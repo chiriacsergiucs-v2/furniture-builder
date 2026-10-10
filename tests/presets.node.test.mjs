@@ -42,9 +42,9 @@ test('save, edit, reopen, backup, import and delete presets in IndexedDB',async(
  assert.equal((await deletePreset(imported[0].id)).length,1)
 })
 test('invalid preset backup format cannot destroy library data',async()=>{
- const {preset}=sample();await savePreset(preset)
+ const before=(await listPresets()).length;const {preset}=sample();await savePreset(preset)
  await assert.rejects(()=>importPresetLibrary('{"schemaVersion":1,"kind":"incorrect","presets":[]}'),/Unsupported/)
- assert.equal((await listPresets()).length,1)
+ assert.equal((await listPresets()).length,before+1)
 })
 test('create preset from existing project parts retains materials and names',()=>{
  const p=createProject();p.parts.push({id:'original',label:'Drawer bottom',width:310,height:260,quantity:2,materialId:'pal18',rotationAllowed:false,grain:'x',abs:emptyAbs()})
