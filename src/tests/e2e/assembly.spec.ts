@@ -16,6 +16,16 @@ test('starter Drawers category, positioned drawer and XYZ edits persist after re
  await expect(x).toHaveValue('-159')
  await x.fill('-175')
  await expect(x).toHaveValue('-175')
+ await expect.poll(async()=>page.evaluate(async()=>{
+  const request=indexedDB.open('mobila-cutlist-build-kit')
+  const database=await new Promise<IDBDatabase>((resolve,reject)=>{request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error)})
+  try{
+   const transaction=database.transaction('projects','readonly')
+   const read=transaction.objectStore('projects').getAll()
+   const saved=await new Promise<Array<{assemblies?:Array<{pieces:Array<{positionMm:number[]}>}>}>>((resolve,reject)=>{read.onsuccess=()=>resolve(read.result);read.onerror=()=>reject(read.error)})
+   return saved[0]?.assemblies?.[0]?.pieces?.[0]?.positionMm?.[0]??null
+  }finally{database.close()}
+ })).toBe(-175)
  await assembly.getByRole('button',{name:'Export Fusion 360 Python'}).click()
  await expect(assembly.getByText(/real panel positions/i)).toBeVisible()
  await page.reload()

@@ -85,7 +85,13 @@ export function App(){
  const create=async()=>{const p=createProject();try{const saved=await saveProject(p);setProjects(prev=>[saved,...prev]);open(saved)}catch(err){setWarning(String(err))}}
  const drop=async(p:Project)=>{if(!window.confirm(`Delete ${p.name}? Export a backup first. This cannot be undone.`))return;try{await removeProject(p.id);setProjects(prev=>prev.filter(x=>x.id!==p.id));if(project?.id===p.id){setProject(null);navigate('projects')}}catch(err){setWarning(String(err))}}
  const duplicate=async(p:Project)=>{try{const cp=await duplicateProject(p);setProjects(prev=>[cp,...prev])}catch(err){setWarning(String(err))}}
- const changeAssembly=(assembly:ProjectAssembly)=>setProject(p=>p?{...p,assemblies:(p.assemblies??[]).map(a=>a.id===assembly.id?assembly:a)}:p)
+ const changeAssembly=(assembly:ProjectAssembly)=>{
+  if(!project)return
+  const next:Project={...project,assemblies:(project.assemblies??[]).map(a=>a.id===assembly.id?assembly:a)}
+  setProject(next)
+  // Save the committed transform immediately; autosave remains a fallback for all fields.
+  void saveProject(next).then(saved=>setProjects(prev=>[saved,...prev.filter(x=>x.id!==saved.id)])).catch(e=>setWarning('Storage: '+String(e)))
+ }
  const newAssemblyForProject=()=>{setProject(p=>p?{...p,assemblies:[...(p.assemblies??[]),newAssembly('New assembly')]}:p);setPreviewOpen(true)}
  const addExampleDrawer=()=>{if(!project)return;try{
   const {parts,assembly}=createDrawer40x30(project)
