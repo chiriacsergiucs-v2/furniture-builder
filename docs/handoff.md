@@ -25,3 +25,10 @@ Unknown third-party device browser quota/eviction; kit editing UI and full categ
 
 ## Viewer / drag feature checkpoint (2026-10-10)
 New dependencies @react-three/fiber, three, @dnd-kit/core/sortable/utilities, @types/three. GitHub Actions `lockfile.yml` regenerates package-lock on main package.json changes. After this feature commit, verify bot lockfile commit, then verify `npm ci`, lint, typecheck, kernel, Vitest, Playwright and deploy. New tests: preview geometry, stable part IDs, order persistence and viewer accessibility. Pending until runs pass. Existing 2D geometry and Dexie data untouched.
+
+## Verified R3F + dnd release v0.3
+- Lockfile generation: new lockfile commit 004da9f after dependency update.
+- CI run 38038577231: lint and TS PASS; kernel 25, Vitest 15, Playwright 10 PASS, production build PASS.
+- Deploy run 38038577305: GitHub Pages reported success at https://chiriacsergiucs-v2.github.io/furniture-builder/.
+- Test evidence obtained from GitHub jobs; browser real device and direct live-site HTTP request not independently verified.
+- 3D lazy chunk ~946 KB (~254 KB gzipped), cached by Workbox PWA. WebGL disabled fallback remains an accessible list.

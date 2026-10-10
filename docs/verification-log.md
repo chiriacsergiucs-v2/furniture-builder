@@ -30,3 +30,10 @@ Benchmark (Node v22.16, max 6 restarts, single run per workload): 20 parts 14.49
 | GitHub Pages publish | PASS | Deploy job 114144405469; URL https://chiriacsergiucs-v2.github.io/furniture-builder/ |
 
 Latest tested source: `f7f38e7fcb9df908f062066460799f9073417f2d`. GitHub deployment action reported success; independent HTTP retrieval was unavailable, so real mobile browser/storage retention after upgrade has not been individually checked.
+
+## 2026-10-10 — R3F/Three and dnd-kit release
+- Code commit 1d4791c; lockfile bot 004da9f; verification source b01f2e64.
+- `npm ci`, `npm run lint`, `npm run typecheck`, `npm run test:kernel`, `npm run test`, `npm run build`, `npm run test:e2e` all passed in GitHub CI https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38038577231.
+- 25 kernel tests, 15 Vitest tests (4 files), 10 Playwright tests.
+- GitHub Pages deployment https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38038577305 passed; Pages reports https://chiriacsergiucs-v2.github.io/furniture-builder/.
+- Not independently tested: physical Android GPU, live URL over this assistant HTTP client.
