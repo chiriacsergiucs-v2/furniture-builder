@@ -35,7 +35,7 @@ function Gizmo({target,mode,orbitRef,onCommit}:{target:Group;mode:GizmoMode;orbi
   const helper=gizmo.getHelper()
   scene.add(helper)
   const changed=()=>invalidate()
-  const drag=(e:{value?:boolean})=>{if(orbitRef.current)orbitRef.current.enabled=!e.value}
+  const drag=(e:{value:unknown})=>{if(orbitRef.current)orbitRef.current.enabled=e.value!==true}
   const mouseUp=()=>{
    onCommit(target.position.toArray().map(x=>Math.round(x*1000)) as Vec3,
     [target.rotation.x,target.rotation.y,target.rotation.z].map(x=>Math.round(MathUtils.radToDeg(x))) as Vec3)
