@@ -16,6 +16,11 @@ In an open project, choose **Presets** to create a named multi-part template, op
 
 Database schema versions are declared in `src/db/database.ts`. The backup version is separate from the IndexedDB schema version, and schema upgrades must preserve old records. Revisions are append-only snapshots of meaningful project/preset/kit/category changes.
 
+## 3D panels and touch-friendly reordering (v0.3)
+The editor offers a lazy-loaded **Panel preview in 3D** based on `three` and `@react-three/fiber` (interactive orbit, zoom, selection). Geometry uses cut dimensions and material thickness without altering manufacturing data. It is an exploded panel inventory, **not a geometrically validated assembled cabinet**; quantity multiples are represented in labels, not duplicate meshes. WebGL2 is optional and an accessible list remains usable if it is unavailable. At most 40 part rows render at once to control mobile GPU usage.
+
+The **Reorder cutlist parts** control uses dnd-kit with mouse, touch, keyboard, and explicit up/down buttons. The order persists in Dexie with the project and does not replace the optimizer's own placement heuristics. Neither feature changes the existing JSON backup schema or 2D guillotine validator.
+
 ## Development
 
 Node >=22 required. `npm install` then `npm run dev`, `npm run lint`, `npm run typecheck`, `npm run test:kernel`, `npm test`, `npm run build`, `npm run test:e2e`. Use the committed package-lock.json; update it whenever dependencies change.

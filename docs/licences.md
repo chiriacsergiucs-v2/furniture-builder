@@ -8,3 +8,12 @@ Run: `npm install && npm ls --all && npx license-checker --production --json` on
 - `dexie` 4.2.1: Apache-2.0 (runtime; local IndexedDB wrapper)
 - `fake-indexeddb` 6.2.5: Apache-2.0 (test-only IndexedDB simulator)
 - No Dexie Cloud or paid sync features are installed.
+
+## 3D + reorder (v0.3, direct packages)
+- `@react-three/fiber` 9.8.1 — MIT, React 19 adapter.
+- `three` 0.186.1 — MIT, core 3D geometry/rendering.
+- `@dnd-kit/core` 6.3.1 — MIT, pointer, touch and keyboard DnD.
+- `@dnd-kit/sortable` 10.0.0 — MIT, ordered lists.
+- `@dnd-kit/utilities` 3.2.2 — MIT, CSS transforms.
+- `@types/three` 0.186.0 — MIT, development types.
+All assets are bundled locally; no runtime CDN or external model/API is introduced.

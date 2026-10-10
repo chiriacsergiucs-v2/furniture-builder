@@ -5,7 +5,7 @@
   "defaultBranch": "main",
   "baseUrl": "/furniture-builder/",
   "status": "in_progress",
-  "currentStep": "STEP_13",
+  "currentStep": "STEP_12",
   "sourceOfTruth": "Checked-in project files and executed test evidence; update after each change",
   "milestones": [
     {
@@ -127,7 +127,7 @@
     "Regency XLSX template unavailable for template-specific adapter",
     "Independent live-site HTTP request unavailable from this tool; GitHub Pages deploy action reported success"
   ],
-  "nextAction": "Continue general Cutlist STEP_13 acceptance; optional new kit editing UI, dependency integrity and device-specific storage/offline checks. Dexie milestone complete.",
+  "nextAction": "Wait for lockfile bot update, then inspect CI / Playwright and GitHub Pages. Fix any failures before confirming release.",
   "lastEvidence": "CI https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38028499465; deploy https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38028499287",
   "storageMilestone": {
     "target": "IndexedDB via Dexie 4.2.1",
@@ -147,5 +147,18 @@
     "newDbName": "mobila-cutlist-build-kit",
     "validation": "25 kernel / 10 Vitest / 8 Chromium Playwright PASS; GitHub Pages deploy PASS",
     "releaseCommit": "f7f38e7fcb9df908f062066460799f9073417f2d"
+  },
+  "viewerMilestone": {
+    "target": "React Three Fiber + Three.js and dnd-kit",
+    "status": "implementation_committed_verification_pending",
+    "checkpoint": {
+      "dependencies": "source_added_lockfile_pending",
+      "panel3d": "source_added",
+      "reorder": "source_added",
+      "unitTests": "pending_ci",
+      "e2e": "pending_ci",
+      "deployment": "pending_ci"
+    },
+    "notes": "No manufacturing schema change, 3D inventory only, reorder list keeps stable part IDs."
   }
 }

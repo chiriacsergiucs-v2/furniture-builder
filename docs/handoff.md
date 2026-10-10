@@ -22,3 +22,6 @@ Unknown third-party device browser quota/eviction; kit editing UI and full categ
 - Deployment: https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38028499287 — GitHub Pages publish PASS.
 - Old localStorage v1 project/preset keys are never deleted. Backup formats preserved.
 - Real-user upgrade should be tested with exported backup available; cross-origin/browser clearing may erase local data.
+
+## Viewer / drag feature checkpoint (2026-10-10)
+New dependencies @react-three/fiber, three, @dnd-kit/core/sortable/utilities, @types/three. GitHub Actions `lockfile.yml` regenerates package-lock on main package.json changes. After this feature commit, verify bot lockfile commit, then verify `npm ci`, lint, typecheck, kernel, Vitest, Playwright and deploy. New tests: preview geometry, stable part IDs, order persistence and viewer accessibility. Pending until runs pass. Existing 2D geometry and Dexie data untouched.

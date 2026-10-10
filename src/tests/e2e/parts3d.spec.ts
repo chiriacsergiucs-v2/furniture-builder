@@ -1,0 +1,22 @@
+import {test,expect} from '@playwright/test'
+
+test('cutlist order controls persist and 3D viewer is available on mobile and desktop',async({page})=>{
+ await page.goto('')
+ await page.getByRole('button',{name:'+ New project'}).click()
+ await page.getByRole('button',{name:'+ Add part'}).click()
+ await page.getByRole('button',{name:'+ Add part'}).click()
+ const names=page.locator('.parts-list .part-card').getByRole('textbox',{name:'Name'})
+ await names.nth(0).fill('Left side')
+ await names.nth(1).fill('Right side')
+ await page.getByText('Reorder cutlist parts · drag, keyboard or arrows').click()
+ await page.getByRole('button',{name:'Move Right side up'}).click()
+ await expect(page.locator('.parts-list .part-card').first().getByRole('textbox',{name:'Name'})).toHaveValue('Right side')
+ await page.getByRole('button',{name:'Open 3D preview'}).click()
+ const viewer=page.getByRole('region',{name:'3D panel preview'})
+ await expect(viewer).toBeVisible()
+ await expect(viewer.getByRole('button',{name:/Right side/})).toBeVisible()
+ await viewer.getByRole('button',{name:/Right side/}).click()
+ await expect(viewer.getByRole('status').filter({hasText:'Right side'})).toBeVisible()
+ await page.reload()
+ await expect(page.locator('.parts-list .part-card').first().getByRole('textbox',{name:'Name'})).toHaveValue('Right side')
+})

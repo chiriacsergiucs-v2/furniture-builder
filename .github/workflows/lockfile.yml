@@ -25,6 +25,6 @@ jobs:
           if ! git diff --cached --quiet; then
             git config user.name 'github-actions[bot]'
             git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-            git commit -m 'chore: refresh lockfile for Dexie storage'
+            git commit -m 'chore: refresh lockfile for 3D and drag dependencies'
             git push origin HEAD:main
           fi
