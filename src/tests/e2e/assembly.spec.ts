@@ -34,3 +34,18 @@ test('starter Drawers category, positioned drawer and XYZ edits persist after re
  await restored.getByRole('button',{name:'Drawer side #1'}).click()
  await expect(restored.getByRole('spinbutton',{name:'X mm'})).toHaveValue('-175')
 })
+
+test('adding starter drawer from categorized presets creates a positioned assembly',async({page})=>{
+ await page.goto('')
+ await page.getByRole('button',{name:'+ New project'}).click()
+ const manager=page.getByRole('region',{name:'Presets'})
+ const starter=manager.locator('.preset-card').filter({hasText:'40 × 30 cm Drawer'})
+ await expect(starter).toBeVisible()
+ await starter.getByRole('spinbutton',{name:'Sets to add'}).fill('2')
+ await starter.getByRole('button',{name:'Add to project'}).click()
+ const assembly=page.getByRole('region',{name:'3D assembly editor'})
+ await expect(assembly).toBeVisible()
+ await expect(assembly.getByRole('combobox',{name:'Assembly'}).locator('option')).toHaveCount(2)
+ await expect(assembly.getByRole('button',{name:'Front Main #1'})).toBeVisible()
+ await page.getByRole('button',{name:'JSON backup'}).click()
+})

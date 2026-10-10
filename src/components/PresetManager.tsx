@@ -13,7 +13,7 @@ const sides:EdgeName[]=['top','right','bottom','left']
 const createEmpty=(project:Project)=>createPreset('',[newPresetItem(project.materials[0])])
 const materialKey=(m:PresetMaterial)=>JSON.stringify({name:m.name,type:m.type,thickness:m.thickness,finish:m.finish??''})
 function message(e:unknown){return e instanceof Error?e.message:String(e)}
-export function PresetManager({project,onInsert}:{project:Project;onInsert:(parts:Part[])=>void}){
+export function PresetManager({project,onInsert}:{project:Project;onInsert:(parts:Part[],presetId:string,copies:number)=>void}){
  const [library,setLibrary]=useState<StoredPreset[]>([])
  const [categories,setCategories]=useState<PresetCategory[]>([])
  const [newCategory,setNewCategory]=useState('')
@@ -30,7 +30,7 @@ export function PresetManager({project,onInsert}:{project:Project;onInsert:(part
  const fromParts=()=>{try{if(!project.parts.length)throw Error('Add parts to the project first.');setDraft(presetFromParts(project));setSelectedCategory(UNCATEGORIZED_ID);setError('');setNotice('')}catch(e){onError(e)}}
  const editItem=(idx:number,update:Partial<PresetItem>)=>setDraft(p=>p?{...p,items:p.items.map((item,i)=>i===idx?{...item,...update}:item)}:p)
  const save=async()=>{if(!draft)return;try{const issues=validatePreset(draft);if(issues.length)throw Error(issues.join('; '));setLibrary(await savePreset({...draft,categoryId:selectedCategory}));setNotice(`Saved preset “${draft.label}” with ${draft.items.length} cut items.`);setError('');setDraft(null)}catch(e){onError(e)}}
- const add=(preset:CutlistPreset)=>{try{const parts=instantiatePreset(preset,project,copies[preset.id]??1);onInsert(parts);setNotice(`Added ${parts.length} cut rows (${parts.reduce((n,p)=>n+p.quantity,0)} pieces) from “${preset.label}”.`);setError('')}catch(e){onError(e)}}
+ const add=(preset:CutlistPreset)=>{try{const quantity=copies[preset.id]??1;const parts=instantiatePreset(preset,project,quantity);onInsert(parts,preset.id,quantity);setNotice(`Added ${parts.length} cut rows (${parts.reduce((n,p)=>n+p.quantity,0)} pieces) from “${preset.label}”.`);setError('')}catch(e){onError(e)}}
  const remove=async(p:CutlistPreset)=>{if(!window.confirm(`Delete preset “${p.label}”? The parts already added to projects will remain.`))return;try{setLibrary(await deletePreset(p.id));if(draft?.id===p.id)setDraft(null);setNotice(`Deleted preset “${p.label}”.`);setError('')}catch(e){onError(e)}}
  const importBackup=async(e:ChangeEvent<HTMLInputElement>)=>{const file=e.target.files?.[0];e.target.value='';if(!file)return;try{const saved=await importPresetLibrary(await file.text());setLibrary(saved);setNotice(`Imported preset library; ${saved.length} presets available.`);setError('')}catch(err){onError(err)}}
  const filtered=library.filter(p=>p.label.toLowerCase().includes(filter.toLowerCase())&&(!categoryFilter||p.categoryId===categoryFilter))

@@ -1,7 +1,7 @@
 import {describe,it,expect} from 'vitest'
 import {createProject} from '../../engine/types.ts'
 import {validateProject} from '../../engine/schema.ts'
-import {createDrawer40x30,addPartInstances,newAssembly,resolveAssembly} from '../../assembly/model.ts'
+import {createDrawer40x30,createPositionedDrawers,addPartInstances,newAssembly,resolveAssembly} from '../../assembly/model.ts'
 import {exportFusionPython} from '../../assembly/fusion.ts'
 
 describe('positioned 40 × 30 drawer and Fusion export',()=>{
@@ -53,6 +53,20 @@ describe('positioned 40 × 30 drawer and Fusion export',()=>{
   expect(source).toContain('rotationDeg')
   expect(source).toContain("item['positionMm']")
  })
+ it('instantiates separate accurately positioned assemblies for multiple starter preset sets',()=>{
+  const p=createProject(),built=createDrawer40x30(p)
+  const parts=built.parts.map(part=>({...part,quantity:part.quantity*3}))
+  const grouped=createPositionedDrawers(parts,3,1)
+  expect(grouped).toHaveLength(3)
+  expect(grouped.map(a=>a.pieces.length)).toEqual([5,5,5])
+  expect(grouped[0].pieces[0].instanceIndex).toBe(0)
+  expect(grouped[2].pieces[0].instanceIndex).toBe(4)
+  expect(grouped[0].pieces[0].positionMm).toEqual([341,0,0])
+  p.parts.push(...parts);p.assemblies=grouped
+  expect(validateProject(p)).toEqual([])
+  expect(()=>createPositionedDrawers(parts,21)).toThrow(/1–20/)
+ })
+
  it('rejects missing PAL 18 mm rather than silently changing thickness',()=>{
   const p=createProject();p.materials=p.materials.filter(m=>m.type!=='PAL')
   expect(()=>createDrawer40x30(p)).toThrow(/PAL 18 mm/)

@@ -19,18 +19,32 @@ export function createDrawer40x30(project:Project):{parts:Part[];assembly:Projec
  })
  const parts=[part('Drawer side',300,250,2),part('Drawer back',300,250,1),
   part('Drawer front (inner)',300,250,1),part('Front Main',400,300,1)]
- const [side,back,front,main]=parts
- const offset=(project.assemblies?.length??0)*500
- const piece=(p:Part,n:number,x:number,z:number,ry=0):AssemblyPiece=>({
-  id:crypto.randomUUID(),partId:p.id,instanceIndex:n,
-  positionMm:[x+offset,0,z],rotationDeg:[0,ry,0]
+ const assembly=createPositionedDrawers(parts,1,project.assemblies?.length??0)[0]
+ return {parts,assembly}
+}
+export function createPositionedDrawers(parts:Part[],copies:number,existingAssemblyCount=0):ProjectAssembly[]{
+ if(!Number.isSafeInteger(copies)||copies<1||copies>20)throw Error('Positioned drawer presets support 1–20 sets per insertion.')
+ const expected:[string,number,number,number][]=[
+  ['Drawer side',300,250,2],['Drawer back',300,250,1],
+  ['Drawer front (inner)',300,250,1],['Front Main',400,300,1]
+ ]
+ if(parts.length!==4||expected.some(([label,w,h,n])=>!parts.some(p=>p.label===label&&p.width===w&&p.height===h&&p.quantity===n*copies)))
+  throw Error('The starter drawer was customized. Restore its original dimensions to create a positioned assembly, or place its parts manually.')
+ const [side,back,front,main]=expected.map(([label])=>parts.find(p=>p.label===label)!)
+ return Array.from({length:copies},(_,i)=>{
+  const offset=(existingAssemblyCount+i)*500
+  const piece=(p:Part,n:number,x:number,z:number,ry=0):AssemblyPiece=>({
+   id:crypto.randomUUID(),partId:p.id,instanceIndex:n,
+   positionMm:[offset+x,0,z],rotationDeg:[0,ry,0]
+  })
+  const a=newAssembly('40 × 30 cm Drawer'+(copies>1?' #'+(i+1):''))
+  // A 336 x 300 x 250 mm body with 18 mm sides and 2 mm front reveal.
+  a.pieces=[
+   piece(side,i*2,-159,0,90),piece(side,i*2+1,159,0,90),
+   piece(back,i,0,-141),piece(front,i,0,141),piece(main,i,0,161)
+  ]
+  return a
  })
- const a=newAssembly(name)
- // 18mm side panels at x±159; 300mm cross panels centered in 336mm outer body.
- // Body 336W x 300D x 250H; main front spans x±200 and is 2mm ahead.
- a.pieces=[piece(side,0,-159,0,90),piece(side,1,159,0,90),
-  piece(back,0,0,-141),piece(front,0,0,141),piece(main,0,0,161)]
- return {parts,assembly:a}
 }
 export function addPartInstances(a:ProjectAssembly,p:Part):ProjectAssembly{
  const allocated=new Set(a.pieces.filter(x=>x.partId===p.id).map(x=>x.instanceIndex))
