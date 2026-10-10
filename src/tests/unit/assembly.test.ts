@@ -51,7 +51,7 @@ describe('positioned 40 × 30 drawer and Fusion export',()=>{
   expect(source).toContain('Drawer side')
   expect(source).toContain('Front Main')
   expect(source).toContain('rotationDeg')
-  expect(source).toContain('"positionMm"')
+  expect(source).toContain("item['positionMm']")
  })
  it('rejects missing PAL 18 mm rather than silently changing thickness',()=>{
   const p=createProject();p.materials=p.materials.filter(m=>m.type!=='PAL')
