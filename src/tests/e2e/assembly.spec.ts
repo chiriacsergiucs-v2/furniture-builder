@@ -46,6 +46,6 @@ test('adding starter drawer from categorized presets creates a positioned assemb
  const assembly=page.getByRole('region',{name:'3D assembly editor'})
  await expect(assembly).toBeVisible()
  await expect(assembly.getByRole('combobox',{name:'Assembly'}).locator('option')).toHaveCount(2)
- await expect(assembly.getByRole('button',{name:'Front Main #1'})).toBeVisible()
+ await expect(assembly.getByRole('button',{name:'Front Main #2'})).toBeVisible()
  await page.getByRole('button',{name:'JSON backup'}).click()
 })
