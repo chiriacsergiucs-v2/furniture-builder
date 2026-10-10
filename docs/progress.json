@@ -125,13 +125,14 @@
     "viewer3D": "CI lint/typecheck/build PASS; React Three Fiber & Three.js lazy asset; Vitest 15 PASS",
     "dndKit": "Part order persists with stable IDs; Playwright 10/10 PASS",
     "viewerDeploy": "GitHub Pages run 38038577305 PASS; deploy of b01f2e64",
-    "viewerCI": "Run 38038577231 PASS, 25 kernel/15 Vitest/10 E2E"
+    "viewerCI": "Run 38038577231 PASS, 25 kernel/15 Vitest/10 E2E",
+    "assembly": "PASS 25 kernel / 21 Vitest / 14 Playwright in CI 38048669793; Pages 38048670051"
   },
   "externalBlockers": [
     "Regency XLSX template unavailable for template-specific adapter",
     "Independent live-site HTTP request unavailable from this tool; GitHub Pages deploy action reported success"
   ],
-  "nextAction": "Continue user-specific Android WebGL/touch checks and later nested kit geometry editor; general STEP_13 acceptance remains incomplete.",
+  "nextAction": "Real-device Android TransformControls UX and Autodesk Fusion Python script execution; optional panel snapping, collision detection, bottom/hardware and parametric drawer dimensions. General STEP_13 still pending.",
   "lastEvidence": "CI https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38028499465; deploy https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38028499287",
   "storageMilestone": {
     "target": "IndexedDB via Dexie 4.2.1",
@@ -168,14 +169,35 @@
     "notes": "Local 3D panel preview is not assembly geometry; cut tree remains the source of truth. WebGL fallback and accessible legend implemented. Physical Android GPU not checked."
   },
   "assemblyMilestone": {
-    "status": "implemented_verification_pending",
+    "status": "verified_deployed",
+    "implementationCommits": [
+      "2af07ba437f810e208625890787b1e8c0185637f",
+      "c949ee2a34d99ebe122c5e8c597f51caecee767b",
+      "4dc4df3ddd5e27f0483e10b5dd5a3f2c5c1f8937",
+      "80644cb2c27ff50d1fef2637b3133a5cb051ee91"
+    ],
+    "verifiedCommit": "d298f5af168c04fac998d7c235ec80235809d1b7",
     "features": [
       "3D translation/rotation gizmo",
-      "numerical XYZ in mm/degrees",
-      "5-panel drawer example",
-      "Drawers default category/preset/kit",
-      "Fusion Python native solid components"
+      "editable XYZ in integer mm/degrees",
+      "default Drawers category with starter preset and kit",
+      "five individually positioned panels for 40 x 30 drawer",
+      "positioned multi-set preset insertion",
+      "Fusion Python B-rep solid export",
+      "project JSON and Dexie persistence"
     ],
-    "notes": "No bottom, fixings or slides in example; project.schemaVersion remains 1; physical Fusion execution unverified"
+    "checkpoints": {
+      "tests": "25 kernel, 21 Vitest, 14 Playwright PASS",
+      "build": "PASS",
+      "deployment": "PASS GitHub Pages run 38048670051",
+      "unit": "PASS",
+      "mobileEmulation": "PASS"
+    },
+    "limitations": [
+      "No drawer bottom, hardware, joinery or formal structural validation",
+      "Fusion Python API script unexecuted inside Autodesk Fusion",
+      "Independent live Pages HTTP GET unavailable; action reports deployment success",
+      "Physical Android touch gizmo not tested"
+    ]
   }
 }

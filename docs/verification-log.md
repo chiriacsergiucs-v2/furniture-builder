@@ -37,3 +37,10 @@ Latest tested source: `f7f38e7fcb9df908f062066460799f9073417f2d`. GitHub deploym
 - 25 kernel tests, 15 Vitest tests (4 files), 10 Playwright tests.
 - GitHub Pages deployment https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38038577305 passed; Pages reports https://chiriacsergiucs-v2.github.io/furniture-builder/.
 - Not independently tested: physical Android GPU, live URL over this assistant HTTP client.
+
+## 2026-10-10 — Positioned drawers, preset-to-assembly and Fusion export
+- GitHub CI: https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38048669793
+- Results: 25/25 kernel, 21/21 Vitest, 14/14 Playwright across desktop and emulated Android; lint, typecheck and production build all PASSED.
+- GitHub Pages: https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38048670051 — reported deployment success for d298f5af.
+- Tests cover 4 row / 5 panel drawer placement, 3-set positioning and per-instance indices, independent XYZ edit persistence after IndexedDB save, Fusion script content, default Drawers preset use.
+- Pending: independently run generated script in Fusion, real Android GPU gestures, real physical drawer fit and hardware allowances, independent live URL GET.

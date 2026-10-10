@@ -32,3 +32,12 @@ New dependencies @react-three/fiber, three, @dnd-kit/core/sortable/utilities, @t
 - Deploy run 38038577305: GitHub Pages reported success at https://chiriacsergiucs-v2.github.io/furniture-builder/.
 - Test evidence obtained from GitHub jobs; browser real device and direct live-site HTTP request not independently verified.
 - 3D lazy chunk ~946 KB (~254 KB gzipped), cached by Workbox PWA. WebGL disabled fallback remains an accessible list.
+
+## Verified positioned drawer and Fusion 360 release — 2026-10-10
+- Application commit d298f5af, CI run 38048669793: npm ci, lint, TypeScript, kernel (25), Vitest (21), production build and desktop/Android-viewport Playwright (14) all PASS.
+- Pages run 38048670051 completed successfully, URL https://chiriacsergiucs-v2.github.io/furniture-builder/.
+- `src/assembly/model.ts` stores per-panel transforms as part of Project (optional `assemblies`); zero database schema change and JSON backups preserve transforms. No existing localStorage keys are modified.
+- `src/assembly/starter.ts` transactionally seeds the default Drawers category, the 4-cut-row / 5-instance drawer preset and its kit; metadata marker prevents reinstating deleted defaults.
+- Direct + Drawer button or preset library Add to project creates assemblies (up to 20 sets in one insertion). Pal 18mm only, body width 336mm, depth 300mm, height 250mm; main front 400x300 and 2mm reveal.
+- `src/assembly/fusion.ts` exports a self-contained Fusion Python API script creating individual **direct-model B-rep solids** with centimeter conversion. Execution in Fusion itself remains unverified. It does not export STEP/F3D directly.
+- Not included: drawer bottom, joinery, hardware, interference checks; physical Android GPU/touch check pending. Autodesk references in README/feature docs.
