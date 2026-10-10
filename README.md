@@ -6,6 +6,10 @@ Prototype of a mobile-first, offline-oriented furniture panel cutting optimizer 
 
 Project editor, PAL/MDF/custom materials, configurable sheets/quantities/trims, parts, grain, rotation, four-edge ABS, localStorage, version-1 JSON backups, CSV/XLSX generic import, SVG/print/PDF/CSV/XLSX exports, multi-restart heuristic guillotine optimizer and independent cut-tree validation.
 
+## Reusable cutlist presets
+
+In a project editor, open **Presets**. Choose **Create preset**, name it (for example, Drawer top), add as many labeled cut items as needed, and save. Set how many complete sets to add, then choose **Add to project**. Parts are copied with new IDs and multiplied quantities; you can edit them independently. **Save project parts as preset** builds a preset from the current project cutlist. Material type, thickness, and finish must match a compatible project material; ambiguous or missing materials are reported without partial insertion. Presets are saved separately in browser localStorage, remain available across projects and reloads, and support JSON export/import. They are not part of individual project JSON backups.
+
 ## Development
 
 Node >=22 required. `npm install` then `npm run dev`, `npm run lint`, `npm run typecheck`, `npm run test:kernel`, `npm test`, `npm run build`, `npm run test:e2e`. No lockfile was generated in the sandbox because registry network access was blocked. Make and commit one before release, then switch CI/deploy to `npm ci`.
