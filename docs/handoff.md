@@ -8,7 +8,7 @@ Application prototype in this project. See root `CUTLIST_OPTIMIZER_RESUMABLE_BUI
 
 ## Evidence
 - Node 22.16 available; no npm packages installed locally.
-- `node --experimental-strip-types --test tests/engine.node.test.mjs` passed 12/12 (including 200 fuzz cases) after validation fixes.
+- `node --experimental-strip-types --test tests/engine.node.test.mjs` passed 19/19 (12 engine cases including 200 fuzz cases + 7 CSV/SVG/persistence/validator integration cases) after validation fixes.
 - Full dependency install timed out because sandbox cannot access npm registry.
 - Full TypeScript/Vite build, Vitest, Playwright and live Pages deployment have **not** been run or verified.
 - Generic XLSX parser/serializer written but untested against actual workbook due missing ExcelJS install.

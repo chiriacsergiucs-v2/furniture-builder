@@ -113,11 +113,12 @@
   },
   "verified": {
     "runtime": "Node v22.16.0",
-    "kernel": "12/12 passed; 200 seeded randomized scenarios in case 12",
+    "kernel": "19/19 passed: 12 engine tests including 200 fuzz instances, 7 CSV/SVG/storage/validator integration tests",
     "frameworkBuild": "not_run: npm registry inaccessible",
     "e2e": "not_run",
     "pwaOffline": "not_run",
-    "githubPages": "not_verified"
+    "githubPages": "not_verified",
+    "benchmarks": "20 parts:14.49ms/2 sheets; 50:8.21ms/3 sheets; 100:18.76ms/5 sheets; 250:46.41ms/12 sheets (sandbox single runs)"
   },
   "externalBlockers": [
     "npm dependencies unavailable from sandbox network; lockfile missing",
@@ -125,5 +126,5 @@
     "Original Regency template SABLON DEBITARE NOU.xlsx unavailable"
   ],
   "nextAction": "Make full source available in furniture-builder, install dependencies, generate lockfile, run lint/typecheck/unit/build/e2e and fix findings.",
-  "lastEvidence": "node --experimental-strip-types --test tests/engine.node.test.mjs"
+  "lastEvidence": "npm run test:kernel (Node 22.16); 19 PASS, 0 FAIL"
 }

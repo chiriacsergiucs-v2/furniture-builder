@@ -13,7 +13,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "test:kernel": "node --experimental-strip-types --test tests/engine.node.test.mjs"
+    "test:kernel": "node --experimental-strip-types --test tests/*.node.test.mjs"
   },
   "dependencies": {
     "react": "^19.1.1",
