@@ -42,6 +42,6 @@ Never mark a gate as passed based on code inspection or assumptions.
 - [x] D03 replace project and preset persistence with async Dexie calls
 - [x] D04 preserve project/preset JSON + full database backup
 - [x] D05 add categories and revision/kit/material repository APIs
-- [ ] D06 install Dexie + fake-indexeddb with committed lockfile
-- [ ] D07 run Vitest/Playwright/CI and correct failures
-- [ ] D08 deploy via GitHub Pages and verify
+- [x] D06 install Dexie + fake-indexeddb with committed lockfile (lockfile action 38028331504)
+- [x] D07 run Vitest/Playwright/CI and correct failures (25 kernel + 10 Vitest + 8 E2E)
+- [x] D08 deploy via GitHub Pages and verify (workflow 38028499287; HTTP independently unavailable)

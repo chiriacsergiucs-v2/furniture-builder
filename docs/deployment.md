@@ -1,12 +1,10 @@
 # GitHub Pages deployment
 
-Repository: https://github.com/chiriacsergiucs-v2/furniture-builder
-Potential site: https://chiriacsergiucs-v2.github.io/furniture-builder/
-Vite base: `/furniture-builder/`; PWA scope/start_url match; hash navigation avoids path rewrites.
-
-1. Commit all source code, generate and commit package-lock.json, replace temporary npm install steps with npm ci.
-2. Verify full CI locally or in GitHub Actions. Enable Pages from Actions in the repository Settings if account supports Pages for this private repo. **Do not change repo visibility automatically.**
-3. Run deploy workflow on main, verify live assets, scope, service worker registration, offline reload, and Android installation before marking G10 passed.
-4. GitHub Pages does not receive any customer project files. Project data lives only in browser localStorage.
-
-Current status: NOT DEPLOYED / NOT VERIFIED.
+- Repository: https://github.com/chiriacsergiucs-v2/furniture-builder
+- Published URL: https://chiriacsergiucs-v2.github.io/furniture-builder/
+- Vite base: `/furniture-builder/`; PWA scope and hash routing match.
+- GitHub Actions 38028499287: Pages build and deployment succeeded at `f7f38e7`.
+- GitHub Actions 38028499465: lint, TypeScript, 25 kernel tests, 10 Vitest tests, 8 Playwright tests and production build passed.
+- Independent external HTTP verification could not run in current tool; GitHub Pages deployment reported success.
+- Project, library, kit and revision data remain local in **IndexedDB via Dexie**. Legacy localStorage project and preset data is preserved. The static site receives no customer data.
+- On new releases, users may need to activate the installed PWA's **Update app** notification. Never clear site data to force an update. Export complete JSON database backup before clearing data or changing devices.

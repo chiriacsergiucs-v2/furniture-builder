@@ -15,3 +15,10 @@ Dexie database `mobila-cutlist-build-kit`; `migration:localStorage:v1` commits a
 
 ## Remaining watch-outs
 Unknown third-party device browser quota/eviction; kit editing UI and full category trees not yet present. Regency sheet template still unavailable. No remote sync.
+
+## Verified Dexie release checkpoint
+- Latest tested application commit: `f7f38e7` (2026-10-10).
+- CI: https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38028499465 — 25 kernel, 10 Vitest, 8 Playwright, lint, typecheck, build all PASS.
+- Deployment: https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38028499287 — GitHub Pages publish PASS.
+- Old localStorage v1 project/preset keys are never deleted. Backup formats preserved.
+- Real-user upgrade should be tested with exported backup available; cross-origin/browser clearing may erase local data.
