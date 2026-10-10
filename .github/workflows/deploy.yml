@@ -1,7 +1,5 @@
 name: Deploy GitHub Pages
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
@@ -18,8 +16,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      # Temporary until a registry-generated package-lock.json can be committed.
-      - run: npm install --no-audit --no-fund
+      - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run test:kernel
