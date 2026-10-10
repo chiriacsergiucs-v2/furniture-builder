@@ -12,7 +12,7 @@ function fakeStorage(items:Record<string,string>):Storage{
  const map=new Map(Object.entries(items))
  return {get length(){return map.size},clear(){map.clear()},getItem(k){return map.get(k)??null},key(n){return [...map.keys()][n]??null},removeItem(k){map.delete(k)},setItem(k,v){map.set(k,v)}}
 }
-let temporary:FurnitureDatabase[]=[]
+const temporary:FurnitureDatabase[]=[]
 beforeEach(async()=>{
  await db.open()
  await db.transaction('rw',db.projects,db.presets,db.presetCategories,db.kits,db.materials,db.revisions,db.metadata,async()=>{
