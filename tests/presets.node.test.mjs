@@ -1,10 +1,12 @@
+import 'fake-indexeddb/auto'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {createProject,emptyAbs} from '../src/engine/types.ts'
 import {createPreset,newPresetItem,presetFromParts,validatePreset,instantiatePreset} from '../src/presets/presets.ts'
 import {deletePreset,exportPresetLibrary,importPresetLibrary,listPresets,savePreset} from '../src/presets/storage.ts'
-const fakeStorage=()=>{const entries=new Map();globalThis.window={localStorage:{getItem:k=>entries.get(k)??null,setItem:(k,v)=>entries.set(k,String(v)),removeItem:k=>entries.delete(k)}};return entries}
+
 function sample(){const p=createProject();const a=newPresetItem(p.materials[0]);a.label='Top panel';a.width=450;a.height=210;a.quantity=2;a.abs.top='ABS 2 mm';const b={...newPresetItem(p.materials[0]),label:'Side panel',width:210,height:120,quantity:1};return {p,preset:createPreset('Drawer top',[a,b])}}
+
 test('preset captures independent labeled cut items and preserves ABS/constraints',()=>{
  const {p,preset}=sample();assert.deepEqual(validatePreset(preset),[])
  const inserted=instantiatePreset(preset,p,3)
@@ -27,19 +29,22 @@ test('material resolution refuses missing, ambiguous, and different-thickness ma
  assert.throws(()=>instantiatePreset(preset,p),/Required material not found/)
  assert.equal(p.parts.length,0)
 })
-test('save, edit, reload, backup, import and remove presets in browser storage',()=>{
- fakeStorage();const {p,preset}=sample();assert.equal(listPresets().length,0)
- savePreset(preset);assert.equal(listPresets().length,1)
- preset.label='Drawer top revised';savePreset(preset);assert.equal(listPresets().length,1);assert.equal(listPresets()[0].label,'Drawer top revised')
- const imported=importPresetLibrary(exportPresetLibrary());assert.equal(imported.length,2);assert.notEqual(imported[0].id,imported[1].id)
- assert.equal(instantiatePreset(listPresets()[0],p)[0].width,450);assert.equal(deletePreset(imported[0].id).length,1)
+test('save, edit, reopen, backup, import and delete presets in IndexedDB',async()=>{
+ const {p,preset}=sample()
+ assert.equal((await listPresets()).length,0)
+ await savePreset(preset);assert.equal((await listPresets()).length,1)
+ preset.label='Drawer top revised';await savePreset(preset)
+ assert.equal((await listPresets())[0].label,'Drawer top revised')
+ const exported=await exportPresetLibrary();const imported=await importPresetLibrary(exported)
+ assert.equal(imported.length,2);assert.notEqual(imported[0].id,imported[1].id)
+ const restored=instantiatePreset((await listPresets())[0],p)
+ assert.equal(restored[0].width,450)
+ assert.equal((await deletePreset(imported[0].id)).length,1)
 })
-test('corrupt preset libraries and invalid backup formats fail without erasing existing data',()=>{
- const map=fakeStorage(),{preset}=sample();savePreset(preset)
- assert.throws(()=>importPresetLibrary('{"schemaVersion":1,"kind":"incorrect","presets":[]}'),/Unsupported/)
- assert.equal(listPresets().length,1)
- map.set('mobila-cutlist:presets:v1','{broken')
- assert.throws(()=>listPresets(),/corrupted/);assert.throws(()=>savePreset(preset),/corrupted/);assert.equal(map.get('mobila-cutlist:presets:v1'),'{broken')
+test('invalid preset backup format cannot destroy library data',async()=>{
+ const {preset}=sample();await savePreset(preset)
+ await assert.rejects(()=>importPresetLibrary('{"schemaVersion":1,"kind":"incorrect","presets":[]}'),/Unsupported/)
+ assert.equal((await listPresets()).length,1)
 })
 test('create preset from existing project parts retains materials and names',()=>{
  const p=createProject();p.parts.push({id:'original',label:'Drawer bottom',width:310,height:260,quantity:2,materialId:'pal18',rotationAllowed:false,grain:'x',abs:emptyAbs()})

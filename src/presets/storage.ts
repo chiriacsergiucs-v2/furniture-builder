@@ -1,42 +1,57 @@
 import type {CutlistPreset} from './presets.ts'
 import {validatePreset} from './presets.ts'
-const key='mobila-cutlist:presets:v1'
-const getStore=():Storage=>{
- try{const store=window.localStorage,probe='mobila-cutlist:probe';store.setItem(probe,'1');store.removeItem(probe);return store}
- catch{throw Error('Browser storage unavailable; presets cannot be saved. Check browser storage permissions.')}
-}
-const decode=(raw:string):CutlistPreset[]=>{
- let value:unknown
- try{value=JSON.parse(raw)}catch{throw Error('Stored presets JSON is corrupted. Existing data was not overwritten.')}
- if(!Array.isArray(value))throw Error('Invalid preset library format')
- if(value.length>1000)throw Error('Preset library exceeds the 1000-preset limit')
+import {db,UNCATEGORIZED_ID,now} from '../db/database.ts'
+import type {StoredPreset,LibraryRevision} from '../db/database.ts'
+import {initializeStorage} from '../db/migration.ts'
+
+function validateAll(values:unknown):CutlistPreset[]{
+ if(!Array.isArray(values)||values.length>1000)throw Error('Invalid preset library (maximum 1000 presets)')
  const ids=new Set<string>()
- for(const preset of value){const errors=validatePreset(preset);if(errors.length)throw Error('Invalid preset: '+errors.join('; '));const id=(preset as CutlistPreset).id;if(ids.has(id))throw Error('Duplicate preset IDs');ids.add(id)}
- return value as CutlistPreset[]
+ for(const item of values){const errors=validatePreset(item)
+  if(errors.length)throw Error('Invalid preset: '+errors.join('; '))
+  if(ids.has(item.id))throw Error('Duplicate preset IDs');ids.add(item.id)
+ }
+ return values as CutlistPreset[]
 }
-export function listPresets():CutlistPreset[]{const raw=getStore().getItem(key);return raw?decode(raw).sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt)):[]}
-const storeAll=(items:CutlistPreset[]):CutlistPreset[]=>{
- if(items.length>1000)throw Error('A maximum of 1000 presets is supported')
- const checked=decode(JSON.stringify(items))
- try{getStore().setItem(key,JSON.stringify(checked))}catch{throw Error('Could not save presets. Browser storage may be full. Export a backup and free space.')}
- return checked
-}
-export function savePreset(preset:CutlistPreset):CutlistPreset[]{
+const makeRevision=(p:StoredPreset,action:LibraryRevision['action']):LibraryRevision=>({schemaVersion:1,id:crypto.randomUUID(),entityType:'preset',entityId:p.id,action,createdAt:now(),snapshot:structuredClone(p)})
+export async function listPresets():Promise<StoredPreset[]>{await initializeStorage();return db.presets.orderBy('updatedAt').reverse().toArray()}
+export async function savePreset(preset:CutlistPreset):Promise<StoredPreset[]>{
  const errors=validatePreset(preset);if(errors.length)throw Error(errors.join('; '))
- const existing=listPresets()
- const stored={...structuredClone(preset),updatedAt:new Date().toISOString()}
- return storeAll([stored,...existing.filter(p=>p.id!==stored.id)])
+ await initializeStorage()
+ await db.transaction('rw',db.presets,db.presetCategories,db.revisions,async()=>{
+  const existing=await db.presets.get(preset.id)
+  const categoryId=(preset as StoredPreset).categoryId??existing?.categoryId??UNCATEGORIZED_ID
+  if(!await db.presetCategories.get(categoryId))throw Error('Preset category is missing')
+  const stored={...structuredClone(preset),categoryId,updatedAt:now()}
+  await db.presets.put(stored)
+  await db.revisions.add(makeRevision(stored,existing?'update':'create'))
+ })
+ return listPresets()
 }
-export function deletePreset(id:string):CutlistPreset[]{return storeAll(listPresets().filter(p=>p.id!==id))}
-export function exportPresetLibrary():string{return JSON.stringify({schemaVersion:1,kind:'mobila-cutlist-presets',presets:listPresets()},null,2)}
-export function importPresetLibrary(json:string):CutlistPreset[]{
+export async function deletePreset(id:string):Promise<StoredPreset[]>{
+ await initializeStorage()
+ await db.transaction('rw',db.presets,db.revisions,async()=>{const old=await db.presets.get(id);if(old){await db.presets.delete(id);await db.revisions.add(makeRevision(old,'delete'))}})
+ return listPresets()
+}
+export async function exportPresetLibrary():Promise<string>{
+ return JSON.stringify({schemaVersion:1,kind:'mobila-cutlist-presets',presets:await listPresets()},null,2)
+}
+export async function importPresetLibrary(json:string):Promise<StoredPreset[]>{
  let value:unknown;try{value=JSON.parse(json)}catch{throw Error('Invalid preset backup JSON')}
  if(!value||typeof value!=='object'||Array.isArray(value))throw Error('Invalid preset backup')
  const backup=value as Record<string,unknown>
  if(backup.schemaVersion!==1||backup.kind!=='mobila-cutlist-presets')throw Error('Unsupported preset backup format')
- const incoming=decode(JSON.stringify(backup.presets))
- const prior=listPresets()
- const ids=new Set(prior.map(p=>p.id))
- const imported=incoming.map(p=>{const item=structuredClone(p);if(ids.has(item.id))item.id=crypto.randomUUID();ids.add(item.id);return item})
- return storeAll([...imported,...prior])
+ const items=validateAll(backup.presets)
+ await initializeStorage()
+ // Validate and commit all imports atomically. Existing IDs are remapped without overwriting.
+ await db.transaction('rw',db.presets,db.revisions,async()=>{
+  const existing=new Set((await db.presets.toArray()).map(p=>p.id))
+  for(const preset of items){const stored:StoredPreset={...structuredClone(preset),categoryId:UNCATEGORIZED_ID}
+   if(existing.has(stored.id))stored.id=crypto.randomUUID()
+   existing.add(stored.id)
+   await db.presets.put(stored)
+   await db.revisions.add(makeRevision(stored,'import'))
+  }
+ })
+ return listPresets()
 }

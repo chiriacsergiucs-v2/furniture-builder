@@ -33,3 +33,15 @@ Statuses: `verified_partial` is not a completed milestone; each milestone requir
 7. Commit functional stages, update progress.json and verification-log.md with exact command outcomes and UTC time.
 
 Never mark a gate as passed based on code inspection or assumptions.
+
+
+## Dexie storage milestone (requested 2026-10-10)
+- [x] D00 audit localStorage keys, refs and constraints
+- [x] D01 implement Dexie schema v1/v2 and named collections
+- [x] D02 atomic read-only legacy migration and metadata marker
+- [x] D03 replace project and preset persistence with async Dexie calls
+- [x] D04 preserve project/preset JSON + full database backup
+- [x] D05 add categories and revision/kit/material repository APIs
+- [ ] D06 install Dexie + fake-indexeddb with committed lockfile
+- [ ] D07 run Vitest/Playwright/CI and correct failures
+- [ ] D08 deploy via GitHub Pages and verify

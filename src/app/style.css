@@ -12,8 +12,10 @@
 [data-theme="dark"] .preset-editor,[data-theme="dark"] .preset-card{background:#132538;border-color:#385066}
 [data-theme="dark"] .preset-card p,[data-theme="dark"] .preset-card ul{color:#adc2d4}[data-theme="dark"] .preset-success{color:#7be4b5}
 
-/* Visible PWA update prompt and shortcut to reusable cutlist presets */
+/* Visible PWA update prompt and a short jump to saved cutlist presets. */
 .update-notice{display:flex;align-items:center;flex-wrap:wrap;gap:10px;padding:12px 14px;margin:10px 0;border:1px solid #aec9de;border-radius:10px;background:#eaf4fc;color:#163c5a}
 .update-notice span{flex:1;min-width:200px}.part-heading-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 #presets{scroll-margin-top:12px}
 [data-theme="dark"] .update-notice{background:#163450;border-color:#436e8e;color:#e3f3ff}
+.preset-category-editor {display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin:12px 0}
+.preset-category-editor .field {flex:1;min-width:180px}

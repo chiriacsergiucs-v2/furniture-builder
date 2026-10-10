@@ -1,25 +1,31 @@
 # Furniture Builder — Mobila Cutlist Optimizer
 
-Prototype of a mobile-first, offline-oriented furniture panel cutting optimizer using React, TypeScript, Vite and a Web Worker. Source files and docs track `chiriacsergiucs-v2/furniture-builder` and GitHub Pages base `/furniture-builder/`.
+Offline-first prototype of a mobile-first, offline-oriented furniture panel cutting optimizer using React, TypeScript, Vite and a Web Worker. Source files and docs track `chiriacsergiucs-v2/furniture-builder` and GitHub Pages base `/furniture-builder/`.
 
 ## Features implemented in source
 
-Project editor, PAL/MDF/custom materials, configurable sheets/quantities/trims, parts, grain, rotation, four-edge ABS, localStorage, version-1 JSON backups, CSV/XLSX generic import, SVG/print/PDF/CSV/XLSX exports, multi-restart heuristic guillotine optimizer and independent cut-tree validation.
+Project editor, PAL/MDF/custom materials, configurable sheets/quantities/trims, parts, grain, rotation, four-edge ABS, Dexie IndexedDB, version-1 JSON backups, CSV/XLSX generic import, SVG/print/PDF/CSV/XLSX exports, multi-restart heuristic guillotine optimizer and independent cut-tree validation.
 
-## Reusable cutlist presets
+## Offline Dexie database (v0.2)
 
-In a project editor, open **Presets**. Choose **Create preset**, name it (for example, Drawer top), add as many labeled cut items as needed, and save. Set how many complete sets to add, then choose **Add to project**. Parts are copied with new IDs and multiplied quantities; you can edit them independently. **Save project parts as preset** builds a preset from the current project cutlist. Material type, thickness, and finish must match a compatible project material; ambiguous or missing materials are reported without partial insertion. Presets are saved separately in browser localStorage, remain available across projects and reloads, and support JSON export/import. They are not part of individual project JSON backups.
+Projects, reusable cutlist presets, preset categories, kits, library materials and revisions live in IndexedDB, using Dexie 4.2.x. No cloud service or account is required. Projects still embed material specifications so an old cutlist remains reproducible when the library changes.
+
+On first load, valid legacy `mobila-cutlist:project:<id>` and `mobila-cutlist:presets:v1` records are copied into an atomic Dexie transaction. Existing IndexedDB records take precedence, no legacy keys are erased, malformed legacy records remain untouched, and a migration marker prevents duplicate migrations. IndexedDB open/write errors are surfaced rather than silently losing data. Project and preset JSON backup/restore remain compatible with v1; Settings adds complete database JSON export and non-destructive merge restore.
+
+In an open project, choose **Presets** to create a named multi-part template, optionally create categories (such as Drawers), save the preset and insert it into another project. IndexedDB is still local to each browser origin: users should export backups before clearing browser storage or changing devices.
+
+Database schema versions are declared in `src/db/database.ts`. The backup version is separate from the IndexedDB schema version, and schema upgrades must preserve old records. Revisions are append-only snapshots of meaningful project/preset/kit/category changes.
 
 ## Development
 
-Node >=22 required. `npm install` then `npm run dev`, `npm run lint`, `npm run typecheck`, `npm run test:kernel`, `npm test`, `npm run build`, `npm run test:e2e`. No lockfile was generated in the sandbox because registry network access was blocked. Make and commit one before release, then switch CI/deploy to `npm ci`.
+Node >=22 required. `npm install` then `npm run dev`, `npm run lint`, `npm run typecheck`, `npm run test:kernel`, `npm test`, `npm run build`, `npm run test:e2e`. Use the committed package-lock.json; update it whenever dependencies change.
 
 Without dependencies the engine test can run with `npm run test:kernel` (Node built-in test runner and strip-types).
 
 ## State and resumption
 
-Read `docs/progress.json`, `docs/handoff.md`, `docs/verification-log.md`, `AGENTS.md` and `CUTLIST_OPTIMIZER_RESUMABLE_BUILD_PROMPT_v2.md`. **Source is a prototype; production verification is incomplete.** Full UI build, Android/PWA offline tests, and Pages deployment have not been confirmed.
+Read `docs/progress.json`, `docs/handoff.md`, `docs/verification-log.md`, `AGENTS.md` and `CUTLIST_OPTIMIZER_RESUMABLE_BUILD_PROMPT_v2.md`. **Release acceptance depends on current GitHub Actions and browser tests.** Check actual run URLs before claiming success.
 
 ## Privacy and licensing
 
-MIT-licensed application source. No backend/database/accounts/remote optimization, and no data leaves the browser during application use. Validate exact fabrication constraints and dimensions before cutting. Third-party licence inventory pending dependency audit.
+MIT-licensed application source. No backend/server database/accounts/remote optimization, and no data leaves the browser during application use. Validate exact fabrication constraints and dimensions before cutting. Third-party licence inventory pending dependency audit.

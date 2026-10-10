@@ -1,30 +1,17 @@
-# Resumption handoff — 2026-10-10
+# Resumable implementation handoff — Dexie milestone
 
-## Repository
-`chiriacsergiucs-v2/furniture-builder`, private, initially empty. Owner confirmed by the user. Default branch `main` and write access confirmed; a README and initial agent files were committed through the GitHub connector. **Do not push to `mobila-cutlist` or `ai-config`.**
+## Current milestone
+Target repo `chiriacsergiucs-v2/furniture-builder` on `main`. Legacy localStorage records must never be deleted. New `src/db` contains Dexie schema v1/v2, migration, repositories and JSON backup. UI project/preset storage has been converted to async operations. A change to package dependencies requires refreshing `package-lock.json` via GitHub Actions.
 
-## Local source
-Application prototype in this project. See root `CUTLIST_OPTIMIZER_RESUMABLE_BUILD_PROMPT_v2.md` for original requirements and checkpoint protocol.
+## Key recovery checks
+1. Inspect `docs/progress.json` and the HEAD commit SHA.
+2. Verify lockfile matches `package.json` before running `npm ci`.
+3. Run lint, typecheck, Vitest, kernel tests, Playwright (mobile, presets, offline, migration) and build.
+4. Do not mark Pages or offline accepted until workflow and live site evidence exists.
+5. Validate browser migration with existing real localStorage without removing keys.
 
-## Evidence
-- Node 22.16 available; no npm packages installed locally.
-- `node --experimental-strip-types --test tests/engine.node.test.mjs` passed 19/19 (12 engine cases including 200 fuzz cases + 7 CSV/SVG/persistence/validator integration cases) after validation fixes.
-- Full dependency install timed out because sandbox cannot access npm registry.
-- Full TypeScript/Vite build, Vitest, Playwright and live Pages deployment have **not** been run or verified.
-- Generic XLSX parser/serializer written but untested against actual workbook due missing ExcelJS install.
-- Regency adapter is deliberately not fabricated; original workbook unavailable.
+## Data safety
+Dexie database `mobila-cutlist-build-kit`; `migration:localStorage:v1` commits atomically with data; no legacy deletion. Original project/preset backup formats stay readable. Full DB JSON export/import is a non-destructive merge. Schema upgrades keep v1 + v2 declarations.
 
-## Changes during last batch
-- Updated Vite base, PWA manifest scope, Playwright URL and HTML favicon to `/furniture-builder/`.
-- Added hash route with project ID to restore selected saved project after browser refresh.
-- Made theme storage initialization resilient to disabled localStorage.
-- Hardened sheet trim and source ID validation, plus stored corrupted-result recovery.
-- Expanded independent cut-tree validator to check aggregate area/statistic consistency and offcut shapes.
-- Temporarily used `npm install` in CI pending a lockfile; revert to `npm ci` when generated.
-
-## Immediate next tasks
-1. Ensure all local source files are committed to `furniture-builder` as individual files (not just documentation); compare manifests before marking sync done.
-2. Fetch dependencies on network-enabled environment. Generate and commit `package-lock.json` using `npm install`, switch CI to `npm ci`.
-3. Run complete verification sequence and fix errors; don't claim unrun tests passed.
-4. Inspect GitHub Pages settings for private repository eligibility and enable Actions deploy if allowed.
-5. Import real `SABLON DEBITARE NOU.xlsx` when provided; implement Regency mapping only after inspection.
+## Remaining watch-outs
+Unknown third-party device browser quota/eviction; kit editing UI and full category trees not yet present. Regency sheet template still unavailable. No remote sync.

@@ -12,10 +12,13 @@ test('create, optimize, persist and reload on desktop and Android viewports',asy
   throw error
  })
  await expect(page.getByText('Stock sheets',{exact:true}).first()).toBeVisible()
- await expect.poll(async()=>page.evaluate(()=>Object.keys(localStorage).some(key=>{
-  if(!key.startsWith('mobila-cutlist:project:'))return false
-  try{return Boolean(JSON.parse(localStorage.getItem(key)??'null')?.lastResult)}catch{return false}
- }))).toBe(true)
+ await expect.poll(async()=>page.evaluate(async()=>{
+  const r=indexedDB.open('mobila-cutlist-build-kit')
+  const database=await new Promise<IDBDatabase>((resolve,reject)=>{r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})
+  const tx=database.transaction('projects','readonly'),request=tx.objectStore('projects').getAll()
+  const projects=await new Promise<Array<{lastResult?:unknown}>>((resolve,reject)=>{request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error)})
+  database.close();return projects.some(p=>Boolean(p.lastResult))
+ })).toBe(true)
  await page.reload()
  await expect(page.getByRole('heading',{name:'Optimization results'})).toBeVisible()
 })

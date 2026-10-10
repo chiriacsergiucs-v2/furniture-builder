@@ -1,3 +1,4 @@
+import 'fake-indexeddb/auto'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {createProject,emptyTrim} from '../src/engine/types.ts'
@@ -34,9 +35,11 @@ test('SVG escapes user labels and draws validated cut tree',()=>{
  const p=projectFixture(),r=optimizeProject(p);assert.deepEqual(validateResult(p,r),[]);
  const svg=cuttingSvg(r.boards[0],p);assert.ok(svg.includes('&lt;inner&gt;'));assert.ok(svg.includes('&amp;'));assert.ok(!svg.includes('<inner>'))
 })
-test('JSON persistence survives reopening, restoring and rejects corruption',()=>{
- const data=new Map();globalThis.window={localStorage:{getItem:k=>data.get(k)??null,setItem:(k,v)=>data.set(k,String(v)),removeItem:k=>data.delete(k)}};
- const p=projectFixture(),saved=saveProject(p);assert.equal(listProjects().length,1);assert.equal(listProjects()[0].id,saved.id);
- const json=backupProject(p);assert.throws(()=>restoreProject(json));const restored=restoreProject(json,true);assert.equal(restored.id,p.id);
- const invalidResult={junk:4};data.set('mobila-cutlist:project:'+p.id,JSON.stringify({...p,lastResult:invalidResult}));assert.equal(listProjects().length,1);assert.equal(listProjects()[0].lastResult,undefined)
+test('JSON project backup survives Dexie reopening and rejects corruption',async()=>{
+ const p=projectFixture(),saved=await saveProject(p)
+ const entries=await listProjects();assert.equal(entries.length,1);assert.equal(entries[0].id,saved.id)
+ const json=backupProject(p)
+ await assert.rejects(()=>restoreProject(json),/already exists/)
+ const restored=await restoreProject(json,true);assert.equal(restored.id,p.id)
+ assert.equal((await listProjects())[0].parts[0].label,p.parts[0].label)
 })
