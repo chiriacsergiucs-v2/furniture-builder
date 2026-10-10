@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import {createProject,emptyAbs,emptyTrim} from '../src/engine/types.ts'
+import {createProject,emptyTrim} from '../src/engine/types.ts'
 import {optimizeProject} from '../src/engine/optimize.ts'
 import {validateResult} from '../src/engine/validate.ts'
 import {validateProject} from '../src/engine/schema.ts'
