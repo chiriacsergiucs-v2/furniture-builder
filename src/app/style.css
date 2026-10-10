@@ -35,3 +35,11 @@
 .panel3d-legend button{font-size:12px;min-height:34px;padding:5px 8px}
 .panel3d-legend button[aria-pressed="true"]{background:#22598a;color:#fff}
 @media(max-width:660px){.panel3d-canvas{height:310px}.reorder-item button{padding:6px 9px}}
+
+/* Assembly editor: independent panel transforms, mobile-sized gizmo controls */
+.assembly-editor{display:grid;gap:14px}
+.assembly-canvas{height:470px;touch-action:none}
+.assembly-transform{display:grid;gap:9px;padding:12px;border:1px solid #b7c9d7;border-radius:10px;background:#f8fbfc}
+.assembly-transform .form-grid{grid-template-columns:repeat(3,minmax(70px,1fr))}
+.assembly-transform .danger{justify-self:start}
+@media(max-width:660px){.assembly-canvas{height:350px}.assembly-transform .form-grid{gap:8px}}

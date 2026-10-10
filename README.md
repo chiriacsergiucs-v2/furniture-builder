@@ -21,6 +21,11 @@ The editor offers a lazy-loaded **Panel preview in 3D** based on `three` and `@r
 
 The **Reorder cutlist parts** control uses dnd-kit with mouse, touch, keyboard, and explicit up/down buttons. The order persists in Dexie with the project and does not replace the optimizer's own placement heuristics. Neither feature changes the existing JSON backup schema or 2D guillotine validator.
 
+## Positioned 3D drawer assemblies and Fusion 360 (v0.4)
+The project editor supports individually movable and rotatable panel instances saved in the project JSON/IndexedDB. Use **+ 40 × 30 cm Drawer** to add 4 cutlist rows and five solid panels: two 300 × 250 mm sides, a 300 × 250 mm back, a 300 × 250 mm inner front, and a 400 × 300 mm visible Front Main. PAL 18 mm gives a 336 × 300 × 250 mm drawer body and 2 mm space before the main front. **Drawers** category and starter kit are seeded once, without overwriting user presets. No bottom panel, slides, fixings or joinery are specified; the example does not constitute a finished production design.
+
+A 3D transform gizmo and accessible numerical inputs edit XYZ positions (mm) and XYZ rotations (degrees) per panel instance, independently from the 2D cut plan. **Export Fusion 360 Python** creates separately editable direct-model B-rep solids from the exact transforms using Autodesk Fusion Scripts and Add-Ins. This is not an F3D or STEP file; use Fusion to save/export afterwards. Execution in Autodesk Fusion itself is not part of browser tests.
+
 ## Development
 
 Node >=22 required. `npm install` then `npm run dev`, `npm run lint`, `npm run typecheck`, `npm run test:kernel`, `npm test`, `npm run build`, `npm run test:e2e`. Use the committed package-lock.json; update it whenever dependencies change.

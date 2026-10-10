@@ -166,5 +166,16 @@
       "deployment": "pass_38038577305"
     },
     "notes": "Local 3D panel preview is not assembly geometry; cut tree remains the source of truth. WebGL fallback and accessible legend implemented. Physical Android GPU not checked."
+  },
+  "assemblyMilestone": {
+    "status": "implemented_verification_pending",
+    "features": [
+      "3D translation/rotation gizmo",
+      "numerical XYZ in mm/degrees",
+      "5-panel drawer example",
+      "Drawers default category/preset/kit",
+      "Fusion Python native solid components"
+    ],
+    "notes": "No bottom, fixings or slides in example; project.schemaVersion remains 1; physical Fusion execution unverified"
   }
 }
