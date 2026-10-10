@@ -1,0 +1,12 @@
+node_modules/
+dist/
+coverage/
+playwright-report/
+test-results/
+.env*
+!.env.example
+*.xlsx
+*.xls
+*.csv
+*.backup.json
+.DS_Store

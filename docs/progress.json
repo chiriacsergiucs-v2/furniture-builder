@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 1,
+  "project": "Mobila Cutlist Optimizer",
+  "repository": "chiriacsergiucs-v2/furniture-builder",
+  "defaultBranch": "main",
+  "baseUrl": "/furniture-builder/",
+  "status": "in_progress",
+  "currentStep": "STEP_00",
+  "sourceOfTruth": "Checked-in project files and executed test evidence; update after each change",
+  "milestones": [
+    {
+      "id": "STEP_00",
+      "title": "Repository and dependency audit",
+      "status": "pending",
+      "notes": "Audit incomplete"
+    },
+    {
+      "id": "STEP_01",
+      "title": "Bootstrap application",
+      "status": "implemented_unverified",
+      "notes": "Requires dependency install and/or further tests"
+    },
+    {
+      "id": "STEP_02",
+      "title": "Manufacturing data model",
+      "status": "verified_partial",
+      "notes": "Local standalone geometry tests passed, production acceptance pending"
+    },
+    {
+      "id": "STEP_03",
+      "title": "localStorage persistence",
+      "status": "implemented_unverified",
+      "notes": "Requires dependency install and/or further tests"
+    },
+    {
+      "id": "STEP_04",
+      "title": "Project editor",
+      "status": "implemented_unverified",
+      "notes": "Requires dependency install and/or further tests"
+    },
+    {
+      "id": "STEP_05",
+      "title": "Guillotine optimization engine",
+      "status": "verified_partial",
+      "notes": "Local standalone geometry tests passed, production acceptance pending"
+    },
+    {
+      "id": "STEP_06",
+      "title": "Cutting validation and test suite",
+      "status": "verified_partial",
+      "notes": "Local standalone geometry tests passed, production acceptance pending"
+    },
+    {
+      "id": "STEP_07",
+      "title": "Interactive cutting diagrams",
+      "status": "implemented_unverified",
+      "notes": "Requires dependency install and/or further tests"
+    },
+    {
+      "id": "STEP_08",
+      "title": "Statistics and material calculations",
+      "status": "implemented_unverified",
+      "notes": "Requires dependency install and/or further tests"
+    },
+    {
+      "id": "STEP_09",
+      "title": "Import and export",
+      "status": "implemented_unverified",
+      "notes": "Requires dependency install and/or further tests"
+    },
+    {
+      "id": "STEP_10",
+      "title": "PWA and offline functionality",
+      "status": "implemented_unverified",
+      "notes": "Requires dependency install and/or further tests"
+    },
+    {
+      "id": "STEP_11",
+      "title": "GitHub Pages and CI/CD",
+      "status": "implemented_unverified",
+      "notes": "Requires dependency install and/or further tests"
+    },
+    {
+      "id": "STEP_12",
+      "title": "User experience and resilience",
+      "status": "implemented_unverified",
+      "notes": "Requires dependency install and/or further tests"
+    },
+    {
+      "id": "STEP_13",
+      "title": "End-to-end verification",
+      "status": "pending",
+      "notes": ""
+    },
+    {
+      "id": "STEP_14",
+      "title": "Release and documentation",
+      "status": "pending",
+      "notes": ""
+    }
+  ],
+  "gates": {
+    "G1": "pending_full_verification",
+    "G2": "pending_full_verification",
+    "G3": "pending_full_verification",
+    "G4": "pending_full_verification",
+    "G5": "pending_full_verification",
+    "G6": "pending_full_verification",
+    "G7": "pending_full_verification",
+    "G8": "pending_full_verification",
+    "G9": "pending_full_verification",
+    "G10": "pending_full_verification"
+  },
+  "verified": {
+    "runtime": "Node v22.16.0",
+    "kernel": "12/12 passed; 200 seeded randomized scenarios in case 12",
+    "frameworkBuild": "not_run: npm registry inaccessible",
+    "e2e": "not_run",
+    "pwaOffline": "not_run",
+    "githubPages": "not_verified"
+  },
+  "externalBlockers": [
+    "npm dependencies unavailable from sandbox network; lockfile missing",
+    "GitHub Pages settings and private-repository eligibility not verified",
+    "Original Regency template SABLON DEBITARE NOU.xlsx unavailable"
+  ],
+  "nextAction": "Make full source available in furniture-builder, install dependencies, generate lockfile, run lint/typecheck/unit/build/e2e and fix findings.",
+  "lastEvidence": "node --experimental-strip-types --test tests/engine.node.test.mjs"
+}

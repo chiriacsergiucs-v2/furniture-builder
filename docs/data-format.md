@@ -1,0 +1,3 @@
+# Data format
+
+All board/part/cut dimensions are integer millimetres. JSON backup: schemaVersion 1, project/material/sheet/offcut/parts/settings, omitting previous optimization results for portability. Do not silently migrate a material or thickness. CSV parts header: `Name,Width_mm,Height_mm,Quantity,Material_ID,Rotate,Grain,ABS_Top,ABS_Right,ABS_Bottom,ABS_Left,Group,Notes`. CSV placement export includes board, stock, material, part ID, instance, x/y, width/height, rotated. Quoted RFC4180 cells, CRLF output, spreadsheet formula-escaping. Generic XLSX adapter detects known English/Romanian column names. Regency template layout deliberately remains unimplemented until original workbook is inspected.

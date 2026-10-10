@@ -9,4 +9,4 @@ No backend, database, remote API, accounts, external scripts or data upload. Sto
 `npm install` (must create package-lock on networked machine); `npm run test:kernel`; `npm run typecheck`; `npm test`; `npm run build`; `npm run test:e2e`. `npm run test:kernel` is runnable using only Node 22 with TypeScript stripping, even before installing npm dependencies. Gate on actual command results.
 
 ## Git safety
-Target **only** `chiriacsergiucs-v2/furniture-builder` after its creation; confirm ownership and branch before pushing. Never modify unrelated `mobila-cutlist` or `ai-config`. Do not check in customer cutlists/backups or original template workbooks. Avoid force pushes, automated overwrite, and deleted localStorage records.
+Target **only** `chiriacsergiucs-v2/furniture-builder`; confirm ownership and branch before pushing. Never modify unrelated `mobila-cutlist` or `ai-config`. Do not check in customer cutlists/backups or original template workbooks. Avoid force pushes, automated overwrite, and deleted localStorage records.

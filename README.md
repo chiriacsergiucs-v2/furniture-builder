@@ -1,22 +1,21 @@
 # Furniture Builder — Mobila Cutlist Optimizer
 
-Mobile-first, client-side 2D guillotine cutting optimizer for PAL, MDF, plywood and configurable stock sheets.
+Prototype of a mobile-first, offline-oriented furniture panel cutting optimizer using React, TypeScript, Vite and a Web Worker. Source files and docs track `chiriacsergiucs-v2/furniture-builder` and GitHub Pages base `/furniture-builder/`.
 
-## Project status (2026-10-10)
-Development in progress, not yet released. A TypeScript solver prototype was tested locally with **12/12 standalone tests passing** (including 200 fuzz cases). React/TypeScript/Vite full build, browser E2E, offline/PWA and GitHub Pages are **not yet verified**. The build environment could not download npm dependencies.
+## Features implemented in source
 
-## Architecture
-- React + TypeScript + Vite; localStorage; Web Worker; SVG diagrams.
-- No backend, database, account registration or cloud data transfer.
-- Coordinates and panel dimensions in integer mm.
-- Recursive guillotine cut-tree checked by an independent validator.
-- Data exports: JSON, CSV, SVG, browser print/PDF, generic XLSX (lazy ExcelJS).
-- Regency workbook adapter awaits original `SABLON DEBITARE NOU.xlsx`.
+Project editor, PAL/MDF/custom materials, configurable sheets/quantities/trims, parts, grain, rotation, four-edge ABS, localStorage, version-1 JSON backups, CSV/XLSX generic import, SVG/print/PDF/CSV/XLSX exports, multi-restart heuristic guillotine optimizer and independent cut-tree validation.
 
-## Deployment
-Target URL after deployment: https://chiriacsergiucs-v2.github.io/furniture-builder/
+## Development
 
-The repository is presently private. GitHub Pages availability for this private repository depends on account/repository settings. Do not claim a live deployment until verified.
+Node >=22 required. `npm install` then `npm run dev`, `npm run lint`, `npm run typecheck`, `npm run test:kernel`, `npm test`, `npm run build`, `npm run test:e2e`. No lockfile was generated in the sandbox because registry network access was blocked. Make and commit one before release, then switch CI/deploy to `npm ci`.
 
-## Resumption
-Read `docs/progress.json`, `docs/handoff.md`, then `AGENTS.md` before continuing.
+Without dependencies the engine test can run with `npm run test:kernel` (Node built-in test runner and strip-types).
+
+## State and resumption
+
+Read `docs/progress.json`, `docs/handoff.md`, `docs/verification-log.md`, `AGENTS.md` and `CUTLIST_OPTIMIZER_RESUMABLE_BUILD_PROMPT_v2.md`. **Source is a prototype; production verification is incomplete.** Full UI build, Android/PWA offline tests, and Pages deployment have not been confirmed.
+
+## Privacy and licensing
+
+MIT-licensed application source. No backend/database/accounts/remote optimization, and no data leaves the browser during application use. Validate exact fabrication constraints and dimensions before cutting. Third-party licence inventory pending dependency audit.
