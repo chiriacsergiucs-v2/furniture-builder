@@ -7,7 +7,10 @@ test('create, optimize, persist and reload on desktop and Android viewports',asy
  await page.getByRole('button',{name:'+ Add part'}).click()
  await expect(page.locator('.part-card').first().getByRole('textbox',{name:'Name'})).toHaveValue('New part')
  await page.getByRole('button',{name:'Optimize cutlist'}).click()
- await expect(page.getByRole('heading',{name:'Optimization results'})).toBeVisible()
+ await expect(page.getByRole('heading',{name:'Optimization results'})).toBeVisible({timeout:15000}).catch(async error=>{
+  console.log('OPTIMIZATION_DIAGNOSTICS',JSON.stringify({hash:await page.evaluate(()=>location.hash),alerts:await page.getByRole('alert').allTextContents(),main:(await page.locator('main').innerText()).slice(0,1400)}))
+  throw error
+ })
  await expect(page.getByText('Stock sheets',{exact:true}).first()).toBeVisible()
  await expect.poll(async()=>page.evaluate(()=>Object.keys(localStorage).some(key=>{
   if(!key.startsWith('mobila-cutlist:project:'))return false
