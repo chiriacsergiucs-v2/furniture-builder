@@ -9,7 +9,7 @@ export interface PresetItem {
  notes?:string
 }
 export interface CutlistPreset {
- schemaVersion:1; id:string; label:string; items:PresetItem[]
+ schemaVersion:1; id:string; label:string; categoryId?:string; items:PresetItem[]
  createdAt:string; updatedAt:string
 }
 const sides=['top','right','bottom','left'] as const
