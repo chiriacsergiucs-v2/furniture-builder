@@ -31,7 +31,7 @@ export function parseBuildKitBackup(json:string):BuildKitBackup{
 }
 export async function exportDatabaseBackup():Promise<string>{
  await initializeStorage()
- const collections=await db.transaction('r',db.projects,db.presetCategories,db.presets,db.kits,db.materials,db.revisions,async()=>({
+ const collections=await db.transaction('r',[db.projects,db.presetCategories,db.presets,db.kits,db.materials,db.revisions],async()=>({
   projects:await db.projects.toArray(),presetCategories:await db.presetCategories.toArray(),
   presets:await db.presets.toArray(),kits:await db.kits.toArray(),
   materials:await db.materials.toArray(),revisions:await db.revisions.toArray()
@@ -49,7 +49,7 @@ export async function importDatabaseBackup(json:string):Promise<{imported:Record
  const allCategoryIds=new Set([...existingCategoryIds,...c.presetCategories.map(x=>x.id),UNCATEGORIZED_ID])
  for(const p of c.presets)if(!allCategoryIds.has(p.categoryId))throw Error('Backup preset category missing: '+p.categoryId)
  for(const k of c.kits)if(!allCategoryIds.has(k.categoryId))throw Error('Backup kit category missing: '+k.categoryId)
- await db.transaction('rw',db.projects,db.presetCategories,db.presets,db.kits,db.materials,db.revisions,db.metadata,async()=>{
+ await db.transaction('rw',[db.projects,db.presetCategories,db.presets,db.kits,db.materials,db.revisions,db.metadata],async()=>{
   if(!await db.presetCategories.get(UNCATEGORIZED_ID))await db.presetCategories.put(defaultCategory())
   const merge=async <T>(name:string,table:Table<T,string>,rows:T[],getId:(item:T)=>string)=>{
    imported[name]=0;skipped[name]=0

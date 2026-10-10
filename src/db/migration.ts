@@ -64,7 +64,7 @@ export async function migrateLocalStorage(database:FurnitureDatabase=defaultDb,s
  const report:MigrationReport={status:'completed',projects:0,presets:0,skipped:snapshot.skipped,warnings:snapshot.warnings,completedAt:now(),sourceKeysPreserved:true}
  // Entire transfer and completion marker are one atomic IndexedDB transaction.
  // Existing Dexie records always win. On failure, all partial writes roll back.
- await database.transaction('rw',database.projects,database.presets,database.presetCategories,database.materials,database.metadata,async()=>{
+ await database.transaction('rw',[database.projects,database.presets,database.presetCategories,database.materials,database.metadata],async()=>{
   if(await database.metadata.get(MIGRATION_KEY))return
   if(!await database.presetCategories.get(UNCATEGORIZED_ID))await database.presetCategories.put(defaultCategory())
   for(const project of snapshot.projects){

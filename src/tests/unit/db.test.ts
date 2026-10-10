@@ -15,7 +15,7 @@ function fakeStorage(items:Record<string,string>):Storage{
 const temporary:FurnitureDatabase[]=[]
 beforeEach(async()=>{
  await db.open()
- await db.transaction('rw',db.projects,db.presets,db.presetCategories,db.kits,db.materials,db.revisions,db.metadata,async()=>{
+ await db.transaction('rw',[db.projects,db.presets,db.presetCategories,db.kits,db.materials,db.revisions,db.metadata],async()=>{
   for(const table of [db.projects,db.presets,db.presetCategories,db.kits,db.materials,db.revisions,db.metadata])await table.clear()
   await db.metadata.put({key:MIGRATION_KEY,value:{status:'completed',projects:0,presets:0,skipped:0,warnings:[],completedAt:'',sourceKeysPreserved:true},updatedAt:''})
   await db.presetCategories.put({schemaVersion:1,id:UNCATEGORIZED_ID,name:'Uncategorized',parentId:null,sortOrder:0,createdAt:'',updatedAt:''})
