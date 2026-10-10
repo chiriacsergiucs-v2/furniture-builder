@@ -1,3 +1,4 @@
+import type {ProjectAssembly} from '../assembly/model.ts'
 export type Mm = number // validated positive/zero integer millimetres only
 export type GrainAxis = 'none' | 'x' | 'y'
 export type MaterialType = 'PAL' | 'MDF' | 'plywood' | 'custom'
@@ -10,7 +11,7 @@ export interface Offcut {id:string; materialId:string; thickness:Mm; width:Mm; h
 export interface Part {id:string; label:string; width:Mm; height:Mm; quantity:number; materialId:string; rotationAllowed:boolean; grain:GrainAxis; abs:EdgeBanding; group?:string; notes?:string}
 export type Heuristic = 'area' | 'short' | 'long'
 export interface OptimizationSettings {kerf:Mm; rotationAllowed:boolean; maxDurationMs:number; maxRestarts:number; minOffcutWidth:Mm; minOffcutHeight:Mm; minOffcutArea:number; seed:number}
-export interface Project {schemaVersion:1; id:string; name:string; description:string; createdAt:string; updatedAt:string; materials:Material[]; sheets:StockSheet[]; offcuts:Offcut[]; parts:Part[]; settings:OptimizationSettings; lastResult?:OptimizationResult}
+export interface Project {schemaVersion:1; id:string; name:string; description:string; createdAt:string; updatedAt:string; materials:Material[]; sheets:StockSheet[]; offcuts:Offcut[]; parts:Part[]; assemblies?:ProjectAssembly[]; settings:OptimizationSettings; lastResult?:OptimizationResult}
 export type CutTree = {kind:'part';rect:Rect; instanceId:string} | {kind:'waste';rect:Rect;id:string} | {kind:'cut';rect:Rect; orientation:'vertical'|'horizontal'; at:Mm;kerf:Mm; first:CutTree;second:CutTree}
 export interface Placement {instanceId:string; partId:string; x:Mm; y:Mm; width:Mm; height:Mm; rotated:boolean}
 export interface BoardLayout {id:string; stockId:string; source:'stock'|'offcut'; materialId:string; thickness:Mm; grain:GrainAxis; width:Mm;height:Mm;trim:StockSheet['trim'];usable:Rect;tree:CutTree;placements:Placement[]}
