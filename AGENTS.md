@@ -38,3 +38,10 @@ Only modify `chiriacsergiucs-v2/furniture-builder`; verify target and branch. Ne
 - Do not merge/deploy/publish changes until the chosen minimum verification passes; distinguish a pushed branch/PR from a published application.
 - After **every** implementation or repository-publication iteration, end the user response with a **Skipped this iteration** section naming consciously deferred work (including E2E, extra tests, documentation, deployment and polish as applicable). If nothing was skipped, explicitly say so.
 - Only expand this scope when the user explicitly authorizes a later milestone or when an unplanned change is essential for correctness/data safety.
+
+## Modular furniture engine — canonical roadmap (2026-10-11)
+- Read `docs/modular-engine-backlog.md` before every furniture configurator/component/template change. Treat its named statuses as the initiative's canonical implementation ledger; never mark a planned feature Done solely because a UI card or mock exists.
+- **EDC** means Explore → Doubt → Compare: consider viable approaches, identify assumptions/failure modes, compare their tradeoffs, then recommend/execute the smallest accepted milestone.
+- Preserve modularity lessons from IKEA and other systems separately from evaluation of their physical construction quality. Focus on the reusable configuration **brain** first; appearance, detailed material thickness decisions, advanced hardware and polishing are deferred unless explicitly requested. Material thickness remains a parameter.
+- Every **repo/code iteration** must update the ledger if functionality or status changes, and every final repo/code answer must include a table showing **Done / Partially done / Not done / Dropped** for the ledger's B-IDs. Use stable IDs, record evidence for status changes, and state the next checkpoint.
+- Include the `Skipped this iteration` section as the final section of the response. No new E2E tests or nonessential work by default before MVP.
