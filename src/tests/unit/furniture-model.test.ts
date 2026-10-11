@@ -80,6 +80,24 @@ describe('Manufacturing and rendered geometry parity B16/B17/B21/B28',()=>{
    }
   }
  })
+ it('keeps standalone drawer 3D solids consistent with manufactured panel extents',()=>{
+  const project=createProject(),material=project.materials[0]
+  for(const front of ['applied','lowered','none'] as const){
+   const spec={...drawerDefaults(material.id),front}
+   const expected=drawerPanels(spec,material)
+   const built=createDrawerForProject(project,spec)
+   const model=deriveFurnitureModel({...project,parts:built.parts,assemblies:built.assemblies},
+    built.assemblies[0])
+   expect(model.diagnostics).toEqual([])
+   expect(model.solids.length).toBe(expected.length)
+   for(let i=0;i<expected.length;i++){
+    const solid=model.solids[i],box=expected[i]
+    const spans=worldExtents(solid.part.width,solid.part.height,
+     solid.material.thickness,solid.instance.rotationDeg)
+    close(spans[0],box.dx);close(spans[1],box.dz);close(spans[2],box.dy)
+   }
+  }
+ })
  it('keeps two copies independently editable and serializable without migrating legacy documents',()=>{
   const project=createProject(),material=project.materials[0]
   const spec=initialSpecForTemplate('chest-3-drawer',material.id)
