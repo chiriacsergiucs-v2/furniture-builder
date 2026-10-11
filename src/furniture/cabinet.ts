@@ -75,7 +75,7 @@ function pieceFor(box:CabinetBox,part:Part,index:number,s:CabinetSpec,offset:num
   s.depth/2-box.y-box.dy/2
  ]
  return {id:crypto.randomUUID(),partId:part.id,instanceIndex:index,
-  positionMm:center,rotationDeg:box.role==='Side panel'?[90,0,90]:[90,0,0]}
+  positionMm:center,rotationDeg:box.role==='Side panel'?[0,90,90]:[90,0,0]}
 }
 export function createCabinetAssemblies(s:CabinetSpec,material:Material,parts:Part[],copies=1,existingCount=0):ProjectAssembly[]{
  const errors=cabinetErrors(s,material);if(errors.length)throw Error(errors.join(' '))
