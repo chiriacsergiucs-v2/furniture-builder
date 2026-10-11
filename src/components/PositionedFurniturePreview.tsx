@@ -4,7 +4,7 @@ import {BoxGeometry,EdgesGeometry,MathUtils} from 'three'
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js'
 import type {Project} from '../engine/types.ts'
 import type {ProjectAssembly} from '../assembly/model.ts'
-import {resolveAssembly} from '../assembly/model.ts'
+import {deriveFurnitureModel} from '../furniture/furniture-model.ts'
 
 function CameraControls({focus}:{focus:[number,number,number]}){
  const {camera,gl,invalidate}=useThree()
@@ -19,7 +19,7 @@ function CameraControls({focus}:{focus:[number,number,number]}){
  return null
 }
 export default function PositionedFurniturePreview({project,assembly}:{project:Project;assembly:ProjectAssembly}){
- const pieces=resolveAssembly(project,assembly)
+ const pieces=deriveFurnitureModel(project,assembly).solids
  const [supported]=useState(()=>{try{return Boolean(document.createElement('canvas').getContext('webgl2'))}catch{return false}})
  const focus=useMemo(():[number,number,number]=>{
   if(!pieces.length)return [0,0,0]
