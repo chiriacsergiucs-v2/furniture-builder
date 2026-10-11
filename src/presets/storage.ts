@@ -3,6 +3,7 @@ import {validatePreset} from './presets.ts'
 import {db,UNCATEGORIZED_ID,now} from '../db/database.ts'
 import type {StoredPreset,LibraryRevision} from '../db/database.ts'
 import {initializeStorage} from '../db/migration.ts'
+import {adaptLegacyPreset} from '../furniture/legacy-adapter.ts'
 
 function validateAll(values:unknown):CutlistPreset[]{
  if(!Array.isArray(values)||values.length>1000)throw Error('Invalid preset library (maximum 1000 presets)')
@@ -14,7 +15,7 @@ function validateAll(values:unknown):CutlistPreset[]{
  return values as CutlistPreset[]
 }
 const makeRevision=(p:StoredPreset,action:LibraryRevision['action']):LibraryRevision=>({schemaVersion:1,id:crypto.randomUUID(),entityType:'preset',entityId:p.id,action,createdAt:now(),snapshot:structuredClone(p)})
-export async function listPresets():Promise<StoredPreset[]>{await initializeStorage();return db.presets.orderBy('updatedAt').reverse().toArray()}
+export async function listPresets():Promise<StoredPreset[]>{await initializeStorage();return (await db.presets.orderBy('updatedAt').reverse().toArray()).map(adaptLegacyPreset)}
 export async function savePreset(preset:CutlistPreset):Promise<StoredPreset[]>{
  const errors=validatePreset(preset);if(errors.length)throw Error(errors.join('; '))
  await initializeStorage()
