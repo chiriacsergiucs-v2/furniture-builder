@@ -1,9 +1,9 @@
 # Modular Furniture Engine — EDC Architecture & Execution Backlog
 
 **Project:** `chiriacsergiucs-v2/furniture-builder`  
-**Backlog version:** 1.1 · 2026-10-11 · **Canonical status source for this initiative**  
+**Backlog version:** 1.2 · 2026-10-11 · **Canonical status source for this initiative**  
 **Implementation branch policy:** Work on `main` when explicitly requested. Preserve user data.  
-**Current iteration:** B05–B07 and reusable drawer components verified by PR #4 CI run 38113051014; deployment verification remains separate.
+**Current iteration:** B08–B14 completed as a coherent cabinet-composition milestone, with B15 retained as Done; PR #5 CI [38114434330](https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38114434330) passed lint, typecheck, kernel/unit tests, build and existing browser suite. GitHub Pages live-site validation is a separate release check.
 
 ## Mandate and frozen product decisions
 
@@ -240,13 +240,13 @@ Variants are **distinct construction/partition/operation recipes**, not renamed 
 | B05 | 5 | Named attachment slots | Done | `core/carcass` declares `interior.main` with shelf/drawer compatibility and max 20; child instances carry named slots. CI 38113051014 PASS |
 | B06 | 6 | Slot compatibility and cycle validation | Done | Resolution rejects incompatible slot children, duplicate IDs, unsupported definitions and capacity violations in this initial component scope. CI 38113051014 PASS |
 | B07 | 7 | OP01 Insert | Done | Pure `insertComponent()` validates types; cabinet wizard inserts real drawer children and regenerates assembled geometry and cutlist. CI 38113051014 PASS |
-| B08 | 8 | OP04 Repeat | Partially done | `cabinetBoxes` repeats equal shelves; not generic component repetition |
-| B09 | 9 | OP02 Replace | Not done | Swap shelf for drawer within same compartment |
-| B10 | 10 | OP03 Split | Not done | Create independently configurable child bays |
-| B11 | 11 | OP05 Connect | Not done | Attach two compatible furniture modules with transforms |
-| B12 | 12 | C01 generic reusable carcass | Partially done | `src/furniture/cabinet.ts` creates one fixed construction pattern |
-| B13 | 13 | C02/C03 shelf component | Partially done | Cabinet-specific shelf count/spacing, no independent definition or slot |
-| B14 | 14 | C04 compartment component | Not done | Parent opening not modeled as configurable child node |
+| B08 | 8 | OP04 Repeat | Done | `repeatComponents()` preserves stable indexed child identities, updates parent count and recomputes dependent dimensions. Cabinet wizard repeats shelves/drawers in both single and split bays; focused tests CI 38114434330 PASS |
+| B09 | 9 | OP02 Replace | Done | `replaceComponent()` performs immutable, compatible node substitution, updates parent shelf/drawer count, blocks mixed unpartitioned contents; bay selection replaces shelves with drawers. Tests CI 38114434330 PASS |
+| B10 | 10 | OP03 Split | Done | `splitCompartment()` creates two separately parameterized `core/compartment` children, vertical or horizontal divider and real cut parts; ratio, content kind and counts editable in wizard. Tests CI 38114434330 PASS |
+| B11 | 11 | OP05 Connect | Done | `connectModules()` validates two same-height/depth/thickness carcasses and right-docks module 2 via parent-width binding; complete connected 3D/cutlist and distinct panels. Scope: right-side two-module join only; arbitrary-direction docking deferred. CI 38114434330 PASS |
+| B12 | 12 | C01 generic reusable carcass | Done | The existing `core/carcass` definition now serves ordinary, split, and connected cabinet assemblies, with independently configured module sizes/contents; same generator, cutlist and 3D projections. CI 38114434330 PASS |
+| B13 | 13 | C02/C03 shelf component | Done | `core/shelf` reused directly and inside split compartments, repeated via `repeatComponents`; optional individually adjustable percent positions for unsplit shelves, with clear-gap constraints. Pin-drilling rules are deferred. CI 38114434330 PASS |
+| B14 | 14 | C04 compartment component | Done | `core/compartment` definition has independent width/height/x/z, contents slot and child parameter derivation. Two split bays generate correctly sized shelves/drawers and divider using parent changes. CI 38114434330 PASS |
 | B15 | 15 | C15 reusable drawer box | Done | `src/furniture/drawer.ts` builds side/back/inner-front/bottom plus optional applied front, opening-driven for standalone and cabinet components, independently editable. CI 38113051014 PASS |
 | B16 | 16 | C17 configurable drawer fronts | Partially done | Fixed starter front, no independent adaptable front |
 | B17 | 17 | One normalized 3D + cut-list + BOM model | Partially done | Cabinet builds matching boxes/parts, but no generic shared `FurnitureModel`/BOM |
@@ -280,10 +280,8 @@ Variants are **distinct construction/partition/operation recipes**, not renamed 
 **Iteration 2 completed (2026-10-11):** B05/B06/B07 implement the `interior.main` slot and the user's preferred configurable drawer as the first inserted child. C15 and the building-component UI are in place; generic repeat/replace/split remain separate checkpoints. CI 38113051014 PASS.
 
 Original proposal (superseded): B05/B06/B07 insert with a reusable shelf in the named slot.  
-**Iteration 3:** B08/B09 repeat and replace, including a reusable drawer box.  
-**Iteration 4:** B10 split compartments.  
-**Iteration 5:** B17 B19 B21 implement a chest from shared carcass+drawer components.  
-**Iteration 6:** B11 connect independent modules, test cross-template reuse.  
+**Iteration 3 completed (2026-10-11):** B08–B14, including repeat/replace, vertical or horizontal split bays, a right-docked second module, reusable carcass/adjustable shelf/compartment components. Verified by PR #5 CI 38114434330. B15 remains Done from the earlier reusable drawer milestone.
+**Next iteration recommended:** B16, B17, B19, B21 — independently configurable drawer fronts and a distinct chest-of-drawers template built from the same component definitions, with one normalized manufacturing assembly. B18/B20/B22/B23 can improve incrementally.\n**Scope limits:** Docking is limited to exactly two horizontally adjacent same-height/depth/thickness carcasses; no arbitrary 3D placement or joint engineering. Custom shelf positions describe location, not a verified shelf-pin hole pattern. Structural strength and hardware installation remain outside scope.  
 Later: B23-B24 additional families and dynamic variants; advanced fittings only on request.
 
 ### Definition of done for the first full vertical slice

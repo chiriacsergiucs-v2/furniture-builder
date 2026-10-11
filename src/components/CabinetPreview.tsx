@@ -3,6 +3,7 @@ import {Canvas,useThree} from '@react-three/fiber'
 import {BoxGeometry,EdgesGeometry} from 'three'
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js'
 import type {CabinetBox,CabinetSpec} from '../furniture/cabinet.ts'
+import {totalCabinetWidth} from '../furniture/cabinet.ts'
 
 function Orbit(){
  const {camera,gl,invalidate}=useThree()
@@ -24,7 +25,7 @@ function Board({item,spec}:{item:CabinetBox;spec:CabinetSpec}){
  useEffect(()=>()=>{geometry.dispose();edges.dispose()},[geometry,edges])
  const color=item.role==='Side panel'?'#bca98f':item.role==='Shelf'?'#97b9c9':'#cdbfa9'
  return <group position={[
-  (item.x+item.dx/2-spec.width/2)/1000,
+  (item.x+item.dx/2-totalCabinetWidth(spec)/2)/1000,
   (item.z+item.dz/2-spec.height/2)/1000,
   (spec.depth/2-item.y-item.dy/2)/1000
  ]}>
@@ -33,7 +34,7 @@ function Board({item,spec}:{item:CabinetBox;spec:CabinetSpec}){
  </group>
 }
 export default function CabinetPreview({spec,boxes}:{spec:CabinetSpec;boxes:CabinetBox[]}){
- const span=Math.max(spec.width,spec.height,spec.depth)/1000
+ const span=Math.max(totalCabinetWidth(spec),spec.height,spec.depth)/1000
  const can3d=typeof document!=='undefined'&&Boolean(document.createElement('canvas').getContext('webgl2'))
  if(!can3d)return <div className="cabinet-no-webgl">3D preview unavailable. Manufacturing dimensions and cut list remain accessible.</div>
  return <div className="cabinet-preview" role="img" aria-label="Orbitable 3D preview of configured cabinet">
