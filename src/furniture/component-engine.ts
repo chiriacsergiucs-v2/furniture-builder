@@ -48,7 +48,7 @@ const shelf:ComponentDefinition={
 }
 /** Extend with new component definitions, not template-specific sizing copies. */
 export const componentRegistry:ReadonlyMap<string,ComponentDefinition>=new Map(
- [carcass,shelf].map(def=>[def.id+'@'+def.version,def])
+ [carcass,shelf].map(def=>[def.id+'@'+def.version,def] as const)
 )
 export function getComponentDefinition(id:string,version:number):ComponentDefinition{
  const def=componentRegistry.get(id+'@'+version)
