@@ -89,8 +89,17 @@ const compartment:ComponentDefinition={
  }
 }
 const shelf:ComponentDefinition={id:'core/shelf',version:1,defaults:{},derive:()=>({})}
+const drawerFront:ComponentDefinition={
+ id:'core/drawer-front',version:1,defaults:{},
+ derive:p=>({
+  innerFrontHeight:p.bodyHeight-(p.variant===1?p.pullGap:0),
+  appliedFrontWidth:p.openingWidth-2*p.frontGap,
+  appliedFrontHeight:p.openingHeight-2*p.frontGap
+ })
+}
 const drawer:ComponentDefinition={
  id:'core/drawer',version:1,defaults:{},
+ slots:[{id:'front.main',accepts:['core/drawer-front'],max:1}],
  derive:p=>({
   bodyWidth:p.openingWidth-2*p.sideSpace,
   bodyHeight:p.openingHeight-p.upperClearance,
@@ -104,7 +113,7 @@ const moduleGroup:ComponentDefinition={
  derive:p=>({totalWidth:p.primaryWidth+p.secondaryWidth})
 }
 export const componentRegistry:ReadonlyMap<string,ComponentDefinition>=new Map(
- [box,compartment,shelf,drawer,moduleGroup].map(def=>[def.id+'@'+def.version,def] as const)
+ [box,compartment,shelf,drawerFront,drawer,moduleGroup].map(def=>[def.id+'@'+def.version,def] as const)
 )
 export function getComponentDefinition(id:string,version:number):ComponentDefinition{
  const result=componentRegistry.get(id+'@'+version)
@@ -199,16 +208,29 @@ export function createDrawerComponentTree(spec:DrawerSpec,thickness:number,previ
  const compatible=previous?.definitionId==='core/drawer'&&previous.definitionVersion===1
  const sideSpace=spec.runner==='accuride-3832'?13:spec.runner==='blum-movento'?21:
   spec.runner==='none'?1:spec.customSideClearance
+ const oldFront=compatible?priorChildren(previous).find(child=>child.definitionId==='core/drawer-front'):undefined
  return {
   id:compatible&&previous?previous.id:crypto.randomUUID(),
   definitionId:'core/drawer',definitionVersion:1,
-  template:{id:'drawer-unit',version:1},children:[],
+  template:{id:'drawer-unit',version:1},
   params:{
    openingWidth:spec.openingWidth,openingHeight:spec.openingHeight,
    openingDepth:spec.openingDepth,thickness,sideSpace,runnerLength:spec.runnerLength,
    rearClearance:spec.rearClearance,upperClearance:spec.upperClearance,
    underMount:spec.runner==='blum-movento'?1:0,hasRunners:spec.runner==='none'?0:1
-  }
+  },
+  children:[{
+   id:oldFront?.id??crypto.randomUUID(),slot:'front.main',
+   definitionId:'core/drawer-front',definitionVersion:1,
+   params:{variant:spec.front==='lowered'?1:spec.front==='applied'?2:0,
+    frontGap:spec.frontGap,pullGap:spec.pullGap},
+   bindings:{
+    bodyHeight:{parentKey:'bodyHeight'},
+    openingWidth:{parentKey:'openingWidth'},
+    openingHeight:{parentKey:'openingHeight'}
+   },
+   children:[]
+  }]
  }
 }
 function drawerNode(index:number,scope:'carcass'|'compartment',spec:DrawerSpec,t:number,
