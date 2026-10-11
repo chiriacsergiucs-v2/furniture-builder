@@ -1,9 +1,9 @@
 # Modular Furniture Engine — EDC Architecture & Execution Backlog
 
 **Project:** `chiriacsergiucs-v2/furniture-builder`  
-**Backlog version:** 1.0 · 2026-10-11 · **Canonical status source for this initiative**  
+**Backlog version:** 1.1 · 2026-10-11 · **Canonical status source for this initiative**  
 **Implementation branch policy:** Work on `main` when explicitly requested. Preserve user data.  
-**Current iteration:** Design/specification only; **no new engine capability claimed**.
+**Current iteration:** B05–B07 and reusable drawer components verified by PR #4 CI run 38113051014; deployment verification remains separate.
 
 ## Mandate and frozen product decisions
 
@@ -237,9 +237,9 @@ Variants are **distinct construction/partition/operation recipes**, not renamed 
 | B02 | 2 | Typed component-definition registry | Done | `src/furniture/component-engine.ts`: versioned `core/carcass` and `core/shelf` definitions, lookup and unsupported-version rejection; focused tests + CI [38111997423](https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38111997423) PASS |
 | B03 | 3 | Component-instance tree with stable IDs | Done | `src/furniture/component-engine.ts` and optional `componentTree` on assemblies/presets: independent instance IDs, preserved root/shelf IDs on edits, legacy-safe JSON/Dexie boundary; focused tests + CI [38111997423](https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38111997423) PASS |
 | B04 | 4 | Directed parameter inheritance / derived values | Done | Parent-scoped numeric bindings drive child width/depth/position; `cabinetBoxes()` now reads resolved tree so cutlist and 3D update together; focused tests + CI [38111997423](https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38111997423) PASS |
-| B05 | 5 | Named attachment slots | Not done | Slot IDs, anchors and multiplicity absent |
-| B06 | 6 | Slot compatibility and cycle validation | Not done | No cross-component type validation |
-| B07 | 7 | OP01 Insert | Not done | Need real insertable shelf/drawer slot |
+| B05 | 5 | Named attachment slots | Done | `core/carcass` declares `interior.main` with shelf/drawer compatibility and max 20; child instances carry named slots. CI 38113051014 PASS |
+| B06 | 6 | Slot compatibility and cycle validation | Done | Resolution rejects incompatible slot children, duplicate IDs, unsupported definitions and capacity violations in this initial component scope. CI 38113051014 PASS |
+| B07 | 7 | OP01 Insert | Done | Pure `insertComponent()` validates types; cabinet wizard inserts real drawer children and regenerates assembled geometry and cutlist. CI 38113051014 PASS |
 | B08 | 8 | OP04 Repeat | Partially done | `cabinetBoxes` repeats equal shelves; not generic component repetition |
 | B09 | 9 | OP02 Replace | Not done | Swap shelf for drawer within same compartment |
 | B10 | 10 | OP03 Split | Not done | Create independently configurable child bays |
@@ -247,7 +247,7 @@ Variants are **distinct construction/partition/operation recipes**, not renamed 
 | B12 | 12 | C01 generic reusable carcass | Partially done | `src/furniture/cabinet.ts` creates one fixed construction pattern |
 | B13 | 13 | C02/C03 shelf component | Partially done | Cabinet-specific shelf count/spacing, no independent definition or slot |
 | B14 | 14 | C04 compartment component | Not done | Parent opening not modeled as configurable child node |
-| B15 | 15 | C15 reusable drawer box | Partially done | `assembly/model.ts` has only fixed 40×30 starter; no parent-driven dimensions/bottom |
+| B15 | 15 | C15 reusable drawer box | Done | `src/furniture/drawer.ts` builds side/back/inner-front/bottom plus optional applied front, opening-driven for standalone and cabinet components, independently editable. CI 38113051014 PASS |
 | B16 | 16 | C17 configurable drawer fronts | Partially done | Fixed starter front, no independent adaptable front |
 | B17 | 17 | One normalized 3D + cut-list + BOM model | Partially done | Cabinet builds matching boxes/parts, but no generic shared `FurnitureModel`/BOM |
 | B18 | 18 | Complete assembled-item preview | Partially done | Cabinet and positioned assemblies preview exists; not supported for every planned template |
@@ -261,6 +261,9 @@ Variants are **distinct construction/partition/operation recipes**, not renamed 
 | B26 | 26 | Material/hardware/joinery-grade advanced rules | Not done | Intentionally deferred; keep material thickness parametric |
 | B27 | 27 | Photo-realistic styling / finish controls | Not done | Intentionally deferred; not a prerequisite for component engine |
 | B28 | 28 | Cross-template geometry/cutlist parity verification | Not done | Focused checks should be added only as new logic warrants |
+| B29 | 29 | Building-component catalogue in Add Item and presets | Done | `CabinetConfigurator.tsx` lists drawer/shelf and planned components; `PresetManager.tsx` creates, edits, duplicates and inserts drawer presets. CI 38113051014 PASS |
+| B30 | 30 | Parametric runner-aware drawer builder | Done | `DrawerConfigurator.tsx` and `drawer.ts` support selected side/under/custom runners, nominal length, opening clearances, lowered finger-pull or applied/inner-only fronts; repeat in cabinets and independent edits. Focused tests CI 38113051014 PASS |
+| B31 | 31 | Separate hardware requirements list | Done | `drawerHardware()` schedules runner pairs and optional front handles independently of board cuts in drawer and cabinet UI; not a complete drilling or supplier BOM. CI 38113051014 PASS |
 
 ### Stage gates / exact next milestone
 
@@ -274,7 +277,9 @@ Variants are **distinct construction/partition/operation recipes**, not renamed 
 - Existing CabinetSpec presets/projects load unchanged; no destructive migration; no new E2E.
 - No second "drawer geometry engine" is introduced; B15 comes later.
 
-**Iteration 2:** B05/B06/B07 insert with a reusable shelf in the named slot.  
+**Iteration 2 completed (2026-10-11):** B05/B06/B07 implement the `interior.main` slot and the user's preferred configurable drawer as the first inserted child. C15 and the building-component UI are in place; generic repeat/replace/split remain separate checkpoints. CI 38113051014 PASS.
+
+Original proposal (superseded): B05/B06/B07 insert with a reusable shelf in the named slot.  
 **Iteration 3:** B08/B09 repeat and replace, including a reusable drawer box.  
 **Iteration 4:** B10 split compartments.  
 **Iteration 5:** B17 B19 B21 implement a chest from shared carcass+drawer components.  
@@ -314,5 +319,9 @@ Later: B23-B24 additional families and dynamic variants; advanced fittings only 
 - Configura / CET design and configurable product rules: https://www.configura.com/
 - Blum e-services cabinet/product configuration: https://www.blum.com/
 - Hettich cabinet/hardware reference systems: https://www.hettich.com/
+- Accuride 3832 slide mounting side-space reference (12.9–13.2 mm per side): https://help.accuride-europe.com/knowledge/installing-drawer-slides
+- Blum MOVENTO woodworking planning dimensions (box width = opening −42 mm, nominal length adjustment and side-thickness envelope): https://publications.blum.com/2022/catalogue/en/421/
+
+Runner profiles implement a sizing envelope only; exact drilling, fastening and other model-specific manufacturer installation requirements remain unverified. Metal runner pairs and optional handles are scheduled separately from board cut parts.
 
 Compare actual manufacturer requirements and published docs before implementing specific connectors, mechanisms or manufacturing tolerances. This backlog is a **design contract and implementation tracker**, not a verified manufacturing handbook.

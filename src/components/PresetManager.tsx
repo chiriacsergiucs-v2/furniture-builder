@@ -1,5 +1,8 @@
 import {lazy,Suspense,useEffect,useState} from 'react'
 import {CabinetConfigurator} from './CabinetConfigurator.tsx'
+import {DrawerConfigurator} from './DrawerConfigurator.tsx'
+import {createDrawerPreset} from '../furniture/drawer.ts'
+import type {DrawerSpec} from '../furniture/drawer.ts'
 import {createCabinetPreset,cabinetBoxes} from '../furniture/cabinet.ts'
 import type {CabinetSpec} from '../furniture/cabinet.ts'
 import {DRAWER_PRESET_ID} from '../assembly/model.ts'
@@ -16,6 +19,7 @@ import {UNCATEGORIZED_ID} from '../db/database.ts'
 
 const Preset3DViewer=lazy(()=>import('./Preset3DViewer.tsx'))
 const CabinetPreview=lazy(()=>import('./CabinetPreview.tsx'))
+const DrawerPresetPreview=lazy(()=>import('./DrawerPresetPreview.tsx'))
 const edges:EdgeName[]=['top','right','bottom','left']
 const starterMaterials:Material[]=[
  {id:'preset-pal18',name:'PAL 18 mm',type:'PAL',thickness:18},
@@ -33,12 +37,12 @@ function ItemDetails({item,index}:{item:PresetItem;index:number}){
 }
 function SavedPreset({preset,categoryName,projects,targetId,onTarget,onInsert,onEdit,onDuplicate,onDelete}:{
  preset:StoredPreset;categoryName:string;projects:Project[];targetId:string;onTarget:(id:string)=>void;
- onInsert:(id:string,parts:Part[],presetId:string,copies:number,cabinetSpec?:CabinetSpec)=>Promise<void>;
+ onInsert:(id:string,parts:Part[],presetId:string,copies:number,cabinetSpec?:CabinetSpec,drawerSpec?:DrawerSpec)=>Promise<void>;
  onEdit:(p:StoredPreset)=>void;onDuplicate:(p:StoredPreset)=>void;onDelete:(p:StoredPreset)=>Promise<void>
 }){
  const [sets,setSets]=useState(1)
  const [expanded3d,setExpanded3d]=useState(false)
- const showCompletePreview=Boolean(preset.cabinetSpec)||preset.id===DRAWER_PRESET_ID
+ const showCompletePreview=Boolean(preset.cabinetSpec||preset.drawerSpec)||preset.id===DRAWER_PRESET_ID
  const [busy,setBusy]=useState(false)
  const [error,setError]=useState('')
  const [notice,setNotice]=useState('')
@@ -49,7 +53,7 @@ function SavedPreset({preset,categoryName,projects,targetId,onTarget,onInsert,on
    if(!project)throw Error('Destination project missing')
    const parts=instantiatePreset(preset,project,sets)
    setBusy(true);setError('')
-   await onInsert(project.id,parts,preset.id,sets,preset.cabinetSpec)
+   await onInsert(project.id,parts,preset.id,sets,preset.cabinetSpec,preset.drawerSpec)
    setNotice('Inserted '+parts.reduce((total,p)=>total+p.quantity,0)+' pieces into '+project.name+'.')
   }catch(e){setError(message(e))}finally{setBusy(false)}
  }
@@ -65,7 +69,7 @@ function SavedPreset({preset,categoryName,projects,targetId,onTarget,onInsert,on
      <button type="button" className="danger" onClick={()=>void onDelete(preset)}>Delete</button>
     </div>
     {expanded3d&&showCompletePreview&&<div role="region" aria-label="Complete furniture 3D preview"><Suspense fallback={<p role="status">Loading assembled furniture…</p>}>
-     {preset.cabinetSpec?<CabinetPreview spec={preset.cabinetSpec} boxes={cabinetBoxes(preset.cabinetSpec,preset.items[0].material.thickness)}/>:<Preset3DViewer preset={preset}/>}
+     {preset.cabinetSpec?<CabinetPreview spec={preset.cabinetSpec} boxes={cabinetBoxes(preset.cabinetSpec,preset.items[0].material.thickness)}/>:preset.drawerSpec?<DrawerPresetPreview preset={preset}/>:<Preset3DViewer preset={preset}/>}
     </Suspense></div>}
     {!showCompletePreview&&<p className="muted">No assembled 3D model saved for this preset. Cut dimensions alone do not define panel positions.</p>}
     <div className="preset-controls">
@@ -103,7 +107,7 @@ function CategoryBranch({category,all,visible,presets,projects,targetId,onTarget
 
 export function PresetManager({project,projects,onInsert}:{
  project:Project|null;projects:Project[];
- onInsert:(projectId:string,parts:Part[],presetId:string,copies:number,cabinetSpec?:CabinetSpec)=>Promise<void>
+ onInsert:(projectId:string,parts:Part[],presetId:string,copies:number,cabinetSpec?:CabinetSpec,drawerSpec?:DrawerSpec)=>Promise<void>
 }){
  const [library,setLibrary]=useState<StoredPreset[]>([])
  const [categories,setCategories]=useState<PresetCategory[]>([])
@@ -116,6 +120,7 @@ export function PresetManager({project,projects,onInsert}:{
  const [draft,setDraft]=useState<CutlistPreset|null>(null)
  const [draftMode,setDraftMode]=useState<DraftMode>('create')
  const [cabinetEditor,setCabinetEditor]=useState<{source?:StoredPreset;duplicate?:boolean}|null>(null)
+ const [drawerEditor,setDrawerEditor]=useState<{source?:StoredPreset;duplicate?:boolean}|null>(null)
  const [filter,setFilter]=useState('')
  const [busy,setBusy]=useState(false)
  const materials=project?.materials.length?project.materials:starterMaterials
@@ -134,9 +139,11 @@ export function PresetManager({project,projects,onInsert}:{
   setDraft(presetFromParts(project));setDraftMode('create');setSelectedCategory(UNCATEGORIZED_ID);setError('');setNotice('')
  }catch(e){onError(e)}}
  const beginEdit=(p:StoredPreset)=>{
+  if(p.drawerSpec){setDraft(null);setCabinetEditor(null);setDrawerEditor({source:p});setSelectedCategory(p.categoryId);setError('');setNotice('');return}
   if(p.cabinetSpec){setDraft(null);setCabinetEditor({source:p});setSelectedCategory(p.categoryId);setError('');setNotice('');return}
   setCabinetEditor(null);setDraft(structuredClone(p));setSelectedCategory(p.categoryId);setDraftMode('edit');setError('');setNotice('')}
  const beginDuplicate=(p:StoredPreset)=>{
+  if(p.drawerSpec){setDraft(null);setCabinetEditor(null);setDrawerEditor({source:p,duplicate:true});setSelectedCategory(p.categoryId);setError('');setNotice('Unsaved drawer copy.');return}
   if(p.cabinetSpec){setDraft(null);setCabinetEditor({source:p,duplicate:true});setSelectedCategory(p.categoryId);setError('');setNotice('Unsaved cabinet copy. The original remains unchanged.');return}
   setCabinetEditor(null)
   setDraft(duplicatePresetDraft(p));setSelectedCategory(p.categoryId);setDraftMode('duplicate');setError('')
@@ -151,6 +158,17 @@ export function PresetManager({project,projects,onInsert}:{
    const previous=cabinetEditor?.duplicate?undefined:cabinetEditor?.source
    const updated=await savePreset({...created,id:previous?.id??created.id,createdAt:previous?.createdAt??created.createdAt,categoryId})
    setLibrary(updated);setCabinetEditor(null);setError('');setNotice(previous?'Cabinet preset updated.':'Cabinet preset saved.')
+  }catch(e){onError(e);throw e}finally{setBusy(false)}
+ }
+ const saveDrawer=async(spec:DrawerSpec,categoryId:string)=>{
+  try{
+   setBusy(true)
+   const material=materials.find(m=>m.id===spec.materialId)
+   if(!material)throw Error('Choose a valid drawer material.')
+   const created=createDrawerPreset(spec,material)
+   const previous=drawerEditor?.duplicate?undefined:drawerEditor?.source
+   const updated=await savePreset({...created,id:previous?.id??created.id,createdAt:previous?.createdAt??created.createdAt,categoryId})
+   setLibrary(updated);setDrawerEditor(null);setError('');setNotice(previous?'Drawer component updated.':'Drawer component saved as reusable preset.')
   }catch(e){onError(e);throw e}finally{setBusy(false)}
  }
  const editItem=(idx:number,patch:Partial<PresetItem>)=>setDraft(p=>p?{...p,items:p.items.map((item,i)=>i===idx?{...item,...patch}:item)}:p)
@@ -189,7 +207,7 @@ export function PresetManager({project,projects,onInsert}:{
  return <section id="presets" className="card preset-library-page" aria-label="Presets">
   <div className="section-head"><h2>Preset library <small>({library.length} saved)</small></h2>
    <div className="actions compact-actions">
-    <button type="button" className="primary" onClick={()=>{setDraft(null);setCabinetEditor({});setSelectedCategory(UNCATEGORIZED_ID);setError('');setNotice('')}}>+ Create preset</button><button type="button" onClick={newDraft}>Manual preset</button>
+    <button type="button" className="primary" onClick={()=>{setDraft(null);setDrawerEditor(null);setCabinetEditor({});setSelectedCategory(UNCATEGORIZED_ID);setError('');setNotice('')}}>+ Create preset</button><button type="button" onClick={()=>{setDrawerEditor({});setCabinetEditor(null);setDraft(null);setError('');setNotice('')}}>+ Reusable drawer component</button><button type="button" onClick={newDraft}>Manual preset</button>
     <button type="button" disabled={!project?.parts.length} onClick={fromParts}>Save project parts as preset</button>
    </div>
   </div>
@@ -205,7 +223,10 @@ export function PresetManager({project,projects,onInsert}:{
   {notice&&<p className="preset-success" role="status">{notice}</p>}
   {cabinetEditor&&<CabinetConfigurator key={(cabinetEditor.source?.id??'new')+(cabinetEditor.duplicate?'-copy':'')} mode="preset" materials={materials} categories={categories} initialCategory={cabinetEditor.source?.categoryId??UNCATEGORIZED_ID}
    initial={cabinetEditor.source?.cabinetSpec?{...cabinetEditor.source.cabinetSpec,materialId:materials.find(m=>m.type===cabinetEditor.source?.items[0]?.material.type&&m.thickness===cabinetEditor.source?.items[0]?.material.thickness)?.id??materials[0]?.id??''}:undefined}
-   onSavePreset={saveCabinet} onCancel={()=>setCabinetEditor(null)}/>}
+   onSavePreset={saveCabinet} onChooseDrawer={()=>{setCabinetEditor(null);setDrawerEditor({})}} onCancel={()=>setCabinetEditor(null)}/>}
+  {drawerEditor&&<DrawerConfigurator key={(drawerEditor.source?.id??'new')+(drawerEditor.duplicate?'-copy':'')} mode="preset" materials={materials} categories={categories} initialCategory={drawerEditor.source?.categoryId??UNCATEGORIZED_ID}
+   initial={drawerEditor.source?.drawerSpec?{...drawerEditor.source.drawerSpec,materialId:materials.find(m=>m.type===drawerEditor.source?.items[0]?.material.type&&m.thickness===drawerEditor.source?.items[0]?.material.thickness)?.id??materials[0]?.id??''}:undefined}
+   onSavePreset={saveDrawer} onCancel={()=>setDrawerEditor(null)}/>}
   {draft&&<div role="region" className="preset-editor" aria-label="Preset draft editor">
    <h3>{draftMode==='duplicate'?'Duplicate with new params (unsaved)':draftMode==='edit'?'Edit preset':'New preset'}</h3>
    <p className="muted">{draftMode==='duplicate'?'The original is unchanged. Change the name, dimensions, quantities, materials or ABS; nothing is created until Save duplicate.':'Changes are stored only when Save is pressed.'}</p>

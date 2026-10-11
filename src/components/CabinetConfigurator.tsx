@@ -7,17 +7,20 @@ import {exportFusionPython} from '../assembly/fusion.ts'
 import {cabinetErrors,cabinetBoxes,createCabinetForProject} from '../furniture/cabinet.ts'
 import type {CabinetSpec} from '../furniture/cabinet.ts'
 import {furnitureTemplates,initialSpecForTemplate} from '../furniture/templates.ts'
+import {drawerDefaults,runnerProfiles,drawerSideSpace,drawerHardware} from '../furniture/drawer.ts'
+import type {DrawerSpec} from '../furniture/drawer.ts'
 import type {FurnitureTemplate} from '../furniture/templates.ts'
 
 const CabinetPreview=lazy(()=>import('./CabinetPreview.tsx'))
 type Stage=0|1|2
 const steps=['Choose template','Customize','Review & save'] as const
 
-export function CabinetConfigurator({mode,materials,categories,initial,initialCategory,editing=false,onAdd,onSavePreset,onCancel}:{
+export function CabinetConfigurator({mode,materials,categories,initial,initialCategory,editing=false,onAdd,onSavePreset,onChooseDrawer,onCancel}:{
  mode:'item'|'preset';materials:Material[];categories?:PresetCategory[];editing?:boolean
  initial?:CabinetSpec;initialCategory?:string
  onAdd?:(spec:CabinetSpec)=>Promise<void>|void
  onSavePreset?:(spec:CabinetSpec,categoryId:string)=>Promise<void>|void
+ onChooseDrawer?:()=>void
  onCancel:()=>void
 }){
  const [spec,setSpec]=useState<CabinetSpec>(()=>{
@@ -39,6 +42,14 @@ export function CabinetConfigurator({mode,materials,categories,initial,initialCa
   return group.length?[{label:role,width:group[0].cutWidth,height:group[0].cutHeight,quantity:group.length}]:[]
  })
  const change=<K extends keyof CabinetSpec>(key:K,value:CabinetSpec[K])=>{setSpec(old=>({...old,[key]:value}));setError('')}
+ const changeDrawers=(count:number)=>{setSpec(old=>({
+  ...old,drawers:count,shelves:count>0?0:old.shelves,
+  drawerConfig:old.drawerConfig??{...drawerDefaults(old.materialId),runnerLength:300}
+ }));setError('')}
+ const changeDrawerConfig=<K extends keyof DrawerSpec>(key:K,value:DrawerSpec[K])=>{
+  setSpec(old=>({...old,drawerConfig:{...(old.drawerConfig??{...drawerDefaults(old.materialId),runnerLength:300}),[key]:value}}))
+  setError('')
+ }
  const selectTemplate=(template:FurnitureTemplate)=>{
   if(template.status!=='ready')return
   setSpec(initialSpecForTemplate(template.id,spec.materialId))
@@ -94,14 +105,23 @@ export function CabinetConfigurator({mode,materials,categories,initial,initialCa
     {stage===0&&<>
      <div className="cabinet-step">01 / Select your starting template</div>
      <p className="muted">Choose a proven geometry. Every available template generates a complete 3D model and cut list. More template types will be added here.</p>
+     <div className="cabinet-step">Building components · reusable</div>
+     <div className="furniture-template-list" role="group" aria-label="Building component library">
+      <button type="button" className="furniture-template-card" onClick={onChooseDrawer} disabled={!onChooseDrawer}>
+       <span className="template-copy"><strong>C15 · Configurable drawer box</strong><small>Runners, clearances, optional applied front or lowered finger-pull front</small><span className="template-category">Ready · Reusable in furniture</span></span>
+      </button>
+      <div className="furniture-template-card"><span className="template-copy"><strong>C02 · Shelves</strong><small>Adjustable quantity, spacing and clearance inside the cabinet</small><span className="template-category">Integrated into carcass</span></span></div>
+      <div className="furniture-template-card"><span className="template-copy"><strong>Doors, vertical partitions, support legs</strong><small>Planned reusable component types</small><span className="template-category">Not implemented yet</span></span></div>
+     </div>
+     <div className="cabinet-step">Furniture templates</div>
      <div className="furniture-template-list" role="group" aria-label="Furniture templates">
       {furnitureTemplates.map(template=>{
        const selected=spec.templateId===template.id
        return <button type="button" key={template.id}
         className={'furniture-template-card'+(selected?' selected':'')}
-        disabled={template.status!=='ready'}
+        disabled={template.status!=='ready'||template.kind==='drawer'&&!onChooseDrawer}
         aria-pressed={template.status==='ready'?selected:undefined}
-        onClick={()=>selectTemplate(template)}>
+        onClick={()=>template.kind==='drawer'?onChooseDrawer?.():selectTemplate(template)}>
         <span className="template-drawing" aria-hidden="true">
          <span className="template-outline">{Array.from({length:Math.min(5,template.defaultSpec?.shelves??2)},(_,i)=><span className="template-shelf" key={i}/>)}</span>
         </span>
@@ -126,7 +146,34 @@ export function CabinetConfigurator({mode,materials,categories,initial,initialCa
       <select value={spec.materialId} onChange={e=>change('materialId',e.target.value)}>
        {materials.map(m=><option value={m.id} key={m.id}>{m.name} · {m.type} · {m.thickness} mm</option>)}
       </select></label>
+     <div className="cabinet-step">Interior components · insert into cabinet</div>
+     <p className="muted">This first undivided cabinet opening supports either repeated shelves or repeated drawer components. Split compartments will follow.</p>
      <div className="cabinet-shelf-picker">
+      <div><strong>Configurable drawers</strong><p className="muted">Each drawer inherits the cabinet's clear internal opening</p></div>
+      <div className="cabinet-quantity">
+       <button type="button" aria-label="Remove drawer" disabled={(spec.drawers??0)===0} onClick={()=>changeDrawers(Math.max(0,(spec.drawers??0)-1))}>−</button>
+       <output aria-label="Drawer count">{spec.drawers??0}</output>
+       <button type="button" aria-label="Insert drawer" disabled={(spec.drawers??0)>=20} onClick={()=>changeDrawers(Math.min(20,(spec.drawers??0)+1))}>+</button>
+      </div>
+     </div>
+     {(spec.drawers??0)>0&&<div className="form-grid">
+      <label className="field"><span>Runner profile</span><select value={spec.drawerConfig?.runner??'accuride-3832'}
+       onChange={e=>{const runner=e.target.value as DrawerSpec['runner'];setSpec(old=>({...old,drawerConfig:{
+        ...(old.drawerConfig??{...drawerDefaults(old.materialId),runnerLength:300}),
+        runner,extension:runner==='none'?'partial':'full'}}))}}>
+       {runnerProfiles.map(r=><option value={r.id} key={r.id}>{r.title}</option>)}</select></label>
+      <label className="field"><span>Drawer front</span><select value={spec.drawerConfig?.front??'applied'} onChange={e=>changeDrawerConfig('front',e.target.value as DrawerSpec['front'])}>
+       <option value="applied">Applied front · handle</option><option value="lowered">Lower front · finger pull</option><option value="none">Inner front only</option>
+      </select></label>
+      <label className="field"><span>Runner length (mm)</span><input type="number" step="1" min="1" value={spec.drawerConfig?.runnerLength??300} onChange={e=>changeDrawerConfig('runnerLength',Number(e.target.value))}/></label>
+      {spec.drawerConfig?.runner==='custom'&&<label className="field"><span>Slide clearance per side (mm)</span><input type="number" step="1" min="1" value={spec.drawerConfig.customSideClearance} onChange={e=>changeDrawerConfig('customSideClearance',Number(e.target.value))}/></label>}
+      <label className="field"><span>Upper clearance (mm)</span><input type="number" step="1" min="0" value={spec.drawerConfig?.upperClearance??6} onChange={e=>changeDrawerConfig('upperClearance',Number(e.target.value))}/></label>
+      <label className="field"><span>Rear clearance (mm)</span><input type="number" step="1" min="0" value={spec.drawerConfig?.rearClearance??20} onChange={e=>changeDrawerConfig('rearClearance',Number(e.target.value))}/></label>
+      {spec.drawerConfig?.front==='lowered'&&<label className="field"><span>Finger-pull gap (mm)</span><input type="number" step="1" min="15" value={spec.drawerConfig.pullGap} onChange={e=>changeDrawerConfig('pullGap',Number(e.target.value))}/></label>}
+      {spec.drawerConfig?.front==='applied'&&<label className="field"><span>Applied front gap (mm)</span><input type="number" step="1" min="0" value={spec.drawerConfig.frontGap} onChange={e=>changeDrawerConfig('frontGap',Number(e.target.value))}/></label>}
+      <p className="muted">Slide side space: {drawerSideSpace(spec.drawerConfig??{...drawerDefaults(spec.materialId),runnerLength:300})} mm/side. Verify runner-specific installation documentation.</p>
+     </div>}
+     {(spec.drawers??0)===0&&<div className="cabinet-shelf-picker">
       <div><strong>Internal shelves</strong><p className="muted">Automatically evenly spaced</p></div>
       <div className="cabinet-quantity">
        <button type="button" aria-label="Decrease shelves" disabled={spec.shelves===0}
@@ -135,7 +182,7 @@ export function CabinetConfigurator({mode,materials,categories,initial,initialCa
        <button type="button" aria-label="Increase shelves" disabled={spec.shelves===20}
         onClick={()=>change('shelves',Math.min(20,spec.shelves+1))}>+</button>
       </div>
-     </div>
+     </div>}
      <details className="cabinet-options"><summary>Advanced clearances, grain and ABS</summary>
       <div className="form-grid">
        {field('sideClear','Shelf side clearance (mm)')}
@@ -161,7 +208,7 @@ export function CabinetConfigurator({mode,materials,categories,initial,initialCa
      <dl className="furniture-review">
       <div><dt>Overall size</dt><dd>{spec.width} × {spec.height} × {spec.depth} mm</dd></div>
       <div><dt>Material</dt><dd>{material?.name} · {material?.thickness} mm</dd></div>
-      <div><dt>Internal shelves</dt><dd>{spec.shelves}</dd></div>
+      <div><dt>Internal shelves</dt><dd>{spec.shelves}</dd></div><div><dt>Inserted drawers</dt><dd>{spec.drawers??0}</dd></div>
       <div><dt>Total physical panels</dt><dd>{boxes.length}</dd></div>
       {mode==='preset'&&<div><dt>Preset category</dt><dd>{categories?.find(c=>c.id===category)?.name??'Uncategorized'}</dd></div>}
      </dl>
@@ -182,6 +229,12 @@ export function CabinetConfigurator({mode,materials,categories,initial,initialCa
      <thead><tr><th>Part</th><th>Cut size (mm)</th><th>Qty</th></tr></thead>
      <tbody>{rows.map(row=><tr key={row.label}><td>{row.label}</td><td>{row.width} × {row.height} × {material?.thickness}</td><td>{row.quantity}</td></tr>)}</tbody>
     </table></div>
+    {(spec.drawers??0)>0&&spec.drawerConfig&&<div>
+     <div className="cabinet-step">Building hardware · not board cut pieces</div>
+     {drawerHardware(spec.drawerConfig).length?drawerHardware(spec.drawerConfig).map(h=>
+      <p className="muted" key={h.label}>{(spec.drawers??0)*h.quantity} {h.unit}{(spec.drawers??0)>1?'s':''} · {h.label}</p>
+     ):<p className="muted">Drawer movement mechanism not configured.</p>}
+    </div>}
    </div>
   </div>
   {error&&<p role="alert" className="preset-error">{error}</p>}
