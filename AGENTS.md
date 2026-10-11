@@ -29,3 +29,12 @@ Only modify `chiriacsergiucs-v2/furniture-builder`; verify target and branch. Ne
 - Model: 2 sides 300x250, inner front 300x250, back 300x250, visible front 400x300 mm, PAL 18 mm. Five solids but four cutlist rows, with side quantity 2. Drawer body 336x300x250 mm, visible front z=161 mm (2 mm reveal). No bottom hardware/joinery.
 - Fusion export is Python API source for static direct-model B-reps, not native .f3d/.step. Never claim verified inside Autodesk Fusion.
 - CI 38048669793 (25 kernel, 21 Vitest, 14 Playwright) and Pages 38048670051 PASS on d298f5af. Browser device validation remains pending.
+
+## Pre-MVP scope and iteration reporting — hard constraint (2026-10-11)
+- Optimize for the shortest functional vertical slice. Before writing code, ask whether each change is necessary to demonstrate the requested feature *now*. Defer anything that is not necessary.
+- Do not add new end-to-end/browser suites, large regression matrices, extra abstractions, polishing, refactors, documentation expansions, integration scaffolding or performance work by default at this pre-MVP stage.
+- Prefer lightweight validation: TypeScript/lint/build and a small focused unit test only where it materially catches a core logic error. Do not execute long test suites unless explicitly requested or needed to diagnose a real blocker.
+- Leave legacy tests and features intact unless a minimal compatibility fix is required. Do not make the optional E2E suite a gate for exploratory UI iterations; communicate that browser acceptance remains unverified.
+- Do not merge/deploy/publish changes until the chosen minimum verification passes; distinguish a pushed branch/PR from a published application.
+- After **every** implementation or repository-publication iteration, end the user response with a **Skipped this iteration** section naming consciously deferred work (including E2E, extra tests, documentation, deployment and polish as applicable). If nothing was skipped, explicitly say so.
+- Only expand this scope when the user explicitly authorizes a later milestone or when an unplanned change is essential for correctness/data safety.
