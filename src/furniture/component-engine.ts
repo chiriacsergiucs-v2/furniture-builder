@@ -54,7 +54,10 @@ const carcass:ComponentDefinition={
    shelfDepth:p.depth-p.frontClear-p.rearClear,
    shelfX:p.thickness+p.sideClear,
    firstShelfZ:p.thickness+clearHeight,
-   shelfPitch:clearHeight+p.thickness
+   shelfPitch:clearHeight+p.thickness,
+   drawerGap:3,
+   drawerOpeningHeight:p.drawers>0?Math.floor((p.height-2*p.thickness-(p.drawers-1)*3)/p.drawers):0,
+   drawerPitch:p.drawers>0?Math.floor((p.height-2*p.thickness-(p.drawers-1)*3)/p.drawers)+3:0
   }
  }
 }
@@ -132,7 +135,7 @@ export function createCabinetComponentTree(spec:CabinetSpec,thickness:number,pre
   ?previous.children.filter((child):child is StoredComponentTree=>{
    if(!child||typeof child!=='object')return false
    const candidate=child as Partial<StoredComponentTree>
-   return typeof candidate.id==='string'&&candidate.definitionId==='core/shelf'&&
+   return typeof candidate.id==='string'&&['core/shelf','core/drawer'].includes(candidate.definitionId??'')&&
     candidate.definitionVersion===1&&Boolean(candidate.params)&&
     typeof candidate.params?.index==='number'
   }):[]
@@ -144,10 +147,22 @@ export function createCabinetComponentTree(spec:CabinetSpec,thickness:number,pre
   template:{id:spec.templateId??'cabinet-open',version:templateVersion},
   params:{
    width:spec.width,height:spec.height,depth:spec.depth,thickness,
-   shelves:spec.shelves,sideClear:spec.sideClear,
+   shelves:spec.shelves,drawers:spec.drawers??0,sideClear:spec.sideClear,
    frontClear:spec.frontClear,rearClear:spec.rearClear
   },
-  children:Array.from({length:spec.shelves},(_,index)=>{
+  children:(spec.drawers??0)>0?Array.from({length:spec.drawers??0},(_,index)=>{
+   const config=spec.drawerConfig
+   if(!config)throw Error('Drawer configuration missing from cabinet')
+   const old=oldChildren.find(child=>child.definitionId==='core/drawer'&&child.params.index===index)
+   const child=createDrawerComponentTree(config,thickness,old)
+   return {...child,slot:'interior.main',params:{...child.params,index},bindings:{
+    x:{parentKey:'thickness'},y:{parentKey:'frontClear'},
+    z:{parentKey:'thickness',scaledBy:{parentKey:'drawerPitch',localKey:'index'}},
+    openingWidth:{parentKey:'innerWidth'},
+    openingDepth:{parentKey:'depth',add: -spec.rearClear},
+    openingHeight:{parentKey:'drawerOpeningHeight'}
+   }}
+  }):Array.from({length:spec.shelves},(_,index)=>{
    const old=oldChildren.find(child=>child.definitionId==='core/shelf'&&child.params.index===index)
    return {
     id:old?.id??crypto.randomUUID(),
