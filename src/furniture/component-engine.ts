@@ -15,6 +15,16 @@ export interface ComponentInstance {
  children:ComponentInstance[]
  template?:{id:string;version:number}
 }
+/** Shallow JSON boundary: Dexie's recursive key-path types cannot traverse a recursive tree type. */
+export interface StoredComponentTree {
+ id:string
+ definitionId:string
+ definitionVersion:number
+ params:Record<string,number>
+ bindings?:Record<string,ParentBinding>
+ children:unknown[]
+ template?:{id:string;version:number}
+}
 export type ParameterValues=Record<string,number>
 export interface ComponentDefinition {
  id:string
@@ -93,9 +103,16 @@ export function resolveComponentTree(root:ComponentInstance):ResolvedComponent{
 }
 
 /** Preserve existing node IDs on edits; different furniture copies receive fresh IDs. */
-export function createCabinetComponentTree(spec:CabinetSpec,thickness:number,previous?:ComponentInstance):ComponentInstance{
+export function createCabinetComponentTree(spec:CabinetSpec,thickness:number,previous?:StoredComponentTree):ComponentInstance{
  const compatible=previous?.definitionId==='core/carcass'&&previous.definitionVersion===1
- const oldChildren=compatible&&previous&&Array.isArray(previous.children)?previous.children:[]
+ const oldChildren=compatible&&previous&&Array.isArray(previous.children)
+  ?previous.children.filter((child):child is StoredComponentTree=>{
+   if(!child||typeof child!=='object')return false
+   const candidate=child as Partial<StoredComponentTree>
+   return typeof candidate.id==='string'&&candidate.definitionId==='core/shelf'&&
+    candidate.definitionVersion===1&&Boolean(candidate.params)&&
+    typeof candidate.params?.index==='number'
+  }):[]
  const templateVersion=spec.templateVersion??1
  if(templateVersion!==1)throw Error('Unsupported cabinet template version '+templateVersion)
  return {
