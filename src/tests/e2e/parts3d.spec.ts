@@ -17,6 +17,16 @@ test('cutlist order controls persist and 3D viewer is available on mobile and de
  await expect(viewer.getByRole('button',{name:/Right side/})).toBeVisible()
  await viewer.getByRole('button',{name:/Right side/}).click()
  await expect(viewer.getByRole('status').filter({hasText:'Right side'})).toBeVisible()
+ await expect.poll(async()=>page.evaluate(async()=>{
+  const request=indexedDB.open('mobila-cutlist-build-kit')
+  const database=await new Promise<IDBDatabase>((resolve,reject)=>{request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error)})
+  try{
+   const read=database.transaction('projects','readonly').objectStore('projects').getAll()
+   const items=await new Promise<Array<{parts:Array<{label:string}>}>>((resolve,reject)=>{read.onsuccess=()=>resolve(read.result);read.onerror=()=>reject(read.error)})
+   return items[0]?.parts[0]?.label??null
+  }finally{database.close()}
+ })).toBe('Right side')
  await page.reload()
+ await expect(page.getByRole('heading',{name:'Cutlist editor'})).toBeVisible()
  await expect(page.locator('.parts-list .part-card').first().getByRole('textbox',{name:'Name'})).toHaveValue('Right side')
 })
