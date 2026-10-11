@@ -4,6 +4,7 @@ import {validateResult} from '../engine/validate.ts'
 import {db,defaultCategory,now,UNCATEGORIZED_ID} from './database.ts'
 import type {BuildKit,KitItem,LibraryMaterial,PresetCategory,LibraryRevision,RevisionEntity} from './database.ts'
 import {initializeStorage} from './migration.ts'
+import {adaptLegacyProject} from '../furniture/legacy-adapter.ts'
 
 export class StorageError extends Error {constructor(message:string){super(message);this.name='StorageError'}}
 const fail=(e:unknown)=>{throw new StorageError(e instanceof Error?e.message:String(e))}
@@ -13,7 +14,7 @@ function logRevision(entityType:RevisionEntity,entityId:string,action:LibraryRev
 export function cleanProject(value:Project):Project{
  const errors=validateProject(value)
  if(errors.length)throw new StorageError('Invalid project: '+errors.join('; '))
- const project=structuredClone(value)
+ const project=adaptLegacyProject(structuredClone(value))
  if(project.lastResult){try{if(validateResult(project,project.lastResult).length)project.lastResult=undefined}catch{project.lastResult=undefined}}
  return project
 }
