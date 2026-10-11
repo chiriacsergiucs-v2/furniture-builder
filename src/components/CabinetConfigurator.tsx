@@ -204,7 +204,7 @@ export function CabinetConfigurator({mode,materials,categories,initial,initialCa
      </>}
      {!spec.split&&<>
      <div className="cabinet-step">Single-compartment children</div>
-     <p className="muted">This first undivided cabinet opening supports either repeated shelves or repeated drawer components. Split compartments will follow.</p>
+     <p className="muted">Repeat shelves or drawers here, or select a split layout to combine independently configurable compartments.</p>
      <div className="cabinet-shelf-picker">
       <div><strong>Configurable drawers</strong><p className="muted">Each drawer inherits the cabinet's clear internal opening</p></div>
       <div className="cabinet-quantity">
@@ -243,7 +243,10 @@ export function CabinetConfigurator({mode,materials,categories,initial,initialCa
      </div>}
      {!spec.split&&(spec.drawers??0)===0&&spec.shelves>0&&<div className="stack">
       <label className="field"><span>Shelf positioning</span><select value={spec.shelfMode??'even'}
-       onChange={e=>change('shelfMode',e.target.value as 'even'|'custom')}>
+       onChange={e=>setSpec(old=>({...old,shelfMode:e.target.value as 'even'|'custom',
+        shelfPositions:old.shelfPositions?.length===old.shelves?old.shelfPositions:
+         Array.from({length:old.shelves},(_,i)=>Math.round((i+1)*100/(old.shelves+1)))
+       }))}>
        <option value="even">Automatically spaced</option><option value="custom">Custom adjustable positions</option>
       </select></label>
       {spec.shelfMode==='custom'&&spec.shelfPositions?.map((percent,index)=><label className="field" key={index}>
@@ -271,8 +274,10 @@ export function CabinetConfigurator({mode,materials,categories,initial,initialCa
       <label className="field"><span>Second module width (mm)</span><input type="number" min="100" step="1"
        value={spec.connected.width} onChange={e=>change('connected',{...spec.connected!,width:Number(e.target.value)})}/></label>
       <label className="field"><span>Second module interior</span><select value={spec.connected.drawers>0?'drawers':spec.connected.shelves>0?'shelves':'empty'}
-       onChange={e=>change('connected',{...spec.connected!,shelves:e.target.value==='shelves'?2:0,
-        drawers:e.target.value==='drawers'?2:0})}>
+       onChange={e=>setSpec(old=>({...old,connected:old.connected?{
+         ...old.connected,shelves:e.target.value==='shelves'?2:0,drawers:e.target.value==='drawers'?2:0
+        }:undefined,drawerConfig:e.target.value==='drawers'?
+         old.drawerConfig??{...drawerDefaults(old.materialId),runnerLength:300}:old.drawerConfig}))}>
        <option value="empty">Empty</option><option value="shelves">Shelves</option><option value="drawers">Drawers</option>
       </select></label>
       {(spec.connected.shelves>0||spec.connected.drawers>0)&&<label className="field">
