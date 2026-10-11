@@ -143,17 +143,36 @@ export function createDrawerPreset(s:DrawerSpec,m:Material):CutlistPreset{
  })))
  return {...p,drawerSpec:structuredClone(s),componentTree:createDrawerComponentTree(s,m.thickness)}
 }
+/** Copy-on-write for multiple preset instances sharing one grouped cutlist. */
 export function reconfigureDrawer(project:Project,id:string,s:DrawerSpec):Project{
  const prior=project.assemblies?.find(a=>a.id===id)
  if(!prior?.drawerSpec)throw Error('Selected item is not a configurable drawer.')
- const ids=new Set(prior.pieces.map(piece=>piece.partId))
- if(project.assemblies?.some(a=>a.id!==id&&a.pieces.some(piece=>ids.has(piece.partId))))
-  throw Error('Cannot update a drawer with parts shared by another assembly.')
+ const ownIds=new Set(prior.pieces.map(piece=>piece.partId))
  const material=project.materials.find(m=>m.id===s.materialId)
  if(!material)throw Error('Drawer material missing from project.')
- const parts=drawerParts(s,material),newAssembly=drawerAssembly(s,material,parts)
+ const newParts=drawerParts(s,material),newAssembly=drawerAssembly(s,material,newParts)
  newAssembly.id=id;newAssembly.createdAt=prior.createdAt
  newAssembly.componentTree=createDrawerComponentTree(s,material.thickness,prior.componentTree)
- return {...project,parts:[...project.parts.filter(p=>!ids.has(p.id)),...parts],
-  assemblies:project.assemblies?.map(a=>a.id===id?newAssembly:a),lastResult:undefined}
+ const otherAssemblies=(project.assemblies??[]).filter(a=>a.id!==id)
+ const indexMaps=new Map<string,Map<number,number>>()
+ const remainingParts=project.parts.flatMap(part=>{
+  if(!ownIds.has(part.id))return [part]
+  const remaining=otherAssemblies.flatMap(a=>a.pieces.filter(piece=>piece.partId===part.id))
+   .sort((a,b)=>a.instanceIndex-b.instanceIndex)
+  const removed=prior.pieces.filter(piece=>piece.partId===part.id).length
+  if(remaining.length+removed!==part.quantity)
+   throw Error('Drawer part '+part.label+' contains unallocated pieces; cannot reconfigure safely.')
+  const mapping=new Map(remaining.map((piece,i)=>[piece.instanceIndex,i]))
+  if(mapping.size!==remaining.length)throw Error('Duplicate drawer part allocations')
+  indexMaps.set(part.id,mapping)
+  return remaining.length?[{...part,quantity:remaining.length}]:[]
+ })
+ const assemblies=(project.assemblies??[]).map(a=>{
+  if(a.id===id)return newAssembly
+  return {...a,pieces:a.pieces.map(piece=>{
+   const mapped=indexMaps.get(piece.partId)?.get(piece.instanceIndex)
+   return mapped===undefined?piece:{...piece,instanceIndex:mapped}
+  })}
+ })
+ return {...project,parts:[...remainingParts,...newParts],assemblies,lastResult:undefined}
 }
