@@ -4,7 +4,7 @@ import {createProject} from '../engine/types.ts'
 import type {PresetCategory} from '../db/database.ts'
 import {download,fileSlug} from '../import-export/files.ts'
 import {exportFusionPython} from '../assembly/fusion.ts'
-import {createDrawerForProject,drawerDefaults,drawerErrors,drawerParts,drawerSideSpace,runnerProfiles} from '../furniture/drawer.ts'
+import {createDrawerForProject,drawerDefaults,drawerErrors,drawerParts,drawerSideSpace,drawerHardware,runnerProfiles} from '../furniture/drawer.ts'
 import type {DrawerSpec} from '../furniture/drawer.ts'
 const PositionedFurniturePreview=lazy(()=>import('./PositionedFurniturePreview.tsx'))
 
@@ -110,6 +110,10 @@ export function DrawerConfigurator({mode,materials,categories,initial,initialCat
      <thead><tr><th>Component part</th><th>Dimensions (mm)</th><th>Qty</th></tr></thead>
      <tbody>{boxes.map(p=><tr key={p.label}><td>{p.label}</td><td>{p.width} × {p.height} × {material?.thickness}</td><td>{p.quantity}</td></tr>)}</tbody>
     </table></div>
+    <div className="cabinet-step">Fittings / hardware (separate from board cut list)</div>
+    {drawerHardware(spec).length?<div className="stack">
+     {drawerHardware(spec).map(h=><p className="muted" key={h.label}>{h.quantity} {h.unit} · {h.label}</p>)}
+    </div>:<p className="muted">No metal runner selected. Drawer movement/support not yet engineered.</p>}
    </div>
   </div>
   {error&&<p role="alert" className="preset-error">{error}</p>}
