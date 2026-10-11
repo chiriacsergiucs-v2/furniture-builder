@@ -233,10 +233,10 @@ Variants are **distinct construction/partition/operation recipes**, not renamed 
 | ID | Order | Initiative | Status | Current evidence / acceptance gap |
 |---|---:|---|---|---|
 | B00 | 0 | Publish this EDC backlog and permanent status convention | Done | `docs/modular-engine-backlog.md` on `main` |
-| B01 | 1 | First-class template catalogue | Partially done | `src/furniture/templates.ts`: 7 entries, 3 ready variants of same carcass generator; needs versioned recipes |
-| B02 | 2 | Typed component-definition registry | Not done | No registry mapping type/version to generator contract |
-| B03 | 3 | Component-instance tree with stable IDs | Not done | Existing assembly pieces are positioned panels, not a typed parent-child component graph |
-| B04 | 4 | Directed parameter inheritance / derived values | Not done | Width/height propagate inside `cabinetBoxes`, but no generic parent-child graph |
+| B01 | 1 | First-class template catalogue | Done | `src/furniture/templates.ts`: 7 versioned recipes (3 ready), registered root components and checked availability; CI [38111997423](https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38111997423) PASS. Additional template families B24 remain planned |
+| B02 | 2 | Typed component-definition registry | Done | `src/furniture/component-engine.ts`: versioned `core/carcass` and `core/shelf` definitions, lookup and unsupported-version rejection; focused tests + CI [38111997423](https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38111997423) PASS |
+| B03 | 3 | Component-instance tree with stable IDs | Done | `src/furniture/component-engine.ts` and optional `componentTree` on assemblies/presets: independent instance IDs, preserved root/shelf IDs on edits, legacy-safe JSON/Dexie boundary; focused tests + CI [38111997423](https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38111997423) PASS |
+| B04 | 4 | Directed parameter inheritance / derived values | Done | Parent-scoped numeric bindings drive child width/depth/position; `cabinetBoxes()` now reads resolved tree so cutlist and 3D update together; focused tests + CI [38111997423](https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38111997423) PASS |
 | B05 | 5 | Named attachment slots | Not done | Slot IDs, anchors and multiplicity absent |
 | B06 | 6 | Slot compatibility and cycle validation | Not done | No cross-component type validation |
 | B07 | 7 | OP01 Insert | Not done | Need real insertable shelf/drawer slot |
@@ -264,7 +264,9 @@ Variants are **distinct construction/partition/operation recipes**, not renamed 
 
 ### Stage gates / exact next milestone
 
-**Iteration 1 recommended: B02 + B03 + B04 with the smallest proof that parent width changes a child clearance**, using existing cabinet as one compatible adapter. Do **not** build the entire 40-component library first.
+**Iteration 1 completed (2026-10-11): B01–B04.** Versioned template roots and typed component tree are live in the cabinet generation path; tree data is stored on assemblies and presets. CI [38111997423](https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38111997423) passed lint, typecheck, kernel, unit, build and existing browser checks. B05/B06/B07 remain the next milestone.
+
+**Original Iteration 1 acceptance definition (completed): B02 + B03 + B04 with the smallest proof that parent width changes a child clearance**, using existing cabinet as one compatible adapter. Do **not** build the entire 40-component library first.
 
 - A typed component registry can register the carcass and shelf definitions by ID/version.
 - A cabinet owns at least one `interior.main` child slot; a shelf instance can occupy that slot.
