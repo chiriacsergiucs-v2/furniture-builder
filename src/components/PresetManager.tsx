@@ -1,7 +1,8 @@
 import {lazy,Suspense,useEffect,useState} from 'react'
 import {CabinetConfigurator} from './CabinetConfigurator.tsx'
-import {createCabinetPreset} from '../furniture/cabinet.ts'
+import {createCabinetPreset,cabinetBoxes} from '../furniture/cabinet.ts'
 import type {CabinetSpec} from '../furniture/cabinet.ts'
+import {DRAWER_PRESET_ID} from '../assembly/model.ts'
 import type {ChangeEvent} from 'react'
 import type {Part,Project,Material,EdgeName,GrainAxis} from '../engine/types.ts'
 import {download} from '../import-export/files.ts'
@@ -14,6 +15,7 @@ import type {PresetCategory,StoredPreset} from '../db/database.ts'
 import {UNCATEGORIZED_ID} from '../db/database.ts'
 
 const Preset3DViewer=lazy(()=>import('./Preset3DViewer.tsx'))
+const CabinetPreview=lazy(()=>import('./CabinetPreview.tsx'))
 const edges:EdgeName[]=['top','right','bottom','left']
 const starterMaterials:Material[]=[
  {id:'preset-pal18',name:'PAL 18 mm',type:'PAL',thickness:18},
@@ -23,13 +25,10 @@ const materialKey=(m:PresetMaterial)=>JSON.stringify({name:m.name,type:m.type,th
 const message=(e:unknown)=>e instanceof Error?e.message:String(e)
 type DraftMode='create'|'edit'|'duplicate'
 
-function ItemDetails({item,index,preset}:{item:PresetItem;index:number;preset:CutlistPreset}){
- const [open3d,setOpen3d]=useState(false)
+function ItemDetails({item,index}:{item:PresetItem;index:number}){
  return <details className="preset-item-details">
   <summary>{index+1}. {item.label} — {item.width} × {item.height} × {item.material.thickness} mm · {item.quantity} pcs</summary>
   <p className="muted">{item.material.name} · Grain {item.grain} · Rotation {item.rotationAllowed?'allowed':'restricted'} · ABS: {edges.filter(e=>item.abs[e]).map(e=>e+': '+item.abs[e]).join(', ')||'none'}</p>
-  <button type="button" onClick={()=>setOpen3d(p=>!p)} aria-expanded={open3d}>{open3d?'Hide item 3D':'View item 3D'}</button>
-  {open3d&&<Suspense fallback={<p role="status">Loading 3D panel…</p>}><Preset3DViewer preset={preset} itemIndex={index}/></Suspense>}
  </details>
 }
 function SavedPreset({preset,categoryName,projects,targetId,onTarget,onInsert,onEdit,onDuplicate,onDelete}:{
@@ -39,6 +38,7 @@ function SavedPreset({preset,categoryName,projects,targetId,onTarget,onInsert,on
 }){
  const [sets,setSets]=useState(1)
  const [expanded3d,setExpanded3d]=useState(false)
+ const showCompletePreview=Boolean(preset.cabinetSpec)||preset.id===DRAWER_PRESET_ID
  const [busy,setBusy]=useState(false)
  const [error,setError]=useState('')
  const [notice,setNotice]=useState('')
@@ -57,14 +57,17 @@ function SavedPreset({preset,categoryName,projects,targetId,onTarget,onInsert,on
   <details className="preset-entry">
    <summary><strong>{preset.label}</strong> <small>· {preset.items.length} cut rows / {preset.items.reduce((sum,i)=>sum+i.quantity,0)} pieces · {categoryName}</small></summary>
    <div className="preset-entry-body">
-    <div className="preset-item-tree">{preset.items.map((item,i)=><ItemDetails key={i} item={item} index={i} preset={preset}/>)}</div>
+    <div className="preset-item-tree">{preset.items.map((item,i)=><ItemDetails key={i} item={item} index={i}/>)}</div>
     <div className="actions">
-     <button type="button" onClick={()=>setExpanded3d(v=>!v)} aria-expanded={expanded3d}>{expanded3d?'Hide preset 3D':'View preset 3D'}</button>
+     {showCompletePreview&&<button type="button" onClick={()=>setExpanded3d(v=>!v)} aria-expanded={expanded3d}>{expanded3d?'Hide assembled 3D':'View assembled 3D'}</button>}
      <button type="button" onClick={()=>onEdit(preset)}>Edit original</button>
      <button type="button" onClick={()=>onDuplicate(preset)}>Duplicate with new params</button>
      <button type="button" className="danger" onClick={()=>void onDelete(preset)}>Delete</button>
     </div>
-    {expanded3d&&<Suspense fallback={<p role="status">Loading 3D assembly…</p>}><Preset3DViewer preset={preset}/></Suspense>}
+    {expanded3d&&showCompletePreview&&<div role="region" aria-label="Complete furniture 3D preview"><Suspense fallback={<p role="status">Loading assembled furniture…</p>}>
+     {preset.cabinetSpec?<CabinetPreview spec={preset.cabinetSpec} boxes={cabinetBoxes(preset.cabinetSpec,preset.items[0].material.thickness)}/>:<Preset3DViewer preset={preset}/>}
+    </Suspense></div>}
+    {!showCompletePreview&&<p className="muted">No assembled 3D model saved for this preset. Cut dimensions alone do not define panel positions.</p>}
     <div className="preset-controls">
      <label className="field"><span>Sets to add</span><input type="number" step="1" min="1" max="20" value={sets} onChange={e=>setSets(Number(e.target.value))}/></label>
      <label className="field"><span>Destination project</span><select value={targetId} onChange={e=>onTarget(e.target.value)}><option value="">Select project</option>{projects.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
@@ -112,7 +115,7 @@ export function PresetManager({project,projects,onInsert}:{
  const [notice,setNotice]=useState('')
  const [draft,setDraft]=useState<CutlistPreset|null>(null)
  const [draftMode,setDraftMode]=useState<DraftMode>('create')
- const [cabinetEditor,setCabinetEditor]=useState<{source?:StoredPreset}|null>(null)
+ const [cabinetEditor,setCabinetEditor]=useState<{source?:StoredPreset;duplicate?:boolean}|null>(null)
  const [filter,setFilter]=useState('')
  const [busy,setBusy]=useState(false)
  const materials=project?.materials.length?project.materials:starterMaterials
@@ -134,6 +137,7 @@ export function PresetManager({project,projects,onInsert}:{
   if(p.cabinetSpec){setDraft(null);setCabinetEditor({source:p});setSelectedCategory(p.categoryId);setError('');setNotice('');return}
   setCabinetEditor(null);setDraft(structuredClone(p));setSelectedCategory(p.categoryId);setDraftMode('edit');setError('');setNotice('')}
  const beginDuplicate=(p:StoredPreset)=>{
+  if(p.cabinetSpec){setDraft(null);setCabinetEditor({source:p,duplicate:true});setSelectedCategory(p.categoryId);setError('');setNotice('Unsaved cabinet copy. The original remains unchanged.');return}
   setCabinetEditor(null)
   setDraft(duplicatePresetDraft(p));setSelectedCategory(p.categoryId);setDraftMode('duplicate');setError('')
   setNotice('Unsaved duplicate draft. No preset is created until you press Save duplicate.')
@@ -144,7 +148,7 @@ export function PresetManager({project,projects,onInsert}:{
    const material=materials.find(m=>m.id===spec.materialId)
    if(!material)throw Error('Choose an available material.')
    const created=createCabinetPreset(spec,material)
-   const previous=cabinetEditor?.source
+   const previous=cabinetEditor?.duplicate?undefined:cabinetEditor?.source
    const updated=await savePreset({...created,id:previous?.id??created.id,createdAt:previous?.createdAt??created.createdAt,categoryId})
    setLibrary(updated);setCabinetEditor(null);setError('');setNotice(previous?'Cabinet preset updated.':'Cabinet preset saved.')
   }catch(e){onError(e);throw e}finally{setBusy(false)}
@@ -199,7 +203,7 @@ export function PresetManager({project,projects,onInsert}:{
   </div>
   {error&&<p className="preset-error" role="alert">{error}</p>}
   {notice&&<p className="preset-success" role="status">{notice}</p>}
-  {cabinetEditor&&<CabinetConfigurator key={cabinetEditor.source?.id??'new'} mode="preset" materials={materials} categories={categories} initialCategory={cabinetEditor.source?.categoryId??UNCATEGORIZED_ID}
+  {cabinetEditor&&<CabinetConfigurator key={(cabinetEditor.source?.id??'new')+(cabinetEditor.duplicate?'-copy':'')} mode="preset" materials={materials} categories={categories} initialCategory={cabinetEditor.source?.categoryId??UNCATEGORIZED_ID}
    initial={cabinetEditor.source?.cabinetSpec?{...cabinetEditor.source.cabinetSpec,materialId:materials.find(m=>m.type===cabinetEditor.source?.items[0]?.material.type&&m.thickness===cabinetEditor.source?.items[0]?.material.thickness)?.id??materials[0]?.id??''}:undefined}
    onSavePreset={saveCabinet} onCancel={()=>setCabinetEditor(null)}/>}
   {draft&&<div role="region" className="preset-editor" aria-label="Preset draft editor">

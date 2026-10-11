@@ -78,6 +78,6 @@ test('duplicate is a new unsaved draft; cancel creates nothing; save creates one
  // Open item and request lazy 3D rendering independently of the project editor.
  const copy=manager.locator('.preset-card').filter({hasText:'Custom 40 x 30 drawer'})
  await copy.locator('.preset-entry > summary').click()
- await copy.getByRole('button',{name:'View preset 3D'}).click()
- await expect(copy.getByRole('region',{name:'Preset 3D preview'})).toBeVisible()
+ await expect(copy.getByRole('button',{name:'View assembled 3D'})).toHaveCount(0)
+ await expect(copy.getByText('No assembled 3D model saved',{exact:false})).toBeVisible()
 })
