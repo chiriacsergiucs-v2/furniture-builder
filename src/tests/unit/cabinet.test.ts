@@ -1,7 +1,7 @@
 import {describe,it,expect} from 'vitest'
 import {createProject} from '../../engine/types.ts'
 import {validateProject} from '../../engine/schema.ts'
-import {createCabinetForProject,createCabinetPreset,createCabinetParts,createCabinetAssemblies,cabinetBoxes,cabinetDefaults,cabinetErrors} from '../../furniture/cabinet.ts'
+import {createCabinetForProject,createCabinetPreset,createCabinetParts,createCabinetAssemblies,cabinetBoxes,cabinetDefaults,cabinetErrors,reconfigureCabinet} from '../../furniture/cabinet.ts'
 import {instantiatePreset} from '../../presets/presets.ts'
 import {exportFusionPython} from '../../assembly/fusion.ts'
 
@@ -61,6 +61,25 @@ describe('parametric cabinet editor — parts, presets and Fusion',()=>{
   expect(JSON.stringify(preset)).toBe(raw)
   project.parts.push(...one);project.assemblies=assemblies
   expect(validateProject(project)).toEqual([])
+ })
+ it('edits only the chosen cabinet and removes stale shelf rows',()=>{
+  const {project,spec}=create()
+  const first=createCabinetForProject(project,spec)
+  project.parts.push(...first.parts);project.assemblies=first.assemblies
+  const other={...spec,label:'Other cabinet',width:600}
+  const second=createCabinetForProject(project,other)
+  project.parts.push(...second.parts);project.assemblies.push(...second.assemblies)
+  const originalOther=JSON.stringify(second.assemblies[0])
+  const update={...spec,width:1000,shelves:0}
+  const revised=reconfigureCabinet(project,first.assemblies[0].id,update)
+  expect(revised.assemblies).toHaveLength(2)
+  expect(JSON.stringify(revised.assemblies![1])).toBe(originalOther)
+  expect(revised.assemblies![0].pieces).toHaveLength(4)
+  expect(revised.parts.filter(p=>p.group==='Open cabinet').map(p=>p.quantity)).toEqual([2,2])
+  expect(revised.parts.find(p=>p.group==='Open cabinet'&&p.label==='Top / bottom')?.width).toBe(964)
+  expect(validateProject(revised)).toEqual([])
+  expect(project.parts).toHaveLength(6)
+  expect(project.assemblies![0].pieces).toHaveLength(6)
  })
  it('supports odd dimensions and fractional shelf positions in a saved assembly',()=>{
   const {project,spec}=create()
