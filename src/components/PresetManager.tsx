@@ -180,7 +180,7 @@ export function PresetManager({project,projects,onInsert}:{
   </div>
   {error&&<p className="preset-error" role="alert">{error}</p>}
   {notice&&<p className="preset-success" role="status">{notice}</p>}
-  {draft&&<div className="preset-editor" aria-label="Preset draft editor">
+  {draft&&<div role="region" className="preset-editor" aria-label="Preset draft editor">
    <h3>{draftMode==='duplicate'?'Duplicate with new params (unsaved)':draftMode==='edit'?'Edit preset':'New preset'}</h3>
    <p className="muted">{draftMode==='duplicate'?'The original is unchanged. Change the name, dimensions, quantities, materials or ABS; nothing is created until Save duplicate.':'Changes are stored only when Save is pressed.'}</p>
    <div className="form-grid">
