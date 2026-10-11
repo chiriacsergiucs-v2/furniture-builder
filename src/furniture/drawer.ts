@@ -30,6 +30,14 @@ export const runnerProfiles=[
  {id:'custom',title:'Custom runner specification',note:'Enter verified clearances and travel type from the chosen hardware datasheet'}
 ] as const
 
+/** Hardware schedule is separate from panel cutting parts. Nominal product selection still requires verification. */
+export function drawerHardware(s:DrawerSpec):Array<{label:string;quantity:number;unit:'pair'|'piece'}>{
+ const items:Array<{label:string;quantity:number;unit:'pair'|'piece'}>=[]
+ if(s.runner!=='none')items.push({label:s.runner==='accuride-3832'?'Accuride 3832 side-mount runner':
+  s.runner==='blum-movento'?'Blum MOVENTO undermount runner':'Custom runner (exact hardware TBD)',quantity:1,unit:'pair'})
+ if(s.front==='applied')items.push({label:'Applied-front handle (optional; drilling not configured)',quantity:1,unit:'piece'})
+ return items
+}
 export function drawerSideSpace(s:DrawerSpec):number{
  if(s.runner==='accuride-3832')return 13
  if(s.runner==='blum-movento')return 21
