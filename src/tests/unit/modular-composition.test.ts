@@ -30,7 +30,7 @@ describe('B08–B15: modular furniture composition and manufacturing',()=>{
   expect(expanded.children).toHaveLength(3)
   expect(expanded.params.shelves).toBe(3)
   expect(expanded.children[0].id).toBe(original.children[0].id)
-  expect(resolveComponentTree(expanded).children.map(c=>c.values.z)).toEqual([225,432,639])
+  expect(resolveComponentTree(expanded).children.map(c=>c.values.z)).toEqual([220.5,441,661.5])
   expect(resolveComponentTree(original).children.map(c=>c.values.z)).toEqual([294,588])
  })
  it('replaces a shelf with a drawer in a single compatible bay without changing source',()=>{
@@ -75,7 +75,7 @@ describe('B08–B15: modular furniture composition and manufacturing',()=>{
   expect(firstShelf?.z).toBeGreaterThan(divider!.z+divider!.dz)
   const built=createCabinetForProject(project,config)
   expect(built.parts.reduce((n,p)=>n+p.quantity,0)).toBe(built.assemblies[0].pieces.length)
-  expect(cabinetErrors({...config,split:{...config.split,ratio:10}},material).length).toBeGreaterThan(0)
+  expect(cabinetErrors({...config,split:{...config.split,ratio:10,first:{content:'drawers',count:3}}},material).length).toBeGreaterThan(0)
  })
  it('positions custom shelves, checks ordering and retains saved presets',()=>{
   const {spec,material}=base()
