@@ -1,5 +1,5 @@
 import type {Project,StockSheet,Part,Offcut} from './types.ts'
-import {validPresetOrigin} from '../presets/presets.ts'
+import {validPresetOrigin} from '../presets/origin.ts'
 export const integer=(n:unknown,min=0):n is number=>typeof n==='number'&&Number.isSafeInteger(n)&&n>=min
 export const finiteMoney=(n:unknown):n is number=>typeof n==='number'&&Number.isFinite(n)&&n>=0
 export const safeString=(s:unknown):s is string=>typeof s==='string'&&s.length<=20000
