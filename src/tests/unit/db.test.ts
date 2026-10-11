@@ -3,7 +3,7 @@ import {beforeEach,afterAll,describe,it,expect} from 'vitest'
 import {FurnitureDatabase,MIGRATION_KEY,UNCATEGORIZED_ID,db} from '../../db/database.ts'
 import {migrateLocalStorage,readLegacySnapshot} from '../../db/migration.ts'
 import {createProject,emptyAbs} from '../../engine/types.ts'
-import {createPreset,newPresetItem} from '../../presets/presets.ts'
+import {createPreset,newPresetItem,instantiatePreset} from '../../presets/presets.ts'
 import {duplicatePresetDraft} from '../../presets/duplicate.ts'
 import {saveProject,getProject,duplicateProject,removeProject,backupProject,restoreProject,saveCategory,listCategories,saveKit,listKits,listRevisions} from '../../db/repository.ts'
 import {savePreset,listPresets,exportPresetLibrary,importPresetLibrary} from '../../presets/storage.ts'
@@ -117,3 +117,23 @@ describe('explicit duplication and persistence',()=>{
   expect(rows.find(p=>p.id===source.id)?.items[0].width).toBe(source.items[0].width)
  })
 })
+
+describe('B19 saved preset revisions',()=>{
+ it('pins existing parts to the original definition after a preset edit',async()=>{
+  const project=createProject();
+  const preset=createPreset('Drawer panel',[newPresetItem(project.materials[0])]);
+  await savePreset(preset);
+  const first=(await listPresets()).find(p=>p.id===preset.id)!;
+  expect(first.revision).toBe(1);
+  project.parts=instantiatePreset(first,project);
+  await saveProject(project);
+  await savePreset({...first,items:first.items.map(item=>({...item,width:650}))});
+  const second=(await listPresets()).find(p=>p.id===preset.id)!;
+  expect(second.revision).toBe(2);
+  const frozen=(await getProject(project.id))!.parts[0];
+  expect(frozen.width).toBe(first.items[0].width);
+  expect(frozen.sourcePreset).toEqual({id:preset.id,revision:1});
+  const backup=backupProject((await getProject(project.id))!);
+  expect(JSON.parse(backup).parts[0].sourcePreset.revision).toBe(1);
+ })
+});
