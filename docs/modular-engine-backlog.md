@@ -1,9 +1,9 @@
 # Modular Furniture Engine — EDC Architecture & Execution Backlog
 
 **Project:** `chiriacsergiucs-v2/furniture-builder`  
-**Backlog version:** 1.2 · 2026-10-11 · **Canonical status source for this initiative**  
+**Backlog version:** 1.3 · 2026-10-11 · **Canonical status source for this initiative**  
 **Implementation branch policy:** Work on `main` when explicitly requested. Preserve user data.  
-**Current iteration:** B08–B14 completed as a coherent cabinet-composition milestone, with B15 retained as Done; PR #5 CI [38114434330](https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38114434330) passed lint, typecheck, kernel/unit tests, build and existing browser suite. GitHub Pages live-site validation is a separate release check.
+**Current iteration:** PR #6 builds the next functional slice: front components, five chest recipes, normalized furniture model, assembled preview and geometry/cutlist diagnostics. Verified by [CI run 38115071468](https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38115071468) (lint, TypeScript, kernel/unit, build and existing browser tests passed). Merge/Pages publication status is verified separately.
 
 ## Mandate and frozen product decisions
 
@@ -248,19 +248,19 @@ Variants are **distinct construction/partition/operation recipes**, not renamed 
 | B13 | 13 | C02/C03 shelf component | Done | `core/shelf` reused directly and inside split compartments, repeated via `repeatComponents`; optional individually adjustable percent positions for unsplit shelves, with clear-gap constraints. Pin-drilling rules are deferred. CI 38114434330 PASS |
 | B14 | 14 | C04 compartment component | Done | `core/compartment` definition has independent width/height/x/z, contents slot and child parameter derivation. Two split bays generate correctly sized shelves/drawers and divider using parent changes. CI 38114434330 PASS |
 | B15 | 15 | C15 reusable drawer box | Done | `src/furniture/drawer.ts` builds side/back/inner-front/bottom plus optional applied front, opening-driven for standalone and cabinet components, independently editable. CI 38113051014 PASS |
-| B16 | 16 | C17 configurable drawer fronts | Partially done | Fixed starter front, no independent adaptable front |
-| B17 | 17 | One normalized 3D + cut-list + BOM model | Partially done | Cabinet builds matching boxes/parts, but no generic shared `FurnitureModel`/BOM |
-| B18 | 18 | Complete assembled-item preview | Partially done | Cabinet and positioned assemblies preview exists; not supported for every planned template |
+| B16 | 16 | C17 configurable drawer fronts | Done | Versioned `core/drawer-front` occupies drawer `front.main` slot and derives applied-front dimensions or lowered finger-pull inner front from parent opening; `drawerPanels` consumes the resolved front geometry. Focused tests and CI 38115071468 PASS |
+| B17 | 17 | One normalized 3D + cut-list + BOM model | Done | `src/furniture/furniture-model.ts` derives per-assembly positioned solids, actual manufacturing quantities, hardware schedule and diagnostics; assembled 3D renderer and Fusion snapshot use this model; cabinet preview uses the same pipeline. CI 38115071468 PASS |
+| B18 | 18 | Complete assembled-item preview | Done | All **ready** cabinet, chest and drawer objects show a complete positioned assembly using one `PositionedFurniturePreview` path; manual cut rows do not invent assembly positions, and planned kinds remain disabled. CI 38115071468 PASS |
 | B19 | 19 | Versioned template recipes and independent instances | Partially done | Dexie presets/project assemblies exist; version-pinned component recipes not yet supported |
 | B20 | 20 | Legacy migration / save & restore compatibility | Partially done | Dexie + current backups exist; future graph adapters/migration not implemented |
-| B21 | 21 | Template recipe #2 from shared components: chest of drawers | Not done | Prove carcass + repeated adjustable drawers reuse |
+| B21 | 21 | Template recipe #2 from shared components: chest of drawers | Done | Five distinct functional ready recipes (`chest-3-drawer`, `chest-5-drawer`, `chest-two-column`, `chest-mixed-drawers`, `chest-open-shelf`) reuse existing carcass, split-compartment, drawer and front definitions; catalog and wizard can create/save/edit. CI 38115071468 PASS |
 | B22 | 22 | Generalized create/edit/save preset flow | Partially done | Cabinet-only wizard and saved preset supported; composition engine integration missing |
-| B23 | 23 | Incompatibility/collision diagnostics | Partially done | Cabinet dimension validation exists; no cross-component slot/collision diagnostics |
-| B24 | 24 | Template expansion: 18 families / 90 variants | Not done | Catalog/variants specified above, generators not implemented |
+| B23 | 23 | Incompatibility/collision diagnostics | Done | Component resolver rejects invalid attachment slots/duplicate nodes, cabinet generator checks dimensions/runner fit and `geometry-diagnostics.ts` rejects intersecting 3D panel extents with numeric mm overlap diagnostics. Hardware travel, fittings drilling and structural certification explicitly excluded. CI 38115071468 PASS |
+| B24 | 24 | Template expansion: 18 families / 90 variants | Partially done | Five additional chest variants are now genuine manufacturing templates; the 18-family/90-variant domain catalog remains specified in this file, but unrelated bed/table/wardrobe recipes are planned, NOT marked ready. CI 38115071468 PASS for working templates |
 | B25 | 25 | Standalone per-cut-piece 3D as primary furniture preview | Dropped | User explicitly requires complete furniture preview; cutlist stays tabular |
 | B26 | 26 | Material/hardware/joinery-grade advanced rules | Not done | Intentionally deferred; keep material thickness parametric |
 | B27 | 27 | Photo-realistic styling / finish controls | Not done | Intentionally deferred; not a prerequisite for component engine |
-| B28 | 28 | Cross-template geometry/cutlist parity verification | Not done | Focused checks should be added only as new logic warrants |
+| B28 | 28 | Cross-template geometry/cutlist parity verification | Done | `src/tests/unit/furniture-model.test.ts` verifies every ready cabinet/chest variant plus standalone drawer fronts: 3D oriented physical extents, per-piece cut quantities, runner BOM, versioned snapshots, legacy records and collision checks. CI 38115071468 PASS |
 | B29 | 29 | Building-component catalogue in Add Item and presets | Done | `CabinetConfigurator.tsx` lists drawer/shelf and planned components; `PresetManager.tsx` creates, edits, duplicates and inserts drawer presets. CI 38113051014 PASS |
 | B30 | 30 | Parametric runner-aware drawer builder | Done | `DrawerConfigurator.tsx` and `drawer.ts` support selected side/under/custom runners, nominal length, opening clearances, lowered finger-pull or applied/inner-only fronts; repeat in cabinets and independent edits. Focused tests CI 38113051014 PASS |
 | B31 | 31 | Separate hardware requirements list | Done | `drawerHardware()` schedules runner pairs and optional front handles independently of board cuts in drawer and cabinet UI; not a complete drilling or supplier BOM. CI 38113051014 PASS |
@@ -281,7 +281,12 @@ Variants are **distinct construction/partition/operation recipes**, not renamed 
 
 Original proposal (superseded): B05/B06/B07 insert with a reusable shelf in the named slot.  
 **Iteration 3 completed (2026-10-11):** B08–B14, including repeat/replace, vertical or horizontal split bays, a right-docked second module, reusable carcass/adjustable shelf/compartment components. Verified by PR #5 CI 38114434330. B15 remains Done from the earlier reusable drawer milestone.
-**Next iteration recommended:** B16, B17, B19, B21 — independently configurable drawer fronts and a distinct chest-of-drawers template built from the same component definitions, with one normalized manufacturing assembly. B18/B20/B22/B23 can improve incrementally.\n**Scope limits:** Docking is limited to exactly two horizontally adjacent same-height/depth/thickness carcasses; no arbitrary 3D placement or joint engineering. Custom shelf positions describe location, not a verified shelf-pin hole pattern. Structural strength and hardware installation remain outside scope.  
+**Iteration 4 completed (2026-10-11):** B16, B17, B18, B21, B23, B28 and partial B24. Five genuine chest configurations and front components reuse the engine; geometry/Cut list/hardware are derived from a normalized model. CI 38115071468 PASS.
+
+**Remaining roadmap:** B19 (deeper version/migration guarantees), B20 (future graph adapters), B22 (unified arbitrary-component wizard), B24 (additional furniture families), B26 (advanced material/hardware/joinery), B27 (photorealism). These are **not** claimed Done. The user's prior requirement to prioritize the configuration brain defers B26/B27.
+
+**Safety boundary:** Physical panel collision checks do not simulate drawer travel, hinge swings, fastener drilling, anchoring, or structural loads; manufacturing approval still requires engineering review.
+**Scope limits:** Docking is limited to exactly two horizontally adjacent same-height/depth/thickness carcasses; no arbitrary 3D placement or joint engineering. Custom shelf positions describe location, not a verified shelf-pin hole pattern. Structural strength and hardware installation remain outside scope.  
 Later: B23-B24 additional families and dynamic variants; advanced fittings only on request.
 
 ### Definition of done for the first full vertical slice

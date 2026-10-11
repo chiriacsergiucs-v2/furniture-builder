@@ -1,4 +1,5 @@
 import {cabinetDefaults} from './cabinet.ts'
+import {drawerDefaults} from './drawer.ts'
 import type {CabinetSpec} from './cabinet.ts'
 import {getComponentDefinition} from './component-engine.ts'
 
@@ -16,12 +17,18 @@ export interface FurnitureTemplate {
  status:'ready'|'planned'
  version:number
  rootComponent?:{definitionId:string;definitionVersion:number}
- defaultSpec?:Pick<CabinetSpec,'width'|'height'|'depth'|'shelves'>
+ defaultSpec?:Partial<Pick<CabinetSpec,'width'|'height'|'depth'|'shelves'|'drawers'|'split'>>
+ drawerRunnerLength?:number
 }
 export const furnitureTemplates:readonly FurnitureTemplate[]=[
  {id:'cabinet-open',version:1,rootComponent:{definitionId:'core/carcass',definitionVersion:1},title:'Open cabinet',category:'Cabinets',description:'Basic cabinet with adjustable, evenly spaced shelves.',kind:'cabinet',status:'ready',defaultSpec:{width:800,height:900,depth:350,shelves:2}},
  {id:'cabinet-empty',version:1,rootComponent:{definitionId:'core/carcass',definitionVersion:1},title:'Empty carcass',category:'Cabinets',description:'Four-panel open cabinet, ready for future doors or drawers.',kind:'cabinet',status:'ready',defaultSpec:{width:800,height:900,depth:350,shelves:0}},
  {id:'cabinet-shelving',version:1,rootComponent:{definitionId:'core/carcass',definitionVersion:1},title:'Shelf tower',category:'Storage',description:'Tall storage module with four internal shelves.',kind:'cabinet',status:'ready',defaultSpec:{width:600,height:1800,depth:350,shelves:4}},
+ {id:'chest-3-drawer',version:1,rootComponent:{definitionId:'core/carcass',definitionVersion:1},title:'Chest · 3 drawers',category:'Bedroom',description:'Three equally sized full-width drawers, each with clearance-aware runners and configurable fronts.',kind:'cabinet',status:'ready',defaultSpec:{width:900,height:820,depth:450,shelves:0,drawers:3},drawerRunnerLength:400},
+ {id:'chest-5-drawer',version:1,rootComponent:{definitionId:'core/carcass',definitionVersion:1},title:'Chest · 5 drawers',category:'Bedroom',description:'Five full-width repeated drawer components, each recomputed when the chest resizes.',kind:'cabinet',status:'ready',defaultSpec:{width:900,height:1100,depth:450,shelves:0,drawers:5},drawerRunnerLength:400},
+ {id:'chest-two-column',version:1,rootComponent:{definitionId:'core/carcass',definitionVersion:1},title:'Chest · two columns',category:'Bedroom',description:'Two vertical compartments with three narrow drawers each.',kind:'cabinet',status:'ready',defaultSpec:{width:1100,height:900,depth:450,shelves:0,drawers:0,split:{axis:'vertical',ratio:50,first:{content:'drawers',count:3},second:{content:'drawers',count:3}}},drawerRunnerLength:400},
+ {id:'chest-mixed-drawers',version:1,rootComponent:{definitionId:'core/carcass',definitionVersion:1},title:'Chest · shallow and deep',category:'Bedroom',description:'Separate upper and lower drawer compartments with distinct opening heights.',kind:'cabinet',status:'ready',defaultSpec:{width:900,height:1000,depth:450,shelves:0,drawers:0,split:{axis:'horizontal',ratio:65,first:{content:'drawers',count:2},second:{content:'drawers',count:2}}},drawerRunnerLength:400},
+ {id:'chest-open-shelf',version:1,rootComponent:{definitionId:'core/carcass',definitionVersion:1},title:'Chest · drawer and shelves',category:'Bedroom',description:'Drawer bank beside open shelving with independently sized compartments.',kind:'cabinet',status:'ready',defaultSpec:{width:1100,height:900,depth:450,shelves:0,drawers:0,split:{axis:'vertical',ratio:62,first:{content:'drawers',count:4},second:{content:'shelves',count:3}}},drawerRunnerLength:400},
  {id:'drawer-unit',version:1,rootComponent:{definitionId:'core/drawer',definitionVersion:1},title:'Drawer module',category:'Building components',description:'Adjustable drawer opening, runner clearance, front and pull style.',kind:'drawer',status:'ready'},
  {id:'wardrobe',version:1,title:'Wardrobe',category:'Storage',description:'Clothes rail, shelves and optional doors.',kind:'wardrobe',status:'planned'},
  {id:'desk',version:1,title:'Desk',category:'Tables & desks',description:'Worktop, side panels and support structure.',kind:'desk',status:'planned'},
@@ -34,5 +41,10 @@ export function initialSpecForTemplate(id:string,materialId:string):CabinetSpec{
  const template=availableTemplate(id)
  if(!template||template.kind!=='cabinet'||!template.defaultSpec||!template.rootComponent)throw Error('Template not available: '+id)
  getComponentDefinition(template.rootComponent.definitionId,template.rootComponent.definitionVersion)
- return {...cabinetDefaults(materialId),...template.defaultSpec,label:template.title,templateId:template.id,templateVersion:template.version}
+ const result:CabinetSpec={...cabinetDefaults(materialId),...structuredClone(template.defaultSpec),
+  label:template.title,templateId:template.id,templateVersion:template.version}
+ const hasDrawers=(result.drawers??0)>0||
+  Boolean(result.split&&(result.split.first.content==='drawers'||result.split.second.content==='drawers'))
+ if(hasDrawers)result.drawerConfig={...drawerDefaults(materialId),runnerLength:template.drawerRunnerLength??300}
+ return result
 }

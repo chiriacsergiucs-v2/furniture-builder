@@ -1,9 +1,9 @@
 import type {Project} from '../engine/types.ts'
 import type {ProjectAssembly} from './model.ts'
-import {resolveAssembly} from './model.ts'
+import {deriveFurnitureModel} from '../furniture/furniture-model.ts'
 /** Fusion 360 Python script: real, separately named solid B-rep components, not mesh. */
 export function exportFusionPython(project:Project,assembly:ProjectAssembly):string{
- const resolved=resolveAssembly(project,assembly)
+ const resolved=deriveFurnitureModel(project,assembly).solids
  if(!resolved.length)throw Error('Assembly has no valid panel instances to export.')
  const data={name:assembly.label,items:resolved.map(({instance,part,material})=>({
   name:part.label+' '+(instance.instanceIndex+1),widthMm:part.width,heightMm:part.height,
