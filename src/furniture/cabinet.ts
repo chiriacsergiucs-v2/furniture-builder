@@ -116,3 +116,24 @@ export function createCabinetPreset(s:CabinetSpec,material:Material):CutlistPres
  })))
  return {...preset,cabinetSpec:structuredClone(s)}
 }
+
+/** Replace one managed cabinet without mutating other assemblies or project items. */
+export function reconfigureCabinet(project:Project,assemblyId:string,spec:CabinetSpec):Project{
+ const old=project.assemblies?.find(a=>a.id===assemblyId)
+ if(!old?.cabinetSpec)throw Error('This assembly is not a configurable cabinet.')
+ const ownPartIds=new Set(old.pieces.map(piece=>piece.partId))
+ const otherAssemblies=(project.assemblies??[]).filter(a=>a.id!==assemblyId)
+ if(otherAssemblies.some(a=>a.pieces.some(piece=>ownPartIds.has(piece.partId))))
+  throw Error('Cabinet parts are shared by another assembly; duplicate the cabinet before editing.')
+ const material=project.materials.find(m=>m.id===spec.materialId)
+ if(!material)throw Error('Selected material is not available.')
+ const parts=createCabinetParts(spec,material)
+ const index=(project.assemblies??[]).findIndex(a=>a.id===assemblyId)
+ const replacement=createCabinetAssemblies(spec,material,parts,1,index)[0]
+ return {...project,
+  parts:[...project.parts.filter(part=>!ownPartIds.has(part.id)),...parts],
+  assemblies:(project.assemblies??[]).map(a=>a.id===assemblyId?
+   {...replacement,id:a.id,createdAt:a.createdAt}:a),
+  lastResult:undefined
+ }
+}
