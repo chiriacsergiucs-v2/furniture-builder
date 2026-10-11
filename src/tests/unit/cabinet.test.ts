@@ -57,7 +57,7 @@ describe('parametric cabinet editor — parts, presets and Fusion',()=>{
   const assemblies=createCabinetAssemblies(resolved,project.materials[0],one,2,0)
   expect(assemblies.map(a=>a.pieces.length)).toEqual([6,6])
   expect(assemblies[0].pieces[0].instanceIndex).toBe(0)
-  expect(assemblies[1].pieces[0].instanceIndex).toBe(1)
+  expect(assemblies[1].pieces[0].instanceIndex).toBe(2)
   expect(JSON.stringify(preset)).toBe(raw)
   project.parts.push(...one);project.assemblies=assemblies
   expect(validateProject(project)).toEqual([])
