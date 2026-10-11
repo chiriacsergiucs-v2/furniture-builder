@@ -51,3 +51,8 @@ Latest tested source: `f7f38e7fcb9df908f062066460799f9073417f2d`. GitHub deploym
 - Pages: https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38107862978 — deployed successfully from a1bcb4cf194cc334ef78728e2c37611fda042393.
 - Confirmed standalone preset browsing, explicit save, cancellation without database writes, project insertion, reload persistence and on-demand 3D region via automated tests.
 - Existing Dexie database schema preserved. Avoid clearing site data; use complete JSON backups.
+
+## 2026-10-11 — EDC iteration 5 B19/B20/B22
+- Pinned source revision and serialized manufacturing instance provenance; non-destructive stable legacy cabinet/drawer graph hydration; explicit-save configured furniture preset draft.
+- CI https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38117222030 passed 25/25 kernel, 56/56 unit and 12/12 browser tests, typecheck, lint and build. Pages https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38117222131 succeeded. Source commit 07a1eaf93427ec0d345253e57103de46cf4f288e.
+- Still deferred: generic editor for unknown component kinds, physical Android GPU, Fusion execution, additional furniture families, hardware/drilling and photorealism.

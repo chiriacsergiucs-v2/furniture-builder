@@ -132,7 +132,7 @@
     "Regency XLSX template unavailable for template-specific adapter",
     "Independent live-site HTTP request unavailable from this tool; GitHub Pages deploy action reported success"
   ],
-  "nextAction": "Physical Android touch/GPU checks and optional cloud sync/backup. Keep verifying browser data persistence and Fusion export on actual desktop Fusion.",
+  "nextAction": "B22: adapt the component registry's ready root types into one explicit-save preset editor; extend B24 only after real geometry/cutlist parity is verified.",
   "lastEvidence": "CI https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38028499465; deploy https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38028499287",
   "storageMilestone": {
     "target": "IndexedDB via Dexie 4.2.1",
@@ -224,5 +224,29 @@
     "ciRun": 38107863136,
     "deploymentRun": 38107862978,
     "notes": "Browser/device-local IndexedDB, not cloud-synchronized; project and full database JSON exports already supported. The starter drawer uses positioned preset preview; other presets use schematic arranged panels."
+  },
+  "modularEngineIteration5": {
+    "status": "verified_deployed",
+    "commit": "07a1eaf93427ec0d345253e57103de46cf4f288e",
+    "statusChanges": {
+      "B19": "Done",
+      "B20": "Done",
+      "B22": "Partially done"
+    },
+    "checks": {
+      "kernel": "25/25",
+      "vitest": "56/56",
+      "browser": "12/12",
+      "lint": "pass",
+      "typecheck": "pass",
+      "build": "pass"
+    },
+    "ciRun": 38117222030,
+    "pagesRun": 38117222131,
+    "limitations": [
+      "No migration promises for unknown future component versions",
+      "General arbitrary-component preset wizard not built",
+      "No newly authored E2E suite; existing suite passed"
+    ]
   }
 }

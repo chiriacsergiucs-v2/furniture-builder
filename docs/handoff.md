@@ -50,3 +50,10 @@ New dependencies @react-three/fiber, three, @dnd-kit/core/sortable/utilities, @t
 - Navigation tab Presets separated from editor, hierarchical category/preset/item and lazy 3D per entry.
 - Main cutting editor places only cutlist-critical fields up front, hiding ABS, grain and setup under expandable advanced areas.
 - Limitations: IndexedDB is browser/device local and subject to site-data removal. Full database JSON backup is available in Settings; physical Android and independent live-site HTTP test not performed.
+
+## 2026-10-11 — B19/B20 completed, B22 progressed
+- `src/presets/origin.ts`: stable source preset ID/revision and component-template pins; `savePreset` advances version on user Save; project parts and assemblies keep their original source pin after library edits. Copy-on-write reconfiguration retains origin metadata.
+- `src/furniture/legacy-adapter.ts`: read-only in-memory deterministic component-tree backfill for known historical cabinets/drawers; original Dexie records remain unchanged until explicit user Save. Legacy preset JSON and project JSON backup compatibility retained.
+- Presets page now offers Configure as new preset for a configured project cabinet/chest/drawer; user reviews parameters and explicitly saves; does not invent geometry for future template kinds.
+- CI https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38117222030 PASS: 25 kernel, 56 Vitest, 12 Playwright; lint/typecheck/build pass. Deploy https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38117222131 PASS. Physical Android and Fusion API execution remain untested.
+- B19 Done; B20 Done for supported historical data; B22 Partial pending arbitrary registered-component wizard.
