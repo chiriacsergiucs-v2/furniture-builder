@@ -4,17 +4,20 @@ import type {ProjectAssembly,AssemblyPiece,Vec3} from '../assembly/model.ts'
 import {presetMaterial,createPreset} from '../presets/presets.ts'
 import type {CutlistPreset} from '../presets/presets.ts'
 import {createCabinetComponentTree,resolveComponentTree} from './component-engine.ts'
+import {drawerDefaults,drawerErrors,drawerPanels} from './drawer.ts'
+import type {DrawerSpec,DrawerRole} from './drawer.ts'
 
 /** Manufacturing dimensions are integer millimetres; assembly centres may be half-mm. */
 export interface CabinetSpec {
  label:string; width:number; height:number; depth:number; materialId:string
  shelves:number; sideClear:number; frontClear:number; rearClear:number
  grain:GrainAxis; frontEdge:boolean; templateId?:string; templateVersion?:number
+ drawers?:number; drawerConfig?:DrawerSpec
 }
 export interface CabinetBox {
- role:'Side panel'|'Top / bottom'|'Shelf'
+ role:'Side panel'|'Top / bottom'|'Shelf'|DrawerRole
  index:number; x:number; y:number; z:number
- dx:number; dy:number; dz:number; cutWidth:number; cutHeight:number
+ dx:number; dy:number; dz:number; cutWidth:number; cutHeight:number; rotationDeg?:Vec3
 }
 export const cabinetDefaults=(materialId:string):CabinetSpec=>({
  label:'Open cabinet',width:800,height:900,depth:350,materialId,shelves:2,
@@ -28,12 +31,20 @@ export function cabinetErrors(s:CabinetSpec,material?:Material):string[]{
  if(![s.width,s.height,s.depth].every(n=>whole(n)&&n>0))e.push('Width, height and depth must be positive whole millimetres.')
  if(![s.sideClear,s.frontClear,s.rearClear].every(n=>whole(n)&&n>=0))e.push('Clearances must be nonnegative whole millimetres.')
  if(!whole(s.shelves)||s.shelves<0||s.shelves>20)e.push('Shelves must be between 0 and 20.')
+ if(!whole(s.drawers??0)|| (s.drawers??0)<0||(s.drawers??0)>20)e.push('Drawers must be between 0 and 20.')
+ if((s.drawers??0)>0&&s.shelves>0)e.push('Choose shelves OR drawers in this undivided compartment.')
  if(s.templateVersion!==undefined&&s.templateVersion!==1)e.push('Unsupported cabinet template version.')
  if(material&&whole(material.thickness)&&material.thickness>0&&e.length===0){
   const t=material.thickness
   if(s.width<=2*t+2*s.sideClear)e.push('Width cannot fit the side panels and clearances.')
   if(s.depth<=s.frontClear+s.rearClear)e.push('Depth must exceed front and rear clearances.')
-  if((s.height-(s.shelves+2)*t)/(s.shelves+1)<50)e.push('Each clear compartment must be at least 50 mm tall.')
+  if(s.shelves>0&&(s.height-(s.shelves+2)*t)/(s.shelves+1)<50)e.push('Each clear compartment must be at least 50 mm tall.')
+  if((s.drawers??0)>0){
+   const innerHeight=Math.floor((s.height-2*t-((s.drawers??0)-1)*3)/(s.drawers??1))
+   if(innerHeight<80)e.push('Each drawer opening must be at least 80 mm high.')
+   else if(!s.drawerConfig)e.push('Drawer configuration missing from cabinet.')
+   else e.push(...drawerErrors({...s.drawerConfig,openingWidth:s.width-2*t,openingHeight:innerHeight,openingDepth:s.depth-s.rearClear,materialId:material.id},material))
+  }
  }
  return e
 }
@@ -46,7 +57,23 @@ export function cabinetBoxes(s:CabinetSpec,t:number):CabinetBox[]{
   {role:'Top / bottom',index:0,x:v.thickness,y:0,z:0,dx:v.innerWidth,dy:v.depth,dz:v.thickness,cutWidth:v.innerWidth,cutHeight:v.depth},
   {role:'Top / bottom',index:1,x:v.thickness,y:0,z:v.height-v.thickness,dx:v.innerWidth,dy:v.depth,dz:v.thickness,cutWidth:v.innerWidth,cutHeight:v.depth}
  ]
+ const indices=new Map<DrawerRole,number>()
  for(const child of resolved.children){
+  if(child.instance.definitionId==='core/drawer'){
+   if(!s.drawerConfig)throw Error('Drawer specification missing.')
+   const childSpec:DrawerSpec={...s.drawerConfig,materialId:s.materialId,
+    openingWidth:child.values.openingWidth,openingHeight:child.values.openingHeight,
+    openingDepth:child.values.openingDepth}
+   const m:Material={id:s.materialId,name:'Panel',type:'PAL',thickness:t}
+   const panels=drawerPanels(childSpec,m)
+   for(const panel of panels){
+    const index=indices.get(panel.role)??0
+    indices.set(panel.role,index+1)
+    result.push({...panel,index,x:child.values.x+panel.x,y:child.values.y+panel.y,
+     z:child.values.z+panel.z})
+   }
+   continue
+  }
   if(child.instance.definitionId!=='core/shelf')throw Error('Unsupported cabinet child '+child.instance.definitionId)
   const b=child.values
   result.push({
@@ -65,7 +92,7 @@ const edgeFor=(role:CabinetBox['role'],enabled:boolean)=>{
 export function createCabinetParts(s:CabinetSpec,material:Material):Part[]{
  const errors=cabinetErrors(s,material);if(errors.length)throw Error(errors.join(' '))
  const b=cabinetBoxes(s,material.thickness)
- return (['Side panel','Top / bottom','Shelf'] as const).flatMap(role=>{
+ return (['Side panel','Top / bottom','Shelf','Drawer side','Drawer back','Drawer front','Drawer bottom','Applied front'] as const).flatMap(role=>{
   const matching=b.filter(x=>x.role===role)
   if(!matching.length)return []
   return [{id:crypto.randomUUID(),label:role,width:matching[0].cutWidth,height:matching[0].cutHeight,
@@ -82,7 +109,7 @@ function pieceFor(box:CabinetBox,part:Part,index:number,s:CabinetSpec,offset:num
   s.depth/2-box.y-box.dy/2
  ]
  return {id:crypto.randomUUID(),partId:part.id,instanceIndex:index,
-  positionMm:center,rotationDeg:box.role==='Side panel'?[0,90,90]:[90,0,0]}
+  positionMm:center,rotationDeg:box.rotationDeg??(box.role==='Side panel'?[0,90,90]:[90,0,0])}
 }
 export function createCabinetAssemblies(s:CabinetSpec,material:Material,parts:Part[],copies=1,existingCount=0):ProjectAssembly[]{
  const errors=cabinetErrors(s,material);if(errors.length)throw Error(errors.join(' '))
