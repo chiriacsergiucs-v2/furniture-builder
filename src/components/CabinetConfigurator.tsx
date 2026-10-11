@@ -8,8 +8,8 @@ import {cabinetDefaults,cabinetErrors,cabinetBoxes,createCabinetForProject} from
 import type {CabinetSpec} from '../furniture/cabinet.ts'
 const CabinetPreview=lazy(()=>import('./CabinetPreview.tsx'))
 
-export function CabinetConfigurator({mode,materials,categories,initial,initialCategory,onAdd,onSavePreset,onCancel}:{
- mode:'item'|'preset';materials:Material[];categories?:PresetCategory[]
+export function CabinetConfigurator({mode,materials,categories,initial,initialCategory,editing=false,onAdd,onSavePreset,onCancel}:{
+ mode:'item'|'preset';materials:Material[];categories?:PresetCategory[];editing?:boolean
  initial?:CabinetSpec;initialCategory?:string
  onAdd?:(spec:CabinetSpec)=>Promise<void>|void
  onSavePreset?:(spec:CabinetSpec,categoryId:string)=>Promise<void>|void
@@ -61,8 +61,8 @@ export function CabinetConfigurator({mode,materials,categories,initial,initialCa
  const field=(key:'width'|'height'|'depth'|'sideClear'|'frontClear'|'rearClear',label:string,min=0)=>
   <label className="field"><span>{label}</span><input type="number" step="1" min={min}
    value={spec[key]} onChange={e=>change(key,Number(e.target.value))}/></label>
- return <section className="card cabinet-wizard" role="region" aria-label={mode==='item'?'Add furniture item':'Create furniture preset'}>
-  <div className="section-head"><div><h2>{mode==='item'?'Add furniture item':'Create furniture preset'}</h2>
+ return <section className="card cabinet-wizard" role="region" aria-label={mode==='item'?(editing?'Edit furniture item':'Add furniture item'):'Create furniture preset'}>
+  <div className="section-head"><div><h2>{mode==='item'?(editing?'Edit furniture item':'Add furniture item'):'Create furniture preset'}</h2>
    <p className="muted">Parametric open-front cabinet · all dimensions in mm · automatic cut list</p></div>
    <button type="button" onClick={onCancel}>Close editor</button>
   </div>
@@ -127,7 +127,7 @@ export function CabinetConfigurator({mode,materials,categories,initial,initialCa
    <button type="button" onClick={onCancel}>Cancel</button>
    <button type="button" onClick={exportFusion} disabled={errors.length>0}>Export to Fusion 360 (.py)</button>
    <button type="button" className="primary" onClick={()=>void submit()} disabled={errors.length>0||saving}>
-    {saving?'Saving…':mode==='item'?'Add item to project':'Save preset'}
+    {saving?'Saving…':mode==='item'?(editing?'Update item':'Add item to project'):'Save preset'}
    </button>
   </div>
   <p className="muted cabinet-export-note">Fusion export is a separately editable solid-component snapshot, not a live-linked .f3d file. Re-export after changing the cabinet.</p>
