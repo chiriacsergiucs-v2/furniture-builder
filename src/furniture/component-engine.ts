@@ -95,11 +95,11 @@ export function resolveComponentTree(root:ComponentInstance):ResolvedComponent{
 /** Preserve existing node IDs on edits; different furniture copies receive fresh IDs. */
 export function createCabinetComponentTree(spec:CabinetSpec,thickness:number,previous?:ComponentInstance):ComponentInstance{
  const compatible=previous?.definitionId==='core/carcass'&&previous.definitionVersion===1
- const oldChildren=compatible&&Array.isArray(previous.children)?previous.children:[]
+ const oldChildren=compatible&&previous&&Array.isArray(previous.children)?previous.children:[]
  const templateVersion=spec.templateVersion??1
  if(templateVersion!==1)throw Error('Unsupported cabinet template version '+templateVersion)
  return {
-  id:compatible?previous.id:crypto.randomUUID(),
+  id:compatible&&previous?previous.id:crypto.randomUUID(),
   definitionId:'core/carcass',definitionVersion:1,
   template:{id:spec.templateId??'cabinet-open',version:templateVersion},
   params:{
