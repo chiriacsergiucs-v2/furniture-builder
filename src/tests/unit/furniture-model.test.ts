@@ -7,6 +7,7 @@ import {drawerDefaults,drawerPanels,createDrawerForProject} from '../../furnitur
 import {createDrawerComponentTree,resolveComponentTree} from '../../furniture/component-engine.ts'
 import {furnitureTemplates,initialSpecForTemplate} from '../../furniture/templates.ts'
 import {deriveFurnitureModel,cabinetDrawerCount} from '../../furniture/furniture-model.ts'
+import {detectPanelCollisions} from '../../furniture/geometry-diagnostics.ts'
 
 const close=(a:number,b:number)=>expect(Math.abs(a-b)).toBeLessThan(1e-5)
 function worldExtents(width:number,height:number,thickness:number,angles:[number,number,number]){
@@ -79,6 +80,18 @@ describe('Manufacturing and rendered geometry parity B16/B17/B21/B28',()=>{
     close(span[0],box.dx);close(span[1],box.dz);close(span[2],box.dy)
    }
   }
+ })
+ it('checks all ready cabinet recipes for physical collisions and detects manufactured overlaps',()=>{
+  const project=createProject(),material=project.materials[0]
+  const templates=furnitureTemplates.filter(t=>t.status==='ready'&&t.kind==='cabinet')
+  for(const template of templates){
+   const spec=initialSpecForTemplate(template.id,material.id)
+   expect(detectPanelCollisions(cabinetBoxes(spec,material.thickness))).toEqual([])
+  }
+  const example=cabinetBoxes(initialSpecForTemplate('cabinet-open',material.id),material.thickness)
+  const duplicate=[example[0],{...example[0],index:99}]
+  expect(detectPanelCollisions(duplicate)).toHaveLength(1)
+  expect(detectPanelCollisions([example[0],example[1]])).toEqual([])
  })
  it('keeps standalone drawer 3D solids consistent with manufactured panel extents',()=>{
   const project=createProject(),material=project.materials[0]
