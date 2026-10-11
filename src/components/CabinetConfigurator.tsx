@@ -7,17 +7,20 @@ import {exportFusionPython} from '../assembly/fusion.ts'
 import {cabinetErrors,cabinetBoxes,createCabinetForProject} from '../furniture/cabinet.ts'
 import type {CabinetSpec} from '../furniture/cabinet.ts'
 import {furnitureTemplates,initialSpecForTemplate} from '../furniture/templates.ts'
+import {drawerDefaults,runnerProfiles,drawerSideSpace} from '../furniture/drawer.ts'
+import type {DrawerSpec} from '../furniture/drawer.ts'
 import type {FurnitureTemplate} from '../furniture/templates.ts'
 
 const CabinetPreview=lazy(()=>import('./CabinetPreview.tsx'))
 type Stage=0|1|2
 const steps=['Choose template','Customize','Review & save'] as const
 
-export function CabinetConfigurator({mode,materials,categories,initial,initialCategory,editing=false,onAdd,onSavePreset,onCancel}:{
+export function CabinetConfigurator({mode,materials,categories,initial,initialCategory,editing=false,onAdd,onSavePreset,onChooseDrawer,onCancel}:{
  mode:'item'|'preset';materials:Material[];categories?:PresetCategory[];editing?:boolean
  initial?:CabinetSpec;initialCategory?:string
  onAdd?:(spec:CabinetSpec)=>Promise<void>|void
  onSavePreset?:(spec:CabinetSpec,categoryId:string)=>Promise<void>|void
+ onChooseDrawer?:()=>void
  onCancel:()=>void
 }){
  const [spec,setSpec]=useState<CabinetSpec>(()=>{
@@ -39,6 +42,14 @@ export function CabinetConfigurator({mode,materials,categories,initial,initialCa
   return group.length?[{label:role,width:group[0].cutWidth,height:group[0].cutHeight,quantity:group.length}]:[]
  })
  const change=<K extends keyof CabinetSpec>(key:K,value:CabinetSpec[K])=>{setSpec(old=>({...old,[key]:value}));setError('')}
+ const changeDrawers=(count:number)=>{setSpec(old=>({
+  ...old,drawers:count,shelves:count>0?0:old.shelves,
+  drawerConfig:old.drawerConfig??{...drawerDefaults(old.materialId),runnerLength:300}
+ }));setError('')}
+ const changeDrawerConfig=<K extends keyof DrawerSpec>(key:K,value:DrawerSpec[K])=>{
+  setSpec(old=>({...old,drawerConfig:{...(old.drawerConfig??{...drawerDefaults(old.materialId),runnerLength:300}),[key]:value}}))
+  setError('')
+ }
  const selectTemplate=(template:FurnitureTemplate)=>{
   if(template.status!=='ready')return
   setSpec(initialSpecForTemplate(template.id,spec.materialId))
@@ -94,14 +105,23 @@ export function CabinetConfigurator({mode,materials,categories,initial,initialCa
     {stage===0&&<>
      <div className="cabinet-step">01 / Select your starting template</div>
      <p className="muted">Choose a proven geometry. Every available template generates a complete 3D model and cut list. More template types will be added here.</p>
+     <div className="cabinet-step">Building components · reusable</div>
+     <div className="furniture-template-list" role="group" aria-label="Building component library">
+      <button type="button" className="furniture-template-card" onClick={onChooseDrawer} disabled={!onChooseDrawer}>
+       <span className="template-copy"><strong>C15 · Configurable drawer box</strong><small>Runners, clearances, optional applied front or lowered finger-pull front</small><span className="template-category">Ready · Reusable in furniture</span></span>
+      </button>
+      <div className="furniture-template-card"><span className="template-copy"><strong>C02 · Shelves</strong><small>Adjustable quantity, spacing and clearance inside the cabinet</small><span className="template-category">Integrated into carcass</span></span></div>
+      <div className="furniture-template-card"><span className="template-copy"><strong>Doors, vertical partitions, support legs</strong><small>Planned reusable component types</small><span className="template-category">Not implemented yet</span></span></div>
+     </div>
+     <div className="cabinet-step">Furniture templates</div>
      <div className="furniture-template-list" role="group" aria-label="Furniture templates">
       {furnitureTemplates.map(template=>{
        const selected=spec.templateId===template.id
        return <button type="button" key={template.id}
         className={'furniture-template-card'+(selected?' selected':'')}
-        disabled={template.status!=='ready'}
+        disabled={template.status!=='ready'||template.kind==='drawer'&&!onChooseDrawer}
         aria-pressed={template.status==='ready'?selected:undefined}
-        onClick={()=>selectTemplate(template)}>
+        onClick={()=>template.kind==='drawer'?onChooseDrawer?.():selectTemplate(template)}>
         <span className="template-drawing" aria-hidden="true">
          <span className="template-outline">{Array.from({length:Math.min(5,template.defaultSpec?.shelves??2)},(_,i)=><span className="template-shelf" key={i}/>)}</span>
         </span>
@@ -161,7 +181,7 @@ export function CabinetConfigurator({mode,materials,categories,initial,initialCa
      <dl className="furniture-review">
       <div><dt>Overall size</dt><dd>{spec.width} × {spec.height} × {spec.depth} mm</dd></div>
       <div><dt>Material</dt><dd>{material?.name} · {material?.thickness} mm</dd></div>
-      <div><dt>Internal shelves</dt><dd>{spec.shelves}</dd></div>
+      <div><dt>Internal shelves</dt><dd>{spec.shelves}</dd></div><div><dt>Inserted drawers</dt><dd>{spec.drawers??0}</dd></div>
       <div><dt>Total physical panels</dt><dd>{boxes.length}</dd></div>
       {mode==='preset'&&<div><dt>Preset category</dt><dd>{categories?.find(c=>c.id===category)?.name??'Uncategorized'}</dd></div>}
      </dl>
