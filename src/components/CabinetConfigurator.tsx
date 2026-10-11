@@ -146,7 +146,34 @@ export function CabinetConfigurator({mode,materials,categories,initial,initialCa
       <select value={spec.materialId} onChange={e=>change('materialId',e.target.value)}>
        {materials.map(m=><option value={m.id} key={m.id}>{m.name} · {m.type} · {m.thickness} mm</option>)}
       </select></label>
+     <div className="cabinet-step">Interior components · insert into cabinet</div>
+     <p className="muted">This first undivided cabinet opening supports either repeated shelves or repeated drawer components. Split compartments will follow.</p>
      <div className="cabinet-shelf-picker">
+      <div><strong>Configurable drawers</strong><p className="muted">Each drawer inherits the cabinet's clear internal opening</p></div>
+      <div className="cabinet-quantity">
+       <button type="button" aria-label="Remove drawer" disabled={(spec.drawers??0)===0} onClick={()=>changeDrawers(Math.max(0,(spec.drawers??0)-1))}>−</button>
+       <output aria-label="Drawer count">{spec.drawers??0}</output>
+       <button type="button" aria-label="Insert drawer" disabled={(spec.drawers??0)>=20} onClick={()=>changeDrawers(Math.min(20,(spec.drawers??0)+1))}>+</button>
+      </div>
+     </div>
+     {(spec.drawers??0)>0&&<div className="form-grid">
+      <label className="field"><span>Runner profile</span><select value={spec.drawerConfig?.runner??'accuride-3832'}
+       onChange={e=>{const runner=e.target.value as DrawerSpec['runner'];setSpec(old=>({...old,drawerConfig:{
+        ...(old.drawerConfig??{...drawerDefaults(old.materialId),runnerLength:300}),
+        runner,extension:runner==='none'?'partial':'full'}}))}}>
+       {runnerProfiles.map(r=><option value={r.id} key={r.id}>{r.title}</option>)}</select></label>
+      <label className="field"><span>Drawer front</span><select value={spec.drawerConfig?.front??'applied'} onChange={e=>changeDrawerConfig('front',e.target.value as DrawerSpec['front'])}>
+       <option value="applied">Applied front · handle</option><option value="lowered">Lower front · finger pull</option><option value="none">Inner front only</option>
+      </select></label>
+      <label className="field"><span>Runner length (mm)</span><input type="number" step="1" min="1" value={spec.drawerConfig?.runnerLength??300} onChange={e=>changeDrawerConfig('runnerLength',Number(e.target.value))}/></label>
+      {spec.drawerConfig?.runner==='custom'&&<label className="field"><span>Slide clearance per side (mm)</span><input type="number" step="1" min="1" value={spec.drawerConfig.customSideClearance} onChange={e=>changeDrawerConfig('customSideClearance',Number(e.target.value))}/></label>}
+      <label className="field"><span>Upper clearance (mm)</span><input type="number" step="1" min="0" value={spec.drawerConfig?.upperClearance??6} onChange={e=>changeDrawerConfig('upperClearance',Number(e.target.value))}/></label>
+      <label className="field"><span>Rear clearance (mm)</span><input type="number" step="1" min="0" value={spec.drawerConfig?.rearClearance??20} onChange={e=>changeDrawerConfig('rearClearance',Number(e.target.value))}/></label>
+      {spec.drawerConfig?.front==='lowered'&&<label className="field"><span>Finger-pull gap (mm)</span><input type="number" step="1" min="15" value={spec.drawerConfig.pullGap} onChange={e=>changeDrawerConfig('pullGap',Number(e.target.value))}/></label>}
+      {spec.drawerConfig?.front==='applied'&&<label className="field"><span>Applied front gap (mm)</span><input type="number" step="1" min="0" value={spec.drawerConfig.frontGap} onChange={e=>changeDrawerConfig('frontGap',Number(e.target.value))}/></label>}
+      <p className="muted">Slide side space: {drawerSideSpace(spec.drawerConfig??{...drawerDefaults(spec.materialId),runnerLength:300})} mm/side. Verify runner-specific installation documentation.</p>
+     </div>}
+     {(spec.drawers??0)===0&&<div className="cabinet-shelf-picker">
       <div><strong>Internal shelves</strong><p className="muted">Automatically evenly spaced</p></div>
       <div className="cabinet-quantity">
        <button type="button" aria-label="Decrease shelves" disabled={spec.shelves===0}
@@ -155,7 +182,7 @@ export function CabinetConfigurator({mode,materials,categories,initial,initialCa
        <button type="button" aria-label="Increase shelves" disabled={spec.shelves===20}
         onClick={()=>change('shelves',Math.min(20,spec.shelves+1))}>+</button>
       </div>
-     </div>
+     </div>}
      <details className="cabinet-options"><summary>Advanced clearances, grain and ABS</summary>
       <div className="form-grid">
        {field('sideClear','Shelf side clearance (mm)')}
