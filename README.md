@@ -34,6 +34,10 @@ A 3D transform gizmo and accessible numerical inputs edit XYZ positions (mm) and
 - The cutlist editor now defaults to **five primary part fields** (name, width, height, quantity, material). ABS and grain, trimming, stock setup and cutting settings are disclosed on demand instead of cluttering the main editor.
 - Data is stored **locally in this browser profile**, not on a server. Regular reloads preserve data; browser data clearing or changing devices does not. Use **Settings → Export complete database JSON** for safe backups and transfer. Importing a full database backup is a non-destructive merge.
 
+## Modular furniture engine roadmap
+
+See **[EDC modular engine implementation backlog](docs/modular-engine-backlog.md)** for the six-layer architecture, 40 reusable components, 18 furniture families with 90 planned dynamic configurations, five composition operations and the evidence-based **Done / Partially done / Not done / Dropped** tracker. This document is the authoritative roadmap for incremental furniture-template development. Catalog ideas marked planned are **not** functional generators.
+
 ## Development
 
 Node >=22 required. `npm install` then `npm run dev`, `npm run lint`, `npm run typecheck`, `npm run test:kernel`, `npm test`, `npm run build`, `npm run test:e2e`. Use the committed package-lock.json; update it whenever dependencies change.
