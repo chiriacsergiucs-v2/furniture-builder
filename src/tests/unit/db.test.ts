@@ -143,7 +143,7 @@ describe('B20 historical furniture graph adapters',()=>{
  it('hydrates legacy project graphs deterministically without changing stored rows',async()=>{
   const base=createProject(),spec=cabinetDefaults(base.materials[0].id)
   const built=createCabinetForProject(base,spec)
-  const legacy={...base,parts:built.parts,assemblies:built.assemblies.map(({componentTree,...rest})=>rest)}
+  const legacy={...base,parts:built.parts,assemblies:built.assemblies.map(assembly=>{const legacy=structuredClone(assembly);delete legacy.componentTree;return legacy})}
   await db.projects.put(legacy)
   const first=await getProject(legacy.id),second=await getProject(legacy.id)
   expect(first?.assemblies?.[0].componentTree?.definitionId).toBe('core/carcass')
