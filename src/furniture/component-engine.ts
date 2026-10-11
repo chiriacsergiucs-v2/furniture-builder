@@ -238,7 +238,9 @@ export function repeatComponents(
   const child=factory(i,existing)
   return {...child,id:existing?.id??child.id,slot,params:{...child.params,index:i}}
  })
- const result={...parent,children:[...others,...next]}
+ const countKey=kind==='core/shelf'?'shelves':kind==='core/drawer'?'drawers':undefined
+ const result={...parent,params:countKey?{...parent.params,[countKey]:count}:parent.params,
+  children:[...others,...next]}
  resolveComponentTree(result)
  return result
 }
@@ -246,9 +248,21 @@ export function repeatComponents(
 export function replaceComponent(root:ComponentInstance,id:string,replacement:ComponentInstance):ComponentInstance{
  let matched=false
  const walk=(node:ComponentInstance):ComponentInstance=>{
-  if(node.id===id){matched=true;return {...replacement,slot:node.slot}}
+  const index=node.children.findIndex(c=>c.id===id)
+  if(index>=0){
+   matched=true
+   const original=node.children[index]
+   const children=node.children.map((c,i)=>i===index?{...replacement,slot:original.slot}:c)
+   const shelves=children.filter(c=>c.definitionId==='core/shelf').length
+   const drawers=children.filter(c=>c.definitionId==='core/drawer').length
+   if(shelves&&drawers)throw Error('Mixed shelves and drawers require separate compartments')
+   const params={...node.params,...(node.definitionId==='core/carcass'||node.definitionId==='core/compartment'?
+    {shelves,drawers}:{})}
+   return {...node,params,children}
+  }
   return {...node,children:node.children.map(walk)}
  }
+ if(root.id===id)throw Error('Cannot replace the furniture root directly')
  const result=walk(root)
  if(!matched)throw Error('Component to replace not found')
  resolveComponentTree(result)
