@@ -38,7 +38,7 @@ export function adaptLegacyProject(project:Project):Project{
 export function adaptLegacyPreset(preset:StoredPreset):StoredPreset{
  if(preset.componentTree||(!preset.cabinetSpec&&!preset.drawerSpec))return preset
  const thickness=preset.items[0]?.material.thickness
- if(!Number.isSafeInteger(thickness)||thickness<1)return preset
+ if(typeof thickness!=='number'||!Number.isSafeInteger(thickness)||thickness<1)return preset
  const graph=preset.cabinetSpec?
   recover(preset.id,()=>createCabinetComponentTree(preset.cabinetSpec!,thickness)):
   recover(preset.id,()=>createDrawerComponentTree(preset.drawerSpec!,thickness))
