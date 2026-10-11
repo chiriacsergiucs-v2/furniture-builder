@@ -44,3 +44,10 @@ Latest tested source: `f7f38e7fcb9df908f062066460799f9073417f2d`. GitHub deploym
 - GitHub Pages: https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38048670051 — reported deployment success for d298f5af.
 - Tests cover 4 row / 5 panel drawer placement, 3-set positioning and per-instance indices, independent XYZ edit persistence after IndexedDB save, Fusion script content, default Drawers preset use.
 - Pending: independently run generated script in Fusion, real Android GPU gestures, real physical drawer fit and hardware allowances, independent live URL GET.
+
+## 2026-10-11 — Saved preset categories, separate navigation, optional 3D, explicit duplicate drafts, editor cleanup
+
+- CI: https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38107863136 — passed 25 kernel tests, 22 Vitest tests, 16 Playwright tests (desktop and Android viewport). TypeScript/lint/production build passed.
+- Pages: https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38107862978 — deployed successfully from a1bcb4cf194cc334ef78728e2c37611fda042393.
+- Confirmed standalone preset browsing, explicit save, cancellation without database writes, project insertion, reload persistence and on-demand 3D region via automated tests.
+- Existing Dexie database schema preserved. Avoid clearing site data; use complete JSON backups.

@@ -26,6 +26,14 @@ The project editor supports individually movable and rotatable panel instances s
 
 A 3D transform gizmo and accessible numerical inputs edit XYZ positions (mm) and XYZ rotations (degrees) per panel instance, independently from the 2D cut plan. **Export Fusion 360 Python** creates separately editable direct-model B-rep solids from the exact transforms using Autodesk Fusion Scripts and Add-Ins. This is not an F3D or STEP file; use Fusion to save/export afterwards. Execution in Autodesk Fusion itself is not part of browser tests.
 
+## Standalone preset library, saved drafts and clean editor (v0.5)
+
+- Open the **Presets** navigation tab, independent of an open project. Browse expandable categories (including nested categories), then expand a preset and each cut item. Each can launch a lazy on-demand 3D preview. The default 40 × 30 cm Drawer preview uses the starter assembly positioning; other presets use an illustrative panel layout, not a validated assembly.
+- **Create preset** and **Edit original** save only when you click **Save preset**. **Duplicate with new params** creates an independent unsaved draft with a fresh ID; **Cancel** discards it, and **Save duplicate** is the only action that persists it.
+- Each preset stores all of its labeled cut items, exact dimensions, quantities, materials, grain/rotation and ABS in **Dexie IndexedDB**, organized by categories, with revision history. Insertion into a selected project saves a new project snapshot; the source preset remains unchanged.
+- The cutlist editor now defaults to **five primary part fields** (name, width, height, quantity, material). ABS and grain, trimming, stock setup and cutting settings are disclosed on demand instead of cluttering the main editor.
+- Data is stored **locally in this browser profile**, not on a server. Regular reloads preserve data; browser data clearing or changing devices does not. Use **Settings → Export complete database JSON** for safe backups and transfer. Importing a full database backup is a non-destructive merge.
+
 ## Development
 
 Node >=22 required. `npm install` then `npm run dev`, `npm run lint`, `npm run typecheck`, `npm run test:kernel`, `npm test`, `npm run build`, `npm run test:e2e`. Use the committed package-lock.json; update it whenever dependencies change.

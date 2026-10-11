@@ -41,3 +41,12 @@ New dependencies @react-three/fiber, three, @dnd-kit/core/sortable/utilities, @t
 - Direct + Drawer button or preset library Add to project creates assemblies (up to 20 sets in one insertion). Pal 18mm only, body width 336mm, depth 300mm, height 250mm; main front 400x300 and 2mm reveal.
 - `src/assembly/fusion.ts` exports a self-contained Fusion Python API script creating individual **direct-model B-rep solids** with centimeter conversion. Execution in Fusion itself remains unverified. It does not export STEP/F3D directly.
 - Not included: drawer bottom, joinery, hardware, interference checks; physical Android GPU/touch check pending. Autodesk references in README/feature docs.
+
+## Verified preset library and compact UI release — 2026-10-11
+- Latest feature commit a1bcb4cf194cc334ef78728e2c37611fda042393, CI https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38107863136 PASSED: 25 kernel / 22 Vitest / 16 Playwright (Chromium + Android emulation); lint/TypeScript/build PASS.
+- GitHub Pages https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38107862978 PASSED.
+- Dexie DB remained the single source of truth; preset items live inside preset records; categories, project inserts and revision data are committed with explicit save actions.
+- Duplicate action creates a fresh-ID draft and does not call storage until Save duplicate; cancel/reload without saving is non-mutating. Regression tests confirm original and new preset independence.
+- Navigation tab Presets separated from editor, hierarchical category/preset/item and lazy 3D per entry.
+- Main cutting editor places only cutlist-critical fields up front, hiding ABS, grain and setup under expandable advanced areas.
+- Limitations: IndexedDB is browser/device local and subject to site-data removal. Full database JSON backup is available in Settings; physical Android and independent live-site HTTP test not performed.

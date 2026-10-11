@@ -132,7 +132,7 @@
     "Regency XLSX template unavailable for template-specific adapter",
     "Independent live-site HTTP request unavailable from this tool; GitHub Pages deploy action reported success"
   ],
-  "nextAction": "Real-device Android TransformControls UX and Autodesk Fusion Python script execution; optional panel snapping, collision detection, bottom/hardware and parametric drawer dimensions. General STEP_13 still pending.",
+  "nextAction": "Physical Android touch/GPU checks and optional cloud sync/backup. Keep verifying browser data persistence and Fusion export on actual desktop Fusion.",
   "lastEvidence": "CI https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38028499465; deploy https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38028499287",
   "storageMilestone": {
     "target": "IndexedDB via Dexie 4.2.1",
@@ -199,5 +199,30 @@
       "Independent live Pages HTTP GET unavailable; action reports deployment success",
       "Physical Android touch gizmo not tested"
     ]
+  },
+  "presetLibraryMilestone": {
+    "status": "verified_deployed",
+    "release": "v0.5.0",
+    "testedCommit": "a1bcb4cf194cc334ef78728e2c37611fda042393",
+    "features": [
+      "standalone /presets navigation",
+      "expandable categories and cut items",
+      "lazy 3D per preset and item",
+      "explicit create/edit/duplicate draft save",
+      "category and preset persistence in Dexie IndexedDB",
+      "project-targeted insertion",
+      "compact cutlist with collapsed ABS/grain and advanced controls"
+    ],
+    "tests": {
+      "kernel": "25/25 passed",
+      "vitest": "22/22 passed",
+      "playwright": "16/16 passed",
+      "lint": "pass",
+      "typecheck": "pass",
+      "build": "pass"
+    },
+    "ciRun": 38107863136,
+    "deploymentRun": 38107862978,
+    "notes": "Browser/device-local IndexedDB, not cloud-synchronized; project and full database JSON exports already supported. The starter drawer uses positioned preset preview; other presets use schematic arranged panels."
   }
 }
