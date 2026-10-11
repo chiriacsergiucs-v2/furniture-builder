@@ -6,7 +6,7 @@ test('Add item starts a parametric cabinet with exact cutlist and Fusion export'
  await page.getByRole('button',{name:'+ Add item'}).click()
  const wizard=page.getByRole('region',{name:'Add furniture item'})
  await expect(wizard.getByText('Live assembly preview')).toBeVisible()
- await expect(wizard.getByText('764 × 350 × 18')).toBeVisible()
+ await expect(wizard.getByText('764 × 350 × 18').first()).toBeVisible()
  await expect(wizard.getByText('Physical panels')).toBeVisible()
  await wizard.getByRole('button',{name:'Decrease shelves'}).click()
  await wizard.getByRole('button',{name:'Decrease shelves'}).click()
@@ -20,7 +20,7 @@ test('Add item starts a parametric cabinet with exact cutlist and Fusion export'
  await expect(page.locator('.parts-list .part-card').nth(0).getByRole('spinbutton',{name:'Quantity'})).toHaveValue('2')
  await page.reload()
  await expect(page.locator('.parts-list .part-card')).toHaveCount(3)
- await page.getByRole('button',{name:'Open 3D preview'}).click().catch(()=>{})
+ await expect(page.getByRole('region',{name:'3D assembly editor'})).toBeVisible()
 })
 
 test('Create preset uses wizard and preserves library through reload',async({page})=>{
@@ -39,7 +39,7 @@ test('Create preset uses wizard and preserves library through reload',async({pag
  const saved=manager.locator('.preset-card').filter({hasText:'Kitchen A'})
  await expect(saved).toHaveCount(1)
  await saved.locator('.preset-entry > summary').click()
- await expect(saved.getByText('864 × 350 × 18')).toBeVisible()
+ await expect(saved.getByText('864 × 350 × 18').first()).toBeVisible()
  await saved.getByRole('button',{name:'Edit original'}).click()
  await expect(manager.getByRole('region',{name:'Create furniture preset'})).toBeVisible()
 })
