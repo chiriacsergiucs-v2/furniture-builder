@@ -193,7 +193,7 @@ export function App(){
   onCancel={()=>{setCabinetEditorOpen(false);setEditingCabinetId('')}}/>}
  {drawerEditorOpen&&<DrawerConfigurator key={editingDrawerId||'new'} mode="item" materials={project.materials}
   initial={project.assemblies?.find(a=>a.id===editingDrawerId)?.drawerSpec} editing={Boolean(editingDrawerId)}
-  onAdd={addDrawer} onCancel={()=>{setDrawerEditorOpen(false);setEditingDrawerId('')}}/>
+  onAdd={addDrawer} onCancel={()=>{setDrawerEditorOpen(false);setEditingDrawerId('')}}/>}
  {project.assemblies?.some(a=>a.cabinetSpec||a.drawerSpec)&&<section className="card"><div className="section-head"><h2>Configured furniture & building components</h2></div><div className="actions">
   {project.assemblies.filter(a=>a.cabinetSpec).map(a=><button key={a.id} onClick={()=>{setEditingCabinetId(a.id);setCabinetEditorOpen(true)}}>Edit {a.label}</button>)}
   {project.assemblies.filter(a=>a.drawerSpec).map(a=><button key={a.id} onClick={()=>{setEditingDrawerId(a.id);setDrawerEditorOpen(true)}}>Edit drawer {a.label}</button>)}
