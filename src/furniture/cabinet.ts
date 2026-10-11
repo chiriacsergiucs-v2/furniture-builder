@@ -5,6 +5,7 @@ import {presetMaterial,createPreset} from '../presets/presets.ts'
 import type {CutlistPreset} from '../presets/presets.ts'
 import {createCabinetComponentTree,resolveComponentTree} from './component-engine.ts'
 import {drawerErrors,drawerPanels} from './drawer.ts'
+import {panelCollisionMessages} from './geometry-diagnostics.ts'
 import type {DrawerSpec,DrawerRole} from './drawer.ts'
 
 export interface CompartmentLayout {
@@ -120,6 +121,10 @@ export function cabinetErrors(s:CabinetSpec,material?:Material):string[]{
     shelves:s.connected.shelves,drawers:s.connected.drawers,split:undefined,
     connected:undefined,shelfMode:'even',shelfPositions:undefined},material).map(issue=>'Module 2: '+issue))
   }
+ }
+ if(e.length===0&&material){
+  try{e.push(...panelCollisionMessages(cabinetBoxes(s,material.thickness)))}
+  catch(error){e.push(error instanceof Error?error.message:'Could not resolve furniture geometry.')}
  }
  return e
 }
