@@ -1,4 +1,5 @@
 import type {ProjectAssembly} from '../assembly/model.ts'
+import type {PresetOrigin} from '../presets/presets.ts'
 export type Mm = number // validated positive/zero integer millimetres only
 export type GrainAxis = 'none' | 'x' | 'y'
 export type MaterialType = 'PAL' | 'MDF' | 'plywood' | 'custom'
@@ -8,7 +9,7 @@ export type Rect = {x: Mm, y: Mm, width: Mm, height: Mm}
 export interface Material {id:string; name:string; type:MaterialType; thickness:Mm; finish?:string}
 export interface StockSheet {id:string; materialId:string; thickness:Mm; width:Mm; height:Mm; quantity:number|null; grain:GrainAxis; trim:{top:Mm;right:Mm;bottom:Mm;left:Mm}; cost?:number}
 export interface Offcut {id:string; materialId:string; thickness:Mm; width:Mm; height:Mm; grain:GrainAxis; quantity:number}
-export interface Part {id:string; label:string; width:Mm; height:Mm; quantity:number; materialId:string; rotationAllowed:boolean; grain:GrainAxis; abs:EdgeBanding; group?:string; notes?:string}
+export interface Part {id:string; label:string; width:Mm; height:Mm; quantity:number; materialId:string; rotationAllowed:boolean; grain:GrainAxis; abs:EdgeBanding; group?:string; notes?:string; sourcePreset?:PresetOrigin}
 export type Heuristic = 'area' | 'short' | 'long'
 export interface OptimizationSettings {kerf:Mm; rotationAllowed:boolean; maxDurationMs:number; maxRestarts:number; minOffcutWidth:Mm; minOffcutHeight:Mm; minOffcutArea:number; seed:number}
 export interface Project {schemaVersion:1; id:string; name:string; description:string; createdAt:string; updatedAt:string; materials:Material[]; sheets:StockSheet[]; offcuts:Offcut[]; parts:Part[]; assemblies?:ProjectAssembly[]; settings:OptimizationSettings; lastResult?:OptimizationResult}

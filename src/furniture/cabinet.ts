@@ -280,7 +280,7 @@ export function reconfigureCabinet(project:Project,assemblyId:string,spec:Cabine
  return {...project,
   parts:[...project.parts.filter(part=>!ownPartIds.has(part.id)),...parts],
   assemblies:(project.assemblies??[]).map(a=>a.id===assemblyId?
-   {...replacement,id:a.id,createdAt:a.createdAt}:a),
+   {...replacement,id:a.id,createdAt:a.createdAt,...(a.sourcePreset?{sourcePreset:structuredClone(a.sourcePreset)}:{})}:a),
   lastResult:undefined
  }
 }

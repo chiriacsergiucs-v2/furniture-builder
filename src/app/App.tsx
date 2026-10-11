@@ -140,8 +140,10 @@ export function App(){
     if(!m)throw Error('Drawer material not found in destination project.')
     return createDrawerAssemblies({...drawerSpec,materialId:m.id},m,parts,copies,target.assemblies?.length??0)
    })():[]
+  const pinned=parts[0]?.sourcePreset
+  const snapshotAssemblies=pinned?assemblies.map(assembly=>({...assembly,sourcePreset:structuredClone(pinned)})):assemblies
   const next:Project={...target,parts:[...target.parts,...parts],
-   assemblies:[...(target.assemblies??[]),...assemblies],lastResult:undefined}
+   assemblies:[...(target.assemblies??[]),...snapshotAssemblies],lastResult:undefined}
   const saved=await saveProject(next)
   setProjects(await listProjects())
   setProject(saved)

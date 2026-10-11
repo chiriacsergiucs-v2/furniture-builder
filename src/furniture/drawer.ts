@@ -162,6 +162,7 @@ export function reconfigureDrawer(project:Project,id:string,s:DrawerSpec):Projec
  if(!material)throw Error('Drawer material missing from project.')
  const newParts=drawerParts(s,material),newAssembly=drawerAssembly(s,material,newParts)
  newAssembly.id=id;newAssembly.createdAt=prior.createdAt
+ if(prior.sourcePreset)newAssembly.sourcePreset=structuredClone(prior.sourcePreset)
  newAssembly.componentTree=createDrawerComponentTree(s,material.thickness,prior.componentTree)
  const otherAssemblies=(project.assemblies??[]).filter(a=>a.id!==id)
  const indexMaps=new Map<string,Map<number,number>>()

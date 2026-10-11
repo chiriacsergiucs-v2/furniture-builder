@@ -22,7 +22,11 @@ export async function savePreset(preset:CutlistPreset):Promise<StoredPreset[]>{
   const existing=await db.presets.get(preset.id)
   const categoryId=(preset as StoredPreset).categoryId??existing?.categoryId??UNCATEGORIZED_ID
   if(!await db.presetCategories.get(categoryId))throw Error('Preset category is missing')
-  const stored={...structuredClone(preset),categoryId,updatedAt:now()}
+  // The revision is advanced atomically on explicit Save, not during editing or insertion.
+  // Unversioned legacy records are revision 1; their first edit becomes revision 2.
+  const revision=existing?(existing.revision??1)+1:(preset.revision??1)
+  if(!Number.isSafeInteger(revision))throw Error('Preset revision overflow')
+  const stored={...structuredClone(preset),categoryId,revision,updatedAt:now()}
   await db.presets.put(stored)
   await db.revisions.add(makeRevision(stored,existing?'update':'create'))
  })
