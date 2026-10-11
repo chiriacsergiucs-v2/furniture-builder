@@ -7,7 +7,7 @@ import {exportFusionPython} from '../assembly/fusion.ts'
 import {cabinetErrors,cabinetBoxes,createCabinetForProject} from '../furniture/cabinet.ts'
 import type {CabinetSpec} from '../furniture/cabinet.ts'
 import {furnitureTemplates,initialSpecForTemplate} from '../furniture/templates.ts'
-import {drawerDefaults,runnerProfiles,drawerSideSpace} from '../furniture/drawer.ts'
+import {drawerDefaults,runnerProfiles,drawerSideSpace,drawerHardware} from '../furniture/drawer.ts'
 import type {DrawerSpec} from '../furniture/drawer.ts'
 import type {FurnitureTemplate} from '../furniture/templates.ts'
 
@@ -229,6 +229,12 @@ export function CabinetConfigurator({mode,materials,categories,initial,initialCa
      <thead><tr><th>Part</th><th>Cut size (mm)</th><th>Qty</th></tr></thead>
      <tbody>{rows.map(row=><tr key={row.label}><td>{row.label}</td><td>{row.width} × {row.height} × {material?.thickness}</td><td>{row.quantity}</td></tr>)}</tbody>
     </table></div>
+    {(spec.drawers??0)>0&&spec.drawerConfig&&<div>
+     <div className="cabinet-step">Building hardware · not board cut pieces</div>
+     {drawerHardware(spec.drawerConfig).length?drawerHardware(spec.drawerConfig).map(h=>
+      <p className="muted" key={h.label}>{(spec.drawers??0)*h.quantity} {h.unit}{(spec.drawers??0)>1?'s':''} · {h.label}</p>
+     ):<p className="muted">Drawer movement mechanism not configured.</p>}
+    </div>}
    </div>
   </div>
   {error&&<p role="alert" className="preset-error">{error}</p>}
