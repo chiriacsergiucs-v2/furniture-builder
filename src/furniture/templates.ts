@@ -1,5 +1,6 @@
 import {cabinetDefaults} from './cabinet.ts'
 import type {CabinetSpec} from './cabinet.ts'
+import {getComponentDefinition} from './component-engine.ts'
 
 /**
  * Small, declarative catalogue. Only ready templates can create manufacturing
@@ -31,6 +32,7 @@ export function availableTemplate(id:string):FurnitureTemplate|undefined{
 }
 export function initialSpecForTemplate(id:string,materialId:string):CabinetSpec{
  const template=availableTemplate(id)
- if(!template||template.kind!=='cabinet'||!template.defaultSpec)throw Error('Template not available: '+id)
+ if(!template||template.kind!=='cabinet'||!template.defaultSpec||!template.rootComponent)throw Error('Template not available: '+id)
+ getComponentDefinition(template.rootComponent.definitionId,template.rootComponent.definitionVersion)
  return {...cabinetDefaults(materialId),...template.defaultSpec,label:template.title,templateId:template.id,templateVersion:template.version}
 }
