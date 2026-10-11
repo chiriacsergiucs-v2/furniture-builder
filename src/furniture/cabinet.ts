@@ -51,6 +51,28 @@ export function cabinetErrors(s:CabinetSpec,material?:Material):string[]{
  if(!whole(s.shelves)||s.shelves<0||s.shelves>20)e.push('Shelves must be between 0 and 20.')
  if(!whole(s.drawers??0)|| (s.drawers??0)<0||(s.drawers??0)>20)e.push('Drawers must be between 0 and 20.')
  if((s.drawers??0)>0&&s.shelves>0)e.push('Choose shelves OR drawers in this undivided compartment.')
+ if(s.split){
+  if(s.shelves>0||(s.drawers??0)>0)e.push('Split bays use their own shelf and drawer counts.')
+  if(!['vertical','horizontal'].includes(s.split.axis)||
+    !whole(s.split.ratio)||s.split.ratio<10||s.split.ratio>90)
+   e.push('Split direction and percentage must be valid (10–90%).')
+  for(const layout of [s.split.first,s.split.second]){
+   if(!['empty','shelves','drawers'].includes(layout.content)||!whole(layout.count)||
+      layout.count<0||layout.count>20||layout.content==='empty'&&layout.count!==0)
+    e.push('Each compartment must have a valid content type and count 0–20.')
+  }
+ }
+ if(s.shelfMode==='custom'&&!s.split&&s.shelves>0){
+  const pos=s.shelfPositions??[]
+  if(pos.length!==s.shelves||pos.some(n=>!whole(n)||n<5||n>95)||
+     pos.some((n,i)=>i>0&&n<=pos[i-1]))
+   e.push('Custom shelf positions must be strictly increasing, 5–95%.')
+ }
+ if(s.connected&&(!whole(s.connected.width)||s.connected.width<=0||
+  !whole(s.connected.shelves)||s.connected.shelves<0||s.connected.shelves>20||
+  !whole(s.connected.drawers)||s.connected.drawers<0||s.connected.drawers>20||
+  s.connected.shelves>0&&s.connected.drawers>0))
+  e.push('Connected module needs valid width and either shelves or drawers.')
  if(s.templateVersion!==undefined&&s.templateVersion!==1)e.push('Unsupported cabinet template version.')
  if(material&&whole(material.thickness)&&material.thickness>0&&e.length===0){
   const t=material.thickness
@@ -63,42 +85,99 @@ export function cabinetErrors(s:CabinetSpec,material?:Material):string[]{
    else if(!s.drawerConfig)e.push('Drawer configuration missing from cabinet.')
    else e.push(...drawerErrors({...s.drawerConfig,openingWidth:s.width-2*t,openingHeight:innerHeight,openingDepth:s.depth-s.rearClear,materialId:material.id},material))
   }
+  if(s.shelfMode==='custom'&&!s.split&&s.shelves>0&&s.shelfPositions?.length===s.shelves){
+   const innerHeight=s.height-2*t
+   const positions=s.shelfPositions.map(percent=>t+innerHeight*percent/100)
+   const gaps=[positions[0]-t,...positions.slice(1).map((pos,i)=>pos-positions[i]-t),
+    s.height-t-(positions[positions.length-1]+t)]
+   if(gaps.some(gap=>gap<50))e.push('Custom shelves require at least 50 mm of clear space between panels.')
+  }
+  if(s.split&&!e.length){
+   const length=(s.split.axis==='vertical'?s.width-2*t:s.height-2*t)-t
+   const a=Math.floor(length*s.split.ratio/100),b=length-a
+   const bays=[s.split.first,s.split.second]
+   for(let i=0;i<2;i++){
+    const width=s.split.axis==='vertical'?(i===0?a:b):s.width-2*t
+    const height=s.split.axis==='horizontal'?(i===0?a:b):s.height-2*t
+    const bay=bays[i]
+    if(width<=2*s.sideClear+20||height<50)e.push('Compartment '+(i+1)+' is too small.')
+    else if(bay.content==='shelves'&&
+      (height-bay.count*t)/(bay.count+1)<50)
+      e.push('Compartment '+(i+1)+' shelves need 50 mm clear spacing.')
+    else if(bay.content==='drawers'){
+     const opening=Math.floor((height-(bay.count-1)*3)/bay.count)
+     if(opening<80)e.push('Compartment '+(i+1)+' drawer opening must be at least 80 mm.')
+     else if(!s.drawerConfig)e.push('Drawer configuration missing for compartment '+(i+1)+'.')
+     else e.push(...drawerErrors({...s.drawerConfig,openingWidth:width,
+       openingHeight:opening,openingDepth:s.depth-s.rearClear,materialId:material.id},material)
+      .map(issue=>'Compartment '+(i+1)+': '+issue))
+    }
+   }
+  }
+  if(s.connected){
+   if(s.connected.width<=2*t+2*s.sideClear)e.push('Connected module is too narrow for a carcass.')
+   else if(!e.length)e.push(...cabinetErrors({...s,width:s.connected.width,
+    shelves:s.connected.shelves,drawers:s.connected.drawers,split:undefined,
+    connected:undefined,shelfMode:'even',shelfPositions:undefined},material).map(issue=>'Module 2: '+issue))
+  }
  }
  return e
 }
+export const totalCabinetWidth=(s:CabinetSpec):number=>s.width+(s.connected?.width??0)
 export function cabinetBoxes(s:CabinetSpec,t:number):CabinetBox[]{
  const resolved=resolveComponentTree(createCabinetComponentTree(s,t))
+ if(resolved.instance.definitionId==='core/module-group'){
+  if(!s.connected)throw Error('Connected module configuration missing')
+  const left=cabinetBoxes({...s,connected:undefined},t)
+  const rightSpec:CabinetSpec={...s,width:s.connected.width,shelves:s.connected.shelves,
+   drawers:s.connected.drawers,split:undefined,connected:undefined,shelfMode:'even',
+   shelfPositions:undefined}
+  const right=cabinetBoxes(rightSpec,t).map(b=>({...b,x:b.x+s.width,
+   label:'Module 2 · '+(b.label??b.role)}))
+  return [...left,...right]
+ }
  const v=resolved.values
  const result:CabinetBox[]=[
-  {role:'Side panel',index:0,x:0,y:0,z:0,dx:v.thickness,dy:v.depth,dz:v.height,cutWidth:v.height,cutHeight:v.depth},
-  {role:'Side panel',index:1,x:v.width-v.thickness,y:0,z:0,dx:v.thickness,dy:v.depth,dz:v.height,cutWidth:v.height,cutHeight:v.depth},
-  {role:'Top / bottom',index:0,x:v.thickness,y:0,z:0,dx:v.innerWidth,dy:v.depth,dz:v.thickness,cutWidth:v.innerWidth,cutHeight:v.depth},
-  {role:'Top / bottom',index:1,x:v.thickness,y:0,z:v.height-v.thickness,dx:v.innerWidth,dy:v.depth,dz:v.thickness,cutWidth:v.innerWidth,cutHeight:v.depth}
+  {role:'Side panel',index:0,x:0,y:0,z:0,dx:t,dy:v.depth,dz:v.height,cutWidth:v.height,cutHeight:v.depth},
+  {role:'Side panel',index:1,x:v.width-t,y:0,z:0,dx:t,dy:v.depth,dz:v.height,cutWidth:v.height,cutHeight:v.depth},
+  {role:'Top / bottom',index:0,x:t,y:0,z:0,dx:v.innerWidth,dy:v.depth,dz:t,cutWidth:v.innerWidth,cutHeight:v.depth},
+  {role:'Top / bottom',index:1,x:t,y:0,z:v.height-t,dx:v.innerWidth,dy:v.depth,dz:t,cutWidth:v.innerWidth,cutHeight:v.depth}
  ]
- const indices=new Map<DrawerRole,number>()
- for(const child of resolved.children){
-  if(child.instance.definitionId==='core/drawer'){
-   if(!s.drawerConfig)throw Error('Drawer specification missing.')
-   const childSpec:DrawerSpec={...s.drawerConfig,materialId:s.materialId,
-    openingWidth:child.values.openingWidth,openingHeight:child.values.openingHeight,
-    openingDepth:child.values.openingDepth}
-   const m:Material={id:s.materialId,name:'Panel',type:'PAL',thickness:t}
-   const panels=drawerPanels(childSpec,m)
-   for(const panel of panels){
-    const index=indices.get(panel.role)??0
-    indices.set(panel.role,index+1)
-    result.push({...panel,index,x:child.values.x+panel.x,y:child.values.y+panel.y,
-     z:child.values.z+panel.z})
-   }
-   continue
-  }
-  if(child.instance.definitionId!=='core/shelf')throw Error('Unsupported cabinet child '+child.instance.definitionId)
-  const b=child.values
-  result.push({
-   role:'Shelf',index:b.index,x:b.x,y:b.y,z:b.z,
-   dx:b.width,dy:b.depth,dz:b.thickness,
-   cutWidth:b.width,cutHeight:b.depth
+ if(s.split){
+  if(s.split.axis==='vertical')result.push({
+   role:'Divider',index:0,x:v.dividerX,y:0,z:t,dx:t,dy:v.depth,dz:v.innerHeight,
+   cutWidth:v.innerHeight,cutHeight:v.depth,rotationDeg:[0,90,90]
   })
+  else result.push({
+   role:'Divider',index:0,x:t,y:0,z:v.dividerZ,dx:v.innerWidth,dy:v.depth,dz:t,
+   cutWidth:v.innerWidth,cutHeight:v.depth,rotationDeg:[90,0,0]
+  })
+ }
+ const indexes=new Map<string,number>()
+ const children=resolved.children.flatMap(child=>child.instance.definitionId==='core/compartment'?
+  child.children.map(grand=>({node:grand,bay:Number(child.instance.params.index)+1})):[{node:child,bay:0}])
+ for(const {node,bay} of children){
+  if(node.instance.definitionId==='core/drawer'){
+   if(!s.drawerConfig)throw Error('Drawer specification missing.')
+   const b=node.values
+   const childSpec:DrawerSpec={...s.drawerConfig,materialId:s.materialId,
+    openingWidth:b.openingWidth,openingHeight:b.openingHeight,
+    openingDepth:b.openingDepth}
+   const m:Material={id:s.materialId,name:'Panel',type:'PAL',thickness:t}
+   for(const panel of drawerPanels(childSpec,m)){
+    const label=bay?'Bay '+bay+' · '+panel.role:panel.role
+    const index=indexes.get(label)??0
+    indexes.set(label,index+1)
+    result.push({...panel,index,label,x:b.x+panel.x,y:b.y+panel.y,z:b.z+panel.z})
+   }
+  }else if(node.instance.definitionId==='core/shelf'){
+   const b=node.values,label=bay?'Bay '+bay+' · Shelf':'Shelf'
+   const index=indexes.get(label)??0
+   indexes.set(label,index+1)
+   result.push({role:'Shelf',index,label:bay?label:undefined,
+    x:b.x,y:b.y,z:b.z,dx:b.width,dy:b.depth,dz:b.thickness,
+    cutWidth:b.width,cutHeight:b.depth})
+  }else throw Error('Unsupported cabinet child '+node.instance.definitionId)
  }
  return result
 }
@@ -107,22 +186,28 @@ const edgeFor=(role:CabinetBox['role'],enabled:boolean)=>{
  if(enabled)abs.bottom=role==='Side panel'?'ABS front':'ABS front'
  return abs
 }
+const boxName=(b:CabinetBox)=>b.label??b.role
+const boxKey=(b:CabinetBox)=>JSON.stringify([boxName(b),b.cutWidth,b.cutHeight])
 export function createCabinetParts(s:CabinetSpec,material:Material):Part[]{
  const errors=cabinetErrors(s,material);if(errors.length)throw Error(errors.join(' '))
- const b=cabinetBoxes(s,material.thickness)
- return (['Side panel','Top / bottom','Shelf','Drawer side','Drawer back','Drawer front','Drawer bottom','Applied front'] as const).flatMap(role=>{
-  const matching=b.filter(x=>x.role===role)
-  if(!matching.length)return []
-  return [{id:crypto.randomUUID(),label:role,width:matching[0].cutWidth,height:matching[0].cutHeight,
-   quantity:matching.length,materialId:material.id,rotationAllowed:s.grain==='none',
-   grain:s.grain,abs:edgeFor(role,s.frontEdge),group:s.label}]
- })
+ const boxes=cabinetBoxes(s,material.thickness)
+ const groups=new Map<string,{box:CabinetBox;quantity:number}>()
+ for(const b of boxes){
+  const key=boxKey(b),previous=groups.get(key)
+  groups.set(key,{box:b,quantity:(previous?.quantity??0)+1})
+ }
+ return [...groups.values()].map(({box,quantity})=>({
+  id:crypto.randomUUID(),label:boxName(box),width:box.cutWidth,height:box.cutHeight,
+  quantity,materialId:material.id,rotationAllowed:s.grain==='none',
+  grain:s.grain,abs:edgeFor(box.role,s.frontEdge),group:s.label
+ }))
 }
+
 function pieceFor(box:CabinetBox,part:Part,index:number,s:CabinetSpec,offset:number):AssemblyPiece{
  // Three.js/Fusion assembly axes: X width, Y vertical, Z towards cabinet front.
  // CutWidth is aligned with local X; cutHeight with local Y; thickness with local Z.
  const center:Vec3=[
-  offset+box.x+box.dx/2-s.width/2,
+  offset+box.x+box.dx/2-totalCabinetWidth(s)/2,
   box.z+box.dz/2-s.height/2,
   s.depth/2-box.y-box.dy/2
  ]
@@ -130,29 +215,32 @@ function pieceFor(box:CabinetBox,part:Part,index:number,s:CabinetSpec,offset:num
   positionMm:center,rotationDeg:box.rotationDeg??(box.role==='Side panel'?[0,90,90]:[90,0,0])}
 }
 export function createCabinetAssemblies(s:CabinetSpec,material:Material,parts:Part[],copies=1,existingCount=0):ProjectAssembly[]{
- const errors=cabinetErrors(s,material);if(errors.length)throw Error(errors.join(' '))
+ const issues=cabinetErrors(s,material);if(issues.length)throw Error(issues.join(' '))
  if(!whole(copies)||copies<1||copies>20)throw Error('Insert between 1 and 20 cabinets.')
  const boxes=cabinetBoxes(s,material.thickness)
- const byRole=new Map(parts.map(p=>[p.label,p]))
- const stamp=new Date().toISOString()
- for(const role of new Set(boxes.map(b=>b.role))){
-  const part=byRole.get(role),perCabinet=boxes.filter(b=>b.role===role).length
-  if(!part||part.quantity<perCabinet*copies||part.width!==boxes.find(b=>b.role===role)?.cutWidth||
-   part.height!==boxes.find(b=>b.role===role)?.cutHeight||part.materialId!==material.id){
-   throw Error('Parts do not match the cabinet specification: '+role)
-  }
+ const counts=new Map<string,number>()
+ for(const b of boxes)counts.set(boxKey(b),(counts.get(boxKey(b))??0)+1)
+ const byKey=new Map(parts.map(p=>[JSON.stringify([p.label,p.width,p.height]),p]))
+ for(const [key,count] of counts){
+  const part=byKey.get(key)
+  if(!part||part.materialId!==material.id||part.quantity<count*copies)
+   throw Error('Parts do not match the cabinet specification: '+key)
  }
+ const stamp=new Date().toISOString()
  return Array.from({length:copies},(_,copy)=>{
-  const id=crypto.randomUUID(),offset=(existingCount+copy)*(s.width+150)
+  const offsets=new Map<string,number>()
   const pieces=boxes.map(box=>{
-   const part=byRole.get(box.role)!
-   return pieceFor(box,part,copy*boxes.filter(b=>b.role===box.role).length+box.index,s,offset)
+   const key=boxKey(box),part=byKey.get(key)!
+   const index=copy*counts.get(key)!+(offsets.get(key)??0)
+   offsets.set(key,(offsets.get(key)??0)+1)
+   return pieceFor(box,part,index,s,(existingCount+copy)*(totalCabinetWidth(s)+150))
   })
-  return {id,label:s.label+(copies>1?' #'+(copy+1):''),pieces,
-   createdAt:stamp,updatedAt:stamp,cabinetSpec:structuredClone(s),
+  return {id:crypto.randomUUID(),label:s.label+(copies>1?' #'+(copy+1):''),
+   pieces,createdAt:stamp,updatedAt:stamp,cabinetSpec:structuredClone(s),
    componentTree:createCabinetComponentTree(s,material.thickness)}
  })
 }
+
 export function createCabinetForProject(project:Project,s:CabinetSpec):{parts:Part[];assemblies:ProjectAssembly[]}{
  const material=project.materials.find(m=>m.id===s.materialId)
  if(!material)throw Error('Selected material does not exist in the project.')
