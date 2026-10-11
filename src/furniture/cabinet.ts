@@ -8,7 +8,7 @@ import type {CutlistPreset} from '../presets/presets.ts'
 export interface CabinetSpec {
  label:string; width:number; height:number; depth:number; materialId:string
  shelves:number; sideClear:number; frontClear:number; rearClear:number
- grain:GrainAxis; frontEdge:boolean
+ grain:GrainAxis; frontEdge:boolean; templateId?:string
 }
 export interface CabinetBox {
  role:'Side panel'|'Top / bottom'|'Shelf'
@@ -17,7 +17,7 @@ export interface CabinetBox {
 }
 export const cabinetDefaults=(materialId:string):CabinetSpec=>({
  label:'Open cabinet',width:800,height:900,depth:350,materialId,shelves:2,
- sideClear:0,frontClear:0,rearClear:0,grain:'none',frontEdge:false
+ sideClear:0,frontClear:0,rearClear:0,grain:'none',frontEdge:false,templateId:'cabinet-open'
 })
 const whole=(x:number)=>Number.isSafeInteger(x)
 export function cabinetErrors(s:CabinetSpec,material?:Material):string[]{
