@@ -1,10 +1,10 @@
 import type {Part,Project,Material} from '../engine/types.ts'
 import type {CabinetSpec} from '../furniture/cabinet.ts'
-import type {ComponentInstance} from '../furniture/component-engine.ts'
+import type {StoredComponentTree} from '../furniture/component-engine.ts'
 import {emptyAbs} from '../engine/types.ts'
 export type Vec3=[number,number,number]
 export interface AssemblyPiece {id:string;partId:string;instanceIndex:number;positionMm:Vec3;rotationDeg:Vec3}
-export interface ProjectAssembly {id:string;label:string;pieces:AssemblyPiece[];cabinetSpec?:CabinetSpec;componentTree?:ComponentInstance;createdAt:string;updatedAt:string}
+export interface ProjectAssembly {id:string;label:string;pieces:AssemblyPiece[];cabinetSpec?:CabinetSpec;componentTree?:StoredComponentTree;createdAt:string;updatedAt:string}
 export const DRAWER_CATEGORY_ID='starter-drawers'
 export const DRAWER_PRESET_ID='starter-drawer-40x30-preset-v1'
 export const DRAWER_KIT_ID='starter-drawer-40x30-kit-v1'
