@@ -7,15 +7,33 @@ import {createCabinetComponentTree,resolveComponentTree} from './component-engin
 import {drawerErrors,drawerPanels} from './drawer.ts'
 import type {DrawerSpec,DrawerRole} from './drawer.ts'
 
-/** Manufacturing dimensions are integer millimetres; assembly centres may be half-mm. */
+export interface CompartmentLayout {
+ content:'empty'|'shelves'|'drawers'
+ count:number
+}
+export interface CabinetSplit {
+ axis:'vertical'|'horizontal'
+ ratio:number // first compartment gets this percentage of internal space after the divider
+ first:CompartmentLayout
+ second:CompartmentLayout
+}
+export interface ConnectedCabinetModule {
+ width:number
+ shelves:number
+ drawers:number
+}
+ /** Manufacturing dimensions are integer millimetres; assembly centres may be half-mm. */
 export interface CabinetSpec {
  label:string; width:number; height:number; depth:number; materialId:string
  shelves:number; sideClear:number; frontClear:number; rearClear:number
  grain:GrainAxis; frontEdge:boolean; templateId?:string; templateVersion?:number
  drawers?:number; drawerConfig?:DrawerSpec
+ split?:CabinetSplit; connected?:ConnectedCabinetModule
+ shelfMode?:'even'|'custom'; shelfPositions?:number[]
 }
 export interface CabinetBox {
- role:'Side panel'|'Top / bottom'|'Shelf'|DrawerRole
+ role:'Side panel'|'Top / bottom'|'Shelf'|'Divider'|DrawerRole
+ label?:string
  index:number; x:number; y:number; z:number
  dx:number; dy:number; dz:number; cutWidth:number; cutHeight:number; rotationDeg?:Vec3
 }
