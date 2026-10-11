@@ -14,7 +14,10 @@ import {download,fileSlug} from '../import-export/files.ts'
 import {cuttingSvg,printableHtml} from '../import-export/svg.ts'
 import {PresetManager} from '../components/PresetManager.tsx'
 import {CabinetConfigurator} from '../components/CabinetConfigurator.tsx'
+import {DrawerConfigurator} from '../components/DrawerConfigurator.tsx'
 import {createCabinetForProject,createCabinetAssemblies,reconfigureCabinet,cabinetBoxes} from '../furniture/cabinet.ts'
+import {createDrawerForProject,createDrawerAssemblies,reconfigureDrawer} from '../furniture/drawer.ts'
+import type {DrawerSpec} from '../furniture/drawer.ts'
 import type {CabinetSpec} from '../furniture/cabinet.ts'
 import {PartOrderBoard} from '../components/PartOrderBoard.tsx'
 import {createDrawer40x30,createPositionedDrawers,DRAWER_PRESET_ID} from '../assembly/model.ts'
@@ -57,6 +60,8 @@ export function App(){
  const [selectedFurnitureId,setSelectedFurnitureId]=useState('')
  const [cabinetEditorOpen,setCabinetEditorOpen]=useState(false)
  const [editingCabinetId,setEditingCabinetId]=useState('')
+ const [drawerEditorOpen,setDrawerEditorOpen]=useState(false)
+ const [editingDrawerId,setEditingDrawerId]=useState('')
   const workerRef=useRef<Worker|null>(null)
  const revision=useRef(0)
   const [appUpdateAvailable,setAppUpdateAvailable]=useState(false)
@@ -101,6 +106,18 @@ export function App(){
   }
   setEditingCabinetId('');setCabinetEditorOpen(false);setPreviewOpen(true);setWarning('')
  }
+ const addDrawer=(spec:DrawerSpec)=>{
+  if(!project)throw Error('Open a project first.')
+  if(editingDrawerId){
+   update(()=>reconfigureDrawer(project,editingDrawerId,spec))
+   setSelectedFurnitureId(editingDrawerId)
+  }else{
+   const built=createDrawerForProject(project,spec)
+   update(p=>({...p,parts:[...p.parts,...built.parts],assemblies:[...(p.assemblies??[]),...built.assemblies]}))
+   setSelectedFurnitureId(built.assemblies[0].id)
+  }
+  setDrawerEditorOpen(false);setEditingDrawerId('');setPreviewOpen(true);setWarning('')
+ }
  const addExampleDrawer=()=>{if(!project)return;try{
   const {parts,assembly}=createDrawer40x30(project)
   update(p=>({...p,parts:[...p.parts,...parts],assemblies:[...(p.assemblies??[]),assembly]}))
@@ -109,7 +126,7 @@ export function App(){
  const fusionExport=(assembly:ProjectAssembly)=>{if(!project)return;try{
   download('furniture-assembly-'+assembly.id+'.py',exportFusionPython(project,assembly),'text/x-python;charset=utf-8')
  }catch(e){setWarning(e instanceof Error?e.message:String(e))}}
- const insertPresetIntoProject=async(projectId:string,parts:Part[],presetId:string,copies:number,cabinetSpec?:CabinetSpec)=>{
+ const insertPresetIntoProject=async(projectId:string,parts:Part[],presetId:string,copies:number,cabinetSpec?:CabinetSpec,drawerSpec?:DrawerSpec)=>{
   // Preserve any active, possibly unsaved editor snapshot.
   const target=project?.id===projectId?project:await getProject(projectId)
   if(!target)throw Error('Destination project no longer exists.')
@@ -118,6 +135,10 @@ export function App(){
     const m=target.materials.find(material=>material.id===parts[0]?.materialId)
     if(!m)throw Error('Cabinet material not found in destination project.')
     return createCabinetAssemblies({...cabinetSpec,materialId:m.id},m,parts,copies,target.assemblies?.length??0)
+   })():drawerSpec?(()=>{
+    const m=target.materials.find(material=>material.id===parts[0]?.materialId)
+    if(!m)throw Error('Drawer material not found in destination project.')
+    return createDrawerAssemblies({...drawerSpec,materialId:m.id},m,parts,copies,target.assemblies?.length??0)
    })():[]
   const next:Project={...target,parts:[...target.parts,...parts],
    assemblies:[...(target.assemblies??[]),...assemblies],lastResult:undefined}
@@ -167,11 +188,17 @@ export function App(){
  <section className="card"><div className="section-head"><h2>Stock sheets</h2><button onClick={()=>update(p=>({...p,sheets:[...p.sheets,{id:mkId(),materialId:p.materials[0]?.id??'',thickness:p.materials[0]?.thickness??18,width:2800,height:2070,quantity:null,grain:'none',trim:emptyTrim()}]}))}>+ Sheet</button></div>{project.sheets.map(s=><div className="sheet-card" key={s.id}><div className="form-grid"><FormLine label="Material"><select value={s.materialId} onChange={e=>{const material=project.materials.find(x=>x.id===e.target.value);changeSheet(s.id,{materialId:e.target.value,thickness:material?.thickness??s.thickness})}}>{project.materials.map(m=><option key={m.id} value={m.id}>{m.name}</option>)}</select></FormLine><FormLine label="Width mm">{numeric(v=>changeSheet(s.id,{width:v}),s.width,1)}</FormLine><FormLine label="Height mm">{numeric(v=>changeSheet(s.id,{height:v}),s.height,1)}</FormLine><FormLine label="Inventory (blank = unlimited)"><input type="number" min="0" value={s.quantity??''} onChange={e=>changeSheet(s.id,{quantity:e.target.value===''?null:Number(e.target.value)})}/></FormLine><FormLine label="Grain axis"><select value={s.grain} onChange={e=>changeSheet(s.id,{grain:e.target.value as GrainAxis})}>{['none','x','y'].map(x=><option key={x}>{x}</option>)}</select></FormLine></div><details className="stock-advanced"><summary>Stock trim margins</summary><div className="trimline">{(['top','right','bottom','left'] as const).map(side=><FormLine key={side} label={`Trim ${side} mm`}>{numeric(v=>changeSheet(s.id,{trim:{...s.trim,[side]:v}}),s.trim[side])}</FormLine>)}</div></details><button className="danger" onClick={()=>{if(confirm('Remove sheet specification?'))update(p=>({...p,sheets:p.sheets.filter(v=>v.id!==s.id)}))}}>Remove sheet</button></div>)}</section>
  </div></details>
  {cabinetEditorOpen&&<CabinetConfigurator key={editingCabinetId||'new'} mode="item" materials={project.materials} editing={Boolean(editingCabinetId)}
-  initial={project.assemblies?.find(a=>a.id===editingCabinetId)?.cabinetSpec} onAdd={addCabinet} onCancel={()=>{setCabinetEditorOpen(false);setEditingCabinetId('')}}/>}
- {project.assemblies?.some(a=>a.cabinetSpec)&&<section className="card"><div className="section-head"><h2>Configured furniture</h2></div><div className="actions">
+  initial={project.assemblies?.find(a=>a.id===editingCabinetId)?.cabinetSpec} onAdd={addCabinet}
+  onChooseDrawer={()=>{setCabinetEditorOpen(false);setEditingCabinetId('');setDrawerEditorOpen(true)}}
+  onCancel={()=>{setCabinetEditorOpen(false);setEditingCabinetId('')}}/>}
+ {drawerEditorOpen&&<DrawerConfigurator key={editingDrawerId||'new'} mode="item" materials={project.materials}
+  initial={project.assemblies?.find(a=>a.id===editingDrawerId)?.drawerSpec} editing={Boolean(editingDrawerId)}
+  onAdd={addDrawer} onCancel={()=>{setDrawerEditorOpen(false);setEditingDrawerId('')}}/>
+ {project.assemblies?.some(a=>a.cabinetSpec||a.drawerSpec)&&<section className="card"><div className="section-head"><h2>Configured furniture & building components</h2></div><div className="actions">
   {project.assemblies.filter(a=>a.cabinetSpec).map(a=><button key={a.id} onClick={()=>{setEditingCabinetId(a.id);setCabinetEditorOpen(true)}}>Edit {a.label}</button>)}
+  {project.assemblies.filter(a=>a.drawerSpec).map(a=><button key={a.id} onClick={()=>{setEditingDrawerId(a.id);setDrawerEditorOpen(true)}}>Edit drawer {a.label}</button>)}
  </div></section>}
- <section className="card"><div className="section-head"><h2>Parts <small>({project.parts.reduce((n,p)=>n+p.quantity,0)} pieces)</small></h2><div className="part-heading-actions"><button onClick={()=>navigate('presets')}>Browse presets</button><button className="primary" onClick={()=>{setEditingCabinetId('');setCabinetEditorOpen(true)}}>+ Add item</button><button onClick={()=>update(p=>({...p,parts:[...p.parts,newPart(p.materials[0]?.id??'')]}))}>+ Add part</button></div></div><FormLine label="Filter parts"><input value={partSearch} placeholder="Search by name" onChange={e=>setPartSearch(e.target.value)}/></FormLine><PartOrderBoard parts={project.parts} onChange={ordered=>update(p=>({...p,parts:ordered}))}/><div className="parts-list">{project.parts.filter(p=>p.label.toLowerCase().includes(partSearch.toLowerCase())).map(part=><div className="part-card" key={part.id}><div className="form-grid"><FormLine label="Name"><input value={part.label} onChange={e=>changePart(part.id,{label:e.target.value})}/></FormLine><FormLine label="Width mm">{numeric(v=>changePart(part.id,{width:v}),part.width,1)}</FormLine><FormLine label="Height mm">{numeric(v=>changePart(part.id,{height:v}),part.height,1)}</FormLine><FormLine label="Quantity">{numeric(v=>changePart(part.id,{quantity:v}),part.quantity,1)}</FormLine><FormLine label="Material"><select value={part.materialId} onChange={e=>changePart(part.id,{materialId:e.target.value})}>{project.materials.map(m=><option value={m.id} key={m.id}>{m.name}</option>)}</select></FormLine></div><details className="part-advanced"><summary>Advanced · ABS & grain ({(['top','right','bottom','left'] as const).filter(edge=>part.abs[edge]).length} edged sides)</summary><div className="part-options"><div className="part-options-head"><FormLine label="Part grain"><select value={part.grain} onChange={e=>changePart(part.id,{grain:e.target.value as GrainAxis})}>{['none','x','y'].map(x=><option key={x}>{x}</option>)}</select></FormLine><label><input type="checkbox" checked={part.rotationAllowed} onChange={e=>changePart(part.id,{rotationAllowed:e.target.checked})}/> Rotation allowed</label></div>{(['top','right','bottom','left'] as const).map(side=><FormLine key={side} label={`ABS ${side}`}><input placeholder="none / ABS 2mm" value={part.abs[side]??''} onChange={e=>changePart(part.id,{abs:{...part.abs,[side]:e.target.value||null}})}/></FormLine>)}</div></details><div className="actions part-actions"><button onClick={()=>update(p=>({...p,parts:[...p.parts,{...structuredClone(part),id:mkId(),label:`${part.label} copy`}]}))}>Duplicate</button><button className="danger" onClick={()=>{if(confirm(`Delete ${part.label}?`))update(p=>({...p,parts:p.parts.filter(v=>v.id!==part.id)}))}}>Delete</button></div></div>)}</div><details><summary>Paste spreadsheet rows</summary><p>Each line: Name [Tab] Width [Tab] Height [Tab] Quantity</p><textarea rows={3} value={importText} onChange={e=>setImportText(e.target.value)} placeholder={'Shelf\t800\t400\t2'}/><button onClick={addFromPaste}>Add pasted parts</button></details><label className="buttonlike">Import CSV / XLSX<input type="file" hidden accept=".csv,.xlsx" onChange={e=>void importFile(e)}/></label></section>
+ <section className="card"><div className="section-head"><h2>Parts <small>({project.parts.reduce((n,p)=>n+p.quantity,0)} pieces)</small></h2><div className="part-heading-actions"><button onClick={()=>navigate('presets')}>Browse presets</button><button className="primary" onClick={()=>{setEditingCabinetId('');setCabinetEditorOpen(true)}}>+ Add item</button><button onClick={()=>{setEditingDrawerId('');setDrawerEditorOpen(true)}}>+ Building component · Drawer</button><button onClick={()=>update(p=>({...p,parts:[...p.parts,newPart(p.materials[0]?.id??'')]}))}>+ Add part</button></div></div><FormLine label="Filter parts"><input value={partSearch} placeholder="Search by name" onChange={e=>setPartSearch(e.target.value)}/></FormLine><PartOrderBoard parts={project.parts} onChange={ordered=>update(p=>({...p,parts:ordered}))}/><div className="parts-list">{project.parts.filter(p=>p.label.toLowerCase().includes(partSearch.toLowerCase())).map(part=><div className="part-card" key={part.id}><div className="form-grid"><FormLine label="Name"><input value={part.label} onChange={e=>changePart(part.id,{label:e.target.value})}/></FormLine><FormLine label="Width mm">{numeric(v=>changePart(part.id,{width:v}),part.width,1)}</FormLine><FormLine label="Height mm">{numeric(v=>changePart(part.id,{height:v}),part.height,1)}</FormLine><FormLine label="Quantity">{numeric(v=>changePart(part.id,{quantity:v}),part.quantity,1)}</FormLine><FormLine label="Material"><select value={part.materialId} onChange={e=>changePart(part.id,{materialId:e.target.value})}>{project.materials.map(m=><option value={m.id} key={m.id}>{m.name}</option>)}</select></FormLine></div><details className="part-advanced"><summary>Advanced · ABS & grain ({(['top','right','bottom','left'] as const).filter(edge=>part.abs[edge]).length} edged sides)</summary><div className="part-options"><div className="part-options-head"><FormLine label="Part grain"><select value={part.grain} onChange={e=>changePart(part.id,{grain:e.target.value as GrainAxis})}>{['none','x','y'].map(x=><option key={x}>{x}</option>)}</select></FormLine><label><input type="checkbox" checked={part.rotationAllowed} onChange={e=>changePart(part.id,{rotationAllowed:e.target.checked})}/> Rotation allowed</label></div>{(['top','right','bottom','left'] as const).map(side=><FormLine key={side} label={`ABS ${side}`}><input placeholder="none / ABS 2mm" value={part.abs[side]??''} onChange={e=>changePart(part.id,{abs:{...part.abs,[side]:e.target.value||null}})}/></FormLine>)}</div></details><div className="actions part-actions"><button onClick={()=>update(p=>({...p,parts:[...p.parts,{...structuredClone(part),id:mkId(),label:`${part.label} copy`}]}))}>Duplicate</button><button className="danger" onClick={()=>{if(confirm(`Delete ${part.label}?`))update(p=>({...p,parts:p.parts.filter(v=>v.id!==part.id)}))}}>Delete</button></div></div>)}</div><details><summary>Paste spreadsheet rows</summary><p>Each line: Name [Tab] Width [Tab] Height [Tab] Quantity</p><textarea rows={3} value={importText} onChange={e=>setImportText(e.target.value)} placeholder={'Shelf\t800\t400\t2'}/><button onClick={addFromPaste}>Add pasted parts</button></details><label className="buttonlike">Import CSV / XLSX<input type="file" hidden accept=".csv,.xlsx" onChange={e=>void importFile(e)}/></label></section>
  <section className="card"><div className="section-head"><h2>Complete furniture · 3D</h2><div className="actions compact-actions"><button onClick={addExampleDrawer}>+ 40 × 30 cm Drawer</button><button onClick={()=>setPreviewOpen(v=>!v)} aria-expanded={previewOpen}>{previewOpen?'Hide assembled 3D':'View assembled 3D'}</button></div></div>
  {previewOpen&&(selectedFurniture?<div className="stack">
   <div className="form-grid"><FormLine label="Furniture item"><select value={selectedFurniture.id} onChange={e=>setSelectedFurnitureId(e.target.value)}>{completeAssemblies.map(a=><option key={a.id} value={a.id}>{a.label}</option>)}</select></FormLine></div>
@@ -181,7 +208,8 @@ export function App(){
      <PositionedFurniturePreview project={project} assembly={selectedFurniture}/>}
   </Suspense>
   <div className="actions"><button onClick={()=>fusionExport(selectedFurniture)}>Export complete item to Fusion 360</button>
-   {selectedFurniture.cabinetSpec&&<button onClick={()=>{setEditingCabinetId(selectedFurniture.id);setCabinetEditorOpen(true)}}>Edit item dimensions</button>}</div>
+   {selectedFurniture.cabinetSpec&&<button onClick={()=>{setEditingCabinetId(selectedFurniture.id);setCabinetEditorOpen(true)}}>Edit item dimensions</button>}
+   {selectedFurniture.drawerSpec&&<button onClick={()=>{setEditingDrawerId(selectedFurniture.id);setDrawerEditorOpen(true)}}>Edit drawer component</button>}</div>
  </div>:<p className="muted">No assembled furniture model yet. Use + Add item to design a cabinet. Manual cut rows do not include the positions required to render a complete item.</p>)}</section>
 
  <details className="card cutting-settings"><summary>Cutting settings · kerf {project.settings.kerf} mm</summary><div className="form-grid"><FormLine label="Saw kerf mm">{numeric(v=>update(p=>({...p,settings:{...p.settings,kerf:v}})),project.settings.kerf)}</FormLine><FormLine label="Search duration ms">{numeric(v=>update(p=>({...p,settings:{...p.settings,maxDurationMs:v}})),project.settings.maxDurationMs,1)}</FormLine><FormLine label="Restarts">{numeric(v=>update(p=>({...p,settings:{...p.settings,maxRestarts:v}})),project.settings.maxRestarts,1)}</FormLine><FormLine label="Offcut min width mm">{numeric(v=>update(p=>({...p,settings:{...p.settings,minOffcutWidth:v}})),project.settings.minOffcutWidth,1)}</FormLine><FormLine label="Offcut min height mm">{numeric(v=>update(p=>({...p,settings:{...p.settings,minOffcutHeight:v}})),project.settings.minOffcutHeight,1)}</FormLine><FormLine label="Offcut min area mm²">{numeric(v=>update(p=>({...p,settings:{...p.settings,minOffcutArea:v}})),project.settings.minOffcutArea)}</FormLine></div><label><input type="checkbox" checked={project.settings.rotationAllowed} onChange={e=>update(p=>({...p,settings:{...p.settings,rotationAllowed:e.target.checked}}))}/> Allow rotation globally</label></details>
