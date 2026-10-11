@@ -10,7 +10,7 @@ test('create a category preset, persist across reloads and import into distinct 
  await page.getByRole('button',{name:'+ New project'}).click()
  await page.getByRole('button',{name:'Presets',exact:true}).click()
  const manager=page.getByRole('region',{name:'Presets'})
- await manager.getByRole('button',{name:'+ Create preset'}).click()
+ await manager.getByRole('button',{name:'Manual preset'}).click()
  const editor=page.getByRole('region',{name:'Preset draft editor'})
  await editor.getByRole('textbox',{name:'Preset label'}).fill('Drawer top')
  await editor.getByRole('textbox',{name:'Item label'}).fill('Drawer top panel')

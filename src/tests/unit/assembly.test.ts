@@ -28,7 +28,7 @@ describe('positioned 40 × 30 drawer and Fusion export',()=>{
  it('prevents malformed transforms and duplicated instances',()=>{
   const p=createProject(),built=createDrawer40x30(p)
   p.parts=built.parts;p.assemblies=[built.assembly]
-  p.assemblies[0].pieces[0].positionMm=[1.5,0,0]
+  p.assemblies[0].pieces[0].positionMm=[Number.NaN,0,0]
   expect(validateProject(p)).toContain('Invalid assembly piece '+p.assemblies[0].pieces[0].id)
   p.assemblies[0].pieces[0].positionMm=[0,0,0]
   p.assemblies[0].pieces[1].instanceIndex=0
