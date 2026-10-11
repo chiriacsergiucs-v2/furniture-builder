@@ -119,11 +119,22 @@ export function PresetManager({project,projects,onInsert}:{
  const [notice,setNotice]=useState('')
  const [draft,setDraft]=useState<CutlistPreset|null>(null)
  const [draftMode,setDraftMode]=useState<DraftMode>('create')
- const [cabinetEditor,setCabinetEditor]=useState<{source?:StoredPreset;duplicate?:boolean}|null>(null)
- const [drawerEditor,setDrawerEditor]=useState<{source?:StoredPreset;duplicate?:boolean}|null>(null)
+ const [cabinetEditor,setCabinetEditor]=useState<{source?:StoredPreset;duplicate?:boolean;initial?:CabinetSpec}|null>(null)
+ const [drawerEditor,setDrawerEditor]=useState<{source?:StoredPreset;duplicate?:boolean;initial?:DrawerSpec}|null>(null)
+ const [configuredId,setConfiguredId]=useState('')
  const [filter,setFilter]=useState('')
  const [busy,setBusy]=useState(false)
  const materials=project?.materials.length?project.materials:starterMaterials
+ const configured=project?.assemblies?.filter(a=>a.cabinetSpec||a.drawerSpec)??[]
+ const fromConfigured=()=>{
+  const selected=configured.find(a=>a.id===(configuredId||configured[0]?.id))
+  if(!selected){onError(new Error('Choose a configured item first.'));return}
+  setDraft(null);setDrawerEditor(null);setCabinetEditor(null)
+  setSelectedCategory(UNCATEGORIZED_ID);setError('')
+  if(selected.cabinetSpec)setCabinetEditor({initial:structuredClone(selected.cabinetSpec)})
+  else if(selected.drawerSpec)setDrawerEditor({initial:structuredClone(selected.drawerSpec)})
+  setNotice('Unsaved configured item. Review parameters, then press Save preset to add it to the library.')
+ }
  useEffect(()=>{let active=true;void Promise.all([listPresets(),listCategories()])
   .then(([saved,groups])=>{if(active){setLibrary(saved);setCategories(groups)}})
   .catch(e=>{if(active)setError(message(e))});return()=>{active=false}},[])
@@ -211,7 +222,13 @@ export function PresetManager({project,projects,onInsert}:{
     <button type="button" disabled={!project?.parts.length} onClick={fromParts}>Save project parts as preset</button>
    </div>
   </div>
-  <p className="muted">Expand a category, preset, then item. 3D views load on demand. Duplication always starts as an unsaved draft; only Save duplicate writes to the library.</p>
+  <p className="muted">Expand a category, preset, then item. 3D views load on demand. Drafts only persist on explicit Save.</p>
+  {configured.length>0&&<div className="preset-category-editor"><label className="field"><span>Project item to reuse</span>
+   <select value={configuredId||configured[0]?.id||''} onChange={e=>setConfiguredId(e.target.value)}>
+    {configured.map(a=><option key={a.id} value={a.id}>{a.label}</option>)}
+   </select></label>
+   <button type="button" onClick={fromConfigured}>Configure as new preset</button>
+  </div>}
   <div className="preset-category-editor">
    <label className="field"><span>New category</span><input placeholder="Cabinets, Shelves…" value={newCategory} onChange={e=>setNewCategory(e.target.value)}/></label>
    <label className="field"><span>Parent category</span><select value={parentCategory} onChange={e=>setParentCategory(e.target.value)}>
@@ -222,10 +239,10 @@ export function PresetManager({project,projects,onInsert}:{
   {error&&<p className="preset-error" role="alert">{error}</p>}
   {notice&&<p className="preset-success" role="status">{notice}</p>}
   {cabinetEditor&&<CabinetConfigurator key={(cabinetEditor.source?.id??'new')+(cabinetEditor.duplicate?'-copy':'')} mode="preset" materials={materials} categories={categories} initialCategory={cabinetEditor.source?.categoryId??UNCATEGORIZED_ID}
-   initial={cabinetEditor.source?.cabinetSpec?{...cabinetEditor.source.cabinetSpec,materialId:materials.find(m=>m.type===cabinetEditor.source?.items[0]?.material.type&&m.thickness===cabinetEditor.source?.items[0]?.material.thickness)?.id??materials[0]?.id??''}:undefined}
+   initial={cabinetEditor.initial??(cabinetEditor.source?.cabinetSpec?{...cabinetEditor.source.cabinetSpec,materialId:materials.find(m=>m.type===cabinetEditor.source?.items[0]?.material.type&&m.thickness===cabinetEditor.source?.items[0]?.material.thickness)?.id??materials[0]?.id??''}:undefined)}
    onSavePreset={saveCabinet} onChooseDrawer={()=>{setCabinetEditor(null);setDrawerEditor({})}} onCancel={()=>setCabinetEditor(null)}/>}
   {drawerEditor&&<DrawerConfigurator key={(drawerEditor.source?.id??'new')+(drawerEditor.duplicate?'-copy':'')} mode="preset" materials={materials} categories={categories} initialCategory={drawerEditor.source?.categoryId??UNCATEGORIZED_ID}
-   initial={drawerEditor.source?.drawerSpec?{...drawerEditor.source.drawerSpec,materialId:materials.find(m=>m.type===drawerEditor.source?.items[0]?.material.type&&m.thickness===drawerEditor.source?.items[0]?.material.thickness)?.id??materials[0]?.id??''}:undefined}
+   initial={drawerEditor.initial??(drawerEditor.source?.drawerSpec?{...drawerEditor.source.drawerSpec,materialId:materials.find(m=>m.type===drawerEditor.source?.items[0]?.material.type&&m.thickness===drawerEditor.source?.items[0]?.material.thickness)?.id??materials[0]?.id??''}:undefined)}
    onSavePreset={saveDrawer} onCancel={()=>setDrawerEditor(null)}/>}
   {draft&&<div role="region" className="preset-editor" aria-label="Preset draft editor">
    <h3>{draftMode==='duplicate'?'Duplicate with new params (unsaved)':draftMode==='edit'?'Edit preset':'New preset'}</h3>
