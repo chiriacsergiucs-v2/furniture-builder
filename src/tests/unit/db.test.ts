@@ -4,6 +4,7 @@ import {FurnitureDatabase,MIGRATION_KEY,UNCATEGORIZED_ID,db} from '../../db/data
 import {migrateLocalStorage,readLegacySnapshot} from '../../db/migration.ts'
 import {createProject,emptyAbs} from '../../engine/types.ts'
 import {createPreset,newPresetItem,instantiatePreset} from '../../presets/presets.ts'
+import {createCabinetForProject,createCabinetPreset,cabinetDefaults} from '../../furniture/cabinet.ts'
 import {duplicatePresetDraft} from '../../presets/duplicate.ts'
 import {saveProject,getProject,duplicateProject,removeProject,backupProject,restoreProject,saveCategory,listCategories,saveKit,listKits,listRevisions} from '../../db/repository.ts'
 import {savePreset,listPresets,exportPresetLibrary,importPresetLibrary} from '../../presets/storage.ts'
@@ -137,3 +138,28 @@ describe('B19 saved preset revisions',()=>{
   expect(JSON.parse(backup).parts[0].sourcePreset.revision).toBe(1);
  })
 });
+
+describe('B20 historical furniture graph adapters',()=>{
+ it('hydrates legacy project graphs deterministically without changing stored rows',async()=>{
+  const base=createProject(),spec=cabinetDefaults(base.materials[0].id)
+  const built=createCabinetForProject(base,spec)
+  const legacy={...base,parts:built.parts,assemblies:built.assemblies.map(({componentTree,...rest})=>rest)}
+  await db.projects.put(legacy)
+  const first=await getProject(legacy.id),second=await getProject(legacy.id)
+  expect(first?.assemblies?.[0].componentTree?.definitionId).toBe('core/carcass')
+  expect(first?.assemblies?.[0].componentTree?.id).toBe(second?.assemblies?.[0].componentTree?.id)
+  expect((await db.projects.get(legacy.id))?.assemblies?.[0].componentTree).toBeUndefined()
+  expect(first?.parts).toEqual(legacy.parts)
+ })
+ it('hydrates a legacy preset without mutating its stored JSON or revision',async()=>{
+  const base=createProject(),material=base.materials[0]
+  const preset=createCabinetPreset(cabinetDefaults(material.id),material)
+  delete preset.componentTree
+  await db.presets.put({...preset,categoryId:UNCATEGORIZED_ID})
+  const saved=(await listPresets()).find(row=>row.id===preset.id)!
+  expect(saved.componentTree?.definitionId).toBe('core/carcass')
+  expect(saved.revision).toBeUndefined()
+  expect((await db.presets.get(preset.id))?.componentTree).toBeUndefined()
+  expect(parseBuildKitBackup(await exportDatabaseBackup()).collections.presets[0].componentTree).toBeUndefined()
+ })
+})
