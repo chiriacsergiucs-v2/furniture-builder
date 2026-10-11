@@ -29,7 +29,7 @@ export function validateProject(p:unknown):string[]{
      const allocation=piece?.partId+':'+piece?.instanceIndex
      if(!piece||!safeString(piece.id)||!piece.id||pieceIds.has(piece.id)||assigned.has(allocation)||!part||
       !integer(piece.instanceIndex)||piece.instanceIndex>=part.quantity||
-      !Array.isArray(piece.positionMm)||piece.positionMm.length!==3||!piece.positionMm.every(v=>Number.isSafeInteger(v)&&Math.abs(v)<=1e7)||
+      !Array.isArray(piece.positionMm)||piece.positionMm.length!==3||!piece.positionMm.every(v=>typeof v==='number'&&Number.isFinite(v)&&Math.abs(v)<=1e7)||
       !Array.isArray(piece.rotationDeg)||piece.rotationDeg.length!==3||!piece.rotationDeg.every(v=>Number.isSafeInteger(v)&&Math.abs(v)<=360000)){
       errors.push('Invalid assembly piece '+(piece?.id??''));continue
      }
