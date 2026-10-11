@@ -90,18 +90,20 @@ export function drawerPanels(s:DrawerSpec,material:Material):DrawerPanel[]{
  if(problems.length)throw Error(problems.join(' '))
  const root=resolveComponentTree(createDrawerComponentTree(s,material.thickness))
  const {bodyWidth:w,bodyHeight:h,bodyDepth:d,sideSpace:side,thickness:t}=root.values
- const x=side,frontH=s.front==='lowered'?h-s.pullGap:h
+ const x=side
+ const front=root.children.find(c=>c.instance.definitionId==='core/drawer-front')?.values
+ if(!front)throw Error('Drawer front component is missing.')
  const panels:DrawerPanel[]=[
   {role:'Drawer side',index:0,x,y:0,z:0,dx:t,dy:d,dz:h,cutWidth:d,cutHeight:h,rotationDeg:[0,90,0]},
   {role:'Drawer side',index:1,x:x+w-t,y:0,z:0,dx:t,dy:d,dz:h,cutWidth:d,cutHeight:h,rotationDeg:[0,90,0]},
   {role:'Drawer back',index:0,x:x+t,y:d-t,z:0,dx:w-2*t,dy:t,dz:h,cutWidth:w-2*t,cutHeight:h,rotationDeg:[0,0,0]},
-  {role:'Drawer front',index:0,x:x+t,y:0,z:0,dx:w-2*t,dy:t,dz:frontH,cutWidth:w-2*t,cutHeight:frontH,rotationDeg:[0,0,0]},
+  {role:'Drawer front',index:0,x:x+t,y:0,z:0,dx:w-2*t,dy:t,dz:front.innerFrontHeight,cutWidth:w-2*t,cutHeight:front.innerFrontHeight,rotationDeg:[0,0,0]},
   {role:'Drawer bottom',index:0,x:x+t,y:t,z:0,dx:w-2*t,dy:d-2*t,dz:t,cutWidth:w-2*t,cutHeight:d-2*t,rotationDeg:[90,0,0]}
  ]
  if(s.front==='applied')panels.push({
   role:'Applied front',index:0,x:s.frontGap,y:-t,z:s.frontGap,
-  dx:s.openingWidth-2*s.frontGap,dy:t,dz:s.openingHeight-2*s.frontGap,
-  cutWidth:s.openingWidth-2*s.frontGap,cutHeight:s.openingHeight-2*s.frontGap,
+  dx:front.appliedFrontWidth,dy:t,dz:front.appliedFrontHeight,
+  cutWidth:front.appliedFrontWidth,cutHeight:front.appliedFrontHeight,
   rotationDeg:[0,0,0]
  })
  return panels
