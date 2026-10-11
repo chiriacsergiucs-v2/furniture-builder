@@ -3,8 +3,6 @@ import {test,expect} from '@playwright/test'
 test('starter Drawers category, positioned drawer and XYZ edits persist after reload',async({page})=>{
  await page.goto('')
  await page.getByRole('button',{name:'+ New project'}).click()
- const presets=page.getByRole('region',{name:'Presets'})
- await expect(presets.getByText('40 × 30 cm Drawer',{exact:true}).first()).toBeVisible()
  await page.getByRole('button',{name:'+ 40 × 30 cm Drawer'}).click()
  const assembly=page.getByRole('region',{name:'3D assembly editor'})
  await expect(assembly).toBeVisible()
@@ -38,9 +36,12 @@ test('starter Drawers category, positioned drawer and XYZ edits persist after re
 test('adding starter drawer from categorized presets creates a positioned assembly',async({page})=>{
  await page.goto('')
  await page.getByRole('button',{name:'+ New project'}).click()
+ await page.getByRole('button',{name:'Presets',exact:true}).click()
  const manager=page.getByRole('region',{name:'Presets'})
+ const drawerCategory=manager.locator('.preset-category-branch').filter({hasText:'Drawers'}).first()
+ await drawerCategory.locator(':scope > summary').click()
  const starter=manager.locator('.preset-card').filter({hasText:'40 × 30 cm Drawer'})
- await expect(starter).toBeVisible()
+ await starter.locator('.preset-entry > summary').click()
  await starter.getByRole('spinbutton',{name:'Sets to add'}).fill('2')
  await starter.getByRole('button',{name:'Add to project'}).click()
  const assembly=page.getByRole('region',{name:'3D assembly editor'})

@@ -4,6 +4,7 @@ import {FurnitureDatabase,MIGRATION_KEY,UNCATEGORIZED_ID,db} from '../../db/data
 import {migrateLocalStorage,readLegacySnapshot} from '../../db/migration.ts'
 import {createProject,emptyAbs} from '../../engine/types.ts'
 import {createPreset,newPresetItem} from '../../presets/presets.ts'
+import {duplicatePresetDraft} from '../../presets/duplicate.ts'
 import {saveProject,getProject,duplicateProject,removeProject,backupProject,restoreProject,saveCategory,listCategories,saveKit,listKits,listRevisions} from '../../db/repository.ts'
 import {savePreset,listPresets,exportPresetLibrary,importPresetLibrary} from '../../presets/storage.ts'
 import {exportDatabaseBackup,importDatabaseBackup,parseBuildKitBackup} from '../../db/backup.ts'
@@ -96,5 +97,23 @@ describe('Dexie collections and backups',()=>{
   backup.collections.projects[0].name=10
   await expect(importDatabaseBackup(JSON.stringify(backup))).rejects.toThrow(/Invalid project/)
   expect((await getProject(project.id))?.name).toBe(project.name)
+ })
+})
+
+describe('explicit duplication and persistence',()=>{
+ it('does not write unsaved duplicate drafts to Dexie or mutate original',async()=>{
+  const project=createProject(),source=createPreset('Drawer top',[newPresetItem(project.materials[0])])
+  await savePreset(source)
+  const draft=duplicatePresetDraft(source,()=> 'new-id',()=> '2026-01-01T00:00:00.000Z')
+  draft.label='Drawer top 400'
+  draft.items[0].width=400
+  expect(draft.id).not.toBe(source.id)
+  expect((await listPresets()).length).toBe(1)
+  expect((await listPresets())[0].items[0].width).toBe(source.items[0].width)
+  await savePreset(draft)
+  const rows=await listPresets()
+  expect(rows).toHaveLength(2)
+  expect(rows.find(p=>p.id===draft.id)?.items[0].width).toBe(400)
+  expect(rows.find(p=>p.id===source.id)?.items[0].width).toBe(source.items[0].width)
  })
 })
