@@ -3,7 +3,7 @@ import {createProject} from '../../engine/types.ts'
 import {validateProject} from '../../engine/schema.ts'
 import {cabinetDefaults,createCabinetForProject} from '../../furniture/cabinet.ts'
 import {createCabinetComponentTree,createDrawerComponentTree,insertComponent,resolveComponentTree} from '../../furniture/component-engine.ts'
-import {drawerDefaults,drawerErrors,drawerPanels,drawerParts,createDrawerForProject,createDrawerPreset,createDrawerAssemblies,reconfigureDrawer} from '../../furniture/drawer.ts'
+import {drawerDefaults,drawerErrors,drawerPanels,createDrawerForProject,createDrawerPreset,createDrawerAssemblies,reconfigureDrawer} from '../../furniture/drawer.ts'
 import {instantiatePreset,validatePreset} from '../../presets/presets.ts'
 
 describe('Reusable drawer components, runner clearances and insertion',()=>{
