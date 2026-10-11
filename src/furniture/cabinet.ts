@@ -4,7 +4,7 @@ import type {ProjectAssembly,AssemblyPiece,Vec3} from '../assembly/model.ts'
 import {presetMaterial,createPreset} from '../presets/presets.ts'
 import type {CutlistPreset} from '../presets/presets.ts'
 import {createCabinetComponentTree,resolveComponentTree} from './component-engine.ts'
-import {drawerDefaults,drawerErrors,drawerPanels} from './drawer.ts'
+import {drawerErrors,drawerPanels} from './drawer.ts'
 import type {DrawerSpec,DrawerRole} from './drawer.ts'
 
 /** Manufacturing dimensions are integer millimetres; assembly centres may be half-mm. */
