@@ -108,7 +108,7 @@ export function drawerParts(s:DrawerSpec,m:Material):Part[]{
    grain:s.grain,abs:emptyAbs(),group:s.label}]
  })
 }
-export function drawerAssembly(s:DrawerSpec,m:Material,parts:Part[],offset=0):ProjectAssembly{
+export function drawerAssembly(s:DrawerSpec,m:Material,parts:Part[],offset=0,copyIndex=0):ProjectAssembly{
  const panels=drawerPanels(s,m),partByRole=new Map(parts.map(part=>[part.label,part]))
  const now=new Date().toISOString()
  const pieces:AssemblyPiece[]=panels.map(panel=>{
@@ -116,7 +116,7 @@ export function drawerAssembly(s:DrawerSpec,m:Material,parts:Part[],offset=0):Pr
   if(!part||part.materialId!==m.id||part.width!==panel.cutWidth||part.height!==panel.cutHeight||
    part.quantity<panels.filter(p=>p.role===panel.role).length)
    throw Error('Drawer cutlist does not match panel geometry: '+panel.role)
-  return {id:crypto.randomUUID(),partId:part.id,instanceIndex:panel.index,
+  return {id:crypto.randomUUID(),partId:part.id,instanceIndex:panel.index+copyIndex*panels.filter(p=>p.role===panel.role).length,
    positionMm:[offset+panel.x+panel.dx/2-s.openingWidth/2,
     panel.z+panel.dz/2-s.openingHeight/2,
     s.openingDepth/2-panel.y-panel.dy/2],rotationDeg:panel.rotationDeg}
@@ -129,6 +129,11 @@ export function createDrawerForProject(project:Project,s:DrawerSpec){
  if(!material)throw Error('Selected drawer material is not part of the project.')
  const parts=drawerParts(s,material)
  return {parts,assemblies:[drawerAssembly(s,material,parts,(project.assemblies?.length??0)*(s.openingWidth+150))]}
+}
+/** Reuse one cutlist with N independently positioned drawer assemblies. */
+export function createDrawerAssemblies(s:DrawerSpec,m:Material,parts:Part[],copies:number,existingCount=0):ProjectAssembly[]{
+ if(!Number.isSafeInteger(copies)||copies<1||copies>20)throw Error('Insert between 1 and 20 drawers.')
+ return Array.from({length:copies},(_,i)=>drawerAssembly(s,m,parts,(existingCount+i)*(s.openingWidth+150),i))
 }
 export function createDrawerPreset(s:DrawerSpec,m:Material):CutlistPreset{
  const parts=drawerParts(s,m)
