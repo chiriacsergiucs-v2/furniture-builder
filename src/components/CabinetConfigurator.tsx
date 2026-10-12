@@ -29,6 +29,7 @@ export function CabinetConfigurator({mode,materials,categories,initial,initialCa
   return {...candidate,materialId:materials.some(m=>m.id===candidate.materialId)?candidate.materialId:first}
  })
  const [stage,setStage]=useState<Stage>(initial?1:0)
+ const [templateCategory,setTemplateCategory]=useState('all')
  const [category,setCategory]=useState(initialCategory??'uncategorized')
  const [saving,setSaving]=useState(false)
  const [error,setError]=useState('')
@@ -144,25 +145,48 @@ export function CabinetConfigurator({mode,materials,categories,initial,initialCa
       <div className="furniture-template-card"><span className="template-copy"><strong>C02 · Shelves</strong><small>Adjustable quantity, spacing and clearance inside the cabinet</small><span className="template-category">Integrated into carcass</span></span></div>
       <div className="furniture-template-card"><span className="template-copy"><strong>Doors, vertical partitions, support legs</strong><small>Planned reusable component types</small><span className="template-category">Not implemented yet</span></span></div>
      </div>
-     <div className="cabinet-step">Furniture templates</div>
-     <div className="furniture-template-list" role="group" aria-label="Furniture templates">
-      {furnitureTemplates.map(template=>{
-       const selected=spec.templateId===template.id
-       return <button type="button" key={template.id}
-        className={'furniture-template-card'+(selected?' selected':'')}
-        disabled={template.status!=='ready'||template.kind==='drawer'&&!onChooseDrawer}
-        aria-pressed={template.status==='ready'?selected:undefined}
-        onClick={()=>template.kind==='drawer'?onChooseDrawer?.():selectTemplate(template)}>
-        <span className="template-drawing" aria-hidden="true">
-         <span className="template-outline">{Array.from({length:Math.min(5,template.defaultSpec?.shelves??2)},(_,i)=><span className="template-shelf" key={i}/>)}</span>
-        </span>
-        <span className="template-copy"><strong>{template.title}</strong>
-         <small>{template.description}</small>
-         <span className="template-category">{template.category} · {template.status==='ready'?'Available':'Planned'}</span>
-        </span>
-       </button>
-      })}
-     </div>
+     <div className="cabinet-step">Furniture templates · {furnitureTemplates.filter(t=>t.status==='ready').length} buildable designs</div>
+     <label className="field template-filter"><span>Show furniture category</span>
+      <select aria-label="Furniture category" value={templateCategory} onChange={e=>setTemplateCategory(e.target.value)}>
+       <option value="all">All ready categories</option>
+       {[...new Set(furnitureTemplates.filter(t=>t.status==='ready').map(t=>t.category))].map(category=>
+        <option key={category} value={category}>{category}</option>)}
+      </select>
+     </label>
+     {[...new Set(furnitureTemplates.filter(t=>t.status==='ready'&&(templateCategory==='all'||t.category===templateCategory)).map(t=>t.category))].map(category=>
+      <section className="furniture-template-group" key={category} aria-label={category+' templates'}>
+       <h3>{category}</h3>
+       <div className="furniture-template-list">
+        {furnitureTemplates.filter(t=>t.status==='ready'&&t.category===category).map(template=>{
+         const selected=spec.templateId===template.id
+         return <button type="button" key={template.id}
+          className={'furniture-template-card'+(selected?' selected':'')}
+          disabled={template.kind==='drawer'&&!onChooseDrawer}
+          aria-pressed={selected}
+          onClick={()=>template.kind==='drawer'?onChooseDrawer?.():selectTemplate(template)}>
+          <span className="template-drawing" aria-hidden="true">
+           <span className="template-outline">{Array.from({length:Math.min(5,template.defaultSpec?.shelves??2)},(_,i)=>
+            <span className="template-shelf" key={i}/>)}</span>
+          </span>
+          <span className="template-copy"><strong>{template.title}</strong>
+           <small>{template.description}</small>
+           <span className="template-category">{template.category} · Ready</span>
+          </span>
+         </button>
+        })}
+       </div>
+      </section>
+     )}
+     <details className="planned-template-list"><summary>Planned designs ({furnitureTemplates.filter(t=>t.status==='planned').length}) — not yet buildable</summary>
+      <p className="muted">These require dedicated geometry or hardware support. They cannot generate manufacturing files yet.</p>
+      <div className="furniture-template-list">
+       {furnitureTemplates.filter(t=>t.status==='planned').map(template=>
+        <article key={template.id} className="furniture-template-card template-planned-card">
+         <strong>{template.title}</strong><small>{template.description}</small>
+         <span className="template-category">Planned · not available</span>
+        </article>)}
+      </div>
+     </details>
     </>}
     {stage===1&&<>
      <div className="cabinet-step">02 / Customize {furnitureTemplates.find(t=>t.id===spec.templateId)?.title??'cabinet'}</div>

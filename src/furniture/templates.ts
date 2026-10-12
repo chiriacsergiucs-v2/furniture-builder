@@ -17,7 +17,7 @@ export interface FurnitureTemplate {
  status:'ready'|'planned'
  version:number
  rootComponent?:{definitionId:string;definitionVersion:number}
- defaultSpec?:Partial<Pick<CabinetSpec,'width'|'height'|'depth'|'shelves'|'drawers'|'split'>>
+ defaultSpec?:Partial<Pick<CabinetSpec,'width'|'height'|'depth'|'shelves'|'drawers'|'split'|'connected'>>
  drawerRunnerLength?:number
 }
 export const furnitureTemplates:readonly FurnitureTemplate[]=[

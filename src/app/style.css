@@ -153,3 +153,13 @@
  .cabinet-preview{height:245px;min-height:220px}
 }
 @media(max-width:420px){.furniture-template-list{grid-template-columns:1fr}.furniture-template-card{min-height:0;flex-direction:row;align-items:center}}
+
+/* B24: category-grouped ready furniture templates, planned cards kept separate. */
+.template-filter{max-width:340px;margin:11px 0}
+.furniture-template-group{display:grid;gap:10px;margin:14px 0}
+.furniture-template-group h3{font-size:14px;margin:3px 0 0;color:#526c83}
+.planned-template-list{padding:8px 0;border-top:1px solid #dbe5ed}
+.planned-template-list>.furniture-template-list{margin-top:10px}
+.template-planned-card{min-height:120px;cursor:default;opacity:.72}
+.template-planned-card small{line-height:1.5;color:#64778a}
+@media(max-width:420px){.furniture-template-group h3{margin-top:0}}
