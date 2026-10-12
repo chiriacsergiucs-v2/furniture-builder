@@ -130,8 +130,18 @@ export function App(){
   // Preserve any active, possibly unsaved editor snapshot.
   const target=project?.id===projectId?project:await getProject(projectId)
   if(!target)throw Error('Destination project no longer exists.')
-  const assemblies=presetId===DRAWER_PRESET_ID?
-   createPositionedDrawers(parts,copies,target.assemblies?.length??0):cabinetSpec?(()=>{
+  const assemblies=presetId===DRAWER_PRESET_ID?(()=>{
+    // A modified static starter has no validated positions. Keep its custom cutlist,
+    // never fabricate an assembled drawer from incompatible dimensions.
+    try{return createPositionedDrawers(parts,copies,target.assemblies?.length??0)}
+    catch(e){
+     if(e instanceof Error&&e.message.startsWith('The starter drawer was customized.')){
+      setWarning('Customized starter inserted as cutlist parts only. Use a configurable drawer to generate validated 3D assembly positions.')
+      return []
+     }
+     throw e
+    }
+   })():cabinetSpec?(()=>{
     const m=target.materials.find(material=>material.id===parts[0]?.materialId)
     if(!m)throw Error('Cabinet material not found in destination project.')
     return createCabinetAssemblies({...cabinetSpec,materialId:m.id},m,parts,copies,target.assemblies?.length??0)
