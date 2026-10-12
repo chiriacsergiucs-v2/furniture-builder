@@ -6,6 +6,8 @@ import {presetMaterial,resolvePresetMaterial,validatePreset} from '../presets/pr
 import {instantiateCustomizedPreset,customizeGeneratedPreset} from '../presets/customize.ts'
 import {createCabinetPreset} from '../furniture/cabinet.ts'
 import {createDrawerPreset} from '../furniture/drawer.ts'
+import {surfacePreset} from '../furniture/surface.ts'
+import {SurfaceConfigurator} from './SurfaceConfigurator.tsx'
 import {CabinetConfigurator} from './CabinetConfigurator.tsx'
 import {DrawerConfigurator} from './DrawerConfigurator.tsx'
 
@@ -13,7 +15,7 @@ interface Props {
  source:StoredPreset; project:Project
  onCancel:()=>void
  onInsert:(projectId:string,parts:Part[],presetId:string,copies:number,
-  cabinetSpec?:NonNullable<StoredPreset['cabinetSpec']>,drawerSpec?:NonNullable<StoredPreset['drawerSpec']>)=>Promise<void>
+  cabinetSpec?:NonNullable<StoredPreset['cabinetSpec']>,drawerSpec?:NonNullable<StoredPreset['drawerSpec']>,surfaceSpec?:NonNullable<StoredPreset['surfaceSpec']>)=>Promise<void>
 }
 const err=(e:unknown)=>e instanceof Error?e.message:String(e)
 /** One-off, in-memory customization. Nothing is written to the preset library. */
@@ -25,9 +27,9 @@ export function PresetCustomization({source,project,onCancel,onInsert}:Props){
  const compatible=materials.find(m=>source.items[0]&&m.type===source.items[0].material.type&&
   m.thickness===source.items[0].material.thickness&&
   (m.finish??'')===(source.items[0].material.finish??''))??materials[0]
- const run=async(parts:Part[],cabinetSpec?:StoredPreset['cabinetSpec'],drawerSpec?:StoredPreset['drawerSpec'])=>{
+ const run=async(parts:Part[],cabinetSpec?:StoredPreset['cabinetSpec'],drawerSpec?:StoredPreset['drawerSpec'],surfaceSpec?:StoredPreset['surfaceSpec'])=>{
   setSaving(true);setError('')
-  try{await onInsert(project.id,parts,source.id,1,cabinetSpec,drawerSpec)}
+  try{await onInsert(project.id,parts,source.id,1,cabinetSpec,drawerSpec,surfaceSpec)}
   catch(e){setError(err(e));throw e}
   finally{setSaving(false)}
  }
@@ -44,6 +46,13 @@ export function PresetCustomization({source,project,onCancel,onInsert}:Props){
   const output=customizeGeneratedPreset(source,createDrawerPreset(spec,material))
   const parts=instantiateCustomizedPreset(source,output,project)
   await run(parts,undefined,spec)
+ }
+ const withSurface=async(spec:NonNullable<StoredPreset['surfaceSpec']>)=>{
+  const material=materials.find(m=>m.id===spec.materialId)
+  if(!material)throw Error('Selected material is unavailable.')
+  const generated=customizeGeneratedPreset(source,surfacePreset(spec,material))
+  const parts=instantiateCustomizedPreset(source,generated,project)
+  await run(parts,undefined,undefined,spec)
  }
  const changeItem=(index:number,patch:Partial<PresetItem>)=>setDraft(p=>({
   ...p,items:p.items.map((item,i)=>i===index?{...item,...patch}:item)
@@ -72,6 +81,9 @@ export function PresetCustomization({source,project,onCancel,onInsert}:Props){
   {source.cabinetSpec?<CabinetConfigurator key={source.id} mode="item" materials={materials}
     initial={{...structuredClone(source.cabinetSpec),materialId:matching?.id??initialMaterial()}}
     onAdd={withCabinet} onCancel={onCancel}/>:
+   source.surfaceSpec?<SurfaceConfigurator key={source.id} mode="item" materials={materials}
+    initial={{...structuredClone(source.surfaceSpec),materialId:matching?.id??initialMaterial()}}
+    onAdd={withSurface} onCancel={onCancel}/>:
    source.drawerSpec?<DrawerConfigurator key={source.id} mode="item" materials={materials}
     initial={{...structuredClone(source.drawerSpec),materialId:matching?.id??initialMaterial()}}
     onAdd={withDrawer} onCancel={onCancel}/>:

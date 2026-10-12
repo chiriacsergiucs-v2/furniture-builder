@@ -12,7 +12,8 @@ export function instantiateCustomizedPreset(
  if(source.id!==draft.id)throw Error('Customization must retain its source preset ID.')
  if(source.cabinetSpec&&!draft.cabinetSpec||
     source.drawerSpec&&!draft.drawerSpec||
-    !source.cabinetSpec&&!source.drawerSpec&&(draft.cabinetSpec!==undefined||draft.drawerSpec!==undefined))
+    source.surfaceSpec&&!draft.surfaceSpec||
+    !source.cabinetSpec&&!source.drawerSpec&&!source.surfaceSpec&&(draft.cabinetSpec!==undefined||draft.drawerSpec!==undefined||draft.surfaceSpec!==undefined))
   throw Error('Customization must retain its component kind.')
  const snapshot:CutlistPreset={...structuredClone(draft),id:source.id,
   revision:source.revision??1,createdAt:source.createdAt}
@@ -25,7 +26,8 @@ export function instantiateCustomizedPreset(
  * pretending the library was edited or duplicating its record. */
 export function customizeGeneratedPreset(source:StoredPreset,generated:CutlistPreset):CutlistPreset{
  if(Boolean(source.cabinetSpec)!==Boolean(generated.cabinetSpec)||
-    Boolean(source.drawerSpec)!==Boolean(generated.drawerSpec))
+    Boolean(source.drawerSpec)!==Boolean(generated.drawerSpec)||
+    Boolean(source.surfaceSpec)!==Boolean(generated.surfaceSpec))
   throw Error('A customized component cannot silently switch its generator kind.')
  return {...generated,id:source.id,revision:source.revision??1,createdAt:source.createdAt}
 }
