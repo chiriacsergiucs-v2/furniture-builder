@@ -41,6 +41,11 @@ See **[EDC modular engine implementation backlog](docs/modular-engine-backlog.md
 ## Project-only customized presets
 Open **Presets**, expand a saved entry, select a destination project and choose **Customize for project**. Change manual panel dimensions, quantities or materials, or use existing cabinet/drawer configurators. Changes remain temporary until **Add customized to project** or **Add item to project** is selected; only the destination project is saved. The original preset record and source revision remain unchanged. To save the variation in the library, use **Duplicate with new params** followed by **Save duplicate**. Modified static starter drawer cut rows do not imply valid 3D geometry; a parametric drawer is required for regenerated assembly positioning.
 
+## Expanded furniture template picker (B24, October 2026)
+The creation wizard now offers **19 buildable templates**, up from 9, grouped by category (Cabinets, Kitchen, Bedroom, Living room, Hallway, Storage, Building components). Ten new ready arrangements reuse the manufacturing-backed cabinet/shelf/divider/drawer engine: kitchen base and wall carcasses, pantry, two-bay bookcase, bedside chest, shoe shelving, two media consoles, sideboard, and connected twin cubbies. All produce editable dimensioned parts and positioned panel assemblies; the source template/version is preserved in saved configurations.
+
+**Scope:** These are honest open-carcase furniture arrangements, not complete installed kitchen cabinets or wall-mounted cabinetry. Backboards, doors, plinths, anti-tip brackets, cable channels and joining hardware require separate work. Planned-only wardrobe, desk and full entertainment variants remain listed but cannot generate cutlists. The 18-family/90-variant idea is a roadmap target, not a ready-library claim.
+
 ## Development
 
 Node >=22 required. `npm install` then `npm run dev`, `npm run lint`, `npm run typecheck`, `npm run test:kernel`, `npm test`, `npm run build`, `npm run test:e2e`. Use the committed package-lock.json; update it whenever dependencies change.

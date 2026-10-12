@@ -132,7 +132,7 @@
     "Regency XLSX template unavailable for template-specific adapter",
     "Independent live-site HTTP request unavailable from this tool; GitHub Pages deploy action reported success"
   ],
-  "nextAction": "B22: definition-driven editor for new roots only after their manufacturing generators exist; B24 next ready family. B26/B27 deferred.",
+  "nextAction": "B24 next: implement one truly distinct root with validated structural geometry (desk/table support or wardrobe rail/doors), rather than more labels on existing carcass templates. B22 generic editor remains partial; B26/B27 deferred.",
   "lastEvidence": "CI https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38028499465; deploy https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38028499287",
   "storageMilestone": {
     "target": "IndexedDB via Dexie 4.2.1",
@@ -274,6 +274,45 @@
     "limitations": [
       "Universal editor for unimplemented roots pending",
       "Physical Android and Autodesk Fusion execution unverified"
+    ]
+  },
+  "modularEngineIteration7": {
+    "status": "feature_verified_merged",
+    "initiative": "B24",
+    "featureMergeCommit": "811d85c74a3d7e4fe6e9b27942a8e3e9c527c388",
+    "readyBefore": 9,
+    "readyAfter": 19,
+    "addedIds": [
+      "kitchen-base-open",
+      "kitchen-wall-open",
+      "pantry-open",
+      "bookcase-two-bay",
+      "nightstand-two-drawer",
+      "shoe-storage-open",
+      "media-two-bay-open",
+      "media-drawer-bay",
+      "sideboard-mixed",
+      "connected-cubby"
+    ],
+    "plannedUnchanged": [
+      "wardrobe",
+      "desk",
+      "tv-unit"
+    ],
+    "statusChange": "Partially done",
+    "ciRun": 38204846862,
+    "verified": {
+      "kernel": "25/25",
+      "unit": "60/60",
+      "browser": "12/12",
+      "lint": "pass",
+      "typecheck": "pass",
+      "build": "pass"
+    },
+    "limitations": [
+      "Cabinet-derived open-case configurations, not dedicated structural roots for beds/desks/wardrobes",
+      "No anti-tip/wall fixing, plinth, back, hinges, cables or door modeling",
+      "Final main deployment pending verification"
     ]
   }
 }

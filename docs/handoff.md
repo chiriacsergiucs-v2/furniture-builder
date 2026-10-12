@@ -64,3 +64,9 @@ New dependencies @react-three/fiber, three, @dnd-kit/core/sortable/utilities, @t
 - `src/presets/customize.ts` pins the originating preset ID/revision without writing to the library. Static starter drawer rows modified beyond their original dimensions are inserted as cutlist only, not fabricated 3D positions.
 - CI https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38202868555 passed: kernel 25, Vitest 58, Playwright 12, TypeScript, lint, build. GitHub Pages https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38202868533 passed.
 - Still pending: general unimplemented root editor, new furniture families, real Android touch, actual Fusion API execution.
+
+## 2026-10-12 — B24 template selection increased 9 → 19
+- PR https://github.com/chiriacsergiucs-v2/furniture-builder/pull/7 merged (commit 811d85c74a3d7e4fe6e9b27942a8e3e9c527c388); ten additional ready `kind:'cabinet'` recipes, category filter, ready-category groups and collapsed planned catalog.
+- New recipes are real parametric open-carcase constructions; no fiction about ready desks, wardrobes, mounted wall units, doors, cable holes, plinths or hardware.
+- `src/tests/unit/template-expansion.test.ts` checks collisions, model solids/cutlist counts, project validity and versioning for each new recipe. CI https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38204846862 passed: 25 kernel, 60 Vitest, 12 Playwright, lint/TS/build.
+- B24 remains Partial. The next valuable milestone is a **distinct non-carcass family root**, e.g. desk frame/worktop, instead of only relabeled carcasses.
