@@ -8,7 +8,7 @@ import {furnitureTemplates,initialSpecForTemplate} from '../../furniture/templat
 describe('B01-B04: versioned templates and propagated component trees',()=>{
  it('resolves only ready versioned recipes with a registered root definition',()=>{
   const ready=furnitureTemplates.filter(t=>t.status==='ready')
-  expect(ready).toHaveLength(19)
+  expect(ready).toHaveLength(29)
   for(const t of ready){
    expect(t.version).toBe(1)
    expect(componentRegistry.has(t.rootComponent!.definitionId+'@'+t.rootComponent!.definitionVersion)).toBe(true)

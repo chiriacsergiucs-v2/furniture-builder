@@ -4,7 +4,7 @@ import {createProject} from '../engine/types.ts'
 import type {PresetCategory} from '../db/database.ts'
 import {download,fileSlug} from '../import-export/files.ts'
 import {exportFusionPython} from '../assembly/fusion.ts'
-import {surfacePanels,surfaceParts,surfaceErrors,surfaceForProject} from '../furniture/surface.ts'
+import {surfacePanels,surfaceErrors,surfaceForProject} from '../furniture/surface.ts'
 import type {SurfaceSpec} from '../furniture/surface.ts'
 import {furnitureTemplates,initialSurfaceSpecForTemplate} from '../furniture/templates.ts'
 const PositionedFurniturePreview=lazy(()=>import('./PositionedFurniturePreview.tsx'))
