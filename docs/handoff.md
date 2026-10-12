@@ -57,3 +57,10 @@ New dependencies @react-three/fiber, three, @dnd-kit/core/sortable/utilities, @t
 - Presets page now offers Configure as new preset for a configured project cabinet/chest/drawer; user reviews parameters and explicitly saves; does not invent geometry for future template kinds.
 - CI https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38117222030 PASS: 25 kernel, 56 Vitest, 12 Playwright; lint/typecheck/build pass. Deploy https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38117222131 PASS. Physical Android and Fusion API execution remain untested.
 - B19 Done; B20 Done for supported historical data; B22 Partial pending arbitrary registered-component wizard.
+
+## 2026-10-12 — B22 project-only customization (verified)
+- **Customize for project** is separate from library **Edit original** and **Duplicate with new params**.
+- For current cabinet/chest/drawer presets, existing configurators regenerate actual material cut parts and independent positioned assemblies. Manual presets permit separate width/height/quantity/material changes with grain/ABS advanced options. Only final Add writes to the destination project.
+- `src/presets/customize.ts` pins the originating preset ID/revision without writing to the library. Static starter drawer rows modified beyond their original dimensions are inserted as cutlist only, not fabricated 3D positions.
+- CI https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38202868555 passed: kernel 25, Vitest 58, Playwright 12, TypeScript, lint, build. GitHub Pages https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38202868533 passed.
+- Still pending: general unimplemented root editor, new furniture families, real Android touch, actual Fusion API execution.

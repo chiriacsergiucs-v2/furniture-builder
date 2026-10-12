@@ -132,7 +132,7 @@
     "Regency XLSX template unavailable for template-specific adapter",
     "Independent live-site HTTP request unavailable from this tool; GitHub Pages deploy action reported success"
   ],
-  "nextAction": "B22: adapt the component registry's ready root types into one explicit-save preset editor; extend B24 only after real geometry/cutlist parity is verified.",
+  "nextAction": "B22: definition-driven editor for new roots only after their manufacturing generators exist; B24 next ready family. B26/B27 deferred.",
   "lastEvidence": "CI https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38028499465; deploy https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38028499287",
   "storageMilestone": {
     "target": "IndexedDB via Dexie 4.2.1",
@@ -247,6 +247,33 @@
       "No migration promises for unknown future component versions",
       "General arbitrary-component preset wizard not built",
       "No newly authored E2E suite; existing suite passed"
+    ]
+  },
+  "modularEngineIteration6": {
+    "status": "verified_deployed",
+    "featureCommit": "3f0a0fb8e3001b5998fc9126333c39cd8494895c",
+    "initiative": "B22",
+    "statusChange": "Partially done",
+    "scope": [
+      "Customize saved presets project-only",
+      "Manual part edits and registered cabinet/drawer regeneration",
+      "Preserve library revision origin",
+      "Never duplicate without explicit Save",
+      "Reject fabricated fixed starter 3D placements"
+    ],
+    "checks": {
+      "kernel": "25/25",
+      "vitest": "58/58",
+      "browser": "12/12",
+      "lint": "pass",
+      "typecheck": "pass",
+      "build": "pass"
+    },
+    "ciRun": 38202868555,
+    "pagesRun": 38202868533,
+    "limitations": [
+      "Universal editor for unimplemented roots pending",
+      "Physical Android and Autodesk Fusion execution unverified"
     ]
   }
 }

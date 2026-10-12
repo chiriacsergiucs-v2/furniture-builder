@@ -38,6 +38,9 @@ A 3D transform gizmo and accessible numerical inputs edit XYZ positions (mm) and
 
 See **[EDC modular engine implementation backlog](docs/modular-engine-backlog.md)** for the six-layer architecture, 40 reusable components, 18 furniture families with 90 planned dynamic configurations, five composition operations and the evidence-based **Done / Partially done / Not done / Dropped** tracker. This document is the authoritative roadmap for incremental furniture-template development. Catalog ideas marked planned are **not** functional generators.
 
+## Project-only customized presets
+Open **Presets**, expand a saved entry, select a destination project and choose **Customize for project**. Change manual panel dimensions, quantities or materials, or use existing cabinet/drawer configurators. Changes remain temporary until **Add customized to project** or **Add item to project** is selected; only the destination project is saved. The original preset record and source revision remain unchanged. To save the variation in the library, use **Duplicate with new params** followed by **Save duplicate**. Modified static starter drawer cut rows do not imply valid 3D geometry; a parametric drawer is required for regenerated assembly positioning.
+
 ## Development
 
 Node >=22 required. `npm install` then `npm run dev`, `npm run lint`, `npm run typecheck`, `npm run test:kernel`, `npm test`, `npm run build`, `npm run test:e2e`. Use the committed package-lock.json; update it whenever dependencies change.
