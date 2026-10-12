@@ -26,7 +26,7 @@ describe('B24 distinct worktop and support generator',()=>{
    expect(surfaceErrors(spec,m),id).toEqual([])
    const boxes=surfacePanels(spec,m)
    expect(boxes.length).toBeGreaterThan(2)
-   expect(detectPanelCollisions(boxes),id).toEqual([])
+   expect(detectPanelCollisions(boxes.map(b=>({...b,role:'Side panel' as const}))),id).toEqual([])
    const built=surfaceForProject(project,spec)
    const complete={...project,parts:built.parts,assemblies:built.assemblies}
    expect(validateProject(complete),id).toEqual([])
