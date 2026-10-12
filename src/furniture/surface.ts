@@ -71,7 +71,7 @@ export function surfacePanels(s:SurfaceSpec,m:Material):SurfacePanel[]{
   add('Rear panel',ins+t,d-ins-t,0,w-2*(ins+t),t,topZ,[0,0,0],w-2*(ins+t),topZ)
  }else{
   const pedestalWidth=Math.min(320,Math.floor(w*.29))
-  const xLeft=ins,xInner=ins+pedestalWidth-t
+  const xLeft=ins
   const pedestal=(left:number)=>{
    gable('Pedestal side',left,ins,d-2*ins)
    gable('Pedestal side',left+pedestalWidth-t,ins,d-2*ins)
