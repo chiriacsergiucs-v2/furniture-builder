@@ -12,6 +12,7 @@ import {download} from '../import-export/files.ts'
 import {createPreset,instantiatePreset,newPresetItem,presetFromParts,presetMaterial,validatePreset} from '../presets/presets.ts'
 import type {CutlistPreset,PresetItem,PresetMaterial} from '../presets/presets.ts'
 import {duplicatePresetDraft} from '../presets/duplicate.ts'
+import {PresetCustomization} from './PresetCustomization.tsx'
 import {deletePreset,exportPresetLibrary,importPresetLibrary,listPresets,savePreset} from '../presets/storage.ts'
 import {listCategories,saveCategory,deleteCategory} from '../db/repository.ts'
 import type {PresetCategory,StoredPreset} from '../db/database.ts'
@@ -35,10 +36,10 @@ function ItemDetails({item,index}:{item:PresetItem;index:number}){
   <p className="muted">{item.material.name} · Grain {item.grain} · Rotation {item.rotationAllowed?'allowed':'restricted'} · ABS: {edges.filter(e=>item.abs[e]).map(e=>e+': '+item.abs[e]).join(', ')||'none'}</p>
  </details>
 }
-function SavedPreset({preset,categoryName,projects,targetId,onTarget,onInsert,onEdit,onDuplicate,onDelete}:{
+function SavedPreset({preset,categoryName,projects,targetId,onTarget,onInsert,onEdit,onDuplicate,onCustomize,onDelete}:{
  preset:StoredPreset;categoryName:string;projects:Project[];targetId:string;onTarget:(id:string)=>void;
  onInsert:(id:string,parts:Part[],presetId:string,copies:number,cabinetSpec?:CabinetSpec,drawerSpec?:DrawerSpec)=>Promise<void>;
- onEdit:(p:StoredPreset)=>void;onDuplicate:(p:StoredPreset)=>void;onDelete:(p:StoredPreset)=>Promise<void>
+ onEdit:(p:StoredPreset)=>void;onDuplicate:(p:StoredPreset)=>void;onCustomize:(p:StoredPreset)=>void;onDelete:(p:StoredPreset)=>Promise<void>
 }){
  const [sets,setSets]=useState(1)
  const [expanded3d,setExpanded3d]=useState(false)
@@ -76,6 +77,7 @@ function SavedPreset({preset,categoryName,projects,targetId,onTarget,onInsert,on
      <label className="field"><span>Sets to add</span><input type="number" step="1" min="1" max="20" value={sets} onChange={e=>setSets(Number(e.target.value))}/></label>
      <label className="field"><span>Destination project</span><select value={targetId} onChange={e=>onTarget(e.target.value)}><option value="">Select project</option>{projects.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
      <button className="primary" disabled={!targetId||busy||!Number.isSafeInteger(sets)||sets<1||sets>20} onClick={()=>void add()}>{busy?'Adding…':'Add to project'}</button>
+     <button type="button" disabled={!targetId||busy} onClick={()=>onCustomize(preset)}>Customize for project</button>
     </div>
     {error&&<p role="alert" className="preset-error">{error}</p>}
     {notice&&<p role="status" className="preset-success">{notice}</p>}
@@ -83,11 +85,11 @@ function SavedPreset({preset,categoryName,projects,targetId,onTarget,onInsert,on
   </details>
  </article>
 }
-function CategoryBranch({category,all,visible,presets,projects,targetId,onTarget,onInsert,onEdit,onDuplicate,onDelete,depth=0}:{
+function CategoryBranch({category,all,visible,presets,projects,targetId,onTarget,onInsert,onEdit,onDuplicate,onCustomize,onDelete,depth=0}:{
  category:PresetCategory;all:PresetCategory[];visible:Set<string>;presets:StoredPreset[];
  projects:Project[];targetId:string;onTarget:(id:string)=>void;
- onInsert:(id:string,parts:Part[],presetId:string,copies:number,cabinetSpec?:CabinetSpec)=>Promise<void>;
- onEdit:(p:StoredPreset)=>void;onDuplicate:(p:StoredPreset)=>void;onDelete:(p:StoredPreset)=>Promise<void>;depth?:number
+ onInsert:(id:string,parts:Part[],presetId:string,copies:number,cabinetSpec?:CabinetSpec,drawerSpec?:DrawerSpec)=>Promise<void>;
+ onEdit:(p:StoredPreset)=>void;onDuplicate:(p:StoredPreset)=>void;onCustomize:(p:StoredPreset)=>void;onDelete:(p:StoredPreset)=>Promise<void>;depth?:number
 }){
  const children=all.filter(c=>c.parentId===category.id&&visible.has(c.id))
  const rows=presets.filter(p=>(p.categoryId??UNCATEGORIZED_ID)===category.id)
@@ -97,10 +99,10 @@ function CategoryBranch({category,all,visible,presets,projects,targetId,onTarget
   <div className="preset-category-content">
    {rows.map(p=><SavedPreset key={p.id} preset={p} categoryName={category.name} projects={projects}
     targetId={targetId} onTarget={onTarget} onInsert={onInsert} onEdit={onEdit}
-    onDuplicate={onDuplicate} onDelete={onDelete}/>)}
+    onDuplicate={onDuplicate} onCustomize={onCustomize} onDelete={onDelete}/>)}
    {children.map(child=><CategoryBranch key={child.id} category={child} all={all} visible={visible} presets={presets}
     projects={projects} targetId={targetId} onTarget={onTarget} onInsert={onInsert} onEdit={onEdit}
-    onDuplicate={onDuplicate} onDelete={onDelete} depth={depth+1}/>)}
+    onDuplicate={onDuplicate} onCustomize={onCustomize} onDelete={onDelete} depth={depth+1}/>)}
   </div>
  </details>
 }
@@ -119,6 +121,7 @@ export function PresetManager({project,projects,onInsert}:{
  const [notice,setNotice]=useState('')
  const [draft,setDraft]=useState<CutlistPreset|null>(null)
  const [draftMode,setDraftMode]=useState<DraftMode>('create')
+ const [customizing,setCustomizing]=useState<StoredPreset|null>(null)
  const [cabinetEditor,setCabinetEditor]=useState<{source?:StoredPreset;duplicate?:boolean;initial?:CabinetSpec}|null>(null)
  const [drawerEditor,setDrawerEditor]=useState<{source?:StoredPreset;duplicate?:boolean;initial?:DrawerSpec}|null>(null)
  const [configuredId,setConfiguredId]=useState('')
@@ -140,6 +143,11 @@ export function PresetManager({project,projects,onInsert}:{
   .catch(e=>{if(active)setError(message(e))});return()=>{active=false}},[])
  useEffect(()=>{if(project?.id&&projects.some(p=>p.id===project.id))setTargetId(current=>current||project.id)},[project?.id,projects])
  const onError=(e:unknown)=>{setError(message(e));setNotice('')}
+ const customize=(preset:StoredPreset)=>{
+  if(!targetId||!projects.some(p=>p.id===targetId)){onError(new Error('Select a destination project first.'));return}
+  setDraft(null);setCabinetEditor(null);setDrawerEditor(null)
+  setCustomizing(preset);setError('');setNotice('')
+ }
  const newDraft=()=>{
   setCabinetEditor(null)
   setDraft(createPreset('',[newPresetItem(materials[0])]))
@@ -238,6 +246,9 @@ export function PresetManager({project,projects,onInsert}:{
   </div>
   {error&&<p className="preset-error" role="alert">{error}</p>}
   {notice&&<p className="preset-success" role="status">{notice}</p>}
+  {customizing&&projects.some(p=>p.id===targetId)&&<PresetCustomization key={customizing.id}
+   source={customizing} project={projects.find(p=>p.id===targetId)!} onInsert={onInsert}
+   onCancel={()=>setCustomizing(null)}/>} 
   {cabinetEditor&&<CabinetConfigurator key={(cabinetEditor.source?.id??'new')+(cabinetEditor.duplicate?'-copy':'')} mode="preset" materials={materials} categories={categories} initialCategory={cabinetEditor.source?.categoryId??UNCATEGORIZED_ID}
    initial={cabinetEditor.initial??(cabinetEditor.source?.cabinetSpec?{...cabinetEditor.source.cabinetSpec,materialId:materials.find(m=>m.type===cabinetEditor.source?.items[0]?.material.type&&m.thickness===cabinetEditor.source?.items[0]?.material.thickness)?.id??materials[0]?.id??''}:undefined)}
    onSavePreset={saveCabinet} onChooseDrawer={()=>{setCabinetEditor(null);setDrawerEditor({})}} onCancel={()=>setCabinetEditor(null)}/>}
@@ -290,10 +301,10 @@ export function PresetManager({project,projects,onInsert}:{
   </div>
   <div className="preset-category-tree">
    {roots.map(cat=><CategoryBranch key={cat.id} category={cat} all={categories} visible={visible} presets={matches} projects={projects}
-    targetId={targetId} onTarget={setTargetId} onInsert={onInsert} onEdit={beginEdit} onDuplicate={beginDuplicate} onDelete={deleteSaved}/>)}
+    targetId={targetId} onTarget={setTargetId} onInsert={onInsert} onEdit={beginEdit} onDuplicate={beginDuplicate} onCustomize={customize} onDelete={deleteSaved}/>)}
    {orphaned.length>0&&<details className="preset-category-branch"><summary>Unassigned presets ({orphaned.length})</summary>
     <div className="preset-category-content">{orphaned.map(p=><SavedPreset key={p.id} preset={p} categoryName="Unassigned" projects={projects} targetId={targetId}
-      onTarget={setTargetId} onInsert={onInsert} onEdit={beginEdit} onDuplicate={beginDuplicate} onDelete={deleteSaved}/>)}</div>
+      onTarget={setTargetId} onInsert={onInsert} onEdit={beginEdit} onDuplicate={beginDuplicate} onCustomize={customize} onDelete={deleteSaved}/>)}</div>
    </details>}
    {!matches.length&&<p className="muted">No matching presets. Create one to begin.</p>}
   </div>
