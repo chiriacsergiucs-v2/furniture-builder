@@ -39,7 +39,10 @@ describe('B24: ten additional buildable furniture layouts',()=>{
    expect(derived.cutlist.reduce((n,row)=>n+row.quantity,0)).toBe(boxes.length)
    expect(built.parts.every(part=>Number.isSafeInteger(part.width)&&Number.isSafeInteger(part.height)&&part.width>0&&part.height>0)).toBe(true)
    const preset=createCabinetPreset(recipe,material)
-   expect(preset.componentTree?.template).toEqual({id,version:1})
+   expect(preset.cabinetSpec?.templateId).toBe(id)
+   // Connected assemblies use the generic module-group root recipe internally;
+   // the saved cabinetSpec still pins the catalog's selected template ID/version.
+   expect(preset.componentTree?.template).toEqual({id:id==='connected-cubby'?'cabinet-connected':id,version:1})
    const copy=structuredClone(preset)
    expect(copy.items).toEqual(preset.items)
    signatures.add(JSON.stringify([recipe.width,recipe.height,recipe.depth,recipe.split,recipe.drawers,recipe.shelves,recipe.connected]))
