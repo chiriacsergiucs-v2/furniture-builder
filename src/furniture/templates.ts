@@ -1,5 +1,7 @@
 import {cabinetDefaults} from './cabinet.ts'
 import {drawerDefaults} from './drawer.ts'
+import {surfaceDefaults} from './surface.ts'
+import type {SurfaceSpec,SupportLayout} from './surface.ts'
 import type {CabinetSpec} from './cabinet.ts'
 import {getComponentDefinition} from './component-engine.ts'
 
@@ -7,7 +9,7 @@ import {getComponentDefinition} from './component-engine.ts'
  * Small, declarative catalogue. Only ready templates can create manufacturing
  * parts. Future kinds stay visible as plans but cannot generate imaginary cuts.
  */
-export type TemplateKind='cabinet'|'drawer'|'wardrobe'|'desk'|'entertainment'
+export type TemplateKind='cabinet'|'drawer'|'surface'|'wardrobe'|'desk'|'entertainment'
 export interface FurnitureTemplate {
  id:string
  title:string
@@ -19,6 +21,7 @@ export interface FurnitureTemplate {
  rootComponent?:{definitionId:string;definitionVersion:number}
  defaultSpec?:Partial<Pick<CabinetSpec,'width'|'height'|'depth'|'shelves'|'drawers'|'split'|'connected'>>
  drawerRunnerLength?:number
+ surfaceSpec?:{kind:'desk'|'table';width:number;height:number;depth:number;layout:SupportLayout}
 }
 export const furnitureTemplates:readonly FurnitureTemplate[]=[
  {id:'cabinet-open',version:1,rootComponent:{definitionId:'core/carcass',definitionVersion:1},title:'Open cabinet',category:'Cabinets',description:'Basic cabinet with adjustable, evenly spaced shelves.',kind:'cabinet',status:'ready',defaultSpec:{width:800,height:900,depth:350,shelves:2}},
@@ -40,8 +43,17 @@ export const furnitureTemplates:readonly FurnitureTemplate[]=[
  {id:'sideboard-mixed',version:1,rootComponent:{definitionId:'core/carcass',definitionVersion:1},title:'Sideboard · shelf + drawers',category:'Living room',description:'1600 × 850 mm open sideboard with two shelves and three drawers in separate bays; no cabinet doors.',kind:'cabinet',status:'ready',defaultSpec:{width:1600,height:850,depth:450,shelves:0,split:{axis:'vertical',ratio:55,first:{content:'shelves',count:2},second:{content:'drawers',count:3}}},drawerRunnerLength:400},
  {id:'connected-cubby',version:1,rootComponent:{definitionId:'core/carcass',definitionVersion:1},title:'Connected storage · two modules',category:'Storage',description:'Two adjacent 600 mm open carcasses with independently repeated shelves; connection hardware excluded.',kind:'cabinet',status:'ready',defaultSpec:{width:600,height:750,depth:350,shelves:2,connected:{width:600,shelves:1,drawers:0}}},
  {id:'drawer-unit',version:1,rootComponent:{definitionId:'core/drawer',definitionVersion:1},title:'Drawer module',category:'Building components',description:'Adjustable drawer opening, runner clearance, front and pull style.',kind:'drawer',status:'ready'},
+ {id:'desk-gable',version:1,rootComponent:{definitionId:'core/surface',definitionVersion:1},title:'Panel desk · two gables',category:'Desks',description:'Worktop supported by two full-depth panel gables. No rated load or hardware.',kind:'surface',status:'ready',surfaceSpec:{kind:'desk',width:1200,height:750,depth:600,layout:'gables'}},
+ {id:'desk-four-supports',version:1,rootComponent:{definitionId:'core/surface',definitionVersion:1},title:'Desk · four independent supports',category:'Desks',description:'Worktop on four discrete panel supports, without cable cutouts.',kind:'surface',status:'ready',surfaceSpec:{kind:'desk',width:1400,height:740,depth:700,layout:'four-supports'}},
+ {id:'desk-trestle',version:1,rootComponent:{definitionId:'core/surface',definitionVersion:1},title:'Desk · trestle with stretcher',category:'Desks',description:'Two gable trestles and a longitudinal stretcher under a long worktop.',kind:'surface',status:'ready',surfaceSpec:{kind:'desk',width:1500,height:750,depth:650,layout:'trestle'}},
+ {id:'desk-pedestal-left',version:1,rootComponent:{definitionId:'core/surface',definitionVersion:1},title:'Desk · left open pedestal',category:'Desks',description:'Worktop, shelved left panel pedestal, and one right gable support.',kind:'surface',status:'ready',surfaceSpec:{kind:'desk',width:1400,height:750,depth:650,layout:'single-pedestal'}},
+ {id:'desk-two-pedestals',version:1,rootComponent:{definitionId:'core/surface',definitionVersion:1},title:'Desk · dual open pedestals',category:'Desks',description:'Worktop with left and right shelf pedestals, no sliding drawers.',kind:'surface',status:'ready',surfaceSpec:{kind:'desk',width:1600,height:760,depth:700,layout:'dual-pedestal'}},
+ {id:'table-coffee',version:1,rootComponent:{definitionId:'core/surface',definitionVersion:1},title:'Coffee table · panel gables',category:'Tables',description:'Low worktop with two broad inset gable supports.',kind:'surface',status:'ready',surfaceSpec:{kind:'table',width:900,height:450,depth:500,layout:'gables'}},
+ {id:'table-four-supports',version:1,rootComponent:{definitionId:'core/surface',definitionVersion:1},title:'Table · four panel supports',category:'Tables',description:'Dining-size worktop and four individual panel supports; engineering not load-rated.',kind:'surface',status:'ready',surfaceSpec:{kind:'table',width:1600,height:760,depth:850,layout:'four-supports'}},
+ {id:'table-trestle',version:1,rootComponent:{definitionId:'core/surface',definitionVersion:1},title:'Table · gable trestle',category:'Tables',description:'Long worktop with two inset gables and a longitudinal stretcher.',kind:'surface',status:'ready',surfaceSpec:{kind:'table',width:1800,height:760,depth:900,layout:'trestle'}},
+ {id:'table-console',version:1,rootComponent:{definitionId:'core/surface',definitionVersion:1},title:'Console table · rear panel',category:'Tables',description:'Narrow top, side gables and full-height rear stabilizing panel.',kind:'surface',status:'ready',surfaceSpec:{kind:'table',width:1200,height:800,depth:300,layout:'console'}},
+ {id:'table-two-pedestals',version:1,rootComponent:{definitionId:'core/surface',definitionVersion:1},title:'Work table · twin pedestals',category:'Tables',description:'Wide worktop with two open shelf pedestals.',kind:'surface',status:'ready',surfaceSpec:{kind:'table',width:1600,height:740,depth:750,layout:'dual-pedestal'}},
  {id:'wardrobe',version:1,title:'Wardrobe',category:'Storage',description:'Clothes rail, shelves and optional doors.',kind:'wardrobe',status:'planned'},
- {id:'desk',version:1,title:'Desk',category:'Tables & desks',description:'Worktop, side panels and support structure.',kind:'desk',status:'planned'},
  {id:'tv-unit',version:1,title:'TV console',category:'Living room',description:'Wide, low storage and media bays.',kind:'entertainment',status:'planned'}
 ]
 export function availableTemplate(id:string):FurnitureTemplate|undefined{
@@ -57,4 +69,14 @@ export function initialSpecForTemplate(id:string,materialId:string):CabinetSpec{
   Boolean(result.split&&(result.split.first.content==='drawers'||result.split.second.content==='drawers'))
  if(hasDrawers)result.drawerConfig={...drawerDefaults(materialId),runnerLength:template.drawerRunnerLength??300}
  return result
+}
+
+/** Worktop/support designs use a separate structural root, never a fake carcass. */
+export function initialSurfaceSpecForTemplate(id:string,materialId:string):SurfaceSpec{
+ const template=availableTemplate(id)
+ if(!template||template.kind!=='surface'||!template.surfaceSpec||!template.rootComponent)
+  throw Error('Worktop template not available: '+id)
+ getComponentDefinition(template.rootComponent.definitionId,template.rootComponent.definitionVersion)
+ return {...surfaceDefaults(materialId),...structuredClone(template.surfaceSpec),
+  label:template.title,templateId:template.id,templateVersion:1,materialId}
 }
