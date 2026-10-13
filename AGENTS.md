@@ -45,3 +45,9 @@ Only modify `chiriacsergiucs-v2/furniture-builder`; verify target and branch. Ne
 - Preserve modularity lessons from IKEA and other systems separately from evaluation of their physical construction quality. Focus on the reusable configuration **brain** first; appearance, detailed material thickness decisions, advanced hardware and polishing are deferred unless explicitly requested. Material thickness remains a parameter.
 - Every **repo/code iteration** must update the ledger if functionality or status changes, and every final repo/code answer must include a table showing **Done / Partially done / Not done / Dropped** for the ledger's B-IDs. Use stable IDs, record evidence for status changes, and state the next checkpoint.
 - Include the `Skipped this iteration` section as the final section of the response. No new E2E tests or nonessential work by default before MVP.
+
+## B24 expanded furniture templates — 2026-10-13
+- `src/furniture/templates.ts` now contains 49 ready recipes; ten desks/tables have a distinct `core/surface` root. 20 additional casework layouts reuse existing carcass/divider/shelf/drawer physical generators.
+- Required check for any new ready recipe: model and cutlist dimensions agree, 3D positioned instances are valid, no panel overlap, preset source versions serialize safely. Do not mark proposed bed, door, hanging rod, lift, wall mounting or hardware as ready without real generators and verification.
+- 18-family / 90-variant target remains B24 Partial; 49 ready catalog entries are not 49 fully completed variants of the specified 90 mechanisms.
+- Baseline B24 branch CI 38325171870 passed 25 kernel, 62 Vitest, 12 Playwright; PR #8 merged. Physical load testing is outside browser tests.

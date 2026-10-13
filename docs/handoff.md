@@ -70,3 +70,9 @@ New dependencies @react-three/fiber, three, @dnd-kit/core/sortable/utilities, @t
 - New recipes are real parametric open-carcase constructions; no fiction about ready desks, wardrobes, mounted wall units, doors, cable holes, plinths or hardware.
 - `src/tests/unit/template-expansion.test.ts` checks collisions, model solids/cutlist counts, project validity and versioning for each new recipe. CI https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38204846862 passed: 25 kernel, 60 Vitest, 12 Playwright, lint/TS/build.
 - B24 remains Partial. The next valuable milestone is a **distinct non-carcass family root**, e.g. desk frame/worktop, instead of only relabeled carcasses.
+
+## 2026-10-13 — B24 release: 49 manufacturing-backed recipes
+- PR #8 merged at f20182114df8474683edeae7b7116bafbb7ee86d; branch CI 38325171870 PASS: 25 kernel, 62 Vitest, 12 Playwright, lint, TS and production build.
+- New `src/furniture/surface.ts` and `src/components/SurfaceConfigurator.tsx` model worktop panels, gables, trestles, panel supports, shelved pedestals and console rear supports. Saved presets include optional `surfaceSpec` without changing Dexie schema. Manual and parametric project copies are independently positioned and their saved source revisions are pinned.
+- `src/furniture/templates.ts` includes 49 ready entries; 10 from `core/surface`, 39 from current carcass/drawer engine. Category-filtered UI remains. Only real modeled panels appear in ready assemblies.
+- The 18-family/90-construction-mechanism roadmap is NOT finished. Bed supports, garment rails, hinged/sliding/lift fronts, plinths and hardware need distinct families/geometry and physical engineering. No production structural load validation.

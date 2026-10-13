@@ -132,7 +132,7 @@
     "Regency XLSX template unavailable for template-specific adapter",
     "Independent live-site HTTP request unavailable from this tool; GitHub Pages deploy action reported success"
   ],
-  "nextAction": "B24 next: implement one truly distinct root with validated structural geometry (desk/table support or wardrobe rail/doors), rather than more labels on existing carcass templates. B22 generic editor remains partial; B26/B27 deferred.",
+  "nextAction": "Complete B24 with a dedicated bed support/slat generator and wardrobe door/rail components, each with independent manufacturing and installation validation. Do not count conceptual 90 variants as ready.",
   "lastEvidence": "CI https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38028499465; deploy https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/38028499287",
   "storageMilestone": {
     "target": "IndexedDB via Dexie 4.2.1",
@@ -314,5 +314,40 @@
       "No anti-tip/wall fixing, plinth, back, hinges, cables or door modeling",
       "Final main deployment pending verification"
     ]
+  },
+  "modularEngineIteration8": {
+    "status": "merged_ci_verified",
+    "initiative": "B24",
+    "mergeCommit": "f20182114df8474683edeae7b7116bafbb7ee86d",
+    "readyTemplatesPrevious": 19,
+    "readyTemplatesNow": 49,
+    "added": {
+      "surface": 10,
+      "openAndDrawerCasework": 20
+    },
+    "verified": {
+      "kernel": "25/25",
+      "unit": "62/62",
+      "browser": "12/12",
+      "lint": "pass",
+      "typecheck": "pass",
+      "build": "pass"
+    },
+    "ciRun": 38325171870,
+    "prNumber": 8,
+    "scope": [
+      "New worktop/support root separate from carcass",
+      "Five desk and five table recipes",
+      "Twenty additional casework recipes",
+      "XYZ 3D placement and geometry-cutlist validation",
+      "Preset create/edit/duplicate and project-only customization without implicit save"
+    ],
+    "outstanding": [
+      "The 90 variant mechanisms are not implemented",
+      "Beds, structural load ratings, hanging rails and door mechanisms",
+      "Mounting, joinery and accessibility verification",
+      "Independent physical Android/Fusion installation test"
+    ],
+    "pagesStatus": "pending_verification_after_merge"
   }
 }

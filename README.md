@@ -46,6 +46,11 @@ The creation wizard now offers **19 buildable templates**, up from 9, grouped by
 
 **Scope:** These are honest open-carcase furniture arrangements, not complete installed kitchen cabinets or wall-mounted cabinetry. Backboards, doors, plinths, anti-tip brackets, cable channels and joining hardware require separate work. Planned-only wardrobe, desk and full entertainment variants remain listed but cannot generate cutlists. The 18-family/90-variant idea is a roadmap target, not a ready-library claim.
 
+## B24 furniture expansion — 49 working templates
+Furniture template selection includes 49 versioned **geometry-and-cutlist backed recipes** (19 previously): twenty additional open/drawer casework designs and ten desk/table arrangements using a separate panel worktop-and-support generator (`core/surface`). Desk and table presets save only when clicked, generate independent physical panels and positioned 3D assemblies, and export solids through Fusion Python.
+
+**Important limits:** Worktop support layouts generate cut geometry but have **not** been structurally load-tested. Uprights, joints, tip resistance and fixing specifications need review before fabrication. Open kitchen/island/vanity/closet concepts exclude doors, backs, plinths, wall mountings, hanging rods, sinks and drilling. The 18-family/90-variant roadmap is still partially complete; do not treat 49 recipes as 49 of its requested detailed operating mechanisms.
+
 ## Development
 
 Node >=22 required. `npm install` then `npm run dev`, `npm run lint`, `npm run typecheck`, `npm run test:kernel`, `npm test`, `npm run build`, `npm run test:e2e`. Use the committed package-lock.json; update it whenever dependencies change.
