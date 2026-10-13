@@ -31,6 +31,7 @@ export function CabinetConfigurator({mode,materials,categories,initial,initialCa
  })
  const [stage,setStage]=useState<Stage>(initial?1:0)
  const [templateCategory,setTemplateCategory]=useState('all')
+ const [templateQuery,setTemplateQuery]=useState('')
  const [category,setCategory]=useState(initialCategory??'uncategorized')
  const [saving,setSaving]=useState(false)
  const [error,setError]=useState('')
@@ -83,6 +84,12 @@ export function CabinetConfigurator({mode,materials,categories,initial,initialCa
   setSpec(old=>({...old,drawerConfig:{...(old.drawerConfig??{...drawerDefaults(old.materialId),runnerLength:300}),[key]:value}}))
   setError('')
  }
+ const matchingTemplate=(template:FurnitureTemplate)=>{
+  const q=templateQuery.trim().toLocaleLowerCase()
+  return !q||[template.title,template.category,template.description].some(v=>v.toLocaleLowerCase().includes(q))
+ }
+ const matchingReady=furnitureTemplates.filter(t=>t.status==='ready'&&
+  (templateCategory==='all'||t.category===templateCategory)&&matchingTemplate(t))
  const selectTemplate=(template:FurnitureTemplate)=>{
   if(template.status!=='ready')return
   setSpec(initialSpecForTemplate(template.id,spec.materialId))
@@ -146,7 +153,11 @@ export function CabinetConfigurator({mode,materials,categories,initial,initialCa
       <div className="furniture-template-card"><span className="template-copy"><strong>C02 · Shelves</strong><small>Adjustable quantity, spacing and clearance inside the cabinet</small><span className="template-category">Integrated into carcass</span></span></div>
       <div className="furniture-template-card"><span className="template-copy"><strong>Doors, vertical partitions, support legs</strong><small>Planned reusable component types</small><span className="template-category">Not implemented yet</span></span></div>
      </div>
-     <div className="cabinet-step">Furniture templates · {furnitureTemplates.filter(t=>t.status==='ready').length} buildable designs</div>
+     <div className="cabinet-step">Furniture templates · {matchingReady.length} shown / {furnitureTemplates.filter(t=>t.status==='ready').length} ready</div>
+     <label className="field template-filter"><span>Search furniture templates</span>
+      <input type="search" aria-label="Search furniture templates" value={templateQuery}
+       placeholder="Desk, pantry, sideboard, worktop…" onChange={e=>setTemplateQuery(e.target.value)}/>
+     </label>
      <label className="field template-filter"><span>Show furniture category</span>
       <select aria-label="Furniture category" value={templateCategory} onChange={e=>setTemplateCategory(e.target.value)}>
        <option value="all">All ready categories</option>
@@ -154,11 +165,11 @@ export function CabinetConfigurator({mode,materials,categories,initial,initialCa
         <option key={category} value={category}>{category}</option>)}
       </select>
      </label>
-     {[...new Set(furnitureTemplates.filter(t=>t.status==='ready'&&(templateCategory==='all'||t.category===templateCategory)).map(t=>t.category))].map(category=>
+     {[...new Set(matchingReady.map(t=>t.category))].map(category=>
       <section className="furniture-template-group" key={category} aria-label={category+' templates'}>
        <h3>{category}</h3>
        <div className="furniture-template-list">
-        {furnitureTemplates.filter(t=>t.status==='ready'&&t.category===category).map(template=>{
+        {matchingReady.filter(t=>t.category===category).map(template=>{
          const selected=spec.templateId===template.id
          return <button type="button" key={template.id}
           className={'furniture-template-card'+(selected?' selected':'')}
@@ -178,6 +189,7 @@ export function CabinetConfigurator({mode,materials,categories,initial,initialCa
        </div>
       </section>
      )}
+     {matchingReady.length===0&&<p role="status" className="muted">No ready template matches this category and search. Clear the search or choose All ready categories.</p>}
      <details className="planned-template-list"><summary>Planned designs ({furnitureTemplates.filter(t=>t.status==='planned').length}) — not yet buildable</summary>
       <p className="muted">These require dedicated geometry or hardware support. They cannot generate manufacturing files yet.</p>
       <div className="furniture-template-list">
