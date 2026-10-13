@@ -18,7 +18,8 @@ describe('B24: ten additional buildable furniture layouts',()=>{
   const selected=ids.map(id=>furnitureTemplates.find(t=>t.id===id))
   expect(selected.every(t=>t?.status==='ready'&&t.kind==='cabinet'&&t.rootComponent?.definitionId==='core/carcass')).toBe(true)
   expect(new Set(selected.map(t=>t?.category)).size).toBeGreaterThanOrEqual(5)
-  for(const id of ['wardrobe','desk','tv-unit']){
+  expect(furnitureTemplates.find(t=>t.id==='desk-gable')?.status).toBe('ready')
+  for(const id of ['wardrobe','tv-unit']){
    expect(furnitureTemplates.find(t=>t.id===id)?.status).toBe('planned')
   }
  })

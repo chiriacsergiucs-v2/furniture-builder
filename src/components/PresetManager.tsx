@@ -1,6 +1,11 @@
 import {lazy,Suspense,useEffect,useState} from 'react'
 import {CabinetConfigurator} from './CabinetConfigurator.tsx'
 import {DrawerConfigurator} from './DrawerConfigurator.tsx'
+import {SurfaceConfigurator} from './SurfaceConfigurator.tsx'
+import {surfacePreset,surfaceForProject} from '../furniture/surface.ts'
+import type {SurfaceSpec} from '../furniture/surface.ts'
+import {initialSurfaceSpecForTemplate} from '../furniture/templates.ts'
+import {createProject} from '../engine/types.ts'
 import {createDrawerPreset} from '../furniture/drawer.ts'
 import type {DrawerSpec} from '../furniture/drawer.ts'
 import {createCabinetPreset,cabinetBoxes} from '../furniture/cabinet.ts'
@@ -21,6 +26,7 @@ import {UNCATEGORIZED_ID} from '../db/database.ts'
 const Preset3DViewer=lazy(()=>import('./Preset3DViewer.tsx'))
 const CabinetPreview=lazy(()=>import('./CabinetPreview.tsx'))
 const DrawerPresetPreview=lazy(()=>import('./DrawerPresetPreview.tsx'))
+const PositionedFurniturePreview=lazy(()=>import('./PositionedFurniturePreview.tsx'))
 const edges:EdgeName[]=['top','right','bottom','left']
 const starterMaterials:Material[]=[
  {id:'preset-pal18',name:'PAL 18 mm',type:'PAL',thickness:18},
@@ -36,14 +42,24 @@ function ItemDetails({item,index}:{item:PresetItem;index:number}){
   <p className="muted">{item.material.name} · Grain {item.grain} · Rotation {item.rotationAllowed?'allowed':'restricted'} · ABS: {edges.filter(e=>item.abs[e]).map(e=>e+': '+item.abs[e]).join(', ')||'none'}</p>
  </details>
 }
+function SurfaceSavedPreview({preset}:{preset:StoredPreset}){
+ const spec=preset.surfaceSpec!
+ const material={id:'preview',name:preset.items[0].material.name,type:preset.items[0].material.type,
+  thickness:preset.items[0].material.thickness}
+ const base=createProject()
+ const project={...base,materials:[material],parts:[],assemblies:[]}
+ const built=surfaceForProject(project,{...spec,materialId:material.id})
+ const full={...project,parts:built.parts,assemblies:built.assemblies}
+ return <PositionedFurniturePreview project={full} assembly={built.assemblies[0]}/>
+}
 function SavedPreset({preset,categoryName,projects,targetId,onTarget,onInsert,onEdit,onDuplicate,onCustomize,onDelete}:{
  preset:StoredPreset;categoryName:string;projects:Project[];targetId:string;onTarget:(id:string)=>void;
- onInsert:(id:string,parts:Part[],presetId:string,copies:number,cabinetSpec?:CabinetSpec,drawerSpec?:DrawerSpec)=>Promise<void>;
+ onInsert:(id:string,parts:Part[],presetId:string,copies:number,cabinetSpec?:CabinetSpec,drawerSpec?:DrawerSpec,surfaceSpec?:SurfaceSpec)=>Promise<void>;
  onEdit:(p:StoredPreset)=>void;onDuplicate:(p:StoredPreset)=>void;onCustomize:(p:StoredPreset)=>void;onDelete:(p:StoredPreset)=>Promise<void>
 }){
  const [sets,setSets]=useState(1)
  const [expanded3d,setExpanded3d]=useState(false)
- const showCompletePreview=Boolean(preset.cabinetSpec||preset.drawerSpec)||preset.id===DRAWER_PRESET_ID
+ const showCompletePreview=Boolean(preset.cabinetSpec||preset.drawerSpec||preset.surfaceSpec)||preset.id===DRAWER_PRESET_ID
  const [busy,setBusy]=useState(false)
  const [error,setError]=useState('')
  const [notice,setNotice]=useState('')
@@ -54,7 +70,7 @@ function SavedPreset({preset,categoryName,projects,targetId,onTarget,onInsert,on
    if(!project)throw Error('Destination project missing')
    const parts=instantiatePreset(preset,project,sets)
    setBusy(true);setError('')
-   await onInsert(project.id,parts,preset.id,sets,preset.cabinetSpec,preset.drawerSpec)
+   await onInsert(project.id,parts,preset.id,sets,preset.cabinetSpec,preset.drawerSpec,preset.surfaceSpec)
    setNotice('Inserted '+parts.reduce((total,p)=>total+p.quantity,0)+' pieces into '+project.name+'.')
   }catch(e){setError(message(e))}finally{setBusy(false)}
  }
@@ -70,7 +86,7 @@ function SavedPreset({preset,categoryName,projects,targetId,onTarget,onInsert,on
      <button type="button" className="danger" onClick={()=>void onDelete(preset)}>Delete</button>
     </div>
     {expanded3d&&showCompletePreview&&<div role="region" aria-label="Complete furniture 3D preview"><Suspense fallback={<p role="status">Loading assembled furniture…</p>}>
-     {preset.cabinetSpec?<CabinetPreview spec={preset.cabinetSpec} boxes={cabinetBoxes(preset.cabinetSpec,preset.items[0].material.thickness)}/>:preset.drawerSpec?<DrawerPresetPreview preset={preset}/>:<Preset3DViewer preset={preset}/>}
+     {preset.cabinetSpec?<CabinetPreview spec={preset.cabinetSpec} boxes={cabinetBoxes(preset.cabinetSpec,preset.items[0].material.thickness)}/>:preset.drawerSpec?<DrawerPresetPreview preset={preset}/>:preset.surfaceSpec?<SurfaceSavedPreview preset={preset}/>:<Preset3DViewer preset={preset}/>}
     </Suspense></div>}
     {!showCompletePreview&&<p className="muted">No assembled 3D model saved for this preset. Cut dimensions alone do not define panel positions.</p>}
     <div className="preset-controls">
@@ -109,7 +125,7 @@ function CategoryBranch({category,all,visible,presets,projects,targetId,onTarget
 
 export function PresetManager({project,projects,onInsert}:{
  project:Project|null;projects:Project[];
- onInsert:(projectId:string,parts:Part[],presetId:string,copies:number,cabinetSpec?:CabinetSpec,drawerSpec?:DrawerSpec)=>Promise<void>
+ onInsert:(projectId:string,parts:Part[],presetId:string,copies:number,cabinetSpec?:CabinetSpec,drawerSpec?:DrawerSpec,surfaceSpec?:SurfaceSpec)=>Promise<void>
 }){
  const [library,setLibrary]=useState<StoredPreset[]>([])
  const [categories,setCategories]=useState<PresetCategory[]>([])
@@ -124,11 +140,12 @@ export function PresetManager({project,projects,onInsert}:{
  const [customizing,setCustomizing]=useState<StoredPreset|null>(null)
  const [cabinetEditor,setCabinetEditor]=useState<{source?:StoredPreset;duplicate?:boolean;initial?:CabinetSpec}|null>(null)
  const [drawerEditor,setDrawerEditor]=useState<{source?:StoredPreset;duplicate?:boolean;initial?:DrawerSpec}|null>(null)
+ const [surfaceEditor,setSurfaceEditor]=useState<{source?:StoredPreset;duplicate?:boolean;initial?:SurfaceSpec}|null>(null)
  const [configuredId,setConfiguredId]=useState('')
  const [filter,setFilter]=useState('')
  const [busy,setBusy]=useState(false)
  const materials=project?.materials.length?project.materials:starterMaterials
- const configured=project?.assemblies?.filter(a=>a.cabinetSpec||a.drawerSpec)??[]
+ const configured=project?.assemblies?.filter(a=>a.cabinetSpec||a.drawerSpec||a.surfaceSpec)??[]
  const fromConfigured=()=>{
   const selected=configured.find(a=>a.id===(configuredId||configured[0]?.id))
   if(!selected){onError(new Error('Choose a configured item first.'));return}
@@ -136,6 +153,7 @@ export function PresetManager({project,projects,onInsert}:{
   setSelectedCategory(UNCATEGORIZED_ID);setError('')
   if(selected.cabinetSpec)setCabinetEditor({initial:structuredClone(selected.cabinetSpec)})
   else if(selected.drawerSpec)setDrawerEditor({initial:structuredClone(selected.drawerSpec)})
+  else if(selected.surfaceSpec)setSurfaceEditor({initial:structuredClone(selected.surfaceSpec)})
   setNotice('Unsaved configured item. Review parameters, then press Save preset to add it to the library.')
  }
  useEffect(()=>{let active=true;void Promise.all([listPresets(),listCategories()])
@@ -145,7 +163,7 @@ export function PresetManager({project,projects,onInsert}:{
  const onError=(e:unknown)=>{setError(message(e));setNotice('')}
  const customize=(preset:StoredPreset)=>{
   if(!targetId||!projects.some(p=>p.id===targetId)){onError(new Error('Select a destination project first.'));return}
-  setDraft(null);setCabinetEditor(null);setDrawerEditor(null)
+  setDraft(null);setCabinetEditor(null);setDrawerEditor(null);setSurfaceEditor(null)
   setCustomizing(preset);setError('');setNotice('')
  }
  const newDraft=()=>{
@@ -158,10 +176,12 @@ export function PresetManager({project,projects,onInsert}:{
   setDraft(presetFromParts(project));setDraftMode('create');setSelectedCategory(UNCATEGORIZED_ID);setError('');setNotice('')
  }catch(e){onError(e)}}
  const beginEdit=(p:StoredPreset)=>{
+  if(p.surfaceSpec){setDraft(null);setCabinetEditor(null);setDrawerEditor(null);setSurfaceEditor({source:p});setSelectedCategory(p.categoryId);setError('');setNotice('');return}
   if(p.drawerSpec){setDraft(null);setCabinetEditor(null);setDrawerEditor({source:p});setSelectedCategory(p.categoryId);setError('');setNotice('');return}
   if(p.cabinetSpec){setDraft(null);setCabinetEditor({source:p});setSelectedCategory(p.categoryId);setError('');setNotice('');return}
   setCabinetEditor(null);setDraft(structuredClone(p));setSelectedCategory(p.categoryId);setDraftMode('edit');setError('');setNotice('')}
  const beginDuplicate=(p:StoredPreset)=>{
+  if(p.surfaceSpec){setDraft(null);setCabinetEditor(null);setDrawerEditor(null);setSurfaceEditor({source:p,duplicate:true});setSelectedCategory(p.categoryId);setError('');setNotice('Unsaved worktop copy.');return}
   if(p.drawerSpec){setDraft(null);setCabinetEditor(null);setDrawerEditor({source:p,duplicate:true});setSelectedCategory(p.categoryId);setError('');setNotice('Unsaved drawer copy.');return}
   if(p.cabinetSpec){setDraft(null);setCabinetEditor({source:p,duplicate:true});setSelectedCategory(p.categoryId);setError('');setNotice('Unsaved cabinet copy. The original remains unchanged.');return}
   setCabinetEditor(null)
@@ -188,6 +208,17 @@ export function PresetManager({project,projects,onInsert}:{
    const previous=drawerEditor?.duplicate?undefined:drawerEditor?.source
    const updated=await savePreset({...created,id:previous?.id??created.id,createdAt:previous?.createdAt??created.createdAt,categoryId})
    setLibrary(updated);setDrawerEditor(null);setError('');setNotice(previous?'Drawer component updated.':'Drawer component saved as reusable preset.')
+  }catch(e){onError(e);throw e}finally{setBusy(false)}
+ }
+ const saveSurface=async(spec:SurfaceSpec,categoryId:string)=>{
+  try{
+   setBusy(true)
+   const material=materials.find(m=>m.id===spec.materialId)
+   if(!material)throw Error('Choose a project material.')
+   const generated=surfacePreset(spec,material)
+   const previous=surfaceEditor?.duplicate?undefined:surfaceEditor?.source
+   const saved=await savePreset({...generated,id:previous?.id??generated.id,createdAt:previous?.createdAt??generated.createdAt,categoryId})
+   setLibrary(saved);setSurfaceEditor(null);setError('');setNotice(previous?'Worktop preset updated.':'Worktop preset saved.')
   }catch(e){onError(e);throw e}finally{setBusy(false)}
  }
  const editItem=(idx:number,patch:Partial<PresetItem>)=>setDraft(p=>p?{...p,items:p.items.map((item,i)=>i===idx?{...item,...patch}:item)}:p)
@@ -226,7 +257,7 @@ export function PresetManager({project,projects,onInsert}:{
  return <section id="presets" className="card preset-library-page" aria-label="Presets">
   <div className="section-head"><h2>Preset library <small>({library.length} saved)</small></h2>
    <div className="actions compact-actions">
-    <button type="button" className="primary" onClick={()=>{setDraft(null);setDrawerEditor(null);setCabinetEditor({});setSelectedCategory(UNCATEGORIZED_ID);setError('');setNotice('')}}>+ Create preset</button><button type="button" onClick={()=>{setDrawerEditor({});setCabinetEditor(null);setDraft(null);setError('');setNotice('')}}>+ Reusable drawer component</button><button type="button" onClick={newDraft}>Manual preset</button>
+    <button type="button" className="primary" onClick={()=>{setDraft(null);setDrawerEditor(null);setCabinetEditor({});setSelectedCategory(UNCATEGORIZED_ID);setError('');setNotice('')}}>+ Create preset</button><button type="button" onClick={()=>{setDrawerEditor({});setCabinetEditor(null);setDraft(null);setError('');setNotice('')}}>+ Reusable drawer component</button><button type="button" onClick={()=>{setDraft(null);setDrawerEditor(null);setCabinetEditor(null);setSurfaceEditor({})}}>+ Desk / Table preset</button><button type="button" onClick={newDraft}>Manual preset</button>
     <button type="button" disabled={!project?.parts.length} onClick={fromParts}>Save project parts as preset</button>
    </div>
   </div>
@@ -251,7 +282,11 @@ export function PresetManager({project,projects,onInsert}:{
    onCancel={()=>setCustomizing(null)}/>} 
   {cabinetEditor&&<CabinetConfigurator key={(cabinetEditor.source?.id??'new')+(cabinetEditor.duplicate?'-copy':'')} mode="preset" materials={materials} categories={categories} initialCategory={cabinetEditor.source?.categoryId??UNCATEGORIZED_ID}
    initial={cabinetEditor.initial??(cabinetEditor.source?.cabinetSpec?{...cabinetEditor.source.cabinetSpec,materialId:materials.find(m=>m.type===cabinetEditor.source?.items[0]?.material.type&&m.thickness===cabinetEditor.source?.items[0]?.material.thickness)?.id??materials[0]?.id??''}:undefined)}
-   onSavePreset={saveCabinet} onChooseDrawer={()=>{setCabinetEditor(null);setDrawerEditor({})}} onCancel={()=>setCabinetEditor(null)}/>}
+   onSavePreset={saveCabinet} onChooseDrawer={()=>{setCabinetEditor(null);setDrawerEditor({})}} onChooseSurface={id=>{setCabinetEditor(null);setSurfaceEditor({initial:initialSurfaceSpecForTemplate(id,materials[0]?.id??'')})}} onCancel={()=>setCabinetEditor(null)}/>}
+  {surfaceEditor&&<SurfaceConfigurator key={(surfaceEditor.source?.id??surfaceEditor.initial?.templateId??'new')+(surfaceEditor.duplicate?'-copy':'')}
+   mode="preset" materials={materials} categories={categories} initialCategory={surfaceEditor.source?.categoryId??UNCATEGORIZED_ID}
+   initial={surfaceEditor.initial??(surfaceEditor.source?.surfaceSpec?{...surfaceEditor.source.surfaceSpec,materialId:materials.find(m=>m.type===surfaceEditor.source?.items[0]?.material.type&&m.thickness===surfaceEditor.source?.items[0]?.material.thickness)?.id??materials[0]?.id??''}:undefined)}
+   onSavePreset={saveSurface} onCancel={()=>setSurfaceEditor(null)}/>}
   {drawerEditor&&<DrawerConfigurator key={(drawerEditor.source?.id??'new')+(drawerEditor.duplicate?'-copy':'')} mode="preset" materials={materials} categories={categories} initialCategory={drawerEditor.source?.categoryId??UNCATEGORIZED_ID}
    initial={drawerEditor.initial??(drawerEditor.source?.drawerSpec?{...drawerEditor.source.drawerSpec,materialId:materials.find(m=>m.type===drawerEditor.source?.items[0]?.material.type&&m.thickness===drawerEditor.source?.items[0]?.material.thickness)?.id??materials[0]?.id??''}:undefined)}
    onSavePreset={saveDrawer} onCancel={()=>setDrawerEditor(null)}/>}

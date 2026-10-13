@@ -15,12 +15,13 @@ const CabinetPreview=lazy(()=>import('./CabinetPreview.tsx'))
 type Stage=0|1|2
 const steps=['Choose template','Customize','Review & save'] as const
 
-export function CabinetConfigurator({mode,materials,categories,initial,initialCategory,editing=false,onAdd,onSavePreset,onChooseDrawer,onCancel}:{
+export function CabinetConfigurator({mode,materials,categories,initial,initialCategory,editing=false,onAdd,onSavePreset,onChooseDrawer,onChooseSurface,onCancel}:{
  mode:'item'|'preset';materials:Material[];categories?:PresetCategory[];editing?:boolean
  initial?:CabinetSpec;initialCategory?:string
  onAdd?:(spec:CabinetSpec)=>Promise<void>|void
  onSavePreset?:(spec:CabinetSpec,categoryId:string)=>Promise<void>|void
  onChooseDrawer?:()=>void
+ onChooseSurface?:(templateId:string)=>void
  onCancel:()=>void
 }){
  const [spec,setSpec]=useState<CabinetSpec>(()=>{
@@ -161,9 +162,9 @@ export function CabinetConfigurator({mode,materials,categories,initial,initialCa
          const selected=spec.templateId===template.id
          return <button type="button" key={template.id}
           className={'furniture-template-card'+(selected?' selected':'')}
-          disabled={template.kind==='drawer'&&!onChooseDrawer}
+          disabled={template.kind==='drawer'&&!onChooseDrawer||template.kind==='surface'&&!onChooseSurface}
           aria-pressed={selected}
-          onClick={()=>template.kind==='drawer'?onChooseDrawer?.():selectTemplate(template)}>
+          onClick={()=>template.kind==='drawer'?onChooseDrawer?.():template.kind==='surface'?onChooseSurface?.(template.id):selectTemplate(template)}>
           <span className="template-drawing" aria-hidden="true">
            <span className="template-outline">{Array.from({length:Math.min(5,template.defaultSpec?.shelves??2)},(_,i)=>
             <span className="template-shelf" key={i}/>)}</span>

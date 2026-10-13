@@ -112,8 +112,12 @@ const moduleGroup:ComponentDefinition={
  slots:[{id:'modules',accepts:['core/carcass'],max:2}],
  derive:p=>({totalWidth:p.primaryWidth+p.secondaryWidth})
 }
+const worktopSurface:ComponentDefinition={
+ id:'core/surface',version:1,defaults:{},
+ derive:p=>({clearHeight:p.height-p.thickness,topArea:p.width*p.depth})
+}
 export const componentRegistry:ReadonlyMap<string,ComponentDefinition>=new Map(
- [box,compartment,shelf,drawerFront,drawer,moduleGroup].map(def=>[def.id+'@'+def.version,def] as const)
+ [box,compartment,shelf,drawerFront,drawer,moduleGroup,worktopSurface].map(def=>[def.id+'@'+def.version,def] as const)
 )
 export function getComponentDefinition(id:string,version:number):ComponentDefinition{
  const result=componentRegistry.get(id+'@'+version)

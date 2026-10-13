@@ -1,6 +1,7 @@
 import type {Material,MaterialType,Part,Project,GrainAxis,EdgeBanding} from '../engine/types.ts'
 import type {CabinetSpec} from '../furniture/cabinet.ts'
 import type {DrawerSpec} from '../furniture/drawer.ts'
+import type {SurfaceSpec} from '../furniture/surface.ts'
 import type {StoredComponentTree} from '../furniture/component-engine.ts'
 import {emptyAbs} from '../engine/types.ts'
 import {integer,safeString} from '../engine/schema.ts'
@@ -15,7 +16,7 @@ import {presetOrigin} from './origin.ts'
 export type {PresetOrigin} from './origin.ts'
 export {presetOrigin,validPresetOrigin} from './origin.ts'
 export interface CutlistPreset {
- schemaVersion:1; id:string; label:string; categoryId?:string; items:PresetItem[]; revision?:number; cabinetSpec?:CabinetSpec;drawerSpec?:DrawerSpec; componentTree?:StoredComponentTree
+ schemaVersion:1; id:string; label:string; categoryId?:string; items:PresetItem[]; revision?:number; cabinetSpec?:CabinetSpec;drawerSpec?:DrawerSpec;surfaceSpec?:SurfaceSpec; componentTree?:StoredComponentTree
  createdAt:string; updatedAt:string
 }
 const sides=['top','right','bottom','left'] as const

@@ -20,7 +20,7 @@ describe('Manufacturing and rendered geometry parity B16/B17/B21/B28',()=>{
  it('builds all five chest recipes from shared drawer and carcass components',()=>{
   const project=createProject(),material=project.materials[0]
   const chests=furnitureTemplates.filter(t=>t.id.startsWith('chest-'))
-  expect(chests).toHaveLength(5)
+  expect(chests).toHaveLength(6)
   const layouts=new Set<string>()
   for(const template of chests){
    expect(template.status).toBe('ready')
@@ -43,7 +43,7 @@ describe('Manufacturing and rendered geometry parity B16/B17/B21/B28',()=>{
    layouts.add(JSON.stringify([spec.drawers,spec.split?.axis,
     spec.split?.first.content,spec.split?.first.count,spec.split?.second.content,spec.split?.second.count]))
   }
-  expect(layouts.size).toBe(5)
+  expect(layouts.size).toBe(6)
  })
  it('models the drawer front as an independent versioned child with inherited dimensions',()=>{
   const project=createProject(),material=project.materials[0]
