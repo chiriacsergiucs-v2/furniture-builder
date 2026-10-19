@@ -349,5 +349,42 @@
       "Independent physical Android/Fusion installation test"
     ],
     "pagesStatus": "pending_verification_after_merge"
+  },
+  "modularEngineIteration9": {
+    "status": "feature_branch_verification",
+    "initiative": "B24",
+    "readyPrevious": 49,
+    "readyNow": 54,
+    "newDefinitions": [
+      "core/back-panel@1",
+      "core/hinged-door@1",
+      "core/plinth@1"
+    ],
+    "newTemplates": [
+      "kitchen-base-single-door",
+      "kitchen-wall-double-door",
+      "sideboard-closed-shelves",
+      "kitchen-base-panel-plinth",
+      "sideboard-doors-plinth"
+    ],
+    "behavior": [
+      "Applied full-size back outside rear carcass",
+      "Single/double static front panels with 2mm reveals and 3mm double-door gap",
+      "Registered parent binding and stable leaf identities on resizing",
+      "Reject doors across drawer fronts",
+      "Require hinge and back attachment sets without claiming fitting specifications",
+      "Three physical below-carcass recessed plinth panels with exact setbacks and height validation"
+    ],
+    "tests": "Branch CI 39316491894 (verify conclusion before asserting success); focused enclosure and plinth unit tests.",
+    "deferred": [
+      "Bed structural root and safe load assessment",
+      "Wardrobe rod and hanging clearances",
+      "Actual hinge movement and supplier drilling patterns",
+      "Plinth/mounting/advanced joinery",
+      "Universal arbitrary-root configurator",
+      "Photorealistic materials",
+      "Plinth load certification, levelling and installation fasteners"
+    ],
+    "dataSafety": "Optional schema fields; existing saved cabinets remain open with no extra panels by default."
   }
 }

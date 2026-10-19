@@ -76,3 +76,16 @@ New dependencies @react-three/fiber, three, @dnd-kit/core/sortable/utilities, @t
 - New `src/furniture/surface.ts` and `src/components/SurfaceConfigurator.tsx` model worktop panels, gables, trestles, panel supports, shelved pedestals and console rear supports. Saved presets include optional `surfaceSpec` without changing Dexie schema. Manual and parametric project copies are independently positioned and their saved source revisions are pinned.
 - `src/furniture/templates.ts` includes 49 ready entries; 10 from `core/surface`, 39 from current carcass/drawer engine. Category-filtered UI remains. Only real modeled panels appear in ready assemblies.
 - The 18-family/90-construction-mechanism roadmap is NOT finished. Bed supports, garment rails, hinged/sliding/lift fronts, plinths and hardware need distinct families/geometry and physical engineering. No production structural load validation.
+
+## 2026-10-19 — Iteration 9 B24 partial enclosure milestone (feature branch)
+- Added optional applied external back (C05 proof) and independently generated single/double door leaves (C18 geometry proof), registered parent-bound child definitions, saved edit paths and two separate BOM *fitting-set* placeholders. No mounting, drilling or swing physics is claimed.
+- New functional templates: kitchen-base-single-door, kitchen-wall-double-door, sideboard-closed-shelves. Ready total increases from 49 to 52, never counted as full 18 × 5 mechanisms.
+- Legacy cabinet JSON survives because `CabinetSpec.backPanel` and `frontDoors` are optional; existing projects do not retroactively acquire enclosure panels.
+- Focused tests check all three ready panels, collision and cutlist parity, odd sizing and stable IDs; feature CI https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/39315685574.
+- Follow-up: real hinged hardware/drilling; wardrobe rails and bed-specific supports; generic editor. B22 partial, B24 partial, B26/B27 not done.
+
+### Iteration 9 plinth extension
+- Registered `core/plinth@1` with carcass-relative dimensional bindings, three collision-checked panels per module and normalized cutlist/Fusion snapshots; independent base child identity is preserved after edit.
+- Two additional functional recipes: `kitchen-base-panel-plinth`, `sideboard-doors-plinth`. Combined milestone: 49 → 54 ready templates, without claiming 54 of the 90 originally specified construction mechanisms.
+- Explicit height 60–200 mm and recessed front setback (minimum 20 mm and depth clearance) are validated. Physical load support, leveling and fastening are not certified.
+- Focused test `src/tests/unit/cabinet-plinth.test.ts`; CI run https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/39316491894 (verify conclusion).
