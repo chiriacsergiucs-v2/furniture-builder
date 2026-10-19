@@ -83,3 +83,9 @@ New dependencies @react-three/fiber, three, @dnd-kit/core/sortable/utilities, @t
 - Legacy cabinet JSON survives because `CabinetSpec.backPanel` and `frontDoors` are optional; existing projects do not retroactively acquire enclosure panels.
 - Focused tests check all three ready panels, collision and cutlist parity, odd sizing and stable IDs; feature CI https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/39315685574.
 - Follow-up: real hinged hardware/drilling; wardrobe rails and bed-specific supports; generic editor. B22 partial, B24 partial, B26/B27 not done.
+
+### Iteration 9 plinth extension
+- Registered `core/plinth@1` with carcass-relative dimensional bindings, three collision-checked panels per module and normalized cutlist/Fusion snapshots; independent base child identity is preserved after edit.
+- Two additional functional recipes: `kitchen-base-panel-plinth`, `sideboard-doors-plinth`. Combined milestone: 49 → 54 ready templates, without claiming 54 of the 90 originally specified construction mechanisms.
+- Explicit height 60–200 mm and recessed front setback (minimum 20 mm and depth clearance) are validated. Physical load support, leveling and fastening are not certified.
+- Focused test `src/tests/unit/cabinet-plinth.test.ts`; CI run https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/39316491894 (verify conclusion).
