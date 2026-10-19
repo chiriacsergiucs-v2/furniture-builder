@@ -29,12 +29,21 @@ export function cabinetDrawerCount(s:CabinetSpec):number{
  return own+(s.connected?.drawers??0)
 }
 function hardwareForAssembly(assembly:ProjectAssembly):HardwareRequirement[]{
- const spec=assembly.drawerSpec??assembly.cabinetSpec?.drawerConfig
- if(!spec)return []
- const copies=assembly.drawerSpec?1:cabinetDrawerCount(assembly.cabinetSpec!)
- if(copies<=0)return []
- return drawerHardware(spec).map(h=>({...h,quantity:h.quantity*copies,
-  optional:h.label.includes('(optional')}))
+ const cabinet=assembly.cabinetSpec
+ const drawer=assembly.drawerSpec??cabinet?.drawerConfig
+ const copies=assembly.drawerSpec?1:cabinet?cabinetDrawerCount(cabinet):0
+ const schedule:HardwareRequirement[]=drawer&&copies>0?
+  drawerHardware(drawer).map(h=>({...h,quantity:h.quantity*copies,
+   optional:h.label.includes('(optional')})):[]
+ if(cabinet?.frontDoors&&cabinet.frontDoors!=='none'){
+  const count=(cabinet.frontDoors==='double'?2:1)*(cabinet.connected?2:1)
+  schedule.push({label:'Hinge fitting set per door leaf (selection and drilling TBD)',
+   quantity:count,unit:'piece',optional:false})
+ }
+ if(cabinet?.backPanel) schedule.push({
+  label:'Back-panel attachment set (fixing pattern TBD)',
+  quantity:cabinet.connected?2:1,unit:'piece',optional:false})
+ return schedule
 }
 /** One normalized view of the saved assembly for 3D, Fusion snapshot and manufacturing counts.
  * This does not certify joint engineering, strength, drilling or hardware suitability.

@@ -31,9 +31,11 @@ export interface CabinetSpec {
  drawers?:number; drawerConfig?:DrawerSpec
  split?:CabinetSplit; connected?:ConnectedCabinetModule
  shelfMode?:'even'|'custom'; shelfPositions?:number[]
+ /** Optional external applied back panel and front leaves. Hardware drilling not represented. */
+ backPanel?:boolean; frontDoors?:'none'|'single'|'double'
 }
 export interface CabinetBox {
- role:'Side panel'|'Top / bottom'|'Shelf'|'Divider'|DrawerRole
+ role:'Side panel'|'Top / bottom'|'Shelf'|'Divider'|'Applied back'|'Hinged door'|DrawerRole
  label?:string
  index:number; x:number; y:number; z:number
  dx:number; dy:number; dz:number; cutWidth:number; cutHeight:number; rotationDeg?:Vec3
@@ -75,6 +77,15 @@ export function cabinetErrors(s:CabinetSpec,material?:Material):string[]{
   s.connected.shelves>0&&s.connected.drawers>0))
   e.push('Connected module needs valid width and either shelves or drawers.')
  if(s.templateVersion!==undefined&&s.templateVersion!==1)e.push('Unsupported cabinet template version.')
+ if(s.backPanel!==undefined&&typeof s.backPanel!=='boolean')e.push('Back panel setting must be a boolean.')
+ if(s.frontDoors!==undefined&&!['none','single','double'].includes(s.frontDoors))
+  e.push('Unsupported door configuration.')
+ if(s.frontDoors&&s.frontDoors!=='none'){
+  const drawerBays=s.split?[s.split.first,s.split.second].some(b=>b.content==='drawers'&&b.count>0):(s.drawers??0)>0
+  if(drawerBays||(s.connected?.drawers??0)>0)
+   e.push('Cabinet doors cannot cover drawer fronts; use a dedicated closed shelf compartment.')
+  if(s.width<150||s.height<150)e.push('Hinged doors require at least 150 mm width and height.')
+ }
  if(material&&whole(material.thickness)&&material.thickness>0&&e.length===0){
   const t=material.thickness
   if(s.width<=2*t+2*s.sideClear)e.push('Width cannot fit the side panels and clearances.')
@@ -182,6 +193,13 @@ export function cabinetBoxes(s:CabinetSpec,t:number):CabinetBox[]{
    result.push({role:'Shelf',index,label:bay?label:undefined,
     x:b.x,y:b.y,z:b.z,dx:b.width,dy:b.depth,dz:b.thickness,
     cutWidth:b.width,cutHeight:b.depth})
+  }else if(node.instance.definitionId==='core/back-panel'||node.instance.definitionId==='core/hinged-door'){
+   const b=node.values
+   const role=node.instance.definitionId==='core/back-panel'?'Applied back':'Hinged door'
+   const label=role==='Hinged door'?(b.leafCount===2?(b.index===0?'Hinged door · left':'Hinged door · right'):'Hinged door · single'):role
+   result.push({role,label,index:b.index,x:b.panelX,y:b.panelY,z:b.panelZ,
+    dx:b.cutWidth,dy:t,dz:b.cutHeight,cutWidth:b.cutWidth,cutHeight:b.cutHeight,
+    rotationDeg:[0,0,0]})
   }else throw Error('Unsupported cabinet child '+node.instance.definitionId)
  }
  return result

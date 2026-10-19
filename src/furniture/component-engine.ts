@@ -43,7 +43,9 @@ export interface ResolvedComponent {
 }
 const box:ComponentDefinition={
  id:'core/carcass',version:1,defaults:{},
- slots:[{id:'interior.main',accepts:['core/shelf','core/drawer','core/compartment'],max:20}],
+ slots:[{id:'interior.main',accepts:['core/shelf','core/drawer','core/compartment'],max:20},
+  {id:'back.main',accepts:['core/back-panel'],max:1},
+  {id:'front.main',accepts:['core/hinged-door'],max:2}],
  derive:p=>{
   const t=p.thickness,innerWidth=p.width-2*t,innerHeight=p.height-2*t
   const clearHeight=(p.height-(p.shelves+2)*t)/(p.shelves+1)
@@ -112,12 +114,28 @@ const moduleGroup:ComponentDefinition={
  slots:[{id:'modules',accepts:['core/carcass'],max:2}],
  derive:p=>({totalWidth:p.primaryWidth+p.secondaryWidth})
 }
+/** Externally applied panels do not overlap carcass solids, and their derived sizes
+ * automatically track parent dimensions and material thickness. */
+const appliedBack:ComponentDefinition={
+ id:'core/back-panel',version:1,defaults:{},
+ derive:p=>({cutWidth:p.width,cutHeight:p.height,panelX:0,panelY:p.depth,panelZ:0})
+}
+const hingedDoor:ComponentDefinition={
+ id:'core/hinged-door',version:1,defaults:{},
+ derive:p=>{
+  const opening=p.width-2*p.gap
+  const first=p.leafCount===2?Math.floor((opening-p.centerGap)/2):opening
+  const second=p.leafCount===2?opening-p.centerGap-first:0
+  return {cutWidth:p.leafCount===2&&p.index===1?second:first,cutHeight:p.height-2*p.gap,
+   panelX:p.gap+(p.index===1?first+p.centerGap:0),panelY:-p.thickness,panelZ:p.gap}
+ }
+}
 const worktopSurface:ComponentDefinition={
  id:'core/surface',version:1,defaults:{},
  derive:p=>({clearHeight:p.height-p.thickness,topArea:p.width*p.depth})
 }
 export const componentRegistry:ReadonlyMap<string,ComponentDefinition>=new Map(
- [box,compartment,shelf,drawerFront,drawer,moduleGroup,worktopSurface].map(def=>[def.id+'@'+def.version,def] as const)
+ [box,compartment,shelf,drawerFront,drawer,moduleGroup,worktopSurface,appliedBack,hingedDoor].map(def=>[def.id+'@'+def.version,def] as const)
 )
 export function getComponentDefinition(id:string,version:number):ComponentDefinition{
  const result=componentRegistry.get(id+'@'+version)
@@ -393,6 +411,30 @@ function createSingleCabinetTree(spec:CabinetSpec,t:number,previous?:StoredCompo
    shelfNode(index,'carcass',previousOf(old,'core/shelf',index),
     spec.shelfMode==='custom'?spec.shelfPositions?.[index]:undefined))
  }
+ // Optional enclosure children are explicit versioned nodes with stable instance IDs.
+ // No backing sheet or doors are silently added to historical project records.
+ if(spec.backPanel){
+  root.children.push({
+   id:previousOf(old,'core/back-panel',0)?.id??crypto.randomUUID(),
+   definitionId:'core/back-panel',definitionVersion:1,slot:'back.main',
+   params:{index:0},bindings:{
+    width:{parentKey:'width'},height:{parentKey:'height'},
+    depth:{parentKey:'depth'},thickness:{parentKey:'thickness'}},
+   children:[]
+  })
+ }
+ const doorCount=spec.frontDoors==='single'?1:spec.frontDoors==='double'?2:0
+ for(let index=0;index<doorCount;index++){
+  root.children.push({
+   id:previousOf(old,'core/hinged-door',index)?.id??crypto.randomUUID(),
+   definitionId:'core/hinged-door',definitionVersion:1,slot:'front.main',
+   params:{index,leafCount:doorCount,gap:2,centerGap:3},
+   bindings:{width:{parentKey:'width'},height:{parentKey:'height'},
+    depth:{parentKey:'depth'},thickness:{parentKey:'thickness'}},
+   children:[]
+  })
+ }
+ resolveComponentTree(root)
  return root
 }
 /** Backwards-compatible legacy cabinet tree is left unchanged unless split/connected is selected. */

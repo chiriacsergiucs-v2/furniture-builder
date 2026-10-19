@@ -304,6 +304,18 @@ export function CabinetConfigurator({mode,materials,categories,initial,initialCa
       <label className="checkline"><input type="checkbox" checked={spec.frontEdge}
        onChange={e=>change('frontEdge',e.target.checked)}/> Front-facing ABS edges</label>
      </details>
+     <div className="cabinet-step">Enclosure panels · manufacturing geometry</div>
+     <label className="checkline"><input type="checkbox" checked={spec.backPanel??false}
+      onChange={e=>change('backPanel',e.target.checked)}/> Add an external full-size back panel</label>
+     <label className="field"><span>Front door panels</span><select value={spec.frontDoors??'none'}
+      onChange={e=>change('frontDoors',e.target.value as 'none'|'single'|'double')}>
+       <option value="none">Open front</option>
+       <option value="single">One applied door leaf</option>
+       <option value="double">Two applied door leaves · 3 mm center gap</option>
+      </select></label>
+     <p className="muted">Panels are generated with 2 mm edge reveals and placed outside the carcass.
+      Doors/back add one panel thickness to front/rear depth respectively. Hinge movement,
+      drilling, fixing pattern and load capacity are NOT specified; select fittings before building.</p>
      <div className="cabinet-step">Module connections</div>
      <label className="checkline"><input type="checkbox" checked={Boolean(spec.connected)}
       onChange={e=>changeConnected(e.target.checked)}/> Attach a second carcass to the right</label>
@@ -336,6 +348,8 @@ export function CabinetConfigurator({mode,materials,categories,initial,initialCa
      <dl className="furniture-review">
       <div><dt>Overall size</dt><dd>{spec.width} × {spec.height} × {spec.depth} mm</dd></div>
       <div><dt>Material</dt><dd>{material?.name} · {material?.thickness} mm</dd></div>
+      <div><dt>Back panel</dt><dd>{spec.backPanel?'External applied':'None'}</dd></div>
+      <div><dt>Door leaves</dt><dd>{spec.frontDoors==='single'?1:spec.frontDoors==='double'?2:0}{spec.connected?' per module':''}</dd></div>
       <div><dt>Internal shelves</dt><dd>{spec.shelves}</dd></div><div><dt>Inserted drawers</dt><dd>{spec.drawers??0}</dd></div>
       {spec.split&&<div><dt>Split bays</dt><dd>{spec.split.axis} · {spec.split.ratio}/{100-spec.split.ratio}% · {spec.split.first.content}/{spec.split.second.content}</dd></div>}
       {spec.connected&&<div><dt>Connected module</dt><dd>+{spec.connected.width} mm right · {spec.connected.drawers||spec.connected.shelves} components</dd></div>}
@@ -359,11 +373,16 @@ export function CabinetConfigurator({mode,materials,categories,initial,initialCa
      <thead><tr><th>Part</th><th>Cut size (mm)</th><th>Qty</th></tr></thead>
      <tbody>{rows.map(row=><tr key={row.label}><td>{row.label}</td><td>{row.width} × {row.height} × {material?.thickness}</td><td>{row.quantity}</td></tr>)}</tbody>
     </table></div>
-    {hasDrawers&&spec.drawerConfig&&<div>
+    {(hasDrawers&&spec.drawerConfig||spec.frontDoors&&spec.frontDoors!=='none'||spec.backPanel)&&<div>
      <div className="cabinet-step">Building hardware · not board cut pieces</div>
-     {drawerHardware(spec.drawerConfig).length?drawerHardware(spec.drawerConfig).map(h=>
+     {hasDrawers&&spec.drawerConfig&&(drawerHardware(spec.drawerConfig).length?drawerHardware(spec.drawerConfig).map(h=>
       <p className="muted" key={h.label}>{((spec.drawers??0)+(spec.split?[spec.split.first,spec.split.second].filter(b=>b.content==='drawers').reduce((n,b)=>n+b.count,0):0)+(spec.connected?.drawers??0))*h.quantity} {h.unit} · {h.label}</p>
-     ):<p className="muted">Drawer movement mechanism not configured.</p>}
+     ):<p className="muted">Drawer movement mechanism not configured.</p>)}
+     {spec.frontDoors&&spec.frontDoors!=='none'&&<p className="muted">
+      {(spec.frontDoors==='double'?2:1)*(spec.connected?2:1)} door-leaf hinge sets required;
+      hinge type, quantities per set and drill coordinates require manufacturer verification.</p>}
+     {spec.backPanel&&<p className="muted">
+      {spec.connected?2:1} back-panel fixing sets required; attachment method not specified.</p>}
     </div>}
    </div>
   </div>
