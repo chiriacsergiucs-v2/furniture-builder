@@ -12,6 +12,7 @@ describe('B24 recessed three-panel plinth',()=>{
   const project=createProject(),m=project.materials[0]
   for(const id of ['kitchen-base-panel-plinth','sideboard-doors-plinth']){
    const spec=initialSpecForTemplate(id,m.id),t=m.thickness
+   const height=spec.plinthHeight??0,inset=spec.plinthInset??0
    expect(cabinetErrors(spec,m),id).toEqual([])
    const boxes=cabinetBoxes(spec,t)
    expect(detectPanelCollisions(boxes),id).toEqual([])
@@ -19,11 +20,11 @@ describe('B24 recessed three-panel plinth',()=>{
    const front=boxes.find(b=>b.role==='Plinth front')
    expect(sides).toHaveLength(2)
    expect(sides.map(b=>[b.x,b.y,b.z,b.cutWidth,b.cutHeight]))
-    .toEqual([[0,spec.plinthInset,-spec.plinthHeight,spec.plinthHeight,spec.depth-spec.plinthInset],
-     [spec.width-t,spec.plinthInset,-spec.plinthHeight,spec.plinthHeight,spec.depth-spec.plinthInset]])
-   expect(front).toMatchObject({x:t,y:spec.plinthInset,z:-spec.plinthHeight,
-    dx:spec.width-2*t,dy:t,dz:spec.plinthHeight,
-    cutWidth:spec.width-2*t,cutHeight:spec.plinthHeight})
+    .toEqual([[0,inset,-height,height,spec.depth-inset],
+     [spec.width-t,inset,-height,height,spec.depth-inset]])
+   expect(front).toMatchObject({x:t,y:inset,z:-height,
+    dx:spec.width-2*t,dy:t,dz:height,
+    cutWidth:spec.width-2*t,cutHeight:height})
    const made=createCabinetForProject(project,spec)
    const complete={...project,parts:made.parts,assemblies:made.assemblies}
    expect(validateProject(complete)).toEqual([])
