@@ -89,3 +89,9 @@ New dependencies @react-three/fiber, three, @dnd-kit/core/sortable/utilities, @t
 - Two additional functional recipes: `kitchen-base-panel-plinth`, `sideboard-doors-plinth`. Combined milestone: 49 → 54 ready templates, without claiming 54 of the 90 originally specified construction mechanisms.
 - Explicit height 60–200 mm and recessed front setback (minimum 20 mm and depth clearance) are validated. Physical load support, leveling and fastening are not certified.
 - Focused test `src/tests/unit/cabinet-plinth.test.ts`; CI run https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/39316491894 (verify conclusion).
+
+### Iteration 9 published release checkpoint
+- PR #10 merged to main as `b6cb2b44a65e22b994f981281b38f62e795cd702`; https://github.com/chiriacsergiucs-v2/furniture-builder/pull/10.
+- CI https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/39316987912: 25 kernel, 67 Vitest, 12 Playwright, lint, TypeScript and production build ALL PASS.
+- GitHub Pages https://github.com/chiriacsergiucs-v2/furniture-builder/actions/runs/39316987961: deployed successfully. Live https://chiriacsergiucs-v2.github.io/furniture-builder/.
+- B24 stays Partially done, because supplier-specific hinge drilling, 18 families x 5 real mechanisms, wardrobe rods and bed support structures remain unimplemented.

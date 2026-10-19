@@ -351,7 +351,7 @@
     "pagesStatus": "pending_verification_after_merge"
   },
   "modularEngineIteration9": {
-    "status": "feature_branch_verification",
+    "status": "verified_deployed",
     "initiative": "B24",
     "readyPrevious": 49,
     "readyNow": 54,
@@ -375,7 +375,7 @@
       "Require hinge and back attachment sets without claiming fitting specifications",
       "Three physical below-carcass recessed plinth panels with exact setbacks and height validation"
     ],
-    "tests": "Branch CI 39316491894 (verify conclusion before asserting success); focused enclosure and plinth unit tests.",
+    "tests": "25 kernel, 67 Vitest, 12 Playwright; ESLint, TypeScript and production build all passing",
     "deferred": [
       "Bed structural root and safe load assessment",
       "Wardrobe rod and hanging clearances",
@@ -385,6 +385,11 @@
       "Photorealistic materials",
       "Plinth load certification, levelling and installation fasteners"
     ],
-    "dataSafety": "Optional schema fields; existing saved cabinets remain open with no extra panels by default."
+    "dataSafety": "Optional schema fields; existing saved cabinets remain open with no extra panels by default.",
+    "mergeCommit": "b6cb2b44a65e22b994f981281b38f62e795cd702",
+    "ciRun": 39316987912,
+    "pagesRun": 39316987961,
+    "prNumber": 10,
+    "statusChange": "B24 remains Partially done; B22 remains Partial, B26/B27 Not done"
   }
 }

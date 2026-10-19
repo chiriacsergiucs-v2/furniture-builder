@@ -51,6 +51,11 @@ Furniture template selection includes 49 versioned **geometry-and-cutlist backed
 
 **Important limits:** Worktop support layouts generate cut geometry but have **not** been structurally load-tested. Uprights, joints, tip resistance and fixing specifications need review before fabrication. Open kitchen/island/vanity/closet concepts exclude doors, backs, plinths, wall mountings, hanging rods, sinks and drilling. The 18-family/90-variant roadmap is still partially complete; do not treat 49 recipes as 49 of its requested detailed operating mechanisms.
 
+## B24 enclosure and panel-plinth addition — 54 working templates (October 2026)
+The cabinet wizard now supports optional **applied back panels**, **single or double external door leaves**, and **three-panel recessed toe-kick bases**. These are individually parametric; project and preset models include full positioned 3D panels, real cutting sizes, and fitting-set requirements. Five new ready kitchen/living-room designs demonstrate the components, bringing the catalog to **54** functioning templates. Configure these options during the Customize step, then review exact parts before saving.
+
+**Scope:** The door leaves are static closed-position panels. Hinge fittings, hole patterns, swing clearances, leveling/fasteners, structural loads and wall fixings are not specified or certified. Cabinet assemblies saved previously remain open unless explicitly edited. The planned 18-family/90-distinct-mechanism target is still incomplete.
+
 ## Development
 
 Node >=22 required. `npm install` then `npm run dev`, `npm run lint`, `npm run typecheck`, `npm run test:kernel`, `npm test`, `npm run build`, `npm run test:e2e`. Use the committed package-lock.json; update it whenever dependencies change.
