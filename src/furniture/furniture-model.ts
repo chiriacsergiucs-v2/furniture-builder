@@ -40,6 +40,9 @@ function hardwareForAssembly(assembly:ProjectAssembly):HardwareRequirement[]{
   schedule.push({label:'Hinge fitting set per door leaf (selection and drilling TBD)',
    quantity:count,unit:'piece',optional:false})
  }
+ if(cabinet?.plinthHeight!==undefined) schedule.push({
+  label:'Panel-plinth joining fastener set (type and count TBD)',
+  quantity:cabinet.connected?2:1,unit:'piece',optional:false})
  if(cabinet?.backPanel) schedule.push({
   label:'Back-panel attachment set (fixing pattern TBD)',
   quantity:cabinet.connected?2:1,unit:'piece',optional:false})

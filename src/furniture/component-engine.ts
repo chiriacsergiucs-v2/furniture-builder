@@ -45,6 +45,7 @@ const box:ComponentDefinition={
  id:'core/carcass',version:1,defaults:{},
  slots:[{id:'interior.main',accepts:['core/shelf','core/drawer','core/compartment'],max:20},
   {id:'back.main',accepts:['core/back-panel'],max:1},
+  {id:'base.main',accepts:['core/plinth'],max:1},
   {id:'front.main',accepts:['core/hinged-door'],max:2}],
  derive:p=>{
   const t=p.thickness,innerWidth=p.width-2*t,innerHeight=p.height-2*t
@@ -116,6 +117,10 @@ const moduleGroup:ComponentDefinition={
 }
 /** Externally applied panels do not overlap carcass solids, and their derived sizes
  * automatically track parent dimensions and material thickness. */
+const cabinetPlinth:ComponentDefinition={
+ id:'core/plinth',version:1,defaults:{},
+ derive:p=>({clearWidth:p.width-2*p.thickness,runDepth:p.depth-p.inset})
+}
 const appliedBack:ComponentDefinition={
  id:'core/back-panel',version:1,defaults:{},
  derive:p=>({cutWidth:p.width,cutHeight:p.height,panelX:0,panelY:p.depth,panelZ:0})
@@ -135,7 +140,7 @@ const worktopSurface:ComponentDefinition={
  derive:p=>({clearHeight:p.height-p.thickness,topArea:p.width*p.depth})
 }
 export const componentRegistry:ReadonlyMap<string,ComponentDefinition>=new Map(
- [box,compartment,shelf,drawerFront,drawer,moduleGroup,worktopSurface,appliedBack,hingedDoor].map(def=>[def.id+'@'+def.version,def] as const)
+ [box,compartment,shelf,drawerFront,drawer,moduleGroup,worktopSurface,appliedBack,hingedDoor,cabinetPlinth].map(def=>[def.id+'@'+def.version,def] as const)
 )
 export function getComponentDefinition(id:string,version:number):ComponentDefinition{
  const result=componentRegistry.get(id+'@'+version)
@@ -410,6 +415,17 @@ function createSingleCabinetTree(spec:CabinetSpec,t:number,previous?:StoredCompo
   root=repeatComponents(root,'interior.main','core/shelf',spec.shelves,(index)=>
    shelfNode(index,'carcass',previousOf(old,'core/shelf',index),
     spec.shelfMode==='custom'?spec.shelfPositions?.[index]:undefined))
+ }
+ // Optional three-panel toe-kick supports sit entirely below the carcass base.
+ if(spec.plinthHeight!==undefined){
+  root.children.push({
+   id:previousOf(old,'core/plinth',0)?.id??crypto.randomUUID(),
+   definitionId:'core/plinth',definitionVersion:1,slot:'base.main',
+   params:{index:0,height:spec.plinthHeight,inset:spec.plinthInset??60},
+   bindings:{width:{parentKey:'width'},depth:{parentKey:'depth'},
+    thickness:{parentKey:'thickness'}},
+   children:[]
+  })
  }
  // Optional enclosure children are explicit versioned nodes with stable instance IDs.
  // No backing sheet or doors are silently added to historical project records.

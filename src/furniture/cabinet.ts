@@ -33,9 +33,11 @@ export interface CabinetSpec {
  shelfMode?:'even'|'custom'; shelfPositions?:number[]
  /** Optional external applied back panel and front leaves. Hardware drilling not represented. */
  backPanel?:boolean; frontDoors?:'none'|'single'|'double'
+ /** Optional below-carcass panel plinth; height and inset in integer mm. */
+ plinthHeight?:number; plinthInset?:number
 }
 export interface CabinetBox {
- role:'Side panel'|'Top / bottom'|'Shelf'|'Divider'|'Applied back'|'Hinged door'|DrawerRole
+ role:'Side panel'|'Top / bottom'|'Shelf'|'Divider'|'Applied back'|'Hinged door'|'Plinth side'|'Plinth front'|DrawerRole
  label?:string
  index:number; x:number; y:number; z:number
  dx:number; dy:number; dz:number; cutWidth:number; cutHeight:number; rotationDeg?:Vec3
@@ -80,6 +82,14 @@ export function cabinetErrors(s:CabinetSpec,material?:Material):string[]{
  if(s.backPanel!==undefined&&typeof s.backPanel!=='boolean')e.push('Back panel setting must be a boolean.')
  if(s.frontDoors!==undefined&&!['none','single','double'].includes(s.frontDoors))
   e.push('Unsupported door configuration.')
+ if(s.plinthHeight!==undefined){
+  if(!whole(s.plinthHeight)||s.plinthHeight<60||s.plinthHeight>200)
+   e.push('Panel plinth height must be 60–200 mm.')
+  if(!whole(s.plinthInset??60)||(s.plinthInset??60)<20)
+   e.push('Plinth front setback must be at least 20 mm.')
+  if(material&&(s.plinthInset??60)>s.depth-material.thickness-50)
+   e.push('Plinth setback leaves insufficient side-panel depth.')
+ }
  if(s.frontDoors&&s.frontDoors!=='none'){
   const drawerBays=s.split?[s.split.first,s.split.second].some(b=>b.content==='drawers'&&b.count>0):(s.drawers??0)>0
   if(drawerBays||(s.connected?.drawers??0)>0)
@@ -193,6 +203,16 @@ export function cabinetBoxes(s:CabinetSpec,t:number):CabinetBox[]{
    result.push({role:'Shelf',index,label:bay?label:undefined,
     x:b.x,y:b.y,z:b.z,dx:b.width,dy:b.depth,dz:b.thickness,
     cutWidth:b.width,cutHeight:b.depth})
+  }else if(node.instance.definitionId==='core/plinth'){
+   const b=node.values
+   for(let index=0;index<2;index++)result.push({
+    role:'Plinth side',index,x:index===0?0:b.width-t,
+    y:b.inset,z:-b.height,dx:t,dy:b.runDepth,dz:b.height,
+    cutWidth:b.height,cutHeight:b.runDepth,rotationDeg:[0,90,90]
+   })
+   result.push({role:'Plinth front',index:0,x:t,y:b.inset,z:-b.height,
+    dx:b.clearWidth,dy:t,dz:b.height,cutWidth:b.clearWidth,
+    cutHeight:b.height,rotationDeg:[0,0,0]})
   }else if(node.instance.definitionId==='core/back-panel'||node.instance.definitionId==='core/hinged-door'){
    const b=node.values
    const role=node.instance.definitionId==='core/back-panel'?'Applied back':'Hinged door'
