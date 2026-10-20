@@ -1,0 +1,118 @@
+{
+  "consensus": [
+    {
+      "id": "CONS-001",
+      "decision_id": "DEC-001",
+      "status": "CONFIRMED",
+      "summary": "Client-side static offline-capable application; no remote backend, accounts or remote AI services.",
+      "source_ids": [
+        "SRC-002",
+        "SRC-001"
+      ]
+    },
+    {
+      "id": "CONS-002",
+      "decision_id": "DEC-002",
+      "status": "CONFIRMED",
+      "summary": "Dexie IndexedDB is required; original no-database/localStorage-only condition is superseded for local persistence.",
+      "source_ids": [
+        "SRC-002",
+        "SRC-007"
+      ]
+    },
+    {
+      "id": "CONS-003",
+      "decision_id": "DEC-003",
+      "status": "CONFIRMED",
+      "summary": "Migration must be atomic, idempotent and non-destructive; never delete legacy localStorage keys or overwrite newer Dexie IDs.",
+      "source_ids": [
+        "SRC-002",
+        "SRC-004"
+      ]
+    },
+    {
+      "id": "CONS-004",
+      "decision_id": "DEC-004",
+      "status": "CONFIRMED",
+      "summary": "Use integer millimetres; honour kerf, grain, rotation, stock count and edge annotations; never silently reinterpret final dimensions.",
+      "source_ids": [
+        "SRC-002"
+      ]
+    },
+    {
+      "id": "CONS-005",
+      "decision_id": "DEC-005",
+      "status": "CONFIRMED",
+      "summary": "Validate every layout, do not claim globally optimal results.",
+      "source_ids": [
+        "SRC-002",
+        "SRC-001"
+      ]
+    },
+    {
+      "id": "CONS-006",
+      "decision_id": "DEC-006",
+      "status": "CONFIRMED",
+      "summary": "Exploded panel inventory is not a structurally validated assembly or cutting layout.",
+      "source_ids": [
+        "SRC-002",
+        "SRC-001"
+      ]
+    },
+    {
+      "id": "CONS-007",
+      "decision_id": "DEC-007",
+      "status": "CONFIRMED",
+      "summary": "Export Python direct-model solids, not live linked native Fusion .f3d or .step; in-Fusion execution unverified.",
+      "source_ids": [
+        "SRC-002"
+      ]
+    },
+    {
+      "id": "CONS-008",
+      "decision_id": "DEC-008",
+      "status": "CONFIRMED",
+      "summary": "Reuse components and recipe-based generators; do not model every furniture family as a cabinet.",
+      "source_ids": [
+        "SRC-005"
+      ]
+    },
+    {
+      "id": "CONS-009",
+      "decision_id": "DEC-009",
+      "status": "CONFIRMED",
+      "summary": "3D, cut rows, BOM, Fusion outputs originate from consistent FurnitureModel; no fictitious manufacturing validity.",
+      "source_ids": [
+        "SRC-005"
+      ]
+    },
+    {
+      "id": "CONS-010",
+      "decision_id": "DEC-010",
+      "status": "CONFIRMED",
+      "summary": "54 working recipes do not mean all planned mechanisms are implemented.",
+      "source_ids": [
+        "SRC-004"
+      ]
+    },
+    {
+      "id": "CONS-011",
+      "decision_id": "DEC-011",
+      "status": "CONFIRMED",
+      "summary": "Current target furniture-builder with Pages base /furniture-builder/; legacy references differ.",
+      "source_ids": [
+        "SRC-003",
+        "SRC-001"
+      ]
+    },
+    {
+      "id": "CONS-012",
+      "decision_id": "DEC-012",
+      "status": "UNKNOWN",
+      "summary": "Research did not verify installed/pinned Claude Flow/Ruflo version; version-neutral contracts only.",
+      "source_ids": [
+        "SRC-006"
+      ]
+    }
+  ]
+}

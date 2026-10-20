@@ -1,0 +1,1696 @@
+{
+  "schema_version": 1,
+  "source_ids": [
+    "SRC-001",
+    "SRC-002",
+    "SRC-003",
+    "SRC-004",
+    "SRC-005",
+    "SRC-006",
+    "SRC-007",
+    "SRC-008",
+    "SRC-009",
+    "SRC-010",
+    "SRC-011",
+    "SRC-012",
+    "SRC-013",
+    "SRC-014",
+    "SRC-015",
+    "SRC-016",
+    "SRC-017",
+    "SRC-018",
+    "SRC-019",
+    "SRC-020",
+    "SRC-021",
+    "SRC-022",
+    "SRC-023",
+    "SRC-024",
+    "SRC-025",
+    "SRC-026"
+  ],
+  "decisions": [
+    {
+      "id": "DEC-001",
+      "title": "Local offline first",
+      "status": "CONFIRMED",
+      "statement": "Client-side static offline-capable application; no remote backend, accounts or remote AI services.",
+      "source_ids": [
+        "SRC-002",
+        "SRC-001"
+      ],
+      "supersedes": []
+    },
+    {
+      "id": "DEC-002",
+      "title": "IndexedDB supersedes localStorage-only",
+      "status": "CONFIRMED",
+      "statement": "Dexie IndexedDB is required; original no-database/localStorage-only condition is superseded for local persistence.",
+      "source_ids": [
+        "SRC-002",
+        "SRC-007"
+      ],
+      "supersedes": [
+        "historical localStorage-only constraint"
+      ]
+    },
+    {
+      "id": "DEC-003",
+      "title": "Preserve legacy records",
+      "status": "CONFIRMED",
+      "statement": "Migration must be atomic, idempotent and non-destructive; never delete legacy localStorage keys or overwrite newer Dexie IDs.",
+      "source_ids": [
+        "SRC-002",
+        "SRC-004"
+      ],
+      "supersedes": []
+    },
+    {
+      "id": "DEC-004",
+      "title": "Exact manufacturing units",
+      "status": "CONFIRMED",
+      "statement": "Use integer millimetres; honour kerf, grain, rotation, stock count and edge annotations; never silently reinterpret final dimensions.",
+      "source_ids": [
+        "SRC-002"
+      ],
+      "supersedes": []
+    },
+    {
+      "id": "DEC-005",
+      "title": "Optimiser is heuristic",
+      "status": "CONFIRMED",
+      "statement": "Validate every layout, do not claim globally optimal results.",
+      "source_ids": [
+        "SRC-002",
+        "SRC-001"
+      ],
+      "supersedes": []
+    },
+    {
+      "id": "DEC-006",
+      "title": "3D panel preview is nonauthoritative",
+      "status": "CONFIRMED",
+      "statement": "Exploded panel inventory is not a structurally validated assembly or cutting layout.",
+      "source_ids": [
+        "SRC-002",
+        "SRC-001"
+      ],
+      "supersedes": []
+    },
+    {
+      "id": "DEC-007",
+      "title": "Fusion export is a snapshot",
+      "status": "CONFIRMED",
+      "statement": "Export Python direct-model solids, not live linked native Fusion .f3d or .step; in-Fusion execution unverified.",
+      "source_ids": [
+        "SRC-002"
+      ],
+      "supersedes": []
+    },
+    {
+      "id": "DEC-008",
+      "title": "Typed component graph + specialist roots",
+      "status": "CONFIRMED",
+      "statement": "Reuse components and recipe-based generators; do not model every furniture family as a cabinet.",
+      "source_ids": [
+        "SRC-005"
+      ],
+      "supersedes": []
+    },
+    {
+      "id": "DEC-009",
+      "title": "Single normalised furniture projection",
+      "status": "CONFIRMED",
+      "statement": "3D, cut rows, BOM, Fusion outputs originate from consistent FurnitureModel; no fictitious manufacturing validity.",
+      "source_ids": [
+        "SRC-005"
+      ],
+      "supersedes": []
+    },
+    {
+      "id": "DEC-010",
+      "title": "Real recipe maturity only",
+      "status": "CONFIRMED",
+      "statement": "54 working recipes do not mean all planned mechanisms are implemented.",
+      "source_ids": [
+        "SRC-004"
+      ],
+      "supersedes": []
+    },
+    {
+      "id": "DEC-011",
+      "title": "Repository and pages target",
+      "status": "CONFIRMED",
+      "statement": "Current target furniture-builder with Pages base /furniture-builder/; legacy references differ.",
+      "source_ids": [
+        "SRC-003",
+        "SRC-001"
+      ],
+      "supersedes": []
+    },
+    {
+      "id": "DEC-012",
+      "title": "No native Claude Flow without pin",
+      "status": "UNKNOWN",
+      "statement": "Research did not verify installed/pinned Claude Flow/Ruflo version; version-neutral contracts only.",
+      "source_ids": [
+        "SRC-006"
+      ],
+      "supersedes": []
+    }
+  ],
+  "features": [
+    {
+      "id": "FEAT-001",
+      "name": "Project and material editor",
+      "status": "IMPLEMENTED",
+      "module_id": "MOD-001"
+    },
+    {
+      "id": "FEAT-002",
+      "name": "Stock sheets, trims and quantity",
+      "status": "IMPLEMENTED",
+      "module_id": "MOD-001"
+    },
+    {
+      "id": "FEAT-003",
+      "name": "Grain, rotation and four-edge ABS",
+      "status": "IMPLEMENTED",
+      "module_id": "MOD-002"
+    },
+    {
+      "id": "FEAT-004",
+      "name": "Seeded heuristic guillotine optimiser",
+      "status": "IMPLEMENTED",
+      "module_id": "MOD-002"
+    },
+    {
+      "id": "FEAT-005",
+      "name": "Independent layout validation",
+      "status": "IMPLEMENTED",
+      "module_id": "MOD-003"
+    },
+    {
+      "id": "FEAT-006",
+      "name": "2D layouts and statistics",
+      "status": "IMPLEMENTED",
+      "module_id": "MOD-004"
+    },
+    {
+      "id": "FEAT-007",
+      "name": "Generic CSV and XLSX interchange",
+      "status": "IMPLEMENTED",
+      "module_id": "MOD-005"
+    },
+    {
+      "id": "FEAT-008",
+      "name": "SVG, PDF and backup exports",
+      "status": "IMPLEMENTED",
+      "module_id": "MOD-005"
+    },
+    {
+      "id": "FEAT-009",
+      "name": "IndexedDB project persistence",
+      "status": "IMPLEMENTED",
+      "module_id": "MOD-006"
+    },
+    {
+      "id": "FEAT-010",
+      "name": "Atomic legacy migration",
+      "status": "IMPLEMENTED",
+      "module_id": "MOD-006"
+    },
+    {
+      "id": "FEAT-011",
+      "name": "Presets, kits and revisions",
+      "status": "IMPLEMENTED",
+      "module_id": "MOD-007"
+    },
+    {
+      "id": "FEAT-012",
+      "name": "Exploded panel preview",
+      "status": "IMPLEMENTED",
+      "module_id": "MOD-008"
+    },
+    {
+      "id": "FEAT-013",
+      "name": "Positioned assembly editing",
+      "status": "IMPLEMENTED",
+      "module_id": "MOD-008"
+    },
+    {
+      "id": "FEAT-014",
+      "name": "Fusion Python snapshot export",
+      "status": "IMPLEMENTED_UNVERIFIED_IN_FUSION",
+      "module_id": "MOD-009"
+    },
+    {
+      "id": "FEAT-015",
+      "name": "Typed component graph",
+      "status": "IMPLEMENTED",
+      "module_id": "MOD-010"
+    },
+    {
+      "id": "FEAT-016",
+      "name": "Recipe-based furniture families",
+      "status": "PARTIAL",
+      "module_id": "MOD-010"
+    },
+    {
+      "id": "FEAT-017",
+      "name": "Normalised FurnitureModel projections",
+      "status": "IMPLEMENTED",
+      "module_id": "MOD-011"
+    },
+    {
+      "id": "FEAT-018",
+      "name": "Generic registered-component editor",
+      "status": "PARTIAL",
+      "module_id": "MOD-010"
+    },
+    {
+      "id": "FEAT-019",
+      "name": "Dedicated bed and wardrobe mechanisms",
+      "status": "PROPOSED",
+      "module_id": "MOD-010"
+    },
+    {
+      "id": "FEAT-020",
+      "name": "Hardware/joinery-grade physical rules",
+      "status": "UNKNOWN",
+      "module_id": "MOD-011"
+    },
+    {
+      "id": "FEAT-021",
+      "name": "Static offline PWA / GitHub Pages",
+      "status": "IMPLEMENTED",
+      "module_id": "MOD-012"
+    }
+  ],
+  "modules": [
+    {
+      "id": "MOD-001",
+      "name": "Project editor and domain input",
+      "location": "src/app, src/components"
+    },
+    {
+      "id": "MOD-002",
+      "name": "Panel optimisation engine",
+      "location": "src/engine"
+    },
+    {
+      "id": "MOD-003",
+      "name": "Independent tree validation",
+      "location": "src/engine"
+    },
+    {
+      "id": "MOD-004",
+      "name": "Cutting views and statistics",
+      "location": "src/components"
+    },
+    {
+      "id": "MOD-005",
+      "name": "Import/export adapters",
+      "location": "src/import-export"
+    },
+    {
+      "id": "MOD-006",
+      "name": "Dexie database and migration",
+      "location": "src/db, src/storage"
+    },
+    {
+      "id": "MOD-007",
+      "name": "Preset/kit library",
+      "location": "src/presets"
+    },
+    {
+      "id": "MOD-008",
+      "name": "Three.js viewer and positioned assembly",
+      "location": "src/assembly, src/components"
+    },
+    {
+      "id": "MOD-009",
+      "name": "Fusion Python snapshot exporter",
+      "location": "src/assembly/fusion.ts"
+    },
+    {
+      "id": "MOD-010",
+      "name": "Typed component/recipe engine",
+      "location": "src/furniture"
+    },
+    {
+      "id": "MOD-011",
+      "name": "Manufacturing model/BOM/diagnostics",
+      "location": "src/furniture/furniture-model.ts"
+    },
+    {
+      "id": "MOD-012",
+      "name": "PWA/CI/release",
+      "location": "vite config, .github/workflows"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "FR-001",
+      "kind": "functional",
+      "title": "Create and edit furniture cutting projects with persistent identifiers",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-001",
+      "module_id": "MOD-001",
+      "decision_ids": [
+        "DEC-004"
+      ],
+      "source_ids": [
+        "SRC-002"
+      ],
+      "acceptance": "Demonstrate behaviour from a persisted project using automated/recorded evidence; verify domain invariants and document any remaining gaps.",
+      "test_ids": [
+        "TEST-003"
+      ],
+      "task_ids": []
+    },
+    {
+      "id": "FR-002",
+      "kind": "functional",
+      "title": "Specify material and thickness in project inputs",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-001",
+      "module_id": "MOD-001",
+      "decision_ids": [
+        "DEC-004"
+      ],
+      "source_ids": [
+        "SRC-002"
+      ],
+      "acceptance": "Demonstrate behaviour from a persisted project using automated/recorded evidence; verify domain invariants and document any remaining gaps.",
+      "test_ids": [
+        "TEST-003"
+      ],
+      "task_ids": []
+    },
+    {
+      "id": "FR-003",
+      "kind": "functional",
+      "title": "Record parts with exact width, length, count and material",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-001",
+      "module_id": "MOD-001",
+      "decision_ids": [
+        "DEC-004"
+      ],
+      "source_ids": [
+        "SRC-002"
+      ],
+      "acceptance": "Demonstrate behaviour from a persisted project using automated/recorded evidence; verify domain invariants and document any remaining gaps.",
+      "test_ids": [
+        "TEST-003"
+      ],
+      "task_ids": []
+    },
+    {
+      "id": "FR-004",
+      "kind": "functional",
+      "title": "Preserve project configuration when closing/reopening the browser",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-001",
+      "module_id": "MOD-001",
+      "decision_ids": [
+        "DEC-004"
+      ],
+      "source_ids": [
+        "SRC-002"
+      ],
+      "acceptance": "Demonstrate behaviour from a persisted project using automated/recorded evidence; verify domain invariants and document any remaining gaps.",
+      "test_ids": [
+        "TEST-003"
+      ],
+      "task_ids": []
+    },
+    {
+      "id": "FR-005",
+      "kind": "functional",
+      "title": "Allow multiple named materials with separate stock assignments",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-001",
+      "module_id": "MOD-001",
+      "decision_ids": [
+        "DEC-004"
+      ],
+      "source_ids": [
+        "SRC-002"
+      ],
+      "acceptance": "Demonstrate behaviour from a persisted project using automated/recorded evidence; verify domain invariants and document any remaining gaps.",
+      "test_ids": [
+        "TEST-003"
+      ],
+      "task_ids": []
+    },
+    {
+      "id": "FR-006",
+      "kind": "functional",
+      "title": "Allow duplication or reusable insertion of existing parts without losing identities",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-001",
+      "module_id": "MOD-001",
+      "decision_ids": [
+        "DEC-004"
+      ],
+      "source_ids": [
+        "SRC-002"
+      ],
+      "acceptance": "Demonstrate behaviour from a persisted project using automated/recorded evidence; verify domain invariants and document any remaining gaps.",
+      "test_ids": [
+        "TEST-003"
+      ],
+      "task_ids": []
+    },
+    {
+      "id": "FR-007",
+      "kind": "functional",
+      "title": "Enter stock sheet sizes, available quantities and trim margins",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-003",
+      "module_id": "MOD-002",
+      "decision_ids": [
+        "DEC-004"
+      ],
+      "source_ids": [
+        "SRC-002"
+      ],
+      "acceptance": "Demonstrate behaviour from a persisted project using automated/recorded evidence; verify domain invariants and document any remaining gaps.",
+      "test_ids": [
+        "TEST-001",
+        "TEST-004"
+      ],
+      "task_ids": []
+    },
+    {
+      "id": "FR-008",
+      "kind": "functional",
+      "title": "Express per-part grain requirement and allowed rotation",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-003",
+      "module_id": "MOD-002",
+      "decision_ids": [
+        "DEC-004"
+      ],
+      "source_ids": [
+        "SRC-002"
+      ],
+      "acceptance": "Demonstrate behaviour from a persisted project using automated/recorded evidence; verify domain invariants and document any remaining gaps.",
+      "test_ids": [
+        "TEST-001",
+        "TEST-004"
+      ],
+      "task_ids": []
+    },
+    {
+      "id": "FR-009",
+      "kind": "functional",
+      "title": "Represent edge banding on four distinct sides",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-003",
+      "module_id": "MOD-002",
+      "decision_ids": [
+        "DEC-004"
+      ],
+      "source_ids": [
+        "SRC-002"
+      ],
+      "acceptance": "Demonstrate behaviour from a persisted project using automated/recorded evidence; verify domain invariants and document any remaining gaps.",
+      "test_ids": [
+        "TEST-001",
+        "TEST-004"
+      ],
+      "task_ids": []
+    },
+    {
+      "id": "FR-010",
+      "kind": "functional",
+      "title": "Keep edge-band annotations separate from cut dimensions",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-003",
+      "module_id": "MOD-002",
+      "decision_ids": [
+        "DEC-004"
+      ],
+      "source_ids": [
+        "SRC-002"
+      ],
+      "acceptance": "Demonstrate behaviour from a persisted project using automated/recorded evidence; verify domain invariants and document any remaining gaps.",
+      "test_ids": [
+        "TEST-001",
+        "TEST-004"
+      ],
+      "task_ids": []
+    },
+    {
+      "id": "FR-011",
+      "kind": "functional",
+      "title": "Run deterministic seeded multi-restart guillotine packing heuristic",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-004",
+      "module_id": "MOD-002",
+      "decision_ids": [
+        "DEC-005"
+      ],
+      "source_ids": [
+        "SRC-001"
+      ],
+      "acceptance": "Demonstrate behaviour from a persisted project using automated/recorded evidence; verify domain invariants and document any remaining gaps.",
+      "test_ids": [
+        "TEST-001",
+        "TEST-004"
+      ],
+      "task_ids": []
+    },
+    {
+      "id": "FR-012",
+      "kind": "functional",
+      "title": "Constrain packing by materials and eligible stock sizes",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-004",
+      "module_id": "MOD-002",
+      "decision_ids": [
+        "DEC-005"
+      ],
+      "source_ids": [
+        "SRC-001"
+      ],
+      "acceptance": "Demonstrate behaviour from a persisted project using automated/recorded evidence; verify domain invariants and document any remaining gaps.",
+      "test_ids": [
+        "TEST-001",
+        "TEST-004"
+      ],
+      "task_ids": []
+    },
+    {
+      "id": "FR-013",
+      "kind": "functional",
+      "title": "Report unplaced parts and usable/offcut area",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-004",
+      "module_id": "MOD-002",
+      "decision_ids": [
+        "DEC-005"
+      ],
+      "source_ids": [
+        "SRC-001"
+      ],
+      "acceptance": "Demonstrate behaviour from a persisted project using automated/recorded evidence; verify domain invariants and document any remaining gaps.",
+      "test_ids": [
+        "TEST-001",
+        "TEST-004"
+      ],
+      "task_ids": []
+    },
+    {
+      "id": "FR-014",
+      "kind": "functional",
+      "title": "Return cutting result statistics without global-optimum guarantee",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-004",
+      "module_id": "MOD-002",
+      "decision_ids": [
+        "DEC-005"
+      ],
+      "source_ids": [
+        "SRC-001"
+      ],
+      "acceptance": "Demonstrate behaviour from a persisted project using automated/recorded evidence; verify domain invariants and document any remaining gaps.",
+      "test_ids": [
+        "TEST-001",
+        "TEST-004"
+      ],
+      "task_ids": []
+    },
+    {
+      "id": "FR-015",
+      "kind": "functional",
+      "title": "Independently validate cut-tree geometry",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-005",
+      "module_id": "MOD-003",
+      "decision_ids": [
+        "DEC-005"
+      ],
+      "source_ids": [
+        "SRC-002"
+      ],
+      "acceptance": "Demonstrate behaviour from a persisted project using automated/recorded evidence; verify domain invariants and document any remaining gaps.",
+      "test_ids": [
+        "TEST-001",
+        "TEST-004"
+      ],
+      "task_ids": []
+    },
+    {
+      "id": "FR-016",
+      "kind": "functional",
+      "title": "Reject invalid dimensions, overlaps, stock escapes and incompatible grain",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-005",
+      "module_id": "MOD-003",
+      "decision_ids": [
+        "DEC-005"
+      ],
+      "source_ids": [
+        "SRC-002"
+      ],
+      "acceptance": "Demonstrate behaviour from a persisted project using automated/recorded evidence; verify domain invariants and document any remaining gaps.",
+      "test_ids": [
+        "TEST-001",
+        "TEST-004"
+      ],
+      "task_ids": []
+    },
+    {
+      "id": "FR-017",
+      "kind": "functional",
+      "title": "Block use of invalid results for render/export",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-005",
+      "module_id": "MOD-003",
+      "decision_ids": [
+        "DEC-005"
+      ],
+      "source_ids": [
+        "SRC-002"
+      ],
+      "acceptance": "Demonstrate behaviour from a persisted project using automated/recorded evidence; verify domain invariants and document any remaining gaps.",
+      "test_ids": [
+        "TEST-001",
+        "TEST-004"
+      ],
+      "task_ids": []
+    },
+    {
+      "id": "FR-018",
+      "kind": "functional",
+      "title": "Import/export generic CSV",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-007",
+      "module_id": "MOD-005",
+      "decision_ids": [
+        "DEC-004"
+      ],
+      "source_ids": [
+        "SRC-001"
+      ],
+      "acceptance": "Demonstrate behaviour from a persisted project using automated/recorded evidence; verify domain invariants and document any remaining gaps.",
+      "test_ids": [
+        "TEST-011"
+      ],
+      "task_ids": [
+        "TSK-010"
+      ]
+    },
+    {
+      "id": "FR-019",
+      "kind": "functional",
+      "title": "Import/export generic XLSX",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-007",
+      "module_id": "MOD-005",
+      "decision_ids": [
+        "DEC-004"
+      ],
+      "source_ids": [
+        "SRC-001"
+      ],
+      "acceptance": "Demonstrate behaviour from a persisted project using automated/recorded evidence; verify domain invariants and document any remaining gaps.",
+      "test_ids": [
+        "TEST-011"
+      ],
+      "task_ids": [
+        "TSK-010"
+      ]
+    },
+    {
+      "id": "FR-020",
+      "kind": "functional",
+      "title": "Export print-ready/PDF and SVG cutting views",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-007",
+      "module_id": "MOD-005",
+      "decision_ids": [
+        "DEC-004"
+      ],
+      "source_ids": [
+        "SRC-001"
+      ],
+      "acceptance": "Demonstrate behaviour from a persisted project using automated/recorded evidence; verify domain invariants and document any remaining gaps.",
+      "test_ids": [
+        "TEST-011"
+      ],
+      "task_ids": [
+        "TSK-010"
+      ]
+    },
+    {
+      "id": "FR-021",
+      "kind": "functional",
+      "title": "Maintain versioned JSON project/preset backup interoperability",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-007",
+      "module_id": "MOD-005",
+      "decision_ids": [
+        "DEC-004"
+      ],
+      "source_ids": [
+        "SRC-001"
+      ],
+      "acceptance": "Demonstrate behaviour from a persisted project using automated/recorded evidence; verify domain invariants and document any remaining gaps.",
+      "test_ids": [
+        "TEST-011"
+      ],
+      "task_ids": [
+        "TSK-010"
+      ]
+    },
+    {
+      "id": "FR-022",
+      "kind": "functional",
+      "title": "Persist projects, presets, kits, revisions and materials in Dexie",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-010",
+      "module_id": "MOD-006",
+      "decision_ids": [
+        "DEC-003"
+      ],
+      "source_ids": [
+        "SRC-002"
+      ],
+      "acceptance": "Demonstrate behaviour from a persisted project using automated/recorded evidence; verify domain invariants and document any remaining gaps.",
+      "test_ids": [
+        "TEST-006",
+        "TEST-004"
+      ],
+      "task_ids": []
+    },
+    {
+      "id": "FR-023",
+      "kind": "functional",
+      "title": "Migrate legacy records once within an atomic transaction",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-010",
+      "module_id": "MOD-006",
+      "decision_ids": [
+        "DEC-003"
+      ],
+      "source_ids": [
+        "SRC-002"
+      ],
+      "acceptance": "Demonstrate behaviour from a persisted project using automated/recorded evidence; verify domain invariants and document any remaining gaps.",
+      "test_ids": [
+        "TEST-006",
+        "TEST-004"
+      ],
+      "task_ids": []
+    },
+    {
+      "id": "FR-024",
+      "kind": "functional",
+      "title": "Do not delete old localStorage keys or overwrite newer indexed records",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-010",
+      "module_id": "MOD-006",
+      "decision_ids": [
+        "DEC-003"
+      ],
+      "source_ids": [
+        "SRC-002"
+      ],
+      "acceptance": "Demonstrate behaviour from a persisted project using automated/recorded evidence; verify domain invariants and document any remaining gaps.",
+      "test_ids": [
+        "TEST-006",
+        "TEST-004"
+      ],
+      "task_ids": []
+    },
+    {
+      "id": "FR-025",
+      "kind": "functional",
+      "title": "Merge full database JSON backup without destructive replacement",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-010",
+      "module_id": "MOD-006",
+      "decision_ids": [
+        "DEC-003"
+      ],
+      "source_ids": [
+        "SRC-002"
+      ],
+      "acceptance": "Demonstrate behaviour from a persisted project using automated/recorded evidence; verify domain invariants and document any remaining gaps.",
+      "test_ids": [
+        "TEST-006",
+        "TEST-004"
+      ],
+      "task_ids": []
+    },
+    {
+      "id": "FR-026",
+      "kind": "functional",
+      "title": "Compose furniture from typed registered child components",
+      "status": "CONFIRMED_SCOPE_IMPLEMENTATION_PARTIAL",
+      "feature_id": "FEAT-015",
+      "module_id": "MOD-010",
+      "decision_ids": [
+        "DEC-008"
+      ],
+      "source_ids": [
+        "SRC-005"
+      ],
+      "acceptance": "Demonstrate behaviour from a persisted project using automated/recorded evidence; verify domain invariants and document any remaining gaps.",
+      "test_ids": [
+        "TEST-003"
+      ],
+      "task_ids": [
+        "TSK-003",
+        "TSK-004",
+        "TSK-005",
+        "TSK-015"
+      ]
+    },
+    {
+      "id": "FR-027",
+      "kind": "functional",
+      "title": "Preserve parameter schemas, dependencies and attachment relationships",
+      "status": "CONFIRMED_SCOPE_IMPLEMENTATION_PARTIAL",
+      "feature_id": "FEAT-015",
+      "module_id": "MOD-010",
+      "decision_ids": [
+        "DEC-008"
+      ],
+      "source_ids": [
+        "SRC-005"
+      ],
+      "acceptance": "Demonstrate behaviour from a persisted project using automated/recorded evidence; verify domain invariants and document any remaining gaps.",
+      "test_ids": [
+        "TEST-003"
+      ],
+      "task_ids": [
+        "TSK-003",
+        "TSK-004",
+        "TSK-005",
+        "TSK-015"
+      ]
+    },
+    {
+      "id": "FR-028",
+      "kind": "functional",
+      "title": "Use specialist structural roots for non-cabinet furniture",
+      "status": "CONFIRMED_SCOPE_IMPLEMENTATION_PARTIAL",
+      "feature_id": "FEAT-015",
+      "module_id": "MOD-010",
+      "decision_ids": [
+        "DEC-008"
+      ],
+      "source_ids": [
+        "SRC-005"
+      ],
+      "acceptance": "Demonstrate behaviour from a persisted project using automated/recorded evidence; verify domain invariants and document any remaining gaps.",
+      "test_ids": [
+        "TEST-003"
+      ],
+      "task_ids": [
+        "TSK-003",
+        "TSK-004",
+        "TSK-005",
+        "TSK-015"
+      ]
+    },
+    {
+      "id": "FR-029",
+      "kind": "functional",
+      "title": "Save user-configured furniture as independently editable instances",
+      "status": "CONFIRMED_SCOPE_IMPLEMENTATION_PARTIAL",
+      "feature_id": "FEAT-015",
+      "module_id": "MOD-010",
+      "decision_ids": [
+        "DEC-008"
+      ],
+      "source_ids": [
+        "SRC-005"
+      ],
+      "acceptance": "Demonstrate behaviour from a persisted project using automated/recorded evidence; verify domain invariants and document any remaining gaps.",
+      "test_ids": [
+        "TEST-003"
+      ],
+      "task_ids": [
+        "TSK-003",
+        "TSK-004",
+        "TSK-005",
+        "TSK-015"
+      ]
+    },
+    {
+      "id": "FR-030",
+      "kind": "functional",
+      "title": "Generate normalized solids and manufacturing output from one FurnitureModel",
+      "status": "CONFIRMED_SCOPE_IMPLEMENTATION_PARTIAL",
+      "feature_id": "FEAT-015",
+      "module_id": "MOD-010",
+      "decision_ids": [
+        "DEC-008"
+      ],
+      "source_ids": [
+        "SRC-005"
+      ],
+      "acceptance": "Demonstrate behaviour from a persisted project using automated/recorded evidence; verify domain invariants and document any remaining gaps.",
+      "test_ids": [
+        "TEST-003"
+      ],
+      "task_ids": [
+        "TSK-003",
+        "TSK-004",
+        "TSK-005",
+        "TSK-015"
+      ]
+    },
+    {
+      "id": "FR-031",
+      "kind": "functional",
+      "title": "Edit saved per-instance XYZ translation and rotation",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-013",
+      "module_id": "MOD-008",
+      "decision_ids": [
+        "DEC-007"
+      ],
+      "source_ids": [
+        "SRC-002"
+      ],
+      "acceptance": "Demonstrate behaviour from a persisted project using automated/recorded evidence; verify domain invariants and document any remaining gaps.",
+      "test_ids": [
+        "TEST-003",
+        "TEST-009"
+      ],
+      "task_ids": [
+        "TSK-009"
+      ]
+    },
+    {
+      "id": "FR-032",
+      "kind": "functional",
+      "title": "Preview exploded panels with accessible non-WebGL fallback",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-013",
+      "module_id": "MOD-008",
+      "decision_ids": [
+        "DEC-007"
+      ],
+      "source_ids": [
+        "SRC-002"
+      ],
+      "acceptance": "Demonstrate behaviour from a persisted project using automated/recorded evidence; verify domain invariants and document any remaining gaps.",
+      "test_ids": [
+        "TEST-003",
+        "TEST-009"
+      ],
+      "task_ids": [
+        "TSK-009"
+      ]
+    },
+    {
+      "id": "FR-033",
+      "kind": "functional",
+      "title": "Export Fusion Python snapshot without asserting runtime validation",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-013",
+      "module_id": "MOD-008",
+      "decision_ids": [
+        "DEC-007"
+      ],
+      "source_ids": [
+        "SRC-002"
+      ],
+      "acceptance": "Demonstrate behaviour from a persisted project using automated/recorded evidence; verify domain invariants and document any remaining gaps.",
+      "test_ids": [
+        "TEST-003",
+        "TEST-009"
+      ],
+      "task_ids": [
+        "TSK-009"
+      ]
+    },
+    {
+      "id": "FR-034",
+      "kind": "functional",
+      "title": "Operate as an offline-oriented static PWA",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-021",
+      "module_id": "MOD-012",
+      "decision_ids": [
+        "DEC-001"
+      ],
+      "source_ids": [
+        "SRC-001"
+      ],
+      "acceptance": "Demonstrate behaviour from a persisted project using automated/recorded evidence; verify domain invariants and document any remaining gaps.",
+      "test_ids": [
+        "TEST-005",
+        "TEST-007"
+      ],
+      "task_ids": [
+        "TSK-001",
+        "TSK-002",
+        "TSK-011",
+        "TSK-012",
+        "TSK-013",
+        "TSK-014"
+      ]
+    },
+    {
+      "id": "FR-035",
+      "kind": "functional",
+      "title": "Deploy static application via GitHub Pages",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-021",
+      "module_id": "MOD-012",
+      "decision_ids": [
+        "DEC-001"
+      ],
+      "source_ids": [
+        "SRC-001"
+      ],
+      "acceptance": "Demonstrate behaviour from a persisted project using automated/recorded evidence; verify domain invariants and document any remaining gaps.",
+      "test_ids": [
+        "TEST-005",
+        "TEST-007"
+      ],
+      "task_ids": [
+        "TSK-001",
+        "TSK-002",
+        "TSK-011",
+        "TSK-012",
+        "TSK-013",
+        "TSK-014"
+      ]
+    },
+    {
+      "id": "NFR-001",
+      "kind": "non-functional",
+      "title": "No backend, accounts, remote sync or runtime cloud APIs",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-021",
+      "module_id": "MOD-012",
+      "decision_ids": [
+        "DEC-001"
+      ],
+      "source_ids": [
+        "SRC-002"
+      ],
+      "acceptance": "Document applicable gate and passing verification evidence before labeling accepted.",
+      "test_ids": [
+        "TEST-005",
+        "TEST-007"
+      ],
+      "task_ids": [
+        "TSK-001",
+        "TSK-002",
+        "TSK-011",
+        "TSK-012",
+        "TSK-013",
+        "TSK-014"
+      ]
+    },
+    {
+      "id": "NFR-002",
+      "kind": "non-functional",
+      "title": "Use exact integer millimetre inputs and stable geometric constraints",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-003",
+      "module_id": "MOD-002",
+      "decision_ids": [
+        "DEC-004"
+      ],
+      "source_ids": [
+        "SRC-002"
+      ],
+      "acceptance": "Document applicable gate and passing verification evidence before labeling accepted.",
+      "test_ids": [
+        "TEST-001",
+        "TEST-004"
+      ],
+      "task_ids": []
+    },
+    {
+      "id": "NFR-003",
+      "kind": "non-functional",
+      "title": "Never claim globally optimal packing",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-003",
+      "module_id": "MOD-002",
+      "decision_ids": [
+        "DEC-005"
+      ],
+      "source_ids": [
+        "SRC-002"
+      ],
+      "acceptance": "Document applicable gate and passing verification evidence before labeling accepted.",
+      "test_ids": [
+        "TEST-001",
+        "TEST-004"
+      ],
+      "task_ids": []
+    },
+    {
+      "id": "NFR-004",
+      "kind": "non-functional",
+      "title": "Fail closed when a cutting result violates validator invariants",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-005",
+      "module_id": "MOD-003",
+      "decision_ids": [
+        "DEC-005"
+      ],
+      "source_ids": [
+        "SRC-002"
+      ],
+      "acceptance": "Document applicable gate and passing verification evidence before labeling accepted.",
+      "test_ids": [
+        "TEST-001",
+        "TEST-004"
+      ],
+      "task_ids": []
+    },
+    {
+      "id": "NFR-005",
+      "kind": "non-functional",
+      "title": "Legacy data must never be deleted during migration",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-009",
+      "module_id": "MOD-006",
+      "decision_ids": [
+        "DEC-003"
+      ],
+      "source_ids": [
+        "SRC-002"
+      ],
+      "acceptance": "Document applicable gate and passing verification evidence before labeling accepted.",
+      "test_ids": [
+        "TEST-006",
+        "TEST-004"
+      ],
+      "task_ids": []
+    },
+    {
+      "id": "NFR-006",
+      "kind": "non-functional",
+      "title": "Migration must be atomic and idempotent",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-009",
+      "module_id": "MOD-006",
+      "decision_ids": [
+        "DEC-003"
+      ],
+      "source_ids": [
+        "SRC-002"
+      ],
+      "acceptance": "Document applicable gate and passing verification evidence before labeling accepted.",
+      "test_ids": [
+        "TEST-006",
+        "TEST-004"
+      ],
+      "task_ids": []
+    },
+    {
+      "id": "NFR-007",
+      "kind": "non-functional",
+      "title": "Backward-compatible JSON backups across schema changes",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-009",
+      "module_id": "MOD-006",
+      "decision_ids": [
+        "DEC-003"
+      ],
+      "source_ids": [
+        "SRC-001"
+      ],
+      "acceptance": "Document applicable gate and passing verification evidence before labeling accepted.",
+      "test_ids": [
+        "TEST-006",
+        "TEST-004"
+      ],
+      "task_ids": []
+    },
+    {
+      "id": "NFR-008",
+      "kind": "non-functional",
+      "title": "Static PWA must preserve core use offline",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-021",
+      "module_id": "MOD-012",
+      "decision_ids": [
+        "DEC-001"
+      ],
+      "source_ids": [
+        "SRC-001"
+      ],
+      "acceptance": "Document applicable gate and passing verification evidence before labeling accepted.",
+      "test_ids": [
+        "TEST-005",
+        "TEST-007"
+      ],
+      "task_ids": [
+        "TSK-001",
+        "TSK-002",
+        "TSK-011",
+        "TSK-012",
+        "TSK-013",
+        "TSK-014"
+      ]
+    },
+    {
+      "id": "NFR-009",
+      "kind": "non-functional",
+      "title": "Viewer must degrade gracefully without WebGL",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-012",
+      "module_id": "MOD-008",
+      "decision_ids": [
+        "DEC-006"
+      ],
+      "source_ids": [
+        "SRC-002"
+      ],
+      "acceptance": "Document applicable gate and passing verification evidence before labeling accepted.",
+      "test_ids": [
+        "TEST-003",
+        "TEST-009"
+      ],
+      "task_ids": [
+        "TSK-009"
+      ]
+    },
+    {
+      "id": "NFR-010",
+      "kind": "non-functional",
+      "title": "Preserve touch and keyboard access for reorder controls",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-012",
+      "module_id": "MOD-008",
+      "decision_ids": [
+        "DEC-006"
+      ],
+      "source_ids": [
+        "SRC-001"
+      ],
+      "acceptance": "Document applicable gate and passing verification evidence before labeling accepted.",
+      "test_ids": [
+        "TEST-003",
+        "TEST-009"
+      ],
+      "task_ids": [
+        "TSK-009"
+      ]
+    },
+    {
+      "id": "NFR-011",
+      "kind": "non-functional",
+      "title": "Avoid release claims without executed CI and deploy evidence",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-021",
+      "module_id": "MOD-012",
+      "decision_ids": [
+        "DEC-011"
+      ],
+      "source_ids": [
+        "SRC-002"
+      ],
+      "acceptance": "Document applicable gate and passing verification evidence before labeling accepted.",
+      "test_ids": [
+        "TEST-005",
+        "TEST-007"
+      ],
+      "task_ids": [
+        "TSK-001",
+        "TSK-002",
+        "TSK-011",
+        "TSK-012",
+        "TSK-013",
+        "TSK-014"
+      ]
+    },
+    {
+      "id": "NFR-012",
+      "kind": "non-functional",
+      "title": "Do not fabricate joinery, fitting, drilling or structural certifications",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-017",
+      "module_id": "MOD-011",
+      "decision_ids": [
+        "DEC-009"
+      ],
+      "source_ids": [
+        "SRC-005"
+      ],
+      "acceptance": "Document applicable gate and passing verification evidence before labeling accepted.",
+      "test_ids": [
+        "TEST-010"
+      ],
+      "task_ids": [
+        "TSK-006",
+        "TSK-007"
+      ]
+    },
+    {
+      "id": "NFR-013",
+      "kind": "non-functional",
+      "title": "New templates must reuse typed component rules rather than duplicating engines",
+      "status": "CONFIRMED",
+      "feature_id": "FEAT-015",
+      "module_id": "MOD-010",
+      "decision_ids": [
+        "DEC-008"
+      ],
+      "source_ids": [
+        "SRC-005"
+      ],
+      "acceptance": "Document applicable gate and passing verification evidence before labeling accepted.",
+      "test_ids": [
+        "TEST-003"
+      ],
+      "task_ids": [
+        "TSK-003",
+        "TSK-004",
+        "TSK-005",
+        "TSK-015"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TSK-001",
+      "requirement_ids": [
+        "FR-034",
+        "FR-035",
+        "NFR-001",
+        "NFR-008",
+        "NFR-011"
+      ],
+      "dependencies": [],
+      "decision_ids": [
+        "DEC-012"
+      ]
+    },
+    {
+      "id": "TSK-002",
+      "requirement_ids": [
+        "FR-034",
+        "FR-035",
+        "NFR-001",
+        "NFR-008",
+        "NFR-011"
+      ],
+      "dependencies": [],
+      "decision_ids": [
+        "DEC-005"
+      ]
+    },
+    {
+      "id": "TSK-003",
+      "requirement_ids": [
+        "FR-026",
+        "FR-027",
+        "FR-028",
+        "FR-029",
+        "FR-030",
+        "NFR-013"
+      ],
+      "dependencies": [],
+      "decision_ids": [
+        "DEC-008",
+        "DEC-009"
+      ]
+    },
+    {
+      "id": "TSK-004",
+      "requirement_ids": [
+        "FR-026",
+        "FR-027",
+        "FR-028",
+        "FR-029",
+        "FR-030",
+        "NFR-013"
+      ],
+      "dependencies": [],
+      "decision_ids": [
+        "DEC-008"
+      ]
+    },
+    {
+      "id": "TSK-005",
+      "requirement_ids": [
+        "FR-026",
+        "FR-027",
+        "FR-028",
+        "FR-029",
+        "FR-030",
+        "NFR-013"
+      ],
+      "dependencies": [],
+      "decision_ids": [
+        "DEC-008"
+      ]
+    },
+    {
+      "id": "TSK-006",
+      "requirement_ids": [
+        "NFR-012"
+      ],
+      "dependencies": [
+        "TSK-007"
+      ],
+      "decision_ids": [
+        "DEC-009"
+      ]
+    },
+    {
+      "id": "TSK-007",
+      "requirement_ids": [
+        "NFR-012"
+      ],
+      "dependencies": [],
+      "decision_ids": [
+        "DEC-009"
+      ]
+    },
+    {
+      "id": "TSK-008",
+      "requirement_ids": [],
+      "dependencies": [],
+      "decision_ids": [
+        "DEC-007"
+      ]
+    },
+    {
+      "id": "TSK-009",
+      "requirement_ids": [
+        "FR-031",
+        "FR-032",
+        "FR-033",
+        "NFR-009",
+        "NFR-010"
+      ],
+      "dependencies": [],
+      "decision_ids": [
+        "DEC-006"
+      ]
+    },
+    {
+      "id": "TSK-010",
+      "requirement_ids": [
+        "FR-018",
+        "FR-019",
+        "FR-020",
+        "FR-021"
+      ],
+      "dependencies": [],
+      "decision_ids": [
+        "DEC-004"
+      ]
+    },
+    {
+      "id": "TSK-011",
+      "requirement_ids": [
+        "FR-034",
+        "FR-035",
+        "NFR-001",
+        "NFR-008",
+        "NFR-011"
+      ],
+      "dependencies": [],
+      "decision_ids": [
+        "DEC-011"
+      ]
+    },
+    {
+      "id": "TSK-012",
+      "requirement_ids": [
+        "FR-034",
+        "FR-035",
+        "NFR-001",
+        "NFR-008",
+        "NFR-011"
+      ],
+      "dependencies": [],
+      "decision_ids": [
+        "DEC-002",
+        "DEC-011"
+      ]
+    },
+    {
+      "id": "TSK-013",
+      "requirement_ids": [
+        "FR-034",
+        "FR-035",
+        "NFR-001",
+        "NFR-008",
+        "NFR-011"
+      ],
+      "dependencies": [
+        "TSK-002"
+      ],
+      "decision_ids": [
+        "DEC-005"
+      ]
+    },
+    {
+      "id": "TSK-014",
+      "requirement_ids": [
+        "FR-034",
+        "FR-035",
+        "NFR-001",
+        "NFR-008",
+        "NFR-011"
+      ],
+      "dependencies": [
+        "TSK-002",
+        "TSK-011",
+        "TSK-013"
+      ],
+      "decision_ids": [
+        "DEC-011"
+      ]
+    },
+    {
+      "id": "TSK-015",
+      "requirement_ids": [
+        "FR-026",
+        "FR-027",
+        "FR-028",
+        "FR-029",
+        "FR-030",
+        "NFR-013"
+      ],
+      "dependencies": [],
+      "decision_ids": [
+        "DEC-008",
+        "DEC-010"
+      ]
+    }
+  ],
+  "tests": [
+    {
+      "id": "TEST-001",
+      "name": "Kernel geometry, 25 tests",
+      "status": "REPORTED_BY_RESEARCH",
+      "source_ids": [
+        "SRC-004"
+      ]
+    },
+    {
+      "id": "TEST-002",
+      "name": "Vitest suite, 67 tests",
+      "status": "REPORTED_BY_RESEARCH",
+      "source_ids": [
+        "SRC-004"
+      ]
+    },
+    {
+      "id": "TEST-003",
+      "name": "Playwright, 12 tests",
+      "status": "REPORTED_BY_RESEARCH",
+      "source_ids": [
+        "SRC-004"
+      ]
+    },
+    {
+      "id": "TEST-004",
+      "name": "CI job 39316987912",
+      "status": "REPORTED_BY_RESEARCH",
+      "source_ids": [
+        "SRC-017"
+      ]
+    },
+    {
+      "id": "TEST-005",
+      "name": "Deploy 39316987961",
+      "status": "REPORTED_BY_RESEARCH",
+      "source_ids": [
+        "SRC-018"
+      ]
+    },
+    {
+      "id": "TEST-006",
+      "name": "IndexedDB migration tests",
+      "status": "SOURCE_DOCUMENTED",
+      "source_ids": [
+        "SRC-003"
+      ]
+    },
+    {
+      "id": "TEST-007",
+      "name": "Offline browser test",
+      "status": "SOURCE_DOCUMENTED",
+      "source_ids": [
+        "SRC-003"
+      ]
+    },
+    {
+      "id": "TEST-008",
+      "name": "Fusion inside runtime",
+      "status": "NOT_RUN",
+      "source_ids": [
+        "SRC-002"
+      ]
+    },
+    {
+      "id": "TEST-009",
+      "name": "Physical Android touch/GPU",
+      "status": "NOT_RUN",
+      "source_ids": [
+        "SRC-004"
+      ]
+    },
+    {
+      "id": "TEST-010",
+      "name": "Physical fit and hardware test",
+      "status": "NOT_RUN",
+      "source_ids": [
+        "SRC-005"
+      ]
+    },
+    {
+      "id": "TEST-011",
+      "name": "Regency workbook mapping",
+      "status": "NOT_RUN",
+      "source_ids": [
+        "SRC-003"
+      ]
+    },
+    {
+      "id": "TEST-012",
+      "name": "Full original STEP_13 E2E",
+      "status": "PENDING",
+      "source_ids": [
+        "SRC-003"
+      ]
+    }
+  ],
+  "conventions": {
+    "evidence_statuses": "REPORTED_BY_RESEARCH does not mean current-session tests executed",
+    "missing_links": "Empty task_ids may indicate no current implementation task; do not imply acceptance"
+  }
+}

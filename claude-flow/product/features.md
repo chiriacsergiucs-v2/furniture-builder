@@ -1,0 +1,23 @@
+# Feature register
+
+- **FEAT-001 Project and material editor** — `IMPLEMENTED`; module `MOD-001`
+- **FEAT-002 Stock sheets, trims and quantity** — `IMPLEMENTED`; module `MOD-001`
+- **FEAT-003 Grain, rotation and four-edge ABS** — `IMPLEMENTED`; module `MOD-002`
+- **FEAT-004 Seeded heuristic guillotine optimiser** — `IMPLEMENTED`; module `MOD-002`
+- **FEAT-005 Independent layout validation** — `IMPLEMENTED`; module `MOD-003`
+- **FEAT-006 2D layouts and statistics** — `IMPLEMENTED`; module `MOD-004`
+- **FEAT-007 Generic CSV and XLSX interchange** — `IMPLEMENTED`; module `MOD-005`
+- **FEAT-008 SVG, PDF and backup exports** — `IMPLEMENTED`; module `MOD-005`
+- **FEAT-009 IndexedDB project persistence** — `IMPLEMENTED`; module `MOD-006`
+- **FEAT-010 Atomic legacy migration** — `IMPLEMENTED`; module `MOD-006`
+- **FEAT-011 Presets, kits and revisions** — `IMPLEMENTED`; module `MOD-007`
+- **FEAT-012 Exploded panel preview** — `IMPLEMENTED`; module `MOD-008`
+- **FEAT-013 Positioned assembly editing** — `IMPLEMENTED`; module `MOD-008`
+- **FEAT-014 Fusion Python snapshot export** — `IMPLEMENTED_UNVERIFIED_IN_FUSION`; module `MOD-009`
+- **FEAT-015 Typed component graph** — `IMPLEMENTED`; module `MOD-010`
+- **FEAT-016 Recipe-based furniture families** — `PARTIAL`; module `MOD-010`
+- **FEAT-017 Normalised FurnitureModel projections** — `IMPLEMENTED`; module `MOD-011`
+- **FEAT-018 Generic registered-component editor** — `PARTIAL`; module `MOD-010`
+- **FEAT-019 Dedicated bed and wardrobe mechanisms** — `PROPOSED`; module `MOD-010`
+- **FEAT-020 Hardware/joinery-grade physical rules** — `UNKNOWN`; module `MOD-011`
+- **FEAT-021 Static offline PWA / GitHub Pages** — `IMPLEMENTED`; module `MOD-012`

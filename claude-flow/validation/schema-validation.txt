@@ -1,0 +1,5 @@
+Generated 2026-10-21
+Requirements: 48; source IDs: 26; decisions: 12; features: 21; modules: 12; tasks: 15; tests/gates: 12
+Referential validation: PASS
+
+All verified ID references resolve.

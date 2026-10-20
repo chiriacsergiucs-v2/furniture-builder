@@ -1,0 +1,266 @@
+{
+  "snapshot": "2026-10-21",
+  "sources": [
+    {
+      "id": "SRC-001",
+      "name": "README.md",
+      "type": "github",
+      "path": "https://github.com/chiriacsergiucs-v2/furniture-builder/blob/main/README.md",
+      "access": "VERIFIED_IN_CURRENT_SESSION",
+      "sha": "83140133956d8f5bca972593c5e1bffc3cc5d483",
+      "authority": "primary",
+      "notes": "Read through connected GitHub fetch_file in this session"
+    },
+    {
+      "id": "SRC-002",
+      "name": "AGENTS.md",
+      "type": "github",
+      "path": "https://github.com/chiriacsergiucs-v2/furniture-builder/blob/main/AGENTS.md",
+      "access": "VERIFIED_IN_CURRENT_SESSION",
+      "sha": "3ff7eb19f86a9c98ae08c0bb96c47e35173844c0",
+      "authority": "primary",
+      "notes": "Read through connected GitHub fetch_file in this session"
+    },
+    {
+      "id": "SRC-003",
+      "name": "docs/progress.json",
+      "type": "github",
+      "path": "https://github.com/chiriacsergiucs-v2/furniture-builder/blob/main/docs/progress.json",
+      "access": "VERIFIED_IN_CURRENT_SESSION",
+      "sha": "31fed494c005ef7351d26ee8c862012dfa9b6622",
+      "authority": "primary",
+      "notes": "Read through connected GitHub fetch_file in this session"
+    },
+    {
+      "id": "SRC-004",
+      "name": "docs/handoff.md",
+      "type": "github",
+      "path": "https://github.com/chiriacsergiucs-v2/furniture-builder/blob/main/docs/handoff.md",
+      "access": "VERIFIED_IN_CURRENT_SESSION",
+      "sha": "4863ca30c159fbc8a918802b2acffbb863de5f21",
+      "authority": "primary",
+      "notes": "Read through connected GitHub fetch_file in this session"
+    },
+    {
+      "id": "SRC-005",
+      "name": "docs/modular-engine-backlog.md",
+      "type": "github",
+      "path": "https://github.com/chiriacsergiucs-v2/furniture-builder/blob/main/docs/modular-engine-backlog.md",
+      "access": "VERIFIED_IN_CURRENT_SESSION",
+      "sha": "1745235f212b2648d63a24fafda123b6ca434f2b",
+      "authority": "primary",
+      "notes": "Read through connected GitHub fetch_file in this session"
+    },
+    {
+      "id": "SRC-006",
+      "name": "package.json",
+      "type": "github",
+      "path": "https://github.com/chiriacsergiucs-v2/furniture-builder/blob/main/package.json",
+      "access": "VERIFIED_IN_CURRENT_SESSION",
+      "sha": "a2d646aef4866021e6b4c80d916ecba25ed43333",
+      "authority": "primary",
+      "notes": "Read through connected GitHub fetch_file in this session"
+    },
+    {
+      "id": "SRC-007",
+      "name": "docs/architecture.md",
+      "type": "github",
+      "path": "https://github.com/chiriacsergiucs-v2/furniture-builder/blob/main/docs/architecture.md",
+      "access": "VERIFIED_IN_CURRENT_SESSION",
+      "sha": "43f3db3789087ae3b3bfbbd8e5cddc9dca74633b",
+      "authority": "primary",
+      "notes": "Read through connected GitHub fetch_file in this session"
+    },
+    {
+      "id": "SRC-008",
+      "name": "src/engine/types.ts",
+      "type": "research-report repository evidence",
+      "path": "https://github.com/chiriacsergiucs-v2/furniture-builder/blob/main/src/engine/types.ts",
+      "access": "REPORTED_BY_PRIOR_RESEARCH_NOT_REFETCHED",
+      "sha": null,
+      "authority": "secondary research report",
+      "notes": "Prior Deep Research report describes this source; this reconstruction did not independently re-fetch it"
+    },
+    {
+      "id": "SRC-009",
+      "name": "src/db/database.ts",
+      "type": "research-report repository evidence",
+      "path": "https://github.com/chiriacsergiucs-v2/furniture-builder/blob/main/src/db/database.ts",
+      "access": "REPORTED_BY_PRIOR_RESEARCH_NOT_REFETCHED",
+      "sha": null,
+      "authority": "secondary research report",
+      "notes": "Prior Deep Research report describes this source; this reconstruction did not independently re-fetch it"
+    },
+    {
+      "id": "SRC-010",
+      "name": "docs/storage-migration.md",
+      "type": "research-report repository evidence",
+      "path": "https://github.com/chiriacsergiucs-v2/furniture-builder/blob/main/docs/storage-migration.md",
+      "access": "REPORTED_BY_PRIOR_RESEARCH_NOT_REFETCHED",
+      "sha": null,
+      "authority": "secondary research report",
+      "notes": "Prior Deep Research report describes this source; this reconstruction did not independently re-fetch it"
+    },
+    {
+      "id": "SRC-011",
+      "name": "docs/algorithm.md",
+      "type": "research-report repository evidence",
+      "path": "https://github.com/chiriacsergiucs-v2/furniture-builder/blob/main/docs/algorithm.md",
+      "access": "REPORTED_BY_PRIOR_RESEARCH_NOT_REFETCHED",
+      "sha": null,
+      "authority": "secondary research report",
+      "notes": "Prior Deep Research report describes this source; this reconstruction did not independently re-fetch it"
+    },
+    {
+      "id": "SRC-012",
+      "name": "src/furniture/furniture-model.ts",
+      "type": "research-report repository evidence",
+      "path": "https://github.com/chiriacsergiucs-v2/furniture-builder/blob/main/src/furniture/furniture-model.ts",
+      "access": "REPORTED_BY_PRIOR_RESEARCH_NOT_REFETCHED",
+      "sha": null,
+      "authority": "secondary research report",
+      "notes": "Prior Deep Research report describes this source; this reconstruction did not independently re-fetch it"
+    },
+    {
+      "id": "SRC-013",
+      "name": "src/assembly/model.ts",
+      "type": "research-report repository evidence",
+      "path": "https://github.com/chiriacsergiucs-v2/furniture-builder/blob/main/src/assembly/model.ts",
+      "access": "REPORTED_BY_PRIOR_RESEARCH_NOT_REFETCHED",
+      "sha": null,
+      "authority": "secondary research report",
+      "notes": "Prior Deep Research report describes this source; this reconstruction did not independently re-fetch it"
+    },
+    {
+      "id": "SRC-014",
+      "name": "src/import-export/csv.ts",
+      "type": "research-report repository evidence",
+      "path": "https://github.com/chiriacsergiucs-v2/furniture-builder/blob/main/src/import-export/csv.ts",
+      "access": "REPORTED_BY_PRIOR_RESEARCH_NOT_REFETCHED",
+      "sha": null,
+      "authority": "secondary research report",
+      "notes": "Prior Deep Research report describes this source; this reconstruction did not independently re-fetch it"
+    },
+    {
+      "id": "SRC-015",
+      "name": "CUTLIST_OPTIMIZER_RESUMABLE_BUILD_PROMPT_v2.md",
+      "type": "research-report repository evidence",
+      "path": "https://github.com/chiriacsergiucs-v2/furniture-builder/blob/main/CUTLIST_OPTIMIZER_RESUMABLE_BUILD_PROMPT_v2.md",
+      "access": "REPORTED_BY_PRIOR_RESEARCH_NOT_REFETCHED",
+      "sha": null,
+      "authority": "secondary research report",
+      "notes": "Prior Deep Research report describes this source; this reconstruction did not independently re-fetch it"
+    },
+    {
+      "id": "SRC-016",
+      "name": "src/tests/**, tests/**",
+      "type": "research-report repository evidence",
+      "path": "https://github.com/chiriacsergiucs-v2/furniture-builder/blob/main/src/tests/**, tests/**",
+      "access": "REPORTED_BY_PRIOR_RESEARCH_NOT_REFETCHED",
+      "sha": null,
+      "authority": "secondary research report",
+      "notes": "Prior Deep Research report describes this source; this reconstruction did not independently re-fetch it"
+    },
+    {
+      "id": "SRC-017",
+      "name": "Actions CI run 39316987912",
+      "type": "research-report repository evidence",
+      "path": "Actions CI run 39316987912",
+      "access": "REPORTED_BY_PRIOR_RESEARCH_NOT_REFETCHED",
+      "sha": null,
+      "authority": "secondary research report",
+      "notes": "Prior Deep Research report describes this source; this reconstruction did not independently re-fetch it"
+    },
+    {
+      "id": "SRC-018",
+      "name": "Actions Pages run 39316987961",
+      "type": "research-report repository evidence",
+      "path": "Actions Pages run 39316987961",
+      "access": "REPORTED_BY_PRIOR_RESEARCH_NOT_REFETCHED",
+      "sha": null,
+      "authority": "secondary research report",
+      "notes": "Prior Deep Research report describes this source; this reconstruction did not independently re-fetch it"
+    },
+    {
+      "id": "SRC-019",
+      "name": "PR history 1–10",
+      "type": "research-report repository evidence",
+      "path": "PR history 1–10",
+      "access": "REPORTED_BY_PRIOR_RESEARCH_NOT_REFETCHED",
+      "sha": null,
+      "authority": "secondary research report",
+      "notes": "Prior Deep Research report describes this source; this reconstruction did not independently re-fetch it"
+    },
+    {
+      "id": "SRC-020",
+      "name": "SABLON DEBITARE NOU.xlsx",
+      "type": "uploaded file",
+      "path": "SABLON DEBITARE NOU.xlsx",
+      "access": "VERIFIED_IN_CURRENT_SESSION",
+      "sha": "ea9ae3715d5cc6730f8d41ea830d7685ebc4eaff5be07829db9a2837b55a190e",
+      "authority": "primary",
+      "notes": "Uploaded and byte-accessible; 30727 bytes"
+    },
+    {
+      "id": "SRC-021",
+      "name": "SABLON DEBITARE NOU (1).xlsx",
+      "type": "uploaded file",
+      "path": "SABLON DEBITARE NOU (1).xlsx",
+      "access": "VERIFIED_IN_CURRENT_SESSION",
+      "sha": "92a0c9d15ae98f9516cc72458fa4105dea28149b687da5afcce4d3a27dab9c08",
+      "authority": "primary",
+      "notes": "Uploaded and byte-accessible; 30574 bytes"
+    },
+    {
+      "id": "SRC-022",
+      "name": "SABLON DEBITARE NOU (2).xlsx",
+      "type": "uploaded file",
+      "path": "SABLON DEBITARE NOU (2).xlsx",
+      "access": "VERIFIED_IN_CURRENT_SESSION",
+      "sha": "055751e3d2a8fc5e1f038eaa5b51d8ee8489e5edd2a0302cd407c74c667b77c8",
+      "authority": "primary",
+      "notes": "Uploaded and byte-accessible; 30478 bytes"
+    },
+    {
+      "id": "SRC-023",
+      "name": "SABLON DEBITARE NOU (3).xlsx",
+      "type": "uploaded file",
+      "path": "SABLON DEBITARE NOU (3).xlsx",
+      "access": "VERIFIED_IN_CURRENT_SESSION",
+      "sha": "7dfd4407552a05ca70b02e6a9bbced25b6b945d02b4fd87703b388a7ba6c6365",
+      "authority": "primary",
+      "notes": "Uploaded and byte-accessible; 30470 bytes"
+    },
+    {
+      "id": "SRC-024",
+      "name": "Formular-Comanda-Debitare-SALICE-2025.pdf",
+      "type": "uploaded file",
+      "path": "Formular-Comanda-Debitare-SALICE-2025.pdf",
+      "access": "VERIFIED_IN_CURRENT_SESSION",
+      "sha": "1d5c085381b0b19da23252e9e01de94580e6ee8876fb953f11ef9543fcaaeb4d",
+      "authority": "primary",
+      "notes": "Uploaded and byte-accessible; 327783 bytes"
+    },
+    {
+      "id": "SRC-025",
+      "name": "Branch · Branch · Fișiere salvate și grupate.txt",
+      "type": "uploaded file",
+      "path": "Branch · Branch · Fișiere salvate și grupate.txt",
+      "access": "VERIFIED_IN_CURRENT_SESSION",
+      "sha": "277ed08556b055a05ccc11ab783d96172fd45c4bc0281cec3a9f1a12b57a95f2",
+      "authority": "primary",
+      "notes": "Uploaded and byte-accessible; 12018 bytes"
+    },
+    {
+      "id": "SRC-026",
+      "name": "Estimare servicii Salice.txt",
+      "type": "uploaded file",
+      "path": "Estimare servicii Salice.txt",
+      "access": "VERIFIED_IN_CURRENT_SESSION",
+      "sha": "363942a021a1d3ede601dc74f3f0aa49faaddd2b8c9c3152b0ccac90b1f9d73b",
+      "authority": "primary",
+      "notes": "Uploaded and byte-accessible; 2005 bytes"
+    }
+  ],
+  "interpretation": "REPORTED_BY_PRIOR_RESEARCH_NOT_REFETCHED is not current-session independent confirmation; uploaded files verified locally."
+}

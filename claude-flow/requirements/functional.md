@@ -1,0 +1,37 @@
+# Functional requirements
+
+- **FR-001** [CONFIRMED] Create and edit furniture cutting projects with persistent identifiers — `FEAT-001` / `MOD-001`
+- **FR-002** [CONFIRMED] Specify material and thickness in project inputs — `FEAT-001` / `MOD-001`
+- **FR-003** [CONFIRMED] Record parts with exact width, length, count and material — `FEAT-001` / `MOD-001`
+- **FR-004** [CONFIRMED] Preserve project configuration when closing/reopening the browser — `FEAT-001` / `MOD-001`
+- **FR-005** [CONFIRMED] Allow multiple named materials with separate stock assignments — `FEAT-001` / `MOD-001`
+- **FR-006** [CONFIRMED] Allow duplication or reusable insertion of existing parts without losing identities — `FEAT-001` / `MOD-001`
+- **FR-007** [CONFIRMED] Enter stock sheet sizes, available quantities and trim margins — `FEAT-003` / `MOD-002`
+- **FR-008** [CONFIRMED] Express per-part grain requirement and allowed rotation — `FEAT-003` / `MOD-002`
+- **FR-009** [CONFIRMED] Represent edge banding on four distinct sides — `FEAT-003` / `MOD-002`
+- **FR-010** [CONFIRMED] Keep edge-band annotations separate from cut dimensions — `FEAT-003` / `MOD-002`
+- **FR-011** [CONFIRMED] Run deterministic seeded multi-restart guillotine packing heuristic — `FEAT-004` / `MOD-002`
+- **FR-012** [CONFIRMED] Constrain packing by materials and eligible stock sizes — `FEAT-004` / `MOD-002`
+- **FR-013** [CONFIRMED] Report unplaced parts and usable/offcut area — `FEAT-004` / `MOD-002`
+- **FR-014** [CONFIRMED] Return cutting result statistics without global-optimum guarantee — `FEAT-004` / `MOD-002`
+- **FR-015** [CONFIRMED] Independently validate cut-tree geometry — `FEAT-005` / `MOD-003`
+- **FR-016** [CONFIRMED] Reject invalid dimensions, overlaps, stock escapes and incompatible grain — `FEAT-005` / `MOD-003`
+- **FR-017** [CONFIRMED] Block use of invalid results for render/export — `FEAT-005` / `MOD-003`
+- **FR-018** [CONFIRMED] Import/export generic CSV — `FEAT-007` / `MOD-005`
+- **FR-019** [CONFIRMED] Import/export generic XLSX — `FEAT-007` / `MOD-005`
+- **FR-020** [CONFIRMED] Export print-ready/PDF and SVG cutting views — `FEAT-007` / `MOD-005`
+- **FR-021** [CONFIRMED] Maintain versioned JSON project/preset backup interoperability — `FEAT-007` / `MOD-005`
+- **FR-022** [CONFIRMED] Persist projects, presets, kits, revisions and materials in Dexie — `FEAT-010` / `MOD-006`
+- **FR-023** [CONFIRMED] Migrate legacy records once within an atomic transaction — `FEAT-010` / `MOD-006`
+- **FR-024** [CONFIRMED] Do not delete old localStorage keys or overwrite newer indexed records — `FEAT-010` / `MOD-006`
+- **FR-025** [CONFIRMED] Merge full database JSON backup without destructive replacement — `FEAT-010` / `MOD-006`
+- **FR-026** [CONFIRMED_SCOPE_IMPLEMENTATION_PARTIAL] Compose furniture from typed registered child components — `FEAT-015` / `MOD-010`
+- **FR-027** [CONFIRMED_SCOPE_IMPLEMENTATION_PARTIAL] Preserve parameter schemas, dependencies and attachment relationships — `FEAT-015` / `MOD-010`
+- **FR-028** [CONFIRMED_SCOPE_IMPLEMENTATION_PARTIAL] Use specialist structural roots for non-cabinet furniture — `FEAT-015` / `MOD-010`
+- **FR-029** [CONFIRMED_SCOPE_IMPLEMENTATION_PARTIAL] Save user-configured furniture as independently editable instances — `FEAT-015` / `MOD-010`
+- **FR-030** [CONFIRMED_SCOPE_IMPLEMENTATION_PARTIAL] Generate normalized solids and manufacturing output from one FurnitureModel — `FEAT-015` / `MOD-010`
+- **FR-031** [CONFIRMED] Edit saved per-instance XYZ translation and rotation — `FEAT-013` / `MOD-008`
+- **FR-032** [CONFIRMED] Preview exploded panels with accessible non-WebGL fallback — `FEAT-013` / `MOD-008`
+- **FR-033** [CONFIRMED] Export Fusion Python snapshot without asserting runtime validation — `FEAT-013` / `MOD-008`
+- **FR-034** [CONFIRMED] Operate as an offline-oriented static PWA — `FEAT-021` / `MOD-012`
+- **FR-035** [CONFIRMED] Deploy static application via GitHub Pages — `FEAT-021` / `MOD-012`

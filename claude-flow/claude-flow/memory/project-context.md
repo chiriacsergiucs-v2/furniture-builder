@@ -1,0 +1,3 @@
+# Project memory
+
+Project: Mobila Cutlist Optimizer, repo `chiriacsergiucs-v2/furniture-builder`. Offline PWA, no backend/accounts/cloud. IndexedDB via Dexie explicitly supersedes old localStorage-only instruction; old data must survive. Millimetre-exact cutting, grain, kerf and edge banding, with independent guillotine validation. Specialist furniture roots with typed shared children and single FurnitureModel projection. Fusion Python is not Fusion runtime tested. Reported B22/B24 partial. Physical fixing and hardware specs remain unproven. Supplier SALICE final measurements **include ABS**; reconcile with cut dimensions before adapter. Missing source means BLOCKED/UNKNOWN, not invented.
