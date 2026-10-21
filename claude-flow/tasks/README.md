@@ -1,18 +1,11 @@
-# Task contracts
+# Tasks
 
-`tasks.json` holds every task as a contract: objective, owning role, governing ADRs, requirement IDs, dependencies,
-affected files, deliverables, the exact `verification` commands the verifier runs, acceptance conditions, a
-`scope_guard` (ADR-0028) and an `evidence` list that must be non-empty before `DONE`.
+`tasks.json` lists the next work as contracts (owner, governing ADRs, backlog ids, verification commands,
+acceptance, blocker).
 
-These are runtime-neutral (ADR-0030): they are read by agents, not loaded by a CLI.
-
-## Start here
-- **READY now:** TSK-002 (reconcile STEP/gates), TSK-011 (licence audit), TSK-012 (doc drift).
-- **Scope-guarded:** TSK-003 (B22 editor for registered roots).
-- **Specify, don't code:** TSK-004 (bed root), TSK-005 (wardrobe rails/fronts).
-- **Blocked on things outside the repo:** TSK-001 (runtime pin), TSK-006/007 (physical), TSK-008 (Fusion), TSK-009 (Android), TSK-010 (original vendor files not in repo).
-- **Pending on others:** TSK-013 → TSK-002; TSK-014 → TSK-002, TSK-011, TSK-013.
-
-## Lifecycle
-`READY → IN_PROGRESS (owner) → IN_REVIEW (owner hands off) → DONE (verifier) | BLOCKED_* (anyone, with blocker text)`.
-Blocked statuses are never promoted without the blocker being resolved in writing.
+- **READY:** TSK-N08 editable desk pedestals, TSK-V01 browser verification of partially verified features.
+- **Waiting on your answers** (open questions in the proposed ADR): TSK-N01 nesting (ADR-0018/0019), TSK-N02 printing
+  (ADR-0020), TSK-N05 drawer heights / adjustable shelves (ADR-0023), TSK-N06 front styles (ADR-0024), TSK-N07 wall
+  and corner cabinets (ADR-0025).
+- **Need a decision:** TSK-N03 Fusion export (ADR-0021), TSK-N04 projects (ADR-0022), TSK-R01 orchestration runtime
+  (ADR-0017).

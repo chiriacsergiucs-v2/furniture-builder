@@ -3,22 +3,21 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
-  base: '/furniture-builder/',
-  plugins: [react(), VitePWA({
-    registerType: 'prompt',
-    injectRegister: 'auto',
-    includeAssets: ['favicon.svg'],
-    manifest: {
-      name: 'Mobila Cutlist Optimizer', short_name: 'Cutlist',
-      description: 'Offline furniture panel guillotine cutting optimizer',
-      start_url: '/furniture-builder/', scope: '/furniture-builder/',
-      display: 'standalone', theme_color: '#173452', background_color: '#f6f8fb',
-      icons: [
-        {src: 'icons/app-192.png', sizes: '192x192', type: 'image/png'},
-        {src: 'icons/app-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable'}
-      ]
-    },
-    workbox: {maximumFileSizeToCacheInBytes: 8*1024*1024, navigateFallback: 'index.html', globPatterns: ['**/*.{js,css,html,svg,png,woff2}']}
-  })],
-  test: {environment:'node', include:['src/tests/unit/**/*.test.ts']}
+  base: process.env.BASE_PATH ?? '/furniture-builder/',
+  plugins: [
+    react(),
+    VitePWA({
+      registerType: 'prompt',
+      manifest: {
+        name: 'Furniture Builder', short_name: 'Furniture',
+        description: 'Parametric furniture designer with 3D preview and cut list. Works offline.',
+        display: 'standalone', theme_color: '#1d1f1c', background_color: '#f4f2ec',
+        icons: [{ src: 'icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' }],
+      },
+      workbox: { globPatterns: ['**/*.{js,css,html,svg,woff2}'], maximumFileSizeToCacheInBytes: 4 * 1024 * 1024 },
+    }),
+  ],
+  // three.js is ~1 MB and lazy-loaded on demand (ADR-0013).
+  build: { chunkSizeWarningLimit: 1100 },
+  test: { environment: 'node', include: ['tests/**/*.test.ts'] },
 })

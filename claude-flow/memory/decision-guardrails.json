@@ -1,130 +1,58 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "authority_priority": [
     "new_explicit_user_decision",
-    "confirmed_consensus_in_accepted_adr",
-    "accepted_adr_or_written_spec",
-    "executed_code_and_tests_on_main",
+    "accepted_adr",
+    "code_and_tests_on_branch",
     "historical_discussion",
-    "unconfirmed_proposal"
+    "proposal"
   ],
-  "note": "Implemented code is evidence of state, not permission to overrule product intent recorded above it.",
   "hard_guards": [
     {
       "adr": "ADR-0001",
-      "rule": "Static PWA on GitHub Pages at /furniture-builder/; hash routing; update via in-app prompt, never by clearing site data."
+      "rule": "Do not read, write or migrate the previous app or its data."
     },
     {
       "adr": "ADR-0002",
-      "rule": "No backend, accounts, cloud sync, customer-data upload, remote AI, paid service or runtime external API."
+      "rule": "No backend, accounts, cloud, telemetry, remote AI, runtime third-party requests or CDN."
     },
     {
       "adr": "ADR-0003",
-      "rule": "Dexie IndexedDB is the client store; the old localStorage-only clause is superseded for client-side storage only."
+      "rule": "Integer millimetres; fixed axis convention; exact integer splits."
     },
     {
       "adr": "ADR-0004",
-      "rule": "Migrations: marker inside the same transaction; missing-only writes; existing IDs win; legacy keys never deleted."
-    },
-    {
-      "adr": "ADR-0005",
-      "rule": "Never edit an existing Dexie version block; add a new version for any index/table change."
-    },
-    {
-      "adr": "ADR-0006",
-      "rule": "Keep every shipped JSON backup format readable; imports skip existing IDs; never silently migrate material or thickness."
-    },
-    {
-      "adr": "ADR-0007",
-      "rule": "Integer millimetres everywhere; unit conversion only at export/render boundaries."
+      "rule": "All views and lists consume buildModel(); no geometry in UI code."
     },
     {
       "adr": "ADR-0008",
-      "rule": "Kerf is a full-length destroyed stripe; sub-kerf residuals are rejected, not absorbed."
-    },
-    {
-      "adr": "ADR-0009",
-      "rule": "Material, thickness, grain, rotation permission, stock quantity and trim constrain placement in generator and validator alike."
+      "rule": "User input never throws; independent overlap/envelope checks; errors block export."
     },
     {
       "adr": "ADR-0010",
-      "rule": "ABS edge banding is an annotation; cut sizes are never adjusted by it without a signed-off transform."
+      "rule": "Never invent hardware specifications; label guidance."
     },
     {
       "adr": "ADR-0011",
-      "rule": "Deterministic seeded heuristic with lexicographic objective; never call results optimal."
+      "rule": "Validate designs before load/import; never persist generated geometry."
     },
     {
       "adr": "ADR-0012",
-      "rule": "Independent validator gates every result; validator shares no placement helpers with the generator."
+      "rule": "Never edit a shipped Dexie version; never delete unreadable rows."
     },
     {
-      "adr": "ADR-0015",
-      "rule": "Component generators live in the versioned registry; persisted data holds only ids, versions, parameters."
+      "adr": "ADR-0014",
+      "rule": "The 3D viewer never edits the design."
     },
     {
       "adr": "ADR-0016",
-      "rule": "One-way parent-to-child parameter binding; stable instance IDs; pure composition operations."
-    },
-    {
-      "adr": "ADR-0017",
-      "rule": "Each furniture family uses a matching structural root; no fake carcass panels for surfaces."
-    },
-    {
-      "adr": "ADR-0018",
-      "rule": "3D, cut rows, BOM and Fusion consume one FurnitureModel; re-deriving geometry elsewhere is a defect."
-    },
-    {
-      "adr": "ADR-0019",
-      "rule": "Hardware is a requirement schedule, never emitted as cut panels; no drilling/part numbers claimed."
-    },
-    {
-      "adr": "ADR-0020",
-      "rule": "Only ready templates generate parts; planned ones are inert."
-    },
-    {
-      "adr": "ADR-0021",
-      "rule": "Ready recipe count and complete family count are reported separately; B24 stays Partial."
-    },
-    {
-      "adr": "ADR-0022",
-      "rule": "Legacy trees are adapted in memory; stored rows change only on explicit user Save."
-    },
-    {
-      "adr": "ADR-0024",
-      "rule": "3D interaction never changes part dimensions, IDs, quantities or materials."
-    },
-    {
-      "adr": "ADR-0025",
-      "rule": "Fusion export is a Python direct-model script; say 'unverified in Fusion'."
-    },
-    {
-      "adr": "ADR-0026",
-      "rule": "Vendor workbook adapters only from an inspected original file referenced by path and sha."
-    },
-    {
-      "adr": "ADR-0027",
-      "rule": "Heavy modules lazy-loaded; everything bundled; no CDN."
-    },
-    {
-      "adr": "ADR-0028",
-      "rule": "Smallest vertical slice; lint+typecheck+build+focused test; no E2E/refactor/polish by default; end with 'Skipped this iteration'."
-    },
-    {
-      "adr": "ADR-0029",
-      "rule": "Ledger status changes only with cited evidence; pushed != merged != deployed != live-verified; reported != executed."
+      "rule": "Evidence-only ledger; pushed != merged != deployed != live-verified; end with Skipped this iteration."
     }
   ],
-  "runtime": {
-    "name": null,
-    "version": null,
-    "status": "VERSION_UNVERIFIED"
-  },
-  "no_automated_release_without_verified_gates": true,
   "proposed_guards": [
     {
-      "adr": "ADR-0030",
-      "rule": "No native Claude Flow/Ruflo files until a version is pinned and ADR-0030 is Accepted."
+      "adr": "ADR-0017",
+      "rule": "No native orchestration files until a runtime is pinned."
     }
   ]
 }
