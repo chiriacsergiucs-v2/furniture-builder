@@ -1,11 +1,23 @@
 # Scope
 
-**In scope / source-backed:** projects, stock and material records, exact part dimensions, edging/grain/rotation, heuristic guillotine nesting, independent cutting-tree validation, 2D views and statistics, CSV/XLSX generic exchange, backups, IndexedDB, local presets/kits/revisions, component recipes, positioned 3D, Fusion Python snapshot, static offline PWA.
+## In scope and implemented (evidence in `requirements/functional.md`)
+Projects, materials, stock sheets/offcuts with trim and quantity, exact parts with grain/rotation/ABS, deterministic
+guillotine heuristic with independent validation, SVG/print/CSV/XLSX outputs, Dexie IndexedDB with non-destructive
+legacy migration and JSON backups, preset/kit/category library with revisions, typed modular furniture engine with
+55 ready templates (2 planned), positioned 3D preview and assembly editor, Fusion Python snapshot, offline PWA on
+GitHub Pages.
 
-**Partially in scope:** generic registered-component editing (B22), broader distinct furniture mechanisms (B24).
+## In scope, partially implemented
+- B22 general create/edit/save flow for every registered root (TSK-003).
+- B24 18 families / 90 mechanisms — ready recipes ≠ complete families (ADR-0021; TSK-004/005 specify next roots).
 
-**Not established as done:** advanced joinery/hardware rules B26; photorealistic controls B27; physical mounting/strength validation, external runtime proofs, supplier-specific Regency adapter.
+## Deferred by decision
+- B26 joinery/hardware-grade rules (blocked on physical validation, TSK-007).
+- B27 photorealistic finishes.
+- Vendor-specific Regency/SALICE adapters until originals are in the repo (ADR-0026, TSK-010).
 
-**Explicitly out of current architecture:** remote database, backend, cloud sync, accounts, user data uploads to remote service, remote AI API.
+## Out of scope by architecture
+Remote database, backend, accounts, cloud sync, customer-data upload, remote AI, paid services, CDN assets
+(ADR-0002, ADR-0027).
 
-**Source caveat:** supplier paperwork and example personal furniture are integration/reference inputs, not global product requirements until formally approved.
+Sources: `README.md`, `docs/modular-engine-backlog.md` ledger, `AGENTS.md`.

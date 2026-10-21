@@ -1,6 +1,10 @@
-# User journeys
+# User journeys (as implemented)
 
-1. **Cutlist:** edit project → choose materials/sheets/trims → enter parts/grain/ABS → run heuristic → independently validate → inspect cut layout/statistics → export only valid results.
-2. **Reuse:** create or select typed component/preset → configure parameters → save independent furniture instance → derive 3D/cut rows/hardware requirements from normalised model → persist locally.
-3. **Recovery:** legacy localStorage detected → validate and transactionally migrate into Dexie → keep legacy keys intact → export versioned JSON backup and restore by non-destructive merge.
-4. **Supplier handoff [PROPOSED ADAPTER]:** map tested native part model to `SABLON DEBITARE NOU` or SALICE contract with explicit dimension/ABS conversion; not an implemented supplier adapter claim.
+1. **Plain cutlist**: new project → materials/sheets → add parts (CSV/XLSX or manual) → optimise → review SVG per
+   board, stats, unplaced → export CSV/XLSX/print. (`src/app/App.tsx`, `src/import-export/*`)
+2. **Furniture from template**: Presets → pick a ready template → configure in the wizard (shelves, drawers, split,
+   doors, plinth) → see positioned 3D → save as preset (revision) → insert into a project → optimise. (`src/components/CabinetConfigurator.tsx`, `PresetManager.tsx`)
+3. **Project-only customisation**: insert preset → *Customize for project* → edit isolated copy → explicit Save. (`src/presets/customize.ts`)
+4. **Assembly tweak**: open assembly editor → move/rotate instances in integer mm/deg → export Fusion script. (`src/components/Assembly3DEditor.tsx`, `src/assembly/fusion.ts`)
+5. **Backup / move device**: Settings → export full database JSON → import on other device (merge, no overwrite). (`src/db/backup.ts`)
+6. **Upgrade from the localStorage era**: open app → automatic one-time migration → legacy keys untouched. (`src/db/migration.ts`)

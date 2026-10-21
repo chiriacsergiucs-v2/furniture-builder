@@ -1,12 +1,16 @@
-# Business rules
+# Business rules (manufacturing truths the software encodes)
 
-- Dimensions are integer mm in the optimiser and must not be silently changed by edging metadata.
-- Validate guillotine placement before diagram/export. Heuristic results are not guaranteed global minima.
-- Respect stock availability, orientation, grain, trim, kerf and material compatibility.
-- Existing project snapshots must remain reproducible after library changes.
-- Migration never deletes source keys; preserving existing IndexedDB IDs is required.
-- New furniture types are specialist roots + shared reusable child components, not renamed cabinets.
-- A template is "ready" only if it yields actual valid geometry/manufacturing output; catalogue concept counts do not imply readiness.
-- Fusion direct-model snapshot is not a live-linked native CAD model.
-- Neither the panel viewer nor untested BOM signifies structural or installation certification.
-- SALICE 'FINAL dimensions include ABS' contradicts a naive one-to-one mapping from optimiser cut dimensions; adapter must resolve it per vendor specification.
+| Rule | Where enforced | ADR |
+|---|---|---|
+| Dimensions are whole millimetres; no rounding on import | `src/engine/schema.ts` | ADR-0007 |
+| Kerf (default 4 mm) is removed along the full cut; residual < kerf is unusable | `src/engine/guillotine.ts` | ADR-0008 |
+| A part must match sheet material **and** thickness | `src/engine/optimize.ts`, `validate.ts` | ADR-0009 |
+| Grain-locked parts follow sheet grain; rotation only when allowed and non-square | `src/engine/geometry.ts` | ADR-0009 |
+| Trim margins are unusable; coordinates are on the physical sheet | `src/engine/geometry.ts (usableOf)` | ADR-0009 |
+| Offcuts are reusable only above configured min width/height/area | `src/engine/optimize.ts` | ADR-0011 |
+| Preference order: existing board → offcut → new sheet | `src/engine/optimize.ts (cost 0/1/2)` | ADR-0011 |
+| ABS is an edge label; finished-size inputs need an explicit transform | `src/engine/types.ts` | ADR-0010 |
+| Hardware is purchased, never cut | `src/furniture/furniture-model.ts` | ADR-0019 |
+| Drawer body = sides + back + inner front (+ applied front); 2 mm reveal default | `src/furniture/drawer.ts`, `AGENTS.md` v0.4 | ADR-0018 |
+| Doors never span drawer fronts; double doors have a 3 mm gap | `docs/progress.json` iteration 9 | ADR-0020 |
+| A layout is never "optimal"; operator reviews cutting order | `docs/algorithm.md` | ADR-0011 |

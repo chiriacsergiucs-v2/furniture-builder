@@ -1,266 +1,506 @@
 {
-  "snapshot": "2026-10-21",
+  "schema_version": 2,
+  "repository": "chiriacsergiucs-v2/furniture-builder",
+  "commit": "e1bf0c78963303aaa88cff0093bd893f100a411d",
+  "snapshot_date": "2026-10-21",
+  "rule": "Only repository files at the given commit are sources. Nothing from chats, research reports or uploads outside the repo.",
   "sources": [
     {
       "id": "SRC-001",
-      "name": "README.md",
-      "type": "github",
-      "path": "https://github.com/chiriacsergiucs-v2/furniture-builder/blob/main/README.md",
-      "access": "VERIFIED_IN_CURRENT_SESSION",
-      "sha": "83140133956d8f5bca972593c5e1bffc3cc5d483",
-      "authority": "primary",
-      "notes": "Read through connected GitHub fetch_file in this session"
+      "path": "README.md",
+      "kind": "doc",
+      "blob_sha": "83140133956d8f5bca972593c5e1bffc3cc5d483",
+      "authority": "primary"
     },
     {
       "id": "SRC-002",
-      "name": "AGENTS.md",
-      "type": "github",
-      "path": "https://github.com/chiriacsergiucs-v2/furniture-builder/blob/main/AGENTS.md",
-      "access": "VERIFIED_IN_CURRENT_SESSION",
-      "sha": "3ff7eb19f86a9c98ae08c0bb96c47e35173844c0",
-      "authority": "primary",
-      "notes": "Read through connected GitHub fetch_file in this session"
+      "path": "AGENTS.md",
+      "kind": "doc",
+      "blob_sha": "3ff7eb19f86a9c98ae08c0bb96c47e35173844c0",
+      "authority": "primary"
     },
     {
       "id": "SRC-003",
-      "name": "docs/progress.json",
-      "type": "github",
-      "path": "https://github.com/chiriacsergiucs-v2/furniture-builder/blob/main/docs/progress.json",
-      "access": "VERIFIED_IN_CURRENT_SESSION",
-      "sha": "31fed494c005ef7351d26ee8c862012dfa9b6622",
-      "authority": "primary",
-      "notes": "Read through connected GitHub fetch_file in this session"
+      "path": "CUTLIST_OPTIMIZER_RESUMABLE_BUILD_PROMPT_v2.md",
+      "kind": "doc",
+      "blob_sha": "e561cd36dcb5d954886b223776dd85191120ea86",
+      "authority": "primary"
     },
     {
       "id": "SRC-004",
-      "name": "docs/handoff.md",
-      "type": "github",
-      "path": "https://github.com/chiriacsergiucs-v2/furniture-builder/blob/main/docs/handoff.md",
-      "access": "VERIFIED_IN_CURRENT_SESSION",
-      "sha": "4863ca30c159fbc8a918802b2acffbb863de5f21",
-      "authority": "primary",
-      "notes": "Read through connected GitHub fetch_file in this session"
+      "path": "package.json",
+      "kind": "code",
+      "blob_sha": "a2d646aef4866021e6b4c80d916ecba25ed43333",
+      "authority": "primary"
     },
     {
       "id": "SRC-005",
-      "name": "docs/modular-engine-backlog.md",
-      "type": "github",
-      "path": "https://github.com/chiriacsergiucs-v2/furniture-builder/blob/main/docs/modular-engine-backlog.md",
-      "access": "VERIFIED_IN_CURRENT_SESSION",
-      "sha": "1745235f212b2648d63a24fafda123b6ca434f2b",
-      "authority": "primary",
-      "notes": "Read through connected GitHub fetch_file in this session"
+      "path": "vite.config.ts",
+      "kind": "code",
+      "blob_sha": "c7ac5360a23ca8ddee85daeaf75795b5b70d8f8c",
+      "authority": "primary"
     },
     {
       "id": "SRC-006",
-      "name": "package.json",
-      "type": "github",
-      "path": "https://github.com/chiriacsergiucs-v2/furniture-builder/blob/main/package.json",
-      "access": "VERIFIED_IN_CURRENT_SESSION",
-      "sha": "a2d646aef4866021e6b4c80d916ecba25ed43333",
-      "authority": "primary",
-      "notes": "Read through connected GitHub fetch_file in this session"
+      "path": ".github/workflows/ci.yml",
+      "kind": "workflow",
+      "blob_sha": "d37e45351247c5055305a430d165b3b38fd9e7d9",
+      "authority": "primary"
     },
     {
       "id": "SRC-007",
-      "name": "docs/architecture.md",
-      "type": "github",
-      "path": "https://github.com/chiriacsergiucs-v2/furniture-builder/blob/main/docs/architecture.md",
-      "access": "VERIFIED_IN_CURRENT_SESSION",
-      "sha": "43f3db3789087ae3b3bfbbd8e5cddc9dca74633b",
-      "authority": "primary",
-      "notes": "Read through connected GitHub fetch_file in this session"
+      "path": ".github/workflows/deploy.yml",
+      "kind": "workflow",
+      "blob_sha": "8592472feb2dc462b6c6c223832a9f9ccc5b4bf4",
+      "authority": "primary"
     },
     {
       "id": "SRC-008",
-      "name": "src/engine/types.ts",
-      "type": "research-report repository evidence",
-      "path": "https://github.com/chiriacsergiucs-v2/furniture-builder/blob/main/src/engine/types.ts",
-      "access": "REPORTED_BY_PRIOR_RESEARCH_NOT_REFETCHED",
-      "sha": null,
-      "authority": "secondary research report",
-      "notes": "Prior Deep Research report describes this source; this reconstruction did not independently re-fetch it"
+      "path": ".github/workflows/lockfile.yml",
+      "kind": "workflow",
+      "blob_sha": "d0d3b6bcd48e7481813179e2080520498a08cddd",
+      "authority": "primary"
     },
     {
       "id": "SRC-009",
-      "name": "src/db/database.ts",
-      "type": "research-report repository evidence",
-      "path": "https://github.com/chiriacsergiucs-v2/furniture-builder/blob/main/src/db/database.ts",
-      "access": "REPORTED_BY_PRIOR_RESEARCH_NOT_REFETCHED",
-      "sha": null,
-      "authority": "secondary research report",
-      "notes": "Prior Deep Research report describes this source; this reconstruction did not independently re-fetch it"
+      "path": "docs/architecture.md",
+      "kind": "doc",
+      "blob_sha": "43f3db3789087ae3b3bfbbd8e5cddc9dca74633b",
+      "authority": "primary"
     },
     {
       "id": "SRC-010",
-      "name": "docs/storage-migration.md",
-      "type": "research-report repository evidence",
-      "path": "https://github.com/chiriacsergiucs-v2/furniture-builder/blob/main/docs/storage-migration.md",
-      "access": "REPORTED_BY_PRIOR_RESEARCH_NOT_REFETCHED",
-      "sha": null,
-      "authority": "secondary research report",
-      "notes": "Prior Deep Research report describes this source; this reconstruction did not independently re-fetch it"
+      "path": "docs/algorithm.md",
+      "kind": "doc",
+      "blob_sha": "71bd45584a1152a1c33245e5d08e3babf155d96c",
+      "authority": "primary"
     },
     {
       "id": "SRC-011",
-      "name": "docs/algorithm.md",
-      "type": "research-report repository evidence",
-      "path": "https://github.com/chiriacsergiucs-v2/furniture-builder/blob/main/docs/algorithm.md",
-      "access": "REPORTED_BY_PRIOR_RESEARCH_NOT_REFETCHED",
-      "sha": null,
-      "authority": "secondary research report",
-      "notes": "Prior Deep Research report describes this source; this reconstruction did not independently re-fetch it"
+      "path": "docs/data-format.md",
+      "kind": "doc",
+      "blob_sha": "0bcaa448def2d07f04ffc437c4d2b8366ca8e390",
+      "authority": "primary"
     },
     {
       "id": "SRC-012",
-      "name": "src/furniture/furniture-model.ts",
-      "type": "research-report repository evidence",
-      "path": "https://github.com/chiriacsergiucs-v2/furniture-builder/blob/main/src/furniture/furniture-model.ts",
-      "access": "REPORTED_BY_PRIOR_RESEARCH_NOT_REFETCHED",
-      "sha": null,
-      "authority": "secondary research report",
-      "notes": "Prior Deep Research report describes this source; this reconstruction did not independently re-fetch it"
+      "path": "docs/deployment.md",
+      "kind": "doc",
+      "blob_sha": "31139fa05e3fd28e5ace541e6b2325a547b3fbfb",
+      "authority": "primary"
     },
     {
       "id": "SRC-013",
-      "name": "src/assembly/model.ts",
-      "type": "research-report repository evidence",
-      "path": "https://github.com/chiriacsergiucs-v2/furniture-builder/blob/main/src/assembly/model.ts",
-      "access": "REPORTED_BY_PRIOR_RESEARCH_NOT_REFETCHED",
-      "sha": null,
-      "authority": "secondary research report",
-      "notes": "Prior Deep Research report describes this source; this reconstruction did not independently re-fetch it"
+      "path": "docs/licences.md",
+      "kind": "doc",
+      "blob_sha": "3002f4f771487be5a64dea19f33a4bbea4c07e96",
+      "authority": "primary"
     },
     {
       "id": "SRC-014",
-      "name": "src/import-export/csv.ts",
-      "type": "research-report repository evidence",
-      "path": "https://github.com/chiriacsergiucs-v2/furniture-builder/blob/main/src/import-export/csv.ts",
-      "access": "REPORTED_BY_PRIOR_RESEARCH_NOT_REFETCHED",
-      "sha": null,
-      "authority": "secondary research report",
-      "notes": "Prior Deep Research report describes this source; this reconstruction did not independently re-fetch it"
+      "path": "docs/handoff.md",
+      "kind": "doc",
+      "blob_sha": "4863ca30c159fbc8a918802b2acffbb863de5f21",
+      "authority": "primary"
     },
     {
       "id": "SRC-015",
-      "name": "CUTLIST_OPTIMIZER_RESUMABLE_BUILD_PROMPT_v2.md",
-      "type": "research-report repository evidence",
-      "path": "https://github.com/chiriacsergiucs-v2/furniture-builder/blob/main/CUTLIST_OPTIMIZER_RESUMABLE_BUILD_PROMPT_v2.md",
-      "access": "REPORTED_BY_PRIOR_RESEARCH_NOT_REFETCHED",
-      "sha": null,
-      "authority": "secondary research report",
-      "notes": "Prior Deep Research report describes this source; this reconstruction did not independently re-fetch it"
+      "path": "docs/progress.json",
+      "kind": "doc",
+      "blob_sha": "31fed494c005ef7351d26ee8c862012dfa9b6622",
+      "authority": "primary"
     },
     {
       "id": "SRC-016",
-      "name": "src/tests/**, tests/**",
-      "type": "research-report repository evidence",
-      "path": "https://github.com/chiriacsergiucs-v2/furniture-builder/blob/main/src/tests/**, tests/**",
-      "access": "REPORTED_BY_PRIOR_RESEARCH_NOT_REFETCHED",
-      "sha": null,
-      "authority": "secondary research report",
-      "notes": "Prior Deep Research report describes this source; this reconstruction did not independently re-fetch it"
+      "path": "docs/modular-engine-backlog.md",
+      "kind": "doc",
+      "blob_sha": "1745235f212b2648d63a24fafda123b6ca434f2b",
+      "authority": "primary"
     },
     {
       "id": "SRC-017",
-      "name": "Actions CI run 39316987912",
-      "type": "research-report repository evidence",
-      "path": "Actions CI run 39316987912",
-      "access": "REPORTED_BY_PRIOR_RESEARCH_NOT_REFETCHED",
-      "sha": null,
-      "authority": "secondary research report",
-      "notes": "Prior Deep Research report describes this source; this reconstruction did not independently re-fetch it"
+      "path": "docs/storage-migration.md",
+      "kind": "doc",
+      "blob_sha": "c85860f55e789fd2cb489319931ff4c72db80173",
+      "authority": "primary"
     },
     {
       "id": "SRC-018",
-      "name": "Actions Pages run 39316987961",
-      "type": "research-report repository evidence",
-      "path": "Actions Pages run 39316987961",
-      "access": "REPORTED_BY_PRIOR_RESEARCH_NOT_REFETCHED",
-      "sha": null,
-      "authority": "secondary research report",
-      "notes": "Prior Deep Research report describes this source; this reconstruction did not independently re-fetch it"
+      "path": "docs/verification-log.md",
+      "kind": "doc",
+      "blob_sha": "d2be0433fbebb67dbada269d09f80f93ea8908d2",
+      "authority": "primary"
     },
     {
       "id": "SRC-019",
-      "name": "PR history 1–10",
-      "type": "research-report repository evidence",
-      "path": "PR history 1–10",
-      "access": "REPORTED_BY_PRIOR_RESEARCH_NOT_REFETCHED",
-      "sha": null,
-      "authority": "secondary research report",
-      "notes": "Prior Deep Research report describes this source; this reconstruction did not independently re-fetch it"
+      "path": "docs/implementation-plan.md",
+      "kind": "doc",
+      "blob_sha": "a48d606fa602991d9ecdcb89474e7c627f589172",
+      "authority": "primary"
     },
     {
       "id": "SRC-020",
-      "name": "SABLON DEBITARE NOU.xlsx",
-      "type": "uploaded file",
-      "path": "SABLON DEBITARE NOU.xlsx",
-      "access": "VERIFIED_IN_CURRENT_SESSION",
-      "sha": "ea9ae3715d5cc6730f8d41ea830d7685ebc4eaff5be07829db9a2837b55a190e",
-      "authority": "primary",
-      "notes": "Uploaded and byte-accessible; 30727 bytes"
+      "path": "docs/release-0.3-3d-and-dnd.md",
+      "kind": "doc",
+      "blob_sha": "6dc2269cc0afaae1240ddff57b949e84f4afeba6",
+      "authority": "primary"
     },
     {
       "id": "SRC-021",
-      "name": "SABLON DEBITARE NOU (1).xlsx",
-      "type": "uploaded file",
-      "path": "SABLON DEBITARE NOU (1).xlsx",
-      "access": "VERIFIED_IN_CURRENT_SESSION",
-      "sha": "92a0c9d15ae98f9516cc72458fa4105dea28149b687da5afcce4d3a27dab9c08",
-      "authority": "primary",
-      "notes": "Uploaded and byte-accessible; 30574 bytes"
+      "path": "src/engine/types.ts",
+      "kind": "code",
+      "blob_sha": "a28a263834d4cc45bd55bdcd9b10739d6bc6a8fd",
+      "authority": "primary"
     },
     {
       "id": "SRC-022",
-      "name": "SABLON DEBITARE NOU (2).xlsx",
-      "type": "uploaded file",
-      "path": "SABLON DEBITARE NOU (2).xlsx",
-      "access": "VERIFIED_IN_CURRENT_SESSION",
-      "sha": "055751e3d2a8fc5e1f038eaa5b51d8ee8489e5edd2a0302cd407c74c667b77c8",
-      "authority": "primary",
-      "notes": "Uploaded and byte-accessible; 30478 bytes"
+      "path": "src/engine/schema.ts",
+      "kind": "code",
+      "blob_sha": "dd3d177a39166cd2bce95fecd1d3370c0952219c",
+      "authority": "primary"
     },
     {
       "id": "SRC-023",
-      "name": "SABLON DEBITARE NOU (3).xlsx",
-      "type": "uploaded file",
-      "path": "SABLON DEBITARE NOU (3).xlsx",
-      "access": "VERIFIED_IN_CURRENT_SESSION",
-      "sha": "7dfd4407552a05ca70b02e6a9bbced25b6b945d02b4fd87703b388a7ba6c6365",
-      "authority": "primary",
-      "notes": "Uploaded and byte-accessible; 30470 bytes"
+      "path": "src/engine/guillotine.ts",
+      "kind": "code",
+      "blob_sha": "c2b55481442a1420487ae3760efba558d01cca28",
+      "authority": "primary"
     },
     {
       "id": "SRC-024",
-      "name": "Formular-Comanda-Debitare-SALICE-2025.pdf",
-      "type": "uploaded file",
-      "path": "Formular-Comanda-Debitare-SALICE-2025.pdf",
-      "access": "VERIFIED_IN_CURRENT_SESSION",
-      "sha": "1d5c085381b0b19da23252e9e01de94580e6ee8876fb953f11ef9543fcaaeb4d",
-      "authority": "primary",
-      "notes": "Uploaded and byte-accessible; 327783 bytes"
+      "path": "src/engine/optimize.ts",
+      "kind": "code",
+      "blob_sha": "2c234da92c9b7bfc17f7f111df4eaeb973996790",
+      "authority": "primary"
     },
     {
       "id": "SRC-025",
-      "name": "Branch · Branch · Fișiere salvate și grupate.txt",
-      "type": "uploaded file",
-      "path": "Branch · Branch · Fișiere salvate și grupate.txt",
-      "access": "VERIFIED_IN_CURRENT_SESSION",
-      "sha": "277ed08556b055a05ccc11ab783d96172fd45c4bc0281cec3a9f1a12b57a95f2",
-      "authority": "primary",
-      "notes": "Uploaded and byte-accessible; 12018 bytes"
+      "path": "src/engine/validate.ts",
+      "kind": "code",
+      "blob_sha": "39388d2e28ff54a90aef2a0a56fdcdd67d5c90b9",
+      "authority": "primary"
     },
     {
       "id": "SRC-026",
-      "name": "Estimare servicii Salice.txt",
-      "type": "uploaded file",
-      "path": "Estimare servicii Salice.txt",
-      "access": "VERIFIED_IN_CURRENT_SESSION",
-      "sha": "363942a021a1d3ede601dc74f3f0aa49faaddd2b8c9c3152b0ccac90b1f9d73b",
-      "authority": "primary",
-      "notes": "Uploaded and byte-accessible; 2005 bytes"
+      "path": "src/engine/geometry.ts",
+      "kind": "code",
+      "blob_sha": "43de6631ee5f517da062f2c5138f0767b5679b68",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-027",
+      "path": "src/engine/optimizer.worker.ts",
+      "kind": "code",
+      "blob_sha": "3df4ee4668dd45eb642638fff64614077dbe3799",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-028",
+      "path": "src/db/database.ts",
+      "kind": "code",
+      "blob_sha": "ea31e449316f76ff1ddebbc5d59cf0caf9a4f7d7",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-029",
+      "path": "src/db/migration.ts",
+      "kind": "code",
+      "blob_sha": "b677de0848ad9f30f9aae1c6e1dafee330ec1883",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-030",
+      "path": "src/db/backup.ts",
+      "kind": "code",
+      "blob_sha": "ba429ac948606bfcc11bde27fc6ddfccc516b87e",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-031",
+      "path": "src/db/repository.ts",
+      "kind": "code",
+      "blob_sha": "7a57e7500618b4b5fbb151596042aaa39ac4eee6",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-032",
+      "path": "src/storage/localStorage.ts",
+      "kind": "code",
+      "blob_sha": "a565cd0dcc6962124d033e135fed2368b920d580",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-033",
+      "path": "src/furniture/component-engine.ts",
+      "kind": "code",
+      "blob_sha": "1a9fa940bf905d71b589eaa4c24879d7d27e325e",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-034",
+      "path": "src/furniture/templates.ts",
+      "kind": "code",
+      "blob_sha": "15b3adcf4618521d42c8094b0116dc63a26ae02c",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-035",
+      "path": "src/furniture/furniture-model.ts",
+      "kind": "code",
+      "blob_sha": "46c09fe38f84547af05ac03ea55b0e7838bc5d51",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-036",
+      "path": "src/furniture/legacy-adapter.ts",
+      "kind": "code",
+      "blob_sha": "5f3a888b455612990ab581a173f6330df4f08e03",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-037",
+      "path": "src/furniture/drawer.ts",
+      "kind": "code",
+      "blob_sha": "9d1109302a5cc761ad739871e723242789542d06",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-038",
+      "path": "src/furniture/surface.ts",
+      "kind": "code",
+      "blob_sha": "c21e9abbe93c7bd693c17487c5738093bbe111fd",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-039",
+      "path": "src/furniture/cabinet.ts",
+      "kind": "code",
+      "blob_sha": "4d32cb337d8f74d4277ace6eda028c1b0533b210",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-040",
+      "path": "src/furniture/geometry-diagnostics.ts",
+      "kind": "code",
+      "blob_sha": "59d60fca19924e223682451750adc4cd2a3a31a9",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-041",
+      "path": "src/assembly/model.ts",
+      "kind": "code",
+      "blob_sha": "48e50f68f6459abe38b56ff76437600c99fe7eae",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-042",
+      "path": "src/assembly/fusion.ts",
+      "kind": "code",
+      "blob_sha": "9b4a32be413d798906054d6bb99cee176cbf384e",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-043",
+      "path": "src/assembly/starter.ts",
+      "kind": "code",
+      "blob_sha": "b02262d9493c7197163b219371a1543c56f97af6",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-044",
+      "path": "src/import-export/excel.ts",
+      "kind": "code",
+      "blob_sha": "599f3182b22990d1c7a48a33b2fa4a0c5f81a0d4",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-045",
+      "path": "src/import-export/csv.ts",
+      "kind": "code",
+      "blob_sha": "78d1cd9fd37c93511d73d9969251b4f53648141f",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-046",
+      "path": "src/import-export/svg.ts",
+      "kind": "code",
+      "blob_sha": "6b41214b55c8ecba9d9cd8e3a50c8d7243641fd1",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-047",
+      "path": "src/presets/presets.ts",
+      "kind": "code",
+      "blob_sha": "10c0bcf72569c6ef5ff0d942225a633a4a6b7daa",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-048",
+      "path": "src/presets/origin.ts",
+      "kind": "code",
+      "blob_sha": "f627c9c567c1a4fe914a7e8f65ebc806de072165",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-049",
+      "path": "src/presets/customize.ts",
+      "kind": "code",
+      "blob_sha": "411d0c1baa27044d776484a622abcce3e751643c",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-050",
+      "path": "src/presets/duplicate.ts",
+      "kind": "code",
+      "blob_sha": "2fd7765b46eb536a4737918c0a13a18b39daa836",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-051",
+      "path": "src/components/reorderParts.ts",
+      "kind": "code",
+      "blob_sha": "d88e188e3cf0d341ecb300bd7354ec26b353491d",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-052",
+      "path": "src/components/Assembly3DEditor.tsx",
+      "kind": "code",
+      "blob_sha": "989c35aebe9499882d421593155d6718b393eaac",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-053",
+      "path": "src/components/PartOrderBoard.tsx",
+      "kind": "code",
+      "blob_sha": "478568418d3eacc3760568418057a8171ed2f104",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-054",
+      "path": "src/components/Panel3DPreview.tsx",
+      "kind": "code",
+      "blob_sha": "fcef1a02782b2aa6e03dc5681b60b03409482bc1",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-055",
+      "path": "src/components/PositionedFurniturePreview.tsx",
+      "kind": "code",
+      "blob_sha": "46e956f63ef6b4c6eb0037f05c08bab694a62af4",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-056",
+      "path": "src/components/PresetManager.tsx",
+      "kind": "code",
+      "blob_sha": "b9e203840bdf0ed77b10bd014966e5680cad9cf7",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-057",
+      "path": "src/components/PresetCustomization.tsx",
+      "kind": "code",
+      "blob_sha": "bfdaf0fe64445c37ddf1d1fd5b048a0f6afa3d17",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-058",
+      "path": "src/components/CabinetConfigurator.tsx",
+      "kind": "code",
+      "blob_sha": "99fbfd7beea7feb791a1107e3ae00b64e51160fd",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-059",
+      "path": "src/tests/unit/db.test.ts",
+      "kind": "test",
+      "blob_sha": "f72fd62531bdc2bae74067d7e04b44f58b762af5",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-060",
+      "path": "src/tests/unit/schema.test.ts",
+      "kind": "test",
+      "blob_sha": "e6a5891e7acd4951688186fa0098183ce5500721",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-061",
+      "path": "src/tests/unit/furniture-model.test.ts",
+      "kind": "test",
+      "blob_sha": "7a44d3aae13f4ffbd5842ecfb1718cdcb2ab554f",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-062",
+      "path": "src/tests/unit/template-expansion.test.ts",
+      "kind": "test",
+      "blob_sha": "81be975272e81ebf87b49182372727d6a432e66e",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-063",
+      "path": "src/tests/unit/modular-composition.test.ts",
+      "kind": "test",
+      "blob_sha": "bdc7a826c3871422e915a59b75b6c70f9c5c4735",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-064",
+      "path": "src/tests/unit/component-engine.test.ts",
+      "kind": "test",
+      "blob_sha": "c99c25660d8cfd49d551e33f2d2d1efa3ea83915",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-065",
+      "path": "src/tests/unit/preset-customization.test.ts",
+      "kind": "test",
+      "blob_sha": "9a402ebb9e3ada218221a6b12c105d090714dd7e",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-066",
+      "path": "src/tests/unit/reorder.test.ts",
+      "kind": "test",
+      "blob_sha": "016fa48362edde49d8ee22665bfd5268c4a93161",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-067",
+      "path": "src/tests/unit/panel3d-layout.test.ts",
+      "kind": "test",
+      "blob_sha": "40cb28ac97bd008b4ae9a64d5f8b970701a0afb5",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-068",
+      "path": "src/tests/e2e/migration.spec.ts",
+      "kind": "test",
+      "blob_sha": "977f158232dbf9a2c201c1441da4d304f53873f0",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-069",
+      "path": "src/tests/e2e/offline.spec.ts",
+      "kind": "test",
+      "blob_sha": "415fec274220f61d7905cc06a0b601fd74213843",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-070",
+      "path": "tests/engine.node.test.mjs",
+      "kind": "test",
+      "blob_sha": "77fc32c06804eedd0216b47060f3f09f54512a5a",
+      "authority": "primary"
+    },
+    {
+      "id": "SRC-071",
+      "path": "tests/benchmark.mjs",
+      "kind": "test",
+      "blob_sha": "4154e269b920255deec0f45256eacda840d4052a",
+      "authority": "primary"
     }
-  ],
-  "interpretation": "REPORTED_BY_PRIOR_RESEARCH_NOT_REFETCHED is not current-session independent confirmation; uploaded files verified locally."
+  ]
 }

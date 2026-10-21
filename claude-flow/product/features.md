@@ -1,23 +1,19 @@
-# Feature register
+# Feature map (FEAT → modules → requirements)
 
-- **FEAT-001 Project and material editor** — `IMPLEMENTED`; module `MOD-001`
-- **FEAT-002 Stock sheets, trims and quantity** — `IMPLEMENTED`; module `MOD-001`
-- **FEAT-003 Grain, rotation and four-edge ABS** — `IMPLEMENTED`; module `MOD-002`
-- **FEAT-004 Seeded heuristic guillotine optimiser** — `IMPLEMENTED`; module `MOD-002`
-- **FEAT-005 Independent layout validation** — `IMPLEMENTED`; module `MOD-003`
-- **FEAT-006 2D layouts and statistics** — `IMPLEMENTED`; module `MOD-004`
-- **FEAT-007 Generic CSV and XLSX interchange** — `IMPLEMENTED`; module `MOD-005`
-- **FEAT-008 SVG, PDF and backup exports** — `IMPLEMENTED`; module `MOD-005`
-- **FEAT-009 IndexedDB project persistence** — `IMPLEMENTED`; module `MOD-006`
-- **FEAT-010 Atomic legacy migration** — `IMPLEMENTED`; module `MOD-006`
-- **FEAT-011 Presets, kits and revisions** — `IMPLEMENTED`; module `MOD-007`
-- **FEAT-012 Exploded panel preview** — `IMPLEMENTED`; module `MOD-008`
-- **FEAT-013 Positioned assembly editing** — `IMPLEMENTED`; module `MOD-008`
-- **FEAT-014 Fusion Python snapshot export** — `IMPLEMENTED_UNVERIFIED_IN_FUSION`; module `MOD-009`
-- **FEAT-015 Typed component graph** — `IMPLEMENTED`; module `MOD-010`
-- **FEAT-016 Recipe-based furniture families** — `PARTIAL`; module `MOD-010`
-- **FEAT-017 Normalised FurnitureModel projections** — `IMPLEMENTED`; module `MOD-011`
-- **FEAT-018 Generic registered-component editor** — `PARTIAL`; module `MOD-010`
-- **FEAT-019 Dedicated bed and wardrobe mechanisms** — `PROPOSED`; module `MOD-010`
-- **FEAT-020 Hardware/joinery-grade physical rules** — `UNKNOWN`; module `MOD-011`
-- **FEAT-021 Static offline PWA / GitHub Pages** — `IMPLEMENTED`; module `MOD-012`
+| FEAT | Feature | Module(s) | Requirements |
+|---|---|---|---|
+| FEAT-001 | Project & materials editor | MOD-001 | FR-001–FR-006 |
+| FEAT-002 | Stock, trim, grain, rotation, ABS inputs | MOD-001, MOD-002 | FR-007–FR-010 |
+| FEAT-003 | Guillotine optimiser in a Web Worker | MOD-002 | FR-011–FR-014 |
+| FEAT-004 | Independent validation | MOD-003 | FR-015–FR-017 |
+| FEAT-005 | Cutting views, statistics, SVG/print | MOD-004, MOD-005 | FR-013, FR-020 |
+| FEAT-006 | CSV / XLSX interchange | MOD-005 | FR-018, FR-019 |
+| FEAT-007 | Dexie storage, migration, backups | MOD-006 | FR-021–FR-025 |
+| FEAT-008 | Preset / category / kit library with revisions | MOD-007 | FR-006, FR-029 |
+| FEAT-009 | Modular component engine & templates | MOD-010, MOD-011 | FR-026–FR-028, FR-036–FR-038 |
+| FEAT-010 | FurnitureModel: 3D + cut rows + hardware schedule | MOD-011, MOD-008 | FR-030, FR-037 |
+| FEAT-011 | 3D preview, assembly editor, reorder | MOD-008 | FR-031, FR-032, FR-039 |
+| FEAT-012 | Fusion 360 Python snapshot | MOD-009 | FR-033 |
+| FEAT-013 | Offline PWA, CI, Pages deploy | MOD-012 | FR-034, FR-035 |
+
+Source: repo `README.md` sections "Features implemented in source" through "B24 enclosure and panel-plinth addition".
