@@ -1,8 +1,9 @@
 import { useMemo } from 'react'
-import { kerfOf, sheetOf } from '../core/design'
+import { sheetOf } from '../core/design'
 import type { NestJob, NestResult, SheetLayout } from '../core/nesting/types'
 import { useDesign } from '../store/designStore'
 import { useNesting } from './useNesting'
+import { useView } from './useView'
 
 const REASON: Record<string, string> = {
   'too-large': 'larger than the usable sheet',
@@ -12,12 +13,13 @@ const REASON: Record<string, string> = {
 
 export function Sheets() {
   const n = useNesting(true)
-  const design = useDesign(s => s.design)
+  const view = useView()
   const setHighlight = useDesign(s => s.setHighlight)
   if (n.blocked) return <p className="blocked">Fix the problems under Checks first; sheets are laid out only for a valid design.</p>
   if (n.status === 'idle' || n.status === 'running') return <p className="empty">Laying out sheets…</p>
   if (n.status === 'error') return <p className="blocked">{n.error}</p>
-  const kerf = kerfOf(design)
+  const kerf = view.kerf
+  const matOf = (id: string) => view.materials.find(m => m.id === id)
   return (
     <div className="sheets">
       <p className="summary">
@@ -25,8 +27,8 @@ export function Sheets() {
         Saw cut {kerf} mm; trim per material below.
       </p>
       <BuyList results={n.results} jobs={n.jobs} />
-      {n.results.map((r, i) => <MaterialSheets key={r.materialId} result={r} job={n.jobs[i]} color={design.materials.find(m => m.id === r.materialId)?.color ?? '#ddd'}
-        labelOf={key => n.rows.find(row => row.panelIds[0] === key)} onHover={setHighlight} trim={sheetOf(design.materials.find(m => m.id === r.materialId)!).trim} />)}
+      {n.results.map((r, i) => { const m = matOf(r.materialId); return <MaterialSheets key={r.materialId} result={r} job={n.jobs[i]} color={m?.color ?? '#ddd'}
+        labelOf={key => n.rows.find(row => row.panelIds[0] === key)} onHover={setHighlight} trim={m ? sheetOf(m).trim : n.jobs[i].trim} /> })}
     </div>
   )
 }

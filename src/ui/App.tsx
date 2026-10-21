@@ -1,10 +1,11 @@
 import { Component, lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react'
-import { cutlist } from '../core/cutlist'
 import { cutlistCsvRo } from '../core/ro'
 import { exportFusionPython } from '../core/fusion'
-import { lastDesignId, loadDesign, rememberLast, saveDesign } from '../persist/db'
+import { lastDesignId, lastProjectId, loadDesign, loadProject, rememberLast, rememberLastProject, saveDesign, saveProject } from '../persist/db'
 import { useDesign } from '../store/designStore'
-import { LibraryDialog, MaterialsDialog, NewDialog } from './Dialogs'
+import { AddPieceDialog, LibraryDialog, MaterialsDialog, NewDialog } from './Dialogs'
+import { PlanView, ProjectPanel } from './Project'
+import { useView } from './useView'
 import { Elevation } from './Elevation'
 import { Inspector } from './Inspector'
 import { Output } from './Output'
@@ -58,7 +59,13 @@ export function App() {
   const setShowFronts = useDesign(s => s.setShowFronts)
   const undo = useDesign(s => s.undo), redo = useDesign(s => s.redo)
   const canUndo = useDesign(s => s.past.length > 0), canRedo = useDesign(s => s.future.length > 0)
-  const [dialog, setDialog] = useState<null | 'new' | 'library' | 'materials'>(null)
+  const [dialog, setDialog] = useState<null | 'new' | 'library' | 'materials' | 'add'>(null)
+  const project = useDesign(s => s.project)
+  const editingItemId = useDesign(s => s.editingItemId)
+  const projectDirtyAt = useDesign(s => s.projectDirtyAt)
+  const vd = useView()
+  const inProject = !!project && !editingItemId
+  const editingName = project?.items.find(i => i.id === editingItemId)?.design.name
   const [save, setSave] = useState<SaveState>('idle')
   const [view, setView] = useState<'front' | '3d'>('front')
   const [has3d] = useState(webglAvailable)
@@ -91,12 +98,16 @@ export function App() {
 
   // Reopen the last piece on this device.
   useEffect(() => {
+    const pid = lastProjectId()
+    if (pid) { loadProject(pid).then(p => { if (p) useDesign.getState().openProject(p) }).catch(() => {}); return }
     const id = lastDesignId()
     if (id) loadDesign(id).then(d => { if (d) useDesign.getState().load(d, { fromStorage: true }) }).catch(() => {})
   }, [])
 
   // Autosave shortly after each change; also save a freshly opened template so it appears in the library.
   useEffect(() => {
+    // Pieces inside a project are saved with the project, never into the library.
+    if (useDesign.getState().project) return
     rememberLast(design.id)
     // Opened from storage and untouched: nothing to write (an old file is upgraded only when edited).
     if (useDesign.getState().pristine) return
@@ -107,19 +118,31 @@ export function App() {
     return () => clearTimeout(t)
   }, [design, dirtyAt])
 
+  // Projects autosave too, and are reopened next time.
+  useEffect(() => {
+    rememberLastProject(project?.id ?? null)
+    if (!project || !projectDirtyAt) return
+    const t = setTimeout(() => {
+      setSave('saving')
+      saveProject(project).then(() => setSave('saved')).catch(() => setSave('failed'))
+    }, 400)
+    return () => clearTimeout(t)
+  }, [project, projectDirtyAt])
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement
       if (t.closest('input, textarea, select')) return
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); if (e.shiftKey) redo(); else undo() }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') { e.preventDefault(); redo() }
-      if (e.key === 'Escape') useDesign.getState().select(null)
+      if (e.key === 'Escape') { const st = useDesign.getState(); if (st.project && !st.editingItemId) st.selectItem(null); else st.select(null) }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [undo, redo])
 
-  const errors = model.diagnostics.filter(d => d.severity === 'error').length
+  const errors = vd.diagnostics.filter(d => d.severity === 'error').length
+  const exportName = fileName(vd.title)
 
   return (
     <>
@@ -128,49 +151,66 @@ export function App() {
         <div className="brand" aria-hidden="true">
           <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" /><line x1="3" y1="10" x2="21" y2="10" /><line x1="3" y1="15.5" x2="21" y2="15.5" /></svg>
         </div>
-        <input className="name" aria-label="Name of this piece" defaultValue={design.name} key={design.id}
-          onBlur={e => { const v = e.target.value.trim(); if (v && v !== design.name) rename(v) }}
+        <input className="name" aria-label={inProject ? 'Name of this project' : 'Name of this piece'} defaultValue={inProject ? project!.name : design.name} key={inProject ? `p-${project!.id}` : design.id}
+          onBlur={e => {
+            const v = e.target.value.trim()
+            if (!v) return
+            if (inProject) { if (v !== project!.name) useDesign.getState().updateProject(p => ({ ...p, name: v })) }
+            else if (v !== design.name) rename(v)
+          }}
           onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }} />
         <span className={`save ${save}`} role="status">{save === 'saving' ? 'Saving…' : save === 'saved' ? 'Saved on this device' : save === 'failed' ? 'Not saved — browser storage unavailable' : ''}</span>
         <nav className="actions">
-          <button type="button" onClick={undo} disabled={!canUndo} title="Undo (Ctrl+Z)">Undo</button>
-          <button type="button" onClick={redo} disabled={!canRedo} title="Redo (Ctrl+Shift+Z)">Redo</button>
-          <span className="divider" aria-hidden="true" />
+          {!inProject && <>
+            <button type="button" onClick={undo} disabled={!canUndo} title="Undo (Ctrl+Z)">Undo</button>
+            <button type="button" onClick={redo} disabled={!canRedo} title="Redo (Ctrl+Shift+Z)">Redo</button>
+            <span className="divider" aria-hidden="true" />
+          </>}
           <button type="button" onClick={() => setDialog('new')}>New</button>
           <button type="button" onClick={() => setDialog('library')}>Saved</button>
-          <button type="button" onClick={() => setDialog('materials')}>Materials</button>
+          {!inProject && <button type="button" onClick={() => setDialog('materials')}>Materials</button>}
           <span className="divider" aria-hidden="true" />
           <button type="button" className="primary" disabled={errors > 0} title={errors ? 'Fix the problems listed under Checks first' : 'Download the parts list as CSV'}
-            onClick={() => download(`${fileName(design.name)}-parts.csv`, cutlistCsvRo(cutlist(model, design.materials)), 'text/csv;charset=utf-8')}>Parts CSV</button>
+            onClick={() => download(`${exportName}-parts.csv`, cutlistCsvRo(vd.rows), 'text/csv;charset=utf-8')}>Parts CSV</button>
           <button type="button" disabled={errors > 0} title={errors ? 'Fix the problems listed under Checks first' : 'Print the cutting sheet (Romanian, A4) or save it as PDF'} onClick={() => setPrinting(true)}>Print</button>
           <details className="menu" ref={menuRef}>
             <summary>Export</summary>
             <div className="menu-items" onClick={() => menuRef.current?.removeAttribute('open')}>
-              <button type="button" onClick={downloadSvg}>Front view drawing (SVG)</button>
-              <button type="button" onClick={() => download(`${fileName(design.name)}-fusion.py`, exportFusionPython(design, model), 'text/x-python')}>
-                Fusion 360 script <small>not yet tested in Fusion</small>
-              </button>
-              <button type="button" onClick={() => download(`${fileName(design.name)}.json`, JSON.stringify(design, null, 2), 'application/json')}>Design file (to open on another device)</button>
+              {inProject ? (
+                <button type="button" onClick={() => download(`${exportName}-project.json`, JSON.stringify(project, null, 2), 'application/json')}>Project file (to open on another device)</button>
+              ) : <>
+                <button type="button" onClick={downloadSvg}>Front view drawing (SVG)</button>
+                <button type="button" onClick={() => download(`${fileName(design.name)}-fusion.py`, exportFusionPython(design, model), 'text/x-python')}>
+                  Fusion 360 script <small>not yet tested in Fusion</small>
+                </button>
+                <button type="button" onClick={() => download(`${fileName(design.name)}.json`, JSON.stringify(design, null, 2), 'application/json')}>Design file (to open on another device)</button>
+              </>}
             </div>
           </details>
         </nav>
       </header>
 
-      <main className="work">
+      {editingItemId && project && (
+        <div className="piece-banner" role="status">
+          <span>Editing <strong>{editingName}</strong> in project <strong>{project.name}</strong>. Changes stay in this project.</span>
+          <button type="button" onClick={() => useDesign.getState().backToProject()}>Back to project</button>
+        </div>
+      )}
+      <main className={`work ${editingItemId ? 'with-banner' : ''}`}>
         <aside className="side">
-          <Inspector />
+          {inProject ? <ProjectPanel onAdd={() => setDialog('add')} /> : <Inspector />}
         </aside>
         <section className="stage" aria-label="Drawing">
           <div className="stage-tools">
             <div className="segmented small" role="radiogroup" aria-label="View">
-              <button type="button" role="radio" aria-checked={view === 'front'} className={view === 'front' ? 'on' : ''} onClick={() => setView('front')}>Front</button>
+              <button type="button" role="radio" aria-checked={view === 'front'} className={view === 'front' ? 'on' : ''} onClick={() => setView('front')}>{inProject ? 'Plan' : 'Front'}</button>
               <button type="button" role="radio" aria-checked={view === '3d'} className={view === '3d' ? 'on' : ''} onClick={() => setView('3d')}>3D</button>
             </div>
             <label className="toggle small"><input type="checkbox" checked={showFronts} onChange={e => setShowFronts(e.target.checked)} /><span>Doors and fronts</span></label>
             {view === '3d' && <button type="button" className="mini" onClick={() => window.dispatchEvent(new Event('fb:fit'))}>Reset view</button>}
           </div>
           <div className="views">
-            <div className={`view front ${view === 'front' ? 'active' : ''}`}><Elevation /></div>
+            <div className={`view front ${view === 'front' ? 'active' : ''}`}>{inProject ? <PlanView /> : <Elevation />}</div>
             <div className={`view three ${view === '3d' ? 'active' : ''}`}>
               {mount3d ? (
                 <ViewerBoundary>
@@ -189,6 +229,7 @@ export function App() {
       <NewDialog open={dialog === 'new'} onClose={() => setDialog(null)} />
       <LibraryDialog open={dialog === 'library'} onClose={() => setDialog(null)} />
       <MaterialsDialog open={dialog === 'materials'} onClose={() => setDialog(null)} />
+      <AddPieceDialog open={dialog === 'add'} onClose={() => setDialog(null)} />
     </div>
     {printing && <PrintSheet />}
     </>

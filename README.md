@@ -7,15 +7,20 @@ Runs in the browser, works offline, keeps everything on your device.
 
 ## How it works
 
-1. Pick a starting piece (**New**) or open one you saved (**Saved**).
-2. In the **front view**, tap a space. Choose what goes in it — shelves, drawers, hanging, empty — add doors, or
-   divide it side by side or stacked. Tap **Whole cabinet** to change size, construction and materials.
-3. The **3D** view, **Parts**, **Hardware** and **Checks** update as you edit. Hover a part to see it in 3D.
-4. When Checks shows no problems, download **Parts CSV** for the panel shop. **Design file** saves a copy you can
-   import on another device.
+1. **New** → pick a starting piece (cabinets, chest, bookcase, sideboard, wardrobe, wall cabinet, blind or L-shaped
+   corner, desks) or start a **project** with several pieces.
+2. In the **front view**, tap a space: shelves (fixed or adjustable on 32 mm pin rows), drawers (equal or chosen
+   heights), hanging, empty; add doors and handles, or divide it side by side or stacked. **Whole cabinet** sets size,
+   construction, overlay / half overlay / inset fronts, wall mounting and materials.
+3. **Parts**, **Sheets** (heuristic layouts on your stock sheets), **Hardware** and **Checks** update as you edit.
+4. When Checks is clear: **Parts CSV** (Romanian, for the panel shop), **Print** (Romanian A4 cutting sheet with
+   sheet plans; save as PDF from the dialog), **Export** → front-view SVG, Fusion 360 script (not yet tested in
+   Fusion), design or project file.
+5. In a **project**, place pieces on the plan (position in mm, quarter turns), set quantities, and get one parts list,
+   one set of sheets and one hardware list. Editing a piece there never changes your saved pieces.
 
-Sizes in the parts list are finished sizes; banded edges are marked L (along the length) and W (along the width).
-Hinge counts and shelf-span warnings are common guidance — your hardware's datasheet decides.
+Sizes are finished sizes; banded edges are marked L/W. Defaults: 4 mm saw cut, 10 mm sheet trim, PAL/HDF 2800 × 2070,
+MDF 2440 × 1220 (Materials). Hinge, pin and bracket counts are common guidance — the maker's datasheet decides.
 
 ## Develop
 
@@ -31,7 +36,8 @@ npm run lint && npm run typecheck && npm run build
 ## Layout
 
 ```
-src/core      pure TypeScript model: types, geometry, cabinet & desk generators, checks, cut list, design document
+src/core      pure TypeScript model: geometry, cabinet/desk/corner generators, checks, cut list, nesting, projects,
+              Romanian output, Fusion export, design document
 src/store     Zustand store: design, derived model, selection, undo/redo
 src/persist   IndexedDB (Dexie) storage
 src/ui        React UI: front elevation, inspector, parts/hardware/checks, dialogs

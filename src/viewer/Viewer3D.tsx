@@ -3,6 +3,7 @@ import { ContactShadows, Edges, OrbitControls } from '@react-three/drei'
 import { useEffect, useMemo, useRef, type ComponentRef } from 'react'
 import { Color } from 'three'
 import { useDesign } from '../store/designStore'
+import { useView } from '../ui/useView'
 import type { Box, Panel } from '../core/types'
 
 const S = 0.001 // mm → metres
@@ -15,11 +16,12 @@ const HIGHLIGHT = '#f2c230'
  * Click a panel to select the space that owns it.
  */
 export default function Viewer3D() {
-  const designId = useDesign(s => s.design.id)
-  const bounds = useDesign(s => s.model.bounds)
+  const view = useView()
+  const designId = view.mode === 'project' ? 'project' : `design:${useDesign.getState().design.id}`
+  const bounds = view.model.bounds
   return (
     <Canvas camera={{ fov: 32, near: 0.01, far: 100 }} dpr={[1, 2]} shadows={false}
-      onPointerMissed={() => useDesign.getState().select(null)}>
+      onPointerMissed={() => { const st = useDesign.getState(); if (st.project && !st.editingItemId) st.selectItem(null); else st.select(null) }}>
       <color attach="background" args={['#e7eae7']} />
       <hemisphereLight args={['#ffffff', '#b9bdb6', 1.1]} />
       <directionalLight position={[2.5, 4, 3]} intensity={1.6} />
@@ -62,13 +64,15 @@ function Fit({ bounds }: { bounds: Box }) {
 }
 
 function Panels() {
-  const panels = useDesign(s => s.model.panels)
-  const materials = useDesign(s => s.design.materials)
-  const productId = useDesign(s => s.design.product.id)
-  const selectedId = useDesign(s => s.selectedId)
+  const view = useView()
+  const panels = view.model.panels
+  const materials = view.materials
+  const selectedSpace = useDesign(s => s.selectedId)
+  const selectedItem = useDesign(s => s.selectedItemId)
+  const selectedId = view.mode === 'project' ? selectedItem : selectedSpace
   const highlight = useDesign(s => s.highlight)
   const showFronts = useDesign(s => s.showFronts)
-  const select = useDesign(s => s.select)
+  const pick = useDesign(s => s.pick)
   const colors = useMemo(() => new Map(materials.map(m => [m.id, m.color])), [materials])
   const hl = useMemo(() => new Set(highlight), [highlight])
 
@@ -76,13 +80,13 @@ function Panels() {
     <group>
       {panels.filter(p => showFronts || !FRONT.has(p.role)).map(p => {
         const b = p.box
-        const selected = selectedId !== null && p.nodeId === selectedId
+        const selected = selectedId !== null && (view.mode === 'project' ? p.nodeId.startsWith(`${selectedId}:`) : p.nodeId === selectedId)
         const lit = hl.has(p.id)
         const base = colors.get(p.materialId) ?? '#cccccc'
         const color = lit ? HIGHLIGHT : selected ? new Color(base).lerp(new Color(SELECT), 0.45).getStyle() : base
         return (
           <mesh key={p.id} position={[(b.x + b.w / 2) * S, (b.y + b.h / 2) * S, (b.z + b.d / 2) * S]}
-            onClick={e => { e.stopPropagation(); select(p.nodeId === productId ? null : p.nodeId) }}>
+            onClick={e => { e.stopPropagation(); pick(p.nodeId) }}>
             <boxGeometry args={[b.w * S, b.h * S, b.d * S]} />
             <meshStandardMaterial color={color} roughness={0.78} metalness={0} transparent={p.role === 'back'} opacity={p.role === 'back' ? 0.92 : 1} />
             <Edges threshold={15} color={selected ? SELECT : '#3b403c'} lineWidth={selected ? 1.6 : 1} />

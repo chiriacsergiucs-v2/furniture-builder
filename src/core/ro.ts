@@ -31,8 +31,12 @@ const PART: Record<string, string> = {
   'Blind panel': 'Panou orb',
 }
 
-/** "Drawer 2 side" → "Lateral sertar". Unknown labels pass through unchanged. */
-export const partRo = (label: string): string => PART[baseLabel(label)] ?? label
+/** "Drawer 2 side" → "Lateral sertar"; "Base cabinet: Left side" → "Base cabinet: Lateral stânga". Unknown labels pass through. */
+export function partRo(label: string): string {
+  const i = label.lastIndexOf(': ')
+  if (i >= 0) return `${label.slice(0, i)}: ${partRo(label.slice(i + 2))}`
+  return PART[baseLabel(label)] ?? label
+}
 
 /** Drilling summary in Romanian (pin rows and handle holes). */
 export function drillingRo(text: string): string {

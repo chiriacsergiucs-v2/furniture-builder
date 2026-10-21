@@ -131,7 +131,7 @@
     {
       "id": "TSK-N04",
       "title": "Projects with several pieces",
-      "status": "READY",
+      "status": "DONE",
       "owner": "architecture-authority",
       "adrs": [
         "ADR-0011",
@@ -147,7 +147,11 @@
       ],
       "blocker": null,
       "acceptance": [],
-      "evidence": [],
+      "evidence": [
+        "tests/project.test.ts",
+        "npx vitest run: 80 passed",
+        "browser run with screenshots and project PDF"
+      ],
       "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
     },
     {
