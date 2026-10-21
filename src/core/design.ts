@@ -118,7 +118,7 @@ export function mapSpace(root: Space, id: string, fn: (s: Space) => Space): Spac
 export function changeKind(s: Space, kind: SpaceKind): Space {
   if (s.kind === kind) return s
   const next = makeSpace(kind, s.id)
-  return { ...next, front: s.front ?? null }
+  return { ...next, front: s.front ?? null, ...(s.handle ? { handle: s.handle } : {}) }
 }
 
 /** Change a drawer count, keeping custom heights in step (new drawers share the rest). */
@@ -195,7 +195,10 @@ function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0)
   if (!isObj(s) || !isStr(s.id)) { errs.push('Invalid space'); return }
   if (seen.has(s.id as string)) errs.push(`Duplicate space id ${String(s.id)}`)
   seen.add(s.id as string)
-  if (s.front != null && !(isObj(s.front) && s.front.kind === 'doors' && (s.front.count === 1 || s.front.count === 2))) errs.push('Invalid doors')
+  if (s.front != null && !(isObj(s.front) && s.front.kind === 'doors' && (s.front.count === 1 || s.front.count === 2) && (s.front.hinge === undefined || s.front.hinge === 'left' || s.front.hinge === 'right'))) errs.push('Invalid doors')
+  if (s.handle != null && !(isObj(s.handle) && ['bar', 'knob', 'push'].includes(s.handle.kind as string) &&
+    (s.handle.holeSpacing === undefined || isInt(s.handle.holeSpacing, 16)) &&
+    (s.handle.position === undefined || ['top', 'centre', 'bottom'].includes(s.handle.position as string)))) errs.push('Invalid handle')
   switch (s.kind) {
     case 'empty': return
     case 'shelves':
@@ -244,6 +247,7 @@ export function validateDesign(d: unknown): string[] {
     ;['bodyMaterialId', 'frontMaterialId', 'backMaterialId'].forEach(k => matRef(k, params))
     if (params.top !== 'over' && params.top !== 'between') errs.push('Invalid top joint')
     for (const k of ['shelfClearance', 'pinRowSetback']) if (params[k] !== undefined && !isInt(params[k])) errs.push(`${k} must be a whole number of mm`)
+    if (params.frontStyle !== undefined && !['overlay', 'half', 'inset'].includes(params.frontStyle as string)) errs.push('Invalid front style')
     if (!['none', 'applied', 'inset'].includes(params.back as string)) errs.push('Invalid back')
     validateSpace(params.interior, errs, new Set())
   } else if (p.kind === 'desk') {

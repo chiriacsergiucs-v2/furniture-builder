@@ -75,6 +75,12 @@ export function Elevation() {
         {showFronts && fronts.map(p => (
           <rect key={p.id} className="el-front" x={p.box.x} y={Y(p.box.y, p.box.h)} width={p.box.w} height={p.box.h} />
         ))}
+        {showFronts && fronts.filter(p => p.handleHoles).map(p => {
+          const pts = p.handleHoles!.at.map(([u, v]) => [p.box.x + u, -(p.box.y + v)] as const)
+          return pts.length === 2
+            ? <line key={`h-${p.id}`} className="el-handle" x1={pts[0][0]} y1={pts[0][1]} x2={pts[1][0]} y2={pts[1][1]} />
+            : <circle key={`h-${p.id}`} className="el-knob" cx={pts[0][0]} cy={pts[0][1]} r={Math.max(b.w, b.h) / 160} />
+        })}
         {leaves.map(s => (
           <text key={`l-${s.nodeId}`} className={`el-label ${s.nodeId === selectedId ? 'selected' : ''}`} x={s.box.x + s.box.w / 2} y={Y(s.box.y, s.box.h) + s.box.h / 2}
             fontSize={Math.min(fontSize, s.box.w / 6)} dominantBaseline="middle" textAnchor="middle">

@@ -53,6 +53,8 @@ export interface Panel {
   banded: Face[]
   /** 32 mm-system shelf-pin hole rows (annotation for the panel shop, ADR-0023). */
   pinRows?: PinRows[]
+  /** Handle holes on a front, measured from the front's left and bottom edges (ADR-0024). */
+  handleHoles?: { at: [Mm, Mm][]; diameter: Mm }
 }
 
 /** Hole rows on one face of a panel. Positions are measured on the panel itself, in mm. */
@@ -65,7 +67,7 @@ export interface PinRows {
   diameter: Mm
 }
 
-export type HardwareKind = 'drawer-runner-pair' | 'hinge' | 'clothes-rail' | 'rail-support' | 'shelf-pin'
+export type HardwareKind = 'drawer-runner-pair' | 'hinge' | 'clothes-rail' | 'rail-support' | 'shelf-pin' | 'handle' | 'push-latch'
 
 export interface HardwareItem {
   nodeId: string
@@ -115,12 +117,29 @@ export interface FurnitureModel {
 /** Size of one part of a split: fixed millimetres or a share of the remainder. */
 export type SplitSize = { mode: 'mm'; value: Mm } | { mode: 'fr'; value: number }
 
-export interface DoorsFront { kind: 'doors'; count: 1 | 2; }
+export interface DoorsFront {
+  kind: 'doors'
+  count: 1 | 2
+  /** Hinge side of a single door (default left, so it opens from the right). */
+  hinge?: 'left' | 'right'
+}
+
+/** Handle on every front of a space (ADR-0024). Push-to-open has no holes; it schedules a push latch. */
+export interface Handle {
+  kind: 'bar' | 'knob' | 'push'
+  /** Hole centres of a bar handle (default 128). */
+  holeSpacing?: Mm
+  position?: 'top' | 'centre' | 'bottom'
+}
+
+export type FrontStyle = 'overlay' | 'half' | 'inset'
 
 interface SpaceBase {
   id: string
-  /** Optional doors covering this whole space (not allowed on drawer spaces). */
+  /** Optional doors covering this whole space. Doors over drawers make them internal drawers. */
   front?: DoorsFront | null
+  /** Handle on this space's doors, or on its drawer fronts. */
+  handle?: Handle | null
 }
 
 export interface EmptySpace extends SpaceBase { kind: 'empty' }
@@ -177,8 +196,10 @@ export interface CabinetParams {
   backInset: Mm
   plinthHeight: Mm
   plinthSetback: Mm
-  /** Gap between adjacent fronts; outer reveal is half of it. */
+  /** Gap between adjacent fronts; outer reveal is half of it (overlay) or the full gap (inset). */
   frontGap: Mm
+  /** How fronts meet the carcass (ADR-0024). Absent = overlay. */
+  frontStyle?: FrontStyle
   shelfSetback: Mm
   /** Adjustable shelves are this much shorter on each side (default 1). */
   shelfClearance?: Mm

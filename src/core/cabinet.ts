@@ -1,6 +1,6 @@
 import { box, distribute, equalParts } from './geometry'
 import type {
-  Box, CabinetParams, Diagnostic, Face, HardwareItem, Material, Mm, Panel, PanelRole, PinRows, Space, SpaceOpening,
+  Box, CabinetParams, Diagnostic, Face, Handle, HardwareItem, Material, Mm, Panel, PanelRole, PinRows, Space, SpaceOpening,
 } from './types'
 
 /**
@@ -87,6 +87,25 @@ export function buildCabinet(p: CabinetParams, materials: Map<string, Material>,
       thicknessAxis, grainAxis, banded,
     })
   }
+  /** Attach handle holes to the front that was just added (positions from the front's left/bottom edges). */
+  const placeHandle = (h: Handle | null | undefined, kind: 'door' | 'drawer', w: Mm, hgt: Mm, openEdge: 'left' | 'right' | null, nodeId: string) => {
+    if (!h || h.kind === 'push') return
+    const panel = out.panels[out.panels.length - 1]
+    const pos = h.position ?? (kind === 'drawer' ? 'top' : 'centre')
+    const inset = kind === 'drawer' ? 40 : 100
+    const vc = pos === 'top' ? hgt - Math.min(inset, lo(hgt)) : pos === 'bottom' ? Math.min(inset, lo(hgt)) : lo(hgt)
+    const uc = kind === 'drawer' ? lo(w) : openEdge === 'left' ? Math.min(40, lo(w)) : w - Math.min(40, lo(w))
+    if (h.kind === 'knob') { panel.handleHoles = { at: [[uc, vc]], diameter: 5 }; return }
+    const S = h.holeSpacing ?? 128
+    const along = kind === 'drawer' ? w : hgt
+    if (S + 40 > along) { out.diagnostics.push({ severity: 'warning', code: 'handle-fit', message: `${S} mm handle does not fit on ${panel.label.toLowerCase()} (${along} mm).`, nodeId: mapNode(nodeId) }); return }
+    const centre = kind === 'drawer' ? uc : vc
+    let a = centre - lo(S), b = centre + hi(S)
+    // keep the holes on the front at top/bottom positions
+    if (kind === 'door' && b > hgt - 20) { b = hgt - 20; a = b - S }
+    if (kind === 'door' && a < 20) { a = 20; b = a + S }
+    panel.handleHoles = { at: kind === 'drawer' ? [[a, vc], [b, vc]] : [[uc, a], [uc, b]], diameter: 5 }
+  }
   const hw = (item: HardwareItem) => out.hardware.push({ ...item, nodeId: mapNode(item.nodeId) })
 
   const { width: W, height: H, depth: D, plinthHeight: ph } = p
@@ -123,11 +142,27 @@ export function buildCabinet(p: CabinetParams, materials: Map<string, Material>,
   }
 
   const adjustable: { spaceId: string; op: Box }[] = []
+  const style = p.frontStyle ?? 'overlay'
+  const inset = style === 'inset'
   const r = lo(g)
+  // Overlay covers the outer panels; half overlay stops half a gap short of their centre lines (as at dividers).
+  const rootFront: FrontZone = style === 'half'
+    ? { x0: lo(t) + hi(g), x1: W - t + lo(t) - lo(g), y0: ph + lo(t) + hi(g), y1: H - t + lo(t) - lo(g) }
+    : { x0: r, x1: W - r, y0: ph + r, y1: H - r }
   const root: Ctx = {
     opening: box(t, ph + t, openZ, W - 2 * t, H - ph - 2 * t, D - openZ),
-    front: { x0: r, x1: W - r, y0: ph + r, y1: H - r },
+    front: rootFront,
     behindDoors: false,
+  }
+  /** Inset fronts sit inside their own opening with the full gap all round, flush with the carcass front. */
+  const zoneOf = (c: Ctx): FrontZone => inset
+    ? { x0: c.opening.x + g, x1: c.opening.x + c.opening.w - g, y0: c.opening.y + g, y1: c.opening.y + c.opening.h - g }
+    : c.front
+  const frontZ = inset ? D - tf : D
+  const handleHw = (nodeId: string, h: Handle | null | undefined, fronts: number) => {
+    if (!h || fronts <= 0) return
+    if (h.kind === 'push') hw({ nodeId, kind: 'push-latch', label: 'Push latch (push-to-open)', quantity: fronts, note: 'use hinges without self-closing spring for doors (check the latch datasheet)' })
+    else hw({ nodeId, kind: 'handle', label: h.kind === 'bar' ? `Bar handle, ${h.holeSpacing ?? 128} mm centres` : 'Knob', quantity: fronts })
   }
 
   // ---- interior ------------------------------------------------------------
@@ -151,24 +186,32 @@ export function buildCabinet(p: CabinetParams, materials: Map<string, Material>,
 
     // doors
     if (hasDoors && s.front) {
-      const f = c.front
+      const f = zoneOf(c)
       const n = s.front.count
       const totalW = f.x1 - f.x0 - (n - 1) * g
       const widths = equalParts(totalW, n)
       let x = f.x0
       widths.forEach((w, i) => {
         const h = f.y1 - f.y0
+        // The handle goes on the opening edge: right edge of a left-hinged door, the meeting edges of a pair.
+        const openEdge: 'left' | 'right' = n === 2 ? (i === 0 ? 'right' : 'left') : (s.front!.hinge === 'right' ? 'left' : 'right')
         add(s.id, 'door', n === 1 ? 'Door' : i === 0 ? 'Door left' : 'Door right', front.id,
-          box(x, f.y0, D, w, h, tf), 'z', 'y', ['-x', '+x', '-y', '+y'], i)
+          box(x, f.y0, frontZ, w, h, tf), 'z', 'y', ['-x', '+x', '-y', '+y'], i)
+        placeHandle(s.handle, 'door', w, h, openEdge, s.id)
         if (w > 600) warn('door-wide', `Door ${w} mm wide; over ~600 mm consider two doors.`, s.id)
         if (w < 100 || h < 100) err('door-small', `Door ${w}×${h} mm is too small.`, s.id)
         x += w + g
       })
       const dh = f.y1 - f.y0
       hw({ nodeId: s.id, kind: 'hinge', label: 'Hinge, 35 mm cup, soft-close, clip-on', quantity: hingeCount(dh) * n, note: `${hingeCount(dh)} per door, ${hingeBand(dh)} (typical — confirm with the hinge datasheet)` })
+      handleHw(s.id, s.handle, n)
     }
-    const inner: Ctx = { ...c, behindDoors: c.behindDoors || hasDoors }
+    // Behind inset doors everything moves back by the door thickness.
+    const innerOpening = hasDoors && inset ? { ...op, d: op.d - tf } : op
+    if (innerOpening.d <= 0) { err('space-too-small', 'No depth left behind the inset doors.', s.id); return }
+    const inner: Ctx = { ...c, opening: innerOpening, behindDoors: c.behindDoors || hasDoors }
 
+    const ip = inner.opening
     switch (s.kind) {
       case 'empty':
         return
@@ -176,115 +219,117 @@ export function buildCabinet(p: CabinetParams, materials: Map<string, Material>,
         const n = s.count
         if (n < 0 || !Number.isInteger(n) || n > 50) { err('shelf-count', 'Shelf count must be a whole number from 0 to 50.', s.id); return }
         if (n === 0) return
-        const gapTotal = op.h - n * t
-        if (gapTotal < (n + 1) * 20) { err('shelves-crowded', `${n} shelves do not fit in ${op.h} mm.`, s.id); return }
+        const gapTotal = ip.h - n * t
+        if (gapTotal < (n + 1) * 20) { err('shelves-crowded', `${n} shelves do not fit in ${ip.h} mm.`, s.id); return }
         const gaps = equalParts(gapTotal, n + 1)
-        const sd = op.d - p.shelfSetback
+        const sd = ip.d - p.shelfSetback
         if (sd < 50) { err('shelf-shallow', 'Shelves would be shallower than 50 mm.', s.id); return }
         const clear = s.adjustable ? (p.shelfClearance ?? DEFAULT_SHELF_CLEARANCE) : 0
-        if (s.adjustable && op.w - 2 * clear < 50) { err('shelf-narrow', 'Adjustable shelves would be narrower than 50 mm.', s.id); return }
-        let y = op.y
+        if (s.adjustable && ip.w - 2 * clear < 50) { err('shelf-narrow', 'Adjustable shelves would be narrower than 50 mm.', s.id); return }
+        let y = ip.y
         for (let i = 0; i < n; i++) {
           y += gaps[i]
           add(s.id, 'shelf', s.adjustable ? `Adjustable shelf ${i + 1}` : `Shelf ${i + 1}`, body.id,
-            box(op.x + clear, y, op.z, op.w - 2 * clear, t, sd), 'y', 'x', ['+z'], i)
+            box(ip.x + clear, y, ip.z, ip.w - 2 * clear, t, sd), 'y', 'x', ['+z'], i)
           y += t
         }
         if (s.adjustable) {
-          adjustable.push({ spaceId: s.id, op })
+          adjustable.push({ spaceId: s.id, op: ip })
           hw({ nodeId: s.id, kind: 'shelf-pin', label: 'Shelf pin, 5 mm', quantity: 4 * n, note: '4 per adjustable shelf (typical)' })
         }
-        if (op.w > 50 * t) warn('shelf-span', `Shelf span ${op.w} mm is long for ${t} mm board and may sag (rule of thumb ≤ ${50 * t} mm).`, s.id)
+        if (ip.w > 50 * t) warn('shelf-span', `Shelf span ${ip.w} mm is long for ${t} mm board and may sag (rule of thumb ≤ ${50 * t} mm).`, s.id)
         return
       }
       case 'hanging': {
-        if (s.railDrop < 0 || s.railDrop >= op.h) { err('rail-drop', 'Rail position is outside the space.', s.id); return }
-        hw({ nodeId: s.id, kind: 'clothes-rail', label: 'Clothes rail', quantity: 1, sizeMm: op.w, note: 'cut to opening width' })
+        if (s.railDrop < 0 || s.railDrop >= ip.h) { err('rail-drop', 'Rail position is outside the space.', s.id); return }
+        hw({ nodeId: s.id, kind: 'clothes-rail', label: 'Clothes rail', quantity: 1, sizeMm: ip.w, note: 'cut to opening width' })
         hw({ nodeId: s.id, kind: 'rail-support', label: 'Rail support', quantity: 2 })
-        if (op.d < 500) warn('hanging-shallow', `Opening depth ${op.d} mm; hangers usually need about 550 mm.`, s.id)
-        if (op.h < 800) warn('hanging-short', `Only ${op.h} mm of height for hanging.`, s.id)
+        if (ip.d < 500) warn('hanging-shallow', `Opening depth ${ip.d} mm; hangers usually need about 550 mm.`, s.id)
+        if (ip.h < 800) warn('hanging-short', `Only ${ip.h} mm of height for hanging.`, s.id)
         return
       }
       case 'drawers': {
         const n = s.count
         if (n < 1 || !Number.isInteger(n) || n > 20) { err('drawer-count', 'Drawer count must be a whole number from 1 to 20.', s.id); return }
-        if (n * 60 > op.h) { err('drawer-low', `${n} drawers do not fit in ${op.h} mm of height.`, s.id); return }
+        if (n * 60 > ip.h) { err('drawer-low', `${n} drawers do not fit in ${ip.h} mm of height.`, s.id); return }
         const ds = p.drawers
         const internal = inner.behindDoors
-        // Internal drawers stay clear of the closed door and hinge arms.
-        const setback = internal ? Math.max(p.shelfSetback, INTERNAL_DRAWER_SETBACK) : 0
-        const maxRunner = op.d - ds.rearClearance - setback
+        // Internal drawers stay clear of the closed door and hinge arms; inset fronts sit in front of the box.
+        const setback = internal ? Math.max(p.shelfSetback, INTERNAL_DRAWER_SETBACK) : inset ? tf : 0
+        const maxRunner = ip.d - ds.rearClearance - setback
         const runner = [...ds.runnerLengths].sort((a, b) => a - b).filter(l => l <= maxRunner).pop()
         if (runner === undefined) {
           err('runner-fit', `No runner length fits ${maxRunner} mm of depth (available: ${ds.runnerLengths.join(', ')}).`, s.id)
           return
         }
-        const bw = op.w - 2 * ds.sideClearance
+        const bw = ip.w - 2 * ds.sideClearance
         const tb = boxM.thickness, tbot = bottomM.thickness
         if (bw < 2 * tb + 50) { err('drawer-narrow', `Drawer box would be only ${bw} mm wide.`, s.id); return }
         // fronts: split the front zone top→bottom
-        const fz = c.front
+        const fz = zoneOf(c)
         const custom = s.heights && s.heights.length === n ? s.heights : undefined
         if (s.heights && !custom) { err('drawer-heights', `Give one height per drawer (${n}).`, s.id); return }
         const frontRoom = fz.y1 - fz.y0 - (n - 1) * g
         const frontHeights = custom && !internal ? distribute(frontRoom, custom) : equalParts(frontRoom, n)
         if (!frontHeights || frontHeights.some(v => v <= 0)) { err('drawer-heights', `Drawer heights do not fit in ${frontRoom} mm of front.`, s.id); return }
         let slots: Mm[]
-        if (!custom) slots = equalParts(op.h, n)
+        if (!custom) slots = equalParts(ip.h, n)
         else if (internal) {
-          const sl = distribute(op.h, custom)
-          if (!sl || sl.some(v => v <= 0)) { err('drawer-heights', `Drawer heights do not fit in ${op.h} mm.`, s.id); return }
+          const sl = distribute(ip.h, custom)
+          if (!sl || sl.some(v => v <= 0)) { err('drawer-heights', `Drawer heights do not fit in ${ip.h} mm.`, s.id); return }
           slots = sl
         } else {
           // Each drawer box sits behind its own front: slot boundaries follow the middle of the gaps between fronts.
           slots = []
-          let top = op.y + op.h, ft = fz.y1
+          let top = ip.y + ip.h, ft = fz.y1
           for (let i = 0; i < n; i++) {
             const fb = ft - frontHeights[i]
-            const bottom = i === n - 1 ? op.y : Math.min(top, Math.max(op.y, fb - lo(g)))
+            const bottom = i === n - 1 ? ip.y : Math.min(top, Math.max(ip.y, fb - lo(g)))
             slots.push(top - bottom)
             top = bottom; ft = fb - g
           }
         }
         if (custom && custom.every(z => z.mode === 'mm')) {
-          const room = internal ? op.h : frontRoom
+          const room = internal ? ip.h : frontRoom
           const asked = custom.reduce((a, z) => a + z.value, 0)
           if (asked !== room) warn('drawer-heights-resized', `Drawer heights add up to ${asked} mm but there is ${room} mm; the bottom drawer was adjusted. Make one drawer "Share" to absorb the difference.`, s.id)
         }
-        let slotTop = op.y + op.h
+        let slotTop = ip.y + ip.h
         let frontTop = fz.y1
-        const frontZ = D - setback
+        const boxFront = ip.z + ip.d - setback
         for (let i = 0; i < n; i++) {
           const sh = slots[i]
           const slotBottom = slotTop - sh
           const bh = sh - ds.verticalClearance
           if (bh < 60) { err('drawer-low', `Drawer ${i + 1} box would be only ${bh} mm high.`, s.id); return }
           const by = slotBottom + lo(ds.verticalClearance)
-          const bz = frontZ - runner
-          const bx = op.x + ds.sideClearance
+          const bz = boxFront - runner
+          const bx = ip.x + ds.sideClearance
           const k = i + 1
           add(s.id, 'drawer-bottom', `Drawer ${k} bottom`, bottomM.id, box(bx, by, bz, bw, tbot, runner), 'y', 'x', [], i)
           const ph2 = bh - tbot, py = by + tbot
           add(s.id, 'drawer-side', `Drawer ${k} side`, boxM.id, box(bx, py, bz, tb, ph2, runner), 'x', 'z', ['+y'], 2 * i)
           add(s.id, 'drawer-side', `Drawer ${k} side`, boxM.id, box(bx + bw - tb, py, bz, tb, ph2, runner), 'x', 'z', ['+y'], 2 * i + 1)
           add(s.id, 'drawer-back', `Drawer ${k} back`, boxM.id, box(bx + tb, py, bz, bw - 2 * tb, ph2, tb), 'z', 'x', ['+y'], i)
-          add(s.id, 'drawer-inner-front', `Drawer ${k} inner front`, boxM.id, box(bx + tb, py, frontZ - tb, bw - 2 * tb, ph2, tb), 'z', 'x', ['+y'], i)
+          add(s.id, 'drawer-inner-front', `Drawer ${k} inner front`, boxM.id, box(bx + tb, py, boxFront - tb, bw - 2 * tb, ph2, tb), 'z', 'x', ['+y'], i)
           if (!internal) {
             const fh = frontHeights[i]
             add(s.id, 'drawer-front', `Drawer ${k} front`, front.id,
-              box(fz.x0, frontTop - fh, D, fz.x1 - fz.x0, fh, tf), 'z', 'x', ['-x', '+x', '-y', '+y'], i)
+              box(fz.x0, frontTop - fh, frontZ, fz.x1 - fz.x0, fh, tf), 'z', 'x', ['-x', '+x', '-y', '+y'], i)
+            placeHandle(s.handle, 'drawer', fz.x1 - fz.x0, fh, null, s.id)
             frontTop -= fh + g
           }
           slotTop = slotBottom
         }
         hw({ nodeId: s.id, kind: 'drawer-runner-pair', label: internal ? 'Ball-bearing side runner pair (internal drawers)' : 'Ball-bearing side runner pair', quantity: n, sizeMm: runner, note: `side clearance ${ds.sideClearance} mm per side` })
+        if (!internal) handleHw(s.id, s.handle, n)
         if (internal) warn('internal-drawers', 'Drawers behind doors: check hinge and door clearance against the drawer boxes.', s.id)
         return
       }
       case 'split': {
         const k = s.children.length
         if (k < 2 || s.sizes.length !== k) { err('split-shape', 'A split needs at least two parts with one size each.', s.id); return }
-        const along = s.axis === 'x' ? op.w : op.h
+        const along = s.axis === 'x' ? ip.w : ip.h
         const parts = distribute(along - (k - 1) * t, s.sizes)
         if (!parts || parts.some(v => v <= 0)) { err('split-fit', `Fixed sizes do not fit in ${along} mm.`, s.id); return }
         if (s.sizes.every(z => z.mode === 'mm')) {
@@ -292,30 +337,30 @@ export function buildCabinet(p: CabinetParams, materials: Map<string, Material>,
           if (asked !== room) warn('split-resized', `Fixed sizes add up to ${asked} mm but there is ${room} mm; the last part was adjusted to ${parts[k - 1]} mm. Make one part "Share" to absorb the difference.`, s.id)
         }
         if (s.axis === 'x') {
-          let x = op.x
+          let x = ip.x
           let prevFrontX = inner.front.x0
           parts.forEach((w, i) => {
             const last = i === k - 1
             const mid = x + w + lo(t)
             const fz: FrontZone = { ...inner.front, x0: prevFrontX, x1: last ? inner.front.x1 : mid - lo(g) }
-            visit(s.children[i], { ...inner, opening: { ...op, x, w }, front: fz }, level + 1)
+            visit(s.children[i], { ...inner, opening: { ...ip, x, w }, front: fz }, level + 1)
             if (!last) {
-              add(s.id, 'divider', `Divider ${i + 1}`, body.id, box(x + w, op.y, op.z, t, op.h, op.d), 'x', 'y', ['+z'], i)
+              add(s.id, 'divider', `Divider ${i + 1}`, body.id, box(x + w, ip.y, ip.z, t, ip.h, ip.d), 'x', 'y', ['+z'], i)
               prevFrontX = mid + hi(g)
             }
             x += w + t
           })
         } else {
-          let top = op.y + op.h
+          let top = ip.y + ip.h
           let prevFrontTop = inner.front.y1
           parts.forEach((h, i) => {
             const last = i === k - 1
             const bottom = top - h
             const mid = bottom - t + lo(t)
             const fz: FrontZone = { ...inner.front, y1: prevFrontTop, y0: last ? inner.front.y0 : mid + hi(g) }
-            visit(s.children[i], { ...inner, opening: { ...op, y: bottom, h }, front: fz }, level + 1)
+            visit(s.children[i], { ...inner, opening: { ...ip, y: bottom, h }, front: fz }, level + 1)
             if (!last) {
-              add(s.id, 'divider', `Fixed shelf ${i + 1}`, body.id, box(op.x, bottom - t, op.z, op.w, t, op.d), 'y', 'x', ['+z'], i)
+              add(s.id, 'divider', `Fixed shelf ${i + 1}`, body.id, box(ip.x, bottom - t, ip.z, ip.w, t, ip.d), 'y', 'x', ['+z'], i)
               prevFrontTop = mid - lo(g)
             }
             top = bottom - t

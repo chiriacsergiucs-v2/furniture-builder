@@ -6,9 +6,15 @@ export const baseLabel = (label: string) => label.replace(/\s\d+\b/g, '').trim()
 
 /** "2 rows × 14 holes ø5, 37 mm from edges, one face" — what the panel shop drills. */
 export function drillingText(p: Panel): string {
-  if (!p.pinRows?.length) return ''
-  return p.pinRows.map(r => `${r.rows.length} rows × ${r.holes.length} holes ø${r.diameter}, ${r.rows[0]} mm from edges`).join('; ') +
-    (p.pinRows.length > 1 ? ' (both faces, offset 16 mm)' : ', one face')
+  const parts: string[] = []
+  if (p.pinRows?.length) {
+    parts.push(p.pinRows.map(r => `${r.rows.length} rows × ${r.holes.length} holes ø${r.diameter}, ${r.rows[0]} mm from edges`).join('; ') +
+      (p.pinRows.length > 1 ? ' (both faces, offset 16 mm)' : ', one face'))
+  }
+  if (p.handleHoles) {
+    parts.push(`handle ${p.handleHoles.at.length === 1 ? 'hole' : 'holes'} ø${p.handleHoles.diameter} at ${p.handleHoles.at.map(([u, v]) => `${u}/${v}`).join(', ')} mm from left/bottom`)
+  }
+  return parts.join('; ')
 }
 
 export interface CutRow {

@@ -347,3 +347,58 @@ describe('drawer heights and adjustable shelves (ADR-0023)', () => {
     expect(Math.abs(div.pinRows![1].holes[0] - div.pinRows![0].holes[0]) % 32).toBe(16)
   })
 })
+
+describe('front styles and handles (ADR-0024)', () => {
+  it('inset: fronts sit flush inside their openings with the full gap and everything else moves back', () => {
+    const d = withCab(byTemplate('sideboard'), { frontStyle: 'inset' })
+    const p = cab(d)
+    const m = buildModel(d)
+    expect(m.diagnostics.filter(x => x.severity === 'error')).toEqual([])
+    const fronts = [...role(m.panels, 'door'), ...role(m.panels, 'drawer-front')]
+    for (const f of fronts) { expect(f.box.z).toBe(p.depth - 18); expect(f.box.z + f.box.d).toBe(p.depth) }
+    const doors = role(m.panels, 'door').sort((a, b) => a.box.x - b.box.x)
+    expect(doors[0].box.x).toBe(18 + 3) // inside the left side, 3 mm reveal
+    // shelves behind inset doors stop behind the door
+    for (const s of role(m.panels, 'shelf')) expect(s.box.z + s.box.d).toBeLessThanOrEqual(p.depth - 18)
+  })
+  it('half overlay: outer fronts stop half a gap short of the side centre line', () => {
+    const d = withCab(byTemplate('sideboard'), { frontStyle: 'half' })
+    const m = buildModel(d)
+    expect(m.diagnostics.filter(x => x.severity === 'error')).toEqual([])
+    const doors = role(m.panels, 'door').sort((a, b) => a.box.x - b.box.x)
+    expect(doors[0].box.x).toBe(9 + 2) // lo(18) + hi(3)
+    expect(doors[1].box.x + doors[1].box.w).toBe(cab(d).width - 18 + 9 - 1)
+  })
+  it('bar handles: centred on drawer fronts, on the opening edge of doors, one per front in the hardware list', () => {
+    const d = withCab(byTemplate('sideboard'), {})
+    const p = cab(d)
+    if (p.interior.kind !== 'split') throw Error()
+    const [l, mid] = p.interior.children
+    let interior = mapSpace(p.interior, mid.id, s => ({ ...s, handle: { kind: 'bar', holeSpacing: 128, position: 'top' } }))
+    interior = mapSpace(interior, l.id, s => ({ ...s, handle: { kind: 'bar', holeSpacing: 160 } }))
+    const m = buildModel(withCab(d, { interior }))
+    const df = role(m.panels, 'drawer-front')[0]
+    const [[u1, v1], [u2, v2]] = df.handleHoles!.at
+    expect(u2 - u1).toBe(128); expect(v1).toBe(v2); expect(u1 + 64).toBe(Math.floor(df.box.w / 2)); expect(v1).toBe(df.box.h - 40)
+    const door = role(m.panels, 'door').sort((a, b) => a.box.x - b.box.x)[0]
+    expect(door.handleHoles!.at.every(([u]) => u === door.box.w - 40)).toBe(true) // left-hinged: handle on the right
+    const hw = hardwareSummary(m)
+    expect(hw.find(h => h.label === 'Bar handle, 128 mm centres')?.quantity).toBe(3)
+    expect(hw.find(h => h.label === 'Bar handle, 160 mm centres')?.quantity).toBe(1)
+    expect(cutlist(m, d.materials).some(r => r.drilling.includes('handle holes ø5'))).toBe(true)
+  })
+  it('push-to-open schedules latches and drills nothing; knobs drill one hole', () => {
+    const d = byTemplate('chest')
+    const p = cab(d)
+    const push = buildModel(withCab(d, { interior: { ...p.interior, handle: { kind: 'push' } } }))
+    expect(hardwareSummary(push).find(h => h.kind === 'push-latch')?.quantity).toBe(4)
+    expect(role(push.panels, 'drawer-front').every(f => !f.handleHoles)).toBe(true)
+    const knob = buildModel(withCab(d, { interior: { ...p.interior, handle: { kind: 'knob' } } }))
+    expect(role(knob.panels, 'drawer-front').every(f => f.handleHoles?.at.length === 1)).toBe(true)
+  })
+  it('a handle longer than the front is reported', () => {
+    const d = byTemplate('chest')
+    const m = buildModel(withCab(d, { width: 300, interior: { ...cab(d).interior, handle: { kind: 'bar', holeSpacing: 320 } } }))
+    expect(m.diagnostics.map(x => x.code)).toContain('handle-fit')
+  })
+})
