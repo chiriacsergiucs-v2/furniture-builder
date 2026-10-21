@@ -30,7 +30,7 @@ Statuses: **Done** (acceptance met, evidence cited) · **Partially done** (code 
 
 | ID | Item | Status | Notes |
 |---|---|---|---|
-| N01 | Sheet nesting: guillotine optimiser from the cut list, with independent validator | Not done | ADR-0018, ADR-0019; Previous app had one; rebuild from ADR-level rules (kerf stripe, grain, trim) |
+| N01 | Sheet nesting: guillotine optimiser from the cut list, with independent validator | Done | ADR-0018/0019; `tests/nesting.test.ts` (fuzz + mutation), template layout test; screenshots |
 | N02 | Printable cut sheet / PDF and SVG drawings | Not done | ADR-0020 |
 | N03 | Fusion 360 export from `FurnitureModel` | Not done | ADR-0021; Must be labelled unverified until run in Fusion |
 | N04 | Several pieces in one project (kitchen run, room) | Not done | ADR-0022; Needs a project document above `Design` |

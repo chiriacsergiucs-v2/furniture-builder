@@ -60,12 +60,14 @@ export function App() {
   // Reopen the last piece on this device.
   useEffect(() => {
     const id = lastDesignId()
-    if (id) loadDesign(id).then(d => { if (d) useDesign.getState().load(d) }).catch(() => {})
+    if (id) loadDesign(id).then(d => { if (d) useDesign.getState().load(d, { fromStorage: true }) }).catch(() => {})
   }, [])
 
   // Autosave shortly after each change; also save a freshly opened template so it appears in the library.
   useEffect(() => {
     rememberLast(design.id)
+    // Opened from storage and untouched: nothing to write (an old file is upgraded only when edited).
+    if (useDesign.getState().pristine) return
     const t = setTimeout(() => {
       setSave('saving')
       saveDesign(design).then(() => setSave('saved')).catch(() => setSave('failed'))

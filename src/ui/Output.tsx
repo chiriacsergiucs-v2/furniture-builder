@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { areaM2, cutlist, edgeBandMeters, hardwareSummary } from '../core/cutlist'
 import { useDesign, type Tab } from '../store/designStore'
+import { Sheets } from './Sheets'
 
 export function Output() {
   const tab = useDesign(s => s.tab)
@@ -10,6 +11,7 @@ export function Output() {
   const warnings = model.diagnostics.length - errors
   const tabs: { id: Tab; label: string; badge?: number; kind?: string }[] = [
     { id: 'parts', label: 'Parts' },
+    { id: 'sheets', label: 'Sheets' },
     { id: 'hardware', label: 'Hardware' },
     { id: 'checks', label: 'Checks', badge: errors || warnings || undefined, kind: errors ? 'error' : 'warning' },
   ]
@@ -25,6 +27,7 @@ export function Output() {
       </div>
       <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`} className="tabpanel">
         {tab === 'parts' && <Parts />}
+        {tab === 'sheets' && <Sheets />}
         {tab === 'hardware' && <Hardware />}
         {tab === 'checks' && <Checks />}
       </div>
