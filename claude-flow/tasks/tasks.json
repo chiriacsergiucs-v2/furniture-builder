@@ -227,7 +227,7 @@
     {
       "id": "TSK-N07",
       "title": "Wall and corner cabinets",
-      "status": "READY",
+      "status": "DONE",
       "owner": "furniture-geometry",
       "adrs": [
         "ADR-0025"
@@ -242,7 +242,11 @@
       ],
       "acceptance": [],
       "blocker": null,
-      "evidence": [],
+      "evidence": [
+        "tests/core.test.ts ADR-0025 block",
+        "npx vitest run: 73 passed",
+        "screenshots"
+      ],
       "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
     },
     {

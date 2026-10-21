@@ -1,9 +1,10 @@
 import { buildCabinet } from './cabinet'
+import { buildCorner } from './corner'
 import { buildDesk } from './desk'
 import { box, contains, cutDimensions, isMm, overlaps, union } from './geometry'
 import type { Design, Diagnostic, FurnitureModel, Material, Panel } from './types'
 
-const FRONT_ROLES = new Set<Panel['role']>(['door', 'drawer-front'])
+const FRONT_ROLES = new Set<Panel['role']>(['door', 'drawer-front', 'blind-panel'])
 
 /**
  * Build the single normalised model for a design. Every consumer (3D, cutlist, hardware, checks)
@@ -12,8 +13,8 @@ const FRONT_ROLES = new Set<Panel['role']>(['door', 'drawer-front'])
 export function buildModel(design: Design): FurnitureModel {
   const materials = new Map<string, Material>(design.materials.map(m => [m.id, m]))
   const prod = design.product
-  const partial = prod.kind === 'cabinet'
-    ? buildCabinet(prod.params, materials, { productNodeId: prod.id })
+  const partial = prod.kind === 'cabinet' ? buildCabinet(prod.params, materials, { productNodeId: prod.id })
+    : prod.kind === 'corner' ? buildCorner(prod.params, prod.id, materials)
     : buildDesk(prod.params, prod.id, materials)
   const diagnostics: Diagnostic[] = [...partial.diagnostics]
   const panels = partial.panels

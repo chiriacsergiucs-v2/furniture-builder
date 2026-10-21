@@ -40,7 +40,7 @@ export interface StockSheet {
 export type PanelRole =
   | 'side' | 'top' | 'bottom' | 'back' | 'plinth' | 'divider' | 'shelf'
   | 'door' | 'drawer-front' | 'drawer-side' | 'drawer-back' | 'drawer-inner-front' | 'drawer-bottom'
-  | 'worktop' | 'gable' | 'modesty'
+  | 'worktop' | 'gable' | 'modesty' | 'blind-panel'
 
 /** A face direction, used to name banded edges of a panel in world terms. */
 export type Face = '-x' | '+x' | '-y' | '+y' | '-z' | '+z'
@@ -80,6 +80,7 @@ export interface PinRows {
 }
 
 export type HardwareKind = 'drawer-runner-pair' | 'hinge' | 'clothes-rail' | 'rail-support' | 'shelf-pin' | 'handle' | 'push-latch'
+  | 'wall-bracket' | 'wall-rail' | 'corner-hinge'
 
 export interface HardwareItem {
   nodeId: string
@@ -108,6 +109,8 @@ export interface SpaceOpening {
   box: Box
   /** Depth in the space tree (root = 0). */
   depth: number
+  /** Spaces of an L-corner's side wing are not drawn in the front view (selected from the inspector instead). */
+  view?: 'front' | 'side'
   leaf: boolean
   hasDoors: boolean
 }
@@ -199,6 +202,10 @@ export interface CabinetParams {
   width: Mm
   height: Mm
   depth: Mm
+  /** Wall cabinets hang on brackets: no plinth, hanging hardware scheduled (ADR-0025). Absent = floor. */
+  mount?: 'floor' | 'wall'
+  /** Height of the cabinet's underside above the floor when wall-mounted (position only). */
+  mountHeight?: Mm
   bodyMaterialId: string
   frontMaterialId: string
   backMaterialId: string
@@ -242,9 +249,40 @@ export interface DeskParams {
   frontGap: Mm
 }
 
+/** Corner cabinets (ADR-0025): built from two carcasses by the cabinet generator. */
+export interface CornerParams {
+  variant: 'blind' | 'l-shape'
+  /** Which end the corner is at. */
+  side: 'left' | 'right'
+  /** Blind: overall width. L-shape: length of the wing along the back wall. */
+  width: Mm
+  /** L-shape: length of the wing along the side wall, including the corner. */
+  wingWidth: Mm
+  /** Blind: width of the blind section covered by the neighbouring cabinet. */
+  blindWidth: Mm
+  height: Mm
+  depth: Mm
+  bodyMaterialId: string
+  frontMaterialId: string
+  backMaterialId: string
+  top: 'over' | 'between'
+  back: 'none' | 'applied' | 'inset'
+  backInset: Mm
+  plinthHeight: Mm
+  plinthSetback: Mm
+  frontGap: Mm
+  shelfSetback: Mm
+  drawers: DrawerSettings
+  /** Blind: the usable section. L-shape: the back-wall wing. */
+  interior: Space
+  /** L-shape: the side-wall wing. */
+  wingInterior: Space
+}
+
 export type Product =
   | { kind: 'cabinet'; id: string; params: CabinetParams }
   | { kind: 'desk'; id: string; params: DeskParams }
+  | { kind: 'corner'; id: string; params: CornerParams }
 
 export interface Design {
   /** 2 adds stock sheets and cutting settings (ADR-0019); version-1 files are upgraded in memory on load. */

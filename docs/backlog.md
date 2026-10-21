@@ -36,7 +36,7 @@ Statuses: **Done** (acceptance met, evidence cited) · **Partially done** (code 
 | N04 | Several pieces in one project (kitchen run, room) | Not done | ADR-0022; Needs a project document above `Design` |
 | N05 | Unequal drawer heights, adjustable shelves (pin rows) | Done | ADR-0023; 5 tests; fuzz covers heights and adjustable shelves (20,000 passed) |
 | N06 | Inset / half-overlay fronts, handles | Done | ADR-0024; 5 tests; fuzz covers all three styles and handles (20,000 passed); screenshots |
-| N07 | Wall and corner cabinets, worktop joins | Not done | ADR-0025 |
+| N07 | Wall and corner cabinets, worktop joins | Done | ADR-0025; 4 tests incl. 400 random corners; screenshots of wall, blind and L corners |
 | N08 | Selectable pedestal internals on desks | Done | ADR-0026; `tests/core.test.ts` editable pedestals; 20,000-design fuzz passed |
 | N09 | Committed browser test suite | Not done | Only when the user asks (pre-MVP rule) |
 

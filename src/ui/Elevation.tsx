@@ -48,11 +48,11 @@ export function Elevation() {
   const backs = model.panels.filter(p => BEHIND.has(p.role))
   const fronts = model.panels.filter(p => FRONTS.has(p.role))
   const selectedPanels = new Set(model.panels.filter(p => p.nodeId === selectedId).map(p => p.id))
-  const selectedSpace = model.spaces.find(s => s.nodeId === selectedId)
+  const selectedSpace = model.spaces.find(s => s.nodeId === selectedId && s.view !== 'side')
   const fontSize = Math.max(b.w, b.h) / 26
 
   // Leaf spaces on top so they receive taps; parents (splits) are selected from the breadcrumb.
-  const leaves = model.spaces.filter(s => s.leaf)
+  const leaves = model.spaces.filter(s => s.leaf && s.view !== 'side')
 
   return (
     <figure className="elevation" aria-label="Front view. Select a space to edit it.">
