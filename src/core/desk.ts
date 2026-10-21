@@ -1,4 +1,5 @@
 import { buildCabinet, type PartialModel } from './cabinet'
+import { pedestalRoot } from './design'
 import { box } from './geometry'
 import type { CabinetParams, DeskParams, Material, Panel } from './types'
 
@@ -12,7 +13,7 @@ export function pedestalParams(p: DeskParams, side: 'left' | 'right', deskId: st
     bodyMaterialId: p.bodyMaterialId, frontMaterialId: p.frontMaterialId, backMaterialId: p.drawers.bottomMaterialId,
     top: 'between', back: 'applied', backInset: 0, plinthHeight: 0, plinthSetback: 0,
     frontGap: p.frontGap, shelfSetback: 0, drawers: p.drawers,
-    interior: { id: `${deskId}:ped-${side}:drawers`, kind: 'drawers', count: p.pedestal.drawerCount },
+    interior: pedestalRoot(p, side, deskId),
   }
 }
 
@@ -37,13 +38,12 @@ export function buildDesk(p: DeskParams, deskId: string, materials: Map<string, 
   const leftPed = p.support === 'pedestal-left' || p.support === 'two-pedestals'
   const rightPed = p.support === 'pedestal-right' || p.support === 'two-pedestals'
   const pw = p.pedestal.width
-  const merge = (m: PartialModel) => { out.panels.push(...m.panels); out.hardware.push(...m.hardware); out.diagnostics.push(...m.diagnostics) }
-  const toDesk = () => deskId
+  const merge = (m: PartialModel) => { out.panels.push(...m.panels); out.spaces.push(...m.spaces); out.hardware.push(...m.hardware); out.diagnostics.push(...m.diagnostics) }
 
-  if (leftPed) merge(buildCabinet(pedestalParams(p, 'left', deskId, Hu, Ds), materials, { idPrefix: `${deskId}/ped-left:`, productNodeId: deskId, mapNodeId: toDesk }))
+  if (leftPed) merge(buildCabinet(pedestalParams(p, 'left', deskId, Hu, Ds), materials, { idPrefix: `${deskId}/ped-left:`, productNodeId: deskId }))
   else panel('gable-left', 'gable', 'Left gable', body.id, box(0, 0, 0, t, Hu, Ds), 'x', 'y', ['+z'])
 
-  if (rightPed) merge(buildCabinet(pedestalParams(p, 'right', deskId, Hu, Ds), materials, { idPrefix: `${deskId}/ped-right:`, productNodeId: deskId, mapNodeId: toDesk, origin: { x: W - pw, y: 0, z: 0 } }))
+  if (rightPed) merge(buildCabinet(pedestalParams(p, 'right', deskId, Hu, Ds), materials, { idPrefix: `${deskId}/ped-right:`, productNodeId: deskId, origin: { x: W - pw, y: 0, z: 0 } }))
   else panel('gable-right', 'gable', 'Right gable', body.id, box(W - t, 0, 0, t, Hu, Ds), 'x', 'y', ['+z'])
 
   const lx = leftPed ? pw : t, rx = W - (rightPed ? pw : t)

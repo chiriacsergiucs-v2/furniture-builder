@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { buildModel, hasErrors } from '../src/core/build'
 import { cutlist, hardwareSummary } from '../src/core/cutlist'
-import { changeKind, mapSpace, splitSpace, templates, validateDesign } from '../src/core/design'
+import { changeKind, findInProduct, mapProductSpace, mapSpace, pedestalRoot, productRoots, splitSpace, templates, validateDesign } from '../src/core/design'
 import { cutDimensions, distribute, overlaps } from '../src/core/geometry'
 import type { CabinetParams, Design, Panel } from '../src/core/types'
 
@@ -183,7 +183,11 @@ describe('desk', () => {
     expect(role(m.panels, 'worktop')).toHaveLength(1)
     expect(role(m.panels, 'drawer-front')).toHaveLength(3)
     expect(role(m.panels, 'gable')).toHaveLength(1)
-    expect(m.panels.every(p => p.nodeId === d.product.id)).toBe(true)
+    // Carcass and worktop belong to the desk; drawer parts belong to the pedestal's own space (ADR-0026).
+    for (const p of m.panels) {
+      if (p.role.startsWith('drawer')) expect(p.nodeId).not.toBe(d.product.id)
+      else expect(p.nodeId).toBe(d.product.id)
+    }
     const top = role(m.panels, 'worktop')[0]
     for (const p of m.panels) if (p !== top) expect(p.box.y + p.box.h).toBeLessThanOrEqual(top.box.y)
   })
@@ -251,5 +255,39 @@ describe('regressions from independent review', () => {
     if (d.product.kind !== 'desk') throw Error()
     const bad: Design = { ...d, product: { ...d.product, params: { ...d.product.params, support: 'two-pedestals', width: 900, pedestal: { width: 440, drawerCount: 3 } } } }
     expect(errors(bad).map(e => e.code)).toContain('knee-narrow')
+  })
+})
+
+describe('editable desk pedestals (ADR-0026)', () => {
+  it('exposes each pedestal as editable spaces and edits them independently', () => {
+    const d = byTemplate('desk-pedestal')
+    if (d.product.kind !== 'desk') throw Error()
+    const both: Design = { ...d, product: { ...d.product, params: { ...d.product.params, support: 'two-pedestals', width: 1600 } } }
+    const roots = productRoots(both.product)
+    expect(roots.map(r => r.side)).toEqual(['left', 'right'])
+    const m = buildModel(both)
+    for (const r of roots) expect(m.spaces.some(s => s.nodeId === r.root.id)).toBe(true)
+    // turn the right unit into a divided unit: shelves over one big drawer
+    const right = roots[1].root
+    const product = mapProductSpace(both.product, right.id, s => splitSpace(s, 'y', 2))
+    const edited: Design = { ...both, product }
+    expect(validateDesign(edited)).toEqual([])
+    const m2 = buildModel(edited)
+    expect(m2.diagnostics.filter(x => x.severity === 'error')).toEqual([])
+    expect(findInProduct(edited.product, right.id)?.side).toBe('right')
+    // the left unit is untouched
+    const leftFronts = (mm: typeof m) => mm.panels.filter(p => p.role === 'drawer-front' && p.box.x < 800).length
+    expect(leftFronts(m2)).toBe(leftFronts(m))
+  })
+  it('older desks without stored trees still build and become editable', () => {
+    const d = byTemplate('desk-pedestal')
+    if (d.product.kind !== 'desk') throw Error()
+    const legacy: Design = { ...d, product: { ...d.product, params: { ...d.product.params, pedestal: { width: 420, drawerCount: 4 } } } }
+    expect(validateDesign(legacy)).toEqual([])
+    const root = pedestalRoot((legacy.product as Extract<Design['product'], { kind: 'desk' }>).params, 'left', legacy.product.id)
+    expect(root).toMatchObject({ kind: 'drawers', count: 4 })
+    const edited = mapProductSpace(legacy.product, root.id, s => changeKind(s, 'shelves'))
+    expect(edited).not.toBe(legacy.product)
+    expect(buildModel({ ...legacy, product: edited }).panels.filter(p => p.role === 'shelf').length).toBe(2)
   })
 })

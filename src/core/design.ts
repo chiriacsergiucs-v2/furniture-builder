@@ -2,6 +2,8 @@ import type {
   CabinetParams, DeskParams, Design, DrawerSettings, Material, Product, Space, SpaceKind, SplitSize,
 } from './types'
 
+export type PedestalSide = 'left' | 'right'
+
 export const newId = (): string =>
   (globalThis.crypto?.randomUUID?.() ?? `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`).slice(0, 8)
 
@@ -40,7 +42,8 @@ export const cabinetDefaults = (interior: Space): CabinetParams => ({
 
 export const deskDefaults = (): DeskParams => ({
   width: 1400, depth: 700, height: 750, topMaterialId: 'pal18oak', bodyMaterialId: 'pal18',
-  frontOverhang: 30, support: 'pedestal-left', pedestal: { width: 420, drawerCount: 3 },
+  frontOverhang: 30, support: 'pedestal-left',
+  pedestal: { width: 420, drawerCount: 3, left: { id: newId(), kind: 'drawers', count: 3 }, right: { id: newId(), kind: 'drawers', count: 3 } },
   modesty: { enabled: true, height: 350, setback: 120 }, drawers: defaultDrawers(),
   frontMaterialId: 'mdf18', frontGap: 3,
 })
@@ -128,6 +131,39 @@ export function splitSpace(s: Space, axis: 'x' | 'y', parts: number): Space {
 /** Collapse a split back into a plain space (keeps id, doors). */
 export const unsplit = (s: Space): Space => (s.kind === 'split' ? { id: s.id, kind: 'shelves', count: 2, front: s.front ?? null } : s)
 
+// ---------------------------------------------------------------------------
+// Editable space roots of any product (cabinet interior, desk drawer units)
+// ---------------------------------------------------------------------------
+
+export const usesPedestal = (p: DeskParams, side: PedestalSide) =>
+  p.support === 'two-pedestals' || p.support === (side === 'left' ? 'pedestal-left' : 'pedestal-right')
+
+/** The stored tree, or the legacy equal-drawers unit with a stable id. */
+export const pedestalRoot = (p: DeskParams, side: PedestalSide, deskId: string): Space =>
+  p.pedestal[side] ?? { id: `${deskId}:ped-${side}:drawers`, kind: 'drawers', count: p.pedestal.drawerCount }
+
+export function productRoots(prod: Product): { root: Space; side?: PedestalSide }[] {
+  if (prod.kind === 'cabinet') return [{ root: prod.params.interior }]
+  return (['left', 'right'] as const).filter(s => usesPedestal(prod.params, s)).map(side => ({ root: pedestalRoot(prod.params, side, prod.id), side }))
+}
+
+export function findInProduct(prod: Product, id: string): { space: Space; root: Space; side?: PedestalSide } | undefined {
+  for (const r of productRoots(prod)) { const space = findSpace(r.root, id); if (space) return { space, ...r } }
+  return undefined
+}
+
+export function mapProductSpace(prod: Product, id: string, fn: (s: Space) => Space): Product {
+  if (prod.kind === 'cabinet') {
+    const interior = mapSpace(prod.params.interior, id, fn)
+    return interior === prod.params.interior ? prod : { ...prod, params: { ...prod.params, interior } }
+  }
+  for (const { root, side } of productRoots(prod)) {
+    const next = mapSpace(root, id, fn)
+    if (next !== root) return { ...prod, params: { ...prod.params, pedestal: { ...prod.params.pedestal, [side!]: next } } }
+  }
+  return prod
+}
+
 export function setProductParams<P extends Product>(prod: P, patch: Partial<P['params']>): P {
   return { ...prod, params: { ...prod.params, ...patch } } as P
 }
@@ -194,6 +230,10 @@ export function validateDesign(d: unknown): string[] {
     ;['topMaterialId', 'bodyMaterialId', 'frontMaterialId'].forEach(k => matRef(k, params))
     if (!['gables', 'pedestal-left', 'pedestal-right', 'two-pedestals'].includes(params.support as string)) errs.push('Invalid support')
     if (!isObj(params.pedestal) || !isInt(params.pedestal.width, 1) || !isInt(params.pedestal.drawerCount, 1) || (params.pedestal.drawerCount as number) > MAX_DRAWERS) errs.push('Invalid pedestal')
+    else {
+      const seen = new Set<string>()
+      for (const side of ['left', 'right'] as const) if (params.pedestal[side] !== undefined) validateSpace(params.pedestal[side], errs, seen)
+    }
     if (!isObj(params.modesty) || typeof params.modesty.enabled !== 'boolean' || !isInt(params.modesty.height) || !isInt(params.modesty.setback)) errs.push('Invalid modesty panel')
   } else errs.push('Unknown product kind')
   return errs

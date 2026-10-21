@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { buildModel } from '../core/build'
-import { findSpace, mapSpace, templates } from '../core/design'
+import { findInProduct, mapProductSpace, templates } from '../core/design'
 import type { CabinetParams, DeskParams, Design, FurnitureModel, Material, Space } from '../core/types'
 
 export type Tab = 'parts' | 'hardware' | 'checks'
@@ -46,7 +46,7 @@ export const useDesign = create<State>((set, get) => {
       past: [...past, design].slice(-HISTORY), future: [], dirtyAt: Date.now(),
     })
     const sel = get().selectedId
-    if (sel && stamped.product.kind === 'cabinet' && !findSpace(stamped.product.params.interior, sel)) set({ selectedId: null })
+    if (sel && !findInProduct(stamped.product, sel)) set({ selectedId: null })
   }
   const initial = templates[0].create()
   return {
@@ -74,10 +74,8 @@ export const useDesign = create<State>((set, get) => {
     },
     updateSpace: (id, fn) => {
       const d = get().design
-      if (d.product.kind !== 'cabinet') return
-      const interior = mapSpace(d.product.params.interior, id, fn)
-      if (interior === d.product.params.interior) return
-      commit({ ...d, product: { ...d.product, params: { ...d.product.params, interior } } })
+      const product = mapProductSpace(d.product, id, fn)
+      if (product !== d.product) commit({ ...d, product })
     },
     updateMaterial: (id, patch) => {
       const d = get().design

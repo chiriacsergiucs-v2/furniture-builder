@@ -73,4 +73,4 @@ Questions answered by the user on 2026-10-21; each becomes Accepted when its sli
 | [ADR-0023](ADR-0023.md) | More space options: chosen drawer heights and adjustable shelves with 32 mm pin rows | N05 | Approved |
 | [ADR-0024](ADR-0024.md) | Front styles (overlay, half overlay, inset) and handles as a scheduled item with a position | N06 | Approved |
 | [ADR-0025](ADR-0025.md) | Wall and corner cabinets as new product roots built from the cabinet generator | N07 | Approved |
-| [ADR-0026](ADR-0026.md) | Desk pedestals become editable spaces | N08 | Approved |
+| [ADR-0026](ADR-0026.md) | Desk pedestals become editable spaces | N08 | Accepted |

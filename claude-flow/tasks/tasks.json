@@ -228,7 +228,7 @@
     {
       "id": "TSK-N08",
       "title": "Editable desk pedestal spaces",
-      "status": "READY",
+      "status": "DONE",
       "owner": "furniture-geometry",
       "adrs": [
         "ADR-0026"
@@ -243,7 +243,11 @@
       ],
       "acceptance": [],
       "blocker": null,
-      "evidence": [],
+      "evidence": [
+        "tests/core.test.ts editable desk pedestals (2 tests)",
+        "npx vitest run: 37 passed",
+        "FUZZ_N=20000 fuzz passed"
+      ],
       "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
     }
   ]

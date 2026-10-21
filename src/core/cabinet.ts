@@ -24,7 +24,7 @@ export interface BuildOptions {
   origin?: { x: Mm; y: Mm; z: Mm }
   /** Node id used for carcass panels (the product). */
   productNodeId: string
-  /** Remap space node ids (pedestals map everything to the desk node). */
+  /** Remap space node ids; when set, spaces are not exposed for editing. */
   mapNodeId?: (spaceId: string) => string
 }
 
