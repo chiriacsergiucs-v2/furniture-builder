@@ -155,7 +155,7 @@ export function buildCabinet(p: CabinetParams, materials: Map<string, Material>,
     if (p.back !== 'inset' || p.backInset < 15) warn('wall-back', 'Hanging brackets usually need the back set in about 15–20 mm; check the bracket datasheet.', pid)
   }
 
-  const adjustable: { spaceId: string; op: Box }[] = []
+  const adjustable: { spaceId: string; op: Box; shelfDepth: Mm }[] = []
   const style = p.frontStyle ?? 'overlay'
   const inset = style === 'inset'
   const r = lo(g)
@@ -249,7 +249,7 @@ export function buildCabinet(p: CabinetParams, materials: Map<string, Material>,
           y += t
         }
         if (s.adjustable) {
-          adjustable.push({ spaceId: s.id, op: ip })
+          adjustable.push({ spaceId: s.id, op: ip, shelfDepth: sd })
           hw({ nodeId: s.id, kind: 'shelf-pin', label: 'Shelf pin, 5 mm', quantity: 4 * n, note: '4 per adjustable shelf (typical)' })
         }
         if (ip.w > 50 * t) warn('shelf-span', `Shelf span ${ip.w} mm is long for ${t} mm board and may sag (rule of thumb ≤ ${50 * t} mm).`, s.id)
@@ -394,11 +394,13 @@ export function buildCabinet(p: CabinetParams, materials: Map<string, Material>,
 const SUPPORTS = new Set<PanelRole>(['side', 'divider', 'gable'])
 
 /**
- * Give the vertical panels either side of each adjustable-shelf space a pair of 32 mm hole rows. A panel drilled
- * from both faces gets the second face's holes offset by half a pitch so holes never meet (ADR-0023).
+ * Give the vertical panels either side of each adjustable-shelf space a pair of 32 mm hole rows (ADR-0023).
+ * Holes sit on one grid per panel measured from its bottom edge: the +x face on multiples of 32, the −x face offset
+ * by 16, so holes from the two faces of a divider never meet. Rows are set back from the front and rear of the
+ * shelves themselves (not the panel), so both rows always carry the shelf.
  */
-function addPinRows(panels: Panel[], spaces: { spaceId: string; op: Box }[], setback: Mm, diags: Diagnostic[]) {
-  for (const { spaceId, op } of spaces) {
+function addPinRows(panels: Panel[], spaces: { spaceId: string; op: Box; shelfDepth: Mm }[], setback: Mm, diags: Diagnostic[]) {
+  for (const { spaceId, op, shelfDepth } of spaces) {
     const sides: [Face, (p: Panel) => boolean][] = [
       ['+x', p => p.box.x + p.box.w === op.x],
       ['-x', p => p.box.x === op.x + op.w],
@@ -407,14 +409,14 @@ function addPinRows(panels: Panel[], spaces: { spaceId: string; op: Box }[], set
       const panel = panels.find(p => SUPPORTS.has(p.role) && p.thicknessAxis === 'x' && touches(p) &&
         p.box.y <= op.y && p.box.y + p.box.h >= op.y + op.h && p.box.z <= op.z && p.box.z + p.box.d >= op.z + op.d)
       if (!panel) { diags.push({ severity: 'warning', code: 'pin-rows-no-panel', message: 'No side panel found for shelf pins on one side of an adjustable space.', nodeId: spaceId }); continue }
-      if (panel.box.d < 2 * setback + PIN_PITCH) { diags.push({ severity: 'warning', code: 'pin-rows-shallow', message: `${panel.label} is too shallow for two pin rows ${setback} mm from the edges.`, nodeId: spaceId }); continue }
-      const opposite = (panel.pinRows ?? []).some(r => r.face !== face)
-      const start = op.y - panel.box.y + 2 * PIN_PITCH + (opposite ? PIN_PITCH / 2 : 0)
-      const end = op.y + op.h - panel.box.y - 2 * PIN_PITCH
+      if (shelfDepth < 2 * setback + PIN_PITCH) { diags.push({ severity: 'warning', code: 'pin-rows-shallow', message: `Shelves ${shelfDepth} mm deep are too shallow for two pin rows ${setback} mm from their edges.`, nodeId: spaceId }); continue }
+      const offset = face === '+x' ? 0 : PIN_PITCH / 2
+      const lowest = op.y - panel.box.y + 2 * PIN_PITCH, highest = op.y + op.h - panel.box.y - 2 * PIN_PITCH
       const holes: Mm[] = []
-      for (let h = start; h <= end; h += PIN_PITCH) holes.push(h)
+      for (let h = Math.ceil((lowest - offset) / PIN_PITCH) * PIN_PITCH + offset; h <= highest; h += PIN_PITCH) holes.push(h)
       if (!holes.length) continue
-      const rows: PinRows = { face, rows: [setback, panel.box.d - setback], holes, diameter: PIN_DIAMETER }
+      const rear = op.z - panel.box.z + setback, front = op.z + shelfDepth - panel.box.z - setback
+      const rows: PinRows = { face, rows: [rear, front], holes, diameter: PIN_DIAMETER }
       panel.pinRows = [...(panel.pinRows ?? []), rows]
     }
   }

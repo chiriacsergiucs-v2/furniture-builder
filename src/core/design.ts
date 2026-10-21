@@ -231,13 +231,14 @@ export function setProductParams<P extends Product>(prod: P, patch: Partial<P['p
 // ---------------------------------------------------------------------------
 
 export const MAX_SHELVES = 50
+export const MAX_MM = 100_000
 export const MAX_DRAWERS = 20
 
 const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v)
 const isInt = (v: unknown, min = 0) => typeof v === 'number' && Number.isSafeInteger(v) && v >= min
 const isStr = (v: unknown) => typeof v === 'string' && v.length > 0 && v.length < 500
 
-const validSize = (z: unknown) => isObj(z) && ((z.mode === 'mm' && isInt(z.value, 1)) || (z.mode === 'fr' && typeof z.value === 'number' && z.value > 0 && z.value < 1000))
+const validSize = (z: unknown) => isObj(z) && ((z.mode === 'mm' && isInt(z.value, 1) && (z.value as number) <= MAX_MM) || (z.mode === 'fr' && typeof z.value === 'number' && z.value >= 0.01 && z.value <= 1000))
 
 function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0) {
   if (depth > 12) { errs.push('Space tree is too deep'); return }
@@ -246,7 +247,7 @@ function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0)
   seen.add(s.id as string)
   if (s.front != null && !(isObj(s.front) && s.front.kind === 'doors' && (s.front.count === 1 || s.front.count === 2) && (s.front.hinge === undefined || s.front.hinge === 'left' || s.front.hinge === 'right'))) errs.push('Invalid doors')
   if (s.handle != null && !(isObj(s.handle) && ['bar', 'knob', 'push'].includes(s.handle.kind as string) &&
-    (s.handle.holeSpacing === undefined || isInt(s.handle.holeSpacing, 16)) &&
+    (s.handle.holeSpacing === undefined || (isInt(s.handle.holeSpacing, 16) && (s.handle.holeSpacing as number) <= 2000)) &&
     (s.handle.position === undefined || ['top', 'centre', 'bottom'].includes(s.handle.position as string)))) errs.push('Invalid handle')
   switch (s.kind) {
     case 'empty': return
@@ -280,7 +281,7 @@ export function validateDesign(d: unknown): string[] {
   if (!Array.isArray(d.materials) || !d.materials.length) return [...errs, 'Materials missing']
   const mids = new Set<string>()
   for (const m of d.materials) {
-    if (!isObj(m) || !isStr(m.id) || !isStr(m.name) || !isInt(m.thickness, 1) || typeof m.grain !== 'boolean' || typeof m.color !== 'string') errs.push('Invalid material')
+    if (!isObj(m) || !isStr(m.id) || !isStr(m.name) || !isInt(m.thickness, 1) || (m.thickness as number) > 200 || typeof m.grain !== 'boolean' || typeof m.color !== 'string') errs.push('Invalid material')
     else if (m.sheet !== undefined && !(isObj(m.sheet) && isInt(m.sheet.length, 100) && isInt(m.sheet.width, 100) && isInt(m.sheet.trim) &&
       2 * (m.sheet.trim as number) < Math.min(m.sheet.length as number, m.sheet.width as number) && (m.sheet.count === null || isInt(m.sheet.count)))) errs.push(`Invalid sheet for ${String(m.name)}`)
     else if (mids.has(m.id as string)) errs.push(`Duplicate material ${String(m.id)}`)
@@ -289,7 +290,8 @@ export function validateDesign(d: unknown): string[] {
   const p = d.product
   if (!isObj(p) || !isStr(p.id) || !isObj(p.params)) return [...errs, 'Invalid product']
   const params = p.params
-  const ints = (keys: string[], obj: Record<string, unknown>) => keys.forEach(k => { if (!isInt(obj[k])) errs.push(`${k} must be a whole number of mm`) })
+  // Sizes are whole mm up to 100 m: generous for furniture, far from floating-point trouble.
+  const ints = (keys: string[], obj: Record<string, unknown>) => keys.forEach(k => { if (!isInt(obj[k]) || (obj[k] as number) > MAX_MM) errs.push(`${k} must be a whole number of mm`) })
   const matRef = (k: string, obj: Record<string, unknown>) => { if (!mids.has(obj[k] as string)) errs.push(`${k} refers to an unknown material`) }
   const dr = params.drawers
   if (!isObj(dr) || !Array.isArray(dr.runnerLengths) || !dr.runnerLengths.every(v => isInt(v, 1))) errs.push('Invalid drawer settings')
@@ -298,7 +300,8 @@ export function validateDesign(d: unknown): string[] {
     ints(['width', 'height', 'depth', 'backInset', 'plinthHeight', 'plinthSetback', 'frontGap', 'shelfSetback'], params)
     ;['bodyMaterialId', 'frontMaterialId', 'backMaterialId'].forEach(k => matRef(k, params))
     if (params.top !== 'over' && params.top !== 'between') errs.push('Invalid top joint')
-    for (const k of ['shelfClearance', 'pinRowSetback']) if (params[k] !== undefined && !isInt(params[k])) errs.push(`${k} must be a whole number of mm`)
+    if (params.shelfClearance !== undefined && (!isInt(params.shelfClearance) || (params.shelfClearance as number) > 20)) errs.push('shelfClearance must be a whole number of mm')
+    if (params.pinRowSetback !== undefined && (!isInt(params.pinRowSetback, 8) || (params.pinRowSetback as number) > 300)) errs.push('pinRowSetback must be 8 to 300 mm')
     if (params.frontStyle !== undefined && !['overlay', 'half', 'inset'].includes(params.frontStyle as string)) errs.push('Invalid front style')
     if (params.mount !== undefined && params.mount !== 'floor' && params.mount !== 'wall') errs.push('Invalid mount')
     if (params.mountHeight !== undefined && !isInt(params.mountHeight)) errs.push('mountHeight must be a whole number of mm')

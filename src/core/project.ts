@@ -102,8 +102,8 @@ export const placedBounds = (item: ProjectItem): Box => placeItem(item).bounds
 // The whole room
 // ---------------------------------------------------------------------------
 
-/** Materials of all pieces merged by name + thickness; the first piece's colour and sheet win. */
-export const materialKey = (m: Pick<Material, 'name' | 'thickness'>) => `mat:${m.name}|${m.thickness}`
+/** Materials of all pieces merged by name + thickness + grain (grained and plain boards never share a sheet). */
+export const materialKey = (m: Pick<Material, 'name' | 'thickness' | 'grain'>) => `mat:${m.name}|${m.thickness}|${m.grain ? 'grain' : 'plain'}`
 
 export interface ProjectModel {
   pieces: PlacedPiece[]
@@ -121,7 +121,14 @@ export function buildProjectModel(project: Project): ProjectModel {
   const diagnostics: Diagnostic[] = []
   for (const pc of pieces) {
     const mats = new Map(pc.item.design.materials.map(m => [m.id, m]))
-    for (const m of pc.item.design.materials) if (!materials.has(materialKey(m))) materials.set(materialKey(m), { ...m, id: materialKey(m), sheet: sheetOf(m) })
+    for (const m of pc.item.design.materials) {
+      const k = materialKey(m), seen = materials.get(k)
+      if (!seen) { materials.set(k, { ...m, id: k, sheet: sheetOf(m) }); continue }
+      const a = seen.sheet!, b = sheetOf(m)
+      if (a.length !== b.length || a.width !== b.width || a.trim !== b.trim || a.count !== b.count) {
+        diagnostics.push({ severity: 'warning', code: 'material-sheet-conflict', message: `${m.name} has different sheet settings in ${pc.item.design.name}; the first piece's sheet (${a.length} × ${a.width}) is used for the whole project.`, nodeId: pc.item.id })
+      }
+    }
     for (const p of pc.panels) { const m = mats.get(p.materialId); panels.push({ ...p, materialId: m ? materialKey(m) : p.materialId }) }
     for (const h of pc.model.hardware) hardware.push({ ...h, nodeId: `${pc.item.id}:${h.nodeId}`, quantity: h.quantity * pc.item.quantity })
     const errs = pc.model.diagnostics.filter(d => d.severity === 'error').length

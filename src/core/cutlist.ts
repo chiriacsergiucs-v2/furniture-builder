@@ -9,7 +9,7 @@ export function drillingText(p: Panel): string {
   const parts: string[] = []
   if (p.pinRows?.length) {
     parts.push(p.pinRows.map(r => `${r.rows.length} rows × ${r.holes.length} holes ø${r.diameter}, ${r.rows[0]} mm from edges`).join('; ') +
-      (p.pinRows.length > 1 ? ' (both faces, offset 16 mm)' : ', one face'))
+      (new Set(p.pinRows.map(r => r.face)).size > 1 ? ' (both faces, offset 16 mm)' : ', one face'))
   }
   if (p.handleHoles) {
     parts.push(`handle ${p.handleHoles.at.length === 1 ? 'hole' : 'holes'} ø${p.handleHoles.diameter} at ${p.handleHoles.at.map(([u, v]) => `${u}/${v}`).join(', ')} mm from left/bottom`)
