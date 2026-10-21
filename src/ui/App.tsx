@@ -96,16 +96,21 @@ export function App() {
   // Mount the 3D canvas only when it is on screen, so it measures its real size.
   const mount3d = has3d && (wide || view === '3d')
 
-  // Reopen the last piece on this device.
+  // Reopen the last piece on this device. Until that has settled nothing is autosaved, so the placeholder piece shown
+  // during start-up never lands in the library or replaces the remembered piece.
+  const [started, setStarted] = useState(false)
   useEffect(() => {
+    const done = () => setStarted(true)
     const pid = lastProjectId()
-    if (pid) { loadProject(pid).then(p => { if (p) useDesign.getState().openProject(p) }).catch(() => {}); return }
+    if (pid) { loadProject(pid).then(p => { if (p) useDesign.getState().openProject(p) }).catch(() => {}).finally(done); return }
     const id = lastDesignId()
-    if (id) loadDesign(id).then(d => { if (d) useDesign.getState().load(d, { fromStorage: true }) }).catch(() => {})
+    if (id) loadDesign(id).then(d => { if (d) useDesign.getState().load(d, { fromStorage: true }) }).catch(() => {}).finally(done)
+    else done()
   }, [])
 
   // Autosave shortly after each change; also save a freshly opened template so it appears in the library.
   useEffect(() => {
+    if (!started) return
     // Pieces inside a project are saved with the project, never into the library.
     if (useDesign.getState().project) return
     rememberLast(design.id)
@@ -116,10 +121,11 @@ export function App() {
       saveDesign(design).then(() => setSave('saved')).catch(() => setSave('failed'))
     }, dirtyAt ? 400 : 0)
     return () => clearTimeout(t)
-  }, [design, dirtyAt])
+  }, [design, dirtyAt, started])
 
   // Projects autosave too, and are reopened next time.
   useEffect(() => {
+    if (!started) return
     rememberLastProject(project?.id ?? null)
     if (!project || !projectDirtyAt) return
     const t = setTimeout(() => {
@@ -127,7 +133,7 @@ export function App() {
       saveProject(project).then(() => setSave('saved')).catch(() => setSave('failed'))
     }, 400)
     return () => clearTimeout(t)
-  }, [project, projectDirtyAt])
+  }, [project, projectDirtyAt, started])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

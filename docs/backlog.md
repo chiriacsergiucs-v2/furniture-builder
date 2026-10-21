@@ -20,10 +20,10 @@ Statuses: **Done** (acceptance met, evidence cited) · **Partially done** (code 
 | F11 | Front-elevation editor with tap-to-select spaces, breadcrumbs, inspector | Done | `src/ui/Elevation.tsx`, `Inspector.tsx`; screenshots during build |
 | F12 | 3D preview: lazy, highlight from parts list, click to select, no-WebGL message | Done | `src/viewer/Viewer3D.tsx`; screenshots (SwiftShader) |
 | F13 | Templates: chest, bookcase, base cabinet, sideboard, wardrobe, pedestal desk, panel desk | Done | every-template test |
-| F14 | Local library: autosave, reopen last, list, duplicate, delete, import/export design file | Partially done | storage unit-tested (`tests/persist.test.ts`); library dialog not exercised by automation |
-| F15 | Undo / redo (buttons, Ctrl+Z / Ctrl+Shift+Z) | Partially done | implemented in `designStore.ts`; no automated test |
-| F16 | Materials editor (name, thickness, grain, colour, add) | Partially done | implemented in `Dialogs.tsx`; no automated test |
-| F17 | Offline PWA with update prompt | Partially done | service worker builds; offline start not verified on a device |
+| F14 | Local library: autosave, reopen last, list, duplicate, delete, import/export design file | Done | storage unit-tested (`tests/persist.test.ts`); browser run 2026-10-22: rename autosaves, duplicate, delete (disabled on the open piece), export → import, reopen after reload. Found and fixed: each reload saved a stray placeholder piece |
+| F15 | Undo / redo (buttons, Ctrl+Z / Ctrl+Shift+Z) | Done | browser run 2026-10-22: buttons and keyboard shortcuts both undo and redo a drawer-count change |
+| F16 | Materials editor (name, thickness, grain, colour, add) | Done | browser run 2026-10-22: rename and thickness change reach the parts CSV; add material; screenshot |
+| F17 | Offline PWA with update prompt | Partially done | browser run 2026-10-22: service worker controls the page and the app reopens the last piece with the network off (headless Chromium, localhost). Not yet checked on a phone or on the Pages URL; update prompt not exercised |
 | F18 | Responsive layout phone → wide desktop | Done | screenshots 390 / 1280 / 1600 px; no horizontal page scroll at 390 px |
 
 ## Next slices (not started)
