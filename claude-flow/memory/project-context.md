@@ -23,7 +23,7 @@ Vendor adapters only from inspected originals; the Regency workbook is not in th
 B-/STEP-ledger status only with evidence; full sequence + Pages run = release (ADR-0029). Orchestration files are
 runtime-neutral until a Claude Flow version is pinned (ADR-0030, TSK-001).
 
-**Known drift to fix (TSK-012):** `templates.ts` = 55 ready + 2 planned, ledger says 54; `docs/architecture.md`
+**Known drift to fix (TSK-012):** `templates.ts` = 54 ready + 2 planned, ledger says 54; `docs/architecture.md`
 still mentions localStorage autosave; `docs/licences.md` provisional.
 
 **Missing ⇒ BLOCKED/UNKNOWN, never invented:** physical loads, hardware part numbers, drilling, supplier column

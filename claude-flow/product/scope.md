@@ -4,7 +4,7 @@
 Projects, materials, stock sheets/offcuts with trim and quantity, exact parts with grain/rotation/ABS, deterministic
 guillotine heuristic with independent validation, SVG/print/CSV/XLSX outputs, Dexie IndexedDB with non-destructive
 legacy migration and JSON backups, preset/kit/category library with revisions, typed modular furniture engine with
-55 ready templates (2 planned), positioned 3D preview and assembly editor, Fusion Python snapshot, offline PWA on
+54 ready templates (2 planned), positioned 3D preview and assembly editor, Fusion Python snapshot, offline PWA on
 GitHub Pages.
 
 ## In scope, partially implemented

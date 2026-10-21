@@ -447,9 +447,9 @@
     {
       "id": "TSK-012",
       "title": "Reconcile stale architecture documentation with current main",
-      "status": "READY",
+      "status": "DONE",
       "owner_role": "requirements-analyst",
-      "objective": "Fix drift: docs/architecture.md still says 'Project editor controls localStorage autosave'; ledger says 54 ready templates while templates.ts has 55 ready + 2 planned; docs/licences.md marked provisional. Correct the repo docs and regenerate mirrors.",
+      "objective": "Fix drift: docs/architecture.md said 'Project editor controls localStorage autosave' (Dexie is primary); the rebuild's '55 ready templates' claim was a miscount (54 ready + 2 planned is correct); docs/licences.md marked provisional is TSK-011.",
       "governing_adrs": [
         "ADR-0003",
         "ADR-0020",
@@ -474,12 +474,16 @@
         "python3 -I claude-flow/scripts/validate.py --sync"
       ],
       "acceptance": [
-        "Each documented count matches a grep of the code",
+        "Each documented count matches a grep of template entries in the code",
         "No doc claims localStorage as primary store"
       ],
       "scope_guard": "ADR-0028: smallest slice; no E2E, refactor or polish unless listed above.",
       "blocker": null,
-      "evidence": [],
+      "evidence": [
+        "docs/architecture.md autosave sentence corrected (this commit)",
+        "validate.py template count fixed: 54 ready / 2 planned matches ledger and README",
+        "C-03 and C-04 resolved in evidence/conflicts.md"
+      ],
       "handoff": {
         "to": [
           "verifier"

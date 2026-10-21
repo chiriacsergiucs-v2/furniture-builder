@@ -4,7 +4,7 @@
 **Stack:** React 19, TypeScript 5.9, Vite 7, vite-plugin-pwa, Dexie 4.2.1, three 0.186 + @react-three/fiber 9.8, dnd-kit, ExcelJS 4.4; Vitest, Playwright, Node 22 kernel tests; GitHub Actions `ci.yml` / `deploy.yml` / `lockfile.yml`.
 
 **What it is:** an offline, phone-first furniture panel cutting optimiser with an exact guillotine engine and an
-independent validator, a Dexie-backed preset/kit library, a typed modular furniture engine (55 ready templates),
+independent validator, a Dexie-backed preset/kit library, a typed modular furniture engine (54 ready templates),
 positioned 3D previews and a Fusion 360 Python snapshot. No backend, accounts or cloud.
 
 **State (code at the commit in `evidence/source-index.json`):** engine, storage, migration, backups, component

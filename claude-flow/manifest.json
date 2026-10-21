@@ -2,7 +2,7 @@
   "package": "mobila-claude-flow",
   "snapshot_date": "2026-10-21",
   "repository": "chiriacsergiucs-v2/furniture-builder",
-  "repo_commit": "e1bf0c78963303aaa88cff0093bd893f100a411d",
+  "repo_commit": "0e55bd646b72bb5cc3d2fdedfa21bc8e6c9d6ddd",
   "sources": "repository only (evidence/source-index.json)",
   "runtime": {
     "name": null,
