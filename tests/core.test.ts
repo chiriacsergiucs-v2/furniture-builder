@@ -291,3 +291,59 @@ describe('editable desk pedestals (ADR-0026)', () => {
     expect(buildModel({ ...legacy, product: edited }).panels.filter(p => p.role === 'shelf').length).toBe(2)
   })
 })
+
+describe('drawer heights and adjustable shelves (ADR-0023)', () => {
+  it('designs without the new fields build the same model as before', () => {
+    const d = byTemplate('chest')
+    const a = buildModel(d)
+    const b = buildModel(withCab(d, { interior: { ...cab(d).interior } }))
+    expect(b.panels).toEqual(a.panels)
+  })
+  it('chosen front heights: fixed top drawer, the rest share; boxes stay behind their fronts', () => {
+    const d = withCab(byTemplate('chest'), { interior: { id: 'dr', kind: 'drawers', count: 3, heights: [{ mode: 'mm', value: 150 }, { mode: 'fr', value: 1 }, { mode: 'fr', value: 2 }] } })
+    expect(validateDesign(d)).toEqual([])
+    const m = buildModel(d)
+    expect(m.diagnostics.filter(x => x.severity === 'error')).toEqual([])
+    const fronts = role(m.panels, 'drawer-front').sort((a, b) => b.box.y - a.box.y)
+    expect(fronts[0].box.h).toBe(150)
+    expect(fronts[2].box.h).toBeGreaterThan(fronts[1].box.h * 1.9)
+    // each drawer box lies within its own front's vertical span ± the gap
+    for (let i = 0; i < 3; i++) {
+      const sides = m.panels.filter(p => p.role === 'drawer-side' && p.label.startsWith(`Drawer ${i + 1} `))
+      for (const s of sides) {
+        expect(s.box.y).toBeGreaterThanOrEqual(fronts[i].box.y - 3 - 30)
+        expect(s.box.y + s.box.h).toBeLessThanOrEqual(fronts[i].box.y + fronts[i].box.h + 3)
+      }
+    }
+  })
+  it('rejects heights that do not match the count or do not fit', () => {
+    const wrong = withCab(byTemplate('chest'), { interior: { id: 'dr', kind: 'drawers', count: 3, heights: [{ mode: 'fr', value: 1 }] } })
+    expect(validateDesign(wrong)).toContain('Drawer heights must list one size per drawer')
+    expect(errors(wrong).map(e => e.code)).toContain('drawer-heights')
+    const tooBig = withCab(byTemplate('chest'), { interior: { id: 'dr', kind: 'drawers', count: 2, heights: [{ mode: 'mm', value: 900 }, { mode: 'fr', value: 1 }] } })
+    expect(errors(tooBig).map(e => e.code)).toContain('drawer-heights')
+  })
+  it('adjustable shelves are 1 mm shorter each side and the sides get 32 mm pin rows 37 mm from the edges', () => {
+    const d = withCab(byTemplate('bookcase'), { interior: { id: 'sh', kind: 'shelves', count: 4, adjustable: true } })
+    const m = buildModel(d)
+    expect(m.diagnostics.filter(x => x.severity === 'error')).toEqual([])
+    const opening = m.spaces.find(s => s.nodeId === 'sh')!.box
+    for (const s of role(m.panels, 'shelf')) { expect(s.box.w).toBe(opening.w - 2); expect(s.box.x).toBe(opening.x + 1) }
+    const sides = role(m.panels, 'side')
+    expect(sides.every(s => s.pinRows?.length === 1)).toBe(true)
+    const rows = sides[0].pinRows![0]
+    expect(rows.rows).toEqual([37, sides[0].box.d - 37])
+    for (let i = 1; i < rows.holes.length; i++) expect(rows.holes[i] - rows.holes[i - 1]).toBe(32)
+    expect(hardwareSummary(m).find(h => h.kind === 'shelf-pin')?.quantity).toBe(16)
+    const rowsInList = cutlist(m, d.materials).find(r => r.labels.includes('Left side'))!
+    expect(rowsInList.drilling).toMatch(/2 rows × \d+ holes ø5, 37 mm from edges/)
+  })
+  it('a divider drilled from both faces has its second row offset by 16 mm', () => {
+    const d = withCab(byTemplate('bookcase'), { width: 1000, interior: { id: 'r', kind: 'split', axis: 'x', sizes: [{ mode: 'fr', value: 1 }, { mode: 'fr', value: 1 }], children: [
+      { id: 'a', kind: 'shelves', count: 3, adjustable: true }, { id: 'b', kind: 'shelves', count: 3, adjustable: true }] } })
+    const m = buildModel(d)
+    const div = role(m.panels, 'divider')[0]
+    expect(div.pinRows).toHaveLength(2)
+    expect(Math.abs(div.pinRows![1].holes[0] - div.pinRows![0].holes[0]) % 32).toBe(16)
+  })
+})

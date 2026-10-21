@@ -1,6 +1,6 @@
 import { box, distribute, equalParts } from './geometry'
 import type {
-  Box, CabinetParams, Diagnostic, Face, HardwareItem, Material, Mm, Panel, PanelRole, Space, SpaceOpening,
+  Box, CabinetParams, Diagnostic, Face, HardwareItem, Material, Mm, Panel, PanelRole, PinRows, Space, SpaceOpening,
 } from './types'
 
 /**
@@ -29,6 +29,12 @@ export interface BuildOptions {
 }
 
 export interface PartialModel { panels: Panel[]; spaces: SpaceOpening[]; hardware: HardwareItem[]; diagnostics: Diagnostic[] }
+
+/** 32 mm system (ADR-0023). */
+export const PIN_PITCH = 32
+export const PIN_DIAMETER = 5
+export const DEFAULT_SHELF_CLEARANCE = 1
+export const DEFAULT_PIN_ROW_SETBACK = 37
 
 /** Minimum gap between closed doors and internal drawer boxes (hinge arm clearance). */
 export const INTERNAL_DRAWER_SETBACK = 20
@@ -116,6 +122,7 @@ export function buildCabinet(p: CabinetParams, materials: Map<string, Material>,
     openZ = p.backInset + bt
   }
 
+  const adjustable: { spaceId: string; op: Box }[] = []
   const r = lo(g)
   const root: Ctx = {
     opening: box(t, ph + t, openZ, W - 2 * t, H - ph - 2 * t, D - openZ),
@@ -174,11 +181,18 @@ export function buildCabinet(p: CabinetParams, materials: Map<string, Material>,
         const gaps = equalParts(gapTotal, n + 1)
         const sd = op.d - p.shelfSetback
         if (sd < 50) { err('shelf-shallow', 'Shelves would be shallower than 50 mm.', s.id); return }
+        const clear = s.adjustable ? (p.shelfClearance ?? DEFAULT_SHELF_CLEARANCE) : 0
+        if (s.adjustable && op.w - 2 * clear < 50) { err('shelf-narrow', 'Adjustable shelves would be narrower than 50 mm.', s.id); return }
         let y = op.y
         for (let i = 0; i < n; i++) {
           y += gaps[i]
-          add(s.id, 'shelf', `Shelf ${i + 1}`, body.id, box(op.x, y, op.z, op.w, t, sd), 'y', 'x', ['+z'], i)
+          add(s.id, 'shelf', s.adjustable ? `Adjustable shelf ${i + 1}` : `Shelf ${i + 1}`, body.id,
+            box(op.x + clear, y, op.z, op.w - 2 * clear, t, sd), 'y', 'x', ['+z'], i)
           y += t
+        }
+        if (s.adjustable) {
+          adjustable.push({ spaceId: s.id, op })
+          hw({ nodeId: s.id, kind: 'shelf-pin', label: 'Shelf pin, 5 mm', quantity: 4 * n, note: '4 per adjustable shelf (typical)' })
         }
         if (op.w > 50 * t) warn('shelf-span', `Shelf span ${op.w} mm is long for ${t} mm board and may sag (rule of thumb ≤ ${50 * t} mm).`, s.id)
         return
@@ -208,10 +222,35 @@ export function buildCabinet(p: CabinetParams, materials: Map<string, Material>,
         const bw = op.w - 2 * ds.sideClearance
         const tb = boxM.thickness, tbot = bottomM.thickness
         if (bw < 2 * tb + 50) { err('drawer-narrow', `Drawer box would be only ${bw} mm wide.`, s.id); return }
-        const slots = equalParts(op.h, n)
         // fronts: split the front zone top→bottom
         const fz = c.front
-        const frontHeights = equalParts(fz.y1 - fz.y0 - (n - 1) * g, n)
+        const custom = s.heights && s.heights.length === n ? s.heights : undefined
+        if (s.heights && !custom) { err('drawer-heights', `Give one height per drawer (${n}).`, s.id); return }
+        const frontRoom = fz.y1 - fz.y0 - (n - 1) * g
+        const frontHeights = custom && !internal ? distribute(frontRoom, custom) : equalParts(frontRoom, n)
+        if (!frontHeights || frontHeights.some(v => v <= 0)) { err('drawer-heights', `Drawer heights do not fit in ${frontRoom} mm of front.`, s.id); return }
+        let slots: Mm[]
+        if (!custom) slots = equalParts(op.h, n)
+        else if (internal) {
+          const sl = distribute(op.h, custom)
+          if (!sl || sl.some(v => v <= 0)) { err('drawer-heights', `Drawer heights do not fit in ${op.h} mm.`, s.id); return }
+          slots = sl
+        } else {
+          // Each drawer box sits behind its own front: slot boundaries follow the middle of the gaps between fronts.
+          slots = []
+          let top = op.y + op.h, ft = fz.y1
+          for (let i = 0; i < n; i++) {
+            const fb = ft - frontHeights[i]
+            const bottom = i === n - 1 ? op.y : Math.min(top, Math.max(op.y, fb - lo(g)))
+            slots.push(top - bottom)
+            top = bottom; ft = fb - g
+          }
+        }
+        if (custom && custom.every(z => z.mode === 'mm')) {
+          const room = internal ? op.h : frontRoom
+          const asked = custom.reduce((a, z) => a + z.value, 0)
+          if (asked !== room) warn('drawer-heights-resized', `Drawer heights add up to ${asked} mm but there is ${room} mm; the bottom drawer was adjusted. Make one drawer "Share" to absorb the difference.`, s.id)
+        }
         let slotTop = op.y + op.h
         let frontTop = fz.y1
         const frontZ = D - setback
@@ -287,5 +326,36 @@ export function buildCabinet(p: CabinetParams, materials: Map<string, Material>,
     }
   }
   visit(p.interior, root)
+  addPinRows(out.panels, adjustable.map(a => ({ ...a, op: { ...a.op, x: a.op.x + o.x, y: a.op.y + o.y, z: a.op.z + o.z } })),
+    p.pinRowSetback ?? DEFAULT_PIN_ROW_SETBACK, out.diagnostics)
   return out
+}
+
+const SUPPORTS = new Set<PanelRole>(['side', 'divider', 'gable'])
+
+/**
+ * Give the vertical panels either side of each adjustable-shelf space a pair of 32 mm hole rows. A panel drilled
+ * from both faces gets the second face's holes offset by half a pitch so holes never meet (ADR-0023).
+ */
+function addPinRows(panels: Panel[], spaces: { spaceId: string; op: Box }[], setback: Mm, diags: Diagnostic[]) {
+  for (const { spaceId, op } of spaces) {
+    const sides: [Face, (p: Panel) => boolean][] = [
+      ['+x', p => p.box.x + p.box.w === op.x],
+      ['-x', p => p.box.x === op.x + op.w],
+    ]
+    for (const [face, touches] of sides) {
+      const panel = panels.find(p => SUPPORTS.has(p.role) && p.thicknessAxis === 'x' && touches(p) &&
+        p.box.y <= op.y && p.box.y + p.box.h >= op.y + op.h && p.box.z <= op.z && p.box.z + p.box.d >= op.z + op.d)
+      if (!panel) { diags.push({ severity: 'warning', code: 'pin-rows-no-panel', message: 'No side panel found for shelf pins on one side of an adjustable space.', nodeId: spaceId }); continue }
+      if (panel.box.d < 2 * setback + PIN_PITCH) { diags.push({ severity: 'warning', code: 'pin-rows-shallow', message: `${panel.label} is too shallow for two pin rows ${setback} mm from the edges.`, nodeId: spaceId }); continue }
+      const opposite = (panel.pinRows ?? []).some(r => r.face !== face)
+      const start = op.y - panel.box.y + 2 * PIN_PITCH + (opposite ? PIN_PITCH / 2 : 0)
+      const end = op.y + op.h - panel.box.y - 2 * PIN_PITCH
+      const holes: Mm[] = []
+      for (let h = start; h <= end; h += PIN_PITCH) holes.push(h)
+      if (!holes.length) continue
+      const rows: PinRows = { face, rows: [setback, panel.box.d - setback], holes, diameter: PIN_DIAMETER }
+      panel.pinRows = [...(panel.pinRows ?? []), rows]
+    }
+  }
 }

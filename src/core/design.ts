@@ -37,7 +37,7 @@ export const cabinetDefaults = (interior: Space): CabinetParams => ({
   width: 800, height: 900, depth: 450,
   bodyMaterialId: 'pal18', frontMaterialId: 'mdf18', backMaterialId: 'hdf3',
   top: 'over', back: 'applied', backInset: 15, plinthHeight: 80, plinthSetback: 40,
-  frontGap: 3, shelfSetback: 20, drawers: defaultDrawers(), interior,
+  frontGap: 3, shelfSetback: 20, shelfClearance: 1, pinRowSetback: 37, drawers: defaultDrawers(), interior,
 })
 
 export const deskDefaults = (): DeskParams => ({
@@ -121,6 +121,15 @@ export function changeKind(s: Space, kind: SpaceKind): Space {
   return { ...next, front: s.front ?? null }
 }
 
+/** Change a drawer count, keeping custom heights in step (new drawers share the rest). */
+export function setDrawerCount(s: Space, count: number): Space {
+  if (s.kind !== 'drawers') return s
+  const heights = s.heights
+    ? count > s.heights.length ? [...s.heights, ...Array.from({ length: count - s.heights.length }, () => fr())] : s.heights.slice(0, count)
+    : undefined
+  return { ...s, count, ...(heights ? { heights } : {}) }
+}
+
 export function splitSpace(s: Space, axis: 'x' | 'y', parts: number): Space {
   const n = Math.max(2, Math.min(8, Math.round(parts)))
   const first: Space = { ...s, id: newId(), front: null }
@@ -179,6 +188,8 @@ const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 
 const isInt = (v: unknown, min = 0) => typeof v === 'number' && Number.isSafeInteger(v) && v >= min
 const isStr = (v: unknown) => typeof v === 'string' && v.length > 0 && v.length < 500
 
+const validSize = (z: unknown) => isObj(z) && ((z.mode === 'mm' && isInt(z.value, 1)) || (z.mode === 'fr' && typeof z.value === 'number' && z.value > 0 && z.value < 1000))
+
 function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0) {
   if (depth > 12) { errs.push('Space tree is too deep'); return }
   if (!isObj(s) || !isStr(s.id)) { errs.push('Invalid space'); return }
@@ -187,12 +198,21 @@ function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0)
   if (s.front != null && !(isObj(s.front) && s.front.kind === 'doors' && (s.front.count === 1 || s.front.count === 2))) errs.push('Invalid doors')
   switch (s.kind) {
     case 'empty': return
-    case 'shelves': if (!isInt(s.count) || (s.count as number) > MAX_SHELVES) errs.push('Invalid shelf count'); return
-    case 'drawers': if (!isInt(s.count, 1) || (s.count as number) > MAX_DRAWERS) errs.push('Invalid drawer count'); return
+    case 'shelves':
+      if (!isInt(s.count) || (s.count as number) > MAX_SHELVES) errs.push('Invalid shelf count')
+      if (s.adjustable !== undefined && typeof s.adjustable !== 'boolean') errs.push('Invalid adjustable flag')
+      return
+    case 'drawers':
+      if (!isInt(s.count, 1) || (s.count as number) > MAX_DRAWERS) errs.push('Invalid drawer count')
+      if (s.heights !== undefined) {
+        if (!Array.isArray(s.heights) || s.heights.length !== s.count) errs.push('Drawer heights must list one size per drawer')
+        else for (const z of s.heights) if (!validSize(z)) errs.push('Invalid drawer height')
+      }
+      return
     case 'hanging': if (!isInt(s.railDrop)) errs.push('Invalid rail drop'); return
     case 'split':
       if ((s.axis !== 'x' && s.axis !== 'y') || !Array.isArray(s.children) || !Array.isArray(s.sizes) || s.children.length !== s.sizes.length || s.children.length < 2) { errs.push('Invalid split'); return }
-      for (const z of s.sizes) if (!isObj(z) || !((z.mode === 'mm' && isInt(z.value, 1)) || (z.mode === 'fr' && typeof z.value === 'number' && z.value > 0 && z.value < 1000))) errs.push('Invalid split size')
+      for (const z of s.sizes) if (!validSize(z)) errs.push('Invalid split size')
       for (const c of s.children) validateSpace(c, errs, seen, depth + 1)
       return
     default: errs.push(`Unknown space kind ${String(s.kind)}`)
@@ -223,6 +243,7 @@ export function validateDesign(d: unknown): string[] {
     ints(['width', 'height', 'depth', 'backInset', 'plinthHeight', 'plinthSetback', 'frontGap', 'shelfSetback'], params)
     ;['bodyMaterialId', 'frontMaterialId', 'backMaterialId'].forEach(k => matRef(k, params))
     if (params.top !== 'over' && params.top !== 'between') errs.push('Invalid top joint')
+    for (const k of ['shelfClearance', 'pinRowSetback']) if (params[k] !== undefined && !isInt(params[k])) errs.push(`${k} must be a whole number of mm`)
     if (!['none', 'applied', 'inset'].includes(params.back as string)) errs.push('Invalid back')
     validateSpace(params.interior, errs, new Set())
   } else if (p.kind === 'desk') {

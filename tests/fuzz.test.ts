@@ -26,9 +26,13 @@ function genSpace(depth: number, doorsAbove: boolean): Space {
   const id = nid()
   switch (k) {
     case 'empty': return { id, kind: 'empty', front: doors }
-    case 'shelves': return { id, kind: 'shelves', count: ri(0, 4), front: doors }
+    case 'shelves': return { id, kind: 'shelves', count: ri(0, 4), front: doors, ...(rnd() < 0.35 ? { adjustable: true } : {}) }
     case 'hanging': return { id, kind: 'hanging', railDrop: ri(20, 80), front: doors }
-    case 'drawers': return { id, kind: 'drawers', count: ri(1, 5), front: doors }
+    case 'drawers': {
+      const count = ri(1, 5)
+      const heights = rnd() < 0.35 ? Array.from({ length: count }, () => rnd() < 0.3 ? { mode: 'mm' as const, value: ri(90, 250) } : { mode: 'fr' as const, value: ri(1, 3) }) : undefined
+      return { id, kind: 'drawers', count, front: doors, ...(heights ? { heights } : {}) }
+    }
     default: {
       const n = ri(2, 4)
       const children = Array.from({ length: n }, () => genSpace(depth + 1, below))
@@ -55,7 +59,7 @@ function genCabinet(): Design {
     width: ri(300, 2400), height: ri(300, 2400), depth: ri(250, 700),
     bodyMaterialId: 'body', frontMaterialId: 'front', backMaterialId: 'back',
     top: pick(['over', 'between'] as const), back: pick(['none', 'applied', 'inset'] as const), backInset: ri(0, 30),
-    plinthHeight: pick([0, 0, ri(40, 120)]), plinthSetback: ri(0, 60), frontGap: ri(0, 6), shelfSetback: ri(0, 30),
+    plinthHeight: pick([0, 0, ri(40, 120)]), plinthSetback: ri(0, 60), frontGap: ri(0, 6), shelfSetback: ri(0, 30), shelfClearance: ri(0, 2), pinRowSetback: pick([37, 37, ri(25, 60)]),
     drawers: drawers(), interior: genSpace(0, false),
   }
   return { schemaVersion: 1, id: 'd', name: 'f', createdAt: '', updatedAt: '', materials: mats(), product: { kind: 'cabinet', id: 'P', params } }
@@ -101,7 +105,10 @@ function check(d: Design): string[] {
     if (d.product.kind === 'desk' && f.box.z + f.box.d > envD && !m.diagnostics.some(x => x.code === 'fronts-proud')) probs.push(`front-protrudes-past-worktop ${f.id} by ${f.box.z + f.box.d - envD}`)
   }
   // floating: every non-front panel must touch another panel (drawer parts each other; shelves the carcass)
-  for (const p of P) if (!FRONT.has(p.role) && !P.some(q => q !== p && touches(p.box, q.box))) probs.push(`floating ${p.id}`)
+  // Adjustable shelves rest on pins (ADR-0023): they are supported only if both neighbouring panels carry pin rows.
+  const onPins = (p: (typeof P)[number]) => p.label.startsWith('Adjustable shelf') &&
+    P.filter(q => q.pinRows?.length && (q.box.x + q.box.w <= p.box.x || q.box.x >= p.box.x + p.box.w)).length >= 2
+  for (const p of P) if (!FRONT.has(p.role) && !onPins(p) && !P.some(q => q !== p && touches(p.box, q.box))) probs.push(`floating ${p.id}`)
   // front gaps (cabinet only for outer reveal)
   const r = Math.floor(g / 2)
   if (d.product.kind === 'cabinet') {

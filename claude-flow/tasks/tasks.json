@@ -94,7 +94,7 @@
     {
       "id": "TSK-N05",
       "title": "Unequal drawer heights and adjustable shelves",
-      "status": "READY",
+      "status": "DONE",
       "owner": "furniture-geometry",
       "adrs": [
         "ADR-0005",
@@ -112,7 +112,11 @@
         "schemaVersion bumped only if the document shape changes incompatibly; old designs still load"
       ],
       "blocker": null,
-      "evidence": [],
+      "evidence": [
+        "tests/core.test.ts ADR-0023 block",
+        "npx vitest run: 42 passed",
+        "FUZZ_N=20000 passed"
+      ],
       "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
     },
     {
