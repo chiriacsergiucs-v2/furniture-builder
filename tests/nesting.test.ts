@@ -108,7 +108,7 @@ describe('nest', () => {
   it('builds one job per material from cut-list rows', () => {
     const row = (materialId: string, panelIds: string[], labels: string[], length: number, width: number): CutRow => ({
       materialId, materialName: materialId.toUpperCase(), thickness: 18, length, width, quantity: panelIds.length,
-      edgesL: 0, edgesW: 0, grain: materialId === 'pal', labels, panelIds,
+      edgesL: 0, edgesW: 0, grain: materialId === 'pal', drilling: '', labels, panelIds,
     })
     const rows = [row('pal', ['s1', 's2'], ['Side L', 'Side R'], 720, 560), row('mdf', ['f1'], ['Front'], 700, 400), row('pal', ['t'], ['Top'], 800, 560), row('hdf', ['b'], ['Back'], 700, 700)]
     const settings = new Map([

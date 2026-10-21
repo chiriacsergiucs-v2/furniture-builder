@@ -39,7 +39,7 @@
     {
       "id": "TSK-N01",
       "title": "Sheet nesting: guillotine optimiser from the cut list with an independent validator",
-      "status": "READY",
+      "status": "DONE",
       "owner": "furniture-geometry",
       "adrs": [
         "ADR-0003",
@@ -65,7 +65,12 @@
         "Results described as heuristic, never optimal"
       ],
       "blocker": null,
-      "evidence": [],
+      "evidence": [
+        "tests/nesting.test.ts",
+        "tests/core.test.ts stock sheets block",
+        "npx vitest run: 61 passed",
+        "FUZZ_N=5000 nesting fuzz passed"
+      ],
       "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
     },
     {

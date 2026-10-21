@@ -65,8 +65,8 @@ Questions answered by the user on 2026-10-21; each becomes Accepted when its sli
 
 | ID | Decision | Backlog | Status |
 |---|---|---|---|
-| [ADR-0018](ADR-0018.md) | Sheet nesting: seeded guillotine heuristic with an independent layout validator | N01 | Approved |
-| [ADR-0019](ADR-0019.md) | Stock sheets, trim and kerf live in the design document (schemaVersion 2) | N01 | Approved |
+| [ADR-0018](ADR-0018.md) | Sheet nesting: seeded guillotine heuristic with an independent layout validator | N01 | Accepted |
+| [ADR-0019](ADR-0019.md) | Stock sheets, trim and kerf live in the design document (schemaVersion 2) | N01 | Accepted |
 | [ADR-0020](ADR-0020.md) | Printing and drawings: SVG from the model plus a print stylesheet, no PDF library | N02 | Approved |
 | [ADR-0021](ADR-0021.md) | Fusion 360 export: a Python script that rebuilds the model as named solid boxes, unverified until run in Fusion | N03 | Approved |
 | [ADR-0022](ADR-0022.md) | Projects: several pieces placed in one room, with combined parts and storage version 2 | N04 | Approved |

@@ -402,3 +402,41 @@ describe('front styles and handles (ADR-0024)', () => {
     expect(m.diagnostics.map(x => x.code)).toContain('handle-fit')
   })
 })
+
+describe('stock sheets in the design (ADR-0019) and sheet layouts (ADR-0018)', () => {
+  it('a version-1 file validates, upgrades in memory with the user defaults, and builds identical panels', async () => {
+    const { upgradeDesign } = await import('../src/core/design')
+    const v2 = byTemplate('sideboard')
+    const v1 = { ...v2, schemaVersion: 1 as const, cutting: undefined, materials: v2.materials.map(({ sheet: _s, ...m }) => { void _s; return m }) }
+    expect(validateDesign(v1)).toEqual([])
+    const up = upgradeDesign(v1)
+    expect(up.schemaVersion).toBe(2)
+    expect(up.cutting?.kerf).toBe(4)
+    expect(up.materials.find(m => m.id === 'pal18')!.sheet).toEqual({ length: 2800, width: 2070, trim: 10, count: null })
+    expect(up.materials.find(m => m.id === 'mdf18')!.sheet).toEqual({ length: 2440, width: 1220, trim: 10, count: null })
+    expect(up.materials.find(m => m.id === 'hdf3')!.sheet).toEqual({ length: 2800, width: 2070, trim: 10, count: null })
+    expect(buildModel(up).panels).toEqual(buildModel(v1).panels)
+    expect(validateDesign(up)).toEqual([])
+    expect(upgradeDesign(up)).toBe(up)
+  })
+  it('rejects broken sheet settings', () => {
+    const d = byTemplate('chest')
+    const bad = { ...d, materials: d.materials.map(m => m.id === 'pal18' ? { ...m, sheet: { length: 2800, width: 2070, trim: 1500, count: null } } : m) }
+    expect(validateDesign(bad).some(e => e.startsWith('Invalid sheet'))).toBe(true)
+  })
+  it('every template lays out on its stock sheets with a valid, validated result', async () => {
+    const { nest } = await import('../src/core/nesting')
+    const { nestingJobs } = await import('../src/core/nesting/fromDesign')
+    for (const t of templates) {
+      const d = t.create()
+      const { jobs } = nestingJobs(d, buildModel(d))
+      expect(jobs.length).toBeGreaterThan(0)
+      for (const j of jobs) {
+        const r = nest(j, { maxMs: 10_000 })
+        expect(r.valid).toBe(true)
+        expect(r.unplaced).toEqual([])
+        expect(j.kerf).toBe(4); expect(j.trim).toBe(10)
+      }
+    }
+  })
+})

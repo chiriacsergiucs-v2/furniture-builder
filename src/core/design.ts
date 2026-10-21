@@ -7,13 +7,30 @@ export type PedestalSide = 'left' | 'right'
 export const newId = (): string =>
   (globalThis.crypto?.randomUUID?.() ?? `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`).slice(0, 8)
 
-export const defaultMaterials = (): Material[] => [
+/** User's stock (2026-10-21): PAL and HDF 2800 × 2070, MDF 2440 × 1220, 10 mm trim per edge, 4 mm kerf. */
+export const DEFAULT_KERF = 4
+export const DEFAULT_TRIM = 10
+export function defaultSheetFor(m: Pick<Material, 'id' | 'name'>): NonNullable<Material['sheet']> {
+  const mdf = /mdf/i.test(m.id) || /mdf/i.test(m.name)
+  return mdf ? { length: 2440, width: 1220, trim: DEFAULT_TRIM, count: null } : { length: 2800, width: 2070, trim: DEFAULT_TRIM, count: null }
+}
+export const sheetOf = (m: Material) => m.sheet ?? defaultSheetFor(m)
+export const kerfOf = (d: Design) => d.cutting?.kerf ?? DEFAULT_KERF
+
+/** Version-1 → 2 in memory: fill stock sheets and cutting settings. Returns the same object when already v2. */
+export function upgradeDesign(d: Design): Design {
+  if (d.schemaVersion === 2 && d.cutting && d.materials.every(m => m.sheet)) return d
+  return { ...d, schemaVersion: 2, cutting: d.cutting ?? { kerf: DEFAULT_KERF }, materials: d.materials.map(m => (m.sheet ? m : { ...m, sheet: defaultSheetFor(m) })) }
+}
+
+const baseMaterials = (): Material[] => [
   { id: 'pal18', name: 'PAL 18 white', thickness: 18, grain: false, color: '#ecebe6' },
   { id: 'pal18oak', name: 'PAL 18 oak', thickness: 18, grain: true, color: '#c9a36b' },
   { id: 'pal16', name: 'PAL 16 white', thickness: 16, grain: false, color: '#f1f0ea' },
   { id: 'mdf18', name: 'MDF 18 painted', thickness: 18, grain: false, color: '#b9c4c9' },
   { id: 'hdf3', name: 'HDF 3', thickness: 3, grain: false, color: '#a89a86' },
 ]
+export const defaultMaterials = (): Material[] => baseMaterials().map(m => ({ ...m, sheet: defaultSheetFor(m) }))
 
 export const defaultDrawers = (): DrawerSettings => ({
   sideClearance: 13, verticalClearance: 30, rearClearance: 10,
@@ -50,7 +67,7 @@ export const deskDefaults = (): DeskParams => ({
 
 function wrap(name: string, product: Product): Design {
   const now = new Date().toISOString()
-  return { schemaVersion: 1, id: newId(), name, createdAt: now, updatedAt: now, materials: defaultMaterials(), product }
+  return { schemaVersion: 2, id: newId(), name, createdAt: now, updatedAt: now, materials: defaultMaterials(), product, cutting: { kerf: DEFAULT_KERF } }
 }
 const cabinet = (name: string, over: Partial<CabinetParams>, interior: Space) =>
   wrap(name, { kind: 'cabinet', id: newId(), params: { ...cabinetDefaults(interior), ...over, interior } })
@@ -225,12 +242,15 @@ function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0)
 export function validateDesign(d: unknown): string[] {
   const errs: string[] = []
   if (!isObj(d)) return ['Design must be an object']
-  if (d.schemaVersion !== 1) errs.push('Unsupported schemaVersion')
+  if (d.schemaVersion !== 1 && d.schemaVersion !== 2) errs.push('Unsupported schemaVersion')
+  if (d.cutting !== undefined && !(isObj(d.cutting) && isInt(d.cutting.kerf) && (d.cutting.kerf as number) <= 20)) errs.push('Invalid cutting settings')
   if (!isStr(d.id) || !isStr(d.name)) errs.push('Missing id or name')
   if (!Array.isArray(d.materials) || !d.materials.length) return [...errs, 'Materials missing']
   const mids = new Set<string>()
   for (const m of d.materials) {
     if (!isObj(m) || !isStr(m.id) || !isStr(m.name) || !isInt(m.thickness, 1) || typeof m.grain !== 'boolean' || typeof m.color !== 'string') errs.push('Invalid material')
+    else if (m.sheet !== undefined && !(isObj(m.sheet) && isInt(m.sheet.length, 100) && isInt(m.sheet.width, 100) && isInt(m.sheet.trim) &&
+      2 * (m.sheet.trim as number) < Math.min(m.sheet.length as number, m.sheet.width as number) && (m.sheet.count === null || isInt(m.sheet.count)))) errs.push(`Invalid sheet for ${String(m.name)}`)
     else if (mids.has(m.id as string)) errs.push(`Duplicate material ${String(m.id)}`)
     else mids.add(m.id as string)
   }

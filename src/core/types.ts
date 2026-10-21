@@ -23,6 +23,18 @@ export interface Material {
   grain: boolean
   /** Display colour for the 3D view (CSS hex). */
   color: string
+  /** Stock sheet bought for this board (ADR-0019). Absent in version-1 files; defaults fill it in. */
+  sheet?: StockSheet
+}
+
+/** A full factory sheet. Length runs along the grain, matching cut-list length (ADR-0009). */
+export interface StockSheet {
+  length: Mm
+  width: Mm
+  /** Unusable margin trimmed off each edge before cutting parts. */
+  trim: Mm
+  /** Sheets available; null = buy as many as needed. */
+  count: number | null
 }
 
 export type PanelRole =
@@ -235,11 +247,14 @@ export type Product =
   | { kind: 'desk'; id: string; params: DeskParams }
 
 export interface Design {
-  schemaVersion: 1
+  /** 2 adds stock sheets and cutting settings (ADR-0019); version-1 files are upgraded in memory on load. */
+  schemaVersion: 1 | 2
   id: string
   name: string
   createdAt: string
   updatedAt: string
   materials: Material[]
   product: Product
+  /** Saw settings for sheet layouts. */
+  cutting?: { kerf: Mm }
 }

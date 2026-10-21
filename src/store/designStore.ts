@@ -1,9 +1,9 @@
 import { create } from 'zustand'
 import { buildModel } from '../core/build'
-import { findInProduct, mapProductSpace, templates } from '../core/design'
+import { findInProduct, mapProductSpace, templates, upgradeDesign } from '../core/design'
 import type { CabinetParams, DeskParams, Design, FurnitureModel, Material, Space } from '../core/types'
 
-export type Tab = 'parts' | 'hardware' | 'checks'
+export type Tab = 'parts' | 'sheets' | 'hardware' | 'checks'
 
 interface State {
   design: Design
@@ -17,8 +17,11 @@ interface State {
   past: Design[]
   future: Design[]
   dirtyAt: number
+  /** Opened from storage and not edited since: autosave leaves the stored row alone (ADR-0019). */
+  pristine: boolean
 
-  load: (d: Design) => void
+  load: (d: Design, opts?: { fromStorage?: boolean }) => void
+  setKerf: (kerf: number) => void
   rename: (name: string) => void
   updateCabinet: (patch: Partial<CabinetParams>) => void
   updateDesk: (patch: Partial<DeskParams>) => void
@@ -43,7 +46,7 @@ export const useDesign = create<State>((set, get) => {
     const stamped = { ...next, updatedAt: new Date().toISOString() }
     set({
       design: stamped, model: buildModel(stamped),
-      past: [...past, design].slice(-HISTORY), future: [], dirtyAt: Date.now(),
+      past: [...past, design].slice(-HISTORY), future: [], dirtyAt: Date.now(), pristine: false,
     })
     const sel = get().selectedId
     if (sel && !findInProduct(stamped.product, sel)) set({ selectedId: null })
@@ -59,8 +62,13 @@ export const useDesign = create<State>((set, get) => {
     past: [],
     future: [],
     dirtyAt: 0,
+    pristine: false,
 
-    load: d => set({ design: d, model: buildModel(d), selectedId: null, highlight: [], past: [], future: [], dirtyAt: 0 }),
+    load: (raw, opts) => {
+      const d = upgradeDesign(raw)
+      set({ design: d, model: buildModel(d), selectedId: null, highlight: [], past: [], future: [], dirtyAt: 0, pristine: !!opts?.fromStorage })
+    },
+    setKerf: kerf => { const d = get().design; commit({ ...d, cutting: { ...d.cutting, kerf } }) },
     rename: name => commit({ ...get().design, name }),
     updateCabinet: patch => {
       const d = get().design
@@ -90,13 +98,13 @@ export const useDesign = create<State>((set, get) => {
       const { past, design, future } = get()
       const prev = past[past.length - 1]
       if (!prev) return
-      set({ design: prev, model: buildModel(prev), past: past.slice(0, -1), future: [design, ...future], dirtyAt: Date.now() })
+      set({ design: prev, model: buildModel(prev), past: past.slice(0, -1), future: [design, ...future], dirtyAt: Date.now(), pristine: false })
     },
     redo: () => {
       const { past, design, future } = get()
       const next = future[0]
       if (!next) return
-      set({ design: next, model: buildModel(next), past: [...past, design], future: future.slice(1), dirtyAt: Date.now() })
+      set({ design: next, model: buildModel(next), past: [...past, design], future: future.slice(1), dirtyAt: Date.now(), pristine: false })
     },
   }
 })
