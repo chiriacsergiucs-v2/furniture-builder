@@ -1,6 +1,7 @@
-import { Component, lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
+import { Component, lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react'
 import { cutlist } from '../core/cutlist'
 import { cutlistCsvRo } from '../core/ro'
+import { exportFusionPython } from '../core/fusion'
 import { lastDesignId, loadDesign, rememberLast, saveDesign } from '../persist/db'
 import { useDesign } from '../store/designStore'
 import { LibraryDialog, MaterialsDialog, NewDialog } from './Dialogs'
@@ -62,6 +63,7 @@ export function App() {
   const [view, setView] = useState<'front' | '3d'>('front')
   const [has3d] = useState(webglAvailable)
   const [printing, setPrinting] = useState(false)
+  const menuRef = useRef<HTMLDetailsElement>(null)
   // Render the print sheet, open the print dialog, then remove it again (ADR-0020).
   useEffect(() => {
     if (!printing) return
@@ -141,8 +143,16 @@ export function App() {
           <button type="button" className="primary" disabled={errors > 0} title={errors ? 'Fix the problems listed under Checks first' : 'Download the parts list as CSV'}
             onClick={() => download(`${fileName(design.name)}-parts.csv`, cutlistCsvRo(cutlist(model, design.materials)), 'text/csv;charset=utf-8')}>Parts CSV</button>
           <button type="button" disabled={errors > 0} title={errors ? 'Fix the problems listed under Checks first' : 'Print the cutting sheet (Romanian, A4) or save it as PDF'} onClick={() => setPrinting(true)}>Print</button>
-          <button type="button" onClick={downloadSvg} title="Download the front view as an SVG drawing">Drawing</button>
-          <button type="button" onClick={() => download(`${fileName(design.name)}.json`, JSON.stringify(design, null, 2), 'application/json')}>Design file</button>
+          <details className="menu" ref={menuRef}>
+            <summary>Export</summary>
+            <div className="menu-items" onClick={() => menuRef.current?.removeAttribute('open')}>
+              <button type="button" onClick={downloadSvg}>Front view drawing (SVG)</button>
+              <button type="button" onClick={() => download(`${fileName(design.name)}-fusion.py`, exportFusionPython(design, model), 'text/x-python')}>
+                Fusion 360 script <small>not yet tested in Fusion</small>
+              </button>
+              <button type="button" onClick={() => download(`${fileName(design.name)}.json`, JSON.stringify(design, null, 2), 'application/json')}>Design file (to open on another device)</button>
+            </div>
+          </details>
         </nav>
       </header>
 
