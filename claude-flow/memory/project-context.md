@@ -11,4 +11,9 @@ autosave, never delete unreadable rows (ADR-0012). Front elevation edits; 3D pre
 seeded fuzz + storage; no browser suite by default (ADR-0015). Process: smallest slice, evidence-only ledger in
 `docs/backlog.md`, end replies with *Skipped this iteration* (ADR-0016).
 
-Unknown — never invent: supplier datasheets, loads, drilling, edge-band subtraction policy, orchestration runtime.
+User decisions 2026-10-21: kerf 4 mm; PAL/HDF 2800 × 2070, MDF 2440 × 1220; trim 10 mm; full sheets only; A4 portrait;
+Romanian on paper and CSV; never subtract edge band; ball-bearing side runners; 35 mm soft-close clip-on hinges;
+inset gap 3 mm; handles bar/knob/push; blind + L corners; bracket-and-rail wall mounting; independent pedestals;
+projects embed copies; no orchestration runtime. Details in ADR-0009/0010/0017–0026.
+
+Unknown — never invent: loads, drilling depths, screw specs, exact supplier datasheet values.

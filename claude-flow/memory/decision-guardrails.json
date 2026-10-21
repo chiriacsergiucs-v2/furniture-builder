@@ -47,12 +47,11 @@
     {
       "adr": "ADR-0016",
       "rule": "Evidence-only ledger; pushed != merged != deployed != live-verified; end with Skipped this iteration."
-    }
-  ],
-  "proposed_guards": [
+    },
     {
       "adr": "ADR-0017",
-      "rule": "No native orchestration files until a runtime is pinned."
+      "rule": "No orchestration runtime; contracts stay generic."
     }
-  ]
+  ],
+  "proposed_guards": []
 }

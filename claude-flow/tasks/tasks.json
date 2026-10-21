@@ -7,7 +7,8 @@
     "IN_REVIEW",
     "DONE",
     "BLOCKED_BY_USER",
-    "NEEDS_ANSWERS"
+    "NEEDS_ANSWERS",
+    "DROPPED"
   ],
   "rules": [
     "Start only READY tasks whose depends_on are DONE.",
@@ -18,7 +19,7 @@
     {
       "id": "TSK-R01",
       "title": "Pin an orchestration runtime (Claude Flow / Ruflo) and translate these contracts",
-      "status": "BLOCKED_BY_USER",
+      "status": "DROPPED",
       "owner": "architecture-authority",
       "adrs": [
         "ADR-0017"
@@ -28,15 +29,17 @@
       "verification": [
         "<runtime cli> validate"
       ],
-      "blocker": "User has not chosen a runtime or version.",
+      "blocker": null,
       "acceptance": [],
-      "evidence": [],
+      "evidence": [
+        "User decision 2026-10-21: keep contracts generic (ADR-0017 Accepted)."
+      ],
       "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
     },
     {
       "id": "TSK-N01",
       "title": "Sheet nesting: guillotine optimiser from the cut list with an independent validator",
-      "status": "NEEDS_ANSWERS",
+      "status": "READY",
       "owner": "furniture-geometry",
       "adrs": [
         "ADR-0003",
@@ -61,14 +64,14 @@
         "Validator shares no code with the placer and gates every layout",
         "Results described as heuristic, never optimal"
       ],
-      "blocker": "Open questions in the governing proposed ADR must be answered first.",
+      "blocker": null,
       "evidence": [],
       "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
     },
     {
       "id": "TSK-N02",
       "title": "Printable cut sheet and SVG drawings from the model",
-      "status": "NEEDS_ANSWERS",
+      "status": "READY",
       "owner": "ui",
       "adrs": [
         "ADR-0004",
@@ -84,14 +87,14 @@
         "screenshots of print preview"
       ],
       "acceptance": [],
-      "blocker": "Open questions in the governing proposed ADR must be answered first.",
+      "blocker": null,
       "evidence": [],
       "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
     },
     {
       "id": "TSK-N05",
       "title": "Unequal drawer heights and adjustable shelves",
-      "status": "NEEDS_ANSWERS",
+      "status": "READY",
       "owner": "furniture-geometry",
       "adrs": [
         "ADR-0005",
@@ -108,14 +111,14 @@
       "acceptance": [
         "schemaVersion bumped only if the document shape changes incompatibly; old designs still load"
       ],
-      "blocker": "Open questions in the governing proposed ADR must be answered first.",
+      "blocker": null,
       "evidence": [],
       "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
     },
     {
       "id": "TSK-N04",
       "title": "Projects with several pieces",
-      "status": "NEEDS_SPEC",
+      "status": "READY",
       "owner": "architecture-authority",
       "adrs": [
         "ADR-0011",
@@ -129,7 +132,7 @@
       "verification": [
         "npm test"
       ],
-      "blocker": "ADR-0022 open question (reference vs embed).",
+      "blocker": null,
       "acceptance": [],
       "evidence": [],
       "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
@@ -137,7 +140,7 @@
     {
       "id": "TSK-N03",
       "title": "Fusion 360 export",
-      "status": "NEEDS_SPEC",
+      "status": "READY",
       "owner": "furniture-geometry",
       "adrs": [
         "ADR-0004",
@@ -150,8 +153,10 @@
       "verification": [
         "python3 -m py_compile <exported script>"
       ],
-      "blocker": "ADR-0021 open question; result must stay labelled unverified until run in Fusion.",
-      "acceptance": [],
+      "blocker": null,
+      "acceptance": [
+        "Labelled unverified until the user runs it in Fusion"
+      ],
       "evidence": [],
       "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
     },
@@ -181,7 +186,7 @@
     {
       "id": "TSK-N06",
       "title": "Front styles and handles",
-      "status": "NEEDS_ANSWERS",
+      "status": "READY",
       "owner": "furniture-geometry",
       "adrs": [
         "ADR-0024"
@@ -195,14 +200,14 @@
         "FUZZ_N=30000 npx vitest run tests/fuzz.test.ts"
       ],
       "acceptance": [],
-      "blocker": "Open questions in the governing proposed ADR must be answered first.",
+      "blocker": null,
       "evidence": [],
       "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
     },
     {
       "id": "TSK-N07",
       "title": "Wall and corner cabinets",
-      "status": "NEEDS_ANSWERS",
+      "status": "READY",
       "owner": "furniture-geometry",
       "adrs": [
         "ADR-0025"
@@ -216,7 +221,7 @@
         "FUZZ_N=30000 npx vitest run tests/fuzz.test.ts"
       ],
       "acceptance": [],
-      "blocker": "Open questions in the governing proposed ADR must be answered first.",
+      "blocker": null,
       "evidence": [],
       "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
     },

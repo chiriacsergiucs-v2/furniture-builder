@@ -10,5 +10,5 @@
 7. **Ledger**: update `docs/backlog.md` and the task's `status`/`evidence` in the same change; run `scripts/validate.py`.
 8. **Report**: changed paths, IDs, evidence, blockers, backlog table, *Skipped this iteration*.
 
-Stop when a physical/supplier fact is unknown (record it under *Open questions* in the backlog), when a check fails
+Stop when a physical/supplier fact is unknown (add it under an *Open questions* heading in `docs/backlog.md`), when a check fails
 (fix the cause, never the check), or when a change would need the network (ADR-0002).
