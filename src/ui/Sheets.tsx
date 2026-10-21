@@ -78,7 +78,7 @@ function MaterialSheets({ result, job, color, labelOf, onHover, trim }: {
   )
 }
 
-function SheetSvg({ sheet, color, labelOf, onHover }: { sheet: SheetLayout; color: string; labelOf: (key: string) => { labels: string[]; panelIds: string[] } | undefined; onHover: (ids: string[]) => void }) {
+export function SheetSvg({ sheet, color, labelOf, onHover }: { sheet: SheetLayout; color: string; labelOf: (key: string) => { labels: string[]; panelIds: string[] } | undefined; onHover: (ids: string[]) => void }) {
   const fs = Math.max(sheet.length, sheet.width) / 26
   const placements = useMemo(() => sheet.placements.map(p => ({ ...p, info: labelOf(p.key) })), [sheet, labelOf])
   return (

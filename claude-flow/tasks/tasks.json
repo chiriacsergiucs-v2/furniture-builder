@@ -76,7 +76,7 @@
     {
       "id": "TSK-N02",
       "title": "Printable cut sheet and SVG drawings from the model",
-      "status": "READY",
+      "status": "DONE",
       "owner": "ui",
       "adrs": [
         "ADR-0004",
@@ -93,7 +93,11 @@
       ],
       "acceptance": [],
       "blocker": null,
-      "evidence": [],
+      "evidence": [
+        "tests/ro.test.ts",
+        "npx vitest run: 64 passed",
+        "print PDF, CSV and SVG generated from the running app"
+      ],
       "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
     },
     {
