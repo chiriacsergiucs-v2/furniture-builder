@@ -182,7 +182,7 @@
     {
       "id": "TSK-V01",
       "title": "Verify library, undo/redo, materials editor and offline start in a real browser",
-      "status": "READY",
+      "status": "DONE",
       "owner": "verifier",
       "adrs": [
         "ADR-0015"
@@ -197,9 +197,15 @@
       "verification": [
         "manual or scripted browser run with screenshots"
       ],
-      "acceptance": [],
+      "acceptance": [
+        "Library, undo/redo and materials editor exercised in a browser against a production build",
+        "Offline start checked with the service worker in control"
+      ],
       "blocker": null,
-      "evidence": [],
+      "evidence": [
+        "PR #24: scripted Chromium run (undo/redo, materials → CSV, library duplicate/delete/import/reopen, offline reopen); fixed stray autosave on reload",
+        "F17 stays Partially done: not checked on a phone or the Pages URL; update prompt not exercised"
+      ],
       "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
     },
     {

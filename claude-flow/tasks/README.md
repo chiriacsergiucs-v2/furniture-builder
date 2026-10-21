@@ -1,7 +1,8 @@
 # Tasks
 
 `tasks.json` lists the next work as contracts (owner, governing ADRs, backlog ids, verification commands,
-acceptance). All open questions were answered on 2026-10-21, so every feature task is **READY**:
+acceptance). All open questions were answered on 2026-10-21. Status 2026-10-22: every task is **DONE** except TSK-N03,
+which waits for the user to run an exported script inside Fusion 360 (IN_REVIEW):
 
 TSK-N01 sheet optimiser (ADR-0018/0019) · TSK-N02 printing, Romanian CSV (ADR-0020) · TSK-N03 Fusion export
 (ADR-0021) · TSK-N04 projects (ADR-0022) · TSK-N05 drawer heights and adjustable shelves (ADR-0023) · TSK-N06 front
