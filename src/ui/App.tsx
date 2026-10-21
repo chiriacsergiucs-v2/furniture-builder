@@ -71,6 +71,15 @@ export function App() {
   const [has3d] = useState(webglAvailable)
   const [printing, setPrinting] = useState(false)
   const menuRef = useRef<HTMLDetailsElement>(null)
+  // The sticky drawing on phones sits right under the top bar, whose height changes as its buttons wrap.
+  const barRef = useRef<HTMLElement>(null)
+  useEffect(() => {
+    const bar = barRef.current
+    if (!bar || typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(() => document.documentElement.style.setProperty('--bar-h', `${bar.offsetHeight}px`))
+    ro.observe(bar)
+    return () => ro.disconnect()
+  }, [])
   // Render the print sheet, open the print dialog, then remove it again (ADR-0020).
   useEffect(() => {
     if (!printing) return
@@ -153,7 +162,7 @@ export function App() {
   return (
     <>
     <div className="app">
-      <header className="bar">
+      <header className="bar" ref={barRef}>
         <div className="brand" aria-hidden="true">
           <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" /><line x1="3" y1="10" x2="21" y2="10" /><line x1="3" y1="15.5" x2="21" y2="15.5" /></svg>
         </div>
