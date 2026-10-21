@@ -1,18 +1,20 @@
 # Architecture overview
 
-```mermaid
-flowchart LR
-  UI[React + TS + Vite PWA] --> LOCAL[(Dexie IndexedDB)]
-  LEGACY[(localStorage)] -->|atomic copy| LOCAL
-  UI --> OPT[Web Worker: heuristic guillotine]
-  OPT --> VALID[Independent cut-tree validator]
-  VALID --> CUT[2D cutting layouts and export]
-  UI --> COMPONENTS[Typed component graph + recipes]
-  COMPONENTS --> MODEL[Normalized FurnitureModel]
-  MODEL --> THREED[3D / positioned assembly]
-  MODEL --> BOM[Cutlist + hardware diagnostics]
-  MODEL --> FUSION[Fusion Python snapshot]
-  UI --> PAGES[Static GitHub Pages]
+```
+ React UI (src/app, src/components)  ── lazy ──►  three.js / R3F viewer, dnd-kit reorder, ExcelJS
+        │ configurators, validators
+        ▼
+ Furniture engine (src/furniture)  ──►  FurnitureModel ──► cut rows ─┐
+   registry · instance tree · templates            │                 │
+                                                   ▼                 ▼
+ Assembly (src/assembly)  positions/rotations   Fusion .py      Project.parts
+                                                                     │
+ Engine (src/engine)  ◄─ Web Worker ─  optimize ─► CutTree ─► validate ─► SVG/CSV/XLSX
+        ▲ integer mm, kerf, grain, trim                       (independent)
+ Persistence (src/db, src/storage)  Dexie v2 · migration · backups · legacy adapter
+ Platform  Vite + PWA (vite.config.ts) · GitHub Actions ci/deploy/lockfile · Pages /furniture-builder/
 ```
 
-**Separation:** Cut-tree placement validation is not equivalent to assembled furniture stability validation. Generic supplier import/export is not a validated per-vendor adapter.
+Boundaries: engine has no DOM/storage imports (ADR-0013); validator shares no placement code with the generator
+(ADR-0012); all geometry consumers read `FurnitureModel` (ADR-0018); storage never deletes legacy data (ADR-0004);
+nothing leaves the device (ADR-0002).

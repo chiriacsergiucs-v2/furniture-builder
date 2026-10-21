@@ -1,17 +1,16 @@
-# Dependencies
+# Dependencies (from `package.json` at the indexed commit)
 
-- `TSK-001` → no tracked task predecessors; state `BLOCKED_BY_VERSION_SELECTION`
-- `TSK-002` → no tracked task predecessors; state `READY`
-- `TSK-003` → no tracked task predecessors; state `READY_WITH_SCOPE_GUARD`
-- `TSK-004` → no tracked task predecessors; state `ROADMAP_READY_FOR_SPECIFICATION`
-- `TSK-005` → no tracked task predecessors; state `ROADMAP_READY_FOR_SPECIFICATION`
-- `TSK-006` → TSK-007; state `BLOCKED_ON_PHYSICAL_SPEC`
-- `TSK-007` → no tracked task predecessors; state `BLOCKED_EXTERNAL`
-- `TSK-008` → no tracked task predecessors; state `BLOCKED_EXTERNAL`
-- `TSK-009` → no tracked task predecessors; state `BLOCKED_EXTERNAL`
-- `TSK-010` → no tracked task predecessors; state `READY_FOR_MAPPING_SPEC`
-- `TSK-011` → no tracked task predecessors; state `READY`
-- `TSK-012` → no tracked task predecessors; state `READY`
-- `TSK-013` → TSK-002; state `PENDING`
-- `TSK-014` → TSK-002, TSK-011, TSK-013; state `PENDING`
-- `TSK-015` → no tracked task predecessors; state `ONGOING_GUARDRAIL`
+| Package | Version | Role | Licence (per docs/licences.md) | Network side-effects |
+|---|---|---|---|---|
+| react / react-dom | ^19.1.1 | UI | MIT | none |
+| dexie | 4.2.1 | IndexedDB wrapper | Apache-2.0 | none (no Dexie Cloud) |
+| exceljs | ^4.4.0 | XLSX read/write (lazy) | MIT (to confirm, TSK-011) | none |
+| three / @react-three/fiber | 0.186.1 / 9.8.1 | 3D preview (lazy) | MIT | none |
+| @dnd-kit/core, sortable, utilities | 6.3.1 / 10.0.0 / 3.2.2 | reorder | MIT | none |
+| vite, @vitejs/plugin-react, vite-plugin-pwa | ^7.1 / ^5.0 / ^1.0.3 | build, PWA | dev | — |
+| typescript, eslint, typescript-eslint | ^5.9 / ^9.33 / ^8.40 | dev | dev | — |
+| vitest, @playwright/test, fake-indexeddb | ^3.2 / ^1.55 / 6.2.5 | tests | dev; fake-indexeddb Apache-2.0 | — |
+| @types/* | — | dev types | MIT | — |
+
+Rules: a new runtime dependency needs a licence row, a lazy-load decision (ADR-0027), a network check (ADR-0002)
+and the bot `lockfile.yml` run before CI/deploy claims (ADR-0029). Transitive audit is TSK-011.

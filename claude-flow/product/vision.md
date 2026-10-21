@@ -1,3 +1,7 @@
-# Product vision
+# Vision
 
-Enable local-first furniture builders to define exact sheet parts, optimise cutting, reuse component recipes and produce coherent manufacturing and 3D outputs without inventing hardware or installation claims. This is a synthesis of current source files, not an unverified market positioning commitment.
+A phone-first, offline tool that turns a furniture design into a saw-ready guillotine cutting plan for a small
+workshop — exact to the millimetre, honest about what it has and has not verified, and never dependent on a
+server, an account or anyone else's cloud.
+
+Source: repo `README.md` (intro, "Privacy and licensing"), `CUTLIST_OPTIMIZER_RESUMABLE_BUILD_PROMPT_v2.md` §"Hard product constraints".

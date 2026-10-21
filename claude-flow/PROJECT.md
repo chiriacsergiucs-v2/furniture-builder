@@ -1,9 +1,19 @@
-# Project baseline
+# Project baseline — Mobila Cutlist Optimizer
 
-**Mobila Cutlist Optimizer** (`mobila-cutlist` package) in the currently connected `chiriacsergiucs-v2/furniture-builder` repository. An offline-oriented React/TypeScript/Vite SPA/PWA with an exact panel-cut optimiser and a developing component-based furniture configuration system.
+**Repository:** `chiriacsergiucs-v2/furniture-builder` · package `mobila-cutlist` `0.3.0-dev` · MIT · Pages base `/furniture-builder/`
+**Stack:** React 19, TypeScript 5.9, Vite 7, vite-plugin-pwa, Dexie 4.2.1, three 0.186 + @react-three/fiber 9.8, dnd-kit, ExcelJS 4.4; Vitest, Playwright, Node 22 kernel tests; GitHub Actions `ci.yml` / `deploy.yml` / `lockfile.yml`.
 
-**Current confirmed architecture:** browser local Dexie IndexedDB (not cloud); heuristic guillotine engine plus independent validator; imports/exports; three.js exploded/positioned previews; modular components with specialist structural roots; normalised furniture model; Fusion 360 Python export as an unverified snapshot. No accounts, backend or remote API dependency.
+**What it is:** an offline, phone-first furniture panel cutting optimiser with an exact guillotine engine and an
+independent validator, a Dexie-backed preset/kit library, a typed modular furniture engine (55 ready templates),
+positioned 3D previews and a Fusion 360 Python snapshot. No backend, accounts or cloud.
 
-**Current limits:** Current report describes B22 partial, B24 partial with 54 working recipes, B26/B27 not done, STEP_13/14 pending; these statements are inherited from prior research and should be rechecked before implementation. Physical joinery/load tests, Autodesk runtime, real Android and original Regency workbook are not proven. See `delivery/implementation-status.md` and `evidence/uploads-review.md`.
+**State (code at the commit in `evidence/source-index.json`):** engine, storage, migration, backups, component
+engine B01–B21/B23/B28–B31 Done; B22 and B24 Partial; B25 Dropped; B26/B27 Not done. STEP ledger: STEP_03 and
+STEP_11 verified, several `implemented_unverified`, STEP_13/14 pending. CI/Pages runs cited in `docs/handoff.md`
+are **reported**, not re-executed by this folder.
 
-**Authority order:** current user-confirmed decision > confirmed consensus > accepted ADR/spec > executed code/tests > earlier discussion > idea. Implemented code is evidence of state, not permission to silently overrule product intent.
+**Authority order:** explicit user decision › Accepted ADR consensus › ADR/spec › code+tests on main › history › proposal
+(`memory/decision-guardrails.json`). Code is evidence of state, not permission to overrule intent.
+
+**Where to look:** decisions → `architecture/decisions/README.md`; who does what → `agents/`; how work runs →
+`workflows/`; what to do next → `tasks/README.md`; what is unknown → `evidence/unknowns.md`.

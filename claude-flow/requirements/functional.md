@@ -1,37 +1,45 @@
 # Functional requirements
 
-- **FR-001** [CONFIRMED] Create and edit furniture cutting projects with persistent identifiers — `FEAT-001` / `MOD-001`
-- **FR-002** [CONFIRMED] Specify material and thickness in project inputs — `FEAT-001` / `MOD-001`
-- **FR-003** [CONFIRMED] Record parts with exact width, length, count and material — `FEAT-001` / `MOD-001`
-- **FR-004** [CONFIRMED] Preserve project configuration when closing/reopening the browser — `FEAT-001` / `MOD-001`
-- **FR-005** [CONFIRMED] Allow multiple named materials with separate stock assignments — `FEAT-001` / `MOD-001`
-- **FR-006** [CONFIRMED] Allow duplication or reusable insertion of existing parts without losing identities — `FEAT-001` / `MOD-001`
-- **FR-007** [CONFIRMED] Enter stock sheet sizes, available quantities and trim margins — `FEAT-003` / `MOD-002`
-- **FR-008** [CONFIRMED] Express per-part grain requirement and allowed rotation — `FEAT-003` / `MOD-002`
-- **FR-009** [CONFIRMED] Represent edge banding on four distinct sides — `FEAT-003` / `MOD-002`
-- **FR-010** [CONFIRMED] Keep edge-band annotations separate from cut dimensions — `FEAT-003` / `MOD-002`
-- **FR-011** [CONFIRMED] Run deterministic seeded multi-restart guillotine packing heuristic — `FEAT-004` / `MOD-002`
-- **FR-012** [CONFIRMED] Constrain packing by materials and eligible stock sizes — `FEAT-004` / `MOD-002`
-- **FR-013** [CONFIRMED] Report unplaced parts and usable/offcut area — `FEAT-004` / `MOD-002`
-- **FR-014** [CONFIRMED] Return cutting result statistics without global-optimum guarantee — `FEAT-004` / `MOD-002`
-- **FR-015** [CONFIRMED] Independently validate cut-tree geometry — `FEAT-005` / `MOD-003`
-- **FR-016** [CONFIRMED] Reject invalid dimensions, overlaps, stock escapes and incompatible grain — `FEAT-005` / `MOD-003`
-- **FR-017** [CONFIRMED] Block use of invalid results for render/export — `FEAT-005` / `MOD-003`
-- **FR-018** [CONFIRMED] Import/export generic CSV — `FEAT-007` / `MOD-005`
-- **FR-019** [CONFIRMED] Import/export generic XLSX — `FEAT-007` / `MOD-005`
-- **FR-020** [CONFIRMED] Export print-ready/PDF and SVG cutting views — `FEAT-007` / `MOD-005`
-- **FR-021** [CONFIRMED] Maintain versioned JSON project/preset backup interoperability — `FEAT-007` / `MOD-005`
-- **FR-022** [CONFIRMED] Persist projects, presets, kits, revisions and materials in Dexie — `FEAT-010` / `MOD-006`
-- **FR-023** [CONFIRMED] Migrate legacy records once within an atomic transaction — `FEAT-010` / `MOD-006`
-- **FR-024** [CONFIRMED] Do not delete old localStorage keys or overwrite newer indexed records — `FEAT-010` / `MOD-006`
-- **FR-025** [CONFIRMED] Merge full database JSON backup without destructive replacement — `FEAT-010` / `MOD-006`
-- **FR-026** [CONFIRMED_SCOPE_IMPLEMENTATION_PARTIAL] Compose furniture from typed registered child components — `FEAT-015` / `MOD-010`
-- **FR-027** [CONFIRMED_SCOPE_IMPLEMENTATION_PARTIAL] Preserve parameter schemas, dependencies and attachment relationships — `FEAT-015` / `MOD-010`
-- **FR-028** [CONFIRMED_SCOPE_IMPLEMENTATION_PARTIAL] Use specialist structural roots for non-cabinet furniture — `FEAT-015` / `MOD-010`
-- **FR-029** [CONFIRMED_SCOPE_IMPLEMENTATION_PARTIAL] Save user-configured furniture as independently editable instances — `FEAT-015` / `MOD-010`
-- **FR-030** [CONFIRMED_SCOPE_IMPLEMENTATION_PARTIAL] Generate normalized solids and manufacturing output from one FurnitureModel — `FEAT-015` / `MOD-010`
-- **FR-031** [CONFIRMED] Edit saved per-instance XYZ translation and rotation — `FEAT-013` / `MOD-008`
-- **FR-032** [CONFIRMED] Preview exploded panels with accessible non-WebGL fallback — `FEAT-013` / `MOD-008`
-- **FR-033** [CONFIRMED] Export Fusion Python snapshot without asserting runtime validation — `FEAT-013` / `MOD-008`
-- **FR-034** [CONFIRMED] Operate as an offline-oriented static PWA — `FEAT-021` / `MOD-012`
-- **FR-035** [CONFIRMED] Deploy static application via GitHub Pages — `FEAT-021` / `MOD-012`
+Every requirement is **Accepted** only because the cited repository path implements or enforces it. IDs are stable; new ones append. FR-036–039 were added in the 2026-10-21 rebuild for behaviour that existed in code but had no requirement.
+
+| ID | Requirement | Evidence (repo path) | ADR |
+|---|---|---|---|
+| FR-001 | Create and edit cutting projects with persistent IDs | `src/engine/types.ts (Project), src/db/repository.ts` | ADR-0003 |
+| FR-002 | Declare materials with type and integer thickness | `src/engine/types.ts (Material), src/engine/schema.ts` | ADR-0007 |
+| FR-003 | Record parts with exact cut width/height, quantity and material | `src/engine/types.ts (Part)` | ADR-0007 |
+| FR-004 | Persist project state across browser restarts | `src/db/database.ts` | ADR-0003 |
+| FR-005 | Multiple named materials with separate stock sheets and offcuts | `src/engine/types.ts` (StockSheet, Offcut) | ADR-0009 |
+| FR-006 | Duplicate/insert parts and presets without losing identities | `src/presets/origin.ts, src/presets/duplicate.ts` | ADR-0023 |
+| FR-007 | Stock sheet sizes, quantity (or unlimited) and four trim margins | `src/engine/types.ts (StockSheet.trim/quantity)` | ADR-0009 |
+| FR-008 | Per-part grain requirement and rotation permission | `src/engine/geometry.ts (grainFits), src/engine/optimize.ts` | ADR-0009 |
+| FR-009 | Edge banding on four distinct sides | `src/engine/types.ts (EdgeBanding)` | ADR-0010 |
+| FR-010 | Edge-band annotations never alter cut dimensions | `docs/architecture.md, src/engine/guillotine.ts (no abs read)` | ADR-0010 |
+| FR-011 | Deterministic seeded multi-restart guillotine heuristic | `src/engine/optimize.ts` (makeRng, runAttempt) | ADR-0011 |
+| FR-012 | Placement constrained by material, thickness, eligible stock and kerf | `src/engine/optimize.ts (consider), src/engine/guillotine.ts` | ADR-0008, ADR-0009 |
+| FR-013 | Report unplaced instances, offcuts and area statistics | `src/engine/optimize.ts (calculateStatistics)` | ADR-0011 |
+| FR-014 | Result statistics carry no global-optimum guarantee | `docs/algorithm.md` | ADR-0011 |
+| FR-015 | Independently validate every cut tree | `src/engine/validate.ts` | ADR-0012 |
+| FR-016 | Reject invalid dimensions, overlaps, stock escapes, grain and kerf mismatches | `src/engine/validate.ts` | ADR-0012 |
+| FR-017 | Invalid results are blocked from render and export | `src/engine/optimize.ts (valid flag), src/db/migration.ts` | ADR-0012 |
+| FR-018 | Import/export generic CSV | `src/import-export/csv.ts, docs/data-format.md` | ADR-0014 |
+| FR-019 | Import/export generic XLSX (lazy ExcelJS) | `src/import-export/excel.ts` | ADR-0026, ADR-0027 |
+| FR-020 | Export SVG and print/PDF cutting views derived from the cut tree | `src/import-export/svg.ts` | ADR-0014 |
+| FR-021 | Versioned JSON project/preset backups stay interoperable | `src/db/backup.ts, docs/data-format.md` | ADR-0006 |
+| FR-022 | Persist projects, categories, presets, kits, materials, revisions in Dexie | `src/db/database.ts` | ADR-0003 |
+| FR-023 | One-time legacy migration inside an atomic transaction | `src/db/migration.ts` | ADR-0004 |
+| FR-024 | Never delete legacy keys or overwrite newer indexed records | `src/db/migration.ts` | ADR-0004 |
+| FR-025 | Merge full-database JSON backup without destructive replacement | `src/db/backup.ts, docs/storage-migration.md` | ADR-0006 |
+| FR-026 | Compose furniture from typed, versioned, registered components | `src/furniture/component-engine.ts` | ADR-0015 |
+| FR-027 | Parameter binding, named slots and compatibility validation | `src/furniture/component-engine.ts (resolveComponentTree)` | ADR-0016 |
+| FR-028 | Specialist structural roots for non-cabinet furniture | `src/furniture/templates.ts, src/furniture/surface.ts` | ADR-0017 |
+| FR-029 | Saved configurations are independently editable instances with source pins | `src/presets/origin.ts, src/presets/customize.ts` | ADR-0023 |
+| FR-030 | One FurnitureModel feeds 3D, cutlist rows, BOM and Fusion export | `src/furniture/furniture-model.ts` | ADR-0018 |
+| FR-031 | Edit per-instance integer-mm position and integer-degree rotation | `src/assembly/model.ts, src/engine/schema.ts` | ADR-0024 |
+| FR-032 | Exploded/positioned 3D preview with accessible non-WebGL fallback | `src/components/Panel3DPreview.tsx, src/components/PositionedFurniturePreview.tsx` | ADR-0024 |
+| FR-033 | Fusion Python snapshot export labelled unverified in Fusion | `src/assembly/fusion.ts` | ADR-0025 |
+| FR-034 | Operate as an offline static PWA | `vite.config.ts (VitePWA)` | ADR-0001 |
+| FR-035 | Deploy via GitHub Pages at /furniture-builder/ | `vite.config.ts, .github/workflows/deploy.yml` | ADR-0001 |
+| FR-036 | Only ready templates generate parts; planned ones are visible but inert | `src/furniture/templates.ts` | ADR-0020 |
+| FR-037 | Hardware listed as a requirement schedule separate from cut panels | `src/furniture/furniture-model.ts, src/furniture/drawer.ts` | ADR-0019 |
+| FR-038 | Legacy component trees adapted read-only in memory | `src/furniture/legacy-adapter.ts` | ADR-0022 |
+| FR-039 | Reorder cut parts by touch/keyboard without changing IDs or quantities | `src/components/reorderParts.ts, src/components/PartOrderBoard.tsx` | ADR-0024 |

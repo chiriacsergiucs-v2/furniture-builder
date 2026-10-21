@@ -1,15 +1,33 @@
-# Acceptance criteria
+# Acceptance criteria (verifier checklist)
 
-**Universal criterion:** an executed test or manual verification artefact linked to the requirement, branch/commit and environment. An unrun or merely documented test is not accepted.
+Each line is a check the `verifier` role can run; the FR/NFR it proves is in brackets.
 
-**Panels:** integer mm, material stock, kerf, trim, grain and banding exact. Independently verify no overlap, no boundary breach and correct cut-tree conservation.
+## Engine
+- `npm run test:kernel` passes; fixture with free width = part + (kerf−1) is rejected [FR-012, NFR-002].
+- Same project optimised twice → deep-equal result [FR-011].
+- Grain-locked part on cross-grain sheet ends in `unplaced`, never rotated [FR-008].
+- `validateResult` finds: duplicate placement, node outside usable area, kerf mismatch, area non-conservation [FR-015, FR-016, NFR-004].
+- `validate.ts` imports nothing from `guillotine.ts`/`optimize.ts` [FR-015].
 
-**Storage:** valid migration does not delete old keys, is idempotent on refresh and does not overwrite existing Dexie entities. Verify backups and merge restore.
+## Storage
+- `npm run test -- db`: migration twice = once; existing Dexie ID not overwritten; `localStorage` keys unchanged after migration [FR-023, FR-024, NFR-005, NFR-006].
+- Full backup export→import into empty DB → equal counts; second import changes nothing [FR-025, NFR-007].
+- `database.ts` has one `version(n)` block per shipped version; old blocks byte-identical to history [NFR-007].
 
-**Modular furniture:** output projections agree on panel identity, quantity and dimensions; no speculative hardware/drilling; save/reload independent instance configuration.
+## Furniture engine
+- Parity test passes for every `status:'ready'` template: cut rows equal model extents, no overlapping solids [FR-030, FR-036].
+- `initialSpecForTemplate` on a `planned` ID yields no parts [FR-036].
+- Parent width change updates child shelf, sibling untouched; repeat N→N+1 keeps first N IDs [FR-027].
+- No `HardwareRequirement` reaches `Project.parts` [FR-037, NFR-012].
+- Legacy fixture adapted in memory; stored row unchanged [FR-038].
 
-**Viewer:** accessible fallback without WebGL, supported mouse/touch/keyboard navigation where documented.
+## UI / 3D
+- `reorderParts` returns same ID multiset [FR-039, NFR-010].
+- `Assembly3DEditor.tsx` does not import `optimize.ts`; no part dimension write path from 3D [FR-031, FR-032].
+- WebGL unavailable → list fallback renders (unit/E2E where authorised) [NFR-009].
 
-**Supplier adapter:** signed-off sample demonstrates exact column mapping, edge thickness convention and roundtrip; no default assumption about final versus saw-cut dimensions.
-
-**Release:** run `npm ci`, lint, typecheck, kernel, Vitest, build, Chromium Playwright and deploy checks as appropriate; attach logs, not just status text. Physical Android, Fusion and fixing loads are separate gates.
+## Platform / release
+- `vite.config.ts` base `/furniture-builder/`; `dist/` has no third-party `<script src>` [FR-034, FR-035, NFR-014].
+- `grep -rn "fetch(" src/` empty outside generated SW [NFR-001].
+- Release claim cites `lockfile.yml`, CI run, Pages run; vocabulary from `workflows/release.md` [NFR-011].
+- Implementation reply ends with `Skipped this iteration` [NFR-015].
