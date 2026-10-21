@@ -23,8 +23,15 @@ Statuses: **Done** (acceptance met, evidence cited) · **Partially done** (code 
 | F14 | Local library: autosave, reopen last, list, duplicate, delete, import/export design file | Done | storage unit-tested (`tests/persist.test.ts`); browser run 2026-10-22: rename autosaves, duplicate, delete (disabled on the open piece), export → import, reopen after reload. Found and fixed: each reload saved a stray placeholder piece |
 | F15 | Undo / redo (buttons, Ctrl+Z / Ctrl+Shift+Z) | Done | browser run 2026-10-22: buttons and keyboard shortcuts both undo and redo a drawer-count change |
 | F16 | Materials editor (name, thickness, grain, colour, add) | Done | browser run 2026-10-22: rename and thickness change reach the parts CSV; add material; screenshot |
-| F17 | Offline PWA with update prompt | Partially done | browser run 2026-10-22: service worker controls the page and the app reopens the last piece with the network off (headless Chromium, localhost). Not yet checked on a phone or on the Pages URL; update prompt not exercised |
+| F17 | Offline PWA with update prompt | Done | 2026-10-22, production build of deployed commit 7274eef served under `/furniture-builder/`: SW scope correct, offline start reopens last piece, 3D works offline; simulated deploy shows "A new version is ready", old version kept until "Update now", then new build loads with edits intact. Not checked on the github.io URL itself (unreachable from the build workspace) or on a real phone |
 | F18 | Responsive layout phone → wide desktop | Done | screenshots 390 / 1280 / 1600 px; no horizontal page scroll at 320–768 px. 2026-10-22: Parts CSV, Print and Export were hidden off-screen in a sideways scroller on phones; buttons now wrap to a second row (verified at 390 px, all reachable) |
+
+## Release check 2026-10-22 (commit 7274eef, deployed)
+
+Clean `npm ci` → lint → typecheck → 87 tests → build (the deploy job's steps), served under `/furniture-builder/`;
+scripted Chromium run 24/24 at 1440 px and 390 px: load, fonts, manifest scope, edit/undo/redo, sheets (worker), 3D,
+Romanian CSV (BOM, `;`), SVG, Fusion script compiles, design file export/import, Romanian print PDF, project with 3
+pieces + sheets + reopen, offline start, no page errors or failed requests. Pages deployment SHA = main SHA.
 
 ## Next slices (not started)
 
