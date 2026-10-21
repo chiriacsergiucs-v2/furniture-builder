@@ -294,3 +294,35 @@ table.buy { margin-bottom: 18px; }
   .materials li { grid-template-columns: 36px 1fr; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+/* Print (ADR-0020): A4 portrait, black on white, Romanian sheet ------------ */
+/* Laid out off-screen (not display:none) so its fonts, incl. Romanian glyphs, load before the print dialog. */
+.print-root { position: absolute; left: -100000px; top: 0; width: 186mm; visibility: hidden; pointer-events: none; }
+@page { size: A4 portrait; margin: 12mm; }
+@media print {
+  body { background: #fff; color: #000; font-size: 10pt; }
+  .app, .dialog, .update-bar { display: none !important; }
+  .print-root { display: block; position: static; width: auto; visibility: visible; }
+  .pr-head h1 { font-size: 16pt; margin: 0 0 2mm; }
+  .pr-head p { margin: 0 0 1mm; }
+  .pr-note { font-size: 8.5pt; color: #333; margin: 1mm 0 2mm; }
+  .pr-block { margin-top: 5mm; }
+  .pr-block h2 { font-size: 12pt; margin: 0 0 2mm; border-bottom: 1px solid #000; padding-bottom: 1mm; }
+  .pr-elev .elevation { height: 95mm; padding: 0; }
+  .pr-elev .el-label, .pr-elev .el-selection, .pr-elev .dim.subtle { display: none; }
+  .pr-elev .el-space rect { fill: transparent !important; }
+  .pr-table { width: 100%; border-collapse: collapse; margin-bottom: 3mm; font-size: 9pt; break-inside: auto; }
+  .pr-table caption { text-align: left; font-weight: 600; padding: 1mm 0; }
+  .pr-table th, .pr-table td { border: 0.5pt solid #555; padding: 1mm 1.5mm; text-align: left; vertical-align: top; }
+  .pr-table th { background: #eee; font-weight: 600; }
+  .pr-table td.n { text-align: right; font-variant-numeric: tabular-nums; }
+  .pr-table td.drill { font-size: 8pt; }
+  .pr-table tr { break-inside: avoid; }
+  .pr-warn { margin: 0; padding-left: 5mm; font-size: 9pt; }
+  .pr-sheets { break-before: page; }
+  .pr-sheet { break-inside: avoid; margin-bottom: 4mm; }
+  .pr-sheet h3 { font-size: 10pt; margin: 0 0 1mm; }
+  .pr-sheet figcaption { display: none; }
+  .pr-sheet svg { width: 100%; height: auto; }
+  .pr-sheet .sh-part text { font-family: sans-serif; }
+}

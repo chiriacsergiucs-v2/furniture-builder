@@ -93,14 +93,3 @@ export function edgeBandMeters(model: FurnitureModel, materials: Material[]): Ma
   }
   return out
 }
-
-export function cutlistCsv(rows: CutRow[]): string {
-  const esc = (v: string | number) => {
-    const s = String(v)
-    const safe = /^[=+\-@]/.test(s) ? `'${s}` : s
-    return /[",\r\n]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe
-  }
-  const head = ['Material', 'Thickness_mm', 'Length_mm', 'Width_mm', 'Qty', 'Edge_L', 'Edge_W', 'Grain', 'Parts', 'Drilling']
-  const lines = [head, ...rows.map(r => [r.materialName, r.thickness, r.length, r.width, r.quantity, r.edgesL, r.edgesW, r.grain ? 'length' : 'none', r.labels.join(' / '), r.drilling])]
-  return lines.map(l => l.map(esc).join(',')).join('\r\n') + '\r\n'
-}
