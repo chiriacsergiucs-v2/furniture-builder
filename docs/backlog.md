@@ -35,7 +35,7 @@ Statuses: **Done** (acceptance met, evidence cited) · **Partially done** (code 
 | N03 | Fusion 360 export from `FurnitureModel` | Not done | ADR-0021; Must be labelled unverified until run in Fusion |
 | N04 | Several pieces in one project (kitchen run, room) | Not done | ADR-0022; Needs a project document above `Design` |
 | N05 | Unequal drawer heights, adjustable shelves (pin rows) | Done | ADR-0023; 5 tests; fuzz covers heights and adjustable shelves (20,000 passed) |
-| N06 | Inset / half-overlay fronts, handles | Not done | ADR-0024; Front zone already central; handles need physical spec |
+| N06 | Inset / half-overlay fronts, handles | Done | ADR-0024; 5 tests; fuzz covers all three styles and handles (20,000 passed); screenshots |
 | N07 | Wall and corner cabinets, worktop joins | Not done | ADR-0025 |
 | N08 | Selectable pedestal internals on desks | Done | ADR-0026; `tests/core.test.ts` editable pedestals; 20,000-design fuzz passed |
 | N09 | Committed browser test suite | Not done | Only when the user asks (pre-MVP rule) |

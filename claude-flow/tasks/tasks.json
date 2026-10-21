@@ -190,7 +190,7 @@
     {
       "id": "TSK-N06",
       "title": "Front styles and handles",
-      "status": "READY",
+      "status": "DONE",
       "owner": "furniture-geometry",
       "adrs": [
         "ADR-0024"
@@ -205,7 +205,12 @@
       ],
       "acceptance": [],
       "blocker": null,
-      "evidence": [],
+      "evidence": [
+        "tests/core.test.ts ADR-0024 block",
+        "npx vitest run: 47 passed",
+        "FUZZ_N=20000 passed",
+        "screenshots chest/sideboard"
+      ],
       "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
     },
     {

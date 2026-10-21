@@ -20,18 +20,19 @@ let idc = 0
 const nid = () => `s${idc++}`
 
 function genSpace(depth: number, doorsAbove: boolean): Space {
-  const doors = !doorsAbove && rnd() < 0.3 ? { kind: 'doors' as const, count: pick([1, 2] as const) } : null
+  const doors = !doorsAbove && rnd() < 0.3 ? { kind: 'doors' as const, count: pick([1, 2] as const), hinge: pick(['left', 'right'] as const) } : null
+  const handle = rnd() < 0.4 ? { kind: pick(['bar', 'knob', 'push'] as const), holeSpacing: pick([96, 128, 160, 192, 320]), position: pick(['top', 'centre', 'bottom'] as const) } : undefined
   const below = doorsAbove || !!doors
   const k = depth < 3 && rnd() < 0.45 ? 'split' : pick(['empty', 'shelves', 'hanging', 'drawers'] as const)
   const id = nid()
   switch (k) {
-    case 'empty': return { id, kind: 'empty', front: doors }
-    case 'shelves': return { id, kind: 'shelves', count: ri(0, 4), front: doors, ...(rnd() < 0.35 ? { adjustable: true } : {}) }
+    case 'empty': return { id, kind: 'empty', front: doors, handle }
+    case 'shelves': return { id, kind: 'shelves', count: ri(0, 4), front: doors, handle, ...(rnd() < 0.35 ? { adjustable: true } : {}) }
     case 'hanging': return { id, kind: 'hanging', railDrop: ri(20, 80), front: doors }
     case 'drawers': {
       const count = ri(1, 5)
       const heights = rnd() < 0.35 ? Array.from({ length: count }, () => rnd() < 0.3 ? { mode: 'mm' as const, value: ri(90, 250) } : { mode: 'fr' as const, value: ri(1, 3) }) : undefined
-      return { id, kind: 'drawers', count, front: doors, ...(heights ? { heights } : {}) }
+      return { id, kind: 'drawers', count, front: doors, handle, ...(heights ? { heights } : {}) }
     }
     default: {
       const n = ri(2, 4)
@@ -59,6 +60,7 @@ function genCabinet(): Design {
     width: ri(300, 2400), height: ri(300, 2400), depth: ri(250, 700),
     bodyMaterialId: 'body', frontMaterialId: 'front', backMaterialId: 'back',
     top: pick(['over', 'between'] as const), back: pick(['none', 'applied', 'inset'] as const), backInset: ri(0, 30),
+    frontStyle: pick(['overlay', 'overlay', 'half', 'inset'] as const),
     plinthHeight: pick([0, 0, ri(40, 120)]), plinthSetback: ri(0, 60), frontGap: ri(0, 6), shelfSetback: ri(0, 30), shelfClearance: ri(0, 2), pinRowSetback: pick([37, 37, ri(25, 60)]),
     drawers: drawers(), interior: genSpace(0, false),
   }
@@ -100,8 +102,10 @@ function check(d: Design): string[] {
   else { const c = d.product.params; W = c.width; H = c.height; Dd = c.depth - c.frontOverhang; ph = 0; g = c.frontGap; envD = c.depth }
   const env: Box = { x: 0, y: 0, z: 0, w: W, h: H, d: envD }
   for (const p of P) if (!FRONT.has(p.role) && !contains(env, p.box)) probs.push(`outside ${p.id}`)
+  const style = d.product.kind === 'cabinet' ? d.product.params.frontStyle ?? 'overlay' : 'overlay'
+  const fz = style === 'inset' ? Dd - tf : Dd
   for (const f of fronts) {
-    if (f.box.z !== Dd || f.box.d !== tf) probs.push(`front-z ${f.id} z=${f.box.z} expected ${Dd}`)
+    if (f.box.z !== fz || f.box.d !== tf) probs.push(`front-z ${f.id} z=${f.box.z} expected ${fz}`)
     if (d.product.kind === 'desk' && f.box.z + f.box.d > envD && !m.diagnostics.some(x => x.code === 'fronts-proud')) probs.push(`front-protrudes-past-worktop ${f.id} by ${f.box.z + f.box.d - envD}`)
   }
   // floating: every non-front panel must touch another panel (drawer parts each other; shelves the carcass)
@@ -110,21 +114,26 @@ function check(d: Design): string[] {
     P.filter(q => q.pinRows?.length && (q.box.x + q.box.w <= p.box.x || q.box.x >= p.box.x + p.box.w)).length >= 2
   for (const p of P) if (!FRONT.has(p.role) && !onPins(p) && !P.some(q => q !== p && touches(p.box, q.box))) probs.push(`floating ${p.id}`)
   // front gaps (cabinet only for outer reveal)
-  const r = Math.floor(g / 2)
+  const t = d.materials.find(m => m.id === 'body')!.thickness
+  const lo = (n: number) => Math.floor(n / 2), hi = (n: number) => n - Math.floor(n / 2)
   if (d.product.kind === 'cabinet') {
+    // Outer limits per front style (ADR-0006, ADR-0024).
+    const lim = style === 'inset' ? { x0: t + g, x1: W - t - g, y0: ph + t + g, y1: H - t - g }
+      : style === 'half' ? { x0: lo(t) + hi(g), x1: W - t + lo(t) - lo(g), y0: ph + lo(t) + hi(g), y1: H - t + lo(t) - lo(g) }
+      : { x0: lo(g), x1: W - lo(g), y0: ph + lo(g), y1: H - lo(g) }
     for (const f of fronts) {
       const b = f.box
-      if (b.x < r || b.x + b.w > W - r || b.y < ph + r || b.y + b.h > H - r) probs.push(`reveal<half ${f.id}`)
+      if (b.x < lim.x0 || b.x + b.w > lim.x1 || b.y < lim.y0 || b.y + b.h > lim.y1) probs.push(`reveal ${style} ${f.id}`)
     }
   }
-  const t = d.materials.find(m => m.id === 'body')!.thickness
+  const okGap = (gap: number) => gap === g || (style === 'inset' && gap === 2 * g + t)
   for (let i = 0; i < fronts.length; i++) for (let j = 0; j < fronts.length; j++) {
     if (i === j) continue
     const a = fronts[i].box, b = fronts[j].box
     const yo = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y)
     const xo = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x)
-    if (yo > 0 && b.x >= a.x + a.w) { const gap = b.x - a.x - a.w; if (gap !== g && gap <= g + t + 20) probs.push(`xgap ${gap}!=${g} ${fronts[i].id}|${fronts[j].id}`) }
-    if (xo > 0 && b.y >= a.y + a.h) { const gap = b.y - a.y - a.h; if (gap !== g && gap <= g + t + 20) probs.push(`ygap ${gap}!=${g} ${fronts[i].id}|${fronts[j].id}`) }
+    if (yo > 0 && b.x >= a.x + a.w) { const gap = b.x - a.x - a.w; if (!okGap(gap) && gap <= 2 * g + t + 20) probs.push(`xgap ${gap}!=${g} ${fronts[i].id}|${fronts[j].id}`) }
+    if (xo > 0 && b.y >= a.y + a.h) { const gap = b.y - a.y - a.h; if (!okGap(gap) && gap <= 2 * g + t + 20) probs.push(`ygap ${gap}!=${g} ${fronts[i].id}|${fronts[j].id}`) }
   }
   for (const p of P) if (p.role.startsWith('drawer-') && p.role !== 'drawer-front' || p.role === 'shelf') {
     const sp = m.spaces.find(s => s.nodeId === p.nodeId)
@@ -133,7 +142,9 @@ function check(d: Design): string[] {
   if (d.product.kind === 'cabinet') for (const h of m.hardware) if (h.kind === 'drawer-runner-pair') {
     const sp = m.spaces.find(s => s.nodeId === h.nodeId)!
     const c = d.product.params
-    const setback = h.label.includes('internal') ? Math.max(c.shelfSetback, INTERNAL_DRAWER_SETBACK) : 0
+    const internal = h.label.includes('internal')
+    const ins = (c.frontStyle ?? 'overlay') === 'inset'
+    const setback = internal ? Math.max(c.shelfSetback, INTERNAL_DRAWER_SETBACK) + (ins && sp.hasDoors ? tf : 0) : ins ? tf : 0
     const best = Math.max(...c.drawers.runnerLengths.filter(l => l <= sp.box.d - c.drawers.rearClearance - setback))
     if (best !== h.sizeMm) probs.push(`runnerChoice ${h.sizeMm} vs ${best}`)
   }

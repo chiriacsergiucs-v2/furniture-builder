@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { changeKind, fr, setDrawerCount, findInProduct, findSpace, parentOf, pedestalRoot, splitSpace, unsplit, usesPedestal, type PedestalSide } from '../core/design'
-import type { CabinetParams, DeskParams, DeskSupport, Material, Space, SpaceKind, SplitSize } from '../core/types'
+import type { CabinetParams, DeskParams, DeskSupport, FrontStyle, Handle, Material, Space, SpaceKind, SplitSize } from '../core/types'
 import { useDesign } from '../store/designStore'
 import { Counter, Group, MmField, Segmented, Select, Toggle } from './controls'
 
@@ -80,7 +80,13 @@ function SpaceEditor({ space, root, side }: { space: Space; root: Space; side?: 
       <Segmented<0 | 1 | 2> label="Doors" value={space.front?.count ?? 0}
         options={[{ value: 0, label: 'None' }, { value: 1, label: 'One' }, { value: 2, label: 'Pair' }]}
         onChange={n => set(s => ({ ...s, front: n === 0 ? null : { kind: 'doors', count: n } }))} />
+      {space.front?.count === 1 && (
+        <Segmented<'left' | 'right'> label="Hinges on" value={space.front.hinge ?? 'left'}
+          options={[{ value: 'left', label: 'Left' }, { value: 'right', label: 'Right' }]}
+          onChange={v => set(s => (s.front ? { ...s, front: { ...s.front, hinge: v } } : s))} />
+      )}
       {space.kind === 'drawers' && space.front && <p className="hint">Drawers behind doors are built as internal drawers without their own fronts.</p>}
+      {(space.front || space.kind === 'drawers') && <HandleEditor space={space} onChange={set} />}
 
       {space.kind === 'split' ? (
         <SplitEditor space={space} onChange={set} onSelect={select} />
@@ -97,6 +103,32 @@ function SpaceEditor({ space, root, side }: { space: Space; root: Space; side?: 
         <button type="button" className="link" onClick={() => select(parent.id)}>Select the divided space around this one</button>
       )}
     </div>
+  )
+}
+
+const BAR_SPACINGS = [96, 128, 160, 192, 224, 256, 320]
+
+function HandleEditor({ space, onChange }: { space: Space; onChange: (fn: (s: Space) => Space) => void }) {
+  const h = space.handle
+  const kind = h?.kind ?? 'none'
+  const setH = (patch: Partial<Handle> | null) => onChange(s => ({ ...s, handle: patch === null ? null : { kind: 'bar', ...(s.handle ?? {}), ...patch } as Handle }))
+  return (
+    <>
+      <Segmented<'none' | Handle['kind']> label={space.front ? 'Handles on the doors' : 'Handles on the drawers'} value={kind}
+        options={[{ value: 'none', label: 'None' }, { value: 'bar', label: 'Bar' }, { value: 'knob', label: 'Knob' }, { value: 'push', label: 'Push to open' }]}
+        onChange={v => setH(v === 'none' ? null : { kind: v })} />
+      {h && h.kind !== 'push' && (
+        <div className="dims2">
+          {h.kind === 'bar' && (
+            <Select label="Hole centres" value={String(h.holeSpacing ?? 128)} options={BAR_SPACINGS.map(v => ({ value: String(v), label: `${v} mm` }))}
+              onChange={v => setH({ holeSpacing: Number(v) })} />
+          )}
+          <Select<'top' | 'centre' | 'bottom'> label="Position" value={h.position ?? (space.front ? 'centre' : 'top')}
+            options={[{ value: 'top', label: 'Near the top' }, { value: 'centre', label: 'Middle' }, { value: 'bottom', label: 'Near the bottom' }]}
+            onChange={v => setH({ position: v })} />
+        </div>
+      )}
+    </>
   )
 }
 
@@ -211,7 +243,10 @@ function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material
         {p.back === 'inset' && <MmField label="Back set in from rear" value={p.backInset} min={0} max={100} step={1} onChange={v => set({ backInset: v })} />}
         <MmField label="Plinth height" value={p.plinthHeight} min={0} max={250} onChange={v => set({ plinthHeight: v })} hint="0 for no plinth" />
         {p.plinthHeight > 0 && <MmField label="Plinth set back" value={p.plinthSetback} min={0} max={200} step={5} onChange={v => set({ plinthSetback: v })} />}
-        <MmField label="Gap between fronts" value={p.frontGap} min={0} max={10} step={1} onChange={v => set({ frontGap: v })} />
+        <Segmented<FrontStyle> label="Doors and drawer fronts" value={p.frontStyle ?? 'overlay'}
+          options={[{ value: 'overlay', label: 'Overlay' }, { value: 'half', label: 'Half overlay' }, { value: 'inset', label: 'Inset' }]}
+          onChange={v => set({ frontStyle: v })} />
+        <MmField label={(p.frontStyle ?? 'overlay') === 'inset' ? 'Gap around fronts' : 'Gap between fronts'} value={p.frontGap} min={0} max={10} step={1} onChange={v => set({ frontGap: v })} />
         <MmField label="Shelf set back" value={p.shelfSetback} min={0} max={100} step={5} onChange={v => set({ shelfSetback: v })} />
         <div className="dims2">
           <MmField label="Adjustable shelf gap, each side" value={p.shelfClearance ?? 1} min={0} max={5} step={1} onChange={v => set({ shelfClearance: v })} />
