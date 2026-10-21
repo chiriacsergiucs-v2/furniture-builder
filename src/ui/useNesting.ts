@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { hasErrors } from '../core/build'
 import type { CutRow } from '../core/cutlist'
 import { nest } from '../core/nesting'
-import { nestingJobs } from '../core/nesting/fromDesign'
 import type { NestJob, NestResult } from '../core/nesting/types'
 import type { NestResponse } from '../core/nesting/worker'
-import { useDesign } from '../store/designStore'
+import { useView } from './useView'
 
 export type NestState =
   | { status: 'idle' }
@@ -18,17 +16,16 @@ export type NestState =
  * Falls back to the main thread if workers are unavailable. Designs with errors are never laid out.
  */
 export function useNesting(active: boolean): NestState & { blocked: boolean } {
-  const design = useDesign(s => s.design)
-  const model = useDesign(s => s.model)
+  const view = useView()
   const [state, setState] = useState<NestState>({ status: 'idle' })
   const worker = useRef<Worker | null>(null)
   const req = useRef(0)
-  const blocked = hasErrors(model)
+  const blocked = view.diagnostics.some(d => d.severity === 'error')
 
   useEffect(() => {
     if (!active || blocked) return
     const timer = setTimeout(() => {
-      const { jobs, rows } = nestingJobs(design, model)
+      const jobs = view.jobs(), rows = view.rows
       const id = ++req.current
       setState({ status: 'running' })
       const finish = (msg: NestResponse) => {
@@ -45,7 +42,7 @@ export function useNesting(active: boolean): NestState & { blocked: boolean } {
       }
     }, 250)
     return () => clearTimeout(timer)
-  }, [active, blocked, design, model])
+  }, [active, blocked, view])
 
   useEffect(() => () => { worker.current?.terminate(); worker.current = null }, [])
   return { ...state, blocked }

@@ -1,14 +1,15 @@
 import { useMemo } from 'react'
-import { areaM2, cutlist, edgeBandMeters, hardwareSummary } from '../core/cutlist'
+import { areaM2, bandMetersFromRows } from '../core/cutlist'
 import { useDesign, type Tab } from '../store/designStore'
 import { Sheets } from './Sheets'
+import { useView } from './useView'
 
 export function Output() {
   const tab = useDesign(s => s.tab)
   const setTab = useDesign(s => s.setTab)
-  const model = useDesign(s => s.model)
-  const errors = model.diagnostics.filter(d => d.severity === 'error').length
-  const warnings = model.diagnostics.length - errors
+  const view = useView()
+  const errors = view.diagnostics.filter(d => d.severity === 'error').length
+  const warnings = view.diagnostics.length - errors
   const tabs: { id: Tab; label: string; badge?: number; kind?: string }[] = [
     { id: 'parts', label: 'Parts' },
     { id: 'sheets', label: 'Sheets' },
@@ -36,13 +37,12 @@ export function Output() {
 }
 
 function Parts() {
-  const model = useDesign(s => s.model)
-  const materials = useDesign(s => s.design.materials)
+  const view = useView()
   const setHighlight = useDesign(s => s.setHighlight)
   const highlight = useDesign(s => s.highlight)
-  const rows = useMemo(() => cutlist(model, materials), [model, materials])
-  const bands = useMemo(() => edgeBandMeters(model, materials), [model, materials])
-  const blocked = model.diagnostics.some(d => d.severity === 'error')
+  const rows = view.rows
+  const bands = useMemo(() => bandMetersFromRows(rows), [rows])
+  const blocked = view.diagnostics.some(d => d.severity === 'error')
   const byMat = useMemo(() => {
     const m = new Map<string, typeof rows>()
     for (const r of rows) m.set(r.materialId, [...(m.get(r.materialId) ?? []), r])
@@ -52,7 +52,7 @@ function Parts() {
 
   return (
     <div className="parts">
-      {blocked && <p className="blocked">This design has problems (see Checks). Fix them before cutting.</p>}
+      {blocked && <p className="blocked">{view.mode === 'project' ? 'This project' : 'This design'} has problems (see Checks). Fix them before cutting.</p>}
       <p className="summary">{total} parts in {byMat.length} {byMat.length === 1 ? 'material' : 'materials'}. Sizes are finished sizes; edges marked for banding.</p>
       {byMat.map(([mid, list]) => {
         const name = list[0].materialName
@@ -103,8 +103,7 @@ function EdgeMark({ l, w }: { l: number; w: number }) {
 }
 
 function Hardware() {
-  const model = useDesign(s => s.model)
-  const items = hardwareSummary(model)
+  const items = useView().hardware
   if (!items.length) return <p className="empty">No hardware needed yet. Add drawers, doors or a hanging rail.</p>
   return (
     <div className="hardware">
@@ -122,17 +121,20 @@ function Hardware() {
 }
 
 function Checks() {
-  const diags = useDesign(s => s.model.diagnostics)
+  const view = useView()
+  const diags = view.diagnostics
   const select = useDesign(s => s.select)
+  const selectItem = useDesign(s => s.selectItem)
   const productId = useDesign(s => s.design.product.id)
   const setHighlight = useDesign(s => s.setHighlight)
+  const go = (nodeId?: string) => view.mode === 'project' ? selectItem(nodeId ?? null) : select(nodeId && nodeId !== productId ? nodeId : null)
   if (!diags.length) return <p className="empty ok">No problems found. Parts fit, nothing overlaps, every size is a whole millimetre.</p>
   const sorted = [...diags].sort((a, b) => (a.severity === b.severity ? 0 : a.severity === 'error' ? -1 : 1))
   return (
     <ul className="checks">
       {sorted.map((d, i) => (
         <li key={i} className={d.severity}>
-          <button type="button" onClick={() => { select(d.nodeId && d.nodeId !== productId ? d.nodeId : null); setHighlight(d.panelIds ?? []) }}>
+          <button type="button" onClick={() => { go(d.nodeId); setHighlight(d.panelIds ?? []) }}>
             <span className="sev">{d.severity === 'error' ? 'Problem' : 'Check'}</span>
             <span>{d.message}</span>
           </button>

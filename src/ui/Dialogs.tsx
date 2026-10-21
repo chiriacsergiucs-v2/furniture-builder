@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { kerfOf, newId, sheetOf, templates, validateDesign } from '../core/design'
 import type { Design, Material } from '../core/types'
-import { deleteDesign, listDesigns, saveDesign, type StoredDesign } from '../persist/db'
+import { newProject, validateProject, type Project } from '../core/project'
+import { deleteDesign, deleteProject, listDesigns, listProjects, saveDesign, saveProject, type StoredDesign, type StoredProject } from '../persist/db'
 import { useDesign } from '../store/designStore'
 import { MmField, Toggle } from './controls'
+import { AddPieceList } from './Project'
 
 function Dialog({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: ReactNode }) {
   const ref = useRef<HTMLDialogElement>(null)
@@ -23,8 +25,18 @@ function Dialog({ open, onClose, title, children }: { open: boolean; onClose: ()
 
 export function NewDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const load = useDesign(s => s.load)
+  const openProject = useDesign(s => s.openProject)
   return (
-    <Dialog open={open} onClose={onClose} title="Start a new piece">
+    <Dialog open={open} onClose={onClose} title="Start something new">
+      <ul className="template-list">
+        <li className="project-start">
+          <button type="button" onClick={() => { const p = newProject(); void saveProject(p); openProject(p); onClose() }}>
+            <strong>Project with several pieces</strong>
+            <span>A kitchen, a bedroom or a room: place pieces, then get one parts list and one set of sheets.</span>
+          </button>
+        </li>
+      </ul>
+      <h3 className="list-head">Or a single piece</h3>
       <ul className="template-list">
         {templates.map(t => (
           <li key={t.id}>
@@ -35,22 +47,42 @@ export function NewDialog({ open, onClose }: { open: boolean; onClose: () => voi
           </li>
         ))}
       </ul>
-      <p className="hint">Your current piece is already saved on this device.</p>
+      <p className="hint">What you have open now is already saved on this device.</p>
+    </Dialog>
+  )
+}
+
+export function AddPieceDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  return (
+    <Dialog open={open} onClose={onClose} title="Add a piece to the project">
+      {open && <AddPieceList onDone={onClose} />}
     </Dialog>
   )
 }
 
 export function LibraryDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const load = useDesign(s => s.load)
-  const currentId = useDesign(s => s.design.id)
+  const openProject = useDesign(s => s.openProject)
+  const currentId = useDesign(s => (s.project ? s.project.id : s.design.id))
   const [rows, setRows] = useState<StoredDesign[] | null>(null)
+  const [projects, setProjects] = useState<StoredProject[]>([])
   const [error, setError] = useState<string | null>(null)
-  const refresh = () => listDesigns().then(setRows).catch(() => setError('Saved pieces could not be read from this browser.'))
+  const refresh = () => {
+    listDesigns().then(setRows).catch(() => setError('Saved pieces could not be read from this browser.'))
+    listProjects().then(setProjects).catch(() => setProjects([]))
+  }
   useEffect(() => { if (open) refresh() }, [open])
 
   const importFile = async (f: File) => {
     try {
       const data: unknown = JSON.parse(await f.text())
+      if (data && typeof data === 'object' && 'items' in data) {
+        const perrs = validateProject(data)
+        if (perrs.length) { setError(`That file is not a valid project: ${perrs.slice(0, 3).join('; ')}.`); return }
+        const p = { ...(data as Project), id: newId(), updatedAt: new Date().toISOString() }
+        await saveProject(p)
+        openProject(p); onClose(); return
+      }
       const errs = validateDesign(data)
       if (errs.length) { setError(`That file is not a valid design: ${errs.slice(0, 3).join('; ')}.`); return }
       const d = data as Design
@@ -61,8 +93,30 @@ export function LibraryDialog({ open, onClose }: { open: boolean; onClose: () =>
   }
 
   return (
-    <Dialog open={open} onClose={onClose} title="Saved pieces">
+    <Dialog open={open} onClose={onClose} title="Saved on this device">
       {error && <p className="field-error" role="alert">{error}</p>}
+      {projects.length > 0 && (
+        <>
+          <h3 className="list-head">Projects</h3>
+          <ul className="library">
+            {projects.map(r => (
+              <li key={r.id} className={r.id === currentId ? 'current' : ''}>
+                <button type="button" className="open" onClick={() => { openProject(r.project); onClose() }}>
+                  <strong>{r.name}</strong>
+                  <span>{r.project.items.length} {r.project.items.length === 1 ? 'piece' : 'pieces'}, edited {new Date(r.updatedAt).toLocaleString()}</span>
+                </button>
+                <button type="button" className="mini" onClick={async () => {
+                  const now = new Date().toISOString()
+                  await saveProject({ ...r.project, id: newId(), name: `${r.name} (copy)`, createdAt: now, updatedAt: now }); refresh()
+                }}>Duplicate</button>
+                <button type="button" className="mini danger" disabled={r.id === currentId} title={r.id === currentId ? 'Open something else first' : undefined}
+                  onClick={async () => { if (confirm(`Delete project “${r.name}”? This cannot be undone.`)) { await deleteProject(r.id); refresh() } }}>Delete</button>
+              </li>
+            ))}
+          </ul>
+          <h3 className="list-head">Pieces</h3>
+        </>
+      )}
       {rows === null ? <p className="hint">Loading…</p> : rows.length === 0 ? (
         <p className="empty">Nothing saved yet. Pieces save automatically as you edit.</p>
       ) : (
@@ -84,7 +138,7 @@ export function LibraryDialog({ open, onClose }: { open: boolean; onClose: () =>
         </ul>
       )}
       <label className="file-btn">
-        Import a design file
+        Import a design or project file
         <input type="file" accept="application/json,.json" onChange={e => { const f = e.target.files?.[0]; if (f) importFile(f); e.target.value = '' }} />
       </label>
     </Dialog>

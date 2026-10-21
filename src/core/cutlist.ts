@@ -93,3 +93,13 @@ export function edgeBandMeters(model: FurnitureModel, materials: Material[]): Ma
   }
   return out
 }
+
+/** Metres of edge band per material from cut rows (works for a piece or a whole project). */
+export function bandMetersFromRows(rows: CutRow[]): Map<string, number> {
+  const out = new Map<string, number>()
+  for (const r of rows) {
+    const mm = (r.edgesL * r.length + r.edgesW * r.width) * r.quantity
+    if (mm) out.set(r.materialId, (out.get(r.materialId) ?? 0) + mm / 1000)
+  }
+  return out
+}

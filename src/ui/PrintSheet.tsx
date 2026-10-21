@@ -1,44 +1,52 @@
 import { useMemo } from 'react'
-import { cutlist, edgeBandMeters, hardwareSummary, areaM2 } from '../core/cutlist'
-import { kerfOf, sheetOf } from '../core/design'
+import { areaM2, bandMetersFromRows } from '../core/cutlist'
+import { sheetOf } from '../core/design'
 import { nest } from '../core/nesting'
-import { nestingJobs } from '../core/nesting/fromDesign'
 import { drillingRo, hardwareRo, partRo } from '../core/ro'
 import { useDesign } from '../store/designStore'
 import { Elevation } from './Elevation'
 import { SheetSvg } from './Sheets'
+import { useView } from './useView'
 
 /**
  * Printable cutting sheet for the panel shop, in Romanian, A4 portrait (ADR-0020). Rendered only while printing;
  * everything comes from the model and the cut list — no geometry is computed here.
  */
 export function PrintSheet() {
-  const design = useDesign(s => s.design)
-  const model = useDesign(s => s.model)
-  const rows = useMemo(() => cutlist(model, design.materials), [model, design.materials])
-  const bands = useMemo(() => edgeBandMeters(model, design.materials), [model, design.materials])
-  const hw = useMemo(() => hardwareSummary(model), [model])
-  const layouts = useMemo(() => {
-    const { jobs, rows: r } = nestingJobs(design, model)
-    return { jobs, rows: r, results: jobs.map(j => nest(j)) }
-  }, [design, model])
-  const b = model.bounds
+  const view = useView()
+  const project = useDesign(s => s.project)
+  const rows = view.rows
+  const bands = useMemo(() => bandMetersFromRows(rows), [rows])
+  const hw = view.hardware
+  const layouts = useMemo(() => { const jobs = view.jobs(); return { jobs, rows, results: jobs.map(j => nest(j)) } }, [view, rows])
+  const b = view.model.bounds
   const byMat = [...new Set(rows.map(r => r.materialId))]
-  const warnings = model.diagnostics.filter(d => d.severity === 'warning')
+  const warnings = view.diagnostics.filter(d => d.severity === 'warning')
   const labelOf = (key: string) => layouts.rows.find(r => r.panelIds[0] === key)
+  const colorOf = (id: string) => view.materials.find(m => m.id === id)?.color ?? '#ddd'
 
   return (
     <div className="print-root" aria-hidden="true">
       <header className="pr-head">
-        <h1>{design.name}</h1>
-        <p>Fișă de debitare · {new Date().toLocaleDateString('ro-RO')} · gabarit {b.w} × {b.h} × {b.d} mm</p>
-        <p className="pr-note">Dimensiuni finite, în mm. Cantul este marcat (L = pe lungime, l = pe lățime), nu scăzut din dimensiuni. Fibra urmează lungimea la plăcile cu fibră. Tăietură {kerfOf(design)} mm.</p>
+        <h1>{view.title}</h1>
+        <p>Fișă de debitare{view.mode === 'project' ? ' · proiect' : ''} · {new Date().toLocaleDateString('ro-RO')} · gabarit {b.w} × {b.h} × {b.d} mm</p>
+        <p className="pr-note">Dimensiuni finite, în mm. Cantul este marcat (L = pe lungime, l = pe lățime), nu scăzut din dimensiuni. Fibra urmează lungimea la plăcile cu fibră. Tăietură {view.kerf} mm.</p>
       </header>
 
-      <section className="pr-block pr-elev">
-        <h2>Vedere frontală</h2>
-        <Elevation />
-      </section>
+      {view.mode === 'design' ? (
+        <section className="pr-block pr-elev">
+          <h2>Vedere frontală</h2>
+          <Elevation />
+        </section>
+      ) : project && (
+        <section className="pr-block">
+          <h2>Piese în proiect</h2>
+          <table className="pr-table">
+            <thead><tr><th>Piesă</th><th>Buc.</th><th>Poziție x / y / z</th><th>Rotire</th></tr></thead>
+            <tbody>{project.items.map(i => <tr key={i.id}><td>{i.design.name}</td><td className="n">{i.quantity}</td><td className="n">{i.position.x} / {i.position.y} / {i.position.z}</td><td className="n">{i.rotationY}°</td></tr>)}</tbody>
+          </table>
+        </section>
+      )}
 
       <section className="pr-block">
         <h2>Listă de piese</h2>
@@ -90,7 +98,7 @@ export function PrintSheet() {
           <thead><tr><th>Plăci</th><th>Material</th><th>Format</th><th>Margine</th><th>Utilizare</th></tr></thead>
           <tbody>
             {layouts.results.map((r, i) => {
-              const m = design.materials.find(x => x.id === r.materialId)!
+              const m = view.materials.find(x => x.id === r.materialId)!
               return <tr key={r.materialId}><td className="n">{r.valid ? r.stats.sheetsUsed : '—'}</td><td>{layouts.jobs[i].materialName}</td><td className="n">{layouts.jobs[i].sheet.length} × {layouts.jobs[i].sheet.width}</td><td className="n">{sheetOf(m).trim} mm</td><td className="n">{r.valid ? `${Math.round(r.stats.utilisation * 100)}%` : 'invalid'}</td></tr>
             })}
           </tbody>
@@ -100,7 +108,7 @@ export function PrintSheet() {
             {r.sheets.map(s => (
               <div key={s.index} className="pr-sheet">
                 <h3>{layouts.jobs[i].materialName} — placa {s.index + 1} din {r.sheets.length}</h3>
-                <SheetSvg sheet={s} color={design.materials.find(m => m.id === r.materialId)?.color ?? '#ddd'} labelOf={k => { const row = labelOf(k); return row ? { ...row, labels: row.labels.map(partRo) } : undefined }} onHover={() => {}} />
+                <SheetSvg sheet={s} color={colorOf(r.materialId)} labelOf={k => { const row = labelOf(k); return row ? { ...row, labels: row.labels.map(partRo) } : undefined }} onHover={() => {}} />
               </div>
             ))}
           </div>

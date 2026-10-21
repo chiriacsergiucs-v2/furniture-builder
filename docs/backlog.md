@@ -33,7 +33,7 @@ Statuses: **Done** (acceptance met, evidence cited) · **Partially done** (code 
 | N01 | Sheet nesting: guillotine optimiser from the cut list, with independent validator | Done | ADR-0018/0019; `tests/nesting.test.ts` (fuzz + mutation), template layout test; screenshots |
 | N02 | Printable cut sheet / PDF and SVG drawings | Done | ADR-0020; `tests/ro.test.ts`; PDF rendered from the app (headless Chrome) |
 | N03 | Fusion 360 export from `FurnitureModel` | Partially done | ADR-0021; exporter built and syntax-checked (`tests/fusion.test.ts`); not yet run inside Fusion |
-| N04 | Several pieces in one project (kitchen run, room) | Not done | ADR-0022; Needs a project document above `Design` |
+| N04 | Several pieces in one project (kitchen run, room) | Done | ADR-0022; `tests/project.test.ts` (7); browser run: edit persisted across reload; project PDF |
 | N05 | Unequal drawer heights, adjustable shelves (pin rows) | Done | ADR-0023; 5 tests; fuzz covers heights and adjustable shelves (20,000 passed) |
 | N06 | Inset / half-overlay fronts, handles | Done | ADR-0024; 5 tests; fuzz covers all three styles and handles (20,000 passed); screenshots |
 | N07 | Wall and corner cabinets, worktop joins | Done | ADR-0025; 4 tests incl. 400 random corners; screenshots of wall, blind and L corners |
