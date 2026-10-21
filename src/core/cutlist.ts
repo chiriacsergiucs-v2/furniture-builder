@@ -1,8 +1,15 @@
 import { cutDimensions } from './geometry'
-import type { FurnitureModel, HardwareItem, Material, Mm } from './types'
+import type { FurnitureModel, HardwareItem, Material, Mm, Panel } from './types'
 
 /** "Drawer 2 side L" → "Drawer side L" so identical parts share one label. */
 export const baseLabel = (label: string) => label.replace(/\s\d+\b/g, '').trim() || label
+
+/** "2 rows × 14 holes ø5, 37 mm from edges, one face" — what the panel shop drills. */
+export function drillingText(p: Panel): string {
+  if (!p.pinRows?.length) return ''
+  return p.pinRows.map(r => `${r.rows.length} rows × ${r.holes.length} holes ø${r.diameter}, ${r.rows[0]} mm from edges`).join('; ') +
+    (p.pinRows.length > 1 ? ' (both faces, offset 16 mm)' : ', one face')
+}
 
 export interface CutRow {
   materialId: string
@@ -16,6 +23,8 @@ export interface CutRow {
   edgesL: number
   edgesW: number
   grain: boolean
+  /** Shelf-pin drilling summary, empty when none (ADR-0023). */
+  drilling: string
   labels: string[]
   panelIds: string[]
 }
@@ -31,7 +40,8 @@ export function cutlist(model: FurnitureModel, materials: Material[]): CutRow[] 
     const m = mats.get(p.materialId)
     if (!m) continue
     const c = cutDimensions(p, m.grain)
-    const key = [m.id, c.thickness, c.length, c.width, c.edgesL, c.edgesW].join('|')
+    const drilling = drillingText(p)
+    const key = [m.id, c.thickness, c.length, c.width, c.edgesL, c.edgesW, drilling].join('|')
     const row = rows.get(key)
     if (row) {
       row.quantity++
@@ -41,7 +51,7 @@ export function cutlist(model: FurnitureModel, materials: Material[]): CutRow[] 
     } else {
       rows.set(key, {
         materialId: m.id, materialName: m.name, thickness: c.thickness, length: c.length, width: c.width,
-        quantity: 1, edgesL: c.edgesL, edgesW: c.edgesW, grain: m.grain,
+        quantity: 1, edgesL: c.edgesL, edgesW: c.edgesW, grain: m.grain, drilling,
         labels: [baseLabel(p.label)], panelIds: [p.id],
       })
     }
@@ -84,7 +94,7 @@ export function cutlistCsv(rows: CutRow[]): string {
     const safe = /^[=+\-@]/.test(s) ? `'${s}` : s
     return /[",\r\n]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe
   }
-  const head = ['Material', 'Thickness_mm', 'Length_mm', 'Width_mm', 'Qty', 'Edge_L', 'Edge_W', 'Grain', 'Parts']
-  const lines = [head, ...rows.map(r => [r.materialName, r.thickness, r.length, r.width, r.quantity, r.edgesL, r.edgesW, r.grain ? 'length' : 'none', r.labels.join(' / ')])]
+  const head = ['Material', 'Thickness_mm', 'Length_mm', 'Width_mm', 'Qty', 'Edge_L', 'Edge_W', 'Grain', 'Parts', 'Drilling']
+  const lines = [head, ...rows.map(r => [r.materialName, r.thickness, r.length, r.width, r.quantity, r.edgesL, r.edgesW, r.grain ? 'length' : 'none', r.labels.join(' / '), r.drilling])]
   return lines.map(l => l.map(esc).join(',')).join('\r\n') + '\r\n'
 }

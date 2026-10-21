@@ -51,9 +51,21 @@ export interface Panel {
   grainAxis: Axis
   /** Edges that receive edge banding, named by the outward face they sit on. */
   banded: Face[]
+  /** 32 mm-system shelf-pin hole rows (annotation for the panel shop, ADR-0023). */
+  pinRows?: PinRows[]
 }
 
-export type HardwareKind = 'drawer-runner-pair' | 'hinge' | 'clothes-rail' | 'rail-support'
+/** Hole rows on one face of a panel. Positions are measured on the panel itself, in mm. */
+export interface PinRows {
+  face: Face
+  /** Row positions across the panel depth, measured from the panel's rear edge. */
+  rows: Mm[]
+  /** Hole centres along the panel height, measured from the panel's bottom edge. */
+  holes: Mm[]
+  diameter: Mm
+}
+
+export type HardwareKind = 'drawer-runner-pair' | 'hinge' | 'clothes-rail' | 'rail-support' | 'shelf-pin'
 
 export interface HardwareItem {
   nodeId: string
@@ -112,11 +124,21 @@ interface SpaceBase {
 }
 
 export interface EmptySpace extends SpaceBase { kind: 'empty' }
-export interface ShelvesSpace extends SpaceBase { kind: 'shelves'; count: number }
+export interface ShelvesSpace extends SpaceBase {
+  kind: 'shelves'
+  count: number
+  /** Loose shelves on pins: shortened by the shelf clearance; the neighbouring panels get pin rows (ADR-0023). */
+  adjustable?: boolean
+}
 export interface HangingSpace extends SpaceBase { kind: 'hanging'; /** Rail distance below the top of the space. */ railDrop: Mm }
 export interface DrawersSpace extends SpaceBase {
   kind: 'drawers'
   count: number
+  /**
+   * Optional heights, top→bottom, one per drawer (ADR-0023). They size the drawer fronts (or the opening, for
+   * internal drawers); fixed mm or shares of the rest, like splits. Absent = equal.
+   */
+  heights?: SplitSize[]
 }
 export interface SplitSpace extends SpaceBase {
   kind: 'split'
@@ -158,6 +180,10 @@ export interface CabinetParams {
   /** Gap between adjacent fronts; outer reveal is half of it. */
   frontGap: Mm
   shelfSetback: Mm
+  /** Adjustable shelves are this much shorter on each side (default 1). */
+  shelfClearance?: Mm
+  /** Pin-row distance from the front and rear edges (default 37). */
+  pinRowSetback?: Mm
   drawers: DrawerSettings
   interior: Space
 }

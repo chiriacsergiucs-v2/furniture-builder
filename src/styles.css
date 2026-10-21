@@ -211,6 +211,8 @@ table.cut tbody tr { cursor: default; }
 table.cut tbody tr:hover, table.cut tbody tr.on { background: #fdf3cf; }
 table.cut tbody tr:focus { outline: 2px solid var(--tape); outline-offset: -2px; }
 td.labels { color: var(--ink-2); font-size: .86rem; }
+td.labels .drill { display: block; color: var(--ink); font-size: .8rem; margin-top: 2px; }
+.parts-sizes .part-name.static { color: var(--ink); text-decoration: none; }
 td.note { color: var(--ink-2); font-size: .84rem; }
 .edgemark { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
 .edgemark svg { width: 30px; height: 16px; }

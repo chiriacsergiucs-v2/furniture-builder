@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { changeKind, findInProduct, findSpace, parentOf, pedestalRoot, splitSpace, unsplit, usesPedestal, type PedestalSide } from '../core/design'
+import { changeKind, fr, setDrawerCount, findInProduct, findSpace, parentOf, pedestalRoot, splitSpace, unsplit, usesPedestal, type PedestalSide } from '../core/design'
 import type { CabinetParams, DeskParams, DeskSupport, Material, Space, SpaceKind, SplitSize } from '../core/types'
 import { useDesign } from '../store/designStore'
 import { Counter, Group, MmField, Segmented, Select, Toggle } from './controls'
@@ -70,7 +70,11 @@ function SpaceEditor({ space, root, side }: { space: Space; root: Space; side?: 
           onChange={k => set(s => changeKind(s, k))} />
       )}
       {space.kind === 'shelves' && <Counter label="Shelves" value={space.count} min={0} max={12} onChange={v => set(s => ({ ...s, count: v }) as Space)} />}
-      {space.kind === 'drawers' && <Counter label="Drawers" value={space.count} min={1} max={10} onChange={v => set(s => ({ ...s, count: v }) as Space)} />}
+      {space.kind === 'shelves' && space.count > 0 && (
+        <Toggle label="Adjustable, on shelf pins" checked={!!space.adjustable} onChange={v => set(s => ({ ...s, adjustable: v }) as Space)} />
+      )}
+      {space.kind === 'drawers' && <Counter label="Drawers" value={space.count} min={1} max={10} onChange={v => set(s => setDrawerCount(s, v))} />}
+      {space.kind === 'drawers' && space.count > 1 && <DrawerHeights space={space} onChange={set} />}
       {space.kind === 'hanging' && <MmField label="Rail below top" value={space.railDrop} min={0} max={500} step={10} onChange={v => set(s => ({ ...s, railDrop: v }) as Space)} />}
 
       <Segmented<0 | 1 | 2> label="Doors" value={space.front?.count ?? 0}
@@ -93,6 +97,42 @@ function SpaceEditor({ space, root, side }: { space: Space; root: Space; side?: 
         <button type="button" className="link" onClick={() => select(parent.id)}>Select the divided space around this one</button>
       )}
     </div>
+  )
+}
+
+function DrawerHeights({ space, onChange }: { space: Extract<Space, { kind: 'drawers' }>; onChange: (fn: (s: Space) => Space) => void }) {
+  const panels = useDesign(s => s.model.panels)
+  const fronts = useMemo(() => panels.filter(p => p.nodeId === space.id && p.role === 'drawer-front').sort((a, b) => b.box.y - a.box.y), [panels, space.id])
+  const custom = !!space.heights
+  const heights = space.heights ?? Array.from({ length: space.count }, () => fr())
+  const setH = (i: number, z: SplitSize) => onChange(s => (s.kind === 'drawers' ? { ...s, heights: heights.map((h, j) => (j === i ? z : h)) } : s))
+  return (
+    <>
+      <Segmented<'equal' | 'custom'> label="Drawer heights" value={custom ? 'custom' : 'equal'}
+        options={[{ value: 'equal', label: 'Equal' }, { value: 'custom', label: 'Choose' }]}
+        onChange={v => onChange(s => {
+          if (s.kind !== 'drawers') return s
+          if (v === 'equal') { const { heights: _drop, ...rest } = s; void _drop; return rest }
+          return { ...s, heights: Array.from({ length: s.count }, () => fr()) }
+        })} />
+      {custom && (
+        <ul className="parts-sizes">
+          {heights.map((z, i) => (
+            <li key={i}>
+              <span className="part-name static">Drawer {i + 1}</span>
+              <select aria-label={`Drawer ${i + 1} sizing`} value={z.mode} onChange={e => setH(i, e.target.value === 'mm' ? { mode: 'mm', value: fronts[i]?.box.h ?? 150 } : { mode: 'fr', value: 1 })}>
+                <option value="fr">Share</option>
+                <option value="mm">Fixed</option>
+              </select>
+              <input aria-label={z.mode === 'mm' ? `Drawer ${i + 1} front height in mm` : `Drawer ${i + 1} share`} inputMode={z.mode === 'mm' ? 'numeric' : 'decimal'} defaultValue={z.value} key={`${i}-${z.mode}-${z.value}`}
+                onBlur={e => { const v = Number(e.target.value); if (z.mode === 'mm' ? Number.isInteger(v) && v > 0 : v > 0 && v < 1000) setH(i, { mode: z.mode, value: v } as SplitSize) }} />
+              <span className="result">{fronts[i] ? `${fronts[i].box.h} mm` : '—'}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {custom && <p className="hint">Top to bottom. Heights are front heights; a share splits whatever the fixed drawers leave.</p>}
+    </>
   )
 }
 
@@ -173,6 +213,10 @@ function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material
         {p.plinthHeight > 0 && <MmField label="Plinth set back" value={p.plinthSetback} min={0} max={200} step={5} onChange={v => set({ plinthSetback: v })} />}
         <MmField label="Gap between fronts" value={p.frontGap} min={0} max={10} step={1} onChange={v => set({ frontGap: v })} />
         <MmField label="Shelf set back" value={p.shelfSetback} min={0} max={100} step={5} onChange={v => set({ shelfSetback: v })} />
+        <div className="dims2">
+          <MmField label="Adjustable shelf gap, each side" value={p.shelfClearance ?? 1} min={0} max={5} step={1} onChange={v => set({ shelfClearance: v })} />
+          <MmField label="Pin rows from edges" value={p.pinRowSetback ?? 37} min={20} max={100} step={1} onChange={v => set({ pinRowSetback: v })} />
+        </div>
       </Group>
       <Group title="Materials">
         <Select label="Body" value={p.bodyMaterialId} options={panelMats} onChange={v => set({ bodyMaterialId: v })} />

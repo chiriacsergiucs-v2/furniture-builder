@@ -71,7 +71,7 @@ function Parts() {
                     <td className="num">{r.length}</td>
                     <td className="num">{r.width}</td>
                     <td><EdgeMark l={r.edgesL} w={r.edgesW} /></td>
-                    <td className="labels">{r.labels.join(', ')}</td>
+                    <td className="labels">{r.labels.join(', ')}{r.drilling && <span className="drill">Drill: {r.drilling}</span>}</td>
                   </tr>
                 )
               })}
