@@ -91,7 +91,8 @@ for a, info in adrs.items():
 
 # ---------- template count vs docs (ADR-0020 compliance) ----------
 tpl = (REPO / "src/furniture/templates.ts").read_text()
-ready, planned = tpl.count("status:'ready'"), tpl.count("status:'planned'")
+_entries = re.findall(r"\{id:['\"][a-z0-9-]+['\"].*?status:'(ready|planned)'", tpl)
+ready, planned = _entries.count("ready"), _entries.count("planned")
 b24 = next((r for r in ledger_rows if r["id"] == "B24"), None)
 if b24 and str(ready) not in b24["evidence"]:
     warnings.append(f"B24 ledger evidence does not mention current ready count {ready} (planned {planned}) — TSK-012")

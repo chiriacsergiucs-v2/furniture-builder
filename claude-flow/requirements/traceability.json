@@ -1030,7 +1030,7 @@
     },
     {
       "id": "TSK-012",
-      "status": "READY",
+      "status": "DONE",
       "adrs": [
         "ADR-0003",
         "ADR-0020",

@@ -7,7 +7,7 @@ affected files, deliverables, the exact `verification` commands the verifier run
 These are runtime-neutral (ADR-0030): they are read by agents, not loaded by a CLI.
 
 ## Start here
-- **READY now:** TSK-002 (reconcile STEP/gates), TSK-011 (licence audit), TSK-012 (doc drift incl. 54 vs 55 templates).
+- **READY now:** TSK-002 (reconcile STEP/gates), TSK-011 (licence audit), TSK-012 (doc drift).
 - **Scope-guarded:** TSK-003 (B22 editor for registered roots).
 - **Specify, don't code:** TSK-004 (bed root), TSK-005 (wardrobe rails/fronts).
 - **Blocked on things outside the repo:** TSK-001 (runtime pin), TSK-006/007 (physical), TSK-008 (Fusion), TSK-009 (Android), TSK-010 (original vendor files not in repo).

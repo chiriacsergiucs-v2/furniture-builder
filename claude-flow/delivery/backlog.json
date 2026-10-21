@@ -4,7 +4,7 @@
   "generated_at": "2026-10-21",
   "note": "GENERATED mirror; edit the repo ledger, then run scripts/validate.py --sync",
   "template_counts_in_code": {
-    "ready": 55,
+    "ready": 54,
     "planned": 2
   },
   "rows": [
