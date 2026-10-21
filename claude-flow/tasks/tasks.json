@@ -153,7 +153,7 @@
     {
       "id": "TSK-N03",
       "title": "Fusion 360 export",
-      "status": "READY",
+      "status": "IN_REVIEW",
       "owner": "furniture-geometry",
       "adrs": [
         "ADR-0004",
@@ -166,11 +166,13 @@
       "verification": [
         "python3 -m py_compile <exported script>"
       ],
-      "blocker": null,
+      "blocker": "Waiting for the user to run one exported script in Fusion and report the result.",
       "acceptance": [
         "Labelled unverified until the user runs it in Fusion"
       ],
-      "evidence": [],
+      "evidence": [
+        "tests/fusion.test.ts (py_compile on every template)"
+      ],
       "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
     },
     {

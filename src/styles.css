@@ -59,6 +59,16 @@ h2 { font-size: 1.2rem; font-weight: 600; margin: 0; letter-spacing: -.005em; }
 .actions button:hover:not(:disabled) { border-color: #59625d; }
 .actions button.primary { background: var(--tape); color: var(--tape-ink); }
 .actions button.primary:hover:not(:disabled) { border-color: var(--tape); filter: brightness(1.05); }
+.menu { position: relative; }
+.menu > summary { list-style: none; cursor: pointer; padding: 6px 10px; border: 1px solid transparent; border-radius: var(--r); font-weight: 500; color: var(--board); }
+.menu > summary::-webkit-details-marker { display: none; }
+.menu > summary::after { content: ' ▾'; font-size: .8em; }
+.menu > summary:hover, .menu[open] > summary { border-color: #59625d; }
+.menu-items { position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; min-width: 260px; background: var(--sheet); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; box-shadow: 0 12px 32px rgba(20, 24, 22, .22); padding: 6px; display: grid; }
+.menu-items button { text-align: left; background: none; border: 0; padding: 9px 10px; border-radius: var(--r); color: var(--ink); font-weight: 500; display: grid; }
+.menu-items button:hover { background: var(--mat-soft); }
+.menu-items small { color: var(--ink-2); font-weight: 400; font-size: .8rem; }
+@media (max-width: 760px) { .menu-items { position: fixed; left: 16px; right: 16px; top: auto; min-width: 0; } }
 .actions .divider { width: 1px; height: 22px; background: #454d49; margin: 0 4px; }
 
 .work {
