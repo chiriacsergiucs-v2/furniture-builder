@@ -1,5 +1,5 @@
 import type {
-  CabinetParams, DeskParams, Design, DrawerSettings, Material, Product, Space, SpaceKind, SplitSize,
+  CabinetParams, CornerParams, DeskParams, Design, DrawerSettings, Material, Product, Space, SpaceKind, SplitSize,
 } from './types'
 
 export type PedestalSide = 'left' | 'right'
@@ -57,6 +57,14 @@ export const cabinetDefaults = (interior: Space): CabinetParams => ({
   frontGap: 3, shelfSetback: 20, shelfClearance: 1, pinRowSetback: 37, drawers: defaultDrawers(), interior,
 })
 
+export const cornerDefaults = (variant: CornerParams['variant']): CornerParams => ({
+  variant, side: 'left', width: variant === 'blind' ? 1000 : 900, wingWidth: 900, blindWidth: 610, height: 720, depth: 560,
+  bodyMaterialId: 'pal18', frontMaterialId: 'mdf18', backMaterialId: 'hdf3', top: 'over', back: 'applied', backInset: 15,
+  plinthHeight: 100, plinthSetback: 50, frontGap: 3, shelfSetback: 20, drawers: defaultDrawers(),
+  interior: { id: newId(), kind: 'shelves', count: 1, front: { kind: 'doors', count: 1, ...(variant === 'blind' ? { hinge: 'right' as const } : {}) } },
+  wingInterior: { id: newId(), kind: 'shelves', count: 1, front: variant === 'l-shape' ? { kind: 'doors', count: 1, hinge: 'left' } : null },
+})
+
 export const deskDefaults = (): DeskParams => ({
   width: 1400, depth: 700, height: 750, topMaterialId: 'pal18oak', bodyMaterialId: 'pal18',
   frontOverhang: 30, support: 'pedestal-left',
@@ -96,6 +104,13 @@ export const templates: Template[] = [
           { id: newId(), kind: 'empty' }, { id: newId(), kind: 'hanging', railDrop: 50 }] },
         { id: newId(), kind: 'shelves', count: 5 },
       ] }) },
+  { id: 'wall-cabinet', name: 'Wall cabinet', description: '800 × 720 × 320, two doors, hung on brackets',
+    create: () => cabinet('Wall cabinet', { width: 800, height: 720, depth: 320, mount: 'wall', mountHeight: 1450, plinthHeight: 0, back: 'inset', backInset: 18 },
+      { id: newId(), kind: 'shelves', count: 1, front: { kind: 'doors', count: 2 } }) },
+  { id: 'corner-blind', name: 'Blind corner base', description: '1000 × 720 × 560, 400 mm blind section on the left, one door',
+    create: () => wrap('Blind corner base', { kind: 'corner', id: newId(), params: cornerDefaults('blind') }) },
+  { id: 'corner-l', name: 'L-shaped corner base', description: '900 × 900 × 720, two wings open to each other, folding door pair',
+    create: () => wrap('L-shaped corner base', { kind: 'corner', id: newId(), params: cornerDefaults('l-shape') }) },
   { id: 'desk-pedestal', name: 'Desk with pedestal', description: '1400 × 700 × 750, three-drawer pedestal left',
     create: () => wrap('Desk with pedestal', { kind: 'desk', id: newId(), params: deskDefaults() }) },
   { id: 'desk-gables', name: 'Panel desk', description: '1200 × 600 × 750, two panel gables',
@@ -168,12 +183,22 @@ export const usesPedestal = (p: DeskParams, side: PedestalSide) =>
 export const pedestalRoot = (p: DeskParams, side: PedestalSide, deskId: string): Space =>
   p.pedestal[side] ?? { id: `${deskId}:ped-${side}:drawers`, kind: 'drawers', count: p.pedestal.drawerCount }
 
-export function productRoots(prod: Product): { root: Space; side?: PedestalSide }[] {
-  if (prod.kind === 'cabinet') return [{ root: prod.params.interior }]
-  return (['left', 'right'] as const).filter(s => usesPedestal(prod.params, s)).map(side => ({ root: pedestalRoot(prod.params, side, prod.id), side }))
+/** Editable space trees of a product, each with the name shown in breadcrumbs. */
+export interface ProductRoot { root: Space; label: string; side?: PedestalSide; wing?: 'a' | 'b' }
+
+export function productRoots(prod: Product): ProductRoot[] {
+  if (prod.kind === 'cabinet') return [{ root: prod.params.interior, label: 'Interior' }]
+  if (prod.kind === 'corner') {
+    return prod.params.variant === 'blind'
+      ? [{ root: prod.params.interior, label: 'Usable section', wing: 'a' }]
+      : [{ root: prod.params.interior, label: 'Back-wall wing', wing: 'a' }, { root: prod.params.wingInterior, label: 'Side-wall wing', wing: 'b' }]
+  }
+  const desk = prod.params
+  return (['left', 'right'] as const).filter(s => usesPedestal(desk, s))
+    .map(side => ({ root: pedestalRoot(desk, side, prod.id), side, label: `${side === 'left' ? 'Left' : 'Right'} drawer unit` }))
 }
 
-export function findInProduct(prod: Product, id: string): { space: Space; root: Space; side?: PedestalSide } | undefined {
+export function findInProduct(prod: Product, id: string): ({ space: Space } & ProductRoot) | undefined {
   for (const r of productRoots(prod)) { const space = findSpace(r.root, id); if (space) return { space, ...r } }
   return undefined
 }
@@ -183,9 +208,16 @@ export function mapProductSpace(prod: Product, id: string, fn: (s: Space) => Spa
     const interior = mapSpace(prod.params.interior, id, fn)
     return interior === prod.params.interior ? prod : { ...prod, params: { ...prod.params, interior } }
   }
+  if (prod.kind === 'corner') {
+    const interior = mapSpace(prod.params.interior, id, fn)
+    if (interior !== prod.params.interior) return { ...prod, params: { ...prod.params, interior } }
+    const wingInterior = mapSpace(prod.params.wingInterior, id, fn)
+    return wingInterior === prod.params.wingInterior ? prod : { ...prod, params: { ...prod.params, wingInterior } }
+  }
+  const desk = prod.params
   for (const { root, side } of productRoots(prod)) {
     const next = mapSpace(root, id, fn)
-    if (next !== root) return { ...prod, params: { ...prod.params, pedestal: { ...prod.params.pedestal, [side!]: next } } }
+    if (next !== root) return { ...prod, params: { ...desk, pedestal: { ...desk.pedestal, [side!]: next } } }
   }
   return prod
 }
@@ -268,6 +300,8 @@ export function validateDesign(d: unknown): string[] {
     if (params.top !== 'over' && params.top !== 'between') errs.push('Invalid top joint')
     for (const k of ['shelfClearance', 'pinRowSetback']) if (params[k] !== undefined && !isInt(params[k])) errs.push(`${k} must be a whole number of mm`)
     if (params.frontStyle !== undefined && !['overlay', 'half', 'inset'].includes(params.frontStyle as string)) errs.push('Invalid front style')
+    if (params.mount !== undefined && params.mount !== 'floor' && params.mount !== 'wall') errs.push('Invalid mount')
+    if (params.mountHeight !== undefined && !isInt(params.mountHeight)) errs.push('mountHeight must be a whole number of mm')
     if (!['none', 'applied', 'inset'].includes(params.back as string)) errs.push('Invalid back')
     validateSpace(params.interior, errs, new Set())
   } else if (p.kind === 'desk') {
@@ -280,6 +314,16 @@ export function validateDesign(d: unknown): string[] {
       for (const side of ['left', 'right'] as const) if (params.pedestal[side] !== undefined) validateSpace(params.pedestal[side], errs, seen)
     }
     if (!isObj(params.modesty) || typeof params.modesty.enabled !== 'boolean' || !isInt(params.modesty.height) || !isInt(params.modesty.setback)) errs.push('Invalid modesty panel')
+  } else if (p.kind === 'corner') {
+    ints(['width', 'wingWidth', 'blindWidth', 'height', 'depth', 'backInset', 'plinthHeight', 'plinthSetback', 'frontGap', 'shelfSetback'], params)
+    ;['bodyMaterialId', 'frontMaterialId', 'backMaterialId'].forEach(k => matRef(k, params))
+    if (params.variant !== 'blind' && params.variant !== 'l-shape') errs.push('Invalid corner variant')
+    if (params.side !== 'left' && params.side !== 'right') errs.push('Invalid corner side')
+    if (params.top !== 'over' && params.top !== 'between') errs.push('Invalid top joint')
+    if (!['none', 'applied', 'inset'].includes(params.back as string)) errs.push('Invalid back')
+    const seen = new Set<string>()
+    validateSpace(params.interior, errs, seen)
+    validateSpace(params.wingInterior, errs, seen)
   } else errs.push('Unknown product kind')
   return errs
 }

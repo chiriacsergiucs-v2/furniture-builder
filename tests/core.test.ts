@@ -440,3 +440,70 @@ describe('stock sheets in the design (ADR-0019) and sheet layouts (ADR-0018)', (
     }
   })
 })
+
+describe('wall and corner cabinets (ADR-0025)', () => {
+  it('wall cabinet: no plinth, two brackets and a rail cut to width', () => {
+    const d = byTemplate('wall-cabinet')
+    const m = buildModel(d)
+    expect(role(m.panels, 'plinth')).toHaveLength(0)
+    expect(Math.min(...m.panels.map(p => p.box.y))).toBe(0)
+    const hw = hardwareSummary(m)
+    expect(hw.find(h => h.kind === 'wall-bracket')?.quantity).toBe(2)
+    expect(hw.find(h => h.kind === 'wall-rail')?.sizeMm).toBe(cab(d).width)
+    expect(m.diagnostics.map(x => x.code)).not.toContain('wall-back')
+    expect(buildModel(withCab(d, { back: 'applied' })).diagnostics.map(x => x.code)).toContain('wall-back')
+  })
+  it('blind corner: blind panel one gap from the door, mirrored for the right', () => {
+    for (const side of ['left', 'right'] as const) {
+      const d0 = byTemplate('corner-blind')
+      if (d0.product.kind !== 'corner') throw Error()
+      const d: Design = { ...d0, product: { ...d0.product, params: { ...d0.product.params, side } } }
+      const m = buildModel(d)
+      expect(m.diagnostics.filter(x => x.severity === 'error')).toEqual([])
+      const blind = role(m.panels, 'blind-panel')[0]
+      const door = role(m.panels, 'door')[0]
+      const gap = side === 'left' ? door.box.x - (blind.box.x + blind.box.w) : blind.box.x - (door.box.x + door.box.w)
+      expect(gap).toBe(3)
+      expect(side === 'left' ? blind.box.x : d0.product.params.width - (blind.box.x + blind.box.w)).toBe(1)
+    }
+  })
+  it('L corner: two wings open at the corner, door leaves clear of each other, fold hinge scheduled', () => {
+    for (const side of ['left', 'right'] as const) {
+      const d0 = byTemplate('corner-l')
+      if (d0.product.kind !== 'corner') throw Error()
+      const p = { ...d0.product.params, side }
+      const m = buildModel({ ...d0, product: { ...d0.product, params: p } })
+      expect(m.diagnostics.filter(x => x.severity === 'error')).toEqual([])
+      expect(role(m.panels, 'side')).toHaveLength(3) // wing B has no side at the corner
+      expect(role(m.panels, 'door')).toHaveLength(2)
+      expect(hardwareSummary(m).some(h => h.kind === 'corner-hinge')).toBe(true)
+      // wing B runs along the side wall to the full wing width
+      expect(Math.max(...m.panels.map(x => x.box.z + x.box.d))).toBe(p.wingWidth)
+      // its spaces are editable but not drawn in the front view
+      expect(m.spaces.some(s => s.nodeId === p.wingInterior.id && s.view === 'side')).toBe(true)
+    }
+  })
+  it('random corners: never overlapping when no error is reported', () => {
+    let seed = 7
+    const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff }
+    const ri = (a: number, b: number) => a + Math.floor(rnd() * (b - a + 1))
+    let clean = 0
+    for (let i = 0; i < 400; i++) {
+      const d0 = byTemplate(rnd() < 0.5 ? 'corner-blind' : 'corner-l')
+      if (d0.product.kind !== 'corner') throw Error()
+      const kinds = ['empty', 'shelves', 'drawers'] as const
+      const sp = (id: string) => ({ id, kind: kinds[ri(0, 2)], count: ri(1, 4), front: rnd() < 0.6 ? { kind: 'doors' as const, count: (rnd() < 0.5 ? 1 : 2) as 1 | 2 } : null }) as never
+      const p = { ...d0.product.params, side: rnd() < 0.5 ? 'left' as const : 'right' as const, width: ri(600, 1400), wingWidth: ri(600, 1400), blindWidth: ri(150, 700),
+        depth: ri(300, 650), height: ri(400, 1000), plinthHeight: rnd() < 0.3 ? 0 : ri(40, 120), frontGap: ri(0, 5), top: rnd() < 0.5 ? 'over' as const : 'between' as const,
+        back: (['applied', 'inset', 'none'] as const)[ri(0, 2)], interior: sp('ia'), wingInterior: sp('ib') }
+      const m = buildModel({ ...d0, product: { ...d0.product, params: p } })
+      if (m.diagnostics.some(x => x.severity === 'error')) continue
+      clean++
+      for (let a = 0; a < m.panels.length; a++) for (let b = a + 1; b < m.panels.length; b++) {
+        if (overlaps(m.panels[a].box, m.panels[b].box)) throw Error(`overlap ${m.panels[a].id} ${m.panels[b].id} in ${JSON.stringify(p)}`)
+      }
+      for (const x of m.panels) for (const v of Object.values(x.box)) expect(Number.isSafeInteger(v)).toBe(true)
+    }
+    expect(clean).toBeGreaterThan(100)
+  })
+})

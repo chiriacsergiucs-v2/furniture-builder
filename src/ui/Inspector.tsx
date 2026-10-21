@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
-import { changeKind, fr, setDrawerCount, findInProduct, findSpace, parentOf, pedestalRoot, splitSpace, unsplit, usesPedestal, type PedestalSide } from '../core/design'
-import type { CabinetParams, DeskParams, DeskSupport, FrontStyle, Handle, Material, Space, SpaceKind, SplitSize } from '../core/types'
+import { changeKind, fr, setDrawerCount, findInProduct, findSpace, parentOf, pedestalRoot, splitSpace, unsplit, usesPedestal } from '../core/design'
+import type { CabinetParams, CornerParams, DeskParams, DeskSupport, FrontStyle, Handle, Material, Space, SpaceKind, SplitSize } from '../core/types'
 import { useDesign } from '../store/designStore'
 import { Counter, Group, MmField, Segmented, Select, Toggle } from './controls'
 
@@ -11,39 +11,39 @@ export function Inspector() {
   const selectedId = useDesign(s => s.selectedId)
   const prod = design.product
   const found = selectedId ? findInProduct(prod, selectedId) : undefined
-  if (found) return <SpaceEditor space={found.space} root={found.root} side={found.side} />
-  return prod.kind === 'desk'
-    ? <DeskEditor p={prod.params} deskId={prod.id} materials={design.materials} />
-    : <CabinetEditor p={prod.params} materials={design.materials} />
+  if (found) return <SpaceEditor space={found.space} root={found.root} rootLabel={found.label} wholeLabel={WHOLE[prod.kind]} />
+  if (prod.kind === 'desk') return <DeskEditor p={prod.params} deskId={prod.id} materials={design.materials} />
+  if (prod.kind === 'corner') return <CornerEditor p={prod.params} materials={design.materials} />
+  return <CabinetEditor p={prod.params} materials={design.materials} />
 }
+
+const WHOLE = { cabinet: 'Whole cabinet', desk: 'Whole desk', corner: 'Whole corner unit' } as const
 
 function matOptions(materials: Material[], filter?: (m: Material) => boolean) {
   return materials.filter(filter ?? (() => true)).map(m => ({ value: m.id, label: `${m.name}` }))
 }
 
-const ROOT_LABEL = (side?: PedestalSide) => (side ? `${side === 'left' ? 'Left' : 'Right'} drawer unit` : 'Interior')
-
-function Crumbs({ root, id, side }: { root: Space; id: string; side?: PedestalSide }) {
+function Crumbs({ root, id, rootLabel, wholeLabel }: { root: Space; id: string; rootLabel: string; wholeLabel: string }) {
   const select = useDesign(s => s.select)
   const chain: Space[] = []
   let cur: Space | undefined = findSpace(root, id)
   while (cur) { chain.unshift(cur); cur = parentOf(root, cur.id) }
   return (
     <nav className="crumbs" aria-label="Where this space sits">
-      <button type="button" onClick={() => select(null)}>{side ? 'Whole desk' : 'Whole cabinet'}</button>
+      <button type="button" onClick={() => select(null)}>{wholeLabel}</button>
       {chain.map((s, i) => (
         <span key={s.id}>
           <span aria-hidden="true" className="sep">/</span>
           {i === chain.length - 1
-            ? <span aria-current="true">{i === 0 ? ROOT_LABEL(side) : KIND_LABEL[s.kind]}</span>
-            : <button type="button" onClick={() => select(s.id)}>{i === 0 ? ROOT_LABEL(side) : KIND_LABEL[s.kind]}</button>}
+            ? <span aria-current="true">{i === 0 ? rootLabel : KIND_LABEL[s.kind]}</span>
+            : <button type="button" onClick={() => select(s.id)}>{i === 0 ? rootLabel : KIND_LABEL[s.kind]}</button>}
         </span>
       ))}
     </nav>
   )
 }
 
-function SpaceEditor({ space, root, side }: { space: Space; root: Space; side?: PedestalSide }) {
+function SpaceEditor({ space, root, rootLabel, wholeLabel }: { space: Space; root: Space; rootLabel: string; wholeLabel: string }) {
   const update = useDesign(s => s.updateSpace)
   const select = useDesign(s => s.select)
   const opening = useDesign(s => s.model.spaces.find(o => o.nodeId === space.id))
@@ -54,7 +54,7 @@ function SpaceEditor({ space, root, side }: { space: Space; root: Space; side?: 
 
   return (
     <div className="inspector">
-      <Crumbs root={root} id={space.id} side={side} />
+      <Crumbs root={root} id={space.id} rootLabel={rootLabel} wholeLabel={wholeLabel} />
       <header className="insp-head">
         <h2>{space.kind === 'split' ? 'Divided space' : `${KIND_LABEL[space.kind]}`}</h2>
         {opening && <p className="measure"><span>{opening.box.w}</span> wide × <span>{opening.box.h}</span> high × <span>{opening.box.d}</span> deep inside</p>}
@@ -237,12 +237,16 @@ function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material
         <MmField label="Depth" value={p.depth} min={100} max={1200} onChange={v => set({ depth: v })} />
       </div>
       <button type="button" className="link" onClick={() => select(p.interior.id)}>Edit the interior</button>
+      <Segmented<'floor' | 'wall'> label="Stands on" value={p.mount ?? 'floor'}
+        options={[{ value: 'floor', label: 'The floor' }, { value: 'wall', label: 'Wall brackets' }]}
+        onChange={v => set(v === 'wall' ? { mount: v, mountHeight: p.mountHeight ?? 1450 } : { mount: v })} />
+      {p.mount === 'wall' && <MmField label="Underside above the floor" value={p.mountHeight ?? 1450} min={0} max={2500} onChange={v => set({ mountHeight: v })} hint="Position only; brackets and a rail are added to the hardware list." />}
       <Group title="Construction">
         <Segmented label="Top" value={p.top} options={[{ value: 'over', label: 'On the sides' }, { value: 'between', label: 'Between sides' }]} onChange={v => set({ top: v })} />
         <Segmented label="Back" value={p.back} options={[{ value: 'applied', label: 'Nailed on' }, { value: 'inset', label: 'Set in' }, { value: 'none', label: 'None' }]} onChange={v => set({ back: v })} />
         {p.back === 'inset' && <MmField label="Back set in from rear" value={p.backInset} min={0} max={100} step={1} onChange={v => set({ backInset: v })} />}
-        <MmField label="Plinth height" value={p.plinthHeight} min={0} max={250} onChange={v => set({ plinthHeight: v })} hint="0 for no plinth" />
-        {p.plinthHeight > 0 && <MmField label="Plinth set back" value={p.plinthSetback} min={0} max={200} step={5} onChange={v => set({ plinthSetback: v })} />}
+        {p.mount !== 'wall' && <MmField label="Plinth height" value={p.plinthHeight} min={0} max={250} onChange={v => set({ plinthHeight: v })} hint="0 for no plinth" />}
+        {p.mount !== 'wall' && p.plinthHeight > 0 && <MmField label="Plinth set back" value={p.plinthSetback} min={0} max={200} step={5} onChange={v => set({ plinthSetback: v })} />}
         <Segmented<FrontStyle> label="Doors and drawer fronts" value={p.frontStyle ?? 'overlay'}
           options={[{ value: 'overlay', label: 'Overlay' }, { value: 'half', label: 'Half overlay' }, { value: 'inset', label: 'Inset' }]}
           onChange={v => set({ frontStyle: v })} />
@@ -281,6 +285,49 @@ function DrawerSettingsGroup({ value: d, materials, onChange }: { value: Cabinet
         <p className="hint">The longest one that fits the depth is chosen.</p>
       </div>
     </Group>
+  )
+}
+
+function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[] }) {
+  const set = useDesign(s => s.updateCorner)
+  const select = useDesign(s => s.select)
+  const panelMats = matOptions(materials, m => m.thickness >= 12)
+  const blind = p.variant === 'blind'
+  return (
+    <div className="inspector">
+      <header className="insp-head">
+        <h2>Corner unit</h2>
+        <p className="hint">{blind ? 'A blind section the neighbouring cabinet covers, joined to a normal cabinet.' : 'Two wings open to each other at the corner, with a folding door pair. The front view shows the back-wall wing.'}</p>
+      </header>
+      <Segmented<CornerParams['variant']> label="Type" value={p.variant} options={[{ value: 'blind', label: 'Blind corner' }, { value: 'l-shape', label: 'L-shaped' }]} onChange={v => set({ variant: v })} />
+      <Segmented<'left' | 'right'> label="Corner on the" value={p.side} options={[{ value: 'left', label: 'Left' }, { value: 'right', label: 'Right' }]} onChange={v => set({ side: v })} />
+      <div className="dims3">
+        <MmField label={blind ? 'Width' : 'Back wing'} value={p.width} min={300} max={3000} onChange={v => set({ width: v })} />
+        <MmField label="Height" value={p.height} min={300} max={2500} onChange={v => set({ height: v })} />
+        <MmField label="Depth" value={p.depth} min={200} max={900} onChange={v => set({ depth: v })} />
+      </div>
+      {blind
+        ? <MmField label="Blind section" value={p.blindWidth} min={100} max={1500} onChange={v => set({ blindWidth: v })} hint={`About the neighbour's depth + 50 mm (${p.depth + 50}) keeps doors and handles clear.`} />
+        : <MmField label="Side wing (incl. corner)" value={p.wingWidth} min={300} max={3000} onChange={v => set({ wingWidth: v })} />}
+      <div className="field">
+        <span className="field-label">Inside</span>
+        <div className="split-actions">
+          <button type="button" onClick={() => select(p.interior.id)}>{blind ? 'Edit usable section' : 'Edit back-wall wing'}</button>
+          {!blind && <button type="button" onClick={() => select(p.wingInterior.id)}>Edit side-wall wing</button>}
+        </div>
+      </div>
+      <Group title="Construction">
+        <Segmented label="Top" value={p.top} options={[{ value: 'over', label: 'On the sides' }, { value: 'between', label: 'Between sides' }]} onChange={v => set({ top: v })} />
+        <Segmented label="Back" value={p.back} options={[{ value: 'applied', label: 'Nailed on' }, { value: 'inset', label: 'Set in' }, { value: 'none', label: 'None' }]} onChange={v => set({ back: v })} />
+        <MmField label="Plinth height" value={p.plinthHeight} min={0} max={250} onChange={v => set({ plinthHeight: v })} hint="0 for no plinth" />
+        <MmField label="Gap between fronts" value={p.frontGap} min={0} max={10} step={1} onChange={v => set({ frontGap: v })} />
+      </Group>
+      <Group title="Materials">
+        <Select label="Body" value={p.bodyMaterialId} options={panelMats} onChange={v => set({ bodyMaterialId: v })} />
+        <Select label="Fronts" value={p.frontMaterialId} options={panelMats} onChange={v => set({ frontMaterialId: v })} />
+        <Select label="Back" value={p.backMaterialId} options={matOptions(materials)} onChange={v => set({ backMaterialId: v })} />
+      </Group>
+    </div>
   )
 }
 

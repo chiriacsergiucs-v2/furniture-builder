@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { buildModel } from '../core/build'
 import { findInProduct, mapProductSpace, templates, upgradeDesign } from '../core/design'
-import type { CabinetParams, DeskParams, Design, FurnitureModel, Material, Space } from '../core/types'
+import type { CabinetParams, CornerParams, DeskParams, Design, FurnitureModel, Material, Space } from '../core/types'
 
 export type Tab = 'parts' | 'sheets' | 'hardware' | 'checks'
 
@@ -25,6 +25,7 @@ interface State {
   rename: (name: string) => void
   updateCabinet: (patch: Partial<CabinetParams>) => void
   updateDesk: (patch: Partial<DeskParams>) => void
+  updateCorner: (patch: Partial<CornerParams>) => void
   updateSpace: (id: string, fn: (s: Space) => Space) => void
   updateMaterial: (id: string, patch: Partial<Material>) => void
   addMaterial: (m: Material) => void
@@ -78,6 +79,11 @@ export const useDesign = create<State>((set, get) => {
     updateDesk: patch => {
       const d = get().design
       if (d.product.kind !== 'desk') return
+      commit({ ...d, product: { ...d.product, params: { ...d.product.params, ...patch } } })
+    },
+    updateCorner: patch => {
+      const d = get().design
+      if (d.product.kind !== 'corner') return
       commit({ ...d, product: { ...d.product, params: { ...d.product.params, ...patch } } })
     },
     updateSpace: (id, fn) => {

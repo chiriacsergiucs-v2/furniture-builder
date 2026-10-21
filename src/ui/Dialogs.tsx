@@ -71,7 +71,7 @@ export function LibraryDialog({ open, onClose }: { open: boolean; onClose: () =>
             <li key={r.id} className={r.id === currentId ? 'current' : ''}>
               <button type="button" className="open" onClick={() => { load(r.design, { fromStorage: true }); onClose() }}>
                 <strong>{r.name}</strong>
-                <span>{r.design.product.kind === 'desk' ? 'Desk' : 'Cabinet'}, edited {new Date(r.updatedAt).toLocaleString()}</span>
+                <span>{({ desk: 'Desk', corner: 'Corner unit', cabinet: 'Cabinet' } as const)[r.design.product.kind]}, edited {new Date(r.updatedAt).toLocaleString()}</span>
               </button>
               <button type="button" className="mini" onClick={async () => {
                 const now = new Date().toISOString()

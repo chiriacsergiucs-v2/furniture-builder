@@ -99,7 +99,8 @@ function check(d: Design): string[] {
   const fronts = P.filter(p => FRONT.has(p.role))
   let W: number, H: number, Dd: number, ph: number, g: number, envD: number
   if (d.product.kind === 'cabinet') { const c = d.product.params; W = c.width; H = c.height; Dd = c.depth; ph = c.plinthHeight; g = c.frontGap; envD = Dd }
-  else { const c = d.product.params; W = c.width; H = c.height; Dd = c.depth - c.frontOverhang; ph = 0; g = c.frontGap; envD = c.depth }
+  else if (d.product.kind === 'desk') { const c = d.product.params; W = c.width; H = c.height; Dd = c.depth - c.frontOverhang; ph = 0; g = c.frontGap; envD = c.depth }
+  else return probs
   const env: Box = { x: 0, y: 0, z: 0, w: W, h: H, d: envD }
   for (const p of P) if (!FRONT.has(p.role) && !contains(env, p.box)) probs.push(`outside ${p.id}`)
   const style = d.product.kind === 'cabinet' ? d.product.params.frontStyle ?? 'overlay' : 'overlay'

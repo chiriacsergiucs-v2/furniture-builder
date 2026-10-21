@@ -26,6 +26,10 @@ export interface BuildOptions {
   productNodeId: string
   /** Remap space node ids; when set, spaces are not exposed for editing. */
   mapNodeId?: (spaceId: string) => string
+  /** Leave out one side panel; top, bottom, plinth, inset back and the opening run to that edge (L-corners). */
+  omitSide?: 'left' | 'right'
+  /** Shorten the front zone at either end (corner doors that must clear each other). */
+  frontTrim?: { left?: Mm; right?: Mm }
 }
 
 export interface PartialModel { panels: Panel[]; spaces: SpaceOpening[]; hardware: HardwareItem[]; diagnostics: Diagnostic[] }
@@ -108,7 +112,9 @@ export function buildCabinet(p: CabinetParams, materials: Map<string, Material>,
   }
   const hw = (item: HardwareItem) => out.hardware.push({ ...item, nodeId: mapNode(item.nodeId) })
 
-  const { width: W, height: H, depth: D, plinthHeight: ph } = p
+  const { width: W, height: H, depth: D } = p
+  const wall = p.mount === 'wall'
+  const ph = wall ? 0 : p.plinthHeight
   const t = body.thickness, bt = backM.thickness, tf = front.thickness, g = p.frontGap
   const pid = opts.productNodeId
 
@@ -124,21 +130,29 @@ export function buildCabinet(p: CabinetParams, materials: Map<string, Material>,
   const z0 = p.back === 'applied' ? bt : 0
   const Dc = D - z0
   const sideH = p.top === 'over' ? H - t : H
-  add(pid, 'side', 'Left side', body.id, box(0, 0, z0, t, sideH, Dc), 'x', 'y', ['+z'], 0)
-  add(pid, 'side', 'Right side', body.id, box(W - t, 0, z0, t, sideH, Dc), 'x', 'y', ['+z'], 1)
+  // Inner span between the sides; an omitted side lets everything run to that edge.
+  const L = opts.omitSide === 'left' ? 0 : t, R = opts.omitSide === 'right' ? 0 : t
+  const span = W - L - R
+  if (opts.omitSide !== 'left') add(pid, 'side', 'Left side', body.id, box(0, 0, z0, t, sideH, Dc), 'x', 'y', ['+z'], 0)
+  if (opts.omitSide !== 'right') add(pid, 'side', 'Right side', body.id, box(W - t, 0, z0, t, sideH, Dc), 'x', 'y', ['+z'], 1)
   if (p.top === 'over') add(pid, 'top', 'Top', body.id, box(0, H - t, z0, W, t, Dc), 'y', 'x', ['+z', '-x', '+x'])
-  else add(pid, 'top', 'Top', body.id, box(t, H - t, z0, W - 2 * t, t, Dc), 'y', 'x', ['+z'])
-  add(pid, 'bottom', 'Bottom', body.id, box(t, ph, z0, W - 2 * t, t, Dc), 'y', 'x', ['+z'])
+  else add(pid, 'top', 'Top', body.id, box(L, H - t, z0, span, t, Dc), 'y', 'x', ['+z'])
+  add(pid, 'bottom', 'Bottom', body.id, box(L, ph, z0, span, t, Dc), 'y', 'x', ['+z'])
   if (ph > 0) {
-    add(pid, 'plinth', 'Plinth', body.id, box(t, 0, D - p.plinthSetback - t, W - 2 * t, ph, t), 'z', 'x', ['-y'])
+    add(pid, 'plinth', 'Plinth', body.id, box(L, 0, D - p.plinthSetback - t, span, ph, t), 'z', 'x', ['-y'])
   }
   let openZ = z0
   if (p.back === 'applied') {
     add(pid, 'back', 'Back', backM.id, box(0, ph, 0, W, H - ph, bt), 'z', 'y', [])
   } else if (p.back === 'inset') {
     if (p.backInset < 0 || p.backInset + bt > D - 2 * t) err('back-inset', 'Back inset does not fit in the carcass depth.', pid)
-    add(pid, 'back', 'Back', backM.id, box(t, ph + t, p.backInset, W - 2 * t, H - ph - 2 * t, bt), 'z', 'y', [])
+    add(pid, 'back', 'Back', backM.id, box(L, ph + t, p.backInset, span, H - ph - 2 * t, bt), 'z', 'y', [])
     openZ = p.backInset + bt
+  }
+  if (wall) {
+    hw({ nodeId: pid, kind: 'wall-bracket', label: 'Adjustable hanging bracket', quantity: 2, note: 'one in each top back corner (confirm with the bracket datasheet and the wall type)' })
+    hw({ nodeId: pid, kind: 'wall-rail', label: 'Wall rail for hanging brackets', quantity: 1, sizeMm: W, note: 'cut to cabinet width' })
+    if (p.back !== 'inset' || p.backInset < 15) warn('wall-back', 'Hanging brackets usually need the back set in about 15–20 mm; check the bracket datasheet.', pid)
   }
 
   const adjustable: { spaceId: string; op: Box }[] = []
@@ -146,11 +160,12 @@ export function buildCabinet(p: CabinetParams, materials: Map<string, Material>,
   const inset = style === 'inset'
   const r = lo(g)
   // Overlay covers the outer panels; half overlay stops half a gap short of their centre lines (as at dividers).
-  const rootFront: FrontZone = style === 'half'
+  const baseFront: FrontZone = style === 'half'
     ? { x0: lo(t) + hi(g), x1: W - t + lo(t) - lo(g), y0: ph + lo(t) + hi(g), y1: H - t + lo(t) - lo(g) }
     : { x0: r, x1: W - r, y0: ph + r, y1: H - r }
+  const rootFront: FrontZone = { ...baseFront, x0: baseFront.x0 + (opts.frontTrim?.left ?? 0), x1: baseFront.x1 - (opts.frontTrim?.right ?? 0) }
   const root: Ctx = {
-    opening: box(t, ph + t, openZ, W - 2 * t, H - ph - 2 * t, D - openZ),
+    opening: box(L, ph + t, openZ, span, H - ph - 2 * t, D - openZ),
     front: rootFront,
     behindDoors: false,
   }

@@ -28,6 +28,7 @@ const PART: Record<string, string> = {
   'Left gable': 'Picior lateral stânga',
   'Right gable': 'Picior lateral dreapta',
   'Modesty panel': 'Panou de modestie',
+  'Blind panel': 'Panou orb',
 }
 
 /** "Drawer 2 side" → "Lateral sertar". Unknown labels pass through unchanged. */
@@ -58,6 +59,9 @@ export function hardwareRo(h: HardwareItem): { item: string; note: string } {
       return { item: s ? `Mâner, ${s} mm între găuri` : 'Buton', note: '' }
     }
     case 'push-latch': return { item: 'Sistem push-to-open', note: 'balamale fără arc de închidere la uși' }
+    case 'wall-bracket': return { item: 'Agățătoare reglabilă pentru corp suspendat', note: 'câte una în colțurile de sus din spate (verificați fișa tehnică și tipul peretelui)' }
+    case 'wall-rail': return { item: 'Șină de perete pentru agățători', note: 'tăiată la lățimea corpului' }
+    case 'corner-hinge': return { item: 'Set balama de colț (leagă cele două uși)', note: 'verificați setul și balamalele înlocuite în fișa tehnică' }
   }
 }
 
