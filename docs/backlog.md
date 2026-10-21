@@ -30,14 +30,14 @@ Statuses: **Done** (acceptance met, evidence cited) · **Partially done** (code 
 
 | ID | Item | Status | Notes |
 |---|---|---|---|
-| N01 | Sheet nesting: guillotine optimiser from the cut list, with independent validator | Not done | Previous app had one; rebuild from ADR-level rules (kerf stripe, grain, trim) |
-| N02 | Printable cut sheet / PDF and SVG drawings | Not done | |
-| N03 | Fusion 360 export from `FurnitureModel` | Not done | Must be labelled unverified until run in Fusion |
-| N04 | Several pieces in one project (kitchen run, room) | Not done | Needs a project document above `Design` |
-| N05 | Unequal drawer heights, adjustable shelves (pin rows) | Not done | New space options, same engine |
-| N06 | Inset / half-overlay fronts, handles | Not done | Front zone already central; handles need physical spec |
-| N07 | Wall and corner cabinets, worktop joins | Not done | |
-| N08 | Selectable pedestal internals on desks | Not done | Desk spaces not exposed yet |
+| N01 | Sheet nesting: guillotine optimiser from the cut list, with independent validator | Not done | ADR-0018, ADR-0019; Previous app had one; rebuild from ADR-level rules (kerf stripe, grain, trim) |
+| N02 | Printable cut sheet / PDF and SVG drawings | Not done | ADR-0020 |
+| N03 | Fusion 360 export from `FurnitureModel` | Not done | ADR-0021; Must be labelled unverified until run in Fusion |
+| N04 | Several pieces in one project (kitchen run, room) | Not done | ADR-0022; Needs a project document above `Design` |
+| N05 | Unequal drawer heights, adjustable shelves (pin rows) | Not done | ADR-0023; New space options, same engine |
+| N06 | Inset / half-overlay fronts, handles | Not done | ADR-0024; Front zone already central; handles need physical spec |
+| N07 | Wall and corner cabinets, worktop joins | Not done | ADR-0025 |
+| N08 | Selectable pedestal internals on desks | Not done | ADR-0026; Desk spaces not exposed yet |
 | N09 | Committed browser test suite | Not done | Only when the user asks (pre-MVP rule) |
 
 ## Dropped

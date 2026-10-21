@@ -6,7 +6,8 @@
     "IN_PROGRESS",
     "IN_REVIEW",
     "DONE",
-    "BLOCKED_BY_USER"
+    "BLOCKED_BY_USER",
+    "NEEDS_ANSWERS"
   ],
   "rules": [
     "Start only READY tasks whose depends_on are DONE.",
@@ -35,13 +36,15 @@
     {
       "id": "TSK-N01",
       "title": "Sheet nesting: guillotine optimiser from the cut list with an independent validator",
-      "status": "READY",
+      "status": "NEEDS_ANSWERS",
       "owner": "furniture-geometry",
       "adrs": [
         "ADR-0003",
         "ADR-0004",
         "ADR-0008",
-        "ADR-0009"
+        "ADR-0009",
+        "ADR-0018",
+        "ADR-0019"
       ],
       "backlog": [
         "N01"
@@ -58,18 +61,19 @@
         "Validator shares no code with the placer and gates every layout",
         "Results described as heuristic, never optimal"
       ],
-      "blocker": null,
+      "blocker": "Open questions in the governing proposed ADR must be answered first.",
       "evidence": [],
       "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
     },
     {
       "id": "TSK-N02",
       "title": "Printable cut sheet and SVG drawings from the model",
-      "status": "READY",
+      "status": "NEEDS_ANSWERS",
       "owner": "ui",
       "adrs": [
         "ADR-0004",
-        "ADR-0009"
+        "ADR-0009",
+        "ADR-0020"
       ],
       "backlog": [
         "N02"
@@ -80,18 +84,19 @@
         "screenshots of print preview"
       ],
       "acceptance": [],
-      "blocker": null,
+      "blocker": "Open questions in the governing proposed ADR must be answered first.",
       "evidence": [],
       "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
     },
     {
       "id": "TSK-N05",
       "title": "Unequal drawer heights and adjustable shelves",
-      "status": "READY",
+      "status": "NEEDS_ANSWERS",
       "owner": "furniture-geometry",
       "adrs": [
         "ADR-0005",
-        "ADR-0011"
+        "ADR-0011",
+        "ADR-0023"
       ],
       "backlog": [
         "N05"
@@ -103,7 +108,7 @@
       "acceptance": [
         "schemaVersion bumped only if the document shape changes incompatibly; old designs still load"
       ],
-      "blocker": null,
+      "blocker": "Open questions in the governing proposed ADR must be answered first.",
       "evidence": [],
       "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
     },
@@ -114,7 +119,8 @@
       "owner": "architecture-authority",
       "adrs": [
         "ADR-0011",
-        "ADR-0012"
+        "ADR-0012",
+        "ADR-0022"
       ],
       "backlog": [
         "N04"
@@ -123,7 +129,7 @@
       "verification": [
         "npm test"
       ],
-      "blocker": "Needs an ADR for the project document and storage version 2.",
+      "blocker": "ADR-0022 open question (reference vs embed).",
       "acceptance": [],
       "evidence": [],
       "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
@@ -134,7 +140,8 @@
       "status": "NEEDS_SPEC",
       "owner": "furniture-geometry",
       "adrs": [
-        "ADR-0004"
+        "ADR-0004",
+        "ADR-0021"
       ],
       "backlog": [
         "N03"
@@ -143,7 +150,7 @@
       "verification": [
         "python3 -m py_compile <exported script>"
       ],
-      "blocker": "Must be labelled unverified until run in Fusion by the user.",
+      "blocker": "ADR-0021 open question; result must stay labelled unverified until run in Fusion.",
       "acceptance": [],
       "evidence": [],
       "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
@@ -165,6 +172,69 @@
       "depends_on": [],
       "verification": [
         "manual or scripted browser run with screenshots"
+      ],
+      "acceptance": [],
+      "blocker": null,
+      "evidence": [],
+      "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
+    },
+    {
+      "id": "TSK-N06",
+      "title": "Front styles and handles",
+      "status": "NEEDS_ANSWERS",
+      "owner": "furniture-geometry",
+      "adrs": [
+        "ADR-0024"
+      ],
+      "backlog": [
+        "N06"
+      ],
+      "depends_on": [],
+      "verification": [
+        "npm test",
+        "FUZZ_N=30000 npx vitest run tests/fuzz.test.ts"
+      ],
+      "acceptance": [],
+      "blocker": "Open questions in the governing proposed ADR must be answered first.",
+      "evidence": [],
+      "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
+    },
+    {
+      "id": "TSK-N07",
+      "title": "Wall and corner cabinets",
+      "status": "NEEDS_ANSWERS",
+      "owner": "furniture-geometry",
+      "adrs": [
+        "ADR-0025"
+      ],
+      "backlog": [
+        "N07"
+      ],
+      "depends_on": [],
+      "verification": [
+        "npm test",
+        "FUZZ_N=30000 npx vitest run tests/fuzz.test.ts"
+      ],
+      "acceptance": [],
+      "blocker": "Open questions in the governing proposed ADR must be answered first.",
+      "evidence": [],
+      "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
+    },
+    {
+      "id": "TSK-N08",
+      "title": "Editable desk pedestal spaces",
+      "status": "READY",
+      "owner": "furniture-geometry",
+      "adrs": [
+        "ADR-0026"
+      ],
+      "backlog": [
+        "N08"
+      ],
+      "depends_on": [],
+      "verification": [
+        "npm test",
+        "FUZZ_N=30000 npx vitest run tests/fuzz.test.ts"
       ],
       "acceptance": [],
       "blocker": null,
