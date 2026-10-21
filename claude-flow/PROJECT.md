@@ -1,19 +1,12 @@
-# Project baseline — Mobila Cutlist Optimizer
+# Project baseline
 
-**Repository:** `chiriacsergiucs-v2/furniture-builder` · package `mobila-cutlist` `0.3.0-dev` · MIT · Pages base `/furniture-builder/`
-**Stack:** React 19, TypeScript 5.9, Vite 7, vite-plugin-pwa, Dexie 4.2.1, three 0.186 + @react-three/fiber 9.8, dnd-kit, ExcelJS 4.4; Vitest, Playwright, Node 22 kernel tests; GitHub Actions `ci.yml` / `deploy.yml` / `lockfile.yml`.
+**Furniture Builder** — `chiriacsergiucs-v2/furniture-builder`, rebuilt from zero on branch `rebuild/v1` (2026-10-21).
+A phone-first, offline PWA: design casework by dividing a front elevation into spaces, see it in 3D, get a grouped
+cut list with edge-band notation and a hardware schedule. No backend.
 
-**What it is:** an offline, phone-first furniture panel cutting optimiser with an exact guillotine engine and an
-independent validator, a Dexie-backed preset/kit library, a typed modular furniture engine (54 ready templates),
-positioned 3D previews and a Fusion 360 Python snapshot. No backend, accounts or cloud.
+**Stack:** React 19, TypeScript 5.9 strict, Vite 7, Zustand 5, three 0.186 + @react-three/fiber 9 + drei 10 (lazy),
+Dexie 4, vite-plugin-pwa 1, Vitest 3, ESLint 10. Fonts: Barlow (bundled).
 
-**State (code at the commit in `evidence/source-index.json`):** engine, storage, migration, backups, component
-engine B01–B21/B23/B28–B31 Done; B22 and B24 Partial; B25 Dropped; B26/B27 Not done. STEP ledger: STEP_03 and
-STEP_11 verified, several `implemented_unverified`, STEP_13/14 pending. CI/Pages runs cited in `docs/handoff.md`
-are **reported**, not re-executed by this folder.
+**State:** first slice done — see `docs/backlog.md` (F01–F18; F14–F17 partially verified). Next: sheet nesting (N01).
 
-**Authority order:** explicit user decision › Accepted ADR consensus › ADR/spec › code+tests on main › history › proposal
-(`memory/decision-guardrails.json`). Code is evidence of state, not permission to overrule intent.
-
-**Where to look:** decisions → `architecture/decisions/README.md`; who does what → `agents/`; how work runs →
-`workflows/`; what to do next → `tasks/README.md`; what is unknown → `evidence/unknowns.md`.
+**Authority:** explicit user decision › Accepted ADR › code + tests on the branch › earlier discussion › proposal.

@@ -1,30 +1,14 @@
-# Project memory (read first, every session)
+# Project memory (read first)
 
-**Project:** Mobila Cutlist Optimizer — `chiriacsergiucs-v2/furniture-builder`, package `mobila-cutlist` 0.3.0-dev.
-Offline static PWA (React 19, TS, Vite 7) on GitHub Pages at `/furniture-builder/`. No backend, accounts, cloud or
-remote AI (ADR-0001/0002).
+Furniture Builder, rebuilt from zero 2026-10-21 on `rebuild/v1`; clean break from the old app and its data (ADR-0001).
+Offline static PWA, no backend (ADR-0002). Integer mm, x/y/z = width/height-from-floor/depth-from-back (ADR-0003).
+Panels are boxes; one `buildModel()` feeds elevation, 3D, parts, hardware, checks (ADR-0004). Cabinets are recursive
+space trees: split / shelves / drawers / hanging / empty + optional doors (ADR-0005). Full-overlay fronts with exact
+gaps (ADR-0006). Desk pedestals are cabinets (ADR-0007). Problems are diagnostics; independent overlap/envelope
+checks; errors block CSV (ADR-0008). Cut list = finished sizes, L/W edge counts, grain → length (ADR-0009). Hardware
+is a labelled schedule (ADR-0010). Design = self-contained validated JSON (ADR-0011). Dexie `furniture-builder` v1,
+autosave, never delete unreadable rows (ADR-0012). Front elevation edits; 3D previews (ADR-0014). Tests: core +
+seeded fuzz + storage; no browser suite by default (ADR-0015). Process: smallest slice, evidence-only ledger in
+`docs/backlog.md`, end replies with *Skipped this iteration* (ADR-0016).
 
-**Data:** Dexie IndexedDB `mobila-cutlist-build-kit` v2, seven tables; legacy localStorage keys are read-only
-forever; migrations atomic + idempotent + missing-only; three JSON backup formats kept readable (ADR-0003–0006,
-0022, 0023).
-
-**Manufacturing truth:** integer mm; kerf is a full stripe; grain/rotation/quantity/trim enforced; ABS is an
-annotation; heuristic seeded search, never "optimal"; an independent validator gates every result; the cut tree is
-canonical (ADR-0007–0014).
-
-**Furniture engine:** versioned component registry; stable-ID instance trees with one-way parent→child binding;
-specialist roots (`core/carcass`, `core/surface`); one `FurnitureModel` feeds 3D/cutlist/BOM/Fusion; hardware is a
-schedule; only `ready` templates generate parts; B24 stays Partial (ADR-0015–0021).
-
-**Outputs:** 3D is non-authoritative; Fusion export is a Python script, unverified in Fusion (ADR-0024/0025).
-Vendor adapters only from inspected originals; the Regency workbook is not in the repo (ADR-0026).
-
-**Process:** smallest vertical slice, light verification, `Skipped this iteration` every time (ADR-0028);
-B-/STEP-ledger status only with evidence; full sequence + Pages run = release (ADR-0029). Orchestration files are
-runtime-neutral until a Claude Flow version is pinned (ADR-0030, TSK-001).
-
-**Known drift to fix (TSK-012):** `templates.ts` = 54 ready + 2 planned, ledger says 54; `docs/architecture.md`
-still mentions localStorage autosave; `docs/licences.md` provisional.
-
-**Missing ⇒ BLOCKED/UNKNOWN, never invented:** physical loads, hardware part numbers, drilling, supplier column
-mapping, ABS-inclusive policy, Fusion/Android runtime results, runtime version.
+Unknown — never invent: supplier datasheets, loads, drilling, edge-band subtraction policy, orchestration runtime.

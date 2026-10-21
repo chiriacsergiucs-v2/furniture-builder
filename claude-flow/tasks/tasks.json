@@ -1,610 +1,175 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "status_values": [
     "READY",
-    "READY_WITH_SCOPE_GUARD",
-    "ROADMAP_READY_FOR_SPECIFICATION",
-    "PENDING",
+    "NEEDS_SPEC",
     "IN_PROGRESS",
     "IN_REVIEW",
     "DONE",
-    "BLOCKED_EXTERNAL",
-    "BLOCKED_ON_PHYSICAL_SPEC",
-    "BLOCKED_BY_VERSION_SELECTION",
-    "ONGOING_GUARDRAIL"
+    "BLOCKED_BY_USER"
   ],
   "rules": [
-    "Only READY/READY_WITH_SCOPE_GUARD with all depends_on DONE may start.",
-    "Status moves to DONE only by verifier with evidence[] non-empty.",
-    "IDs are never reused or renumbered."
+    "Start only READY tasks whose depends_on are DONE.",
+    "DONE requires evidence[] from the verifier.",
+    "IDs are never reused."
   ],
   "tasks": [
     {
-      "id": "TSK-001",
-      "title": "Pin a Claude Flow / Ruflo runtime version and translate contracts",
-      "status": "BLOCKED_BY_VERSION_SELECTION",
-      "owner_role": "orchestration-compatibility",
-      "objective": "Record the chosen runtime and version, run its init in a disposable worktree, inspect the generated schema, translate agents/workflows/tasks into it, validate with its CLI.",
-      "governing_adrs": [
-        "ADR-0030"
+      "id": "TSK-R01",
+      "title": "Pin an orchestration runtime (Claude Flow / Ruflo) and translate these contracts",
+      "status": "BLOCKED_BY_USER",
+      "owner": "architecture-authority",
+      "adrs": [
+        "ADR-0017"
       ],
-      "requirement_ids": [
-        "NFR-010"
-      ],
+      "backlog": [],
       "depends_on": [],
-      "affected_files": [
-        "claude-flow/manifest.json",
-        "claude-flow/agents/*",
-        "claude-flow/tasks/tasks.json"
-      ],
-      "deliverables": [
-        "manifest.runtime filled",
-        "ADR-0030 re-issued as Accepted",
-        "native files under the runtime's expected path"
-      ],
       "verification": [
-        "<runtime cli> --version",
         "<runtime cli> validate"
       ],
-      "acceptance": [
-        "Native files load without error in the pinned version",
-        "Every agent role and task ID preserved"
-      ],
-      "scope_guard": "ADR-0028: smallest slice; no E2E, refactor or polish unless listed above.",
-      "blocker": "User has not named a runtime or version; package.json declares none.",
+      "blocker": "User has not chosen a runtime or version.",
+      "acceptance": [],
       "evidence": [],
-      "handoff": {
-        "to": [
-          "verifier"
-        ],
-        "requires": "diff or commit, IDs touched, command output, open blockers"
-      }
+      "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
     },
     {
-      "id": "TSK-002",
-      "title": "Reconcile STEP_00–14 and gates G1–G10 against current main",
+      "id": "TSK-N01",
+      "title": "Sheet nesting: guillotine optimiser from the cut list with an independent validator",
       "status": "READY",
-      "owner_role": "verifier",
-      "objective": "For each STEP and gate in docs/progress.json, cite the current evidence (test file, CI run, code path) or mark it pending; correct statuses that drifted (e.g. STEP_01/04/07–09/12 'implemented_unverified' with later CI runs cited in docs/handoff.md).",
-      "governing_adrs": [
-        "ADR-0029"
+      "owner": "furniture-geometry",
+      "adrs": [
+        "ADR-0003",
+        "ADR-0004",
+        "ADR-0008",
+        "ADR-0009"
       ],
-      "requirement_ids": [
-        "NFR-008",
-        "NFR-011"
+      "backlog": [
+        "N01"
       ],
       "depends_on": [],
-      "affected_files": [
-        "docs/progress.json",
-        "docs/verification-log.md",
-        "claude-flow/delivery/milestones.md"
-      ],
-      "deliverables": [
-        "Updated progress.json with evidence per milestone",
-        "milestones.md regenerated"
-      ],
       "verification": [
-        "python3 -I claude-flow/scripts/validate.py --sync"
+        "npm test",
+        "FUZZ_N=30000 npx vitest run tests/fuzz.test.ts",
+        "npm run build"
       ],
       "acceptance": [
-        "No STEP marked verified without a cited run or command output",
-        "Gates G3–G6 either evidenced or still pending with reason"
+        "Kerf removed as a full-length stripe; residual narrower than kerf rejected",
+        "Grain-locked parts never rotated",
+        "Validator shares no code with the placer and gates every layout",
+        "Results described as heuristic, never optimal"
       ],
-      "scope_guard": "ADR-0028: smallest slice; no E2E, refactor or polish unless listed above.",
       "blocker": null,
       "evidence": [],
-      "handoff": {
-        "to": [
-          "verifier"
-        ],
-        "requires": "diff or commit, IDs touched, command output, open blockers"
-      }
+      "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
     },
     {
-      "id": "TSK-003",
-      "title": "Close B22: generalized create/edit/save flow for every registered component root",
-      "status": "READY_WITH_SCOPE_GUARD",
-      "owner_role": "furniture-ui",
-      "objective": "Allow the preset editor to create/edit/save any registered root definition (carcass, surface) rather than only cabinets/chests/drawers, reusing existing configurators.",
-      "governing_adrs": [
-        "ADR-0015",
-        "ADR-0023",
-        "ADR-0028"
+      "id": "TSK-N02",
+      "title": "Printable cut sheet and SVG drawings from the model",
+      "status": "READY",
+      "owner": "ui",
+      "adrs": [
+        "ADR-0004",
+        "ADR-0009"
       ],
-      "requirement_ids": [
-        "FR-020",
-        "FR-021"
+      "backlog": [
+        "N02"
       ],
       "depends_on": [],
-      "affected_files": [
-        "src/components/PresetManager.tsx",
-        "src/components/PresetCustomization.tsx",
-        "src/presets/customize.ts",
-        "docs/modular-engine-backlog.md"
-      ],
-      "deliverables": [
-        "B22 row moved to Done with evidence or kept Partial with the exact gap named"
-      ],
       "verification": [
-        "npm run typecheck",
-        "npm run lint",
-        "npm run test -- preset-customization"
+        "npm run build",
+        "screenshots of print preview"
       ],
-      "acceptance": [
-        "Editing a preset draft touches storage only on Save",
-        "Library edit does not change an inserted project part",
-        "No new E2E spec"
-      ],
-      "scope_guard": "Only roots already in the registry; no new definitions in this task.",
+      "acceptance": [],
       "blocker": null,
       "evidence": [],
-      "handoff": {
-        "to": [
-          "verifier"
-        ],
-        "requires": "diff or commit, IDs touched, command output, open blockers"
-      }
+      "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
     },
     {
-      "id": "TSK-004",
-      "title": "Specify a dedicated bed support / slat structural root",
-      "status": "ROADMAP_READY_FOR_SPECIFICATION",
-      "owner_role": "requirements-analyst",
-      "objective": "Write requirements/specs/bed-support-root.md: parameters, derived parts, hardware schedule, validation rules and parity test plan. No code.",
-      "governing_adrs": [
-        "ADR-0017",
-        "ADR-0019",
-        "ADR-0020",
-        "ADR-0021"
+      "id": "TSK-N05",
+      "title": "Unequal drawer heights and adjustable shelves",
+      "status": "READY",
+      "owner": "furniture-geometry",
+      "adrs": [
+        "ADR-0005",
+        "ADR-0011"
       ],
-      "requirement_ids": [
-        "FR-015",
-        "FR-016"
+      "backlog": [
+        "N05"
       ],
       "depends_on": [],
-      "affected_files": [
-        "claude-flow/requirements/specs/bed-support-root.md"
-      ],
-      "deliverables": [
-        "Spec file",
-        "Open physical questions appended to evidence/unknowns.md"
-      ],
       "verification": [
-        "python3 -I claude-flow/scripts/validate.py"
+        "npm test"
       ],
       "acceptance": [
-        "Spec names every unknown physical constraint instead of assuming it",
-        "Spec does not promise load ratings"
+        "schemaVersion bumped only if the document shape changes incompatibly; old designs still load"
       ],
-      "scope_guard": "ADR-0028: smallest slice; no E2E, refactor or polish unless listed above.",
       "blocker": null,
       "evidence": [],
-      "handoff": {
-        "to": [
-          "verifier"
-        ],
-        "requires": "diff or commit, IDs touched, command output, open blockers"
-      }
+      "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
     },
     {
-      "id": "TSK-005",
-      "title": "Specify wardrobe rail and front components",
-      "status": "ROADMAP_READY_FOR_SPECIFICATION",
-      "owner_role": "requirements-analyst",
-      "objective": "Write requirements/specs/wardrobe-rails-fronts.md for hanging rail and sliding/hinged front components attachable to core/carcass slots.",
-      "governing_adrs": [
-        "ADR-0016",
-        "ADR-0017",
-        "ADR-0019",
-        "ADR-0021"
+      "id": "TSK-N04",
+      "title": "Projects with several pieces",
+      "status": "NEEDS_SPEC",
+      "owner": "architecture-authority",
+      "adrs": [
+        "ADR-0011",
+        "ADR-0012"
       ],
-      "requirement_ids": [
-        "FR-015",
-        "FR-016"
+      "backlog": [
+        "N04"
       ],
       "depends_on": [],
-      "affected_files": [
-        "claude-flow/requirements/specs/wardrobe-rails-fronts.md"
-      ],
-      "deliverables": [
-        "Spec file"
-      ],
       "verification": [
-        "python3 -I claude-flow/scripts/validate.py"
+        "npm test"
       ],
-      "acceptance": [
-        "Reuses existing carcass/door definitions where possible",
-        "Hardware listed as schedule only"
-      ],
-      "scope_guard": "ADR-0028: smallest slice; no E2E, refactor or polish unless listed above.",
-      "blocker": null,
+      "blocker": "Needs an ADR for the project document and storage version 2.",
+      "acceptance": [],
       "evidence": [],
-      "handoff": {
-        "to": [
-          "verifier"
-        ],
-        "requires": "diff or commit, IDs touched, command output, open blockers"
-      }
+      "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
     },
     {
-      "id": "TSK-006",
-      "title": "Advance B26 material/hardware/joinery rules",
-      "status": "BLOCKED_ON_PHYSICAL_SPEC",
-      "owner_role": "furniture-domain",
-      "objective": "Introduce verified joinery/hardware rules once physical validation exists.",
-      "governing_adrs": [
-        "ADR-0019"
+      "id": "TSK-N03",
+      "title": "Fusion 360 export",
+      "status": "NEEDS_SPEC",
+      "owner": "furniture-geometry",
+      "adrs": [
+        "ADR-0004"
       ],
-      "requirement_ids": [
-        "FR-017"
-      ],
-      "depends_on": [
-        "TSK-007"
-      ],
-      "affected_files": [
-        "src/furniture/*"
-      ],
-      "deliverables": [
-        "None until unblocked"
-      ],
-      "verification": [],
-      "acceptance": [
-        "Blocked"
-      ],
-      "scope_guard": "ADR-0028: smallest slice; no E2E, refactor or polish unless listed above.",
-      "blocker": "Depends on TSK-007 physical validation; B26 is intentionally Not done.",
-      "evidence": [],
-      "handoff": {
-        "to": [
-          "verifier"
-        ],
-        "requires": "diff or commit, IDs touched, command output, open blockers"
-      }
-    },
-    {
-      "id": "TSK-007",
-      "title": "Physical materials and hardware validation",
-      "status": "BLOCKED_EXTERNAL",
-      "owner_role": "user",
-      "objective": "Real-world check of runner clearances, hinge/back attachment sets, plinth setbacks and load behaviour for at least one built piece.",
-      "governing_adrs": [
-        "ADR-0019",
-        "ADR-0021"
-      ],
-      "requirement_ids": [
-        "NFR-012"
+      "backlog": [
+        "N03"
       ],
       "depends_on": [],
-      "affected_files": [],
-      "deliverables": [
-        "Measured results recorded in evidence/"
-      ],
-      "verification": [],
-      "acceptance": [
-        "Performed outside the repository by the user"
-      ],
-      "scope_guard": "ADR-0028: smallest slice; no E2E, refactor or polish unless listed above.",
-      "blocker": "Requires a physical build; cannot be done by agents.",
-      "evidence": [],
-      "handoff": {
-        "to": [
-          "verifier"
-        ],
-        "requires": "diff or commit, IDs touched, command output, open blockers"
-      }
-    },
-    {
-      "id": "TSK-008",
-      "title": "Execute the Fusion Python export inside Autodesk Fusion",
-      "status": "BLOCKED_EXTERNAL",
-      "owner_role": "user",
-      "objective": "Run exportFusionPython output in Fusion 360 and record whether all solids are created with correct dimensions.",
-      "governing_adrs": [
-        "ADR-0025"
-      ],
-      "requirement_ids": [
-        "FR-030"
-      ],
-      "depends_on": [],
-      "affected_files": [
-        "src/assembly/fusion.ts"
-      ],
-      "deliverables": [
-        "Screenshot/log in evidence/",
-        "ADR-0025 consequence updated"
-      ],
       "verification": [
         "python3 -m py_compile <exported script>"
       ],
-      "acceptance": [
-        "Solid count equals positioned instance count",
-        "Dimensions in cm match mm/10"
-      ],
-      "scope_guard": "ADR-0028: smallest slice; no E2E, refactor or polish unless listed above.",
-      "blocker": "Needs a Fusion runtime.",
+      "blocker": "Must be labelled unverified until run in Fusion by the user.",
+      "acceptance": [],
       "evidence": [],
-      "handoff": {
-        "to": [
-          "verifier"
-        ],
-        "requires": "diff or commit, IDs touched, command output, open blockers"
-      }
+      "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
     },
     {
-      "id": "TSK-009",
-      "title": "Physical Android offline/touch validation",
-      "status": "BLOCKED_EXTERNAL",
-      "owner_role": "user",
-      "objective": "Install the PWA on a real Android device; verify offline start, 3D fallback without WebGL, touch drag reorder.",
-      "governing_adrs": [
-        "ADR-0001",
-        "ADR-0024",
-        "ADR-0027"
-      ],
-      "requirement_ids": [
-        "NFR-002",
-        "NFR-004"
-      ],
-      "depends_on": [],
-      "affected_files": [],
-      "deliverables": [
-        "Device/browser/version recorded with pass/fail per check"
-      ],
-      "verification": [],
-      "acceptance": [
-        "All three checks recorded"
-      ],
-      "scope_guard": "ADR-0028: smallest slice; no E2E, refactor or polish unless listed above.",
-      "blocker": "Needs a physical device; Playwright Android emulation already passes (reported).",
-      "evidence": [],
-      "handoff": {
-        "to": [
-          "verifier"
-        ],
-        "requires": "diff or commit, IDs touched, command output, open blockers"
-      }
-    },
-    {
-      "id": "TSK-010",
-      "title": "Map the supplier cutting workbook and SALICE order form to the import model",
-      "status": "BLOCKED_EXTERNAL",
-      "owner_role": "requirements-analyst",
-      "objective": "Produce a column-by-column mapping spec from the original SABLON DEBITARE NOU workbook and SALICE form, including the ABS-inclusive vs cut-size policy, before any adapter code.",
-      "governing_adrs": [
-        "ADR-0010",
-        "ADR-0026"
-      ],
-      "requirement_ids": [
-        "FR-027"
-      ],
-      "depends_on": [],
-      "affected_files": [
-        "claude-flow/requirements/specs/vendor-workbook-mapping.md",
-        "claude-flow/evidence/source-index.json"
-      ],
-      "deliverables": [
-        "Mapping spec",
-        "Source index entries with path+sha for the original files"
-      ],
-      "verification": [
-        "python3 -I claude-flow/scripts/validate.py"
-      ],
-      "acceptance": [
-        "Every mapped column cites a cell range in the original",
-        "ABS policy explicitly decided by the user"
-      ],
-      "scope_guard": "ADR-0028: smallest slice; no E2E, refactor or polish unless listed above.",
-      "blocker": "Original workbook/form are not in the repository; add them (or a redacted copy) before this task can start.",
-      "evidence": [],
-      "handoff": {
-        "to": [
-          "verifier"
-        ],
-        "requires": "diff or commit, IDs touched, command output, open blockers"
-      }
-    },
-    {
-      "id": "TSK-011",
-      "title": "Dependency and licence audit",
+      "id": "TSK-V01",
+      "title": "Verify library, undo/redo, materials editor and offline start in a real browser",
       "status": "READY",
-      "owner_role": "release-compliance",
-      "objective": "Complete docs/licences.md for all runtime dependencies (direct + transitive) from package-lock.json; confirm no telemetry/network side-effects.",
-      "governing_adrs": [
-        "ADR-0002",
-        "ADR-0027",
-        "ADR-0029"
+      "owner": "verifier",
+      "adrs": [
+        "ADR-0015"
       ],
-      "requirement_ids": [
-        "NFR-006"
-      ],
-      "depends_on": [],
-      "affected_files": [
-        "docs/licences.md",
-        "claude-flow/delivery/dependencies.md"
-      ],
-      "deliverables": [
-        "Licence table",
-        "STEP_00 status update with evidence"
-      ],
-      "verification": [
-        "npm ci",
-        "npm ls --all --json > /tmp/deps.json"
-      ],
-      "acceptance": [
-        "Every package in npm ls has a licence row",
-        "No GPL/AGPL runtime dependency"
-      ],
-      "scope_guard": "ADR-0028: smallest slice; no E2E, refactor or polish unless listed above.",
-      "blocker": null,
-      "evidence": [],
-      "handoff": {
-        "to": [
-          "verifier"
-        ],
-        "requires": "diff or commit, IDs touched, command output, open blockers"
-      }
-    },
-    {
-      "id": "TSK-012",
-      "title": "Reconcile stale architecture documentation with current main",
-      "status": "DONE",
-      "owner_role": "requirements-analyst",
-      "objective": "Fix drift: docs/architecture.md said 'Project editor controls localStorage autosave' (Dexie is primary); the rebuild's '55 ready templates' claim was a miscount (54 ready + 2 planned is correct); docs/licences.md marked provisional is TSK-011.",
-      "governing_adrs": [
-        "ADR-0003",
-        "ADR-0020",
-        "ADR-0029"
-      ],
-      "requirement_ids": [
-        "NFR-008"
+      "backlog": [
+        "F14",
+        "F15",
+        "F16",
+        "F17"
       ],
       "depends_on": [],
-      "affected_files": [
-        "docs/architecture.md",
-        "docs/modular-engine-backlog.md",
-        "README.md",
-        "claude-flow/evidence/conflicts.md"
-      ],
-      "deliverables": [
-        "Corrected docs",
-        "conflicts.md entries resolved"
-      ],
       "verification": [
-        "grep -o \"status:'ready'\" src/furniture/templates.ts | wc -l",
-        "python3 -I claude-flow/scripts/validate.py --sync"
+        "manual or scripted browser run with screenshots"
       ],
-      "acceptance": [
-        "Each documented count matches a grep of template entries in the code",
-        "No doc claims localStorage as primary store"
-      ],
-      "scope_guard": "ADR-0028: smallest slice; no E2E, refactor or polish unless listed above.",
-      "blocker": null,
-      "evidence": [
-        "docs/architecture.md autosave sentence corrected (this commit)",
-        "validate.py template count fixed: 54 ready / 2 planned matches ledger and README",
-        "C-03 and C-04 resolved in evidence/conflicts.md"
-      ],
-      "handoff": {
-        "to": [
-          "verifier"
-        ],
-        "requires": "diff or commit, IDs touched, command output, open blockers"
-      }
-    },
-    {
-      "id": "TSK-013",
-      "title": "Original STEP_13 full acceptance",
-      "status": "PENDING",
-      "owner_role": "verifier",
-      "objective": "Run the complete verification sequence on current main and record counts.",
-      "governing_adrs": [
-        "ADR-0029"
-      ],
-      "requirement_ids": [
-        "NFR-001",
-        "NFR-008"
-      ],
-      "depends_on": [
-        "TSK-002"
-      ],
-      "affected_files": [
-        "docs/progress.json",
-        "docs/verification-log.md"
-      ],
-      "deliverables": [
-        "STEP_13 status with run ID"
-      ],
-      "verification": [
-        "npm ci && npm run lint && npm run typecheck && npm run test:kernel && npm run test && npm run build && npx playwright install --with-deps chromium && npm run test:e2e"
-      ],
-      "acceptance": [
-        "All suites pass on the cited commit"
-      ],
-      "scope_guard": "ADR-0028: smallest slice; no E2E, refactor or polish unless listed above.",
+      "acceptance": [],
       "blocker": null,
       "evidence": [],
-      "handoff": {
-        "to": [
-          "verifier"
-        ],
-        "requires": "diff or commit, IDs touched, command output, open blockers"
-      }
-    },
-    {
-      "id": "TSK-014",
-      "title": "Original STEP_14 release/handoff",
-      "status": "PENDING",
-      "owner_role": "release-compliance",
-      "objective": "Execute workflows/release.md end to end.",
-      "governing_adrs": [
-        "ADR-0029"
-      ],
-      "requirement_ids": [
-        "NFR-008"
-      ],
-      "depends_on": [
-        "TSK-002",
-        "TSK-011",
-        "TSK-013"
-      ],
-      "affected_files": [
-        "docs/progress.json",
-        "docs/handoff.md"
-      ],
-      "deliverables": [
-        "Release checkpoint"
-      ],
-      "verification": [
-        "see workflows/release.md"
-      ],
-      "acceptance": [
-        "Every gate in release.md cited"
-      ],
-      "scope_guard": "ADR-0028: smallest slice; no E2E, refactor or polish unless listed above.",
-      "blocker": null,
-      "evidence": [],
-      "handoff": {
-        "to": [
-          "verifier"
-        ],
-        "requires": "diff or commit, IDs touched, command output, open blockers"
-      }
-    },
-    {
-      "id": "TSK-015",
-      "title": "Continuous B24 scope guardrail",
-      "status": "ONGOING_GUARDRAIL",
-      "owner_role": "furniture-domain",
-      "objective": "On every furniture change, keep B24 Partial and report ready-recipe count and complete-family count separately.",
-      "governing_adrs": [
-        "ADR-0020",
-        "ADR-0021"
-      ],
-      "requirement_ids": [
-        "FR-015"
-      ],
-      "depends_on": [],
-      "affected_files": [
-        "docs/modular-engine-backlog.md"
-      ],
-      "deliverables": [
-        "Ledger row kept honest"
-      ],
-      "verification": [
-        "grep -c \"status:'ready'\" src/furniture/templates.ts"
-      ],
-      "acceptance": [
-        "Two numbers reported, never conflated"
-      ],
-      "scope_guard": "ADR-0028: smallest slice; no E2E, refactor or polish unless listed above.",
-      "blocker": null,
-      "evidence": [],
-      "handoff": {
-        "to": [
-          "verifier"
-        ],
-        "requires": "diff or commit, IDs touched, command output, open blockers"
-      }
+      "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
     }
   ]
 }

@@ -1,71 +1,44 @@
-# Furniture Builder — Mobila Cutlist Optimizer
+# Furniture Builder
 
-Offline-first prototype of a mobile-first, offline-oriented furniture panel cutting optimizer using React, TypeScript, Vite and a Web Worker. Source files and docs track `chiriacsergiucs-v2/furniture-builder` and GitHub Pages base `/furniture-builder/`.
+Design cabinets, chests, wardrobes and desks to the millimetre, see them in 3D and get the parts list.
+Runs in the browser, works offline, keeps everything on your device.
 
-## Features implemented in source
+**Live:** https://chiriacsergiucs-v2.github.io/furniture-builder/
 
-Project editor, PAL/MDF/custom materials, configurable sheets/quantities/trims, parts, grain, rotation, four-edge ABS, Dexie IndexedDB, version-1 JSON backups, CSV/XLSX generic import, SVG/print/PDF/CSV/XLSX exports, multi-restart heuristic guillotine optimizer and independent cut-tree validation.
+## How it works
 
-## Offline Dexie database (v0.2)
+1. Pick a starting piece (**New**) or open one you saved (**Saved**).
+2. In the **front view**, tap a space. Choose what goes in it — shelves, drawers, hanging, empty — add doors, or
+   divide it side by side or stacked. Tap **Whole cabinet** to change size, construction and materials.
+3. The **3D** view, **Parts**, **Hardware** and **Checks** update as you edit. Hover a part to see it in 3D.
+4. When Checks shows no problems, download **Parts CSV** for the panel shop. **Design file** saves a copy you can
+   import on another device.
 
-Projects, reusable cutlist presets, preset categories, kits, library materials and revisions live in IndexedDB, using Dexie 4.2.x. No cloud service or account is required. Projects still embed material specifications so an old cutlist remains reproducible when the library changes.
+Sizes in the parts list are finished sizes; banded edges are marked L (along the length) and W (along the width).
+Hinge counts and shelf-span warnings are common guidance — your hardware's datasheet decides.
 
-On first load, valid legacy `mobila-cutlist:project:<id>` and `mobila-cutlist:presets:v1` records are copied into an atomic Dexie transaction. Existing IndexedDB records take precedence, no legacy keys are erased, malformed legacy records remain untouched, and a migration marker prevents duplicate migrations. IndexedDB open/write errors are surfaced rather than silently losing data. Project and preset JSON backup/restore remain compatible with v1; Settings adds complete database JSON export and non-destructive merge restore.
+## Develop
 
-In an open project, choose **Presets** to create a named multi-part template, optionally create categories (such as Drawers), save the preset and insert it into another project. IndexedDB is still local to each browser origin: users should export backups before clearing browser storage or changing devices.
+```sh
+npm ci
+npm run dev        # http://localhost:5173/furniture-builder/
+npm test           # unit, fuzz and storage tests
+npm run lint && npm run typecheck && npm run build
+```
 
-Database schema versions are declared in `src/db/database.ts`. The backup version is separate from the IndexedDB schema version, and schema upgrades must preserve old records. Revisions are append-only snapshots of meaningful project/preset/kit/category changes.
+`FUZZ_N=50000 npx vitest run tests/fuzz.test.ts` runs a deep geometry fuzz.
 
-## 3D panels and touch-friendly reordering (v0.3)
-The editor offers a lazy-loaded **Panel preview in 3D** based on `three` and `@react-three/fiber` (interactive orbit, zoom, selection). Geometry uses cut dimensions and material thickness without altering manufacturing data. It is an exploded panel inventory, **not a geometrically validated assembled cabinet**; quantity multiples are represented in labels, not duplicate meshes. WebGL2 is optional and an accessible list remains usable if it is unavailable. At most 40 part rows render at once to control mobile GPU usage.
+## Layout
 
-The **Reorder cutlist parts** control uses dnd-kit with mouse, touch, keyboard, and explicit up/down buttons. The order persists in Dexie with the project and does not replace the optimizer's own placement heuristics. Neither feature changes the existing JSON backup schema or 2D guillotine validator.
+```
+src/core      pure TypeScript model: types, geometry, cabinet & desk generators, checks, cut list, design document
+src/store     Zustand store: design, derived model, selection, undo/redo
+src/persist   IndexedDB (Dexie) storage
+src/ui        React UI: front elevation, inspector, parts/hardware/checks, dialogs
+src/viewer    lazy three.js preview
+tests         core, fuzz and storage tests
+docs          backlog (single ledger)
+claude-flow   architecture decisions and agent contracts
+```
 
-## Positioned 3D drawer assemblies and Fusion 360 (v0.4)
-The project editor supports individually movable and rotatable panel instances saved in the project JSON/IndexedDB. Use **+ 40 × 30 cm Drawer** to add 4 cutlist rows and five solid panels: two 300 × 250 mm sides, a 300 × 250 mm back, a 300 × 250 mm inner front, and a 400 × 300 mm visible Front Main. PAL 18 mm gives a 336 × 300 × 250 mm drawer body and 2 mm space before the main front. **Drawers** category and starter kit are seeded once, without overwriting user presets. Adding the starter drawer through Presets → Add to project also creates positioned assemblies; 1–20 sets are supported per insertion. No bottom panel, slides, fixings or joinery are specified; the example does not constitute a finished production design.
-
-A 3D transform gizmo and accessible numerical inputs edit XYZ positions (mm) and XYZ rotations (degrees) per panel instance, independently from the 2D cut plan. **Export Fusion 360 Python** creates separately editable direct-model B-rep solids from the exact transforms using Autodesk Fusion Scripts and Add-Ins. This is not an F3D or STEP file; use Fusion to save/export afterwards. Execution in Autodesk Fusion itself is not part of browser tests.
-
-## Standalone preset library, saved drafts and clean editor (v0.5)
-
-- Open the **Presets** navigation tab, independent of an open project. Browse expandable categories (including nested categories), then expand a preset and each cut item. Each can launch a lazy on-demand 3D preview. The default 40 × 30 cm Drawer preview uses the starter assembly positioning; other presets use an illustrative panel layout, not a validated assembly.
-- **Create preset** and **Edit original** save only when you click **Save preset**. **Duplicate with new params** creates an independent unsaved draft with a fresh ID; **Cancel** discards it, and **Save duplicate** is the only action that persists it.
-- Each preset stores all of its labeled cut items, exact dimensions, quantities, materials, grain/rotation and ABS in **Dexie IndexedDB**, organized by categories, with revision history. Insertion into a selected project saves a new project snapshot; the source preset remains unchanged.
-- The cutlist editor now defaults to **five primary part fields** (name, width, height, quantity, material). ABS and grain, trimming, stock setup and cutting settings are disclosed on demand instead of cluttering the main editor.
-- Data is stored **locally in this browser profile**, not on a server. Regular reloads preserve data; browser data clearing or changing devices does not. Use **Settings → Export complete database JSON** for safe backups and transfer. Importing a full database backup is a non-destructive merge.
-
-## Modular furniture engine roadmap
-
-See **[EDC modular engine implementation backlog](docs/modular-engine-backlog.md)** for the six-layer architecture, 40 reusable components, 18 furniture families with 90 planned dynamic configurations, five composition operations and the evidence-based **Done / Partially done / Not done / Dropped** tracker. This document is the authoritative roadmap for incremental furniture-template development. Catalog ideas marked planned are **not** functional generators.
-
-## Project-only customized presets
-Open **Presets**, expand a saved entry, select a destination project and choose **Customize for project**. Change manual panel dimensions, quantities or materials, or use existing cabinet/drawer configurators. Changes remain temporary until **Add customized to project** or **Add item to project** is selected; only the destination project is saved. The original preset record and source revision remain unchanged. To save the variation in the library, use **Duplicate with new params** followed by **Save duplicate**. Modified static starter drawer cut rows do not imply valid 3D geometry; a parametric drawer is required for regenerated assembly positioning.
-
-## Expanded furniture template picker (B24, October 2026)
-The creation wizard now offers **19 buildable templates**, up from 9, grouped by category (Cabinets, Kitchen, Bedroom, Living room, Hallway, Storage, Building components). Ten new ready arrangements reuse the manufacturing-backed cabinet/shelf/divider/drawer engine: kitchen base and wall carcasses, pantry, two-bay bookcase, bedside chest, shoe shelving, two media consoles, sideboard, and connected twin cubbies. All produce editable dimensioned parts and positioned panel assemblies; the source template/version is preserved in saved configurations.
-
-**Scope:** These are honest open-carcase furniture arrangements, not complete installed kitchen cabinets or wall-mounted cabinetry. Backboards, doors, plinths, anti-tip brackets, cable channels and joining hardware require separate work. Planned-only wardrobe, desk and full entertainment variants remain listed but cannot generate cutlists. The 18-family/90-variant idea is a roadmap target, not a ready-library claim.
-
-## B24 furniture expansion — 49 working templates
-Furniture template selection includes 49 versioned **geometry-and-cutlist backed recipes** (19 previously): twenty additional open/drawer casework designs and ten desk/table arrangements using a separate panel worktop-and-support generator (`core/surface`). Desk and table presets save only when clicked, generate independent physical panels and positioned 3D assemblies, and export solids through Fusion Python.
-
-**Important limits:** Worktop support layouts generate cut geometry but have **not** been structurally load-tested. Uprights, joints, tip resistance and fixing specifications need review before fabrication. Open kitchen/island/vanity/closet concepts exclude doors, backs, plinths, wall mountings, hanging rods, sinks and drilling. The 18-family/90-variant roadmap is still partially complete; do not treat 49 recipes as 49 of its requested detailed operating mechanisms.
-
-## B24 enclosure and panel-plinth addition — 54 working templates (October 2026)
-The cabinet wizard now supports optional **applied back panels**, **single or double external door leaves**, and **three-panel recessed toe-kick bases**. These are individually parametric; project and preset models include full positioned 3D panels, real cutting sizes, and fitting-set requirements. Five new ready kitchen/living-room designs demonstrate the components, bringing the catalog to **54** functioning templates. Configure these options during the Customize step, then review exact parts before saving.
-
-**Scope:** The door leaves are static closed-position panels. Hinge fittings, hole patterns, swing clearances, leveling/fasteners, structural loads and wall fixings are not specified or certified. Cabinet assemblies saved previously remain open unless explicitly edited. The planned 18-family/90-distinct-mechanism target is still incomplete.
-
-## Development
-
-Node >=22 required. `npm install` then `npm run dev`, `npm run lint`, `npm run typecheck`, `npm run test:kernel`, `npm test`, `npm run build`, `npm run test:e2e`. Use the committed package-lock.json; update it whenever dependencies change.
-
-Without dependencies the engine test can run with `npm run test:kernel` (Node built-in test runner and strip-types).
-
-## State and resumption
-
-Read `docs/progress.json`, `docs/handoff.md`, `docs/verification-log.md`, `AGENTS.md` and `CUTLIST_OPTIMIZER_RESUMABLE_BUILD_PROMPT_v2.md`. **Release acceptance depends on current GitHub Actions and browser tests.** Check actual run URLs before claiming success.
-
-## Privacy and licensing
-
-MIT-licensed application source. No backend/server database/accounts/remote optimization, and no data leaves the browser during application use. Validate exact fabrication constraints and dimensions before cutting. Third-party licence inventory pending dependency audit.
+Decisions are in `claude-flow/architecture/decisions/`. MIT licensed.
