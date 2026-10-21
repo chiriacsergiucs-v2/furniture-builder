@@ -172,7 +172,11 @@ export interface DeskParams {
   bodyMaterialId: string
   frontOverhang: Mm
   support: DeskSupport
-  pedestal: { width: Mm; drawerCount: number }
+  /**
+   * Drawer units. `left` / `right` hold each unit's own space tree (ADR-0026). When absent (older designs) a
+   * unit is `drawerCount` equal drawers, derived in memory with a stable id.
+   */
+  pedestal: { width: Mm; drawerCount: number; left?: Space; right?: Space }
   modesty: { enabled: boolean; height: Mm; setback: Mm }
   drawers: DrawerSettings
   frontMaterialId: string

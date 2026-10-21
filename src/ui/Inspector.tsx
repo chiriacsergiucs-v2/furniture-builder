@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { changeKind, findSpace, parentOf, splitSpace, unsplit } from '../core/design'
+import { changeKind, findInProduct, findSpace, parentOf, pedestalRoot, splitSpace, unsplit, usesPedestal, type PedestalSide } from '../core/design'
 import type { CabinetParams, DeskParams, DeskSupport, Material, Space, SpaceKind, SplitSize } from '../core/types'
 import { useDesign } from '../store/designStore'
 import { Counter, Group, MmField, Segmented, Select, Toggle } from './controls'
@@ -10,10 +10,10 @@ export function Inspector() {
   const design = useDesign(s => s.design)
   const selectedId = useDesign(s => s.selectedId)
   const prod = design.product
-  if (prod.kind === 'desk') return <DeskEditor p={prod.params} materials={design.materials} />
-  const space = selectedId ? findSpace(prod.params.interior, selectedId) : undefined
-  return space
-    ? <SpaceEditor space={space} root={prod.params.interior} />
+  const found = selectedId ? findInProduct(prod, selectedId) : undefined
+  if (found) return <SpaceEditor space={found.space} root={found.root} side={found.side} />
+  return prod.kind === 'desk'
+    ? <DeskEditor p={prod.params} deskId={prod.id} materials={design.materials} />
     : <CabinetEditor p={prod.params} materials={design.materials} />
 }
 
@@ -21,27 +21,29 @@ function matOptions(materials: Material[], filter?: (m: Material) => boolean) {
   return materials.filter(filter ?? (() => true)).map(m => ({ value: m.id, label: `${m.name}` }))
 }
 
-function Crumbs({ root, id }: { root: Space; id: string }) {
+const ROOT_LABEL = (side?: PedestalSide) => (side ? `${side === 'left' ? 'Left' : 'Right'} drawer unit` : 'Interior')
+
+function Crumbs({ root, id, side }: { root: Space; id: string; side?: PedestalSide }) {
   const select = useDesign(s => s.select)
   const chain: Space[] = []
   let cur: Space | undefined = findSpace(root, id)
   while (cur) { chain.unshift(cur); cur = parentOf(root, cur.id) }
   return (
     <nav className="crumbs" aria-label="Where this space sits">
-      <button type="button" onClick={() => select(null)}>Whole cabinet</button>
+      <button type="button" onClick={() => select(null)}>{side ? 'Whole desk' : 'Whole cabinet'}</button>
       {chain.map((s, i) => (
         <span key={s.id}>
           <span aria-hidden="true" className="sep">/</span>
           {i === chain.length - 1
-            ? <span aria-current="true">{i === 0 ? 'Interior' : KIND_LABEL[s.kind]}</span>
-            : <button type="button" onClick={() => select(s.id)}>{i === 0 ? 'Interior' : KIND_LABEL[s.kind]}</button>}
+            ? <span aria-current="true">{i === 0 ? ROOT_LABEL(side) : KIND_LABEL[s.kind]}</span>
+            : <button type="button" onClick={() => select(s.id)}>{i === 0 ? ROOT_LABEL(side) : KIND_LABEL[s.kind]}</button>}
         </span>
       ))}
     </nav>
   )
 }
 
-function SpaceEditor({ space, root }: { space: Space; root: Space }) {
+function SpaceEditor({ space, root, side }: { space: Space; root: Space; side?: PedestalSide }) {
   const update = useDesign(s => s.updateSpace)
   const select = useDesign(s => s.select)
   const opening = useDesign(s => s.model.spaces.find(o => o.nodeId === space.id))
@@ -52,7 +54,7 @@ function SpaceEditor({ space, root }: { space: Space; root: Space }) {
 
   return (
     <div className="inspector">
-      <Crumbs root={root} id={space.id} />
+      <Crumbs root={root} id={space.id} side={side} />
       <header className="insp-head">
         <h2>{space.kind === 'split' ? 'Divided space' : `${KIND_LABEL[space.kind]}`}</h2>
         {opening && <p className="measure"><span>{opening.box.w}</span> wide × <span>{opening.box.h}</span> high × <span>{opening.box.d}</span> deep inside</p>}
@@ -203,7 +205,8 @@ function DrawerSettingsGroup({ value: d, materials, onChange }: { value: Cabinet
   )
 }
 
-function DeskEditor({ p, materials }: { p: DeskParams; materials: Material[] }) {
+function DeskEditor({ p, deskId, materials }: { p: DeskParams; deskId: string; materials: Material[] }) {
+  const select = useDesign(s => s.select)
   const set = useDesign(s => s.updateDesk)
   const panelMats = matOptions(materials, m => m.thickness >= 12)
   const ped = p.support !== 'gables'
@@ -221,7 +224,17 @@ function DeskEditor({ p, materials }: { p: DeskParams; materials: Material[] }) 
       {ped && (
         <div className="dims2">
           <MmField label="Drawer unit width" value={p.pedestal.width} min={250} max={900} onChange={v => set({ pedestal: { ...p.pedestal, width: v } })} />
-          <Counter label="Drawers" value={p.pedestal.drawerCount} min={1} max={6} onChange={v => set({ pedestal: { ...p.pedestal, drawerCount: v } })} />
+        </div>
+      )}
+      {ped && (
+        <div className="field">
+          <span className="field-label">Inside the drawer units</span>
+          <div className="split-actions">
+            {(['left', 'right'] as const).filter(sd => usesPedestal(p, sd)).map(sd => (
+              <button key={sd} type="button" onClick={() => select(pedestalRoot(p, sd, deskId).id)}>{sd === 'left' ? 'Edit left unit' : 'Edit right unit'}</button>
+            ))}
+          </div>
+          <p className="hint">Or tap a drawer unit in the front view. Each unit is laid out on its own.</p>
         </div>
       )}
       <MmField label="Top overhang at the front" value={p.frontOverhang} min={0} max={300} step={5} onChange={v => set({ frontOverhang: v })} />

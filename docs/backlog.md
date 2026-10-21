@@ -37,7 +37,7 @@ Statuses: **Done** (acceptance met, evidence cited) · **Partially done** (code 
 | N05 | Unequal drawer heights, adjustable shelves (pin rows) | Not done | ADR-0023; New space options, same engine |
 | N06 | Inset / half-overlay fronts, handles | Not done | ADR-0024; Front zone already central; handles need physical spec |
 | N07 | Wall and corner cabinets, worktop joins | Not done | ADR-0025 |
-| N08 | Selectable pedestal internals on desks | Not done | ADR-0026; Desk spaces not exposed yet |
+| N08 | Selectable pedestal internals on desks | Done | ADR-0026; `tests/core.test.ts` editable pedestals; 20,000-design fuzz passed |
 | N09 | Committed browser test suite | Not done | Only when the user asks (pre-MVP rule) |
 
 ## Dropped

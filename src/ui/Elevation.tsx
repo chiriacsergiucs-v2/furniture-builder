@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { productRoots } from '../core/design'
 import { useDesign } from '../store/designStore'
 import type { Panel, SpaceOpening } from '../core/types'
 
@@ -34,12 +35,11 @@ export function Elevation() {
 
   const counts = useMemo(() => {
     const m = new Map<string, number>()
-    if (design.product.kind !== 'cabinet') return m
     const walk = (s: import('../core/types').Space) => {
       if (s.kind === 'shelves' || s.kind === 'drawers') m.set(s.id, s.count)
       if (s.kind === 'split') s.children.forEach(walk)
     }
-    walk(design.product.params.interior)
+    productRoots(design.product).forEach(r => walk(r.root))
     return m
   }, [design.product])
 
