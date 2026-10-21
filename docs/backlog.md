@@ -39,6 +39,7 @@ Statuses: **Done** (acceptance met, evidence cited) · **Partially done** (code 
 | N07 | Wall and corner cabinets, worktop joins | Done | ADR-0025; 4 tests incl. 400 random corners; screenshots of wall, blind and L corners |
 | N08 | Selectable pedestal internals on desks | Done | ADR-0026; `tests/core.test.ts` editable pedestals; 20,000-design fuzz passed |
 | N09 | Committed browser test suite | Not done | Only when the user asks (pre-MVP rule) |
+| N10 | Fixes from independent review (2026-10-22) | Done | Pin holes per-panel grid (faces never coincide), rows measured on the shelf, "one face" text, setback ≥ 8 mm, size caps, project materials split by grain + sheet-conflict warning, mirrored L-corner handle, L-corner plinth notch; 7 regression tests fail on the old code, pass now; reviewer's fuzz re-run passed |
 
 ## Dropped
 

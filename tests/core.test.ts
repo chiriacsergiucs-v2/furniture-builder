@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildModel, hasErrors } from '../src/core/build'
-import { cutlist, hardwareSummary } from '../src/core/cutlist'
+import { cutlist, drillingText, hardwareSummary } from '../src/core/cutlist'
 import { changeKind, findInProduct, mapProductSpace, mapSpace, pedestalRoot, productRoots, splitSpace, templates, validateDesign } from '../src/core/design'
 import { cutDimensions, distribute, overlaps } from '../src/core/geometry'
 import type { CabinetParams, Design, Panel } from '../src/core/types'
@@ -505,5 +505,69 @@ describe('wall and corner cabinets (ADR-0025)', () => {
       for (const x of m.panels) for (const v of Object.values(x.box)) expect(Number.isSafeInteger(v)).toBe(true)
     }
     expect(clean).toBeGreaterThan(100)
+  })
+})
+
+describe('review fixes (2026-10-22)', () => {
+  const fr = (value = 1) => ({ mode: 'fr' as const, value })
+  it('holes drilled from the two faces of a divider never coincide, whatever the space heights', () => {
+    for (let low = 200; low <= 600; low += 13) {
+      const d = withCab(byTemplate('bookcase'), { width: 1000, height: 1800, interior: { id: 'r', kind: 'split', axis: 'x', sizes: [fr(), fr()], children: [
+        { id: 'L', kind: 'shelves', count: 2, adjustable: true },
+        { id: 'R', kind: 'split', axis: 'y', sizes: [fr(), { mode: 'mm', value: low }], children: [{ id: 'RT', kind: 'shelves', count: 2, adjustable: true }, { id: 'RB', kind: 'empty' }] },
+      ] } })
+      const div = role(buildModel(d).panels, 'divider')[0]
+      const [a, b] = div.pinRows!
+      expect(a.face).not.toBe(b.face)
+      expect(a.holes.filter(h => b.holes.includes(h))).toEqual([])
+      for (const r of div.pinRows!) for (const h of r.holes) expect(((h - (r.face === '+x' ? 0 : 16)) % 32 + 32) % 32).toBe(0)
+    }
+  })
+  it('pin rows sit 37 mm inside the shelves themselves, not the panel edges', () => {
+    for (const d of [
+      withCab(byTemplate('base-door'), { frontStyle: 'inset', interior: { ...cab(byTemplate('base-door')).interior, adjustable: true } as CabinetParams['interior'] }),
+      withCab(byTemplate('wall-cabinet'), { backInset: 40, interior: { ...cab(byTemplate('wall-cabinet')).interior, adjustable: true } as CabinetParams['interior'] }),
+    ]) {
+    const m = buildModel(d)
+    expect(m.diagnostics.filter(x => x.severity === 'error')).toEqual([])
+    const shelf = role(m.panels, 'shelf')[0], side = role(m.panels, 'side')[0]
+    const [rear, front] = side.pinRows![0].rows.map(r => side.box.z + r)
+    expect(rear).toBe(shelf.box.z + 37)
+    expect(front).toBe(shelf.box.z + shelf.box.d - 37)
+    }
+  })
+  it('drilling text says "one face" when stacked spaces drill the same face twice', () => {
+    const d = withCab(byTemplate('bookcase'), { interior: { id: 'r', kind: 'split', axis: 'y', sizes: [fr(), fr()], children: [
+      { id: 'A', kind: 'shelves', count: 1, adjustable: true }, { id: 'B', kind: 'shelves', count: 1, adjustable: true }] } })
+    const side = role(buildModel(d).panels, 'side')[0]
+    expect(side.pinRows).toHaveLength(2)
+    expect(drillingText(side)).toMatch(/one face$/)
+  })
+  it('pin row setback must leave room for the hole; sizes are capped', () => {
+    expect(validateDesign(withCab(byTemplate('bookcase'), { pinRowSetback: 0 }))).toContain('pinRowSetback must be 8 to 300 mm')
+    expect(validateDesign(withCab(byTemplate('bookcase'), { width: 2 ** 53 - 1 })).length).toBeGreaterThan(0)
+    const d = byTemplate('bookcase')
+    expect(validateDesign({ ...d, materials: d.materials.map(m => ({ ...m, thickness: 1e15 })) })).toContain('Invalid material')
+  })
+  it('mirrored L corner keeps the side-wing handle on the same edge as seen from its front', () => {
+    const build = (side: 'left' | 'right') => {
+      const d0 = byTemplate('corner-l')
+      if (d0.product.kind !== 'corner') throw Error()
+      const p = d0.product.params
+      return buildModel({ ...d0, product: { ...d0.product, params: { ...p, side, wingInterior: { ...p.wingInterior, handle: { kind: 'knob' } } } } })
+    }
+    const doorB = (m: ReturnType<typeof buildModel>) => role(m.panels, 'door').find(p => p.thicknessAxis === 'x')!
+    const l = doorB(build('left')), r = doorB(build('right'))
+    expect(l.handleHoles && r.handleHoles).toBeTruthy()
+    expect(r.handleHoles!.at.map(([u]) => u)).toEqual(l.handleHoles!.at.map(([u]) => l.box.d - u))
+  })
+  it('L corner plinth runs continuously round the corner', () => {
+    const d0 = byTemplate('corner-l')
+    if (d0.product.kind !== 'corner') throw Error()
+    const m = buildModel(d0)
+    const [a, b] = role(m.panels, 'plinth').sort((p, q) => p.box.w - q.box.w).reverse()
+    // b (side wing) ends exactly on a's front face
+    expect(b.box.z).toBe(a.box.z + a.box.d)
+    expect(b.box.x).toBeGreaterThanOrEqual(a.box.x)
   })
 })

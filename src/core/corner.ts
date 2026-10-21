@@ -45,7 +45,8 @@ function mirror(m: PartialModel, W: number): PartialModel {
     panels: m.panels.map(p => ({
       ...p, label: swapLR(p.label), box: mirrorBox(p.box, W), banded: p.banded.map(f => FACE_MIRROR[f]),
       ...(p.pinRows ? { pinRows: p.pinRows.map(r => ({ ...r, face: FACE_MIRROR[r.face] })) } : {}),
-      ...(p.handleHoles && p.thicknessAxis === 'z' ? { handleHoles: { ...p.handleHoles, at: p.handleHoles.at.map(([u, v]) => [p.box.w - u, v] as [number, number]) } } : {}),
+      // Mirroring flips which edge is the front's left, for fronts facing ±z (width along x) and ±x (width along z).
+      ...(p.handleHoles ? { handleHoles: { ...p.handleHoles, at: p.handleHoles.at.map(([u, v]) => [(p.thicknessAxis === 'z' ? p.box.w : p.box.d) - u, v] as [number, number]) } } : {}),
     })),
     spaces: m.spaces.map(s => ({ ...s, box: mirrorBox(s.box, W) })),
   }
@@ -89,6 +90,8 @@ export function buildCorner(p: CornerParams, id: string, materials: Map<string, 
   const doorStart = D + tf + g // A's door begins clear of B's door leaf
   const a = buildCabinet(carcass(p, p.width, p.interior), materials, { idPrefix: `${id}/a:`, productNodeId: id, frontTrim: { left: doorStart - r } })
   const bLocal = buildCabinet(carcass(p, wb, p.wingInterior), materials, { idPrefix: `${id}/b:`, productNodeId: id, omitSide: 'right' })
+  // Wing B's plinth runs on past the corner edge until it butts against the front face of wing A's plinth (no notch).
+  if (p.plinthHeight > 0) for (const x of bLocal.panels) if (x.role === 'plinth') x.box = { ...x.box, w: x.box.w + p.plinthSetback }
   const b: PartialModel = {
     panels: bLocal.panels.map(x => rotatePanel(x, p.wingWidth)),
     spaces: bLocal.spaces.map((s): SpaceOpening => ({ ...s, box: rotateBox(s.box, p.wingWidth), view: 'side' })),

@@ -71,3 +71,20 @@ describe('projects (ADR-0022)', () => {
     expect(db.verno).toBe(2)
   })
 })
+
+describe('project materials (review fix 2026-10-22)', () => {
+  it('a grained and a plain board of the same name never share a sheet; conflicting sheets are flagged', () => {
+    let p = newProject('Mixed')
+    const a = t('base-door'), b = t('base-door')
+    b.materials = b.materials.map(m => ({ ...m, grain: !m.grain, sheet: { length: 2440, width: 1220, trim: 10, count: null } }))
+    const c = t('base-door')
+    c.materials = c.materials.map(m => ({ ...m, sheet: { length: 2440, width: 1220, trim: 10, count: null } }))
+    for (const d of [a, b, c]) p = { ...p, items: [...p.items, makeItem(p, d)] }
+    const pm = buildProjectModel(p)
+    const jobs = projectNestingJobs(p), rows = projectCutlist(p)
+    const names = jobs.map(j => j.materialName)
+    for (const j of jobs) for (const r of rows.filter(r => r.materialId === j.materialId)) expect(r.grain).toBe(j.grain)
+    expect(names.length).toBeGreaterThan(new Set(names).size) // same name split by grain
+    expect(pm.diagnostics.some(d => d.code === 'material-sheet-conflict')).toBe(true)
+  })
+})
