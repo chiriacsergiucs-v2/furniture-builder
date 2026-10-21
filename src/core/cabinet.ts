@@ -158,7 +158,7 @@ export function buildCabinet(p: CabinetParams, materials: Map<string, Material>,
         x += w + g
       })
       const dh = f.y1 - f.y0
-      hw({ nodeId: s.id, kind: 'hinge', label: 'Hinge', quantity: hingeCount(dh) * n, note: `${hingeCount(dh)} per door, ${hingeBand(dh)} (typical — confirm with the hinge datasheet)` })
+      hw({ nodeId: s.id, kind: 'hinge', label: 'Hinge, 35 mm cup, soft-close, clip-on', quantity: hingeCount(dh) * n, note: `${hingeCount(dh)} per door, ${hingeBand(dh)} (typical — confirm with the hinge datasheet)` })
     }
     const inner: Ctx = { ...c, behindDoors: c.behindDoors || hasDoors }
 
@@ -238,7 +238,7 @@ export function buildCabinet(p: CabinetParams, materials: Map<string, Material>,
           }
           slotTop = slotBottom
         }
-        hw({ nodeId: s.id, kind: 'drawer-runner-pair', label: internal ? 'Drawer runner pair (internal drawers)' : 'Drawer runner pair', quantity: n, sizeMm: runner, note: `side clearance ${ds.sideClearance} mm per side` })
+        hw({ nodeId: s.id, kind: 'drawer-runner-pair', label: internal ? 'Ball-bearing side runner pair (internal drawers)' : 'Ball-bearing side runner pair', quantity: n, sizeMm: runner, note: `side clearance ${ds.sideClearance} mm per side` })
         if (internal) warn('internal-drawers', 'Drawers behind doors: check hinge and door clearance against the drawer boxes.', s.id)
         return
       }

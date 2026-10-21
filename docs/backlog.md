@@ -46,8 +46,11 @@ Statuses: **Done** (acceptance met, evidence cited) · **Partially done** (code 
 |---|---|---|
 | D01 | Migrate data from the previous app | User chose a clean break (ADR-0001) |
 
-## Open questions for the user
+## Decisions from the user (2026-10-21)
 
-- Which runner and hinge suppliers to model (datasheet clearances, lengths)?
-- Should cut sizes ever subtract edge-band thickness, or always go to the shop as finished sizes?
-- Orchestration runtime (Claude Flow / Ruflo) and version, if any (ADR-0017).
+All open questions are answered and recorded in the ADRs: kerf 4 mm, PAL/HDF 2800 × 2070, MDF 2440 × 1220, 10 mm
+trim, full sheets only (ADR-0018/0019); A4 portrait, Romanian on paper and CSV (ADR-0020); Fusion grouped per piece
+(ADR-0021); projects keep copies (ADR-0022); 37 mm hole rows, 1 mm shelf clearance (ADR-0023); inset gap 3 mm,
+bar/knob/push-to-open handles (ADR-0024); blind and L-shaped corners, bracket-and-rail wall mounting (ADR-0025);
+independent pedestals (ADR-0026); finished sizes, never band-subtracted (ADR-0009); ball-bearing side runners and
+35 mm soft-close clip-on hinges (ADR-0010); no orchestration runtime (ADR-0017).

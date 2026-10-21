@@ -6,7 +6,8 @@ repository files as evidence and ends with a check a reviewer can run. The pre-r
 | Status | Meaning |
 |---|---|
 | Accepted | Implemented or enforced; evidence points at the code that proves it. |
-| Proposed | Recorded but not yet enforceable. |
+| Approved | Decided by the user (questions answered), not yet built. Becomes Accepted when the code exists. |
+| Proposed | Recorded, still has open questions. |
 | Superseded | Replaced; kept for lineage. |
 
 New ADRs: copy any file's six sections, number sequentially, never renumber. Only `architecture-authority` accepts or supersedes.
@@ -56,20 +57,20 @@ New ADRs: copy any file's six sections, number sequentially, never renumber. Onl
 |---|---|---|
 | [ADR-0015](ADR-0015.md) | Verification: pure-core unit tests plus seeded fuzz invariants; screenshots for UI; no E2E suite by default | Accepted |
 | [ADR-0016](ADR-0016.md) | Process: smallest slice, evidence-only status, explicit "Skipped this iteration" | Accepted |
-| [ADR-0017](ADR-0017.md) | Agent contracts stay runtime-neutral until a Claude Flow / Ruflo version is pinned | Proposed |
+| [ADR-0017](ADR-0017.md) | Agent contracts stay runtime-neutral; no Claude Flow / Ruflo runtime is adopted | Accepted |
 
-## Proposed — next slices
+## Approved — next slices
 
-Each has an *Open questions* section; answers turn it into Accepted when the slice is built.
+Questions answered by the user on 2026-10-21; each becomes Accepted when its slice is built.
 
 | ID | Decision | Backlog | Status |
 |---|---|---|---|
-| [ADR-0018](ADR-0018.md) | Sheet nesting: seeded guillotine heuristic with an independent layout validator | N01 | Proposed |
-| [ADR-0019](ADR-0019.md) | Stock sheets, trim and kerf live in the design document (schemaVersion 2) | N01 | Proposed |
-| [ADR-0020](ADR-0020.md) | Printing and drawings: SVG from the model plus a print stylesheet, no PDF library | N02 | Proposed |
-| [ADR-0021](ADR-0021.md) | Fusion 360 export: a Python script that rebuilds the model as named solid boxes, unverified until run in Fusion | N03 | Proposed |
-| [ADR-0022](ADR-0022.md) | Projects: several pieces placed in one room, with combined parts and storage version 2 | N04 | Proposed |
-| [ADR-0023](ADR-0023.md) | More space options: chosen drawer heights and adjustable shelves with 32 mm pin rows | N05 | Proposed |
-| [ADR-0024](ADR-0024.md) | Front styles (overlay, half overlay, inset) and handles as a scheduled item with a position | N06 | Proposed |
-| [ADR-0025](ADR-0025.md) | Wall and corner cabinets as new product roots built from the cabinet generator | N07 | Proposed |
-| [ADR-0026](ADR-0026.md) | Desk pedestals become editable spaces | N08 | Proposed |
+| [ADR-0018](ADR-0018.md) | Sheet nesting: seeded guillotine heuristic with an independent layout validator | N01 | Approved |
+| [ADR-0019](ADR-0019.md) | Stock sheets, trim and kerf live in the design document (schemaVersion 2) | N01 | Approved |
+| [ADR-0020](ADR-0020.md) | Printing and drawings: SVG from the model plus a print stylesheet, no PDF library | N02 | Approved |
+| [ADR-0021](ADR-0021.md) | Fusion 360 export: a Python script that rebuilds the model as named solid boxes, unverified until run in Fusion | N03 | Approved |
+| [ADR-0022](ADR-0022.md) | Projects: several pieces placed in one room, with combined parts and storage version 2 | N04 | Approved |
+| [ADR-0023](ADR-0023.md) | More space options: chosen drawer heights and adjustable shelves with 32 mm pin rows | N05 | Approved |
+| [ADR-0024](ADR-0024.md) | Front styles (overlay, half overlay, inset) and handles as a scheduled item with a position | N06 | Approved |
+| [ADR-0025](ADR-0025.md) | Wall and corner cabinets as new product roots built from the cabinet generator | N07 | Approved |
+| [ADR-0026](ADR-0026.md) | Desk pedestals become editable spaces | N08 | Approved |
