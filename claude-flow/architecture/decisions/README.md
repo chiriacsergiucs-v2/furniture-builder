@@ -50,6 +50,7 @@ New ADRs: copy any file's six sections, number sequentially, never renumber. Onl
 | ID | Decision | Status |
 |---|---|---|
 | [ADR-0014](ADR-0014.md) | The front elevation is the editing surface; 3D is a non-authoritative preview | Accepted |
+| [ADR-0030](ADR-0030.md) | One token set with light and dark themes, a component layer, and a wizard-ready steps rail | Proposed |
 
 ## Process
 

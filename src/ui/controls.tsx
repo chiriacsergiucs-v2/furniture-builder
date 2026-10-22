@@ -1,4 +1,5 @@
 import { useId, useState, type ReactNode } from 'react'
+import { Icon } from './icons'
 
 /** Whole-millimetre input. Commits on blur or Enter so typing "1" on the way to "1200" never rebuilds a 1 mm cabinet. */
 export function MmField({ label, value, onChange, min = 0, max = 10000, step = 10, unit = 'mm', hint }: {
@@ -18,13 +19,13 @@ export function MmField({ label, value, onChange, min = 0, max = 10000, step = 1
       <label htmlFor={id}>{label}</label>
       <div className={`mm ${valid ? '' : 'invalid'}`}>
         <button type="button" className="step" aria-label={`Decrease ${label}`} onClick={() => bump(-step)}>−</button>
-        <input id={id} inputMode="numeric" value={text} aria-invalid={!valid}
+        <input id={id} inputMode="numeric" value={text} aria-invalid={!valid} aria-describedby={!valid ? `${id}-err` : undefined}
           onChange={e => setText(e.target.value.replace(/[^\d-]/g, ''))}
           onBlur={commit} onKeyDown={e => { if (e.key === 'Enter') { commit(); (e.target as HTMLInputElement).blur() } if (e.key === 'Escape') setText(String(value)) }} />
         <span className="unit">{unit}</span>
         <button type="button" className="step" aria-label={`Increase ${label}`} onClick={() => bump(step)}>+</button>
       </div>
-      {!valid && <p className="field-error">Whole number from {min} to {max}.</p>}
+      {!valid && <p className="field-error" id={`${id}-err`}>Whole number from {min} to {max}.</p>}
       {valid && hint && <p className="hint">{hint}</p>}
     </div>
   )
@@ -83,11 +84,50 @@ export function Counter({ label, value, min, max, onChange }: { label: string; v
   )
 }
 
-export function Group({ title, children, defaultOpen = true }: { title: string; children: ReactNode; defaultOpen?: boolean }) {
+/** Collapsible section. `id` lets the steps rail open and scroll to it. */
+export function Group({ title, children, defaultOpen = true, id }: { title: string; children: ReactNode; defaultOpen?: boolean; id?: string }) {
   return (
-    <details className="group" open={defaultOpen}>
-      <summary>{title}</summary>
+    <details className="group" open={defaultOpen} id={id}>
+      <summary>{title}<Icon name="chevron-down" className="chev" /></summary>
       <div className="group-body">{children}</div>
     </details>
+  )
+}
+
+/** Opens a Group by id and scrolls it into view (used by the steps rail). */
+export function revealGroup(id: string) {
+  const el = document.getElementById(id)
+  if (!el) return
+  if (el instanceof HTMLDetailsElement) el.open = true
+  el.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
+}
+
+/** A titled block inside the inspector: keeps related controls together. */
+export function Section({ title, children, aside }: { title: string; children: ReactNode; aside?: ReactNode }) {
+  return (
+    <section className="section" aria-label={title}>
+      <div className="card-title"><span>{title}</span>{aside}</div>
+      {children}
+    </section>
+  )
+}
+
+/* Steps rail — wizard-ready (docs/ui-design.md). An ordered list of stages with a number, a label and a one-line
+   status. Here it is a section map; a guided flow sets `current` and adds Back / Next in a `.wizard-footer`. */
+export interface Step { id: string; label: string; meta?: string; tone?: 'ok' | 'warn' | 'error'; done?: boolean; disabled?: boolean }
+
+export function Steps({ steps, current, onSelect, label }: { steps: Step[]; current?: string; onSelect: (id: string) => void; label: string }) {
+  return (
+    <ol className="steps" aria-label={label}>
+      {steps.map((s, i) => (
+        <li key={s.id} className={`${s.tone ?? ''} ${s.done ? 'done' : ''}`}>
+          <button type="button" aria-current={s.id === current ? 'step' : undefined} disabled={s.disabled} title={s.meta} onClick={() => onSelect(s.id)}>
+            <span className="n" aria-hidden="true">{i + 1}</span>
+            <span className="lbl">{s.label}</span>
+            {s.meta && <span className="meta">{s.meta}</span>}
+          </button>
+        </li>
+      ))}
+    </ol>
   )
 }

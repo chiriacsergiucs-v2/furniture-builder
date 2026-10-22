@@ -10,6 +10,8 @@ import { Elevation } from './Elevation'
 import { Inspector } from './Inspector'
 import { Output } from './Output'
 import { PrintSheet } from './PrintSheet'
+import { Icon } from './icons'
+import { setTheme, useTheme } from './useTheme'
 
 const Viewer3D = lazy(() => import('../viewer/Viewer3D'))
 
@@ -22,7 +24,7 @@ class ViewerBoundary extends Component<{ children: ReactNode }, { failed: boolea
   static getDerivedStateFromError() { return { failed: true } }
   render() { return this.state.failed ? <NoViewer /> : this.props.children }
 }
-const NoViewer = () => <div className="no-3d"><p>3D preview is not available in this browser. The front view and parts list still work.</p></div>
+const NoViewer = () => <div className="no-3d"><p className="empty center"><Icon name="cube" />3D preview is not available in this browser. The front view and parts list still work.</p></div>
 
 function download(name: string, text: string, type: string) {
   const url = URL.createObjectURL(new Blob([text], { type }))
@@ -32,6 +34,7 @@ function download(name: string, text: string, type: string) {
 const fileName = (s: string) => s.trim().replace(/[^\w\- ]+/g, '').replace(/\s+/g, '-').toLowerCase() || 'design'
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'failed'
+const SAVE_TEXT: Record<SaveState, string> = { idle: '', saving: 'Saving…', saved: 'Saved on this device', failed: 'Not saved — browser storage unavailable' }
 
 /** Self-contained styles for the exported SVG drawing (the app stylesheet does not travel with the file). */
 const SVG_STYLE = `.floor{fill:#b9c0bb}.el-back{fill:#d9ddd9}.el-panel{stroke:#22272a;stroke-width:1.2;vector-effect:non-scaling-stroke}
@@ -72,6 +75,7 @@ export function App() {
   const [view, setView] = useState<'front' | '3d'>('front')
   const [has3d] = useState(webglAvailable)
   const [printing, setPrinting] = useState(false)
+  const theme = useTheme()
   const menuRef = useRef<HTMLDetailsElement>(null)
   // The sticky drawing on phones sits right under the top bar, whose height changes as its buttons wrap.
   const barRef = useRef<HTMLElement>(null)
@@ -81,6 +85,14 @@ export function App() {
     const ro = new ResizeObserver(() => document.documentElement.style.setProperty('--bar-h', `${bar.offsetHeight}px`))
     ro.observe(bar)
     return () => ro.disconnect()
+  }, [])
+  // The Export menu closes on Escape and on a click outside it (keyboard users need a way out).
+  useEffect(() => {
+    const close = () => menuRef.current?.removeAttribute('open')
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && menuRef.current?.open) { close(); menuRef.current?.querySelector('summary')?.focus() } }
+    const onClick = (e: MouseEvent) => { if (menuRef.current?.open && !menuRef.current.contains(e.target as Node)) close() }
+    window.addEventListener('keydown', onKey); document.addEventListener('click', onClick)
+    return () => { window.removeEventListener('keydown', onKey); document.removeEventListener('click', onClick) }
   }, [])
   // Render the print sheet, open the print dialog, then remove it again (ADR-0020).
   useEffect(() => {
@@ -160,6 +172,7 @@ export function App() {
 
   const errors = vd.diagnostics.filter(d => d.severity === 'error').length
   const exportName = fileName(vd.title)
+  const blockedTitle = errors ? 'Fix the problems listed under Checks first' : undefined
 
   return (
     <>
@@ -176,41 +189,51 @@ export function App() {
             else if (v !== design.name) rename(v)
           }}
           onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }} />
-        <span className={`save ${save}`} role="status">{save === 'saving' ? 'Saving…' : save === 'saved' ? 'Saved on this device' : save === 'failed' ? 'Not saved — browser storage unavailable' : ''}</span>
-        <nav className="actions">
-          {!inProject && <>
-            <button type="button" onClick={undo} disabled={!canUndo} title="Undo (Ctrl+Z)">Undo</button>
-            <button type="button" onClick={redo} disabled={!canRedo} title="Redo (Ctrl+Shift+Z)">Redo</button>
+        <span className={`status ${save}`} role="status" title={SAVE_TEXT[save] || undefined}>
+          {save !== 'idle' && <><span className="dot" aria-hidden="true" /><span className="txt">{SAVE_TEXT[save]}</span></>}
+        </span>
+        <button type="button" className="btn icon theme" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          aria-label={theme === 'dark' ? 'Switch to the light theme' : 'Switch to the dark theme'} title={theme === 'dark' ? 'Light theme' : 'Dark theme'}>
+          <Icon name={theme === 'dark' ? 'sun' : 'moon'} />
+        </button>
+        <nav className="actions" aria-label="Actions">
+          {!inProject && <div className="cluster">
+            <button type="button" className="btn icon" onClick={undo} disabled={!canUndo} aria-label="Undo" title="Undo (Ctrl+Z)"><Icon name="undo" /></button>
+            <button type="button" className="btn icon" onClick={redo} disabled={!canRedo} aria-label="Redo" title="Redo (Ctrl+Shift+Z)"><Icon name="redo" /></button>
             <span className="divider" aria-hidden="true" />
-          </>}
-          <button type="button" onClick={() => setDialog('new')}>New</button>
-          <button type="button" onClick={() => setDialog('library')}>Saved</button>
-          {!inProject && <button type="button" onClick={() => setDialog('materials')}>Materials</button>}
-          <span className="divider" aria-hidden="true" />
-          <button type="button" className="primary" disabled={errors > 0} title={errors ? 'Fix the problems listed under Checks first' : 'Download the parts list as CSV'}
-            onClick={() => download(`${exportName}-parts.csv`, cutlistCsvRo(vd.rows), 'text/csv;charset=utf-8')}>Parts CSV</button>
-          <button type="button" disabled={errors > 0} title={errors ? 'Fix the problems listed under Checks first' : 'Print the cutting sheet (Romanian, A4) or save it as PDF'} onClick={() => setPrinting(true)}>Print</button>
-          <details className="menu" ref={menuRef}>
-            <summary>Export</summary>
-            <div className="menu-items" onClick={() => menuRef.current?.removeAttribute('open')}>
-              {inProject ? (
-                <button type="button" onClick={() => download(`${exportName}-project.json`, JSON.stringify(project, null, 2), 'application/json')}>Project file (to open on another device)</button>
-              ) : <>
-                <button type="button" onClick={downloadSvg}>Front view drawing (SVG)</button>
-                <button type="button" onClick={() => download(`${fileName(design.name)}-fusion.py`, exportFusionPython(design, model), 'text/x-python')}>
-                  Fusion 360 script <small>not yet tested in Fusion</small>
-                </button>
-                <button type="button" onClick={() => download(`${fileName(design.name)}.json`, JSON.stringify(design, null, 2), 'application/json')}>Design file (to open on another device)</button>
-              </>}
-            </div>
-          </details>
+          </div>}
+          <div className="cluster">
+            <button type="button" className="btn" onClick={() => setDialog('new')} aria-label="New" title="Start a new piece or project"><Icon name="plus" /><span className="lbl">New</span></button>
+            <button type="button" className="btn" onClick={() => setDialog('library')} aria-label="Library" title="Pieces and projects saved on this device"><Icon name="folder" /><span className="lbl">Library</span></button>
+            {!inProject && <button type="button" className="btn" onClick={() => setDialog('materials')} aria-label="Materials" title="Boards, thicknesses and stock sheets"><Icon name="layers" /><span className="lbl">Materials</span></button>}
+            <span className="divider" aria-hidden="true" />
+          </div>
+          <div className="cluster end">
+            <details className="menu" ref={menuRef}>
+              <summary aria-label="Export" title="Drawings, scripts and files"><Icon name="share" /><span className="lbl">Export</span><Icon name="chevron-down" className="sm" /></summary>
+              <div className="menu-items" onClick={() => menuRef.current?.removeAttribute('open')}>
+                {inProject ? (
+                  <button type="button" onClick={() => download(`${exportName}-project.json`, JSON.stringify(project, null, 2), 'application/json')}><Icon name="download" />Project file <small>to open on another device</small></button>
+                ) : <>
+                  <button type="button" onClick={downloadSvg}><Icon name="front" />Front view drawing <small>SVG</small></button>
+                  <button type="button" onClick={() => download(`${fileName(design.name)}-fusion.py`, exportFusionPython(design, model), 'text/x-python')}>
+                    <Icon name="cube" />Fusion 360 script <small>not yet tested in Fusion</small>
+                  </button>
+                  <button type="button" onClick={() => download(`${fileName(design.name)}.json`, JSON.stringify(design, null, 2), 'application/json')}><Icon name="download" />Design file <small>to open on another device</small></button>
+                </>}
+              </div>
+            </details>
+            <button type="button" className="btn outline" disabled={errors > 0} aria-label="Print" title={blockedTitle ?? 'Print the cutting sheet (Romanian, A4) or save it as PDF'} onClick={() => setPrinting(true)}><Icon name="printer" /><span className="lbl">Print</span></button>
+            <button type="button" className="btn primary" disabled={errors > 0} title={blockedTitle ?? 'Download the parts list as CSV'}
+              onClick={() => download(`${exportName}-parts.csv`, cutlistCsvRo(vd.rows), 'text/csv;charset=utf-8')}><Icon name="download" />Parts CSV</button>
+          </div>
         </nav>
       </header>
 
       {editingItemId && project && (
         <div className="piece-banner" role="status">
           <span>Editing <strong>{editingName}</strong> in project <strong>{project.name}</strong>. Changes stay in this project.</span>
-          <button type="button" onClick={() => useDesign.getState().backToProject()}>Back to project</button>
+          <button type="button" className="btn sm" onClick={() => useDesign.getState().backToProject()}>Back to project</button>
         </div>
       )}
       <main className={`work ${editingItemId ? 'with-banner' : ''}`}>
@@ -225,14 +248,14 @@ export function App() {
             </div>
             <label className="toggle small"><input type="checkbox" checked={showFronts} onChange={e => setShowFronts(e.target.checked)} /><span>Doors and fronts</span></label>
             {(wide || view === '3d') && <label className="toggle small"><input type="checkbox" checked={exploded} onChange={e => setExploded(e.target.checked)} /><span>Exploded 3D</span></label>}
-            {view === '3d' && <button type="button" className="mini" onClick={() => window.dispatchEvent(new Event('fb:fit'))}>Reset view</button>}
+            {view === '3d' && <button type="button" className="btn sm" onClick={() => window.dispatchEvent(new Event('fb:fit'))}><Icon name="refresh" className="sm" />Reset view</button>}
           </div>
           <div className="views">
             <div className={`view front ${view === 'front' ? 'active' : ''}`}>{inProject ? <PlanView /> : <Elevation />}</div>
             <div className={`view three ${view === '3d' ? 'active' : ''}`}>
               {mount3d ? (
                 <ViewerBoundary>
-                  <Suspense fallback={<div className="no-3d"><p>Loading 3D…</p></div>}>
+                  <Suspense fallback={<div className="no-3d"><p className="loading">Loading 3D…</p></div>}>
                     <Viewer3D />
                   </Suspense>
                 </ViewerBoundary>
@@ -242,7 +265,6 @@ export function App() {
         </section>
         <Output />
       </main>
-
 
       <NewDialog open={dialog === 'new'} onClose={() => setDialog(null)} />
       <LibraryDialog open={dialog === 'library'} onClose={() => setDialog(null)} />

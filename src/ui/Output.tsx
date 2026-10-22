@@ -3,6 +3,7 @@ import { areaM2, bandMetersFromRows } from '../core/cutlist'
 import { useDesign, type Tab } from '../store/designStore'
 import { Sheets } from './Sheets'
 import { useView } from './useView'
+import { Icon } from './icons'
 
 export function Output() {
   const tab = useDesign(s => s.tab)
@@ -10,8 +11,9 @@ export function Output() {
   const view = useView()
   const errors = view.diagnostics.filter(d => d.severity === 'error').length
   const warnings = view.diagnostics.length - errors
+  const parts = view.rows.reduce((n, r) => n + r.quantity, 0)
   const tabs: { id: Tab; label: string; badge?: number; kind?: string }[] = [
-    { id: 'parts', label: 'Parts' },
+    { id: 'parts', label: 'Parts', badge: parts || undefined, kind: 'neutral' },
     { id: 'sheets', label: 'Sheets' },
     { id: 'hardware', label: 'Hardware' },
     { id: 'checks', label: 'Checks', badge: errors || warnings || undefined, kind: errors ? 'error' : 'warning' },
@@ -52,7 +54,7 @@ function Parts() {
 
   return (
     <div className="parts">
-      {blocked && <p className="blocked">{view.mode === 'project' ? 'This project' : 'This design'} has problems (see Checks). Fix them before cutting.</p>}
+      {blocked && <p className="alert error blocked"><Icon name="alert-circle" className="sm" /><span>{view.mode === 'project' ? 'This project' : 'This design'} has problems (see Checks). Fix them before cutting.</span></p>}
       <p className="summary">{total} parts in {byMat.length} {byMat.length === 1 ? 'material' : 'materials'}. Sizes are finished sizes; edges marked for banding.</p>
       {byMat.map(([mid, list]) => {
         const name = list[0].materialName
@@ -104,7 +106,7 @@ function EdgeMark({ l, w }: { l: number; w: number }) {
 
 function Hardware() {
   const items = useView().hardware
-  if (!items.length) return <p className="empty">No hardware needed yet. Add drawers, doors or a hanging rail.</p>
+  if (!items.length) return <p className="empty center"><Icon name="box" />No hardware needed yet. Add drawers, doors or a hanging rail.</p>
   return (
     <div className="hardware">
       <table className="cut">
@@ -128,15 +130,15 @@ function Checks() {
   const productId = useDesign(s => s.design.product.id)
   const setHighlight = useDesign(s => s.setHighlight)
   const go = (nodeId?: string) => view.mode === 'project' ? selectItem(nodeId ?? null) : select(nodeId && nodeId !== productId ? nodeId : null)
-  if (!diags.length) return <p className="empty ok">No problems found. Parts fit, nothing overlaps, every size is a whole millimetre.</p>
+  if (!diags.length) return <p className="empty ok center"><Icon name="check" />No problems found. Parts fit, nothing overlaps, every size is a whole millimetre.</p>
   const sorted = [...diags].sort((a, b) => (a.severity === b.severity ? 0 : a.severity === 'error' ? -1 : 1))
   return (
     <ul className="checks">
       {sorted.map((d, i) => (
         <li key={i} className={d.severity}>
           <button type="button" onClick={() => { go(d.nodeId); setHighlight(d.panelIds ?? []) }}>
-            <span className="sev">{d.severity === 'error' ? 'Problem' : 'Check'}</span>
-            <span>{d.message}</span>
+            <Icon name={d.severity === 'error' ? 'alert-circle' : 'alert-triangle'} className="sm" />
+            <span><span className="sev">{d.severity === 'error' ? 'Problem' : 'Check'}</span>{d.message}</span>
           </button>
         </li>
       ))}

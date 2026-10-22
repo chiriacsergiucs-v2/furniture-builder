@@ -4,6 +4,7 @@ import type { NestJob, NestResult, SheetLayout } from '../core/nesting/types'
 import { useDesign } from '../store/designStore'
 import { useNesting } from './useNesting'
 import { useView } from './useView'
+import { Icon } from './icons'
 
 const REASON: Record<string, string> = {
   'too-large': 'larger than the usable sheet',
@@ -15,9 +16,9 @@ export function Sheets() {
   const n = useNesting(true)
   const view = useView()
   const setHighlight = useDesign(s => s.setHighlight)
-  if (n.blocked) return <p className="blocked">Fix the problems under Checks first; sheets are laid out only for a valid design.</p>
-  if (n.status === 'idle' || n.status === 'running') return <p className="empty">Laying out sheets…</p>
-  if (n.status === 'error') return <p className="blocked">{n.error}</p>
+  if (n.blocked) return <p className="alert error blocked"><Icon name="alert-circle" className="sm" /><span>Fix the problems under Checks first; sheets are laid out only for a valid design.</span></p>
+  if (n.status === 'idle' || n.status === 'running') return <p className="loading">Laying out sheets…</p>
+  if (n.status === 'error') return <p className="alert error blocked"><Icon name="alert-circle" className="sm" /><span>{n.error}</span></p>
   const kerf = view.kerf
   const matOf = (id: string) => view.materials.find(m => m.id === id)
   return (
@@ -60,7 +61,7 @@ function MaterialSheets({ result, job, color, labelOf, onHover, trim }: {
     return (
       <section className="mat-sheets">
         <h3>{job.materialName}</h3>
-        <p className="blocked">This layout failed its own check and is not shown: {result.errors.slice(0, 3).join('; ')}</p>
+        <p className="alert error blocked"><Icon name="alert-circle" className="sm" /><span>This layout failed its own check and is not shown: {result.errors.slice(0, 3).join('; ')}</span></p>
       </section>
     )
   }
@@ -71,7 +72,7 @@ function MaterialSheets({ result, job, color, labelOf, onHover, trim }: {
         <ul className="inline-diags">
           {Object.entries(result.unplaced.reduce<Record<string, number>>((a, u) => ({ ...a, [`${u.key}|${u.reason}`]: (a[`${u.key}|${u.reason}`] ?? 0) + 1 }), {})).map(([k, q]) => {
             const [key, reason] = k.split('|')
-            return <li key={k} className="error">{q} × {labelOf(key)?.labels.join(', ') ?? key} not placed: {REASON[reason] ?? reason}.</li>
+            return <li key={k} className="alert error"><Icon name="alert-circle" className="sm" /><span>{q} × {labelOf(key)?.labels.join(', ') ?? key} not placed: {REASON[reason] ?? reason}.</span></li>
           })}
         </ul>
       )}
