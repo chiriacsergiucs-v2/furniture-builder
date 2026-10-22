@@ -7,7 +7,7 @@ import {
   buildProjectModel, makeItem, newProject, placementBases, placementIssues, projectCutlist, projectNestingJobs,
   removeProjectItem, resolvePlacements, setGapLeft, validateProject, type Project,
 } from '../src/core/project'
-import { mobilaBucatarie, mobilaDormitor, mobilaLiving, sampleProjects } from '../src/core/samples/mobila'
+import { mobilaDormitor, mobilaLiving, sampleProjects } from '../src/core/samples/mobila'
 import type { CabinetParams, Design } from '../src/core/types'
 
 const t = (id: string) => templates.find(x => x.id === id)!.create()
@@ -187,18 +187,10 @@ describe('Mobila rooms from the project file', () => {
     const [ns, b] = pm.pieces.map(x => x.bounds)
     expect(overlaps(ns, b)).toBe(false)
   })
-  it('Bucătărie: one 3670 × 700 × 3 splashback', () => {
-    const rows = projectCutlist(mobilaBucatarie())
-    expect(rows.map(r => [r.length, r.width, r.thickness, r.quantity])).toEqual([[3670, 700, 3, 1]])
-  })
-  it('sheets lay out for every room; only the splashback is longer than any sheet', () => {
+  it('sheets lay out for every room', () => {
     for (const s of sampleProjects) {
       const p = s.create()
-      for (const job of projectNestingJobs(p)) {
-        const unplaced = nest(job).unplaced
-        if (s.id === 'mobila-bucatarie') expect(unplaced.map(u => u.reason)).toEqual(['too-large'])
-        else expect(unplaced).toEqual([])
-      }
+      for (const job of projectNestingJobs(p)) expect(nest(job).unplaced).toEqual([])
     }
   })
 })

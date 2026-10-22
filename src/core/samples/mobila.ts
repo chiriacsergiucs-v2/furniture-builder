@@ -4,10 +4,10 @@
  * from the file, `docs/samples/mobila.md` lists the difference. Nothing here is invented: unknown values (backs,
  * plinths, drawer box boards) use the app's own defaults and are listed there as open.
  *
- * The Pat Noi bed and the kitchen splashback are known only as cut panels, without positions ("UNPLACED_DO_NOT_INVENT"
- * in the file), so they are panel sets (ADR-0032): listed for cutting, never assembled here. The RHS workbench (an
- * envelope with no member list) and the variants the file marks as not for production (nightstand B, the simplified
- * bed) are not built.
+ * The Pat Noi bed is known only as cut panels, without positions ("UNPLACED_DO_NOT_INVENT" in the file), so it is a
+ * panel set (ADR-0032): listed for cutting, never assembled here. The kitchen splashback (left out at the user's
+ * request), the RHS workbench (an envelope with no member list) and the variants the file marks as not for production
+ * (nightstand B, the simplified bed) are not built.
  */
 import { defaultDrawers, defaultMaterials, fr, mm } from '../design'
 import type { Placement, Project, ProjectItem } from '../project'
@@ -118,21 +118,9 @@ export function mobilaDormitor(): Project {
   }
 }
 
-/** Bucătărie: the splashback, one 3 mm Gray Urban panel. The file gives no stock sheet size for it. */
-export function mobilaBucatarie(): Project {
-  const grayUrban: Material = { id: 'gray-urban-3', name: 'Gray Urban 3 mm (panou perete)', thickness: 3, grain: false, color: '#8a8d90' }
-  const panou = panelSet('mobila-panou-bucatarie', 'Panou bucătărie', [part('KT-0064', 'Panou perete', 3670, 700, 'gray-urban-3')],
-    'Wall splashback. Its stock sheet and its height on the wall are not in the Mobila file.', [grayUrban])
-  return {
-    schemaVersion: 1, id: 'mobila-bucatarie', name: 'Mobila — Bucătărie', createdAt: STAMP, updatedAt: STAMP, cutting: { kerf: 4 },
-    items: [item('bucatarie-panou', panou, 0, { kind: 'floor' })],
-  }
-}
-
 export interface SampleProject { id: string; name: string; description: string; create: () => Project }
 
 export const sampleProjects: SampleProject[] = [
   { id: 'mobila-living', name: 'Mobila — Living', description: 'Column 535 × 2600, low run 2685 × 435 on the floor, high run hung 1730 mm above it', create: mobilaLiving },
   { id: 'mobila-dormitor', name: 'Mobila — Dormitor', description: 'Two nightstands A, 450 × 400, two drawers; Pat Noi bed panels (not assembled)', create: mobilaDormitor },
-  { id: 'mobila-bucatarie', name: 'Mobila — Bucătărie', description: 'Splashback panel 3670 × 700 × 3', create: mobilaBucatarie },
 ]
