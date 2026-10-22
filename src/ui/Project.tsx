@@ -8,6 +8,7 @@ import { Dim, DimV } from './Elevation'
 import { Icon } from './icons'
 import { templateGlyph } from './Templates'
 import { StartFrom } from './Catalog'
+import { askConfirm } from './Confirm'
 
 const FRONT_SIDE: Record<QuarterTurn, string> = { 0: 'front faces you', 90: 'front faces right', 180: 'front faces the back wall', 270: 'front faces left' }
 
@@ -32,7 +33,7 @@ export function ProjectPanel({ onAdd }: { onAdd: () => void }) {
     if (!item?.libraryId) return
     const d = await loadDesign(item.libraryId).catch(() => undefined)
     if (!d) { setLibMsg('The saved piece this came from no longer exists.'); return }
-    if (!confirm(`Replace “${item.design.name}” in this project with the current saved version? Position, turn and quantity stay.`)) return
+    if (!(await askConfirm(`Replace “${item.design.name}” in this project with the current saved version? Position, turn and quantity stay.`, { confirmLabel: 'Replace' }))) return
     update(item.id, { design: structuredClone(d) })
     setLibMsg('Updated from the saved piece.')
   }
@@ -87,7 +88,7 @@ export function ProjectPanel({ onAdd }: { onAdd: () => void }) {
             </>
           ) : <p className="hint">No piece on its left at this height; set “From left” to place it.</p>}
           {piece && <p className="hint">Takes {piece.bounds.w} × {piece.bounds.d} mm of floor, {piece.bounds.h} mm high.</p>}
-          <button type="button" className="danger-link" onClick={() => { if (confirm(`Remove “${item.design.name}” from this project?`)) remove(item.id) }}>Remove from project</button>
+          <button type="button" className="danger-link" onClick={async () => { if (await askConfirm(`Remove “${item.design.name}” from this project?`, { confirmLabel: 'Remove', danger: true })) remove(item.id) }}>Remove from project</button>
         </section>
       )}
 
@@ -300,9 +301,9 @@ function RunParts() {
   const project = useDesign(s => s.project)!
   const updateProject = useDesign(s => s.updateProject)
   const parts = project.runParts ?? []
-  const suggest = () => {
+  const suggest = async () => {
     const next = suggestRunParts({ ...project, runParts: [] })
-    if (parts.length && !confirm('Replace the run parts with new suggestions for where the pieces are now?')) return
+    if (parts.length && !(await askConfirm('Replace the run parts with new suggestions for where the pieces are now?', { confirmLabel: 'Replace' }))) return
     updateProject(p => ({ ...p, runParts: next }))
   }
   return (

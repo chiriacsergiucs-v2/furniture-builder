@@ -54,6 +54,12 @@ describe('editable templates on this device (ADR-0034)', () => {
     expect(a.id).not.toBe(b.id)
     expect(a.id).not.toBe(f.variants[0].create!().id)
   })
+  it("the user's own templates are mixed in after the shipped ones, not listed first", () => {
+    const own = templateFromDesign(templates[0].create(), { name: 'Mine', function: 'storage', rooms: ['bedroom'] })
+    const merged = mergeCatalog(catalogFamilies, [own])
+    expect(merged[merged.length - 1].localId).toBe(own.id)
+    expect(merged[0].id).toBe(catalogFamilies[0].id)
+  })
   it('a corrupt template row is skipped and still present', async () => {
     const t = shadowOf(findFamily('bookcase')!)
     const { db } = await import('../src/persist/db')

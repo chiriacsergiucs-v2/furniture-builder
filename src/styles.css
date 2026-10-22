@@ -312,6 +312,11 @@ td.note { color: var(--ink-2); font-size: var(--fs-xs); }
 .dialog-body { padding: var(--s-4) var(--s-5) var(--s-5); display: grid; gap: var(--s-4); overflow: auto; min-height: 0; }
 .dialog-footer { display: flex; justify-content: flex-end; gap: var(--s-2); flex-wrap: wrap; padding: var(--s-3) var(--s-5); border-top: 1px solid var(--line-2); background: var(--surface); }
 .dialog-footer .start { margin-right: auto; }
+.dialog.confirm { width: min(440px, calc(100vw - 32px)); }
+.confirm-msg { margin: 0; display: flex; gap: var(--s-2); align-items: flex-start; font-size: var(--fs-md); }
+.confirm-msg .icon { color: var(--error); flex: none; margin-top: 3px; }
+.btn.danger.solid { background: var(--error-fill); border-color: var(--error-fill); color: var(--on-error); }
+.dialog.confirm input { width: 100%; }
 @media (prefers-reduced-motion: no-preference) {
   .dialog[open] { animation: rise var(--t-base); }
   @keyframes rise { from { opacity: 0; transform: translateY(6px); } }
@@ -528,13 +533,18 @@ table.buy { margin-bottom: var(--s-4); }
   .bar .name { width: auto; flex: 1; min-width: 0; }
   .bar .status .txt { display: none; }
   .bar .status.failed .txt { display: inline; }
-  /* Every action stays on screen: the row wraps instead of hiding in a sideways scroller (F18). */
-  .actions { width: 100%; min-width: 0; margin: 0; flex-wrap: wrap; row-gap: 2px; order: 2; }
+  /* Phones: the actions sit in a bottom bar at thumb height (ADR-0030, user decision 2026-10-23); every action stays
+     on screen — the bar wraps instead of hiding buttons in a sideways scroller (F18). */
+  .actions { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; margin: 0; flex-wrap: wrap; justify-content: space-between; row-gap: 2px;
+    background: var(--bar-bg); border-top: 1px solid var(--bar-line);
+    padding: 6px max(12px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px)); }
+  .app { padding-bottom: var(--actions-h, 60px); }
+  .catalog-page { padding-bottom: calc(var(--actions-h, 60px) + var(--s-6)); }
   .bar > .theme { margin-left: auto; }
   .actions .divider { display: none; }
   .actions .cluster { flex: 0 0 auto; }
   .actions .cluster.end { margin-left: auto; }
-  .menu-items { position: fixed; left: 16px; right: 16px; top: auto; min-width: 0; }
+  .menu-items { position: fixed; left: 16px; right: 16px; top: auto; bottom: calc(var(--actions-h, 60px) + 8px); min-width: 0; }
   .work { display: flex; flex-direction: column; }
   .work > * { min-width: 0; max-width: 100vw; }
   .stage { order: -1; height: 50vh; min-height: 300px; position: sticky; top: var(--bar-h, 92px); z-index: 2; background: var(--bg); border-bottom: 1px solid var(--line); }

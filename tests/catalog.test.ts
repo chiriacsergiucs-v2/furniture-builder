@@ -96,3 +96,18 @@ describe('template catalog (ADR-0032, ADR-0033, ADR-0039)', () => {
     expect(readFileSync(path, 'utf8').match(re)?.[0]).toBe(block)
   })
 })
+
+describe('brand entries from the catalog feed (ADR-0027, ADR-0029)', () => {
+  it('a brand entry opens as a copy with its origin; the shipped entry is unchanged', async () => {
+    const { brandEntries, copyBrandEntry } = await import('../src/core/catalog/brands')
+    expect(Array.isArray(brandEntries)).toBe(true)
+    const design = { ...templates[1].create(), catalog: { brand: 'IKEA', productName: 'BILLY 80', category: 'Bookcase', origin: { catalogId: 'x', revision: 1, productName: 'BILLY 80', sourceUrl: 'https://www.ikea.com/x.pdf', takenAt: 't' } } }
+    const entry = { catalogId: 'ikea-billy-80', design }
+    const before = JSON.stringify(entry)
+    const copy = copyBrandEntry(entry, 'new-id', '2026-10-23T00:00:00Z')
+    expect(copy.id).toBe('new-id')
+    expect(copy.catalog?.origin).toMatchObject({ catalogId: 'ikea-billy-80', brand: 'IKEA', productName: 'BILLY 80', sourceUrl: 'https://www.ikea.com/x.pdf' })
+    expect(validateDesign(copy)).toEqual([])
+    expect(JSON.stringify(entry)).toBe(before)
+  })
+})

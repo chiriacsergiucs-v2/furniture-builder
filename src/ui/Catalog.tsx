@@ -3,10 +3,13 @@ import { buildModel } from '../core/build'
 import { catalogFamilies, CAPABILITY_WAITS, FUNCTION_LABEL, FUNCTIONS, insertable, insertVariant, isSafetyConfirmed, missingCapabilities, ROOM_LABEL, ROOMS, setSafetyConfirmed, startFamilies, type CatalogVariant, type FunctionGroup, type Room } from '../core/catalog'
 import { mergeCatalog, shadowOf, templateFromDesign, validateLocalTemplate, type LocalTemplate, type ViewFamily } from '../core/catalog/local'
 import { VARIANT_RO } from '../core/catalog/ro'
+import { brandEntries, copyBrandEntry } from '../core/catalog/brands'
+import { newId } from '../core/design'
 import type { Design } from '../core/types'
 import { listDesigns, type StoredDesign } from '../persist/db'
 import { useDesign } from '../store/designStore'
 import { useTemplates } from '../store/templatesStore'
+import { askConfirm, askText } from './Confirm'
 import { Icon } from './icons'
 import { familyGlyph, templateGlyph } from './Templates'
 
@@ -204,7 +207,16 @@ export function CatalogPage({ onDone }: { onDone: () => void }) {
         </section>
       ))}
       {source === 'saved' && <SavedList onTake={take} />}
-      {source === 'brands' && <p className="empty center"><Icon name="catalog" />No brand products yet. They arrive through the catalog feed (ADR-0029), which has not added any.</p>}
+      {source === 'brands' && (brandEntries.length === 0
+        ? <p className="empty center"><Icon name="catalog" />No brand products yet. The weekly catalog feed (Mondays, IKEA first) adds them once it can reach the manufacturers' sites.</p>
+        : <ul className="template-list template-grid">{brandEntries.map(e => (
+            <li key={e.catalogId}>
+              <button type="button" className="row-btn" onClick={() => take(copyBrandEntry(e, newId()))}>
+                <span className="glyph"><Icon name={templateGlyph(e.design.product.kind)} /></span>
+                <span><strong>{e.design.catalog!.brand} {e.design.catalog!.productName ?? e.design.name}</strong><span className="sub">{e.design.catalog!.category ?? ''}{e.design.catalog!.articleNumber ? ` · ${e.design.catalog!.articleNumber}` : ''}</span></span>
+                <Icon name="chevron-right" className="chev sm" />
+              </button>
+            </li>))}</ul>)}
     </main>
   )
 }
@@ -258,8 +270,8 @@ function FamilyBlock({ f, also, q, toProject, onTake, onEdit }: { f: ViewFamily;
           )
         })}
       </ul>
-      {f.localId && !f.own && <button type="button" className="danger-link" onClick={() => { if (confirm(`Reset “${f.name}” to the shipped template? Your edits to it on this device are removed.`)) void remove(f.localId!) }}>Reset to shipped</button>}
-      {f.own && <button type="button" className="danger-link" onClick={() => { if (confirm(`Delete your template “${f.name}”?`)) void remove(f.localId!) }}>Delete template</button>}
+      {f.localId && !f.own && <button type="button" className="danger-link" onClick={async () => { if (await askConfirm(`Reset “${f.name}” to the shipped template? Your edits to it on this device are removed.`, { confirmLabel: 'Reset', danger: true })) void remove(f.localId!) }}>Reset to shipped</button>}
+      {f.own && <button type="button" className="danger-link" onClick={async () => { if (await askConfirm(`Delete your template “${f.name}”?`, { confirmLabel: 'Delete', danger: true })) void remove(f.localId!) }}>Delete template</button>}
     </article>
   )
 }
@@ -272,7 +284,7 @@ function ShippedUpdated({ f }: { f: ViewFamily }) {
     <p className="alert info"><Icon name="info" className="sm" />
       <span>The shipped template was updated (revision {shipped.catalogVersion}). Shipped: {shipped.variants.length} variants; yours: {f.variants.length}.</span>
       <button type="button" className="btn sm" onClick={() => { const t = useTemplates.getState().locals.find(x => x.id === f.localId); if (t) void save({ ...t, basedOn: shipped.catalogVersion, updatedAt: now() }) }}>Keep mine</button>
-      <button type="button" className="btn sm" onClick={() => { if (confirm('Replace your edits with the shipped template?')) void remove(f.localId!) }}>Use shipped</button>
+      <button type="button" className="btn sm" onClick={async () => { if (await askConfirm('Replace your edits with the shipped template?', { confirmLabel: 'Use shipped', danger: true })) void remove(f.localId!) }}>Use shipped</button>
     </p>
   )
 }
@@ -284,8 +296,8 @@ function SaveAsTemplate() {
   const [done, setDone] = useState(false)
   if (project && !editingItem) return null
   return (
-    <button type="button" className="btn sm" disabled={done} onClick={() => {
-      const name = prompt('Name of the new template', design.name)?.trim()
+    <button type="button" className="btn sm" disabled={done} onClick={async () => {
+      const name = (await askText('Name of the new template', design.name))?.trim()
       if (!name) return
       void save(templateFromDesign(design, { name, function: 'storage', rooms: ['other'] })).then(() => setDone(true))
     }}>{done ? 'Saved as a template' : 'Save this piece as a template'}</button>

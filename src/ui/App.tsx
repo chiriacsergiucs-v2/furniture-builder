@@ -5,6 +5,7 @@ import { lastDesignId, lastProjectId, loadDesign, loadProject, rememberLast, rem
 import { useDesign } from '../store/designStore'
 import { AddPieceDialog, LibraryDialog, MaterialsDialog, NewDialog } from './Dialogs'
 import { CatalogPage } from './Catalog'
+import { ConfirmHost } from './Confirm'
 import { catalogFamilies } from '../core/catalog'
 import { useTemplates } from '../store/templatesStore'
 import { PlanView, ProjectPanel } from './Project'
@@ -108,6 +109,17 @@ export function App() {
     const bar = barRef.current
     if (!bar || typeof ResizeObserver === 'undefined') return
     const ro = new ResizeObserver(() => document.documentElement.style.setProperty('--bar-h', `${bar.offsetHeight}px`))
+    ro.observe(bar)
+    return () => ro.disconnect()
+  }, [])
+  // Phones put the actions in a fixed bottom bar; the page keeps room for it (ADR-0030).
+  useEffect(() => {
+    const bar = barRef.current?.querySelector('.actions') as HTMLElement | null
+    if (!bar || typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(() => {
+      const fixed = getComputedStyle(bar).position === 'fixed'
+      document.documentElement.style.setProperty('--actions-h', fixed ? `${bar.offsetHeight}px` : '0px')
+    })
     ro.observe(bar)
     return () => ro.disconnect()
   }, [])
@@ -308,6 +320,7 @@ export function App() {
       <MaterialsDialog open={dialog === 'materials'} onClose={() => setDialog(null)} />
       <AddPieceDialog open={dialog === 'add'} onClose={() => setDialog(null)} onBrowse={openCatalog} />
     </div>
+    <ConfirmHost />
     {printing && <PrintSheet />}
     </>
   )

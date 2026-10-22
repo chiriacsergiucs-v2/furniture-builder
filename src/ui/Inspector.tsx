@@ -4,6 +4,7 @@ import type { CabinetParams, CornerParams, DeskParams, DeskSupport, FrontStyle, 
 import { useDesign } from '../store/designStore'
 import { Counter, Group, MmField, revealGroup, Section, Segmented, Select, Steps, Toggle, type Step } from './controls'
 import { Icon } from './icons'
+import { askConfirm } from './Confirm'
 import { ApplianceEditor, ChecksGroup, FrameEditor, FrontEditor, LayoutPicker, PanelEditor, PieceInfo } from './Editors'
 
 const KIND_LABEL: Record<SpaceKind, string> = { empty: 'Empty', shelves: 'Shelves', drawers: 'Drawers', hanging: 'Hanging', split: 'Divided' }
@@ -479,8 +480,8 @@ function DeskEditor({ p, deskId, materials }: { p: DeskParams; deskId: string; m
 function BaysGroup({ interior, onChange }: { interior: Space; onChange: (s: Space) => void }) {
   const layout = bayLayoutOf(interior)
   const cur = layout ?? { bays: 1, shelves: 0, doors: 0 as const }
-  const apply = (patch: Partial<typeof cur>) => {
-    if (!layout && !confirm('The inside has its own layout. Replace it with equal bays?')) return
+  const apply = async (patch: Partial<typeof cur>) => {
+    if (!layout && !(await askConfirm('The inside has its own layout. Replace it with equal bays?', { confirmLabel: 'Replace' }))) return
     onChange(makeBays({ ...cur, ...patch }, interior))
   }
   return (

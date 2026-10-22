@@ -24,3 +24,9 @@ by Room (default) or Type; local template edits in Dexie v3; rules registry (`sr
 (rails top, no bottom, appliance niches typed by the user), `panel` and `frame` roots, sliding doors and flaps, solid
 stock in a lengths list, project run parts. `docs/catalog.md` is generated (`npm run catalog:docs`). No formula engine,
 no template inheritance; shaped parts (raked backs, diagonal fronts) need a future ADR.
+
+User answers 2026-10-23 (all ADR open questions): kitchen carcass 720 + plinth 100; shelf span 900 (18 mm), door 600,
+hanger depth 530, anti-tip > 1000; no scribe allowance; sliding 30 / 80; timber lengths 2400 + 3000, joinery not
+listed; brand cleared on first edit; all saved pieces in the Catalog; own templates mixed in by room/type; placement
+keeps its own turn, Wall warns, gap tool hidden above; feed weekly IKEA only; own confirm dialogs; theme toggle stays;
+no guided New; phone bottom bar; shaped-part ADR next (ADR-0040).

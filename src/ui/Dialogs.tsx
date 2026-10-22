@@ -10,6 +10,7 @@ import { Icon } from './icons'
 import { AddPieceList } from './Project'
 import { templateGlyph } from './Templates'
 import { StartFrom } from './Catalog'
+import { askConfirm } from './Confirm'
 
 /** Modal shell: header (title + close), scrolling body, optional footer for actions. Esc and backdrop close it. */
 export function Dialog({ open, onClose, title, children, footer, wide }: { open: boolean; onClose: () => void; title: string; children: ReactNode; footer?: ReactNode; wide?: boolean }) {
@@ -113,7 +114,7 @@ export function LibraryDialog({ open, onClose }: { open: boolean; onClose: () =>
       <button type="button" className="btn sm" onClick={dup(r, kind)} title="Duplicate"><Icon name="copy" className="sm" /><span className="lbl">Duplicate</span></button>
       <button type="button" className="btn sm danger" disabled={r.id === currentId} title={r.id === currentId ? (kind === 'project' ? 'Open something else first' : 'Open another piece first') : 'Delete'}
         onClick={async () => {
-          if (!confirm(kind === 'project' ? `Delete project “${r.name}”? This cannot be undone.` : `Delete “${r.name}”? This cannot be undone.`)) return
+          if (!(await askConfirm(kind === 'project' ? `Delete project “${r.name}”? This cannot be undone.` : `Delete “${r.name}”? This cannot be undone.`, { confirmLabel: 'Delete', danger: true }))) return
           if (kind === 'project') await deleteProject(r.id); else await deleteDesign(r.id)
           refresh()
         }}><Icon name="trash" className="sm" /><span className="lbl">Delete</span></button>

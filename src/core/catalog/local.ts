@@ -43,11 +43,14 @@ export function fromLocal(t: LocalTemplate, shipped?: CatalogFamily): ViewFamily
   }
 }
 
-/** Local templates first, shipped ones they shadow hidden (ADR-0034). */
+/**
+ * Shipped families with the local ones mixed in (ADR-0034, user decision 2026-10-23): an edited family takes the
+ * shipped one's place, the user's own new families follow, so grouping by room or type places them like any other.
+ */
 export function mergeCatalog(shipped: CatalogFamily[], locals: LocalTemplate[]): ViewFamily[] {
   const byShipped = new Map(locals.filter(t => t.shadows).map(t => [t.shadows!, t]))
   const own = locals.filter(t => !t.shadows).map(t => fromLocal(t))
-  return [...own, ...shipped.map(f => { const t = byShipped.get(f.id); return t ? fromLocal(t, f) : f })]
+  return [...shipped.map(f => { const t = byShipped.get(f.id); return t ? fromLocal(t, f) : f }), ...own]
 }
 
 /** Start editing a shipped family: a local copy that shadows it. */
