@@ -210,6 +210,8 @@ export interface CabinetParams {
   frontMaterialId: string
   backMaterialId: string
   top: 'over' | 'between'
+  /** 'under': the bottom runs the full width and the sides stand on it. Absent = between the sides. */
+  bottom?: 'between' | 'under'
   back: 'none' | 'applied' | 'inset'
   /** Distance of an inset back from the rear edge of the carcass. */
   backInset: Mm

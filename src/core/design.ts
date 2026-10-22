@@ -172,6 +172,46 @@ export function splitSpace(s: Space, axis: 'x' | 'y', parts: number): Space {
 /** Collapse a split back into a plain space (keeps id, doors). */
 export const unsplit = (s: Space): Space => (s.kind === 'split' ? { id: s.id, kind: 'shelves', count: 2, front: s.front ?? null } : s)
 
+/**
+ * A row of bays: vertical dividers, the same number of fixed shelves in every bay and the same doors on each.
+ * The quick layout for base and wall units; anything finer is edited space by space.
+ */
+export interface BayLayout { bays: number; shelves: number; doors: 0 | 1 | 2 }
+export const MAX_BAYS = 8
+
+/** The bay layout a space tree already has, or null when its inside is laid out some other way. */
+export function bayLayoutOf(s: Space): BayLayout | null {
+  const one = (c: Space): Omit<BayLayout, 'bays'> | null =>
+    c.kind === 'shelves' && !c.adjustable ? { shelves: c.count, doors: (c.front?.count ?? 0) as BayLayout['doors'] } : null
+  if (s.kind !== 'split') { const b = one(s); return b ? { bays: 1, ...b } : null }
+  if (s.axis !== 'x' || s.front) return null
+  const kids = s.children.map(one)
+  const first = kids[0]
+  if (!first || kids.some(k => !k || k.shelves !== first.shelves || k.doors !== first.doors)) return null
+  return { bays: s.children.length, ...first }
+}
+
+/**
+ * Lay a space out as bays. Keeps the root id and existing bay ids (so selection and fixed bay widths survive),
+ * and the handle of the first bay on every bay.
+ */
+export function makeBays(l: BayLayout, prev: Space): Space {
+  const bays = Math.max(1, Math.min(MAX_BAYS, Math.round(l.bays)))
+  const shelves = Math.max(0, Math.min(MAX_SHELVES, Math.round(l.shelves)))
+  const front = l.doors ? { kind: 'doors' as const, count: l.doors } : null
+  const old = prev.kind === 'split' && prev.axis === 'x' ? prev.children : [prev]
+  const handle = old[0]?.handle
+  const bay = (i: number, id: string): Space => {
+    const was = old[i]
+    const hinge = was?.front?.count === 1 && l.doors === 1 ? was.front.hinge : undefined
+    return { id, kind: 'shelves', count: shelves, front: front && hinge ? { ...front, hinge } : front, ...(handle ? { handle } : {}) }
+  }
+  if (bays === 1) return bay(0, prev.id)
+  const sizes = prev.kind === 'split' && prev.axis === 'x' && prev.sizes.length === bays ? prev.sizes : Array.from({ length: bays }, () => fr())
+  const children = Array.from({ length: bays }, (_, i) => bay(i, old[i] && old[i].id !== prev.id ? old[i].id : newId()))
+  return { id: prev.id, kind: 'split', axis: 'x', sizes, children, front: null }
+}
+
 // ---------------------------------------------------------------------------
 // Editable space roots of any product (cabinet interior, desk drawer units)
 // ---------------------------------------------------------------------------
@@ -300,6 +340,7 @@ export function validateDesign(d: unknown): string[] {
     ints(['width', 'height', 'depth', 'backInset', 'plinthHeight', 'plinthSetback', 'frontGap', 'shelfSetback'], params)
     ;['bodyMaterialId', 'frontMaterialId', 'backMaterialId'].forEach(k => matRef(k, params))
     if (params.top !== 'over' && params.top !== 'between') errs.push('Invalid top joint')
+    if (params.bottom !== undefined && params.bottom !== 'between' && params.bottom !== 'under') errs.push('Invalid bottom joint')
     if (params.shelfClearance !== undefined && (!isInt(params.shelfClearance) || (params.shelfClearance as number) > 20)) errs.push('shelfClearance must be a whole number of mm')
     if (params.pinRowSetback !== undefined && (!isInt(params.pinRowSetback, 8) || (params.pinRowSetback as number) > 300)) errs.push('pinRowSetback must be 8 to 300 mm')
     if (params.frontStyle !== undefined && !['overlay', 'half', 'inset'].includes(params.frontStyle as string)) errs.push('Invalid front style')

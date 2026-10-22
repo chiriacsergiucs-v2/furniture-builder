@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { buildModel } from '../core/build'
 import { findInProduct, mapProductSpace, templates, upgradeDesign } from '../core/design'
-import { buildProjectModel, makeItem, setGapLeft, type Project, type ProjectItem, type ProjectModel } from '../core/project'
+import { buildProjectModel, makeItem, removeProjectItem, resolvePlacements, setGapLeft, type Project, type ProjectItem, type ProjectModel } from '../core/project'
 import type { CabinetParams, CornerParams, DeskParams, Design, FurnitureModel, Material, Space } from '../core/types'
 
 export type Tab = 'parts' | 'sheets' | 'hardware' | 'checks'
@@ -87,7 +87,8 @@ export const useDesign = create<State>((set, get) => {
     if (project && editingItemId) set({ project: { ...project, items: project.items.map(i => (i.id === editingItemId ? { ...i, design } : i)) }, projectDirtyAt: Date.now() })
   }
   const commitProject = (next: Project) => {
-    const stamped = { ...next, updatedAt: new Date().toISOString() }
+    // Pieces on or above others follow them (ADR-0031): stored positions always match the placements.
+    const stamped = { ...resolvePlacements(next), updatedAt: new Date().toISOString() }
     set({ project: stamped, projectModel: buildProjectModel(stamped), projectDirtyAt: Date.now() })
   }
   const initial = templates[0].create()
@@ -119,7 +120,7 @@ export const useDesign = create<State>((set, get) => {
       if (project && !editingItemId) { set({ selectedItemId: nodeId.split(':')[0] }); return }
       set({ selectedId: nodeId === design.product.id ? null : nodeId })
     },
-    openProject: p => set({ project: p, projectModel: buildProjectModel(p), editingItemId: null, selectedItemId: null, highlight: [], projectDirtyAt: 0 }),
+    openProject: raw => { const p = resolvePlacements(raw); set({ project: p, projectModel: buildProjectModel(p), editingItemId: null, selectedItemId: null, highlight: [], projectDirtyAt: 0 }) },
     closeProject: () => set({ project: null, projectModel: null, editingItemId: null, selectedItemId: null }),
     updateProject: fn => { const p = get().project; if (p) commitProject(fn(p)) },
     addPiece: (d, libraryId) => {
@@ -131,7 +132,7 @@ export const useDesign = create<State>((set, get) => {
     },
     updateItem: (id, patch) => { const p = get().project; if (p) commitProject({ ...p, items: p.items.map(i => (i.id === id ? { ...i, ...patch } : i)) }) },
     setGap: (id, gap, moveRight) => { const p = get().project; if (p) { const next = setGapLeft(p, id, gap, moveRight); if (next !== p) commitProject(next) } },
-    removeItem: id => { const p = get().project; if (p) { commitProject({ ...p, items: p.items.filter(i => i.id !== id) }); set({ selectedItemId: null }) } },
+    removeItem: id => { const p = get().project; if (p) { commitProject(removeProjectItem(p, id)); set({ selectedItemId: null }) } },
     selectItem: id => set({ selectedItemId: id }),
     editItem: id => {
       const item = get().project?.items.find(i => i.id === id)
@@ -140,9 +141,11 @@ export const useDesign = create<State>((set, get) => {
       set({ editingItemId: id, design: d, model: buildModel(d), selectedId: null, highlight: [], past: [], future: [], dirtyAt: 0, pristine: true })
     },
     backToProject: () => {
-      const p = get().project
-      if (!p) return
-      set({ editingItemId: null, projectModel: buildProjectModel(p), selectedId: null, highlight: [] })
+      const raw = get().project
+      if (!raw) return
+      // A resized piece moves whatever sits on it.
+      const p = resolvePlacements(raw)
+      set({ editingItemId: null, project: p, projectModel: buildProjectModel(p), selectedId: null, highlight: [], ...(p !== raw ? { projectDirtyAt: Date.now() } : {}) })
     },
     setKerf: kerf => { const d = get().design; commit({ ...d, cutting: { ...d.cutting, kerf } }) },
     rename: name => commit({ ...get().design, name }),

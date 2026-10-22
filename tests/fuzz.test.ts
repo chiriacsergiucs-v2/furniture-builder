@@ -60,7 +60,7 @@ function genCabinet(): Design {
   const params: CabinetParams = {
     width: ri(300, 2400), height: ri(300, 2400), depth: ri(250, 700),
     bodyMaterialId: 'body', frontMaterialId: 'front', backMaterialId: 'back',
-    top: pick(['over', 'between'] as const), back: pick(['none', 'applied', 'inset'] as const), backInset: ri(0, 30),
+    top: pick(['over', 'between'] as const), bottom: pick(['between', 'under'] as const), back: pick(['none', 'applied', 'inset'] as const), backInset: ri(0, 30),
     frontStyle: pick(['overlay', 'overlay', 'half', 'inset'] as const),
     plinthHeight: pick([0, 0, ri(40, 120)]), plinthSetback: ri(0, 60), frontGap: ri(0, 6), shelfSetback: ri(0, 30), shelfClearance: ri(0, 2), pinRowSetback: pick([37, 37, ri(25, 60)]),
     drawers: drawers(), interior: genSpace(0, false),
