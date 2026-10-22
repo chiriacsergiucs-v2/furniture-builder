@@ -50,6 +50,9 @@ pieces + sheets + reopen, offline start, no page errors or failed requests. Page
 | N11 | Project plan shows sizes (tape dimensions) and a room front view | Done | `src/ui/Project.tsx` (`RoomPlan`, `RoomFront`): overall width along the back wall and depth along the side wall, overall width and height in the front view, selected piece's sizes in green; tap a piece in either view to select it. Lint, typecheck, 87 tests, build passed; scripted Chromium screenshots of a 3-piece project at 1440 and 390 px, no page errors. No new unit test (drawing only) |
 | N12 | Exploded 3D view | Done | User request 2026-10-22; ADR-0014 addendum. `src/core/explode.ts`; `tests/explode.test.ts` (sizes kept, whole mm, on the floor, no overlaps, every template and a project); fuzz checks no exploded overlaps (20,000 passed). Browser run 1440 / 390 px: piece and project exploded, no page errors, no sideways scroll |
 | N13 | Gap between two pieces in a project | Done | User request 2026-10-22; ADR-0022 addendum. `leftNeighbour`/`setGapLeft` in `src/core/project.ts`; 4 tests. Browser run: gap set to 600 mm, the piece on its right moved with it. Gaps are along the wall (x) only |
+| N14 | Catalog page: by category, brand, saved on this device | Not done | ADR-0027 (Proposed). User request 2026-10-22 |
+| N15 | Catalog metadata and origin link kept on edited copies | Not done | ADR-0028 (Proposed). User request 2026-10-22 |
+| N16 | Catalog feed: scheduled reconstruction of public assembly manuals into native designs, via PR | Not done | ADR-0029 (Proposed). Weekly routine "Furniture catalog feed" created 2026-10-22; no run yet |
 
 ## Dropped
 

@@ -74,3 +74,13 @@ Questions answered by the user on 2026-10-21; each becomes Accepted when its sli
 | [ADR-0024](ADR-0024.md) | Front styles (overlay, half overlay, inset) and handles as a scheduled item with a position | N06 | Accepted |
 | [ADR-0025](ADR-0025.md) | Wall and corner cabinets as new product roots built from the cabinet generator | N07 | Accepted |
 | [ADR-0026](ADR-0026.md) | Desk pedestals become editable spaces | N08 | Accepted |
+
+## Catalog — proposed
+
+Requested by the user on 2026-10-22; defaults in each ADR await confirmation.
+
+| ID | Decision | Backlog | Status |
+|---|---|---|---|
+| [ADR-0027](ADR-0027.md) | Catalog page: browse by category, brand and "Saved on this device"; shipped entries open as local copies | N14 | Proposed |
+| [ADR-0028](ADR-0028.md) | Catalog metadata and origin link live in the design document (optional field, no schema bump) | N15 | Proposed |
+| [ADR-0029](ADR-0029.md) | The catalog is fed by a scheduled, PR-gated offline reconstruction job; native products only, evidence per value | N16 | Proposed |
