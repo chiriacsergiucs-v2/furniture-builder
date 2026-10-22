@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState, type KeyboardEvent } from 'react'
 import { templates } from '../core/design'
-import { leftNeighbour, type ProjectModel, type QuarterTurn } from '../core/project'
+import { leftNeighbour, placementBases, type Placement, type ProjectItem, type ProjectModel, type QuarterTurn } from '../core/project'
 import type { Panel } from '../core/types'
 import { listDesigns, loadDesign, type StoredDesign } from '../persist/db'
 import { useDesign } from '../store/designStore'
-import { Counter, MmField, Segmented, Toggle } from './controls'
+import { Counter, MmField, Segmented, Select, Toggle } from './controls'
 import { Dim, DimV } from './Elevation'
 import { Icon } from './icons'
 import { TemplateButton, templateGlyph } from './Templates'
@@ -77,12 +77,8 @@ export function ProjectPanel({ onAdd }: { onAdd: () => void }) {
             options={[{ value: 0, label: '0°' }, { value: 90, label: '90°' }, { value: 180, label: '180°' }, { value: 270, label: '270°' }]}
             onChange={v => update(item.id, { rotationY: v })} />
           <p className="hint">{FRONT_SIDE[item.rotationY]}</p>
-          <div className="dims3">
-            <MmField label="From left" value={item.position.x} min={-20000} max={20000} onChange={v => update(item.id, { position: { ...item.position, x: v } })} />
-            <MmField label="From back" value={item.position.z} min={-20000} max={20000} onChange={v => update(item.id, { position: { ...item.position, z: v } })} />
-            <MmField label="Above floor" value={item.position.y} min={0} max={3000} onChange={v => update(item.id, { position: { ...item.position, y: v } })} />
-          </div>
-          {left ? (
+          <PlacementFields item={item} />
+          {item.placement?.kind === 'above' ? null : left ? (
             <>
               <MmField label={`Gap to ${left.item.design.name} on the left`} value={left.gap} min={0} max={5000}
                 onChange={v => setGap(item.id, v, moveRight)} />
@@ -97,6 +93,66 @@ export function ProjectPanel({ onAdd }: { onAdd: () => void }) {
       <MmField label="Saw cut (kerf) for this project" value={project.cutting?.kerf ?? 4} min={0} max={20} step={1}
         onChange={v => updateProject(p => ({ ...p, cutting: { kerf: v } }))} />
     </div>
+  )
+}
+
+type PlacementKind = Placement['kind'] | 'free'
+
+/** Where the selected piece sits: on the floor, on the wall, on or above another piece, or anywhere (ADR-0031). */
+function PlacementFields({ item }: { item: ProjectItem }) {
+  const project = useDesign(s => s.project)!
+  const update = useDesign(s => s.updateItem)
+  const bases = useMemo(() => placementBases(project, item.id), [project, item.id])
+  const pl = item.placement
+  const kind: PlacementKind = pl?.kind ?? 'free'
+  const pos = item.position
+  const setPlacement = (next: PlacementKind) => {
+    if (next === 'free') { update(item.id, { placement: undefined }); return }
+    if (next === 'floor') update(item.id, { placement: { kind: 'floor' } })
+    else if (next === 'wall') update(item.id, { placement: { kind: 'wall', height: pos.y > 0 ? pos.y : 1450 } })
+    else if (bases.length) update(item.id, { placement: { kind: 'above', baseId: bases[0].id, gap: 0, offsetX: 0 } })
+  }
+  const xz = (
+    <div className="dims2">
+      <MmField label="From left" value={pos.x} min={-20000} max={20000} onChange={v => update(item.id, { position: { ...pos, x: v } })} />
+      <MmField label="From back" value={pos.z} min={-20000} max={20000} onChange={v => update(item.id, { position: { ...pos, z: v } })} />
+    </div>
+  )
+  return (
+    <>
+      <Segmented<PlacementKind> label="Placed" value={kind} onChange={setPlacement}
+        options={[
+          { value: 'floor', label: 'Floor', title: 'Stands on the floor' },
+          { value: 'wall', label: 'Wall', title: 'Hung on the wall at a height' },
+          ...(bases.length ? [{ value: 'above' as const, label: 'On a piece', title: 'Stands on, or hangs above, another piece and follows it' }] : []),
+          { value: 'free', label: 'Anywhere', title: 'Set all three distances yourself' },
+        ]} />
+      {kind === 'floor' && xz}
+      {kind === 'wall' && pl?.kind === 'wall' && (
+        <>
+          {xz}
+          <MmField label="Underside above the floor" value={pl.height} min={0} max={3000} onChange={v => update(item.id, { placement: { ...pl, height: v } })} />
+        </>
+      )}
+      {kind === 'above' && pl?.kind === 'above' && (
+        <>
+          <Select label="On or above" value={pl.baseId} options={bases.map(b => ({ value: b.id, label: b.design.name }))}
+            onChange={v => update(item.id, { placement: { ...pl, baseId: v } })} />
+          <div className="dims2">
+            <MmField label="Gap above it" value={pl.gap} min={0} max={3000} onChange={v => update(item.id, { placement: { ...pl, gap: v } })} hint="0 = stands on it" />
+            <MmField label="From its left edge" value={pl.offsetX} min={-5000} max={5000} onChange={v => update(item.id, { placement: { ...pl, offsetX: v } })} />
+          </div>
+          <p className="hint">Backs line up; it moves with the piece below.</p>
+        </>
+      )}
+      {kind === 'free' && (
+        <div className="dims3">
+          <MmField label="From left" value={pos.x} min={-20000} max={20000} onChange={v => update(item.id, { position: { ...pos, x: v } })} />
+          <MmField label="From back" value={pos.z} min={-20000} max={20000} onChange={v => update(item.id, { position: { ...pos, z: v } })} />
+          <MmField label="Above floor" value={pos.y} min={0} max={3000} onChange={v => update(item.id, { position: { ...pos, y: v } })} />
+        </div>
+      )}
+    </>
   )
 }
 
@@ -138,13 +194,17 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
           const b = pc.bounds
           const [fx1, fz1, fx2, fz2] = frontLine(b, pc.item.rotationY)
           const on = pc.item.id === selectedId
+          // Pieces stacked on the same floor area (a wall run above a base run) get their names on separate lines.
+          const stack = pm.pieces.filter(q => q.bounds.x < b.x + b.w && b.x < q.bounds.x + q.bounds.w && q.bounds.z < b.z + b.d && b.z < q.bounds.z + q.bounds.d)
+          const size = Math.min(fs, b.w / 7)
+          const dy = (stack.indexOf(pc) - (stack.length - 1) / 2) * size * 1.3
           return (
             <g key={pc.item.id} className={`plan-piece ${on ? 'on' : ''} ${b.y > 0 ? 'raised' : ''}`} role="button" tabIndex={0} aria-pressed={on}
               aria-label={`${pc.item.design.name}, ${b.w} by ${b.d} mm`}
               onClick={() => select(pc.item.id)} onKeyDown={onKey(() => select(pc.item.id))}>
               <rect x={b.x} y={b.z} width={b.w} height={b.d} />
               <line className="front" x1={fx1} y1={fz1} x2={fx2} y2={fz2} />
-              <text x={b.x + b.w / 2} y={b.z + b.d / 2} fontSize={Math.min(fs, b.w / 7)} textAnchor="middle" dominantBaseline="middle">
+              <text x={b.x + b.w / 2} y={b.z + b.d / 2 + dy} fontSize={size} textAnchor="middle" dominantBaseline="middle">
                 {pc.item.quantity > 1 ? `${pc.item.quantity}× ` : ''}{pc.item.design.name}
               </text>
             </g>

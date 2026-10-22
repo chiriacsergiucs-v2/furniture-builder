@@ -129,15 +129,19 @@ export function buildCabinet(p: CabinetParams, materials: Map<string, Material>,
   // ---- carcass -------------------------------------------------------------
   const z0 = p.back === 'applied' ? bt : 0
   const Dc = D - z0
-  const sideH = p.top === 'over' ? H - t : H
+  // A bottom under the sides runs the full width; the sides then stand on it.
+  const under = p.bottom === 'under'
+  const sideY = under ? ph + t : 0
+  const sideH = (p.top === 'over' ? H - t : H) - sideY
   // Inner span between the sides; an omitted side lets everything run to that edge.
   const L = opts.omitSide === 'left' ? 0 : t, R = opts.omitSide === 'right' ? 0 : t
   const span = W - L - R
-  if (opts.omitSide !== 'left') add(pid, 'side', 'Left side', body.id, box(0, 0, z0, t, sideH, Dc), 'x', 'y', ['+z'], 0)
-  if (opts.omitSide !== 'right') add(pid, 'side', 'Right side', body.id, box(W - t, 0, z0, t, sideH, Dc), 'x', 'y', ['+z'], 1)
+  if (opts.omitSide !== 'left') add(pid, 'side', 'Left side', body.id, box(0, sideY, z0, t, sideH, Dc), 'x', 'y', ['+z'], 0)
+  if (opts.omitSide !== 'right') add(pid, 'side', 'Right side', body.id, box(W - t, sideY, z0, t, sideH, Dc), 'x', 'y', ['+z'], 1)
   if (p.top === 'over') add(pid, 'top', 'Top', body.id, box(0, H - t, z0, W, t, Dc), 'y', 'x', ['+z', '-x', '+x'])
   else add(pid, 'top', 'Top', body.id, box(L, H - t, z0, span, t, Dc), 'y', 'x', ['+z'])
-  add(pid, 'bottom', 'Bottom', body.id, box(L, ph, z0, span, t, Dc), 'y', 'x', ['+z'])
+  if (under) add(pid, 'bottom', 'Bottom', body.id, box(0, ph, z0, W, t, Dc), 'y', 'x', ['+z', '-x', '+x'])
+  else add(pid, 'bottom', 'Bottom', body.id, box(L, ph, z0, span, t, Dc), 'y', 'x', ['+z'])
   if (ph > 0) {
     add(pid, 'plinth', 'Plinth', body.id, box(L, 0, D - p.plinthSetback - t, span, ph, t), 'z', 'x', ['-y'])
   }

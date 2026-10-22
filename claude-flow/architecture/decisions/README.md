@@ -85,3 +85,11 @@ Requested by the user on 2026-10-22; defaults in each ADR await confirmation.
 | [ADR-0027](ADR-0027.md) | Catalog page: browse by category, brand and "Saved on this device"; shipped entries open as local copies | N14 | Proposed |
 | [ADR-0028](ADR-0028.md) | Catalog metadata and origin link live in the design document (optional field, no schema bump) | N15 | Proposed |
 | [ADR-0029](ADR-0029.md) | The catalog is fed by a scheduled search → extract (`tools/catalog/extract_pdf.py`) → reconstruct → PR job; native products only, evidence per value | N16, N17 | Proposed |
+
+## Placement — proposed
+
+Requested by the user on 2026-10-22; defaults in the ADR await confirmation.
+
+| ID | Decision | Backlog | Status |
+|---|---|---|---|
+| [ADR-0031](ADR-0031.md) | Pieces are placed on the floor, on the wall, or on/above another piece; cabinet bottom under the sides; bay layout | N19, N20 | Proposed |

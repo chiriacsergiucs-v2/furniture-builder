@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { kerfOf, newId, sheetOf, templates, validateDesign } from '../core/design'
 import type { Design, Material } from '../core/types'
 import { newProject, validateProject, type Project } from '../core/project'
+import { sampleProjects } from '../core/samples/mobila'
 import { deleteDesign, deleteProject, listDesigns, listProjects, saveDesign, saveProject, type StoredDesign, type StoredProject } from '../persist/db'
 import { useDesign } from '../store/designStore'
 import { MmField, Toggle } from './controls'
@@ -38,6 +39,22 @@ export function NewDialog({ open, onClose }: { open: boolean; onClose: () => voi
         <span><strong>Project with several pieces</strong><span className="sub">A kitchen, a bedroom or a room: place pieces, then get one parts list and one set of sheets.</span></span>
         <Icon name="chevron-right" className="chev sm" />
       </button>
+      <h3 className="list-head">Mobila rooms</h3>
+      <ul className="template-list">
+        {sampleProjects.map(sp => (
+          <li key={sp.id}>
+            <button type="button" className="row-btn" onClick={() => {
+              const now = new Date().toISOString()
+              const p = { ...sp.create(), id: newId(), createdAt: now, updatedAt: now }
+              void saveProject(p); openProject(p); onClose()
+            }}>
+              <span className="glyph"><Icon name="project" /></span>
+              <span><strong>{sp.name}</strong><span className="sub">{sp.description}</span></span>
+              <Icon name="chevron-right" className="chev sm" />
+            </button>
+          </li>
+        ))}
+      </ul>
       <h3 className="list-head">Or a single piece</h3>
       <ul className="template-list template-grid">
         {templates.map(t => <li key={t.id}><TemplateButton t={t} onPick={() => { load(t.create()); onClose() }} /></li>)}

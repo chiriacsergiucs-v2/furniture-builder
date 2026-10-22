@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { changeKind, fr, setDrawerCount, findInProduct, findSpace, parentOf, pedestalRoot, splitSpace, unsplit, usesPedestal } from '../core/design'
+import { bayLayoutOf, changeKind, fr, makeBays, MAX_BAYS, setDrawerCount, findInProduct, findSpace, parentOf, pedestalRoot, splitSpace, unsplit, usesPedestal } from '../core/design'
 import type { CabinetParams, CornerParams, DeskParams, DeskSupport, FrontStyle, Handle, Material, Space, SpaceKind, SplitSize } from '../core/types'
 import { useDesign } from '../store/designStore'
 import { Counter, Group, MmField, revealGroup, Section, Segmented, Select, Steps, Toggle, type Step } from './controls'
@@ -301,12 +301,14 @@ function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material
         <MmField label="Depth" value={p.depth} min={100} max={1200} onChange={v => set({ depth: v })} />
       </div>
       <button type="button" className="link" onClick={() => select(p.interior.id)}>Edit the interior</button>
+      <BaysGroup interior={p.interior} onChange={interior => set({ interior })} />
       <Segmented<'floor' | 'wall'> label="Stands on" value={p.mount ?? 'floor'}
         options={[{ value: 'floor', label: 'The floor' }, { value: 'wall', label: 'Wall brackets' }]}
         onChange={v => set(v === 'wall' ? { mount: v, mountHeight: p.mountHeight ?? 1450 } : { mount: v })} />
       {p.mount === 'wall' && <MmField label="Underside above the floor" value={p.mountHeight ?? 1450} min={0} max={2500} onChange={v => set({ mountHeight: v })} hint="Position only; brackets and a rail are added to the hardware list." />}
       <Group title="Construction" id="g-build">
         <Segmented label="Top" value={p.top} options={[{ value: 'over', label: 'On the sides' }, { value: 'between', label: 'Between sides' }]} onChange={v => set({ top: v })} />
+        <Segmented<'between' | 'under'> label="Bottom" value={p.bottom ?? 'between'} options={[{ value: 'between', label: 'Between sides' }, { value: 'under', label: 'Under the sides' }]} onChange={v => set({ bottom: v })} />
         <Segmented label="Back" value={p.back} options={[{ value: 'applied', label: 'Nailed on' }, { value: 'inset', label: 'Set in' }, { value: 'none', label: 'None' }]} onChange={v => set({ back: v })} />
         {p.back === 'inset' && <MmField label="Back set in from rear" value={p.backInset} min={0} max={100} step={1} onChange={v => set({ backInset: v })} />}
         {p.mount !== 'wall' && <MmField label="Plinth height" value={p.plinthHeight} min={0} max={250} onChange={v => set({ plinthHeight: v })} hint="0 for no plinth" />}
@@ -462,5 +464,25 @@ function DeskEditor({ p, deskId, materials }: { p: DeskParams; deskId: string; m
       </Group>
       {ped && <DrawerSettingsGroup value={p.drawers} materials={materials} onChange={d => set({ drawers: d })} />}
     </div>
+  )
+}
+
+/** Quick layout for the whole inside: bays side by side, the same shelves and doors in each (core `makeBays`). */
+function BaysGroup({ interior, onChange }: { interior: Space; onChange: (s: Space) => void }) {
+  const layout = bayLayoutOf(interior)
+  const cur = layout ?? { bays: 1, shelves: 0, doors: 0 as const }
+  const apply = (patch: Partial<typeof cur>) => {
+    if (!layout && !confirm('The inside has its own layout. Replace it with equal bays?')) return
+    onChange(makeBays({ ...cur, ...patch }, interior))
+  }
+  return (
+    <Group title="Bays and shelves" id="g-bays">
+      {!layout && <p className="hint">The inside is laid out space by space. Changing these replaces it with equal bays.</p>}
+      <Counter label="Bays (divided by uprights)" value={cur.bays} min={1} max={MAX_BAYS} onChange={v => apply({ bays: v })} />
+      <Counter label="Shelves in each bay" value={cur.shelves} min={0} max={12} onChange={v => apply({ shelves: v })} />
+      <Segmented<0 | 1 | 2> label="Doors on each bay" value={cur.doors}
+        options={[{ value: 0, label: 'None' }, { value: 1, label: 'One' }, { value: 2, label: 'Pair' }]} onChange={v => apply({ doors: v })} />
+      {layout && layout.bays > 1 && <p className="hint">Tap a bay in the front view to give it its own width, shelves or drawers.</p>}
+    </Group>
   )
 }

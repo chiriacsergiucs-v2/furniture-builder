@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "id": "mobila-dormitor",
+  "name": "Mobila — Dormitor",
+  "createdAt": "2026-10-22T00:00:00.000Z",
+  "updatedAt": "2026-10-22T00:00:00.000Z",
+  "cutting": {
+    "kerf": 4
+  },
+  "items": [
+    {
+      "id": "dormitor-noptiera-a",
+      "design": {
+        "schemaVersion": 2,
+        "id": "mobila-noptiera-a",
+        "name": "Noptieră A",
+        "createdAt": "2026-10-22T00:00:00.000Z",
+        "updatedAt": "2026-10-22T00:00:00.000Z",
+        "materials": [
+          {
+            "id": "pal18",
+            "name": "PAL 18 mm",
+            "thickness": 18,
+            "grain": false,
+            "color": "#e7e3db",
+            "sheet": {
+              "length": 2800,
+              "width": 2070,
+              "trim": 10,
+              "count": null
+            }
+          },
+          {
+            "id": "mdf-p110",
+            "name": "MDF Kastamonu P110 antracit lucios 18 mm",
+            "thickness": 18,
+            "grain": false,
+            "color": "#3b3f44",
+            "sheet": {
+              "length": 2800,
+              "width": 1220,
+              "trim": 10,
+              "count": null
+            }
+          },
+          {
+            "id": "pal16",
+            "name": "PAL 16 white",
+            "thickness": 16,
+            "grain": false,
+            "color": "#f1f0ea",
+            "sheet": {
+              "length": 2800,
+              "width": 2070,
+              "trim": 10,
+              "count": null
+            }
+          },
+          {
+            "id": "hdf3",
+            "name": "HDF 3",
+            "thickness": 3,
+            "grain": false,
+            "color": "#a89a86",
+            "sheet": {
+              "length": 2800,
+              "width": 2070,
+              "trim": 10,
+              "count": null
+            }
+          }
+        ],
+        "product": {
+          "kind": "cabinet",
+          "id": "mobila-noptiera-a-p",
+          "params": {
+            "bodyMaterialId": "pal18",
+            "frontMaterialId": "mdf-p110",
+            "backMaterialId": "hdf3",
+            "top": "over",
+            "bottom": "between",
+            "back": "none",
+            "backInset": 15,
+            "plinthHeight": 0,
+            "plinthSetback": 0,
+            "frontGap": 4,
+            "frontStyle": "overlay",
+            "shelfSetback": 0,
+            "shelfClearance": 1,
+            "pinRowSetback": 37,
+            "drawers": {
+              "sideClearance": 13,
+              "verticalClearance": 30,
+              "rearClearance": 10,
+              "runnerLengths": [
+                250,
+                300,
+                350,
+                400,
+                450,
+                500,
+                550,
+                600
+              ],
+              "boxMaterialId": "pal16",
+              "bottomMaterialId": "hdf3"
+            },
+            "width": 450,
+            "height": 400,
+            "depth": 332,
+            "interior": {
+              "id": "nA-in",
+              "kind": "drawers",
+              "count": 2,
+              "heights": [
+                {
+                  "mode": "mm",
+                  "value": 160
+                },
+                {
+                  "mode": "fr",
+                  "value": 1
+                }
+              ],
+              "front": null
+            }
+          }
+        },
+        "cutting": {
+          "kerf": 4
+        }
+      },
+      "quantity": 2,
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotationY": 0,
+      "placement": {
+        "kind": "floor"
+      }
+    }
+  ]
+}

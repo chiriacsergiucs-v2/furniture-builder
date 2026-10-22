@@ -14,6 +14,19 @@ import type { Box, Design, Diagnostic, Face, FurnitureModel, HardwareItem, Mater
 
 export type QuarterTurn = 0 | 90 | 180 | 270
 
+/**
+ * How a piece is placed (ADR-0031). The stored `position` is kept in step with it by `resolvePlacements`:
+ *  - floor: stands on the floor (height 0), moved freely along the walls;
+ *  - wall: hung on the wall, its underside `height` mm above the floor;
+ *  - above: sits on another piece (gap 0) or hangs `gap` mm above it, back faces aligned, `offsetX` mm from its
+ *    left edge; it follows that piece when it moves.
+ * Absent = free: `position` is used as stored (projects saved before placement existed).
+ */
+export type Placement =
+  | { kind: 'floor' }
+  | { kind: 'wall'; height: Mm }
+  | { kind: 'above'; baseId: string; gap: Mm; offsetX: Mm }
+
 export interface ProjectItem {
   id: string
   /** Embedded copy; edited inside the project only. */
@@ -26,6 +39,7 @@ export interface ProjectItem {
   rotationY: QuarterTurn
   /** The saved design this copy came from, for "Update from library". */
   libraryId?: string
+  placement?: Placement
 }
 
 export interface Project {
@@ -47,8 +61,94 @@ export function newProject(name = 'New project'): Project {
 export function makeItem(project: Project, design: Design, libraryId?: string): ProjectItem {
   const right = project.items.length ? Math.max(...project.items.map(i => placedBounds(i).x + placedBounds(i).w)) : 0
   const d = upgradeDesign(design)
-  const y = d.product.kind === 'cabinet' && d.product.params.mount === 'wall' ? d.product.params.mountHeight ?? 1450 : 0
-  return { id: newId(), design: structuredClone(d), quantity: 1, position: { x: right, y, z: 0 }, rotationY: 0, ...(libraryId ? { libraryId } : {}) }
+  const wall = isWallHung(d)
+  const y = wall ? (d.product.kind === 'cabinet' ? d.product.params.mountHeight ?? 1450 : 1450) : 0
+  const placement: Placement = wall ? { kind: 'wall', height: y } : { kind: 'floor' }
+  return { id: newId(), design: structuredClone(d), quantity: 1, position: { x: right, y, z: 0 }, rotationY: 0, placement, ...(libraryId ? { libraryId } : {}) }
+}
+
+/** The piece is built to hang on the wall (brackets and rail scheduled). */
+export const isWallHung = (d: Design) => d.product.kind === 'cabinet' && d.product.params.mount === 'wall'
+
+// ---------------------------------------------------------------------------
+// Placement: floor, wall, on or above another piece (ADR-0031)
+// ---------------------------------------------------------------------------
+
+/** Pieces an item may sit on or hang above: not itself and nothing that (directly or not) sits on it. */
+export function placementBases(project: Project, id: string): ProjectItem[] {
+  const byId = new Map(project.items.map(i => [i.id, i]))
+  const restsOn = (it: ProjectItem): boolean => {
+    for (let cur: ProjectItem | undefined = it, n = 0; cur && n <= project.items.length; n++) {
+      if (cur.id === id) return true
+      cur = cur.placement?.kind === 'above' ? byId.get(cur.placement.baseId) : undefined
+    }
+    return false
+  }
+  return project.items.filter(i => i.id !== id && !restsOn(i))
+}
+
+/**
+ * Bring every stored position in line with its placement. Bases are placed before the pieces on them; a piece whose
+ * base is missing or that rests on itself through a chain keeps its stored position (reported by `placementIssues`).
+ * Returns the same project when nothing moves.
+ */
+export function resolvePlacements(project: Project): Project {
+  const byId = new Map(project.items.map(i => [i.id, i]))
+  const out = new Map<string, ProjectItem>()
+  const busy = new Set<string>()
+  const resolve = (it: ProjectItem): ProjectItem => {
+    const done = out.get(it.id)
+    if (done) return done
+    if (busy.has(it.id)) return it
+    busy.add(it.id)
+    const pl = it.placement
+    let position = it.position
+    if (pl?.kind === 'floor') position = { ...position, y: 0 }
+    else if (pl?.kind === 'wall') position = { ...position, y: pl.height }
+    else if (pl?.kind === 'above') {
+      const base = byId.get(pl.baseId)
+      if (base && !busy.has(base.id)) {
+        const b = placedBounds(resolve(base))
+        position = { x: b.x + pl.offsetX, y: b.y + b.h + pl.gap, z: b.z }
+      }
+    }
+    busy.delete(it.id)
+    const next = position.x === it.position.x && position.y === it.position.y && position.z === it.position.z ? it : { ...it, position }
+    out.set(it.id, next)
+    return next
+  }
+  const items = project.items.map(resolve)
+  return items.every((it, i) => it === project.items[i]) ? project : { ...project, items }
+}
+
+/** Remove a piece; pieces that sat on it stay where they are (their placement becomes free). */
+export function removeProjectItem(project: Project, id: string): Project {
+  const items = project.items.filter(i => i.id !== id).map(i => {
+    if (i.placement?.kind !== 'above' || i.placement.baseId !== id) return i
+    const { placement: _gone, ...rest } = i
+    void _gone
+    return rest
+  })
+  return { ...project, items }
+}
+
+/** Placement problems: a missing base, a piece resting on itself, a piece in the air that is not built to hang. */
+export function placementIssues(project: Project): Diagnostic[] {
+  const out: Diagnostic[] = []
+  const byId = new Map(project.items.map(i => [i.id, i]))
+  for (const it of project.items) {
+    const pl = it.placement
+    const name = it.design.name
+    if (pl?.kind === 'above') {
+      const base = byId.get(pl.baseId)
+      if (!base) out.push({ severity: 'warning', code: 'placement-base-missing', message: `${name} was placed on a piece that is no longer in the project; it stays where it is.`, nodeId: it.id })
+      else if (!placementBases(project, it.id).some(b => b.id === base.id)) out.push({ severity: 'error', code: 'placement-cycle', message: `${name} and ${base.design.name} are placed on each other.`, nodeId: it.id })
+    }
+    const hangs = pl?.kind === 'wall' ? pl.height > 0 : pl?.kind === 'above' ? pl.gap > 0 : false
+    if (hangs && !isWallHung(it.design)) out.push({ severity: 'warning', code: 'placement-not-hung', message: `${name} is off the floor with nothing under it; set it to hang on wall brackets (Whole cabinet → Stands on).`, nodeId: it.id })
+    if (pl?.kind === 'floor' && isWallHung(it.design)) out.push({ severity: 'warning', code: 'placement-wall-on-floor', message: `${name} is built to hang on the wall but is placed on the floor.`, nodeId: it.id })
+  }
+  return out
 }
 
 // ---------------------------------------------------------------------------
@@ -115,13 +215,14 @@ export interface ProjectModel {
   diagnostics: Diagnostic[]
 }
 
-export function buildProjectModel(project: Project): ProjectModel {
+export function buildProjectModel(input: Project): ProjectModel {
+  const project = resolvePlacements(input)
   const pieces = project.items.map(placeItem)
   const materials = new Map<string, Material>()
   const panels: Panel[] = []
   const piecePanels: Panel[][] = []
   const hardware: HardwareItem[] = []
-  const diagnostics: Diagnostic[] = []
+  const diagnostics: Diagnostic[] = placementIssues(project)
   for (const pc of pieces) {
     const mats = new Map(pc.item.design.materials.map(m => [m.id, m]))
     for (const m of pc.item.design.materials) {
@@ -188,11 +289,12 @@ export function setGapLeft(project: Project, id: string, gap: Mm, moveRight = tr
   const mine = placedBounds(me)
   const moves = (it: ProjectItem) => {
     if (it.id === id) return true
+    if (it.placement?.kind === 'above') return false
     if (!moveRight) return false
     const b = placedBounds(it)
     return b.x >= mine.x + mine.w && sameRun(b, mine)
   }
-  return { ...project, items: project.items.map(it => (moves(it) ? { ...it, position: { ...it.position, x: it.position.x + dx } } : it)) }
+  return resolvePlacements({ ...project, items: project.items.map(it => (moves(it) ? { ...it, position: { ...it.position, x: it.position.x + dx } } : it)) })
 }
 
 /** Parts for the whole project: each piece's cut list × its quantity, merged across pieces. */
@@ -251,6 +353,10 @@ export function validateProject(p: unknown): string[] {
     if (!isInt(it.quantity, 1) || (it.quantity as number) > 99) errs.push('Item quantity must be 1 to 99')
     if (!isObj(it.position) || !isInt(it.position.x) || !isInt(it.position.y, 0) || !isInt(it.position.z)) errs.push('Item position must be whole mm (height ≥ 0)')
     if (![0, 90, 180, 270].includes(it.rotationY as number)) errs.push('Item rotation must be a quarter turn')
+    const pl = it.placement
+    if (pl !== undefined && !(isObj(pl) && (pl.kind === 'floor' ||
+      (pl.kind === 'wall' && isInt(pl.height, 0)) ||
+      (pl.kind === 'above' && typeof pl.baseId === 'string' && !!pl.baseId && pl.baseId !== it.id && isInt(pl.gap, 0) && isInt(pl.offsetX))))) errs.push('Invalid item placement')
     const de = validateDesign(it.design)
     if (de.length) errs.push(`Item ${String(it.id)}: ${de[0]}`)
   }
