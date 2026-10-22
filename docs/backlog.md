@@ -46,9 +46,10 @@ pieces + sheets + reopen, offline start, no page errors or failed requests. Page
 | N07 | Wall and corner cabinets, worktop joins | Done | ADR-0025; 4 tests incl. 400 random corners; screenshots of wall, blind and L corners |
 | N08 | Selectable pedestal internals on desks | Done | ADR-0026; `tests/core.test.ts` editable pedestals; 20,000-design fuzz passed |
 | N09 | Committed browser test suite | Not done | Only when the user asks (pre-MVP rule) |
-| N11 | Exploded 3D view | Done | User request 2026-10-22; ADR-0014 addendum. `src/core/explode.ts`; `tests/explode.test.ts` (sizes kept, whole mm, on the floor, no overlaps, every template and a project); fuzz checks no exploded overlaps (20,000 passed). Browser run 1440 / 390 px: piece and project exploded, no page errors, no sideways scroll |
-| N12 | Gap between two pieces in a project | Done | User request 2026-10-22; ADR-0022 addendum. `leftNeighbour`/`setGapLeft` in `src/core/project.ts`; 4 tests. Browser run: gap set to 600 mm, the piece on its right moved with it. Gaps are along the wall (x) only |
 | N10 | Fixes from independent review (2026-10-22) | Done | Pin holes per-panel grid (faces never coincide), rows measured on the shelf, "one face" text, setback ≥ 8 mm, size caps, project materials split by grain + sheet-conflict warning, mirrored L-corner handle, L-corner plinth notch; 7 regression tests fail on the old code, pass now; reviewer's fuzz re-run passed |
+| N11 | Project plan shows sizes (tape dimensions) and a room front view | Done | `src/ui/Project.tsx` (`RoomPlan`, `RoomFront`): overall width along the back wall and depth along the side wall, overall width and height in the front view, selected piece's sizes in green; tap a piece in either view to select it. Lint, typecheck, 87 tests, build passed; scripted Chromium screenshots of a 3-piece project at 1440 and 390 px, no page errors. No new unit test (drawing only) |
+| N12 | Exploded 3D view | Done | User request 2026-10-22; ADR-0014 addendum. `src/core/explode.ts`; `tests/explode.test.ts` (sizes kept, whole mm, on the floor, no overlaps, every template and a project); fuzz checks no exploded overlaps (20,000 passed). Browser run 1440 / 390 px: piece and project exploded, no page errors, no sideways scroll |
+| N13 | Gap between two pieces in a project | Done | User request 2026-10-22; ADR-0022 addendum. `leftNeighbour`/`setGapLeft` in `src/core/project.ts`; 4 tests. Browser run: gap set to 600 mm, the piece on its right moved with it. Gaps are along the wall (x) only |
 
 ## Dropped
 
