@@ -31,6 +31,8 @@ export interface CutRow {
   grain: boolean
   /** Shelf-pin drilling summary, empty when none (ADR-0023). */
   drilling: string
+  /** Solid timber: cut from lengths, never nested on sheets (ADR-0038). */
+  solid?: boolean
   labels: string[]
   panelIds: string[]
 }
@@ -58,7 +60,7 @@ export function cutlist(model: FurnitureModel, materials: Material[]): CutRow[] 
       rows.set(key, {
         materialId: m.id, materialName: m.name, thickness: c.thickness, length: c.length, width: c.width,
         quantity: 1, edgesL: c.edgesL, edgesW: c.edgesW, grain: m.grain, drilling,
-        labels: [baseLabel(p.label)], panelIds: [p.id],
+        labels: [baseLabel(p.label)], panelIds: [p.id], ...(m.stock === 'solid' ? { solid: true } : {}),
       })
     }
   }
@@ -100,6 +102,44 @@ export function bandMetersFromRows(rows: CutRow[]): Map<string, number> {
   for (const r of rows) {
     const mm = (r.edgesL * r.length + r.edgesW * r.width) * r.quantity
     if (mm) out.set(r.materialId, (out.get(r.materialId) ?? 0) + mm / 1000)
+  }
+  return out
+}
+
+/** One bought length and the parts cut from it. */
+export interface StockBar { stock: Mm; parts: { length: Mm; label: string }[]; waste: Mm }
+export interface LengthsGroup { materialId: string; materialName: string; section: string; bars: StockBar[]; tooLong: { length: Mm; label: string }[] }
+
+/**
+ * Solid parts as a lengths list (ADR-0038): per material and section (thickness × width), parts are packed longest
+ * first into the shortest bought length that still takes them (first fit decreasing), with a saw cut between parts.
+ * A heuristic, never claimed optimal.
+ */
+export function lengthsList(rows: CutRow[], stockLengths: (materialId: string) => Mm[], kerf: Mm): LengthsGroup[] {
+  const groups = new Map<string, LengthsGroup & { items: { length: Mm; label: string }[] }>()
+  for (const r of rows) {
+    if (!r.solid) continue
+    const section = `${r.thickness} × ${r.width}`
+    const key = `${r.materialId}|${section}`
+    let g = groups.get(key)
+    if (!g) { g = { materialId: r.materialId, materialName: r.materialName, section, bars: [], tooLong: [], items: [] }; groups.set(key, g) }
+    for (let i = 0; i < r.quantity; i++) g.items.push({ length: r.length, label: r.labels.join(', ') })
+  }
+  const out: LengthsGroup[] = []
+  for (const g of groups.values()) {
+    const stock = [...stockLengths(g.materialId)].sort((a, b) => a - b)
+    const longest = stock[stock.length - 1] ?? 0
+    const items = [...g.items].sort((a, b) => b.length - a.length)
+    const open: { stock: Mm; parts: { length: Mm; label: string }[]; used: Mm }[] = []
+    for (const it of items) {
+      if (it.length > longest) { g.tooLong.push(it); continue }
+      const bar = open.find(b => b.used + (b.parts.length ? kerf : 0) + it.length <= b.stock)
+      if (bar) { bar.used += (bar.parts.length ? kerf : 0) + it.length; bar.parts.push(it); continue }
+      open.push({ stock: longest, parts: [it], used: it.length })
+    }
+    // Each bar can then be bought in the shortest stocked length that still holds its parts.
+    const bars = open.map(b => { const s = stock.find(l => l >= b.used) ?? b.stock; return { stock: s, parts: b.parts, waste: s - b.used } })
+    out.push({ materialId: g.materialId, materialName: g.materialName, section: g.section, bars, tooLong: g.tooLong })
   }
   return out
 }
