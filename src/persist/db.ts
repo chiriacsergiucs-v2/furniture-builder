@@ -1,10 +1,12 @@
 import Dexie, { type Table } from 'dexie'
 import { validateDesign } from '../core/design'
 import { validateProject, type Project } from '../core/project'
+import { validateLocalTemplate, type LocalTemplate } from '../core/catalog/local'
 import type { Design } from '../core/types'
 
 export interface StoredDesign { id: string; name: string; updatedAt: string; design: Design }
 export interface StoredProject { id: string; name: string; updatedAt: string; project: Project }
+export interface StoredTemplate { id: string; updatedAt: string; template: LocalTemplate }
 
 /**
  * Local-only storage (IndexedDB). Nothing leaves the device. New database name: the rebuild is a clean
@@ -13,12 +15,15 @@ export interface StoredProject { id: string; name: string; updatedAt: string; pr
 class FurnitureDb extends Dexie {
   designs!: Table<StoredDesign, string>
   projects!: Table<StoredProject, string>
+  templates!: Table<StoredTemplate, string>
   constructor(name = 'furniture-builder') {
     super(name)
     // Never edit a shipped version block; add a new version for any change (ADR-0012).
     this.version(1).stores({ designs: 'id, updatedAt, name' })
     // v2 (ADR-0022): projects with several pieces. Designs untouched.
     this.version(2).stores({ designs: 'id, updatedAt, name', projects: 'id, updatedAt, name' })
+    // v3 (ADR-0034): templates edited on this device. Designs and projects untouched (additive table).
+    this.version(3).stores({ designs: 'id, updatedAt, name', projects: 'id, updatedAt, name', templates: 'id, updatedAt' })
   }
 }
 
@@ -52,6 +57,16 @@ export async function loadProject(id: string, database = db): Promise<Project | 
   return row.project
 }
 export const deleteProject = (id: string, database = db) => database.projects.delete(id)
+
+export async function saveTemplate(t: LocalTemplate, database = db): Promise<void> {
+  await database.templates.put({ id: t.id, updatedAt: t.updatedAt, template: t })
+}
+/** Local templates that still validate; unreadable rows are skipped and kept (ADR-0012). */
+export async function listTemplates(database = db): Promise<LocalTemplate[]> {
+  const rows = await database.templates.orderBy('updatedAt').reverse().toArray()
+  return rows.filter(r => !validateLocalTemplate(r.template).length).map(r => r.template)
+}
+export const deleteTemplate = (id: string, database = db) => database.templates.delete(id)
 
 const LAST_KEY = 'furniture-builder:last-design'
 const LAST_PROJECT_KEY = 'furniture-builder:last-project'

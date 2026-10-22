@@ -4,6 +4,8 @@ import { exportFusionPython } from '../core/fusion'
 import { lastDesignId, lastProjectId, loadDesign, loadProject, rememberLast, rememberLastProject, saveDesign, saveProject } from '../persist/db'
 import { useDesign } from '../store/designStore'
 import { AddPieceDialog, LibraryDialog, MaterialsDialog, NewDialog } from './Dialogs'
+import { CatalogDialog } from './Catalog'
+import { useTemplates } from '../store/templatesStore'
 import { PlanView, ProjectPanel } from './Project'
 import { useView } from './useView'
 import { Elevation } from './Elevation'
@@ -64,7 +66,8 @@ export function App() {
   const setExploded = useDesign(s => s.setExploded)
   const undo = useDesign(s => s.undo), redo = useDesign(s => s.redo)
   const canUndo = useDesign(s => s.past.length > 0), canRedo = useDesign(s => s.future.length > 0)
-  const [dialog, setDialog] = useState<null | 'new' | 'library' | 'materials' | 'add'>(null)
+  const [dialog, setDialog] = useState<null | 'new' | 'library' | 'materials' | 'add' | 'catalog'>(null)
+  const templateEdit = useDesign(s => s.templateEdit)
   const project = useDesign(s => s.project)
   const editingItemId = useDesign(s => s.editingItemId)
   const projectDirtyAt = useDesign(s => s.projectDirtyAt)
@@ -134,8 +137,8 @@ export function App() {
   // Autosave shortly after each change; also save a freshly opened template so it appears in the library.
   useEffect(() => {
     if (!started) return
-    // Pieces inside a project are saved with the project, never into the library.
-    if (useDesign.getState().project) return
+    // Pieces inside a project are saved with the project, never into the library; template edits go to the template.
+    if (useDesign.getState().project || useDesign.getState().templateEdit) return
     rememberLast(design.id)
     // Opened from storage and untouched: nothing to write (an old file is upgraded only when edited).
     if (useDesign.getState().pristine) return
@@ -204,6 +207,7 @@ export function App() {
           </div>}
           <div className="cluster">
             <button type="button" className="btn" onClick={() => setDialog('new')} aria-label="New" title="Start a new piece or project"><Icon name="plus" /><span className="lbl">New</span></button>
+            <button type="button" className="btn" onClick={() => setDialog('catalog')} aria-label="Catalog" title="All furniture templates, by room or type"><Icon name="catalog" /><span className="lbl">Catalog</span></button>
             <button type="button" className="btn" onClick={() => setDialog('library')} aria-label="Library" title="Pieces and projects saved on this device"><Icon name="folder" /><span className="lbl">Library</span></button>
             {!inProject && <button type="button" className="btn" onClick={() => setDialog('materials')} aria-label="Materials" title="Boards, thicknesses and stock sheets"><Icon name="layers" /><span className="lbl">Materials</span></button>}
             <span className="divider" aria-hidden="true" />
@@ -230,13 +234,20 @@ export function App() {
         </nav>
       </header>
 
+      {templateEdit && (
+        <div className="piece-banner" role="status">
+          <span>Editing variant <strong>{templateEdit.template.family.variants.find(v => v.id === templateEdit.variantId)?.name}</strong> of template <strong>{templateEdit.template.family.name}</strong>. Saved to the template on this device.</span>
+          <button type="button" className="btn sm primary" onClick={() => { const t = useDesign.getState().finishTemplateEdit(true); if (t) void useTemplates.getState().save(t); setDialog('catalog') }}>Save to template</button>
+          <button type="button" className="btn sm" onClick={() => { useDesign.getState().finishTemplateEdit(false); setDialog('catalog') }}>Cancel</button>
+        </div>
+      )}
       {editingItemId && project && (
         <div className="piece-banner" role="status">
           <span>Editing <strong>{editingName}</strong> in project <strong>{project.name}</strong>. Changes stay in this project.</span>
           <button type="button" className="btn sm" onClick={() => useDesign.getState().backToProject()}>Back to project</button>
         </div>
       )}
-      <main className={`work ${editingItemId ? 'with-banner' : ''}`}>
+      <main className={`work ${editingItemId || templateEdit ? 'with-banner' : ''}`}>
         <aside className="side">
           {inProject ? <ProjectPanel onAdd={() => setDialog('add')} /> : <Inspector />}
         </aside>
@@ -266,10 +277,11 @@ export function App() {
         <Output />
       </main>
 
-      <NewDialog open={dialog === 'new'} onClose={() => setDialog(null)} />
+      <NewDialog open={dialog === 'new'} onClose={() => setDialog(null)} onBrowse={() => setDialog('catalog')} />
+      <CatalogDialog open={dialog === 'catalog'} onClose={() => setDialog(null)} />
       <LibraryDialog open={dialog === 'library'} onClose={() => setDialog(null)} />
       <MaterialsDialog open={dialog === 'materials'} onClose={() => setDialog(null)} />
-      <AddPieceDialog open={dialog === 'add'} onClose={() => setDialog(null)} />
+      <AddPieceDialog open={dialog === 'add'} onClose={() => setDialog(null)} onBrowse={() => setDialog('catalog')} />
     </div>
     {printing && <PrintSheet />}
     </>

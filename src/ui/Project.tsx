@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState, type KeyboardEvent } from 'react'
-import { templates } from '../core/design'
-import { leftNeighbour, placementBases, type Placement, type ProjectItem, type ProjectModel, type QuarterTurn } from '../core/project'
+import { leftNeighbour, placementBases, suggestRunParts, type Placement, type ProjectItem, type ProjectModel, type QuarterTurn } from '../core/project'
 import type { Panel } from '../core/types'
 import { listDesigns, loadDesign, type StoredDesign } from '../persist/db'
 import { useDesign } from '../store/designStore'
 import { Counter, MmField, Segmented, Select, Toggle } from './controls'
 import { Dim, DimV } from './Elevation'
 import { Icon } from './icons'
-import { TemplateButton, templateGlyph } from './Templates'
+import { templateGlyph } from './Templates'
+import { StartFrom } from './Catalog'
 
 const FRONT_SIDE: Record<QuarterTurn, string> = { 0: 'front faces you', 90: 'front faces right', 180: 'front faces the back wall', 270: 'front faces left' }
 
@@ -61,6 +61,7 @@ export function ProjectPanel({ onAdd }: { onAdd: () => void }) {
         </ul>
       )}
       <button type="button" className="btn outline block" onClick={onAdd}><Icon name="plus" />Add a piece</button>
+      <RunParts />
 
       {item && (
         <section className="piece-edit section" aria-label={`Selected piece: ${item.design.name}`}>
@@ -267,16 +268,13 @@ function RoomFront({ pm }: { pm: ProjectModel }) {
 }
 
 /** Choose a starting piece or a saved piece to add to the project. */
-export function AddPieceList({ onDone }: { onDone: () => void }) {
+export function AddPieceList({ onDone, onBrowse }: { onDone: () => void; onBrowse?: () => void }) {
   const add = useDesign(s => s.addPiece)
   const [saved, setSaved] = useState<StoredDesign[]>([])
   useEffect(() => { listDesigns().then(setSaved).catch(() => setSaved([])) }, [])
   return (
     <>
-      <h3 className="list-head">Start from</h3>
-      <ul className="template-list template-grid">
-        {templates.map(t => <li key={t.id}><TemplateButton t={t} onPick={() => { add(t.create()); onDone() }} /></li>)}
-      </ul>
+      <StartFrom onPick={d => { add(d); onDone() }} onBrowse={onBrowse} />
       {saved.length > 0 && (
         <>
           <h3 className="list-head">Your saved pieces</h3>
@@ -294,5 +292,34 @@ export function AddPieceList({ onDone }: { onDone: () => void }) {
         </>
       )}
     </>
+  )
+}
+
+/** Worktop, fillers and cover panels along runs of base units (ADR-0036): suggested, listed with a reason, removable. */
+function RunParts() {
+  const project = useDesign(s => s.project)!
+  const updateProject = useDesign(s => s.updateProject)
+  const parts = project.runParts ?? []
+  const suggest = () => {
+    const next = suggestRunParts({ ...project, runParts: [] })
+    if (parts.length && !confirm('Replace the run parts with new suggestions for where the pieces are now?')) return
+    updateProject(p => ({ ...p, runParts: next }))
+  }
+  return (
+    <section className="section run-parts" aria-label="Run parts">
+      <div className="card-title"><span>Run parts</span></div>
+      <p className="hint">For rows of base units side by side: one worktop, a filler in each gap, a cover panel on each open end. Pieces keep their own plinths.</p>
+      {parts.length > 0 && (
+        <ul className="run-list">
+          {parts.map(rp => (
+            <li key={rp.id}>
+              <span><strong>{rp.label}</strong> <span className="num">{rp.box.w} × {rp.box.h} × {rp.box.d}</span><span className="sub">{rp.reason}</span></span>
+              <button type="button" className="btn icon ghost sm" aria-label={`Remove ${rp.label}`} onClick={() => updateProject(p => ({ ...p, runParts: (p.runParts ?? []).filter(x => x.id !== rp.id) }))}><Icon name="trash" /></button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <button type="button" className="btn outline block" onClick={suggest} disabled={!project.items.length}><Icon name="refresh" className="sm" />{parts.length ? 'Suggest again' : 'Suggest worktop, fillers and covers'}</button>
+    </section>
   )
 }

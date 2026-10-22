@@ -552,6 +552,75 @@ table.buy { margin-bottom: var(--s-4); }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 
 /* 15. Print (ADR-0020): A4 portrait, black on white, Romanian sheet --------- */
+/* Catalog (ADR-0027, ADR-0032): Start from list, catalog page, template editor ----------------------- */
+.dialog.wide { width: min(1180px, calc(100vw - 32px)); }
+.alert.info { background: var(--surface-2); border-color: var(--link); }
+.alert.info .icon { color: var(--link); }
+.alert .btn { grid-column: 2; justify-self: start; }
+.tag { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: var(--r-pill); background: var(--primary-soft); color: var(--primary); font-size: .7rem; font-weight: 600; vertical-align: middle; }
+.tag.subtle { background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--line-2); }
+.count { font-family: var(--num); color: var(--ink-2); font-weight: 500; font-size: var(--fs-sm); }
+.start-from { display: grid; gap: var(--s-3); }
+.start-head { display: flex; align-items: center; gap: var(--s-2); flex-wrap: wrap; }
+.start-head .list-head { margin-right: auto; }
+.start-group h4 { font-size: var(--fs-sm); color: var(--ink-2); margin: 0 0 6px; font-weight: 600; }
+.start-row { display: grid; grid-template-columns: 1fr auto; gap: 4px; align-items: center; }
+.start-row .row-btn { grid-template-columns: auto 1fr; }
+.start-row .more { font-family: var(--num); font-size: .75rem; margin-left: 2px; }
+.variant-picks { list-style: none; margin: 4px 0 6px 48px; padding: 0; display: grid; gap: 2px; }
+.variant-picks .link { text-align: left; padding: 2px 0; }
+.variant-picks .link:disabled { color: var(--ink-3); cursor: not-allowed; }
+.variant-picks .sub { display: block; color: var(--ink-2); font-size: var(--fs-xs); }
+.catalog-toolbar { display: flex; flex-wrap: wrap; gap: var(--s-2); align-items: center; position: sticky; top: calc(-1 * var(--s-4)); z-index: 2; background: var(--surface); padding: var(--s-2) 0; }
+.catalog-toolbar .search { display: flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: var(--r); padding: 0 8px; min-height: 32px; flex: 1 1 200px; }
+.catalog-toolbar .search input { border: 0; outline: 0; background: transparent; color: var(--ink); width: 100%; font: inherit; }
+.group-head { font-size: var(--fs-lg); margin: var(--s-2) 0; }
+.fam-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--s-3); }
+.fam-card { border: 1px solid var(--line-2); border-radius: var(--r-lg); background: var(--surface); padding: var(--s-3); display: grid; gap: var(--s-2); align-content: start; }
+.fam-card.support-reference { background: var(--surface-2); }
+.fam-card header { display: grid; grid-template-columns: auto 1fr auto; gap: var(--s-2); align-items: start; }
+.fam-card header .glyph { width: 36px; height: 36px; border-radius: var(--r); display: grid; place-items: center; background: var(--surface-2); color: var(--ink-2); }
+.fam-card h4 { margin: 0; font-size: var(--fs-md); }
+.fam-card .sub { color: var(--ink-2); font-size: var(--fs-xs); margin: 0; }
+.fam-card .facts { margin: 0; font-size: var(--fs-sm); color: var(--ink); }
+.fam-card .structure { margin: 0; font-size: var(--fs-sm); color: var(--ink-2); }
+.fam-card .configs summary { cursor: pointer; font-size: var(--fs-sm); color: var(--link); }
+.fam-card .configs ul { margin: 4px 0 0; padding-left: 18px; font-size: var(--fs-sm); color: var(--ink-2); }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; }
+.chip { padding: 1px 8px; border-radius: var(--r-pill); font-size: .72rem; font-weight: 600; background: var(--primary-soft); color: var(--primary); }
+.chip.subtle { background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--line-2); font-weight: 500; }
+.chip.reference { background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--line); }
+.chip.safety, .chip.needs-construction { background: var(--warn-soft); color: var(--warn); }
+.chip.edited { background: var(--accent-soft); color: var(--on-accent); }
+.fam-card .variants { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; border-top: 1px solid var(--line-2); padding-top: var(--s-2); }
+.fam-card .variants li { display: grid; grid-template-columns: 1fr auto; gap: var(--s-2); align-items: center; }
+.fam-card .variants li.waits strong { color: var(--ink-2); }
+.fam-card .variants strong { font-size: var(--fs-sm); font-weight: 600; }
+.fam-card .variants .sub { display: block; }
+.kind { display: inline-grid; place-items: center; width: 18px; height: 18px; margin-left: 6px; border-radius: var(--r-sm); font-family: var(--num); font-size: .7rem; font-weight: 700; vertical-align: middle; border: 1px solid var(--line); color: var(--ink-2); }
+.kind.construction { border-color: var(--warn); color: var(--warn); }
+.template-editor { display: grid; gap: var(--s-3); border: 1px solid var(--line-2); border-radius: var(--r-lg); padding: var(--s-4); }
+.template-editor textarea, .template-editor input, .template-editor select { width: 100%; }
+.template-editor .rooms { display: flex; flex-wrap: wrap; gap: 4px var(--s-3); border: 0; padding: 0; margin: 0; }
+.template-editor .rooms legend { font-size: var(--fs-sm); color: var(--ink-2); margin-bottom: 4px; }
+.variant-edit { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-2); }
+.variant-edit li { display: grid; grid-template-columns: 1fr 1.4fr; gap: 6px; padding: var(--s-2); border: 1px solid var(--line-2); border-radius: var(--r); }
+.variant-edit .row-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px; }
+.piece-info { display: grid; gap: var(--s-2); }
+.piece-info p { margin: 0; }
+.lengths { display: grid; gap: var(--s-2); margin-top: var(--s-4); }
+.lengths .too-long td { color: var(--error); }
+.run-parts { display: grid; gap: var(--s-2); }
+.run-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.run-list li { display: grid; grid-template-columns: 1fr auto; gap: var(--s-2); align-items: center; padding: 6px 8px; border: 1px solid var(--line-2); border-radius: var(--r); }
+.run-list .sub { display: block; color: var(--ink-2); font-size: var(--fs-xs); }
+.piece-banner .btn.primary { margin-left: auto; }
+@media (max-width: 760px) {
+  .fam-grid { grid-template-columns: 1fr; }
+  .variant-edit li { grid-template-columns: 1fr; }
+  .dialog.wide { width: calc(100vw - 16px); }
+}
+
 /* Laid out off-screen (not display:none) so its fonts, incl. Romanian glyphs, load before the print dialog. */
 .print-root { position: absolute; left: -100000px; top: 0; width: 186mm; visibility: hidden; pointer-events: none; }
 @page { size: A4 portrait; margin: 12mm; }
