@@ -58,6 +58,14 @@ pieces + sheets + reopen, offline start, no page errors or failed requests. Page
 | N19 | Project placement: floor, wall, on or above another piece (follows it) | Done | User request 2026-10-22; ADR-0031 (Proposed). `tests/mobila.test.ts` placement block (7 tests; two code mutations each fail a test). Scripted Chromium 1440 / 390 px: SUS placed on JOS with a 1730 mm gap, controls shown, no page errors, no sideways scroll. Not checked on a real phone |
 | N20 | Cabinet bottom under the sides; "Bays and shelves" quick layout (uprights, shelves per bay, doors per bay) | Done | User request 2026-10-22; ADR-0031. 5 tests; fuzz now picks the bottom joint (3,000 seeded passed); screenshot of JOS editor at 1440 / 390 px |
 | N21 | Mobila rooms rebuilt from `MOBILA_TOATE_CAMERELE_AI_CAD_PAL_MDF.json`: Living (Coloana, JOS, SUS) and Dormitor (nightstand A ×2) | Partially done | `src/core/samples/mobila.ts`, `docs/samples/*.project.json`, New → Mobila rooms. Living carcass parts match the file 47/47 by size (test); fronts and nightstand differ by 1–18 mm, listed in `docs/samples/mobila.md`. Gap: bed, splashback and RHS bench not built (no product type); per-panel materials (SUS bottom MDF) not supported |
+| N22 | Template catalog: families + variants as design snapshots, in Start from and a Catalog tab, Room / Type grouping | Not done | ADR-0032 (Proposed). User request 2026-10-22; list in `docs/catalog.md` (42 families) |
+| N23 | Default variants (1–5 per family) and *Apply layout* presets | Not done | ADR-0033 (Proposed). 112 variants listed, 57 interior-only |
+| N24 | Editable templates saved as local templates (Dexie table), reset / compare with shipped | Not done | ADR-0034 (Proposed) |
+| N25 | Rules registry: shelf span, door width, anti-tip, hanger depth, tilt-up; safety-regulated items gated | Not done | ADR-0035 (Proposed); thresholds unverified, await confirmation |
+| N26 | Kitchen construction: tall units, rails top, no bottom, appliance niches, front-only panel, run fillers / covers / plinth / worktop | Not done | ADR-0036 (Proposed) |
+| N27 | Sliding doors and flaps | Not done | ADR-0037 (Proposed) |
+| N28 | Frame root (tables, benches, stools, chairs, beds) with solid stock lengths list | Not done | ADR-0038 (Proposed) |
+| N29 | Reference entries for upholstered / mechanised / shaped pieces | Not done | ADR-0039 (Proposed) |
 
 ## Dropped
 

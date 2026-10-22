@@ -283,6 +283,194 @@
         "FUZZ_N=20000 fuzz passed"
       ],
       "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
+    },
+    {
+      "id": "TSK-N22",
+      "title": "Template catalog families, Start from and Catalog tab with Room / Type grouping",
+      "status": "NEEDS_ANSWERS",
+      "owner": "ui",
+      "adrs": [
+        "ADR-0032",
+        "ADR-0027",
+        "ADR-0028"
+      ],
+      "backlog": [
+        "N22"
+      ],
+      "depends_on": [],
+      "verification": [
+        "npm run lint && npm run typecheck && npm test && npm run build"
+      ],
+      "acceptance": [
+        "Compliance check of ADR-0032"
+      ],
+      "blocker": "Open questions in ADR-0032 await the user's answers",
+      "evidence": [],
+      "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
+    },
+    {
+      "id": "TSK-N23",
+      "title": "Default variants (1–5) and Apply layout presets",
+      "status": "NEEDS_ANSWERS",
+      "owner": "furniture-geometry",
+      "adrs": [
+        "ADR-0033"
+      ],
+      "backlog": [
+        "N23"
+      ],
+      "depends_on": [
+        "TSK-N22"
+      ],
+      "verification": [
+        "npm run lint && npm run typecheck && npm test && npm run build"
+      ],
+      "acceptance": [
+        "Compliance check of ADR-0033"
+      ],
+      "blocker": "Open questions in ADR-0033 await the user's answers",
+      "evidence": [],
+      "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
+    },
+    {
+      "id": "TSK-N24",
+      "title": "Editable templates as local templates (Dexie table)",
+      "status": "NEEDS_ANSWERS",
+      "owner": "storage",
+      "adrs": [
+        "ADR-0034",
+        "ADR-0012"
+      ],
+      "backlog": [
+        "N24"
+      ],
+      "depends_on": [
+        "TSK-N22"
+      ],
+      "verification": [
+        "npm run lint && npm run typecheck && npm test && npm run build"
+      ],
+      "acceptance": [
+        "Compliance check of ADR-0034"
+      ],
+      "blocker": "Open questions in ADR-0034 await the user's answers",
+      "evidence": [],
+      "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
+    },
+    {
+      "id": "TSK-N25",
+      "title": "Rules registry with labelled guidance",
+      "status": "NEEDS_ANSWERS",
+      "owner": "furniture-geometry",
+      "adrs": [
+        "ADR-0035",
+        "ADR-0008"
+      ],
+      "backlog": [
+        "N25"
+      ],
+      "depends_on": [],
+      "verification": [
+        "npm run lint && npm run typecheck && npm test && npm run build"
+      ],
+      "acceptance": [
+        "Compliance check of ADR-0035"
+      ],
+      "blocker": "Open questions in ADR-0035 await the user's answers",
+      "evidence": [],
+      "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
+    },
+    {
+      "id": "TSK-N26",
+      "title": "Kitchen construction flags, appliance niches, front-only panel, run parts",
+      "status": "NEEDS_ANSWERS",
+      "owner": "furniture-geometry",
+      "adrs": [
+        "ADR-0036"
+      ],
+      "backlog": [
+        "N26"
+      ],
+      "depends_on": [
+        "TSK-N22"
+      ],
+      "verification": [
+        "npm run lint && npm run typecheck && npm test && npm run build"
+      ],
+      "acceptance": [
+        "Compliance check of ADR-0036"
+      ],
+      "blocker": "Open questions in ADR-0036 await the user's answers",
+      "evidence": [],
+      "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
+    },
+    {
+      "id": "TSK-N27",
+      "title": "Sliding doors and flaps",
+      "status": "NEEDS_ANSWERS",
+      "owner": "furniture-geometry",
+      "adrs": [
+        "ADR-0037"
+      ],
+      "backlog": [
+        "N27"
+      ],
+      "depends_on": [],
+      "verification": [
+        "npm run lint && npm run typecheck && npm test && npm run build"
+      ],
+      "acceptance": [
+        "Compliance check of ADR-0037"
+      ],
+      "blocker": "Open questions in ADR-0037 await the user's answers",
+      "evidence": [],
+      "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
+    },
+    {
+      "id": "TSK-N28",
+      "title": "Frame root and solid stock",
+      "status": "NEEDS_ANSWERS",
+      "owner": "furniture-geometry",
+      "adrs": [
+        "ADR-0038"
+      ],
+      "backlog": [
+        "N28"
+      ],
+      "depends_on": [],
+      "verification": [
+        "npm run lint && npm run typecheck && npm test && npm run build"
+      ],
+      "acceptance": [
+        "Compliance check of ADR-0038"
+      ],
+      "blocker": "Open questions in ADR-0038 await the user's answers",
+      "evidence": [],
+      "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
+    },
+    {
+      "id": "TSK-N29",
+      "title": "Reference entries for upholstered and shaped pieces",
+      "status": "NEEDS_ANSWERS",
+      "owner": "ui",
+      "adrs": [
+        "ADR-0039"
+      ],
+      "backlog": [
+        "N29"
+      ],
+      "depends_on": [
+        "TSK-N22"
+      ],
+      "verification": [
+        "npm run lint && npm run typecheck && npm test && npm run build"
+      ],
+      "acceptance": [
+        "Compliance check of ADR-0039"
+      ],
+      "blocker": "Open questions in ADR-0039 await the user's answers",
+      "evidence": [],
+      "scope_guard": "Smallest slice; no browser suite, refactor or polish unless listed (ADR-0016)."
     }
   ]
 }
