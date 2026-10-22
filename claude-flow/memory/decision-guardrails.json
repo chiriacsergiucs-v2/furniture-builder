@@ -51,6 +51,10 @@
     {
       "adr": "ADR-0017",
       "rule": "No orchestration runtime; contracts stay generic."
+    },
+    {
+      "adr": "ADR-0016",
+      "rule": "Delivery is auto-failed unless every requirement, in the user's words, is reachable and verified in the running app the user uses; never drop or relabel a requirement to avoid it (retro 2026-10-23)."
     }
   ],
   "proposed_guards": []

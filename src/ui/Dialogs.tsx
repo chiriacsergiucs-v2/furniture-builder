@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { kerfOf, newId, sheetOf, templates, validateDesign } from '../core/design'
+import { kerfOf, newId, sheetOf, validateDesign } from '../core/design'
 import type { Design, Material } from '../core/types'
 import { newProject, validateProject, type Project } from '../core/project'
 import { sampleProjects } from '../core/samples/mobila'
@@ -8,10 +8,12 @@ import { useDesign } from '../store/designStore'
 import { MmField, Toggle } from './controls'
 import { Icon } from './icons'
 import { AddPieceList } from './Project'
-import { TemplateButton, templateGlyph } from './Templates'
+import { templateGlyph } from './Templates'
+import { StartFrom } from './Catalog'
+import { askConfirm } from './Confirm'
 
 /** Modal shell: header (title + close), scrolling body, optional footer for actions. Esc and backdrop close it. */
-function Dialog({ open, onClose, title, children, footer }: { open: boolean; onClose: () => void; title: string; children: ReactNode; footer?: ReactNode }) {
+export function Dialog({ open, onClose, title, children, footer, wide }: { open: boolean; onClose: () => void; title: string; children: ReactNode; footer?: ReactNode; wide?: boolean }) {
   const ref = useRef<HTMLDialogElement>(null)
   useEffect(() => {
     const d = ref.current
@@ -20,7 +22,7 @@ function Dialog({ open, onClose, title, children, footer }: { open: boolean; onC
     if (!open && d.open) d.close()
   }, [open])
   return (
-    <dialog ref={ref} className="dialog" onClose={onClose} onClick={e => { if (e.target === ref.current) onClose() }} aria-label={title}>
+    <dialog ref={ref} className={`dialog ${wide ? 'wide' : ''}`} onClose={onClose} onClick={e => { if (e.target === ref.current) onClose() }} aria-label={title}>
       <header><h2>{title}</h2><button type="button" className="btn icon ghost sm close" onClick={onClose} aria-label="Close"><Icon name="x" /></button></header>
       <div className="dialog-body">{children}</div>
       {footer && <div className="dialog-footer">{footer}</div>}
@@ -28,7 +30,7 @@ function Dialog({ open, onClose, title, children, footer }: { open: boolean; onC
   )
 }
 
-export function NewDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function NewDialog({ open, onClose, onBrowse }: { open: boolean; onClose: () => void; onBrowse?: () => void }) {
   const load = useDesign(s => s.load)
   const openProject = useDesign(s => s.openProject)
   return (
@@ -55,18 +57,15 @@ export function NewDialog({ open, onClose }: { open: boolean; onClose: () => voi
           </li>
         ))}
       </ul>
-      <h3 className="list-head">Or a single piece</h3>
-      <ul className="template-list template-grid">
-        {templates.map(t => <li key={t.id}><TemplateButton t={t} onPick={() => { load(t.create()); onClose() }} /></li>)}
-      </ul>
+      {open && <StartFrom onPick={d => { load(d); onClose() }} onBrowse={onBrowse} />}
     </Dialog>
   )
 }
 
-export function AddPieceDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function AddPieceDialog({ open, onClose, onBrowse }: { open: boolean; onClose: () => void; onBrowse?: () => void }) {
   return (
     <Dialog open={open} onClose={onClose} title="Add a piece to the project">
-      {open && <AddPieceList onDone={onClose} />}
+      {open && <AddPieceList onDone={onClose} onBrowse={onBrowse} />}
     </Dialog>
   )
 }
@@ -115,7 +114,7 @@ export function LibraryDialog({ open, onClose }: { open: boolean; onClose: () =>
       <button type="button" className="btn sm" onClick={dup(r, kind)} title="Duplicate"><Icon name="copy" className="sm" /><span className="lbl">Duplicate</span></button>
       <button type="button" className="btn sm danger" disabled={r.id === currentId} title={r.id === currentId ? (kind === 'project' ? 'Open something else first' : 'Open another piece first') : 'Delete'}
         onClick={async () => {
-          if (!confirm(kind === 'project' ? `Delete project “${r.name}”? This cannot be undone.` : `Delete “${r.name}”? This cannot be undone.`)) return
+          if (!(await askConfirm(kind === 'project' ? `Delete project “${r.name}”? This cannot be undone.` : `Delete “${r.name}”? This cannot be undone.`, { confirmLabel: 'Delete', danger: true }))) return
           if (kind === 'project') await deleteProject(r.id); else await deleteDesign(r.id)
           refresh()
         }}><Icon name="trash" className="sm" /><span className="lbl">Delete</span></button>
@@ -153,7 +152,7 @@ export function LibraryDialog({ open, onClose }: { open: boolean; onClose: () =>
             <li key={r.id} className={r.id === currentId ? 'current' : ''}>
               <button type="button" className="row-btn" aria-current={r.id === currentId ? 'true' : undefined} onClick={() => { load(r.design, { fromStorage: true }); onClose() }}>
                 <span className="glyph"><Icon name={templateGlyph(r.design.product.kind)} /></span>
-                <span><strong>{r.name}</strong><span className="sub">{({ desk: 'Desk', corner: 'Corner unit', cabinet: 'Cabinet' } as const)[r.design.product.kind]}, edited {when(r.updatedAt)}</span></span>
+                <span><strong>{r.name}</strong><span className="sub">{({ desk: 'Desk', corner: 'Corner unit', cabinet: 'Cabinet', panel: 'Front panel', frame: 'Frame' } as const)[r.design.product.kind]}, edited {when(r.updatedAt)}</span></span>
               </button>
               {rowActions(r, 'piece')}
             </li>

@@ -1,5 +1,5 @@
 import type {
-  CabinetParams, CornerParams, DeskParams, Design, DrawerSettings, Material, Product, Space, SpaceKind, SplitSize,
+  CabinetParams, CornerParams, DeskParams, Design, DrawerSettings, FrameKind, FrameParams, Material, PanelParams, Product, Space, SpaceKind, SplitSize,
 } from './types'
 
 export type PedestalSide = 'left' | 'right'
@@ -73,11 +73,42 @@ export const deskDefaults = (): DeskParams => ({
   frontMaterialId: 'mdf18', frontGap: 3,
 })
 
-function wrap(name: string, product: Product): Design {
-  const now = new Date().toISOString()
-  return { schemaVersion: 2, id: newId(), name, createdAt: now, updatedAt: now, materials: defaultMaterials(), product, cutting: { kerf: DEFAULT_KERF } }
+/** Solid timber for frames (ADR-0038): bought in lengths; thickness is nominal (sections vary by part). */
+export const solidMaterials = (): Material[] => [
+  { id: 'beech', name: 'Beech, solid', thickness: 45, grain: true, color: '#d8b38a', stock: 'solid', lengths: [2400, 3000] },
+  { id: 'pine', name: 'Pine, solid', thickness: 45, grain: true, color: '#e3c99a', stock: 'solid', lengths: [2400, 3000] },
+  { id: 'larch', name: 'Larch, solid (outdoor)', thickness: 45, grain: true, color: '#c7966a', stock: 'solid', lengths: [2400, 3000] },
+]
+
+export const frameDefaults = (kind: FrameKind): FrameParams => {
+  const base: FrameParams = {
+    kind, width: 1600, depth: 900, height: 750, panelMaterialId: 'pal18oak', solidMaterialId: 'beech', top: 'panel',
+    leg: { w: 60, d: 60 }, legInset: 20, apron: { height: 90, thickness: 22 }, stretchers: 'none', stretcherHeight: 150,
+    shelf: null, slats: { width: 70, thickness: 20, gap: 40 }, back: null, bed: null,
+  }
+  switch (kind) {
+    case 'table': return base
+    case 'bench': return { ...base, width: 1200, depth: 380, height: 450, leg: { w: 45, d: 45 }, legInset: 30, apron: { height: 70, thickness: 22 } }
+    case 'stool': return { ...base, width: 380, depth: 380, height: 650, leg: { w: 40, d: 40 }, legInset: 10, apron: { height: 60, thickness: 22 }, stretchers: 'box', stretcherHeight: 250 }
+    case 'chair': return { ...base, width: 450, depth: 500, height: 880, leg: { w: 40, d: 40 }, legInset: 0, apron: { height: 70, thickness: 22 },
+      stretchers: 'h', stretcherHeight: 150, back: { seatHeight: 460, style: 'slats', count: 4, railHeight: 60 }, slats: { width: 40, thickness: 16, gap: 40 } }
+    case 'bed': return { ...base, height: 1000, panelMaterialId: 'pal18oak', solidMaterialId: 'pine', apron: { height: 0, thickness: 25 }, leg: { w: 45, d: 45 },
+      slats: { width: 70, thickness: 20, gap: 50 },
+      bed: { mattress: { w: 1600, l: 2000 }, clearance: 10, deckHeight: 380, railHeight: 180, headboardHeight: 1000, footboardHeight: 0, sidePanelHeight: 0, tierGap: 0, guardHeight: 300 } }
+  }
 }
-const cabinet = (name: string, over: Partial<CabinetParams>, interior: Space) =>
+
+export const panelDefaults = (purpose: PanelParams['purpose']): PanelParams => ({
+  purpose, width: purpose === 'filler' ? 50 : purpose === 'cover' ? 580 : 597, height: purpose === 'fridge' ? 1200 : purpose === 'cover' ? 870 : 717,
+  materialId: 'mdf18', handle: purpose === 'dishwasher' || purpose === 'fridge' ? { kind: 'bar', holeSpacing: 128, position: 'top' } : null,
+})
+
+export function wrap(name: string, product: Product): Design {
+  const now = new Date().toISOString()
+  const solid = product.kind === 'frame' ? solidMaterials() : []
+  return { schemaVersion: 2, id: newId(), name, createdAt: now, updatedAt: now, materials: [...defaultMaterials(), ...solid], product, cutting: { kerf: DEFAULT_KERF } }
+}
+export const cabinet = (name: string, over: Partial<CabinetParams>, interior: Space) =>
   wrap(name, { kind: 'cabinet', id: newId(), params: { ...cabinetDefaults(interior), ...over, interior } })
 
 export interface Template { id: string; name: string; description: string; create: () => Design }
@@ -203,7 +234,7 @@ export function makeBays(l: BayLayout, prev: Space): Space {
   const handle = old[0]?.handle
   const bay = (i: number, id: string): Space => {
     const was = old[i]
-    const hinge = was?.front?.count === 1 && l.doors === 1 ? was.front.hinge : undefined
+    const hinge = was?.front?.kind === 'doors' && was.front.count === 1 && l.doors === 1 ? was.front.hinge : undefined
     return { id, kind: 'shelves', count: shelves, front: front && hinge ? { ...front, hinge } : front, ...(handle ? { handle } : {}) }
   }
   if (bays === 1) return bay(0, prev.id)
@@ -228,6 +259,7 @@ export interface ProductRoot { root: Space; label: string; side?: PedestalSide; 
 
 export function productRoots(prod: Product): ProductRoot[] {
   if (prod.kind === 'cabinet') return [{ root: prod.params.interior, label: 'Interior' }]
+  if (prod.kind === 'panel' || prod.kind === 'frame') return []
   if (prod.kind === 'corner') {
     return prod.params.variant === 'blind'
       ? [{ root: prod.params.interior, label: 'Usable section', wing: 'a' }]
@@ -254,6 +286,7 @@ export function mapProductSpace(prod: Product, id: string, fn: (s: Space) => Spa
     const wingInterior = mapSpace(prod.params.wingInterior, id, fn)
     return wingInterior === prod.params.wingInterior ? prod : { ...prod, params: { ...prod.params, wingInterior } }
   }
+  if (prod.kind !== 'desk') return prod
   const desk = prod.params
   for (const { root, side } of productRoots(prod)) {
     const next = mapSpace(root, id, fn)
@@ -280,17 +313,48 @@ const isStr = (v: unknown) => typeof v === 'string' && v.length > 0 && v.length 
 
 const validSize = (z: unknown) => isObj(z) && ((z.mode === 'mm' && isInt(z.value, 1) && (z.value as number) <= MAX_MM) || (z.mode === 'fr' && typeof z.value === 'number' && z.value >= 0.01 && z.value <= 1000))
 
+function validFront(f: unknown): boolean {
+  if (!isObj(f)) return false
+  if (f.kind === 'doors') return (f.count === 1 || f.count === 2) && (f.hinge === undefined || f.hinge === 'left' || f.hinge === 'right')
+  if (f.kind === 'sliding') return [2, 3, 4].includes(f.count as number) && (f.overlap === undefined || (isInt(f.overlap) && (f.overlap as number) <= 200)) && (f.track === undefined || (isInt(f.track, 1) && (f.track as number) <= 300))
+  if (f.kind === 'flap') return f.count === 1 && (f.direction === 'up' || f.direction === 'down') && (f.fitting === undefined || (typeof f.fitting === 'string' && f.fitting.length <= 200))
+  return false
+}
+
+const isOptStr = (v: unknown, max = 300) => v === undefined || (typeof v === 'string' && v.length <= max)
+
+/** ADR-0028: optional catalog metadata; checked when present, never throws. */
+function validateCatalog(c: unknown, errs: string[]) {
+  if (c === undefined) return
+  if (!isObj(c)) { errs.push('Invalid catalog metadata'); return }
+  for (const k of ['category', 'brand', 'productName', 'articleNumber', 'hardwareToChoose']) if (!isOptStr(c[k])) errs.push(`Invalid catalog ${k}`)
+  const o = c.origin
+  if (o === undefined) return
+  if (!isObj(o) || !isStr(o.catalogId) || !isInt(o.revision) || !isStr(o.productName) || !isStr(o.takenAt) || !isOptStr(o.brand) || !isOptStr(o.variantId)) { errs.push('Invalid catalog origin'); return }
+  if (o.sourceUrl !== undefined && !(typeof o.sourceUrl === 'string' && /^https?:\/\//.test(o.sourceUrl) && o.sourceUrl.length < 2000)) errs.push('Catalog source link must be an http(s) address')
+}
+
+function validateRules(s: unknown, errs: string[]) {
+  if (s === undefined) return
+  if (!isObj(s) || (s.rules !== undefined && !isObj(s.rules))) { errs.push('Invalid settings'); return }
+  const r = (s.rules ?? {}) as Record<string, unknown>
+  for (const k of ['shelfSpan', 'doorMaxWidth', 'hangerDepth', 'roomHeight']) if (r[k] !== undefined && (!isInt(r[k], 1) || (r[k] as number) > MAX_MM)) errs.push(`Invalid rule setting ${k}`)
+}
+
 function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0) {
   if (depth > 12) { errs.push('Space tree is too deep'); return }
   if (!isObj(s) || !isStr(s.id)) { errs.push('Invalid space'); return }
   if (seen.has(s.id as string)) errs.push(`Duplicate space id ${String(s.id)}`)
   seen.add(s.id as string)
-  if (s.front != null && !(isObj(s.front) && s.front.kind === 'doors' && (s.front.count === 1 || s.front.count === 2) && (s.front.hinge === undefined || s.front.hinge === 'left' || s.front.hinge === 'right'))) errs.push('Invalid doors')
+  if (s.front != null && !validFront(s.front)) errs.push('Invalid doors')
   if (s.handle != null && !(isObj(s.handle) && ['bar', 'knob', 'push'].includes(s.handle.kind as string) &&
     (s.handle.holeSpacing === undefined || (isInt(s.handle.holeSpacing, 16) && (s.handle.holeSpacing as number) <= 2000)) &&
     (s.handle.position === undefined || ['top', 'centre', 'bottom'].includes(s.handle.position as string)))) errs.push('Invalid handle')
   switch (s.kind) {
-    case 'empty': return
+    case 'empty':
+      if (s.appliance !== undefined && !(isObj(s.appliance) && ['oven', 'microwave', 'fridge', 'dishwasher', 'hob', 'other'].includes(s.appliance.kind as string) &&
+        isInt(s.appliance.w, 1) && isInt(s.appliance.h, 1) && isInt(s.appliance.d, 1) && [s.appliance.w, s.appliance.h, s.appliance.d].every(v => (v as number) <= MAX_MM))) errs.push('Invalid appliance niche')
+      return
     case 'shelves':
       if (!isInt(s.count) || (s.count as number) > MAX_SHELVES) errs.push('Invalid shelf count')
       if (s.adjustable !== undefined && typeof s.adjustable !== 'boolean') errs.push('Invalid adjustable flag')
@@ -324,6 +388,8 @@ export function validateDesign(d: unknown): string[] {
     if (!isObj(m) || !isStr(m.id) || !isStr(m.name) || !isInt(m.thickness, 1) || (m.thickness as number) > 200 || typeof m.grain !== 'boolean' || typeof m.color !== 'string') errs.push('Invalid material')
     else if (m.sheet !== undefined && !(isObj(m.sheet) && isInt(m.sheet.length, 100) && isInt(m.sheet.width, 100) && isInt(m.sheet.trim) &&
       2 * (m.sheet.trim as number) < Math.min(m.sheet.length as number, m.sheet.width as number) && (m.sheet.count === null || isInt(m.sheet.count)))) errs.push(`Invalid sheet for ${String(m.name)}`)
+    else if (m.stock !== undefined && m.stock !== 'sheet' && m.stock !== 'solid') errs.push(`Invalid stock for ${String(m.name)}`)
+    else if (m.lengths !== undefined && !(Array.isArray(m.lengths) && m.lengths.length > 0 && m.lengths.every(v => isInt(v, 100) && (v as number) <= 20_000))) errs.push(`Invalid stock lengths for ${String(m.name)}`)
     else if (mids.has(m.id as string)) errs.push(`Duplicate material ${String(m.id)}`)
     else mids.add(m.id as string)
   }
@@ -333,6 +399,16 @@ export function validateDesign(d: unknown): string[] {
   // Sizes are whole mm up to 100 m: generous for furniture, far from floating-point trouble.
   const ints = (keys: string[], obj: Record<string, unknown>) => keys.forEach(k => { if (!isInt(obj[k]) || (obj[k] as number) > MAX_MM) errs.push(`${k} must be a whole number of mm`) })
   const matRef = (k: string, obj: Record<string, unknown>) => { if (!mids.has(obj[k] as string)) errs.push(`${k} refers to an unknown material`) }
+  validateCatalog(d.catalog, errs)
+  validateRules(d.settings, errs)
+  if (p.kind === 'panel') {
+    ints(['width', 'height'], params)
+    matRef('materialId', params)
+    if (!['dishwasher', 'fridge', 'cover', 'filler'].includes(params.purpose as string)) errs.push('Invalid panel purpose')
+    if (params.handle != null && !(isObj(params.handle) && ['bar', 'knob', 'push'].includes(params.handle.kind as string))) errs.push('Invalid handle')
+    return errs
+  }
+  if (p.kind === 'frame') { validateFrame(params, errs, ints, matRef); return errs }
   const dr = params.drawers
   if (!isObj(dr) || !Array.isArray(dr.runnerLengths) || !dr.runnerLengths.every(v => isInt(v, 1))) errs.push('Invalid drawer settings')
   else { ints(['sideClearance', 'verticalClearance', 'rearClearance'], dr); matRef('boxMaterialId', dr); matRef('bottomMaterialId', dr) }
@@ -340,7 +416,9 @@ export function validateDesign(d: unknown): string[] {
     ints(['width', 'height', 'depth', 'backInset', 'plinthHeight', 'plinthSetback', 'frontGap', 'shelfSetback'], params)
     ;['bodyMaterialId', 'frontMaterialId', 'backMaterialId'].forEach(k => matRef(k, params))
     if (params.top !== 'over' && params.top !== 'between') errs.push('Invalid top joint')
-    if (params.bottom !== undefined && params.bottom !== 'between' && params.bottom !== 'under') errs.push('Invalid bottom joint')
+    if (params.bottom !== undefined && !['between', 'under', 'none'].includes(params.bottom as string)) errs.push('Invalid bottom joint')
+    if (params.topKind !== undefined && params.topKind !== 'panel' && params.topKind !== 'rails') errs.push('Invalid top kind')
+    if (params.railDepth !== undefined && (!isInt(params.railDepth, 1) || (params.railDepth as number) > 1000)) errs.push('railDepth must be a whole number of mm')
     if (params.shelfClearance !== undefined && (!isInt(params.shelfClearance) || (params.shelfClearance as number) > 20)) errs.push('shelfClearance must be a whole number of mm')
     if (params.pinRowSetback !== undefined && (!isInt(params.pinRowSetback, 8) || (params.pinRowSetback as number) > 300)) errs.push('pinRowSetback must be 8 to 300 mm')
     if (params.frontStyle !== undefined && !['overlay', 'half', 'inset'].includes(params.frontStyle as string)) errs.push('Invalid front style')
@@ -370,4 +448,29 @@ export function validateDesign(d: unknown): string[] {
     validateSpace(params.wingInterior, errs, seen)
   } else errs.push('Unknown product kind')
   return errs
+}
+
+function validateFrame(f: Record<string, unknown>, errs: string[], ints: (keys: string[], obj: Record<string, unknown>) => void, matRef: (k: string, obj: Record<string, unknown>) => void) {
+  if (!['table', 'bench', 'stool', 'chair', 'bed'].includes(f.kind as string)) errs.push('Invalid frame kind')
+  ints(['width', 'depth', 'height', 'legInset', 'stretcherHeight'], f)
+  matRef('panelMaterialId', f); matRef('solidMaterialId', f)
+  if (f.top !== 'panel' && f.top !== 'slats') errs.push('Invalid frame top')
+  if (!['none', 'box', 'h'].includes(f.stretchers as string)) errs.push('Invalid stretchers')
+  const obj = (k: string, keys: string[], min = 0) => {
+    const o = f[k]
+    if (!isObj(o)) { errs.push(`Invalid ${k}`); return }
+    for (const key of keys) if (!isInt(o[key], min) || (o[key] as number) > MAX_MM) errs.push(`${k}.${key} must be a whole number of mm`)
+  }
+  obj('leg', ['w', 'd'], 1); obj('apron', ['height', 'thickness']); obj('slats', ['width', 'thickness', 'gap'])
+  if (isObj(f.slats) && (!isInt(f.slats.width, 1) || !isInt(f.slats.thickness, 1))) errs.push('Slats need a size')
+  if (f.shelf != null && !(isObj(f.shelf) && isInt(f.shelf.height, 1))) errs.push('Invalid lower shelf')
+  if (f.back != null) {
+    const b = f.back
+    if (!isObj(b) || !isInt(b.seatHeight, 1) || !isInt(b.railHeight, 1) || !isInt(b.count, 1) || (b.count as number) > 20 || (b.style !== 'slats' && b.style !== 'panel')) errs.push('Invalid back')
+  }
+  if (f.kind === 'bed') {
+    const b = f.bed
+    if (!isObj(b) || !isObj(b.mattress) || !isInt(b.mattress.w, 1) || !isInt(b.mattress.l, 1) ||
+      !['clearance', 'deckHeight', 'railHeight', 'headboardHeight', 'footboardHeight', 'sidePanelHeight', 'tierGap', 'guardHeight'].every(k => isInt(b[k]) && (b[k] as number) <= MAX_MM)) errs.push('Invalid bed settings')
+  }
 }

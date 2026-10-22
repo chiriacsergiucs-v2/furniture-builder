@@ -43,6 +43,19 @@ export const DEFAULT_PIN_ROW_SETBACK = 37
 /** Minimum gap between closed doors and internal drawer boxes (hinge arm clearance). */
 export const INTERNAL_DRAWER_SETBACK = 20
 
+/** Sliding doors (ADR-0037): defaults when the space does not say. */
+export const DEFAULT_SLIDING_OVERLAP = 30
+export const DEFAULT_SLIDING_TRACK = 80
+/** Clear gap between the two planes of sliding doors. */
+export const SLIDING_PLANE_GAP = 2
+export const DEFAULT_RAIL_DEPTH = 100
+
+/** Deepest sliding-door track anywhere in a space tree (0 when none), for the front envelope. */
+export function slidingTrackDepth(s: Space): Mm {
+  const own = s.front?.kind === 'sliding' ? s.front.track ?? DEFAULT_SLIDING_TRACK : 0
+  return s.kind === 'split' ? Math.max(own, ...s.children.map(slidingTrackDepth)) : own
+}
+
 const lo = (g: Mm) => Math.floor(g / 2)
 const hi = (g: Mm) => g - Math.floor(g / 2)
 
@@ -131,6 +144,7 @@ export function buildCabinet(p: CabinetParams, materials: Map<string, Material>,
   const Dc = D - z0
   // A bottom under the sides runs the full width; the sides then stand on it.
   const under = p.bottom === 'under'
+  const noBottom = p.bottom === 'none'
   const sideY = under ? ph + t : 0
   const sideH = (p.top === 'over' ? H - t : H) - sideY
   // Inner span between the sides; an omitted side lets everything run to that edge.
@@ -138,9 +152,19 @@ export function buildCabinet(p: CabinetParams, materials: Map<string, Material>,
   const span = W - L - R
   if (opts.omitSide !== 'left') add(pid, 'side', 'Left side', body.id, box(0, sideY, z0, t, sideH, Dc), 'x', 'y', ['+z'], 0)
   if (opts.omitSide !== 'right') add(pid, 'side', 'Right side', body.id, box(W - t, sideY, z0, t, sideH, Dc), 'x', 'y', ['+z'], 1)
-  if (p.top === 'over') add(pid, 'top', 'Top', body.id, box(0, H - t, z0, W, t, Dc), 'y', 'x', ['+z', '-x', '+x'])
+  if (p.topKind === 'rails') {
+    // Two rails instead of a full top (ADR-0036): front rail at the front edge, back rail at the back.
+    const rd = p.railDepth ?? DEFAULT_RAIL_DEPTH
+    const x0 = p.top === 'over' ? 0 : L, w = p.top === 'over' ? W : span
+    if (rd < 30 || 2 * rd > Dc) err('rail-depth', `Top rails ${rd} mm deep do not fit a ${Dc} mm deep carcass.`, pid)
+    else {
+      add(pid, 'rail', 'Top rail back', body.id, box(x0, H - t, z0, w, t, rd), 'y', 'x', [], 0)
+      add(pid, 'rail', 'Top rail front', body.id, box(x0, H - t, z0 + Dc - rd, w, t, rd), 'y', 'x', ['+z'], 1)
+    }
+  } else if (p.top === 'over') add(pid, 'top', 'Top', body.id, box(0, H - t, z0, W, t, Dc), 'y', 'x', ['+z', '-x', '+x'])
   else add(pid, 'top', 'Top', body.id, box(L, H - t, z0, span, t, Dc), 'y', 'x', ['+z'])
-  if (under) add(pid, 'bottom', 'Bottom', body.id, box(0, ph, z0, W, t, Dc), 'y', 'x', ['+z', '-x', '+x'])
+  if (noBottom) { if (!wall) warn('no-bottom', 'A floor cabinet without a bottom has nothing to stand its contents on; this is meant for units over a cooker hood.', pid) }
+  else if (under) add(pid, 'bottom', 'Bottom', body.id, box(0, ph, z0, W, t, Dc), 'y', 'x', ['+z', '-x', '+x'])
   else add(pid, 'bottom', 'Bottom', body.id, box(L, ph, z0, span, t, Dc), 'y', 'x', ['+z'])
   if (ph > 0) {
     add(pid, 'plinth', 'Plinth', body.id, box(L, 0, D - p.plinthSetback - t, span, ph, t), 'z', 'x', ['-y'])
@@ -150,7 +174,7 @@ export function buildCabinet(p: CabinetParams, materials: Map<string, Material>,
     add(pid, 'back', 'Back', backM.id, box(0, ph, 0, W, H - ph, bt), 'z', 'y', [])
   } else if (p.back === 'inset') {
     if (p.backInset < 0 || p.backInset + bt > D - 2 * t) err('back-inset', 'Back inset does not fit in the carcass depth.', pid)
-    add(pid, 'back', 'Back', backM.id, box(L, ph + t, p.backInset, span, H - ph - 2 * t, bt), 'z', 'y', [])
+    add(pid, 'back', 'Back', backM.id, box(L, ph + (noBottom ? 0 : t), p.backInset, span, H - ph - (noBottom ? 1 : 2) * t, bt), 'z', 'y', [])
     openZ = p.backInset + bt
   }
   if (wall) {
@@ -169,7 +193,7 @@ export function buildCabinet(p: CabinetParams, materials: Map<string, Material>,
     : { x0: r, x1: W - r, y0: ph + r, y1: H - r }
   const rootFront: FrontZone = { ...baseFront, x0: baseFront.x0 + (opts.frontTrim?.left ?? 0), x1: baseFront.x1 - (opts.frontTrim?.right ?? 0) }
   const root: Ctx = {
-    opening: box(L, ph + t, openZ, span, H - ph - 2 * t, D - openZ),
+    opening: box(L, ph + (noBottom ? 0 : t), openZ, span, H - ph - (noBottom ? 1 : 2) * t, D - openZ),
     front: rootFront,
     behindDoors: false,
   }
@@ -197,14 +221,43 @@ export function buildCabinet(p: CabinetParams, materials: Map<string, Material>,
       err('space-too-small', 'This space has no room left inside it.', s.id)
       return
     }
-    const hasDoors = !!s.front && s.front.kind === 'doors'
+    // Any front (hinged doors, sliding doors, a flap) closes the space; drawers inside become internal.
+    const hasDoors = !!s.front
     if (hasDoors && c.behindDoors) err('doors-behind-doors', 'Doors are placed inside a space that already has doors.', s.id)
-    if (hasDoors && s.kind === 'drawers') {
-      // Doors over drawers: drawers become internal (no applied fronts).
-    }
 
-    // doors
-    if (hasDoors && s.front) {
+    if (s.front?.kind === 'sliding') {
+      const sf = s.front
+      const f = zoneOf(c)
+      const n = sf.count
+      const ov = sf.overlap ?? DEFAULT_SLIDING_OVERLAP
+      const track = sf.track ?? DEFAULT_SLIDING_TRACK
+      if (inset) warn('sliding-inset', 'Sliding doors run in front of the carcass; the inset front style does not apply to them.', s.id)
+      if (track < 2 * tf + SLIDING_PLANE_GAP) err('sliding-track', `A ${track} mm track is too shallow for two ${tf} mm door planes.`, s.id)
+      if (ov < 0 || ov * 2 >= (f.x1 - f.x0) / n) err('sliding-overlap', `Overlap ${ov} mm does not suit ${n} doors on ${f.x1 - f.x0} mm.`, s.id)
+      else {
+        const widths = equalParts(f.x1 - f.x0 + (n - 1) * ov, n)
+        let x = f.x0
+        widths.forEach((w, i) => {
+          const h = f.y1 - f.y0
+          add(s.id, 'door', `Sliding door ${i + 1}`, front.id, box(x, f.y0, D + (i % 2 === 0 ? 0 : tf + SLIDING_PLANE_GAP), w, h, tf), 'z', 'y', ['-x', '+x', '-y', '+y'], i)
+          placeHandle(s.handle, 'door', w, h, i % 2 === 0 ? 'right' : 'left', s.id)
+          if (w < 100 || h < 100) err('door-small', `Door ${w}×${h} mm is too small.`, s.id)
+          x += w - ov
+        })
+        hw({ nodeId: s.id, kind: 'sliding-track', label: 'Sliding door track, top and bottom', quantity: 2, sizeMm: f.x1 - f.x0, note: `${n} doors in two planes, ${track} mm in front of the carcass (confirm rollers, track and door sizes with the sliding system's datasheet)` })
+        handleHw(s.id, s.handle, n)
+      }
+    } else if (s.front?.kind === 'flap') {
+      const fl = s.front
+      const f = zoneOf(c)
+      const w = f.x1 - f.x0, h = f.y1 - f.y0
+      add(s.id, 'door', fl.direction === 'up' ? 'Lift-up flap' : 'Drop-down flap', front.id, box(f.x0, f.y0, frontZ, w, h, tf), 'z', 'x', ['-x', '+x', '-y', '+y'])
+      placeHandle(s.handle, 'drawer', w, h, null, s.id)
+      if (w < 100 || h < 100) err('door-small', `Flap ${w}×${h} mm is too small.`, s.id)
+      hw({ nodeId: s.id, kind: 'flap-stay', label: fl.fitting ? `Flap fitting: ${fl.fitting}` : (fl.direction === 'up' ? 'Lift-up system for a flap' : 'Stay for a drop-down flap'), quantity: 1, note: `front ${w}×${h} mm — choose by front weight and height from the fitting's datasheet` })
+      if (!fl.fitting) warn('flap-fitting', `Choose the ${fl.direction === 'up' ? 'lift-up system' : 'flap stay'} for this ${w}×${h} mm front from its datasheet and name it here.`, s.id)
+      handleHw(s.id, s.handle, 1)
+    } else if (s.front?.kind === 'doors') {
       const f = zoneOf(c)
       const n = s.front.count
       const totalW = f.x1 - f.x0 - (n - 1) * g
@@ -213,11 +266,10 @@ export function buildCabinet(p: CabinetParams, materials: Map<string, Material>,
       widths.forEach((w, i) => {
         const h = f.y1 - f.y0
         // The handle goes on the opening edge: right edge of a left-hinged door, the meeting edges of a pair.
-        const openEdge: 'left' | 'right' = n === 2 ? (i === 0 ? 'right' : 'left') : (s.front!.hinge === 'right' ? 'left' : 'right')
+        const openEdge: 'left' | 'right' = n === 2 ? (i === 0 ? 'right' : 'left') : (s.front?.kind === 'doors' && s.front.hinge === 'right' ? 'left' : 'right')
         add(s.id, 'door', n === 1 ? 'Door' : i === 0 ? 'Door left' : 'Door right', front.id,
           box(x, f.y0, frontZ, w, h, tf), 'z', 'y', ['-x', '+x', '-y', '+y'], i)
         placeHandle(s.handle, 'door', w, h, openEdge, s.id)
-        if (w > 600) warn('door-wide', `Door ${w} mm wide; over ~600 mm consider two doors.`, s.id)
         if (w < 100 || h < 100) err('door-small', `Door ${w}×${h} mm is too small.`, s.id)
         x += w + g
       })
@@ -225,15 +277,20 @@ export function buildCabinet(p: CabinetParams, materials: Map<string, Material>,
       hw({ nodeId: s.id, kind: 'hinge', label: 'Hinge, 35 mm cup, soft-close, clip-on', quantity: hingeCount(dh) * n, note: `${hingeCount(dh)} per door, ${hingeBand(dh)} (typical — confirm with the hinge datasheet)` })
       handleHw(s.id, s.handle, n)
     }
-    // Behind inset doors everything moves back by the door thickness.
-    const innerOpening = hasDoors && inset ? { ...op, d: op.d - tf } : op
+    // Behind inset doors everything moves back by the door thickness (sliding doors run outside the carcass).
+    const innerOpening = hasDoors && inset && s.front?.kind !== 'sliding' ? { ...op, d: op.d - tf } : op
     if (innerOpening.d <= 0) { err('space-too-small', 'No depth left behind the inset doors.', s.id); return }
     const inner: Ctx = { ...c, opening: innerOpening, behindDoors: c.behindDoors || hasDoors }
 
     const ip = inner.opening
     switch (s.kind) {
-      case 'empty':
+      case 'empty': {
+        const a = s.appliance
+        if (!a) return
+        if (a.w > ip.w || a.h > ip.h || a.d > ip.d) err('appliance-fit', `The ${a.kind} niche ${a.w}×${a.h}×${a.d} mm does not fit in ${ip.w}×${ip.h}×${ip.d} mm.`, s.id)
+        hw({ nodeId: s.id, kind: 'appliance', label: `Built-in ${a.kind}`, quantity: 1, note: `niche ${a.w}×${a.h}×${a.d} mm as entered — check every size and the ventilation against the appliance's installation drawing` })
         return
+      }
       case 'shelves': {
         const n = s.count
         if (n < 0 || !Number.isInteger(n) || n > 50) { err('shelf-count', 'Shelf count must be a whole number from 0 to 50.', s.id); return }
@@ -256,14 +313,12 @@ export function buildCabinet(p: CabinetParams, materials: Map<string, Material>,
           adjustable.push({ spaceId: s.id, op: ip, shelfDepth: sd })
           hw({ nodeId: s.id, kind: 'shelf-pin', label: 'Shelf pin, 5 mm', quantity: 4 * n, note: '4 per adjustable shelf (typical)' })
         }
-        if (ip.w > 50 * t) warn('shelf-span', `Shelf span ${ip.w} mm is long for ${t} mm board and may sag (rule of thumb ≤ ${50 * t} mm).`, s.id)
         return
       }
       case 'hanging': {
         if (s.railDrop < 0 || s.railDrop >= ip.h) { err('rail-drop', 'Rail position is outside the space.', s.id); return }
         hw({ nodeId: s.id, kind: 'clothes-rail', label: 'Clothes rail', quantity: 1, sizeMm: ip.w, note: 'cut to opening width' })
         hw({ nodeId: s.id, kind: 'rail-support', label: 'Rail support', quantity: 2 })
-        if (ip.d < 500) warn('hanging-shallow', `Opening depth ${ip.d} mm; hangers usually need about 550 mm.`, s.id)
         if (ip.h < 800) warn('hanging-short', `Only ${ip.h} mm of height for hanging.`, s.id)
         return
       }

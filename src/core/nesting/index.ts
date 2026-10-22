@@ -18,6 +18,8 @@ export interface SheetSettings {
 export function jobsFromCutlist(rows: CutRow[], settings: Map<string, SheetSettings>): NestJob[] {
   const jobs = new Map<string, NestJob>()
   for (const r of rows) {
+    // Solid timber goes to the lengths list, never onto sheets (ADR-0038).
+    if (r.solid) continue
     const s = settings.get(r.materialId)
     if (!s) continue
     let job = jobs.get(r.materialId)

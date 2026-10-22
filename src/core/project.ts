@@ -42,6 +42,23 @@ export interface ProjectItem {
   placement?: Placement
 }
 
+/**
+ * A part that belongs to a run of pieces rather than to any one of them (ADR-0036): the worktop over a run of base
+ * units, a filler in a gap between two of them, a cover panel on an exposed end. Stored with its room position and
+ * its own copy of the board, so it survives edits of the pieces; the reason says why it was added.
+ */
+export interface RunPart {
+  id: string
+  kind: 'worktop' | 'filler' | 'cover'
+  label: string
+  reason: string
+  box: Box
+  material: Material
+  thicknessAxis: Panel['thicknessAxis']
+  grainAxis: Panel['grainAxis']
+  banded: Face[]
+}
+
 export interface Project {
   schemaVersion: 1
   id: string
@@ -50,6 +67,8 @@ export interface Project {
   updatedAt: string
   items: ProjectItem[]
   cutting?: { kerf: Mm }
+  /** Run parts (ADR-0036). Absent = none, as in projects saved before. */
+  runParts?: RunPart[]
 }
 
 export function newProject(name = 'New project'): Project {
@@ -247,6 +266,16 @@ export function buildProjectModel(input: Project): ProjectModel {
     if (hit) diagnostics.push({ severity: 'error', code: 'pieces-overlap', message: `${pieces[a].item.design.name} and ${pieces[b].item.design.name} overlap in the room.`, nodeId: pieces[b].item.id })
   }
   for (const pc of pieces) if (pc.bounds.y < 0) diagnostics.push({ severity: 'error', code: 'below-floor', message: `${pc.item.design.name} goes below the floor.`, nodeId: pc.item.id })
+  // Run parts (ADR-0036): their own panels, checked against every piece like pieces are against each other.
+  for (const rp of project.runParts ?? []) {
+    const k = materialKey(rp.material)
+    if (!materials.has(k)) materials.set(k, { ...rp.material, id: k, sheet: sheetOf(rp.material) })
+    const panel = runPanel(rp, k)
+    panels.push(panel)
+    piecePanels.push([panel])
+    const hit = pieces.find(pc => overlaps(pc.bounds, rp.box) && pc.panels.some(q => overlaps(q.box, rp.box)))
+    if (hit) diagnostics.push({ severity: 'error', code: 'run-part-overlap', message: `${rp.label} overlaps ${hit.item.design.name}; suggest the run parts again after moving pieces.`, nodeId: `run:${rp.id}` })
+  }
   const model: FurnitureModel = { panels, spaces: [], hardware, diagnostics, bounds: union(panels.map(p => p.box)) }
   return { pieces, model, piecePanels, materials: [...materials.values()], diagnostics }
 }
@@ -297,9 +326,82 @@ export function setGapLeft(project: Project, id: string, gap: Mm, moveRight = tr
   return resolvePlacements({ ...project, items: project.items.map(it => (moves(it) ? { ...it, position: { ...it.position, x: it.position.x + dx } } : it)) })
 }
 
-/** Parts for the whole project: each piece's cut list × its quantity, merged across pieces. */
+const runPanel = (rp: RunPart, materialId: string): Panel => ({
+  id: `run:${rp.id}`, nodeId: `run:${rp.id}`, role: rp.kind === 'worktop' ? 'worktop' : rp.kind === 'filler' ? 'filler' : 'cover-panel',
+  label: rp.label, materialId, box: rp.box, thicknessAxis: rp.thicknessAxis, grainAxis: rp.grainAxis, banded: rp.banded,
+})
+
+/** Base units for runs: floor pieces facing the room (no turn) whose carcass is a cabinet or corner up to worktop height. */
+const RUN_MAX_HEIGHT = 950
+const FILLER_MAX_GAP = 150
+export const WORKTOP_OVERHANG = 20
+export const worktopMaterial = (): Material => ({ id: 'worktop38', name: 'Worktop 38', thickness: 38, grain: true, color: '#b89b74', sheet: { length: 4100, width: 600, trim: 10, count: null } })
+
+/**
+ * Propose run parts for the floor runs in a project (ADR-0036). A run is a row of base units side by side (gaps up to
+ * 150 mm). Each run gets one worktop on top (depth of the deepest unit + 20 mm overhang), a filler in every gap and a
+ * cover panel on each exposed end. Parts that would overlap another piece are left out. Pieces keep their own plinth
+ * panels, so no run plinth is added (it would be doubled).
+ */
+export function suggestRunParts(project: Project): RunPart[] {
+  const placed = resolvePlacements(project).items.map(placeItem)
+  const base = placed.filter(pc => {
+    const k = pc.item.design.product.kind
+    return (k === 'cabinet' || k === 'corner') && pc.item.rotationY === 0 && pc.bounds.y === 0 && pc.bounds.h <= RUN_MAX_HEIGHT && !isWallHung(pc.item.design)
+  }).sort((a, b) => a.bounds.x - b.bounds.x)
+  const runs: PlacedPiece[][] = []
+  for (const pc of base) {
+    const run = runs.find(r => { const last = r[r.length - 1]; const gap = pc.bounds.x - (last.bounds.x + last.bounds.w); return gap >= 0 && gap <= FILLER_MAX_GAP && spans(last.bounds.z, last.bounds.z + last.bounds.d, pc.bounds.z, pc.bounds.z + pc.bounds.d) })
+    if (run) run.push(pc); else runs.push([pc])
+  }
+  const out: RunPart[] = []
+  const free = (b: Box) => !placed.some(pc => overlaps(pc.bounds, b) && pc.panels.some(q => overlaps(q.box, b))) && !out.some(o => overlaps(o.box, b))
+  const frontOf = (pc: PlacedPiece) => {
+    const p = pc.item.design.product
+    const id = p.kind === 'cabinet' || p.kind === 'corner' ? p.params.frontMaterialId : ''
+    return pc.item.design.materials.find(m => m.id === id) ?? pc.item.design.materials[0]
+  }
+  runs.forEach((run, ri) => {
+    const first = run[0].bounds, last = run[run.length - 1].bounds
+    const x0 = first.x, x1 = last.x + last.w
+    const z0 = Math.min(...run.map(pc => pc.bounds.z))
+    const zf = Math.max(...run.map(pc => pc.bounds.z + pc.bounds.d))
+    const top = Math.max(...run.map(pc => pc.bounds.y + pc.bounds.h))
+    const n = run.length
+    for (let i = 1; i < n; i++) {
+      const a = run[i - 1], b = run[i]
+      const gap = b.bounds.x - (a.bounds.x + a.bounds.w)
+      if (gap <= 0) continue
+      const m = frontOf(a)
+      const h = Math.min(a.bounds.h, b.bounds.h)
+      const fz = Math.min(a.bounds.z + a.bounds.d, b.bounds.z + b.bounds.d) - m.thickness
+      const bx: Box = { x: a.bounds.x + a.bounds.w, y: 0, z: fz, w: gap, h, d: m.thickness }
+      if (free(bx)) out.push({ id: `filler-${ri}-${i}`, kind: 'filler', label: 'Filler', reason: `gap ${gap} mm between ${a.item.design.name} and ${b.item.design.name}`, box: bx, material: { ...m }, thicknessAxis: 'z', grainAxis: 'y', banded: ['-x', '+x', '-y', '+y'] })
+    }
+    for (const [end, pc] of [['left', run[0]], ['right', run[n - 1]]] as const) {
+      const m = frontOf(pc)
+      const b = pc.bounds
+      const bx: Box = { x: end === 'left' ? b.x - m.thickness : b.x + b.w, y: 0, z: b.z, w: m.thickness, h: b.h, d: b.d }
+      if (bx.x >= 0 && free(bx)) out.push({ id: `cover-${ri}-${end}`, kind: 'cover', label: `Cover panel ${end}`, reason: `exposed ${end} end of ${pc.item.design.name}`, box: bx, material: { ...m }, thicknessAxis: 'x', grainAxis: 'y', banded: ['+z', '+y'] })
+    }
+    const covers = out.filter(o => o.id.startsWith(`cover-${ri}-`))
+    const wx0 = Math.min(x0, ...covers.map(c => c.box.x)), wx1 = Math.max(x1, ...covers.map(c => c.box.x + c.box.w))
+    const wt = worktopMaterial()
+    const wb: Box = { x: wx0, y: top, z: z0, w: wx1 - wx0, h: wt.thickness, d: zf - z0 + WORKTOP_OVERHANG }
+    if (free(wb)) out.push({ id: `worktop-${ri}`, kind: 'worktop', label: 'Worktop', reason: `run of ${n} ${n === 1 ? 'piece' : 'pieces'}, ${wb.w} mm long; joints and cut-outs are not drawn`, box: wb, material: wt, thicknessAxis: 'y', grainAxis: 'x', banded: ['+z'] })
+  })
+  return out
+}
+
+/** Parts for the whole project: each piece's cut list × its quantity, merged across pieces, then the run parts. */
 export function projectCutlist(project: Project): CutRow[] {
   const rows = new Map<string, CutRow>()
+  const extra = (project.runParts ?? []).map(rp => ({ rp, key: materialKey(rp.material) }))
+  if (extra.length) {
+    const mats = [...new Map(extra.map(e => [e.key, { ...e.rp.material, id: e.key }])).values()]
+    const model: FurnitureModel = { panels: extra.map(e => runPanel(e.rp, e.key)), spaces: [], hardware: [], diagnostics: [], bounds: { x: 0, y: 0, z: 0, w: 0, h: 0, d: 0 } }
+    for (const r of cutlist(model, mats)) rows.set(['run', r.materialId, r.length, r.width, r.edgesL, r.edgesW].join('|'), { ...r, labels: r.labels.map(l => `Run: ${l}`) })
+  }
   for (const item of project.items) {
     const model = buildModel(item.design)
     for (const r of cutlist(model, item.design.materials)) {
@@ -359,6 +461,17 @@ export function validateProject(p: unknown): string[] {
       (pl.kind === 'above' && typeof pl.baseId === 'string' && !!pl.baseId && pl.baseId !== it.id && isInt(pl.gap, 0) && isInt(pl.offsetX))))) errs.push('Invalid item placement')
     const de = validateDesign(it.design)
     if (de.length) errs.push(`Item ${String(it.id)}: ${de[0]}`)
+  }
+  if (p.runParts !== undefined) {
+    if (!Array.isArray(p.runParts)) errs.push('Invalid run parts')
+    else for (const rp of p.runParts) {
+      const b = isObj(rp) ? rp.box : null
+      const m = isObj(rp) ? rp.material : null
+      if (!isObj(rp) || typeof rp.id !== 'string' || !['worktop', 'filler', 'cover'].includes(rp.kind as string) || typeof rp.label !== 'string' || typeof rp.reason !== 'string' ||
+        !isObj(b) || !['x', 'y', 'z'].every(k => isInt(b[k])) || !['w', 'h', 'd'].every(k => isInt(b[k], 1)) ||
+        !isObj(m) || typeof m.name !== 'string' || !isInt(m.thickness, 1) || typeof m.grain !== 'boolean' ||
+        !['x', 'y', 'z'].includes(rp.thicknessAxis as string) || !['x', 'y', 'z'].includes(rp.grainAxis as string) || !Array.isArray(rp.banded)) errs.push('Invalid run part')
+    }
   }
   return errs
 }

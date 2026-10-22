@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { areaM2, bandMetersFromRows } from '../core/cutlist'
+import { areaM2, bandMetersFromRows, lengthsList } from '../core/cutlist'
 import { useDesign, type Tab } from '../store/designStore'
 import { Sheets } from './Sheets'
 import { useView } from './useView'
@@ -84,7 +84,36 @@ function Parts() {
           </table>
         )
       })}
+      <Lengths />
     </div>
+  )
+}
+
+/** Solid timber bought in lengths (ADR-0038): first-fit packing per section, a heuristic. */
+function Lengths() {
+  const view = useView()
+  const groups = useMemo(() => {
+    const mats = new Map(view.materials.map(m => [m.id, m]))
+    return lengthsList(view.rows, id => mats.get(id)?.lengths ?? [2400, 3000], view.kerf)
+  }, [view])
+  if (!groups.length) return null
+  return (
+    <section className="lengths" aria-label="Solid timber lengths">
+      <h3 className="list-head">Solid timber to buy</h3>
+      <p className="hint">Parts packed into the lengths you can buy, longest first, with a {view.kerf} mm saw cut between parts. A quick heuristic, not an optimum.</p>
+      {groups.map(g => (
+        <table key={`${g.materialId}|${g.section}`} className="cut">
+          <caption><strong>{g.materialName}</strong><span>section {g.section} mm, {g.bars.length} {g.bars.length === 1 ? 'length' : 'lengths'}</span></caption>
+          <thead><tr><th scope="col">Length</th><th scope="col">Cut into</th><th scope="col">Left over</th></tr></thead>
+          <tbody>
+            {g.bars.map((b, i) => (
+              <tr key={i}><td className="num">{b.stock}</td><td className="labels">{b.parts.map(p => `${p.length} (${p.label})`).join(' + ')}</td><td className="num">{b.waste}</td></tr>
+            ))}
+            {g.tooLong.map((p, i) => <tr key={`long-${i}`} className="too-long"><td className="num">—</td><td className="labels">{p.length} ({p.label}) is longer than any length you buy</td><td /></tr>)}
+          </tbody>
+        </table>
+      ))}
+    </section>
   )
 }
 
