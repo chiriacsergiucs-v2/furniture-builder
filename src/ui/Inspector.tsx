@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
-import { bayLayoutOf, changeKind, fr, makeBays, MAX_BAYS, setDrawerCount, findInProduct, findSpace, parentOf, pedestalRoot, splitSpace, unsplit, usesPedestal } from '../core/design'
-import type { CabinetParams, CornerParams, DeskParams, DeskSupport, FrontStyle, Handle, Material, Space, SpaceKind, SplitSize } from '../core/types'
+import { bayLayoutOf, changeKind, fr, makeBays, MAX_BAYS, MAX_LOOSE, newId, setDrawerCount, findInProduct, findSpace, parentOf, pedestalRoot, splitSpace, unsplit, usesPedestal } from '../core/design'
+import type { CabinetParams, CornerParams, DeskParams, DeskSupport, FrontStyle, Handle, LoosePanel, Material, PanelSetParams, Space, SpaceKind, SplitSize } from '../core/types'
 import { useDesign } from '../store/designStore'
 import { Counter, Group, MmField, revealGroup, Section, Segmented, Select, Steps, Toggle, type Step } from './controls'
 import { Icon } from './icons'
@@ -15,10 +15,11 @@ export function Inspector() {
   if (found) return <SpaceEditor space={found.space} root={found.root} rootLabel={found.label} wholeLabel={WHOLE[prod.kind]} />
   if (prod.kind === 'desk') return <DeskEditor p={prod.params} deskId={prod.id} materials={design.materials} />
   if (prod.kind === 'corner') return <CornerEditor p={prod.params} materials={design.materials} />
+  if (prod.kind === 'panels') return <PanelSetEditor p={prod.params} materials={design.materials} />
   return <CabinetEditor p={prod.params} materials={design.materials} />
 }
 
-const WHOLE = { cabinet: 'Whole cabinet', desk: 'Whole desk', corner: 'Whole corner unit' } as const
+const WHOLE = { cabinet: 'Whole cabinet', desk: 'Whole desk', corner: 'Whole corner unit', panels: 'Whole panel set' } as const
 
 function matOptions(materials: Material[], filter?: (m: Material) => boolean) {
   return materials.filter(filter ?? (() => true)).map(m => ({ value: m.id, label: `${m.name}` }))
@@ -401,6 +402,44 @@ function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[]
         <Select label="Fronts" value={p.frontMaterialId} options={panelMats} onChange={v => set({ frontMaterialId: v })} />
         <Select label="Back" value={p.backMaterialId} options={matOptions(materials)} onChange={v => set({ backMaterialId: v })} />
       </Group>
+    </div>
+  )
+}
+
+/** Panel set (ADR-0032): a list of cut sizes. No assembly, so no inside and no construction choices. */
+function PanelSetEditor({ p, materials }: { p: PanelSetParams; materials: Material[] }) {
+  const set = useDesign(s => s.updatePanelSet)
+  const count = p.panels.reduce((n, lp) => n + lp.quantity, 0)
+  const steps: Step[] = [
+    { id: 'size', label: 'Panels', meta: `${count} ${count === 1 ? 'part' : 'parts'}`, done: count > 0, tone: count ? undefined : 'error' },
+  ]
+  const change = (id: string, patch: Partial<LoosePanel>) => set({ panels: p.panels.map(lp => (lp.id === id ? { ...lp, ...patch } : lp)) })
+  const add = () => set({ panels: [...p.panels, { id: newId(), name: `Panel ${p.panels.length + 1}`, length: 600, width: 300, materialId: p.panels.at(-1)?.materialId ?? materials[0].id, quantity: 1 }] })
+  return (
+    <div className="inspector">
+      <EditorRail steps={steps} />
+      <header className="insp-head">
+        <h2>Loose panels</h2>
+        <p className="hint">Parts known only by their cut sizes. They go to the cut list and sheets; the 3D view shows them in one pile, not assembled.</p>
+        {p.note && <p className="hint">{p.note}</p>}
+      </header>
+      {p.panels.map(lp => (
+        <Group key={lp.id} title={`${lp.name || 'Panel'} — ${lp.length} × ${lp.width}${lp.quantity > 1 ? ` ×${lp.quantity}` : ''}`} defaultOpen={false}>
+          <div className="field">
+            <label htmlFor={`name-${lp.id}`}>Name</label>
+            <input id={`name-${lp.id}`} className="mat-name" defaultValue={lp.name} key={lp.name} maxLength={200}
+              onBlur={e => { const v = e.target.value.trim(); if (v && v !== lp.name) change(lp.id, { name: v }) }} />
+          </div>
+          <div className="dims3">
+            <MmField label="Length" value={lp.length} min={1} max={5000} step={1} onChange={v => change(lp.id, { length: v })} />
+            <MmField label="Width" value={lp.width} min={1} max={3000} step={1} onChange={v => change(lp.id, { width: v })} />
+            <Counter label="Quantity" value={lp.quantity} min={1} max={MAX_LOOSE} onChange={v => change(lp.id, { quantity: v })} />
+          </div>
+          <Select label="Board" value={lp.materialId} options={matOptions(materials)} onChange={v => change(lp.id, { materialId: v })} />
+          <button type="button" className="btn outline" disabled={p.panels.length < 2} onClick={() => set({ panels: p.panels.filter(x => x.id !== lp.id) })}>Remove panel</button>
+        </Group>
+      ))}
+      <button type="button" className="btn outline" disabled={p.panels.length >= MAX_LOOSE} onClick={add}>Add panel</button>
     </div>
   )
 }

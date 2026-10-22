@@ -4,12 +4,14 @@
  * from the file, `docs/samples/mobila.md` lists the difference. Nothing here is invented: unknown values (backs,
  * plinths, drawer box boards) use the app's own defaults and are listed there as open.
  *
- * Pieces that are not cabinets (the Pat Noi bed, the kitchen splashback, the RHS workbench) and the variants the file
- * marks as not for production (nightstand B, the simplified bed) are not built here.
+ * The Pat Noi bed and the kitchen splashback are known only as cut panels, without positions ("UNPLACED_DO_NOT_INVENT"
+ * in the file), so they are panel sets (ADR-0032): listed for cutting, never assembled here. The RHS workbench (an
+ * envelope with no member list) and the variants the file marks as not for production (nightstand B, the simplified
+ * bed) are not built.
  */
 import { defaultDrawers, defaultMaterials, fr, mm } from '../design'
 import type { Placement, Project, ProjectItem } from '../project'
-import type { CabinetParams, Design, Material, Space } from '../types'
+import type { CabinetParams, Design, LoosePanel, Material, Product, Space } from '../types'
 
 const STAMP = '2026-10-22T00:00:00.000Z'
 
@@ -33,10 +35,18 @@ const carcass = (over: Partial<CabinetParams> & Pick<CabinetParams, 'width' | 'h
   ...over,
 })
 
-const design = (id: string, name: string, params: CabinetParams): Design => ({
-  schemaVersion: 2, id, name, createdAt: STAMP, updatedAt: STAMP, materials: materials(),
-  product: { kind: 'cabinet', id: `${id}-p`, params }, cutting: { kerf: 4 },
+const design = (id: string, name: string, params: CabinetParams): Design => wrap(id, name, { kind: 'cabinet', id: `${id}-p`, params })
+
+const wrap = (id: string, name: string, product: Product, mats = materials()): Design => ({
+  schemaVersion: 2, id, name, createdAt: STAMP, updatedAt: STAMP, materials: mats, product, cutting: { kerf: 4 },
 })
+
+/** A panel set: part ids are the file's part ids, so the cut list can be traced back to it. */
+const panelSet = (id: string, name: string, panels: LoosePanel[], note: string, mats?: Material[]): Design =>
+  wrap(id, name, { kind: 'panels', id: `${id}-p`, params: { panels, note } }, mats)
+
+const part = (id: string, name: string, length: number, width: number, materialId: string, quantity = 1): LoosePanel =>
+  ({ id, name, length, width, materialId, quantity })
 
 const bay = (id: string, shelves: number): Space => ({ id, kind: 'shelves', count: shelves, front: { kind: 'doors', count: 1 } })
 
@@ -78,7 +88,20 @@ export function mobilaLiving(): Project {
   }
 }
 
-/** Dormitor: nightstand A, two identical units (positions next to the bed are not in the file). */
+/**
+ * Pat Noi: the file's cut panels (BD-0050…BD-0055). The upholstered zone (2100 × 600 × 40, textile and foam) and the
+ * existing 2100 × 1100 headboard panel are not cut from board, so they are named in the note, not listed.
+ */
+const patNoi = (): Design => panelSet('mobila-pat-noi', 'Pat Noi', [
+  part('BD-0050', 'Laterală pat', 1800, 270, 'pal18', 2),
+  part('BD-0051', 'Cap pe picioare', 2040, 270, 'pal18'),
+  part('BD-0053', 'Traversă tăblie', 2100, 100, 'mdf-p110'),
+  part('BD-0054', 'Poliță sus tăblie', 2100, 80, 'mdf-p110'),
+  part('BD-0055', 'Poliță laterală tăblie', 450, 80, 'mdf-p110', 2),
+], 'Bed for an 1800 × 2000 mattress. Cut sizes from the Mobila file; how the panels join is not in the file. ' +
+  'Not cut from board, so not listed: upholstered zone 2100 × 600 × 40 (textile and foam), existing headboard panel 2100 × 1100.')
+
+/** Dormitor: nightstand A, two identical units, and the Pat Noi panels (positions in the room are not in the file). */
 export function mobilaDormitor(): Project {
   const noptiera = design('mobila-noptiera-a', 'Noptieră A', carcass({
     width: 450, height: 400, depth: 332, frontGap: 4,
@@ -87,7 +110,22 @@ export function mobilaDormitor(): Project {
   }))
   return {
     schemaVersion: 1, id: 'mobila-dormitor', name: 'Mobila — Dormitor', createdAt: STAMP, updatedAt: STAMP, cutting: { kerf: 4 },
-    items: [item('dormitor-noptiera-a', noptiera, 0, { kind: 'floor' }, 2)],
+    items: [
+      item('dormitor-noptiera-a', noptiera, 0, { kind: 'floor' }, 2),
+      // Next to the nightstand only so the pieces do not overlap in the plan; the file has no position.
+      item('dormitor-pat-noi', patNoi(), 450, { kind: 'floor' }),
+    ],
+  }
+}
+
+/** Bucătărie: the splashback, one 3 mm Gray Urban panel. The file gives no stock sheet size for it. */
+export function mobilaBucatarie(): Project {
+  const grayUrban: Material = { id: 'gray-urban-3', name: 'Gray Urban 3 mm (panou perete)', thickness: 3, grain: false, color: '#8a8d90' }
+  const panou = panelSet('mobila-panou-bucatarie', 'Panou bucătărie', [part('KT-0064', 'Panou perete', 3670, 700, 'gray-urban-3')],
+    'Wall splashback. Its stock sheet and its height on the wall are not in the Mobila file.', [grayUrban])
+  return {
+    schemaVersion: 1, id: 'mobila-bucatarie', name: 'Mobila — Bucătărie', createdAt: STAMP, updatedAt: STAMP, cutting: { kerf: 4 },
+    items: [item('bucatarie-panou', panou, 0, { kind: 'floor' })],
   }
 }
 
@@ -95,5 +133,6 @@ export interface SampleProject { id: string; name: string; description: string; 
 
 export const sampleProjects: SampleProject[] = [
   { id: 'mobila-living', name: 'Mobila — Living', description: 'Column 535 × 2600, low run 2685 × 435 on the floor, high run hung 1730 mm above it', create: mobilaLiving },
-  { id: 'mobila-dormitor', name: 'Mobila — Dormitor', description: 'Two nightstands A, 450 × 400, two drawers', create: mobilaDormitor },
+  { id: 'mobila-dormitor', name: 'Mobila — Dormitor', description: 'Two nightstands A, 450 × 400, two drawers; Pat Noi bed panels (not assembled)', create: mobilaDormitor },
+  { id: 'mobila-bucatarie', name: 'Mobila — Bucătărie', description: 'Splashback panel 3670 × 700 × 3', create: mobilaBucatarie },
 ]

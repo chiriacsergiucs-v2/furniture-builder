@@ -7,7 +7,7 @@ import {
   buildProjectModel, makeItem, newProject, placementBases, placementIssues, projectCutlist, projectNestingJobs,
   removeProjectItem, resolvePlacements, setGapLeft, validateProject, type Project,
 } from '../src/core/project'
-import { mobilaDormitor, mobilaLiving, sampleProjects } from '../src/core/samples/mobila'
+import { mobilaBucatarie, mobilaDormitor, mobilaLiving, sampleProjects } from '../src/core/samples/mobila'
 import type { CabinetParams, Design } from '../src/core/types'
 
 const t = (id: string) => templates.find(x => x.id === id)!.create()
@@ -170,10 +170,70 @@ describe('Mobila rooms from the project file', () => {
     expect(rows.find(r => r.length === 446 && r.width === 160)?.quantity).toBe(2)
     expect(rows.find(r => r.length === 450 && r.width === 332)?.quantity).toBe(2)
   })
-  it('sheets lay out for both rooms', () => {
+  it("Pat Noi: the file's cut panels, in the Dormitor next to the nightstands, not assembled", () => {
+    const p = mobilaDormitor()
+    const bed = p.items.find(i => i.id === 'dormitor-pat-noi')!
+    expect(bed.design.product.kind).toBe('panels')
+    const pm = buildProjectModel(p)
+    const piece = pm.pieces.find(x => x.item.id === bed.id)!
+    expect(piece.model.diagnostics.map(d => d.code)).toContain('not-assembled')
+    const rows = projectCutlist({ ...p, items: [bed] })
+    const got = rows.map(r => [r.length, r.width, r.thickness, r.materialName.slice(0, 3), r.quantity])
+    expect(got).toEqual(expect.arrayContaining([
+      [1800, 270, 18, 'PAL', 2], [2040, 270, 18, 'PAL', 1], [2100, 100, 18, 'MDF', 1], [2100, 80, 18, 'MDF', 1], [450, 80, 18, 'MDF', 2],
+    ]))
+    expect(rows.reduce((a, r) => a + r.quantity, 0)).toBe(7)
+    // The bed does not overlap the nightstand in the plan.
+    const [ns, b] = pm.pieces.map(x => x.bounds)
+    expect(overlaps(ns, b)).toBe(false)
+  })
+  it('Bucătărie: one 3670 × 700 × 3 splashback', () => {
+    const rows = projectCutlist(mobilaBucatarie())
+    expect(rows.map(r => [r.length, r.width, r.thickness, r.quantity])).toEqual([[3670, 700, 3, 1]])
+  })
+  it('sheets lay out for every room; only the splashback is longer than any sheet', () => {
     for (const s of sampleProjects) {
       const p = s.create()
-      for (const job of projectNestingJobs(p)) expect(nest(job).unplaced).toEqual([])
+      for (const job of projectNestingJobs(p)) {
+        const unplaced = nest(job).unplaced
+        if (s.id === 'mobila-bucatarie') expect(unplaced.map(u => u.reason)).toEqual(['too-large'])
+        else expect(unplaced).toEqual([])
+      }
     }
+  })
+})
+
+describe('panel set (ADR-0032)', () => {
+  const set = (): Design => ({
+    ...t('panels'),
+    product: { kind: 'panels', id: 'ps', params: { panels: [
+      { id: 'a', name: 'Small', length: 400, width: 200, materialId: 'pal18', quantity: 2 },
+      { id: 'b', name: 'Big', length: 1800, width: 270, materialId: 'hdf3', quantity: 1 },
+    ] } },
+  })
+  it('lies flat in one pile, largest at the bottom, sizes and boards as listed', () => {
+    const m = buildModel(set())
+    expect(m.panels.map(p => [p.label, p.box.x, p.box.y, p.box.z, p.box.w, p.box.h, p.box.d])).toEqual([
+      ['Big', 0, 0, 0, 1800, 3, 270], ['Small', 0, 3, 0, 400, 18, 200], ['Small', 0, 21, 0, 400, 18, 200],
+    ])
+    expect(m.diagnostics.filter(d => d.severity === 'error')).toEqual([])
+    expect(m.diagnostics.map(d => d.code)).toEqual(['not-assembled'])
+  })
+  it('an empty set or an unknown board is an error, not a crash', () => {
+    const d = set()
+    const empty = { ...d, product: { ...d.product, params: { panels: [] } } } as Design
+    expect(buildModel(empty).diagnostics.map(x => x.code)).toContain('no-panels')
+    const bad = { ...d, product: { ...d.product, params: { panels: [{ id: 'x', name: 'X', length: 100, width: 100, materialId: 'nope', quantity: 1 }] } } } as Design
+    expect(buildModel(bad).diagnostics.map(x => x.code)).toContain('material-missing')
+  })
+  it('validates panels on import', () => {
+    const d = set()
+    expect(validateDesign(d)).toEqual([])
+    const with1 = (lp: object) => ({ ...d, product: { ...d.product, params: { panels: [lp] } } })
+    expect(validateDesign(with1({ id: 'x', name: 'X', length: 100, width: 100, materialId: 'pal18', quantity: 0 }))).toContain('Quantity of X must be 1 to 100')
+    expect(validateDesign(with1({ id: 'x', name: 'X', length: 10.5, width: 100, materialId: 'pal18', quantity: 1 }))).toContain('length must be a whole number of mm')
+    expect(validateDesign(with1({ id: 'x', name: 'X', length: 100, width: 100, materialId: 'nope', quantity: 1 }))).toContain('materialId refers to an unknown material')
+    const two = { ...d, product: { ...d.product, params: { panels: [d.product.kind === 'panels' && d.product.params.panels[0], d.product.kind === 'panels' && d.product.params.panels[0]] } } }
+    expect(validateDesign(two)).toContain('Invalid panel')
   })
 })

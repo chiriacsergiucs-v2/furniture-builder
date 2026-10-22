@@ -30,7 +30,7 @@ describe('exploded view', () => {
       expect(union(ex.map(p => p.box)).y).toBe(m.bounds.y)
       noOverlaps(ex)
       // Touching panels come apart: the exploded piece is bigger than the built one.
-      expect(union(ex.map(p => p.box)).w).toBeGreaterThan(m.bounds.w)
+      if (m.panels.length > 1) expect(union(ex.map(p => p.box)).w).toBeGreaterThan(m.bounds.w)
     }
   })
   it('never changes the model it is given', () => {

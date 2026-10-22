@@ -35,7 +35,8 @@ describe('every template', () => {
       expect(validateDesign(d)).toEqual([])
       const m = buildModel(d)
       expect(m.diagnostics.filter(x => x.severity === 'error')).toEqual([])
-      expect(m.panels.length).toBeGreaterThanOrEqual(4)
+      // A panel set holds what the user lists (the template starts with one part).
+      expect(m.panels.length).toBeGreaterThanOrEqual(d.product.kind === 'panels' ? 1 : 4)
       for (const p of m.panels) for (const v of Object.values(p.box)) expect(Number.isSafeInteger(v)).toBe(true)
       expect(new Set(m.panels.map(p => p.id)).size).toBe(m.panels.length)
       // cut list conserves every panel

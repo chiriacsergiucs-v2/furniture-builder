@@ -1,6 +1,7 @@
 import { buildCabinet } from './cabinet'
 import { buildCorner } from './corner'
 import { buildDesk } from './desk'
+import { buildPanelSet } from './panelset'
 import { box, contains, cutDimensions, isMm, overlaps, union } from './geometry'
 import type { Design, Diagnostic, FurnitureModel, Material, Panel } from './types'
 
@@ -15,6 +16,7 @@ export function buildModel(design: Design): FurnitureModel {
   const prod = design.product
   const partial = prod.kind === 'cabinet' ? buildCabinet(prod.params, materials, { productNodeId: prod.id })
     : prod.kind === 'corner' ? buildCorner(prod.params, prod.id, materials)
+    : prod.kind === 'panels' ? buildPanelSet(prod.params, prod.id, materials)
     : buildDesk(prod.params, prod.id, materials)
   const diagnostics: Diagnostic[] = [...partial.diagnostics]
   const panels = partial.panels

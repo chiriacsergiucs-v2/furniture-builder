@@ -153,7 +153,7 @@ export function LibraryDialog({ open, onClose }: { open: boolean; onClose: () =>
             <li key={r.id} className={r.id === currentId ? 'current' : ''}>
               <button type="button" className="row-btn" aria-current={r.id === currentId ? 'true' : undefined} onClick={() => { load(r.design, { fromStorage: true }); onClose() }}>
                 <span className="glyph"><Icon name={templateGlyph(r.design.product.kind)} /></span>
-                <span><strong>{r.name}</strong><span className="sub">{({ desk: 'Desk', corner: 'Corner unit', cabinet: 'Cabinet' } as const)[r.design.product.kind]}, edited {when(r.updatedAt)}</span></span>
+                <span><strong>{r.name}</strong><span className="sub">{({ desk: 'Desk', corner: 'Corner unit', cabinet: 'Cabinet', panels: 'Loose panels' } as const)[r.design.product.kind]}, edited {when(r.updatedAt)}</span></span>
               </button>
               {rowActions(r, 'piece')}
             </li>

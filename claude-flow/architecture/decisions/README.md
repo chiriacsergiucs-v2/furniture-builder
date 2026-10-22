@@ -93,3 +93,4 @@ Requested by the user on 2026-10-22; defaults in the ADR await confirmation.
 | ID | Decision | Backlog | Status |
 |---|---|---|---|
 | [ADR-0031](ADR-0031.md) | Pieces are placed on the floor, on the wall, or on/above another piece; cabinet bottom under the sides; bay layout | N19, N20 | Proposed |
+| [ADR-0032](ADR-0032.md) | Parts known only by their cut sizes are a panel set (one flat pile, never an invented assembly) | N21, N22 | Proposed |

@@ -18,7 +18,8 @@ describe('Romanian output for the panel shop (ADR-0020)', () => {
   })
   it('every part label used by the generators has a Romanian name', () => {
     const seen = new Set<string>()
-    for (const t of templates) for (const p of buildModel(t.create()).panels) seen.add(p.label)
+    // Loose panels carry the name the user typed; it is printed as written.
+    for (const t of templates) for (const p of buildModel(t.create()).panels) if (p.role !== 'loose') seen.add(p.label)
     for (const label of seen) expect(partRo(label), label).not.toBe(label)
   })
   it('hardware and drilling read in Romanian', () => {

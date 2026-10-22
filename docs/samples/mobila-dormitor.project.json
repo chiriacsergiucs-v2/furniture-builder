@@ -140,6 +140,132 @@
       "placement": {
         "kind": "floor"
       }
+    },
+    {
+      "id": "dormitor-pat-noi",
+      "design": {
+        "schemaVersion": 2,
+        "id": "mobila-pat-noi",
+        "name": "Pat Noi",
+        "createdAt": "2026-10-22T00:00:00.000Z",
+        "updatedAt": "2026-10-22T00:00:00.000Z",
+        "materials": [
+          {
+            "id": "pal18",
+            "name": "PAL 18 mm",
+            "thickness": 18,
+            "grain": false,
+            "color": "#e7e3db",
+            "sheet": {
+              "length": 2800,
+              "width": 2070,
+              "trim": 10,
+              "count": null
+            }
+          },
+          {
+            "id": "mdf-p110",
+            "name": "MDF Kastamonu P110 antracit lucios 18 mm",
+            "thickness": 18,
+            "grain": false,
+            "color": "#3b3f44",
+            "sheet": {
+              "length": 2800,
+              "width": 1220,
+              "trim": 10,
+              "count": null
+            }
+          },
+          {
+            "id": "pal16",
+            "name": "PAL 16 white",
+            "thickness": 16,
+            "grain": false,
+            "color": "#f1f0ea",
+            "sheet": {
+              "length": 2800,
+              "width": 2070,
+              "trim": 10,
+              "count": null
+            }
+          },
+          {
+            "id": "hdf3",
+            "name": "HDF 3",
+            "thickness": 3,
+            "grain": false,
+            "color": "#a89a86",
+            "sheet": {
+              "length": 2800,
+              "width": 2070,
+              "trim": 10,
+              "count": null
+            }
+          }
+        ],
+        "product": {
+          "kind": "panels",
+          "id": "mobila-pat-noi-p",
+          "params": {
+            "panels": [
+              {
+                "id": "BD-0050",
+                "name": "Laterală pat",
+                "length": 1800,
+                "width": 270,
+                "materialId": "pal18",
+                "quantity": 2
+              },
+              {
+                "id": "BD-0051",
+                "name": "Cap pe picioare",
+                "length": 2040,
+                "width": 270,
+                "materialId": "pal18",
+                "quantity": 1
+              },
+              {
+                "id": "BD-0053",
+                "name": "Traversă tăblie",
+                "length": 2100,
+                "width": 100,
+                "materialId": "mdf-p110",
+                "quantity": 1
+              },
+              {
+                "id": "BD-0054",
+                "name": "Poliță sus tăblie",
+                "length": 2100,
+                "width": 80,
+                "materialId": "mdf-p110",
+                "quantity": 1
+              },
+              {
+                "id": "BD-0055",
+                "name": "Poliță laterală tăblie",
+                "length": 450,
+                "width": 80,
+                "materialId": "mdf-p110",
+                "quantity": 2
+              }
+            ],
+            "note": "Bed for an 1800 × 2000 mattress. Cut sizes from the Mobila file; how the panels join is not in the file. Not cut from board, so not listed: upholstered zone 2100 × 600 × 40 (textile and foam), existing headboard panel 2100 × 1100."
+          }
+        },
+        "cutting": {
+          "kerf": 4
+        }
+      },
+      "quantity": 1,
+      "position": {
+        "x": 450,
+        "y": 0,
+        "z": 0
+      },
+      "rotationY": 0,
+      "placement": {
+        "kind": "floor"
+      }
     }
   ]
 }

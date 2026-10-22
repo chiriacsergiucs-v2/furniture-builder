@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "id": "mobila-bucatarie",
+  "name": "Mobila — Bucătărie",
+  "createdAt": "2026-10-22T00:00:00.000Z",
+  "updatedAt": "2026-10-22T00:00:00.000Z",
+  "cutting": {
+    "kerf": 4
+  },
+  "items": [
+    {
+      "id": "bucatarie-panou",
+      "design": {
+        "schemaVersion": 2,
+        "id": "mobila-panou-bucatarie",
+        "name": "Panou bucătărie",
+        "createdAt": "2026-10-22T00:00:00.000Z",
+        "updatedAt": "2026-10-22T00:00:00.000Z",
+        "materials": [
+          {
+            "id": "gray-urban-3",
+            "name": "Gray Urban 3 mm (panou perete)",
+            "thickness": 3,
+            "grain": false,
+            "color": "#8a8d90"
+          }
+        ],
+        "product": {
+          "kind": "panels",
+          "id": "mobila-panou-bucatarie-p",
+          "params": {
+            "panels": [
+              {
+                "id": "KT-0064",
+                "name": "Panou perete",
+                "length": 3670,
+                "width": 700,
+                "materialId": "gray-urban-3",
+                "quantity": 1
+              }
+            ],
+            "note": "Wall splashback. Its stock sheet and its height on the wall are not in the Mobila file."
+          }
+        },
+        "cutting": {
+          "kerf": 4
+        }
+      },
+      "quantity": 1,
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotationY": 0,
+      "placement": {
+        "kind": "floor"
+      }
+    }
+  ]
+}

@@ -40,7 +40,7 @@ export interface StockSheet {
 export type PanelRole =
   | 'side' | 'top' | 'bottom' | 'back' | 'plinth' | 'divider' | 'shelf'
   | 'door' | 'drawer-front' | 'drawer-side' | 'drawer-back' | 'drawer-inner-front' | 'drawer-bottom'
-  | 'worktop' | 'gable' | 'modesty' | 'blind-panel'
+  | 'worktop' | 'gable' | 'modesty' | 'blind-panel' | 'loose'
 
 /** A face direction, used to name banded edges of a panel in world terms. */
 export type Face = '-x' | '+x' | '-y' | '+y' | '-z' | '+z'
@@ -281,10 +281,32 @@ export interface CornerParams {
   wingInterior: Space
 }
 
+/** One part of a panel set (ADR-0032): finished cut size only, no place in an assembly. Thickness comes from the board. */
+export interface LoosePanel {
+  id: string
+  name: string
+  /** Along the grain when the board has one. */
+  length: Mm
+  width: Mm
+  materialId: string
+  quantity: number
+}
+
+/**
+ * Parts known only by their cut sizes (ADR-0032), such as a bed whose panels are measured but whose assembly is not.
+ * Built lying flat in one pile, largest at the bottom: never an invented assembly.
+ */
+export interface PanelSetParams {
+  panels: LoosePanel[]
+  /** Shown with the piece: what the parts are for and what is still unknown. */
+  note?: string
+}
+
 export type Product =
   | { kind: 'cabinet'; id: string; params: CabinetParams }
   | { kind: 'desk'; id: string; params: DeskParams }
   | { kind: 'corner'; id: string; params: CornerParams }
+  | { kind: 'panels'; id: string; params: PanelSetParams }
 
 export interface Design {
   /** 2 adds stock sheets and cutting settings (ADR-0019); version-1 files are upgraded in memory on load. */

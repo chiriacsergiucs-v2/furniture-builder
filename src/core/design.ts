@@ -111,6 +111,8 @@ export const templates: Template[] = [
     create: () => wrap('Blind corner base', { kind: 'corner', id: newId(), params: cornerDefaults('blind') }) },
   { id: 'corner-l', name: 'L-shaped corner base', description: '900 × 900 × 720, two wings open to each other, folding door pair',
     create: () => wrap('L-shaped corner base', { kind: 'corner', id: newId(), params: cornerDefaults('l-shape') }) },
+  { id: 'panels', name: 'Loose panels', description: 'Parts known only by their cut sizes, listed for cutting; not assembled',
+    create: () => wrap('Loose panels', { kind: 'panels', id: newId(), params: { panels: [{ id: newId(), name: 'Panel', length: 600, width: 300, materialId: 'pal18', quantity: 1 }] } }) },
   { id: 'desk-pedestal', name: 'Desk with pedestal', description: '1400 × 700 × 750, three-drawer pedestal left',
     create: () => wrap('Desk with pedestal', { kind: 'desk', id: newId(), params: deskDefaults() }) },
   { id: 'desk-gables', name: 'Panel desk', description: '1200 × 600 × 750, two panel gables',
@@ -228,6 +230,7 @@ export interface ProductRoot { root: Space; label: string; side?: PedestalSide; 
 
 export function productRoots(prod: Product): ProductRoot[] {
   if (prod.kind === 'cabinet') return [{ root: prod.params.interior, label: 'Interior' }]
+  if (prod.kind === 'panels') return []
   if (prod.kind === 'corner') {
     return prod.params.variant === 'blind'
       ? [{ root: prod.params.interior, label: 'Usable section', wing: 'a' }]
@@ -254,6 +257,7 @@ export function mapProductSpace(prod: Product, id: string, fn: (s: Space) => Spa
     const wingInterior = mapSpace(prod.params.wingInterior, id, fn)
     return wingInterior === prod.params.wingInterior ? prod : { ...prod, params: { ...prod.params, wingInterior } }
   }
+  if (prod.kind === 'panels') return prod
   const desk = prod.params
   for (const { root, side } of productRoots(prod)) {
     const next = mapSpace(root, id, fn)
@@ -273,6 +277,7 @@ export function setProductParams<P extends Product>(prod: P, patch: Partial<P['p
 export const MAX_SHELVES = 50
 export const MAX_MM = 100_000
 export const MAX_DRAWERS = 20
+export const MAX_LOOSE = 100
 
 const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v)
 const isInt = (v: unknown, min = 0) => typeof v === 'number' && Number.isSafeInteger(v) && v >= min
@@ -333,6 +338,19 @@ export function validateDesign(d: unknown): string[] {
   // Sizes are whole mm up to 100 m: generous for furniture, far from floating-point trouble.
   const ints = (keys: string[], obj: Record<string, unknown>) => keys.forEach(k => { if (!isInt(obj[k]) || (obj[k] as number) > MAX_MM) errs.push(`${k} must be a whole number of mm`) })
   const matRef = (k: string, obj: Record<string, unknown>) => { if (!mids.has(obj[k] as string)) errs.push(`${k} refers to an unknown material`) }
+  if (p.kind === 'panels') {
+    if (!Array.isArray(params.panels) || params.panels.length > MAX_LOOSE) return [...errs, 'Invalid panel list']
+    const ids = new Set<string>()
+    for (const lp of params.panels) {
+      if (!isObj(lp) || !isStr(lp.id) || ids.has(lp.id as string) || typeof lp.name !== 'string' || lp.name.length > 200) { errs.push('Invalid panel'); continue }
+      ids.add(lp.id as string)
+      ints(['length', 'width'], lp)
+      if (!isInt(lp.quantity, 1) || (lp.quantity as number) > MAX_LOOSE) errs.push(`Quantity of ${String(lp.name)} must be 1 to ${MAX_LOOSE}`)
+      matRef('materialId', lp)
+    }
+    if (params.note !== undefined && typeof params.note !== 'string') errs.push('Invalid note')
+    return errs
+  }
   const dr = params.drawers
   if (!isObj(dr) || !Array.isArray(dr.runnerLengths) || !dr.runnerLengths.every(v => isInt(v, 1))) errs.push('Invalid drawer settings')
   else { ints(['sideClearance', 'verticalClearance', 'rearClearance'], dr); matRef('boxMaterialId', dr); matRef('bottomMaterialId', dr) }

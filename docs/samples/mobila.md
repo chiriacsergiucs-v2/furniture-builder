@@ -2,7 +2,15 @@
 
 Source: `MOBILA_TOATE_CAMERELE_AI_CAD_PAL_MDF.json` (format 2.0.0, exported 2026-10-22), attached to the Mobila
 project. Generator: `src/core/samples/mobila.ts`. Importable files: `mobila-living.project.json`,
-`mobila-dormitor.project.json` (also under **New → Mobila rooms** in the app). `tests/mobila.test.ts` checks them.
+`mobila-dormitor.project.json`, `mobila-bucatarie.project.json` (also under **New → Mobila rooms** in the app).
+`tests/mobila.test.ts` checks them.
+
+| Room in the file | Project | Pieces |
+|---|---|---|
+| Living | Mobila — Living | Coloana, Corp jos (JOS), Corp sus (SUS) |
+| Dormitor | Mobila — Dormitor | Noptieră A ×2, Pat Noi (loose panels) |
+| Bucătărie | Mobila — Bucătărie | Panou bucătărie (loose panel) |
+| Atelier | — | Banc montaj RHS not built: envelope only, steel, no member list |
 
 ## Living (`living_535`) — three pieces
 
@@ -14,6 +22,28 @@ project. Generator: `src/core/samples/mobila.ts`. Importable files: `mobila-livi
 
 All 47 living parts appear, with the file's carcass sizes one for one (2600 × 400 ×2, 2685 × 400 ×4,
 400 × 399 ×12, 499 × 400 ×7, 510 × 400 ×4, 519 × 400 ×6) and 12 fronts. Overall 3220 × 2600, as the file.
+
+## Dormitor — Pat Noi (loose panels, ADR-0032)
+
+The file gives the bed's cut panels only; every position is marked "do not invent". Built as a panel set: the parts
+go to the cut list and sheets and lie in one pile in 3D, with a warning that the assembly is not modelled.
+
+| Part (file id) | Cut size | Board | Qty |
+|---|---|---|---|
+| Laterală pat (BD-0050) | 1800 × 270 | PAL 18 | 2 |
+| Cap pe picioare (BD-0051) | 2040 × 270 | PAL 18 | 1 |
+| Traversă tăblie (BD-0053) | 2100 × 100 | MDF P110 18 | 1 |
+| Poliță sus tăblie (BD-0054) | 2100 × 80 | MDF P110 18 | 1 |
+| Poliță laterală tăblie (BD-0055) | 450 × 80 | MDF P110 18 | 2 |
+
+Not listed (not cut from board): upholstered zone BD-0052 2100 × 600 × 40, existing headboard panel 2100 × 1100.
+The file's alternative continuous shelf 2992 (446 + 2100 + 446) is not added, as the file says not to double it.
+Placed next to the nightstand in the plan only so the pieces do not overlap; the file has no position.
+
+## Bucătărie — splashback
+
+Panou perete (KT-0064) 3670 × 700 × 3, Gray Urban, as a one-part panel set. The file gives no stock sheet, so the app
+uses its default 2800 × 2070 and Sheets lists the part as larger than the usable sheet. No height on the wall.
 
 ## Dormitor — nightstand A, quantity 2
 
@@ -43,8 +73,7 @@ the rest. Front gap 4 gives the file's 446 mm front width. Floor; the file has n
 
 | Item | Reason |
 |---|---|
-| Pat Noi (bed) | Not a cabinet; the app has no bed product. Panel sizes also look swapped (sides 1800, foot 2040 for an 1800 × 2000 mattress) |
-| Panou bucătărie (splashback 3670 × 700 × 3) | Single wall panel, no product type for it |
+| Pat Noi as an assembled bed | Joints, heights and positions are not in the file. Sizes also look swapped (sides 1800, foot 2040 for an 1800 × 2000 mattress); check before cutting |
 | Banc montaj RHS | Envelope only, steel; no member list in the file |
 | Nightstand B, simplified bed | Marked alternative / superseded in the file |
 | Archived cutting orders | Marked "do not merge" in the file |
