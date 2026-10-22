@@ -93,3 +93,19 @@ Requested by the user on 2026-10-22; defaults in the ADR await confirmation.
 | ID | Decision | Backlog | Status |
 |---|---|---|---|
 | [ADR-0031](ADR-0031.md) | Pieces are placed on the floor, on the wall, or on/above another piece; cabinet bottom under the sides; bay layout | N19, N20 | Proposed |
+
+## Template catalog — proposed
+
+Requested by the user on 2026-10-22 (all furniture types, grouped by room with a toggle to type, editable, 1–5 default
+variants each). Families and variants: `docs/catalog.md`. Defaults in each ADR await confirmation.
+
+| ID | Decision | Backlog | Status |
+|---|---|---|---|
+| [ADR-0032](ADR-0032.md) | Template catalog = families of complete design snapshots, copied on insert, grouped by room (default) or type; no formula engine or inheritance | N22 | Proposed |
+| [ADR-0033](ADR-0033.md) | 1–5 default variants per family (fewest for simple storage, most for kitchen); interior variants double as *Apply layout* presets | N23 | Proposed |
+| [ADR-0034](ADR-0034.md) | Templates are editable: edits saved as local templates (new Dexie table), shipped ones never change, reset and compare | N24 | Proposed |
+| [ADR-0035](ADR-0035.md) | Construction guidance as a rules registry keyed by role/product, labelled warnings; safety-regulated items wait for user values | N25 | Proposed |
+| [ADR-0036](ADR-0036.md) | Kitchen: tall units, rails-top / no-bottom flags, user-sized appliance niches, front-only panel, run-level fillers, covers, plinth, worktop | N26 | Proposed |
+| [ADR-0037](ADR-0037.md) | Sliding doors and lift-up / drop-down flaps as front kinds, hardware user-specified | N27 | Proposed |
+| [ADR-0038](ADR-0038.md) | Frame root for tables, benches, stools, chairs and beds, with solid (linear) stock beside sheet stock | N28 | Proposed |
+| [ADR-0039](ADR-0039.md) | Upholstered, mechanised and shaped pieces are reference entries until a shaped-part ADR | N29 | Proposed |
