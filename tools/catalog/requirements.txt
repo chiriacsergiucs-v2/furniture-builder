@@ -1,0 +1,2 @@
+# Local PDF extraction for the catalog feed (ADR-0029). Not part of the app build.
+pdfplumber==0.11.10
