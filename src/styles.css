@@ -254,12 +254,16 @@ td.note { color: var(--ink-2); font-size: .84rem; }
 .piece-banner { display: flex; gap: 12px; align-items: center; justify-content: space-between; padding: 8px 16px; background: var(--tape); color: var(--tape-ink); font-size: .92rem; }
 .piece-banner button { background: var(--ink); color: var(--board); border: 0; border-radius: var(--r); padding: 6px 12px; font-weight: 600; white-space: nowrap; }
 .app:has(.piece-banner) { grid-template-rows: auto auto 1fr; }
-.plan { margin: 0; height: 100%; padding: 4px 16px 16px; display: grid; grid-template-rows: 1fr auto; }
+.plan-views { height: 100%; display: grid; grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); }
+.plan { margin: 0; height: 100%; min-height: 0; padding: 4px 16px 16px; display: grid; grid-template-rows: 1fr auto; }
 .plan svg { width: 100%; height: 100%; min-height: 0; display: block; }
 .plan figcaption { font-size: .82rem; color: var(--ink-2); }
 .plan .wall { stroke: var(--ink); stroke-width: 4; vector-effect: non-scaling-stroke; }
 .plan .wall-label, .plan .dim-text { fill: var(--ink-2); font-family: var(--font); }
 .plan-piece { cursor: pointer; }
+.front-hit { fill: transparent; cursor: pointer; }
+.front-hit:focus { outline: none; }
+.front-hit:focus-visible { stroke: var(--mat); stroke-width: 3; vector-effect: non-scaling-stroke; }
 .plan-piece rect { fill: #dfe3e0; stroke: var(--ink); stroke-width: 1.4; vector-effect: non-scaling-stroke; }
 .plan-piece.raised rect { fill: rgba(223, 227, 224, .55); stroke-dasharray: 6 4; }
 .plan-piece:hover rect { fill: #e9efe9; }

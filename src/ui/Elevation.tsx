@@ -100,7 +100,7 @@ export function Elevation() {
   )
 }
 
-function Dim({ x1, x2, y, label, fontSize, subtle }: { x1: number; x2: number; y: number; label: string; fontSize: number; subtle?: boolean }) {
+export function Dim({ x1, x2, y, label, fontSize, subtle }: { x1: number; x2: number; y: number; label: string; fontSize: number; subtle?: boolean }) {
   const mid = (x1 + x2) / 2
   const w = label.length * fontSize * 0.62 + fontSize
   return (
@@ -114,11 +114,11 @@ function Dim({ x1, x2, y, label, fontSize, subtle }: { x1: number; x2: number; y
   )
 }
 
-function DimV({ y1, y2, x, label, fontSize }: { y1: number; y2: number; x: number; label: string; fontSize: number }) {
+export function DimV({ y1, y2, x, label, fontSize, subtle }: { y1: number; y2: number; x: number; label: string; fontSize: number; subtle?: boolean }) {
   const mid = (y1 + y2) / 2
   const w = label.length * fontSize * 0.62 + fontSize
   return (
-    <g className="dim">
+    <g className={`dim ${subtle ? 'subtle' : ''}`}>
       <line x1={x} x2={x} y1={y1} y2={y2} />
       <line x1={x - fontSize * 0.4} x2={x + fontSize * 0.4} y1={y1} y2={y1} />
       <line x1={x - fontSize * 0.4} x2={x + fontSize * 0.4} y1={y2} y2={y2} />
