@@ -83,6 +83,7 @@ export function StartFrom({ onPick, onBrowse }: { onPick: (d: Design) => void; o
                       <span className="glyph"><Icon name={familyGlyph(f)} /></span>
                       <span><strong>{f.name}{f.localId && <span className="tag">edited</span>}{also && <span className="tag subtle">also here</span>}</strong><span className="sub">{first.name} — {first.summary}</span></span>
                     </button>
+                    {more === 0 && <span aria-hidden="true" className="no-more" />}
                     {more > 0 && (
                       <button type="button" className="btn icon ghost sm" aria-expanded={open === key} aria-label={`${more} more ${f.name} variants`} title={`${more} more`}
                         onClick={() => setOpen(open === key ? null : key)}><Icon name={open === key ? 'chevron-down' : 'chevron-right'} /><span className="more">{more}</span></button>

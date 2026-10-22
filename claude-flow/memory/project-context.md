@@ -17,3 +17,10 @@ inset gap 3 mm; handles bar/knob/push; blind + L corners; bracket-and-rail wall 
 projects embed copies; no orchestration runtime. Details in ADR-0009/0010/0017–0026.
 
 Unknown — never invent: loads, drilling depths, screw specs, exact supplier datasheet values.
+
+Catalog (2026-10-23, ADR-0032–0039, Proposed with defaults, built on `feat/catalog-templates`): 42 template families of
+complete design snapshots copied on insert (origin kept, ADR-0028), 1–5 variants each, Start from + Catalog tab grouped
+by Room (default) or Type; local template edits in Dexie v3; rules registry (`src/core/rules.ts`); kitchen flags
+(rails top, no bottom, appliance niches typed by the user), `panel` and `frame` roots, sliding doors and flaps, solid
+stock in a lengths list, project run parts. `docs/catalog.md` is generated (`npm run catalog:docs`). No formula engine,
+no template inheritance; shaped parts (raked backs, diagonal fronts) need a future ADR.

@@ -566,6 +566,7 @@ table.buy { margin-bottom: var(--s-4); }
 .start-group h4 { font-size: var(--fs-sm); color: var(--ink-2); margin: 0 0 6px; font-weight: 600; }
 .start-row { display: grid; grid-template-columns: 1fr auto; gap: 4px; align-items: center; }
 .start-row .row-btn { grid-template-columns: auto 1fr; }
+.start-row .no-more { width: 32px; }
 .start-row .more { font-family: var(--num); font-size: .75rem; margin-left: 2px; }
 .variant-picks { list-style: none; margin: 4px 0 6px 48px; padding: 0; display: grid; gap: 2px; }
 .variant-picks .link { text-align: left; padding: 2px 0; }

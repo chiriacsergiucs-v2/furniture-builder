@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto'
 import Dexie from 'dexie'
 import { describe, expect, it } from 'vitest'
-import { catalogFamilies, findFamily } from '../src/core/catalog'
+import { catalogFamilies, findFamily, insertVariant } from '../src/core/catalog'
 import { mergeCatalog, shadowOf, templateFromDesign, validateLocalTemplate } from '../src/core/catalog/local'
 import { applyLayout, layoutPresets } from '../src/core/catalog/presets'
 import { buildModel } from '../src/core/build'
@@ -46,6 +46,13 @@ describe('editable templates on this device (ADR-0034)', () => {
     expect(after.find(f => f.id === 'wardrobe')?.name).toBe('Wardrobe')
     expect(after.find(f => f.id === 'chest')?.localId).toBe(other.id)
     expect(JSON.stringify(shipped.variants.map(v => v.id))).toBe(before)
+  })
+  it('inserting from a local template (stored design data) still gives a new id each time', () => {
+    const merged = mergeCatalog(catalogFamilies, [shadowOf(findFamily('dresser')!)])
+    const f = merged.find(x => x.id === 'dresser')!
+    const a = insertVariant(f, f.variants[0])!, b = insertVariant(f, f.variants[0])!
+    expect(a.id).not.toBe(b.id)
+    expect(a.id).not.toBe(f.variants[0].create!().id)
   })
   it('a corrupt template row is skipped and still present', async () => {
     const t = shadowOf(findFamily('bookcase')!)

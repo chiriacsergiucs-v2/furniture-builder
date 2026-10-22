@@ -123,7 +123,8 @@ export function lengthsList(rows: CutRow[], stockLengths: (materialId: string) =
     const key = `${r.materialId}|${section}`
     let g = groups.get(key)
     if (!g) { g = { materialId: r.materialId, materialName: r.materialName, section, bars: [], tooLong: [], items: [] }; groups.set(key, g) }
-    for (let i = 0; i < r.quantity; i++) g.items.push({ length: r.length, label: r.labels.join(', ') })
+    // One label per part: a row of identical parts may carry several names ("Side rail left, Side rail right").
+    for (let i = 0; i < r.quantity; i++) g.items.push({ length: r.length, label: r.labels[Math.min(i, r.labels.length - 1)] })
   }
   const out: LengthsGroup[] = []
   for (const g of groups.values()) {
