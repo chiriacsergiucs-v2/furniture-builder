@@ -5,9 +5,12 @@ import { newProject, validateProject, type Project } from '../core/project'
 import { deleteDesign, deleteProject, listDesigns, listProjects, saveDesign, saveProject, type StoredDesign, type StoredProject } from '../persist/db'
 import { useDesign } from '../store/designStore'
 import { MmField, Toggle } from './controls'
+import { Icon } from './icons'
 import { AddPieceList } from './Project'
+import { TemplateButton, templateGlyph } from './Templates'
 
-function Dialog({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: ReactNode }) {
+/** Modal shell: header (title + close), scrolling body, optional footer for actions. Esc and backdrop close it. */
+function Dialog({ open, onClose, title, children, footer }: { open: boolean; onClose: () => void; title: string; children: ReactNode; footer?: ReactNode }) {
   const ref = useRef<HTMLDialogElement>(null)
   useEffect(() => {
     const d = ref.current
@@ -17,8 +20,9 @@ function Dialog({ open, onClose, title, children }: { open: boolean; onClose: ()
   }, [open])
   return (
     <dialog ref={ref} className="dialog" onClose={onClose} onClick={e => { if (e.target === ref.current) onClose() }} aria-label={title}>
-      <header><h2>{title}</h2><button type="button" className="close" onClick={onClose} aria-label="Close">×</button></header>
+      <header><h2>{title}</h2><button type="button" className="btn icon ghost sm close" onClick={onClose} aria-label="Close"><Icon name="x" /></button></header>
       <div className="dialog-body">{children}</div>
+      {footer && <div className="dialog-footer">{footer}</div>}
     </dialog>
   )
 }
@@ -27,27 +31,17 @@ export function NewDialog({ open, onClose }: { open: boolean; onClose: () => voi
   const load = useDesign(s => s.load)
   const openProject = useDesign(s => s.openProject)
   return (
-    <Dialog open={open} onClose={onClose} title="Start something new">
-      <ul className="template-list">
-        <li className="project-start">
-          <button type="button" onClick={() => { const p = newProject(); void saveProject(p); openProject(p); onClose() }}>
-            <strong>Project with several pieces</strong>
-            <span>A kitchen, a bedroom or a room: place pieces, then get one parts list and one set of sheets.</span>
-          </button>
-        </li>
-      </ul>
+    <Dialog open={open} onClose={onClose} title="Start something new"
+      footer={<p className="hint start">What you have open now is already saved on this device.</p>}>
+      <button type="button" className="row-btn" onClick={() => { const p = newProject(); void saveProject(p); openProject(p); onClose() }}>
+        <span className="glyph"><Icon name="project" /></span>
+        <span><strong>Project with several pieces</strong><span className="sub">A kitchen, a bedroom or a room: place pieces, then get one parts list and one set of sheets.</span></span>
+        <Icon name="chevron-right" className="chev sm" />
+      </button>
       <h3 className="list-head">Or a single piece</h3>
-      <ul className="template-list">
-        {templates.map(t => (
-          <li key={t.id}>
-            <button type="button" onClick={() => { load(t.create()); onClose() }}>
-              <strong>{t.name}</strong>
-              <span>{t.description}</span>
-            </button>
-          </li>
-        ))}
+      <ul className="template-list template-grid">
+        {templates.map(t => <li key={t.id}><TemplateButton t={t} onPick={() => { load(t.create()); onClose() }} /></li>)}
       </ul>
-      <p className="hint">What you have open now is already saved on this device.</p>
     </Dialog>
   )
 }
@@ -92,55 +86,63 @@ export function LibraryDialog({ open, onClose }: { open: boolean; onClose: () =>
     } catch { setError('That file could not be read as JSON.') }
   }
 
+  const when = (iso: string) => new Date(iso).toLocaleString()
+  const dup = (r: StoredDesign | StoredProject, kind: 'piece' | 'project') => async () => {
+    const now = new Date().toISOString()
+    if (kind === 'project') { const p = (r as StoredProject).project; await saveProject({ ...p, id: newId(), name: `${r.name} (copy)`, createdAt: now, updatedAt: now }) }
+    else { const d = (r as StoredDesign).design; await saveDesign({ ...d, id: newId(), name: `${r.name} (copy)`, createdAt: now, updatedAt: now }) }
+    refresh()
+  }
+  const rowActions = (r: StoredDesign | StoredProject, kind: 'piece' | 'project') => (
+    <>
+      <button type="button" className="btn sm" onClick={dup(r, kind)} title="Duplicate"><Icon name="copy" className="sm" /><span className="lbl">Duplicate</span></button>
+      <button type="button" className="btn sm danger" disabled={r.id === currentId} title={r.id === currentId ? (kind === 'project' ? 'Open something else first' : 'Open another piece first') : 'Delete'}
+        onClick={async () => {
+          if (!confirm(kind === 'project' ? `Delete project “${r.name}”? This cannot be undone.` : `Delete “${r.name}”? This cannot be undone.`)) return
+          if (kind === 'project') await deleteProject(r.id); else await deleteDesign(r.id)
+          refresh()
+        }}><Icon name="trash" className="sm" /><span className="lbl">Delete</span></button>
+    </>
+  )
+
   return (
-    <Dialog open={open} onClose={onClose} title="Saved on this device">
-      {error && <p className="field-error" role="alert">{error}</p>}
+    <Dialog open={open} onClose={onClose} title="Saved on this device"
+      footer={<label className="btn outline file-btn"><Icon name="upload" />Import a design or project file
+        <input type="file" accept="application/json,.json" onChange={e => { const f = e.target.files?.[0]; if (f) importFile(f); e.target.value = '' }} />
+      </label>}>
+      {error && <p className="alert error" role="alert"><Icon name="alert-circle" className="sm" /><span>{error}</span></p>}
       {projects.length > 0 && (
         <>
           <h3 className="list-head">Projects</h3>
           <ul className="library">
             {projects.map(r => (
               <li key={r.id} className={r.id === currentId ? 'current' : ''}>
-                <button type="button" className="open" onClick={() => { openProject(r.project); onClose() }}>
-                  <strong>{r.name}</strong>
-                  <span>{r.project.items.length} {r.project.items.length === 1 ? 'piece' : 'pieces'}, edited {new Date(r.updatedAt).toLocaleString()}</span>
+                <button type="button" className="row-btn" aria-current={r.id === currentId ? 'true' : undefined} onClick={() => { openProject(r.project); onClose() }}>
+                  <span className="glyph"><Icon name="project" /></span>
+                  <span><strong>{r.name}</strong><span className="sub">{r.project.items.length} {r.project.items.length === 1 ? 'piece' : 'pieces'}, edited {when(r.updatedAt)}</span></span>
                 </button>
-                <button type="button" className="mini" onClick={async () => {
-                  const now = new Date().toISOString()
-                  await saveProject({ ...r.project, id: newId(), name: `${r.name} (copy)`, createdAt: now, updatedAt: now }); refresh()
-                }}>Duplicate</button>
-                <button type="button" className="mini danger" disabled={r.id === currentId} title={r.id === currentId ? 'Open something else first' : undefined}
-                  onClick={async () => { if (confirm(`Delete project “${r.name}”? This cannot be undone.`)) { await deleteProject(r.id); refresh() } }}>Delete</button>
+                {rowActions(r, 'project')}
               </li>
             ))}
           </ul>
           <h3 className="list-head">Pieces</h3>
         </>
       )}
-      {rows === null ? <p className="hint">Loading…</p> : rows.length === 0 ? (
-        <p className="empty">Nothing saved yet. Pieces save automatically as you edit.</p>
+      {rows === null ? <p className="loading">Loading…</p> : rows.length === 0 ? (
+        <p className="empty center"><Icon name="folder" />Nothing saved yet. Pieces save automatically as you edit.</p>
       ) : (
         <ul className="library">
           {rows.map(r => (
             <li key={r.id} className={r.id === currentId ? 'current' : ''}>
-              <button type="button" className="open" onClick={() => { load(r.design, { fromStorage: true }); onClose() }}>
-                <strong>{r.name}</strong>
-                <span>{({ desk: 'Desk', corner: 'Corner unit', cabinet: 'Cabinet' } as const)[r.design.product.kind]}, edited {new Date(r.updatedAt).toLocaleString()}</span>
+              <button type="button" className="row-btn" aria-current={r.id === currentId ? 'true' : undefined} onClick={() => { load(r.design, { fromStorage: true }); onClose() }}>
+                <span className="glyph"><Icon name={templateGlyph(r.design.product.kind)} /></span>
+                <span><strong>{r.name}</strong><span className="sub">{({ desk: 'Desk', corner: 'Corner unit', cabinet: 'Cabinet' } as const)[r.design.product.kind]}, edited {when(r.updatedAt)}</span></span>
               </button>
-              <button type="button" className="mini" onClick={async () => {
-                const now = new Date().toISOString()
-                await saveDesign({ ...r.design, id: newId(), name: `${r.name} (copy)`, createdAt: now, updatedAt: now }); refresh()
-              }}>Duplicate</button>
-              <button type="button" className="mini danger" disabled={r.id === currentId} title={r.id === currentId ? 'Open another piece first' : undefined}
-                onClick={async () => { if (confirm(`Delete “${r.name}”? This cannot be undone.`)) { await deleteDesign(r.id); refresh() } }}>Delete</button>
+              {rowActions(r, 'piece')}
             </li>
           ))}
         </ul>
       )}
-      <label className="file-btn">
-        Import a design or project file
-        <input type="file" accept="application/json,.json" onChange={e => { const f = e.target.files?.[0]; if (f) importFile(f); e.target.value = '' }} />
-      </label>
     </Dialog>
   )
 }
@@ -152,7 +154,11 @@ export function MaterialsDialog({ open, onClose }: { open: boolean; onClose: () 
   const update = useDesign(s => s.updateMaterial)
   const add = useDesign(s => s.addMaterial)
   return (
-    <Dialog open={open} onClose={onClose} title="Materials in this piece">
+    <Dialog open={open} onClose={onClose} title="Materials in this piece"
+      footer={<>
+        <p className="hint start">Changing a thickness rebuilds every part made from that board.</p>
+        <button type="button" className="btn outline" onClick={() => add({ id: newId(), name: 'New board', thickness: 18, grain: false, color: '#d8d4cc' })}><Icon name="plus" />Add a material</button>
+      </>}>
       <MmField label="Saw cut (kerf)" value={kerf} min={0} max={20} step={1} onChange={setKerf} hint="Material lost in every cut. Sheet length runs along the grain." />
       <ul className="materials">
         {materials.map((m: Material) => (
@@ -171,8 +177,6 @@ export function MaterialsDialog({ open, onClose }: { open: boolean; onClose: () 
           </li>
         ))}
       </ul>
-      <button type="button" className="secondary" onClick={() => add({ id: newId(), name: 'New board', thickness: 18, grain: false, color: '#d8d4cc' })}>Add a material</button>
-      <p className="hint">Changing a thickness rebuilds every part made from that board.</p>
     </Dialog>
   )
 }

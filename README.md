@@ -16,6 +16,7 @@ Runs in the browser, works offline, keeps everything on your device.
 4. When Checks is clear: **Parts CSV** (Romanian, for the panel shop), **Print** (Romanian A4 cutting sheet with
    sheet plans; save as PDF from the dialog), **Export** → front-view SVG, Fusion 360 script (not yet tested in
    Fusion), design or project file.
+   **Library** lists what is saved on this device. The theme follows your system; the sun / moon button switches it.
 5. In a **project**, place pieces on the plan (position in mm, quarter turns), set quantities, and get one parts list,
    one set of sheets and one hardware list. Editing a piece there never changes your saved pieces.
 

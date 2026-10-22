@@ -6,6 +6,8 @@ import { listDesigns, loadDesign, type StoredDesign } from '../persist/db'
 import { useDesign } from '../store/designStore'
 import { Counter, MmField, Segmented, Toggle } from './controls'
 import { Dim, DimV } from './Elevation'
+import { Icon } from './icons'
+import { TemplateButton, templateGlyph } from './Templates'
 
 const FRONT_SIDE: Record<QuarterTurn, string> = { 0: 'front faces you', 90: 'front faces right', 180: 'front faces the back wall', 270: 'front faces left' }
 
@@ -42,30 +44,31 @@ export function ProjectPanel({ onAdd }: { onAdd: () => void }) {
         <p className="hint">Pieces are cut and bought together. Each piece is a copy; editing it here never changes your saved pieces.</p>
       </header>
       {project.items.length === 0 ? (
-        <p className="empty">No pieces yet. Add a cabinet, a corner unit or a desk to start.</p>
+        <p className="empty center"><Icon name="project" />No pieces yet. Add a cabinet, a corner unit or a desk to start.</p>
       ) : (
         <ul className="pieces">
           {project.items.map(i => {
             const b = pm?.pieces.find(p => p.item.id === i.id)?.bounds
             return (
               <li key={i.id}>
-                <button type="button" className={i.id === selectedId ? 'on' : ''} aria-pressed={i.id === selectedId} onClick={() => select(i.id)}>
-                  <strong>{i.quantity > 1 ? `${i.quantity} × ` : ''}{i.design.name}</strong>
-                  {b && <span>{b.w} × {b.h} × {b.d} mm</span>}
+                <button type="button" className={`row-btn ${i.id === selectedId ? 'on' : ''}`} aria-pressed={i.id === selectedId} onClick={() => select(i.id)}>
+                  <span><strong>{i.quantity > 1 ? `${i.quantity} × ` : ''}{i.design.name}</strong>{b && <span className="sub num">{b.w} × {b.h} × {b.d} mm</span>}</span>
+                  <Icon name="chevron-right" className="chev sm" />
                 </button>
               </li>
             )
           })}
         </ul>
       )}
-      <button type="button" className="secondary" onClick={onAdd}>Add a piece</button>
+      <button type="button" className="btn outline block" onClick={onAdd}><Icon name="plus" />Add a piece</button>
 
       {item && (
-        <section className="piece-edit" aria-label={`Selected piece: ${item.design.name}`}>
+        <section className="piece-edit section" aria-label={`Selected piece: ${item.design.name}`}>
+          <div className="card-title"><span>Selected piece</span></div>
           <h3>{item.design.name}</h3>
           <div className="split-actions">
-            <button type="button" onClick={() => edit(item.id)}>Edit this piece</button>
-            {item.libraryId && <button type="button" onClick={updateFromLibrary}>Update from saved piece</button>}
+            <button type="button" className="btn solid" onClick={() => edit(item.id)}><Icon name="pencil" className="sm" />Edit this piece</button>
+            {item.libraryId && <button type="button" className="btn outline" onClick={updateFromLibrary}>Update from saved piece</button>}
           </div>
           {libMsg && <p className="hint" role="status">{libMsg}</p>}
           <Counter label="How many" value={item.quantity} min={1} max={99} onChange={v => update(item.id, { quantity: v })} />
@@ -211,17 +214,21 @@ export function AddPieceList({ onDone }: { onDone: () => void }) {
   return (
     <>
       <h3 className="list-head">Start from</h3>
-      <ul className="template-list">
-        {templates.map(t => (
-          <li key={t.id}><button type="button" onClick={() => { add(t.create()); onDone() }}><strong>{t.name}</strong><span>{t.description}</span></button></li>
-        ))}
+      <ul className="template-list template-grid">
+        {templates.map(t => <li key={t.id}><TemplateButton t={t} onPick={() => { add(t.create()); onDone() }} /></li>)}
       </ul>
       {saved.length > 0 && (
         <>
           <h3 className="list-head">Your saved pieces</h3>
           <ul className="template-list">
             {saved.map(r => (
-              <li key={r.id}><button type="button" onClick={() => { add(r.design, r.id); onDone() }}><strong>{r.name}</strong><span>A copy is added; “Update from saved piece” pulls later changes.</span></button></li>
+              <li key={r.id}>
+                <button type="button" className="row-btn" onClick={() => { add(r.design, r.id); onDone() }}>
+                  <span className="glyph"><Icon name={templateGlyph(r.design.product.kind)} /></span>
+                  <span><strong>{r.name}</strong><span className="sub">A copy is added; “Update from saved piece” pulls later changes.</span></span>
+                  <Icon name="chevron-right" className="chev sm" />
+                </button>
+              </li>
             ))}
           </ul>
         </>

@@ -6,6 +6,7 @@ import { explode } from '../core/explode'
 import { union } from '../core/geometry'
 import { useDesign } from '../store/designStore'
 import { useView } from '../ui/useView'
+import { useTheme } from '../ui/useTheme'
 import type { Box, Panel } from '../core/types'
 
 const S = 0.001 // mm → metres
@@ -20,6 +21,9 @@ const HIGHLIGHT = '#f2c230'
 export default function Viewer3D() {
   const view = useView()
   const exploded = useDesign(s => s.exploded)
+  const theme = useTheme()
+  // Stage colours come from the stylesheet tokens so the canvas matches the light or dark theme.
+  const bg = useMemo(() => { void theme; return getComputedStyle(document.documentElement).getPropertyValue('--stage-3d').trim() || '#e7eae7' }, [theme])
   const designId = `${view.mode === 'project' ? 'project' : `design:${useDesign.getState().design.id}`}:${exploded ? 'exploded' : 'built'}`
   // Exploded: positions only, for looking; parts, sheets and checks always use the built model.
   const panels = useMemo(() => (exploded ? explode(view.pieces) : view.model.panels), [exploded, view])
@@ -27,7 +31,7 @@ export default function Viewer3D() {
   return (
     <Canvas camera={{ fov: 32, near: 0.01, far: 100 }} dpr={[1, 2]} shadows={false}
       onPointerMissed={() => { const st = useDesign.getState(); if (st.project && !st.editingItemId) st.selectItem(null); else st.select(null) }}>
-      <color attach="background" args={['#e7eae7']} />
+      <color attach="background" args={[bg]} />
       <hemisphereLight args={['#ffffff', '#b9bdb6', 1.1]} />
       <directionalLight position={[2.5, 4, 3]} intensity={1.6} />
       <directionalLight position={[-3, 2, -1]} intensity={0.35} />
