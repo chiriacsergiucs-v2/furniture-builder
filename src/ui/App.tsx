@@ -4,7 +4,8 @@ import { exportFusionPython } from '../core/fusion'
 import { lastDesignId, lastProjectId, loadDesign, loadProject, rememberLast, rememberLastProject, saveDesign, saveProject } from '../persist/db'
 import { useDesign } from '../store/designStore'
 import { AddPieceDialog, LibraryDialog, MaterialsDialog, NewDialog } from './Dialogs'
-import { CatalogDialog } from './Catalog'
+import { CatalogPage } from './Catalog'
+import { catalogFamilies } from '../core/catalog'
 import { useTemplates } from '../store/templatesStore'
 import { PlanView, ProjectPanel } from './Project'
 import { useView } from './useView'
@@ -55,7 +56,27 @@ function useMediaQuery(q: string) {
   return match
 }
 
+type Page = 'editor' | 'catalog'
+const pageFromHash = (): Page => (typeof location !== 'undefined' && location.hash === '#catalog' ? 'catalog' : 'editor')
+/** The two top-level pages, linkable: #catalog opens the Catalog (ADR-0032). */
+function usePage(): [Page, (p: Page) => void] {
+  const [page, setPage] = useState<Page>(pageFromHash)
+  useEffect(() => {
+    const on = () => setPage(pageFromHash())
+    window.addEventListener('hashchange', on)
+    return () => window.removeEventListener('hashchange', on)
+  }, [])
+  return [page, (p: Page) => {
+    if (p === 'catalog') location.hash = 'catalog'
+    else history.replaceState(null, '', location.pathname + location.search)
+    setPage(p)
+    window.scrollTo({ top: 0 })
+  }]
+}
+const CATALOG_ITEMS = catalogFamilies.reduce((n, f) => n + f.variants.length, 0)
+
 export function App() {
+  const [page, setPage] = usePage()
   const design = useDesign(s => s.design)
   const model = useDesign(s => s.model)
   const dirtyAt = useDesign(s => s.dirtyAt)
@@ -66,7 +87,8 @@ export function App() {
   const setExploded = useDesign(s => s.setExploded)
   const undo = useDesign(s => s.undo), redo = useDesign(s => s.redo)
   const canUndo = useDesign(s => s.past.length > 0), canRedo = useDesign(s => s.future.length > 0)
-  const [dialog, setDialog] = useState<null | 'new' | 'library' | 'materials' | 'add' | 'catalog'>(null)
+  const [dialog, setDialog] = useState<null | 'new' | 'library' | 'materials' | 'add'>(null)
+  const openCatalog = () => { setDialog(null); setPage('catalog') }
   const templateEdit = useDesign(s => s.templateEdit)
   const project = useDesign(s => s.project)
   const editingItemId = useDesign(s => s.editingItemId)
@@ -184,6 +206,10 @@ export function App() {
         <div className="brand" aria-hidden="true">
           <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" /><line x1="3" y1="10" x2="21" y2="10" /><line x1="3" y1="15.5" x2="21" y2="15.5" /></svg>
         </div>
+        <nav className="pages" aria-label="Pages">
+          <a href="#" aria-current={page === 'editor' ? 'page' : undefined} onClick={e => { e.preventDefault(); setPage('editor') }}><Icon name="front" className="sm" />Editor</a>
+          <a href="#catalog" aria-current={page === 'catalog' ? 'page' : undefined} onClick={e => { e.preventDefault(); setPage('catalog') }}><Icon name="catalog" className="sm" />Catalog <span className="count">{CATALOG_ITEMS}</span></a>
+        </nav>
         <input className="name" aria-label={inProject ? 'Name of this project' : 'Name of this piece'} defaultValue={inProject ? project!.name : design.name} key={inProject ? `p-${project!.id}` : design.id}
           onBlur={e => {
             const v = e.target.value.trim()
@@ -207,7 +233,6 @@ export function App() {
           </div>}
           <div className="cluster">
             <button type="button" className="btn" onClick={() => setDialog('new')} aria-label="New" title="Start a new piece or project"><Icon name="plus" /><span className="lbl">New</span></button>
-            <button type="button" className="btn" onClick={() => setDialog('catalog')} aria-label="Catalog" title="All furniture templates, by room or type"><Icon name="catalog" /><span className="lbl">Catalog</span></button>
             <button type="button" className="btn" onClick={() => setDialog('library')} aria-label="Library" title="Pieces and projects saved on this device"><Icon name="folder" /><span className="lbl">Library</span></button>
             {!inProject && <button type="button" className="btn" onClick={() => setDialog('materials')} aria-label="Materials" title="Boards, thicknesses and stock sheets"><Icon name="layers" /><span className="lbl">Materials</span></button>}
             <span className="divider" aria-hidden="true" />
@@ -237,8 +262,8 @@ export function App() {
       {templateEdit && (
         <div className="piece-banner" role="status">
           <span>Editing variant <strong>{templateEdit.template.family.variants.find(v => v.id === templateEdit.variantId)?.name}</strong> of template <strong>{templateEdit.template.family.name}</strong>. Saved to the template on this device.</span>
-          <button type="button" className="btn sm primary" onClick={() => { const t = useDesign.getState().finishTemplateEdit(true); if (t) void useTemplates.getState().save(t); setDialog('catalog') }}>Save to template</button>
-          <button type="button" className="btn sm" onClick={() => { useDesign.getState().finishTemplateEdit(false); setDialog('catalog') }}>Cancel</button>
+          <button type="button" className="btn sm primary" onClick={() => { const t = useDesign.getState().finishTemplateEdit(true); if (t) void useTemplates.getState().save(t); setPage('catalog') }}>Save to template</button>
+          <button type="button" className="btn sm" onClick={() => { useDesign.getState().finishTemplateEdit(false); setPage('catalog') }}>Cancel</button>
         </div>
       )}
       {editingItemId && project && (
@@ -247,7 +272,8 @@ export function App() {
           <button type="button" className="btn sm" onClick={() => useDesign.getState().backToProject()}>Back to project</button>
         </div>
       )}
-      <main className={`work ${editingItemId || templateEdit ? 'with-banner' : ''}`}>
+      {page === 'catalog' && <CatalogPage onDone={() => setPage('editor')} />}
+      <main className={`work ${editingItemId || templateEdit ? 'with-banner' : ''}`} hidden={page === 'catalog'}>
         <aside className="side">
           {inProject ? <ProjectPanel onAdd={() => setDialog('add')} /> : <Inspector />}
         </aside>
@@ -277,11 +303,10 @@ export function App() {
         <Output />
       </main>
 
-      <NewDialog open={dialog === 'new'} onClose={() => setDialog(null)} onBrowse={() => setDialog('catalog')} />
-      <CatalogDialog open={dialog === 'catalog'} onClose={() => setDialog(null)} />
+      <NewDialog open={dialog === 'new'} onClose={() => setDialog(null)} onBrowse={openCatalog} />
       <LibraryDialog open={dialog === 'library'} onClose={() => setDialog(null)} />
       <MaterialsDialog open={dialog === 'materials'} onClose={() => setDialog(null)} />
-      <AddPieceDialog open={dialog === 'add'} onClose={() => setDialog(null)} onBrowse={() => setDialog('catalog')} />
+      <AddPieceDialog open={dialog === 'add'} onClose={() => setDialog(null)} onBrowse={openCatalog} />
     </div>
     {printing && <PrintSheet />}
     </>

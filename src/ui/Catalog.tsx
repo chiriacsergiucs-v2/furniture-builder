@@ -1,19 +1,22 @@
 import { useEffect, useMemo, useState } from 'react'
 import { buildModel } from '../core/build'
-import { catalogFamilies, CAPABILITY_WAITS, FUNCTION_LABEL, FUNCTIONS, insertable, insertVariant, missingCapabilities, ROOM_LABEL, ROOMS, startFamilies, type FunctionGroup, type Room } from '../core/catalog'
+import { catalogFamilies, CAPABILITY_WAITS, FUNCTION_LABEL, FUNCTIONS, insertable, insertVariant, isSafetyConfirmed, missingCapabilities, ROOM_LABEL, ROOMS, setSafetyConfirmed, startFamilies, type CatalogVariant, type FunctionGroup, type Room } from '../core/catalog'
 import { mergeCatalog, shadowOf, templateFromDesign, validateLocalTemplate, type LocalTemplate, type ViewFamily } from '../core/catalog/local'
+import { VARIANT_RO } from '../core/catalog/ro'
 import type { Design } from '../core/types'
 import { listDesigns, type StoredDesign } from '../persist/db'
 import { useDesign } from '../store/designStore'
 import { useTemplates } from '../store/templatesStore'
-import { Dialog } from './Dialogs'
 import { Icon } from './icons'
 import { familyGlyph, templateGlyph } from './Templates'
 
 export type Grouping = 'room' | 'type'
 const GROUP_KEY = 'furniture-builder:catalog-group'
+const SAFETY_KEY = 'furniture-builder:safety-confirmed'
 const readGrouping = (): Grouping => { try { return localStorage.getItem(GROUP_KEY) === 'type' ? 'type' : 'room' } catch { return 'room' } }
 const writeGrouping = (g: Grouping) => { try { localStorage.setItem(GROUP_KEY, g) } catch { /* private mode */ } }
+// The safety confirmation is remembered on this device (ADR-0035); read once when the app loads.
+try { setSafetyConfirmed(localStorage.getItem(SAFETY_KEY) === 'yes') } catch { /* private mode */ }
 
 /** Grouping chosen on this device: Room by default (ADR-0032), persisted in browser storage when it works. */
 export function useGrouping(): [Grouping, (g: Grouping) => void] {
@@ -40,6 +43,8 @@ export function groupFamilies(families: ViewFamily[], by: Grouping): Group[] {
   return groups.filter(g => g.items.length)
 }
 
+const itemCount = (g: Group) => g.items.reduce((n, i) => n + i.family.variants.length, 0)
+
 function GroupToggle({ value, onChange }: { value: Grouping; onChange: (g: Grouping) => void }) {
   return (
     <div className="segmented small" role="radiogroup" aria-label="Group by">
@@ -50,105 +55,94 @@ function GroupToggle({ value, onChange }: { value: Grouping; onChange: (g: Group
 }
 
 const now = () => new Date().toISOString()
+const waitsFor = (requires: CatalogVariant['requires']) => missingCapabilities({ requires }).map(c => CAPABILITY_WAITS[c] ?? c).join('; ')
+const matches = (f: ViewFamily, v: CatalogVariant, q: string) => !q || [f.name, f.nameRo, ...f.aliases, v.name, VARIANT_RO[v.id] ?? ''].some(s => s.toLowerCase().includes(q))
 
 /**
- * "Start from" (ADR-0032): every family that can be built, its default variant first; the chevron opens the others.
- * Picking makes an independent copy with its origin recorded.
+ * "Start from" (ADR-0032) in New and in a project's "Add a piece": every catalog item, grouped by room or type, with
+ * search. Picking one makes an independent copy with its origin recorded.
  */
 export function StartFrom({ onPick, onBrowse }: { onPick: (d: Design) => void; onBrowse?: () => void }) {
   const families = useCatalog()
   const [grouping, setGrouping] = useGrouping()
-  const [open, setOpen] = useState<string | null>(null)
+  const [query, setQuery] = useState('')
+  const q = query.trim().toLowerCase()
   const groups = useMemo(() => groupFamilies(startFamilies(families) as ViewFamily[], grouping), [families, grouping])
-  const pick = (f: ViewFamily, vId: string) => { const v = f.variants.find(x => x.id === vId); const d = v && insertVariant(f, v, now()); if (d) onPick(d) }
+  const total = useMemo(() => startFamilies(families).reduce((n, f) => n + f.variants.filter(insertable).length, 0), [families])
   return (
     <div className="start-from">
       <div className="start-head">
-        <h3 className="list-head">Start from</h3>
+        <h3 className="list-head">Start from <span className="count">{total} items</span></h3>
         <GroupToggle value={grouping} onChange={setGrouping} />
-        {onBrowse && <button type="button" className="btn sm" onClick={onBrowse}><Icon name="catalog" className="sm" />Full catalog</button>}
+        {onBrowse && <button type="button" className="btn sm" onClick={onBrowse}><Icon name="catalog" className="sm" />Open the Catalog</button>}
       </div>
-      {groups.map(g => (
-        <section key={g.key} className="start-group" aria-label={g.label}>
-          <h4>{g.label} <span className="count">{g.items.length}</span></h4>
-          <ul className="template-list template-grid">
-            {g.items.map(({ family: f, also }) => {
-              const first = f.variants.find(insertable)!
-              const more = f.variants.filter(insertable).length - 1
-              const key = `${g.key}:${f.id}`
-              return (
-                <li key={key} className="start-item">
-                  <div className="start-row">
-                    <button type="button" className="row-btn" onClick={() => pick(f, first.id)}>
-                      <span className="glyph"><Icon name={familyGlyph(f)} /></span>
-                      <span><strong>{f.name}{f.localId && <span className="tag">edited</span>}{also && <span className="tag subtle">also here</span>}</strong><span className="sub">{first.name} — {first.summary}</span></span>
-                    </button>
-                    {more === 0 && <span aria-hidden="true" className="no-more" />}
-                    {more > 0 && (
-                      <button type="button" className="btn icon ghost sm" aria-expanded={open === key} aria-label={`${more} more ${f.name} variants`} title={`${more} more`}
-                        onClick={() => setOpen(open === key ? null : key)}><Icon name={open === key ? 'chevron-down' : 'chevron-right'} /><span className="more">{more}</span></button>
-                    )}
-                  </div>
-                  {open === key && (
-                    <ul className="variant-picks">
-                      {f.variants.filter(v => v.id !== first.id).map(v => (
-                        <li key={v.id}>
-                          <button type="button" className="link" disabled={!insertable(v)} onClick={() => pick(f, v.id)} title={insertable(v) ? undefined : waitsFor(v.requires)}>
-                            {v.name} <span className="sub">{insertable(v) ? v.summary : waitsFor(v.requires)}</span>
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+      <label className="search"><Icon name="search" className="sm" /><input type="search" placeholder="Search, e.g. wardrobe, dulap, bed" aria-label="Search the items" value={query} onChange={e => setQuery(e.target.value)} /></label>
+      {groups.map(g => {
+        const rows = g.items.flatMap(({ family: f }) => f.variants.filter(v => insertable(v) && matches(f, v, q)).map(v => ({ f, v })))
+        if (!rows.length) return null
+        return (
+          <section key={g.key} className="start-group" aria-label={g.label}>
+            <h4>{g.label} <span className="count">{rows.length}</span></h4>
+            <ul className="template-list template-grid">
+              {rows.map(({ f, v }) => (
+                <li key={`${g.key}:${f.id}:${v.id}`}>
+                  <button type="button" className="row-btn" onClick={() => { const d = insertVariant(f, v, now()); if (d) onPick(d) }}>
+                    <span className="glyph"><Icon name={familyGlyph(f)} /></span>
+                    <span><strong>{f.name}: {v.name}</strong><span className="sub">{v.summary}{VARIANT_RO[v.id] ? ` · ${f.nameRo}: ${VARIANT_RO[v.id]}` : ''}</span></span>
+                    <Icon name="chevron-right" className="chev sm" />
+                  </button>
                 </li>
-              )
-            })}
-          </ul>
-        </section>
-      ))}
+              ))}
+            </ul>
+          </section>
+        )
+      })}
     </div>
   )
 }
 
-const waitsFor = (requires: Parameters<typeof missingCapabilities>[0]['requires']) =>
-  missingCapabilities({ requires }).map(c => CAPABILITY_WAITS[c] ?? c).join('; ')
-
-/** Size, parts and checks of a family's default variant, from the built model (ADR-0004). */
-function useCardFacts(f: ViewFamily) {
-  return useMemo(() => {
-    const v = f.variants.find(insertable)
-    if (!v) return null
-    const m = buildModel(insertVariant(f, v, '')!)
-    const errors = m.diagnostics.filter(d => d.severity === 'error').length
-    return { w: m.bounds.w, h: m.bounds.h, d: m.bounds.d, parts: m.panels.length, errors, warnings: m.diagnostics.length - errors }
-  }, [f])
+/** Size, parts and checks of one item, from its built model (ADR-0004). */
+function itemFacts(f: ViewFamily, v: CatalogVariant) {
+  if (!insertable(v)) return null
+  const m = buildModel(insertVariant(f, v, '')!)
+  const errors = m.diagnostics.filter(d => d.severity === 'error').length
+  return { w: m.bounds.w, h: m.bounds.h, d: m.bounds.d, parts: m.panels.length, errors, warnings: m.diagnostics.length - errors }
 }
 
 type Source = 'templates' | 'saved' | 'brands'
 
-/** The Catalog page (ADR-0027, amended by ADR-0032): templates, saved pieces and brand products. */
-export function CatalogDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+/**
+ * The Catalog page (ADR-0027 as amended by ADR-0032): a full page, reached from the "Catalog" tab in the top bar or
+ * the #catalog link. It lists every item (each variant of each family) with its default structure and what can be
+ * changed, grouped by room or by type; items open or join the open project; templates are edited here (ADR-0034).
+ */
+export function CatalogPage({ onDone }: { onDone: () => void }) {
   const families = useCatalog()
   const [grouping, setGrouping] = useGrouping()
   const [source, setSource] = useState<Source>('templates')
   const [query, setQuery] = useState('')
   const [editing, setEditing] = useState<LocalTemplate | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
+  const [safety, setSafety] = useState(isSafetyConfirmed())
   const project = useDesign(s => s.project)
   const editingItem = useDesign(s => s.editingItemId)
   const toProject = !!project && !editingItem
   const take = (d: Design) => {
     if (toProject) useDesign.getState().addPiece(d)
     else useDesign.getState().load(d)
-    onClose()
+    onDone()
   }
   const q = query.trim().toLowerCase()
-  const shown = useMemo(() => (q ? families.filter(f => [f.name, f.nameRo, ...f.aliases].some(s => s.toLowerCase().includes(q))) : families), [families, q])
+  const shown = useMemo(() => families.filter(f => f.variants.some(v => matches(f, v, q))), [families, q])
   const groups = useMemo(() => groupFamilies(shown, grouping), [shown, grouping])
+  const all = families.flatMap(f => f.variants)
+  const ready = all.filter(insertable).length
   const startEdit = (f: ViewFamily) => {
     const local = f.localId ? useTemplates.getState().locals.find(t => t.id === f.localId) : undefined
     setEditing(local ? structuredClone(local) : shadowOf(catalogFamilies.find(x => x.id === f.id)!))
+    window.scrollTo({ top: 0 })
   }
+  const toggleSafety = (v: boolean) => { setSafetyConfirmed(v); try { localStorage.setItem(SAFETY_KEY, v ? 'yes' : 'no') } catch { /* private mode */ } setSafety(v) }
   const exportLocal = () => {
     const data = JSON.stringify({ kind: 'mobila-templates', templates: useTemplates.getState().locals }, null, 2)
     const url = URL.createObjectURL(new Blob([data], { type: 'application/json' }))
@@ -165,14 +159,14 @@ export function CatalogDialog({ open, onClose }: { open: boolean; onClose: () =>
     } catch { setMsg('That file could not be read as a templates file.') }
   }
   return (
-    <Dialog open={open} onClose={onClose} title="Catalog" wide
-      footer={<>
-        <p className="hint start">Templates are starting points: picking one makes your own copy. Edits to a template stay on this device.</p>
-        <button type="button" className="btn outline" onClick={exportLocal} disabled={!useTemplates.getState().locals.length}><Icon name="download" />Export my templates</button>
-        <label className="btn outline file-btn"><Icon name="upload" />Import templates
-          <input type="file" accept="application/json,.json" onChange={e => { const f = e.target.files?.[0]; if (f) void importLocal(f); e.target.value = '' }} />
-        </label>
-      </>}>
+    <main className="catalog-page" aria-label="Catalog">
+      <header className="catalog-head">
+        <div>
+          <h1>Catalog</h1>
+          <p className="hint"><strong className="num">{all.length} items</strong> in {families.length} families · {ready} open right away. {toProject ? 'Pick one to add it to the open project.' : 'Pick one to open your own copy in the editor.'}</p>
+        </div>
+        <button type="button" className="btn outline" onClick={onDone}><Icon name="chevron-right" className="sm" />Back to the editor</button>
+      </header>
       <div className="catalog-toolbar">
         <div className="segmented small" role="tablist" aria-label="Source">
           {(['templates', 'saved', 'brands'] as const).map(s => (
@@ -183,65 +177,83 @@ export function CatalogDialog({ open, onClose }: { open: boolean; onClose: () =>
         </div>
         {source === 'templates' && <>
           <GroupToggle value={grouping} onChange={setGrouping} />
-          <label className="search"><Icon name="search" className="sm" /><input type="search" placeholder="Search names and other names" aria-label="Search the catalog" value={query} onChange={e => setQuery(e.target.value)} /></label>
-          <SaveAsTemplate />
+          <label className="search"><Icon name="search" className="sm" /><input type="search" placeholder="Search, e.g. wardrobe, dulap, bed" aria-label="Search the catalog" value={query} onChange={e => setQuery(e.target.value)} /></label>
         </>}
       </div>
+      {source === 'templates' && (
+        <div className="catalog-actions">
+          <label className="toggle small"><input type="checkbox" checked={safety} onChange={e => toggleSafety(e.target.checked)} /><span>I check safety-regulated items (bunk bed, cradle) against the standards myself</span></label>
+          <SaveAsTemplate />
+          <button type="button" className="btn sm" onClick={exportLocal} disabled={!useTemplates.getState().locals.length}><Icon name="download" className="sm" />Export my templates</button>
+          <label className="btn sm file-btn"><Icon name="upload" className="sm" />Import templates
+            <input type="file" accept="application/json,.json" onChange={e => { const f = e.target.files?.[0]; if (f) void importLocal(f); e.target.value = '' }} />
+          </label>
+        </div>
+      )}
       {msg && <p className="alert info" role="status"><Icon name="info" className="sm" /><span>{msg}</span></p>}
-      {source === 'templates' && (editing
-        ? <TemplateEditor key={editing.id} draft={editing} onDone={m => { setEditing(null); if (m) setMsg(m) }} onEditDesign={(t, vid) => { useDesign.getState().editTemplateVariant(t, vid); onClose() }} />
-        : groups.length === 0 ? <p className="empty center"><Icon name="search" />Nothing matches “{query}”.</p>
-        : groups.map(g => (
-          <section key={g.key} className="catalog-group" aria-label={g.label}>
-            <h3 className="group-head">{g.label} <span className="count">{g.items.length}</span></h3>
-            <div className="fam-grid">
-              {g.items.map(({ family, also }) => <FamilyCard key={`${g.key}:${family.id}`} f={family} also={also} toProject={toProject} onTake={take} onEdit={() => startEdit(family)} />)}
-            </div>
-          </section>
-        )))}
+      {source === 'templates' && editing && (
+        <TemplateEditor key={editing.id} draft={editing} onDone={m => { setEditing(null); if (m) setMsg(m) }} onEditDesign={(t, vid) => { useDesign.getState().editTemplateVariant(t, vid); onDone() }} />
+      )}
+      {source === 'templates' && !editing && (groups.length === 0
+        ? <p className="empty center"><Icon name="search" />Nothing matches “{query}”.</p>
+        : <nav className="group-index" aria-label="Jump to a group">{groups.map(g => <a key={g.key} href={`#cat-${g.key}`} onClick={e => { e.preventDefault(); document.getElementById(`cat-${g.key}`)?.scrollIntoView({ behavior: 'smooth' }) }}>{g.label} <span className="count">{itemCount(g)}</span></a>)}</nav>)}
+      {source === 'templates' && !editing && groups.map(g => (
+        <section key={g.key} id={`cat-${g.key}`} className="catalog-group" aria-label={g.label}>
+          <h2 className="group-head">{g.label} <span className="count">{itemCount(g)} items</span></h2>
+          {g.items.map(({ family, also }) => <FamilyBlock key={`${g.key}:${family.id}`} f={family} also={also} q={q} toProject={toProject} onTake={take} onEdit={() => startEdit(family)} />)}
+        </section>
+      ))}
       {source === 'saved' && <SavedList onTake={take} />}
       {source === 'brands' && <p className="empty center"><Icon name="catalog" />No brand products yet. They arrive through the catalog feed (ADR-0029), which has not added any.</p>}
-    </Dialog>
+    </main>
   )
 }
 
-const SUPPORT_TEXT = { ready: 'Ready', 'needs-construction': 'Needs construction', safety: 'Waits for safety values', reference: 'Reference' } as const
+const SUPPORT_TEXT = { ready: 'Ready', 'needs-construction': 'Needs construction', safety: 'Safety-regulated', reference: 'Reference' } as const
 
-function FamilyCard({ f, also, toProject, onTake, onEdit }: { f: ViewFamily; also?: boolean; toProject: boolean; onTake: (d: Design) => void; onEdit: () => void }) {
-  const facts = useCardFacts(f)
+/** One family: its default structure and what can be changed, then every item (variant) as its own card. */
+function FamilyBlock({ f, also, q, toProject, onTake, onEdit }: { f: ViewFamily; also?: boolean; q: string; toProject: boolean; onTake: (d: Design) => void; onEdit: () => void }) {
   const remove = useTemplates(s => s.remove)
+  const items = f.variants.filter(v => matches(f, v, q))
+  const facts = useMemo(() => new Map(f.variants.map(v => [v.id, itemFacts(f, v)])), [f])
   return (
-    <article className={`fam-card support-${f.support}`}>
-      <header>
+    <article className={`family support-${f.support}`} aria-label={f.name}>
+      <header className="family-head">
         <span className="glyph"><Icon name={familyGlyph(f)} /></span>
         <div>
-          <h4>{f.name}</h4>
-          <p className="sub">{f.nameRo}{f.aliases.length ? ` · ${f.aliases.join(', ')}` : ''}</p>
+          <h3>{f.name} <span className="ro">{f.nameRo}</span></h3>
+          <p className="chips">
+            <span className={`chip ${f.support}`}>{SUPPORT_TEXT[f.support]}</span>
+            <span className="chip">{FUNCTION_LABEL[f.function as FunctionGroup]}</span>
+            {f.rooms.map(r => <span key={r} className="chip subtle">{ROOM_LABEL[r as Room]}</span>)}
+            {f.localId && <span className="chip edited">{f.own ? 'Your template' : 'Edited on this device'}</span>}
+            {also && <span className="chip subtle">main room: {ROOM_LABEL[f.rooms[0] as Room]}</span>}
+            {f.aliases.length > 0 && <span className="aliases">also called {f.aliases.join(', ')}</span>}
+          </p>
         </div>
-        <button type="button" className="btn icon ghost sm" onClick={onEdit} aria-label={`Edit the ${f.name} template`} title="Edit this template"><Icon name="pencil" /></button>
+        <button type="button" className="btn sm" onClick={onEdit}><Icon name="pencil" className="sm" />Edit template</button>
       </header>
-      <p className="chips">
-        <span className={`chip ${f.support}`}>{SUPPORT_TEXT[f.support]}</span>
-        <span className="chip">{FUNCTION_LABEL[f.function as FunctionGroup]}</span>
-        {f.rooms.map(r => <span key={r} className="chip subtle">{ROOM_LABEL[r as Room]}</span>)}
-        {f.localId && <span className="chip edited">{f.own ? 'Your template' : 'Edited on this device'}</span>}
-        {also && <span className="chip subtle">also listed in {ROOM_LABEL[f.rooms[0] as Room]}</span>}
-      </p>
-      {facts && <p className="facts num">{facts.w} × {facts.h} × {facts.d} mm · {facts.parts} parts{facts.errors ? ` · ${facts.errors} problems` : facts.warnings ? ` · ${facts.warnings} to check` : ' · no problems'}</p>}
-      <p className="structure">{f.structure}</p>
-      <details className="configs"><summary>What can be changed</summary><ul>{f.configurations.map(c => <li key={c}>{c}</li>)}</ul></details>
+      <div className="family-body">
+        <p className="structure"><strong>Default structure:</strong> {f.structure}</p>
+        <div className="configs"><strong>Configurations:</strong><ul>{f.configurations.map(c => <li key={c}>{c}</li>)}</ul></div>
+      </div>
       {f.shippedUpdated && <ShippedUpdated f={f} />}
-      <ul className="variants">
-        {f.variants.map((v, i) => {
+      <ul className="items">
+        {items.map((v, i) => {
           const ok = insertable(v)
+          const fx = facts.get(v.id)
           return (
-            <li key={v.id} className={ok ? '' : 'waits'}>
-              <div>
-                <strong>{v.name}</strong>{i === 0 && <span className="tag subtle">default</span>}
-                <span className={`kind ${v.kind}`} title={v.kind === 'interior' ? 'Interior-only: builds on an existing product' : 'Needed new construction'}>{v.kind === 'interior' ? 'I' : 'C'}</span>
-                <span className="sub">{ok ? v.summary : waitsFor(v.requires)}{v.hardware ? ` · choose: ${v.hardware}` : ''}</span>
+            <li key={v.id} className={`item ${ok ? '' : 'waits'}`}>
+              <div className="item-text">
+                <span className="item-name"><strong>{v.name}</strong>{i === 0 && f.variants[0].id === v.id && <span className="tag subtle">default</span>}
+                <span className={`kind ${v.kind}`} title={v.kind === 'interior' ? 'Interior-only: built on an existing product' : 'Needed new construction'}>{v.kind === 'interior' ? 'I' : 'C'}</span></span>
+                {VARIANT_RO[v.id] && <span className="ro">{VARIANT_RO[v.id]}</span>}
+                <span className="sub">{v.summary}</span>
+                {fx && <span className="sub num">{fx.w} × {fx.h} × {fx.d} mm · {fx.parts} parts{fx.errors ? ` · ${fx.errors} problems` : fx.warnings ? ` · ${fx.warnings} to check` : ''}</span>}
+                {v.hardware && <span className="sub">You choose: {v.hardware}</span>}
+                {!ok && <span className="sub waits-why">Not available yet: {waitsFor(v.requires) || 'no design'}</span>}
               </div>
-              <button type="button" className="btn sm" disabled={!ok} onClick={() => { const d = insertVariant(f, v); if (d) onTake(d) }}>{toProject ? 'Add' : 'Open'}</button>
+              <button type="button" className="btn sm primary" disabled={!ok} onClick={() => { const d = insertVariant(f, v); if (d) onTake(d) }}>{toProject ? 'Add' : 'Open'}</button>
             </li>
           )
         })}

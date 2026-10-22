@@ -60,7 +60,7 @@ plinth, 560 deep; wall units 320 deep; width grid 150 · 200 · 300 · 400 · 45
 | Dining table | dining, kitchen | frame · ✅ ready | 1200 × 750 × 800 | Top on four legs joined by rails under the top; about 600 mm of length per seat. | Length per seats; Leg section and inset; Rail height; H-stretcher | 4 seats **C** [root:frame] · 6 seats **C** [root:frame] · With H-stretcher **C** [root:frame] |
 | Patio table | outdoor | frame · ✅ ready | 1500 × 740 × 860 | Slatted top with drainage gaps on legs and rails, in outdoor timber. | Slat width and gap; Outdoor timber; Stretchers | Slatted top **C** [root:frame] · Slatted top, H-stretcher **C** [root:frame] |
 
-### Seating (12 families, 20 variants)
+### Seating (12 families, 25 variants)
 
 | Family | Rooms | Root · support | Default size | Structure | Configurations | Variants (≤ 5) |
 |---|---|---|---|---|---|---|
@@ -69,13 +69,13 @@ plinth, 560 deep; wall units 320 deep; width grid 150 · 200 · 300 · 400 · 45
 | Stool | kitchen, dining | frame · ✅ ready | 380 × 450 × 380 | Seat on four legs with rails and a footrest ring of stretchers. | Low, counter or bar height; Footrest height | Low 450 **C** [root:frame] · Counter 650 **C** [root:frame] · Bar 760 **C** [root:frame] |
 | Bench | dining, hallway, bedroom | frame · ✅ ready | 1200 × 450 × 380 | Long seat on legs and rails, or a low box with cubbies. | Legs or box; Storage under; Lid | Storage bench, open cubbies **I** · 4 legs **C** [root:frame] · Lift lid **C** [front:lid, hardware:user] ⏳ |
 | Garden bench | outdoor | frame · ✅ ready | 1500 × 450 × 390 | Slatted seat with drainage gaps on legs and rails, outdoor timber. | Slat width and gap; Back and arms | Backless slatted **C** [root:frame] · With back and arms **C** [shape] ⏳ |
-| Armchair | living, bedroom | frame · 📖 reference | 800 × 850 × 770 | Upholstered: base frame of rails, seat deck on webbing or springs, back frame, two arm frames, legs, cushions. | Arm style and width; Seat depth 500–550, seat height 400–450 (typical); Cushions | Frame only **C** [root:frame, hardware:user] |
-| Accent chair | living, bedroom | frame · 📖 reference | 700 × 800 × 720 | Smaller upholstered chair, armless or with slim arms, on exposed legs. | Armless or slim arms; Exposed legs | Frame only **C** [root:frame, hardware:user] |
-| Sofa | living | frame · 📖 reference | 1600 × 850 × 820 | Upholstered: hardwood or ply rails, seat suspension, back frame, arms, legs, cushions; about 600–700 mm per seat. | Seats 2–4; Arm style; Cushions; Legs | 2-seat frame only **C** [root:frame, hardware:user] · 3-seat frame only **C** [root:frame, hardware:user] |
-| Sectional | living | frame · 📖 reference | — | Sofa modules (arm, armless, corner, chaise) joined by brackets. | L, U or chaise layout; Module list | L-shape frame only **C** [root:frame, frame:modules] ⏳ |
-| Recliner | living | frame · 📖 reference | — | Upholstered frame built around a bought reclining mechanism that sets its inside sizes. | Mechanism; Wall clearance | Reference only **C** [shape, hardware:user] ⏳ |
-| Ergonomic office chair | office | frame · 📖 reference | — | Bought assembly: gas lift, mechanism, five-star base, adjustable seat, back and arms. | Seat height range; Arms; Headrest | Reference only **C** [shape, hardware:user] ⏳ |
-| Outdoor lounger | outdoor | frame · 📖 reference | — | Two stringers, slats, a hinged backrest on a prop with several positions, legs or wheels. | Backrest positions; Wheels | Reference only **C** [shape, hardware:user] ⏳ |
+| Armchair | living, bedroom | frame · ✅ ready | 800 × 850 × 770 | Upholstered: base frame of rails, seat deck on webbing or springs, back frame, two arm frames, legs, cushions. | Arm style and width; Seat depth 500–550, seat height 400–450 (typical); Cushions | Frame only **C** [root:frame, hardware:user] |
+| Accent chair | living, bedroom | frame · ✅ ready | 700 × 800 × 720 | Smaller upholstered chair, armless or with slim arms, on exposed legs. | Armless or slim arms; Exposed legs | Frame only **C** [root:frame, hardware:user] |
+| Sofa | living | frame · ✅ ready | 1600 × 850 × 820 | Upholstered: hardwood or ply rails, seat suspension, back frame, arms, legs, cushions; about 600–700 mm per seat. | Seats 2–4; Arm style; Cushions; Legs | 2-seat frame only **C** [root:frame, hardware:user] · 3-seat frame only **C** [root:frame, hardware:user] |
+| Sectional | living | frame · ✅ ready | 2400 × 850 × 870 | Sofa modules (arm, armless, corner, chaise) joined by brackets. | L, U or chaise layout; Module list | Main section frame **C** [root:frame, hardware:user] · Chaise section frame **C** [root:frame, hardware:user] · L-shape as one piece **C** [root:frame, frame:modules] ⏳ |
+| Recliner | living | frame · ✅ ready | 900 × 1000 × 920 | Upholstered frame built around a bought reclining mechanism that sets its inside sizes. | Mechanism; Wall clearance | Fixed frame shell **C** [root:frame, hardware:user] · Reclining frame **C** [shape, hardware:user] ⏳ |
+| Ergonomic office chair | office | frame · ✅ ready | 480 × 950 × 500 | Bought assembly: gas lift, mechanism, five-star base, adjustable seat, back and arms. | Seat height range; Arms; Headrest | Fixed-height desk chair frame **C** [root:frame, hardware:user] · Ergonomic chair (bought) **C** [shape, hardware:user] ⏳ |
+| Outdoor lounger | outdoor | frame · ✅ ready | 1950 × 320 × 570 | Two stringers, slats, a hinged backrest on a prop with several positions, legs or wheels. | Backrest positions; Wheels | Flat lounger frame **C** [root:frame, hardware:user] · Adjustable backrest **C** [shape, hardware:user] ⏳ |
 
 ### Sleeping and lying (5 families, 9 variants)
 
@@ -87,5 +87,5 @@ plinth, 560 deep; wall units 320 deep; width grid 150 · 200 · 300 · 400 · 45
 | Bunk bed | kids, bedroom | frame · 🛡 waits for safety values | — | Two decks between tall ends, guard rails all round the top deck, a ladder. | Tier gap; Ladder side; Guard rail height; Trundle | Standard **C** [root:frame, safety:user-confirmed] ⏳ · With trundle **C** [root:frame, frame:under-storage, safety:user-confirmed] ⏳ |
 | Cradle | bedroom, kids | frame · 🛡 waits for safety values | — | Small bed with tall ends and closed sides on a fixed stand. | Mattress size; Side height | Fixed stand **C** [root:frame, safety:user-confirmed] ⏳ |
 
-**Totals:** 42 families, 112 variants; 56 interior-only, 96 can be inserted today, 16 wait (⏳) for a construction or for safety values.
+**Totals:** 42 families, 117 variants; 56 interior-only, 101 can be inserted today, 16 wait (⏳) for a construction or for safety values.
 <!-- catalog:end -->

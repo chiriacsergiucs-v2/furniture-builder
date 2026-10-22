@@ -12,3 +12,9 @@
 
 Stop when a physical/supplier fact is unknown (add it under an *Open questions* heading in `docs/backlog.md`), when a check fails
 (fix the cause, never the check), or when a change would need the network (ADR-0002).
+
+## Acceptance (hard, auto-failing — retro 2026-10-23)
+
+Before reporting done: write the requirement ledger (user's words → evidence in the running app), run a find-it test
+from the bare app at phone and desktop widths, and state whether the change is merged and deployed. Any requirement
+without evidence fails the delivery.

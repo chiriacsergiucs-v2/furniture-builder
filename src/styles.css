@@ -622,6 +622,53 @@ table.buy { margin-bottom: var(--s-4); }
   .dialog.wide { width: calc(100vw - 16px); }
 }
 
+/* Pages: Editor | Catalog, always labelled (the Catalog must be findable on every screen) ---------- */
+.work[hidden] { display: none !important; }
+.pages { display: flex; gap: 2px; padding: 2px; border: 1px solid var(--bar-line); border-radius: var(--r); flex: none; }
+.pages a { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: var(--r-sm); color: var(--bar-ink); text-decoration: none; font-weight: 600; font-size: var(--fs-sm); white-space: nowrap; }
+.pages a .icon { color: var(--bar-ink-2); }
+.pages a:hover { background: var(--bar-line); }
+.pages a[aria-current="page"] { background: var(--accent); color: var(--on-accent); }
+.pages a[aria-current="page"] .icon, .pages a[aria-current="page"] .count { color: var(--on-accent); }
+.pages .count { color: var(--bar-ink-2); font-weight: 500; }
+.catalog-page { max-width: 1280px; width: 100%; margin: 0 auto; padding: var(--s-5) var(--s-4) var(--s-8); display: grid; gap: var(--s-4); align-content: start; }
+.catalog-head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--s-3); flex-wrap: wrap; }
+.catalog-head h1 { margin: 0; font-size: var(--fs-2xl); }
+.catalog-head .hint { margin: 4px 0 0; }
+.catalog-page .catalog-toolbar { top: 0; }
+.catalog-actions { display: flex; flex-wrap: wrap; gap: var(--s-2); align-items: center; }
+.catalog-actions .toggle { margin-right: auto; }
+.group-index { display: flex; flex-wrap: wrap; gap: 6px; }
+.group-index a { padding: 2px 10px; border: 1px solid var(--line); border-radius: var(--r-pill); color: var(--link); text-decoration: none; font-size: var(--fs-sm); }
+.catalog-group { display: grid; gap: var(--s-3); scroll-margin-top: 64px; }
+.catalog-group .group-head { border-bottom: 2px solid var(--line-2); padding-bottom: 4px; }
+.family { border: 1px solid var(--line-2); border-radius: var(--r-lg); background: var(--surface); padding: var(--s-3) var(--s-4); display: grid; gap: var(--s-2); }
+.family-head { display: grid; grid-template-columns: auto 1fr auto; gap: var(--s-3); align-items: start; }
+.family-head .glyph { width: 40px; height: 40px; border-radius: var(--r); display: grid; place-items: center; background: var(--surface-2); color: var(--ink-2); }
+.family-head h3 { margin: 0 0 4px; font-size: var(--fs-lg); }
+.ro { color: var(--ink-2); font-weight: 400; font-size: var(--fs-sm); margin-left: 6px; }
+.aliases { color: var(--ink-2); font-size: var(--fs-xs); }
+.family-body { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-3); font-size: var(--fs-sm); color: var(--ink-2); }
+.family-body p { margin: 0; }
+.family-body ul { margin: 2px 0 0; padding-left: 18px; }
+.family-body strong { color: var(--ink); }
+.items { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--s-2); }
+.item { display: grid; grid-template-columns: 1fr auto; gap: var(--s-2); align-items: start; padding: var(--s-2) var(--s-3); border: 1px solid var(--line-2); border-radius: var(--r); background: var(--surface-2); }
+.item .item-text { display: grid; gap: 1px; }
+.item .item-name strong { font-size: var(--fs-md); }
+.item .ro { margin-left: 0; display: block; }
+.item .sub { color: var(--ink-2); font-size: var(--fs-xs); display: block; }
+.item.waits { background: var(--surface); border-style: dashed; }
+.item .waits-why { color: var(--warn); }
+.start-from .search { display: flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: var(--r); padding: 0 8px; min-height: 34px; }
+.start-from .search input { border: 0; outline: 0; background: transparent; color: var(--ink); width: 100%; font: inherit; }
+@media (max-width: 760px) {
+  .family-body { grid-template-columns: 1fr; }
+  .family-head { grid-template-columns: auto 1fr; }
+  .family-head > .btn { grid-column: 1 / -1; justify-self: start; }
+  .pages a { padding: 4px 8px; }
+}
+
 /* Laid out off-screen (not display:none) so its fonts, incl. Romanian glyphs, load before the print dialog. */
 .print-root { position: absolute; left: -100000px; top: 0; width: 186mm; visibility: hidden; pointer-events: none; }
 @page { size: A4 portrait; margin: 12mm; }

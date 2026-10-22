@@ -1,13 +1,15 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { buildModel } from '../src/core/build'
-import { catalogFamilies, FUNCTIONS, insertable, insertVariant, ROOMS, startFamilies, BUILT_CAPABILITIES } from '../src/core/catalog'
+import { catalogFamilies, FUNCTIONS, insertable, insertVariant, ROOMS, startFamilies, BUILT_CAPABILITIES, setSafetyConfirmed } from '../src/core/catalog'
+import { VARIANT_RO } from '../src/core/catalog/ro'
 import { CATALOG_BEGIN, CATALOG_END, catalogMarkdown } from '../src/core/catalog/markdown'
 import { templates, validateDesign } from '../src/core/design'
 
 /** Warnings a shipped variant may carry at its default size, each by design (ADR-0035 compliance). */
 const EXPECTED_WARNINGS = new Set(['internal-drawers', 'hardware-to-choose', 'flap-fitting', 'shelf-support'])
-const EXTRA: Record<string, string[]> = { 'sofa-3-frame': ['frame-span'] }
+// Long frames carry the "centre leg" reminder by design.
+const EXTRA: Record<string, string[]> = { 'sofa-3-frame': ['frame-span'], 'sectional-main': ['frame-span'], 'lounger-flat': ['frame-span'] }
 
 describe('template catalog (ADR-0032, ADR-0033, ADR-0039)', () => {
   it('every family has 1–5 variants, known rooms and function, unique ids', () => {
@@ -64,6 +66,22 @@ describe('template catalog (ADR-0032, ADR-0033, ADR-0039)', () => {
     expect(JSON.stringify(v.create!().product.params.width)).toBe(before)
     const hw = catalogFamilies.find(x => x.id === 'pullout-base')!
     expect(insertVariant(hw, hw.variants[0])!.catalog?.hardwareToChoose).toBe('pull-out frame')
+  })
+  it('more than 100 items; every family has at least one item that opens; every item has a Romanian name', () => {
+    const all = catalogFamilies.flatMap(f => f.variants)
+    expect(all.length).toBeGreaterThan(100)
+    for (const f of catalogFamilies.filter(x => x.support !== 'safety')) expect(f.variants.some(insertable), f.id).toBe(true)
+    for (const v of all) expect(VARIANT_RO[v.id], v.id).toBeTruthy()
+  })
+  it('safety-regulated items open once the user confirms they check them, and keep their warning', () => {
+    const bunk = catalogFamilies.find(f => f.id === 'bunk-bed')!
+    expect(insertVariant(bunk, bunk.variants[0])).toBeNull()
+    setSafetyConfirmed(true)
+    try {
+      const d = insertVariant(bunk, bunk.variants[0])!
+      expect(buildModel(d).diagnostics.map(x => x.code)).toContain('safety-not-checked')
+      expect(buildModel(d).diagnostics.filter(x => x.severity === 'error')).toEqual([])
+    } finally { setSafetyConfirmed(false) }
   })
   it('the ten existing templates are kept as variant ids', () => {
     const vids = new Set(catalogFamilies.flatMap(f => f.variants.map(v => v.id)))

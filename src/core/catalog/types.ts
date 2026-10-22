@@ -28,7 +28,7 @@ export const CAPABILITY_WAITS: Partial<Record<Capability, string>> = {
   'frame:arms': 'needs arm rests on the frame root (not built yet)',
   'frame:modules': 'needs sofa modules joined into one piece (not built yet)',
   'frame:under-storage': 'needs drawers built into a frame (not built yet)',
-  'safety:user-confirmed': 'covered by safety standards; waits for values you confirm (ADR-0035)',
+  'safety:user-confirmed': 'covered by safety standards: switch on "I check safety-regulated items myself" in the Catalog to use it',
 }
 
 export type VariantKind = 'interior' | 'construction'
@@ -68,5 +68,14 @@ export interface CatalogFamily {
   variants: CatalogVariant[]
 }
 
-export const insertable = (v: Pick<CatalogVariant, 'create' | 'requires'>) => !!v.create && v.requires.every(c => BUILT_CAPABILITIES.has(c))
-export const missingCapabilities = (v: Pick<CatalogVariant, 'requires'>) => v.requires.filter(c => !BUILT_CAPABILITIES.has(c))
+/**
+ * Safety-regulated items (bunk bed, cradle) unlock once the user confirms, on this device, that they check the design
+ * against the standards themselves (ADR-0035). The designs keep their "not a compliance check" warning regardless.
+ */
+let safetyConfirmed = false
+export const setSafetyConfirmed = (v: boolean) => { safetyConfirmed = v }
+export const isSafetyConfirmed = () => safetyConfirmed
+const available = (c: Capability) => BUILT_CAPABILITIES.has(c) || (c === 'safety:user-confirmed' && safetyConfirmed)
+
+export const insertable = (v: Pick<CatalogVariant, 'create' | 'requires'>) => !!v.create && v.requires.every(available)
+export const missingCapabilities = (v: Pick<CatalogVariant, 'requires'>) => v.requires.filter(c => !available(c))

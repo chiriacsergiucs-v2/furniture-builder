@@ -132,7 +132,7 @@ export const seating: CatalogFamily[] = [
     ],
   },
   {
-    id: 'armchair', name: 'Armchair', nameRo: 'Fotoliu', aliases: ['easy chair', 'fotoliu'], function: 'seating', rooms: ['living', 'bedroom'], root: 'frame', support: 'reference',
+    id: 'armchair', name: 'Armchair', nameRo: 'Fotoliu', aliases: ['easy chair', 'fotoliu'], function: 'seating', rooms: ['living', 'bedroom'], root: 'frame', support: 'ready',
     structure: 'Upholstered: base frame of rails, seat deck on webbing or springs, back frame, two arm frames, legs, cushions.',
     configurations: ['Arm style and width', 'Seat depth 500–550, seat height 400–450 (typical)', 'Cushions'],
     dims: SEAT_DIMS, catalogVersion: 1,
@@ -142,7 +142,7 @@ export const seating: CatalogFamily[] = [
     ],
   },
   {
-    id: 'accent-chair', name: 'Accent chair', nameRo: 'Fotoliu decorativ', aliases: ['occasional chair'], function: 'seating', rooms: ['living', 'bedroom'], root: 'frame', support: 'reference',
+    id: 'accent-chair', name: 'Accent chair', nameRo: 'Fotoliu decorativ', aliases: ['occasional chair'], function: 'seating', rooms: ['living', 'bedroom'], root: 'frame', support: 'ready',
     structure: 'Smaller upholstered chair, armless or with slim arms, on exposed legs.',
     configurations: ['Armless or slim arms', 'Exposed legs'],
     dims: SEAT_DIMS, catalogVersion: 1,
@@ -152,7 +152,7 @@ export const seating: CatalogFamily[] = [
     ],
   },
   {
-    id: 'sofa', name: 'Sofa', nameRo: 'Canapea', aliases: ['couch', 'settee', 'canapea'], function: 'seating', rooms: ['living'], root: 'frame', support: 'reference',
+    id: 'sofa', name: 'Sofa', nameRo: 'Canapea', aliases: ['couch', 'settee', 'canapea'], function: 'seating', rooms: ['living'], root: 'frame', support: 'ready',
     structure: 'Upholstered: hardwood or ply rails, seat suspension, back frame, arms, legs, cushions; about 600–700 mm per seat.',
     configurations: ['Seats 2–4', 'Arm style', 'Cushions', 'Legs'],
     dims: SEAT_DIMS, catalogVersion: 1,
@@ -164,32 +164,50 @@ export const seating: CatalogFamily[] = [
     ],
   },
   {
-    id: 'sectional', name: 'Sectional', nameRo: 'Colțar', aliases: ['corner sofa', 'coltar'], function: 'seating', rooms: ['living'], root: 'frame', support: 'reference',
+    id: 'sectional', name: 'Sectional', nameRo: 'Colțar', aliases: ['corner sofa', 'coltar'], function: 'seating', rooms: ['living'], root: 'frame', support: 'ready',
     structure: 'Sofa modules (arm, armless, corner, chaise) joined by brackets.',
     configurations: ['L, U or chaise layout', 'Module list'],
     dims: SEAT_DIMS, catalogVersion: 1,
-    variants: [{ id: 'sectional-l-frame', name: 'L-shape frame only', summary: 'Modules joined at a corner', kind: 'construction', requires: ['root:frame', 'frame:modules'] }],
+    variants: [
+      { id: 'sectional-main', name: 'Main section frame', summary: '2400 wide with a back; join modules with connector brackets', kind: 'construction', requires: ['root:frame', 'hardware:user'], hardware: `${UPHOLSTERY}; module connector brackets`,
+        create: () => frame('Sectional main section frame', 'bench', { width: 2400, depth: 900, height: 850, back: withBack(420), apron: { height: 100, thickness: 25 }, leg: { w: 60, d: 60 } }) },
+      { id: 'sectional-chaise', name: 'Chaise section frame', summary: '900 × 1600, no back', kind: 'construction', requires: ['root:frame', 'hardware:user'], hardware: `${UPHOLSTERY}; module connector brackets`,
+        create: () => frame('Sectional chaise frame', 'bench', { width: 900, depth: 1600, height: 420, apron: { height: 100, thickness: 25 }, leg: { w: 60, d: 60 } }) },
+      { id: 'sectional-l-frame', name: 'L-shape as one piece', summary: 'Modules joined at a corner', kind: 'construction', requires: ['root:frame', 'frame:modules'] },
+    ],
   },
   {
-    id: 'recliner', name: 'Recliner', nameRo: 'Fotoliu recliner', aliases: ['reclining chair'], function: 'seating', rooms: ['living'], root: 'frame', support: 'reference',
+    id: 'recliner', name: 'Recliner', nameRo: 'Fotoliu recliner', aliases: ['reclining chair'], function: 'seating', rooms: ['living'], root: 'frame', support: 'ready',
     structure: 'Upholstered frame built around a bought reclining mechanism that sets its inside sizes.',
     configurations: ['Mechanism', 'Wall clearance'],
     dims: SEAT_DIMS, catalogVersion: 1,
-    variants: [{ id: 'recliner-reference', name: 'Reference only', summary: 'Not generated', kind: 'construction', requires: ['shape', 'hardware:user'] }],
+    variants: [
+      { id: 'recliner-shell', name: 'Fixed frame shell', summary: '900 × 1000 × 950, seat 470', kind: 'construction', requires: ['root:frame', 'hardware:user'], hardware: `reclining mechanism (it sets the frame's inside sizes); ${UPHOLSTERY}`,
+        create: () => frame('Recliner frame shell', 'bench', { width: 900, depth: 950, height: 1000, back: withBack(470), apron: { height: 110, thickness: 25 }, leg: { w: 60, d: 60 } }) },
+      { id: 'recliner-reference', name: 'Reclining frame', summary: 'Back and footrest that tilt', kind: 'construction', requires: ['shape', 'hardware:user'] },
+    ],
   },
   {
-    id: 'office-chair', name: 'Ergonomic office chair', nameRo: 'Scaun ergonomic', aliases: ['task chair'], function: 'seating', rooms: ['office'], root: 'frame', support: 'reference',
+    id: 'office-chair', name: 'Ergonomic office chair', nameRo: 'Scaun ergonomic', aliases: ['task chair'], function: 'seating', rooms: ['office'], root: 'frame', support: 'ready',
     structure: 'Bought assembly: gas lift, mechanism, five-star base, adjustable seat, back and arms.',
     configurations: ['Seat height range', 'Arms', 'Headrest'],
     dims: SEAT_DIMS, catalogVersion: 1,
-    variants: [{ id: 'office-chair-reference', name: 'Reference only', summary: 'Bought, not built', kind: 'construction', requires: ['shape', 'hardware:user'] }],
+    variants: [
+      { id: 'office-chair-frame', name: 'Fixed-height desk chair frame', summary: 'Seat 470, panel back', kind: 'construction', requires: ['root:frame', 'hardware:user'], hardware: 'gas lift, synchro mechanism and 5-star base are bought; this frame has fixed legs instead',
+        create: () => frame('Desk chair frame', 'chair', { width: 480, depth: 500, height: 950, back: { ...chair.back!, seatHeight: 470, style: 'panel' } }) },
+      { id: 'office-chair-reference', name: 'Ergonomic chair (bought)', summary: 'Gas lift, mechanism, 5-star base', kind: 'construction', requires: ['shape', 'hardware:user'] },
+    ],
   },
   {
-    id: 'outdoor-lounger', name: 'Outdoor lounger', nameRo: 'Șezlong', aliases: ['sun lounger', 'sezlong'], function: 'seating', rooms: ['outdoor'], root: 'frame', support: 'reference',
+    id: 'outdoor-lounger', name: 'Outdoor lounger', nameRo: 'Șezlong', aliases: ['sun lounger', 'sezlong'], function: 'seating', rooms: ['outdoor'], root: 'frame', support: 'ready',
     structure: 'Two stringers, slats, a hinged backrest on a prop with several positions, legs or wheels.',
     configurations: ['Backrest positions', 'Wheels'],
     dims: SEAT_DIMS, catalogVersion: 1,
-    variants: [{ id: 'lounger-reference', name: 'Reference only', summary: 'Needs an angled backrest', kind: 'construction', requires: ['shape', 'hardware:user'] }],
+    variants: [
+      { id: 'lounger-flat', name: 'Flat lounger frame', summary: '1950 × 320 × 650, slatted, larch', kind: 'construction', requires: ['root:frame', 'hardware:user'], hardware: 'adjustable backrest prop and wheels',
+        create: () => frame('Flat lounger', 'bench', { width: 1950, depth: 650, height: 320, top: 'slats', solidMaterialId: 'larch', slats: { width: 70, thickness: 22, gap: 10 }, legInset: 40, apron: { height: 90, thickness: 25 } }) },
+      { id: 'lounger-reference', name: 'Adjustable backrest', summary: 'Backrest that tilts on a prop', kind: 'construction', requires: ['shape', 'hardware:user'] },
+    ],
   },
 ]
 

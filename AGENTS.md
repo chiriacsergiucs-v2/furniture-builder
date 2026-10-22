@@ -11,6 +11,13 @@ Read first: `docs/backlog.md`, `claude-flow/architecture/decisions/README.md`, `
 - Storage: never edit a shipped Dexie version; never delete rows the app cannot read (ADR-0012).
 - Zustand selectors return stable references (no `.filter()`/`.map()` inside a selector).
 
+## Delivery (hard, auto-failing — user rule 2026-10-23, see `docs/retros/2026-10-23-catalog.md`)
+- R1 Requirement ledger: list every requirement in the user's own words; each needs evidence from the running app the
+  user will use. Unreachable or unchecked = not done, and the whole delivery fails.
+- R2 No avoidance: never drop or relabel a requirement ("reference", "waits", "gap") to skip building it; ask instead.
+- R3 Find-it test: UI acceptance starts from the bare app and finds features by visible text at phone and desktop widths.
+- R4 Outcome first: replies open with where to click and whether it is live.
+
 ## Process (standing user rules)
 - Smallest functional slice. Default verification: `npm run lint && npm run typecheck && npm test && npm run build`.
 - No new browser/E2E suite, refactors or polish unless asked.
