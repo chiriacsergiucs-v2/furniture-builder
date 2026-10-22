@@ -5,9 +5,12 @@
  */
 import type { Design, Diagnostic, FurnitureModel, HardwareItem, Material, Mm, Panel, RuleSettings } from './types'
 
-/** Typical defaults. Not standards: confirm against your board maker and hardware datasheets. */
+/**
+ * Typical defaults. Not standards: confirm against your board maker and hardware datasheets. The shelf span keeps the
+ * app's earlier rule of thumb (50 × thickness, 900 mm for 18 mm board) until the user confirms another value.
+ */
 export const RULE_DEFAULTS: Required<Omit<RuleSettings, 'roomHeight'>> = {
-  shelfSpan: 800,
+  shelfSpan: 900,
   doorMaxWidth: 600,
   hangerDepth: 530,
 }

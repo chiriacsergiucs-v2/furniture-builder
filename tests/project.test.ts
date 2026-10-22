@@ -4,7 +4,7 @@ import { buildModel } from '../src/core/build'
 import { cutlist } from '../src/core/cutlist'
 import { templates } from '../src/core/design'
 import { nest } from '../src/core/nesting'
-import { buildProjectModel, makeItem, newProject, placeItem, projectCutlist, projectHardware, projectNestingJobs, rotateBox, validateProject, type Project, type QuarterTurn } from '../src/core/project'
+import { buildProjectModel, makeItem, newProject, placeItem, projectCutlist, projectHardware, projectNestingJobs, rotateBox, suggestRunParts, validateProject, type Project, type QuarterTurn } from '../src/core/project'
 import { overlaps } from '../src/core/geometry'
 import { db, listProjects, loadProject, saveProject } from '../src/persist/db'
 
@@ -86,5 +86,44 @@ describe('project materials (review fix 2026-10-22)', () => {
     for (const j of jobs) for (const r of rows.filter(r => r.materialId === j.materialId)) expect(r.grain).toBe(j.grain)
     expect(names.length).toBeGreaterThan(new Set(names).size) // same name split by grain
     expect(pm.diagnostics.some(d => d.code === 'material-sheet-conflict')).toBe(true)
+  })
+})
+
+describe('run parts (ADR-0036)', () => {
+  const run = (): Project => {
+    let p = newProject('Run')
+    for (const id of ['base-door', 'base-door', 'chest']) p = { ...p, items: [...p.items, makeItem(p, t(id))] }
+    // Move the run off the wall corner and open a 37 mm gap before the third unit.
+    return { ...p, items: p.items.map((it, i) => ({ ...it, position: { ...it.position, x: it.position.x + 100 + (i === 2 ? 37 : 0) } })) }
+  }
+  it('a run gets one worktop, a filler in the gap and a cover panel on each exposed end, each with a reason', () => {
+    const p = run()
+    const parts = suggestRunParts(p)
+    expect(parts.filter(x => x.kind === 'worktop')).toHaveLength(1)
+    const filler = parts.find(x => x.kind === 'filler')!
+    expect(filler.box.w).toBe(37)
+    expect(filler.reason).toContain('37 mm')
+    expect(parts.filter(x => x.kind === 'cover')).toHaveLength(2)
+    expect(parts.every(x => x.reason.length > 0)).toBe(true)
+    const wt = parts.find(x => x.kind === 'worktop')!
+    const pm0 = buildProjectModel(p)
+    expect(wt.box.y).toBe(Math.max(...pm0.pieces.map(pc => pc.bounds.y + pc.bounds.h)))
+  })
+  it('run parts join the model, the cut list (once each) and the sheets without overlapping anything', () => {
+    const p0 = run()
+    const p = { ...p0, runParts: suggestRunParts(p0) }
+    const pm = buildProjectModel(p)
+    expect(pm.diagnostics.filter(d => d.severity === 'error')).toEqual([])
+    const rows = projectCutlist(p).filter(r => r.labels.some(l => l.startsWith('Run:')))
+    expect(rows.reduce((n, r) => n + r.quantity, 0)).toBe(p.runParts.length)
+    for (const j of projectNestingJobs(p)) { const r = nest(j, { maxMs: 10_000 }); expect(r.valid).toBe(true) }
+    expect(validateProject(p)).toEqual([])
+    expect(validateProject({ ...p, runParts: [{ ...p.runParts[0], kind: 'plinth' }] })).toContain('Invalid run part')
+  })
+  it('a run part that now overlaps a moved piece is an error', () => {
+    const p0 = run()
+    const p = { ...p0, runParts: suggestRunParts(p0) }
+    const moved = { ...p, items: p.items.map((it, i) => (i === 2 ? { ...it, position: { ...it.position, x: it.position.x - 30 } } : it)) }
+    expect(buildProjectModel(moved).diagnostics.map(d => d.code)).toContain('run-part-overlap')
   })
 })
