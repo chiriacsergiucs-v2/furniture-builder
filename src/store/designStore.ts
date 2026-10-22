@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { buildModel } from '../core/build'
 import { findInProduct, mapProductSpace, templates, upgradeDesign } from '../core/design'
-import { buildProjectModel, makeItem, type Project, type ProjectItem, type ProjectModel } from '../core/project'
+import { buildProjectModel, makeItem, setGapLeft, type Project, type ProjectItem, type ProjectModel } from '../core/project'
 import type { CabinetParams, CornerParams, DeskParams, Design, FurnitureModel, Material, Space } from '../core/types'
 
 export type Tab = 'parts' | 'sheets' | 'hardware' | 'checks'
@@ -14,6 +14,8 @@ interface State {
   /** Panels highlighted from the parts list. */
   highlight: string[]
   showFronts: boolean
+  /** 3D preview with the panels pushed apart (display only). */
+  exploded: boolean
   tab: Tab
   past: Design[]
   future: Design[]
@@ -41,6 +43,7 @@ interface State {
   select: (id: string | null) => void
   setHighlight: (ids: string[]) => void
   setShowFronts: (v: boolean) => void
+  setExploded: (v: boolean) => void
   setTab: (t: Tab) => void
   undo: () => void
   redo: () => void
@@ -51,6 +54,7 @@ interface State {
   updateProject: (fn: (p: Project) => Project) => void
   addPiece: (d: Design, libraryId?: string) => void
   updateItem: (id: string, patch: Partial<ProjectItem>) => void
+  setGap: (id: string, gap: number, moveRight: boolean) => void
   removeItem: (id: string) => void
   selectItem: (id: string | null) => void
   editItem: (id: string) => void
@@ -93,6 +97,7 @@ export const useDesign = create<State>((set, get) => {
     selectedId: null,
     highlight: [],
     showFronts: true,
+    exploded: false,
     tab: 'parts',
     past: [],
     future: [],
@@ -125,6 +130,7 @@ export const useDesign = create<State>((set, get) => {
       set({ selectedItemId: item.id })
     },
     updateItem: (id, patch) => { const p = get().project; if (p) commitProject({ ...p, items: p.items.map(i => (i.id === id ? { ...i, ...patch } : i)) }) },
+    setGap: (id, gap, moveRight) => { const p = get().project; if (p) { const next = setGapLeft(p, id, gap, moveRight); if (next !== p) commitProject(next) } },
     removeItem: id => { const p = get().project; if (p) { commitProject({ ...p, items: p.items.filter(i => i.id !== id) }); set({ selectedItemId: null }) } },
     selectItem: id => set({ selectedItemId: id }),
     editItem: id => {
@@ -168,6 +174,7 @@ export const useDesign = create<State>((set, get) => {
     select: id => set({ selectedId: id }),
     setHighlight: ids => set({ highlight: ids }),
     setShowFronts: v => set({ showFronts: v }),
+    setExploded: v => set({ exploded: v }),
     setTab: t => set({ tab: t }),
     undo: () => {
       const { past, design, future } = get()

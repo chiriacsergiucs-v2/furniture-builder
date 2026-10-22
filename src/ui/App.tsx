@@ -57,6 +57,8 @@ export function App() {
   const rename = useDesign(s => s.rename)
   const showFronts = useDesign(s => s.showFronts)
   const setShowFronts = useDesign(s => s.setShowFronts)
+  const exploded = useDesign(s => s.exploded)
+  const setExploded = useDesign(s => s.setExploded)
   const undo = useDesign(s => s.undo), redo = useDesign(s => s.redo)
   const canUndo = useDesign(s => s.past.length > 0), canRedo = useDesign(s => s.future.length > 0)
   const [dialog, setDialog] = useState<null | 'new' | 'library' | 'materials' | 'add'>(null)
@@ -222,6 +224,7 @@ export function App() {
               <button type="button" role="radio" aria-checked={view === '3d'} className={view === '3d' ? 'on' : ''} onClick={() => setView('3d')}>3D</button>
             </div>
             <label className="toggle small"><input type="checkbox" checked={showFronts} onChange={e => setShowFronts(e.target.checked)} /><span>Doors and fronts</span></label>
+            {(wide || view === '3d') && <label className="toggle small"><input type="checkbox" checked={exploded} onChange={e => setExploded(e.target.checked)} /><span>Exploded 3D</span></label>}
             {view === '3d' && <button type="button" className="mini" onClick={() => window.dispatchEvent(new Event('fb:fit'))}>Reset view</button>}
           </div>
           <div className="views">

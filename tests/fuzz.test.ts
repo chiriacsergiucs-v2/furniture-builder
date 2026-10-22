@@ -9,6 +9,7 @@ import { it, expect } from 'vitest'
 import { buildModel } from '../src/core/build'
 import { INTERNAL_DRAWER_SETBACK } from '../src/core/cabinet'
 import { validateDesign, defaultDrawers } from '../src/core/design'
+import { explode } from '../src/core/explode'
 import { overlaps, contains } from '../src/core/geometry'
 import type { Design, Space, Material, Box, CabinetParams, DeskParams } from '../src/core/types'
 
@@ -95,6 +96,8 @@ function check(d: Design): string[] {
   const P = m.panels
   for (const p of P) for (const k of ['x', 'y', 'z', 'w', 'h', 'd'] as const) if (!Number.isSafeInteger(p.box[k])) probs.push(`nonint ${p.id}`)
   for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) if (overlaps(P[i].box, P[j].box)) probs.push(`overlap ${P[i].id} ${P[j].id}`)
+  const E = explode([P])
+  for (let i = 0; i < E.length; i++) for (let j = i + 1; j < E.length; j++) if (overlaps(E[i].box, E[j].box)) probs.push(`exploded-overlap ${E[i].id} ${E[j].id}`)
   const tf = d.materials.find(m => m.id === 'front')!.thickness
   const fronts = P.filter(p => FRONT.has(p.role))
   let W: number, H: number, Dd: number, ph: number, g: number, envD: number

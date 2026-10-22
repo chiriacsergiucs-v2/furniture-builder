@@ -2,6 +2,8 @@ import { Canvas, useThree } from '@react-three/fiber'
 import { ContactShadows, Edges, OrbitControls } from '@react-three/drei'
 import { useEffect, useMemo, useRef, type ComponentRef } from 'react'
 import { Color } from 'three'
+import { explode } from '../core/explode'
+import { union } from '../core/geometry'
 import { useDesign } from '../store/designStore'
 import { useView } from '../ui/useView'
 import type { Box, Panel } from '../core/types'
@@ -17,8 +19,11 @@ const HIGHLIGHT = '#f2c230'
  */
 export default function Viewer3D() {
   const view = useView()
-  const designId = view.mode === 'project' ? 'project' : `design:${useDesign.getState().design.id}`
-  const bounds = view.model.bounds
+  const exploded = useDesign(s => s.exploded)
+  const designId = `${view.mode === 'project' ? 'project' : `design:${useDesign.getState().design.id}`}:${exploded ? 'exploded' : 'built'}`
+  // Exploded: positions only, for looking; parts, sheets and checks always use the built model.
+  const panels = useMemo(() => (exploded ? explode(view.pieces) : view.model.panels), [exploded, view])
+  const bounds = useMemo(() => (exploded ? union(panels.map(p => p.box)) : view.model.bounds), [exploded, panels, view])
   return (
     <Canvas camera={{ fov: 32, near: 0.01, far: 100 }} dpr={[1, 2]} shadows={false}
       onPointerMissed={() => { const st = useDesign.getState(); if (st.project && !st.editingItemId) st.selectItem(null); else st.select(null) }}>
@@ -26,7 +31,7 @@ export default function Viewer3D() {
       <hemisphereLight args={['#ffffff', '#b9bdb6', 1.1]} />
       <directionalLight position={[2.5, 4, 3]} intensity={1.6} />
       <directionalLight position={[-3, 2, -1]} intensity={0.35} />
-      <Panels />
+      <Panels panels={panels} />
       <ContactShadows position={[bounds.x * S + (bounds.w * S) / 2, -0.0005, bounds.z * S + (bounds.d * S) / 2]}
         scale={Math.max(bounds.w, bounds.d) * S * 2.2} blur={2.4} opacity={0.38} far={1.2} />
       <Fit key={designId} bounds={bounds} />
@@ -63,9 +68,8 @@ function Fit({ bounds }: { bounds: Box }) {
   return <OrbitControls ref={controls} makeDefault enableDamping dampingFactor={0.12} minDistance={0.2} maxDistance={20} />
 }
 
-function Panels() {
+function Panels({ panels }: { panels: Panel[] }) {
   const view = useView()
-  const panels = view.model.panels
   const materials = view.materials
   const selectedSpace = useDesign(s => s.selectedId)
   const selectedItem = useDesign(s => s.selectedItemId)

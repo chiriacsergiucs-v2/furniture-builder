@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { templates } from '../core/design'
-import type { QuarterTurn } from '../core/project'
+import { leftNeighbour, type QuarterTurn } from '../core/project'
 import { listDesigns, loadDesign, type StoredDesign } from '../persist/db'
 import { useDesign } from '../store/designStore'
-import { Counter, MmField, Segmented } from './controls'
+import { Counter, MmField, Segmented, Toggle } from './controls'
 
 const FRONT_SIDE: Record<QuarterTurn, string> = { 0: 'front faces you', 90: 'front faces right', 180: 'front faces the back wall', 270: 'front faces left' }
 
@@ -17,8 +17,11 @@ export function ProjectPanel({ onAdd }: { onAdd: () => void }) {
   const remove = useDesign(s => s.removeItem)
   const edit = useDesign(s => s.editItem)
   const updateProject = useDesign(s => s.updateProject)
+  const setGap = useDesign(s => s.setGap)
   const [libMsg, setLibMsg] = useState<string | null>(null)
+  const [moveRight, setMoveRight] = useState(true)
   const item = project.items.find(i => i.id === selectedId)
+  const left = useMemo(() => (selectedId ? leftNeighbour(project, selectedId) : null), [project, selectedId])
   const piece = pm?.pieces.find(p => p.item.id === selectedId)
 
   const updateFromLibrary = async () => {
@@ -74,6 +77,13 @@ export function ProjectPanel({ onAdd }: { onAdd: () => void }) {
             <MmField label="From back" value={item.position.z} min={-20000} max={20000} onChange={v => update(item.id, { position: { ...item.position, z: v } })} />
             <MmField label="Above floor" value={item.position.y} min={0} max={3000} onChange={v => update(item.id, { position: { ...item.position, y: v } })} />
           </div>
+          {left ? (
+            <>
+              <MmField label={`Gap to ${left.item.design.name} on the left`} value={left.gap} min={0} max={5000}
+                onChange={v => setGap(item.id, v, moveRight)} />
+              <Toggle label="Move the pieces on its right too" checked={moveRight} onChange={setMoveRight} />
+            </>
+          ) : <p className="hint">No piece on its left at this height; set “From left” to place it.</p>}
           {piece && <p className="hint">Takes {piece.bounds.w} × {piece.bounds.d} mm of floor, {piece.bounds.h} mm high.</p>}
           <button type="button" className="danger-link" onClick={() => { if (confirm(`Remove “${item.design.name}” from this project?`)) remove(item.id) }}>Remove from project</button>
         </section>

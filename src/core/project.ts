@@ -109,6 +109,8 @@ export interface ProjectModel {
   pieces: PlacedPiece[]
   /** All panels in room coordinates, material ids replaced by merged material keys. */
   model: FurnitureModel
+  /** The same panels grouped by piece, in item order (the exploded view spreads each piece on its own). */
+  piecePanels: Panel[][]
   materials: Material[]
   diagnostics: Diagnostic[]
 }
@@ -117,6 +119,7 @@ export function buildProjectModel(project: Project): ProjectModel {
   const pieces = project.items.map(placeItem)
   const materials = new Map<string, Material>()
   const panels: Panel[] = []
+  const piecePanels: Panel[][] = []
   const hardware: HardwareItem[] = []
   const diagnostics: Diagnostic[] = []
   for (const pc of pieces) {
@@ -129,7 +132,9 @@ export function buildProjectModel(project: Project): ProjectModel {
         diagnostics.push({ severity: 'warning', code: 'material-sheet-conflict', message: `${m.name} has different sheet settings in ${pc.item.design.name}; the first piece's sheet (${a.length} × ${a.width}) is used for the whole project.`, nodeId: pc.item.id })
       }
     }
-    for (const p of pc.panels) { const m = mats.get(p.materialId); panels.push({ ...p, materialId: m ? materialKey(m) : p.materialId }) }
+    const own = pc.panels.map(p => { const m = mats.get(p.materialId); return { ...p, materialId: m ? materialKey(m) : p.materialId } })
+    piecePanels.push(own)
+    panels.push(...own)
     for (const h of pc.model.hardware) hardware.push({ ...h, nodeId: `${pc.item.id}:${h.nodeId}`, quantity: h.quantity * pc.item.quantity })
     const errs = pc.model.diagnostics.filter(d => d.severity === 'error').length
     if (errs) diagnostics.push({ severity: 'error', code: 'piece-errors', message: `${pc.item.design.name} has ${errs} ${errs === 1 ? 'problem' : 'problems'}; open it to fix.`, nodeId: pc.item.id })
@@ -142,7 +147,52 @@ export function buildProjectModel(project: Project): ProjectModel {
   }
   for (const pc of pieces) if (pc.bounds.y < 0) diagnostics.push({ severity: 'error', code: 'below-floor', message: `${pc.item.design.name} goes below the floor.`, nodeId: pc.item.id })
   const model: FurnitureModel = { panels, spaces: [], hardware, diagnostics, bounds: union(panels.map(p => p.box)) }
-  return { pieces, model, materials: [...materials.values()], diagnostics }
+  return { pieces, model, piecePanels, materials: [...materials.values()], diagnostics }
+}
+
+// ---------------------------------------------------------------------------
+// Gaps between pieces in a run
+// ---------------------------------------------------------------------------
+
+/** Open-interval overlap: pieces that only touch are not in each other's way. */
+const spans = (a0: Mm, a1: Mm, b0: Mm, b1: Mm) => Math.min(a1, b1) > Math.max(a0, b0)
+
+/** Pieces at the same height and depth as `b`: a run along the wall (wall cabinets form their own run). */
+const sameRun = (a: Box, b: Box) => spans(a.y, a.y + a.h, b.y, b.y + b.h) && spans(a.z, a.z + a.d, b.z, b.z + b.d)
+
+/** The nearest piece on the left of `id` in the same run, and the free space between them (null if none). */
+export function leftNeighbour(project: Project, id: string): { item: ProjectItem; gap: Mm } | null {
+  const pieces = project.items.map(placeItem)
+  const me = pieces.find(p => p.item.id === id)
+  if (!me) return null
+  let best: PlacedPiece | null = null
+  for (const pc of pieces) {
+    if (pc === me || !sameRun(pc.bounds, me.bounds)) continue
+    const right = pc.bounds.x + pc.bounds.w
+    if (right > me.bounds.x) continue
+    if (!best || right > best.bounds.x + best.bounds.w) best = pc
+  }
+  return best ? { item: best.item, gap: me.bounds.x - (best.bounds.x + best.bounds.w) } : null
+}
+
+/**
+ * Leave `gap` mm between piece `id` and its left neighbour by moving it along the wall. With `moveRight`, the pieces
+ * on its right in the same run move by the same amount, so the rest of the run keeps its spacing.
+ */
+export function setGapLeft(project: Project, id: string, gap: Mm, moveRight = true): Project {
+  const nb = leftNeighbour(project, id)
+  const me = project.items.find(i => i.id === id)
+  if (!nb || !me || !Number.isSafeInteger(gap) || gap < 0) return project
+  const dx = gap - nb.gap
+  if (!dx) return project
+  const mine = placedBounds(me)
+  const moves = (it: ProjectItem) => {
+    if (it.id === id) return true
+    if (!moveRight) return false
+    const b = placedBounds(it)
+    return b.x >= mine.x + mine.w && sameRun(b, mine)
+  }
+  return { ...project, items: project.items.map(it => (moves(it) ? { ...it, position: { ...it.position, x: it.position.x + dx } } : it)) }
 }
 
 /** Parts for the whole project: each piece's cut list × its quantity, merged across pieces. */
