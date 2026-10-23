@@ -681,6 +681,27 @@ table.buy { margin-bottom: var(--s-4); }
   .pages a { padding: 4px 8px; }
 }
 
+/* Home: the welcome page the app starts on (N37) ---------- */
+.app.on-home .bar > .name, .app.on-home .bar > .status, .app.on-home .actions { display: none; }
+.app.on-home { padding-bottom: 0; }
+.app.on-home .bar > .theme { margin-left: auto; }
+.home-page { max-width: 960px; width: 100%; margin: 0 auto; padding: var(--s-6) var(--s-4) var(--s-8); display: grid; gap: var(--s-6); align-content: start; }
+.home-hero { display: grid; gap: var(--s-2); padding: var(--s-5); border: 1px solid var(--line-2); border-radius: var(--r-lg); background: var(--surface); }
+.home-hero h1 { margin: 0; font-size: var(--fs-2xl); }
+.home-hero .hint { margin: 0; max-width: 60ch; }
+.home-start { display: flex; flex-wrap: wrap; gap: var(--s-2); margin-top: var(--s-2); }
+.btn.lg { min-height: 44px; padding: 0 var(--s-4); font-size: var(--fs-md); }
+.home-section { display: grid; gap: var(--s-3); }
+.home-section-head { display: flex; justify-content: space-between; align-items: center; gap: var(--s-2); flex-wrap: wrap; }
+.home-section-head h2 { margin: 0; font-size: var(--fs-xl); }
+.home-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.home-list .row-btn[aria-current="true"] { border-color: var(--primary); }
+@media (max-width: 760px) {
+  .home-page { padding: var(--s-4) var(--s-4) var(--s-6); gap: var(--s-5); }
+  .home-hero { padding: var(--s-4); }
+  .home-start .btn { flex: 1 1 100%; justify-content: center; }
+}
+
 /* Laid out off-screen (not display:none) so its fonts, incl. Romanian glyphs, load before the print dialog. */
 .print-root { position: absolute; left: -100000px; top: 0; width: 186mm; visibility: hidden; pointer-events: none; }
 @page { size: A4 portrait; margin: 12mm; }
@@ -808,7 +829,7 @@ button.tile:hover { border-color: var(--ink-3); background: var(--surface-2); }
 /* Three page tabs (Editor | Catalog | Feature Research): the bar wraps onto a second row instead of running off
    the screen; every tab and action stays labelled and reachable (AGENTS.md R3). */
 .bar { flex-wrap: wrap; row-gap: 4px; }
-@media (max-width: 400px) { .pages .count { display: none; } .pages a { padding: 4px 6px; gap: 4px; } }
+@media (max-width: 440px) { .pages .count, .pages a .icon { display: none; } .pages a { padding: 4px 6px; gap: 4px; } .pages { max-width: 100%; flex-wrap: wrap; } }
 .research-page { grid-template-columns: minmax(0, 1fr); }
 .research-page > *, .research-page section, .research-page .finding { min-width: 0; }
 .research-page select { max-width: 100%; }

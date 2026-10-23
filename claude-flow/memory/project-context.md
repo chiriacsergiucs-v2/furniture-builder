@@ -45,3 +45,4 @@ catalog pictures in Start from and drawn in the browser for edited families (N35
 Built 2026-10-23: ADR-0040 shaped parts (tilt/profile on whole-mm blanks; raked backs 8°, recliner and lounger
 positions 100/120/150°, diagonal corner, U-cut sink drawer, full-size print templates); ADR-0041 placed panels and
 screwed joints (Pat Noi sides screwed to the foot board). Feed (ADR-0029) blocked here: ikea.com not allowed.
+Built 2026-10-23 (N37): the app starts on a Home welcome page (create a new project, choose a saved one); editor at #editor.

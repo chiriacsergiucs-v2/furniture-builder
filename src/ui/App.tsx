@@ -7,6 +7,7 @@ import type { Design } from '../core/types'
 import { AddPieceDialog, LibraryDialog, MaterialsDialog, NewDialog } from './Dialogs'
 import { WizardDialog } from './Wizard'
 import { CatalogPage } from './Catalog'
+import { HomePage } from './Home'
 import { ResearchPage } from './Research'
 import { useResearch } from '../store/researchStore'
 import { ConfirmHost } from './Confirm'
@@ -61,9 +62,13 @@ function useMediaQuery(q: string) {
   return match
 }
 
-type Page = 'editor' | 'catalog' | 'research'
-const pageFromHash = (): Page => (typeof location === 'undefined' ? 'editor' : location.hash === '#catalog' ? 'catalog' : location.hash === '#research' ? 'research' : 'editor')
-/** The top-level pages, linkable: #catalog opens the Catalog (ADR-0032), #research the Feature Research & Catalog (ADR-0043). */
+type Page = 'home' | 'editor' | 'catalog' | 'research'
+const PAGES: Page[] = ['editor', 'catalog', 'research']
+const pageFromHash = (): Page => (typeof location === 'undefined' ? 'home' : PAGES.find(p => location.hash === `#${p}`) ?? 'home')
+/**
+ * The top-level pages, linkable: the bare address opens the Home welcome page (N37), #editor the editor, #catalog the
+ * Catalog (ADR-0032), #research the Feature Research & Catalog (ADR-0043).
+ */
 function usePage(): [Page, (p: Page) => void] {
   const [page, setPage] = useState<Page>(pageFromHash)
   useEffect(() => {
@@ -72,8 +77,8 @@ function usePage(): [Page, (p: Page) => void] {
     return () => window.removeEventListener('hashchange', on)
   }, [])
   return [page, (p: Page) => {
-    if (p === 'catalog' || p === 'research') location.hash = p
-    else history.replaceState(null, '', location.pathname + location.search)
+    if (p === 'home') history.replaceState(null, '', location.pathname + location.search)
+    else location.hash = p
     setPage(p)
     window.scrollTo({ top: 0 })
   }]
@@ -172,7 +177,8 @@ export function App() {
     if (pid) { loadProject(pid).then(p => { if (p) useDesign.getState().openProject(p) }).catch(() => {}).finally(done); return }
     const id = lastDesignId()
     if (id) loadDesign(id).then(d => { if (d) useDesign.getState().load(d, { fromStorage: true }) }).catch(() => {}).finally(done)
-    else done()
+    // Nothing to reopen: the start-up placeholder is saved only once it is edited, so a fresh device lists nothing on Home.
+    else { useDesign.setState({ pristine: true }); done() }
   }, [])
 
   // Autosave shortly after each change; also save a freshly opened template so it appears in the library.
@@ -220,13 +226,14 @@ export function App() {
 
   return (
     <>
-    <div className="app">
+    <div className={`app ${page === 'home' ? 'on-home' : ''}`}>
       <header className="bar" ref={barRef}>
         <div className="brand" aria-hidden="true">
           <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" /><line x1="3" y1="10" x2="21" y2="10" /><line x1="3" y1="15.5" x2="21" y2="15.5" /></svg>
         </div>
         <nav className="pages" aria-label="Pages">
-          <a href="#" aria-current={page === 'editor' ? 'page' : undefined} onClick={e => { e.preventDefault(); setPage('editor') }}><Icon name="front" className="sm" />Editor</a>
+          <a href="#" aria-current={page === 'home' ? 'page' : undefined} onClick={e => { e.preventDefault(); setPage('home') }}><Icon name="home" className="sm" />Home</a>
+          <a href="#editor" aria-current={page === 'editor' ? 'page' : undefined} onClick={e => { e.preventDefault(); setPage('editor') }}><Icon name="front" className="sm" />Editor</a>
           <a href="#catalog" aria-current={page === 'catalog' ? 'page' : undefined} onClick={e => { e.preventDefault(); setPage('catalog') }}><Icon name="catalog" className="sm" />Catalog <span className="count">{CATALOG_ITEMS}</span></a>
           <a href="#research" aria-current={page === 'research' ? 'page' : undefined} onClick={e => { e.preventDefault(); setPage('research') }}><Icon name="search" className="sm" />Feature Research <span className="count">{researchCount}</span></a>
         </nav>
@@ -292,6 +299,7 @@ export function App() {
           <button type="button" className="btn sm" onClick={() => useDesign.getState().backToProject()}>Back to project</button>
         </div>
       )}
+      {page === 'home' && <HomePage onOpened={() => setPage('editor')} onNewPiece={() => setDialog('new')} onLibrary={() => setDialog('library')} />}
       {page === 'catalog' && <CatalogPage onDone={() => setPage('editor')} onNewPiece={() => { setWizardFrom(null); setDialog('wizard') }} />}
       {page === 'research' && <ResearchPage onDone={() => setPage('editor')} />}
       <main className={`work ${editingItemId || templateEdit ? 'with-banner' : ''}`} hidden={page !== 'editor'}>
@@ -331,9 +339,9 @@ export function App() {
       </main>
 
       {/* Closing one dialog to open another fires its close event after the switch: it may only clear itself. */}
-      <NewDialog open={dialog === 'new'} onClose={() => setDialog(d => (d === 'new' ? null : d))} onBrowse={openCatalog} onWizard={() => { setWizardFrom(null); setDialog('wizard') }} />
+      <NewDialog open={dialog === 'new'} onClose={() => setDialog(d => (d === 'new' ? null : d))} onBrowse={openCatalog} onWizard={() => { setWizardFrom(null); setDialog('wizard') }} onOpened={() => setPage('editor')} />
       <WizardDialog open={dialog === 'wizard'} from={wizardFrom} onClose={() => setDialog(d => (d === 'wizard' ? null : d))} onCreated={() => { setDialog(null); setPage('editor') }} />
-      <LibraryDialog open={dialog === 'library'} onClose={() => setDialog(null)} />
+      <LibraryDialog open={dialog === 'library'} onClose={() => setDialog(null)} onOpened={() => setPage('editor')} />
       <MaterialsDialog open={dialog === 'materials'} onClose={() => setDialog(null)} />
       <AddPieceDialog open={dialog === 'add'} onClose={() => setDialog(null)} onBrowse={openCatalog} />
     </div>

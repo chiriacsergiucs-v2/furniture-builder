@@ -34,7 +34,7 @@ export function Dialog({ open, onClose, title, children, footer, wide }: { open:
  * Projects shipped with the app (the Mobila rooms): on every deployed copy, no import needed. Each opens as a new
  * project of the user's own, saved on this device; the shipped one never changes.
  */
-function BuiltInProjects({ onOpened }: { onOpened: () => void }) {
+export function BuiltInProjects({ onOpened }: { onOpened: () => void }) {
   const openProject = useDesign(s => s.openProject)
   return (
     <>
@@ -59,9 +59,10 @@ function BuiltInProjects({ onOpened }: { onOpened: () => void }) {
   )
 }
 
-export function NewDialog({ open, onClose, onBrowse, onWizard }: { open: boolean; onClose: () => void; onBrowse?: () => void; onWizard?: () => void }) {
+export function NewDialog({ open, onClose, onBrowse, onWizard, onOpened }: { open: boolean; onClose: () => void; onBrowse?: () => void; onWizard?: () => void; onOpened?: () => void }) {
   const load = useDesign(s => s.load)
   const openProject = useDesign(s => s.openProject)
+  const opened = () => { onClose(); onOpened?.() }
   return (
     <Dialog open={open} onClose={onClose} title="Start something new"
       footer={<p className="hint start">What you have open now is already saved on this device.</p>}>
@@ -72,13 +73,13 @@ export function NewDialog({ open, onClose, onBrowse, onWizard }: { open: boolean
           <Icon name="chevron-right" className="chev sm" />
         </button>
       )}
-      <button type="button" className="row-btn" onClick={() => { const p = newProject(); void saveProject(p); openProject(p); onClose() }}>
+      <button type="button" className="row-btn" onClick={() => { const p = newProject(); void saveProject(p); openProject(p); opened() }}>
         <span className="glyph"><Icon name="project" /></span>
         <span><strong>Project with several pieces</strong><span className="sub">A kitchen, a bedroom or a room: place pieces, then get one parts list and one set of sheets.</span></span>
         <Icon name="chevron-right" className="chev sm" />
       </button>
-      <BuiltInProjects onOpened={onClose} />
-      {open && <StartFrom onPick={d => { load(d); onClose() }} onBrowse={onBrowse} />}
+      <BuiltInProjects onOpened={opened} />
+      {open && <StartFrom onPick={d => { load(d); opened() }} onBrowse={onBrowse} />}
     </Dialog>
   )
 }
@@ -91,10 +92,11 @@ export function AddPieceDialog({ open, onClose, onBrowse }: { open: boolean; onC
   )
 }
 
-export function LibraryDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function LibraryDialog({ open, onClose, onOpened }: { open: boolean; onClose: () => void; onOpened?: () => void }) {
   const load = useDesign(s => s.load)
   const openProject = useDesign(s => s.openProject)
   const currentId = useDesign(s => (s.project ? s.project.id : s.design.id))
+  const opened = () => { onClose(); onOpened?.() }
   const [rows, setRows] = useState<StoredDesign[] | null>(null)
   const [projects, setProjects] = useState<StoredProject[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -112,14 +114,14 @@ export function LibraryDialog({ open, onClose }: { open: boolean; onClose: () =>
         if (perrs.length) { setError(`That file is not a valid project: ${perrs.slice(0, 3).join('; ')}.`); return }
         const p = { ...(data as Project), id: newId(), updatedAt: new Date().toISOString() }
         await saveProject(p)
-        openProject(p); onClose(); return
+        openProject(p); opened(); return
       }
       const errs = validateDesign(data)
       if (errs.length) { setError(`That file is not a valid design: ${errs.slice(0, 3).join('; ')}.`); return }
       const d = data as Design
       const copy = { ...d, id: newId(), updatedAt: new Date().toISOString() }
       await saveDesign(copy)
-      load(copy); onClose()
+      load(copy); opened()
     } catch { setError('That file could not be read as JSON.') }
   }
 
@@ -148,14 +150,14 @@ export function LibraryDialog({ open, onClose }: { open: boolean; onClose: () =>
         <input type="file" accept="application/json,.json" onChange={e => { const f = e.target.files?.[0]; if (f) importFile(f); e.target.value = '' }} />
       </label>}>
       {error && <p className="alert error" role="alert"><Icon name="alert-circle" className="sm" /><span>{error}</span></p>}
-      <BuiltInProjects onOpened={onClose} />
+      <BuiltInProjects onOpened={opened} />
       {projects.length > 0 && (
         <>
           <h3 className="list-head">Projects</h3>
           <ul className="library">
             {projects.map(r => (
               <li key={r.id} className={r.id === currentId ? 'current' : ''}>
-                <button type="button" className="row-btn" aria-current={r.id === currentId ? 'true' : undefined} onClick={() => { openProject(r.project); onClose() }}>
+                <button type="button" className="row-btn" aria-current={r.id === currentId ? 'true' : undefined} onClick={() => { openProject(r.project); opened() }}>
                   <span className="glyph"><Icon name="project" /></span>
                   <span><strong>{r.name}</strong><span className="sub">{r.project.items.length} {r.project.items.length === 1 ? 'piece' : 'pieces'}, edited {when(r.updatedAt)}</span></span>
                 </button>
@@ -172,7 +174,7 @@ export function LibraryDialog({ open, onClose }: { open: boolean; onClose: () =>
         <ul className="library">
           {rows.map(r => (
             <li key={r.id} className={r.id === currentId ? 'current' : ''}>
-              <button type="button" className="row-btn" aria-current={r.id === currentId ? 'true' : undefined} onClick={() => { load(r.design, { fromStorage: true }); onClose() }}>
+              <button type="button" className="row-btn" aria-current={r.id === currentId ? 'true' : undefined} onClick={() => { load(r.design, { fromStorage: true }); opened() }}>
                 <span className="glyph"><Icon name={templateGlyph(r.design.product.kind)} /></span>
                 <span><strong>{r.name}</strong><span className="sub">{({ desk: 'Desk', corner: 'Corner unit', cabinet: 'Cabinet', panel: 'Front panel', frame: 'Frame', panels: 'Loose panels' } as const)[r.design.product.kind]}, edited {when(r.updatedAt)}</span></span>
               </button>

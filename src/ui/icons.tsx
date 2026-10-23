@@ -43,6 +43,7 @@ const PATHS = {
   chair: 'M7 3v18M7 12h10v9M7 12V3M17 12v-2',
   panel: 'M7 3h10v18H7zM14 6v3',
   catalog: 'M4 4h6a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H4zM20 4h-6a2 2 0 0 0-2 2v14a2 2 0 0 1 2-2h6z',
+  home: 'M3 11 12 4l9 7M5 10v10h5v-6h4v6h5V10',
   search: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM16 16l4 4',
 } as const
 
