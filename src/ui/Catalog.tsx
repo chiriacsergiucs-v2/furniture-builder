@@ -119,7 +119,7 @@ type Source = 'templates' | 'saved' | 'brands'
  * the #catalog link. It lists every item (each variant of each family) with its default structure and what can be
  * changed, grouped by room or by type; items open or join the open project; templates are edited here (ADR-0034).
  */
-export function CatalogPage({ onDone }: { onDone: () => void }) {
+export function CatalogPage({ onDone, onNewPiece }: { onDone: () => void; onNewPiece?: () => void }) {
   const families = useCatalog()
   const [grouping, setGrouping] = useGrouping()
   const [source, setSource] = useState<Source>('templates')
@@ -168,7 +168,10 @@ export function CatalogPage({ onDone }: { onDone: () => void }) {
           <h1>Catalog</h1>
           <p className="hint"><strong className="num">{all.length} items</strong> in {families.length} families · {ready} open right away. {toProject ? 'Pick one to add it to the open project.' : 'Pick one to open your own copy in the editor.'}</p>
         </div>
-        <button type="button" className="btn outline" onClick={onDone}><Icon name="chevron-right" className="sm" />Back to the editor</button>
+        <div className="split-actions">
+          {onNewPiece && <button type="button" className="btn primary" onClick={onNewPiece}><Icon name="plus" className="sm" />New piece</button>}
+          <button type="button" className="btn outline" onClick={onDone}><Icon name="chevron-right" className="sm" />Back to the editor</button>
+        </div>
       </header>
       <div className="catalog-toolbar">
         <div className="segmented small" role="tablist" aria-label="Source">

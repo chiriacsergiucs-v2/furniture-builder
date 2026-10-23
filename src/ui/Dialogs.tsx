@@ -59,12 +59,19 @@ function BuiltInProjects({ onOpened }: { onOpened: () => void }) {
   )
 }
 
-export function NewDialog({ open, onClose, onBrowse }: { open: boolean; onClose: () => void; onBrowse?: () => void }) {
+export function NewDialog({ open, onClose, onBrowse, onWizard }: { open: boolean; onClose: () => void; onBrowse?: () => void; onWizard?: () => void }) {
   const load = useDesign(s => s.load)
   const openProject = useDesign(s => s.openProject)
   return (
     <Dialog open={open} onClose={onClose} title="Start something new"
       footer={<p className="hint start">What you have open now is already saved on this device.</p>}>
+      {onWizard && (
+        <button type="button" className="row-btn" onClick={onWizard}>
+          <span className="glyph"><Icon name="plus" /></span>
+          <span><strong>New piece, step by step</strong><span className="sub">Size, type, then only the questions that apply (dividers, shelves, drawers, doors, base), with suggested combinations. Saved to the Catalog.</span></span>
+          <Icon name="chevron-right" className="chev sm" />
+        </button>
+      )}
       <button type="button" className="row-btn" onClick={() => { const p = newProject(); void saveProject(p); openProject(p); onClose() }}>
         <span className="glyph"><Icon name="project" /></span>
         <span><strong>Project with several pieces</strong><span className="sub">A kitchen, a bedroom or a room: place pieces, then get one parts list and one set of sheets.</span></span>
