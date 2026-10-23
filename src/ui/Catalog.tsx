@@ -221,6 +221,9 @@ export function CatalogPage({ onDone }: { onDone: () => void }) {
   )
 }
 
+/** Picture made before runtime from the shipped design (ADR-0042, `npm run catalog:snapshots`); edited families have none. */
+const snapshotUrl = (variantId: string) => `${import.meta.env.BASE_URL}catalog/${variantId}.svg`
+
 const SUPPORT_TEXT = { ready: 'Ready', 'needs-construction': 'Needs construction', safety: 'Safety-regulated', reference: 'Reference' } as const
 
 /** One family: its default structure and what can be changed, then every item (variant) as its own card. */
@@ -256,6 +259,7 @@ function FamilyBlock({ f, also, q, toProject, onTake, onEdit }: { f: ViewFamily;
           const fx = facts.get(v.id)
           return (
             <li key={v.id} className={`item ${ok ? '' : 'waits'}`}>
+              {ok && !f.localId && <img className="snap" src={snapshotUrl(v.id)} alt={`${f.name}: ${v.name}, 3D view`} loading="lazy" decoding="async" width={240} height={150} />}
               <div className="item-text">
                 <span className="item-name"><strong>{v.name}</strong>{i === 0 && f.variants[0].id === v.id && <span className="tag subtle">default</span>}
                 <span className={`kind ${v.kind}`} title={v.kind === 'interior' ? 'Interior-only: built on an existing product' : 'Needed new construction'}>{v.kind === 'interior' ? 'I' : 'C'}</span></span>

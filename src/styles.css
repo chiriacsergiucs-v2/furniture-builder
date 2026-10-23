@@ -665,6 +665,7 @@ table.buy { margin-bottom: var(--s-4); }
 .items { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--s-2); }
 .item { display: grid; grid-template-columns: 1fr auto; gap: var(--s-2); align-items: start; padding: var(--s-2) var(--s-3); border: 1px solid var(--line-2); border-radius: var(--r); background: var(--surface-2); }
 .item .item-text { display: grid; gap: 1px; }
+.item .snap { grid-column: 1 / -1; width: 100%; height: 150px; object-fit: contain; border-radius: calc(var(--r) - 2px); background: var(--surface); }
 .item .item-name strong { font-size: var(--fs-md); }
 .item .ro { margin-left: 0; display: block; }
 .item .sub { color: var(--ink-2); font-size: var(--fs-xs); display: block; }
