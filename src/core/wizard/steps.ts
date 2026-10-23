@@ -260,6 +260,22 @@ export const STEPS: StepDef[] = [
       return [ped ? `${ped}, ${plural(num(a, 'pedestalDrawers'), 'drawer')} each` : 'two gables', str(a, 'modesty') === 'yes' ? 'modesty panel' : ''].filter(Boolean).join(' · ')
     },
   },
+  {
+    id: 'bed', title: 'Bed', help: 'The bed is sized from its mattress; the height asked first is the headboard height.',
+    fields: [
+      mmField('mattressWidth', 'Mattress width', 1600, 600, 2200),
+      mmField('mattressLength', 'Mattress length', 2000, 1600, 2400),
+      mmField('deckHeight', 'Slats above the floor', 380, 150, 700),
+      { id: 'footboard', label: 'Footboard', kind: 'choice', default: 'none', options: [{ value: 'none', label: 'Low (rails height)' }, { value: 'yes', label: 'Raised' }] },
+      { ...mmField('footboardHeight', 'Footboard height', 600, 300, 1500), visible: a => str(a, 'footboard') === 'yes' },
+    ],
+    apply: (a, d) => onProduct<FrameParams>(d, 'frame', p => p.bed ? ({
+      ...p, bed: { ...p.bed, mattress: { w: num(a, 'mattressWidth'), l: num(a, 'mattressLength') }, deckHeight: num(a, 'deckHeight'),
+        headboardHeight: num(a, 'height'), footboardHeight: str(a, 'footboard') === 'yes' ? num(a, 'footboardHeight') : 0, tierGap: 0 },
+    }) : p),
+    summary: a => [`${num(a, 'mattressWidth')} × ${num(a, 'mattressLength')} mattress`, `slats at ${num(a, 'deckHeight')} mm`,
+      str(a, 'footboard') === 'yes' ? `footboard ${num(a, 'footboardHeight')} mm` : 'low foot'].join(' · '),
+  },
   { id: REVIEW, title: 'Review', help: 'Check the picture, parts and problems, then create the piece.', fields: [] },
 ]
 

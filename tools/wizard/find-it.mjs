@@ -17,6 +17,8 @@ const TYPES = [
   { label: 'Table (leg frame)', width: 1400 },
   { label: 'Bench (leg frame)', width: 1100 },
   { label: 'Desk', width: 1500 },
+  { label: 'Wardrobe', width: 1200 },
+  { label: 'Bed', width: 1600 },
 ]
 
 for (const width of [1440, 375]) {
@@ -142,6 +144,52 @@ for (const width of [1440, 375]) {
     check(width, `${t.label}: opens from the catalog in the editor`, await page.getByLabel('Name of this piece').inputValue() === name)
     if (n === 0) await shot('7-editor')
   }
+  // N35: reopen a wizard piece; an editor change is announced and replaced; the piece is updated in place.
+  const cabName = `Find-it Cabinet ${width}`
+  await page.getByRole('link', { name: /Catalog/ }).click()
+  await page.getByRole('tab', { name: 'Saved on this device' }).click()
+  await page.getByRole('button', { name: new RegExp(cabName) }).click()
+  const side = page.locator('aside.side')
+  await side.getByLabel('Width', { exact: true }).fill('1100')
+  await side.getByLabel('Width', { exact: true }).press('Enter')
+  await page.waitForTimeout(600)
+  const reopen = page.getByRole('button', { name: 'Open in wizard' })
+  check(width, 'visible "Open in wizard" on a wizard piece', await reopen.isVisible())
+  await reopen.click()
+  check(width, 'wizard reopens with the piece name in its title', await wizard.getByRole('heading', { name: `Wizard: ${cabName}` }).isVisible())
+  check(width, 'reopened wizard warns that editor changes will be replaced', await wizard.getByText(/changed in the editor since/).isVisible())
+  check(width, 'reopened wizard holds the stored answers (width 1000)', await wizard.getByLabel(/^Width/).inputValue() === '1000')
+  if (width > 500) await shot('8-reopen')
+  await rail('Dividers').click()
+  await wizard.getByRole('button', { name: 'More vertical dividers' }).click()
+  await rail('Review').click()
+  await wizard.getByRole('button', { name: 'Update piece' }).click()
+  await page.waitForTimeout(500)
+  check(width, '"Update piece" keeps the piece and its name', await page.getByLabel('Name of this piece').inputValue() === cabName && await side.getByLabel('Width', { exact: true }).inputValue() === '1000')
+  await page.getByRole('link', { name: /Catalog/ }).click()
+  await page.getByRole('tab', { name: 'Saved on this device' }).click()
+  check(width, 'updated in place, not duplicated in the catalog', await page.getByRole('button', { name: new RegExp(cabName) }).count() === 1)
+
+  // N36: pictures in Start from, and drawn in the browser for an edited family.
+  await page.getByRole('link', { name: /Editor/ }).click()
+  await page.getByRole('button', { name: 'New', exact: true }).click()
+  const thumbs = page.locator('dialog[open] .start-from img.thumb')
+  await page.waitForTimeout(500)
+  const loaded = await thumbs.evaluateAll(imgs => imgs.slice(0, 6).filter(i => i.complete && i.naturalWidth > 0).length)
+  check(width, 'pictures on the Start from rows', await thumbs.count() >= 90 && loaded >= 4, `${await thumbs.count()} rows with a picture, first 6: ${loaded} loaded`)
+  if (width > 500) await shot('9-start-from')
+  await page.keyboard.press('Escape')
+  await page.getByRole('link', { name: /Catalog/ }).click()
+  await page.getByRole('tab', { name: 'Templates' }).click()
+  const fam = page.locator('article.family').first()
+  const famName = await fam.locator('h3').evaluate(h => h.firstChild.textContent.trim())
+  await fam.getByRole('button', { name: 'Edit template' }).click()
+  await page.getByRole('button', { name: 'Save template' }).click()
+  await page.waitForTimeout(500)
+  const edited = page.locator('article.family').filter({ has: page.locator('.chip.edited') }).first()
+  const src = await edited.locator('img.snap').first().getAttribute('src')
+  check(width, `edited family "${famName}" shows a picture drawn in the browser`, !!src && src.startsWith('data:image/svg+xml'))
+  if (width > 500) await edited.screenshot({ path: `${out}/wizard-10-edited-family-${width}.png` })
   check(width, 'no page errors', errors.length === 0, errors.slice(0, 3).join(' | '))
   await ctx.close()
 }

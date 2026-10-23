@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { buildModel } from '../core/build'
+import { snapshotSvg } from '../core/snapshot'
 import { catalogFamilies, CAPABILITY_WAITS, FUNCTION_LABEL, FUNCTIONS, insertable, insertVariant, isSafetyConfirmed, missingCapabilities, ROOM_LABEL, ROOMS, setSafetyConfirmed, startFamilies, type CatalogVariant, type FunctionGroup, type Room } from '../core/catalog'
 import { mergeCatalog, shadowOf, templateFromDesign, validateLocalTemplate, type LocalTemplate, type ViewFamily } from '../core/catalog/local'
 import { VARIANT_RO } from '../core/catalog/ro'
@@ -90,7 +91,7 @@ export function StartFrom({ onPick, onBrowse }: { onPick: (d: Design) => void; o
               {rows.map(({ f, v }) => (
                 <li key={`${g.key}:${f.id}:${v.id}`}>
                   <button type="button" className="row-btn" onClick={() => { const d = insertVariant(f, v, now()); if (d) onPick(d) }}>
-                    <span className="glyph"><Icon name={familyGlyph(f)} /></span>
+                    <ItemPicture f={f} v={v} className="thumb" width={64} height={44} alt="" />
                     <span><strong>{f.name}: {v.name}</strong><span className="sub">{v.summary}{VARIANT_RO[v.id] ? ` · ${f.nameRo}: ${VARIANT_RO[v.id]}` : ''}</span></span>
                     <Icon name="chevron-right" className="chev sm" />
                   </button>
@@ -224,8 +225,23 @@ export function CatalogPage({ onDone, onNewPiece }: { onDone: () => void; onNewP
   )
 }
 
-/** Picture made before runtime from the shipped design (ADR-0042, `npm run catalog:snapshots`); edited families have none. */
+/** Picture made before runtime from the shipped design (ADR-0042, `npm run catalog:snapshots`). */
 const snapshotUrl = (variantId: string) => `${import.meta.env.BASE_URL}catalog/${variantId}.svg`
+
+/**
+ * An item's 3D picture (ADR-0042 as answered 2026-10-23): the shipped file for shipped families; for families edited
+ * on this device, drawn in the browser from the built model with the same renderer.
+ */
+export function ItemPicture({ f, v, className, width, height, alt }: { f: ViewFamily; v: CatalogVariant; className: string; width: number; height: number; alt: string }) {
+  const local = !!f.localId
+  const drawn = useMemo(() => {
+    if (!local || !insertable(v)) return null
+    const d = insertVariant(f, v, '')
+    return d ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(snapshotSvg(buildModel(d), d.materials))}` : null
+  }, [f, v, local])
+  if (!insertable(v) || (local && !drawn)) return null
+  return <img className={className} src={drawn ?? snapshotUrl(v.id)} alt={alt} loading="lazy" decoding="async" width={width} height={height} />
+}
 
 const SUPPORT_TEXT = { ready: 'Ready', 'needs-construction': 'Needs construction', safety: 'Safety-regulated', reference: 'Reference' } as const
 
@@ -262,7 +278,7 @@ function FamilyBlock({ f, also, q, toProject, onTake, onEdit }: { f: ViewFamily;
           const fx = facts.get(v.id)
           return (
             <li key={v.id} className={`item ${ok ? '' : 'waits'}`}>
-              {ok && !f.localId && <img className="snap" src={snapshotUrl(v.id)} alt={`${f.name}: ${v.name}, 3D view`} loading="lazy" decoding="async" width={240} height={150} />}
+              {ok && <ItemPicture f={f} v={v} className="snap" width={240} height={150} alt={`${f.name}: ${v.name}, 3D view`} />}
               <div className="item-text">
                 <span className="item-name"><strong>{v.name}</strong>{i === 0 && f.variants[0].id === v.id && <span className="tag subtle">default</span>}
                 <span className={`kind ${v.kind}`} title={v.kind === 'interior' ? 'Interior-only: built on an existing product' : 'Needed new construction'}>{v.kind === 'interior' ? 'I' : 'C'}</span></span>

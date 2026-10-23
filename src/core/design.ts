@@ -337,6 +337,16 @@ function validateCatalog(c: unknown, errs: string[]) {
   if (o.sourceUrl !== undefined && !(typeof o.sourceUrl === 'string' && /^https?:\/\//.test(o.sourceUrl) && o.sourceUrl.length < 2000)) errs.push('Catalog source link must be an http(s) address')
 }
 
+/** ADR-0046: the wizard answers a piece was made from; checked when present, never geometry. */
+function validateWizard(w: unknown, errs: string[]) {
+  if (w === undefined) return
+  const a = isObj(w) ? w.answers : undefined
+  if (!isObj(a) || Object.keys(a).length > 100 || JSON.stringify(a).length > 20_000) { errs.push('Invalid wizard answers'); return }
+  const scalar = (v: unknown) => (typeof v === 'string' && v.length <= 500) || (typeof v === 'number' && Number.isFinite(v))
+  const item = (v: unknown) => scalar(v) || (isObj(v) && typeof v.kind === 'string' && v.kind.length <= 50 && typeof v.shelves === 'number' && Number.isFinite(v.shelves) && typeof v.drawers === 'number' && Number.isFinite(v.drawers))
+  for (const v of Object.values(a)) if (!(scalar(v) || (Array.isArray(v) && v.length <= 20 && v.every(item)))) { errs.push('Invalid wizard answers'); return }
+}
+
 function validateRules(s: unknown, errs: string[]) {
   if (s === undefined) return
   if (!isObj(s) || (s.rules !== undefined && !isObj(s.rules))) { errs.push('Invalid settings'); return }
@@ -404,6 +414,7 @@ export function validateDesign(d: unknown): string[] {
   const matRef = (k: string, obj: Record<string, unknown>) => { if (!mids.has(obj[k] as string)) errs.push(`${k} refers to an unknown material`) }
   validateCatalog(d.catalog, errs)
   validateRules(d.settings, errs)
+  validateWizard(d.wizard, errs)
   if (p.kind === 'panels') {
     if (!Array.isArray(params.panels) || params.panels.length > MAX_LOOSE) return [...errs, 'Invalid panel list']
     const ids = new Set<string>()

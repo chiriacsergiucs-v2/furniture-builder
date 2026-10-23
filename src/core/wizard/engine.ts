@@ -4,7 +4,7 @@
  */
 import { buildModel } from '../build'
 import { newId, validateDesign } from '../design'
-import type { Design, FurnitureModel, Severity } from '../types'
+import type { Design, FurnitureModel, Severity, WizardAnswers } from '../types'
 import { CONSTRUCTION_TYPES, typeById } from './registry'
 import { BASICS, REVIEW, STEPS, TYPE, compartmentsOf, contentUses, listOf, stepById, str } from './steps'
 import type { Answers, ConstructionType, FieldDef, Option, StepDef } from './types'
@@ -25,7 +25,10 @@ export function visibleSteps(a: Answers): StepDef[] {
   return ids.map(id => stepById.get(id)).filter((s): s is StepDef => !!s && (s.visible?.(r) ?? true))
 }
 
-export const visibleFields = (step: StepDef, a: Answers): FieldDef[] => { const r = resolve(a); return step.fields.filter(f => f.visible?.(r) ?? true) }
+export const visibleFields = (step: StepDef, a: Answers): FieldDef[] => {
+  const r = resolve(a), t = typeOf(a)
+  return step.fields.filter(f => !t?.hide?.includes(f.id) && (f.visible?.(r) ?? true)).map(f => (t?.labels?.[f.id] ? { ...f, label: t.labels[f.id] } : f))
+}
 
 /** Options of a choice field: the registry for the type picker, else the field's options narrowed by the type. */
 export function fieldOptions(f: FieldDef, a: Answers): Option[] {
@@ -113,10 +116,28 @@ export function check(a: Answers): Check {
  * The finished piece (ADR-0046): a fresh id and timestamps on the built design, or the problems that block it —
  * the same errors that block export.
  */
-export function createPiece(a: Answers, now = new Date().toISOString()): { ok: true; design: Design } | { ok: false; problems: Problem[] } {
+export function createPiece(a: Answers, now = new Date().toISOString(), replaces?: Design): { ok: true; design: Design } | { ok: false; problems: Problem[] } {
   const c = check(a)
   if (!c.design || c.errors) return { ok: false, problems: c.problems.filter(p => p.severity === 'error') }
-  return { ok: true, design: { ...structuredClone(c.design), id: newId(), createdAt: now, updatedAt: now } }
+  // The answers travel with the piece so it can be reopened in the wizard (ADR-0046 answer).
+  const d: Design = { ...structuredClone(c.design), createdAt: now, updatedAt: now, wizard: { answers: structuredClone(resolve(a)) as WizardAnswers } }
+  if (!replaces) return { ok: true, design: { ...d, id: newId() } }
+  // Reopened piece: same id and creation date; catalog fields other than the category are kept.
+  return { ok: true, design: { ...d, id: replaces.id, createdAt: replaces.createdAt, catalog: { ...replaces.catalog, ...d.catalog } } }
+}
+
+/** What the wizard would build from the answers stored on a piece, without ids, to compare with the piece. */
+const shape = (d: Design) => JSON.stringify([d.product, d.materials], (k, v) => (k === 'id' ? undefined : v))
+
+/** The answers stored on a piece, when it was made in the wizard. */
+export const storedAnswers = (d: Design): Answers | null => (d.wizard ? (structuredClone(d.wizard.answers) as Answers) : null)
+
+/** True when the piece was changed in the editor after the wizard made it (reopening would replace those changes). */
+export function editedSinceWizard(d: Design): boolean {
+  const a = storedAnswers(d)
+  if (!a) return false
+  const built = check(a).design
+  return !built || shape(built) !== shape(d)
 }
 
 /** Steps whose fields a set of answer keys touches. */

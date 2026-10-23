@@ -5,8 +5,8 @@
 import { useDeferredValue, useId, useMemo, useState } from 'react'
 import { cutlist } from '../core/cutlist'
 import { snapshotSvg } from '../core/snapshot'
-import type { FurnitureModel, Material } from '../core/types'
-import { REVIEW, TYPE, check, createPiece, fieldOptions, fieldRange, nextOpenStep, resolve, stepsWriting, visibleFields, visibleSteps, type Problem } from '../core/wizard/engine'
+import type { Design, FurnitureModel, Material } from '../core/types'
+import { REVIEW, TYPE, check, createPiece, editedSinceWizard, storedAnswers, fieldOptions, fieldRange, nextOpenStep, resolve, stepsWriting, visibleFields, visibleSteps, type Problem } from '../core/wizard/engine'
 import { compartmentsOf, contentUses, listOf } from '../core/wizard/steps'
 import { CARDS_FIRST, generatorAt, suggestions, type Suggestion } from '../core/wizard/suggest'
 import type { Answers, AnswerValue, Compartment, FieldDef } from '../core/wizard/types'
@@ -132,7 +132,7 @@ function Suggestions({ a, stepId, onUse, onBlank }: { a: Answers; stepId: string
   const list = useMemo(() => suggestions(deferred, stepId), [deferred, stepId])
   return (
     <section className="wz-suggest" aria-label="Suggested combinations">
-      <div className="card-title"><span>Suggested combinations</span><span className="hint">Fit {String(resolve(a).width)} × {String(resolve(a).height)} × {String(resolve(a).depth)} mm, checked by the model</span></div>
+      <div className="card-title"><span>Suggested combinations</span><span className="hint">Fit the sizes entered so far, checked by the model</span></div>
       {list.length ? (
         <ul className="wz-cards">{list.slice(0, shown).map(s => <Card key={s.key} s={s} onUse={() => onUse(s)} />)}</ul>
       ) : <p className="hint">No combination fits these sizes without errors; set the answers by hand.</p>}
@@ -144,19 +144,21 @@ function Suggestions({ a, stepId, onUse, onBlank }: { a: Answers; stepId: string
   )
 }
 
-export function WizardDialog({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: () => void }) {
+/** `from`: a piece made in the wizard, reopened with its stored answers; "Update piece" replaces it in place (ADR-0046). */
+export function WizardDialog({ open, onClose, onCreated, from }: { open: boolean; onClose: () => void; onCreated: () => void; from?: Design | null }) {
   return (
-    <Dialog open={open} onClose={onClose} title="New piece" wide>
-      {open && <Wizard onClose={onClose} onCreated={onCreated} />}
+    <Dialog open={open} onClose={onClose} title={from ? `Wizard: ${from.name}` : 'New piece'} wide>
+      {open && <Wizard key={from?.id ?? 'new'} onClose={onClose} onCreated={onCreated} from={from ?? null} />}
     </Dialog>
   )
 }
 
-function Wizard({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
+function Wizard({ onClose, onCreated, from }: { onClose: () => void; onCreated: () => void; from: Design | null }) {
   const load = useDesign(s => s.load)
-  const [a, setA] = useState<Answers>({})
+  const [a, setA] = useState<Answers>(() => (from && storedAnswers(from)) || {})
   const [stepId, setStepId] = useState('basics')
-  const [done, setDone] = useState<Set<string>>(new Set())
+  const [done, setDone] = useState<Set<string>>(() => new Set(from ? visibleSteps(storedAnswers(from) ?? {}).map(s => s.id) : []))
+  const [edited] = useState(() => !!from && editedSinceWizard(from))
   const [saveError, setSaveError] = useState<string | null>(null)
   const r = resolve(a)
   const steps = visibleSteps(a)
@@ -186,7 +188,7 @@ function Wizard({ onClose, onCreated }: { onClose: () => void; onCreated: () => 
     go(nextOpenStep(s.answers, step.id, nowDone))
   }
   const create = async () => {
-    const res = createPiece(a)
+    const res = createPiece(a, new Date().toISOString(), from ?? undefined)
     if (!res.ok) return
     try {
       await saveDesign(res.design)
@@ -203,6 +205,10 @@ function Wizard({ onClose, onCreated }: { onClose: () => void; onCreated: () => 
         steps={steps.map(s => ({ id: s.id, label: s.title, done: done.has(s.id), tone: c.problems.some(p => p.step === s.id && p.severity === 'error') ? 'error' : undefined }))} />
       <div className="wz-body">
         <div className="wz-main">
+          {from && step.id === 'basics' && (
+            <p className={`alert ${edited ? 'warning' : 'info'}`} role="status"><Icon name={edited ? 'alert-triangle' : 'info'} className="sm" />
+              <span>Reopened with the answers it was made from. “Update piece” replaces “{from.name}” in place.{edited ? ' It was changed in the editor since; those changes will be replaced.' : ''}</span></p>
+          )}
           <h3>{step.title}</h3>
           {step.help && <p className="hint">{step.help}</p>}
           {fields.map(f => <FieldInput key={f.id} f={f} a={a} r={r} set={set} />)}
@@ -225,7 +231,7 @@ function Wizard({ onClose, onCreated }: { onClose: () => void; onCreated: () => 
           {c.model && c.design && c.model.panels.length > 0
             ? <img src={picture(c.model, c.design.materials, 260)} alt={`Preview of ${c.design.name}`} />
             : <p className="hint">Choose a type to see the piece.</p>}
-          <p className="num">{String(r.width)} × {String(r.height)} × {String(r.depth)} mm{c.model ? ` · ${c.model.panels.length} parts` : ''}</p>
+          {c.model && <p className="num">{c.model.bounds.w} × {c.model.bounds.h} × {c.model.bounds.d} mm · {c.model.panels.length} parts</p>}
           {!isReview && c.design && <ProblemList problems={c.problems} limit={3} />}
         </aside>
       </div>
@@ -236,7 +242,7 @@ function Wizard({ onClose, onCreated }: { onClose: () => void; onCreated: () => 
         {!isReview && <button type="button" className="btn outline" onClick={() => next(false)}>Skip</button>}
         {!isReview && <button type="button" className="btn primary" disabled={step.id === TYPE && !a.type} onClick={() => next(true)}>Next</button>}
         {isReview && <button type="button" className="btn primary" disabled={!c.design || c.errors > 0} title={c.errors ? 'Fix the problems listed under Checks first' : undefined} onClick={() => void create()}>
-          <Icon name="plus" className="sm" />Create piece</button>}
+          <Icon name="plus" className="sm" />{from ? 'Update piece' : 'Create piece'}</button>}
       </div>
     </div>
   )

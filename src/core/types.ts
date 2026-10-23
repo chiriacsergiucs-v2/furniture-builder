@@ -453,4 +453,9 @@ export interface Design {
   catalog?: CatalogMeta
   /** Guidance thresholds (ADR-0035). */
   settings?: { rules?: RuleSettings }
+  /** Answers of the New-piece wizard that made this piece, so it can be reopened there (ADR-0046). Never geometry. */
+  wizard?: { answers: WizardAnswers }
 }
+
+/** Wizard answers as stored: text, numbers, or a list of those or of compartments (`src/core/wizard/types.ts`). */
+export type WizardAnswers = Record<string, string | number | (string | number | { kind: string; shelves: number; drawers: number })[]>

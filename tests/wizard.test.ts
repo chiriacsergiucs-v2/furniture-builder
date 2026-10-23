@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { buildModel, hasErrors } from '../src/core/build'
 import { validateDesign } from '../src/core/design'
 import type { Space } from '../src/core/types'
-import { check, createPiece, fieldProblems, nextOpenStep, resolve, stepsWriting, toDesign, visibleFields, visibleSteps } from '../src/core/wizard/engine'
+import { check, createPiece, editedSinceWizard, storedAnswers, fieldProblems, nextOpenStep, resolve, stepsWriting, toDesign, visibleFields, visibleSteps } from '../src/core/wizard/engine'
 import { CONSTRUCTION_TYPES } from '../src/core/wizard/registry'
 import { STEPS, stepById } from '../src/core/wizard/steps'
 import { candidatePicks, rankByVariety, suggestions } from '../src/core/wizard/suggest'
@@ -234,5 +234,70 @@ describe('result → catalog (ADR-0046)', () => {
       expect(res.ok, t.id).toBe(true)
       if (res.ok) { await saveDesign(res.design); expect(await loadDesign(res.design.id)).toEqual(res.design) }
     }
+  })
+})
+
+describe('N35: wardrobe and bed types', () => {
+  it('wardrobe: hanging on the left, shelves on the right, pair of doors by default; hanging-left cards exist', () => {
+    const p = cabinetOf({ type: 'wardrobe' })
+    expect(leaves(p.interior).map(l => l.kind)).toEqual(['hanging', 'shelves'])
+    expect(p.interior.front).toEqual({ kind: 'doors', count: 2 })
+    expect(suggestions({ type: 'wardrobe' }, 'type')[0].label).toBe('1 divider · hanging rail | 5 shelves · pair of doors · on a plinth')
+    expect(suggestions({ type: 'wardrobe' }, 'type').some(s => /hanging rail \| \d+ shelves \| \d+ shelves/.test(s.label))).toBe(true)
+  })
+
+  it('bed: width and depth are not asked, height is the headboard; mattress, deck and footboard reach the bed', () => {
+    const basics = stepById.get('basics')!
+    const f = visibleFields(basics, { type: 'bed' })
+    expect(f.map(x => x.id)).not.toContain('width')
+    expect(f.map(x => x.id)).not.toContain('depth')
+    expect(f.find(x => x.id === 'height')!.label).toBe('Headboard height')
+    const d = toDesign({ type: 'bed', height: 1100, mattressWidth: 1400, mattressLength: 1900, deckHeight: 300, footboard: 'yes', footboardHeight: 700 })!
+    if (d.product.kind !== 'frame') throw new Error('frame')
+    expect(d.product.params.kind).toBe('bed')
+    expect(d.product.params.bed).toMatchObject({ mattress: { w: 1400, l: 1900 }, deckHeight: 300, headboardHeight: 1100, footboardHeight: 700, tierGap: 0 })
+    const m = buildModel(d)
+    expect(m.bounds.h).toBe(1100)
+    expect(fieldProblems({ type: 'bed', mattressWidth: 5000 }).some(x => x.field === 'mattressWidth')).toBe(true)
+  })
+
+  it('bed cards change with the mattress width only through the model (all valid, varied)', () => {
+    const list = suggestions({ type: 'bed' }, 'type')
+    expect(new Set(list.map(s => resolve(s.answers).mattressWidth)).size).toBeGreaterThan(2)
+  })
+})
+
+describe('N35: answers kept with the piece, reopened in the wizard (ADR-0046)', () => {
+  it('a created piece carries its answers; they validate and rebuild the same piece', () => {
+    const res = createPiece({ type: 'wardrobe', name: 'Hall wardrobe', width: 1000 })
+    if (!res.ok) throw new Error('not created')
+    expect(res.design.wizard?.answers).toMatchObject({ type: 'wardrobe', name: 'Hall wardrobe', width: 1000 })
+    expect(validateDesign(res.design)).toEqual([])
+    expect(editedSinceWizard(res.design)).toBe(false)
+    expect(resolve(storedAnswers(res.design)!).width).toBe(1000)
+  })
+
+  it('an edit in the editor is detected; updating keeps the id, creation date and catalog fields', () => {
+    const res = createPiece({ type: 'cabinet', name: 'Box' }, '2026-10-01T00:00:00.000Z')
+    if (!res.ok) throw new Error('not created')
+    const edited = { ...res.design, catalog: { ...res.design.catalog, brand: 'Mine' }, product: { ...res.design.product, params: { ...res.design.product.params, width: 950 } } } as typeof res.design
+    expect(editedSinceWizard(edited)).toBe(true)
+    const again = createPiece({ ...storedAnswers(edited)!, dividers: 1 }, '2026-10-23T00:00:00.000Z', edited)
+    if (!again.ok) throw new Error('not updated')
+    expect([again.design.id, again.design.createdAt, again.design.updatedAt]).toEqual([edited.id, '2026-10-01T00:00:00.000Z', '2026-10-23T00:00:00.000Z'])
+    expect(again.design.catalog).toMatchObject({ brand: 'Mine', category: 'Storage and display' })
+    expect(editedSinceWizard(again.design)).toBe(false)
+  })
+
+  it.each([
+    ['not an object', 'x'],
+    ['answers missing', {}],
+    ['a value of the wrong type', { answers: { width: { a: 1 } } }],
+    ['a compartment without counts', { answers: { compartments: [{ kind: 'shelves' }] } }],
+    ['too large', { answers: { name: 'x'.repeat(30_000) } }],
+  ])('bad stored answers are reported, never thrown: %s', (_, wizard) => {
+    const res = createPiece({ type: 'desk' })
+    if (!res.ok) throw new Error('not created')
+    expect(validateDesign({ ...res.design, wizard })).toContain('Invalid wizard answers')
   })
 })

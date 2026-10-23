@@ -79,6 +79,10 @@ export interface ConstructionType {
   defaults: Answers
   /** Per field: allowed option values (subset of the field's options). */
   options?: Record<string, string[]>
+  /** Fields of shared steps this type does not ask (for example a bed takes its width and depth from the mattress). */
+  hide?: string[]
+  /** Per field: different label text. */
+  labels?: Record<string, string>
   /** Per field: tighter min/max. */
   limits?: Record<string, { min?: number; max?: number }>
   /** Starting design on an existing product root; steps then write their answers into it. */

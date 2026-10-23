@@ -28,15 +28,19 @@ export const dividersAxis = (values: number[]): Axis => ({
 })
 
 /**
- * What the compartments hold, as a pattern: every compartment the same kind, or `drawers-left` (a drawer bank on the
- * left, shelves elsewhere). Counts stay as they are; the shelves and drawers axes set them.
+ * What the compartments hold, as a pattern: every compartment the same kind, or `<kind>-left` (that kind in the left
+ * compartment, shelves elsewhere: `drawers-left`, `hanging-left`). Counts stay as they are; the shelves and drawers
+ * axes set them.
  */
 export const mixAxis = (values: string[]): Axis => ({
   id: 'mix', values, writes: ['compartments'],
-  apply: (a, v) => setCompartments(a, (c, i) => ({ ...c, kind: v === 'drawers-left' ? (i === 0 ? 'drawers' : 'shelves') : String(v) })),
+  apply: (a, v) => {
+    const left = String(v).endsWith('-left') ? String(v).slice(0, -5) : null
+    return setCompartments(a, (c, i) => ({ ...c, kind: left ? (i === 0 ? left : 'shelves') : String(v) }))
+  },
   current: a => {
     const cs = compartmentsOf(a)
-    if (cs.length > 1 && cs[0].kind === 'drawers' && cs.slice(1).every(c => c.kind === 'shelves')) return 'drawers-left'
+    if (cs.length > 1 && cs[0].kind !== 'shelves' && cs.slice(1).every(c => c.kind === 'shelves')) return `${cs[0].kind}-left`
     return cs[0].kind
   },
 })

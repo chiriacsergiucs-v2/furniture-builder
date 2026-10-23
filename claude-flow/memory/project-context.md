@@ -40,3 +40,5 @@ User answers 2026-10-23 (ADR-0040–0046): rake default 8° kept; recliner 100/1
 Pat Noi bed joins with bed-rail brackets (rail height unknown, ADR-0041 stays Proposed); catalog pictures also in
 Start from + drawn in the browser for edited families (N36); no auto backlog from research approvals; tab label kept;
 wizard: add Wardrobe and Bed types, keep answers to reopen in the wizard (N35); no legs under cabinets now; 6/64 cards.
+Built 2026-10-23: wizard types Wardrobe and Bed; answers stored on pieces (`wizard.answers`) with "Open in wizard";
+catalog pictures in Start from and drawn in the browser for edited families (N35, N36).

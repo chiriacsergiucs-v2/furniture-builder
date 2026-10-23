@@ -31,6 +31,21 @@ const frameAxes = (legs: number[]): Axis[] => [
   answerAxis('legSize', legs),
 ]
 
+const wardrobeAxes = (): Axis[] => [
+  dividersAxis([1, 2, 0]),
+  mixAxis(['hanging-left', 'hanging', 'shelves', 'drawers-left', 'shelves-drawers']),
+  shelvesAxis([4, 5, 6, 3]),
+  drawersAxis([3, 4, 2]),
+  frontsAxis(['pair', 'sliding', 'per', 'none']),
+  answerAxis('base', ['plinth', 'none']),
+]
+
+const bedAxes = (): Axis[] => [
+  answerAxis('mattressWidth', [1600, 900, 1400, 1800]),
+  answerAxis('footboard', ['none', 'yes']),
+  answerAxis('deckHeight', [380, 250, 450]),
+]
+
 const deskAxes = (): Axis[] => [
   answerAxis('support', ['pedestal-left', 'gables', 'two-pedestals', 'pedestal-right']),
   answerAxis('pedestalDrawers', [3, 2, 4, 5]),
@@ -68,6 +83,35 @@ export const CONSTRUCTION_TYPES: ConstructionType[] = [
       { id: 'shelving-divisions', at: 'divisions', axes: shelvingAxes() },
       { id: 'shelving-contents', at: 'contents', axes: shelvingAxes().slice(1) },
       { id: 'shelving-base', at: 'base', axes: shelvingAxes().slice(3) },
+    ],
+  },
+  {
+    id: 'wardrobe', label: 'Wardrobe',
+    description: 'A tall carcass for clothes: hanging rails, shelves and drawers, behind hinged or sliding doors.',
+    steps: ['divisions', 'contents', 'fronts', 'base', 'carcass'],
+    defaults: { name: 'Wardrobe', category: 'storage', width: 1200, height: 2100, depth: 600, board: 'pal18', dividers: 1,
+      compartments: [{ kind: 'hanging', shelves: 5, drawers: 3 }, { kind: 'shelves', shelves: 5, drawers: 3 }], fronts: 'pair', base: 'plinth', plinthHeight: 80, back: 'applied' },
+    limits: { width: { min: 400, max: 3000 }, height: { min: 1200, max: 2700 }, depth: { min: 300, max: 800 } },
+    seed: () => cabinet('Wardrobe', {}, { id: newId(), kind: 'empty' }),
+    generators: [
+      { id: 'wardrobe-layouts', at: 'type', axes: wardrobeAxes() },
+      { id: 'wardrobe-divisions', at: 'divisions', axes: wardrobeAxes() },
+      { id: 'wardrobe-contents', at: 'contents', axes: wardrobeAxes().slice(1) },
+      { id: 'wardrobe-fronts', at: 'fronts', axes: wardrobeAxes().slice(4) },
+    ],
+  },
+  {
+    id: 'bed', label: 'Bed',
+    description: 'A bed frame sized from its mattress: headboard, side rails, slats on ledgers, optional raised footboard.',
+    steps: ['bed'],
+    hide: ['width', 'depth'],
+    labels: { height: 'Headboard height' },
+    defaults: { name: 'Bed', category: 'sleeping', height: 1000, board: 'pal18oak', mattressWidth: 1600, mattressLength: 2000, deckHeight: 380, footboard: 'none', footboardHeight: 600 },
+    limits: { height: { min: 500, max: 1600 } },
+    seed: () => wrap('Bed', { kind: 'frame', id: newId(), params: frameDefaults('bed') }),
+    generators: [
+      { id: 'bed-sizes', at: 'type', axes: bedAxes() },
+      { id: 'bed-step', at: 'bed', axes: bedAxes() },
     ],
   },
   {
