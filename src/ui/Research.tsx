@@ -1,10 +1,10 @@
 import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react'
 import {
-  buildView, coverage, descendants, EMPTY_QUERY, filterFeatures, groupFeatures, markOf, specMarkdown, sortFeatures, stats,
-  type CatalogView, type FeatureQuery, type GroupBy, type ImportPlan, type SortKey, type ViewFeature, type ViewFinding,
+  assessedValue, assessmentStats, buildView, coverage, DEMAND_SCALE, descendants, EMPTY_QUERY, filterFeatures, groupFeatures, markOf, rating,
+  specMarkdown, sortFeatures, stats, VALUE_BANDS, type CatalogView, type RatingDim, type FeatureQuery, type GroupBy, type ImportPlan, type SortKey, type ViewFeature, type ViewFinding,
 } from '../core/research/catalog'
 import {
-  FINDING_KIND_LABEL, IMPLEMENTATION_LABEL, IMPLEMENTATIONS, SELECTION_LABEL, SELECTIONS, USER_PRIORITIES,
+  ASSESSMENT_CRITERIA, COMPLEXITY_SCALE, CONFIDENCE_SCALE, FINDING_KIND_LABEL, IMPLEMENTATION_LABEL, IMPLEMENTATIONS, SELECTION_LABEL, SELECTIONS, USER_PRIORITIES,
   type FindingKind, type Implementation, type ResearchMark, type Selection,
 } from '../core/research/types'
 import { useResearch, type MarkPatch } from '../store/researchStore'
@@ -27,6 +27,12 @@ function download(name: string, text: string, type: string) {
 }
 const today = () => new Date().toISOString().slice(0, 10)
 const ne = (s: string) => (s === 'not evaluated' || s === 'unknown' ? <span className="ne">{s}</span> : s)
+/** A rating with its source: the paper's own words, or our assessment marked "A" (never shown as research). */
+function Rated({ f, dim }: { f: ViewFeature; dim: RatingDim }) {
+  const r = rating(f, dim)
+  if (r.source === 'none') return <span className="ne">{r.value}</span>
+  return <span className={`rated ${r.source}`}>{r.value}{r.source === 'assessment' && <abbr className="assessed" title="Assessed from the paper's evidence with the paper's method — not a rating in the paper">A</abbr>}</span>
+}
 const catLabel = (view: CatalogView, id: string) => view.categories.find(c => c.id === id)?.label ?? id
 
 /**
@@ -107,6 +113,7 @@ function Overview({ ctx }: { ctx: Ctx }) {
   const max = Math.max(1, ...st.byCategory.map(c => c.n))
   return (
     <div className="research-overview">
+      <AssessmentDashboard ctx={ctx} />
       <section className="tiles" aria-label="Totals">
         <Tile n={st.features} label="Features in total" onClick={() => go('features')} />
         <Tile n={st.topLevel} label="Top-level features" onClick={() => go('features', { topLevel: true })} />
@@ -151,6 +158,65 @@ function Overview({ ctx }: { ctx: Ctx }) {
   )
 }
 
+// ── Assessment dashboard ───────────────────────────────────────────────────────────────────────────────────────
+
+function Dist({ title, rows, onPick }: { title: string; rows: { key: string; label?: string; n: number }[]; onPick?: (key: string) => void }) {
+  const max = Math.max(1, ...rows.map(r => r.n))
+  return (
+    <section aria-label={title}><h3>{title}</h3>
+      <ul className="bars">{rows.map(r => (
+        <li key={r.key}>{onPick && r.key !== 'Other' ? <button type="button" className="link" onClick={() => onPick(r.key)}>{r.label ?? r.key}</button> : <span>{r.label ?? r.key}</span>}
+          <span className="bar-track"><span style={{ width: `${(r.n / max) * 100}%` }} /></span><span className="num">{r.n}</span></li>
+      ))}</ul>
+    </section>
+  )
+}
+
+function RankedList({ ctx, title, items, empty }: { ctx: Ctx; title: string; items: ViewFeature[]; empty: string }) {
+  return (
+    <section aria-label={title}><h3>{title} <span className="count">{items.length}</span></h3>
+      {items.length ? <ol className="ranked">{items.map(f => (
+        <li key={f.id}><button type="button" className="link" onClick={() => ctx.open(f.id)}>{f.name}</button>
+          <span className="facts">Value <Rated f={f} dim="impact" /> · Demand <Rated f={f} dim="demand" /> · Complexity <Rated f={f} dim="complexity" /> · Confidence <Rated f={f} dim="confidence" /></span></li>
+      ))}</ol> : <p className="ne">{empty}</p>}
+    </section>
+  )
+}
+
+/** Demand, value, complexity and confidence of every feature: the paper's own ratings, else our assessment. */
+function AssessmentDashboard({ ctx }: { ctx: Ctx }) {
+  const { view, marks, go } = ctx
+  const list = useMemo(() => [...view.features.values()].filter(f => !markOf(marks, f.id).mergedInto), [view, marks])
+  const a = useMemo(() => assessmentStats(list), [list])
+  return (
+    <section className="assessment" aria-label="Assessment">
+      <h2 className="group-head">Assessment: demand, value, complexity, confidence</h2>
+      <p className="alert info"><Icon name="info" className="sm" /><span><strong className="num">{list.length - a.unrated} of {list.length}</strong> features rated: <strong>{a.ratedByPaper}</strong> by the paper itself, <strong>{a.assessed}</strong> assessed here from the paper’s evidence with the paper’s own method (marked <abbr className="assessed">A</abbr>). Value = core relevance 30 % · demand 20 % · UX 20 % · competitor adoption 15 % · differentiation 10 % · downstream leverage 5 %, each 1–5. Assessments are judgements, not research results; open a feature for its scores and rationale.</span></p>
+      <div className="table-wrap"><table className="cut matrix" aria-label="Value by complexity">
+        <caption>Value (rows) × complexity (columns) — number of features; pick a cell to list them</caption>
+        <thead><tr><th>Value</th>{COMPLEXITY_SCALE.map(c => <th key={c}>{c}</th>)}</tr></thead>
+        <tbody>{a.matrix.map(r => (
+          <tr key={r.band}><th scope="row" className="num">{r.label}</th>{r.cells.map(c => (
+            <td key={c.complexity} className={`cell v${r.band.replace('.', '')} c${(COMPLEXITY_SCALE as readonly string[]).indexOf(c.complexity)}`}>
+              {c.ids.length ? <button type="button" className="cell-btn num" title={c.ids.map(id => view.features.get(id)?.name).join('\n')} aria-label={`${c.ids.length} features with value ${r.label} and ${c.complexity} complexity`} onClick={() => go('features', { valueBand: r.band, complexity: c.complexity, showMerged: false })}>{c.ids.length}</button> : <span className="ne">·</span>}
+            </td>))}</tr>
+        ))}</tbody>
+      </table></div>
+      <div className="overview-cols four">
+        <Dist title="Demand" rows={a.byDemand} onPick={k => go('features', { demand: k })} />
+        <Dist title="Value (1–5)" rows={a.byValue} onPick={k => go('features', { valueBand: k })} />
+        <Dist title="Complexity" rows={a.byComplexity} onPick={k => go('features', { complexity: k })} />
+        <Dist title="Confidence in the evidence" rows={a.byConfidence} onPick={k => go('features', { confidence: k })} />
+      </div>
+      <div className="overview-cols">
+        <RankedList ctx={ctx} title="Highest value" items={a.top} empty="No rated features." />
+        <RankedList ctx={ctx} title="Quick wins (value ≥ 4.0, complexity Medium or lower)" items={a.quickWins} empty="None." />
+        <RankedList ctx={ctx} title="High value, weak evidence (check before committing)" items={a.weakEvidence} empty="Every feature valued 4.0 or more has at least medium confidence." />
+      </div>
+    </section>
+  )
+}
+
 // ── Explorer ────────────────────────────────────────────────────────────────────────────────────────────────────
 
 const SORTS: [SortKey, string][] = [['research', 'Research rank'], ['name', 'Name'], ['category', 'Category'], ['impact', 'Value 1–5 (impact)'], ['demand', 'Demand'], ['complexity', 'Complexity (low first)'], ['confidence', 'Confidence'], ['priority', 'Research priority'], ['selection', 'Your decision'], ['yours', 'Your priority']]
@@ -191,6 +257,11 @@ function Explorer({ ctx, query, setQuery }: { ctx: Ctx; query: FeatureQuery; set
         <select aria-label="Filter by implementation status" value={query.implementation} onChange={e => q({ implementation: e.target.value as Implementation | '' })}><option value="">Any implementation</option>{IMPLEMENTATIONS.map(s => <option key={s} value={s}>{IMPLEMENTATION_LABEL[s]}</option>)}</select>
         <select aria-label="Research priority" value={query.priority} onChange={e => q({ priority: e.target.value })}><option value="">Any research priority</option>{priorities.map(p => <option key={p} value={p}>{p}</option>)}</select>
         <select aria-label="Origin" value={query.origin} onChange={e => q({ origin: e.target.value as FeatureQuery['origin'] })}><option value="">Named or inferred</option><option value="explicit">Named in the research</option><option value="inferred">Inferred opportunities</option></select>
+        <select aria-label="Demand" value={query.demand} onChange={e => q({ demand: e.target.value })}><option value="">Any demand</option>{[...DEMAND_SCALE, 'Indirect / emerging'].map(d => <option key={d} value={d}>{d}</option>)}</select>
+        <select aria-label="Value" value={query.valueBand} onChange={e => q({ valueBand: e.target.value })}><option value="">Any value</option>{VALUE_BANDS.map(([k, l]) => <option key={k} value={k}>Value {l}</option>)}</select>
+        <select aria-label="Complexity" value={query.complexity} onChange={e => q({ complexity: e.target.value })}><option value="">Any complexity</option>{COMPLEXITY_SCALE.map(c => <option key={c} value={c}>{c}</option>)}</select>
+        <select aria-label="Confidence" value={query.confidence} onChange={e => q({ confidence: e.target.value })}><option value="">Any confidence</option>{[...CONFIDENCE_SCALE].reverse().map(c => <option key={c} value={c}>{c}</option>)}</select>
+        <select aria-label="Rated by" value={query.rated} onChange={e => q({ rated: e.target.value as FeatureQuery['rated'] })}><option value="">Rated by paper or assessment</option><option value="paper">Rated by the paper</option><option value="assessment">Assessed here (A)</option></select>
         <select aria-label="Evidence" value={query.evidence} onChange={e => q({ evidence: e.target.value as FeatureQuery['evidence'] })}><option value="">Any evidence</option><option value="with">With evidence</option><option value="without">Missing evidence</option></select>
       </div>
       <div className="catalog-actions">
@@ -260,10 +331,10 @@ function FeatureRow({ f, ctx, ticked, onTick, onOpen }: { f: ViewFeature; ctx: C
       </td>
       <td data-label="Category"><span>{catLabel(view, f.category)}<span className="sub">{f.subcategory}</span></span></td>
       <td data-label="Description" className="desc">{f.description}</td>
-      <td data-label="Demand">{ne(f.demand)}</td>
-      <td data-label="Value 1–5 (impact)" className="num">{ne(f.impact)}</td>
-      <td data-label="Complexity">{ne(f.complexity)}</td>
-      <td data-label="Confidence">{ne(f.confidence)}</td>
+      <td data-label="Demand"><Rated f={f} dim="demand" /></td>
+      <td data-label="Value 1–5 (impact)" className="num"><Rated f={f} dim="impact" /></td>
+      <td data-label="Complexity"><Rated f={f} dim="complexity" /></td>
+      <td data-label="Confidence"><Rated f={f} dim="confidence" /></td>
       <td data-label="Dependencies">{f.dependencies.length ? f.dependencies.map(d => view.features.get(d)?.name ?? d).join(', ') : <span className="ne">none listed</span>}</td>
       <td data-label="Your decision"><SelectionSelect id={f.id} value={m.selection} label={`Your decision on ${f.name}`} /></td>
       <td data-label="Implementation"><ImplementationSelect id={f.id} value={m.implementation} /></td>
@@ -351,8 +422,29 @@ function FeatureDetail({ ctx, f, onBack }: { ctx: Ctx; f: ViewFeature; onBack: (
       <section aria-label="Description"><h3>Description</h3><p>{f.description}</p>
         <dl className="pairs"><dt>User problem</dt><dd>{ne(f.userProblem)}</dd><dt>User benefit</dt><dd>{ne(f.userBenefit)}</dd>{f.mvp && <><dt>MVP acceptance criterion</dt><dd>{f.mvp}</dd></>}</dl>
       </section>
-      <section aria-label="Research ratings"><h3>Research ratings <span className="hint">as written in the paper</span></h3>
-        <dl className="pairs ratings">{ratings.map(([k, v]) => <Fragment key={k}><dt>{k}</dt><dd>{ne(v)}</dd></Fragment>)}</dl>
+      <section aria-label="Ratings"><h3>Ratings</h3>
+        <div className="table-wrap"><table className="cut ratings-table">
+          <thead><tr><th>Rating</th><th>Value</th><th>Source</th></tr></thead>
+          <tbody>
+            {([['User demand', 'demand'], ['Value (impact), 1–5', 'impact'], ['Implementation complexity', 'complexity'], ['Evidence confidence', 'confidence'], ['Competitor adoption', 'adoption']] as const).map(([k, d]) => {
+              const r = rating(f, d)
+              return <tr key={k}><th scope="row">{k}</th><td><Rated f={f} dim={d} /></td><td>{r.source === 'paper' ? 'The paper (ranked table)' : r.source === 'assessment' ? 'Assessment — not from the paper' : '—'}</td></tr>
+            })}
+            {ratings.filter(([k]) => k === 'Appreciation' || k === 'Research priority').map(([k, v]) => <tr key={k}><th scope="row">{k}</th><td>{ne(v)}</td><td>{v === 'not evaluated' ? 'not rated by the paper; not assessed' : 'The paper (ranked table)'}</td></tr>)}
+          </tbody>
+        </table></div>
+        {f.assessment && (
+          <div className="assessment-box">
+            <p className="alert warning"><Icon name="alert-triangle" className="sm" /><span><strong>Assessment, not research.</strong> The paper does not rate this feature. These scores apply the paper’s own method (line 71) to the findings linked below. {f.assessment.by}, {f.assessment.date}.</span></p>
+            <div className="table-wrap"><table className="cut">
+              <thead><tr><th>Criterion</th><th>Weight</th><th>Score (1–5)</th></tr></thead>
+              <tbody>{ASSESSMENT_CRITERIA.map(([k, label, w]) => <tr key={k}><th scope="row">{label}</th><td className="num">{Math.round(w * 100)} %</td><td className="num">{f.assessment!.scores[k]}</td></tr>)}
+                <tr><th scope="row">Value (weighted)</th><td /><td className="num"><strong>{assessedValue(f.assessment)}</strong></td></tr></tbody>
+            </table></div>
+            <p><strong>Why:</strong> {f.assessment.rationale}</p>
+            {f.assessment.internal && <p className="hint">Internal capability: users do not ask for it by name, so demand reads “Indirect”, as the paper does for its internal rows.</p>}
+          </div>
+        )}
       </section>
       <div className="detail-cols">
         <section aria-label="Functional requirements"><h3>Functional requirements</h3><List items={f.requirements} /></section>
@@ -556,9 +648,9 @@ function Compare({ ctx }: { ctx: Ctx }) {
   const rows: [string, (f: ViewFeature) => ReactNode][] = [
     ['Category', f => `${catLabel(view, f.category)} › ${f.subcategory}`], ['Origin', f => (f.origin === 'inferred' ? 'Inferred opportunity' : 'Named in the research')],
     ['Your decision', f => <SelectionSelect id={f.id} value={markOf(marks, f.id).selection} label={`Your decision on ${f.name}`} />], ['Implementation', f => <ImplementationSelect id={f.id} value={markOf(marks, f.id).implementation} />],
-    ['Your priority', f => markOf(marks, f.id).priority || '—'], ['Research priority', f => ne(f.priority)], ['Value 1–5 (impact)', f => ne(f.impact)],
-    ['Demand', f => ne(f.demand)], ['Appreciation', f => ne(f.appreciation)], ['Competitor adoption', f => ne(f.adoption)], ['Complexity', f => ne(f.complexity)],
-    ['Confidence', f => ne(f.confidence)], ['Phase', f => f.phase ?? '—'], ['MVP criterion', f => f.mvp ?? '—'],
+    ['Your priority', f => markOf(marks, f.id).priority || '—'], ['Research priority', f => ne(f.priority)], ['Value 1–5 (impact)', f => <Rated f={f} dim="impact" />],
+    ['Demand', f => <Rated f={f} dim="demand" />], ['Appreciation', f => ne(f.appreciation)], ['Competitor adoption', f => <Rated f={f} dim="adoption" />], ['Complexity', f => <Rated f={f} dim="complexity" />],
+    ['Confidence', f => <Rated f={f} dim="confidence" />], ['Assessment rationale', f => f.assessment?.rationale ?? 'Rated by the paper'], ['Phase', f => f.phase ?? '—'], ['MVP criterion', f => f.mvp ?? '—'],
     ['Dependencies', f => f.dependencies.map(d => view.features.get(d)?.name ?? d).join(', ') || '—'], ['Sub-features', f => String(descendants(view, f.id).length)],
     ['Competitors', f => f.competitors.map(c => view.competitors.get(c)?.name ?? c).join(', ') || '—'], ['Findings', f => String(f.findings.length)],
     ['Description', f => f.description], ['Your notes', f => markOf(marks, f.id).notes || '—'],

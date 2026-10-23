@@ -4,8 +4,8 @@
  * user input never throws (ADR-0008) — problems come back as lists.
  */
 import {
-  IMPLEMENTATIONS, RESEARCH_FORMAT, RESEARCH_SCHEMA, SELECTIONS, USER_PRIORITIES,
-  type BibEntry, type Citation, type Competitor, type Contradiction, type Implementation, type ResearchBundle, type ResearchCategory,
+  ASSESSMENT_CRITERIA, COMPLEXITY_SCALE, CONFIDENCE_SCALE, IMPLEMENTATIONS, RESEARCH_FORMAT, RESEARCH_SCHEMA, SELECTIONS, USER_PRIORITIES,
+  type Assessment, type BibEntry, type Citation, type Competitor, type Contradiction, type Implementation, type ResearchBundle, type ResearchCategory,
   type ResearchDocument, type ResearchFeature, type ResearchFinding, type ResearchMark, type ResearchSection, type Selection, type Unextracted,
 } from './types'
 
@@ -80,6 +80,7 @@ export function validateBundle(x: unknown): string[] {
     if (f.origin !== 'explicit' && f.origin !== 'inferred') e.push(`${at}: origin must be explicit or inferred.`)
     if (f.parent === f.id) e.push(`${at}: is its own parent.`)
     if ('selection' in f || 'notes' in f) e.push(`${at}: user decisions are not part of a research file.`)
+    if (f.assessment) e.push(...validateAssessment(f.assessment).map(x => `${at}: assessment ${x}`))
   }
   for (const c of b.contradictions!) {
     for (const n of c.findings ?? []) if (!finds.has(n)) e.push(`Contradiction ${c.id}: unknown finding ${n}.`)
@@ -88,6 +89,60 @@ export function validateBundle(x: unknown): string[] {
   for (const u of b.unextracted!) { inDoc(`Unextracted ${u.id}`, u.lines); if (!isStr(u.reason) || !u.reason) e.push(`Unextracted ${u.id}: a reason is required.`) }
   return e
 }
+
+/** Problems with an assessment: every criterion scored 1–5, words from the paper's scales, a rationale and an author. */
+export function validateAssessment(a: Assessment): string[] {
+  const e: string[] = []
+  for (const [k] of ASSESSMENT_CRITERIA) { const v = a.scores?.[k]; if (!Number.isInteger(v) || v < 1 || v > 5) e.push(`${k} must be a whole score 1–5.`) }
+  if (!COMPLEXITY_SCALE.includes(a.complexity)) e.push(`complexity must be one of ${COMPLEXITY_SCALE.join(', ')}.`)
+  if (!CONFIDENCE_SCALE.includes(a.confidence)) e.push(`confidence must be one of ${CONFIDENCE_SCALE.join(', ')}.`)
+  if (!isStr(a.rationale) || !a.rationale.trim()) e.push('needs a rationale.')
+  if (!isStr(a.by) || !a.by || !isStr(a.date)) e.push('needs an author and a date.')
+  return e
+}
+
+// ── Assessment ───────────────────────────────────────────────────────────────────────────────────────────────────
+
+const SCORE_WORD = ['', 'Low', 'Low-medium', 'Medium', 'Medium-high', 'High'] as const
+/** The paper's weighted sum, one decimal (line 71). */
+export function assessedValue(a: Assessment): string {
+  const v = ASSESSMENT_CRITERIA.reduce((n, [k, , w]) => n + a.scores[k] * w, 0)
+  return (Math.round(v * 10 + 1e-9) / 10).toFixed(1)
+}
+export const assessedDemand = (a: Assessment) => (a.internal ? 'Indirect' : SCORE_WORD[a.scores.demand])
+export const assessedAdoption = (a: Assessment) => SCORE_WORD[a.scores.adoption]
+
+export type RatingDim = 'demand' | 'impact' | 'complexity' | 'confidence' | 'adoption'
+export interface Rating { value: string; source: 'paper' | 'assessment' | 'none' }
+const NE = 'not evaluated'
+/** The paper's rating when it gives one, else the assessment, else "not evaluated" — always with its source. */
+export function rating(f: ResearchFeature, dim: RatingDim): Rating {
+  const paper = f[dim]
+  if (paper && paper !== NE && paper !== 'unknown') return { value: paper, source: 'paper' }
+  const a = f.assessment
+  if (!a) return { value: NE, source: 'none' }
+  const value = dim === 'impact' ? assessedValue(a) : dim === 'demand' ? assessedDemand(a) : dim === 'adoption' ? assessedAdoption(a) : a[dim]
+  return { value, source: 'assessment' }
+}
+/** All four core ratings present (from the paper or assessed). */
+export const fullyRated = (f: ResearchFeature) => (['demand', 'impact', 'complexity', 'confidence'] as const).every(d => rating(f, d).source !== 'none')
+
+/** Buckets for the paper's free-form words ("High for cabinetry" → High, "Medium if data exists" → Medium). */
+export function scaleBucket(s: string, scale: readonly string[]): string {
+  const t = s.toLowerCase().replace('high/medium', 'medium-high')
+  const sorted = [...scale].sort((a, b) => b.length - a.length)
+  return sorted.find(w => t.startsWith(w.toLowerCase())) ?? 'Other'
+}
+export const DEMAND_SCALE = ['High', 'Medium-high', 'Medium', 'Low-medium', 'Low'] as const
+export const VALUE_BANDS = [['4.5', '4.5–5.0', 4.5, 5.01], ['4.0', '4.0–4.4', 4, 4.5], ['3.5', '3.5–3.9', 3.5, 4], ['3.0', '3.0–3.4', 3, 3.5], ['2.0', '2.0–2.9', 2, 3], ['1.0', 'below 2.0', 0, 2]] as const
+export function valueBand(f: ResearchFeature): string {
+  const v = Number.parseFloat(rating(f, 'impact').value)
+  if (Number.isNaN(v)) return ''
+  return VALUE_BANDS.find(([, , lo, hi]) => v >= lo && v < hi)?.[0] ?? ''
+}
+export const complexityOf = (f: ResearchFeature) => scaleBucket(rating(f, 'complexity').value, COMPLEXITY_SCALE)
+export const confidenceOf = (f: ResearchFeature) => scaleBucket(rating(f, 'confidence').value, CONFIDENCE_SCALE)
+export const demandOf = (f: ResearchFeature) => { const r = rating(f, 'demand').value; return /^(indirect|emerging)/i.test(r) ? 'Indirect / emerging' : scaleBucket(r, DEMAND_SCALE) }
 
 // ── Merged view ─────────────────────────────────────────────────────────────────────────────────────────────────
 
@@ -396,8 +451,14 @@ export interface FeatureQuery {
   /** Only features without a parent. */
   topLevel: boolean
   showMerged: boolean
+  /** Rating filters (effective rating: the paper's, else the assessment). */
+  demand: string
+  valueBand: string
+  complexity: string
+  confidence: string
+  rated: '' | 'paper' | 'assessment'
 }
-export const EMPTY_QUERY: FeatureQuery = { q: '', category: '', selection: '', implementation: '', origin: '', priority: '', evidence: '', planned: false, topLevel: false, showMerged: false }
+export const EMPTY_QUERY: FeatureQuery = { q: '', category: '', selection: '', implementation: '', origin: '', priority: '', evidence: '', planned: false, topLevel: false, showMerged: false, demand: '', valueBand: '', complexity: '', confidence: '', rated: '' }
 
 export const markOf = (marks: Record<string, ResearchMark>, id: string): ResearchMark => marks[id] ?? defaultMark(id, '')
 
@@ -416,6 +477,11 @@ export function filterFeatures(view: CatalogView, marks: Record<string, Research
     if (q.evidence === 'without' && f.findings.length) return false
     if (q.planned && m.selection !== 'shortlisted' && m.selection !== 'approved') return false
     if (q.topLevel && f.parent) return false
+    if (q.demand && demandOf(f) !== q.demand) return false
+    if (q.valueBand && valueBand(f) !== q.valueBand) return false
+    if (q.complexity && complexityOf(f) !== q.complexity) return false
+    if (q.confidence && confidenceOf(f) !== q.confidence) return false
+    if (q.rated && rating(f, 'impact').source !== q.rated) return false
     if (!words.length) return true
     const hay = [f.id, f.name, f.description, f.subcategory, f.userProblem, ...f.tags, ...f.requirements, ...f.useCases, ...f.competitors.map(compName), m.notes].join(' ').toLowerCase()
     return words.every(w => hay.includes(w))
@@ -428,8 +494,8 @@ export function sortFeatures(list: ViewFeature[], key: SortKey, marks: Record<st
   const yours = (f: ViewFeature) => { const p = markOf(marks, f.id).priority; return p ? Number(p[1]) : 9 }
   const research = (f: ViewFeature) => f.rank ?? (f.recommendationRank ? 40 + f.recommendationRank : 100)
   const val: Record<SortKey, (f: ViewFeature) => number | string> = {
-    research, name: f => f.name.toLowerCase(), category: f => f.category, impact: f => -level(f.impact), demand: f => -level(f.demand),
-    complexity: f => level(f.complexity), confidence: f => -level(f.confidence), priority: f => priorityRank(f.priority), selection: sel, yours,
+    research, name: f => f.name.toLowerCase(), category: f => f.category, impact: f => -level(rating(f, 'impact').value), demand: f => -level(rating(f, 'demand').value),
+    complexity: f => level(rating(f, 'complexity').value) || 9, confidence: f => -level(rating(f, 'confidence').value), priority: f => priorityRank(f.priority), selection: sel, yours,
   }
   const get = val[key]
   const out = [...list].sort((a, b) => { const x = get(a), y = get(b); return x < y ? -1 : x > y ? 1 : research(a) - research(b) || a.name.localeCompare(b.name) })
@@ -537,8 +603,10 @@ export function specMarkdown(view: CatalogView, marks: Record<string, ResearchMa
     const m = markOf(marks, id)
     const cat = view.categories.find(c => c.id === f.category)?.label ?? f.category
     out.push('', `## ${f.name}`, '', `\`${f.id}\` · ${cat} › ${f.subcategory}${f.parent ? ` · part of ${name(f.parent)}` : ''} · ${f.origin === 'inferred' ? '**Inferred opportunity (not a research conclusion)**' : 'Named in the research'}${f.retired ? ' · retired in the latest paper edition' : ''}`, '')
+    const r = (d: RatingDim) => { const x = rating(f, d); return x.source === 'assessment' ? `${x.value} (assessed)` : x.value }
     out.push(`| Your decision | Implementation | Your priority | Research priority | Value | Complexity | Demand | Appreciation | Competitor adoption | Confidence |`, '|---|---|---|---|---|---|---|---|---|---|',
-      `| ${m.selection} | ${m.implementation} | ${m.priority || '—'} | ${f.priority} | ${f.impact} | ${f.complexity} | ${f.demand} | ${f.appreciation} | ${f.adoption} | ${f.confidence} |`, '')
+      `| ${m.selection} | ${m.implementation} | ${m.priority || '—'} | ${f.priority} | ${r('impact')} | ${r('complexity')} | ${r('demand')} | ${f.appreciation} | ${r('adoption')} | ${r('confidence')} |`, '')
+    if (f.assessment) out.push(`> **Assessment, not research:** the paper does not rate this feature. Scores (1–5) with the paper's method — ${ASSESSMENT_CRITERIA.map(([k, label]) => `${label} ${f.assessment!.scores[k]}`).join(', ')} → value ${assessedValue(f.assessment)}. ${f.assessment.rationale} (${f.assessment.by}, ${f.assessment.date})`, '')
     out.push(f.description, '')
     out.push(`**User problem:** ${f.userProblem}`, '', `**User benefit:** ${f.userBenefit}`, '')
     if (f.mvp) out.push(`**MVP acceptance criterion (research):** ${f.mvp}`, '')
@@ -560,4 +628,51 @@ export function specMarkdown(view: CatalogView, marks: Record<string, ResearchMa
     if (m.notes.trim()) out.push('', '**Your notes**', '', m.notes.trim())
   }
   return out.join('\n') + '\n'
+}
+
+// ── Assessment dashboard ────────────────────────────────────────────────────────────────────────────────────────
+
+export interface AssessmentStats {
+  ratedByPaper: number
+  assessed: number
+  unrated: number
+  byDemand: { key: string; n: number }[]
+  byComplexity: { key: string; n: number }[]
+  byConfidence: { key: string; n: number }[]
+  byValue: { key: string; label: string; n: number }[]
+  /** Value band (rows) × complexity (columns): feature ids. */
+  matrix: { band: string; label: string; cells: { complexity: string; ids: string[] }[] }[]
+  /** Highest value first; ties: lower complexity, higher confidence. */
+  top: ViewFeature[]
+  /** Value ≥ 4.0 and complexity Medium or lower. */
+  quickWins: ViewFeature[]
+  /** Value ≥ 4.0 but confidence Low-medium or lower: check before committing. */
+  weakEvidence: ViewFeature[]
+}
+
+const num = (f: ResearchFeature) => Number.parseFloat(rating(f, 'impact').value) || 0
+const byValue = (a: ViewFeature, b: ViewFeature) => num(b) - num(a) || level(rating(a, 'complexity').value) - level(rating(b, 'complexity').value) || level(rating(b, 'confidence').value) - level(rating(a, 'confidence').value) || a.name.localeCompare(b.name)
+
+/** Distribution of demand, value, complexity and confidence over the listed features (merged ones excluded by the caller). */
+export function assessmentStats(list: ViewFeature[]): AssessmentStats {
+  const count = <K extends string>(keys: readonly K[], of: (f: ViewFeature) => string) => {
+    const out = keys.map(key => ({ key: key as string, n: list.filter(f => of(f) === key).length }))
+    const other = list.filter(f => !keys.includes(of(f) as K)).length
+    return other ? [...out, { key: 'Other', n: other }] : out
+  }
+  const sorted = [...list].sort(byValue)
+  const lowComplexity = new Set<string>(['Low', 'Low-medium', 'Medium'])
+  return {
+    ratedByPaper: list.filter(f => rating(f, 'impact').source === 'paper').length,
+    assessed: list.filter(f => rating(f, 'impact').source === 'assessment').length,
+    unrated: list.filter(f => !fullyRated(f)).length,
+    byDemand: count([...DEMAND_SCALE, 'Indirect / emerging'], demandOf),
+    byComplexity: count(COMPLEXITY_SCALE, complexityOf),
+    byConfidence: count([...CONFIDENCE_SCALE].reverse(), confidenceOf),
+    byValue: VALUE_BANDS.map(([key, label]) => ({ key, label, n: list.filter(f => valueBand(f) === key).length })),
+    matrix: VALUE_BANDS.map(([band, label]) => ({ band, label, cells: COMPLEXITY_SCALE.map(c => ({ complexity: c, ids: sorted.filter(f => valueBand(f) === band && complexityOf(f) === c).map(f => f.id) })) })),
+    top: sorted.slice(0, 12),
+    quickWins: sorted.filter(f => num(f) >= 4 && lowComplexity.has(complexityOf(f))),
+    weakEvidence: sorted.filter(f => num(f) >= 4 && ['Low', 'Low-medium'].includes(confidenceOf(f))),
+  }
 }

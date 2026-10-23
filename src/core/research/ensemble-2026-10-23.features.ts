@@ -5,7 +5,8 @@
  * `appNotes` are observations about this repository (backlog / ADR ids), kept apart from the research.
  */
 import text from '../../../docs/research/2026-10-23-furniture-ensemble-builder.md?raw'
-import type { Contradiction, ResearchFeature } from './types'
+import { ASSESSOR, ASSESSMENT_DATE, ENSEMBLE_ASSESSMENTS } from './ensemble-2026-10-23.assessment'
+import type { Assessment, Contradiction, ResearchFeature } from './types'
 
 export const NOT_EVALUATED = 'not evaluated'
 export const UNKNOWN = 'unknown'
@@ -23,7 +24,14 @@ function ranked(rank: number) {
 type Draft = Partial<Omit<ResearchFeature, 'id'>> & Pick<ResearchFeature, 'name' | 'description' | 'category' | 'subcategory'>
 const n = (s: string) => `ens.n.${s}`
 const id = (s: string) => `ens.f.${s}`
+function assessmentOf(slug: string): Assessment | undefined {
+  const r = ENSEMBLE_ASSESSMENTS[slug]
+  if (!r) return undefined
+  const [relevance, demand, ux, adoption, differentiation, leverage, complexity, confidence, rationale, internal] = r
+  return { scores: { relevance, demand, ux, adoption, differentiation, leverage }, complexity: complexity as Assessment['complexity'], confidence: confidence as Assessment['confidence'], rationale, by: ASSESSOR, date: ASSESSMENT_DATE, ...(internal ? { internal } : {}) }
+}
 function F(slug: string, d: Draft): ResearchFeature {
+  const assessment = d.rank ? undefined : assessmentOf(slug)
   return {
     origin: 'explicit', userProblem: UNKNOWN, userBenefit: UNKNOWN, useCases: [], workflow: [], requirements: [], technical: [],
     competitors: [], demand: NOT_EVALUATED, appreciation: NOT_EVALUATED, adoption: NOT_EVALUATED, impact: NOT_EVALUATED,
@@ -35,6 +43,7 @@ function F(slug: string, d: Draft): ResearchFeature {
     related: (d.related ?? []).map(id),
     findings: (d.findings ?? []).map(n),
     inferredFrom: d.inferredFrom?.map(n),
+    ...(assessment ? { assessment } : {}),
   }
 }
 const P1 = 'Functional ensemble creation (phase 1)', P2 = 'Intelligent compatibility and automatic adjustments (phase 2)'

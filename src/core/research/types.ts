@@ -138,7 +138,30 @@ export interface ResearchFeature {
   findings: string[]
   /** Observations about this repository (backlog / ADR ids), not research. */
   appNotes?: string[]
+  /** Assessment of a feature the paper does not rate; never replaces a rating the paper gives. */
+  assessment?: Assessment
   tags: string[]
+}
+
+/** The paper's scoring criteria (line 71), each scored 1–5; Value is their weighted sum. */
+export const ASSESSMENT_CRITERIA = [
+  ['relevance', 'Core ensemble relevance', 0.30], ['demand', 'Documented/user demand', 0.20], ['ux', 'UX improvement', 0.20],
+  ['adoption', 'Competitor adoption', 0.15], ['differentiation', 'Differentiation', 0.10], ['leverage', 'Downstream leverage', 0.05],
+] as const
+export type Criterion = (typeof ASSESSMENT_CRITERIA)[number][0]
+export const COMPLEXITY_SCALE = ['Low', 'Low-medium', 'Medium', 'Medium-high', 'High', 'Very high'] as const
+export const CONFIDENCE_SCALE = ['Low', 'Low-medium', 'Medium', 'Medium-high', 'High'] as const
+
+/** An assessment made from the paper's evidence with the paper's method; labelled as such wherever it is shown. */
+export interface Assessment {
+  scores: Record<Criterion, number>
+  complexity: (typeof COMPLEXITY_SCALE)[number]
+  confidence: (typeof CONFIDENCE_SCALE)[number]
+  /** Plumbing users never ask for by name: demand reads "Indirect", as in the paper. */
+  internal?: boolean
+  rationale: string
+  by: string
+  date: string
 }
 
 export interface Contradiction {
