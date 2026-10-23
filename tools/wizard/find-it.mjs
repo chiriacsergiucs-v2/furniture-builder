@@ -35,7 +35,7 @@ for (const width of [1440, 375]) {
   const rail = label => wizard.locator('.steps .lbl').getByText(label, { exact: true })
   const shot = name => page.screenshot({ path: `${out}/wizard-${name}-${width}.png` })
   await page.goto(url)
-  // The app starts on Home (N37); the editor is one visible tab away.
+  // The app starts on Home (N38); the editor is one visible tab away.
   await page.getByRole('link', { name: 'Editor' }).click()
 
   /** Open the wizard by visible text: desktop through New → "New piece, step by step"; phones through the Catalog tab → "New piece". */

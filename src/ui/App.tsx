@@ -66,7 +66,7 @@ type Page = 'home' | 'editor' | 'catalog' | 'research'
 const PAGES: Page[] = ['editor', 'catalog', 'research']
 const pageFromHash = (): Page => (typeof location === 'undefined' ? 'home' : PAGES.find(p => location.hash === `#${p}`) ?? 'home')
 /**
- * The top-level pages, linkable: the bare address opens the Home welcome page (N37), #editor the editor, #catalog the
+ * The top-level pages, linkable: the bare address opens the Home welcome page (N38), #editor the editor, #catalog the
  * Catalog (ADR-0032), #research the Feature Research & Catalog (ADR-0043).
  */
 function usePage(): [Page, (p: Page) => void] {

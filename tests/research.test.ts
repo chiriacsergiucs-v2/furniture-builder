@@ -5,11 +5,12 @@ import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import {
+  assessedValue, assessmentStats, complexityOf, fullyRated, rating, validateAssessment,
   auditChecks, buildView, coverage, descendants, EMPTY_QUERY, filterFeatures, groupFeatures, mergeMarks, planImport, sortFeatures,
   specMarkdown, stats, storedOf, validateBundle, type StoredBundle,
 } from '../src/core/research/catalog'
 import { ENSEMBLE_BUNDLE, MVP_ROWS, RANKED_ROWS, RECOMMENDATION_ROWS, rankLine, recommendationLine } from '../src/core/research/ensemble-2026-10-23'
-import type { ResearchBundle, ResearchMark } from '../src/core/research/types'
+import { ASSESSMENT_CRITERIA, type ResearchBundle, type ResearchMark } from '../src/core/research/types'
 import { db, listResearchBundles, listResearchMarks } from '../src/persist/db'
 import { seedShipped, useResearch } from '../src/store/researchStore'
 import { ResearchPage } from '../src/ui/Research'
@@ -268,5 +269,61 @@ describe('research catalog: page', () => {
     const html = render({ initialTab: 'coverage' })
     expect(html).toContain('Extraction complete')
     expect(html).toContain('Nothing in this paper is marked UNEXTRACTED')
+  })
+})
+
+describe('research catalog: assessment of demand, value, complexity and confidence', () => {
+  const view = buildView([storedOf(B, AT)])
+  const all = [...view.features.values()]
+  it('rates every feature: the paper\'s words where it rates, an assessment everywhere else', () => {
+    for (const f of all) expect(fullyRated(f), f.id).toBe(true)
+    for (const f of all.filter(x => x.rank)) {
+      expect(f.assessment, `${f.id} keeps the paper's ratings`).toBeUndefined()
+      for (const d of ['demand', 'impact', 'complexity', 'confidence'] as const) expect(rating(f, d).source).toBe('paper')
+    }
+    const assessed = all.filter(x => !x.rank)
+    expect(assessed).toHaveLength(118)
+    for (const f of assessed) {
+      expect(f.assessment, f.id).toBeDefined()
+      expect(validateAssessment(f.assessment!), f.id).toEqual([])
+      expect(rating(f, 'impact').source).toBe('assessment')
+    }
+  })
+  it('computes value with the paper\'s weights', () => {
+    expect(ASSESSMENT_CRITERIA.reduce((n, [, , w]) => n + w, 0)).toBeCloseTo(1)
+    const so = view.features.get('ens.f.snap-override')!
+    expect(so.assessment!.scores).toEqual({ relevance: 5, demand: 5, ux: 5, adoption: 4, differentiation: 3, leverage: 2 })
+    expect(assessedValue(so.assessment!)).toBe('4.5') // 1.5 + 1 + 1 + .6 + .3 + .1
+    expect(rating(view.features.get('ens.f.composition-layer')!, 'demand').value).toBe('Indirect')
+  })
+  it('rejects an assessment off the scales or without a rationale', () => {
+    const a = { ...view.features.get('ens.f.snap-override')!.assessment! }
+    expect(validateAssessment({ ...a, scores: { ...a.scores, ux: 6 } }).join()).toMatch(/ux/)
+    expect(validateAssessment({ ...a, complexity: 'Tiny' as never }).join()).toMatch(/complexity/)
+    expect(validateAssessment({ ...a, rationale: ' ' }).join()).toMatch(/rationale/)
+    const b = clone(B); b.features.find(f => f.assessment)!.assessment!.confidence = 'Sure' as never
+    expect(validateBundle(b).join()).toMatch(/assessment confidence/)
+  })
+  it('summarises the assessment for the dashboard and filters by it', () => {
+    const st = assessmentStats(all)
+    expect(st.ratedByPaper).toBe(39); expect(st.assessed).toBe(118); expect(st.unrated).toBe(0)
+    expect(st.matrix.flatMap(r => r.cells.flatMap(c => c.ids)).length).toBe(all.length)
+    for (const k of ['byDemand', 'byComplexity', 'byConfidence', 'byValue'] as const) expect(st[k].reduce((n, r) => n + r.n, 0), k).toBe(all.length)
+    expect(st.top[0].impact).toBe('5.0')
+    for (const f of st.quickWins) { expect(Number(rating(f, 'impact').value)).toBeGreaterThanOrEqual(4); expect(['Low', 'Low-medium', 'Medium']).toContain(complexityOf(f)) }
+    expect(st.quickWins.map(f => f.id)).toContain('ens.f.snap-override')
+    const cell = filterFeatures(view, {}, { ...EMPTY_QUERY, valueBand: '4.5', complexity: 'Low' }).map(f => f.id)
+    expect(cell).toEqual(st.matrix[0].cells[0].ids.slice().sort((a, b) => cell.indexOf(a) - cell.indexOf(b)))
+    expect(filterFeatures(view, {}, { ...EMPTY_QUERY, rated: 'paper' })).toHaveLength(39)
+    expect(specMarkdown(view, {}, ['ens.f.snap-override'], AT)).toMatch(/4\.5 \(assessed\)[\s\S]*Assessment, not research/)
+  })
+  it('shows the assessment on the dashboard and on the feature, labelled as such', () => {
+    const over = renderToStaticMarkup(createElement(ResearchPage, { onDone: () => {} }))
+    for (const t of ['Assessment: demand, value, complexity, confidence', 'Value (rows) × complexity (columns)', 'Quick wins', 'High value, weak evidence', 'by the paper itself']) expect(over).toContain(t)
+    const det = renderToStaticMarkup(createElement(ResearchPage, { onDone: () => {}, initialTab: 'features', initialDetail: 'ens.f.snap-override' }))
+    expect(det).toContain('Assessment, not research.')
+    expect(det).toContain('Assessment — not from the paper')
+    const paper = renderToStaticMarkup(createElement(ResearchPage, { onDone: () => {}, initialTab: 'features', initialDetail: 'ens.f.guided-snapping' }))
+    expect(paper).not.toContain('Assessment, not research.')
   })
 })

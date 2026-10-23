@@ -8,7 +8,7 @@ import { Icon } from './icons'
 import { templateGlyph } from './Templates'
 
 /**
- * The welcome page the app starts on (backlog N37): create a new project, or pick one saved on this device.
+ * The welcome page the app starts on (backlog N38): create a new project, or pick one saved on this device.
  * Everything listed opens in the editor; nothing here changes what is stored.
  */
 export function HomePage({ onOpened, onNewPiece, onLibrary }: { onOpened: () => void; onNewPiece: () => void; onLibrary: () => void }) {
