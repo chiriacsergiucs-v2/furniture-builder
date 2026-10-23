@@ -3,6 +3,8 @@ import { validateDesign } from '../core/design'
 import { validateProject, type Project } from '../core/project'
 import { validateLocalTemplate, type LocalTemplate } from '../core/catalog/local'
 import type { Design } from '../core/types'
+import { validateBundle, validateMark, type StoredBundle } from '../core/research/catalog'
+import type { ResearchMark } from '../core/research/types'
 
 export interface StoredDesign { id: string; name: string; updatedAt: string; design: Design }
 export interface StoredProject { id: string; name: string; updatedAt: string; project: Project }
@@ -16,6 +18,8 @@ class FurnitureDb extends Dexie {
   designs!: Table<StoredDesign, string>
   projects!: Table<StoredProject, string>
   templates!: Table<StoredTemplate, string>
+  researchDocs!: Table<StoredBundle, string>
+  researchMarks!: Table<ResearchMark, string>
   constructor(name = 'furniture-builder') {
     super(name)
     // Never edit a shipped version block; add a new version for any change (ADR-0012).
@@ -24,6 +28,9 @@ class FurnitureDb extends Dexie {
     this.version(2).stores({ designs: 'id, updatedAt, name', projects: 'id, updatedAt, name' })
     // v3 (ADR-0034): templates edited on this device. Designs and projects untouched (additive table).
     this.version(3).stores({ designs: 'id, updatedAt, name', projects: 'id, updatedAt, name', templates: 'id, updatedAt' })
+    // v4 (ADR-0043): research papers (one row per edition) and the user's decisions on them, kept apart so a
+    // re-import never touches a decision. Earlier tables untouched (additive).
+    this.version(4).stores({ designs: 'id, updatedAt, name', projects: 'id, updatedAt, name', templates: 'id, updatedAt', researchDocs: 'key, docId', researchMarks: 'id, updatedAt' })
   }
 }
 
@@ -67,6 +74,23 @@ export async function listTemplates(database = db): Promise<LocalTemplate[]> {
   return rows.filter(r => !validateLocalTemplate(r.template).length).map(r => r.template)
 }
 export const deleteTemplate = (id: string, database = db) => database.templates.delete(id)
+
+export async function saveResearchBundle(s: StoredBundle, database = db): Promise<void> {
+  await database.researchDocs.put(s)
+}
+/** Stored editions that still validate; unreadable rows are skipped and kept (ADR-0012). */
+export async function listResearchBundles(database = db): Promise<StoredBundle[]> {
+  const rows = await database.researchDocs.toArray()
+  return rows.filter(r => !validateBundle(r.bundle).length)
+}
+export async function saveResearchMarks(marks: ResearchMark[], database = db): Promise<void> {
+  await database.researchMarks.bulkPut(marks)
+}
+/** Decisions that still validate; unreadable rows are skipped and kept (ADR-0012). */
+export async function listResearchMarks(database = db): Promise<ResearchMark[]> {
+  const rows = await database.researchMarks.toArray()
+  return rows.filter(r => !validateMark(r).length)
+}
 
 const LAST_KEY = 'furniture-builder:last-design'
 const LAST_PROJECT_KEY = 'furniture-builder:last-project'

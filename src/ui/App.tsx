@@ -5,6 +5,8 @@ import { lastDesignId, lastProjectId, loadDesign, loadProject, rememberLast, rem
 import { useDesign } from '../store/designStore'
 import { AddPieceDialog, LibraryDialog, MaterialsDialog, NewDialog } from './Dialogs'
 import { CatalogPage } from './Catalog'
+import { ResearchPage } from './Research'
+import { useResearch } from '../store/researchStore'
 import { ConfirmHost } from './Confirm'
 import { catalogFamilies } from '../core/catalog'
 import { useTemplates } from '../store/templatesStore'
@@ -57,9 +59,9 @@ function useMediaQuery(q: string) {
   return match
 }
 
-type Page = 'editor' | 'catalog'
-const pageFromHash = (): Page => (typeof location !== 'undefined' && location.hash === '#catalog' ? 'catalog' : 'editor')
-/** The two top-level pages, linkable: #catalog opens the Catalog (ADR-0032). */
+type Page = 'editor' | 'catalog' | 'research'
+const pageFromHash = (): Page => (typeof location === 'undefined' ? 'editor' : location.hash === '#catalog' ? 'catalog' : location.hash === '#research' ? 'research' : 'editor')
+/** The top-level pages, linkable: #catalog opens the Catalog (ADR-0032), #research the Feature Research & Catalog (ADR-0043). */
 function usePage(): [Page, (p: Page) => void] {
   const [page, setPage] = useState<Page>(pageFromHash)
   useEffect(() => {
@@ -68,7 +70,7 @@ function usePage(): [Page, (p: Page) => void] {
     return () => window.removeEventListener('hashchange', on)
   }, [])
   return [page, (p: Page) => {
-    if (p === 'catalog') location.hash = 'catalog'
+    if (p === 'catalog' || p === 'research') location.hash = p
     else history.replaceState(null, '', location.pathname + location.search)
     setPage(p)
     window.scrollTo({ top: 0 })
@@ -78,6 +80,7 @@ const CATALOG_ITEMS = catalogFamilies.reduce((n, f) => n + f.variants.length, 0)
 
 export function App() {
   const [page, setPage] = usePage()
+  const researchCount = useResearch(s => new Set(s.stored.flatMap(b => b.bundle.features.map(f => f.id))).size)
   const design = useDesign(s => s.design)
   const model = useDesign(s => s.model)
   const dirtyAt = useDesign(s => s.dirtyAt)
@@ -221,6 +224,7 @@ export function App() {
         <nav className="pages" aria-label="Pages">
           <a href="#" aria-current={page === 'editor' ? 'page' : undefined} onClick={e => { e.preventDefault(); setPage('editor') }}><Icon name="front" className="sm" />Editor</a>
           <a href="#catalog" aria-current={page === 'catalog' ? 'page' : undefined} onClick={e => { e.preventDefault(); setPage('catalog') }}><Icon name="catalog" className="sm" />Catalog <span className="count">{CATALOG_ITEMS}</span></a>
+          <a href="#research" aria-current={page === 'research' ? 'page' : undefined} onClick={e => { e.preventDefault(); setPage('research') }}><Icon name="search" className="sm" />Feature Research <span className="count">{researchCount}</span></a>
         </nav>
         <input className="name" aria-label={inProject ? 'Name of this project' : 'Name of this piece'} defaultValue={inProject ? project!.name : design.name} key={inProject ? `p-${project!.id}` : design.id}
           onBlur={e => {
@@ -285,7 +289,8 @@ export function App() {
         </div>
       )}
       {page === 'catalog' && <CatalogPage onDone={() => setPage('editor')} />}
-      <main className={`work ${editingItemId || templateEdit ? 'with-banner' : ''}`} hidden={page === 'catalog'}>
+      {page === 'research' && <ResearchPage onDone={() => setPage('editor')} />}
+      <main className={`work ${editingItemId || templateEdit ? 'with-banner' : ''}`} hidden={page !== 'editor'}>
         <aside className="side">
           {inProject ? <ProjectPanel onAdd={() => setDialog('add')} /> : <Inspector />}
         </aside>

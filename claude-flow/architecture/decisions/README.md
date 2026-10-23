@@ -133,3 +133,11 @@ Requested by the user on 2026-10-23.
 | ID | Decision | Backlog | Status |
 |---|---|---|---|
 | [ADR-0042](ADR-0042.md) | Catalog pictures are SVG snapshots of the built model, made before the app runs and shipped as files | N32 | Proposed |
+
+## Feature research catalog — proposed
+
+Requested by the user on 2026-10-23.
+
+| ID | Decision | Backlog | Status |
+|---|---|---|---|
+| [ADR-0043](ADR-0043.md) | Research papers become a traceable feature catalog (bundle format, line-level coverage audit, re-import); user decisions stored apart and never touched by imports | N33 | Proposed |
