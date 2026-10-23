@@ -61,6 +61,9 @@ const now = () => new Date().toISOString()
 const waitsFor = (requires: CatalogVariant['requires']) => missingCapabilities({ requires }).map(c => CAPABILITY_WAITS[c] ?? c).join('; ')
 const matches = (f: ViewFamily, v: CatalogVariant, q: string) => !q || [f.name, f.nameRo, ...f.aliases, v.name, VARIANT_RO[v.id] ?? ''].some(s => s.toLowerCase().includes(q))
 
+/** Picture made before runtime from the shipped design (ADR-0042, `npm run catalog:snapshots`); edited families have none. */
+const snapshotUrl = (variantId: string) => `${import.meta.env.BASE_URL}catalog/${variantId}.svg`
+
 /**
  * "Start from" (ADR-0032) in New and in a project's "Add a piece": every catalog item, grouped by room or type, with
  * search. Picking one makes an independent copy with its origin recorded.
@@ -90,7 +93,9 @@ export function StartFrom({ onPick, onBrowse }: { onPick: (d: Design) => void; o
               {rows.map(({ f, v }) => (
                 <li key={`${g.key}:${f.id}:${v.id}`}>
                   <button type="button" className="row-btn" onClick={() => { const d = insertVariant(f, v, now()); if (d) onPick(d) }}>
-                    <span className="glyph"><Icon name={familyGlyph(f)} /></span>
+                    {f.localId
+                      ? <span className="glyph"><Icon name={familyGlyph(f)} /></span>
+                      : <img className="snap-thumb" src={snapshotUrl(v.id)} alt="" loading="lazy" decoding="async" width={72} height={60} />}
                     <span><strong>{f.name}: {v.name}</strong><span className="sub">{v.summary}{VARIANT_RO[v.id] ? ` · ${f.nameRo}: ${VARIANT_RO[v.id]}` : ''}</span></span>
                     <Icon name="chevron-right" className="chev sm" />
                   </button>
@@ -220,9 +225,6 @@ export function CatalogPage({ onDone }: { onDone: () => void }) {
     </main>
   )
 }
-
-/** Picture made before runtime from the shipped design (ADR-0042, `npm run catalog:snapshots`); edited families have none. */
-const snapshotUrl = (variantId: string) => `${import.meta.env.BASE_URL}catalog/${variantId}.svg`
 
 const SUPPORT_TEXT = { ready: 'Ready', 'needs-construction': 'Needs construction', safety: 'Safety-regulated', reference: 'Reference' } as const
 

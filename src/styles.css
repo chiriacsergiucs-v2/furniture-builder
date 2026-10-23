@@ -235,6 +235,7 @@ select { padding-right: 28px; appearance: none; -webkit-appearance: none;
 .row-btn.on, .row-btn[aria-pressed="true"] { border-color: var(--primary); background: var(--primary-soft); }
 .row-btn .glyph { width: 36px; height: 36px; border-radius: var(--r); display: grid; place-items: center; background: var(--surface-2); color: var(--ink-2); }
 .row-btn.on .glyph { background: var(--surface); color: var(--primary); }
+.row-btn .snap-thumb { width: 72px; height: 60px; flex: none; object-fit: contain; border-radius: var(--r); background: var(--surface-2); }
 .row-btn strong { font-weight: 600; display: block; }
 .row-btn span.sub { color: var(--ink-2); font-size: var(--fs-xs); display: block; }
 .row-btn .chev { color: var(--ink-3); }
