@@ -29,4 +29,9 @@ User answers 2026-10-23 (all ADR open questions): kitchen carcass 720 + plinth 1
 hanger depth 530, anti-tip > 1000; no scribe allowance; sliding 30 / 80; timber lengths 2400 + 3000, joinery not
 listed; brand cleared on first edit; all saved pieces in the Catalog; own templates mixed in by room/type; placement
 keeps its own turn, Wall warns, gap tool hidden above; feed weekly IKEA only; own confirm dialogs; theme toggle stays;
-no guided New; phone bottom bar; shaped-part ADR next (ADR-0040).
+no guided New (amended same day: "New piece" wizard, ADR-0044); phone bottom bar; shaped-part ADR next (ADR-0040).
+
+New-piece wizard (2026-10-23, ADR-0044–0046, Proposed): New → "New piece" asks sizes, a construction type (cabinet,
+open shelving, table, bench, desk) and only that type's steps; types, steps and suggestion generators are data in
+`src/core/wizard/`; cards are candidates built by `buildModel()` with no errors, ranked default-first then by variety;
+the result is a normal design saved with `saveDesign()` (no Dexie change). Legs under a carcass are not in the model.

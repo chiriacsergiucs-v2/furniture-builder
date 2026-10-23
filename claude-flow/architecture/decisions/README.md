@@ -141,3 +141,13 @@ Requested by the user on 2026-10-23.
 | ID | Decision | Backlog | Status |
 |---|---|---|---|
 | [ADR-0043](ADR-0043.md) | Research papers become a traceable feature catalog (bundle format, line-level coverage audit, re-import); user decisions stored apart and never touched by imports | N33 | Proposed |
+
+## New-piece wizard — proposed
+
+Requested by the user on 2026-10-23 (replaces ADR-0030 answer 3, "No guided New flow").
+
+| ID | Decision | Backlog | Status |
+|---|---|---|---|
+| [ADR-0044](ADR-0044.md) | "New piece" is a data-driven wizard: step library + construction-type registry map answers to a design | N34 | Proposed |
+| [ADR-0045](ADR-0045.md) | Suggested combinations from generator axes declared per type, kept only when `buildModel()` has no errors | N34 | Proposed |
+| [ADR-0046](ADR-0046.md) | A wizard result is an ordinary saved design in the existing `designs` table; no Dexie version | N34 | Proposed |
