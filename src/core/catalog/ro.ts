@@ -10,7 +10,7 @@ export const VARIANT_RO: Record<string, string> = {
   'tall-pantry': 'Cămară, 2 uși suprapuse', 'tall-pantry-drawers': 'Cămară + sertare interioare', 'tall-broom': 'Mături / utilitar', 'tall-oven-tower': 'Coloană cuptor + microunde', 'tall-fridge': 'Coloană frigider',
   'corner-blind': 'Orb stânga + raft', 'corner-blind-right': 'Orb dreapta + raft', 'corner-blind-wall': 'Colț orb suspendat',
   'corner-l': 'L jos, uși pliante', 'corner-l-wall': 'L suspendat 600 × 600', 'corner-diagonal': 'Front diagonal',
-  bookcase: 'Deschisă, cu spate, rafturi',
+  bookcase: 'Deschisă, cu spate, rafturi', panels: 'Un panou',
   wardrobe: '2 uși, bară + rafturi', 'wardrobe-3': '3 secțiuni + sertare', 'wardrobe-double-hang': 'Două bare', 'wardrobe-4-doors': '4 uși, 2 secțiuni', 'wardrobe-sliding': '2 uși glisante',
   'armoire-drawer': 'Bară + sertar jos', 'armoire-shelves': 'Bară + rafturi',
   'dresser-2x3': '2 × 3 sertare', 'dresser-2x4': '2 × 4 sertare', 'dresser-graduated': '3 sertare late, gradate',

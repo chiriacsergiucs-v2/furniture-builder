@@ -117,3 +117,19 @@ Requested by the user on 2026-10-23 (answer to ADR-0039).
 | ID | Decision | Backlog | Status |
 |---|---|---|---|
 | [ADR-0040](ADR-0040.md) | Shaped parts: tilted members and profiled boards on whole-mm cut blanks | N30 | Proposed |
+
+## Mobila rooms — proposed
+
+Requested by the user on 2026-10-22.
+
+| ID | Decision | Backlog | Status |
+|---|---|---|---|
+| [ADR-0041](ADR-0041.md) | Parts known only by their cut sizes are a panel set (one flat pile, never an invented assembly) | N21, N31 | Proposed |
+
+## Catalog pictures — proposed
+
+Requested by the user on 2026-10-23.
+
+| ID | Decision | Backlog | Status |
+|---|---|---|---|
+| [ADR-0042](ADR-0042.md) | Catalog pictures are SVG snapshots of the built model, made before the app runs and shipped as files | N32 | Proposed |

@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { buildModel } from '../core/build'
 import { findInProduct, mapProductSpace, templates, upgradeDesign } from '../core/design'
 import { buildProjectModel, makeItem, removeProjectItem, resolvePlacements, setGapLeft, type Project, type ProjectItem, type ProjectModel } from '../core/project'
-import type { CabinetParams, CornerParams, DeskParams, Design, FrameParams, FurnitureModel, Material, PanelParams, Space } from '../core/types'
+import type { CabinetParams, CornerParams, DeskParams, Design, FrameParams, FurnitureModel, Material, PanelParams, PanelSetParams, Space } from '../core/types'
 import type { LocalTemplate } from '../core/catalog/local'
 
 export type Tab = 'parts' | 'sheets' | 'hardware' | 'checks'
@@ -40,6 +40,7 @@ interface State {
   updateCabinet: (patch: Partial<CabinetParams>) => void
   updateDesk: (patch: Partial<DeskParams>) => void
   updateCorner: (patch: Partial<CornerParams>) => void
+  updatePanelSet: (patch: Partial<PanelSetParams>) => void
   updatePanel: (patch: Partial<PanelParams>) => void
   updateFrame: (patch: Partial<FrameParams>) => void
   /** Catalog metadata and guidance settings (ADR-0028, ADR-0035). */
@@ -175,6 +176,11 @@ export const useDesign = create<State>((set, get) => {
     updateCorner: patch => {
       const d = get().design
       if (d.product.kind !== 'corner') return
+      commit({ ...d, product: { ...d.product, params: { ...d.product.params, ...patch } } })
+    },
+    updatePanelSet: patch => {
+      const d = get().design
+      if (d.product.kind !== 'panels') return
       commit({ ...d, product: { ...d.product, params: { ...d.product.params, ...patch } } })
     },
     updatePanel: patch => {

@@ -1,4 +1,4 @@
-import type { Design, Mm } from '../types'
+import type { Design, Mm, Product } from '../types'
 
 /** Function groups and rooms used to group the catalog (ADR-0032). */
 export type FunctionGroup = 'kitchen' | 'storage' | 'tables' | 'seating' | 'sleeping'
@@ -57,7 +57,7 @@ export interface CatalogFamily {
   /** First is the primary room. */
   rooms: Room[]
   /** Product root that builds it. */
-  root: 'cabinet' | 'corner' | 'desk' | 'panel' | 'frame'
+  root: Product['kind']
   support: Support
   /** The default structure in words, for the catalog card. */
   structure: string

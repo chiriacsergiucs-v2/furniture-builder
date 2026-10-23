@@ -45,6 +45,8 @@ export type PanelRole =
   | 'side' | 'top' | 'bottom' | 'back' | 'plinth' | 'divider' | 'shelf'
   | 'door' | 'drawer-front' | 'drawer-side' | 'drawer-back' | 'drawer-inner-front' | 'drawer-bottom'
   | 'worktop' | 'gable' | 'modesty' | 'blind-panel'
+  /** Panel set parts (ADR-0041). */
+  | 'loose'
   /** Top rails instead of a full top (ADR-0036); frame parts (ADR-0038). */
   | 'rail' | 'leg' | 'apron' | 'stretcher' | 'slat' | 'ledger' | 'seat' | 'headboard' | 'footboard' | 'stile' | 'rung'
   /** Run parts in a project (ADR-0036). */
@@ -376,12 +378,34 @@ export interface FrameParams {
   } | null
 }
 
+/** One part of a panel set (ADR-0041): finished cut size only, no place in an assembly. Thickness comes from the board. */
+export interface LoosePanel {
+  id: string
+  name: string
+  /** Along the grain when the board has one. */
+  length: Mm
+  width: Mm
+  materialId: string
+  quantity: number
+}
+
+/**
+ * Parts known only by their cut sizes (ADR-0041), such as a bed whose panels are measured but whose assembly is not.
+ * Built lying flat in one pile, largest at the bottom: never an invented assembly.
+ */
+export interface PanelSetParams {
+  panels: LoosePanel[]
+  /** Shown with the piece: what the parts are for and what is still unknown. */
+  note?: string
+}
+
 export type Product =
   | { kind: 'cabinet'; id: string; params: CabinetParams }
   | { kind: 'desk'; id: string; params: DeskParams }
   | { kind: 'corner'; id: string; params: CornerParams }
   | { kind: 'panel'; id: string; params: PanelParams }
   | { kind: 'frame'; id: string; params: FrameParams }
+  | { kind: 'panels'; id: string; params: PanelSetParams }
 
 /** Where a piece came from (ADR-0028); kept on every copy, never used for geometry. */
 export interface CatalogMeta {

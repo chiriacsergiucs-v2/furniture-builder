@@ -111,4 +111,13 @@ export const storage: CatalogFamily[] = [
       { id: 'filing-lateral', name: 'Lateral, 2 drawers', summary: '900 × 720 × 500', kind: 'interior', requires: ['hardware:user'], hardware: 'lateral hanging-file rails', create: () => cab('Lateral filing cabinet', { width: 900, height: 720, depth: 500, plinthHeight: 40 }, drawers(2)) },
     ],
   },
+  {
+    id: 'loose-panels', name: 'Loose panels', nameRo: 'Panouri libere', aliases: ['cut list', 'panel set', 'panouri'], function: 'storage', rooms: ['other'], root: 'panels', support: 'ready',
+    structure: 'Parts known only by their cut sizes (ADR-0041): listed for cutting and sheets, shown in one pile, not assembled.',
+    configurations: ['Name, length, width, board and quantity per part'],
+    dims: { min: [1, 1, 1], max: [5000, 3000, 200] }, catalogVersion: 1,
+    variants: [
+      { id: 'panels', name: 'One panel', summary: '600 × 300, add more', kind: 'interior', requires: [], create: legacy('panels') },
+    ],
+  },
 ]

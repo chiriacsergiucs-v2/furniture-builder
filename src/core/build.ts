@@ -1,6 +1,7 @@
 import { buildCabinet, slidingTrackDepth } from './cabinet'
 import { buildCorner } from './corner'
 import { buildDesk } from './desk'
+import { buildPanelSet } from './panelset'
 import { buildFrame } from './frame'
 import { buildPanel } from './panel'
 import { runRules } from './rules'
@@ -20,6 +21,7 @@ export function buildModel(design: Design): FurnitureModel {
     : prod.kind === 'corner' ? buildCorner(prod.params, prod.id, materials)
     : prod.kind === 'panel' ? buildPanel(prod.params, prod.id, materials)
     : prod.kind === 'frame' ? buildFrame(prod.params, prod.id, materials)
+    : prod.kind === 'panels' ? buildPanelSet(prod.params, prod.id, materials)
     : buildDesk(prod.params, prod.id, materials)
   const diagnostics: Diagnostic[] = [...partial.diagnostics]
   const panels = partial.panels

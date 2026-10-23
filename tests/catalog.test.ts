@@ -5,9 +5,11 @@ import { catalogFamilies, FUNCTIONS, insertable, insertVariant, ROOMS, startFami
 import { VARIANT_RO } from '../src/core/catalog/ro'
 import { CATALOG_BEGIN, CATALOG_END, catalogMarkdown } from '../src/core/catalog/markdown'
 import { templates, validateDesign } from '../src/core/design'
+import type { Design } from '../src/core/types'
 
 /** Warnings a shipped variant may carry at its default size, each by design (ADR-0035 compliance). */
-const EXPECTED_WARNINGS = new Set(['internal-drawers', 'hardware-to-choose', 'flap-fitting', 'shelf-support'])
+// 'not-assembled': every loose panel set says its assembly is not modelled (ADR-0041).
+const EXPECTED_WARNINGS = new Set(['internal-drawers', 'hardware-to-choose', 'flap-fitting', 'shelf-support', 'not-assembled'])
 // Long frames carry the "centre leg" reminder by design.
 const EXTRA: Record<string, string[]> = { 'sofa-3-frame': ['frame-span'], 'sectional-main': ['frame-span'], 'lounger-flat': ['frame-span'] }
 
@@ -24,7 +26,7 @@ describe('template catalog (ADR-0032, ADR-0033, ADR-0039)', () => {
       expect(f.structure.length).toBeGreaterThan(10)
       expect(f.configurations.length).toBeGreaterThan(0)
     }
-    expect(catalogFamilies).toHaveLength(42)
+    expect(catalogFamilies).toHaveLength(43)
   })
   it('kitchen cabinets carry the most variants, simple open storage the fewest', () => {
     const avg = (fn: string) => { const l = catalogFamilies.filter(f => f.function === fn); return l.reduce((n, f) => n + f.variants.length, 0) / l.length }
@@ -61,9 +63,10 @@ describe('template catalog (ADR-0032, ADR-0033, ADR-0039)', () => {
     const a = insertVariant(f, v, '2026-10-23T00:00:00.000Z')!, b = insertVariant(f, v)!
     expect(a.id).not.toBe(b.id)
     expect(a.catalog?.origin).toMatchObject({ catalogId: 'wardrobe', variantId: 'wardrobe', revision: 1, takenAt: '2026-10-23T00:00:00.000Z' })
-    const before = JSON.stringify(v.create!().product.params.width)
+    const width = (d: Design) => (d.product.params as { width?: number }).width
+    const before = JSON.stringify(width(v.create!()))
     if (a.product.kind === 'cabinet') a.product.params.width = 9999
-    expect(JSON.stringify(v.create!().product.params.width)).toBe(before)
+    expect(JSON.stringify(width(v.create!()))).toBe(before)
     const hw = catalogFamilies.find(x => x.id === 'pullout-base')!
     expect(insertVariant(hw, hw.variants[0])!.catalog?.hardwareToChoose).toBe('pull-out frame')
   })
