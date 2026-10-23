@@ -146,7 +146,7 @@ function Hardware() {
           ))}
         </tbody>
       </table>
-      <p className="hint">Screws and connectors are not listed. Hinge and shelf-pin counts follow common guidance; the maker's datasheet decides.</p>
+      <p className="hint">Screws and connectors are not listed, except screwed joints a design names (their screws are your choice). Hinge and shelf-pin counts follow common guidance; the maker's datasheet decides.</p>
     </div>
   )
 }

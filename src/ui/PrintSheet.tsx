@@ -7,6 +7,7 @@ import { useDesign } from '../store/designStore'
 import { Elevation } from './Elevation'
 import { SheetSvg } from './Sheets'
 import { useView } from './useView'
+import { OVERLAP, PAGE, profileTemplates } from '../core/template'
 
 /**
  * Printable cutting sheet for the panel shop, in Romanian, A4 portrait (ADR-0020). Rendered only while printing;
@@ -24,6 +25,7 @@ export function PrintSheet() {
   const warnings = view.diagnostics.filter(d => d.severity === 'warning')
   const labelOf = (key: string) => layouts.rows.find(r => r.panelIds[0] === key)
   const colorOf = (id: string) => view.materials.find(m => m.id === id)?.color ?? '#ddd'
+  const templates = useMemo(() => profileTemplates(view.model.panels), [view])
 
   return (
     <div className="print-root" aria-hidden="true">
@@ -80,7 +82,7 @@ export function PrintSheet() {
               {hw.map((h, i) => { const ro = hardwareRo(h); return <tr key={i}><td className="n">{h.quantity}</td><td>{ro.item}</td><td className="n">{h.sizeMm ? `${h.sizeMm} mm` : ''}</td><td>{ro.note}</td></tr> })}
             </tbody>
           </table>
-          <p className="pr-note">Șuruburile și elementele de îmbinare nu sunt incluse.</p>
+          <p className="pr-note">Șuruburile și elementele de îmbinare nu sunt incluse, în afara îmbinărilor cu șuruburi numite în proiect (șuruburile le alegeți dvs.).</p>
         </section>
       )}
 
@@ -88,6 +90,35 @@ export function PrintSheet() {
         <section className="pr-block">
           <h2>De verificat</h2>
           <ul className="pr-warn">{warnings.map((w, i) => <li key={i}>{w.message}</li>)}</ul>
+        </section>
+      )}
+
+      {templates.length > 0 && (
+        <section className="pr-block pr-templates">
+          <h2>Șabloane la scară 1:1</h2>
+          <p className="pr-note">Tipăriți la 100% (fără „potrivire în pagină”) și verificați bara de 100 mm. Foile se suprapun {OVERLAP} mm: lipiți-le după marcaje. Linia punctată este semifabricatul din lista de piese.</p>
+          <table className="pr-table">
+            <thead><tr><th>Piesă</th><th>Buc.</th><th>Semifabricat</th><th>Puncte (mm, de la colțul stânga-sus)</th><th>Foi</th></tr></thead>
+            <tbody>{templates.map(tp => (
+              <tr key={tp.key}><td>{partRo(tp.label)}</td><td className="n">{tp.quantity}</td><td className="n">{tp.w} × {tp.h}</td>
+                <td className="drill">{tp.points.map(([x, y]) => `${x},${y}`).join(' · ')}</td><td className="n">{tp.tiles.length}</td></tr>
+            ))}</tbody>
+          </table>
+          {templates.flatMap(tp => tp.tiles.map(tile => (
+            <div key={`${tp.key}-${tile.col}-${tile.row}`} className="pr-template">
+              <h3>Șablon {partRo(tp.label)} — foaia {tile.row * tp.cols + tile.col + 1} din {tp.tiles.length} (coloana {tile.col + 1}, rândul {tile.row + 1})</h3>
+              <svg width={`${PAGE.w}mm`} height={`${PAGE.h}mm`} viewBox={`${tile.x0} ${tile.y0} ${PAGE.w} ${PAGE.h}`}>
+                <rect className="tp-blank" x={0} y={0} width={tp.w} height={tp.h} />
+                <polygon className="tp-cut" points={tp.points.map(([x, y]) => `${x},${y}`).join(' ')} />
+                {[[0, 0], [PAGE.w, 0], [0, PAGE.h], [PAGE.w, PAGE.h]].map(([dx, dy], k) => (
+                  <path key={k} className="tp-mark" d={`M${tile.x0 + dx - 4} ${tile.y0 + dy}h8M${tile.x0 + dx} ${tile.y0 + dy - 4}v8`} />
+                ))}
+                <g className="tp-scale" transform={`translate(${tile.x0 + 8} ${tile.y0 + PAGE.h - 10})`}>
+                  <path d="M0 0h100M0 -3v6M100 -3v6" /><text x={50} y={-4} textAnchor="middle">100 mm</text>
+                </g>
+              </svg>
+            </div>
+          )))}
         </section>
       )}
 

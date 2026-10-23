@@ -1,5 +1,6 @@
 import { base, corner, door, drawers, empty, even, flap, fr, legacy, mm, panel, shelves, splitY, tall, wallUnit } from './helpers'
 import type { CatalogFamily } from './types'
+import type { DrawersSpace } from '../types'
 
 /** Kitchen: 720 carcass + 100 plinth, 560 deep; walls 320 deep; tall to 2400 (ADR-0036 defaults, typical values to confirm). */
 const GRID = [150, 200, 300, 400, 450, 500, 600, 800, 900, 1000, 1200]
@@ -41,7 +42,9 @@ export const kitchen: CatalogFamily[] = [
       { id: 'sink-2-doors', name: '2 doors, rails, no back', summary: '800 wide', kind: 'construction', requires: ['top:rails'], create: () => base('Sink base, 2 doors', { width: 800, topKind: 'rails', back: 'none' }, empty(door(2))) },
       { id: 'sink-1-door', name: '1 door (600)', summary: '600 wide, rails, no back', kind: 'construction', requires: ['top:rails'], create: () => base('Sink base, 1 door', { topKind: 'rails', back: 'none' }, empty(door(1))) },
       { id: 'sink-false-front', name: 'False front + 2 doors', summary: 'Fixed strip under the sink', kind: 'construction', requires: ['top:rails', 'front:fixed'] },
-      { id: 'sink-u-drawer', name: 'U-cut drawer + drawer', summary: 'Drawer cut around the trap', kind: 'construction', requires: ['shape', 'hardware:user'] },
+      { id: 'sink-u-drawer', name: 'U-cut drawer + drawer', summary: '800 wide; top drawer cut around the trap (notch 250 × 200: set it to your trap)', kind: 'construction', requires: ['top:rails', 'shape', 'hardware:user'],
+        hardware: 'full-extension runners suited to a sink drawer; the siphon/trap sets the notch',
+        create: () => base('Sink base, U-cut drawer + drawer', { width: 800, topKind: 'rails', back: 'none' }, { ...(drawers(2) as DrawersSpace), uCut: { width: 250, depth: 200 } }) },
       { id: 'sink-waste', name: 'Waste pull-out', summary: 'One tall pull-out for bins', kind: 'construction', requires: ['top:rails', 'hardware:user'], hardware: 'waste pull-out system',
         create: () => base('Sink base, waste pull-out', { topKind: 'rails', back: 'none' }, drawers(1)) },
     ],
@@ -128,7 +131,8 @@ export const kitchen: CatalogFamily[] = [
       { id: 'corner-l', name: 'Base L, folding doors', summary: '900 × 900, 720 carcass on the plinth', kind: 'interior', requires: [], create: () => corner('L-shaped corner base', 'l-shape', { height: 820 }) },
       { id: 'corner-l-wall', name: 'Wall L 600 × 600', summary: '720 high, 320 deep', kind: 'interior', requires: ['hardware:user'], hardware: 'wall hanging brackets (corner units do not get them automatically)',
         create: () => corner('Wall L corner', 'l-shape', { width: 600, wingWidth: 600, height: 720, depth: 320, plinthHeight: 0 }) },
-      { id: 'corner-diagonal', name: 'Diagonal front', summary: 'Five-sided corner', kind: 'construction', requires: ['shape'] },
+      { id: 'corner-diagonal', name: 'Diagonal front', summary: 'Five-sided, 900 along each wall, door at 45°', kind: 'construction', requires: ['shape'],
+        create: () => corner('Diagonal corner base', 'diagonal', { width: 900, height: 820, depth: 560, plinthHeight: 100, plinthSetback: 50 }) },
     ],
   },
 ]

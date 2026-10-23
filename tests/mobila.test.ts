@@ -170,13 +170,23 @@ describe('Mobila rooms from the project file', () => {
     expect(rows.find(r => r.length === 446 && r.width === 160)?.quantity).toBe(2)
     expect(rows.find(r => r.length === 450 && r.width === 332)?.quantity).toBe(2)
   })
-  it("Pat Noi: the file's cut panels, in the Dormitor next to the nightstands, not assembled", () => {
+  it("Pat Noi: the file's cut panels; sides screwed to the foot board (user 2026-10-23), headboard trim in the pile", () => {
     const p = mobilaDormitor()
     const bed = p.items.find(i => i.id === 'dormitor-pat-noi')!
     expect(bed.design.product.kind).toBe('panels')
     const pm = buildProjectModel(p)
     const piece = pm.pieces.find(x => x.item.id === bed.id)!
     expect(piece.model.diagnostics.map(d => d.code)).toContain('not-assembled')
+    expect(piece.model.diagnostics.filter(d => d.severity === 'error')).toEqual([])
+    const m = buildModel(bed.design)
+    const at = (label: string) => m.panels.find(x => x.label === label)!.box
+    // Sides on edge behind the foot board, flush with its ends; foot board across the front.
+    expect(at('Laterală pat stânga')).toEqual({ x: 0, y: 0, z: 0, w: 18, h: 270, d: 1800 })
+    expect(at('Laterală pat dreapta')).toEqual({ x: 2022, y: 0, z: 0, w: 18, h: 270, d: 1800 })
+    expect(at('Cap pe picioare')).toEqual({ x: 0, y: 0, z: 1800, w: 2040, h: 270, d: 18 })
+    // Headboard trim stays in the pile, clear of the frame.
+    expect(at('Traversă tăblie').x).toBe(2140)
+    expect(m.hardware.filter(h => h.kind === 'screws').map(h => h.label)).toEqual(['Screws: Laterală pat stânga to Cap pe picioare', 'Screws: Laterală pat dreapta to Cap pe picioare'])
     const rows = projectCutlist({ ...p, items: [bed] })
     const got = rows.map(r => [r.length, r.width, r.thickness, r.materialName.slice(0, 3), r.quantity])
     expect(got).toEqual(expect.arrayContaining([
@@ -217,6 +227,36 @@ describe('panel set (ADR-0041)', () => {
     expect(buildModel(empty).diagnostics.map(x => x.code)).toContain('no-panels')
     const bad = { ...d, product: { ...d.product, params: { panels: [{ id: 'x', name: 'X', length: 100, width: 100, materialId: 'nope', quantity: 1 }] } } } as Design
     expect(buildModel(bad).diagnostics.map(x => x.code)).toContain('material-missing')
+  })
+  it('placed panels are built where they sit; joints are scheduled; the rest stays in a pile beside them', () => {
+    const d = set()
+    const placed = { ...d, product: { ...d.product, params: { panels: [
+      { id: 'side', name: 'Side', length: 800, width: 300, materialId: 'pal18', quantity: 1, place: { x: 0, y: 0, z: 0, lie: 'up-z' } },
+      { id: 'top', name: 'Top', length: 600, width: 300, materialId: 'pal18', quantity: 1, place: { x: 18, y: 782, z: 0, lie: 'flat-x' } },
+      { id: 'spare', name: 'Spare', length: 400, width: 200, materialId: 'pal18', quantity: 1 },
+    ], joints: [{ a: 'side', b: 'top', kind: 'screwed' }] } } } as Design
+    expect(validateDesign(placed)).toEqual([])
+    const m = buildModel(placed)
+    expect(m.panels.map(x => [x.label, x.box.x, x.box.y, x.box.z, x.box.w, x.box.h, x.box.d, x.thicknessAxis])).toEqual([
+      ['Side', 0, 0, 0, 18, 800, 300, 'x'], ['Top', 18, 782, 0, 600, 18, 300, 'y'], ['Spare', 718, 0, 0, 400, 18, 200, 'y'],
+    ])
+    expect(m.hardware).toEqual([expect.objectContaining({ kind: 'screws', quantity: 1 })])
+    expect(m.diagnostics.filter(x => x.severity === 'error')).toEqual([])
+    // Two placed panels in the same space are caught by the independent overlap check.
+    const clash = structuredClone(placed)
+    if (clash.product.kind === 'panels') clash.product.params.panels[1].place!.x = 0
+    expect(buildModel(clash).diagnostics.map(x => x.code)).toContain('overlap')
+  })
+  it('placements and joints are validated, never thrown', () => {
+    const d = set()
+    const with1 = (lp: object, joints?: object[]) => ({ ...d, product: { ...d.product, params: { panels: [lp, { id: 'o', name: 'O', length: 100, width: 100, materialId: 'pal18', quantity: 1 }], ...(joints ? { joints } : {}) } } })
+    const base = { id: 'x', name: 'X', length: 100, width: 100, materialId: 'pal18', quantity: 1 }
+    expect(validateDesign(with1({ ...base, place: { x: 0, y: 0, z: 0, lie: 'sideways' } }))).toContain('Invalid place for X')
+    expect(validateDesign(with1({ ...base, place: { x: 0.5, y: 0, z: 0, lie: 'flat-x' } }))).toContain('x must be a whole number of mm')
+    expect(validateDesign(with1({ ...base, quantity: 2, place: { x: 0, y: 0, z: 0, lie: 'flat-x' } }))).toContain('X: a placed panel has quantity 1 (list each copy with its own place)')
+    expect(validateDesign(with1(base, [{ a: 'x', b: 'nope', kind: 'screwed' }]))).toContain('Invalid joint')
+    const unplaced = with1(base, [{ a: 'x', b: 'o', kind: 'screwed' }]) as Design
+    expect(buildModel(unplaced).diagnostics.map(x => x.code)).toContain('joint-unplaced')
   })
   it('validates panels on import', () => {
     const d = set()

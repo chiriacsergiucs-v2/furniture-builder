@@ -8,11 +8,12 @@
 import { it, expect } from 'vitest'
 import { buildModel } from '../src/core/build'
 import { INTERNAL_DRAWER_SETBACK } from '../src/core/cabinet'
-import { validateDesign, defaultDrawers, findSpace } from '../src/core/design'
+import { validateDesign, defaultDrawers, findSpace, cornerDefaults } from '../src/core/design'
 import { explode } from '../src/core/explode'
-import { overlaps, contains } from '../src/core/geometry'
+import { contains } from '../src/core/geometry'
 import { frameDefaults, solidMaterials } from '../src/core/design'
-import type { Design, Space, Material, Box, CabinetParams, DeskParams, FrameParams, Front } from '../src/core/types'
+import { aabbOf, panelsOverlap, shapeProblems } from '../src/core/shape'
+import type { Design, Space, Material, Box, CabinetParams, CornerParams, DeskParams, FrameParams, Front } from '../src/core/types'
 
 let seed = Number(process.env.SEED ?? 12345)
 const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff }
@@ -39,7 +40,9 @@ function genSpace(depth: number, doorsAbove: boolean): Space {
     case 'drawers': {
       const count = ri(1, 5)
       const heights = rnd() < 0.35 ? Array.from({ length: count }, () => rnd() < 0.3 ? { mode: 'mm' as const, value: ri(90, 250) } : { mode: 'fr' as const, value: ri(1, 3) }) : undefined
-      return { id, kind: 'drawers', count, front: doors, handle, ...(heights ? { heights } : {}) }
+      // Sink drawers (ADR-0040): the top drawer cut around a trap.
+      const uCut = rnd() < 0.2 ? { width: ri(30, 500), depth: ri(30, 450) } : undefined
+      return { id, kind: 'drawers', count, front: doors, handle, ...(heights ? { heights } : {}), ...(uCut ? { uCut } : {}) }
     }
     default: {
       const n = ri(2, 4)
@@ -60,6 +63,19 @@ function mats(): Material[] {
   ]
 }
 const drawers = () => ({ ...defaultDrawers(), sideClearance: ri(10, 14), verticalClearance: ri(20, 40), rearClearance: ri(0, 20), boxMaterialId: 'box', bottomMaterialId: 'bot' })
+
+/** Diagonal corner units (ADR-0040): random sizes, sides, shelves and doors. */
+function genDiagonal(): Design {
+  idc = 0
+  const W = ri(500, 1400)
+  const params: CornerParams = {
+    ...cornerDefaults('diagonal'), side: pick(['left', 'right'] as const), width: W, depth: ri(250, Math.max(260, W - 200)), height: ri(300, 2400),
+    bodyMaterialId: 'body', frontMaterialId: 'front', backMaterialId: 'back', back: pick(['applied', 'none'] as const), plinthHeight: pick([0, ri(40, 150)]),
+    plinthSetback: ri(0, 80), frontGap: ri(0, 5), drawers: drawers(),
+    interior: { id: nid(), kind: 'shelves', count: ri(0, 5), front: pick([null, { kind: 'doors' as const, count: 1 as const }, { kind: 'doors' as const, count: 2 as const }]) },
+  }
+  return { schemaVersion: 2, id: 'd', name: 'c', createdAt: '', updatedAt: '', materials: mats(), product: { kind: 'corner', id: 'C', params } }
+}
 
 function genCabinet(): Design {
   idc = 0
@@ -102,9 +118,10 @@ function check(d: Design): string[] {
   if (errs.length) return probs // only check invariants for designs reported clean
   const P = m.panels
   for (const p of P) for (const k of ['x', 'y', 'z', 'w', 'h', 'd'] as const) if (!Number.isSafeInteger(p.box[k])) probs.push(`nonint ${p.id}`)
-  for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) if (overlaps(P[i].box, P[j].box)) probs.push(`overlap ${P[i].id} ${P[j].id}`)
+  for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) if (panelsOverlap(P[i], P[j])) probs.push(`overlap ${P[i].id} ${P[j].id}`)
+  for (const p of P) for (const msg of shapeProblems(p)) probs.push(`shape ${p.id} ${msg}`)
   const E = explode([P])
-  for (let i = 0; i < E.length; i++) for (let j = i + 1; j < E.length; j++) if (overlaps(E[i].box, E[j].box)) probs.push(`exploded-overlap ${E[i].id} ${E[j].id}`)
+  for (let i = 0; i < E.length; i++) for (let j = i + 1; j < E.length; j++) if (panelsOverlap(E[i], E[j])) probs.push(`exploded-overlap ${E[i].id} ${E[j].id}`)
   const tf = d.materials.find(m => m.id === 'front')!.thickness
   const fronts = P.filter(p => FRONT.has(p.role))
   let W: number, H: number, Dd: number, ph: number, g: number, envD: number
@@ -180,10 +197,16 @@ function genFrame(): Design {
     leg: { w: ri(25, 80), d: ri(25, 80) }, legInset: ri(0, 80), apron: { height: pick([0, ri(40, 120)]), thickness: ri(15, 30) },
     stretchers: pick(['none', 'box', 'h'] as const), stretcherHeight: ri(60, 300), shelf: rnd() < 0.3 ? { height: ri(80, 300) } : null,
     slats: { width: ri(30, 120), thickness: ri(12, 30), gap: ri(5, 80) },
-    back: (kind === 'chair' || kind === 'bench') && rnd() < 0.8 ? { seatHeight: ri(300, 520), style: pick(['slats', 'panel'] as const), count: ri(1, 8), railHeight: ri(40, 90) } : null,
+    back: (kind === 'chair' || kind === 'bench') && rnd() < 0.8 ? { seatHeight: ri(300, 520), style: pick(['slats', 'panel'] as const), count: ri(1, 8), railHeight: ri(40, 90), angleDeg: pick([0, ri(1, 25), ri(1, 60)]) } : null,
     bed: kind === 'bed' ? { mattress: { w: pick([600, 900, 1400, 1600, 1800]), l: pick([1200, 1900, 2000]) }, clearance: ri(0, 30), deckHeight: ri(200, 500), railHeight: ri(140, 260),
       headboardHeight: ri(400, 1200), footboardHeight: pick([0, ri(300, 700)]), sidePanelHeight: pick([0, 0, ri(400, 900)]), tierGap: pick([0, 0, ri(700, 1100)]), guardHeight: ri(150, 400) } : null,
   }
+  // Shaped options (ADR-0040): reclining positions with a footrest, arm rests, a lounger backrest, a bought base.
+  const positions = () => Array.from({ length: ri(1, 4) }, () => ri(91, 179))
+  if (f.back && rnd() < 0.3) { const ps = positions(); f.recline = { positions: ps, at: ri(0, ps.length - 1), footrest: rnd() < 0.7 ? { length: ri(100, 600), angles: ps.map(() => ri(0, 90)) } : null } }
+  if (f.back && rnd() < 0.3) f.arms = { height: (f.back.seatHeight) + ri(-50, 400) }
+  if (kind === 'bench' && !f.back && f.top === 'slats' && rnd() < 0.5) { const ps = positions(); f.backrest = { length: ri(100, 1200), positions: ps, at: ri(0, ps.length - 1) } }
+  if (kind === 'chair' && rnd() < 0.2) f.base = 'bought'
   return { schemaVersion: 2, id: 'd', name: 'f', createdAt: '', updatedAt: '', materials: [...mats(), ...solidMaterials(), { id: 'pal18oak', name: 'Oak', thickness: pick([16, 18, 25]), grain: true, color: '#fff' }],
     product: { kind: 'frame', id: 'F', params: { ...f, panelMaterialId: 'pal18oak', solidMaterialId: 'beech' } } }
 }
@@ -198,9 +221,11 @@ function checkFrame(d: Design): string[] {
   if (m.diagnostics.some(x => x.severity === 'error')) return probs
   const P = m.panels
   for (const p of P) for (const k of ['x', 'y', 'z', 'w', 'h', 'd'] as const) if (!Number.isSafeInteger(p.box[k]) || (['w', 'h', 'd'].includes(k) && p.box[k] <= 0)) probs.push(`frame-size ${p.id}`)
-  for (const p of P) if (p.box.y < 0) probs.push(`frame-below-floor ${p.id}`)
-  for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) if (overlaps(P[i].box, P[j].box)) probs.push(`frame-overlap ${P[i].id} ${P[j].id}`)
-  for (const p of P) if (p.label !== 'Lower shelf' && !P.some(q => q !== p && touches(p.box, q.box))) probs.push(`frame-floating ${p.id}`)
+  for (const p of P) if (aabbOf(p).y < 0) probs.push(`frame-below-floor ${p.id}`)
+  for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) if (panelsOverlap(P[i], P[j])) probs.push(`frame-overlap ${P[i].id} ${P[j].id}`)
+  // A footrest hangs on the bought mechanism and a bought base carries seat and back: those may float.
+  const bought = d.product.kind === 'frame' && d.product.params.kind === 'chair' && d.product.params.base === 'bought'
+  for (const p of P) if (p.label !== 'Lower shelf' && p.label !== 'Footrest' && !bought && !P.some(q => q !== p && touches(p.box, q.box))) probs.push(`frame-floating ${p.id}`)
   return probs
 }
 
@@ -223,7 +248,7 @@ it('random designs keep every geometric invariant (seeded fuzz)', () => {
   const found: Record<string, { n: number; ex: Design; probs: string[] }> = {}
   let clean = 0
   for (let i = 0; i < N; i++) {
-    const d = i % 4 === 3 ? genDesk() : genCabinet()
+    const d = i % 4 === 3 ? genDesk() : i % 8 === 5 ? genDiagonal() : genCabinet()
     const probs = check(d)
     const m = (() => { try { return buildModel(d) } catch { return null } })()
     if (m && !m.diagnostics.some(x => x.severity === 'error')) clean++

@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest'
 import { buildModel } from '../src/core/build'
 import { templates } from '../src/core/design'
 import { exportFusionPython, fusionGroups } from '../src/core/fusion'
+import { catalogFamilies, insertVariant } from '../src/core/catalog'
 
 const python = (() => { try { execFileSync('python3', ['--version']); return 'python3' } catch { return null } })()
 
@@ -28,13 +29,32 @@ describe('Fusion 360 export (ADR-0021)', () => {
       const rows = src.split('\n').filter(l => /^ {4}\("/.test(l))
       expect(rows.length).toBe(m.panels.length)
       const top = Math.max(...m.panels.map(p => p.box.y + p.box.h))
-      const maxZ = Math.max(...rows.map(r => { const n = r.match(/-?\d+(\.\d+)?/g)!.map(Number); return n[n.length - 4] + n[n.length - 1] / 2 }))
+      // Each row ends: centre z, then sizes (x, y, z), then two direction vectors.
+      const maxZ = Math.max(...rows.map(r => { const n = r.match(/-?\d+(\.\d+)?/g)!.map(Number); return n[n.length - 10] + n[n.length - 7] / 2 }))
       expect(maxZ).toBeCloseTo(top / 10, 3)
       if (python) {
         const f = join(dir, `${t.id}.py`)
         writeFileSync(f, src)
         execFileSync(python, ['-m', 'py_compile', f])
       }
+    }
+  })
+  it('shaped parts (ADR-0040): tilted parts carry turned directions, profiles become sketches; the script compiles', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fusion-shaped-'))
+    for (const id of ['corner-diagonal', 'sink-u-drawer', 'recliner-reference', 'lounger-reference']) {
+      const f = catalogFamilies.find(x => x.variants.some(v => v.id === id))!
+      const d = insertVariant(f, f.variants.find(v => v.id === id)!, '')!
+      const m = buildModel(d)
+      const src = exportFusionPython(d, m)
+      const rows = src.split('\n').filter(l => /^ {4}\("/.test(l))
+      expect(rows.length, id).toBe(m.panels.length)
+      const profiled = m.panels.filter(p => p.shape?.kind === 'profile').length
+      expect(rows.filter(r => /"(xy|xz|yz)"/.test(r)).length, id).toBe(profiled)
+      // A turned direction has a component that is neither 0 nor ±1.
+      const dirs = rows.filter(r => !/"(xy|xz|yz)"/.test(r)).map(r => r.match(/-?\d+(\.\d+)?/g)!.map(Number).slice(-6))
+      const turned = dirs.filter(v => v.some(c => Math.abs(c) > 1e-6 && Math.abs(Math.abs(c) - 1) > 1e-6)).length
+      expect(turned, id).toBe(m.panels.filter(p => p.shape?.kind === 'tilt').length)
+      if (python) { const file = join(dir, `${id}.py`); writeFileSync(file, src); execFileSync(python, ['-m', 'py_compile', file]) }
     }
   })
 })

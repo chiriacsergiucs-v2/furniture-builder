@@ -1,4 +1,5 @@
 import { cutDimensions } from './geometry'
+import { shapeNote } from './shape'
 import type { FurnitureModel, HardwareItem, Material, Mm, Panel } from './types'
 
 /** "Drawer 2 side L" → "Drawer side L" so identical parts share one label. */
@@ -14,6 +15,8 @@ export function drillingText(p: Panel): string {
   if (p.handleHoles) {
     parts.push(`handle ${p.handleHoles.at.length === 1 ? 'hole' : 'holes'} ø${p.handleHoles.diameter} at ${p.handleHoles.at.map(([u, v]) => `${u}/${v}`).join(', ')} mm from left/bottom`)
   }
+  const shaped = shapeNote(p)
+  if (shaped) parts.push(shaped)
   return parts.join('; ')
 }
 

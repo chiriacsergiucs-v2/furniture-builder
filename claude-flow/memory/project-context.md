@@ -29,4 +29,19 @@ User answers 2026-10-23 (all ADR open questions): kitchen carcass 720 + plinth 1
 hanger depth 530, anti-tip > 1000; no scribe allowance; sliding 30 / 80; timber lengths 2400 + 3000, joinery not
 listed; brand cleared on first edit; all saved pieces in the Catalog; own templates mixed in by room/type; placement
 keeps its own turn, Wall warns, gap tool hidden above; feed weekly IKEA only; own confirm dialogs; theme toggle stays;
-no guided New; phone bottom bar; shaped-part ADR next (ADR-0040).
+no guided New (amended same day: "New piece" wizard, ADR-0044); phone bottom bar; shaped-part ADR next (ADR-0040).
+
+New-piece wizard (2026-10-23, ADR-0044–0046, Proposed): New → "New piece" asks sizes, a construction type (cabinet,
+open shelving, table, bench, desk) and only that type's steps; types, steps and suggestion generators are data in
+`src/core/wizard/`; cards are candidates built by `buildModel()` with no errors, ranked default-first then by variety;
+the result is a normal design saved with `saveDesign()` (no Dexie change). Legs under a carcass are not in the model.
+
+User answers 2026-10-23 (ADR-0040–0046): rake default 8° kept; recliner 100/120/150°; full-size profile templates;
+Pat Noi bed joins with bed-rail brackets (rail height unknown, ADR-0041 stays Proposed); catalog pictures also in
+Start from + drawn in the browser for edited families (N36); no auto backlog from research approvals; tab label kept;
+wizard: add Wardrobe and Bed types, keep answers to reopen in the wizard (N35); no legs under cabinets now; 6/64 cards.
+Built 2026-10-23: wizard types Wardrobe and Bed; answers stored on pieces (`wizard.answers`) with "Open in wizard";
+catalog pictures in Start from and drawn in the browser for edited families (N35, N36).
+Built 2026-10-23: ADR-0040 shaped parts (tilt/profile on whole-mm blanks; raked backs 8°, recliner and lounger
+positions 100/120/150°, diagonal corner, U-cut sink drawer, full-size print templates); ADR-0041 placed panels and
+screwed joints (Pat Noi sides screwed to the foot board). Feed (ADR-0029) blocked here: ikea.com not allowed.

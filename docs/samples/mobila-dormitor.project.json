@@ -209,12 +209,32 @@
           "params": {
             "panels": [
               {
-                "id": "BD-0050",
-                "name": "Laterală pat",
+                "id": "BD-0050-L",
+                "name": "Laterală pat stânga",
                 "length": 1800,
                 "width": 270,
                 "materialId": "pal18",
-                "quantity": 2
+                "quantity": 1,
+                "place": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0,
+                  "lie": "edge-z"
+                }
+              },
+              {
+                "id": "BD-0050-R",
+                "name": "Laterală pat dreapta",
+                "length": 1800,
+                "width": 270,
+                "materialId": "pal18",
+                "quantity": 1,
+                "place": {
+                  "x": 2022,
+                  "y": 0,
+                  "z": 0,
+                  "lie": "edge-z"
+                }
               },
               {
                 "id": "BD-0051",
@@ -222,7 +242,13 @@
                 "length": 2040,
                 "width": 270,
                 "materialId": "pal18",
-                "quantity": 1
+                "quantity": 1,
+                "place": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 1800,
+                  "lie": "edge-x"
+                }
               },
               {
                 "id": "BD-0053",
@@ -249,7 +275,19 @@
                 "quantity": 2
               }
             ],
-            "note": "Bed for an 1800 × 2000 mattress. Cut sizes from the Mobila file; how the panels join is not in the file. Not cut from board, so not listed: upholstered zone 2100 × 600 × 40 (textile and foam), existing headboard panel 2100 × 1100."
+            "note": "Bed frame: the two side boards are screwed to the foot board (user decision 2026-10-23); the head end stands against the existing headboard panel. Cut sizes from the Mobila file (sides 1800, foot 2040: check against the mattress before cutting). Not in the file: what carries the mattress, and where the headboard trim goes (shown in the pile). Not cut from board, so not listed: upholstered zone 2100 × 600 × 40, existing headboard panel 2100 × 1100.",
+            "joints": [
+              {
+                "a": "BD-0050-L",
+                "b": "BD-0051",
+                "kind": "screwed"
+              },
+              {
+                "a": "BD-0050-R",
+                "b": "BD-0051",
+                "kind": "screwed"
+              }
+            ]
           }
         },
         "cutting": {

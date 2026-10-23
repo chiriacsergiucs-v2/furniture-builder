@@ -380,11 +380,27 @@ export function buildCabinet(p: CabinetParams, materials: Map<string, Material>,
           const bz = boxFront - runner
           const bx = ip.x + ds.sideClearance
           const k = i + 1
+          const bottomAt = out.panels.length
           add(s.id, 'drawer-bottom', `Drawer ${k} bottom`, bottomM.id, box(bx, by, bz, bw, tbot, runner), 'y', 'x', [], i)
           const ph2 = bh - tbot, py = by + tbot
           add(s.id, 'drawer-side', `Drawer ${k} side`, boxM.id, box(bx, py, bz, tb, ph2, runner), 'x', 'z', ['+y'], 2 * i)
           add(s.id, 'drawer-side', `Drawer ${k} side`, boxM.id, box(bx + bw - tb, py, bz, tb, ph2, runner), 'x', 'z', ['+y'], 2 * i + 1)
-          add(s.id, 'drawer-back', `Drawer ${k} back`, boxM.id, box(bx + tb, py, bz, bw - 2 * tb, ph2, tb), 'z', 'x', ['+y'], i)
+          const u = i === 0 ? s.uCut : null
+          if (u) {
+            // Sink drawer (ADR-0040): a notch for the trap at the middle of the back. The bottom is cut to a U; the back
+            // runs round the notch in five parts. Notch sizes come from the trap; they are not checked against it.
+            const n0 = Math.floor((bw - u.width) / 2), nx0 = bx + n0, nx1 = nx0 + u.width
+            if (u.width < 50 || u.depth < 50 || n0 < 2 * tb + 50 || u.depth > runner - 2 * tb - 50) {
+              err('u-cut', `A ${u.width} × ${u.depth} mm notch does not fit a ${bw} × ${runner} mm drawer box.`, s.id); return
+            }
+            out.panels[bottomAt].shape = { kind: 'profile', points: [[0, 0], [n0, 0], [n0, u.depth], [n0 + u.width, u.depth], [n0 + u.width, 0], [bw, 0], [bw, runner], [0, runner]] }
+            add(s.id, 'drawer-back', `Drawer ${k} back left`, boxM.id, box(bx + tb, py, bz, nx0 - tb - (bx + tb), ph2, tb), 'z', 'x', ['+y'], 100)
+            add(s.id, 'drawer-back', `Drawer ${k} back right`, boxM.id, box(nx1 + tb, py, bz, bx + bw - tb - (nx1 + tb), ph2, tb), 'z', 'x', ['+y'], 101)
+            add(s.id, 'drawer-back', `Drawer ${k} trap side`, boxM.id, box(nx0 - tb, py, bz, tb, ph2, u.depth), 'x', 'z', ['+y'], 102)
+            add(s.id, 'drawer-back', `Drawer ${k} trap side`, boxM.id, box(nx1, py, bz, tb, ph2, u.depth), 'x', 'z', ['+y'], 103)
+            add(s.id, 'drawer-back', `Drawer ${k} trap front`, boxM.id, box(nx0 - tb, py, bz + u.depth, u.width + 2 * tb, ph2, tb), 'z', 'x', ['+y'], 104)
+            warn('u-cut-trap', `Drawer 1 is cut around the trap (${u.width} × ${u.depth} mm notch at the back): check the trap and pipes before cutting.`, s.id)
+          } else add(s.id, 'drawer-back', `Drawer ${k} back`, boxM.id, box(bx + tb, py, bz, bw - 2 * tb, ph2, tb), 'z', 'x', ['+y'], i)
           add(s.id, 'drawer-inner-front', `Drawer ${k} inner front`, boxM.id, box(bx + tb, py, boxFront - tb, bw - 2 * tb, ph2, tb), 'z', 'x', ['+y'], i)
           if (!internal) {
             const fh = frontHeights[i]
@@ -473,7 +489,11 @@ function addPinRows(panels: Panel[], spaces: { spaceId: string; op: Box; shelfDe
       const lowest = op.y - panel.box.y + 2 * PIN_PITCH, highest = op.y + op.h - panel.box.y - 2 * PIN_PITCH
       const holes: Mm[] = []
       for (let h = Math.ceil((lowest - offset) / PIN_PITCH) * PIN_PITCH + offset; h <= highest; h += PIN_PITCH) holes.push(h)
-      if (!holes.length) continue
+      if (!holes.length) {
+        // A shelf on pins needs holes on both sides; skipping one side would leave it resting on one edge.
+        diags.push({ severity: 'error', code: 'pin-rows-short', message: `This space is ${op.h} mm high: no room for shelf-pin holes ${2 * PIN_PITCH} mm clear of its top and bottom on one side. Make the shelves fixed or the space taller.`, nodeId: spaceId })
+        continue
+      }
       const rear = op.z - panel.box.z + setback, front = op.z + shelfDepth - panel.box.z - setback
       const rows: PinRows = { face, rows: [rear, front], holes, diameter: PIN_DIAMETER }
       panel.pinRows = [...(panel.pinRows ?? []), rows]

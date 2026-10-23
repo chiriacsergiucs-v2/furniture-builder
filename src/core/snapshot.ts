@@ -3,7 +3,9 @@
  * panel drawn as its three visible faces in the board's colour. Pure and deterministic, so the catalog pictures are
  * made once before the app runs (`npm run catalog:snapshots`) and shipped as files; nothing renders in the browser.
  */
-import type { Box, FurnitureModel, Material } from './types'
+import { inPlaneAxes } from './geometry'
+import { aabbOf, area2, profileWorld, rotateAbout, type V3 } from './shape'
+import type { Box, FurnitureModel, Material, Panel } from './types'
 
 /** View from the front right, above: azimuth 30°, elevation 25°. */
 const AZ = Math.PI / 6, EL = (25 * Math.PI) / 180
@@ -24,6 +26,48 @@ function faces(b: Box): { shade: number; pts: P[] }[] {
     { shade: 0.9, pts: [[x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]] },
     { shade: 1.06, pts: [[x0, y1, z1], [x1, y1, z1], [x1, y1, z0], [x0, y1, z0]] },
   ]
+}
+
+/** Shade of a face by its unit normal: the three box faces keep their shades, slanted faces blend them. */
+const shadeOf = (n: V3) => 0.74 * n[0] * n[0] + 1.06 * n[1] * n[1] + 0.9 * n[2] * n[2]
+const norm = (v: V3): V3 => { const l = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / l, v[1] / l, v[2] / l] }
+
+/**
+ * Faces of a shaped panel (ADR-0040) that face the viewer: a tilted blank's six faces turned about its pivot, or a
+ * profile's two outline faces and one side face per outline edge.
+ */
+function shapedFaces(p: Panel): { shade: number; pts: P[] }[] {
+  const b = p.box, s = p.shape!
+  const all: { n: V3; pts: P[] }[] = []
+  if (s.kind === 'tilt') {
+    const x0 = b.x, x1 = b.x + b.w, y0 = b.y, y1 = b.y + b.h, z0 = b.z, z1 = b.z + b.d
+    const box6: { n: V3; pts: P[] }[] = [
+      { n: [1, 0, 0], pts: [[x1, y0, z1], [x1, y0, z0], [x1, y1, z0], [x1, y1, z1]] }, { n: [-1, 0, 0], pts: [[x0, y0, z0], [x0, y0, z1], [x0, y1, z1], [x0, y1, z0]] },
+      { n: [0, 1, 0], pts: [[x0, y1, z1], [x1, y1, z1], [x1, y1, z0], [x0, y1, z0]] }, { n: [0, -1, 0], pts: [[x0, y0, z0], [x1, y0, z0], [x1, y0, z1], [x0, y0, z1]] },
+      { n: [0, 0, 1], pts: [[x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]] }, { n: [0, 0, -1], pts: [[x1, y0, z0], [x0, y0, z0], [x0, y1, z0], [x1, y1, z0]] },
+    ]
+    const pv: V3 = [b.x + s.pivot[0], b.y + s.pivot[1], b.z + s.pivot[2]]
+    for (const f of box6) all.push({ n: rotateAbout(f.n, s.axis, s.angleDeg, [0, 0, 0]), pts: f.pts.map(q => rotateAbout(q, s.axis, s.angleDeg, pv)) })
+  } else {
+    const t = p.thicknessAxis, ti = ['x', 'y', 'z'].indexOf(t)
+    const ccw = area2(s.points) > 0 ? s.points : [...s.points].reverse()
+    const back = profileWorld(b, t, ccw)
+    const off: V3 = [0, 0, 0]; off[ti] = ti === 0 ? b.w : ti === 1 ? b.h : b.d
+    const front = back.map(q => [q[0] + off[0], q[1] + off[1], q[2] + off[2]] as V3)
+    const tn: V3 = [0, 0, 0]; tn[ti] = 1
+    const [ua, va] = inPlaneAxes(t)
+    const ui = ['x', 'y', 'z'].indexOf(ua), vi = ['x', 'y', 'z'].indexOf(va)
+    ccw.forEach(([u, v], i) => {
+      const [u2, v2] = ccw[(i + 1) % ccw.length]
+      // Counter-clockwise in (u, v): the outside of edge a → b is to its right, (dv, −du).
+      const n: V3 = [0, 0, 0]; n[ui] = v2 - v; n[vi] = -(u2 - u)
+      all.push({ n: norm(n), pts: [back[i], back[(i + 1) % ccw.length], front[(i + 1) % ccw.length], front[i]] })
+    })
+    // Outline faces last: a visible one is nearer than the part's own side faces (notches included).
+    all.push({ n: tn, pts: front }, { n: [-tn[0], -tn[1], -tn[2]], pts: back })
+  }
+  // Normals are outward; keep the faces turned towards the viewer.
+  return all.filter(f => f.n[0] * V[0] + f.n[1] * V[1] + f.n[2] * V[2] > 1e-9).map(f => ({ shade: shadeOf(norm(f.n)), pts: f.pts as P[] }))
 }
 
 /** Screen bounds of a box: its eight corners projected. */
@@ -92,17 +136,17 @@ export function snapshotSvg(model: FurnitureModel, materials: Material[], size =
   const pad = 6
   if (!panels.length) return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}"/>\n`
   let u0 = Infinity, u1 = -Infinity, v0 = Infinity, v1 = -Infinity
-  for (const p of panels) { const b = screenBounds(p.box); u0 = Math.min(u0, b[0]); u1 = Math.max(u1, b[1]); v0 = Math.min(v0, b[2]); v1 = Math.max(v1, b[3]) }
+  for (const p of panels) { const b = screenBounds(aabbOf(p)); u0 = Math.min(u0, b[0]); u1 = Math.max(u1, b[1]); v0 = Math.min(v0, b[2]); v1 = Math.max(v1, b[3]) }
   const k = (size - 2 * pad) / Math.max(u1 - u0, v1 - v0, 1)
   const w = Math.round((u1 - u0) * k + 2 * pad), h = Math.round((v1 - v0) * k + 2 * pad)
   const f = (n: number) => String(Math.round(n * 10) / 10)
   const pt = (p: P) => `${f((sx(p) - u0) * k + pad)},${f((sy(p) - v0) * k + pad)}`
   const out: string[] = []
-  for (const i of paintOrder(panels.map(p => p.box))) {
+  for (const i of paintOrder(panels.map(aabbOf))) {
     const p = panels[i]
     const c = colour.get(p.materialId) ?? '#c8c4bb'
     const edge = tint(c, 0.55)
-    for (const fc of faces(p.box)) out.push(`<path d="M${fc.pts.map(pt).join('L')}Z" fill="${tint(c, fc.shade)}" stroke="${edge}"/>`)
+    for (const fc of p.shape ? shapedFaces(p) : faces(p.box)) out.push(`<path d="M${fc.pts.map(pt).join('L')}Z" fill="${tint(c, fc.shade)}" stroke="${edge}"/>`)
   }
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" stroke-width="0.5" stroke-linejoin="round">${out.join('')}</svg>\n`
 }

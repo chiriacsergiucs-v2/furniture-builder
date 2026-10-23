@@ -1,6 +1,6 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { bayLayoutOf, changeKind, fr, makeBays, MAX_BAYS, MAX_LOOSE, newId, setDrawerCount, findInProduct, findSpace, parentOf, pedestalRoot, splitSpace, unsplit, usesPedestal } from '../core/design'
-import type { CabinetParams, CornerParams, DeskParams, DeskSupport, FrontStyle, Handle, LoosePanel, Material, PanelSetParams, Space, SpaceKind, SplitSize } from '../core/types'
+import type { CabinetParams, CornerParams, DeskParams, DeskSupport, FrontStyle, Handle, LoosePanel, Material, PanelLie, PanelSetParams, Space, SpaceKind, SplitSize } from '../core/types'
 import { useDesign } from '../store/designStore'
 import { Counter, Group, MmField, revealGroup, Section, Segmented, Select, Steps, Toggle, type Step } from './controls'
 import { Icon } from './icons'
@@ -135,6 +135,14 @@ function SpaceEditor({ space, root, rootLabel, wholeLabel }: { space: Space; roo
           )}
           {space.kind === 'drawers' && <Counter label="Drawers" value={space.count} min={1} max={10} onChange={v => set(s => setDrawerCount(s, v))} />}
           {space.kind === 'drawers' && space.count > 1 && <DrawerHeights space={space} onChange={set} />}
+          {space.kind === 'drawers' && <Toggle label="Top drawer cut around a sink trap" checked={!!space.uCut}
+            onChange={v => set(s => (s.kind === 'drawers' ? { ...s, uCut: v ? { width: 250, depth: 200 } : null } : s))} />}
+          {space.kind === 'drawers' && space.uCut && (
+            <div className="dims2">
+              <MmField label="Notch width" value={space.uCut.width} min={50} max={1000} onChange={v => set(s => (s.kind === 'drawers' && s.uCut ? { ...s, uCut: { ...s.uCut, width: v } } : s))} />
+              <MmField label="Notch depth" value={space.uCut.depth} min={50} max={800} onChange={v => set(s => (s.kind === 'drawers' && s.uCut ? { ...s, uCut: { ...s.uCut, depth: v } } : s))} hint="Measure your trap and pipes" />
+            </div>
+          )}
           {space.kind === 'hanging' && <MmField label="Rail below top" value={space.railDrop} min={0} max={500} step={10} onChange={v => set(s => ({ ...s, railDrop: v }) as Space)} />}
           {space.kind === 'empty' && <ApplianceEditor space={space} onChange={set} />}
         </Section>
@@ -364,12 +372,12 @@ function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[]
   const set = useDesign(s => s.updateCorner)
   const select = useDesign(s => s.select)
   const panelMats = matOptions(materials, m => m.thickness >= 12)
-  const blind = p.variant === 'blind'
-  const inside = insideSummary(blind ? [p.interior] : [p.interior, p.wingInterior])
+  const blind = p.variant === 'blind', diagonal = p.variant === 'diagonal'
+  const inside = insideSummary(blind || diagonal ? [p.interior] : [p.interior, p.wingInterior])
   const steps: Step[] = [
     { id: 'size', label: 'Size', meta: `${p.width}×${p.height}×${p.depth}`, done: true },
     { id: 'inside', label: 'Inside', meta: inside, done: inside !== 'Empty', tone: inside === 'Empty' ? 'warn' : undefined },
-    { id: 'build', label: 'Build', meta: blind ? 'Blind corner' : 'L-shaped', done: true },
+    { id: 'build', label: 'Build', meta: blind ? 'Blind corner' : diagonal ? 'Diagonal' : 'L-shaped', done: true },
     { id: 'materials', label: 'Boards', meta: matName(materials, p.bodyMaterialId), done: true },
   ]
   return (
@@ -377,24 +385,27 @@ function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[]
       <EditorRail steps={steps} inside={() => select(p.interior.id)} />
       <header className="insp-head">
         <h2>Corner unit</h2>
-        <p className="hint">{blind ? 'A blind section the neighbouring cabinet covers, joined to a normal cabinet.' : 'Two wings open to each other at the corner, with a folding door pair. The front view shows the back-wall wing.'}</p>
+        <p className="hint">{blind ? 'A blind section the neighbouring cabinet covers, joined to a normal cabinet.'
+          : diagonal ? 'Five-sided: the same width along both walls, a return at each end and the door across the diagonal at 45°. Bottom, top and shelves are cut to a template.'
+          : 'Two wings open to each other at the corner, with a folding door pair. The front view shows the back-wall wing.'}</p>
       </header>
       <PieceInfo />
-      <Segmented<CornerParams['variant']> label="Type" value={p.variant} options={[{ value: 'blind', label: 'Blind corner' }, { value: 'l-shape', label: 'L-shaped' }]} onChange={v => set({ variant: v })} />
+      <Segmented<CornerParams['variant']> label="Type" value={p.variant} options={[{ value: 'blind', label: 'Blind corner' }, { value: 'l-shape', label: 'L-shaped' }, { value: 'diagonal', label: 'Diagonal' }]}
+        onChange={v => set(v === 'diagonal' && p.interior.kind !== 'shelves' ? { variant: v, interior: { id: p.interior.id, kind: 'shelves', count: 1, front: { kind: 'doors', count: 1 } } } : { variant: v })} />
       <Segmented<'left' | 'right'> label="Corner on the" value={p.side} options={[{ value: 'left', label: 'Left' }, { value: 'right', label: 'Right' }]} onChange={v => set({ side: v })} />
       <div className="dims3">
-        <MmField label={blind ? 'Width' : 'Back wing'} value={p.width} min={300} max={3000} onChange={v => set({ width: v })} />
+        <MmField label={blind ? 'Width' : diagonal ? 'Along each wall' : 'Back wing'} value={p.width} min={300} max={3000} onChange={v => set({ width: v })} />
         <MmField label="Height" value={p.height} min={300} max={2500} onChange={v => set({ height: v })} />
         <MmField label="Depth" value={p.depth} min={200} max={900} onChange={v => set({ depth: v })} />
       </div>
-      {blind
+      {diagonal ? null : blind
         ? <MmField label="Blind section" value={p.blindWidth} min={100} max={1500} onChange={v => set({ blindWidth: v })} hint={`About the neighbour's depth + 50 mm (${p.depth + 50}) keeps doors and handles clear.`} />
         : <MmField label="Side wing (incl. corner)" value={p.wingWidth} min={300} max={3000} onChange={v => set({ wingWidth: v })} />}
       <div className="field">
         <span className="field-label">Inside</span>
         <div className="split-actions">
-          <button type="button" className="btn outline" onClick={() => select(p.interior.id)}>{blind ? 'Edit usable section' : 'Edit back-wall wing'}</button>
-          {!blind && <button type="button" className="btn outline" onClick={() => select(p.wingInterior.id)}>Edit side-wall wing</button>}
+          <button type="button" className="btn outline" onClick={() => select(p.interior.id)}>{blind ? 'Edit usable section' : diagonal ? 'Edit shelves and doors' : 'Edit back-wall wing'}</button>
+          {!blind && !diagonal && <button type="button" className="btn outline" onClick={() => select(p.wingInterior.id)}>Edit side-wall wing</button>}
         </div>
       </div>
       <Group title="Construction" id="g-build">
@@ -427,7 +438,7 @@ function PanelSetEditor({ p, materials }: { p: PanelSetParams; materials: Materi
       <EditorRail steps={steps} />
       <header className="insp-head">
         <h2>Loose panels</h2>
-        <p className="hint">Parts known only by their cut sizes. They go to the cut list and sheets; the 3D view shows them in one pile, not assembled.</p>
+        <p className="hint">Parts known by their cut sizes. They go to the cut list and sheets. Parts with a known place are built where they sit; the rest lie in a pile beside them.</p>
         {p.note && <p className="hint">{p.note}</p>}
       </header>
       {p.panels.map(lp => (
@@ -443,11 +454,55 @@ function PanelSetEditor({ p, materials }: { p: PanelSetParams; materials: Materi
             <Counter label="Quantity" value={lp.quantity} min={1} max={MAX_LOOSE} onChange={v => change(lp.id, { quantity: v })} />
           </div>
           <Select label="Board" value={lp.materialId} options={matOptions(materials)} onChange={v => change(lp.id, { materialId: v })} />
-          <button type="button" className="btn outline" disabled={p.panels.length < 2} onClick={() => set({ panels: p.panels.filter(x => x.id !== lp.id) })}>Remove panel</button>
+          <Toggle label="Placed in the assembly" checked={!!lp.place}
+            onChange={on => change(lp.id, on ? { place: { x: 0, y: 0, z: 0, lie: 'flat-x' }, quantity: 1 } : { place: undefined })} />
+          {lp.place && <>
+            <Select label="Lies" value={lp.place.lie} options={LIE_OPTIONS} onChange={v => change(lp.id, { place: { ...lp.place!, lie: v } })} />
+            <div className="dims3">
+              <MmField label="x (from left)" value={lp.place.x} min={0} max={20000} step={1} onChange={v => change(lp.id, { place: { ...lp.place!, x: v } })} />
+              <MmField label="y (from floor)" value={lp.place.y} min={0} max={20000} step={1} onChange={v => change(lp.id, { place: { ...lp.place!, y: v } })} />
+              <MmField label="z (from back)" value={lp.place.z} min={0} max={20000} step={1} onChange={v => change(lp.id, { place: { ...lp.place!, z: v } })} />
+            </div>
+          </>}
+          <button type="button" className="btn outline" disabled={p.panels.length < 2}
+            onClick={() => set({ panels: p.panels.filter(x => x.id !== lp.id), joints: (p.joints ?? []).filter(j => j.a !== lp.id && j.b !== lp.id) })}>Remove panel</button>
         </Group>
       ))}
       <button type="button" className="btn outline" disabled={p.panels.length >= MAX_LOOSE} onClick={add}>Add panel</button>
+      <JointsEditor p={p} />
     </div>
+  )
+}
+
+const LIE_OPTIONS: { value: PanelLie; label: string }[] = [
+  { value: 'flat-x', label: 'Flat, length left to right' }, { value: 'flat-z', label: 'Flat, length front to back' },
+  { value: 'edge-x', label: 'On edge, length left to right' }, { value: 'edge-z', label: 'On edge, length front to back' },
+  { value: 'up-x', label: 'Upright, facing the front' }, { value: 'up-z', label: 'Upright, facing the side' },
+]
+
+/** Screwed joints between placed panels (ADR-0041 amendment); screws are the user's choice. */
+function JointsEditor({ p }: { p: PanelSetParams }) {
+  const set = useDesign(s => s.updatePanelSet)
+  const placed = p.panels.filter(lp => lp.place)
+  const [a, setA] = useState(''), [b, setB] = useState('')
+  const name = (id: string) => p.panels.find(lp => lp.id === id)?.name ?? id
+  const joints = p.joints ?? []
+  if (placed.length < 2 && !joints.length) return null
+  const opts = placed.map(lp => ({ value: lp.id, label: lp.name }))
+  return (
+    <Section title="Screwed joints">
+      {joints.length ? <ul className="plain-list">{joints.map((j, i) => (
+        <li key={`${j.a}-${j.b}-${i}`}>{name(j.a)} — {name(j.b)}{' '}
+          <button type="button" className="btn sm ghost" onClick={() => set({ joints: joints.filter((_, k) => k !== i) })}>Remove</button></li>
+      ))}</ul> : <p className="hint">No joints yet.</p>}
+      <div className="dims2">
+        <Select label="Panel" value={a || opts[0]?.value || ''} options={opts} onChange={setA} />
+        <Select label="Screwed to" value={b || opts[1]?.value || ''} options={opts} onChange={setB} />
+      </div>
+      <button type="button" className="btn outline" disabled={opts.length < 2 || (a || opts[0]?.value) === (b || opts[1]?.value)}
+        onClick={() => set({ joints: [...joints, { a: a || opts[0].value, b: b || opts[1].value, kind: 'screwed' }] })}>Add screwed joint</button>
+      <p className="hint">Screw type, length and count are your choice for the board (guidance only).</p>
+    </Section>
   )
 }
 

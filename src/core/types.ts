@@ -77,7 +77,18 @@ export interface Panel {
   pinRows?: PinRows[]
   /** Handle holes on a front, measured from the front's left and bottom edges (ADR-0024). */
   handleHoles?: { at: [Mm, Mm][]; diameter: Mm }
+  /** Shaped part (ADR-0040): `box` stays the whole-mm cut blank; absent = a plain box. */
+  shape?: PanelShape
 }
+
+/**
+ * ADR-0040. `tilt`: the blank turned by whole degrees (right-hand rule) about an axis through `pivot`, measured from
+ * the blank's minimum corner; placement only, the cut size is the blank. `profile`: a board cut to a polygon on its
+ * face, whole-mm points [u, v] from the blank's minimum corner along its two in-plane axes (x, y, z order).
+ */
+export type PanelShape =
+  | { kind: 'tilt'; axis: Axis; angleDeg: number; pivot: [Mm, Mm, Mm] }
+  | { kind: 'profile'; points: [Mm, Mm][] }
 
 /** Hole rows on one face of a panel. Positions are measured on the panel itself, in mm. */
 export interface PinRows {
@@ -93,6 +104,8 @@ export type HardwareKind = 'drawer-runner-pair' | 'hinge' | 'clothes-rail' | 'ra
   | 'wall-bracket' | 'wall-rail' | 'corner-hinge'
   /** ADR-0035 anti-tip fixing, ADR-0036 appliance and front fixing, ADR-0037 sliding track and flap stay, ADR-0038/0039 purchased items. */
   | 'wall-fixing' | 'appliance' | 'front-fixing' | 'sliding-track' | 'flap-stay' | 'purchased'
+  /** ADR-0041 amendment: a screwed joint between two placed panels; screw type, length and count are the user's choice. */
+  | 'screws'
 
 export interface HardwareItem {
   nodeId: string
@@ -205,6 +218,11 @@ export interface DrawersSpace extends SpaceBase {
   kind: 'drawers'
   count: number
   /**
+   * Sink drawer (ADR-0040): the top drawer box is cut around the trap, a `width` × `depth` notch at the middle of its
+   * back. Its bottom is a profiled board; its back runs around the notch. The front stays whole.
+   */
+  uCut?: { width: Mm; depth: Mm } | null
+  /**
    * Optional heights, top→bottom, one per drawer (ADR-0023). They size the drawer fronts (or the opening, for
    * internal drawers); fixed mm or shares of the rest, like splits. Absent = equal.
    */
@@ -293,7 +311,8 @@ export interface DeskParams {
 
 /** Corner cabinets (ADR-0025): built from two carcasses by the cabinet generator. */
 export interface CornerParams {
-  variant: 'blind' | 'l-shape'
+  /** `diagonal` (ADR-0040): a five-sided unit, `width` along both walls, `depth` deep at each return, door(s) at 45°. */
+  variant: 'blind' | 'l-shape' | 'diagonal'
   /** Which end the corner is at. */
   side: 'left' | 'right'
   /** Blind: overall width. L-shape: length of the wing along the back wall. */
@@ -358,8 +377,26 @@ export interface FrameParams {
   shelf?: { height: Mm } | null
   /** Slatted top, seat or bed deck. */
   slats: { width: Mm; thickness: Mm; gap: Mm }
-  /** Chair and bench: seat height; the back posts carry on up to `height`. Absent = no back. */
-  back?: { seatHeight: Mm; style: 'slats' | 'panel'; count: number; railHeight: Mm } | null
+  /**
+   * Chair and bench: seat height; the back posts carry on up to `height`. Absent = no back. `angleDeg`: rake of the
+   * back from vertical, whole degrees (ADR-0040; absent = 0, upright). Above the seat the back leans as one piece.
+   */
+  back?: { seatHeight: Mm; style: 'slats' | 'panel'; count: number; railHeight: Mm; angleDeg?: number } | null
+  /**
+   * Reclining back (ADR-0040): seat-to-back angles of the bought mechanism's positions (default 100°, 120°, 150°) and the
+   * one shown; it sets the back's rake (angle − 90°). An optional footrest hangs from the seat's front edge, swung
+   * forward by `angles[at]` degrees (0 = hanging, 90 = level). The mechanism is bought and sets the real positions.
+   */
+  recline?: { positions: number[]; at: number; footrest?: { length: Mm; angles: number[] } | null } | null
+  /**
+   * Lounger backrest (ADR-0040): the first `length` mm of a slatted seat lift on a hinge, on a bought prop. Positions
+   * are seat-to-back angles (default 100°, 120°, 150°); 180° would be flat.
+   */
+  backrest?: { length: Mm; positions: number[]; at: number } | null
+  /** Arm posts on the seat at the front corners and arm rests back to the back posts; armrest top above the floor. */
+  arms?: { height: Mm } | null
+  /** Chair only: `bought` = seat and back boards on a bought base (gas lift, mechanism, five-star base); no legs. */
+  base?: 'legs' | 'bought'
   /** Bed only. */
   bed?: {
     mattress: { w: Mm; l: Mm }
@@ -387,7 +424,22 @@ export interface LoosePanel {
   width: Mm
   materialId: string
   quantity: number
+  /**
+   * Where the part sits when its place is known (ADR-0041 amendment, 2026-10-23): back-left-bottom corner and how it
+   * lies. Placed parts have quantity 1; unplaced parts stay in the pile beside the assembly.
+   */
+  place?: PanelPlace
 }
+
+/**
+ * How a placed panel lies. `flat-*`: thickness up (y), length along x or z. `edge-*`: standing on its long edge,
+ * width up, length along x or z. `up-*`: standing on its end, length up, width along x or z.
+ */
+export type PanelLie = 'flat-x' | 'flat-z' | 'edge-x' | 'edge-z' | 'up-x' | 'up-z'
+export interface PanelPlace { x: Mm; y: Mm; z: Mm; lie: PanelLie }
+
+/** Two placed panels screwed together (ADR-0041 amendment); listed in the hardware schedule, screws chosen by the user. */
+export interface PanelJoint { a: string; b: string; kind: 'screwed' }
 
 /**
  * Parts known only by their cut sizes (ADR-0041), such as a bed whose panels are measured but whose assembly is not.
@@ -397,6 +449,8 @@ export interface PanelSetParams {
   panels: LoosePanel[]
   /** Shown with the piece: what the parts are for and what is still unknown. */
   note?: string
+  /** Screwed joints between placed panels (ADR-0041 amendment). */
+  joints?: PanelJoint[]
 }
 
 export type Product =
@@ -453,4 +507,9 @@ export interface Design {
   catalog?: CatalogMeta
   /** Guidance thresholds (ADR-0035). */
   settings?: { rules?: RuleSettings }
+  /** Answers of the New-piece wizard that made this piece, so it can be reopened there (ADR-0046). Never geometry. */
+  wizard?: { answers: WizardAnswers }
 }
+
+/** Wizard answers as stored: text, numbers, or a list of those or of compartments (`src/core/wizard/types.ts`). */
+export type WizardAnswers = Record<string, string | number | (string | number | { kind: string; shelves: number; drawers: number })[]>

@@ -3,7 +3,9 @@ import { cutlistCsvRo } from '../core/ro'
 import { exportFusionPython } from '../core/fusion'
 import { lastDesignId, lastProjectId, loadDesign, loadProject, rememberLast, rememberLastProject, saveDesign, saveProject } from '../persist/db'
 import { useDesign } from '../store/designStore'
+import type { Design } from '../core/types'
 import { AddPieceDialog, LibraryDialog, MaterialsDialog, NewDialog } from './Dialogs'
+import { WizardDialog } from './Wizard'
 import { CatalogPage } from './Catalog'
 import { ResearchPage } from './Research'
 import { useResearch } from '../store/researchStore'
@@ -91,8 +93,10 @@ export function App() {
   const setExploded = useDesign(s => s.setExploded)
   const undo = useDesign(s => s.undo), redo = useDesign(s => s.redo)
   const canUndo = useDesign(s => s.past.length > 0), canRedo = useDesign(s => s.future.length > 0)
-  const [dialog, setDialog] = useState<null | 'new' | 'library' | 'materials' | 'add'>(null)
+  const [dialog, setDialog] = useState<null | 'new' | 'library' | 'materials' | 'add' | 'wizard'>(null)
   const openCatalog = () => { setDialog(null); setPage('catalog') }
+  /** The piece reopened in the wizard, or null for a new one (ADR-0046). */
+  const [wizardFrom, setWizardFrom] = useState<Design | null>(null)
   const templateEdit = useDesign(s => s.templateEdit)
   const project = useDesign(s => s.project)
   const editingItemId = useDesign(s => s.editingItemId)
@@ -288,10 +292,16 @@ export function App() {
           <button type="button" className="btn sm" onClick={() => useDesign.getState().backToProject()}>Back to project</button>
         </div>
       )}
-      {page === 'catalog' && <CatalogPage onDone={() => setPage('editor')} />}
+      {page === 'catalog' && <CatalogPage onDone={() => setPage('editor')} onNewPiece={() => { setWizardFrom(null); setDialog('wizard') }} />}
       {page === 'research' && <ResearchPage onDone={() => setPage('editor')} />}
       <main className={`work ${editingItemId || templateEdit ? 'with-banner' : ''}`} hidden={page !== 'editor'}>
         <aside className="side">
+          {!inProject && !templateEdit && !editingItemId && design.wizard && (
+            <div className="wz-reopen">
+              <span className="hint">Made with the New-piece wizard.</span>
+              <button type="button" className="btn sm" onClick={() => { setWizardFrom(design); setDialog('wizard') }}><Icon name="pencil" className="sm" />Open in wizard</button>
+            </div>
+          )}
           {inProject ? <ProjectPanel onAdd={() => setDialog('add')} /> : <Inspector />}
         </aside>
         <section className="stage" aria-label="Drawing">
@@ -320,7 +330,9 @@ export function App() {
         <Output />
       </main>
 
-      <NewDialog open={dialog === 'new'} onClose={() => setDialog(null)} onBrowse={openCatalog} />
+      {/* Closing one dialog to open another fires its close event after the switch: it may only clear itself. */}
+      <NewDialog open={dialog === 'new'} onClose={() => setDialog(d => (d === 'new' ? null : d))} onBrowse={openCatalog} onWizard={() => { setWizardFrom(null); setDialog('wizard') }} />
+      <WizardDialog open={dialog === 'wizard'} from={wizardFrom} onClose={() => setDialog(d => (d === 'wizard' ? null : d))} onCreated={() => { setDialog(null); setPage('editor') }} />
       <LibraryDialog open={dialog === 'library'} onClose={() => setDialog(null)} />
       <MaterialsDialog open={dialog === 'materials'} onClose={() => setDialog(null)} />
       <AddPieceDialog open={dialog === 'add'} onClose={() => setDialog(null)} onBrowse={openCatalog} />

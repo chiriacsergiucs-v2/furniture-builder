@@ -7,6 +7,7 @@ import { buildModel } from './build'
 import { cutlist, hardwareSummary, type CutRow } from './cutlist'
 import { DEFAULT_KERF, newId, sheetOf, upgradeDesign, validateDesign } from './design'
 import { overlaps, union } from './geometry'
+import { aabbOf, overlapsBox, panelsOverlap, turnShape } from './shape'
 import type { SheetSettings } from './nesting'
 import { jobsFromCutlist } from './nesting'
 import type { NestJob } from './nesting/types'
@@ -200,7 +201,7 @@ export function placeItem(item: ProjectItem): PlacedPiece {
   const model = buildModel(item.design)
   const r = item.rotationY
   const rotated = model.panels.map(p => rotateBox(p.box, r))
-  const rb = union(rotated)
+  const rb = union(model.panels.map(p => rotateBox(aabbOf(p), r)))
   const dx = item.position.x - rb.x, dy = item.position.y - rb.y, dz = item.position.z - rb.z
   const panels = model.panels.map((p, i): Panel => ({
     ...p,
@@ -211,8 +212,9 @@ export function placeItem(item: ProjectItem): PlacedPiece {
     grainAxis: swap(p.grainAxis, r),
     banded: p.banded.map(f => ROT_FACE[r][f]),
     ...(p.pinRows ? { pinRows: p.pinRows.map(x => ({ ...x, face: ROT_FACE[r][x.face] })) } : {}),
+    ...(p.shape ? { shape: turnShape(p.shape, p.box, rotated[i], p.thicknessAxis, swap(p.thicknessAxis, r), r) } : {}),
   }))
-  return { item, model, panels, bounds: union(panels.map(p => p.box)) }
+  return { item, model, panels, bounds: union(panels.map(aabbOf)) }
 }
 
 export const placedBounds = (item: ProjectItem): Box => placeItem(item).bounds
@@ -262,7 +264,7 @@ export function buildProjectModel(input: Project): ProjectModel {
   // Pieces may touch but not occupy the same space (bounding boxes first, then panels).
   for (let a = 0; a < pieces.length; a++) for (let b = a + 1; b < pieces.length; b++) {
     if (!overlaps(pieces[a].bounds, pieces[b].bounds)) continue
-    const hit = pieces[a].panels.find(p => pieces[b].panels.some(q => overlaps(p.box, q.box)))
+    const hit = pieces[a].panels.find(p => pieces[b].panels.some(q => panelsOverlap(p, q)))
     if (hit) diagnostics.push({ severity: 'error', code: 'pieces-overlap', message: `${pieces[a].item.design.name} and ${pieces[b].item.design.name} overlap in the room.`, nodeId: pieces[b].item.id })
   }
   for (const pc of pieces) if (pc.bounds.y < 0) diagnostics.push({ severity: 'error', code: 'below-floor', message: `${pc.item.design.name} goes below the floor.`, nodeId: pc.item.id })
@@ -273,10 +275,10 @@ export function buildProjectModel(input: Project): ProjectModel {
     const panel = runPanel(rp, k)
     panels.push(panel)
     piecePanels.push([panel])
-    const hit = pieces.find(pc => overlaps(pc.bounds, rp.box) && pc.panels.some(q => overlaps(q.box, rp.box)))
+    const hit = pieces.find(pc => overlaps(pc.bounds, rp.box) && pc.panels.some(q => overlapsBox(q, rp.box)))
     if (hit) diagnostics.push({ severity: 'error', code: 'run-part-overlap', message: `${rp.label} overlaps ${hit.item.design.name}; suggest the run parts again after moving pieces.`, nodeId: `run:${rp.id}` })
   }
-  const model: FurnitureModel = { panels, spaces: [], hardware, diagnostics, bounds: union(panels.map(p => p.box)) }
+  const model: FurnitureModel = { panels, spaces: [], hardware, diagnostics, bounds: union(panels.map(aabbOf)) }
   return { pieces, model, piecePanels, materials: [...materials.values()], diagnostics }
 }
 
@@ -355,7 +357,7 @@ export function suggestRunParts(project: Project): RunPart[] {
     if (run) run.push(pc); else runs.push([pc])
   }
   const out: RunPart[] = []
-  const free = (b: Box) => !placed.some(pc => overlaps(pc.bounds, b) && pc.panels.some(q => overlaps(q.box, b))) && !out.some(o => overlaps(o.box, b))
+  const free = (b: Box) => !placed.some(pc => overlaps(pc.bounds, b) && pc.panels.some(q => overlapsBox(q, b))) && !out.some(o => overlaps(o.box, b))
   const frontOf = (pc: PlacedPiece) => {
     const p = pc.item.design.product
     const id = p.kind === 'cabinet' || p.kind === 'corner' ? p.params.frontMaterialId : ''

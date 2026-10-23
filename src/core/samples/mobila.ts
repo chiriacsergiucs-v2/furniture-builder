@@ -89,17 +89,28 @@ export function mobilaLiving(): Project {
 }
 
 /**
- * Pat Noi: the file's cut panels (BD-0050…BD-0055). The upholstered zone (2100 × 600 × 40, textile and foam) and the
- * existing 2100 × 1100 headboard panel are not cut from board, so they are named in the note, not listed.
+ * Pat Noi: the file's cut panels (BD-0050…BD-0055). The user decided on 2026-10-23 that the bed rails are the
+ * chipboard side boards screwed to the foot board (ADR-0041 amendment): the two sides (1800 × 270) stand on edge
+ * behind the foot board (2040 × 270), flush with its ends, and are screwed through it. The head end stands against the
+ * existing headboard panel. The headboard trim (BD-0053…0055) has no known place and stays in the pile. The upholstered
+ * zone (2100 × 600 × 40) and the existing 2100 × 1100 headboard panel are not cut from board, so they are named in the
+ * note, not listed. What carries the mattress is not in the file.
  */
-const patNoi = (): Design => panelSet('mobila-pat-noi', 'Pat Noi', [
-  part('BD-0050', 'Laterală pat', 1800, 270, 'pal18', 2),
-  part('BD-0051', 'Cap pe picioare', 2040, 270, 'pal18'),
-  part('BD-0053', 'Traversă tăblie', 2100, 100, 'mdf-p110'),
-  part('BD-0054', 'Poliță sus tăblie', 2100, 80, 'mdf-p110'),
-  part('BD-0055', 'Poliță laterală tăblie', 450, 80, 'mdf-p110', 2),
-], 'Bed for an 1800 × 2000 mattress. Cut sizes from the Mobila file; how the panels join is not in the file. ' +
-  'Not cut from board, so not listed: upholstered zone 2100 × 600 × 40 (textile and foam), existing headboard panel 2100 × 1100.')
+const patNoi = (): Design => {
+  const d = panelSet('mobila-pat-noi', 'Pat Noi', [
+    { ...part('BD-0050-L', 'Laterală pat stânga', 1800, 270, 'pal18'), place: { x: 0, y: 0, z: 0, lie: 'edge-z' } },
+    { ...part('BD-0050-R', 'Laterală pat dreapta', 1800, 270, 'pal18'), place: { x: 2022, y: 0, z: 0, lie: 'edge-z' } },
+    { ...part('BD-0051', 'Cap pe picioare', 2040, 270, 'pal18'), place: { x: 0, y: 0, z: 1800, lie: 'edge-x' } },
+    part('BD-0053', 'Traversă tăblie', 2100, 100, 'mdf-p110'),
+    part('BD-0054', 'Poliță sus tăblie', 2100, 80, 'mdf-p110'),
+    part('BD-0055', 'Poliță laterală tăblie', 450, 80, 'mdf-p110', 2),
+  ], 'Bed frame: the two side boards are screwed to the foot board (user decision 2026-10-23); the head end stands ' +
+    'against the existing headboard panel. Cut sizes from the Mobila file (sides 1800, foot 2040: check against the ' +
+    'mattress before cutting). Not in the file: what carries the mattress, and where the headboard trim goes (shown in ' +
+    'the pile). Not cut from board, so not listed: upholstered zone 2100 × 600 × 40, existing headboard panel 2100 × 1100.')
+  if (d.product.kind === 'panels') d.product.params.joints = [{ a: 'BD-0050-L', b: 'BD-0051', kind: 'screwed' }, { a: 'BD-0050-R', b: 'BD-0051', kind: 'screwed' }]
+  return d
+}
 
 /** Dormitor: nightstand A, two identical units, and the Pat Noi panels (positions in the room are not in the file). */
 export function mobilaDormitor(): Project {
@@ -122,5 +133,5 @@ export interface SampleProject { id: string; name: string; description: string; 
 
 export const sampleProjects: SampleProject[] = [
   { id: 'mobila-living', name: 'Mobila — Living', description: 'Column 535 × 2600, low run 2685 × 435 on the floor, high run hung 1730 mm above it', create: mobilaLiving },
-  { id: 'mobila-dormitor', name: 'Mobila — Dormitor', description: 'Two nightstands A, 450 × 400, two drawers; Pat Noi bed panels (not assembled)', create: mobilaDormitor },
+  { id: 'mobila-dormitor', name: 'Mobila — Dormitor', description: 'Two nightstands A, 450 × 400, two drawers; Pat Noi bed frame (sides screwed to the foot board)', create: mobilaDormitor },
 ]

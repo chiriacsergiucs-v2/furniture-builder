@@ -4,7 +4,7 @@ import type { Panel } from '../core/types'
 import { listDesigns, loadDesign, type StoredDesign } from '../persist/db'
 import { useDesign } from '../store/designStore'
 import { Counter, MmField, Segmented, Select, Toggle } from './controls'
-import { Dim, DimV } from './Elevation'
+import { Dim, DimV, outlinePoints } from './Elevation'
 import { Icon } from './icons'
 import { templateGlyph } from './Templates'
 import { StartFrom } from './Catalog'
@@ -245,11 +245,11 @@ function RoomFront({ pm }: { pm: ProjectModel }) {
       <svg viewBox={`${x0 - pad * 1.2} ${-top - pad * 0.8} ${x1 - x0 + pad * 2.4} ${top + pad * 1.8}`}>
         <rect className="floor" x={x0 - pad} y={0} width={x1 - x0 + 2 * pad} height={pad * 0.15} />
         {structure.map(({ p, pc }) => (
-          <rect key={p.id} className={`el-panel ${pc.item.id === selectedId ? 'hl' : ''}`} x={p.box.x} y={Y(p.box.y, p.box.h)} width={p.box.w} height={p.box.h}
+          <polygon key={p.id} className={`el-panel ${pc.item.id === selectedId ? 'hl' : ''}`} points={outlinePoints(p)}
             style={{ fill: colors.get(`${pc.item.id}:${p.materialId}`) }} />
         ))}
         {showFronts && fronts.map(({ p }) => (
-          <rect key={p.id} className="el-front" x={p.box.x} y={Y(p.box.y, p.box.h)} width={p.box.w} height={p.box.h} />
+          <polygon key={p.id} className="el-front" points={outlinePoints(p)} />
         ))}
         {pm.pieces.map(pc => (
           <rect key={pc.item.id} className="front-hit" x={pc.bounds.x} y={Y(pc.bounds.y, pc.bounds.h)} width={pc.bounds.w} height={pc.bounds.h}

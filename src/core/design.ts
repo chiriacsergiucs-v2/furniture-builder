@@ -91,7 +91,7 @@ export const frameDefaults = (kind: FrameKind): FrameParams => {
     case 'bench': return { ...base, width: 1200, depth: 380, height: 450, leg: { w: 45, d: 45 }, legInset: 30, apron: { height: 70, thickness: 22 } }
     case 'stool': return { ...base, width: 380, depth: 380, height: 650, leg: { w: 40, d: 40 }, legInset: 10, apron: { height: 60, thickness: 22 }, stretchers: 'box', stretcherHeight: 250 }
     case 'chair': return { ...base, width: 450, depth: 500, height: 880, leg: { w: 40, d: 40 }, legInset: 0, apron: { height: 70, thickness: 22 },
-      stretchers: 'h', stretcherHeight: 150, back: { seatHeight: 460, style: 'slats', count: 4, railHeight: 60 }, slats: { width: 40, thickness: 16, gap: 40 } }
+      stretchers: 'h', stretcherHeight: 150, back: { seatHeight: 460, style: 'slats', count: 4, railHeight: 60, angleDeg: 8 }, slats: { width: 40, thickness: 16, gap: 40 } }
     case 'bed': return { ...base, height: 1000, panelMaterialId: 'pal18oak', solidMaterialId: 'pine', apron: { height: 0, thickness: 25 }, leg: { w: 45, d: 45 },
       slats: { width: 70, thickness: 20, gap: 50 },
       bed: { mattress: { w: 1600, l: 2000 }, clearance: 10, deckHeight: 380, railHeight: 180, headboardHeight: 1000, footboardHeight: 0, sidePanelHeight: 0, tierGap: 0, guardHeight: 300 } }
@@ -263,6 +263,7 @@ export function productRoots(prod: Product): ProductRoot[] {
   if (prod.kind === 'cabinet') return [{ root: prod.params.interior, label: 'Interior' }]
   if (prod.kind === 'panel' || prod.kind === 'frame' || prod.kind === 'panels') return []
   if (prod.kind === 'corner') {
+    if (prod.params.variant === 'diagonal') return [{ root: prod.params.interior, label: 'Interior', wing: 'a' }]
     return prod.params.variant === 'blind'
       ? [{ root: prod.params.interior, label: 'Usable section', wing: 'a' }]
       : [{ root: prod.params.interior, label: 'Back-wall wing', wing: 'a' }, { root: prod.params.wingInterior, label: 'Side-wall wing', wing: 'b' }]
@@ -337,6 +338,16 @@ function validateCatalog(c: unknown, errs: string[]) {
   if (o.sourceUrl !== undefined && !(typeof o.sourceUrl === 'string' && /^https?:\/\//.test(o.sourceUrl) && o.sourceUrl.length < 2000)) errs.push('Catalog source link must be an http(s) address')
 }
 
+/** ADR-0046: the wizard answers a piece was made from; checked when present, never geometry. */
+function validateWizard(w: unknown, errs: string[]) {
+  if (w === undefined) return
+  const a = isObj(w) ? w.answers : undefined
+  if (!isObj(a) || Object.keys(a).length > 100 || JSON.stringify(a).length > 20_000) { errs.push('Invalid wizard answers'); return }
+  const scalar = (v: unknown) => (typeof v === 'string' && v.length <= 500) || (typeof v === 'number' && Number.isFinite(v))
+  const item = (v: unknown) => scalar(v) || (isObj(v) && typeof v.kind === 'string' && v.kind.length <= 50 && typeof v.shelves === 'number' && Number.isFinite(v.shelves) && typeof v.drawers === 'number' && Number.isFinite(v.drawers))
+  for (const v of Object.values(a)) if (!(scalar(v) || (Array.isArray(v) && v.length <= 20 && v.every(item)))) { errs.push('Invalid wizard answers'); return }
+}
+
 function validateRules(s: unknown, errs: string[]) {
   if (s === undefined) return
   if (!isObj(s) || (s.rules !== undefined && !isObj(s.rules))) { errs.push('Invalid settings'); return }
@@ -364,6 +375,7 @@ function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0)
       return
     case 'drawers':
       if (!isInt(s.count, 1) || (s.count as number) > MAX_DRAWERS) errs.push('Invalid drawer count')
+      if (s.uCut != null && !(isObj(s.uCut) && isInt(s.uCut.width, 1) && isInt(s.uCut.depth, 1) && (s.uCut.width as number) <= MAX_MM && (s.uCut.depth as number) <= MAX_MM)) errs.push('Invalid U-cut')
       if (s.heights !== undefined) {
         if (!Array.isArray(s.heights) || s.heights.length !== s.count) errs.push('Drawer heights must list one size per drawer')
         else for (const z of s.heights) if (!validSize(z)) errs.push('Invalid drawer height')
@@ -404,6 +416,7 @@ export function validateDesign(d: unknown): string[] {
   const matRef = (k: string, obj: Record<string, unknown>) => { if (!mids.has(obj[k] as string)) errs.push(`${k} refers to an unknown material`) }
   validateCatalog(d.catalog, errs)
   validateRules(d.settings, errs)
+  validateWizard(d.wizard, errs)
   if (p.kind === 'panels') {
     if (!Array.isArray(params.panels) || params.panels.length > MAX_LOOSE) return [...errs, 'Invalid panel list']
     const ids = new Set<string>()
@@ -413,6 +426,16 @@ export function validateDesign(d: unknown): string[] {
       ints(['length', 'width'], lp)
       if (!isInt(lp.quantity, 1) || (lp.quantity as number) > MAX_LOOSE) errs.push(`Quantity of ${String(lp.name)} must be 1 to ${MAX_LOOSE}`)
       matRef('materialId', lp)
+      if (lp.place !== undefined) {
+        const pl = lp.place
+        if (!isObj(pl) || !['flat-x', 'flat-z', 'edge-x', 'edge-z', 'up-x', 'up-z'].includes(pl.lie as string)) errs.push(`Invalid place for ${String(lp.name)}`)
+        else ints(['x', 'y', 'z'], pl)
+        if (lp.quantity !== 1) errs.push(`${String(lp.name)}: a placed panel has quantity 1 (list each copy with its own place)`)
+      }
+    }
+    if (params.joints !== undefined) {
+      if (!Array.isArray(params.joints) || params.joints.length > 4 * MAX_LOOSE) errs.push('Invalid joints')
+      else for (const j of params.joints) if (!isObj(j) || j.kind !== 'screwed' || !ids.has(j.a as string) || !ids.has(j.b as string) || j.a === j.b) errs.push('Invalid joint')
     }
     if (params.note !== undefined && typeof params.note !== 'string') errs.push('Invalid note')
     return errs
@@ -455,7 +478,7 @@ export function validateDesign(d: unknown): string[] {
   } else if (p.kind === 'corner') {
     ints(['width', 'wingWidth', 'blindWidth', 'height', 'depth', 'backInset', 'plinthHeight', 'plinthSetback', 'frontGap', 'shelfSetback'], params)
     ;['bodyMaterialId', 'frontMaterialId', 'backMaterialId'].forEach(k => matRef(k, params))
-    if (params.variant !== 'blind' && params.variant !== 'l-shape') errs.push('Invalid corner variant')
+    if (!['blind', 'l-shape', 'diagonal'].includes(params.variant as string)) errs.push('Invalid corner variant')
     if (params.side !== 'left' && params.side !== 'right') errs.push('Invalid corner side')
     if (params.top !== 'over' && params.top !== 'between') errs.push('Invalid top joint')
     if (!['none', 'applied', 'inset'].includes(params.back as string)) errs.push('Invalid back')
@@ -483,7 +506,25 @@ function validateFrame(f: Record<string, unknown>, errs: string[], ints: (keys: 
   if (f.back != null) {
     const b = f.back
     if (!isObj(b) || !isInt(b.seatHeight, 1) || !isInt(b.railHeight, 1) || !isInt(b.count, 1) || (b.count as number) > 20 || (b.style !== 'slats' && b.style !== 'panel')) errs.push('Invalid back')
+    else if (b.angleDeg !== undefined && (!isInt(b.angleDeg) || (b.angleDeg as number) > 60)) errs.push('Back rake must be a whole number of degrees from 0 to 60')
   }
+  // ADR-0040: positions are seat-to-back angles in whole degrees, 91–179 (180 = flat); `at` picks the one shown.
+  const positions = (o: Record<string, unknown>) => Array.isArray(o.positions) && o.positions.length >= 1 && o.positions.length <= 6 &&
+    o.positions.every(v => isInt(v) && (v as number) > 90 && (v as number) < 180) && isInt(o.at) && (o.at as number) < o.positions.length
+  if (f.recline != null) {
+    const r = f.recline
+    if (!isObj(r) || !positions(r)) errs.push('Invalid recline positions')
+    else if (r.footrest != null && !(isObj(r.footrest) && isInt(r.footrest.length, 50) && (r.footrest.length as number) <= 1500 && Array.isArray(r.footrest.angles) &&
+      r.footrest.angles.length === (r.positions as unknown[]).length && r.footrest.angles.every(v => isInt(v) && (v as number) <= 90))) errs.push('Invalid footrest')
+    if (f.back == null) errs.push('A reclining frame needs a back')
+  }
+  if (f.backrest != null) {
+    const r = f.backrest
+    if (!isObj(r) || !positions(r) || !isInt(r.length, 100) || (r.length as number) > MAX_MM) errs.push('Invalid backrest')
+    if (f.top !== 'slats') errs.push('A lifting backrest needs a slatted seat')
+  }
+  if (f.arms != null && !(isObj(f.arms) && isInt(f.arms.height, 1) && (f.arms.height as number) <= MAX_MM)) errs.push('Invalid arms')
+  if (f.base !== undefined && f.base !== 'legs' && f.base !== 'bought') errs.push('Invalid base')
   if (f.kind === 'bed') {
     const b = f.bed
     if (!isObj(b) || !isObj(b.mattress) || !isInt(b.mattress.w, 1) || !isInt(b.mattress.l, 1) ||

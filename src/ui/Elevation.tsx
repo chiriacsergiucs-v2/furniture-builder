@@ -2,6 +2,10 @@ import { useMemo } from 'react'
 import { productRoots } from '../core/design'
 import { useDesign } from '../store/designStore'
 import type { Panel, SpaceOpening } from '../core/types'
+import { frontOutline } from '../core/shape'
+
+/** SVG points of a panel's front outline (y flipped so the floor is at the bottom). */
+export const outlinePoints = (p: Panel) => frontOutline(p).map(([x, y]) => `${x},${-y}`).join(' ')
 
 const FRONTS = new Set<Panel['role']>(['door', 'drawer-front'])
 const DRAWER_BOX = new Set<Panel['role']>(['drawer-side', 'drawer-back', 'drawer-inner-front', 'drawer-bottom'])
@@ -58,7 +62,7 @@ export function Elevation() {
     <figure className="elevation" aria-label="Front view. Select a space to edit it.">
       <svg viewBox={vb} preserveAspectRatio="xMidYMid meet" role="group">
         <rect className="floor" x={b.x - pad} y={0} width={b.w + 2 * pad} height={pad * 0.15} />
-        {backs.map(p => <rect key={p.id} className="el-back" x={p.box.x} y={Y(p.box.y, p.box.h)} width={p.box.w} height={p.box.h} />)}
+        {backs.map(p => <polygon key={p.id} className="el-back" points={outlinePoints(p)} />)}
         {leaves.map(s => (
           <g key={s.nodeId} className={`el-space ${s.nodeId === selectedId ? 'selected' : ''}`}
             role="button" tabIndex={0} aria-pressed={s.nodeId === selectedId} aria-label={`${describe(s, counts.get(s.nodeId))} space, ${s.box.w} by ${s.box.h} mm`}
@@ -68,12 +72,12 @@ export function Elevation() {
           </g>
         ))}
         {structure.map(p => (
-          <rect key={p.id} className={`el-panel ${selectedPanels.has(p.id) ? 'hl' : ''}`} x={p.box.x} y={Y(p.box.y, p.box.h)} width={p.box.w} height={p.box.h}
+          <polygon key={p.id} className={`el-panel ${selectedPanels.has(p.id) ? 'hl' : ''}`} points={outlinePoints(p)}
             style={{ fill: mats.get(p.materialId)?.color }}
             onClick={e => { e.stopPropagation(); select(p.nodeId === design.product.id ? null : p.nodeId) }} />
         ))}
         {showFronts && fronts.map(p => (
-          <rect key={p.id} className="el-front" x={p.box.x} y={Y(p.box.y, p.box.h)} width={p.box.w} height={p.box.h} />
+          <polygon key={p.id} className="el-front" points={outlinePoints(p)} />
         ))}
         {showFronts && fronts.filter(p => p.handleHoles).map(p => {
           const pts = p.handleHoles!.at.map(([u, v]) => [p.box.x + u, -(p.box.y + v)] as const)
