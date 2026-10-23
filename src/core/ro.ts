@@ -94,6 +94,7 @@ export function drillingRo(text: string): string {
     .replace(/handle holes ø(\d+) at/g, 'găuri mâner ø$1 la')
     .replace(/handle hole ø(\d+) at/g, 'gaură mâner ø$1 la')
     .replace(/mm from left\/bottom/g, 'mm de la stânga/jos')
+    .replace(/cut to template \((\d+) points\)/g, 'tăiere după șablon ($1 puncte)')
 }
 
 export function hardwareRo(h: HardwareItem): { item: string; note: string } {

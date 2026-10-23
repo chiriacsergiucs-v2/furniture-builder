@@ -77,7 +77,18 @@ export interface Panel {
   pinRows?: PinRows[]
   /** Handle holes on a front, measured from the front's left and bottom edges (ADR-0024). */
   handleHoles?: { at: [Mm, Mm][]; diameter: Mm }
+  /** Shaped part (ADR-0040): `box` stays the whole-mm cut blank; absent = a plain box. */
+  shape?: PanelShape
 }
+
+/**
+ * ADR-0040. `tilt`: the blank turned by whole degrees (right-hand rule) about an axis through `pivot`, measured from
+ * the blank's minimum corner; placement only, the cut size is the blank. `profile`: a board cut to a polygon on its
+ * face, whole-mm points [u, v] from the blank's minimum corner along its two in-plane axes (x, y, z order).
+ */
+export type PanelShape =
+  | { kind: 'tilt'; axis: Axis; angleDeg: number; pivot: [Mm, Mm, Mm] }
+  | { kind: 'profile'; points: [Mm, Mm][] }
 
 /** Hole rows on one face of a panel. Positions are measured on the panel itself, in mm. */
 export interface PinRows {
@@ -207,6 +218,11 @@ export interface DrawersSpace extends SpaceBase {
   kind: 'drawers'
   count: number
   /**
+   * Sink drawer (ADR-0040): the top drawer box is cut around the trap, a `width` × `depth` notch at the middle of its
+   * back. Its bottom is a profiled board; its back runs around the notch. The front stays whole.
+   */
+  uCut?: { width: Mm; depth: Mm } | null
+  /**
    * Optional heights, top→bottom, one per drawer (ADR-0023). They size the drawer fronts (or the opening, for
    * internal drawers); fixed mm or shares of the rest, like splits. Absent = equal.
    */
@@ -295,7 +311,8 @@ export interface DeskParams {
 
 /** Corner cabinets (ADR-0025): built from two carcasses by the cabinet generator. */
 export interface CornerParams {
-  variant: 'blind' | 'l-shape'
+  /** `diagonal` (ADR-0040): a five-sided unit, `width` along both walls, `depth` deep at each return, door(s) at 45°. */
+  variant: 'blind' | 'l-shape' | 'diagonal'
   /** Which end the corner is at. */
   side: 'left' | 'right'
   /** Blind: overall width. L-shape: length of the wing along the back wall. */
@@ -360,8 +377,26 @@ export interface FrameParams {
   shelf?: { height: Mm } | null
   /** Slatted top, seat or bed deck. */
   slats: { width: Mm; thickness: Mm; gap: Mm }
-  /** Chair and bench: seat height; the back posts carry on up to `height`. Absent = no back. */
-  back?: { seatHeight: Mm; style: 'slats' | 'panel'; count: number; railHeight: Mm } | null
+  /**
+   * Chair and bench: seat height; the back posts carry on up to `height`. Absent = no back. `angleDeg`: rake of the
+   * back from vertical, whole degrees (ADR-0040; absent = 0, upright). Above the seat the back leans as one piece.
+   */
+  back?: { seatHeight: Mm; style: 'slats' | 'panel'; count: number; railHeight: Mm; angleDeg?: number } | null
+  /**
+   * Reclining back (ADR-0040): seat-to-back angles of the bought mechanism's positions (default 100°, 120°, 150°) and the
+   * one shown; it sets the back's rake (angle − 90°). An optional footrest hangs from the seat's front edge, swung
+   * forward by `angles[at]` degrees (0 = hanging, 90 = level). The mechanism is bought and sets the real positions.
+   */
+  recline?: { positions: number[]; at: number; footrest?: { length: Mm; angles: number[] } | null } | null
+  /**
+   * Lounger backrest (ADR-0040): the first `length` mm of a slatted seat lift on a hinge, on a bought prop. Positions
+   * are seat-to-back angles (default 100°, 120°, 150°); 180° would be flat.
+   */
+  backrest?: { length: Mm; positions: number[]; at: number } | null
+  /** Arm posts on the seat at the front corners and arm rests back to the back posts; armrest top above the floor. */
+  arms?: { height: Mm } | null
+  /** Chair only: `bought` = seat and back boards on a bought base (gas lift, mechanism, five-star base); no legs. */
+  base?: 'legs' | 'bought'
   /** Bed only. */
   bed?: {
     mattress: { w: Mm; l: Mm }

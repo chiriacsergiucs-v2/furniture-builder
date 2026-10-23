@@ -572,3 +572,16 @@ describe('review fixes (2026-10-22)', () => {
     expect(b.box.x).toBeGreaterThanOrEqual(a.box.x)
   })
 })
+
+describe('adjustable shelves in a short space (fuzz finding 2026-10-23)', () => {
+  it('when pin holes fit on only one side, it is an error instead of a shelf resting on one edge', () => {
+    const d = templates.find(t => t.id === 'bookcase')!.create()
+    if (d.product.kind !== 'cabinet') throw new Error('cabinet')
+    // A 141 mm space between dividers: room for a +x hole at 64 mm but none on the −x grid (16 + 32k).
+    d.product.params.interior = { id: 'r', kind: 'split', axis: 'y', sizes: [{ mode: 'fr', value: 1 }, { mode: 'mm', value: 141 }], children: [
+      { id: 'top', kind: 'empty' }, { id: 'low', kind: 'split', axis: 'x', sizes: [{ mode: 'fr', value: 1 }, { mode: 'mm', value: 325 }, { mode: 'fr', value: 1 }], children: [
+        { id: 'a', kind: 'empty' }, { id: 'b', kind: 'shelves', count: 1, adjustable: true }, { id: 'c', kind: 'empty' }] }] }
+    const m = buildModel(d)
+    expect(m.diagnostics.find(x => x.code === 'pin-rows-short')?.severity).toBe('error')
+  })
+})

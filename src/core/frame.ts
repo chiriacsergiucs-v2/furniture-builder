@@ -48,6 +48,11 @@ export function buildFrame(p: FrameParams, id: string, materials: Map<string, Ma
     return at
   }
   const slatCount = (span: Mm) => Math.max(1, Math.floor((span + p.slats.gap) / (p.slats.width + p.slats.gap)))
+  /** Tilt every part pushed since index `from` as one piece about the axis through the world point `pivot` (ADR-0040). */
+  const tiltFrom = (from: number, axis: Axis, angleDeg: number, pivot: [Mm, Mm, Mm]) => {
+    if (!angleDeg) return
+    for (const q of out.panels.slice(from)) q.shape = { kind: 'tilt', axis, angleDeg, pivot: [pivot[0] - q.box.x, pivot[1] - q.box.y, pivot[2] - q.box.z] }
+  }
 
   if (p.kind === 'bed') return buildBed(p, out, err, member, sheet, spread, slatCount, panelM)
 
@@ -58,6 +63,10 @@ export function buildFrame(p: FrameParams, id: string, materials: Map<string, Ma
   const seatH = back ? back.seatHeight : H
   const topT = p.top === 'panel' ? panelM.thickness : slats.thickness
   const topY = seatH - topT
+  // Rake of the back from vertical: from the reclining position shown, else the back's own angle (ADR-0040).
+  const recline = back ? p.recline ?? null : null
+  const rake = recline ? (recline.positions[recline.at] ?? 90) - 90 : back?.angleDeg ?? 0
+  if (p.kind === 'chair' && p.base === 'bought') return boughtBase(p, id, out, err, sheet, tiltFrom, back, rake, panelM)
   if (W < 2 * (li + lw) + 50 || D < 2 * (li + ld) + 50 || topY < 100) return err('frame-too-small', `${W}×${H}×${D} mm is too small for ${lw}×${ld} mm legs.`)
   if (li < 0) return err('leg-inset', 'Legs cannot be set outside the top.')
   if (ah > 0 && (at > Math.min(lw, ld) || at <= 0)) return err('apron-thickness', `Rails ${at} mm thick must be no thicker than the ${Math.min(lw, ld)} mm legs.`)
@@ -68,8 +77,10 @@ export function buildFrame(p: FrameParams, id: string, materials: Map<string, Ma
   const xs = [li, W - li - lw], zs = [li, D - li - ld]
   // Back posts carry on up to the full height; the seat stops in front of them.
   zs.forEach((z, zi) => xs.forEach((x, xi) => {
-    const post = back && zi === 0
-    member('leg', post ? (xi ? 'Back post right' : 'Back post left') : (xi ? 'Front leg right' : 'Front leg left'), box(x, 0, z, lw, post ? H : topY, ld))
+    // A raked back leans above the seat: the back legs stop at the seat and the posts above lean with the back.
+    const post = back && zi === 0 && !rake
+    const name = back && zi === 0 ? (rake ? 'Back leg' : 'Back post') : 'Front leg'
+    member('leg', `${name} ${xi ? 'right' : 'left'}`, box(x, 0, z, lw, post ? H : topY, ld))
   }))
   const tz0 = back ? li + ld : 0
   const topLabel = p.kind === 'table' ? 'Table top' : 'Seat'
@@ -79,7 +90,19 @@ export function buildFrame(p: FrameParams, id: string, materials: Map<string, Ma
     // Slats run side to side over the rails; front and back slats sit over the legs, so nothing hangs unsupported.
     const z0 = Math.max(tz0, li), span = D - li - z0
     const n = slatCount(span)
-    for (const z of spread(z0, span, slats.width, n)) member('slat', `${topLabel} slat`, box(0, topY, z, W, topT, slats.width))
+    const br = p.kind === 'bench' && !back ? p.backrest ?? null : null
+    if (br && br.length > W - 2 * (li + lw) - 100) return err('backrest-length', `A ${br.length} mm backrest leaves too little seat on a ${W} mm frame.`)
+    const L = br ? br.length : 0
+    for (const z of spread(z0, span, slats.width, n)) member('slat', `${topLabel} slat`, box(L, topY, z, W - L, topT, slats.width))
+    if (br) {
+      // Lounger backrest (ADR-0040): the first L mm of the slats on two battens, hinged at the top edge at x = L.
+      const i0 = out.panels.length
+      for (const z of spread(z0, span, slats.width, n)) member('slat', 'Backrest slat', box(0, topY, z, L, topT, slats.width))
+      const bw = 45, bz = li + ld, bd = D - 2 * li - 2 * ld
+      for (const bx of [li + lw + 10, L - bw - 10]) member('rail', 'Backrest batten', box(bx, topY - at, bz, bw, at, bd))
+      tiltFrom(i0, 'z', -(180 - (br.positions[br.at] ?? 180)), [L, seatH, 0])
+      out.hardware.push({ nodeId: id, kind: 'purchased', label: `Backrest hinges and prop (positions ${br.positions.map(a => `${a}°`).join(', ')})`, quantity: 1, note: 'bought; the prop sets the real positions' })
+    }
   }
   const ring = (role: PanelRole, name: string, y: Mm, h: Mm, which: 'box' | 'h') => {
     const innerX = W - 2 * li - 2 * lw, innerZ = D - 2 * li - 2 * ld
@@ -105,9 +128,24 @@ export function buildFrame(p: FrameParams, id: string, materials: Map<string, Ma
       out.diagnostics.push({ severity: 'warning', code: 'shelf-support', message: 'The lower shelf sits between the legs: fix it with cleats or dowels (not listed).', nodeId: id })
     }
   }
+  const fr = recline?.footrest
+  if (fr && recline) {
+    // Footrest hinged under the front edge of the seat, swung forward from hanging (0°) to level (90°).
+    const a = fr.angles[recline.at] ?? 0, t = panelM.thickness
+    if (a >= 90) sheet('seat', 'Footrest', box(li, topY - t, D, W - 2 * li, t, fr.length), 'y', 'x', ['-x', '+x', '+z'])
+    else {
+      if (a === 0 && fr.length > topY) return err('footrest-floor', `A ${fr.length} mm footrest hanging from ${topY} mm reaches the floor.`)
+      const i0 = out.panels.length
+      sheet('seat', 'Footrest', box(li, topY - fr.length, D, W - 2 * li, fr.length, t), 'z', 'x', ['-x', '+x', '-y'])
+      tiltFrom(i0, 'x', -a, [li, topY, D])
+    }
+  }
+  if (recline) out.hardware.push({ nodeId: id, kind: 'purchased', label: `Reclining mechanism (positions ${recline.positions.map(a => `${a}°`).join(', ')})`, quantity: 1, note: 'bought; it sets the frame\'s inside sizes and the real positions' })
   if (back) {
     const bx = li + lw, bw = W - 2 * li - 2 * lw
     const y0 = seatH + BACK_START
+    const b0 = out.panels.length
+    if (rake) xs.forEach((x, xi) => member('leg', `Back post ${xi ? 'right' : 'left'}`, box(x, topY, li, lw, H - topY, ld)))
     if (back.style === 'panel') {
       const bt = panelM.thickness
       sheet('seat', 'Back panel', box(bx, y0, li + Math.floor((ld - bt) / 2), bw, H - y0, bt), 'z', 'x', ['+y'])
@@ -120,11 +158,45 @@ export function buildFrame(p: FrameParams, id: string, materials: Map<string, Ma
       const sz = li + Math.floor((ld - slats.thickness) / 2)
       for (const x of spread(bx + 20, bw - 40, slats.width, n)) member('slat', 'Back slat', box(x, sy, sz, slats.width, sh, slats.thickness))
     }
+    // The back leans back (top towards the wall) about the back edge of the posts at seat-frame level.
+    tiltFrom(b0, 'x', -rake, [0, topY, li])
+  }
+  if (p.arms) {
+    const top = p.arms.height
+    if (!back) err('arms-need-back', 'Arm rests run back to the back posts: give the frame a back.')
+    else if (top - at < seatH + 100) err('arm-height', `Arm rests at ${top} mm are too close to the ${seatH} mm seat.`)
+    else xs.forEach((x, xi) => {
+      const side = xi ? 'right' : 'left'
+      member('leg', `Arm post ${side}`, box(x, seatH, D - li - ld, lw, top - at - seatH, ld))
+      member('rail', `Arm rest ${side}`, box(x, top - at, li + ld, lw, at, D - 2 * li - ld))
+    })
   }
   return out
 }
 
 type Err = (code: string, message: string) => PartialModel
+type Tilt = (from: number, axis: Axis, angleDeg: number, pivot: [Mm, Mm, Mm]) => void
+
+/**
+ * Chair on a bought base (ADR-0040): only the seat and back boards are cut; the gas lift, mechanism, five-star base and
+ * back support are bought, scheduled and not drawn. The back leans by its rake about its bottom back edge.
+ */
+function boughtBase(p: FrameParams, id: string, out: PartialModel, err: Err, sheet: Sheet, tilt: Tilt, back: FrameParams['back'], rake: number, panelM: Material): PartialModel {
+  const t = panelM.thickness, seatH = back ? back.seatHeight : p.height
+  if (p.width < 250 || p.depth < 250 || seatH < 300) return err('frame-too-small', `A ${p.width} × ${p.depth} mm seat at ${seatH} mm is too small for a bought base.`)
+  sheet('seat', 'Seat', box(0, seatH - t, 0, p.width, t, p.depth), 'y', 'x', ['-x', '+x', '-z', '+z'])
+  if (back) {
+    const y0 = seatH + BACK_START
+    if (p.height - y0 < 150) return err('back-height', `A back needs room above the seat (${seatH} mm) below the top (${p.height} mm).`)
+    const i0 = out.panels.length
+    sheet('seat', 'Back panel', box(0, y0, 0, p.width, p.height - y0, t), 'z', 'x', ['-x', '+x', '-y', '+y'])
+    tilt(i0, 'x', -rake, [0, y0, 0])
+    out.hardware.push({ nodeId: id, kind: 'purchased', label: 'Back support bar (joins seat and back)', quantity: 1, note: 'bought with the mechanism' })
+  }
+  out.hardware.push({ nodeId: id, kind: 'purchased', label: 'Gas lift, synchro mechanism and five-star base', quantity: 1, note: 'bought; check its mounting plate against the seat board' })
+  out.diagnostics.push({ severity: 'warning', code: 'bought-base', message: 'Seat and back boards on a bought base: the base, gas lift, mechanism and back support are bought and not drawn.', nodeId: id })
+  return out
+}
 type Member = (role: PanelRole, label: string, b: Box) => void
 type Sheet = (role: PanelRole, label: string, b: Box, ta: Axis, ga: Axis, banded: Face[]) => void
 type Spread = (from: Mm, span: Mm, w: Mm, n: number) => Mm[]

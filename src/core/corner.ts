@@ -1,5 +1,5 @@
-import { buildCabinet, type PartialModel } from './cabinet'
-import { box } from './geometry'
+import { buildCabinet, hingeBand, hingeCount, type PartialModel } from './cabinet'
+import { box, equalParts } from './geometry'
 import type { Box, CabinetParams, CornerParams, Face, Material, Panel, SpaceOpening } from './types'
 
 /**
@@ -56,12 +56,92 @@ const merge = (into: PartialModel, from: PartialModel) => {
   into.panels.push(...from.panels); into.spaces.push(...from.spaces); into.hardware.push(...from.hardware); into.diagnostics.push(...from.diagnostics)
 }
 
+/**
+ * Diagonal corner (ADR-0040), corner on the left: backs on both walls, a side return at the end of each wall (`depth`
+ * deep), five-sided bottom, top and shelves (profiled boards), a plinth board and the door(s) turned 45° about the
+ * vertical across the diagonal. Mirrored for `side: 'right'`.
+ */
+function buildDiagonal(p: CornerParams, id: string, materials: Map<string, Material>, out: PartialModel): PartialModel {
+  const err = (code: string, message: string) => { out.diagnostics.push({ severity: 'error', code, message, nodeId: id }); return out }
+  const body = materials.get(p.bodyMaterialId)!, front = materials.get(p.frontMaterialId)!, backM = materials.get(p.backMaterialId)
+  if (!backM) return err('material-missing', 'A material used by this corner cabinet does not exist in the design.')
+  const W = p.width, D = p.depth, H = p.height, t = body.thickness, tf = front.thickness, ph = p.plinthHeight, g = p.frontGap
+  const bt = p.back === 'none' ? 0 : backM.thickness
+  const s = p.interior
+  if (s.kind !== 'shelves') return err('diagonal-interior', 'A diagonal corner holds shelves only; set its inside to shelves.')
+  if (W - D < 300) return err('corner-size', `The diagonal needs the width (${W} mm) at least 300 mm more than the depth (${D} mm).`)
+  if (D < 3 * t + 100 || H - ph < 4 * t) return err('corner-size', `A ${W} × ${H} × ${D} mm diagonal corner is too small for ${t} mm panels.`)
+  const local: PartialModel = { panels: [], spaces: [], hardware: [], diagnostics: [] }
+  const add = (key: string, role: Panel['role'], label: string, materialId: string, b: Box, thicknessAxis: Panel['thicknessAxis'], grainAxis: Panel['grainAxis'], banded: Face[], shape?: Panel['shape']) =>
+    local.panels.push({ id: `${id}/${key}`, nodeId: role === 'door' ? s.id : id, role, label, materialId, box: b, thicknessAxis, grainAxis, banded, ...(shape ? { shape } : {}) })
+  if (bt) {
+    add('back-a', 'back', 'Back (back wall)', backM.id, box(0, ph, 0, W, H - ph, bt), 'z', 'x', [])
+    add('back-b', 'back', 'Back (side wall)', backM.id, box(0, ph, bt, bt, H - ph, W - bt), 'x', 'z', [])
+  }
+  add('side-r', 'side', 'Side return right', body.id, box(W - t, ph, bt, t, H - ph, D - bt), 'x', 'y', ['+z'])
+  add('side-l', 'side', 'Side return left', body.id, box(bt, ph, W - t, D - bt, H - ph, t), 'z', 'y', ['+x'])
+  // Five-sided boards between the returns: the cut edge runs parallel to the doors, set in by the return thickness.
+  const Wb = W - t - bt
+  const pent: [number, number][] = [[0, 0], [Wb, 0], [Wb, D - bt], [D - bt, Wb], [0, Wb]]
+  const board = (key: string, role: Panel['role'], label: string, y: number) =>
+    add(key, role, label, body.id, box(bt, y, bt, Wb, t, Wb), 'y', 'x', ['+x', '+z'], { kind: 'profile', points: pent })
+  board('bottom', 'bottom', 'Bottom', ph)
+  board('top', 'top', 'Top', H - t)
+  const room = H - ph - 2 * t - s.count * t
+  if (s.count < 0 || room < (s.count + 1) * 20) return err('shelves-crowded', `${s.count} shelves do not fit in ${H - ph - 2 * t} mm.`)
+  let y = ph + t
+  for (const [i, gap] of equalParts(room, s.count + 1).slice(0, -1).entries()) { y += gap; board(`shelf/${i}`, 'shelf', 'Shelf', y); y += t }
+  // Along the diagonal: unit vector u from the left return's front corner (D, W) to the right one's (W, D).
+  const r2 = Math.SQRT1_2
+  const along = (k: number, off: number): [number, number] => [Math.round(D + k * r2 + off * r2), Math.round(W - k * r2 + off * r2)]
+  const span = Math.round(Math.SQRT2 * (W - D))
+  // Plinth board set back from the doors; its ends stop short of the returns by the set-back.
+  if (ph > 0) {
+    const inset = p.plinthSetback + t, len = span - 2 * inset
+    const [px, pz] = along(inset, -inset - 1)
+    add('plinth', 'plinth', 'Plinth (diagonal)', body.id, box(px, 0, pz, len, ph, t), 'z', 'x', ['+z'], { kind: 'tilt', axis: 'y', angleDeg: 45, pivot: [0, 0, 0] })
+  }
+  // Doors just outside the diagonal (1 mm clear, so whole-mm rounding never pushes them into the carcass).
+  const doors = s.front
+  if (doors && doors.kind === 'doors') {
+    const r = lo(g), n = doors.count, dh = H - ph - 2 * r
+    const leaf = Math.floor((span - 2 * r - (n - 1) * g) / n)
+    if (leaf < 100 || dh < 100) return err('door-small', `Door ${leaf}×${dh} mm is too small.`)
+    for (let i = 0; i < n; i++) {
+      const [dx, dz] = along(r + i * (leaf + g), 1)
+      add(`door/${i}`, 'door', n > 1 ? `Door ${i ? 'right' : 'left'} (diagonal)` : 'Door (diagonal)', front.id, box(dx, ph + r, dz, leaf, dh, tf), 'z', 'y', ['-x', '+x', '-y', '+y'],
+        { kind: 'tilt', axis: 'y', angleDeg: 45, pivot: [0, 0, 0] })
+    }
+    local.hardware.push({ nodeId: s.id, kind: 'hinge', label: 'Concealed hinge for a 45° diagonal corner door', quantity: n * hingeCount(dh), note: `${hingeCount(dh)} per door (typical for ${hingeBand(dh)}); choose the hinge maker's 45° corner hinge or angled plate` })
+  } else if (doors) return err('diagonal-front', 'A diagonal corner takes one door or a pair.')
+  if (s.count) local.hardware.push({ nodeId: s.id, kind: 'shelf-pin', label: 'Shelf support', quantity: 4 * s.count, note: 'fixed shelves: 4 per shelf' })
+  local.spaces.push({ nodeId: s.id, kind: 'shelves', box: box(bt, ph + t, bt, Wb, H - ph - 2 * t, Wb), depth: 0, leaf: true, hasDoors: !!doors })
+  merge(out, p.side === 'left' ? local : mirrorDiagonal(local, W))
+  return out
+}
+
+/**
+ * Mirror for a corner on the right: x → W − x (the blanks move with `mirror`). A turn about the vertical turns the
+ * other way, about the mirrored pivot (w − x from the new min corner); profiles whose first axis is x flip across it.
+ */
+function mirrorDiagonal(m: PartialModel, W: number): PartialModel {
+  const mm = mirror(m, W)
+  mm.panels = mm.panels.map(p => {
+    const s = p.shape
+    if (!s) return p
+    if (s.kind === 'profile') return p.thicknessAxis === 'x' ? p : { ...p, shape: { kind: 'profile', points: s.points.map(([u, v]) => [p.box.w - u, v] as [number, number]).reverse() } }
+    return { ...p, shape: { ...s, angleDeg: s.axis === 'x' ? s.angleDeg : -s.angleDeg, pivot: [p.box.w - s.pivot[0], s.pivot[1], s.pivot[2]] } }
+  })
+  return mm
+}
+
 export function buildCorner(p: CornerParams, id: string, materials: Map<string, Material>): PartialModel {
   const out: PartialModel = { panels: [], spaces: [], hardware: [], diagnostics: [] }
   const err = (code: string, message: string) => out.diagnostics.push({ severity: 'error', code, message, nodeId: id })
   const warn = (code: string, message: string) => out.diagnostics.push({ severity: 'warning', code, message, nodeId: id })
   const body = materials.get(p.bodyMaterialId), front = materials.get(p.frontMaterialId)
   if (!body || !front) { err('material-missing', 'A material used by this corner cabinet does not exist in the design.'); return out }
+  if (p.variant === 'diagonal') return buildDiagonal(p, id, materials, out)
   const t = body.thickness, tf = front.thickness, g = p.frontGap, D = p.depth
   const r = lo(g)
 

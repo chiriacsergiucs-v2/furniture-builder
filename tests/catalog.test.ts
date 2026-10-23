@@ -11,7 +11,7 @@ import type { Design } from '../src/core/types'
 // 'not-assembled': every loose panel set says its assembly is not modelled (ADR-0041).
 const EXPECTED_WARNINGS = new Set(['internal-drawers', 'hardware-to-choose', 'flap-fitting', 'shelf-support', 'not-assembled'])
 // Long frames carry the "centre leg" reminder by design.
-const EXTRA: Record<string, string[]> = { 'sofa-3-frame': ['frame-span'], 'sectional-main': ['frame-span'], 'lounger-flat': ['frame-span'] }
+const EXTRA: Record<string, string[]> = { 'sofa-3-frame': ['frame-span'], 'sectional-main': ['frame-span'], 'lounger-flat': ['frame-span'], 'sink-u-drawer': ['u-cut-trap'], 'office-chair-reference': ['bought-base'] }
 
 describe('template catalog (ADR-0032, ADR-0033, ADR-0039)', () => {
   it('every family has 1–5 variants, known rooms and function, unique ids', () => {

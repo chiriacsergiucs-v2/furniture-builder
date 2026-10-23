@@ -210,14 +210,34 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
           <Segmented<'panel' | 'slats'> label={p.kind === 'table' ? 'Top' : 'Seat'} value={p.top} options={[{ value: 'panel', label: 'One board' }, { value: 'slats', label: 'Slats' }]} onChange={v => set({ top: v })} />
           {(p.kind === 'chair' || p.kind === 'bench') && (
             <>
-              <Toggle label="Back" checked={!!p.back} onChange={v => set({ back: v ? { seatHeight: Math.min(460, p.height - 300), style: 'slats', count: 4, railHeight: 60 } : null })} />
+              <Toggle label="Back" checked={!!p.back} onChange={v => set({ back: v ? { seatHeight: Math.min(460, p.height - 300), style: 'slats', count: 4, railHeight: 60, angleDeg: 8 } : null })} />
               {p.back && (
                 <div className="dims2">
                   <MmField label="Seat height" value={p.back.seatHeight} min={200} max={900} onChange={v => set({ back: { ...p.back!, seatHeight: v } })} />
                   <Select<'slats' | 'panel'> label="Back of" value={p.back.style} options={[{ value: 'slats', label: 'Slats' }, { value: 'panel', label: 'A panel' }]} onChange={v => set({ back: { ...p.back!, style: v } })} />
                   {p.back.style === 'slats' && <Counter label="Back slats" value={p.back.count} min={1} max={12} onChange={v => set({ back: { ...p.back!, count: v } })} />}
+                  {!p.recline && <MmField label="Back rake" unit="°" value={p.back.angleDeg ?? 0} min={0} max={25} step={1} onChange={v => set({ back: { ...p.back!, angleDeg: v } })} hint="Leans back from upright (ADR-0040); 8° is typical" />}
                 </div>
               )}
+              {p.back && p.recline && (
+                <Segmented<number> label="Reclining position shown" value={p.recline.at}
+                  options={p.recline.positions.map((a, i) => ({ value: i, label: `${a}°` }))} onChange={v => set({ recline: { ...p.recline!, at: v } })} />
+              )}
+              {p.back && <Toggle label="Reclining back (bought mechanism)" checked={!!p.recline}
+                onChange={v => set({ recline: v ? { positions: [100, 120, 150], at: 0, footrest: { length: 380, angles: [0, 45, 90] } } : null })} />}
+              {p.recline && <Toggle label="Footrest" checked={!!p.recline.footrest}
+                onChange={v => set({ recline: { ...p.recline!, footrest: v ? { length: 380, angles: p.recline!.positions.map((_, i, a) => Math.round((90 * i) / Math.max(1, a.length - 1))) } : null } })} />}
+              {p.back && <Toggle label="Arm rests" checked={!!p.arms} onChange={v => set({ arms: v ? { height: (p.back?.seatHeight ?? 450) + 220 } : null })} />}
+              {p.arms && <MmField label="Arm rest top above floor" value={p.arms.height} min={200} max={1500} onChange={v => set({ arms: { height: v } })} />}
+              {p.kind === 'bench' && !p.back && p.top === 'slats' && <Toggle label="Lifting backrest (bought prop)" checked={!!p.backrest}
+                onChange={v => set({ backrest: v ? { length: Math.min(650, Math.floor(p.width / 3)), positions: [100, 120, 150], at: 2 } : null })} />}
+              {p.backrest && <>
+                <MmField label="Backrest length" value={p.backrest.length} min={100} max={2000} onChange={v => set({ backrest: { ...p.backrest!, length: v } })} />
+                <Segmented<number> label="Backrest position shown" value={p.backrest.at}
+                  options={p.backrest.positions.map((a, i) => ({ value: i, label: `${a}°` }))} onChange={v => set({ backrest: { ...p.backrest!, at: v } })} />
+              </>}
+              {p.kind === 'chair' && <Segmented<'legs' | 'bought'> label="Stands on" value={p.base ?? 'legs'}
+                options={[{ value: 'legs', label: 'Legs' }, { value: 'bought', label: 'Bought base (gas lift)' }]} onChange={v => set({ base: v })} />}
             </>
           )}
           <Group title="Legs, rails and stretchers" id="g-build">

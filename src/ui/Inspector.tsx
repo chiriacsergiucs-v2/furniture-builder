@@ -135,6 +135,14 @@ function SpaceEditor({ space, root, rootLabel, wholeLabel }: { space: Space; roo
           )}
           {space.kind === 'drawers' && <Counter label="Drawers" value={space.count} min={1} max={10} onChange={v => set(s => setDrawerCount(s, v))} />}
           {space.kind === 'drawers' && space.count > 1 && <DrawerHeights space={space} onChange={set} />}
+          {space.kind === 'drawers' && <Toggle label="Top drawer cut around a sink trap" checked={!!space.uCut}
+            onChange={v => set(s => (s.kind === 'drawers' ? { ...s, uCut: v ? { width: 250, depth: 200 } : null } : s))} />}
+          {space.kind === 'drawers' && space.uCut && (
+            <div className="dims2">
+              <MmField label="Notch width" value={space.uCut.width} min={50} max={1000} onChange={v => set(s => (s.kind === 'drawers' && s.uCut ? { ...s, uCut: { ...s.uCut, width: v } } : s))} />
+              <MmField label="Notch depth" value={space.uCut.depth} min={50} max={800} onChange={v => set(s => (s.kind === 'drawers' && s.uCut ? { ...s, uCut: { ...s.uCut, depth: v } } : s))} hint="Measure your trap and pipes" />
+            </div>
+          )}
           {space.kind === 'hanging' && <MmField label="Rail below top" value={space.railDrop} min={0} max={500} step={10} onChange={v => set(s => ({ ...s, railDrop: v }) as Space)} />}
           {space.kind === 'empty' && <ApplianceEditor space={space} onChange={set} />}
         </Section>
@@ -364,12 +372,12 @@ function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[]
   const set = useDesign(s => s.updateCorner)
   const select = useDesign(s => s.select)
   const panelMats = matOptions(materials, m => m.thickness >= 12)
-  const blind = p.variant === 'blind'
-  const inside = insideSummary(blind ? [p.interior] : [p.interior, p.wingInterior])
+  const blind = p.variant === 'blind', diagonal = p.variant === 'diagonal'
+  const inside = insideSummary(blind || diagonal ? [p.interior] : [p.interior, p.wingInterior])
   const steps: Step[] = [
     { id: 'size', label: 'Size', meta: `${p.width}×${p.height}×${p.depth}`, done: true },
     { id: 'inside', label: 'Inside', meta: inside, done: inside !== 'Empty', tone: inside === 'Empty' ? 'warn' : undefined },
-    { id: 'build', label: 'Build', meta: blind ? 'Blind corner' : 'L-shaped', done: true },
+    { id: 'build', label: 'Build', meta: blind ? 'Blind corner' : diagonal ? 'Diagonal' : 'L-shaped', done: true },
     { id: 'materials', label: 'Boards', meta: matName(materials, p.bodyMaterialId), done: true },
   ]
   return (
@@ -377,24 +385,27 @@ function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[]
       <EditorRail steps={steps} inside={() => select(p.interior.id)} />
       <header className="insp-head">
         <h2>Corner unit</h2>
-        <p className="hint">{blind ? 'A blind section the neighbouring cabinet covers, joined to a normal cabinet.' : 'Two wings open to each other at the corner, with a folding door pair. The front view shows the back-wall wing.'}</p>
+        <p className="hint">{blind ? 'A blind section the neighbouring cabinet covers, joined to a normal cabinet.'
+          : diagonal ? 'Five-sided: the same width along both walls, a return at each end and the door across the diagonal at 45°. Bottom, top and shelves are cut to a template.'
+          : 'Two wings open to each other at the corner, with a folding door pair. The front view shows the back-wall wing.'}</p>
       </header>
       <PieceInfo />
-      <Segmented<CornerParams['variant']> label="Type" value={p.variant} options={[{ value: 'blind', label: 'Blind corner' }, { value: 'l-shape', label: 'L-shaped' }]} onChange={v => set({ variant: v })} />
+      <Segmented<CornerParams['variant']> label="Type" value={p.variant} options={[{ value: 'blind', label: 'Blind corner' }, { value: 'l-shape', label: 'L-shaped' }, { value: 'diagonal', label: 'Diagonal' }]}
+        onChange={v => set(v === 'diagonal' && p.interior.kind !== 'shelves' ? { variant: v, interior: { id: p.interior.id, kind: 'shelves', count: 1, front: { kind: 'doors', count: 1 } } } : { variant: v })} />
       <Segmented<'left' | 'right'> label="Corner on the" value={p.side} options={[{ value: 'left', label: 'Left' }, { value: 'right', label: 'Right' }]} onChange={v => set({ side: v })} />
       <div className="dims3">
-        <MmField label={blind ? 'Width' : 'Back wing'} value={p.width} min={300} max={3000} onChange={v => set({ width: v })} />
+        <MmField label={blind ? 'Width' : diagonal ? 'Along each wall' : 'Back wing'} value={p.width} min={300} max={3000} onChange={v => set({ width: v })} />
         <MmField label="Height" value={p.height} min={300} max={2500} onChange={v => set({ height: v })} />
         <MmField label="Depth" value={p.depth} min={200} max={900} onChange={v => set({ depth: v })} />
       </div>
-      {blind
+      {diagonal ? null : blind
         ? <MmField label="Blind section" value={p.blindWidth} min={100} max={1500} onChange={v => set({ blindWidth: v })} hint={`About the neighbour's depth + 50 mm (${p.depth + 50}) keeps doors and handles clear.`} />
         : <MmField label="Side wing (incl. corner)" value={p.wingWidth} min={300} max={3000} onChange={v => set({ wingWidth: v })} />}
       <div className="field">
         <span className="field-label">Inside</span>
         <div className="split-actions">
-          <button type="button" className="btn outline" onClick={() => select(p.interior.id)}>{blind ? 'Edit usable section' : 'Edit back-wall wing'}</button>
-          {!blind && <button type="button" className="btn outline" onClick={() => select(p.wingInterior.id)}>Edit side-wall wing</button>}
+          <button type="button" className="btn outline" onClick={() => select(p.interior.id)}>{blind ? 'Edit usable section' : diagonal ? 'Edit shelves and doors' : 'Edit back-wall wing'}</button>
+          {!blind && !diagonal && <button type="button" className="btn outline" onClick={() => select(p.wingInterior.id)}>Edit side-wall wing</button>}
         </div>
       </div>
       <Group title="Construction" id="g-build">

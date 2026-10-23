@@ -5,7 +5,8 @@ import { buildPanelSet } from './panelset'
 import { buildFrame } from './frame'
 import { buildPanel } from './panel'
 import { runRules } from './rules'
-import { box, contains, cutDimensions, isMm, overlaps, union } from './geometry'
+import { box, contains, cutDimensions, isMm, union } from './geometry'
+import { aabbOf, panelsOverlap, shapeProblems } from './shape'
 import type { Design, Diagnostic, FurnitureModel, Material, Panel } from './types'
 
 const FRONT_ROLES = new Set<Panel['role']>(['door', 'drawer-front', 'blind-panel'])
@@ -39,6 +40,8 @@ export function buildModel(design: Design): FurnitureModel {
     } else if (c.width < 30) {
       diagnostics.push({ severity: 'warning', code: 'narrow-part', message: `${p.label} is only ${c.width} mm wide.`, nodeId: p.nodeId, panelIds: [p.id] })
     }
+    // Shaped parts (ADR-0040): whole degrees, profiles inside their blank.
+    for (const message of shapeProblems(p)) diagnostics.push({ severity: 'error', code: 'shape', message, nodeId: p.nodeId, panelIds: [p.id] })
     // Solid timber is cut from lengths of several sections; sheet parts must match their board (ADR-0038).
     if (m && m.stock !== 'solid' && c.thickness !== m.thickness) {
       diagnostics.push({ severity: 'error', code: 'thickness', message: `${p.label} thickness ${c.thickness} mm does not match ${m.name}.`, nodeId: p.nodeId, panelIds: [p.id] })
@@ -48,7 +51,7 @@ export function buildModel(design: Design): FurnitureModel {
   // No two parts may occupy the same space.
   for (let i = 0; i < panels.length; i++) {
     for (let j = i + 1; j < panels.length; j++) {
-      if (overlaps(panels[i].box, panels[j].box)) {
+      if (panelsOverlap(panels[i], panels[j])) {
         diagnostics.push({
           severity: 'error', code: 'overlap',
           message: `${panels[i].label} and ${panels[j].label} occupy the same space.`,
@@ -66,13 +69,13 @@ export function buildModel(design: Design): FurnitureModel {
     // Sliding doors run on a track in front of the carcass (ADR-0037).
     const frontEnv = box(0, 0, 0, W, H, D + Math.max(front?.thickness ?? 0, slidingTrackDepth(prod.params.interior)))
     for (const p of panels) {
-      if (!contains(FRONT_ROLES.has(p.role) ? frontEnv : env, p.box)) {
+      if (!contains(FRONT_ROLES.has(p.role) ? frontEnv : env, aabbOf(p))) {
         diagnostics.push({ severity: 'error', code: 'outside', message: `${p.label} sticks out of the ${W}×${H}×${D} mm cabinet.`, nodeId: p.nodeId, panelIds: [p.id] })
       }
     }
   }
 
-  const model: FurnitureModel = { panels, spaces: partial.spaces, hardware: partial.hardware, diagnostics, bounds: union(panels.map(p => p.box)) }
+  const model: FurnitureModel = { panels, spaces: partial.spaces, hardware: partial.hardware, diagnostics, bounds: union(panels.map(aabbOf)) }
   // Construction guidance (ADR-0035): labelled warnings and reminders, after the independent checks above.
   const ruled = runRules(design, model, materials)
   model.diagnostics.push(...ruled.diagnostics)

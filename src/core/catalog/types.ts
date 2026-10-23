@@ -17,7 +17,7 @@ export type Capability =
   | 'shape' | 'front:fixed' | 'front:lid' | 'frame:arms' | 'frame:modules' | 'frame:under-storage' | 'safety:user-confirmed'
 
 export const BUILT_CAPABILITIES: ReadonlySet<Capability> = new Set<Capability>([
-  'top:rails', 'bottom:none', 'appliance-niche', 'root:panel', 'root:frame', 'front:sliding', 'front:flap', 'hardware:user',
+  'top:rails', 'bottom:none', 'appliance-niche', 'root:panel', 'root:frame', 'front:sliding', 'front:flap', 'hardware:user', 'shape',
 ])
 
 /** Plain-language reason a capability is missing, shown on a greyed variant. */

@@ -6,7 +6,7 @@ const TABLE_DIMS = { min: [300, 300, 300] as [number, number, number], max: [300
 const SEAT_DIMS = { min: [300, 350, 300] as [number, number, number], max: [2600, 1200, 1100] as [number, number, number] }
 const BED_DIMS = { min: [500, 300, 900] as [number, number, number], max: [2200, 2000, 2300] as [number, number, number] }
 const chair = frameDefaults('chair')
-const withBack = (seatHeight: number, style: 'slats' | 'panel' = 'panel') => ({ seatHeight, style, count: 4, railHeight: 60 })
+const withBack = (seatHeight: number, style: 'slats' | 'panel' = 'panel') => ({ seatHeight, style, count: 4, railHeight: 60, angleDeg: 8 })
 
 export const tables: CatalogFamily[] = [
   {
@@ -128,7 +128,9 @@ export const seating: CatalogFamily[] = [
     dims: SEAT_DIMS, catalogVersion: 1,
     variants: [
       { id: 'garden-bench-slats', name: 'Backless slatted', summary: '1500 × 450 × 450, larch', kind: 'construction', requires: ['root:frame'], create: () => frame('Garden bench', 'bench', { width: 1500, depth: 450, top: 'slats', solidMaterialId: 'larch', slats: { width: 70, thickness: 25, gap: 8 } }) },
-      { id: 'garden-bench-back', name: 'With back and arms', summary: 'Raked back', kind: 'construction', requires: ['shape'] },
+      { id: 'garden-bench-back', name: 'With back and arms', summary: '1500 × 900 × 620, back raked 15°, arm rests at 650', kind: 'construction', requires: ['root:frame', 'shape'],
+        create: () => frame('Garden bench with back', 'bench', { width: 1500, depth: 620, height: 900, top: 'slats', solidMaterialId: 'larch', slats: { width: 70, thickness: 25, gap: 8 },
+          back: { seatHeight: 450, style: 'slats', count: 6, railHeight: 70, angleDeg: 15 }, arms: { height: 650 } }) },
     ],
   },
   {
@@ -184,7 +186,10 @@ export const seating: CatalogFamily[] = [
     variants: [
       { id: 'recliner-shell', name: 'Fixed frame shell', summary: '900 × 1000 × 950, seat 470', kind: 'construction', requires: ['root:frame', 'hardware:user'], hardware: `reclining mechanism (it sets the frame's inside sizes); ${UPHOLSTERY}`,
         create: () => frame('Recliner frame shell', 'bench', { width: 900, depth: 950, height: 1000, back: withBack(470), apron: { height: 110, thickness: 25 }, leg: { w: 60, d: 60 } }) },
-      { id: 'recliner-reference', name: 'Reclining frame', summary: 'Back and footrest that tilt', kind: 'construction', requires: ['shape', 'hardware:user'] },
+      { id: 'recliner-reference', name: 'Reclining frame', summary: 'Back 100° / 120° / 150°, footrest; shown upright', kind: 'construction', requires: ['root:frame', 'shape', 'hardware:user'],
+        hardware: `reclining mechanism with footrest linkage (it sets the positions and the frame's inside sizes); ${UPHOLSTERY}`,
+        create: () => frame('Reclining frame', 'bench', { width: 900, depth: 950, height: 1000, back: withBack(470), apron: { height: 110, thickness: 25 }, leg: { w: 60, d: 60 },
+          recline: { positions: [100, 120, 150], at: 0, footrest: { length: 380, angles: [0, 45, 90] } } }) },
     ],
   },
   {
@@ -195,7 +200,9 @@ export const seating: CatalogFamily[] = [
     variants: [
       { id: 'office-chair-frame', name: 'Fixed-height desk chair frame', summary: 'Seat 470, panel back', kind: 'construction', requires: ['root:frame', 'hardware:user'], hardware: 'gas lift, synchro mechanism and 5-star base are bought; this frame has fixed legs instead',
         create: () => frame('Desk chair frame', 'chair', { width: 480, depth: 500, height: 950, back: { ...chair.back!, seatHeight: 470, style: 'panel' } }) },
-      { id: 'office-chair-reference', name: 'Ergonomic chair (bought)', summary: 'Gas lift, mechanism, 5-star base', kind: 'construction', requires: ['shape', 'hardware:user'] },
+      { id: 'office-chair-reference', name: 'Ergonomic chair (bought base)', summary: 'Seat and raked back boards on a bought gas lift, mechanism and 5-star base', kind: 'construction', requires: ['root:frame', 'shape', 'hardware:user'],
+        hardware: 'gas lift, synchro mechanism, 5-star base and back support bar are bought',
+        create: () => frame('Ergonomic chair boards', 'chair', { width: 480, depth: 460, height: 1000, base: 'bought', back: { ...chair.back!, seatHeight: 480, style: 'panel', angleDeg: 8 } }) },
     ],
   },
   {
@@ -206,7 +213,9 @@ export const seating: CatalogFamily[] = [
     variants: [
       { id: 'lounger-flat', name: 'Flat lounger frame', summary: '1950 × 320 × 650, slatted, larch', kind: 'construction', requires: ['root:frame', 'hardware:user'], hardware: 'adjustable backrest prop and wheels',
         create: () => frame('Flat lounger', 'bench', { width: 1950, depth: 650, height: 320, top: 'slats', solidMaterialId: 'larch', slats: { width: 70, thickness: 22, gap: 10 }, legInset: 40, apron: { height: 90, thickness: 25 } }) },
-      { id: 'lounger-reference', name: 'Adjustable backrest', summary: 'Backrest that tilts on a prop', kind: 'construction', requires: ['shape', 'hardware:user'] },
+      { id: 'lounger-reference', name: 'Adjustable backrest', summary: 'Backrest 100° / 120° / 150° on a prop; shown at 150°', kind: 'construction', requires: ['root:frame', 'shape', 'hardware:user'], hardware: 'backrest hinges and prop',
+        create: () => frame('Lounger with backrest', 'bench', { width: 1950, depth: 650, height: 320, top: 'slats', solidMaterialId: 'larch', slats: { width: 70, thickness: 22, gap: 10 }, legInset: 40, apron: { height: 90, thickness: 25 },
+          backrest: { length: 650, positions: [100, 120, 150], at: 2 } }) },
     ],
   },
 ]
