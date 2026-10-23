@@ -35,3 +35,8 @@ New-piece wizard (2026-10-23, ADR-0044–0046, Proposed): New → "New piece" as
 open shelving, table, bench, desk) and only that type's steps; types, steps and suggestion generators are data in
 `src/core/wizard/`; cards are candidates built by `buildModel()` with no errors, ranked default-first then by variety;
 the result is a normal design saved with `saveDesign()` (no Dexie change). Legs under a carcass are not in the model.
+
+User answers 2026-10-23 (ADR-0040–0046): rake default 8° kept; recliner 100/120/150°; full-size profile templates;
+Pat Noi bed joins with bed-rail brackets (rail height unknown, ADR-0041 stays Proposed); catalog pictures also in
+Start from + drawn in the browser for edited families (N36); no auto backlog from research approvals; tab label kept;
+wizard: add Wardrobe and Bed types, keep answers to reopen in the wizard (N35); no legs under cabinets now; 6/64 cards.

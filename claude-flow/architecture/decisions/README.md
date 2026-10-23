@@ -116,7 +116,7 @@ Requested by the user on 2026-10-23 (answer to ADR-0039).
 
 | ID | Decision | Backlog | Status |
 |---|---|---|---|
-| [ADR-0040](ADR-0040.md) | Shaped parts: tilted members and profiled boards on whole-mm cut blanks | N30 | Proposed |
+| [ADR-0040](ADR-0040.md) | Shaped parts: tilted members and profiled boards on whole-mm cut blanks | N30 | Approved |
 
 ## Mobila rooms — proposed
 
@@ -132,7 +132,7 @@ Requested by the user on 2026-10-23.
 
 | ID | Decision | Backlog | Status |
 |---|---|---|---|
-| [ADR-0042](ADR-0042.md) | Catalog pictures are SVG snapshots of the built model, made before the app runs and shipped as files | N32 | Proposed |
+| [ADR-0042](ADR-0042.md) | Catalog pictures are SVG snapshots of the built model, made before the app runs and shipped as files | N32 | Approved |
 
 ## Feature research catalog — proposed
 
@@ -140,7 +140,7 @@ Requested by the user on 2026-10-23.
 
 | ID | Decision | Backlog | Status |
 |---|---|---|---|
-| [ADR-0043](ADR-0043.md) | Research papers become a traceable feature catalog (bundle format, line-level coverage audit, re-import); user decisions stored apart and never touched by imports | N33 | Proposed |
+| [ADR-0043](ADR-0043.md) | Research papers become a traceable feature catalog (bundle format, line-level coverage audit, re-import); user decisions stored apart and never touched by imports | N33 | Accepted |
 
 ## New-piece wizard — proposed
 
@@ -148,6 +148,6 @@ Requested by the user on 2026-10-23 (replaces ADR-0030 answer 3, "No guided New 
 
 | ID | Decision | Backlog | Status |
 |---|---|---|---|
-| [ADR-0044](ADR-0044.md) | "New piece" is a data-driven wizard: step library + construction-type registry map answers to a design | N34 | Proposed |
-| [ADR-0045](ADR-0045.md) | Suggested combinations from generator axes declared per type, kept only when `buildModel()` has no errors | N34 | Proposed |
-| [ADR-0046](ADR-0046.md) | A wizard result is an ordinary saved design in the existing `designs` table; no Dexie version | N34 | Proposed |
+| [ADR-0044](ADR-0044.md) | "New piece" is a data-driven wizard: step library + construction-type registry map answers to a design | N34 | Approved |
+| [ADR-0045](ADR-0045.md) | Suggested combinations from generator axes declared per type, kept only when `buildModel()` has no errors | N34 | Accepted |
+| [ADR-0046](ADR-0046.md) | A wizard result is an ordinary saved design in the existing `designs` table; no Dexie version | N34 | Approved |
