@@ -50,7 +50,7 @@ New ADRs: copy any file's six sections, number sequentially, never renumber. Onl
 | ID | Decision | Status |
 |---|---|---|
 | [ADR-0014](ADR-0014.md) | The front elevation is the editing surface; 3D is a non-authoritative preview | Accepted |
-| [ADR-0030](ADR-0030.md) | One token set with light and dark themes, a component layer, and a wizard-ready steps rail | Proposed |
+| [ADR-0030](ADR-0030.md) | One token set with light and dark themes, a component layer, and a wizard-ready steps rail | Accepted |
 
 ## Process
 
@@ -82,9 +82,9 @@ Requested by the user on 2026-10-22; defaults in each ADR await confirmation.
 
 | ID | Decision | Backlog | Status |
 |---|---|---|---|
-| [ADR-0027](ADR-0027.md) | Catalog page: browse by category, brand and "Saved on this device"; shipped entries open as local copies | N14 | Proposed |
-| [ADR-0028](ADR-0028.md) | Catalog metadata and origin link live in the design document (optional field, no schema bump) | N15 | Proposed |
-| [ADR-0029](ADR-0029.md) | The catalog is fed by a scheduled search → extract (`tools/catalog/extract_pdf.py`) → reconstruct → PR job; native products only, evidence per value | N16, N17 | Proposed |
+| [ADR-0027](ADR-0027.md) | Catalog page: browse by category, brand and "Saved on this device"; shipped entries open as local copies | N14 | Approved |
+| [ADR-0028](ADR-0028.md) | Catalog metadata and origin link live in the design document (optional field, no schema bump) | N15 | Accepted |
+| [ADR-0029](ADR-0029.md) | The catalog is fed by a scheduled search → extract (`tools/catalog/extract_pdf.py`) → reconstruct → PR job; native products only, evidence per value | N16, N17 | Approved |
 
 ## Placement — proposed
 
@@ -92,5 +92,36 @@ Requested by the user on 2026-10-22; defaults in the ADR await confirmation.
 
 | ID | Decision | Backlog | Status |
 |---|---|---|---|
-| [ADR-0031](ADR-0031.md) | Pieces are placed on the floor, on the wall, or on/above another piece; cabinet bottom under the sides; bay layout | N19, N20 | Proposed |
-| [ADR-0032](ADR-0032.md) | Parts known only by their cut sizes are a panel set (one flat pile, never an invented assembly) | N21, N22 | Proposed |
+| [ADR-0031](ADR-0031.md) | Pieces are placed on the floor, on the wall, or on/above another piece; cabinet bottom under the sides; bay layout | N19, N20 | Accepted |
+
+## Template catalog — proposed
+
+Requested by the user on 2026-10-22 (all furniture types, grouped by room with a toggle to type, editable, 1–5 default
+variants each). Families and variants: `docs/catalog.md`. Defaults in each ADR await confirmation.
+
+| ID | Decision | Backlog | Status |
+|---|---|---|---|
+| [ADR-0032](ADR-0032.md) | Template catalog = families of complete design snapshots, copied on insert, grouped by room (default) or type; no formula engine or inheritance | N22 | Accepted |
+| [ADR-0033](ADR-0033.md) | 1–5 default variants per family (fewest for simple storage, most for kitchen); interior variants double as *Apply layout* presets | N23 | Accepted |
+| [ADR-0034](ADR-0034.md) | Templates are editable: edits saved as local templates (new Dexie table), shipped ones never change, reset and compare | N24 | Accepted |
+| [ADR-0035](ADR-0035.md) | Construction guidance as a rules registry keyed by role/product, labelled warnings; safety-regulated items wait for user values | N25 | Accepted |
+| [ADR-0036](ADR-0036.md) | Kitchen: tall units, rails-top / no-bottom flags, user-sized appliance niches, front-only panel, run-level fillers, covers, plinth, worktop | N26 | Accepted |
+| [ADR-0037](ADR-0037.md) | Sliding doors and lift-up / drop-down flaps as front kinds, hardware user-specified | N27 | Accepted |
+| [ADR-0038](ADR-0038.md) | Frame root for tables, benches, stools, chairs and beds, with solid (linear) stock beside sheet stock | N28 | Accepted |
+| [ADR-0039](ADR-0039.md) | Upholstered, mechanised and shaped pieces are reference entries until a shaped-part ADR | N29 | Accepted |
+
+## Shapes — proposed
+
+Requested by the user on 2026-10-23 (answer to ADR-0039).
+
+| ID | Decision | Backlog | Status |
+|---|---|---|---|
+| [ADR-0040](ADR-0040.md) | Shaped parts: tilted members and profiled boards on whole-mm cut blanks | N30 | Proposed |
+
+## Mobila rooms — proposed
+
+Requested by the user on 2026-10-22.
+
+| ID | Decision | Backlog | Status |
+|---|---|---|---|
+| [ADR-0041](ADR-0041.md) | Parts known only by their cut sizes are a panel set (one flat pile, never an invented assembly) | N21, N31 | Proposed |

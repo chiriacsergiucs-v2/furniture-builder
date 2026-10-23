@@ -2,7 +2,7 @@
 
 Source: `MOBILA_TOATE_CAMERELE_AI_CAD_PAL_MDF.json` (format 2.0.0, exported 2026-10-22), attached to the Mobila
 project. Generator: `src/core/samples/mobila.ts`. Importable files: `mobila-living.project.json`,
-`mobila-dormitor.project.json` (also under **New → Mobila rooms** in the app).
+`mobila-dormitor.project.json` (also built into the app: **New** or **Library → Built in the app**, on the deployed site with no import).
 `tests/mobila.test.ts` checks them.
 
 | Room in the file | Project | Pieces |
@@ -23,7 +23,7 @@ project. Generator: `src/core/samples/mobila.ts`. Importable files: `mobila-livi
 All 47 living parts appear, with the file's carcass sizes one for one (2600 × 400 ×2, 2685 × 400 ×4,
 400 × 399 ×12, 499 × 400 ×7, 510 × 400 ×4, 519 × 400 ×6) and 12 fronts. Overall 3220 × 2600, as the file.
 
-## Dormitor — Pat Noi (loose panels, ADR-0032)
+## Dormitor — Pat Noi (loose panels, ADR-0041)
 
 The file gives the bed's cut panels only; every position is marked "do not invent". Built as a panel set: the parts
 go to the cut list and sheets and lie in one pile in 3D, with a warning that the assembly is not modelled.

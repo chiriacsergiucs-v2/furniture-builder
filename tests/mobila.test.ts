@@ -195,7 +195,7 @@ describe('Mobila rooms from the project file', () => {
   })
 })
 
-describe('panel set (ADR-0032)', () => {
+describe('panel set (ADR-0041)', () => {
   const set = (): Design => ({
     ...t('panels'),
     product: { kind: 'panels', id: 'ps', params: { panels: [

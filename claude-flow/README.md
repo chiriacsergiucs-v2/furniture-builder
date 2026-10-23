@@ -7,7 +7,7 @@ Start with `PROJECT.md`, then `memory/project-context.md`, then `architecture/de
 
 ```
 architecture/overview.md        how the code fits together
-architecture/decisions/         ADR-0001 … ADR-0026 (17 accepted for the current app, 9 approved for next slices)
+architecture/decisions/         ADR-0001 … ADR-0039 (see the index for status)
 agents/                         six roles: owned paths, commands, gates, never-do rules
 workflows/                      implementation, change-control, release
 tasks/tasks.json                next work as contracts (READY / BLOCKED with reasons)

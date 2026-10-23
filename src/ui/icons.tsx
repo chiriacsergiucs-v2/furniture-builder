@@ -38,6 +38,12 @@ const PATHS = {
   'desk-pedestal': 'M3 7h18M4 7v12M20 7v12M13 7v12M13 11h7M13 15h7',
   'desk-gables': 'M3 7h18M5 7v12M19 7v12',
   project: 'M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z',
+  table: 'M3 8h18M5 8v12M19 8v12M5 12h14',
+  bed: 'M3 18V7M21 18v-5H3M3 13V9h7v4M3 18h18',
+  chair: 'M7 3v18M7 12h10v9M7 12V3M17 12v-2',
+  panel: 'M7 3h10v18H7zM14 6v3',
+  catalog: 'M4 4h6a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H4zM20 4h-6a2 2 0 0 0-2 2v14a2 2 0 0 1 2-2h6z',
+  search: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM16 16l4 4',
 } as const
 
 export type IconName = keyof typeof PATHS

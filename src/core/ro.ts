@@ -29,6 +29,52 @@ const PART: Record<string, string> = {
   'Right gable': 'Picior lateral dreapta',
   'Modesty panel': 'Panou de modestie',
   'Blind panel': 'Panou orb',
+  'Top rail front': 'Traversă sus față',
+  'Top rail back': 'Traversă sus spate',
+  'Sliding door': 'Ușă glisantă',
+  'Lift-up flap': 'Clapă rabatabilă sus',
+  'Drop-down flap': 'Clapă rabatabilă jos',
+  'Dishwasher front': 'Front mașină de spălat vase',
+  'Fridge door front': 'Front ușă frigider',
+  'Cover panel': 'Panou de capăt',
+  Filler: 'Completare',
+  'Table top': 'Blat masă',
+  Seat: 'Șezut',
+  'Seat slat': 'Șipcă șezut',
+  'Table top slat': 'Șipcă blat',
+  'Front leg left': 'Picior față stânga',
+  'Front leg right': 'Picior față dreapta',
+  'Back post left': 'Montant spătar stânga',
+  'Back post right': 'Montant spătar dreapta',
+  'Rail front': 'Tăblie față',
+  'Rail back': 'Tăblie spate',
+  'Rail left': 'Tăblie stânga',
+  'Rail right': 'Tăblie dreapta',
+  'Stretcher front': 'Legătură față',
+  'Stretcher back': 'Legătură spate',
+  'Stretcher left': 'Legătură stânga',
+  'Stretcher right': 'Legătură dreapta',
+  'Stretcher middle': 'Legătură mijloc',
+  'Lower shelf': 'Raft jos',
+  'Back panel': 'Panou spătar',
+  'Back rail top': 'Traversă spătar sus',
+  'Back rail bottom': 'Traversă spătar jos',
+  'Back slat': 'Șipcă spătar',
+  Headboard: 'Tăblie cap',
+  Footboard: 'Tăblie picioare',
+  'Side panel': 'Panou lateral',
+  'Side rail left': 'Lonjeron stânga',
+  'Side rail right': 'Lonjeron dreapta',
+  'Slat ledger left': 'Șipcă suport stânga',
+  'Slat ledger right': 'Șipcă suport dreapta',
+  Slat: 'Șipcă',
+  'Centre rail': 'Lonjeron central',
+  'Centre leg': 'Picior central',
+  'Guard rail left': 'Balustradă stânga',
+  'Guard rail right': 'Balustradă dreapta',
+  'Ladder stile left': 'Montant scară stânga',
+  'Ladder stile right': 'Montant scară dreapta',
+  'Ladder rung': 'Treaptă scară',
 }
 
 /** "Drawer 2 side" → "Lateral sertar"; "Base cabinet: Left side" → "Base cabinet: Lateral stânga". Unknown labels pass through. */
@@ -66,6 +112,12 @@ export function hardwareRo(h: HardwareItem): { item: string; note: string } {
     case 'wall-bracket': return { item: 'Agățătoare reglabilă pentru corp suspendat', note: 'câte una în colțurile de sus din spate (verificați fișa tehnică și tipul peretelui)' }
     case 'wall-rail': return { item: 'Șină de perete pentru agățători', note: 'tăiată la lățimea corpului' }
     case 'corner-hinge': return { item: 'Set balama de colț (leagă cele două uși)', note: 'verificați setul și balamalele înlocuite în fișa tehnică' }
+    case 'wall-fixing': return { item: 'Prindere anti-răsturnare în perete', note: 'alegeți diblurile după tipul peretelui (orientativ)' }
+    case 'appliance': return { item: h.label.replace(/^Built-in /, 'Electrocasnic încorporat: '), note: 'verificați nișa după desenul de montaj al aparatului' }
+    case 'front-fixing': return { item: 'Kit prindere front', note: 'de obicei livrat cu aparatul — verificați desenul de montaj' }
+    case 'sliding-track': return { item: 'Șină uși glisante, sus și jos', note: 'verificați sistemul glisant în fișa tehnică' }
+    case 'flap-stay': return { item: 'Mecanism clapă', note: 'alegeți după greutatea și înălțimea frontului (fișa tehnică)' }
+    case 'purchased': return { item: h.label, note: h.note ?? '' }
   }
 }
 

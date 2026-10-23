@@ -3,7 +3,7 @@ import { box } from './geometry'
 import type { Material, PanelSetParams } from './types'
 
 /**
- * Panel set (ADR-0032): every part lies flat in one pile, largest at the bottom, back-left corners aligned. The pile
+ * Panel set (ADR-0041): every part lies flat in one pile, largest at the bottom, back-left corners aligned. The pile
  * shows sizes and boards honestly; how the parts go together is not modelled, and a warning says so.
  */
 export function buildPanelSet(p: PanelSetParams, id: string, materials: Map<string, Material>): PartialModel {

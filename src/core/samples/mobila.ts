@@ -5,7 +5,7 @@
  * plinths, drawer box boards) use the app's own defaults and are listed there as open.
  *
  * The Pat Noi bed is known only as cut panels, without positions ("UNPLACED_DO_NOT_INVENT" in the file), so it is a
- * panel set (ADR-0032): listed for cutting, never assembled here. The kitchen splashback (left out at the user's
+ * panel set (ADR-0041): listed for cutting, never assembled here. The kitchen splashback (left out at the user's
  * request), the RHS workbench (an envelope with no member list) and the variants the file marks as not for production
  * (nightstand B, the simplified bed) are not built.
  */

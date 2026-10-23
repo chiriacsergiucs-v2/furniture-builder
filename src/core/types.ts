@@ -25,6 +25,10 @@ export interface Material {
   color: string
   /** Stock sheet bought for this board (ADR-0019). Absent in version-1 files; defaults fill it in. */
   sheet?: StockSheet
+  /** 'solid': timber bought in lengths, listed by length instead of nested on sheets (ADR-0038). Absent = sheet. */
+  stock?: 'sheet' | 'solid'
+  /** Solid stock: lengths you can buy, ascending (default 2400, 3000). */
+  lengths?: Mm[]
 }
 
 /** A full factory sheet. Length runs along the grain, matching cut-list length (ADR-0009). */
@@ -40,7 +44,13 @@ export interface StockSheet {
 export type PanelRole =
   | 'side' | 'top' | 'bottom' | 'back' | 'plinth' | 'divider' | 'shelf'
   | 'door' | 'drawer-front' | 'drawer-side' | 'drawer-back' | 'drawer-inner-front' | 'drawer-bottom'
-  | 'worktop' | 'gable' | 'modesty' | 'blind-panel' | 'loose'
+  | 'worktop' | 'gable' | 'modesty' | 'blind-panel'
+  /** Panel set parts (ADR-0041). */
+  | 'loose'
+  /** Top rails instead of a full top (ADR-0036); frame parts (ADR-0038). */
+  | 'rail' | 'leg' | 'apron' | 'stretcher' | 'slat' | 'ledger' | 'seat' | 'headboard' | 'footboard' | 'stile' | 'rung'
+  /** Run parts in a project (ADR-0036). */
+  | 'filler' | 'cover-panel'
 
 /** A face direction, used to name banded edges of a panel in world terms. */
 export type Face = '-x' | '+x' | '-y' | '+y' | '-z' | '+z'
@@ -81,6 +91,8 @@ export interface PinRows {
 
 export type HardwareKind = 'drawer-runner-pair' | 'hinge' | 'clothes-rail' | 'rail-support' | 'shelf-pin' | 'handle' | 'push-latch'
   | 'wall-bracket' | 'wall-rail' | 'corner-hinge'
+  /** ADR-0035 anti-tip fixing, ADR-0036 appliance and front fixing, ADR-0037 sliding track and flap stay, ADR-0038/0039 purchased items. */
+  | 'wall-fixing' | 'appliance' | 'front-fixing' | 'sliding-track' | 'flap-stay' | 'purchased'
 
 export interface HardwareItem {
   nodeId: string
@@ -139,6 +151,27 @@ export interface DoorsFront {
   hinge?: 'left' | 'right'
 }
 
+/** Sliding doors in two planes in front of the carcass (ADR-0037). The track system is the user's choice. */
+export interface SlidingFront {
+  kind: 'sliding'
+  count: 2 | 3 | 4
+  /** How far neighbouring doors overlap (default 30). */
+  overlap?: Mm
+  /** Depth the track needs in front of the carcass (default 80). */
+  track?: Mm
+}
+
+/** One front hinged at its top (lift-up) or bottom (drop-down) edge (ADR-0037). */
+export interface FlapFront {
+  kind: 'flap'
+  count: 1
+  direction: 'up' | 'down'
+  /** The lift system or stay the user picked from its datasheet; a warning stays until it is named. */
+  fitting?: string
+}
+
+export type Front = DoorsFront | SlidingFront | FlapFront
+
 /** Handle on every front of a space (ADR-0024). Push-to-open has no holes; it schedules a push latch. */
 export interface Handle {
   kind: 'bar' | 'knob' | 'push'
@@ -152,12 +185,15 @@ export type FrontStyle = 'overlay' | 'half' | 'inset'
 interface SpaceBase {
   id: string
   /** Optional doors covering this whole space. Doors over drawers make them internal drawers. */
-  front?: DoorsFront | null
+  front?: Front | null
   /** Handle on this space's doors, or on its drawer fronts. */
   handle?: Handle | null
 }
 
-export interface EmptySpace extends SpaceBase { kind: 'empty' }
+/** A niche for a built-in appliance; its size comes from the appliance's installation drawing, never a default (ADR-0036). */
+export interface ApplianceNiche { kind: 'oven' | 'microwave' | 'fridge' | 'dishwasher' | 'hob' | 'other'; w: Mm; h: Mm; d: Mm }
+
+export interface EmptySpace extends SpaceBase { kind: 'empty'; appliance?: ApplianceNiche }
 export interface ShelvesSpace extends SpaceBase {
   kind: 'shelves'
   count: number
@@ -210,8 +246,12 @@ export interface CabinetParams {
   frontMaterialId: string
   backMaterialId: string
   top: 'over' | 'between'
-  /** 'under': the bottom runs the full width and the sides stand on it. Absent = between the sides. */
-  bottom?: 'between' | 'under'
+  /** 'rails': two rails between the sides instead of a full top, e.g. under a worktop or over a sink (ADR-0036). */
+  topKind?: 'panel' | 'rails'
+  /** Depth of each top rail (default 100). */
+  railDepth?: Mm
+  /** 'under': the bottom runs the full width and the sides stand on it. 'none': no bottom (over-hood units). Absent = between the sides. */
+  bottom?: 'between' | 'under' | 'none'
   back: 'none' | 'applied' | 'inset'
   /** Distance of an inset back from the rear edge of the carcass. */
   backInset: Mm
@@ -281,7 +321,64 @@ export interface CornerParams {
   wingInterior: Space
 }
 
-/** One part of a panel set (ADR-0032): finished cut size only, no place in an assembly. Thickness comes from the board. */
+/** A front with no carcass: integrated appliance door, cover panel or filler (ADR-0036). */
+export interface PanelParams {
+  purpose: 'dishwasher' | 'fridge' | 'cover' | 'filler'
+  width: Mm
+  height: Mm
+  materialId: string
+  handle?: Handle | null
+}
+
+export type FrameKind = 'table' | 'bench' | 'stool' | 'chair' | 'bed'
+
+/**
+ * Legs, rails, stretchers, slats and a top or deck (ADR-0038). Only vertical and horizontal members; every part is
+ * still an axis-aligned box. Solid members use `solidMaterialId`, panels (top, seat, headboard) `panelMaterialId`.
+ */
+export interface FrameParams {
+  kind: FrameKind
+  /** Outside size. Bed: derived from the mattress (width/depth ignored), height = headboard height. */
+  width: Mm
+  depth: Mm
+  height: Mm
+  panelMaterialId: string
+  solidMaterialId: string
+  /** Table, bench, stool, chair. */
+  top: 'panel' | 'slats'
+  /** Leg section across x and z. */
+  leg: { w: Mm; d: Mm }
+  /** Legs set in from the outside edges of the top. */
+  legInset: Mm
+  /** Rails under the top between the legs (height of the rail). 0 = none. */
+  apron: { height: Mm; thickness: Mm }
+  stretchers: 'none' | 'box' | 'h'
+  stretcherHeight: Mm
+  /** Lower shelf (coffee and end tables), its top height above the floor. */
+  shelf?: { height: Mm } | null
+  /** Slatted top, seat or bed deck. */
+  slats: { width: Mm; thickness: Mm; gap: Mm }
+  /** Chair and bench: seat height; the back posts carry on up to `height`. Absent = no back. */
+  back?: { seatHeight: Mm; style: 'slats' | 'panel'; count: number; railHeight: Mm } | null
+  /** Bed only. */
+  bed?: {
+    mattress: { w: Mm; l: Mm }
+    clearance: Mm
+    /** Top of the slats above the floor. */
+    deckHeight: Mm
+    railHeight: Mm
+    headboardHeight: Mm
+    /** 0 = no footboard (low foot rail only). */
+    footboardHeight: Mm
+    /** Back panel along the left side (daybed). 0 = none. */
+    sidePanelHeight: Mm
+    /** Second bed above (bunk) with this clear gap between decks. 0 = single. */
+    tierGap: Mm
+    guardHeight: Mm
+  } | null
+}
+
+/** One part of a panel set (ADR-0041): finished cut size only, no place in an assembly. Thickness comes from the board. */
 export interface LoosePanel {
   id: string
   name: string
@@ -293,7 +390,7 @@ export interface LoosePanel {
 }
 
 /**
- * Parts known only by their cut sizes (ADR-0032), such as a bed whose panels are measured but whose assembly is not.
+ * Parts known only by their cut sizes (ADR-0041), such as a bed whose panels are measured but whose assembly is not.
  * Built lying flat in one pile, largest at the bottom: never an invented assembly.
  */
 export interface PanelSetParams {
@@ -306,7 +403,40 @@ export type Product =
   | { kind: 'cabinet'; id: string; params: CabinetParams }
   | { kind: 'desk'; id: string; params: DeskParams }
   | { kind: 'corner'; id: string; params: CornerParams }
+  | { kind: 'panel'; id: string; params: PanelParams }
+  | { kind: 'frame'; id: string; params: FrameParams }
   | { kind: 'panels'; id: string; params: PanelSetParams }
+
+/** Where a piece came from (ADR-0028); kept on every copy, never used for geometry. */
+export interface CatalogMeta {
+  category?: string
+  brand?: string
+  productName?: string
+  articleNumber?: string
+  /** Hardware the user still has to choose from a maker's datasheet (ADR-0033 `hardware:user`); a warning stays until cleared. */
+  hardwareToChoose?: string
+  origin?: {
+    catalogId: string
+    variantId?: string
+    revision: number
+    brand?: string
+    productName: string
+    sourceUrl?: string
+    takenAt: string
+  }
+}
+
+/** Guidance thresholds (ADR-0035). Absent = typical defaults; all are warnings, never errors. */
+export interface RuleSettings {
+  /** Longest shelf span for 18 mm particleboard or MDF before a sag warning; scaled by thickness. */
+  shelfSpan?: Mm
+  /** Widest single hinged door before a warning. */
+  doorMaxWidth?: Mm
+  /** Least inside depth for a hanging rail. */
+  hangerDepth?: Mm
+  /** Room height, for the tilt-up check. Absent = not checked. */
+  roomHeight?: Mm
+}
 
 export interface Design {
   /** 2 adds stock sheets and cutting settings (ADR-0019); version-1 files are upgraded in memory on load. */
@@ -319,4 +449,8 @@ export interface Design {
   product: Product
   /** Saw settings for sheet layouts. */
   cutting?: { kerf: Mm }
+  /** Catalog metadata and origin link (ADR-0028). */
+  catalog?: CatalogMeta
+  /** Guidance thresholds (ADR-0035). */
+  settings?: { rules?: RuleSettings }
 }

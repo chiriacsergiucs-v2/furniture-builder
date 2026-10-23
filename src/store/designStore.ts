@@ -2,7 +2,8 @@ import { create } from 'zustand'
 import { buildModel } from '../core/build'
 import { findInProduct, mapProductSpace, templates, upgradeDesign } from '../core/design'
 import { buildProjectModel, makeItem, removeProjectItem, resolvePlacements, setGapLeft, type Project, type ProjectItem, type ProjectModel } from '../core/project'
-import type { CabinetParams, CornerParams, DeskParams, Design, FurnitureModel, Material, PanelSetParams, Space } from '../core/types'
+import type { CabinetParams, CornerParams, DeskParams, Design, FrameParams, FurnitureModel, Material, PanelParams, PanelSetParams, Space } from '../core/types'
+import type { LocalTemplate } from '../core/catalog/local'
 
 export type Tab = 'parts' | 'sheets' | 'hardware' | 'checks'
 
@@ -30,6 +31,8 @@ interface State {
   /** Piece selected in the project view. */
   selectedItemId: string | null
   projectDirtyAt: number
+  /** Editing one variant of a local template (ADR-0034); the piece open before comes back afterwards. */
+  templateEdit: { template: LocalTemplate; variantId: string; returnTo: Design } | null
 
   load: (d: Design, opts?: { fromStorage?: boolean }) => void
   setKerf: (kerf: number) => void
@@ -38,6 +41,13 @@ interface State {
   updateDesk: (patch: Partial<DeskParams>) => void
   updateCorner: (patch: Partial<CornerParams>) => void
   updatePanelSet: (patch: Partial<PanelSetParams>) => void
+  updatePanel: (patch: Partial<PanelParams>) => void
+  updateFrame: (patch: Partial<FrameParams>) => void
+  /** Catalog metadata and guidance settings (ADR-0028, ADR-0035). */
+  updateMeta: (patch: Partial<Pick<Design, 'catalog' | 'settings'>>) => void
+  editTemplateVariant: (template: LocalTemplate, variantId: string) => void
+  /** Leave template mode; returns the template with the edited design put back (the caller saves it), or null. */
+  finishTemplateEdit: (keep: boolean) => LocalTemplate | null
   updateSpace: (id: string, fn: (s: Space) => Space) => void
   updateMaterial: (id: string, patch: Partial<Material>) => void
   addMaterial: (m: Material) => void
@@ -69,7 +79,9 @@ export const useDesign = create<State>((set, get) => {
   const commit = (next: Design) => {
     const { design, past } = get()
     if (next === design) return
-    const stamped = { ...next, updatedAt: new Date().toISOString() }
+    // A copy of a brand's product stops being that brand's product once edited; its origin stays (ADR-0028).
+    const debranded = next.catalog?.brand && next.catalog.origin ? { ...next, catalog: { ...next.catalog, brand: undefined } } : next
+    const stamped = { ...debranded, updatedAt: new Date().toISOString() }
     set({
       design: stamped, model: buildModel(stamped),
       past: [...past, design].slice(-HISTORY), future: [], dirtyAt: Date.now(), pristine: false,
@@ -110,6 +122,7 @@ export const useDesign = create<State>((set, get) => {
     editingItemId: null,
     selectedItemId: null,
     projectDirtyAt: 0,
+    templateEdit: null,
 
     load: (raw, opts) => {
       const d = upgradeDesign(raw)
@@ -169,6 +182,36 @@ export const useDesign = create<State>((set, get) => {
       const d = get().design
       if (d.product.kind !== 'panels') return
       commit({ ...d, product: { ...d.product, params: { ...d.product.params, ...patch } } })
+    },
+    updatePanel: patch => {
+      const d = get().design
+      if (d.product.kind !== 'panel') return
+      commit({ ...d, product: { ...d.product, params: { ...d.product.params, ...patch } } })
+    },
+    updateFrame: patch => {
+      const d = get().design
+      if (d.product.kind !== 'frame') return
+      commit({ ...d, product: { ...d.product, params: { ...d.product.params, ...patch } } })
+    },
+    updateMeta: patch => commit({ ...get().design, ...patch }),
+    editTemplateVariant: (template, variantId) => {
+      const v = template.family.variants.find(x => x.id === variantId)
+      if (!v?.design) return
+      const d = upgradeDesign(structuredClone(v.design))
+      const returnTo = get().templateEdit?.returnTo ?? get().design
+      set({ templateEdit: { template, variantId, returnTo }, design: d, model: buildModel(d), selectedId: null, highlight: [], past: [], future: [], dirtyAt: 0, pristine: true,
+        project: null, projectModel: null, editingItemId: null, selectedItemId: null })
+    },
+    finishTemplateEdit: keep => {
+      const te = get().templateEdit
+      if (!te) return null
+      const design = get().design
+      const back = te.returnTo
+      set({ templateEdit: null, design: back, model: buildModel(back), selectedId: null, highlight: [], past: [], future: [], dirtyAt: 0, pristine: true })
+      if (!keep) return null
+      const now = new Date().toISOString()
+      return { ...te.template, revision: te.template.revision + 1, updatedAt: now,
+        family: { ...te.template.family, variants: te.template.family.variants.map(v => (v.id === te.variantId ? { ...v, design } : v)) } }
     },
     updateSpace: (id, fn) => {
       const d = get().design
