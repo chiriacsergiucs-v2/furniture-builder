@@ -424,6 +424,16 @@ export function validateDesign(d: unknown): string[] {
       ints(['length', 'width'], lp)
       if (!isInt(lp.quantity, 1) || (lp.quantity as number) > MAX_LOOSE) errs.push(`Quantity of ${String(lp.name)} must be 1 to ${MAX_LOOSE}`)
       matRef('materialId', lp)
+      if (lp.place !== undefined) {
+        const pl = lp.place
+        if (!isObj(pl) || !['flat-x', 'flat-z', 'edge-x', 'edge-z', 'up-x', 'up-z'].includes(pl.lie as string)) errs.push(`Invalid place for ${String(lp.name)}`)
+        else ints(['x', 'y', 'z'], pl)
+        if (lp.quantity !== 1) errs.push(`${String(lp.name)}: a placed panel has quantity 1 (list each copy with its own place)`)
+      }
+    }
+    if (params.joints !== undefined) {
+      if (!Array.isArray(params.joints) || params.joints.length > 4 * MAX_LOOSE) errs.push('Invalid joints')
+      else for (const j of params.joints) if (!isObj(j) || j.kind !== 'screwed' || !ids.has(j.a as string) || !ids.has(j.b as string) || j.a === j.b) errs.push('Invalid joint')
     }
     if (params.note !== undefined && typeof params.note !== 'string') errs.push('Invalid note')
     return errs

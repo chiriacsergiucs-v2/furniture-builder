@@ -124,7 +124,7 @@ Requested by the user on 2026-10-22.
 
 | ID | Decision | Backlog | Status |
 |---|---|---|---|
-| [ADR-0041](ADR-0041.md) | Parts known only by their cut sizes are a panel set (one flat pile, never an invented assembly) | N21, N31 | Proposed |
+| [ADR-0041](ADR-0041.md) | Parts known only by their cut sizes are a panel set; parts with a known place are assembled (screwed joints), the rest stay in a pile | N21, N31 | Accepted |
 
 ## Catalog pictures — proposed
 

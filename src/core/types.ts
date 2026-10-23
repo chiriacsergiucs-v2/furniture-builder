@@ -93,6 +93,8 @@ export type HardwareKind = 'drawer-runner-pair' | 'hinge' | 'clothes-rail' | 'ra
   | 'wall-bracket' | 'wall-rail' | 'corner-hinge'
   /** ADR-0035 anti-tip fixing, ADR-0036 appliance and front fixing, ADR-0037 sliding track and flap stay, ADR-0038/0039 purchased items. */
   | 'wall-fixing' | 'appliance' | 'front-fixing' | 'sliding-track' | 'flap-stay' | 'purchased'
+  /** ADR-0041 amendment: a screwed joint between two placed panels; screw type, length and count are the user's choice. */
+  | 'screws'
 
 export interface HardwareItem {
   nodeId: string
@@ -387,7 +389,22 @@ export interface LoosePanel {
   width: Mm
   materialId: string
   quantity: number
+  /**
+   * Where the part sits when its place is known (ADR-0041 amendment, 2026-10-23): back-left-bottom corner and how it
+   * lies. Placed parts have quantity 1; unplaced parts stay in the pile beside the assembly.
+   */
+  place?: PanelPlace
 }
+
+/**
+ * How a placed panel lies. `flat-*`: thickness up (y), length along x or z. `edge-*`: standing on its long edge,
+ * width up, length along x or z. `up-*`: standing on its end, length up, width along x or z.
+ */
+export type PanelLie = 'flat-x' | 'flat-z' | 'edge-x' | 'edge-z' | 'up-x' | 'up-z'
+export interface PanelPlace { x: Mm; y: Mm; z: Mm; lie: PanelLie }
+
+/** Two placed panels screwed together (ADR-0041 amendment); listed in the hardware schedule, screws chosen by the user. */
+export interface PanelJoint { a: string; b: string; kind: 'screwed' }
 
 /**
  * Parts known only by their cut sizes (ADR-0041), such as a bed whose panels are measured but whose assembly is not.
@@ -397,6 +414,8 @@ export interface PanelSetParams {
   panels: LoosePanel[]
   /** Shown with the piece: what the parts are for and what is still unknown. */
   note?: string
+  /** Screwed joints between placed panels (ADR-0041 amendment). */
+  joints?: PanelJoint[]
 }
 
 export type Product =

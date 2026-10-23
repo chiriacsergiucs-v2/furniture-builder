@@ -23,14 +23,17 @@ project. Generator: `src/core/samples/mobila.ts`. Importable files: `mobila-livi
 All 47 living parts appear, with the file's carcass sizes one for one (2600 × 400 ×2, 2685 × 400 ×4,
 400 × 399 ×12, 499 × 400 ×7, 510 × 400 ×4, 519 × 400 ×6) and 12 fronts. Overall 3220 × 2600, as the file.
 
-## Dormitor — Pat Noi (loose panels, ADR-0041)
+## Dormitor — Pat Noi (panel set with a screwed frame, ADR-0041 as amended 2026-10-23)
 
-The file gives the bed's cut panels only; every position is marked "do not invent". Built as a panel set: the parts
-go to the cut list and sheets and lie in one pile in 3D, with a warning that the assembly is not modelled.
+The file gives the bed's cut panels only; every position is marked "do not invent". The user decided on 2026-10-23
+that the bed rails are the chipboard side boards **screwed to the foot board**. So the two sides (1800 × 270) stand on
+edge behind the foot board (2040 × 270), flush with its ends, and two screwed joints are scheduled (screw type, length
+and count are your choice). The head end stands against the existing headboard panel. The headboard trim has no known
+place and lies in a pile beside the frame. What carries the mattress is not in the file.
 
 | Part (file id) | Cut size | Board | Qty |
 |---|---|---|---|
-| Laterală pat (BD-0050) | 1800 × 270 | PAL 18 | 2 |
+| Laterală pat stânga / dreapta (BD-0050) | 1800 × 270 | PAL 18 | 2 |
 | Cap pe picioare (BD-0051) | 2040 × 270 | PAL 18 | 1 |
 | Traversă tăblie (BD-0053) | 2100 × 100 | MDF P110 18 | 1 |
 | Poliță sus tăblie (BD-0054) | 2100 × 80 | MDF P110 18 | 1 |
@@ -69,7 +72,7 @@ the rest. Front gap 4 gives the file's 446 mm front width. Floor; the file has n
 | Item | Reason |
 |---|---|
 | Panou bucătărie (splashback) | Left out at the user's request (2026-10-22) |
-| Pat Noi as an assembled bed | Joints, heights and positions are not in the file. Sizes also look swapped (sides 1800, foot 2040 for an 1800 × 2000 mattress); check before cutting |
+| Pat Noi mattress support and headboard trim positions | Not in the file. Sizes also look swapped (sides 1800, foot 2040 for an 1800 × 2000 mattress); check before cutting |
 | Banc montaj RHS | Envelope only, steel; no member list in the file |
 | Nightstand B, simplified bed | Marked alternative / superseded in the file |
 | Archived cutting orders | Marked "do not merge" in the file |

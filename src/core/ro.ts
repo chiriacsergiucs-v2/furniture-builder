@@ -118,6 +118,7 @@ export function hardwareRo(h: HardwareItem): { item: string; note: string } {
     case 'sliding-track': return { item: 'Șină uși glisante, sus și jos', note: 'verificați sistemul glisant în fișa tehnică' }
     case 'flap-stay': return { item: 'Mecanism clapă', note: 'alegeți după greutatea și înălțimea frontului (fișa tehnică)' }
     case 'purchased': return { item: h.label, note: h.note ?? '' }
+    case 'screws': return { item: 'Șuruburi pentru PAL', note: `${h.note ?? ''} — alegeți tipul, lungimea și numărul (orientativ)`.trim() }
   }
 }
 
