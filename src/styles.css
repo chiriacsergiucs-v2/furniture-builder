@@ -4085,3 +4085,25 @@ button.tile:hover {
 .shopping table.shop td.num {
   font-size: var(--fs-sm);
 }
+/* Dragging a piece on the plan (ADR-065): a touch drag on a piece does not scroll the page. */
+.plan-piece {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.plan .drag-ghost {
+  pointer-events: none;
+}
+.plan .drag-ghost rect {
+  fill: var(--primary-soft);
+  fill-opacity: 0.5;
+  stroke: var(--primary);
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+  vector-effect: non-scaling-stroke;
+}
+.plan .drag-ghost text {
+  fill: var(--ink);
+  font-family: var(--font);
+  font-weight: 600;
+}

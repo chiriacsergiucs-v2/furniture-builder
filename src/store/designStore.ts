@@ -12,6 +12,8 @@ import { mergeItems } from '../core/merge';
 import { closeOutline, DEFAULT_ROOM_HEIGHT, snapCorner, type Pt, type Room } from '../core/room';
 import {
   buildProjectModel,
+  dragPosition,
+  liftOff,
   makeItem,
   planRuns,
   refreshRunParts,
@@ -106,6 +108,11 @@ interface State {
   updateProject: (fn: (p: Project) => Project) => void;
   addPiece: (d: Design, libraryId?: string) => void;
   updateItem: (id: string, patch: Partial<ProjectItem>) => void;
+  /**
+   * Move a piece on the plan by a drag or an arrow key (ADR-065): rounded to the step, lifted off a base, one undo
+   * step. Nothing happens (no step) when the piece would not move.
+   */
+  moveItemBy: (id: string, dxMm: number, dzMm: number, step?: number) => void;
   setGap: (id: string, gap: number, moveRight: boolean) => void;
   removeItem: (id: string) => void;
   /** Merge two touching cabinets into one (ADR-047); returns why not, or an empty list. */
@@ -309,6 +316,18 @@ export const useDesign = create<State>((set, get) => {
       const p = get().project;
       if (p)
         commitProject({ ...p, items: p.items.map((i) => (i.id === id ? { ...i, ...patch } : i)) });
+    },
+    moveItemBy: (id, dxMm, dzMm, step) => {
+      const p = get().project;
+      const it = p?.items.find((i) => i.id === id);
+      if (!p || !it) return;
+      const position = dragPosition(it, dxMm, dzMm, step);
+      if (position.x === it.position.x && position.z === it.position.z) return;
+      const placement = liftOff(it);
+      const { placement: _old, ...rest } = it;
+      void _old;
+      const moved: ProjectItem = { ...rest, position, ...(placement ? { placement } : {}) };
+      commitProject({ ...p, items: p.items.map((i) => (i.id === id ? moved : i)) });
     },
     setGap: (id, gap, moveRight) => {
       const p = get().project;
