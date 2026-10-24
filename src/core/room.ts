@@ -223,6 +223,53 @@ export function featureBox(r: Room, f: RoomFeature): Box | null {
   return wallBox(r, f.wall, f.from, f.width, f.depth, f.sill, f.height);
 }
 
+/**
+ * A door's swing on the plan (ADR-058): hinged at the start of its opening, the leaf turns a quarter circle from
+ * the wall into the room. `hinge`, the closed leaf end and the open leaf end are floor points (x, z); `sweep` is
+ * the SVG arc direction from closed to open in plan coordinates (x right, z down).
+ */
+export function doorSwing(
+  r: Room,
+  f: RoomFeature,
+): { hinge: Pt; closed: Pt; open: Pt; radius: Mm; sweep: 0 | 1 } | null {
+  if (f.kind !== 'door' || f.wall === null || f.wall < 0 || f.wall >= r.outline.length) return null;
+  const { a, dx, dz, nx, nz } = frame(r, f.wall);
+  const hinge: Pt = [a[0] + dx * f.from, a[1] + dz * f.from];
+  const closed: Pt = [hinge[0] + dx * f.width, hinge[1] + dz * f.width];
+  const open: Pt = [hinge[0] + nx * f.width, hinge[1] + nz * f.width];
+  return { hinge, closed, open, radius: f.width, sweep: dx * nz - dz * nx > 0 ? 1 : 0 };
+}
+
+/**
+ * What the front view shows of the room (ADR-058): its x range and height, and the doors, windows and obstacles on
+ * the back wall (a wall along x at the smallest z of the outline) at their x range and heights. Empty while the
+ * outline has problems.
+ */
+export function roomFrontView(r: Room): {
+  x0: Mm;
+  x1: Mm;
+  height: Mm;
+  features: { id: string; kind: RoomFeature['kind']; label: string; x: Mm; w: Mm; y: Mm; h: Mm }[];
+} | null {
+  if (outlineIssues(r.outline).length) return null;
+  const xs = r.outline.map((p) => p[0]);
+  const minZ = Math.min(...r.outline.map((p) => p[1]));
+  const back = r.outline
+    .map((_, i) => i)
+    .filter((i) => {
+      const [a, b] = wallEnds(r, i);
+      return a[1] === minZ && b[1] === minZ;
+    });
+  const features = r.features
+    .filter((f) => f.wall !== null && back.includes(f.wall))
+    .map((f) => {
+      const b = wallBox(r, f.wall!, f.from, f.width, 0, 0, 0);
+      const y = f.kind === 'door' ? 0 : f.sill;
+      return { id: f.id, kind: f.kind, label: f.label, x: b.x, w: b.w, y, h: f.height };
+    });
+  return { x0: Math.min(...xs), x1: Math.max(...xs), height: r.height, features };
+}
+
 export const NEAR_WALL = 50;
 
 const boxesOverlap = (a: Box, b: Box) =>
@@ -274,6 +321,20 @@ export function roomChecks(
       });
       continue;
     }
+    if (f.wall !== null) {
+      const len = wallLength(room, f.wall);
+      if (f.from + f.width > len)
+        diagnostics.push({
+          severity: 'error',
+          code: 'room-feature',
+          message: `${f.label} runs ${f.from + f.width - len} mm past the end of wall ${f.wall + 1} (${len} mm long): move it or make it narrower.`,
+        });
+    } else if (!rectInside(room.outline, b.x, b.z, b.x + b.w, b.z + b.d))
+      diagnostics.push({
+        severity: 'error',
+        code: 'room-feature',
+        message: `${f.label} is outside the room: move it inside the walls.`,
+      });
     if (f.kind === 'obstacle') obstacles.push({ label: f.label, box: b });
   }
   const clearanceIssues: Diagnostic[] = [];
@@ -316,7 +377,7 @@ export function roomChecks(
           diagnostics.push({
             severity: 'warning',
             code: 'covers-window',
-            message: `${pc.name} stands against ${f.label} and is ${b.y + b.h - f.sill} mm higher than its sill.`,
+            message: `${pc.name} covers the window ${f.label}: it stands against its wall and is ${b.y + b.h - f.sill} mm higher than its sill.`,
             nodeId: pc.id,
           });
       }

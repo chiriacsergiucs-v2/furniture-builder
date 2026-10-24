@@ -19,8 +19,10 @@ import { useDesign } from '../store/designStore';
 import { Counter, MmField, Segmented, Select, Toggle } from './controls';
 import {
   DEFAULT_ROOM_HEIGHT,
+  doorSwing,
   featureBox,
   outlineIssues,
+  roomFrontView,
   setWallLength,
   shapeOutline,
   wallEnds,
@@ -543,7 +545,8 @@ export function PlanView() {
   const pm = useDesign((s) => s.projectModel);
   const placingId = useDesign((s) => s.placingItemId);
   const stop = useDesign((s) => s.stopPlacing);
-  const undo = useDesign((s) => s.undo);
+  // Cancel takes the just-added piece out again: a project undo, which also ends placing.
+  const undoProject = useDesign((s) => s.undoProject);
   const ref = useRef<HTMLDivElement>(null);
   const placing = pm?.pieces.find((pc) => pc.item.id === placingId);
   const drawing = useDesign((s) => s.drawingRoom);
@@ -588,7 +591,7 @@ export function PlanView() {
           <button type="button" className="btn sm" onClick={stop}>
             Place to the right
           </button>
-          <button type="button" className="btn sm ghost" onClick={undo}>
+          <button type="button" className="btn sm ghost" onClick={undoProject}>
             Cancel
           </button>
         </div>
@@ -828,10 +831,22 @@ function RoomOutline({ room, fs }: { room: Room; fs: number }) {
               <title>{f.label}</title>
             </rect>
           );
+        const sw = doorSwing(room, f);
         return (
-          <rect key={f.id} className="room-door" x={b.x} y={b.z} width={b.w} height={b.d}>
-            <title>{`${f.label}: keep free for the swing`}</title>
-          </rect>
+          <g key={f.id}>
+            {/* The area the check keeps free (as deep as the door is wide), drawn faintly. */}
+            <rect className="room-door" x={b.x} y={b.z} width={b.w} height={b.d}>
+              <title>{`${f.label}: keep free for the swing`}</title>
+            </rect>
+            {sw && (
+              <path
+                className="room-door-swing"
+                d={`M ${sw.hinge.join(' ')} L ${sw.closed.join(' ')} A ${sw.radius} ${sw.radius} 0 0 ${sw.sweep} ${sw.open.join(' ')} Z`}
+              >
+                <title>{`${f.label}: door swing`}</title>
+              </path>
+            )}
+          </g>
         );
       })}
     </g>
@@ -843,6 +858,8 @@ function RoomFront({ pm }: { pm: ProjectModel }) {
   const selectedId = useDesign((s) => s.selectedItemId);
   const select = useDesign((s) => s.selectItem);
   const showFronts = useDesign((s) => s.showFronts);
+  const room = useDesign((s) => s.project?.room);
+  const rv = useMemo(() => (room ? roomFrontView(room) : null), [room]);
   const colors = useMemo(
     () =>
       new Map(
@@ -853,9 +870,9 @@ function RoomFront({ pm }: { pm: ProjectModel }) {
     [pm.pieces],
   );
   const b = pm.model.bounds;
-  const x0 = Math.min(0, b.x),
-    x1 = b.x + b.w,
-    top = b.y + b.h;
+  const x0 = Math.min(0, b.x, rv?.x0 ?? 0),
+    x1 = Math.max(b.x + b.w, rv?.x1 ?? 0),
+    top = Math.max(b.y + b.h, rv?.height ?? 0);
   const span = Math.max(x1 - x0, top, 1000);
   const pad = span * 0.1,
     dfs = span / 32;
@@ -875,6 +892,25 @@ function RoomFront({ pm }: { pm: ProjectModel }) {
         viewBox={`${x0 - pad * 1.2} ${-top - pad * 0.8} ${x1 - x0 + pad * 2.4} ${top + pad * 1.8}`}
       >
         <rect className="floor" x={x0 - pad} y={0} width={x1 - x0 + 2 * pad} height={pad * 0.15} />
+        {rv && (
+          <g className="room-front">
+            <line className="room-ceiling" x1={rv.x0} y1={-rv.height} x2={rv.x1} y2={-rv.height}>
+              <title>{`Room height ${rv.height}`}</title>
+            </line>
+            {rv.features.map((f) => (
+              <rect
+                key={f.id}
+                className={`room-${f.kind}`}
+                x={f.x}
+                y={Y(f.y, f.h)}
+                width={f.w}
+                height={f.h}
+              >
+                <title>{`${f.label} on the back wall`}</title>
+              </rect>
+            ))}
+          </g>
+        )}
         {structure.map(({ p, pc }) => (
           <polygon
             key={p.id}
@@ -928,6 +964,8 @@ function RoomFront({ pm }: { pm: ProjectModel }) {
       </svg>
       <figcaption>
         Seen from the front. Sizes in mm: overall in yellow, the selected piece in green.
+        {rv &&
+          ' The room height and the doors, windows and obstacles on the back wall are outlined.'}
       </figcaption>
     </figure>
   );

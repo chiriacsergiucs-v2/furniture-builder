@@ -1,4 +1,4 @@
-// Find-it acceptance for ADR-051 and ADR-054…062, ADR-064 (backlog N46, N49–N57, N59), run against a production build:
+// Find-it acceptance for ADR-051 and ADR-054…062, ADR-064 (check labels name the ADR) (backlog N46, N49–N57, N59), run against a production build:
 //   npm run build && npx vite preview --port 4173 &  node tools/ensemble/find-it-adrs.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `npm test`.
 import { chromium } from 'playwright';
@@ -111,15 +111,25 @@ for (const width of [1440, 375]) {
   await addPiece('Base cabinet');
   check(
     width,
-    '0053 banner "Tap the plan to place" after adding',
+    'ADR-056 banner "Tap the plan to place" after adding',
     await page.getByText('Tap the plan to place').isVisible(),
   );
+  // Cancel takes the just-added piece out again (project undo) and ends placing.
+  await click(btn('Cancel'));
+  await page.waitForTimeout(150);
+  check(
+    width,
+    'ADR-056 Cancel removes the just-added piece (0 pieces, banner gone)',
+    (await pieces.count()) === 0 && !(await page.getByText('Tap the plan to place').isVisible()),
+    `${await pieces.count()} pieces`,
+  );
+  await addPiece('Base cabinet');
   await click(btn('Place to the right'));
   await addPiece('Base cabinet');
   await tapPlan(2000, 300);
   check(
     width,
-    '0053 tapped piece placed at the tapped point (From left ≈ 2000)',
+    'ADR-056 tapped piece placed at the tapped point (From left ≈ 2000)',
     Math.abs(Number(await field('From left').inputValue()) - 2000) <= 15,
     await field('From left').inputValue(),
   );
@@ -134,11 +144,11 @@ for (const width of [1440, 375]) {
   await selectPiece(2);
   await click(page.getByRole('button', { name: 'Remove from project' }));
   await confirm('Remove');
-  check(width, '0050 piece removed', (await pieces.count()) === 2);
+  check(width, 'ADR-051 piece removed', (await pieces.count()) === 2);
   await click(btn('Undo'));
-  check(width, '0050 Undo brings it back', (await pieces.count()) === 3);
+  check(width, 'ADR-051 Undo brings it back', (await pieces.count()) === 3);
   await click(btn('Redo'));
-  check(width, '0050 Redo removes it again', (await pieces.count()) === 2);
+  check(width, 'ADR-051 Redo removes it again', (await pieces.count()) === 2);
   await click(btn('Undo'));
 
   // ADR-054/0058: sides on the bottom → run plinth; scribe; automatic refresh after a gap change.
@@ -152,13 +162,13 @@ for (const width of [1440, 375]) {
   const runList = page.getByRole('region', { name: 'Run parts' });
   check(
     width,
-    "0051 run parts list a Plinth replacing the pieces' own",
+    "ADR-054 run parts list a Plinth replacing the pieces' own",
     /Plinth[\s\S]*replaces their own plinths/.test(await runList.innerText()),
   );
   const plinthRows = (await partsCsv()).split('\n').filter((l) => /Plintă/.test(l));
   check(
     width,
-    '0051 Parts CSV: one plinth row, the run plinth, 1800 mm',
+    'ADR-054 Parts CSV: one plinth row, the run plinth, 1800 mm',
     plinthRows.length === 1 && /^Run: Plintă/.test(plinthRows[0]) && /;1800;/.test(plinthRows[0]),
     plinthRows.join(' | '),
   );
@@ -168,55 +178,74 @@ for (const width of [1440, 375]) {
   const runText = await runList.innerText();
   check(
     width,
-    '0058 filler appears by itself after the gap change',
+    'ADR-061 filler appears by itself after the gap change',
     /Filler[\s\S]*gap 40 mm \+ 20 mm scribe/.test(runText),
     runText.replace(/\n/g, ' ').slice(0, 200),
   );
   check(
     width,
-    '0058 "Keep run parts up to date" is on',
+    'ADR-061 "Keep run parts up to date" is on',
     await page.getByLabel('Keep run parts up to date').isChecked(),
   );
   await shot('run-parts');
 
-  // ADR-055: finish scope.
+  // ADR-055: finish scope. A wardrobe away from the run must keep its own doors.
+  await addPiece('Wardrobe');
+  await click(btn('Place to the right'));
+  check(width, 'ADR-055 wardrobe added away from the run', (await pieces.count()) === 4);
   await selectPiece(0);
   const finish = page.locator('.finish-fields');
   await finish.scrollIntoViewIfNeeded();
   check(
     width,
-    '0052 "Finish" heading in the selected piece',
+    'ADR-055 "Finish" heading in the selected piece',
     await finish.getByRole('heading', { name: 'Finish' }).isVisible(),
   );
   const opts = await finish.getByLabel('Board').locator('option').allTextContents();
-  const boardIndex = opts.length > 1 ? 1 : 0;
+  // A board no door uses yet, so "not on the chosen board" really means the wardrobe was left alone.
+  const before = (await partsCsv()).split('\n').filter((l) => /: Ușă/.test(l));
+  const free = (o) => !before.some((l) => l.includes(`;${o.split(',')[0]};`));
+  const thick = opts.findIndex((o) => free(o) && /, 18 mm$/.test(o));
+  const unused = thick >= 0 ? thick : opts.findIndex(free);
+  const boardIndex = unused >= 0 ? unused : opts.length > 1 ? 1 : 0;
   const boardName = opts[boardIndex].split(',')[0];
   await finish.getByLabel('Board').selectOption({ index: boardIndex });
   await click(finish.getByRole('radio', { name: 'This run' }));
   await click(finish.getByRole('button', { name: 'Apply finish' }));
   check(
     width,
-    '0052 applied to the three pieces of the run',
+    'ADR-055 applied to the three pieces of the run',
     /Applied to 3 pieces/.test(await finish.innerText()),
     (await finish.innerText()).replace(/\n/g, ' ').slice(-80),
   );
   const doorRows = (await partsCsv()).split('\n').filter((l) => /: Ușă/.test(l));
+  const baseDoors = doorRows.filter((l) => /^Base cabinet/.test(l));
+  const wardrobeDoors = doorRows.filter((l) => /^Wardrobe/.test(l));
   check(
     width,
-    '0052 Parts CSV: every door now on the chosen board',
-    doorRows.length > 0 && doorRows.every((l) => l.includes(`;${boardName};`)),
-    `${boardName}: ${doorRows.length} rows`,
+    'ADR-055 Parts CSV: the base-cabinet doors are on the chosen board',
+    baseDoors.length > 0 && baseDoors.every((l) => l.includes(`;${boardName};`)),
+    `${boardName}: ${baseDoors.length} rows`,
+  );
+  check(
+    width,
+    'ADR-055 Parts CSV: the wardrobe doors (not in the run) are not',
+    wardrobeDoors.length > 0 && wardrobeDoors.every((l) => !l.includes(`;${boardName};`)),
+    wardrobeDoors.join(' | '),
   );
 
   // ADR-057: a wardrobe turned to face the run, 300 mm away → cannot open fully (warning, export allowed).
-  await addPiece('Wardrobe');
-  await click(btn('Place to the right'));
+  await selectPiece(3);
   await click(page.getByRole('radio', { name: '180°' }));
   await setField('From left', 0);
   await setField('From back', 900);
   const checks1 = await checksText();
-  check(width, '0054 Checks list "cannot open fully"', /cannot open fully/.test(checks1));
-  check(width, '0054 export stays allowed (Parts CSV enabled)', await btn('Parts CSV').isEnabled());
+  check(width, 'ADR-057 Checks list "cannot open fully"', /cannot open fully/.test(checks1));
+  check(
+    width,
+    'ADR-057 export stays allowed (Parts CSV enabled)',
+    await btn('Parts CSV').isEnabled(),
+  );
   await click(page.getByRole('tab', { name: /Parts/ }));
 
   // ADR-058: the room with an obstacle the run hits.
@@ -227,7 +256,7 @@ for (const width of [1440, 375]) {
   const roomSec = page.getByRole('region', { name: 'Room' });
   check(
     width,
-    '0055 room added: "Room height" and walls listed',
+    'ADR-058 room added: "Room height" and walls listed',
     (await roomSec.getByRole('textbox', { name: 'Room height', exact: true }).isVisible()) &&
       (await roomSec.getByRole('textbox', { name: 'Wall 4', exact: true }).isVisible()),
   );
@@ -235,12 +264,12 @@ for (const width of [1440, 375]) {
   const checks2 = await checksText();
   check(
     width,
-    '0055 Checks: base cabinet runs into the obstacle',
+    'ADR-058 Checks: base cabinet runs into the obstacle',
     /runs into Obstacle 1/.test(checks2),
   );
   check(
     width,
-    '0055 the plan draws the room outline',
+    'ADR-058 the plan draws the room outline',
     (await plan.locator('.room-outline .wall').count()) >= 4,
   );
   await click(page.getByRole('tab', { name: /Parts/ }));
@@ -249,14 +278,14 @@ for (const width of [1440, 375]) {
   await setField('Sill height', 500);
   check(
     width,
-    '0055 the plan shows the window',
+    'ADR-058 the plan shows the window',
     (await plan.locator('.room-window').count()) === 1,
   );
   const checks3 = await checksText();
   check(
     width,
-    '0055 Checks: cabinets against the window wall are higher than its sill',
-    /higher than its sill/.test(checks3),
+    'ADR-058 Checks: cabinets against the window wall cover the window',
+    /covers the window/.test(checks3),
   );
   await click(page.getByRole('tab', { name: /Parts/ }));
   await click(roomSec.getByRole('button', { name: 'Remove window' }));
@@ -265,7 +294,7 @@ for (const width of [1440, 375]) {
   await click(roomSec.getByRole('radio', { name: 'L-shape' }));
   check(
     width,
-    '0056 L-shape gives six walls',
+    'ADR-059 L-shape gives six walls',
     await roomSec.getByRole('textbox', { name: 'Wall 6', exact: true }).isVisible(),
   );
   await selectPiece(2);
@@ -274,7 +303,7 @@ for (const width of [1440, 375]) {
   const checks4 = await checksText();
   check(
     width,
-    '0056 a piece in the L cut-out is outside the room',
+    'ADR-059 a piece in the L cut-out is outside the room',
     /outside the room/.test(checks4),
   );
   await click(page.getByRole('tab', { name: /Parts/ }));
@@ -283,7 +312,7 @@ for (const width of [1440, 375]) {
   await click(roomSec.getByRole('button', { name: 'Draw the room again' }));
   check(
     width,
-    '0056 drawing banner visible',
+    'ADR-059 drawing banner visible',
     await page.getByText('Tap the corners of the room').isVisible(),
   );
   for (const [x, z] of [
@@ -296,7 +325,7 @@ for (const width of [1440, 375]) {
   await click(btn('Close the room'));
   check(
     width,
-    '0056 drawn room has four walls of the tapped lengths',
+    'ADR-059 drawn room has four walls of the tapped lengths',
     (await roomSec.getByRole('textbox', { name: 'Wall 4', exact: true }).isVisible()) &&
       !(await roomSec.getByRole('textbox', { name: 'Wall 5', exact: true }).count()) &&
       Math.abs(
@@ -313,30 +342,55 @@ for (const width of [1440, 375]) {
   await shop.getByRole('heading', { name: 'Boards' }).waitFor();
   check(
     width,
-    '0061 sections Boards, Edge banding, Hardware, Run parts',
+    'ADR-064 sections Boards, Edge banding, Hardware, Run parts',
     (await shop.getByRole('heading', { name: 'Boards' }).isVisible()) &&
+      (await shop.getByRole('heading', { name: 'Edge banding' }).isVisible()) &&
       (await shop.getByRole('heading', { name: 'Hardware' }).isVisible()) &&
       (await shop.getByRole('heading', { name: 'Run parts' }).isVisible()),
   );
   check(
     width,
-    '0061 "not counted" line for screws',
+    'ADR-064 "not counted" line for screws',
     await shop.getByText(/Screws, dowels, cams and glue are not counted/).isVisible(),
   );
+  // Sheets are counted once the layout is done: the Boards line then shows "sheets".
+  const boardsTable = shop.getByRole('region', { name: 'Boards' });
+  check(
+    width,
+    'ADR-062 Boards are counted in sheets from the layout',
+    await boardsTable
+      .getByText(/\d+ sheets/)
+      .first()
+      .waitFor({ timeout: 20000 })
+      .then(
+        () => true,
+        () => false,
+      ),
+    (await boardsTable.innerText()).replace(/\n/g, ' ').slice(0, 160),
+  );
   await click(shop.getByRole('button', { name: 'Prices' }));
-  await shop
-    .getByLabel(/^Price unit of /)
-    .first()
-    .selectOption('m2');
+  const unitBox = shop.getByLabel(/^Price unit of /).first();
   const priceBox = shop.getByLabel(/^Price of /).first();
+  await unitBox.selectOption('sheet');
+  await priceBox.fill('250');
+  await priceBox.press('Tab');
+  await page.waitForTimeout(200);
+  const estSheet = await shop.locator('.estimate').innerText();
+  check(
+    width,
+    'ADR-062 a price per sheet gives a non-zero estimate and lists the missing prices',
+    /Estimate: [1-9][\d\s.,]* lei/.test(estSheet) && /missing/.test(estSheet),
+    estSheet.replace(/\n/g, ' '),
+  );
+  await unitBox.selectOption('m2');
   await priceBox.fill('250');
   await priceBox.press('Tab');
   await page.waitForTimeout(200);
   const est = await shop.locator('.estimate').innerText();
   check(
     width,
-    '0059 estimate shows a total and the missing prices',
-    /Estimate: [1-9][\d\s.,]* lei/.test(est) && /missing/.test(est),
+    'ADR-062 a price per m² gives a non-zero estimate and lists the missing prices',
+    /Estimate: [1-9][\d\s.,]* lei/.test(est) && /missing/.test(est) && est !== estSheet,
     est.replace(/\n/g, ' '),
   );
   const [dl] = await Promise.all([
@@ -346,7 +400,7 @@ for (const width of [1440, 375]) {
   const csv = readFileSync(await dl.path(), 'utf8');
   check(
     width,
-    '0061 Shopping list CSV downloads with sections',
+    'ADR-064 Shopping list CSV downloads with sections',
     /Plăci/.test(csv) && /Feronerie/.test(csv),
   );
   await shot('shopping');
@@ -358,7 +412,7 @@ for (const width of [1440, 375]) {
   await confirm('Cancel').catch(() => {});
   check(
     width,
-    '0057 saved message',
+    'ADR-060 saved message',
     await page
       .getByText(/Saved as project template/)
       .waitFor({ timeout: 5000 })
@@ -374,12 +428,12 @@ for (const width of [1440, 375]) {
   await page.locator('main.work').waitFor({ state: 'visible' });
   check(
     width,
-    '0057 new project from the template has the three pieces',
+    'ADR-060 new project from the template has the three pieces',
     (await pieces.count()) === 3,
   );
   check(
     width,
-    '0057 run parts suggested again',
+    'ADR-060 run parts suggested again',
     /Worktop/.test(await page.getByRole('region', { name: 'Run parts' }).innerText()),
   );
 
@@ -397,13 +451,13 @@ for (const width of [1440, 375]) {
   await click(page.getByRole('tab', { name: 'Hardware' }));
   check(
     width,
-    '0051 fixed front: fixing listed as user-specified',
+    'ADR-054 fixed front: fixing listed as user-specified',
     await page.getByText('Fixing for the fixed (false) front').isVisible(),
   );
   await click(page.getByRole('tab', { name: 'Shopping list' }));
   check(
     width,
-    '0061 "To choose before buying" lists the front fixing',
+    'ADR-064 "To choose before buying" lists the front fixing',
     await page
       .locator('#panel-shopping')
       .getByRole('heading', { name: 'To choose before buying' })

@@ -3965,9 +3965,33 @@ button.tile:hover {
 .plan .room-door {
   fill: none;
   stroke: var(--ink-2);
-  stroke-width: 1.5;
-  stroke-dasharray: 4 3;
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+  stroke-opacity: 0.5;
   vector-effect: non-scaling-stroke;
+}
+.plan .room-door-swing {
+  fill: none;
+  stroke: var(--ink-2);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+.plan .room-front .room-ceiling {
+  stroke: var(--ink-2);
+  stroke-width: 1.5;
+  stroke-dasharray: 8 4;
+  vector-effect: non-scaling-stroke;
+}
+.plan .room-front .room-door,
+.plan .room-front .room-window,
+.plan .room-front .room-obstacle {
+  fill: none;
+  stroke-dasharray: none;
+  stroke-opacity: 1;
+  pointer-events: none;
+}
+.plan .room-front .room-window {
+  stroke-width: 2;
 }
 .plan .draw-line {
   fill: none;

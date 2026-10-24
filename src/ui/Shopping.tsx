@@ -124,6 +124,8 @@ export function ShoppingList() {
     w.print();
   };
   const blocked = view.diagnostics.some((d) => d.severity === 'error');
+  // ADR-008: errors block every export, like Parts CSV and Print cutting sheet.
+  const blockedTitle = blocked ? 'Fix the problems listed under Checks first' : undefined;
   return (
     <div className="shopping">
       {blocked && (
@@ -163,6 +165,8 @@ export function ShoppingList() {
         <button
           type="button"
           className="btn sm"
+          disabled={blocked}
+          title={blockedTitle ?? 'Download the shopping list as CSV'}
           onClick={() =>
             save(
               `${view.title}-shopping.csv`,
@@ -174,7 +178,13 @@ export function ShoppingList() {
           <Icon name="download" className="sm" />
           Shopping list CSV
         </button>
-        <button type="button" className="btn sm" onClick={printList}>
+        <button
+          type="button"
+          className="btn sm"
+          disabled={blocked}
+          title={blockedTitle ?? 'Print the shopping list or save it as PDF'}
+          onClick={printList}
+        >
           <Icon name="printer" className="sm" />
           Print shopping list
         </button>
@@ -306,7 +316,7 @@ function Line({
                 >
                   {units.map((u) => (
                     <option key={u} value={u}>
-                      {PER[u]}
+                      {u === 'piece' && l.worktop ? 'per worktop board' : PER[u]}
                     </option>
                   ))}
                 </select>
@@ -316,7 +326,10 @@ function Line({
             </span>
           ) : p === null ? (
             <span className="hint">
-              {l.priceKey && e && e.unit === 'sheet' && l.sheets == null
+              {l.priceKey &&
+              e &&
+              (e.unit === 'sheet' || (e.unit === 'piece' && l.worktop)) &&
+              l.sheets == null
                 ? 'sheets not laid out'
                 : 'price missing'}
             </span>

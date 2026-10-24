@@ -9,9 +9,12 @@ import {
 } from '../src/core/project';
 import {
   closeOutline,
+  doorSwing,
+  featureBox,
   inside,
   outlineIssues,
   rectInside,
+  roomFrontView,
   setWallLength,
   shapeOutline,
   snapCorner,
@@ -80,6 +83,88 @@ describe('room (ADR-058)', () => {
     const d = buildProjectModel(p).diagnostics.find((x) => x.code === 'covers-window')!;
     expect(d.severity).toBe('warning');
     expect(d.message).toContain('1200 mm higher than its sill');
+    expect(d.message).toMatch(/covers the window Window: it stands against its wall/);
+  });
+  it('a feature running past the end of its wall, or a free-standing obstacle outside, is an error naming it', () => {
+    const past = buildProjectModel(
+      proj(['base-door'], {
+        ...rect(),
+        features: [feat({ kind: 'window', from: 2600, width: 1000, sill: 900, label: 'Window 1' })],
+      }),
+    ).diagnostics.find((x) => x.code === 'room-feature');
+    expect(past?.severity).toBe('error');
+    expect(past?.message).toContain('Window 1 runs 600 mm past the end of wall 1');
+    const out = buildProjectModel(
+      proj(['base-door'], {
+        ...rect(),
+        features: [feat({ wall: null, x: 2800, z: 1000, width: 400, label: 'Pillar' })],
+      }),
+    ).diagnostics.find((x) => x.code === 'room-feature');
+    expect(out?.severity).toBe('error');
+    expect(out?.message).toContain('Pillar is outside the room');
+    // Exactly to the corner, and a free-standing obstacle inside: no problem.
+    expect(
+      codes(
+        proj(['base-door'], {
+          ...rect(),
+          features: [
+            feat({ kind: 'window', from: 2000, width: 1000, sill: 900, label: 'Window 1' }),
+            feat({ wall: null, x: 2000, z: 2000, width: 400, label: 'Pillar' }),
+          ],
+        }),
+      ),
+    ).not.toContain('room-feature');
+  });
+  it('a door swing is a quarter circle from the hinge end, inside its check rectangle', () => {
+    const room = rect();
+    const door = feat({ kind: 'door', wall: 0, from: 500, width: 800, height: 2000 });
+    expect(doorSwing(room, door)).toEqual({
+      hinge: [500, 0],
+      closed: [1300, 0],
+      open: [500, 800],
+      radius: 800,
+      sweep: 1,
+    });
+    // Wall 3 runs from (0, 3000) to (0, 0): the leaf opens towards +x.
+    const left = doorSwing(room, { ...door, wall: 3, from: 2200 })!;
+    expect(left.hinge).toEqual([0, 800]);
+    expect(left.closed).toEqual([0, 0]);
+    expect(left.open).toEqual([800, 800]);
+    const b = featureBox(room, { ...door, wall: 3, from: 2200 })!;
+    for (const [x, z] of [left.hinge, left.closed, left.open]) {
+      expect(x >= b.x && x <= b.x + b.w && z >= b.z && z <= b.z + b.d).toBe(true);
+    }
+    expect(doorSwing(room, feat({ kind: 'window' }))).toBeNull();
+  });
+  it('the front view shows the room height and the features on the back wall only', () => {
+    const v = roomFrontView({
+      ...rect(4000, 3000),
+      features: [
+        feat({ id: 'w', kind: 'window', from: 1000, width: 1200, sill: 900, height: 1200 }),
+        feat({ id: 'd', kind: 'door', wall: 0, from: 3000, width: 800, sill: 0, height: 2000 }),
+        feat({ id: 'o', kind: 'obstacle', wall: 0, from: 0, width: 600, sill: 100, height: 600 }),
+        feat({ id: 's', kind: 'door', wall: 1, from: 0, width: 800, height: 2000 }),
+      ],
+    })!;
+    expect([v.x0, v.x1, v.height]).toEqual([0, 4000, 2600]);
+    expect(v.features.map((f) => [f.id, f.x, f.w, f.y, f.h])).toEqual([
+      ['w', 1000, 1200, 900, 1200],
+      ['d', 3000, 800, 0, 2000],
+      ['o', 0, 600, 100, 600],
+    ]);
+    // Alcove: the back wall is the alcove's back (smallest z).
+    const alcove: Room = {
+      height: 2500,
+      outline: shapeOutline('alcove', {
+        width: 4000,
+        depth: 3000,
+        cutWidth: 1000,
+        cutDepth: 500,
+        offset: 1500,
+      }),
+      features: [feat({ id: 'a', kind: 'window', wall: 2, from: 100, width: 600, sill: 1000 })],
+    };
+    expect(roomFrontView(alcove)!.features.map((f) => [f.x, f.w])).toEqual([[1600, 600]]);
   });
   it('a piece in the swing of a door on the left wall is a warning', () => {
     // Wall 3 runs from (0, 3000) to (0, 0); a door 800 wide starting 2700 mm along it reaches z = 300 … 0.

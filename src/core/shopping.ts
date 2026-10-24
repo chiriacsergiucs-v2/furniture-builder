@@ -5,6 +5,7 @@
  */
 import { bandMetersFromRows, type CutRow } from './cutlist';
 import type { RunPart } from './project';
+import { csvCell } from './prices';
 import { materialKey } from './project';
 import type { Diagnostic, HardwareItem, Material } from './types';
 
@@ -22,6 +23,8 @@ export interface ShopLine {
   /** Boards: both measures, so a per-sheet or per-m² price can be used. Sheets null until laid out. */
   sheets?: number | null;
   m2?: number;
+  /** Boards: a worktop board (kind kitchen worktop, or named like "Worktop"), so it can be priced per piece. */
+  worktop?: boolean;
 }
 
 export const NOT_COUNTED =
@@ -76,6 +79,7 @@ export function shoppingList(input: {
       priceKey: key,
       sheets: n,
       m2,
+      ...(m?.kind === 'worktop' || /worktop/i.test(name) ? { worktop: true } : {}),
     });
   }
   for (const [id, metres] of bandMetersFromRows(rows)) {
@@ -154,7 +158,7 @@ export function shoppingCsvRo(
   priceOf?: (l: ShopLine) => number | null,
   currency = 'lei',
 ): string {
-  const esc = (s: string) => (/[;"\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s);
+  const esc = csvCell;
   const head = [
     'Secțiune',
     'Articol',
