@@ -40,7 +40,7 @@ backlog = set(re.findall(r"^\| ([FND]\d{2}) \|", (REPO / "docs/backlog.md").read
 
 # Index rows: | [ADR-NNN](link) | title | depends | status |
 index = (ADR / "README.md").read_text()
-rows = re.findall(r"^\| \[ADR-(\d{3})\]\(([^)]+)\) \|.*\| ([^|]+) \|$", index, re.M)
+rows = re.findall(r"^\| \[ADR-(\d{3})\]\(([^)]+)\)\s*\|.*\| ([^|]+) \|$", index, re.M)
 seen = {}
 for num, link, cell in rows:
     seen[num] = seen.get(num, 0) + 1
