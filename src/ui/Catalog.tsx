@@ -19,10 +19,10 @@ const GROUP_KEY = 'furniture-builder:catalog-group'
 const SAFETY_KEY = 'furniture-builder:safety-confirmed'
 const readGrouping = (): Grouping => { try { return localStorage.getItem(GROUP_KEY) === 'type' ? 'type' : 'room' } catch { return 'room' } }
 const writeGrouping = (g: Grouping) => { try { localStorage.setItem(GROUP_KEY, g) } catch { /* private mode */ } }
-// The safety confirmation is remembered on this device (ADR-0035); read once when the app loads.
+// The safety confirmation is remembered on this device (ADR-035); read once when the app loads.
 try { setSafetyConfirmed(localStorage.getItem(SAFETY_KEY) === 'yes') } catch { /* private mode */ }
 
-/** Grouping chosen on this device: Room by default (ADR-0032), persisted in browser storage when it works. */
+/** Grouping chosen on this device: Room by default (ADR-032), persisted in browser storage when it works. */
 export function useGrouping(): [Grouping, (g: Grouping) => void] {
   const [g, setG] = useState<Grouping>(readGrouping)
   return [g, (next: Grouping) => { writeGrouping(next); setG(next) }]
@@ -63,7 +63,7 @@ const waitsFor = (requires: CatalogVariant['requires']) => missingCapabilities({
 const matches = (f: ViewFamily, v: CatalogVariant, q: string) => !q || [f.name, f.nameRo, ...f.aliases, v.name, VARIANT_RO[v.id] ?? ''].some(s => s.toLowerCase().includes(q))
 
 /**
- * "Start from" (ADR-0032) in New and in a project's "Add a piece": every catalog item, grouped by room or type, with
+ * "Start from" (ADR-032) in New and in a project's "Add a piece": every catalog item, grouped by room or type, with
  * search. Picking one makes an independent copy with its origin recorded.
  */
 export function StartFrom({ onPick, onBrowse }: { onPick: (d: Design) => void; onBrowse?: () => void }) {
@@ -105,7 +105,7 @@ export function StartFrom({ onPick, onBrowse }: { onPick: (d: Design) => void; o
   )
 }
 
-/** Size, parts and checks of one item, from its built model (ADR-0004). */
+/** Size, parts and checks of one item, from its built model (ADR-004). */
 function itemFacts(f: ViewFamily, v: CatalogVariant) {
   if (!insertable(v)) return null
   const m = buildModel(insertVariant(f, v, '')!)
@@ -116,9 +116,9 @@ function itemFacts(f: ViewFamily, v: CatalogVariant) {
 type Source = 'templates' | 'saved' | 'brands'
 
 /**
- * The Catalog page (ADR-0027 as amended by ADR-0032): a full page, reached from the "Catalog" tab in the top bar or
+ * The Catalog page (ADR-027 as amended by ADR-032): a full page, reached from the "Catalog" tab in the top bar or
  * the #catalog link. It lists every item (each variant of each family) with its default structure and what can be
- * changed, grouped by room or by type; items open or join the open project; templates are edited here (ADR-0034).
+ * changed, grouped by room or by type; items open or join the open project; templates are edited here (ADR-034).
  */
 export function CatalogPage({ onDone, onNewPiece }: { onDone: () => void; onNewPiece?: () => void }) {
   const families = useCatalog()
@@ -225,11 +225,11 @@ export function CatalogPage({ onDone, onNewPiece }: { onDone: () => void; onNewP
   )
 }
 
-/** Picture made before runtime from the shipped design (ADR-0042, `npm run catalog:snapshots`). */
+/** Picture made before runtime from the shipped design (ADR-042, `npm run catalog:snapshots`). */
 const snapshotUrl = (variantId: string) => `${import.meta.env.BASE_URL}catalog/${variantId}.svg`
 
 /**
- * An item's 3D picture (ADR-0042 as answered 2026-10-23): the shipped file for shipped families; for families edited
+ * An item's 3D picture (ADR-042 as answered 2026-10-23): the shipped file for shipped families; for families edited
  * on this device, drawn in the browser from the built model with the same renderer.
  */
 export function ItemPicture({ f, v, className, width, height, alt }: { f: ViewFamily; v: CatalogVariant; className: string; width: number; height: number; alt: string }) {
@@ -347,7 +347,7 @@ function SavedList({ onTake }: { onTake: (d: Design) => void }) {
   )
 }
 
-/** Edit a family on this device (ADR-0034): names, grouping, text, variant order and names; designs in the editor. */
+/** Edit a family on this device (ADR-034): names, grouping, text, variant order and names; designs in the editor. */
 function TemplateEditor({ draft: initial, onDone, onEditDesign }: { draft: LocalTemplate; onDone: (msg?: string) => void; onEditDesign: (t: LocalTemplate, variantId: string) => void }) {
   const [t, setT] = useState(initial)
   const save = useTemplates(s => s.save)

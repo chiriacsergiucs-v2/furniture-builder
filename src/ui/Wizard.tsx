@@ -1,5 +1,5 @@
 /**
- * New-piece wizard (ADR-0044, ADR-0045, ADR-0046). Renders whatever the step library and the construction-type
+ * New-piece wizard (ADR-044, ADR-045, ADR-046). Renders whatever the step library and the construction-type
  * registry declare: fields by kind, cards from the type's generators. No branch here knows a construction type.
  */
 import { useDeferredValue, useId, useMemo, useState } from 'react'
@@ -144,7 +144,7 @@ function Suggestions({ a, stepId, onUse, onBlank }: { a: Answers; stepId: string
   )
 }
 
-/** `from`: a piece made in the wizard, reopened with its stored answers; "Update piece" replaces it in place (ADR-0046). */
+/** `from`: a piece made in the wizard, reopened with its stored answers; "Update piece" replaces it in place (ADR-046). */
 export function WizardDialog({ open, onClose, onCreated, from }: { open: boolean; onClose: () => void; onCreated: () => void; from?: Design | null }) {
   return (
     <Dialog open={open} onClose={onClose} title={from ? `Wizard: ${from.name}` : 'New piece'} wide>

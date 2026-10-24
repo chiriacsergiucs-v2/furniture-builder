@@ -184,7 +184,7 @@ describe('desk', () => {
     expect(role(m.panels, 'worktop')).toHaveLength(1)
     expect(role(m.panels, 'drawer-front')).toHaveLength(3)
     expect(role(m.panels, 'gable')).toHaveLength(1)
-    // Carcass and worktop belong to the desk; drawer parts belong to the pedestal's own space (ADR-0026).
+    // Carcass and worktop belong to the desk; drawer parts belong to the pedestal's own space (ADR-026).
     for (const p of m.panels) {
       if (p.role.startsWith('drawer')) expect(p.nodeId).not.toBe(d.product.id)
       else expect(p.nodeId).toBe(d.product.id)
@@ -259,7 +259,7 @@ describe('regressions from independent review', () => {
   })
 })
 
-describe('editable desk pedestals (ADR-0026)', () => {
+describe('editable desk pedestals (ADR-026)', () => {
   it('exposes each pedestal as editable spaces and edits them independently', () => {
     const d = byTemplate('desk-pedestal')
     if (d.product.kind !== 'desk') throw Error()
@@ -293,7 +293,7 @@ describe('editable desk pedestals (ADR-0026)', () => {
   })
 })
 
-describe('drawer heights and adjustable shelves (ADR-0023)', () => {
+describe('drawer heights and adjustable shelves (ADR-023)', () => {
   it('designs without the new fields build the same model as before', () => {
     const d = byTemplate('chest')
     const a = buildModel(d)
@@ -349,7 +349,7 @@ describe('drawer heights and adjustable shelves (ADR-0023)', () => {
   })
 })
 
-describe('front styles and handles (ADR-0024)', () => {
+describe('front styles and handles (ADR-024)', () => {
   it('inset: fronts sit flush inside their openings with the full gap and everything else moves back', () => {
     const d = withCab(byTemplate('sideboard'), { frontStyle: 'inset' })
     const p = cab(d)
@@ -404,7 +404,7 @@ describe('front styles and handles (ADR-0024)', () => {
   })
 })
 
-describe('stock sheets in the design (ADR-0019) and sheet layouts (ADR-0018)', () => {
+describe('stock sheets in the design (ADR-019) and sheet layouts (ADR-018)', () => {
   it('a version-1 file validates, upgrades in memory with the user defaults, and builds identical panels', async () => {
     const { upgradeDesign } = await import('../src/core/design')
     const v2 = byTemplate('sideboard')
@@ -442,7 +442,7 @@ describe('stock sheets in the design (ADR-0019) and sheet layouts (ADR-0018)', (
   })
 })
 
-describe('wall and corner cabinets (ADR-0025)', () => {
+describe('wall and corner cabinets (ADR-025)', () => {
   it('wall cabinet: no plinth, two brackets and a rail cut to width', () => {
     const d = byTemplate('wall-cabinet')
     const m = buildModel(d)

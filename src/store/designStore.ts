@@ -22,9 +22,9 @@ interface State {
   past: Design[]
   future: Design[]
   dirtyAt: number
-  /** Opened from storage and not edited since: autosave leaves the stored row alone (ADR-0019). */
+  /** Opened from storage and not edited since: autosave leaves the stored row alone (ADR-019). */
   pristine: boolean
-  /** Open project (ADR-0022), or null when editing a single saved piece. */
+  /** Open project (ADR-022), or null when editing a single saved piece. */
   project: Project | null
   projectModel: ProjectModel | null
   /** Piece of the project being edited in the piece editor. */
@@ -32,7 +32,7 @@ interface State {
   /** Piece selected in the project view. */
   selectedItemId: string | null
   projectDirtyAt: number
-  /** Editing one variant of a local template (ADR-0034); the piece open before comes back afterwards. */
+  /** Editing one variant of a local template (ADR-034); the piece open before comes back afterwards. */
   templateEdit: { template: LocalTemplate; variantId: string; returnTo: Design } | null
 
   load: (d: Design, opts?: { fromStorage?: boolean }) => void
@@ -44,7 +44,7 @@ interface State {
   updatePanelSet: (patch: Partial<PanelSetParams>) => void
   updatePanel: (patch: Partial<PanelParams>) => void
   updateFrame: (patch: Partial<FrameParams>) => void
-  /** Catalog metadata and guidance settings (ADR-0028, ADR-0035). */
+  /** Catalog metadata and guidance settings (ADR-028, ADR-035). */
   updateMeta: (patch: Partial<Pick<Design, 'catalog' | 'settings'>>) => void
   editTemplateVariant: (template: LocalTemplate, variantId: string) => void
   /** Leave template mode; returns the template with the edited design put back (the caller saves it), or null. */
@@ -70,7 +70,7 @@ interface State {
   updateItem: (id: string, patch: Partial<ProjectItem>) => void
   setGap: (id: string, gap: number, moveRight: boolean) => void
   removeItem: (id: string) => void
-  /** Merge two touching cabinets into one (ADR-0047); returns why not, or an empty list. */
+  /** Merge two touching cabinets into one (ADR-047); returns why not, or an empty list. */
   mergeItems: (a: string, b: string) => string[]
   selectItem: (id: string | null) => void
   editItem: (id: string) => void
@@ -84,7 +84,7 @@ export const useDesign = create<State>((set, get) => {
   const commit = (next: Design) => {
     const { design, past } = get()
     if (next === design) return
-    // A copy of a brand's product stops being that brand's product once edited; its origin stays (ADR-0028).
+    // A copy of a brand's product stops being that brand's product once edited; its origin stays (ADR-028).
     const debranded = next.catalog?.brand && next.catalog.origin ? { ...next, catalog: { ...next.catalog, brand: undefined } } : next
     const stamped = { ...debranded, updatedAt: new Date().toISOString() }
     set({
@@ -93,7 +93,7 @@ export const useDesign = create<State>((set, get) => {
     })
     const sel = get().selectedId
     if (sel && !findInProduct(stamped.product, sel)) set({ selectedId: null })
-    // Editing a project piece: the change lives in the project's embedded copy, never the library (ADR-0022).
+    // Editing a project piece: the change lives in the project's embedded copy, never the library (ADR-022).
     const { project, editingItemId } = get()
     if (project && editingItemId) {
       set({ project: { ...project, updatedAt: stamped.updatedAt, items: project.items.map(i => (i.id === editingItemId ? { ...i, design: stamped } : i)) }, projectDirtyAt: Date.now() })
@@ -105,7 +105,7 @@ export const useDesign = create<State>((set, get) => {
     if (project && editingItemId) set({ project: { ...project, items: project.items.map(i => (i.id === editingItemId ? { ...i, design } : i)) }, projectDirtyAt: Date.now() })
   }
   const commitProject = (next: Project) => {
-    // Pieces on or above others follow them (ADR-0031): stored positions always match the placements.
+    // Pieces on or above others follow them (ADR-031): stored positions always match the placements.
     const stamped = { ...resolvePlacements(next), updatedAt: new Date().toISOString() }
     set({ project: stamped, projectModel: buildProjectModel(stamped), projectDirtyAt: Date.now() })
   }

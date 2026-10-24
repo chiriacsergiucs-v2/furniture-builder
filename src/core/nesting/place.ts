@@ -1,5 +1,5 @@
 /**
- * Guillotine sheet placer (ADR-0018). A heuristic: seeded, bounded restarts over part orderings, fit rules and
+ * Guillotine sheet placer (ADR-018). A heuristic: seeded, bounded restarts over part orderings, fit rules and
  * split orders, compared lexicographically. It never claims an optimal layout.
  *
  * Rules: every cut runs edge to edge of its rectangle and destroys a full kerf stripe; a part fits a free

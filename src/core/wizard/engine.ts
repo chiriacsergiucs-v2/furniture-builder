@@ -1,6 +1,6 @@
 /**
- * New-piece wizard engine (ADR-0044). Generic over the step library and the construction-type registry: it never
- * names a type. Answers → design → buildModel(); problems are diagnostics, never exceptions (ADR-0008).
+ * New-piece wizard engine (ADR-044). Generic over the step library and the construction-type registry: it never
+ * names a type. Answers → design → buildModel(); problems are diagnostics, never exceptions (ADR-008).
  */
 import { buildModel } from '../build'
 import { newId, validateDesign } from '../design'
@@ -113,13 +113,13 @@ export function check(a: Answers): Check {
 }
 
 /**
- * The finished piece (ADR-0046): a fresh id and timestamps on the built design, or the problems that block it —
+ * The finished piece (ADR-046): a fresh id and timestamps on the built design, or the problems that block it —
  * the same errors that block export.
  */
 export function createPiece(a: Answers, now = new Date().toISOString(), replaces?: Design): { ok: true; design: Design } | { ok: false; problems: Problem[] } {
   const c = check(a)
   if (!c.design || c.errors) return { ok: false, problems: c.problems.filter(p => p.severity === 'error') }
-  // The answers travel with the piece so it can be reopened in the wizard (ADR-0046 answer).
+  // The answers travel with the piece so it can be reopened in the wizard (ADR-046 answer).
   const d: Design = { ...structuredClone(c.design), createdAt: now, updatedAt: now, wizard: { answers: structuredClone(resolve(a)) as WizardAnswers } }
   if (!replaces) return { ok: true, design: { ...d, id: newId() } }
   // Reopened piece: same id and creation date; catalog fields other than the category are kept.

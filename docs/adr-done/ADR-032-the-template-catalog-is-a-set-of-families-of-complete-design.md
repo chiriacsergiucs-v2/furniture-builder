@@ -1,0 +1,122 @@
+# ADR-032: The template catalog is a set of families of complete design snapshots, copied on insert, grouped by room or function
+
+- Status: Implemented
+- Date: 2026-10-22
+- Implemented: 2026-10-23
+- Decided by: user request; defaults below await confirmation
+- Depends on: none
+- Design: n/a
+- Related: ADR-004, ADR-005, ADR-007, ADR-011, ADR-027, ADR-028, ADR-033, ADR-034
+- Backlog: N22
+
+## Context
+
+The user asked for a template for every furniture type in their list (seating, sleeping, tables, storage; living
+room, bedroom, dining room, home office, outdoor), plus kitchen cabinets, each with its default structure and the
+configurations it supports. The templates must appear in **Start from** (the *New* dialog and the project's *Add a
+piece* list, `src/ui/Dialogs.tsx`, `src/ui/Project.tsx`) and all of them in a **Catalog** tab, grouped by room with a
+toggle to group by type.
+
+A first proposal (research report, 2026-10-22) modelled templates as a formula language (`"W - 2*T"` part sizes,
+`extends` inheritance, validation expressions inside templates, variants as parameter overrides). Reviewed against
+this repository and a second round of research on IKEA/PAX/METOD planners, Tylko-style configurators and
+Polyboard/Mozaik/imos libraries (`docs/research/diy-configurator-approaches.md`, 2026-10-22, all figures unverified
+model knowledge), it is rejected:
+
+- a part-formula engine is a second source of geometry next to `buildModel()` (ADR-004) and re-opens what ADR-005
+  rejected ("template catalogue with parameters … templates are kept only as starting points");
+- `extends` inheritance would let a template edit silently change saved designs; professional tools insert by copy;
+- validation inside templates duplicates ADR-008 diagnostics and skips user-built designs (rules: ADR-035);
+- parameter-override variants need a generator Mobila does not have.
+
+## Decision
+
+- **A template family** is catalog data, not code: `{ id, name, aliases[], function, rooms[], primaryRoom, root,
+  support, dims: { min, max, widthGrid? }, configurations[], variants[1..5], catalogVersion }`.
+  - `function` ∈ `seating | sleeping | tables | storage | kitchen`.
+  - `rooms[]` ⊂ `living | bedroom | dining | office | outdoor | kitchen | hallway | kids | other` (tags; a family
+    shows in every room it lists).
+  - `root` = the product root that builds it (`cabinet`, `desk`, `corner` today; `frame` per ADR-038).
+  - `support` = `ready` (builds today) · `needs-construction` (named ADR) · `reference` (ADR-039; listed with
+    structure and configurations, not generated). Families that are not `ready` are shown and badged, never hidden.
+  - `configurations[]` = the human list of what can be varied (e.g. "sections 1–6, doors hinged/sliding, plinth or
+    legs"), shown on the card; it is description, not executable.
+- **A variant is a complete `Design`** (ADR-011) — product root, space tree, materials — validated by
+  `validateDesign`. There is no formula, inheritance or override layer; dimensions come from the root builders.
+- **Insert = deep copy.** Picking a variant creates a new design id and records
+  `catalog.origin { catalogId: family id, variantId, revision: catalogVersion }` (ADR-028). Later catalog changes
+  never reach existing designs; an explicit *Compare with template* may come later.
+- **Start from** lists families with their default variant first; a chevron opens the other variants. The Catalog
+  page (ADR-027) gains a **Templates** source next to *Brands* and *Saved on this device*.
+- **Grouping:** a segmented control *Room | Type*, default **Room** (user's instruction), persisted per device in
+  `localStorage` wrapped in try/catch. Room view lists a family under each of its rooms (primary room first, others
+  badged *also in*); Type view lists it once under `function`. Counts come from in-memory filtering, outside Zustand
+  selectors. An *Other* group catches untagged families.
+- **Cards are projections:** size, part count and the check badge come from `buildModel()` of the variant (ADR-004).
+- The full family list and every variant is kept in `docs/catalog.md`; the code catalog
+  (`src/core/catalog/`, one module per family) must match it.
+- Existing template ids (`chest`, `bookcase`, `base-door`, `sideboard`, `wardrobe`, `wall-cabinet`,
+  `corner-blind`, `corner-l`, `desk-pedestal`, `desk-gables`) become variant ids, so nothing already saved changes.
+
+## Alternatives considered
+
+- **Formula/archetype template schema** — rejected, see Context.
+- **Group by type by default** (what DTC sites do) — rejected by the user's instruction; Type stays one tap away.
+- **Hide families that cannot be built yet** — rejected: the user asked for the entire catalog; badges say why.
+
+## Consequences
+
+- `templates` in `src/core/design.ts` becomes a projection of the catalog's default variants (one list, no drift).
+- Adding a family is a data change plus a test; adding a construction is an ADR.
+- Bundle grows by the variants' JSON; families load as one lazy chunk with the Catalog page.
+
+## Evidence (repository files)
+
+- Today: `src/core/design.ts` (`templates`, 10 entries), `src/ui/Templates.tsx`, `src/ui/Dialogs.tsx` (`NewDialog`),
+  `src/ui/Project.tsx` ("Start from"). Nothing implements families, variants or grouping yet.
+
+## Compliance check
+
+When accepted: a test loads every family, checks `1 ≤ variants ≤ 5`, every `ready` variant validates and builds
+without errors, every room/function value is known, `docs/catalog.md` lists exactly the families in code, and
+`grep -rn "extends\|eval(" src/core/catalog` returns nothing.
+
+## Open questions (defaults used until answered)
+
+1. Room list — default the user's five plus Kitchen, Hallway, Kids, Other.
+2. Should *reference* families (sofas, recliners …) appear in **Start from**, or only in the Catalog tab?
+   Default: Catalog tab only, so *Start from* never offers something that cannot be built.
+
+## Implementation (2026-10-23)
+
+Built with the defaults of both open questions (rooms: the user's five + Kitchen, Hallway, Kids, Other; reference
+families only in the Catalog tab). 42 families, 112 variants in `src/core/catalog/` (`kitchen.ts`, `storage.ts`,
+`furniture.ts`). `docs/catalog.md` is generated from the code (`npm run catalog:docs`) and a test fails when they
+differ. Support gained a fourth value, `safety` (built, but every variant waits for user-confirmed safety values:
+bunk bed, cradle).
+
+Differences from the text above: `templates` in `src/core/design.ts` stays as the ten legacy builders (the catalog
+reuses them by id) instead of becoming a projection — that avoids an import cycle and keeps every older test and
+sample unchanged; kitchen variants that reuse a legacy id (`base-door`, `corner-blind`, `corner-l`) are rebuilt at the
+kitchen height (720 carcass + 100 plinth) while the legacy templates keep their old sizes. `dims.min/max` are
+catalog information only (not enforced on input).
+
+Evidence: `src/core/catalog/*`, `src/ui/Catalog.tsx` (`StartFrom`, grouping, cards), `src/ui/Dialogs.tsx`,
+`src/ui/Project.tsx`; `tests/catalog.test.ts` (8 tests: 1–5 variants, known rooms/functions, every insertable variant
+validates and builds with only documented warnings, copy on insert, legacy ids kept, docs match).
+
+Verification 2026-10-23 (branch `feat/catalog-templates`): `npm run lint`, `npm run typecheck`, `npm test` (157 passed), `npm run build` passed; `FUZZ_N=30000` fuzz passed (cabinets with the new fronts and flags, and frames); scripted headless Chromium against the production build at 1280 and 390 px, 18/18 checks, no page errors, no sideways scroll. Six code mutations each fail a test. Not checked on a real phone, with a screen reader, or on the deployed site.
+
+## Amendment (2026-10-23, after the user's review)
+
+The first build put the catalog in a dialog behind an unlabelled icon and listed families, not items. Corrected:
+the Catalog is a **page** with its own always-labelled tab in the top bar (*Editor | Catalog*) and a `#catalog`
+link; it lists **every item** (117 variants in 42 families) with the family's default structure and configurations;
+*Start from* lists every item that opens, with search. Every family now has at least one item that opens (frame
+shells for recliner, desk chair, flat lounger and sectional sections); safety-regulated items open after the user's
+confirmation (ADR-035). Acceptance is a find-it test from the bare app (see `docs/retros/2026-10-23-catalog.md`).
+
+## Answers (2026-10-23, from the user)
+
+1. Rooms — the user's five plus Kitchen, Hallway, Kids, Other (default kept).
+2. Superseded by the amendment: every family now has items that open, so all appear in *Start from*.

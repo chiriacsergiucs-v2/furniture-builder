@@ -1,5 +1,5 @@
 /**
- * Exploded view (ADR-0014): panels pushed apart so each one can be seen on its own. Only positions change, never
+ * Exploded view (ADR-014): panels pushed apart so each one can be seen on its own. Only positions change, never
  * sizes; the result is for the 3D preview and never feeds parts, sheets or checks.
  *
  * Every panel's centre moves away from its piece's centre by `amount` times their distance, and each piece's centre

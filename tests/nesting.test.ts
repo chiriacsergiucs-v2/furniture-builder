@@ -1,5 +1,5 @@
 /**
- * Sheet nesting (ADR-0018): unit tests plus a seeded fuzz that checks every layout against the independent
+ * Sheet nesting (ADR-018): unit tests plus a seeded fuzz that checks every layout against the independent
  * validator and that mutated layouts are rejected. FUZZ_N=5000 npx vitest run tests/nesting.test.ts for a deep run.
  */
 import { describe, it, expect } from 'vitest'

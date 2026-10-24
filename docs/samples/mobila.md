@@ -36,7 +36,7 @@ cabinet's own sizes (720 + 100 plinth, 560 deep) are not used, at the user's cho
 
 The file's original Living (Coloana 535 × 2600, JOS and SUS 2685 × 435 with five bays) is no longer built.
 
-## Dormitor — Pat Noi (panel set with a screwed frame, ADR-0041 as amended 2026-10-23)
+## Dormitor — Pat Noi (panel set with a screwed frame, ADR-041 as amended 2026-10-23)
 
 The file gives the bed's cut panels only; every position is marked "do not invent". The user decided on 2026-10-23
 that the bed rails are the chipboard side boards **screwed to the foot board**. So the two sides (1800 × 270) stand on

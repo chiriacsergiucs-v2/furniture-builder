@@ -1,5 +1,5 @@
 /**
- * Romanian wording for what goes to the panel shop: printed sheets and the parts CSV (ADR-0020).
+ * Romanian wording for what goes to the panel shop: printed sheets and the parts CSV (ADR-020).
  * The app UI stays English. Pure functions, no UI imports.
  */
 import { baseLabel, type CutRow } from './cutlist'
@@ -127,7 +127,7 @@ export const CSV_HEADERS_RO = ['Denumire', 'Material', 'Grosime', 'Lungime', 'LÄ
 
 /**
  * Parts CSV for Romanian panel shops: semicolon-separated (Romanian Excel's list separator), UTF-8 with BOM so
- * diacritics open correctly, formula-leading cells escaped. Sizes are finished sizes (ADR-0009).
+ * diacritics open correctly, formula-leading cells escaped. Sizes are finished sizes (ADR-009).
  */
 export function cutlistCsvRo(rows: CutRow[]): string {
   const esc = (v: string | number) => {

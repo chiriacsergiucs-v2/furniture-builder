@@ -1,6 +1,6 @@
 /**
- * The shipped template catalog (ADR-0032, ADR-0033, ADR-0039): families of complete design snapshots.
- * Insert = deep copy with a new id and the origin recorded (ADR-0028); later catalog changes never reach a copy.
+ * The shipped template catalog (ADR-032, ADR-033, ADR-039): families of complete design snapshots.
+ * Insert = deep copy with a new id and the origin recorded (ADR-028); later catalog changes never reach a copy.
  * The list must match `docs/catalog.md` (a test compares them).
  */
 import { newId, upgradeDesign } from '../design'

@@ -11,7 +11,7 @@ import { takePictures, withPictures } from '../src/persist/images'
 const patch = (d: Design, id: string, p: Partial<Material>): Design => ({ ...d, materials: d.materials.map(m => (m.id === id ? { ...m, ...p } : m)) })
 const desk = () => templates.find(t => t.id === 'desk-pedestal')!.create()
 
-describe('labels (ADR-0049)', () => {
+describe('labels (ADR-049)', () => {
   it('are optional, validated, and shown after the name', () => {
     const d = templates[0].create()
     expect(validateDesign(patch(d, 'pal18', { maker: 'egger', kind: 'pal' }))).toEqual([])
@@ -71,7 +71,7 @@ describe('the user\'s decor list', () => {
   })
 })
 
-describe('pictures inside exported files (ADR-0048)', () => {
+describe('pictures inside exported files (ADR-048)', () => {
   const pic = (id: string) => ({ id, name: `${id}.jpg`, type: 'image/jpeg', width: 2, height: 1, bytes: new Uint8Array([9, 8, 7]).buffer, createdAt: '' })
   it('base64 round trip', () => {
     const bytes = new Uint8Array(70000).map((_, i) => i % 251).buffer

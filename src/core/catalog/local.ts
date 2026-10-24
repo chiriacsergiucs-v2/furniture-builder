@@ -1,5 +1,5 @@
 /**
- * Templates edited on this device (ADR-0034). Shipped families are read-only; an edit is stored as a local template
+ * Templates edited on this device (ADR-034). Shipped families are read-only; an edit is stored as a local template
  * that shadows the shipped one (`shadows`), or a new family made from a saved design. Variant designs are stored as
  * data, so a local template is self-contained and survives app updates; nothing is replaced without the user's say.
  */
@@ -44,7 +44,7 @@ export function fromLocal(t: LocalTemplate, shipped?: CatalogFamily): ViewFamily
 }
 
 /**
- * Shipped families with the local ones mixed in (ADR-0034, user decision 2026-10-23): an edited family takes the
+ * Shipped families with the local ones mixed in (ADR-034, user decision 2026-10-23): an edited family takes the
  * shipped one's place, the user's own new families follow, so grouping by room or type places them like any other.
  */
 export function mergeCatalog(shipped: CatalogFamily[], locals: LocalTemplate[]): ViewFamily[] {

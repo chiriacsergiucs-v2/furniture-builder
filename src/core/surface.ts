@@ -2,7 +2,7 @@ import { inPlaneAxes } from './geometry'
 import type { Axis, Face, MaterialImage, Mm, Panel } from './types'
 
 /**
- * Pictures on boards (ADR-0048): which files are accepted, how big they are kept, and how one picture is laid on
+ * Pictures on boards (ADR-048): which files are accepted, how big they are kept, and how one picture is laid on
  * each face of a part. Pure: no DOM, no storage, no three.js.
  */
 export const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp'] as const
@@ -106,7 +106,7 @@ export function planeUvs(p: Panel, img: MaterialImage, s: Axis, t: Axis, pointsM
 }
 
 /**
- * A picture carried inside an exported design or project file (ADR-0048, user answer 2026-10-24): the stored bytes
+ * A picture carried inside an exported design or project file (ADR-048, user answer 2026-10-24): the stored bytes
  * as base64, so the file opens with its pictures on another device.
  */
 export interface PictureFile { id: string; name: string; type: string; width: number; height: number; data: string }

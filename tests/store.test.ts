@@ -6,7 +6,7 @@ import { validateDesign } from '../src/core/design'
 import { makeItem, newProject } from '../src/core/project'
 import { useDesign } from '../src/store/designStore'
 
-describe('catalog origin survives every copy (ADR-0028)', () => {
+describe('catalog origin survives every copy (ADR-028)', () => {
   it('insert → edit → duplicate → export → import → embed keeps the origin byte-identical', () => {
     const f = catalogFamilies.find(x => x.id === 'wardrobe')!
     const d = insertVariant(f, f.variants[1])!
@@ -32,7 +32,7 @@ describe('catalog origin survives every copy (ADR-0028)', () => {
   })
 })
 
-describe('template edit mode (ADR-0034)', () => {
+describe('template edit mode (ADR-034)', () => {
   it('edits a variant design, then returns to the piece that was open; cancel keeps the template unchanged', () => {
     const t = shadowOf(catalogFamilies.find(x => x.id === 'bookcase')!)
     const open = insertVariant(catalogFamilies[0], catalogFamilies[0].variants[0])!

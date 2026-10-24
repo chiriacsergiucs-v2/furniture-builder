@@ -40,9 +40,9 @@ export function buildModel(design: Design): FurnitureModel {
     } else if (c.width < 30) {
       diagnostics.push({ severity: 'warning', code: 'narrow-part', message: `${p.label} is only ${c.width} mm wide.`, nodeId: p.nodeId, panelIds: [p.id] })
     }
-    // Shaped parts (ADR-0040): whole degrees, profiles inside their blank.
+    // Shaped parts (ADR-040): whole degrees, profiles inside their blank.
     for (const message of shapeProblems(p)) diagnostics.push({ severity: 'error', code: 'shape', message, nodeId: p.nodeId, panelIds: [p.id] })
-    // Solid timber is cut from lengths of several sections; sheet parts must match their board (ADR-0038).
+    // Solid timber is cut from lengths of several sections; sheet parts must match their board (ADR-038).
     if (m && m.stock !== 'solid' && c.thickness !== m.thickness) {
       diagnostics.push({ severity: 'error', code: 'thickness', message: `${p.label} thickness ${c.thickness} mm does not match ${m.name}.`, nodeId: p.nodeId, panelIds: [p.id] })
     }
@@ -66,7 +66,7 @@ export function buildModel(design: Design): FurnitureModel {
     const { width: W, height: H, depth: D } = prod.params
     const env = box(0, 0, 0, W, H, D)
     const front = materials.get(prod.params.frontMaterialId)
-    // Sliding doors run on a track in front of the carcass (ADR-0037).
+    // Sliding doors run on a track in front of the carcass (ADR-037).
     const frontEnv = box(0, 0, 0, W, H, D + Math.max(front?.thickness ?? 0, slidingTrackDepth(prod.params.interior)))
     for (const p of panels) {
       if (!contains(FRONT_ROLES.has(p.role) ? frontEnv : env, aabbOf(p))) {
@@ -75,7 +75,7 @@ export function buildModel(design: Design): FurnitureModel {
     }
   }
 
-  // A board labelled kitchen worktop on other parts: guidance only, the user may mean it (ADR-0049).
+  // A board labelled kitchen worktop on other parts: guidance only, the user may mean it (ADR-049).
   for (const m of design.materials) {
     if (m.kind !== 'worktop') continue
     const others = panels.filter(p => p.materialId === m.id && p.role !== 'worktop')
@@ -86,7 +86,7 @@ export function buildModel(design: Design): FurnitureModel {
   }
 
   const model: FurnitureModel = { panels, spaces: partial.spaces, hardware: partial.hardware, diagnostics, bounds: union(panels.map(aabbOf)) }
-  // Construction guidance (ADR-0035): labelled warnings and reminders, after the independent checks above.
+  // Construction guidance (ADR-035): labelled warnings and reminders, after the independent checks above.
   const ruled = runRules(design, model, materials)
   model.diagnostics.push(...ruled.diagnostics)
   model.hardware.push(...ruled.hardware)

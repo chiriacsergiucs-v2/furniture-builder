@@ -1,0 +1,115 @@
+# ADR-040: Shaped parts: angled boxes and profiled panels, still exact in whole millimetres
+
+- Status: Implemented
+- Date: 2026-10-23
+- Implemented: 2026-10-23
+- Decided by: user answers below
+- Depends on: none
+- Design: n/a
+- Related: ADR-003, ADR-004, ADR-009, ADR-018, ADR-021, ADR-038, ADR-039
+- Backlog: N30
+
+## Context
+
+Catalog items wait on `shape` (`docs/catalog.md`): a reclining frame, an adjustable lounger backrest, a raked garden
+bench back, a diagonal corner front, a U-cut sink drawer. ADR-004 allows only axis-aligned boxes and says shaped
+parts need a new panel kind and an ADR. Cut lists, sheet nesting, the elevation, 3D, Fusion export and the overlap
+checks all read `Panel.box`.
+
+## Decision
+
+- **`Panel.shape?`** (optional; absent = today's box): the panel is still described by its **cut blank**, an
+  axis-aligned `box` in whole millimetres, plus one of:
+  - `{ kind: 'tilt', axis: 'x' | 'z', angleDeg: integer, pivot: 'bottom' | 'top' }` — a straight member or board leaned
+    about one axis (raked backs, backrest positions, splayed legs). The cut blank is the member's straight length ×
+    section; the tilt is applied only for placement.
+  - `{ kind: 'profile', points: [u, v][] }` — a flat board whose outline is a polygon on its face, in whole mm inside
+    the blank (diagonal corner fronts with mitred edges, U-cut drawer fronts, curved-looking aprons as polylines).
+- **What stays exact:** cut list and nesting use the blank (ADR-009, ADR-018); the profile is listed as a drilling
+  /cutting note ("cut to template, n points") and the outline is printed on the cut sheet (ADR-020).
+- **Checks:** overlap tests use the tilted member's oriented box (separating-axis test on integers scaled ×1000);
+  a profile must stay inside its blank; angles are whole degrees 1–60; errors, never throws (ADR-008).
+- **Views:** the elevation draws the projected outline; 3D draws the tilted box or extruded profile; Fusion export
+  rebuilds tilt as a rotated body and profile as an extruded sketch, still unverified until run (ADR-021).
+- **First users:** frame backs get `back.angleDeg` (raked chair and bench backs, recliner and lounger positions);
+  corner units get a diagonal front; sink bases get a U-cut drawer front. Each lifts the matching `shape` waits.
+
+## Alternatives considered
+
+- **Stepped boxes approximating angles** — rejected in ADR-039: wrong cut sizes.
+- **General meshes / CSG** — rejected in ADR-004: loses exact cut sizes and simple checks.
+
+## Consequences
+
+- `Panel` gains an optional field; old designs and every box-only view keep working unchanged.
+- Floating-point appears only in drawing and in the oriented overlap test, never in sizes or cut lists.
+
+## Evidence (repository files)
+
+- Today: `src/core/types.ts` (`Panel`, `Box`), `src/core/build.ts` (overlap checks), `src/core/frame.ts`,
+  `src/core/corner.ts`, `docs/catalog.md` (items waiting for `shape`).
+
+## Compliance check
+
+When accepted: every catalog item that waited only for `shape` opens and builds without errors; cut sizes of tilted
+members equal their straight lengths; fuzz with random angles reports no overlaps on designs without errors; a design
+saved before this ADR loads and builds byte-identically.
+
+## Open questions (defaults used until answered)
+
+1. Back rake for chairs and benches — default 8°, editable 0–25°.
+2. Recliner and lounger positions — default 3 positions (100°, 120°, 150° seat-to-back).
+3. Profiles: printed full-size template on the cut sheet (default) or coordinates only?
+
+## Answers (2026-10-23, from the user)
+
+1. **Back rake:** no preference — the default stays (8°, editable 0–25°).
+2. **Recliner and lounger positions:** 3 positions, 100°, 120°, 150° seat-to-back (default confirmed).
+3. **Profiles:** full-size printed template on the cut sheet (default confirmed).
+Built 2026-10-23 (backlog N30); see the amendment below.
+
+## Amendment (2026-10-23, built)
+
+Implemented as decided, with these changes (code and ADR agree):
+
+- **Tilt** is `{ kind: 'tilt', axis: 'x' | 'y' | 'z', angleDeg, pivot: [x, y, z] }`. The pivot is a whole-mm point
+  measured from the blank's minimum corner, which is more general than `'bottom' | 'top'`. Axis `y` (vertical) is needed
+  for the diagonal corner's door and plinth. Angles are whole degrees **1–89**: the user's lounger positions
+  (100° / 120° / 150° seat-to-back) lift the backrest up to 80° from flat. Chair and bench backs stay limited to 0–25°
+  in the editor and 0–60° in a design file.
+- **Profile** points are `[u, v]` along the blank's two in-plane axes in x, y, z order. Overlap uses the convex hull of
+  the outline, so it is conservative for notches. A profile must stay inside its blank and have an area.
+- **Checks** (`src/core/shape.ts`): an integer test for plain boxes. When either part is shaped, a separating-axis test
+  on the two solids, with projections rounded to 1/1000 mm, so touching faces never count as an overlap. Bounds,
+  envelopes and project placement use the whole-mm box around the solid. In projects, quarter turns carry shapes
+  (`turnShape`).
+- **First users** (each lifts its `shape` wait; all six catalog items now open):
+  - Raked frame backs (`back.angleDeg`, default 8° for new chairs and benches with a back; designs without the field
+    stay upright and build exactly as before). The back legs stop at the seat frame; posts, rails, slats or the
+    panel above lean as one piece about its back edge.
+  - Reclining frame: `recline.positions` 100° / 120° / 150°, the one shown sets the rake. An optional footrest
+    hangs at 0°, swings at 45° and lies level at 90° (`angles` per position). The mechanism is a bought, scheduled item.
+  - Lounger backrest: `backrest` with the same positions. The first part of a slatted seat, on two battens, lifts
+    about its top hinge edge. Hinges and prop are bought.
+  - Garden bench with back and arms: `arms.height`, arm posts on the seat, arm rests back to the posts.
+  - Ergonomic chair on a bought base: `base: 'bought'`. Only the seat and back boards are cut; the gas lift,
+    mechanism, base and back support are scheduled and not drawn.
+  - Diagonal corner (`variant: 'diagonal'`): backs on both walls, a return at each end, five-sided bottom, top and
+    shelves (profiles), plinth and door(s) turned 45° about the vertical; mirrored for the right.
+  - Sink drawer (`DrawersSpace.uCut`): the **drawer box** is cut around the trap, not the front. The bottom is a
+    U-profile and the back runs round the notch in five plain parts. The front stays whole, which is physically
+    correct; the earlier wording "U-cut drawer front" was wrong.
+- **Views:** the front view draws the projected outline; 3D draws the tilted box or the extruded profile; catalog
+  pictures draw the solids' faces (`snapshot.ts`). The Fusion script turns the box axes for tilts and sketches plus
+  extrudes profiles; it is still unverified until run in Fusion (ADR-021).
+- **Print:** each distinct profile gets a coordinate table and full-size A4 tiles (186 × 255 mm drawing area, 10 mm
+  overlap, corner marks and a 100 mm check bar), as the user answered. Cut-list note: "cut to template (n points)".
+- **Fuzz finding (fixed):** an adjustable-shelf space too short for a pin hole on one side used to get pins on the
+  other side only, leaving the shelf on one edge. That is now the error `pin-rows-short` (ADR-023 note).
+
+Evidence: `src/core/shape.ts`, `src/core/template.ts`, `src/core/frame.ts`, `src/core/corner.ts`,
+`src/core/cabinet.ts` (U-cut, pin rows), `src/core/build.ts`, `src/core/project.ts`, `src/core/snapshot.ts`,
+`src/core/fusion.ts`, `src/ui/Elevation.tsx`, `src/viewer/Viewer3D.tsx`, `src/ui/PrintSheet.tsx`,
+`src/ui/Editors.tsx`, `src/ui/Inspector.tsx`. Tests: `tests/shapes.test.ts` (15), `tests/fusion.test.ts` (shaped
+export compiles), `tests/fuzz.test.ts` (random rakes, positions, footrests, arms, backrests, bought bases, U-cuts,
+diagonal corners; 30,000 passed), `tests/core.test.ts` (pin rows). Browser: `tools/shapes/find-it.mjs`.

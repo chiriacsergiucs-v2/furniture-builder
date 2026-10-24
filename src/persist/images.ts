@@ -5,7 +5,7 @@ import type { MaterialImage } from '../core/types'
 import { db, loadImage, saveImage } from './db'
 
 /**
- * Pictures for materials (ADR-0048), browser side: import a file the user picked, and share one object URL per
+ * Pictures for materials (ADR-048), browser side: import a file the user picked, and share one object URL per
  * stored picture between the views. Nothing is uploaded; problems come back as messages, never as exceptions.
  */
 export type ImportResult = { ok: true; image: MaterialImage; color: string } | { ok: false; problem: string }
@@ -94,7 +94,7 @@ export const imageKey = (materials: { image?: MaterialImage }[]) =>
   [...new Set(materials.flatMap(m => (m.image ? [m.image.id] : [])))].sort().join(',')
 
 /**
- * A design or project file with its pictures inside (ADR-0048, user answer 2026-10-24): `pictures` holds every
+ * A design or project file with its pictures inside (ADR-048, user answer 2026-10-24): `pictures` holds every
  * picture its materials use that is on this device. Older files without it still open.
  */
 export async function withPictures<T extends object>(data: T, designs: { materials: { image?: MaterialImage }[] }[]): Promise<T & { pictures?: PictureFile[] }> {

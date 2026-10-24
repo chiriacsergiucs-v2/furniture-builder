@@ -1,5 +1,5 @@
 /**
- * Suggested combinations (ADR-0045). Candidates come from the axes a type declares for a step, are built with
+ * Suggested combinations (ADR-045). Candidates come from the axes a type declares for a step, are built with
  * buildModel() and kept only without errors; the type default comes first, then the most different ones.
  */
 import type { FurnitureModel, Design } from '../types'

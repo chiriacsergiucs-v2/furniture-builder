@@ -1,4 +1,4 @@
-// Find-it acceptance for pictures on materials (AGENTS.md R3, backlog N43, ADR-0048), run against a production build:
+// Find-it acceptance for pictures on materials (CLAUDE.md R3, backlog N43, ADR-048), run against a production build:
 //   npm run build && npx vite preview --port 4173 &  node tools/materials/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `npm test`.
 import { chromium } from 'playwright'

@@ -333,7 +333,7 @@ td.note { color: var(--ink-2); font-size: var(--fs-xs); }
 .bar .name {
   background: transparent; border: 1px solid transparent; border-radius: var(--r); color: var(--bar-ink);
   font-weight: 600; font-size: 1.05rem; padding: 4px 8px; min-width: 8ch; width: min(32ch, 28vw); min-height: 36px;
-  flex: 0 1 auto; /* gives way so the three page tabs and every action fit (ADR-0043) */
+  flex: 0 1 auto; /* gives way so the three page tabs and every action fit (ADR-043) */
 }
 .bar .name:hover { border-color: var(--bar-line); }
 .bar .name:focus { border-color: var(--accent); outline: none; background: var(--bar-hover); }
@@ -384,7 +384,7 @@ td.note { color: var(--ink-2); font-size: var(--fs-xs); }
 .view.three canvas { touch-action: none; }
 .no-3d { height: 100%; display: grid; place-items: center; padding: var(--s-6); color: var(--ink-2); text-align: center; }
 
-/* Elevation (ADR-0014). Geometry comes from the model; only paint lives here. */
+/* Elevation (ADR-014). Geometry comes from the model; only paint lives here. */
 .elevation { margin: 0; height: 100%; padding: 4px 16px 16px; }
 .elevation svg { width: 100%; height: 100%; display: block; }
 .floor { fill: var(--floor); }
@@ -544,7 +544,7 @@ table.buy { margin-bottom: var(--s-4); }
   .bar .name { width: auto; flex: 1; min-width: 0; }
   .bar .status .txt { display: none; }
   .bar .status.failed .txt { display: inline; }
-  /* Phones: the actions sit in a bottom bar at thumb height (ADR-0030, user decision 2026-10-23); every action stays
+  /* Phones: the actions sit in a bottom bar at thumb height (ADR-030, user decision 2026-10-23); every action stays
      on screen — the bar wraps instead of hiding buttons in a sideways scroller (F18). */
   .actions { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; margin: 0; flex-wrap: wrap; justify-content: space-between; row-gap: 2px;
     background: var(--bar-bg); border-top: 1px solid var(--bar-line);
@@ -572,8 +572,8 @@ table.buy { margin-bottom: var(--s-4); }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 
-/* 15. Print (ADR-0020): A4 portrait, black on white, Romanian sheet --------- */
-/* Catalog (ADR-0027, ADR-0032): Start from list, catalog page, template editor ----------------------- */
+/* 15. Print (ADR-020): A4 portrait, black on white, Romanian sheet --------- */
+/* Catalog (ADR-027, ADR-032): Start from list, catalog page, template editor ----------------------- */
 .dialog.wide { width: min(1180px, calc(100vw - 32px)); }
 .alert.info { background: var(--surface-2); border-color: var(--link); }
 .alert.info .icon { color: var(--link); }
@@ -728,7 +728,7 @@ table.buy { margin-bottom: var(--s-4); }
   .pr-elev .el-label, .pr-elev .el-selection, .pr-elev .dim.subtle { display: none; }
   .pr-elev .el-space rect { fill: transparent !important; }
   .pr-table { width: 100%; border-collapse: collapse; margin-bottom: 3mm; font-size: 9pt; break-inside: auto; }
-  /* Full-size templates (ADR-0040): one tile per page, drawn 1:1 in millimetres. */
+  /* Full-size templates (ADR-040): one tile per page, drawn 1:1 in millimetres. */
   .pr-template { break-before: page; }
   .pr-template h3 { font-size: 9pt; margin: 0 0 2mm; }
   .pr-template svg { display: block; overflow: hidden; }
@@ -752,7 +752,7 @@ table.buy { margin-bottom: var(--s-4); }
   .pr-sheet .sh-part text { font-family: sans-serif; }
 }
 
-/* Feature Research & Catalog (ADR-0043) ------------------------------------------------------------- */
+/* Feature Research & Catalog (ADR-043) ------------------------------------------------------------- */
 .research-page { max-width: 1440px; }
 .research-page .research-tabs { justify-content: flex-start; }
 .research-page .research-tabs button { flex: 0 1 auto; }
@@ -837,7 +837,7 @@ button.tile:hover { border-color: var(--ink-3); background: var(--surface-2); }
   .research-toolbar select { flex: 1 1 45%; }
 }
 /* Three page tabs (Editor | Catalog | Feature Research): the bar wraps onto a second row instead of running off
-   the screen; every tab and action stays labelled and reachable (AGENTS.md R3). */
+   the screen; every tab and action stays labelled and reachable (CLAUDE.md R3). */
 .bar { flex-wrap: wrap; row-gap: 4px; }
 @media (max-width: 440px) { .pages .count, .pages a .icon { display: none; } .pages a { padding: 4px 6px; gap: 4px; } .pages { max-width: 100%; flex-wrap: wrap; } }
 .research-page { grid-template-columns: minmax(0, 1fr); }
@@ -860,7 +860,7 @@ button.tile:hover { border-color: var(--ink-3); background: var(--surface-2); }
   .features-table td.fname::before { display: none !important; }
   .features-table td[data-label=""] { float: right; width: auto; }
 }
-/* Assessment dashboard (ADR-0043 addendum) */
+/* Assessment dashboard (ADR-043 addendum) */
 .assessment { display: grid; gap: var(--s-3); }
 .assessment h3 { font-size: var(--fs-md); margin-bottom: 4px; }
 .overview-cols.four { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
@@ -881,7 +881,7 @@ button.tile:hover { border-color: var(--ink-3); background: var(--surface-2); }
 @media (max-width: 1100px) { .overview-cols.four { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 760px) { .overview-cols.four { grid-template-columns: 1fr; } }
 
-/* New-piece wizard (ADR-0044/0045) ------------------------------------------ */
+/* New-piece wizard (ADR-044/045) ------------------------------------------ */
 .wizard { display: grid; gap: var(--s-4); min-width: 0; }
 .wizard .steps { overflow-x: auto; padding-bottom: 2px; }
 .wz-body { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: var(--s-5); align-items: start; }

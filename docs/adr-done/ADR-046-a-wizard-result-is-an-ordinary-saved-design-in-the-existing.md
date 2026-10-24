@@ -1,0 +1,67 @@
+# ADR-046: A wizard result is an ordinary saved design in the existing `designs` table; no Dexie version
+
+- Status: Implemented
+- Date: 2026-10-23
+- Implemented: 2026-10-23
+- Decided by: user answers below
+- Depends on: none
+- Design: n/a
+- Related: ADR-008, ADR-011, ADR-012, ADR-027, ADR-028, ADR-044
+- Backlog: N34
+
+## Context
+
+The wizard must end with "a new piece" for the catalog. The user decided on 2026-10-23 that all saved pieces belong in
+the Catalog. "Saved on this device" lists every row of the `designs` table (ADR-027, ADR-032). Storage rules: never
+edit a shipped Dexie version, and never delete rows the app cannot read (ADR-012).
+
+## Decision
+
+- **Create piece** builds the design with `toDesign` (ADR-044) and blocks while any error remains:
+  - field range problems,
+  - `validateDesign` messages,
+  - `buildModel()` errors.
+  These are the same errors that block export (ADR-008).
+- The piece then gets a new id and timestamps, and `catalog.category` is set from the Basics answer (ADR-028,
+  an optional field, so no schema bump). It is saved with the existing `saveDesign()` and opened in the editor with
+  the store's `load()`.
+- From there it is like any other piece. It is listed in the Library and in Catalog → "Saved on this device", it
+  autosaves when edited, and it exports and joins projects.
+- **No Dexie version is added.** No table or index changes; v1–v4 stay as shipped.
+- **Amended 2026-10-23 (answer 1):** the resolved answers are stored on the piece as the optional `wizard.answers`
+  field (validated by `validateDesign`, never geometry, no schema bump, like ADR-028). The editor shows "Open in
+  wizard" on such pieces. "Update piece" replaces the piece in place: same id and creation date, catalog fields other
+  than the category kept. When the piece was changed in the editor since (its product or boards differ from what
+  the answers build), the wizard says those changes will be replaced.
+
+## Alternatives considered
+
+- **A `wizardPieces` table or saved answers** — would need Dexie v5 and a second source of truth beside the design.
+- **Saving as a local template (ADR-034)** — templates are families of variants, a different flow. "Save this piece
+  as a template" stays available in the Catalog for that.
+
+## Consequences
+
+- Nothing about storage changes. Older builds of the app read wizard pieces as normal designs.
+
+## Evidence (repository files)
+
+- `src/core/wizard/engine.ts` (`createPiece`), `src/ui/Wizard.tsx` (Create piece → `saveDesign` → `load`),
+  `src/persist/db.ts` (unchanged).
+- `tests/wizard.test.ts`: save → listed by `listDesigns` → `validateDesign` passes; errors block creation.
+
+## Compliance check
+
+`git diff --stat src/persist/db.ts` is empty for this change. `npx vitest run tests/wizard.test.ts` saves a wizard
+piece into a fake IndexedDB and reads it back unchanged.
+
+## Open questions
+
+1. Should the answers be kept so the wizard can be reopened on a piece? Default: no (the editor is the place to
+   change it).
+
+## Answers (2026-10-23, from the user)
+
+1. **Keep the answers** so a piece can be reopened in the wizard — changes the decision above: the answers will be
+   stored with the design as an optional field (no Dexie version; validated like `catalog`, ADR-028) and an
+   "Open in wizard" action added. Built 2026-10-23 (backlog N35); the Decision above is amended accordingly.

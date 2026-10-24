@@ -68,7 +68,7 @@ const PAGES: Page[] = ['editor', 'catalog', 'research']
 const pageFromHash = (): Page => (typeof location === 'undefined' ? 'home' : PAGES.find(p => location.hash === `#${p}`) ?? 'home')
 /**
  * The top-level pages, linkable: the bare address opens the Home welcome page (N38), #editor the editor, #catalog the
- * Catalog (ADR-0032), #research the Feature Research & Catalog (ADR-0043).
+ * Catalog (ADR-032), #research the Feature Research & Catalog (ADR-043).
  */
 function usePage(): [Page, (p: Page) => void] {
   const [page, setPage] = useState<Page>(pageFromHash)
@@ -101,7 +101,7 @@ export function App() {
   const canUndo = useDesign(s => s.past.length > 0), canRedo = useDesign(s => s.future.length > 0)
   const [dialog, setDialog] = useState<null | 'new' | 'library' | 'materials' | 'add' | 'wizard'>(null)
   const openCatalog = () => { setDialog(null); setPage('catalog') }
-  /** The piece reopened in the wizard, or null for a new one (ADR-0046). */
+  /** The piece reopened in the wizard, or null for a new one (ADR-046). */
   const [wizardFrom, setWizardFrom] = useState<Design | null>(null)
   const templateEdit = useDesign(s => s.templateEdit)
   const project = useDesign(s => s.project)
@@ -125,7 +125,7 @@ export function App() {
     ro.observe(bar)
     return () => ro.disconnect()
   }, [])
-  // Phones put the actions in a fixed bottom bar; the page keeps room for it (ADR-0030).
+  // Phones put the actions in a fixed bottom bar; the page keeps room for it (ADR-030).
   useEffect(() => {
     const bar = barRef.current?.querySelector('.actions') as HTMLElement | null
     if (!bar || typeof ResizeObserver === 'undefined') return
@@ -144,7 +144,7 @@ export function App() {
     window.addEventListener('keydown', onKey); document.addEventListener('click', onClick)
     return () => { window.removeEventListener('keydown', onKey); document.removeEventListener('click', onClick) }
   }, [])
-  // Render the print sheet, open the print dialog, then remove it again (ADR-0020).
+  // Render the print sheet, open the print dialog, then remove it again (ADR-020).
   useEffect(() => {
     if (!printing) return
     const done = () => setPrinting(false)
@@ -160,7 +160,7 @@ export function App() {
     const clone = svg.cloneNode(true) as SVGSVGElement
     clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
     clone.querySelectorAll('.el-space, .el-label, .el-selection').forEach(n => n.remove())
-    // Pictures (ADR-0048) live on this device only: the file gets the plain colours.
+    // Pictures (ADR-048) live on this device only: the file gets the plain colours.
     clone.querySelectorAll('pattern').forEach(n => n.remove())
     clone.querySelectorAll<SVGElement>('[data-plain]').forEach(n => { n.style.fill = n.dataset.plain ?? '' })
     const style = document.createElementNS('http://www.w3.org/2000/svg', 'style')

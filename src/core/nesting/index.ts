@@ -13,12 +13,12 @@ export interface SheetSettings {
 
 /**
  * One job per material that has settings, in first-seen cut-list order. Rows of materials without settings are
- * skipped (the caller reports missing stock). Key = first panel id of the row; sizes are finished sizes (ADR-0009).
+ * skipped (the caller reports missing stock). Key = first panel id of the row; sizes are finished sizes (ADR-009).
  */
 export function jobsFromCutlist(rows: CutRow[], settings: Map<string, SheetSettings>): NestJob[] {
   const jobs = new Map<string, NestJob>()
   for (const r of rows) {
-    // Solid timber goes to the lengths list, never onto sheets (ADR-0038).
+    // Solid timber goes to the lengths list, never onto sheets (ADR-038).
     if (r.solid) continue
     const s = settings.get(r.materialId)
     if (!s) continue

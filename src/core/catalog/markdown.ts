@@ -17,7 +17,7 @@ function defaultSize(f: CatalogFamily): string {
   return `${b.w} × ${b.h} × ${b.d}`
 }
 
-/** The family tables of `docs/catalog.md`, generated from the code catalog so the two cannot drift (ADR-0032). */
+/** The family tables of `docs/catalog.md`, generated from the code catalog so the two cannot drift (ADR-032). */
 export function catalogMarkdown(families: CatalogFamily[] = catalogFamilies): string {
   const out: string[] = []
   for (const fn of FUNCTIONS) {

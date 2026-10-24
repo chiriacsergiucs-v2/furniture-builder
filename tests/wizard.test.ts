@@ -215,7 +215,7 @@ describe('universal: engine and UI know no construction type', () => {
   })
 })
 
-describe('result → catalog (ADR-0046)', () => {
+describe('result → catalog (ADR-046)', () => {
   it('creates a valid design with a fresh id, saves it in the existing designs table and reads it back unchanged', async () => {
     const a: Answers = { type: 'shelving', name: 'Wizard bookcase', width: 900 }
     const res = createPiece(a, '2026-10-23T10:00:00.000Z')
@@ -267,7 +267,7 @@ describe('N35: wardrobe and bed types', () => {
   })
 })
 
-describe('N35: answers kept with the piece, reopened in the wizard (ADR-0046)', () => {
+describe('N35: answers kept with the piece, reopened in the wizard (ADR-046)', () => {
   it('a created piece carries its answers; they validate and rebuild the same piece', () => {
     const res = createPiece({ type: 'wardrobe', name: 'Hall wardrobe', width: 1000 })
     if (!res.ok) throw new Error('not created')

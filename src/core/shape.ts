@@ -1,5 +1,5 @@
 /**
- * Shaped parts (ADR-0040). A shaped panel is still described by its cut blank, the axis-aligned `box` in whole
+ * Shaped parts (ADR-040). A shaped panel is still described by its cut blank, the axis-aligned `box` in whole
  * millimetres that the cut list, nesting and integer checks use. `shape` only says how the blank is placed (tilt) or
  * cut (profile). Floating point appears here only, for drawing and the oriented overlap test; never in sizes.
  */
@@ -16,7 +16,7 @@ const scale = (a: V3, k: number): V3 => [a[0] * k, a[1] * k, a[2] * k]
 const dot = (a: V3, b: V3) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 const cross = (a: V3, b: V3): V3 => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
 
-/** Whole degrees 1–89 (ADR-0040 amendment: lounger backrests reach 80° from flat at the 100° position). */
+/** Whole degrees 1–89 (ADR-040 amendment: lounger backrests reach 80° from flat at the 100° position). */
 export const MAX_TILT = 89
 const min3 = (b: Box): V3 => [b.x, b.y, b.z]
 const size = (b: Box, a: Axis) => (a === 'x' ? b.w : a === 'y' ? b.h : b.d)
@@ -110,7 +110,7 @@ export function overlapsBox(p: Panel, b: Box): boolean {
   return !p.shape || solidsOverlap(solidOf(p), solidOf({ ...p, box: b, shape: undefined }))
 }
 
-/** Problems with a panel's shape (ADR-0008: reported, never thrown). */
+/** Problems with a panel's shape (ADR-008: reported, never thrown). */
 export function shapeProblems(p: Panel): string[] {
   const s = p.shape
   if (!s) return []
@@ -131,7 +131,7 @@ export function shapeProblems(p: Panel): string[] {
 /** Twice the signed area of a polygon. */
 export const area2 = (pts: [number, number][]) => pts.reduce((a, [x, y], i) => { const [x2, y2] = pts[(i + 1) % pts.length]; return a + x * y2 - x2 * y }, 0)
 
-/** Cut-list note for a shaped panel (ADR-0040): profiles are cut to the printed template; tilt is placement only. */
+/** Cut-list note for a shaped panel (ADR-040): profiles are cut to the printed template; tilt is placement only. */
 export function shapeNote(p: Panel): string {
   if (p.shape?.kind === 'profile') return `cut to template (${p.shape.points.length} points)`
   return ''
@@ -169,7 +169,7 @@ export function turnShape(s: PanelShape, from: Box, to: Box, t: Axis, tTo: Axis,
 }
 
 /**
- * Outline of a panel in the front view (x across, y up), for drawing (ADR-0040). A plain box is its rectangle; a
+ * Outline of a panel in the front view (x across, y up), for drawing (ADR-040). A plain box is its rectangle; a
  * profile facing the front is its polygon; anything else is the convex hull of its solid seen from the front.
  */
 export function frontOutline(p: Panel): [number, number][] {

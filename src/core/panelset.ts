@@ -17,9 +17,9 @@ const THICKNESS_AXIS: Record<PanelLie, Panel['thicknessAxis']> = { 'flat-x': 'y'
 const GRAIN_AXIS: Record<PanelLie, Panel['grainAxis']> = { 'flat-x': 'x', 'flat-z': 'z', 'edge-x': 'x', 'edge-z': 'z', 'up-x': 'y', 'up-z': 'y' }
 
 /**
- * Panel set (ADR-0041): parts known by their cut sizes. Parts with a known place (amendment 2026-10-23) are built
+ * Panel set (ADR-041): parts known by their cut sizes. Parts with a known place (amendment 2026-10-23) are built
  * where they sit; every other part lies flat in one pile beside them, largest at the bottom. Screwed joints between
- * placed parts are scheduled; screw type, length and count are the user's choice (ADR-0010).
+ * placed parts are scheduled; screw type, length and count are the user's choice (ADR-010).
  */
 export function buildPanelSet(p: PanelSetParams, id: string, materials: Map<string, Material>): PartialModel {
   const out: PartialModel = { panels: [], spaces: [], hardware: [], diagnostics: [] }

@@ -36,7 +36,7 @@ function Rated({ f, dim }: { f: ViewFeature; dim: RatingDim }) {
 const catLabel = (view: CatalogView, id: string) => view.categories.find(c => c.id === id)?.label ?? id
 
 /**
- * Feature Research & Catalog (ADR-0043): every record extracted from the research papers, searchable and selectable
+ * Feature Research & Catalog (ADR-043): every record extracted from the research papers, searchable and selectable
  * for later work. Reached from the "Feature Research" tab in the top bar or the #research link. Selecting a feature is a
  * planning decision only; nothing here starts an implementation.
  */

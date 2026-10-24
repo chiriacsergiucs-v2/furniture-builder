@@ -7,7 +7,7 @@ import { listResearchBundles, listResearchMarks, saveResearchBundle, saveResearc
 export type MarkPatch = Partial<Omit<ResearchMark, 'id' | 'createdAt' | 'updatedAt'>>
 
 /**
- * Research papers and the user's decisions on them (ADR-0043), kept in step with IndexedDB. Shipped papers are
+ * Research papers and the user's decisions on them (ADR-043), kept in step with IndexedDB. Shipped papers are
  * seeded on first use; a newer shipped edition is stored beside the old one. Decisions are only ever written by the
  * user's own actions.
  */

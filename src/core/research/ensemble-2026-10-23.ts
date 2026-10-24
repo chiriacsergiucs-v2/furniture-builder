@@ -1,6 +1,6 @@
 /**
  * "Furniture Ensemble Builder — Deep Research & Product Strategy" (research snapshot 23 October 2026), extracted
- * into records (ADR-0043). Source: `docs/research/2026-10-23-furniture-ensemble-builder.md`; every line range below
+ * into records (ADR-043). Source: `docs/research/2026-10-23-furniture-ensemble-builder.md`; every line range below
  * points into that file and the excerpt shown in the app is that text. Statements are normalised wording of the
  * paper; nothing here is added research. `tests/research.test.ts` checks that every line is accounted for.
  */

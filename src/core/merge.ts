@@ -1,5 +1,5 @@
 /**
- * Merging two pieces of a project into one (ADR-0047): two cabinets standing side by side, touching, become one wider
+ * Merging two pieces of a project into one (ADR-047): two cabinets standing side by side, touching, become one wider
  * cabinet. One carcass replaces the two: the two sides that met become a single divider centred on the old joint, and
  * each piece's interior (with its own fronts) becomes one part of a left→right split. Everything else must already be
  * the same; otherwise the merge is refused with the reasons, never guessed.

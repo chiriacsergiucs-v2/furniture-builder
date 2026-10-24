@@ -2,7 +2,7 @@ import { useSyncExternalStore } from 'react'
 
 /**
  * Light / dark theme. Follows the system until the user picks one; the choice is kept on this device only
- * (localStorage, no telemetry — ADR-0002). `data-theme` on <html> drives the CSS tokens.
+ * (localStorage, no telemetry — ADR-002). `data-theme` on <html> drives the CSS tokens.
  */
 export type Theme = 'light' | 'dark'
 const KEY = 'fb:theme'

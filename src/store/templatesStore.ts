@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import type { LocalTemplate } from '../core/catalog/local'
 import { deleteTemplate, listTemplates, saveTemplate } from '../persist/db'
 
-/** Templates edited on this device (ADR-0034), loaded once and kept in step with IndexedDB. */
+/** Templates edited on this device (ADR-034), loaded once and kept in step with IndexedDB. */
 interface TemplatesState {
   locals: LocalTemplate[]
   loaded: boolean

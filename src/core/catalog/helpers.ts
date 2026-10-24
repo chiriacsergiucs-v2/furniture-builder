@@ -19,7 +19,7 @@ export const even = (n: number) => Array.from({ length: n }, () => fr())
 /** A cabinet design. */
 export const cab = (name: string, over: Partial<CabinetParams>, interior: Space): Design => cabinet(name, over, interior)
 
-/** Kitchen base unit: 720 mm carcass on a 100 mm plinth, 560 deep (ADR-0036 defaults, to confirm). */
+/** Kitchen base unit: 720 mm carcass on a 100 mm plinth, 560 deep (ADR-036 defaults, to confirm). */
 export const KITCHEN_BASE: Partial<CabinetParams> = { width: 600, height: 820, depth: 560, plinthHeight: 100, plinthSetback: 50, top: 'between', back: 'applied' }
 export const KITCHEN_WALL: Partial<CabinetParams> = { width: 600, height: 720, depth: 320, mount: 'wall', mountHeight: 1450, plinthHeight: 0, back: 'inset', backInset: 18 }
 export const KITCHEN_TALL: Partial<CabinetParams> = { width: 600, height: 2200, depth: 560, plinthHeight: 100, plinthSetback: 50 }
@@ -36,5 +36,5 @@ export const frame = (name: string, kind: FrameKind, over: Partial<FrameParams> 
 export const bed = (name: string, over: Partial<NonNullable<FrameParams['bed']>>, frameOver: Partial<FrameParams> = {}): Design =>
   frame(name, 'bed', { ...frameOver, bed: { ...frameDefaults('bed').bed!, ...over } })
 
-/** A legacy template (ADR-0032: existing ids kept as variant ids, built exactly as before). */
+/** A legacy template (ADR-032: existing ids kept as variant ids, built exactly as before). */
 export const legacy = (id: string) => () => templates.find(t => t.id === id)!.create()

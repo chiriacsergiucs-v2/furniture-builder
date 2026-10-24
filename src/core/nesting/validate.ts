@@ -1,5 +1,5 @@
 /**
- * Independent layout validator (ADR-0018). Shares no code with the placer: it re-derives every rectangle from the
+ * Independent layout validator (ADR-018). Shares no code with the placer: it re-derives every rectangle from the
  * sheet, trim, cuts and kerf, and checks containment, kerf, grain, stock count, part instances, placements and
  * exact area conservation. Returns human-readable errors; an empty list means the layout may be shown.
  */

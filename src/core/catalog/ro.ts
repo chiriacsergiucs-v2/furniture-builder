@@ -1,4 +1,4 @@
-/** Romanian names of every catalog item (ADR-0033). A test checks that every variant has one. */
+/** Romanian names of every catalog item (ADR-033). A test checks that every variant has one. */
 export const VARIANT_RO: Record<string, string> = {
   'base-door': '1 ușă + raft', 'base-2-doors': '2 uși + raft', 'base-drawer-door': 'Sertar peste ușă', 'base-inner-drawers': 'Ușă + 2 sertare interioare', 'base-open': 'Rafturi deschise',
   'drawers-3': '3 sertare, cel de jos adânc', 'drawers-4': '4 sertare egale', 'drawers-pan': '2 sertare pentru oale', 'drawers-800': 'Bancă de sertare 800', 'drawers-hob': 'Corp sub plită',

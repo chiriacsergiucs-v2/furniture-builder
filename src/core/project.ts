@@ -1,5 +1,5 @@
 /**
- * Projects (ADR-0022): several pieces placed in a room, cut and bought together.
+ * Projects (ADR-022): several pieces placed in a room, cut and bought together.
  * Each item embeds its own copy of a design (library edits never flow in by themselves); positions are whole
  * millimetres and rotations quarter turns about the vertical axis, so every panel stays an axis-aligned box.
  */
@@ -16,7 +16,7 @@ import type { Box, Design, Diagnostic, Face, FurnitureModel, HardwareItem, Mater
 export type QuarterTurn = 0 | 90 | 180 | 270
 
 /**
- * How a piece is placed (ADR-0031). The stored `position` is kept in step with it by `resolvePlacements`:
+ * How a piece is placed (ADR-031). The stored `position` is kept in step with it by `resolvePlacements`:
  *  - floor: stands on the floor (height 0), moved freely along the walls;
  *  - wall: hung on the wall, its underside `height` mm above the floor;
  *  - above: sits on another piece (gap 0) or hangs `gap` mm above it, back faces aligned, `offsetX` mm from its
@@ -44,7 +44,7 @@ export interface ProjectItem {
 }
 
 /**
- * A part that belongs to a run of pieces rather than to any one of them (ADR-0036): the worktop over a run of base
+ * A part that belongs to a run of pieces rather than to any one of them (ADR-036): the worktop over a run of base
  * units, a filler in a gap between two of them, a cover panel on an exposed end. Stored with its room position and
  * its own copy of the board, so it survives edits of the pieces; the reason says why it was added.
  */
@@ -68,7 +68,7 @@ export interface Project {
   updatedAt: string
   items: ProjectItem[]
   cutting?: { kerf: Mm }
-  /** Run parts (ADR-0036). Absent = none, as in projects saved before. */
+  /** Run parts (ADR-036). Absent = none, as in projects saved before. */
   runParts?: RunPart[]
 }
 
@@ -91,7 +91,7 @@ export function makeItem(project: Project, design: Design, libraryId?: string): 
 export const isWallHung = (d: Design) => d.product.kind === 'cabinet' && d.product.params.mount === 'wall'
 
 // ---------------------------------------------------------------------------
-// Placement: floor, wall, on or above another piece (ADR-0031)
+// Placement: floor, wall, on or above another piece (ADR-031)
 // ---------------------------------------------------------------------------
 
 /** Pieces an item may sit on or hang above: not itself and nothing that (directly or not) sits on it. */
@@ -224,7 +224,7 @@ export const placedBounds = (item: ProjectItem): Box => placeItem(item).bounds
 // ---------------------------------------------------------------------------
 
 /** Materials of all pieces merged by name + thickness + grain (grained and plain boards never share a sheet). */
-/** Boards with the same name, thickness and grain are one board; a picture (ADR-0048) makes a different decor. */
+/** Boards with the same name, thickness and grain are one board; a picture (ADR-048) makes a different decor. */
 export const materialKey = (m: Pick<Material, 'name' | 'thickness' | 'grain' | 'image'>) => `mat:${m.name}|${m.thickness}|${m.grain ? 'grain' : 'plain'}${m.image ? `|img:${m.image.id}` : ''}`
 
 export interface ProjectModel {
@@ -269,7 +269,7 @@ export function buildProjectModel(input: Project): ProjectModel {
     if (hit) diagnostics.push({ severity: 'error', code: 'pieces-overlap', message: `${pieces[a].item.design.name} and ${pieces[b].item.design.name} overlap in the room.`, nodeId: pieces[b].item.id })
   }
   for (const pc of pieces) if (pc.bounds.y < 0) diagnostics.push({ severity: 'error', code: 'below-floor', message: `${pc.item.design.name} goes below the floor.`, nodeId: pc.item.id })
-  // Run parts (ADR-0036): their own panels, checked against every piece like pieces are against each other.
+  // Run parts (ADR-036): their own panels, checked against every piece like pieces are against each other.
   for (const rp of project.runParts ?? []) {
     const k = materialKey(rp.material)
     if (!materials.has(k)) materials.set(k, { ...rp.material, id: k, sheet: sheetOf(rp.material) })
@@ -341,7 +341,7 @@ export const WORKTOP_OVERHANG = 20
 export const worktopMaterial = (): Material => ({ id: 'worktop38', name: 'Worktop 38', thickness: 38, grain: true, color: '#b89b74', sheet: { length: 4100, width: 600, trim: 10, count: null } })
 
 /**
- * Propose run parts for the floor runs in a project (ADR-0036). A run is a row of base units side by side (gaps up to
+ * Propose run parts for the floor runs in a project (ADR-036). A run is a row of base units side by side (gaps up to
  * 150 mm). Each run gets one worktop on top (depth of the deepest unit + 20 mm overhang), a filler in every gap and a
  * cover panel on each exposed end. Parts that would overlap another piece are left out. Pieces keep their own plinth
  * panels, so no run plinth is added (it would be doubled).

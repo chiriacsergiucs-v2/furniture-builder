@@ -32,9 +32,9 @@ export interface CutRow {
   edgesL: number
   edgesW: number
   grain: boolean
-  /** Shelf-pin drilling summary, empty when none (ADR-0023). */
+  /** Shelf-pin drilling summary, empty when none (ADR-023). */
   drilling: string
-  /** Solid timber: cut from lengths, never nested on sheets (ADR-0038). */
+  /** Solid timber: cut from lengths, never nested on sheets (ADR-038). */
   solid?: boolean
   labels: string[]
   panelIds: string[]
@@ -114,7 +114,7 @@ export interface StockBar { stock: Mm; parts: { length: Mm; label: string }[]; w
 export interface LengthsGroup { materialId: string; materialName: string; section: string; bars: StockBar[]; tooLong: { length: Mm; label: string }[] }
 
 /**
- * Solid parts as a lengths list (ADR-0038): per material and section (thickness × width), parts are packed longest
+ * Solid parts as a lengths list (ADR-038): per material and section (thickness × width), parts are packed longest
  * first into the shortest bought length that still takes them (first fit decreasing), with a saw cut between parts.
  * A heuristic, never claimed optimal.
  */

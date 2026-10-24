@@ -1,5 +1,5 @@
 /**
- * New-piece wizard (ADR-0044): answers, steps and construction types are plain data. The engine and the UI read
+ * New-piece wizard (ADR-044): answers, steps and construction types are plain data. The engine and the UI read
  * these shapes only; nothing in them knows a particular type.
  */
 import type { Design } from '../types'
@@ -57,7 +57,7 @@ export interface StepDef {
 
 export type AxisValue = string | number
 
-/** One dimension of a suggestion family (ADR-0045). */
+/** One dimension of a suggestion family (ADR-045). */
 export interface Axis {
   id: string
   values: AxisValue[]

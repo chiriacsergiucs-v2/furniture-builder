@@ -13,7 +13,7 @@ import { askConfirm } from './Confirm'
 
 const FRONT_SIDE: Record<QuarterTurn, string> = { 0: 'front faces you', 90: 'front faces right', 180: 'front faces the back wall', 270: 'front faces left' }
 
-/** Left panel in the project view: the pieces, and the one selected (ADR-0022). */
+/** Left panel in the project view: the pieces, and the one selected (ADR-022). */
 export function ProjectPanel({ onAdd }: { onAdd: () => void }) {
   const project = useDesign(s => s.project)!
   const pm = useDesign(s => s.projectModel)
@@ -100,7 +100,7 @@ export function ProjectPanel({ onAdd }: { onAdd: () => void }) {
   )
 }
 
-/** Merge the selected piece with a cabinet touching it on the left or right (ADR-0047). */
+/** Merge the selected piece with a cabinet touching it on the left or right (ADR-047). */
 function MergeFields({ item }: { item: ProjectItem }) {
   const project = useDesign(s => s.project)!
   const merge = useDesign(s => s.mergeItems)
@@ -126,7 +126,7 @@ function MergeFields({ item }: { item: ProjectItem }) {
 
 type PlacementKind = Placement['kind'] | 'free'
 
-/** Where the selected piece sits: on the floor, on the wall, on or above another piece, or anywhere (ADR-0031). */
+/** Where the selected piece sits: on the floor, on the wall, on or above another piece, or anywhere (ADR-031). */
 function PlacementFields({ item }: { item: ProjectItem }) {
   const project = useDesign(s => s.project)!
   const update = useDesign(s => s.updateItem)
@@ -322,7 +322,7 @@ export function AddPieceList({ onDone, onBrowse }: { onDone: () => void; onBrows
   )
 }
 
-/** Worktop, fillers and cover panels along runs of base units (ADR-0036): suggested, listed with a reason, removable. */
+/** Worktop, fillers and cover panels along runs of base units (ADR-036): suggested, listed with a reason, removable. */
 function RunParts() {
   const project = useDesign(s => s.project)!
   const updateProject = useDesign(s => s.updateProject)

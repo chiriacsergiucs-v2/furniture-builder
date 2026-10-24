@@ -15,7 +15,7 @@ const codes = (d: Design) => buildModel(d).diagnostics.map(x => x.code)
 const cab = (over: Partial<CabinetParams>, interior: Space = { id: 'in', kind: 'shelves', count: 1 }) => cabinet('T', over, interior)
 const frame = (kind: FrameParams['kind'], over: Partial<FrameParams> = {}) => wrap('F', { kind: 'frame', id: 'F', params: { ...frameDefaults(kind), ...over } })
 
-describe('kitchen construction flags (ADR-0036)', () => {
+describe('kitchen construction flags (ADR-036)', () => {
   it('rails instead of a top: two rails, no top panel, nothing overlaps', () => {
     const d = cab({ width: 800, height: 720, depth: 560, topKind: 'rails', railDepth: 100, back: 'none' })
     const m = buildModel(d)
@@ -54,7 +54,7 @@ describe('kitchen construction flags (ADR-0036)', () => {
   })
 })
 
-describe('sliding doors and flaps (ADR-0037)', () => {
+describe('sliding doors and flaps (ADR-037)', () => {
   const sliding = (count: 2 | 3 | 4, overlap = 30) => cab({ width: 1800, height: 2100, depth: 600 }, { id: 's', kind: 'hanging', railDrop: 60, front: { kind: 'sliding', count, overlap, track: 80 } })
   it('doors cover the front zone exactly with the stated overlaps, in two planes, with no hinges', () => {
     for (const n of [2, 3, 4] as const) {
@@ -91,7 +91,7 @@ describe('sliding doors and flaps (ADR-0037)', () => {
   })
 })
 
-describe('frame root and solid stock (ADR-0038)', () => {
+describe('frame root and solid stock (ADR-038)', () => {
   it('every frame kind builds without errors or overlaps at its default size', () => {
     for (const k of ['table', 'bench', 'stool', 'chair', 'bed'] as const) {
       const d = frame(k)
@@ -139,7 +139,7 @@ describe('frame root and solid stock (ADR-0038)', () => {
   })
 })
 
-describe('rules registry (ADR-0035)', () => {
+describe('rules registry (ADR-035)', () => {
   it('shelf span warns on a long shelf, scaled by thickness, and stays quiet within the limit', () => {
     expect(codes(cab({ width: 1200 }, { id: 'sh', kind: 'shelves', count: 2 }))).toContain('shelf-span')
     expect(codes(cab({ width: 800 }, { id: 'sh', kind: 'shelves', count: 2 }))).not.toContain('shelf-span')
@@ -174,7 +174,7 @@ describe('rules registry (ADR-0035)', () => {
   })
 })
 
-describe('catalog metadata in the design (ADR-0028)', () => {
+describe('catalog metadata in the design (ADR-028)', () => {
   const withMeta = (catalog: unknown) => ({ ...cab({}), catalog }) as Design
   it('absent is valid; good metadata is valid; bad values are reported, never thrown', () => {
     expect(validateDesign(cab({}))).toEqual([])

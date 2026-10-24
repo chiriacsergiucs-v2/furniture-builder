@@ -3,7 +3,7 @@ import { create } from 'zustand'
 import { Icon } from './icons'
 
 /**
- * The app's own confirmation and text prompts (ADR-0030, user decision 2026-10-23), replacing the browser's
+ * The app's own confirmation and text prompts (ADR-030, user decision 2026-10-23), replacing the browser's
  * confirm() and prompt(): same look as the app, Escape cancels, Enter confirms, focus returns afterwards.
  */
 interface Ask { message: string; confirmLabel: string; danger: boolean; input?: string; resolve: (v: string | boolean | null) => void }

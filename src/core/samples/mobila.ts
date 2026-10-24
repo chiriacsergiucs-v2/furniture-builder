@@ -6,7 +6,7 @@
  * plinths, drawer box boards) use the app's own defaults and are listed there as open.
  *
  * The Pat Noi bed is known only as cut panels, without positions ("UNPLACED_DO_NOT_INVENT" in the file), so it is a
- * panel set (ADR-0041): listed for cutting, never assembled here. The kitchen splashback (left out at the user's
+ * panel set (ADR-041): listed for cutting, never assembled here. The kitchen splashback (left out at the user's
  * request), the RHS workbench (an envelope with no member list) and the variants the file marks as not for production
  * (nightstand B, the simplified bed) are not built.
  */
@@ -57,7 +57,7 @@ const item = (id: string, d: Design, x: number, placement: Placement, quantity =
 /**
  * A Mobila cabinet made from the catalog's "Base cabinet, doors" family (variants "1 door + shelf" and "2 doors +
  * shelf": one shelf behind one or two doors), sized to the Living wall and built with the Mobila boards. The origin
- * link is kept (ADR-0028) with fixed ids and stamp, so the generator stays deterministic.
+ * link is kept (ADR-028) with fixed ids and stamp, so the generator stays deterministic.
  */
 const fromBase = (id: string, name: string, doors: 1 | 2, over: Partial<CabinetParams> & Pick<CabinetParams, 'width'>): Design => {
   const family = findFamily('base-doors')!
@@ -95,7 +95,7 @@ export function mobilaLiving(): Project {
 
 /**
  * Pat Noi: the file's cut panels (BD-0050…BD-0055). The user decided on 2026-10-23 that the bed rails are the
- * chipboard side boards screwed to the foot board (ADR-0041 amendment): the two sides (1800 × 270) stand on edge
+ * chipboard side boards screwed to the foot board (ADR-041 amendment): the two sides (1800 × 270) stand on edge
  * behind the foot board (2040 × 270), flush with its ends, and are screwed through it. The head end stands against the
  * existing headboard panel. The headboard trim (BD-0053…0055) has no known place and stays in the pile. The upholstered
  * zone (2100 × 600 × 40) and the existing 2100 × 1100 headboard panel are not cut from board, so they are named in the

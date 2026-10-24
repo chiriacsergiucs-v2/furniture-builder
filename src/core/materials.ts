@@ -1,8 +1,8 @@
 import type { Material, MaterialKind, MaterialMaker, Mm } from './types'
 
 /**
- * Material labels and the user's decor list (ADR-0049). Labels are shown only. The decor list is the user's own
- * file: every decor comes from a row of it, nothing is filled in or guessed (ADR-0010). Pure: no DOM, no storage.
+ * Material labels and the user's decor list (ADR-049). Labels are shown only. The decor list is the user's own
+ * file: every decor comes from a row of it, nothing is filled in or guessed (ADR-010). Pure: no DOM, no storage.
  */
 export const MAKERS: { value: MaterialMaker; label: string }[] = [
   { value: 'egger', label: 'Egger' }, { value: 'kastamonu', label: 'Kastamonu' }, { value: 'fundermax', label: 'Fundermax' },

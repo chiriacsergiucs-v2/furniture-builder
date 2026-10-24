@@ -1,0 +1,37 @@
+# ADR-012: Local persistence in IndexedDB with autosave; corrupt rows are skipped, never deleted
+
+- Status: Implemented
+- Date: 2026-10-21
+- Implemented: 2026-10-21
+- Depends on: none
+- Design: n/a
+- Related: ADR-001, ADR-011
+
+## Context
+
+No backend (ADR-002). The user previously required IndexedDB via Dexie for local storage and that data is never
+destroyed by the app.
+
+## Decision
+
+Dexie database `furniture-builder`, version 1, table `designs (id, updatedAt, name)` holding whole design documents; version 2 adds `projects` (ADR-022).
+The open design autosaves ~400 ms after each change; the last open design id is a per-device convenience in
+localStorage. Rows that fail `validateDesign` are skipped on load and left in place. Schema versions are never
+edited after shipping; changes add `version(n+1)`. Users keep durable copies with *Design file* export.
+
+## Alternatives considered
+
+- **localStorage only** — rejected: size limits, synchronous.
+- **OPFS/SQLite** — rejected: heavier, no benefit at this scale.
+
+## Consequences
+
+- Clearing site data deletes saved designs; export is the backup.
+
+## Evidence (repository files)
+
+- `src/persist/db.ts`; `src/ui/App.tsx` autosave effect; `tests/persist.test.ts`.
+
+## Compliance check
+
+`tests/persist.test.ts` passes, including the corrupt-row case.

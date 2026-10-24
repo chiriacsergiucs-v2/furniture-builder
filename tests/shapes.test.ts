@@ -9,7 +9,7 @@ const panel = (box: Box, shape?: PanelShape, t: Panel['thicknessAxis'] = 'z'): P
   ({ id: 'p', nodeId: 'n', role: 'seat', label: 'Part', materialId: 'm', box, thicknessAxis: t, grainAxis: 'y', banded: [], ...(shape ? { shape } : {}) })
 const b = (x: number, y: number, z: number, w: number, h: number, d: number): Box => ({ x, y, z, w, h, d })
 
-describe('shaped parts core (ADR-0040)', () => {
+describe('shaped parts core (ADR-040)', () => {
   // A 20 mm board 1000 high, leaning back 10° about its bottom-back edge (top towards −z).
   const back = panel(b(0, 0, 100, 400, 1000, 20), { kind: 'tilt', axis: 'x', angleDeg: -10, pivot: [0, 0, 0] })
 
@@ -80,7 +80,7 @@ const frame = (over: Partial<FrameParams>, kind: FrameParams['kind'] = 'chair'):
 const item = (id: string): Design => { const f = catalogFamilies.find(x => x.variants.some(v => v.id === id))!; return insertVariant(f, f.variants.find(v => v.id === id)!, '')! }
 const errors = (d: Design) => buildModel(d).diagnostics.filter(x => x.severity === 'error').map(x => x.message)
 
-describe('first users of shaped parts (ADR-0040)', () => {
+describe('first users of shaped parts (ADR-040)', () => {
   it('a raked chair back leans as one piece about the seat frame; cut sizes stay the straight lengths; no rake = no shapes', () => {
     const d = frame({})
     const m = buildModel(d)

@@ -89,7 +89,7 @@ function Parts() {
   )
 }
 
-/** Solid timber bought in lengths (ADR-0038): first-fit packing per section, a heuristic. */
+/** Solid timber bought in lengths (ADR-038): first-fit packing per section, a heuristic. */
 function Lengths() {
   const view = useView()
   const groups = useMemo(() => {

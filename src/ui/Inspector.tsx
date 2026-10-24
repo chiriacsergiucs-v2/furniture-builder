@@ -425,7 +425,7 @@ function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[]
   )
 }
 
-/** Panel set (ADR-0041): a list of cut sizes. No assembly, so no inside and no construction choices. */
+/** Panel set (ADR-041): a list of cut sizes. No assembly, so no inside and no construction choices. */
 function PanelSetEditor({ p, materials }: { p: PanelSetParams; materials: Material[] }) {
   const set = useDesign(s => s.updatePanelSet)
   const count = p.panels.reduce((n, lp) => n + lp.quantity, 0)
@@ -481,7 +481,7 @@ const LIE_OPTIONS: { value: PanelLie; label: string }[] = [
   { value: 'up-x', label: 'Upright, facing the front' }, { value: 'up-z', label: 'Upright, facing the side' },
 ]
 
-/** Screwed joints between placed panels (ADR-0041 amendment); screws are the user's choice. */
+/** Screwed joints between placed panels (ADR-041 amendment); screws are the user's choice. */
 function JointsEditor({ p }: { p: PanelSetParams }) {
   const set = useDesign(s => s.updatePanelSet)
   const placed = p.panels.filter(lp => lp.place)

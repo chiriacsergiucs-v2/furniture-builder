@@ -15,7 +15,7 @@ function kitchen(): Project {
   return p
 }
 
-describe('projects (ADR-0022)', () => {
+describe('projects (ADR-022)', () => {
   it('quarter turns are exact and keep the footprint size', () => {
     const b = { x: 10, y: 0, z: 20, w: 600, h: 720, d: 560 }
     for (const r of [0, 90, 180, 270] as QuarterTurn[]) {
@@ -89,7 +89,7 @@ describe('project materials (review fix 2026-10-22)', () => {
   })
 })
 
-describe('run parts (ADR-0036)', () => {
+describe('run parts (ADR-036)', () => {
   const run = (): Project => {
     let p = newProject('Run')
     for (const id of ['base-door', 'base-door', 'chest']) p = { ...p, items: [...p.items, makeItem(p, t(id))] }

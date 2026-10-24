@@ -7,7 +7,7 @@ const PURPOSE_LABEL: Record<PanelParams['purpose'], string> = {
 }
 
 /**
- * A front with no carcass behind it (ADR-0036): an integrated dishwasher or fridge door, an end cover panel or a
+ * A front with no carcass behind it (ADR-036): an integrated dishwasher or fridge door, an end cover panel or a
  * filler. One panel, standing on the floor with its face towards the viewer. Fixing hardware comes with the
  * appliance or is the user's choice; nothing is specified here.
  */

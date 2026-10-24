@@ -59,7 +59,7 @@ describe('bay layout', () => {
   })
 })
 
-describe('placement (ADR-0031)', () => {
+describe('placement (ADR-031)', () => {
   const two = (): Project => {
     let p = newProject('Run')
     p = { ...p, items: [...p.items, makeItem(p, t('base-door'))] }
@@ -208,7 +208,7 @@ describe('Mobila rooms from the project file', () => {
   })
 })
 
-describe('panel set (ADR-0041)', () => {
+describe('panel set (ADR-041)', () => {
   const set = (): Design => ({
     ...t('panels'),
     product: { kind: 'panels', id: 'ps', params: { panels: [

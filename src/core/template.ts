@@ -1,5 +1,5 @@
 /**
- * Full-size templates for profiled boards (ADR-0040, user answer: printed full-size on the cut sheet). Each distinct
+ * Full-size templates for profiled boards (ADR-040, user answer: printed full-size on the cut sheet). Each distinct
  * profile becomes an outline on paper at 1:1, cut into A4 tiles that overlap by 10 mm for taping together. Pure: the
  * print sheet only draws what this returns.
  */

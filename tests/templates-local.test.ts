@@ -8,7 +8,7 @@ import { buildModel } from '../src/core/build'
 import { templates } from '../src/core/design'
 import { deleteTemplate, listTemplates, saveTemplate } from '../src/persist/db'
 
-describe('editable templates on this device (ADR-0034)', () => {
+describe('editable templates on this device (ADR-034)', () => {
   it('upgrading an existing version-2 database keeps every design and project row', async () => {
     const name = 'fb-upgrade-test'
     const old = new Dexie(name)
@@ -83,7 +83,7 @@ describe('editable templates on this device (ADR-0034)', () => {
   })
 })
 
-describe('layout presets (ADR-0033)', () => {
+describe('layout presets (ADR-033)', () => {
   it('applying a preset keeps the space id and the outer size, and builds', () => {
     const presets = layoutPresets(catalogFamilies)
     expect(presets.length).toBeGreaterThan(20)

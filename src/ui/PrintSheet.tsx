@@ -10,7 +10,7 @@ import { useView } from './useView'
 import { OVERLAP, PAGE, profileTemplates } from '../core/template'
 
 /**
- * Printable cutting sheet for the panel shop, in Romanian, A4 portrait (ADR-0020). Rendered only while printing;
+ * Printable cutting sheet for the panel shop, in Romanian, A4 portrait (ADR-020). Rendered only while printing;
  * everything comes from the model and the cut list — no geometry is computed here.
  */
 export function PrintSheet() {

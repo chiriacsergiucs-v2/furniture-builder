@@ -75,7 +75,7 @@ export const deskDefaults = (): DeskParams => ({
   frontMaterialId: 'mdf18', frontGap: 3,
 })
 
-/** Solid timber for frames (ADR-0038): bought in lengths; thickness is nominal (sections vary by part). */
+/** Solid timber for frames (ADR-038): bought in lengths; thickness is nominal (sections vary by part). */
 export const solidMaterials = (): Material[] => [
   { id: 'beech', name: 'Beech, solid', thickness: 45, grain: true, color: '#d8b38a', stock: 'solid', lengths: [2400, 3000] },
   { id: 'pine', name: 'Pine, solid', thickness: 45, grain: true, color: '#e3c99a', stock: 'solid', lengths: [2400, 3000] },
@@ -329,7 +329,7 @@ function validFront(f: unknown): boolean {
 
 const isOptStr = (v: unknown, max = 300) => v === undefined || (typeof v === 'string' && v.length <= max)
 
-/** ADR-0028: optional catalog metadata; checked when present, never throws. */
+/** ADR-028: optional catalog metadata; checked when present, never throws. */
 function validateCatalog(c: unknown, errs: string[]) {
   if (c === undefined) return
   if (!isObj(c)) { errs.push('Invalid catalog metadata'); return }
@@ -340,7 +340,7 @@ function validateCatalog(c: unknown, errs: string[]) {
   if (o.sourceUrl !== undefined && !(typeof o.sourceUrl === 'string' && /^https?:\/\//.test(o.sourceUrl) && o.sourceUrl.length < 2000)) errs.push('Catalog source link must be an http(s) address')
 }
 
-/** ADR-0046: the wizard answers a piece was made from; checked when present, never geometry. */
+/** ADR-046: the wizard answers a piece was made from; checked when present, never geometry. */
 function validateWizard(w: unknown, errs: string[]) {
   if (w === undefined) return
   const a = isObj(w) ? w.answers : undefined
@@ -512,7 +512,7 @@ function validateFrame(f: Record<string, unknown>, errs: string[], ints: (keys: 
     if (!isObj(b) || !isInt(b.seatHeight, 1) || !isInt(b.railHeight, 1) || !isInt(b.count, 1) || (b.count as number) > 20 || (b.style !== 'slats' && b.style !== 'panel')) errs.push('Invalid back')
     else if (b.angleDeg !== undefined && (!isInt(b.angleDeg) || (b.angleDeg as number) > 60)) errs.push('Back rake must be a whole number of degrees from 0 to 60')
   }
-  // ADR-0040: positions are seat-to-back angles in whole degrees, 91–179 (180 = flat); `at` picks the one shown.
+  // ADR-040: positions are seat-to-back angles in whole degrees, 91–179 (180 = flat); `at` picks the one shown.
   const positions = (o: Record<string, unknown>) => Array.isArray(o.positions) && o.positions.length >= 1 && o.positions.length <= 6 &&
     o.positions.every(v => isInt(v) && (v as number) > 90 && (v as number) < 180) && isInt(o.at) && (o.at as number) < o.positions.length
   if (f.recline != null) {

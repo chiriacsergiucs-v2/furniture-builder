@@ -113,7 +113,7 @@ export const storage: CatalogFamily[] = [
   },
   {
     id: 'loose-panels', name: 'Loose panels', nameRo: 'Panouri libere', aliases: ['cut list', 'panel set', 'panouri'], function: 'storage', rooms: ['other'], root: 'panels', support: 'ready',
-    structure: 'Parts known only by their cut sizes (ADR-0041): listed for cutting and sheets, shown in one pile, not assembled.',
+    structure: 'Parts known only by their cut sizes (ADR-041): listed for cutting and sheets, shown in one pile, not assembled.',
     configurations: ['Name, length, width, board and quantity per part'],
     dims: { min: [1, 1, 1], max: [5000, 3000, 200] }, catalogVersion: 1,
     variants: [

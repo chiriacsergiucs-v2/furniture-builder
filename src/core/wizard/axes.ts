@@ -1,5 +1,5 @@
 /**
- * Suggestion axes (ADR-0045): each is one dimension of a family of combinations. Types list the axes (and the values)
+ * Suggestion axes (ADR-045): each is one dimension of a family of combinations. Types list the axes (and the values)
  * they want on each step; the engine builds the combinations. A new family is a new list of these.
  */
 import { compartmentCount, compartmentsOf, contentUses, listOf, str } from './steps'

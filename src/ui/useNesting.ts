@@ -12,7 +12,7 @@ export type NestState =
   | { status: 'error'; error: string }
 
 /**
- * Lay out sheets in a Web Worker whenever the design changes while the Sheets tab is open (ADR-0018).
+ * Lay out sheets in a Web Worker whenever the design changes while the Sheets tab is open (ADR-018).
  * Falls back to the main thread if workers are unavailable. Designs with errors are never laid out.
  */
 export function useNesting(active: boolean): NestState & { blocked: boolean } {

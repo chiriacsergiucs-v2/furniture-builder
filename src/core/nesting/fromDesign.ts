@@ -4,7 +4,7 @@ import type { Design, FurnitureModel } from '../types'
 import { jobsFromCutlist, type SheetSettings } from './index'
 import type { NestJob } from './types'
 
-/** Nesting jobs for every material in the design, from the cut list (ADR-0004, ADR-0018, ADR-0019). */
+/** Nesting jobs for every material in the design, from the cut list (ADR-004, ADR-018, ADR-019). */
 export function nestingJobs(design: Design, model: FurnitureModel): { jobs: NestJob[]; rows: CutRow[] } {
   const rows = cutlist(model, design.materials)
   const kerf = kerfOf(design)

@@ -1,5 +1,5 @@
 /**
- * Web Worker entry for sheet nesting (ADR-0018): the placer runs off the main thread.
+ * Web Worker entry for sheet nesting (ADR-018): the placer runs off the main thread.
  * Request {id, jobs, options?} → reply {id, results} or {id, error}. Uses only `self`; no DOM.
  */
 import { nest } from './place'

@@ -1,0 +1,103 @@
+# ADRs — Furniture Builder
+
+Architecture Decision Records for **Furniture Builder**, a phone-first offline PWA for designing casework and
+getting a cut list. Each ADR is a self-contained unit of work: a decision plus everything needed to implement
+it, sized to build without loading the rest of the plan.
+
+Stack: React 19, TypeScript strict, Vite 7, Zustand, react-three-fiber (lazy), Dexie; static site on GitHub
+Pages, no backend (ADR-002, ADR-013).
+
+## Conventions
+
+- **Location:** pending ADRs live in `docs/adr/`; implemented ones move to `docs/adr-done/`.
+- **File name:** `ADR-NNN-short-kebab-title.md` (3-digit number, next free one).
+- **Template:** copy [`_template.md`](_template.md), or run the `new-adr` skill.
+- **Status:** `Pending` (agreed, waiting for implementation), `Deferred (<reason>)`,
+  or `Implemented`. Never set `Implemented` by hand; the `ship-adr` skill does it.
+- **An ADR is agreed by the user.** Defaults the user has not confirmed stay listed under
+  *Open questions* in the ADR; an ADR whose open questions block building is `Deferred`.
+- **Authority:** explicit user decision › implemented ADR › code and tests › earlier discussion › proposal.
+- **Implemented ADRs are not edited.** If a decision changes, write a new ADR that links
+  the old one in its Context.
+- **Links:** pending ADRs link siblings as `[ADR-XXX](ADR-XXX-slug.md)`; once an ADR is in
+  `adr-done/`, link it as `[ADR-XXX](../adr-done/ADR-XXX-slug.md)` (the `ship-adr` skill
+  rewrites these automatically). Plain ids (`ADR-012`) in code comments and docs are fine;
+  `npm run docs:check` makes sure each one exists.
+- **Backlog:** an ADR names its `docs/backlog.md` items on a `- Backlog:` line.
+- **Size:** up to ~110 lines, ~6.5 KB and 8 `Done when` items. Bigger means split it.
+
+ADR-001 to ADR-049 were written before ADR-050 adopted this layout. They keep their original
+sections (Context, Decision, Alternatives, Consequences, Evidence, Compliance check, answers and
+amendments) and have no `Done when` list; their evidence is in `docs/backlog.md`.
+
+## Workflow
+
+1. `new ADR` — the `new-adr` skill writes the ADR from the template and adds its row below.
+2. The user answers its open questions and agrees.
+3. `next ADR` — the `next-adr` skill picks the lowest-numbered pending ADR whose
+   dependencies are all implemented, and builds it.
+4. Review, merge (only on the user's instruction) and deploy.
+5. `ship ADR-NNN` — the `ship-adr` skill marks it Implemented, moves it to
+   `docs/adr-done/`, fixes links and sets the status below.
+
+## Index
+
+The **last column is the status**: the `ship-adr` skill rewrites it to
+`✅ Implemented` when an ADR ships.
+
+<!-- Add one row per ADR at the end of the table, in number order. Example row:
+| [ADR-NNN](ADR-NNN-short-title.md) | Short title | — | Pending |
+-->
+
+| ADR | Title | Depends on | Status |
+| --- | ----- | ---------- | ------ |
+| [ADR-001](../adr-done/ADR-001-rebuild-from-zero-with-a-clean-break-from-the-previous-app-a.md) | Rebuild from zero with a clean break from the previous app and its data | — | ✅ Implemented |
+| [ADR-002](../adr-done/ADR-002-static-offline-pwa-on-github-pages-no-backend-accounts-cloud.md) | Static offline PWA on GitHub Pages; no backend, accounts, cloud or remote services | — | ✅ Implemented |
+| [ADR-003](../adr-done/ADR-003-integer-millimetres-and-one-coordinate-system-everywhere.md) | Integer millimetres and one coordinate system everywhere | — | ✅ Implemented |
+| [ADR-004](../adr-done/ADR-004-every-part-is-an-axis-aligned-box-one-furnituremodel-feeds-e.md) | Every part is an axis-aligned box; one FurnitureModel feeds every view and list | — | ✅ Implemented |
+| [ADR-005](../adr-done/ADR-005-furniture-is-a-recursive-subdivision-of-spaces.md) | Furniture is a recursive subdivision of spaces | — | ✅ Implemented |
+| [ADR-006](../adr-done/ADR-006-full-overlay-fronts-with-exact-gap-arithmetic.md) | Full-overlay fronts with exact gap arithmetic | — | ✅ Implemented |
+| [ADR-007](../adr-done/ADR-007-specialist-product-roots-share-the-cabinet-generator-a-desk.md) | Specialist product roots share the cabinet generator; a desk pedestal is a cabinet | — | ✅ Implemented |
+| [ADR-008](../adr-done/ADR-008-problems-are-diagnostics-checked-independently-of-the-genera.md) | Problems are diagnostics, checked independently of the generators; errors block export | — | ✅ Implemented |
+| [ADR-009](../adr-done/ADR-009-cut-list-lists-finished-sizes-banded-edges-are-annotated-gra.md) | Cut list lists finished sizes; banded edges are annotated, grain sets length | — | ✅ Implemented |
+| [ADR-010](../adr-done/ADR-010-hardware-is-a-schedule-with-labelled-guidance-never-invented.md) | Hardware is a schedule with labelled guidance, never invented specifications | — | ✅ Implemented |
+| [ADR-011](../adr-done/ADR-011-a-design-is-a-self-contained-validated-json-document.md) | A design is a self-contained, validated JSON document | — | ✅ Implemented |
+| [ADR-012](../adr-done/ADR-012-local-persistence-in-indexeddb-with-autosave-corrupt-rows-ar.md) | Local persistence in IndexedDB with autosave; corrupt rows are skipped, never deleted | — | ✅ Implemented |
+| [ADR-013](../adr-done/ADR-013-stack-react-19-typescript-strict-vite-7-zustand-react-three.md) | Stack: React 19, TypeScript strict, Vite 7, Zustand, react-three-fiber (lazy), Dexie | — | ✅ Implemented |
+| [ADR-014](../adr-done/ADR-014-the-front-elevation-is-the-editing-surface-3d-is-a-non-autho.md) | The front elevation is the editing surface; 3D is a non-authoritative preview | — | ✅ Implemented |
+| [ADR-015](../adr-done/ADR-015-verification-pure-core-unit-tests-plus-seeded-fuzz-invariant.md) | Verification: pure-core unit tests plus seeded fuzz invariants; screenshots for UI; no E2E suite by default | — | ✅ Implemented |
+| [ADR-016](../adr-done/ADR-016-process-smallest-slice-evidence-only-status-explicit-skipped.md) | Process: smallest slice, evidence-only status, explicit "Skipped this iteration" | — | ✅ Implemented |
+| [ADR-017](../adr-done/ADR-017-agent-contracts-stay-runtime-neutral-no-claude-flow-ruflo-ru.md) | Agent contracts stay runtime-neutral; no Claude Flow / Ruflo runtime is adopted | — | ✅ Implemented |
+| [ADR-018](../adr-done/ADR-018-sheet-nesting-seeded-guillotine-heuristic-with-an-independen.md) | Sheet nesting: seeded guillotine heuristic with an independent layout validator | — | ✅ Implemented |
+| [ADR-019](../adr-done/ADR-019-stock-sheets-trim-and-kerf-live-in-the-design-document-schem.md) | Stock sheets, trim and kerf live in the design document (schemaVersion 2) | — | ✅ Implemented |
+| [ADR-020](../adr-done/ADR-020-printing-and-drawings-svg-from-the-model-plus-a-print-styles.md) | Printing and drawings: SVG from the model plus a print stylesheet, no PDF library | — | ✅ Implemented |
+| [ADR-021](../adr-done/ADR-021-fusion-360-export-a-python-script-that-rebuilds-the-model-as.md) | Fusion 360 export: a Python script that rebuilds the model as named solid boxes, unverified until run in Fusion | — | ✅ Implemented |
+| [ADR-022](../adr-done/ADR-022-projects-several-pieces-placed-in-one-room-with-combined-par.md) | Projects: several pieces placed in one room, with combined parts and storage version 2 | — | ✅ Implemented |
+| [ADR-023](../adr-done/ADR-023-more-space-options-chosen-drawer-heights-and-adjustable-shel.md) | More space options: chosen drawer heights and adjustable shelves with 32 mm pin rows | — | ✅ Implemented |
+| [ADR-024](../adr-done/ADR-024-front-styles-overlay-half-overlay-inset-and-handles-as-a-sch.md) | Front styles (overlay, half overlay, inset) and handles as a scheduled item with a position | — | ✅ Implemented |
+| [ADR-025](../adr-done/ADR-025-wall-and-corner-cabinets-as-new-product-roots-built-from-the.md) | Wall and corner cabinets as new product roots built from the cabinet generator | — | ✅ Implemented |
+| [ADR-026](../adr-done/ADR-026-desk-pedestals-become-editable-spaces.md) | Desk pedestals become editable spaces | — | ✅ Implemented |
+| [ADR-027](ADR-027-catalog-page-browse-furniture-by-category-brand-and-saved-on.md) | Catalog page: browse furniture by category, brand and "Saved on this device" | ADR-029 | Pending |
+| [ADR-028](../adr-done/ADR-028-catalog-metadata-and-origin-link-live-in-the-design-document.md) | Catalog metadata and origin link live in the design document | — | ✅ Implemented |
+| [ADR-029](ADR-029-the-catalog-is-fed-by-a-scheduled-search-and-extract-job-wit.md) | The catalog is fed by a scheduled search-and-extract job with a local PDF extraction script, gated by PR | — | Pending |
+| [ADR-030](../adr-done/ADR-030-one-token-set-with-light-and-dark-themes-a-component-layer-a.md) | One token set with light and dark themes, a component layer, and a wizard-ready steps rail | — | ✅ Implemented |
+| [ADR-031](../adr-done/ADR-031-pieces-in-a-project-are-placed-on-the-floor-on-the-wall-or-o.md) | Pieces in a project are placed on the floor, on the wall, or on/above another piece | — | ✅ Implemented |
+| [ADR-032](../adr-done/ADR-032-the-template-catalog-is-a-set-of-families-of-complete-design.md) | The template catalog is a set of families of complete design snapshots, copied on insert, grouped by room or function | — | ✅ Implemented |
+| [ADR-033](../adr-done/ADR-033-every-template-family-ships-1-5-default-variants-interior-on.md) | Every template family ships 1–5 default variants; interior-only variants double as layout presets | — | ✅ Implemented |
+| [ADR-034](../adr-done/ADR-034-templates-are-editable-on-the-catalog-page-edits-are-saved-a.md) | Templates are editable on the Catalog page; edits are saved as local templates, shipped ones never change | — | ✅ Implemented |
+| [ADR-035](../adr-done/ADR-035-construction-guidance-is-a-rules-registry-keyed-by-part-role.md) | Construction guidance is a rules registry keyed by part role and product, producing labelled warnings | — | ✅ Implemented |
+| [ADR-036](../adr-done/ADR-036-kitchen-modules-tall-units-construction-flags-on-the-cabinet.md) | Kitchen modules: tall units, construction flags on the cabinet root, appliance niches and run-level parts | — | ✅ Implemented |
+| [ADR-037](../adr-done/ADR-037-new-front-kinds-sliding-doors-and-lift-up-flaps-with-user-sp.md) | New front kinds: sliding doors and lift-up flaps, with user-specified hardware | — | ✅ Implemented |
+| [ADR-038](../adr-done/ADR-038-a-frame-root-for-tables-benches-stools-and-beds-with-solid-l.md) | A frame root for tables, benches, stools and beds, with solid (linear) stock alongside sheet stock | — | ✅ Implemented |
+| [ADR-039](../adr-done/ADR-039-upholstered-mechanised-and-shaped-pieces-are-catalog-referen.md) | Upholstered, mechanised and shaped pieces are catalog reference entries until a shaped-part ADR exists | — | ✅ Implemented |
+| [ADR-040](../adr-done/ADR-040-shaped-parts-angled-boxes-and-profiled-panels-still-exact-in.md) | Shaped parts: angled boxes and profiled panels, still exact in whole millimetres | — | ✅ Implemented |
+| [ADR-041](../adr-done/ADR-041-parts-known-only-by-their-cut-sizes-are-a-panel-set-never-an.md) | Parts known only by their cut sizes are a panel set, never an invented assembly | — | ✅ Implemented |
+| [ADR-042](../adr-done/ADR-042-catalog-pictures-are-svg-snapshots-of-the-built-model-made-b.md) | Catalog pictures are SVG snapshots of the built model, made before the app runs | — | ✅ Implemented |
+| [ADR-043](../adr-done/ADR-043-research-papers-become-a-traceable-feature-catalog-decisions.md) | Research papers become a traceable feature catalog; decisions are stored apart from the research | — | ✅ Implemented |
+| [ADR-044](../adr-done/ADR-044-new-piece-is-a-data-driven-wizard-a-step-library-and-a-const.md) | "New piece" is a data-driven wizard: a step library and a construction-type registry map answers to a design | — | ✅ Implemented |
+| [ADR-045](../adr-done/ADR-045-suggested-combinations-come-from-generator-axes-declared-per.md) | Suggested combinations come from generator axes declared per type, kept only when buildModel() has no errors | — | ✅ Implemented |
+| [ADR-046](../adr-done/ADR-046-a-wizard-result-is-an-ordinary-saved-design-in-the-existing.md) | A wizard result is an ordinary saved design in the existing `designs` table; no Dexie version | — | ✅ Implemented |
+| [ADR-047](ADR-047-two-touching-cabinets-in-a-project-merge-into-one-cabinet-an.md) | Two touching cabinets in a project merge into one cabinet; any other difference refuses the merge | — | Deferred (open questions for the user; the merge itself is built, backlog N42) |
+| [ADR-048](../adr-done/ADR-048-a-material-can-show-any-picture-from-the-user-s-device-the-p.md) | A material can show any picture from the user's device; the picture is kept on the device, the design keeps a reference | — | ✅ Implemented |
+| [ADR-049](../adr-done/ADR-049-materials-carry-optional-manufacturer-and-type-labels-the-us.md) | Materials carry optional manufacturer and type labels; the user's own decor list enables a decor choice | — | ✅ Implemented |
+| [ADR-050](../adr-done/ADR-050-adopt-the-reserv-adr-layout-claude-skills-and-ci-conventions.md) | Adopt the reserv ADR layout, Claude skills and CI conventions | — | ✅ Implemented |

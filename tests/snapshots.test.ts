@@ -6,13 +6,13 @@ import { snapshotSvg } from '../src/core/snapshot'
 import type { FurnitureModel, Material, Panel } from '../src/core/types'
 
 /**
- * Catalog pictures are made before the app runs (ADR-0042): `npm run catalog:snapshots` writes
+ * Catalog pictures are made before the app runs (ADR-042): `npm run catalog:snapshots` writes
  * `public/catalog/<variant>.svg`; this test fails when a committed picture no longer matches its design.
  */
 const dir = new URL('../public/catalog/', import.meta.url)
 const shipped = catalogFamilies.flatMap(f => f.variants.filter(insertable).map(v => ({ f, v })))
 
-describe('catalog snapshots (ADR-0042)', () => {
+describe('catalog snapshots (ADR-042)', () => {
   it('every item that opens has a committed picture of its current design, and nothing else is there', () => {
     for (const { f, v } of shipped) {
       const d = insertVariant(f, v, '')!

@@ -16,7 +16,7 @@ const panel = (over: Partial<Panel> = {}): Panel => ({
   box: { x: 0, y: 0, z: 0, w: 18, h: 2000, d: 600 }, thicknessAxis: 'x', grainAxis: 'y', banded: [], ...over,
 })
 
-describe('picked files (ADR-0048)', () => {
+describe('picked files (ADR-048)', () => {
   it('accepts PNG, JPEG and WebP within the size limit; anything else is a message, never a throw', () => {
     expect(imageFileProblem({ name: 'a.png', type: 'image/png', size: 1000 })).toBeNull()
     expect(imageFileProblem({ name: 'a.webp', type: 'image/webp', size: 1000 })).toBeNull()

@@ -7,10 +7,10 @@ Inputs that were not provided and the assumptions made:
 
 | Input | Assumption |
 |---|---|
-| Users and top tasks | Hobby cabinetmakers and small panel shops. Top tasks: start from a template → set size → fill/divide spaces → clear Checks → Parts CSV / Print; place several pieces in a project. (README, ADR-0014, ADR-0020.) |
+| Users and top tasks | Hobby cabinetmakers and small panel shops. Top tasks: start from a template → set size → fill/divide spaces → clear Checks → Parts CSV / Print; place several pieces in a project. (README, ADR-014, ADR-020.) |
 | Brand assets | The existing palette is the brand: graphite ink, cutting-mat green, tape-measure yellow, Barlow. Kept and systematised, not replaced. |
 | Pain points | Taken from the audit below, not from user reports. |
-| Platform | Web PWA, phone → wide desktop (ADR-0002, F18). No new dependencies. |
+| Platform | Web PWA, phone → wide desktop (ADR-002, F18). No new dependencies. |
 
 ## 1. Audit (before: commit b2c6f0f, screenshots at 360 / 390 / 1280 / 1600 px)
 
@@ -68,7 +68,7 @@ dark link 8.3; dark error 7.76; dark warn 8.66; on-accent on accent 7.98; error 
 4.63; dark error/warn on their soft fills 7.4. `--ink-3` is never used for text.
 
 Dark mode rules: follows the system; the toggle in the title row stores a choice in `localStorage` (`fb:theme`, this
-device only — ADR-0002). `@media print` always uses the light set (dark overrides are wrapped in `@media screen`),
+device only — ADR-002). `@media print` always uses the light set (dark overrides are wrapped in `@media screen`),
 checked: body #fff / #000, panel stroke #22272a while the page is in dark mode. The 3D canvas reads `--stage-3d`.
 Material swatches keep their real colours in both themes; text drawn on them is always dark.
 
@@ -115,7 +115,7 @@ Groups use chevrons (A14) and have ids so the rail can open them.
 no fronts yet), Divide this space (A4); diagnostics as alerts with icons (A15); breadcrumb kept.
 
 **Output.** Parts tab shows the part count; sticky headers (A6); blocked state as an alert; Checks empty state with a
-tick; each check row has an icon (same colours as before, nothing softened — ADR-0008).
+tick; each check row has an icon (same colours as before, nothing softened — ADR-008).
 
 **New / Add a piece.** Project card on top, then a two-column grid of templates with glyphs (A7); footer carries the
 "already saved" note. Library: rows with glyphs, Duplicate / Delete as small icon-labelled buttons, Import in the footer
@@ -124,7 +124,7 @@ tick; each check row has an icon (same colours as before, nothing softened — A
 **Project panel.** Pieces as row buttons with chevrons; the selected piece in a titled card with "Edit this piece" as
 the solid action.
 
-**Drawings.** Unchanged geometry (ADR-0004 / 0014); colours via tokens so they follow the theme (A12). Print sheet
+**Drawings.** Unchanged geometry (ADR-004 / 0014); colours via tokens so they follow the theme (A12). Print sheet
 unchanged.
 
 ## 5. Rollout

@@ -19,7 +19,7 @@ const HIGHLIGHT = '#f2c230'
 
 const geoCache = new WeakMap<Panel, ExtrudeGeometry>()
 const unit = (a: 'x' | 'y' | 'z') => [a === 'x' ? 1 : 0, a === 'y' ? 1 : 0, a === 'z' ? 1 : 0]
-/** A profiled board (ADR-0040): its outline extruded through the thickness, placed on the blank's in-plane axes. */
+/** A profiled board (ADR-040): its outline extruded through the thickness, placed on the blank's in-plane axes. */
 function profileGeometry(p: Panel): ExtrudeGeometry {
   const hit = geoCache.get(p)
   if (hit) return hit
@@ -37,7 +37,7 @@ function profileGeometry(p: Panel): ExtrudeGeometry {
   return g
 }
 
-/** A board with a picture (ADR-0048): texture coordinates from the core, scaled to the part's size in mm. */
+/** A board with a picture (ADR-048): texture coordinates from the core, scaled to the part's size in mm. */
 function PictureGeometry({ p, img }: { p: Panel; img: MaterialImage }) {
   const g = useMemo(() => {
     if (p.shape?.kind === 'profile') {
@@ -155,7 +155,7 @@ function Panels({ panels }: { panels: Panel[] }) {
         const b = p.box
         const selected = selectedId !== null && (view.mode === 'project' ? p.nodeId.startsWith(`${selectedId}:`) : p.nodeId === selectedId)
         const lit = hl.has(p.id)
-        // A picture replaces the plain colour; without a readable one the plain colour stays (ADR-0048).
+        // A picture replaces the plain colour; without a readable one the plain colour stays (ADR-048).
         const img = images.get(p.materialId)
         const map = img ? textures.get(img.id) : undefined
         const base = map ? '#ffffff' : colors.get(p.materialId) ?? '#cccccc'
@@ -177,7 +177,7 @@ function Panels({ panels }: { panels: Panel[] }) {
           </mesh>
         )
         if (p.shape?.kind !== 'tilt') return mesh
-        // Tilted part (ADR-0040): the blank turned about its pivot, right-hand rule, as in the model.
+        // Tilted part (ADR-040): the blank turned about its pivot, right-hand rule, as in the model.
         const s = p.shape, pv = [b.x + s.pivot[0], b.y + s.pivot[1], b.z + s.pivot[2]], a = (s.angleDeg * Math.PI) / 180
         return (
           <group key={p.id} position={[pv[0] * S, pv[1] * S, pv[2] * S]} rotation={[s.axis === 'x' ? a : 0, s.axis === 'y' ? a : 0, s.axis === 'z' ? a : 0]}>

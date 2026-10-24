@@ -17,7 +17,7 @@ export default defineConfig({
       workbox: { globPatterns: ['**/*.{js,css,html,svg,woff2}'], maximumFileSizeToCacheInBytes: 4 * 1024 * 1024 },
     }),
   ],
-  // three.js is ~1 MB and lazy-loaded on demand (ADR-0013).
+  // three.js is ~1 MB and lazy-loaded on demand (ADR-013).
   build: { chunkSizeWarningLimit: 1100 },
   test: { environment: 'node', include: ['tests/**/*.test.ts'] },
 })

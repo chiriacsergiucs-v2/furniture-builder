@@ -10,7 +10,7 @@ import { catalogFamilies, insertVariant } from '../src/core/catalog'
 
 const python = (() => { try { execFileSync('python3', ['--version']); return 'python3' } catch { return null } })()
 
-describe('Fusion 360 export (ADR-0021)', () => {
+describe('Fusion 360 export (ADR-021)', () => {
   it('groups every panel exactly once: carcass, doors, one group per drawer', () => {
     const d = templates.find(t => t.id === 'sideboard')!.create()
     const m = buildModel(d)
@@ -39,7 +39,7 @@ describe('Fusion 360 export (ADR-0021)', () => {
       }
     }
   })
-  it('shaped parts (ADR-0040): tilted parts carry turned directions, profiles become sketches; the script compiles', () => {
+  it('shaped parts (ADR-040): tilted parts carry turned directions, profiles become sketches; the script compiles', () => {
     const dir = mkdtempSync(join(tmpdir(), 'fusion-shaped-'))
     for (const id of ['corner-diagonal', 'sink-u-drawer', 'recliner-reference', 'lounger-reference']) {
       const f = catalogFamilies.find(x => x.variants.some(v => v.id === id))!

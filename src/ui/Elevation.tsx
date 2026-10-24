@@ -33,7 +33,7 @@ export function Elevation() {
   const select = useDesign(s => s.select)
   const showFronts = useDesign(s => s.showFronts)
   const mats = useMemo(() => new Map(design.materials.map(m => [m.id, m])), [design.materials])
-  // Pictures on boards (ADR-0048): one pattern per material and direction; plain colour while missing.
+  // Pictures on boards (ADR-048): one pattern per material and direction; plain colour while missing.
   const urls = useImageUrls(imageKey(design.materials))
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '')
   const patId = (materialId: string, turned: boolean) => `${uid}-pic-${materialId.replace(/[^a-zA-Z0-9_-]/g, '')}-${turned ? 1 : 0}`

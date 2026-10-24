@@ -2,7 +2,7 @@ import { base, corner, door, drawers, empty, even, flap, fr, legacy, mm, panel, 
 import type { CatalogFamily } from './types'
 import type { DrawersSpace } from '../types'
 
-/** Kitchen: 720 carcass + 100 plinth, 560 deep; walls 320 deep; tall to 2400 (ADR-0036 defaults, typical values to confirm). */
+/** Kitchen: 720 carcass + 100 plinth, 560 deep; walls 320 deep; tall to 2400 (ADR-036 defaults, typical values to confirm). */
 const GRID = [150, 200, 300, 400, 450, 500, 600, 800, 900, 1000, 1200]
 const BASE_DIMS = { min: [150, 600, 300] as [number, number, number], max: [1200, 1000, 700] as [number, number, number], widthGrid: GRID }
 
@@ -23,7 +23,7 @@ export const kitchen: CatalogFamily[] = [
   {
     id: 'base-drawers', name: 'Base cabinet, drawers', nameRo: 'Corp bază cu sertare', aliases: ['drawer base', 'pan drawers', 'corp sertare'], function: 'kitchen', rooms: ['kitchen'], root: 'cabinet', support: 'ready',
     structure: 'Carcass on a plinth with a bank of drawers on side-mount runners; fronts split top to bottom.',
-    configurations: ['Drawers 1–5', 'Front heights equal, fixed or shares (ADR-0023)', 'Runner length from your list', 'Rails instead of a top under a hob'],
+    configurations: ['Drawers 1–5', 'Front heights equal, fixed or shares (ADR-023)', 'Runner length from your list', 'Rails instead of a top under a hob'],
     dims: BASE_DIMS, catalogVersion: 1,
     variants: [
       { id: 'drawers-3', name: '3 drawers, deep bottom', summary: 'Shallow, medium, deep', kind: 'interior', requires: [], create: () => base('Drawer base, 3 drawers', {}, drawers(3, [fr(1), fr(1.5), fr(2)])) },

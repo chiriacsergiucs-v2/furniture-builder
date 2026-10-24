@@ -1,7 +1,7 @@
 /**
- * Research catalog logic (ADR-0043): validate and merge research bundles, plan re-imports without touching user
+ * Research catalog logic (ADR-043): validate and merge research bundles, plan re-imports without touching user
  * decisions, account for every line of a source document, and project features for the catalog page. Pure functions;
- * user input never throws (ADR-0008) — problems come back as lists.
+ * user input never throws (ADR-008) — problems come back as lists.
  */
 import {
   ASSESSMENT_CRITERIA, COMPLEXITY_SCALE, CONFIDENCE_SCALE, IMPLEMENTATIONS, RESEARCH_FORMAT, RESEARCH_SCHEMA, SELECTIONS, USER_PRIORITIES,

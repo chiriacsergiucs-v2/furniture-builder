@@ -13,7 +13,7 @@ function run(ids: string[]): Project {
 }
 const params = (p: Project, i: number) => p.items[i].design.product.params as CabinetParams
 
-describe('merging two pieces of a project (ADR-0047)', () => {
+describe('merging two pieces of a project (ADR-047)', () => {
   it('two touching base cabinets become one cabinet with the same footprint and both interiors', () => {
     const p = run(['base-door', 'base-door'])
     const before = buildProjectModel(p)

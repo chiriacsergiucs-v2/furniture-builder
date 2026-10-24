@@ -1,5 +1,5 @@
 /**
- * Step library of the New-piece wizard (ADR-0044). Each step owns its fields (answer keys), says when it shows,
+ * Step library of the New-piece wizard (ADR-044). Each step owns its fields (answer keys), says when it shows,
  * writes its answers into model input (`apply`) and gives the short text used on cards (`summary`). Construction
  * types pick the steps they use; nothing here depends on a particular type.
  */

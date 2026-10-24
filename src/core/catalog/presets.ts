@@ -1,5 +1,5 @@
 /**
- * Layout presets (ADR-0033): the inside of every interior-only cabinet variant, offered as "Apply layout…" on any
+ * Layout presets (ADR-033): the inside of every interior-only cabinet variant, offered as "Apply layout…" on any
  * space. Applying keeps the selected space's id (so selection survives), gives every other node a fresh id, and never
  * touches outer sizes or materials. One undo step, because it goes through the normal space update.
  */

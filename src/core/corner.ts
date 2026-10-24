@@ -3,7 +3,7 @@ import { box, equalParts } from './geometry'
 import type { Box, CabinetParams, CornerParams, Face, Material, Panel, SpaceOpening } from './types'
 
 /**
- * Corner cabinets (ADR-0025), built from two carcasses by the cabinet generator — no shelf, drawer or front code of
+ * Corner cabinets (ADR-025), built from two carcasses by the cabinet generator — no shelf, drawer or front code of
  * their own.
  *
  * Blind corner: a narrow blind section (empty carcass + fixed blind panel in front) joined to a normal cabinet.
@@ -57,7 +57,7 @@ const merge = (into: PartialModel, from: PartialModel) => {
 }
 
 /**
- * Diagonal corner (ADR-0040), corner on the left: backs on both walls, a side return at the end of each wall (`depth`
+ * Diagonal corner (ADR-040), corner on the left: backs on both walls, a side return at the end of each wall (`depth`
  * deep), five-sided bottom, top and shelves (profiled boards), a plinth board and the door(s) turned 45° about the
  * vertical across the diagonal. Mirrored for `side: 'right'`.
  */

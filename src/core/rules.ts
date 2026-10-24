@@ -1,5 +1,5 @@
 /**
- * Construction guidance as a registry of rules (ADR-0035), run by `buildModel` after the generators for every
+ * Construction guidance as a registry of rules (ADR-035), run by `buildModel` after the generators for every
  * design, whether it came from the catalog or was built by hand. Thresholds are typical values the user can change
  * (`design.settings.rules`); every rule is a warning or a hardware reminder, never an error.
  */

@@ -1,6 +1,6 @@
 /**
- * Sheet nesting types (ADR-0018). Independent of `Material`: a job is built from the cut list (ADR-0009) plus
- * per-material stock settings (ADR-0019). Every value is an integer number of millimetres (ADR-0003).
+ * Sheet nesting types (ADR-018). Independent of `Material`: a job is built from the cut list (ADR-009) plus
+ * per-material stock settings (ADR-019). Every value is an integer number of millimetres (ADR-003).
  *
  * Sheet coordinates: origin at a sheet corner, **x along the sheet length** (the grain direction for grained
  * boards), **y along the sheet width**. Trim margins lie outside `usable`.

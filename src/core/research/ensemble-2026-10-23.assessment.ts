@@ -1,5 +1,5 @@
 /**
- * Assessment of the features the 2026-10-23 paper does not rate (ADR-0043 addendum). Made 2026-10-23 by Claude from
+ * Assessment of the features the 2026-10-23 paper does not rate (ADR-043 addendum). Made 2026-10-23 by Claude from
  * the paper's own evidence, with the paper's own scoring method (line 71): six ordinal 1–5 scores — core ensemble
  * relevance 30 %, documented/user demand 20 %, UX improvement 20 %, competitor adoption 15 %, differentiation 10 %,
  * downstream leverage 5 % — give Value; complexity and confidence use the paper's words. This is an assessment, not
@@ -117,7 +117,7 @@ export const ENSEMBLE_ASSESSMENTS: Record<string, Row> = {
   'cross-family': [5, 4, 4, 2, 5, 4, 'High', 'Medium', 'Called probably the most obvious opportunity; the request is one anecdote, rated medium for discovering a need and low for prevalence.'],
   'family-presets': [4, 3, 4, 2, 4, 3, 'Medium', 'Medium', 'Architecture advice that follows from cross-family composition.'],
   'multi-supplier-catalogue': [2, 2, 2, 3, 3, 4, 'Very high', 'Medium', 'pCon/Cyncly precedent; a strategy for later, needs supplier data.'],
-  'live-manufacturer-data': [2, 2, 2, 3, 3, 4, 'Very high', 'Medium', 'Professional tools rely on it; needs online data feeds (conflicts with ADR-0002 here).'],
+  'live-manufacturer-data': [2, 2, 2, 3, 3, 4, 'Very high', 'Medium', 'Professional tools rely on it; needs online data feeds (conflicts with ADR-002 here).'],
   'build-a-run': [4, 4, 5, 2, 5, 3, 'High', 'Medium-high', 'The workflow form of ranked #20 auto-fit; the paper explains why a deterministic solver is safer than AI.'],
   'budget-style-filters': [2, 3, 3, 2, 3, 2, 'High', 'Low-medium', 'Phase-four item; budget filtering needs price data the paper ties to "if data exists".'],
   'layout-optimisation': [2, 2, 2, 2, 3, 2, 'Very high', 'Low', 'One word in the phase-four list with no detail.'],

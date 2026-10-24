@@ -1,5 +1,5 @@
 /**
- * A still 3D picture of a built model as SVG (ADR-0042): an orthographic view from the front right and above, every
+ * A still 3D picture of a built model as SVG (ADR-042): an orthographic view from the front right and above, every
  * panel drawn as its three visible faces in the board's colour. Pure and deterministic, so the catalog pictures are
  * made once before the app runs (`npm run catalog:snapshots`) and shipped as files; nothing renders in the browser.
  */
@@ -33,7 +33,7 @@ const shadeOf = (n: V3) => 0.74 * n[0] * n[0] + 1.06 * n[1] * n[1] + 0.9 * n[2] 
 const norm = (v: V3): V3 => { const l = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / l, v[1] / l, v[2] / l] }
 
 /**
- * Faces of a shaped panel (ADR-0040) that face the viewer: a tilted blank's six faces turned about its pivot, or a
+ * Faces of a shaped panel (ADR-040) that face the viewer: a tilted blank's six faces turned about its pivot, or a
  * profile's two outline faces and one side face per outline edge.
  */
 function shapedFaces(p: Panel): { shade: number; pts: P[] }[] {

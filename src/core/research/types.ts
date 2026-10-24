@@ -1,5 +1,5 @@
 /**
- * Research catalog (ADR-0043): research papers turned into traceable records, and features that can be picked for
+ * Research catalog (ADR-043): research papers turned into traceable records, and features that can be picked for
  * later work. Research records are read-only data; the user's decisions live apart from them (`ResearchMark`), so
  * importing a paper again can never overwrite a decision.
  *

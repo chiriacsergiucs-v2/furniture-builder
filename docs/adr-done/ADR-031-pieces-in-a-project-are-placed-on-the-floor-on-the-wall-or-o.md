@@ -1,0 +1,60 @@
+# ADR-031: Pieces in a project are placed on the floor, on the wall, or on/above another piece
+
+- Status: Implemented
+- Date: — (requested by the user 2026-10-22; defaults below await confirmation)
+- Implemented: 2026-10-23
+- Depends on: none
+- Design: n/a
+- Related: ADR-003, ADR-005, ADR-022, ADR-025
+- Backlog: N19, N20
+
+## Context
+
+The user's living wall (Mobila, `living_535`) is a tall column, a low run on the floor and a high run hung above the
+low run. Projects (ADR-022) only stored a free `position`, so a top unit had to be placed by typing its height and
+re-typed whenever the unit under it changed. The file's low and high runs also have the bottom under the sides, which
+the cabinet generator could not build.
+
+## Decision
+
+- `ProjectItem.placement` (optional, no project schema bump): `floor` (height 0), `wall` (underside height), or
+  `above` (base item, gap ≥ 0, offset from the base's left edge; backs aligned). Absent = free, as before.
+- `resolvePlacements` derives `position` from the placement on every project change; the stored position always
+  matches. Bases resolve first; a missing base keeps the stored position (warning); a loop is an error.
+- Removing a base frees the pieces on it where they stand. New pieces get `floor`, or `wall` for wall-mounted cabinets.
+- Warnings: a piece off the floor that is not built to hang, and a wall-hung piece placed on the floor.
+- `CabinetParams.bottom: 'between' | 'under'` (absent = between). Under: full-width bottom, sides stand on it.
+- A bay layout shortcut (`makeBays`, "Bays and shelves" group) lays the whole inside out as equal bays with the same
+  shelves and doors; it keeps bay ids and fixed widths. The space tree (ADR-005) is unchanged.
+
+## Alternatives considered
+
+- **Stacking inside one design** (one cabinet holding both runs) — breaks one-carcass-per-design and the gap between
+  the runs is open wall, not furniture.
+- **Placement in the design** (`mountHeight` only) — cannot express "on that piece" and would not follow it.
+
+## Consequences
+
+- Any code that reads item positions must use a resolved project; `buildProjectModel` and the store resolve.
+- Placement does not change parts or hardware; hanging hardware still comes from the cabinet's "Stands on".
+
+## Evidence (repository files)
+
+- `src/core/project.ts` — `Placement`, `resolvePlacements`, `placementBases`, `placementIssues`, `removeProjectItem`, validation.
+- `src/core/cabinet.ts`, `src/core/types.ts`, `src/core/design.ts` — `bottom: 'under'`, `makeBays`, `bayLayoutOf`.
+- `src/store/designStore.ts` — resolve on commit, open and back-to-project. `src/ui/Project.tsx`, `src/ui/Inspector.tsx` — controls.
+- `src/core/samples/mobila.ts`, `docs/samples/` — Mobila rooms; `tests/mobila.test.ts`, `tests/samples-files.test.ts`, fuzz covers `bottom`.
+
+## Compliance check
+
+`grep -n "resolvePlacements" src/core/project.ts src/store/designStore.ts` finds the build and every project commit.
+
+## Open questions
+
+1. Should a piece placed above another also take the base's turn (rotation)? Default: no, its own turn.
+2. Should "Wall" placement switch the cabinet to wall brackets automatically? Default: no; a warning asks for it.
+3. Gaps along the wall (ADR-022 addendum) for pieces placed above another: default the gap tool is hidden; they follow their base.
+
+## Answers (2026-10-23, from the user)
+
+1. A piece placed above another **keeps its own turn**. 2. *Wall* placement **warns and asks** instead of switching to brackets. 3. The gap tool stays **hidden** for pieces placed above another. All three match what was built (backlog N19, N20 Done).

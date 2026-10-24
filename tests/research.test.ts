@@ -29,7 +29,7 @@ function dropFeature(b: ResearchBundle, id: string): ResearchBundle {
 }
 const mark = (id: string, patch: Partial<ResearchMark> = {}): ResearchMark => ({ id, selection: 'approved', implementation: 'not-started', priority: 'P1', notes: 'mine', reviewed: false, links: [], createdAt: AT, updatedAt: AT, ...patch })
 
-describe('research catalog: extracted data (ADR-0043)', () => {
+describe('research catalog: extracted data (ADR-043)', () => {
   it('is the committed paper, quoted verbatim', () => {
     expect(B.document.text).toBe(TEXT)
     expect(createHash('sha256').update(TEXT).digest('hex')).toBe(B.document.sha256)

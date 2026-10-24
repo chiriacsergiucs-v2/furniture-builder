@@ -1,7 +1,7 @@
 /**
- * Construction types offered by the New-piece wizard (ADR-0044) and their suggestion families (ADR-0045).
+ * Construction types offered by the New-piece wizard (ADR-044) and their suggestion families (ADR-045).
  * Adding a type or a family is one entry here; the engine and the UI read these entries only.
- * Sizes and counts are layout defaults the user changes in the wizard, not hardware or load figures (ADR-0010).
+ * Sizes and counts are layout defaults the user changes in the wizard, not hardware or load figures (ADR-010).
  */
 import { cabinet, deskDefaults, frameDefaults, newId, wrap } from '../design'
 import { answerAxis, dividersAxis, drawersAxis, frontsAxis, mixAxis, shelvesAxis } from './axes'

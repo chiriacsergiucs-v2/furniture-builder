@@ -14,7 +14,7 @@ const matOptions = (materials: Material[], filter?: (m: Material) => boolean) =>
 type FrontKind = 'none' | 'doors1' | 'doors2' | 'sliding' | 'flap'
 const frontKind = (f: Front | null | undefined): FrontKind => !f ? 'none' : f.kind === 'doors' ? (f.count === 1 ? 'doors1' : 'doors2') : f.kind
 
-/** Doors, sliding doors or a flap on a space (ADR-0005, ADR-0037). */
+/** Doors, sliding doors or a flap on a space (ADR-005, ADR-037). */
 export function FrontEditor({ space, onChange }: { space: Space; onChange: (fn: (s: Space) => Space) => void }) {
   const f = space.front
   const set = (front: Front | null) => onChange(s => ({ ...s, front }))
@@ -56,7 +56,7 @@ export function FrontEditor({ space, onChange }: { space: Space; onChange: (fn: 
 
 const APPLIANCES: ApplianceNiche['kind'][] = ['oven', 'microwave', 'fridge', 'dishwasher', 'hob', 'other']
 
-/** Appliance niche on an empty space (ADR-0036): every size typed from the appliance's installation drawing. */
+/** Appliance niche on an empty space (ADR-036): every size typed from the appliance's installation drawing. */
 export function ApplianceEditor({ space, onChange }: { space: Extract<Space, { kind: 'empty' }>; onChange: (fn: (s: Space) => Space) => void }) {
   const a = space.appliance
   const opening = useDesign(s => s.model.spaces.find(o => o.nodeId === space.id))
@@ -84,7 +84,7 @@ export function ApplianceEditor({ space, onChange }: { space: Extract<Space, { k
   )
 }
 
-/** "Apply layout…" from the catalog's interior variants (ADR-0033): replaces this space's inside, one undo step. */
+/** "Apply layout…" from the catalog's interior variants (ADR-033): replaces this space's inside, one undo step. */
 export function LayoutPicker({ space, onChange }: { space: Space; onChange: (fn: (s: Space) => Space) => void }) {
   const presets = useMemo(() => layoutPresets(catalogFamilies), [])
   return (
@@ -102,7 +102,7 @@ export function LayoutPicker({ space, onChange }: { space: Space; onChange: (fn:
   )
 }
 
-/** Where the piece came from (ADR-0028) and the hardware still to choose (ADR-0033). */
+/** Where the piece came from (ADR-028) and the hardware still to choose (ADR-033). */
 export function PieceInfo() {
   const catalog = useDesign(s => s.design.catalog)
   const updateMeta = useDesign(s => s.updateMeta)
@@ -120,7 +120,7 @@ export function PieceInfo() {
   )
 }
 
-/** Guidance thresholds (ADR-0035): typical defaults the user can change for this piece. */
+/** Guidance thresholds (ADR-035): typical defaults the user can change for this piece. */
 export function ChecksGroup() {
   const rules = useDesign(s => s.design.settings?.rules)
   const settings = useDesign(s => s.design.settings)
@@ -145,7 +145,7 @@ export function PanelEditor({ p, materials }: { p: PanelParams; materials: Mater
   const set = useDesign(s => s.updatePanel)
   return (
     <div className="inspector">
-      <header className="insp-head"><h2>{PURPOSE[p.purpose]}</h2><p className="hint">A front with no carcass behind it (ADR-0036).</p></header>
+      <header className="insp-head"><h2>{PURPOSE[p.purpose]}</h2><p className="hint">A front with no carcass behind it (ADR-036).</p></header>
       <PieceInfo />
       <Select<PanelParams['purpose']> label="Used as" value={p.purpose} options={(Object.keys(PURPOSE) as PanelParams['purpose'][]).map(k => ({ value: k, label: PURPOSE[k] }))} onChange={v => set({ purpose: v })} />
       <div className="dims2">
@@ -173,7 +173,7 @@ const MATTRESSES: [number, number, string][] = [
 
 const FRAME_LABEL: Record<FrameParams['kind'], string> = { table: 'Table', bench: 'Bench', stool: 'Stool', chair: 'Chair', bed: 'Bed' }
 
-/** Frames (ADR-0038): legs, rails, stretchers, slats; beds by mattress size. */
+/** Frames (ADR-038): legs, rails, stretchers, slats; beds by mattress size. */
 export function FrameEditor({ p, materials }: { p: FrameParams; materials: Material[] }) {
   const set = useDesign(s => s.updateFrame)
   const solid = matOptions(materials, m => m.stock === 'solid')
@@ -217,7 +217,7 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
                   <MmField label="Seat height" value={p.back.seatHeight} min={200} max={900} onChange={v => set({ back: { ...p.back!, seatHeight: v } })} />
                   <Select<'slats' | 'panel'> label="Back of" value={p.back.style} options={[{ value: 'slats', label: 'Slats' }, { value: 'panel', label: 'A panel' }]} onChange={v => set({ back: { ...p.back!, style: v } })} />
                   {p.back.style === 'slats' && <Counter label="Back slats" value={p.back.count} min={1} max={12} onChange={v => set({ back: { ...p.back!, count: v } })} />}
-                  {!p.recline && <MmField label="Back rake" unit="°" value={p.back.angleDeg ?? 0} min={0} max={25} step={1} onChange={v => set({ back: { ...p.back!, angleDeg: v } })} hint="Leans back from upright (ADR-0040); 8° is typical" />}
+                  {!p.recline && <MmField label="Back rake" unit="°" value={p.back.angleDeg ?? 0} min={0} max={25} step={1} onChange={v => set({ back: { ...p.back!, angleDeg: v } })} hint="Leans back from upright (ADR-040); 8° is typical" />}
                 </div>
               )}
               {p.back && p.recline && (

@@ -3,7 +3,7 @@ import { profileWorld, rotateAbout, type V3 } from './shape'
 import type { Design, FurnitureModel, Panel } from './types'
 
 /**
- * Fusion 360 export (ADR-0021): a self-contained Python script for the Fusion API that rebuilds every panel as a
+ * Fusion 360 export (ADR-021): a self-contained Python script for the Fusion API that rebuilds every panel as a
  * named solid box, grouped per piece — carcass, doors, each drawer (box + front). Generated from the model only.
  * Axes: our x → Fusion X, our height y → Fusion Z, our depth z (back→front) → Fusion −Y, so the front faces −Y.
  * Millimetres are converted to Fusion's centimetres here and nowhere else. NOT verified inside Fusion.
@@ -44,7 +44,7 @@ export function exportFusionPython(design: Design, model: FurnitureModel): strin
     for (const p of g.panels) {
       const b = p.box, name = py(`${p.label} [${mats.get(p.materialId) ?? p.materialId}]`)
       if (p.shape?.kind === 'profile') {
-        // Profile (ADR-0040): outline on the blank's back face, extruded through the thickness.
+        // Profile (ADR-040): outline on the blank's back face, extruded through the thickness.
         const pts = profileWorld(b, p.thicknessAxis, p.shape.points).map(q => `(${F(q).map(cm).join(', ')})`).join(', ')
         const tn: V3 = [0, 0, 0]; tn[['x', 'y', 'z'].indexOf(p.thicknessAxis)] = 1
         const th = p.thicknessAxis === 'x' ? b.w : p.thicknessAxis === 'y' ? b.h : b.d
@@ -55,7 +55,7 @@ export function exportFusionPython(design: Design, model: FurnitureModel): strin
       }
       let c: V3 = [b.x + b.w / 2, b.y + b.h / 2, b.z + b.d / 2], ex: V3 = [1, 0, 0], ez: V3 = [0, 0, 1]
       if (p.shape?.kind === 'tilt') {
-        // Tilted part (ADR-0040): the box's centre and axes turned about its pivot.
+        // Tilted part (ADR-040): the box's centre and axes turned about its pivot.
         const s = p.shape, pv: V3 = [b.x + s.pivot[0], b.y + s.pivot[1], b.z + s.pivot[2]]
         c = rotateAbout(c, s.axis, s.angleDeg, pv)
         ex = rotateAbout(ex, s.axis, s.angleDeg, [0, 0, 0]); ez = rotateAbout(ez, s.axis, s.angleDeg, [0, 0, 0])
@@ -78,12 +78,12 @@ ${hw.length ? hw.join('\n') : '#   none'}
 import adsk.core, adsk.fusion, traceback
 
 # (component, body name, centre x, centre y, centre z, length, width, height, length direction, width direction) in cm;
-# tilted parts (ADR-0040) have turned directions.
+# tilted parts (ADR-040) have turned directions.
 PANELS = [
 ${rows.join('\n')}
 ]
 
-# Profiled boards (ADR-0040): (component, body name, base plane, plane offset, outline points, thickness direction,
+# Profiled boards (ADR-040): (component, body name, base plane, plane offset, outline points, thickness direction,
 # thickness) in cm. Each is sketched on an offset plane and extruded.
 PROFILES = [
 ${profiles.join('\n')}

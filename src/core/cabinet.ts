@@ -34,7 +34,7 @@ export interface BuildOptions {
 
 export interface PartialModel { panels: Panel[]; spaces: SpaceOpening[]; hardware: HardwareItem[]; diagnostics: Diagnostic[] }
 
-/** 32 mm system (ADR-0023). */
+/** 32 mm system (ADR-023). */
 export const PIN_PITCH = 32
 export const PIN_DIAMETER = 5
 export const DEFAULT_SHELF_CLEARANCE = 1
@@ -43,7 +43,7 @@ export const DEFAULT_PIN_ROW_SETBACK = 37
 /** Minimum gap between closed doors and internal drawer boxes (hinge arm clearance). */
 export const INTERNAL_DRAWER_SETBACK = 20
 
-/** Sliding doors (ADR-0037): defaults when the space does not say. */
+/** Sliding doors (ADR-037): defaults when the space does not say. */
 export const DEFAULT_SLIDING_OVERLAP = 30
 export const DEFAULT_SLIDING_TRACK = 80
 /** Clear gap between the two planes of sliding doors. */
@@ -153,7 +153,7 @@ export function buildCabinet(p: CabinetParams, materials: Map<string, Material>,
   if (opts.omitSide !== 'left') add(pid, 'side', 'Left side', body.id, box(0, sideY, z0, t, sideH, Dc), 'x', 'y', ['+z'], 0)
   if (opts.omitSide !== 'right') add(pid, 'side', 'Right side', body.id, box(W - t, sideY, z0, t, sideH, Dc), 'x', 'y', ['+z'], 1)
   if (p.topKind === 'rails') {
-    // Two rails instead of a full top (ADR-0036): front rail at the front edge, back rail at the back.
+    // Two rails instead of a full top (ADR-036): front rail at the front edge, back rail at the back.
     const rd = p.railDepth ?? DEFAULT_RAIL_DEPTH
     const x0 = p.top === 'over' ? 0 : L, w = p.top === 'over' ? W : span
     if (rd < 30 || 2 * rd > Dc) err('rail-depth', `Top rails ${rd} mm deep do not fit a ${Dc} mm deep carcass.`, pid)
@@ -387,7 +387,7 @@ export function buildCabinet(p: CabinetParams, materials: Map<string, Material>,
           add(s.id, 'drawer-side', `Drawer ${k} side`, boxM.id, box(bx + bw - tb, py, bz, tb, ph2, runner), 'x', 'z', ['+y'], 2 * i + 1)
           const u = i === 0 ? s.uCut : null
           if (u) {
-            // Sink drawer (ADR-0040): a notch for the trap at the middle of the back. The bottom is cut to a U; the back
+            // Sink drawer (ADR-040): a notch for the trap at the middle of the back. The bottom is cut to a U; the back
             // runs round the notch in five parts. Notch sizes come from the trap; they are not checked against it.
             const n0 = Math.floor((bw - u.width) / 2), nx0 = bx + n0, nx1 = nx0 + u.width
             if (u.width < 50 || u.depth < 50 || n0 < 2 * tb + 50 || u.depth > runner - 2 * tb - 50) {
@@ -469,7 +469,7 @@ export function buildCabinet(p: CabinetParams, materials: Map<string, Material>,
 const SUPPORTS = new Set<PanelRole>(['side', 'divider', 'gable'])
 
 /**
- * Give the vertical panels either side of each adjustable-shelf space a pair of 32 mm hole rows (ADR-0023).
+ * Give the vertical panels either side of each adjustable-shelf space a pair of 32 mm hole rows (ADR-023).
  * Holes sit on one grid per panel measured from its bottom edge: the +x face on multiples of 32, the −x face offset
  * by 16, so holes from the two faces of a divider never meet. Rows are set back from the front and rear of the
  * shelves themselves (not the panel), so both rows always carry the shelf.

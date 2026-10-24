@@ -3,7 +3,7 @@ import { box, equalParts } from './geometry'
 import type { Axis, Box, Face, FrameParams, Material, Mm, Panel, PanelRole } from './types'
 
 /**
- * Frame furniture (ADR-0038): tables, benches, stools, chairs and beds built from legs, rails, stretchers, slats and
+ * Frame furniture (ADR-038): tables, benches, stools, chairs and beds built from legs, rails, stretchers, slats and
  * a top or deck. Fixed topology per kind, no space tree. Every member is an axis-aligned box; solid members are cut
  * from lengths (their section is the two short sides), panels from sheets.
  */
@@ -48,7 +48,7 @@ export function buildFrame(p: FrameParams, id: string, materials: Map<string, Ma
     return at
   }
   const slatCount = (span: Mm) => Math.max(1, Math.floor((span + p.slats.gap) / (p.slats.width + p.slats.gap)))
-  /** Tilt every part pushed since index `from` as one piece about the axis through the world point `pivot` (ADR-0040). */
+  /** Tilt every part pushed since index `from` as one piece about the axis through the world point `pivot` (ADR-040). */
   const tiltFrom = (from: number, axis: Axis, angleDeg: number, pivot: [Mm, Mm, Mm]) => {
     if (!angleDeg) return
     for (const q of out.panels.slice(from)) q.shape = { kind: 'tilt', axis, angleDeg, pivot: [pivot[0] - q.box.x, pivot[1] - q.box.y, pivot[2] - q.box.z] }
@@ -63,7 +63,7 @@ export function buildFrame(p: FrameParams, id: string, materials: Map<string, Ma
   const seatH = back ? back.seatHeight : H
   const topT = p.top === 'panel' ? panelM.thickness : slats.thickness
   const topY = seatH - topT
-  // Rake of the back from vertical: from the reclining position shown, else the back's own angle (ADR-0040).
+  // Rake of the back from vertical: from the reclining position shown, else the back's own angle (ADR-040).
   const recline = back ? p.recline ?? null : null
   const rake = recline ? (recline.positions[recline.at] ?? 90) - 90 : back?.angleDeg ?? 0
   if (p.kind === 'chair' && p.base === 'bought') return boughtBase(p, id, out, err, sheet, tiltFrom, back, rake, panelM)
@@ -95,7 +95,7 @@ export function buildFrame(p: FrameParams, id: string, materials: Map<string, Ma
     const L = br ? br.length : 0
     for (const z of spread(z0, span, slats.width, n)) member('slat', `${topLabel} slat`, box(L, topY, z, W - L, topT, slats.width))
     if (br) {
-      // Lounger backrest (ADR-0040): the first L mm of the slats on two battens, hinged at the top edge at x = L.
+      // Lounger backrest (ADR-040): the first L mm of the slats on two battens, hinged at the top edge at x = L.
       const i0 = out.panels.length
       for (const z of spread(z0, span, slats.width, n)) member('slat', 'Backrest slat', box(0, topY, z, L, topT, slats.width))
       const bw = 45, bz = li + ld, bd = D - 2 * li - 2 * ld
@@ -178,7 +178,7 @@ type Err = (code: string, message: string) => PartialModel
 type Tilt = (from: number, axis: Axis, angleDeg: number, pivot: [Mm, Mm, Mm]) => void
 
 /**
- * Chair on a bought base (ADR-0040): only the seat and back boards are cut; the gas lift, mechanism, five-star base and
+ * Chair on a bought base (ADR-040): only the seat and back boards are cut; the gas lift, mechanism, five-star base and
  * back support are bought, scheduled and not drawn. The back leans by its rake about its bottom back edge.
  */
 function boughtBase(p: FrameParams, id: string, out: PartialModel, err: Err, sheet: Sheet, tilt: Tilt, back: FrameParams['back'], rake: number, panelM: Material): PartialModel {

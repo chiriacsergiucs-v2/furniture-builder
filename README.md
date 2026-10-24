@@ -30,6 +30,7 @@ npm ci
 npm run dev        # http://localhost:5173/furniture-builder/
 npm test           # unit, fuzz and storage tests
 npm run lint && npm run typecheck && npm run build
+npm run docs:check # ADRs, their index and every ADR / backlog id
 ```
 
 `FUZZ_N=50000 npx vitest run tests/fuzz.test.ts` runs a deep geometry fuzz.
@@ -44,8 +45,8 @@ src/persist   IndexedDB (Dexie) storage
 src/ui        React UI: front elevation, inspector, parts/hardware/checks, dialogs
 src/viewer    lazy three.js preview
 tests         core, fuzz and storage tests
-docs          backlog (single ledger)
-claude-flow   architecture decisions and agent contracts
+docs          backlog (single ledger), ADRs (docs/adr, docs/adr-done), product context, UI design
+scripts       docs check (ADRs, index, ids)
 ```
 
-Decisions are in `claude-flow/architecture/decisions/`. MIT licensed.
+Decisions are in `docs/adr/` (pending) and `docs/adr-done/` (implemented); the workflow is in `CLAUDE.md`. MIT licensed.

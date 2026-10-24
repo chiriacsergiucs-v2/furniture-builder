@@ -7,13 +7,13 @@ import { CATALOG_BEGIN, CATALOG_END, catalogMarkdown } from '../src/core/catalog
 import { templates, validateDesign } from '../src/core/design'
 import type { Design } from '../src/core/types'
 
-/** Warnings a shipped variant may carry at its default size, each by design (ADR-0035 compliance). */
-// 'not-assembled': every loose panel set says its assembly is not modelled (ADR-0041).
+/** Warnings a shipped variant may carry at its default size, each by design (ADR-035 compliance). */
+// 'not-assembled': every loose panel set says its assembly is not modelled (ADR-041).
 const EXPECTED_WARNINGS = new Set(['internal-drawers', 'hardware-to-choose', 'flap-fitting', 'shelf-support', 'not-assembled'])
 // Long frames carry the "centre leg" reminder by design.
 const EXTRA: Record<string, string[]> = { 'sofa-3-frame': ['frame-span'], 'sectional-main': ['frame-span'], 'lounger-flat': ['frame-span'], 'sink-u-drawer': ['u-cut-trap'], 'office-chair-reference': ['bought-base'] }
 
-describe('template catalog (ADR-0032, ADR-0033, ADR-0039)', () => {
+describe('template catalog (ADR-032, ADR-033, ADR-039)', () => {
   it('every family has 1–5 variants, known rooms and function, unique ids', () => {
     const ids = new Set<string>(), vids = new Set<string>()
     for (const f of catalogFamilies) {
@@ -100,7 +100,7 @@ describe('template catalog (ADR-0032, ADR-0033, ADR-0039)', () => {
   })
 })
 
-describe('brand entries from the catalog feed (ADR-0027, ADR-0029)', () => {
+describe('brand entries from the catalog feed (ADR-027, ADR-029)', () => {
   it('a brand entry opens as a copy with its origin; the shipped entry is unchanged', async () => {
     const { brandEntries, copyBrandEntry } = await import('../src/core/catalog/brands')
     expect(Array.isArray(brandEntries)).toBe(true)

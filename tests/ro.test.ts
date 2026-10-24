@@ -4,7 +4,7 @@ import { cutlist, hardwareSummary } from '../src/core/cutlist'
 import { templates } from '../src/core/design'
 import { CSV_HEADERS_RO, cutlistCsvRo, drillingRo, hardwareRo, partRo } from '../src/core/ro'
 
-describe('Romanian output for the panel shop (ADR-0020)', () => {
+describe('Romanian output for the panel shop (ADR-020)', () => {
   it('CSV: Romanian headers, semicolons, UTF-8 BOM, translated part names', () => {
     const d = templates.find(t => t.id === 'chest')!.create()
     const csv = cutlistCsvRo(cutlist(buildModel(d), d.materials))

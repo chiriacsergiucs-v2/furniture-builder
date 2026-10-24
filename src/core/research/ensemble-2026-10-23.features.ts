@@ -1,5 +1,5 @@
 /**
- * Features of the 2026-10-23 ensemble paper (ADR-0043). Ratings of ranked features are read from the paper's own
+ * Features of the 2026-10-23 ensemble paper (ADR-043). Ratings of ranked features are read from the paper's own
  * table row (lines 75–113), word for word; every other rating is `not evaluated` because the paper gives none.
  * `origin: 'inferred'` marks an opportunity read from findings (listed in `inferredFrom`), never a research conclusion.
  * `appNotes` are observations about this repository (backlog / ADR ids), kept apart from the research.
@@ -77,7 +77,7 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
     mvp: 'The ensemble editor creates instances from current furniture templates without duplicating/reimplementing the template\'s internal parametric logic.',
     requirements: ['Instance holds templateId and templateVersion.', 'Instance parameters hold only differences from template defaults.', 'Optional materialOverrides and ensembleId.', 'Dragging an item into the scene creates an instance; the template is not copied.'],
     competitors: ['c.pcon'], findings: ['mvp-1', '072', '095', '053', '114', '120'], phase: P1, tags: ['MVP', 'data-model'],
-    appNotes: ['This app: project items embed a copy of a design (ADR-0022, ADR-0028); see the research-vs-app conflict record.'],
+    appNotes: ['This app: project items embed a copy of a design (ADR-022, ADR-028); see the research-vs-app conflict record.'],
   }),
   F('reference-copies', {
     name: 'Reference copies updated across instances', parent: 'template-instancing', category: 'assembly', subcategory: 'Instances',
@@ -97,7 +97,7 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
     requirements: ['Do not encode the ensemble as a parent-child Three.js scene hierarchy.', 'Central domain store separate from rendered Three objects.'],
     technical: ['Makes save/load, testing, undo, constraints and server-side processing easier.'],
     findings: ['103', '112', 'stack-06'], tags: ['architecture'],
-    appNotes: ['This app already treats every view as a projection of buildModel() (ADR-0004).'],
+    appNotes: ['This app already treats every view as a projection of buildModel() (ADR-004).'],
   }),
   F('template-api', {
     name: 'Template API exposing parameters and bounds', parent: 'composition-layer', category: 'architecture', subcategory: 'Dependencies',
@@ -277,7 +277,7 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
     name: 'Constraints as inspectable domain data', parent: 'compatibility-engine', category: 'validation', subcategory: 'Rules',
     description: 'Rules are data, not hidden code: name, what they apply to, what they require, severity and repair strategies. Example: drawer-door-clearance — applies to base-cabinet-with-drawer; drawer swept volume must not intersect neighbour solid/door volume; severity error; repairs: increase side gap, insert compatible filler, change neighbour, reverse door hinge where supported.',
     findings: ['136', '137'], related: ['explainable-warnings'], tags: ['rules', 'explainability'],
-    appNotes: ['This app has a rules registry keyed by role/product (ADR-0035, backlog N25).'],
+    appNotes: ['This app has a rules registry keyed by role/product (ADR-035, backlog N25).'],
   }),
   F('catalogue-validation', {
     name: 'Catalogue validation and QA tooling', parent: 'inspectable-rules', category: 'catalogue', subcategory: 'Quality',
@@ -303,7 +303,7 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
     description: 'Static body intersections are detected and presented before finalisation; simple AABB/OBB checks first.',
     mvp: 'Static body intersections are detected and presented before finalisation.',
     findings: ['mvp-9', 'stack-04', 'phase-1'], tags: ['MVP'],
-    appNotes: ['This app reports pieces that overlap in a project and pieces below the floor (`src/core/project.ts`, ADR-0022) and overlapping panels in a piece (ADR-0008).'],
+    appNotes: ['This app reports pieces that overlap in a project and pieces below the floor (`src/core/project.ts`, ADR-022) and overlapping panels in a piece (ADR-008).'],
   }),
   F('rapier-queries', {
     name: 'Spatial query engine (Rapier) without physics', parent: 'collision-clearance', category: 'architecture', subcategory: 'Collision engine',
@@ -334,7 +334,7 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
     userBenefit: 'A major opportunity to outperform generic planners.',
     useCases: ['Door clearance conflict: tall cabinet A\'s door sweep intersects wall cabinet B — fixes: add 30 mm spacer · reverse hinge · move B · choose narrower cabinet.'],
     findings: ['rank-07', 'rec-07', '081', '082', 'phase-2'], dependencies: ['collision-clearance'], phase: P2, tags: ['P1', 'differentiator'],
-    appNotes: ['This app lists problems as diagnostics that block export (ADR-0008); no repair actions.'],
+    appNotes: ['This app lists problems as diagnostics that block export (ADR-008); no repair actions.'],
   }),
   F('select-and-explain', {
     name: 'Select and explain the problem', parent: 'explainable-warnings', category: 'ux', subcategory: 'Diagnostics',
@@ -360,7 +360,7 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
     requirements: ['Move and rotate in both views.', 'Exact numeric transforms (see Precise numeric manipulation).'],
     technical: ['Transform = position, rotation (quaternion), optional scale.'],
     findings: ['mvp-3', '091', 'phase-1'], phase: P1, tags: ['MVP'], related: ['precise-numeric'],
-    appNotes: ['This app places project pieces in whole mm with quarter turns about the vertical axis only (ADR-0022).'],
+    appNotes: ['This app places project pieces in whole mm with quarter turns about the vertical axis only (ADR-022).'],
   }),
   F('drag-drop-placement', {
     name: 'Drag-and-drop placement', parent: 'direct-manipulation', category: 'positioning', subcategory: 'Placement',
@@ -384,7 +384,7 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
     userBenefit: 'Trustworthy, buildable sizes.',
     requirements: ['Type width, offset, gap, position and rotation.', 'Keep snapping while entering numbers.'],
     competitors: ['c.planner5d', 'c.roomle', 'c.pcon'], findings: ['rank-04', 'rec-04', '010', '043', '063', '064', '053'], phase: P1, tags: ['core', 'P0'],
-    appNotes: ['This app: whole-mm sizes everywhere (ADR-0003); gap between two project pieces along the wall (backlog N13).'],
+    appNotes: ['This app: whole-mm sizes everywhere (ADR-003); gap between two project pieces along the wall (backlog N13).'],
   }),
   F('numeric-transform', {
     name: 'Numeric transform entry', parent: 'precise-numeric', category: 'positioning', subcategory: 'Precision',
@@ -418,7 +418,7 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
     name: 'Duplicate, mirror and predictable rotate operations', category: 'positioning', subcategory: 'Transforms', ...ranked(19),
     description: 'Duplicate instances or groups, mirror them, and rotate them predictably.',
     findings: ['rank-19'], tags: ['P0'],
-    appNotes: ['This app: duplicate a saved piece in the Library (F14); project item quantity; quarter turns (ADR-0022). No mirror.'],
+    appNotes: ['This app: duplicate a saved piece in the Library (F14); project item quantity; quarter turns (ADR-022). No mirror.'],
   }),
   F('locks-overrides', {
     name: 'Lock/pin modules and preserve manual overrides', category: 'parametric', subcategory: 'Locks', ...ranked(18),
@@ -462,7 +462,7 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
     technical: ['2D plan: same scene/domain model with an orthographic camera and overlays.', 'Phase one implements top/orthographic 2D and perspective 3D against the same model.'],
     competitors: ['c.roomle', 'c.homebyme', 'c.planner5d', 'c.sweethome3d'], findings: ['rank-06', 'rec-06', '060', '061', '062', 'stack-01', '089', 'stack-05', '120', 'phase-1'],
     phase: P1, tags: ['core', 'P0'],
-    appNotes: ['This app: every view is a projection of buildModel() (ADR-0004); front elevation + 3D (ADR-0014); project plan and room front view (N11).'],
+    appNotes: ['This app: every view is a projection of buildModel() (ADR-004); front elevation + 3D (ADR-014); project plan and room front view (N11).'],
   }),
   F('ortho-plan', {
     name: '2D plan as orthographic view of the same model', parent: 'sync-2d-3d', category: 'visual', subcategory: 'Views',
@@ -509,7 +509,7 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
     mvp: 'Saving and reopening restores template versions, parameter overrides, transformations, groups and connections.',
     technical: ['Versioned JSON/domain records plus separate asset references allow migrations and keep template identity.'],
     competitors: ['c.planner5d'], findings: ['rank-10', 'rec-10', 'mvp-14', 'stack-08', '043', '063', '061'], phase: P1, tags: ['core', 'MVP', 'P0'],
-    appNotes: ['This app: autosaved local library and projects in IndexedDB (F14, ADR-0012).'],
+    appNotes: ['This app: autosaved local library and projects in IndexedDB (F14, ADR-012).'],
   }),
   F('version-recovery', {
     name: 'Version history and recovery', parent: 'versioned-save', category: 'persistence', subcategory: 'History',
@@ -648,7 +648,7 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
     name: 'Hardware/fastener completeness', category: 'manufacturing', subcategory: 'Hardware', ...ranked(25),
     description: 'The ensemble lists all required hardware and fasteners; missing hardware is one of the "looks right but cannot be built" frustrations (a missing-hinge example illustrates the need). The paper keeps generated hardware deterministic.',
     findings: ['rank-25', '064', '133', '142', 'phase-3', '123'], phase: P3, tags: ['P2'],
-    appNotes: ['This app lists hardware as a labelled schedule and never invents specs (ADR-0010).'],
+    appNotes: ['This app lists hardware as a labelled schedule and never invents specs (ADR-010).'],
   }),
   F('board-bom', {
     name: 'Detailed hardware and board-level BOM', parent: 'hardware-completeness', category: 'manufacturing', subcategory: 'Production data',
@@ -779,7 +779,7 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
     description: 'AI proposes candidate arrangements; the deterministic engine validates; the user accepts or edits. AI never overrides a hard compatibility rule. Coohom (AI kitchen auto-layout) and Planner 5D (AI-assisted placement) implement versions of it.',
     requirements: ['AI proposes → deterministic engine validates → user accepts/edits.', 'AI may never override a hard compatibility rule.'],
     competitors: ['c.coohom', 'c.planner5d'], findings: ['rank-37', '020', '021', '022', '126', '142', '143', '042'], dependencies: ['compatibility-engine'], phase: P4, tags: ['P3'],
-    appNotes: ['ADR-0002: no remote AI in this app; see the research-vs-app conflict record.'],
+    appNotes: ['ADR-002: no remote AI in this app; see the research-vs-app conflict record.'],
   }),
   F('ai-floorplan', {
     name: 'AI-assisted floor-plan/layout', parent: 'ai-layout', category: 'ai', subcategory: 'AI',
@@ -830,7 +830,7 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
   F('collaboration', {
     name: 'Real-time collaboration/comments', category: 'ux', subcategory: 'Collaboration', ...ranked(35),
     description: 'Several people edit or comment on one ensemble; listed in phase four "if justified". Yjs is a credible option.', findings: ['rank-35', 'stack-09', 'phase-4'], phase: P4, tags: ['P2'],
-    appNotes: ['ADR-0002: no backend or accounts in this app.'],
+    appNotes: ['ADR-002: no backend or accounts in this app.'],
   }),
   F('yjs-crdt', {
     name: 'CRDT shared state (Yjs)', parent: 'collaboration', category: 'architecture', subcategory: 'Collaboration',
@@ -883,8 +883,8 @@ export const ENSEMBLE_CONTRADICTIONS: Contradiction[] = [
   { id: 'ens.x.10', basis: 'inferred', title: 'Value score vs priority label', description: 'Read across the table (not stated by the paper): "Explainable warnings" scores 4.8 but is P1 while lower-scored rows 16, 17 and 19 are P0; "Lock/pin" is P1 although the architecture section calls locks outranking soft rules "essential for user trust". Value and priority are separate columns in the paper.', findings: ['ens.n.rank-07', 'ens.n.rank-16', 'ens.n.rank-18', 'ens.n.108'], features: ['ens.f.explainable-warnings', 'ens.f.locks-overrides'] },
   { id: 'ens.x.15', basis: 'inferred', title: 'P0 features missing from the MVP table and phase plan', description: 'Read across the paper (not stated by it): room geometry (rank 16, P0, recommendation #14), edge/face/centre alignment (rank 17, P0), duplicate/mirror/rotate (rank 19, P0) and the assembly graph (rank 22, "P0 internal") are not in the MVP capability table, and none of them is named in the four phases. No phase is assigned to them here.', findings: ['ens.n.rank-16', 'ens.n.rank-17', 'ens.n.rank-19', 'ens.n.rank-22', 'ens.n.rec-14', 'ens.n.114', 'ens.n.phase-1'], features: ['ens.f.room-geometry', 'ens.f.alignment-distribution', 'ens.f.duplicate-mirror-rotate', 'ens.f.assembly-graph'] },
   { id: 'ens.x.16', basis: 'inferred', title: '"High" evidence confidence resting on anecdotes', description: 'Read across the paper (not stated by it): several rows rate evidence "High" from community posts — rank 3 "real interference reports", rank 8 "explicit request also found", rank 10 "version-loss frustration documented" (its only citation, ref-55, is the r/planner5d forum) — while the paper calls these sources anecdotes, not statistically representative, and "low for prevalence".', findings: ['ens.n.rank-03', 'ens.n.rank-08', 'ens.n.rank-10', 'ens.n.013', 'ens.n.019', 'ens.n.144', 'ens.n.151'], features: ['ens.f.collision-clearance', 'ens.f.multi-select-groups', 'ens.f.versioned-save'] },
-  { id: 'ens.x.11', basis: 'app', title: 'Research vs ADR-0002: AI, collaboration, live data', description: 'AI layout, natural-language generation, real-time collaboration (Yjs), live pricing/inventory data and server-side processing need network services; ADR-0002 keeps this app a static offline PWA with no backend, accounts, cloud or remote AI.', findings: ['ens.n.rank-37', 'ens.n.rank-38', 'ens.n.rank-35', 'ens.n.rank-24', 'ens.n.rank-34', 'ens.n.stack-09', 'ens.n.112'], features: ['ens.f.ai-layout', 'ens.f.nl-generation', 'ens.f.collaboration', 'ens.f.live-price', 'ens.f.inventory-alternatives'] },
-  { id: 'ens.x.12', basis: 'app', title: 'Research vs ADR-0022/0028: references vs embedded copies', description: 'The paper\'s FurnitureInstance references a template and never copies it (pCon reference copies update across instances); this app\'s projects embed a copy of each design so library edits never flow in by themselves.', findings: ['ens.n.072', 'ens.n.095', 'ens.n.053'], features: ['ens.f.template-instancing', 'ens.f.reference-copies'] },
-  { id: 'ens.x.13', basis: 'app', title: 'Research vs ADR-0022: free rotation vs quarter turns', description: 'The paper\'s Transform uses a quaternion rotation; this app keeps every panel an axis-aligned box and rotates project pieces in quarter turns about the vertical axis only.', findings: ['ens.n.091', 'ens.n.mvp-3'], features: ['ens.f.direct-manipulation', 'ens.f.numeric-transform'] },
-  { id: 'ens.x.14', basis: 'app', title: 'Research vs ADR-0010: generated hardware', description: 'The paper wants generated hardware and hardware completeness; ADR-0010 lets this app list hardware only as a labelled schedule and never invent specs.', findings: ['ens.n.rank-25', 'ens.n.133', 'ens.n.142'], features: ['ens.f.hardware-completeness'] },
+  { id: 'ens.x.11', basis: 'app', title: 'Research vs ADR-002: AI, collaboration, live data', description: 'AI layout, natural-language generation, real-time collaboration (Yjs), live pricing/inventory data and server-side processing need network services; ADR-002 keeps this app a static offline PWA with no backend, accounts, cloud or remote AI.', findings: ['ens.n.rank-37', 'ens.n.rank-38', 'ens.n.rank-35', 'ens.n.rank-24', 'ens.n.rank-34', 'ens.n.stack-09', 'ens.n.112'], features: ['ens.f.ai-layout', 'ens.f.nl-generation', 'ens.f.collaboration', 'ens.f.live-price', 'ens.f.inventory-alternatives'] },
+  { id: 'ens.x.12', basis: 'app', title: 'Research vs ADR-022/028: references vs embedded copies', description: 'The paper\'s FurnitureInstance references a template and never copies it (pCon reference copies update across instances); this app\'s projects embed a copy of each design so library edits never flow in by themselves.', findings: ['ens.n.072', 'ens.n.095', 'ens.n.053'], features: ['ens.f.template-instancing', 'ens.f.reference-copies'] },
+  { id: 'ens.x.13', basis: 'app', title: 'Research vs ADR-022: free rotation vs quarter turns', description: 'The paper\'s Transform uses a quaternion rotation; this app keeps every panel an axis-aligned box and rotates project pieces in quarter turns about the vertical axis only.', findings: ['ens.n.091', 'ens.n.mvp-3'], features: ['ens.f.direct-manipulation', 'ens.f.numeric-transform'] },
+  { id: 'ens.x.14', basis: 'app', title: 'Research vs ADR-010: generated hardware', description: 'The paper wants generated hardware and hardware completeness; ADR-010 lets this app list hardware only as a labelled schedule and never invent specs.', findings: ['ens.n.rank-25', 'ens.n.133', 'ens.n.142'], features: ['ens.f.hardware-completeness'] },
 ]

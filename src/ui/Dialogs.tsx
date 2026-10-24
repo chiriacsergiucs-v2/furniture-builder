@@ -127,7 +127,7 @@ export function LibraryDialog({ open, onClose, onOpened }: { open: boolean; onCl
       const isProject = !!parsed && typeof parsed === 'object' && 'items' in parsed
       const errs = isProject ? validateProject(parsed) : validateDesign(parsed)
       if (errs.length) { setError(`That file is not a valid ${isProject ? 'project' : 'design'}: ${errs.slice(0, 3).join('; ')}.`); return }
-      // Pictures carried in the file go to this device (ADR-0048); a bad one is reported, the file still opens.
+      // Pictures carried in the file go to this device (ADR-048); a bad one is reported, the file still opens.
       const { data, problems } = await takePictures(parsed)
       const done = () => { if (problems.length) { setError(`Opened, but ${problems.slice(0, 3).join(' ')}`); refresh() } else opened() }
       if (isProject) {
@@ -215,7 +215,7 @@ export function MaterialsDialog({ open, onClose }: { open: boolean; onClose: () 
   const add = useDesign(s => s.addMaterial)
   const remove = useDesign(s => s.removeMaterial)
   const [why, setWhy] = useState<{ id: string; text: string } | null>(null)
-  // The user's decor list (ADR-0049): the decor choice appears only once a list has been imported.
+  // The user's decor list (ADR-049): the decor choice appears only once a list has been imported.
   const [decors, setDecors] = useState<Decor[]>([])
   const [decorMsg, setDecorMsg] = useState<{ ok: boolean; text: string } | null>(null)
   useEffect(() => { if (open) listDecors().then(setDecors).catch(() => setDecors([])) }, [open])
@@ -286,7 +286,7 @@ export function MaterialsDialog({ open, onClose }: { open: boolean; onClose: () 
 }
 
 /**
- * ADR-0048: any picture from this device as the board's look. It is scaled down and kept on this device only; the
+ * ADR-048: any picture from this device as the board's look. It is scaled down and kept on this device only; the
  * plain colour becomes the picture's average colour and is shown wherever the picture cannot be.
  */
 function MaterialPicture({ m }: { m: Material }) {

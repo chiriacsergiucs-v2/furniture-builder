@@ -1,6 +1,6 @@
 import type { Design, Mm, Product } from '../types'
 
-/** Function groups and rooms used to group the catalog (ADR-0032). */
+/** Function groups and rooms used to group the catalog (ADR-032). */
 export type FunctionGroup = 'kitchen' | 'storage' | 'tables' | 'seating' | 'sleeping'
 export type Room = 'living' | 'bedroom' | 'dining' | 'office' | 'outdoor' | 'kitchen' | 'hallway' | 'kids' | 'other'
 export const FUNCTIONS: FunctionGroup[] = ['kitchen', 'storage', 'tables', 'seating', 'sleeping']
@@ -9,8 +9,8 @@ export const FUNCTION_LABEL: Record<FunctionGroup, string> = { kitchen: 'Kitchen
 export const ROOM_LABEL: Record<Room, string> = { living: 'Living room', bedroom: 'Bedroom', dining: 'Dining room', office: 'Home office', kitchen: 'Kitchen', hallway: 'Hallway', kids: "Kids' room", outdoor: 'Outdoor', other: 'Other' }
 
 /**
- * What a variant needs beyond today's roots (ADR-0033). Built capabilities let the variant be inserted;
- * `hardware:user` inserts with a reminder to choose the hardware from its datasheet (ADR-0010).
+ * What a variant needs beyond today's roots (ADR-033). Built capabilities let the variant be inserted;
+ * `hardware:user` inserts with a reminder to choose the hardware from its datasheet (ADR-010).
  */
 export type Capability =
   | 'top:rails' | 'bottom:none' | 'appliance-niche' | 'root:panel' | 'root:frame' | 'front:sliding' | 'front:flap' | 'hardware:user'
@@ -22,7 +22,7 @@ export const BUILT_CAPABILITIES: ReadonlySet<Capability> = new Set<Capability>([
 
 /** Plain-language reason a capability is missing, shown on a greyed variant. */
 export const CAPABILITY_WAITS: Partial<Record<Capability, string>> = {
-  shape: 'needs angled or shaped parts (a future ADR, see ADR-0039)',
+  shape: 'needs angled or shaped parts (a future ADR, see ADR-039)',
   'front:fixed': 'needs a fixed false front (not built yet)',
   'front:lid': 'needs a lid hinged on the top (not built yet)',
   'frame:arms': 'needs arm rests on the frame root (not built yet)',
@@ -41,11 +41,11 @@ export interface CatalogVariant {
   requires: Capability[]
   /** For `hardware:user`: what the user still has to choose (a warning until cleared). */
   hardware?: string
-  /** A complete, self-contained design (ADR-0011). Absent when the variant cannot be built yet. */
+  /** A complete, self-contained design (ADR-011). Absent when the variant cannot be built yet. */
   create?: () => Design
 }
 
-/** `safety`: built, but every variant waits for safety values the user confirms (ADR-0035). */
+/** `safety`: built, but every variant waits for safety values the user confirms (ADR-035). */
 export type Support = 'ready' | 'needs-construction' | 'safety' | 'reference'
 
 export interface CatalogFamily {
@@ -70,7 +70,7 @@ export interface CatalogFamily {
 
 /**
  * Safety-regulated items (bunk bed, cradle) unlock once the user confirms, on this device, that they check the design
- * against the standards themselves (ADR-0035). The designs keep their "not a compliance check" warning regardless.
+ * against the standards themselves (ADR-035). The designs keep their "not a compliance check" warning regardless.
  */
 let safetyConfirmed = false
 export const setSafetyConfirmed = (v: boolean) => { safetyConfirmed = v }

@@ -23,7 +23,7 @@ let idc = 0
 const nid = () => `s${idc++}`
 
 function genSpace(depth: number, doorsAbove: boolean): Space {
-  // Hinged doors mostly; sliding doors and flaps sometimes (ADR-0037).
+  // Hinged doors mostly; sliding doors and flaps sometimes (ADR-037).
   const frontKind = rnd()
   const doors: Front | null = doorsAbove || rnd() >= 0.3 ? null
     : frontKind < 0.75 ? { kind: 'doors' as const, count: pick([1, 2] as const), hinge: pick(['left', 'right'] as const) }
@@ -40,7 +40,7 @@ function genSpace(depth: number, doorsAbove: boolean): Space {
     case 'drawers': {
       const count = ri(1, 5)
       const heights = rnd() < 0.35 ? Array.from({ length: count }, () => rnd() < 0.3 ? { mode: 'mm' as const, value: ri(90, 250) } : { mode: 'fr' as const, value: ri(1, 3) }) : undefined
-      // Sink drawers (ADR-0040): the top drawer cut around a trap.
+      // Sink drawers (ADR-040): the top drawer cut around a trap.
       const uCut = rnd() < 0.2 ? { width: ri(30, 500), depth: ri(30, 450) } : undefined
       return { id, kind: 'drawers', count, front: doors, handle, ...(heights ? { heights } : {}), ...(uCut ? { uCut } : {}) }
     }
@@ -64,7 +64,7 @@ function mats(): Material[] {
 }
 const drawers = () => ({ ...defaultDrawers(), sideClearance: ri(10, 14), verticalClearance: ri(20, 40), rearClearance: ri(0, 20), boxMaterialId: 'box', bottomMaterialId: 'bot' })
 
-/** Diagonal corner units (ADR-0040): random sizes, sides, shelves and doors. */
+/** Diagonal corner units (ADR-040): random sizes, sides, shelves and doors. */
 function genDiagonal(): Design {
   idc = 0
   const W = ri(500, 1400)
@@ -134,13 +134,13 @@ function check(d: Design): string[] {
   const fz = style === 'inset' ? Dd - tf : Dd
   const sliding = (f: (typeof P)[number]) => f.label.startsWith('Sliding door')
   for (const f of fronts) {
-    // Sliding doors run in two planes in front of the carcass, whatever the front style (ADR-0037).
+    // Sliding doors run in two planes in front of the carcass, whatever the front style (ADR-037).
     if (sliding(f)) { if ((f.box.z !== Dd && f.box.z !== Dd + tf + 2) || f.box.d !== tf) probs.push(`sliding-z ${f.id}`); continue }
     if (f.box.z !== fz || f.box.d !== tf) probs.push(`front-z ${f.id} z=${f.box.z} expected ${fz}`)
     if (d.product.kind === 'desk' && f.box.z + f.box.d > envD && !m.diagnostics.some(x => x.code === 'fronts-proud')) probs.push(`front-protrudes-past-worktop ${f.id} by ${f.box.z + f.box.d - envD}`)
   }
   // floating: every non-front panel must touch another panel (drawer parts each other; shelves the carcass)
-  // Adjustable shelves rest on pins (ADR-0023): they are supported only if both neighbouring panels carry pin rows.
+  // Adjustable shelves rest on pins (ADR-023): they are supported only if both neighbouring panels carry pin rows.
   const onPins = (p: (typeof P)[number]) => p.label.startsWith('Adjustable shelf') &&
     P.filter(q => q.pinRows?.length && (q.box.x + q.box.w <= p.box.x || q.box.x >= p.box.x + p.box.w)).length >= 2
   for (const p of P) if (!FRONT.has(p.role) && !onPins(p) && !P.some(q => q !== p && touches(p.box, q.box))) probs.push(`floating ${p.id}`)
@@ -148,7 +148,7 @@ function check(d: Design): string[] {
   const t = d.materials.find(m => m.id === 'body')!.thickness
   const lo = (n: number) => Math.floor(n / 2), hi = (n: number) => n - Math.floor(n / 2)
   if (d.product.kind === 'cabinet') {
-    // Outer limits per front style (ADR-0006, ADR-0024).
+    // Outer limits per front style (ADR-006, ADR-024).
     const bt = d.product.params.bottom === 'none' ? 0 : t
     const lim = style === 'inset' ? { x0: t + g, x1: W - t - g, y0: ph + bt + g, y1: H - t - g }
       : style === 'half' ? { x0: lo(t) + hi(g), x1: W - t + lo(t) - lo(g), y0: ph + lo(t) + hi(g), y1: H - t + lo(t) - lo(g) }
@@ -177,7 +177,7 @@ function check(d: Design): string[] {
     const c = d.product.params
     const internal = h.label.includes('internal')
     const ins = (c.frontStyle ?? 'overlay') === 'inset'
-    // Sliding doors run outside the carcass, so they take no depth from the drawers behind them (ADR-0037).
+    // Sliding doors run outside the carcass, so they take no depth from the drawers behind them (ADR-037).
     const ownFront = findSpace(c.interior, h.nodeId)?.front
     const setback = internal ? Math.max(c.shelfSetback, INTERNAL_DRAWER_SETBACK) + (ins && sp.hasDoors && ownFront?.kind !== 'sliding' ? tf : 0) : ins ? tf : 0
     const best = Math.max(...c.drawers.runnerLengths.filter(l => l <= sp.box.d - c.drawers.rearClearance - setback))
@@ -201,7 +201,7 @@ function genFrame(): Design {
     bed: kind === 'bed' ? { mattress: { w: pick([600, 900, 1400, 1600, 1800]), l: pick([1200, 1900, 2000]) }, clearance: ri(0, 30), deckHeight: ri(200, 500), railHeight: ri(140, 260),
       headboardHeight: ri(400, 1200), footboardHeight: pick([0, ri(300, 700)]), sidePanelHeight: pick([0, 0, ri(400, 900)]), tierGap: pick([0, 0, ri(700, 1100)]), guardHeight: ri(150, 400) } : null,
   }
-  // Shaped options (ADR-0040): reclining positions with a footrest, arm rests, a lounger backrest, a bought base.
+  // Shaped options (ADR-040): reclining positions with a footrest, arm rests, a lounger backrest, a bought base.
   const positions = () => Array.from({ length: ri(1, 4) }, () => ri(91, 179))
   if (f.back && rnd() < 0.3) { const ps = positions(); f.recline = { positions: ps, at: ri(0, ps.length - 1), footrest: rnd() < 0.7 ? { length: ri(100, 600), angles: ps.map(() => ri(0, 90)) } : null } }
   if (f.back && rnd() < 0.3) f.arms = { height: (f.back.seatHeight) + ri(-50, 400) }
@@ -229,7 +229,7 @@ function checkFrame(d: Design): string[] {
   return probs
 }
 
-it('random frames keep the frame invariants (seeded fuzz, ADR-0038)', () => {
+it('random frames keep the frame invariants (seeded fuzz, ADR-038)', () => {
   const N = Math.ceil(Number(process.env.FUZZ_N ?? 3000) / 2)
   const found: Record<string, { n: number; probs: string[] }> = {}
   let clean = 0
