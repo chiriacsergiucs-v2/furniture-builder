@@ -4,6 +4,7 @@ Run: python3 -I -m unittest discover tools/catalog
 """
 import json
 import os
+import subprocess
 import tempfile
 import unittest
 from unittest import mock
@@ -139,6 +140,21 @@ class ExtractTest(unittest.TestCase):
             self.assertEqual(json.load(f)['format'], extract_pdf.FORMAT)
         with self.assertRaises(SystemExit), mock.patch('sys.stderr'):
             extract_pdf.main(['https://example.com/manual.pdf', '--out', out])
+
+
+class NoManualsInRepoTest(unittest.TestCase):
+    """No third-party manual, page image or extraction output is tracked (ADR-029)."""
+
+    def test_nothing_copyrighted_is_tracked(self):
+        repo = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        try:
+            files = subprocess.run(['git', 'ls-files', '--', 'tools/catalog', 'src/core/catalog'], cwd=repo,
+                                   capture_output=True, text=True, check=True).stdout.splitlines()
+        except (OSError, subprocess.CalledProcessError):
+            self.skipTest('not a git checkout')
+        banned = ('.pdf', '.png', '.jpg', '.jpeg', '.tif', '.tiff', '.webp')
+        found = [f for f in files if f.lower().endswith(banned) or os.path.basename(f) == 'extraction.json']
+        self.assertEqual(found, [])
 
 
 if __name__ == '__main__':

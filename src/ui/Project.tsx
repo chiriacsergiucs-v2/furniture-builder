@@ -648,6 +648,17 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
     window.addEventListener('keydown', onEsc);
     return () => window.removeEventListener('keydown', onEsc);
   }, [drag]);
+  // Chrome ignores `touch-action` on SVG shapes, so a touch drag on a piece would start a page scroll and cancel the
+  // pointer. While a piece is pressed, touchmove is prevented (non-passive) so the drag keeps the pointer.
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const onMove = (e: TouchEvent) => {
+      if (dragRef.current) e.preventDefault();
+    };
+    svg.addEventListener('touchmove', onMove, { passive: false });
+    return () => svg.removeEventListener('touchmove', onMove);
+  }, []);
   /** Screen point → room mm on the plan (x along the back wall, z away from it). */
   const toRoom = (e: { clientX: number; clientY: number }) => {
     const svg = svgRef.current,

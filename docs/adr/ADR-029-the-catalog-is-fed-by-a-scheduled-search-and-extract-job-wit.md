@@ -97,6 +97,7 @@ environment's network policy (proxy 403). OCR path not exercised (no Tesseract i
       and 2020 mm are among the dimension facts with their page; two runs give byte-identical `extraction.json`
 - [ ] A page without a text layer in that or another real manual gives `ocr-unavailable` (or OCR text when
       Tesseract is installed), never a crash
-- [ ] No `.pdf`, page image or `extraction.json` is tracked under `tools/catalog/` or `src/core/catalog/`
+- [x] No `.pdf`, page image or `extraction.json` is tracked under `tools/catalog/` or `src/core/catalog/`
       (a test asserts it)
+      — `NoManualsInRepoTest` (2026-10-24; fails when a `.pdf` is staged under `tools/catalog/`)
 - [ ] `tools/catalog/README.md` gives the exact commands and the result of the real-manual run
