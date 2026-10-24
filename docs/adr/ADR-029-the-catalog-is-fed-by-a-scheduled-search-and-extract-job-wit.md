@@ -1,12 +1,18 @@
 # ADR-029: The catalog is fed by a scheduled search-and-extract job with a local PDF extraction script, gated by PR
 
-- Status: Pending
+- Status: Deferred (won't do: no access to IKEA data — user decision 2026-10-24)
 - Date: 2026-10-22
 - Decided by: user request; defaults below await confirmation
 - Depends on: none
 - Design: n/a
 - Related: ADR-002, ADR-004, ADR-008, ADR-010, ADR-011, ADR-016, ADR-027, ADR-028
 - Backlog: N17
+
+## Status note (2026-10-24)
+
+The user decided not to build the rest of this ADR: there is no access to IKEA data (ikea.com manuals cannot be
+fetched here). The extraction script and its tests stay in `tools/catalog/` as built. ADR-052 and ADR-027 depend on
+this ADR's feed and stay blocked until the user decides otherwise.
 
 ## Context
 
