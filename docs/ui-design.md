@@ -127,6 +127,13 @@ the solid action.
 **Drawings.** Unchanged geometry (ADR-004 / 0014); colours via tokens so they follow the theme (A12). Print sheet
 unchanged.
 
+**3D look and Render (ADR-067, ADR-068, 2026-10-24).** The 3D toolbar adds **Look** (`.segmented.small`:
+_Simple · Realistic_, kept in `localStorage` `fb:look`; Realistic by default at ≥ 1024 px) and a **Render** button
+(camera icon) that opens _Render a picture_: size segmented, hint, a `.status.saving` progress line, the picture in
+`.render-frame`, Start / Cancel / Render again / **Save PNG** in the footer, and an error alert when WebGL 2 is
+missing. In Realistic the selection is the green tint only (no outline). Materials gains **Finish** (_Matte · Satin ·
+Gloss_) under _Has grain_.
+
 ## 5. Rollout
 
 Shipped as one slice on `ccr-38ebfeec-gnv63w` because the tokens, components and screens share one stylesheet; each

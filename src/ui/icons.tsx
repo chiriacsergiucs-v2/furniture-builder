@@ -19,6 +19,7 @@ const PATHS = {
   'alert-triangle': 'M12 3 2 20h20zM12 9v5m0 3h.01',
   'alert-circle': 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 8v5m0 3h.01',
   info: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 11v5m0-8h.01',
+  camera: 'M4 8h3l2-3h6l2 3h3v11H4zM12 10a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z',
   refresh: 'M20 12a8 8 0 1 1-2.3-5.7M20 4v4h-4',
   trash: 'M4 7h16M10 11v6m4-6v6M6 7l1 13h10l1-13M9 7V4h6v3',
   copy: 'M9 9h11v11H9zM5 15V5a2 2 0 0 1 2-2h10',

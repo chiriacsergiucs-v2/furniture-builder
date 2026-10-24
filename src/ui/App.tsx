@@ -31,6 +31,8 @@ import { Output } from './Output';
 import { PrintSheet } from './PrintSheet';
 import { Icon } from './icons';
 import { setTheme, useTheme } from './useTheme';
+import { setLook, useLook } from './useLook';
+import { RenderDialog } from './RenderDialog';
 
 const Viewer3D = lazy(() => import('../viewer/Viewer3D'));
 
@@ -151,9 +153,10 @@ export function App() {
     canRedoPiece = useDesign((s) => s.future.length > 0);
   const canUndoProject = useDesign((s) => s.projectPast.length > 0),
     canRedoProject = useDesign((s) => s.projectFuture.length > 0);
-  const [dialog, setDialog] = useState<null | 'new' | 'library' | 'materials' | 'add' | 'wizard'>(
-    null,
-  );
+  const [dialog, setDialog] = useState<
+    null | 'new' | 'library' | 'materials' | 'add' | 'wizard' | 'render'
+  >(null);
+  const look = useLook();
   const openCatalog = () => {
     setDialog(null);
     setPage('catalog');
@@ -756,6 +759,33 @@ export function App() {
                   Reset view
                 </button>
               )}
+              {mount3d && (
+                <div className="segmented small" role="radiogroup" aria-label="Look">
+                  {(['simple', 'realistic'] as const).map((l) => (
+                    <button
+                      key={l}
+                      type="button"
+                      role="radio"
+                      aria-checked={look === l}
+                      className={look === l ? 'on' : ''}
+                      onClick={() => setLook(l)}
+                    >
+                      {l === 'simple' ? 'Simple' : 'Realistic'}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {mount3d && (
+                <button
+                  type="button"
+                  className="btn sm"
+                  title="Render a photo-quality picture. Best on a laptop; a phone may be slow."
+                  onClick={() => setDialog('render')}
+                >
+                  <Icon name="camera" className="sm" />
+                  Render
+                </button>
+              )}
             </div>
             <div className="views">
               <div className={`view front ${view === 'front' ? 'active' : ''}`}>
@@ -809,6 +839,11 @@ export function App() {
           onOpened={() => setPage('editor')}
         />
         <MaterialsDialog open={dialog === 'materials'} onClose={() => setDialog(null)} />
+        <RenderDialog
+          open={dialog === 'render'}
+          onClose={() => setDialog((d) => (d === 'render' ? null : d))}
+          name={inProject ? project!.name : design.name}
+        />
         <AddPieceDialog
           open={dialog === 'add'}
           onClose={() => setDialog(null)}

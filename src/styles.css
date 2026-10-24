@@ -1152,6 +1152,22 @@ td.note {
 .dialog-footer .start {
   margin-right: auto;
 }
+/* Render a picture (ADR-068): the path-traced canvas, scaled to the dialog's width. */
+.render-frame:empty {
+  display: none;
+}
+.render-frame {
+  margin-top: var(--s-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  overflow: hidden;
+  background: var(--surface-2);
+}
+.render-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
 .dialog.confirm {
   width: min(440px, calc(100vw - 32px));
 }
