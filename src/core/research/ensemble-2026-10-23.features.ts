@@ -5,7 +5,7 @@
  * `appNotes` are observations about this repository (backlog / ADR ids), kept apart from the research.
  */
 import text from '../../../docs/research/2026-10-23-furniture-ensemble-builder.md?raw'
-import { ASSESSOR, ASSESSMENT_DATE, ENSEMBLE_ASSESSMENTS, ENSEMBLE_PRIORITIES } from './ensemble-2026-10-23.assessment'
+import { ASSESSOR, ASSESSMENT_DATE, ENSEMBLE_APPRECIATION, ENSEMBLE_ASSESSMENTS, ENSEMBLE_PRIORITIES } from './ensemble-2026-10-23.assessment'
 import type { Assessment, Contradiction, ResearchFeature } from './types'
 
 export const NOT_EVALUATED = 'not evaluated'
@@ -29,7 +29,8 @@ function assessmentOf(slug: string): Assessment | undefined {
   if (!r) return undefined
   const [relevance, demand, ux, adoption, differentiation, leverage, complexity, confidence, rationale, internal] = r
   const [priority, priorityBasis] = ENSEMBLE_PRIORITIES[slug] ?? ['', '']
-  return { scores: { relevance, demand, ux, adoption, differentiation, leverage }, complexity: complexity as Assessment['complexity'], confidence: confidence as Assessment['confidence'], priority, priorityBasis, rationale, by: ASSESSOR, date: ASSESSMENT_DATE, ...(internal ? { internal } : {}) }
+  const [appreciation, appreciationBasis] = ENSEMBLE_APPRECIATION[slug] ?? ['', '']
+  return { scores: { relevance, demand, ux, adoption, differentiation, leverage }, complexity: complexity as Assessment['complexity'], confidence: confidence as Assessment['confidence'], priority, priorityBasis, appreciation, appreciationBasis, rationale, by: ASSESSOR, date: ASSESSMENT_DATE, ...(internal ? { internal } : {}) }
 }
 function F(slug: string, d: Draft): ResearchFeature {
   const assessment = d.rank ? undefined : assessmentOf(slug)

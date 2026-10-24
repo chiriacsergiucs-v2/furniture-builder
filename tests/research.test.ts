@@ -323,6 +323,25 @@ describe('research catalog: assessment of demand, value, complexity and confiden
     expect(filterFeatures(view, {}, { ...EMPTY_QUERY, priority: 'P3' }).every(f => rating(f, 'priority').value.includes('P3'))).toBe(true)
     expect(specMarkdown(view, {}, ['ens.f.env-drawer'], AT)).toMatch(/\| P1 \(assessed\) \|[\s\S]*Research priority P1 \(assessed\): Parent/)
   })
+  it('gives every assessed feature an appreciation with its basis; requests are never counted as praise', () => {
+    for (const f of all.filter(x => x.assessment)) {
+      expect(f.assessment!.appreciation.length, f.id).toBeGreaterThan(0)
+      expect(f.assessment!.appreciationBasis.length, f.id).toBeGreaterThan(10)
+      expect(rating(f, 'appreciation').source).toBe('assessment')
+      if (f.assessment!.internal && f.id !== 'ens.f.local-propagation') expect(f.assessment!.appreciation, f.id).toBe('Indirect')
+      const parent = f.assessment!.appreciationBasis.match(/^Parent: (.+?) \("(.+?)", rank (\d+)\)/)
+      if (parent) expect(all.find(x => x.rank === Number(parent[3]))!.appreciation, f.id).toBe(parent[2])
+    }
+    for (const f of all.filter(x => x.rank)) expect(rating(f, 'appreciation')).toEqual({ value: f.appreciation, source: 'paper' })
+    expect(rating(view.features.get('ens.f.cross-family')!, 'appreciation').value).toBe('Unproven')
+    expect(rating(view.features.get('ens.f.env-chair')!, 'appreciation').value).toBe('Unproven')
+    expect(rating(view.features.get('ens.f.snap-preview')!, 'appreciation').value).toBe('High')
+    const st = assessmentStats(all)
+    expect(st.byAppreciation.reduce((n, r) => n + r.n, 0)).toBe(all.length)
+    expect(st.byAppreciation.find(r => r.key === 'Other')).toBeUndefined()
+    expect(filterFeatures(view, {}, { ...EMPTY_QUERY, appreciation: 'Unproven' }).every(f => /^Unproven/.test(rating(f, 'appreciation').value))).toBe(true)
+    expect(validateAssessment({ ...view.features.get('ens.f.snap-override')!.assessment!, appreciationBasis: '' }).join()).toMatch(/appreciation needs/)
+  })
   it('rejects an assessment off the scales or without a rationale', () => {
     const a = { ...view.features.get('ens.f.snap-override')!.assessment! }
     expect(validateAssessment({ ...a, scores: { ...a.scores, ux: 6 } }).join()).toMatch(/ux/)

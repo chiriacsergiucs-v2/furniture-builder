@@ -162,6 +162,9 @@ export interface Assessment {
   /** Research priority in the paper's terms (P0 foundational … P3 experimental/later), with what it rests on. */
   priority: string
   priorityBasis: string
+  /** Appreciation in the paper's words (High, Medium, Mixed, Unproven, Indirect …), with what it rests on. */
+  appreciation: string
+  appreciationBasis: string
   rationale: string
   by: string
   date: string
