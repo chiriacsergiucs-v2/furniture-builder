@@ -35,6 +35,8 @@ for (const width of [1440, 375]) {
   const rail = label => wizard.locator('.steps .lbl').getByText(label, { exact: true })
   const shot = name => page.screenshot({ path: `${out}/wizard-${name}-${width}.png` })
   await page.goto(url)
+  // The app starts on Home (N38); the editor is one visible tab away.
+  await page.getByRole('link', { name: 'Editor' }).click()
 
   /** Open the wizard by visible text: desktop through New → "New piece, step by step"; phones through the Catalog tab → "New piece". */
   const openWizard = async (via) => {
@@ -138,7 +140,7 @@ for (const width of [1440, 375]) {
     await page.getByRole('link', { name: /Catalog/ }).click()
     await page.getByRole('tab', { name: 'Saved on this device' }).click()
     const item = page.getByRole('button', { name: new RegExp(name) })
-    check(width, `${t.label}: listed in Catalog → Saved on this device`, await item.isVisible())
+    check(width, `${t.label}: listed in Catalog → Saved on this device`, await item.waitFor({ timeout: 5000 }).then(() => true, () => false))
     if (n === 0) await shot('6-catalog-saved')
     await item.click()
     check(width, `${t.label}: opens from the catalog in the editor`, await page.getByLabel('Name of this piece').inputValue() === name)
@@ -168,6 +170,7 @@ for (const width of [1440, 375]) {
   check(width, '"Update piece" keeps the piece and its name', await page.getByLabel('Name of this piece').inputValue() === cabName && await side.getByLabel('Width', { exact: true }).inputValue() === '1000')
   await page.getByRole('link', { name: /Catalog/ }).click()
   await page.getByRole('tab', { name: 'Saved on this device' }).click()
+  await page.getByRole('button', { name: new RegExp(cabName) }).first().waitFor({ timeout: 5000 }).catch(() => {})
   check(width, 'updated in place, not duplicated in the catalog', await page.getByRole('button', { name: new RegExp(cabName) }).count() === 1)
 
   // N36: pictures in Start from, and drawn in the browser for an edited family.
