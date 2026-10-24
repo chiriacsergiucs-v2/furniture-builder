@@ -3,7 +3,7 @@
 - Status: Pending
 - Date: 2026-10-22
 - Decided by: user request; defaults below await confirmation
-- Depends on: ADR-029
+- Depends on: ADR-052
 - Design: docs/ui-design.md
 - Related: ADR-002, ADR-004, ADR-011, ADR-012, ADR-022, ADR-028, ADR-029; amended by ADR-032 (Templates source, Room/Type grouping)
 - Backlog: N14
@@ -82,4 +82,16 @@ Verification 2026-10-23 (branch `feat/catalog-templates`): `npm run lint`, `npm 
 
 1. Category list — superseded by the user's instruction of 2026-10-22: the Catalog groups **by room (default) or by type** (ADR-032).
 2. Saved pieces — **all saved pieces appear** under *Saved on this device* (default kept).
-Approved, not Accepted: the brand facet waits for the first brand entries from the feed (ADR-029).
+Approved, not Accepted: the brand facet waits for the first brand entries from the feed (ADR-052, split out of
+ADR-029 on 2026-10-24).
+
+## Done when
+
+- [x] One Catalog page with *Templates*, *Saved on this device* and *Brands*, grouped by room or type, with a name
+  search (`src/ui/Catalog.tsx`, `tests/catalog.test.ts`)
+- [x] Card size, part count and check badge come from `buildModel()`, not stored numbers
+- [x] Opening or adding any entry makes a copy with a new id and its origin; the shipped entry is unchanged
+  (`tests/store.test.ts`, `tests/catalog.test.ts`)
+- [ ] *Brands* has a brand facet: each brand with its count, choosing one filters the list; a test runs it on brand
+  entries and checks every card's size equals the `buildModel()` bounds
+- [ ] Find-it test: from the bare app, Catalog → *Brands* → a brand → the entry, at phone and desktop widths

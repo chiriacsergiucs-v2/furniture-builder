@@ -77,7 +77,7 @@ The **last column is the status**: the `ship-adr` skill rewrites it to
 | [ADR-024](../adr-done/ADR-024-front-styles-overlay-half-overlay-inset-and-handles-as-a-sch.md) | Front styles (overlay, half overlay, inset) and handles as a scheduled item with a position | — | ✅ Implemented |
 | [ADR-025](../adr-done/ADR-025-wall-and-corner-cabinets-as-new-product-roots-built-from-the.md) | Wall and corner cabinets as new product roots built from the cabinet generator | — | ✅ Implemented |
 | [ADR-026](../adr-done/ADR-026-desk-pedestals-become-editable-spaces.md) | Desk pedestals become editable spaces | — | ✅ Implemented |
-| [ADR-027](ADR-027-catalog-page-browse-furniture-by-category-brand-and-saved-on.md) | Catalog page: browse furniture by category, brand and "Saved on this device" | ADR-029 | Pending |
+| [ADR-027](ADR-027-catalog-page-browse-furniture-by-category-brand-and-saved-on.md) | Catalog page: browse furniture by category, brand and "Saved on this device" | ADR-052 | Pending |
 | [ADR-028](../adr-done/ADR-028-catalog-metadata-and-origin-link-live-in-the-design-document.md) | Catalog metadata and origin link live in the design document | — | ✅ Implemented |
 | [ADR-029](ADR-029-the-catalog-is-fed-by-a-scheduled-search-and-extract-job-wit.md) | The catalog is fed by a scheduled search-and-extract job with a local PDF extraction script, gated by PR | — | Pending |
 | [ADR-030](../adr-done/ADR-030-one-token-set-with-light-and-dark-themes-a-component-layer-a.md) | One token set with light and dark themes, a component layer, and a wizard-ready steps rail | — | ✅ Implemented |
@@ -102,3 +102,4 @@ The **last column is the status**: the `ship-adr` skill rewrites it to
 | [ADR-049](../adr-done/ADR-049-materials-carry-optional-manufacturer-and-type-labels-the-us.md) | Materials carry optional manufacturer and type labels; the user's own decor list enables a decor choice | — | ✅ Implemented |
 | [ADR-050](../adr-done/ADR-050-adopt-the-reserv-adr-layout-claude-skills-and-ci-conventions.md) | Adopt the reserv ADR layout, Claude skills and CI conventions | — | ✅ Implemented |
 | [ADR-051](../adr-done/ADR-051-add-undo-and-redo-for-project-changes.md) | Add undo and redo for project changes | ADR-022, ADR-047 | ✅ Implemented |
+| [ADR-052](ADR-052-run-the-catalog-feed-job-search-reconstruct-and-publish-bran.md) | Run the catalog feed job: search, reconstruct and publish brand entries through a pull request | ADR-029 | Pending |
