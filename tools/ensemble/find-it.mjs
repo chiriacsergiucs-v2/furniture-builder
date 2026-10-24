@@ -153,7 +153,15 @@ for (const width of [1440, 375]) {
   check(
     width,
     'saved: project listed under "Choose a project" after reload',
-    await page.getByText(`Verify ${width}`).first().isVisible(),
+    // The list is read from the device after Home renders: wait for it.
+    await page
+      .getByText(`Verify ${width}`)
+      .first()
+      .waitFor({ state: 'visible', timeout: 5000 })
+      .then(
+        () => true,
+        () => false,
+      ),
   );
   check(width, 'no sideways scroll (project)', await noSideScroll());
 
