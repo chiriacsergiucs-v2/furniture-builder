@@ -132,11 +132,6 @@ describe('placement (ADR-0031)', () => {
   })
 })
 
-/** Finished sizes and quantities from the file's `grouped_current_cut_list_by_material_and_room` (living). */
-const SOURCE_LIVING: [number, number, number][] = [
-  [2600, 400, 2], [2685, 400, 4], [400, 399, 12], [499, 400, 7], [510, 400, 4], [519, 400, 6],
-]
-
 describe('Mobila rooms from the project file', () => {
   it('every sample validates and builds without errors', () => {
     for (const s of sampleProjects) {
@@ -147,21 +142,29 @@ describe('Mobila rooms from the project file', () => {
       for (const pc of pm.pieces) expect(pc.model.diagnostics.filter(d => d.severity === 'error')).toEqual([])
     }
   })
-  it('living: column at the left, JOS on the floor, SUS hung with its underside at 2165 like the file', () => {
-    const pm = buildProjectModel(mobilaLiving())
-    const [col, jos, sus] = pm.pieces.map(p => p.bounds)
-    expect([col.x, col.w, col.h]).toEqual([0, 535, 2600])
-    expect([jos.x, jos.y, jos.w, jos.h]).toEqual([535, 0, 2685, 435])
-    expect([sus.x, sus.y, sus.w, sus.h]).toEqual([535, 2165, 2685, 435])
-    // overall 3220 × 2600, as the file's envelope
+  it('living (user 2026-10-24): catalog base cabinets 1 door + 2 doors + 1 door, on the floor and the same hung at the ceiling', () => {
+    const p = mobilaLiving()
+    const pm = buildProjectModel(p)
+    const b = pm.pieces.map(x => [x.bounds.x, x.bounds.y, x.bounds.w, x.bounds.h])
+    expect(b).toEqual([
+      [0, 0, 805, 435], [805, 0, 1610, 435], [2415, 0, 805, 435],
+      [0, 2165, 805, 435], [805, 2165, 1610, 435], [2415, 2165, 805, 435],
+    ])
+    // every piece comes from the catalog's base cabinet family, with one or two doors
+    expect(p.items.map(i => i.design.catalog?.origin?.variantId)).toEqual(['base-door', 'base-2-doors', 'base-door', 'base-door', 'base-2-doors', 'base-door'])
+    expect(p.items.map(i => buildModel(i.design).panels.filter(x => x.role === 'door').length)).toEqual([1, 2, 1, 1, 2, 1])
+    // ceiling row hangs on brackets above its floor cabinet; overall 3220 × 2600, the file's envelope
+    expect(p.items.slice(3).map(i => i.placement)).toEqual([1, 2, 3].map(n => ({ kind: 'above', baseId: `living-jos-${n}`, gap: 1730, offsetX: 0 })))
     expect([pm.model.bounds.w, pm.model.bounds.h]).toEqual([3220, 2600])
+    for (const [x, y] of [[0, 1], [3, 4], [1, 2], [4, 5]]) expect(overlaps(pm.pieces[x].bounds, pm.pieces[y].bounds)).toBe(false)
   })
-  it('living carcass parts match the file one for one (47 parts in all)', () => {
+  it('living cut list: 38 parts, 8 fronts 803 × 433', () => {
     const rows = projectCutlist(mobilaLiving())
-    for (const [l, w, q] of SOURCE_LIVING) expect(rows.find(r => r.length === l && r.width === w && r.thickness === 18 && r.materialName.startsWith('PAL'))?.quantity).toBe(q)
-    expect(rows.reduce((a, r) => a + r.quantity, 0)).toBe(47)
-    const fronts = rows.filter(r => r.materialName.startsWith('MDF')).reduce((a, r) => a + r.quantity, 0)
-    expect(fronts).toBe(12)
+    const got = rows.map(r => [r.length, r.width, r.materialName.slice(0, 3), r.quantity])
+    expect(got).toEqual(expect.arrayContaining([
+      [803, 433, 'MDF', 8], [1610, 400, 'PAL', 4], [1574, 400, 'PAL', 2], [805, 400, 'PAL', 8], [769, 400, 'PAL', 4], [400, 399, 'PAL', 12],
+    ]))
+    expect(rows.reduce((a, r) => a + r.quantity, 0)).toBe(38)
   })
   it('nightstand A: two units, fronts 446 wide, top front 160', () => {
     const p = mobilaDormitor()

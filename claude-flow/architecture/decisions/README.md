@@ -158,4 +158,4 @@ Requested by the user on 2026-10-24.
 
 | ID | Decision | Backlog | Status |
 |---|---|---|---|
-| [ADR-0047](ADR-0047.md) | Two touching cabinets in a project merge into one cabinet; any other difference refuses the merge | N41 | Proposed |
+| [ADR-0047](ADR-0047.md) | Two touching cabinets in a project merge into one cabinet; any other difference refuses the merge | N42 | Proposed |
