@@ -134,8 +134,12 @@ for (const width of [1280, 390]) {
     const progress = dlg.getByText(/Rendering… \d+ \/ 256 samples/);
     await progress.waitFor({ timeout: 120000 });
     const first = await progress.innerText();
-    await page.waitForTimeout(5000);
-    const later = (await progress.isVisible()) ? await progress.innerText() : 'done';
+    // The first samples wait for the path-tracing shader to compile (10–20 s on a software GPU).
+    let later = first;
+    for (let i = 0; i < 60 && later === first; i++) {
+      await page.waitForTimeout(2000);
+      later = (await progress.isVisible()) ? await progress.innerText() : 'done';
+    }
     check(width, 'sample count rises', first !== later, `${first} → ${later}`);
     check(
       width,
