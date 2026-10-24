@@ -130,7 +130,7 @@ export default function Viewer3D() {
   const exploded = useDesign((s) => s.exploded);
   const theme = useTheme();
   const look = useLook();
-  // A render (ADR-067) always uses the realistic look.
+  // A render (ADR-068) always uses the realistic look.
   const rendering = useRendering();
   const realistic = rendering || look === 'realistic';
   // Stage colours come from the stylesheet tokens so the canvas matches the light or dark theme.
@@ -195,7 +195,7 @@ export default function Viewer3D() {
   );
 }
 
-/** Lets the path tracer (ADR-067) read the scene and camera the user is looking at. */
+/** Lets the path tracer (ADR-068) read the scene and camera the user is looking at. */
 function Stage() {
   const { scene, camera } = useThree();
   useEffect(() => {
@@ -205,7 +205,7 @@ function Stage() {
   return null;
 }
 
-/** Image-based light (ADR-066) from three's generated room, so no light file is downloaded or shipped (ADR-002). */
+/** Image-based light (ADR-067) from three's generated room, so no light file is downloaded or shipped (ADR-002). */
 function RoomLight() {
   const get = useThree((s) => s.get);
   useEffect(() => {
@@ -282,7 +282,7 @@ function ShadowCatcher({ bounds }: { bounds: Box }) {
   );
 }
 
-/** Ambient occlusion with three's own GTAO pass: soft darkening where boards meet (ADR-066). */
+/** Ambient occlusion with three's own GTAO pass: soft darkening where boards meet (ADR-067). */
 function Occlusion() {
   const { gl, scene, camera, size } = useThree();
   const composer = useMemo(() => {
@@ -452,7 +452,7 @@ function Panels({
           const side = p.shape?.kind === 'profile' ? DoubleSide : FrontSide;
           const look = realistic ? (
             <>
-              {/* Realistic (ADR-066): the finish sets how matte or glossy a board is; backs stay opaque. The selection shows
+              {/* Realistic (ADR-067): the finish sets how matte or glossy a board is; backs stay opaque. The selection shows
                   as the green tint only: drei's outline is a mesh that the occlusion pass would smear. */}
               <meshPhysicalMaterial
                 key={map ? map.uuid : 'plain'}

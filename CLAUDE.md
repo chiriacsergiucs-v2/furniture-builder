@@ -108,11 +108,16 @@ Lifecycle, one skill per step:
 ## Delivery (hard, auto-failing — user rule 2026-10-23, `docs/retros/2026-10-23-catalog.md`)
 
 - **R1 Requirement ledger:** list every requirement in the user's own words; each needs evidence from the
-  running app the user will use. Unreachable or unchecked = not done, and the whole delivery fails.
+  running app the user will use. Unreachable or unchecked = not done, and the whole delivery fails. A light ADR
+  (below) marks each visible requirement _not checked in a browser_ instead.
 - **R2 No avoidance:** never drop or relabel a requirement ("reference", "waits", "gap", "deferred") to skip
   building it; ask instead.
 - **R3 Find-it test:** UI acceptance starts from the bare app and finds features by visible text at phone and
-  desktop widths (`tools/*/find-it.mjs` against the production build).
+  desktop widths (`tools/*/find-it.mjs` against the production build). Exception (ADR-066): an ADR whose
+  header the user set to `- Acceptance: light` skips the find-it script and any browser run; its backlog rows
+  stay Partially done with the gap `find-it pending (light, ADR-066)`, naming the visible text to find, until
+  the user says "catch up acceptance", which writes and runs the missing scripts on the production build of
+  `main` or on the live URL.
 - **R4 Outcome first:** replies open with where to click and whether it is live.
 
 ## Process (standing user rules)
@@ -123,7 +128,8 @@ Lifecycle, one skill per step:
   run id). Label evidence from documents differently from evidence you ran.
 - Pushed ≠ merged ≠ deployed ≠ live-verified. Never claim tests or deployments that did not run. "Live-verified"
   only if someone opened the published URL and checked it.
-- Every implementation reply ends with the backlog status table and a **Skipped this iteration** section.
+- Every implementation reply ends with the backlog status table (including every row still marked
+  `find-it pending (light, ADR-066)`) and a **Skipped this iteration** section.
 - Stop when a check fails (fix the cause, never the check) or when a change would need the network (ADR-002).
 
 ## Git

@@ -15,7 +15,7 @@ import { GradientEquirectTexture, WebGLPathTracer } from 'three-gpu-pathtracer';
 import { getStage, setRendering, SHADOW_CATCHER } from './renderBridge';
 
 /**
- * A photo-quality still of the 3D view (ADR-067): the scene the user is looking at, path-traced on this device's
+ * A photo-quality still of the 3D view (ADR-068): the scene the user is looking at, path-traced on this device's
  * GPU with three-gpu-pathtracer. Loaded only when the user presses Render; nothing leaves the device (ADR-002).
  */
 export interface RenderJob {

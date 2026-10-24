@@ -68,10 +68,13 @@ ADRs are all in `docs/adr-done/`.
 7. **Verify.** Run the `verify` skill. Geometry changes also run
    `FUZZ_N=30000 pnpm exec vitest run tests/fuzz.test.ts`. Anything visible: write or extend
    `tools/<feature>/find-it.mjs` and run it on the production build from the bare app at
-   phone (375–390 px) and desktop (1280–1440 px) widths (R3).
+   phone (375–390 px) and desktop (1280–1440 px) widths (R3). If the ADR header says
+   `- Acceptance: light`, skip the script, preview and browser; the backlog row stays
+   Partially done with the gap `find-it pending (light, ADR-066)` and the visible text to find (ADR-066).
 8. **Ledger.** Update the backlog row in `docs/backlog.md` in the same change, with the
    evidence you ran. Write the requirement ledger (R1): every requirement in the user's
-   words → evidence in the running app. Any requirement without evidence fails the delivery.
+   words → evidence in the running app. Any requirement without evidence fails the delivery;
+   for a light ADR, visible requirements are marked _not checked in a browser_.
 9. **Do not ship in this skill.** When the checklist is met, report (outcome first: where to
    click, whether it is merged and deployed), end with the backlog table and
    **Skipped this iteration**, and suggest `ship ADR-NNN` once it is merged.

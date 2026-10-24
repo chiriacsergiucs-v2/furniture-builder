@@ -14,7 +14,7 @@ export const MAX_TEXTURE_PX = 2048;
 export const DEFAULT_TILE_LENGTH: Mm = 1000;
 export const MAX_TILE: Mm = 10_000;
 
-/** Board finishes (ADR-066), in the order the Materials dialog shows them. */
+/** Board finishes (ADR-067), in the order the Materials dialog shows them. */
 export const FINISHES: { value: BoardFinish; label: string }[] = [
   { value: 'matte', label: 'Matte' },
   { value: 'satin', label: 'Satin' },
@@ -23,7 +23,7 @@ export const FINISHES: { value: BoardFinish; label: string }[] = [
 export const isFinish = (v: unknown): v is BoardFinish => FINISHES.some((f) => f.value === v);
 
 /**
- * How a finish looks in the realistic 3D view and in renders (ADR-066). Rendering values tuned by eye, not supplier
+ * How a finish looks in the realistic 3D view and in renders (ADR-067). Rendering values tuned by eye, not supplier
  * or physical specs (ADR-010). Absent = matte.
  */
 export function finishLook(f: BoardFinish | undefined): {

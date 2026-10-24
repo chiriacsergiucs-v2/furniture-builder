@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react';
 
 /**
- * The 3D view's look (ADR-066): 'simple' is the plain preview, 'realistic' adds room light, soft shadows and
+ * The 3D view's look (ADR-067): 'simple' is the plain preview, 'realistic' adds room light, soft shadows and
  * ambient occlusion. Kept on this device only (localStorage, no telemetry — ADR-002), like the theme.
  */
 export type Look = 'simple' | 'realistic';

@@ -18,7 +18,7 @@ type State =
   | { kind: 'failed'; message: string };
 
 /**
- * Render a picture (ADR-067): path-traces what the 3D view shows and saves it as a PNG on this device. The path
+ * Render a picture (ADR-068): path-traces what the 3D view shows and saves it as a PNG on this device. The path
  * tracer is loaded only from here, the first time Start is pressed.
  */
 export function RenderDialog({

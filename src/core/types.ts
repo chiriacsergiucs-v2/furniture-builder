@@ -43,7 +43,7 @@ export interface Material {
   kind?: MaterialKind;
   /** Taken from a decor list the user imported (ADR-049): the list's code and file name, for tracing. */
   decor?: { code: string; list: string };
-  /** How the board's surface looks in the 3D view and renders (ADR-066); display only. Absent = matte. */
+  /** How the board's surface looks in the 3D view and renders (ADR-067); display only. Absent = matte. */
   finish?: BoardFinish;
 }
 

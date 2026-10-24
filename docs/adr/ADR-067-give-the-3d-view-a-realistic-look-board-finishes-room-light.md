@@ -1,17 +1,17 @@
-# ADR-066: Give the 3D view a realistic look: board finishes, room light and soft shadows
+# ADR-067: Give the 3D view a realistic look: board finishes, room light and soft shadows
 
 - Status: Pending
 - Date: 2026-10-24
 - Depends on: ADR-014, ADR-048
 - Design: docs/ui-design.md (§3 Segmented, §4 Materials and the 3D view)
-- Backlog: N61
+- Backlog: N62
 
 ## Context
 
 The user, 2026-10-24: "I want to be able to design furniture and give it realistic looks, with the
 possibility of rendering high quality 3d designs of it, to sell designed kitchens as an example."
 Asked where and how well, they answered: "Laptop, preview quality, start with step 1 and 2". Step 1
-is this ADR (a realistic live 3D view); step 2 is [ADR-067](ADR-067-render-a-photo-quality-still-of-the-3d-view-on-a-laptop-and.md)
+is this ADR (a realistic live 3D view); step 2 is [ADR-068](ADR-068-render-a-photo-quality-still-of-the-3d-view-on-a-laptop-and.md)
 (a rendered still). Export to Blender (step 3) is not asked for.
 
 Today the viewer (`src/viewer/Viewer3D.tsx`, ADR-014) draws every panel with `meshStandardMaterial`
@@ -56,12 +56,12 @@ drei (ADR-013); the viewer stays lazy and select-only (ADR-014); no network (ADR
 
 - In scope: the `finish` field and its validation; the Finish control; the Look control; the
   realistic lighting, materials, shadows and ambient occlusion; tests and a find-it test.
-- Out of scope: rendered stills (ADR-067), bundled textures, appliances and sinks, worktop edge
+- Out of scope: rendered stills (ADR-068), bundled textures, appliances and sinks, worktop edge
   profiles, wall and floor finishes, Blender/glTF export.
 
 ## Consequences
 
-- Positive: kitchens look like real boards in the live view; it feeds ADR-067's renders.
+- Positive: kitchens look like real boards in the live view; it feeds ADR-068's renders.
 - Negative / risks: _Realistic_ costs GPU time; older laptops and phones may stutter, hence the
   _Simple_ default on narrow screens and the toggle.
 - Harder to change later: `finish` is saved in designs; it can gain values but not lose them.

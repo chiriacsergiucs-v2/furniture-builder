@@ -1,17 +1,17 @@
-# ADR-067: Render a photo-quality still of the 3D view on a laptop and save it as PNG
+# ADR-068: Render a photo-quality still of the 3D view on a laptop and save it as PNG
 
 - Status: Pending
 - Date: 2026-10-24
-- Depends on: ADR-002, ADR-066
+- Depends on: ADR-002, ADR-067
 - Design: docs/ui-design.md (§3 Button, Dialog; §4 the 3D view)
-- Backlog: N62
+- Backlog: N63
 
 ## Context
 
 The user, 2026-10-24: "I want to be able to design furniture and give it realistic looks, with the
 possibility of rendering high quality 3d designs of it, to sell designed kitchens as an example."
 Their answers: renders happen on a **laptop**, **preview quality** (a picture a client accepts, not
-magazine quality), start with step 1 ([ADR-066](ADR-066-give-the-3d-view-a-realistic-look-board-finishes-room-light.md),
+magazine quality), start with step 1 ([ADR-067](ADR-067-give-the-3d-view-a-realistic-look-board-finishes-room-light.md),
 realistic live view) and step 2 (this ADR, a rendered still).
 
 A live WebGL view, however well lit, approximates light. A path tracer follows light bounces and
@@ -28,7 +28,7 @@ in the browser, offline, with nothing uploaded (ADR-002).
   offline once the app is installed.
 - **Flow:** a **Render** button in the 3D view toolbar opens a dialog _Render a picture_:
   - size: _1920 × 1080_ (default) or _1280 × 720_;
-  - **Start** renders the current camera view with ADR-066's realistic materials; selection
+  - **Start** renders the current camera view with ADR-067's realistic materials; selection
     highlights are hidden; a progress line reads "Rendering… 120 / 256 samples" and the picture
     sharpens in the dialog as samples add up; **Cancel** stops and frees the GPU;
   - when done, **Save PNG** downloads `<design name> render.png` to the device. Nothing is uploaded.
@@ -41,7 +41,7 @@ in the browser, offline, with nothing uploaded (ADR-002).
 - **Export to Blender (glTF) and render in Cycles** — best quality, but the user chose preview
   quality in the browser first; possible later as step 3.
 - **A cloud render service** — forbidden by ADR-002.
-- **Screenshot the live view at high resolution** — cheap, but it is what ADR-066 already shows; no
+- **Screenshot the live view at high resolution** — cheap, but it is what ADR-067 already shows; no
   real light bounces.
 - **Write our own path tracer** — months of work that the MIT library already does.
 

@@ -1,5 +1,5 @@
 /**
- * Render settings and the device check for photo-quality stills (ADR-067). Pure apart from the canvas the caller
+ * Render settings and the device check for photo-quality stills (ADR-068). Pure apart from the canvas the caller
  * passes in; no three.js here, so the main bundle stays small.
  */
 export const RENDER_SAMPLES = 256;

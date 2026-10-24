@@ -5,7 +5,7 @@ import type { Camera, Scene } from 'three';
 export const SHADOW_CATCHER = 'fb-shadow-catcher';
 
 /**
- * Hands the live 3D scene to the path tracer (ADR-067) without the UI importing three.js. While `rendering` is set
+ * Hands the live 3D scene to the path tracer (ADR-068) without the UI importing three.js. While `rendering` is set
  * the viewer shows the realistic look with no selection or hover tint, so the picture shows only the furniture.
  */
 let stage: { scene: Scene; camera: Camera } | null = null;

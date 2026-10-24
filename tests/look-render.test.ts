@@ -20,7 +20,7 @@ const withFinish = (d: Design, finish: unknown): Design => ({
 });
 const kitchen = () => templates[0].create();
 
-describe('board finish (ADR-066)', () => {
+describe('board finish (ADR-067)', () => {
   it('accepts matte, satin and gloss, rejects anything else, and is optional', () => {
     const d = kitchen();
     expect(d.materials.every((m) => m.finish === undefined)).toBe(true);
@@ -72,7 +72,7 @@ describe('board finish (ADR-066)', () => {
   });
 });
 
-describe('3D look setting (ADR-066)', () => {
+describe('3D look setting (ADR-067)', () => {
   it('defaults to realistic on laptops and simple on phones; reads only known values', () => {
     expect(defaultLook(1280)).toBe('realistic');
     expect(defaultLook(1024)).toBe('realistic');
@@ -84,7 +84,7 @@ describe('3D look setting (ADR-066)', () => {
   });
 });
 
-describe('render a picture (ADR-067)', () => {
+describe('render a picture (ADR-068)', () => {
   it('needs WebGL 2 and never throws while checking', () => {
     expect(hasWebGL2(() => ({ getContext: (k) => (k === 'webgl2' ? {} : null) }))).toBe(true);
     expect(hasWebGL2(() => ({ getContext: () => null }))).toBe(false);

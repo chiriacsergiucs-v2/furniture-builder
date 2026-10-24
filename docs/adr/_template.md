@@ -17,6 +17,8 @@ HOW TO USE THIS TEMPLATE
 - The design line takes a path or link to the design reference (e.g. docs/ui-design.md),
   or "n/a" for work with no screen.
 - The backlog line names the docs/backlog.md items (e.g. "N45"), or "none".
+- Optional: "- Acceptance: light" (only when the user asks) skips the find-it test; the backlog
+  rows keep the gap `find-it pending (light, ADR-066)` until a catch-up run. Omitted or "full" = R3 (ADR-066).
 - One ADR = one unit that can be built without loading the rest of the plan.
   Target: up to ~110 lines, ~6.5 KB, 8 checklist items. Bigger means split it.
 - Link sibling ADRs as [ADR-XXX](ADR-XXX-short-title.md).
