@@ -32,6 +32,9 @@ interface State {
   /** Piece selected in the project view. */
   selectedItemId: string | null
   projectDirtyAt: number
+  /** Project-level history (ADR-051): earlier and undone states of the open project. */
+  projectPast: Project[]
+  projectFuture: Project[]
   /** Editing one variant of a local template (ADR-034); the piece open before comes back afterwards. */
   templateEdit: { template: LocalTemplate; variantId: string; returnTo: Design } | null
 
@@ -75,6 +78,8 @@ interface State {
   selectItem: (id: string | null) => void
   editItem: (id: string) => void
   backToProject: () => void
+  undoProject: () => void
+  redoProject: () => void
 }
 
 const HISTORY = 100
@@ -104,10 +109,20 @@ export const useDesign = create<State>((set, get) => {
     const { project, editingItemId, design } = get()
     if (project && editingItemId) set({ project: { ...project, items: project.items.map(i => (i.id === editingItemId ? { ...i, design } : i)) }, projectDirtyAt: Date.now() })
   }
+  /** The project as it was when its piece editor opened; one undo step if the piece changed (ADR-051). */
+  let projectBeforeEdit: Project | null = null
   const commitProject = (next: Project) => {
     // Pieces on or above others follow them (ADR-031): stored positions always match the placements.
     const stamped = { ...resolvePlacements(next), updatedAt: new Date().toISOString() }
-    set({ project: stamped, projectModel: buildProjectModel(stamped), projectDirtyAt: Date.now() })
+    const prev = get().project
+    set({ project: stamped, projectModel: buildProjectModel(stamped), projectDirtyAt: Date.now(),
+      ...(prev ? { projectPast: [...get().projectPast, prev].slice(-HISTORY), projectFuture: [] } : {}) })
+  }
+  /** Show an earlier or later state of the project; the selection survives if the piece still exists. */
+  const restoreProject = (p: Project, projectPast: Project[], projectFuture: Project[]) => {
+    const sel = get().selectedItemId
+    set({ project: p, projectModel: buildProjectModel(p), projectPast, projectFuture, projectDirtyAt: Date.now(),
+      selectedItemId: sel && p.items.some(i => i.id === sel) ? sel : null })
   }
   const initial = templates[0].create()
   return {
@@ -127,20 +142,22 @@ export const useDesign = create<State>((set, get) => {
     editingItemId: null,
     selectedItemId: null,
     projectDirtyAt: 0,
+    projectPast: [],
+    projectFuture: [],
     templateEdit: null,
 
     load: (raw, opts) => {
       const d = upgradeDesign(raw)
       set({ design: d, model: buildModel(d), selectedId: null, highlight: [], past: [], future: [], dirtyAt: 0, pristine: !!opts?.fromStorage,
-        project: null, projectModel: null, editingItemId: null, selectedItemId: null })
+        project: null, projectModel: null, editingItemId: null, selectedItemId: null, projectPast: [], projectFuture: [] })
     },
     pick: nodeId => {
       const { project, editingItemId, design } = get()
       if (project && !editingItemId) { set({ selectedItemId: nodeId.split(':')[0] }); return }
       set({ selectedId: nodeId === design.product.id ? null : nodeId })
     },
-    openProject: raw => { const p = resolvePlacements(raw); set({ project: p, projectModel: buildProjectModel(p), editingItemId: null, selectedItemId: null, highlight: [], projectDirtyAt: 0 }) },
-    closeProject: () => set({ project: null, projectModel: null, editingItemId: null, selectedItemId: null }),
+    openProject: raw => { const p = resolvePlacements(raw); set({ project: p, projectModel: buildProjectModel(p), editingItemId: null, selectedItemId: null, highlight: [], projectDirtyAt: 0, projectPast: [], projectFuture: [] }) },
+    closeProject: () => set({ project: null, projectModel: null, editingItemId: null, selectedItemId: null, projectPast: [], projectFuture: [] }),
     updateProject: fn => { const p = get().project; if (p) commitProject(fn(p)) },
     addPiece: (d, libraryId) => {
       const p = get().project
@@ -164,6 +181,7 @@ export const useDesign = create<State>((set, get) => {
       const item = get().project?.items.find(i => i.id === id)
       if (!item) return
       const d = upgradeDesign(item.design)
+      projectBeforeEdit = get().project
       set({ editingItemId: id, design: d, model: buildModel(d), selectedId: null, highlight: [], past: [], future: [], dirtyAt: 0, pristine: true })
     },
     backToProject: () => {
@@ -171,7 +189,23 @@ export const useDesign = create<State>((set, get) => {
       if (!raw) return
       // A resized piece moves whatever sits on it.
       const p = resolvePlacements(raw)
-      set({ editingItemId: null, project: p, projectModel: buildProjectModel(p), selectedId: null, highlight: [], ...(p !== raw ? { projectDirtyAt: Date.now() } : {}) })
+      // Edits made in the piece editor become one project undo step.
+      const before = projectBeforeEdit
+      projectBeforeEdit = null
+      const history = before && before !== p ? { projectPast: [...get().projectPast, before].slice(-HISTORY), projectFuture: [] } : {}
+      set({ editingItemId: null, project: p, projectModel: buildProjectModel(p), selectedId: null, highlight: [], ...history, ...(p !== raw ? { projectDirtyAt: Date.now() } : {}) })
+    },
+    undoProject: () => {
+      const { project, projectPast, projectFuture, editingItemId } = get()
+      const prev = projectPast[projectPast.length - 1]
+      if (!project || !prev || editingItemId) return
+      restoreProject(prev, projectPast.slice(0, -1), [project, ...projectFuture])
+    },
+    redoProject: () => {
+      const { project, projectPast, projectFuture, editingItemId } = get()
+      const next = projectFuture[0]
+      if (!project || !next || editingItemId) return
+      restoreProject(next, [...projectPast, project], projectFuture.slice(1))
     },
     setKerf: kerf => { const d = get().design; commit({ ...d, cutting: { ...d.cutting, kerf } }) },
     rename: name => commit({ ...get().design, name }),

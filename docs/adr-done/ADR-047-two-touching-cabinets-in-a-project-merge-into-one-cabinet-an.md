@@ -1,7 +1,8 @@
 # ADR-047: Two touching cabinets in a project merge into one cabinet; any other difference refuses the merge
 
-- Status: Deferred (open questions for the user; the merge itself is built, backlog N42)
+- Status: Implemented
 - Date: 2026-10-24
+- Implemented: 2026-10-24
 - Decided by: user: "merging 2 items into 1", items = pieces in a project
 - Depends on: none
 - Design: n/a
@@ -34,14 +35,26 @@ build, with no guessed geometry (ADR-004, ADR-010).
     merged piece is a new piece.
 - **Other pieces:** any piece on or above either cabinet (ADR-031) is moved onto the merged one at the same place
   in the room. Run parts (ADR-036) are kept as they are.
-- **Undo:** project-level changes have no undo today (removing a piece only asks for confirmation). Merging works
-  the same way: it asks for confirmation and says it cannot be undone.
+- **Undo:** merging asks for confirmation; Undo in the project view brings the two pieces back
+  (ADR-051).
 
 ## Consequences
 
 - The cut list loses two sides and one back and gains one divider. Hinges and runners stay the same.
 - Pieces that differ in height, depth, plinth and so on must be made the same in the editor first.
-- Open questions for the user:
-  1. Should merging pieces with different heights or depths be allowed (for example, taking the left piece's)?
-  2. Should non-cabinet pieces merge?
-  3. Should a project-level undo be added?
+
+## Answers (2026-10-24, from the user)
+
+1. Pieces with different heights or depths: **refuse, as today** — the merge button stays disabled and lists the
+   difference.
+2. Non-cabinet pieces: **no, cabinets only**.
+3. Project-level undo: **yes** — built as ADR-051.
+
+## Done when
+
+- [x] Two touching base cabinets merge into one cabinet with the same footprint and both interiors (`tests/merge.test.ts`)
+- [x] Works from either piece and with every quarter turn
+- [x] Any other difference, or a piece that is not a cabinet, disables the merge and lists the reason
+- [x] Pieces on or above either cabinet move onto the merged one
+- [x] Find-it test passes from the bare app at phone and desktop widths (`tools/merge/find-it.mjs`)
+- [x] Undo brings the two pieces back (ADR-051)

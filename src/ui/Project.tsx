@@ -114,7 +114,7 @@ function MergeFields({ item }: { item: ProjectItem }) {
         <div key={c.item.id}>
           <button type="button" className="btn outline" disabled={c.issues.length > 0} onClick={async () => {
             const [l, r] = c.side === 'right' ? [item, c.item] : [c.item, item]
-            if (!(await askConfirm(`Merge “${l.design.name}” and “${r.design.name}” into one cabinet? The two sides that meet become one divider; each keeps its contents and fronts. This cannot be undone.`, { confirmLabel: 'Merge' }))) return
+            if (!(await askConfirm(`Merge “${l.design.name}” and “${r.design.name}” into one cabinet? The two sides that meet become one divider; each keeps its contents and fronts. Undo brings the two pieces back.`, { confirmLabel: 'Merge' }))) return
             merge(item.id, c.item.id)
           }}>Merge with {c.item.design.name} on the {c.side}</button>
           {c.issues.length > 0 && <ul className="hint" role="note">{c.issues.map(x => <li key={x}>{x}</li>)}</ul>}

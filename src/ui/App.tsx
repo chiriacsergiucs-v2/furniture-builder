@@ -97,8 +97,10 @@ export function App() {
   const setShowFronts = useDesign(s => s.setShowFronts)
   const exploded = useDesign(s => s.exploded)
   const setExploded = useDesign(s => s.setExploded)
-  const undo = useDesign(s => s.undo), redo = useDesign(s => s.redo)
-  const canUndo = useDesign(s => s.past.length > 0), canRedo = useDesign(s => s.future.length > 0)
+  const undoPiece = useDesign(s => s.undo), redoPiece = useDesign(s => s.redo)
+  const undoProject = useDesign(s => s.undoProject), redoProject = useDesign(s => s.redoProject)
+  const canUndoPiece = useDesign(s => s.past.length > 0), canRedoPiece = useDesign(s => s.future.length > 0)
+  const canUndoProject = useDesign(s => s.projectPast.length > 0), canRedoProject = useDesign(s => s.projectFuture.length > 0)
   const [dialog, setDialog] = useState<null | 'new' | 'library' | 'materials' | 'add' | 'wizard'>(null)
   const openCatalog = () => { setDialog(null); setPage('catalog') }
   /** The piece reopened in the wizard, or null for a new one (ADR-046). */
@@ -109,6 +111,9 @@ export function App() {
   const projectDirtyAt = useDesign(s => s.projectDirtyAt)
   const vd = useView()
   const inProject = !!project && !editingItemId
+  // The project view undoes project changes (ADR-051); the piece editor undoes piece edits.
+  const undo = inProject ? undoProject : undoPiece, redo = inProject ? redoProject : redoPiece
+  const canUndo = inProject ? canUndoProject : canUndoPiece, canRedo = inProject ? canRedoProject : canRedoPiece
   const editingName = project?.items.find(i => i.id === editingItemId)?.design.name
   const [save, setSave] = useState<SaveState>('idle')
   const [view, setView] = useState<'front' | '3d'>('front')
@@ -241,7 +246,7 @@ export function App() {
           <a href="#catalog" aria-current={page === 'catalog' ? 'page' : undefined} onClick={e => { e.preventDefault(); setPage('catalog') }}><Icon name="catalog" className="sm" />Catalog <span className="count">{CATALOG_ITEMS}</span></a>
           <a href="#research" aria-current={page === 'research' ? 'page' : undefined} onClick={e => { e.preventDefault(); setPage('research') }}><Icon name="search" className="sm" />Feature Research <span className="count">{researchCount}</span></a>
         </nav>
-        <input className="name" aria-label={inProject ? 'Name of this project' : 'Name of this piece'} defaultValue={inProject ? project!.name : design.name} key={inProject ? `p-${project!.id}` : design.id}
+        <input className="name" aria-label={inProject ? 'Name of this project' : 'Name of this piece'} defaultValue={inProject ? project!.name : design.name} key={inProject ? `p-${project!.id}-${project!.name}` : design.id}
           onBlur={e => {
             const v = e.target.value.trim()
             if (!v) return
@@ -257,11 +262,11 @@ export function App() {
           <Icon name={theme === 'dark' ? 'sun' : 'moon'} />
         </button>
         <nav className="actions" aria-label="Actions">
-          {!inProject && <div className="cluster">
+          <div className="cluster">
             <button type="button" className="btn icon" onClick={undo} disabled={!canUndo} aria-label="Undo" title="Undo (Ctrl+Z)"><Icon name="undo" /></button>
             <button type="button" className="btn icon" onClick={redo} disabled={!canRedo} aria-label="Redo" title="Redo (Ctrl+Shift+Z)"><Icon name="redo" /></button>
             <span className="divider" aria-hidden="true" />
-          </div>}
+          </div>
           <div className="cluster">
             <button type="button" className="btn" onClick={() => setDialog('new')} aria-label="New" title="Start a new piece or project"><Icon name="plus" /><span className="lbl">New</span></button>
             <button type="button" className="btn" onClick={() => setDialog('library')} aria-label="Library" title="Pieces and projects saved on this device"><Icon name="folder" /><span className="lbl">Library</span></button>

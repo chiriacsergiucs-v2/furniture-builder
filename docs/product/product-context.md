@@ -47,3 +47,5 @@ positions 100/120/150°, diagonal corner, U-cut sink drawer, full-size print tem
 screwed joints (Pat Noi sides screwed to the foot board). Feed (ADR-029) blocked here: ikea.com not allowed.
 Built 2026-10-23 (N38): the app starts on a Home welcome page (create a new project, choose a saved one); editor at #editor.
 Built 2026-10-24 (N41): Mobila — Living re-done from catalog base cabinets, 1-door + 2-door + 1-door on the floor and at the ceiling (805 · 1610 · 805 × 435, 3220 wall).
+User answers 2026-10-24 (ADR-047): merging refuses pieces of different height or depth; cabinets only; project-level undo
+added (ADR-051, N46). Process: the repository follows the reserv flow (ADR-050): `docs/adr`, `.claude/skills`, `CLAUDE.md`.
