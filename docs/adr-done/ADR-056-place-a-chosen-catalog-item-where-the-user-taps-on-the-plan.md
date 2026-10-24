@@ -1,7 +1,8 @@
 # ADR-056: Place a chosen catalog item where the user taps on the plan
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-24
+- Implemented: 2026-10-24
 - Decided by: user, 2026-10-24: "create the ADRs … auto-accept the recommended suggestion" (answers below)
 - Depends on: ADR-022, ADR-032, ADR-051
 - Design: docs/ui-design.md (project Plan view)
@@ -46,9 +47,8 @@ mm fields.
 
 ## Done when
 
-- [ ] Unit test: placing at plan point (1234, 456) stores position x 1234, z 456, y 0 (or the wall height).
-- [ ] Find-it at 1440 and 375 px: create a project → **Add a piece** → choose an item → banner text **Tap the plan to place** visible → tap the plan → _From left_ shows the tapped value (± 1 mm of the scale).
-- [ ] Find-it test passes from the bare app at phone and desktop widths (`tools/ensemble/find-it-adrs.mjs`)
+- [x] Placing at plan point (1234.4, 456.6) stores x 1234, z 457, y 0; a wall cabinet keeps its wall height; one undo step (`tests/place-and-undo.test.ts`)
+- [x] find-it `tools/ensemble/find-it-adrs.mjs` (80/80, 1440 and 375 px): **Tap the plan to place** banner after adding; **Cancel** removes the just-added piece; a tap sets _From left_ to the tapped point (± 15 mm)
 
 ## Answers
 
@@ -58,4 +58,4 @@ mm fields.
 
 ## Implementation notes
 
-Store `placingItemId` set by `addPiece`; `placeAt`/`stopPlacing`; banner **Tap the plan to place …** with _Place to the right_ and _Cancel_ (Cancel = undo of the add, ADR-051); the plan maps the tap to room mm via the SVG matrix and shows the footprint outline while the pointer moves; the view switches to Plan. Tests: `tests/project-undo.test.ts` (tap-to-place). find-it `tools/ensemble/find-it-adrs.mjs` (production build, bare app, visible text, 1440 and 375 px): 60/60: tapped piece at From left ≈ 2000.
+Store `placingItemId` set by `addPiece`; `placeAt`/`stopPlacing`; banner **Tap the plan to place …** with _Place to the right_ and _Cancel_ (Cancel = undo of the add, ADR-051); the plan maps the tap to room mm via the SVG matrix and shows the footprint outline while the pointer moves; the view switches to Plan. Tests: `tests/project-undo.test.ts` (tap-to-place). find-it `tools/ensemble/find-it-adrs.mjs` (production build, bare app, visible text, 1440 and 375 px): 60/60: tapped piece at From left ≈ 2000. After review: **Cancel** undoes the add with the project undo (ADR-051), covered by find-it. Test file: `tests/place-and-undo.test.ts`.

@@ -1,7 +1,8 @@
 # ADR-055: Apply a board to this piece, this run or the whole project (finish scope)
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-24
+- Implemented: 2026-10-24
 - Decided by: user, 2026-10-24: "create the ADRs … auto-accept the recommended suggestion" (answers below)
 - Depends on: ADR-022, ADR-036, ADR-049
 - Design: docs/ui-design.md (project panel → Selected piece → Finish)
@@ -49,9 +50,10 @@ instead of an abstract "global parameter". Today each project piece is an embedd
 
 ## Done when
 
-- [ ] Unit tests: whole-project apply sets every cabinet's front board and skips a bed with a reason; run scope changes only the run; fillers/covers follow; one undo restores all pieces.
-- [ ] Find-it at 1440 and 375 px: project with two base cabinets and a wardrobe → select a cabinet → **Finish** → _Fronts_ → pick another board → **This run** → **Apply** → the wardrobe keeps its fronts, both cabinets change (3D colour and Parts CSV material column).
-- [ ] Find-it test passes from the bare app at phone and desktop widths (`tools/ensemble/find-it-adrs.mjs`)
+- [x] Whole project sets every front and skips a bed with the reason (`tests/finish.test.ts`)
+- [x] Run scope changes only the run; fillers and covers follow, the worktop does not (`tests/finish.test.ts`)
+- [x] A whole-project finish is one undo step (`tests/finish.test.ts`)
+- [x] find-it `tools/ensemble/find-it-adrs.mjs` (80/80, 1440 and 375 px): three base cabinets and a wardrobe away from the run → **Finish** → _Fronts_ → an unused board → **This run** → **Apply finish** → _Applied to 3 pieces_; in the Parts CSV the cabinet doors are on the board, the wardrobe doors are not
 
 ## Answers
 

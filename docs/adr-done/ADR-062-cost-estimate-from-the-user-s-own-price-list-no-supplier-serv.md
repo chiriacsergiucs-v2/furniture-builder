@@ -1,7 +1,8 @@
 # ADR-062: Cost estimate from the user's own price list (no supplier service)
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-24
+- Implemented: 2026-10-24
 - Decided by: user, 2026-10-24: "create the ADRs … auto-accept the recommended suggestion" (answers below)
 - Depends on: ADR-002, ADR-010, ADR-012, ADR-018
 - Design: docs/ui-design.md (results → Shopping list)
@@ -46,9 +47,9 @@ non-free outside integration: that part is split into **ADR-063 (Pending)**.
 
 ## Done when
 
-- [ ] Unit tests: estimate from sheets and from m²; missing prices listed, total marked incomplete; CSV round trip; unreadable price rows skipped and kept.
-- [ ] Find-it at 1440 and 375 px: piece → **Parts** → **Prices** → enter a sheet price for the body board → the line **Estimate:** shows a total and **prices missing** for the rest.
-- [ ] Find-it test passes from the bare app at phone and desktop widths (`tools/ensemble/find-it-adrs.mjs`)
+- [x] Estimate per sheet, per m² and per worktop board; missing prices listed; nothing guessed (`tests/templates-prices-shopping.test.ts`, `tests/shopping-csv.test.ts`)
+- [x] Price CSV `kind;key;unit;price` round trip; old 3-column files still read; bad rows reported; unreadable stored rows skipped and kept (`tests/shopping-csv.test.ts`, `tests/templates-prices-shopping.test.ts`)
+- [x] find-it `tools/ensemble/find-it-adrs.mjs` (80/80, 1440 and 375 px): **Shopping list** → boards counted in sheets from the layout → **Prices** → a price per sheet, and per m², each give a non-zero **Estimate** and list the missing prices
 
 ## Answers
 
@@ -59,4 +60,4 @@ non-free outside integration: that part is split into **ADR-063 (Pending)**.
 
 ## Implementation notes
 
-`src/core/prices.ts` (whole minor units, per sheet / per m² / per m / per piece, currency row, CSV), Dexie v7 `prices`. The estimate is shown in the new **Shopping list** tab (ADR-064) — not in the Parts tab — because it prices the shopping lines: **Estimate: … lei — N prices missing (incomplete)**; **Prices** opens a price field and unit beside every line, _Currency_, _Export prices_, _Import prices_. Board per-sheet prices need the sheet layout; while the design has errors, boards show m² and per-sheet prices count as missing. Tests: `tests/templates-prices-shopping.test.ts`. find-it `tools/ensemble/find-it-adrs.mjs` (production build, bare app, visible text, 1440 and 375 px): 60/60.
+`src/core/prices.ts` (whole minor units, per sheet / per m² / per m / per piece, currency row, CSV), Dexie v7 `prices`. The estimate is shown in the new **Shopping list** tab (ADR-064) — not in the Parts tab — because it prices the shopping lines: **Estimate: … lei — N prices missing (incomplete)**; **Prices** opens a price field and unit beside every line, _Currency_, _Export prices_, _Import prices_. Board per-sheet prices need the sheet layout; while the design has errors, boards show m² and per-sheet prices count as missing. Tests: `tests/templates-prices-shopping.test.ts`. find-it `tools/ensemble/find-it-adrs.mjs` (production build, bare app, visible text, 1440 and 375 px): 60/60. After review: price files are `kind;key;unit;price` (3-column files still read); worktop boards can be priced per worktop board.

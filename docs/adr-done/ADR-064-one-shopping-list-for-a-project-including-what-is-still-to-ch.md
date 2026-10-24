@@ -1,7 +1,8 @@
 # ADR-064: One shopping list for a project: boards, banding, hardware, run parts and what is still to choose
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-24
+- Implemented: 2026-10-24
 - Decided by: user, 2026-10-24: "create the ADRs … auto-accept the recommended suggestion" (answers below)
 - Depends on: ADR-010, ADR-018, ADR-020, ADR-036
 - Design: docs/ui-design.md (results → Shopping list)
@@ -46,9 +47,9 @@ flaps, fixed fronts). Nothing collects them, and nothing says what is still unde
 
 ## Done when
 
-- [ ] Unit tests: a project with a sink base, an oven niche and a run → list has sheets, banding, hinges, runners, worktop and plinth, and _To choose_ lists the oven and the sink front fixing; quantities × piece quantity.
-- [ ] Find-it at 1440 and 375 px: project → **Parts** → **Shopping list** → sections **Boards**, **Hardware**, **To choose before buying** visible; **Shopping list CSV** downloads.
-- [ ] Find-it test passes from the bare app at phone and desktop widths (`tools/ensemble/find-it-adrs.mjs`)
+- [x] Boards, banding, hardware, run parts (worktop and plinth) and _To choose before buying_ (oven niche, fixed-front fixing) listed; hardware counts follow the number of copies; boards in sheets when laid out (`tests/templates-prices-shopping.test.ts`)
+- [x] Shopping and price CSVs neutralise cells starting with = + - @ (`tests/shopping-csv.test.ts`); the CSV and Print are disabled while the design has errors (code: `src/ui/Shopping.tsx` `disabled={blocked}`; not exercised in a browser)
+- [x] find-it `tools/ensemble/find-it-adrs.mjs` (80/80, 1440 and 375 px): sections Boards, Edge banding, Hardware, Run parts; the _not counted_ line; **Shopping list CSV** downloads; on a chest with a fixed front, _To choose before buying_ lists the fixing
 
 ## Answers
 
@@ -59,4 +60,4 @@ flaps, fixed fronts). Nothing collects them, and nothing says what is still unde
 
 ## Implementation notes
 
-`src/core/shopping.ts` (`shoppingList`, `shoppingCsvRo`), new results tab **Shopping list** (`src/ui/Shopping.tsx`): Boards (sheets from the layout worker, else m²; solid stock in metres), Edge banding, Hardware, Run parts, **To choose before buying** (appliance niches, flap and sliding hardware, fixed-front fixing, and the rules' _hardware from a datasheet_, _anti-tip_ and _safety_ checks), the fixed "not counted" line; **Shopping list CSV** (Romanian, `;`) and **Print shopping list**. Tabs wrap on phones (found by the find-it run: five tabs were wider than 375 px). Tests: `tests/templates-prices-shopping.test.ts`. find-it `tools/ensemble/find-it-adrs.mjs` (production build, bare app, visible text, 1440 and 375 px): 60/60.
+`src/core/shopping.ts` (`shoppingList`, `shoppingCsvRo`), new results tab **Shopping list** (`src/ui/Shopping.tsx`): Boards (sheets from the layout worker, else m²; solid stock in metres), Edge banding, Hardware, Run parts, **To choose before buying** (appliance niches, flap and sliding hardware, fixed-front fixing, and the rules' _hardware from a datasheet_, _anti-tip_ and _safety_ checks), the fixed "not counted" line; **Shopping list CSV** (Romanian, `;`) and **Print shopping list**. Tabs wrap on phones (found by the find-it run: five tabs were wider than 375 px). Tests: `tests/templates-prices-shopping.test.ts`. find-it `tools/ensemble/find-it-adrs.mjs` (production build, bare app, visible text, 1440 and 375 px): 60/60. After review: the CSV and Print are blocked while the design has errors; CSV cells starting with = + - @ are neutralised.

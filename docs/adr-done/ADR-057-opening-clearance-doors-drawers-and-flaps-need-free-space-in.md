@@ -1,7 +1,8 @@
 # ADR-057: Opening clearance — doors and drawers need free space in front; warnings in projects
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-24
+- Implemented: 2026-10-24
 - Decided by: user, 2026-10-24: "create the ADRs … auto-accept the recommended suggestion" (answers below)
 - Depends on: ADR-022, ADR-031, ADR-037
 - Design: docs/ui-design.md (Plan view, Checks tab)
@@ -49,9 +50,12 @@ space a door or drawer needs **in front of the piece** when it opens, checked ag
 
 ## Done when
 
-- [ ] Unit tests: a drawer unit with a wardrobe 300 mm in front → `opening-blocked` naming both; 600 mm free for a 500 mm drawer → no warning; two doors in an L corner → `openings-clash`; sliding doors → none; export still allowed.
-- [ ] Find-it at 1440 and 375 px: project with a chest of drawers and a wardrobe turned to face it at 300 mm → the problem list shows **cannot open fully**; Parts CSV stays enabled.
-- [ ] Find-it test passes from the bare app at phone and desktop widths (`tools/ensemble/find-it-adrs.mjs`)
+- [x] A wardrobe 300 mm in front of a chest → `opening-blocked` naming both, with needed and free mm (`tests/clearance.test.ts`)
+- [x] Free space exactly equal to the need → no warning; one millimetre less → warning (`tests/clearance.test.ts`)
+- [x] Two door cabinets in an L corner → `openings-clash` (`tests/clearance.test.ts`)
+- [x] Sliding doors need no clearance (`tests/clearance.test.ts`, a cabinet with two sliding doors)
+- [x] Warnings only: no error, export allowed (`tests/clearance.test.ts`)
+- [x] find-it `tools/ensemble/find-it-adrs.mjs` (80/80, 1440 and 375 px): a wardrobe turned to face the run → Checks list _cannot open fully_; **Parts CSV** stays enabled
 
 ## Answers
 
@@ -62,4 +66,4 @@ space a door or drawer needs **in front of the piece** when it opens, checked ag
 
 ## Implementation notes
 
-`src/core/clearance.ts` (`localClearances`), `PlacedPiece.clearances`/`facing`, `openingChecks` in `src/core/project.ts` (`opening-blocked`, `openings-clash`, warnings), room walls and obstacles included (ADR-058); flaps keep a box twice their height (up or down) and as deep as they are high; fixed fronts need none. The plan outlines a selected piece's blocked clearances in red dashes. Tests: `tests/clearance.test.ts`, `tests/room.test.ts`. find-it `tools/ensemble/find-it-adrs.mjs` (production build, bare app, visible text, 1440 and 375 px): 60/60: Checks list _cannot open fully_; Parts CSV stays enabled.
+`src/core/clearance.ts` (`localClearances`), `PlacedPiece.clearances`/`facing`, `openingChecks` in `src/core/project.ts` (`opening-blocked`, `openings-clash`, warnings), room walls and obstacles included (ADR-058); flaps keep a box twice their height (up or down) and as deep as they are high; fixed fronts need none. The plan outlines a selected piece's blocked clearances in red dashes. Tests: `tests/clearance.test.ts`, `tests/room.test.ts`. find-it `tools/ensemble/find-it-adrs.mjs` (production build, bare app, visible text, 1440 and 375 px): 60/60: Checks list _cannot open fully_; Parts CSV stays enabled. After review: tests for sliding doors, an L corner and the exact free-space limit.

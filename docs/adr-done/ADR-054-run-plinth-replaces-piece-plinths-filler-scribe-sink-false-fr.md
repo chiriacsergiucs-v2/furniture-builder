@@ -1,7 +1,8 @@
 # ADR-054: Run plinth replaces the pieces' own plinths; filler scribe allowance; sink false front
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-24
+- Implemented: 2026-10-24
 - Decided by: user, 2026-10-24: "create the ADRs … auto-accept the recommended suggestion" (answers below)
 - Depends on: ADR-036
 - Design: docs/ui-design.md (project panel → Run parts; Inspector → drawers)
@@ -51,9 +52,12 @@ open gaps: no run plinth, no scribe allowance, sink false front not built.
 
 ## Done when
 
-- [ ] Unit tests: a run of three base units gets one plinth of the run length and the three piece plinths leave the project cut list; different plinth heights → warning, no run plinth; scribe 20 mm widens fillers by 20; a fixed front keeps the front panel and drops drawer box and runners; fuzz keeps "no overlapping panels".
-- [ ] Find-it at 1440 and 375 px: project with three base cabinets → **Suggest worktop, fillers and covers** → the list shows **Plinth**; the Parts CSV has one plinth row of the run length.
-- [ ] Find-it test passes from the bare app at phone and desktop widths (`tools/ensemble/find-it-adrs.mjs`)
+- [x] One run plinth of the run length replaces the three piece plinths in the project cut list (`tests/run-parts.test.ts` "a run of three base units gets one plinth…")
+- [x] Different plinth heights, setbacks or body boards → no run plinth and a note naming each piece and its value (`tests/run-parts.test.ts`, three tests)
+- [x] Scribe 20 mm cuts the filler 20 mm wider; the model keeps the installed size (`tests/run-parts.test.ts`)
+- [x] A fixed front keeps the front panel and drops the drawer box and one runner pair; fixing listed as user-specified (`tests/run-parts.test.ts`; fuzz covers `fixedTop`, 30,000 deep run passed)
+- [x] Seeded project fuzz: no run part overlaps a piece and every run plinth spans its run when the project has no errors (`tests/run-parts.test.ts` "run parts, seeded project fuzz")
+- [x] find-it `tools/ensemble/find-it-adrs.mjs` (80/80, 1440 and 375 px): **Suggest worktop, plinth, fillers and covers** lists **Plinth**; the Parts CSV has one _Run: Plintă_ row of 1800 mm; the fixed-front fixing shows in Hardware
 
 ## Answers
 
@@ -65,4 +69,4 @@ open gaps: no run plinth, no scribe allowance, sink false front not built.
 
 ## Implementation notes
 
-`src/core/project.ts` `planRuns`: a run plinth (kind `plinth`, key, `from`) only where every piece is a cabinet whose **sides stand on the bottom** (Bottom → _Under the sides_): with sides to the floor, a continuous plinth would cut through them — this condition is added to the decision, and the run-parts list says why a run got no plinth. Instead of a `plinthFromRun` item flag, the pieces covered are the plinth's `from` ids (`plinthCovered`), so removing the plinth gives the pieces their plinths back with nothing else to keep in step. `placeItem` keeps the piece's full outline when its plinth is left out. Scribe allowance (_Scribe allowance for fillers_, default 0) widens **fillers** in the cut list only; covers stay as they are. Fixed front: `DrawersSpace.fixedTop` in `src/core/cabinet.ts`, Inspector toggle _Top drawer is a fixed front (sink false front)_, hardware line _Fixing for the fixed (false) front — user-specified_. Tests: `tests/run-parts.test.ts`, fuzz covers `fixedTop` (3,000 seeded; 30,000 deep run passed). find-it `tools/ensemble/find-it-adrs.mjs` (production build, bare app, visible text, 1440 and 375 px): 60/60.
+`src/core/project.ts` `planRuns`: a run plinth (kind `plinth`, key, `from`) only where every piece is a cabinet whose **sides stand on the bottom** (Bottom → _Under the sides_): with sides to the floor, a continuous plinth would cut through them — this condition is added to the decision, and the run-parts list says why a run got no plinth. Instead of a `plinthFromRun` item flag, the pieces covered are the plinth's `from` ids (`plinthCovered`), so removing the plinth gives the pieces their plinths back with nothing else to keep in step. `placeItem` keeps the piece's full outline when its plinth is left out. Scribe allowance (_Scribe allowance for fillers_, default 0) widens **fillers** in the cut list only; covers stay as they are. Fixed front: `DrawersSpace.fixedTop` in `src/core/cabinet.ts`, Inspector toggle _Top drawer is a fixed front (sink false front)_, hardware line _Fixing for the fixed (false) front — user-specified_. Tests: `tests/run-parts.test.ts`, fuzz covers `fixedTop` (3,000 seeded; 30,000 deep run passed). find-it `tools/ensemble/find-it-adrs.mjs` (production build, bare app, visible text, 1440 and 375 px): 60/60. After review: the run plinth also needs the same body board; every note names the pieces and their values; a run part made for a removed piece, or a run plinth whose length no longer matches its pieces, is an error (`run-part-stale`) while automatic refresh is off.

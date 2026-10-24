@@ -1,7 +1,8 @@
 # ADR-060: Save a project as a reusable project template (new Dexie table `projectTemplates`)
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-24
+- Implemented: 2026-10-24
 - Decided by: user, 2026-10-24: "create the ADRs … auto-accept the recommended suggestion" (answers below)
 - Depends on: ADR-012, ADR-022, ADR-032, ADR-054
 - Design: docs/ui-design.md (Home, Catalog → Saved on this device)
@@ -17,7 +18,7 @@ own project cannot be reused as a starting point except by duplicating it in the
 ## Decision
 
 - **Project → "Save as project template"** stores: name, description, the pieces (embedded design copies, as
-  ADR-032 snapshots), their positions **relative to the leftmost-back piece**, quarter turns, placements, the
+  ADR-032 snapshots), their positions **relative to the smallest x and z of the pieces**, quarter turns, placements, the
   run-part **recipe** (which kinds were suggested and the scribe/plinth settings, ADR-054) — not the run-part
   geometry, which is suggested again — and the room (ADR-058/0056) only if the user ticks _Include the room_.
 - **Storage:** the next free Dexie version (7 today; ADR-062's `prices` table takes the version after whichever
@@ -47,9 +48,10 @@ own project cannot be reused as a starting point except by duplicating it in the
 
 ## Done when
 
-- [ ] Unit tests: save → use gives a project with the same pieces and relative positions and new ids; recipe re-suggests run parts; corrupt template row skipped and kept; the upgrade from the previous version keeps all tables.
-- [ ] Find-it at 1440 and 375 px: project with three pieces → **Save as project template** → Home → **Create a new project** → **From a project template** → the template → new project with three pieces.
-- [ ] Find-it test passes from the bare app at phone and desktop widths (`tools/ensemble/find-it-adrs.mjs`)
+- [x] Save → use gives the same pieces at the same relative places with new ids; run parts suggested again; removed run parts stay removed (`tests/templates-prices-shopping.test.ts`)
+- [x] Malformed templates are reported, never thrown; an unreadable stored row is skipped and kept; the list still loads (`tests/templates-prices-shopping.test.ts`)
+- [x] Export carries pictures; import restores them; v6 → v7 upgrade keeps every table (`tests/templates-prices-shopping.test.ts`)
+- [x] find-it `tools/ensemble/find-it-adrs.mjs` (80/80, 1440 and 375 px): **Save as project template** → Home → **Create from a project template** → new project with the three pieces and its run parts
 
 ## Answers
 
@@ -60,4 +62,4 @@ own project cannot be reused as a starting point except by duplicating it in the
 
 ## Implementation notes
 
-`src/core/projectTemplate.ts`, Dexie **v7** `projectTemplates` (shared version with ADR-062 `prices`, built in the same change), `src/ui/ProjectTemplates.tsx`: Project → **Save as project template** (asks _Include the room_ when there is one); Home → **Create from a project template** (a list on the Home page, next to _Choose a project_); Catalog → _Saved on this device_ lists them with Rename, Export, Delete; Library import accepts a project-template file. Tests: `tests/templates-prices-shopping.test.ts` (round trip, room optional, v6 → v7 upgrade, unreadable row kept); version tests updated to 7. find-it `tools/ensemble/find-it-adrs.mjs` (production build, bare app, visible text, 1440 and 375 px): 60/60.
+`src/core/projectTemplate.ts`, Dexie **v7** `projectTemplates` (shared version with ADR-062 `prices`, built in the same change), `src/ui/ProjectTemplates.tsx`: Project → **Save as project template** (asks _Include the room_ when there is one); Home → **Create from a project template** (a list on the Home page, next to _Choose a project_); Catalog → _Saved on this device_ lists them with Rename, Export, Delete; Library import accepts a project-template file. Tests: `tests/templates-prices-shopping.test.ts` (round trip, room optional, v6 → v7 upgrade, unreadable row kept); version tests updated to 7. find-it `tools/ensemble/find-it-adrs.mjs` (production build, bare app, visible text, 1440 and 375 px): 60/60. After review: positions are kept relative to the smallest x and z of the pieces; the recipe also carries removed run parts (ids remapped); export/import carries pictures (`src/persist/projectTemplateFile.ts`); validation never throws.

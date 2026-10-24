@@ -1,7 +1,8 @@
 # ADR-058: The project has a room: walls, doors, windows and obstacles, checked against the pieces
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-24
+- Implemented: 2026-10-24
 - Decided by: user, 2026-10-24: "create the ADRs … auto-accept the recommended suggestion" (answers below)
 - Depends on: ADR-022, ADR-031, ADR-057
 - Design: docs/ui-design.md (project panel → Room; Plan view; 3D)
@@ -53,9 +54,8 @@ from, width, sill, height, depth? , label }`:
 
 ## Done when
 
-- [ ] Unit tests: piece past the right wall → `outside-room`; radiator box hit → `hits-obstacle`; tall unit in front of a 900 mm sill → `covers-window`; piece in a door swing → `blocks-door`; project without room → no new diagnostics.
-- [ ] Find-it at 1440 and 375 px: project → **Room** → width 3000 → **Add window** → the plan shows the window; a wardrobe moved under it shows **covers the window**.
-- [ ] Find-it test passes from the bare app at phone and desktop widths (`tools/ensemble/find-it-adrs.mjs`)
+- [x] Piece past a wall → `outside-room`; obstacle hit → `hits-obstacle`; tall unit against a window wall above the sill → `covers-window`; piece in a door swing → `blocks-door`; feature past its wall → `room-feature`; no room → no new diagnostics (`tests/room.test.ts`)
+- [x] find-it `tools/ensemble/find-it-adrs.mjs` (80/80, 1440 and 375 px): **Add the room** → walls and _Room height_ listed, the plan draws the outline; **Add obstacle** → _runs into Obstacle 1_; **Add window** (sill 500) → the plan shows it and Checks say the cabinets _cover the window_
 
 ## Answers
 
@@ -67,4 +67,4 @@ from, width, sill, height, depth? , label }`:
 
 ## Implementation notes
 
-`src/core/room.ts` (`Room` with an **outline** from the start, so ADR-059 needs no second model; `roomChecks`, `featureBox`, `roomDisplayBoxes`), `Project.room`, checks in `buildProjectModel`; Project → **Room** (_Add the room_ / _Draw the room_, shape, height _Measure your ceiling_ — starting value 2500 mm, walls, _Add door / window / obstacle_, _Remove the room_); plan draws walls, door swings, windows, obstacles; 3D shows translucent walls with openings, the floor inside the outline and obstacles (`src/viewer/Viewer3D.tsx`). Features sit on a wall by number (or free-standing for obstacles). "Covers the window" applies to pieces standing against that wall (within 50 mm). Tests: `tests/room.test.ts`. find-it `tools/ensemble/find-it-adrs.mjs` (production build, bare app, visible text, 1440 and 375 px): 60/60: room added, _runs into Obstacle 1_.
+`src/core/room.ts` (`Room` with an **outline** from the start, so ADR-059 needs no second model; `roomChecks`, `featureBox`, `roomDisplayBoxes`), `Project.room`, checks in `buildProjectModel`; Project → **Room** (_Add the room_ / _Draw the room_, shape, height _Measure your ceiling_ — starting value 2500 mm, walls, _Add door / window / obstacle_, _Remove the room_); plan draws walls, door swings, windows, obstacles; 3D shows translucent walls with openings, the floor inside the outline and obstacles (`src/viewer/Viewer3D.tsx`). Features sit on a wall by number (or free-standing for obstacles). "Covers the window" applies to pieces standing against that wall (within 50 mm). Tests: `tests/room.test.ts`. find-it `tools/ensemble/find-it-adrs.mjs` (production build, bare app, visible text, 1440 and 375 px): 60/60: room added, _runs into Obstacle 1_. After review: a feature past its wall is an error (`room-feature`); the window warning says _covers the window_; door swings are drawn as quarter circles; the front view outlines the room height and the back-wall doors, windows and obstacles.

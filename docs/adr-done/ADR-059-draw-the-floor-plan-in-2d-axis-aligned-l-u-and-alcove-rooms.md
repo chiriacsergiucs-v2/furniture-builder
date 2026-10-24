@@ -1,7 +1,8 @@
 # ADR-059: Draw the floor plan in 2D: rooms made of axis-aligned wall runs (L, U and alcove shapes)
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-24
+- Implemented: 2026-10-24
 - Decided by: user, 2026-10-24: "create the ADRs … auto-accept the recommended suggestion" (answers below)
 - Depends on: ADR-058
 - Design: docs/ui-design.md (project panel → Room; Plan view)
@@ -42,9 +43,9 @@ an alcove; users need to draw that outline on the plan, not type a rectangle.
 
 ## Done when
 
-- [ ] Unit tests: L-shape outline from lengths; point-in-outline for pieces; self-crossing outline → room error; walls stay axis-aligned after any edit.
-- [ ] Find-it at 1440 and 375 px: project → **Room** → **L-shape** → the plan shows six walls with lengths; a piece in the cut-out corner shows **outside the room**.
-- [ ] Find-it test passes from the bare app at phone and desktop widths (`tools/ensemble/find-it-adrs.mjs`)
+- [x] L, U and alcove outlines are closed and square; a piece in the L cut-out is outside; a crossing outline is a room error; editing a wall length keeps the walls square (`tests/room.test.ts`)
+- [x] Drawing snaps walls to x or z in 10 mm steps, closes square, lands on the first corner's line within 50 mm, and is one undo step (`tests/room.test.ts`)
+- [x] find-it `tools/ensemble/find-it-adrs.mjs` (80/80, 1440 and 375 px): **L-shape** gives six walls; a piece in the cut-out is _outside the room_; **Draw the room again** → four taps → **Close the room** gives four walls of the tapped lengths
 
 ## Answers
 
