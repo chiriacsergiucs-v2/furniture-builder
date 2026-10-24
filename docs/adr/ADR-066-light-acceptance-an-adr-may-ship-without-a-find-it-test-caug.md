@@ -68,17 +68,18 @@ This ADR changes the user rule R3 (the user's decision outranks it). It does not
 
 ## Done when
 
-- [ ] `CLAUDE.md` R3 states the light exception and the `find-it pending (light, ADR-066)` marker.
-- [ ] `docs/adr/_template.md` documents the optional `- Acceptance: light` header line.
-- [ ] The seven skills each say what a light ADR skips and that it records the marker.
-- [ ] `pnpm docs:check` accepts `Acceptance: light|full`, rejects any other value, and fails when a light
+- [x] `CLAUDE.md` R3 states the light exception and the `find-it pending (light, ADR-066)` marker.
+- [x] `docs/adr/_template.md` documents the optional `- Acceptance: light` header line.
+- [x] The seven skills each say what a light ADR skips and that it records the marker.
+- [x] `pnpm docs:check` accepts `Acceptance: light|full`, rejects any other value, and fails when a light
       ADR's backlog row is Done without catch-up evidence or lacks the marker.
-- [ ] N60 (ADR-065) carries the marker; `pnpm docs:check` passes.
-- [ ] CI passes.
+- [x] N60 (ADR-065) carries the marker; `pnpm docs:check` passes.
+- [x] CI passes.
 
-## Open questions
+## Answers (2026-10-24)
 
-- Should a new top-level screen, tab or menu entry be allowed to go light? Default: yes, the user decides
-  per ADR; the ADR states the risk.
-- Should the agent remind the user when markers pile up? Default: list the open markers in the status
-  table at the end of every implementation reply; no automatic catch-up.
+The user accepted both defaults ("defaults are fine"):
+
+- A new top-level screen, tab or menu entry may go light; the user decides per ADR, and the ADR states the risk.
+- Every implementation reply lists the rows still marked `find-it pending (light, ADR-066)` in its status
+  table; there is no automatic catch-up.

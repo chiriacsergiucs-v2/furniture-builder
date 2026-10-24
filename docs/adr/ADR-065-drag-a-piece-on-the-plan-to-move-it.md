@@ -5,6 +5,7 @@
 - Depends on: ADR-051, ADR-056
 - Design: docs/ui-design.md (project Plan view)
 - Backlog: N60
+- Acceptance: light
 
 ## Context
 
