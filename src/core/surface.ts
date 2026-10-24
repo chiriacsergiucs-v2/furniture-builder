@@ -1,5 +1,5 @@
 import { inPlaneAxes } from './geometry';
-import type { Axis, Face, MaterialImage, Mm, Panel } from './types';
+import type { Axis, BoardFinish, Face, MaterialImage, Mm, Panel } from './types';
 
 /**
  * Pictures on boards (ADR-048): which files are accepted, how big they are kept, and how one picture is laid on
@@ -13,6 +13,33 @@ export const MAX_TEXTURE_PX = 2048;
 /** Board covered by one picture when it is first added: this length along the picture's width. */
 export const DEFAULT_TILE_LENGTH: Mm = 1000;
 export const MAX_TILE: Mm = 10_000;
+
+/** Board finishes (ADR-066), in the order the Materials dialog shows them. */
+export const FINISHES: { value: BoardFinish; label: string }[] = [
+  { value: 'matte', label: 'Matte' },
+  { value: 'satin', label: 'Satin' },
+  { value: 'gloss', label: 'Gloss' },
+];
+export const isFinish = (v: unknown): v is BoardFinish => FINISHES.some((f) => f.value === v);
+
+/**
+ * How a finish looks in the realistic 3D view and in renders (ADR-066). Rendering values tuned by eye, not supplier
+ * or physical specs (ADR-010). Absent = matte.
+ */
+export function finishLook(f: BoardFinish | undefined): {
+  roughness: number;
+  clearcoat: number;
+  clearcoatRoughness: number;
+} {
+  switch (f) {
+    case 'gloss':
+      return { roughness: 0.15, clearcoat: 0.6, clearcoatRoughness: 0.08 };
+    case 'satin':
+      return { roughness: 0.5, clearcoat: 0, clearcoatRoughness: 0 };
+    default:
+      return { roughness: 0.85, clearcoat: 0, clearcoatRoughness: 0 };
+  }
+}
 
 /** Why a picked file cannot be used, or null. Never throws. */
 export function imageFileProblem(file: {

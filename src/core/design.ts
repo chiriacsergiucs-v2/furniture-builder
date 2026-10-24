@@ -13,7 +13,7 @@ import type {
   SpaceKind,
   SplitSize,
 } from './types';
-import { materialImageProblems } from './surface';
+import { isFinish, materialImageProblems } from './surface';
 import { materialLabelProblems } from './materials';
 
 export type PedestalSide = 'left' | 'right';
@@ -955,6 +955,8 @@ export function validateDesign(d: unknown): string[] {
       errs.push(
         `Invalid picture for ${String(m.name)}: ${materialImageProblems(m.image).join(', ')}`,
       );
+    else if (m.finish !== undefined && !isFinish(m.finish))
+      errs.push(`Invalid finish for ${String(m.name)}: use matte, satin or gloss`);
     else if (materialLabelProblems(m).length)
       errs.push(`Invalid labels for ${String(m.name)}: ${materialLabelProblems(m).join(', ')}`);
     else if (mids.has(m.id as string)) errs.push(`Duplicate material ${String(m.id)}`);

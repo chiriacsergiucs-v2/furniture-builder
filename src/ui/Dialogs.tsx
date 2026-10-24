@@ -29,14 +29,14 @@ import {
 } from '../persist/db';
 import { useDesign } from '../store/designStore';
 import { readProjectTemplateFile } from '../persist/projectTemplateFile';
-import { MmField, Select, Toggle } from './controls';
+import { MmField, Segmented, Select, Toggle } from './controls';
 import { Icon } from './icons';
 import { AddPieceList } from './Project';
 import { templateGlyph } from './Templates';
 import { StartFrom } from './Catalog';
 import { askConfirm } from './Confirm';
 import { importImage, takePictures, useImageUrls } from '../persist/images';
-import { imageIdsOf, MAX_TILE } from '../core/surface';
+import { FINISHES, imageIdsOf, MAX_TILE } from '../core/surface';
 
 /** Modal shell: header (title + close), scrolling body, optional footer for actions. Esc and backdrop close it. */
 export function Dialog({
@@ -694,6 +694,12 @@ export function MaterialsDialog({ open, onClose }: { open: boolean; onClose: () 
               label="Has grain"
               checked={m.grain}
               onChange={(v) => update(m.id, { grain: v })}
+            />
+            <Segmented
+              label="Finish"
+              value={m.finish ?? 'matte'}
+              options={FINISHES}
+              onChange={(v) => update(m.id, { finish: v })}
             />
             <div className="sheet-fields">
               <Select
