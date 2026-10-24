@@ -3992,6 +3992,30 @@ button.tile:hover {
   stroke-width: 1.5;
   vector-effect: non-scaling-stroke;
 }
+/* Pipes and outlets (ADR-072): small marked zones on a wall. */
+.plan .room-pipe rect,
+.plan .room-outlet rect,
+.plan .room-front .room-pipe,
+.plan .room-front .room-outlet {
+  fill: var(--surface);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+.plan .room-pipe rect,
+.plan .room-front .room-pipe {
+  stroke: #4a8fc4;
+}
+.plan .room-outlet rect,
+.plan .room-front .room-outlet {
+  stroke: var(--warn);
+  stroke-dasharray: 3 2;
+}
+.plan .room-pipe text,
+.plan .room-outlet text {
+  fill: var(--ink-2);
+  pointer-events: none;
+}
 .plan .room-front .room-ceiling {
   stroke: var(--ink-2);
   stroke-width: 1.5;
@@ -4029,6 +4053,10 @@ button.tile:hover {
   list-style: none;
   padding: 0;
   margin: 0;
+}
+/* Five "Add …" buttons (ADR-072) wrap instead of widening the side panel on a phone. */
+.room .split-actions {
+  flex-wrap: wrap;
 }
 .room .room-feature {
   border: 1px solid var(--line);
