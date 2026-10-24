@@ -1,14 +1,16 @@
-import { Canvas, useThree } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { ContactShadows, Edges, OrbitControls } from '@react-three/drei';
 import { useEffect, useMemo, useRef, type ComponentRef } from 'react';
 import {
   BoxGeometry,
   Color,
   DoubleSide,
+  type DirectionalLight,
   ExtrudeGeometry,
   Float32BufferAttribute,
   FrontSide,
   Matrix4,
+  PMREMGenerator,
   RepeatWrapping,
   SRGBColorSpace,
   Shape,
@@ -16,15 +18,22 @@ import {
   TextureLoader,
   Vector2,
 } from 'three';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { explode } from '../core/explode';
 import { roomDisplayBoxes } from '../core/room';
 import { inPlaneAxes, union } from '../core/geometry';
 import { aabbOf } from '../core/shape';
-import { boxUvs, planeUvs } from '../core/surface';
+import { boxUvs, finishLook, planeUvs } from '../core/surface';
 import { imageKey, useImageUrls } from '../persist/images';
 import { useDesign } from '../store/designStore';
 import { useView } from '../ui/useView';
 import { useTheme } from '../ui/useTheme';
+import { useLook } from '../ui/useLook';
+import { SHADOW_CATCHER, setStage, useRendering } from './renderBridge';
 import type { Box, MaterialImage, Panel } from '../core/types';
 
 const S = 0.001; // mm → metres
@@ -120,6 +129,10 @@ export default function Viewer3D() {
   const view = useView();
   const exploded = useDesign((s) => s.exploded);
   const theme = useTheme();
+  const look = useLook();
+  // A render (ADR-068) always uses the realistic look.
+  const rendering = useRendering();
+  const realistic = rendering || look === 'realistic';
   // Stage colours come from the stylesheet tokens so the canvas matches the light or dark theme.
   const bg = useMemo(() => {
     void theme;
@@ -141,7 +154,7 @@ export default function Viewer3D() {
     <Canvas
       camera={{ fov: 32, near: 0.01, far: 100 }}
       dpr={[1, 2]}
-      shadows={false}
+      shadows={realistic}
       onPointerMissed={() => {
         const st = useDesign.getState();
         if (st.project && !st.editingItemId) st.selectItem(null);
@@ -149,21 +162,148 @@ export default function Viewer3D() {
       }}
     >
       <color attach="background" args={[bg]} />
-      <hemisphereLight args={['#ffffff', '#b9bdb6', 1.1]} />
-      <directionalLight position={[2.5, 4, 3]} intensity={1.6} />
-      <directionalLight position={[-3, 2, -1]} intensity={0.35} />
-      <Panels panels={panels} />
+      <Stage />
+      {realistic ? (
+        <>
+          <RoomLight />
+          <KeyLight bounds={bounds} />
+          <ShadowCatcher bounds={bounds} />
+          {!rendering && <Occlusion />}
+        </>
+      ) : (
+        <>
+          <hemisphereLight args={['#ffffff', '#b9bdb6', 1.1]} />
+          <directionalLight position={[2.5, 4, 3]} intensity={1.6} />
+          <directionalLight position={[-3, 2, -1]} intensity={0.35} />
+          <ContactShadows
+            position={[
+              bounds.x * S + (bounds.w * S) / 2,
+              -0.0005,
+              bounds.z * S + (bounds.d * S) / 2,
+            ]}
+            scale={Math.max(bounds.w, bounds.d) * S * 2.2}
+            blur={2.4}
+            opacity={0.38}
+            far={1.2}
+          />
+        </>
+      )}
+      <Panels panels={panels} realistic={realistic} plain={rendering} />
       {view.mode === 'project' && !exploded && <RoomWalls />}
-      <ContactShadows
-        position={[bounds.x * S + (bounds.w * S) / 2, -0.0005, bounds.z * S + (bounds.d * S) / 2]}
-        scale={Math.max(bounds.w, bounds.d) * S * 2.2}
-        blur={2.4}
-        opacity={0.38}
-        far={1.2}
-      />
       <Fit key={designId} bounds={bounds} />
     </Canvas>
   );
+}
+
+/** Lets the path tracer (ADR-068) read the scene and camera the user is looking at. */
+function Stage() {
+  const { scene, camera } = useThree();
+  useEffect(() => {
+    setStage({ scene, camera });
+    return () => setStage(null);
+  }, [scene, camera]);
+  return null;
+}
+
+/** Image-based light (ADR-067) from three's generated room, so no light file is downloaded or shipped (ADR-002). */
+function RoomLight() {
+  const get = useThree((s) => s.get);
+  useEffect(() => {
+    const { gl, scene } = get();
+    const pmrem = new PMREMGenerator(gl);
+    const room = new RoomEnvironment();
+    const env = pmrem.fromScene(room, 0.04).texture;
+    scene.environment = env;
+    scene.environmentIntensity = 0.35;
+    room.dispose();
+    pmrem.dispose();
+    return () => {
+      if (scene.environment === env) scene.environment = null;
+      env.dispose();
+    };
+  }, [get]);
+  return null;
+}
+
+/** One sun-like light above and to the front-right that casts soft shadows over the whole piece or project. */
+function KeyLight({ bounds }: { bounds: Box }) {
+  const ref = useRef<DirectionalLight>(null);
+  const get = useThree((s) => s.get);
+  const cx = (bounds.x + bounds.w / 2) * S,
+    cy = (bounds.y + bounds.h / 2) * S,
+    cz = (bounds.z + bounds.d / 2) * S;
+  const r = Math.max(0.5, 0.6 * Math.hypot(bounds.w, bounds.h, bounds.d) * S);
+  const e = r * 1.5;
+  useEffect(() => {
+    const l = ref.current;
+    if (!l) return;
+    const { scene } = get();
+    l.target.position.set(cx, cy, cz);
+    scene.add(l.target);
+    l.shadow.camera.updateProjectionMatrix();
+    return () => {
+      scene.remove(l.target);
+    };
+  }, [get, cx, cy, cz, e]);
+  return (
+    <directionalLight
+      ref={ref}
+      position={[cx - r * 1.2, cy + r * 2.2, cz + r * 1.4]}
+      intensity={1.3}
+      castShadow
+      shadow-mapSize={[2048, 2048]}
+      shadow-radius={4}
+      shadow-bias={-0.0004}
+      shadow-normalBias={0.01}
+      shadow-camera-left={-e}
+      shadow-camera-right={e}
+      shadow-camera-top={e}
+      shadow-camera-bottom={-e}
+      shadow-camera-near={0.05}
+      shadow-camera-far={r * 6}
+    />
+  );
+}
+
+/** An invisible floor that only shows the shadows falling on it. */
+function ShadowCatcher({ bounds }: { bounds: Box }) {
+  const size = Math.max(bounds.w, bounds.d, 1000) * S * 4;
+  return (
+    <mesh
+      name={SHADOW_CATCHER}
+      rotation={[-Math.PI / 2, 0, 0]}
+      position={[(bounds.x + bounds.w / 2) * S, -0.0005, (bounds.z + bounds.d / 2) * S]}
+      receiveShadow
+      raycast={() => null}
+    >
+      <planeGeometry args={[size, size]} />
+      <shadowMaterial opacity={0.35} />
+    </mesh>
+  );
+}
+
+/** Ambient occlusion with three's own GTAO pass: soft darkening where boards meet (ADR-067). */
+function Occlusion() {
+  const { gl, scene, camera, size } = useThree();
+  const composer = useMemo(() => {
+    const c = new EffectComposer(gl);
+    c.addPass(new RenderPass(scene, camera));
+    const ao = new GTAOPass(scene, camera, size.width, size.height);
+    ao.blendIntensity = 0.9;
+    ao.updateGtaoMaterial({ radius: 0.12, distanceFallOff: 1, thickness: 1 });
+    c.addPass(ao);
+    c.addPass(new OutputPass());
+    return c;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gl, scene, camera]);
+  useEffect(() => {
+    composer.setPixelRatio(gl.getPixelRatio());
+    composer.setSize(size.width, size.height);
+  }, [composer, gl, size.width, size.height]);
+  useEffect(() => () => composer.dispose(), [composer]);
+  // Priority 1 takes over drawing from the default renderer.
+  useFrame(() => composer.render(), 1);
+  return null;
 }
 
 /** The project's room (ADR-058): translucent walls with openings, obstacles; display only, never picked. */
@@ -260,7 +400,16 @@ function Fit({ bounds }: { bounds: Box }) {
   );
 }
 
-function Panels({ panels }: { panels: Panel[] }) {
+function Panels({
+  panels,
+  realistic,
+  plain,
+}: {
+  panels: Panel[];
+  realistic: boolean;
+  /** No selection or hover tint (while rendering a picture). */
+  plain: boolean;
+}) {
   const view = useView();
   const materials = view.materials;
   const selectedSpace = useDesign((s) => s.selectedId);
@@ -270,6 +419,7 @@ function Panels({ panels }: { panels: Panel[] }) {
   const showFronts = useDesign((s) => s.showFronts);
   const pick = useDesign((s) => s.pick);
   const colors = useMemo(() => new Map(materials.map((m) => [m.id, m.color])), [materials]);
+  const finishes = useMemo(() => new Map(materials.map((m) => [m.id, m.finish])), [materials]);
   const images = useMemo(
     () => new Map(materials.flatMap((m) => (m.image ? [[m.id, m.image] as const] : []))),
     [materials],
@@ -284,11 +434,12 @@ function Panels({ panels }: { panels: Panel[] }) {
         .map((p) => {
           const b = p.box;
           const selected =
+            !plain &&
             selectedId !== null &&
             (view.mode === 'project'
               ? p.nodeId.startsWith(`${selectedId}:`)
               : p.nodeId === selectedId);
-          const lit = hl.has(p.id);
+          const lit = !plain && hl.has(p.id);
           // A picture replaces the plain colour; without a readable one the plain colour stays (ADR-048).
           const img = images.get(p.materialId);
           const map = img ? textures.get(img.id) : undefined;
@@ -298,7 +449,21 @@ function Panels({ panels }: { panels: Panel[] }) {
             : selected
               ? new Color(base).lerp(new Color(SELECT), 0.45).getStyle()
               : base;
-          const look = (
+          const side = p.shape?.kind === 'profile' ? DoubleSide : FrontSide;
+          const look = realistic ? (
+            <>
+              {/* Realistic (ADR-067): the finish sets how matte or glossy a board is; backs stay opaque. The selection shows
+                  as the green tint only: drei's outline is a mesh that the occlusion pass would smear. */}
+              <meshPhysicalMaterial
+                key={map ? map.uuid : 'plain'}
+                map={map ?? null}
+                color={color}
+                metalness={0}
+                {...finishLook(finishes.get(p.materialId))}
+                side={side}
+              />
+            </>
+          ) : (
             <>
               <meshStandardMaterial
                 key={map ? map.uuid : 'plain'}
@@ -308,7 +473,7 @@ function Panels({ panels }: { panels: Panel[] }) {
                 metalness={0}
                 transparent={p.role === 'back'}
                 opacity={p.role === 'back' ? 0.92 : 1}
-                side={p.shape?.kind === 'profile' ? DoubleSide : FrontSide}
+                side={side}
               />
               <Edges
                 threshold={15}
@@ -329,12 +494,18 @@ function Panels({ panels }: { panels: Panel[] }) {
             );
           if (p.shape?.kind === 'profile') {
             return map && img ? (
-              <mesh key={p.id} onClick={onClick}>
+              <mesh key={p.id} onClick={onClick} castShadow={realistic} receiveShadow={realistic}>
                 <PictureGeometry p={p} img={img} />
                 {look}
               </mesh>
             ) : (
-              <mesh key={p.id} geometry={profileGeometry(p)} onClick={onClick}>
+              <mesh
+                key={p.id}
+                geometry={profileGeometry(p)}
+                onClick={onClick}
+                castShadow={realistic}
+                receiveShadow={realistic}
+              >
                 {look}
               </mesh>
             );
@@ -344,6 +515,8 @@ function Panels({ panels }: { panels: Panel[] }) {
               key={p.id}
               position={[(b.x + b.w / 2) * S, (b.y + b.h / 2) * S, (b.z + b.d / 2) * S]}
               onClick={onClick}
+              castShadow={realistic}
+              receiveShadow={realistic}
             >
               {geometry}
               {look}
@@ -367,6 +540,8 @@ function Panels({ panels }: { panels: Panel[] }) {
                   (b.z + b.d / 2 - pv[2]) * S,
                 ]}
                 onClick={onClick}
+                castShadow={realistic}
+                receiveShadow={realistic}
               >
                 {geometry}
                 {look}
