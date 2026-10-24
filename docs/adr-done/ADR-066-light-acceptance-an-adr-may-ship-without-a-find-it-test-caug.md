@@ -1,7 +1,8 @@
 # ADR-066: Light acceptance: an ADR may ship without a find-it test, caught up later
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-24
+- Implemented: 2026-10-24 (Merged in PR #38 (CI run 382, Pages run 126))
 - Depends on: ADR-050
 - Design: n/a
 - Backlog: N61

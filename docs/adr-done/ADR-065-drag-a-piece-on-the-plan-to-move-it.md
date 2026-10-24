@@ -1,7 +1,8 @@
 # ADR-065: Drag a piece on the plan to move it
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-24
+- Implemented: 2026-10-24 (Merged in PR #37 (CI run 380, Pages run 125); light acceptance, find-it pending (ADR-066))
 - Depends on: ADR-051, ADR-056
 - Design: docs/ui-design.md (project Plan view)
 - Backlog: N60
