@@ -1,0 +1,4 @@
+# Formatting-only commits; git blame skips them with
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+# Prettier, ADR-053
+8981d674fd351bdce2b9b56b05fb25c24850827c

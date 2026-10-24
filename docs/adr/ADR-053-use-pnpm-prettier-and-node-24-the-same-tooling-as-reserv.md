@@ -14,7 +14,7 @@ and no formatter, because the stacks differ. The user then asked to cover everyt
 uses pnpm 12.6.0 (`packageManager`), Node 24 (`.nvmrc`, `engines`), Prettier with `singleQuote`,
 `trailingComma: all` and `printWidth: 100`, `.editorconfig`, and `pnpm/setup@v3` in CI with a
 `format:check` step. ADR-013 fixed the app stack (React, Vite, Zustand, Dexie); it named no package manager,
-so the app stack does not change.
+so the app stack does not change. `workbox-window` (a peer of vite-plugin-pwa that npm hoisted) is now declared.
 
 ## Decision
 
@@ -56,5 +56,6 @@ so the app stack does not change.
 
 - [x] `pnpm install --frozen-lockfile` installs from `pnpm-lock.yaml` with the versions npm resolved
 - [x] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build`, `pnpm docs:check` pass on Node 24
-- [x] The production build passes the find-it tests run against it on Node 24
+- [x] The production build passes every find-it test on Node 24 (home, materials, merge, project-undo, research,
+      shapes, wizard)
 - [ ] CI and the Pages deploy pass with `pnpm/setup@v3` on GitHub (first run on the pull request)
