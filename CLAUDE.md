@@ -12,7 +12,7 @@ Read first: `docs/backlog.md`, `docs/adr/README.md`, `docs/product/product-conte
 - React 19, TypeScript 5.9 strict, Vite 7, Zustand 5 (ADR-013)
 - three + @react-three/fiber + drei, lazy-loaded (ADR-013, ADR-014)
 - Dexie 4 (IndexedDB), vite-plugin-pwa (ADR-012)
-- npm, Vitest, ESLint
+- Node 24, pnpm 12, Vitest, ESLint + Prettier (ADR-053, the same tooling as reserv)
 - Static site on GitHub Pages; no backend, accounts, cloud, telemetry, remote AI or CDN (ADR-002)
 - GitHub for source control and CI/CD
 
@@ -32,13 +32,13 @@ Read first: `docs/backlog.md`, `docs/adr/README.md`, `docs/product/product-conte
 - `src/ui` — React UI; `src/viewer` — lazy three.js preview
 - `tests/` — core, fuzz, storage and UI-logic tests (Vitest)
 - `tools/` — the catalog PDF extractor and the find-it acceptance scripts (`tools/*/find-it.mjs`)
-- `scripts/check-docs.py` — checks ADRs, the index and every ADR and backlog id (`npm run docs:check`)
+- `scripts/check-docs.py` — checks ADRs, the index and every ADR and backlog id (`pnpm docs:check`)
 - `docs/adr/` — pending ADRs, `README.md` (index), `_template.md`
 - `docs/adr-done/` — implemented ADRs
 - `docs/backlog.md` — the single work ledger (F/N/D ids)
 - `docs/product/product-context.md` — the user's decisions and answers so far; `docs/architecture.md` — how
   the code fits together; `docs/ui-design.md` — tokens, components and screens; `docs/catalog.md` — generated
-  (`npm run catalog:docs`); `docs/retros/` — retrospectives
+  (`pnpm catalog:docs`); `docs/retros/` — retrospectives
 - `.claude/skills/` — `new-adr`, `next-adr`, `ship-adr`, `verify`, `review`, `debug`, `add-tests`,
   `implement-design`, `design-review`, `add-storage-version`, `add-model-feature` (reserv's `add-endpoint`
   counterpart), `security-review`
@@ -48,20 +48,21 @@ Read first: `docs/backlog.md`, `docs/adr/README.md`, `docs/product/product-conte
 ## Commands
 
 CI is the source of truth. Before saying work is done, run the same checks CI runs
-(`.github/workflows/ci.yml`; scripts are defined in `package.json`).
+(`.github/workflows/ci.yml`; scripts are defined in `package.json`). `pnpm format` fixes formatting.
 
-| Check      | Command              |
-| ---------- | -------------------- |
-| Install    | `npm ci`             |
-| Lint       | `npm run lint`       |
-| Type-check | `npm run typecheck`  |
-| Test       | `npm test`           |
-| Build      | `npm run build`      |
-| Docs check | `npm run docs:check` |
+| Check      | Command                          |
+| ---------- | -------------------------------- |
+| Install    | `pnpm install --frozen-lockfile` |
+| Lint       | `pnpm lint`                      |
+| Format     | `pnpm format:check`              |
+| Type-check | `pnpm typecheck`                 |
+| Test       | `pnpm test`                      |
+| Build      | `pnpm build`                     |
+| Docs check | `pnpm docs:check`                |
 
-Not in CI, run when relevant: `FUZZ_N=30000 npx vitest run tests/fuzz.test.ts` after any geometry change;
-`npm run catalog:docs` and `npm run catalog:snapshots` after catalog changes; the matching
-`tools/*/find-it.mjs` against `npm run build && npm run preview` for anything visible.
+Not in CI, run when relevant: `FUZZ_N=30000 pnpm exec vitest run tests/fuzz.test.ts` after any geometry change;
+`pnpm catalog:docs` and `pnpm catalog:snapshots` after catalog changes; the matching
+`tools/*/find-it.mjs` against `pnpm build && pnpm preview` for anything visible.
 
 ## How we plan and build: ADRs
 

@@ -1,0 +1,4 @@
+# Single-package repository; this file only holds pnpm settings (ADR-053).
+allowBuilds:
+  # Vite's bundler: its install script picks the platform binary.
+  esbuild: true

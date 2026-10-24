@@ -42,7 +42,7 @@ app loads or sends over the network**. This review is engineering guidance, not 
    - **Storage and privacy:** nothing leaves the device unless the user downloads it; never
      delete or overwrite rows the app cannot read (ADR-012); exported files carry only what
      the user made (pictures are embedded only when they choose to export, ADR-048).
-   - **Dependencies:** `npm audit --omit=dev`; new packages justified, maintained, licence
+   - **Dependencies:** `pnpm audit --omit=dev`; new packages justified, maintained, licence
      known, no telemetry, not typosquats; lockfile committed.
    - **Secrets:** none needed at runtime. `git ls-files | grep -iE "\.env|key|secret|token"`
      shows nothing sensitive; the workflow files use no secrets beyond GitHub's own token.

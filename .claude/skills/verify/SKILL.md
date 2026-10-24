@@ -27,9 +27,9 @@ Project: **Furniture Builder** — offline PWA.
 3. **If a check fails**, fix the real cause. Never make a check pass by weakening it: no
    skipping or deleting tests, no lowering fuzz counts, no loosening lint or compiler rules,
    no `any` / `@ts-ignore` / `eslint-disable` to silence errors.
-4. **Run the extra checks the change needs** (not in CI): `FUZZ_N=30000 npx vitest run
-   tests/fuzz.test.ts` after geometry changes; `npm run catalog:docs` /
-   `npm run catalog:snapshots` after catalog changes; the feature's `tools/*/find-it.mjs`
+4. **Run the extra checks the change needs** (not in CI): `FUZZ_N=30000 pnpm exec vitest run
+   tests/fuzz.test.ts` after geometry changes; `pnpm catalog:docs` /
+   `pnpm catalog:snapshots` after catalog changes; the feature's `tools/*/find-it.mjs`
    on the production build for anything visible.
 5. **Compare with CI.** If `.github/workflows/ci.yml` runs a check that is not in the table
    (or the commands differ), tell the user and suggest updating the table.

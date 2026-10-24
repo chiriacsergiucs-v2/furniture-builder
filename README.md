@@ -26,14 +26,14 @@ MDF 2440 × 1220 (Materials). Hinge, pin and bracket counts are common guidance 
 ## Develop
 
 ```sh
-npm ci
-npm run dev        # http://localhost:5173/furniture-builder/
-npm test           # unit, fuzz and storage tests
-npm run lint && npm run typecheck && npm run build
-npm run docs:check # ADRs, their index and every ADR / backlog id
+pnpm install --frozen-lockfile
+pnpm dev        # http://localhost:5173/furniture-builder/
+pnpm test           # unit, fuzz and storage tests
+pnpm lint && pnpm typecheck && pnpm build
+pnpm docs:check # ADRs, their index and every ADR / backlog id
 ```
 
-`FUZZ_N=50000 npx vitest run tests/fuzz.test.ts` runs a deep geometry fuzz.
+`FUZZ_N=50000 pnpm exec vitest run tests/fuzz.test.ts` runs a deep geometry fuzz.
 
 ## Layout
 

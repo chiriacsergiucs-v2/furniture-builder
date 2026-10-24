@@ -34,8 +34,8 @@ capability is built there first, and the UI only edits the design document and s
 8. **Tests** (`add-tests`): a unit test per rule; extend the seeded fuzz generators and
    invariants; a validation test for bad documents; an old-document test if the shape changed.
    Check that a deliberate code mutation fails a test.
-9. **Verify:** the `verify` skill, then `FUZZ_N=30000 npx vitest run tests/fuzz.test.ts`;
-   `npm run catalog:docs` / `catalog:snapshots` if catalog templates change; a find-it test
+9. **Verify:** the `verify` skill, then `FUZZ_N=30000 pnpm exec vitest run tests/fuzz.test.ts`;
+   `pnpm catalog:docs` / `catalog:snapshots` if catalog templates change; a find-it test
    for anything visible.
 
 ## Rules

@@ -1,6 +1,6 @@
 // Find-it acceptance for pictures on materials (CLAUDE.md R3, backlog N43, ADR-048), run against a production build:
-//   npm run build && npx vite preview --port 4173 &  node tools/materials/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
-// Starts from the bare app at each width and finds everything by visible text. Not part of `npm test`.
+//   pnpm build && pnpm exec vite preview --port 4173 &  node tools/materials/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
+// Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
 import { chromium } from 'playwright'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { crc32, deflateSync } from 'node:zlib'

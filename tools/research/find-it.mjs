@@ -1,6 +1,6 @@
 // Find-it acceptance for the Feature Research & Catalog page (CLAUDE.md R3), run against a production build:
-//   npm run build && npx vite preview --port 4173 &  node tools/research/find-it.mjs http://localhost:4173/furniture-builder/
-// Starts from the bare app at each width and finds everything by visible text. Not part of `npm test`.
+//   pnpm build && pnpm exec vite preview --port 4173 &  node tools/research/find-it.mjs http://localhost:4173/furniture-builder/
+// Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
 import { chromium } from 'playwright'
 import { mkdirSync } from 'node:fs'
 

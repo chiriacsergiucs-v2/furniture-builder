@@ -14,22 +14,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: pnpm/setup@v3
         with:
-          node-version: '22'
-          cache: npm
+          runtime: node@24
+          cache: true
+          require-lockfile: true
 
-      - run: npm ci
+      - run: pnpm lint
 
-      - run: npm run lint
+      - run: pnpm format:check
 
-      - run: npm run typecheck
+      - run: pnpm typecheck
 
-      - run: npm test
+      - run: pnpm test
 
-      - run: npm run build
+      - run: pnpm build
 
       # ADRs, their index and every ADR / backlog id (ADR-050).
-      - run: npm run docs:check
+      - run: pnpm docs:check

@@ -30,7 +30,7 @@ Project: **Furniture Builder** — pure TypeScript model, Vitest (ADR-015).
    clock or order dependence); clear names. For important rules, check that a deliberate
    code mutation makes a test fail and record it in the backlog evidence.
 6. **Bug fixes start with a failing test.**
-7. **Run** the new tests alone (`npx vitest run tests/<file>.test.ts`), then the `verify`
+7. **Run** the new tests alone (`pnpm exec vitest run tests/<file>.test.ts`), then the `verify`
    skill; the deep fuzz for geometry.
 
 ## Rules

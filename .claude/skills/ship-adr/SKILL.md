@@ -36,7 +36,7 @@ Project: **Furniture Builder** — offline PWA for designing casework.
    links across `docs/adr*/`, sets the README row to `✅ Implemented`, and warns about
    unchecked `Done when` items and stale references elsewhere.
 4. **Review** `git status --short` and `git diff`; fix reported stale references by hand.
-   Tick the `Done when` boxes you verified. Run `npm run docs:check`.
+   Tick the `Done when` boxes you verified. Run `pnpm docs:check`.
 5. **Commit and push:**
    ```bash
    git add -A

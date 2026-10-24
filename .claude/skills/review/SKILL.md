@@ -37,7 +37,7 @@ trust a claim you did not see run. Default mode is **read-only**: report, do not
    - **Release:** no network request, CDN or telemetry (ADR-002), lockfile committed, no
      dependency with unknown licence, base path intact, README claims match behaviour.
    - **Scope:** changes outside the ADR, unasked refactors, polish or browser suites (ADR-016).
-   - **Ledger:** `docs/backlog.md` updated with evidence; `npm run docs:check` passes.
+   - **Ledger:** `docs/backlog.md` updated with evidence; `pnpm docs:check` passes.
 5. **Skip what tools already enforce** (ESLint style).
 6. **Report**, short and specific, with `file:line` references:
    - **Verdict:** ready / needs changes.

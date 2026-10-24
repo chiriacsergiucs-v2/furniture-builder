@@ -22,7 +22,7 @@ Pages, no backend (ADR-002, ADR-013).
 - **Links:** pending ADRs link siblings as `[ADR-XXX](ADR-XXX-slug.md)`; once an ADR is in
   `adr-done/`, link it as `[ADR-XXX](../adr-done/ADR-XXX-slug.md)` (the `ship-adr` skill
   rewrites these automatically). Plain ids (`ADR-012`) in code comments and docs are fine;
-  `npm run docs:check` makes sure each one exists.
+  `pnpm docs:check` makes sure each one exists.
 - **Backlog:** an ADR names its `docs/backlog.md` items on a `- Backlog:` line.
 - **Size:** up to ~110 lines, ~6.5 KB and 8 `Done when` items. Bigger means split it.
 
@@ -103,3 +103,4 @@ The **last column is the status**: the `ship-adr` skill rewrites it to
 | [ADR-050](../adr-done/ADR-050-adopt-the-reserv-adr-layout-claude-skills-and-ci-conventions.md) | Adopt the reserv ADR layout, Claude skills and CI conventions | — | ✅ Implemented |
 | [ADR-051](../adr-done/ADR-051-add-undo-and-redo-for-project-changes.md) | Add undo and redo for project changes | ADR-022, ADR-047 | ✅ Implemented |
 | [ADR-052](ADR-052-run-the-catalog-feed-job-search-reconstruct-and-publish-bran.md) | Run the catalog feed job: search, reconstruct and publish brand entries through a pull request | ADR-029 | Pending |
+| [ADR-053](ADR-053-use-pnpm-prettier-and-node-24-the-same-tooling-as-reserv.md) | Use pnpm, Prettier and Node 24, the same tooling as reserv | ADR-050 | Pending |

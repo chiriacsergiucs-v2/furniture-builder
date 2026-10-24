@@ -58,7 +58,7 @@ Everything written to the repo is in **English**, whatever language the conversa
      split it into several ADRs (run the helper once per ADR).
    - Status stays `Pending`. If open questions block building, set
      `- Status: Deferred (<reason>)` in the file **and** in the README row.
-8. **Run** `npm run docs:check`.
+8. **Run** `pnpm docs:check`.
 9. **Hand over.** Show the user the open questions. Suggest a branch named `adr-NNN-slug`
    and a pull request. Do not commit or push unless the user asks.
 

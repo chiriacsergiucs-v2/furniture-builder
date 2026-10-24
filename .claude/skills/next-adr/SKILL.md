@@ -66,7 +66,7 @@ ADRs are all in `docs/adr-done/`.
    - a screen or component → `implement-design`
    - tests → `add-tests`
 7. **Verify.** Run the `verify` skill. Geometry changes also run
-   `FUZZ_N=30000 npx vitest run tests/fuzz.test.ts`. Anything visible: write or extend
+   `FUZZ_N=30000 pnpm exec vitest run tests/fuzz.test.ts`. Anything visible: write or extend
    `tools/<feature>/find-it.mjs` and run it on the production build from the bare app at
    phone (375–390 px) and desktop (1280–1440 px) widths (R3).
 8. **Ledger.** Update the backlog row in `docs/backlog.md` in the same change, with the

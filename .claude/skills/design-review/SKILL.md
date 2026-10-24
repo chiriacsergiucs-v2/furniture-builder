@@ -11,7 +11,7 @@ user's screenshot) is authoritative. This skill finds differences; `implement-de
 ## Workflow
 
 1. **Get both sides.** The reference from the ADR's `Design:` line. The implementation from
-   the production build (`npm run build && npx vite preview --port 4173`, then
+   the production build (`pnpm build && pnpm exec vite preview --port 4173`, then
    `http://localhost:4173/furniture-builder/`), captured with Playwright (Chromium is
    installed) at 390, 1280 and 1600 px, light and dark theme. Never review from the code alone.
 2. **Find it first (R3):** starting from the bare app, can the feature be found by its
