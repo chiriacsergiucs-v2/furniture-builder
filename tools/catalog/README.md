@@ -10,7 +10,8 @@ python3 -m venv .venv && .venv/bin/pip install -r tools/catalog/requirements.txt
 .venv/bin/python -I -m unittest discover tools/catalog                         # tests
 ```
 
-- Local file in, JSON out; the script never downloads. Keep manuals and `extraction.json` out of the repo.
+- Local file in, JSON out; the script never downloads. Keep manuals and `extraction.json` out of the repo: a test
+  fails if a PDF, page image or `extraction.json` is tracked under `tools/catalog/` or `src/core/catalog/`.
 - Same file → byte-identical output (sorted keys, rounded coordinates, no timestamps or paths).
 - Coordinates are PDF points, origin at the page's top-left.
 - `facts[]` are **candidates**, each with page and box:
