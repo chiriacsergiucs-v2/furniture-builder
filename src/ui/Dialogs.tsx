@@ -1,18 +1,19 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { kerfOf, newId, sheetOf, validateDesign } from '../core/design'
-import type { Design, Material } from '../core/types'
+import type { Design, Material, MaterialKind, MaterialMaker } from '../core/types'
+import { DECOR_COLUMNS, decorPatch, KINDS, MAKERS, parseDecorList, type Decor } from '../core/materials'
 import { newProject, validateProject, type Project } from '../core/project'
 import { sampleProjects } from '../core/samples/mobila'
-import { deleteDesign, deleteProject, listDesigns, listProjects, saveDesign, saveProject, type StoredDesign, type StoredProject } from '../persist/db'
+import { clearDecors, deleteDesign, deleteImages, deleteProject, listDecors, replaceDecors, unusedImageIds, listDesigns, listProjects, saveDesign, saveProject, type StoredDesign, type StoredProject } from '../persist/db'
 import { useDesign } from '../store/designStore'
-import { MmField, Toggle } from './controls'
+import { MmField, Select, Toggle } from './controls'
 import { Icon } from './icons'
 import { AddPieceList } from './Project'
 import { templateGlyph } from './Templates'
 import { StartFrom } from './Catalog'
 import { askConfirm } from './Confirm'
-import { importImage, useImageUrls } from '../persist/images'
-import { MAX_TILE } from '../core/surface'
+import { importImage, takePictures, useImageUrls } from '../persist/images'
+import { imageIdsOf, MAX_TILE } from '../core/surface'
 
 /** Modal shell: header (title + close), scrolling body, optional footer for actions. Esc and backdrop close it. */
 export function Dialog({ open, onClose, title, children, footer, wide }: { open: boolean; onClose: () => void; title: string; children: ReactNode; footer?: ReactNode; wide?: boolean }) {
@@ -100,6 +101,18 @@ export function LibraryDialog({ open, onClose, onOpened }: { open: boolean; onCl
   const currentId = useDesign(s => (s.project ? s.project.id : s.design.id))
   const opened = () => { onClose(); onOpened?.() }
   const [rows, setRows] = useState<StoredDesign[] | null>(null)
+  const [cleanMsg, setCleanMsg] = useState<string | null>(null)
+  const cleanUp = async () => {
+    const st = useDesign.getState()
+    const keep = imageIdsOf([st.design, ...(st.project?.items.map(i => i.design) ?? []), { materials: (st.project?.runParts ?? []).map(r => r.material) }])
+    try {
+      const ids = await unusedImageIds(keep)
+      if (!ids.length) { setCleanMsg('No unused pictures on this device.'); return }
+      if (!(await askConfirm(`Delete ${ids.length} picture${ids.length === 1 ? '' : 's'} that no saved piece, project or template uses? This cannot be undone.`, { confirmLabel: 'Delete pictures', danger: true }))) return
+      await deleteImages(ids)
+      setCleanMsg(`${ids.length} unused picture${ids.length === 1 ? '' : 's'} deleted.`)
+    } catch { setCleanMsg('Pictures could not be read from this browser.') }
+  }
   const [projects, setProjects] = useState<StoredProject[]>([])
   const [error, setError] = useState<string | null>(null)
   const refresh = () => {
@@ -110,20 +123,21 @@ export function LibraryDialog({ open, onClose, onOpened }: { open: boolean; onCl
 
   const importFile = async (f: File) => {
     try {
-      const data: unknown = JSON.parse(await f.text())
-      if (data && typeof data === 'object' && 'items' in data) {
-        const perrs = validateProject(data)
-        if (perrs.length) { setError(`That file is not a valid project: ${perrs.slice(0, 3).join('; ')}.`); return }
+      const parsed: unknown = JSON.parse(await f.text())
+      const isProject = !!parsed && typeof parsed === 'object' && 'items' in parsed
+      const errs = isProject ? validateProject(parsed) : validateDesign(parsed)
+      if (errs.length) { setError(`That file is not a valid ${isProject ? 'project' : 'design'}: ${errs.slice(0, 3).join('; ')}.`); return }
+      // Pictures carried in the file go to this device (ADR-0048); a bad one is reported, the file still opens.
+      const { data, problems } = await takePictures(parsed)
+      const done = () => { if (problems.length) { setError(`Opened, but ${problems.slice(0, 3).join(' ')}`); refresh() } else opened() }
+      if (isProject) {
         const p = { ...(data as Project), id: newId(), updatedAt: new Date().toISOString() }
         await saveProject(p)
-        openProject(p); opened(); return
+        openProject(p); done(); return
       }
-      const errs = validateDesign(data)
-      if (errs.length) { setError(`That file is not a valid design: ${errs.slice(0, 3).join('; ')}.`); return }
-      const d = data as Design
-      const copy = { ...d, id: newId(), updatedAt: new Date().toISOString() }
+      const copy = { ...(data as Design), id: newId(), updatedAt: new Date().toISOString() }
       await saveDesign(copy)
-      load(copy); opened()
+      load(copy); done()
     } catch { setError('That file could not be read as JSON.') }
   }
 
@@ -148,9 +162,13 @@ export function LibraryDialog({ open, onClose, onOpened }: { open: boolean; onCl
 
   return (
     <Dialog open={open} onClose={onClose} title="Saved on this device"
-      footer={<label className="btn outline file-btn"><Icon name="upload" />Import a design or project file
-        <input type="file" accept="application/json,.json" onChange={e => { const f = e.target.files?.[0]; if (f) importFile(f); e.target.value = '' }} />
-      </label>}>
+      footer={<>
+        <button type="button" className="btn outline" onClick={() => void cleanUp()}><Icon name="trash" />Clean up unused pictures</button>
+        <label className="btn outline file-btn"><Icon name="upload" />Import a design or project file
+          <input type="file" accept="application/json,.json" onChange={e => { const f = e.target.files?.[0]; if (f) importFile(f); e.target.value = '' }} />
+        </label>
+      </>}>
+      {cleanMsg && <p className="alert info" role="status"><Icon name="info" className="sm" /><span>{cleanMsg}</span></p>}
       {error && <p className="alert error" role="alert"><Icon name="alert-circle" className="sm" /><span>{error}</span></p>}
       <BuiltInProjects onOpened={opened} />
       {projects.length > 0 && (
@@ -197,6 +215,21 @@ export function MaterialsDialog({ open, onClose }: { open: boolean; onClose: () 
   const add = useDesign(s => s.addMaterial)
   const remove = useDesign(s => s.removeMaterial)
   const [why, setWhy] = useState<{ id: string; text: string } | null>(null)
+  // The user's decor list (ADR-0049): the decor choice appears only once a list has been imported.
+  const [decors, setDecors] = useState<Decor[]>([])
+  const [decorMsg, setDecorMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  useEffect(() => { if (open) listDecors().then(setDecors).catch(() => setDecors([])) }, [open])
+  const importDecors = async (f: File) => {
+    let text: string
+    try { text = await f.text() } catch { setDecorMsg({ ok: false, text: `${f.name} could not be read.` }); return }
+    const r = parseDecorList(text, f.name)
+    if (!r.decors.length) { setDecorMsg({ ok: false, text: `No decors imported. ${r.problems.slice(0, 4).join(' ')}` }); return }
+    try { await replaceDecors(r.decors) } catch { setDecorMsg({ ok: false, text: 'The decor list could not be saved on this device.' }); return }
+    setDecors(r.decors)
+    setDecorMsg({ ok: r.problems.length === 0, text: `${r.decors.length} decor${r.decors.length === 1 ? '' : 's'} imported from ${f.name}.${r.problems.length ? ` ${r.problems.length} row${r.problems.length === 1 ? '' : 's'} skipped: ${r.problems.slice(0, 4).join(' ')}` : ''}` })
+  }
+  const decorOptions = [{ value: '', label: 'Not from the list' }, ...decors.map(d => ({ value: d.id, label: `${d.makerText} ${d.code} ${d.name}, ${d.thickness} mm` }))]
+  const decorOf = (m: Material) => decors.find(d => m.decor && d.code === m.decor.code && d.list === m.decor.list && d.thickness === m.thickness)?.id ?? ''
   return (
     <Dialog open={open} onClose={onClose} title="Materials in this piece"
       footer={<>
@@ -204,6 +237,19 @@ export function MaterialsDialog({ open, onClose }: { open: boolean; onClose: () 
         <button type="button" className="btn outline" onClick={() => add({ id: newId(), name: 'New board', thickness: 18, grain: false, color: '#d8d4cc' })}><Icon name="plus" />Add a material</button>
       </>}>
       <MmField label="Saw cut (kerf)" value={kerf} min={0} max={20} step={1} onChange={setKerf} hint="Material lost in every cut. Sheet length runs along the grain." />
+      <div className="decor-list">
+        <p className="hint">{decors.length ? `Decor list: ${decors[0].list}, ${decors.length} decor${decors.length === 1 ? '' : 's'}. Choose one on any board below.` : `Decor list: none. Import your own CSV with the columns ${DECOR_COLUMNS} (whole mm, #rrggbb) to choose decors on the boards.`}</p>
+        <div className="mat-picture-row">
+          <label className="btn sm outline file-btn"><Icon name="upload" className="sm" />Import decor list (CSV)
+            <input type="file" accept=".csv,text/csv,text/plain" aria-label="Import decor list (CSV)" onChange={e => { const f = e.target.files?.[0]; if (f) void importDecors(f); e.target.value = '' }} />
+          </label>
+          {decors.length > 0 && <button type="button" className="btn sm ghost" onClick={async () => {
+            if (!(await askConfirm('Remove the decor list from this device? Boards keep their names, colours and labels.', { confirmLabel: 'Remove list', danger: true }))) return
+            await clearDecors(); setDecors([]); setDecorMsg(null)
+          }}>Remove decor list</button>}
+        </div>
+        {decorMsg && <p className={`alert ${decorMsg.ok ? 'info' : 'error'}`} role={decorMsg.ok ? 'status' : 'alert'}><Icon name={decorMsg.ok ? 'info' : 'alert-circle'} className="sm" /><span>{decorMsg.text}</span></p>}
+      </div>
       <ul className="materials">
         {materials.map((m: Material) => (
           <li key={m.id}>
@@ -211,6 +257,14 @@ export function MaterialsDialog({ open, onClose }: { open: boolean; onClose: () 
             <input className="mat-name" aria-label="Name" defaultValue={m.name} key={m.name} onBlur={e => e.target.value.trim() && update(m.id, { name: e.target.value.trim() })} />
             <MmField label="Thickness" value={m.thickness} min={1} max={60} step={1} onChange={v => update(m.id, { thickness: v })} />
             <Toggle label="Has grain" checked={m.grain} onChange={v => update(m.id, { grain: v })} />
+            <div className="sheet-fields">
+              <Select label="Manufacturer" value={m.maker ?? ''} options={[{ value: '', label: 'Not set' }, ...MAKERS]}
+                onChange={v => update(m.id, { maker: (v || undefined) as MaterialMaker | undefined })} />
+              <Select label="Type" value={m.kind ?? ''} options={[{ value: '', label: 'Not set' }, ...KINDS]}
+                onChange={v => update(m.id, { kind: (v || undefined) as MaterialKind | undefined })} />
+              {decors.length > 0 && <Select label="Decor from your list" value={decorOf(m)} options={decorOptions}
+                onChange={v => { const d = decors.find(x => x.id === v); update(m.id, d ? decorPatch(d) : { decor: undefined }) }} />}
+            </div>
             <div className="sheet-fields">
               <MmField label="Sheet length" value={sheetOf(m).length} min={300} max={6000} onChange={v => update(m.id, { sheet: { ...sheetOf(m), length: v } })} />
               <MmField label="Sheet width" value={sheetOf(m).width} min={300} max={3000} onChange={v => update(m.id, { sheet: { ...sheetOf(m), width: v } })} />

@@ -104,3 +104,38 @@ export function planeUvs(p: Panel, img: MaterialImage, s: Axis, t: Axis, pointsM
   }
   return out
 }
+
+/**
+ * A picture carried inside an exported design or project file (ADR-0048, user answer 2026-10-24): the stored bytes
+ * as base64, so the file opens with its pictures on another device.
+ */
+export interface PictureFile { id: string; name: string; type: string; width: number; height: number; data: string }
+
+export function pictureFileProblems(x: unknown): string[] {
+  if (!x || typeof x !== 'object' || Array.isArray(x)) return ['picture must be an object']
+  const p = x as Record<string, unknown>
+  const errs: string[] = []
+  if (typeof p.id !== 'string' || !/^[A-Za-z0-9_-]{1,200}$/.test(p.id)) errs.push('picture id missing')
+  if (typeof p.name !== 'string' || p.name.length > 500) errs.push('picture name missing')
+  if (typeof p.type !== 'string' || !(IMAGE_TYPES as readonly string[]).includes(p.type)) errs.push('picture type must be PNG, JPEG or WebP')
+  for (const k of ['width', 'height']) if (!(Number.isSafeInteger(p[k]) && (p[k] as number) >= 1 && (p[k] as number) <= MAX_TEXTURE_PX)) errs.push(`picture ${k} must be 1 to ${MAX_TEXTURE_PX} px`)
+  if (typeof p.data !== 'string' || !p.data || p.data.length > MAX_IMAGE_BYTES * 2 || !/^[A-Za-z0-9+/]+=*$/.test(p.data)) errs.push('picture data must be base64')
+  return errs
+}
+
+export function bytesToBase64(bytes: ArrayBuffer): string {
+  const u = new Uint8Array(bytes)
+  let s = ''
+  for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode(...u.subarray(i, i + 0x8000))
+  return btoa(s)
+}
+export function base64ToBytes(b64: string): ArrayBuffer {
+  const s = atob(b64)
+  const u = new Uint8Array(s.length)
+  for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i)
+  return u.buffer
+}
+
+/** Picture ids the materials of these designs refer to. */
+export const imageIdsOf = (designs: { materials: { image?: MaterialImage }[] }[]): Set<string> =>
+  new Set(designs.flatMap(d => d.materials.flatMap(m => (m.image ? [m.image.id] : []))))

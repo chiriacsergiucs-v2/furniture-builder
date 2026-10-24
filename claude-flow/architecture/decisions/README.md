@@ -166,5 +166,5 @@ Requested by the user on 2026-10-24.
 
 | ID | Decision | Backlog | Status |
 |---|---|---|---|
-| [ADR-0048](ADR-0048.md) | A material can show any picture from the user's device; the picture is kept on the device (Dexie v5 `images`), the design keeps a reference | N43 | Proposed |
-| [ADR-0049](ADR-0049.md) | TO-DO: manufacturer (Egger, Kastamonu, Fundermax, Kronospan) and type (PAL, MDF, kitchen worktop) labels for materials | N44 | Proposed (to-do) |
+| [ADR-0048](ADR-0048.md) | A material can show any picture from the user's device; kept on the device (Dexie v5 `images`), carried inside exported files, manual cleanup | N43 | Accepted |
+| [ADR-0049](ADR-0049.md) | Optional manufacturer (Egger, Kastamonu, Fundermax, Kronospan, Other) and type (PAL, MDF, kitchen worktop, Other) labels, shown only; worktop warning; the user's own decor list (Dexie v6) enables a decor choice | N44 | Accepted |

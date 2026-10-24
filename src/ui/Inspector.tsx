@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { bayLayoutOf, changeKind, fr, makeBays, MAX_BAYS, MAX_LOOSE, newId, setDrawerCount, findInProduct, findSpace, parentOf, pedestalRoot, splitSpace, unsplit, usesPedestal } from '../core/design'
+import { materialLabel } from '../core/materials'
 import type { CabinetParams, CornerParams, DeskParams, DeskSupport, FrontStyle, Handle, LoosePanel, Material, PanelLie, PanelSetParams, Space, SpaceKind, SplitSize } from '../core/types'
 import { useDesign } from '../store/designStore'
 import { Counter, Group, MmField, revealGroup, Section, Segmented, Select, Steps, Toggle, type Step } from './controls'
@@ -26,7 +27,7 @@ export function Inspector() {
 const WHOLE = { cabinet: 'Whole cabinet', desk: 'Whole desk', corner: 'Whole corner unit', panel: 'Whole panel', frame: 'Whole frame', panels: 'Whole panel set' } as const
 
 function matOptions(materials: Material[], filter?: (m: Material) => boolean) {
-  return materials.filter(filter ?? (() => true)).map(m => ({ value: m.id, label: `${m.name}` }))
+  return materials.filter(filter ?? (() => true)).map(m => ({ value: m.id, label: materialLabel(m) }))
 }
 const matName = (materials: Material[], id: string) => materials.find(m => m.id === id)?.name ?? '—'
 

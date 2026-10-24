@@ -107,11 +107,11 @@ describe('pictures on this device', () => {
     await db.images.put({ id: 'img-bad', name: 'x', type: 'image/jpeg', width: 1, height: 1, bytes: 'not bytes' as never, createdAt: '' })
     expect(await loadImage('img-bad')).toBeUndefined()
     expect(await db.images.get('img-bad')).toBeDefined()
-    expect(db.verno).toBe(5)
+    expect(db.verno).toBe(6)
   })
 })
 
-describe('upgrading to version 5', () => {
+describe('upgrading to version 6', () => {
   it('a version-4 database keeps every design, project, template and research row', async () => {
     const name = 'fb-upgrade-v5'
     const old = new Dexie(name)
@@ -125,8 +125,8 @@ describe('upgrading to version 5', () => {
     const Db = db.constructor as new (n: string) => typeof db
     const fresh = new Db(name)
     await fresh.open()
-    expect(fresh.verno).toBe(5)
-    expect([await fresh.designs.count(), await fresh.projects.count(), await fresh.templates.count(), await fresh.researchMarks.count(), await fresh.images.count()]).toEqual([1, 1, 1, 1, 0])
+    expect(fresh.verno).toBe(6)
+    expect([await fresh.designs.count(), await fresh.projects.count(), await fresh.templates.count(), await fresh.researchMarks.count(), await fresh.images.count(), await fresh.decors.count()]).toEqual([1, 1, 1, 1, 0, 0])
     expect((await fresh.designs.get(d.id))?.design).toEqual(d)
     fresh.close()
   })

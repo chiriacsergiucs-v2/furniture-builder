@@ -526,6 +526,7 @@ table.buy { margin-bottom: var(--s-4); }
 .mat-picture-row { display: flex; flex-wrap: wrap; gap: var(--s-2); align-items: center; }
 .mat-thumb { width: 56px; height: 56px; object-fit: cover; border: 1px solid var(--line); border-radius: var(--r); }
 .mat-actions { justify-items: start; }
+.decor-list { display: grid; gap: var(--s-2); margin-bottom: var(--s-3); }
 .file-btn.disabled { opacity: .6; pointer-events: none; }
 .file-btn { position: relative; cursor: pointer; }
 .file-btn input { position: absolute; width: 1px; height: 1px; opacity: 0; }

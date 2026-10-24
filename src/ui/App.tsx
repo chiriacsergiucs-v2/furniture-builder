@@ -3,6 +3,7 @@ import { cutlistCsvRo } from '../core/ro'
 import { exportFusionPython } from '../core/fusion'
 import { lastDesignId, lastProjectId, loadDesign, loadProject, rememberLast, rememberLastProject, saveDesign, saveProject } from '../persist/db'
 import { useDesign } from '../store/designStore'
+import { withPictures } from '../persist/images'
 import type { Design } from '../core/types'
 import { AddPieceDialog, LibraryDialog, MaterialsDialog, NewDialog } from './Dialogs'
 import { WizardDialog } from './Wizard'
@@ -272,13 +273,13 @@ export function App() {
               <summary aria-label="Export" title="Drawings, scripts and files"><Icon name="share" /><span className="lbl">Export</span><Icon name="chevron-down" className="sm" /></summary>
               <div className="menu-items" onClick={() => menuRef.current?.removeAttribute('open')}>
                 {inProject ? (
-                  <button type="button" onClick={() => download(`${exportName}-project.json`, JSON.stringify(project, null, 2), 'application/json')}><Icon name="download" />Project file <small>to open on another device</small></button>
+                  <button type="button" onClick={async () => download(`${exportName}-project.json`, JSON.stringify(await withPictures(project!, [...project!.items.map(i => i.design), { materials: (project!.runParts ?? []).map(r => r.material) }]), null, 2), 'application/json')}><Icon name="download" />Project file <small>to open on another device</small></button>
                 ) : <>
                   <button type="button" onClick={downloadSvg}><Icon name="front" />Front view drawing <small>SVG</small></button>
                   <button type="button" onClick={() => download(`${fileName(design.name)}-fusion.py`, exportFusionPython(design, model), 'text/x-python')}>
                     <Icon name="cube" />Fusion 360 script <small>not yet tested in Fusion</small>
                   </button>
-                  <button type="button" onClick={() => download(`${fileName(design.name)}.json`, JSON.stringify(design, null, 2), 'application/json')}><Icon name="download" />Design file <small>to open on another device</small></button>
+                  <button type="button" onClick={async () => download(`${fileName(design.name)}.json`, JSON.stringify(await withPictures(design, [design]), null, 2), 'application/json')}><Icon name="download" />Design file <small>to open on another device</small></button>
                 </>}
               </div>
             </details>

@@ -2,7 +2,7 @@
 //   npm run build && npx vite preview --port 4173 &  node tools/materials/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `npm test`.
 import { chromium } from 'playwright'
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { crc32, deflateSync } from 'node:zlib'
 
 const url = process.argv[2] ?? 'http://localhost:4173/furniture-builder/'
@@ -26,6 +26,9 @@ const picture = `${out}/stripes.png`
 writeFileSync(picture, png(64, 64, x => (Math.floor(x / 8) % 2 ? [20, 40, 230] : [230, 20, 20])))
 const notPicture = `${out}/not-a-picture.png`
 writeFileSync(notPicture, 'this is text, not a picture')
+
+const decorCsv = `${out}/my-decors.csv`
+writeFileSync(decorCsv, 'manufacturer;type;code;name;thickness;color\nEgger;PAL;H1145;Bardolino Oak;18;#b59a7a\nKronospan;Kitchen worktop;K001;Craft Oak;38;#a07850\nBad;PAL;X;no colour;18;white\n')
 
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH })
 const results = []
@@ -136,10 +139,77 @@ for (const width of [1440, 375]) {
   await closeDialog()
   await ctx.setOffline(false)
 
+  // 6b. Labels: Egger + Kitchen worktop on PAL 18 white; shown in the board choices; worktop warning in Checks.
+  await openMaterials()
+  const palRow = dlg.locator('li').filter({ has: page.getByRole('img', { name: 'Picture of PAL 18 white' }) })
+  await palRow.getByLabel('Manufacturer').selectOption({ label: 'Egger' })
+  await palRow.getByLabel('Type').selectOption({ label: 'Kitchen worktop' })
+  check(width, 'labels: Manufacturer and Type found and set', await palRow.getByLabel('Manufacturer').inputValue() === 'egger' && await palRow.getByLabel('Type').inputValue() === 'worktop')
+  check(width, 'decor list: none yet, import offered', await dlg.getByText(/Decor list: none/).isVisible() && await dlg.getByText('Import decor list (CSV)').isVisible())
+  check(width, 'decor choice hidden without a list', await dlg.getByLabel('Decor from your list').count() === 0)
+
+  // 6c. Import the user's decor list: 2 decors, 1 bad row listed; choose a decor on MDF 18 painted.
+  await dlg.getByLabel('Import decor list (CSV)').setInputFiles(decorCsv)
+  await dlg.getByText(/2 decors imported from my-decors.csv/).waitFor({ timeout: 5000 }).catch(() => {})
+  check(width, 'decor list imported, bad row reported', await dlg.getByText(/2 decors imported from my-decors.csv\. 1 row skipped: Row 4: color "white"/).isVisible())
+  const mdfRow = dlg.locator('li').filter({ has: page.getByRole('img', { name: 'Picture of MDF 18 painted' }) })
+  await mdfRow.getByLabel('Decor from your list').selectOption({ label: 'Egger H1145 Bardolino Oak, 18 mm' })
+  await page.waitForTimeout(300)
+  check(width, 'decor chosen: board renamed from the list', await dlg.locator('input.mat-name').evaluateAll(xs => xs.some(x => x.value === 'Egger H1145 Bardolino Oak')))
+  await closeDialog()
+  const boardChoices = await page.locator('select option').allInnerTexts()
+  check(width, 'board choices show labels', boardChoices.includes('PAL 18 white · Egger, Kitchen worktop') && boardChoices.includes('Egger H1145 Bardolino Oak · Egger, PAL'))
+  await page.getByRole('tab', { name: /Checks/ }).dispatchEvent('click')
+  check(width, 'worktop board on other parts: guidance warning', await page.getByText(/PAL 18 white is labelled kitchen worktop but is used for .*\(guidance\)/).first().isVisible())
+
+  // 6d. Export the design file: pictures inside. Open it on "another device" (fresh browser): pictures shown.
+  await page.waitForTimeout(1200)
+  await page.getByRole('button', { name: 'Library' }).isVisible()
+  await page.locator('summary[aria-label="Export"]').click()
+  const [dl] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: /Design file/ }).click()])
+  const filePath = `${out}/exported-${width}.json`
+  await dl.saveAs(filePath)
+  const exported = JSON.parse(readFileSync(filePath, 'utf8'))
+  check(width, 'exported design file carries its pictures', Array.isArray(exported.pictures) && exported.pictures.length === 2, `${exported.pictures?.length} pictures`)
+  const other = await browser.newContext({ viewport: { width, height: phone ? 812 : 900 } })
+  const op = await other.newPage()
+  op.on('pageerror', e => errors.push(`other device: ${e.message}`))
+  await op.goto(url)
+  await op.getByRole('button', { name: /^Library/ }).click()
+  await op.locator('dialog[open] input[type=file]').setInputFiles(filePath)
+  await op.locator('main.work').waitFor({ state: 'visible' })
+  await op.getByRole('radio', { name: '3D' }).click(); await op.waitForTimeout(1500)
+  const there = await stripeShare(op, await op.locator('.view.three canvas').screenshot())
+  check(width, 'other device: imported file shows the pictures in 3D', there.red > 0.02 && there.blue > 0.02, JSON.stringify(there))
+  await other.close()
+
+  // 6e. Replace a picture (the old one is now unused), then Library → Clean up unused pictures.
+  await openMaterials()
+  await dlg.getByLabel('Replace picture for PAL 18 white').setInputFiles(picture)
+  await page.waitForTimeout(1500)
+  await closeDialog()
+  await page.waitForTimeout(1200) // autosave
+  await page.getByRole('button', { name: 'Library' }).dispatchEvent('click')
+  await dlg.getByRole('button', { name: 'Clean up unused pictures' }).click()
+  const confirmDlg = page.locator('dialog[open]').filter({ hasText: /Delete 1 picture that no saved piece/ })
+  await confirmDlg.waitFor({ timeout: 5000 }).catch(() => {})
+  check(width, 'cleanup asks before deleting 1 unused picture', await confirmDlg.isVisible().catch(() => false))
+  await confirmDlg.getByRole('button', { name: 'Delete pictures' }).click()
+  check(width, 'cleanup: 1 unused picture deleted', await page.getByText('1 unused picture deleted.').isVisible())
+  await page.keyboard.press('Escape'); await page.waitForTimeout(300)
+  await page.reload()
+  if (await page.getByRole('button', { name: 'New single piece' }).isVisible().catch(() => false)) {
+    await page.locator('.row-btn').filter({ hasNotText: 'Mobila' }).first().click()
+  }
+  await page.locator('main.work').waitFor({ state: 'visible' })
+  await show3d()
+  const kept = await canvasShare()
+  check(width, 'after cleanup: pictures in use still shown', kept.red > 0.02 && kept.blue > 0.02, JSON.stringify(kept))
+
   // 7. Remove the picture: plain colour again.
   await openMaterials()
   await dlg.locator('li').filter({ has: page.getByRole('img', { name: 'Picture of PAL 18 white' }) }).getByRole('button', { name: 'Remove picture' }).click()
-  await dlg.locator('li').filter({ has: page.getByRole('img', { name: 'Picture of MDF 18 painted' }) }).getByRole('button', { name: 'Remove picture' }).click()
+  await dlg.locator('li').filter({ has: page.getByRole('img', { name: 'Picture of Egger H1145 Bardolino Oak' }) }).getByRole('button', { name: 'Remove picture' }).click()
   check(width, 'picture removed: "Add a picture" back', await dlg.getByLabel('Add a picture for PAL 18 white').count() === 1)
   await closeDialog()
   await page.waitForTimeout(1000)

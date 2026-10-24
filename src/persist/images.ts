@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { newId } from '../core/design'
-import { defaultTile, fitWithin, imageFileProblem } from '../core/surface'
+import { base64ToBytes, bytesToBase64, defaultTile, fitWithin, imageFileProblem, imageIdsOf, pictureFileProblems, type PictureFile } from '../core/surface'
 import type { MaterialImage } from '../core/types'
-import { loadImage, saveImage } from './db'
+import { db, loadImage, saveImage } from './db'
 
 /**
  * Pictures for materials (ADR-0048), browser side: import a file the user picked, and share one object URL per
@@ -92,3 +92,37 @@ const EMPTY = new Map<string, ImageUrl>()
 /** Sorted, de-duplicated picture ids of the materials, as the key `useImageUrls` takes. */
 export const imageKey = (materials: { image?: MaterialImage }[]) =>
   [...new Set(materials.flatMap(m => (m.image ? [m.image.id] : [])))].sort().join(',')
+
+/**
+ * A design or project file with its pictures inside (ADR-0048, user answer 2026-10-24): `pictures` holds every
+ * picture its materials use that is on this device. Older files without it still open.
+ */
+export async function withPictures<T extends object>(data: T, designs: { materials: { image?: MaterialImage }[] }[]): Promise<T & { pictures?: PictureFile[] }> {
+  const pictures: PictureFile[] = []
+  for (const id of imageIdsOf(designs)) {
+    const row = await loadImage(id)
+    if (row) pictures.push({ id, name: row.name, type: row.type, width: row.width, height: row.height, data: bytesToBase64(row.bytes) })
+  }
+  return pictures.length ? { ...data, pictures } : data
+}
+
+/**
+ * Stores the pictures carried by an imported file (skipping ids already on this device) and returns the file without
+ * them. A bad picture is skipped and reported; its material then shows the plain colour. Never throws.
+ */
+export async function takePictures(data: unknown, database = db): Promise<{ data: unknown; problems: string[] }> {
+  if (!data || typeof data !== 'object' || !('pictures' in data)) return { data, problems: [] }
+  const { pictures, ...rest } = data as Record<string, unknown>
+  const problems: string[] = []
+  if (!Array.isArray(pictures)) return { data: rest, problems: ['The pictures in the file could not be read.'] }
+  for (const p of pictures) {
+    const errs = pictureFileProblems(p)
+    if (errs.length) { problems.push(`A picture was skipped: ${errs.join(', ')}.`); continue }
+    const f = p as PictureFile
+    try {
+      if (await database.images.get(f.id)) continue
+      await saveImage({ id: f.id, name: f.name, type: f.type, width: f.width, height: f.height, bytes: base64ToBytes(f.data), createdAt: new Date().toISOString() }, database)
+    } catch { problems.push(`The picture ${f.name} could not be saved on this device.`) }
+  }
+  return { data: rest, problems }
+}

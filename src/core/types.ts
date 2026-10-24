@@ -31,7 +31,15 @@ export interface Material {
   lengths?: Mm[]
   /** A picture from the user's device shown on the board's faces instead of the plain colour (ADR-0048). */
   image?: MaterialImage
+  /** Labels (ADR-0049): shown next to the name only; never used to fill in specs. */
+  maker?: MaterialMaker
+  kind?: MaterialKind
+  /** Taken from a decor list the user imported (ADR-0049): the list's code and file name, for tracing. */
+  decor?: { code: string; list: string }
 }
+
+export type MaterialMaker = 'egger' | 'kastamonu' | 'fundermax' | 'kronospan' | 'other'
+export type MaterialKind = 'pal' | 'mdf' | 'worktop' | 'other'
 
 /**
  * ADR-0048. The picture itself lives in this device's `images` table under `id`; the design keeps only the reference.

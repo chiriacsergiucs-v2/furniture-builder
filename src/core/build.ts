@@ -75,6 +75,16 @@ export function buildModel(design: Design): FurnitureModel {
     }
   }
 
+  // A board labelled kitchen worktop on other parts: guidance only, the user may mean it (ADR-0049).
+  for (const m of design.materials) {
+    if (m.kind !== 'worktop') continue
+    const others = panels.filter(p => p.materialId === m.id && p.role !== 'worktop')
+    if (others.length) {
+      diagnostics.push({ severity: 'warning', code: 'worktop-board', nodeId: others[0].nodeId, panelIds: others.map(p => p.id),
+        message: `${m.name} is labelled kitchen worktop but is used for ${others.length === 1 ? others[0].label : `${others.length} parts that are not worktops`} (guidance).` })
+    }
+  }
+
   const model: FurnitureModel = { panels, spaces: partial.spaces, hardware: partial.hardware, diagnostics, bounds: union(panels.map(aabbOf)) }
   // Construction guidance (ADR-0035): labelled warnings and reminders, after the independent checks above.
   const ruled = runRules(design, model, materials)

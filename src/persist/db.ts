@@ -3,6 +3,7 @@ import { validateDesign } from '../core/design'
 import { validateProject, type Project } from '../core/project'
 import { validateLocalTemplate, type LocalTemplate } from '../core/catalog/local'
 import type { Design } from '../core/types'
+import type { Decor } from '../core/materials'
 import { validateBundle, validateMark, type StoredBundle } from '../core/research/catalog'
 import type { ResearchMark } from '../core/research/types'
 
@@ -23,6 +24,7 @@ class FurnitureDb extends Dexie {
   researchDocs!: Table<StoredBundle, string>
   researchMarks!: Table<ResearchMark, string>
   images!: Table<StoredImage, string>
+  decors!: Table<Decor, string>
   constructor(name = 'furniture-builder') {
     super(name)
     // Never edit a shipped version block; add a new version for any change (ADR-0012).
@@ -36,6 +38,8 @@ class FurnitureDb extends Dexie {
     this.version(4).stores({ designs: 'id, updatedAt, name', projects: 'id, updatedAt, name', templates: 'id, updatedAt', researchDocs: 'key, docId', researchMarks: 'id, updatedAt' })
     // v5 (ADR-0048): pictures for materials, referenced by id from a design's material. Earlier tables untouched.
     this.version(5).stores({ designs: 'id, updatedAt, name', projects: 'id, updatedAt, name', templates: 'id, updatedAt', researchDocs: 'key, docId', researchMarks: 'id, updatedAt', images: 'id' })
+    // v6 (ADR-0049): the decor list the user imported. Earlier tables untouched.
+    this.version(6).stores({ designs: 'id, updatedAt, name', projects: 'id, updatedAt, name', templates: 'id, updatedAt', researchDocs: 'key, docId', researchMarks: 'id, updatedAt', images: 'id', decors: 'id' })
   }
 }
 
@@ -106,6 +110,27 @@ export async function loadImage(id: string, database = db): Promise<StoredImage 
   const ok = row && row.bytes instanceof ArrayBuffer && row.bytes.byteLength > 0 && typeof row.type === 'string'
   return ok ? row : undefined
 }
+
+/** Replaces the stored decor list with the user's new one (ADR-0049). */
+export async function replaceDecors(decors: Decor[], database = db): Promise<void> {
+  await database.transaction('rw', database.decors, async () => { await database.decors.clear(); await database.decors.bulkPut(decors) })
+}
+export const listDecors = (database = db): Promise<Decor[]> => database.decors.toArray()
+export const clearDecors = (database = db) => database.decors.clear()
+
+/**
+ * Pictures no stored design, project or template refers to (ADR-0048 cleanup). Rows are searched as text, so rows
+ * the app cannot read still keep their pictures (ADR-0012). `keep`: ids in use by what is open but not yet saved.
+ */
+export async function unusedImageIds(keep: Iterable<string> = [], database = db): Promise<string[]> {
+  const ids = await database.images.toCollection().primaryKeys()
+  const text = [
+    ...(await database.designs.toArray()), ...(await database.projects.toArray()), ...(await database.templates.toArray()),
+  ].map(r => JSON.stringify(r)).join('\n')
+  const kept = new Set(keep)
+  return ids.filter(id => !kept.has(id) && !text.includes(`"${id}"`))
+}
+export const deleteImages = (ids: string[], database = db) => database.images.bulkDelete(ids)
 
 const LAST_KEY = 'furniture-builder:last-design'
 const LAST_PROJECT_KEY = 'furniture-builder:last-project'

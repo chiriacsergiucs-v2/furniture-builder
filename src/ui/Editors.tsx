@@ -3,12 +3,13 @@ import { catalogFamilies } from '../core/catalog'
 import { applyLayout, layoutPresets } from '../core/catalog/presets'
 import { DEFAULT_SLIDING_OVERLAP, DEFAULT_SLIDING_TRACK } from '../core/cabinet'
 import { RULE_DEFAULTS } from '../core/rules'
+import { materialLabel } from '../core/materials'
 import type { ApplianceNiche, FrameParams, Front, Material, PanelParams, RuleSettings, Space } from '../core/types'
 import { useDesign } from '../store/designStore'
 import { Counter, Group, MmField, Segmented, Select, Toggle } from './controls'
 import { Icon } from './icons'
 
-const matOptions = (materials: Material[], filter?: (m: Material) => boolean) => materials.filter(filter ?? (() => true)).map(m => ({ value: m.id, label: m.name }))
+const matOptions = (materials: Material[], filter?: (m: Material) => boolean) => materials.filter(filter ?? (() => true)).map(m => ({ value: m.id, label: materialLabel(m) }))
 
 type FrontKind = 'none' | 'doors1' | 'doors2' | 'sliding' | 'flap'
 const frontKind = (f: Front | null | undefined): FrontKind => !f ? 'none' : f.kind === 'doors' ? (f.count === 1 ? 'doors1' : 'doors2') : f.kind
