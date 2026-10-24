@@ -23,7 +23,7 @@ Project: **Furniture Builder** — pure TypeScript model, Vitest (ADR-015).
    - **Store** for undo/redo, selection and stable selectors.
    - **No committed browser suite** unless the user asks (ADR-015). Visible behaviour is
      proven by a find-it script in `tools/<feature>/find-it.mjs`, run on the production build
-     (for an `Acceptance: light` ADR: later, at the catch-up; record `find-it pending (light, ADR-066)`, ADR-066).
+     (ADR-080).
 4. **Cases this domain breaks on:** minimum and maximum sizes, thickness larger than the
    space, odd millimetres in equal splits, every quarter turn in projects, every front style,
    empty spaces, schemaVersion 1 documents, invalid imports.

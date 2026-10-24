@@ -4,7 +4,7 @@
 - every ADR in docs/adr/ (Pending or Deferred) and docs/adr-done/ (Implemented) has a valid header;
 - the docs/adr/README.md index lists each ADR once, with the right link and status;
 - every ADR id, ADR link and backlog id used in the repository exists;
-- an ADR with "- Acceptance: light" keeps the find-it marker on its backlog rows until they are Done (ADR-066).
+- a pending ADR has no "- Acceptance:" line: light acceptance was retired (ADR-080).
 
 Run: npm run docs:check  (python3 -I scripts/check-docs.py)"""
 import pathlib, re, subprocess, sys
@@ -37,7 +37,6 @@ for folder in (ADR, DONE):
                 errors.append(f"{rel}: missing '- {key}:' line")
         adrs[num] = (f, status)
 
-MARKER = "find-it pending (light, ADR-066)"
 # "N60" -> (status, evidence)
 backlog = {m.group(1): (m.group(2).strip(), m.group(3))
            for m in re.finditer(r"^\| ([FND]\d{2}) \|[^|\n]*\|([^|\n]*)\|?(.*)$",
@@ -73,20 +72,9 @@ for num, (path, status) in adrs.items():
     for b in re.findall(r"\b[FND]\d{2}\b", bl.group(1) if bl else ""):
         if b not in backlog:
             errors.append(f"{rel}: unknown backlog id {b}")
-    # Light acceptance (ADR-066): the backlog row keeps the marker until a find-it run makes it Done.
-    acc = re.search(r"^- Acceptance: (.+)$", text, re.M)
-    if acc and acc.group(1).strip() not in ("light", "full"):
-        errors.append(f"{rel}: Acceptance must be light or full, is '{acc.group(1).strip()}'")
-    if acc and acc.group(1).strip() == "light":
-        for b in re.findall(r"\b[FND]\d{2}\b", bl.group(1) if bl else ""):
-            if b not in backlog:
-                continue
-            row_status, evidence = backlog[b]
-            if row_status == "Done":
-                if MARKER in evidence or "find-it" not in evidence:
-                    errors.append(f"{rel}: {b} is Done but has no find-it evidence from the catch-up")
-            elif MARKER not in evidence:
-                errors.append(f"{rel}: {b} lacks the gap '{MARKER}'")
+    # Light acceptance was retired (ADR-080); implemented ADRs keep their header as history (ADR-065).
+    if path.parent == ADR and re.search(r"^- Acceptance: ", text, re.M):
+        errors.append(f"{rel}: '- Acceptance:' is retired (ADR-080); every visible change gets a find-it test")
 
 # Every ADR id and ADR link in tracked text files.
 files = subprocess.run(["git", "ls-files", "--cached", "--others", "--exclude-standard"],

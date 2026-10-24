@@ -30,8 +30,7 @@ Project: **Furniture Builder** — offline PWA.
 4. **Run the extra checks the change needs** (not in CI): `FUZZ_N=30000 pnpm exec vitest run
 tests/fuzz.test.ts` after geometry changes; `pnpm catalog:docs` /
    `pnpm catalog:snapshots` after catalog changes; the feature's `tools/*/find-it.mjs`
-   on the production build for anything visible (not for an `Acceptance: light` ADR: report
-   "find-it pending (light)" instead, ADR-066).
+   on the production build for anything visible (always, ADR-080).
 5. **Compare with CI.** If `.github/workflows/ci.yml` runs a check that is not in the table
    (or the commands differ), tell the user and suggest updating the table.
 6. **Report briefly:** one line per row (pass/fail), the cause of any failure, what you

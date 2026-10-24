@@ -28,8 +28,7 @@ no visual, copy or flow changes without the user's approval.
 5. **Copy:** English in the app; Romanian only on printed sheets and the parts CSV (ADR-020).
 6. **Find-it test (R3):** write `tools/<feature>/find-it.mjs` (copy an existing one) that
    starts from the bare app and finds the feature by its visible text at phone and desktop
-   widths, with screenshots; run it on `pnpm build` + `vite preview`. Skip it when the ADR
-   says `- Acceptance: light`, and record `find-it pending (light, ADR-066)` in the backlog row (ADR-066).
+   widths, with screenshots; run it on `pnpm build` + `vite preview`. Never skipped (ADR-080).
 7. **Verify** with the `verify` skill, add logic tests with `add-tests`, and report what
    was built, which states are covered, screenshots, and any deviation with the reason.
 
