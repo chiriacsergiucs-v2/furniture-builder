@@ -26,11 +26,15 @@ import { shapeOutline } from '../src/core/room';
 import type { Design, Space } from '../src/core/types';
 import {
   db,
+  deleteImages,
   listPrices,
   listProjectTemplates,
+  loadImage,
+  saveImage,
   saveProjectTemplate,
   savePrices,
 } from '../src/persist/db';
+import { projectTemplateFile, readProjectTemplateFile } from '../src/persist/projectTemplateFile';
 
 const t = (id: string) => templates.find((x) => x.id === id)!.create();
 function kitchen(): Project {
@@ -130,6 +134,144 @@ describe('project templates (ADR-060)', () => {
   });
 });
 
+describe('project templates: bad input, removed run parts, pictures (review of ADR-060)', () => {
+  it('a malformed template is reported, never thrown (quarter turn with a run recipe, every item field)', () => {
+    const tpl = templateFromProject(kitchen(), 'Bad');
+    expect(tpl.runRecipe).toBeDefined();
+    const item = (patch: Record<string, unknown>) => ({
+      ...tpl,
+      items: tpl.items.map((it, n) => (n === 0 ? { ...it, ...patch } : it)),
+    });
+    const bad: [unknown, RegExp][] = [
+      [item({ rotationY: 45 }), /quarter turn/],
+      [item({ quantity: 0 }), /quantity/],
+      [item({ quantity: 2.5 }), /quantity/],
+      [item({ quantity: 100 }), /quantity/],
+      [item({ offset: { x: 1.5, y: 0, z: 0 } }), /offset/],
+      [item({ offset: { x: 0, y: -1, z: 0 } }), /offset/],
+      [item({ offset: null }), /offset/],
+      [item({ placement: { kind: 'above', baseId: 'nope', gap: 0, offsetX: 0 } }), /placement/],
+      [item({ placement: { kind: 'wall' } }), /placement/],
+      [item({ ref: 7 }), /Invalid template item/],
+      [item({ design: null }), /Item/],
+      [{ ...tpl, items: [tpl.items[0], tpl.items[0]] }, /duplicate/],
+      [{ ...tpl, runRecipe: { settings: { scribe: 300, auto: true } } }, /recipe/],
+      [{ ...tpl, runRecipe: { settings: { scribe: 1.5, auto: true } } }, /recipe/],
+      [{ ...tpl, runRecipe: { settings: { scribe: 0, auto: 'yes' } } }, /recipe/],
+      [{ ...tpl, runRecipe: { settings: { scribe: 0, auto: true }, removed: [1] } }, /recipe/],
+      [{ ...tpl, runRecipe: {} }, /recipe/],
+    ];
+    for (const [t, why] of bad) {
+      let errs: string[] = [];
+      expect(() => (errs = validateProjectTemplate(t))).not.toThrow();
+      expect(errs.join(' ')).toMatch(why);
+    }
+  });
+  it('a stored row that used to make the check throw is skipped and kept; the list still loads', async () => {
+    const good = templateFromProject(kitchen(), 'Good');
+    await saveProjectTemplate(good);
+    const t45 = {
+      ...good,
+      id: 'turned-45',
+      items: good.items.map((it, n) => (n === 0 ? { ...it, rotationY: 45 } : it)),
+    };
+    await db.projectTemplates.put({
+      id: 'turned-45',
+      name: 'x',
+      updatedAt: '2030',
+      template: t45 as never,
+    });
+    const list = await listProjectTemplates();
+    expect(list.map((x) => x.id)).toContain(good.id);
+    expect(list.map((x) => x.id)).not.toContain('turned-45');
+    expect(await db.projectTemplates.get('turned-45')).toBeDefined();
+  });
+  it('run parts the user removed stay removed in projects made from the template (ids remapped)', () => {
+    const p0 = kitchen();
+    const gone = p0.runParts!.filter((r) => r.kind === 'worktop' || r.kind === 'cover');
+    expect(gone.some((r) => r.kind === 'worktop')).toBe(true);
+    expect(gone.some((r) => r.kind === 'cover')).toBe(true);
+    const p: Project = {
+      ...p0,
+      runParts: p0.runParts!.filter((r) => !gone.includes(r)),
+      runPartsRemoved: [...gone.map((r) => r.key!), 'filler|gone-a,gone-b'],
+    };
+    const tpl = templateFromProject(p, 'Without worktop');
+    expect(tpl.runRecipe!.removed).toEqual(gone.map((r) => r.key!));
+    expect(validateProjectTemplate(tpl)).toEqual([]);
+    const q = projectFromTemplate(tpl);
+    expect(validateProject(q)).toEqual([]);
+    const ids = new Set(q.items.map((i) => i.id));
+    expect(q.runPartsRemoved).toHaveLength(gone.length);
+    for (const k of q.runPartsRemoved!) {
+      expect(
+        k
+          .split('|')[1]
+          .split(',')
+          .every((id) => ids.has(id)),
+      ).toBe(true);
+    }
+    expect(q.runPartsRemoved!.map((k) => k.split('|')[0])).toEqual(
+      gone.map((r) => r.key!.split('|')[0]),
+    );
+    expect(q.runParts!.some((r) => r.kind === 'worktop')).toBe(false);
+    expect(q.runParts!.filter((r) => r.kind === 'cover')).toEqual([]);
+    // The template is used again for a second project: still removed, with that project's ids.
+    const q2 = projectFromTemplate(tpl);
+    expect(q2.runParts!.some((r) => r.kind === 'worktop')).toBe(false);
+  });
+  it('export carries the pictures; import on another device restores them and drops them from the template', async () => {
+    const p0 = kitchen();
+    await saveImage({
+      id: 'img-tpl1',
+      name: 'oak.jpg',
+      type: 'image/jpeg',
+      width: 2,
+      height: 1,
+      bytes: new Uint8Array([4, 5, 6]).buffer,
+      createdAt: '',
+    });
+    const d = p0.items[0].design;
+    const withImage = {
+      ...d,
+      materials: d.materials.map((m, i) =>
+        i === 0
+          ? { ...m, image: { id: 'img-tpl1', name: 'oak.jpg', tileLength: 1000, tileWidth: 500 } }
+          : m,
+      ),
+    };
+    const p = {
+      ...p0,
+      items: p0.items.map((it, i) => (i === 0 ? { ...it, design: withImage } : it)),
+    };
+    const tpl = templateFromProject(p, 'Pictured');
+    const file = JSON.parse(JSON.stringify(await projectTemplateFile(tpl)));
+    expect(file.pictures).toHaveLength(1);
+    await deleteImages(['img-tpl1']); // "another device"
+    const r = await readProjectTemplateFile(file);
+    if (!r.ok) throw new Error(r.error);
+    expect(r.problems).toEqual([]);
+    expect('pictures' in r.template).toBe(false);
+    expect(r.template.id).not.toBe(tpl.id);
+    expect(validateProjectTemplate(r.template)).toEqual([]);
+    expect(new Uint8Array((await loadImage('img-tpl1'))!.bytes)).toEqual(new Uint8Array([4, 5, 6]));
+    // A template without pictures exports unchanged.
+    const plain = templateFromProject(kitchen(), 'Plain');
+    expect(await projectTemplateFile(plain)).toEqual(plain);
+  });
+  it('importing a broken template file names the template problem, not a JSON error', async () => {
+    const tpl = templateFromProject(kitchen(), 'Broken');
+    const file = {
+      ...tpl,
+      items: tpl.items.map((it, n) => (n === 0 ? { ...it, rotationY: 45 } : it)),
+    };
+    const r = await readProjectTemplateFile(JSON.parse(JSON.stringify(file)));
+    expect(r.ok).toBe(false);
+    if (!r.ok)
+      expect(r.error).toMatch(/^That file is not a valid project template: .*quarter turn/);
+  });
+});
+
 describe('shopping list (ADR-064) and estimate (ADR-062)', () => {
   const sink = (): Design => {
     const d = t('chest');
@@ -149,8 +291,29 @@ describe('shopping list (ADR-064) and estimate (ADR-062)', () => {
         }
       : d;
   };
+  /** Three base units whose sides stand on the bottom, so the run gets a worktop and a run plinth. */
+  const underRun = (): Project => {
+    let p = newProject('Under');
+    for (let i = 0; i < 3; i++) {
+      const d = t('base-door');
+      const under: Design =
+        d.product.kind === 'cabinet'
+          ? {
+              ...d,
+              product: { ...d.product, params: { ...d.product.params, bottom: 'under' } },
+            }
+          : d;
+      p = { ...p, items: [...p.items, makeItem(p, under)] };
+    }
+    p = {
+      ...p,
+      items: p.items.map((it) => ({ ...it, position: { ...it.position, x: it.position.x + 300 } })),
+    };
+    return { ...p, runParts: suggestRunParts(p), runSettings: { scribe: 0, auto: true } };
+  };
   it('lists boards, banding, hardware, run parts, and what is still to choose; screws are not counted', () => {
-    let p = kitchen();
+    let p = underRun();
+    expect(p.runParts!.some((r) => r.kind === 'plinth')).toBe(true);
     p = {
       ...p,
       items: [...p.items, { ...makeItem(p, sink()), position: { x: 5000, y: 0, z: 0 } }],
@@ -166,6 +329,12 @@ describe('shopping list (ADR-064) and estimate (ADR-062)', () => {
     const sections = new Set(lines.map((l) => l.section));
     for (const s of ['boards', 'banding', 'hardware', 'run', 'choose'] as const)
       expect(sections.has(s)).toBe(true);
+    const run = lines.filter((l) => l.section === 'run').map((l) => l.label);
+    expect(run).toContain('Worktop');
+    expect(run).toContain('Plinth');
+    expect(lines.find((l) => l.section === 'run' && l.label === 'Plinth')!.detail).toMatch(
+      /^1800 × 100 × \d+ mm, /,
+    );
     expect(lines.find((l) => l.section === 'choose')!.label).toMatch(/fixed \(false\) front/);
     expect(lines.some((l) => l.section === 'hardware' && /runner/i.test(l.label))).toBe(true);
     const tall = buildModel(t('wardrobe'));
@@ -183,6 +352,29 @@ describe('shopping list (ADR-064) and estimate (ADR-062)', () => {
     const csv = shoppingCsvRo(lines);
     expect(csv).toContain('Plăci');
     expect(csv).toContain('not counted');
+  });
+  it('with a sheet count from the layout, a board is bought in sheets (m² kept for per-m² prices)', () => {
+    const p = underRun();
+    const rows = projectCutlist(p);
+    const materials = buildProjectModel(p).materials;
+    const board = rows.find((r) => !r.solid)!.materialId;
+    const lines = shoppingList({
+      rows,
+      materials,
+      hardware: projectHardware(p),
+      sheets: new Map([[board, 3]]),
+      runParts: p.runParts,
+    });
+    const m = materials.find((x) => x.id === board)!;
+    const line = lines.find(
+      (l) => l.section === 'boards' && l.priceKey === `board:${materialKey(m)}`,
+    )!;
+    expect(line.unit).toBe('sheet');
+    expect(line.quantity).toBe(3);
+    expect(line.sheets).toBe(3);
+    expect(line.m2).toBeGreaterThan(0);
+    const others = lines.filter((l) => l.section === 'boards' && l !== line && l.unit !== 'm');
+    expect(others.every((l) => l.unit === 'm2' && l.sheets === null)).toBe(true);
   });
   it('an oven niche is to choose before buying; hardware counts follow the number of copies', () => {
     const d = t('base-door');

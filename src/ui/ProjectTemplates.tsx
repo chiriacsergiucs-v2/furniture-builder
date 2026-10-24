@@ -10,6 +10,7 @@ import {
   saveProject,
   saveProjectTemplate,
 } from '../persist/db';
+import { projectTemplateFile } from '../persist/projectTemplateFile';
 import { useDesign } from '../store/designStore';
 import { askConfirm, askText } from './Confirm';
 import { Icon } from './icons';
@@ -150,9 +151,11 @@ export function ProjectTemplateList({
                   <button
                     type="button"
                     className="btn sm"
-                    onClick={() => {
+                    onClick={async () => {
+                      // With its pictures, like design and project files (ADR-048).
+                      const file = await projectTemplateFile(t);
                       const url = URL.createObjectURL(
-                        new Blob([JSON.stringify(t, null, 2)], { type: 'application/json' }),
+                        new Blob([JSON.stringify(file, null, 2)], { type: 'application/json' }),
                       );
                       Object.assign(document.createElement('a'), {
                         href: url,

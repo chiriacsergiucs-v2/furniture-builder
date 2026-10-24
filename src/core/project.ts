@@ -459,7 +459,23 @@ export function buildProjectModel(input: Project): ProjectModel {
         nodeId: pc.item.id,
       });
   // Run parts (ADR-036): their own panels, checked against every piece like pieces are against each other.
+  const placedById = new Map(pieces.map((pc) => [pc.item.id, pc]));
   for (const rp of project.runParts ?? []) {
+    // Made for pieces that are gone, or a run plinth no longer as long as its pieces (refresh off, ADR-061).
+    const src = (rp.from ?? []).map((id) => placedById.get(id));
+    const stale =
+      src.some((pc) => !pc) ||
+      (rp.kind === 'plinth' &&
+        src.length > 0 &&
+        (Math.min(...src.map((pc) => pc!.bounds.x)) !== rp.box.x ||
+          Math.max(...src.map((pc) => pc!.bounds.x + pc!.bounds.w)) !== rp.box.x + rp.box.w));
+    if (stale)
+      diagnostics.push({
+        severity: 'error',
+        code: 'run-part-stale',
+        message: `${rp.label} was made for pieces that changed or were removed; suggest the run parts again.`,
+        nodeId: `run:${rp.id}`,
+      });
     const k = materialKey(rp.material);
     if (!materials.has(k)) materials.set(k, { ...rp.material, id: k, sheet: sheetOf(rp.material) });
     const panel = runPanel(rp, k);
@@ -811,8 +827,15 @@ export function planRuns(project: Project): { parts: RunPart[]; notes: string[] 
       const ok = cabs.filter((c): c is { pc: PlacedPiece; p: CabinetParams } => !!c);
       const plinthLine = (c: { pc: PlacedPiece; p: CabinetParams }) =>
         c.pc.bounds.z + c.p.depth - c.p.plinthSetback;
-      const bodyT = (c: { pc: PlacedPiece; p: CabinetParams }) =>
-        c.pc.item.design.materials.find((m) => m.id === c.p.bodyMaterialId)?.thickness ?? 0;
+      const bodyOf = (c: { pc: PlacedPiece; p: CabinetParams }) =>
+        c.pc.item.design.materials.find((m) => m.id === c.p.bodyMaterialId);
+      const bodyT = (c: { pc: PlacedPiece; p: CabinetParams }) => bodyOf(c)?.thickness ?? 0;
+      const bodyKey = (c: { pc: PlacedPiece; p: CabinetParams }) => {
+        const m = bodyOf(c);
+        return m ? materialKey(m) : '';
+      };
+      const each = (f: (c: { pc: PlacedPiece; p: CabinetParams }) => string) =>
+        ok.map((c) => `${c.pc.item.design.name} ${f(c)}`).join(', ');
       let why = '';
       if (ok.length < n) why = 'a corner unit in the run keeps its own plinth';
       else if (ok.some((c) => c.p.plinthHeight <= 0))
@@ -821,8 +844,17 @@ export function planRuns(project: Project): { parts: RunPart[]; notes: string[] 
         why = `the sides of ${names((c) => c.p.bottom !== 'under')} reach the floor; set Bottom → under the sides`;
       else if (new Set(ok.map((c) => c.p.plinthHeight)).size > 1)
         why = `plinth heights differ (${ok.map((c) => `${c.pc.item.design.name} ${c.p.plinthHeight} mm`).join(', ')})`;
-      else if (new Set(ok.map(plinthLine)).size > 1 || new Set(ok.map(bodyT)).size > 1)
-        why = 'plinth setbacks or board thicknesses differ';
+      else if (new Set(ok.map((c) => c.p.plinthSetback)).size > 1)
+        why = `plinth setbacks differ (${each((c) => `${c.p.plinthSetback} mm`)})`;
+      else if (new Set(ok.map(plinthLine)).size > 1)
+        why = `plinth fronts are not in line (${each((c) => `${plinthLine(c)} mm from the back`)})`;
+      else if (new Set(ok.map(bodyKey)).size > 1)
+        why = `body boards differ (${each((c) => {
+          const m = bodyOf(c);
+          return m
+            ? `${m.name} ${m.thickness} mm${m.grain ? ' grained' : ''}${m.image ? ' with a picture' : ''}`
+            : 'no board';
+        })})`;
       if (why)
         notes.push(
           `No run plinth for ${run.map((pc) => pc.item.design.name).join(' + ')}: ${why}.`,

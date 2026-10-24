@@ -28,7 +28,7 @@ import {
   type StoredProject,
 } from '../persist/db';
 import { useDesign } from '../store/designStore';
-import { validateProjectTemplate, type ProjectTemplate } from '../core/projectTemplate';
+import { readProjectTemplateFile } from '../persist/projectTemplateFile';
 import { MmField, Select, Toggle } from './controls';
 import { Icon } from './icons';
 import { AddPieceList } from './Project';
@@ -284,25 +284,25 @@ export function LibraryDialog({
   const importFile = async (f: File) => {
     try {
       const parsed: unknown = JSON.parse(await f.text());
-      // A project template file (ADR-060) is stored as a template, not opened.
+      // A project template file (ADR-060) is stored as a template, not opened; its pictures come along (ADR-048).
       if (
         parsed &&
         typeof parsed === 'object' &&
         (parsed as { kind?: unknown }).kind === 'project-template'
       ) {
-        const te = validateProjectTemplate(parsed);
-        if (te.length) {
-          setError(`That file is not a valid project template: ${te.slice(0, 3).join('; ')}.`);
+        const r = await readProjectTemplateFile(parsed);
+        if (!r.ok) {
+          setError(r.error);
           return;
         }
-        const t = {
-          ...(parsed as ProjectTemplate),
-          id: newId(),
-          updatedAt: new Date().toISOString(),
-        };
-        await saveProjectTemplate(t);
+        try {
+          await saveProjectTemplate(r.template);
+        } catch {
+          setError('The project template could not be saved on this device.');
+          return;
+        }
         setError(
-          `Project template “${t.name}” imported. Use it from Home → Create from a project template.`,
+          `Project template “${r.template.name}” imported. Use it from Home → Create from a project template.${r.problems.length ? ` ${r.problems.slice(0, 3).join(' ')}` : ''}`,
         );
         return;
       }

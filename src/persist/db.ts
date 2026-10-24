@@ -206,7 +206,15 @@ export async function saveProjectTemplate(t: ProjectTemplate, database = db): Pr
 /** Project templates that still validate; unreadable rows are skipped and kept (ADR-012). */
 export async function listProjectTemplates(database = db): Promise<ProjectTemplate[]> {
   const rows = await database.projectTemplates.orderBy('updatedAt').reverse().toArray();
-  return rows.filter((r) => !validateProjectTemplate(r.template).length).map((r) => r.template);
+  // Each row on its own: one that cannot be read is skipped (and kept), never the whole list (ADR-012).
+  const usable = (t: unknown) => {
+    try {
+      return !validateProjectTemplate(t).length;
+    } catch {
+      return false;
+    }
+  };
+  return rows.filter((r) => usable(r.template)).map((r) => r.template);
 }
 export const deleteProjectTemplate = (id: string, database = db) =>
   database.projectTemplates.delete(id);

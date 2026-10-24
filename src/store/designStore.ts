@@ -389,7 +389,8 @@ export const useDesign = create<State>((set, get) => {
     suggestRunParts: () => {
       const p = get().project;
       if (!p) return;
-      const settings = { scribe: p.runSettings?.scribe ?? 0, auto: true };
+      // Automatic refresh is on by default the first time; after that the user's choice is kept (ADR-061).
+      const settings = { scribe: p.runSettings?.scribe ?? 0, auto: p.runSettings?.auto ?? true };
       const base = { ...p, runSettings: settings, runPartsRemoved: [] };
       commitProject({ ...base, runParts: planRuns(base).parts });
     },

@@ -34,10 +34,29 @@ export interface ProjectTemplate {
   createdAt: string;
   updatedAt: string;
   items: TemplateItem[];
-  /** Suggest run parts again with these settings when used (absent = the project had none). */
-  runRecipe?: { settings: RunSettings };
+  /**
+   * Suggest run parts again with these settings when used (absent = the project had none). `removed` keeps the run
+   * parts the user removed, as keys over template refs, so they stay removed in projects made from it.
+   */
+  runRecipe?: { settings: RunSettings; removed?: string[] };
   room?: Room;
 }
+
+/**
+ * A run-part key (`kind|idA,idB`) with its piece ids mapped through `ids`; null when one of them is not mapped (the
+ * piece is not there any more).
+ */
+export function remapRunKey(key: string, ids: ReadonlyMap<string, string>): string | null {
+  const bar = key.indexOf('|');
+  if (bar < 0) return null;
+  const from = key.slice(bar + 1).split(',');
+  const mapped = from.map((id) => ids.get(id));
+  if (!from.length || mapped.some((id) => id === undefined)) return null;
+  return `${key.slice(0, bar)}|${mapped.join(',')}`;
+}
+
+const remapKeys = (keys: readonly string[], ids: ReadonlyMap<string, string>) =>
+  keys.map((k) => remapRunKey(k, ids)).filter((k): k is string => k !== null);
 
 export function templateFromProject(
   p: Project,
@@ -48,6 +67,9 @@ export function templateFromProject(
   const ox = withRoom || !p.items.length ? 0 : Math.min(...p.items.map((i) => i.position.x));
   const oz = withRoom || !p.items.length ? 0 : Math.min(...p.items.map((i) => i.position.z));
   const now = new Date().toISOString();
+  // Template refs are the project's item ids; removed keys of pieces no longer there are dropped.
+  const refs = new Map(p.items.map((i) => [i.id, i.id]));
+  const removed = remapKeys(p.runPartsRemoved ?? [], refs);
   return {
     kind: 'project-template',
     schemaVersion: 1,
@@ -68,6 +90,7 @@ export function templateFromProject(
       ? {
           runRecipe: {
             settings: { scribe: p.runSettings?.scribe ?? 0, auto: p.runSettings?.auto ?? true },
+            ...(removed.length ? { removed } : {}),
           },
         }
       : {}),
@@ -104,13 +127,21 @@ export function projectFromTemplate(t: ProjectTemplate, name = t.name): Project 
     ...(t.room ? { room: structuredClone(t.room) } : {}),
   };
   if (!t.runRecipe) return base;
-  const withSettings = { ...base, runSettings: { ...t.runRecipe.settings } };
+  const removed = remapKeys(t.runRecipe.removed ?? [], ids);
+  const withSettings: Project = {
+    ...base,
+    runSettings: { ...t.runRecipe.settings },
+    ...(removed.length ? { runPartsRemoved: removed } : {}),
+  };
   return { ...withSettings, runParts: planRuns(withSettings).parts };
 }
 
 const isObj = (v: unknown): v is Record<string, unknown> =>
   !!v && typeof v === 'object' && !Array.isArray(v);
+const isInt = (v: unknown, min = -1e7, max = 1e7) =>
+  typeof v === 'number' && Number.isSafeInteger(v) && v >= min && v <= max;
 
+/** Problems of a template read from storage or a file; never throws (ADR-008). Empty = usable. */
 export function validateProjectTemplate(t: unknown): string[] {
   if (!isObj(t)) return ['Template must be an object'];
   const errs: string[] = [];
@@ -119,19 +150,64 @@ export function validateProjectTemplate(t: unknown): string[] {
     errs.push('Missing template id or name');
   if (typeof t.description !== 'string') errs.push('Missing description');
   if (!Array.isArray(t.items)) return [...errs, 'Items missing'];
+  const refs = new Set(
+    t.items.flatMap((it) => (isObj(it) && typeof it.ref === 'string' ? [it.ref] : [])),
+  );
+  const seen = new Set<string>();
   for (const it of t.items) {
-    if (!isObj(it) || typeof it.ref !== 'string') {
+    if (!isObj(it) || typeof it.ref !== 'string' || !it.ref) {
       errs.push('Invalid template item');
       continue;
     }
+    const name = `Item ${it.ref}`;
+    if (seen.has(it.ref)) errs.push(`${name}: duplicate ref`);
+    seen.add(it.ref);
     const de = validateDesign(it.design);
-    if (de.length) errs.push(`Item ${it.ref}: ${de[0]}`);
+    if (de.length) errs.push(`${name}: ${de[0]}`);
+    if (!isInt(it.quantity, 1, 99)) errs.push(`${name}: quantity must be 1 to 99`);
+    if (![0, 90, 180, 270].includes(it.rotationY as number))
+      errs.push(`${name}: rotation must be a quarter turn`);
+    const o = it.offset;
+    if (!isObj(o) || !isInt(o.x) || !isInt(o.y, 0) || !isInt(o.z))
+      errs.push(`${name}: offset must be whole mm (height ≥ 0)`);
+    const pl = it.placement;
+    if (
+      pl !== undefined &&
+      !(
+        isObj(pl) &&
+        (pl.kind === 'floor' ||
+          (pl.kind === 'wall' && isInt(pl.height, 0)) ||
+          (pl.kind === 'above' &&
+            typeof pl.baseId === 'string' &&
+            refs.has(pl.baseId) &&
+            pl.baseId !== it.ref &&
+            isInt(pl.gap, 0) &&
+            isInt(pl.offsetX)))
+      )
+    )
+      errs.push(`${name}: invalid placement`);
+  }
+  const rr = t.runRecipe;
+  if (rr !== undefined) {
+    const s = isObj(rr) ? rr.settings : null;
+    if (
+      !isObj(rr) ||
+      !isObj(s) ||
+      !isInt(s.scribe, 0, 200) ||
+      typeof s.auto !== 'boolean' ||
+      (rr.removed !== undefined &&
+        !(Array.isArray(rr.removed) && rr.removed.every((k) => typeof k === 'string')))
+    )
+      errs.push('Invalid run-part recipe');
   }
   if (t.room !== undefined) errs.push(...validateRoom(t.room));
   if (!errs.length) {
-    // The project it makes must be valid too (positions, quarter turns, placements, run settings).
-    const pe = validateProject(projectFromTemplate(t as unknown as ProjectTemplate));
-    if (pe.length) errs.push(...pe);
+    // The project it makes must be valid too; a failure there is a problem, never a crash.
+    try {
+      errs.push(...validateProject(projectFromTemplate(t as unknown as ProjectTemplate)));
+    } catch (e) {
+      errs.push(`The template cannot be used: ${e instanceof Error ? e.message : String(e)}`);
+    }
   }
   return errs;
 }
