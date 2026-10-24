@@ -18,6 +18,7 @@ right and are restated here.
 ## Decision
 
 Add `src/core/nesting/` with two independent modules:
+
 - **Placer**: for each material, place every part instance from the cut list onto stock sheets using guillotine
   splits only. Kerf is a full-length stripe of material destroyed by each cut; a leftover narrower than the kerf is
   unusable and rejected, never absorbed. Grain-locked parts (material has grain) are never rotated; plain parts may
@@ -28,8 +29,8 @@ Add `src/core/nesting/` with two independent modules:
 - **Validator**: re-walks every cut tree with no shared code from the placer and checks containment, kerf, grain,
   stock counts, that every part instance is placed exactly once or listed as unplaced, and exact area conservation.
   A layout that fails is never shown or exported.
-The placer runs in a Web Worker. Results are always called a *heuristic layout*, never optimal. Input is the cut list
-(finished sizes, ADR-009), so nesting never re-derives geometry (ADR-004).
+  The placer runs in a Web Worker. Results are always called a _heuristic layout_, never optimal. Input is the cut list
+  (finished sizes, ADR-009), so nesting never re-derives geometry (ADR-004).
 
 ## Alternatives considered
 

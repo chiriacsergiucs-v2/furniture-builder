@@ -64,6 +64,7 @@ questions and asked for them to be built.
 ## Compliance check
 
 `npx vitest run tests/materials.test.ts` checks the following:
+
 - labels are validated and change no part;
 - a worktop board on other parts gives a warning;
 - comma and semicolon CSV, Romanian headers, quotes and a BOM are read;

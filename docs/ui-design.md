@@ -5,34 +5,34 @@ end is kept; nothing was removed. Core paths are unchanged in length (same click
 
 Inputs that were not provided and the assumptions made:
 
-| Input | Assumption |
-|---|---|
+| Input               | Assumption                                                                                                                                                                                                     |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Users and top tasks | Hobby cabinetmakers and small panel shops. Top tasks: start from a template → set size → fill/divide spaces → clear Checks → Parts CSV / Print; place several pieces in a project. (README, ADR-014, ADR-020.) |
-| Brand assets | The existing palette is the brand: graphite ink, cutting-mat green, tape-measure yellow, Barlow. Kept and systematised, not replaced. |
-| Pain points | Taken from the audit below, not from user reports. |
-| Platform | Web PWA, phone → wide desktop (ADR-002, F18). No new dependencies. |
+| Brand assets        | The existing palette is the brand: graphite ink, cutting-mat green, tape-measure yellow, Barlow. Kept and systematised, not replaced.                                                                          |
+| Pain points         | Taken from the audit below, not from user reports.                                                                                                                                                             |
+| Platform            | Web PWA, phone → wide desktop (ADR-002, F18). No new dependencies.                                                                                                                                             |
 
 ## 1. Audit (before: commit b2c6f0f, screenshots at 360 / 390 / 1280 / 1600 px)
 
-| # | Issue | Location | Impact | Effort | Fix |
-|---|---|---|---|---|---|
-| A1 | Save status (incl. "Not saved — storage unavailable") hidden on phones (`.save { display: none }`) | top bar ≤ 760 px | High: data-loss warning invisible on the device most likely to lack storage | S | Status dot always visible; text shown on phones only for the failed state |
-| A2 | Eight unrelated button styles (`.actions`, `.secondary`, `.split-actions`, `.mini`, `.link`, `.file-btn`, `.piece-banner`, `.update-bar`) | everywhere | Med: inconsistent affordance; hover inverted to solid black on secondary buttons | M | One `.btn` with variants (primary, solid, outline, ghost, danger, link, icon, sm) |
-| A3 | Text-only actions; "Saved" names the library but reads like a status | top bar | Med: scanning, confusion with the "Saved on this device" status next to it | S | Icons + labels; "Library"; labels collapse to icons below 1320 px with `aria-label` |
-| A4 | Inspector is a flat list of 10+ fields with no grouping (Contents / Doors / Handles / Divide run together) | space editor | High: hierarchy; users scroll to find "Divide" | M | Three titled sections: Contents, Doors and handles, Divide this space |
-| A5 | No map of the stages of a piece; no wizard primitive for coming flows (catalog N14, guided start) | whole-piece editor | Med | M | Steps rail (size → inside → build → boards → cut) with live status; same component carries a guided flow later |
-| A6 | Long parts tables lose their header while scrolling | Parts, Hardware, Sheets | Med | S | Sticky `thead` inside the tab panel |
-| A7 | Template chooser: 10 identical rows, no visual differentiation | New, Add a piece | Med: slow recognition | S | Two-column grid with a glyph per template |
-| A8 | Dialogs have no footer; primary actions ("Add a material", "Import") sit at the end of a scrolling body | Materials, Library | Med | S | Header / body / sticky footer |
-| A9 | Materials dialog: rows run together; four-column sheet fields clip "2800" at 560 px | Materials | Med | S | One card per material; sheet fields in two columns |
-| A10 | Export menu cannot be closed with Escape or a click outside | top bar | Med (keyboard access) | S | Escape closes and returns focus; outside click closes |
-| A11 | No dark theme; `color-scheme: light` only | global | Med: workshop/evening use, OLED phones | M | Token set for dark, `prefers-color-scheme` + manual toggle, print forced light |
-| A12 | 3D canvas background and drawing colours hard-coded | Viewer3D, elevation, sheets | Low (blocks A11) | S | Read `--stage-3d`; drawing colours as tokens; text on material fills fixed dark |
-| A13 | Empty / loading states are bare sentences | Hardware, Checks, Library, 3D | Low | S | `.empty` with icon, `.loading` with spinner |
-| A14 | Disclosure sections use "+ / −", which reads as increment next to counters | Construction, Materials groups | Low | S | Chevron |
-| A15 | Diagnostics inline in the inspector are coloured bars without an icon | space editor | Low | S | `.alert` with icon; same component in Output, Sheets, Library |
-| A16 | Hint text 12.3 px | everywhere | Low (passes contrast) | S | 13 px `--fs-xs` |
-| A17 | Native `confirm()` for delete / remove / replace | Library, Project | Low: inconsistent look, but accessible and modal | — | Kept; flagged for a later styled confirm (needs your decision) |
+| #   | Issue                                                                                                                                     | Location                       | Impact                                                                           | Effort | Fix                                                                                                            |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ | -------------------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------- |
+| A1  | Save status (incl. "Not saved — storage unavailable") hidden on phones (`.save { display: none }`)                                        | top bar ≤ 760 px               | High: data-loss warning invisible on the device most likely to lack storage      | S      | Status dot always visible; text shown on phones only for the failed state                                      |
+| A2  | Eight unrelated button styles (`.actions`, `.secondary`, `.split-actions`, `.mini`, `.link`, `.file-btn`, `.piece-banner`, `.update-bar`) | everywhere                     | Med: inconsistent affordance; hover inverted to solid black on secondary buttons | M      | One `.btn` with variants (primary, solid, outline, ghost, danger, link, icon, sm)                              |
+| A3  | Text-only actions; "Saved" names the library but reads like a status                                                                      | top bar                        | Med: scanning, confusion with the "Saved on this device" status next to it       | S      | Icons + labels; "Library"; labels collapse to icons below 1320 px with `aria-label`                            |
+| A4  | Inspector is a flat list of 10+ fields with no grouping (Contents / Doors / Handles / Divide run together)                                | space editor                   | High: hierarchy; users scroll to find "Divide"                                   | M      | Three titled sections: Contents, Doors and handles, Divide this space                                          |
+| A5  | No map of the stages of a piece; no wizard primitive for coming flows (catalog N14, guided start)                                         | whole-piece editor             | Med                                                                              | M      | Steps rail (size → inside → build → boards → cut) with live status; same component carries a guided flow later |
+| A6  | Long parts tables lose their header while scrolling                                                                                       | Parts, Hardware, Sheets        | Med                                                                              | S      | Sticky `thead` inside the tab panel                                                                            |
+| A7  | Template chooser: 10 identical rows, no visual differentiation                                                                            | New, Add a piece               | Med: slow recognition                                                            | S      | Two-column grid with a glyph per template                                                                      |
+| A8  | Dialogs have no footer; primary actions ("Add a material", "Import") sit at the end of a scrolling body                                   | Materials, Library             | Med                                                                              | S      | Header / body / sticky footer                                                                                  |
+| A9  | Materials dialog: rows run together; four-column sheet fields clip "2800" at 560 px                                                       | Materials                      | Med                                                                              | S      | One card per material; sheet fields in two columns                                                             |
+| A10 | Export menu cannot be closed with Escape or a click outside                                                                               | top bar                        | Med (keyboard access)                                                            | S      | Escape closes and returns focus; outside click closes                                                          |
+| A11 | No dark theme; `color-scheme: light` only                                                                                                 | global                         | Med: workshop/evening use, OLED phones                                           | M      | Token set for dark, `prefers-color-scheme` + manual toggle, print forced light                                 |
+| A12 | 3D canvas background and drawing colours hard-coded                                                                                       | Viewer3D, elevation, sheets    | Low (blocks A11)                                                                 | S      | Read `--stage-3d`; drawing colours as tokens; text on material fills fixed dark                                |
+| A13 | Empty / loading states are bare sentences                                                                                                 | Hardware, Checks, Library, 3D  | Low                                                                              | S      | `.empty` with icon, `.loading` with spinner                                                                    |
+| A14 | Disclosure sections use "+ / −", which reads as increment next to counters                                                                | Construction, Materials groups | Low                                                                              | S      | Chevron                                                                                                        |
+| A15 | Diagnostics inline in the inspector are coloured bars without an icon                                                                     | space editor                   | Low                                                                              | S      | `.alert` with icon; same component in Output, Sheets, Library                                                  |
+| A16 | Hint text 12.3 px                                                                                                                         | everywhere                     | Low (passes contrast)                                                            | S      | 13 px `--fs-xs`                                                                                                |
+| A17 | Native `confirm()` for delete / remove / replace                                                                                          | Library, Project               | Low: inconsistent look, but accessible and modal                                 | —      | Kept; flagged for a later styled confirm (needs your decision)                                                 |
 
 Quick wins: A1, A3, A6, A7, A8, A10, A13–A16. Structural: A2, A4, A5, A11/A12.
 
@@ -45,22 +45,22 @@ Barlow Semi Condensed, tabular, so columns of millimetres line up.
 
 ### Tokens (`src/styles.css`, section 1)
 
-| Group | Tokens | Light | Dark |
-|---|---|---|---|
-| Surfaces | `--bg` `--surface` `--surface-2` | #eef0ee / #fff / #f6f7f6 | #15181a / #1e2326 / #252b2e |
-| Ink | `--ink` `--ink-2` (`--ink-3` decorative only) | #22272a / #5a625e | #e8ebe9 / #a8b1ac |
-| Lines | `--line` `--line-2` | #cdd3cf / #e1e5e2 | #343c3f / #2a3134 |
-| Primary | `--primary` `--primary-hover` `--primary-soft` `--on-primary` `--link` | #2d5b4c … #dbe7e1, link #2d5b4c | #3a7260 … #24403a, link #8fc7b2 |
-| Accent | `--accent` `--accent-hover` `--accent-soft` `--on-accent` | #f2c230 / #ebb81c / #fdf3cf / #3a2e00 | same, soft #3d3415 |
-| Feedback | `--error` `--error-fill` `--error-soft`; `--warn` …; `--ok` … | #b3261e / #b3261e / #f8e1df; #9a5b00 …; #2d5b4c | text #ff9a90, fill unchanged, soft #3a1f1d; #f0b55a; #8fc7b2 |
-| Top bar | `--bar-bg` `--bar-ink` `--bar-ink-2` `--bar-line` `--bar-hover` | #22272a … | #0f1213 … |
-| Drawings | `--floor` `--el-back` `--stage-3d` `--sheet-bg` `--sheet-usable` `--on-material` | #b9c0bb … | #3a4347 … (text on material fills stays #22272a) |
-| Type | `--font` Barlow, `--num` Barlow Semi Condensed; `--fs-xs/sm/md/lg/xl/2xl` = 13 / 14 / 15 / 17 / 20 / 24 px; `--lh` 1.45 | | |
-| Space | `--s-1…8` = 4 8 12 16 20 24 32 | | |
-| Shape | `--r-sm` 4, `--r` 6, `--r-lg` 10, `--r-pill` | | |
-| Depth | `--shadow-1/2/3` (card, menu, dialog); `--backdrop` | | |
-| Motion | `--t-fast` 120 ms, `--t-base` 180 ms, ease-out; everything off under `prefers-reduced-motion` | | |
-| Layout | `--side` 360, `--out` 400, `--control-h` 38, `--touch` 40 | | |
+| Group    | Tokens                                                                                                                  | Light                                           | Dark                                                         |
+| -------- | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------ |
+| Surfaces | `--bg` `--surface` `--surface-2`                                                                                        | #eef0ee / #fff / #f6f7f6                        | #15181a / #1e2326 / #252b2e                                  |
+| Ink      | `--ink` `--ink-2` (`--ink-3` decorative only)                                                                           | #22272a / #5a625e                               | #e8ebe9 / #a8b1ac                                            |
+| Lines    | `--line` `--line-2`                                                                                                     | #cdd3cf / #e1e5e2                               | #343c3f / #2a3134                                            |
+| Primary  | `--primary` `--primary-hover` `--primary-soft` `--on-primary` `--link`                                                  | #2d5b4c … #dbe7e1, link #2d5b4c                 | #3a7260 … #24403a, link #8fc7b2                              |
+| Accent   | `--accent` `--accent-hover` `--accent-soft` `--on-accent`                                                               | #f2c230 / #ebb81c / #fdf3cf / #3a2e00           | same, soft #3d3415                                           |
+| Feedback | `--error` `--error-fill` `--error-soft`; `--warn` …; `--ok` …                                                           | #b3261e / #b3261e / #f8e1df; #9a5b00 …; #2d5b4c | text #ff9a90, fill unchanged, soft #3a1f1d; #f0b55a; #8fc7b2 |
+| Top bar  | `--bar-bg` `--bar-ink` `--bar-ink-2` `--bar-line` `--bar-hover`                                                         | #22272a …                                       | #0f1213 …                                                    |
+| Drawings | `--floor` `--el-back` `--stage-3d` `--sheet-bg` `--sheet-usable` `--on-material`                                        | #b9c0bb …                                       | #3a4347 … (text on material fills stays #22272a)             |
+| Type     | `--font` Barlow, `--num` Barlow Semi Condensed; `--fs-xs/sm/md/lg/xl/2xl` = 13 / 14 / 15 / 17 / 20 / 24 px; `--lh` 1.45 |                                                 |                                                              |
+| Space    | `--s-1…8` = 4 8 12 16 20 24 32                                                                                          |                                                 |                                                              |
+| Shape    | `--r-sm` 4, `--r` 6, `--r-lg` 10, `--r-pill`                                                                            |                                                 |                                                              |
+| Depth    | `--shadow-1/2/3` (card, menu, dialog); `--backdrop`                                                                     |                                                 |                                                              |
+| Motion   | `--t-fast` 120 ms, `--t-base` 180 ms, ease-out; everything off under `prefers-reduced-motion`                           |                                                 |                                                              |
+| Layout   | `--side` 360, `--out` 400, `--control-h` 38, `--touch` 40                                                               |                                                 |                                                              |
 
 Contrast (computed, WCAG 2.2 AA ≥ 4.5:1 for text): ink-2 on surface-2 5.85, on bg 5.48; white on primary 7.74
 (dark 5.59); white on warn fill 5.43; white on error fill 6.54; bar-ink-2 on bar 7.0; dark ink-2 on surface 7.21;
@@ -77,27 +77,27 @@ Iconography: inline SVG, 24-unit grid, 1.75 stroke, round caps — the same cons
 
 ## 3. Components and states (`src/styles.css` sections 3–6, `src/ui/controls.tsx`)
 
-| Component | Class / export | States covered |
-|---|---|---|
-| Button | `.btn` + `primary` (one per screen: Parts CSV) / `solid` / `outline` / `ghost` / `danger` / `link` / `icon` / `sm` / `block` / `loading` | default, hover, active, focus-visible (2 px ring, accent on dark bar), disabled (50 %), loading (spinner, text hidden) |
-| Millimetre field | `MmField` → `.mm` | default, hover, focus-within ring, invalid (red border + message linked by `aria-describedby`), hint |
-| Select / text input | `select`, `.input`, `.mat-name` | default, hover, focus; custom chevron; dark variant |
-| Segmented (radio group) | `Segmented` → `.segmented` | on (primary fill), hover, focus-visible inside; wraps at narrow widths |
-| Counter | `Counter` → `.counter` | hover, disabled at min/max, live `output` |
-| Toggle | `Toggle` → `.toggle` | native checkbox, accent colour |
-| Steps rail (wizard-ready) | `Steps`, `Step` → `.steps` | per step: `done` (green number), tone `ok` / `warn` / `error` (status colour), `aria-current="step"` (current), `disabled`; `.wizard-footer` for Back / Next |
-| Section card | `Section` → `.section` + `.card-title` | — |
-| Collapsible group | `Group` (with `id`) → `.group`, `revealGroup(id)` | open / closed chevron; opened and scrolled to from the rail |
-| Row button (template, library, piece) | `.row-btn` with `.glyph` `.sub` `.chev` | hover, `on` / `aria-pressed` / `aria-current` (primary border + soft fill) |
-| Alert | `.alert.error` / `.warning` / `.info` / `.ok` | icon + text; used inline, in tabs, in lists |
-| Badge | `.badge.error` / `.warning` / `.neutral` | — |
-| Tabs | `.tabs` | on (primary underline), hover, focus-visible; horizontal scroll on narrow |
-| Status | `.status.saving` / `.saved` / `.failed` | dot (pulse while saving), text, failed always visible |
-| Empty / loading | `.empty` (+ `.ok`, `.center`), `.loading` | icon or spinner |
-| Table | `table.cut` | sticky head (desktop), row hover / `on` (accent-soft), focus ring |
-| Menu | `.menu` (details) | open, hover, Escape, outside click |
-| Dialog | `Dialog` with `footer` → `.dialog`, `.dialog-body`, `.dialog-footer` | open animation (not under reduced motion), backdrop, Escape, close button |
-| Toast | `.toast` | update prompt |
+| Component                             | Class / export                                                                                                                           | States covered                                                                                                                                               |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Button                                | `.btn` + `primary` (one per screen: Parts CSV) / `solid` / `outline` / `ghost` / `danger` / `link` / `icon` / `sm` / `block` / `loading` | default, hover, active, focus-visible (2 px ring, accent on dark bar), disabled (50 %), loading (spinner, text hidden)                                       |
+| Millimetre field                      | `MmField` → `.mm`                                                                                                                        | default, hover, focus-within ring, invalid (red border + message linked by `aria-describedby`), hint                                                         |
+| Select / text input                   | `select`, `.input`, `.mat-name`                                                                                                          | default, hover, focus; custom chevron; dark variant                                                                                                          |
+| Segmented (radio group)               | `Segmented` → `.segmented`                                                                                                               | on (primary fill), hover, focus-visible inside; wraps at narrow widths                                                                                       |
+| Counter                               | `Counter` → `.counter`                                                                                                                   | hover, disabled at min/max, live `output`                                                                                                                    |
+| Toggle                                | `Toggle` → `.toggle`                                                                                                                     | native checkbox, accent colour                                                                                                                               |
+| Steps rail (wizard-ready)             | `Steps`, `Step` → `.steps`                                                                                                               | per step: `done` (green number), tone `ok` / `warn` / `error` (status colour), `aria-current="step"` (current), `disabled`; `.wizard-footer` for Back / Next |
+| Section card                          | `Section` → `.section` + `.card-title`                                                                                                   | —                                                                                                                                                            |
+| Collapsible group                     | `Group` (with `id`) → `.group`, `revealGroup(id)`                                                                                        | open / closed chevron; opened and scrolled to from the rail                                                                                                  |
+| Row button (template, library, piece) | `.row-btn` with `.glyph` `.sub` `.chev`                                                                                                  | hover, `on` / `aria-pressed` / `aria-current` (primary border + soft fill)                                                                                   |
+| Alert                                 | `.alert.error` / `.warning` / `.info` / `.ok`                                                                                            | icon + text; used inline, in tabs, in lists                                                                                                                  |
+| Badge                                 | `.badge.error` / `.warning` / `.neutral`                                                                                                 | —                                                                                                                                                            |
+| Tabs                                  | `.tabs`                                                                                                                                  | on (primary underline), hover, focus-visible; horizontal scroll on narrow                                                                                    |
+| Status                                | `.status.saving` / `.saved` / `.failed`                                                                                                  | dot (pulse while saving), text, failed always visible                                                                                                        |
+| Empty / loading                       | `.empty` (+ `.ok`, `.center`), `.loading`                                                                                                | icon or spinner                                                                                                                                              |
+| Table                                 | `table.cut`                                                                                                                              | sticky head (desktop), row hover / `on` (accent-soft), focus ring                                                                                            |
+| Menu                                  | `.menu` (details)                                                                                                                        | open, hover, Escape, outside click                                                                                                                           |
+| Dialog                                | `Dialog` with `footer` → `.dialog`, `.dialog-body`, `.dialog-footer`                                                                     | open animation (not under reduced motion), backdrop, Escape, close button                                                                                    |
+| Toast                                 | `.toast`                                                                                                                                 | update prompt                                                                                                                                                |
 
 ## 4. Screens, before → after (screenshots in the session log; same paths at 360 / 390 / 1280 / 1600 px, light and dark)
 
@@ -107,7 +107,7 @@ sub-labels, Print, Parts CSV (the only yellow), theme toggle on the title row. L
 (A3). Phone: same three rows as before, nothing hidden (F18).
 
 **Whole-piece inspector.** Before: title, three sizes, link, segmented, then groups with + / −. After: the steps rail
-on top (A5) — *1 Size 800×900×450 · 2 Inside 4 drawers · 3 Build Overlay · 4 Boards PAL 18 white · 5 Cut Ready* — each
+on top (A5) — _1 Size 800×900×450 · 2 Inside 4 drawers · 3 Build Overlay · 4 Boards PAL 18 white · 5 Cut Ready_ — each
 jumps to its section or tab; "Inside" turns amber when the interior is empty, "Cut" red with the number of problems.
 Groups use chevrons (A14) and have ids so the rail can open them.
 
@@ -151,17 +151,17 @@ in dark mode renders the light print sheet. Not run: a real phone, a screen read
 
 ## Feature inventory (every original feature accounted for)
 
-| Feature | Status |
-|---|---|
-| Name field, autosave status | kept; status now visible on phones |
-| Undo / Redo (buttons + shortcuts) | kept (icon buttons, same titles) |
-| New, Saved (library), Materials, Parts CSV, Print, Export menu (SVG, Fusion, design / project file) | kept; "Saved" button renamed "Library", dialog title unchanged |
-| Front / Plan / 3D switch, Doors and fronts, Exploded 3D, Reset view | kept |
-| Elevation: tap spaces, breadcrumb, selection, dimensions | kept |
-| Inspector: all fields for cabinet, corner, desk, space, split, drawer heights, handles, runner settings | kept, regrouped |
-| Output tabs: Parts, Sheets, Hardware, Checks; row ↔ 3D highlight; CSV blocked by errors | kept |
-| Projects: list, add, edit, update from saved, quantity, turn, position, gap, remove, kerf; plan + room front | kept |
-| Library: open, duplicate, delete, import | kept |
-| Materials: colour, name, thickness, grain, sheet, trim, stock, add; kerf | kept |
-| Print sheet, update toast, no-WebGL message | kept |
-| New: theme toggle (light / dark, device-local) | added |
+| Feature                                                                                                      | Status                                                         |
+| ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------- |
+| Name field, autosave status                                                                                  | kept; status now visible on phones                             |
+| Undo / Redo (buttons + shortcuts)                                                                            | kept (icon buttons, same titles)                               |
+| New, Saved (library), Materials, Parts CSV, Print, Export menu (SVG, Fusion, design / project file)          | kept; "Saved" button renamed "Library", dialog title unchanged |
+| Front / Plan / 3D switch, Doors and fronts, Exploded 3D, Reset view                                          | kept                                                           |
+| Elevation: tap spaces, breadcrumb, selection, dimensions                                                     | kept                                                           |
+| Inspector: all fields for cabinet, corner, desk, space, split, drawer heights, handles, runner settings      | kept, regrouped                                                |
+| Output tabs: Parts, Sheets, Hardware, Checks; row ↔ 3D highlight; CSV blocked by errors                      | kept                                                           |
+| Projects: list, add, edit, update from saved, quantity, turn, position, gap, remove, kerf; plan + room front | kept                                                           |
+| Library: open, duplicate, delete, import                                                                     | kept                                                           |
+| Materials: colour, name, thickness, grain, sheet, trim, stock, add; kerf                                     | kept                                                           |
+| Print sheet, update toast, no-WebGL message                                                                  | kept                                                           |
+| New: theme toggle (light / dark, device-local)                                                               | added                                                          |

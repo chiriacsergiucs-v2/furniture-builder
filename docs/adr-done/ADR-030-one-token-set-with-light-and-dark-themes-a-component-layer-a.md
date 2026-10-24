@@ -50,10 +50,11 @@ default colour of a new material in `Dialogs.tsx`; everything else resolves thro
 ## Answers (2026-10-23, from the user)
 
 From `docs/ui-design.md` open questions:
+
 1. **Replace native confirm()/prompt()** with the app's own dialog — built: `src/ui/Confirm.tsx` (`askConfirm`, `askText`), every call site switched.
 2. **Theme toggle stays in the top bar.**
-3. **No guided New flow**; *Start from* (every catalog item) is the quick start.
+3. **No guided New flow**; _Start from_ (every catalog item) is the quick start.
    **Amended 2026-10-23** by a later user request ("a multistep wizard to create a piece of furniture for the catalog"):
-   *New* gains a guided "New piece" wizard built on this steps rail and `.wizard-footer` (ADR-044); *Start from* stays.
+   _New_ gains a guided "New piece" wizard built on this steps rail and `.wizard-footer` (ADR-044); _Start from_ stays.
 4. **Bottom action bar on phones** — built: at ≤ 760 px the actions sit in a fixed bottom bar (safe-area aware); the page reserves its height.
-Evidence: find-it acceptance at 1440 / 1024 / 390 / 360 px (actions in the top bar on desktop, bottom bar on phones; delete asks in the app's own dialog, Cancel keeps the piece). Not checked on a real phone or with a screen reader.
+   Evidence: find-it acceptance at 1440 / 1024 / 390 / 360 px (actions in the top bar on desktop, bottom bar on phones; delete asks in the app's own dialog, Cancel keeps the piece). Not checked on a real phone or with a screen reader.

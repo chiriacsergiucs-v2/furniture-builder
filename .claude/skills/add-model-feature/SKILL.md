@@ -41,7 +41,7 @@ capability is built there first, and the UI only edits the design document and s
 ## Rules
 
 - `src/core` imports nothing from React, three or Dexie.
-- Unknown physical facts (loads, drilling, screw specs, supplier values) go under *Open
-  questions*; ask the user instead of choosing a number.
+- Unknown physical facts (loads, drilling, screw specs, supplier values) go under _Open
+  questions_; ask the user instead of choosing a number.
 - Never change how an existing saved design builds without an ADR that says so; old designs
   must still build the same way.

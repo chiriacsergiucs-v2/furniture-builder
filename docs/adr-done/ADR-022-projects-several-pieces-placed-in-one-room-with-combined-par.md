@@ -43,7 +43,7 @@ whole millimetres and quarter turns, then checked for overlaps between pieces. T
 
 ## Addendum 2026-10-22: gaps between pieces (user request, backlog N13)
 
-The selected piece shows *Gap to <piece> on the left*: the nearest piece on its left in the same run (height and
+The selected piece shows _Gap to <piece> on the left_: the nearest piece on its left in the same run (height and
 depth ranges overlap, so wall cabinets are their own run). Changing it moves the piece along the wall and, by
 default, the pieces on its right in the same run by the same amount. The gap is derived from positions, never
 stored, so the project format is unchanged. `leftNeighbour`, `setGapLeft` in `src/core/project.ts`; tests in
@@ -57,6 +57,6 @@ parts equal the sum of each piece's parts times quantity.
 ## Answers (2026-10-21, from the user)
 
 - **Library edits do not flow into projects.** A project embeds a copy of each piece; an explicit
-  *Update from library* action pulls the current saved version on request.
+  _Update from library_ action pulls the current saved version on request.
 
 Built and accepted 2026-10-21. Projects embed copies; “Update from saved piece” pulls library changes on request (user answer).

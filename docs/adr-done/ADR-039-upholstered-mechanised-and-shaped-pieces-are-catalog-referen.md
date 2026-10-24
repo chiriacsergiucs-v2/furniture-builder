@@ -22,9 +22,9 @@ decorative blocks (research 2026-10-22, unverified).
   structure** (frame members, deck, arms, back, cushions or mechanism), **typical dimension ranges** (labelled
   typical) and **configurations** (seat count, modules and layout for sectionals, arm style, mechanism type), from
   `docs/catalog.md`.
-- They are not generated, not in *Start from* (ADR-032 default), and produce no cut list. The detail panel says
+- They are not generated, not in _Start from_ (ADR-032 default), and produce no cut list. The detail panel says
   which ADR would unlock them.
-- **Partial unlock without new geometry:** a sofa or armchair *base frame* made of straight rails and 18 mm panel
+- **Partial unlock without new geometry:** a sofa or armchair _base frame_ made of straight rails and 18 mm panel
   arms can be modelled with the frame root (ADR-038) as `kind: 'bench'` with arms — offered as a variant
   "Frame only (no upholstery)" with `requires: ['root:frame']`; upholstery, springs, foam and mechanisms are listed as
   purchased items with no specifications.
@@ -56,9 +56,9 @@ except ones whose `requires[]` is built.
 ## Implementation (2026-10-23)
 
 Armchair, accent chair, sofa, sectional, recliner, ergonomic office chair and outdoor lounger are `reference` families:
-structure, typical ranges and configurations on their cards, not in *Start from*. Armchair, accent chair and sofa (2
-and 3 seats) have an insertable *Frame only* variant built with the frame root (a bench with a vertical back) whose
-upholstery is a *to choose* reminder; sectional, recliner, office chair and lounger have no insertable variant.
+structure, typical ranges and configurations on their cards, not in _Start from_. Armchair, accent chair and sofa (2
+and 3 seats) have an insertable _Frame only_ variant built with the frame root (a bench with a vertical back) whose
+upholstery is a _to choose_ reminder; sectional, recliner, office chair and lounger have no insertable variant.
 Open question 1: no shaped-part ADR scheduled.
 
 Evidence: `src/core/catalog/furniture.ts`, `tests/catalog.test.ts`.
@@ -67,8 +67,8 @@ Verification 2026-10-23 (branch `feat/catalog-templates`): `npm run lint`, `npm 
 
 ## Amendment (2026-10-23)
 
-All seven families now have items that open (frame only / frame shell, upholstery and mechanisms as *to choose*
-reminders) and appear in *Start from*; their support is `ready`. Items that need angled parts (reclining frame,
+All seven families now have items that open (frame only / frame shell, upholstery and mechanisms as _to choose_
+reminders) and appear in _Start from_; their support is `ready`. Items that need angled parts (reclining frame,
 adjustable lounger backrest, raked garden-bench back, diagonal corner front) still wait for a shaped-part ADR.
 
 ## Answers (2026-10-23, from the user)

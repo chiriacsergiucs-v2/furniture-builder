@@ -18,7 +18,7 @@ diagram per board. A PDF library would add hundreds of kilobytes and a second la
 
 Add a print view that renders, from `FurnitureModel` and the cut list only: a title block (design name, date,
 overall size), the front elevation SVG with dimensions, the grouped parts list with edge marks, the hardware list, and
-open checks. A `@media print` stylesheet sets A4 pages, black-on-white, page breaks per section. *Save as PDF* is the
+open checks. A `@media print` stylesheet sets A4 pages, black-on-white, page breaks per section. _Save as PDF_ is the
 browser's own print dialog. SVG drawings (elevation, later sheet diagrams) are also downloadable as files. Printing is
 blocked, like CSV, while the design has errors.
 
@@ -48,7 +48,7 @@ When accepted: the print view imports only `src/core` and presentational compone
 
 - **Page:** A4 portrait.
 - **Language for the panel shop:** Romanian on printed sheets **and in the parts CSV** — column headers
-  *Denumire, Material, Grosime, Lungime, Lățime, Buc., Cant L, Cant l, Fibră*. The app UI stays English. This changes
+  _Denumire, Material, Grosime, Lungime, Lățime, Buc., Cant L, Cant l, Fibră_. The app UI stays English. This changes
   the CSV headers defined under ADR-009 when N02 is built; sizes and edge notation are unchanged.
 
 Built and accepted 2026-10-21. CSV uses semicolons and a UTF-8 BOM so Romanian Excel opens it in columns with diacritics.

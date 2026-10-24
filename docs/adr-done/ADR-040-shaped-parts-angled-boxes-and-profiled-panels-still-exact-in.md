@@ -66,7 +66,7 @@ saved before this ADR loads and builds byte-identically.
 1. **Back rake:** no preference — the default stays (8°, editable 0–25°).
 2. **Recliner and lounger positions:** 3 positions, 100°, 120°, 150° seat-to-back (default confirmed).
 3. **Profiles:** full-size printed template on the cut sheet (default confirmed).
-Built 2026-10-23 (backlog N30); see the amendment below.
+   Built 2026-10-23 (backlog N30); see the amendment below.
 
 ## Amendment (2026-10-23, built)
 

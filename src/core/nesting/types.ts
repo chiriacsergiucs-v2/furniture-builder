@@ -8,48 +8,48 @@
 
 export interface NestPart {
   /** Stable identity, e.g. the first panel id of a cut-list row. */
-  key: string
-  label: string
+  key: string;
+  label: string;
   /** Along the grain for grained boards (cut-list length). */
-  length: number
-  width: number
-  quantity: number
+  length: number;
+  width: number;
+  quantity: number;
 }
 
 export interface NestJob {
-  materialId: string
-  materialName: string
-  thickness: number
+  materialId: string;
+  materialName: string;
+  thickness: number;
   /** Grained boards never rotate parts: part length stays along sheet length. */
-  grain: boolean
+  grain: boolean;
   /** `count: null` = unlimited sheets. */
-  sheet: { length: number; width: number; count: number | null }
+  sheet: { length: number; width: number; count: number | null };
   /** Unusable margin on each of the four edges. */
-  trim: number
+  trim: number;
   /** Width of the material stripe destroyed by every cut. */
-  kerf: number
-  parts: NestPart[]
+  kerf: number;
+  parts: NestPart[];
 }
 
 export interface NestOptions {
-  seed?: number
-  maxMs?: number
-  maxAttempts?: number
+  seed?: number;
+  maxMs?: number;
+  maxAttempts?: number;
 }
 
 /** Axis-aligned rectangle on a sheet: `length` along x, `width` along y. */
 export interface Rect {
-  x: number
-  y: number
-  length: number
-  width: number
+  x: number;
+  y: number;
+  length: number;
+  width: number;
 }
 
 /**
  * `across-length`: the cut line runs across the sheet length, at constant x = `at`.
  * `along-length`: the cut line runs along the sheet length, at constant y = `at`.
  */
-export type CutOrientation = 'along-length' | 'across-length'
+export type CutOrientation = 'along-length' | 'across-length';
 
 /**
  * Guillotine cut tree. Leaves carry their own size; node positions are implied by the cuts:
@@ -60,61 +60,68 @@ export type CutOrientation = 'along-length' | 'across-length'
 export type CutTree =
   | { kind: 'part'; key: string; instance: number; length: number; width: number; rotated: boolean }
   | { kind: 'waste'; length: number; width: number }
-  | { kind: 'cut'; orientation: CutOrientation; at: number; kerf: number; first: CutTree; second: CutTree }
+  | {
+      kind: 'cut';
+      orientation: CutOrientation;
+      at: number;
+      kerf: number;
+      first: CutTree;
+      second: CutTree;
+    };
 
 export interface Placement {
-  key: string
+  key: string;
   /** 1..quantity of the part. */
-  instance: number
-  x: number
-  y: number
+  instance: number;
+  x: number;
+  y: number;
   /** Extent along x (sheet length). */
-  length: number
+  length: number;
   /** Extent along y (sheet width). */
-  width: number
+  width: number;
   /** True when the part's length lies along the sheet width. Always false for grained jobs. */
-  rotated: boolean
+  rotated: boolean;
 }
 
 export interface SheetLayout {
-  index: number
-  length: number
-  width: number
-  usable: Rect
+  index: number;
+  length: number;
+  width: number;
+  usable: Rect;
   /** Tree covering exactly `usable`. */
-  tree: CutTree
-  placements: Placement[]
+  tree: CutTree;
+  placements: Placement[];
 }
 
-export type UnplacedReason = 'too-large' | 'no-sheet-left' | 'invalid-job'
+export type UnplacedReason = 'too-large' | 'no-sheet-left' | 'invalid-job';
 
 export interface Unplaced {
-  key: string
-  instance: number
-  reason: UnplacedReason
+  key: string;
+  instance: number;
+  reason: UnplacedReason;
 }
 
 export interface NestStats {
-  sheetsUsed: number
-  partArea: number
-  sheetArea: number
-  trimArea: number
-  kerfArea: number
-  wasteArea: number
+  sheetsUsed: number;
+  partArea: number;
+  sheetArea: number;
+  trimArea: number;
+  kerfArea: number;
+  wasteArea: number;
   /** Area of the largest single waste rectangle (mm²). */
-  largestLeftover: number
+  largestLeftover: number;
   /** partArea / sheetArea, 0 when no sheet is used. */
-  utilisation: number
-  cuts: number
+  utilisation: number;
+  cuts: number;
 }
 
 export interface NestResult {
-  materialId: string
-  sheets: SheetLayout[]
-  unplaced: Unplaced[]
-  stats: NestStats
-  search: { attempts: number; elapsedMs: number; seed: number }
+  materialId: string;
+  sheets: SheetLayout[];
+  unplaced: Unplaced[];
+  stats: NestStats;
+  search: { attempts: number; elapsedMs: number; seed: number };
   /** Set from `validateNest`; a layout with errors is never shown or exported. */
-  valid: boolean
-  errors: string[]
+  valid: boolean;
+  errors: string[];
 }

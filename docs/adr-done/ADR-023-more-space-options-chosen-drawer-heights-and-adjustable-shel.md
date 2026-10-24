@@ -22,7 +22,7 @@ shelving is adjustable on the 32 mm system.
   setting) and the sides they sit between get a **pin-row annotation**: hole-row positions on the 32 mm grid from
   the front and back edges, listed with the part. It is an annotation for the shop, labelled as such; no drilling
   depth or hardware model is claimed (ADR-010).
-Both are optional fields, so the design document stays version-compatible (validated as optional).
+  Both are optional fields, so the design document stays version-compatible (validated as optional).
 
 ## Alternatives considered
 

@@ -92,11 +92,11 @@ environment's network policy (proxy 403). OCR path not exercised (no Tesseract i
 ## Done when
 
 - [x] `python3 -I -m unittest discover tools/catalog` passes (dimensions incl. cm, quantities, article numbers,
-  labels vs steps, drawing regions, no-text warning, identical output, URL refused)
+      labels vs steps, drawing regions, no-text warning, identical output, URL refused)
 - [ ] Run on a real IKEA assembly manual (BILLY 80, downloaded from ikea.com to a scratch directory): 800, 280
-  and 2020 mm are among the dimension facts with their page; two runs give byte-identical `extraction.json`
+      and 2020 mm are among the dimension facts with their page; two runs give byte-identical `extraction.json`
 - [ ] A page without a text layer in that or another real manual gives `ocr-unavailable` (or OCR text when
-  Tesseract is installed), never a crash
+      Tesseract is installed), never a crash
 - [ ] No `.pdf`, page image or `extraction.json` is tracked under `tools/catalog/` or `src/core/catalog/`
-  (a test asserts it)
+      (a test asserts it)
 - [ ] `tools/catalog/README.md` gives the exact commands and the result of the real-manual run

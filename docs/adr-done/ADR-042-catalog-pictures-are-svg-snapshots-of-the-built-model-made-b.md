@@ -52,6 +52,6 @@ WebGL in the build and change between GPU drivers.
 
 ## Answers (2026-10-23, from the user)
 
-1. **Pictures also in *Start from*** (New, Add a piece) — changes the default; built 2026-10-23 (backlog N36): `ItemPicture` in `src/ui/Catalog.tsx` on every *Start from* row.
+1. **Pictures also in _Start from_** (New, Add a piece) — changes the default; built 2026-10-23 (backlog N36): `ItemPicture` in `src/ui/Catalog.tsx` on every _Start from_ row.
 2. **Families edited on this device get a picture drawn in the browser** with the same renderer — changes the
    default; built 2026-10-23 (backlog N36): drawn with `snapshotSvg` from the built model, as an in-memory picture.

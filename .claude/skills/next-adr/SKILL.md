@@ -55,11 +55,11 @@ ADRs are all in `docs/adr-done/`.
    Skip the split only if the user asks.
 3. **Start building — do not ask for permission.** Announce the number and title in one
    line. Stop and ask only when a dependency is blocked, or when a physical or supplier
-   fact is unknown (record it under *Open questions* in `docs/backlog.md`; never invent it).
+   fact is unknown (record it under _Open questions_ in `docs/backlog.md`; never invent it).
 4. **Read only what the ADR points to:** the ADR, its `Depends on` ADRs, the design
    reference, and the current code it touches (not docs alone).
 5. **Scope.** For each change ask "needed to demonstrate this now?" — if not, it goes under
-   *Skipped this iteration*. Non-trivial choices get a short Explore → Doubt → Compare.
+   _Skipped this iteration_. Non-trivial choices get a short Explore → Doubt → Compare.
 6. **Implement** one vertical slice that meets the `Done when` list. Keep `src/core` pure;
    add a test for every new rule. Use the matching skill:
    - saved data or a new Dexie table → `add-storage-version`

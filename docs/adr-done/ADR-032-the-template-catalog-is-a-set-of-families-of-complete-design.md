@@ -13,8 +13,8 @@
 
 The user asked for a template for every furniture type in their list (seating, sleeping, tables, storage; living
 room, bedroom, dining room, home office, outdoor), plus kitchen cabinets, each with its default structure and the
-configurations it supports. The templates must appear in **Start from** (the *New* dialog and the project's *Add a
-piece* list, `src/ui/Dialogs.tsx`, `src/ui/Project.tsx`) and all of them in a **Catalog** tab, grouped by room with a
+configurations it supports. The templates must appear in **Start from** (the _New_ dialog and the project's _Add a
+piece_ list, `src/ui/Dialogs.tsx`, `src/ui/Project.tsx`) and all of them in a **Catalog** tab, grouped by room with a
 toggle to group by type.
 
 A first proposal (research report, 2026-10-22) modelled templates as a formula language (`"W - 2*T"` part sizes,
@@ -32,7 +32,7 @@ model knowledge), it is rejected:
 ## Decision
 
 - **A template family** is catalog data, not code: `{ id, name, aliases[], function, rooms[], primaryRoom, root,
-  support, dims: { min, max, widthGrid? }, configurations[], variants[1..5], catalogVersion }`.
+support, dims: { min, max, widthGrid? }, configurations[], variants[1..5], catalogVersion }`.
   - `function` ∈ `seating | sleeping | tables | storage | kitchen`.
   - `rooms[]` ⊂ `living | bedroom | dining | office | outdoor | kitchen | hallway | kids | other` (tags; a family
     shows in every room it lists).
@@ -45,13 +45,13 @@ model knowledge), it is rejected:
   `validateDesign`. There is no formula, inheritance or override layer; dimensions come from the root builders.
 - **Insert = deep copy.** Picking a variant creates a new design id and records
   `catalog.origin { catalogId: family id, variantId, revision: catalogVersion }` (ADR-028). Later catalog changes
-  never reach existing designs; an explicit *Compare with template* may come later.
+  never reach existing designs; an explicit _Compare with template_ may come later.
 - **Start from** lists families with their default variant first; a chevron opens the other variants. The Catalog
-  page (ADR-027) gains a **Templates** source next to *Brands* and *Saved on this device*.
-- **Grouping:** a segmented control *Room | Type*, default **Room** (user's instruction), persisted per device in
+  page (ADR-027) gains a **Templates** source next to _Brands_ and _Saved on this device_.
+- **Grouping:** a segmented control _Room | Type_, default **Room** (user's instruction), persisted per device in
   `localStorage` wrapped in try/catch. Room view lists a family under each of its rooms (primary room first, others
-  badged *also in*); Type view lists it once under `function`. Counts come from in-memory filtering, outside Zustand
-  selectors. An *Other* group catches untagged families.
+  badged _also in_); Type view lists it once under `function`. Counts come from in-memory filtering, outside Zustand
+  selectors. An _Other_ group catches untagged families.
 - **Cards are projections:** size, part count and the check badge come from `buildModel()` of the variant (ADR-004).
 - The full family list and every variant is kept in `docs/catalog.md`; the code catalog
   (`src/core/catalog/`, one module per family) must match it.
@@ -84,8 +84,8 @@ without errors, every room/function value is known, `docs/catalog.md` lists exac
 ## Open questions (defaults used until answered)
 
 1. Room list — default the user's five plus Kitchen, Hallway, Kids, Other.
-2. Should *reference* families (sofas, recliners …) appear in **Start from**, or only in the Catalog tab?
-   Default: Catalog tab only, so *Start from* never offers something that cannot be built.
+2. Should _reference_ families (sofas, recliners …) appear in **Start from**, or only in the Catalog tab?
+   Default: Catalog tab only, so _Start from_ never offers something that cannot be built.
 
 ## Implementation (2026-10-23)
 
@@ -110,13 +110,13 @@ Verification 2026-10-23 (branch `feat/catalog-templates`): `npm run lint`, `npm 
 ## Amendment (2026-10-23, after the user's review)
 
 The first build put the catalog in a dialog behind an unlabelled icon and listed families, not items. Corrected:
-the Catalog is a **page** with its own always-labelled tab in the top bar (*Editor | Catalog*) and a `#catalog`
+the Catalog is a **page** with its own always-labelled tab in the top bar (_Editor | Catalog_) and a `#catalog`
 link; it lists **every item** (117 variants in 42 families) with the family's default structure and configurations;
-*Start from* lists every item that opens, with search. Every family now has at least one item that opens (frame
+_Start from_ lists every item that opens, with search. Every family now has at least one item that opens (frame
 shells for recliner, desk chair, flat lounger and sectional sections); safety-regulated items open after the user's
 confirmation (ADR-035). Acceptance is a find-it test from the bare app (see `docs/retros/2026-10-23-catalog.md`).
 
 ## Answers (2026-10-23, from the user)
 
 1. Rooms — the user's five plus Kitchen, Hallway, Kids, Other (default kept).
-2. Superseded by the amendment: every family now has items that open, so all appear in *Start from*.
+2. Superseded by the amendment: every family now has items that open, so all appear in _Start from_.

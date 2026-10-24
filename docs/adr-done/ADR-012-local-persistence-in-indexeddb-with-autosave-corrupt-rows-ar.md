@@ -17,7 +17,7 @@ destroyed by the app.
 Dexie database `furniture-builder`, version 1, table `designs (id, updatedAt, name)` holding whole design documents; version 2 adds `projects` (ADR-022).
 The open design autosaves ~400 ms after each change; the last open design id is a per-device convenience in
 localStorage. Rows that fail `validateDesign` are skipped on load and left in place. Schema versions are never
-edited after shipping; changes add `version(n+1)`. Users keep durable copies with *Design file* export.
+edited after shipping; changes add `version(n+1)`. Users keep durable copies with _Design file_ export.
 
 ## Alternatives considered
 

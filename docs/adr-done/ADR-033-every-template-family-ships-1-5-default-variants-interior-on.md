@@ -56,7 +56,7 @@ Tylko's category pages are one engine with different starting configurations.
 ## Compliance check
 
 When accepted: tests check variant counts against the limits, that every `interior` variant builds with zero errors
-at its default size and at the family's `dims.min`/`dims.max`, that *Apply layout* keeps the root id and outer
+at its default size and at the family's `dims.min`/`dims.max`, that _Apply layout_ keeps the root id and outer
 bounds, and that a variant with unmet `requires[]` cannot be inserted.
 
 ## Open questions (defaults used until answered)
@@ -69,7 +69,7 @@ bounds, and that a variant with unmet `requires[]` cannot be inserted.
 57 are interior-only; 96 can be inserted today, 16 wait (⏳) for a construction that is not built (`shape`,
 `front:fixed`, `front:lid`, `frame:arms`, `frame:modules`, `frame:under-storage`) or for safety values.
 `hardware:user` variants insert with `catalog.hardwareToChoose` set, which raises a warning until the user marks it
-chosen. *Apply layout* offers the inside of every insertable interior cabinet variant on any space (keeps the
+chosen. _Apply layout_ offers the inside of every insertable interior cabinet variant on any space (keeps the
 space id, one undo step).
 
 Differences from the text above: variant names are English only (families have a Romanian name, `nameRo`);
@@ -85,4 +85,4 @@ Verification 2026-10-23 (branch `feat/catalog-templates`): `npm run lint`, `npm 
 
 ## Answers (2026-10-23, from the user)
 
-1. Superseded: *Start from* lists every item individually, with the item count in its heading.
+1. Superseded: _Start from_ lists every item individually, with the item count in its heading.

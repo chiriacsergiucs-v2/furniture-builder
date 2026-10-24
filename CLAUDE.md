@@ -71,7 +71,7 @@ implement it. Read `docs/adr/README.md` for the conventions and the index.
 
 - File name: `ADR-NNN-short-kebab-title.md` (3-digit number).
 - Status: `Pending`, `Deferred (<reason>)` or `Implemented`. Never set `Implemented` by hand.
-- An ADR is agreed by the user. Unconfirmed defaults stay under *Open questions* in the ADR.
+- An ADR is agreed by the user. Unconfirmed defaults stay under _Open questions_ in the ADR.
 - Implemented ADRs are not edited; a changed decision gets a new ADR that links the old one.
 - Check `docs/adr/` and `docs/adr-done/` before proposing an alternative to a settled choice.
 - Authority: explicit user decision › implemented ADR › code and tests › earlier discussion › proposal.
@@ -92,7 +92,7 @@ Lifecycle, one skill per step:
 - User input never throws and is never clamped silently; problems are diagnostics, checked independently of the
   generators; errors block export. Never hide or soften an error diagnostic (ADR-008).
 - Never invent hardware specs, loads, drilling depths, screw specs or supplier values; label guidance as
-  guidance (ADR-010). An unknown physical fact goes under *Open questions* in `docs/backlog.md`; ask the user.
+  guidance (ADR-010). An unknown physical fact goes under _Open questions_ in `docs/backlog.md`; ask the user.
 - Validate designs before load or import; imported designs get new ids; never persist generated geometry. A
   change to `src/core/types.ts`, the design document or the model shape cites or creates an ADR, and a new
   document shape bumps `schemaVersion` and keeps old readers (ADR-011).
@@ -118,7 +118,7 @@ Lifecycle, one skill per step:
 ## Process (standing user rules)
 
 - Smallest functional slice; for each change ask "needed to demonstrate this now?" — if not, it goes under
-  *Skipped this iteration*.
+  _Skipped this iteration_.
 - Update `docs/backlog.md` in the same change; change a status only with evidence (command output or a CI
   run id). Label evidence from documents differently from evidence you ran.
 - Pushed ≠ merged ≠ deployed ≠ live-verified. Never claim tests or deployments that did not run. "Live-verified"

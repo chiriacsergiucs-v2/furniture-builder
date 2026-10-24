@@ -18,8 +18,8 @@ preview; stack and delivery at the architect's discretion on a new branch.
 
 All application code, tests and docs from the previous app are removed. Nothing reads the old Dexie database
 (`mobila-cutlist-build-kit`), old localStorage keys or old JSON backups, and nothing deletes them either: the new
-app uses a new database name. Product *constraints* the user stated earlier (offline, no backend, exact millimetres,
-honest claims, pre-MVP process rules) are re-adopted as fresh ADRs; product *code* is not.
+app uses a new database name. Product _constraints_ the user stated earlier (offline, no backend, exact millimetres,
+honest claims, pre-MVP process rules) are re-adopted as fresh ADRs; product _code_ is not.
 
 ## Alternatives considered
 

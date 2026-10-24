@@ -17,18 +17,18 @@ there is no backend (ADR-002); app updates must be able to fix a shipped templat
 
 ## Decision
 
-- **Shipped families are read-only.** *Edit* on a shipped family or variant creates a **local template** that
+- **Shipped families are read-only.** _Edit_ on a shipped family or variant creates a **local template** that
   shadows it on this device: `{ id, shadows?: familyId, revision, family }` stored in a new Dexie table
   `templates` (a new Dexie version; shipped versions are never edited).
 - **What can be edited:** family name, aliases, rooms and function (grouping), the configurations text, variant
   names/order/default, and each variant's design — opened in the normal editor (elevation + inspector) in a
-  *Template* mode whose Save writes back to the local template, not the library. Variants can be added (still ≤ 5,
+  _Template_ mode whose Save writes back to the local template, not the library. Variants can be added (still ≤ 5,
   ADR-033), duplicated or deleted. Root and `support` are not editable.
 - Card-level quick edits (name, rooms) are inline; everything else is in a side panel or the editor.
-- **Badges and reset.** A shadowing template shows *Edited on this device*; *Reset to shipped* deletes only the
+- **Badges and reset.** A shadowing template shows _Edited on this device_; _Reset to shipped_ deletes only the
   local row after confirmation. When the app ships a newer `catalogVersion` of a shadowed family the card says
-  *Shipped template updated* and offers *Compare* / *Keep mine* / *Use shipped*; nothing is replaced silently.
-- **New families** can be created from any saved design (*Save as template*), tagged with rooms and function.
+  _Shipped template updated_ and offers _Compare_ / _Keep mine_ / _Use shipped_; nothing is replaced silently.
+- **New families** can be created from any saved design (_Save as template_), tagged with rooms and function.
 - Local templates are exported and imported as a JSON file validated like designs (`validateDesign` per variant
   plus the family checks); unreadable rows are skipped and kept (ADR-012).
 - Start from and the Catalog read the merged view: local templates first, shadowed shipped ones hidden.
@@ -52,21 +52,21 @@ there is no backend (ADR-002); app updates must be able to fix a shipped templat
 ## Compliance check
 
 When accepted: storage tests show the upgrade keeps every existing row; edit → reload → the local template wins;
-*Reset* removes only that row; a corrupt template row is skipped and still present; the shipped family object is
+_Reset_ removes only that row; a corrupt template row is skipped and still present; the shipped family object is
 deep-equal before and after editing.
 
 ## Open questions (defaults used until answered)
 
-1. Should local templates appear in *Start from* above shipped ones (default) or mixed in by room/type order?
+1. Should local templates appear in _Start from_ above shipped ones (default) or mixed in by room/type order?
 
 ## Implementation (2026-10-23)
 
 Dexie version 3 adds the `templates` table (versions 1 and 2 untouched). Editing a shipped family creates a local
 template that shadows it; names, other names, rooms, type, structure and configuration text, variant names, order
-(first = default), duplicate and delete (1–5) are edited in the Catalog page; *Edit design* opens the variant in the
-normal editor in template mode (banner: *Save to template* / *Cancel*; nothing is written to the library). *Save this
-piece as a template* makes a new family. *Reset to shipped* deletes only the local row. A newer shipped
-`catalogVersion` shows *Keep mine* / *Use shipped* with the variant counts; *Compare* is that count line only. Local
+(first = default), duplicate and delete (1–5) are edited in the Catalog page; _Edit design_ opens the variant in the
+normal editor in template mode (banner: _Save to template_ / _Cancel_; nothing is written to the library). _Save this
+piece as a template_ makes a new family. _Reset to shipped_ deletes only the local row. A newer shipped
+`catalogVersion` shows _Keep mine_ / _Use shipped_ with the variant counts; _Compare_ is that count line only. Local
 templates export and import as one JSON file, each validated. Open question 1: local templates come first (default).
 
 Evidence: `src/persist/db.ts` (v3, `saveTemplate`, `listTemplates`, `deleteTemplate`), `src/core/catalog/local.ts`,

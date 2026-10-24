@@ -39,11 +39,11 @@ catalog?: {
 - **Shipped entries** carry `category`, `brand`, `productName`, `sourceUrl` and no `origin`.
 - **Copying** a shipped entry (ADR-027) sets `origin` from it. Duplicating, exporting, importing a file and
   embedding in a project all keep `catalog` unchanged, so the link survives every edit of the copy.
-- **Edited vs. original** is derived, never stored: the editor shows *Based on BRAND PRODUCT (rev N)* with a link
-  to the in-app entry and, when present, the external `sourceUrl`. *Differs from original* compares the copy's
+- **Edited vs. original** is derived, never stored: the editor shows _Based on BRAND PRODUCT (rev N)_ with a link
+  to the in-app entry and, when present, the external `sourceUrl`. _Differs from original_ compares the copy's
   `buildModel()` cut list with the entry's.
 - **Brand on edited copies.** A copy keeps `origin.brand`, but its own `brand` is cleared on the first edit: the
-  modified piece is the user's design *based on* that product, not a product of that brand.
+  modified piece is the user's design _based on_ that product, not a product of that brand.
 - External links are plain anchors the user clicks (`rel="noopener noreferrer"`); the app never requests them
   (ADR-002).
 - `validateDesign` checks the field when present (strings, length caps, known category, integer revision,
@@ -78,19 +78,19 @@ reported by `validateDesign` and never throw; (4) the first edit clears `brand` 
 
 ## Open questions (defaults used until answered)
 
-1. Clear `brand` on the first edit of a copy (default) or keep it with a *modified* badge?
+1. Clear `brand` on the first edit of a copy (default) or keep it with a _modified_ badge?
 
 ## Implementation (2026-10-23)
 
 `Design.catalog` (`CatalogMeta`) exists with the fields above plus `origin.variantId` and `hardwareToChoose`
 (hardware still to choose from a datasheet, ADR-033). `validateDesign` checks it (length caps, integer revision,
-http(s) links only). Inserting a catalog variant sets `origin`; the editor shows *Based on …*; the first edit clears
+http(s) links only). Inserting a catalog variant sets `origin`; the editor shows _Based on …_; the first edit clears
 `brand` and keeps `origin.brand` (open question 1: default used). No `schemaVersion` bump, no Dexie version for this.
 
 Evidence: `src/core/types.ts`, `src/core/design.ts` (`validateCatalog`), `src/core/catalog/index.ts` (`insertVariant`),
 `src/store/designStore.ts` (`commit`), `src/ui/Editors.tsx` (`PieceInfo`); `tests/store.test.ts` (origin
 byte-identical through edit, duplicate, export/import and project embed; brand cleared on first edit),
-`tests/constructions.test.ts` (validation). Not built: *Differs from original* comparison.
+`tests/constructions.test.ts` (validation). Not built: _Differs from original_ comparison.
 
 Verification 2026-10-23 (branch `feat/catalog-templates`): `npm run lint`, `npm run typecheck`, `npm test` (157 passed), `npm run build` passed; `FUZZ_N=30000` fuzz passed (cabinets with the new fronts and flags, and frames); scripted headless Chromium against the production build at 1280 and 390 px, 18/18 checks, no page errors, no sideways scroll. Six code mutations each fail a test. Not checked on a real phone, with a screen reader, or on the deployed site.
 

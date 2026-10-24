@@ -21,7 +21,7 @@ edit a shipped Dexie version, and never delete rows the app cannot read (ADR-012
   - field range problems,
   - `validateDesign` messages,
   - `buildModel()` errors.
-  These are the same errors that block export (ADR-008).
+    These are the same errors that block export (ADR-008).
 - The piece then gets a new id and timestamps, and `catalog.category` is set from the Basics answer (ADR-028,
   an optional field, so no schema bump). It is saved with the existing `saveDesign()` and opened in the editor with
   the store's `load()`.

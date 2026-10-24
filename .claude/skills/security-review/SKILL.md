@@ -56,7 +56,7 @@ app loads or sends over the network**. This review is engineering guidance, not 
      saved designs lost or overwritten by a crafted file, code execution through an export.
    - **Medium:** a crafted file hangs or crashes the tab, formula injection in the CSV.
    - **Low / hardening:** missing Content-Security-Policy meta tag, defense in depth.
-   Finish with what you checked, what you did not, and what needs the user's decision.
+     Finish with what you checked, what you did not, and what needs the user's decision.
 
 ## Rules
 

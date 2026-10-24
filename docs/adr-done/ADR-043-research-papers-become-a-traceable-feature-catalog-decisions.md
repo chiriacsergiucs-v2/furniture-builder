@@ -91,7 +91,7 @@ re-imports leave decisions unchanged.
 
 1. **No** automatic backlog entry on approval (default confirmed).
 2. **Keep the tab label "Feature Research"** on every width (default confirmed).
-The decision is built as recorded (backlog N33), so the ADR is Accepted.
+   The decision is built as recorded (backlog N33), so the ADR is Accepted.
 
 ## Addendum 2026-10-23 — assessment of unrated features (backlog N37)
 

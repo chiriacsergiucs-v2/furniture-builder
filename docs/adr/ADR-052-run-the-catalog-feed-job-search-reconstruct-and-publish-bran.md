@@ -12,7 +12,7 @@
 
 ADR-029 decided a four-stage catalog feed and built stage 2, the extraction script. This ADR is the scheduled
 job's part: **search** for manuals, **reconstruct** products as designs, **publish** them through a pull request,
-so the Catalog's *Brands* tab (ADR-027) gets real products. The weekly routine "Furniture catalog feed" exists
+so the Catalog's _Brands_ tab (ADR-027) gets real products. The weekly routine "Furniture catalog feed" exists
 outside the repository; on 2026-10-23 its runs stopped because ikea.com was refused by the environment's network
 policy and web search was not available.
 
@@ -47,7 +47,7 @@ policy and web search was not available.
   label, or product-page field), status `identified` / `geometrically resolved` / `manufacturing verified` (three
   states, never a percentage), derivation dependencies, the manual's `sha256` from the extraction, and the list of
   unresolved fields. Values the model needs but the sources do not give (e.g. board thickness not printed) use the
-  app defaults **and are listed as unresolved**; the card and editor show *Dimensions not verified for cutting* for
+  app defaults **and are listed as unresolved**; the card and editor show _Dimensions not verified for cutting_ for
   any entry with unresolved fields. Documented hardware is recorded with its printed quantity; the app's hardware
   schedule stays guidance (ADR-010) until a hardware ADR maps documented hardware into the model.
 - **Gate: a pull request.** Each run works on branch `claude/catalog-feed`, keeps one open PR, never pushes
@@ -81,8 +81,8 @@ policy and web search was not available.
 
 - [ ] `tools/catalog/candidates.json` exists and every processed candidate has a status (and a reason when skipped)
 - [ ] A test asserts every brand entry validates, builds with no errors, carries `catalog.brand` and an origin,
-  and has an evidence file covering overall width, height and depth
+      and has an evidence file covering overall width, height and depth
 - [ ] The first entry, IKEA BILLY 80, builds at 800 × 280 × 2020 mm with every value traced to the manual or
-  listed as unresolved; the card shows *Dimensions not verified for cutting* while any field is unresolved
+      listed as unresolved; the card shows _Dimensions not verified for cutting_ while any field is unresolved
 - [ ] The job's output reaches `main` only through a merged pull request (`git log main`)
-- [ ] Find-it test: Catalog → *Brands* shows the entry at phone and desktop widths and *Use this piece* opens a copy
+- [ ] Find-it test: Catalog → _Brands_ shows the entry at phone and desktop widths and _Use this piece_ opens a copy

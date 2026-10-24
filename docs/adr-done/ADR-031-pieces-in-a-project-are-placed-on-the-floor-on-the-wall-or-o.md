@@ -57,4 +57,4 @@ the cabinet generator could not build.
 
 ## Answers (2026-10-23, from the user)
 
-1. A piece placed above another **keeps its own turn**. 2. *Wall* placement **warns and asks** instead of switching to brackets. 3. The gap tool stays **hidden** for pieces placed above another. All three match what was built (backlog N19, N20 Done).
+1. A piece placed above another **keeps its own turn**. 2. _Wall_ placement **warns and asks** instead of switching to brackets. 3. The gap tool stays **hidden** for pieces placed above another. All three match what was built (backlog N19, N20 Done).

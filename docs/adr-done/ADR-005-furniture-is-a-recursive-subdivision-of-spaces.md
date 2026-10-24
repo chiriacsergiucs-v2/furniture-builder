@@ -17,7 +17,7 @@ doors over that. Established cabinet software works the same way. A fixed menu o
 A cabinet's interior is a tree of `Space` nodes. A space is `empty`, `shelves(count)`, `drawers(count)`,
 `hanging(railDrop)`, or `split(axis, sizes[], children[])`; any space may also carry `doors(1|2)`. Split sizes are
 `mm` (fixed) or `fr` (share of the remainder). Dividers between split parts are real panels. Doors over a space that
-contains drawers make those drawers *internal* (no applied fronts, set back for hinge clearance). Tree edits are pure
+contains drawers make those drawers _internal_ (no applied fronts, set back for hinge clearance). Tree edits are pure
 functions (`mapSpace`, `changeKind`, `splitSpace`, `unsplit`) that preserve node ids.
 
 ## Alternatives considered

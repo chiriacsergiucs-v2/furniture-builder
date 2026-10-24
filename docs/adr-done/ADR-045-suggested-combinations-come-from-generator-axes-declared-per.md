@@ -39,7 +39,7 @@ must not rely on hand-made UI maths (ADR-004) or invented popularity.
   - `shelves-crowded` removes too many shelves for the height.
   - `drawer-low` removes too many drawers.
   - `door-small` removes doors on bays that are too narrow.
-  Changing the sizes changes which cards survive. Warnings stay and show a badge with their count.
+    Changing the sizes changes which cards survive. Warnings stay and show a badge with their count.
 - **Duplicates.** Two candidates that build the same product (ids ignored) are one card; the first one met is kept.
 - **Ranking.** The type default comes first. Each next card is the candidate with the largest least Hamming distance
   (over axis values) to the cards already chosen, so the cards spread across the axes. Ties go to enumeration
@@ -85,4 +85,4 @@ doors, and no axis may write a key owned by an earlier step.
 ## Answers (2026-10-23, from the user)
 
 1. **Keep 6 cards first, "Show more" by 6, cap 64 per step** (default confirmed).
-The decision is built as recorded (backlog N34), so the ADR is Accepted.
+   The decision is built as recorded (backlog N34), so the ADR is Accepted.

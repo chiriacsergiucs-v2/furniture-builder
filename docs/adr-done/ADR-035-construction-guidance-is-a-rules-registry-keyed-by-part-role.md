@@ -18,7 +18,7 @@ Mobila already runs independent checks in `build.ts` (ADR-008) and hinge bands i
 ## Decision
 
 - `src/core/rules.ts` holds a list of rules `{ code, appliesTo: role | product kind | family function, check(model,
-  design, settings) → Diagnostic[] }`, run by `buildModel` after the generators, for **every** design (catalog or
+design, settings) → Diagnostic[] }`, run by `buildModel` after the generators, for **every** design (catalog or
   hand-built).
 - Thresholds are **settings with defaults**, stored per design under `settings.rules` only when changed, labelled
   "typical — confirm for your board and hardware". First set (values unverified, from research; confirm before
@@ -70,8 +70,8 @@ Thresholds used (open question 1 not answered yet): shelf span **900 mm for 18 m
 750 / 900 values above were not adopted without the user's confirmation. Door 600, hanger depth 530, tilt-up when a
 room height is set (uses the smaller of width and depth). Anti-tip is a hardware line on floor storage over 1000 mm
 ("Anti-tip wall fixing"), not a warning, so tall pieces do not carry a permanent warning. Bunk beds and cradles carry
-a permanent *not a compliance check* warning and their catalog variants cannot be inserted. Settings are editable
-per piece in the *Checks* group.
+a permanent _not a compliance check_ warning and their catalog variants cannot be inserted. Settings are editable
+per piece in the _Checks_ group.
 
 Evidence: `src/core/rules.ts`, `src/core/build.ts`, `src/ui/Editors.tsx` (`ChecksGroup`);
 `tests/constructions.test.ts` (rules registry block, 6 tests), `tests/catalog.test.ts` (shipped variants only carry
@@ -81,8 +81,8 @@ Verification 2026-10-23 (branch `feat/catalog-templates`): `npm run lint`, `npm 
 
 ## Amendment (2026-10-23)
 
-Safety-regulated items (bunk bed, cradle) open once the user ticks *I check safety-regulated items against the
-standards myself* on the Catalog page (stored on this device); their *not a compliance check* warning stays.
+Safety-regulated items (bunk bed, cradle) open once the user ticks _I check safety-regulated items against the
+standards myself_ on the Catalog page (stored on this device); their _not a compliance check_ warning stays.
 
 ## Answers (2026-10-23, from the user)
 

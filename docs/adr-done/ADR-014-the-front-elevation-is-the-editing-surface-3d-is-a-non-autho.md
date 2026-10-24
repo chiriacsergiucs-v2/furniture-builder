@@ -34,7 +34,7 @@ else works.
 
 ## Addendum 2026-10-22: exploded 3D view (user request, backlog N12)
 
-An *Exploded 3D* toggle spreads the panels of the 3D preview: each panel's centre moves away from its piece's centre
+An _Exploded 3D_ toggle spreads the panels of the 3D preview: each panel's centre moves away from its piece's centre
 by half their distance again, and each piece away from the room's centre; sizes never change and the lowest panel
 stays on the floor. Pure function `explode()` in `src/core/explode.ts`; display only, parts/sheets/checks use the
 built model. `tests/explode.test.ts` and the fuzz test check that exploded panels never overlap.

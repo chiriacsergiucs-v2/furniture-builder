@@ -21,7 +21,7 @@ picture the user picks needs none. Manufacturer and type labels are deferred to 
 - **Picture on a material.** `Material.image = { id, name, tileLength, tileWidth, turn? }` (`src/core/types.ts`).
   - The design stores only this reference.
   - The bytes live in the new Dexie **version 5** table `images`. Each row is `{ id, name, type, width, height,
-    bytes: ArrayBuffer, createdAt }`, stored as bytes rather than a Blob so every browser can store it. Earlier
+bytes: ArrayBuffer, createdAt }`, stored as bytes rather than a Blob so every browser can store it. Earlier
     tables are unchanged (ADR-012).
 - **Import** (`src/persist/images.ts`):
   - Accepted: PNG, JPEG and WebP up to 30 MB.
@@ -84,6 +84,7 @@ picture the user picks needs none. Manufacturer and type labels are deferred to 
 ## Compliance check
 
 `npx vitest run tests/surface.test.ts` checks the following:
+
 - files are refused with a message, never a throw;
 - the scale-down is correct;
 - bad references fail validation;

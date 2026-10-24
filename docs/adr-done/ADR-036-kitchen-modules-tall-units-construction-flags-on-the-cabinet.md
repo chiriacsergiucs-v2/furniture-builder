@@ -30,9 +30,9 @@ construction Mobila lacks. The parts retail planners most often leave out are ex
 - **Front-only element** (`panel` product, a new tiny root): an integrated dishwasher/fridge door or a cover panel —
   one front-material panel with handle holes, no carcass; fixing hardware user-specified.
 - **Run-level parts belong to projects** (ADR-022, ADR-031): along a run of floor pieces the project can add
-  *filler* (gap width + scribe allowance setting), *end cover panel* (exposed sides), *plinth* (run length, setback)
-  and *worktop* (run length, depth, thickness, joints at corners). Each is a project-level panel in the combined cut
-  list with its reason ("filler — gap 37 mm + 20 mm scribe"). *Fill run* proposes widths from the family width grid
+  _filler_ (gap width + scribe allowance setting), _end cover panel_ (exposed sides), _plinth_ (run length, setback)
+  and _worktop_ (run length, depth, thickness, joints at corners). Each is a project-level panel in the combined cut
+  list with its reason ("filler — gap 37 mm + 20 mm scribe"). _Fill run_ proposes widths from the family width grid
   with the remainder as a filler.
 - Lift-up flaps, carousels, U-cut sink drawers, pull-out frames and waste systems are `requires: ['hardware:user']`
   (and the U-cut is also non-box); they stay greyed until hardware data exists (ADR-010).
@@ -68,7 +68,7 @@ cut list, and a 3-piece run whose filler, cover panel, plinth and worktop appear
 
 Built: `topKind: 'rails'` (+ `railDepth`), `bottom: 'none'`, appliance niches on empty spaces (sizes typed by the
 user; error when the niche does not fit; hardware line), the `panel` root (dishwasher / fridge front, cover panel,
-filler with a fixing-kit line), tall-cabinet family, and project **run parts**: *Suggest worktop, fillers and covers*
+filler with a fixing-kit line), tall-cabinet family, and project **run parts**: _Suggest worktop, fillers and covers_
 finds rows of base units (cabinet or corner, no turn, on the floor, up to 950 mm high, gaps ≤ 150 mm) and adds one
 worktop (deepest unit + 20 mm overhang, 38 mm worktop board), a filler in each gap and a cover panel on each open end
 that does not hit another piece, each with its reason, in the combined cut list and sheets; a run part that later

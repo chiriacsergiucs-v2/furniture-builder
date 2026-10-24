@@ -18,9 +18,9 @@ parts are still axis-aligned boxes (ADR-004), but many are solid timber cut from
 ## Decision
 
 - New root `frame` (ADR-007): `FrameParams { kind: 'table' | 'bench' | 'stool' | 'chair' | 'bed', width, depth,
-  height, top?, legs: { section, inset }, rails: { height, thickness, set: 'apron' | 'trestle' | 'panel-ends' },
-  stretchers?, slats?: { width, thickness, gap, ledger }, back?: { height, rails | slats }, deck? ,
-  headboard?/footboard? (bed), tiers? (bunk) }`. Topology is fixed per `kind`; there is no space tree, except that a
+height, top?, legs: { section, inset }, rails: { height, thickness, set: 'apron' | 'trestle' | 'panel-ends' },
+stretchers?, slats?: { width, thickness, gap, ledger }, back?: { height, rails | slats }, deck? ,
+headboard?/footboard? (bed), tiers? (bunk) }`. Topology is fixed per `kind`; there is no space tree, except that a
   bench, bed or table may hold a **cabinet** for under-storage (drawers under a bed, a coffee-table drawer) built by
   `buildCabinet` with an origin offset, as desk pedestals are.
 - **Stock kind:** `Material.stock: 'sheet' | 'solid'` (absent = sheet). Solid parts go to a **lengths list** (by

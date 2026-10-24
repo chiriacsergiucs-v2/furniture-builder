@@ -14,7 +14,7 @@
 
 The user asked for "a multistep wizard to create a piece of furniture for the catalog". It should ask width, height and
 depth, then a type ("rectangle frame for example"), then "dividers, shelves, drawers or not, doors and so on", and end
-with a new piece. It must be "rather universal", with "broad general coverage". Until now *New* offered only a
+with a new piece. It must be "rather universal", with "broad general coverage". Until now _New_ offered only a
 project, the built-in rooms and copies of catalog items (ADR-030 answer 3, 2026-10-23: "No guided New flow"). The
 user's new request replaces that answer. The model already represents everything the wizard asks for: carcass, split
 spaces (dividers), shelves, drawers, hanging, doors (one, pair, sliding), back, plinth or wall mount (ADR-005,
@@ -63,8 +63,8 @@ cabinet's base is plinth, none or wall-hung, and legs come with the table and be
     the sizes and the name follow the chosen type's defaults.
   - The UI (`src/ui/Wizard.tsx`) renders fields by kind only and has no branch on a type id. A live picture, the part
     count and the problems sit beside every step.
-- **Entry points** (found by visible text): *New* → "New piece, step by step", and the Catalog page → "New piece"
-  (the Catalog tab is labelled at every width; the *New* label is hidden on narrow screens).
+- **Entry points** (found by visible text): _New_ → "New piece, step by step", and the Catalog page → "New piece"
+  (the Catalog tab is labelled at every width; the _New_ label is hidden on narrow screens).
 - Geometry stays in `buildModel()` (ADR-004). The wizard only writes whole-mm parameters (ADR-003). Previews,
   part counts and diagnostics are projections of the built model. Defaults are layout defaults the user can change,
   not hardware facts (ADR-010).
@@ -90,7 +90,7 @@ cabinet's base is plinth, none or wall-hung, and legs come with the table and be
 ## Evidence (repository files)
 
 - `src/core/wizard/types.ts`, `steps.ts`, `registry.ts`, `engine.ts`; `src/ui/Wizard.tsx`; `src/ui/Dialogs.tsx`
-  (*New* → "New piece").
+  (_New_ → "New piece").
 - `tests/wizard.test.ts` (30 tests: answers → design for every type, visibility, diagnostics on invalid input, no
   type id in the engine, suggestion engine or wizard UI, save → catalog).
 - `tools/wizard/find-it.mjs`: browser acceptance from the bare app at 1440 and 375 px (not part of `npm test`).

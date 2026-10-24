@@ -9,7 +9,7 @@ checks; errors block CSV (ADR-008). Cut list = finished sizes, L/W edge counts, 
 is a labelled schedule (ADR-010). Design = self-contained validated JSON (ADR-011). Dexie `furniture-builder` v1,
 autosave, never delete unreadable rows (ADR-012). Front elevation edits; 3D previews (ADR-014). Tests: core +
 seeded fuzz + storage; no browser suite by default (ADR-015). Process: smallest slice, evidence-only ledger in
-`docs/backlog.md`, end replies with *Skipped this iteration* (ADR-016).
+`docs/backlog.md`, end replies with _Skipped this iteration_ (ADR-016).
 
 User decisions 2026-10-21: kerf 4 mm; PAL/HDF 2800 × 2070, MDF 2440 × 1220; trim 10 mm; full sheets only; A4 portrait;
 Romanian on paper and CSV; never subtract edge band; ball-bearing side runners; 35 mm soft-close clip-on hinges;

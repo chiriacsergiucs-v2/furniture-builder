@@ -52,7 +52,7 @@ hardware present; a flap schedules its stay line and warns until named; fuzz pic
 Built as decided with the defaults (overlap 30, track 80). Sliding doors are two planes at the carcass front and
 `tf + 2` mm in front of it; the cabinet envelope check allows the track depth. Under the inset front style sliding
 doors take the inset front zone (so gaps line up with neighbouring fronts) and a warning says inset does not apply.
-Flaps schedule a stay line and warn until the fitting is named. The inspector's *Front* control offers None / Door /
+Flaps schedule a stay line and warn until the fitting is named. The inspector's _Front_ control offers None / Door /
 Pair / Sliding / Flap.
 
 Evidence: `src/core/types.ts` (`SlidingFront`, `FlapFront`), `src/core/cabinet.ts`, `src/core/design.ts`

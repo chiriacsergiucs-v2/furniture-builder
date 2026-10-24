@@ -15,7 +15,7 @@ wrong across nested dividers.
 ## Decision
 
 Fronts sit in front of the carcass (`z ∈ [depth, depth + front thickness]`) and overlay it. Each space carries a
-*front zone*: at outer carcass edges a front stops `floor(gap/2)` short of the edge; across an inner divider the
+_front zone_: at outer carcass edges a front stops `floor(gap/2)` short of the edge; across an inner divider the
 neighbouring fronts meet at the divider's centre line minus `floor(gap/2)` and `ceil(gap/2)`, so the gap between any
 two neighbouring fronts is exactly `frontGap`. Drawer fronts in a space are separated by `frontGap`.
 
