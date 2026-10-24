@@ -1,6 +1,7 @@
 /**
  * The Mobila rooms, rebuilt as native projects from the project file `MOBILA_TOATE_CAMERELE_AI_CAD_PAL_MDF.json`
- * (format 2.0.0, 2026-10-22). Every size below is taken from that file; where the app builds a part differently
+ * (format 2.0.0, 2026-10-22). Living was re-done from the catalog's base cabinets at the user's request (2026-10-24);
+ * it keeps the file's envelope and boards. Every other size below is taken from that file; where the app builds a part differently
  * from the file, `docs/samples/mobila.md` lists the difference. Nothing here is invented: unknown values (backs,
  * plinths, drawer box boards) use the app's own defaults and are listed there as open.
  *
@@ -9,11 +10,13 @@
  * request), the RHS workbench (an envelope with no member list) and the variants the file marks as not for production
  * (nightstand B, the simplified bed) are not built.
  */
+import { findFamily } from '../catalog'
 import { defaultDrawers, defaultMaterials, fr, mm } from '../design'
 import type { Placement, Project, ProjectItem } from '../project'
-import type { CabinetParams, Design, LoosePanel, Material, Product, Space } from '../types'
+import type { CabinetParams, Design, LoosePanel, Material, Product } from '../types'
 
 const STAMP = '2026-10-22T00:00:00.000Z'
+const LIVING_STAMP = '2026-10-24T00:00:00.000Z'
 
 /** Boards named as in the file. Sheet sizes from "Estimare servicii Salice.txt": PAL 2800 × 2070, MDF 2800 × 1220. */
 const materials = (): Material[] => {
@@ -48,43 +51,45 @@ const panelSet = (id: string, name: string, panels: LoosePanel[], note: string, 
 const part = (id: string, name: string, length: number, width: number, materialId: string, quantity = 1): LoosePanel =>
   ({ id, name, length, width, materialId, quantity })
 
-const bay = (id: string, shelves: number): Space => ({ id, kind: 'shelves', count: shelves, front: { kind: 'doors', count: 1 } })
-
-/**
- * A row of five bays (JOS and SUS): top and bottom 2685 run over the sides, four uprights 399 high,
- * bays 510 · 519 · 519 · 519 · 510, one fixed shelf and one door per bay.
- */
-const run = (id: string): Space => ({
-  id, kind: 'split', axis: 'x', sizes: [mm(510), fr(), fr(), fr(), mm(510)], front: null,
-  children: [1, 2, 3, 4, 5].map(i => bay(`${id}-b${i}`, 1)),
-})
-
 const item = (id: string, d: Design, x: number, placement: Placement, quantity = 1): ProjectItem =>
   ({ id, design: d, quantity, position: { x, y: 0, z: 0 }, rotationY: 0, placement })
 
-/** Living_2026_535: the tall column on the left, the low run on the floor and the high run hung above it. */
-export function mobilaLiving(): Project {
-  const coloana = design('mobila-coloana', 'Coloana', carcass({
-    width: 535, height: 2600, depth: 400, top: 'between', bottom: 'between',
-    // Upper compartment 410 high behind its own door; four shelves behind the tall door below the fixed shelf.
-    interior: {
-      id: 'col-in', kind: 'split', axis: 'y', sizes: [mm(410), fr()], front: null,
-      children: [
-        { id: 'col-sus', kind: 'shelves', count: 0, front: { kind: 'doors', count: 1 } },
-        { id: 'col-jos', kind: 'shelves', count: 4, front: { kind: 'doors', count: 1 } },
-      ],
-    },
-  }))
-  const jos = design('mobila-jos', 'Corp jos (JOS)', carcass({ width: 2685, height: 435, depth: 400, bottom: 'under', interior: run('jos-in') }))
-  const sus = design('mobila-sus', 'Corp sus (SUS)', carcass({ width: 2685, height: 435, depth: 400, bottom: 'under', mount: 'wall', mountHeight: 2165, interior: run('sus-in') }))
+/**
+ * A Mobila cabinet made from the catalog's "Base cabinet, doors" family (variants "1 door + shelf" and "2 doors +
+ * shelf": one shelf behind one or two doors), sized to the Living wall and built with the Mobila boards. The origin
+ * link is kept (ADR-0028) with fixed ids and stamp, so the generator stays deterministic.
+ */
+const fromBase = (id: string, name: string, doors: 1 | 2, over: Partial<CabinetParams> & Pick<CabinetParams, 'width'>): Design => {
+  const family = findFamily('base-doors')!
+  const variant = family.variants.find(v => v.id === (doors === 1 ? 'base-door' : 'base-2-doors'))!
   return {
-    schemaVersion: 1, id: 'mobila-living', name: 'Mobila — Living', createdAt: STAMP, updatedAt: STAMP, cutting: { kerf: 4 },
-    items: [
-      item('living-coloana', coloana, 0, { kind: 'floor' }),
-      item('living-jos', jos, 535, { kind: 'floor' }),
-      // SUS bottom at 2165 in the file: 1730 mm above the 435 mm JOS.
-      item('living-sus', sus, 535, { kind: 'above', baseId: 'living-jos', gap: 1730, offsetX: 0 }),
-    ],
+    ...design(id, name, carcass({ height: 435, depth: 400, bottom: 'under', ...over, interior: { id: `${id}-in`, kind: 'shelves', count: 1, front: { kind: 'doors', count: doors } } })),
+    catalog: {
+      category: family.name,
+      origin: { catalogId: family.id, variantId: variant.id, revision: family.catalogVersion, productName: `${family.name} — ${variant.name}`, takenAt: LIVING_STAMP },
+    },
+  }
+}
+
+/** Living wall 3220 wide (the file's envelope): four doors of equal width, so 805 · 1610 · 805. */
+export const LIVING_WIDTHS = [805, 1610, 805] as const
+
+/**
+ * Living, re-done from the catalog (user request 2026-10-24): per row a 1-door base cabinet on the left, then a 2-door
+ * and a 1-door base cabinet. The floor row stands on the floor; the ceiling row is the same three cabinets hung on wall
+ * brackets, each 1730 mm above its floor cabinet (underside 2165, top 2600, as the file's SUS).
+ */
+export function mobilaLiving(): Project {
+  const doors = [1, 2, 1] as const
+  const xs = LIVING_WIDTHS.map((_, i) => LIVING_WIDTHS.slice(0, i).reduce((a, w) => a + w, 0))
+  const floor = LIVING_WIDTHS.map((width, i) => item(`living-jos-${i + 1}`,
+    fromBase(`mobila-jos-${i + 1}`, `Corp jos ${i + 1} (${doors[i]} ${doors[i] === 1 ? 'ușă' : 'uși'})`, doors[i], { width }), xs[i], { kind: 'floor' }))
+  const ceiling = LIVING_WIDTHS.map((width, i) => item(`living-sus-${i + 1}`,
+    fromBase(`mobila-sus-${i + 1}`, `Corp sus ${i + 1} (${doors[i]} ${doors[i] === 1 ? 'ușă' : 'uși'})`, doors[i], { width, mount: 'wall', mountHeight: 2165 }),
+    xs[i], { kind: 'above', baseId: `living-jos-${i + 1}`, gap: 1730, offsetX: 0 }))
+  return {
+    schemaVersion: 1, id: 'mobila-living', name: 'Mobila — Living', createdAt: STAMP, updatedAt: LIVING_STAMP, cutting: { kerf: 4 },
+    items: [...floor, ...ceiling],
   }
 }
 
@@ -132,6 +137,6 @@ export function mobilaDormitor(): Project {
 export interface SampleProject { id: string; name: string; description: string; create: () => Project }
 
 export const sampleProjects: SampleProject[] = [
-  { id: 'mobila-living', name: 'Mobila — Living', description: 'Column 535 × 2600, low run 2685 × 435 on the floor, high run hung 1730 mm above it', create: mobilaLiving },
+  { id: 'mobila-living', name: 'Mobila — Living', description: 'Catalog base cabinets, 1 door + 2 doors + 1 door (805 · 1610 · 805 × 435), on the floor and the same three hung at the ceiling (underside 2165)', create: mobilaLiving },
   { id: 'mobila-dormitor', name: 'Mobila — Dormitor', description: 'Two nightstands A, 450 × 400, two drawers; Pat Noi bed frame (sides screwed to the foot board)', create: mobilaDormitor },
 ]
