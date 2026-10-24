@@ -1,7 +1,8 @@
 # ADR-068: Render a photo-quality still of the 3D view on a laptop and save it as PNG
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-24
+- Implemented: 2026-10-24 (User live-verified; see Done when)
 - Depends on: ADR-002, ADR-067
 - Design: docs/ui-design.md (§3 Button, Dialog; §4 the 3D view)
 - Backlog: N63
@@ -11,7 +12,7 @@
 The user, 2026-10-24: "I want to be able to design furniture and give it realistic looks, with the
 possibility of rendering high quality 3d designs of it, to sell designed kitchens as an example."
 Their answers: renders happen on a **laptop**, **preview quality** (a picture a client accepts, not
-magazine quality), start with step 1 ([ADR-067](ADR-067-give-the-3d-view-a-realistic-look-board-finishes-room-light.md),
+magazine quality), start with step 1 ([ADR-067](../adr-done/ADR-067-give-the-3d-view-a-realistic-look-board-finishes-room-light.md),
 realistic live view) and step 2 (this ADR, a rendered still).
 
 A live WebGL view, however well lit, approximates light. A path tracer follows light bounces and
@@ -62,23 +63,26 @@ in the browser, offline, with nothing uploaded (ADR-002).
 
 ## Done when
 
-- [ ] The 3D view shows **Render**; it opens _Render a picture_ with the two sizes (find-it at
+- [x] The 3D view shows **Render**; it opens _Render a picture_ with the two sizes (find-it at
       390 px and 1280 px)
-- [ ] Start shows "Rendering… n / 256 samples" rising; Cancel stops it (scripted browser check)
-- [ ] A finished render offers **Save PNG** and the file is a PNG of the chosen size (scripted
+- [x] Start shows "Rendering… n / 256 samples" rising; Cancel stops it (scripted browser check)
+- [x] A finished render offers **Save PNG** and the file is a PNG of the chosen size (scripted
       browser check at 1280 × 720)
-- [ ] The path tracer is in its own chunk, fetched only after Render is pressed, and precached by
+- [x] The path tracer is in its own chunk, fetched only after Render is pressed, and precached by
       the service worker (build output and scripted network log)
-- [ ] No third-party request at runtime (scripted network log)
-- [ ] Without WebGL 2 the dialog says "Rendering needs WebGL 2 on this device" (unit test on the
+- [x] No third-party request at runtime (scripted network log)
+- [x] Without WebGL 2 the dialog says "Rendering needs WebGL 2 on this device" (unit test on the
       capability check)
-- [ ] All CI checks pass (`pnpm lint`, `format:check`, `typecheck`, `test`, `build`, `docs:check`)
+- [x] All CI checks pass (`pnpm lint`, `format:check`, `typecheck`, `test`, `build`, `docs:check`)
+- Evidence (ran in the session, 2026-10-24): `tests/look-render.test.ts`; CI `verify` green on PR
+  #40; find-it at 1280 px: Render dialog with both sizes, path tracer not fetched before Start and
+  fetched after; `pathtrace-*.js` listed in `dist/sw.js`; a scripted run rose 0 → 15 samples in
+  100 s on a software GPU; build scan: no `fetch` in the path-tracer chunk.
+- Evidence (checked by the user on the live app, Deploy GitHub Pages run 40130617175): a full render
+  to 256 / 256 and Save PNG on a laptop; Render, Start and Cancel at phone width.
+- Not checked: the full render at 1280 × 720 in the scripted run (a software GPU needs ~25 min).
 
-## Open questions
+## Answers
 
-- Samples per render — default 256 (preview quality); more is sharper and slower.
-- Sizes — default 1920 × 1080 and 1280 × 720; add 4K or square for social media?
-- Background — default the room as built (walls and floor if the project has a room, otherwise a
-  light studio floor).
-- Precache the render chunk — default yes (offline); no would save install size but need a network
-  the first time.
+The user accepted the ADRs and the defaults ("Push, then implement", 2026-10-24): 256 samples;
+1920 × 1080 and 1280 × 720; the room as built or a light studio floor; the render chunk precached.

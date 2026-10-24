@@ -1,7 +1,8 @@
 # ADR-067: Give the 3D view a realistic look: board finishes, room light and soft shadows
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-24
+- Implemented: 2026-10-24 (User live-verified; see Done when)
 - Depends on: ADR-014, ADR-048
 - Design: docs/ui-design.md (§3 Segmented, §4 Materials and the 3D view)
 - Backlog: N62
@@ -11,7 +12,7 @@
 The user, 2026-10-24: "I want to be able to design furniture and give it realistic looks, with the
 possibility of rendering high quality 3d designs of it, to sell designed kitchens as an example."
 Asked where and how well, they answered: "Laptop, preview quality, start with step 1 and 2". Step 1
-is this ADR (a realistic live 3D view); step 2 is [ADR-068](ADR-068-render-a-photo-quality-still-of-the-3d-view-on-a-laptop-and.md)
+is this ADR (a realistic live 3D view); step 2 is [ADR-068](../adr-done/ADR-068-render-a-photo-quality-still-of-the-3d-view-on-a-laptop-and.md)
 (a rendered still). Export to Blender (step 3) is not asked for.
 
 Today the viewer (`src/viewer/Viewer3D.tsx`, ADR-014) draws every panel with `meshStandardMaterial`
@@ -68,22 +69,28 @@ drei (ADR-013); the viewer stays lazy and select-only (ADR-014); no network (ADR
 
 ## Done when
 
-- [ ] `finish` validates (three values accepted, anything else rejected, absent = matte) and
+- [x] `finish` validates (three values accepted, anything else rejected, absent = matte) and
       round-trips through export/import (unit test)
-- [ ] `finish` never changes the cut list, CSV, nesting, costs or print (unit test)
-- [ ] `finishLook` gives a distinct roughness per finish, gloss lowest (unit test)
-- [ ] The Materials dialog shows **Finish** with _Matte · Satin · Gloss_ and the 3D view shows
+- [x] `finish` never changes the cut list, CSV, nesting, costs or print (unit test)
+- [x] `finishLook` gives a distinct roughness per finish, gloss lowest (unit test)
+- [x] The Materials dialog shows **Finish** with _Matte · Satin · Gloss_ and the 3D view shows
       **Simple · Realistic**; the choice survives a reload (find-it at 390 px and 1280 px)
-- [ ] _Realistic_ shows environment light, tone mapping, soft shadows and ambient occlusion, and the
+- [x] _Realistic_ shows environment light, tone mapping, soft shadows and ambient occlusion, and the
       selected part is still highlighted (screenshots at 1280 px, light and dark)
-- [ ] The production build makes no third-party request and the 3D chunk still loads only when the
+- [x] The production build makes no third-party request and the 3D chunk still loads only when the
       3D view is visible (build output and scripted network log)
-- [ ] All CI checks pass (`pnpm lint`, `format:check`, `typecheck`, `test`, `build`, `docs:check`)
+- [x] All CI checks pass (`pnpm lint`, `format:check`, `typecheck`, `test`, `build`, `docs:check`)
+- Evidence (ran in the session, 2026-10-24): `tests/look-render.test.ts` (8 tests), `pnpm test` 380
+  tests; CI `verify` green on PR #40; `tools/look-render/find-it.mjs` at 1280 px passed Finish, Look
+  (default Realistic) and no sideways scroll; screenshots light and dark, selection tinted; build
+  scan: the 3D and path-tracer chunks contain no `fetch` and only URLs in shader comments.
+- Evidence (checked by the user on the live app, Deploy GitHub Pages run 40130617175): Finish and Look
+  on a laptop, phone width (Finish, Look, no sideways scroll), Look kept after reload.
+- Built differently from the decision: in _Realistic_ the selection is the green tint only (drei's
+  outline is a mesh the occlusion pass smears); Look and Render also show at ≥ 1500 px, where the 3D
+  view sits beside the front view.
 
-## Open questions
+## Answers
 
-- Roughness/clearcoat per finish — default matte 0.85, satin 0.5, gloss 0.15 + clearcoat 0.6;
-  tune by eye on your laptop.
-- Default look by width — default _Realistic_ ≥ 1024 px, _Simple_ below.
-- Bundled wood and stone textures (for example CC0 décors) — default none: plain colour or your own
-  pictures (ADR-048). Bundling needs your licence choice and a one-time download.
+The user accepted the ADRs and the defaults ("Push, then implement", 2026-10-24): finish values matte
+0.85, satin 0.5, gloss 0.15 + clearcoat 0.6; Realistic by default at ≥ 1024 px; no bundled textures.
