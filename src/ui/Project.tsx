@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type KeyboardEvent } from 'react'
+import { mergeCandidates } from '../core/merge'
 import { leftNeighbour, placementBases, suggestRunParts, type Placement, type ProjectItem, type ProjectModel, type QuarterTurn } from '../core/project'
 import type { Panel } from '../core/types'
 import { listDesigns, loadDesign, type StoredDesign } from '../persist/db'
@@ -87,6 +88,7 @@ export function ProjectPanel({ onAdd }: { onAdd: () => void }) {
               <Toggle label="Move the pieces on its right too" checked={moveRight} onChange={setMoveRight} />
             </>
           ) : <p className="hint">No piece on its left at this height; set “From left” to place it.</p>}
+          <MergeFields item={item} />
           {piece && <p className="hint">Takes {piece.bounds.w} × {piece.bounds.d} mm of floor, {piece.bounds.h} mm high.</p>}
           <button type="button" className="danger-link" onClick={async () => { if (await askConfirm(`Remove “${item.design.name}” from this project?`, { confirmLabel: 'Remove', danger: true })) remove(item.id) }}>Remove from project</button>
         </section>
@@ -94,6 +96,30 @@ export function ProjectPanel({ onAdd }: { onAdd: () => void }) {
 
       <MmField label="Saw cut (kerf) for this project" value={project.cutting?.kerf ?? 4} min={0} max={20} step={1}
         onChange={v => updateProject(p => ({ ...p, cutting: { kerf: v } }))} />
+    </div>
+  )
+}
+
+/** Merge the selected piece with a cabinet touching it on the left or right (ADR-0047). */
+function MergeFields({ item }: { item: ProjectItem }) {
+  const project = useDesign(s => s.project)!
+  const merge = useDesign(s => s.mergeItems)
+  const candidates = useMemo(() => mergeCandidates(project, item.id), [project, item.id])
+  return (
+    <div className="merge-fields">
+      <h4>Merge into one piece</h4>
+      {candidates.length === 0 ? (
+        <p className="hint">Nothing touches it on the left or right. Set the gap to 0 next to another cabinet to merge the two.</p>
+      ) : candidates.map(c => (
+        <div key={c.item.id}>
+          <button type="button" className="btn outline" disabled={c.issues.length > 0} onClick={async () => {
+            const [l, r] = c.side === 'right' ? [item, c.item] : [c.item, item]
+            if (!(await askConfirm(`Merge “${l.design.name}” and “${r.design.name}” into one cabinet? The two sides that meet become one divider; each keeps its contents and fronts. This cannot be undone.`, { confirmLabel: 'Merge' }))) return
+            merge(item.id, c.item.id)
+          }}>Merge with {c.item.design.name} on the {c.side}</button>
+          {c.issues.length > 0 && <ul className="hint" role="note">{c.issues.map(x => <li key={x}>{x}</li>)}</ul>}
+        </div>
+      ))}
     </div>
   )
 }

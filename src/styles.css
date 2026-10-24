@@ -472,6 +472,10 @@ td.note { color: var(--ink-2); font-size: var(--fs-xs); }
 .pieces { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-1); }
 .pieces .row-btn { grid-template-columns: 1fr auto; }
 .piece-edit { display: grid; gap: var(--s-3); }
+.merge-fields { display: grid; gap: var(--s-2); min-width: 0; }
+.merge-fields h4 { margin: 0; }
+.merge-fields .btn { white-space: normal; text-align: left; max-width: 100%; padding-block: var(--s-2); }
+.merge-fields ul { margin: var(--s-1) 0 0; padding-left: 1.2em; }
 .list-head { margin: 0; font-size: var(--fs-xs); font-weight: 600; color: var(--ink-2); text-transform: uppercase; letter-spacing: .04em; }
 .plan-views { height: 100%; display: grid; grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); }
 .plan { margin: 0; height: 100%; min-height: 0; padding: 4px 16px 16px; display: grid; grid-template-rows: 1fr auto; }

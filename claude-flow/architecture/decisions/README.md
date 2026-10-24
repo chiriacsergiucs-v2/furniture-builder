@@ -151,3 +151,11 @@ Requested by the user on 2026-10-23 (replaces ADR-0030 answer 3, "No guided New 
 | [ADR-0044](ADR-0044.md) | "New piece" is a data-driven wizard: step library + construction-type registry map answers to a design | N34 | Accepted |
 | [ADR-0045](ADR-0045.md) | Suggested combinations from generator axes declared per type, kept only when `buildModel()` has no errors | N34 | Accepted |
 | [ADR-0046](ADR-0046.md) | A wizard result is an ordinary saved design in the existing `designs` table; no Dexie version | N34 | Accepted |
+
+## Projects — merge
+
+Requested by the user on 2026-10-24.
+
+| ID | Decision | Backlog | Status |
+|---|---|---|---|
+| [ADR-0047](ADR-0047.md) | Two touching cabinets in a project merge into one cabinet; any other difference refuses the merge | N41 | Proposed |

@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { buildModel } from '../core/build'
 import { findInProduct, mapProductSpace, templates, upgradeDesign } from '../core/design'
+import { mergeItems } from '../core/merge'
 import { buildProjectModel, makeItem, removeProjectItem, resolvePlacements, setGapLeft, type Project, type ProjectItem, type ProjectModel } from '../core/project'
 import type { CabinetParams, CornerParams, DeskParams, Design, FrameParams, FurnitureModel, Material, PanelParams, PanelSetParams, Space } from '../core/types'
 import type { LocalTemplate } from '../core/catalog/local'
@@ -67,6 +68,8 @@ interface State {
   updateItem: (id: string, patch: Partial<ProjectItem>) => void
   setGap: (id: string, gap: number, moveRight: boolean) => void
   removeItem: (id: string) => void
+  /** Merge two touching cabinets into one (ADR-0047); returns why not, or an empty list. */
+  mergeItems: (a: string, b: string) => string[]
   selectItem: (id: string | null) => void
   editItem: (id: string) => void
   backToProject: () => void
@@ -147,6 +150,13 @@ export const useDesign = create<State>((set, get) => {
     updateItem: (id, patch) => { const p = get().project; if (p) commitProject({ ...p, items: p.items.map(i => (i.id === id ? { ...i, ...patch } : i)) }) },
     setGap: (id, gap, moveRight) => { const p = get().project; if (p) { const next = setGapLeft(p, id, gap, moveRight); if (next !== p) commitProject(next) } },
     removeItem: id => { const p = get().project; if (p) { commitProject(removeProjectItem(p, id)); set({ selectedItemId: null }) } },
+    mergeItems: (a, b) => {
+      const p = get().project
+      if (!p) return ['No project is open.']
+      const res = mergeItems(p, a, b)
+      if (res.mergedId) { commitProject(res.project); set({ selectedItemId: res.mergedId }) }
+      return res.issues
+    },
     selectItem: id => set({ selectedItemId: id }),
     editItem: id => {
       const item = get().project?.items.find(i => i.id === id)
