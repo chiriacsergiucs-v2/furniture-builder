@@ -4,6 +4,8 @@
  * millimetres and rotations quarter turns about the vertical axis, so every panel stays an axis-aligned box.
  */
 import { buildModel } from './build';
+import { localClearances, type Clearance } from './clearance';
+import { roomChecks, validateRoom, type Room } from './room';
 import { cutlist, hardwareSummary, type CutRow } from './cutlist';
 import { DEFAULT_KERF, newId, sheetOf, upgradeDesign, validateDesign } from './design';
 import { overlaps, union } from './geometry';
@@ -13,6 +15,7 @@ import { jobsFromCutlist } from './nesting';
 import type { NestJob } from './nesting/types';
 import type {
   Box,
+  CabinetParams,
   Design,
   Diagnostic,
   Face,
@@ -60,7 +63,15 @@ export interface ProjectItem {
  */
 export interface RunPart {
   id: string;
-  kind: 'worktop' | 'filler' | 'cover';
+  kind: 'worktop' | 'filler' | 'cover' | 'plinth';
+  /** What it is made from (ADR-061): kind + source piece ids + end; stable across refreshes. Absent in older files. */
+  key?: string;
+  /** Ids of the pieces it was derived from (ADR-061); a run plinth replaces these pieces' own plinths (ADR-054). */
+  from?: string[];
+  /** Extra width cut for scribing to the wall or a neighbour (ADR-054); the installed size is `box`. */
+  scribe?: Mm;
+  /** Shown once after an automatic refresh changed this part ("2400 → 3000 mm long"). */
+  changed?: string;
   label: string;
   reason: string;
   box: Box;
@@ -80,6 +91,19 @@ export interface Project {
   cutting?: { kerf: Mm };
   /** Run parts (ADR-036). Absent = none, as in projects saved before. */
   runParts?: RunPart[];
+  /** Run-part settings (ADR-054, ADR-061). Absent = scribe 0, no automatic refresh. */
+  runSettings?: RunSettings;
+  /** Keys of run parts the user removed; an automatic refresh never brings them back (ADR-061). */
+  runPartsRemoved?: string[];
+  /** The room: walls, doors, windows, obstacles (ADR-058/0056). Absent = no room checks. */
+  room?: Room;
+}
+
+export interface RunSettings {
+  /** Scribe allowance added to the cut width of fillers, mm (ADR-054). */
+  scribe: Mm;
+  /** Suggest run parts again after every change of the pieces (ADR-061). */
+  auto: boolean;
 }
 
 export function newProject(name = 'New project'): Project {
@@ -258,6 +282,13 @@ export function rotateBox(b: Box, r: QuarterTurn): Box {
   }
 }
 
+const FACING: Record<QuarterTurn, PlacedPiece['facing']> = {
+  0: { axis: 'z', sign: 1 },
+  90: { axis: 'x', sign: 1 },
+  180: { axis: 'z', sign: -1 },
+  270: { axis: 'x', sign: -1 },
+};
+
 const swap = (a: Panel['thicknessAxis'], r: QuarterTurn) =>
   r % 180 === 0 ? a : a === 'x' ? 'z' : a === 'z' ? 'x' : 'y';
 
@@ -266,14 +297,23 @@ export interface PlacedPiece {
   model: FurnitureModel;
   panels: Panel[];
   bounds: Box;
+  /** Space its doors, drawers and flaps need to open, in room coordinates (ADR-057). */
+  clearances: Clearance[];
+  /** The room axis and sign the piece's front faces: its clearances grow that way. */
+  facing: { axis: 'x' | 'z'; sign: 1 | -1 };
 }
 
 /** Build one item and move its panels into the room. Panel and node ids are prefixed with the item id. */
-export function placeItem(item: ProjectItem): PlacedPiece {
-  const model = buildModel(item.design);
+export function placeItem(item: ProjectItem, opts?: { noPlinth?: boolean }): PlacedPiece {
+  const built = buildModel(item.design);
+  // A run plinth replaces the piece's own plinth (ADR-054).
+  const model = opts?.noPlinth
+    ? { ...built, panels: built.panels.filter((p) => p.role !== 'plinth') }
+    : built;
   const r = item.rotationY;
   const rotated = model.panels.map((p) => rotateBox(p.box, r));
-  const rb = union(model.panels.map((p) => rotateBox(aabbOf(p), r)));
+  // The piece is placed by its full outline, so leaving the plinth out does not move it.
+  const rb = union(built.panels.map((p) => rotateBox(aabbOf(p), r)));
   const dx = item.position.x - rb.x,
     dy = item.position.y - rb.y,
     dz = item.position.z - rb.z;
@@ -299,7 +339,24 @@ export function placeItem(item: ProjectItem): PlacedPiece {
         }
       : {}),
   }));
-  return { item, model, panels, bounds: union(panels.map(aabbOf)) };
+  const full = { x: rb.x + dx, y: rb.y + dy, z: rb.z + dz, w: rb.w, h: rb.h, d: rb.d };
+  const clearances = localClearances(model).map((c) => {
+    const rc = rotateBox(c.box, r);
+    return {
+      ...c,
+      panelId: `${item.id}:${c.panelId}`,
+      box: { ...rc, x: rc.x + dx, y: rc.y + dy, z: rc.z + dz },
+    };
+  });
+  const facing = FACING[r];
+  return {
+    item,
+    model,
+    panels,
+    bounds: model === built ? union(panels.map(aabbOf)) : full,
+    clearances,
+    facing,
+  };
 }
 
 export const placedBounds = (item: ProjectItem): Box => placeItem(item).bounds;
@@ -321,11 +378,14 @@ export interface ProjectModel {
   piecePanels: Panel[][];
   materials: Material[];
   diagnostics: Diagnostic[];
+  /** Clearances that hit something (ADR-057), for the plan outline of the selected piece. */
+  blocked: { itemId: string; box: Box }[];
 }
 
 export function buildProjectModel(input: Project): ProjectModel {
   const project = resolvePlacements(input);
-  const pieces = project.items.map(placeItem);
+  const covered = plinthCovered(project);
+  const pieces = project.items.map((i) => placeItem(i, { noPlinth: covered.has(i.id) }));
   const materials = new Map<string, Material>();
   const panels: Panel[] = [];
   const piecePanels: Panel[][] = [];
@@ -399,7 +459,23 @@ export function buildProjectModel(input: Project): ProjectModel {
         nodeId: pc.item.id,
       });
   // Run parts (ADR-036): their own panels, checked against every piece like pieces are against each other.
+  const placedById = new Map(pieces.map((pc) => [pc.item.id, pc]));
   for (const rp of project.runParts ?? []) {
+    // Made for pieces that are gone, or a run plinth no longer as long as its pieces (refresh off, ADR-061).
+    const src = (rp.from ?? []).map((id) => placedById.get(id));
+    const stale =
+      src.some((pc) => !pc) ||
+      (rp.kind === 'plinth' &&
+        src.length > 0 &&
+        (Math.min(...src.map((pc) => pc!.bounds.x)) !== rp.box.x ||
+          Math.max(...src.map((pc) => pc!.bounds.x + pc!.bounds.w)) !== rp.box.x + rp.box.w));
+    if (stale)
+      diagnostics.push({
+        severity: 'error',
+        code: 'run-part-stale',
+        message: `${rp.label} was made for pieces that changed or were removed; suggest the run parts again.`,
+        nodeId: `run:${rp.id}`,
+      });
     const k = materialKey(rp.material);
     if (!materials.has(k)) materials.set(k, { ...rp.material, id: k, sheet: sheetOf(rp.material) });
     const panel = runPanel(rp, k);
@@ -416,6 +492,21 @@ export function buildProjectModel(input: Project): ProjectModel {
         nodeId: `run:${rp.id}`,
       });
   }
+  // The room (ADR-058): walls, obstacles, door swings and windows; obstacles also block openings (ADR-057).
+  const rc = project.room
+    ? roomChecks(
+        project.room,
+        pieces.map((pc) => ({
+          id: pc.item.id,
+          name: pc.item.design.name,
+          bounds: pc.bounds,
+          hitsPanels: (b: Box) => pc.panels.some((q) => overlapsBox(q, b)),
+          clearances: pc.clearances,
+        })),
+      )
+    : null;
+  if (rc) diagnostics.push(...rc.diagnostics, ...rc.clearanceIssues);
+  const blocked = openingChecks(pieces, panels, diagnostics, rc?.obstacles ?? []);
   const model: FurnitureModel = {
     panels,
     spaces: [],
@@ -423,7 +514,75 @@ export function buildProjectModel(input: Project): ProjectModel {
     diagnostics,
     bounds: union(panels.map(aabbOf)),
   };
-  return { pieces, model, piecePanels, materials: [...materials.values()], diagnostics };
+  return { pieces, model, piecePanels, materials: [...materials.values()], diagnostics, blocked };
+}
+
+// ---------------------------------------------------------------------------
+// Opening clearance (ADR-057)
+// ---------------------------------------------------------------------------
+
+/** Free room in front of a clearance's front before `hit` (mm), along the piece's facing. */
+function freeBefore(c: Clearance, f: PlacedPiece['facing'], hit: Box): Mm {
+  const k = f.axis,
+    w = k === 'x' ? 'w' : 'd';
+  return Math.max(0, f.sign > 0 ? hit[k] - c.box[k] : c.box[k] + c.box[w] - (hit[k] + hit[w]));
+}
+
+/**
+ * Warn when the space a front needs to open is taken by another piece, a run part or a wall feature (`obstacles`),
+ * and when two pieces' openings swing into the same space. Warnings only: export stays allowed (ADR-008, ADR-010).
+ */
+function openingChecks(
+  pieces: PlacedPiece[],
+  allPanels: Panel[],
+  diagnostics: Diagnostic[],
+  obstacles: { label: string; box: Box }[] = [],
+): { itemId: string; box: Box }[] {
+  const blocked: { itemId: string; box: Box }[] = [];
+  for (const pc of pieces) {
+    const own = `${pc.item.id}:`;
+    for (const c of pc.clearances) {
+      const hits = [
+        ...allPanels
+          .filter((q) => !q.id.startsWith(own) && overlapsBox(q, c.box))
+          .map((q) => ({
+            box: aabbOf(q),
+            name: q.id.startsWith('run:')
+              ? q.label
+              : (pieces.find((o) => q.id.startsWith(`${o.item.id}:`))?.item.design.name ?? q.label),
+          })),
+        ...obstacles
+          .filter((o) => overlaps(o.box, c.box))
+          .map((o) => ({ box: o.box, name: o.label })),
+      ];
+      if (!hits.length) continue;
+      const near = hits.reduce((a, b) =>
+        freeBefore(c, pc.facing, b.box) < freeBefore(c, pc.facing, a.box) ? b : a,
+      );
+      blocked.push({ itemId: pc.item.id, box: c.box });
+      diagnostics.push({
+        severity: 'warning',
+        code: 'opening-blocked',
+        message: `${c.label} of ${pc.item.design.name} cannot open fully: it hits ${near.name} (needs ${c.need} mm, ${freeBefore(c, pc.facing, near.box)} mm free).`,
+        nodeId: pc.item.id,
+      });
+    }
+  }
+  for (let a = 0; a < pieces.length; a++)
+    for (let b = a + 1; b < pieces.length; b++) {
+      const clash = pieces[a].clearances.find((x) =>
+        pieces[b].clearances.some((y) => overlaps(x.box, y.box)),
+      );
+      if (!clash) continue;
+      const other = pieces[b].clearances.find((y) => overlaps(clash.box, y.box))!;
+      diagnostics.push({
+        severity: 'warning',
+        code: 'openings-clash',
+        message: `${clash.label} of ${pieces[a].item.design.name} and ${other.label} of ${pieces[b].item.design.name} open into the same space.`,
+        nodeId: pieces[b].item.id,
+      });
+    }
+  return blocked;
 }
 
 // ---------------------------------------------------------------------------
@@ -439,7 +598,7 @@ const sameRun = (a: Box, b: Box) =>
 
 /** The nearest piece on the left of `id` in the same run, and the free space between them (null if none). */
 export function leftNeighbour(project: Project, id: string): { item: ProjectItem; gap: Mm } | null {
-  const pieces = project.items.map(placeItem);
+  const pieces = project.items.map((i) => placeItem(i));
   const me = pieces.find((p) => p.item.id === id);
   if (!me) return null;
   let best: PlacedPiece | null = null;
@@ -478,10 +637,24 @@ export function setGapLeft(project: Project, id: string, gap: Mm, moveRight = tr
   });
 }
 
+/** Pieces whose own plinth is replaced by a run plinth (ADR-054). */
+export function plinthCovered(project: Project): Set<string> {
+  return new Set(
+    (project.runParts ?? []).filter((r) => r.kind === 'plinth').flatMap((r) => r.from ?? []),
+  );
+}
+
 const runPanel = (rp: RunPart, materialId: string): Panel => ({
   id: `run:${rp.id}`,
   nodeId: `run:${rp.id}`,
-  role: rp.kind === 'worktop' ? 'worktop' : rp.kind === 'filler' ? 'filler' : 'cover-panel',
+  role:
+    rp.kind === 'worktop'
+      ? 'worktop'
+      : rp.kind === 'filler'
+        ? 'filler'
+        : rp.kind === 'plinth'
+          ? 'plinth'
+          : 'cover-panel',
   label: rp.label,
   materialId,
   box: rp.box,
@@ -503,14 +676,8 @@ export const worktopMaterial = (): Material => ({
   sheet: { length: 4100, width: 600, trim: 10, count: null },
 });
 
-/**
- * Propose run parts for the floor runs in a project (ADR-036). A run is a row of base units side by side (gaps up to
- * 150 mm). Each run gets one worktop on top (depth of the deepest unit + 20 mm overhang), a filler in every gap and a
- * cover panel on each exposed end. Parts that would overlap another piece are left out. Pieces keep their own plinth
- * panels, so no run plinth is added (it would be doubled).
- */
-export function suggestRunParts(project: Project): RunPart[] {
-  const placed = resolvePlacements(project).items.map(placeItem);
+/** Runs of base units: floor cabinets/corners facing the room, side by side with gaps up to 150 mm, left → right. */
+function groupRuns(placed: PlacedPiece[]): PlacedPiece[][] {
   const base = placed
     .filter((pc) => {
       const k = pc.item.design.product.kind;
@@ -537,16 +704,51 @@ export function suggestRunParts(project: Project): RunPart[] {
     if (run) run.push(pc);
     else runs.push([pc]);
   }
+  return runs;
+}
+
+/** The ids of the run a piece belongs to (the same runs the run parts use), or null. */
+export function runOf(project: Project, id: string): string[] | null {
+  const ids = groupRuns(resolvePlacements(project).items.map((i) => placeItem(i)))
+    .map((r) => r.map((pc) => pc.item.id))
+    .find((r) => r.includes(id));
+  return ids ?? null;
+}
+
+/**
+ * Propose run parts for the floor runs in a project (ADR-036). A run is a row of base units side by side (gaps up to
+ * 150 mm). Each run gets one worktop on top (depth of the deepest unit + 20 mm overhang), a filler in every gap, a
+ * cover panel on each exposed end and (ADR-054) one plinth along the run when every piece's sides stand on its bottom
+ * and the plinths match; that plinth replaces the pieces' own. Parts that would overlap another piece are left out;
+ * parts the user removed (`runPartsRemoved`) are not proposed again. `notes` say why a run got no plinth.
+ */
+export function planRuns(project: Project): { parts: RunPart[]; notes: string[] } {
+  const resolved = resolvePlacements(project);
+  const placed = resolved.items.map((i) => placeItem(i));
+  const removed = new Set(project.runPartsRemoved ?? []);
+  const scribe = project.runSettings?.scribe ?? 0;
+  const notes: string[] = [];
+  const runs = groupRuns(placed);
   const out: RunPart[] = [];
-  const free = (b: Box) =>
-    !placed.some((pc) => overlaps(pc.bounds, b) && pc.panels.some((q) => overlapsBox(q, b))) &&
-    !out.some((o) => overlaps(o.box, b));
+  /** Free of every piece (a run plinth ignores the plinths it replaces) and of the parts proposed so far. */
+  const free = (b: Box, skipPlinthOf: Set<string> = new Set()) =>
+    !placed.some(
+      (pc) =>
+        overlaps(pc.bounds, b) &&
+        pc.panels.some(
+          (q) => !(q.role === 'plinth' && skipPlinthOf.has(pc.item.id)) && overlapsBox(q, b),
+        ),
+    ) && !out.some((o) => overlaps(o.box, b));
+  const push = (rp: RunPart) => {
+    if (!removed.has(rp.key!)) out.push(rp);
+  };
   const frontOf = (pc: PlacedPiece) => {
     const p = pc.item.design.product;
     const id = p.kind === 'cabinet' || p.kind === 'corner' ? p.params.frontMaterialId : '';
     return pc.item.design.materials.find((m) => m.id === id) ?? pc.item.design.materials[0];
   };
-  runs.forEach((run, ri) => {
+  runs.forEach((run) => {
+    const ids = run.map((pc) => pc.item.id);
     const first = run[0].bounds,
       last = run[run.length - 1].bounds;
     const x0 = first.x,
@@ -564,13 +766,17 @@ export function suggestRunParts(project: Project): RunPart[] {
       const h = Math.min(a.bounds.h, b.bounds.h);
       const fz = Math.min(a.bounds.z + a.bounds.d, b.bounds.z + b.bounds.d) - m.thickness;
       const bx: Box = { x: a.bounds.x + a.bounds.w, y: 0, z: fz, w: gap, h, d: m.thickness };
+      const key = `filler|${a.item.id},${b.item.id}`;
       if (free(bx))
-        out.push({
-          id: `filler-${ri}-${i}`,
+        push({
+          id: key,
+          key,
+          from: [a.item.id, b.item.id],
           kind: 'filler',
           label: 'Filler',
-          reason: `gap ${gap} mm between ${a.item.design.name} and ${b.item.design.name}`,
+          reason: `gap ${gap} mm${scribe ? ` + ${scribe} mm scribe` : ''} between ${a.item.design.name} and ${b.item.design.name}`,
           box: bx,
+          ...(scribe ? { scribe } : {}),
           material: { ...m },
           thicknessAxis: 'z',
           grainAxis: 'y',
@@ -591,9 +797,12 @@ export function suggestRunParts(project: Project): RunPart[] {
         h: b.h,
         d: b.d,
       };
+      const key = `cover-${end}|${pc.item.id}`;
       if (bx.x >= 0 && free(bx))
-        out.push({
-          id: `cover-${ri}-${end}`,
+        push({
+          id: key,
+          key,
+          from: [pc.item.id],
           kind: 'cover',
           label: `Cover panel ${end}`,
           reason: `exposed ${end} end of ${pc.item.design.name}`,
@@ -604,7 +813,86 @@ export function suggestRunParts(project: Project): RunPart[] {
           banded: ['+z', '+y'],
         });
     }
-    const covers = out.filter((o) => o.id.startsWith(`cover-${ri}-`));
+    // Run plinth (ADR-054): only where the pieces' plinths can be one board — sides standing on the bottom, same
+    // plinth height and setback, same front line. Otherwise each piece keeps its own and a note says why.
+    const cabs = run.map((pc) =>
+      pc.item.design.product.kind === 'cabinet' ? { pc, p: pc.item.design.product.params } : null,
+    );
+    const names = (f: (c: { pc: PlacedPiece; p: CabinetParams }) => boolean) =>
+      cabs
+        .filter((c): c is { pc: PlacedPiece; p: CabinetParams } => !!c && f(c))
+        .map((c) => c.pc.item.design.name)
+        .join(', ');
+    if (n > 1) {
+      const ok = cabs.filter((c): c is { pc: PlacedPiece; p: CabinetParams } => !!c);
+      const plinthLine = (c: { pc: PlacedPiece; p: CabinetParams }) =>
+        c.pc.bounds.z + c.p.depth - c.p.plinthSetback;
+      const bodyOf = (c: { pc: PlacedPiece; p: CabinetParams }) =>
+        c.pc.item.design.materials.find((m) => m.id === c.p.bodyMaterialId);
+      const bodyT = (c: { pc: PlacedPiece; p: CabinetParams }) => bodyOf(c)?.thickness ?? 0;
+      const bodyKey = (c: { pc: PlacedPiece; p: CabinetParams }) => {
+        const m = bodyOf(c);
+        return m ? materialKey(m) : '';
+      };
+      const each = (f: (c: { pc: PlacedPiece; p: CabinetParams }) => string) =>
+        ok.map((c) => `${c.pc.item.design.name} ${f(c)}`).join(', ');
+      let why = '';
+      if (ok.length < n) why = 'a corner unit in the run keeps its own plinth';
+      else if (ok.some((c) => c.p.plinthHeight <= 0))
+        why = `no plinth on ${names((c) => c.p.plinthHeight <= 0)}`;
+      else if (ok.some((c) => c.p.bottom !== 'under'))
+        why = `the sides of ${names((c) => c.p.bottom !== 'under')} reach the floor; set Bottom → under the sides`;
+      else if (new Set(ok.map((c) => c.p.plinthHeight)).size > 1)
+        why = `plinth heights differ (${ok.map((c) => `${c.pc.item.design.name} ${c.p.plinthHeight} mm`).join(', ')})`;
+      else if (new Set(ok.map((c) => c.p.plinthSetback)).size > 1)
+        why = `plinth setbacks differ (${each((c) => `${c.p.plinthSetback} mm`)})`;
+      else if (new Set(ok.map(plinthLine)).size > 1)
+        why = `plinth fronts are not in line (${each((c) => `${plinthLine(c)} mm from the back`)})`;
+      else if (new Set(ok.map(bodyKey)).size > 1)
+        why = `body boards differ (${each((c) => {
+          const m = bodyOf(c);
+          return m
+            ? `${m.name} ${m.thickness} mm${m.grain ? ' grained' : ''}${m.image ? ' with a picture' : ''}`
+            : 'no board';
+        })})`;
+      if (why)
+        notes.push(
+          `No run plinth for ${run.map((pc) => pc.item.design.name).join(' + ')}: ${why}.`,
+        );
+      else {
+        const c0 = ok[0],
+          t = bodyT(c0);
+        const m = c0.pc.item.design.materials.find((x) => x.id === c0.p.bodyMaterialId)!;
+        const bx: Box = {
+          x: x0,
+          y: 0,
+          z: plinthLine(c0) - t,
+          w: x1 - x0,
+          h: c0.p.plinthHeight,
+          d: t,
+        };
+        const key = `plinth|${ids.join(',')}`;
+        if (free(bx, new Set(ids)))
+          push({
+            id: key,
+            key,
+            from: ids,
+            kind: 'plinth',
+            label: 'Plinth',
+            reason: `run of ${n} ${n === 1 ? 'piece' : 'pieces'}, ${bx.w} mm long; replaces their own plinths`,
+            box: bx,
+            material: { ...m },
+            thicknessAxis: 'z',
+            grainAxis: 'x',
+            banded: ['-y'],
+          });
+        else
+          notes.push(
+            `No run plinth for ${run.map((pc) => pc.item.design.name).join(' + ')}: it would overlap a filler or another piece.`,
+          );
+      }
+    }
+    const covers = out.filter((o) => o.kind === 'cover' && o.from!.some((id) => ids.includes(id)));
     const wx0 = Math.min(x0, ...covers.map((c) => c.box.x)),
       wx1 = Math.max(x1, ...covers.map((c) => c.box.x + c.box.w));
     const wt = worktopMaterial();
@@ -616,9 +904,12 @@ export function suggestRunParts(project: Project): RunPart[] {
       h: wt.thickness,
       d: zf - z0 + WORKTOP_OVERHANG,
     };
+    const key = `worktop|${ids.join(',')}`;
     if (free(wb))
-      out.push({
-        id: `worktop-${ri}`,
+      push({
+        id: key,
+        key,
+        from: ids,
         kind: 'worktop',
         label: 'Worktop',
         reason: `run of ${n} ${n === 1 ? 'piece' : 'pieces'}, ${wb.w} mm long; joints and cut-outs are not drawn`,
@@ -629,7 +920,43 @@ export function suggestRunParts(project: Project): RunPart[] {
         banded: ['+z'],
       });
   });
-  return out;
+  return { parts: out, notes };
+}
+
+export const suggestRunParts = (project: Project): RunPart[] => planRuns(project).parts;
+
+/**
+ * Keep run parts in step with the pieces (ADR-061): with `runSettings.auto`, propose them again; parts with the
+ * same key and box keep their stored copy, changed ones say what changed. Removed keys whose pieces are gone are
+ * forgotten. Returns the same project when nothing changes.
+ */
+export function refreshRunParts(project: Project): Project {
+  if (!project.runSettings?.auto) return project;
+  const old = new Map((project.runParts ?? []).map((r) => [r.key ?? r.id, r]));
+  const ids = new Set(project.items.map((i) => i.id));
+  const removed = (project.runPartsRemoved ?? []).filter((k) =>
+    k
+      .split('|')[1]
+      ?.split(',')
+      .every((id) => ids.has(id)),
+  );
+  const next = planRuns({ ...project, runPartsRemoved: removed }).parts.map((r) => {
+    const was = old.get(r.key!);
+    if (!was) return r;
+    const same = JSON.stringify(was.box) === JSON.stringify(r.box) && was.scribe === r.scribe;
+    if (same) {
+      const { changed: _c, ...keep } = was;
+      void _c;
+      return keep;
+    }
+    const along =
+      r.kind === 'worktop' || r.kind === 'plinth' ? 'w' : r.kind === 'filler' ? 'w' : 'h';
+    return { ...r, material: was.material, changed: `${was.box[along]} → ${r.box[along]} mm` };
+  });
+  const before = JSON.stringify(project.runParts ?? []),
+    after = JSON.stringify(next);
+  if (before === after && removed.length === (project.runPartsRemoved ?? []).length) return project;
+  return { ...project, runParts: next, runPartsRemoved: removed };
 }
 
 /** Parts for the whole project: each piece's cut list × its quantity, merged across pieces, then the run parts. */
@@ -638,8 +965,13 @@ export function projectCutlist(project: Project): CutRow[] {
   const extra = (project.runParts ?? []).map((rp) => ({ rp, key: materialKey(rp.material) }));
   if (extra.length) {
     const mats = [...new Map(extra.map((e) => [e.key, { ...e.rp.material, id: e.key }])).values()];
+    // Fillers are cut wider by their scribe allowance (ADR-054); the model keeps the installed size.
+    const cutPanel = (rp: RunPart, key: string) => {
+      const p = runPanel(rp, key);
+      return rp.scribe ? { ...p, box: { ...p.box, w: p.box.w + rp.scribe } } : p;
+    };
     const model: FurnitureModel = {
-      panels: extra.map((e) => runPanel(e.rp, e.key)),
+      panels: extra.map((e) => cutPanel(e.rp, e.key)),
       spaces: [],
       hardware: [],
       diagnostics: [],
@@ -651,8 +983,12 @@ export function projectCutlist(project: Project): CutRow[] {
         labels: r.labels.map((l) => `Run: ${l}`),
       });
   }
+  const covered = plinthCovered(project);
   for (const item of project.items) {
-    const model = buildModel(item.design);
+    const built = buildModel(item.design);
+    const model = covered.has(item.id)
+      ? { ...built, panels: built.panels.filter((p) => p.role !== 'plinth') }
+      : built;
     for (const r of cutlist(model, item.design.materials)) {
       const mat = item.design.materials.find((m) => m.id === r.materialId)!;
       const id = materialKey(mat);
@@ -781,9 +1117,14 @@ export function validateProject(p: unknown): string[] {
         if (
           !isObj(rp) ||
           typeof rp.id !== 'string' ||
-          !['worktop', 'filler', 'cover'].includes(rp.kind as string) ||
+          !['worktop', 'filler', 'cover', 'plinth'].includes(rp.kind as string) ||
           typeof rp.label !== 'string' ||
           typeof rp.reason !== 'string' ||
+          (rp.key !== undefined && typeof rp.key !== 'string') ||
+          (rp.from !== undefined &&
+            !(Array.isArray(rp.from) && rp.from.every((x) => typeof x === 'string'))) ||
+          (rp.scribe !== undefined && !isInt(rp.scribe, 0)) ||
+          (rp.changed !== undefined && typeof rp.changed !== 'string') ||
           !isObj(b) ||
           !['x', 'y', 'z'].every((k) => isInt(b[k])) ||
           !['w', 'h', 'd'].every((k) => isInt(b[k], 1)) ||
@@ -798,5 +1139,21 @@ export function validateProject(p: unknown): string[] {
           errs.push('Invalid run part');
       }
   }
+  if (
+    p.runSettings !== undefined &&
+    !(
+      isObj(p.runSettings) &&
+      isInt(p.runSettings.scribe, 0) &&
+      (p.runSettings.scribe as number) <= 200 &&
+      typeof p.runSettings.auto === 'boolean'
+    )
+  )
+    errs.push('Invalid run settings');
+  if (p.room !== undefined) errs.push(...validateRoom(p.room));
+  if (
+    p.runPartsRemoved !== undefined &&
+    !(Array.isArray(p.runPartsRemoved) && p.runPartsRemoved.every((k) => typeof k === 'string'))
+  )
+    errs.push('Invalid removed run parts');
   return errs;
 }

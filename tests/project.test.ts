@@ -103,7 +103,7 @@ describe('projects (ADR-022)', () => {
     await saveProject(p);
     expect((await listProjects()).map((x) => x.id)).toContain(p.id);
     expect((await loadProject(p.id))?.items.length).toBe(4);
-    expect(db.verno).toBe(6);
+    expect(db.verno).toBe(7);
   });
 });
 
@@ -174,9 +174,12 @@ describe('run parts (ADR-036)', () => {
       expect(r.valid).toBe(true);
     }
     expect(validateProject(p)).toEqual([]);
-    expect(validateProject({ ...p, runParts: [{ ...p.runParts[0], kind: 'plinth' }] })).toContain(
-      'Invalid run part',
-    );
+    expect(
+      validateProject({
+        ...p,
+        runParts: [{ ...p.runParts[0], kind: 'skirting' }],
+      } as unknown as Project),
+    ).toContain('Invalid run part');
   });
   it('a run part that now overlaps a moved piece is an error', () => {
     const p0 = run();

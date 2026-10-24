@@ -33,6 +33,7 @@ import type { Design } from '../core/types';
 import { listDesigns, type StoredDesign } from '../persist/db';
 import { useDesign } from '../store/designStore';
 import { useTemplates } from '../store/templatesStore';
+import { ProjectTemplateList } from './ProjectTemplates';
 import { askConfirm, askText } from './Confirm';
 import { Icon } from './icons';
 import { familyGlyph, templateGlyph } from './Templates';
@@ -499,7 +500,12 @@ export function CatalogPage({
             ))}
           </section>
         ))}
-      {source === 'saved' && <SavedList onTake={take} />}
+      {source === 'saved' && (
+        <>
+          <SavedList onTake={take} />
+          <ProjectTemplateList manage onOpened={onDone} />
+        </>
+      )}
       {source === 'brands' &&
         (brandEntries.length === 0 ? (
           <p className="empty center">

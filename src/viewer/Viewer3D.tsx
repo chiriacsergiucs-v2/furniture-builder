@@ -14,8 +14,10 @@ import {
   Shape,
   Texture,
   TextureLoader,
+  Vector2,
 } from 'three';
 import { explode } from '../core/explode';
+import { roomDisplayBoxes } from '../core/room';
 import { inPlaneAxes, union } from '../core/geometry';
 import { aabbOf } from '../core/shape';
 import { boxUvs, planeUvs } from '../core/surface';
@@ -151,6 +153,7 @@ export default function Viewer3D() {
       <directionalLight position={[2.5, 4, 3]} intensity={1.6} />
       <directionalLight position={[-3, 2, -1]} intensity={0.35} />
       <Panels panels={panels} />
+      {view.mode === 'project' && !exploded && <RoomWalls />}
       <ContactShadows
         position={[bounds.x * S + (bounds.w * S) / 2, -0.0005, bounds.z * S + (bounds.d * S) / 2]}
         scale={Math.max(bounds.w, bounds.d) * S * 2.2}
@@ -160,6 +163,50 @@ export default function Viewer3D() {
       />
       <Fit key={designId} bounds={bounds} />
     </Canvas>
+  );
+}
+
+/** The project's room (ADR-058): translucent walls with openings, obstacles; display only, never picked. */
+function RoomWalls() {
+  const room = useDesign((s) => s.project?.room);
+  const boxes = useMemo(() => (room ? roomDisplayBoxes(room) : null), [room]);
+  if (!boxes) return null;
+  const mesh = (b: Box, key: string, color: string, opacity: number) => (
+    <mesh
+      key={key}
+      position={[(b.x + b.w / 2) * S, (b.y + b.h / 2) * S, (b.z + b.d / 2) * S]}
+      raycast={() => null}
+    >
+      <boxGeometry args={[b.w * S, b.h * S, b.d * S]} />
+      <meshStandardMaterial color={color} transparent opacity={opacity} depthWrite={false} />
+    </mesh>
+  );
+  return (
+    <>
+      {boxes.walls.map((b, i) => mesh(b, `w${i}`, '#c9cdc8', 0.28))}
+      {boxes.obstacles.map((b, i) => mesh(b, `o${i}`, '#b3261e', 0.35))}
+      {room && boxes.walls.length > 0 && <RoomFloor outline={room.outline} />}
+    </>
+  );
+}
+
+/** The floor inside the room outline, just under the pieces. */
+function RoomFloor({ outline }: { outline: [number, number][] }) {
+  const shape = useMemo(
+    () => new Shape(outline.map(([x, z]) => new Vector2(x * S, -z * S))),
+    [outline],
+  );
+  return (
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.001, 0]} raycast={() => null}>
+      <shapeGeometry args={[shape]} />
+      <meshStandardMaterial
+        color="#d9dcd6"
+        transparent
+        opacity={0.35}
+        depthWrite={false}
+        side={DoubleSide}
+      />
+    </mesh>
   );
 }
 

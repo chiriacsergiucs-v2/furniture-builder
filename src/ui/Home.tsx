@@ -10,6 +10,7 @@ import {
 import { useDesign } from '../store/designStore';
 import { askText } from './Confirm';
 import { BuiltInProjects } from './Dialogs';
+import { ProjectTemplateList } from './ProjectTemplates';
 import { Icon } from './icons';
 import { templateGlyph } from './Templates';
 
@@ -167,6 +168,7 @@ export function HomePage({
             )}
           </>
         )}
+        <ProjectTemplateList onOpened={onOpened} />
         <BuiltInProjects onOpened={onOpened} />
       </section>
     </main>

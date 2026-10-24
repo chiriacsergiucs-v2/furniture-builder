@@ -174,6 +174,16 @@ export function App() {
   const editingName = project?.items.find((i) => i.id === editingItemId)?.design.name;
   const [save, setSave] = useState<SaveState>('idle');
   const [view, setView] = useState<'front' | '3d'>('front');
+  // A piece waiting to be placed is placed on the plan (ADR-056).
+  // A room being drawn is drawn on the plan too (ADR-059).
+  const tapMode = useDesign((s) =>
+    s.placingItemId ? `place:${s.placingItemId}` : s.drawingRoom ? 'draw' : '',
+  );
+  const [lastTapMode, setLastTapMode] = useState(tapMode);
+  if (tapMode !== lastTapMode) {
+    setLastTapMode(tapMode);
+    if (tapMode) setView('front');
+  }
   const [has3d] = useState(webglAvailable);
   const [printing, setPrinting] = useState(false);
   const theme = useTheme();

@@ -4,6 +4,8 @@ import { validateProject, type Project } from '../core/project';
 import { validateLocalTemplate, type LocalTemplate } from '../core/catalog/local';
 import type { Design } from '../core/types';
 import type { Decor } from '../core/materials';
+import { validatePrice, type PriceEntry } from '../core/prices';
+import { validateProjectTemplate, type ProjectTemplate } from '../core/projectTemplate';
 import { validateBundle, validateMark, type StoredBundle } from '../core/research/catalog';
 import type { ResearchMark } from '../core/research/types';
 
@@ -18,6 +20,12 @@ export interface StoredProject {
   name: string;
   updatedAt: string;
   project: Project;
+}
+export interface StoredProjectTemplate {
+  id: string;
+  name: string;
+  updatedAt: string;
+  template: ProjectTemplate;
 }
 export interface StoredTemplate {
   id: string;
@@ -47,6 +55,8 @@ class FurnitureDb extends Dexie {
   researchMarks!: Table<ResearchMark, string>;
   images!: Table<StoredImage, string>;
   decors!: Table<Decor, string>;
+  projectTemplates!: Table<StoredProjectTemplate, string>;
+  prices!: Table<PriceEntry, string>;
   constructor(name = 'furniture-builder') {
     super(name);
     // Never edit a shipped version block; add a new version for any change (ADR-012).
@@ -86,6 +96,18 @@ class FurnitureDb extends Dexie {
       researchMarks: 'id, updatedAt',
       images: 'id',
       decors: 'id',
+    });
+    // v7 (ADR-060, ADR-062): project templates and the user's own price list. Earlier tables untouched.
+    this.version(7).stores({
+      designs: 'id, updatedAt, name',
+      projects: 'id, updatedAt, name',
+      templates: 'id, updatedAt',
+      researchDocs: 'key, docId',
+      researchMarks: 'id, updatedAt',
+      images: 'id',
+      decors: 'id',
+      projectTemplates: 'id, updatedAt, name',
+      prices: 'id',
     });
   }
 }
@@ -173,6 +195,38 @@ export async function replaceDecors(decors: Decor[], database = db): Promise<voi
 export const listDecors = (database = db): Promise<Decor[]> => database.decors.toArray();
 export const clearDecors = (database = db) => database.decors.clear();
 
+export async function saveProjectTemplate(t: ProjectTemplate, database = db): Promise<void> {
+  await database.projectTemplates.put({
+    id: t.id,
+    name: t.name,
+    updatedAt: t.updatedAt,
+    template: t,
+  });
+}
+/** Project templates that still validate; unreadable rows are skipped and kept (ADR-012). */
+export async function listProjectTemplates(database = db): Promise<ProjectTemplate[]> {
+  const rows = await database.projectTemplates.orderBy('updatedAt').reverse().toArray();
+  // Each row on its own: one that cannot be read is skipped (and kept), never the whole list (ADR-012).
+  const usable = (t: unknown) => {
+    try {
+      return !validateProjectTemplate(t).length;
+    } catch {
+      return false;
+    }
+  };
+  return rows.filter((r) => usable(r.template)).map((r) => r.template);
+}
+export const deleteProjectTemplate = (id: string, database = db) =>
+  database.projectTemplates.delete(id);
+
+/** The user's price list (ADR-062); unreadable rows are skipped and kept. */
+export async function listPrices(database = db): Promise<PriceEntry[]> {
+  return (await database.prices.toArray()).filter((r) => !validatePrice(r).length);
+}
+export const savePrice = (e: PriceEntry, database = db) => database.prices.put(e);
+export const savePrices = (list: PriceEntry[], database = db) => database.prices.bulkPut(list);
+export const deletePrice = (id: string, database = db) => database.prices.delete(id);
+
 /**
  * Pictures no stored design, project or template refers to (ADR-048 cleanup). Rows are searched as text, so rows
  * the app cannot read still keep their pictures (ADR-012). `keep`: ids in use by what is open but not yet saved.
@@ -186,6 +240,7 @@ export async function unusedImageIds(
     ...(await database.designs.toArray()),
     ...(await database.projects.toArray()),
     ...(await database.templates.toArray()),
+    ...(await database.projectTemplates.toArray()),
   ]
     .map((r) => JSON.stringify(r))
     .join('\n');

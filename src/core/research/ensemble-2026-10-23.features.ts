@@ -246,7 +246,7 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
     phase: P1,
     tags: ['workflow', 'catalogue'],
     appNotes: [
-      'This app has a Catalog page and "Start from" lists (backlog N22) and projects with several pieces (N04).',
+      'This app has a Catalog page and "Start from" lists (backlog N22) and projects with several pieces (N04); an added piece is placed where the user taps the plan (ADR-056, N51).',
     ],
   }),
   F('catalogue-placement', {
@@ -1148,7 +1148,7 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
     phase: P1,
     tags: ['core', 'MVP', 'P0'],
     appNotes: [
-      'This app: undo/redo in the piece editor (F15); the Undo/Redo buttons are hidden in project view (`src/ui/App.tsx`).',
+      'This app: undo/redo in the piece editor (F15) and for every project change, one action = one step (ADR-051, N46).',
     ],
   }),
   F('command-log', {
@@ -1261,7 +1261,7 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
     phase: P2,
     tags: ['P1'],
     appNotes: [
-      'This app: materials are edited per piece (F16); project materials split by grain (N10).',
+      'This app: materials are edited per piece (F16); project → Finish applies a board to this piece, this run or the whole project (ADR-055, N50).',
     ],
   }),
   F('finish-scope', {
@@ -1314,7 +1314,7 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
     phase: P2,
     tags: ['differentiator'],
     appNotes: [
-      'This app suggests run parts — worktop, fillers, cover panels — for a project run (`suggestRunParts`, backlog N26); pieces keep their own plinth.',
+      'This app suggests run parts — worktop, run plinth, fillers, cover panels — for a project run (`planRuns`, backlog N26, N49) and keeps them up to date when pieces change (ADR-061, N56).',
     ],
   }),
   F('generated-part-mechanism', {
@@ -1719,7 +1719,7 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
     findings: ['rank-16', 'rec-14', '061', '044', '042', '102', '032'],
     tags: ['P0'],
     appNotes: [
-      'This app places pieces along a back wall with wall-hung and on-piece placement (N19), without modelled openings or obstacles.',
+      'This app places pieces with wall-hung and on-piece placement (N19) in an optional room with walls, doors, windows and obstacles, checked against the pieces (ADR-058/0056, N53, N54).',
     ],
   }),
   F('room-walls', {

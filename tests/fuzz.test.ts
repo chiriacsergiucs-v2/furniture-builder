@@ -113,6 +113,8 @@ function genSpace(depth: number, doorsAbove: boolean): Space {
           : undefined;
       // Sink drawers (ADR-040): the top drawer cut around a trap.
       const uCut = rnd() < 0.2 ? { width: ri(30, 500), depth: ri(30, 450) } : undefined;
+      // Sink false front (ADR-054): the top drawer kept as a fixed front.
+      const fixedTop = rnd() < 0.15;
       return {
         id,
         kind: 'drawers',
@@ -121,6 +123,7 @@ function genSpace(depth: number, doorsAbove: boolean): Space {
         handle,
         ...(heights ? { heights } : {}),
         ...(uCut ? { uCut } : {}),
+        ...(fixedTop ? { fixedTop } : {}),
       };
     }
     default: {

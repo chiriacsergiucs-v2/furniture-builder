@@ -874,6 +874,8 @@ function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0)
         )
       )
         errs.push('Invalid U-cut');
+      if (s.fixedTop !== undefined && typeof s.fixedTop !== 'boolean')
+        errs.push('Invalid fixed front');
       if (s.heights !== undefined) {
         if (!Array.isArray(s.heights) || s.heights.length !== s.count)
           errs.push('Drawer heights must list one size per drawer');

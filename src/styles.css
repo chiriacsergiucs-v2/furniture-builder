@@ -3907,3 +3907,181 @@ button.tile:hover {
   display: grid;
   gap: var(--s-1);
 }
+.hint.warn {
+  color: var(--warn);
+}
+.place-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--accent-soft, var(--surface-2));
+  border-bottom: 1px solid var(--line);
+  font-size: var(--fs-sm);
+}
+.place-banner span {
+  flex: 1 1 200px;
+}
+.plan-views.placing {
+  grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr);
+}
+.plan svg.placing {
+  cursor: crosshair;
+}
+.plan .place-ghost {
+  fill: none;
+  stroke: var(--accent, #c80);
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+.plan .blocked-clearance {
+  fill: var(--error-soft);
+  fill-opacity: 0.5;
+  stroke: var(--error);
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+.plan .room-floor {
+  fill: var(--surface-2);
+  stroke: none;
+}
+.plan .room-obstacle {
+  fill: var(--error-soft);
+  stroke: var(--error);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+.plan .room-window {
+  fill: var(--surface);
+  stroke: #4a8fc4;
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+}
+.plan .room-door {
+  fill: none;
+  stroke: var(--ink-2);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+  stroke-opacity: 0.5;
+  vector-effect: non-scaling-stroke;
+}
+.plan .room-door-swing {
+  fill: none;
+  stroke: var(--ink-2);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+.plan .room-front .room-ceiling {
+  stroke: var(--ink-2);
+  stroke-width: 1.5;
+  stroke-dasharray: 8 4;
+  vector-effect: non-scaling-stroke;
+}
+.plan .room-front .room-door,
+.plan .room-front .room-window,
+.plan .room-front .room-obstacle {
+  fill: none;
+  stroke-dasharray: none;
+  stroke-opacity: 1;
+  pointer-events: none;
+}
+.plan .room-front .room-window {
+  stroke-width: 2;
+}
+.plan .draw-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+}
+.plan .draw-line.next {
+  stroke-dasharray: 6 4;
+}
+.plan .draw-corner {
+  fill: var(--accent);
+}
+.room .room-sizes,
+.room .wall-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.room .room-feature {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px;
+  margin: 8px 0;
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.shopping {
+  display: grid;
+  gap: 10px;
+}
+.shopping .estimate {
+  margin: 0;
+  font-size: var(--fs-sm);
+}
+.shopping .estimate .warn {
+  color: var(--warn);
+}
+.shopping .price-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: end;
+}
+.shopping .price-edit {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.shopping .price-edit input {
+  width: 7em;
+}
+.shopping .price-edit input.bad {
+  border-color: var(--error);
+}
+.shopping table.shop td.note {
+  white-space: normal;
+}
+/* Five result tabs: never wider than the screen; on phones they wrap so every tab stays in sight. */
+.output,
+.output > * {
+  min-width: 0;
+}
+@media (max-width: 600px) {
+  .tabs {
+    flex-wrap: wrap;
+  }
+}
+.shopping {
+  min-width: 0;
+}
+.shopping .split-actions {
+  flex-wrap: wrap;
+}
+.shopping table.shop {
+  table-layout: fixed;
+}
+.shopping table.shop td,
+.shopping table.shop th,
+.shopping .estimate {
+  overflow-wrap: anywhere;
+}
+.shopping table.shop th:nth-child(1) {
+  width: 22%;
+}
+.shopping table.shop td.num {
+  font-size: var(--fs-sm);
+}

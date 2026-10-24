@@ -7,16 +7,21 @@ import {
   upgradeDesign,
   validateDesign,
 } from '../core/design';
+import { applyFinish, type FinishRole, type FinishScope } from '../core/finish';
 import { mergeItems } from '../core/merge';
+import { closeOutline, DEFAULT_ROOM_HEIGHT, snapCorner, type Pt, type Room } from '../core/room';
 import {
   buildProjectModel,
   makeItem,
+  planRuns,
+  refreshRunParts,
   removeProjectItem,
   resolvePlacements,
   setGapLeft,
   type Project,
   type ProjectItem,
   type ProjectModel,
+  type RunSettings,
 } from '../core/project';
 import type {
   CabinetParams,
@@ -32,7 +37,7 @@ import type {
 } from '../core/types';
 import type { LocalTemplate } from '../core/catalog/local';
 
-export type Tab = 'parts' | 'sheets' | 'hardware' | 'checks';
+export type Tab = 'parts' | 'sheets' | 'hardware' | 'shopping' | 'checks';
 
 interface State {
   design: Design;
@@ -61,6 +66,10 @@ interface State {
   /** Project-level history (ADR-051): earlier and undone states of the open project. */
   projectPast: Project[];
   projectFuture: Project[];
+  /** A piece just added and waiting to be placed by a tap on the plan (ADR-056). */
+  placingItemId: string | null;
+  /** Corners tapped so far while drawing the room on the plan (ADR-059), or null. */
+  drawingRoom: Pt[] | null;
   /** Editing one variant of a local template (ADR-034); the piece open before comes back afterwards. */
   templateEdit: { template: LocalTemplate; variantId: string; returnTo: Design } | null;
 
@@ -106,6 +115,27 @@ interface State {
   backToProject: () => void;
   undoProject: () => void;
   redoProject: () => void;
+  /** Run parts (ADR-036, ADR-054, ADR-061): propose again (forgets removals, turns automatic refresh on), remove one, settings. */
+  suggestRunParts: () => void;
+  removeRunPart: (id: string) => void;
+  setRunSettings: (patch: Partial<RunSettings>) => void;
+  /** Put one board on the fronts or carcass of the selected piece, its run or the whole project (ADR-055). */
+  applyFinish: (
+    id: string,
+    role: FinishRole,
+    board: Material,
+    scope: FinishScope,
+  ) => { applied: string[]; skipped: string[] };
+  /** Put the piece being placed with its left-back corner at a plan point (whole mm, x and z ≥ 0), or stop placing (ADR-056). */
+  placeAt: (x: number, z: number) => void;
+  stopPlacing: () => void;
+  /** The room (ADR-058/059); undefined removes it. */
+  setRoom: (room: Room | undefined) => void;
+  startDrawRoom: () => void;
+  addRoomCorner: (x: number, z: number) => void;
+  /** Close the drawn outline into the room (keeps height and features); false when fewer than three corners. */
+  finishDrawRoom: () => boolean;
+  cancelDrawRoom: () => void;
 }
 
 const HISTORY = 100;
@@ -159,8 +189,11 @@ export const useDesign = create<State>((set, get) => {
   /** The project as it was when its piece editor opened; one undo step if the piece changed (ADR-051). */
   let projectBeforeEdit: Project | null = null;
   const commitProject = (next: Project) => {
-    // Pieces on or above others follow them (ADR-031): stored positions always match the placements.
-    const stamped = { ...resolvePlacements(next), updatedAt: new Date().toISOString() };
+    // Pieces on or above others follow them (ADR-031); run parts follow the pieces in the same step (ADR-061).
+    const stamped = {
+      ...refreshRunParts(resolvePlacements(next)),
+      updatedAt: new Date().toISOString(),
+    };
     const prev = get().project;
     set({
       project: stamped,
@@ -180,6 +213,7 @@ export const useDesign = create<State>((set, get) => {
       projectPast,
       projectFuture,
       projectDirtyAt: Date.now(),
+      placingItemId: null,
       selectedItemId: sel && p.items.some((i) => i.id === sel) ? sel : null,
     });
   };
@@ -203,6 +237,8 @@ export const useDesign = create<State>((set, get) => {
     projectDirtyAt: 0,
     projectPast: [],
     projectFuture: [],
+    placingItemId: null,
+    drawingRoom: null,
     templateEdit: null,
 
     load: (raw, opts) => {
@@ -243,6 +279,8 @@ export const useDesign = create<State>((set, get) => {
         projectDirtyAt: 0,
         projectPast: [],
         projectFuture: [],
+        placingItemId: null,
+        drawingRoom: null,
       });
     },
     closeProject: () =>
@@ -253,6 +291,8 @@ export const useDesign = create<State>((set, get) => {
         selectedItemId: null,
         projectPast: [],
         projectFuture: [],
+        placingItemId: null,
+        drawingRoom: null,
       }),
     updateProject: (fn) => {
       const p = get().project;
@@ -263,7 +303,7 @@ export const useDesign = create<State>((set, get) => {
       if (!p) return;
       const item = makeItem(p, d, libraryId);
       commitProject({ ...p, items: [...p.items, item] });
-      set({ selectedItemId: item.id });
+      set({ selectedItemId: item.id, placingItemId: item.id });
     },
     updateItem: (id, patch) => {
       const p = get().project;
@@ -315,8 +355,8 @@ export const useDesign = create<State>((set, get) => {
     backToProject: () => {
       const raw = get().project;
       if (!raw) return;
-      // A resized piece moves whatever sits on it.
-      const p = resolvePlacements(raw);
+      // A resized piece moves whatever sits on it; run parts follow it (ADR-061).
+      const p = refreshRunParts(resolvePlacements(raw));
       // Edits made in the piece editor become one project undo step.
       const before = projectBeforeEdit;
       projectBeforeEdit = null;
@@ -346,6 +386,85 @@ export const useDesign = create<State>((set, get) => {
       if (!project || !next || editingItemId) return;
       restoreProject(next, [...projectPast, project], projectFuture.slice(1));
     },
+    suggestRunParts: () => {
+      const p = get().project;
+      if (!p) return;
+      // Automatic refresh is on by default the first time; after that the user's choice is kept (ADR-061).
+      const settings = { scribe: p.runSettings?.scribe ?? 0, auto: p.runSettings?.auto ?? true };
+      const base = { ...p, runSettings: settings, runPartsRemoved: [] };
+      commitProject({ ...base, runParts: planRuns(base).parts });
+    },
+    removeRunPart: (id) => {
+      const p = get().project;
+      const rp = p?.runParts?.find((r) => r.id === id);
+      if (!p || !rp) return;
+      commitProject({
+        ...p,
+        runParts: (p.runParts ?? []).filter((r) => r.id !== id),
+        runPartsRemoved: [...(p.runPartsRemoved ?? []), rp.key ?? rp.id],
+      });
+    },
+    setRunSettings: (patch) => {
+      const p = get().project;
+      if (!p) return;
+      commitProject({ ...p, runSettings: { scribe: 0, auto: false, ...p.runSettings, ...patch } });
+    },
+    applyFinish: (id, role, board, scope) => {
+      const p = get().project;
+      if (!p) return { applied: [], skipped: [] };
+      const r = applyFinish(p, id, role, board, scope);
+      if (r.applied.length) commitProject(r.project);
+      return { applied: r.applied, skipped: r.skipped };
+    },
+    placeAt: (x, z) => {
+      const { project: p, placingItemId: id } = get();
+      const it = p?.items.find((i) => i.id === id);
+      set({ placingItemId: null });
+      if (!p || !it) return;
+      const position = {
+        ...it.position,
+        x: Math.max(0, Math.round(x)),
+        z: Math.max(0, Math.round(z)),
+      };
+      commitProject({ ...p, items: p.items.map((i) => (i.id === it.id ? { ...i, position } : i)) });
+    },
+    stopPlacing: () => set({ placingItemId: null }),
+    setRoom: (room) => {
+      const p = get().project;
+      if (!p) return;
+      if (room) commitProject({ ...p, room });
+      else {
+        const { room: _r, ...rest } = p;
+        void _r;
+        commitProject(rest);
+      }
+    },
+    startDrawRoom: () => set({ drawingRoom: [], placingItemId: null }),
+    addRoomCorner: (x, z) => {
+      const pts = get().drawingRoom;
+      if (pts)
+        set({
+          drawingRoom: [
+            ...pts,
+            snapCorner(pts[pts.length - 1], x, z, 10, pts.length >= 2 ? pts[0] : undefined),
+          ],
+        });
+    },
+    finishDrawRoom: () => {
+      const { drawingRoom: pts, project: p } = get();
+      if (!p || !pts || pts.length < 3) return false;
+      set({ drawingRoom: null });
+      commitProject({
+        ...p,
+        room: {
+          height: p.room?.height ?? DEFAULT_ROOM_HEIGHT,
+          features: p.room?.features ?? [],
+          outline: closeOutline(pts),
+        },
+      });
+      return true;
+    },
+    cancelDrawRoom: () => set({ drawingRoom: null }),
     setKerf: (kerf) => {
       const d = get().design;
       commit({ ...d, cutting: { ...d.cutting, kerf } });
