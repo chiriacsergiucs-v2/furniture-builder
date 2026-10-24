@@ -1,5 +1,7 @@
-import { useMemo } from 'react'
+import { useId, useMemo } from 'react'
 import { productRoots } from '../core/design'
+import { faceMapping } from '../core/surface'
+import { imageKey, useImageUrls } from '../persist/images'
 import { useDesign } from '../store/designStore'
 import type { Panel, SpaceOpening } from '../core/types'
 import { frontOutline } from '../core/shape'
@@ -31,6 +33,16 @@ export function Elevation() {
   const select = useDesign(s => s.select)
   const showFronts = useDesign(s => s.showFronts)
   const mats = useMemo(() => new Map(design.materials.map(m => [m.id, m])), [design.materials])
+  // Pictures on boards (ADR-0048): one pattern per material and direction; plain colour while missing.
+  const urls = useImageUrls(imageKey(design.materials))
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '')
+  const patId = (materialId: string, turned: boolean) => `${uid}-pic-${materialId.replace(/[^a-zA-Z0-9_-]/g, '')}-${turned ? 1 : 0}`
+  const fillOf = (p: Panel) => {
+    const m = mats.get(p.materialId)
+    const url = m?.image ? urls.get(m.image.id) : undefined
+    if (!m?.image || !url || url === 'missing') return m?.color
+    return `url(#${patId(m.id, faceMapping(p, m.image, 'x', 'y').u[0] === 0)})`
+  }
 
   const b = model.bounds
   const pad = Math.max(b.w, b.h) * 0.09
@@ -61,6 +73,18 @@ export function Elevation() {
   return (
     <figure className="elevation" aria-label="Front view. Select a space to edit it.">
       <svg viewBox={vb} preserveAspectRatio="xMidYMid meet" role="group">
+        <defs>
+          {design.materials.flatMap(m => {
+            const url = m.image ? urls.get(m.image.id) : undefined
+            if (!m.image || !url || url === 'missing') return []
+            const { tileLength: L, tileWidth: W } = m.image
+            return [false, true].map(turned => (
+              <pattern key={`${m.id}-${turned}`} id={patId(m.id, turned)} patternUnits="userSpaceOnUse" width={L} height={W} patternTransform={turned ? 'rotate(90)' : undefined}>
+                <image href={url} width={L} height={W} preserveAspectRatio="none" />
+              </pattern>
+            ))
+          })}
+        </defs>
         <rect className="floor" x={b.x - pad} y={0} width={b.w + 2 * pad} height={pad * 0.15} />
         {backs.map(p => <polygon key={p.id} className="el-back" points={outlinePoints(p)} />)}
         {leaves.map(s => (
@@ -73,7 +97,7 @@ export function Elevation() {
         ))}
         {structure.map(p => (
           <polygon key={p.id} className={`el-panel ${selectedPanels.has(p.id) ? 'hl' : ''}`} points={outlinePoints(p)}
-            style={{ fill: mats.get(p.materialId)?.color }}
+            style={{ fill: fillOf(p) }} data-plain={mats.get(p.materialId)?.color}
             onClick={e => { e.stopPropagation(); select(p.nodeId === design.product.id ? null : p.nodeId) }} />
         ))}
         {showFronts && fronts.map(p => (

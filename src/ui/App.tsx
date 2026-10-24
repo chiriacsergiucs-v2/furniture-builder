@@ -159,6 +159,9 @@ export function App() {
     const clone = svg.cloneNode(true) as SVGSVGElement
     clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
     clone.querySelectorAll('.el-space, .el-label, .el-selection').forEach(n => n.remove())
+    // Pictures (ADR-0048) live on this device only: the file gets the plain colours.
+    clone.querySelectorAll('pattern').forEach(n => n.remove())
+    clone.querySelectorAll<SVGElement>('[data-plain]').forEach(n => { n.style.fill = n.dataset.plain ?? '' })
     const style = document.createElementNS('http://www.w3.org/2000/svg', 'style')
     style.textContent = SVG_STYLE
     clone.prepend(style)

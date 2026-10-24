@@ -1,14 +1,16 @@
 import { Canvas, useThree } from '@react-three/fiber'
 import { ContactShadows, Edges, OrbitControls } from '@react-three/drei'
 import { useEffect, useMemo, useRef, type ComponentRef } from 'react'
-import { Color, DoubleSide, ExtrudeGeometry, FrontSide, Matrix4, Shape } from 'three'
+import { BoxGeometry, Color, DoubleSide, ExtrudeGeometry, Float32BufferAttribute, FrontSide, Matrix4, RepeatWrapping, SRGBColorSpace, Shape, Texture, TextureLoader } from 'three'
 import { explode } from '../core/explode'
 import { inPlaneAxes, union } from '../core/geometry'
 import { aabbOf } from '../core/shape'
+import { boxUvs, planeUvs } from '../core/surface'
+import { imageKey, useImageUrls } from '../persist/images'
 import { useDesign } from '../store/designStore'
 import { useView } from '../ui/useView'
 import { useTheme } from '../ui/useTheme'
-import type { Box, Panel } from '../core/types'
+import type { Box, MaterialImage, Panel } from '../core/types'
 
 const S = 0.001 // mm → metres
 const FRONT = new Set<Panel['role']>(['door', 'drawer-front'])
@@ -33,6 +35,46 @@ function profileGeometry(p: Panel): ExtrudeGeometry {
   g.computeVertexNormals()
   geoCache.set(p, g)
   return g
+}
+
+/** A board with a picture (ADR-0048): texture coordinates from the core, scaled to the part's size in mm. */
+function PictureGeometry({ p, img }: { p: Panel; img: MaterialImage }) {
+  const g = useMemo(() => {
+    if (p.shape?.kind === 'profile') {
+      // Own copy of the extruded outline so its texture coordinates can change.
+      const base = profileGeometry(p).clone()
+      const [ua, va] = inPlaneAxes(p.thicknessAxis)
+      // Extruded outlines carry coordinates in metres along the outline's plane; turn them into picture coordinates.
+      const uv = base.getAttribute('uv')
+      const mm = Array.from(uv.array as Float32Array, v => v / S)
+      base.setAttribute('uv', new Float32BufferAttribute(planeUvs(p, img, ua, va, mm), 2))
+      return base
+    }
+    const b = new BoxGeometry(p.box.w * S, p.box.h * S, p.box.d * S)
+    b.setAttribute('uv', new Float32BufferAttribute(boxUvs(p, img), 2))
+    return b
+  }, [p, img])
+  useEffect(() => () => g.dispose(), [g])
+  return <primitive object={g} attach="geometry" />
+}
+
+/** One texture per picture, shared by every part; freed when no material uses the picture any more. */
+function useTextures(urls: Map<string, string>): Map<string, Texture> {
+  const textures = useMemo(() => {
+    const m = new Map<string, Texture>()
+    const loader = new TextureLoader()
+    for (const [id, url] of urls) {
+      if (url === 'missing') continue
+      const t = loader.load(url)
+      t.wrapS = t.wrapT = RepeatWrapping
+      t.colorSpace = SRGBColorSpace
+      t.anisotropy = 4
+      m.set(id, t)
+    }
+    return m
+  }, [urls])
+  useEffect(() => () => textures.forEach(t => t.dispose()), [textures])
+  return textures
 }
 
 /**
@@ -103,6 +145,8 @@ function Panels({ panels }: { panels: Panel[] }) {
   const showFronts = useDesign(s => s.showFronts)
   const pick = useDesign(s => s.pick)
   const colors = useMemo(() => new Map(materials.map(m => [m.id, m.color])), [materials])
+  const images = useMemo(() => new Map(materials.flatMap(m => (m.image ? [[m.id, m.image] as const] : []))), [materials])
+  const textures = useTextures(useImageUrls(imageKey(materials)))
   const hl = useMemo(() => new Set(highlight), [highlight])
 
   return (
@@ -111,17 +155,24 @@ function Panels({ panels }: { panels: Panel[] }) {
         const b = p.box
         const selected = selectedId !== null && (view.mode === 'project' ? p.nodeId.startsWith(`${selectedId}:`) : p.nodeId === selectedId)
         const lit = hl.has(p.id)
-        const base = colors.get(p.materialId) ?? '#cccccc'
+        // A picture replaces the plain colour; without a readable one the plain colour stays (ADR-0048).
+        const img = images.get(p.materialId)
+        const map = img ? textures.get(img.id) : undefined
+        const base = map ? '#ffffff' : colors.get(p.materialId) ?? '#cccccc'
         const color = lit ? HIGHLIGHT : selected ? new Color(base).lerp(new Color(SELECT), 0.45).getStyle() : base
         const look = <>
-          <meshStandardMaterial color={color} roughness={0.78} metalness={0} transparent={p.role === 'back'} opacity={p.role === 'back' ? 0.92 : 1} side={p.shape?.kind === 'profile' ? DoubleSide : FrontSide} />
+          <meshStandardMaterial key={map ? map.uuid : 'plain'} map={map ?? null} color={color} roughness={0.78} metalness={0} transparent={p.role === 'back'} opacity={p.role === 'back' ? 0.92 : 1} side={p.shape?.kind === 'profile' ? DoubleSide : FrontSide} />
           <Edges threshold={15} color={selected ? SELECT : '#3b403c'} lineWidth={selected ? 1.6 : 1} />
         </>
         const onClick = (e: { stopPropagation: () => void }) => { e.stopPropagation(); pick(p.nodeId) }
-        if (p.shape?.kind === 'profile') return <mesh key={p.id} geometry={profileGeometry(p)} onClick={onClick}>{look}</mesh>
+        const geometry = map && img ? <PictureGeometry p={p} img={img} /> : <boxGeometry args={[b.w * S, b.h * S, b.d * S]} />
+        if (p.shape?.kind === 'profile') {
+          return map && img ? <mesh key={p.id} onClick={onClick}><PictureGeometry p={p} img={img} />{look}</mesh>
+            : <mesh key={p.id} geometry={profileGeometry(p)} onClick={onClick}>{look}</mesh>
+        }
         const mesh = (
           <mesh key={p.id} position={[(b.x + b.w / 2) * S, (b.y + b.h / 2) * S, (b.z + b.d / 2) * S]} onClick={onClick}>
-            <boxGeometry args={[b.w * S, b.h * S, b.d * S]} />
+            {geometry}
             {look}
           </mesh>
         )
@@ -131,7 +182,7 @@ function Panels({ panels }: { panels: Panel[] }) {
         return (
           <group key={p.id} position={[pv[0] * S, pv[1] * S, pv[2] * S]} rotation={[s.axis === 'x' ? a : 0, s.axis === 'y' ? a : 0, s.axis === 'z' ? a : 0]}>
             <mesh position={[(b.x + b.w / 2 - pv[0]) * S, (b.y + b.h / 2 - pv[1]) * S, (b.z + b.d / 2 - pv[2]) * S]} onClick={onClick}>
-              <boxGeometry args={[b.w * S, b.h * S, b.d * S]} />
+              {geometry}
               {look}
             </mesh>
           </group>

@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { buildModel } from '../core/build'
-import { findInProduct, mapProductSpace, templates, upgradeDesign } from '../core/design'
+import { findInProduct, mapProductSpace, templates, upgradeDesign, validateDesign } from '../core/design'
 import { mergeItems } from '../core/merge'
 import { buildProjectModel, makeItem, removeProjectItem, resolvePlacements, setGapLeft, type Project, type ProjectItem, type ProjectModel } from '../core/project'
 import type { CabinetParams, CornerParams, DeskParams, Design, FrameParams, FurnitureModel, Material, PanelParams, PanelSetParams, Space } from '../core/types'
@@ -52,6 +52,8 @@ interface State {
   updateSpace: (id: string, fn: (s: Space) => Space) => void
   updateMaterial: (id: string, patch: Partial<Material>) => void
   addMaterial: (m: Material) => void
+  /** Removes a board no part uses; returns why not otherwise (nothing changes). */
+  removeMaterial: (id: string) => string | null
   select: (id: string | null) => void
   setHighlight: (ids: string[]) => void
   setShowFronts: (v: boolean) => void
@@ -233,6 +235,14 @@ export const useDesign = create<State>((set, get) => {
       commit({ ...d, materials: d.materials.map(m => (m.id === id ? { ...m, ...patch } : m)) })
     },
     addMaterial: m => { const d = get().design; commit({ ...d, materials: [...d.materials, m] }) },
+    removeMaterial: id => {
+      const d = get().design
+      const next = { ...d, materials: d.materials.filter(m => m.id !== id) }
+      if (next.materials.length === d.materials.length) return null
+      if (validateDesign(next).length) return 'This board is still used by parts of the piece. Choose another board for them first.'
+      commit(next)
+      return null
+    },
     select: id => set({ selectedId: id }),
     setHighlight: ids => set({ highlight: ids }),
     setShowFronts: v => set({ showFronts: v }),

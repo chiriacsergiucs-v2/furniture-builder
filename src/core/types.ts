@@ -29,6 +29,22 @@ export interface Material {
   stock?: 'sheet' | 'solid'
   /** Solid stock: lengths you can buy, ascending (default 2400, 3000). */
   lengths?: Mm[]
+  /** A picture from the user's device shown on the board's faces instead of the plain colour (ADR-0048). */
+  image?: MaterialImage
+}
+
+/**
+ * ADR-0048. The picture itself lives in this device's `images` table under `id`; the design keeps only the reference.
+ * One copy of the picture covers `tileLength` × `tileWidth` mm of board and repeats; its width runs along the part's
+ * grain axis, or across it when `turn` is set.
+ */
+export interface MaterialImage {
+  id: string
+  /** File name as picked, for display. */
+  name: string
+  tileLength: Mm
+  tileWidth: Mm
+  turn?: boolean
 }
 
 /** A full factory sheet. Length runs along the grain, matching cut-list length (ADR-0009). */

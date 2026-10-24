@@ -522,6 +522,11 @@ table.buy { margin-bottom: var(--s-4); }
 .materials input[type=color] { width: 36px; height: 38px; padding: 0; border: 1px solid var(--line); border-radius: var(--r); background: none; }
 .materials .field > label { font-size: var(--fs-xs); }
 .materials .mm, .materials .mat-name, .materials select { background: var(--surface); }
+.materials .mat-picture, .materials .mat-actions { grid-column: 1 / -1; display: grid; gap: var(--s-2); }
+.mat-picture-row { display: flex; flex-wrap: wrap; gap: var(--s-2); align-items: center; }
+.mat-thumb { width: 56px; height: 56px; object-fit: cover; border: 1px solid var(--line); border-radius: var(--r); }
+.mat-actions { justify-items: start; }
+.file-btn.disabled { opacity: .6; pointer-events: none; }
 .file-btn { position: relative; cursor: pointer; }
 .file-btn input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .file-btn:focus-within { outline: 2px solid var(--link); outline-offset: 2px; }

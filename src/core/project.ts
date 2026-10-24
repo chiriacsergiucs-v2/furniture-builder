@@ -224,7 +224,8 @@ export const placedBounds = (item: ProjectItem): Box => placeItem(item).bounds
 // ---------------------------------------------------------------------------
 
 /** Materials of all pieces merged by name + thickness + grain (grained and plain boards never share a sheet). */
-export const materialKey = (m: Pick<Material, 'name' | 'thickness' | 'grain'>) => `mat:${m.name}|${m.thickness}|${m.grain ? 'grain' : 'plain'}`
+/** Boards with the same name, thickness and grain are one board; a picture (ADR-0048) makes a different decor. */
+export const materialKey = (m: Pick<Material, 'name' | 'thickness' | 'grain' | 'image'>) => `mat:${m.name}|${m.thickness}|${m.grain ? 'grain' : 'plain'}${m.image ? `|img:${m.image.id}` : ''}`
 
 export interface ProjectModel {
   pieces: PlacedPiece[]

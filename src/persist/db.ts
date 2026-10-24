@@ -9,6 +9,8 @@ import type { ResearchMark } from '../core/research/types'
 export interface StoredDesign { id: string; name: string; updatedAt: string; design: Design }
 export interface StoredProject { id: string; name: string; updatedAt: string; project: Project }
 export interface StoredTemplate { id: string; updatedAt: string; template: LocalTemplate }
+/** A picture added to a material (ADR-0048), already scaled down. Bytes, not a Blob: every browser stores those. */
+export interface StoredImage { id: string; name: string; type: string; width: number; height: number; bytes: ArrayBuffer; createdAt: string }
 
 /**
  * Local-only storage (IndexedDB). Nothing leaves the device. New database name: the rebuild is a clean
@@ -20,6 +22,7 @@ class FurnitureDb extends Dexie {
   templates!: Table<StoredTemplate, string>
   researchDocs!: Table<StoredBundle, string>
   researchMarks!: Table<ResearchMark, string>
+  images!: Table<StoredImage, string>
   constructor(name = 'furniture-builder') {
     super(name)
     // Never edit a shipped version block; add a new version for any change (ADR-0012).
@@ -31,6 +34,8 @@ class FurnitureDb extends Dexie {
     // v4 (ADR-0043): research papers (one row per edition) and the user's decisions on them, kept apart so a
     // re-import never touches a decision. Earlier tables untouched (additive).
     this.version(4).stores({ designs: 'id, updatedAt, name', projects: 'id, updatedAt, name', templates: 'id, updatedAt', researchDocs: 'key, docId', researchMarks: 'id, updatedAt' })
+    // v5 (ADR-0048): pictures for materials, referenced by id from a design's material. Earlier tables untouched.
+    this.version(5).stores({ designs: 'id, updatedAt, name', projects: 'id, updatedAt, name', templates: 'id, updatedAt', researchDocs: 'key, docId', researchMarks: 'id, updatedAt', images: 'id' })
   }
 }
 
@@ -90,6 +95,16 @@ export async function saveResearchMarks(marks: ResearchMark[], database = db): P
 export async function listResearchMarks(database = db): Promise<ResearchMark[]> {
   const rows = await database.researchMarks.toArray()
   return rows.filter(r => !validateMark(r).length)
+}
+
+export async function saveImage(img: StoredImage, database = db): Promise<void> {
+  await database.images.put(img)
+}
+/** The stored picture if it is readable; an unreadable row is left in place (ADR-0012). */
+export async function loadImage(id: string, database = db): Promise<StoredImage | undefined> {
+  const row = await database.images.get(id)
+  const ok = row && row.bytes instanceof ArrayBuffer && row.bytes.byteLength > 0 && typeof row.type === 'string'
+  return ok ? row : undefined
 }
 
 const LAST_KEY = 'furniture-builder:last-design'

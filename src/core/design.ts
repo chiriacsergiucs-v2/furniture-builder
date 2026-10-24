@@ -1,6 +1,7 @@
 import type {
   CabinetParams, CornerParams, DeskParams, Design, DrawerSettings, FrameKind, FrameParams, Material, PanelParams, Product, Space, SpaceKind, SplitSize,
 } from './types'
+import { materialImageProblems } from './surface'
 
 export type PedestalSide = 'left' | 'right'
 
@@ -405,6 +406,7 @@ export function validateDesign(d: unknown): string[] {
       2 * (m.sheet.trim as number) < Math.min(m.sheet.length as number, m.sheet.width as number) && (m.sheet.count === null || isInt(m.sheet.count)))) errs.push(`Invalid sheet for ${String(m.name)}`)
     else if (m.stock !== undefined && m.stock !== 'sheet' && m.stock !== 'solid') errs.push(`Invalid stock for ${String(m.name)}`)
     else if (m.lengths !== undefined && !(Array.isArray(m.lengths) && m.lengths.length > 0 && m.lengths.every(v => isInt(v, 100) && (v as number) <= 20_000))) errs.push(`Invalid stock lengths for ${String(m.name)}`)
+    else if (m.image !== undefined && materialImageProblems(m.image).length) errs.push(`Invalid picture for ${String(m.name)}: ${materialImageProblems(m.image).join(', ')}`)
     else if (mids.has(m.id as string)) errs.push(`Duplicate material ${String(m.id)}`)
     else mids.add(m.id as string)
   }

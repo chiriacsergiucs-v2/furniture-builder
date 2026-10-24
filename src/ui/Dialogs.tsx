@@ -11,6 +11,8 @@ import { AddPieceList } from './Project'
 import { templateGlyph } from './Templates'
 import { StartFrom } from './Catalog'
 import { askConfirm } from './Confirm'
+import { importImage, useImageUrls } from '../persist/images'
+import { MAX_TILE } from '../core/surface'
 
 /** Modal shell: header (title + close), scrolling body, optional footer for actions. Esc and backdrop close it. */
 export function Dialog({ open, onClose, title, children, footer, wide }: { open: boolean; onClose: () => void; title: string; children: ReactNode; footer?: ReactNode; wide?: boolean }) {
@@ -193,10 +195,12 @@ export function MaterialsDialog({ open, onClose }: { open: boolean; onClose: () 
   const setKerf = useDesign(s => s.setKerf)
   const update = useDesign(s => s.updateMaterial)
   const add = useDesign(s => s.addMaterial)
+  const remove = useDesign(s => s.removeMaterial)
+  const [why, setWhy] = useState<{ id: string; text: string } | null>(null)
   return (
     <Dialog open={open} onClose={onClose} title="Materials in this piece"
       footer={<>
-        <p className="hint start">Changing a thickness rebuilds every part made from that board.</p>
+        <p className="hint start">Changing a thickness rebuilds every part made from that board. Colours and pictures only change how the board looks on screen.</p>
         <button type="button" className="btn outline" onClick={() => add({ id: newId(), name: 'New board', thickness: 18, grain: false, color: '#d8d4cc' })}><Icon name="plus" />Add a material</button>
       </>}>
       <MmField label="Saw cut (kerf)" value={kerf} min={0} max={20} step={1} onChange={setKerf} hint="Material lost in every cut. Sheet length runs along the grain." />
@@ -214,9 +218,58 @@ export function MaterialsDialog({ open, onClose }: { open: boolean; onClose: () 
               <MmField label="Sheets in stock" unit="" value={sheetOf(m).count ?? 0} min={0} max={999} step={1} hint="0 = buy as needed"
                 onChange={v => update(m.id, { sheet: { ...sheetOf(m), count: v === 0 ? null : v } })} />
             </div>
+            <MaterialPicture m={m} />
+            <div className="mat-actions">
+              <button type="button" className="btn sm outline" onClick={() => { const r = remove(m.id); setWhy(r ? { id: m.id, text: r } : null) }}>
+                <Icon name="trash" className="sm" />Remove board</button>
+              {why?.id === m.id && <p className="alert error" role="alert"><Icon name="alert-circle" className="sm" /><span>{why.text}</span></p>}
+            </div>
           </li>
         ))}
       </ul>
     </Dialog>
+  )
+}
+
+/**
+ * ADR-0048: any picture from this device as the board's look. It is scaled down and kept on this device only; the
+ * plain colour becomes the picture's average colour and is shown wherever the picture cannot be.
+ */
+function MaterialPicture({ m }: { m: Material }) {
+  const update = useDesign(s => s.updateMaterial)
+  const urls = useImageUrls(m.image?.id ?? '')
+  const url = m.image ? urls.get(m.image.id) : undefined
+  const [busy, setBusy] = useState(false)
+  const [problem, setProblem] = useState<string | null>(null)
+  const pick = async (file: File | undefined) => {
+    if (!file) return
+    setBusy(true); setProblem(null)
+    const r = await importImage(file)
+    setBusy(false)
+    if (!r.ok) { setProblem(`${r.problem} The board keeps its ${m.image ? 'current picture' : 'plain colour'}.`); return }
+    update(m.id, { color: r.color, image: { ...r.image, turn: m.image?.turn } })
+  }
+  const img = m.image
+  return (
+    <div className="mat-picture">
+      <div className="mat-picture-row">
+        {img && url && url !== 'missing' && <img className="mat-thumb" src={url} alt={`Picture of ${m.name}`} />}
+        <label className={`btn sm outline file-btn${busy ? ' disabled' : ''}`}>
+          <Icon name="upload" className="sm" />{busy ? 'Preparing picture…' : img ? 'Replace picture' : 'Add a picture'}
+          <input type="file" accept="image/png,image/jpeg,image/webp" disabled={busy} aria-label={`${img ? 'Replace' : 'Add a'} picture for ${m.name}`}
+            onChange={e => { void pick(e.target.files?.[0]); e.target.value = '' }} />
+        </label>
+        {img && <button type="button" className="btn sm ghost" onClick={() => update(m.id, { image: undefined })}>Remove picture</button>}
+        {img && <span className="hint">{img.name}</span>}
+      </div>
+      {img && url === 'missing' && <p className="alert error" role="alert"><Icon name="alert-circle" className="sm" />
+        <span>The picture {img.name} is not on this device. The plain colour is shown; add the picture again to see it.</span></p>}
+      {problem && <p className="alert error" role="alert"><Icon name="alert-circle" className="sm" /><span>{problem}</span></p>}
+      {img && <div className="sheet-fields">
+        <MmField label="One picture covers, along the grain" value={img.tileLength} min={1} max={MAX_TILE} onChange={v => update(m.id, { image: { ...img, tileLength: v } })} />
+        <MmField label="One picture covers, across" value={img.tileWidth} min={1} max={MAX_TILE} onChange={v => update(m.id, { image: { ...img, tileWidth: v } })} />
+        <Toggle label="Turn picture 90°" checked={!!img.turn} onChange={v => update(m.id, { image: { ...img, turn: v } })} />
+      </div>}
+    </div>
   )
 }
