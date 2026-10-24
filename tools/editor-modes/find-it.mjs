@@ -11,21 +11,38 @@ const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PAT
 const results = [];
 const check = (width, name, ok, detail = '') => {
   results.push({ width, name, ok });
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${width}px ${name}${detail ? ` — ${detail}` : ''}`);
+  console.log(
+    `${ok ? 'PASS' : 'FAIL'} ${typeof width === 'number' ? `${width}px` : width} ${name}${detail ? ` — ${detail}` : ''}`,
+  );
 };
 
-for (const width of [390, 1280, 360]) {
+// Light at three widths, then dark (system setting) at phone and desktop widths.
+for (const [width, scheme] of [
+  [390, 'light'],
+  [1280, 'light'],
+  [360, 'light'],
+  [390, 'dark'],
+  [1280, 'dark'],
+]) {
   const phone = width < 500;
-  const ctx = await browser.newContext({ viewport: { width, height: phone ? 844 : 900 } });
+  const ctx = await browser.newContext({
+    viewport: { width, height: phone ? 844 : 900 },
+    colorScheme: scheme,
+  });
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => {
     if (m.type() === 'error') errors.push(m.text());
   });
+  const tag = scheme === 'dark' ? `${width}px dark` : `${width}px`;
+  const ck = (w, name, ok, detail) => check(tag, name, ok, detail);
   const noSideScroll = () =>
     page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
-  const shot = (name) => page.screenshot({ path: `${out}/modes-${name}-${width}.png` });
+  const shot = (name) =>
+    page.screenshot({
+      path: `${out}/modes-${name}-${width}${scheme === 'dark' ? '-dark' : ''}.png`,
+    });
   const mode = (name) => page.getByRole('radio', { name });
   const side = page.locator('aside.side');
   const peek = page.locator('.sheet-peek');
@@ -42,7 +59,7 @@ for (const width of [390, 1280, 360]) {
     .first()
     .click();
   await page.locator('main.work').waitFor({ state: 'visible' });
-  check(
+  ck(
     width,
     'modes Compose · Configure · Build & Preview visible',
     (await mode('Compose').isVisible()) &&
@@ -70,21 +87,21 @@ for (const width of [390, 1280, 360]) {
   for (const t of [/^contents$/i, /^doors and handles$/i, /^divide this space$/i]) {
     const l = side.getByText(t).first();
     await l.scrollIntoViewIfNeeded();
-    check(width, `Compose shows ${t.source}`, await l.isVisible());
+    ck(width, `Compose shows ${t.source}`, await l.isVisible());
   }
-  check(
+  ck(
     width,
     'Compose has no Construction or Materials settings',
     (await group('Construction').count()) === 0 && (await group(/^Materials$/).count()) === 0,
   );
-  if (phone) check(width, 'no 3D canvas in Compose', (await canvases()) === 0);
-  check(width, 'no sideways scroll (Compose)', await noSideScroll());
+  if (phone) ck(width, 'no 3D canvas in Compose', (await canvases()) === 0);
+  ck(width, 'no sideways scroll (Compose)', await noSideScroll());
   await shot('compose');
 
   // 3. Configure: size, construction, boards (with Add a material) and drawers; no Materials button or dialog.
   await mode('Configure').click();
   await page.waitForTimeout(200);
-  check(
+  ck(
     width,
     'Configure shows Width',
     await side.getByLabel('Width', { exact: true }).first().isVisible(),
@@ -95,19 +112,19 @@ for (const width of [390, 1280, 360]) {
     'Drawers and runners',
     'Boards, sheets and saw cut',
   ])
-    check(width, `Configure shows "${t}"`, (await group(t).count()) > 0);
+    ck(width, `Configure shows "${t}"`, (await group(t).count()) > 0);
   await group('Boards, sheets and saw cut').click();
   const addMaterial = side.getByRole('button', { name: 'Add a material' });
   await addMaterial.scrollIntoViewIfNeeded();
-  check(width, 'Configure has "Add a material"', await addMaterial.isVisible());
-  check(
+  ck(width, 'Configure has "Add a material"', await addMaterial.isVisible());
+  ck(
     width,
     'no Materials button or dialog anywhere',
     (await page.getByRole('button', { name: 'Materials', exact: true }).count()) === 0 &&
       (await page.getByRole('dialog', { name: 'Materials in this piece' }).count()) === 0,
   );
-  if (phone) check(width, 'no 3D canvas in Configure', (await canvases()) === 0);
-  check(
+  if (phone) ck(width, 'no 3D canvas in Configure', (await canvases()) === 0);
+  ck(
     width,
     'no sideways scroll (Configure)',
     await noSideScroll(),
@@ -133,15 +150,15 @@ for (const width of [390, 1280, 360]) {
     .first()
     .waitFor({ timeout: 15000 })
     .catch(() => {});
-  check(width, 'Build & Preview shows the 3D view', (await canvases()) > 0);
+  ck(width, 'Build & Preview shows the 3D view', (await canvases()) > 0);
   const csv = page.getByRole('button', { name: 'Download CSV' });
   const print = page.getByRole('button', { name: 'Print', exact: true });
-  check(
+  ck(
     width,
     'Parts tab has Download CSV and Print, enabled',
     (await csv.isVisible()) && (await csv.isEnabled()) && (await print.isEnabled()),
   );
-  check(width, 'no sideways scroll (Build & Preview)', await noSideScroll());
+  ck(width, 'no sideways scroll (Build & Preview)', await noSideScroll());
   await shot('build');
   await mode('Configure').click();
   const w = side.getByLabel('Width', { exact: true }).first();
@@ -149,18 +166,18 @@ for (const width of [390, 1280, 360]) {
   await w.press('Tab');
   await mode(/Build & Preview/).click();
   await page.waitForTimeout(300);
-  check(
+  ck(
     width,
     'the mode names the problem ("1 problem")',
     /1 problem/.test(await mode(/Build & Preview/).textContent()),
   );
-  check(
+  ck(
     width,
     'Download CSV and Print disabled with an error',
     (await csv.isDisabled()) && (await print.isDisabled()),
   );
   await page.getByRole('tab', { name: /Checks/ }).click();
-  check(
+  ck(
     width,
     'Checks shows the error',
     await page
@@ -178,7 +195,7 @@ for (const width of [390, 1280, 360]) {
       box(page.locator('section.stage')),
       box(page.locator('section.output')),
     ]);
-    check(width, 'side left, drawing centre, Build right', a.x < b.x && b.x < c.x && c.width > 0);
+    ck(width, 'side left, drawing centre, Build right', a.x < b.x && b.x < c.x && c.width > 0);
   }
 
   // 6. A project opens in Compose with the plan; Configure holds the project settings; placing switches to Compose.
@@ -190,13 +207,13 @@ for (const width of [390, 1280, 360]) {
     .click();
   await page.locator('main.work').waitFor({ state: 'visible' });
   await mode('Compose').click();
-  check(
+  ck(
     width,
     'project shows its plan in Compose',
     await page.getByText('Add pieces to see them on the plan.').isVisible(),
   );
   await mode('Configure').click();
-  check(
+  ck(
     width,
     'Configure holds the project settings',
     (await side.getByRole('heading', { name: 'Project settings' }).isVisible()) &&
@@ -210,15 +227,52 @@ for (const width of [390, 1280, 360]) {
   await page.getByRole('button', { name: 'Add', exact: true }).first().click();
   await page.locator('main.work').waitFor({ state: 'visible' });
   await page.waitForTimeout(300);
-  check(
+  ck(
     width,
     'placing a piece switches to Compose',
     (await mode('Compose').getAttribute('aria-checked')) === 'true' &&
       (await page.getByText('Tap the plan to place').isVisible()),
   );
-  check(width, 'no sideways scroll (project)', await noSideScroll());
+  ck(width, 'no sideways scroll (project)', await noSideScroll());
   await shot('placing');
-  check(width, 'no page errors', errors.length === 0, errors.join(' / '));
+  if (scheme === 'dark') {
+    // Every new surface follows the dark tokens: dark ground, light text (ADR-030).
+    const lum = (rgb) => {
+      const [r, g, b] = rgb.match(/\d+/g).map(Number);
+      return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+    };
+    const colours = async (sel) =>
+      page
+        .locator(sel)
+        .first()
+        .evaluate((el) => {
+          const cs = getComputedStyle(el);
+          return [cs.backgroundColor, cs.color];
+        });
+    const parts = ['header.bar', 'nav.places', '.modes', 'aside.side', 'section.output'];
+    if (phone) parts.push('.sheet-peek');
+    for (const sel of parts) {
+      if (!(await page.locator(sel).first().isVisible())) continue;
+      const [bg, fg] = await colours(sel);
+      ck(
+        width,
+        `dark: ${sel} is dark with light text`,
+        lum(bg) < 0.25 && lum(fg) > 0.6,
+        `${bg} / ${fg}`,
+      );
+    }
+    await page.locator('summary[aria-label="More"]').click();
+    const [mbg, mfg] = await colours('details.more .menu-items');
+    ck(
+      width,
+      'dark: ⋯ menu is dark with light text',
+      lum(mbg) < 0.25 && lum(mfg) > 0.6,
+      `${mbg} / ${mfg}`,
+    );
+    await shot('more');
+    await page.keyboard.press('Escape');
+  }
+  ck(width, 'no page errors', errors.length === 0, errors.join(' / '));
   await ctx.close();
 }
 await browser.close();

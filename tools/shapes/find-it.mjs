@@ -171,7 +171,7 @@ for (const width of [1440, 375]) {
     check(width, `${it.item}: no sideways scroll`, await noSideScroll());
   }
 
-  // Pat Noi: Mobila — Dormitor from New → Built in the app; the bed frame is screwed and listed.
+  // Pat Noi: Mobila — Dormitor (before D02 it came from New → Built in the app); the bed frame is screwed and listed.
   // "New" is labelled in the top bar on desktop and an icon with that name in the phone bottom bar.
   await page.getByRole('button', { name: 'New', exact: true }).click();
   await page.getByRole('button', { name: /Mobila — Dormitor/ }).click();

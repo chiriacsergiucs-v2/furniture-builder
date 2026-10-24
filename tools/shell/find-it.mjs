@@ -55,11 +55,22 @@ for (const width of [1280, 390, 360]) {
   } else check(width, 'places are tabs in the top bar', navBox.y < barBox.y + barBox.height);
   check(width, 'top bar is one row', barBox.height <= 56, `${barBox.height}px`);
   check(width, 'no sideways scroll (Projects)', await noSideScroll());
+  // D02: the "Built in the app" list is gone (user request 2026-10-24).
+  check(
+    width,
+    'Projects has no "Built in the app"',
+    (await page.getByText('Built in the app').count()) === 0,
+  );
   await shot('projects');
 
   // 2. A new single piece opens in the editor.
   await page.getByRole('button', { name: 'New single piece' }).click();
   const dlg = page.locator('dialog[open]');
+  check(
+    width,
+    'New has no "Built in the app"',
+    (await dlg.getByText('Built in the app').count()) === 0,
+  );
   await dlg
     .getByRole('button', { name: /Wall cabinet/ })
     .first()

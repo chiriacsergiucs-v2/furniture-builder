@@ -16,7 +16,6 @@ import {
 } from '../../persist/db';
 import { useDesign } from '../../store/designStore';
 import { askConfirm, askText } from '../Confirm';
-import { BuiltInProjects } from '../Dialogs';
 import { ProjectTemplateList } from '../ProjectTemplates';
 import { Icon, type IconName } from '../icons';
 import { templateGlyph } from '../Templates';
@@ -33,7 +32,7 @@ const KIND_TEXT = {
 
 /**
  * Projects (ADR-078): everything saved on this device in one place — the former Home page and Library dialog.
- * Create, open, duplicate, delete, import a file, clean up pictures; shipped projects and project templates too.
+ * Create, open, duplicate, delete, import a file, clean up pictures; project templates too.
  */
 export function ProjectsPage({
   onOpened,
@@ -232,7 +231,7 @@ export function ProjectsPage({
         ) : projects.length === 0 && pieces.length === 0 ? (
           <p className="empty center">
             <Icon name="folder" />
-            No projects saved yet. Create a new project, or open one built in the app below.
+            No projects saved yet. Create a new project or a single piece, or import a file.
           </p>
         ) : (
           <>
@@ -271,7 +270,6 @@ export function ProjectsPage({
           </>
         )}
         <ProjectTemplateList onOpened={onOpened} />
-        <BuiltInProjects onOpened={onOpened} />
       </section>
     </main>
   );

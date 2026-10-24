@@ -276,6 +276,10 @@ export function mobilaDormitor(): Project {
   };
 }
 
+/**
+ * The Mobila rooms as projects. Used by the tests and to regenerate `docs/samples/*.project.json`; the app no longer
+ * lists them (the "Built in the app" list was removed at the user's request, 2026-10-24, backlog D02).
+ */
 export interface SampleProject {
   id: string;
   name: string;

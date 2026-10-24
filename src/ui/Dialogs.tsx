@@ -10,7 +10,6 @@ import {
   type Decor,
 } from '../core/materials';
 import { newProject } from '../core/project';
-import { sampleProjects } from '../core/samples/mobila';
 import { clearDecors, listDecors, replaceDecors, saveProject } from '../persist/db';
 import { useDesign } from '../store/designStore';
 import { Group, MmField, Segmented, Select, Toggle } from './controls';
@@ -68,48 +67,6 @@ export function Dialog({
       <div className="dialog-body">{children}</div>
       {footer && <div className="dialog-footer">{footer}</div>}
     </dialog>
-  );
-}
-
-/**
- * Projects shipped with the app (the Mobila rooms): on every deployed copy, no import needed. Each opens as a new
- * project of the user's own, saved on this device; the shipped one never changes.
- */
-export function BuiltInProjects({ onOpened }: { onOpened: () => void }) {
-  const openProject = useDesign((s) => s.openProject);
-  return (
-    <>
-      <h3 className="list-head">Built in the app</h3>
-      <p className="hint">
-        Mobila rooms, available on the deployed app. Each opens as your own copy.
-      </p>
-      <ul className="template-list">
-        {sampleProjects.map((sp) => (
-          <li key={sp.id}>
-            <button
-              type="button"
-              className="row-btn"
-              onClick={() => {
-                const now = new Date().toISOString();
-                const p = { ...sp.create(), id: newId(), createdAt: now, updatedAt: now };
-                void saveProject(p);
-                openProject(p);
-                onOpened();
-              }}
-            >
-              <span className="glyph">
-                <Icon name="project" />
-              </span>
-              <span>
-                <strong>{sp.name}</strong>
-                <span className="sub">{sp.description}</span>
-              </span>
-              <Icon name="chevron-right" className="chev sm" />
-            </button>
-          </li>
-        ))}
-      </ul>
-    </>
   );
 }
 
@@ -176,7 +133,6 @@ export function NewDialog({
         </span>
         <Icon name="chevron-right" className="chev sm" />
       </button>
-      <BuiltInProjects onOpened={opened} />
       {open && (
         <StartFrom
           onPick={(d) => {
