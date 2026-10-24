@@ -10,6 +10,7 @@ import type { Design } from '../core/types'
 import { listDesigns, type StoredDesign } from '../persist/db'
 import { useDesign } from '../store/designStore'
 import { useTemplates } from '../store/templatesStore'
+import { ProjectTemplateList } from './ProjectTemplates'
 import { askConfirm, askText } from './Confirm'
 import { Icon } from './icons'
 import { familyGlyph, templateGlyph } from './Templates'
@@ -210,7 +211,7 @@ export function CatalogPage({ onDone, onNewPiece }: { onDone: () => void; onNewP
           {g.items.map(({ family, also }) => <FamilyBlock key={`${g.key}:${family.id}`} f={family} also={also} q={q} toProject={toProject} onTake={take} onEdit={() => startEdit(family)} />)}
         </section>
       ))}
-      {source === 'saved' && <SavedList onTake={take} />}
+      {source === 'saved' && <><SavedList onTake={take} /><ProjectTemplateList manage onOpened={onDone} /></>}
       {source === 'brands' && (brandEntries.length === 0
         ? <p className="empty center"><Icon name="catalog" />No brand products yet. The weekly catalog feed (Mondays, IKEA first) adds them once it can reach the manufacturers' sites.</p>
         : <ul className="template-list template-grid">{brandEntries.map(e => (

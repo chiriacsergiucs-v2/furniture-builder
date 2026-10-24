@@ -98,7 +98,8 @@ export function App() {
   const exploded = useDesign(s => s.exploded)
   const setExploded = useDesign(s => s.setExploded)
   const undo = useDesign(s => s.undo), redo = useDesign(s => s.redo)
-  const canUndo = useDesign(s => s.past.length > 0), canRedo = useDesign(s => s.future.length > 0)
+  const canUndo = useDesign(s => (s.project && !s.editingItemId ? s.projectPast.length : s.past.length) > 0)
+  const canRedo = useDesign(s => (s.project && !s.editingItemId ? s.projectFuture.length : s.future.length) > 0)
   const [dialog, setDialog] = useState<null | 'new' | 'library' | 'materials' | 'add' | 'wizard'>(null)
   const openCatalog = () => { setDialog(null); setPage('catalog') }
   /** The piece reopened in the wizard, or null for a new one (ADR-0046). */
@@ -112,6 +113,11 @@ export function App() {
   const editingName = project?.items.find(i => i.id === editingItemId)?.design.name
   const [save, setSave] = useState<SaveState>('idle')
   const [view, setView] = useState<'front' | '3d'>('front')
+  // A piece waiting to be placed is placed on the plan (ADR-0053).
+  // A room being drawn is drawn on the plan too (ADR-0056).
+  const tapMode = useDesign(s => (s.placingItemId ? `place:${s.placingItemId}` : s.drawingRoom ? 'draw' : ''))
+  const [lastTapMode, setLastTapMode] = useState(tapMode)
+  if (tapMode !== lastTapMode) { setLastTapMode(tapMode); if (tapMode) setView('front') }
   const [has3d] = useState(webglAvailable)
   const [printing, setPrinting] = useState(false)
   const theme = useTheme()
@@ -257,11 +263,11 @@ export function App() {
           <Icon name={theme === 'dark' ? 'sun' : 'moon'} />
         </button>
         <nav className="actions" aria-label="Actions">
-          {!inProject && <div className="cluster">
+          <div className="cluster">
             <button type="button" className="btn icon" onClick={undo} disabled={!canUndo} aria-label="Undo" title="Undo (Ctrl+Z)"><Icon name="undo" /></button>
             <button type="button" className="btn icon" onClick={redo} disabled={!canRedo} aria-label="Redo" title="Redo (Ctrl+Shift+Z)"><Icon name="redo" /></button>
             <span className="divider" aria-hidden="true" />
-          </div>}
+          </div>
           <div className="cluster">
             <button type="button" className="btn" onClick={() => setDialog('new')} aria-label="New" title="Start a new piece or project"><Icon name="plus" /><span className="lbl">New</span></button>
             <button type="button" className="btn" onClick={() => setDialog('library')} aria-label="Library" title="Pieces and projects saved on this device"><Icon name="folder" /><span className="lbl">Library</span></button>

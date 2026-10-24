@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { areaM2, bandMetersFromRows, lengthsList } from '../core/cutlist'
 import { useDesign, type Tab } from '../store/designStore'
 import { Sheets } from './Sheets'
+import { ShoppingList } from './Shopping'
 import { useView } from './useView'
 import { Icon } from './icons'
 
@@ -16,6 +17,7 @@ export function Output() {
     { id: 'parts', label: 'Parts', badge: parts || undefined, kind: 'neutral' },
     { id: 'sheets', label: 'Sheets' },
     { id: 'hardware', label: 'Hardware' },
+    { id: 'shopping', label: 'Shopping list' },
     { id: 'checks', label: 'Checks', badge: errors || warnings || undefined, kind: errors ? 'error' : 'warning' },
   ]
   return (
@@ -32,6 +34,7 @@ export function Output() {
         {tab === 'parts' && <Parts />}
         {tab === 'sheets' && <Sheets />}
         {tab === 'hardware' && <Hardware />}
+        {tab === 'shopping' && <ShoppingList />}
         {tab === 'checks' && <Checks />}
       </div>
     </section>

@@ -22,7 +22,7 @@ describe('editable templates on this device (ADR-0034)', () => {
     const Db = (mod.db.constructor as new (n: string) => typeof mod.db)
     const fresh = new Db(name)
     await fresh.open()
-    expect(fresh.verno).toBe(6)
+    expect(fresh.verno).toBe(7)
     expect(await fresh.designs.count()).toBe(1)
     expect(await fresh.projects.count()).toBe(1) // unreadable rows are kept
     expect(await fresh.templates.count()).toBe(0)

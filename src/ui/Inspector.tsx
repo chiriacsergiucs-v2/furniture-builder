@@ -136,6 +136,8 @@ function SpaceEditor({ space, root, rootLabel, wholeLabel }: { space: Space; roo
           )}
           {space.kind === 'drawers' && <Counter label="Drawers" value={space.count} min={1} max={10} onChange={v => set(s => setDrawerCount(s, v))} />}
           {space.kind === 'drawers' && space.count > 1 && <DrawerHeights space={space} onChange={set} />}
+          {space.kind === 'drawers' && !space.front && <Toggle label="Top drawer is a fixed front (sink false front)" checked={!!space.fixedTop}
+            onChange={v => set(s => (s.kind === 'drawers' ? { ...s, fixedTop: v || undefined } : s))} />}
           {space.kind === 'drawers' && <Toggle label="Top drawer cut around a sink trap" checked={!!space.uCut}
             onChange={v => set(s => (s.kind === 'drawers' ? { ...s, uCut: v ? { width: 250, depth: 200 } : null } : s))} />}
           {space.kind === 'drawers' && space.uCut && (

@@ -371,9 +371,20 @@ export function buildCabinet(p: CabinetParams, materials: Map<string, Material>,
         let slotTop = ip.y + ip.h
         let frontTop = fz.y1
         const boxFront = ip.z + ip.d - setback
+        // Sink false front (ADR-0051): drawer 1 keeps its front; its box and runners are left out.
+        const fixed = !!s.fixedTop && !internal
+        if (s.fixedTop && internal) warn('fixed-front-internal', 'A fixed front needs a drawer front of its own; drawers behind doors have none, so the setting is ignored.', s.id)
+        if (fixed && s.uCut) warn('fixed-front-ucut', 'The top drawer is a fixed front, so it has no box to cut around the trap; the U-cut is ignored.', s.id)
         for (let i = 0; i < n; i++) {
           const sh = slots[i]
           const slotBottom = slotTop - sh
+          if (fixed && i === 0) {
+            const fh = frontHeights[0]
+            add(s.id, 'drawer-front', 'Fixed front 1', front.id, box(fz.x0, frontTop - fh, frontZ, fz.x1 - fz.x0, fh, tf), 'z', 'x', ['-x', '+x', '-y', '+y'], 0)
+            frontTop -= fh + g
+            slotTop = slotBottom
+            continue
+          }
           const bh = sh - ds.verticalClearance
           if (bh < 60) { err('drawer-low', `Drawer ${i + 1} box would be only ${bh} mm high.`, s.id); return }
           const by = slotBottom + lo(ds.verticalClearance)
@@ -385,7 +396,7 @@ export function buildCabinet(p: CabinetParams, materials: Map<string, Material>,
           const ph2 = bh - tbot, py = by + tbot
           add(s.id, 'drawer-side', `Drawer ${k} side`, boxM.id, box(bx, py, bz, tb, ph2, runner), 'x', 'z', ['+y'], 2 * i)
           add(s.id, 'drawer-side', `Drawer ${k} side`, boxM.id, box(bx + bw - tb, py, bz, tb, ph2, runner), 'x', 'z', ['+y'], 2 * i + 1)
-          const u = i === 0 ? s.uCut : null
+          const u = i === 0 && !fixed ? s.uCut : null
           if (u) {
             // Sink drawer (ADR-0040): a notch for the trap at the middle of the back. The bottom is cut to a U; the back
             // runs round the notch in five parts. Notch sizes come from the trap; they are not checked against it.
@@ -411,8 +422,10 @@ export function buildCabinet(p: CabinetParams, materials: Map<string, Material>,
           }
           slotTop = slotBottom
         }
-        hw({ nodeId: s.id, kind: 'drawer-runner-pair', label: internal ? 'Ball-bearing side runner pair (internal drawers)' : 'Ball-bearing side runner pair', quantity: n, sizeMm: runner, note: `side clearance ${ds.sideClearance} mm per side` })
-        if (!internal) handleHw(s.id, s.handle, n)
+        const boxes = fixed ? n - 1 : n
+        if (boxes) hw({ nodeId: s.id, kind: 'drawer-runner-pair', label: internal ? 'Ball-bearing side runner pair (internal drawers)' : 'Ball-bearing side runner pair', quantity: boxes, sizeMm: runner, note: `side clearance ${ds.sideClearance} mm per side` })
+        if (fixed) hw({ nodeId: s.id, kind: 'front-fixing', label: 'Fixing for the fixed (false) front', quantity: 1, note: 'user-specified: choose clips or brackets for the sink front' })
+        if (!internal) handleHw(s.id, s.handle, boxes)
         if (internal) warn('internal-drawers', 'Drawers behind doors: check hinge and door clearance against the drawer boxes.', s.id)
         return
       }

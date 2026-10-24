@@ -246,6 +246,8 @@ export interface DrawersSpace extends SpaceBase {
    * back. Its bottom is a profiled board; its back runs around the notch. The front stays whole.
    */
   uCut?: { width: Mm; depth: Mm } | null
+  /** Sink false front (ADR-0051): the top drawer is a fixed front only — no box, no runners; fixing user-specified. */
+  fixedTop?: boolean
   /**
    * Optional heights, top→bottom, one per drawer (ADR-0023). They size the drawer fronts (or the opening, for
    * internal drawers); fixed mm or shares of the rest, like splits. Absent = equal.

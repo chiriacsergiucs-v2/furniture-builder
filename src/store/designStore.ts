@@ -1,12 +1,14 @@
 import { create } from 'zustand'
 import { buildModel } from '../core/build'
 import { findInProduct, mapProductSpace, templates, upgradeDesign, validateDesign } from '../core/design'
+import { closeOutline, DEFAULT_ROOM_HEIGHT, snapCorner, type Pt, type Room } from '../core/room'
+import { applyFinish, type FinishRole, type FinishScope } from '../core/finish'
 import { mergeItems } from '../core/merge'
-import { buildProjectModel, makeItem, removeProjectItem, resolvePlacements, setGapLeft, type Project, type ProjectItem, type ProjectModel } from '../core/project'
+import { buildProjectModel, makeItem, planRuns, refreshRunParts, removeProjectItem, resolvePlacements, setGapLeft, type Project, type ProjectItem, type ProjectModel, type RunSettings } from '../core/project'
 import type { CabinetParams, CornerParams, DeskParams, Design, FrameParams, FurnitureModel, Material, PanelParams, PanelSetParams, Space } from '../core/types'
 import type { LocalTemplate } from '../core/catalog/local'
 
-export type Tab = 'parts' | 'sheets' | 'hardware' | 'checks'
+export type Tab = 'parts' | 'sheets' | 'hardware' | 'shopping' | 'checks'
 
 interface State {
   design: Design
@@ -32,6 +34,15 @@ interface State {
   /** Piece selected in the project view. */
   selectedItemId: string | null
   projectDirtyAt: number
+  /** Project history (ADR-0050): one entry per user action on the project; session only. */
+  projectPast: Project[]
+  projectFuture: Project[]
+  /** Corners tapped so far while drawing the room on the plan (ADR-0056), or null. */
+  drawingRoom: Pt[] | null
+  /** A piece just added and waiting to be placed by a tap on the plan (ADR-0053). */
+  placingItemId: string | null
+  /** The project as it was when *Edit this piece* opened; *Back to project* records one step from it. */
+  editStart: Project | null
   /** Editing one variant of a local template (ADR-0034); the piece open before comes back afterwards. */
   templateEdit: { template: LocalTemplate; variantId: string; returnTo: Design } | null
 
@@ -75,6 +86,22 @@ interface State {
   selectItem: (id: string | null) => void
   editItem: (id: string) => void
   backToProject: () => void
+  /** Run parts (ADR-0036/0051/0058): propose again (forgets removals, turns automatic refresh on), remove one, settings. */
+  suggestRunParts: () => void
+  removeRunPart: (id: string) => void
+  setRunSettings: (patch: Partial<RunSettings>) => void
+  /** Put one board on the fronts or carcass of the selected piece, its run or the whole project (ADR-0052). */
+  /** Put the piece being placed with its left-back corner at a plan point (whole mm, x and z ≥ 0), or stop placing. */
+  placeAt: (x: number, z: number) => void
+  stopPlacing: () => void
+  /** The room (ADR-0055/0056); undefined removes it. */
+  setRoom: (room: Room | undefined) => void
+  startDrawRoom: () => void
+  addRoomCorner: (x: number, z: number) => void
+  /** Close the drawn outline into the room (keeps height and features); false when fewer than three corners. */
+  finishDrawRoom: () => boolean
+  cancelDrawRoom: () => void
+  applyFinish: (id: string, role: FinishRole, board: Material, scope: FinishScope) => { applied: string[]; skipped: string[] }
 }
 
 const HISTORY = 100
@@ -104,10 +131,20 @@ export const useDesign = create<State>((set, get) => {
     const { project, editingItemId, design } = get()
     if (project && editingItemId) set({ project: { ...project, items: project.items.map(i => (i.id === editingItemId ? { ...i, design } : i)) }, projectDirtyAt: Date.now() })
   }
+  /** Every project change goes through here: one call = one undo step (ADR-0050). */
   const commitProject = (next: Project) => {
+    const prev = get().project
     // Pieces on or above others follow them (ADR-0031): stored positions always match the placements.
-    const stamped = { ...resolvePlacements(next), updatedAt: new Date().toISOString() }
-    set({ project: stamped, projectModel: buildProjectModel(stamped), projectDirtyAt: Date.now() })
+    // Run parts follow the pieces in the same step (ADR-0058).
+    const stamped = { ...refreshRunParts(resolvePlacements(next)), updatedAt: new Date().toISOString() }
+    set({ project: stamped, projectModel: buildProjectModel(stamped), projectDirtyAt: Date.now(),
+      ...(prev ? { projectPast: [...get().projectPast, prev].slice(-HISTORY), projectFuture: [] } : {}) })
+  }
+  /** Show a project from the history: rebuild, keep the selection only if that piece still exists. */
+  const showProject = (p: Project, projectPast: Project[], projectFuture: Project[]) => {
+    const sel = get().selectedItemId
+    set({ project: p, projectModel: buildProjectModel(p), projectPast, projectFuture, projectDirtyAt: Date.now(), placingItemId: null,
+      selectedItemId: sel && p.items.some(i => i.id === sel) ? sel : null })
   }
   const initial = templates[0].create()
   return {
@@ -127,27 +164,32 @@ export const useDesign = create<State>((set, get) => {
     editingItemId: null,
     selectedItemId: null,
     projectDirtyAt: 0,
+    projectPast: [],
+    projectFuture: [],
+    editStart: null,
+    placingItemId: null,
+    drawingRoom: null,
     templateEdit: null,
 
     load: (raw, opts) => {
       const d = upgradeDesign(raw)
       set({ design: d, model: buildModel(d), selectedId: null, highlight: [], past: [], future: [], dirtyAt: 0, pristine: !!opts?.fromStorage,
-        project: null, projectModel: null, editingItemId: null, selectedItemId: null })
+        project: null, projectModel: null, editingItemId: null, selectedItemId: null, projectPast: [], projectFuture: [], editStart: null })
     },
     pick: nodeId => {
       const { project, editingItemId, design } = get()
       if (project && !editingItemId) { set({ selectedItemId: nodeId.split(':')[0] }); return }
       set({ selectedId: nodeId === design.product.id ? null : nodeId })
     },
-    openProject: raw => { const p = resolvePlacements(raw); set({ project: p, projectModel: buildProjectModel(p), editingItemId: null, selectedItemId: null, highlight: [], projectDirtyAt: 0 }) },
-    closeProject: () => set({ project: null, projectModel: null, editingItemId: null, selectedItemId: null }),
+    openProject: raw => { const p = resolvePlacements(raw); set({ project: p, projectModel: buildProjectModel(p), editingItemId: null, selectedItemId: null, highlight: [], projectDirtyAt: 0, projectPast: [], projectFuture: [], editStart: null, placingItemId: null, drawingRoom: null }) },
+    closeProject: () => set({ project: null, projectModel: null, editingItemId: null, selectedItemId: null, projectPast: [], projectFuture: [], editStart: null, placingItemId: null, drawingRoom: null }),
     updateProject: fn => { const p = get().project; if (p) commitProject(fn(p)) },
     addPiece: (d, libraryId) => {
       const p = get().project
       if (!p) return
       const item = makeItem(p, d, libraryId)
       commitProject({ ...p, items: [...p.items, item] })
-      set({ selectedItemId: item.id })
+      set({ selectedItemId: item.id, placingItemId: item.id })
     },
     updateItem: (id, patch) => { const p = get().project; if (p) commitProject({ ...p, items: p.items.map(i => (i.id === id ? { ...i, ...patch } : i)) }) },
     setGap: (id, gap, moveRight) => { const p = get().project; if (p) { const next = setGapLeft(p, id, gap, moveRight); if (next !== p) commitProject(next) } },
@@ -164,14 +206,17 @@ export const useDesign = create<State>((set, get) => {
       const item = get().project?.items.find(i => i.id === id)
       if (!item) return
       const d = upgradeDesign(item.design)
-      set({ editingItemId: id, design: d, model: buildModel(d), selectedId: null, highlight: [], past: [], future: [], dirtyAt: 0, pristine: true })
+      set({ editingItemId: id, design: d, model: buildModel(d), selectedId: null, highlight: [], past: [], future: [], dirtyAt: 0, pristine: true, editStart: get().project })
     },
     backToProject: () => {
       const raw = get().project
       if (!raw) return
-      // A resized piece moves whatever sits on it.
+      const start = get().editStart
+      set({ editingItemId: null, selectedId: null, highlight: [], editStart: null })
+      // The piece's edits are one project step (ADR-0050); a resized piece moves whatever sits on it.
+      if (start && raw !== start) { set({ project: start }); commitProject(raw); return }
       const p = resolvePlacements(raw)
-      set({ editingItemId: null, project: p, projectModel: buildProjectModel(p), selectedId: null, highlight: [], ...(p !== raw ? { projectDirtyAt: Date.now() } : {}) })
+      set({ project: p, projectModel: buildProjectModel(p), ...(p !== raw ? { projectDirtyAt: Date.now() } : {}) })
     },
     setKerf: kerf => { const d = get().design; commit({ ...d, cutting: { ...d.cutting, kerf } }) },
     rename: name => commit({ ...get().design, name }),
@@ -248,7 +293,62 @@ export const useDesign = create<State>((set, get) => {
     setShowFronts: v => set({ showFronts: v }),
     setExploded: v => set({ exploded: v }),
     setTab: t => set({ tab: t }),
+    suggestRunParts: () => {
+      const p = get().project
+      if (!p) return
+      const settings = { scribe: p.runSettings?.scribe ?? 0, auto: true }
+      commitProject({ ...p, runSettings: settings, runPartsRemoved: [], runParts: planRuns({ ...p, runSettings: settings, runPartsRemoved: [] }).parts })
+    },
+    removeRunPart: id => {
+      const p = get().project
+      const rp = p?.runParts?.find(r => r.id === id)
+      if (!p || !rp) return
+      commitProject({ ...p, runParts: (p.runParts ?? []).filter(r => r.id !== id), runPartsRemoved: [...(p.runPartsRemoved ?? []), rp.key ?? rp.id] })
+    },
+    placeAt: (x, z) => {
+      const { project: p, placingItemId: id } = get()
+      const it = p?.items.find(i => i.id === id)
+      set({ placingItemId: null })
+      if (!p || !it) return
+      const position = { ...it.position, x: Math.max(0, Math.round(x)), z: Math.max(0, Math.round(z)) }
+      commitProject({ ...p, items: p.items.map(i => (i.id === it.id ? { ...i, position } : i)) })
+    },
+    stopPlacing: () => set({ placingItemId: null }),
+    setRoom: room => {
+      const p = get().project
+      if (!p) return
+      if (room) commitProject({ ...p, room })
+      else { const { room: _r, ...rest } = p; void _r; commitProject(rest) }
+    },
+    startDrawRoom: () => set({ drawingRoom: [], placingItemId: null }),
+    addRoomCorner: (x, z) => { const pts = get().drawingRoom; if (pts) set({ drawingRoom: [...pts, snapCorner(pts[pts.length - 1], x, z, 10, pts.length >= 2 ? pts[0] : undefined)] }) },
+    finishDrawRoom: () => {
+      const { drawingRoom: pts, project: p } = get()
+      if (!p || !pts || pts.length < 3) return false
+      set({ drawingRoom: null })
+      commitProject({ ...p, room: { height: p.room?.height ?? DEFAULT_ROOM_HEIGHT, features: p.room?.features ?? [], outline: closeOutline(pts) } })
+      return true
+    },
+    cancelDrawRoom: () => set({ drawingRoom: null }),
+    applyFinish: (id, role, board, scope) => {
+      const p = get().project
+      if (!p) return { applied: [], skipped: [] }
+      const r = applyFinish(p, id, role, board, scope)
+      if (r.applied.length) commitProject(r.project)
+      return { applied: r.applied, skipped: r.skipped }
+    },
+    setRunSettings: patch => {
+      const p = get().project
+      if (!p) return
+      commitProject({ ...p, runSettings: { scribe: 0, auto: false, ...p.runSettings, ...patch } })
+    },
     undo: () => {
+      const { project, editingItemId, projectPast, projectFuture } = get()
+      if (project && !editingItemId) {
+        const prev = projectPast[projectPast.length - 1]
+        if (prev) showProject(prev, projectPast.slice(0, -1), [project, ...projectFuture])
+        return
+      }
       const { past, design, future } = get()
       const prev = past[past.length - 1]
       if (!prev) return
@@ -256,6 +356,12 @@ export const useDesign = create<State>((set, get) => {
       syncItem()
     },
     redo: () => {
+      const { project, editingItemId, projectPast, projectFuture } = get()
+      if (project && !editingItemId) {
+        const next = projectFuture[0]
+        if (next) showProject(next, [...projectPast, project], projectFuture.slice(1))
+        return
+      }
       const { past, design, future } = get()
       const next = future[0]
       if (!next) return

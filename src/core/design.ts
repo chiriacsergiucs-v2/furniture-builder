@@ -378,6 +378,7 @@ function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0)
     case 'drawers':
       if (!isInt(s.count, 1) || (s.count as number) > MAX_DRAWERS) errs.push('Invalid drawer count')
       if (s.uCut != null && !(isObj(s.uCut) && isInt(s.uCut.width, 1) && isInt(s.uCut.depth, 1) && (s.uCut.width as number) <= MAX_MM && (s.uCut.depth as number) <= MAX_MM)) errs.push('Invalid U-cut')
+      if (s.fixedTop !== undefined && typeof s.fixedTop !== 'boolean') errs.push('Invalid fixed front')
       if (s.heights !== undefined) {
         if (!Array.isArray(s.heights) || s.heights.length !== s.count) errs.push('Drawer heights must list one size per drawer')
         else for (const z of s.heights) if (!validSize(z)) errs.push('Invalid drawer height')

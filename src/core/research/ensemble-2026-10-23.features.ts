@@ -113,7 +113,7 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
     userBenefit: 'Matches the consumer mental model (IKEA: choose modules and see the finished result).',
     workflow: ['Open an ensemble workspace.', 'Choose a category (Base Cabinets, Wardrobes, Shelving, Desks, Existing Designs).', 'Drag a template into the scene: an instance is created.'],
     competitors: ['c.ikea-kitchen'], findings: ['071', '028', '062', '153'], phase: P1, tags: ['workflow', 'catalogue'],
-    appNotes: ['This app has a Catalog page and "Start from" lists (backlog N22) and projects with several pieces (N04).'],
+    appNotes: ['This app has a Catalog page and "Start from" lists (backlog N22) and projects with several pieces (N04); an added piece is placed where the user taps the plan (ADR-0053, N49).'],
   }),
   F('catalogue-placement', {
     name: 'Catalogue placement of multiple instances', parent: 'ensemble-workspace', category: 'assembly', subcategory: 'Catalogue',
@@ -496,7 +496,7 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
     mvp: 'Add, delete, move, rotate, snap, unsnap, parameter change and group operations can be reverted. Compound operations undo atomically.',
     technical: ['Command/transaction log: one semantic operation touching instances, connections, generated parts and BOM stays one undo step.', 'Complex configurators continue to spend engineering effort on correct undo grouping (the cited source is the Roomle changelog, ref-54).'],
     competitors: ['c.roomle'], findings: ['rank-09', 'rec-09', 'mvp-13', 'stack-07'], phase: P1, tags: ['core', 'MVP', 'P0'],
-    appNotes: ['This app: undo/redo in the piece editor (F15); the Undo/Redo buttons are hidden in project view (`src/ui/App.tsx`).'],
+    appNotes: ['This app: undo/redo in the piece editor (F15) and for every project change, one action = one step (ADR-0050, N46).'],
   }),
   F('command-log', {
     name: 'Command/transaction log', parent: 'transactional-undo', category: 'architecture', subcategory: 'Undo',
@@ -547,7 +547,7 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
     name: 'Shared material/finish propagation', category: 'shared', subcategory: 'Materials', ...ranked(12), recommendationRank: 12,
     description: 'Ensemble-level materials: apply a finish to this module, this connected run or the whole ensemble. Conceptually Roomle\'s global parameters.',
     competitors: ['c.roomle'], findings: ['rank-12', 'rec-12', '079', '039', '134'], phase: P2, tags: ['P1'],
-    appNotes: ['This app: materials are edited per piece (F16); project materials split by grain (N10).'],
+    appNotes: ['This app: materials are edited per piece (F16); project → Finish applies a board to this piece, this run or the whole project (ADR-0052, N48).'],
   }),
   F('finish-scope', {
     name: 'Scope selector: This item / Connected run / Entire ensemble', parent: 'material-propagation', category: 'shared', subcategory: 'Materials',
@@ -570,7 +570,7 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
     userBenefit: 'Complete, consistent ensembles without manual fitting parts.',
     requirements: ['GeneratedPart: type, generatedFrom instance ids, generatorVersion, parameters, overrides.', 'Generated parts are not ordinary furniture instances.'],
     competitors: ['c.coohom', 'c.roomle'], findings: ['rec-13', '014', '015', '016', '050', '174', '098', '101', '121', '133'], phase: P2, tags: ['differentiator'],
-    appNotes: ['This app suggests run parts — worktop, fillers, cover panels — for a project run (`suggestRunParts`, backlog N26); pieces keep their own plinth.'],
+    appNotes: ['This app suggests run parts — worktop, run plinth, fillers, cover panels — for a project run (`planRuns`, backlog N26, N47) and keeps them up to date when pieces change (ADR-0058, N54).'],
   }),
   F('generated-part-mechanism', {
     name: 'Generic GeneratedPart mechanism', parent: 'generated-parts', category: 'architecture', subcategory: 'Generated parts',
@@ -715,7 +715,7 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
     name: 'Room/wall geometry, windows, doors and obstacles', category: 'room', subcategory: 'Room geometry', ...ranked(16), recommendationRank: 14,
     description: 'Walls, corners, doors, windows, pipes/outlets and obstacle zones let furniture validity be checked against the actual environment, not only against other furniture.',
     competitors: ['c.planner5d', 'c.roomle', 'c.homebyme', 'c.ikea-kitchen'], findings: ['rank-16', 'rec-14', '061', '044', '042', '102', '032'], tags: ['P0'],
-    appNotes: ['This app places pieces along a back wall with wall-hung and on-piece placement (N19), without modelled openings or obstacles.'],
+    appNotes: ['This app places pieces with wall-hung and on-piece placement (N19) in an optional room with walls, doors, windows and obstacles, checked against the pieces (ADR-0055/0056, N51, N52).'],
   }),
   F('room-walls', { name: 'Walls and corners', parent: 'room-geometry', category: 'room', subcategory: 'Room geometry', description: 'Room walls and corners as context geometry.', findings: ['rec-14', 'rank-16'], tags: ['room'] }),
   F('room-openings', { name: 'Doors and windows', parent: 'room-geometry', category: 'room', subcategory: 'Room geometry', description: 'Room doors and windows as context geometry.', findings: ['rec-14', 'rank-16'], tags: ['room'] }),

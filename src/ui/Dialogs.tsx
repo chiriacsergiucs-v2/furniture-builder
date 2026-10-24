@@ -4,8 +4,9 @@ import type { Design, Material, MaterialKind, MaterialMaker } from '../core/type
 import { DECOR_COLUMNS, decorPatch, KINDS, MAKERS, parseDecorList, type Decor } from '../core/materials'
 import { newProject, validateProject, type Project } from '../core/project'
 import { sampleProjects } from '../core/samples/mobila'
-import { clearDecors, deleteDesign, deleteImages, deleteProject, listDecors, replaceDecors, unusedImageIds, listDesigns, listProjects, saveDesign, saveProject, type StoredDesign, type StoredProject } from '../persist/db'
+import { clearDecors, deleteDesign, deleteImages, deleteProject, listDecors, replaceDecors, unusedImageIds, listDesigns, listProjects, saveDesign, saveProject, saveProjectTemplate, type StoredDesign, type StoredProject } from '../persist/db'
 import { useDesign } from '../store/designStore'
+import { validateProjectTemplate, type ProjectTemplate } from '../core/projectTemplate'
 import { MmField, Select, Toggle } from './controls'
 import { Icon } from './icons'
 import { AddPieceList } from './Project'
@@ -124,6 +125,15 @@ export function LibraryDialog({ open, onClose, onOpened }: { open: boolean; onCl
   const importFile = async (f: File) => {
     try {
       const parsed: unknown = JSON.parse(await f.text())
+      // A project template file (ADR-0057) is stored as a template, not opened.
+      if (parsed && typeof parsed === 'object' && (parsed as { kind?: unknown }).kind === 'project-template') {
+        const te = validateProjectTemplate(parsed)
+        if (te.length) { setError(`That file is not a valid project template: ${te.slice(0, 3).join('; ')}.`); return }
+        const t = { ...(parsed as ProjectTemplate), id: newId(), updatedAt: new Date().toISOString() }
+        await saveProjectTemplate(t)
+        setError(`Project template “${t.name}” imported. Use it from Home → Create from a project template.`)
+        return
+      }
       const isProject = !!parsed && typeof parsed === 'object' && 'items' in parsed
       const errs = isProject ? validateProject(parsed) : validateDesign(parsed)
       if (errs.length) { setError(`That file is not a valid ${isProject ? 'project' : 'design'}: ${errs.slice(0, 3).join('; ')}.`); return }

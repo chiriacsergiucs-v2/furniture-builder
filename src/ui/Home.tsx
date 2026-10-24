@@ -4,6 +4,7 @@ import { listDesigns, listProjects, saveProject, type StoredDesign, type StoredP
 import { useDesign } from '../store/designStore'
 import { askText } from './Confirm'
 import { BuiltInProjects } from './Dialogs'
+import { ProjectTemplateList } from './ProjectTemplates'
 import { Icon } from './icons'
 import { templateGlyph } from './Templates'
 
@@ -81,6 +82,7 @@ export function HomePage({ onOpened, onNewPiece, onLibrary }: { onOpened: () => 
             </ul>
           </>}
         </>}
+        <ProjectTemplateList onOpened={onOpened} />
         <BuiltInProjects onOpened={onOpened} />
       </section>
     </main>

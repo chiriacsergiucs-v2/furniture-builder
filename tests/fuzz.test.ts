@@ -42,7 +42,9 @@ function genSpace(depth: number, doorsAbove: boolean): Space {
       const heights = rnd() < 0.35 ? Array.from({ length: count }, () => rnd() < 0.3 ? { mode: 'mm' as const, value: ri(90, 250) } : { mode: 'fr' as const, value: ri(1, 3) }) : undefined
       // Sink drawers (ADR-0040): the top drawer cut around a trap.
       const uCut = rnd() < 0.2 ? { width: ri(30, 500), depth: ri(30, 450) } : undefined
-      return { id, kind: 'drawers', count, front: doors, handle, ...(heights ? { heights } : {}), ...(uCut ? { uCut } : {}) }
+      // Sink false front (ADR-0051): the top drawer kept as a fixed front.
+      const fixedTop = rnd() < 0.15
+      return { id, kind: 'drawers', count, front: doors, handle, ...(heights ? { heights } : {}), ...(uCut ? { uCut } : {}), ...(fixedTop ? { fixedTop } : {}) }
     }
     default: {
       const n = ri(2, 4)
