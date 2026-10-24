@@ -1,0 +1,88 @@
+# ADR-045: Suggested combinations come from generator axes declared per type, kept only when buildModel() has no errors
+
+- Status: Implemented
+- Date: 2026-10-23
+- Implemented: 2026-10-23
+- Decided by: user answers below
+- Depends on: none
+- Design: n/a
+- Related: ADR-002, ADR-004, ADR-008, ADR-010, ADR-035, ADR-042, ADR-044
+- Backlog: N34
+
+## Context
+
+The user asked the wizard to suggest "possible combinations (like after choosing a frame, suggest with smaller card
+items a frame with X shelves, y drawers, with doors, without doors)". This must be "universal" and give "broad
+general coverage". The suggestions must fit the sizes entered and be computed offline by fixed rules (ADR-002). They
+must not rely on hand-made UI maths (ADR-004) or invented popularity.
+
+## Decision
+
+- **Generators are data** on each construction type (ADR-044): `{ id, at: stepId, axes }`.
+  - An axis has an `id`, its allowed `values`, `apply(answers, value) → answers`, `writes` (the answer keys it sets)
+    and `current(answers)` (the value the answers already hold).
+  - The shipped axes (`src/core/wizard/axes.ts`) are: dividers 0..3, compartment mix (all open, all shelves, all
+    drawers, shelves over drawers, drawers left + shelves right), shelves 1..6, drawers 2..6, fronts (none, one,
+    pair, sliding, per compartment), base (plinth, none, wall-hung), back (full, none), table top (panel, slats),
+    stretchers (none, box, H), lower shelf (none, yes), desk support and pedestal drawers.
+  - A new family is a new generator entry, or a new axis object. The engine does not change.
+- **Where cards appear.** A generator shows on its `at` step: after the type is chosen (`at: 'type'`) and on later
+  steps (divisions, contents, fronts, base, frame, desk). An axis may only write answer keys owned by the `at` step
+  or later steps, which a test enforces. So a later card keeps every earlier answer.
+- **Candidates.**
+  - The cartesian product of the axis values, enumerated lazily.
+  - The first candidate is always the type default: each axis takes its value from the type's defaults.
+  - When the product is larger than the cap (default 64 per step), the indices are visited with a stride that is
+    coprime with the total. The sample then spreads over every axis instead of exhausting the last one.
+- **Fit.** Each candidate's answers become a design (`toDesign`), which `buildModel()` builds. Candidates with an
+  error diagnostic are dropped. Counts therefore come from the model's own rules:
+  - `shelves-crowded` removes too many shelves for the height.
+  - `drawer-low` removes too many drawers.
+  - `door-small` removes doors on bays that are too narrow.
+    Changing the sizes changes which cards survive. Warnings stay and show a badge with their count.
+- **Duplicates.** Two candidates that build the same product (ids ignored) are one card; the first one met is kept.
+- **Ranking.** The type default comes first. Each next card is the candidate with the largest least Hamming distance
+  (over axis values) to the cards already chosen, so the cards spread across the axes. Ties go to enumeration
+  order. There is no popularity signal.
+- **Amount.** 6 cards are shown, plus "Show more" (6 at a time) up to every valid candidate.
+- **Cards.** A card shows a mini picture from `snapshotSvg(buildModel(…))` (ADR-042 renderer, made in memory) and a
+  label joined from the `summary` of the steps the generator covers ("2 dividers · 3 shelves each · pair of doors ·
+  plinth").
+  - **Use this** replaces the answers. The wizard then goes to the next step after `at` that the generator does not
+    cover, or to Review. Nothing is saved until "Create piece".
+  - **Start blank** is always available: it keeps the user's own answers and continues.
+- **Performance.** Results are memoised per (type, step, answers) in a small LRU (32 entries). Only the current
+  step is computed, and pictures are drawn only for the cards on screen.
+
+## Alternatives considered
+
+- **Hard-coded preset lists per type** — not universal; sizes would not filter them.
+- **Random sampling** — not reproducible; the same sizes must give the same cards.
+- **Scoring by "popularity"** — no such data exists locally; inventing it breaks ADR-010.
+
+## Consequences
+
+- At most 64 builds per step (well under 100 ms for a cabinet in tests). A larger cap is a one-line change.
+- With a sampled product, some valid combinations are not offered; the user can still set any of them by hand on
+  the step.
+
+## Evidence (repository files)
+
+- `src/core/wizard/axes.ts`, `suggest.ts`, `registry.ts` (generators); `src/ui/Wizard.tsx` (cards).
+- `tests/wizard.test.ts`: generator output, error filtering, size-dependent counts, de-duplication and variety,
+  applying a card, later-step cards keep earlier answers.
+
+## Compliance check
+
+`npx vitest run tests/wizard.test.ts` passes only when no suggested card builds with an error. A low cabinet must get
+fewer drawer cards than a tall one, the first six cards of a cabinet must include shelves, drawers, doors and no
+doors, and no axis may write a key owned by an earlier step.
+
+## Open questions
+
+1. 6 cards first, cap 64 per step. Default kept until the user asks otherwise.
+
+## Answers (2026-10-23, from the user)
+
+1. **Keep 6 cards first, "Show more" by 6, cap 64 per step** (default confirmed).
+   The decision is built as recorded (backlog N34), so the ADR is Accepted.

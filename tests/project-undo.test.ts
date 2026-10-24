@@ -1,86 +1,90 @@
-import 'fake-indexeddb/auto'
-import { beforeEach, describe, expect, it } from 'vitest'
-import { templates } from '../src/core/design'
-import { newProject } from '../src/core/project'
-import { useDesign } from '../src/store/designStore'
+import { beforeEach, describe, expect, it } from 'vitest';
+import { templates } from '../src/core/design';
+import { makeItem, newProject, type Project } from '../src/core/project';
+import type { CabinetParams } from '../src/core/types';
+import { useDesign } from '../src/store/designStore';
 
-const t = (id: string) => templates.find(x => x.id === id)!.create()
-const st = () => useDesign.getState()
+const t = (id: string) => templates.find((x) => x.id === id)!.create();
+function run(ids: string[]): Project {
+  let p = newProject('Run');
+  for (const id of ids) p = { ...p, items: [...p.items, makeItem(p, t(id))] };
+  return p;
+}
+const s = () => useDesign.getState();
+const names = () => s().project!.items.map((i) => i.design.name);
 
-describe('project undo/redo (ADR-0050)', () => {
-  beforeEach(() => {
-    st().openProject(newProject('Undo'))
-    st().addPiece(t('base-door'))
-    st().addPiece(t('base-door'))
-  })
-  it('each action is one step; undo returns the identical project, redo the changed one', () => {
-    const before = st().project!
-    const id = before.items[1].id
-    st().updateItem(id, { position: { ...before.items[1].position, x: 2000 } })
-    const after = st().project!
-    st().undo()
-    expect(st().project).toBe(before)
-    st().redo()
-    expect(st().project).toBe(after)
-    st().removeItem(before.items[0].id)
-    expect(st().project!.items).toHaveLength(1)
-    st().undo()
-    expect(st().project!.items).toHaveLength(2)
-  })
-  it('a gap that moves the pieces on the right, a merge and run-part suggestions are one step each', () => {
-    st().addPiece(t('base-door'))
-    const p0 = st().project!
-    st().setGap(p0.items[1].id, 100, true)
-    expect(st().project!.items[2].position.x).toBe(p0.items[2].position.x + 100)
-    st().undo()
-    expect(st().project).toBe(p0)
-    const issues = st().mergeItems(p0.items[0].id, p0.items[1].id)
-    expect(issues).toEqual([])
-    expect(st().project!.items).toHaveLength(2)
-    st().undo()
-    expect(st().project).toBe(p0)
-  })
-  it('a new action clears redo; a piece edited in the project is one project step', () => {
-    const p0 = st().project!
-    st().updateItem(p0.items[0].id, { quantity: 3 })
-    st().undo()
-    st().updateItem(p0.items[0].id, { quantity: 2 })
-    expect(st().projectFuture).toEqual([])
-    const p1 = st().project!
-    st().editItem(p1.items[0].id)
-    st().updateCabinet({ width: 500 })
-    st().updateCabinet({ width: 450 })
-    st().backToProject()
-    const prod = st().project!.items[0].design.product
-    expect(prod.kind === 'cabinet' ? prod.params.width : 0).toBe(450)
-    st().undo()
-    expect(st().project!.items[0].design).toBe(p1.items[0].design)
-  })
-  it('opening another project clears the history', () => {
-    st().openProject(newProject('Other'))
-    expect(st().projectPast).toEqual([])
-    st().undo()
-    expect(st().project!.name).toBe('Other')
-  })
-})
+describe('project undo and redo (ADR-051)', () => {
+  beforeEach(() => s().openProject(run(['base-door', 'base-door'])));
 
-describe('tap the plan to place (ADR-0053)', () => {
-  it('an added piece waits to be placed; a plan point sets its left-back corner in whole mm, one undo step', () => {
-    st().openProject(newProject('Place'))
-    st().addPiece(t('base-door'))
-    st().addPiece(t('chest'))
-    const id = st().placingItemId!
-    expect(id).toBe(st().project!.items[1].id)
-    const before = st().project!
-    st().placeAt(1234.4, 456.6)
-    const it = st().project!.items[1]
-    expect(it.position).toEqual({ x: 1234, y: 0, z: 457 })
-    expect(st().placingItemId).toBeNull()
-    st().undo()
-    expect(st().project).toBe(before)
-    st().addPiece(t('wall-cabinet'))
-    st().placeAt(-50, -10)
-    const w = st().project!.items[2]
-    expect([w.position.x, w.position.z, w.position.y]).toEqual([0, 0, 1450])
-  })
-})
+  it('undo brings back the two pieces a merge joined; redo merges them again', () => {
+    const [a, b] = s().project!.items;
+    expect(s().mergeItems(a.id, b.id)).toEqual([]);
+    expect(s().project!.items).toHaveLength(1);
+    s().undoProject();
+    expect(s().project!.items.map((i) => i.id)).toEqual([a.id, b.id]);
+    expect(s().projectModel!.diagnostics).toEqual([]);
+    expect(s().selectedItemId).toBeNull();
+    s().redoProject();
+    expect(s().project!.items).toHaveLength(1);
+    expect((s().project!.items[0].design.product.params as CabinetParams).width).toBe(1200);
+  });
+
+  it('undoes removing a piece, renaming the project and changing a quantity, one step each', () => {
+    const [a, b] = s().project!.items;
+    s().updateProject((p) => ({ ...p, name: 'Kitchen' }));
+    s().updateItem(b.id, { quantity: b.quantity + 2 });
+    s().removeItem(a.id);
+    expect(s().project!.items).toHaveLength(1);
+    s().undoProject();
+    expect(s().project!.items.map((i) => i.id)).toEqual([a.id, b.id]);
+    s().undoProject();
+    expect(s().project!.items[1].quantity).toBe(b.quantity);
+    s().undoProject();
+    expect(s().project!.name).toBe('Run');
+    expect(s().projectPast).toHaveLength(0);
+    s().undoProject(); // nothing left: no change
+    expect(s().project!.name).toBe('Run');
+  });
+
+  it('a new change after undo clears redo', () => {
+    s().updateProject((p) => ({ ...p, name: 'A' }));
+    s().undoProject();
+    expect(s().projectFuture).toHaveLength(1);
+    s().updateProject((p) => ({ ...p, name: 'B' }));
+    expect(s().projectFuture).toHaveLength(0);
+  });
+
+  it('edits made in the piece editor come back as one project step; nothing changed adds no step', () => {
+    const [a] = s().project!.items;
+    s().editItem(a.id);
+    s().backToProject();
+    expect(s().projectPast).toHaveLength(0);
+    s().updateProject((p) => ({ ...p, name: 'Kitchen' }));
+    s().editItem(a.id);
+    s().rename('Left');
+    s().updateCabinet({ width: 500 });
+    s().undoProject(); // ignored while the piece editor is open
+    expect(s().editingItemId).toBe(a.id);
+    expect(s().project!.name).toBe('Kitchen');
+    expect(names()[0]).toBe('Left');
+    s().backToProject();
+    expect(names()[0]).toBe('Left');
+    expect(s().projectPast).toHaveLength(2);
+    s().undoProject();
+    expect(s().project!.name).toBe('Kitchen');
+    expect(names()[0]).toBe(a.design.name);
+    expect((s().project!.items[0].design.product.params as CabinetParams).width).toBe(
+      (a.design.product.params as CabinetParams).width,
+    );
+  });
+
+  it('opening or closing a project starts a fresh history', () => {
+    s().updateProject((p) => ({ ...p, name: 'A' }));
+    s().openProject(run(['base-door']));
+    expect(s().projectPast).toHaveLength(0);
+    s().updateProject((p) => ({ ...p, name: 'B' }));
+    s().closeProject();
+    expect(s().projectPast).toHaveLength(0);
+    expect(s().projectFuture).toHaveLength(0);
+  });
+});

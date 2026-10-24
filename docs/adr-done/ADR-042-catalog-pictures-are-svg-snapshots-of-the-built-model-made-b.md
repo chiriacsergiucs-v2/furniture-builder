@@ -1,0 +1,57 @@
+# ADR-042: Catalog pictures are SVG snapshots of the built model, made before the app runs
+
+- Status: Implemented
+- Date: 2026-10-23
+- Implemented: 2026-10-23
+- Decided by: user answers below
+- Depends on: none
+- Design: n/a
+- Related: ADR-002, ADR-004, ADR-013, ADR-032
+- Backlog: N32
+
+## Context
+
+The user asked for a 3D snapshot of each catalog item, taken before runtime. Rendering 100+ live three.js views on
+the Catalog page would load the lazy 3D chunk (ADR-013) and cost every visitor; screenshots from a browser would need
+WebGL in the build and change between GPU drivers.
+
+## Decision
+
+- `src/core/snapshot.ts` draws a built model as SVG: orthographic view from the front right and above (azimuth 30°,
+  elevation 25°), the three visible faces of every panel in its board's colour, shaded per face, painter's order
+  from a separating-axis test (two boxes that can't cover each other are not ordered). Pure and deterministic.
+- `npm run catalog:snapshots` writes `public/catalog/<variant id>.svg` for every item that opens; the files are
+  committed, served next to the app and precached by the service worker (works offline).
+- `tests/snapshots.test.ts` fails when a picture is missing, stale or orphaned, so a design change cannot ship with an
+  old picture.
+- The Catalog page shows the picture on each item card. Families edited on this device show none (their designs
+  differ from the shipped picture).
+
+## Alternatives considered
+
+- **Live 3D per card** — heavy, needs WebGL on every visit. **PNG screenshots from headless Chrome** — not
+  reproducible across machines, needs a browser in CI, larger files.
+
+## Consequences
+
+- Pictures show the outside only as the panels are drawn: no textures, hinges or handles' 3D shape.
+- About 0.6 MB of SVG in the precache.
+
+## Evidence (repository files)
+
+- `src/core/snapshot.ts`, `public/catalog/*.svg`, `tests/snapshots.test.ts`, `src/ui/Catalog.tsx` (`snapshotUrl`), `package.json` (`catalog:snapshots`).
+
+## Compliance check
+
+`npx vitest run tests/snapshots.test.ts` passes only when every committed picture matches its design.
+
+## Open questions
+
+1. Pictures in the "Start from" lists too (New, Add a piece)? Default: Catalog page only.
+2. Pictures for families edited on this device, made in the browser? Default: none.
+
+## Answers (2026-10-23, from the user)
+
+1. **Pictures also in _Start from_** (New, Add a piece) — changes the default; built 2026-10-23 (backlog N36): `ItemPicture` in `src/ui/Catalog.tsx` on every _Start from_ row.
+2. **Families edited on this device get a picture drawn in the browser** with the same renderer — changes the
+   default; built 2026-10-23 (backlog N36): drawn with `snapshotSvg` from the built model, as an in-memory picture.

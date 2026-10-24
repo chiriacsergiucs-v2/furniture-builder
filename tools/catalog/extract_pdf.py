@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Extract what an assembly manual prints, as evidence for catalog entries (ADR-0029, stage 2).
+"""Extract what an assembly manual prints, as evidence for catalog entries (ADR-029, stage 2).
 
 Run: python3 -I tools/catalog/extract_pdf.py <manual.pdf> --out <dir>
 
@@ -223,7 +223,7 @@ def dumps(data):
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(description='Extract printed facts from a local assembly-manual PDF (ADR-0029).')
+    ap = argparse.ArgumentParser(description='Extract printed facts from a local assembly-manual PDF (ADR-029).')
     ap.add_argument('pdf', help='path to a local PDF file')
     ap.add_argument('--out', required=True, help='directory to write extraction.json into')
     args = ap.parse_args(argv)

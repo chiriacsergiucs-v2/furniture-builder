@@ -8,76 +8,108 @@
  */
 
 /** Integer millimetres. Enforced at runtime by `assertMm` / design validation. */
-export type Mm = number
+export type Mm = number;
 
-export type Axis = 'x' | 'y' | 'z'
+export type Axis = 'x' | 'y' | 'z';
 
 /** Axis-aligned box: minimum corner + size. Every panel is one of these. */
-export interface Box { x: Mm; y: Mm; z: Mm; w: Mm; h: Mm; d: Mm }
-
-export interface Material {
-  id: string
-  name: string
-  thickness: Mm
-  /** Decor/grain direction matters: cutlist length follows the panel's grain axis. */
-  grain: boolean
-  /** Display colour for the 3D view (CSS hex). */
-  color: string
-  /** Stock sheet bought for this board (ADR-0019). Absent in version-1 files; defaults fill it in. */
-  sheet?: StockSheet
-  /** 'solid': timber bought in lengths, listed by length instead of nested on sheets (ADR-0038). Absent = sheet. */
-  stock?: 'sheet' | 'solid'
-  /** Solid stock: lengths you can buy, ascending (default 2400, 3000). */
-  lengths?: Mm[]
-  /** A picture from the user's device shown on the board's faces instead of the plain colour (ADR-0048). */
-  image?: MaterialImage
-  /** Labels (ADR-0049): shown next to the name only; never used to fill in specs. */
-  maker?: MaterialMaker
-  kind?: MaterialKind
-  /** Taken from a decor list the user imported (ADR-0049): the list's code and file name, for tracing. */
-  decor?: { code: string; list: string }
+export interface Box {
+  x: Mm;
+  y: Mm;
+  z: Mm;
+  w: Mm;
+  h: Mm;
+  d: Mm;
 }
 
-export type MaterialMaker = 'egger' | 'kastamonu' | 'fundermax' | 'kronospan' | 'other'
-export type MaterialKind = 'pal' | 'mdf' | 'worktop' | 'other'
+export interface Material {
+  id: string;
+  name: string;
+  thickness: Mm;
+  /** Decor/grain direction matters: cutlist length follows the panel's grain axis. */
+  grain: boolean;
+  /** Display colour for the 3D view (CSS hex). */
+  color: string;
+  /** Stock sheet bought for this board (ADR-019). Absent in version-1 files; defaults fill it in. */
+  sheet?: StockSheet;
+  /** 'solid': timber bought in lengths, listed by length instead of nested on sheets (ADR-038). Absent = sheet. */
+  stock?: 'sheet' | 'solid';
+  /** Solid stock: lengths you can buy, ascending (default 2400, 3000). */
+  lengths?: Mm[];
+  /** A picture from the user's device shown on the board's faces instead of the plain colour (ADR-048). */
+  image?: MaterialImage;
+  /** Labels (ADR-049): shown next to the name only; never used to fill in specs. */
+  maker?: MaterialMaker;
+  kind?: MaterialKind;
+  /** Taken from a decor list the user imported (ADR-049): the list's code and file name, for tracing. */
+  decor?: { code: string; list: string };
+}
+
+export type MaterialMaker = 'egger' | 'kastamonu' | 'fundermax' | 'kronospan' | 'other';
+export type MaterialKind = 'pal' | 'mdf' | 'worktop' | 'other';
 
 /**
- * ADR-0048. The picture itself lives in this device's `images` table under `id`; the design keeps only the reference.
+ * ADR-048. The picture itself lives in this device's `images` table under `id`; the design keeps only the reference.
  * One copy of the picture covers `tileLength` × `tileWidth` mm of board and repeats; its width runs along the part's
  * grain axis, or across it when `turn` is set.
  */
 export interface MaterialImage {
-  id: string
+  id: string;
   /** File name as picked, for display. */
-  name: string
-  tileLength: Mm
-  tileWidth: Mm
-  turn?: boolean
+  name: string;
+  tileLength: Mm;
+  tileWidth: Mm;
+  turn?: boolean;
 }
 
-/** A full factory sheet. Length runs along the grain, matching cut-list length (ADR-0009). */
+/** A full factory sheet. Length runs along the grain, matching cut-list length (ADR-009). */
 export interface StockSheet {
-  length: Mm
-  width: Mm
+  length: Mm;
+  width: Mm;
   /** Unusable margin trimmed off each edge before cutting parts. */
-  trim: Mm
+  trim: Mm;
   /** Sheets available; null = buy as many as needed. */
-  count: number | null
+  count: number | null;
 }
 
 export type PanelRole =
-  | 'side' | 'top' | 'bottom' | 'back' | 'plinth' | 'divider' | 'shelf'
-  | 'door' | 'drawer-front' | 'drawer-side' | 'drawer-back' | 'drawer-inner-front' | 'drawer-bottom'
-  | 'worktop' | 'gable' | 'modesty' | 'blind-panel'
-  /** Panel set parts (ADR-0041). */
+  | 'side'
+  | 'top'
+  | 'bottom'
+  | 'back'
+  | 'plinth'
+  | 'divider'
+  | 'shelf'
+  | 'door'
+  | 'drawer-front'
+  | 'drawer-side'
+  | 'drawer-back'
+  | 'drawer-inner-front'
+  | 'drawer-bottom'
+  | 'worktop'
+  | 'gable'
+  | 'modesty'
+  | 'blind-panel'
+  /** Panel set parts (ADR-041). */
   | 'loose'
-  /** Top rails instead of a full top (ADR-0036); frame parts (ADR-0038). */
-  | 'rail' | 'leg' | 'apron' | 'stretcher' | 'slat' | 'ledger' | 'seat' | 'headboard' | 'footboard' | 'stile' | 'rung'
-  /** Run parts in a project (ADR-0036). */
-  | 'filler' | 'cover-panel'
+  /** Top rails instead of a full top (ADR-036); frame parts (ADR-038). */
+  | 'rail'
+  | 'leg'
+  | 'apron'
+  | 'stretcher'
+  | 'slat'
+  | 'ledger'
+  | 'seat'
+  | 'headboard'
+  | 'footboard'
+  | 'stile'
+  | 'rung'
+  /** Run parts in a project (ADR-036). */
+  | 'filler'
+  | 'cover-panel';
 
 /** A face direction, used to name banded edges of a panel in world terms. */
-export type Face = '-x' | '+x' | '-y' | '+y' | '-z' | '+z'
+export type Face = '-x' | '+x' | '-y' | '+y' | '-z' | '+z';
 
 /**
  * One physical sheet part. `box` is the finished size and position.
@@ -85,93 +117,107 @@ export type Face = '-x' | '+x' | '-y' | '+y' | '-z' | '+z'
  */
 export interface Panel {
   /** Stable across resizes: `${nodeId}/${role}[/${index}]`. */
-  id: string
+  id: string;
   /** Design node that generated this panel; used for selection. */
-  nodeId: string
-  role: PanelRole
-  label: string
-  materialId: string
-  box: Box
-  thicknessAxis: Axis
+  nodeId: string;
+  role: PanelRole;
+  label: string;
+  materialId: string;
+  box: Box;
+  thicknessAxis: Axis;
   /** In-plane axis the decor grain runs along (ignored when the material has no grain). */
-  grainAxis: Axis
+  grainAxis: Axis;
   /** Edges that receive edge banding, named by the outward face they sit on. */
-  banded: Face[]
-  /** 32 mm-system shelf-pin hole rows (annotation for the panel shop, ADR-0023). */
-  pinRows?: PinRows[]
-  /** Handle holes on a front, measured from the front's left and bottom edges (ADR-0024). */
-  handleHoles?: { at: [Mm, Mm][]; diameter: Mm }
-  /** Shaped part (ADR-0040): `box` stays the whole-mm cut blank; absent = a plain box. */
-  shape?: PanelShape
+  banded: Face[];
+  /** 32 mm-system shelf-pin hole rows (annotation for the panel shop, ADR-023). */
+  pinRows?: PinRows[];
+  /** Handle holes on a front, measured from the front's left and bottom edges (ADR-024). */
+  handleHoles?: { at: [Mm, Mm][]; diameter: Mm };
+  /** Shaped part (ADR-040): `box` stays the whole-mm cut blank; absent = a plain box. */
+  shape?: PanelShape;
 }
 
 /**
- * ADR-0040. `tilt`: the blank turned by whole degrees (right-hand rule) about an axis through `pivot`, measured from
+ * ADR-040. `tilt`: the blank turned by whole degrees (right-hand rule) about an axis through `pivot`, measured from
  * the blank's minimum corner; placement only, the cut size is the blank. `profile`: a board cut to a polygon on its
  * face, whole-mm points [u, v] from the blank's minimum corner along its two in-plane axes (x, y, z order).
  */
 export type PanelShape =
   | { kind: 'tilt'; axis: Axis; angleDeg: number; pivot: [Mm, Mm, Mm] }
-  | { kind: 'profile'; points: [Mm, Mm][] }
+  | { kind: 'profile'; points: [Mm, Mm][] };
 
 /** Hole rows on one face of a panel. Positions are measured on the panel itself, in mm. */
 export interface PinRows {
-  face: Face
+  face: Face;
   /** Row positions across the panel depth, measured from the panel's rear edge. */
-  rows: Mm[]
+  rows: Mm[];
   /** Hole centres along the panel height, measured from the panel's bottom edge. */
-  holes: Mm[]
-  diameter: Mm
+  holes: Mm[];
+  diameter: Mm;
 }
 
-export type HardwareKind = 'drawer-runner-pair' | 'hinge' | 'clothes-rail' | 'rail-support' | 'shelf-pin' | 'handle' | 'push-latch'
-  | 'wall-bracket' | 'wall-rail' | 'corner-hinge'
-  /** ADR-0035 anti-tip fixing, ADR-0036 appliance and front fixing, ADR-0037 sliding track and flap stay, ADR-0038/0039 purchased items. */
-  | 'wall-fixing' | 'appliance' | 'front-fixing' | 'sliding-track' | 'flap-stay' | 'purchased'
-  /** ADR-0041 amendment: a screwed joint between two placed panels; screw type, length and count are the user's choice. */
-  | 'screws'
+export type HardwareKind =
+  | 'drawer-runner-pair'
+  | 'hinge'
+  | 'clothes-rail'
+  | 'rail-support'
+  | 'shelf-pin'
+  | 'handle'
+  | 'push-latch'
+  | 'wall-bracket'
+  | 'wall-rail'
+  | 'corner-hinge'
+  /** ADR-035 anti-tip fixing, ADR-036 appliance and front fixing, ADR-037 sliding track and flap stay, ADR-038/039 purchased items. */
+  | 'wall-fixing'
+  | 'appliance'
+  | 'front-fixing'
+  | 'sliding-track'
+  | 'flap-stay'
+  | 'purchased'
+  /** ADR-041 amendment: a screwed joint between two placed panels; screw type, length and count are the user's choice. */
+  | 'screws';
 
 export interface HardwareItem {
-  nodeId: string
-  kind: HardwareKind
-  label: string
-  quantity: number
+  nodeId: string;
+  kind: HardwareKind;
+  label: string;
+  quantity: number;
   /** Nominal size in mm where meaningful (runner length, rail length). */
-  sizeMm?: Mm
-  note?: string
+  sizeMm?: Mm;
+  note?: string;
 }
 
-export type Severity = 'error' | 'warning'
+export type Severity = 'error' | 'warning';
 
 export interface Diagnostic {
-  severity: Severity
-  code: string
-  message: string
-  nodeId?: string
-  panelIds?: string[]
+  severity: Severity;
+  code: string;
+  message: string;
+  nodeId?: string;
+  panelIds?: string[];
 }
 
 /** The clear interior of an editable space, for selection and labelling. */
 export interface SpaceOpening {
-  nodeId: string
-  kind: SpaceKind
-  box: Box
+  nodeId: string;
+  kind: SpaceKind;
+  box: Box;
   /** Depth in the space tree (root = 0). */
-  depth: number
+  depth: number;
   /** Spaces of an L-corner's side wing are not drawn in the front view (selected from the inspector instead). */
-  view?: 'front' | 'side'
-  leaf: boolean
-  hasDoors: boolean
+  view?: 'front' | 'side';
+  leaf: boolean;
+  hasDoors: boolean;
 }
 
 /** Output of building a design: the single normalised model. */
 export interface FurnitureModel {
-  panels: Panel[]
-  spaces: SpaceOpening[]
-  hardware: HardwareItem[]
-  diagnostics: Diagnostic[]
+  panels: Panel[];
+  spaces: SpaceOpening[];
+  hardware: HardwareItem[];
+  diagnostics: Diagnostic[];
   /** Overall bounding box including fronts. */
-  bounds: Box
+  bounds: Box;
 }
 
 // ---------------------------------------------------------------------------
@@ -179,304 +225,334 @@ export interface FurnitureModel {
 // ---------------------------------------------------------------------------
 
 /** Size of one part of a split: fixed millimetres or a share of the remainder. */
-export type SplitSize = { mode: 'mm'; value: Mm } | { mode: 'fr'; value: number }
+export type SplitSize = { mode: 'mm'; value: Mm } | { mode: 'fr'; value: number };
 
 export interface DoorsFront {
-  kind: 'doors'
-  count: 1 | 2
+  kind: 'doors';
+  count: 1 | 2;
   /** Hinge side of a single door (default left, so it opens from the right). */
-  hinge?: 'left' | 'right'
+  hinge?: 'left' | 'right';
 }
 
-/** Sliding doors in two planes in front of the carcass (ADR-0037). The track system is the user's choice. */
+/** Sliding doors in two planes in front of the carcass (ADR-037). The track system is the user's choice. */
 export interface SlidingFront {
-  kind: 'sliding'
-  count: 2 | 3 | 4
+  kind: 'sliding';
+  count: 2 | 3 | 4;
   /** How far neighbouring doors overlap (default 30). */
-  overlap?: Mm
+  overlap?: Mm;
   /** Depth the track needs in front of the carcass (default 80). */
-  track?: Mm
+  track?: Mm;
 }
 
-/** One front hinged at its top (lift-up) or bottom (drop-down) edge (ADR-0037). */
+/** One front hinged at its top (lift-up) or bottom (drop-down) edge (ADR-037). */
 export interface FlapFront {
-  kind: 'flap'
-  count: 1
-  direction: 'up' | 'down'
+  kind: 'flap';
+  count: 1;
+  direction: 'up' | 'down';
   /** The lift system or stay the user picked from its datasheet; a warning stays until it is named. */
-  fitting?: string
+  fitting?: string;
 }
 
-export type Front = DoorsFront | SlidingFront | FlapFront
+export type Front = DoorsFront | SlidingFront | FlapFront;
 
-/** Handle on every front of a space (ADR-0024). Push-to-open has no holes; it schedules a push latch. */
+/** Handle on every front of a space (ADR-024). Push-to-open has no holes; it schedules a push latch. */
 export interface Handle {
-  kind: 'bar' | 'knob' | 'push'
+  kind: 'bar' | 'knob' | 'push';
   /** Hole centres of a bar handle (default 128). */
-  holeSpacing?: Mm
-  position?: 'top' | 'centre' | 'bottom'
+  holeSpacing?: Mm;
+  position?: 'top' | 'centre' | 'bottom';
 }
 
-export type FrontStyle = 'overlay' | 'half' | 'inset'
+export type FrontStyle = 'overlay' | 'half' | 'inset';
 
 interface SpaceBase {
-  id: string
+  id: string;
   /** Optional doors covering this whole space. Doors over drawers make them internal drawers. */
-  front?: Front | null
+  front?: Front | null;
   /** Handle on this space's doors, or on its drawer fronts. */
-  handle?: Handle | null
+  handle?: Handle | null;
 }
 
-/** A niche for a built-in appliance; its size comes from the appliance's installation drawing, never a default (ADR-0036). */
-export interface ApplianceNiche { kind: 'oven' | 'microwave' | 'fridge' | 'dishwasher' | 'hob' | 'other'; w: Mm; h: Mm; d: Mm }
+/** A niche for a built-in appliance; its size comes from the appliance's installation drawing, never a default (ADR-036). */
+export interface ApplianceNiche {
+  kind: 'oven' | 'microwave' | 'fridge' | 'dishwasher' | 'hob' | 'other';
+  w: Mm;
+  h: Mm;
+  d: Mm;
+}
 
-export interface EmptySpace extends SpaceBase { kind: 'empty'; appliance?: ApplianceNiche }
+export interface EmptySpace extends SpaceBase {
+  kind: 'empty';
+  appliance?: ApplianceNiche;
+}
 export interface ShelvesSpace extends SpaceBase {
-  kind: 'shelves'
-  count: number
-  /** Loose shelves on pins: shortened by the shelf clearance; the neighbouring panels get pin rows (ADR-0023). */
-  adjustable?: boolean
+  kind: 'shelves';
+  count: number;
+  /** Loose shelves on pins: shortened by the shelf clearance; the neighbouring panels get pin rows (ADR-023). */
+  adjustable?: boolean;
 }
-export interface HangingSpace extends SpaceBase { kind: 'hanging'; /** Rail distance below the top of the space. */ railDrop: Mm }
+export interface HangingSpace extends SpaceBase {
+  kind: 'hanging';
+  /** Rail distance below the top of the space. */ railDrop: Mm;
+}
 export interface DrawersSpace extends SpaceBase {
-  kind: 'drawers'
-  count: number
+  kind: 'drawers';
+  count: number;
   /**
-   * Sink drawer (ADR-0040): the top drawer box is cut around the trap, a `width` × `depth` notch at the middle of its
+   * Sink drawer (ADR-040): the top drawer box is cut around the trap, a `width` × `depth` notch at the middle of its
    * back. Its bottom is a profiled board; its back runs around the notch. The front stays whole.
    */
-  uCut?: { width: Mm; depth: Mm } | null
-  /** Sink false front (ADR-0051): the top drawer is a fixed front only — no box, no runners; fixing user-specified. */
-  fixedTop?: boolean
+  uCut?: { width: Mm; depth: Mm } | null;
+  /** Sink false front (ADR-054): the top drawer is a fixed front only — no box, no runners; fixing user-specified. */
+  fixedTop?: boolean;
   /**
-   * Optional heights, top→bottom, one per drawer (ADR-0023). They size the drawer fronts (or the opening, for
+   * Optional heights, top→bottom, one per drawer (ADR-023). They size the drawer fronts (or the opening, for
    * internal drawers); fixed mm or shares of the rest, like splits. Absent = equal.
    */
-  heights?: SplitSize[]
+  heights?: SplitSize[];
 }
 export interface SplitSpace extends SpaceBase {
-  kind: 'split'
+  kind: 'split';
   /** 'x' = vertical dividers, children left→right. 'y' = horizontal dividers, children top→bottom. */
-  axis: 'x' | 'y'
-  sizes: SplitSize[]
-  children: Space[]
+  axis: 'x' | 'y';
+  sizes: SplitSize[];
+  children: Space[];
 }
 
-export type Space = EmptySpace | ShelvesSpace | HangingSpace | DrawersSpace | SplitSpace
-export type SpaceKind = Space['kind']
+export type Space = EmptySpace | ShelvesSpace | HangingSpace | DrawersSpace | SplitSpace;
+export type SpaceKind = Space['kind'];
 
 export interface DrawerSettings {
   /** Runner clearance per side between drawer box and opening (side-mount runners). */
-  sideClearance: Mm
+  sideClearance: Mm;
   /** Opening height minus drawer box height. */
-  verticalClearance: Mm
+  verticalClearance: Mm;
   /** Space left behind the runner. */
-  rearClearance: Mm
+  rearClearance: Mm;
   /** Available runner lengths, ascending. */
-  runnerLengths: Mm[]
-  boxMaterialId: string
-  bottomMaterialId: string
+  runnerLengths: Mm[];
+  boxMaterialId: string;
+  bottomMaterialId: string;
 }
 
 export interface CabinetParams {
-  width: Mm
-  height: Mm
-  depth: Mm
-  /** Wall cabinets hang on brackets: no plinth, hanging hardware scheduled (ADR-0025). Absent = floor. */
-  mount?: 'floor' | 'wall'
+  width: Mm;
+  height: Mm;
+  depth: Mm;
+  /** Wall cabinets hang on brackets: no plinth, hanging hardware scheduled (ADR-025). Absent = floor. */
+  mount?: 'floor' | 'wall';
   /** Height of the cabinet's underside above the floor when wall-mounted (position only). */
-  mountHeight?: Mm
-  bodyMaterialId: string
-  frontMaterialId: string
-  backMaterialId: string
-  top: 'over' | 'between'
-  /** 'rails': two rails between the sides instead of a full top, e.g. under a worktop or over a sink (ADR-0036). */
-  topKind?: 'panel' | 'rails'
+  mountHeight?: Mm;
+  bodyMaterialId: string;
+  frontMaterialId: string;
+  backMaterialId: string;
+  top: 'over' | 'between';
+  /** 'rails': two rails between the sides instead of a full top, e.g. under a worktop or over a sink (ADR-036). */
+  topKind?: 'panel' | 'rails';
   /** Depth of each top rail (default 100). */
-  railDepth?: Mm
+  railDepth?: Mm;
   /** 'under': the bottom runs the full width and the sides stand on it. 'none': no bottom (over-hood units). Absent = between the sides. */
-  bottom?: 'between' | 'under' | 'none'
-  back: 'none' | 'applied' | 'inset'
+  bottom?: 'between' | 'under' | 'none';
+  back: 'none' | 'applied' | 'inset';
   /** Distance of an inset back from the rear edge of the carcass. */
-  backInset: Mm
-  plinthHeight: Mm
-  plinthSetback: Mm
+  backInset: Mm;
+  plinthHeight: Mm;
+  plinthSetback: Mm;
   /** Gap between adjacent fronts; outer reveal is half of it (overlay) or the full gap (inset). */
-  frontGap: Mm
-  /** How fronts meet the carcass (ADR-0024). Absent = overlay. */
-  frontStyle?: FrontStyle
-  shelfSetback: Mm
+  frontGap: Mm;
+  /** How fronts meet the carcass (ADR-024). Absent = overlay. */
+  frontStyle?: FrontStyle;
+  shelfSetback: Mm;
   /** Adjustable shelves are this much shorter on each side (default 1). */
-  shelfClearance?: Mm
+  shelfClearance?: Mm;
   /** Pin-row distance from the front and rear edges (default 37). */
-  pinRowSetback?: Mm
-  drawers: DrawerSettings
-  interior: Space
+  pinRowSetback?: Mm;
+  drawers: DrawerSettings;
+  interior: Space;
 }
 
-export type DeskSupport = 'gables' | 'pedestal-left' | 'pedestal-right' | 'two-pedestals'
+export type DeskSupport = 'gables' | 'pedestal-left' | 'pedestal-right' | 'two-pedestals';
 
 export interface DeskParams {
-  width: Mm
-  depth: Mm
-  height: Mm
-  topMaterialId: string
-  bodyMaterialId: string
-  frontOverhang: Mm
-  support: DeskSupport
+  width: Mm;
+  depth: Mm;
+  height: Mm;
+  topMaterialId: string;
+  bodyMaterialId: string;
+  frontOverhang: Mm;
+  support: DeskSupport;
   /**
-   * Drawer units. `left` / `right` hold each unit's own space tree (ADR-0026). When absent (older designs) a
+   * Drawer units. `left` / `right` hold each unit's own space tree (ADR-026). When absent (older designs) a
    * unit is `drawerCount` equal drawers, derived in memory with a stable id.
    */
-  pedestal: { width: Mm; drawerCount: number; left?: Space; right?: Space }
-  modesty: { enabled: boolean; height: Mm; setback: Mm }
-  drawers: DrawerSettings
-  frontMaterialId: string
-  frontGap: Mm
+  pedestal: { width: Mm; drawerCount: number; left?: Space; right?: Space };
+  modesty: { enabled: boolean; height: Mm; setback: Mm };
+  drawers: DrawerSettings;
+  frontMaterialId: string;
+  frontGap: Mm;
 }
 
-/** Corner cabinets (ADR-0025): built from two carcasses by the cabinet generator. */
+/** Corner cabinets (ADR-025): built from two carcasses by the cabinet generator. */
 export interface CornerParams {
-  /** `diagonal` (ADR-0040): a five-sided unit, `width` along both walls, `depth` deep at each return, door(s) at 45°. */
-  variant: 'blind' | 'l-shape' | 'diagonal'
+  /** `diagonal` (ADR-040): a five-sided unit, `width` along both walls, `depth` deep at each return, door(s) at 45°. */
+  variant: 'blind' | 'l-shape' | 'diagonal';
   /** Which end the corner is at. */
-  side: 'left' | 'right'
+  side: 'left' | 'right';
   /** Blind: overall width. L-shape: length of the wing along the back wall. */
-  width: Mm
+  width: Mm;
   /** L-shape: length of the wing along the side wall, including the corner. */
-  wingWidth: Mm
+  wingWidth: Mm;
   /** Blind: width of the blind section covered by the neighbouring cabinet. */
-  blindWidth: Mm
-  height: Mm
-  depth: Mm
-  bodyMaterialId: string
-  frontMaterialId: string
-  backMaterialId: string
-  top: 'over' | 'between'
-  back: 'none' | 'applied' | 'inset'
-  backInset: Mm
-  plinthHeight: Mm
-  plinthSetback: Mm
-  frontGap: Mm
-  shelfSetback: Mm
-  drawers: DrawerSettings
+  blindWidth: Mm;
+  height: Mm;
+  depth: Mm;
+  bodyMaterialId: string;
+  frontMaterialId: string;
+  backMaterialId: string;
+  top: 'over' | 'between';
+  back: 'none' | 'applied' | 'inset';
+  backInset: Mm;
+  plinthHeight: Mm;
+  plinthSetback: Mm;
+  frontGap: Mm;
+  shelfSetback: Mm;
+  drawers: DrawerSettings;
   /** Blind: the usable section. L-shape: the back-wall wing. */
-  interior: Space
+  interior: Space;
   /** L-shape: the side-wall wing. */
-  wingInterior: Space
+  wingInterior: Space;
 }
 
-/** A front with no carcass: integrated appliance door, cover panel or filler (ADR-0036). */
+/** A front with no carcass: integrated appliance door, cover panel or filler (ADR-036). */
 export interface PanelParams {
-  purpose: 'dishwasher' | 'fridge' | 'cover' | 'filler'
-  width: Mm
-  height: Mm
-  materialId: string
-  handle?: Handle | null
+  purpose: 'dishwasher' | 'fridge' | 'cover' | 'filler';
+  width: Mm;
+  height: Mm;
+  materialId: string;
+  handle?: Handle | null;
 }
 
-export type FrameKind = 'table' | 'bench' | 'stool' | 'chair' | 'bed'
+export type FrameKind = 'table' | 'bench' | 'stool' | 'chair' | 'bed';
 
 /**
- * Legs, rails, stretchers, slats and a top or deck (ADR-0038). Only vertical and horizontal members; every part is
+ * Legs, rails, stretchers, slats and a top or deck (ADR-038). Only vertical and horizontal members; every part is
  * still an axis-aligned box. Solid members use `solidMaterialId`, panels (top, seat, headboard) `panelMaterialId`.
  */
 export interface FrameParams {
-  kind: FrameKind
+  kind: FrameKind;
   /** Outside size. Bed: derived from the mattress (width/depth ignored), height = headboard height. */
-  width: Mm
-  depth: Mm
-  height: Mm
-  panelMaterialId: string
-  solidMaterialId: string
+  width: Mm;
+  depth: Mm;
+  height: Mm;
+  panelMaterialId: string;
+  solidMaterialId: string;
   /** Table, bench, stool, chair. */
-  top: 'panel' | 'slats'
+  top: 'panel' | 'slats';
   /** Leg section across x and z. */
-  leg: { w: Mm; d: Mm }
+  leg: { w: Mm; d: Mm };
   /** Legs set in from the outside edges of the top. */
-  legInset: Mm
+  legInset: Mm;
   /** Rails under the top between the legs (height of the rail). 0 = none. */
-  apron: { height: Mm; thickness: Mm }
-  stretchers: 'none' | 'box' | 'h'
-  stretcherHeight: Mm
+  apron: { height: Mm; thickness: Mm };
+  stretchers: 'none' | 'box' | 'h';
+  stretcherHeight: Mm;
   /** Lower shelf (coffee and end tables), its top height above the floor. */
-  shelf?: { height: Mm } | null
+  shelf?: { height: Mm } | null;
   /** Slatted top, seat or bed deck. */
-  slats: { width: Mm; thickness: Mm; gap: Mm }
+  slats: { width: Mm; thickness: Mm; gap: Mm };
   /**
    * Chair and bench: seat height; the back posts carry on up to `height`. Absent = no back. `angleDeg`: rake of the
-   * back from vertical, whole degrees (ADR-0040; absent = 0, upright). Above the seat the back leans as one piece.
+   * back from vertical, whole degrees (ADR-040; absent = 0, upright). Above the seat the back leans as one piece.
    */
-  back?: { seatHeight: Mm; style: 'slats' | 'panel'; count: number; railHeight: Mm; angleDeg?: number } | null
+  back?: {
+    seatHeight: Mm;
+    style: 'slats' | 'panel';
+    count: number;
+    railHeight: Mm;
+    angleDeg?: number;
+  } | null;
   /**
-   * Reclining back (ADR-0040): seat-to-back angles of the bought mechanism's positions (default 100°, 120°, 150°) and the
+   * Reclining back (ADR-040): seat-to-back angles of the bought mechanism's positions (default 100°, 120°, 150°) and the
    * one shown; it sets the back's rake (angle − 90°). An optional footrest hangs from the seat's front edge, swung
    * forward by `angles[at]` degrees (0 = hanging, 90 = level). The mechanism is bought and sets the real positions.
    */
-  recline?: { positions: number[]; at: number; footrest?: { length: Mm; angles: number[] } | null } | null
+  recline?: {
+    positions: number[];
+    at: number;
+    footrest?: { length: Mm; angles: number[] } | null;
+  } | null;
   /**
-   * Lounger backrest (ADR-0040): the first `length` mm of a slatted seat lift on a hinge, on a bought prop. Positions
+   * Lounger backrest (ADR-040): the first `length` mm of a slatted seat lift on a hinge, on a bought prop. Positions
    * are seat-to-back angles (default 100°, 120°, 150°); 180° would be flat.
    */
-  backrest?: { length: Mm; positions: number[]; at: number } | null
+  backrest?: { length: Mm; positions: number[]; at: number } | null;
   /** Arm posts on the seat at the front corners and arm rests back to the back posts; armrest top above the floor. */
-  arms?: { height: Mm } | null
+  arms?: { height: Mm } | null;
   /** Chair only: `bought` = seat and back boards on a bought base (gas lift, mechanism, five-star base); no legs. */
-  base?: 'legs' | 'bought'
+  base?: 'legs' | 'bought';
   /** Bed only. */
   bed?: {
-    mattress: { w: Mm; l: Mm }
-    clearance: Mm
+    mattress: { w: Mm; l: Mm };
+    clearance: Mm;
     /** Top of the slats above the floor. */
-    deckHeight: Mm
-    railHeight: Mm
-    headboardHeight: Mm
+    deckHeight: Mm;
+    railHeight: Mm;
+    headboardHeight: Mm;
     /** 0 = no footboard (low foot rail only). */
-    footboardHeight: Mm
+    footboardHeight: Mm;
     /** Back panel along the left side (daybed). 0 = none. */
-    sidePanelHeight: Mm
+    sidePanelHeight: Mm;
     /** Second bed above (bunk) with this clear gap between decks. 0 = single. */
-    tierGap: Mm
-    guardHeight: Mm
-  } | null
+    tierGap: Mm;
+    guardHeight: Mm;
+  } | null;
 }
 
-/** One part of a panel set (ADR-0041): finished cut size only, no place in an assembly. Thickness comes from the board. */
+/** One part of a panel set (ADR-041): finished cut size only, no place in an assembly. Thickness comes from the board. */
 export interface LoosePanel {
-  id: string
-  name: string
+  id: string;
+  name: string;
   /** Along the grain when the board has one. */
-  length: Mm
-  width: Mm
-  materialId: string
-  quantity: number
+  length: Mm;
+  width: Mm;
+  materialId: string;
+  quantity: number;
   /**
-   * Where the part sits when its place is known (ADR-0041 amendment, 2026-10-23): back-left-bottom corner and how it
+   * Where the part sits when its place is known (ADR-041 amendment, 2026-10-23): back-left-bottom corner and how it
    * lies. Placed parts have quantity 1; unplaced parts stay in the pile beside the assembly.
    */
-  place?: PanelPlace
+  place?: PanelPlace;
 }
 
 /**
  * How a placed panel lies. `flat-*`: thickness up (y), length along x or z. `edge-*`: standing on its long edge,
  * width up, length along x or z. `up-*`: standing on its end, length up, width along x or z.
  */
-export type PanelLie = 'flat-x' | 'flat-z' | 'edge-x' | 'edge-z' | 'up-x' | 'up-z'
-export interface PanelPlace { x: Mm; y: Mm; z: Mm; lie: PanelLie }
+export type PanelLie = 'flat-x' | 'flat-z' | 'edge-x' | 'edge-z' | 'up-x' | 'up-z';
+export interface PanelPlace {
+  x: Mm;
+  y: Mm;
+  z: Mm;
+  lie: PanelLie;
+}
 
-/** Two placed panels screwed together (ADR-0041 amendment); listed in the hardware schedule, screws chosen by the user. */
-export interface PanelJoint { a: string; b: string; kind: 'screwed' }
+/** Two placed panels screwed together (ADR-041 amendment); listed in the hardware schedule, screws chosen by the user. */
+export interface PanelJoint {
+  a: string;
+  b: string;
+  kind: 'screwed';
+}
 
 /**
- * Parts known only by their cut sizes (ADR-0041), such as a bed whose panels are measured but whose assembly is not.
+ * Parts known only by their cut sizes (ADR-041), such as a bed whose panels are measured but whose assembly is not.
  * Built lying flat in one pile, largest at the bottom: never an invented assembly.
  */
 export interface PanelSetParams {
-  panels: LoosePanel[]
+  panels: LoosePanel[];
   /** Shown with the piece: what the parts are for and what is still unknown. */
-  note?: string
-  /** Screwed joints between placed panels (ADR-0041 amendment). */
-  joints?: PanelJoint[]
+  note?: string;
+  /** Screwed joints between placed panels (ADR-041 amendment). */
+  joints?: PanelJoint[];
 }
 
 export type Product =
@@ -485,57 +561,60 @@ export type Product =
   | { kind: 'corner'; id: string; params: CornerParams }
   | { kind: 'panel'; id: string; params: PanelParams }
   | { kind: 'frame'; id: string; params: FrameParams }
-  | { kind: 'panels'; id: string; params: PanelSetParams }
+  | { kind: 'panels'; id: string; params: PanelSetParams };
 
-/** Where a piece came from (ADR-0028); kept on every copy, never used for geometry. */
+/** Where a piece came from (ADR-028); kept on every copy, never used for geometry. */
 export interface CatalogMeta {
-  category?: string
-  brand?: string
-  productName?: string
-  articleNumber?: string
-  /** Hardware the user still has to choose from a maker's datasheet (ADR-0033 `hardware:user`); a warning stays until cleared. */
-  hardwareToChoose?: string
+  category?: string;
+  brand?: string;
+  productName?: string;
+  articleNumber?: string;
+  /** Hardware the user still has to choose from a maker's datasheet (ADR-033 `hardware:user`); a warning stays until cleared. */
+  hardwareToChoose?: string;
   origin?: {
-    catalogId: string
-    variantId?: string
-    revision: number
-    brand?: string
-    productName: string
-    sourceUrl?: string
-    takenAt: string
-  }
+    catalogId: string;
+    variantId?: string;
+    revision: number;
+    brand?: string;
+    productName: string;
+    sourceUrl?: string;
+    takenAt: string;
+  };
 }
 
-/** Guidance thresholds (ADR-0035). Absent = typical defaults; all are warnings, never errors. */
+/** Guidance thresholds (ADR-035). Absent = typical defaults; all are warnings, never errors. */
 export interface RuleSettings {
   /** Longest shelf span for 18 mm particleboard or MDF before a sag warning; scaled by thickness. */
-  shelfSpan?: Mm
+  shelfSpan?: Mm;
   /** Widest single hinged door before a warning. */
-  doorMaxWidth?: Mm
+  doorMaxWidth?: Mm;
   /** Least inside depth for a hanging rail. */
-  hangerDepth?: Mm
+  hangerDepth?: Mm;
   /** Room height, for the tilt-up check. Absent = not checked. */
-  roomHeight?: Mm
+  roomHeight?: Mm;
 }
 
 export interface Design {
-  /** 2 adds stock sheets and cutting settings (ADR-0019); version-1 files are upgraded in memory on load. */
-  schemaVersion: 1 | 2
-  id: string
-  name: string
-  createdAt: string
-  updatedAt: string
-  materials: Material[]
-  product: Product
+  /** 2 adds stock sheets and cutting settings (ADR-019); version-1 files are upgraded in memory on load. */
+  schemaVersion: 1 | 2;
+  id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+  materials: Material[];
+  product: Product;
   /** Saw settings for sheet layouts. */
-  cutting?: { kerf: Mm }
-  /** Catalog metadata and origin link (ADR-0028). */
-  catalog?: CatalogMeta
-  /** Guidance thresholds (ADR-0035). */
-  settings?: { rules?: RuleSettings }
-  /** Answers of the New-piece wizard that made this piece, so it can be reopened there (ADR-0046). Never geometry. */
-  wizard?: { answers: WizardAnswers }
+  cutting?: { kerf: Mm };
+  /** Catalog metadata and origin link (ADR-028). */
+  catalog?: CatalogMeta;
+  /** Guidance thresholds (ADR-035). */
+  settings?: { rules?: RuleSettings };
+  /** Answers of the New-piece wizard that made this piece, so it can be reopened there (ADR-046). Never geometry. */
+  wizard?: { answers: WizardAnswers };
 }
 
 /** Wizard answers as stored: text, numbers, or a list of those or of compartments (`src/core/wizard/types.ts`). */
-export type WizardAnswers = Record<string, string | number | (string | number | { kind: string; shelves: number; drawers: number })[]>
+export type WizardAnswers = Record<
+  string,
+  string | number | (string | number | { kind: string; shelves: number; drawers: number })[]
+>;

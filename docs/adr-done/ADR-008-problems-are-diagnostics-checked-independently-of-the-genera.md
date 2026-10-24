@@ -1,0 +1,41 @@
+# ADR-008: Problems are diagnostics, checked independently of the generators; errors block export
+
+- Status: Implemented
+- Date: 2026-10-21
+- Implemented: 2026-10-21
+- Depends on: none
+- Design: n/a
+- Related: ADR-004, ADR-015
+
+## Context
+
+Users type impossible values while editing. Throwing breaks the editor; silently clamping hides mistakes that
+become wasted boards.
+
+## Decision
+
+Generators never throw on user input; they emit `Diagnostic { severity: error|warning, code, message, nodeId,
+panelIds }`. `buildModel` then runs checks that do **not** trust the generators: integer sizes, positive sizes and
+narrow parts, thickness equals the material, **no two panels share volume**, every carcass panel inside the declared
+envelope (fronts allowed in front). Warnings carry rule-of-thumb guidance (shelf sag, wide doors, knee space,
+hanging depth) and say so. The parts CSV button is disabled while any error exists.
+
+## Alternatives considered
+
+- **Throw on invalid input** — rejected: unusable while typing.
+- **Clamp silently** — rejected: hides mistakes.
+
+## Consequences
+
+- Overlap is O(n²); fine for furniture-scale part counts (hundreds).
+- New generator features need no new overlap code; the independent check catches collisions.
+
+## Evidence (repository files)
+
+- `src/core/build.ts` — integer, size, thickness, overlap and envelope checks.
+- `src/ui/Output.tsx` — Checks tab; `src/ui/App.tsx` — CSV disabled on errors.
+- `tests/fuzz.test.ts` — invariants hold whenever no error is reported.
+
+## Compliance check
+
+Fuzz: no buildable random design has overlapping or out-of-envelope panels.

@@ -1,0 +1,99 @@
+# ADR-028: Catalog metadata and origin link live in the design document
+
+- Status: Implemented
+- Date: 2026-10-22
+- Implemented: 2026-10-23
+- Decided by: user request; defaults below await confirmation
+- Depends on: none
+- Design: n/a
+- Related: ADR-011, ADR-012, ADR-022, ADR-027, ADR-029
+- Backlog: N15
+
+## Context
+
+The user asked that a piece created by editing an item imported from another brand **keeps the link to the
+original item**. Designs are self-contained JSON (ADR-011), are duplicated in the library, exported/imported as
+files and embedded as copies in projects (ADR-022), so any link stored elsewhere would be lost on the way.
+
+## Decision
+
+Add one optional field to `Design`:
+
+```ts
+catalog?: {
+  category?: CatalogCategory          // ADR-027 list
+  brand?: string                      // e.g. "IKEA"; absent = the user's own design
+  productName?: string                // e.g. "BILLY bookcase 80×28×202"
+  articleNumber?: string              // manufacturer's article number, when printed in the source
+  origin?: {
+    catalogId: string                 // stable id of the shipped entry, e.g. "ikea-billy-80x28x202"
+    revision: number                  // entry revision the copy was taken from (ADR-029)
+    brand: string
+    productName: string
+    sourceUrl?: string                // manufacturer's public manual or product page
+    takenAt: string                   // ISO time the copy was made
+  }
+}
+```
+
+- **Shipped entries** carry `category`, `brand`, `productName`, `sourceUrl` and no `origin`.
+- **Copying** a shipped entry (ADR-027) sets `origin` from it. Duplicating, exporting, importing a file and
+  embedding in a project all keep `catalog` unchanged, so the link survives every edit of the copy.
+- **Edited vs. original** is derived, never stored: the editor shows _Based on BRAND PRODUCT (rev N)_ with a link
+  to the in-app entry and, when present, the external `sourceUrl`. _Differs from original_ compares the copy's
+  `buildModel()` cut list with the entry's.
+- **Brand on edited copies.** A copy keeps `origin.brand`, but its own `brand` is cleared on the first edit: the
+  modified piece is the user's design _based on_ that product, not a product of that brand.
+- External links are plain anchors the user clicks (`rel="noopener noreferrer"`); the app never requests them
+  (ADR-002).
+- `validateDesign` checks the field when present (strings, length caps, known category, integer revision,
+  `http(s)` URLs only). Absent field = valid, so every existing design and file still loads.
+- **No `schemaVersion` bump and no Dexie version.** The field is optional and additive: old readers validate and
+  round-trip it (object spread), and rows are whole documents (ADR-012). This is an addendum to ADR-011's "shape
+  change bumps `schemaVersion`": additive optional metadata that never affects geometry does not.
+
+## Alternatives considered
+
+- **Separate Dexie table of origins keyed by design id** — rejected: lost on export, duplicate and project embed.
+- **Bump to `schemaVersion: 3`** — rejected: an older cached app version could no longer open files from a newer
+  one, for a field that changes no geometry.
+- **Keep the brand on modified copies** — rejected: presents user changes as the manufacturer's product.
+
+## Consequences
+
+- Project items already carry `libraryId`; `catalog.origin` is independent of it (a piece can come from the
+  catalog and be in the library).
+- Generated geometry is still never stored (ADR-011).
+
+## Evidence (repository files)
+
+- Today: `src/core/types.ts` (`Design` has no metadata), `src/core/design.ts` (`validateDesign` ignores unknown
+  fields), `src/ui/Dialogs.tsx` (duplicate/import use object spread). Nothing implements this yet.
+
+## Compliance check
+
+When accepted: tests show (1) every existing template and fixture validates unchanged; (2) copy → edit → duplicate →
+export → import → embed in a project keeps `catalog.origin` byte-identical; (3) invalid `catalog` values are
+reported by `validateDesign` and never throw; (4) the first edit clears `brand` but keeps `origin`.
+
+## Open questions (defaults used until answered)
+
+1. Clear `brand` on the first edit of a copy (default) or keep it with a _modified_ badge?
+
+## Implementation (2026-10-23)
+
+`Design.catalog` (`CatalogMeta`) exists with the fields above plus `origin.variantId` and `hardwareToChoose`
+(hardware still to choose from a datasheet, ADR-033). `validateDesign` checks it (length caps, integer revision,
+http(s) links only). Inserting a catalog variant sets `origin`; the editor shows _Based on …_; the first edit clears
+`brand` and keeps `origin.brand` (open question 1: default used). No `schemaVersion` bump, no Dexie version for this.
+
+Evidence: `src/core/types.ts`, `src/core/design.ts` (`validateCatalog`), `src/core/catalog/index.ts` (`insertVariant`),
+`src/store/designStore.ts` (`commit`), `src/ui/Editors.tsx` (`PieceInfo`); `tests/store.test.ts` (origin
+byte-identical through edit, duplicate, export/import and project embed; brand cleared on first edit),
+`tests/constructions.test.ts` (validation). Not built: _Differs from original_ comparison.
+
+Verification 2026-10-23 (branch `feat/catalog-templates`): `npm run lint`, `npm run typecheck`, `npm test` (157 passed), `npm run build` passed; `FUZZ_N=30000` fuzz passed (cabinets with the new fronts and flags, and frames); scripted headless Chromium against the production build at 1280 and 390 px, 18/18 checks, no page errors, no sideways scroll. Six code mutations each fail a test. Not checked on a real phone, with a screen reader, or on the deployed site.
+
+## Answers (2026-10-23, from the user)
+
+1. **Clear the brand on the first edit** of a copy; the origin keeps it (default kept, as built).
