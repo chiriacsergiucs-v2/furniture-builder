@@ -32,7 +32,7 @@ export function SaveProjectTemplate() {
     try {
       await saveProjectTemplate(t);
       setMsg(
-        `Saved as project template “${t.name}”. Use it from Home → Create from a project template.`,
+        `Saved as project template “${t.name}”. Use it from Projects → Create from a project template.`,
       );
     } catch {
       setMsg('The template could not be saved on this device.');

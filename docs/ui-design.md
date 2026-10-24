@@ -134,6 +134,34 @@ _Simple · Realistic_, kept in `localStorage` `fb:look`; Realistic by default at
 missing. In Realistic the selection is the green tint only (no outline). Materials gains **Finish** (_Matte · Satin ·
 Gloss_) under _Has grain_.
 
+**Shell and editor modes (ADR-078, ADR-079, 2026-10-24).** These replace the top bar and the phone action bar
+described above. Audit and wireframes are in `docs/research/2026-10-24-ui-redesign-audit.md`.
+
+- _Places._ **Projects** (the bare address and `#projects`: Home and the Library dialog merged, with Import a
+  file and Clean up unused pictures), **Catalog** and **Editor**. They are tabs in the top bar (`nav.places`) on
+  wider screens and a fixed one-row bottom nav at ≤ 760 px. Feature Research moved into ⋯.
+- _App bar, one row._ It shows the path to what is open: the name; `‹ Project › piece` for a piece in a project;
+  or the variant plus **Save to template** / **Cancel** for a template variant. The template's family name is
+  hidden on phones. It also holds the status dot, Undo, Redo, the theme toggle and ⋯ **More**.
+- _⋯ More._ New…, **Files** (Design or Project file, Front view drawing, Fusion 360 script, Import a file) and
+  Feature Research. Catalog template import/export sits in its own _Template files_ menu. The banners are gone.
+- _Modes._ A segmented control under the bar: **Compose · Configure · Build & Preview** (remembered per
+  device in `fb:mode`). Build & Preview carries the Checks count.
+  - Compose: the space or piece editor.
+  - Configure: the whole-piece editor with the steps rail, plus _Boards, sheets and saw cut_ (it was the
+    Materials dialog). For a project: run parts, saw cut and save as a template.
+  - Build & Preview: 3D plus the outputs.
+- _Desktop._ The left panel shows Compose or Configure. Build is always the right column. Build & Preview turns
+  the centre to 3D.
+- _Phone._
+  - Compose: the drawing fills the screen, with a bottom sheet over the nav. Its peek row reads _Selected: …_ or
+    _Tap a space to edit it_; the sheet opens on a selection, shrinks the drawing and steps aside while placing
+    or drawing.
+  - Configure: settings only.
+  - Build & Preview: 3D (42 vh, mounted only here) over the output tabs.
+- _Output actions._ **Download CSV** (the one primary button) and **Print** sit on top of the Parts tab, and
+  are still disabled while there are errors (ADR-008).
+
 ## 5. Rollout
 
 Shipped as one slice on `ccr-38ebfeec-gnv63w` because the tokens, components and screens share one stylesheet; each
@@ -158,17 +186,17 @@ in dark mode renders the light print sheet. Not run: a real phone, a screen read
 
 ## Feature inventory (every original feature accounted for)
 
-| Feature                                                                                                      | Status                                                         |
-| ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------- |
-| Name field, autosave status                                                                                  | kept; status now visible on phones                             |
-| Undo / Redo (buttons + shortcuts)                                                                            | kept (icon buttons, same titles)                               |
-| New, Saved (library), Materials, Parts CSV, Print, Export menu (SVG, Fusion, design / project file)          | kept; "Saved" button renamed "Library", dialog title unchanged |
-| Front / Plan / 3D switch, Doors and fronts, Exploded 3D, Reset view                                          | kept                                                           |
-| Elevation: tap spaces, breadcrumb, selection, dimensions                                                     | kept                                                           |
-| Inspector: all fields for cabinet, corner, desk, space, split, drawer heights, handles, runner settings      | kept, regrouped                                                |
-| Output tabs: Parts, Sheets, Hardware, Checks; row ↔ 3D highlight; CSV blocked by errors                      | kept                                                           |
-| Projects: list, add, edit, update from saved, quantity, turn, position, gap, remove, kerf; plan + room front | kept                                                           |
-| Library: open, duplicate, delete, import                                                                     | kept                                                           |
-| Materials: colour, name, thickness, grain, sheet, trim, stock, add; kerf                                     | kept                                                           |
-| Print sheet, update toast, no-WebGL message                                                                  | kept                                                           |
-| New: theme toggle (light / dark, device-local)                                                               | added                                                          |
+| Feature                                                                                                      | Status                                                     |
+| ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------- |
+| Name field, autosave status                                                                                  | kept; name in the app bar path (ADR-078)                   |
+| Undo / Redo (buttons + shortcuts)                                                                            | kept (icon buttons, same titles)                           |
+| New, Saved (library), Materials, Parts CSV, Print, Export menu (SVG, Fusion, design / project file)          | kept; ⋯ › New / Files, Projects page, Configure, Parts tab |
+| Front / Plan / 3D switch, Doors and fronts, Exploded 3D, Reset view                                          | kept                                                       |
+| Elevation: tap spaces, breadcrumb, selection, dimensions                                                     | kept                                                       |
+| Inspector: all fields for cabinet, corner, desk, space, split, drawer heights, handles, runner settings      | kept, regrouped                                            |
+| Output tabs: Parts, Sheets, Hardware, Checks; row ↔ 3D highlight; CSV blocked by errors                      | kept                                                       |
+| Projects: list, add, edit, update from saved, quantity, turn, position, gap, remove, kerf; plan + room front | kept                                                       |
+| Library: open, duplicate, delete, import                                                                     | kept                                                       |
+| Materials: colour, name, thickness, grain, sheet, trim, stock, add; kerf                                     | kept                                                       |
+| Print sheet, update toast, no-WebGL message                                                                  | kept                                                       |
+| New: theme toggle (light / dark, device-local)                                                               | added                                                      |

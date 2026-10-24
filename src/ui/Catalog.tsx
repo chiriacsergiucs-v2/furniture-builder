@@ -413,28 +413,36 @@ export function CatalogPage({
             </span>
           </label>
           <SaveAsTemplate />
-          <button
-            type="button"
-            className="btn sm"
-            onClick={exportLocal}
-            disabled={!useTemplates.getState().locals.length}
-          >
-            <Icon name="download" className="sm" />
-            Export my templates
-          </button>
-          <label className="btn sm file-btn">
-            <Icon name="upload" className="sm" />
-            Import templates
-            <input
-              type="file"
-              accept="application/json,.json"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) void importLocal(f);
-                e.target.value = '';
-              }}
-            />
-          </label>
+          <details className="menu catalog-files">
+            <summary aria-label="Template files" title="Export or import your own templates">
+              <Icon name="more" className="sm" />
+              <span>Template files</span>
+            </summary>
+            <div className="menu-items">
+              <button
+                type="button"
+                onClick={exportLocal}
+                disabled={!useTemplates.getState().locals.length}
+              >
+                <Icon name="download" />
+                Export my templates
+              </button>
+              <label className="menu-file">
+                <Icon name="upload" />
+                Import templates
+                <input
+                  type="file"
+                  accept="application/json,.json"
+                  aria-label="Import templates"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) void importLocal(f);
+                    e.target.value = '';
+                  }}
+                />
+              </label>
+            </div>
+          </details>
         </div>
       )}
       {msg && (

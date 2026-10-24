@@ -49,3 +49,4 @@ Built 2026-10-23 (N38): the app starts on a Home welcome page (create a new proj
 Built 2026-10-24 (N41): Mobila — Living re-done from catalog base cabinets, 1-door + 2-door + 1-door on the floor and at the ceiling (805 · 1610 · 805 × 435, 3220 wall).
 User answers 2026-10-24 (ADR-047): merging refuses pieces of different height or depth; cabinets only; project-level undo
 added (ADR-051, N46). Process: the repository follows the reserv flow (ADR-050): `docs/adr`, `.claude/skills`, `CLAUDE.md`.
+Built 2026-10-24 (ADR-078/079, N73/N74): places Projects · Catalog · Editor (bottom nav on phones), one-row app bar with ⋯ › Files for every import/export, editor modes Compose · Configure · Build & Preview; Home and the Library dialog became Projects; Materials moved into Configure; CSV and Print on the Parts tab.

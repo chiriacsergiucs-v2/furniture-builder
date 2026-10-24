@@ -2,7 +2,8 @@
 
 Source: `MOBILA_TOATE_CAMERELE_AI_CAD_PAL_MDF.json` (format 2.0.0, exported 2026-10-22), attached to the Mobila
 project. Generator: `src/core/samples/mobila.ts`. Importable files: `mobila-living.project.json`,
-`mobila-dormitor.project.json` (also built into the app: **New** or **Library → Built in the app**, on the deployed site with no import).
+`mobila-dormitor.project.json`; open them with ⋯ › Files › **Import a file**. (They are no longer built into the app: removed
+at the user's request 2026-10-24, backlog D02.)
 `tests/mobila.test.ts` checks them.
 
 | Room in the file | Project           | Pieces                                                                                      |

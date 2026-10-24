@@ -10,6 +10,7 @@ import {
   setDrawerCount,
   findInProduct,
   findSpace,
+  productRoots,
   parentOf,
   pedestalRoot,
   splitSpace,
@@ -47,6 +48,7 @@ import {
 } from './controls';
 import { Icon } from './icons';
 import { askConfirm } from './Confirm';
+import { useUi } from './shell/uiStore';
 import {
   ApplianceEditor,
   ChecksGroup,
@@ -65,19 +67,25 @@ const KIND_LABEL: Record<SpaceKind, string> = {
   split: 'Divided',
 };
 
-export function Inspector() {
+/**
+ * The piece editor for one editor mode (ADR-079). Compose edits the selected space (contents, doors, divide);
+ * Configure edits the whole piece (size, construction, boards, drawers), whatever is selected.
+ */
+export function Inspector({ mode }: { mode: 'compose' | 'configure' }) {
   const design = useDesign((s) => s.design);
   const selectedId = useDesign((s) => s.selectedId);
   const prod = design.product;
   const found = selectedId ? findInProduct(prod, selectedId) : undefined;
-  if (found)
-    return (
+  if (mode === 'compose')
+    return found ? (
       <SpaceEditor
         space={found.space}
         root={found.root}
         rootLabel={found.label}
         wholeLabel={WHOLE[prod.kind]}
       />
+    ) : (
+      <ComposeStart />
     );
   if (prod.kind === 'desk')
     return <DeskEditor p={prod.params} deskId={prod.id} materials={design.materials} />;
@@ -87,6 +95,55 @@ export function Inspector() {
   if (prod.kind === 'panels')
     return <PanelSetEditor p={prod.params} materials={design.materials} />;
   return <CabinetEditor p={prod.params} materials={design.materials} />;
+}
+
+/** Compose with nothing selected: where to tap, or a way into each space tree. */
+function ComposeStart() {
+  const prod = useDesign((s) => s.design.product);
+  const select = useDesign((s) => s.select);
+  const setMode = useUi((s) => s.setMode);
+  const roots = productRoots(prod);
+  return (
+    <div className="inspector compose-start">
+      <header className="insp-head">
+        <h2>Compose</h2>
+        <p className="hint">
+          {roots.length
+            ? 'Tap a space in the front view to fill it with shelves, drawers or hanging, add doors, or divide it.'
+            : 'This piece has no spaces to fill. Its sizes and boards are under Configure.'}
+        </p>
+      </header>
+      {roots.map((r) => (
+        <button key={r.root.id} type="button" className="row-btn" onClick={() => select(r.root.id)}>
+          <span className="glyph">
+            <Icon name="grid" />
+          </span>
+          <span>
+            <strong>Edit the {r.label.toLowerCase()}</strong>
+            <span className="sub">{insideSummary([r.root])}</span>
+          </span>
+          <Icon name="chevron-right" className="chev sm" />
+        </button>
+      ))}
+      {!roots.length && (
+        <button type="button" className="btn outline" onClick={() => setMode('configure')}>
+          <Icon name="sliders" className="sm" />
+          Open Configure
+        </button>
+      )}
+    </div>
+  );
+}
+
+/** One line naming what is selected in the piece, for the phone sheet's peek row (ADR-079). */
+export function selectionLabel(prod: Parameters<typeof findInProduct>[0], id: string | null) {
+  const found = id ? findInProduct(prod, id) : undefined;
+  if (!found) return null;
+  return found.space.id === found.root.id
+    ? found.label
+    : found.space.kind === 'split'
+      ? 'Divided space'
+      : KIND_LABEL[found.space.kind];
 }
 
 const WHOLE = {
@@ -147,6 +204,7 @@ const FRONT_LABEL: Record<FrontStyle, string> = {
 function EditorRail({ steps, inside }: { steps: Step[]; inside?: () => void }) {
   const diags = useDesign((s) => s.model.diagnostics);
   const setTab = useDesign((s) => s.setTab);
+  const setMode = useUi((s) => s.setMode);
   const errors = diags.filter((d) => d.severity === 'error').length;
   const warnings = diags.length - errors;
   const cut: Step = {
@@ -165,8 +223,7 @@ function EditorRail({ steps, inside }: { steps: Step[]; inside?: () => void }) {
     else if (id === 'inside') inside?.();
     else if (id === 'cut') {
       setTab(errors || warnings ? 'checks' : 'parts');
-      if (matchMedia('(max-width: 760px)').matches)
-        document.querySelector('.output')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      setMode('build');
     } else revealGroup(`g-${id}`);
   };
   return (
@@ -711,7 +768,9 @@ function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material
       <EditorRail steps={steps} inside={() => select(p.interior.id)} />
       <header className="insp-head">
         <h2>Whole cabinet</h2>
-        <p className="hint">Tap a space in the front view to fill or divide it.</p>
+        <p className="hint">
+          Sizes, construction and boards. Fill or divide the spaces under Compose.
+        </p>
       </header>
       <PieceInfo />
       <div className="dims3">

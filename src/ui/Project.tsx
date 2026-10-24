@@ -57,7 +57,17 @@ const FRONT_SIDE: Record<QuarterTurn, string> = {
 };
 
 /** Left panel in the project view: the pieces, and the one selected (ADR-022). */
-export function ProjectPanel({ onAdd }: { onAdd: () => void }) {
+/**
+ * The project editor for one editor mode (ADR-079). Compose: the pieces, where they stand and the room. Configure:
+ * what applies to the whole project (run parts, saw cut, saving it as a template).
+ */
+export function ProjectPanel({
+  onAdd,
+  mode,
+}: {
+  onAdd: () => void;
+  mode: 'compose' | 'configure';
+}) {
   const project = useDesign((s) => s.project)!;
   const pm = useDesign((s) => s.projectModel);
   const selectedId = useDesign((s) => s.selectedItemId);
@@ -94,6 +104,26 @@ export function ProjectPanel({ onAdd }: { onAdd: () => void }) {
     setLibMsg('Updated from the saved piece.');
   };
 
+  if (mode === 'configure')
+    return (
+      <div className="inspector">
+        <header className="insp-head">
+          <h2>Project settings</h2>
+          <p className="hint">These apply to every piece in {project.name}.</p>
+        </header>
+        <RunParts />
+        <MmField
+          label="Saw cut (kerf) for this project"
+          value={project.cutting?.kerf ?? 4}
+          min={0}
+          max={20}
+          step={1}
+          onChange={(v) => updateProject((p) => ({ ...p, cutting: { kerf: v } }))}
+        />
+        <SaveProjectTemplate />
+      </div>
+    );
+
   return (
     <div className="inspector">
       <header className="insp-head">
@@ -103,49 +133,6 @@ export function ProjectPanel({ onAdd }: { onAdd: () => void }) {
           your saved pieces.
         </p>
       </header>
-      {project.items.length === 0 ? (
-        <p className="empty center">
-          <Icon name="project" />
-          No pieces yet. Add a cabinet, a corner unit or a desk to start.
-        </p>
-      ) : (
-        <ul className="pieces">
-          {project.items.map((i) => {
-            const b = pm?.pieces.find((p) => p.item.id === i.id)?.bounds;
-            return (
-              <li key={i.id}>
-                <button
-                  type="button"
-                  className={`row-btn ${i.id === selectedId ? 'on' : ''}`}
-                  aria-pressed={i.id === selectedId}
-                  onClick={() => select(i.id)}
-                >
-                  <span>
-                    <strong>
-                      {i.quantity > 1 ? `${i.quantity} × ` : ''}
-                      {i.design.name}
-                    </strong>
-                    {b && (
-                      <span className="sub num">
-                        {b.w} × {b.h} × {b.d} mm
-                      </span>
-                    )}
-                  </span>
-                  <Icon name="chevron-right" className="chev sm" />
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-      <button type="button" className="btn outline block" onClick={onAdd}>
-        <Icon name="plus" />
-        Add a piece
-      </button>
-      <RunParts />
-      <RoomSection />
-      <SaveProjectTemplate />
-
       {item && (
         <section className="piece-edit section" aria-label={`Selected piece: ${item.design.name}`}>
           <div className="card-title">
@@ -237,15 +224,46 @@ export function ProjectPanel({ onAdd }: { onAdd: () => void }) {
           </button>
         </section>
       )}
-
-      <MmField
-        label="Saw cut (kerf) for this project"
-        value={project.cutting?.kerf ?? 4}
-        min={0}
-        max={20}
-        step={1}
-        onChange={(v) => updateProject((p) => ({ ...p, cutting: { kerf: v } }))}
-      />
+      {project.items.length === 0 ? (
+        <p className="empty center">
+          <Icon name="project" />
+          No pieces yet. Add a cabinet, a corner unit or a desk to start.
+        </p>
+      ) : (
+        <ul className="pieces">
+          {project.items.map((i) => {
+            const b = pm?.pieces.find((p) => p.item.id === i.id)?.bounds;
+            return (
+              <li key={i.id}>
+                <button
+                  type="button"
+                  className={`row-btn ${i.id === selectedId ? 'on' : ''}`}
+                  aria-pressed={i.id === selectedId}
+                  onClick={() => select(i.id)}
+                >
+                  <span>
+                    <strong>
+                      {i.quantity > 1 ? `${i.quantity} × ` : ''}
+                      {i.design.name}
+                    </strong>
+                    {b && (
+                      <span className="sub num">
+                        {b.w} × {b.h} × {b.d} mm
+                      </span>
+                    )}
+                  </span>
+                  <Icon name="chevron-right" className="chev sm" />
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      <button type="button" className="btn outline block" onClick={onAdd}>
+        <Icon name="plus" />
+        Add a piece
+      </button>
+      <RoomSection />
     </div>
   );
 }

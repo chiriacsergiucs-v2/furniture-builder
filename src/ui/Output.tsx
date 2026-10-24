@@ -5,6 +5,9 @@ import { Sheets } from './Sheets';
 import { ShoppingList } from './Shopping';
 import { useView } from './useView';
 import { Icon } from './icons';
+import { cutlistCsvRo } from '../core/ro';
+import { download, fileName } from './shell/files';
+import { useUi } from './shell/uiStore';
 
 export function Output() {
   const tab = useDesign((s) => s.tab);
@@ -69,8 +72,39 @@ function Parts() {
   }, [rows]);
   const total = rows.reduce((n, r) => n + r.quantity, 0);
 
+  const setPrinting = useUi((s) => s.setPrinting);
+  const why = blocked ? 'Fix the problems listed under Checks first' : undefined;
+
   return (
     <div className="parts">
+      <div className="out-actions">
+        <button
+          type="button"
+          className="btn primary"
+          disabled={blocked}
+          title={why ?? 'Download the parts list as CSV (Romanian)'}
+          onClick={() =>
+            download(
+              `${fileName(view.title)}-parts.csv`,
+              cutlistCsvRo(view.rows),
+              'text/csv;charset=utf-8',
+            )
+          }
+        >
+          <Icon name="download" />
+          Download CSV
+        </button>
+        <button
+          type="button"
+          className="btn outline"
+          disabled={blocked}
+          title={why ?? 'Print the cutting sheet (Romanian, A4) or save it as PDF'}
+          onClick={() => setPrinting(true)}
+        >
+          <Icon name="printer" />
+          Print
+        </button>
+      </div>
       {blocked && (
         <p className="alert error blocked">
           <Icon name="alert-circle" className="sm" />

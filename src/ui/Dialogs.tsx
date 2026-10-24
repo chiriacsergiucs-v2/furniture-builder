@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { kerfOf, newId, sheetOf, validateDesign } from '../core/design';
-import type { Design, Material, MaterialKind, MaterialMaker } from '../core/types';
+import { kerfOf, newId, sheetOf } from '../core/design';
+import type { Material, MaterialKind, MaterialMaker } from '../core/types';
 import {
   DECOR_COLUMNS,
   decorPatch,
@@ -9,34 +9,16 @@ import {
   parseDecorList,
   type Decor,
 } from '../core/materials';
-import { newProject, validateProject, type Project } from '../core/project';
-import { sampleProjects } from '../core/samples/mobila';
-import {
-  clearDecors,
-  deleteDesign,
-  deleteImages,
-  deleteProject,
-  listDecors,
-  replaceDecors,
-  unusedImageIds,
-  listDesigns,
-  listProjects,
-  saveDesign,
-  saveProject,
-  saveProjectTemplate,
-  type StoredDesign,
-  type StoredProject,
-} from '../persist/db';
+import { newProject } from '../core/project';
+import { clearDecors, listDecors, replaceDecors, saveProject } from '../persist/db';
 import { useDesign } from '../store/designStore';
-import { readProjectTemplateFile } from '../persist/projectTemplateFile';
-import { MmField, Segmented, Select, Toggle } from './controls';
+import { Group, MmField, Segmented, Select, Toggle } from './controls';
 import { Icon } from './icons';
 import { AddPieceList } from './Project';
-import { templateGlyph } from './Templates';
 import { StartFrom } from './Catalog';
 import { askConfirm } from './Confirm';
-import { importImage, takePictures, useImageUrls } from '../persist/images';
-import { FINISHES, imageIdsOf, MAX_TILE } from '../core/surface';
+import { importImage, useImageUrls } from '../persist/images';
+import { FINISHES, MAX_TILE } from '../core/surface';
 
 /** Modal shell: header (title + close), scrolling body, optional footer for actions. Esc and backdrop close it. */
 export function Dialog({
@@ -85,48 +67,6 @@ export function Dialog({
       <div className="dialog-body">{children}</div>
       {footer && <div className="dialog-footer">{footer}</div>}
     </dialog>
-  );
-}
-
-/**
- * Projects shipped with the app (the Mobila rooms): on every deployed copy, no import needed. Each opens as a new
- * project of the user's own, saved on this device; the shipped one never changes.
- */
-export function BuiltInProjects({ onOpened }: { onOpened: () => void }) {
-  const openProject = useDesign((s) => s.openProject);
-  return (
-    <>
-      <h3 className="list-head">Built in the app</h3>
-      <p className="hint">
-        Mobila rooms, available on the deployed app. Each opens as your own copy.
-      </p>
-      <ul className="template-list">
-        {sampleProjects.map((sp) => (
-          <li key={sp.id}>
-            <button
-              type="button"
-              className="row-btn"
-              onClick={() => {
-                const now = new Date().toISOString();
-                const p = { ...sp.create(), id: newId(), createdAt: now, updatedAt: now };
-                void saveProject(p);
-                openProject(p);
-                onOpened();
-              }}
-            >
-              <span className="glyph">
-                <Icon name="project" />
-              </span>
-              <span>
-                <strong>{sp.name}</strong>
-                <span className="sub">{sp.description}</span>
-              </span>
-              <Icon name="chevron-right" className="chev sm" />
-            </button>
-          </li>
-        ))}
-      </ul>
-    </>
   );
 }
 
@@ -193,7 +133,6 @@ export function NewDialog({
         </span>
         <Icon name="chevron-right" className="chev sm" />
       </button>
-      <BuiltInProjects onOpened={opened} />
       {open && (
         <StartFrom
           onPick={(d) => {
@@ -223,308 +162,11 @@ export function AddPieceDialog({
   );
 }
 
-export function LibraryDialog({
-  open,
-  onClose,
-  onOpened,
-}: {
-  open: boolean;
-  onClose: () => void;
-  onOpened?: () => void;
-}) {
-  const load = useDesign((s) => s.load);
-  const openProject = useDesign((s) => s.openProject);
-  const currentId = useDesign((s) => (s.project ? s.project.id : s.design.id));
-  const opened = () => {
-    onClose();
-    onOpened?.();
-  };
-  const [rows, setRows] = useState<StoredDesign[] | null>(null);
-  const [cleanMsg, setCleanMsg] = useState<string | null>(null);
-  const cleanUp = async () => {
-    const st = useDesign.getState();
-    const keep = imageIdsOf([
-      st.design,
-      ...(st.project?.items.map((i) => i.design) ?? []),
-      { materials: (st.project?.runParts ?? []).map((r) => r.material) },
-    ]);
-    try {
-      const ids = await unusedImageIds(keep);
-      if (!ids.length) {
-        setCleanMsg('No unused pictures on this device.');
-        return;
-      }
-      if (
-        !(await askConfirm(
-          `Delete ${ids.length} picture${ids.length === 1 ? '' : 's'} that no saved piece, project or template uses? This cannot be undone.`,
-          { confirmLabel: 'Delete pictures', danger: true },
-        ))
-      )
-        return;
-      await deleteImages(ids);
-      setCleanMsg(`${ids.length} unused picture${ids.length === 1 ? '' : 's'} deleted.`);
-    } catch {
-      setCleanMsg('Pictures could not be read from this browser.');
-    }
-  };
-  const [projects, setProjects] = useState<StoredProject[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const refresh = () => {
-    listDesigns()
-      .then(setRows)
-      .catch(() => setError('Saved pieces could not be read from this browser.'));
-    listProjects()
-      .then(setProjects)
-      .catch(() => setProjects([]));
-  };
-  useEffect(() => {
-    if (open) refresh();
-  }, [open]);
-
-  const importFile = async (f: File) => {
-    try {
-      const parsed: unknown = JSON.parse(await f.text());
-      // A project template file (ADR-060) is stored as a template, not opened; its pictures come along (ADR-048).
-      if (
-        parsed &&
-        typeof parsed === 'object' &&
-        (parsed as { kind?: unknown }).kind === 'project-template'
-      ) {
-        const r = await readProjectTemplateFile(parsed);
-        if (!r.ok) {
-          setError(r.error);
-          return;
-        }
-        try {
-          await saveProjectTemplate(r.template);
-        } catch {
-          setError('The project template could not be saved on this device.');
-          return;
-        }
-        setError(
-          `Project template “${r.template.name}” imported. Use it from Home → Create from a project template.${r.problems.length ? ` ${r.problems.slice(0, 3).join(' ')}` : ''}`,
-        );
-        return;
-      }
-      const isProject = !!parsed && typeof parsed === 'object' && 'items' in parsed;
-      const errs = isProject ? validateProject(parsed) : validateDesign(parsed);
-      if (errs.length) {
-        setError(
-          `That file is not a valid ${isProject ? 'project' : 'design'}: ${errs.slice(0, 3).join('; ')}.`,
-        );
-        return;
-      }
-      // Pictures carried in the file go to this device (ADR-048); a bad one is reported, the file still opens.
-      const { data, problems } = await takePictures(parsed);
-      const done = () => {
-        if (problems.length) {
-          setError(`Opened, but ${problems.slice(0, 3).join(' ')}`);
-          refresh();
-        } else opened();
-      };
-      if (isProject) {
-        const p = { ...(data as Project), id: newId(), updatedAt: new Date().toISOString() };
-        await saveProject(p);
-        openProject(p);
-        done();
-        return;
-      }
-      const copy = { ...(data as Design), id: newId(), updatedAt: new Date().toISOString() };
-      await saveDesign(copy);
-      load(copy);
-      done();
-    } catch {
-      setError('That file could not be read as JSON.');
-    }
-  };
-
-  const when = (iso: string) => new Date(iso).toLocaleString();
-  const dup = (r: StoredDesign | StoredProject, kind: 'piece' | 'project') => async () => {
-    const now = new Date().toISOString();
-    if (kind === 'project') {
-      const p = (r as StoredProject).project;
-      await saveProject({
-        ...p,
-        id: newId(),
-        name: `${r.name} (copy)`,
-        createdAt: now,
-        updatedAt: now,
-      });
-    } else {
-      const d = (r as StoredDesign).design;
-      await saveDesign({
-        ...d,
-        id: newId(),
-        name: `${r.name} (copy)`,
-        createdAt: now,
-        updatedAt: now,
-      });
-    }
-    refresh();
-  };
-  const rowActions = (r: StoredDesign | StoredProject, kind: 'piece' | 'project') => (
-    <>
-      <button type="button" className="btn sm" onClick={dup(r, kind)} title="Duplicate">
-        <Icon name="copy" className="sm" />
-        <span className="lbl">Duplicate</span>
-      </button>
-      <button
-        type="button"
-        className="btn sm danger"
-        disabled={r.id === currentId}
-        title={
-          r.id === currentId
-            ? kind === 'project'
-              ? 'Open something else first'
-              : 'Open another piece first'
-            : 'Delete'
-        }
-        onClick={async () => {
-          if (
-            !(await askConfirm(
-              kind === 'project'
-                ? `Delete project “${r.name}”? This cannot be undone.`
-                : `Delete “${r.name}”? This cannot be undone.`,
-              { confirmLabel: 'Delete', danger: true },
-            ))
-          )
-            return;
-          if (kind === 'project') await deleteProject(r.id);
-          else await deleteDesign(r.id);
-          refresh();
-        }}
-      >
-        <Icon name="trash" className="sm" />
-        <span className="lbl">Delete</span>
-      </button>
-    </>
-  );
-
-  return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      title="Saved on this device"
-      footer={
-        <>
-          <button type="button" className="btn outline" onClick={() => void cleanUp()}>
-            <Icon name="trash" />
-            Clean up unused pictures
-          </button>
-          <label className="btn outline file-btn">
-            <Icon name="upload" />
-            Import a design or project file
-            <input
-              type="file"
-              accept="application/json,.json"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) importFile(f);
-                e.target.value = '';
-              }}
-            />
-          </label>
-        </>
-      }
-    >
-      {cleanMsg && (
-        <p className="alert info" role="status">
-          <Icon name="info" className="sm" />
-          <span>{cleanMsg}</span>
-        </p>
-      )}
-      {error && (
-        <p className="alert error" role="alert">
-          <Icon name="alert-circle" className="sm" />
-          <span>{error}</span>
-        </p>
-      )}
-      <BuiltInProjects onOpened={opened} />
-      {projects.length > 0 && (
-        <>
-          <h3 className="list-head">Projects</h3>
-          <ul className="library">
-            {projects.map((r) => (
-              <li key={r.id} className={r.id === currentId ? 'current' : ''}>
-                <button
-                  type="button"
-                  className="row-btn"
-                  aria-current={r.id === currentId ? 'true' : undefined}
-                  onClick={() => {
-                    openProject(r.project);
-                    opened();
-                  }}
-                >
-                  <span className="glyph">
-                    <Icon name="project" />
-                  </span>
-                  <span>
-                    <strong>{r.name}</strong>
-                    <span className="sub">
-                      {r.project.items.length} {r.project.items.length === 1 ? 'piece' : 'pieces'},
-                      edited {when(r.updatedAt)}
-                    </span>
-                  </span>
-                </button>
-                {rowActions(r, 'project')}
-              </li>
-            ))}
-          </ul>
-          <h3 className="list-head">Pieces</h3>
-        </>
-      )}
-      {rows === null ? (
-        <p className="loading">Loading…</p>
-      ) : rows.length === 0 ? (
-        <p className="empty center">
-          <Icon name="folder" />
-          Nothing saved yet. Pieces save automatically as you edit.
-        </p>
-      ) : (
-        <ul className="library">
-          {rows.map((r) => (
-            <li key={r.id} className={r.id === currentId ? 'current' : ''}>
-              <button
-                type="button"
-                className="row-btn"
-                aria-current={r.id === currentId ? 'true' : undefined}
-                onClick={() => {
-                  load(r.design, { fromStorage: true });
-                  opened();
-                }}
-              >
-                <span className="glyph">
-                  <Icon name={templateGlyph(r.design.product.kind)} />
-                </span>
-                <span>
-                  <strong>{r.name}</strong>
-                  <span className="sub">
-                    {
-                      (
-                        {
-                          desk: 'Desk',
-                          corner: 'Corner unit',
-                          cabinet: 'Cabinet',
-                          panel: 'Front panel',
-                          frame: 'Frame',
-                          panels: 'Loose panels',
-                        } as const
-                      )[r.design.product.kind]
-                    }
-                    , edited {when(r.updatedAt)}
-                  </span>
-                </span>
-              </button>
-              {rowActions(r, 'piece')}
-            </li>
-          ))}
-        </ul>
-      )}
-    </Dialog>
-  );
-}
-
-export function MaterialsDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+/**
+ * Every board in this piece, the saw cut and the user's decor list (ADR-049), shown inline under Configure
+ * (ADR-079; it was the Materials dialog).
+ */
+export function MaterialsPanel() {
   const materials = useDesign((s) => s.design.materials);
   const kerf = useDesign((s) => kerfOf(s.design));
   const setKerf = useDesign((s) => s.setKerf);
@@ -536,11 +178,10 @@ export function MaterialsDialog({ open, onClose }: { open: boolean; onClose: () 
   const [decors, setDecors] = useState<Decor[]>([]);
   const [decorMsg, setDecorMsg] = useState<{ ok: boolean; text: string } | null>(null);
   useEffect(() => {
-    if (open)
-      listDecors()
-        .then(setDecors)
-        .catch(() => setDecors([]));
-  }, [open]);
+    listDecors()
+      .then(setDecors)
+      .catch(() => setDecors([]));
+  }, []);
   const importDecors = async (f: File) => {
     let text: string;
     try {
@@ -582,29 +223,11 @@ export function MaterialsDialog({ open, onClose }: { open: boolean; onClose: () 
         d.thickness === m.thickness,
     )?.id ?? '';
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      title="Materials in this piece"
-      footer={
-        <>
-          <p className="hint start">
-            Changing a thickness rebuilds every part made from that board. Colours and pictures only
-            change how the board looks on screen.
-          </p>
-          <button
-            type="button"
-            className="btn outline"
-            onClick={() =>
-              add({ id: newId(), name: 'New board', thickness: 18, grain: false, color: '#d8d4cc' })
-            }
-          >
-            <Icon name="plus" />
-            Add a material
-          </button>
-        </>
-      }
-    >
+    <Group title="Boards, sheets and saw cut" id="g-boards" defaultOpen={false}>
+      <p className="hint">
+        Changing a thickness rebuilds every part made from that board. Colours and pictures only
+        change how the board looks on screen.
+      </p>
       <MmField
         label="Saw cut (kerf)"
         value={kerf}
@@ -789,7 +412,17 @@ export function MaterialsDialog({ open, onClose }: { open: boolean; onClose: () 
           </li>
         ))}
       </ul>
-    </Dialog>
+      <button
+        type="button"
+        className="btn outline"
+        onClick={() =>
+          add({ id: newId(), name: 'New board', thickness: 18, grain: false, color: '#d8d4cc' })
+        }
+      >
+        <Icon name="plus" />
+        Add a material
+      </button>
+    </Group>
   );
 }
 
