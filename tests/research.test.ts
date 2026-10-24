@@ -296,11 +296,40 @@ describe('research catalog: assessment of demand, value, complexity and confiden
     expect(assessedValue(so.assessment!)).toBe('4.5') // 1.5 + 1 + 1 + .6 + .3 + .1
     expect(rating(view.features.get('ens.f.composition-layer')!, 'demand').value).toBe('Indirect')
   })
+  it('gives every assessed feature a research priority with its basis; the paper\'s priorities stay as written', () => {
+    for (const f of all.filter(x => x.assessment)) {
+      expect(f.assessment!.priority, f.id).toMatch(/^P[0-3](\/P[0-3])?$/)
+      expect(f.assessment!.priorityBasis.length, f.id).toBeGreaterThan(10)
+      expect(rating(f, 'priority').source).toBe('assessment')
+    }
+    for (const f of all.filter(x => x.rank)) expect(rating(f, 'priority')).toEqual({ value: f.priority, source: 'paper' })
+    expect(rating(view.features.get('ens.f.snap-override')!, 'priority').value).toBe('P0') // MVP table row
+    expect(rating(view.features.get('ens.f.clearance-envelopes')!, 'priority').value).toBe('P1') // phase 2
+    expect(rating(view.features.get('ens.f.composition-layer')!, 'priority').value).toBe('P0 internal')
+    // A basis that names an MVP row or a phase must agree with the priority it gives.
+    for (const f of all.filter(x => x.assessment)) {
+      const { priority, priorityBasis } = f.assessment!
+      if (priorityBasis.startsWith('MVP table')) expect(priority, f.id).toBe('P0')
+      const ph = priorityBasis.match(/^Phase (\d)/)
+      if (ph) expect(priority, f.id).toBe(`P${Number(ph[1]) - 1}`)
+      const parent = priorityBasis.match(/^Parent: ([^(]+?) \(/)
+      if (parent && f.parent) {
+        const p = rating(view.features.get(f.parent)!, 'priority').value.replace(' internal', '')
+        expect(priority, `${f.id} follows its parent`).toBe(p)
+      }
+    }
+    expect(groupFeatures(all, 'priority', view, {}).some(g => g.label.includes('not evaluated'))).toBe(false)
+    expect(assessmentStats(all).byPriority.reduce((n, r) => n + r.n, 0)).toBe(all.length)
+    expect(filterFeatures(view, {}, { ...EMPTY_QUERY, priority: 'P3' }).every(f => rating(f, 'priority').value.includes('P3'))).toBe(true)
+    expect(specMarkdown(view, {}, ['ens.f.env-drawer'], AT)).toMatch(/\| P1 \(assessed\) \|[\s\S]*Research priority P1 \(assessed\): Parent/)
+  })
   it('rejects an assessment off the scales or without a rationale', () => {
     const a = { ...view.features.get('ens.f.snap-override')!.assessment! }
     expect(validateAssessment({ ...a, scores: { ...a.scores, ux: 6 } }).join()).toMatch(/ux/)
     expect(validateAssessment({ ...a, complexity: 'Tiny' as never }).join()).toMatch(/complexity/)
     expect(validateAssessment({ ...a, rationale: ' ' }).join()).toMatch(/rationale/)
+    expect(validateAssessment({ ...a, priority: 'P5' }).join()).toMatch(/priority must/)
+    expect(validateAssessment({ ...a, priorityBasis: '' }).join()).toMatch(/basis/)
     const b = clone(B); b.features.find(f => f.assessment)!.assessment!.confidence = 'Sure' as never
     expect(validateBundle(b).join()).toMatch(/assessment confidence/)
   })
@@ -319,7 +348,7 @@ describe('research catalog: assessment of demand, value, complexity and confiden
   })
   it('shows the assessment on the dashboard and on the feature, labelled as such', () => {
     const over = renderToStaticMarkup(createElement(ResearchPage, { onDone: () => {} }))
-    for (const t of ['Assessment: demand, value, complexity, confidence', 'Value (rows) × complexity (columns)', 'Quick wins', 'High value, weak evidence', 'by the paper itself']) expect(over).toContain(t)
+    for (const t of ['P0 foundational', 'P3 experimental/later', 'Assessment: demand, value, complexity, confidence', 'Value (rows) × complexity (columns)', 'Quick wins', 'High value, weak evidence', 'by the paper itself']) expect(over).toContain(t)
     const det = renderToStaticMarkup(createElement(ResearchPage, { onDone: () => {}, initialTab: 'features', initialDetail: 'ens.f.snap-override' }))
     expect(det).toContain('Assessment, not research.')
     expect(det).toContain('Assessment — not from the paper')

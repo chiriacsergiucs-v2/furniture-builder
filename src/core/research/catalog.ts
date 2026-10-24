@@ -96,6 +96,8 @@ export function validateAssessment(a: Assessment): string[] {
   for (const [k] of ASSESSMENT_CRITERIA) { const v = a.scores?.[k]; if (!Number.isInteger(v) || v < 1 || v > 5) e.push(`${k} must be a whole score 1–5.`) }
   if (!COMPLEXITY_SCALE.includes(a.complexity)) e.push(`complexity must be one of ${COMPLEXITY_SCALE.join(', ')}.`)
   if (!CONFIDENCE_SCALE.includes(a.confidence)) e.push(`confidence must be one of ${CONFIDENCE_SCALE.join(', ')}.`)
+  if (!isStr(a.priority) || !/^P[0-3](\/P[0-3])?$/.test(a.priority)) e.push('priority must be P0–P3 (or two bands such as P0/P1).')
+  if (!isStr(a.priorityBasis) || !a.priorityBasis.trim()) e.push('priority needs its basis.')
   if (!isStr(a.rationale) || !a.rationale.trim()) e.push('needs a rationale.')
   if (!isStr(a.by) || !a.by || !isStr(a.date)) e.push('needs an author and a date.')
   return e
@@ -112,7 +114,7 @@ export function assessedValue(a: Assessment): string {
 export const assessedDemand = (a: Assessment) => (a.internal ? 'Indirect' : SCORE_WORD[a.scores.demand])
 export const assessedAdoption = (a: Assessment) => SCORE_WORD[a.scores.adoption]
 
-export type RatingDim = 'demand' | 'impact' | 'complexity' | 'confidence' | 'adoption'
+export type RatingDim = 'demand' | 'impact' | 'complexity' | 'confidence' | 'adoption' | 'priority'
 export interface Rating { value: string; source: 'paper' | 'assessment' | 'none' }
 const NE = 'not evaluated'
 /** The paper's rating when it gives one, else the assessment, else "not evaluated" — always with its source. */
@@ -121,11 +123,12 @@ export function rating(f: ResearchFeature, dim: RatingDim): Rating {
   if (paper && paper !== NE && paper !== 'unknown') return { value: paper, source: 'paper' }
   const a = f.assessment
   if (!a) return { value: NE, source: 'none' }
-  const value = dim === 'impact' ? assessedValue(a) : dim === 'demand' ? assessedDemand(a) : dim === 'adoption' ? assessedAdoption(a) : a[dim]
+  const value = dim === 'impact' ? assessedValue(a) : dim === 'demand' ? assessedDemand(a) : dim === 'adoption' ? assessedAdoption(a)
+    : dim === 'priority' ? `${a.priority}${a.internal ? ' internal' : ''}` : a[dim]
   return { value, source: 'assessment' }
 }
-/** All four core ratings present (from the paper or assessed). */
-export const fullyRated = (f: ResearchFeature) => (['demand', 'impact', 'complexity', 'confidence'] as const).every(d => rating(f, d).source !== 'none')
+/** All core ratings present (from the paper or assessed): demand, value, complexity, confidence, priority. */
+export const fullyRated = (f: ResearchFeature) => (['demand', 'impact', 'complexity', 'confidence', 'priority'] as const).every(d => rating(f, d).source !== 'none')
 
 /** Buckets for the paper's free-form words ("High for cabinetry" → High, "Medium if data exists" → Medium). */
 export function scaleBucket(s: string, scale: readonly string[]): string {
@@ -472,7 +475,7 @@ export function filterFeatures(view: CatalogView, marks: Record<string, Research
     if (q.selection && m.selection !== q.selection) return false
     if (q.implementation && m.implementation !== q.implementation) return false
     if (q.origin && f.origin !== q.origin) return false
-    if (q.priority && !f.priority.includes(q.priority)) return false
+    if (q.priority && !rating(f, 'priority').value.includes(q.priority)) return false
     if (q.evidence === 'with' && !f.findings.length) return false
     if (q.evidence === 'without' && f.findings.length) return false
     if (q.planned && m.selection !== 'shortlisted' && m.selection !== 'approved') return false
@@ -495,7 +498,7 @@ export function sortFeatures(list: ViewFeature[], key: SortKey, marks: Record<st
   const research = (f: ViewFeature) => f.rank ?? (f.recommendationRank ? 40 + f.recommendationRank : 100)
   const val: Record<SortKey, (f: ViewFeature) => number | string> = {
     research, name: f => f.name.toLowerCase(), category: f => f.category, impact: f => -level(rating(f, 'impact').value), demand: f => -level(rating(f, 'demand').value),
-    complexity: f => level(rating(f, 'complexity').value) || 9, confidence: f => -level(rating(f, 'confidence').value), priority: f => priorityRank(f.priority), selection: sel, yours,
+    complexity: f => level(rating(f, 'complexity').value) || 9, confidence: f => -level(rating(f, 'confidence').value), priority: f => priorityRank(rating(f, 'priority').value), selection: sel, yours,
   }
   const get = val[key]
   const out = [...list].sort((a, b) => { const x = get(a), y = get(b); return x < y ? -1 : x > y ? 1 : research(a) - research(b) || a.name.localeCompare(b.name) })
@@ -511,7 +514,7 @@ export function groupFeatures(list: ViewFeature[], by: GroupBy, view: CatalogVie
   for (const f of list) {
     if (by === 'category') put(f.category, view.categories.find(c => c.id === f.category)?.label ?? f.category, f)
     else if (by === 'parent') { const top = rootOf(view, f); put(top.id, top.name, f) }
-    else if (by === 'priority') put(f.priority, f.priority === 'not evaluated' ? 'Research priority: not evaluated' : `Research priority ${f.priority}`, f)
+    else if (by === 'priority') { const p = rating(f, 'priority'); put(p.value, p.source === 'none' ? 'Research priority: not evaluated' : `Research priority ${p.value}`, f) }
     else { const s = markOf(marks, f.id).selection; put(s, s[0].toUpperCase() + s.slice(1), f) }
   }
   const order = by === 'category' ? (g: FeatureGroup) => view.categories.findIndex(c => c.id === g.key)
@@ -605,8 +608,8 @@ export function specMarkdown(view: CatalogView, marks: Record<string, ResearchMa
     out.push('', `## ${f.name}`, '', `\`${f.id}\` · ${cat} › ${f.subcategory}${f.parent ? ` · part of ${name(f.parent)}` : ''} · ${f.origin === 'inferred' ? '**Inferred opportunity (not a research conclusion)**' : 'Named in the research'}${f.retired ? ' · retired in the latest paper edition' : ''}`, '')
     const r = (d: RatingDim) => { const x = rating(f, d); return x.source === 'assessment' ? `${x.value} (assessed)` : x.value }
     out.push(`| Your decision | Implementation | Your priority | Research priority | Value | Complexity | Demand | Appreciation | Competitor adoption | Confidence |`, '|---|---|---|---|---|---|---|---|---|---|',
-      `| ${m.selection} | ${m.implementation} | ${m.priority || '—'} | ${f.priority} | ${r('impact')} | ${r('complexity')} | ${r('demand')} | ${f.appreciation} | ${r('adoption')} | ${r('confidence')} |`, '')
-    if (f.assessment) out.push(`> **Assessment, not research:** the paper does not rate this feature. Scores (1–5) with the paper's method — ${ASSESSMENT_CRITERIA.map(([k, label]) => `${label} ${f.assessment!.scores[k]}`).join(', ')} → value ${assessedValue(f.assessment)}. ${f.assessment.rationale} (${f.assessment.by}, ${f.assessment.date})`, '')
+      `| ${m.selection} | ${m.implementation} | ${m.priority || '—'} | ${r('priority')} | ${r('impact')} | ${r('complexity')} | ${r('demand')} | ${f.appreciation} | ${r('adoption')} | ${r('confidence')} |`, '')
+    if (f.assessment) out.push(`> **Assessment, not research:** the paper does not rate this feature. Scores (1–5) with the paper's method — ${ASSESSMENT_CRITERIA.map(([k, label]) => `${label} ${f.assessment!.scores[k]}`).join(', ')} → value ${assessedValue(f.assessment)}. ${f.assessment.rationale} Research priority ${r('priority')}: ${f.assessment.priorityBasis} (${f.assessment.by}, ${f.assessment.date})`, '')
     out.push(f.description, '')
     out.push(`**User problem:** ${f.userProblem}`, '', `**User benefit:** ${f.userBenefit}`, '')
     if (f.mvp) out.push(`**MVP acceptance criterion (research):** ${f.mvp}`, '')
@@ -630,6 +633,9 @@ export function specMarkdown(view: CatalogView, marks: Record<string, ResearchMa
   return out.join('\n') + '\n'
 }
 
+/** First band of the effective research priority ("P0/P1" → P0, "P1 internal" → P1); '' when none. */
+export const priorityBand = (f: ResearchFeature) => rating(f, 'priority').value.match(/P[0-3]/)?.[0] ?? ''
+
 // ── Assessment dashboard ────────────────────────────────────────────────────────────────────────────────────────
 
 export interface AssessmentStats {
@@ -648,6 +654,8 @@ export interface AssessmentStats {
   quickWins: ViewFeature[]
   /** Value ≥ 4.0 but confidence Low-medium or lower: check before committing. */
   weakEvidence: ViewFeature[]
+  /** P0 … P3 (dual bands such as P0/P1 counted under their first band). */
+  byPriority: { key: string; n: number }[]
 }
 
 const num = (f: ResearchFeature) => Number.parseFloat(rating(f, 'impact').value) || 0
@@ -674,5 +682,6 @@ export function assessmentStats(list: ViewFeature[]): AssessmentStats {
     top: sorted.slice(0, 12),
     quickWins: sorted.filter(f => num(f) >= 4 && lowComplexity.has(complexityOf(f))),
     weakEvidence: sorted.filter(f => num(f) >= 4 && ['Low', 'Low-medium'].includes(confidenceOf(f))),
+    byPriority: ['P0', 'P1', 'P2', 'P3'].map(key => ({ key, n: list.filter(f => priorityBand(f) === key).length })),
   }
 }

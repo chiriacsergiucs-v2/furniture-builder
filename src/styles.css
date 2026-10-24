@@ -832,7 +832,7 @@ button.tile:hover { border-color: var(--ink-3); background: var(--surface-2); }
 /* Assessment dashboard (ADR-0043 addendum) */
 .assessment { display: grid; gap: var(--s-3); }
 .assessment h3 { font-size: var(--fs-md); margin-bottom: 4px; }
-.overview-cols.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.overview-cols.four { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
 .assessed { display: inline-grid; place-items: center; margin-left: 4px; width: 16px; height: 16px; border-radius: var(--r-sm); background: var(--accent-soft); color: var(--on-accent); font-size: .65rem; font-weight: 700; text-decoration: none; vertical-align: 1px; cursor: help; font-style: normal; }
 .matrix { max-width: 860px; }
 .matrix caption { font-size: var(--fs-sm); color: var(--ink-2); }

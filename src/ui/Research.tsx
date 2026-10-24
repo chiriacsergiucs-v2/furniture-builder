@@ -191,7 +191,7 @@ function AssessmentDashboard({ ctx }: { ctx: Ctx }) {
   return (
     <section className="assessment" aria-label="Assessment">
       <h2 className="group-head">Assessment: demand, value, complexity, confidence</h2>
-      <p className="alert info"><Icon name="info" className="sm" /><span><strong className="num">{list.length - a.unrated} of {list.length}</strong> features rated: <strong>{a.ratedByPaper}</strong> by the paper itself, <strong>{a.assessed}</strong> assessed here from the paper’s evidence with the paper’s own method (marked <abbr className="assessed">A</abbr>). Value = core relevance 30 % · demand 20 % · UX 20 % · competitor adoption 15 % · differentiation 10 % · downstream leverage 5 %, each 1–5. Assessments are judgements, not research results; open a feature for its scores and rationale.</span></p>
+      <p className="alert info"><Icon name="info" className="sm" /><span><strong className="num">{list.length - a.unrated} of {list.length}</strong> features rated: <strong>{a.ratedByPaper}</strong> by the paper itself, <strong>{a.assessed}</strong> assessed here (demand, value, complexity, confidence and research priority) from the paper’s evidence with the paper’s own method (marked <abbr className="assessed">A</abbr>). Value = core relevance 30 % · demand 20 % · UX 20 % · competitor adoption 15 % · differentiation 10 % · downstream leverage 5 %, each 1–5. Assessments are judgements, not research results; open a feature for its scores and rationale.</span></p>
       <div className="table-wrap"><table className="cut matrix" aria-label="Value by complexity">
         <caption>Value (rows) × complexity (columns) — number of features; pick a cell to list them</caption>
         <thead><tr><th>Value</th>{COMPLEXITY_SCALE.map(c => <th key={c}>{c}</th>)}</tr></thead>
@@ -207,6 +207,7 @@ function AssessmentDashboard({ ctx }: { ctx: Ctx }) {
         <Dist title="Value (1–5)" rows={a.byValue} onPick={k => go('features', { valueBand: k })} />
         <Dist title="Complexity" rows={a.byComplexity} onPick={k => go('features', { complexity: k })} />
         <Dist title="Confidence in the evidence" rows={a.byConfidence} onPick={k => go('features', { confidence: k })} />
+        <Dist title="Research priority" rows={a.byPriority.map(r => ({ ...r, label: { P0: 'P0 foundational', P1: 'P1 next stage', P2: 'P2 advanced/professional', P3: 'P3 experimental/later' }[r.key] }))} onPick={k => go('features', { priority: k })} />
       </div>
       <div className="overview-cols">
         <RankedList ctx={ctx} title="Highest value" items={a.top} empty="No rated features." />
@@ -246,7 +247,7 @@ function Explorer({ ctx, query, setQuery }: { ctx: Ctx; query: FeatureQuery; set
   const q = (patch: Partial<FeatureQuery>) => setQuery({ ...query, ...patch })
   const list = useMemo(() => sortFeatures(filterFeatures(view, marks, query), sort, marks, desc), [view, marks, query, sort, desc])
   const groups = useMemo(() => groupFeatures(list, group, view, marks), [list, group, view, marks])
-  const priorities = useMemo(() => [...new Set([...view.features.values()].map(f => f.priority))].sort(), [view])
+  const priorities = useMemo(() => [...new Set([...view.features.values()].map(f => rating(f, 'priority').value))].filter(p => p !== 'not evaluated').sort(), [view])
   const pickedHere = picked.filter(id => view.features.has(id))
   return (
     <div className="explorer">
@@ -319,7 +320,7 @@ function FeatureRow({ f, ctx, ticked, onTick, onOpen }: { f: ViewFeature; ctx: C
         <button type="button" className="link" onClick={onOpen}>{f.name}</button>
         <span className="chips">
           {f.rank && <span className="chip subtle">#{f.rank}</span>}
-          {f.priority !== 'not evaluated' && <span className="chip">{f.priority}</span>}
+          {rating(f, 'priority').source !== 'none' && <span className="chip"><Rated f={f} dim="priority" /></span>}
           {f.mvp && <span className="chip edited">MVP</span>}
           {f.origin === 'inferred' && <span className="chip safety">Inferred</span>}
           {f.children.length > 0 && <span className="chip subtle">{f.children.length} sub-features</span>}
@@ -426,11 +427,11 @@ function FeatureDetail({ ctx, f, onBack }: { ctx: Ctx; f: ViewFeature; onBack: (
         <div className="table-wrap"><table className="cut ratings-table">
           <thead><tr><th>Rating</th><th>Value</th><th>Source</th></tr></thead>
           <tbody>
-            {([['User demand', 'demand'], ['Value (impact), 1–5', 'impact'], ['Implementation complexity', 'complexity'], ['Evidence confidence', 'confidence'], ['Competitor adoption', 'adoption']] as const).map(([k, d]) => {
+            {([['User demand', 'demand'], ['Value (impact), 1–5', 'impact'], ['Implementation complexity', 'complexity'], ['Evidence confidence', 'confidence'], ['Research priority', 'priority'], ['Competitor adoption', 'adoption']] as const).map(([k, d]) => {
               const r = rating(f, d)
               return <tr key={k}><th scope="row">{k}</th><td><Rated f={f} dim={d} /></td><td>{r.source === 'paper' ? 'The paper (ranked table)' : r.source === 'assessment' ? 'Assessment — not from the paper' : '—'}</td></tr>
             })}
-            {ratings.filter(([k]) => k === 'Appreciation' || k === 'Research priority').map(([k, v]) => <tr key={k}><th scope="row">{k}</th><td>{ne(v)}</td><td>{v === 'not evaluated' ? 'not rated by the paper; not assessed' : 'The paper (ranked table)'}</td></tr>)}
+            {ratings.filter(([k]) => k === 'Appreciation').map(([k, v]) => <tr key={k}><th scope="row">{k}</th><td>{ne(v)}</td><td>{v === 'not evaluated' ? 'not rated by the paper; not assessed' : 'The paper (ranked table)'}</td></tr>)}
           </tbody>
         </table></div>
         {f.assessment && (
@@ -442,6 +443,7 @@ function FeatureDetail({ ctx, f, onBack }: { ctx: Ctx; f: ViewFeature; onBack: (
                 <tr><th scope="row">Value (weighted)</th><td /><td className="num"><strong>{assessedValue(f.assessment)}</strong></td></tr></tbody>
             </table></div>
             <p><strong>Why:</strong> {f.assessment.rationale}</p>
+            <p><strong>Research priority <Rated f={f} dim="priority" /></strong> — {f.assessment.priorityBasis}</p>
             {f.assessment.internal && <p className="hint">Internal capability: users do not ask for it by name, so demand reads “Indirect”, as the paper does for its internal rows.</p>}
           </div>
         )}
@@ -648,7 +650,7 @@ function Compare({ ctx }: { ctx: Ctx }) {
   const rows: [string, (f: ViewFeature) => ReactNode][] = [
     ['Category', f => `${catLabel(view, f.category)} › ${f.subcategory}`], ['Origin', f => (f.origin === 'inferred' ? 'Inferred opportunity' : 'Named in the research')],
     ['Your decision', f => <SelectionSelect id={f.id} value={markOf(marks, f.id).selection} label={`Your decision on ${f.name}`} />], ['Implementation', f => <ImplementationSelect id={f.id} value={markOf(marks, f.id).implementation} />],
-    ['Your priority', f => markOf(marks, f.id).priority || '—'], ['Research priority', f => ne(f.priority)], ['Value 1–5 (impact)', f => <Rated f={f} dim="impact" />],
+    ['Your priority', f => markOf(marks, f.id).priority || '—'], ['Research priority', f => <Rated f={f} dim="priority" />], ['Value 1–5 (impact)', f => <Rated f={f} dim="impact" />],
     ['Demand', f => <Rated f={f} dim="demand" />], ['Appreciation', f => ne(f.appreciation)], ['Competitor adoption', f => <Rated f={f} dim="adoption" />], ['Complexity', f => <Rated f={f} dim="complexity" />],
     ['Confidence', f => <Rated f={f} dim="confidence" />], ['Assessment rationale', f => f.assessment?.rationale ?? 'Rated by the paper'], ['Phase', f => f.phase ?? '—'], ['MVP criterion', f => f.mvp ?? '—'],
     ['Dependencies', f => f.dependencies.map(d => view.features.get(d)?.name ?? d).join(', ') || '—'], ['Sub-features', f => String(descendants(view, f.id).length)],

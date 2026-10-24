@@ -159,6 +159,9 @@ export interface Assessment {
   confidence: (typeof CONFIDENCE_SCALE)[number]
   /** Plumbing users never ask for by name: demand reads "Indirect", as in the paper. */
   internal?: boolean
+  /** Research priority in the paper's terms (P0 foundational … P3 experimental/later), with what it rests on. */
+  priority: string
+  priorityBasis: string
   rationale: string
   by: string
   date: string
