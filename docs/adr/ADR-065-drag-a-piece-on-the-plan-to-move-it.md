@@ -26,15 +26,17 @@ ADR-056: adding stays tap-to-place; this adds moving by dragging.
   page; the rest of the plan still scrolls.
 - **While dragging:** the piece's footprint follows the pointer as an outline, with a label
   "From left 1240 · From back 0 mm". Nothing is committed yet; **Esc** (or a second finger) cancels.
-- **On release:** one `updateItem` with the new `position.x` / `position.z`, rounded to whole mm
-  and to a **10 mm step**. One drag is one undo step (ADR-051); run parts refresh in that step
+- **On release:** one store action (`moveItemBy`) with the new `position.x` / `position.z`: the
+  move is rounded to a **10 mm step** (`dragPosition` in `src/core/project.ts`), so the piece keeps
+  its own whole millimetres and moves by multiples of 10 mm. One drag is one undo step (ADR-051); run parts refresh in that step
   (ADR-061).
 - **No clamping, no snapping:** the piece goes exactly where it is dropped (ADR-008). Overlaps,
   outside-the-room and opening problems show as the usual diagnostics (ADR-057, ADR-058). Snapping
   to neighbours and walls is left to the connector work.
-- **Placement:** floor and wall-hung pieces move in x and z; their height stays. A piece placed
-  **on or above another piece** is not dragged: its base is dragged and it follows (ADR-031); a
-  hint says so.
+- **Placement:** floor and wall-hung pieces move in x and z; their height stays. Pieces on a
+  dragged base follow it (ADR-031). A piece placed **on or above another piece** is **lifted off**
+  when it is dragged itself (`liftOff`): a wall-hung piece becomes hung on the wall at its current
+  height, anything else stands on the floor (height 0).
 - **Keyboard:** with a piece focused on the plan, arrow keys move it 10 mm (Shift: 100 mm), one
   undo step per key press, so the feature does not depend on a pointer.
 
@@ -62,21 +64,27 @@ ADR-056: adding stays tap-to-place; this adds moving by dragging.
 
 ## Done when
 
-- [ ] A pure helper turns a pointer move in plan mm into a new position on the 10 mm step, with no
+- [x] A pure helper turns a pointer move in plan mm into a new position on the 10 mm step, with no
       clamping (unit test)
-- [ ] One drag is one undo step; Esc cancels with no step; a move under 4 px is a tap that selects
+- [x] One drag is one undo step; Esc cancels with no step; a move under 4 px is a tap that selects
       (unit tests on the store and the helper)
-- [ ] A piece placed on another piece is not dragged and shows the hint (unit test)
-- [ ] Arrow keys move the focused piece 10 mm, Shift 100 mm, one undo step each (unit test)
-- [ ] Find-it at 1440 px: a mouse drag of a piece changes _From left_ by the dragged distance
-      (± 10 mm); **Undo** puts it back
-- [ ] Find-it at 375 px: a touch drag moves the piece and the page does not scroll sideways
-- [ ] `FUZZ_N=30000` fuzz still passes (no geometry change expected)
+- [x] A piece placed on another piece is lifted off when dragged (floor, or wall at its height if
+      wall-hung) (unit test)
+- [x] Arrow keys move the focused piece 10 mm, Shift 100 mm, one undo step each (unit test)
+- Evidence (ran locally 2026-10-24): `tests/drag.test.ts` (14 tests), `pnpm test` 372 tests,
+  `FUZZ_N=30000` fuzz.
+- Note: Find-it skipped for this ADR on the user's instruction (2026-10-24); not verified in a
+  browser.
+- [x] `FUZZ_N=30000` fuzz still passes (no geometry change expected)
 
-## Open questions
+## Answers
 
-- Step while dragging: **10 mm** (typed values stay exact to 1 mm). Finer or coarser?
-- Should a dragged piece snap to touch its neighbour or a wall when dropped within a few mm?
-  Default: **no snapping** in this ADR.
-- Pieces placed on another piece: default **not draggable** (drag the base). Should dragging them
-  move them off their base instead?
+User answers, 2026-10-24:
+
+- Step while dragging: **10 mm** (typed values stay exact to 1 mm). Arrow keys move 10 mm, Shift
+  100 mm.
+- **No snapping** to neighbours or walls.
+- A piece standing on another piece is **lifted off** when dragged: wall-hung (`isWallHung`) →
+  `wall` at its current height, otherwise `floor` (height 0). This replaces the default "not
+  draggable, drag the base".
+- Find-it: skipped for this ADR ("Skip find-it for this one").

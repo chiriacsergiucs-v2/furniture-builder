@@ -3,6 +3,7 @@ import { projectBoards, roleBoard, type FinishRole, type FinishScope } from '../
 import { decorPatch, type Decor } from '../core/materials';
 import { mergeCandidates } from '../core/merge';
 import {
+  dragPosition,
   leftNeighbour,
   materialKey,
   placementBases,
@@ -17,6 +18,14 @@ import type { Material, Panel } from '../core/types';
 import { listDecors, listDesigns, loadDesign, type StoredDesign } from '../persist/db';
 import { useDesign } from '../store/designStore';
 import { Counter, MmField, Segmented, Select, Toggle } from './controls';
+import {
+  arrowMove,
+  movePointer,
+  pressPiece,
+  releasePointer,
+  type DragGesture,
+  type PointerAt,
+} from './planDrag';
 import {
   DEFAULT_ROOM_HEIGHT,
   doorSwing,
@@ -602,7 +611,10 @@ export function PlanView() {
   );
 }
 
-/** Top-down plan of the room: x to the right, the back wall at the top. Tap a piece to select it. */
+/**
+ * Top-down plan of the room: x to the right, the back wall at the top. Tap a piece to select it; drag it, or use
+ * the arrow keys on it, to move it (ADR-065).
+ */
 function RoomPlan({ pm }: { pm: ProjectModel }) {
   const selectedId = useDesign((s) => s.selectedItemId);
   const select = useDesign((s) => s.selectItem);
@@ -615,6 +627,27 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
   const drawing = useDesign((s) => s.drawingRoom);
   const addCorner = useDesign((s) => s.addRoomCorner);
   const tapping = !!placing || !!drawing;
+  const moveItemBy = useDesign((s) => s.moveItemBy);
+  /** The press or drag in progress (ADR-065); the ref keeps pointer handlers in step between renders. */
+  const [pressed, setDragState] = useState<DragGesture | null>(null);
+  // Tap modes (placing a new piece, drawing the room) turn dragging off (ADR-056, ADR-059).
+  const drag = tapping ? null : pressed;
+  const dragRef = useRef<DragGesture | null>(null);
+  const setDrag = (g: DragGesture | null) => {
+    dragRef.current = g;
+    setDragState(g);
+  };
+  useEffect(() => {
+    if (!drag) return;
+    const onEsc = (e: globalThis.KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setDrag(null);
+      }
+    };
+    window.addEventListener('keydown', onEsc);
+    return () => window.removeEventListener('keydown', onEsc);
+  }, [drag]);
   /** Screen point → room mm on the plan (x along the back wall, z away from it). */
   const toRoom = (e: { clientX: number; clientY: number }) => {
     const svg = svgRef.current,
@@ -623,6 +656,14 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
     const pt = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse());
     return { x: Math.round(pt.x), z: Math.round(pt.y) };
   };
+  const at = (e: { pointerId: number; clientX: number; clientY: number }): PointerAt => ({
+    pointerId: e.pointerId,
+    sx: e.clientX,
+    sy: e.clientY,
+    room: toRoom(e),
+  });
+  const dragged = drag?.dragging ? pm.pieces.find((pc) => pc.item.id === drag.id) : undefined;
+  const dropAt = dragged && drag ? dragPosition(dragged.item, drag.dx, drag.dz) : null;
   const pts = [...(room?.outline ?? []), ...(drawing ?? [])];
   const xs = [
       ...pm.pieces.flatMap((p) => [p.bounds.x, p.bounds.x + p.bounds.w]),
@@ -657,6 +698,10 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
         className={tapping ? 'placing' : undefined}
         onPointerMove={tapping ? (e) => setHover(toRoom(e)) : undefined}
         onPointerLeave={() => setHover(null)}
+        onPointerDown={(e) => {
+          // A second finger (or any other pointer) while a piece is pressed cancels the drag.
+          if (dragRef.current && e.pointerId !== dragRef.current.pointerId) setDrag(null);
+        }}
         onClick={
           tapping
             ? (e) => {
@@ -723,7 +768,48 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
               aria-pressed={on}
               aria-label={`${pc.item.design.name}, ${b.w} by ${b.d} mm`}
               onClick={tapping ? undefined : () => select(pc.item.id)}
-              onKeyDown={onKey(() => select(pc.item.id))}
+              onKeyDown={(e) => {
+                const m = tapping ? null : arrowMove(e.key, e.shiftKey);
+                if (!m) return onKey(() => select(pc.item.id))(e);
+                e.preventDefault();
+                moveItemBy(pc.item.id, m.dx, m.dz);
+              }}
+              onPointerDown={
+                tapping
+                  ? undefined
+                  : (e) => {
+                      if (e.pointerType === 'mouse' && e.button !== 0) return;
+                      // Another pointer already pressing: the plan's handler cancels that drag instead.
+                      const cur = dragRef.current;
+                      if (cur && cur.pointerId !== e.pointerId) return;
+                      const g = pressPiece(null, pc.item.id, at(e));
+                      if (!g) return;
+                      e.currentTarget.setPointerCapture?.(e.pointerId);
+                      setDrag(g);
+                    }
+              }
+              onPointerMove={
+                tapping
+                  ? undefined
+                  : (e) => {
+                      const g = dragRef.current;
+                      if (!g || g.id !== pc.item.id) return;
+                      const next = movePointer(g, at(e));
+                      if (next !== g) setDrag(next);
+                    }
+              }
+              onPointerUp={(e) => {
+                const g = dragRef.current;
+                if (!g || g.id !== pc.item.id) return;
+                const end = releasePointer(g, e.pointerId);
+                if (!end) return;
+                setDrag(null);
+                // A tap mode that started during the press ends the drag without moving anything.
+                if (tapping) return;
+                select(end.id);
+                if (end.kind === 'drop') moveItemBy(end.id, end.dx, end.dz);
+              }}
+              onPointerCancel={() => setDrag(null)}
             >
               <rect x={b.x} y={b.z} width={b.w} height={b.d} />
               <line className="front" x1={fx1} y1={fz1} x2={fx2} y2={fz2} />
@@ -754,6 +840,23 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
               <title>Needed to open; something is in the way</title>
             </rect>
           ))}
+        {dragged && dropAt && (
+          <g className="drag-ghost" aria-hidden="true">
+            <rect
+              x={dragged.bounds.x + dropAt.x - dragged.item.position.x}
+              y={dragged.bounds.z + dropAt.z - dragged.item.position.z}
+              width={dragged.bounds.w}
+              height={dragged.bounds.d}
+            />
+            <text
+              x={dragged.bounds.x + dropAt.x - dragged.item.position.x}
+              y={dragged.bounds.z + dropAt.z - dragged.item.position.z - fs * 0.5}
+              fontSize={fs}
+            >
+              From left {dropAt.x} · From back {dropAt.z} mm
+            </text>
+          </g>
+        )}
         {placing && hover && (
           <rect
             className="place-ghost"
@@ -788,7 +891,8 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
       </svg>
       <figcaption>
         Seen from above. The yellow edge is each piece's front; dashed pieces hang on the wall; red
-        dashes show where a selected piece's doors or drawers cannot open.
+        dashes show where a selected piece's doors or drawers cannot open. Drag a piece, or use the
+        arrow keys on it, to move it; Esc cancels a drag.
       </figcaption>
     </figure>
   );

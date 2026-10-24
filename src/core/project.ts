@@ -201,6 +201,37 @@ export function resolvePlacements(project: Project): Project {
   return items.every((it, i) => it === project.items[i]) ? project : { ...project, items };
 }
 
+// ---------------------------------------------------------------------------
+// Dragging a piece on the plan (ADR-065)
+// ---------------------------------------------------------------------------
+
+/** The step a drag or an arrow key moves a piece by (ADR-065); typed values stay exact to 1 mm. */
+export const DRAG_STEP: Mm = 10;
+
+/**
+ * Where a piece lands after being moved `dxMm` / `dzMm` on the plan: the move is rounded to whole `step`s, so the
+ * piece keeps its own millimetres and moves by multiples of the step. No clamping and no snapping (ADR-008): a
+ * position outside the room or over another piece is kept and reported by the usual diagnostics.
+ */
+export function dragPosition(
+  item: ProjectItem,
+  dxMm: number,
+  dzMm: number,
+  step: Mm = DRAG_STEP,
+): ProjectItem['position'] {
+  const snap = (d: number) => (Number.isFinite(d) ? Math.round(d / step) * step : 0) || 0;
+  return { ...item.position, x: item.position.x + snap(dxMm), z: item.position.z + snap(dzMm) };
+}
+
+/**
+ * A piece placed on or above another piece leaves it when dragged (ADR-065): wall-hung pieces become hung on the
+ * wall at their current height, anything else stands on the floor. Other placements are returned unchanged.
+ */
+export function liftOff(item: ProjectItem): Placement | undefined {
+  if (item.placement?.kind !== 'above') return item.placement;
+  return isWallHung(item.design) ? { kind: 'wall', height: item.position.y } : { kind: 'floor' };
+}
+
 /** Remove a piece; pieces that sat on it stay where they are (their placement becomes free). */
 export function removeProjectItem(project: Project, id: string): Project {
   const items = project.items
