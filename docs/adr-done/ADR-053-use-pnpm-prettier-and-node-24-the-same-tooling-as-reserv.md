@@ -1,7 +1,8 @@
 # ADR-053: Use pnpm, Prettier and Node 24, the same tooling as reserv
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-24
+- Implemented: 2026-10-24
 - Decided by: user, 2026-10-24: "Lets cover all skipped" (the skipped list named moving to pnpm, Prettier and Node 24)
 - Depends on: ADR-050
 - Design: n/a
@@ -58,4 +59,5 @@ so the app stack does not change. `workbox-window` (a peer of vite-plugin-pwa th
 - [x] `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build`, `pnpm docs:check` pass on Node 24
 - [x] The production build passes every find-it test on Node 24 (home, materials, merge, project-undo, research,
       shapes, wizard)
-- [ ] CI and the Pages deploy pass with `pnpm/setup@v3` on GitHub (first run on the pull request)
+- [x] CI passes with `pnpm/setup@v3` on GitHub (PR #33, CI run 370)
+- [x] The Pages deploy passes with `pnpm/setup@v3` (merge commit 9e03969: CI run 372, Deploy GitHub Pages run 121)
