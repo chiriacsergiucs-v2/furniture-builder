@@ -8,6 +8,7 @@ repository files as evidence and ends with a check a reviewer can run. The pre-r
 | Accepted | Implemented or enforced; evidence points at the code that proves it. |
 | Approved | Decided by the user (questions answered), not yet built. Becomes Accepted when the code exists. |
 | Proposed | Recorded, still has open questions. |
+| Pending | Needs a non-free service or an outside integration (and usually a change to ADR-0002); waits for the user's choice. Not built. |
 | Superseded | Replaced; kept for lineage. |
 
 New ADRs: copy any file's six sections, number sequentially, never renumber. Only `architecture-authority` accepts or supersedes.
@@ -168,3 +169,27 @@ Requested by the user on 2026-10-24.
 |---|---|---|---|
 | [ADR-0048](ADR-0048.md) | A material can show any picture from the user's device; kept on the device (Dexie v5 `images`), carried inside exported files, manual cleanup | N43 | Accepted |
 | [ADR-0049](ADR-0049.md) | Optional manufacturer (Egger, Kastamonu, Fundermax, Kronospan, Other) and type (PAL, MDF, kitchen worktop, Other) labels, shown only; worktop warning; the user's own decor list (Dexie v6) enables a decor choice | N44 | Accepted |
+
+## Research quick wins and medium-effort features (IKEA + Roomle)
+
+Requested by the user on 2026-10-24 ("create the ADRs … auto-accept the recommended suggestion"); answers in each ADR.
+
+| ID | Decision | Backlog | Status |
+|---|---|---|---|
+| [ADR-0050](ADR-0050.md) | Project edits get undo/redo; one user action is one undo step | N46 | Approved |
+| [ADR-0051](ADR-0051.md) | Run plinth replaces the pieces' own plinths; filler scribe allowance; sink false front | N47 | Approved |
+| [ADR-0052](ADR-0052.md) | Apply a board to this piece, this run or the whole project (finish scope) | N48 | Approved |
+| [ADR-0053](ADR-0053.md) | Place a chosen catalog item where the user taps on the plan | N49 | Approved |
+| [ADR-0054](ADR-0054.md) | Opening clearance — doors and drawers need free space in front; warnings in projects | N50 | Approved |
+| [ADR-0055](ADR-0055.md) | The project has a room: walls, doors, windows and obstacles, checked against the pieces | N51 | Approved |
+| [ADR-0056](ADR-0056.md) | Draw the floor plan in 2D: rooms made of axis-aligned wall runs | N52 | Approved |
+| [ADR-0057](ADR-0057.md) | Save a project as a reusable project template (new Dexie table) | N53 | Approved |
+| [ADR-0058](ADR-0058.md) | Run parts stay up to date by themselves; the user's removals are remembered | N54 | Approved |
+| [ADR-0059](ADR-0059.md) | Cost estimate from the user's own price list (no supplier service) | N55 | Approved |
+| [ADR-0061](ADR-0061.md) | One shopping list for a project, including what is still to choose | N57 | Approved |
+
+## Pending — non-free services or outside integrations
+
+| ID | Decision | Backlog | Status |
+|---|---|---|---|
+| [ADR-0060](ADR-0060.md) | Supplier price feeds, live stock and online ordering | N56 | Pending |
