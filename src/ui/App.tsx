@@ -1,6 +1,4 @@
 import { Component, lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
-import { cutlistCsvRo } from '../core/ro';
-import { exportFusionPython } from '../core/fusion';
 import {
   lastDesignId,
   lastProjectId,
@@ -12,27 +10,27 @@ import {
   saveProject,
 } from '../persist/db';
 import { useDesign } from '../store/designStore';
-import { withPictures } from '../persist/images';
 import type { Design } from '../core/types';
-import { AddPieceDialog, LibraryDialog, MaterialsDialog, NewDialog } from './Dialogs';
+import { AddPieceDialog, MaterialsPanel, NewDialog } from './Dialogs';
 import { WizardDialog } from './Wizard';
 import { CatalogPage } from './Catalog';
-import { HomePage } from './Home';
 import { ResearchPage } from './Research';
-import { useResearch } from '../store/researchStore';
 import { ConfirmHost } from './Confirm';
 import { catalogFamilies } from '../core/catalog';
 import { useTemplates } from '../store/templatesStore';
 import { PlanView, ProjectPanel } from './Project';
 import { useView } from './useView';
 import { Elevation } from './Elevation';
-import { Inspector } from './Inspector';
+import { Inspector, selectionLabel } from './Inspector';
 import { Output } from './Output';
 import { PrintSheet } from './PrintSheet';
 import { Icon } from './icons';
 import { setTheme, useTheme } from './useTheme';
 import { setLook, useLook } from './useLook';
 import { RenderDialog } from './RenderDialog';
+import { MoreMenu } from './shell/MoreMenu';
+import { ProjectsPage } from './shell/ProjectsPage';
+import { MODE_LABEL, MODES, useUi } from './shell/uiStore';
 
 const Viewer3D = lazy(() => import('../viewer/Viewer3D'));
 
@@ -63,19 +61,6 @@ const NoViewer = () => (
   </div>
 );
 
-function download(name: string, text: string, type: string) {
-  const url = URL.createObjectURL(new Blob([text], { type }));
-  const a = Object.assign(document.createElement('a'), { href: url, download: name });
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-const fileName = (s: string) =>
-  s
-    .trim()
-    .replace(/[^\w\- ]+/g, '')
-    .replace(/\s+/g, '-')
-    .toLowerCase() || 'design';
-
 type SaveState = 'idle' | 'saving' | 'saved' | 'failed';
 const SAVE_TEXT: Record<SaveState, string> = {
   idle: '',
@@ -83,12 +68,6 @@ const SAVE_TEXT: Record<SaveState, string> = {
   saved: 'Saved on this device',
   failed: 'Not saved — browser storage unavailable',
 };
-
-/** Self-contained styles for the exported SVG drawing (the app stylesheet does not travel with the file). */
-const SVG_STYLE = `.floor{fill:#b9c0bb}.el-back{fill:#d9ddd9}.el-panel{stroke:#22272a;stroke-width:1.2;vector-effect:non-scaling-stroke}
-.el-front{fill:none;stroke:#5a625e;stroke-dasharray:5 4;vector-effect:non-scaling-stroke}.el-handle{stroke:#22272a;stroke-width:3;stroke-linecap:round;vector-effect:non-scaling-stroke}
-.el-knob{fill:#22272a}.dim line{stroke:#22272a;stroke-width:1;vector-effect:non-scaling-stroke}.dim rect{fill:#f2c230}.dim text{fill:#3a2e00;font-family:sans-serif;font-weight:600}
-.dim.subtle{display:none}`;
 
 function useMediaQuery(q: string) {
   const [match, setMatch] = useState(
@@ -103,15 +82,15 @@ function useMediaQuery(q: string) {
   return match;
 }
 
-type Page = 'home' | 'editor' | 'catalog' | 'research';
-const PAGES: Page[] = ['editor', 'catalog', 'research'];
+type Page = 'projects' | 'editor' | 'catalog' | 'research';
+const PAGES: Page[] = ['projects', 'editor', 'catalog', 'research'];
 const pageFromHash = (): Page =>
   typeof location === 'undefined'
-    ? 'home'
-    : (PAGES.find((p) => location.hash === `#${p}`) ?? 'home');
+    ? 'projects'
+    : (PAGES.find((p) => location.hash === `#${p}`) ?? 'projects');
 /**
- * The top-level pages, linkable: the bare address opens the Home welcome page (N38), #editor the editor, #catalog the
- * Catalog (ADR-032), #research the Feature Research & Catalog (ADR-043).
+ * The three places (ADR-078), linkable: the bare address and #projects open Projects, #editor the editor, #catalog
+ * the Catalog (ADR-032); #research the Feature Research & Catalog (ADR-043), reached from the ⋯ menu.
  */
 function usePage(): [Page, (p: Page) => void] {
   const [page, setPage] = useState<Page>(pageFromHash);
@@ -123,7 +102,7 @@ function usePage(): [Page, (p: Page) => void] {
   return [
     page,
     (p: Page) => {
-      if (p === 'home') history.replaceState(null, '', location.pathname + location.search);
+      if (p === 'projects') history.replaceState(null, '', location.pathname + location.search);
       else location.hash = p;
       setPage(p);
       window.scrollTo({ top: 0 });
@@ -131,14 +110,15 @@ function usePage(): [Page, (p: Page) => void] {
   ];
 }
 const CATALOG_ITEMS = catalogFamilies.reduce((n, f) => n + f.variants.length, 0);
+const PLACES: { page: Page; label: string; icon: 'folder' | 'catalog' | 'front' }[] = [
+  { page: 'projects', label: 'Projects', icon: 'folder' },
+  { page: 'catalog', label: 'Catalog', icon: 'catalog' },
+  { page: 'editor', label: 'Editor', icon: 'front' },
+];
 
 export function App() {
   const [page, setPage] = usePage();
-  const researchCount = useResearch(
-    (s) => new Set(s.stored.flatMap((b) => b.bundle.features.map((f) => f.id))).size,
-  );
   const design = useDesign((s) => s.design);
-  const model = useDesign((s) => s.model);
   const dirtyAt = useDesign((s) => s.dirtyAt);
   const rename = useDesign((s) => s.rename);
   const showFronts = useDesign((s) => s.showFronts);
@@ -153,9 +133,7 @@ export function App() {
     canRedoPiece = useDesign((s) => s.future.length > 0);
   const canUndoProject = useDesign((s) => s.projectPast.length > 0),
     canRedoProject = useDesign((s) => s.projectFuture.length > 0);
-  const [dialog, setDialog] = useState<
-    null | 'new' | 'library' | 'materials' | 'add' | 'wizard' | 'render'
-  >(null);
+  const [dialog, setDialog] = useState<null | 'new' | 'add' | 'wizard' | 'render'>(null);
   const look = useLook();
   const openCatalog = () => {
     setDialog(null);
@@ -167,6 +145,8 @@ export function App() {
   const project = useDesign((s) => s.project);
   const editingItemId = useDesign((s) => s.editingItemId);
   const projectDirtyAt = useDesign((s) => s.projectDirtyAt);
+  const selectedId = useDesign((s) => s.selectedId);
+  const selectedItemId = useDesign((s) => s.selectedItemId);
   const vd = useView();
   const inProject = !!project && !editingItemId;
   // The project view undoes project changes (ADR-051); the piece editor undoes piece edits.
@@ -176,65 +156,77 @@ export function App() {
     canRedo = inProject ? canRedoProject : canRedoPiece;
   const editingName = project?.items.find((i) => i.id === editingItemId)?.design.name;
   const [save, setSave] = useState<SaveState>('idle');
-  const [view, setView] = useState<'front' | '3d'>('front');
-  // A piece waiting to be placed is placed on the plan (ADR-056).
-  // A room being drawn is drawn on the plan too (ADR-059).
+
+  // Editor modes (ADR-079). Build & Preview shows 3D; Compose and Configure show the drawing.
+  const mode = useUi((s) => s.mode);
+  const setMode = useUi((s) => s.setMode);
+  const printing = useUi((s) => s.printing);
+  const setPrinting = useUi((s) => s.setPrinting);
+  const notice = useUi((s) => s.notice);
+  const setNotice = useUi((s) => s.setNotice);
+  const phone = useMediaQuery('(max-width: 760px)');
+  const wide = useMediaQuery('(min-width: 1500px)');
+  const [has3d] = useState(webglAvailable);
+  const [view, setView] = useState<'front' | '3d'>(mode === 'build' && has3d ? '3d' : 'front');
+  const [lastMode, setLastMode] = useState(mode);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  if (mode !== lastMode) {
+    setLastMode(mode);
+    setView(mode === 'build' && has3d ? '3d' : 'front');
+  }
+  // On a phone the mode alone decides: 3D only in Build & Preview, so the canvas is not mounted elsewhere (ADR-014).
+  const shown = phone ? (mode === 'build' ? '3d' : 'front') : view;
+  const mount3d = has3d && (wide || shown === '3d');
+
+  // A piece waiting to be placed (ADR-056) or a room being drawn (ADR-059) is done on the plan, in Compose.
   const tapMode = useDesign((s) =>
     s.placingItemId ? `place:${s.placingItemId}` : s.drawingRoom ? 'draw' : '',
   );
-  const [lastTapMode, setLastTapMode] = useState(tapMode);
-  if (tapMode !== lastTapMode) {
-    setLastTapMode(tapMode);
-    if (tapMode) setView('front');
+  // Choosing a space or a piece while configuring means composing it; on a phone the sheet opens on it.
+  const selKey = inProject ? selectedItemId : selectedId;
+  const [lastTap, setLastTap] = useState(tapMode);
+  const [lastSel, setLastSel] = useState(selKey);
+  if (tapMode !== lastTap) {
+    setLastTap(tapMode);
+    // Placing a piece or drawing the room needs the plan: on a phone the sheet steps aside.
+    if (tapMode) {
+      setView('front');
+      setSheetOpen(false);
+    }
   }
-  const [has3d] = useState(webglAvailable);
-  const [printing, setPrinting] = useState(false);
+  if (selKey !== lastSel) {
+    setLastSel(selKey);
+    if (selKey && !tapMode) setSheetOpen(true);
+  }
+  useEffect(() => {
+    if (tapMode) useUi.getState().setMode('compose');
+  }, [tapMode]);
+  useEffect(() => {
+    if (selKey && useUi.getState().mode === 'configure') useUi.getState().setMode('compose');
+  }, [selKey]);
+
   const theme = useTheme();
-  const menuRef = useRef<HTMLDetailsElement>(null);
-  // The sticky drawing on phones sits right under the top bar, whose height changes as its buttons wrap.
+  // The drawing on phones is sized to the space left between the bars; both bars report their heights.
   const barRef = useRef<HTMLElement>(null);
+  const navRef = useRef<HTMLElement>(null);
+  const modesRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const bar = barRef.current;
-    if (!bar || typeof ResizeObserver === 'undefined') return;
-    const ro = new ResizeObserver(() =>
-      document.documentElement.style.setProperty('--bar-h', `${bar.offsetHeight}px`),
-    );
-    ro.observe(bar);
-    return () => ro.disconnect();
-  }, []);
-  // Phones put the actions in a fixed bottom bar; the page keeps room for it (ADR-030).
-  useEffect(() => {
-    const bar = barRef.current?.querySelector('.actions') as HTMLElement | null;
-    if (!bar || typeof ResizeObserver === 'undefined') return;
+    if (typeof ResizeObserver === 'undefined') return;
+    const root = document.documentElement.style;
     const ro = new ResizeObserver(() => {
-      const fixed = getComputedStyle(bar).position === 'fixed';
-      document.documentElement.style.setProperty(
+      const bar = barRef.current,
+        nav = navRef.current,
+        modes = modesRef.current;
+      if (bar) root.setProperty('--bar-h', `${bar.offsetHeight}px`);
+      root.setProperty('--modes-h', `${modes?.offsetHeight ?? 0}px`);
+      root.setProperty(
         '--actions-h',
-        fixed ? `${bar.offsetHeight}px` : '0px',
+        nav && getComputedStyle(nav).position === 'fixed' ? `${nav.offsetHeight}px` : '0px',
       );
     });
-    ro.observe(bar);
+    for (const el of [barRef.current, navRef.current, modesRef.current]) if (el) ro.observe(el);
     return () => ro.disconnect();
-  }, []);
-  // The Export menu closes on Escape and on a click outside it (keyboard users need a way out).
-  useEffect(() => {
-    const close = () => menuRef.current?.removeAttribute('open');
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && menuRef.current?.open) {
-        close();
-        menuRef.current?.querySelector('summary')?.focus();
-      }
-    };
-    const onClick = (e: MouseEvent) => {
-      if (menuRef.current?.open && !menuRef.current.contains(e.target as Node)) close();
-    };
-    window.addEventListener('keydown', onKey);
-    document.addEventListener('click', onClick);
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      document.removeEventListener('click', onClick);
-    };
-  }, []);
+  }, [page]);
   // Render the print sheet, open the print dialog, then remove it again (ADR-020).
   useEffect(() => {
     if (!printing) return;
@@ -253,30 +245,7 @@ export function App() {
       clearTimeout(t);
       window.removeEventListener('afterprint', done);
     };
-  }, [printing]);
-  const downloadSvg = () => {
-    const svg = document.querySelector('.view.front .elevation svg');
-    if (!svg) return;
-    const clone = svg.cloneNode(true) as SVGSVGElement;
-    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-    clone.querySelectorAll('.el-space, .el-label, .el-selection').forEach((n) => n.remove());
-    // Pictures (ADR-048) live on this device only: the file gets the plain colours.
-    clone.querySelectorAll('pattern').forEach((n) => n.remove());
-    clone.querySelectorAll<SVGElement>('[data-plain]').forEach((n) => {
-      n.style.fill = n.dataset.plain ?? '';
-    });
-    const style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
-    style.textContent = SVG_STYLE;
-    clone.prepend(style);
-    download(
-      `${fileName(design.name)}-front.svg`,
-      new XMLSerializer().serializeToString(clone),
-      'image/svg+xml',
-    );
-  };
-  const wide = useMediaQuery('(min-width: 1500px)');
-  // Mount the 3D canvas only when it is on screen, so it measures its real size.
-  const mount3d = has3d && (wide || view === '3d');
+  }, [printing, setPrinting]);
 
   // Reopen the last piece on this device. Until that has settled nothing is autosaved, so the placeholder piece shown
   // during start-up never lands in the library or replaces the remembered piece.
@@ -301,7 +270,7 @@ export function App() {
         })
         .catch(() => {})
         .finally(done);
-    // Nothing to reopen: the start-up placeholder is saved only once it is edited, so a fresh device lists nothing on Home.
+    // Nothing to reopen: the start-up placeholder is saved only once it is edited, so a fresh device lists nothing.
     else {
       useDesign.setState({ pristine: true });
       done();
@@ -366,12 +335,45 @@ export function App() {
   }, [undo, redo]);
 
   const errors = vd.diagnostics.filter((d) => d.severity === 'error').length;
-  const exportName = fileName(vd.title);
-  const blockedTitle = errors ? 'Fix the problems listed under Checks first' : undefined;
+  const warnings = vd.diagnostics.length - errors;
+  const buildMeta = errors
+    ? `${errors} ${errors === 1 ? 'problem' : 'problems'}`
+    : warnings
+      ? `${warnings} to check`
+      : '';
+  const sideMode = mode === 'configure' ? 'configure' : 'compose';
+  const selectedItem = project?.items.find((i) => i.id === selectedItemId);
+  const peek = inProject
+    ? selectedItem
+      ? `Selected: ${selectedItem.design.name}`
+      : `${project!.name}: ${project!.items.length} ${project!.items.length === 1 ? 'piece' : 'pieces'}`
+    : (() => {
+        const l = selectionLabel(design.product, selectedId);
+        return l ? `Selected: ${l}` : 'Tap a space to edit it';
+      })();
+
+  const nameField = (
+    <input
+      className="name"
+      aria-label={inProject ? 'Name of this project' : 'Name of this piece'}
+      defaultValue={inProject ? project!.name : design.name}
+      key={inProject ? `p-${project!.id}-${project!.name}` : `${design.id}-${design.name}`}
+      onBlur={(e) => {
+        const v = e.target.value.trim();
+        if (!v) return;
+        if (inProject) {
+          if (v !== project!.name) useDesign.getState().updateProject((p) => ({ ...p, name: v }));
+        } else if (v !== design.name) rename(v);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+      }}
+    />
+  );
 
   return (
     <>
-      <div className={`app ${page === 'home' ? 'on-home' : ''}`}>
+      <div className={`app page-${page}`}>
         <header className="bar" ref={barRef}>
           <div className="brand" aria-hidden="true">
             <svg viewBox="0 0 24 24">
@@ -380,301 +382,183 @@ export function App() {
               <line x1="3" y1="15.5" x2="21" y2="15.5" />
             </svg>
           </div>
-          <nav className="pages" aria-label="Pages">
-            <a
-              href="#"
-              aria-current={page === 'home' ? 'page' : undefined}
-              onClick={(e) => {
-                e.preventDefault();
-                setPage('home');
-              }}
-            >
-              <Icon name="home" className="sm" />
-              Home
-            </a>
-            <a
-              href="#editor"
-              aria-current={page === 'editor' ? 'page' : undefined}
-              onClick={(e) => {
-                e.preventDefault();
-                setPage('editor');
-              }}
-            >
-              <Icon name="front" className="sm" />
-              Editor
-            </a>
-            <a
-              href="#catalog"
-              aria-current={page === 'catalog' ? 'page' : undefined}
-              onClick={(e) => {
-                e.preventDefault();
-                setPage('catalog');
-              }}
-            >
-              <Icon name="catalog" className="sm" />
-              Catalog <span className="count">{CATALOG_ITEMS}</span>
-            </a>
-            <a
-              href="#research"
-              aria-current={page === 'research' ? 'page' : undefined}
-              onClick={(e) => {
-                e.preventDefault();
-                setPage('research');
-              }}
-            >
-              <Icon name="search" className="sm" />
-              Feature Research <span className="count">{researchCount}</span>
-            </a>
+          <nav className="pages places" aria-label="Places" ref={navRef}>
+            {PLACES.map((p) => (
+              <a
+                key={p.page}
+                href={p.page === 'projects' ? '#' : `#${p.page}`}
+                aria-current={page === p.page ? 'page' : undefined}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setPage(p.page);
+                }}
+              >
+                <Icon name={p.icon} className="sm" />
+                <span>{p.label}</span>
+                {p.page === 'catalog' && <span className="count">{CATALOG_ITEMS}</span>}
+              </a>
+            ))}
           </nav>
-          <input
-            className="name"
-            aria-label={inProject ? 'Name of this project' : 'Name of this piece'}
-            defaultValue={inProject ? project!.name : design.name}
-            key={inProject ? `p-${project!.id}-${project!.name}` : design.id}
-            onBlur={(e) => {
-              const v = e.target.value.trim();
-              if (!v) return;
-              if (inProject) {
-                if (v !== project!.name)
-                  useDesign.getState().updateProject((p) => ({ ...p, name: v }));
-              } else if (v !== design.name) rename(v);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-            }}
-          />
-          <span className={`status ${save}`} role="status" title={SAVE_TEXT[save] || undefined}>
-            {save !== 'idle' && (
-              <>
-                <span className="dot" aria-hidden="true" />
-                <span className="txt">{SAVE_TEXT[save]}</span>
-              </>
-            )}
-          </span>
-          <button
-            type="button"
-            className="btn icon theme"
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            aria-label={theme === 'dark' ? 'Switch to the light theme' : 'Switch to the dark theme'}
-            title={theme === 'dark' ? 'Light theme' : 'Dark theme'}
-          >
-            <Icon name={theme === 'dark' ? 'sun' : 'moon'} />
-          </button>
-          <nav className="actions" aria-label="Actions">
-            <div className="cluster">
-              <button
-                type="button"
-                className="btn icon"
-                onClick={undo}
-                disabled={!canUndo}
-                aria-label="Undo"
-                title="Undo (Ctrl+Z)"
-              >
-                <Icon name="undo" />
-              </button>
-              <button
-                type="button"
-                className="btn icon"
-                onClick={redo}
-                disabled={!canRedo}
-                aria-label="Redo"
-                title="Redo (Ctrl+Shift+Z)"
-              >
-                <Icon name="redo" />
-              </button>
-              <span className="divider" aria-hidden="true" />
+          {page === 'editor' && (
+            <div className="path">
+              {templateEdit ? (
+                <>
+                  <span className="crumb family" title="Template">
+                    {templateEdit.template.family.name}
+                  </span>
+                  <span className="sep family" aria-hidden="true">
+                    ›
+                  </span>
+                  <span className="crumb here">
+                    {
+                      templateEdit.template.family.variants.find(
+                        (v) => v.id === templateEdit.variantId,
+                      )?.name
+                    }
+                  </span>
+                  <button
+                    type="button"
+                    className="btn sm primary"
+                    aria-label="Save to template"
+                    title="Saved to the template on this device"
+                    onClick={() => {
+                      const t = useDesign.getState().finishTemplateEdit(true);
+                      if (t) void useTemplates.getState().save(t);
+                      setPage('catalog');
+                    }}
+                  >
+                    Save<span className="lbl-long"> to template</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="btn sm"
+                    onClick={() => {
+                      useDesign.getState().finishTemplateEdit(false);
+                      setPage('catalog');
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </>
+              ) : editingItemId && project ? (
+                <>
+                  <button
+                    type="button"
+                    className="crumb back"
+                    aria-label={`Back to project ${project.name}`}
+                    title={`Changes to ${editingName ?? 'this piece'} stay in this project`}
+                    onClick={() => useDesign.getState().backToProject()}
+                  >
+                    <Icon name="chevron-left" className="sm" />
+                    {project.name}
+                  </button>
+                  <span className="sep" aria-hidden="true">
+                    ›
+                  </span>
+                  {nameField}
+                </>
+              ) : (
+                nameField
+              )}
             </div>
-            <div className="cluster">
-              <button
-                type="button"
-                className="btn"
-                onClick={() => setDialog('new')}
-                aria-label="New"
-                title="Start a new piece or project"
-              >
-                <Icon name="plus" />
-                <span className="lbl">New</span>
-              </button>
-              <button
-                type="button"
-                className="btn"
-                onClick={() => setDialog('library')}
-                aria-label="Library"
-                title="Pieces and projects saved on this device"
-              >
-                <Icon name="folder" />
-                <span className="lbl">Library</span>
-              </button>
-              {!inProject && (
+          )}
+          {page === 'editor' && (
+            <span className={`status ${save}`} role="status" title={SAVE_TEXT[save] || undefined}>
+              {save !== 'idle' && (
+                <>
+                  <span className="dot" aria-hidden="true" />
+                  <span className="txt">{SAVE_TEXT[save]}</span>
+                </>
+              )}
+            </span>
+          )}
+          <div className="bar-tools">
+            {page === 'editor' && (
+              <>
                 <button
                   type="button"
-                  className="btn"
-                  onClick={() => setDialog('materials')}
-                  aria-label="Materials"
-                  title="Boards, thicknesses and stock sheets"
+                  className="btn icon"
+                  onClick={undo}
+                  disabled={!canUndo}
+                  aria-label="Undo"
+                  title="Undo (Ctrl+Z)"
                 >
-                  <Icon name="layers" />
-                  <span className="lbl">Materials</span>
+                  <Icon name="undo" />
                 </button>
-              )}
-              <span className="divider" aria-hidden="true" />
-            </div>
-            <div className="cluster end">
-              <details className="menu" ref={menuRef}>
-                <summary aria-label="Export" title="Drawings, scripts and files">
-                  <Icon name="share" />
-                  <span className="lbl">Export</span>
-                  <Icon name="chevron-down" className="sm" />
-                </summary>
-                <div
-                  className="menu-items"
-                  onClick={() => menuRef.current?.removeAttribute('open')}
+                <button
+                  type="button"
+                  className="btn icon"
+                  onClick={redo}
+                  disabled={!canRedo}
+                  aria-label="Redo"
+                  title="Redo (Ctrl+Shift+Z)"
                 >
-                  {inProject ? (
-                    <button
-                      type="button"
-                      onClick={async () =>
-                        download(
-                          `${exportName}-project.json`,
-                          JSON.stringify(
-                            await withPictures(project!, [
-                              ...project!.items.map((i) => i.design),
-                              { materials: (project!.runParts ?? []).map((r) => r.material) },
-                            ]),
-                            null,
-                            2,
-                          ),
-                          'application/json',
-                        )
-                      }
-                    >
-                      <Icon name="download" />
-                      Project file <small>to open on another device</small>
-                    </button>
-                  ) : (
-                    <>
-                      <button type="button" onClick={downloadSvg}>
-                        <Icon name="front" />
-                        Front view drawing <small>SVG</small>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          download(
-                            `${fileName(design.name)}-fusion.py`,
-                            exportFusionPython(design, model),
-                            'text/x-python',
-                          )
-                        }
-                      >
-                        <Icon name="cube" />
-                        Fusion 360 script <small>not yet tested in Fusion</small>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={async () =>
-                          download(
-                            `${fileName(design.name)}.json`,
-                            JSON.stringify(await withPictures(design, [design]), null, 2),
-                            'application/json',
-                          )
-                        }
-                      >
-                        <Icon name="download" />
-                        Design file <small>to open on another device</small>
-                      </button>
-                    </>
-                  )}
-                </div>
-              </details>
-              <button
-                type="button"
-                className="btn outline"
-                disabled={errors > 0}
-                aria-label="Print"
-                title={blockedTitle ?? 'Print the cutting sheet (Romanian, A4) or save it as PDF'}
-                onClick={() => setPrinting(true)}
-              >
-                <Icon name="printer" />
-                <span className="lbl">Print</span>
-              </button>
-              <button
-                type="button"
-                className="btn primary"
-                disabled={errors > 0}
-                title={blockedTitle ?? 'Download the parts list as CSV'}
-                onClick={() =>
-                  download(
-                    `${exportName}-parts.csv`,
-                    cutlistCsvRo(vd.rows),
-                    'text/csv;charset=utf-8',
-                  )
-                }
-              >
-                <Icon name="download" />
-                Parts CSV
-              </button>
-            </div>
-          </nav>
+                  <Icon name="redo" />
+                </button>
+              </>
+            )}
+            <button
+              type="button"
+              className="btn icon theme"
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              aria-label={
+                theme === 'dark' ? 'Switch to the light theme' : 'Switch to the dark theme'
+              }
+              title={theme === 'dark' ? 'Light theme' : 'Dark theme'}
+            >
+              <Icon name={theme === 'dark' ? 'sun' : 'moon'} />
+            </button>
+            <MoreMenu
+              onNew={() => setDialog('new')}
+              onOpened={() => setPage('editor')}
+              onResearch={() => setPage('research')}
+            />
+          </div>
         </header>
+        {page === 'editor' && (
+          <div className="modes" ref={modesRef}>
+            <div className="segmented" role="radiogroup" aria-label="Editor mode">
+              {MODES.map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  role="radio"
+                  aria-checked={mode === m}
+                  className={mode === m ? 'on' : ''}
+                  onClick={() => setMode(m)}
+                >
+                  {MODE_LABEL[m]}
+                  {m === 'build' && buildMeta && (
+                    <span className={`badge ${errors ? 'error' : 'warning'}`}>
+                      {errors || warnings}
+                      <span className="badge-words"> {buildMeta.replace(/^\d+ /, '')}</span>
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        {notice && (
+          <p
+            className={`alert notice ${notice.ok ? 'info' : 'error'}`}
+            role={notice.ok ? 'status' : 'alert'}
+          >
+            <Icon name={notice.ok ? 'info' : 'alert-circle'} className="sm" />
+            <span>{notice.text}</span>
+            <button
+              type="button"
+              className="btn icon ghost sm"
+              aria-label="Dismiss"
+              onClick={() => setNotice(null)}
+            >
+              <Icon name="x" className="sm" />
+            </button>
+          </p>
+        )}
 
-        {templateEdit && (
-          <div className="piece-banner" role="status">
-            <span>
-              Editing variant{' '}
-              <strong>
-                {
-                  templateEdit.template.family.variants.find((v) => v.id === templateEdit.variantId)
-                    ?.name
-                }
-              </strong>{' '}
-              of template <strong>{templateEdit.template.family.name}</strong>. Saved to the
-              template on this device.
-            </span>
-            <button
-              type="button"
-              className="btn sm primary"
-              onClick={() => {
-                const t = useDesign.getState().finishTemplateEdit(true);
-                if (t) void useTemplates.getState().save(t);
-                setPage('catalog');
-              }}
-            >
-              Save to template
-            </button>
-            <button
-              type="button"
-              className="btn sm"
-              onClick={() => {
-                useDesign.getState().finishTemplateEdit(false);
-                setPage('catalog');
-              }}
-            >
-              Cancel
-            </button>
-          </div>
-        )}
-        {editingItemId && project && (
-          <div className="piece-banner" role="status">
-            <span>
-              Editing <strong>{editingName}</strong> in project <strong>{project.name}</strong>.
-              Changes stay in this project.
-            </span>
-            <button
-              type="button"
-              className="btn sm"
-              onClick={() => useDesign.getState().backToProject()}
-            >
-              Back to project
-            </button>
-          </div>
-        )}
-        {page === 'home' && (
-          <HomePage
-            onOpened={() => setPage('editor')}
-            onNewPiece={() => setDialog('new')}
-            onLibrary={() => setDialog('library')}
-          />
+        {page === 'projects' && (
+          <ProjectsPage onOpened={() => setPage('editor')} onNewPiece={() => setDialog('new')} />
         )}
         {page === 'catalog' && (
           <CatalogPage
@@ -687,50 +571,78 @@ export function App() {
         )}
         {page === 'research' && <ResearchPage onDone={() => setPage('editor')} />}
         <main
-          className={`work ${editingItemId || templateEdit ? 'with-banner' : ''}`}
+          className={`work mode-${mode} ${sheetOpen ? 'sheet-open' : ''}`}
           hidden={page !== 'editor'}
         >
-          <aside className="side">
-            {!inProject && !templateEdit && !editingItemId && design.wizard && (
-              <div className="wz-reopen">
-                <span className="hint">Made with the New-piece wizard.</span>
-                <button
-                  type="button"
-                  className="btn sm"
-                  onClick={() => {
-                    setWizardFrom(design);
-                    setDialog('wizard');
-                  }}
-                >
-                  <Icon name="pencil" className="sm" />
-                  Open in wizard
-                </button>
-              </div>
-            )}
-            {inProject ? <ProjectPanel onAdd={() => setDialog('add')} /> : <Inspector />}
+          <aside className="side" aria-label={sideMode === 'configure' ? 'Configure' : 'Compose'}>
+            <button
+              type="button"
+              className="sheet-peek"
+              aria-expanded={sheetOpen}
+              onClick={() => setSheetOpen((o) => !o)}
+            >
+              <span>{peek}</span>
+              <Icon name={sheetOpen ? 'chevron-down' : 'chevron-up'} className="sm" />
+            </button>
+            <div className="side-body">
+              {sideMode === 'configure' &&
+                !inProject &&
+                !templateEdit &&
+                !editingItemId &&
+                design.wizard && (
+                  <div className="wz-reopen">
+                    <span className="hint">Made with the New-piece wizard.</span>
+                    <button
+                      type="button"
+                      className="btn sm"
+                      onClick={() => {
+                        setWizardFrom(design);
+                        setDialog('wizard');
+                      }}
+                    >
+                      <Icon name="pencil" className="sm" />
+                      Open in wizard
+                    </button>
+                  </div>
+                )}
+              {inProject ? (
+                <ProjectPanel mode={sideMode} onAdd={() => setDialog('add')} />
+              ) : (
+                <>
+                  <Inspector mode={sideMode} />
+                  {sideMode === 'configure' && (
+                    <div className="inspector boards">
+                      <MaterialsPanel />
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </aside>
           <section className="stage" aria-label="Drawing">
             <div className="stage-tools">
-              <div className="segmented small" role="radiogroup" aria-label="View">
-                <button
-                  type="button"
-                  role="radio"
-                  aria-checked={view === 'front'}
-                  className={view === 'front' ? 'on' : ''}
-                  onClick={() => setView('front')}
-                >
-                  {inProject ? 'Plan' : 'Front'}
-                </button>
-                <button
-                  type="button"
-                  role="radio"
-                  aria-checked={view === '3d'}
-                  className={view === '3d' ? 'on' : ''}
-                  onClick={() => setView('3d')}
-                >
-                  3D
-                </button>
-              </div>
+              {!phone && (
+                <div className="segmented small" role="radiogroup" aria-label="View">
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={view === 'front'}
+                    className={view === 'front' ? 'on' : ''}
+                    onClick={() => setView('front')}
+                  >
+                    {inProject ? 'Plan' : 'Front'}
+                  </button>
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={view === '3d'}
+                    className={view === '3d' ? 'on' : ''}
+                    onClick={() => setView('3d')}
+                  >
+                    3D
+                  </button>
+                </div>
+              )}
               <label className="toggle small">
                 <input
                   type="checkbox"
@@ -739,7 +651,7 @@ export function App() {
                 />
                 <span>Doors and fronts</span>
               </label>
-              {(wide || view === '3d') && (
+              {(wide || shown === '3d') && (
                 <label className="toggle small">
                   <input
                     type="checkbox"
@@ -749,7 +661,7 @@ export function App() {
                   <span>Exploded 3D</span>
                 </label>
               )}
-              {view === '3d' && (
+              {shown === '3d' && (
                 <button
                   type="button"
                   className="btn sm"
@@ -788,10 +700,10 @@ export function App() {
               )}
             </div>
             <div className="views">
-              <div className={`view front ${view === 'front' ? 'active' : ''}`}>
+              <div className={`view front ${shown === 'front' ? 'active' : ''}`}>
                 {inProject ? <PlanView /> : <Elevation />}
               </div>
-              <div className={`view three ${view === '3d' ? 'active' : ''}`}>
+              <div className={`view three ${shown === '3d' ? 'active' : ''}`}>
                 {mount3d ? (
                   <ViewerBoundary>
                     <Suspense
@@ -833,12 +745,6 @@ export function App() {
             setPage('editor');
           }}
         />
-        <LibraryDialog
-          open={dialog === 'library'}
-          onClose={() => setDialog(null)}
-          onOpened={() => setPage('editor')}
-        />
-        <MaterialsDialog open={dialog === 'materials'} onClose={() => setDialog(null)} />
         <RenderDialog
           open={dialog === 'render'}
           onClose={() => setDialog((d) => (d === 'render' ? null : d))}

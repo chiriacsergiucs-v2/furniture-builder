@@ -94,10 +94,7 @@ device (`localStorage` `fb:mode`). Nothing is gated.
       page scroll at 360 and 390 px.
 - [ ] `tools/editor-modes/find-it.mjs` passes on the production build at 390 and 1280 px. All CI checks pass.
 
-## Open questions
+## Answers (user, 2026-10-24: "Proceed", every default accepted)
 
-- M1: The mode names _Compose · Configure · Build & Preview_. Default: these names (your words). Or _Layout ·
-  Settings · Results_?
-- M2: Should the mode be remembered per device (default) or always open in Compose?
-- M3: A phone bottom sheet for the selected space (default), or a full page with a back button?
-- M4: Acceptance. Default: full (find-it). Or `light` (ADR-066)?
+- M1: _Compose · Configure · Build & Preview_. M2: remembered per device. M3: a bottom sheet on phones.
+  M4: full acceptance (find-it).

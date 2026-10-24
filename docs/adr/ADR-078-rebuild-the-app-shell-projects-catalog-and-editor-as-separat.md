@@ -90,13 +90,7 @@ components are reused as content.
 - [ ] No horizontal page scroll at 360 and 390 px. Focus is visible on every nav and menu item. Escape closes ⋯.
 - [ ] `tools/shell/find-it.mjs` passes on the production build at 390 and 1280 px. All CI checks pass.
 
-## Open questions
+## Answers (user, 2026-10-24: "Proceed", every default accepted)
 
-- R1: "New from scratch". Default: the shell and layouts are written fresh, and the field editors (Inspector
-  sections, Project panel, Output tabs, Catalog page) are reused. Say if you want those rewritten too. That is a
-  larger, separate ADR.
-- R2: Feature Research in ⋯ (default), or as a fourth bottom tab?
-- R3: Theme toggle. You decided on 2026-10-23 that it stays in the title row. Default: it stays in the app bar.
-  Should it move into ⋯ on phones to save space?
-- R4: Should Parts CSV keep a one-tap shortcut in the app bar? Default: no; it moves to the Parts list (ADR-079).
-- R5: Acceptance. Default: full (find-it). Or `light` (ADR-066)?
+- R1: new shell and layouts; field editors reused. R2: Feature Research in ⋯. R3: theme toggle stays in the app
+  bar. R4: no CSV shortcut in the app bar. R5: full acceptance (find-it).

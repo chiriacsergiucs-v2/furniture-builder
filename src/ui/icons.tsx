@@ -47,6 +47,10 @@ const PATHS = {
   catalog: 'M4 4h6a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H4zM20 4h-6a2 2 0 0 0-2 2v14a2 2 0 0 1 2-2h6z',
   home: 'M3 11 12 4l9 7M5 10v10h5v-6h4v6h5V10',
   search: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM16 16l4 4',
+  more: 'M5 12h.5M11.75 12h.5M18.5 12h.5',
+  'chevron-left': 'm15 6-6 6 6 6',
+  'chevron-up': 'm6 15 6-6 6 6',
+  sliders: 'M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0M14 4v4M8 10v4M16 16v4',
 } as const;
 
 export type IconName = keyof typeof PATHS;

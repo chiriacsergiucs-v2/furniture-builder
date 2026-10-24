@@ -4123,3 +4123,429 @@ button.tile:hover {
   font-family: var(--font);
   font-weight: 600;
 }
+
+/* 22. Shell (ADR-078) and editor modes (ADR-079) ---------------------------- */
+/* One-row app bar: places, the path to what is open, undo/redo, theme, ⋯. Phones move the places to a bottom nav. */
+.app {
+  display: flex;
+  flex-direction: column;
+}
+.app > .work {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.bar {
+  flex-wrap: nowrap;
+  gap: var(--s-2) var(--s-3);
+}
+.bar .path {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.bar .path .name {
+  width: auto;
+  flex: 1 1 12ch;
+  min-width: 6ch;
+  max-width: 40ch;
+}
+.bar .crumb {
+  color: var(--bar-ink-2);
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 18ch;
+}
+.bar .crumb.here {
+  color: var(--bar-ink);
+}
+.bar button.crumb.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 36px;
+  padding: 0 6px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--r);
+  font: inherit;
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  color: var(--bar-ink-2);
+  cursor: pointer;
+}
+.bar button.crumb.back:hover {
+  background: var(--bar-hover);
+  color: var(--bar-ink);
+}
+.bar button.crumb.back:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.bar .sep {
+  color: var(--bar-ink-2);
+}
+.bar .path .btn {
+  flex: none;
+}
+.bar-tools {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+}
+.bar-tools .btn {
+  color: var(--bar-ink);
+  background: transparent;
+  border-color: transparent;
+}
+.bar-tools .btn:hover:not(:disabled) {
+  background: var(--bar-hover);
+  border-color: transparent;
+}
+.bar-tools .btn:focus-visible {
+  outline-color: var(--accent);
+}
+.menu.more > summary {
+  display: grid;
+  place-items: center;
+  width: var(--control-h);
+  height: var(--control-h);
+  border-radius: var(--r);
+  color: var(--bar-ink);
+  cursor: pointer;
+}
+.menu.more > summary:hover,
+.menu.more[open] > summary {
+  background: var(--bar-hover);
+}
+.menu.more > summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.menu-head {
+  margin: 8px 10px 2px;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.menu-items > [role='group'] {
+  display: grid;
+}
+.menu-sep {
+  height: 1px;
+  background: var(--line-2);
+  margin: 6px 4px;
+}
+.menu-items .menu-file {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: var(--s-2);
+  align-items: center;
+  padding: 9px 10px;
+  border-radius: var(--r);
+  color: var(--ink);
+  font-weight: 500;
+  cursor: pointer;
+}
+.menu-items .menu-file .icon {
+  grid-row: 1 / 3;
+  color: var(--ink-2);
+}
+.menu-items .menu-file:hover {
+  background: var(--surface-2);
+}
+.menu-items .menu-file:focus-within,
+.menu-items button:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: -2px;
+}
+.menu-items .menu-file input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+.menu-items button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.catalog-files > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 var(--s-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  cursor: pointer;
+}
+.catalog-files > summary:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+}
+.catalog-files .menu-items {
+  right: auto;
+  left: 0;
+}
+.alert.notice {
+  margin: var(--s-2) var(--s-4) 0;
+  align-items: center;
+}
+.alert.notice .btn {
+  margin-left: auto;
+}
+
+/* Editor modes: Compose · Configure · Build & Preview (ADR-079) */
+.modes {
+  padding: 6px var(--s-4);
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+.modes .segmented {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  max-width: 600px;
+}
+.modes .segmented button {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-weight: 600;
+}
+.modes .segmented button.on .badge {
+  box-shadow: 0 0 0 1px var(--on-primary);
+}
+.sheet-peek {
+  display: none;
+}
+.compose-start {
+  display: grid;
+  gap: var(--s-2);
+}
+.out-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-bottom: var(--s-3);
+}
+.side .materials li {
+  grid-template-columns: 36px minmax(0, 1fr);
+}
+.side .materials li > * {
+  min-width: 0;
+}
+
+@media (max-width: 760px) {
+  .app {
+    padding-bottom: var(--actions-h, 64px);
+  }
+  .bar {
+    flex-wrap: nowrap;
+    padding: 6px var(--s-3);
+  }
+  .bar .brand {
+    display: none;
+  }
+  .bar .path .name {
+    min-width: 0;
+  }
+  .bar .lbl-long,
+  .bar .family {
+    display: none;
+  }
+  .bar .crumb {
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+  .bar .crumb,
+  .bar button.crumb.back {
+    max-width: 11ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .bar .menu-items {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    top: calc(var(--bar-h, 50px) + 4px);
+    bottom: auto;
+    max-height: calc(100dvh - var(--bar-h, 50px) - var(--actions-h, 64px) - 16px);
+    overflow: auto;
+  }
+  /* The places become a one-row bottom nav at thumb height (ADR-078, replaces ADR-030's action bar). */
+  .pages.places {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 6;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+    max-width: none;
+    border: 0;
+    border-top: 1px solid var(--bar-line);
+    border-radius: 0;
+    background: var(--bar-bg);
+    padding: 4px max(8px, env(safe-area-inset-right, 0px))
+      calc(4px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px));
+  }
+  .pages.places a {
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    min-height: 48px;
+    padding: 4px;
+    font-size: var(--fs-xs);
+  }
+  .pages.places a .icon {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+  }
+  .pages.places .count {
+    display: none;
+  }
+  .modes {
+    position: sticky;
+    top: var(--bar-h, 50px);
+    z-index: 4;
+    padding: 6px var(--s-3);
+  }
+  .modes .segmented button {
+    padding: 4px 2px;
+    font-size: var(--fs-sm);
+    white-space: normal;
+    line-height: 1.15;
+    text-align: center;
+  }
+  .modes .segmented button .badge {
+    display: none;
+  }
+  .modes .segmented button.on .badge,
+  .modes .segmented button .badge.error {
+    display: inline-block;
+  }
+  .work .stage {
+    position: relative;
+    top: auto;
+    order: 0;
+    z-index: auto;
+  }
+  /* Compose: the drawing fills the screen; the selection editor is a sheet with a peek row above the nav. */
+  .work.mode-compose .stage {
+    height: calc(
+      100dvh - var(--bar-h, 50px) - var(--modes-h, 52px) - var(--actions-h, 64px) - 56px
+    );
+    min-height: 260px;
+  }
+  .work.mode-compose .output {
+    display: none;
+  }
+  .work.mode-compose .side {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: var(--actions-h, 64px);
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    max-height: 56px;
+    overflow: hidden;
+    border-top: 1px solid var(--line);
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    box-shadow: var(--shadow-3);
+  }
+  /* With the sheet open the drawing shrinks to the space above it, so the selection stays in sight. */
+  .work.mode-compose.sheet-open .side {
+    max-height: 52dvh;
+  }
+  .work.mode-compose.sheet-open .stage {
+    height: calc(
+      100dvh - var(--bar-h, 50px) - var(--modes-h, 52px) - var(--actions-h, 64px) - 52dvh
+    );
+    min-height: 150px;
+  }
+  .work.mode-build .stage-tools,
+  .work.mode-compose .stage-tools {
+    gap: 6px var(--s-2);
+    padding: 6px var(--s-3);
+  }
+  .work.mode-compose .sheet-peek {
+    display: flex;
+    flex: none;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--s-2);
+    width: 100%;
+    min-height: 56px;
+    padding: 0 var(--s-4);
+    background: var(--surface);
+    border: 0;
+    border-bottom: 1px solid var(--line-2);
+    color: var(--ink);
+    font: inherit;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+  }
+  .work.mode-compose .sheet-peek:focus-visible {
+    outline: 2px solid var(--link);
+    outline-offset: -2px;
+  }
+  .work.mode-compose .side-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+  .work.mode-compose:not(.sheet-open) .side-body {
+    display: none;
+  }
+  /* Configure: the settings page only. */
+  .work.mode-configure .stage,
+  .work.mode-configure .output {
+    display: none;
+  }
+  /* Build & Preview: 3D on top, then the results. */
+  .work.mode-build .side {
+    display: none;
+  }
+  .work.mode-build .stage {
+    height: 42vh;
+    min-height: 260px;
+    border-bottom: 1px solid var(--line);
+  }
+}
+/* The boards list follows the whole-piece editor under Configure (ADR-079): no second top gap. */
+.inspector.boards {
+  padding-top: 0;
+}
+.side .inspector:has(+ .inspector.boards) {
+  padding-bottom: var(--s-4);
+}
+@media (max-width: 760px) {
+  /* The mode shows the count; the words stay for screen readers. */
+  .modes .badge-words {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
