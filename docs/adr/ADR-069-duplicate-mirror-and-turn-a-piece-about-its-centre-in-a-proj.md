@@ -13,7 +13,7 @@ necessary for the following items from research. Import 3D models and model libr
 predictable rotate operations · Also for these: [14 features marked Interested]", then "Draft adrs for each".
 
 Research row: _Duplicate, mirror and predictable rotate operations_ (rank 19, P0). Today a project item has a
-quantity, a quarter-turn **Turn** (`rotationY`) and can be dragged ([ADR-065](ADR-065-drag-a-piece-on-the-plan-to-move-it.md)); a design can be duplicated in the
+quantity, a quarter-turn **Turn** (`rotationY`) and can be dragged ([ADR-065](../adr-done/ADR-065-drag-a-piece-on-the-plan-to-move-it.md)); a design can be duplicated in the
 library (F14). Turning keeps the piece's lowest corner (`position` is the rotated piece's min corner,
 [ADR-031](../adr-done/ADR-031-pieces-in-a-project-are-placed-on-the-floor-on-the-wall-or-o.md)), so a turned piece jumps on the plan. There is no duplicate in place and no mirror.
 
