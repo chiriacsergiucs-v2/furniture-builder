@@ -1,23 +1,23 @@
 # Template catalog — families, default structure, configurations and default variants
 
-The shipped template catalog (ADR-0032, ADR-0033, ADR-0039). The tables below are generated from
+The shipped template catalog (ADR-032, ADR-033, ADR-039). The tables below are generated from
 `src/core/catalog/` and a test fails when they differ, so the code and this file always list the same families and
 variants. **Every dimension is a typical value from retail catalogs and planners as known to the model on
 2026-10-22 — not checked against live sources (the web was blocked) and not a standards check. Confirm before relying
 on them.**
 
 Legend — **Support**: ✅ ready (in *Start from* and the Catalog) · 🔧 needs construction · 📖 reference (browsed in
-the Catalog tab; only "frame only" variants can be inserted, ADR-0039). **Variant kind**: **I** interior-only (space
+the Catalog tab; only "frame only" variants can be inserted, ADR-039). **Variant kind**: **I** interior-only (space
 tree, sizes or materials on an existing root) · **C** needed new construction; `[…]` lists what it requires.
-`hardware:user` inserts with a reminder to choose that hardware from its datasheet (ADR-0010). ⏳ = waits for a
+`hardware:user` inserts with a reminder to choose that hardware from its datasheet (ADR-010). ⏳ = waits for a
 construction that is not built (`shape`, `front:fixed`, `front:lid`, `frame:arms`, `frame:modules`,
-`frame:under-storage`) or for safety values the user confirms (`safety:user-confirmed`, ADR-0035). Sizes are
+`frame:under-storage`) or for safety values the user confirms (`safety:user-confirmed`, ADR-035). Sizes are
 W × H × D in mm, measured on the built model of the default variant (fronts included).
 
 Rooms: living · bedroom · dining · office · kitchen · hallway · kids · outdoor · other. A family shows under every
-room it lists; the first is its primary room. Kitchen defaults (ADR-0036 open questions): 720 mm carcass on a 100 mm
+room it lists; the first is its primary room. Kitchen defaults (ADR-036 open questions): 720 mm carcass on a 100 mm
 plinth, 560 deep; wall units 320 deep; width grid 150 · 200 · 300 · 400 · 450 · 500 · 600 · 800 · 900 · 1000 · 1200
-(free sizes allowed). Run parts — worktop, fillers, cover panels — are added to projects (ADR-0036).
+(free sizes allowed). Run parts — worktop, fillers, cover panels — are added to projects (ADR-036).
 
 <!-- catalog:begin (generated from src/core/catalog by `npm run catalog:docs`; do not edit by hand) -->
 ### Kitchen cabinets (10 families, 38 variants)
@@ -25,7 +25,7 @@ plinth, 560 deep; wall units 320 deep; width grid 150 · 200 · 300 · 400 · 45
 | Family | Rooms | Root · support | Default size | Structure | Configurations | Variants (≤ 5) |
 |---|---|---|---|---|---|---|
 | Base cabinet, doors | kitchen | cabinet · ✅ ready | 600 × 820 × 578 | Sides, bottom and top between the sides, back, plinth; shelves behind one or two hinged doors. | Width on the kitchen grid (free size allowed); 1 door up to 600 mm, 2 doors above; Shelves 0–3, fixed or adjustable; Inner drawers behind the door | 1 door + shelf **I** · 2 doors + shelf **I** · Drawer over door **I** · Door + 2 inner drawers **I** · Open shelves **I** |
-| Base cabinet, drawers | kitchen | cabinet · ✅ ready | 600 × 820 × 578 | Carcass on a plinth with a bank of drawers on side-mount runners; fronts split top to bottom. | Drawers 1–5; Front heights equal, fixed or shares (ADR-0023); Runner length from your list; Rails instead of a top under a hob | 3 drawers, deep bottom **I** · 4 equal drawers **I** · 2 pan drawers **I** · 800 wide drawer bank **I** · Hob base **C** [top:rails] |
+| Base cabinet, drawers | kitchen | cabinet · ✅ ready | 600 × 820 × 578 | Carcass on a plinth with a bank of drawers on side-mount runners; fronts split top to bottom. | Drawers 1–5; Front heights equal, fixed or shares (ADR-023); Runner length from your list; Rails instead of a top under a hob | 3 drawers, deep bottom **I** · 4 equal drawers **I** · 2 pan drawers **I** · 800 wide drawer bank **I** · Hob base **C** [top:rails] |
 | Sink base | kitchen | cabinet · ✅ ready | 800 × 820 × 578 | Carcass with two top rails instead of a top and no back, so the sink and pipes fit; doors in front. | Width 600–1200; 1 or 2 doors; Rails depth; False front, U-cut drawer or waste pull-out | 2 doors, rails, no back **C** [top:rails] · 1 door (600) **C** [top:rails] · False front + 2 doors **C** [top:rails, front:fixed] ⏳ · U-cut drawer + drawer **C** [top:rails, shape, hardware:user] · Waste pull-out **C** [top:rails, hardware:user] |
 | Appliance base | kitchen | cabinet · ✅ ready | 600 × 820 × 578 | Carcass with rails and no back; an open niche sized from the oven's installation drawing. | Niche size from the appliance drawing (never defaulted); Drawer below or oven at plinth level | Oven niche + drawer below **C** [top:rails, appliance-niche, hardware:user] · Oven niche at plinth **C** [top:rails, appliance-niche, hardware:user] |
 | Narrow pull-out base | kitchen | cabinet · ✅ ready | 300 × 820 × 578 | Narrow carcass with one full-height drawer front on a pull-out frame. | Width 150–400; Pull-out frame from its datasheet | Full-height pull-out **I** [hardware:user] · Spice / bottle pull-out **I** [hardware:user] |
@@ -48,7 +48,7 @@ plinth, 560 deep; wall units 320 deep; width grid 150 · 200 · 300 · 400 · 45
 | Credenza | office, dining, living | cabinet · ✅ ready | 1600 × 700 × 468 | Low office sideboard close to desk height: doors, sliding doors or file drawers. | Sections; Hinged or sliding doors; File drawers | Doors + file drawers **I** [hardware:user] · 3 doors, low **I** · Sliding doors **C** [front:sliding] |
 | Media console | living | cabinet · ✅ ready | 1800 × 450 × 438 | Low long carcass with open niches for devices, drawers, doors or flaps; on the floor or hung on the wall. | Open niches; Drawers; Drop-down flaps; Floor or wall-hung | Open niches + drawers **I** · Doors + open centre **I** · Wall-hung **I** · Drop-down flaps **C** [front:flap, hardware:user] |
 | Filing cabinet | office | cabinet · ✅ ready | 420 × 1000 × 618 | Strong carcass with file drawers on full-extension runners and hanging-file rails. | Drawers 2–4; Vertical or lateral; Under-desk pedestal | 3 file drawers **I** [hardware:user] · Pedestal: box + file drawer **I** · Lateral, 2 drawers **I** [hardware:user] |
-| Loose panels | other | panels · ✅ ready | 600 × 18 × 300 | Parts known only by their cut sizes (ADR-0041): listed for cutting and sheets, shown in one pile, not assembled. | Name, length, width, board and quantity per part | One panel **I** |
+| Loose panels | other | panels · ✅ ready | 600 × 18 × 300 | Parts known only by their cut sizes (ADR-041): listed for cutting and sheets, shown in one pile, not assembled. | Name, length, width, board and quantity per part | One panel **I** |
 
 ### Tables and surfaces (6 families, 17 variants)
 

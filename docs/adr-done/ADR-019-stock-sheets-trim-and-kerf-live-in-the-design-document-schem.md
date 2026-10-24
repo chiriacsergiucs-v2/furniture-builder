@@ -1,0 +1,57 @@
+# ADR-019: Stock sheets, trim and kerf live in the design document (schemaVersion 2)
+
+- Status: Implemented
+- Date: 2026-10-21
+- Implemented: 2026-10-21
+- Decided by: open questions answered by the user
+- Depends on: none
+- Design: n/a
+- Related: ADR-011, ADR-012, ADR-018
+- Backlog: N01
+
+## Context
+
+Nesting needs, per material, the sheet size, how many are available, edge trim, and the saw kerf. Today a
+`Material` has only name, thickness, grain and colour, and the design document is `schemaVersion: 1` (ADR-011).
+
+## Decision
+
+Extend `Material` with optional `sheet: { length, width, trim, count | null }` (integer mm; `count: null` =
+unlimited) and add `cutting: { kerf }` to the design. Bump the design document to `schemaVersion: 2`.
+`validateDesign` keeps accepting version 1 and upgrades it **in memory** with defaults (PAL and HDF 2800 × 2070 mm,
+MDF 2440 × 1220 mm, 10 mm trim per edge, 4 mm kerf); the stored row is rewritten only when the user next edits that design. Sheet length runs
+along the grain, matching cut-list length (ADR-009).
+
+## Alternatives considered
+
+- **Separate global stock library** — useful later for a whole workshop, but makes a design file depend on
+  external data; kept for the multi-piece project work (ADR-022).
+- **Hard migration of stored rows on startup** — rejected: rewrites user data the user has not touched.
+
+## Consequences
+
+- Old design files keep opening; new files need the new app.
+- Materials dialog gains sheet fields.
+
+## Evidence (repository files)
+
+- `src/core/types.ts` — `StockSheet`, `Material.sheet`, `Design.cutting`, `schemaVersion: 1 | 2`.
+- `src/core/design.ts` — `defaultSheetFor`, `sheetOf`, `kerfOf`, `upgradeDesign`, sheet/cutting validation.
+- `src/store/designStore.ts` — upgrade on load; `pristine` keeps untouched stored rows unwritten (`src/ui/App.tsx`).
+- `src/ui/Dialogs.tsx` — kerf and per-material sheet fields.
+- `tests/core.test.ts` — "a version-1 file validates, upgrades in memory … builds identical panels".
+
+## Compliance check
+
+When accepted: a test loads a version-1 design, validates it, builds it, and exports it as version 2 with identical
+panels.
+
+## Answers (2026-10-21, from the user)
+
+- **Sheet sizes (length along grain × width):** PAL (all PAL boards) 2800 × 2070 mm; MDF 2440 × 1220 mm;
+  HDF 2800 × 2070 mm. These become the defaults of the built-in materials; every material's sheet stays editable.
+- **Edge trim:** 10 mm per edge on factory sheets (default; editable per material).
+- **Kerf:** 4 mm (ADR-018).
+- `minOffcut` is dropped from `cutting` while offcuts are not tracked (ADR-018).
+
+Built and accepted 2026-10-21.
