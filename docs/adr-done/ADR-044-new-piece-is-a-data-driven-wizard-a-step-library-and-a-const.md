@@ -1,0 +1,115 @@
+# ADR-044: "New piece" is a data-driven wizard: a step library and a construction-type registry map answers to a design
+
+- Status: Implemented
+- Date: 2026-10-23
+- Implemented: 2026-10-23
+- Decided by: user answers below
+- Depends on: none
+- Design: n/a
+- Amends: ADR-030 answer 3, "No guided New flow", by the user's later request
+- Related: ADR-003, ADR-004, ADR-005, ADR-006, ADR-008, ADR-010, ADR-030, ADR-038, ADR-045, ADR-046
+- Backlog: N34
+
+## Context
+
+The user asked for "a multistep wizard to create a piece of furniture for the catalog". It should ask width, height and
+depth, then a type ("rectangle frame for example"), then "dividers, shelves, drawers or not, doors and so on", and end
+with a new piece. It must be "rather universal", with "broad general coverage". Until now _New_ offered only a
+project, the built-in rooms and copies of catalog items (ADR-030 answer 3, 2026-10-23: "No guided New flow"). The
+user's new request replaces that answer. The model already represents everything the wizard asks for: carcass, split
+spaces (dividers), shelves, drawers, hanging, doors (one, pair, sliding), back, plinth or wall mount (ADR-005,
+ADR-006, ADR-025, ADR-037), leg frames (ADR-038) and desks (ADR-007). It has no legs under a carcass, so a
+cabinet's base is plinth, none or wall-hung, and legs come with the table and bench types.
+
+## Decision
+
+- **Answers** are one flat record (`src/core/wizard/types.ts`). Values are text, whole mm, a choice, or a list per
+  compartment. They live in the wizard while it is open and are never saved on their own.
+- **Step library** (`src/core/wizard/steps.ts`): each step has an `id`, a `title`, `fields` and an optional
+  `visible(answers)` predicate. It also has `apply(answers, design) → design`, which writes its answers into model
+  input, and `summary(answers)`, which gives the short text used on cards and in Review.
+  - A field has an `id` (its answer key), a kind (`text`, `int` with unit `mm`, `choice`, `compartments`,
+    `perCompartment`, `perCompartmentMm`), `min`/`max`/`default`, help text and its own `visible`.
+  - Shipped steps:
+    - Basics: name, category, width, height, depth, board (the thickness comes from the board).
+    - Construction type.
+    - Divisions: vertical dividers, equal or custom widths.
+    - Compartment contents: open, shelves, drawers, hanging rail or shelves over drawers, with counts and
+      "Apply to all".
+    - Fronts: none, one door, pair, sliding pair or per compartment, plus a handle.
+    - Base: plinth, none or wall-hung.
+    - Back panel.
+    - Frame: top, stretchers, lower shelf, leg section.
+    - Desk: support, drawers per pedestal, modesty panel.
+    - Review.
+- **Construction-type registry** (`src/core/wizard/registry.ts`): each type declares its label, description, default
+  category, the ordered step ids it uses, default answers, size limits, option subsets (for example open shelving
+  allows only open/shelves compartments), a `seed(answers)` that returns the starting design on an existing root, and
+  its suggestion generators (ADR-045). Shipped types:
+  - Cabinet (closed box, `cabinet` root).
+  - Open shelving (`cabinet` root, no fronts, back optional).
+  - Wardrobe (`cabinet` root: hanging rail left, shelves right, pair of doors) — added 2026-10-23 (answer 1).
+  - Bed (`frame` root, single tier; sized from the mattress, so it hides width and depth and asks the headboard
+    height) — added 2026-10-23 (answer 1). Bunk beds stay in the Catalog behind the safety confirmation (ADR-035).
+  - Table and Bench (`frame` root, ADR-038).
+  - Desk (`desk` root).
+- **Engine** (`src/core/wizard/engine.ts`) is generic.
+  - It computes the visible steps from the type's list and each step's predicate.
+  - `toDesign(type, answers)` runs `seed`, then the `apply` of each visible step in order.
+  - `check(answers)` returns field range problems plus `validateDesign` and `buildModel()` diagnostics. Input never
+    throws: a failed build becomes an error diagnostic.
+  - Back, Next and Skip work on every step, and the steps rail jumps to any step. Next keeps the answers; Skip puts
+    the step back to the type's defaults (on the type step it picks the first type). Until the user changes them,
+    the sizes and the name follow the chosen type's defaults.
+  - The UI (`src/ui/Wizard.tsx`) renders fields by kind only and has no branch on a type id. A live picture, the part
+    count and the problems sit beside every step.
+- **Entry points** (found by visible text): _New_ → "New piece, step by step", and the Catalog page → "New piece"
+  (the Catalog tab is labelled at every width; the _New_ label is hidden on narrow screens).
+- Geometry stays in `buildModel()` (ADR-004). The wizard only writes whole-mm parameters (ADR-003). Previews,
+  part counts and diagnostics are projections of the built model. Defaults are layout defaults the user can change,
+  not hardware facts (ADR-010).
+- **Adding a type** is one registry entry; adding a step is one step-library entry. No engine or UI change is needed
+  for either.
+
+## Alternatives considered
+
+- **One hand-written form per product root** — fast for one shape, but every new type needs new UI. That is not
+  "universal".
+- **A rules/formula engine in the design document** — rejected for templates in ADR-032 for the same reasons.
+  The wizard writes plain designs.
+- **Reusing catalog variants as the wizard's only output** — gives no control over dividers or contents.
+
+## Consequences
+
+- A wizard piece is an ordinary design. After creation every edit happens in the normal editor; the wizard is
+  not reopened on it.
+- The wizard covers what the shipped steps can express. Finer layouts (fixed drawer heights, nested splits, corner
+  units) remain editor or catalog work.
+- Legs under a carcass would need a model change (new ADR) before a "legs" base can be offered for cabinets.
+
+## Evidence (repository files)
+
+- `src/core/wizard/types.ts`, `steps.ts`, `registry.ts`, `engine.ts`; `src/ui/Wizard.tsx`; `src/ui/Dialogs.tsx`
+  (_New_ → "New piece").
+- `tests/wizard.test.ts` (30 tests: answers → design for every type, visibility, diagnostics on invalid input, no
+  type id in the engine, suggestion engine or wizard UI, save → catalog).
+- `tools/wizard/find-it.mjs`: browser acceptance from the bare app at 1440 and 375 px (not part of `npm test`).
+
+## Compliance check
+
+`npx vitest run tests/wizard.test.ts` passes only when every shipped type builds without errors from its defaults,
+invalid sizes give error diagnostics instead of throwing, and `src/ui/Wizard.tsx` / `engine.ts` contain no
+construction-type id.
+
+## Open questions
+
+1. Types shipped: cabinet, open shelving, table, bench, desk. Should more (wardrobe, bed, wall unit) get their own
+   entries? Default: these five; a wall unit is a cabinet with base "wall-hung".
+2. Legs under cabinets need a new model capability. Should they be built? Default: not offered; tables and benches
+   carry legs.
+
+## Answers (2026-10-23, from the user)
+
+1. **Types:** keep the five and **add Wardrobe and Bed** as registry entries — built 2026-10-23 (backlog N35): two
+   registry entries, one new step (`bed`), and two generic type fields (`hide`, `labels`); no engine or UI branch.
+2. **Legs under cabinets: not now** (default confirmed); tables and benches carry legs.

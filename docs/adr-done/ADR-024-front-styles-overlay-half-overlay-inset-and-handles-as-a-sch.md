@@ -1,0 +1,54 @@
+# ADR-024: Front styles (overlay, half overlay, inset) and handles as a scheduled item with a position
+
+- Status: Implemented
+- Date: 2026-10-21
+- Implemented: 2026-10-21
+- Decided by: open questions answered by the user
+- Depends on: none
+- Design: n/a
+- Related: ADR-006, ADR-008, ADR-010
+- Backlog: N06
+
+## Context
+
+All fronts are full overlay today (ADR-006). Inset fronts sit inside the carcass; half overlay shares a divider
+between two fronts. Handles affect the hardware list and sometimes the front (finger pulls).
+
+## Decision
+
+Add a cabinet-level `frontStyle: 'overlay' | 'half' | 'inset'` (default `overlay`, so old designs are unchanged).
+The front-zone calculation (ADR-006) gets one branch per style; gap rules stay exact. Inset fronts sit at
+`z ∈ [depth − thickness, depth]` and the envelope check treats them as carcass. Handles become `handle: { kind: 'bar' | 'knob' | 'push', holeSpacing?, position: 'top'|'centre'|'bottom' }` per
+front-bearing space (`push` has no position and schedules a push latch); they appear in the hardware list with their centre
+position on the front, as an annotation. No drilling template, screw length or load claim (ADR-010).
+
+## Alternatives considered
+
+- **Per-front style** — flexible but rarely used; per-cabinet first, per-space later if needed.
+
+## Consequences
+
+- Inset requires the internal drawer setback and shelf setback to grow by the front thickness; handled in the same
+  place as internal drawers.
+- Fuzz must cover all three styles.
+
+## Evidence (repository files)
+
+- `src/core/types.ts` — `FrontStyle`, `Handle`, `DoorsFront.hinge`, `Panel.handleHoles`.
+- `src/core/cabinet.ts` — style-specific front zones (`rootFront`, `zoneOf`), inset openings set back by the front thickness, `placeHandle`, handle/push-latch hardware.
+- `src/core/cutlist.ts` — handle holes in the drilling text.
+- `src/ui/Inspector.tsx` — front style, hinge side, `HandleEditor`; `src/ui/Elevation.tsx` draws handles.
+- `tests/core.test.ts` — ADR-024 block (5 tests); `tests/fuzz.test.ts` randomises style, hinge and handles and checks per-style reveals and gaps.
+
+## Compliance check
+
+When accepted: fuzz asserts exact gaps for every style; overlay designs build identical models to today.
+
+## Answers (2026-10-21, from the user)
+
+- **Inset front gap:** 3 mm all round (same as the overlay gap default).
+- **Handles in use:** bar handles (hole spacing as a parameter, e.g. 128 / 160 / 192 mm), knobs, and handleless
+  push-to-open. Push-to-open schedules one push latch per door or drawer and needs no handle position.
+  Aluminium profile pulls are out of scope.
+
+Built and accepted 2026-10-21. Overlay designs build identical models (all earlier tests unchanged).

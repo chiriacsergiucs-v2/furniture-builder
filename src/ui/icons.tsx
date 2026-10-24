@@ -7,7 +7,8 @@ const PATHS = {
   layers: 'm12 3 9 5-9 5-9-5zM3 13l9 5 9-5',
   download: 'M12 4v11m0 0 4-4m-4 4-4-4M4 19h16',
   upload: 'M12 19V8m0 0 4 4m-4-4-4 4M4 5h16',
-  printer: 'M6 9V4h12v5M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v6H6z',
+  printer:
+    'M6 9V4h12v5M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v6H6z',
   share: 'M12 3v12m0-12 4 4m-4-4-4 4M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5',
   sun: 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M4.9 19.1l1.4-1.4m11.4-11.4 1.4-1.4',
   moon: 'M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z',
@@ -45,14 +46,19 @@ const PATHS = {
   catalog: 'M4 4h6a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H4zM20 4h-6a2 2 0 0 0-2 2v14a2 2 0 0 1 2-2h6z',
   home: 'M3 11 12 4l9 7M5 10v10h5v-6h4v6h5V10',
   search: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM16 16l4 4',
-} as const
+} as const;
 
-export type IconName = keyof typeof PATHS
+export type IconName = keyof typeof PATHS;
 
 export function Icon({ name, className }: { name: IconName; className?: string }) {
   return (
-    <svg className={`icon ${className ?? ''}`} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <svg
+      className={`icon ${className ?? ''}`}
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      focusable="false"
+    >
       <path d={PATHS[name]} />
     </svg>
-  )
+  );
 }

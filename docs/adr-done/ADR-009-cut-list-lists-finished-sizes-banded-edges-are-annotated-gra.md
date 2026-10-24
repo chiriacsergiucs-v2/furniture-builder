@@ -1,0 +1,44 @@
+# ADR-009: Cut list lists finished sizes; banded edges are annotated, grain sets length
+
+- Status: Implemented
+- Date: 2026-10-21
+- Implemented: 2026-10-21
+- Depends on: none
+- Design: n/a
+- Related: ADR-004
+
+## Context
+
+Panel shops in the user's market take finished dimensions with edge-band notation and apply their own
+allowance; supplier forms seen earlier quote sizes that include the band.
+
+## Decision
+
+Cut-list sizes are the panel's finished size. Each banded edge is counted as along-length (L) or along-width (W),
+0–2 each — the notation panel shops use. On grained boards the length is the dimension along the grain; on plain
+boards it is the longer side. Identical parts (material, thickness, size, edge counts) are grouped. Totals per
+material: area and metres of edge band. CSV export escapes formula-leading cells (Romanian headers, `;` separator, ADR-020).
+
+## Alternatives considered
+
+- **Subtract band thickness** — rejected as the default: band thickness and shop practice vary; can become a
+  per-material option later.
+
+## Consequences
+
+- A shop that wants pre-subtracted sizes must be told; the parts panel states "finished sizes".
+
+## Evidence (repository files)
+
+- `src/core/geometry.ts` — `cutDimensions`.
+- `src/core/cutlist.ts` — `cutlist`, `edgeBandMeters`; `src/core/ro.ts` — `cutlistCsvRo` (Romanian CSV, ADR-020).
+- `tests/core.test.ts` — grouping, edge notation, grain test.
+
+## Compliance check
+
+Chest test: sides grouped ×2 with L1 W0; fronts banded on four edges.
+
+## Confirmation (2026-10-21)
+
+Confirmed by the user: sizes are never reduced by edge-band thickness; the panel shop applies its own allowance.
+The CSV switches to Romanian column headers with printing (ADR-020).

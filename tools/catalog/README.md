@@ -1,4 +1,4 @@
-# Catalog feed tools (ADR-0029)
+# Catalog feed tools (ADR-029)
 
 Not part of the app: nothing under `src/` imports this folder and it is not in the build.
 

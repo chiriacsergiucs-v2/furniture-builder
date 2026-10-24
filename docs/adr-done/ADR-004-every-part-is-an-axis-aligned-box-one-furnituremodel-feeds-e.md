@@ -1,0 +1,42 @@
+# ADR-004: Every part is an axis-aligned box; one FurnitureModel feeds every view and list
+
+- Status: Implemented
+- Date: 2026-10-21
+- Implemented: 2026-10-21
+- Depends on: none
+- Design: n/a
+- Related: ADR-005, ADR-008, ADR-014
+
+## Context
+
+In the previous app the 3D view, cut list and exports derived geometry separately and drifted apart.
+
+## Decision
+
+`buildModel(design)` returns one `FurnitureModel { panels, spaces, hardware, diagnostics, bounds }`. Each `Panel` is
+an axis-aligned `Box` (finished size and position) with its thickness axis, grain axis and banded faces. The front
+elevation, the 3D view, the cut list, the hardware list and the checks are all **projections** of this model; none
+computes geometry of its own. Panel ids are derived from the owning node id + role + index, so they stay stable when
+dimensions change.
+
+## Alternatives considered
+
+- **Mesh/CSG geometry** — rejected for this domain: casework panels are boxes; boxes make overlap and cut-size
+  computation exact and trivial.
+- **Per-view derivation with shared helpers** — rejected: it is what drifted before.
+
+## Consequences
+
+- Rotated or shaped parts (angled tops, curves) need a new panel kind and an ADR.
+- Any new output (PDF, Fusion, nesting) must consume `FurnitureModel`.
+
+## Evidence (repository files)
+
+- `src/core/types.ts` — `Box`, `Panel`, `FurnitureModel`.
+- `src/core/build.ts` — `buildModel`.
+- `src/ui/Elevation.tsx`, `src/viewer/Viewer3D.tsx`, `src/core/cutlist.ts` — all read `model.panels`.
+- `tests/core.test.ts` — "keeps panel ids stable when the cabinet is resized"; cut list conserves every panel.
+
+## Compliance check
+
+`grep -rn "buildCabinet\|buildDesk" src/ui src/viewer` returns nothing (views never call generators directly).

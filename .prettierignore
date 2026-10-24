@@ -1,0 +1,12 @@
+node_modules
+dist
+dev-dist
+coverage
+pnpm-lock.yaml
+# Generated and compared byte-for-byte by tests: the catalog list, the sample project files and the
+# catalog pictures.
+docs/catalog.md
+docs/samples/*.project.json
+public/catalog/
+# Research papers kept verbatim; their lines are audited by tests/research.test.ts (ADR-043).
+docs/research/
