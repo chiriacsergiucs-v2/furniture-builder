@@ -15,7 +15,7 @@ predictable rotate operations · Also for these: [14 features marked Interested]
 Research row: _Guided connection snapping with live preview and orientation_ (rank 1, P0) with sub-features snap
 preview, snap override, deterministic candidate ranking and "why won't this connect?". Its paper evidence says
 snapping must be understandable and temporarily bypassable (Planner 5D complaints about snapping that cannot be
-turned off). [ADR-065](ADR-065-drag-a-piece-on-the-plan-to-move-it.md) built dragging on the Plan with **no snapping** on the user's answer; this ADR adds it
+turned off). [ADR-065](../adr-done/ADR-065-drag-a-piece-on-the-plan-to-move-it.md) built dragging on the Plan with **no snapping** on the user's answer; this ADR adds it
 as a separate, switchable layer and does not change ADR-065's drag.
 
 ## Decision
