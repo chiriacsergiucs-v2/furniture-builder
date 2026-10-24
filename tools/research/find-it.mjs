@@ -27,6 +27,7 @@ for (const width of [1440, 1024, 390, 360]) {
   check(width, 'no sideways scroll on the overview', await noSideScroll())
   check(width, 'assessment dashboard: matrix, distributions, quick wins', await page.getByRole('heading', { name: 'Assessment: demand, value, complexity, confidence' }).isVisible()
     && await page.getByText('Value (rows) × complexity (columns)').isVisible() && await page.getByRole('heading', { name: /Quick wins/ }).isVisible())
+  check(width, 'research priority distribution on the dashboard', await page.getByRole('heading', { name: 'Research priority' }).isVisible() && await page.getByRole('button', { name: 'P0 foundational' }).isVisible())
   await page.getByRole('button', { name: /features with value 4\.5–5\.0 and Low complexity/ }).click()
   check(width, 'matrix cell opens the matching features', await page.locator('table.features-table tbody tr').count() >= 1 && await page.getByLabel('Value', { exact: true }).inputValue() === '4.5')
   await page.getByRole('tab', { name: 'Overview' }).click()
