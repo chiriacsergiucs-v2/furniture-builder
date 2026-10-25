@@ -5,6 +5,7 @@
 - Depends on: ADR-014, ADR-079
 - Design: docs/ui-design.md (§4 Screens: editor, stage tools)
 - Backlog: N75
+- Acceptance: light
 
 ## Context
 
@@ -36,7 +37,9 @@ drawing is where you edit, and 3D only selects, stays lazy and mounts only when 
 6. The chosen view is kept while the mode stays the same; changing mode resets it to the mode's default, as now.
    Tap-to-place, room drawing and a tapped project check still bring the drawing forward: from 3D they switch to
    Front/Plan; from Both they stay in Both (the drawing is already visible).
-7. Phone (< 760 px): unchanged (see Open questions).
+7. Phone (< 760 px): the switch appears only in Build & Preview, with the same three options, defaulting to
+   **3D** (today's view). **Both** stacks the drawing over the 3D view. Compose and Configure stay as today: no
+   switch, no `canvas` (ADR-014, ADR-079).
 
 ## Alternatives considered
 
@@ -48,8 +51,8 @@ drawing is where you edit, and 3D only selects, stays lazy and mounts only when 
 ## Scope
 
 - In scope: the _View_ switch and `view`/`shown`/`mount3d` logic in `src/ui/App.tsx`; `.views` split CSS in
-  `src/styles.css`; `docs/ui-design.md` §4; `tools/view-both/find-it.mjs`; a UI-logic test for the view rules.
-- Out of scope: phone layout, the 3D viewer's internals, `src/core`, store and storage (the choice is not saved).
+  `src/styles.css`; `docs/ui-design.md` §4; a UI-logic test for the view rules. The find-it script waits for a catch-up (ADR-066).
+- Out of scope: phone Compose and Configure, the 3D viewer's internals, `src/core`, store and storage (the choice is not saved).
 
 ## Consequences
 
@@ -60,21 +63,18 @@ drawing is where you edit, and 3D only selects, stays lazy and mounts only when 
 ## Done when
 
 - [ ] At 1280 px the stage shows the _View_ switch with **Front**, **3D** and **Both**; choosing **Both** shows the
-      elevation and a `canvas` in the stage at once (find-it).
-- [ ] In a project the switch reads **Plan**, **3D**, **Both**; **Both** shows the plan and the 3D view (find-it).
+      elevation and the 3D view at once (light — catch-up).
+- [ ] In a project the switch reads **Plan**, **3D**, **Both**; **Both** shows the plan and the 3D view
+      (light — catch-up).
 - [ ] At 1500 px and wider the switch is visible and **Both** is selected by default; choosing **Front** removes the
-      `canvas` from the DOM (find-it; ADR-014).
-- [ ] Tapping a space in the drawing while in **Both** selects it, and the selection stays **Both** (find-it).
-- [ ] Without WebGL, **3D** and **Both** are disabled with the reason shown (UI-logic test).
-- [ ] At 390 px nothing changes: no _View_ switch, no `canvas` outside Build & Preview; no horizontal page scroll at
-      360 and 390 px (find-it).
-- [ ] `tools/view-both/find-it.mjs` passes on the production build at 390, 1280 and 1600 px. All CI checks pass.
+      `canvas` from the DOM (light — catch-up; ADR-014).
+- [ ] At 390 px in Build & Preview the switch shows **Front**, **3D**, **Both** with **3D** selected; **Both** stacks
+      the drawing over 3D. Compose and Configure show no switch and no `canvas` (light — catch-up).
+- [ ] Without WebGL, **3D** and **Both** are disabled with the reason shown; the view rules (default per mode and
+      width, reset on mode change, placing from Both stays Both) are covered by a UI-logic test.
+- [ ] No horizontal page scroll at 360 and 390 px (light — catch-up). All CI checks pass.
 
-## Open questions
+## Answers (user, 2026-10-25)
 
-- V1: Label of the third option — default **Both**. (Alternatives: _Split_, _Front + 3D_.)
-- V2: Phone — default unchanged (no switch; mode decides). Alternative: add the switch on phones in Build &
-  Preview with Both stacked (drawing over 3D).
-- V3: Default view at ≥ 1500 px — default **Both** (keeps today's look). Below 1500 px: default by mode, as today.
-- V4: Remember the chosen view per device (`localStorage`)? Default no; it resets with the mode, as today.
-- V5: Acceptance — default full (find-it). Say "light" to skip the browser run (ADR-066).
+- V1: label **Both**. V2: phone shows the switch in Build & Preview only, Both stacked. V3: **Both** is the default
+  at ≥ 1500 px, by mode below. V4: not remembered; resets with the mode. V5: light acceptance (ADR-066).
