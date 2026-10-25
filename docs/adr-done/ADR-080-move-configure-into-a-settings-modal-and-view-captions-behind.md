@@ -1,7 +1,8 @@
 # ADR-080: Move Configure into a settings modal and view captions behind an info icon
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-25
+- Implemented: 2026-10-25 (Merged in PR #55 (ae82326); light acceptance, find-it pending (ADR-066))
 - Depends on: ADR-079
 - Design: docs/ui-design.md (§3 Components and states, §4 Screens: projects, editor)
 - Backlog: N75
@@ -106,7 +107,7 @@ No change to `src/core`, the design document, the model or the Dexie schema.
 - [ ] Every Projects and Single pieces row has _Settings for <name>_; changing a value there and reopening the
       item shows the new value (light — catch-up).
 - [ ] An invalid value in the modal shows its error, is not clamped, and blocks Download CSV (tests).
-- [ ] Lint, format, typecheck, tests, build and docs check pass.
+- [x] Lint, format, typecheck, tests, build and docs check pass.
 
 ## Open questions
 
