@@ -40,6 +40,10 @@ Requirement ledger (user's words):
      button (`ⓘ`, ≥ 44 px target) at the drawing's top-right. Names: _About the plan_ / _About the front view_.
    - Desktop (hover-capable pointer): the text shows on hover and on focus; hides on leave, blur or Esc.
    - Touch: a tap toggles it; tapping outside, tapping again or Esc closes it.
+   - The Snap status line under the plan's Snap button (user decision 2026-10-25) moves into the plan's
+     popover: its idle text ("Pieces go exactly where dropped." / "Snaps within 60 mm …") is shown first, then the
+     caption. While a piece is being dragged, the live snap feedback ("Snaps: …", "Alt held: placing freely.")
+     shows as an overlay on the plan, removed on drop, so it takes no layout space.
    - The text is unchanged and shown as a popover over the drawing, so the drawing never moves. It stays inside
      the viewport at 390 px. The button has `aria-expanded`/`aria-controls`.
 2. **Two modes: Compose · Build & Preview.** The Configure segment is removed. Both modes are otherwise unchanged.
@@ -78,7 +82,7 @@ No change to `src/core`, the design document, the model or the Dexie schema.
 - In scope: info button + popover and a settings button in `src/ui/controls.tsx`; the Configure panel moved into
   a modal reused by the editor and `src/ui/shell/ProjectsPage.tsx`; two-segment mode control; `fb:mode` fallback;
   steps-rail targets; `docs/ui-design.md`; `tests/ui-mode.test.ts`; `tools/settings-modal/find-it.mjs`.
-- Out of scope: the wording of captions and settings; 3D controls; Compose content; the Snap status line.
+- Out of scope: the wording of captions and settings; 3D controls; other Compose content.
 
 ## Consequences
 
@@ -92,18 +96,19 @@ No change to `src/core`, the design document, the model or the Dexie schema.
 - [ ] Project plan and front view render no caption text; each has an info button _About the plan_ / _About the
       front view_ that shows the original text on hover/focus at 1280 px and on tap at 390 px, closes on outside
       tap or Esc, with no horizontal scroll (find-it).
+- [ ] No Snap status line under the Snap button; the plan's popover starts with "Pieces go exactly where dropped."
+      when Snap is off; while dragging, "Snaps:" shows over the plan and disappears on drop (find-it).
 - [ ] At 390 × 844 px in a project's Compose, the plan and the front view are both fully visible (find-it).
-- [ ] The mode control shows exactly _Compose_ and _Build & Preview_ (find-it, both widths).
+- [ ] The mode control shows exactly _Compose_ and _Build & Preview_ (find-it, both widths); a stored `fb:mode` =
+      `configure` opens Compose and steps-rail Size opens the modal (`tests/ui-mode.test.ts`).
 - [ ] The editor bar's _Settings_ opens a modal with _Width_, _Construction_, _Add a material_ and _Drawers_ for a
       piece, and the project-wide settings for a project; changing Width updates the drawing (find-it).
 - [ ] Every Projects and Single pieces row has _Settings for <name>_; changing a value there and reopening the
       item shows the new value (find-it, both widths).
 - [ ] An invalid value in the modal shows its error, is not clamped, and blocks Download CSV (tests).
-- [ ] Stored `fb:mode` = `configure` opens Compose; steps-rail Size opens the modal (`tests/ui-mode.test.ts`).
 - [ ] Lint, format, typecheck, tests, build and docs check pass.
 
 ## Open questions
 
 - The list gear on a piece inside a project: not offered (default; open the project); or list pieces too?
-- Snap status line: keep visible (default) or move into the plan's info popover?
 - Editing from the list: apply live (default) or Save/Cancel buttons in that modal?
