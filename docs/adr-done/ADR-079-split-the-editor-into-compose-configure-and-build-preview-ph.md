@@ -1,7 +1,8 @@
 # ADR-079: Split the editor into Compose, Configure and Build & Preview, phone first
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-24
+- Implemented: 2026-10-25 (Merged to main; CI run 40170561018 and Deploy GitHub Pages run 40170561007 green on 895eb54)
 - Depends on: ADR-078
 - Design: docs/ui-design.md (§4 Screens: editor), docs/research/2026-10-24-ui-redesign-audit.md (§3)
 - Backlog: N74
@@ -80,19 +81,19 @@ device (`localStorage` `fb:mode`). Nothing is gated.
 
 ## Done when
 
-- [ ] At 390 px the Editor shows _Compose · Configure · Build & Preview_. Tapping a space in Compose opens
+- [x] At 390 px the Editor shows _Compose · Configure · Build & Preview_. Tapping a space in Compose opens
       _Selected: …_ with Contents, Doors and handles and Divide this space, and no Construction or Materials fields
       (find-it).
-- [ ] Configure shows Size, Construction, Materials (with _Add a material_) and Drawers and runners. No Materials
+- [x] Configure shows Size, Construction, Materials (with _Add a material_) and Drawers and runners. No Materials
       button or dialog is left anywhere (find-it).
-- [ ] Build & Preview shows the 3D view and the Parts tab with _Download CSV_ and _Print_. With an error both are
+- [x] Build & Preview shows the 3D view and the Parts tab with _Download CSV_ and _Print_. With an error both are
       disabled and Checks shows it unsoftened (find-it on a design with an error; ADR-008).
-- [ ] The 3D canvas is not in the DOM in Compose or Configure at 390 px (find-it checks for no `canvas`; ADR-014).
-- [ ] A project opens in Compose with the Plan and its pieces. Configure holds the project-wide settings. Tap-to-place
+- [x] The 3D canvas is not in the DOM in Compose or Configure at 390 px (find-it checks for no `canvas`; ADR-014).
+- [x] A project opens in Compose with the Plan and its pieces. Configure holds the project-wide settings. Tap-to-place
       and room drawing switch to Compose (find-it).
-- [ ] At 1280 px, Compose/Configure is on the left, the drawing in the centre and Build on the right. No horizontal
+- [x] At 1280 px, Compose/Configure is on the left, the drawing in the centre and Build on the right. No horizontal
       page scroll at 360 and 390 px.
-- [ ] `tools/editor-modes/find-it.mjs` passes on the production build at 390 and 1280 px. All CI checks pass.
+- [x] `tools/editor-modes/find-it.mjs` passes on the production build at 390 and 1280 px. All CI checks pass.
 
 ## Answers (user, 2026-10-24: "Proceed", every default accepted)
 

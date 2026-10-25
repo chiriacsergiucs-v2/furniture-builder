@@ -1,7 +1,8 @@
 # ADR-073: Chair, installation and service clearances, drawn on the plan
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-24
+- Implemented: 2026-10-25 (Merged to main; CI run 40170561018 and Deploy GitHub Pages run 40170561007 green on 895eb54)
 - Depends on: ADR-057, ADR-058
 - Design: docs/ui-design.md (Plan view, Output › Checks)
 - Backlog: N68
@@ -50,10 +51,10 @@ them on the plan.
 
 ## Done when
 
-- [ ] Chair, installation and service envelopes are derived and checked (unit tests)
-- [ ] The tall-unit installation check uses the diagonal and the room height (unit test)
-- [ ] _Clearances_ toggle draws zones in three severities (find-it at 390 px and 1280 px)
-- [ ] All CI checks pass; `FUZZ_N=30000` fuzz passes
+- [x] Chair, installation and service envelopes are derived and checked (unit tests)
+- [x] The tall-unit installation check uses the diagonal and the room height (unit test)
+- [x] _Clearances_ toggle draws zones in three severities (find-it at 390 px and 1280 px)
+- [x] All CI checks pass; `FUZZ_N=30000` fuzz passes
 
 ## Open questions
 

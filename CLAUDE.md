@@ -133,6 +133,11 @@ Lifecycle, one skill per step:
 - Every implementation reply ends with the backlog status table (including every row still marked
   `find-it pending (light, ADR-066)`) and a **Skipped this iteration** section.
 - Stop when a check fails (fix the cause, never the check) or when a change would need the network (ADR-002).
+- Recommended options (user rule 2026-10-25): in questions, open questions and ADR defaults, never mark an
+  option as recommended because it is the simplest. Recommend the option closest to what the user asked to
+  build, and say so. If it is more complex, explain why and estimate how much more work it is (+N %) and how
+  much more of the request it delivers (+N % of value), labelled as estimates. "Smallest slice" applies to how
+  a chosen option is built, not to which option is recommended.
 
 ## Git
 

@@ -1,7 +1,8 @@
 # ADR-070: Snap a dragged piece to neighbours and walls with a preview and an override
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-24
+- Implemented: 2026-10-25 (Merged to main; CI run 40170561018 and Deploy GitHub Pages run 40170561007 green on 895eb54)
 - Depends on: ADR-058, ADR-065
 - Design: docs/ui-design.md (Plan view)
 - Backlog: N65
@@ -54,13 +55,13 @@ as a separate, switchable layer and does not change ADR-065's drag.
 
 ## Done when
 
-- [ ] Connectors, rules and ranking are pure and deterministic (unit tests; same input → same snap)
-- [ ] A floor unit dragged within 60 mm of another floor unit's side snaps flush; a wall unit does not
+- [x] Connectors, rules and ranking are pure and deterministic (unit tests; same input → same snap)
+- [x] A floor unit dragged within 60 mm of another floor unit's side snaps flush; a wall unit does not
       (unit tests)
-- [ ] Snapping to a wall and into an inside corner (unit tests on L rooms)
-- [ ] Snap off or Alt held: the drop is exactly where released, as ADR-065 (unit test)
-- [ ] **Snap** toggle and the dashed preview are found at 390 px and 1280 px (find-it)
-- [ ] All CI checks pass; `FUZZ_N=30000` fuzz passes
+- [x] Snapping to a wall and into an inside corner (unit tests on L rooms)
+- [x] Snap off or Alt held: the drop is exactly where released, as ADR-065 (unit test)
+- [x] **Snap** toggle and the dashed preview are found at 390 px and 1280 px (find-it)
+- [x] All CI checks pass; `FUZZ_N=30000` fuzz passes
 
 ## Open questions
 

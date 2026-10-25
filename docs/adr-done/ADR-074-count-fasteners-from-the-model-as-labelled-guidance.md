@@ -1,7 +1,8 @@
 # ADR-074: Count fasteners from the model as labelled guidance
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-24
+- Implemented: 2026-10-25 (Merged to main; CI run 40170561018 and Deploy GitHub Pages run 40170561007 green on 895eb54)
 - Depends on: ADR-010, ADR-064
 - Design: docs/ui-design.md (Output › Hardware, Shopping list)
 - Backlog: N69
@@ -48,11 +49,11 @@ forbids invented specs; this ADR counts, it does not specify.
 
 ## Done when
 
-- [ ] Joint, pin, hanging and fixing counts match hand counts for each template (unit tests)
-- [ ] Without a chosen fastener the line is in _to choose before buying_; with one it is a counted line
+- [x] Joint, pin, hanging and fixing counts match hand counts for each template (unit tests)
+- [x] Without a chosen fastener the line is in _to choose before buying_; with one it is a counted line
       (unit tests)
-- [ ] _Fasteners_ is found in Materials and the lines in the Shopping list (find-it at 390 px and 1280 px)
-- [ ] All CI checks pass
+- [x] _Fasteners_ is found in Materials and the lines in the Shopping list (find-it at 390 px and 1280 px)
+- [x] All CI checks pass
 
 ## Open questions
 

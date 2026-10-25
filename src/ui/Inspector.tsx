@@ -68,8 +68,8 @@ const KIND_LABEL: Record<SpaceKind, string> = {
 };
 
 /**
- * The piece editor for one editor mode (ADR-079). Compose edits the selected space (contents, doors, divide);
- * Configure edits the whole piece (size, construction, boards, drawers), whatever is selected.
+ * The piece editor (ADR-079). Compose edits the selected space (contents, doors, divide); `configure` edits the
+ * whole piece (size, construction, boards, drawers), whatever is selected, and is shown in Settings (ADR-080).
  */
 export function Inspector({ mode }: { mode: 'compose' | 'configure' }) {
   const design = useDesign((s) => s.design);
@@ -101,7 +101,7 @@ export function Inspector({ mode }: { mode: 'compose' | 'configure' }) {
 function ComposeStart() {
   const prod = useDesign((s) => s.design.product);
   const select = useDesign((s) => s.select);
-  const setMode = useUi((s) => s.setMode);
+  const setSettingsOpen = useUi((s) => s.setSettingsOpen);
   const roots = productRoots(prod);
   return (
     <div className="inspector compose-start">
@@ -110,7 +110,7 @@ function ComposeStart() {
         <p className="hint">
           {roots.length
             ? 'Tap a space in the front view to fill it with shelves, drawers or hanging, add doors, or divide it.'
-            : 'This piece has no spaces to fill. Its sizes and boards are under Configure.'}
+            : 'This piece has no spaces to fill. Its sizes and boards are under Settings.'}
         </p>
       </header>
       {roots.map((r) => (
@@ -126,9 +126,9 @@ function ComposeStart() {
         </button>
       ))}
       {!roots.length && (
-        <button type="button" className="btn outline" onClick={() => setMode('configure')}>
+        <button type="button" className="btn outline" onClick={() => setSettingsOpen(true)}>
           <Icon name="sliders" className="sm" />
-          Open Configure
+          Open Settings
         </button>
       )}
     </div>
@@ -205,6 +205,7 @@ function EditorRail({ steps, inside }: { steps: Step[]; inside?: () => void }) {
   const diags = useDesign((s) => s.model.diagnostics);
   const setTab = useDesign((s) => s.setTab);
   const setMode = useUi((s) => s.setMode);
+  const setSettingsOpen = useUi((s) => s.setSettingsOpen);
   const errors = diags.filter((d) => d.severity === 'error').length;
   const warnings = diags.length - errors;
   const cut: Step = {
@@ -219,10 +220,16 @@ function EditorRail({ steps, inside }: { steps: Step[]; inside?: () => void }) {
     tone: errors ? 'error' : warnings ? 'warn' : 'ok',
   };
   const go = (id: string) => {
-    if (id === 'size') document.querySelector('.inspector')?.scrollIntoView({ block: 'start' });
-    else if (id === 'inside') inside?.();
-    else if (id === 'cut') {
+    if (id === 'size')
+      document.querySelector('.settings-body .inspector')?.scrollIntoView({ block: 'start' });
+    else if (id === 'inside') {
+      // The spaces are edited in Compose, on the drawing: Settings steps aside.
+      setSettingsOpen(false);
+      setMode('compose');
+      inside?.();
+    } else if (id === 'cut') {
       setTab(errors || warnings ? 'checks' : 'parts');
+      setSettingsOpen(false);
       setMode('build');
     } else revealGroup(`g-${id}`);
   };

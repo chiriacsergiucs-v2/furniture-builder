@@ -1,7 +1,8 @@
 # ADR-071: Select the problem and offer previewed repairs for diagnostics
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-24
+- Implemented: 2026-10-25 (Merged to main; CI run 40170561018 and Deploy GitHub Pages run 40170561007 green on 895eb54)
 - Depends on: ADR-008, ADR-057, ADR-058
 - Design: docs/ui-design.md (Output › Checks, Plan view)
 - Backlog: N66
@@ -52,11 +53,11 @@ the problem is or how to fix it.
 
 ## Done when
 
-- [ ] Overlap, door-blocked and outside-room diagnostics carry pieces, box and amount (unit tests)
-- [ ] Each offered repair clears its diagnostic and adds no error (unit tests, fuzz over layouts)
-- [ ] Applying a repair is one undo step (unit test)
-- [ ] Tapping a check selects and outlines the problem; **Apply** is found (find-it at 390 px and 1280 px)
-- [ ] All CI checks pass
+- [x] Overlap, door-blocked and outside-room diagnostics carry pieces, box and amount (unit tests)
+- [x] Each offered repair clears its diagnostic and adds no error (unit tests, fuzz over layouts)
+- [x] Applying a repair is one undo step (unit test)
+- [x] Tapping a check selects and outlines the problem; **Apply** is found (find-it at 390 px and 1280 px)
+- [x] All CI checks pass
 
 ## Open questions
 

@@ -1,10 +1,10 @@
-# ADR-080: Show the drawing and 3D side by side from the view switch
+# ADR-081: Show the drawing and 3D side by side from the view switch
 
 - Status: Pending
 - Date: 2026-10-25
 - Depends on: ADR-014, ADR-079
 - Design: docs/ui-design.md (§4 Screens: editor, stage tools)
-- Backlog: N75
+- Backlog: N76
 - Acceptance: light
 
 ## Context
@@ -38,7 +38,7 @@ drawing is where you edit, and 3D only selects, stays lazy and mounts only when 
    Tap-to-place, room drawing and a tapped project check still bring the drawing forward: from 3D they switch to
    Front/Plan; from Both they stay in Both (the drawing is already visible).
 7. Phone (< 760 px): the switch appears only in Build & Preview, with the same three options, defaulting to
-   **3D** (today's view). **Both** stacks the drawing over the 3D view. Compose and Configure stay as today: no
+   **3D** (today's view). **Both** stacks the drawing over the 3D view. Compose stays as today: no
    switch, no `canvas` (ADR-014, ADR-079).
 
 ## Alternatives considered
@@ -52,7 +52,7 @@ drawing is where you edit, and 3D only selects, stays lazy and mounts only when 
 
 - In scope: the _View_ switch and `view`/`shown`/`mount3d` logic in `src/ui/App.tsx`; `.views` split CSS in
   `src/styles.css`; `docs/ui-design.md` §4; a UI-logic test for the view rules. The find-it script waits for a catch-up (ADR-066).
-- Out of scope: phone Compose and Configure, the 3D viewer's internals, `src/core`, store and storage (the choice is not saved).
+- Out of scope: phone Compose, the 3D viewer's internals, `src/core`, store and storage (the choice is not saved).
 
 ## Consequences
 
@@ -69,7 +69,7 @@ drawing is where you edit, and 3D only selects, stays lazy and mounts only when 
 - [ ] At 1500 px and wider the switch is visible and **Both** is selected by default; choosing **Front** removes the
       `canvas` from the DOM (light — catch-up; ADR-014).
 - [ ] At 390 px in Build & Preview the switch shows **Front**, **3D**, **Both** with **3D** selected; **Both** stacks
-      the drawing over 3D. Compose and Configure show no switch and no `canvas` (light — catch-up).
+      the drawing over 3D. Compose shows no switch and no `canvas` (light — catch-up).
 - [ ] Without WebGL, **3D** and **Both** are disabled with the reason shown; the view rules (default per mode and
       width, reset on mode change, placing from Both stays Both) are covered by a UI-logic test.
 - [ ] No horizontal page scroll at 360 and 390 px (light — catch-up). All CI checks pass.
