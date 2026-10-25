@@ -109,7 +109,9 @@ export type PanelRole =
   | 'rung'
   /** Run parts in a project (ADR-036). */
   | 'filler'
-  | 'cover-panel';
+  | 'cover-panel'
+  /** Crown, pelmet and ceiling filler along a run (ADR-075). */
+  | 'trim';
 
 /** A face direction, used to name banded edges of a panel in world terms. */
 export type Face = '-x' | '+x' | '-y' | '+y' | '-z' | '+z';

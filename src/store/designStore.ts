@@ -16,13 +16,16 @@ import {
   liftOff,
   makeItem,
   planRuns,
+  PROJECT_SCHEMA,
   refreshRunParts,
+  requestKey,
   removeProjectItem,
   resolvePlacements,
   setGapLeft,
   type Project,
   type ProjectItem,
   type ProjectModel,
+  type RunRequest,
   type RunSettings,
 } from '../core/project';
 import type {
@@ -126,6 +129,13 @@ interface State {
   suggestRunParts: () => void;
   removeRunPart: (id: string) => void;
   setRunSettings: (patch: Partial<RunSettings>) => void;
+  /**
+   * Ask for a worktop over chosen pieces, a worktop's overhangs, or a trim (ADR-075); replaces the request with the
+   * same key. Its part is made at once, in the same undo step, and then follows the pieces.
+   */
+  setRunRequest: (r: RunRequest) => void;
+  /** Drop a request that could not be made (ADR-075). */
+  removeRunRequest: (key: string) => void;
   /** Put one board on the fronts or carcass of the selected piece, its run or the whole project (ADR-055). */
   applyFinish: (
     id: string,
@@ -417,11 +427,44 @@ export const useDesign = create<State>((set, get) => {
       const p = get().project;
       const rp = p?.runParts?.find((r) => r.id === id);
       if (!p || !rp) return;
+      // A part the user asked for (ADR-075) goes with its request; its key stays removed like any other.
+      const asked = p.runRequests?.filter((r) => requestKey(r) !== rp.key);
       commitProject({
         ...p,
         runParts: (p.runParts ?? []).filter((r) => r.id !== id),
         runPartsRemoved: [...(p.runPartsRemoved ?? []), rp.key ?? rp.id],
+        ...(asked ? { runRequests: asked } : {}),
       });
+    },
+    setRunRequest: (r) => {
+      const p = get().project;
+      if (!p) return;
+      const key = requestKey(r);
+      const settings = p.runSettings ?? { scribe: 0, auto: true };
+      const next: Project = {
+        ...p,
+        schemaVersion: PROJECT_SCHEMA,
+        runRequests: [...(p.runRequests ?? []).filter((x) => requestKey(x) !== key), r],
+        runPartsRemoved: (p.runPartsRemoved ?? []).filter((k) => k !== key),
+      };
+      if (settings.auto) {
+        commitProject({ ...next, runSettings: settings });
+        return;
+      }
+      // Refresh off: only the asked-for parts are made now (and the worktops they replace go); the rest stay.
+      const keys = new Set(next.runRequests!.map(requestKey));
+      const wt = new Set(next.runRequests!.flatMap((x) => (x.kind === 'worktop' ? x.from : [])));
+      const keep = (p.runParts ?? []).filter(
+        (x) =>
+          !keys.has(x.key ?? '') && !(x.kind === 'worktop' && x.from?.some((id) => wt.has(id))),
+      );
+      const made = planRuns(next).parts.filter((x) => keys.has(x.key ?? ''));
+      commitProject({ ...next, runSettings: settings, runParts: [...keep, ...made] });
+    },
+    removeRunRequest: (key) => {
+      const p = get().project;
+      if (!p?.runRequests) return;
+      commitProject({ ...p, runRequests: p.runRequests.filter((r) => requestKey(r) !== key) });
     },
     setRunSettings: (patch) => {
       const p = get().project;
