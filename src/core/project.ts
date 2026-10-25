@@ -29,6 +29,7 @@ import { bandFor, bandProblems, bandText } from './materials';
 import { DEFAULT_KERF, newId, sheetOf, upgradeDesign, validateDesign } from './design';
 import { cutDimensions, intersection, overlaps, union } from './geometry';
 import { aabbOf, overlapsBox, panelsOverlap, turnShape } from './shape';
+import { modelBox, modelChecks, validateModelItems, type ModelItem } from './model3d';
 import type { SheetSettings } from './nesting';
 import { jobsFromCutlist } from './nesting';
 import type { NestJob } from './nesting/types';
@@ -128,12 +129,13 @@ export const requestKey = (r: Pick<RunRequest, 'kind' | 'from'>) => `${r.kind}|$
 /**
  * Project document versions (ADR-011): new and edited projects are written at `PROJECT_SCHEMA`; every version in
  * `PROJECT_SCHEMAS` still loads unchanged. 2 = room pipes and outlets (ADR-072); 3 = clearance zones on items
- * (ADR-073); 4 = run requests and trim run parts (ADR-075).
+ * (ADR-073); 4 = run requests and trim run parts (ADR-075); 5 = display-only 3D models (ADR-076).
  */
-export const PROJECT_SCHEMA = 4 as const;
-export const PROJECT_SCHEMAS: readonly number[] = [1, 2, 3, PROJECT_SCHEMA];
-export type ProjectSchemaVersion = 1 | 2 | 3 | typeof PROJECT_SCHEMA;
+export const PROJECT_SCHEMA = 5 as const;
+export const PROJECT_SCHEMAS: readonly number[] = [1, 2, 3, 4, PROJECT_SCHEMA];
+export type ProjectSchemaVersion = 1 | 2 | 3 | 4 | typeof PROJECT_SCHEMA;
 const RUN_REQUESTS_SINCE = 4;
+const MODELS_SINCE = 5;
 
 export interface Project {
   schemaVersion: ProjectSchemaVersion;
@@ -153,6 +155,8 @@ export interface Project {
   runRequests?: RunRequest[];
   /** The room: walls, doors, windows, obstacles (ADR-058/0056). Absent = no room checks. */
   room?: Room;
+  /** Display-only 3D models (ADR-076, schemaVersion 5): never cut, priced, bought or nested. Absent = none. */
+  models?: ModelItem[];
 }
 
 export interface RunSettings {
@@ -481,6 +485,10 @@ export interface ProjectModel {
   diagnostics: Diagnostic[];
   /** Clearances that hit something (ADR-057), for the plan outline of the selected piece. */
   blocked: { itemId: string; box: Box }[];
+  /** Display-only 3D models with the box each takes in the room (ADR-076). */
+  models: { item: ModelItem; box: Box }[];
+  /** Everything drawn: the panels and the model boxes (`model.bounds` stays the panels only, for parts and prints). */
+  extent: Box;
   /** Every body, opening, chair and service zone with its worst problem, for the plan's Clearances overlay (ADR-073). */
   zones: ClearanceZone[];
 }
@@ -644,21 +652,36 @@ export function buildProjectModel(input: Project): ProjectModel {
       });
     }
   }
+  // Display-only 3D models (ADR-076): their boxes are checked like pieces, never cut.
+  const models = (project.models ?? []).map((item) => ({ item, box: modelBox(item) }));
+  const checked = pieces.map((pc) => ({
+    id: pc.item.id,
+    name: pc.item.design.name,
+    bounds: pc.bounds,
+    hitsPanels: (b: Box) => pc.panels.some((q) => overlapsBox(q, b)),
+    covers: (b: Box) =>
+      pc.panels.find((q) => COVER_ROLES.has(q.role) && overlapsBox(q, b))?.role ?? null,
+    clearances: pc.clearances,
+  }));
+  // Run parts (worktop, plinth, fillers, covers) are checked against models too.
+  const runChecked = panels
+    .filter((p) => p.id.startsWith('run:'))
+    .map((p) => ({
+      id: p.id,
+      name: p.label,
+      bounds: aabbOf(p),
+      hitsPanels: (b: Box) => overlapsBox(p, b),
+    }));
+  diagnostics.push(...modelChecks(project.models ?? [], [...checked, ...runChecked]));
+  const asPieces = models.map((m) => ({
+    id: m.item.id,
+    name: m.item.name,
+    bounds: m.box,
+    hitsPanels: (b: Box) => overlaps(m.box, b),
+    clearances: [],
+  }));
   // The room (ADR-058): walls, obstacles, door swings and windows; obstacles also block openings (ADR-057).
-  const rc = project.room
-    ? roomChecks(
-        project.room,
-        pieces.map((pc) => ({
-          id: pc.item.id,
-          name: pc.item.design.name,
-          bounds: pc.bounds,
-          hitsPanels: (b: Box) => pc.panels.some((q) => overlapsBox(q, b)),
-          covers: (b: Box) =>
-            pc.panels.find((q) => COVER_ROLES.has(q.role) && overlapsBox(q, b))?.role ?? null,
-          clearances: pc.clearances,
-        })),
-      )
-    : null;
+  const rc = project.room ? roomChecks(project.room, [...checked, ...asPieces]) : null;
   if (rc) diagnostics.push(...rc.diagnostics, ...rc.clearanceIssues);
   // Run worktops and plinths over a pipe or outlet (ADR-072).
   if (project.room && !outlineIssues(project.room.outline).length)
@@ -672,7 +695,11 @@ export function buildProjectModel(input: Project): ProjectModel {
             covers: (b: Box) => (overlaps(rp.box, b) ? rp.kind : null),
           }),
         );
-  const blocked = openingChecks(pieces, panels, diagnostics, rc?.obstacles ?? []);
+  const obstacles = [
+    ...(rc?.obstacles ?? []),
+    ...models.map((m) => ({ label: m.item.name, box: m.box })),
+  ];
+  const blocked = openingChecks(pieces, panels, diagnostics, obstacles);
   const zones = clearanceZones(
     project,
     pieces,
@@ -680,7 +707,7 @@ export function buildProjectModel(input: Project): ProjectModel {
     diagnostics,
     blocked,
     overlapping,
-    rc?.obstacles ?? [],
+    obstacles,
   );
   const model: FurnitureModel = {
     panels,
@@ -696,6 +723,8 @@ export function buildProjectModel(input: Project): ProjectModel {
     materials: [...materials.values()],
     diagnostics,
     blocked,
+    models,
+    extent: union([...panels.map(aabbOf), ...models.map((m) => m.box)]),
     zones,
   };
 }
@@ -1700,5 +1729,10 @@ export function validateProject(p: unknown): string[] {
     !(Array.isArray(p.runPartsRemoved) && p.runPartsRemoved.every((k) => typeof k === 'string'))
   )
     errs.push('Invalid removed run parts');
+  if (p.models !== undefined) {
+    if ((p.schemaVersion as number) < MODELS_SINCE)
+      errs.push(`3D models need project schemaVersion ${MODELS_SINCE}`);
+    errs.push(...validateModelItems(p.models, ids));
+  }
   return errs;
 }

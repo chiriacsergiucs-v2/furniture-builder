@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { exportFusionPython } from '../../core/fusion';
 import { withPictures } from '../../persist/images';
+import { withModels } from '../../persist/models';
 import { useDesign } from '../../store/designStore';
 import { Icon } from '../icons';
 import { download, downloadFrontSvg, fileName } from './files';
@@ -73,7 +74,7 @@ export function MoreMenu({
                 download(
                   `${fileName(project.name)}-project.json`,
                   JSON.stringify(
-                    await withPictures(project, [
+                    await withPictures(await withModels(project), [
                       ...project.items.map((i) => i.design),
                       { materials: (project.runParts ?? []).map((r) => r.material) },
                     ]),
