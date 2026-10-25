@@ -12,6 +12,7 @@ import { mergeItems } from '../core/merge';
 import { closeOutline, DEFAULT_ROOM_HEIGHT, snapCorner, type Pt, type Room } from '../core/room';
 import {
   buildProjectModel,
+  PROJECT_SCHEMA,
   dragPosition,
   liftOff,
   makeItem,
@@ -199,6 +200,7 @@ export const useDesign = create<State>((set, get) => {
     // Pieces on or above others follow them (ADR-031); run parts follow the pieces in the same step (ADR-061).
     const stamped = {
       ...refreshRunParts(resolvePlacements(next)),
+      schemaVersion: PROJECT_SCHEMA, // an edited project is saved in the current shape (ADR-011, ADR-073)
       updatedAt: new Date().toISOString(),
     };
     const prev = get().project;

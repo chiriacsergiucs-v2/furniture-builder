@@ -48,6 +48,7 @@ import { templateGlyph } from './Templates';
 import { StartFrom } from './Catalog';
 import { askConfirm } from './Confirm';
 import { SaveProjectTemplate } from './ProjectTemplates';
+import { ClearanceFields, ZoneOverlay, ZoneToolbar } from './Clearances';
 
 const FRONT_SIDE: Record<QuarterTurn, string> = {
   0: 'front faces you',
@@ -200,6 +201,7 @@ export function ProjectPanel({
               No piece on its left at this height; set “From left” to place it.
             </p>
           )}
+          <ClearanceFields item={item} />
           <FinishFields item={item} />
           <MergeFields item={item} />
           {piece && (
@@ -646,6 +648,7 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
   const addCorner = useDesign((s) => s.addRoomCorner);
   const tapping = !!placing || !!drawing;
   const moveItemBy = useDesign((s) => s.moveItemBy);
+  const [showZones, setShowZones] = useState(false);
   /** The press or drag in progress (ADR-065); the ref keeps pointer handlers in step between renders. */
   const [pressed, setDragState] = useState<DragGesture | null>(null);
   // Tap modes (placing a new piece, drawing the room) turn dragging off (ADR-056, ADR-059).
@@ -694,14 +697,10 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
   const dragged = drag?.dragging ? pm.pieces.find((pc) => pc.item.id === drag.id) : undefined;
   const dropAt = dragged && drag ? dragPosition(dragged.item, drag.dx, drag.dz) : null;
   const pts = [...(room?.outline ?? []), ...(drawing ?? [])];
-  const xs = [
-      ...pm.pieces.flatMap((p) => [p.bounds.x, p.bounds.x + p.bounds.w]),
-      ...pts.map((p) => p[0]),
-    ],
-    zs = [
-      ...pm.pieces.flatMap((p) => [p.bounds.z, p.bounds.z + p.bounds.d]),
-      ...pts.map((p) => p[1]),
-    ];
+  // With Clearances on, the view also frames the zones (chair or service space beyond the pieces).
+  const framed = showZones ? pm.zones.map((z) => z.box) : pm.pieces.map((p) => p.bounds);
+  const xs = [...framed.flatMap((b) => [b.x, b.x + b.w]), ...pts.map((p) => p[0])],
+    zs = [...framed.flatMap((b) => [b.z, b.z + b.d]), ...pts.map((p) => p[1])];
   const x0 = Math.min(0, ...xs),
     x1 = Math.max(1000, ...xs),
     z0 = Math.min(0, ...zs),
@@ -720,7 +719,8 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
           ? [b.x, b.z, b.x + b.w, b.z]
           : [b.x, b.z, b.x, b.z + b.d];
   return (
-    <figure className="plan" aria-label="Room plan, seen from above. Select a piece.">
+    <figure className="plan has-tools" aria-label="Room plan, seen from above. Select a piece.">
+      <ZoneToolbar on={showZones} onChange={setShowZones} />
       <svg
         ref={svgRef}
         viewBox={`${x0 - pad * 1.2} ${z0 - pad * 1.6} ${x1 - x0 + pad * 2.4} ${z1 - z0 + pad * 2.8}`}
@@ -855,6 +855,7 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
             </g>
           );
         })}
+        {showZones && <ZoneOverlay zones={pm.zones} fs={fs} />}
         {pm.blocked
           .filter((c) => c.itemId === selectedId)
           .map((c, i) => (

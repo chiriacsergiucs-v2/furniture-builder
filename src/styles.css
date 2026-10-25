@@ -4549,3 +4549,81 @@ button.tile:hover {
     white-space: nowrap;
   }
 }
+
+/* Clearances overlay on the plan (ADR-073) --------------------------------- */
+.plan.has-tools {
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+.plan-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2) var(--s-4);
+}
+.zone-legend {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+  font-size: var(--fs-xs);
+  color: var(--ink-2);
+}
+.zone-legend .key::before {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 6px;
+  vertical-align: -2px;
+  border: 2px solid currentColor;
+  background: repeating-linear-gradient(45deg, currentColor 0 2px, transparent 2px 5px);
+}
+.zone-legend .key.none {
+  color: var(--ok);
+}
+.zone-legend .key.warning {
+  color: var(--warn);
+}
+.zone-legend .key.error {
+  color: var(--error);
+}
+.plan .zones {
+  pointer-events: none;
+}
+.plan .zone rect {
+  fill-opacity: 0.85;
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+.plan .zone.none rect {
+  stroke: var(--ok);
+}
+.plan .zone.warning rect {
+  stroke: var(--warn);
+  stroke-width: 2.5;
+}
+.plan .zone.error rect {
+  stroke: var(--error);
+  stroke-width: 3;
+}
+.plan .zone.body rect {
+  fill-opacity: 0.45;
+}
+.plan .hatch.none {
+  stroke: var(--ok);
+}
+.plan .hatch.warning {
+  stroke: var(--warn);
+}
+.plan .hatch.error {
+  stroke: var(--error);
+}
+.plan .zone text {
+  fill: var(--ink);
+  font-family: var(--font);
+  font-weight: 600;
+}
+.zone-fields {
+  display: grid;
+  gap: var(--s-2);
+}
