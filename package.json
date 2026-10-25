@@ -19,7 +19,8 @@
     "test": "vitest run",
     "catalog:docs": "UPDATE_CATALOG_DOC=1 vitest run tests/catalog.test.ts",
     "catalog:snapshots": "WRITE_SNAPSHOTS=1 vitest run tests/snapshots.test.ts",
-    "docs:check": "python3 -I scripts/check-docs.py"
+    "docs:check": "python3 -I scripts/check-docs.py && python3 -I -m unittest discover -s scripts -p 'test_*.py' -q",
+    "gaps": "python3 -I scripts/gaps.py"
   },
   "dependencies": {
     "@fontsource/barlow": "5.3.0",

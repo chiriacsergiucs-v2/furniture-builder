@@ -141,6 +141,9 @@ if [ -n "$stale" ]; then
   echo "$stale"
 fi
 
+# --- 6. gaps moved into this ADR become Done (ADR-082) ---------------------
+python3 -I scripts/gaps.py sync
+
 echo
 echo "Done. Moved to $dst and updated links."
 echo
