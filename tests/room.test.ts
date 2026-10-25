@@ -4,9 +4,12 @@ import {
   buildProjectModel,
   makeItem,
   newProject,
+  PROJECT_SCHEMA,
   validateProject,
   type Project,
 } from '../src/core/project';
+import { findFamily } from '../src/core/catalog';
+import type { Design } from '../src/core/types';
 import {
   closeOutline,
   doorSwing,
@@ -14,6 +17,7 @@ import {
   inside,
   outlineIssues,
   rectInside,
+  roomDisplayBoxes,
   roomFrontView,
   setWallLength,
   shapeOutline,
@@ -308,5 +312,104 @@ describe('closing a drawn room near the first corner', () => {
   it("a corner within 50 mm of the first corner's line lands on it", () => {
     expect(snapCorner([4200, 3000], 12, 3003, 10, [0, 0])).toEqual([0, 3000]);
     expect(snapCorner([4200, 3000], 70, 3003, 10, [0, 0])).toEqual([70, 3000]);
+  });
+});
+
+describe('pipes and outlets (ADR-072)', () => {
+  const kitchen = (fam: string, v: string) =>
+    findFamily(fam)!.variants.find((x) => x.id === v)!.create!();
+  const withDesigns = (designs: Design[], room: Room): Project => {
+    let p = newProject('Services');
+    for (const d of designs) p = { ...p, items: [...p.items, makeItem(p, d)] };
+    return { ...p, room };
+  };
+  const pipe = feat({
+    id: 'p',
+    kind: 'pipe',
+    from: 200,
+    width: 100,
+    sill: 300,
+    height: 100,
+    depth: 0,
+    label: 'Pipe 1',
+  });
+  const outlet = feat({
+    id: 'o',
+    kind: 'outlet',
+    from: 200,
+    width: 80,
+    sill: 1200,
+    height: 80,
+    depth: 0,
+    label: 'Outlet 1',
+  });
+
+  it('new projects are at the current version; version 1 and 2 files validate and round-trip', () => {
+    expect(newProject().schemaVersion).toBe(PROJECT_SCHEMA);
+    expect(PROJECT_SCHEMA).toBe(2);
+    const p = proj(['base-door'], { ...rect(), features: [pipe, outlet] });
+    expect(validateProject(p)).toEqual([]);
+    const back = JSON.parse(JSON.stringify(p)) as Project;
+    expect(back.room!.features.map((f) => f.kind)).toEqual(['pipe', 'outlet']);
+    expect(validateProject(back)).toEqual([]);
+    // A version-1 project (as saved before) still loads unchanged.
+    const v1 = { ...proj(['base-door'], rect()), schemaVersion: 1 as const };
+    expect(validateProject(v1)).toEqual([]);
+    expect(buildProjectModel(v1).diagnostics).toEqual([]);
+    expect(validateProject({ ...p, schemaVersion: 99 })).toContain(
+      'Unsupported project schemaVersion',
+    );
+    expect(
+      validateProject({ ...p, room: { ...rect(), features: [{ ...pipe, kind: 'tap' }] } }),
+    ).toContain('Invalid room feature');
+  });
+
+  it('a base unit with a back over a pipe warns; a sink base (no back) does not', () => {
+    const base = withDesigns([t('base-door')], { ...rect(), features: [pipe] });
+    const d = buildProjectModel(base).diagnostics.filter((x) => x.code === 'covers-service');
+    expect(d).toHaveLength(1);
+    expect(d[0].severity).toBe('warning');
+    expect(d[0].message).toMatch(/^Pipe behind .+ \(Pipe 1\): cut the back or move the piece\.$/);
+    const sink = withDesigns([kitchen('sink-base', 'sink-2-doors')], {
+      ...rect(),
+      features: [pipe],
+    });
+    expect(codes(sink)).toEqual([]);
+    // Moved along the wall, clear of the piece: no warning.
+    expect(
+      codes(withDesigns([t('base-door')], { ...rect(), features: [{ ...pipe, from: 2000 }] })),
+    ).toEqual([]);
+  });
+
+  it('an outlet hidden behind a tall unit warns; above a base unit it does not', () => {
+    const tall = withDesigns([kitchen('tall-cabinet', 'tall-pantry')], {
+      ...rect(),
+      features: [outlet],
+    });
+    const d = buildProjectModel(tall).diagnostics;
+    expect(d.map((x) => x.code)).toEqual(['outlet-hidden']);
+    expect(d[0].severity).toBe('warning');
+    expect(d[0].message).toMatch(/^Outlet 1 is hidden behind .+: move the outlet or the piece\.$/);
+    expect(
+      codes(withDesigns([kitchen('sink-base', 'sink-2-doors')], { ...rect(), features: [outlet] })),
+    ).toEqual([]);
+    // Low behind a base unit's back: the back covers it (not "hidden", a base unit is no tall unit).
+    const low = buildProjectModel(
+      withDesigns([t('base-door')], { ...rect(), features: [{ ...outlet, sill: 300 }] }),
+    ).diagnostics;
+    expect(low.map((x) => x.code)).toEqual(['covers-service']);
+    expect(low[0].message).toMatch(
+      /^Outlet behind .+ \(Outlet 1\): cut the back or move the piece\.$/,
+    );
+  });
+
+  it('pipes and outlets are no openings in the 3D walls and show in the front view', () => {
+    const r = { ...rect(), features: [pipe, outlet] };
+    expect(roomDisplayBoxes(r).walls).toEqual(roomDisplayBoxes(rect()).walls);
+    expect(roomFrontView(r)!.features.map((f) => [f.kind, f.y, f.h])).toEqual([
+      ['pipe', 300, 100],
+      ['outlet', 1200, 80],
+    ]);
+    expect(featureBox(r, pipe)).toEqual({ x: 200, y: 300, z: 0, w: 100, h: 100, d: 50 });
   });
 });
