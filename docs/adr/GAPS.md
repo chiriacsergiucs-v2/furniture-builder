@@ -474,3 +474,39 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: “items from it can be used to add as a new adr or mark as acknowledged and accepted”
 - Questions: Is the file enough, or do you want a page (in the app, or an artifact) where you can mark gaps acknowledged or promote them?
 - Suggested pick: The file, edited through Claude ("acknowledge G-012", "make ADR from G-007"); a page only if you want to triage on the phone without a session (estimate for a page: effort +40%, value +15%)
+
+### G-051: Count stepper not over the 3D view
+
+- Status: Open
+- Origin: ADR-083, 2026-10-25; agent scoped it out
+- Missing: No stepper over the 3D view; ADR-014 says the 3D viewer only selects, never edits.
+- Request: “Divider(horizontal and vertical)/drawer/shelf/all other applicable pleces based on configuration + currentNuber - … Placement: above the selected piece”
+- Questions: Show the stepper over the 3D view too (needs a new ADR changing ADR-014)?
+- Suggested pick: No: the stepper floats over the front drawing, which is shown next to 3D in Both (ADR-081); 3D stays select-only (estimate for 3D: effort +40%, value +10%)
+
+### G-052: Count stepper only for cabinet spaces
+
+- Status: Open
+- Origin: ADR-083, 2026-10-25; agent scoped it out
+- Missing: Products without spaces (frame, panel set, single panel) and project-plan items get no stepper; desk pedestals and corner wings get it through their cabinet spaces only.
+- Request: “Divider(horizontal and vertical)/drawer/shelf/all other applicable pleces based on configuration + currentNuber - … Placement: above the selected piece”
+- Questions: Which counts outside cabinet spaces should step (e.g. frame slats, panel-set copies, desk pedestals)?
+- Suggested pick: Name the ones you use; each is a small add once the stepper exists (estimate per family: effort +10%, value +5%)
+
+### G-053: Which bay the divider stepper adds or removes
+
+- Status: Open
+- Origin: ADR-083, 2026-10-25; agent scoped it out
+- Missing: Open question default: + on dividers adds the new bay at the end (right / bottom) with 2 shelves, like the existing Add button; - removes the last bay with its contents (undo restores it); - at 1 divider leaves one space holding the first bay's contents.
+- Request: “Divider(horizontal and vertical)/drawer/shelf/all other applicable pleces based on configuration + currentNuber - … Placement: above the selected piece”
+- Questions: Where does + add and - remove: at the end, or next to the selected bay? What goes in a new bay: empty, or a copy of its neighbour?
+- Suggested pick: End, with 2 shelves like the existing Add button (consistent with what the app does today; next-to-selection is estimated +15% effort for +5% value)
+
+### G-054: Acceptance level for the count stepper
+
+- Status: Open
+- Origin: ADR-083, 2026-10-25; agent scoped it out
+- Missing: Open question default: full acceptance (find-it script at 390 and 1280 px).
+- Request: “Divider(horizontal and vertical)/drawer/shelf/all other applicable pleces based on configuration + currentNuber - … Placement: above the selected piece”
+- Questions: Full find-it acceptance or light (ADR-066)?
+- Suggested pick: Full: the request is a visible control and R3 is the default (light saves an estimated 20% effort, adds no value)
