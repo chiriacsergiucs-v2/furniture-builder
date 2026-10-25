@@ -4549,3 +4549,35 @@ button.tile:hover {
     white-space: nowrap;
   }
 }
+
+/* 23. Plan snapping (ADR-070) ------------------------------------------------- */
+/* The Snap toggle above the plan; a snapped preview is drawn in the ok colour (yellow marks fronts). */
+.plan.with-tools {
+  grid-template-rows: auto 1fr auto;
+}
+.plan-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2) var(--s-3);
+  min-width: 0;
+}
+.plan-tools-note {
+  flex: 1 1 200px;
+  min-width: 0;
+  font-size: var(--fs-xs);
+  color: var(--ink-2);
+}
+.plan .snap-toggle[aria-pressed='true'] {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  color: var(--ink);
+}
+.plan .drag-ghost.snapped rect {
+  fill: var(--ok-soft);
+  stroke: var(--ok);
+  stroke-width: 3;
+}
+.plan .drag-ghost .snap-label {
+  fill: var(--ink-2);
+}

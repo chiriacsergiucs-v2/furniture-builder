@@ -3,7 +3,6 @@ import { projectBoards, roleBoard, type FinishRole, type FinishScope } from '../
 import { decorPatch, type Decor } from '../core/materials';
 import { mergeCandidates } from '../core/merge';
 import {
-  dragPosition,
   leftNeighbour,
   materialKey,
   placementBases,
@@ -14,6 +13,7 @@ import {
   type ProjectModel,
   type QuarterTurn,
 } from '../core/project';
+import { dropTarget, SNAP_RANGE } from '../core/snap';
 import type { Material, Panel } from '../core/types';
 import { listDecors, listDesigns, loadDesign, type StoredDesign } from '../persist/db';
 import { useDesign } from '../store/designStore';
@@ -26,6 +26,7 @@ import {
   type DragGesture,
   type PointerAt,
 } from './planDrag';
+import { useSnap } from './useSnap';
 import {
   DEFAULT_ROOM_HEIGHT,
   doorSwing,
@@ -651,21 +652,40 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
   // Tap modes (placing a new piece, drawing the room) turn dragging off (ADR-056, ADR-059).
   const drag = tapping ? null : pressed;
   const dragRef = useRef<DragGesture | null>(null);
-  const setDrag = (g: DragGesture | null) => {
+  // Snapping (ADR-070): the Snap toggle, and Alt held while dragging to place freely.
+  const project = useDesign((s) => s.project);
+  const [snapOn, setSnapOn] = useSnap();
+  const [alt, setAlt] = useState(false);
+  const setDrag = (g: DragGesture | null, altKey = false) => {
+    // Alt is read when a press starts and forgotten when it ends, so a missed keyup never carries over.
+    if (!dragRef.current || !g) setAlt(altKey);
     dragRef.current = g;
     setDragState(g);
   };
+  const dragging = !!drag;
   useEffect(() => {
-    if (!drag) return;
+    if (!dragging) return;
     const onEsc = (e: globalThis.KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
         setDrag(null);
       }
     };
+    const onAlt = (e: globalThis.KeyboardEvent) => {
+      if (e.key === 'Alt') {
+        e.preventDefault();
+        setAlt(e.type === 'keydown');
+      }
+    };
     window.addEventListener('keydown', onEsc);
-    return () => window.removeEventListener('keydown', onEsc);
-  }, [drag]);
+    window.addEventListener('keydown', onAlt);
+    window.addEventListener('keyup', onAlt);
+    return () => {
+      window.removeEventListener('keydown', onEsc);
+      window.removeEventListener('keydown', onAlt);
+      window.removeEventListener('keyup', onAlt);
+    };
+  }, [dragging]);
   // Chrome ignores `touch-action` on SVG shapes, so a touch drag on a piece would start a page scroll and cancel the
   // pointer. While a piece is pressed, touchmove is prevented (non-passive) so the drag keeps the pointer.
   useEffect(() => {
@@ -692,7 +712,10 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
     room: toRoom(e),
   });
   const dragged = drag?.dragging ? pm.pieces.find((pc) => pc.item.id === drag.id) : undefined;
-  const dropAt = dragged && drag ? dragPosition(dragged.item, drag.dx, drag.dz) : null;
+  const target =
+    dragged && drag && project
+      ? dropTarget(project, pm.pieces, drag.id, drag.dx, drag.dz, snapOn && !alt)
+      : null;
   const pts = [...(room?.outline ?? []), ...(drawing ?? [])];
   const xs = [
       ...pm.pieces.flatMap((p) => [p.bounds.x, p.bounds.x + p.bounds.w]),
@@ -720,7 +743,26 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
           ? [b.x, b.z, b.x + b.w, b.z]
           : [b.x, b.z, b.x, b.z + b.d];
   return (
-    <figure className="plan" aria-label="Room plan, seen from above. Select a piece.">
+    <figure className="plan with-tools" aria-label="Room plan, seen from above. Select a piece.">
+      <div className="plan-tools">
+        <button
+          type="button"
+          className="btn sm outline snap-toggle"
+          aria-pressed={snapOn}
+          onClick={() => setSnapOn(!snapOn)}
+        >
+          Snap
+        </button>
+        <span className="plan-tools-note" role="status" aria-live={drag ? 'off' : 'polite'}>
+          {target
+            ? target.snap
+              ? `Snaps: ${[target.snap.label, ...target.snap.notes].join(' · ')}`
+              : (target.hint ?? (snapOn ? 'Alt held: placing freely.' : 'Snap is off.'))
+            : snapOn
+              ? `Snaps within ${SNAP_RANGE} mm to walls and neighbours; hold Alt to place freely.`
+              : 'Pieces go exactly where dropped.'}
+        </span>
+      </div>
       <svg
         ref={svgRef}
         viewBox={`${x0 - pad * 1.2} ${z0 - pad * 1.6} ${x1 - x0 + pad * 2.4} ${z1 - z0 + pad * 2.8}`}
@@ -814,7 +856,7 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
                       const g = pressPiece(null, pc.item.id, at(e));
                       if (!g) return;
                       e.currentTarget.setPointerCapture?.(e.pointerId);
-                      setDrag(g);
+                      setDrag(g, e.altKey);
                     }
               }
               onPointerMove={
@@ -825,6 +867,7 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
                       if (!g || g.id !== pc.item.id) return;
                       const next = movePointer(g, at(e));
                       if (next !== g) setDrag(next);
+                      if (e.altKey !== alt) setAlt(e.altKey);
                     }
               }
               onPointerUp={(e) => {
@@ -836,7 +879,21 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
                 // A tap mode that started during the press ends the drag without moving anything.
                 if (tapping) return;
                 select(end.id);
-                if (end.kind === 'drop') moveItemBy(end.id, end.dx, end.dz);
+                if (end.kind !== 'drop') return;
+                const snapping = snapOn && !e.altKey;
+                const t =
+                  snapping && project
+                    ? dropTarget(project, pm.pieces, end.id, end.dx, end.dz, true)
+                    : null;
+                // Snap off or Alt held: exactly the ADR-065 drop. Snapped: whole mm, one undo step.
+                if (!t?.snap) moveItemBy(end.id, end.dx, end.dz);
+                else
+                  moveItemBy(
+                    end.id,
+                    t.position.x - pc.item.position.x,
+                    t.position.z - pc.item.position.z,
+                    1,
+                  );
               }}
               onPointerCancel={() => setDrag(null)}
             >
@@ -869,21 +926,22 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
               <title>Needed to open; something is in the way</title>
             </rect>
           ))}
-        {dragged && dropAt && (
-          <g className="drag-ghost" aria-hidden="true">
-            <rect
-              x={dragged.bounds.x + dropAt.x - dragged.item.position.x}
-              y={dragged.bounds.z + dropAt.z - dragged.item.position.z}
-              width={dragged.bounds.w}
-              height={dragged.bounds.d}
-            />
-            <text
-              x={dragged.bounds.x + dropAt.x - dragged.item.position.x}
-              y={dragged.bounds.z + dropAt.z - dragged.item.position.z - fs * 0.5}
-              fontSize={fs}
-            >
-              From left {dropAt.x} · From back {dropAt.z} mm
+        {target && (
+          <g className={`drag-ghost ${target.snap ? 'snapped' : ''}`} aria-hidden="true">
+            <rect x={target.box.x} y={target.box.z} width={target.box.w} height={target.box.d} />
+            <text x={target.box.x} y={target.box.z - fs * 0.5} fontSize={fs}>
+              From left {target.position.x} · From back {target.position.z} mm
             </text>
+            {target.snap && (
+              <text
+                className="snap-label"
+                x={target.box.x}
+                y={target.box.z + target.box.d + fs * 1.2}
+                fontSize={fs}
+              >
+                {[target.snap.label, ...target.snap.notes].join(' · ')}
+              </text>
+            )}
           </g>
         )}
         {placing && hover && (
@@ -921,7 +979,8 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
       <figcaption>
         Seen from above. The yellow edge is each piece's front; dashed pieces hang on the wall; red
         dashes show where a selected piece's doors or drawers cannot open. Drag a piece, or use the
-        arrow keys on it, to move it; Esc cancels a drag.
+        arrow keys on it, to move it; Esc cancels a drag. With Snap on, a dropped piece joins a
+        wall, an inside corner or a neighbour’s side within {SNAP_RANGE} mm; arrow keys never snap.
       </figcaption>
     </figure>
   );
