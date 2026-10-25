@@ -477,21 +477,23 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-051: Tap on the innermost selected space
 
-- Status: Open
+- Status: ADR-083
 - Origin: ADR-083, 2026-10-25, open question (Claude default)
 - Missing: What a tap on the already selected innermost space does
 - Request: The flow of selecting the furniture, then the middle (given there are 2 dividers), then having a horizontal divider, then selecting the bottom one to adjust shelves is a painful horrible user experience. Adjust the selecting to go from bigger to smaller. 1 click = entire furniture, second click selects the smaller frame, third again the smaller within, iteratively.
 - Questions: Stay on the innermost space, or wrap back to the whole piece?
 - Suggested pick: Stay on the innermost space, so a repeated tap while adjusting shelves never loses the selection (estimate)
+- Answer: User 2026-10-25: "1 wrap back" — wrap back to the whole piece; built in ADR-083.
 
 ### G-052: Drill-down across project and piece
 
-- Status: Open
+- Status: ADR-083
 - Origin: ADR-083, 2026-10-25, open question (Claude default)
 - Missing: Drill-down from the project plan/3D into a piece's spaces
 - Request: The flow of selecting the furniture, then the middle (given there are 2 dividers), then having a horizontal divider, then selecting the bottom one to adjust shelves is a painful horrible user experience. Adjust the selecting to go from bigger to smaller. 1 click = entire furniture, second click selects the smaller frame, third again the smaller within, iteratively.
 - Questions: In a project, does the 2nd tap on a selected piece open it in the editor with the bay under the tap selected, or keep today's separate edit step?
 - Suggested pick: Continue drilling into the piece (2nd tap opens it with the bay selected): closest to '1 click = entire furniture'; estimate +30 % work, +25 % of value
+- Answer: User 2026-10-25: "2 yes" — the 2nd tap on a selected piece opens it with the space under the tap selected; built in ADR-083.
 
 ### G-053: Step back up one level without the breadcrumb
 

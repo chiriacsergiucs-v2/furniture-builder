@@ -31,7 +31,7 @@ Selection follows the space tree from the outside in, one level per tap, at the 
   - current selection on the path: its child on the path (one level smaller);
   - current selection off the path (a tap elsewhere): the deepest node on the path that is an ancestor of the current
     selection, then one level down — so a tap on a sibling bay selects that sibling, not the whole piece again;
-  - current selection is the leaf: stays (G-051).
+  - current selection is the innermost space at the point: back to the whole piece (user 2026-10-25, G-051).
 - "Nothing selected" becomes a state of its own (`selectedId: undefined`), distinct from "whole piece" (`null`), so the
   first tap is visibly the whole piece (outline round the piece, inspector shows the piece). Store change only; the
   design document and `FurnitureModel` do not change (no ADR-011 bump).
@@ -40,20 +40,22 @@ Selection follows the space tree from the outside in, one level per tap, at the 
   the centre of the current selection; the breadcrumb keeps going up.
 - 3D (`src/viewer/Viewer3D.tsx`): the hit point (`e.point`, converted to mm, x and y) goes through the same
   `pathAt`/`nextSelection`; a tap on empty space clears the selection (as today). Still select-only (ADR-014).
-- Project view: unchanged in this ADR — a tap selects the piece (G-052).
+- Project view (user 2026-10-25, G-052): the 1st tap on a piece (plan, room front view or 3D) selects it as today;
+  a 2nd tap on the selected piece opens it in the piece editor with the first level under the tap selected (the tap
+  point is mapped back into the piece through its position and quarter turn). The plan, seen from above, has no
+  height, so there the 2nd tap opens the piece with the whole piece selected.
 
 ## Alternatives considered
 
 - **Double tap to enter a group (Figma style)** — two gestures to learn; double tap zooms on phones.
 - **Keep leaf-first, add an "up one level" button** — keeps the long route the user called painful.
-- **Tap cycles through all levels at the point, wrapping** — same as the decision except at the leaf; kept as G-051.
+- **Stay on the innermost space after the last level** — the user chose wrapping back to the whole piece (G-051).
 
 ## Scope
 
-- In scope: drill-down selection in the piece editor's front view and 3D view, `selectPath.ts` with tests, the
-  "nothing selected" state, the whole-piece outline, find-it script.
-- Out of scope: a gesture to step back up one level besides the breadcrumb (G-053); drilling from the project plan
-  into a piece (G-052).
+- In scope: drill-down selection in the piece editor's front view and 3D view, the 2nd tap in a project opening the
+  piece (G-052), `selectPath.ts` with tests, the "nothing selected" state, the whole-piece outline, find-it script.
+- Out of scope: a gesture to step back up one level besides the breadcrumb (G-053).
 
 ## Consequences
 
@@ -65,7 +67,7 @@ Selection follows the space tree from the outside in, one level per tap, at the 
 ## Done when
 
 - [ ] `tests/select-path.test.ts`: on a piece with 2 vertical dividers and a horizontal divider in the middle bay,
-      taps at one point select whole piece → middle bay → bottom space; a 4th tap stays on the bottom space.
+      taps at one point select whole piece → middle bay → bottom space; a 4th tap selects the whole piece again.
 - [ ] Same test: with the middle bay selected, a tap in the left bay selects the left bay; with nothing selected, a tap
       selects the whole piece; a point outside the piece selects nothing.
 - [ ] The same sequence works from 3D hit points (unit test on the mm conversion feeding `pathAt`).
@@ -73,11 +75,6 @@ Selection follows the space tree from the outside in, one level per tap, at the 
 - [ ] `tools/drill-select/find-it.mjs` on the production build, at 390 px and 1280 px: from the bare app, open a piece,
       tap the front view three times at one point and find the inspector text for the whole piece, then the bay, then
       the inner space.
+- [ ] In a project, a 2nd tap on the selected piece opens it with the space under the tap selected, also for a piece
+      turned 90° (store test).
 - [ ] `pnpm lint`, `format:check`, `typecheck`, `test`, `build`, `docs:check` pass.
-
-## Open questions
-
-- Tap on the already selected innermost space: stays (default) or wraps back to the whole piece? (G-051)
-- In a project, should the 2nd tap on a selected piece open it in the editor with the bay under the tap selected?
-  Recommended: yes, closest to "1 click = entire furniture"; estimate +30 % work, +25 % of value. Default until
-  answered: project view unchanged. (G-052)
