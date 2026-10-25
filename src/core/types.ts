@@ -218,6 +218,12 @@ export interface Diagnostic {
   message: string;
   nodeId?: string;
   panelIds?: string[];
+  /** Project pieces involved (ADR-071): the problem piece is listed last. */
+  itemIds?: string[];
+  /** Where the problem is, room mm (ADR-071): the overlap, the blocked zone or the piece outside the room. */
+  box?: Box;
+  /** How much, mm (ADR-071): the overlap, the missing opening space or the distance outside the room. */
+  amount?: Mm;
 }
 
 /** The clear interior of an editable space, for selection and labelling. */

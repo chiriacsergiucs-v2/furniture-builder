@@ -27,7 +27,7 @@ import {
 import { bandKey, cutlist, hardwareSummary, type CutRow } from './cutlist';
 import { bandFor, bandProblems, bandText } from './materials';
 import { DEFAULT_KERF, newId, sheetOf, upgradeDesign, validateDesign } from './design';
-import { cutDimensions, overlaps, union } from './geometry';
+import { cutDimensions, intersection, overlaps, union } from './geometry';
 import { aabbOf, overlapsBox, panelsOverlap, turnShape } from './shape';
 import type { SheetSettings } from './nesting';
 import { jobsFromCutlist } from './nesting';
@@ -530,13 +530,20 @@ export function buildProjectModel(input: Project): ProjectModel {
       if (!overlaps(pieces[a].bounds, pieces[b].bounds)) continue;
       const hit = pieces[a].panels.find((p) => pieces[b].panels.some((q) => panelsOverlap(p, q)));
       if (hit) overlapping.add(pieces[a].item.id).add(pieces[b].item.id);
-      if (hit)
+      if (hit) {
+        // Where and how much (ADR-071): the shared part of their outlines, and its thinnest side (the shortest way out).
+        const box = intersection(pieces[a].bounds, pieces[b].bounds);
+        const amount = Math.min(box.w, box.h, box.d);
         diagnostics.push({
           severity: 'error',
           code: 'pieces-overlap',
-          message: `${pieces[a].item.design.name} and ${pieces[b].item.design.name} overlap in the room.`,
+          message: `${pieces[a].item.design.name} and ${pieces[b].item.design.name} overlap by ${amount} mm in the room.`,
           nodeId: pieces[b].item.id,
+          itemIds: [pieces[a].item.id, pieces[b].item.id],
+          box,
+          amount,
         });
+      }
     }
   for (const pc of pieces)
     if (pc.bounds.y < 0)
@@ -775,24 +782,33 @@ function openingChecks(
           .filter((q) => !q.id.startsWith(own) && overlapsBox(q, c.box))
           .map((q) => ({
             box: aabbOf(q),
+            itemId: q.id.startsWith('run:')
+              ? undefined
+              : pieces.find((o) => q.id.startsWith(`${o.item.id}:`))?.item.id,
             name: q.id.startsWith('run:')
               ? q.label
               : (pieces.find((o) => q.id.startsWith(`${o.item.id}:`))?.item.design.name ?? q.label),
           })),
         ...obstacles
           .filter((o) => overlaps(o.box, c.box))
-          .map((o) => ({ box: o.box, name: o.label })),
+          .map((o) => ({ box: o.box, itemId: undefined, name: o.label })),
       ];
       if (!hits.length) continue;
       const near = hits.reduce((a, b) =>
         freeBefore(c, pc.facing, b.box) < freeBefore(c, pc.facing, a.box) ? b : a,
       );
       blocked.push({ itemId: pc.item.id, box: c.box });
+      const free = freeBefore(c, pc.facing, near.box);
       diagnostics.push({
         severity: 'warning',
         code: 'opening-blocked',
-        message: `${c.label} of ${pc.item.design.name} cannot open fully: it hits ${near.name} (needs ${c.need} mm, ${freeBefore(c, pc.facing, near.box)} mm free).`,
+        message: `${c.label} of ${pc.item.design.name} cannot open fully: it hits ${near.name} (needs ${c.need} mm, ${free} mm free).`,
         nodeId: pc.item.id,
+        // ADR-071: the front, the piece in the way (when it is one), the blocked zone and the space missing.
+        panelIds: [c.panelId],
+        itemIds: near.itemId ? [near.itemId, pc.item.id] : [pc.item.id],
+        box: intersection(c.box, near.box),
+        amount: c.need - free,
       });
     }
   }

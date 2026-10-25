@@ -24,6 +24,7 @@ import { useView } from './useView';
 import { Elevation } from './Elevation';
 import { Inspector, selectionLabel } from './Inspector';
 import { Output } from './Output';
+import { useProblem } from './problemStore';
 import { PrintSheet } from './PrintSheet';
 import { Icon } from './icons';
 import { setTheme, useTheme } from './useTheme';
@@ -199,6 +200,24 @@ export function App() {
     setLastSel(selKey);
     if (selKey && !tapMode) setSheetOpen(true);
   }
+  // A project check tapped under Checks (ADR-071) is shown on the plan: the drawing comes forward, the sheet steps aside.
+  const problemTap = useProblem((s) => s.tapped);
+  const [lastProblemTap, setLastProblemTap] = useState(problemTap);
+  if (problemTap !== lastProblemTap) {
+    setLastProblemTap(problemTap);
+    if (inProject) {
+      setView('front');
+      setSheetOpen(false);
+    }
+  }
+  const seenProblemTap = useRef(problemTap);
+  useEffect(() => {
+    if (problemTap === seenProblemTap.current) return;
+    seenProblemTap.current = problemTap;
+    // On a phone Build & Preview shows 3D only: the plan is in Compose.
+    if (window.matchMedia?.('(max-width: 760px)').matches && useUi.getState().mode === 'build')
+      useUi.getState().setMode('compose');
+  }, [problemTap]);
   useEffect(() => {
     if (tapMode) useUi.getState().setMode('compose');
   }, [tapMode]);

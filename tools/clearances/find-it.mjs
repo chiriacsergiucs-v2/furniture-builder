@@ -211,7 +211,11 @@ for (const width of [1440, 375]) {
   await closeSheet();
   await shot('overlap-error');
   const t2 = await checksText();
-  check(width, 'Checks says they "overlap in the room"', /overlap in the room/.test(t2));
+  check(
+    width,
+    'Checks says they "overlap by … mm in the room" (wording since ADR-071)',
+    /overlap by \d+ mm in the room/.test(t2),
+  );
 
   // 4b. Installation: a wardrobe in a room 1 mm higher than the wardrobe cannot be tipped up (a warning), and
   // marked "Assembled lying down" it is an error.
