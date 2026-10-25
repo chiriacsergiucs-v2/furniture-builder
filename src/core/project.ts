@@ -5,7 +5,7 @@
  */
 import { buildModel } from './build';
 import { localClearances, type Clearance } from './clearance';
-import { roomChecks, validateRoom, type Room } from './room';
+import { outlineIssues, roomChecks, serviceChecks, validateRoom, type Room } from './room';
 import { bandKey, cutlist, hardwareSummary, type CutRow } from './cutlist';
 import { bandFor, bandProblems, bandText } from './materials';
 import { DEFAULT_KERF, newId, sheetOf, upgradeDesign, validateDesign } from './design';
@@ -82,8 +82,16 @@ export interface RunPart {
   banded: Face[];
 }
 
+/**
+ * Project document versions (ADR-011): new and edited projects are written at `PROJECT_SCHEMA`; every version in
+ * `PROJECT_SCHEMAS` still loads unchanged. 2 = room pipes and outlets (ADR-072).
+ */
+export const PROJECT_SCHEMA = 2;
+export const PROJECT_SCHEMAS: readonly number[] = [1, PROJECT_SCHEMA];
+export type ProjectSchemaVersion = 1 | typeof PROJECT_SCHEMA;
+
 export interface Project {
-  schemaVersion: 1;
+  schemaVersion: ProjectSchemaVersion;
   id: string;
   name: string;
   createdAt: string;
@@ -110,7 +118,7 @@ export interface RunSettings {
 export function newProject(name = 'New project'): Project {
   const now = new Date().toISOString();
   return {
-    schemaVersion: 1,
+    schemaVersion: PROJECT_SCHEMA,
     id: newId(),
     name,
     createdAt: now,
@@ -557,11 +565,25 @@ export function buildProjectModel(input: Project): ProjectModel {
           name: pc.item.design.name,
           bounds: pc.bounds,
           hitsPanels: (b: Box) => pc.panels.some((q) => overlapsBox(q, b)),
+          covers: (b: Box) =>
+            pc.panels.find((q) => COVER_ROLES.has(q.role) && overlapsBox(q, b))?.role ?? null,
           clearances: pc.clearances,
         })),
       )
     : null;
   if (rc) diagnostics.push(...rc.diagnostics, ...rc.clearanceIssues);
+  // Run worktops and plinths over a pipe or outlet (ADR-072).
+  if (project.room && !outlineIssues(project.room.outline).length)
+    for (const rp of project.runParts ?? [])
+      if (COVER_ROLES.has(rp.kind))
+        diagnostics.push(
+          ...serviceChecks(project.room, {
+            id: `run:${rp.id}`,
+            name: rp.label,
+            bounds: rp.box,
+            covers: (b: Box) => (overlaps(rp.box, b) ? rp.kind : null),
+          }),
+        );
   const blocked = openingChecks(pieces, panels, diagnostics, rc?.obstacles ?? []);
   const model: FurnitureModel = {
     panels,
@@ -572,6 +594,9 @@ export function buildProjectModel(input: Project): ProjectModel {
   };
   return { pieces, model, piecePanels, materials: [...materials.values()], diagnostics, blocked };
 }
+
+/** Parts that cover a pipe or outlet behind them (ADR-072). */
+const COVER_ROLES: ReadonlySet<string> = new Set(['back', 'plinth', 'worktop']);
 
 // ---------------------------------------------------------------------------
 // Opening clearance (ADR-057)
@@ -1133,7 +1158,8 @@ const isInt = (v: unknown, min = -1e7) =>
 export function validateProject(p: unknown): string[] {
   if (!isObj(p)) return ['Project must be an object'];
   const errs: string[] = [];
-  if (p.schemaVersion !== 1) errs.push('Unsupported project schemaVersion');
+  if (!PROJECT_SCHEMAS.includes(p.schemaVersion as number))
+    errs.push('Unsupported project schemaVersion');
   if (typeof p.id !== 'string' || !p.id || typeof p.name !== 'string' || !p.name)
     errs.push('Missing project id or name');
   if (
