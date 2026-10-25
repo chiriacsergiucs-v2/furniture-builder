@@ -12,6 +12,7 @@ import {
 import { useDesign } from '../store/designStore';
 import type { Design } from '../core/types';
 import { AddPieceDialog, MaterialsPanel, NewDialog } from './Dialogs';
+import { FastenersPanel } from './Fasteners';
 import { WizardDialog } from './Wizard';
 import { CatalogPage } from './Catalog';
 import { ResearchPage } from './Research';
@@ -613,6 +614,7 @@ export function App() {
                   {sideMode === 'configure' && (
                     <div className="inspector boards">
                       <MaterialsPanel />
+                      <FastenersPanel />
                     </div>
                   )}
                 </>
