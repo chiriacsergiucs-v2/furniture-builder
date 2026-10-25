@@ -1,6 +1,7 @@
 import { cutDimensions } from './geometry';
+import { bandFor, bandText, FRONT_BAND_ROLES } from './materials';
 import { shapeNote } from './shape';
-import type { FurnitureModel, HardwareItem, Material, Mm, Panel } from './types';
+import type { EdgeBand, FurnitureModel, HardwareItem, Material, Mm, Panel } from './types';
 
 /** "Drawer 2 side L" → "Drawer side L" so identical parts share one label. */
 export const baseLabel = (label: string) => label.replace(/\s\d+\b/g, '').trim() || label;
@@ -47,6 +48,10 @@ export interface CutRow {
   drilling: string;
   /** Solid timber: cut from lengths, never nested on sheets (ADR-038). */
   solid?: boolean;
+  /** The edge band named for these parts (ADR-077); absent = not named yet. Sizes never change with it. */
+  band?: EdgeBand;
+  /** The band is the board's separate front band (doors and drawer fronts, ADR-077). */
+  bandFront?: boolean;
   labels: string[];
   panelIds: string[];
 }
@@ -63,7 +68,19 @@ export function cutlist(model: FurnitureModel, materials: Material[]): CutRow[] 
     if (!m) continue;
     const c = cutDimensions(p, m.grain);
     const drilling = drillingText(p);
-    const key = [m.id, c.thickness, c.length, c.width, c.edgesL, c.edgesW, drilling].join('|');
+    const band = bandFor(m, p.role);
+    const bandFront = !!m.frontBand && FRONT_BAND_ROLES.has(p.role);
+    const key = [
+      m.id,
+      c.thickness,
+      c.length,
+      c.width,
+      c.edgesL,
+      c.edgesW,
+      drilling,
+      bandKey(band),
+      bandFront,
+    ].join('|');
     const row = rows.get(key);
     if (row) {
       row.quantity++;
@@ -85,6 +102,8 @@ export function cutlist(model: FurnitureModel, materials: Material[]): CutRow[] 
         labels: [baseLabel(p.label)],
         panelIds: [p.id],
         ...(m.stock === 'solid' ? { solid: true } : {}),
+        ...(band ? { band } : {}),
+        ...(bandFront ? { bandFront } : {}),
       });
     }
   }
@@ -131,10 +150,71 @@ export function edgeBandMeters(model: FurnitureModel, materials: Material[]): Ma
 export function bandMetersFromRows(rows: CutRow[]): Map<string, number> {
   const out = new Map<string, number>();
   for (const r of rows) {
-    const mm = (r.edgesL * r.length + r.edgesW * r.width) * r.quantity;
-    if (mm) out.set(r.materialId, (out.get(r.materialId) ?? 0) + mm / 1000);
+    // With the band's per-edge allowance (ADR-077), so the cut list and the shopping list agree.
+    const m = rowBandMetres(r);
+    if (m) out.set(r.materialId, (out.get(r.materialId) ?? 0) + m);
   }
   return out;
+}
+
+/** Identity of a band spec for grouping ("" = not named). The allowance is not part of what is bought. */
+export const bandKey = (b: EdgeBand | undefined) =>
+  b ? `${b.kind}|${b.thickness}|${b.width}|${b.code ?? ''}` : '';
+
+/** Metres of band to buy for a row: each banded edge plus the band's per-edge allowance (ADR-077, default 0). */
+export function rowBandMetres(r: CutRow): number {
+  const a = r.band?.allowance ?? 0;
+  return ((r.edgesL * (r.length + a) + r.edgesW * (r.width + a)) * r.quantity) / 1000;
+}
+
+/**
+ * The bands a board's banded parts use, for its cut-list header (ADR-077): the board's bands, then separate front
+ * bands (several only when a project merges pieces that name different bands); `unnamed` when some banded part has
+ * no band named yet.
+ */
+export function boardBands(rows: CutRow[]): {
+  bands: EdgeBand[];
+  fronts: EdgeBand[];
+  unnamed: boolean;
+} {
+  const bands = new Map<string, EdgeBand>(),
+    fronts = new Map<string, EdgeBand>();
+  let unnamed = false;
+  for (const r of rows) {
+    if (!r.edgesL && !r.edgesW) continue;
+    if (!r.band) unnamed = true;
+    else (r.bandFront ? fronts : bands).set(bandKey(r.band), r.band);
+  }
+  return { bands: [...bands.values()], fronts: [...fronts.values()], unnamed };
+}
+
+/** Words of a board's band header: English on screen, Romanian on printed sheets (ADR-020). */
+export interface BandWords {
+  prefix: string;
+  band: (b: EdgeBand) => string;
+  fronts: string;
+  unnamed: string;
+  someUnnamed: string;
+}
+const BAND_WORDS_EN: BandWords = {
+  prefix: 'Edge band: ',
+  band: bandText,
+  fronts: 'fronts',
+  unnamed: 'not named yet',
+  someUnnamed: 'some parts not named yet',
+};
+
+/** "Edge band: ABS 0.8 × 22 mm · fronts ABS 2 × 22 mm"; null when no part of the board is banded. */
+export function boardBandText(rows: CutRow[], w: BandWords = BAND_WORDS_EN): string | null {
+  const b = boardBands(rows);
+  const named = b.bands.length + b.fronts.length > 0;
+  if (!named && !b.unnamed) return null;
+  const parts = [
+    ...b.bands.map(w.band),
+    ...b.fronts.map((f) => `${w.fronts} ${w.band(f)}`),
+    ...(b.unnamed ? [named ? w.someUnnamed : w.unnamed] : []),
+  ];
+  return `${w.prefix}${parts.join(' · ')}`;
 }
 
 /** One bought length and the parts cut from it. */

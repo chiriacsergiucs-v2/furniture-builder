@@ -216,13 +216,14 @@ describe('model items in a project (ADR-076)', () => {
       items: [makeItem(newProject(), t('chest'))],
     };
     expect(validateProject(v1)).toEqual([]);
-    expect(newProject().schemaVersion).toBe(2);
+    expect(newProject().schemaVersion).toBe(5);
     const p = withModel(v1, fridge({ position: { x: 2000, y: 0, z: 0 } }));
     expect(validateProject(p)).toEqual([]);
-    expect(validateProject({ ...p, schemaVersion: 1 })).toContain(
-      '3D models need a newer project schemaVersion',
-    );
-    expect(validateProject({ ...p, schemaVersion: 3 })).toContain(
+    for (const older of [1, 2, 3, 4])
+      expect(validateProject({ ...p, schemaVersion: older })).toContain(
+        '3D models need project schemaVersion 5',
+      );
+    expect(validateProject({ ...p, schemaVersion: 6 })).toContain(
       'Unsupported project schemaVersion',
     );
     for (const bad of [

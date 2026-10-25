@@ -327,8 +327,11 @@ describe('shopping list (ADR-064) and estimate (ADR-062)', () => {
       runParts: p.runParts,
     });
     const sections = new Set(lines.map((l) => l.section));
-    for (const s of ['boards', 'banding', 'hardware', 'run', 'choose'] as const)
+    for (const s of ['boards', 'hardware', 'run', 'choose'] as const)
       expect(sections.has(s)).toBe(true);
+    // No band is named on these boards, so their banding is still to choose (ADR-077).
+    expect(sections.has('banding')).toBe(false);
+    expect(lines.some((l) => l.section === 'choose' && /^Edge band for /.test(l.label))).toBe(true);
     const run = lines.filter((l) => l.section === 'run').map((l) => l.label);
     expect(run).toContain('Worktop');
     expect(run).toContain('Plinth');

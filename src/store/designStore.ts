@@ -7,6 +7,7 @@ import {
   upgradeDesign,
   validateDesign,
 } from '../core/design';
+import { duplicateItem, mirrorItem, mirrorRun, turnAboutCentre } from '../core/arrange';
 import { applyFinish, type FinishRole, type FinishScope } from '../core/finish';
 import { mergeItems } from '../core/merge';
 import { closeOutline, DEFAULT_ROOM_HEIGHT, snapCorner, type Pt, type Room } from '../core/room';
@@ -16,13 +17,16 @@ import {
   liftOff,
   makeItem,
   planRuns,
+  PROJECT_SCHEMA,
   refreshRunParts,
+  requestKey,
   removeProjectItem,
   resolvePlacements,
   setGapLeft,
   type Project,
   type ProjectItem,
   type ProjectModel,
+  type RunRequest,
   type RunSettings,
 } from '../core/project';
 import type {
@@ -117,6 +121,13 @@ interface State {
   removeItem: (id: string) => void;
   /** Merge two touching cabinets into one (ADR-047); returns why not, or an empty list. */
   mergeItems: (a: string, b: string) => string[];
+  /** Duplicate, turn about the centre, mirror a piece or its run (ADR-069); each is one undo step. */
+  duplicateItem: (id: string) => void;
+  turnItem: (id: string, dir: 1 | -1) => void;
+  /** Returns why nothing changed ("Nothing to mirror in this piece"), or null. */
+  mirrorItem: (id: string) => string | null;
+  /** Returns the pieces of the run that had nothing to mirror (they still move). */
+  mirrorRun: (id: string) => string[];
   selectItem: (id: string | null) => void;
   editItem: (id: string) => void;
   backToProject: () => void;
@@ -126,6 +137,13 @@ interface State {
   suggestRunParts: () => void;
   removeRunPart: (id: string) => void;
   setRunSettings: (patch: Partial<RunSettings>) => void;
+  /**
+   * Ask for a worktop over chosen pieces, a worktop's overhangs, or a trim (ADR-075); replaces the request with the
+   * same key. Its part is made at once, in the same undo step, and then follows the pieces.
+   */
+  setRunRequest: (r: RunRequest) => void;
+  /** Drop a request that could not be made (ADR-075). */
+  removeRunRequest: (key: string) => void;
   /** Put one board on the fronts or carcass of the selected piece, its run or the whole project (ADR-055). */
   applyFinish: (
     id: string,
@@ -199,6 +217,7 @@ export const useDesign = create<State>((set, get) => {
     // Pieces on or above others follow them (ADR-031); run parts follow the pieces in the same step (ADR-061).
     const stamped = {
       ...refreshRunParts(resolvePlacements(next)),
+      schemaVersion: PROJECT_SCHEMA, // an edited project is saved in the current shape (ADR-011, ADR-073)
       updatedAt: new Date().toISOString(),
     };
     const prev = get().project;
@@ -354,6 +373,34 @@ export const useDesign = create<State>((set, get) => {
       }
       return res.issues;
     },
+    duplicateItem: (id) => {
+      const p = get().project;
+      const res = p && duplicateItem(p, id);
+      if (!res) return;
+      commitProject(res.project);
+      set({ selectedItemId: res.id });
+    },
+    turnItem: (id, dir) => {
+      const p = get().project;
+      if (!p) return;
+      const next = turnAboutCentre(p, id, dir);
+      if (next !== p) commitProject(next);
+    },
+    mirrorItem: (id) => {
+      const p = get().project;
+      if (!p) return null;
+      const res = mirrorItem(p, id);
+      if (res.reason) return res.reason;
+      if (res.project !== p) commitProject(res.project);
+      return null;
+    },
+    mirrorRun: (id) => {
+      const p = get().project;
+      if (!p) return [];
+      const res = mirrorRun(p, id);
+      if (res.project !== p) commitProject(res.project);
+      return res.reasons;
+    },
     selectItem: (id) => set({ selectedItemId: id }),
     editItem: (id) => {
       const item = get().project?.items.find((i) => i.id === id);
@@ -418,11 +465,44 @@ export const useDesign = create<State>((set, get) => {
       const p = get().project;
       const rp = p?.runParts?.find((r) => r.id === id);
       if (!p || !rp) return;
+      // A part the user asked for (ADR-075) goes with its request; its key stays removed like any other.
+      const asked = p.runRequests?.filter((r) => requestKey(r) !== rp.key);
       commitProject({
         ...p,
         runParts: (p.runParts ?? []).filter((r) => r.id !== id),
         runPartsRemoved: [...(p.runPartsRemoved ?? []), rp.key ?? rp.id],
+        ...(asked ? { runRequests: asked } : {}),
       });
+    },
+    setRunRequest: (r) => {
+      const p = get().project;
+      if (!p) return;
+      const key = requestKey(r);
+      const settings = p.runSettings ?? { scribe: 0, auto: true };
+      const next: Project = {
+        ...p,
+        schemaVersion: PROJECT_SCHEMA,
+        runRequests: [...(p.runRequests ?? []).filter((x) => requestKey(x) !== key), r],
+        runPartsRemoved: (p.runPartsRemoved ?? []).filter((k) => k !== key),
+      };
+      if (settings.auto) {
+        commitProject({ ...next, runSettings: settings });
+        return;
+      }
+      // Refresh off: only the asked-for parts are made now (and the worktops they replace go); the rest stay.
+      const keys = new Set(next.runRequests!.map(requestKey));
+      const wt = new Set(next.runRequests!.flatMap((x) => (x.kind === 'worktop' ? x.from : [])));
+      const keep = (p.runParts ?? []).filter(
+        (x) =>
+          !keys.has(x.key ?? '') && !(x.kind === 'worktop' && x.from?.some((id) => wt.has(id))),
+      );
+      const made = planRuns(next).parts.filter((x) => keys.has(x.key ?? ''));
+      commitProject({ ...next, runSettings: settings, runParts: [...keep, ...made] });
+    },
+    removeRunRequest: (key) => {
+      const p = get().project;
+      if (!p?.runRequests) return;
+      commitProject({ ...p, runRequests: p.runRequests.filter((r) => requestKey(r) !== key) });
     },
     setRunSettings: (patch) => {
       const p = get().project;
@@ -452,7 +532,8 @@ export const useDesign = create<State>((set, get) => {
     setRoom: (room) => {
       const p = get().project;
       if (!p) return;
-      if (room) commitProject({ ...p, room });
+      // A room may now hold pipes and outlets (ADR-072): it is saved at the current project version.
+      if (room) commitProject({ ...p, room, schemaVersion: PROJECT_SCHEMA });
       else {
         const { room: _r, ...rest } = p;
         void _r;

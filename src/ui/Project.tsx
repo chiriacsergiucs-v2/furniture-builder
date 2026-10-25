@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { projectBoards, roleBoard, type FinishRole, type FinishScope } from '../core/finish';
 import { decorPatch, type Decor } from '../core/materials';
+import { touchingRun } from '../core/arrange';
 import { mergeCandidates } from '../core/merge';
 import {
-  dragPosition,
   leftNeighbour,
   materialKey,
   placementBases,
@@ -14,6 +14,7 @@ import {
   type ProjectModel,
   type QuarterTurn,
 } from '../core/project';
+import { dropTarget, SNAP_RANGE } from '../core/snap';
 import type { Material, Panel } from '../core/types';
 import { listDecors, listDesigns, loadDesign, type StoredDesign } from '../persist/db';
 import { useDesign } from '../store/designStore';
@@ -26,9 +27,12 @@ import {
   type DragGesture,
   type PointerAt,
 } from './planDrag';
+import { useSnap } from './useSnap';
 import {
   DEFAULT_ROOM_HEIGHT,
   doorSwing,
+  DEFAULT_OUTLET_ZONE,
+  DEFAULT_PIPE_ZONE,
   featureBox,
   outlineIssues,
   roomFrontView,
@@ -49,6 +53,15 @@ import { StartFrom } from './Catalog';
 import { askConfirm } from './Confirm';
 import { SaveProjectTemplate } from './ProjectTemplates';
 import { FrontModels, ModelFields, ModelList, MyModels, PlanModels } from './Models3D';
+import { AskRunParts, WorktopOverhang } from './RunRequests';
+import { ClearanceFields, ZoneOverlay, ZoneToolbar } from './Clearances';
+import {
+  ProblemBanner,
+  ProblemOutline,
+  useFocusedProblem,
+  type FocusedProblem,
+} from './ProblemBanner';
+import { useProblem } from './problemStore';
 
 const FRONT_SIDE: Record<QuarterTurn, string> = {
   0: 'front faces you',
@@ -181,6 +194,7 @@ export function ProjectPanel({
             onChange={(v) => update(item.id, { rotationY: v })}
           />
           <p className="hint">{FRONT_SIDE[item.rotationY]}</p>
+          <ArrangeFields key={item.id} item={item} />
           <PlacementFields item={item} />
           {item.placement?.kind === 'above' ? null : left ? (
             <>
@@ -202,6 +216,7 @@ export function ProjectPanel({
               No piece on its left at this height; set “From left” to place it.
             </p>
           )}
+          <ClearanceFields item={item} />
           <FinishFields item={item} />
           <MergeFields item={item} />
           {piece && (
@@ -369,6 +384,91 @@ function FinishFields({ item }: { item: ProjectItem }) {
       <button type="button" className="btn outline" onClick={go} disabled={!options.length}>
         Apply finish
       </button>
+      {msg && (
+        <p className="hint" role="status">
+          {msg}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Duplicate, turn about the centre and mirror the selected piece or its run (ADR-069); each is one undo step. Keys:
+ * Ctrl/Cmd+D duplicates, R / Shift+R turn the piece focused on the plan.
+ */
+function ArrangeFields({ item }: { item: ProjectItem }) {
+  const project = useDesign((s) => s.project)!;
+  const duplicate = useDesign((s) => s.duplicateItem);
+  const turn = useDesign((s) => s.turnItem);
+  const mirror = useDesign((s) => s.mirrorItem);
+  const mirrorRun = useDesign((s) => s.mirrorRun);
+  const [msg, setMsg] = useState<string | null>(null);
+  const pm = useDesign((s) => s.projectModel);
+  // The placed bounds the project model already holds, so the run needs no second build.
+  const run = useMemo(
+    () =>
+      touchingRun(
+        project,
+        item.id,
+        pm ? new Map(pm.pieces.map((pc) => [pc.item.id, pc.bounds])) : undefined,
+      ),
+    [project, pm, item.id],
+  );
+  return (
+    <div className="arrange" role="group" aria-label="Arrange this piece">
+      <div className="arrange-actions">
+        <button
+          type="button"
+          className="btn outline sm"
+          title="Duplicate (Ctrl+D)"
+          onClick={() => {
+            setMsg(null);
+            duplicate(item.id);
+          }}
+        >
+          Duplicate
+        </button>
+        <button
+          type="button"
+          className="btn outline sm"
+          aria-label="Turn 90° anticlockwise about its centre"
+          title="Turn about its centre (R)"
+          onClick={() => {
+            setMsg(null);
+            turn(item.id, 1);
+          }}
+        >
+          Turn 90° ↺
+        </button>
+        <button
+          type="button"
+          className="btn outline sm"
+          aria-label="Turn 90° clockwise about its centre"
+          title="Turn about its centre (Shift+R)"
+          onClick={() => {
+            setMsg(null);
+            turn(item.id, -1);
+          }}
+        >
+          Turn 90° ↻
+        </button>
+        <button type="button" className="btn outline sm" onClick={() => setMsg(mirror(item.id))}>
+          Mirror
+        </button>
+        {run.length > 1 && (
+          <button
+            type="button"
+            className="btn outline sm"
+            onClick={() => {
+              const left = mirrorRun(item.id);
+              setMsg(left.length ? `Moved, nothing to mirror inside: ${left.join('; ')}.` : null);
+            }}
+          >
+            Mirror the run ({run.length} pieces)
+          </button>
+        )}
+      </div>
       {msg && (
         <p className="hint" role="status">
           {msg}
@@ -587,6 +687,15 @@ export function PlanView() {
   useEffect(() => {
     if (placingId || drawing) ref.current?.scrollIntoView({ block: 'nearest' });
   }, [placingId, drawing]);
+  // A check tapped under Checks (ADR-071): bring the plan, with the problem and its repairs, into view.
+  const problem = useFocusedProblem();
+  const tapped = useProblem((s) => s.tapped);
+  const seenTap = useRef(tapped);
+  useEffect(() => {
+    if (tapped === seenTap.current) return;
+    seenTap.current = tapped;
+    ref.current?.scrollIntoView({ block: 'start' });
+  }, [tapped]);
   if (!pm || (!pm.pieces.length && !pm.models.length && !hasRoom && !drawing))
     return (
       <div className="no-3d">
@@ -627,8 +736,12 @@ export function PlanView() {
           </button>
         </div>
       )}
-      <RoomPlan pm={pm} />
-      {(pm.pieces.length > 0 || pm.models.length > 0) && <RoomFront pm={pm} />}
+      {problem && !placing && !drawing && <ProblemBanner problem={problem} />}
+      <RoomPlan pm={pm} problem={problem} />
+      {/* While a problem is shown the plan takes the room the front view had (ADR-071). */}
+      {(pm.pieces.length > 0 || pm.models.length > 0) && !(problem && !placing && !drawing) && (
+        <RoomFront pm={pm} />
+      )}
     </div>
   );
 }
@@ -637,7 +750,7 @@ export function PlanView() {
  * Top-down plan of the room: x to the right, the back wall at the top. Tap a piece to select it; drag it, or use
  * the arrow keys on it, to move it (ADR-065).
  */
-function RoomPlan({ pm }: { pm: ProjectModel }) {
+function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem | null }) {
   const selectedId = useDesign((s) => s.selectedItemId);
   const select = useDesign((s) => s.selectItem);
   const placingId = useDesign((s) => s.placingItemId);
@@ -650,26 +763,47 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
   const addCorner = useDesign((s) => s.addRoomCorner);
   const tapping = !!placing || !!drawing;
   const moveItemBy = useDesign((s) => s.moveItemBy);
+  const [showZones, setShowZones] = useState(false);
+  const turnItem = useDesign((s) => s.turnItem);
   /** The press or drag in progress (ADR-065); the ref keeps pointer handlers in step between renders. */
   const [pressed, setDragState] = useState<DragGesture | null>(null);
   // Tap modes (placing a new piece, drawing the room) turn dragging off (ADR-056, ADR-059).
   const drag = tapping ? null : pressed;
   const dragRef = useRef<DragGesture | null>(null);
-  const setDrag = (g: DragGesture | null) => {
+  // Snapping (ADR-070): the Snap toggle, and Alt held while dragging to place freely.
+  const project = useDesign((s) => s.project);
+  const [snapOn, setSnapOn] = useSnap();
+  const [alt, setAlt] = useState(false);
+  const setDrag = (g: DragGesture | null, altKey = false) => {
+    // Alt is read when a press starts and forgotten when it ends, so a missed keyup never carries over.
+    if (!dragRef.current || !g) setAlt(altKey);
     dragRef.current = g;
     setDragState(g);
   };
+  const dragging = !!drag;
   useEffect(() => {
-    if (!drag) return;
+    if (!dragging) return;
     const onEsc = (e: globalThis.KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
         setDrag(null);
       }
     };
+    const onAlt = (e: globalThis.KeyboardEvent) => {
+      if (e.key === 'Alt') {
+        e.preventDefault();
+        setAlt(e.type === 'keydown');
+      }
+    };
     window.addEventListener('keydown', onEsc);
-    return () => window.removeEventListener('keydown', onEsc);
-  }, [drag]);
+    window.addEventListener('keydown', onAlt);
+    window.addEventListener('keyup', onAlt);
+    return () => {
+      window.removeEventListener('keydown', onEsc);
+      window.removeEventListener('keydown', onAlt);
+      window.removeEventListener('keyup', onAlt);
+    };
+  }, [dragging]);
   // Chrome ignores `touch-action` on SVG shapes, so a touch drag on a piece would start a page scroll and cancel the
   // pointer. While a piece is pressed, touchmove is prevented (non-passive) so the drag keeps the pointer.
   useEffect(() => {
@@ -696,18 +830,18 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
     room: toRoom(e),
   });
   const dragged = drag?.dragging ? pm.pieces.find((pc) => pc.item.id === drag.id) : undefined;
-  const dropAt = dragged && drag ? dragPosition(dragged.item, drag.dx, drag.dz) : null;
+  const target =
+    dragged && drag && project
+      ? dropTarget(project, pm.pieces, drag.id, drag.dx, drag.dz, snapOn && !alt)
+      : null;
   const pts = [...(room?.outline ?? []), ...(drawing ?? [])];
-  const xs = [
-      ...pm.pieces.flatMap((p) => [p.bounds.x, p.bounds.x + p.bounds.w]),
-      ...pm.models.flatMap((m) => [m.box.x, m.box.x + m.box.w]),
-      ...pts.map((p) => p[0]),
-    ],
-    zs = [
-      ...pm.pieces.flatMap((p) => [p.bounds.z, p.bounds.z + p.bounds.d]),
-      ...pm.models.flatMap((m) => [m.box.z, m.box.z + m.box.d]),
-      ...pts.map((p) => p[1]),
-    ];
+  // With Clearances on, the view also frames the zones (chair or service space beyond the pieces); models always.
+  const framed = [
+    ...(showZones ? pm.zones.map((z) => z.box) : pm.pieces.map((p) => p.bounds)),
+    ...pm.models.map((m) => m.box),
+  ];
+  const xs = [...framed.flatMap((b) => [b.x, b.x + b.w]), ...pts.map((p) => p[0])],
+    zs = [...framed.flatMap((b) => [b.z, b.z + b.d]), ...pts.map((p) => p[1])];
   const x0 = Math.min(0, ...xs),
     x1 = Math.max(1000, ...xs),
     z0 = Math.min(0, ...zs),
@@ -728,7 +862,27 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
           ? [b.x, b.z, b.x + b.w, b.z]
           : [b.x, b.z, b.x, b.z + b.d];
   return (
-    <figure className="plan" aria-label="Room plan, seen from above. Select a piece.">
+    <figure className="plan with-tools" aria-label="Room plan, seen from above. Select a piece.">
+      <div className="plan-tools">
+        <button
+          type="button"
+          className="btn sm outline snap-toggle"
+          aria-pressed={snapOn}
+          onClick={() => setSnapOn(!snapOn)}
+        >
+          Snap
+        </button>
+        <ZoneToolbar on={showZones} onChange={setShowZones} />
+        <span className="plan-tools-note" role="status" aria-live={drag ? 'off' : 'polite'}>
+          {target
+            ? target.snap
+              ? `Snaps: ${[target.snap.label, ...target.snap.notes].join(' · ')}`
+              : (target.hint ?? (snapOn ? 'Alt held: placing freely.' : 'Snap is off.'))
+            : snapOn
+              ? `Snaps within ${SNAP_RANGE} mm to walls and neighbours; hold Alt to place freely.`
+              : 'Pieces go exactly where dropped.'}
+        </span>
+      </div>
       <svg
         ref={svgRef}
         viewBox={`${x0 - pad * 1.2} ${z0 - pad * 1.6} ${x1 - x0 + pad * 2.4} ${z1 - z0 + pad * 2.8}`}
@@ -806,6 +960,21 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
               aria-label={`${pc.item.design.name}, ${b.w} by ${b.d} mm`}
               onClick={tapping ? undefined : () => select(pc.item.id)}
               onKeyDown={(e) => {
+                // R / Shift+R turn the focused piece about its centre (ADR-069).
+                if (
+                  !tapping &&
+                  e.key.toLowerCase() === 'r' &&
+                  !e.ctrlKey &&
+                  !e.metaKey &&
+                  !e.altKey
+                ) {
+                  e.preventDefault();
+                  // Holding the key turns once, not once per auto-repeat (each turn is an undo step).
+                  if (e.repeat) return;
+                  select(pc.item.id);
+                  turnItem(pc.item.id, e.shiftKey ? -1 : 1);
+                  return;
+                }
                 const m = tapping ? null : arrowMove(e.key, e.shiftKey);
                 if (!m) return onKey(() => select(pc.item.id))(e);
                 e.preventDefault();
@@ -822,7 +991,7 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
                       const g = pressPiece(null, pc.item.id, at(e));
                       if (!g) return;
                       e.currentTarget.setPointerCapture?.(e.pointerId);
-                      setDrag(g);
+                      setDrag(g, e.altKey);
                     }
               }
               onPointerMove={
@@ -833,6 +1002,7 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
                       if (!g || g.id !== pc.item.id) return;
                       const next = movePointer(g, at(e));
                       if (next !== g) setDrag(next);
+                      if (e.altKey !== alt) setAlt(e.altKey);
                     }
               }
               onPointerUp={(e) => {
@@ -844,7 +1014,21 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
                 // A tap mode that started during the press ends the drag without moving anything.
                 if (tapping) return;
                 select(end.id);
-                if (end.kind === 'drop') moveItemBy(end.id, end.dx, end.dz);
+                if (end.kind !== 'drop') return;
+                const snapping = snapOn && !e.altKey;
+                const t =
+                  snapping && project
+                    ? dropTarget(project, pm.pieces, end.id, end.dx, end.dz, true)
+                    : null;
+                // Snap off or Alt held: exactly the ADR-065 drop. Snapped: whole mm, one undo step.
+                if (!t?.snap) moveItemBy(end.id, end.dx, end.dz);
+                else
+                  moveItemBy(
+                    end.id,
+                    t.position.x - pc.item.position.x,
+                    t.position.z - pc.item.position.z,
+                    1,
+                  );
               }}
               onPointerCancel={() => setDrag(null)}
             >
@@ -863,6 +1047,7 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
             </g>
           );
         })}
+        {showZones && <ZoneOverlay zones={pm.zones} fs={fs} />}
         <PlanModels pm={pm} fs={fs} tapping={tapping} />
         {pm.blocked
           .filter((c) => c.itemId === selectedId)
@@ -878,21 +1063,23 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
               <title>Needed to open; something is in the way</title>
             </rect>
           ))}
-        {dragged && dropAt && (
-          <g className="drag-ghost" aria-hidden="true">
-            <rect
-              x={dragged.bounds.x + dropAt.x - dragged.item.position.x}
-              y={dragged.bounds.z + dropAt.z - dragged.item.position.z}
-              width={dragged.bounds.w}
-              height={dragged.bounds.d}
-            />
-            <text
-              x={dragged.bounds.x + dropAt.x - dragged.item.position.x}
-              y={dragged.bounds.z + dropAt.z - dragged.item.position.z - fs * 0.5}
-              fontSize={fs}
-            >
-              From left {dropAt.x} · From back {dropAt.z} mm
+        {problem && !tapping && <ProblemOutline problem={problem} fs={fs} />}
+        {target && (
+          <g className={`drag-ghost ${target.snap ? 'snapped' : ''}`} aria-hidden="true">
+            <rect x={target.box.x} y={target.box.z} width={target.box.w} height={target.box.d} />
+            <text x={target.box.x} y={target.box.z - fs * 0.5} fontSize={fs}>
+              From left {target.position.x} · From back {target.position.z} mm
             </text>
+            {target.snap && (
+              <text
+                className="snap-label"
+                x={target.box.x}
+                y={target.box.z + target.box.d + fs * 1.2}
+                fontSize={fs}
+              >
+                {[target.snap.label, ...target.snap.notes].join(' · ')}
+              </text>
+            )}
           </g>
         )}
         {placing && hover && (
@@ -930,7 +1117,9 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
       <figcaption>
         Seen from above. The yellow edge is each piece's front; dashed pieces hang on the wall; red
         dashes show where a selected piece's doors or drawers cannot open. Drag a piece, or use the
-        arrow keys on it, to move it; Esc cancels a drag.
+        arrow keys on it, to move it; Esc cancels a drag. R turns the focused piece about its
+        centre. With Snap on, a dropped piece joins a wall, an inside corner or a neighbour’s side
+        within {SNAP_RANGE} mm; arrow keys never snap.
       </figcaption>
     </figure>
   );
@@ -972,6 +1161,23 @@ function RoomOutline({ room, fs }: { room: Room; fs: number }) {
             <rect key={f.id} className="room-window" x={b.x} y={b.z} width={b.w} height={b.d}>
               <title>{f.label}</title>
             </rect>
+          );
+        if (f.kind === 'pipe' || f.kind === 'outlet')
+          return (
+            <g key={f.id} className={`room-${f.kind}`}>
+              <rect x={b.x} y={b.z} width={b.w} height={b.d}>
+                <title>{`${f.label}: keep backs, plinths and worktops clear`}</title>
+              </rect>
+              <text
+                x={b.x + b.w / 2}
+                y={b.z + b.d}
+                fontSize={fs * 0.6}
+                textAnchor="middle"
+                dominantBaseline="hanging"
+              >
+                {f.label}
+              </text>
+            </g>
           );
         const sw = doorSwing(room, f);
         return (
@@ -1181,9 +1387,14 @@ function RunParts() {
   const parts = project.runParts ?? [];
   const removed = project.runPartsRemoved ?? [];
   const settings = project.runSettings;
+  const asked = useDesign((s) => s.projectModel?.diagnostics);
   const notes = useMemo(
-    () => (parts.length || settings?.auto ? planRuns(project).notes : []),
-    [project, parts.length, settings?.auto],
+    () =>
+      (parts.length || settings?.auto ? planRuns(project).notes : []).filter(
+        // Requests that could not be made are listed with a way to remove them (ADR-075).
+        (n) => !asked?.some((d) => d.code === 'run-request' && d.message === n),
+      ),
+    [project, parts.length, settings?.auto, asked],
   );
   const suggest = async () => {
     if (
@@ -1204,7 +1415,8 @@ function RunParts() {
       <p className="hint">
         For rows of base units side by side: one worktop, a filler in each gap, a cover panel on
         each open end, and one plinth along the run when the cabinets stand on their bottoms (it
-        replaces their own plinths).
+        replaces their own plinths). Add a worktop over chosen pieces, or a crown, pelmet or ceiling
+        filler over wall and tall units.
       </p>
       {parts.length > 0 && (
         <ul className="run-list">
@@ -1228,6 +1440,7 @@ function RunParts() {
               >
                 <Icon name="trash" />
               </button>
+              {rp.kind === 'worktop' && <WorktopOverhang part={rp} />}
             </li>
           ))}
         </ul>
@@ -1237,6 +1450,7 @@ function RunParts() {
           {n}
         </p>
       ))}
+      <AskRunParts />
       {removed.length > 0 && (
         <p className="hint">
           {removed.length} removed {removed.length === 1 ? 'part stays' : 'parts stay'} removed.
@@ -1280,6 +1494,8 @@ const FEATURE_KIND: Record<RoomFeature['kind'], string> = {
   door: 'Door',
   window: 'Window',
   obstacle: 'Obstacle',
+  pipe: 'Pipe',
+  outlet: 'Outlet',
 };
 
 /** The room (ADR-058/0056): shape and walls, height, doors, windows and obstacles, checked against the pieces. */
@@ -1347,17 +1563,30 @@ function RoomSection() {
               depth: 0,
               label: `Window ${n}`,
             }
-          : {
-              id: newId(),
-              kind,
-              wall: 0,
-              from: 0,
-              width: 600,
-              sill: 100,
-              height: 600,
-              depth: 100,
-              label: `Obstacle ${n}`,
-            };
+          : kind === 'pipe' || kind === 'outlet'
+            ? {
+                // A zone on the wall (ADR-072); default sizes are the ADR's open question, edited here.
+                id: newId(),
+                kind,
+                wall: 0,
+                from: kind === 'pipe' ? 200 : 400,
+                width: kind === 'pipe' ? DEFAULT_PIPE_ZONE : DEFAULT_OUTLET_ZONE,
+                sill: 300,
+                height: kind === 'pipe' ? DEFAULT_PIPE_ZONE : DEFAULT_OUTLET_ZONE,
+                depth: 0,
+                label: `${FEATURE_KIND[kind]} ${n}`,
+              }
+            : {
+                id: newId(),
+                kind,
+                wall: 0,
+                from: 0,
+                width: 600,
+                sill: 100,
+                height: 600,
+                depth: 100,
+                label: `Obstacle ${n}`,
+              };
     setRoom({ ...room, features: [...room.features, f] });
   };
   const setFeature = (id: string, patch: Partial<RoomFeature>) =>
@@ -1374,7 +1603,8 @@ function RoomSection() {
       {!room ? (
         <>
           <p className="hint">
-            Add the room to check the pieces against its walls, doors, windows and obstacles.
+            Add the room to check the pieces against its walls, doors, windows, obstacles, pipes and
+            outlets.
           </p>
           <Segmented<RoomShape> label="Shape" value={shape} options={SHAPES} onChange={setShape} />
           <button type="button" className="btn outline block" onClick={() => make(shape, sizes)}>
@@ -1494,7 +1724,7 @@ function RoomSection() {
             <Icon name="pencil" className="sm" />
             Draw the room again
           </button>
-          <h4>Doors, windows and obstacles</h4>
+          <h4>Doors, windows, obstacles, pipes and outlets</h4>
           {room.features.length === 0 && <p className="hint">None yet.</p>}
           {room.features.map((f) => (
             <fieldset key={f.id} className="room-feature" aria-label={f.label}>
@@ -1588,6 +1818,12 @@ function RoomSection() {
             </button>
             <button type="button" className="btn outline sm" onClick={() => addFeature('obstacle')}>
               Add obstacle
+            </button>
+            <button type="button" className="btn outline sm" onClick={() => addFeature('pipe')}>
+              Add pipe
+            </button>
+            <button type="button" className="btn outline sm" onClick={() => addFeature('outlet')}>
+              Add outlet
             </button>
           </div>
           <button
