@@ -52,6 +52,7 @@ import { templateGlyph } from './Templates';
 import { StartFrom } from './Catalog';
 import { askConfirm } from './Confirm';
 import { SaveProjectTemplate } from './ProjectTemplates';
+import { ClearanceFields, ZoneOverlay, ZoneToolbar } from './Clearances';
 import {
   ProblemBanner,
   ProblemOutline,
@@ -212,6 +213,7 @@ export function ProjectPanel({
               No piece on its left at this height; set “From left” to place it.
             </p>
           )}
+          <ClearanceFields item={item} />
           <FinishFields item={item} />
           <MergeFields item={item} />
           {piece && (
@@ -754,6 +756,7 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
   const addCorner = useDesign((s) => s.addRoomCorner);
   const tapping = !!placing || !!drawing;
   const moveItemBy = useDesign((s) => s.moveItemBy);
+  const [showZones, setShowZones] = useState(false);
   const turnItem = useDesign((s) => s.turnItem);
   /** The press or drag in progress (ADR-065); the ref keeps pointer handlers in step between renders. */
   const [pressed, setDragState] = useState<DragGesture | null>(null);
@@ -825,14 +828,10 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
       ? dropTarget(project, pm.pieces, drag.id, drag.dx, drag.dz, snapOn && !alt)
       : null;
   const pts = [...(room?.outline ?? []), ...(drawing ?? [])];
-  const xs = [
-      ...pm.pieces.flatMap((p) => [p.bounds.x, p.bounds.x + p.bounds.w]),
-      ...pts.map((p) => p[0]),
-    ],
-    zs = [
-      ...pm.pieces.flatMap((p) => [p.bounds.z, p.bounds.z + p.bounds.d]),
-      ...pts.map((p) => p[1]),
-    ];
+  // With Clearances on, the view also frames the zones (chair or service space beyond the pieces).
+  const framed = showZones ? pm.zones.map((z) => z.box) : pm.pieces.map((p) => p.bounds);
+  const xs = [...framed.flatMap((b) => [b.x, b.x + b.w]), ...pts.map((p) => p[0])],
+    zs = [...framed.flatMap((b) => [b.z, b.z + b.d]), ...pts.map((p) => p[1])];
   const x0 = Math.min(0, ...xs),
     x1 = Math.max(1000, ...xs),
     z0 = Math.min(0, ...zs),
@@ -861,6 +860,7 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
         >
           Snap
         </button>
+        <ZoneToolbar on={showZones} onChange={setShowZones} />
         <span className="plan-tools-note" role="status" aria-live={drag ? 'off' : 'polite'}>
           {target
             ? target.snap
@@ -1035,6 +1035,7 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
             </g>
           );
         })}
+        {showZones && <ZoneOverlay zones={pm.zones} fs={fs} />}
         {pm.blocked
           .filter((c) => c.itemId === selectedId)
           .map((c, i) => (

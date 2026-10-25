@@ -5,6 +5,7 @@ import {
   makeItem,
   newProject,
   PROJECT_SCHEMA,
+  PROJECT_SCHEMAS,
   validateProject,
   type Project,
 } from '../src/core/project';
@@ -346,7 +347,7 @@ describe('pipes and outlets (ADR-072)', () => {
 
   it('new projects are at the current version; version 1 and 2 files validate and round-trip', () => {
     expect(newProject().schemaVersion).toBe(PROJECT_SCHEMA);
-    expect(PROJECT_SCHEMA).toBe(2);
+    expect(PROJECT_SCHEMAS).toContain(2); // pipes and outlets arrived in version 2 (ADR-072)
     const p = proj(['base-door'], { ...rect(), features: [pipe, outlet] });
     expect(validateProject(p)).toEqual([]);
     const back = JSON.parse(JSON.stringify(p)) as Project;
