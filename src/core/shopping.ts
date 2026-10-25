@@ -3,7 +3,8 @@
  * layout, or m² / metres), edge banding, scheduled hardware, run parts — plus what is still to choose before buying.
  * Screws, dowels and cams are counted only as joints of the model, as guidance; the fastener is the user's (ADR-074).
  */
-import { bandMetersFromRows, type CutRow } from './cutlist';
+import { bandKey, rowBandMetres, type CutRow } from './cutlist';
+import { bandText } from './materials';
 import type { RunPart } from './project';
 import { fastenerShopLines, type FastenerChoice, type FastenerCount } from './fasteners';
 import { csvCell } from './prices';
@@ -38,6 +39,54 @@ const CHOOSE_CODES = new Set(['hardware-to-choose', 'anti-tip', 'safety-not-chec
 const TO_CHOOSE = new Set(['appliance', 'flap-stay', 'front-fixing', 'sliding-track']);
 
 const r2 = (v: number) => Math.round(v * 100) / 100;
+
+/**
+ * Edge banding (ADR-077): one line per named band spec with its metres, boards that share a band combined, each
+ * band's per-edge allowance added. Boards whose band is not named yet go to "to choose before buying".
+ */
+function bandingLines(rows: CutRow[]): ShopLine[] {
+  const named = new Map<
+    string,
+    { label: string; metres: number; boards: string[]; extra: boolean }
+  >();
+  const unnamed = new Map<string, { name: string; metres: number }>();
+  for (const r of rows) {
+    const metres = rowBandMetres(r);
+    if (!metres) continue;
+    if (!r.band) {
+      const u = unnamed.get(r.materialId) ?? { name: r.materialName, metres: 0 };
+      u.metres += metres;
+      unnamed.set(r.materialId, u);
+      continue;
+    }
+    const k = bandKey(r.band);
+    const g = named.get(k) ?? { label: bandText(r.band), metres: 0, boards: [], extra: false };
+    g.metres += metres;
+    if (!g.boards.includes(r.materialName)) g.boards.push(r.materialName);
+    if (r.band.allowance) g.extra = true;
+    named.set(k, g);
+  }
+  const out: ShopLine[] = [];
+  for (const g of named.values())
+    out.push({
+      section: 'banding',
+      label: g.label,
+      quantity: r2(g.metres),
+      unit: 'm',
+      detail: `for ${g.boards.join(', ')}${g.extra ? ', with the trim allowance per edge' : ''}`,
+      priceKey: `band:${g.label}`,
+    });
+  // Not priced: a band that is not named cannot be bought yet, like other hardware still to choose.
+  for (const u of unnamed.values())
+    out.push({
+      section: 'choose',
+      label: `Edge band for ${u.name}`,
+      quantity: r2(u.metres),
+      unit: 'm',
+      detail: 'name the band (type, thickness, width) on the board before buying',
+    });
+  return out;
+}
 
 export function shoppingList(input: {
   rows: CutRow[];
@@ -92,18 +141,8 @@ export function shoppingList(input: {
       ...(m?.kind === 'worktop' || /worktop/i.test(name) ? { worktop: true } : {}),
     });
   }
-  for (const [id, metres] of bandMetersFromRows(rows)) {
-    const m = mat.get(id);
-    const name = rows.find((r) => r.materialId === id)?.materialName ?? id;
-    lines.push({
-      section: 'banding',
-      label: `Edge band for ${name}`,
-      quantity: r2(metres),
-      unit: 'm',
-      detail: 'banded edges of the parts',
-      priceKey: `band:${m ? materialKey(m) : name}`,
-    });
-  }
+  const banding = bandingLines(rows);
+  lines.push(...banding.filter((l) => l.section === 'banding'));
   for (const h of hardware) {
     const size = h.sizeMm ? `, ${h.sizeMm} mm` : '';
     if (TO_CHOOSE.has(h.kind))
@@ -142,6 +181,7 @@ export function shoppingList(input: {
       detail: d.message,
     });
   }
+  lines.push(...banding.filter((l) => l.section === 'choose'));
   for (const rp of input.runParts ?? []) {
     lines.push({
       section: 'run',

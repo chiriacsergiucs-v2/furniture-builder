@@ -10,10 +10,13 @@ import { buildModel } from '../src/core/build';
 import { INTERNAL_DRAWER_SETBACK } from '../src/core/cabinet';
 import { validateDesign, defaultDrawers, findSpace, cornerDefaults } from '../src/core/design';
 import { explode } from '../src/core/explode';
-import { contains } from '../src/core/geometry';
+import { contains, cutDimensions } from '../src/core/geometry';
+import { cutlist } from '../src/core/cutlist';
+import { bandFor } from '../src/core/materials';
 import { frameDefaults, solidMaterials } from '../src/core/design';
 import { aabbOf, panelsOverlap, shapeProblems } from '../src/core/shape';
 import type {
+  EdgeBand,
   Design,
   Space,
   Material,
@@ -31,6 +34,29 @@ const rnd = () => {
   return seed / 0x7fffffff;
 };
 const ri = (a: number, b: number) => a + Math.floor(rnd() * (b - a + 1));
+// Edge bands (ADR-077) draw from their own sequence so the seeded geometry stays the same as before.
+let bandSeed = 777;
+const brnd = () => {
+  bandSeed = (bandSeed * 1103515245 + 12345) & 0x7fffffff;
+  return bandSeed / 0x7fffffff;
+};
+const randomBand = (): EdgeBand | undefined =>
+  brnd() < 0.4
+    ? undefined
+    : {
+        kind: brnd() < 0.5 ? 'abs' : 'pvc',
+        thickness: [4, 8, 10, 20, 30][Math.floor(brnd() * 5)],
+        // Mostly wider than the board; 15 mm is narrower than every body and front board.
+        width: [22, 23, 28, 42, 15][Math.floor(brnd() * 5)],
+        ...(brnd() < 0.3 ? { allowance: Math.floor(brnd() * 40) } : {}),
+      };
+const withBands = (ms: Material[]): Material[] =>
+  ms.map((m) => {
+    if (m.id !== 'body' && m.id !== 'front') return m;
+    const band = randomBand(),
+      frontBand = brnd() < 0.3 ? randomBand() : undefined;
+    return { ...m, ...(band ? { band } : {}), ...(frontBand ? { frontBand } : {}) };
+  });
 const pick = <T>(xs: T[]): T => xs[ri(0, xs.length - 1)];
 let idc = 0;
 const nid = () => `s${idc++}`;
@@ -146,7 +172,7 @@ function genSpace(depth: number, doorsAbove: boolean): Space {
 }
 
 function mats(): Material[] {
-  return [
+  return withBands([
     {
       id: 'body',
       name: 'Body',
@@ -165,7 +191,7 @@ function mats(): Material[] {
     { id: 'box', name: 'Box', thickness: pick([12, 15, 16]), grain: false, color: '#fff' },
     { id: 'bot', name: 'Bot', thickness: pick([3, 5, 8]), grain: false, color: '#fff' },
     { id: 'top', name: 'Top', thickness: pick([18, 25, 38]), grain: true, color: '#fff' },
-  ];
+  ]);
 }
 const drawers = () => ({
   ...defaultDrawers(),
@@ -299,7 +325,28 @@ function check(d: Design): string[] {
     return [...probs, 'THROW ' + (e as Error).message];
   }
   const errs = m.diagnostics.filter((x) => x.severity === 'error');
+  // ADR-077: a band narrower than a banded part's board is always an error, and only then.
+  const mat = new Map(d.materials.map((x) => [x.id, x]));
+  const narrow = m.panels.some((p) => {
+    const x = mat.get(p.materialId);
+    const b = x && p.banded.length ? bandFor(x, p.role) : undefined;
+    return !!b && b.width < cutDimensions(p, x!.grain).thickness;
+  });
+  if (narrow !== errs.some((x) => x.code === 'band-narrow'))
+    probs.push(`band-narrow expected ${narrow}`);
   if (errs.length) return probs; // only check invariants for designs reported clean
+  // ADR-009/077: naming bands never changes a cut size (sampled: the cut list is built twice).
+  if (brnd() < 0.1) {
+    const plain = d.materials.map(({ band: _b, frontBand: _f, ...x }) => {
+      void _b;
+      void _f;
+      return x;
+    });
+    const sizes = (ms: Material[]) =>
+      cutlist(m, ms).map((r) => [r.materialId, r.length, r.width, r.edgesL, r.edgesW, r.quantity]);
+    if (JSON.stringify(sizes(d.materials).sort()) !== JSON.stringify(sizes(plain).sort()))
+      probs.push('band-sizes cut sizes change with a band');
+  }
   const P = m.panels;
   for (const p of P)
     for (const k of ['x', 'y', 'z', 'w', 'h', 'd'] as const)

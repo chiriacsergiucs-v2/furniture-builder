@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { areaM2, bandMetersFromRows } from '../core/cutlist';
 import { sheetOf } from '../core/design';
 import { nest } from '../core/nesting';
-import { drillingRo, hardwareRo, partRo } from '../core/ro';
+import { boardBandRo, drillingRo, hardwareRo, partRo } from '../core/ro';
 import { useDesign } from '../store/designStore';
 import { Elevation } from './Elevation';
 import { SheetSvg } from './Sheets';
@@ -89,6 +89,7 @@ export function PrintSheet() {
                 {list[0].materialName} — {areaM2(rows, mid).toFixed(2)} m²
                 {bands.get(mid) ? `, cant ${bands.get(mid)!.toFixed(1)} m` : ''}
                 {list[0].grain ? ', fibră pe lungime' : ''}
+                {boardBandRo(list) ? `; ${boardBandRo(list)}` : ''}
               </caption>
               <thead>
                 <tr>

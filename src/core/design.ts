@@ -14,7 +14,7 @@ import type {
   SplitSize,
 } from './types';
 import { isFinish, materialImageProblems } from './surface';
-import { materialLabelProblems } from './materials';
+import { bandProblems, materialLabelProblems } from './materials';
 
 export type PedestalSide = 'left' | 'right';
 
@@ -36,12 +36,19 @@ export function defaultSheetFor(m: Pick<Material, 'id' | 'name'>): NonNullable<M
 export const sheetOf = (m: Material) => m.sheet ?? defaultSheetFor(m);
 export const kerfOf = (d: Design) => d.cutting?.kerf ?? DEFAULT_KERF;
 
-/** Version-1 → 2 in memory: fill stock sheets and cutting settings. Returns the same object when already v2. */
+/** The document shape this app writes: 3 adds edge band specs on boards (ADR-077); 1 and 2 still load. */
+export const SCHEMA_VERSION = 3;
+
+/**
+ * Older versions → 3 in memory: version 1 gets stock sheets and cutting settings; 2 → 3 adds only optional band
+ * fields, so nothing else changes. Returns the same object when already current.
+ */
 export function upgradeDesign(d: Design): Design {
-  if (d.schemaVersion === 2 && d.cutting && d.materials.every((m) => m.sheet)) return d;
+  if (d.schemaVersion === SCHEMA_VERSION && d.cutting && d.materials.every((m) => m.sheet))
+    return d;
   return {
     ...d,
-    schemaVersion: 2,
+    schemaVersion: SCHEMA_VERSION,
     cutting: d.cutting ?? { kerf: DEFAULT_KERF },
     materials: d.materials.map((m) => (m.sheet ? m : { ...m, sheet: defaultSheetFor(m) })),
   };
@@ -290,7 +297,7 @@ export function wrap(name: string, product: Product): Design {
   const now = new Date().toISOString();
   const solid = product.kind === 'frame' ? solidMaterials() : [];
   return {
-    schemaVersion: 2,
+    schemaVersion: SCHEMA_VERSION,
     id: newId(),
     name,
     createdAt: now,
@@ -907,7 +914,8 @@ function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0)
 export function validateDesign(d: unknown): string[] {
   const errs: string[] = [];
   if (!isObj(d)) return ['Design must be an object'];
-  if (d.schemaVersion !== 1 && d.schemaVersion !== 2) errs.push('Unsupported schemaVersion');
+  if (d.schemaVersion !== 1 && d.schemaVersion !== 2 && d.schemaVersion !== 3)
+    errs.push('Unsupported schemaVersion');
   if (
     d.cutting !== undefined &&
     !(isObj(d.cutting) && isInt(d.cutting.kerf) && (d.cutting.kerf as number) <= 20)
@@ -957,6 +965,12 @@ export function validateDesign(d: unknown): string[] {
       );
     else if (m.finish !== undefined && !isFinish(m.finish))
       errs.push(`Invalid finish for ${String(m.name)}: use matte, satin or gloss`);
+    else if (m.band !== undefined && bandProblems(m.band).length)
+      errs.push(`Invalid edge band for ${String(m.name)}: ${bandProblems(m.band).join(', ')}`);
+    else if (m.frontBand !== undefined && bandProblems(m.frontBand).length)
+      errs.push(
+        `Invalid front edge band for ${String(m.name)}: ${bandProblems(m.frontBand).join(', ')}`,
+      );
     else if (materialLabelProblems(m).length)
       errs.push(`Invalid labels for ${String(m.name)}: ${materialLabelProblems(m).join(', ')}`);
     else if (mids.has(m.id as string)) errs.push(`Duplicate material ${String(m.id)}`);

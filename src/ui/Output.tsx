@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { areaM2, bandMetersFromRows, lengthsList } from '../core/cutlist';
+import { areaM2, bandMetersFromRows, boardBandText, lengthsList } from '../core/cutlist';
 import { useDesign, type Tab } from '../store/designStore';
 import { Sheets } from './Sheets';
 import { FastenerCounts } from './Fasteners';
@@ -130,6 +130,7 @@ function Parts() {
                 {bands.get(mid) ? `, ${bands.get(mid)!.toFixed(1)} m edge band` : ''}
                 {list[0].grain ? ', grain along length' : ''}
               </span>
+              {boardBandText(list) && <span className="band">{boardBandText(list)}</span>}
             </caption>
             <thead>
               <tr>

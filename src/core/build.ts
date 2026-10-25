@@ -4,10 +4,11 @@ import { buildDesk } from './desk';
 import { buildPanelSet } from './panelset';
 import { buildFrame } from './frame';
 import { buildPanel } from './panel';
+import { bandFor, bandText } from './materials';
 import { runRules } from './rules';
 import { box, contains, cutDimensions, isMm, union } from './geometry';
 import { aabbOf, panelsOverlap, shapeProblems } from './shape';
-import type { Design, Diagnostic, FurnitureModel, Material, Panel } from './types';
+import type { Design, Diagnostic, EdgeBand, FurnitureModel, Material, Panel } from './types';
 
 const FRONT_ROLES = new Set<Panel['role']>(['door', 'drawer-front', 'blind-panel']);
 
@@ -126,6 +127,30 @@ export function buildModel(design: Design): FurnitureModel {
       }
     }
   }
+
+  // A band narrower than the board it covers cannot close the edge (ADR-077). Nothing else about the band is
+  // judged: sources disagree on the overhang.
+  const narrow = new Map<string, { m: Material; band: EdgeBand; t: number; panels: Panel[] }>();
+  for (const p of panels) {
+    if (!p.banded.length) continue;
+    const m = materials.get(p.materialId);
+    const band = m && bandFor(m, p.role);
+    if (!m || !band) continue;
+    const t = cutDimensions(p, m.grain).thickness;
+    if (band.width >= t) continue;
+    const k = `${m.id}|${bandText(band)}|${t}`;
+    const g = narrow.get(k);
+    if (g) g.panels.push(p);
+    else narrow.set(k, { m, band, t, panels: [p] });
+  }
+  for (const { m, band, t, panels: list } of narrow.values())
+    diagnostics.push({
+      severity: 'error',
+      code: 'band-narrow',
+      nodeId: list[0].nodeId,
+      panelIds: list.map((x) => x.id),
+      message: `Edge band ${bandText(band)} on ${m.name} is narrower than the ${t} mm board.`,
+    });
 
   // A board labelled kitchen worktop on other parts: guidance only, the user may mean it (ADR-049).
   for (const m of design.materials) {
