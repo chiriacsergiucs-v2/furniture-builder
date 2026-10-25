@@ -75,7 +75,11 @@ for (const width of [1280, 390]) {
     `card bottom ${Math.round(cb.y + cb.height)}, space top ${Math.round(sel.y)}`,
   );
   check(width, 'card is inside the drawing', inside(cb, await box(front)));
-  check(width, 'Vertical dividers shows 2', (await valueOf(front, 'Vertical dividers')) === '2');
+  check(
+    width,
+    'drawer bank selected: its own Vertical dividers 0 (ADR-086)',
+    (await valueOf(front, 'Vertical dividers')) === '0',
+  );
   await shot('drawing');
 
   // 3. + Drawers: 4, and the drawing says so; − Vertical dividers: one bay fewer.
@@ -87,14 +91,30 @@ for (const width of [1280, 390]) {
     'drawing shows "4 drawers"',
     await front.getByText('4 drawers', { exact: true }).isVisible(),
   );
+  // The user's bug (ADR-086): with the middle section selected, + Vertical dividers divides that section only.
+  const sides = () =>
+    front
+      .getByRole('button', { name: /^1 shelf space/ })
+      .evaluateAll((es) => es.map((e) => e.getAttribute('aria-label')));
   const bays = await front.locator('.el-space').count();
+  const before = await sides();
+  await c.getByRole('button', { name: 'More vertical dividers' }).click();
+  await page.waitForTimeout(200);
+  check(
+    width,
+    'More vertical dividers on the middle section → it splits in two, the side sections keep their size',
+    (await valueOf(front, 'Vertical dividers')) === '1' &&
+      (await front.locator('.el-space').count()) === bays + 1 &&
+      JSON.stringify(await sides()) === JSON.stringify(before),
+    `${JSON.stringify(before)} → ${JSON.stringify(await sides())}`,
+  );
   await c.getByRole('button', { name: 'Fewer vertical dividers' }).click();
   await page.waitForTimeout(200);
   check(
     width,
-    'Fewer vertical dividers → 1, one space fewer',
-    (await valueOf(front, 'Vertical dividers')) === '1' &&
-      (await front.locator('.el-space').count()) === bays - 1,
+    'Fewer vertical dividers → one section again',
+    (await valueOf(front, 'Vertical dividers')) === '0' &&
+      (await front.locator('.el-space').count()) === bays,
   );
   check(width, 'no sideways scroll (drawing)', await noSideScroll());
 

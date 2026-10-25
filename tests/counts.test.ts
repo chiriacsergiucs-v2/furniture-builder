@@ -2,7 +2,7 @@ import 'fake-indexeddb/auto';
 import { describe, expect, it } from 'vitest';
 import { buildModel } from '../src/core/build';
 import { countRows, countSubject, stepCount, type CountKey } from '../src/core/counts';
-import { findInProduct, templates } from '../src/core/design';
+import { templates } from '../src/core/design';
 import type { Design, Space } from '../src/core/types';
 import { useDesign } from '../src/store/designStore';
 
@@ -35,12 +35,12 @@ describe('quick count rows (ADR-084)', () => {
     expect(stepCount(sliding, 'sliding', 1).front).toMatchObject({ count: 3 });
     expect(stepCount(sliding, 'sliding', -1)).toBe(sliding);
   });
-  it('a bay of a side-by-side split counts its parent’s vertical dividers', () => {
+  it('a bay of a side-by-side split counts its own dividers, not its parent’s (ADR-086)', () => {
     const d = byTemplate('sideboard');
     const split = interior(d);
     if (split.kind !== 'split') throw Error();
     const bay = rowsOf(d, split.children[1].id);
-    expect(bay.vdiv).toMatchObject({ value: 2, target: split.id });
+    expect(bay.vdiv).toMatchObject({ value: 0, target: split.children[1].id });
     expect(bay.hdiv).toMatchObject({ value: 0, target: split.children[1].id });
     expect(rowsOf(d, split.id).vdiv).toMatchObject({ value: 2, target: split.id });
   });
@@ -144,14 +144,32 @@ describe('quick counts in the store (ADR-084)', () => {
     st().undo();
     expect(value('drawers')).toBe(4);
   });
-  it('removing the selected bay selects the space that held it', () => {
-    const d = byTemplate('sideboard');
-    const split = interior(d);
-    if (split.kind !== 'split') throw Error();
+  it('cabinet with 3 bays: + on the middle bay divides that bay only; shelves change that bay only (ADR-086)', () => {
+    const d = byTemplate('bookcase');
     st().load(d);
-    st().select(split.children[2].id);
-    st().stepCount('vdiv', -1);
-    expect(st().selectedId).toBe(split.id);
-    expect(findInProduct(st().design.product, split.id)?.space.kind).toBe('split');
+    st().select(null);
+    st().stepCount('vdiv', 1);
+    st().stepCount('vdiv', 1);
+    const root = () => interior(st().design);
+    const r0 = root();
+    if (r0.kind !== 'split') throw Error();
+    expect(r0.children).toHaveLength(3);
+    const [left, middle, right] = r0.children.map((c) => c.id);
+    st().select(middle);
+    st().stepCount('vdiv', 1);
+    const r1 = root();
+    if (r1.kind !== 'split') throw Error();
+    expect(r1.children.map((c) => c.id)).toEqual([left, middle, right]);
+    expect(r1.children[1]).toMatchObject({ id: middle, kind: 'split', axis: 'x' });
+    expect(st().selectedId).toBe(middle);
+    st().select(right);
+    st().stepCount('shelves', 1);
+    const r2 = root();
+    if (r2.kind !== 'split') throw Error();
+    expect(r2.children.map((c) => (c.kind === 'shelves' ? c.count : c.kind))).toEqual([
+      4,
+      'split',
+      3,
+    ]);
   });
 });

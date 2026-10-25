@@ -2,15 +2,7 @@
  * Quick counts for the selected space (ADR-084): which counts apply to it, and one step up or down.
  * Pure: the stepper over the drawing and the 3D view only renders these rows and applies `stepCount`.
  */
-import {
-  findInProduct,
-  fr,
-  makeSpace,
-  parentOf,
-  productRoots,
-  setDrawerCount,
-  splitSpace,
-} from './design';
+import { findInProduct, fr, makeSpace, productRoots, setDrawerCount, splitSpace } from './design';
 import type { Selection } from './selectPath';
 import type { Product, Space } from './types';
 
@@ -22,7 +14,7 @@ export interface CountRow {
   value: number;
   min: number;
   max: number;
-  /** The space the step changes: the selected one, or its parent for a divider row along the parent's axis. */
+  /** The space the step changes: always the selected one (ADR-086). */
   target: string;
 }
 
@@ -52,20 +44,16 @@ export function countRows(prod: Product, id: string): CountRow[] {
   const found = findInProduct(prod, id);
   if (!found) return [];
   const s = found.space;
-  const parent = parentOf(found.root, id);
   const rows: CountRow[] = [];
-  for (const axis of ['x', 'y'] as const) {
-    const own = s.kind === 'split' && s.axis === axis;
-    const viaParent = !own && parent?.kind === 'split' && parent.axis === axis;
-    const t = own ? s : viaParent ? parent : null;
+  // Every row changes the selected space only (ADR-086): a bay's dividers divide that bay, never its parent.
+  for (const axis of ['x', 'y'] as const)
     rows.push({
       ...DIV[axis],
-      value: t && t.kind === 'split' ? t.children.length - 1 : 0,
+      value: s.kind === 'split' && s.axis === axis ? s.children.length - 1 : 0,
       min: 0,
       max: MAX_DIVIDERS,
-      target: t ? t.id : s.id,
+      target: s.id,
     });
-  }
   if (s.kind === 'shelves')
     rows.push({
       key: 'shelves',
