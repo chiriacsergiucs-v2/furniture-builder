@@ -1,13 +1,16 @@
 import { useMemo } from 'react';
-import { areaM2, bandMetersFromRows, lengthsList } from '../core/cutlist';
+import { areaM2, bandMetersFromRows, boardBandText, lengthsList } from '../core/cutlist';
 import { useDesign, type Tab } from '../store/designStore';
 import { Sheets } from './Sheets';
+import { FastenerCounts } from './Fasteners';
 import { ShoppingList } from './Shopping';
 import { useView } from './useView';
 import { Icon } from './icons';
 import { cutlistCsvRo } from '../core/ro';
 import { download, fileName } from './shell/files';
 import { useUi } from './shell/uiStore';
+import { mayRepair, problemPanels } from '../core/repairs';
+import { useProblem } from './problemStore';
 
 export function Output() {
   const tab = useDesign((s) => s.tab);
@@ -129,6 +132,7 @@ function Parts() {
                 {bands.get(mid) ? `, ${bands.get(mid)!.toFixed(1)} m edge band` : ''}
                 {list[0].grain ? ', grain along length' : ''}
               </span>
+              {boardBandText(list) && <span className="band">{boardBandText(list)}</span>}
             </caption>
             <thead>
               <tr>
@@ -252,10 +256,13 @@ function Hardware() {
   const items = useView().hardware;
   if (!items.length)
     return (
-      <p className="empty center">
-        <Icon name="box" />
-        No hardware needed yet. Add drawers, doors or a hanging rail.
-      </p>
+      <div className="hardware">
+        <p className="empty center">
+          <Icon name="box" />
+          No hardware needed yet. Add drawers, doors or a hanging rail.
+        </p>
+        <FastenerCounts />
+      </div>
     );
   return (
     <div className="hardware">
@@ -280,10 +287,11 @@ function Hardware() {
         </tbody>
       </table>
       <p className="hint">
-        Screws and connectors are not listed, except screwed joints a design names (their screws are
-        your choice). Hinge and shelf-pin counts follow common guidance; the maker's datasheet
-        decides.
+        Screws and connectors are counted below only as joints (guidance), except screwed joints a
+        design names (their screws are your choice). Hinge and shelf-pin counts follow common
+        guidance; the maker's datasheet decides.
       </p>
+      <FastenerCounts />
     </div>
   );
 }
@@ -295,6 +303,9 @@ function Checks() {
   const selectItem = useDesign((s) => s.selectItem);
   const productId = useDesign((s) => s.design.product.id);
   const setHighlight = useDesign((s) => s.setHighlight);
+  const projectModel = useDesign((s) => s.projectModel);
+  const projectId = useDesign((s) => s.project?.id);
+  const showProblem = useProblem((s) => s.show);
   const go = (nodeId?: string) =>
     view.mode === 'project'
       ? selectItem(nodeId ?? null)
@@ -317,7 +328,11 @@ function Checks() {
             type="button"
             onClick={() => {
               go(d.nodeId);
-              setHighlight(d.panelIds ?? []);
+              // A project problem with a place (ADR-071): outline it on the plan, offer repairs, light its panels.
+              if (view.mode === 'project' && projectModel && projectId && d.itemIds?.length) {
+                setHighlight(problemPanels(projectModel, d));
+                showProblem(d, projectId);
+              } else setHighlight(d.panelIds ?? []);
             }}
           >
             <Icon
@@ -327,6 +342,11 @@ function Checks() {
             <span>
               <span className="sev">{d.severity === 'error' ? 'Problem' : 'Check'}</span>
               {d.message}
+              {view.mode === 'project' && d.itemIds?.length ? (
+                <span className="check-more">
+                  {mayRepair(d) ? 'Show on the plan and see repairs' : 'Show on the plan'}
+                </span>
+              ) : null}
             </span>
           </button>
         </li>

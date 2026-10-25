@@ -12,6 +12,7 @@ import {
 import { useDesign } from '../store/designStore';
 import type { Design } from '../core/types';
 import { AddPieceDialog, MaterialsPanel, NewDialog } from './Dialogs';
+import { FastenersPanel } from './Fasteners';
 import { WizardDialog } from './Wizard';
 import { CatalogPage } from './Catalog';
 import { ResearchPage } from './Research';
@@ -23,6 +24,7 @@ import { useView } from './useView';
 import { Elevation } from './Elevation';
 import { Inspector, selectionLabel } from './Inspector';
 import { Output } from './Output';
+import { useProblem } from './problemStore';
 import { PrintSheet } from './PrintSheet';
 import { Icon } from './icons';
 import { setTheme, useTheme } from './useTheme';
@@ -198,6 +200,24 @@ export function App() {
     setLastSel(selKey);
     if (selKey && !tapMode) setSheetOpen(true);
   }
+  // A project check tapped under Checks (ADR-071) is shown on the plan: the drawing comes forward, the sheet steps aside.
+  const problemTap = useProblem((s) => s.tapped);
+  const [lastProblemTap, setLastProblemTap] = useState(problemTap);
+  if (problemTap !== lastProblemTap) {
+    setLastProblemTap(problemTap);
+    if (inProject) {
+      setView('front');
+      setSheetOpen(false);
+    }
+  }
+  const seenProblemTap = useRef(problemTap);
+  useEffect(() => {
+    if (problemTap === seenProblemTap.current) return;
+    seenProblemTap.current = problemTap;
+    // On a phone Build & Preview shows 3D only: the plan is in Compose.
+    if (window.matchMedia?.('(max-width: 760px)').matches && useUi.getState().mode === 'build')
+      useUi.getState().setMode('compose');
+  }, [problemTap]);
   useEffect(() => {
     if (tapMode) useUi.getState().setMode('compose');
   }, [tapMode]);
@@ -320,6 +340,22 @@ export function App() {
         if (e.shiftKey) redo();
         else undo();
       }
+      // Ctrl/Cmd+D duplicates the piece selected in a project (ADR-069).
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
+        const st = useDesign.getState();
+        const busy = st.placingItemId || st.drawingRoom;
+        if (
+          !e.repeat &&
+          page === 'editor' &&
+          st.project &&
+          !st.editingItemId &&
+          st.selectedItemId &&
+          !busy
+        ) {
+          e.preventDefault();
+          st.duplicateItem(st.selectedItemId);
+        }
+      }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
         e.preventDefault();
         redo();
@@ -332,7 +368,7 @@ export function App() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [undo, redo]);
+  }, [undo, redo, page]);
 
   const errors = vd.diagnostics.filter((d) => d.severity === 'error').length;
   const warnings = vd.diagnostics.length - errors;
@@ -613,6 +649,7 @@ export function App() {
                   {sideMode === 'configure' && (
                     <div className="inspector boards">
                       <MaterialsPanel />
+                      <FastenersPanel />
                     </div>
                   )}
                 </>

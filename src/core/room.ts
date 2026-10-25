@@ -2,7 +2,8 @@
  * The room of a project (ADR-058, ADR-059): an outline of walls parallel to x or z, a height, and doors, windows
  * and obstacles. Whole millimetres; x along the back wall, z away from it (ADR-003). Pieces are checked against it:
  * outside the room or into an obstacle is an error; in a door's swing or above a window sill against its wall is a
- * warning. Optional on a project: absent = no room checks, as before.
+ * warning. Pipes and outlets (ADR-072) are zones on a wall: a back, plinth or worktop over one, or an outlet hidden
+ * behind a piece, is a warning. Optional on a project: absent = no room checks, as before.
  */
 import type { Box, Diagnostic, Mm } from './types';
 
@@ -11,15 +12,24 @@ export type Pt = [Mm, Mm];
 /** Starting height for a new room; the user sets their own (the field says so). */
 export const DEFAULT_ROOM_HEIGHT = 2500;
 
+export const ROOM_FEATURE_KINDS = ['door', 'window', 'obstacle', 'pipe', 'outlet'] as const;
+export type RoomFeatureKind = (typeof ROOM_FEATURE_KINDS)[number];
+/** Pipes and outlets (ADR-072): service zones on a wall, checked against backs, plinths and worktops. */
+export const isService = (k: RoomFeatureKind): k is 'pipe' | 'outlet' =>
+  k === 'pipe' || k === 'outlet';
+/** Starting zone sizes for a new pipe and outlet (ADR-072 open question); the user edits them. */
+export const DEFAULT_PIPE_ZONE = 100;
+export const DEFAULT_OUTLET_ZONE = 80;
+
 export interface RoomFeature {
   id: string;
-  kind: 'door' | 'window' | 'obstacle';
+  kind: RoomFeatureKind;
   /** Index of the wall (outline[i] → outline[i+1]); null = a free-standing obstacle on the floor at x, z. */
   wall: number | null;
   /** Distance from the wall's start corner to the opening or obstacle, along the wall. */
   from: Mm;
   width: Mm;
-  /** Height above the floor where it starts (window sill, obstacle bottom); 0 for doors. */
+  /** Height above the floor where it starts (window sill, obstacle or pipe/outlet zone bottom); 0 for doors. */
   sill: Mm;
   height: Mm;
   /** How far an obstacle comes into the room (or its size along z on the floor). */
@@ -220,6 +230,8 @@ export function featureBox(r: Room, f: RoomFeature): Box | null {
   if (f.wall < 0 || f.wall >= r.outline.length) return null;
   if (f.kind === 'door') return wallBox(r, f.wall, f.from, f.width, f.width, 0, f.height);
   if (f.kind === 'window') return wallBox(r, f.wall, f.from, f.width, 50, f.sill, f.height);
+  // A pipe or outlet zone: the strip just in front of the wall where a back, plinth or worktop would cover it.
+  if (isService(f.kind)) return wallBox(r, f.wall, f.from, f.width, NEAR_WALL, f.sill, f.height);
   return wallBox(r, f.wall, f.from, f.width, f.depth, f.sill, f.height);
 }
 
@@ -291,7 +303,9 @@ export function roomChecks(
     name: string;
     bounds: Box;
     hitsPanels: (b: Box) => boolean;
-    clearances: { label: string; box: Box; need: Mm }[];
+    /** The back, plinth or worktop panel (its role) that enters a box, or null (ADR-072). */
+    covers?: (b: Box) => string | null;
+    clearances: { label: string; box: Box; need: Mm; panelId?: string }[];
   }[],
 ): {
   diagnostics: Diagnostic[];
@@ -340,19 +354,28 @@ export function roomChecks(
   const clearanceIssues: Diagnostic[] = [];
   for (const pc of pieces) {
     const b = pc.bounds;
-    if (!rectInside(room.outline, b.x, b.z, b.x + b.w, b.z + b.d))
+    if (!rectInside(room.outline, b.x, b.z, b.x + b.w, b.z + b.d)) {
+      // ADR-071: how far it has to move to stand inside (the shortest move along the floor), when it fits at all.
+      const way = movesInside(room.outline, b)[0];
+      const amount = way ? Math.abs(way.dx) + Math.abs(way.dz) : undefined;
       diagnostics.push({
         severity: 'error',
         code: 'outside-room',
-        message: `${pc.name} is outside the room (through a wall).`,
+        message: `${pc.name} is outside the room (through a wall)${amount ? `: it is ${amount} mm too far out` : ''}.`,
         nodeId: pc.id,
+        itemIds: [pc.id],
+        box: b,
+        ...(amount ? { amount } : {}),
       });
-    else if (b.y + b.h > room.height)
+    } else if (b.y + b.h > room.height)
       diagnostics.push({
         severity: 'error',
         code: 'outside-room',
         message: `${pc.name} is ${b.y + b.h - room.height} mm taller than the room.`,
         nodeId: pc.id,
+        itemIds: [pc.id],
+        box: b,
+        amount: b.y + b.h - room.height,
       });
     for (const f of room.features) {
       const fb = featureBox(room, f);
@@ -382,6 +405,7 @@ export function roomChecks(
           });
       }
     }
+    diagnostics.push(...serviceChecks(room, pc));
     // Opening clearances that reach through a wall (ADR-057).
     for (const c of pc.clearances) {
       const cb = c.box;
@@ -391,10 +415,96 @@ export function roomChecks(
           code: 'opening-blocked',
           message: `${c.label} of ${pc.name} cannot open fully: it hits a wall (needs ${c.need} mm).`,
           nodeId: pc.id,
+          itemIds: [pc.id],
+          box: cb,
+          ...(c.panelId ? { panelIds: [c.panelId] } : {}),
         });
     }
   }
   return { diagnostics, obstacles, clearanceIssues };
+}
+
+/**
+ * The moves along the floor (dx, dz) that bring a piece's footprint `b` inside the room, shortest first (ADR-071).
+ * Candidates line an edge of the piece up with a corner coordinate of the outline, along x, z or both; empty when
+ * none fits (a piece wider than the room).
+ */
+export function movesInside(outline: Pt[], b: Box): { dx: Mm; dz: Mm }[] {
+  const shifts = (lo: Mm, size: Mm, coords: Mm[]) => [
+    ...new Set([0, ...coords.flatMap((c) => [c - lo, c - (lo + size)])]),
+  ];
+  const sx = shifts(
+    b.x,
+    b.w,
+    outline.map((p) => p[0]),
+  );
+  const sz = shifts(
+    b.z,
+    b.d,
+    outline.map((p) => p[1]),
+  );
+  const out: { dx: Mm; dz: Mm }[] = [];
+  for (const dx of sx)
+    for (const dz of sz)
+      if ((dx || dz) && rectInside(outline, b.x + dx, b.z + dz, b.x + b.w + dx, b.z + b.d + dz))
+        out.push({ dx, dz });
+  const cost = (m: { dx: Mm; dz: Mm }) => Math.abs(m.dx) + Math.abs(m.dz);
+  return out.sort(
+    (p, q) => cost(p) - cost(q) || Math.abs(p.dx) - Math.abs(q.dx) || p.dx - q.dx || p.dz - q.dz,
+  );
+}
+
+/**
+ * A tall unit for the outlet check (ADR-072): at least as high as the smallest tall cabinet in the catalog (ADR-036
+ * dims). A default to confirm, listed under the ADR's open questions.
+ */
+export const TALL_UNIT_HEIGHT = 1600;
+
+/**
+ * A pipe or outlet zone against a piece (ADR-072), warnings only: an outlet whose whole zone (width and height) a
+ * tall unit stands in front of is hidden; otherwise a back, plinth or worktop panel in the zone covers it. A piece
+ * without a back over a pipe (a sink base) is expected and gives nothing. Nothing is cut automatically (ADR-010).
+ */
+export function serviceChecks(
+  room: Room,
+  pc: { id: string; name: string; bounds: Box; covers?: (b: Box) => string | null },
+): Diagnostic[] {
+  const out: Diagnostic[] = [];
+  for (const f of room.features) {
+    const zone = isService(f.kind) ? featureBox(room, f) : null;
+    const d = zone && boxesOverlap(pc.bounds, zone) ? serviceIssue(f, zone, pc) : null;
+    if (d) out.push(d);
+  }
+  return out;
+}
+function serviceIssue(
+  f: RoomFeature,
+  zone: Box,
+  pc: { id: string; name: string; bounds: Box; covers?: (b: Box) => string | null },
+): Diagnostic | null {
+  const b = pc.bounds;
+  if (
+    f.kind === 'outlet' &&
+    b.h >= TALL_UNIT_HEIGHT &&
+    b.x <= zone.x &&
+    b.x + b.w >= zone.x + zone.w &&
+    b.y <= zone.y &&
+    b.y + b.h >= zone.y + zone.h
+  )
+    return {
+      severity: 'warning',
+      code: 'outlet-hidden',
+      message: `${f.label} is hidden behind ${pc.name}: move the outlet or the piece.`,
+      nodeId: pc.id,
+    };
+  const part = pc.covers?.(zone);
+  if (!part) return null;
+  return {
+    severity: 'warning',
+    code: 'covers-service',
+    message: `${f.kind === 'pipe' ? 'Pipe' : 'Outlet'} behind ${pc.name} (${f.label}): cut the ${part} or move the piece.`,
+    nodeId: pc.id,
+  };
 }
 
 /**
@@ -465,7 +575,7 @@ export function validateRoom(r: unknown): string[] {
       if (
         !isObj(f) ||
         typeof f.id !== 'string' ||
-        !['door', 'window', 'obstacle'].includes(f.kind as string) ||
+        !(ROOM_FEATURE_KINDS as readonly unknown[]).includes(f.kind) ||
         typeof f.label !== 'string' ||
         !(f.wall === null || isInt(f.wall, 0)) ||
         !isInt(f.from, 0) ||
@@ -503,7 +613,7 @@ export function roomDisplayBoxes(r: Room, thick = 20): { walls: Box[]; obstacles
   for (let i = 0; i < r.outline.length; i++) {
     const len = wallLength(r, i);
     const open = r.features
-      .filter((f) => f.wall === i && f.kind !== 'obstacle')
+      .filter((f) => f.wall === i && (f.kind === 'door' || f.kind === 'window'))
       .map((f) => ({
         a: Math.max(0, f.from),
         b: Math.min(len, f.from + f.width),
