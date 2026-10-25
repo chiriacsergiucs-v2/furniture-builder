@@ -291,7 +291,7 @@ export function roomChecks(
     name: string;
     bounds: Box;
     hitsPanels: (b: Box) => boolean;
-    clearances: { label: string; box: Box; need: Mm }[];
+    clearances: { label: string; box: Box; need: Mm; panelId?: string }[];
   }[],
 ): {
   diagnostics: Diagnostic[];
@@ -340,19 +340,28 @@ export function roomChecks(
   const clearanceIssues: Diagnostic[] = [];
   for (const pc of pieces) {
     const b = pc.bounds;
-    if (!rectInside(room.outline, b.x, b.z, b.x + b.w, b.z + b.d))
+    if (!rectInside(room.outline, b.x, b.z, b.x + b.w, b.z + b.d)) {
+      // ADR-071: how far it has to move to stand inside (the shortest move along the floor), when it fits at all.
+      const way = movesInside(room.outline, b)[0];
+      const amount = way ? Math.abs(way.dx) + Math.abs(way.dz) : undefined;
       diagnostics.push({
         severity: 'error',
         code: 'outside-room',
-        message: `${pc.name} is outside the room (through a wall).`,
+        message: `${pc.name} is outside the room (through a wall)${amount ? `: it is ${amount} mm too far out` : ''}.`,
         nodeId: pc.id,
+        itemIds: [pc.id],
+        box: b,
+        ...(amount ? { amount } : {}),
       });
-    else if (b.y + b.h > room.height)
+    } else if (b.y + b.h > room.height)
       diagnostics.push({
         severity: 'error',
         code: 'outside-room',
         message: `${pc.name} is ${b.y + b.h - room.height} mm taller than the room.`,
         nodeId: pc.id,
+        itemIds: [pc.id],
+        box: b,
+        amount: b.y + b.h - room.height,
       });
     for (const f of room.features) {
       const fb = featureBox(room, f);
@@ -391,10 +400,43 @@ export function roomChecks(
           code: 'opening-blocked',
           message: `${c.label} of ${pc.name} cannot open fully: it hits a wall (needs ${c.need} mm).`,
           nodeId: pc.id,
+          itemIds: [pc.id],
+          box: cb,
+          ...(c.panelId ? { panelIds: [c.panelId] } : {}),
         });
     }
   }
   return { diagnostics, obstacles, clearanceIssues };
+}
+
+/**
+ * The moves along the floor (dx, dz) that bring a piece's footprint `b` inside the room, shortest first (ADR-071).
+ * Candidates line an edge of the piece up with a corner coordinate of the outline, along x, z or both; empty when
+ * none fits (a piece wider than the room).
+ */
+export function movesInside(outline: Pt[], b: Box): { dx: Mm; dz: Mm }[] {
+  const shifts = (lo: Mm, size: Mm, coords: Mm[]) => [
+    ...new Set([0, ...coords.flatMap((c) => [c - lo, c - (lo + size)])]),
+  ];
+  const sx = shifts(
+    b.x,
+    b.w,
+    outline.map((p) => p[0]),
+  );
+  const sz = shifts(
+    b.z,
+    b.d,
+    outline.map((p) => p[1]),
+  );
+  const out: { dx: Mm; dz: Mm }[] = [];
+  for (const dx of sx)
+    for (const dz of sz)
+      if ((dx || dz) && rectInside(outline, b.x + dx, b.z + dz, b.x + b.w + dx, b.z + b.d + dz))
+        out.push({ dx, dz });
+  const cost = (m: { dx: Mm; dz: Mm }) => Math.abs(m.dx) + Math.abs(m.dz);
+  return out.sort(
+    (p, q) => cost(p) - cost(q) || Math.abs(p.dx) - Math.abs(q.dx) || p.dx - q.dx || p.dz - q.dz,
+  );
 }
 
 /**

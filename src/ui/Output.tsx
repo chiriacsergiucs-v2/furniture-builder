@@ -8,6 +8,8 @@ import { Icon } from './icons';
 import { cutlistCsvRo } from '../core/ro';
 import { download, fileName } from './shell/files';
 import { useUi } from './shell/uiStore';
+import { mayRepair, problemPanels } from '../core/repairs';
+import { useProblem } from './problemStore';
 
 export function Output() {
   const tab = useDesign((s) => s.tab);
@@ -295,6 +297,9 @@ function Checks() {
   const selectItem = useDesign((s) => s.selectItem);
   const productId = useDesign((s) => s.design.product.id);
   const setHighlight = useDesign((s) => s.setHighlight);
+  const projectModel = useDesign((s) => s.projectModel);
+  const projectId = useDesign((s) => s.project?.id);
+  const showProblem = useProblem((s) => s.show);
   const go = (nodeId?: string) =>
     view.mode === 'project'
       ? selectItem(nodeId ?? null)
@@ -317,7 +322,11 @@ function Checks() {
             type="button"
             onClick={() => {
               go(d.nodeId);
-              setHighlight(d.panelIds ?? []);
+              // A project problem with a place (ADR-071): outline it on the plan, offer repairs, light its panels.
+              if (view.mode === 'project' && projectModel && projectId && d.itemIds?.length) {
+                setHighlight(problemPanels(projectModel, d));
+                showProblem(d, projectId);
+              } else setHighlight(d.panelIds ?? []);
             }}
           >
             <Icon
@@ -327,6 +336,11 @@ function Checks() {
             <span>
               <span className="sev">{d.severity === 'error' ? 'Problem' : 'Check'}</span>
               {d.message}
+              {view.mode === 'project' && d.itemIds?.length ? (
+                <span className="check-more">
+                  {mayRepair(d) ? 'Show on the plan and see repairs' : 'Show on the plan'}
+                </span>
+              ) : null}
             </span>
           </button>
         </li>
