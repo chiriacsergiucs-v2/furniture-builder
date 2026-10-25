@@ -477,7 +477,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-051: Count stepper not over the 3D view
 
-- Status: Open
+- Status: ADR-084
 - Origin: ADR-083, 2026-10-25; agent scoped it out
 - Missing: No stepper over the 3D view; ADR-014 says the 3D viewer only selects, never edits.
 - Request: “Divider(horizontal and vertical)/drawer/shelf/all other applicable pleces based on configuration + currentNuber - … Placement: above the selected piece”
@@ -486,7 +486,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-052: Count stepper only for cabinet spaces
 
-- Status: Open
+- Status: Acknowledged (2026-10-25)
 - Origin: ADR-083, 2026-10-25; agent scoped it out
 - Missing: Products without spaces (frame, panel set, single panel) and project-plan items get no stepper; desk pedestals and corner wings get it through their cabinet spaces only.
 - Request: “Divider(horizontal and vertical)/drawer/shelf/all other applicable pleces based on configuration + currentNuber - … Placement: above the selected piece”
@@ -504,7 +504,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-054: Acceptance level for the count stepper
 
-- Status: Open
+- Status: ADR-083
 - Origin: ADR-083, 2026-10-25; agent scoped it out
 - Missing: Open question default: full acceptance (find-it script at 390 and 1280 px).
 - Request: “Divider(horizontal and vertical)/drawer/shelf/all other applicable pleces based on configuration + currentNuber - … Placement: above the selected piece”

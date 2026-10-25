@@ -100,7 +100,8 @@ Lifecycle, one skill per step:
   document shape bumps `schemaVersion` and keeps old readers (ADR-011).
 - Storage: never edit a shipped Dexie version; never delete rows the app cannot read (ADR-012). Use the
   `add-storage-version` skill. Nothing may delete or rewrite saved designs without the user's explicit decision.
-- The 3D viewer only selects, never edits, stays lazy and mounts only when visible (ADR-014).
+- The 3D viewer only selects, never edits, stays lazy and mounts only when visible (ADR-014). One exception: the
+  quick-count card over the 3D view (ADR-084).
 - Zustand selectors return stable references (no `.filter()`/`.map()` inside a selector).
 - Keyboard focus visible; no horizontal page scroll at 390 px.
 - No committed browser/E2E suite, refactors or polish unless the user asks (ADR-015, ADR-016).

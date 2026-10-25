@@ -10,6 +10,7 @@ import {
 import { duplicateItem, mirrorItem, mirrorRun, turnAboutCentre } from '../core/arrange';
 import { applyFinish, type FinishRole, type FinishScope } from '../core/finish';
 import { mergeItems } from '../core/merge';
+import { countRows, stepCount, type CountKey } from '../core/counts';
 import { closeOutline, DEFAULT_ROOM_HEIGHT, snapCorner, type Pt, type Room } from '../core/room';
 import {
   buildProjectModel,
@@ -94,6 +95,8 @@ interface State {
   /** Leave template mode; returns the template with the edited design put back (the caller saves it), or null. */
   finishTemplateEdit: (keep: boolean) => LocalTemplate | null;
   updateSpace: (id: string, fn: (s: Space) => Space) => void;
+  /** One step of a quick count on the selected space (ADR-083); one undo step. Keeps a selection that still exists. */
+  stepCount: (key: CountKey, delta: 1 | -1) => void;
   updateMaterial: (id: string, patch: Partial<Material>) => void;
   addMaterial: (m: Material) => void;
   /** Removes a board no part uses; returns why not otherwise (nothing changes). */
@@ -657,6 +660,14 @@ export const useDesign = create<State>((set, get) => {
       const d = get().design;
       const product = mapProductSpace(d.product, id, fn);
       if (product !== d.product) commit({ ...d, product });
+    },
+    stepCount: (key, delta) => {
+      const { design, selectedId } = get();
+      if (!selectedId) return;
+      const row = countRows(design.product, selectedId).find((r) => r.key === key);
+      if (!row) return;
+      get().updateSpace(row.target, (s) => stepCount(s, key, delta));
+      if (!findInProduct(get().design.product, selectedId)) set({ selectedId: row.target });
     },
     updateMaterial: (id, patch) => {
       const d = get().design;

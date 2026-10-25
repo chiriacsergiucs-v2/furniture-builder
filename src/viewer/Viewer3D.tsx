@@ -1,6 +1,6 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { ContactShadows, Edges, OrbitControls } from '@react-three/drei';
-import { useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
 import {
   BoxGeometry,
   Color,
@@ -18,6 +18,7 @@ import {
   Texture,
   TextureLoader,
   Vector2,
+  Vector3,
 } from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
@@ -37,6 +38,7 @@ import { useView } from '../ui/useView';
 import { useTheme } from '../ui/useTheme';
 import { useLook } from '../ui/useLook';
 import { SHADOW_CATCHER, setStage, useRendering } from './renderBridge';
+import { CountStepper } from '../ui/CountStepper';
 import type { Box, MaterialImage, Panel } from '../core/types';
 
 const S = 0.001; // mm → metres
@@ -155,50 +157,98 @@ export default function Viewer3D() {
     () => (exploded ? union(panels.map(aabbOf)) : (extent ?? view.model.bounds)),
     [exploded, panels, view, extent],
   );
+  const counts = view.mode === 'design' && !rendering;
+  const cardRef = useRef<HTMLDivElement>(null);
+  // Bottom centre of the card at the anchor, kept inside the view (the anchor's screen point, or null to hide).
+  const placeCard = useCallback((at: { x: number; y: number } | null) => {
+    const el = cardRef.current,
+      box = el?.parentElement;
+    if (!el || !box) return;
+    if (!at) {
+      el.style.visibility = 'hidden';
+      return;
+    }
+    const w = el.offsetWidth,
+      h = el.offsetHeight,
+      gap = 6;
+    const left = Math.max(gap, Math.min(at.x - w / 2, box.clientWidth - w - gap));
+    const top = Math.max(gap, Math.min(at.y - h - gap, box.clientHeight - h - gap));
+    el.style.transform = `translate(${Math.round(left)}px, ${Math.round(top)}px)`;
+    el.style.visibility = 'visible';
+  }, []);
   return (
-    <Canvas
-      camera={{ fov: 32, near: 0.01, far: 100 }}
-      dpr={[1, 2]}
-      shadows={realistic}
-      onPointerMissed={() => {
-        const st = useDesign.getState();
-        if (st.project && !st.editingItemId) st.selectItem(null);
-        else st.select(null);
-      }}
-    >
-      <color attach="background" args={[bg]} />
-      <Stage />
-      {realistic ? (
-        <>
-          <RoomLight />
-          <KeyLight bounds={bounds} />
-          <ShadowCatcher bounds={bounds} />
-          {!rendering && <Occlusion />}
-        </>
-      ) : (
-        <>
-          <hemisphereLight args={['#ffffff', '#b9bdb6', 1.1]} />
-          <directionalLight position={[2.5, 4, 3]} intensity={1.6} />
-          <directionalLight position={[-3, 2, -1]} intensity={0.35} />
-          <ContactShadows
-            position={[
-              bounds.x * S + (bounds.w * S) / 2,
-              -0.0005,
-              bounds.z * S + (bounds.d * S) / 2,
-            ]}
-            scale={Math.max(bounds.w, bounds.d) * S * 2.2}
-            blur={2.4}
-            opacity={0.38}
-            far={1.2}
-          />
-        </>
+    <>
+      <Canvas
+        camera={{ fov: 32, near: 0.01, far: 100 }}
+        dpr={[1, 2]}
+        shadows={realistic}
+        onPointerMissed={() => {
+          const st = useDesign.getState();
+          if (st.project && !st.editingItemId) st.selectItem(null);
+          else st.select(null);
+        }}
+      >
+        <color attach="background" args={[bg]} />
+        <Stage />
+        {realistic ? (
+          <>
+            <RoomLight />
+            <KeyLight bounds={bounds} />
+            <ShadowCatcher bounds={bounds} />
+            {!rendering && <Occlusion />}
+          </>
+        ) : (
+          <>
+            <hemisphereLight args={['#ffffff', '#b9bdb6', 1.1]} />
+            <directionalLight position={[2.5, 4, 3]} intensity={1.6} />
+            <directionalLight position={[-3, 2, -1]} intensity={0.35} />
+            <ContactShadows
+              position={[
+                bounds.x * S + (bounds.w * S) / 2,
+                -0.0005,
+                bounds.z * S + (bounds.d * S) / 2,
+              ]}
+              scale={Math.max(bounds.w, bounds.d) * S * 2.2}
+              blur={2.4}
+              opacity={0.38}
+              far={1.2}
+            />
+          </>
+        )}
+        <Panels panels={panels} realistic={realistic} plain={rendering} />
+        {counts && <CountsAnchor place={placeCard} />}
+        {view.mode === 'project' && !exploded && <RoomWalls />}
+        {view.mode === 'project' && !exploded && <ModelItems plain={rendering} />}
+        <Fit key={designId} bounds={bounds} />
+      </Canvas>
+      {counts && (
+        <div ref={cardRef} className="count-anchor" style={{ visibility: 'hidden' }}>
+          <CountStepper className="in-3d" />
+        </div>
       )}
-      <Panels panels={panels} realistic={realistic} plain={rendering} />
-      {view.mode === 'project' && !exploded && <RoomWalls />}
-      {view.mode === 'project' && !exploded && <ModelItems plain={rendering} />}
-      <Fit key={designId} bounds={bounds} />
-    </Canvas>
+    </>
   );
+}
+
+/**
+ * Quick counts (ADR-084): the same − N + card as over the drawing, a DOM overlay beside the canvas, placed each frame
+ * right above the front top edge of the selected space and kept inside the view. The viewer itself still only
+ * selects; the card changes the design through the store.
+ */
+function CountsAnchor({ place }: { place: (at: { x: number; y: number } | null) => void }) {
+  const selectedId = useDesign((s) => s.selectedId);
+  const spaces = useDesign((s) => s.model.spaces);
+  const box = useMemo(
+    () => spaces.find((o) => o.nodeId === selectedId && o.view !== 'side')?.box,
+    [spaces, selectedId],
+  );
+  const v = useMemo(() => new Vector3(), []);
+  useFrame(({ camera, size }) => {
+    if (!box) return place(null);
+    v.set((box.x + box.w / 2) * S, (box.y + box.h) * S, (box.z + box.d) * S).project(camera);
+    place(v.z > 1 ? null : { x: ((v.x + 1) / 2) * size.width, y: ((1 - v.y) / 2) * size.height });
+  });
+  return null;
 }
 
 /** Lets the path tracer (ADR-068) read the scene and camera the user is looking at. */

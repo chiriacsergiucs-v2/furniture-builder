@@ -4997,3 +4997,74 @@ button.tile:hover {
     border-radius: 0;
   }
 }
+
+/* Quick counts (ADR-083): − N + for the selected space, floating right above it in the drawing and in 3D. */
+.elevation {
+  position: relative;
+}
+.count-stepper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  padding: 6px;
+  max-width: min(calc(100% - 12px), 26rem);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.14);
+  font-size: 0.8rem;
+}
+.count-stepper.floating {
+  position: absolute;
+  z-index: 2;
+}
+.cs-row {
+  display: grid;
+  gap: 2px;
+  justify-items: center;
+}
+.cs-label {
+  color: var(--ink-2);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.cs-counter {
+  display: inline-grid;
+  grid-template-columns: 32px 30px 32px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+.cs-counter button {
+  border: 0;
+  background: none;
+  height: 32px;
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+.cs-counter button:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+.cs-counter button:disabled {
+  opacity: 0.35;
+}
+.cs-counter output {
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  border-inline: 1px solid var(--line);
+}
+.view.three {
+  position: relative;
+}
+.count-anchor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  width: max-content;
+  max-width: calc(100% - 12px);
+}
+.count-anchor .count-stepper {
+  max-width: none;
+}
