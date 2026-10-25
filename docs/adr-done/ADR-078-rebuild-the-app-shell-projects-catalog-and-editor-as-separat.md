@@ -1,7 +1,8 @@
 # ADR-078: Rebuild the app shell: Projects, Catalog and Editor as separate places, with files in one menu
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-24
+- Implemented: 2026-10-25 (Merged to main; CI run 40170561018 and Deploy GitHub Pages run 40170561007 green on 895eb54)
 - Depends on: ADR-030
 - Design: docs/ui-design.md (§4 Screens: shell), docs/research/2026-10-24-ui-redesign-audit.md (§3)
 - Backlog: N73
@@ -50,7 +51,7 @@ components are reused as content.
    menu on the Catalog toolbar. Decor CSV stays in Materials (configuration) and the research files stay in
    Feature Research. No import or export control stays in the top or bottom bar.
 5. **Feature Research** moves from a page tab into ⋯ → _Feature Research_ (`#research` still works).
-6. Print and Parts CSV leave the bars. [ADR-079](ADR-079-split-the-editor-into-compose-configure-and-build-preview-ph.md)
+6. Print and Parts CSV leave the bars. [ADR-079](../adr-done/ADR-079-split-the-editor-into-compose-configure-and-build-preview-ph.md)
    puts them on the Parts list, still blocked by errors (ADR-008).
 
 ## Alternatives considered
@@ -77,18 +78,18 @@ components are reused as content.
 
 ## Done when
 
-- [ ] At 390 px the top app bar is one row and the bottom nav is one row with _Projects_, _Catalog_, _Editor_.
+- [x] At 390 px the top app bar is one row and the bottom nav is one row with _Projects_, _Catalog_, _Editor_.
       At 1280 px the three show as top-bar tabs (find-it).
-- [ ] The top and bottom bars contain no import or export control. ⋯ → _Files_ lists _Design file_ (or _Project
+- [x] The top and bottom bars contain no import or export control. ⋯ → _Files_ lists _Design file_ (or _Project
       file_), _Front view drawing_, _Fusion 360 script_ and _Import a file_, and each one works (find-it, using the
       same file names as today).
-- [ ] _Projects_ lists saved projects and pieces with open, duplicate, delete and _Import a file_. The Library and
+- [x] _Projects_ lists saved projects and pieces with open, duplicate, delete and _Import a file_. The Library and
       Home content is gone from elsewhere, and nothing it did is lost (find-it, plus the existing `tests/persist.test.ts`).
-- [ ] Editing an item in a project shows `‹ <project> › <item>` in the app bar. Tapping the project segment returns
+- [x] Editing an item in a project shows `‹ <project> › <item>` in the app bar. Tapping the project segment returns
       to the project (find-it). The template variant path offers Save to template and Cancel (find-it).
-- [ ] _Feature Research_ opens from ⋯. `#editor`, `#catalog` and `#research` links still open their pages.
-- [ ] No horizontal page scroll at 360 and 390 px. Focus is visible on every nav and menu item. Escape closes ⋯.
-- [ ] `tools/shell/find-it.mjs` passes on the production build at 390 and 1280 px. All CI checks pass.
+- [x] _Feature Research_ opens from ⋯. `#editor`, `#catalog` and `#research` links still open their pages.
+- [x] No horizontal page scroll at 360 and 390 px. Focus is visible on every nav and menu item. Escape closes ⋯.
+- [x] `tools/shell/find-it.mjs` passes on the production build at 390 and 1280 px. All CI checks pass.
 
 ## Answers (user, 2026-10-24: "Proceed", every default accepted)
 

@@ -5,6 +5,7 @@
 - Depends on: ADR-079
 - Design: docs/ui-design.md (§3 Components and states, §4 Screens: projects, editor)
 - Backlog: N75
+- Acceptance: light
 
 ## Context
 
@@ -20,8 +21,7 @@ On a 390 px phone the plan ("Seen from above. The yellow edge is each piece's fr
 front view ("Seen from the front. Sizes in mm: …") carry captions under the drawings (`src/ui/Project.tsx`
 figcaptions) that push the front view below the fold.
 
-This changes [ADR-079](ADR-079-split-the-editor-into-compose-configure-and-build-preview-ph.md) (Pending, built,
-not shipped), Decision 2 ("Configure: what it is made of") and 4–5: there is no Configure mode; its content moves
+This changes [ADR-079](../adr-done/ADR-079-split-the-editor-into-compose-configure-and-build-preview-ph.md) (implemented), Decision 2 ("Configure: what it is made of") and 4–5: there is no Configure mode; its content moves
 to a settings modal. ADR-014 is kept.
 
 Requirement ledger (user's words):
@@ -95,16 +95,16 @@ No change to `src/core`, the design document, the model or the Dexie schema.
 
 - [ ] Project plan and front view render no caption text; each has an info button _About the plan_ / _About the
       front view_ that shows the original text on hover/focus at 1280 px and on tap at 390 px, closes on outside
-      tap or Esc, with no horizontal scroll (find-it).
+      tap or Esc, with no horizontal scroll (light — catch-up).
 - [ ] No Snap status line under the Snap button; the plan's popover starts with "Pieces go exactly where dropped."
-      when Snap is off; while dragging, "Snaps:" shows over the plan and disappears on drop (find-it).
-- [ ] At 390 × 844 px in a project's Compose, the plan and the front view are both fully visible (find-it).
-- [ ] The mode control shows exactly _Compose_ and _Build & Preview_ (find-it, both widths); a stored `fb:mode` =
+      when Snap is off; while dragging, "Snaps:" shows over the plan and disappears on drop (light — catch-up).
+- [ ] At 390 × 844 px in a project's Compose, the plan and the front view are both fully visible (light — catch-up).
+- [ ] The mode control shows exactly _Compose_ and _Build & Preview_ (light — catch-up); a stored `fb:mode` =
       `configure` opens Compose and steps-rail Size opens the modal (`tests/ui-mode.test.ts`).
 - [ ] The editor bar's _Settings_ opens a modal with _Width_, _Construction_, _Add a material_ and _Drawers_ for a
-      piece, and the project-wide settings for a project; changing Width updates the drawing (find-it).
+      piece, and the project-wide settings for a project; changing Width updates the drawing (light — catch-up).
 - [ ] Every Projects and Single pieces row has _Settings for <name>_; changing a value there and reopening the
-      item shows the new value (find-it, both widths).
+      item shows the new value (light — catch-up).
 - [ ] An invalid value in the modal shows its error, is not clamped, and blocks Download CSV (tests).
 - [ ] Lint, format, typecheck, tests, build and docs check pass.
 

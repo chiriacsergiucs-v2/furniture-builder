@@ -1,7 +1,8 @@
 # ADR-076: Import 3D models from the device as display-only items
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-24
+- Implemented: 2026-10-25 (Merged to main; CI run 40170561018 and Deploy GitHub Pages run 40170561007 green on 895eb54)
 - Depends on: ADR-002, ADR-011, ADR-012, ADR-048
 - Design: docs/ui-design.md (Add a piece, Plan view, 3D)
 - Backlog: N71
@@ -55,13 +56,13 @@ sinks, chairs or decor, which are not furniture the app should cut.
 
 ## Done when
 
-- [ ] A model item validates; projects of the previous `schemaVersion` load; export/import round-trips with new
+- [x] A model item validates; projects of the previous `schemaVersion` load; export/import round-trips with new
       ids (unit tests)
-- [ ] Model items never reach cut list, costs, shopping list or nesting; their boxes are checked (unit tests)
-- [ ] Files with external URIs or over the limits are refused (unit tests on the validator)
-- [ ] A model in use cannot be deleted from the library (storage test)
-- [ ] _Import 3D model_ and _My 3D models_ are found; the model shows in 3D (find-it at 390 px and 1280 px)
-- [ ] Security review done; all CI checks pass
+- [x] Model items never reach cut list, costs, shopping list or nesting; their boxes are checked (unit tests)
+- [x] Files with external URIs or over the limits are refused (unit tests on the validator)
+- [x] A model in use cannot be deleted from the library (storage test)
+- [x] _Import 3D model_ and _My 3D models_ are found; the model shows in 3D (find-it at 390 px and 1280 px)
+- [x] Security review done; all CI checks pass
 
 ## Open questions
 
