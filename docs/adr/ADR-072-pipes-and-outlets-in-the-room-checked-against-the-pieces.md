@@ -53,3 +53,8 @@ windows and obstacles checked against the pieces ([ADR-058](../adr-done/ADR-058-
 ## Open questions
 
 - Default zone sizes — default pipe 100 × 100 mm, outlet 80 × 80 mm; edit as needed.
+- What counts as a tall unit for the hidden-outlet warning — default: a piece at least 1,600 mm high (the smallest
+  tall cabinet in the catalog, ADR-036) standing in front of the whole outlet zone; a lower piece whose back covers
+  an outlet gets the "cut the back or move the piece" warning instead.
+- How far into the room a pipe or outlet zone reaches for the checks — default 50 mm from the wall (the same strip
+  the window check uses); a back, plinth or worktop panel inside that strip covers the zone.
