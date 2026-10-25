@@ -52,6 +52,13 @@ import { templateGlyph } from './Templates';
 import { StartFrom } from './Catalog';
 import { askConfirm } from './Confirm';
 import { SaveProjectTemplate } from './ProjectTemplates';
+import {
+  ProblemBanner,
+  ProblemOutline,
+  useFocusedProblem,
+  type FocusedProblem,
+} from './ProblemBanner';
+import { useProblem } from './problemStore';
 
 const FRONT_SIDE: Record<QuarterTurn, string> = {
   0: 'front faces you',
@@ -673,6 +680,15 @@ export function PlanView() {
   useEffect(() => {
     if (placingId || drawing) ref.current?.scrollIntoView({ block: 'nearest' });
   }, [placingId, drawing]);
+  // A check tapped under Checks (ADR-071): bring the plan, with the problem and its repairs, into view.
+  const problem = useFocusedProblem();
+  const tapped = useProblem((s) => s.tapped);
+  const seenTap = useRef(tapped);
+  useEffect(() => {
+    if (tapped === seenTap.current) return;
+    seenTap.current = tapped;
+    ref.current?.scrollIntoView({ block: 'start' });
+  }, [tapped]);
   if (!pm || (!pm.pieces.length && !hasRoom && !drawing))
     return (
       <div className="no-3d">
@@ -713,8 +729,10 @@ export function PlanView() {
           </button>
         </div>
       )}
-      <RoomPlan pm={pm} />
-      {pm.pieces.length > 0 && <RoomFront pm={pm} />}
+      {problem && !placing && !drawing && <ProblemBanner problem={problem} />}
+      <RoomPlan pm={pm} problem={problem} />
+      {/* While a problem is shown the plan takes the room the front view had (ADR-071). */}
+      {pm.pieces.length > 0 && !(problem && !placing && !drawing) && <RoomFront pm={pm} />}
     </div>
   );
 }
@@ -723,7 +741,7 @@ export function PlanView() {
  * Top-down plan of the room: x to the right, the back wall at the top. Tap a piece to select it; drag it, or use
  * the arrow keys on it, to move it (ADR-065).
  */
-function RoomPlan({ pm }: { pm: ProjectModel }) {
+function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem | null }) {
   const selectedId = useDesign((s) => s.selectedItemId);
   const select = useDesign((s) => s.selectItem);
   const placingId = useDesign((s) => s.placingItemId);
@@ -1031,6 +1049,7 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
               <title>Needed to open; something is in the way</title>
             </rect>
           ))}
+        {problem && !tapping && <ProblemOutline problem={problem} fs={fs} />}
         {target && (
           <g className={`drag-ghost ${target.snap ? 'snapped' : ''}`} aria-hidden="true">
             <rect x={target.box.x} y={target.box.z} width={target.box.w} height={target.box.d} />

@@ -61,3 +61,8 @@ the problem is or how to fix it.
 ## Open questions
 
 - Which repair is listed first — default: the smallest move.
+- Reverse the hinge — the ADR-057 clearance of a hinged door is as deep as the door is wide across its whole
+  width, whichever side it hangs on, so reversing the hinge never clears the warning and is not offered. Should
+  the clearance follow the hinge side (a new ADR), or is the hinge repair dropped?
+- The filler repair is not offered while run parts refresh automatically (ADR-061 would drop a filler it did not
+  propose) — default: offered only with automatic refresh off.
