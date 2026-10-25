@@ -42,7 +42,9 @@ forbids invented specs; this ADR counts, it does not specify.
 
 - Positive: the shopping list stops forgetting the small parts.
 - Harder to change later: the fastener list is saved on the device (new Dexie table or a settings row: decided
-  in implementation with the `add-storage-version` skill).
+  in implementation with the `add-storage-version` skill). Implementation: one row per joint type in the existing
+  `prices` table (id `fastener:<joint type>`, the user's name and count per joint), so no new Dexie version; price
+  lists and price files skip these rows, and a price file cannot overwrite them.
 
 ## Done when
 

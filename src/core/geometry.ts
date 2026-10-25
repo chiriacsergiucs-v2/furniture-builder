@@ -126,3 +126,17 @@ export function cutDimensions(p: Panel, materialHasGrain: boolean) {
     edgesW,
   };
 }
+
+/** The shared part of two boxes (sizes 0 on an axis where they only touch or miss). */
+export function intersection(a: Box, b: Box): Box {
+  const ax = (k: Axis) => {
+    const [a0, a1] = extent(a, k),
+      [b0, b1] = extent(b, k);
+    const lo = Math.max(a0, b0);
+    return [lo, Math.max(0, Math.min(a1, b1) - lo)] as const;
+  };
+  const [x, w] = ax('x'),
+    [y, h] = ax('y'),
+    [z, d] = ax('z');
+  return { x, y, z, w, h, d };
+}

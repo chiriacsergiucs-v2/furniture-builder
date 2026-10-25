@@ -257,24 +257,24 @@ describe('crown, pelmet and ceiling filler (ADR-075)', () => {
   });
 });
 
-describe('project schemaVersion 2 (ADR-075)', () => {
-  it('new projects are version 2; version 1 files still load unchanged', () => {
+describe('project schemaVersion 4 (ADR-075)', () => {
+  it('new projects are the current version; version 1 files still load unchanged', () => {
     expect(newProject().schemaVersion).toBe(PROJECT_SCHEMA);
     const p = withRequests(row('base-door', 2), []);
     const v1 = { ...p, schemaVersion: 1 as const };
     expect(validateProject(v1)).toEqual([]);
     expect(buildProjectModel(v1).diagnostics.filter((d) => d.severity === 'error')).toEqual([]);
-    expect(validateProject({ ...p, schemaVersion: 3 })).toContain(
+    expect(validateProject({ ...p, schemaVersion: PROJECT_SCHEMA + 1 })).toContain(
       'Unsupported project schemaVersion',
     );
   });
-  it('requests and trims validate in version 2 and are refused in version 1', () => {
+  it('requests and trims validate in version 4 and are refused before it', () => {
     const p0 = row('wall-cabinet', 2);
     const ids = p0.items.map((i) => i.id);
     const p = withRequests(p0, [{ kind: 'crown', from: ids, height: 60, material: board(p0) }]);
     expect(validateProject(p)).toEqual([]);
     expect(validateProject({ ...p, schemaVersion: 1 })).toContain(
-      'Trims and chosen worktops need project schemaVersion 2',
+      'Trims and chosen worktops need project schemaVersion 4',
     );
     for (const bad of [
       { kind: 'cornice', from: ids },

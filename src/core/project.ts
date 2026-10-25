@@ -5,10 +5,29 @@
  */
 import { buildModel } from './build';
 import { localClearances, type Clearance } from './clearance';
-import { roomChecks, validateRoom, type Room } from './room';
-import { cutlist, hardwareSummary, type CutRow } from './cutlist';
+import {
+  BODY_CODES,
+  envelopeChecks,
+  envelopesOf,
+  MAX_ZONE_DEPTH,
+  SERVICE_SIDES,
+  worse,
+  type ClearanceZone,
+  type Envelope,
+  type ItemZones,
+} from './envelopes';
+import {
+  outlineIssues,
+  rectInside,
+  roomChecks,
+  serviceChecks,
+  validateRoom,
+  type Room,
+} from './room';
+import { bandKey, cutlist, hardwareSummary, type CutRow } from './cutlist';
+import { bandFor, bandProblems, bandText } from './materials';
 import { DEFAULT_KERF, newId, sheetOf, upgradeDesign, validateDesign } from './design';
-import { overlaps, union } from './geometry';
+import { cutDimensions, intersection, overlaps, union } from './geometry';
 import { aabbOf, overlapsBox, panelsOverlap, turnShape } from './shape';
 import type { SheetSettings } from './nesting';
 import { jobsFromCutlist } from './nesting';
@@ -54,6 +73,8 @@ export interface ProjectItem {
   /** The saved design this copy came from, for "Update from library". */
   libraryId?: string;
   placement?: Placement;
+  /** Chair, service and installation settings (ADR-073); absent = none. Saved from project schemaVersion 3. */
+  zones?: ItemZones;
 }
 
 /**
@@ -104,13 +125,18 @@ export interface RunRequest {
 }
 export const requestKey = (r: Pick<RunRequest, 'kind' | 'from'>) => `${r.kind}|${r.from.join(',')}`;
 
-/** Project document versions: 2 adds run requests and trim run parts (ADR-075); version 1 files still load. */
-export const PROJECT_SCHEMA = 2;
-const PROJECT_SCHEMAS = [1, 2];
-const RUN_REQUESTS_SINCE = 2;
+/**
+ * Project document versions (ADR-011): new and edited projects are written at `PROJECT_SCHEMA`; every version in
+ * `PROJECT_SCHEMAS` still loads unchanged. 2 = room pipes and outlets (ADR-072); 3 = clearance zones on items
+ * (ADR-073); 4 = run requests and trim run parts (ADR-075).
+ */
+export const PROJECT_SCHEMA = 4 as const;
+export const PROJECT_SCHEMAS: readonly number[] = [1, 2, 3, PROJECT_SCHEMA];
+export type ProjectSchemaVersion = 1 | 2 | 3 | typeof PROJECT_SCHEMA;
+const RUN_REQUESTS_SINCE = 4;
 
 export interface Project {
-  schemaVersion: 1 | 2;
+  schemaVersion: ProjectSchemaVersion;
   id: string;
   name: string;
   createdAt: string;
@@ -366,6 +392,8 @@ export interface PlacedPiece {
   clearances: Clearance[];
   /** The room axis and sign the piece's front faces: its clearances grow that way. */
   facing: { axis: 'x' | 'z'; sign: 1 | -1 };
+  /** Chair, installation and service envelopes in room coordinates (ADR-073). */
+  envelopes: Envelope[];
 }
 
 /** Build one item and move its panels into the room. Panel and node ids are prefixed with the item id. */
@@ -414,6 +442,13 @@ export function placeItem(item: ProjectItem, opts?: { noPlinth?: boolean }): Pla
     };
   });
   const facing = FACING[r];
+  // Tipped up in place from lying on its back: stands on the floor, not hung and not set on another piece (ADR-073).
+  const standsUp =
+    item.position.y === 0 && item.placement?.kind !== 'above' && !isWallHung(item.design);
+  const envelopes = envelopesOf(item.design, item.zones, standsUp, built).map((e) => {
+    const rc = rotateBox(e.box, r);
+    return { ...e, box: { ...rc, x: rc.x + dx, y: rc.y + dy, z: rc.z + dz } };
+  });
   return {
     item,
     model,
@@ -421,6 +456,7 @@ export function placeItem(item: ProjectItem, opts?: { noPlinth?: boolean }): Pla
     bounds: model === built ? union(panels.map(aabbOf)) : full,
     clearances,
     facing,
+    envelopes,
   };
 }
 
@@ -445,6 +481,20 @@ export interface ProjectModel {
   diagnostics: Diagnostic[];
   /** Clearances that hit something (ADR-057), for the plan outline of the selected piece. */
   blocked: { itemId: string; box: Box }[];
+  /** Every body, opening, chair and service zone with its worst problem, for the plan's Clearances overlay (ADR-073). */
+  zones: ClearanceZone[];
+}
+
+/**
+ * ADR-077: a run part is cut from a board of the pieces; it takes the band named on that board now, since its
+ * stored copy of the board may predate the band. Boards no piece uses keep the copy's band.
+ */
+function runMaterial(project: Project, m: Material): Material {
+  const k = materialKey(m);
+  for (const it of project.items)
+    for (const pm of it.design.materials)
+      if (materialKey(pm) === k) return { ...m, band: pm.band, frontBand: pm.frontBand };
+  return m;
 }
 
 export function buildProjectModel(input: Project): ProjectModel {
@@ -503,17 +553,26 @@ export function buildProjectModel(input: Project): ProjectModel {
       });
   }
   // Pieces may touch but not occupy the same space (bounding boxes first, then panels).
+  const overlapping = new Set<string>();
   for (let a = 0; a < pieces.length; a++)
     for (let b = a + 1; b < pieces.length; b++) {
       if (!overlaps(pieces[a].bounds, pieces[b].bounds)) continue;
       const hit = pieces[a].panels.find((p) => pieces[b].panels.some((q) => panelsOverlap(p, q)));
-      if (hit)
+      if (hit) overlapping.add(pieces[a].item.id).add(pieces[b].item.id);
+      if (hit) {
+        // Where and how much (ADR-071): the shared part of their outlines, and its thinnest side (the shortest way out).
+        const box = intersection(pieces[a].bounds, pieces[b].bounds);
+        const amount = Math.min(box.w, box.h, box.d);
         diagnostics.push({
           severity: 'error',
           code: 'pieces-overlap',
-          message: `${pieces[a].item.design.name} and ${pieces[b].item.design.name} overlap in the room.`,
+          message: `${pieces[a].item.design.name} and ${pieces[b].item.design.name} overlap by ${amount} mm in the room.`,
           nodeId: pieces[b].item.id,
+          itemIds: [pieces[a].item.id, pieces[b].item.id],
+          box,
+          amount,
         });
+      }
     }
   for (const pc of pieces)
     if (pc.bounds.y < 0)
@@ -544,6 +603,18 @@ export function buildProjectModel(input: Project): ProjectModel {
     const k = materialKey(rp.material);
     if (!materials.has(k)) materials.set(k, { ...rp.material, id: k, sheet: sheetOf(rp.material) });
     const panel = runPanel(rp, k);
+    // ADR-077: a band narrower than the run part's board is an error, as on a piece's own parts.
+    const band = panel.banded.length
+      ? bandFor(runMaterial(project, rp.material), panel.role)
+      : undefined;
+    const t = cutDimensions(panel, rp.material.grain).thickness;
+    if (band && band.width < t)
+      diagnostics.push({
+        severity: 'error',
+        code: 'band-narrow',
+        message: `Edge band ${bandText(band)} on ${rp.material.name} (${rp.label}) is narrower than the ${t} mm board.`,
+        nodeId: `run:${rp.id}`,
+      });
     panels.push(panel);
     piecePanels.push([panel]);
     const hit = pieces.find(
@@ -582,12 +653,35 @@ export function buildProjectModel(input: Project): ProjectModel {
           name: pc.item.design.name,
           bounds: pc.bounds,
           hitsPanels: (b: Box) => pc.panels.some((q) => overlapsBox(q, b)),
+          covers: (b: Box) =>
+            pc.panels.find((q) => COVER_ROLES.has(q.role) && overlapsBox(q, b))?.role ?? null,
           clearances: pc.clearances,
         })),
       )
     : null;
   if (rc) diagnostics.push(...rc.diagnostics, ...rc.clearanceIssues);
+  // Run worktops and plinths over a pipe or outlet (ADR-072).
+  if (project.room && !outlineIssues(project.room.outline).length)
+    for (const rp of project.runParts ?? [])
+      if (COVER_ROLES.has(rp.kind))
+        diagnostics.push(
+          ...serviceChecks(project.room, {
+            id: `run:${rp.id}`,
+            name: rp.label,
+            bounds: rp.box,
+            covers: (b: Box) => (overlaps(rp.box, b) ? rp.kind : null),
+          }),
+        );
   const blocked = openingChecks(pieces, panels, diagnostics, rc?.obstacles ?? []);
+  const zones = clearanceZones(
+    project,
+    pieces,
+    panels,
+    diagnostics,
+    blocked,
+    overlapping,
+    rc?.obstacles ?? [],
+  );
   const model: FurnitureModel = {
     panels,
     spaces: [],
@@ -595,8 +689,113 @@ export function buildProjectModel(input: Project): ProjectModel {
     diagnostics,
     bounds: union(panels.map(aabbOf)),
   };
-  return { pieces, model, piecePanels, materials: [...materials.values()], diagnostics, blocked };
+  return {
+    pieces,
+    model,
+    piecePanels,
+    materials: [...materials.values()],
+    diagnostics,
+    blocked,
+    zones,
+  };
 }
+
+// ---------------------------------------------------------------------------
+// Chair, installation and service clearances; the Clearances overlay (ADR-073)
+// ---------------------------------------------------------------------------
+
+/**
+ * Check the chair, installation and service envelopes (adding their diagnostics), then list every zone for the
+ * plan overlay with its worst problem: bodies (overlap, room, installation), door swings, drawer travel, flaps
+ * (ADR-057 checks), chair and service zones.
+ */
+function clearanceZones(
+  project: Project,
+  pieces: PlacedPiece[],
+  allPanels: Panel[],
+  diagnostics: Diagnostic[],
+  blocked: { itemId: string; box: Box }[],
+  overlapping: Set<string>,
+  obstacles: { label: string; box: Box }[],
+): ClearanceZone[] {
+  const byId = new Map(project.items.map((i) => [i.id, i]));
+  const carried = (id: string) =>
+    new Set(
+      project.items
+        .filter((i) => {
+          for (let cur = i, n = 0; n <= project.items.length; n++) {
+            if (cur.placement?.kind !== 'above') return false;
+            if (cur.placement.baseId === id) return true;
+            const next = byId.get(cur.placement.baseId);
+            if (!next) return false;
+            cur = next;
+          }
+          return false;
+        })
+        .map((i) => i.id),
+    );
+  const ec = envelopeChecks(
+    pieces.map((pc) => ({
+      id: pc.item.id,
+      name: pc.item.design.name,
+      bounds: pc.bounds,
+      panels: pc.panels,
+      envelopes: pc.envelopes,
+      zones: pc.item.zones,
+      carried: pc.envelopes.some((e) => e.kind === 'installation')
+        ? carried(pc.item.id)
+        : new Set<string>(),
+    })),
+    allPanels.filter((p) => p.id.startsWith('run:')),
+    obstacles,
+    project.room,
+  );
+  diagnostics.push(...ec.diagnostics);
+  const blockedBoxes = new Set(blocked.map((b) => b.box));
+  const room = project.room;
+  const out: ClearanceZone[] = [];
+  for (const pc of pieces) {
+    const id = pc.item.id;
+    let body: ClearanceZone['severity'] = overlapping.has(id) ? 'error' : 'none';
+    for (const d of diagnostics)
+      if (d.nodeId === id && BODY_CODES.has(d.code)) body = worse(body, d.severity);
+    out.push({
+      itemId: id,
+      kind: 'body',
+      label: pc.item.design.name,
+      box: pc.bounds,
+      severity: body,
+    });
+    for (const c of pc.clearances) {
+      const role = pc.panels.find((p) => p.id === c.panelId)?.role;
+      const bad =
+        blockedBoxes.has(c.box) ||
+        (!!room &&
+          !rectInside(room.outline, c.box.x, c.box.z, c.box.x + c.box.w, c.box.z + c.box.d)) ||
+        pieces.some((o) => o !== pc && o.clearances.some((y) => overlaps(c.box, y.box)));
+      out.push({
+        itemId: id,
+        kind: /flap/i.test(c.label) ? 'flap' : role === 'door' ? 'door' : 'drawer',
+        label: c.label,
+        box: c.box,
+        severity: bad ? 'warning' : 'none',
+      });
+    }
+    for (const e of pc.envelopes)
+      if (e.kind !== 'installation')
+        out.push({
+          itemId: id,
+          kind: e.kind,
+          label: e.label,
+          box: e.box,
+          severity: ec.severity.get(e) ?? 'none',
+        });
+  }
+  return out;
+}
+
+/** Parts that cover a pipe or outlet behind them (ADR-072). */
+const COVER_ROLES: ReadonlySet<string> = new Set(['back', 'plinth', 'worktop']);
 
 // ---------------------------------------------------------------------------
 // Opening clearance (ADR-057)
@@ -628,24 +827,33 @@ function openingChecks(
           .filter((q) => !q.id.startsWith(own) && overlapsBox(q, c.box))
           .map((q) => ({
             box: aabbOf(q),
+            itemId: q.id.startsWith('run:')
+              ? undefined
+              : pieces.find((o) => q.id.startsWith(`${o.item.id}:`))?.item.id,
             name: q.id.startsWith('run:')
               ? q.label
               : (pieces.find((o) => q.id.startsWith(`${o.item.id}:`))?.item.design.name ?? q.label),
           })),
         ...obstacles
           .filter((o) => overlaps(o.box, c.box))
-          .map((o) => ({ box: o.box, name: o.label })),
+          .map((o) => ({ box: o.box, itemId: undefined, name: o.label })),
       ];
       if (!hits.length) continue;
       const near = hits.reduce((a, b) =>
         freeBefore(c, pc.facing, b.box) < freeBefore(c, pc.facing, a.box) ? b : a,
       );
       blocked.push({ itemId: pc.item.id, box: c.box });
+      const free = freeBefore(c, pc.facing, near.box);
       diagnostics.push({
         severity: 'warning',
         code: 'opening-blocked',
-        message: `${c.label} of ${pc.item.design.name} cannot open fully: it hits ${near.name} (needs ${c.need} mm, ${freeBefore(c, pc.facing, near.box)} mm free).`,
+        message: `${c.label} of ${pc.item.design.name} cannot open fully: it hits ${near.name} (needs ${c.need} mm, ${free} mm free).`,
         nodeId: pc.item.id,
+        // ADR-071: the front, the piece in the way (when it is one), the blocked zone and the space missing.
+        panelIds: [c.panelId],
+        itemIds: near.itemId ? [near.itemId, pc.item.id] : [pc.item.id],
+        box: intersection(c.box, near.box),
+        amount: c.need - free,
       });
     }
   }
@@ -1233,7 +1441,11 @@ export function projectCutlist(project: Project): CutRow[] {
   const rows = new Map<string, CutRow>();
   const extra = (project.runParts ?? []).map((rp) => ({ rp, key: materialKey(rp.material) }));
   if (extra.length) {
-    const mats = [...new Map(extra.map((e) => [e.key, { ...e.rp.material, id: e.key }])).values()];
+    const mats = [
+      ...new Map(
+        extra.map((e) => [e.key, { ...runMaterial(project, e.rp.material), id: e.key }]),
+      ).values(),
+    ];
     // Fillers are cut wider by their scribe allowance (ADR-054); the model keeps the installed size.
     const cutPanel = (rp: RunPart, key: string) => {
       const p = runPanel(rp, key);
@@ -1247,10 +1459,13 @@ export function projectCutlist(project: Project): CutRow[] {
       bounds: { x: 0, y: 0, z: 0, w: 0, h: 0, d: 0 },
     };
     for (const r of cutlist(model, mats))
-      rows.set(['run', r.materialId, r.length, r.width, r.edgesL, r.edgesW].join('|'), {
-        ...r,
-        labels: r.labels.map((l) => `Run: ${l}`),
-      });
+      rows.set(
+        ['run', r.materialId, r.length, r.width, r.edgesL, r.edgesW, bandKey(r.band)].join('|'),
+        {
+          ...r,
+          labels: r.labels.map((l) => `Run: ${l}`),
+        },
+      );
   }
   const covered = plinthCovered(project);
   for (const item of project.items) {
@@ -1261,7 +1476,16 @@ export function projectCutlist(project: Project): CutRow[] {
     for (const r of cutlist(model, item.design.materials)) {
       const mat = item.design.materials.find((m) => m.id === r.materialId)!;
       const id = materialKey(mat);
-      const key = [id, r.length, r.width, r.edgesL, r.edgesW, r.drilling].join('|');
+      const key = [
+        id,
+        r.length,
+        r.width,
+        r.edgesL,
+        r.edgesW,
+        r.drilling,
+        bandKey(r.band),
+        !!r.bandFront,
+      ].join('|');
       const labels = r.labels.map((l) => `${item.design.name}: ${l}`);
       const panelIds = r.panelIds.map((p) => `${item.id}:${p}`);
       const cur = rows.get(key);
@@ -1327,6 +1551,21 @@ const isObj = (v: unknown): v is Record<string, unknown> =>
 const isInt = (v: unknown, min = -1e7) =>
   typeof v === 'number' && Number.isSafeInteger(v) && v >= min && v <= 1e7;
 
+/** Item clearance settings (ADR-073): whole-mm depths from 1 mm, a known side, a yes/no flag. */
+function validZones(z: unknown): boolean {
+  if (!isObj(z)) return false;
+  const depth = (v: unknown) => isInt(v, 1) && (v as number) <= MAX_ZONE_DEPTH;
+  const s = z.service;
+  return (
+    (z.chairDepth === undefined || depth(z.chairDepth)) &&
+    (z.lyingDown === undefined || typeof z.lyingDown === 'boolean') &&
+    (s === undefined ||
+      (isObj(s) &&
+        SERVICE_SIDES.includes(s.side as never) &&
+        (s.depth === undefined || depth(s.depth))))
+  );
+}
+
 export function validateProject(p: unknown): string[] {
   if (!isObj(p)) return ['Project must be an object'];
   const errs: string[] = [];
@@ -1375,6 +1614,7 @@ export function validateProject(p: unknown): string[] {
       )
     )
       errs.push('Invalid item placement');
+    if (it.zones !== undefined && !validZones(it.zones)) errs.push('Invalid item clearance zones');
     const de = validateDesign(it.design);
     if (de.length) errs.push(`Item ${String(it.id)}: ${de[0]}`);
   }
@@ -1402,6 +1642,8 @@ export function validateProject(p: unknown): string[] {
           typeof m.name !== 'string' ||
           !isInt(m.thickness, 1) ||
           typeof m.grain !== 'boolean' ||
+          (m.band !== undefined && bandProblems(m.band).length > 0) ||
+          (m.frontBand !== undefined && bandProblems(m.frontBand).length > 0) ||
           !['x', 'y', 'z'].includes(rp.thicknessAxis as string) ||
           !['x', 'y', 'z'].includes(rp.grainAxis as string) ||
           !Array.isArray(rp.banded)
@@ -1451,7 +1693,7 @@ export function validateProject(p: unknown): string[] {
       (Array.isArray(p.runParts) &&
         p.runParts.some((rp) => isObj(rp) && TRIM_KINDS.includes(rp.kind as TrimKind))))
   )
-    errs.push('Trims and chosen worktops need project schemaVersion 2');
+    errs.push(`Trims and chosen worktops need project schemaVersion ${RUN_REQUESTS_SINCE}`);
   if (p.room !== undefined) errs.push(...validateRoom(p.room));
   if (
     p.runPartsRemoved !== undefined &&

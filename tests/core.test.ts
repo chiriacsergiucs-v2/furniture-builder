@@ -668,7 +668,8 @@ describe('stock sheets in the design (ADR-019) and sheet layouts (ADR-018)', () 
     };
     expect(validateDesign(v1)).toEqual([]);
     const up = upgradeDesign(v1);
-    expect(up.schemaVersion).toBe(2);
+    // Upgraded to the current shape (3 since ADR-077, which adds only optional band fields).
+    expect(up.schemaVersion).toBe(3);
     expect(up.cutting?.kerf).toBe(4);
     expect(up.materials.find((m) => m.id === 'pal18')!.sheet).toEqual({
       length: 2800,

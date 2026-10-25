@@ -5,6 +5,7 @@ import { validateLocalTemplate, type LocalTemplate } from '../core/catalog/local
 import type { Design } from '../core/types';
 import type { Decor } from '../core/materials';
 import { validatePrice, type PriceEntry } from '../core/prices';
+import { validFastenerChoice, type FastenerChoice, type JointType } from '../core/fasteners';
 import { validateProjectTemplate, type ProjectTemplate } from '../core/projectTemplate';
 import { validateBundle, validateMark, type StoredBundle } from '../core/research/catalog';
 import type { ResearchMark } from '../core/research/types';
@@ -219,10 +220,42 @@ export async function listProjectTemplates(database = db): Promise<ProjectTempla
 export const deleteProjectTemplate = (id: string, database = db) =>
   database.projectTemplates.delete(id);
 
-/** The user's price list (ADR-062); unreadable rows are skipped and kept. */
+/** The user's price list (ADR-062); unreadable rows are skipped and kept. Fastener rows (ADR-074) are not prices. */
 export async function listPrices(database = db): Promise<PriceEntry[]> {
-  return (await database.prices.toArray()).filter((r) => !validatePrice(r).length);
+  return (await database.prices.toArray()).filter(
+    (r) => !r.id.startsWith(FASTENER_PREFIX) && !validatePrice(r).length,
+  );
 }
+
+/**
+ * The user's fastener list (ADR-074): one row per joint type in the existing `prices` table, id
+ * `fastener:<joint type>`, so no new Dexie version is needed. Unreadable rows are skipped and kept (ADR-012).
+ */
+export const FASTENER_PREFIX = 'fastener:';
+type FastenerRow = PriceEntry & { per?: unknown };
+export async function listFasteners(database = db): Promise<FastenerChoice[]> {
+  const rows = (await database.prices
+    .where('id')
+    .startsWith(FASTENER_PREFIX)
+    .toArray()) as FastenerRow[];
+  return rows
+    .map((r) => ({
+      joint: r.id.slice(FASTENER_PREFIX.length) as JointType,
+      name: r.text ?? '',
+      per: r.per as number,
+    }))
+    .filter(validFastenerChoice);
+}
+export const saveFastener = (c: FastenerChoice, database = db) =>
+  database.prices.put({
+    id: FASTENER_PREFIX + c.joint,
+    unit: 'piece',
+    amount: 0,
+    text: c.name,
+    per: c.per,
+  } as FastenerRow);
+export const deleteFastener = (joint: JointType, database = db) =>
+  database.prices.delete(FASTENER_PREFIX + joint);
 export const savePrice = (e: PriceEntry, database = db) => database.prices.put(e);
 export const savePrices = (list: PriceEntry[], database = db) => database.prices.bulkPut(list);
 export const deletePrice = (id: string, database = db) => database.prices.delete(id);

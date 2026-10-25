@@ -7,6 +7,7 @@ import {
   upgradeDesign,
   validateDesign,
 } from '../core/design';
+import { duplicateItem, mirrorItem, mirrorRun, turnAboutCentre } from '../core/arrange';
 import { applyFinish, type FinishRole, type FinishScope } from '../core/finish';
 import { mergeItems } from '../core/merge';
 import { closeOutline, DEFAULT_ROOM_HEIGHT, snapCorner, type Pt, type Room } from '../core/room';
@@ -120,6 +121,13 @@ interface State {
   removeItem: (id: string) => void;
   /** Merge two touching cabinets into one (ADR-047); returns why not, or an empty list. */
   mergeItems: (a: string, b: string) => string[];
+  /** Duplicate, turn about the centre, mirror a piece or its run (ADR-069); each is one undo step. */
+  duplicateItem: (id: string) => void;
+  turnItem: (id: string, dir: 1 | -1) => void;
+  /** Returns why nothing changed ("Nothing to mirror in this piece"), or null. */
+  mirrorItem: (id: string) => string | null;
+  /** Returns the pieces of the run that had nothing to mirror (they still move). */
+  mirrorRun: (id: string) => string[];
   selectItem: (id: string | null) => void;
   editItem: (id: string) => void;
   backToProject: () => void;
@@ -209,6 +217,7 @@ export const useDesign = create<State>((set, get) => {
     // Pieces on or above others follow them (ADR-031); run parts follow the pieces in the same step (ADR-061).
     const stamped = {
       ...refreshRunParts(resolvePlacements(next)),
+      schemaVersion: PROJECT_SCHEMA, // an edited project is saved in the current shape (ADR-011, ADR-073)
       updatedAt: new Date().toISOString(),
     };
     const prev = get().project;
@@ -363,6 +372,34 @@ export const useDesign = create<State>((set, get) => {
       }
       return res.issues;
     },
+    duplicateItem: (id) => {
+      const p = get().project;
+      const res = p && duplicateItem(p, id);
+      if (!res) return;
+      commitProject(res.project);
+      set({ selectedItemId: res.id });
+    },
+    turnItem: (id, dir) => {
+      const p = get().project;
+      if (!p) return;
+      const next = turnAboutCentre(p, id, dir);
+      if (next !== p) commitProject(next);
+    },
+    mirrorItem: (id) => {
+      const p = get().project;
+      if (!p) return null;
+      const res = mirrorItem(p, id);
+      if (res.reason) return res.reason;
+      if (res.project !== p) commitProject(res.project);
+      return null;
+    },
+    mirrorRun: (id) => {
+      const p = get().project;
+      if (!p) return [];
+      const res = mirrorRun(p, id);
+      if (res.project !== p) commitProject(res.project);
+      return res.reasons;
+    },
     selectItem: (id) => set({ selectedItemId: id }),
     editItem: (id) => {
       const item = get().project?.items.find((i) => i.id === id);
@@ -494,7 +531,8 @@ export const useDesign = create<State>((set, get) => {
     setRoom: (room) => {
       const p = get().project;
       if (!p) return;
-      if (room) commitProject({ ...p, room });
+      // A room may now hold pipes and outlets (ADR-072): it is saved at the current project version.
+      if (room) commitProject({ ...p, room, schemaVersion: PROJECT_SCHEMA });
       else {
         const { room: _r, ...rest } = p;
         void _r;

@@ -21,6 +21,7 @@ import {
 } from '../core/shopping';
 import { listPrices, savePrice, savePrices } from '../persist/db';
 import { useDesign } from '../store/designStore';
+import { useFastenerChoices, useFastenerCounts } from './Fasteners';
 import { Icon } from './icons';
 import { useNesting } from './useNesting';
 import { useView } from './useView';
@@ -56,6 +57,8 @@ export function ShoppingList() {
     s.project && !s.editingItemId ? s.project.runParts : undefined,
   );
   const n = useNesting(true);
+  const fastenerCounts = useFastenerCounts();
+  const fastenerChoices = useFastenerChoices();
   const [prices, setPrices] = useState<PriceEntry[]>([]);
   const [editing, setEditing] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -80,8 +83,9 @@ export function ShoppingList() {
         sheets,
         runParts,
         diagnostics: view.diagnostics,
+        fasteners: { counts: fastenerCounts, choices: fastenerChoices },
       }),
-    [view, sheets, runParts],
+    [view, sheets, runParts, fastenerCounts, fastenerChoices],
   );
   const map = useMemo(() => new Map(prices.map((p) => [p.id, p])), [prices]);
   const currency = map.get(CURRENCY_ID)?.text ?? DEFAULT_CURRENCY;
