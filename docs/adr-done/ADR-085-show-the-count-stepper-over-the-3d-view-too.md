@@ -1,15 +1,15 @@
-# ADR-084: Show the count stepper over the 3D view too
+# ADR-085: Show the count stepper over the 3D view too
 
 - Status: Implemented
 - Date: 2026-10-25
 - Implemented: 2026-10-25
-- Depends on: ADR-014, ADR-083
+- Depends on: ADR-014, ADR-084
 - Design: docs/ui-design.md (§3 Components and states)
-- Backlog: N79
+- Backlog: N80
 
 ## Context
 
-[ADR-083](../adr-done/ADR-083-change-counts-with-a-plus-minus-stepper-above-the-selected-s.md) puts a `− N +` card right above
+[ADR-084](../adr-done/ADR-084-change-counts-with-a-plus-minus-stepper-above-the-selected-s.md) puts a `− N +` card right above
 the selected space in the front drawing. Asked whether the card should also show over the 3D view, the user answered
 (2026-10-25): "Yes - create new", then "Write and build both", with the placement "INside the rendered view
 container!".
@@ -18,6 +18,9 @@ This changes [ADR-014](../adr-done/ADR-014-the-front-elevation-is-the-editing-su
 the 3D viewer only selects and never edits. ADR-014 is implemented and stays as it is; this ADR adds one exception:
 the quick-count card may sit over the 3D view and change counts. The viewer's own scene (meshes, clicks, camera)
 still only selects.
+
+Drafted as ADR-084; renumbered ADR-085 (backlog N80) when merging, because `main` had shipped a different ADR-083
+first. With the whole piece selected (ADR-083), the card anchors on the piece's bounds.
 
 ## Decision
 

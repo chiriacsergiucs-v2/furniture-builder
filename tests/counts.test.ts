@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 import { describe, expect, it } from 'vitest';
 import { buildModel } from '../src/core/build';
-import { countRows, stepCount, type CountKey } from '../src/core/counts';
+import { countRows, countSubject, stepCount, type CountKey } from '../src/core/counts';
 import { findInProduct, templates } from '../src/core/design';
 import type { Design, Space } from '../src/core/types';
 import { useDesign } from '../src/store/designStore';
@@ -15,9 +15,11 @@ const rowsOf = (d: Design, id: string) =>
   Object.fromEntries(countRows(d.product, id).map((r) => [r.key, r]));
 const st = () => useDesign.getState();
 const value = (key: CountKey) =>
-  countRows(st().design.product, st().selectedId!).find((r) => r.key === key)?.value;
+  countRows(st().design.product, countSubject(st().design.product, st().selectedId)!).find(
+    (r) => r.key === key,
+  )?.value;
 
-describe('quick count rows (ADR-083)', () => {
+describe('quick count rows (ADR-084)', () => {
   it('a drawer space shows both divider rows at 0 and its drawers', () => {
     const d = byTemplate('chest');
     const r = rowsOf(d, interior(d).id);
@@ -42,6 +44,19 @@ describe('quick count rows (ADR-083)', () => {
     expect(bay.hdiv).toMatchObject({ value: 0, target: split.children[1].id });
     expect(rowsOf(d, split.id).vdiv).toMatchObject({ value: 2, target: split.id });
   });
+  it('the whole piece shows its interior’s counts; nothing selected shows none', () => {
+    const d = byTemplate('chest');
+    expect(countSubject(d.product, null)).toBe(interior(d).id);
+    expect(countSubject(d.product, undefined)).toBeUndefined();
+    expect(countSubject(byTemplate('panels').product, null)).toBeUndefined();
+    st().load(d);
+    st().select(null);
+    st().stepCount('drawers', 1);
+    expect(st().selectedId).toBeNull();
+    expect(
+      countRows(st().design.product, interior(d).id).find((r) => r.key === 'drawers')?.value,
+    ).toBe(5);
+  });
   it('an id that is not a space gives no rows', () => {
     const d = byTemplate('chest');
     expect(countRows(d.product, 'nope')).toEqual([]);
@@ -49,7 +64,7 @@ describe('quick count rows (ADR-083)', () => {
   });
 });
 
-describe('stepping counts (ADR-083)', () => {
+describe('stepping counts (ADR-084)', () => {
   it('shelves, drawers and doors step both ways and stop at their bounds', () => {
     const shelves: Space = { id: 's', kind: 'shelves', count: 0 };
     expect(stepCount(shelves, 'shelves', -1)).toBe(shelves);
@@ -116,7 +131,7 @@ describe('stepping counts (ADR-083)', () => {
   });
 });
 
-describe('quick counts in the store (ADR-083)', () => {
+describe('quick counts in the store (ADR-084)', () => {
   it('each press is one undo step', () => {
     const d = byTemplate('chest');
     st().load(d);

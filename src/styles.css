@@ -4998,7 +4998,7 @@ button.tile:hover {
   }
 }
 
-/* Quick counts (ADR-083): − N + for the selected space, floating right above it in the drawing and in 3D. */
+/* Quick counts (ADR-084, ADR-085): − N + for the selection, floating right above it in the drawing and in 3D. */
 .elevation {
   position: relative;
 }

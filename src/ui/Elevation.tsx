@@ -1,4 +1,4 @@
-import { useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useId, useLayoutEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
 import { productRoots } from '../core/design';
 import { faceMapping } from '../core/surface';
 import { imageKey, useImageUrls } from '../persist/images';
@@ -38,13 +38,13 @@ function describe(s: SpaceOpening, count?: number): string {
 
 /**
  * Front elevation: the editing surface. Structure is drawn solid, fronts as dashed outlines,
- * every leaf space is a tap target. Y is flipped so the floor is at the bottom.
+ * a tap selects the whole piece, then one level smaller per tap (ADR-083). Y is flipped so the floor is at the bottom.
  */
 export function Elevation() {
   const model = useDesign((s) => s.model);
   const design = useDesign((s) => s.design);
   const selectedId = useDesign((s) => s.selectedId);
-  const select = useDesign((s) => s.select);
+  const tapPiece = useDesign((s) => s.tapPiece);
   const showFronts = useDesign((s) => s.showFronts);
   const mats = useMemo(() => new Map(design.materials.map((m) => [m.id, m])), [design.materials]);
   // Pictures on boards (ADR-048): one pattern per material and direction; plain colour while missing.
@@ -83,10 +83,14 @@ export function Elevation() {
   const selectedPanels = new Set(
     model.panels.filter((p) => p.nodeId === selectedId).map((p) => p.id),
   );
-  const selectedSpace = model.spaces.find((s) => s.nodeId === selectedId && s.view !== 'side');
+  // The whole piece selected (ADR-083) is outlined round its bounds.
+  const selectedSpace =
+    selectedId === null
+      ? { box: b }
+      : model.spaces.find((s) => s.nodeId === selectedId && s.view !== 'side');
   const fontSize = Math.max(b.w, b.h) / 26;
 
-  // Quick counts (ADR-083) float right above the selected space, inside the drawing; below its top edge when there
+  // Quick counts (ADR-084) float right above the selected space, inside the drawing; below its top edge when there
   // is no room above. Placed from the selection outline's screen box, so it follows zoom and resizes.
   const figRef = useRef<HTMLElement>(null);
   const selRef = useRef<SVGRectElement>(null);
@@ -123,7 +127,13 @@ export function Elevation() {
     setPos((p) => (p && p.left === left && p.top === top ? p : { left, top }));
   }, [sb?.x, sb?.y, sb?.w, sb?.h, b.x, b.y, b.w, b.h, tick, cardH, design.product]);
 
-  // Leaf spaces on top so they receive taps; parents (splits) are selected from the breadcrumb.
+  // A tap anywhere selects from the outside in, one level per tap (ADR-083); leaves stay keyboard targets.
+  const onTap = (e: MouseEvent<SVGSVGElement>) => {
+    const m = e.currentTarget.getScreenCTM();
+    if (!m) return;
+    const pt = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse());
+    tapPiece(Math.round(pt.x), Math.round(-pt.y));
+  };
   const leaves = model.spaces.filter((s) => s.leaf && s.view !== 'side');
 
   return (
@@ -133,7 +143,7 @@ export function Elevation() {
       style={selectedSpace && cardH ? { paddingTop: cardH + 10 } : undefined}
       aria-label="Front view. Select a space to edit it."
     >
-      <svg viewBox={vb} preserveAspectRatio="xMidYMid meet" role="group">
+      <svg viewBox={vb} preserveAspectRatio="xMidYMid meet" role="group" onClick={onTap}>
         <defs>
           {design.materials.flatMap((m) => {
             const url = m.image ? urls.get(m.image.id) : undefined;
@@ -165,14 +175,10 @@ export function Elevation() {
             tabIndex={0}
             aria-pressed={s.nodeId === selectedId}
             aria-label={`${describe(s, counts.get(s.nodeId))} space, ${s.box.w} by ${s.box.h} mm`}
-            onClick={(e) => {
-              e.stopPropagation();
-              select(s.nodeId);
-            }}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                select(s.nodeId);
+                tapPiece(Math.round(s.box.x + s.box.w / 2), Math.round(s.box.y + s.box.h / 2));
               }
             }}
           >
@@ -186,10 +192,6 @@ export function Elevation() {
             points={outlinePoints(p)}
             style={{ fill: fillOf(p) }}
             data-plain={mats.get(p.materialId)?.color}
-            onClick={(e) => {
-              e.stopPropagation();
-              select(p.nodeId === design.product.id ? null : p.nodeId);
-            }}
           />
         ))}
         {showFronts &&
@@ -243,7 +245,7 @@ export function Elevation() {
         )}
         <Dim x1={b.x} x2={b.x + b.w} y={pad * 0.75} fontSize={fontSize} label={`${b.w}`} />
         <DimV y1={0} y2={-(b.y + b.h)} x={b.x - pad * 0.55} fontSize={fontSize} label={`${b.h}`} />
-        {selectedSpace && (
+        {selectedSpace && selectedId !== null && (
           <Dim
             x1={selectedSpace.box.x}
             x2={selectedSpace.box.x + selectedSpace.box.w}

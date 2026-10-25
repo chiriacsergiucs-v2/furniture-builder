@@ -1,4 +1,4 @@
-// Find-it acceptance for quick counts over the drawing (ADR-083, backlog N78) and over 3D (ADR-084, N79),
+// Find-it acceptance for quick counts over the drawing (ADR-084, backlog N79) and over 3D (ADR-085, N80),
 // run against a production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/count-stepper/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
@@ -50,8 +50,17 @@ for (const width of [1280, 390]) {
   await page.locator('main.work').waitFor({ state: 'visible' });
   await mode('Compose').click();
 
-  // 2. Tap the drawer bank in the drawing: the card sits right above it, inside the drawing.
-  await front.getByRole('button', { name: /^3 drawers space/ }).click({ force: true });
+  // 2. First tap selects the whole piece (ADR-083): the card shows the piece's dividers. A second tap on the drawer
+  //    bank selects it: the card sits right above it, inside the drawing.
+  const bank = front.getByRole('button', { name: /^3 drawers space/ });
+  await bank.click({ force: true });
+  await page.waitForTimeout(250);
+  check(
+    width,
+    'whole piece selected: card shows Vertical dividers 2',
+    (await card(front).isVisible()) && (await valueOf(front, 'Vertical dividers')) === '2',
+  );
+  await bank.click({ force: true });
   await page.waitForTimeout(250);
   const c = card(front);
   check(width, '"Quick counts" card in the drawing', await c.isVisible());

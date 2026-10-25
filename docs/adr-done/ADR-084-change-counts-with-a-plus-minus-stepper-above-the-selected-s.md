@@ -1,11 +1,11 @@
-# ADR-083: Change counts with a plus-minus stepper above the selected space
+# ADR-084: Change counts with a plus-minus stepper above the selected space
 
 - Status: Implemented
 - Date: 2026-10-25
 - Implemented: 2026-10-25
 - Depends on: ADR-051, ADR-079
 - Design: docs/ui-design.md (§3 Components and states)
-- Backlog: N78
+- Backlog: N79
 
 ## Context
 
@@ -21,11 +21,15 @@ door-count choice, and Divide / Add / Remove division for splits. On a phone tha
 drawing. The request is a compact `−  N  +` control floating over the drawing, right above the selection.
 Answers 2026-10-25: placement "right above the selected item in the rendering container" / "INside the rendered view
 container!"; acceptance "Full"; counts outside cabinet spaces "Not now"; the stepper over 3D too: "Yes - create new"
-([ADR-084](../adr-done/ADR-084-show-the-count-stepper-over-the-3d-view-too.md)).
+([ADR-085](../adr-done/ADR-085-show-the-count-stepper-over-the-3d-view-too.md)).
 
 No change to `src/core/types.ts` or the design document: every count already exists (`ShelvesSpace.count`,
 `DrawersSpace.count` with optional `heights`, `SplitSpace.children`/`sizes`, `DoorsFront.count`,
 `SlidingFront.count`). Divider panels already carry their split's `nodeId`, so tapping a divider selects the split.
+
+Drafted as ADR-083 on its branch; renumbered ADR-084 (backlog N79, gaps G-054 to G-057) when merging, because
+`main` had shipped [ADR-083](../adr-done/ADR-083-select-from-the-whole-piece-inwards-one-level-per-tap.md) (tap from
+the whole piece inwards) first.
 
 ## Decision
 
@@ -49,10 +53,12 @@ applies to the selected node:
   space are the existing diagnostics (ADR-008), never a silent clamp.
 - `+` on a leaf's divider row calls `splitSpace(s, axis, 2)`; on a split it appends one bay at the end with 2
   shelves (same as the inspector's Add) and a `fr 1` size. `−` removes the last bay and its size; from one
-  divider it collapses to one space holding the first bay's contents (G-053).
+  divider it collapses to one space holding the first bay's contents (G-056).
 - Each press is one store `stepCount(key, delta)` → one `updateSpace` call, so one undo step (ADR-051). When the
   selected bay is removed, the space that held it is selected. Pure logic lives in `src/core/counts.ts`
   (`countRows(product, id)`, `stepCount(space, key, delta)`) and is unit-tested; the UI only renders the rows.
+- With the whole piece selected (ADR-083, selection `null`) the card shows the counts of the piece's interior when
+  it has exactly one (a cabinet); a desk with two pedestals or an L-corner shows none until a space is selected.
 - The stepper hides while nothing is selected or the selection is a side-wing space (selected from the inspector).
 
 ## Alternatives considered
@@ -60,14 +66,14 @@ applies to the selected node:
 - **Bigger number fields in the inspector** — keeps the user scrolling away from the drawing; not "above the
   selected piece".
 - **Stepper in the 3D view only** — the drawing is where spaces are tapped in Compose; 3D gets the same card in
-  [ADR-084](../adr-done/ADR-084-show-the-count-stepper-over-the-3d-view-too.md).
+  [ADR-085](../adr-done/ADR-085-show-the-count-stepper-over-the-3d-view-too.md).
 - **Drag handles to add dividers** — slower to discover, needs precise touch on a phone.
 
 ## Scope
 
 - In scope: the stepper over the front drawing, the rows above, `stepCount` with tests, find-it script.
-- Out of scope: the 3D view, moved to ADR-084 (G-051); counts outside cabinet spaces — frame, panel set, panel,
-  project plan (G-052, user: "Not now").
+- Out of scope: the 3D view, moved to ADR-085 (G-054); counts outside cabinet spaces — frame, panel set, panel,
+  project plan (G-055, user: "Not now").
 
 ## Consequences
 
@@ -92,5 +98,5 @@ applies to the selected node:
 ## Open questions
 
 - Where `+` adds and `−` removes a bay, and what a new bay holds; built with the default: at the end, with 2
-  shelves (G-053, not answered yet).
-- Answered 2026-10-25: acceptance Full (G-054); counts outside cabinet spaces "Not now" (G-052).
+  shelves (G-056, not answered yet).
+- Answered 2026-10-25: acceptance Full (G-057); counts outside cabinet spaces "Not now" (G-055).

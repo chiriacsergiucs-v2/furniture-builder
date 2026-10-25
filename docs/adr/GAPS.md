@@ -475,37 +475,66 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Is the file enough, or do you want a page (in the app, or an artifact) where you can mark gaps acknowledged or promote them?
 - Suggested pick: The file, edited through Claude ("acknowledge G-012", "make ADR from G-007"); a page only if you want to triage on the phone without a session (estimate for a page: effort +40%, value +15%)
 
-### G-051: Count stepper not over the 3D view
+### G-051: Tap on the innermost selected space
 
-- Status: Done (ADR-084)
-- Origin: ADR-083, 2026-10-25; agent scoped it out
+- Status: Done (ADR-083)
+- Origin: ADR-083, 2026-10-25, open question (Claude default)
+- Missing: What a tap on the already selected innermost space does
+- Request: The flow of selecting the furniture, then the middle (given there are 2 dividers), then having a horizontal divider, then selecting the bottom one to adjust shelves is a painful horrible user experience. Adjust the selecting to go from bigger to smaller. 1 click = entire furniture, second click selects the smaller frame, third again the smaller within, iteratively.
+- Questions: Stay on the innermost space, or wrap back to the whole piece?
+- Suggested pick: Stay on the innermost space, so a repeated tap while adjusting shelves never loses the selection (estimate)
+- Answer: User 2026-10-25: "1 wrap back" — wrap back to the whole piece; built in ADR-083.
+
+### G-052: Drill-down across project and piece
+
+- Status: Done (ADR-083)
+- Origin: ADR-083, 2026-10-25, open question (Claude default)
+- Missing: Drill-down from the project plan/3D into a piece's spaces
+- Request: The flow of selecting the furniture, then the middle (given there are 2 dividers), then having a horizontal divider, then selecting the bottom one to adjust shelves is a painful horrible user experience. Adjust the selecting to go from bigger to smaller. 1 click = entire furniture, second click selects the smaller frame, third again the smaller within, iteratively.
+- Questions: In a project, does the 2nd tap on a selected piece open it in the editor with the bay under the tap selected, or keep today's separate edit step?
+- Suggested pick: Continue drilling into the piece (2nd tap opens it with the bay selected): closest to '1 click = entire furniture'; estimate +30 % work, +25 % of value
+- Answer: User 2026-10-25: "2 yes" — the 2nd tap on a selected piece opens it with the space under the tap selected; built in ADR-083.
+
+### G-053: Step back up one level without the breadcrumb
+
+- Status: Open
+- Origin: ADR-083, 2026-10-25, out of scope (Claude)
+- Missing: Going one level back up with a gesture (Esc / long press)
+- Request: The flow of selecting the furniture, then the middle (given there are 2 dividers), then having a horizontal divider, then selecting the bottom one to adjust shelves is a painful horrible user experience. Adjust the selecting to go from bigger to smaller. 1 click = entire furniture, second click selects the smaller frame, third again the smaller within, iteratively.
+- Questions: Is a 'go up one level' gesture wanted besides the breadcrumb?
+- Suggested pick: Esc on desktop goes up one level; estimate +5 % work
+
+### G-054: Count stepper not over the 3D view
+
+- Status: Done (ADR-085)
+- Origin: ADR-084, 2026-10-25; agent scoped it out
 - Missing: No stepper over the 3D view; ADR-014 says the 3D viewer only selects, never edits.
 - Request: “Divider(horizontal and vertical)/drawer/shelf/all other applicable pleces based on configuration + currentNuber - … Placement: above the selected piece”
 - Questions: Show the stepper over the 3D view too (needs a new ADR changing ADR-014)?
 - Suggested pick: No: the stepper floats over the front drawing, which is shown next to 3D in Both (ADR-081); 3D stays select-only (estimate for 3D: effort +40%, value +10%)
 
-### G-052: Count stepper only for cabinet spaces
+### G-055: Count stepper only for cabinet spaces
 
 - Status: Acknowledged (2026-10-25)
-- Origin: ADR-083, 2026-10-25; agent scoped it out
+- Origin: ADR-084, 2026-10-25; agent scoped it out
 - Missing: Products without spaces (frame, panel set, single panel) and project-plan items get no stepper; desk pedestals and corner wings get it through their cabinet spaces only.
 - Request: “Divider(horizontal and vertical)/drawer/shelf/all other applicable pleces based on configuration + currentNuber - … Placement: above the selected piece”
 - Questions: Which counts outside cabinet spaces should step (e.g. frame slats, panel-set copies, desk pedestals)?
 - Suggested pick: Name the ones you use; each is a small add once the stepper exists (estimate per family: effort +10%, value +5%)
 
-### G-053: Which bay the divider stepper adds or removes
+### G-056: Which bay the divider stepper adds or removes
 
 - Status: Open
-- Origin: ADR-083, 2026-10-25; agent scoped it out
+- Origin: ADR-084, 2026-10-25; agent scoped it out
 - Missing: Open question default: + on dividers adds the new bay at the end (right / bottom) with 2 shelves, like the existing Add button; - removes the last bay with its contents (undo restores it); - at 1 divider leaves one space holding the first bay's contents.
 - Request: “Divider(horizontal and vertical)/drawer/shelf/all other applicable pleces based on configuration + currentNuber - … Placement: above the selected piece”
 - Questions: Where does + add and - remove: at the end, or next to the selected bay? What goes in a new bay: empty, or a copy of its neighbour?
 - Suggested pick: End, with 2 shelves like the existing Add button (consistent with what the app does today; next-to-selection is estimated +15% effort for +5% value)
 
-### G-054: Acceptance level for the count stepper
+### G-057: Acceptance level for the count stepper
 
-- Status: Done (ADR-083)
-- Origin: ADR-083, 2026-10-25; agent scoped it out
+- Status: Done (ADR-084)
+- Origin: ADR-084, 2026-10-25; agent scoped it out
 - Missing: Open question default: full acceptance (find-it script at 390 and 1280 px).
 - Request: “Divider(horizontal and vertical)/drawer/shelf/all other applicable pleces based on configuration + currentNuber - … Placement: above the selected piece”
 - Questions: Full find-it acceptance or light (ADR-066)?

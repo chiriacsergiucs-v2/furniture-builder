@@ -1,8 +1,8 @@
 import { forwardRef, useMemo, type CSSProperties } from 'react';
-import { countRows } from '../core/counts';
+import { countRows, countSubject } from '../core/counts';
 import { useDesign } from '../store/designStore';
 
-/** The counts that apply to the selected space, each as − N + (ADR-083). Nothing when no space is selected. */
+/** The counts that apply to the selected space or piece, each as − N + (ADR-084). Nothing when none apply. */
 export const CountStepper = forwardRef<
   HTMLDivElement,
   { style?: CSSProperties; className?: string }
@@ -10,10 +10,10 @@ export const CountStepper = forwardRef<
   const product = useDesign((s) => s.design.product);
   const selectedId = useDesign((s) => s.selectedId);
   const step = useDesign((s) => s.stepCount);
-  const rows = useMemo(
-    () => (selectedId ? countRows(product, selectedId) : []),
-    [product, selectedId],
-  );
+  const rows = useMemo(() => {
+    const id = countSubject(product, selectedId);
+    return id ? countRows(product, id) : [];
+  }, [product, selectedId]);
   if (!rows.length) return null;
   return (
     <div

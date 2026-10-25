@@ -1,8 +1,17 @@
 /**
- * Quick counts for the selected space (ADR-083): which counts apply to it, and one step up or down.
+ * Quick counts for the selected space (ADR-084): which counts apply to it, and one step up or down.
  * Pure: the stepper over the drawing and the 3D view only renders these rows and applies `stepCount`.
  */
-import { findInProduct, fr, makeSpace, parentOf, setDrawerCount, splitSpace } from './design';
+import {
+  findInProduct,
+  fr,
+  makeSpace,
+  parentOf,
+  productRoots,
+  setDrawerCount,
+  splitSpace,
+} from './design';
+import type { Selection } from './selectPath';
 import type { Product, Space } from './types';
 
 export type CountKey = 'vdiv' | 'hdiv' | 'shelves' | 'drawers' | 'doors' | 'sliding';
@@ -26,6 +35,17 @@ const DIV: Record<'x' | 'y', { key: CountKey; label: string }> = {
   x: { key: 'vdiv', label: 'Vertical dividers' },
   y: { key: 'hdiv', label: 'Horizontal dividers' },
 };
+
+/**
+ * The space whose counts the card shows for a selection: the selected space, or for the whole piece (ADR-083 `null`)
+ * its interior when it has exactly one (a cabinet; not a desk with two pedestals or an L-corner's two wings).
+ */
+export function countSubject(prod: Product, sel: Selection): string | undefined {
+  if (typeof sel === 'string') return sel;
+  if (sel !== null) return undefined;
+  const roots = productRoots(prod);
+  return roots.length === 1 ? roots[0].root.id : undefined;
+}
 
 /** The count rows for the selected space, in display order; empty when the id is not a space of the product. */
 export function countRows(prod: Product, id: string): CountRow[] {
