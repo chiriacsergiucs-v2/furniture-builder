@@ -503,3 +503,30 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: The flow of selecting the furniture, then the middle (given there are 2 dividers), then having a horizontal divider, then selecting the bottom one to adjust shelves is a painful horrible user experience. Adjust the selecting to go from bigger to smaller. 1 click = entire furniture, second click selects the smaller frame, third again the smaller within, iteratively.
 - Questions: Is a 'go up one level' gesture wanted besides the breadcrumb?
 - Suggested pick: Esc on desktop goes up one level; estimate +5 % work
+
+### G-054: Drawing while editing a project piece
+
+- Status: Open
+- Origin: ADR-084, 2026-10-25, open question (Claude default)
+- Missing: What the 2D drawing shows while a project piece is being edited
+- Request: Clicking on the piece goes into editor and exits the project 3d render thus losing tge overview, picking/editing should maintain the scope within the project.
+- Questions: Front drawing: the room front view with the piece's spaces tappable in place, or the piece's own front view (today's editing surface)?
+- Suggested pick: Room front view with the piece's spaces in place: closest to 'maintain the scope within the project'; estimate +35 % work, +30 % of value; small spaces get small on a phone, so the piece view stays one tap away
+
+### G-055: Undo steps for in-place piece edits
+
+- Status: Open
+- Origin: ADR-084, 2026-10-25, open question (Claude default)
+- Missing: How piece edits inside a project are undone
+- Request: Clicking on the piece goes into editor and exits the project 3d render thus losing tge overview, picking/editing should maintain the scope within the project.
+- Questions: Each piece edit one project undo step, or all edits to one piece one step until another piece is picked (as ADR-051 does on Back to project)?
+- Suggested pick: Each edit one project undo step: there is no 'back to project' moment any more; estimate +10 % work
+
+### G-056: Separate piece editor in a project
+
+- Status: Open
+- Origin: ADR-084, 2026-10-25, open question (Claude default)
+- Missing: Whether a separate full-screen piece editor remains
+- Request: Clicking on the piece goes into editor and exits the project 3d render thus losing tge overview, picking/editing should maintain the scope within the project.
+- Questions: Remove the 'open the piece' editor completely, or keep it behind an explicit 'Open piece' button for focused work?
+- Suggested pick: Keep an explicit 'Open piece' button; taps never leave the project: delivers the request, +5 % work
