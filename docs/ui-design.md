@@ -156,13 +156,18 @@ described above. Audit and wireframes are in `docs/research/2026-10-24-ui-redesi
 - _View captions (ADR-080)._ The plan's and the front view's captions, and the plan's Snap line, sit behind an
   info button at the view's top-right (_About the plan_, _About the front view_): hover or focus with a mouse,
   tap on touch; outside tap or Esc closes. While dragging, the live snap note shows over the plan.
+- _View switch (ADR-081)._ `.segmented.small` _View_ in the stage tools: **Front · 3D · Both** (**Plan · 3D ·
+  Both** in a project). Both splits the stage: side by side, stacked when the stage is taller than wide. 3D and
+  Both are disabled without WebGL (title: _3D preview is not available in this browser_). A mode change resets
+  the view: Both from 1500 px, else 3D in Build & Preview and the drawing in Compose.
 - _Desktop._ The left panel shows Compose. Build is always the right column. Build & Preview turns the centre to
-  3D.
+  3D (Both from 1500 px).
 - _Phone._
   - Compose: the drawing fills the screen, with a bottom sheet over the nav. Its peek row reads _Selected: …_ or
     _Tap a space to edit it_; the sheet opens on a selection, shrinks the drawing and steps aside while placing
     or drawing.
-  - Build & Preview: 3D (42 vh, mounted only here) over the output tabs.
+  - Build & Preview: the View switch, 3D (42 vh, mounted only here) over the output tabs; Both stacks the
+    drawing over 3D in a 72 vh stage.
 - _Output actions._ **Download CSV** (the one primary button) and **Print** sit on top of the Parts tab, and
   are still disabled while there are errors (ADR-008).
 
@@ -195,7 +200,7 @@ in dark mode renders the light print sheet. Not run: a real phone, a screen read
 | Name field, autosave status                                                                                  | kept; name in the app bar path (ADR-078)                  |
 | Undo / Redo (buttons + shortcuts)                                                                            | kept (icon buttons, same titles)                          |
 | New, Saved (library), Materials, Parts CSV, Print, Export menu (SVG, Fusion, design / project file)          | kept; ⋯ › New / Files, Projects page, Settings, Parts tab |
-| Front / Plan / 3D switch, Doors and fronts, Exploded 3D, Reset view                                          | kept                                                      |
+| Front / Plan / 3D / Both switch, Doors and fronts, Exploded 3D, Reset view                                   | kept                                                      |
 | Elevation: tap spaces, breadcrumb, selection, dimensions                                                     | kept                                                      |
 | Inspector: all fields for cabinet, corner, desk, space, split, drawer heights, handles, runner settings      | kept, regrouped                                           |
 | Output tabs: Parts, Sheets, Hardware, Checks; row ↔ 3D highlight; CSV blocked by errors                      | kept                                                      |

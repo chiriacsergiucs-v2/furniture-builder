@@ -33,6 +33,16 @@ import { RenderDialog } from './RenderDialog';
 import { MoreMenu } from './shell/MoreMenu';
 import { ProjectsPage } from './shell/ProjectsPage';
 import { MODE_LABEL, MODES, useUi } from './shell/uiStore';
+import {
+  bringDrawingForward,
+  defaultView,
+  shows3d,
+  showsDrawing,
+  showsSwitch,
+  shownView,
+  viewOptions,
+  type StageView,
+} from './viewChoice';
 
 const Viewer3D = lazy(() => import('../viewer/Viewer3D'));
 
@@ -170,16 +180,18 @@ export function App() {
   const phone = useMediaQuery('(max-width: 760px)');
   const wide = useMediaQuery('(min-width: 1500px)');
   const [has3d] = useState(webglAvailable);
-  const [view, setView] = useState<'front' | '3d'>(mode === 'build' && has3d ? '3d' : 'front');
-  const [lastMode, setLastMode] = useState(mode);
+  // The View switch (ADR-081): Front/Plan · 3D · Both. A mode, or crossing 1500 px, starts from its default view.
+  const [view, setView] = useState<StageView>(() => defaultView(mode, wide, has3d));
+  const viewKey = `${mode}|${wide}`;
+  const [lastViewKey, setLastViewKey] = useState(viewKey);
   const [sheetOpen, setSheetOpen] = useState(false);
-  if (mode !== lastMode) {
-    setLastMode(mode);
-    setView(mode === 'build' && has3d ? '3d' : 'front');
+  if (viewKey !== lastViewKey) {
+    setLastViewKey(viewKey);
+    setView(defaultView(mode, wide, has3d));
   }
-  // On a phone the mode alone decides: 3D only in Build & Preview, so the canvas is not mounted elsewhere (ADR-014).
-  const shown = phone ? (mode === 'build' ? '3d' : 'front') : view;
-  const mount3d = has3d && (wide || shown === '3d');
+  // On a phone Compose is the drawing only, so the canvas is not mounted there (ADR-014).
+  const shown = shownView(view, mode, phone);
+  const mount3d = has3d && shows3d(shown);
 
   // A piece waiting to be placed (ADR-056) or a room being drawn (ADR-059) is done on the plan, in Compose.
   const tapMode = useDesign((s) =>
@@ -193,7 +205,7 @@ export function App() {
     setLastTap(tapMode);
     // Placing a piece or drawing the room needs the plan: on a phone the sheet steps aside.
     if (tapMode) {
-      setView('front');
+      setView(bringDrawingForward);
       setSheetOpen(false);
     }
   }
@@ -207,7 +219,7 @@ export function App() {
   if (problemTap !== lastProblemTap) {
     setLastProblemTap(problemTap);
     if (inProject) {
-      setView('front');
+      setView(bringDrawingForward);
       setSheetOpen(false);
     }
   }
@@ -635,28 +647,24 @@ export function App() {
               )}
             </div>
           </aside>
-          <section className="stage" aria-label="Drawing">
+          <section className={`stage ${shown === 'both' ? 'both' : ''}`} aria-label="Drawing">
             <div className="stage-tools">
-              {!phone && (
+              {showsSwitch(mode, phone) && (
                 <div className="segmented small" role="radiogroup" aria-label="View">
-                  <button
-                    type="button"
-                    role="radio"
-                    aria-checked={view === 'front'}
-                    className={view === 'front' ? 'on' : ''}
-                    onClick={() => setView('front')}
-                  >
-                    {inProject ? 'Plan' : 'Front'}
-                  </button>
-                  <button
-                    type="button"
-                    role="radio"
-                    aria-checked={view === '3d'}
-                    className={view === '3d' ? 'on' : ''}
-                    onClick={() => setView('3d')}
-                  >
-                    3D
-                  </button>
+                  {viewOptions(inProject, has3d).map((o) => (
+                    <button
+                      key={o.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={shown === o.id}
+                      className={shown === o.id ? 'on' : ''}
+                      disabled={o.disabled}
+                      title={o.reason}
+                      onClick={() => setView(o.id)}
+                    >
+                      {o.label}
+                    </button>
+                  ))}
                 </div>
               )}
               <label className="toggle small">
@@ -667,7 +675,7 @@ export function App() {
                 />
                 <span>Doors and fronts</span>
               </label>
-              {(wide || shown === '3d') && (
+              {shows3d(shown) && (
                 <label className="toggle small">
                   <input
                     type="checkbox"
@@ -677,7 +685,7 @@ export function App() {
                   <span>Exploded 3D</span>
                 </label>
               )}
-              {shown === '3d' && (
+              {shows3d(shown) && (
                 <button
                   type="button"
                   className="btn sm"
@@ -715,11 +723,11 @@ export function App() {
                 </button>
               )}
             </div>
-            <div className="views">
-              <div className={`view front ${shown === 'front' ? 'active' : ''}`}>
+            <div className={`views ${shown === 'both' ? 'both' : ''}`}>
+              <div className={`view front ${showsDrawing(shown) ? 'active' : ''}`}>
                 {inProject ? <PlanView /> : <Elevation />}
               </div>
-              <div className={`view three ${shown === '3d' ? 'active' : ''}`}>
+              <div className={`view three ${shows3d(shown) ? 'active' : ''}`}>
                 {mount3d ? (
                   <ViewerBoundary>
                     <Suspense
