@@ -1897,12 +1897,13 @@ td.note {
   grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
 }
 .plan {
+  position: relative;
   margin: 0;
   height: 100%;
   min-height: 0;
   padding: 4px 16px 16px;
   display: grid;
-  grid-template-rows: 1fr auto;
+  grid-template-rows: minmax(0, 1fr);
 }
 .plan svg {
   width: 100%;
@@ -1910,9 +1911,26 @@ td.note {
   min-height: 0;
   display: block;
 }
-.plan figcaption {
+/* The view's caption sits behind an info button at its top-right (ADR-080). */
+.plan > .info-tip {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  z-index: 2;
+}
+.plan-drag-note {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 8px;
+  z-index: 2;
+  pointer-events: none;
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
   font-size: var(--fs-xs);
-  color: var(--ink-2);
+  color: var(--ink);
 }
 .plan .wall {
   stroke: var(--ink);
@@ -4724,23 +4742,16 @@ button.tile:hover {
 /* 23. Plan snapping (ADR-070) ------------------------------------------------- */
 /* The Snap toggle above the plan; a snapped preview is drawn in the ok colour (yellow marks fronts). */
 .plan.with-tools {
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto minmax(0, 1fr);
 }
 .plan-tools {
+  /* Room on the right for the info button. */
+  padding-right: 48px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--s-2) var(--s-3);
   min-width: 0;
-}
-.plan-tools-note {
-  flex: 1 1 100%;
-  min-width: 0;
-  font-size: var(--fs-xs);
-  line-height: 1.4;
-  /* Room for three lines, so the plan keeps its size while the status changes during a drag. */
-  min-height: calc(3 * 1.4em);
-  color: var(--ink-2);
 }
 .plan .snap-toggle[aria-pressed='true'] {
   background: var(--primary-soft);
@@ -4922,4 +4933,55 @@ button.tile:hover {
   width: 36px;
   height: 36px;
   object-fit: contain;
+}
+
+/* Info button and its popover (ADR-080): opens over the content, never moves it; stays inside a 390 px screen. */
+.info-tip {
+  position: relative;
+  display: inline-flex;
+}
+.info-btn {
+  min-width: 44px;
+  min-height: 44px;
+  color: var(--ink-2);
+}
+.info-pop {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 20;
+  width: min(340px, calc(100vw - 32px));
+  padding: var(--s-3);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: var(--surface);
+  box-shadow: var(--shadow-2);
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+  color: var(--ink);
+}
+.info-lead {
+  display: block;
+  margin-bottom: var(--s-2);
+  font-weight: 600;
+}
+
+/* Settings (ADR-080): Configure's content in a dialog; full screen on phones. */
+.dialog.wide:has(.settings-body) {
+  width: min(720px, calc(100vw - 32px));
+}
+.settings-body {
+  display: grid;
+  gap: var(--s-4);
+  min-width: 0;
+}
+@media (max-width: 760px) {
+  .dialog.wide:has(.settings-body) {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    margin: 0;
+    border-radius: 0;
+  }
 }

@@ -1,7 +1,8 @@
 # ADR-077: Each board names its edge band: material, thickness and width, on the cut list and shopping list
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-24
+- Implemented: 2026-10-25 (Merged to main; CI run 40170561018 and Deploy GitHub Pages run 40170561007 green on 895eb54)
 - Depends on: ADR-009, ADR-010, ADR-049, ADR-064
 - Design: docs/ui-design.md (Materials, Output › Parts, Shopping list)
 - Backlog: N72
@@ -69,14 +70,14 @@ never reduced by the band thickness, because the panel shop applies its own allo
 
 ## Done when
 
-- [ ] Band fields validate (kind list, thickness 1–100 tenths, width 1–100 mm) and round-trip; older files load
+- [x] Band fields validate (kind list, thickness 1–100 tenths, width 1–100 mm) and round-trip; older files load
       (unit tests)
-- [ ] Cut sizes are identical with and without a band spec (unit test, ADR-009)
-- [ ] Shopping list groups metres by band spec, adds the allowance, and lists boards without a spec under
+- [x] Cut sizes are identical with and without a band spec (unit test, ADR-009)
+- [x] Shopping list groups metres by band spec, adds the allowance, and lists boards without a spec under
       _to choose_ (unit tests)
-- [ ] A band narrower than its board is an error (unit test)
-- [ ] _Edge band_ in Materials and the band label on the parts list are found (find-it at 390 px and 1280 px)
-- [ ] All CI checks pass
+- [x] A band narrower than its board is an error (unit test)
+- [x] _Edge band_ in Materials and the band label on the parts list are found (find-it at 390 px and 1280 px)
+- [x] All CI checks pass
 
 ## Open questions
 

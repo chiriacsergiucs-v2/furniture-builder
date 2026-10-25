@@ -1,7 +1,7 @@
 # UI redesign — audit, competitor patterns and proposed layout (2026-10-24)
 
-Input for [ADR-078](../adr/ADR-078-rebuild-the-app-shell-projects-catalog-and-editor-as-separat.md) and
-[ADR-079](../adr/ADR-079-split-the-editor-into-compose-configure-and-build-preview-ph.md). The user's request,
+Input for [ADR-078](../adr-done/ADR-078-rebuild-the-app-shell-projects-catalog-and-editor-as-separat.md) and
+[ADR-079](../adr-done/ADR-079-split-the-editor-into-compose-configure-and-build-preview-ph.md). The user's request,
 2026-10-24: "ui/ux new from scratch build, to Analyze what is there, based on competitors derive what is the easiest
 layout, declutter composition from configuration, optimise mobile view, keep domains of catalog/item/project cleanly
 separate but available, make the import/export ui accessible from somewhere else to declutter the top and bottom.

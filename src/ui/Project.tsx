@@ -18,7 +18,7 @@ import { dropTarget, SNAP_RANGE } from '../core/snap';
 import type { Material, Panel } from '../core/types';
 import { listDecors, listDesigns, loadDesign, type StoredDesign } from '../persist/db';
 import { useDesign } from '../store/designStore';
-import { Counter, MmField, Segmented, Select, Toggle } from './controls';
+import { Counter, InfoTip, MmField, Segmented, Select, Toggle } from './controls';
 import {
   arrowMove,
   movePointer,
@@ -873,16 +873,27 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
           Snap
         </button>
         <ZoneToolbar on={showZones} onChange={setShowZones} />
-        <span className="plan-tools-note" role="status" aria-live={drag ? 'off' : 'polite'}>
-          {target
-            ? target.snap
-              ? `Snaps: ${[target.snap.label, ...target.snap.notes].join(' · ')}`
-              : (target.hint ?? (snapOn ? 'Alt held: placing freely.' : 'Snap is off.'))
-            : snapOn
-              ? `Snaps within ${SNAP_RANGE} mm to walls and neighbours; hold Alt to place freely.`
-              : 'Pieces go exactly where dropped.'}
-        </span>
       </div>
+      <InfoTip label="About the plan">
+        <span className="info-lead">
+          {snapOn
+            ? `Snaps within ${SNAP_RANGE} mm to walls and neighbours; hold Alt to place freely.`
+            : 'Pieces go exactly where dropped.'}
+        </span>
+        Seen from above. The yellow edge is each piece's front; dashed pieces hang on the wall; red
+        dashes show where a selected piece's doors or drawers cannot open. Drag a piece, or use the
+        arrow keys on it, to move it; Esc cancels a drag. R turns the focused piece about its
+        centre. With Snap on, a dropped piece joins a wall, an inside corner or a neighbour’s side
+        within {SNAP_RANGE} mm; arrow keys never snap.
+      </InfoTip>
+      {/* Live snap feedback while a piece is dragged; over the plan, so it takes no room (ADR-080). */}
+      {target && (
+        <span className="plan-drag-note" role="status">
+          {target.snap
+            ? `Snaps: ${[target.snap.label, ...target.snap.notes].join(' · ')}`
+            : (target.hint ?? (snapOn ? 'Alt held: placing freely.' : 'Snap is off.'))}
+        </span>
+      )}
       <svg
         ref={svgRef}
         viewBox={`${x0 - pad * 1.2} ${z0 - pad * 1.6} ${x1 - x0 + pad * 2.4} ${z1 - z0 + pad * 2.8}`}
@@ -1114,13 +1125,6 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
           </>
         )}
       </svg>
-      <figcaption>
-        Seen from above. The yellow edge is each piece's front; dashed pieces hang on the wall; red
-        dashes show where a selected piece's doors or drawers cannot open. Drag a piece, or use the
-        arrow keys on it, to move it; Esc cancels a drag. R turns the focused piece about its
-        centre. With Snap on, a dropped piece joins a wall, an inside corner or a neighbour’s side
-        within {SNAP_RANGE} mm; arrow keys never snap.
-      </figcaption>
     </figure>
   );
 }
@@ -1238,6 +1242,11 @@ function RoomFront({ pm }: { pm: ProjectModel }) {
     pm.models.find((m) => m.item.id === selectedId)?.box;
   return (
     <figure className="plan" aria-label="Room seen from the front. Select a piece.">
+      <InfoTip label="About the front view">
+        Seen from the front. Sizes in mm: overall in yellow, the selected piece in green.
+        {rv &&
+          ' The room height and the doors, windows and obstacles on the back wall are outlined.'}
+      </InfoTip>
       <svg
         viewBox={`${x0 - pad * 1.2} ${-top - pad * 0.8} ${x1 - x0 + pad * 2.4} ${top + pad * 1.8}`}
       >
@@ -1313,11 +1322,6 @@ function RoomFront({ pm }: { pm: ProjectModel }) {
           </>
         )}
       </svg>
-      <figcaption>
-        Seen from the front. Sizes in mm: overall in yellow, the selected piece in green.
-        {rv &&
-          ' The room height and the doors, windows and obstacles on the back wall are outlined.'}
-      </figcaption>
     </figure>
   );
 }
