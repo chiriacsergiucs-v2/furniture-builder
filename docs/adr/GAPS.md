@@ -477,7 +477,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-051: Tap on the innermost selected space
 
-- Status: ADR-083
+- Status: Done (ADR-083)
 - Origin: ADR-083, 2026-10-25, open question (Claude default)
 - Missing: What a tap on the already selected innermost space does
 - Request: The flow of selecting the furniture, then the middle (given there are 2 dividers), then having a horizontal divider, then selecting the bottom one to adjust shelves is a painful horrible user experience. Adjust the selecting to go from bigger to smaller. 1 click = entire furniture, second click selects the smaller frame, third again the smaller within, iteratively.
@@ -487,7 +487,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-052: Drill-down across project and piece
 
-- Status: ADR-083
+- Status: Done (ADR-083)
 - Origin: ADR-083, 2026-10-25, open question (Claude default)
 - Missing: Drill-down from the project plan/3D into a piece's spaces
 - Request: The flow of selecting the furniture, then the middle (given there are 2 dividers), then having a horizontal divider, then selecting the bottom one to adjust shelves is a painful horrible user experience. Adjust the selecting to go from bigger to smaller. 1 click = entire furniture, second click selects the smaller frame, third again the smaller within, iteratively.

@@ -1,7 +1,8 @@
 # ADR-083: Select from the whole piece inwards, one level per tap
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-25
+- Implemented: 2026-10-25
 - Depends on: ADR-014, ADR-079
 - Design: docs/ui-design.md (section 4, editor screen)
 - Backlog: N78
