@@ -73,7 +73,7 @@ export interface ProjectItem {
   /** The saved design this copy came from, for "Update from library". */
   libraryId?: string;
   placement?: Placement;
-  /** Chair, service and installation settings (ADR-073); absent = none. Saved from project schemaVersion 2. */
+  /** Chair, service and installation settings (ADR-073); absent = none. Saved from project schemaVersion 3. */
   zones?: ItemZones;
 }
 
@@ -84,7 +84,7 @@ export interface ProjectItem {
  */
 export interface RunPart {
   id: string;
-  kind: 'worktop' | 'filler' | 'cover' | 'plinth';
+  kind: 'worktop' | 'filler' | 'cover' | 'plinth' | TrimKind;
   /** What it is made from (ADR-061): kind + source piece ids + end; stable across refreshes. Absent in older files. */
   key?: string;
   /** Ids of the pieces it was derived from (ADR-061); a run plinth replaces these pieces' own plinths (ADR-054). */
@@ -102,15 +102,38 @@ export interface RunPart {
   banded: Face[];
 }
 
+/** Trims along a run of wall or tall units (ADR-075). */
+export type TrimKind = 'crown' | 'pelmet' | 'ceiling-filler';
+export const TRIM_KINDS: TrimKind[] = ['crown', 'pelmet', 'ceiling-filler'];
+
 /**
+ * A run part the user asked for (ADR-075): a worktop over chosen adjacent base units (with its overhangs), or a
+ * trim over chosen adjacent wall or tall units. Its part is planned with the other run parts, so it follows the
+ * pieces (ADR-061). The key is `kind|from ids`, the same form as the suggested parts.
+ */
+export interface RunRequest {
+  kind: 'worktop' | TrimKind;
+  /** Item ids, left to right. */
+  from: string[];
+  /** Worktop: overhang past the front and past each end, mm. Absent = 20 and 0, as suggested worktops. */
+  front?: Mm;
+  side?: Mm;
+  /** Crown and pelmet: the strip height the user entered (no default). */
+  height?: Mm;
+  /** Trims: the board, a copy. */
+  material?: Material;
+}
+export const requestKey = (r: Pick<RunRequest, 'kind' | 'from'>) => `${r.kind}|${r.from.join(',')}`;
+
 /**
  * Project document versions (ADR-011): new and edited projects are written at `PROJECT_SCHEMA`; every version in
  * `PROJECT_SCHEMAS` still loads unchanged. 2 = room pipes and outlets (ADR-072); 3 = clearance zones on items
- * (ADR-073).
+ * (ADR-073); 4 = run requests and trim run parts (ADR-075).
  */
-export const PROJECT_SCHEMA = 3 as const;
-export const PROJECT_SCHEMAS: readonly number[] = [1, 2, PROJECT_SCHEMA];
-export type ProjectSchemaVersion = 1 | 2 | typeof PROJECT_SCHEMA;
+export const PROJECT_SCHEMA = 4 as const;
+export const PROJECT_SCHEMAS: readonly number[] = [1, 2, 3, PROJECT_SCHEMA];
+export type ProjectSchemaVersion = 1 | 2 | 3 | typeof PROJECT_SCHEMA;
+const RUN_REQUESTS_SINCE = 4;
 
 export interface Project {
   schemaVersion: ProjectSchemaVersion;
@@ -126,6 +149,8 @@ export interface Project {
   runSettings?: RunSettings;
   /** Keys of run parts the user removed; an automatic refresh never brings them back (ADR-061). */
   runPartsRemoved?: string[];
+  /** Run parts the user asked for: part-run worktops, overhangs and trims (ADR-075). Absent = none. */
+  runRequests?: RunRequest[];
   /** The room: walls, doors, windows, obstacles (ADR-058/0056). Absent = no room checks. */
   room?: Room;
 }
@@ -273,7 +298,11 @@ export function removeProjectItem(project: Project, id: string): Project {
       void _gone;
       return rest;
     });
-  return { ...project, items };
+  // Run parts asked for over this piece (ADR-075) follow the pieces that are left.
+  const runRequests = project.runRequests
+    ?.map((r) => ({ ...r, from: r.from.filter((x) => x !== id) }))
+    .filter((r) => r.from.length);
+  return { ...project, items, ...(runRequests ? { runRequests } : {}) };
 }
 
 /** Placement problems: a missing base, a piece resting on itself, a piece in the air that is not built to hang. */
@@ -599,6 +628,22 @@ export function buildProjectModel(input: Project): ProjectModel {
         nodeId: `run:${rp.id}`,
       });
   }
+  // Run parts the user asked for that could not be made (ADR-075): an error, never left out silently (ADR-008).
+  const made = new Set((project.runParts ?? []).map((rp) => rp.key));
+  const missing = (project.runRequests ?? []).filter((r) => !made.has(requestKey(r)));
+  if (missing.length) {
+    const { unmade } = planRuns(project);
+    for (const r of missing) {
+      diagnostics.push({
+        severity: 'error',
+        code: 'run-request',
+        message:
+          unmade[requestKey(r)] ??
+          `${requestName(r, project)} is not made yet; suggest the run parts again.`,
+        nodeId: `request:${requestKey(r)}`,
+      });
+    }
+  }
   // The room (ADR-058): walls, obstacles, door swings and windows; obstacles also block openings (ADR-057).
   const rc = project.room
     ? roomChecks(
@@ -898,7 +943,9 @@ const runPanel = (rp: RunPart, materialId: string): Panel => ({
         ? 'filler'
         : rp.kind === 'plinth'
           ? 'plinth'
-          : 'cover-panel',
+          : rp.kind === 'cover'
+            ? 'cover-panel'
+            : 'trim',
   label: rp.label,
   materialId,
   box: rp.box,
@@ -966,13 +1013,25 @@ export function runOf(project: Project, id: string): string[] | null {
  * and the plinths match; that plinth replaces the pieces' own. Parts that would overlap another piece are left out;
  * parts the user removed (`runPartsRemoved`) are not proposed again. `notes` say why a run got no plinth.
  */
-export function planRuns(project: Project): { parts: RunPart[]; notes: string[] } {
+export function planRuns(project: Project): {
+  parts: RunPart[];
+  notes: string[];
+  /** Why a run part the user asked for was not made, by request key (ADR-075). */
+  unmade: Record<string, string>;
+} {
   const resolved = resolvePlacements(project);
   const placed = resolved.items.map((i) => placeItem(i));
   const removed = new Set(project.runPartsRemoved ?? []);
   const scribe = project.runSettings?.scribe ?? 0;
   const notes: string[] = [];
   const runs = groupRuns(placed);
+  const requests = project.runRequests ?? [];
+  const unmade: Record<string, string> = {};
+  const fail = (r: RunRequest, why: string) => {
+    const note = `${requestName(r, project)}: ${why}.`;
+    unmade[requestKey(r)] = note;
+    notes.push(note);
+  };
   const out: RunPart[] = [];
   /** Free of every piece (a run plinth ignores the plinths it replaces) and of the parts proposed so far. */
   const free = (b: Box, skipPlinthOf: Set<string> = new Set()) =>
@@ -997,9 +1056,6 @@ export function planRuns(project: Project): { parts: RunPart[]; notes: string[] 
       last = run[run.length - 1].bounds;
     const x0 = first.x,
       x1 = last.x + last.w;
-    const z0 = Math.min(...run.map((pc) => pc.bounds.z));
-    const zf = Math.max(...run.map((pc) => pc.bounds.z + pc.bounds.d));
-    const top = Math.max(...run.map((pc) => pc.bounds.y + pc.bounds.h));
     const n = run.length;
     for (let i = 1; i < n; i++) {
       const a = run[i - 1],
@@ -1136,38 +1192,205 @@ export function planRuns(project: Project): { parts: RunPart[]; notes: string[] 
           );
       }
     }
-    const covers = out.filter((o) => o.kind === 'cover' && o.from!.some((id) => ids.includes(id)));
-    const wx0 = Math.min(x0, ...covers.map((c) => c.box.x)),
-      wx1 = Math.max(x1, ...covers.map((c) => c.box.x + c.box.w));
-    const wt = worktopMaterial();
-    const wb: Box = {
-      x: wx0,
-      y: top,
-      z: z0,
-      w: wx1 - wx0,
-      h: wt.thickness,
-      d: zf - z0 + WORKTOP_OVERHANG,
-    };
-    const key = `worktop|${ids.join(',')}`;
-    if (free(wb))
-      push({
+    // Worktops the user asked for over part of this run, or with their own overhangs (ADR-075), replace the
+    // suggested worktop over the whole run.
+    const asked = requests.filter(
+      (r) => r.kind === 'worktop' && r.from.some((id) => ids.includes(id)),
+    );
+    const worktop = (pcs: PlacedPiece[], key: string, front = WORKTOP_OVERHANG, side = 0) => {
+      const own = pcs.map((pc) => pc.item.id);
+      const covers = out.filter(
+        (o) => o.kind === 'cover' && o.from!.some((id) => own.includes(id)),
+      );
+      const l = pcs[0].bounds,
+        r = pcs[pcs.length - 1].bounds;
+      const wx0 = Math.min(l.x, ...covers.map((c) => c.box.x)) - side,
+        wx1 = Math.max(r.x + r.w, ...covers.map((c) => c.box.x + c.box.w)) + side;
+      const wz0 = Math.min(...pcs.map((pc) => pc.bounds.z));
+      const wt = worktopMaterial();
+      const wb: Box = {
+        x: wx0,
+        y: Math.max(...pcs.map((pc) => pc.bounds.y + pc.bounds.h)),
+        z: wz0,
+        w: wx1 - wx0,
+        h: wt.thickness,
+        d: Math.max(...pcs.map((pc) => pc.bounds.z + pc.bounds.d)) - wz0 + front,
+      };
+      const m = pcs.length;
+      const part: RunPart = {
         id: key,
         key,
-        from: ids,
+        from: own,
         kind: 'worktop',
         label: 'Worktop',
-        reason: `run of ${n} ${n === 1 ? 'piece' : 'pieces'}, ${wb.w} mm long; joints and cut-outs are not drawn`,
+        reason: `${m === n ? 'run of' : 'over'} ${m} ${m === 1 ? 'piece' : 'pieces'}, ${wb.w} mm long${
+          front !== WORKTOP_OVERHANG || side ? `, overhang ${front} mm front, ${side} mm sides` : ''
+        }; joints and cut-outs are not drawn`,
         box: wb,
         material: wt,
         thicknessAxis: 'y',
         grainAxis: 'x',
         banded: ['+z'],
-      });
+      };
+      return part;
+    };
+    if (asked.length) {
+      for (const r of asked) {
+        const idx = r.from.map((id) => ids.indexOf(id)).sort((a, b) => a - b);
+        if (idx[0] < 0 || idx.some((v, i) => v !== idx[0] + i)) continue;
+        const wb = worktop(
+          idx.map((i) => run[i]),
+          requestKey(r),
+          r.front,
+          r.side,
+        );
+        if (out.some((o) => overlaps(o.box, wb.box)))
+          fail(r, 'it would overlap another worktop or run part');
+        else out.push(wb);
+      }
+      const bare = run.filter((pc) => !asked.some((r) => r.from.includes(pc.item.id)));
+      if (bare.length)
+        notes.push(
+          `No worktop over ${bare.map((pc) => pc.item.design.name).join(' + ')}: worktops were chosen for other pieces of this run (Add worktop over… adds one).`,
+        );
+      return;
+    }
+    const key = `worktop|${ids.join(',')}`;
+    const wb = worktop(run, key);
+    if (free(wb.box)) push(wb);
   });
-  return { parts: out, notes };
+  // Trims the user asked for along wall or tall units (ADR-075).
+  const byId = new Map(placed.map((pc) => [pc.item.id, pc]));
+  // Crowns first, so a ceiling filler on the same units goes above them whatever order they were asked in.
+  const order: Record<RunRequest['kind'], number> = {
+    worktop: 0,
+    crown: 1,
+    pelmet: 2,
+    'ceiling-filler': 3,
+  };
+  for (const r of [...requests].sort((a, b) => order[a.kind] - order[b.kind])) {
+    const key = requestKey(r);
+    if (r.kind === 'worktop') {
+      if (out.some((o) => o.key === key) || unmade[key]) continue;
+      const why =
+        !r.from.length || r.from.some((id) => !byId.has(id))
+          ? 'a piece it was made for is no longer in the project'
+          : !runs.some((run) => r.from.every((id) => run.some((pc) => pc.item.id === id)))
+            ? 'the pieces are not side by side in one run of base units'
+            : 'the pieces are not next to each other';
+      fail(r, why);
+      continue;
+    }
+    const part = planTrim(r, byId, project.room, out);
+    if (typeof part === 'string') fail(r, part);
+    else if (out.some((o) => overlaps(o.box, part.box)))
+      fail(r, 'it would overlap another run part');
+    else out.push(part);
+  }
+  return { parts: out, notes, unmade };
 }
 
 export const suggestRunParts = (project: Project): RunPart[] => planRuns(project).parts;
+
+const TRIM_LABEL: Record<RunRequest['kind'], string> = {
+  worktop: 'Worktop',
+  crown: 'Crown',
+  pelmet: 'Pelmet',
+  'ceiling-filler': 'Ceiling filler',
+};
+
+/** "Crown over Wall unit + Wall unit 2", for notes and diagnostics. */
+export function requestName(r: RunRequest, project: Project): string {
+  const names = r.from.map(
+    (id) => project.items.find((i) => i.id === id)?.design.name ?? 'a removed piece',
+  );
+  return `${TRIM_LABEL[r.kind]} over ${names.join(' + ')}`;
+}
+
+/** Wall units, and tall units standing on the floor, facing the room: the pieces a trim runs along (ADR-075). */
+export const takesTrim = (pc: PlacedPiece) =>
+  pc.item.rotationY === 0 &&
+  (pc.item.design.product.kind === 'cabinet' || pc.item.design.product.kind === 'corner') &&
+  (isWallHung(pc.item.design) || (pc.bounds.y === 0 && pc.bounds.h > RUN_MAX_HEIGHT));
+
+/** Pieces to choose from (ADR-075): runs of base units for a worktop, wall and tall units for trims; left → right. */
+export function requestCandidates(project: Project): { runs: string[][]; trims: string[][] } {
+  const placed = resolvePlacements(project).items.map((i) => placeItem(i));
+  // Trim rows: wall or tall units side by side, the same rule `planTrim` checks.
+  const trims: PlacedPiece[][] = [];
+  for (const pc of placed.filter(takesTrim).sort((a, b) => a.bounds.x - b.bounds.x)) {
+    const row = trims.find((r) => sideBySide(r[r.length - 1].bounds, pc.bounds));
+    if (row) row.push(pc);
+    else trims.push([pc]);
+  }
+  return {
+    runs: groupRuns(placed).map((r) => r.map((pc) => pc.item.id)),
+    trims: trims.map((r) => r.map((pc) => pc.item.id)),
+  };
+}
+
+/** `b` starts 0–150 mm right of `a` and they share some depth. */
+const sideBySide = (a: Box, b: Box) => {
+  const gap = b.x - (a.x + a.w);
+  return gap >= 0 && gap <= FILLER_MAX_GAP && spans(a.z, a.z + a.d, b.z, b.z + b.d);
+};
+
+/**
+ * A crown (on top, along the front), a pelmet (under the bottom, along the front) or a ceiling filler (from the
+ * top, or a crown on it, up to the room height) over adjacent wall or tall units (ADR-075); flush with their
+ * fronts. Returns why it cannot be made instead; nothing is clamped (ADR-008).
+ */
+function planTrim(
+  r: RunRequest,
+  byId: Map<string, PlacedPiece>,
+  room: Room | undefined,
+  out: RunPart[],
+): RunPart | string {
+  const found = r.from.map((id) => byId.get(id));
+  if (!found.length || found.some((pc) => !pc))
+    return 'a piece it was made for is no longer in the project';
+  const pcs = (found as PlacedPiece[]).slice().sort((a, b) => a.bounds.x - b.bounds.x);
+  const odd = pcs.find((pc) => !takesTrim(pc));
+  if (odd) return `${odd.item.design.name} is not a wall or tall unit facing the room`;
+  for (let i = 1; i < pcs.length; i++)
+    if (!sideBySide(pcs[i - 1].bounds, pcs[i].bounds)) return 'the pieces are not side by side';
+  const m = r.material;
+  if (!m) return 'choose its board';
+  const x0 = pcs[0].bounds.x,
+    x1 = Math.max(...pcs.map((pc) => pc.bounds.x + pc.bounds.w));
+  const top = Math.max(...pcs.map((pc) => pc.bounds.y + pc.bounds.h));
+  const bottom = Math.min(...pcs.map((pc) => pc.bounds.y));
+  const zf = Math.max(...pcs.map((pc) => pc.bounds.z + pc.bounds.d));
+  let y: Mm, h: Mm, reason: string;
+  if (r.kind === 'ceiling-filler') {
+    if (!room) return 'set the room and its height first (Room)';
+    const crown = out.filter((o) => o.kind === 'crown' && o.box.x < x1 && o.box.x + o.box.w > x0);
+    y = Math.max(top, ...crown.map((c) => c.box.y + c.box.h));
+    h = room.height - y;
+    if (h <= 0) return `the run already reaches the ${room.height} mm ceiling`;
+    reason = `from ${y} mm up to the ${room.height} mm ceiling`;
+  } else {
+    if (!r.height) return 'enter its height';
+    h = r.height;
+    y = r.kind === 'crown' ? top : bottom - h;
+    if (y < 0) return `it would go ${-y} mm below the floor`;
+    reason = r.kind === 'crown' ? `on top, ${h} mm high` : `under the units, ${h} mm high`;
+  }
+  const key = requestKey(r);
+  return {
+    id: key,
+    key,
+    from: pcs.map((pc) => pc.item.id),
+    kind: r.kind,
+    label: TRIM_LABEL[r.kind],
+    reason: `${reason}, ${x1 - x0} mm along ${pcs.length} ${pcs.length === 1 ? 'piece' : 'pieces'}`,
+    box: { x: x0, y, z: zf - m.thickness, w: x1 - x0, h, d: m.thickness },
+    material: { ...m },
+    thicknessAxis: 'z',
+    grainAxis: 'x',
+    banded: r.kind === 'crown' ? ['+y'] : r.kind === 'pelmet' ? ['-y'] : [],
+  };
+}
 
 /**
  * Keep run parts in step with the pieces (ADR-061): with `runSettings.auto`, propose them again; parts with the
@@ -1187,15 +1410,25 @@ export function refreshRunParts(project: Project): Project {
   const next = planRuns({ ...project, runPartsRemoved: removed }).parts.map((r) => {
     const was = old.get(r.key!);
     if (!was) return r;
-    const same = JSON.stringify(was.box) === JSON.stringify(r.box) && was.scribe === r.scribe;
+    // A trim's board is the one in its request (ADR-075); other parts keep their stored copy.
+    const own = TRIM_KINDS.includes(r.kind as TrimKind);
+    const same =
+      JSON.stringify(was.box) === JSON.stringify(r.box) &&
+      was.scribe === r.scribe &&
+      (!own || JSON.stringify(was.material) === JSON.stringify(r.material));
     if (same) {
       const { changed: _c, ...keep } = was;
       void _c;
       return keep;
     }
     const along =
-      r.kind === 'worktop' || r.kind === 'plinth' ? 'w' : r.kind === 'filler' ? 'w' : 'h';
-    return { ...r, material: was.material, changed: `${was.box[along]} → ${r.box[along]} mm` };
+      (['w', 'h', 'd'] as const).find((k) => was.box[k] !== r.box[k]) ??
+      (r.kind === 'cover' ? 'h' : 'w');
+    return {
+      ...r,
+      material: own ? r.material : was.material,
+      changed: `${was.box[along]} → ${r.box[along]} mm`,
+    };
   });
   const before = JSON.stringify(project.runParts ?? []),
     after = JSON.stringify(next);
@@ -1394,7 +1627,7 @@ export function validateProject(p: unknown): string[] {
         if (
           !isObj(rp) ||
           typeof rp.id !== 'string' ||
-          !['worktop', 'filler', 'cover', 'plinth'].includes(rp.kind as string) ||
+          !['worktop', 'filler', 'cover', 'plinth', ...TRIM_KINDS].includes(rp.kind as string) ||
           typeof rp.label !== 'string' ||
           typeof rp.reason !== 'string' ||
           (rp.key !== undefined && typeof rp.key !== 'string') ||
@@ -1428,6 +1661,39 @@ export function validateProject(p: unknown): string[] {
     )
   )
     errs.push('Invalid run settings');
+  if (p.runRequests !== undefined) {
+    if (!Array.isArray(p.runRequests)) errs.push('Invalid run requests');
+    else
+      for (const r of p.runRequests) {
+        const m = isObj(r) ? r.material : undefined;
+        if (
+          !isObj(r) ||
+          !['worktop', ...TRIM_KINDS].includes(r.kind as string) ||
+          !Array.isArray(r.from) ||
+          !r.from.length ||
+          !r.from.every((x) => typeof x === 'string') ||
+          (r.front !== undefined && !(isInt(r.front, 0) && (r.front as number) <= 1000)) ||
+          (r.side !== undefined && !(isInt(r.side, 0) && (r.side as number) <= 1000)) ||
+          (r.height !== undefined && !(isInt(r.height, 1) && (r.height as number) <= 3000)) ||
+          (m !== undefined &&
+            !(
+              isObj(m) &&
+              typeof m.name === 'string' &&
+              isInt(m.thickness, 1) &&
+              typeof m.grain === 'boolean'
+            ))
+        )
+          errs.push('Invalid run request');
+      }
+  }
+  // Run requests and trim run parts came with version 2 (ADR-075).
+  if (
+    (p.schemaVersion as number) < RUN_REQUESTS_SINCE &&
+    (p.runRequests !== undefined ||
+      (Array.isArray(p.runParts) &&
+        p.runParts.some((rp) => isObj(rp) && TRIM_KINDS.includes(rp.kind as TrimKind))))
+  )
+    errs.push(`Trims and chosen worktops need project schemaVersion ${RUN_REQUESTS_SINCE}`);
   if (p.room !== undefined) errs.push(...validateRoom(p.room));
   if (
     p.runPartsRemoved !== undefined &&

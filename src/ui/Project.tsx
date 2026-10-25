@@ -52,6 +52,7 @@ import { templateGlyph } from './Templates';
 import { StartFrom } from './Catalog';
 import { askConfirm } from './Confirm';
 import { SaveProjectTemplate } from './ProjectTemplates';
+import { AskRunParts, WorktopOverhang } from './RunRequests';
 import { ClearanceFields, ZoneOverlay, ZoneToolbar } from './Clearances';
 import {
   ProblemBanner,
@@ -1370,9 +1371,14 @@ function RunParts() {
   const parts = project.runParts ?? [];
   const removed = project.runPartsRemoved ?? [];
   const settings = project.runSettings;
+  const asked = useDesign((s) => s.projectModel?.diagnostics);
   const notes = useMemo(
-    () => (parts.length || settings?.auto ? planRuns(project).notes : []),
-    [project, parts.length, settings?.auto],
+    () =>
+      (parts.length || settings?.auto ? planRuns(project).notes : []).filter(
+        // Requests that could not be made are listed with a way to remove them (ADR-075).
+        (n) => !asked?.some((d) => d.code === 'run-request' && d.message === n),
+      ),
+    [project, parts.length, settings?.auto, asked],
   );
   const suggest = async () => {
     if (
@@ -1393,7 +1399,8 @@ function RunParts() {
       <p className="hint">
         For rows of base units side by side: one worktop, a filler in each gap, a cover panel on
         each open end, and one plinth along the run when the cabinets stand on their bottoms (it
-        replaces their own plinths).
+        replaces their own plinths). Add a worktop over chosen pieces, or a crown, pelmet or ceiling
+        filler over wall and tall units.
       </p>
       {parts.length > 0 && (
         <ul className="run-list">
@@ -1417,6 +1424,7 @@ function RunParts() {
               >
                 <Icon name="trash" />
               </button>
+              {rp.kind === 'worktop' && <WorktopOverhang part={rp} />}
             </li>
           ))}
         </ul>
@@ -1426,6 +1434,7 @@ function RunParts() {
           {n}
         </p>
       ))}
+      <AskRunParts />
       {removed.length > 0 && (
         <p className="hint">
           {removed.length} removed {removed.length === 1 ? 'part stays' : 'parts stay'} removed.

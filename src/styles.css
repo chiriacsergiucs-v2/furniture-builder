@@ -4827,3 +4827,48 @@ button.tile:hover {
   display: grid;
   gap: var(--s-2);
 }
+
+/* Run parts the user asks for (ADR-075) */
+.run-list .run-edit {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: var(--s-2);
+  min-width: 0;
+}
+.run-list .run-edit > .btn {
+  justify-self: start;
+}
+.run-ask-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+.run-ask {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  min-width: 0;
+}
+.run-pick {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: var(--s-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  min-width: 0;
+}
+.run-pick legend {
+  font-size: var(--fs-xs);
+  color: var(--ink-2);
+}
+.run-failed {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--s-2);
+  align-items: center;
+  color: var(--error);
+  font-size: var(--fs-xs);
+}
