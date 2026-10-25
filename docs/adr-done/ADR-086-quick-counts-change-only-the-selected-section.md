@@ -1,7 +1,8 @@
 # ADR-086: Quick counts change only the selected section
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-25
+- Implemented: 2026-10-25
 - Depends on: ADR-083, ADR-084
 - Design: docs/ui-design.md (§3 Components and states)
 - Backlog: N81
