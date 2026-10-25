@@ -998,6 +998,11 @@ table.cut caption span {
   font-size: var(--fs-xs);
   white-space: nowrap;
 }
+table.cut caption span.band {
+  display: block;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
 table.cut th {
   position: sticky;
   top: 0;
@@ -2087,10 +2092,20 @@ table.buy {
   background: var(--surface);
 }
 .materials .mat-picture,
+.materials .mat-band,
 .materials .mat-actions {
   grid-column: 1 / -1;
   display: grid;
   gap: var(--s-2);
+}
+.band-fields {
+  display: grid;
+  gap: var(--s-2);
+  min-width: 0;
+}
+.band-title {
+  margin: 0;
+  overflow-wrap: anywhere;
 }
 .mat-picture-row {
   display: flex;

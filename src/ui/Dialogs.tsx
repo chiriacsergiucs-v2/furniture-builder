@@ -15,6 +15,7 @@ import { useDesign } from '../store/designStore';
 import { Group, MmField, Segmented, Select, Toggle } from './controls';
 import { Icon } from './icons';
 import { AddPieceList } from './Project';
+import { BoardBand } from './BoardBand';
 import { StartFrom } from './Catalog';
 import { askConfirm } from './Confirm';
 import { importImage, useImageUrls } from '../persist/images';
@@ -389,6 +390,7 @@ export function MaterialsPanel() {
                 }
               />
             </div>
+            <BoardBand key={`${m.id}-band`} m={m} />
             <MaterialPicture m={m} />
             <div className="mat-actions">
               <button
