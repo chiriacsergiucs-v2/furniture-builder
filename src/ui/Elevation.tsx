@@ -1,10 +1,11 @@
-import { useId, useMemo, type MouseEvent } from 'react';
+import { useId, useLayoutEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
 import { productRoots } from '../core/design';
 import { faceMapping } from '../core/surface';
 import { imageKey, useImageUrls } from '../persist/images';
 import { useDesign } from '../store/designStore';
 import type { Panel, SpaceOpening } from '../core/types';
 import { frontOutline } from '../core/shape';
+import { CountStepper } from './CountStepper';
 
 /** SVG points of a panel's front outline (y flipped so the floor is at the bottom). */
 export const outlinePoints = (p: Panel) =>
@@ -89,6 +90,43 @@ export function Elevation() {
       : model.spaces.find((s) => s.nodeId === selectedId && s.view !== 'side');
   const fontSize = Math.max(b.w, b.h) / 26;
 
+  // Quick counts (ADR-084) float right above the selected space, inside the drawing; below its top edge when there
+  // is no room above. Placed from the selection outline's screen box, so it follows zoom and resizes.
+  const figRef = useRef<HTMLElement>(null);
+  const selRef = useRef<SVGRectElement>(null);
+  const stepRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
+  // The drawing gives up the card's height at its top, so there is always room right above the selection.
+  const [cardH, setCardH] = useState(0);
+  const [tick, setTick] = useState(0);
+  useLayoutEffect(() => {
+    const fig = figRef.current;
+    if (!fig || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => setTick((t) => t + 1));
+    ro.observe(fig);
+    return () => ro.disconnect();
+  }, []);
+  const sb = selectedSpace?.box;
+  useLayoutEffect(() => {
+    const fig = figRef.current,
+      sel = selRef.current,
+      st = stepRef.current;
+    if (!fig || !sel || !st) {
+      setCardH(0);
+      return setPos(null);
+    }
+    setCardH(st.offsetHeight);
+    const f = fig.getBoundingClientRect(),
+      r = sel.getBoundingClientRect();
+    const w = st.offsetWidth,
+      h = st.offsetHeight,
+      gap = 6;
+    const left = Math.max(gap, Math.min(r.left + r.width / 2 - f.left - w / 2, f.width - w - gap));
+    const above = r.top - f.top - h - gap;
+    const top = above >= gap ? above : Math.max(gap, r.top - f.top + gap);
+    setPos((p) => (p && p.left === left && p.top === top ? p : { left, top }));
+  }, [sb?.x, sb?.y, sb?.w, sb?.h, b.x, b.y, b.w, b.h, tick, cardH, design.product]);
+
   // A tap anywhere selects from the outside in, one level per tap (ADR-083); leaves stay keyboard targets.
   const onTap = (e: MouseEvent<SVGSVGElement>) => {
     const m = e.currentTarget.getScreenCTM();
@@ -99,7 +137,12 @@ export function Elevation() {
   const leaves = model.spaces.filter((s) => s.leaf && s.view !== 'side');
 
   return (
-    <figure className="elevation" aria-label="Front view. Select a space to edit it.">
+    <figure
+      ref={figRef}
+      className="elevation"
+      style={selectedSpace && cardH ? { paddingTop: cardH + 10 } : undefined}
+      aria-label="Front view. Select a space to edit it."
+    >
       <svg viewBox={vb} preserveAspectRatio="xMidYMid meet" role="group" onClick={onTap}>
         <defs>
           {design.materials.flatMap((m) => {
@@ -192,6 +235,7 @@ export function Elevation() {
         ))}
         {selectedSpace && (
           <rect
+            ref={selRef}
             className="el-selection"
             x={selectedSpace.box.x}
             y={Y(selectedSpace.box.y, selectedSpace.box.h)}
@@ -212,6 +256,13 @@ export function Elevation() {
           />
         )}
       </svg>
+      {selectedSpace && (
+        <CountStepper
+          ref={stepRef}
+          className="floating"
+          style={pos ? { left: pos.left, top: pos.top } : { visibility: 'hidden' }}
+        />
+      )}
     </figure>
   );
 }
