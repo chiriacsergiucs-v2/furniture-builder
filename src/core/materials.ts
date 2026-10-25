@@ -1,4 +1,12 @@
-import type { Material, MaterialKind, MaterialMaker, Mm } from './types';
+import type {
+  EdgeBand,
+  EdgeBandKind,
+  Material,
+  MaterialKind,
+  MaterialMaker,
+  Mm,
+  PanelRole,
+} from './types';
 
 /**
  * Material labels and the user's decor list (ADR-049). Labels are shown only. The decor list is the user's own
@@ -43,6 +51,68 @@ export function materialLabelProblems(m: Record<string, unknown>): string[] {
     )
       errs.push('invalid decor link');
   }
+  return errs;
+}
+
+// ---------------------------------------------------------------------------
+// Edge band specs (ADR-077): named by the user per board; nothing is filled in (ADR-010).
+// ---------------------------------------------------------------------------
+
+export const BAND_KINDS: { value: EdgeBandKind; label: string }[] = [
+  { value: 'abs', label: 'ABS' },
+  { value: 'pvc', label: 'PVC' },
+  { value: 'pp', label: 'PP' },
+  { value: 'melamine', label: 'Melamine' },
+  { value: 'veneer', label: 'Veneer' },
+  { value: 'other', label: 'Other' },
+];
+/** Common supplier thicknesses in tenths of a mm (0.4 · 0.8 · 1 · 2 · 3 mm): choices only, never a default. */
+export const COMMON_BAND_THICKNESS = [4, 8, 10, 20, 30];
+export const BAND_MAX_THICKNESS = 100;
+export const BAND_MAX_WIDTH = 100;
+export const BAND_MAX_ALLOWANCE = 100;
+export const BAND_MAX_CODE = 60;
+
+/** Tenths of a mm as text: 4 → "0.4", 10 → "1" (`sep` "," for Romanian output). */
+export const tenthsText = (t: number, sep = '.') =>
+  (t % 10 === 0 ? String(t / 10) : (t / 10).toFixed(1)).replace('.', sep);
+
+/** "0.8" or "0,8" → 8 tenths; null when it is not a positive multiple of 0.1 mm. */
+export function parseTenths(text: string): number | null {
+  const s = text.trim().replace(',', '.');
+  if (!/^\d+(\.\d)?$/.test(s)) return null;
+  const v = Math.round(Number(s) * 10);
+  return Number.isSafeInteger(v) && v >= 1 && v <= BAND_MAX_THICKNESS ? v : null;
+}
+
+const bandKindName = (k: EdgeBandKind) => BAND_KINDS.find((x) => x.value === k)?.label ?? k;
+
+/** "ABS 0.8 × 22 mm, H1145" — the band as the shop and the buyer read it. */
+export const bandText = (b: EdgeBand) =>
+  `${bandKindName(b.kind)} ${tenthsText(b.thickness)} × ${b.width} mm${b.code ? `, ${b.code}` : ''}`;
+
+/** Doors and drawer fronts may be banded differently (ADR-077). */
+export const FRONT_BAND_ROLES = new Set<PanelRole>(['door', 'drawer-front']);
+
+/** The band on a part of this board: the front band for doors and drawer fronts when set, otherwise the board's. */
+export const bandFor = (m: Pick<Material, 'band' | 'frontBand'>, role: PanelRole) =>
+  (FRONT_BAND_ROLES.has(role) && m.frontBand) || m.band;
+
+/** Problems with one band spec (design validation); empty when valid. */
+export function bandProblems(b: unknown): string[] {
+  if (!b || typeof b !== 'object' || Array.isArray(b)) return ['not a band spec'];
+  const o = b as Record<string, unknown>;
+  const whole = (v: unknown, lo: number, hi: number) =>
+    typeof v === 'number' && Number.isSafeInteger(v) && v >= lo && v <= hi;
+  const errs: string[] = [];
+  if (!BAND_KINDS.some((k) => k.value === o.kind)) errs.push('unknown band type');
+  if (!whole(o.thickness, 1, BAND_MAX_THICKNESS))
+    errs.push('band thickness must be 0.1 to 10 mm, in tenths');
+  if (!whole(o.width, 1, BAND_MAX_WIDTH)) errs.push('band width must be whole mm from 1 to 100');
+  if (o.code !== undefined && (typeof o.code !== 'string' || o.code.length > BAND_MAX_CODE))
+    errs.push('band code must be text up to 60 characters');
+  if (o.allowance !== undefined && !whole(o.allowance, 0, BAND_MAX_ALLOWANCE))
+    errs.push('band allowance must be whole mm from 0 to 100');
   return errs;
 }
 

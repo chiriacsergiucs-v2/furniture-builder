@@ -16,10 +16,18 @@ import {
   type Envelope,
   type ItemZones,
 } from './envelopes';
-import { rectInside, roomChecks, validateRoom, type Room } from './room';
-import { cutlist, hardwareSummary, type CutRow } from './cutlist';
+import {
+  outlineIssues,
+  rectInside,
+  roomChecks,
+  serviceChecks,
+  validateRoom,
+  type Room,
+} from './room';
+import { bandKey, cutlist, hardwareSummary, type CutRow } from './cutlist';
+import { bandFor, bandProblems, bandText } from './materials';
 import { DEFAULT_KERF, newId, sheetOf, upgradeDesign, validateDesign } from './design';
-import { overlaps, union } from './geometry';
+import { cutDimensions, overlaps, union } from './geometry';
 import { aabbOf, overlapsBox, panelsOverlap, turnShape } from './shape';
 import type { SheetSettings } from './nesting';
 import { jobsFromCutlist } from './nesting';
@@ -95,12 +103,14 @@ export interface RunPart {
 }
 
 /**
- * Project document versions this app reads, and the one it writes (ADR-011). 2 (ADR-073): items may carry `zones`.
- * A version-1 file loads unchanged; it is written as the current version after the next edit.
+/**
+ * Project document versions (ADR-011): new and edited projects are written at `PROJECT_SCHEMA`; every version in
+ * `PROJECT_SCHEMAS` still loads unchanged. 2 = room pipes and outlets (ADR-072); 3 = clearance zones on items
+ * (ADR-073).
  */
-export const PROJECT_VERSIONS = [1, 2] as const;
-export type ProjectSchemaVersion = (typeof PROJECT_VERSIONS)[number];
-export const PROJECT_SCHEMA: ProjectSchemaVersion = 2;
+export const PROJECT_SCHEMA = 3 as const;
+export const PROJECT_SCHEMAS: readonly number[] = [1, 2, PROJECT_SCHEMA];
+export type ProjectSchemaVersion = 1 | 2 | typeof PROJECT_SCHEMA;
 
 export interface Project {
   schemaVersion: ProjectSchemaVersion;
@@ -446,6 +456,18 @@ export interface ProjectModel {
   zones: ClearanceZone[];
 }
 
+/**
+ * ADR-077: a run part is cut from a board of the pieces; it takes the band named on that board now, since its
+ * stored copy of the board may predate the band. Boards no piece uses keep the copy's band.
+ */
+function runMaterial(project: Project, m: Material): Material {
+  const k = materialKey(m);
+  for (const it of project.items)
+    for (const pm of it.design.materials)
+      if (materialKey(pm) === k) return { ...m, band: pm.band, frontBand: pm.frontBand };
+  return m;
+}
+
 export function buildProjectModel(input: Project): ProjectModel {
   const project = resolvePlacements(input);
   const covered = plinthCovered(project);
@@ -545,6 +567,18 @@ export function buildProjectModel(input: Project): ProjectModel {
     const k = materialKey(rp.material);
     if (!materials.has(k)) materials.set(k, { ...rp.material, id: k, sheet: sheetOf(rp.material) });
     const panel = runPanel(rp, k);
+    // ADR-077: a band narrower than the run part's board is an error, as on a piece's own parts.
+    const band = panel.banded.length
+      ? bandFor(runMaterial(project, rp.material), panel.role)
+      : undefined;
+    const t = cutDimensions(panel, rp.material.grain).thickness;
+    if (band && band.width < t)
+      diagnostics.push({
+        severity: 'error',
+        code: 'band-narrow',
+        message: `Edge band ${bandText(band)} on ${rp.material.name} (${rp.label}) is narrower than the ${t} mm board.`,
+        nodeId: `run:${rp.id}`,
+      });
     panels.push(panel);
     piecePanels.push([panel]);
     const hit = pieces.find(
@@ -567,11 +601,25 @@ export function buildProjectModel(input: Project): ProjectModel {
           name: pc.item.design.name,
           bounds: pc.bounds,
           hitsPanels: (b: Box) => pc.panels.some((q) => overlapsBox(q, b)),
+          covers: (b: Box) =>
+            pc.panels.find((q) => COVER_ROLES.has(q.role) && overlapsBox(q, b))?.role ?? null,
           clearances: pc.clearances,
         })),
       )
     : null;
   if (rc) diagnostics.push(...rc.diagnostics, ...rc.clearanceIssues);
+  // Run worktops and plinths over a pipe or outlet (ADR-072).
+  if (project.room && !outlineIssues(project.room.outline).length)
+    for (const rp of project.runParts ?? [])
+      if (COVER_ROLES.has(rp.kind))
+        diagnostics.push(
+          ...serviceChecks(project.room, {
+            id: `run:${rp.id}`,
+            name: rp.label,
+            bounds: rp.box,
+            covers: (b: Box) => (overlaps(rp.box, b) ? rp.kind : null),
+          }),
+        );
   const blocked = openingChecks(pieces, panels, diagnostics, rc?.obstacles ?? []);
   const zones = clearanceZones(
     project,
@@ -693,6 +741,9 @@ function clearanceZones(
   }
   return out;
 }
+
+/** Parts that cover a pipe or outlet behind them (ADR-072). */
+const COVER_ROLES: ReadonlySet<string> = new Set(['back', 'plinth', 'worktop']);
 
 // ---------------------------------------------------------------------------
 // Opening clearance (ADR-057)
@@ -1141,7 +1192,11 @@ export function projectCutlist(project: Project): CutRow[] {
   const rows = new Map<string, CutRow>();
   const extra = (project.runParts ?? []).map((rp) => ({ rp, key: materialKey(rp.material) }));
   if (extra.length) {
-    const mats = [...new Map(extra.map((e) => [e.key, { ...e.rp.material, id: e.key }])).values()];
+    const mats = [
+      ...new Map(
+        extra.map((e) => [e.key, { ...runMaterial(project, e.rp.material), id: e.key }]),
+      ).values(),
+    ];
     // Fillers are cut wider by their scribe allowance (ADR-054); the model keeps the installed size.
     const cutPanel = (rp: RunPart, key: string) => {
       const p = runPanel(rp, key);
@@ -1155,10 +1210,13 @@ export function projectCutlist(project: Project): CutRow[] {
       bounds: { x: 0, y: 0, z: 0, w: 0, h: 0, d: 0 },
     };
     for (const r of cutlist(model, mats))
-      rows.set(['run', r.materialId, r.length, r.width, r.edgesL, r.edgesW].join('|'), {
-        ...r,
-        labels: r.labels.map((l) => `Run: ${l}`),
-      });
+      rows.set(
+        ['run', r.materialId, r.length, r.width, r.edgesL, r.edgesW, bandKey(r.band)].join('|'),
+        {
+          ...r,
+          labels: r.labels.map((l) => `Run: ${l}`),
+        },
+      );
   }
   const covered = plinthCovered(project);
   for (const item of project.items) {
@@ -1169,7 +1227,16 @@ export function projectCutlist(project: Project): CutRow[] {
     for (const r of cutlist(model, item.design.materials)) {
       const mat = item.design.materials.find((m) => m.id === r.materialId)!;
       const id = materialKey(mat);
-      const key = [id, r.length, r.width, r.edgesL, r.edgesW, r.drilling].join('|');
+      const key = [
+        id,
+        r.length,
+        r.width,
+        r.edgesL,
+        r.edgesW,
+        r.drilling,
+        bandKey(r.band),
+        !!r.bandFront,
+      ].join('|');
       const labels = r.labels.map((l) => `${item.design.name}: ${l}`);
       const panelIds = r.panelIds.map((p) => `${item.id}:${p}`);
       const cur = rows.get(key);
@@ -1253,7 +1320,7 @@ function validZones(z: unknown): boolean {
 export function validateProject(p: unknown): string[] {
   if (!isObj(p)) return ['Project must be an object'];
   const errs: string[] = [];
-  if (!(PROJECT_VERSIONS as readonly unknown[]).includes(p.schemaVersion))
+  if (!PROJECT_SCHEMAS.includes(p.schemaVersion as number))
     errs.push('Unsupported project schemaVersion');
   if (typeof p.id !== 'string' || !p.id || typeof p.name !== 'string' || !p.name)
     errs.push('Missing project id or name');
@@ -1326,6 +1393,8 @@ export function validateProject(p: unknown): string[] {
           typeof m.name !== 'string' ||
           !isInt(m.thickness, 1) ||
           typeof m.grain !== 'boolean' ||
+          (m.band !== undefined && bandProblems(m.band).length > 0) ||
+          (m.frontBand !== undefined && bandProblems(m.frontBand).length > 0) ||
           !['x', 'y', 'z'].includes(rp.thicknessAxis as string) ||
           !['x', 'y', 'z'].includes(rp.grainAxis as string) ||
           !Array.isArray(rp.banded)

@@ -2,8 +2,9 @@
  * Romanian wording for what goes to the panel shop: printed sheets and the parts CSV (ADR-020).
  * The app UI stays English. Pure functions, no UI imports.
  */
-import { baseLabel, type CutRow } from './cutlist';
-import type { HardwareItem } from './types';
+import { baseLabel, boardBandText, type CutRow } from './cutlist';
+import { tenthsText } from './materials';
+import type { EdgeBand, EdgeBandKind, HardwareItem } from './types';
 
 const PART: Record<string, string> = {
   'Left side': 'Lateral stânga',
@@ -172,6 +173,29 @@ export function hardwareRo(h: HardwareItem): { item: string; note: string } {
   }
 }
 
+const BAND_KIND_RO: Record<EdgeBandKind, string> = {
+  abs: 'ABS',
+  pvc: 'PVC',
+  pp: 'PP',
+  melamine: 'melamină',
+  veneer: 'furnir',
+  other: 'alt tip',
+};
+
+/** "ABS 0,8 × 22 mm, H1145" — the band on printed sheets and the parts CSV (ADR-077). */
+export const bandRo = (b: EdgeBand) =>
+  `${BAND_KIND_RO[b.kind] ?? b.kind} ${tenthsText(b.thickness, ',')} × ${b.width} mm${b.code ? `, ${b.code}` : ''}`;
+
+/** "cant ABS 0,8 × 22 mm · fronturi ABS 2 × 22 mm" for a board's printed header; null when nothing is banded. */
+export const boardBandRo = (rows: CutRow[]) =>
+  boardBandText(rows, {
+    prefix: 'cant ',
+    band: bandRo,
+    fronts: 'fronturi',
+    unnamed: 'nespecificat',
+    someUnnamed: 'unele piese: nespecificat',
+  });
+
 export const CSV_HEADERS_RO = [
   'Denumire',
   'Material',
@@ -181,6 +205,7 @@ export const CSV_HEADERS_RO = [
   'Buc.',
   'Cant L',
   'Cant l',
+  'Tip cant',
   'Fibră',
   'Găurire',
 ];
@@ -206,6 +231,7 @@ export function cutlistCsvRo(rows: CutRow[]): string {
       r.quantity,
       r.edgesL,
       r.edgesW,
+      r.edgesL || r.edgesW ? (r.band ? bandRo(r.band) : 'nespecificat') : '',
       r.grain ? 'pe lungime' : 'nu',
       drillingRo(r.drilling),
     ]),

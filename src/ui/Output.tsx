@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
-import { areaM2, bandMetersFromRows, lengthsList } from '../core/cutlist';
+import { areaM2, bandMetersFromRows, boardBandText, lengthsList } from '../core/cutlist';
 import { useDesign, type Tab } from '../store/designStore';
 import { Sheets } from './Sheets';
+import { FastenerCounts } from './Fasteners';
 import { ShoppingList } from './Shopping';
 import { useView } from './useView';
 import { Icon } from './icons';
@@ -129,6 +130,7 @@ function Parts() {
                 {bands.get(mid) ? `, ${bands.get(mid)!.toFixed(1)} m edge band` : ''}
                 {list[0].grain ? ', grain along length' : ''}
               </span>
+              {boardBandText(list) && <span className="band">{boardBandText(list)}</span>}
             </caption>
             <thead>
               <tr>
@@ -252,10 +254,13 @@ function Hardware() {
   const items = useView().hardware;
   if (!items.length)
     return (
-      <p className="empty center">
-        <Icon name="box" />
-        No hardware needed yet. Add drawers, doors or a hanging rail.
-      </p>
+      <div className="hardware">
+        <p className="empty center">
+          <Icon name="box" />
+          No hardware needed yet. Add drawers, doors or a hanging rail.
+        </p>
+        <FastenerCounts />
+      </div>
     );
   return (
     <div className="hardware">
@@ -280,10 +285,11 @@ function Hardware() {
         </tbody>
       </table>
       <p className="hint">
-        Screws and connectors are not listed, except screwed joints a design names (their screws are
-        your choice). Hinge and shelf-pin counts follow common guidance; the maker's datasheet
-        decides.
+        Screws and connectors are counted below only as joints (guidance), except screwed joints a
+        design names (their screws are your choice). Hinge and shelf-pin counts follow common
+        guidance; the maker's datasheet decides.
       </p>
+      <FastenerCounts />
     </div>
   );
 }
