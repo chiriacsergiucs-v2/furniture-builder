@@ -16,6 +16,7 @@ import {
   liftOff,
   makeItem,
   planRuns,
+  PROJECT_SCHEMA,
   refreshRunParts,
   removeProjectItem,
   resolvePlacements,
@@ -451,7 +452,8 @@ export const useDesign = create<State>((set, get) => {
     setRoom: (room) => {
       const p = get().project;
       if (!p) return;
-      if (room) commitProject({ ...p, room });
+      // A room may now hold pipes and outlets (ADR-072): it is saved at the current project version.
+      if (room) commitProject({ ...p, room, schemaVersion: PROJECT_SCHEMA });
       else {
         const { room: _r, ...rest } = p;
         void _r;

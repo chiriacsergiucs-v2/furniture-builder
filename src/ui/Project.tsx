@@ -29,6 +29,8 @@ import {
 import {
   DEFAULT_ROOM_HEIGHT,
   doorSwing,
+  DEFAULT_OUTLET_ZONE,
+  DEFAULT_PIPE_ZONE,
   featureBox,
   outlineIssues,
   roomFrontView,
@@ -964,6 +966,23 @@ function RoomOutline({ room, fs }: { room: Room; fs: number }) {
               <title>{f.label}</title>
             </rect>
           );
+        if (f.kind === 'pipe' || f.kind === 'outlet')
+          return (
+            <g key={f.id} className={`room-${f.kind}`}>
+              <rect x={b.x} y={b.z} width={b.w} height={b.d}>
+                <title>{`${f.label}: keep backs, plinths and worktops clear`}</title>
+              </rect>
+              <text
+                x={b.x + b.w / 2}
+                y={b.z + b.d}
+                fontSize={fs * 0.6}
+                textAnchor="middle"
+                dominantBaseline="hanging"
+              >
+                {f.label}
+              </text>
+            </g>
+          );
         const sw = doorSwing(room, f);
         return (
           <g key={f.id}>
@@ -1267,6 +1286,8 @@ const FEATURE_KIND: Record<RoomFeature['kind'], string> = {
   door: 'Door',
   window: 'Window',
   obstacle: 'Obstacle',
+  pipe: 'Pipe',
+  outlet: 'Outlet',
 };
 
 /** The room (ADR-058/0056): shape and walls, height, doors, windows and obstacles, checked against the pieces. */
@@ -1334,17 +1355,30 @@ function RoomSection() {
               depth: 0,
               label: `Window ${n}`,
             }
-          : {
-              id: newId(),
-              kind,
-              wall: 0,
-              from: 0,
-              width: 600,
-              sill: 100,
-              height: 600,
-              depth: 100,
-              label: `Obstacle ${n}`,
-            };
+          : kind === 'pipe' || kind === 'outlet'
+            ? {
+                // A zone on the wall (ADR-072); default sizes are the ADR's open question, edited here.
+                id: newId(),
+                kind,
+                wall: 0,
+                from: kind === 'pipe' ? 200 : 400,
+                width: kind === 'pipe' ? DEFAULT_PIPE_ZONE : DEFAULT_OUTLET_ZONE,
+                sill: 300,
+                height: kind === 'pipe' ? DEFAULT_PIPE_ZONE : DEFAULT_OUTLET_ZONE,
+                depth: 0,
+                label: `${FEATURE_KIND[kind]} ${n}`,
+              }
+            : {
+                id: newId(),
+                kind,
+                wall: 0,
+                from: 0,
+                width: 600,
+                sill: 100,
+                height: 600,
+                depth: 100,
+                label: `Obstacle ${n}`,
+              };
     setRoom({ ...room, features: [...room.features, f] });
   };
   const setFeature = (id: string, patch: Partial<RoomFeature>) =>
@@ -1361,7 +1395,8 @@ function RoomSection() {
       {!room ? (
         <>
           <p className="hint">
-            Add the room to check the pieces against its walls, doors, windows and obstacles.
+            Add the room to check the pieces against its walls, doors, windows, obstacles, pipes and
+            outlets.
           </p>
           <Segmented<RoomShape> label="Shape" value={shape} options={SHAPES} onChange={setShape} />
           <button type="button" className="btn outline block" onClick={() => make(shape, sizes)}>
@@ -1481,7 +1516,7 @@ function RoomSection() {
             <Icon name="pencil" className="sm" />
             Draw the room again
           </button>
-          <h4>Doors, windows and obstacles</h4>
+          <h4>Doors, windows, obstacles, pipes and outlets</h4>
           {room.features.length === 0 && <p className="hint">None yet.</p>}
           {room.features.map((f) => (
             <fieldset key={f.id} className="room-feature" aria-label={f.label}>
@@ -1575,6 +1610,12 @@ function RoomSection() {
             </button>
             <button type="button" className="btn outline sm" onClick={() => addFeature('obstacle')}>
               Add obstacle
+            </button>
+            <button type="button" className="btn outline sm" onClick={() => addFeature('pipe')}>
+              Add pipe
+            </button>
+            <button type="button" className="btn outline sm" onClick={() => addFeature('outlet')}>
+              Add outlet
             </button>
           </div>
           <button
