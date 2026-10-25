@@ -72,6 +72,8 @@ implement it. Read `docs/adr/README.md` for the conventions and the index.
 - File name: `ADR-NNN-short-kebab-title.md` (3-digit number).
 - Status: `Pending`, `Deferred (<reason>)` or `Implemented`. Never set `Implemented` by hand.
 - An ADR is agreed by the user. Unconfirmed defaults stay under _Open questions_ in the ADR.
+- Never auto-accept a recommended or default option. Treat it as accepted only when the user says so explicitly
+  (e.g. "accept defaults", "proceed with the recommended"); otherwise ask (user rule 2026-10-25).
 - Implemented ADRs are not edited; a changed decision gets a new ADR that links the old one.
 - Check `docs/adr/` and `docs/adr-done/` before proposing an alternative to a settled choice.
 - Authority: explicit user decision › implemented ADR › code and tests › earlier discussion › proposal.
