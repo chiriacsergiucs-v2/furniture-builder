@@ -1,4 +1,4 @@
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import { ContactShadows, Edges, OrbitControls } from '@react-three/drei';
 import { useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
 import {
@@ -25,6 +25,7 @@ import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { explode } from '../core/explode';
+import { hitToMm } from '../core/selectPath';
 import { roomDisplayBoxes } from '../core/room';
 import { inPlaneAxes, union } from '../core/geometry';
 import { aabbOf } from '../core/shape';
@@ -126,7 +127,7 @@ function useTextures(urls: Map<string, string>): Map<string, Texture> {
 
 /**
  * Non-authoritative preview: renders the model's panels exactly as built, never edits them.
- * Click a panel to select the space that owns it.
+ * A tap selects the whole piece, then one level smaller per tap at the hit point (ADR-083).
  */
 export default function Viewer3D() {
   const view = useView();
@@ -163,7 +164,7 @@ export default function Viewer3D() {
       onPointerMissed={() => {
         const st = useDesign.getState();
         if (st.project && !st.editingItemId) st.selectItem(null);
-        else st.select(null);
+        else st.select(undefined);
       }}
     >
       <color attach="background" args={[bg]} />
@@ -340,7 +341,7 @@ function ModelItemMesh({ item, box, plain }: { item: ModelItem; box: Box; plain:
   const ms = loaded?.id === item.modelId ? loaded.scene : null;
   const clone = useMemo(() => ms?.scene.clone(true) ?? null, [ms]);
   const selected = useDesign((s) => s.selectedItemId === item.id) && !plain;
-  const pick = useDesign((s) => s.pick);
+  const selectItem = useDesign((s) => s.selectItem);
   const { w, h, d } = item.size;
   const outline = useMemo(() => new EdgesGeometry(new BoxGeometry(w * S, h * S, d * S)), [w, h, d]);
   useEffect(() => () => outline.dispose(), [outline]);
@@ -358,7 +359,7 @@ function ModelItemMesh({ item, box, plain }: { item: ModelItem; box: Box; plain:
       rotation={[0, (modelYaw(item) * Math.PI) / 180, 0]}
       onClick={(e) => {
         e.stopPropagation();
-        pick(`${item.id}:model`);
+        selectItem(item.id);
       }}
     >
       {clone && ms ? (
@@ -493,7 +494,10 @@ function Panels({
   const selectedId = view.mode === 'project' ? selectedItem : selectedSpace;
   const highlight = useDesign((s) => s.highlight);
   const showFronts = useDesign((s) => s.showFronts);
-  const pick = useDesign((s) => s.pick);
+  const tapPiece = useDesign((s) => s.tapPiece);
+  const tapItem = useDesign((s) => s.tapItem);
+  const exploded = useDesign((s) => s.exploded);
+  const built = useMemo(() => new Map(view.model.panels.map((p) => [p.id, p])), [view.model]);
   const colors = useMemo(() => new Map(materials.map((m) => [m.id, m.color])), [materials]);
   const finishes = useMemo(() => new Map(materials.map((m) => [m.id, m.finish])), [materials]);
   const images = useMemo(
@@ -509,12 +513,12 @@ function Panels({
         .filter((p) => showFronts || !FRONT.has(p.role))
         .map((p) => {
           const b = p.box;
+          // The whole piece selected (ADR-083) tints every panel.
           const selected =
             !plain &&
-            selectedId !== null &&
             (view.mode === 'project'
-              ? p.nodeId.startsWith(`${selectedId}:`)
-              : p.nodeId === selectedId);
+              ? !!selectedId && p.nodeId.startsWith(`${selectedId}:`)
+              : selectedId === null || p.nodeId === selectedId);
           const lit = !plain && hl.has(p.id);
           // A picture replaces the plain colour; without a readable one the plain colour stays (ADR-048).
           const img = images.get(p.materialId);
@@ -558,9 +562,12 @@ function Panels({
               />
             </>
           );
-          const onClick = (e: { stopPropagation: () => void }) => {
+          // Outside in, one level per tap at the hit point (ADR-083).
+          const onClick = (e: ThreeEvent<MouseEvent>) => {
             e.stopPropagation();
-            pick(p.nodeId);
+            const at = hitToMm(e.point, built.get(p.id), exploded);
+            if (view.mode === 'project') tapItem(p.nodeId.split(':')[0], at);
+            else tapPiece(at.x, at.y);
           };
           const geometry =
             map && img ? (

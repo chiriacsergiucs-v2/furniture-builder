@@ -18,6 +18,7 @@ import {
   usesPedestal,
 } from '../core/design';
 import { materialLabel } from '../core/materials';
+import type { Selection } from '../core/selectPath';
 import type {
   CabinetParams,
   CornerParams,
@@ -101,15 +102,17 @@ export function Inspector({ mode }: { mode: 'compose' | 'configure' }) {
 function ComposeStart() {
   const prod = useDesign((s) => s.design.product);
   const select = useDesign((s) => s.select);
+  const whole = useDesign((s) => s.selectedId === null);
   const setSettingsOpen = useUi((s) => s.setSettingsOpen);
   const roots = productRoots(prod);
   return (
     <div className="inspector compose-start">
       <header className="insp-head">
         <h2>Compose</h2>
+        {whole && <p className="selected-whole">Selected: {WHOLE[prod.kind]}</p>}
         <p className="hint">
           {roots.length
-            ? 'Tap a space in the front view to fill it with shelves, drawers or hanging, add doors, or divide it.'
+            ? 'Tap the drawing: the first tap selects the whole piece, each further tap at the same spot one space smaller. Fill a space with shelves, drawers or hanging, add doors, or divide it.'
             : 'This piece has no spaces to fill. Its sizes and boards are under Settings.'}
         </p>
       </header>
@@ -136,7 +139,8 @@ function ComposeStart() {
 }
 
 /** One line naming what is selected in the piece, for the phone sheet's peek row (ADR-079). */
-export function selectionLabel(prod: Parameters<typeof findInProduct>[0], id: string | null) {
+export function selectionLabel(prod: Parameters<typeof findInProduct>[0], id: Selection) {
+  if (id === null) return WHOLE[prod.kind];
   const found = id ? findInProduct(prod, id) : undefined;
   if (!found) return null;
   return found.space.id === found.root.id

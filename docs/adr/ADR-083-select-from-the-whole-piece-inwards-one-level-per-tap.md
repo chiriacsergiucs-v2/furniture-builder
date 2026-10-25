@@ -36,8 +36,8 @@ Selection follows the space tree from the outside in, one level per tap, at the 
   first tap is visibly the whole piece (outline round the piece, inspector shows the piece). Store change only; the
   design document and `FurnitureModel` do not change (no ADR-011 bump).
 - Front view (`src/ui/Elevation.tsx`): one tap handler on the drawing converts the tap to mm and calls the store's
-  `pick` with the point; spaces and panels no longer select directly. Keyboard: Enter on the focused drawing drills at
-  the centre of the current selection; the breadcrumb keeps going up.
+  `tapPiece` with the point; spaces and panels no longer select directly. Keyboard: Enter on a focused space drills
+  at that space's centre; the breadcrumb keeps going up.
 - 3D (`src/viewer/Viewer3D.tsx`): the hit point (`e.point`, converted to mm, x and y) goes through the same
   `pathAt`/`nextSelection`; a tap on empty space clears the selection (as today). Still select-only (ADR-014).
 - Project view (user 2026-10-25, G-052): the 1st tap on a piece (plan, room front view or 3D) selects it as today;
@@ -66,15 +66,15 @@ Selection follows the space tree from the outside in, one level per tap, at the 
 
 ## Done when
 
-- [ ] `tests/select-path.test.ts`: on a piece with 2 vertical dividers and a horizontal divider in the middle bay,
+- [x] `tests/select-path.test.ts`: on a piece with 2 vertical dividers and a horizontal divider in the middle bay,
       taps at one point select whole piece → middle bay → bottom space; a 4th tap selects the whole piece again.
-- [ ] Same test: with the middle bay selected, a tap in the left bay selects the left bay; with nothing selected, a tap
+- [x] Same test: with the middle bay selected, a tap in the left bay selects the left bay; with nothing selected, a tap
       selects the whole piece; a point outside the piece selects nothing.
-- [ ] The same sequence works from 3D hit points (unit test on the mm conversion feeding `pathAt`).
-- [ ] Undo/redo, `loadDesign` and deleting a space leave a valid selection (store test).
-- [ ] `tools/drill-select/find-it.mjs` on the production build, at 390 px and 1280 px: from the bare app, open a piece,
+- [x] The same sequence works from 3D hit points (unit test on the mm conversion feeding `pathAt`).
+- [x] Undo/redo, `loadDesign` and deleting a space leave a valid selection (store test).
+- [x] `tools/drill-select/find-it.mjs` on the production build, at 390 px and 1280 px: from the bare app, open a piece,
       tap the front view three times at one point and find the inspector text for the whole piece, then the bay, then
       the inner space.
-- [ ] In a project, a 2nd tap on the selected piece opens it with the space under the tap selected, also for a piece
+- [x] In a project, a 2nd tap on the selected piece opens it with the space under the tap selected, also for a piece
       turned 90° (store test).
-- [ ] `pnpm lint`, `format:check`, `typecheck`, `test`, `build`, `docs:check` pass.
+- [x] `pnpm lint`, `format:check`, `typecheck`, `test`, `build`, `docs:check` pass.
