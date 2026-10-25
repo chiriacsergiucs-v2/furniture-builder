@@ -240,7 +240,8 @@ export const useDesign = create<State>((set, get) => {
       projectFuture,
       projectDirtyAt: Date.now(),
       placingItemId: null,
-      selectedItemId: sel && p.items.some((i) => i.id === sel) ? sel : null,
+      selectedItemId:
+        sel && [...p.items, ...(p.models ?? [])].some((i) => i.id === sel) ? sel : null,
     });
   };
   const initial = templates[0].create();

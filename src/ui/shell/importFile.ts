@@ -4,6 +4,7 @@ import { validateProject, type Project } from '../../core/project';
 import { saveDesign, saveProject, saveProjectTemplate } from '../../persist/db';
 import { readProjectTemplateFile } from '../../persist/projectTemplateFile';
 import { takePictures } from '../../persist/images';
+import { takeModels } from '../../persist/models';
 import { useDesign } from '../../store/designStore';
 
 export interface ImportResult {
@@ -60,7 +61,10 @@ export async function importFile(f: File): Promise<ImportResult> {
         },
       };
     // Pictures carried in the file go to this device (ADR-048); a bad one is reported, the file still opens.
-    const { data, problems } = await takePictures(parsed);
+    const pics = await takePictures(parsed);
+    // 3D models carried in a project file (ADR-076) are stored again under new ids; a bad one is reported.
+    const { data, problems: modelProblems } = await takeModels(pics.data);
+    const problems = [...pics.problems, ...modelProblems];
     const now = new Date().toISOString();
     if (isProject) {
       const p = { ...(data as Project), id: newId(), updatedAt: now };

@@ -379,9 +379,10 @@ export function App() {
       : '';
   const sideMode = mode === 'configure' ? 'configure' : 'compose';
   const selectedItem = project?.items.find((i) => i.id === selectedItemId);
+  const selectedModel = project?.models?.find((m) => m.id === selectedItemId);
   const peek = inProject
-    ? selectedItem
-      ? `Selected: ${selectedItem.design.name}`
+    ? selectedItem || selectedModel
+      ? `Selected: ${selectedItem?.design.name ?? selectedModel?.name}`
       : `${project!.name}: ${project!.items.length} ${project!.items.length === 1 ? 'piece' : 'pieces'}`
     : (() => {
         const l = selectionLabel(design.product, selectedId);

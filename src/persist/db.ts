@@ -4,6 +4,7 @@ import { validateProject, type Project } from '../core/project';
 import { validateLocalTemplate, type LocalTemplate } from '../core/catalog/local';
 import type { Design } from '../core/types';
 import type { Decor } from '../core/materials';
+import type { ModelFormat, ModelSize } from '../core/model3d';
 import { validatePrice, type PriceEntry } from '../core/prices';
 import { validFastenerChoice, type FastenerChoice, type JointType } from '../core/fasteners';
 import { validateProjectTemplate, type ProjectTemplate } from '../core/projectTemplate';
@@ -44,6 +45,20 @@ export interface StoredImage {
   createdAt: string;
 }
 
+/** A 3D model file from the device (ADR-076), kept as it was picked; projects refer to it by id. */
+export interface StoredModel {
+  id: string;
+  name: string;
+  format: ModelFormat;
+  bytes: ArrayBuffer;
+  /** Size in mm from the model's bounds (glTF metres × 1000). */
+  size: ModelSize;
+  triangles: number;
+  /** A small rendered picture (PNG) for the library list; absent when it could not be drawn. */
+  thumb?: ArrayBuffer;
+  createdAt: string;
+}
+
 /**
  * Local-only storage (IndexedDB). Nothing leaves the device. New database name: the rebuild is a clean
  * break, so old `mobila-cutlist-build-kit` data is neither read nor touched.
@@ -58,6 +73,7 @@ class FurnitureDb extends Dexie {
   decors!: Table<Decor, string>;
   projectTemplates!: Table<StoredProjectTemplate, string>;
   prices!: Table<PriceEntry, string>;
+  models!: Table<StoredModel, string>;
   constructor(name = 'furniture-builder') {
     super(name);
     // Never edit a shipped version block; add a new version for any change (ADR-012).
@@ -109,6 +125,19 @@ class FurnitureDb extends Dexie {
       decors: 'id',
       projectTemplates: 'id, updatedAt, name',
       prices: 'id',
+    });
+    // v8 (ADR-076): 3D model files for display-only project items. Earlier tables untouched (additive).
+    this.version(8).stores({
+      designs: 'id, updatedAt, name',
+      projects: 'id, updatedAt, name',
+      templates: 'id, updatedAt',
+      researchDocs: 'key, docId',
+      researchMarks: 'id, updatedAt',
+      images: 'id',
+      decors: 'id',
+      projectTemplates: 'id, updatedAt, name',
+      prices: 'id',
+      models: 'id, createdAt',
     });
   }
 }
@@ -281,6 +310,37 @@ export async function unusedImageIds(
   return ids.filter((id) => !kept.has(id) && !text.includes(`"${id}"`));
 }
 export const deleteImages = (ids: string[], database = db) => database.images.bulkDelete(ids);
+
+/** A stored model if its row is readable; an unreadable row is left in place (ADR-012). */
+export async function loadModel(id: string, database = db): Promise<StoredModel | undefined> {
+  const row = await database.models.get(id);
+  return row && row.bytes instanceof ArrayBuffer && row.bytes.byteLength > 0 ? row : undefined;
+}
+export const saveModel = (m: StoredModel, database = db) => database.models.put(m);
+/** Readable models, newest first (ADR-076). */
+export async function listModels(database = db): Promise<StoredModel[]> {
+  const rows = await database.models.orderBy('createdAt').reverse().toArray();
+  return rows.filter((r) => r.bytes instanceof ArrayBuffer && typeof r.name === 'string');
+}
+/**
+ * Delete a model from the library unless a project still uses it (ADR-076, ADR-012). Saved projects are searched as
+ * text, so a project the app cannot read still keeps its models; `keep` holds ids the open project uses.
+ */
+export async function deleteModelIfUnused(
+  id: string,
+  keep: Iterable<string> = [],
+  database = db,
+): Promise<{ deleted: boolean; usedBy: string[] }> {
+  return database.transaction('rw', database.models, database.projects, async () => {
+    const usedBy = (await database.projects.toArray())
+      .filter((r) => JSON.stringify(r).includes(`"${id}"`))
+      .map((r) => (typeof r.name === 'string' ? r.name : 'a saved project'));
+    if (new Set(keep).has(id)) usedBy.unshift('the open project');
+    if (usedBy.length) return { deleted: false, usedBy };
+    await database.models.delete(id);
+    return { deleted: true, usedBy };
+  });
+}
 
 const LAST_KEY = 'furniture-builder:last-design';
 const LAST_PROJECT_KEY = 'furniture-builder:last-project';
