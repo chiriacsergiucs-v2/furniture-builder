@@ -1691,6 +1691,12 @@ td.note {
 .split-actions .btn {
   flex: 1;
 }
+/* Duplicate, turn and mirror in the selected-piece card (ADR-069): wraps at phone width. */
+.arrange-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
 .parts-sizes {
   list-style: none;
   margin: 0;

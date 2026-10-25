@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { projectBoards, roleBoard, type FinishRole, type FinishScope } from '../core/finish';
 import { decorPatch, type Decor } from '../core/materials';
+import { touchingRun } from '../core/arrange';
 import { mergeCandidates } from '../core/merge';
 import {
   dragPosition,
@@ -181,6 +182,7 @@ export function ProjectPanel({
             onChange={(v) => update(item.id, { rotationY: v })}
           />
           <p className="hint">{FRONT_SIDE[item.rotationY]}</p>
+          <ArrangeFields key={item.id} item={item} />
           <PlacementFields item={item} />
           {item.placement?.kind === 'above' ? null : left ? (
             <>
@@ -367,6 +369,91 @@ function FinishFields({ item }: { item: ProjectItem }) {
       <button type="button" className="btn outline" onClick={go} disabled={!options.length}>
         Apply finish
       </button>
+      {msg && (
+        <p className="hint" role="status">
+          {msg}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Duplicate, turn about the centre and mirror the selected piece or its run (ADR-069); each is one undo step. Keys:
+ * Ctrl/Cmd+D duplicates, R / Shift+R turn the piece focused on the plan.
+ */
+function ArrangeFields({ item }: { item: ProjectItem }) {
+  const project = useDesign((s) => s.project)!;
+  const duplicate = useDesign((s) => s.duplicateItem);
+  const turn = useDesign((s) => s.turnItem);
+  const mirror = useDesign((s) => s.mirrorItem);
+  const mirrorRun = useDesign((s) => s.mirrorRun);
+  const [msg, setMsg] = useState<string | null>(null);
+  const pm = useDesign((s) => s.projectModel);
+  // The placed bounds the project model already holds, so the run needs no second build.
+  const run = useMemo(
+    () =>
+      touchingRun(
+        project,
+        item.id,
+        pm ? new Map(pm.pieces.map((pc) => [pc.item.id, pc.bounds])) : undefined,
+      ),
+    [project, pm, item.id],
+  );
+  return (
+    <div className="arrange" role="group" aria-label="Arrange this piece">
+      <div className="arrange-actions">
+        <button
+          type="button"
+          className="btn outline sm"
+          title="Duplicate (Ctrl+D)"
+          onClick={() => {
+            setMsg(null);
+            duplicate(item.id);
+          }}
+        >
+          Duplicate
+        </button>
+        <button
+          type="button"
+          className="btn outline sm"
+          aria-label="Turn 90° anticlockwise about its centre"
+          title="Turn about its centre (R)"
+          onClick={() => {
+            setMsg(null);
+            turn(item.id, 1);
+          }}
+        >
+          Turn 90° ↺
+        </button>
+        <button
+          type="button"
+          className="btn outline sm"
+          aria-label="Turn 90° clockwise about its centre"
+          title="Turn about its centre (Shift+R)"
+          onClick={() => {
+            setMsg(null);
+            turn(item.id, -1);
+          }}
+        >
+          Turn 90° ↻
+        </button>
+        <button type="button" className="btn outline sm" onClick={() => setMsg(mirror(item.id))}>
+          Mirror
+        </button>
+        {run.length > 1 && (
+          <button
+            type="button"
+            className="btn outline sm"
+            onClick={() => {
+              const left = mirrorRun(item.id);
+              setMsg(left.length ? `Moved, nothing to mirror inside: ${left.join('; ')}.` : null);
+            }}
+          >
+            Mirror the run ({run.length} pieces)
+          </button>
+        )}
+      </div>
       {msg && (
         <p className="hint" role="status">
           {msg}
@@ -648,6 +735,7 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
   const addCorner = useDesign((s) => s.addRoomCorner);
   const tapping = !!placing || !!drawing;
   const moveItemBy = useDesign((s) => s.moveItemBy);
+  const turnItem = useDesign((s) => s.turnItem);
   /** The press or drag in progress (ADR-065); the ref keeps pointer handlers in step between renders. */
   const [pressed, setDragState] = useState<DragGesture | null>(null);
   // Tap modes (placing a new piece, drawing the room) turn dragging off (ADR-056, ADR-059).
@@ -800,6 +888,21 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
               aria-label={`${pc.item.design.name}, ${b.w} by ${b.d} mm`}
               onClick={tapping ? undefined : () => select(pc.item.id)}
               onKeyDown={(e) => {
+                // R / Shift+R turn the focused piece about its centre (ADR-069).
+                if (
+                  !tapping &&
+                  e.key.toLowerCase() === 'r' &&
+                  !e.ctrlKey &&
+                  !e.metaKey &&
+                  !e.altKey
+                ) {
+                  e.preventDefault();
+                  // Holding the key turns once, not once per auto-repeat (each turn is an undo step).
+                  if (e.repeat) return;
+                  select(pc.item.id);
+                  turnItem(pc.item.id, e.shiftKey ? -1 : 1);
+                  return;
+                }
                 const m = tapping ? null : arrowMove(e.key, e.shiftKey);
                 if (!m) return onKey(() => select(pc.item.id))(e);
                 e.preventDefault();
@@ -923,7 +1026,8 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
       <figcaption>
         Seen from above. The yellow edge is each piece's front; dashed pieces hang on the wall; red
         dashes show where a selected piece's doors or drawers cannot open. Drag a piece, or use the
-        arrow keys on it, to move it; Esc cancels a drag.
+        arrow keys on it, to move it; Esc cancels a drag. R turns the focused piece about its
+        centre.
       </figcaption>
     </figure>
   );
