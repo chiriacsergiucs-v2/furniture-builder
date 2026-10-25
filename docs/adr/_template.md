@@ -45,7 +45,7 @@ discussion. For a pure technology choice, state the choice and the reasons.
 ## Scope
 
 - In scope: ...
-- Out of scope: ...
+- Out of scope: ... (each item cites its gap, G-NNN in GAPS.md, ADR-082)
 
 ## Consequences
 
@@ -62,4 +62,4 @@ discussion. For a pure technology choice, state the choice and the reasons.
 
 ## Open questions
 
-- <Question for the user, with the default used until it is answered. Delete the section when there are none.>
+- <Question for the user, with the default used until it is answered, and its gap (G-NNN). Delete the section when there are none.>

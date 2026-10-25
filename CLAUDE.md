@@ -35,7 +35,7 @@ Read first: `docs/backlog.md`, `docs/adr/README.md`, `docs/product/product-conte
 - `scripts/check-docs.py` — checks ADRs, the index and every ADR and backlog id (`pnpm docs:check`)
 - `docs/adr/` — pending ADRs, `README.md` (index), `_template.md`
 - `docs/adr-done/` — implemented ADRs
-- `docs/backlog.md` — the single work ledger (F/N/D ids)
+- `docs/backlog.md` — the single work ledger (F/N/D ids); `docs/adr/GAPS.md` — everything not built (G ids, ADR-082)
 - `docs/product/product-context.md` — the user's decisions and answers so far; `docs/architecture.md` — how
   the code fits together; `docs/ui-design.md` — tokens, components and screens; `docs/catalog.md` — generated
   (`pnpm catalog:docs`); `docs/retros/` — retrospectives
@@ -132,6 +132,12 @@ Lifecycle, one skill per step:
   only if someone opened the published URL and checked it.
 - Every implementation reply ends with the backlog status table (including every row still marked
   `find-it pending (light, ADR-066)`) and a **Skipped this iteration** section.
+- Gaps ledger (ADR-082, user rule 2026-10-25): anything not built is recorded in `docs/adr/GAPS.md` in the same
+  change: each skipped item, out-of-scope line, defaulted open question or cut requirement. Use `pnpm gaps add`
+  with the origin, what is missing, the user's request in their words, questions and the suggested pick (the rule
+  below). Cite the G ids in the reply. Only the user acknowledges a gap. A gap moved into an ADR has Status
+  `ADR-NNN` and becomes Done when that ADR ships (`pnpm gaps sync`, run by `ship-adr`). `pnpm docs:check` and a
+  `Stop` hook (`.claude/settings.json`) enforce it.
 - Stop when a check fails (fix the cause, never the check) or when a change would need the network (ADR-002).
 - Recommended options (user rule 2026-10-25): in questions, open questions and ADR defaults, never mark an
   option as recommended because it is the simplest. Recommend the option closest to what the user asked to
