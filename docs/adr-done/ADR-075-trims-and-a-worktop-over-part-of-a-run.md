@@ -1,7 +1,8 @@
 # ADR-075: Trims and a worktop over part of a run
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-24
+- Implemented: 2026-10-25 (Merged to main; CI run 40170561018 and Deploy GitHub Pages run 40170561007 green on 895eb54)
 - Depends on: ADR-036, ADR-054, ADR-061
 - Design: docs/ui-design.md (Project panel › Run parts)
 - Backlog: N70
@@ -43,12 +44,12 @@ part of a run, worktop overhang settings, and trims (crown/top molding, light pe
 
 ## Done when
 
-- [ ] A worktop over two of four pieces spans exactly those two and refreshes with them (unit tests)
-- [ ] Overhang changes the worktop size and position (unit test)
-- [ ] Crown, pelmet and ceiling filler sizes follow the run and room height; they are in the cut list
+- [x] A worktop over two of four pieces spans exactly those two and refreshes with them (unit tests)
+- [x] Overhang changes the worktop size and position (unit test)
+- [x] Crown, pelmet and ceiling filler sizes follow the run and room height; they are in the cut list
       (unit tests)
-- [ ] _Add worktop over…_ and the trims are found (find-it at 390 px and 1280 px)
-- [ ] All CI checks pass
+- [x] _Add worktop over…_ and the trims are found (find-it at 390 px and 1280 px)
+- [x] All CI checks pass
 
 ## Open questions
 

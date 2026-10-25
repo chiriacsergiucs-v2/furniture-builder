@@ -1,7 +1,8 @@
 # ADR-069: Duplicate, mirror and turn a piece about its centre in a project
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-24
+- Implemented: 2026-10-25 (Merged to main; CI run 40170561018 and Deploy GitHub Pages run 40170561007 green on 895eb54)
 - Depends on: ADR-031, ADR-051, ADR-065
 - Design: docs/ui-design.md (project panel, Plan view)
 - Backlog: N64
@@ -53,14 +54,14 @@ library (F14). Turning keeps the piece's lowest corner (`position` is the rotate
 
 ## Done when
 
-- [ ] Duplicate gives a touching copy with new ids, one undo step (unit test)
-- [ ] Turn 90° four times returns the piece to the same position; the footprint centre stays within 1 mm
+- [x] Duplicate gives a touching copy with new ids, one undo step (unit test)
+- [x] Turn 90° four times returns the piece to the same position; the footprint centre stays within 1 mm
       (unit test, fuzz over sizes)
-- [ ] Mirror twice returns the same design; mirror keeps the cut-list sizes and swaps hinge and pedestal sides
+- [x] Mirror twice returns the same design; mirror keeps the cut-list sizes and swaps hinge and pedestal sides
       (unit test per product root)
-- [ ] Mirror a run reflects positions about the run centre, one undo step (unit test)
-- [ ] _Duplicate_, _Turn 90°_ and _Mirror_ are found by text at 390 px and 1280 px (find-it)
-- [ ] All CI checks pass
+- [x] Mirror a run reflects positions about the run centre, one undo step (unit test)
+- [x] _Duplicate_, _Turn 90°_ and _Mirror_ are found by text at 390 px and 1280 px (find-it)
+- [x] All CI checks pass
 
 ## Open questions
 

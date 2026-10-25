@@ -211,7 +211,7 @@ export function FastenerCounts() {
     <section className="fastener-counts" aria-label="Fasteners">
       <h3 className="list-head">Fasteners — guidance</h3>
       <p className="hint">
-        {GUIDANCE}. The fastener and how many per joint are yours: set them under Configure ›
+        {GUIDANCE}. The fastener and how many per joint are yours: set them under Settings ›
         Fasteners.
       </p>
       <table className="cut">

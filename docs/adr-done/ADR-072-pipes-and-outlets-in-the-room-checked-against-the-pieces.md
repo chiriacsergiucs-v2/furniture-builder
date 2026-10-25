@@ -1,7 +1,8 @@
 # ADR-072: Pipes and outlets in the room, checked against the pieces
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-24
+- Implemented: 2026-10-25 (Merged to main; CI run 40170561018 and Deploy GitHub Pages run 40170561007 green on 895eb54)
 - Depends on: ADR-058
 - Design: docs/ui-design.md (Room panel, Plan view)
 - Backlog: N67
@@ -44,11 +45,11 @@ windows and obstacles checked against the pieces ([ADR-058](../adr-done/ADR-058-
 
 ## Done when
 
-- [ ] Pipe and outlet validate and round-trip in project files; the project `schemaVersion` is bumped and older
+- [x] Pipe and outlet validate and round-trip in project files; the project `schemaVersion` is bumped and older
       files load (unit tests)
-- [ ] A base unit over a pipe warns; a sink base does not (unit tests)
-- [ ] _Add pipe_ and _Add outlet_ are found and drawn on the plan (find-it at 390 px and 1280 px)
-- [ ] All CI checks pass
+- [x] A base unit over a pipe warns; a sink base does not (unit tests)
+- [x] _Add pipe_ and _Add outlet_ are found and drawn on the plan (find-it at 390 px and 1280 px)
+- [x] All CI checks pass
 
 ## Open questions
 

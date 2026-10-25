@@ -11,8 +11,8 @@ import {
 } from '../persist/db';
 import { useDesign } from '../store/designStore';
 import type { Design } from '../core/types';
-import { AddPieceDialog, MaterialsPanel, NewDialog } from './Dialogs';
-import { FastenersPanel } from './Fasteners';
+import { AddPieceDialog, NewDialog } from './Dialogs';
+import { SettingsDialog } from './Settings';
 import { WizardDialog } from './Wizard';
 import { CatalogPage } from './Catalog';
 import { ResearchPage } from './Research';
@@ -159,13 +159,14 @@ export function App() {
   const editingName = project?.items.find((i) => i.id === editingItemId)?.design.name;
   const [save, setSave] = useState<SaveState>('idle');
 
-  // Editor modes (ADR-079). Build & Preview shows 3D; Compose and Configure show the drawing.
+  // Editor modes (ADR-079, ADR-080). Build & Preview shows 3D; Compose shows the drawing; Settings is a dialog.
   const mode = useUi((s) => s.mode);
   const setMode = useUi((s) => s.setMode);
   const printing = useUi((s) => s.printing);
   const setPrinting = useUi((s) => s.setPrinting);
   const notice = useUi((s) => s.notice);
   const setNotice = useUi((s) => s.setNotice);
+  const setSettingsOpen = useUi((s) => s.setSettingsOpen);
   const phone = useMediaQuery('(max-width: 760px)');
   const wide = useMediaQuery('(min-width: 1500px)');
   const [has3d] = useState(webglAvailable);
@@ -221,9 +222,6 @@ export function App() {
   useEffect(() => {
     if (tapMode) useUi.getState().setMode('compose');
   }, [tapMode]);
-  useEffect(() => {
-    if (selKey && useUi.getState().mode === 'configure') useUi.getState().setMode('compose');
-  }, [selKey]);
 
   const theme = useTheme();
   // The drawing on phones is sized to the space left between the bars; both bars report their heights.
@@ -377,7 +375,6 @@ export function App() {
     : warnings
       ? `${warnings} to check`
       : '';
-  const sideMode = mode === 'configure' ? 'configure' : 'compose';
   const selectedItem = project?.items.find((i) => i.id === selectedItemId);
   const selectedModel = project?.models?.find((m) => m.id === selectedItemId);
   const peek = inProject
@@ -532,6 +529,15 @@ export function App() {
                 >
                   <Icon name="redo" />
                 </button>
+                <button
+                  type="button"
+                  className="btn icon"
+                  onClick={() => setSettingsOpen(true)}
+                  aria-label="Settings"
+                  title={inProject ? 'Project settings' : 'Size, construction, boards and drawers'}
+                >
+                  <Icon name="sliders" />
+                </button>
               </>
             )}
             <button
@@ -611,7 +617,7 @@ export function App() {
           className={`work mode-${mode} ${sheetOpen ? 'sheet-open' : ''}`}
           hidden={page !== 'editor'}
         >
-          <aside className="side" aria-label={sideMode === 'configure' ? 'Configure' : 'Compose'}>
+          <aside className="side" aria-label="Compose">
             <button
               type="button"
               className="sheet-peek"
@@ -622,38 +628,10 @@ export function App() {
               <Icon name={sheetOpen ? 'chevron-down' : 'chevron-up'} className="sm" />
             </button>
             <div className="side-body">
-              {sideMode === 'configure' &&
-                !inProject &&
-                !templateEdit &&
-                !editingItemId &&
-                design.wizard && (
-                  <div className="wz-reopen">
-                    <span className="hint">Made with the New-piece wizard.</span>
-                    <button
-                      type="button"
-                      className="btn sm"
-                      onClick={() => {
-                        setWizardFrom(design);
-                        setDialog('wizard');
-                      }}
-                    >
-                      <Icon name="pencil" className="sm" />
-                      Open in wizard
-                    </button>
-                  </div>
-                )}
               {inProject ? (
-                <ProjectPanel mode={sideMode} onAdd={() => setDialog('add')} />
+                <ProjectPanel mode="compose" onAdd={() => setDialog('add')} />
               ) : (
-                <>
-                  <Inspector mode={sideMode} />
-                  {sideMode === 'configure' && (
-                    <div className="inspector boards">
-                      <MaterialsPanel />
-                      <FastenersPanel />
-                    </div>
-                  )}
-                </>
+                <Inspector mode="compose" />
               )}
             </div>
           </aside>
@@ -781,6 +759,12 @@ export function App() {
           onCreated={() => {
             setDialog(null);
             setPage('editor');
+          }}
+        />
+        <SettingsDialog
+          onWizard={() => {
+            setWizardFrom(design);
+            setDialog('wizard');
           }}
         />
         <RenderDialog

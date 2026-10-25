@@ -1,16 +1,18 @@
 import { create } from 'zustand';
 
-/** The three editor modes (ADR-079): what goes where · what it is made of · what you get. */
-export type Mode = 'compose' | 'configure' | 'build';
-export const MODES: Mode[] = ['compose', 'configure', 'build'];
+/**
+ * The two editor modes (ADR-080, was three in ADR-079): what goes where · what you get. What it is made of is in the
+ * Settings dialog.
+ */
+export type Mode = 'compose' | 'build';
+export const MODES: Mode[] = ['compose', 'build'];
 export const MODE_LABEL: Record<Mode, string> = {
   compose: 'Compose',
-  configure: 'Configure',
   build: 'Build & Preview',
 };
 
 const KEY = 'fb:mode';
-/** A stored mode, or Compose for anything else (missing, unknown, storage blocked). */
+/** A stored mode, or Compose for anything else (missing, unknown, the old `configure`, storage blocked). */
 export function parseMode(v: string | null | undefined): Mode {
   return MODES.find((m) => m === v) ?? 'compose';
 }
@@ -31,6 +33,9 @@ interface Ui {
   /** A one-line result of an import or export started from a menu, shown until dismissed. */
   notice: { ok: boolean; text: string } | null;
   setNotice: (n: { ok: boolean; text: string } | null) => void;
+  /** The Settings dialog (ADR-080) is open for what is open in the editor. */
+  settingsOpen: boolean;
+  setSettingsOpen: (v: boolean) => void;
 }
 
 /** UI-only state shared by the shell and the editors; nothing here is part of a design (remembered per device only). */
@@ -48,4 +53,6 @@ export const useUi = create<Ui>((set) => ({
   setPrinting: (printing) => set({ printing }),
   notice: null,
   setNotice: (notice) => set({ notice }),
+  settingsOpen: false,
+  setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
 }));
