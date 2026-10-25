@@ -4584,6 +4584,40 @@ button.tile:hover {
   }
 }
 
+/* Materials › Fasteners (ADR-074) ------------------------------------------ */
+.fasteners {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s-3);
+}
+.fastener {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-3);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+  min-width: 0;
+}
+.fastener-head {
+  display: grid;
+  gap: 2px;
+}
+.fastener-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 96px;
+  gap: var(--s-2);
+}
+.fastener .field > input {
+  background: var(--surface);
+  min-width: 0;
+}
+.fastener-counts {
+  margin-top: var(--s-4);
+}
+
 /* 23. Plan snapping (ADR-070) ------------------------------------------------- */
 /* The Snap toggle above the plan; a snapped preview is drawn in the ok colour (yellow marks fronts). */
 .plan.with-tools {

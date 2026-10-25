@@ -184,6 +184,11 @@ export function parsePricesCsv(text: string): { prices: PriceEntry[]; problems: 
       price = pr;
     } else {
       [id = '', unit = '', price = ''] = cells;
+      // The user's fastener list shares the stored table (ADR-074); a price file never overwrites it.
+      if (id.startsWith('fastener:')) {
+        problems.push(`Row ${i + 1}: ${id} is not a price.`);
+        return;
+      }
       if (id === CURRENCY_ID) {
         if (price) prices.push({ id, unit: 'piece', amount: 0, text: price });
         else problems.push(`Row ${i + 1}: no currency name.`);
