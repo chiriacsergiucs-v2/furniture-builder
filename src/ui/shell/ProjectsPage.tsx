@@ -20,6 +20,7 @@ import { ProjectTemplateList } from '../ProjectTemplates';
 import { Icon, type IconName } from '../icons';
 import { templateGlyph } from '../Templates';
 import { importFile } from './importFile';
+import { useUi } from './uiStore';
 
 const KIND_TEXT = {
   desk: 'Desk',
@@ -58,7 +59,12 @@ export function ProjectsPage({
       .then(setPieces)
       .catch(() => setMsg({ ok: false, text: 'Saved work could not be read from this browser.' }));
   };
-  useEffect(refresh, []);
+  // Read on arrival; settings changed from this list are saved by the autosave, so read again once the dialog closes.
+  const settingsOpen = useUi((s) => s.settingsOpen);
+  const setSettingsOpen = useUi((s) => s.setSettingsOpen);
+  useEffect(() => {
+    if (!settingsOpen) refresh();
+  }, [settingsOpen]);
 
   const create = async () => {
     const name = await askText('Name of the new project', 'New project', 'Create project');
@@ -153,6 +159,19 @@ export function ProjectsPage({
           <span className="sub">{sub}</span>
         </span>
         {r.id === currentId && <span className="chip">Open now</span>}
+      </button>
+      <button
+        type="button"
+        className="btn sm icon"
+        aria-label={`Settings for ${r.name}`}
+        title="Settings"
+        onClick={() => {
+          // Settings edit the open copy (ADR-080): this row becomes the one open now, and autosave writes it back.
+          if (r.id !== currentId) open();
+          setSettingsOpen(true);
+        }}
+      >
+        <Icon name="sliders" className="sm" />
       </button>
       <button
         type="button"

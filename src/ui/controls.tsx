@@ -1,4 +1,4 @@
-import { useId, useState, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { Icon } from './icons';
 
 /** Whole-millimetre input. Commits on blur or Enter so typing "1" on the way to "1200" never rebuilds a 1 mm cabinet. */
@@ -299,5 +299,63 @@ export function Steps({
         </li>
       ))}
     </ol>
+  );
+}
+
+/**
+ * An info button whose text opens over the content (ADR-080): on hover or keyboard focus with a mouse, on tap with
+ * touch. A tap outside, a second tap or Esc closes it. The text is in the page only while open.
+ */
+export function InfoTip({ label, children }: { label: string; children: ReactNode }) {
+  const id = useId();
+  const ref = useRef<HTMLSpanElement>(null);
+  const [pinned, setPinned] = useState(false);
+  const [hover, setHover] = useState(false);
+  const shown = pinned || hover;
+  useEffect(() => {
+    if (!shown) return;
+    const close = () => {
+      setPinned(false);
+      setHover(false);
+    };
+    const onDown = (e: PointerEvent) => {
+      if (!ref.current?.contains(e.target as Node)) close();
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') close();
+    };
+    document.addEventListener('pointerdown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('pointerdown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [shown]);
+  return (
+    <span
+      className="info-tip"
+      ref={ref}
+      onPointerEnter={(e) => e.pointerType === 'mouse' && setHover(true)}
+      onPointerLeave={(e) => e.pointerType === 'mouse' && setHover(false)}
+    >
+      <button
+        type="button"
+        className="btn icon ghost sm info-btn"
+        aria-label={label}
+        aria-expanded={shown}
+        aria-controls={shown ? id : undefined}
+        onClick={() => setPinned((p) => !(p || hover))}
+        // Keyboard focus only: a tap also focuses the button, and the tap itself toggles.
+        onFocus={(e) => e.currentTarget.matches(':focus-visible') && setHover(true)}
+        onBlur={() => setHover(false)}
+      >
+        <Icon name="info" className="sm" />
+      </button>
+      {shown && (
+        <span id={id} role="note" className="info-pop">
+          {children}
+        </span>
+      )}
+    </span>
   );
 }
