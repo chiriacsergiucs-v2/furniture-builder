@@ -1,9 +1,10 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { ContactShadows, Edges, OrbitControls } from '@react-three/drei';
-import { useEffect, useMemo, useRef, type ComponentRef } from 'react';
+import { useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
 import {
   BoxGeometry,
   Color,
+  EdgesGeometry,
   DoubleSide,
   type DirectionalLight,
   ExtrudeGeometry,
@@ -29,6 +30,8 @@ import { inPlaneAxes, union } from '../core/geometry';
 import { aabbOf } from '../core/shape';
 import { boxUvs, finishLook, planeUvs } from '../core/surface';
 import { imageKey, useImageUrls } from '../persist/images';
+import { loadModelScene, type ModelScene } from '../persist/models';
+import { modelYaw, type ModelItem } from '../core/model3d';
 import { useDesign } from '../store/designStore';
 import { useView } from '../ui/useView';
 import { useTheme } from '../ui/useTheme';
@@ -146,9 +149,11 @@ export default function Viewer3D() {
     () => (exploded ? explode(view.pieces) : view.model.panels),
     [exploded, view],
   );
+  // A project's display-only 3D models (ADR-076) are framed too.
+  const extent = useDesign((s) => (view.mode === 'project' ? s.projectModel?.extent : undefined));
   const bounds = useMemo(
-    () => (exploded ? union(panels.map(aabbOf)) : view.model.bounds),
-    [exploded, panels, view],
+    () => (exploded ? union(panels.map(aabbOf)) : (extent ?? view.model.bounds)),
+    [exploded, panels, view, extent],
   );
   return (
     <Canvas
@@ -190,6 +195,7 @@ export default function Viewer3D() {
       )}
       <Panels panels={panels} realistic={realistic} plain={rendering} />
       {view.mode === 'project' && !exploded && <RoomWalls />}
+      {view.mode === 'project' && !exploded && <ModelItems plain={rendering} />}
       <Fit key={designId} bounds={bounds} />
     </Canvas>
   );
@@ -304,6 +310,76 @@ function Occlusion() {
   // Priority 1 takes over drawing from the default renderer.
   useFrame(() => composer.render(), 1);
   return null;
+}
+
+/** Display-only 3D models of the project (ADR-076): shown and selectable, never edited (ADR-014). */
+function ModelItems({ plain }: { plain: boolean }) {
+  const models = useDesign((s) => s.projectModel?.models);
+  if (!models?.length) return null;
+  return (
+    <>
+      {models.map((m) => (
+        <ModelItemMesh key={m.item.id} item={m.item} box={m.box} plain={plain} />
+      ))}
+    </>
+  );
+}
+
+/** One model scaled to its size in mm and turned in its box; a plain box while loading or when not on this device. */
+function ModelItemMesh({ item, box, plain }: { item: ModelItem; box: Box; plain: boolean }) {
+  const [loaded, setLoaded] = useState<{ id: string; scene: ModelScene | null } | null>(null);
+  useEffect(() => {
+    let live = true;
+    void loadModelScene(item.modelId).then((scene) => {
+      if (live) setLoaded({ id: item.modelId, scene });
+    });
+    return () => {
+      live = false;
+    };
+  }, [item.modelId]);
+  const ms = loaded?.id === item.modelId ? loaded.scene : null;
+  const clone = useMemo(() => ms?.scene.clone(true) ?? null, [ms]);
+  const selected = useDesign((s) => s.selectedItemId === item.id) && !plain;
+  const pick = useDesign((s) => s.pick);
+  const { w, h, d } = item.size;
+  const outline = useMemo(() => new EdgesGeometry(new BoxGeometry(w * S, h * S, d * S)), [w, h, d]);
+  useEffect(() => () => outline.dispose(), [outline]);
+  // Uniform scale (proportions locked), taken along the model's longest side.
+  const scale = (() => {
+    if (!ms) return 1;
+    const native = ms.size,
+      mm = [w, h, d];
+    const k = native.indexOf(Math.max(...native));
+    return native[k] > 0 ? (mm[k] * S) / native[k] : 1;
+  })();
+  return (
+    <group
+      position={[(box.x + box.w / 2) * S, (box.y + box.h / 2) * S, (box.z + box.d / 2) * S]}
+      rotation={[0, (modelYaw(item) * Math.PI) / 180, 0]}
+      onClick={(e) => {
+        e.stopPropagation();
+        pick(`${item.id}:model`);
+      }}
+    >
+      {clone && ms ? (
+        <group scale={scale}>
+          <group position={[-ms.center[0], -ms.center[1], -ms.center[2]]}>
+            <primitive object={clone} />
+          </group>
+        </group>
+      ) : (
+        <mesh>
+          <boxGeometry args={[w * S, h * S, d * S]} />
+          <meshStandardMaterial color="#9aa3a0" transparent opacity={0.45} depthWrite={false} />
+        </mesh>
+      )}
+      {selected && (
+        <lineSegments geometry={outline} raycast={() => null}>
+          <lineBasicMaterial color={SELECT} />
+        </lineSegments>
+      )}
+    </group>
+  );
 }
 
 /** The project's room (ADR-058): translucent walls with openings, obstacles; display only, never picked. */

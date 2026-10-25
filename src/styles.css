@@ -4549,3 +4549,54 @@ button.tile:hover {
     white-space: nowrap;
   }
 }
+
+/* Display-only 3D models (ADR-076): dashed boxes on the plan and in the front view; the library under Add a piece. */
+.plan-model rect {
+  fill: var(--surface-2);
+  stroke-dasharray: 3 3;
+}
+.front-model {
+  cursor: pointer;
+}
+.front-model rect {
+  fill: var(--surface-2);
+  fill-opacity: 0.7;
+  stroke: var(--ink-2);
+  stroke-width: 1.4;
+  stroke-dasharray: 3 3;
+  vector-effect: non-scaling-stroke;
+}
+.front-model.on rect {
+  fill: var(--primary-soft);
+  stroke: var(--primary);
+  stroke-width: 2.4;
+}
+.front-model text {
+  fill: var(--ink);
+  font-family: var(--font);
+  pointer-events: none;
+}
+.front-model:focus {
+  outline: none;
+}
+.front-model:focus-visible rect {
+  stroke: var(--link);
+  stroke-width: 3;
+}
+.my-models {
+  margin: var(--s-4) 0;
+}
+.my-models .model-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+.my-models .model-row .row-btn {
+  flex: 1;
+  min-width: 0;
+}
+.my-models .glyph img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}

@@ -103,7 +103,7 @@ describe('projects (ADR-022)', () => {
     await saveProject(p);
     expect((await listProjects()).map((x) => x.id)).toContain(p.id);
     expect((await loadProject(p.id))?.items.length).toBe(4);
-    expect(db.verno).toBe(7);
+    expect(db.verno).toBe(8);
   });
 });
 

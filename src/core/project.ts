@@ -10,6 +10,7 @@ import { cutlist, hardwareSummary, type CutRow } from './cutlist';
 import { DEFAULT_KERF, newId, sheetOf, upgradeDesign, validateDesign } from './design';
 import { overlaps, union } from './geometry';
 import { aabbOf, overlapsBox, panelsOverlap, turnShape } from './shape';
+import { modelBox, modelChecks, validateModelItems, type ModelItem } from './model3d';
 import type { SheetSettings } from './nesting';
 import { jobsFromCutlist } from './nesting';
 import type { NestJob } from './nesting/types';
@@ -81,8 +82,14 @@ export interface RunPart {
   banded: Face[];
 }
 
+/**
+ * The project document version. 2 (ADR-076) adds `models`; version-1 projects still load unchanged (ADR-011).
+ * Renumbered at merge if another ADR takes 2 first.
+ */
+export const PROJECT_SCHEMA = 2;
+
 export interface Project {
-  schemaVersion: 1;
+  schemaVersion: 1 | typeof PROJECT_SCHEMA;
   id: string;
   name: string;
   createdAt: string;
@@ -97,6 +104,8 @@ export interface Project {
   runPartsRemoved?: string[];
   /** The room: walls, doors, windows, obstacles (ADR-058/0056). Absent = no room checks. */
   room?: Room;
+  /** Display-only 3D models (ADR-076, schemaVersion 2): never cut, priced, bought or nested. Absent = none. */
+  models?: ModelItem[];
 }
 
 export interface RunSettings {
@@ -109,7 +118,7 @@ export interface RunSettings {
 export function newProject(name = 'New project'): Project {
   const now = new Date().toISOString();
   return {
-    schemaVersion: 1,
+    schemaVersion: PROJECT_SCHEMA,
     id: newId(),
     name,
     createdAt: now,
@@ -411,6 +420,10 @@ export interface ProjectModel {
   diagnostics: Diagnostic[];
   /** Clearances that hit something (ADR-057), for the plan outline of the selected piece. */
   blocked: { itemId: string; box: Box }[];
+  /** Display-only 3D models with the box each takes in the room (ADR-076). */
+  models: { item: ModelItem; box: Box }[];
+  /** Everything drawn: the panels and the model boxes (`model.bounds` stays the panels only, for parts and prints). */
+  extent: Box;
 }
 
 export function buildProjectModel(input: Project): ProjectModel {
@@ -523,21 +536,39 @@ export function buildProjectModel(input: Project): ProjectModel {
         nodeId: `run:${rp.id}`,
       });
   }
+  // Display-only 3D models (ADR-076): their boxes are checked like pieces, never cut.
+  const models = (project.models ?? []).map((item) => ({ item, box: modelBox(item) }));
+  const checked = pieces.map((pc) => ({
+    id: pc.item.id,
+    name: pc.item.design.name,
+    bounds: pc.bounds,
+    hitsPanels: (b: Box) => pc.panels.some((q) => overlapsBox(q, b)),
+    clearances: pc.clearances,
+  }));
+  // Run parts (worktop, plinth, fillers, covers) are checked against models too.
+  const runChecked = panels
+    .filter((p) => p.id.startsWith('run:'))
+    .map((p) => ({
+      id: p.id,
+      name: p.label,
+      bounds: aabbOf(p),
+      hitsPanels: (b: Box) => overlapsBox(p, b),
+    }));
+  diagnostics.push(...modelChecks(project.models ?? [], [...checked, ...runChecked]));
+  const asPieces = models.map((m) => ({
+    id: m.item.id,
+    name: m.item.name,
+    bounds: m.box,
+    hitsPanels: (b: Box) => overlaps(m.box, b),
+    clearances: [],
+  }));
   // The room (ADR-058): walls, obstacles, door swings and windows; obstacles also block openings (ADR-057).
-  const rc = project.room
-    ? roomChecks(
-        project.room,
-        pieces.map((pc) => ({
-          id: pc.item.id,
-          name: pc.item.design.name,
-          bounds: pc.bounds,
-          hitsPanels: (b: Box) => pc.panels.some((q) => overlapsBox(q, b)),
-          clearances: pc.clearances,
-        })),
-      )
-    : null;
+  const rc = project.room ? roomChecks(project.room, [...checked, ...asPieces]) : null;
   if (rc) diagnostics.push(...rc.diagnostics, ...rc.clearanceIssues);
-  const blocked = openingChecks(pieces, panels, diagnostics, rc?.obstacles ?? []);
+  const blocked = openingChecks(pieces, panels, diagnostics, [
+    ...(rc?.obstacles ?? []),
+    ...models.map((m) => ({ label: m.item.name, box: m.box })),
+  ]);
   const model: FurnitureModel = {
     panels,
     spaces: [],
@@ -545,7 +576,16 @@ export function buildProjectModel(input: Project): ProjectModel {
     diagnostics,
     bounds: union(panels.map(aabbOf)),
   };
-  return { pieces, model, piecePanels, materials: [...materials.values()], diagnostics, blocked };
+  return {
+    pieces,
+    model,
+    piecePanels,
+    materials: [...materials.values()],
+    diagnostics,
+    blocked,
+    models,
+    extent: union([...panels.map(aabbOf), ...models.map((m) => m.box)]),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -1092,7 +1132,8 @@ const isInt = (v: unknown, min = -1e7) =>
 export function validateProject(p: unknown): string[] {
   if (!isObj(p)) return ['Project must be an object'];
   const errs: string[] = [];
-  if (p.schemaVersion !== 1) errs.push('Unsupported project schemaVersion');
+  if (p.schemaVersion !== 1 && p.schemaVersion !== PROJECT_SCHEMA)
+    errs.push('Unsupported project schemaVersion');
   if (typeof p.id !== 'string' || !p.id || typeof p.name !== 'string' || !p.name)
     errs.push('Missing project id or name');
   if (
@@ -1186,5 +1227,10 @@ export function validateProject(p: unknown): string[] {
     !(Array.isArray(p.runPartsRemoved) && p.runPartsRemoved.every((k) => typeof k === 'string'))
   )
     errs.push('Invalid removed run parts');
+  if (p.models !== undefined) {
+    if (p.schemaVersion !== PROJECT_SCHEMA)
+      errs.push('3D models need a newer project schemaVersion');
+    errs.push(...validateModelItems(p.models, ids));
+  }
   return errs;
 }

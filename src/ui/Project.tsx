@@ -48,6 +48,7 @@ import { templateGlyph } from './Templates';
 import { StartFrom } from './Catalog';
 import { askConfirm } from './Confirm';
 import { SaveProjectTemplate } from './ProjectTemplates';
+import { FrontModels, ModelFields, ModelList, MyModels, PlanModels } from './Models3D';
 
 const FRONT_SIDE: Record<QuarterTurn, string> = {
   0: 'front faces you',
@@ -85,6 +86,7 @@ export function ProjectPanel({
     [project, selectedId],
   );
   const piece = pm?.pieces.find((p) => p.item.id === selectedId);
+  const model3d = project.models?.find((m) => m.id === selectedId);
 
   const updateFromLibrary = async () => {
     if (!item?.libraryId) return;
@@ -224,6 +226,7 @@ export function ProjectPanel({
           </button>
         </section>
       )}
+      {model3d && <ModelFields item={model3d} />}
       {project.items.length === 0 ? (
         <p className="empty center">
           <Icon name="project" />
@@ -259,6 +262,7 @@ export function ProjectPanel({
           })}
         </ul>
       )}
+      <ModelList pm={pm} />
       <button type="button" className="btn outline block" onClick={onAdd}>
         <Icon name="plus" />
         Add a piece
@@ -583,7 +587,7 @@ export function PlanView() {
   useEffect(() => {
     if (placingId || drawing) ref.current?.scrollIntoView({ block: 'nearest' });
   }, [placingId, drawing]);
-  if (!pm || (!pm.pieces.length && !hasRoom && !drawing))
+  if (!pm || (!pm.pieces.length && !pm.models.length && !hasRoom && !drawing))
     return (
       <div className="no-3d">
         <p>Add pieces to see them on the plan.</p>
@@ -624,7 +628,7 @@ export function PlanView() {
         </div>
       )}
       <RoomPlan pm={pm} />
-      {pm.pieces.length > 0 && <RoomFront pm={pm} />}
+      {(pm.pieces.length > 0 || pm.models.length > 0) && <RoomFront pm={pm} />}
     </div>
   );
 }
@@ -696,10 +700,12 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
   const pts = [...(room?.outline ?? []), ...(drawing ?? [])];
   const xs = [
       ...pm.pieces.flatMap((p) => [p.bounds.x, p.bounds.x + p.bounds.w]),
+      ...pm.models.flatMap((m) => [m.box.x, m.box.x + m.box.w]),
       ...pts.map((p) => p[0]),
     ],
     zs = [
       ...pm.pieces.flatMap((p) => [p.bounds.z, p.bounds.z + p.bounds.d]),
+      ...pm.models.flatMap((m) => [m.box.z, m.box.z + m.box.d]),
       ...pts.map((p) => p[1]),
     ];
   const x0 = Math.min(0, ...xs),
@@ -710,7 +716,9 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
   const pad = span * 0.1,
     fs = span / 40,
     dfs = span / 32;
-  const sel = pm.pieces.find((p) => p.item.id === selectedId)?.bounds;
+  const sel =
+    pm.pieces.find((p) => p.item.id === selectedId)?.bounds ??
+    pm.models.find((m) => m.item.id === selectedId)?.box;
   const frontLine = (b: { x: number; z: number; w: number; d: number }, r: QuarterTurn) =>
     r === 0
       ? [b.x, b.z + b.d, b.x + b.w, b.z + b.d]
@@ -855,6 +863,7 @@ function RoomPlan({ pm }: { pm: ProjectModel }) {
             </g>
           );
         })}
+        <PlanModels pm={pm} fs={fs} tapping={tapping} />
         {pm.blocked
           .filter((c) => c.itemId === selectedId)
           .map((c, i) => (
@@ -1002,7 +1011,7 @@ function RoomFront({ pm }: { pm: ProjectModel }) {
       ),
     [pm.pieces],
   );
-  const b = pm.model.bounds;
+  const b = pm.extent;
   const x0 = Math.min(0, b.x, rv?.x0 ?? 0),
     x1 = Math.max(b.x + b.w, rv?.x1 ?? 0),
     top = Math.max(b.y + b.h, rv?.height ?? 0);
@@ -1018,7 +1027,9 @@ function RoomFront({ pm }: { pm: ProjectModel }) {
     .filter(({ p }) => !FRONTS.has(p.role))
     .sort((a, c) => a.p.box.z + a.p.box.d - (c.p.box.z + c.p.box.d));
   const fronts = parts.filter(({ p }) => FRONTS.has(p.role));
-  const sel = pm.pieces.find((p) => p.item.id === selectedId)?.bounds;
+  const sel =
+    pm.pieces.find((p) => p.item.id === selectedId)?.bounds ??
+    pm.models.find((m) => m.item.id === selectedId)?.box;
   return (
     <figure className="plan" aria-label="Room seen from the front. Select a piece.">
       <svg
@@ -1072,6 +1083,7 @@ function RoomFront({ pm }: { pm: ProjectModel }) {
             onKeyDown={onKey(() => select(pc.item.id))}
           />
         ))}
+        <FrontModels pm={pm} fs={span / 40} />
         <Dim x1={x0} x2={x1} y={pad * 0.6} fontSize={dfs} label={`${x1 - x0}`} />
         <DimV y1={0} y2={-top} x={x0 - pad * 0.6} fontSize={dfs} label={`${top}`} />
         {sel && (
@@ -1122,6 +1134,7 @@ export function AddPieceList({ onDone, onBrowse }: { onDone: () => void; onBrows
         }}
         onBrowse={onBrowse}
       />
+      <MyModels onDone={onDone} />
       {saved.length > 0 && (
         <>
           <h3 className="list-head">Your saved pieces</h3>

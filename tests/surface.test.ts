@@ -168,7 +168,7 @@ describe('pictures on this device', () => {
     });
     expect(await loadImage('img-bad')).toBeUndefined();
     expect(await db.images.get('img-bad')).toBeDefined();
-    expect(db.verno).toBe(7);
+    expect(db.verno).toBe(8);
   });
 });
 
@@ -196,7 +196,7 @@ describe('upgrading to version 6', () => {
     const Db = db.constructor as new (n: string) => typeof db;
     const fresh = new Db(name);
     await fresh.open();
-    expect(fresh.verno).toBe(7);
+    expect(fresh.verno).toBe(8);
     expect([
       await fresh.designs.count(),
       await fresh.projects.count(),
