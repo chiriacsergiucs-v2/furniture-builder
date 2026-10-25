@@ -10,6 +10,7 @@ import {
 import { duplicateItem, mirrorItem, mirrorRun, turnAboutCentre } from '../core/arrange';
 import { applyFinish, type FinishRole, type FinishScope } from '../core/finish';
 import { mergeItems } from '../core/merge';
+import { drill, type Selection } from '../core/selectPath';
 import { closeOutline, DEFAULT_ROOM_HEIGHT, snapCorner, type Pt, type Room } from '../core/room';
 import {
   buildProjectModel,
@@ -22,6 +23,7 @@ import {
   requestKey,
   removeProjectItem,
   resolvePlacements,
+  roomToPiece,
   setGapLeft,
   type Project,
   type ProjectItem,
@@ -43,13 +45,17 @@ import type {
 } from '../core/types';
 import type { LocalTemplate } from '../core/catalog/local';
 
+/** A space selection that no longer exists in the design falls back to the whole piece. */
+const keepSelection = (d: Design, sel: Selection): Selection =>
+  sel && !findInProduct(d.product, sel) ? null : sel;
+
 export type Tab = 'parts' | 'sheets' | 'hardware' | 'shopping' | 'checks';
 
 interface State {
   design: Design;
   model: FurnitureModel;
-  /** Selected space id, or null for the whole piece. */
-  selectedId: string | null;
+  /** Selected space id, null for the whole piece, undefined for nothing selected (ADR-083). */
+  selectedId: Selection;
   /** Panels highlighted from the parts list. */
   highlight: string[];
   showFronts: boolean;
@@ -98,15 +104,20 @@ interface State {
   addMaterial: (m: Material) => void;
   /** Removes a board no part uses; returns why not otherwise (nothing changes). */
   removeMaterial: (id: string) => string | null;
-  select: (id: string | null) => void;
+  select: (id: Selection) => void;
+  /** Tap on the piece at (x, y) mm, front view or 3D: whole piece first, then one level smaller per tap (ADR-083). */
+  tapPiece: (x: number, y: number) => void;
+  /**
+   * Tap on a project piece (ADR-083): the first tap selects it; a tap on the selected piece opens it with the space
+   * under the tap selected (room mm), or the whole piece when the point is unknown.
+   */
+  tapItem: (id: string, at?: { x: number; y: number; z: number }) => void;
   setHighlight: (ids: string[]) => void;
   setShowFronts: (v: boolean) => void;
   setExploded: (v: boolean) => void;
   setTab: (t: Tab) => void;
   undo: () => void;
   redo: () => void;
-  /** 3D click: selects a space (piece editor) or a piece (project view). */
-  pick: (nodeId: string) => void;
   openProject: (p: Project) => void;
   closeProject: () => void;
   updateProject: (fn: (p: Project) => Project) => void;
@@ -248,7 +259,7 @@ export const useDesign = create<State>((set, get) => {
   return {
     design: initial,
     model: buildModel(initial),
-    selectedId: null,
+    selectedId: undefined,
     highlight: [],
     showFronts: true,
     exploded: false,
@@ -273,7 +284,7 @@ export const useDesign = create<State>((set, get) => {
       set({
         design: d,
         model: buildModel(d),
-        selectedId: null,
+        selectedId: undefined,
         highlight: [],
         past: [],
         future: [],
@@ -287,13 +298,18 @@ export const useDesign = create<State>((set, get) => {
         projectFuture: [],
       });
     },
-    pick: (nodeId) => {
-      const { project, editingItemId, design } = get();
-      if (project && !editingItemId) {
-        set({ selectedItemId: nodeId.split(':')[0] });
+    tapPiece: (x, y) => set({ selectedId: drill(get().model, x, y, get().selectedId) }),
+    tapItem: (id, at) => {
+      const { project, selectedItemId } = get();
+      const item = project?.items.find((i) => i.id === id);
+      if (!item || selectedItemId !== id) {
+        set({ selectedItemId: id });
         return;
       }
-      set({ selectedId: nodeId === design.product.id ? null : nodeId });
+      get().editItem(id);
+      if (!at) return set({ selectedId: null });
+      const p = roomToPiece(item, at);
+      set({ selectedId: drill(get().model, p.x, p.y, null) });
     },
     openProject: (raw) => {
       const p = resolvePlacements(raw);
@@ -411,7 +427,7 @@ export const useDesign = create<State>((set, get) => {
         editingItemId: id,
         design: d,
         model: buildModel(d),
-        selectedId: null,
+        selectedId: undefined,
         highlight: [],
         past: [],
         future: [],
@@ -435,7 +451,7 @@ export const useDesign = create<State>((set, get) => {
         editingItemId: null,
         project: p,
         projectModel: buildProjectModel(p),
-        selectedId: null,
+        selectedId: undefined,
         highlight: [],
         ...history,
         ...(p !== raw ? { projectDirtyAt: Date.now() } : {}),
@@ -611,7 +627,7 @@ export const useDesign = create<State>((set, get) => {
         templateEdit: { template, variantId, returnTo },
         design: d,
         model: buildModel(d),
-        selectedId: null,
+        selectedId: undefined,
         highlight: [],
         past: [],
         future: [],
@@ -632,7 +648,7 @@ export const useDesign = create<State>((set, get) => {
         templateEdit: null,
         design: back,
         model: buildModel(back),
-        selectedId: null,
+        selectedId: undefined,
         highlight: [],
         past: [],
         future: [],
@@ -689,6 +705,7 @@ export const useDesign = create<State>((set, get) => {
         model: buildModel(prev),
         past: past.slice(0, -1),
         future: [design, ...future],
+        selectedId: keepSelection(prev, get().selectedId),
         dirtyAt: Date.now(),
         pristine: false,
       });
@@ -703,6 +720,7 @@ export const useDesign = create<State>((set, get) => {
         model: buildModel(next),
         past: [...past, design],
         future: future.slice(1),
+        selectedId: keepSelection(next, get().selectedId),
         dirtyAt: Date.now(),
         pristine: false,
       });

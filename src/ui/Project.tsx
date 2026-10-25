@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react';
 import { projectBoards, roleBoard, type FinishRole, type FinishScope } from '../core/finish';
 import { decorPatch, type Decor } from '../core/materials';
 import { touchingRun } from '../core/arrange';
@@ -753,6 +753,7 @@ export function PlanView() {
 function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem | null }) {
   const selectedId = useDesign((s) => s.selectedItemId);
   const select = useDesign((s) => s.selectItem);
+  const tapItem = useDesign((s) => s.tapItem);
   const placingId = useDesign((s) => s.placingItemId);
   const placeAt = useDesign((s) => s.placeAt);
   const [hover, setHover] = useState<{ x: number; z: number } | null>(null);
@@ -1024,8 +1025,9 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
                 setDrag(null);
                 // A tap mode that started during the press ends the drag without moving anything.
                 if (tapping) return;
+                // A tap selects the piece; a tap on the selected piece opens it, whole piece selected (ADR-083).
+                if (end.kind !== 'drop') return tapItem(end.id);
                 select(end.id);
-                if (end.kind !== 'drop') return;
                 const snapping = snapOn && !e.altKey;
                 const t =
                   snapping && project
@@ -1209,6 +1211,15 @@ function RoomOutline({ room, fs }: { room: Room; fs: number }) {
 function RoomFront({ pm }: { pm: ProjectModel }) {
   const selectedId = useDesign((s) => s.selectedItemId);
   const select = useDesign((s) => s.selectItem);
+  const tapItem = useDesign((s) => s.tapItem);
+  // A tap on the selected piece opens it with the space under the tap selected (ADR-083). Seen from the front, a
+  // piece turned a quarter shows its side, so it opens with the whole piece selected.
+  const tapFront = (e: MouseEvent<SVGRectElement>, item: ProjectItem) => {
+    const m = e.currentTarget.ownerSVGElement?.getScreenCTM();
+    if (!m || item.rotationY % 180 !== 0) return tapItem(item.id);
+    const pt = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse());
+    tapItem(item.id, { x: Math.round(pt.x), y: Math.round(-pt.y), z: item.position.z });
+  };
   const showFronts = useDesign((s) => s.showFronts);
   const room = useDesign((s) => s.project?.room);
   const rv = useMemo(() => (room ? roomFrontView(room) : null), [room]);
@@ -1294,7 +1305,7 @@ function RoomFront({ pm }: { pm: ProjectModel }) {
             tabIndex={0}
             aria-pressed={pc.item.id === selectedId}
             aria-label={`${pc.item.design.name}, ${pc.bounds.w} wide, ${pc.bounds.h} high`}
-            onClick={() => select(pc.item.id)}
+            onClick={(e) => tapFront(e, pc.item)}
             onKeyDown={onKey(() => select(pc.item.id))}
           />
         ))}
