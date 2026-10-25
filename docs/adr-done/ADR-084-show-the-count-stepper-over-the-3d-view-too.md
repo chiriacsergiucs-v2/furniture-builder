@@ -1,14 +1,15 @@
 # ADR-084: Show the count stepper over the 3D view too
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-25
+- Implemented: 2026-10-25
 - Depends on: ADR-014, ADR-083
 - Design: docs/ui-design.md (§3 Components and states)
 - Backlog: N79
 
 ## Context
 
-[ADR-083](ADR-083-change-counts-with-a-plus-minus-stepper-above-the-selected-s.md) puts a `− N +` card right above
+[ADR-083](../adr-done/ADR-083-change-counts-with-a-plus-minus-stepper-above-the-selected-s.md) puts a `− N +` card right above
 the selected space in the front drawing. Asked whether the card should also show over the 3D view, the user answered
 (2026-10-25): "Yes - create new", then "Write and build both", with the placement "INside the rendered view
 container!".

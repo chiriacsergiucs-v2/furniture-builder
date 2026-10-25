@@ -1,7 +1,8 @@
 # ADR-083: Change counts with a plus-minus stepper above the selected space
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-25
+- Implemented: 2026-10-25
 - Depends on: ADR-051, ADR-079
 - Design: docs/ui-design.md (§3 Components and states)
 - Backlog: N78
@@ -20,7 +21,7 @@ door-count choice, and Divide / Add / Remove division for splits. On a phone tha
 drawing. The request is a compact `−  N  +` control floating over the drawing, right above the selection.
 Answers 2026-10-25: placement "right above the selected item in the rendering container" / "INside the rendered view
 container!"; acceptance "Full"; counts outside cabinet spaces "Not now"; the stepper over 3D too: "Yes - create new"
-([ADR-084](ADR-084-show-the-count-stepper-over-the-3d-view-too.md)).
+([ADR-084](../adr-done/ADR-084-show-the-count-stepper-over-the-3d-view-too.md)).
 
 No change to `src/core/types.ts` or the design document: every count already exists (`ShelvesSpace.count`,
 `DrawersSpace.count` with optional `heights`, `SplitSpace.children`/`sizes`, `DoorsFront.count`,
@@ -59,7 +60,7 @@ applies to the selected node:
 - **Bigger number fields in the inspector** — keeps the user scrolling away from the drawing; not "above the
   selected piece".
 - **Stepper in the 3D view only** — the drawing is where spaces are tapped in Compose; 3D gets the same card in
-  [ADR-084](ADR-084-show-the-count-stepper-over-the-3d-view-too.md).
+  [ADR-084](../adr-done/ADR-084-show-the-count-stepper-over-the-3d-view-too.md).
 - **Drag handles to add dividers** — slower to discover, needs precise touch on a phone.
 
 ## Scope
