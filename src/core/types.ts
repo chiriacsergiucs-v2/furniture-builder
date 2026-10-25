@@ -45,6 +45,26 @@ export interface Material {
   decor?: { code: string; list: string };
   /** How the board's surface looks in the 3D view and renders (ADR-067); display only. Absent = matte. */
   finish?: BoardFinish;
+  /** The edge band on this board's banded edges, as the user names it from the supplier's datasheet (ADR-077). */
+  band?: EdgeBand;
+  /** A different band for doors and drawer fronts made of this board (ADR-077); absent = they use `band`. */
+  frontBand?: EdgeBand;
+}
+
+export type EdgeBandKind = 'abs' | 'pvc' | 'pp' | 'melamine' | 'veneer' | 'other';
+
+/**
+ * ADR-077. An edge band spec, entered by the user (no standard fixes these values, ADR-010). Whole numbers:
+ * `thickness` in tenths of a millimetre (0.4 mm = 4), `width` in mm.
+ */
+export interface EdgeBand {
+  kind: EdgeBandKind;
+  thickness: number;
+  width: Mm;
+  /** The supplier's decor or article code. */
+  code?: string;
+  /** Extra length per banded edge for trimming on the edgebander, counted in the metres to buy. Absent = 0. */
+  allowance?: Mm;
 }
 
 export type BoardFinish = 'matte' | 'satin' | 'gloss';
@@ -604,8 +624,11 @@ export interface RuleSettings {
 }
 
 export interface Design {
-  /** 2 adds stock sheets and cutting settings (ADR-019); version-1 files are upgraded in memory on load. */
-  schemaVersion: 1 | 2;
+  /**
+   * 2 adds stock sheets and cutting settings (ADR-019); 3 adds edge band specs on boards (ADR-077). Older files are
+   * upgraded in memory on load.
+   */
+  schemaVersion: 1 | 2 | 3;
   id: string;
   name: string;
   createdAt: string;

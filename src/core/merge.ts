@@ -4,7 +4,7 @@
  * each piece's interior (with its own fronts) becomes one part of a left→right split. Everything else must already be
  * the same; otherwise the merge is refused with the reasons, never guessed.
  */
-import { fr, mm, newId } from './design';
+import { fr, mm, newId, SCHEMA_VERSION } from './design';
 import {
   placeItem,
   type Placement,
@@ -188,7 +188,7 @@ export function mergeItems(
     },
   };
   const design: Design = {
-    schemaVersion: 2,
+    schemaVersion: SCHEMA_VERSION,
     id: newId(),
     name: `${l.design.name} + ${r.design.name}`,
     createdAt: now,
