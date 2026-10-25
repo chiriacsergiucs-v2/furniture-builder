@@ -1,7 +1,8 @@
 # ADR-081: Show the drawing and 3D side by side from the view switch
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-25
+- Implemented: 2026-10-25 (light acceptance; find-it pending (ADR-066))
 - Depends on: ADR-014, ADR-079
 - Design: docs/ui-design.md (§4 Screens: editor, stage tools)
 - Backlog: N76
@@ -70,9 +71,9 @@ drawing is where you edit, and 3D only selects, stays lazy and mounts only when 
       `canvas` from the DOM (light — catch-up; ADR-014).
 - [ ] At 390 px in Build & Preview the switch shows **Front**, **3D**, **Both** with **3D** selected; **Both** stacks
       the drawing over 3D. Compose shows no switch and no `canvas` (light — catch-up).
-- [ ] Without WebGL, **3D** and **Both** are disabled with the reason shown; the view rules (default per mode and
+- [x] Without WebGL, **3D** and **Both** are disabled with the reason shown; the view rules (default per mode and
       width, reset on mode change, placing from Both stays Both) are covered by a UI-logic test.
-- [ ] No horizontal page scroll at 360 and 390 px (light — catch-up). All CI checks pass.
+- [ ] No horizontal page scroll at 360 and 390 px (light — catch-up). All CI checks pass (local run 2026-10-25).
 
 ## Answers (user, 2026-10-25)
 
