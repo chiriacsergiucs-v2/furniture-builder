@@ -66,3 +66,17 @@ library (F14). Turning keeps the piece's lowest corner (`position` is the rotate
 
 - Where the copy goes when both sides are taken — default: on the right anyway, with the overlap diagnostic.
 - Mirror a run also mirrors run parts (fillers, covers) — default: they refresh by themselves (ADR-061).
+- Half-mm rounding when turning: rounding down every time drifts the piece 2 mm in x and z per four turns, which
+  breaks "Turn 90° four times returns the piece to the same position" — default built: round down when the piece
+  ends at 90° or 270° and up when it ends at 0° or 180°, so two turns cover the same floor, four return exactly and
+  the centre moves at most ½ mm.
+- Mirror and the generator's integer split: a split's rounding remainder goes to its last share part, so a mirrored
+  piece whose side-by-side spaces differ can have parts 1 mm wider or narrower than before (2 catalog pieces:
+  wardrobe 3, credenza file) — default built: keep the generator, accept ±1 mm; the alternative is a symmetric
+  split rounding, which changes existing cut lists.
+- Pieces with a fixed hand (lounger backrest, daybed side panel, both built at the left end): mirroring them needs a
+  stored side — default built: Mirror says it cannot mirror them yet; Mirror a run still moves them.
+- A run for Mirror a run — default built: pieces at the same height and depth side by side with gaps up to 150 mm,
+  as for run parts (ADR-036); pieces resting on run pieces are mirrored with it.
+- A piece placed on another piece keeps its back aligned with its base (ADR-031) — default built: Turn keeps its
+  centre along x only.

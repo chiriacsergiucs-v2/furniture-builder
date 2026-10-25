@@ -12,6 +12,7 @@ import {
 import { useDesign } from '../store/designStore';
 import type { Design } from '../core/types';
 import { AddPieceDialog, MaterialsPanel, NewDialog } from './Dialogs';
+import { FastenersPanel } from './Fasteners';
 import { WizardDialog } from './Wizard';
 import { CatalogPage } from './Catalog';
 import { ResearchPage } from './Research';
@@ -339,6 +340,22 @@ export function App() {
         if (e.shiftKey) redo();
         else undo();
       }
+      // Ctrl/Cmd+D duplicates the piece selected in a project (ADR-069).
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
+        const st = useDesign.getState();
+        const busy = st.placingItemId || st.drawingRoom;
+        if (
+          !e.repeat &&
+          page === 'editor' &&
+          st.project &&
+          !st.editingItemId &&
+          st.selectedItemId &&
+          !busy
+        ) {
+          e.preventDefault();
+          st.duplicateItem(st.selectedItemId);
+        }
+      }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
         e.preventDefault();
         redo();
@@ -351,7 +368,7 @@ export function App() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [undo, redo]);
+  }, [undo, redo, page]);
 
   const errors = vd.diagnostics.filter((d) => d.severity === 'error').length;
   const warnings = vd.diagnostics.length - errors;
@@ -632,6 +649,7 @@ export function App() {
                   {sideMode === 'configure' && (
                     <div className="inspector boards">
                       <MaterialsPanel />
+                      <FastenersPanel />
                     </div>
                   )}
                 </>
