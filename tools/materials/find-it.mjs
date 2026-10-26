@@ -105,9 +105,29 @@ for (const width of [1440, 375]) {
   const shot = (name) =>
     page.screenshot({ path: `${out}/materials-${name}-${width}.png`, fullPage: true });
   const dlg = page.locator('dialog[open]');
+  // The Materials dialog is gone (ADR-080): the boards and their pictures are in Settings › Boards, sheets and saw cut.
   const openMaterials = async () => {
-    await page.getByRole('button', { name: 'Materials' }).dispatchEvent('click');
-    await dlg.getByRole('heading', { name: 'Materials in this piece' }).waitFor();
+    await page.getByRole('button', { name: 'Settings' }).click();
+    await dlg.getByRole('heading', { name: /^Settings: / }).waitFor();
+    const g = dlg.locator('details.group', {
+      has: page.locator('summary', { hasText: 'Boards, sheets and saw cut' }),
+    });
+    if (!(await g.evaluate((d) => d.open))) await g.locator('summary').first().click();
+  };
+  // The 3D/Front switch: Build & Preview shows it at every width (Compose hides it on a phone, ADR-080, N82).
+  const toBuild = async (p = page) => {
+    const m = p.getByRole('radio', { name: /Build & Preview/ });
+    if ((await m.getAttribute('aria-checked')) !== 'true') await m.click();
+    await p.waitForTimeout(300);
+  };
+  /** After a reload the app may open on Projects: open the piece that was open. */
+  const reopen = async () => {
+    const home = page.getByRole('button', { name: 'New single piece' });
+    if (await home.isVisible().catch(() => false)) {
+      const current = page.locator('.row-btn[aria-current="true"]');
+      await ((await current.count()) ? current : page.locator('.row-btn').first()).click();
+    }
+    await page.locator('main.work').waitFor({ state: 'visible' });
   };
   const closeDialog = async () => {
     await page.keyboard.press('Escape');
@@ -129,6 +149,7 @@ for (const width of [1440, 375]) {
   await page.getByRole('button', { name: 'New single piece' }).click();
   await dlg.locator('.start-group .row-btn').first().click();
   await page.locator('main.work').waitFor({ state: 'visible' });
+  await toBuild();
   await show3d();
   const before = await canvasShare();
   check(
@@ -225,16 +246,8 @@ for (const width of [1440, 375]) {
   await page.waitForTimeout(1500); // autosave
   await ctx.setOffline(true);
   await page.reload();
-  const home = page.getByRole('button', { name: 'New single piece' });
-  if (await home.isVisible().catch(() => false)) {
-    await page
-      .locator('.row-btn')
-      .filter({ hasText: /./ })
-      .filter({ hasNotText: 'Mobila' })
-      .first()
-      .click();
-  }
-  await page.locator('main.work').waitFor({ state: 'visible' });
+  await reopen();
+  await toBuild();
   await show3d();
   const offline = await canvasShare();
   check(
@@ -304,8 +317,9 @@ for (const width of [1440, 375]) {
       .locator('input.mat-name')
       .evaluateAll((xs) => xs.some((x) => x.value === 'Egger H1145 Bardolino Oak')),
   );
+  // The board choices (body, back, fronts) are in Settings too now.
+  const boardChoices = await dlg.locator('select option').allTextContents();
   await closeDialog();
-  const boardChoices = await page.locator('select option').allInnerTexts();
   check(
     width,
     'board choices show labels',
@@ -324,8 +338,8 @@ for (const width of [1440, 375]) {
 
   // 6d. Export the design file: pictures inside. Open it on "another device" (fresh browser): pictures shown.
   await page.waitForTimeout(1200);
-  await page.getByRole('button', { name: 'Library' }).isVisible();
-  await page.locator('summary[aria-label="Export"]').click();
+  // Export moved to the ⋯ (More) menu › Files.
+  await page.locator('summary[aria-label="More"]').click();
   const [dl] = await Promise.all([
     page.waitForEvent('download'),
     page.getByRole('button', { name: /Design file/ }).click(),
@@ -343,9 +357,10 @@ for (const width of [1440, 375]) {
   const op = await other.newPage();
   op.on('pageerror', (e) => errors.push(`other device: ${e.message}`));
   await op.goto(url);
-  await op.getByRole('button', { name: /^Library/ }).click();
-  await op.locator('dialog[open] input[type=file]').setInputFiles(filePath);
+  // The Library dialog became the Projects page (ADR-078): "Import a file".
+  await op.getByLabel('Import a design, project or project template file').setInputFiles(filePath);
   await op.locator('main.work').waitFor({ state: 'visible' });
+  await toBuild(op);
   await op.getByRole('radio', { name: '3D' }).click();
   await op.waitForTimeout(1500);
   const there = await stripeShare(op, await op.locator('.view.three canvas').screenshot());
@@ -363,8 +378,9 @@ for (const width of [1440, 375]) {
   await page.waitForTimeout(1500);
   await closeDialog();
   await page.waitForTimeout(1200); // autosave
-  await page.getByRole('button', { name: 'Library' }).dispatchEvent('click');
-  await dlg.getByRole('button', { name: 'Clean up unused pictures' }).click();
+  // Library › Clean up unused pictures is on the Projects page now (ADR-078).
+  await page.getByRole('navigation', { name: 'Places' }).getByRole('link', { name: 'Projects' }).click();
+  await page.getByRole('button', { name: 'Clean up unused pictures' }).click();
   const confirmDlg = page
     .locator('dialog[open]')
     .filter({ hasText: /Delete 1 picture that no saved piece/ });
@@ -380,18 +396,10 @@ for (const width of [1440, 375]) {
     'cleanup: 1 unused picture deleted',
     await page.getByText('1 unused picture deleted.').isVisible(),
   );
-  await page.keyboard.press('Escape');
   await page.waitForTimeout(300);
   await page.reload();
-  if (
-    await page
-      .getByRole('button', { name: 'New single piece' })
-      .isVisible()
-      .catch(() => false)
-  ) {
-    await page.locator('.row-btn').filter({ hasNotText: 'Mobila' }).first().click();
-  }
-  await page.locator('main.work').waitFor({ state: 'visible' });
+  await reopen();
+  await toBuild();
   await show3d();
   const kept = await canvasShare();
   check(

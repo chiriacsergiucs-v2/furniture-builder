@@ -31,8 +31,17 @@ for (const width of [1440, 1280, 390, 375]) {
   const shot = (name) =>
     page.screenshot({ path: `${out}/fasteners-${name}-${width}.png`, fullPage: true });
   const mode = (name) => page.getByRole('radio', { name });
-  const side = page.locator('aside.side');
-  const group = (name) => side.locator('details.group > summary', { hasText: name });
+  // Settings (ADR-080) holds what was Configure › Materials, including Fasteners.
+  const dlg = page.locator('dialog[open]');
+  const group = (name) => dlg.locator('details.group > summary', { hasText: name });
+  const openSettings = async () => {
+    await page.getByRole('button', { name: 'Settings' }).click();
+    await dlg.waitFor({ state: 'visible' });
+  };
+  const closeSettings = async () => {
+    await dlg.getByRole('button', { name: 'Done' }).click();
+    await dlg.waitFor({ state: 'detached' }).catch(() => {});
+  };
   const tab = (name) => page.getByRole('tab', { name });
   const panel = (id) => page.locator(`#panel-${id}`);
 
@@ -46,15 +55,17 @@ for (const width of [1440, 1280, 390, 375]) {
     .click();
   await page.locator('main.work').waitFor({ state: 'visible' });
 
-  // 2. Configure › Materials and Fasteners.
-  await mode('Configure').click();
-  await page.waitForTimeout(200);
-  ck('Configure shows "Materials"', (await group(/^Materials$/).count()) > 0);
+  // 2. Settings › boards (the former Materials) and Fasteners.
+  await openSettings();
+  ck(
+    'Settings shows "Boards, sheets and saw cut" (the materials)',
+    (await group(/^Boards, sheets and saw cut/).count()) > 0,
+  );
   const fast = group(/^Fasteners$/);
-  ck('Configure shows "Fasteners"', (await fast.count()) === 1);
+  ck('Settings shows "Fasteners"', (await fast.count()) === 1);
   await fast.scrollIntoViewIfNeeded();
   await fast.click();
-  const fbody = side.locator('#g-fasteners');
+  const fbody = dlg.locator('#g-fasteners');
   ck(
     'Fasteners lists the default joint types',
     (
@@ -76,7 +87,8 @@ for (const width of [1440, 1280, 390, 375]) {
   );
   ck('no sideways scroll (Fasteners)', await noSideScroll());
   await fbody.scrollIntoViewIfNeeded();
-  await shot('materials');
+  await shot('settings');
+  await closeSettings();
 
   // 3. Build & Preview › Hardware and Shopping list, before a fastener is chosen.
   await mode(/Build & Preview/).click();
@@ -108,17 +120,17 @@ for (const width of [1440, 1280, 390, 375]) {
   await shot('shopping-before');
 
   // 4. Name a fastener: 2 per joint.
-  await mode('Configure').click();
-  await page.waitForTimeout(200);
-  if (!(await side.locator('#g-fasteners').evaluate((d) => d.open))) await fast.click();
-  const name = side.getByLabel('Carcass joint: your fastener');
+  await openSettings();
+  if (!(await dlg.locator('#g-fasteners').evaluate((d) => d.open))) await fast.click();
+  const name = dlg.getByLabel('Carcass joint: your fastener');
   await name.scrollIntoViewIfNeeded();
   await name.fill('Confirmat 7 × 50');
   await name.press('Tab');
-  const per = side.getByLabel('Carcass joint: how many per joint');
+  const per = dlg.getByLabel('Carcass joint: how many per joint');
   await per.fill('2');
   await per.press('Tab');
   await page.waitForTimeout(200);
+  await closeSettings();
 
   // 5. The counted line in Hardware and Shopping list.
   await mode(/Build & Preview/).click();

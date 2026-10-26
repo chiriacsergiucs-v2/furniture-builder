@@ -132,7 +132,11 @@ for (const [width, scheme] of [
   // 3. Settings (was Configure, ADR-080): size, construction, boards (with Add a material) and drawers; no
   //    Materials button or dialog.
   await openSettings();
-  ck(width, 'Settings shows Width', await dlg.getByLabel('Width', { exact: true }).first().isVisible());
+  ck(
+    width,
+    'Settings shows Width',
+    await dlg.getByLabel('Width', { exact: true }).first().isVisible(),
+  );
   for (const t of [
     'Construction',
     'Materials',

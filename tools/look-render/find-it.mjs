@@ -26,6 +26,8 @@ for (const width of [1280, 390]) {
     acceptDownloads: true,
   });
   const page = await ctx.newPage();
+  // The realistic look and the path tracer keep a software GPU (CI, containers) busy: allow slow actions.
+  page.setDefaultTimeout(120000);
   const errors = [];
   const remote = [];
   const chunks = [];
@@ -145,7 +147,10 @@ for (const width of [1280, 390]) {
     let later = first;
     for (let i = 0; i < 60 && later === first; i++) {
       await page.waitForTimeout(2000);
-      later = (await progress.isVisible()) ? await progress.innerText() : 'done';
+      // A software GPU can hold the main thread for a long time per sample: wait for the text, do not fail on it.
+      later = (await progress.isVisible())
+        ? await progress.innerText({ timeout: 120000 }).catch(() => later)
+        : 'done';
     }
     check(width, 'sample count rises', first !== later, `${first} → ${later}`);
     check(
