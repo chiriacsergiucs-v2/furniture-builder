@@ -1,5 +1,11 @@
 import { useMemo } from 'react';
-import { areaM2, bandMetersFromRows, boardBandText, lengthsList } from '../core/cutlist';
+import {
+  areaM2,
+  bandMetersFromRows,
+  boardBands,
+  boardBandText,
+  lengthsList,
+} from '../core/cutlist';
 import { useDesign, type Tab } from '../store/designStore';
 import { Sheets } from './Sheets';
 import { FastenerCounts } from './Fasteners';
@@ -73,6 +79,11 @@ function Parts() {
     for (const r of rows) m.set(r.materialId, [...(m.get(r.materialId) ?? []), r]);
     return [...m.entries()];
   }, [rows]);
+  // No board names its edge band yet: the summary says so once instead of under every board.
+  const allUnnamed = useMemo(() => {
+    const bs = byMat.map(([, list]) => boardBands(list));
+    return bs.some((b) => b.unnamed) && bs.every((b) => !b.bands.length && !b.fronts.length);
+  }, [byMat]);
   const total = rows.reduce((n, r) => n + r.quantity, 0);
 
   const setPrinting = useUi((s) => s.setPrinting);
@@ -120,9 +131,12 @@ function Parts() {
       <p className="summary">
         {total} parts in {byMat.length} {byMat.length === 1 ? 'material' : 'materials'}. Sizes are
         finished sizes; edges marked for banding.
+        {allUnnamed && ' Edge bands are not named yet.'}
       </p>
       {byMat.map(([mid, list]) => {
         const name = list[0].materialName;
+        // Said once in the summary when no board names its band yet (G-059), else per board.
+        const bandText = allUnnamed ? null : boardBandText(list);
         return (
           <table key={mid} className="cut">
             <caption>
@@ -132,7 +146,7 @@ function Parts() {
                 {bands.get(mid) ? `, ${bands.get(mid)!.toFixed(1)} m edge band` : ''}
                 {list[0].grain ? ', grain along length' : ''}
               </span>
-              {boardBandText(list) && <span className="band">{boardBandText(list)}</span>}
+              {bandText && <span className="band">{bandText}</span>}
             </caption>
             <thead>
               <tr>
@@ -310,6 +324,14 @@ function Checks() {
     view.mode === 'project'
       ? selectItem(nodeId ?? null)
       : select(nodeId && nodeId !== productId ? nodeId : null);
+  // An empty project has nothing to check yet: no "No problems found" over zero parts (G-059).
+  if (!diags.length && view.mode === 'project' && !projectModel?.pieces.length)
+    return (
+      <p className="empty center">
+        <Icon name="info" />
+        Nothing to check yet. Add pieces under Compose.
+      </p>
+    );
   if (!diags.length)
     return (
       <p className="empty ok center">

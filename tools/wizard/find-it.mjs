@@ -87,15 +87,22 @@ for (const width of [1440, 375]) {
       `${t.label}: wizard opens (${via === 'new' ? 'New → New piece, step by step' : 'Catalog → New piece'})`,
       await openWizard(via),
     );
+    // The type comes first (G-059, 2026-10-26), then the size; the suggestion cards sit on the Type step.
+    check(
+      width,
+      `${t.label}: the wizard opens on the Type step`,
+      (await wizard.locator('.steps [aria-current="step"] .lbl').innerText()) === 'Type',
+    );
+    await wizard
+      .getByRole('button', { name: new RegExp(t.label.replace(/[()]/g, '\\$&')) })
+      .click();
+    await wizard.getByRole('button', { name: 'Next' }).click();
     const name = `Find-it ${t.label.split(' ')[0]} ${width}`;
     await wizard.getByLabel('Name').fill(name);
     await wizard.getByLabel(/^Width/).fill(String(t.width));
     await wizard.getByLabel(/^Width/).blur();
     if (n === 0) await shot('1-size');
-    await wizard.getByRole('button', { name: 'Next' }).click();
-    await wizard
-      .getByRole('button', { name: new RegExp(t.label.replace(/[()]/g, '\\$&')) })
-      .click();
+    await rail('Type').click();
     await page.waitForTimeout(150);
     const cards = await cardLabels();
     check(

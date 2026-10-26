@@ -2,7 +2,6 @@
 // run against a production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/look-render/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
-// (Updated for ADR-080: the Materials dialog is gone; Finish is under Settings › Boards, sheets and saw cut.)
 import { chromium } from 'playwright';
 import { mkdirSync, readFileSync } from 'node:fs';
 
@@ -26,8 +25,6 @@ for (const width of [1280, 390]) {
     acceptDownloads: true,
   });
   const page = await ctx.newPage();
-  // The realistic look and the path tracer keep a software GPU (CI, containers) busy: allow slow actions.
-  page.setDefaultTimeout(120000);
   const errors = [];
   const remote = [];
   const chunks = [];
@@ -54,16 +51,20 @@ for (const width of [1280, 390]) {
     await page.locator('main.work').waitFor({ state: 'visible' });
   };
 
-  // 1. Bare app → a piece → Settings → Boards, sheets and saw cut → Finish: Gloss (ADR-080 moved the Materials
-  //    dialog's fields into the Settings dialog).
+  // 1. Bare app → a piece → Settings → "Boards, sheets and saw cut" → Finish: Gloss (ADR-080 moved the boards
+  // from the old Materials dialog into Settings).
   await page.goto(url);
   await openPiece();
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await dlg.getByRole('heading', { name: /^Settings: / }).waitFor();
-  await dlg.locator('details.group > summary', { hasText: 'Boards, sheets and saw cut' }).click();
+  await dlg.getByText('Boards, sheets and saw cut', { exact: true }).click();
   const finish = dlg.getByRole('radiogroup', { name: 'Finish' }).first();
-  await finish.scrollIntoViewIfNeeded();
-  check(width, '"Finish" visible in Settings › Boards', await finish.isVisible());
+  await finish.waitFor({ timeout: 5000 }).catch(() => {});
+  check(
+    width,
+    '"Finish" visible under Settings › Boards, sheets and saw cut',
+    await finish.isVisible(),
+  );
   check(
     width,
     'Finish offers Matte · Satin · Gloss',
@@ -75,7 +76,7 @@ for (const width of [1280, 390]) {
     'Gloss chosen',
     (await finish.getByRole('radio', { name: 'Gloss' }).getAttribute('aria-checked')) === 'true',
   );
-  check(width, 'no sideways scroll (Settings)', await noSideScroll());
+  check(width, 'no sideways scroll (Settings › Boards)', await noSideScroll());
   await closeDialog();
 
   // 2. 3D view → Look: Simple · Realistic, default by width.
@@ -147,10 +148,7 @@ for (const width of [1280, 390]) {
     let later = first;
     for (let i = 0; i < 60 && later === first; i++) {
       await page.waitForTimeout(2000);
-      // A software GPU can hold the main thread for a long time per sample: wait for the text, do not fail on it.
-      later = (await progress.isVisible())
-        ? await progress.innerText({ timeout: 120000 }).catch(() => later)
-        : 'done';
+      later = (await progress.isVisible()) ? await progress.innerText() : 'done';
     }
     check(width, 'sample count rises', first !== later, `${first} → ${later}`);
     check(

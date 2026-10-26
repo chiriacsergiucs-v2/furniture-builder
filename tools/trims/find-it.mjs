@@ -2,7 +2,6 @@
 // build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/trims/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
-// (Updated for ADR-080: Run parts is in the project's Settings dialog, opened by the top-bar "Settings" button.)
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
 
@@ -60,11 +59,10 @@ for (const width of [375, 390, 1280, 1440]) {
   for (const s of ['Base cabinet', 'Base cabinet', 'Base cabinet', 'Wall cabinet', 'Wall cabinet'])
     await addPiece(s);
 
-  // 2. Settings (was Configure, ADR-080) → Run parts: "Add worktop over…", tick two of the three base units.
-  await page.getByRole('button', { name: 'Settings', exact: true }).click();
-  const settings = page.getByRole('dialog', { name: /^Settings: / });
-  await settings.waitFor({ state: 'visible' });
-  const runParts = settings.getByRole('region', { name: 'Run parts' });
+  // 2. Settings (ADR-080, was the Configure mode) → Run parts: "Add worktop over…", tick two of the three base units.
+  await click(page.getByRole('button', { name: 'Settings', exact: true }));
+  await dlg.getByRole('heading', { name: /^Settings: / }).waitFor();
+  const runParts = dlg.getByRole('region', { name: 'Run parts' });
   await runParts.waitFor({ state: 'visible' });
   const addWt = runParts.getByRole('button', { name: 'Add worktop over…' });
   await addWt.scrollIntoViewIfNeeded();
@@ -160,10 +158,9 @@ for (const width of [375, 390, 1280, 1440]) {
   check(width, 'no sideways scroll (Run parts)', await noSideScroll());
   await shot('trims');
 
-  await settings.getByRole('button', { name: 'Done', exact: true }).click();
-  await settings.waitFor({ state: 'hidden' });
-
-  // 5. Build & Preview → Parts: the worktop and the trims are cut-list rows.
+  // 5. Close Settings (Done), then Build & Preview → Parts: the worktop and the trims are cut-list rows.
+  await click(dlg.getByRole('button', { name: 'Done', exact: true }));
+  await dlg.waitFor({ state: 'detached' }).catch(() => {});
   await page.getByRole('radio', { name: /Build & Preview/ }).click();
   await page.waitForTimeout(400);
   const partsTab = page.getByRole('tab', { name: /^Parts/ });

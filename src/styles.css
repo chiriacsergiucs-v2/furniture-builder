@@ -1244,8 +1244,26 @@ td.note {
   color: var(--bar-ink);
 }
 .brand {
-  display: grid;
-  place-items: center;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: var(--control-h);
+  border-radius: var(--r);
+  color: var(--bar-ink);
+  text-decoration: none;
+}
+.brand:hover {
+  background: var(--bar-hover);
+}
+.brand:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.brand-name {
+  display: none;
+  font-weight: 700;
+  font-size: var(--fs-lg);
+  white-space: nowrap;
 }
 .brand svg {
   width: 26px;
@@ -1557,7 +1575,8 @@ td.note {
   pointer-events: none;
   paint-order: stroke;
   stroke: var(--bg);
-  stroke-width: 6px;
+  /* Wide enough to hide a door's dashed line between the words ("1 shelf" sits on a pair's meeting line). */
+  stroke-width: 10px;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
 }
@@ -2091,7 +2110,10 @@ table.buy {
 }
 .library li {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  /* The row, then however many icon buttons it has, all on one line. */
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  grid-auto-columns: auto;
   gap: 6px;
   align-items: center;
 }
@@ -2583,8 +2605,7 @@ table.buy {
 .kind {
   display: inline-grid;
   place-items: center;
-  width: 18px;
-  height: 18px;
+  padding: 0 6px;
   margin-left: 6px;
   border-radius: var(--r-sm);
   font-family: var(--num);
@@ -2730,12 +2751,12 @@ table.buy {
   background: var(--bar-line);
 }
 .pages a[aria-current='page'] {
-  background: var(--accent);
-  color: var(--on-accent);
+  background: var(--primary);
+  color: var(--on-primary);
 }
 .pages a[aria-current='page'] .icon,
 .pages a[aria-current='page'] .count {
-  color: var(--on-accent);
+  color: var(--on-primary);
 }
 .pages .count {
   color: var(--bar-ink-2);
@@ -2766,6 +2787,8 @@ table.buy {
 }
 .catalog-page .catalog-toolbar {
   top: 0;
+  /* Sticky over the page, so it takes the page's colour, not a white band. */
+  background: var(--bg);
 }
 .catalog-actions {
   display: flex;
@@ -4436,8 +4459,12 @@ button.tile:hover {
     flex-wrap: nowrap;
     padding: 6px var(--s-3);
   }
-  .bar .brand {
+  /* The editor's bar holds the path; elsewhere the phone bar names the app (G-059). */
+  .app.page-editor .bar .brand {
     display: none;
+  }
+  .bar .brand-name {
+    display: inline;
   }
   .bar .path .name {
     min-width: 0;
@@ -5173,6 +5200,7 @@ button.tile:hover {
   .catalog-toolbar .search,
   .start-from .search,
   .bar input.name,
+  .brand,
   .modes .segmented button,
   .crumbs button {
     min-height: 44px;
@@ -5196,6 +5224,9 @@ button.tile:hover {
     display: inline-flex;
     align-items: center;
   }
+  .group-index a {
+    gap: 0.3em;
+  }
   .counter {
     grid-template-columns: 44px 52px 44px;
   }
@@ -5213,5 +5244,98 @@ button.tile:hover {
   }
   .mm .step {
     min-height: 44px;
+  }
+}
+/* Quick counts over 3D fold to one row on a phone (G-058); wide screens never show the fold button. */
+.cs-fold {
+  display: none;
+}
+@media (max-width: 760px) {
+  .count-stepper.foldable .cs-fold {
+    display: inline-flex;
+    flex-basis: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-2);
+    min-height: 44px;
+    padding: 0 var(--s-2);
+    border: 0;
+    border-radius: var(--r-sm);
+    background: none;
+    color: var(--ink);
+    font: inherit;
+    font-weight: 600;
+  }
+  .count-stepper.foldable .cs-fold:hover {
+    background: var(--surface-2);
+  }
+  .count-stepper.folded .cs-row,
+  .count-stepper.folded .cs-title {
+    display: none;
+  }
+}
+/* On a phone the catalog's own actions fold under one button (G-059). */
+.catalog-more > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 var(--s-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  cursor: pointer;
+  list-style: none;
+}
+.catalog-more > summary::-webkit-details-marker {
+  display: none;
+}
+.catalog-more[open] > summary .icon {
+  transform: rotate(180deg);
+}
+.catalog-more > .catalog-actions {
+  margin-top: var(--s-2);
+}
+/* A phone's steps rail runs in rows of three so each step's summary reads whole (G-059). */
+@media (max-width: 760px) {
+  .steps {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.empty-3d {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+/* Hardware on a phone: the item gets the room, the note takes what is left (G-059). */
+@media (max-width: 600px) {
+  .hardware table.cut {
+    table-layout: fixed;
+    width: 100%;
+  }
+  .hardware table.cut th:nth-child(1) {
+    width: 2.5em;
+  }
+  .hardware table.cut th:nth-child(2) {
+    width: 42%;
+  }
+  .hardware table.cut th:nth-child(3) {
+    width: 4.5em;
+  }
+  .hardware table.cut td {
+    overflow-wrap: anywhere;
+  }
+}
+/* A small phone gives a library row's name the room its 44 px buttons take: no glyph, the chip under the name. */
+@media (max-width: 480px) {
+  .library .row-btn {
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding-inline: 10px;
+  }
+  .library .row-btn .glyph {
+    display: none;
   }
 }

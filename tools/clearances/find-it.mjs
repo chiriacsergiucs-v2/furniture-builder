@@ -85,6 +85,10 @@ for (const width of [1440, 375]) {
     await page.waitForTimeout(150);
   };
   const zone = (cls) => plan.locator(`g.zone.${cls}`);
+  // Select a piece on the plan. A tap on the piece already selected opens it (ADR-083), so tap only when it is not.
+  const pick = async (piece) => {
+    if ((await piece.getAttribute('aria-pressed')) !== 'true') await click(piece);
+  };
   const toCompose = async () => {
     if (
       await mode('Compose')
@@ -118,7 +122,7 @@ for (const width of [1440, 375]) {
   await toCompose();
   check(width, 'the desk is on the plan as "Desk…, W by D mm"', await desk.isVisible());
   const [, deskW, deskD] = /(\d+) by (\d+) mm$/.exec(await desk.getAttribute('aria-label')) ?? [];
-  await click(desk);
+  await pick(desk);
 
   // 2. Chair space depth: empty until the user types it (no default), then a chair zone on the overlay.
   await openSheet();
@@ -153,7 +157,7 @@ for (const width of [1440, 375]) {
 
   // 3. A chest in the chair space: the chair zone becomes a warning, and Checks lists it.
   await add('Chest of drawers');
-  await click(chest);
+  await pick(chest);
   await type('From left', 0);
   await type('From back', Number(deskD) + 200);
   check(
@@ -172,7 +176,7 @@ for (const width of [1440, 375]) {
   );
 
   // 3b. A service zone behind the chest, sized by the user: it reaches into the desk, so it is a warning.
-  await click(chest);
+  await pick(chest);
   await openSheet();
   await click(
     page.getByRole('radiogroup', { name: 'Service zone' }).getByRole('radio', { name: 'Back' }),
@@ -200,7 +204,7 @@ for (const width of [1440, 375]) {
   );
 
   // 4. The chest over the desk: both bodies are errors.
-  await click(chest);
+  await pick(chest);
   await type('From back', 0);
   await type('From left', Math.round(Number(deskW) / 4));
   check(
@@ -221,7 +225,7 @@ for (const width of [1440, 375]) {
   // marked "Assembled lying down" it is an error.
   await add('Wardrobe');
   const wardrobe = plan.getByRole('button', { name: /^Wardrobe.*, \d+ by \d+ mm$/ }).first();
-  await click(wardrobe);
+  await pick(wardrobe);
   await openSheet();
   const takes =
     (await page.getByText(/^Takes \d+ × \d+ mm of floor, \d+ mm high\.$/).textContent()) ?? '';
@@ -238,7 +242,7 @@ for (const width of [1440, 375]) {
     ).test(ti),
     takes,
   );
-  await click(wardrobe);
+  await pick(wardrobe);
   await openSheet();
   await click(page.getByRole('checkbox', { name: 'Assembled lying down', exact: true }));
   const te = await checksText();
