@@ -7,6 +7,7 @@ import {
   isLocked,
   leftNeighbour,
   LOCKED_HINT,
+  moveBlocked,
   materialKey,
   pieceBoxToRoom,
   placementBases,
@@ -112,6 +113,11 @@ export function ProjectPanel({
     [project, selectedId],
   );
   const piece = pm?.pieces.find((p) => p.item.id === selectedId);
+  // A locked piece, or one carrying a locked piece, is not moved or turned from the card either (ADR-095).
+  const blocked = useMemo(
+    () => (selectedId ? moveBlocked(project, [selectedId]) : null),
+    [project, selectedId],
+  );
   const model3d = project.models?.find((m) => m.id === selectedId);
 
   const updateFromLibrary = async () => {
@@ -231,10 +237,11 @@ export function ProjectPanel({
               Copies are added to parts, sheets and hardware; one is shown in the room.
             </p>
           )}
-          {isLocked(item) ? (
+          {blocked ? (
             <p className="hint" role="note">
-              {LOCKED_HINT}. It stays {item.position.x} mm from the left and {item.position.z} mm
-              from the back, {FRONT_SIDE[item.rotationY]}; its size and boards can still be changed.
+              {isLocked(item) ? `${LOCKED_HINT}.` : blocked} It stays {item.position.x} mm from the
+              left and {item.position.z} mm from the back, {FRONT_SIDE[item.rotationY]}; turn, place
+              and gap are off until it is unlocked. Its size and boards can still be changed.
             </p>
           ) : (
             <>
@@ -253,8 +260,8 @@ export function ProjectPanel({
             </>
           )}
           <ArrangeFields key={item.id} item={item} />
-          {!isLocked(item) && <PlacementFields item={item} />}
-          {item.placement?.kind === 'above' || isLocked(item) ? null : left ? (
+          {!blocked && <PlacementFields item={item} />}
+          {item.placement?.kind === 'above' || blocked ? null : left ? (
             <>
               <MmField
                 label={`Gap to ${left.item.design.name} on the left`}
@@ -914,8 +921,16 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
     room: toRoom(e),
   });
   const dragged = drag?.dragging ? pm.pieces.find((pc) => pc.item.id === drag.id) : undefined;
-  // A locked piece does not follow the pointer (ADR-095): no outline, the hint instead.
-  const lockedDrag = !!dragged && isLocked(dragged.item);
+  // A locked piece, or one carrying one, does not follow the pointer (ADR-095): no outline, the hint instead.
+  const lockedDrag = useMemo(
+    () =>
+      dragged && project
+        ? isLocked(dragged.item)
+          ? LOCKED_HINT
+          : moveBlocked(project, [dragged.item.id])
+        : null,
+    [dragged, project],
+  );
   const target =
     dragged && drag && project && !lockedDrag
       ? dropTarget(project, pm.pieces, drag.id, drag.dx, drag.dz, snapOn && !alt)
@@ -981,7 +996,7 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
         </span>
       ) : lockedDrag ? (
         <span className="plan-drag-note locked" role="status">
-          {LOCKED_HINT}
+          {lockedDrag}
         </span>
       ) : (
         notice &&

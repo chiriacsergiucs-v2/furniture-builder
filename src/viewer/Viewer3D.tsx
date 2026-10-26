@@ -571,8 +571,13 @@ function LockAnchors({
         el.style.visibility = 'hidden';
         continue;
       }
-      const x = ((v.x + 1) / 2) * size.width - el.offsetWidth / 2;
-      const y = ((1 - v.y) / 2) * size.height - el.offsetHeight / 2;
+      // The label is always "Locked": its size is read once, not each frame (no layout per frame).
+      if (!el.dataset.w && el.offsetWidth) {
+        el.dataset.w = String(el.offsetWidth);
+        el.dataset.h = String(el.offsetHeight);
+      }
+      const x = ((v.x + 1) / 2) * size.width - Number(el.dataset.w ?? 0) / 2;
+      const y = ((1 - v.y) / 2) * size.height - Number(el.dataset.h ?? 0) / 2;
       el.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
       el.style.visibility = 'visible';
     }

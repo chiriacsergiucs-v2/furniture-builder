@@ -311,6 +311,7 @@ export const useDesign = create<State>((set, get) => {
       projectFuture,
       projectDirtyAt: Date.now(),
       placingItemId: null,
+      notice: null,
       selectedItemId:
         sel && [...p.items, ...(p.models ?? [])].some((i) => i.id === sel) ? sel : null,
     });
@@ -393,10 +394,12 @@ export const useDesign = create<State>((set, get) => {
         projectFuture: [],
         placingItemId: null,
         drawingRoom: null,
+        notice: null,
       });
     },
     closeProject: () =>
       set({
+        notice: null,
         project: null,
         projectModel: null,
         editingItemId: null,

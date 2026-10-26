@@ -324,20 +324,40 @@ export function pieceName(project: Project, id: string): string {
     : name;
 }
 
-/** Pieces resting on `id`, directly or on each other (ADR-031): they follow it when it moves. */
-export function carriedBy(project: Project, id: string): ProjectItem[] {
-  const out: ProjectItem[] = [];
-  const seen = new Set([id]);
-  for (let grew = true; grew;) {
-    grew = false;
-    for (const it of project.items) {
-      const pl = it.placement;
-      if (seen.has(it.id) || pl?.kind !== 'above' || !seen.has(pl.baseId)) continue;
-      seen.add(it.id);
-      out.push(it);
-      grew = true;
+/** The pieces placed directly on each piece (ADR-031), by base id. */
+function piecesOn(project: Project): Map<string, ProjectItem[]> {
+  const on = new Map<string, ProjectItem[]>();
+  for (const it of project.items)
+    if (it.placement?.kind === 'above') {
+      const list = on.get(it.placement.baseId);
+      if (list) list.push(it);
+      else on.set(it.placement.baseId, [it]);
     }
-  }
+  return on;
+}
+
+/**
+ * Pieces resting on any of `ids`, directly or on each other (ADR-031): they follow them when they move. Each piece once,
+ * none of `ids` themselves; `stop` ends the walk early at the first piece it accepts (returned last).
+ */
+export function carriedBy(
+  project: Project,
+  ids: string | readonly string[],
+  stop?: (it: ProjectItem, base: string) => boolean,
+): ProjectItem[] {
+  const roots = typeof ids === 'string' ? [ids] : ids;
+  const on = piecesOn(project);
+  const seen = new Set(roots);
+  const out: ProjectItem[] = [];
+  const todo = roots.map((id) => ({ id, root: id }));
+  for (let next = todo.shift(); next; next = todo.shift())
+    for (const c of on.get(next.id) ?? []) {
+      if (seen.has(c.id)) continue;
+      seen.add(c.id);
+      out.push(c);
+      if (stop?.(c, next.root)) return out;
+      todo.push({ id: c.id, root: next.root });
+    }
   return out;
 }
 
@@ -347,14 +367,16 @@ export function carriedBy(project: Project, id: string): ProjectItem[] {
  */
 export function moveBlocked(project: Project, ids: readonly string[]): string | null {
   const moving = new Set(ids);
-  for (const it of project.items)
-    if (moving.has(it.id) && it.locked)
-      return `${pieceName(project, it.id)} is locked — unlock it to move it.`;
-  for (const id of ids)
-    for (const c of carriedBy(project, id))
-      if (c.locked && !moving.has(c.id))
-        return `${pieceName(project, c.id)} sits on ${pieceName(project, id)} and is locked — unlock it to move ${pieceName(project, id)}.`;
-  return null;
+  const own = project.items.find((it) => moving.has(it.id) && it.locked);
+  if (own) return `${pieceName(project, own.id)} is locked — unlock it to move it.`;
+  let base = '';
+  const found = carriedBy(project, ids, (it, root) => {
+    base = root;
+    return !!it.locked;
+  }).at(-1);
+  if (!found?.locked) return null;
+  const b = pieceName(project, base);
+  return `${pieceName(project, found.id)} sits on ${b} and is locked — unlock it to move ${b}.`;
 }
 
 /**

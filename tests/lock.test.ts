@@ -8,6 +8,7 @@ import {
   turnAboutCentre,
 } from '../src/core/arrange';
 import { templates } from '../src/core/design';
+import { mergeItems } from '../src/core/merge';
 import {
   buildProjectModel,
   isLocked,
@@ -114,6 +115,33 @@ describe('a locked piece stays where it is (ADR-095)', () => {
     const off = moveBy(lockedBase, top.id, 300, 0);
     expect(off.reason).toBeUndefined();
     expect(pos(off.project, 0)).toEqual(pos(lockedBase, 0));
+  });
+
+  it('a locked piece two levels up blocks the bottom base; the message names both', () => {
+    let p = run(['base-door', 'wall-cabinet', 'wall-cabinet']);
+    const [base, mid, top] = p.items;
+    p = resolvePlacements({
+      ...p,
+      items: [
+        base,
+        { ...mid, placement: { kind: 'above', baseId: base.id, gap: 0, offsetX: 0 } },
+        { ...top, placement: { kind: 'above', baseId: mid.id, gap: 0, offsetX: 0 } },
+      ],
+    });
+    const q = setLocked(p, top.id, true);
+    const why = moveBlocked(q, [base.id]);
+    expect(why).toContain(base.design.name);
+    expect(why).toMatch(/piece 3\) sits on/);
+    // Moving the whole stack together is still refused: the top one is locked itself.
+    expect(moveBlocked(q, [base.id, mid.id, top.id])).toMatch(/is locked — unlock it to move it/);
+    expect(moveBlocked(p, [base.id])).toBeNull();
+  });
+
+  it('merging keeps a lock on the merged piece', () => {
+    const p = lock(run(['base-door', 'base-door']), 0);
+    const res = mergeItems(p, p.items[0].id, p.items[1].id);
+    expect(res.mergedId).toBeTruthy();
+    expect(res.project.items.find((i) => i.id === res.mergedId)?.locked).toBe(true);
   });
 
   it('a duplicate of a locked piece starts unlocked; the original stays locked', () => {

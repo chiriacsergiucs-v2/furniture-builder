@@ -6,6 +6,7 @@
 import { newId } from './design';
 import { overlaps } from './geometry';
 import {
+  carriedBy,
   LOCKED_HINT,
   moveBlocked,
   pieceName,
@@ -280,18 +281,8 @@ export function mirrorRun(
   const run = touchingRun(project, id, bounds);
   if (!run.length) return { project, reasons: [] };
   const inRun = new Set(run);
-  const stacked = new Set<string>();
-  for (let grew = true; grew;) {
-    grew = false;
-    for (const it of project.items) {
-      const pl = it.placement;
-      if (inRun.has(it.id) || stacked.has(it.id) || pl?.kind !== 'above') continue;
-      if (inRun.has(pl.baseId) || stacked.has(pl.baseId)) {
-        stacked.add(it.id);
-        grew = true;
-      }
-    }
-  }
+  // Pieces resting on a run piece, at any depth (ADR-031), are mirrored with it.
+  const stacked = new Set(carriedBy(project, run).map((i) => i.id));
   // Every piece of the run and on it moves and is mirrored: refused when one is locked (ADR-095).
   const refused = moveBlocked(project, [...run, ...stacked]);
   if (refused) return { project, reasons: [], refused: `Mirror the run refused: ${refused}` };
