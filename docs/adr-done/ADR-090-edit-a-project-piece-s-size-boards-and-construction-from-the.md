@@ -1,7 +1,8 @@
 # ADR-090: Edit a project piece's size, boards and construction from the project editor
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-26
+- Implemented: 2026-10-26
 - Depends on: ADR-080, ADR-088
 - Design: docs/ui-design.md (section 4, editor screen)
 - Backlog: N85
