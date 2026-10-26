@@ -17,7 +17,6 @@ const check = (width, name, ok, detail = '') => {
 for (const width of [1440, 1024, 390, 360]) {
   const ctx = await browser.newContext({
     viewport: { width, height: width < 500 ? 800 : 900 },
-    acceptDownloads: true,
   });
   const page = await ctx.newPage();
   const errors = [];
@@ -39,13 +38,27 @@ for (const width of [1440, 1024, 390, 360]) {
     'page heading "Feature Research & Catalog"',
     await page.getByRole('heading', { name: 'Feature Research & Catalog' }).isVisible(),
   );
+  // ADR-102: only Features (dashboard on top) and Competitors are left; no ticks, no export.
+  const tabs = await page.getByRole('tab').allInnerTexts();
   check(
     width,
-    'overview shows sub-feature and unreviewed-finding totals',
-    (await page.getByText('Sub-features', { exact: true }).isVisible()) &&
-      (await page.getByText('Unreviewed findings').isVisible()),
+    'only the "Features" and "Competitors" tabs',
+    tabs.map((t) => t.trim()).join('|') === 'Features|Competitors',
+    tabs.join('|'),
   );
-  check(width, 'no sideways scroll on the overview', await noSideScroll());
+  check(
+    width,
+    'Features opens with the dashboard above the list',
+    (await page.getByRole('tab', { name: 'Features' }).getAttribute('aria-selected')) === 'true' &&
+      (await page.getByLabel('Search features').isVisible()),
+  );
+  check(
+    width,
+    'no tick boxes and no export',
+    (await page.getByRole('checkbox', { name: /^Tick / }).count()) === 0 &&
+      (await page.getByText(/Export specification|Download decisions|Import paper/).count()) === 0,
+  );
+  check(width, 'no sideways scroll on the dashboard', await noSideScroll());
   check(
     width,
     'assessment dashboard: matrix, distributions, quick wins',
@@ -70,7 +83,7 @@ for (const width of [1440, 1024, 390, 360]) {
   // ADR-092: what the app has built, and the dashboard on what is left
   check(
     width,
-    'overview: "Built in this app" with verified / in progress / left to build',
+    'dashboard: "Built in this app" with verified / in progress / left to build',
     (await page.getByRole('heading', { name: 'Built in this app' }).isVisible()) &&
       (await page.getByRole('button', { name: /left to build/ }).isVisible()),
   );
@@ -90,11 +103,9 @@ for (const width of [1440, 1024, 390, 360]) {
     (await page.locator('table.features-table tbody tr').count()) >= 1 &&
       (await page.getByLabel('Value', { exact: true }).inputValue()) === '4.5',
   );
-  await page.getByRole('tab', { name: 'Overview' }).click();
-  await page.screenshot({ path: `${out}/research-overview-${width}.png`, fullPage: false });
-
-  await page.getByRole('tab', { name: 'Features' }).click();
   await page.getByRole('button', { name: 'Clear filters' }).click();
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.screenshot({ path: `${out}/research-dashboard-${width}.png`, fullPage: false });
   const rows = await page.locator('table.features-table tbody tr').count();
   check(width, 'every feature not merged is listed (≥ 115 rows)', rows >= 115, `${rows} rows`);
   await page.getByLabel('Show merged').check();
@@ -175,27 +186,8 @@ for (const width of [1440, 1024, 390, 360]) {
     (await page.getByLabel('Your notes').inputValue()) === `note at ${width}`,
   );
 
-  await page.getByRole('tab', { name: 'Coverage audit' }).click();
-  check(
-    width,
-    'coverage audit says complete',
-    await page.getByText(/Extraction complete/).isVisible(),
-  );
-  await page.getByRole('tab', { name: 'Import & export' }).click();
-  const [dl] = await Promise.all([
-    page.waitForEvent('download'),
-    page.getByRole('button', { name: /Specification of shortlisted \+ approved \(2\)/ }).click(),
-  ]);
-  check(
-    width,
-    'specification export downloads',
-    dl.suggestedFilename().endsWith('.md'),
-    dl.suggestedFilename(),
-  );
-  for (const t of ['Compare', 'Findings', 'Competitors', 'Contradictions', 'Sources']) {
-    await page.getByRole('tab', { name: t }).click();
-    check(width, `"${t}" opens without sideways scroll`, await noSideScroll());
-  }
+  await page.getByRole('tab', { name: 'Competitors' }).click();
+  check(width, '"Competitors" opens without sideways scroll', await noSideScroll());
   check(width, 'no page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
   await ctx.close();
 }

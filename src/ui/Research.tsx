@@ -8,7 +8,6 @@ import {
   mergedOf,
   UNMERGED,
   buildView,
-  coverage,
   DEMAND_SCALE,
   descendants,
   EMPTY_QUERY,
@@ -16,7 +15,6 @@ import {
   groupFeatures,
   markOf,
   rating,
-  specMarkdown,
   sortFeatures,
   stats,
   VALUE_BANDS,
@@ -24,7 +22,6 @@ import {
   type RatingDim,
   type FeatureQuery,
   type GroupBy,
-  type ImportPlan,
   type SortKey,
   type ViewFeature,
   type ViewFinding,
@@ -49,50 +46,13 @@ import { useResearch, type MarkPatch } from '../store/researchStore';
 import { askConfirm } from './Confirm';
 import { Icon } from './icons';
 
-export type Tab =
-  | 'overview'
-  | 'features'
-  | 'compare'
-  | 'findings'
-  | 'competitors'
-  | 'contradictions'
-  | 'sources'
-  | 'coverage'
-  | 'import';
+/** Features (with the assessment dashboard above the list) and Competitors (ADR-102). */
+export type Tab = 'features' | 'competitors';
 const TABS: [Tab, string][] = [
-  ['overview', 'Overview'],
   ['features', 'Features'],
-  ['compare', 'Compare'],
-  ['findings', 'Findings'],
   ['competitors', 'Competitors'],
-  ['contradictions', 'Contradictions'],
-  ['sources', 'Sources'],
-  ['coverage', 'Coverage audit'],
-  ['import', 'Import & export'],
 ];
-const PICK_KEY = 'furniture-builder:research-picked';
-const readPicked = (): string[] => {
-  try {
-    const v = JSON.parse(localStorage.getItem(PICK_KEY) ?? '[]');
-    return Array.isArray(v) ? v.filter((x) => typeof x === 'string') : [];
-  } catch {
-    return [];
-  }
-};
-const writePicked = (ids: string[]) => {
-  try {
-    localStorage.setItem(PICK_KEY, JSON.stringify(ids));
-  } catch {
-    /* private mode */
-  }
-};
 
-function download(name: string, text: string, type: string) {
-  const url = URL.createObjectURL(new Blob([text], { type }));
-  Object.assign(document.createElement('a'), { href: url, download: name }).click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-const today = () => new Date().toISOString().slice(0, 10);
 const ne = (s: string) =>
   s === 'not evaluated' || s === 'unknown' ? <span className="ne">{s}</span> : s;
 /** A rating with its source: the paper's own words, or our assessment marked "A" (never shown as research). */
@@ -123,7 +83,7 @@ const catLabel = (view: CatalogView, id: string) =>
  */
 export function ResearchPage({
   onDone,
-  initialTab = 'overview',
+  initialTab = 'features',
   initialDetail = null,
 }: {
   onDone: () => void;
@@ -140,16 +100,7 @@ export function ResearchPage({
   const view = useMemo(() => buildView(stored), [stored]);
   const [tab, setTab] = useState<Tab>(initialTab);
   const [detail, setDetail] = useState<string | null>(initialDetail);
-  const [picked, setPickedState] = useState<string[]>(readPicked);
   const [query, setQuery] = useState<FeatureQuery>(EMPTY_QUERY);
-  const setPicked = (ids: string[]) => {
-    writePicked(ids);
-    setPickedState(ids);
-  };
-  const togglePick = (id: string, on?: boolean) =>
-    setPicked(
-      (on ?? !picked.includes(id)) ? [...new Set([...picked, id])] : picked.filter((x) => x !== id),
-    );
   const open = (id: string) => {
     setDetail(id);
     setTab('features');
@@ -162,7 +113,7 @@ export function ResearchPage({
     window.scrollTo({ top: 0 });
   };
   const st = useMemo(() => stats(view, marks), [view, marks]);
-  const ctx: Ctx = { view, marks, open, go, picked, togglePick, setPicked };
+  const ctx: Ctx = { view, marks, open, go };
   return (
     <main className="catalog-page research-page" aria-label="Feature Research & Catalog">
       <header className="catalog-head">
@@ -197,13 +148,9 @@ export function ResearchPage({
             onClick={() => go(t)}
           >
             {label}
-            {t === 'compare' && picked.length > 0 && (
-              <span className="count"> {picked.length}</span>
-            )}
           </button>
         ))}
       </nav>
-      {tab === 'overview' && <Overview ctx={ctx} />}
       {tab === 'features' &&
         (detail && view.features.has(detail) ? (
           <FeatureDetail
@@ -213,15 +160,13 @@ export function ResearchPage({
             onBack={() => setDetail(null)}
           />
         ) : (
-          <Explorer ctx={ctx} query={query} setQuery={setQuery} />
+          <>
+            <AppSummary ctx={ctx} />
+            <AssessmentDashboard ctx={ctx} />
+            <Explorer ctx={ctx} query={query} setQuery={setQuery} />
+          </>
         ))}
-      {tab === 'compare' && <Compare ctx={ctx} />}
-      {tab === 'findings' && <Findings ctx={ctx} />}
       {tab === 'competitors' && <Competitors ctx={ctx} />}
-      {tab === 'contradictions' && <Contradictions ctx={ctx} />}
-      {tab === 'sources' && <Sources ctx={ctx} />}
-      {tab === 'coverage' && <Coverage ctx={ctx} />}
-      {tab === 'import' && <ImportExport ctx={ctx} />}
     </main>
   );
 }
@@ -231,171 +176,9 @@ interface Ctx {
   marks: Record<string, ResearchMark>;
   open: (id: string) => void;
   go: (t: Tab, q?: Partial<FeatureQuery>) => void;
-  picked: string[];
-  togglePick: (id: string, on?: boolean) => void;
-  setPicked: (ids: string[]) => void;
 }
 const setMarks = (ids: string[], patch: MarkPatch) =>
   void useResearch.getState().setMarks(ids, patch);
-
-// ── Overview ────────────────────────────────────────────────────────────────────────────────────────────────────
-
-function Tile({ n, label, onClick }: { n: number | string; label: string; onClick?: () => void }) {
-  const body = (
-    <>
-      <strong className="num">{n}</strong>
-      <span>{label}</span>
-    </>
-  );
-  return onClick ? (
-    <button type="button" className="tile" onClick={onClick}>
-      {body}
-    </button>
-  ) : (
-    <div className="tile">{body}</div>
-  );
-}
-
-function Overview({ ctx }: { ctx: Ctx }) {
-  const { view, marks, go } = ctx;
-  const st = useMemo(() => stats(view, marks), [view, marks]);
-  const max = Math.max(1, ...st.byCategory.map((c) => c.n));
-  return (
-    <div className="research-overview">
-      <AppSummary ctx={ctx} />
-      <AssessmentDashboard ctx={ctx} />
-      <section className="tiles" aria-label="Totals">
-        <Tile n={st.features} label="Features in total" onClick={() => go('features')} />
-        <Tile
-          n={st.topLevel}
-          label="Top-level features"
-          onClick={() => go('features', { topLevel: true })}
-        />
-        <Tile n={st.subfeatures} label="Sub-features" />
-        <Tile
-          n={st.withEvidence}
-          label="With research evidence"
-          onClick={() => go('features', { evidence: 'with' })}
-        />
-        <Tile
-          n={st.withoutEvidence}
-          label="Missing supporting evidence"
-          onClick={() => go('features', { evidence: 'without' })}
-        />
-        <Tile
-          n={st.inferred}
-          label="Inferred opportunities"
-          onClick={() => go('features', { origin: 'inferred' })}
-        />
-        <Tile n={st.findings} label="Research findings" onClick={() => go('findings')} />
-        <Tile
-          n={st.unreviewedFindings}
-          label="Unreviewed findings"
-          onClick={() => go('findings')}
-        />
-        <Tile n={st.competitors} label="Competitors" onClick={() => go('competitors')} />
-        <Tile
-          n={`${st.sources} + ${st.citations}`}
-          label="Sources + citations"
-          onClick={() => go('sources')}
-        />
-        <Tile
-          n={st.contradictions}
-          label="Contradictions and conflicts"
-          onClick={() => go('contradictions')}
-        />
-        {st.retired > 0 && <Tile n={st.retired} label="Retired in a newer edition" />}
-      </section>
-      <p className="alert info">
-        <Icon name="info" className="sm" />
-        <span>
-          <strong>No usage telemetry exists in the research.</strong> “Competitor adoption” means
-          how broadly products implement a pattern; demand and appreciation are qualitative public
-          feedback; “Value” is the researcher’s 1–5 judgement. Ratings are shown exactly as the
-          paper writes them.
-        </span>
-      </p>
-      <div className="overview-cols">
-        <section aria-label="Features by category">
-          <h2 className="group-head">By category</h2>
-          <ul className="bars">
-            {st.byCategory
-              .filter((c) => c.n)
-              .map((c) => (
-                <li key={c.id}>
-                  <button
-                    type="button"
-                    className="link"
-                    onClick={() => go('features', { category: c.id })}
-                  >
-                    {c.label}
-                  </button>
-                  <span className="bar-track">
-                    <span style={{ width: `${(c.n / max) * 100}%` }} />
-                  </span>
-                  <span className="num">{c.n}</span>
-                </li>
-              ))}
-          </ul>
-        </section>
-        <section aria-label="Features by decision">
-          <h2 className="group-head">By your decision</h2>
-          <ul className="bars plain">
-            {SELECTIONS.map((s) => (
-              <li key={s}>
-                <button
-                  type="button"
-                  className="link"
-                  onClick={() => go('features', { selection: s })}
-                >
-                  {SELECTION_LABEL[s]}
-                </button>
-                <span className="num">{st.bySelection[s]}</span>
-              </li>
-            ))}
-          </ul>
-          <h2 className="group-head">By implementation status</h2>
-          <ul className="bars plain">
-            {IMPLEMENTATIONS.map((s) => (
-              <li key={s}>
-                <button
-                  type="button"
-                  className="link"
-                  onClick={() => go('features', { implementation: s })}
-                >
-                  {IMPLEMENTATION_LABEL[s]}
-                </button>
-                <span className="num">{st.byImplementation[s]}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-        <section aria-label="Source coverage">
-          <h2 className="group-head">Source-document coverage</h2>
-          <ul className="bars plain">
-            {st.coverage.map((c) => (
-              <li key={c.doc}>
-                <button type="button" className="link" onClick={() => go('coverage')}>
-                  {c.title}
-                </button>
-                <span className="num">
-                  {c.covered}/{c.total} lines
-                </span>
-                <span className={`chip ${c.complete ? '' : 'safety'}`}>
-                  {c.complete ? 'Complete' : 'Gaps'}
-                </span>
-              </li>
-            ))}
-          </ul>
-          <p className="hint">
-            Every line of the paper is held by a finding, competitor, source, citation or heading
-            record; the audit lists anything that is not.
-          </p>
-        </section>
-      </div>
-    </div>
-  );
-}
 
 // ── Assessment dashboard ───────────────────────────────────────────────────────────────────────────────────────
 
@@ -754,11 +537,10 @@ function Explorer({
   query: FeatureQuery;
   setQuery: (q: FeatureQuery) => void;
 }) {
-  const { view, marks, open, picked, togglePick, setPicked } = ctx;
+  const { view, marks, open } = ctx;
   const [sort, setSort] = useState<SortKey>('research');
   const [desc, setDesc] = useState(false);
   const [group, setGroup] = useState<GroupBy>('category');
-  const [bulk, setBulk] = useState<Selection | ''>('');
   const q = (patch: Partial<FeatureQuery>) => setQuery({ ...query, ...patch });
   const list = useMemo(
     () => sortFeatures(filterFeatures(view, marks, query), sort, marks, desc),
@@ -772,7 +554,6 @@ function Explorer({
         .sort(),
     [view],
   );
-  const pickedHere = picked.filter((id) => view.features.has(id));
   return (
     <div className="explorer">
       <div className="catalog-toolbar research-toolbar">
@@ -990,55 +771,6 @@ function Explorer({
       <p className="hint">
         <strong className="num">{list.length}</strong> of {view.features.size} features shown.
       </p>
-      {pickedHere.length > 0 && (
-        <div className="bulk-bar" role="region" aria-label="Selected features">
-          <strong className="num">{pickedHere.length} ticked</strong>
-          <label className="inline-field">
-            Set decision{' '}
-            <select value={bulk} onChange={(e) => setBulk(e.target.value as Selection | '')}>
-              <option value="">Choose…</option>
-              {SELECTIONS.map((s) => (
-                <option key={s} value={s}>
-                  {SELECTION_LABEL[s]}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button
-            type="button"
-            className="btn sm solid"
-            disabled={!bulk}
-            onClick={() => {
-              if (bulk) {
-                setMarks(pickedHere, { selection: bulk });
-                setBulk('');
-              }
-            }}
-          >
-            Apply
-          </button>
-          <button type="button" className="btn sm" onClick={() => ctx.go('compare')}>
-            Compare
-          </button>
-          <button
-            type="button"
-            className="btn sm"
-            onClick={() =>
-              download(
-                `feature-spec-${today()}.md`,
-                specMarkdown(view, marks, pickedHere, new Date().toISOString()),
-                'text/markdown',
-              )
-            }
-          >
-            <Icon name="download" className="sm" />
-            Export specification
-          </button>
-          <button type="button" className="btn sm ghost" onClick={() => setPicked([])}>
-            Untick all
-          </button>
-        </div>
-      )}
       {list.length === 0 && (
         <p className="empty center">
           <Icon name="search" />
@@ -1046,31 +778,15 @@ function Explorer({
         </p>
       )}
       {groups.map((g) => {
-        const all = g.items.every((f) => picked.includes(f.id));
         return (
           <section key={g.key} className="catalog-group" aria-label={g.label}>
             <h2 className="group-head">
-              <label className="toggle">
-                <input
-                  type="checkbox"
-                  aria-label={`Tick every feature in ${g.label}`}
-                  checked={all}
-                  onChange={(e) =>
-                    setPicked(
-                      e.target.checked
-                        ? [...new Set([...picked, ...g.items.map((f) => f.id)])]
-                        : picked.filter((id) => !g.items.some((f) => f.id === id)),
-                    )
-                  }
-                />
-              </label>
               {g.label} <span className="count">{g.items.length}</span>
             </h2>
             <div className="table-wrap">
               <table className="cut features-table">
                 <thead>
                   <tr>
-                    <th aria-label="Tick" />
                     <th>Feature</th>
                     <th>Category</th>
                     <th>Description</th>
@@ -1085,14 +801,7 @@ function Explorer({
                 </thead>
                 <tbody>
                   {g.items.map((f) => (
-                    <FeatureRow
-                      key={f.id}
-                      f={f}
-                      ctx={ctx}
-                      ticked={picked.includes(f.id)}
-                      onTick={(on) => togglePick(f.id, on)}
-                      onOpen={() => open(f.id)}
-                    />
+                    <FeatureRow key={f.id} f={f} ctx={ctx} onOpen={() => open(f.id)} />
                   ))}
                 </tbody>
               </table>
@@ -1104,32 +813,12 @@ function Explorer({
   );
 }
 
-function FeatureRow({
-  f,
-  ctx,
-  ticked,
-  onTick,
-  onOpen,
-}: {
-  f: ViewFeature;
-  ctx: Ctx;
-  ticked: boolean;
-  onTick: (on: boolean) => void;
-  onOpen: () => void;
-}) {
+function FeatureRow({ f, ctx, onOpen }: { f: ViewFeature; ctx: Ctx; onOpen: () => void }) {
   const { view, marks } = ctx;
   const m = markOf(marks, f.id);
   const parent = f.parent ? view.features.get(f.parent) : undefined;
   return (
     <tr className={mergedOf(f, marks) ? 'merged' : ''}>
-      <td data-label="">
-        <input
-          type="checkbox"
-          aria-label={`Tick ${f.name}`}
-          checked={ticked}
-          onChange={(e) => onTick(e.target.checked)}
-        />
-      </td>
       <td data-label="Feature" className="fname">
         <button type="button" className="link" onClick={onOpen}>
           {f.name}
@@ -1241,7 +930,7 @@ function FeatureLink({ ctx, id }: { ctx: Ctx; id: string }) {
 }
 
 function FeatureDetail({ ctx, f, onBack }: { ctx: Ctx; f: ViewFeature; onBack: () => void }) {
-  const { view, marks, picked, togglePick } = ctx;
+  const { view, marks } = ctx;
   const m = markOf(marks, f.id);
   const [notes, setNotes] = useState(m.notes);
   const [linkTo, setLinkTo] = useState('');
@@ -1433,27 +1122,6 @@ function FeatureDetail({ ctx, f, onBack }: { ctx: Ctx; f: ViewFeature; onBack: (
             }}
             placeholder="Saved on this device when you leave the box"
           />
-        </div>
-        <div className="action-row">
-          <label className="toggle small">
-            <input
-              type="checkbox"
-              checked={picked.includes(f.id)}
-              onChange={(e) => togglePick(f.id, e.target.checked)}
-            />
-            <span>Tick for compare and export</span>
-          </label>
-          {subs.length > 0 && (
-            <button
-              type="button"
-              className="btn sm"
-              onClick={() =>
-                ctx.setPicked([...new Set([...picked, f.id, ...subs.map((s) => s.id)])])
-              }
-            >
-              Tick with all {subs.length} sub-features
-            </button>
-          )}
         </div>
         <div className="action-row">
           <label className="inline-field">
@@ -1886,120 +1554,6 @@ function FindingCard({
   );
 }
 
-const FINDING_FILTERS: [string, string, (f: ViewFinding, linked: boolean) => boolean][] = [
-  ['all', 'All', () => true],
-  ['pain', 'Pain points', (f) => f.kind === 'complaint'],
-  ['requests', 'User requests', (f) => f.kind === 'request'],
-  ['praise', 'Praise', (f) => f.kind === 'praise'],
-  [
-    'conclusions',
-    'Conclusions and recommendations',
-    (f) => ['conclusion', 'recommendation', 'strategy'].includes(f.kind),
-  ],
-  [
-    'technical',
-    'Technical observations',
-    (f) => ['technical', 'architecture', 'principle'].includes(f.kind),
-  ],
-  [
-    'caveats',
-    'Caveats and limitations',
-    (f) => ['caveat', 'limitation', 'estimate'].includes(f.kind),
-  ],
-  ['method', 'Method and sources', (f) => ['methodology', 'source', 'question'].includes(f.kind)],
-  ['supporting', 'Not linked to a feature', (_f, linked) => !linked],
-];
-
-function Findings({ ctx }: { ctx: Ctx }) {
-  const { view, marks } = ctx;
-  const [filter, setFilter] = useState('all');
-  const [section, setSection] = useState('');
-  const [unreviewed, setUnreviewed] = useState(false);
-  const [text, setText] = useState('');
-  const linked = useMemo(
-    () =>
-      new Set(
-        [...view.features.values()].flatMap((f) => [...f.findings, ...(f.inferredFrom ?? [])]),
-      ),
-    [view],
-  );
-  const test = FINDING_FILTERS.find((x) => x[0] === filter)![2];
-  const words = text.trim().toLowerCase();
-  const list = [...view.findings.values()].filter(
-    (f) =>
-      test(f, linked.has(f.id)) &&
-      (!section || f.section === section) &&
-      (!unreviewed || !marks[f.id]?.reviewed) &&
-      (!words || `${f.statement} ${f.excerpt}`.toLowerCase().includes(words)),
-  );
-  return (
-    <div className="findings">
-      <div className="catalog-toolbar">
-        <label className="search">
-          <Icon name="search" className="sm" />
-          <input
-            type="search"
-            placeholder="Search findings and original text"
-            aria-label="Search findings"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-          />
-        </label>
-        <select aria-label="Section" value={section} onChange={(e) => setSection(e.target.value)}>
-          <option value="">All sections</option>
-          {view.sections.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.title}
-            </option>
-          ))}
-        </select>
-        <label className="toggle small">
-          <input
-            type="checkbox"
-            checked={unreviewed}
-            onChange={(e) => setUnreviewed(e.target.checked)}
-          />
-          <span>Unreviewed only</span>
-        </label>
-      </div>
-      <div className="group-index" role="group" aria-label="Kind of finding">
-        {FINDING_FILTERS.map(([k, l]) => (
-          <button
-            key={k}
-            type="button"
-            className={`pill ${filter === k ? 'on' : ''}`}
-            aria-pressed={filter === k}
-            onClick={() => setFilter(k)}
-          >
-            {l}
-          </button>
-        ))}
-      </div>
-      <p className="hint">
-        <strong className="num">{list.length}</strong> of {view.findings.size} findings. Tick
-        “Reviewed” as you read; the Overview counts what is left.
-      </p>
-      {list.length > 0 && (
-        <button
-          type="button"
-          className="btn sm"
-          onClick={() =>
-            setMarks(
-              list.map((f) => f.id),
-              { reviewed: true },
-            )
-          }
-        >
-          Mark these {list.length} as reviewed
-        </button>
-      )}
-      {list.map((f) => (
-        <FindingCard key={f.id} ctx={ctx} f={f} />
-      ))}
-    </div>
-  );
-}
-
 // ── Competitors, contradictions, sources ────────────────────────────────────────────────────────────────────────
 
 function Competitors({ ctx }: { ctx: Ctx }) {
@@ -2083,616 +1637,6 @@ function ContradictionCard({ ctx, c }: { ctx: Ctx; c: CatalogView['contradiction
           </Fragment>
         ))}
       </p>
-    </div>
-  );
-}
-function Contradictions({ ctx }: { ctx: Ctx }) {
-  return (
-    <div className="contradictions">
-      <p className="hint">
-        Conflicting estimates, mixed evidence and conflicts with this app’s decisions are kept side
-        by side; none is resolved for you.
-      </p>
-      {ctx.view.contradictions.map((c) => (
-        <ContradictionCard key={c.id} ctx={ctx} c={c} />
-      ))}
-    </div>
-  );
-}
-
-function Sources({ ctx }: { ctx: Ctx }) {
-  const { view } = ctx;
-  const groups = [...new Set(view.bibliography.map((b) => b.group))];
-  const used = useMemo(() => {
-    const m = new Map<string, string[]>();
-    for (const f of view.findings.values())
-      for (const r of f.allRefs) m.set(`${f.doc}#${r}`, [...(m.get(`${f.doc}#${r}`) ?? []), f.id]);
-    return m;
-  }, [view]);
-  return (
-    <div className="sources">
-      {view.documents.map((d) => (
-        <p key={d.doc.id} className="alert info">
-          <Icon name="catalog" className="sm" />
-          <span>
-            <strong>{d.doc.title}</strong> — research snapshot {d.doc.date}, edition{' '}
-            {d.versions.join(', ')}
-            {d.doc.file ? (
-              <>
-                {' '}
-                · <span className="num">{d.doc.file}</span>
-              </>
-            ) : null}
-            . {d.doc.question}
-          </span>
-        </p>
-      ))}
-      <h2 className="group-head">
-        Bibliography <span className="count">{view.bibliography.length}</span>
-      </h2>
-      {groups.map((g) => (
-        <section key={g} aria-label={g}>
-          <h3>{g}</h3>
-          <ul className="detail-list">
-            {view.bibliography
-              .filter((b) => b.group === g)
-              .map((b) => (
-                <li key={b.id}>
-                  <a href={b.url} target="_blank" rel="noreferrer noopener">
-                    {b.title}
-                  </a>{' '}
-                  — {b.note} <span className="hint num">line {b.line}</span>
-                </li>
-              ))}
-          </ul>
-        </section>
-      ))}
-      <h2 className="group-head">
-        Citations <span className="count">{view.citations.size}</span>
-      </h2>
-      <p className="hint">
-        URLs and original citation ids are listed as the paper writes them; the original ids are
-        often not in URL order, so do not pair them by position.
-      </p>
-      <div className="table-wrap">
-        <table className="cut citations">
-          <thead>
-            <tr>
-              <th>Citation</th>
-              <th>Sources</th>
-              <th>Original ids</th>
-              <th>Used by</th>
-            </tr>
-          </thead>
-          <tbody>
-            {[...view.citations.entries()].map(([k, c]) => (
-              <tr key={k}>
-                <td data-label="Citation" className="num">
-                  {c.id} · line {c.line}
-                </td>
-                <td data-label="Sources">
-                  {c.urls.map((u) => (
-                    <a key={u} href={u} target="_blank" rel="noreferrer noopener" className="url">
-                      {u}
-                    </a>
-                  ))}
-                </td>
-                <td data-label="Original ids" className="num">
-                  {c.originalIds.join(', ')}
-                </td>
-                <td data-label="Used by" className="num">
-                  {(used.get(k) ?? []).map((x) => x.replace(/^.*\.n\./, '')).join(', ') || '—'}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-// ── Coverage audit ──────────────────────────────────────────────────────────────────────────────────────────────
-
-function Coverage({ ctx }: { ctx: Ctx }) {
-  const reports = useMemo(() => ctx.view.documents.map((d) => coverage(d.latest)), [ctx.view]);
-  return (
-    <div className="coverage">
-      {reports.map((r) => {
-        const total = r.sections.reduce((n, s) => n + s.total, 0);
-        const complete =
-          r.sections.every((s) => s.status === 'complete') && r.checks.every((c) => c.ok);
-        return (
-          <section key={r.doc.id} aria-label={`Coverage of ${r.doc.title}`}>
-            <h2 className="group-head">
-              {r.doc.title} <span className="count">edition {r.doc.version}</span>
-            </h2>
-            <p className={`alert ${complete ? 'ok' : 'warning'}`}>
-              <Icon name={complete ? 'check' : 'alert-triangle'} className="sm" />
-              <span>
-                <strong className="num">
-                  {r.coveredLines} of {total}
-                </strong>{' '}
-                content lines are held by a record.{' '}
-                {complete
-                  ? 'Extraction complete: every section is accounted for and every check passes.'
-                  : 'Extraction has gaps — see the warnings below.'}
-              </span>
-            </p>
-            <h3>Second pass — integrity checks</h3>
-            <ul className="checks">
-              {r.checks.map((c) => (
-                <li key={c.id} className={c.ok ? 'ok' : 'bad'}>
-                  <Icon name={c.ok ? 'check' : 'alert-circle'} className="sm" />
-                  <span>
-                    <strong>{c.label}</strong> — {c.detail}
-                  </span>
-                </li>
-              ))}
-            </ul>
-            <h3>By section</h3>
-            <div className="table-wrap">
-              <table className="cut coverage-table">
-                <thead>
-                  <tr>
-                    <th>Section</th>
-                    <th>Lines</th>
-                    <th>Covered</th>
-                    <th>Findings</th>
-                    <th>Features</th>
-                    <th>Supporting records</th>
-                    <th>Supporting-only findings</th>
-                    <th>Warnings</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {r.sections.map((s) => (
-                    <tr key={s.section.id}>
-                      <td data-label="Section">
-                        {s.section.parent ? '↳ ' : ''}
-                        {s.section.title}
-                      </td>
-                      <td data-label="Lines" className="num">
-                        {s.section.lines[0]}–{s.section.lines[1]}
-                      </td>
-                      <td data-label="Covered" className="num">
-                        {s.covered}/{s.total}
-                      </td>
-                      <td data-label="Findings">
-                        <details>
-                          <summary className="num">{s.findings.length}</summary>
-                          <span className="num ids">{s.findings.join(', ')}</span>
-                        </details>
-                      </td>
-                      <td data-label="Features">
-                        <details>
-                          <summary className="num">{s.features.length}</summary>
-                          <span className="ids">
-                            {s.features.map((id, i) => (
-                              <Fragment key={id}>
-                                {i > 0 && ', '}
-                                <FeatureLink ctx={ctx} id={id} />
-                              </Fragment>
-                            ))}
-                          </span>
-                        </details>
-                      </td>
-                      <td data-label="Supporting records">
-                        <details>
-                          <summary className="num">{s.supporting.length}</summary>
-                          <span className="num ids">{s.supporting.join(', ')}</span>
-                        </details>
-                      </td>
-                      <td
-                        data-label="Supporting-only findings"
-                        className="num"
-                        title="Findings kept as research records without a feature (method, caveats, sources)"
-                      >
-                        {s.supportingOnly.length
-                          ? s.supportingOnly.map((x) => x.replace(/^.*\.n\./, '')).join(', ')
-                          : '—'}
-                      </td>
-                      <td data-label="Warnings">
-                        {s.warnings.length ? s.warnings.join(' · ') : '—'}
-                      </td>
-                      <td data-label="Status">
-                        <span className={`chip ${s.status === 'complete' ? '' : 'safety'}`}>
-                          {s.status === 'complete'
-                            ? 'Complete'
-                            : s.status === 'no-text'
-                              ? 'Text not stored'
-                              : 'Partial'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <h3>UNEXTRACTED</h3>
-            {ctx.view.unextracted.filter((u) => u.doc === r.doc.id).length ? (
-              <ul className="detail-list">
-                {ctx.view.unextracted
-                  .filter((u) => u.doc === r.doc.id)
-                  .map((u) => (
-                    <li key={u.id}>
-                      UNEXTRACTED lines {u.lines[0]}–{u.lines[1]}: {u.reason}
-                    </li>
-                  ))}
-              </ul>
-            ) : (
-              <p className="hint">Nothing in this paper is marked UNEXTRACTED.</p>
-            )}
-          </section>
-        );
-      })}
-    </div>
-  );
-}
-
-// ── Compare ─────────────────────────────────────────────────────────────────────────────────────────────────────
-
-function Compare({ ctx }: { ctx: Ctx }) {
-  const { view, marks, picked, togglePick } = ctx;
-  const list = picked.map((id) => view.features.get(id)).filter((f): f is ViewFeature => !!f);
-  if (!list.length)
-    return (
-      <p className="empty center">
-        <Icon name="grid" />
-        Tick features in the Features list (or “Tick for compare” on a feature) to compare them side
-        by side.
-      </p>
-    );
-  const rows: [string, (f: ViewFeature) => ReactNode][] = [
-    ['Category', (f) => `${catLabel(view, f.category)} › ${f.subcategory}`],
-    ['Origin', (f) => (f.origin === 'inferred' ? 'Inferred opportunity' : 'Named in the research')],
-    [
-      'Your decision',
-      (f) => (
-        <SelectionSelect
-          id={f.id}
-          value={markOf(marks, f.id).selection}
-          label={`Your decision on ${f.name}`}
-        />
-      ),
-    ],
-    [
-      'Implementation',
-      (f) => <ImplementationSelect id={f.id} value={implementationOf(f, marks)} />,
-    ],
-    ['Your priority', (f) => markOf(marks, f.id).priority || '—'],
-    ['Research priority', (f) => <Rated f={f} dim="priority" />],
-    ['Value 1–5 (impact)', (f) => <Rated f={f} dim="impact" />],
-    ['Demand', (f) => <Rated f={f} dim="demand" />],
-    ['Appreciation', (f) => <Rated f={f} dim="appreciation" />],
-    ['Competitor adoption', (f) => <Rated f={f} dim="adoption" />],
-    ['Complexity', (f) => <Rated f={f} dim="complexity" />],
-    ['Confidence', (f) => <Rated f={f} dim="confidence" />],
-    ['Assessment rationale', (f) => f.assessment?.rationale ?? 'Rated by the paper'],
-    ['Phase', (f) => f.phase ?? '—'],
-    ['MVP criterion', (f) => f.mvp ?? '—'],
-    [
-      'Dependencies',
-      (f) => f.dependencies.map((d) => view.features.get(d)?.name ?? d).join(', ') || '—',
-    ],
-    ['Sub-features', (f) => String(descendants(view, f.id).length)],
-    [
-      'Competitors',
-      (f) => f.competitors.map((c) => view.competitors.get(c)?.name ?? c).join(', ') || '—',
-    ],
-    ['Findings', (f) => String(f.findings.length)],
-    ['Description', (f) => f.description],
-    ['Your notes', (f) => markOf(marks, f.id).notes || '—'],
-  ];
-  return (
-    <div className="compare">
-      <div className="action-row">
-        <button
-          type="button"
-          className="btn sm"
-          onClick={() =>
-            download(
-              `feature-spec-${today()}.md`,
-              specMarkdown(
-                view,
-                marks,
-                list.map((f) => f.id),
-                new Date().toISOString(),
-              ),
-              'text/markdown',
-            )
-          }
-        >
-          <Icon name="download" className="sm" />
-          Export specification of these {list.length}
-        </button>
-        <button type="button" className="btn sm ghost" onClick={() => ctx.setPicked([])}>
-          Untick all
-        </button>
-      </div>
-      <div className="table-wrap">
-        <table className="cut compare-table">
-          <thead>
-            <tr>
-              <th>Field</th>
-              {list.map((f) => (
-                <th key={f.id}>
-                  <button type="button" className="link" onClick={() => ctx.open(f.id)}>
-                    {f.name}
-                  </button>{' '}
-                  <button
-                    type="button"
-                    className="btn icon ghost sm"
-                    aria-label={`Remove ${f.name} from the comparison`}
-                    onClick={() => togglePick(f.id, false)}
-                  >
-                    <Icon name="x" className="sm" />
-                  </button>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map(([label, get]) => (
-              <tr key={label}>
-                <th scope="row">{label}</th>
-                {list.map((f) => (
-                  <td key={f.id}>{get(f)}</td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-// ── Import & export ─────────────────────────────────────────────────────────────────────────────────────────────
-
-const STATUS_TEXT: Record<ImportPlan['status'], string> = {
-  invalid: 'Not imported: the file has problems.',
-  'new-document': 'New paper.',
-  'new-version': 'New edition of a paper already here.',
-  unchanged: 'Already imported; nothing changed.',
-  conflict: 'Not imported: this edition is already stored with different content.',
-  'older-version': 'Older edition; kept as history, the newer one stays in use.',
-};
-
-function ImportExport({ ctx }: { ctx: Ctx }) {
-  const { view, marks } = ctx;
-  const [plan, setPlan] = useState<ImportPlan | null>(null);
-  const [pending, setPending] = useState<unknown>(null);
-  const [msg, setMsg] = useState<string | null>(null);
-  const readJson = async (file: File): Promise<unknown> => {
-    try {
-      return JSON.parse(await file.text());
-    } catch {
-      return null;
-    }
-  };
-  const chooseBundle = async (file: File) => {
-    const data = await readJson(file);
-    const { planImport } = await import('../core/research/catalog');
-    const p = planImport(useResearch.getState().stored, data, marks);
-    if (data === null) p.errors = ['That file is not JSON.'];
-    setPlan(p);
-    setPending(p.store ? data : null);
-    setMsg(null);
-  };
-  const shortlisted = [...view.features.values()]
-    .filter((f) => {
-      const s = markOf(marks, f.id).selection;
-      return s === 'shortlisted' || s === 'approved';
-    })
-    .map((f) => f.id);
-  return (
-    <div className="import-export">
-      <section aria-label="Export">
-        <h2 className="group-head">Export</h2>
-        <div className="action-row">
-          <button
-            type="button"
-            className="btn sm"
-            disabled={!shortlisted.length}
-            onClick={() =>
-              download(
-                `feature-spec-${today()}.md`,
-                specMarkdown(view, marks, shortlisted, new Date().toISOString()),
-                'text/markdown',
-              )
-            }
-          >
-            <Icon name="download" className="sm" />
-            Specification of shortlisted + approved ({shortlisted.length})
-          </button>
-          <button
-            type="button"
-            className="btn sm"
-            onClick={() =>
-              download(
-                `research-decisions-${today()}.json`,
-                JSON.stringify(
-                  { kind: 'furniture-builder-research-decisions', marks: Object.values(marks) },
-                  null,
-                  2,
-                ),
-                'application/json',
-              )
-            }
-          >
-            <Icon name="download" className="sm" />
-            My decisions and notes ({Object.keys(marks).length})
-          </button>
-          {view.documents.map((d) => (
-            <button
-              key={d.doc.id}
-              type="button"
-              className="btn sm"
-              onClick={() =>
-                download(
-                  `${d.doc.id}-v${d.doc.version}.research.json`,
-                  JSON.stringify(d.latest, null, 2),
-                  'application/json',
-                )
-              }
-            >
-              <Icon name="download" className="sm" />
-              Research file: {d.doc.title.slice(0, 40)}
-              {d.doc.title.length > 40 ? '…' : ''}
-            </button>
-          ))}
-        </div>
-        <p className="hint">
-          The research file is also the import format: copy it, change the document id (a new paper)
-          or raise its version (a new edition), and import it.
-        </p>
-      </section>
-      <section aria-label="Import a research paper">
-        <h2 className="group-head">Import a research paper</h2>
-        <p className="hint">
-          A structured research file (JSON, format “furniture-builder-research”). Importing never
-          changes your decisions: they are stored separately and keyed by feature id. The same
-          feature id in another paper adds its evidence; features dropped by a new edition stay,
-          marked retired. Automatic reading of PDFs or free text is not supported — the paper must
-          be turned into this format first.
-        </p>
-        <label className="btn sm file-btn">
-          <Icon name="upload" className="sm" />
-          Choose a research file
-          <input
-            type="file"
-            accept="application/json,.json"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) void chooseBundle(file);
-              e.target.value = '';
-            }}
-          />
-        </label>
-        {plan && (
-          <div className={`alert ${plan.errors.length ? 'error' : 'info'}`} role="status">
-            <Icon name={plan.errors.length ? 'alert-circle' : 'info'} className="sm" />
-            <div>
-              <p>
-                <strong>{STATUS_TEXT[plan.status]}</strong>{' '}
-                {plan.docId && (
-                  <span className="num">
-                    {plan.docId} edition {plan.version}
-                  </span>
-                )}
-              </p>
-              {plan.errors.length > 0 && (
-                <ul className="detail-list">
-                  {plan.errors.slice(0, 12).map((e) => (
-                    <li key={e}>{e}</li>
-                  ))}
-                  {plan.errors.length > 12 && <li>… {plan.errors.length - 12} more</li>}
-                </ul>
-              )}
-              {plan.store && (
-                <ul className="detail-list">
-                  <li>
-                    {plan.added.length} new features, {plan.changed.length} changed,{' '}
-                    {plan.retired.length} retired (kept).
-                  </li>
-                  <li>
-                    {plan.mergedEvidence.length} features already in the catalog from another paper
-                    get this paper’s evidence.
-                  </li>
-                  {plan.possibleDuplicates.length > 0 && (
-                    <li>
-                      Possible duplicates (same name, different id — merge them on the feature page
-                      if they are the same):{' '}
-                      {plan.possibleDuplicates.map(([a, b]) => `${a} ≈ ${b}`).join('; ')}
-                    </li>
-                  )}
-                  <li>
-                    {plan.decisionsKept} of your decisions on these features stay exactly as they
-                    are.
-                  </li>
-                </ul>
-              )}
-              {pending !== null && (
-                <div className="action-row">
-                  <button
-                    type="button"
-                    className="btn sm primary"
-                    onClick={async () => {
-                      const p = await useResearch.getState().importBundle(pending);
-                      setPending(null);
-                      setPlan(null);
-                      setMsg(
-                        `${STATUS_TEXT[p.status]} ${p.docId} edition ${p.version} stored on this device.`,
-                      );
-                    }}
-                  >
-                    Import it
-                  </button>
-                  <button
-                    type="button"
-                    className="btn sm"
-                    onClick={() => {
-                      setPending(null);
-                      setPlan(null);
-                    }}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-        {msg && (
-          <p className="alert ok" role="status">
-            <Icon name="check" className="sm" />
-            <span>{msg}</span>
-          </p>
-        )}
-      </section>
-      <section aria-label="Import decisions">
-        <h2 className="group-head">Import decisions</h2>
-        <p className="hint">
-          Decisions exported from another device are added; where you already have a decision for
-          the same record, yours is kept.
-        </p>
-        <label className="btn sm file-btn">
-          <Icon name="upload" className="sm" />
-          Choose a decisions file
-          <input
-            type="file"
-            accept="application/json,.json"
-            onChange={async (e) => {
-              const file = e.target.files?.[0];
-              e.target.value = '';
-              if (!file) return;
-              const data = (await readJson(file)) as { marks?: unknown[] } | null;
-              if (!data || !Array.isArray(data.marks)) {
-                setMsg('That file is not a decisions file.');
-                return;
-              }
-              const r = await useResearch.getState().importMarks(data.marks);
-              setMsg(
-                `${r.added} decisions added, ${r.kept} kept as they were on this device${r.invalid ? `, ${r.invalid} skipped (not valid)` : ''}.`,
-              );
-            }}
-          />
-        </label>
-      </section>
-      <section aria-label="Stored editions">
-        <h2 className="group-head">Papers on this device</h2>
-        <ul className="detail-list">
-          {view.documents.map((d) => (
-            <li key={d.doc.id}>
-              <strong>{d.doc.title}</strong> — <span className="num">{d.doc.id}</span>, editions{' '}
-              {d.versions.join(', ')} (latest in use), snapshot {d.doc.date}, stored{' '}
-              {d.importedAt.slice(0, 10)}
-            </li>
-          ))}
-        </ul>
-      </section>
     </div>
   );
 }

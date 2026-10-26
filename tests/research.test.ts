@@ -22,13 +22,11 @@ import {
   EMPTY_QUERY,
   filterFeatures,
   groupFeatures,
-  mergeMarks,
-  planImport,
   sortFeatures,
-  specMarkdown,
   stats,
   storedOf,
   validateBundle,
+  validateMark,
   type StoredBundle,
 } from '../src/core/research/catalog';
 import {
@@ -44,7 +42,7 @@ import {
   type ResearchBundle,
   type ResearchMark,
 } from '../src/core/research/types';
-import { db, listResearchBundles, listResearchMarks } from '../src/persist/db';
+import { db, listResearchBundles, listResearchMarks, saveResearchBundle } from '../src/persist/db';
 import { seedShipped, useResearch } from '../src/store/researchStore';
 import { ResearchPage } from '../src/ui/Research';
 
@@ -256,10 +254,9 @@ describe('research catalog: view, filters and relationships', () => {
       for (const f of c.features) expect(view.features.has(f), `${c.id} → ${f}`).toBe(true);
     }
     expect(view.features.get('ens.f.auto-bom')!.priority).toBe('P0/P1');
-    const md = specMarkdown(view, {}, ['ens.f.auto-bom'], AT);
-    expect(md).toMatch(/BOM priority: P0\/P1/);
-    expect(md).toMatch(/None of these features has been started/);
-    expect(md).toMatch(/lines 89–89/);
+    expect(view.contradictions.find((c) => c.title.startsWith('BOM priority'))!.features).toContain(
+      'ens.f.auto-bom',
+    );
   });
   it('reports a feature that has no evidence instead of hiding it', () => {
     const b = clone(B);
@@ -280,93 +277,18 @@ describe('research catalog: view, filters and relationships', () => {
   });
 });
 
-describe('research catalog: re-import never overwrites decisions', () => {
+describe('research catalog: a newer shipped edition (paper import removed, ADR-102)', () => {
   const v1 = storedOf(B, AT);
-  const marks = {
-    'ens.f.countertops': mark('ens.f.countertops'),
-    'ens.f.ar-placement': mark('ens.f.ar-placement', { selection: 'rejected' }),
-  };
-  it('treats the same edition as unchanged, and different content under the same edition as a conflict', () => {
-    expect(planImport([v1], clone(B), marks).status).toBe('unchanged');
-    const edited = clone(B);
-    edited.features[0].description = 'changed';
-    const p = planImport([v1], edited, marks);
-    expect(p.status).toBe('conflict');
-    expect(p.store).toBe(false);
-  });
-  it('stores a new edition: changed and dropped features are reported, dropped ones stay as retired', () => {
+  it('uses the newest edition; features it drops stay visible as retired', () => {
     const v2 = dropFeature(clone(B), 'ens.f.ar-placement');
     v2.document.version = 2;
     v2.features.find((f) => f.id === 'ens.f.countertops')!.description = 'Edition 2 wording.';
-    const p = planImport([v1], v2, marks);
-    expect(p.status).toBe('new-version');
-    expect(p.changed).toEqual(['ens.f.countertops']);
-    expect(p.retired).toEqual(['ens.f.ar-placement']);
-    expect(p.decisionsKept).toBe(2);
     const view = buildView([v1, storedOf(v2, AT)]);
     expect(view.features.get('ens.f.countertops')!.description).toBe('Edition 2 wording.');
     expect(view.features.get('ens.f.ar-placement')!.retired).toBe(true);
     expect(view.documents[0].versions).toEqual([1, 2]);
   });
-  it("adds another paper's evidence to a shared feature id and flags likely duplicates", () => {
-    const other: ResearchBundle = {
-      ...clone(B),
-      document: {
-        id: 'other',
-        title: 'Other paper',
-        version: 1,
-        date: '2026-11-01',
-        text: 'line one\nline two',
-      },
-      sections: [{ id: 'o.s', title: 'All', lines: [1, 2] }],
-      findings: [
-        {
-          id: 'o.n.1',
-          section: 'o.s',
-          lines: [1, 1],
-          kind: 'request',
-          statement: 'Users want countertops.',
-        },
-      ],
-      citations: [],
-      bibliography: [],
-      competitors: [],
-      contradictions: [],
-      unextracted: [],
-      features: [
-        {
-          ...clone(B.features.find((f) => f.id === 'ens.f.countertops')!),
-          description: 'Other wording',
-          findings: ['o.n.1'],
-          competitors: [],
-          parent: undefined,
-          dependencies: [],
-          related: [],
-        },
-        {
-          ...clone(B.features.find((f) => f.id === 'ens.f.cut-list')!),
-          id: 'o.f.cutlist',
-          findings: ['o.n.1'],
-          competitors: [],
-          dependencies: [],
-          related: [],
-        },
-      ],
-    };
-    const p = planImport([v1], other, marks);
-    expect(p.status).toBe('new-document');
-    expect(p.mergedEvidence).toEqual(['ens.f.countertops']);
-    expect(p.possibleDuplicates).toEqual([['o.f.cutlist', 'ens.f.cut-list']]);
-    const view = buildView([v1, storedOf(other, AT)]);
-    const f = view.features.get('ens.f.countertops')!;
-    expect(f.description).not.toBe('Other wording'); // first paper keeps its fields
-    expect(f.findings).toEqual(expect.arrayContaining(['ens.n.rank-13', 'o.n.1']));
-    expect(f.docs).toEqual(['ens-2026-10-23', 'other']);
-  });
-  it('refuses finding ids that belong to another paper, and never throws on bad input', () => {
-    const clash = clone(B);
-    clash.document = { ...clash.document, id: 'copy' };
-    expect(planImport([v1], clash).errors.join()).toMatch(/already belong to another paper/);
+  it('rejects malformed bundles and never throws on bad input', () => {
     for (const bad of [
       null,
       42,
@@ -374,21 +296,8 @@ describe('research catalog: re-import never overwrites decisions', () => {
       {},
       { format: 'furniture-builder-research', schemaVersion: 1 },
       { ...clone(B), features: 'no' },
-    ]) {
-      const p = planImport([v1], bad);
-      expect(p.status).toBe('invalid');
-      expect(p.errors.length).toBeGreaterThan(0);
-    }
-  });
-  it("keeps the device's decision when a decisions file disagrees", () => {
-    const r = mergeMarks(marks, [
-      mark('ens.f.countertops', { selection: 'rejected' }),
-      mark('ens.f.cut-list'),
-      { id: 'junk' },
-    ]);
-    expect(r.add.map((m) => m.id)).toEqual(['ens.f.cut-list']);
-    expect(r.kept).toBe(1);
-    expect(r.invalid).toBe(1);
+    ])
+      expect(validateBundle(bad).length).toBeGreaterThan(0);
   });
 });
 
@@ -422,8 +331,9 @@ describe('research catalog: persistence', () => {
     // A new edition imported: decisions untouched.
     const v2 = dropFeature(clone(B), 'ens.f.auto-bom');
     v2.document.version = 2;
-    const p = await useResearch.getState().importBundle(v2);
-    expect(p.status).toBe('new-version');
+    await saveResearchBundle(storedOf(v2, AT));
+    useResearch.setState({ loaded: false, marks: {} });
+    await useResearch.getState().init();
     expect((await listResearchMarks()).find((x) => x.id === 'ens.f.auto-bom')!.selection).toBe(
       'shortlisted',
     );
@@ -453,12 +363,26 @@ describe('research catalog: persistence', () => {
 describe('research catalog: page', () => {
   const render = (props: Record<string, unknown>) =>
     renderToStaticMarkup(createElement(ResearchPage, { onDone: () => {}, ...props }));
-  it('shows the overview with totals', () => {
+  it('has only the Features and Competitors tabs, opens on Features with the dashboard, and has no tick boxes', () => {
     const html = render({});
     expect(html).toContain('Feature Research &amp; Catalog');
-    expect(html).toContain('Sub-features');
-    expect(html).toContain('Unreviewed findings');
-    expect(html).toContain('Source-document coverage');
+    const tabs = [...html.matchAll(/role="tab"[^>]*>([^<]+)</g)].map((m) => m[1]);
+    expect(tabs).toEqual(['Features', 'Competitors']);
+    for (const gone of [
+      'Overview',
+      'Compare',
+      'Findings',
+      'Contradictions',
+      'Sources',
+      'Coverage audit',
+      'Import &amp; export',
+    ])
+      expect(tabs).not.toContain(gone);
+    expect(html).toContain('Built in this app');
+    expect(html).toContain('Assessment: demand, value, complexity, confidence');
+    expect(html).toContain('Search features');
+    expect(html).not.toContain('Tick ');
+    expect(html).not.toContain('Export specification');
   });
   it('lists every feature and sub-feature not merged into another, with decision and implementation controls', () => {
     const html = render({ initialTab: 'features' });
@@ -481,11 +405,6 @@ describe('research catalog: page', () => {
       'lines 75',
     ])
       expect(html).toContain(s);
-  });
-  it('shows the coverage audit', () => {
-    const html = render({ initialTab: 'coverage' });
-    expect(html).toContain('Extraction complete');
-    expect(html).toContain('Nothing in this paper is marked UNEXTRACTED');
   });
 });
 
@@ -555,9 +474,6 @@ describe('research catalog: assessment of demand, value, complexity and confiden
         rating(f, 'priority').value.includes('P3'),
       ),
     ).toBe(true);
-    expect(specMarkdown(view, {}, ['ens.f.env-drawer'], AT)).toMatch(
-      /\| P1 \(assessed\) \|[\s\S]*Research priority P1 \(assessed\): Parent/,
-    );
   });
   it('gives every assessed feature an appreciation with its basis; requests are never counted as praise', () => {
     for (const f of all.filter((x) => x.assessment)) {
@@ -631,9 +547,6 @@ describe('research catalog: assessment of demand, value, complexity and confiden
     expect(
       filterFeatures(view, {}, { ...EMPTY_QUERY, rated: 'paper', showMerged: true }),
     ).toHaveLength(39);
-    expect(specMarkdown(view, {}, ['ens.f.snap-override'], AT)).toMatch(
-      /4\.5 \(assessed\)[\s\S]*Assessment, not research/,
-    );
   });
   it('shows the assessment on the dashboard and on the feature, labelled as such', () => {
     const over = renderToStaticMarkup(createElement(ResearchPage, { onDone: () => {} }));
@@ -732,21 +645,16 @@ describe('research catalog: what the app has built, and merged duplicates (ADR-0
     c.features.find((x) => x.app?.status === 'verified')!.app!.missing = 'something';
     expect(validateBundle(c).join()).toMatch(/so it is In Progress/);
   });
-  it("keeps the user's status through a new edition of the paper and through a decisions file", async () => {
+  it("keeps the user's status through a new edition of the paper", async () => {
     const f = 'ens.f.guided-snapping';
     const marks = { [f]: mark(f, { implementation: 'planned', implementationSetAt: AT }) };
     const v2 = clone(B);
     v2.document.version = 2;
-    const p = planImport([storedOf(B, AT)], v2, marks);
-    expect(p.status).toBe('new-version');
     const after = buildView([storedOf(B, AT), storedOf(v2, AT)]);
     expect(implementationOf(after.features.get(f)!, marks)).toBe('planned');
-    const r = mergeMarks(marks, [
-      mark(f, { implementation: 'verified', implementationSetAt: '2026-10-27T00:00:00.000Z' }),
-    ]);
-    expect(r.add).toEqual([]);
-    expect(r.kept).toBe(1);
-    expect(mergeMarks({}, [{ ...mark(f), implementationSetAt: 42 }]).invalid).toBe(1);
+    expect(validateMark({ ...mark(f), implementationSetAt: 42 }).join()).toMatch(
+      /implementation date/,
+    );
   });
   it('counts implementation statuses over the features shown, not the merged ones', () => {
     const st = stats(view, {});

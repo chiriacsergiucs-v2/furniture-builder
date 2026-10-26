@@ -975,3 +975,30 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Items “can be used to add as a new adr or mark as acknowledged and accepted” (G-050)
 - Questions: None while ADR-002 holds.
 - Suggested pick: Keep the hand-over to Claude (estimate for a GitHub-token write path: effort +60%, value +15%, and it breaks ADR-002)
+
+### G-102: Research import and export removed
+
+- Status: Open
+- Origin: ADR-102 Out of scope
+- Missing: Paper import, decisions-file download/upload and research-file download on the research page (Import & export tab removed)
+- Request: "Remove tabs and underlying dead info : Overview, Compare, Findings, Contradictions, Sources, Coverage audit, Import & export"; answers "Remove all, including spec export", "Ticks and bulk actions too"
+- Questions: Bring back a way to back up research decisions or load a newer paper edition?
+- Suggested pick: None; removed by the user's choice. A newer edition ships with the app
+
+### G-103: Research spec export, ticks and compare removed
+
+- Status: Open
+- Origin: ADR-102 Out of scope
+- Missing: Specification export (Markdown) of shortlisted and approved features, tick boxes, bulk decision actions and the Compare table
+- Request: "Remove tabs and underlying dead info : Overview, Compare, Findings, Contradictions, Sources, Coverage audit, Import & export"; answers "Remove all, including spec export", "Ticks and bulk actions too"
+- Questions: Bring back a spec export or side-by-side compare?
+- Suggested pick: None; removed by the user's choice
+
+### G-104: Research overview, findings, sources and audit views removed
+
+- Status: Open
+- Origin: ADR-102 Out of scope
+- Missing: Overview totals tiles and the Findings, Contradictions, Sources and Coverage audit views; the data stays for feature evidence and citations, the coverage audit stays in tests
+- Request: "Remove tabs and underlying dead info : Overview, Compare, Findings, Contradictions, Sources, Coverage audit, Import & export"; answers "Remove all, including spec export", "Ticks and bulk actions too"; "Only code that nothing uses any more"
+- Questions: Show findings, sources or the coverage audit again anywhere?
+- Suggested pick: None; feature pages keep their evidence and citations

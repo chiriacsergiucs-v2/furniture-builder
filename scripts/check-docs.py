@@ -42,7 +42,7 @@ for folder in (ADR, DONE):
 MARKER = "find-it pending (light, ADR-066)"
 # "N60" -> (status, evidence)
 backlog = {m.group(1): (m.group(2).strip(), m.group(3))
-           for m in re.finditer(r"^\| ([FND]\d{2}) \|[^|\n]*\|([^|\n]*)\|?(.*)$",
+           for m in re.finditer(r"^\| ([FND]\d{2,3}) +\|[^|\n]*\|([^|\n]*)\|?(.*)$",
                                 (REPO / "docs/backlog.md").read_text(), re.M)}
 
 # Index rows: | [ADR-NNN](link) | title | depends | status |
@@ -72,7 +72,7 @@ for num, (path, status) in adrs.items():
         if d not in adrs:
             errors.append(f"{rel}: depends on unknown ADR-{d}")
     bl = re.search(r"^- Backlog: (.+)$", text, re.M)
-    for b in re.findall(r"\b[FND]\d{2}\b", bl.group(1) if bl else ""):
+    for b in re.findall(r"\b[FND]\d{2,3}\b", bl.group(1) if bl else ""):
         if b not in backlog:
             errors.append(f"{rel}: unknown backlog id {b}")
     # Light acceptance (ADR-066): the backlog row keeps the marker until a find-it run makes it Done.
@@ -80,7 +80,7 @@ for num, (path, status) in adrs.items():
     if acc and acc.group(1).strip() not in ("light", "full"):
         errors.append(f"{rel}: Acceptance must be light or full, is '{acc.group(1).strip()}'")
     if acc and acc.group(1).strip() == "light":
-        for b in re.findall(r"\b[FND]\d{2}\b", bl.group(1) if bl else ""):
+        for b in re.findall(r"\b[FND]\d{2,3}\b", bl.group(1) if bl else ""):
             if b not in backlog:
                 continue
             row_status, evidence = backlog[b]
