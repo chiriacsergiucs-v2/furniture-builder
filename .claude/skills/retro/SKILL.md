@@ -74,6 +74,10 @@ and text did not hold. Move it up the list instead (doc → CLAUDE.md → skill 
 strongest form that can check it. If nothing can check it by machine, say so and propose a skill step at the
 exact point in the workflow where it was missed.
 
+For a fix that builds a mechanism (a skill, hook or check), state the user's goal in their words and show
+the fix reaches it end to end (for a lesson: saved, merged, read back next time). Leave out every part the
+goal does not need; offer it as a separate proposal instead.
+
 Write each proposal as an exact diff or exact text, not as advice. Mark each one with what it prevents
 (the finding) and its cost (lines added, false positives a hook might give).
 
@@ -89,6 +93,7 @@ Write each proposal as an exact diff or exact text, not as advice. Mark each one
 
   Status is `Proposed`, then `Applied (PR #N)` or `Not chosen (YYYY-MM-DD)`.
 
+- Commit the retro file and push it to the session's branch right away (the Stop hook flags untracked files).
 - Reply briefly with the top findings, then go straight to step 7 in the same turn.
 
 ## 7. Choose in a dialog, then apply and merge (user rule 2026-10-26)
@@ -99,6 +104,10 @@ Call `AskUserQuestion` right after the findings; never wait for the user to type
   most 16 proposals; merge or drop the weakest beyond that). Each option: label `N. <short fix>` (1–5 words),
   description = the finding it prevents, the target file and the cost. The question text says that selected
   proposals are applied and merged, and unselected ones are recorded as not chosen.
+- **Every option must be seen.** The question text names every proposal number it holds ("Proposals 2, 3
+  and 4 — select the ones to apply"), and the reply before the dialog lists every proposal by number.
+- **Never record an unselected proposal as `Not chosen` silently.** After the dialog, name the unselected
+  ones in one line and ask once whether to skip them; only a confirmed skip is `Not chosen`.
 - **A proposal that needs a decision** (two ways to do it) gets its own single-select question, with the
   option closest to the user's request first and marked `(Recommended)` per the CLAUDE.md rule.
 - **Selecting is the instruction to apply and merge** (user rule 2026-10-26: "on selecting and hitting next
