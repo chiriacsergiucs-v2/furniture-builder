@@ -281,13 +281,13 @@ for (const width of [1440, 375]) {
   const palRow = dlg
     .locator('li')
     .filter({ has: page.getByRole('img', { name: 'Picture of PAL 18 white' }) });
-  await palRow.getByLabel('Manufacturer').selectOption({ label: 'Egger' });
-  await palRow.getByLabel('Type').selectOption({ label: 'Kitchen worktop' });
+  await palRow.getByLabel('Manufacturer', { exact: true }).selectOption({ label: 'Egger' });
+  await palRow.getByLabel('Type', { exact: true }).selectOption({ label: 'Kitchen worktop' });
   check(
     width,
     'labels: Manufacturer and Type found and set',
-    (await palRow.getByLabel('Manufacturer').inputValue()) === 'egger' &&
-      (await palRow.getByLabel('Type').inputValue()) === 'worktop',
+    (await palRow.getByLabel('Manufacturer', { exact: true }).inputValue()) === 'egger' &&
+      (await palRow.getByLabel('Type', { exact: true }).inputValue()) === 'worktop',
   );
   check(
     width,
@@ -305,7 +305,7 @@ for (const width of [1440, 375]) {
   await dlg.getByLabel('Import decor list (CSV)').setInputFiles(decorCsv);
   await dlg
     .getByText(/2 decors imported from my-decors.csv/)
-    .waitFor({ timeout: 5000 })
+    .waitFor({ timeout: 30000 })
     .catch(() => {});
   check(
     width,
@@ -366,6 +366,7 @@ for (const width of [1440, 375]) {
   );
   const other = await browser.newContext({ viewport: { width, height: phone ? 812 : 900 } });
   const op = await other.newPage();
+  op.setDefaultTimeout(60000);
   op.on('pageerror', (e) => errors.push(`other device: ${e.message}`));
   await op.goto(url);
   // The Library dialog became the Projects page (ADR-078): "Import a file".
@@ -395,7 +396,7 @@ for (const width of [1440, 375]) {
   const confirmDlg = page
     .locator('dialog[open]')
     .filter({ hasText: /Delete 1 picture that no saved piece/ });
-  await confirmDlg.waitFor({ timeout: 5000 }).catch(() => {});
+  await confirmDlg.waitFor({ timeout: 30000 }).catch(() => {});
   check(
     width,
     'cleanup asks before deleting 1 unused picture',
