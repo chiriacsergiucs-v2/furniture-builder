@@ -15,6 +15,17 @@
           }
         ]
       }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat \"$CLAUDE_PROJECT_DIR/.claude/skills/caveman/activate.md\"",
+            "timeout": 5
+          }
+        ]
+      }
     ]
   }
 }
