@@ -1,4 +1,4 @@
-import type { FurnitureModel, Mm, Panel, SpaceOpening } from './types';
+import type { Box, FurnitureModel, Mm, Panel, SpaceOpening } from './types';
 
 /**
  * Tap selection from the outside in (ADR-083). `undefined` = nothing selected, `null` = the whole piece, a string =
@@ -40,6 +40,23 @@ export function drill(model: FurnitureModel, x: Mm, y: Mm, current: Selection): 
   let k = 0;
   while (k + 1 < full.length && full[k + 1] === own[k + 1]) k++;
   return full[k + 1] ?? null;
+}
+
+/**
+ * The box the selection look draws round (ADR-087), the same one the quick-count card anchors on: the piece's bounds
+ * for the whole piece, the space's front-view box for a space, nothing when nothing is selected.
+ */
+export function selectionBox(model: FurnitureModel, sel: Selection): Box | undefined {
+  if (sel === null) return model.bounds;
+  if (sel === undefined) return undefined;
+  return model.spaces.find((s) => s.nodeId === sel && s.view !== 'side')?.box;
+}
+
+/** Whether a panel belongs to the selected box: its front-view centre is inside (ADR-087); the rest is faded. */
+export function inSelection(sel: Box, p: Box): boolean {
+  const cx = p.x + p.w / 2,
+    cy = p.y + p.h / 2;
+  return cx >= sel.x && cx <= sel.x + sel.w && cy >= sel.y && cy <= sel.y + sel.h;
 }
 
 /**

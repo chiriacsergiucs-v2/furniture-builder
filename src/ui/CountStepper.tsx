@@ -1,6 +1,7 @@
 import { forwardRef, useMemo, type CSSProperties } from 'react';
 import { countRows, countSubject } from '../core/counts';
 import { useDesign } from '../store/designStore';
+import { selectionLabel } from './Inspector';
 
 /** The counts that apply to the selected space or piece, each as − N + (ADR-084). Nothing when none apply. */
 export const CountStepper = forwardRef<
@@ -15,6 +16,8 @@ export const CountStepper = forwardRef<
     return id ? countRows(product, id) : [];
   }, [product, selectedId]);
   if (!rows.length) return null;
+  // Names what the card acts on, the same thing the outline is drawn round (ADR-087, G-069).
+  const title = selectionLabel(product, selectedId);
   return (
     <div
       ref={ref}
@@ -26,6 +29,7 @@ export const CountStepper = forwardRef<
       onClick={(e) => e.stopPropagation()}
       onPointerDown={(e) => e.stopPropagation()}
     >
+      {title && <span className="cs-title">{title}</span>}
       {rows.map((r) => (
         <div key={r.key} className="cs-row">
           <span className="cs-label">{r.label}</span>

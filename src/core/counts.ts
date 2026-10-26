@@ -86,14 +86,14 @@ export function countRows(prod: Product, id: string): CountRow[] {
   return rows;
 }
 
-/** One divider more or fewer along `axis`. A new bay goes at the end with 2 shelves; removing takes the last bay. */
+/** One divider more or fewer along `axis`. A new bay goes at the end, empty (ADR-089); removing takes the last bay. */
 function stepDividers(t: Space, axis: 'x' | 'y', delta: 1 | -1): Space {
   if (t.kind !== 'split' || t.axis !== axis) return delta > 0 ? splitSpace(t, axis, 2) : t;
   const n = t.children.length;
   if (delta > 0)
     return n - 1 >= MAX_DIVIDERS
       ? t
-      : { ...t, children: [...t.children, makeSpace('shelves')], sizes: [...t.sizes, fr()] };
+      : { ...t, children: [...t.children, makeSpace('empty')], sizes: [...t.sizes, fr()] };
   if (n > 2) return { ...t, children: t.children.slice(0, -1), sizes: t.sizes.slice(0, -1) };
   // The last divider: one space again, holding the first bay's contents under the split's id and doors.
   const first = t.children[0];

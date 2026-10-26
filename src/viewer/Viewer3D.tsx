@@ -1,6 +1,7 @@
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
-import { ContactShadows, Edges, OrbitControls } from '@react-three/drei';
+import { ContactShadows, Edges, Line, OrbitControls } from '@react-three/drei';
 import { useCallback, useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   BoxGeometry,
   Color,
@@ -26,8 +27,9 @@ import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { explode } from '../core/explode';
-import { hitToMm } from '../core/selectPath';
+import { hitToMm, inSelection, selectionBox } from '../core/selectPath';
 import { roomDisplayBoxes } from '../core/room';
+import { pieceBoxToRoom } from '../core/project';
 import { inPlaneAxes, union } from '../core/geometry';
 import { aabbOf } from '../core/shape';
 import { boxUvs, finishLook, planeUvs } from '../core/surface';
@@ -36,6 +38,7 @@ import { loadModelScene, type ModelScene } from '../persist/models';
 import { modelYaw, type ModelItem } from '../core/model3d';
 import { useDesign } from '../store/designStore';
 import { useView } from '../ui/useView';
+import { PHONE, useMediaQuery } from '../ui/useMediaQuery';
 import { useTheme } from '../ui/useTheme';
 import { useLook } from '../ui/useLook';
 import { SHADOW_CATCHER, setStage, useRendering } from './renderBridge';
@@ -158,7 +161,16 @@ export default function Viewer3D() {
     () => (exploded ? union(panels.map(aabbOf)) : (extent ?? view.model.bounds)),
     [exploded, panels, view, extent],
   );
-  const counts = view.mode === 'design' && !rendering;
+  // A project piece drilled into from the project editor (ADR-088) gets the card too.
+  const drillOn = useDesign(
+    (s) => !!s.project && !s.editingItemId && !!s.drillItemId && s.drillItemId === s.selectedItemId,
+  );
+  const counts = (view.mode === 'design' || (view.mode === 'project' && drillOn)) && !rendering;
+  // On a phone the short 3D view would be mostly covered by a floating card: it docks under the view (G-070).
+  // The slot under the view, which App renders on phones before this lazy viewer mounts; floating when it is missing.
+  const phone = useMediaQuery(PHONE);
+  const dock = phone ? document.getElementById('count-dock') : null;
+  const docked = !!dock;
   const cardRef = useRef<HTMLDivElement>(null);
   // Bottom centre of the card at the anchor, kept inside the view (the anchor's screen point, or null to hide).
   const placeCard = useCallback((at: { x: number; y: number } | null) => {
@@ -217,12 +229,15 @@ export default function Viewer3D() {
           </>
         )}
         <Panels panels={panels} realistic={realistic} plain={rendering} />
-        {counts && <CountsAnchor place={placeCard} />}
+        {counts && !docked && (
+          <CountsAnchor place={placeCard} inProject={view.mode === 'project'} />
+        )}
         {view.mode === 'project' && !exploded && <RoomWalls />}
         {view.mode === 'project' && !exploded && <ModelItems plain={rendering} />}
         <Fit key={designId} bounds={bounds} />
       </Canvas>
-      {counts && (
+      {counts && dock && createPortal(<CountStepper className="in-3d docked" />, dock)}
+      {counts && !docked && (
         <div ref={cardRef} className="count-anchor" style={{ visibility: 'hidden' }}>
           <CountStepper className="in-3d" />
         </div>
@@ -231,22 +246,76 @@ export default function Viewer3D() {
   );
 }
 
+/** The project piece loaded for edits from the project editor while it is the selected piece (ADR-088). */
+function useDrillItem() {
+  const project = useDesign((s) => s.project);
+  const id = useDesign((s) =>
+    s.project && !s.editingItemId && s.drillItemId === s.selectedItemId ? s.drillItemId : null,
+  );
+  return useMemo(() => (id ? project?.items.find((i) => i.id === id) : undefined), [project, id]);
+}
+
+/** How much of a panel outside the selected space shows (ADR-087). */
+const FADED = 0.28;
+
+/**
+ * The selected space's or piece's box as a thick outline (ADR-087), drawn over the panels so it shows through the
+ * doors, a few mm outside the box so it does not hide in the panel edges.
+ */
+function SelectionOutline({ box }: { box: Box }) {
+  const points = useMemo(() => {
+    const o = 3;
+    const [x0, x1] = [(box.x - o) * S, (box.x + box.w + o) * S];
+    const [y0, y1] = [(box.y - o) * S, (box.y + box.h + o) * S];
+    const [z0, z1] = [(box.z - o) * S, (box.z + box.d + o) * S];
+    const c = (x: number, y: number, z: number) => [x, y, z] as [number, number, number];
+    const corners = [x0, x1].flatMap((x) =>
+      [y0, y1].flatMap((y) => [z0, z1].map((z) => c(x, y, z))),
+    );
+    // Index = 4·x + 2·y + z; an edge joins corners that differ in one bit.
+    const segs: [number, number, number][] = [];
+    for (let i = 0; i < 8; i++)
+      for (const bit of [1, 2, 4]) if (!(i & bit)) segs.push(corners[i], corners[i | bit]);
+    return segs;
+  }, [box]);
+  return (
+    <Line
+      points={points}
+      segments
+      color={SELECT}
+      lineWidth={3.5}
+      depthTest={false}
+      depthWrite={false}
+      // Drawn last, after the transparent (faded) panels, so nothing covers it.
+      transparent
+      renderOrder={10}
+      raycast={() => null}
+    />
+  );
+}
+
 /**
  * Quick counts (ADR-085): the same − N + card as over the drawing, a DOM overlay beside the canvas, placed each frame
  * right above the front top edge of the selected space and kept inside the view. The viewer itself still only
  * selects; the card changes the design through the store.
  */
-function CountsAnchor({ place }: { place: (at: { x: number; y: number } | null) => void }) {
+function CountsAnchor({
+  place,
+  inProject,
+}: {
+  place: (at: { x: number; y: number } | null) => void;
+  inProject: boolean;
+}) {
   const selectedId = useDesign((s) => s.selectedId);
   const model = useDesign((s) => s.model);
-  // The whole piece (ADR-083 `null`) anchors on the piece's bounds.
-  const box = useMemo(
-    () =>
-      selectedId === null
-        ? model.bounds
-        : model.spaces.find((o) => o.nodeId === selectedId && o.view !== 'side')?.box,
-    [model, selectedId],
-  );
+  const item = useDrillItem();
+  // The whole piece (ADR-083 `null`) anchors on the piece's bounds; the same box the selection outline draws (ADR-087).
+  // In a project the box is placed in the room like the piece (ADR-088).
+  const box = useMemo(() => {
+    const local = selectionBox(model, inProject ? (selectedId ?? null) : selectedId);
+    if (!inProject) return local;
+    return item && local ? pieceBoxToRoom(item, model, local) : undefined;
+  }, [model, selectedId, inProject, item]);
   const v = useMemo(() => new Vector3(), []);
   useFrame(({ camera, size }) => {
     if (!box) return place(null);
@@ -560,9 +629,45 @@ function Panels({
   );
   const textures = useTextures(useImageUrls(imageKey(materials)));
   const hl = useMemo(() => new Set(highlight), [highlight]);
+  // Selection look A (ADR-087): a thick outline round the selected space or piece, everything outside it faded.
+  // Simple and Realistic looks (G-064); never in a rendered picture. In a project, for the piece drilled into
+  // (ADR-088): the box is placed in the room, and the fade is decided in the piece's own mm.
+  const drillModel = useDesign((s) => s.model);
+  const drillItem = useDrillItem();
+  const inProject = view.mode === 'project';
+  const look = !plain;
+  const outline = useMemo(() => {
+    if (!look) return undefined;
+    if (!inProject) return selectionBox(view.model, selectedSpace);
+    const local = drillItem && selectionBox(drillModel, selectedSpace ?? null);
+    return drillItem && local ? pieceBoxToRoom(drillItem, drillModel, local) : undefined;
+  }, [look, inProject, view.model, selectedSpace, drillItem, drillModel]);
+  const fadeBox = !look
+    ? undefined
+    : !inProject
+      ? outline
+      : drillItem && typeof selectedSpace === 'string'
+        ? selectionBox(drillModel, selectedSpace)
+        : undefined;
+  const local = useMemo(() => new Map(drillModel.panels.map((p) => [p.id, p])), [drillModel]);
+  const prefix = drillItem ? `${drillItem.id}:` : '';
+  const ownId = inProject ? `${prefix}${selectedSpace}` : selectedSpace;
+  const isFaded = (p: Panel) => {
+    if (!fadeBox) return false;
+    if (!inProject) return !inSelection(fadeBox, (built.get(p.id) ?? p).box);
+    const own = p.id.startsWith(prefix) ? local.get(p.id.slice(prefix.length)) : undefined;
+    return !own || !inSelection(fadeBox, own.box);
+  };
 
   return (
     <group>
+      {outline && !exploded && (
+        // Keyed by the box: drei's segment line does not pick up changed points.
+        <SelectionOutline
+          key={`${outline.x},${outline.y},${outline.w},${outline.h}`}
+          box={outline}
+        />
+      )}
       {panels
         .filter((p) => showFronts || !FRONT.has(p.role))
         .map((p) => {
@@ -574,45 +679,55 @@ function Panels({
               ? !!selectedId && p.nodeId.startsWith(`${selectedId}:`)
               : selectedId === null || p.nodeId === selectedId);
           const lit = !plain && hl.has(p.id);
+          const faded = isFaded(p);
+          // With the outline, only the selected space's own panels are marked (green edges), and no tint.
+          const tinted = selected && !outline;
+          const own = !!outline && p.nodeId === ownId;
           // A picture replaces the plain colour; without a readable one the plain colour stays (ADR-048).
           const img = images.get(p.materialId);
           const map = img ? textures.get(img.id) : undefined;
           const base = map ? '#ffffff' : (colors.get(p.materialId) ?? '#cccccc');
           const color = lit
             ? HIGHLIGHT
-            : selected
+            : tinted
               ? new Color(base).lerp(new Color(SELECT), 0.45).getStyle()
               : base;
           const side = p.shape?.kind === 'profile' ? DoubleSide : FrontSide;
           const look = realistic ? (
             <>
-              {/* Realistic (ADR-067): the finish sets how matte or glossy a board is; backs stay opaque. The selection shows
-                  as the green tint only: drei's outline is a mesh that the occlusion pass would smear. */}
+              {/* Realistic (ADR-067): the finish sets how matte or glossy a board is; backs stay opaque. Panel edges are
+                  not drawn (drei's edge outline is a mesh the occlusion pass would smear); the selection outline is. */}
               <meshPhysicalMaterial
-                key={map ? map.uuid : 'plain'}
+                key={`${map ? map.uuid : 'plain'}${faded ? ':faded' : ''}`}
                 map={map ?? null}
                 color={color}
                 metalness={0}
                 {...finishLook(finishes.get(p.materialId))}
+                transparent={faded}
+                opacity={faded ? FADED : 1}
+                depthWrite={!faded}
                 side={side}
               />
             </>
           ) : (
             <>
               <meshStandardMaterial
-                key={map ? map.uuid : 'plain'}
+                key={`${map ? map.uuid : 'plain'}${faded ? ':faded' : ''}`}
                 map={map ?? null}
                 color={color}
                 roughness={0.78}
                 metalness={0}
-                transparent={p.role === 'back'}
-                opacity={p.role === 'back' ? 0.92 : 1}
+                transparent={p.role === 'back' || faded}
+                opacity={faded ? FADED : p.role === 'back' ? 0.92 : 1}
+                depthWrite={!faded}
                 side={side}
               />
               <Edges
                 threshold={15}
-                color={selected ? SELECT : '#3b403c'}
-                lineWidth={selected ? 1.6 : 1}
+                color={tinted || own ? SELECT : '#3b403c'}
+                lineWidth={tinted || own ? 1.6 : 1}
+                transparent={faded}
+                opacity={faded ? FADED : 1}
               />
             </>
           );

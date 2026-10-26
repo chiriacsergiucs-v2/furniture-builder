@@ -66,3 +66,35 @@ export function SettingsDialog({ onWizard }: { onWizard: () => void }) {
     </Dialog>
   );
 }
+
+/**
+ * A project piece's own settings (ADR-090): size, construction, boards and drawers, edited from the project editor
+ * without opening the piece. The piece is the one loaded for edits there (ADR-088); each change is one project undo
+ * step.
+ */
+export function PieceSettingsDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const name = useDesign((s) => s.design.name);
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      title={`Size, boards and construction: ${name}`}
+      wide
+      footer={
+        <button type="button" className="btn primary" onClick={onClose}>
+          Done
+        </button>
+      }
+    >
+      {open && (
+        <div className="settings-body">
+          <Inspector mode="configure" />
+          <div className="inspector boards">
+            <MaterialsPanel />
+            <FastenersPanel />
+          </div>
+        </div>
+      )}
+    </Dialog>
+  );
+}

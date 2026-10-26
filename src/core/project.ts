@@ -426,6 +426,22 @@ export function roomToPiece(
 }
 
 /** Build one item and move its panels into the room. Panel and node ids are prefixed with the item id. */
+/**
+ * A box in the piece's own mm (a selected space, ADR-088) placed in the room like the piece's panels: turned and moved
+ * the same way as `placeItem` does. `built` is the piece's model (`buildModel(item.design)`).
+ */
+export function pieceBoxToRoom(item: ProjectItem, built: FurnitureModel, box: Box): Box {
+  const r = item.rotationY;
+  const rb = union(built.panels.map((p) => rotateBox(aabbOf(p), r)));
+  const t = rotateBox(box, r);
+  return {
+    ...t,
+    x: t.x + item.position.x - rb.x,
+    y: t.y + item.position.y - rb.y,
+    z: t.z + item.position.z - rb.z,
+  };
+}
+
 export function placeItem(item: ProjectItem, opts?: { noPlinth?: boolean }): PlacedPiece {
   const built = buildModel(item.design);
   // A run plinth replaces the piece's own plinth (ADR-054).

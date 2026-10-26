@@ -32,6 +32,7 @@ import { setLook, useLook } from './useLook';
 import { RenderDialog } from './RenderDialog';
 import { MoreMenu } from './shell/MoreMenu';
 import { ProjectsPage } from './shell/ProjectsPage';
+import { useMediaQuery } from './useMediaQuery';
 import { MODE_LABEL, MODES, useUi } from './shell/uiStore';
 import {
   bringDrawingForward,
@@ -80,19 +81,6 @@ const SAVE_TEXT: Record<SaveState, string> = {
   saved: 'Saved on this device',
   failed: 'Not saved — browser storage unavailable',
 };
-
-function useMediaQuery(q: string) {
-  const [match, setMatch] = useState(
-    () => typeof matchMedia !== 'undefined' && matchMedia(q).matches,
-  );
-  useEffect(() => {
-    const m = matchMedia(q);
-    const on = () => setMatch(m.matches);
-    m.addEventListener('change', on);
-    return () => m.removeEventListener('change', on);
-  }, [q]);
-  return match;
-}
 
 /**
  * The stage's view controls. On a phone in Build & Preview they sit behind one "Options" button so the 3D view keeps
@@ -788,6 +776,8 @@ export function App() {
               </div>
             </div>
           </section>
+          {/* Phones: the 3D view's quick-count card docks here, under the stage, which keeps its height (G-070). */}
+          {phone && <div id="count-dock" className="count-dock-slot" />}
           <Output />
         </main>
 

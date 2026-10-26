@@ -100,7 +100,7 @@ for (const width of [390, 1280]) {
     await page.getByRole('radio', { name: 'Compose' }).click();
   }
 
-  // 4. A project (ADR-083, G-052): the 1st tap on a piece selects it, a 2nd tap opens it, whole piece selected.
+  // 4. A project (ADR-083, ADR-088): a tap on the selected piece selects the whole piece; the project stays open.
   const dlg = page.locator('dialog[open]');
   const peek = page.locator('.sheet-peek');
   const sheet = async (open) => {
@@ -128,16 +128,19 @@ for (const width of [390, 1280]) {
     await page.mouse.click(p.x + p.width / 2, p.y + p.height / 2);
     await page.waitForTimeout(250);
   };
-  // A piece just added is already selected (the 1st tap); one more tap opens it.
+  // A piece just added is already selected; one more tap selects the whole piece inside the project editor, which
+  // stays open (ADR-088 replaced "a 2nd tap opens it"; the full steps are in tools/project-drill/find-it.mjs).
   ck(
     'project: the added piece is selected',
     (await onPlan.getAttribute('aria-pressed')) === 'true',
   );
   await tapPlan();
-  t = await said();
+  await sheet(true);
+  t = await page.getByRole('region', { name: 'Inside this piece' }).innerText();
   ck(
-    'project: a tap on the selected piece opens it, whole piece selected',
-    t.includes('Selected: Whole cabinet'),
+    'project: a tap on the selected piece selects the whole piece, project still open',
+    t.includes('Selected: Whole cabinet') &&
+      (await page.getByRole('heading', { name: 'Project', exact: true }).isVisible()),
     t.slice(0, 80),
   );
   await page.screenshot({ path: `${out}/drill-project-${width}.png` });

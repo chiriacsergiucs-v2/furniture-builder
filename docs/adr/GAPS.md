@@ -548,6 +548,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Fix them directly (findings 1-6 of the UI critique; finding 3: the count card covers the top of the drawing, shows twice in Both). Not a quote for the finding text.
 - Questions: Collapse the card to a 'Quick counts' button over 3D on phones? Reserve the card band before the first selection so the drawing never moves?
 - Suggested pick: Collapsible card over 3D on phones, open by default, closest to ADR-085's 'same card over 3D' (est. +30 % work vs nothing, +20 % of finding 2/3 value)
+- Note: 2026-10-26, ADR-087 (G-070, user "Dock under 3D") docks the phone 3D card under the stage, so it no longer covers the model; the drawing part (the card's band shifting the drawing on the first selection) is still open.
 
 ### G-059: UI critique findings 7-20 not fixed
 
@@ -575,3 +576,113 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: “Skip find-it for this onw”
 - Questions: Run a find-it for dragging now, or keep N60 as Partially done until someone tries it?
 - Suggested pick: Add a find-it: mouse drag at 1440 px changes From left, Undo restores; touch drag at 375 px with no sideways scroll; set N60 by the result. (estimate: effort +3%, value +6%)
+
+### G-062: Which selection design
+
+- Status: Done (ADR-087)
+- Origin: ADR-087, 2026-10-26, open question (Claude default)
+- Missing: Which of the five selection designs (A-E) is built
+- Request: The highlight of the selected item need to be more obvious, suggest 5 designs that can be applied so it is clearer which part of the piece is selected, or if it is entirely selected
+- Questions: Pick one of A outline+ghost, B subtree tint, C glass volume, D corner brackets+label, E nested level outlines (or a mix)
+- Suggested pick: A, outline round the selected space and the rest faded: answers both 'which part' and 'entirely selected' at a glance; estimate equal work to B-D, +10 % value over B
+- Answer: User 2026-10-26: "A" — design A, outline round the selected space and the rest faded; moved into ADR-087.
+
+### G-063: Selection look in the front drawing
+
+- Status: Done (ADR-087)
+- Origin: ADR-087, 2026-10-26, open question (Claude default)
+- Missing: Whether the chosen selection design also applies to the front drawing
+- Request: The highlight of the selected item need to be more obvious, suggest 5 designs that can be applied so it is clearer which part of the piece is selected, or if it is entirely selected
+- Questions: Same design in the front drawing, or 3D only?
+- Suggested pick: Both views, so the selection reads the same everywhere (estimate +25 % work, +30 % value)
+- Answer: User 2026-10-26: "Yes" — the same look in the front drawing; moved into ADR-087.
+
+### G-064: Selection look in Realistic mode
+
+- Status: Done (ADR-087)
+- Origin: ADR-087, 2026-10-26, out of scope
+- Missing: The new selection look in Realistic mode beyond the current tint; pictures stay without selection
+- Request: The highlight of the selected item need to be more obvious, suggest 5 designs that can be applied so it is clearer which part of the piece is selected, or if it is entirely selected
+- Questions: Should Realistic mode show the full selection design too?
+- Suggested pick: Yes, same design in Realistic (estimate +15 % work)
+- Answer: User 2026-10-26: "Yes, same as Simple" — design A (outline and fade) in Realistic too; moved into ADR-087.
+
+### G-065: What the project panel shows for a selected space
+
+- Status: Done (ADR-088)
+- Origin: ADR-088, 2026-10-26, open question (Claude default)
+- Missing: Which controls the project editor shows when a space inside a piece is selected
+- Request: one more ADR, which would keep the project editor open while we click on the item second time (yes editing of ), and it gives us the opportunity to add or remove shelves and change its structure. the item is triggered, but we should be kept on the edit of the project view.
+- Questions: Show the space's own panel (Contents, Doors and handles, Divide this space, Layouts) inside the project editor, or only the quick-count card over 3D?
+- Suggested pick: The space's full panel plus the quick-count card: 'add or remove shelves and change its structure' needs Contents and Divide (estimate +40 % work, +50 % value over the card only)
+- Answer: User 2026-10-26: "Agree" — the space's full panel plus the quick-count card in the project editor; moved into ADR-088.
+
+### G-066: Second tap on the plan
+
+- Status: Done (ADR-088)
+- Origin: ADR-088, 2026-10-26, open question (Claude default)
+- Missing: What a 2nd tap on a selected piece does on the plan, which has no height
+- Request: one more ADR, which would keep the project editor open while we click on the item second time (yes editing of ), and it gives us the opportunity to add or remove shelves and change its structure. the item is triggered, but we should be kept on the edit of the project view.
+- Questions: On the plan: select the piece's interior and stay in the project, or keep opening the piece editor?
+- Suggested pick: Stay in the project and select the piece's interior, same as 3D (estimate)
+- Answer: User 2026-10-26: "Select" — on the plan the 2nd tap selects the piece's interior and stays in the project; moved into ADR-088.
+
+### G-067: Where a new divided part's content comes from
+
+- Status: Done (ADR-089)
+- Origin: ADR-089, 2026-10-26, open question (Claude default)
+- Missing: What a new part made by a divider holds
+- Request: Add a horizontal divider (image 4) adds the divider, but somehow it decided to add also two shells in it. This is not wanted behavior.
+- Questions: New part empty, or a copy of the neighbouring part?
+- Suggested pick: Empty: the user said the added shelves are not wanted
+- Answer: User 2026-10-26: "Empty" — a new part starts empty; moved into ADR-089.
+
+### G-068: Empty new part for every way of dividing
+
+- Status: Done (ADR-089)
+- Origin: ADR-089, 2026-10-26, open question (Claude default)
+- Missing: Whether vertical dividers, the Divide buttons and the Parts counter also add empty parts
+- Request: Add a horizontal divider (image 4) adds the divider, but somehow it decided to add also two shells in it. This is not wanted behavior.
+- Questions: Apply 'new part starts empty' to every divider add (quick-count vertical and horizontal, Side by side, Stacked, Parts +), or only the horizontal quick count?
+- Suggested pick: Every way of dividing, so the same action never behaves two ways (estimate +5 % work)
+- Answer: User 2026-10-26: "Yes" — every way of dividing adds empty parts; moved into ADR-089.
+
+### G-069: Quick-count card heading naming the selection
+
+- Status: Done (ADR-087)
+- Origin: ADR-087, 2026-10-26, cut while building (Claude)
+- Missing: A heading on the quick-count card naming what it acts on (e.g. Whole cabinet)
+- Request: The highlight of the selected item need to be more obvious, suggest 5 designs that can be applied so it is clearer which part of the piece is selected, or if it is entirely selected
+- Questions: Worth a heading if the card must then be made smaller on phones, or is the outline enough?
+- Suggested pick: Outline only (built); revisit with a smaller phone card: a heading made the card cover the tap point in the 390 px 3D view (estimate)
+- Answer: User 2026-10-26: "Yes, every card" — a heading on every quick-count card, once the phone card no longer covers the 3D view; moved into ADR-087.
+
+### G-070: Quick-count card covers much of the phone 3D view
+
+- Status: Done (ADR-087)
+- Origin: ADR-087, 2026-10-26, out of scope (seen while testing, from ADR-085)
+- Missing: A placement or size of the quick-count card that leaves the piece visible in the short 390 px 3D view
+- Request: The highlight of the selected item need to be more obvious, suggest 5 designs that can be applied so it is clearer which part of the piece is selected, or if it is entirely selected
+- Questions: Smaller card on phones, a card docked under the 3D view, or a taller 3D view?
+- Suggested pick: Dock the card under the 3D view on phones, so the piece and its outline stay in sight (estimate +10 % work)
+- Answer: User 2026-10-26: "Dock under 3D" — on phones the card sits in a bar under the 3D view; moved into ADR-087.
+
+### G-071: Selected space not marked in the project's 2D views
+
+- Status: Done (ADR-088)
+- Origin: ADR-088, 2026-10-26, out of scope (Claude)
+- Missing: Outline of the selected space inside a project piece on the plan and in the room front view (taps drill there, the 3D view and the panel show it)
+- Request: one more ADR, which would keep the project editor open while we click on the item second time (yes editing of ), and it gives us the opportunity to add or remove shelves and change its structure. the item is triggered, but we should be kept on the edit of the project view.
+- Questions: Mark the selected space on the room front view too (the plan, seen from above, cannot show a space's height)?
+- Suggested pick: Outline it on the room front view, as in the piece's front drawing (estimate +10 % work)
+- Answer: User 2026-10-26: "Room front + plan" — outline the space on the room front view and its width × depth footprint on the plan; moved into ADR-088.
+
+### G-072: Piece-wide settings from the project panel
+
+- Status: Done (ADR-090)
+- Origin: ADR-088, 2026-10-26, out of scope (Claude)
+- Missing: Size, materials and carcass settings of a project piece edited from the project panel; they stay behind Edit this piece
+- Request: one more ADR, which would keep the project editor open while we click on the item second time (yes editing of ), and it gives us the opportunity to add or remove shelves and change its structure. the item is triggered, but we should be kept on the edit of the project view.
+- Questions: Should the project panel also edit a piece's size, boards and carcass, or is Edit this piece enough for those?
+- Suggested pick: Keep them behind Edit this piece; the request was shelves and structure (estimate)
+- Answer: User 2026-10-26: "Go 068" — build it; moved into ADR-090.
