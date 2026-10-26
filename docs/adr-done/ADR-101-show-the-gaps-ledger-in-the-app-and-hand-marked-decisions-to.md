@@ -12,7 +12,7 @@
 
 User request 2026-10-26, in their words: "Add a gaps page, similar to reseaech, then merge". It builds G-050 ("No
 gaps page in the app"), whose request was that ledger items "can be used to add as a new adr or mark as acknowledged
-and accepted" ([ADR-082](../adr/ADR-082-record-every-unbuilt-item-in-a-gaps-ledger-kept-in-step-with.md)). ADR-082 kept the
+and accepted" ([ADR-082](../adr-done/ADR-082-record-every-unbuilt-item-in-a-gaps-ledger-kept-in-step-with.md)). ADR-082 kept the
 ledger as a repo file only and listed a page as out of scope; this ADR adds the page and leaves the file as the
 single source of truth.
 
@@ -50,8 +50,8 @@ The app has no backend (ADR-002), so a page cannot change `docs/adr/GAPS.md`. Us
 ## Scope
 
 - In scope: the page, the parser, the `gapMarks` table, Copy decisions, the More menu entry, tests and find-it.
-- Out of scope: grouping by origin (not chosen, G-098); exporting or importing marks as a file (G-099); changing `GAPS.md` from the
-  app (ADR-002, G-100).
+- Out of scope: grouping by origin (not chosen, G-099); exporting or importing marks as a file (G-100); changing `GAPS.md` from the
+  app (ADR-002, G-101).
 
 ## Consequences
 

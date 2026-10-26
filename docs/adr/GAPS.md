@@ -904,7 +904,16 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Allow a tolerance (mm) before warning?
 - Suggested pick: Any difference warns until the user names a tolerance (never invent a physical value, ADR-010).
 
-### G-094: Catalog counts agreement unconfirmed
+### G-094: Stop hook not yet observed in a live session
+
+- Status: Open
+- Origin: ADR-082, 2026-10-26; the Stop hook was tested with sample inputs only (Done when), not observed in a live Claude Code session
+- Missing: Evidence that the Stop hook in .claude/settings.json fires and asks once in a real Claude Code session (a worker subagent gets SubagentStop, not Stop, so it could not observe it)
+- Request: “How to configure to have it always up to date? Hook?”
+- Questions: Should someone end a real top-level session with a reply that lists skipped items and confirm the hook asks once?
+- Suggested pick: Yes: one manual check in the next top-level session that ends with a Skipped this iteration list (estimate: effort +2%, value +10% of the hook's request)
+
+### G-095: Catalog counts agreement unconfirmed
 
 - Status: Open
 - Origin: Gap re-check 2026-10-26 (G-059); agent found it
@@ -913,7 +922,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: None; it is a check.
 - Suggested pick: Add a find-it step that compares the catalog total with the sum of its category counts at 390 and 1280 px; fix if they differ. (estimate: effort +2%, value +3%)
 
-### G-095: Empty Brands list promises a cancelled feed
+### G-096: Empty Brands list promises a cancelled feed
 
 - Status: Open
 - Origin: Gap re-check 2026-10-26 (G-044); agent found it
@@ -922,7 +931,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Replace the text with how brand products get in today (import), or hide the Brands source while it is empty?
 - Suggested pick: Replace the text with what is true now: no brand products are bundled; import your own. Closest to the current app; no new feature. (estimate: effort +1%, value +3%)
 
-### G-096: Fastener notes point to a removed screen
+### G-097: Fastener notes point to a removed screen
 
 - Status: Open
 - Origin: Gap re-check 2026-10-26 (G-042); agent found it
@@ -931,16 +940,16 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: None; it is a wording bug. Fix together with the Romanian labels in G-042?
 - Suggested pick: Point both to the current path (Settings › Fasteners, or the piece's Size, boards and construction), and translate them in the Romanian CSV with G-042. (estimate: effort +1%, value +3%)
 
-### G-097: ADR-082 still Pending though built
+### G-098: ADR-082 still Pending though built
 
-- Status: Open
+- Status: Done (ec9c7a8)
 - Origin: Gap re-check 2026-10-26; agent found it
 - Missing: The gaps ledger (docs/adr/GAPS.md), pnpm gaps and the Stop hook exist and are in use, but ADR-082 is still Pending in docs/adr/ and was never shipped.
 - Request: Gaps ledger (ADR-082, user rule 2026-10-25) (context, not a quote)
 - Questions: Ship ADR-082 now (ship-adr), after checking its Done-when list?
 - Suggested pick: Check ADR-082's Done-when list against the repo, then ship it with ship-adr. (estimate: effort +2%, value +2%)
 
-### G-098: Group gaps by origin
+### G-099: Group gaps by origin
 
 - Status: Open
 - Origin: ADR-101, 2026-10-26; user did not pick it
@@ -949,7 +958,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Add grouping by origin later?
 - Suggested pick: Leave it out (the user picked the other three); the search finds an ADR id in the Origin field. (estimate for grouping: effort +10%, value +5%)
 
-### G-099: Gap marks not in a file
+### G-100: Gap marks not in a file
 
 - Status: Open
 - Origin: ADR-101, 2026-10-26; agent scoped it out
@@ -958,7 +967,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Export and import the marks as a file, like research marks?
 - Suggested pick: Export / import a JSON of marks, like Research's Import & export (estimate: effort +10%, value +5%)
 
-### G-100: Ledger not editable from the app
+### G-101: Ledger not editable from the app
 
 - Status: Open
 - Origin: ADR-101, 2026-10-26; ADR-002 (no backend, no tokens)
