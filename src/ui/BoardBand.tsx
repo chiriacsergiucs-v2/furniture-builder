@@ -145,11 +145,9 @@ function BandFields({
     if (now) commit(d);
   };
   const blurCommit = () => commit(draft);
+  // Enter leaves the field; the blur commits, once (committing here too made two undo steps).
   const onEnter = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      commit(draft);
-      e.currentTarget.blur();
-    }
+    if (e.key === 'Enter') e.currentTarget.blur();
   };
   const chosen = parseTenths(draft.thickness);
   const field = (
