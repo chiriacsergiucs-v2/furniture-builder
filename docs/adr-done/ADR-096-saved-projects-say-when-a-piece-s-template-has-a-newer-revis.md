@@ -16,7 +16,7 @@ instance parameter overrides and connection metadata — not merely a flattened 
 already embeds its design with `catalog.origin.revision`, the family's `catalogVersion` when it was taken
 ([ADR-028](../adr-done/ADR-028-catalog-metadata-and-origin-link-live-in-the-design-document.md)), and edited templates already say "The shipped template was updated" (ADR-034). What is
 missing is telling the user when a piece's template has moved on. Connections are not stored anywhere (ADR-070);
-groups come with [ADR-097](../adr/ADR-097-select-several-pieces-and-keep-them-as-groups.md).
+groups come with [ADR-097](../adr-done/ADR-097-select-several-pieces-and-keep-them-as-groups.md).
 
 ## Decision
 

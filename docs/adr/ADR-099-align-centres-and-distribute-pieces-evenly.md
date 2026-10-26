@@ -12,7 +12,7 @@
 The user, 2026-10-26: "New adr 7". Item 7 of the fit review: _Edge/face/centre alignment and equal distribution_
 (rank 17, value 4.4, P0, In Progress, missing "centre alignment and equal distribution"; merged into it: _Inference
 points_). Snapping ([ADR-070](../adr-done/ADR-070-snap-a-dragged-piece-to-neighbours-and-walls-with-a-preview.md)) already aligns faces to neighbours and walls. Several pieces can be selected
-once [ADR-097](ADR-097-select-several-pieces-and-keep-them-as-groups.md) ships.
+once [ADR-097](../adr-done/ADR-097-select-several-pieces-and-keep-them-as-groups.md) ships.
 
 ## Decision
 

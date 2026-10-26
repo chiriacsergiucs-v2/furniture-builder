@@ -35,7 +35,7 @@ piece placed on another following it (ADR-031).
 ## Alternatives considered
 
 - **Lock per axis** (x only, z only) — more control than the research asks; adds UI for little use.
-- **Lock as a group property** — groups are [ADR-097](../adr/ADR-097-select-several-pieces-and-keep-them-as-groups.md); a group can lock its members through this flag later.
+- **Lock as a group property** — groups are [ADR-097](../adr-done/ADR-097-select-several-pieces-and-keep-them-as-groups.md); a group can lock its members through this flag later.
 
 ## Scope
 

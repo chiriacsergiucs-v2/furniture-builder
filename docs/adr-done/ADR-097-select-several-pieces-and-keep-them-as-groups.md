@@ -1,7 +1,8 @@
 # ADR-097: Select several pieces and keep them as groups
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-26
+- Implemented: 2026-10-26
 - Depends on: ADR-051, ADR-065, ADR-069
 - Design: docs/ui-design.md (Plan view)
 - Backlog: N95
@@ -54,10 +55,10 @@ time (`selectedItemId`); run-wide actions exist ("This run", "Mirror the run").
 
 ## Done when
 
-- [ ] Moving and turning a selection keep whole mm, placement rules and locks (unit tests)
-- [ ] Groups save and reload; older project versions load; a deleted piece leaves its group (storage tests)
-- [ ] Every selection action is one undo step (unit test)
-- [ ] Find-it at 1440 px: box-select three pieces → drag → all move; **Group** → tap selects the group, tap again
+- [x] Moving and turning a selection keep whole mm, placement rules and locks (unit tests)
+- [x] Groups save and reload; older project versions load; a deleted piece leaves its group (storage tests)
+- [x] Every selection action is one undo step (unit test)
+- [x] Find-it at 1440 px: box-select three pieces → drag → all move; **Group** → tap selects the group, tap again
       the piece; at 390 px: **Select** → tap two pieces → **Delete** → Undo brings them back; no page errors
 
 ## Answers (2026-10-26)

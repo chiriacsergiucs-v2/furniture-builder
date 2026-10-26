@@ -834,7 +834,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-086: First tap on a grouped piece
 
-- Status: ADR-097
+- Status: Done (ADR-097)
 - Origin: ADR-097 open question (2026-10-26)
 - Missing: Whether the first tap on a grouped piece selects the group; default yes, second tap the piece.
 - Request: "New adr 2" (2026-10-26)
