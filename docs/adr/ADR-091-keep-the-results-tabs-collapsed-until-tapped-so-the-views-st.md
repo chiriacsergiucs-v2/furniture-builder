@@ -65,15 +65,15 @@ User answers 2026-10-26:
 
 ## Done when
 
-- [ ] Store test: `resultsOpen` starts `false`; `toggleTab(t)` opens on `t`, switches on another tab, closes on
+- [x] Store test: `resultsOpen` starts `false`; `toggleTab(t)` opens on `t`, switches on another tab, closes on
       the same tab; `setTab` from the Settings link opens the panel.
-- [ ] A design with an error diagnostic leaves the panel collapsed and the Checks badge shows the count (test).
-- [ ] Find-it (`tools/results-collapse/find-it.mjs`, production build, 390 and 1280 px): on the bare app in Build &
+- [x] A design with an error diagnostic leaves the panel collapsed and the Checks badge shows the count (test).
+- [x] Find-it (`tools/results-collapse/find-it.mjs`, production build, 390 and 1280 px): on the bare app in Build &
       Preview the text "Download CSV" is not visible and the tabs "Parts", "Sheets", "Hardware", "Shopping list",
       "Checks" are; tap "Parts" → "Download CSV" visible; tap "Sheets" → sheet content visible; tap "Sheets" again
       → collapsed; no horizontal page scroll at 390 px.
-- [ ] Existing find-it scripts that read the results are updated and pass (named in the backlog evidence).
-- [ ] lint, format:check, typecheck, test, build, docs:check pass.
+- [x] Existing find-it scripts that read the results are updated and pass (named in the backlog evidence).
+- [x] lint, format:check, typecheck, test, build, docs:check pass.
 
 ## Open questions
 
