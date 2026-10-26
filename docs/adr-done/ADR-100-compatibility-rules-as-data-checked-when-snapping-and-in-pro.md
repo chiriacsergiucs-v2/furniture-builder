@@ -1,7 +1,8 @@
 # ADR-100: Compatibility rules as data, checked when snapping and in project checks
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-26
+- Implemented: 2026-10-26 (Branch adr-100-compatibility-rules; find-it 36/36 at 1440 and 390 px; not merged)
 - Depends on: ADR-035, ADR-070
 - Design: docs/ui-design.md (Plan view)
 - Backlog: N98
@@ -49,9 +50,9 @@ Today [ADR-070](../adr-done/ADR-070-snap-a-dragged-piece-to-neighbours-and-walls
 
 ## Done when
 
-- [ ] The three ADR-070 rules behave as before (existing snap tests pass unchanged)
-- [ ] Depth, height and family rules: refuse/warn as stated, with the rule text (unit tests)
-- [ ] Find-it at 1440 and 390 px: drag a bed next to a kitchen base → "Won't snap to … " names the family rule;
+- [x] The three ADR-070 rules behave as before (existing snap tests pass unchanged)
+- [x] Depth, height and family rules: refuse/warn as stated, with the rule text (unit tests)
+- [x] Find-it at 1440 and 390 px: drag a bed next to a kitchen base → "Won't snap to … " names the family rule;
       two base units of different depths → Checks shows the depth warning; Configure › **Rules** lists the rules
 
 ## Answers (2026-10-26)

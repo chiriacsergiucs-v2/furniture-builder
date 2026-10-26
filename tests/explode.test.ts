@@ -71,7 +71,8 @@ describe('gaps between pieces in a project', () => {
     expect(leftNeighbour(next, next.items[2].id)!.gap).toBe(0);
     expect(next.items[2].position.x).toBe(p.items[2].position.x + 600);
     expect(next.items[0]).toEqual(p.items[0]);
-    expect(buildProjectModel(next).diagnostics).toEqual([]);
+    // Only the depth-match warning of the chest touching the base cabinet (ADR-100).
+    expect(buildProjectModel(next).diagnostics.map((d) => d.code)).toEqual(['compat-depth-match']);
     // Closing it again restores the run exactly.
     expect(setGapLeft(next, next.items[1].id, 0).items).toEqual(p.items);
   });
