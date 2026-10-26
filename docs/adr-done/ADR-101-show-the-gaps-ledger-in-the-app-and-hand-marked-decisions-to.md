@@ -1,7 +1,8 @@
 # ADR-101: Show the gaps ledger in the app and hand marked decisions to Claude
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-26
+- Implemented: 2026-10-26
 - Depends on: ADR-043, ADR-078, ADR-082
 - Design: docs/ui-design.md (section 4, Gaps page)
 - Backlog: N99
@@ -11,7 +12,7 @@
 
 User request 2026-10-26, in their words: "Add a gaps page, similar to reseaech, then merge". It builds G-050 ("No
 gaps page in the app"), whose request was that ledger items "can be used to add as a new adr or mark as acknowledged
-and accepted" ([ADR-082](ADR-082-record-every-unbuilt-item-in-a-gaps-ledger-kept-in-step-with.md)). ADR-082 kept the
+and accepted" ([ADR-082](../adr/ADR-082-record-every-unbuilt-item-in-a-gaps-ledger-kept-in-step-with.md)). ADR-082 kept the
 ledger as a repo file only and listed a page as out of scope; this ADR adds the page and leaves the file as the
 single source of truth.
 
@@ -61,10 +62,10 @@ The app has no backend (ADR-002), so a page cannot change `docs/adr/GAPS.md`. Us
 
 ## Done when
 
-- [ ] `parseGaps` reads every section of the current `GAPS.md` with the same ids and statuses as `scripts/gaps.py`
+- [x] `parseGaps` reads every section of the current `GAPS.md` with the same ids and statuses as `scripts/gaps.py`
       (covered by tests)
-- [ ] Decisions text lists only marked gaps whose status is Open or ADR-NNN, with ids, titles and notes (tests)
-- [ ] Dexie v9 adds `gapMarks`; a v8 database opens with its rows intact (tests)
-- [ ] Find-it: from the bare app, ⋯ More › “Gaps” opens a page headed “Gaps”, with the status counts, a search that
+- [x] Decisions text lists only marked gaps whose status is Open or ADR-NNN, with ids, titles and notes (tests)
+- [x] Dexie v9 adds `gapMarks`; a v8 database opens with its rows intact (tests)
+- [x] Find-it: from the bare app, ⋯ More › “Gaps” opens a page headed “Gaps”, with the status counts, a search that
       finds a gap by id, the Open filter, an expanded gap's “Suggested pick”, Acknowledge, a note, and Copy decisions
       showing “acknowledge G-” at 390 and 1280 px, with no sideways scroll; the mark survives a reload

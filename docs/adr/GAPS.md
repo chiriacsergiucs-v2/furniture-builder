@@ -490,7 +490,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-050: No gaps page in the app
 
-- Status: ADR-101
+- Status: Done (ADR-101)
 - Origin: ADR-082, 2026-10-25; agent scoped it out
 - Missing: The ledger is a repo file only; the app does not show it.
 - Request: “items from it can be used to add as a new adr or mark as acknowledged and accepted”
