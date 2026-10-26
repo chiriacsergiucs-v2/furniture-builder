@@ -1,7 +1,8 @@
 # ADR-091: Keep the results tabs collapsed until tapped so the views stay main
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-26
+- Implemented: 2026-10-26
 - Depends on: ADR-079, ADR-081
 - Design: docs/ui-design.md (section 4, Build & Preview results tabs)
 - Backlog: N89

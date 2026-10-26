@@ -13,16 +13,18 @@ import { useUi } from './uiStore';
 
 /**
  * The ⋯ More menu in the app bar (ADR-078): starting something new, every file in and out of the app (Files, with
- * the clean-up of unused pictures since G-059), and Feature Research. Nothing here sits in the top or bottom bar itself. Escape and a click outside close it.
+ * the clean-up of unused pictures since G-059), Feature Research and Gaps (ADR-101). Nothing here sits in the top or bottom bar itself. Escape and a click outside close it.
  */
 export function MoreMenu({
   onNew,
   onOpened,
   onResearch,
+  onGaps,
 }: {
   onNew: () => void;
   onOpened: () => void;
   onResearch: () => void;
+  onGaps: () => void;
 }) {
   const ref = useRef<HTMLDetailsElement>(null);
   const design = useDesign((s) => s.design);
@@ -190,6 +192,10 @@ export function MoreMenu({
         <button type="button" onClick={run(onResearch)}>
           <Icon name="search" />
           Feature Research <small>papers and decisions</small>
+        </button>
+        <button type="button" onClick={run(onGaps)}>
+          <Icon name="alert-triangle" />
+          Gaps <small>what is not built yet</small>
         </button>
       </div>
     </details>
