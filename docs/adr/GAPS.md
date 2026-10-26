@@ -1002,3 +1002,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: New adr 3
 - Questions: Offer repairs such as 'Make Base cabinet 560 deep like its neighbour' or 'Move the bed away'?
 - Suggested pick: Add a 'match the neighbour's depth/height' repair (closest to fixing the warning; about +20 % of ADR-100's work).
+
+### G-105: Move display-only 3D models in the 3D view
+
+- Status: Open
+- Origin: ADR-093 (2026-10-26, Claude: skipped this iteration)
+- Missing: Move mode drags project pieces only; display-only 3D models (ADR-076) still move by their fields or on the Plan.
+- Request: New adr to override the conflicts for 4 and make it ready
+- Questions: Should Move in 3D also drag and turn display-only 3D models?
+- Suggested pick: Yes, the same Move and Turn (closest to direct manipulation in 2D/3D; about +15 % work for +10 % of the request, estimates).

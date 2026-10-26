@@ -9,6 +9,7 @@ import {
   validateDesign,
 } from '../core/design';
 import { duplicateItem, mirrorItem, mirrorRun, turnAboutCentre } from '../core/arrange';
+import { floorDrop, type FloorPoint } from '../core/drag3d';
 import { applyFinish, type FinishRole, type FinishScope } from '../core/finish';
 import { mergeItems } from '../core/merge';
 import { replaceItem, replaceReport, type ReplaceReport } from '../core/replace';
@@ -150,6 +151,11 @@ interface State {
    * step. Nothing happens (no step) when the piece would not move.
    */
   moveItemBy: (id: string, dxMm: number, dzMm: number, step?: number) => void;
+  /**
+   * Drop a piece dragged in the 3D view (ADR-093) from room point `from` to `to` on its floor plane: the same drop
+   * as a Plan drag (snapping when `snap`), one undo step.
+   */
+  dropItemAt: (id: string, from: FloorPoint, to: FloorPoint, snap: boolean) => void;
   setGap: (id: string, gap: number, moveRight: boolean) => void;
   removeItem: (id: string) => void;
   /** Merge two touching cabinets into one (ADR-047); returns why not, or an empty list. */
@@ -439,6 +445,14 @@ export const useDesign = create<State>((set, get) => {
       void _old;
       const moved: ProjectItem = { ...rest, position, ...(placement ? { placement } : {}) };
       commitProject({ ...p, items: p.items.map((i) => (i.id === id ? moved : i)) });
+    },
+    dropItemAt: (id, from, to, snap) => {
+      const p = get().project;
+      const it = p?.items.find((i) => i.id === id);
+      const pieces = get().projectModel?.pieces;
+      if (!p || !it || !pieces) return;
+      const t = floorDrop(p, pieces, id, from, to, snap);
+      if (t) get().moveItemBy(id, t.position.x - it.position.x, t.position.z - it.position.z, 1);
     },
     setGap: (id, gap, moveRight) => {
       const p = get().project;

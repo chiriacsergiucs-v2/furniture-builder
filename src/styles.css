@@ -5381,6 +5381,32 @@ button.tile:hover {
   font-weight: 600;
 }
 
+/* Placing project pieces in 3D (ADR-093) ---------------------------------- */
+/* Move, Snap and the turn buttons over the 3D view's top-left corner; they wrap on a phone. */
+.three-tools {
+  position: absolute;
+  top: var(--s-2);
+  left: var(--s-2);
+  right: var(--s-2);
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1) var(--s-2);
+  pointer-events: none;
+}
+.three-tools > * {
+  pointer-events: auto;
+}
+.three-tools .btn {
+  background: var(--surface);
+}
+.three-tools .btn[aria-pressed='true'],
+.three-tools .btn.outline[aria-pressed='true']:hover:not(:disabled) {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  color: var(--ink);
+}
+
 /* Gaps page (ADR-101) ----------------------------------------------------- */
 .gaps-page {
   grid-template-columns: minmax(0, 1fr);
