@@ -81,6 +81,14 @@ goal does not need; offer it as a separate proposal instead.
 Write each proposal as an exact diff or exact text, not as advice. Mark each one with what it prevents
 (the finding) and its cost (lines added, false positives a hook might give).
 
+For a skill step or CLAUDE.md line that targets `rule-ignored` or `rule-unclear`, test the wording
+before proposing it: run 5 single-shot sub-agents with the new text in its real context (the whole
+skill) and a task that tempts the failure, and 5 without it as a control. If the control does not
+fail, there is nothing to fix; drop the proposal. If the reps with the wording still disagree,
+tighten its form (a table, a gate, a hook) rather than adding words. Read every flagged answer
+yourself. Report the counts in the proposal. Adapted from obra/superpowers `writing-skills` (MIT,
+skill-finder review 2026-10-26).
+
 ## 6. Write and propose in the same turn
 
 - Write `docs/retros/YYYY-MM-DD-<topic>.md` with these sections: what the user asked (their words),

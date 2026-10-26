@@ -70,24 +70,32 @@ ADRs are all in `docs/adr-done/`.
 5. **Scope.** For each change ask "needed to demonstrate this now?" — if not, it goes under
    _Skipped this iteration_, and every skipped item gets a gap in `docs/adr/GAPS.md`
    (`pnpm gaps add`, ADR-082) in the same change, cited by its G id. Non-trivial choices get a short Explore → Doubt → Compare.
-6. **Implement** one vertical slice that meets the `Done when` list. Keep `src/core` pure;
-   add a test for every new rule. Use the matching skill:
+6. **Plan before code.** Write a short ordered task list in the reply (not a file): per task the
+   files to create or change, the failing test that starts it and the command with its expected
+   output. Then check it: every `Done when` item and every requirement in the user's words maps
+   to a task; names and types used in later tasks match the earlier ones; each failure mode the
+   ADR implies has a test. Add a task for any gap. The plan decides implementation details only;
+   anything the ADR leaves open goes to the user (agreement gate), never into the plan as a
+   choice. Adapted from obra/superpowers `writing-plans` (MIT, skill-finder review 2026-10-26).
+7. **Implement** one vertical slice that meets the `Done when` list, task by task, each
+   starting from its failing test (`add-tests`, step 6). Keep `src/core` pure. Use the
+   matching skill:
    - saved data or a new Dexie table → `add-storage-version`
    - a screen or component → `implement-design`
    - tests → `add-tests`
-7. **Verify.** Run the `verify` skill. Geometry changes also run
+8. **Verify.** Run the `verify` skill. Geometry changes also run
    `FUZZ_N=30000 pnpm exec vitest run tests/fuzz.test.ts`. Anything visible: write or extend
    `tools/<feature>/find-it.mjs` and run it on the production build from the bare app at
    phone (375–390 px) and desktop (1280–1440 px) widths (R3). If the ADR header says
    `- Acceptance: light`, skip the script, preview and browser; the backlog row stays
    Partially done with the gap `find-it pending (light, ADR-066)` and the visible text to find (ADR-066).
-8. **Ledger.** Update the backlog row in `docs/backlog.md` in the same change, with the
+9. **Ledger.** Update the backlog row in `docs/backlog.md` in the same change, with the
    evidence you ran. Write the requirement ledger (R1): every requirement in the user's
    words → evidence in the running app. Any requirement without evidence fails the delivery;
    for a light ADR, visible requirements are marked _not checked in a browser_.
-9. **Do not ship in this skill.** When the checklist is met, report (outcome first: where to
-   click, whether it is merged and deployed), end with the backlog table and
-   **Skipped this iteration**, and suggest `ship ADR-NNN` once it is merged.
+10. **Do not ship in this skill.** When the checklist is met, report (outcome first: where to
+    click, whether it is merged and deployed), end with the backlog table and
+    **Skipped this iteration**, and suggest `ship ADR-NNN` once it is merged.
 
 ## Notes
 

@@ -29,8 +29,15 @@ Project: **Furniture Builder** — pure TypeScript model, Vitest (ADR-015).
    empty spaces, schemaVersion 1 documents, invalid imports.
 5. **Make tests trustworthy:** behaviour not implementation; deterministic (seeded fuzz, no
    clock or order dependence); clear names. For important rules, check that a deliberate
-   code mutation makes a test fail and record it in the backlog evidence.
-6. **Bug fixes start with a failing test.**
+   code mutation makes a test fail and record it in the backlog evidence. Before writing a
+   test body, name the code change that would make it fail; if you cannot, test an
+   observable result instead. Derive the expected value by hand (a literal or a hand-checked
+   fixture), never with the code under test or its helpers.
+6. **Every new rule and every bug fix starts with a failing test.** Write the test, run it
+   alone and watch it fail: it must fail on an assertion (not error out on a typo or an
+   import), with the message you expected, because the rule is missing. A test that passes
+   at once tests existing behaviour; fix the test. For a regression test, prove it: run
+   (pass) → revert the fix → run (must fail) → restore → run (pass).
 7. **Run** the new tests alone (`pnpm exec vitest run tests/<file>.test.ts`), then the `verify`
    skill; the deep fuzz for geometry.
 
@@ -42,4 +49,6 @@ Project: **Furniture Builder** — pure TypeScript model, Vitest (ADR-015).
 - In find-it scripts, wait for content that loads after navigation (`locator.waitFor`), never a bare
   `isVisible()` (retro 2026-10-26).
 - No real personal data in fixtures. Generate images in the test rather than committing binaries.
+- Steps 5 and 6 are adapted from obra/superpowers `test-driven-development` (MIT, skill-finder review
+  2026-10-26).
 - Report: tests added, which `Done when` item each covers, and any case not covered and why.

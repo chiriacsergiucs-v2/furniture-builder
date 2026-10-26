@@ -19,24 +19,27 @@ capability is built there first, and the UI only edits the design document and s
    (`src/core/design.ts`) so a bad value is refused with a message, never thrown. A required
    shape change bumps `schemaVersion` and upgrades older documents in `upgradeDesign`
    (`add-storage-version`). The change cites its ADR.
-3. **Generator.** Produce panels as integer-mm, axis-aligned boxes (or the shaped parts of
+3. **Failing tests first** (`add-tests`, step 6). Before any generator, check or output code, write
+   one unit test per new rule and a validation test for each bad value, run them alone and watch
+   each fail for the expected reason (the rule is missing, not a typo). Then write the code that
+   makes them pass, one rule at a time.
+4. **Generator.** Produce panels as integer-mm, axis-aligned boxes (or the shaped parts of
    ADR-040) in the documented axes (ADR-003). Exact integer splits; gaps from the arithmetic of
    ADR-006. Out-of-range input becomes a diagnostic, never a silent clamp or an exception.
-4. **Independent checks (ADR-008).** `build.ts` must still catch overlaps, envelope and
+5. **Independent checks (ADR-008).** `build.ts` must still catch overlaps, envelope and
    thickness problems without trusting the generator. Add a dedicated check if the feature has
    its own failure mode; errors block export.
-5. **Outputs.** Cut list grouping, edge banding, grain, Romanian names for print/CSV
+6. **Outputs.** Cut list grouping, edge banding, grain, Romanian names for print/CSV
    (`ro.ts`), hardware schedule entries labelled as guidance — never invented specs (ADR-010),
    Fusion export, sheet nesting: make each output that should show the feature show it.
-6. **Store action.** One action in `src/store/designStore.ts` that goes through `commit` (undo,
+7. **Store action.** One action in `src/store/designStore.ts` that goes through `commit` (undo,
    autosave, project sync); selectors stay stable.
-7. **UI.** Only edits the document and reads the model (`implement-design`); no geometry in UI.
-8. **Tests** (`add-tests`): a unit test per rule; extend the seeded fuzz generators and
-   invariants; a validation test for bad documents; an old-document test if the shape changed.
-   Check that a deliberate code mutation fails a test.
-9. **Verify:** the `verify` skill, then `FUZZ_N=30000 pnpm exec vitest run tests/fuzz.test.ts`;
-   `pnpm catalog:docs` / `catalog:snapshots` if catalog templates change; a find-it test
-   for anything visible.
+8. **UI.** Only edits the document and reads the model (`implement-design`); no geometry in UI.
+9. **More tests** (`add-tests`): extend the seeded fuzz generators and invariants; an
+   old-document test if the shape changed. Check that a deliberate code mutation fails a test.
+10. **Verify:** the `verify` skill, then `FUZZ_N=30000 pnpm exec vitest run tests/fuzz.test.ts`;
+    `pnpm catalog:docs` / `catalog:snapshots` if catalog templates change; a find-it test
+    for anything visible.
 
 ## Rules
 

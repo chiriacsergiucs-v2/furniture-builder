@@ -1,6 +1,6 @@
 ---
 name: review
-description: Review a change (current branch, uncommitted work or a pull request) against its ADR's "Done when" list, the user's requirements and the repo's hard rules, and report findings by severity. Read-only unless asked to fix. Use when the user says "review this", "review my changes", "is this ready for PR", "check this against the ADR", or before opening or approving a pull request.
+description: Review a change (current branch, uncommitted work or a pull request) against its ADR's "Done when" list, the user's requirements and the repo's hard rules, and report findings by severity. Read-only unless asked to fix. Use when the user says "review this", "review my changes", "is this ready for PR", "check this against the ADR", before opening or approving a pull request, or when review comments arrive on your own PR.
 ---
 
 # Review a change
@@ -39,12 +39,28 @@ trust a claim you did not see run. Default mode is **read-only**: report, do not
      dependency with unknown licence, base path intact, README claims match behaviour.
    - **Scope:** changes outside the ADR, unasked refactors, polish or browser suites (ADR-016).
    - **Ledger:** `docs/backlog.md` updated with evidence; `pnpm docs:check` passes.
-5. **Skip what tools already enforce** (ESLint style).
+5. **Skip what tools already enforce** (ESLint style). Where the ADR is silent, judge by what a
+   person using the app would expect: the ADR's silence is not permission. Grade such findings by
+   their effect on that person.
 6. **Report**, short and specific, with `file:line` references:
    - **Verdict:** ready / needs changes.
    - **Blocking issues**, each with why and a suggested fix.
    - **Suggestions** (non-blocking).
    - **Requirement / Done-when table:** item → evidence → met / unmet.
+   - **Declined to judge:** every behaviour you considered and set aside as outside the ADR, one
+     line each with the reason, so nothing is dropped silently. Write "none" if empty.
+   - A review run by a sub-agent treats the implementer's report as claims to check, not facts,
+     and is never told what not to flag.
+
+## Receiving review feedback (on your own PR)
+
+For each comment from a person or a review bot: read all of it → restate what it asks → check it
+against the code → decide whether it is right for this repo → reply with a technical answer or a
+reasoned push-back → implement one item at a time, testing each. If any item is unclear, ask about
+it before implementing any item (they may be related). If a comment conflicts with the user's
+earlier decision or an ADR, stop and ask the user. No performative agreement: a wrong suggestion
+gets a reply with the evidence, not a change. Adapted from obra/superpowers `receiving-code-review`
+and `requesting-code-review` (MIT, skill-finder review 2026-10-26).
 
 ## Rules
 

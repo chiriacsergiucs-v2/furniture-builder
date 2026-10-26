@@ -63,7 +63,12 @@ Everything written to the repo is in **English**, whatever language the conversa
      split it into several ADRs (run the helper once per ADR).
    - Status stays `Pending`. If open questions block building, set
      `- Status: Deferred (<reason>)` in the file **and** in the README row.
-8. **Run** `pnpm docs:check`.
+8. **Run** `pnpm docs:check`. Then a **fresh-reader check**: give a new sub-agent only the ADR path
+   and ask for the questions it would still need answered before it could plan the build (places
+   where it would have to guess and a wrong guess would matter), ranked, or "nothing important
+   left". Add each real question to _Open questions_ (with a gap, step 6). This finds defaults the
+   user never heard; it never replaces the user's agreement in step 9. Adapted from
+   obra/superpowers `brainstorming` builder check (MIT, skill-finder review 2026-10-26).
 9. **Hand over.** The ADR keeps `- Agreed: not yet`. Ask the user (`AskUserQuestion`) about each decision,
    each out-of-scope item and each open question, then record their words in the `- Agreed:` line
    (retro 2026-10-26). `pnpm docs:check` refuses to ship an ADR from number 091 on without it. Show the user the open questions. Suggest a branch named `adr-NNN-slug`

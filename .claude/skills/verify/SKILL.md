@@ -38,6 +38,25 @@ tests/fuzz.test.ts` after geometry changes; `pnpm catalog:docs` /
    changed. Say the work is verified only if every row passed, and only for the rows that
    ran — never claim a check that did not run.
 
+## No claim without fresh evidence
+
+Before saying anything is done, fixed, passing or complete, run the command that proves it in
+this turn and read its output. An earlier run, "should pass" or a sub-agent's report is not
+evidence.
+
+| Claim                 | Needs                                          | Not enough                       |
+| --------------------- | ---------------------------------------------- | -------------------------------- |
+| Tests pass            | test output with 0 failures                    | an earlier run, "should pass"    |
+| Lint / format clean   | the command's output with 0 errors             | a partial check                  |
+| Build succeeds        | the build command exits 0                      | lint passing, logs look fine     |
+| Bug fixed             | the original symptom re-run, now passing       | code changed, assumed fixed      |
+| Regression test works | pass → revert fix → fail → restore → pass      | the test passes once             |
+| Sub-agent finished    | `git diff` shows the change                    | the agent reports success        |
+| Merged / deployed     | the merge commit; the `Deploy GitHub Pages` id | the PR was opened, CI was queued |
+| Live                  | someone opened the published URL and checked   | the deploy run is green          |
+
+Adapted from obra/superpowers `verification-before-completion` (MIT, skill-finder review 2026-10-26).
+
 ## Notes
 
 - The helper only runs the listed commands; it never edits files.
