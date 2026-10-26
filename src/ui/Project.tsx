@@ -4,6 +4,7 @@ import { decorPatch, type Decor } from '../core/materials';
 import { touchingRun } from '../core/arrange';
 import { mergeCandidates } from '../core/merge';
 import {
+  DRAG_STEP,
   isLocked,
   leftNeighbour,
   LOCKED_HINT,
@@ -19,6 +20,7 @@ import {
   type QuarterTurn,
 } from '../core/project';
 import { dropTarget, SNAP_RANGE } from '../core/snap';
+import { groupOf, itemsAt, itemsInBox, nextUnder } from '../core/selection';
 import { inSelection, selectionBox } from '../core/selectPath';
 import type { Box, Design, Material, Panel } from '../core/types';
 import { listDecors, listDesigns, loadDesign, type StoredDesign } from '../persist/db';
@@ -79,6 +81,7 @@ import {
 import { useProblem } from './problemStore';
 import { ReplaceButton } from './Replace';
 import { NewerTemplates, TemplateNotice } from './TemplateRevision';
+import { GroupList, SelectionCard } from './Selection';
 
 const FRONT_SIDE: Record<QuarterTurn, string> = {
   0: 'front faces you',
@@ -104,6 +107,8 @@ export function ProjectPanel({
   const selectedId = useDesign((s) => s.selectedItemId);
   const drillId = useDesign((s) => s.drillItemId);
   const select = useDesign((s) => s.selectItem);
+  const toggleItem = useDesign((s) => s.toggleItem);
+  const selectedIds = useDesign((s) => s.selectedItemIds);
   const update = useDesign((s) => s.updateItem);
   const remove = useDesign((s) => s.removeItem);
   const edit = useDesign((s) => s.editItem);
@@ -178,6 +183,7 @@ export function ProjectPanel({
           your saved pieces.
         </p>
       </header>
+      <SelectionCard />
       {item && (
         <section className="piece-edit section" aria-label={`Selected piece: ${item.design.name}`}>
           <div className="card-title">
@@ -339,9 +345,11 @@ export function ProjectPanel({
               <li key={i.id}>
                 <button
                   type="button"
-                  className={`row-btn ${i.id === selectedId ? 'on' : ''}`}
-                  aria-pressed={i.id === selectedId}
-                  onClick={() => select(i.id)}
+                  className={`row-btn ${selectedIds.includes(i.id) ? 'on' : ''}`}
+                  aria-pressed={selectedIds.includes(i.id)}
+                  onClick={(e) =>
+                    e.shiftKey || e.ctrlKey || e.metaKey ? toggleItem(i.id) : select(i.id)
+                  }
                 >
                   <span>
                     <strong>
@@ -361,6 +369,7 @@ export function ProjectPanel({
           })}
         </ul>
       )}
+      <GroupList />
       <ModelList pm={pm} />
       <button type="button" className="btn outline block" onClick={onAdd}>
         <Icon name="plus" />
@@ -377,6 +386,7 @@ function FinishFields({ item }: { item: ProjectItem }) {
   const apply = useDesign((s) => s.applyFinish);
   const [role, setRole] = useState<FinishRole>('front');
   const [scope, setScope] = useState<FinishScope>('piece');
+  const selectedCount = useDesign((s) => s.selectedItemIds.length);
   const [boardKey, setBoardKey] = useState('');
   const [msg, setMsg] = useState<string | null>(null);
   const [decors, setDecors] = useState<Decor[]>([]);
@@ -462,6 +472,9 @@ function FinishFields({ item }: { item: ProjectItem }) {
         options={[
           { value: 'piece', label: 'This piece' },
           ...(run && run.length > 1 ? [{ value: 'run' as const, label: 'This run' }] : []),
+          ...(selectedCount > 1
+            ? [{ value: 'selection' as const, label: `Selected pieces (${selectedCount})` }]
+            : []),
           { value: 'project', label: 'Whole project' },
         ]}
       />
@@ -864,6 +877,27 @@ function roomPoint(svg: SVGSVGElement, clientX: number, clientY: number) {
 function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem | null }) {
   const space = useSpaceInRoom();
   const selectedId = useDesign((s) => s.selectedItemId);
+  // Several selected pieces (ADR-097): Shift/Ctrl/Cmd-click or Select on a phone; a box on empty plan.
+  const selectedIds = useDesign((s) => s.selectedItemIds);
+  const multi = useDesign((s) => s.multiSelect);
+  const setMulti = useDesign((s) => s.setMultiSelect);
+  const toggleItem = useDesign((s) => s.toggleItem);
+  const selectItems = useDesign((s) => s.selectItems);
+  const moveSelectionBy = useDesign((s) => s.moveSelectionBy);
+  /** The selection box being drawn on empty plan (room mm), or null. */
+  const [box, setBoxState] = useState<{
+    pointerId: number;
+    a: { x: number; z: number };
+    b: { x: number; z: number };
+    add: boolean;
+  } | null>(null);
+  const boxRef = useRef<typeof box>(null);
+  const setBox = (v: typeof box) => {
+    boxRef.current = v;
+    setBoxState(v);
+  };
+  /** A pointer gesture just ended on a piece: the click that follows it is not a second selection. */
+  const justTapped = useRef(false);
   const select = useDesign((s) => s.selectItem);
   const tapItem = useDesign((s) => s.tapItem);
   const placingId = useDesign((s) => s.placingItemId);
@@ -925,7 +959,7 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
     const svg = svgRef.current;
     if (!svg) return;
     const onMove = (e: TouchEvent) => {
-      if (dragRef.current) e.preventDefault();
+      if (dragRef.current || boxRef.current) e.preventDefault();
     };
     svg.addEventListener('touchmove', onMove, { passive: false });
     return () => svg.removeEventListener('touchmove', onMove);
@@ -940,22 +974,31 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
     room: toRoom(e),
   });
   const dragged = drag?.dragging ? pm.pieces.find((pc) => pc.item.id === drag.id) : undefined;
+  // Dragging a piece of a selection of several moves them all (ADR-097).
+  const group =
+    dragged && selectedIds.length > 1 && selectedIds.includes(dragged.item.id) ? selectedIds : null;
+  // Snapping uses the moved piece; the other selected pieces move with it, so they are not its neighbours.
+  const others = useMemo(
+    () =>
+      group ? pm.pieces.filter((pc) => !group.includes(pc.item.id) || pc === dragged) : pm.pieces,
+    [group, pm.pieces, dragged],
+  );
   // A locked piece, or one carrying one, does not follow the pointer (ADR-095): no outline, the hint instead.
   const lockedDrag = useMemo(
     () =>
       dragged && project
         ? isLocked(dragged.item)
           ? LOCKED_HINT
-          : moveBlocked(project, [dragged.item.id])
+          : moveBlocked(project, group ?? [dragged.item.id])
         : null,
-    [dragged, project],
+    [dragged, project, group],
   );
   // A catalog item dragged from the piece list (ADR-094): its outline follows the pointer over the plan, snapped
   // the same way (with the Snap toggle, read by `newPieceTarget`).
   const newDrag = usePieceList((s) => s.drag);
   const target =
     dragged && drag && project && !lockedDrag
-      ? dropTarget(project, pm.pieces, drag.id, drag.dx, drag.dz, snapOn && !alt)
+      ? dropTarget(project, others, drag.id, drag.dx, drag.dz, snapOn && !alt)
       : newDrag
         ? newPieceTarget(newDrag)
         : null;
@@ -1010,6 +1053,16 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
         >
           Snap
         </button>
+        {/* Phones: taps add and remove pieces, and a drag on empty plan draws a selection box (ADR-097). */}
+        <button
+          type="button"
+          className="btn sm outline select-toggle"
+          aria-pressed={multi}
+          title="Select several pieces: tap to add or remove, drag on empty plan for a box"
+          onClick={() => setMulti(!multi)}
+        >
+          Select
+        </button>
         <ZoneToolbar on={showZones} onChange={setShowZones} />
       </div>
       <InfoTip label="About the plan">
@@ -1021,8 +1074,10 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
         Seen from above. The yellow edge is each piece's front; dashed pieces hang on the wall; red
         dashes show where a selected piece's doors or drawers cannot open. Drag a piece, or use the
         arrow keys on it, to move it; Esc cancels a drag. R turns the focused piece about its
-        centre. With Snap on, a dropped piece joins a wall, an inside corner or a neighbour’s side
-        within {SNAP_RANGE} mm; arrow keys never snap.
+        centre. Shift- or Ctrl-click adds pieces to the selection (Select on a phone); drag on empty
+        plan to draw a box; tap a spot again to reach a piece under another; Ctrl+A selects all. A
+        grouped piece selects its group first, then itself. With Snap on, a dropped piece joins a
+        wall, an inside corner or a neighbour’s side within {SNAP_RANGE} mm; arrow keys never snap.
       </InfoTip>
       {/* Live snap feedback while a piece is dragged; over the plan, so it takes no room (ADR-080). */}
       {target ? (
@@ -1054,13 +1109,40 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
       <svg
         ref={svgRef}
         viewBox={`${x0 - pad * 1.2} ${z0 - pad * 1.6} ${x1 - x0 + pad * 2.4} ${z1 - z0 + pad * 2.8}`}
-        className={tapping ? 'placing' : undefined}
-        onPointerMove={tapping ? (e) => setHover(toRoom(e)) : undefined}
+        className={tapping ? 'placing' : multi ? 'selecting' : undefined}
+        onPointerMove={(e) => {
+          if (tapping) setHover(toRoom(e));
+          const bx = boxRef.current;
+          if (bx && e.pointerId === bx.pointerId) {
+            const p = toRoom(e);
+            if (p) setBox({ ...bx, b: p });
+          }
+        }}
         onPointerLeave={() => setHover(null)}
         onPointerDown={(e) => {
           // A second finger (or any other pointer) while a piece is pressed cancels the drag.
           if (dragRef.current && e.pointerId !== dragRef.current.pointerId) setDrag(null);
+          if (boxRef.current && e.pointerId !== boxRef.current.pointerId) setBox(null);
+          // A press on empty plan starts a selection box (ADR-097): with a mouse or pen, or with Select on.
+          const onPiece = (e.target as Element).closest?.('.plan-piece, .plan-model');
+          if (tapping || onPiece || dragRef.current || boxRef.current) return;
+          if (e.pointerType === 'touch' && !multi) return;
+          if (e.pointerType === 'mouse' && e.button !== 0) return;
+          const p = toRoom(e);
+          if (!p) return;
+          e.currentTarget.setPointerCapture?.(e.pointerId);
+          setBox({ pointerId: e.pointerId, a: p, b: p, add: e.shiftKey || e.ctrlKey || e.metaKey });
         }}
+        onPointerUp={(e) => {
+          const bx = boxRef.current;
+          if (!bx || e.pointerId !== bx.pointerId || !project) return;
+          setBox(null);
+          // A press without a drag is not a box.
+          if (Math.abs(bx.a.x - bx.b.x) < 1 && Math.abs(bx.a.z - bx.b.z) < 1) return;
+          const hit = itemsInBox(project, bx.a, bx.b);
+          selectItems(bx.add ? [...selectedIds, ...hit] : hit);
+        }}
+        onPointerCancel={() => setBox(null)}
         onClick={
           tapping
             ? (e) => {
@@ -1107,7 +1189,7 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
         {pm.pieces.map((pc) => {
           const b = pc.bounds;
           const [fx1, fz1, fx2, fz2] = frontLine(b, pc.item.rotationY);
-          const on = pc.item.id === selectedId;
+          const on = selectedIds.includes(pc.item.id);
           // Pieces stacked on the same floor area (a wall run above a base run) get their names on separate lines.
           const stack = pm.pieces.filter(
             (q) =>
@@ -1127,7 +1209,17 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
               tabIndex={0}
               aria-pressed={on}
               aria-label={`${pc.item.design.name}, ${b.w} by ${b.d} mm${locked ? ', locked' : ''}`}
-              onClick={tapping ? undefined : () => select(pc.item.id)}
+              onClick={
+                tapping
+                  ? undefined
+                  : () => {
+                      if (justTapped.current) {
+                        justTapped.current = false;
+                        return;
+                      }
+                      select(pc.item.id);
+                    }
+              }
               onKeyDown={(e) => {
                 // R / Shift+R turn the focused piece about its centre (ADR-069).
                 if (
@@ -1147,7 +1239,10 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
                 const m = tapping ? null : arrowMove(e.key, e.shiftKey);
                 if (!m) return onKey(() => select(pc.item.id))(e);
                 e.preventDefault();
-                moveItemBy(pc.item.id, m.dx, m.dz);
+                // On a piece of a selection of several, the arrows move them all (ADR-097).
+                if (selectedIds.length > 1 && selectedIds.includes(pc.item.id))
+                  moveSelectionBy(m.dx, m.dz);
+                else moveItemBy(pc.item.id, m.dx, m.dz);
               }}
               onPointerDown={
                 tapping
@@ -1182,10 +1277,40 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
                 setDrag(null);
                 // A tap mode that started during the press ends the drag without moving anything.
                 if (tapping) return;
-                // A tap selects the piece; a tap on the selected piece opens it, whole piece selected (ADR-083).
-                if (end.kind !== 'drop') return tapItem(end.id);
-                select(end.id);
+                justTapped.current = true;
+                if (end.kind !== 'drop') {
+                  // Shift/Ctrl/Cmd, or Select on: add the piece to the selection or take it out (ADR-097).
+                  if (e.shiftKey || e.ctrlKey || e.metaKey || multi) return toggleItem(end.id);
+                  // The same spot again over stacked pieces: the next one under the pointer (ADR-097).
+                  const pt = toRoom(e);
+                  const under = pt && project ? itemsAt(project, pt.x, pt.z) : [];
+                  if (
+                    under.length > 1 &&
+                    selectedIds.length === 1 &&
+                    under.includes(selectedIds[0]) &&
+                    !groupOf(project!, end.id)
+                  )
+                    return select(nextUnder(under, selectedIds[0]) ?? end.id);
+                  // A tap selects the piece (its group first); a tap on the selected piece opens it (ADR-083).
+                  return tapItem(end.id);
+                }
                 const snapping = snapOn && !e.altKey;
+                // A piece of a selection of several: all move by the same whole mm (ADR-097).
+                if (selectedIds.length > 1 && selectedIds.includes(end.id)) {
+                  const t =
+                    snapping && project
+                      ? dropTarget(project, others, end.id, end.dx, end.dz, true)
+                      : null;
+                  const step = (v: number) => Math.round(v / DRAG_STEP) * DRAG_STEP;
+                  if (t?.snap)
+                    moveSelectionBy(
+                      t.position.x - pc.item.position.x,
+                      t.position.z - pc.item.position.z,
+                    );
+                  else moveSelectionBy(step(end.dx), step(end.dz));
+                  return;
+                }
+                select(end.id);
                 const t =
                   snapping && project
                     ? dropTarget(project, pm.pieces, end.id, end.dx, end.dz, true)
@@ -1218,6 +1343,16 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
             </g>
           );
         })}
+        {box && (
+          <rect
+            className="select-box"
+            x={Math.min(box.a.x, box.b.x)}
+            y={Math.min(box.a.z, box.b.z)}
+            width={Math.abs(box.b.x - box.a.x)}
+            height={Math.abs(box.b.z - box.a.z)}
+            aria-hidden="true"
+          />
+        )}
         {showZones && <ZoneOverlay zones={pm.zones} fs={fs} />}
         <PlanModels pm={pm} fs={fs} tapping={tapping} />
         {pm.blocked

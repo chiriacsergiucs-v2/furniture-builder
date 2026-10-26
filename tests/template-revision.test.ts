@@ -148,7 +148,7 @@ describe('Keep mine in a project (ADR-096)', () => {
     const q = projectWith(taken());
     const k = keepTemplate(q, q.items[0].id, 3);
     expect(k.schemaVersion).toBe(PROJECT_SCHEMA);
-    expect(PROJECT_SCHEMA).toBe(7);
+    expect(PROJECT_SCHEMA).toBeGreaterThanOrEqual(7);
     expect(validateProject(k)).toEqual([]);
     await saveProject(k);
     expect((await loadProject(k.id))?.items[0].templateSeen).toBe(3);

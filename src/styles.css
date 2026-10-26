@@ -4840,7 +4840,8 @@ button.tile:hover {
   gap: var(--s-2) var(--s-3);
   min-width: 0;
 }
-.plan .snap-toggle[aria-pressed='true'] {
+.plan .snap-toggle[aria-pressed='true'],
+.plan .select-toggle[aria-pressed='true'] {
   background: var(--primary-soft);
   border-color: var(--primary);
   color: var(--ink);
@@ -5678,4 +5679,34 @@ button.tile:hover {
 /* The selected-piece card's actions (Edit, Replace…, Update, Lock) wrap instead of widening the panel (ADR-095). */
 .piece-edit > .split-actions {
   flex-wrap: wrap;
+}
+
+/* Several selected pieces and groups (ADR-097). */
+.plan .select-box {
+  fill: var(--primary-soft);
+  fill-opacity: 0.35;
+  stroke: var(--primary);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 4;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+/* With Select on (phones), a drag on empty plan draws the box instead of scrolling the page. */
+.plan svg.selecting {
+  touch-action: none;
+}
+.selection-card .card-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+.groups .group-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+.groups .group-row .row-btn {
+  flex: 1;
+  min-width: 0;
 }

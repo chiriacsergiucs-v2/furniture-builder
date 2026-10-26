@@ -103,7 +103,11 @@ export function moveItems(
  * round the centre; a piece resting on a selected piece keeps resting on it at its turned place along it. Refused
  * with the reason when a piece is locked (ADR-095).
  */
-export function turnSelection(project: Project, ids: readonly string[], dir: 1 | -1 = 1): MoveResult {
+export function turnSelection(
+  project: Project,
+  ids: readonly string[],
+  dir: 1 | -1 = 1,
+): MoveResult {
   const items = known(project, ids);
   if (!items.length) return { project };
   const reason = moveBlocked(
@@ -177,7 +181,10 @@ export function duplicateItems(
       ...(placement ? { placement } : {}),
     };
   });
-  return { project: { ...project, items: [...project.items, ...copies] }, ids: [...newIds.values()] };
+  return {
+    project: { ...project, items: [...project.items, ...copies] },
+    ids: [...newIds.values()],
+  };
 }
 
 /** "Group 1", "Group 2", … the first free name. */
