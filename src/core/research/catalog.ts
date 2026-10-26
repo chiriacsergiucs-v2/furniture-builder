@@ -193,6 +193,30 @@ export function validateBundle(x: unknown): string[] {
       e.push(`${at}: user decisions are not part of a research file.`);
     if (f.assessment)
       e.push(...validateAssessment(f.assessment).map((x) => `${at}: assessment ${x}`));
+    if (f.app) {
+      if (!IMPLEMENTATIONS.includes(f.app.status)) e.push(`${at}: unknown app status.`);
+      if (!isStr(f.app.evidence) || !f.app.evidence.trim())
+        e.push(`${at}: app status needs its evidence.`);
+      if (f.app.status === 'in-progress' && !f.app.missing?.trim())
+        e.push(`${at}: In Progress must say what is missing.`);
+      if ((f.app.status === 'verified' || f.app.status === 'implemented') && f.app.missing)
+        e.push(`${at}: something is missing, so it is In Progress, not ${f.app.status}.`);
+    }
+    if (f.mergedInto !== undefined) {
+      const target = b.features!.find((x) => x.id === f.mergedInto);
+      if (!target) e.push(`${at}: merged into an unknown feature ${f.mergedInto}.`);
+      else if (target.mergedInto)
+        e.push(`${at}: merged into ${f.mergedInto}, which is itself merged.`);
+      else if (target.app?.status === 'verified' || target.app?.status === 'implemented')
+        e.push(
+          `${at}: merged into ${f.mergedInto}, which the app has built — that would hide work left to do.`,
+        );
+      if (f.app?.status === 'verified' || f.app?.status === 'implemented')
+        e.push(`${at}: built by the app, so it is not merged.`);
+      if (f.mergedInto === f.id) e.push(`${at}: merged into itself.`);
+      if (!isStr(f.mergeReason) || !f.mergeReason.trim())
+        e.push(`${at}: a merge needs its reason.`);
+    }
   }
   for (const c of b.contradictions!) {
     for (const n of c.findings ?? [])
@@ -855,6 +879,8 @@ export function validateMark(x: unknown): string[] {
   )
     e.push(`${m.id}: incomplete decision.`);
   if (m.mergedInto !== undefined && !isStr(m.mergedInto)) e.push(`${m.id}: bad merge target.`);
+  if (m.implementationSetAt !== undefined && !isStr(m.implementationSetAt))
+    e.push(`${m.id}: bad implementation date.`);
   return e;
 }
 
@@ -920,6 +946,8 @@ export interface FeatureQuery {
   /** Only features without a parent. */
   topLevel: boolean;
   showMerged: boolean;
+  /** Only features the app has not built yet (Not Started, Planned, In Progress) — ADR-092. */
+  left: boolean;
   /** Rating filters (effective rating: the paper's, else the assessment). */
   demand: string;
   valueBand: string;
@@ -939,6 +967,7 @@ export const EMPTY_QUERY: FeatureQuery = {
   planned: false,
   topLevel: false,
   showMerged: false,
+  left: false,
   demand: '',
   valueBand: '',
   complexity: '',
@@ -950,6 +979,39 @@ export const EMPTY_QUERY: FeatureQuery = {
 export const markOf = (marks: Record<string, ResearchMark>, id: string): ResearchMark =>
   marks[id] ?? defaultMark(id, '');
 
+/**
+ * Implementation status shown for a feature (ADR-092): the user's choice when they set one (or any status other
+ * than the default from before ADR-092), else the app's own record, else Not Started.
+ */
+export function implementationOf(
+  f: ResearchFeature,
+  marks: Record<string, ResearchMark>,
+): Implementation {
+  const m = marks[f.id];
+  if (m && (m.implementationSetAt || m.implementation !== 'not-started')) return m.implementation;
+  return f.app?.status ?? 'not-started';
+}
+/** Who decided the shown status. */
+export const implementationSource = (
+  f: ResearchFeature,
+  marks: Record<string, ResearchMark>,
+): 'user' | 'app' | 'none' => {
+  const m = marks[f.id];
+  if (m && (m.implementationSetAt || m.implementation !== 'not-started')) return 'user';
+  return f.app ? 'app' : 'none';
+};
+/** "none" in a mark undoes a curated merge on this device. */
+export const UNMERGED = 'none';
+/** Merge target shown for a feature: the user's merge or un-merge, else the curated merge (ADR-092). */
+export function mergedOf(
+  f: ResearchFeature,
+  marks: Record<string, ResearchMark>,
+): string | undefined {
+  const m = marks[f.id]?.mergedInto;
+  if (m === UNMERGED) return undefined;
+  return m || f.mergedInto;
+}
+
 export function filterFeatures(
   view: CatalogView,
   marks: Record<string, ResearchMark>,
@@ -959,16 +1021,17 @@ export function filterFeatures(
   const compName = (id: string) => view.competitors.get(id)?.name ?? id;
   return [...view.features.values()].filter((f) => {
     const m = markOf(marks, f.id);
-    if (m.mergedInto && !q.showMerged) return false;
+    if (mergedOf(f, marks) && !q.showMerged) return false;
     if (q.category && f.category !== q.category) return false;
     if (q.selection && m.selection !== q.selection) return false;
-    if (q.implementation && m.implementation !== q.implementation) return false;
+    if (q.implementation && implementationOf(f, marks) !== q.implementation) return false;
     if (q.origin && f.origin !== q.origin) return false;
     if (q.priority && !rating(f, 'priority').value.includes(q.priority)) return false;
     if (q.evidence === 'with' && !f.findings.length) return false;
     if (q.evidence === 'without' && f.findings.length) return false;
     if (q.planned && m.selection !== 'shortlisted' && m.selection !== 'approved') return false;
     if (q.topLevel && f.parent) return false;
+    if (q.left && ['implemented', 'verified'].includes(implementationOf(f, marks))) return false;
     if (q.demand && demandOf(f) !== q.demand) return false;
     if (q.valueBand && valueBand(f) !== q.valueBand) return false;
     if (q.complexity && complexityOf(f) !== q.complexity) return false;
@@ -1148,7 +1211,8 @@ export function stats(view: CatalogView, marks: Record<string, ResearchMark>): C
   for (const f of all) {
     const m = markOf(marks, f.id);
     bySelection[m.selection]++;
-    byImplementation[m.implementation]++;
+    // Merged features are hidden from the lists, so they are not counted here either (review 2026-10-26).
+    if (!mergedOf(f, marks)) byImplementation[implementationOf(f, marks)]++;
   }
   return {
     features: all.length,
@@ -1156,7 +1220,7 @@ export function stats(view: CatalogView, marks: Record<string, ResearchMark>): C
     subfeatures: all.filter((f) => f.parent).length,
     inferred: all.filter((f) => f.origin === 'inferred').length,
     retired: all.filter((f) => f.retired).length,
-    merged: all.filter((f) => markOf(marks, f.id).mergedInto).length,
+    merged: all.filter((f) => mergedOf(f, marks)).length,
     byCategory: view.categories.map((c) => ({
       id: c.id,
       label: c.label,
@@ -1227,7 +1291,7 @@ export function specMarkdown(
     out.push(
       `| Your decision | Implementation | Your priority | Research priority | Value | Complexity | Demand | Appreciation | Competitor adoption | Confidence |`,
       '|---|---|---|---|---|---|---|---|---|---|',
-      `| ${m.selection} | ${m.implementation} | ${m.priority || '—'} | ${r('priority')} | ${r('impact')} | ${r('complexity')} | ${r('demand')} | ${r('appreciation')} | ${r('adoption')} | ${r('confidence')} |`,
+      `| ${m.selection} | ${implementationOf(f, marks)} | ${m.priority || '—'} | ${r('priority')} | ${r('impact')} | ${r('complexity')} | ${r('demand')} | ${r('appreciation')} | ${r('adoption')} | ${r('confidence')} |`,
       '',
     );
     if (f.assessment)

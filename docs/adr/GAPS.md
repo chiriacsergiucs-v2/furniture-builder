@@ -716,3 +716,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Collapse at desktop width too, or only on phones?
 - Suggested pick: Every width: the request names no width and keeps the render views main everywhere
 - Answer: User 2026-10-26: "Only phones"; built in ADR-091 (desktop keeps a tab open).
+
+### G-076: Research app records go stale as ADRs ship
+
+- Status: Open
+- Origin: ADR-092 (2026-10-26, Claude: not asked for)
+- Missing: The research page's app records (src/core/research/ensemble-2026-10-23.app.ts) are not updated when a later ADR ships; the next-adr / ship-adr skills do not touch them, so new work shows as Not Started until someone re-checks.
+- Request: Text that is not a quote: follows from "mark implemented ones" (2026-10-26).
+- Questions: Should ship-adr update the research app record of the feature an ADR names, or should the research page be re-checked on request only?
+- Suggested pick: ship-adr updates the record (closest to keeping 'implemented' marked; about +5 % work per shipped ADR, +100 % of the freshness value; estimates).

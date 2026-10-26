@@ -177,7 +177,20 @@ export interface ResearchFeature {
   appNotes?: string[];
   /** Assessment of a feature the paper does not rate; never replaces a rating the paper gives. */
   assessment?: Assessment;
+  /** This app's state for the feature, from backlog/ADR evidence (ADR-092). A repository record, not research. */
+  app?: AppStatus;
+  /** Merged into another feature with the same idea (ADR-092): hidden from lists, shown on the target, kept. */
+  mergedInto?: string;
+  mergeReason?: string;
   tags: string[];
+}
+
+/** Where the app stands on a feature, with the evidence (backlog row / ADR) and what is still missing. */
+export interface AppStatus {
+  status: Implementation;
+  evidence: string;
+  missing?: string;
+  checked: string;
 }
 
 /** The paper's scoring criteria (line 71), each scored 1–5; Value is their weighted sum. */
@@ -308,6 +321,8 @@ export interface ResearchMark {
   reviewed: boolean;
   /** Feature merged into another: hidden from the list, its evidence shown on the target, nothing deleted. */
   mergedInto?: string;
+  /** Set when the user chose the implementation status, so it wins over the app's own record (ADR-092). */
+  implementationSetAt?: string;
   /** Extra links the user added between features. */
   links: string[];
   createdAt: string;

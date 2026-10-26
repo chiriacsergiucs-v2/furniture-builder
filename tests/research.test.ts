@@ -5,6 +5,10 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import {
+  implementationOf,
+  implementationSource,
+  mergedOf,
+  UNMERGED,
   assessedValue,
   assessmentStats,
   complexityOf,
@@ -456,12 +460,13 @@ describe('research catalog: page', () => {
     expect(html).toContain('Unreviewed findings');
     expect(html).toContain('Source-document coverage');
   });
-  it('lists every feature and sub-feature with decision and implementation controls', () => {
+  it('lists every feature and sub-feature not merged into another, with decision and implementation controls', () => {
     const html = render({ initialTab: 'features' });
-    for (const f of B.features)
-      expect(html).toContain(
-        `Your decision on ${f.name.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/'/g, '&#x27;')}`,
-      );
+    const label = (name: string) =>
+      `Your decision on ${name.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/'/g, '&#x27;')}`;
+    for (const f of B.features.filter((x) => !x.mergedInto)) expect(html).toContain(label(f.name));
+    for (const f of B.features.filter((x) => x.mergedInto))
+      expect(html, f.id).not.toContain(label(f.name));
     expect(html).toContain('Implementation status');
   });
   it('shows a feature in full: sub-features, requirements, evidence with sources', () => {
@@ -623,7 +628,9 @@ describe('research catalog: assessment of demand, value, complexity and confiden
     expect(cell).toEqual(
       st.matrix[0].cells[0].ids.slice().sort((a, b) => cell.indexOf(a) - cell.indexOf(b)),
     );
-    expect(filterFeatures(view, {}, { ...EMPTY_QUERY, rated: 'paper' })).toHaveLength(39);
+    expect(
+      filterFeatures(view, {}, { ...EMPTY_QUERY, rated: 'paper', showMerged: true }),
+    ).toHaveLength(39);
     expect(specMarkdown(view, {}, ['ens.f.snap-override'], AT)).toMatch(
       /4\.5 \(assessed\)[\s\S]*Assessment, not research/,
     );
@@ -657,5 +664,132 @@ describe('research catalog: assessment of demand, value, complexity and confiden
       }),
     );
     expect(paper).not.toContain('Assessment, not research.');
+  });
+});
+
+describe('research catalog: what the app has built, and merged duplicates (ADR-092)', () => {
+  const view = buildView([storedOf(B, AT)]);
+  const all = [...view.features.values()];
+  it("records the app's status with evidence; In Progress always says what is missing", () => {
+    const withApp = all.filter((f) => f.app);
+    expect(withApp.length).toBeGreaterThan(80);
+    for (const f of withApp) {
+      expect(f.app!.evidence, f.id).toMatch(/\b(N\d+|F\d+|ADR-\d+)\b/);
+      if (f.app!.status === 'in-progress') expect(f.app!.missing, f.id).toBeTruthy();
+    }
+    expect(implementationOf(view.features.get('ens.f.guided-snapping')!, {})).toBe('verified');
+    expect(implementationOf(view.features.get('ens.f.semantic-connectors')!, {})).toBe(
+      'in-progress',
+    );
+    expect(implementationOf(view.features.get('ens.f.ar-placement')!, {})).toBe('not-started');
+    const b = clone(B);
+    b.features.find((f) => f.app?.status === 'in-progress')!.app!.missing = '';
+    expect(validateBundle(b).join()).toMatch(/In Progress must say what is missing/);
+  });
+  it("lets the user's own status win, including an explicit Not Started, and never changes it by itself", () => {
+    const f = view.features.get('ens.f.guided-snapping')!;
+    const user = { [f.id]: mark(f.id, { implementation: 'not-started', implementationSetAt: AT }) };
+    expect(implementationOf(f, user)).toBe('not-started');
+    expect(implementationSource(f, user)).toBe('user');
+    const older = { [f.id]: mark(f.id, { implementation: 'planned' }) }; // set before ADR-092: no timestamp
+    expect(implementationOf(f, older)).toBe('planned');
+    const untouched = { [f.id]: mark(f.id, { implementation: 'not-started' }) }; // the default, never chosen
+    expect(implementationOf(f, untouched)).toBe('verified');
+    expect(implementationSource(f, untouched)).toBe('app');
+  });
+  it('merges only features the app has not built, into a target that is not merged itself, with a reason', () => {
+    const merged = all.filter((f) => f.mergedInto);
+    expect(merged.length).toBeGreaterThanOrEqual(30);
+    for (const f of merged) {
+      const t = view.features.get(f.mergedInto!)!;
+      expect(t, f.id).toBeDefined();
+      expect(t.mergedInto, `${f.id} → ${t.id} is not a chain`).toBeUndefined();
+      expect(['implemented', 'verified'], `${f.id} was left to build`).not.toContain(
+        implementationOf(f, {}),
+      );
+      expect(f.mergeReason!.length, f.id).toBeGreaterThan(10);
+    }
+    const b = clone(B);
+    const one = b.features.find((x) => x.mergedInto)!;
+    b.features.find((x) => x.id === one.mergedInto)!.mergedInto = one.id;
+    expect(validateBundle(b).join()).toMatch(/itself merged/);
+  });
+  it('never merges into a built feature, and never calls something with a gap Verified (review 2026-10-26)', () => {
+    for (const f of all.filter((x) => x.mergedInto)) {
+      const t = view.features.get(f.mergedInto!)!;
+      expect(
+        ['implemented', 'verified'],
+        `${f.id} → ${t.id} would hide work left to do`,
+      ).not.toContain(t.app?.status ?? 'not-started');
+    }
+    for (const f of all.filter((x) => x.app && x.app.status !== 'in-progress'))
+      expect(f.app!.missing, `${f.id} has a gap, so it is In Progress`).toBeUndefined();
+    const b = clone(B);
+    const target = b.features.find((x) => x.app?.status === 'verified')!;
+    b.features.find((x) => x.mergedInto)!.mergedInto = target.id;
+    expect(validateBundle(b).join()).toMatch(/which the app has built/);
+    const c = clone(B);
+    c.features.find((x) => x.app?.status === 'verified')!.app!.missing = 'something';
+    expect(validateBundle(c).join()).toMatch(/so it is In Progress/);
+  });
+  it("keeps the user's status through a new edition of the paper and through a decisions file", async () => {
+    const f = 'ens.f.guided-snapping';
+    const marks = { [f]: mark(f, { implementation: 'planned', implementationSetAt: AT }) };
+    const v2 = clone(B);
+    v2.document.version = 2;
+    const p = planImport([storedOf(B, AT)], v2, marks);
+    expect(p.status).toBe('new-version');
+    const after = buildView([storedOf(B, AT), storedOf(v2, AT)]);
+    expect(implementationOf(after.features.get(f)!, marks)).toBe('planned');
+    const r = mergeMarks(marks, [
+      mark(f, { implementation: 'verified', implementationSetAt: '2026-10-27T00:00:00.000Z' }),
+    ]);
+    expect(r.add).toEqual([]);
+    expect(r.kept).toBe(1);
+    expect(mergeMarks({}, [{ ...mark(f), implementationSetAt: 42 }]).invalid).toBe(1);
+  });
+  it('counts implementation statuses over the features shown, not the merged ones', () => {
+    const st = stats(view, {});
+    const shown = all.filter((x) => !mergedOf(x, {})).length;
+    expect(Object.values(st.byImplementation).reduce((n, x) => n + x, 0)).toBe(shown);
+    expect(st.byImplementation['not-started']).toBe(
+      filterFeatures(view, {}, { ...EMPTY_QUERY, implementation: 'not-started' }).length,
+    );
+  });
+  it('keeps merged features and their evidence: hidden from the list, shown on the target, undoable', () => {
+    const f = view.features.get('ens.f.build-a-run')!;
+    expect(mergedOf(f, {})).toBe('ens.f.auto-fit-span');
+    expect(filterFeatures(view, {}, EMPTY_QUERY).map((x) => x.id)).not.toContain(f.id);
+    expect(
+      filterFeatures(view, {}, { ...EMPTY_QUERY, showMerged: true }).map((x) => x.id),
+    ).toContain(f.id);
+    expect(mergedOf(f, { [f.id]: mark(f.id, { mergedInto: UNMERGED }) })).toBeUndefined();
+    const html = renderToStaticMarkup(
+      createElement(ResearchPage, {
+        onDone: () => {},
+        initialTab: 'features',
+        initialDetail: 'ens.f.auto-fit-span',
+      }),
+    );
+    expect(html).toContain('Merged into this');
+    expect(html).toContain('&quot;Build a run&quot; workflow');
+  });
+  it('filters to what is left to build and summarises it on the Overview', () => {
+    const left = filterFeatures(view, {}, { ...EMPTY_QUERY, left: true });
+    expect(left.length).toBeGreaterThan(0);
+    for (const f of left)
+      expect(['implemented', 'verified']).not.toContain(implementationOf(f, {}));
+    const over = renderToStaticMarkup(createElement(ResearchPage, { onDone: () => {} }));
+    expect(over).toContain('Built in this app');
+    expect(over).toMatch(/Left to build \(\d+\)/);
+    const det = renderToStaticMarkup(
+      createElement(ResearchPage, {
+        onDone: () => {},
+        initialTab: 'features',
+        initialDetail: 'ens.f.cad-cnc-export',
+      }),
+    );
+    expect(det).toContain('This app: <span class="chip impl-in-progress">In Progress</span>');
+    expect(det).toContain('DXF, STEP and CNC output');
   });
 });

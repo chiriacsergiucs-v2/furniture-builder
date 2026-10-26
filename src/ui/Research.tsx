@@ -3,6 +3,10 @@ import {
   APPRECIATION_KEYS,
   assessedValue,
   assessmentStats,
+  implementationOf,
+  implementationSource,
+  mergedOf,
+  UNMERGED,
   buildView,
   coverage,
   DEMAND_SCALE,
@@ -40,6 +44,7 @@ import {
   type ResearchMark,
   type Selection,
 } from '../core/research/types';
+import { APP_CHECKED } from '../core/research/ensemble-2026-10-23.app';
 import { useResearch, type MarkPatch } from '../store/researchStore';
 import { askConfirm } from './Confirm';
 import { Icon } from './icons';
@@ -257,6 +262,7 @@ function Overview({ ctx }: { ctx: Ctx }) {
   const max = Math.max(1, ...st.byCategory.map((c) => c.n));
   return (
     <div className="research-overview">
+      <AppSummary ctx={ctx} />
       <AssessmentDashboard ctx={ctx} />
       <section className="tiles" aria-label="Totals">
         <Tile n={st.features} label="Features in total" onClick={() => go('features')} />
@@ -465,17 +471,106 @@ function RankedList({
   );
 }
 
+/** What the app has built of the research (ADR-092), from the repository's record or the user's own status. */
+function AppSummary({ ctx }: { ctx: Ctx }) {
+  const { view, marks, go } = ctx;
+  const all = [...view.features.values()];
+  const shown = all.filter((f) => !mergedOf(f, marks));
+  const n = (s: Implementation) => shown.filter((f) => implementationOf(f, marks) === s).length;
+  const left = shown.length - n('implemented') - n('verified');
+  return (
+    <section className="app-summary" aria-label="Built in this app">
+      <h2 className="group-head">Built in this app</h2>
+      <p className="alert ok">
+        <Icon name="check" className="sm" />
+        <span>
+          Of {shown.length} features (after {all.length - shown.length} merged as the same idea):{' '}
+          <button
+            type="button"
+            className="link"
+            onClick={() => go('features', { implementation: 'verified' })}
+          >
+            <strong className="num">{n('verified')}</strong> verified
+          </button>
+          ,{' '}
+          <button
+            type="button"
+            className="link"
+            onClick={() => go('features', { implementation: 'implemented' })}
+          >
+            <strong className="num">{n('implemented')}</strong> implemented
+          </button>
+          ,{' '}
+          <button
+            type="button"
+            className="link"
+            onClick={() => go('features', { implementation: 'in-progress' })}
+          >
+            <strong className="num">{n('in-progress')}</strong> in progress
+          </button>
+          ,{' '}
+          <button type="button" className="link" onClick={() => go('features', { left: true })}>
+            <strong className="num">{left}</strong> left to build
+          </button>
+          . From the backlog and ADRs (checked {APP_CHECKED}); a status you set yourself wins.{' '}
+          <button
+            type="button"
+            className="link"
+            onClick={() => go('features', { showMerged: true, q: '' })}
+          >
+            See merged features
+          </button>
+        </span>
+      </p>
+    </section>
+  );
+}
+
 /** Demand, value, complexity and confidence of every feature: the paper's own ratings, else our assessment. */
 function AssessmentDashboard({ ctx }: { ctx: Ctx }) {
   const { view, marks, go } = ctx;
-  const list = useMemo(
-    () => [...view.features.values()].filter((f) => !markOf(marks, f.id).mergedInto),
+  const [scope, setScope] = useState<'left' | 'all'>('left');
+  const all = useMemo(
+    () => [...view.features.values()].filter((f) => !mergedOf(f, marks)),
     [view, marks],
+  );
+  const built = useMemo(
+    () =>
+      new Set(
+        all
+          .filter((f) => ['implemented', 'verified'].includes(implementationOf(f, marks)))
+          .map((f) => f.id),
+      ),
+    [all, marks],
+  );
+  const list = useMemo(
+    () => (scope === 'all' ? all : all.filter((f) => !built.has(f.id))),
+    [scope, all, built],
   );
   const a = useMemo(() => assessmentStats(list), [list]);
   return (
     <section className="assessment" aria-label="Assessment">
       <h2 className="group-head">Assessment: demand, value, complexity, confidence</h2>
+      <div className="segmented small" role="radiogroup" aria-label="Features in the assessment">
+        <button
+          type="button"
+          role="radio"
+          aria-checked={scope === 'left'}
+          className={scope === 'left' ? 'on' : ''}
+          onClick={() => setScope('left')}
+        >
+          Left to build ({all.length - built.size})
+        </button>
+        <button
+          type="button"
+          role="radio"
+          aria-checked={scope === 'all'}
+          className={scope === 'all' ? 'on' : ''}
+          onClick={() => setScope('all')}
+        >
+          All features ({all.length})
+        </button>
+      </div>
       <p className="alert info">
         <Icon name="info" className="sm" />
         <span>
@@ -852,6 +947,14 @@ function Explorer({
           />
           <span>Show merged</span>
         </label>
+        <label className="toggle small">
+          <input
+            type="checkbox"
+            checked={query.left}
+            onChange={(e) => q({ left: e.target.checked })}
+          />
+          <span>Left to build only</span>
+        </label>
         <label className="inline-field">
           Group by{' '}
           <select value={group} onChange={(e) => setGroup(e.target.value as GroupBy)}>
@@ -1018,7 +1121,7 @@ function FeatureRow({
   const m = markOf(marks, f.id);
   const parent = f.parent ? view.features.get(f.parent) : undefined;
   return (
-    <tr className={m.mergedInto ? 'merged' : ''}>
+    <tr className={mergedOf(f, marks) ? 'merged' : ''}>
       <td data-label="">
         <input
           type="checkbox"
@@ -1045,7 +1148,7 @@ function FeatureRow({
           )}
           {parent && <span className="chip subtle">in {parent.name}</span>}
           {f.retired && <span className="chip reference">Retired</span>}
-          {m.mergedInto && <span className="chip reference">Merged</span>}
+          {mergedOf(f, marks) && <span className="chip reference">Merged</span>}
           {!f.findings.length && <span className="chip safety">No evidence</span>}
         </span>
       </td>
@@ -1081,7 +1184,12 @@ function FeatureRow({
         <SelectionSelect id={f.id} value={m.selection} label={`Your decision on ${f.name}`} />
       </td>
       <td data-label="Implementation">
-        <ImplementationSelect id={f.id} value={m.implementation} />
+        <ImplementationSelect id={f.id} value={implementationOf(f, marks)} />
+        {implementationSource(f, marks) === 'app' && (
+          <span className="sub" title={f.app!.evidence}>
+            from this app’s record{f.app!.missing ? ` — missing: ${f.app!.missing}` : ''}
+          </span>
+        )}
       </td>
     </tr>
   );
@@ -1139,9 +1247,10 @@ function FeatureDetail({ ctx, f, onBack }: { ctx: Ctx; f: ViewFeature; onBack: (
   const [linkTo, setLinkTo] = useState('');
   const parent = f.parent ? view.features.get(f.parent) : undefined;
   const subs = descendants(view, f.id);
-  const mergedIn = [...view.features.values()].filter(
-    (x) => markOf(marks, x.id).mergedInto === f.id,
-  );
+  const mergedIn = [...view.features.values()].filter((x) => mergedOf(x, marks) === f.id);
+  const merged = mergedOf(f, marks);
+  const impl = implementationOf(f, marks);
+  const implSource = implementationSource(f, marks);
   const findingIds = [
     ...new Set([...f.findings, ...(f.inferredFrom ?? []), ...mergedIn.flatMap((x) => x.findings)]),
   ];
@@ -1152,9 +1261,10 @@ function FeatureDetail({ ctx, f, onBack }: { ctx: Ctx; f: ViewFeature; onBack: (
   const others = useMemo(
     () =>
       [...view.features.values()]
-        .filter((x) => x.id !== f.id)
+        // Not itself merged, and nothing merged into this one may move under another (no chains).
+        .filter((x) => x.id !== f.id && !mergedOf(x, marks))
         .sort((a, b) => a.name.localeCompare(b.name)),
-    [view, f.id],
+    [view, f.id, marks],
   );
   return (
     <article className="feature-detail" aria-label={f.name}>
@@ -1193,22 +1303,74 @@ function FeatureDetail({ ctx, f, onBack }: { ctx: Ctx; f: ViewFeature; onBack: (
           </span>
         </p>
       )}
-      {m.mergedInto && (
+      {merged && (
         <p className="alert info">
           <Icon name="info" className="sm" />
           <span>
-            You merged this feature into <FeatureLink ctx={ctx} id={m.mergedInto} />. Its evidence
-            is shown there too; nothing was deleted.{' '}
+            {m.mergedInto === merged ? 'You merged' : 'Merged'} this feature into{' '}
+            <FeatureLink ctx={ctx} id={merged} />
+            {m.mergedInto !== merged && f.mergeReason ? (
+              <> — same idea: {f.mergeReason}</>
+            ) : null}{' '}
+            Its evidence is shown there too; nothing was deleted.{' '}
             <button
               type="button"
               className="link"
-              onClick={() => setMarks([f.id], { mergedInto: undefined })}
+              onClick={() =>
+                // Undo the user's own merge first (back to the app's merge, if any), else undo the app's merge.
+                setMarks([f.id], {
+                  mergedInto: m.mergedInto && m.mergedInto !== UNMERGED ? undefined : UNMERGED,
+                })
+              }
             >
               Undo merge
             </button>
           </span>
         </p>
       )}
+      <section className="app-status card-like" aria-label="This app">
+        <h3>
+          This app: <span className={`chip impl-${impl}`}>{IMPLEMENTATION_LABEL[impl]}</span>
+        </h3>
+        {f.app ? (
+          <>
+            <p>
+              <strong>Built:</strong> {f.app.evidence}
+            </p>
+            {f.app.missing && (
+              <p>
+                <strong>Missing:</strong> {f.app.missing}
+              </p>
+            )}
+            <p className="hint">
+              From the repository (backlog and ADRs), checked {f.app.checked}. Not research.
+              {implSource === 'user' && (
+                <>
+                  {' '}
+                  You set the status to {IMPLEMENTATION_LABEL[impl]} yourself, so it is shown
+                  instead of the app’s record ({IMPLEMENTATION_LABEL[f.app.status]}).{' '}
+                  <button
+                    type="button"
+                    className="link"
+                    onClick={() =>
+                      setMarks([f.id], {
+                        implementation: 'not-started',
+                        implementationSetAt: undefined,
+                      })
+                    }
+                  >
+                    Use the app’s record
+                  </button>
+                </>
+              )}
+            </p>
+          </>
+        ) : (
+          <p className="hint">
+            Nothing in the backlog or the ADRs builds this yet (checked {APP_CHECKED}).
+          </p>
+        )}
+      </section>
 
       <section className="decision card-like" aria-label="Your decision">
         <div className="dims3">
@@ -1230,7 +1392,7 @@ function FeatureDetail({ ctx, f, onBack }: { ctx: Ctx; f: ViewFeature; onBack: (
             <label htmlFor="d-impl">Implementation status</label>
             <select
               id="d-impl"
-              value={m.implementation}
+              value={impl}
               onChange={(e) =>
                 setMarks([f.id], { implementation: e.target.value as Implementation })
               }
@@ -1536,7 +1698,13 @@ function FeatureDetail({ ctx, f, onBack }: { ctx: Ctx; f: ViewFeature; onBack: (
               <h3>Merged into this</h3>
               <List
                 items={mergedIn.map((x) => (
-                  <FeatureLink ctx={ctx} id={x.id} />
+                  <>
+                    <FeatureLink ctx={ctx} id={x.id} />{' '}
+                    <span className="hint">
+                      ({IMPLEMENTATION_LABEL[implementationOf(x, marks)]})
+                      {x.mergeReason ? ` — ${x.mergeReason}` : ''}
+                    </span>
+                  </>
                 ))}
               />
             </>
@@ -2191,7 +2359,7 @@ function Compare({ ctx }: { ctx: Ctx }) {
     ],
     [
       'Implementation',
-      (f) => <ImplementationSelect id={f.id} value={markOf(marks, f.id).implementation} />,
+      (f) => <ImplementationSelect id={f.id} value={implementationOf(f, marks)} />,
     ],
     ['Your priority', (f) => markOf(marks, f.id).priority || '—'],
     ['Research priority', (f) => <Rated f={f} dim="priority" />],

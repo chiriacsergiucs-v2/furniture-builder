@@ -81,6 +81,10 @@ export const useResearch = create<ResearchState>((set, get) => ({
     const next = ids.map((id) => ({
       ...(get().marks[id] ?? defaultMark(id, at)),
       ...patch,
+      // The user's own implementation status wins over the app's record from now on (ADR-092).
+      ...('implementation' in patch && !('implementationSetAt' in patch)
+        ? { implementationSetAt: at }
+        : {}),
       id,
       updatedAt: at,
     }));
