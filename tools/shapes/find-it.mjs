@@ -176,7 +176,10 @@ for (const width of [1440, 375]) {
   await page.getByRole('button', { name: 'New', exact: true }).click();
   await page.getByRole('button', { name: /Mobila — Dormitor/ }).click();
   await page.waitForTimeout(500);
-  await page.getByRole('tab', { name: /Hardware/ }).dispatchEvent('click');
+  {
+    const t = page.getByRole('tab', { name: /Hardware/ });
+    if ((await t.getAttribute('aria-selected')) !== 'true') await t.dispatchEvent('click');
+  }
   check(
     width,
     'Pat Noi: the two screwed joints are in the hardware list',

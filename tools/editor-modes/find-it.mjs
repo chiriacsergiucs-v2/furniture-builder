@@ -176,7 +176,10 @@ for (const [width, scheme] of [
     'Download CSV and Print disabled with an error',
     (await csv.isDisabled()) && (await print.isDisabled()),
   );
-  await page.getByRole('tab', { name: /Checks/ }).click();
+  {
+    const t = page.getByRole('tab', { name: /Checks/ });
+    if ((await t.getAttribute('aria-selected')) !== 'true') await t.click();
+  }
   ck(
     width,
     'Checks shows the error',

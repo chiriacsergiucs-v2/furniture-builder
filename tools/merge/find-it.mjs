@@ -86,7 +86,10 @@ for (const width of [1440, 375]) {
 
   // 4. Open it in the editor: one cabinet, three uprights (two sides + one divider) in the parts.
   await page.getByRole('button', { name: 'Edit this piece' }).dispatchEvent('click');
-  await page.getByRole('tab', { name: /Parts/ }).dispatchEvent('click');
+  {
+    const t = page.getByRole('tab', { name: /Parts/ });
+    if ((await t.getAttribute('aria-selected')) !== 'true') await t.dispatchEvent('click');
+  }
   await page.waitForTimeout(300);
   const parts = await page.locator('#panel-parts').innerText();
   check(

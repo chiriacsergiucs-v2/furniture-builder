@@ -74,7 +74,7 @@ for (const width of [1280, 390]) {
   const openChecks = async () => {
     if (!(await checksTab.isVisible()))
       await click(page.getByRole('radio', { name: /Build & Preview/ }));
-    await click(checksTab);
+    if ((await checksTab.getAttribute('aria-selected')) !== 'true') await click(checksTab);
   };
   await openChecks();
   const item = page.locator('.checks button', { hasText: /overlap by 100 mm/ });

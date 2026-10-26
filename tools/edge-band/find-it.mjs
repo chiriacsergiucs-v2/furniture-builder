@@ -119,7 +119,10 @@ for (const width of [1440, 1280, 390, 375]) {
 
   // 5. Build & Preview → Parts: each board header names its band.
   await mode(/Build & Preview/).dispatchEvent('click');
-  await page.getByRole('tab', { name: /Parts/ }).dispatchEvent('click');
+  {
+    const t = page.getByRole('tab', { name: /Parts/ });
+    if ((await t.getAttribute('aria-selected')) !== 'true') await t.dispatchEvent('click');
+  }
   const parts = page.locator('#panel-parts');
   check(
     width,
@@ -146,7 +149,10 @@ for (const width of [1440, 1280, 390, 375]) {
   await shot('parts');
 
   // 6. Shopping list: one banding line per band, unnamed boards under To choose before buying.
-  await page.getByRole('tab', { name: 'Shopping list' }).dispatchEvent('click');
+  {
+    const t = page.getByRole('tab', { name: 'Shopping list' });
+    if ((await t.getAttribute('aria-selected')) !== 'true') await t.dispatchEvent('click');
+  }
   const shop = page.locator('#panel-shopping');
   const banding = shop.getByRole('region', { name: 'Edge banding' });
   await banding.waitFor({ timeout: 10000 }).catch(() => {});
@@ -181,7 +187,10 @@ for (const width of [1440, 1280, 390, 375]) {
   await openBoards();
   await fill(band('PAL 18 white').getByLabel('Band width (mm)'), '15');
   await mode(/Build & Preview/).dispatchEvent('click');
-  await page.getByRole('tab', { name: /Checks/ }).dispatchEvent('click');
+  {
+    const t = page.getByRole('tab', { name: /Checks/ });
+    if ((await t.getAttribute('aria-selected')) !== 'true') await t.dispatchEvent('click');
+  }
   check(
     width,
     'narrow band: error "… is narrower than the 18 mm board"',
@@ -192,7 +201,10 @@ for (const width of [1440, 1280, 390, 375]) {
       )
       .isVisible(),
   );
-  await page.getByRole('tab', { name: /Parts/ }).dispatchEvent('click');
+  {
+    const t = page.getByRole('tab', { name: /Parts/ });
+    if ((await t.getAttribute('aria-selected')) !== 'true') await t.dispatchEvent('click');
+  }
   check(
     width,
     'narrow band: Download CSV blocked',
@@ -203,7 +215,10 @@ for (const width of [1440, 1280, 390, 375]) {
   await openBoards();
   await fill(band('PAL 18 white').getByLabel('Band width (mm)'), '22');
   await mode(/Build & Preview/).dispatchEvent('click');
-  await page.getByRole('tab', { name: /Parts/ }).dispatchEvent('click');
+  {
+    const t = page.getByRole('tab', { name: /Parts/ });
+    if ((await t.getAttribute('aria-selected')) !== 'true') await t.dispatchEvent('click');
+  }
   check(
     width,
     'band fixed: Download CSV enabled again',
