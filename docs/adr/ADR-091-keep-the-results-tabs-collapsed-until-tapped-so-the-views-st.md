@@ -4,7 +4,7 @@
 - Date: 2026-10-26
 - Depends on: ADR-079, ADR-081
 - Design: docs/ui-design.md (section 4, Build & Preview results tabs)
-- Backlog: N87
+- Backlog: N88
 - Agreed: 2026-10-26 "Only phones, next adr"; "Open it", "Always collapsed"
 
 ## Context
@@ -23,9 +23,9 @@ User answers 2026-10-26:
 - Closing: **tapping the open tab again** closes it.
 - Errors: **stay collapsed, badge only**; nothing opens by itself.
 - Acceptance level: **full** (find-it script, R3).
-- Width: **only phones** (G-074).
+- Width: **only phones** (G-075).
 - Settings cut-list link: **open it**.
-- Reload: **always collapsed** (G-073).
+- Reload: **always collapsed** (G-074).
 
 ## Decision
 
@@ -34,13 +34,13 @@ User answers 2026-10-26:
 - Tapping a tab opens the panel on that tab. Tapping another tab switches the content. Tapping the open tab
   again collapses the panel.
 - The open state is UI state (`resultsOpen: boolean` beside `tab` in the design store), not saved and not part
-  of the design document (no ADR-011 change). A reload starts collapsed (G-073).
+  of the design document (no ADR-011 change). A reload starts collapsed (G-074).
 - Diagnostics never open the panel. The Checks badge (red for errors, amber for warnings) stays the signal.
 - One explicit user action still opens it: the Settings "cut list" link (`Inspector.tsx`, `go('cut')`) opens the
   panel on Checks or Parts as today, because the user asked to see the results.
 - Accessibility: tabs keep `role="tab"`; while collapsed every tab has `aria-selected="false"` and
   `aria-expanded="false"`; the open tab has `aria-selected="true"`, `aria-expanded="true"`. Focus stays visible.
-- Phones only (`max-width: 760px`, the phone layout of ADR-079; user answer, G-074). Desktop keeps today's
+- Phones only (`max-width: 760px`, the phone layout of ADR-079; user answer, G-075). Desktop keeps today's
   layout: a tab is always open.
 - Print and CSV stay inside the Parts panel; printing (`setPrinting`) does not depend on the panel being open.
 
@@ -54,7 +54,7 @@ User answers 2026-10-26:
 
 - In scope: `Output.tsx` collapse/expand, store flag, the Settings link, styles for the collapsed strip, tests,
   a find-it script.
-- Out of scope: remembering the open state across reloads (G-073, user answer "Always collapsed").
+- Out of scope: remembering the open state across reloads (G-074, user answer "Always collapsed").
 
 ## Consequences
 
@@ -77,4 +77,4 @@ User answers 2026-10-26:
 
 ## Open questions
 
-None. Answered 2026-10-26: width "Only phones" (G-074).
+None. Answered 2026-10-26: width "Only phones" (G-075).

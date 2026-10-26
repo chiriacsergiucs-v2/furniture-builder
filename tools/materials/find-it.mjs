@@ -105,20 +105,34 @@ for (const width of [1440, 375]) {
   const shot = (name) =>
     page.screenshot({ path: `${out}/materials-${name}-${width}.png`, fullPage: true });
   const dlg = page.locator('dialog[open]');
+  // The boards live in Settings › "Boards, sheets and saw cut" since ADR-080 (it was the Materials dialog).
   const openMaterials = async () => {
-    await page.getByRole('button', { name: 'Materials' }).dispatchEvent('click');
-    await dlg.getByRole('heading', { name: 'Materials in this piece' }).waitFor();
+    await page.getByRole('button', { name: 'Settings', exact: true }).click();
+    await dlg.getByRole('heading', { name: /^Settings: / }).waitFor();
+    const boards = dlg.locator('details', {
+      has: page.locator('summary', { hasText: 'Boards, sheets and saw cut' }),
+    });
+    if ((await boards.first().getAttribute('open')) === null)
+      await dlg.locator('summary', { hasText: 'Boards, sheets and saw cut' }).first().click();
+  };
+  const moreMenu = async () => {
+    await page.locator('summary[aria-label="More"]').click();
+    return page.locator('details.more .menu-items');
   };
   const closeDialog = async () => {
     await page.keyboard.press('Escape');
     await dlg.waitFor({ state: 'detached' }).catch(() => {});
   };
-  const show3d = async () => {
-    await page.getByRole('radio', { name: '3D' }).click();
-    await page.waitForTimeout(1500);
+  // A phone shows the View switch in Build & Preview only, and the drawing on its own in Compose (ADR-080).
+  const show3d = async (p = page) => {
+    if (!(await p.getByRole('radio', { name: '3D' }).isVisible()))
+      await p.getByRole('radio', { name: /Build & Preview/ }).click();
+    await p.getByRole('radio', { name: '3D' }).click();
+    await p.waitForTimeout(1500);
   };
   const showFront = async () => {
-    await page.getByRole('radio', { name: 'Front' }).click();
+    if (phone) await page.getByRole('radio', { name: 'Compose' }).click();
+    else await page.getByRole('radio', { name: 'Front' }).click();
     await page.waitForTimeout(300);
   };
   const canvasShare = async () =>
@@ -194,7 +208,19 @@ for (const width of [1440, 375]) {
     .locator('figure.elevation polygon.el-panel')
     .evaluateAll((ps) => ps.filter((p) => p.style.fill.startsWith('url(')).length);
   check(width, 'front view fills boards with the picture', patterned > 0, `${patterned} parts`);
-  const frontShare = await stripeShare(page, await page.locator('figure.elevation').screenshot());
+  // Measured over the boards only: on a phone the drawing area around the piece is larger (ADR-079).
+  const boards = await page.locator('figure.elevation polygon.el-panel').evaluateAll((ps) => {
+    const r = ps.map((p) => p.getBoundingClientRect());
+    const x = Math.min(...r.map((b) => b.left)),
+      y = Math.min(...r.map((b) => b.top));
+    return {
+      x,
+      y,
+      width: Math.max(...r.map((b) => b.right)) - x,
+      height: Math.max(...r.map((b) => b.bottom)) - y,
+    };
+  });
+  const frontShare = await stripeShare(page, await page.screenshot({ clip: boards }));
   check(
     width,
     'front view picture is drawn',
@@ -258,12 +284,12 @@ for (const width of [1440, 375]) {
     .locator('li')
     .filter({ has: page.getByRole('img', { name: 'Picture of PAL 18 white' }) });
   await palRow.getByLabel('Manufacturer').selectOption({ label: 'Egger' });
-  await palRow.getByLabel('Type').selectOption({ label: 'Kitchen worktop' });
+  await palRow.getByLabel('Type', { exact: true }).selectOption({ label: 'Kitchen worktop' });
   check(
     width,
     'labels: Manufacturer and Type found and set',
     (await palRow.getByLabel('Manufacturer').inputValue()) === 'egger' &&
-      (await palRow.getByLabel('Type').inputValue()) === 'worktop',
+      (await palRow.getByLabel('Type', { exact: true }).inputValue()) === 'worktop',
   );
   check(
     width,
@@ -304,8 +330,9 @@ for (const width of [1440, 375]) {
       .locator('input.mat-name')
       .evaluateAll((xs) => xs.some((x) => x.value === 'Egger H1145 Bardolino Oak')),
   );
+  // The board choices sit in Settings with the boards since ADR-080.
+  const boardChoices = await dlg.locator('select option').allInnerTexts();
   await closeDialog();
-  const boardChoices = await page.locator('select option').allInnerTexts();
   check(
     width,
     'board choices show labels',
@@ -327,11 +354,11 @@ for (const width of [1440, 375]) {
 
   // 6d. Export the design file: pictures inside. Open it on "another device" (fresh browser): pictures shown.
   await page.waitForTimeout(1200);
-  await page.getByRole('button', { name: 'Library' }).isVisible();
-  await page.locator('summary[aria-label="Export"]').click();
+  // ⋯ More › Files › Design file (ADR-078).
+  const files = await moreMenu();
   const [dl] = await Promise.all([
     page.waitForEvent('download'),
-    page.getByRole('button', { name: /Design file/ }).click(),
+    files.getByRole('button', { name: /Design file/ }).click(),
   ]);
   const filePath = `${out}/exported-${width}.json`;
   await dl.saveAs(filePath);
@@ -346,12 +373,15 @@ for (const width of [1440, 375]) {
   const op = await other.newPage();
   op.on('pageerror', (e) => errors.push(`other device: ${e.message}`));
   await op.goto(url);
-  await op.getByRole('button', { name: /^Library/ }).click();
-  await op.locator('dialog[open] input[type=file]').setInputFiles(filePath);
+  // The bare app opens on Projects, which has "Import a file" (ADR-078).
+  await op.locator('main.projects-page input[type=file]').first().setInputFiles(filePath);
   await op.locator('main.work').waitFor({ state: 'visible' });
-  await op.getByRole('radio', { name: '3D' }).click();
-  await op.waitForTimeout(1500);
-  const there = await stripeShare(op, await op.locator('.view.three canvas').screenshot());
+  await show3d(op);
+  // A page screenshot clipped to the canvas: the import notice above it can move the element while it is taken.
+  const there = await stripeShare(
+    op,
+    await op.screenshot({ clip: await op.locator('.view.three canvas').boundingBox() }),
+  );
   check(
     width,
     'other device: imported file shows the pictures in 3D',
@@ -360,14 +390,13 @@ for (const width of [1440, 375]) {
   );
   await other.close();
 
-  // 6e. Replace a picture (the old one is now unused), then Library → Clean up unused pictures.
+  // 6e. Replace a picture (the old one is now unused), then ⋯ More › Clean up unused pictures (G-059).
   await openMaterials();
   await dlg.getByLabel('Replace picture for PAL 18 white').setInputFiles(picture);
   await page.waitForTimeout(1500);
   await closeDialog();
   await page.waitForTimeout(1200); // autosave
-  await page.getByRole('button', { name: 'Library' }).dispatchEvent('click');
-  await dlg.getByRole('button', { name: 'Clean up unused pictures' }).click();
+  await (await moreMenu()).getByRole('button', { name: /Clean up unused pictures/ }).click();
   const confirmDlg = page
     .locator('dialog[open]')
     .filter({ hasText: /Delete 1 picture that no saved piece/ });

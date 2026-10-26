@@ -414,7 +414,7 @@ function Wizard({
 }) {
   const load = useDesign((s) => s.load);
   const [a, setA] = useState<Answers>(() => (from && storedAnswers(from)) || {});
-  const [stepId, setStepId] = useState('basics');
+  const [stepId, setStepId] = useState<string>(TYPE);
   const [done, setDone] = useState<Set<string>>(
     () => new Set(from ? visibleSteps(storedAnswers(from) ?? {}).map((s) => s.id) : []),
   );
@@ -588,7 +588,16 @@ function Wizard({
           Cancel
         </button>
         {!isReview && (
-          <button type="button" className="btn outline" onClick={() => next(false)}>
+          <button
+            type="button"
+            className="btn outline"
+            title={
+              step.id === TYPE
+                ? 'Skip: use the first type'
+                : 'Skip: put this step back to its defaults'
+            }
+            onClick={() => next(false)}
+          >
             Skip
           </button>
         )}
