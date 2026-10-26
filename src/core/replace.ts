@@ -83,6 +83,8 @@ export function replaceOptions<F extends CatalogFamily>(
       if (origin && origin.catalogId === family.id && origin.variantId === variant.id) continue;
       const b = sizeOf(family, variant);
       if (!b || (kind !== 'above' && kind !== b.mount)) continue;
+      // A piece on another piece is offered same-width items only (user, 2026-10-26, G-102).
+      if (kind === 'above' && b.w !== width) continue;
       out.push({ family, variant, w: b.w, h: b.h, d: b.d, sameWidth: b.w === width });
     }
   return out

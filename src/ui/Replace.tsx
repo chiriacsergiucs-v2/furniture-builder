@@ -2,7 +2,13 @@ import { useMemo, useState } from 'react';
 import { insertVariant } from '../core/catalog';
 import type { ViewFamily } from '../core/catalog/local';
 import type { ProjectItem } from '../core/project';
-import { designEdited, ownWidth, replaceOptions, type ReplaceOption } from '../core/replace';
+import {
+  designEdited,
+  ownWidth,
+  placeKind,
+  replaceOptions,
+  type ReplaceOption,
+} from '../core/replace';
 import { useDesign } from '../store/designStore';
 import { ItemPicture, useCatalog } from './Catalog';
 import { askConfirm } from './Confirm';
@@ -33,6 +39,8 @@ export function ReplaceButton({ item }: { item: ProjectItem }) {
 function ReplaceDialog({ item, onClose }: { item: ProjectItem; onClose: () => void }) {
   const families = useCatalog();
   const width = useMemo(() => ownWidth(item.design), [item.design]);
+  // A stacked piece gets same-width items only, so it has no "Show other widths" switch (G-102).
+  const stacked = placeKind(item) === 'above';
   const [others, setOthers] = useState(false);
   // Built once per open dialog (ADR-004: sizes come from the built models).
   const options = useMemo(() => replaceOptions(item, families), [item, families]);
@@ -64,13 +72,15 @@ function ReplaceDialog({ item, onClose }: { item: ProjectItem; onClose: () => vo
         {others ? '' : ` and are ${width} mm wide`}. The piece keeps its place, turn, quantity,
         placement, zones and boards; undo puts it back.
       </p>
-      <Toggle label="Show other widths" checked={others} onChange={setOthers} />
+      {!stacked && <Toggle label="Show other widths" checked={others} onChange={setOthers} />}
       {shown.length === 0 ? (
         <p className="empty center">
           <Icon name="info" />
           {others
             ? 'No catalog item stands the same way.'
-            : 'No catalog item has the same width. Switch on “Show other widths” to see the rest.'}
+            : stacked
+              ? 'No catalog item has the same width.'
+              : 'No catalog item has the same width. Switch on “Show other widths” to see the rest.'}
         </p>
       ) : (
         <ul className="template-list replace-list" aria-label="Alternatives">
