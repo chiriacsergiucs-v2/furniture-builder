@@ -5402,6 +5402,10 @@ button.tile:hover {
 .gaps-toolbar .search input {
   width: 100%;
 }
+.gaps-toolbar .search:focus-within {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+}
 .gaps-page .chip.filter {
   border: 1px solid var(--line);
   background: var(--surface);

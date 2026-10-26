@@ -128,6 +128,9 @@ describe('gaps ledger parser (ADR-101)', () => {
       '- note on G-003 (Third): ask about drawers',
     ]);
     expect(decisionsText(gaps, { 'G-001': mark('G-001', null, '  ') })).toBe('');
+    expect(decisionsText(gaps, { 'G-001': mark('G-001', null, 'two\n  lines') })).toContain(
+      '- note on G-001 (First): two lines',
+    );
     expect(decisionsText(gaps, { 'G-001': mark('G-001', 'adr') })).toContain(
       '- make an ADR from G-001 (First)',
     );

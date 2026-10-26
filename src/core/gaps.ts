@@ -118,7 +118,8 @@ export function decisionsText(gaps: Gap[], marks: Record<string, GapMark>): stri
   for (const g of gaps) {
     const m = marks[g.id];
     if (!isMarked(m) || (g.kind !== 'open' && g.kind !== 'adr')) continue;
-    const note = m.note.trim();
+    // One line per gap, whatever the note's line breaks.
+    const note = m.note.trim().replace(/\s*\n\s*/g, ' ');
     const what =
       m.decision === 'acknowledge'
         ? `acknowledge ${g.id} (${g.title})`

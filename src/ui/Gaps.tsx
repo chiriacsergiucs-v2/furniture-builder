@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import ledger from '../../docs/adr/GAPS.md?raw';
 import {
   decisionsText,
@@ -17,6 +17,9 @@ import { Icon } from './icons';
 
 /** The ledger as it was when this app was built (ADR-101); the file in the repo stays the source of truth. */
 const GAPS = parseGaps(ledger);
+const actionable = (g: Gap) => g.kind === 'open' || g.kind === 'adr';
+/** How long a note waits after the last key before it is written to the device. */
+const NOTE_SAVE_MS = 400;
 
 /**
  * The Gaps page (ADR-101): the gaps ledger (ADR-082) with counts, search, a status filter and every field of each
@@ -28,33 +31,68 @@ export function GapsPage({ onDone }: { onDone: () => void }) {
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [kinds, setKinds] = useState<GapStatusKind[]>(['open']);
-  const [copied, setCopied] = useState<string | null>(null);
-  // Rows mount again once the marks are read, so each note box starts from its stored note.
-  const [loaded, setLoaded] = useState(false);
+  const [showDecisions, setShowDecisions] = useState(false);
+  // Marks can be changed only once the stored ones were read, so a quick tap never writes over a stored note.
+  const [ready, setReady] = useState(false);
+  const pending = useRef(new Map<string, { mark: GapMark; timer: number }>());
 
   useEffect(() => {
     listGapMarks()
-      .then((rows) => setMarks(Object.fromEntries(rows.map((m) => [m.gapId, m]))))
-      .catch(() => setError('Your marks could not be read on this device.'))
-      .finally(() => setLoaded(true));
+      .then((rows) => {
+        setMarks((m) => ({ ...Object.fromEntries(rows.map((r) => [r.gapId, r])), ...m }));
+        setReady(true);
+      })
+      .catch(() =>
+        setError('Your marks could not be read on this device, so they cannot be changed.'),
+      );
+  }, []);
+
+  const write = (mark: GapMark) =>
+    saveGapMark(mark).catch(() => setError('Your mark could not be saved on this device.'));
+  // A note still waiting for its timer is written when the page closes or goes away.
+  useEffect(() => {
+    const queue = pending.current;
+    const flush = () => {
+      for (const { mark, timer } of queue.values()) {
+        window.clearTimeout(timer);
+        void write(mark);
+      }
+      queue.clear();
+    };
+    window.addEventListener('pagehide', flush);
+    return () => {
+      window.removeEventListener('pagehide', flush);
+      flush();
+    };
   }, []);
 
   const counts = useMemo(() => gapCounts(GAPS), []);
   const shown = useMemo(() => filterGaps(GAPS, query, kinds), [query, kinds]);
-  const markedCount = GAPS.filter((g) => isMarked(marks[g.id])).length;
+  const decisions = decisionsText(GAPS, marks);
+  const markedCount = GAPS.filter((g) => actionable(g) && isMarked(marks[g.id])).length;
 
-  const save = (gapId: string, patch: Partial<Pick<GapMark, 'decision' | 'note'>>) => {
+  const change = (gapId: string, patch: Partial<Pick<GapMark, 'decision' | 'note'>>) => {
     const old = marks[gapId] ?? { gapId, decision: null, note: '', updatedAt: '' };
     const mark: GapMark = { ...old, ...patch, updatedAt: new Date().toISOString() };
     setMarks((m) => ({ ...m, [gapId]: mark }));
-    saveGapMark(mark).catch(() => setError('Your mark could not be saved on this device.'));
+    const queued = pending.current.get(gapId);
+    if (queued) window.clearTimeout(queued.timer);
+    if (patch.note === undefined) {
+      pending.current.delete(gapId);
+      void write(mark);
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      pending.current.delete(gapId);
+      void write(mark);
+    }, NOTE_SAVE_MS);
+    pending.current.set(gapId, { mark, timer });
   };
   const toggleKind = (k: GapStatusKind) =>
     setKinds((ks) => (ks.includes(k) ? ks.filter((x) => x !== k) : [...ks, k]));
   const copy = () => {
-    const text = decisionsText(GAPS, marks);
-    setCopied(text);
-    if (text) navigator.clipboard?.writeText(text).catch(() => undefined);
+    setShowDecisions(true);
+    if (decisions) navigator.clipboard?.writeText(decisions).catch(() => undefined);
   };
 
   return (
@@ -107,7 +145,7 @@ export function GapsPage({ onDone }: { onDone: () => void }) {
             <button
               key={k}
               type="button"
-              className={`chip filter ${kinds.includes(k) ? 'on' : ''}`}
+              className="chip filter"
               aria-pressed={kinds.includes(k)}
               onClick={() => toggleKind(k)}
             >
@@ -118,20 +156,19 @@ export function GapsPage({ onDone }: { onDone: () => void }) {
         <div className="gaps-copy">
           <button type="button" className="btn primary" onClick={copy}>
             <Icon name="copy" className="sm" />
-            Copy decisions (
-            {
-              GAPS.filter((g) => isMarked(marks[g.id]) && (g.kind === 'open' || g.kind === 'adr'))
-                .length
-            }
-            )
+            Copy decisions ({markedCount})
           </button>
         </div>
       </div>
-      {copied !== null && (
+      {showDecisions && (
         <section className="gaps-decisions" aria-label="Decisions to paste to Claude">
           <h2>Decisions to paste to Claude</h2>
-          {copied ? (
-            <textarea readOnly rows={Math.min(12, copied.split('\n').length + 1)} value={copied} />
+          {decisions ? (
+            <textarea
+              readOnly
+              rows={Math.min(12, decisions.split('\n').length + 1)}
+              value={decisions}
+            />
           ) : (
             <p className="hint">Nothing marked yet: Acknowledge, Make ADR or a note on a gap.</p>
           )}
@@ -143,10 +180,11 @@ export function GapsPage({ onDone }: { onDone: () => void }) {
       <ul className="gaps-list">
         {shown.map((g) => (
           <GapRow
-            key={`${g.id}:${loaded}`}
+            key={g.id}
             gap={g}
             mark={marks[g.id]}
-            onSave={(p) => save(g.id, p)}
+            ready={ready}
+            onChange={(p) => change(g.id, p)}
           />
         ))}
       </ul>
@@ -157,16 +195,16 @@ export function GapsPage({ onDone }: { onDone: () => void }) {
 function GapRow({
   gap: g,
   mark,
-  onSave,
+  ready,
+  onChange,
 }: {
   gap: Gap;
   mark: GapMark | undefined;
-  onSave: (patch: Partial<Pick<GapMark, 'decision' | 'note'>>) => void;
+  ready: boolean;
+  onChange: (patch: Partial<Pick<GapMark, 'decision' | 'note'>>) => void;
 }) {
-  const [note, setNote] = useState(mark?.note ?? '');
   const decide = (d: 'acknowledge' | 'adr') =>
-    onSave({ decision: mark?.decision === d ? null : d });
-  const actionable = g.kind === 'open' || g.kind === 'adr';
+    onChange({ decision: mark?.decision === d ? null : d });
   return (
     <li className="family gap">
       <details>
@@ -195,20 +233,22 @@ function GapRow({
             <FragmentNote key={i} note={n} />
           ))}
         </dl>
-        {actionable && (
+        {actionable(g) && (
           <div className="gap-actions">
             <button
               type="button"
-              className={`btn outline ${mark?.decision === 'acknowledge' ? 'on' : ''}`}
+              className="btn outline"
               aria-pressed={mark?.decision === 'acknowledge'}
+              disabled={!ready}
               onClick={() => decide('acknowledge')}
             >
               Acknowledge
             </button>
             <button
               type="button"
-              className={`btn outline ${mark?.decision === 'adr' ? 'on' : ''}`}
+              className="btn outline"
               aria-pressed={mark?.decision === 'adr'}
+              disabled={!ready}
               onClick={() => decide('adr')}
             >
               Make ADR
@@ -217,9 +257,9 @@ function GapRow({
               Your note
               <textarea
                 rows={2}
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                onBlur={() => note !== (mark?.note ?? '') && onSave({ note })}
+                value={mark?.note ?? ''}
+                disabled={!ready}
+                onChange={(e) => onChange({ note: e.target.value })}
               />
             </label>
           </div>

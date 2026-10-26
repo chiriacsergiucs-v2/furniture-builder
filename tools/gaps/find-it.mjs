@@ -91,7 +91,6 @@ for (const width of [1280, 390]) {
   check(width, 'Acknowledge is pressed', (await ack.getAttribute('aria-pressed')) === 'true');
   const note = row.getByLabel('Your note');
   await note.fill(`checked at ${width}`);
-  await note.blur();
 
   await page.getByRole('button', { name: /^Copy decisions \(1\)$/ }).click();
   const box = page
@@ -105,6 +104,8 @@ for (const width of [1280, 390]) {
     text.split('\n')[1] ?? '',
   );
 
+  // The note is saved while typing (no blur needed); give the short save delay time before reloading.
+  await page.waitForTimeout(800);
   await page.reload();
   await heading.waitFor();
   await page.getByRole('searchbox', { name: 'Search the gaps' }).fill('G-021');
@@ -114,6 +115,13 @@ for (const width of [1280, 390]) {
     'mark survives a reload ("You: acknowledge")',
     await again.getByText('You: acknowledge').isVisible(),
   );
+  await again.locator('summary').click();
+  check(
+    width,
+    'typed note survives a reload without leaving the box',
+    (await again.getByLabel('Your note').inputValue()) === `checked at ${width}`,
+  );
+  await again.locator('summary').click();
   check(
     width,
     '"Marked by you" counts 1 after the reload',
