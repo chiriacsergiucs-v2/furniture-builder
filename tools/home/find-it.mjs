@@ -1,4 +1,6 @@
 // Find-it acceptance for the Home welcome page (CLAUDE.md R3, backlog N38), run against a production build:
+// Since ADR-078 the welcome page is the Projects place (the bare address, "Projects" in the places nav); the
+// "Built in the app" list was removed at the user's request (backlog D02), so the script checks it is gone.
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/home/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
 import { chromium } from 'playwright';
@@ -27,7 +29,12 @@ for (const width of [1440, 375, 360]) {
     page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
   const shot = (name) =>
     page.screenshot({ path: `${out}/home-${name}-${width}.png`, fullPage: true });
-  const welcome = page.getByRole('heading', { name: 'Welcome to Furniture Builder' });
+  // ADR-078: Home became the Projects place; its page heading is "Projects".
+  const welcome = page.getByRole('heading', { name: 'Projects', level: 1 });
+  const homeTab = page
+    .getByRole('navigation', { name: 'Places' })
+    .getByRole('link', { name: 'Projects' });
+  const savedRows = page.locator('.projects-page ul.library .row-btn');
   const editorShown = () => page.locator('main.work').isVisible();
 
   // 1. First start: the bare app opens on the welcome page.
@@ -35,7 +42,7 @@ for (const width of [1440, 375, 360]) {
   await welcome.waitFor({ timeout: 10000 });
   check(
     width,
-    'first start opens the welcome page',
+    'first start opens the welcome page (Projects)',
     (await welcome.isVisible()) && !(await editorShown()),
   );
   check(
@@ -53,16 +60,20 @@ for (const width of [1440, 375, 360]) {
     'empty device says nothing saved yet',
     await page.getByText('No projects saved yet').isVisible(),
   );
+  // Rewritten: the built-in Mobila projects were removed from the app by the user (backlog D02).
   check(
     width,
-    'built-in projects listed',
-    await page.locator('.home-page').getByRole('heading', { name: 'Built in the app' }).isVisible(),
+    '"Built in the app" list removed (D02)',
+    (await page.getByText('Built in the app').count()) === 0,
   );
+  // Rewritten: the Home and Editor tabs are now the Projects, Catalog and Editor places (ADR-078).
+  const places = page.getByRole('navigation', { name: 'Places' });
   check(
     width,
-    'Home and Editor tabs visible',
-    (await page.getByRole('link', { name: 'Home' }).isVisible()) &&
-      (await page.getByRole('link', { name: 'Editor' }).isVisible()),
+    'Projects, Catalog and Editor places visible',
+    (await homeTab.isVisible()) &&
+      (await places.getByRole('link', { name: /^Catalog/ }).isVisible()) &&
+      (await places.getByRole('link', { name: 'Editor' }).isVisible()),
   );
   check(
     width,
@@ -87,10 +98,11 @@ for (const width of [1440, 375, 360]) {
 
   // 3. Home tab is findable; the new project is listed; choosing it opens it.
   await page.waitForTimeout(700); // autosave
-  await page.getByRole('link', { name: 'Home' }).click();
+  await homeTab.click();
   await welcome.waitFor();
-  const row = page.getByRole('button', { name: /Bucătărie test/ });
-  check(width, 'Home tab back to the welcome page', await welcome.isVisible());
+  // Each row also has "Settings for …", "Duplicate …" and "Delete …" buttons: match the row by its start.
+  const row = page.getByRole('button', { name: /^Bucătărie test/ });
+  check(width, 'Projects tab back to the welcome page', await welcome.isVisible());
   check(width, 'saved project listed under Choose a project', await row.isVisible());
   check(width, 'open project marked "Open now"', (await row.innerText()).includes('Open now'));
 
@@ -120,22 +132,22 @@ for (const width of [1440, 375, 360]) {
   check(
     width,
     'project still listed after restart',
-    await page.getByRole('button', { name: /Bucătărie test/ }).isVisible(),
+    await page.getByRole('button', { name: /^Bucătărie test/ }).isVisible(),
   );
   check(
     width,
     'piece listed under Single pieces',
-    await page.getByRole('button', { name: /Comodă test/ }).isVisible(),
+    await page.getByRole('button', { name: /^Comodă test/ }).isVisible(),
   );
   check(
     width,
     'only what the user made is listed (no stray start-up piece)',
-    (await page.locator('.home-list .row-btn').count()) === 2,
-    `${await page.locator('.home-list .row-btn').count()} rows`,
+    (await savedRows.count()) === 2,
+    `${await savedRows.count()} rows`,
   );
   check(width, 'no sideways scroll (with projects)', await noSideScroll());
   await shot('saved');
-  await page.getByRole('button', { name: /Bucătărie test/ }).click();
+  await page.getByRole('button', { name: /^Bucătărie test/ }).click();
   await page.locator('main.work').waitFor({ state: 'visible' });
   check(
     width,
@@ -143,11 +155,18 @@ for (const width of [1440, 375, 360]) {
     (await page.getByLabel('Name of this project').inputValue()) === 'Bucătărie test',
   );
 
-  // 6. Built-in project from Home.
-  await page.getByRole('link', { name: 'Home' }).click();
-  await page.locator('.home-page .template-list .row-btn').first().click();
+  // 6. Rewritten: the built-in projects are gone (D02). From the welcome page the Editor place returns to the
+  //    project that is open.
+  await homeTab.click();
+  await welcome.waitFor();
+  await places.getByRole('link', { name: 'Editor' }).click();
   await page.locator('main.work').waitFor({ state: 'visible' });
-  check(width, 'built-in project opens in the editor', await editorShown());
+  check(
+    width,
+    'Editor tab from the welcome page reopens the open project',
+    (await editorShown()) &&
+      (await page.getByLabel('Name of this project').inputValue()) === 'Bucătărie test',
+  );
   check(width, 'no page errors', errors.length === 0, errors.join(' | '));
   await ctx.close();
 }
