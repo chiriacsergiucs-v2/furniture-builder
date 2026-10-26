@@ -834,7 +834,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-086: First tap on a grouped piece
 
-- Status: ADR-097
+- Status: Done (ADR-097)
 - Origin: ADR-097 open question (2026-10-26)
 - Missing: Whether the first tap on a grouped piece selects the group; default yes, second tap the piece.
 - Request: "New adr 2" (2026-10-26)
@@ -1029,3 +1029,21 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Answer to 'Show the notice in the Library too?': "Library too" (2026-10-26)
 - Questions: Should a saved single piece also offer Keep mine (a design-document field) and Replace with the new revision?
 - Suggested pick: Notice only, as built (the answer asked for the notice); Keep mine on saved designs needs an optional Design field (about +20 % of ADR-096's work, +10 % value; estimates).
+
+### G-108: Multi-select in the front view and 3D
+
+- Status: Open
+- Origin: ADR-097 (2026-10-26, Claude: scoped while building)
+- Missing: Shift/Ctrl/Cmd-click adds pieces to the selection on the plan and in the project's piece list; in the room front view and in 3D a click still selects one piece.
+- Request: New adr 2 (2026-10-26): Desktop: Shift- or Ctrl/Cmd-click adds or removes a piece
+- Questions: Add Shift/Ctrl-click to the room front view and to 3D too?
+- Suggested pick: Yes, the same toggle in both views (about +10 % of ADR-097's work, +10 % value; estimates).
+
+### G-109: Cycling stacked pieces on the plan replaces opening them
+
+- Status: Open
+- Origin: ADR-097 (2026-10-26, Claude: defaulted while building)
+- Missing: On the plan, a tap on the same spot over stacked pieces selects the next piece under it (ADR-097) instead of opening the selected piece's interior (ADR-083, G-066); stacked pieces open from the room front view, 3D or the card.
+- Request: New adr 2 (2026-10-26): tapping the same spot again selects the next piece under the pointer
+- Questions: Over stacked pieces on the plan, should a further tap cycle (as built) or open the piece, with cycling on another gesture?
+- Suggested pick: Cycle as built (the ADR's words); opening stays one tap away in the front view (no extra work).

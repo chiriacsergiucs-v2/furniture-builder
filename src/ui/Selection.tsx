@@ -1,0 +1,147 @@
+import { useState } from 'react';
+import { groupOf, sameIds } from '../core/selection';
+import { useDesign } from '../store/designStore';
+import { askConfirm } from './Confirm';
+import { Icon } from './icons';
+
+/**
+ * Several pieces selected (ADR-097): what acts on the whole selection — Delete, Duplicate, Turn about its centre,
+ * Group or Ungroup. Each is one undo step; the main piece's card follows below for what is one piece's.
+ */
+export function SelectionCard() {
+  const ids = useDesign((s) => s.selectedItemIds);
+  const project = useDesign((s) => s.project);
+  const del = useDesign((s) => s.deleteSelection);
+  const dup = useDesign((s) => s.duplicateSelection);
+  const turn = useDesign((s) => s.turnSelectionBy);
+  const group = useDesign((s) => s.groupSelection);
+  const ungroup = useDesign((s) => s.ungroup);
+  const clear = useDesign((s) => s.selectItem);
+  const [msg, setMsg] = useState<{ for: string; text: string | null }>({ for: '', text: null });
+  if (!project || ids.length < 2) return null;
+  const key = ids.join(',');
+  const g = groupOf(project, ids[0]);
+  const isGroup = !!g && sameIds(g.itemIds, ids);
+  const say = (text: string | null) => setMsg({ for: key, text });
+  return (
+    <section
+      className="selection-card section"
+      aria-label={`${ids.length} pieces selected${isGroup ? `: ${g!.name}` : ''}`}
+    >
+      <div className="card-title">
+        <span>{isGroup ? g!.name : 'Selected pieces'}</span>
+        <span className="chip">{ids.length} pieces</span>
+      </div>
+      <p className="hint">
+        These act on all {ids.length}; drag any of them on the plan to move them together.
+      </p>
+      <div className="arrange-actions">
+        <button
+          type="button"
+          className="btn outline sm"
+          onClick={() => {
+            say(null);
+            dup();
+          }}
+        >
+          Duplicate
+        </button>
+        <button
+          type="button"
+          className="btn outline sm"
+          aria-label="Turn the selection 90° anticlockwise about its centre"
+          onClick={() => say(turn(1))}
+        >
+          Turn 90° ↺
+        </button>
+        <button
+          type="button"
+          className="btn outline sm"
+          aria-label="Turn the selection 90° clockwise about its centre"
+          onClick={() => say(turn(-1))}
+        >
+          Turn 90° ↻
+        </button>
+        {isGroup ? (
+          <button type="button" className="btn outline sm" onClick={() => ungroup(g!.id)}>
+            Ungroup
+          </button>
+        ) : (
+          <button type="button" className="btn outline sm" onClick={() => group()}>
+            Group
+          </button>
+        )}
+        <button
+          type="button"
+          className="btn outline sm danger"
+          onClick={async () => {
+            if (
+              await askConfirm(`Delete these ${ids.length} pieces from this project?`, {
+                confirmLabel: 'Delete',
+                danger: true,
+              })
+            )
+              del();
+          }}
+        >
+          Delete
+        </button>
+        <button type="button" className="btn ghost sm" onClick={() => clear(null)}>
+          Clear selection
+        </button>
+      </div>
+      {msg.for === key && msg.text && (
+        <p className="hint" role="status">
+          {msg.text}
+        </p>
+      )}
+    </section>
+  );
+}
+
+/** The project's groups (ADR-097): select one, or ungroup it. */
+export function GroupList() {
+  const groups = useDesign((s) => s.project?.groups);
+  const ids = useDesign((s) => s.selectedItemIds);
+  const selectItems = useDesign((s) => s.selectItems);
+  const ungroup = useDesign((s) => s.ungroup);
+  if (!groups?.length) return null;
+  return (
+    <section className="groups section" aria-label="Groups">
+      <div className="card-title">
+        <span>Groups</span>
+      </div>
+      <ul className="pieces">
+        {groups.map((g) => {
+          const on = sameIds(ids, g.itemIds);
+          return (
+            <li key={g.id} className="group-row">
+              <button
+                type="button"
+                className={`row-btn ${on ? 'on' : ''}`}
+                aria-pressed={on}
+                onClick={() => selectItems(g.itemIds)}
+              >
+                <span>
+                  <strong>{g.name}</strong>
+                  <span className="sub">
+                    {g.itemIds.length} {g.itemIds.length === 1 ? 'piece' : 'pieces'}
+                  </span>
+                </span>
+                <Icon name="chevron-right" className="chev sm" />
+              </button>
+              <button
+                type="button"
+                className="btn sm ghost"
+                aria-label={`Ungroup ${g.name}`}
+                onClick={() => ungroup(g.id)}
+              >
+                Ungroup
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}

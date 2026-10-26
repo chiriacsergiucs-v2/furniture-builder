@@ -413,6 +413,14 @@ export function App() {
           st.duplicateItem(st.selectedItemId);
         }
       }
+      // Ctrl/Cmd+A selects every piece of the open project (ADR-097).
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
+        const st = useDesign.getState();
+        if (page === 'editor' && st.project && !st.editingItemId && !st.placingItemId) {
+          e.preventDefault();
+          st.selectAll();
+        }
+      }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
         e.preventDefault();
         redo();
@@ -435,11 +443,14 @@ export function App() {
       ? `${warnings} to check`
       : '';
   const selectedItem = project?.items.find((i) => i.id === selectedItemId);
+  const selectedCount = useDesign((s) => s.selectedItemIds.length);
   const selectedModel = project?.models?.find((m) => m.id === selectedItemId);
   const peek = inProject
-    ? selectedItem || selectedModel
-      ? `Selected: ${selectedItem?.design.name ?? selectedModel?.name}`
-      : `${project!.name}: ${project!.items.length} ${project!.items.length === 1 ? 'piece' : 'pieces'}`
+    ? selectedCount > 1
+      ? `${selectedCount} pieces selected`
+      : selectedItem || selectedModel
+        ? `Selected: ${selectedItem?.design.name ?? selectedModel?.name}`
+        : `${project!.name}: ${project!.items.length} ${project!.items.length === 1 ? 'piece' : 'pieces'}`
     : (() => {
         const l = selectionLabel(design.product, selectedId);
         return l ? `Selected: ${l}` : 'Tap a space to edit it';
