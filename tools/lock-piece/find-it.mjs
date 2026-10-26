@@ -140,6 +140,7 @@ for (const width of [1440, 390]) {
   // The 3D view marks it too.
   const r3d = page.getByRole('radio', { name: '3D' });
   if (await r3d.isVisible().catch(() => false)) {
+    const xBefore3d = await planX();
     await r3d.click();
     const b3d = page.locator('.lock-badge-3d', { hasText: 'Locked' });
     await b3d
@@ -149,7 +150,45 @@ for (const width of [1440, 390]) {
     check(width, '"Locked" shows over the piece in 3D', await b3d.first().isVisible());
     await page.waitForTimeout(500);
     await shot('locked-3d');
+    // Dragging it in 3D (ADR-093, Move on) does not move it either; the note says why.
+    const three = page.locator('.view.three');
+    const canvas = three.locator('canvas');
+    const move = page
+      .getByRole('toolbar', { name: 'Place pieces in 3D' })
+      .getByRole('button', { name: 'Move', exact: true });
+    // The Simple look draws fast enough in a software-rendered browser (as tools/move-3d does).
+    await page.getByRole('radio', { name: 'Simple' }).click();
+    await page.waitForTimeout(800);
+    await click(move);
+    const r = await canvas.boundingBox();
+    // Below the "Locked" label, still on the piece.
+    const a = { x: r.x + r.width / 2, y: r.y + r.height * 0.62 };
+    await page.mouse.move(a.x, a.y);
+    await page.mouse.down();
+    for (let i = 1; i <= 10; i++) await page.mouse.move(a.x + 16 * i, a.y);
+    await page.waitForTimeout(250);
+    const note3d = three.locator('.three-drag-note');
+    const seen3d = (await note3d.isVisible().catch(() => false))
+      ? ((await note3d.textContent()) ?? '')
+      : '';
+    await shot('locked-3d-drag');
+    await page.mouse.up();
+    await page.waitForTimeout(400);
+    check(
+      width,
+      'dragging it in 3D shows "Locked — unlock to move"',
+      /Locked — unlock to move/.test(seen3d),
+      seen3d,
+    );
+    await click(move);
     await planRadio.click();
+    await page.waitForTimeout(200);
+    check(
+      width,
+      'the 3D drag did not move it',
+      (await planX()) === xBefore3d,
+      `${xBefore3d} → ${await planX()}`,
+    );
     await page.waitForTimeout(200);
   }
 

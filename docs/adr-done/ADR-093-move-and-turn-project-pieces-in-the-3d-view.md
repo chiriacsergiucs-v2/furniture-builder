@@ -1,7 +1,8 @@
 # ADR-093: Move and turn project pieces in the 3D view
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-26
+- Implemented: 2026-10-26
 - Depends on: ADR-014, ADR-065, ADR-069, ADR-070
 - Design: docs/ui-design.md (Plan view, 3D view)
 - Backlog: N91
@@ -58,7 +59,7 @@ on move mode"; height "Floor plane only; height from placement".
 
 ## Done when
 
-- [ ] A pure function maps a room point to the same drag result as the Plan (whole mm, snap, Alt) (unit tests)
-- [ ] Turning in 3D is one undo step and matches ADR-069's turn (unit test)
-- [ ] Find-it at 1440 and 390 px: project in 3D → **Move** → drag a piece → its "From left" value changes; Undo puts
+- [x] A pure function maps a room point to the same drag result as the Plan (whole mm, snap, Alt) (unit tests)
+- [x] Turning in 3D is one undo step and matches ADR-069's turn (unit test)
+- [x] Find-it at 1440 and 390 px: project in 3D → **Move** → drag a piece → its "From left" value changes; Undo puts
       it back; **Turn 90°** turns it; Move off → dragging orbits; no page errors, no sideways scroll

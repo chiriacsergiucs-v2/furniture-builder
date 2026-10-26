@@ -207,6 +207,10 @@ describe('locked pieces in the store (ADR-095)', () => {
     expect(s().projectPast.length).toBe(1);
     expect(s().turnItem(id, 1)).toMatch(/locked/);
     expect(s().mirrorItem(id)).toMatch(/Locked/);
+    // A drag in the 3D view (ADR-093) drops through the same move: refused too.
+    expect(s().dropItemAt(id, { x: 0, z: 0 }, { x: 400, z: 0 }, false)).toMatch(/locked/);
+    expect(s().project!.items[0].position).toEqual(at);
+    expect(s().projectPast.length).toBe(1);
     s().undoProject();
     expect(s().project!.items[0].locked).toBeUndefined();
     expect(s().moveItemBy(id, 400, 0)).toBeNull();

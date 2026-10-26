@@ -9,6 +9,7 @@ import {
   validateDesign,
 } from '../core/design';
 import { duplicateItem, mirrorItem, mirrorRun, tryTurn } from '../core/arrange';
+import { floorDrop, type FloorPoint } from '../core/drag3d';
 import { applyFinish, type FinishRole, type FinishScope } from '../core/finish';
 import { mergeItems } from '../core/merge';
 import { replaceItem, replaceReport, type ReplaceReport } from '../core/replace';
@@ -28,6 +29,7 @@ import {
   roomToPiece,
   keepTemplate,
   setLocked,
+  tapPosition,
   trySetGap,
   type Project,
   type ProjectItem,
@@ -144,6 +146,11 @@ interface State {
   closeProject: () => void;
   updateProject: (fn: (p: Project) => Project) => void;
   addPiece: (d: Design, libraryId?: string) => void;
+  /**
+   * Add a copy of a design with its left-back corner at a plan point (ADR-094: dropped from the piece list), whole
+   * mm; one undo step. The point is where `dropNewPiece` puts it (snapped or as a tap places it).
+   */
+  addPieceAt: (d: Design, x: number, z: number, libraryId?: string) => void;
   updateItem: (id: string, patch: Partial<ProjectItem>) => void;
   /**
    * Move a piece on the plan by a drag or an arrow key (ADR-065): rounded to the step, lifted off a base, one undo
@@ -151,6 +158,11 @@ interface State {
    * and shown as the plan's notice (ADR-095).
    */
   moveItemBy: (id: string, dxMm: number, dzMm: number, step?: number) => string | null;
+  /**
+   * Drop a piece dragged in the 3D view (ADR-093) from room point `from` to `to` on its floor plane: the same drop
+   * as a Plan drag (snapping when `snap`), one undo step. A locked piece stays and the reason is returned (ADR-095).
+   */
+  dropItemAt: (id: string, from: FloorPoint, to: FloorPoint, snap: boolean) => string | null;
   /** The gap tool (ADR-022); returns why nothing moved when it would move a locked piece (ADR-095), or null. */
   setGap: (id: string, gap: number, moveRight: boolean) => string | null;
   /** Lock or unlock a piece's placement (ADR-095); one undo step. */
@@ -427,6 +439,17 @@ export const useDesign = create<State>((set, get) => {
       commitProject({ ...p, items: [...p.items, item] });
       set({ selectedItemId: item.id, placingItemId: item.id });
     },
+    addPieceAt: (d, x, z, libraryId) => {
+      const p = get().project;
+      if (!p) return;
+      const made = makeItem(p, d, libraryId);
+      // Not clamped here: `dropNewPiece` already placed it as a tap does, and a snap may put it against a wall of
+      // a drawn room at x or z below 0.
+      const position = { ...made.position, x: Math.round(x) || 0, z: Math.round(z) || 0 };
+      const item: ProjectItem = { ...made, position };
+      commitProject({ ...p, items: [...p.items, item] });
+      set({ selectedItemId: item.id, placingItemId: null });
+    },
     updateItem: (id, patch) => {
       const p = get().project;
       if (p)
@@ -442,6 +465,16 @@ export const useDesign = create<State>((set, get) => {
       }
       if (res.project !== p) commitProject(res.project);
       return null;
+    },
+    dropItemAt: (id, from, to, snap) => {
+      const p = get().project;
+      const it = p?.items.find((i) => i.id === id);
+      const pieces = get().projectModel?.pieces;
+      if (!p || !it || !pieces) return null;
+      const t = floorDrop(p, pieces, id, from, to, snap);
+      return t
+        ? get().moveItemBy(id, t.position.x - it.position.x, t.position.z - it.position.z, 1)
+        : null;
     },
     setGap: (id, gap, moveRight) => {
       const p = get().project;
@@ -648,11 +681,7 @@ export const useDesign = create<State>((set, get) => {
       const it = p?.items.find((i) => i.id === id);
       set({ placingItemId: null });
       if (!p || !it) return;
-      const position = {
-        ...it.position,
-        x: Math.max(0, Math.round(x)),
-        z: Math.max(0, Math.round(z)),
-      };
+      const position = tapPosition(it, x, z);
       commitProject({ ...p, items: p.items.map((i) => (i.id === it.id ? { ...i, position } : i)) });
     },
     stopPlacing: () => set({ placingItemId: null }),
