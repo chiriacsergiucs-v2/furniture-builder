@@ -1,7 +1,8 @@
 # ADR-082: Record every unbuilt item in a gaps ledger kept in step with main
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-25
+- Implemented: 2026-10-26
 - Depends on: ADR-050, ADR-066
 - Design: n/a
 - Backlog: N77
@@ -72,14 +73,14 @@ are lost with the session, so nothing tracked them.
 
 ## Done when
 
-- [ ] `docs/adr/GAPS.md` holds G-001 to G-048 with all six fields.
-- [ ] `pnpm docs:check` fails when:
+- [x] `docs/adr/GAPS.md` holds G-001 to G-048 with all six fields.
+- [x] `pnpm docs:check` fails when:
   - a gap is missing a field or has a bad status;
   - two gaps share an id;
   - a gap points at an unknown ADR;
   - a gap points at an Implemented ADR and is not Done;
   - an ADR from ADR-082 on has an _Out of scope_ line or open question without a G id.
-- [ ] `scripts/gaps.py add` appends the next id; `scripts/gaps.py sync` marks gaps of Implemented ADRs Done.
-- [ ] The `Stop` hook asks once when a reply lists skipped items and the ledger has not changed, and stays silent
+- [x] `scripts/gaps.py add` appends the next id; `scripts/gaps.py sync` marks gaps of Implemented ADRs Done.
+- [x] The `Stop` hook asks once when a reply lists skipped items and the ledger has not changed, and stays silent
       otherwise (tested with sample inputs).
-- [ ] `CLAUDE.md`, the template and the `new-adr`, `next-adr` and `ship-adr` skills describe the ledger.
+- [x] `CLAUDE.md`, the template and the `new-adr`, `next-adr` and `ship-adr` skills describe the ledger.
