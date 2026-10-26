@@ -47,14 +47,14 @@ the user says so explicitly … otherwise ask (user rule 2026-10-25)."
 
 ## Proposals
 
-| #   | Finding | Fix (target file)                                                                                                             | Status   |
-| --- | ------- | ----------------------------------------------------------------------------------------------------------------------------- | -------- |
-| 1   | #1, #6  | `new-adr` skill step 6: every _Decision_ bullet quotes the user's words that fix it, or moves to _Open questions_             | Proposed |
-| 2   | #3      | check in `ship-adr.sh`: refuse to ship while the ADR's _Open questions_ cite a gap still `Open`, unless `--accept-defaults`   | Proposed |
-| 3   | #2      | `add-tests` skill › Rules: each find-it check names the requirement it proves in the user's words; a default carries its G id | Proposed |
-| 4   | #4      | `CLAUDE.md` › Process: an answer that does not fit its question → restate the question in full and ask again                  | Proposed |
-| 5   | #7      | `CLAUDE.md` › Commands: never filter a check's output without its exit code (`set -o pipefail`)                               | Proposed |
-| 6   | #9      | `docs/architecture.md`: the 3D overlay is a DOM element placed by projection; drei `Html` rendered empty in production        | Proposed |
+| #   | Finding | Fix (target file)                                                                                                             | Status                  |
+| --- | ------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| 1   | #1, #6  | `new-adr` skill step 6: every _Decision_ bullet quotes the user's words that fix it, or moves to _Open questions_             | Not chosen (2026-10-26) |
+| 2   | #3      | check in `ship-adr.sh`: refuse to ship while the ADR's _Open questions_ cite a gap still `Open`, unless `--accept-defaults`   | Not chosen (2026-10-26) |
+| 3   | #2      | `add-tests` skill › Rules: each find-it check names the requirement it proves in the user's words; a default carries its G id | Not chosen (2026-10-26) |
+| 4   | #4      | `CLAUDE.md` › Process: an answer that does not fit its question → restate the question in full and ask again                  | Applied (PR #PRNUM)     |
+| 5   | #7      | `CLAUDE.md` › Commands: never filter a check's output without its exit code (`set -o pipefail`)                               | Not chosen (2026-10-26) |
+| 6   | #9      | `docs/architecture.md`: the 3D overlay is a DOM element placed by projection; drei `Html` rendered empty in production        | Not chosen (2026-10-26) |
 
 Exact text:
 

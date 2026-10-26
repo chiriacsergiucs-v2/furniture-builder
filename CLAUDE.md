@@ -129,6 +129,8 @@ Lifecycle, one skill per step:
 
 - Smallest functional slice; for each change ask "needed to demonstrate this now?" — if not, it goes under
   _Skipped this iteration_.
+- An answer that does not fit the question it was given for is not an answer: restate the question in full and ask
+  again before building. Never refer to a question by number alone (user rule 2026-10-26).
 - Update `docs/backlog.md` in the same change; change a status only with evidence (command output or a CI
   run id). Label evidence from documents differently from evidence you ran.
 - Pushed ≠ merged ≠ deployed ≠ live-verified. Never claim tests or deployments that did not run. "Live-verified"
