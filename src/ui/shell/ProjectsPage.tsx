@@ -1,16 +1,13 @@
 import { useEffect, useState } from 'react';
 import { newId } from '../../core/design';
 import { newProject } from '../../core/project';
-import { imageIdsOf } from '../../core/surface';
 import {
   deleteDesign,
-  deleteImages,
   deleteProject,
   listDesigns,
   listProjects,
   saveDesign,
   saveProject,
-  unusedImageIds,
   type StoredDesign,
   type StoredProject,
 } from '../../persist/db';
@@ -82,35 +79,6 @@ export function ProjectsPage({
     }
     setMsg(r.message ?? null);
     refresh();
-  };
-  const cleanUp = async () => {
-    const st = useDesign.getState();
-    const keep = imageIdsOf([
-      st.design,
-      ...(st.project?.items.map((i) => i.design) ?? []),
-      { materials: (st.project?.runParts ?? []).map((r) => r.material) },
-    ]);
-    try {
-      const ids = await unusedImageIds(keep);
-      if (!ids.length) {
-        setMsg({ ok: true, text: 'No unused pictures on this device.' });
-        return;
-      }
-      if (
-        !(await askConfirm(
-          `Delete ${ids.length} picture${ids.length === 1 ? '' : 's'} that no saved piece, project or template uses? This cannot be undone.`,
-          { confirmLabel: 'Delete pictures', danger: true },
-        ))
-      )
-        return;
-      await deleteImages(ids);
-      setMsg({
-        ok: true,
-        text: `${ids.length} unused picture${ids.length === 1 ? '' : 's'} deleted.`,
-      });
-    } catch {
-      setMsg({ ok: false, text: 'Pictures could not be read from this browser.' });
-    }
   };
   const duplicate = async (r: StoredDesign | StoredProject, kind: 'piece' | 'project') => {
     const now = new Date().toISOString();
@@ -233,10 +201,6 @@ export function ProjectsPage({
                 }}
               />
             </label>
-            <button type="button" className="btn sm ghost" onClick={() => void cleanUp()}>
-              <Icon name="trash" className="sm" />
-              Clean up unused pictures
-            </button>
           </div>
         </div>
         {msg && (

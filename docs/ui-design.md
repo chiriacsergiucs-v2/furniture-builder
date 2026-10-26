@@ -175,6 +175,26 @@ described above. Audit and wireframes are in `docs/research/2026-10-24-ui-redesi
   tabs, counters, fields, menu rows, summaries, breadcrumbs); a mouse keeps `--control-h` 38. No text is set
   below `--fs-xs` (13 px): badges, chips, tags, step meta and the quick-counts card use it. The result tabs
   wrap to a second row rather than scroll, so Checks is always in sight.
+- _Follow-up (N87, user 2026-10-26)._
+  - _Yellow:_ one yellow action per screen: Create a new project (Projects), New piece (Catalog), Next / Done in
+    dialogs, Download CSV (editor). Catalog variant cards use an outline **Open**; the current place tab is green.
+  - _Quick counts on a phone_ (G-058): the card docked under the 3D view (G-070) has a **Quick counts** button
+    that folds it to one row; open by default, the choice kept on this device (`fb:counts3d`). Wide screens
+    show no fold button.
+  - _Brand:_ the mark is a link to Projects; on a phone outside the editor the bar also reads **Furniture
+    Builder**.
+  - _Projects:_ **Clean up unused pictures** moved to ⋯ More › Files. Row buttons stay on the row's line; a
+    small phone drops the row glyph.
+  - _Catalog:_ the sticky filter row takes the page colour; on a phone the safety choice, **Save this piece as
+    a template** and **Template files** fold under **More catalog actions**; variant kinds read **Interior
+    only** / **New construction**; a room lists its own families first; Start from says **N ready items**.
+  - _Wizard:_ **Type** comes before **Size**; Skip's title says what it does.
+  - _Settings:_ on a phone the steps rail runs in rows of three.
+  - _Results:_ the Parts summary says **Edge bands are not named yet.** once when no board names one; on a
+    phone the Hardware item column takes the room. An empty project says **Add pieces under Compose to see
+    them in 3D.** and Checks says **Nothing to check yet.**
+  - _Drawing:_ space labels have a wider halo so a door's dashed line does not run through the words.
+  - _3D:_ the viewer mounts only while the editor is the page shown (ADR-014).
 - _Output actions._ **Download CSV** (the one primary button) and **Print** sit on top of the Parts tab, and
   are still disabled while there are errors (ADR-008).
 

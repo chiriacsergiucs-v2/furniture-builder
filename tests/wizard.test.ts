@@ -110,8 +110,8 @@ describe('wizard: answers → model input', () => {
   it('open shelving has no doors step and only open/shelves contents', () => {
     const a = { type: 'shelving' };
     expect(visibleSteps(a).map((s) => s.id)).toEqual([
-      'basics',
       'type',
+      'basics',
       'divisions',
       'contents',
       'base',
@@ -174,16 +174,16 @@ describe('wizard: answers → model input', () => {
 
 describe('wizard: steps and visibility', () => {
   it('each type sees only its steps; fields show on their predicates', () => {
-    expect(visibleSteps({}).map((s) => s.id)).toEqual(['basics', 'type', 'review']);
+    expect(visibleSteps({}).map((s) => s.id)).toEqual(['type', 'basics', 'review']);
     expect(visibleSteps({ type: 'table' }).map((s) => s.id)).toEqual([
-      'basics',
       'type',
+      'basics',
       'frame',
       'review',
     ]);
     expect(visibleSteps({ type: 'desk' }).map((s) => s.id)).toEqual([
-      'basics',
       'type',
+      'basics',
       'desk',
       'review',
     ]);
@@ -214,7 +214,8 @@ describe('wizard: steps and visibility', () => {
 
   it('the next open step skips steps already done and ends on Review', () => {
     const a = { type: 'cabinet' };
-    expect(nextOpenStep(a, 'type', new Set(['divisions', 'contents']))).toBe('fronts');
+    expect(nextOpenStep(a, 'type', new Set(['divisions', 'contents']))).toBe('basics');
+    expect(nextOpenStep(a, 'type', new Set(['basics', 'divisions', 'contents']))).toBe('fronts');
     expect(nextOpenStep(a, 'fronts', new Set(['base', 'carcass']))).toBe('review');
   });
 });
@@ -341,7 +342,8 @@ describe('suggestions', () => {
       const order = visibleSteps({ type: t.id }).map((s) => s.id);
       for (const g of t.generators) {
         const at = order.indexOf(g.at);
-        expect(at, `${t.id}: ${g.at}`).toBeGreaterThan(0);
+        // The step is shown (Type is the first step since G-059).
+        expect(at, `${t.id}: ${g.at}`).toBeGreaterThanOrEqual(0);
         const owners = stepsWriting(
           {
             type: t.id,

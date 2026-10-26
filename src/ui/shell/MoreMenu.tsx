@@ -1,16 +1,19 @@
 import { useEffect, useRef } from 'react';
 import { exportFusionPython } from '../../core/fusion';
+import { imageIdsOf } from '../../core/surface';
+import { deleteImages, unusedImageIds } from '../../persist/db';
 import { withPictures } from '../../persist/images';
 import { withModels } from '../../persist/models';
 import { useDesign } from '../../store/designStore';
+import { askConfirm } from '../Confirm';
 import { Icon } from '../icons';
 import { download, downloadFrontSvg, fileName } from './files';
 import { importFile } from './importFile';
 import { useUi } from './uiStore';
 
 /**
- * The ⋯ More menu in the app bar (ADR-078): starting something new, every file in and out of the app (Files), and
- * Feature Research. Nothing here sits in the top or bottom bar itself. Escape and a click outside close it.
+ * The ⋯ More menu in the app bar (ADR-078): starting something new, every file in and out of the app (Files, with
+ * the clean-up of unused pictures since G-059), and Feature Research. Nothing here sits in the top or bottom bar itself. Escape and a click outside close it.
  */
 export function MoreMenu({
   onNew,
@@ -47,6 +50,37 @@ export function MoreMenu({
       document.removeEventListener('click', onClick);
     };
   }, []);
+
+  // Pictures no saved piece, project or template uses (ADR-048), after the user confirms.
+  const cleanUp = async () => {
+    const st = useDesign.getState();
+    const keep = imageIdsOf([
+      st.design,
+      ...(st.project?.items.map((i) => i.design) ?? []),
+      { materials: (st.project?.runParts ?? []).map((r) => r.material) },
+    ]);
+    try {
+      const ids = await unusedImageIds(keep);
+      if (!ids.length) {
+        setNotice({ ok: true, text: 'No unused pictures on this device.' });
+        return;
+      }
+      if (
+        !(await askConfirm(
+          `Delete ${ids.length} picture${ids.length === 1 ? '' : 's'} that no saved piece, project or template uses? This cannot be undone.`,
+          { confirmLabel: 'Delete pictures', danger: true },
+        ))
+      )
+        return;
+      await deleteImages(ids);
+      setNotice({
+        ok: true,
+        text: `${ids.length} unused picture${ids.length === 1 ? '' : 's'} deleted.`,
+      });
+    } catch {
+      setNotice({ ok: false, text: 'Pictures could not be read from this browser.' });
+    }
+  };
 
   const run = (fn: () => void | Promise<void>) => () => {
     close();
@@ -147,6 +181,10 @@ export function MoreMenu({
               }}
             />
           </label>
+          <button type="button" onClick={run(cleanUp)}>
+            <Icon name="trash" />
+            Clean up unused pictures <small>no piece or project uses them</small>
+          </button>
         </div>
         <span className="menu-sep" aria-hidden="true" />
         <button type="button" onClick={run(onResearch)}>

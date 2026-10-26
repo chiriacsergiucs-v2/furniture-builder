@@ -218,7 +218,8 @@ export function App() {
   }
   // On a phone Compose is the drawing only, so the canvas is not mounted there (ADR-014).
   const shown = shownView(view, mode, phone);
-  const mount3d = has3d && shows3d(shown);
+  // Mounted only while the editor is the page shown (ADR-014): hidden on Projects or Catalog it kept rendering.
+  const mount3d = has3d && shows3d(shown) && page === 'editor';
 
   // A piece waiting to be placed (ADR-056) or a room being drawn (ADR-059) is done on the plan, in Compose.
   const tapMode = useDesign((s) =>
@@ -449,13 +450,24 @@ export function App() {
     <>
       <div className={`app page-${page}`}>
         <header className="bar" ref={barRef}>
-          <div className="brand" aria-hidden="true">
-            <svg viewBox="0 0 24 24">
+          {/* The mark goes to Projects, like the Projects place (G-059); on a phone it also names the app. */}
+          <a
+            className="brand"
+            href="#"
+            title="Projects"
+            aria-label="Furniture Builder, go to Projects"
+            onClick={(e) => {
+              e.preventDefault();
+              setPage('projects');
+            }}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
               <rect x="3" y="3" width="18" height="18" />
               <line x1="3" y1="10" x2="21" y2="10" />
               <line x1="3" y1="15.5" x2="21" y2="15.5" />
             </svg>
-          </div>
+            <span className="brand-name">Furniture Builder</span>
+          </a>
           <nav className="pages places" aria-label="Places" ref={navRef}>
             {PLACES.map((p) => (
               <a

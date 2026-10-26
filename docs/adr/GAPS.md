@@ -686,3 +686,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Should the project panel also edit a piece's size, boards and carcass, or is Edit this piece enough for those?
 - Suggested pick: Keep them behind Edit this piece; the request was shelves and structure (estimate)
 - Answer: User 2026-10-26: "Go 068" — build it; moved into ADR-090.
+
+### G-073: UI critique findings 8, 9 and 12 left as they are
+
+- Status: Open
+- Origin: UI critique follow-up 2026-10-26 (N87); user decision for 8 and 9, ADR-033 for 12
+- Missing: Finding 8 (desktop Build & Preview only swaps the centre view; the left panel stays Compose), finding 9 (whole-piece editing split across the Quick counts card, Settings and 'Edit the interior') and finding 12 (Romanian family and variant names under the English ones in the catalog and Start from, ADR-033)
+- Request: Findings 8 + 9: 'Skip 8 and 9'. Finding 12: no request; the names are ADR-033's decision.
+- Questions: Write an ADR for 8 and 9 later? Keep the Romanian names (ADR-033) or show them only in search?
+- Suggested pick: Keep 12 as ADR-033 decided (no change); for 8 and 9, an ADR when you want the editor layout revisited (closest to the critique; est. +40 % work over a small fix, +60 % of 8/9 value)

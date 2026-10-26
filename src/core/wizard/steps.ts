@@ -192,7 +192,7 @@ export const STEPS: StepDef[] = [
   {
     id: BASICS,
     title: 'Size',
-    help: 'Overall size in whole millimetres (width, height from the floor, depth). Until you change them, sizes and name follow the type you pick next.',
+    help: 'Overall size in whole millimetres (width, height from the floor, depth). Until you change them, sizes and name follow the type you picked.',
     fields: [
       { id: 'name', label: 'Name', kind: 'text', default: 'New piece' },
       {

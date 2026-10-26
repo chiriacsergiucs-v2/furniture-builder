@@ -176,8 +176,13 @@ for (const width of [1280, 390, 360]) {
   );
   check(
     width,
-    'Projects has "Clean up unused pictures"',
-    await page.getByRole('button', { name: 'Clean up unused pictures' }).isVisible(),
+    '"Clean up unused pictures" under ⋯ More (G-059)',
+    await (async () => {
+      await more.click();
+      const ok = await menu.getByRole('button', { name: /Clean up unused pictures/ }).isVisible();
+      await page.keyboard.press('Escape');
+      return ok;
+    })(),
   );
   const rows = page.locator('main.projects-page ul.library > li');
   const before = await rows.count();

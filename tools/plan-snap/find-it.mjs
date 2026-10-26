@@ -2,7 +2,8 @@
 // production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/plan-snap/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text: the **Snap** toggle above the plan,
-// the dashed snapped preview with its label while dragging, the flush drop, Snap off (and Alt on desktop) placing
+// the Snap line under the plan's "About the plan" info button (ADR-080), the dashed snapped preview with its label
+// and the live snap note over the plan while dragging, the flush drop, Snap off (and Alt on desktop) placing
 // freely, and the toggle kept after a reload. Desktop drags with the mouse; the phone with real touch (CDP).
 // Not part of `pnpm test`.
 import { chromium } from 'playwright';
@@ -57,7 +58,11 @@ for (const width of [1440, 375]) {
     second = pieces.nth(1);
   const snap = plan.getByRole('button', { name: 'Snap', exact: true });
   const ghost = plan.locator('.drag-ghost');
+  // The live snap note shown over the plan while a piece is dragged (ADR-080).
   const status = plan.getByRole('status');
+  // The plan's caption, with the Snap line, sits behind an info button (ADR-080).
+  const about = plan.getByRole('button', { name: 'About the plan', exact: true });
+  const aboutNote = plan.getByRole('note');
   /** Screen point of a room point (mm) on the plan. */
   const screen = (x, z) =>
     plan.locator('svg').evaluate(
@@ -138,11 +143,17 @@ for (const width of [1440, 375]) {
   check(width, 'two "Base cabinet…" pieces are on the plan', (await pieces.count()) === 2);
   check(width, 'the "Snap" toggle is found above the plan', await snap.isVisible());
   check(width, '"Snap" is on by default', (await snap.getAttribute('aria-pressed')) === 'true');
+  await click(about);
+  await aboutNote.waitFor({ timeout: 3000 }).catch(() => {});
   check(
     width,
-    'the plan says "Snaps within 60 mm … hold Alt to place freely"',
-    /Snaps within 60 mm.*hold Alt to place freely/.test((await status.textContent()) ?? ''),
+    '"About the plan" says "Snaps within 60 mm … hold Alt to place freely"',
+    /Snaps within 60 mm.*hold Alt to place freely/.test(
+      (await aboutNote.textContent({ timeout: 3000 }).catch(() => '')) ?? '',
+    ),
   );
+  await page.keyboard.press('Escape');
+  await page.mouse.move(0, 0);
   const firstX = Number(await first.locator('rect').first().getAttribute('x'));
   const w =
     firstX === 0 ? Number((await first.getAttribute('aria-label')).match(/, (\d+) by/)[1]) : NaN;

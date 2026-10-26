@@ -171,6 +171,15 @@ export default function Viewer3D() {
   const phone = useMediaQuery(PHONE);
   const dock = phone ? document.getElementById('count-dock') : null;
   const docked = !!dock;
+  // A project with nothing in it yet says so over the empty stage (G-059).
+  const emptyProject = useDesign(
+    (s) =>
+      view.mode === 'project' &&
+      !!s.projectModel &&
+      !s.projectModel.pieces.length &&
+      !s.projectModel.models.length &&
+      !s.project?.room,
+  );
   const cardRef = useRef<HTMLDivElement>(null);
   // Bottom centre of the card at the anchor, kept inside the view (the anchor's screen point, or null to hide).
   const placeCard = useCallback((at: { x: number; y: number } | null) => {
@@ -236,10 +245,16 @@ export default function Viewer3D() {
         {view.mode === 'project' && !exploded && <ModelItems plain={rendering} />}
         <Fit key={designId} bounds={bounds} />
       </Canvas>
-      {counts && dock && createPortal(<CountStepper className="in-3d docked" />, dock)}
+      {emptyProject && (
+        <div className="no-3d empty-3d">
+          <p>Add pieces under Compose to see them in 3D.</p>
+        </div>
+      )}
+      {/* The docked card (G-070) folds to one row on a phone (G-058). */}
+      {counts && dock && createPortal(<CountStepper className="in-3d docked" foldable />, dock)}
       {counts && !docked && (
         <div ref={cardRef} className="count-anchor" style={{ visibility: 'hidden' }}>
-          <CountStepper className="in-3d" />
+          <CountStepper className="in-3d" foldable />
         </div>
       )}
     </>

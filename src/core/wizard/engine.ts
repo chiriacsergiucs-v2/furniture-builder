@@ -36,10 +36,10 @@ export const resolve = (a: Answers): Answers => ({
   ...a,
 });
 
-/** The steps of the chosen type (Size and Type first, Review last) that apply to these answers. */
+/** The steps of the chosen type (Type, then Size, first; Review last) that apply to these answers. */
 export function visibleSteps(a: Answers): StepDef[] {
   const r = resolve(a);
-  const ids = [BASICS, TYPE, ...(typeOf(a)?.steps ?? []), REVIEW];
+  const ids = [TYPE, BASICS, ...(typeOf(a)?.steps ?? []), REVIEW];
   return ids
     .map((id) => stepById.get(id))
     .filter((s): s is StepDef => !!s && (s.visible?.(r) ?? true));
