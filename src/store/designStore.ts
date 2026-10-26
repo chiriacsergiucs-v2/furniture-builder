@@ -11,6 +11,7 @@ import {
 import { duplicateItem, mirrorItem, mirrorRun, turnAboutCentre } from '../core/arrange';
 import { applyFinish, type FinishRole, type FinishScope } from '../core/finish';
 import { mergeItems } from '../core/merge';
+import { replaceItem, replaceReport, type ReplaceReport } from '../core/replace';
 import { countRows, countSubject, stepCount, type CountKey } from '../core/counts';
 import { drill, type Selection } from '../core/selectPath';
 import { closeOutline, DEFAULT_ROOM_HEIGHT, snapCorner, type Pt, type Room } from '../core/room';
@@ -149,6 +150,8 @@ interface State {
   mergeItems: (a: string, b: string) => string[];
   /** Duplicate, turn about the centre, mirror a piece or its run (ADR-069); each is one undo step. */
   duplicateItem: (id: string) => void;
+  /** Put a catalog copy in the piece's place, keeping where and how it stands (ADR-098); one undo step. */
+  replaceItem: (id: string, design: Design) => ReplaceReport | null;
   turnItem: (id: string, dir: 1 | -1) => void;
   /** Returns why nothing changed ("Nothing to mirror in this piece"), or null. */
   mirrorItem: (id: string) => string | null;
@@ -443,6 +446,13 @@ export const useDesign = create<State>((set, get) => {
         set({ selectedItemId: res.mergedId });
       }
       return res.issues;
+    },
+    replaceItem: (id, design) => {
+      const { project: p, projectModel: pm } = get();
+      if (!p || !pm || !p.items.some((i) => i.id === id)) return null;
+      commitProject(replaceItem(p, id, design));
+      const { project: next, projectModel: nm } = get();
+      return replaceReport(p, pm, next!, nm!, id);
     },
     duplicateItem: (id) => {
       const p = get().project;

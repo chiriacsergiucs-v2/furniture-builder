@@ -852,7 +852,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-088: Compatible width when replacing
 
-- Status: ADR-098
+- Status: Done (ADR-098)
 - Origin: ADR-098 open question (2026-10-26)
 - Missing: Which width counts as compatible; default the same width, others behind a switch.
 - Request: "New adr 5" (2026-10-26)
@@ -975,3 +975,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Items “can be used to add as a new adr or mark as acknowledged and accepted” (G-050)
 - Questions: None while ADR-002 holds.
 - Suggested pick: Keep the hand-over to Claude (estimate for a GitHub-token write path: effort +60%, value +15%, and it breaks ADR-002)
+
+### G-102: Alternatives for a piece that sits on another piece
+
+- Status: Open
+- Origin: ADR-098 implementation (2026-10-26, Claude: defaulted)
+- Missing: Which catalog items count as the same placement kind for a piece placed on or above another piece; built: every standing and wall-hung item (the piece keeps its on-another-piece placement).
+- Request: New adr 5 (2026-10-26): compatible = same placement kind (floor, wall, on another piece)
+- Questions: For a piece on another piece, offer every item, or only standing items, or only items of the same family?
+- Suggested pick: Every item, since the placement carries over (as built; narrowing to standing items is about +5 % of ADR-098's work)
