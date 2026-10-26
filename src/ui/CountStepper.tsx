@@ -1,12 +1,36 @@
-import { forwardRef, useMemo, type CSSProperties } from 'react';
+import { forwardRef, useMemo, useState, type CSSProperties } from 'react';
 import { countRows, countSubject } from '../core/counts';
 import { useDesign } from '../store/designStore';
+import { Icon } from './icons';
 
-/** The counts that apply to the selected space or piece, each as − N + (ADR-084). Nothing when none apply. */
+// Folded or open over 3D on a phone (G-058), kept on this device only (localStorage, ADR-002). Open until folded.
+const FOLD_KEY = 'fb:counts3d';
+function storedFolded() {
+  try {
+    return localStorage.getItem(FOLD_KEY) === 'folded';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The counts that apply to the selected space or piece, each as − N + (ADR-084). Nothing when none apply.
+ * `foldable` (over 3D) adds a "Quick counts" button that folds the card to one row on a phone (G-058).
+ */
 export const CountStepper = forwardRef<
   HTMLDivElement,
-  { style?: CSSProperties; className?: string }
->(function CountStepper({ style, className }, ref) {
+  { style?: CSSProperties; className?: string; foldable?: boolean }
+>(function CountStepper({ style, className, foldable }, ref) {
+  const [folded, setFolded] = useState(storedFolded);
+  const toggle = () => {
+    const next = !folded;
+    setFolded(next);
+    try {
+      localStorage.setItem(FOLD_KEY, next ? 'folded' : 'open');
+    } catch {
+      /* private mode: the choice lasts for this page only */
+    }
+  };
   const product = useDesign((s) => s.design.product);
   const selectedId = useDesign((s) => s.selectedId);
   const step = useDesign((s) => s.stepCount);
@@ -18,7 +42,7 @@ export const CountStepper = forwardRef<
   return (
     <div
       ref={ref}
-      className={`count-stepper ${className ?? ''}`}
+      className={`count-stepper ${foldable ? 'foldable' : ''} ${foldable && folded ? 'folded' : ''} ${className ?? ''}`}
       role="group"
       aria-label="Quick counts"
       style={style}
@@ -26,6 +50,12 @@ export const CountStepper = forwardRef<
       onClick={(e) => e.stopPropagation()}
       onPointerDown={(e) => e.stopPropagation()}
     >
+      {foldable && (
+        <button type="button" className="cs-fold" aria-expanded={!folded} onClick={toggle}>
+          Quick counts
+          <Icon name={folded ? 'chevron-down' : 'chevron-up'} className="sm" />
+        </button>
+      )}
       {rows.map((r) => (
         <div key={r.key} className="cs-row">
           <span className="cs-label">{r.label}</span>

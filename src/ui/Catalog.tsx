@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { buildModel } from '../core/build';
+import { useMediaQuery } from './useMediaQuery';
 import { snapshotSvg } from '../core/snapshot';
 import {
   catalogFamilies,
@@ -103,7 +104,9 @@ export function groupFamilies(families: ViewFamily[], by: Grouping): Group[] {
     label: ROOM_LABEL[r],
     items: families
       .filter((f) => f.rooms.includes(r))
-      .map((family) => ({ family, also: family.rooms[0] !== r })),
+      .map((family) => ({ family, also: family.rooms[0] !== r }))
+      // The room's own families first; those whose main room is elsewhere follow ("also" here).
+      .sort((a, b) => Number(a.also) - Number(b.also)),
   }));
   const other = families.filter((f) => !f.rooms.length);
   if (other.length)
@@ -149,6 +152,20 @@ const matches = (f: ViewFamily, v: CatalogVariant, q: string) =>
     s.toLowerCase().includes(q),
   );
 
+/** The catalog's own actions; on a phone they fold under one button so the list starts higher up. */
+function CatalogActions({ phone, children }: { phone: boolean; children: ReactNode }) {
+  if (!phone) return <div className="catalog-actions">{children}</div>;
+  return (
+    <details className="catalog-more">
+      <summary>
+        More catalog actions
+        <Icon name="chevron-down" className="sm" />
+      </summary>
+      <div className="catalog-actions">{children}</div>
+    </details>
+  );
+}
+
 /**
  * "Start from" (ADR-032) in New and in a project's "Add a piece": every catalog item, grouped by room or type, with
  * search. Picking one makes an independent copy with its origin recorded.
@@ -176,7 +193,7 @@ export function StartFrom({
     <div className="start-from">
       <div className="start-head">
         <h3 className="list-head">
-          Start from <span className="count">{total} items</span>
+          Start from <span className="count">{total} ready items</span>
         </h3>
         <GroupToggle value={grouping} onChange={setGrouping} />
         {onBrowse && (
@@ -269,6 +286,7 @@ export function CatalogPage({
   onNewPiece?: () => void;
 }) {
   const families = useCatalog();
+  const phone = useMediaQuery('(max-width: 760px)');
   const [grouping, setGrouping] = useGrouping();
   const [source, setSource] = useState<Source>('templates');
   const [query, setQuery] = useState('');
@@ -401,7 +419,7 @@ export function CatalogPage({
         )}
       </div>
       {source === 'templates' && (
-        <div className="catalog-actions">
+        <CatalogActions phone={phone}>
           <label className="toggle small">
             <input
               type="checkbox"
@@ -443,7 +461,7 @@ export function CatalogPage({
               </label>
             </div>
           </details>
-        </div>
+        </CatalogActions>
       )}
       {msg && (
         <p className="alert info" role="status">
@@ -704,7 +722,7 @@ function FamilyBlock({
                         : 'Needed new construction'
                     }
                   >
-                    {v.kind === 'interior' ? 'I' : 'C'}
+                    {v.kind === 'interior' ? 'Interior only' : 'New construction'}
                   </span>
                 </span>
                 {VARIANT_RO[v.id] && <span className="ro">{VARIANT_RO[v.id]}</span>}
@@ -728,7 +746,7 @@ function FamilyBlock({
               </div>
               <button
                 type="button"
-                className="btn sm primary"
+                className="btn sm outline"
                 disabled={!ok}
                 onClick={() => {
                   const d = insertVariant(f, v);

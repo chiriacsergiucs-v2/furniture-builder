@@ -27,6 +27,7 @@ import { Output } from './Output';
 import { useProblem } from './problemStore';
 import { PrintSheet } from './PrintSheet';
 import { Icon } from './icons';
+import { useMediaQuery } from './useMediaQuery';
 import { setTheme, useTheme } from './useTheme';
 import { setLook, useLook } from './useLook';
 import { RenderDialog } from './RenderDialog';
@@ -80,19 +81,6 @@ const SAVE_TEXT: Record<SaveState, string> = {
   saved: 'Saved on this device',
   failed: 'Not saved — browser storage unavailable',
 };
-
-function useMediaQuery(q: string) {
-  const [match, setMatch] = useState(
-    () => typeof matchMedia !== 'undefined' && matchMedia(q).matches,
-  );
-  useEffect(() => {
-    const m = matchMedia(q);
-    const on = () => setMatch(m.matches);
-    m.addEventListener('change', on);
-    return () => m.removeEventListener('change', on);
-  }, [q]);
-  return match;
-}
 
 /**
  * The stage's view controls. On a phone in Build & Preview they sit behind one "Options" button so the 3D view keeps
@@ -461,13 +449,24 @@ export function App() {
     <>
       <div className={`app page-${page}`}>
         <header className="bar" ref={barRef}>
-          <div className="brand" aria-hidden="true">
-            <svg viewBox="0 0 24 24">
+          {/* The mark goes to Projects, like the Projects place (G-059); on a phone it also names the app. */}
+          <a
+            className="brand"
+            href="#"
+            title="Projects"
+            aria-label="Furniture Builder, go to Projects"
+            onClick={(e) => {
+              e.preventDefault();
+              setPage('projects');
+            }}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
               <rect x="3" y="3" width="18" height="18" />
               <line x1="3" y1="10" x2="21" y2="10" />
               <line x1="3" y1="15.5" x2="21" y2="15.5" />
             </svg>
-          </div>
+            <span className="brand-name">Furniture Builder</span>
+          </a>
           <nav className="pages places" aria-label="Places" ref={navRef}>
             {PLACES.map((p) => (
               <a
