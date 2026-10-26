@@ -26,7 +26,7 @@ groups come with [ADR-097](ADR-097-select-several-pieces-and-keep-them-as-groups
   project panel lists how many pieces have a newer template.
 - **Two actions:** **Keep mine** hides the notice for that revision (the project item records
   `templateSeen: <revision>`, project `schemaVersion` raised to the next free version, older ones still load);
-  **Replace with the new revision** runs the replace of [ADR-098](ADR-098-replace-a-piece-with-a-compatible-catalog-alternative.md) with the same item.
+  **Replace with the new revision** runs the replace of [ADR-098](../adr-done/ADR-098-replace-a-piece-with-a-compatible-catalog-alternative.md) with the same item.
 - A pure function `templateStatus(item, families, locals)` in `src/core` decides the notice; nothing is changed
   automatically (projects keep copies, ADR-022/ADR-028).
 - Saving and reloading keep the revision, the dismissal and, once ADR-097 ships, the groups.

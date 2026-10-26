@@ -6,6 +6,7 @@
 import { overlapsBox } from './shape';
 import {
   buildProjectModel,
+  pieceName,
   refreshRunParts,
   resolvePlacements,
   type PlacedPiece,
@@ -104,14 +105,7 @@ const side = (axis: 'x' | 'z', s: number) =>
       ? 'away from the back wall'
       : 'towards the back wall';
 
-/** A piece's name, with its number in the project when another piece has the same name. */
-export function pieceName(project: Project, id: string): string {
-  const i = project.items.findIndex((x) => x.id === id);
-  const name = project.items[i]?.design.name ?? '';
-  return project.items.some((x) => x.id !== id && x.design.name === name)
-    ? `${name} (piece ${i + 1})`
-    : name;
-}
+export { pieceName };
 
 function moveCandidate(
   project: Project,
@@ -119,6 +113,7 @@ function moveCandidate(
   axis: 'x' | 'z',
   s: Mm,
 ): Candidate | null {
+  if (pc.item.locked) return null;
   const next = moveItem(project, pc.item.id, axis === 'x' ? s : 0, axis === 'z' ? s : 0);
   return next
     ? {
@@ -130,6 +125,7 @@ function moveCandidate(
 }
 
 function hangCandidate(project: Project, pc: PlacedPiece, dy: Mm): Candidate | null {
+  if (pc.item.locked) return null;
   const next = rehang(project, pc.item.id, dy);
   return next
     ? {
@@ -165,7 +161,7 @@ function fillerCandidate(
 ): Candidate | null {
   const b = pc.bounds,
     m = frontBoard(pc);
-  if (!m) return null;
+  if (!m || pc.item.locked) return null;
   const along = pc.facing.axis === 'z' ? 'x' : 'z';
   const t = m.thickness;
   const gap0 = s > 0 ? (along === 'x' ? b.x : b.z) : (along === 'x' ? b.x + b.w : b.z + b.d) + s;
@@ -266,7 +262,7 @@ function candidates(project: Project, pm: ProjectModel, d: Diagnostic): Candidat
         m.dx ? `${Math.abs(m.dx)} mm ${side('x', m.dx)}` : '',
         m.dz ? `${Math.abs(m.dz)} mm ${side('z', m.dz)}` : '',
       ].filter(Boolean);
-      const next = moveItem(project, pc.item.id, m.dx, m.dz);
+      const next = pc.item.locked ? null : moveItem(project, pc.item.id, m.dx, m.dz);
       if (next)
         out.push({
           label: `Move ${pieceName(project, pc.item.id)} ${parts.join(' and ')}, inside the room`,
@@ -296,6 +292,9 @@ export function repairsFor(
   const boundsOf = (m: ProjectModel) =>
     new Map<string, Box>([...m.pieces.map((pc) => [pc.item.id, pc.bounds] as [string, Box])]);
   const was = boundsOf(pm);
+  // A locked piece is never moved by a repair (ADR-095): candidates that move it are not made, and one that moves it by
+  // moving its base is dropped here.
+  const locked = pm.pieces.filter((pc) => pc.item.locked).map((pc) => pc.item.id);
   for (const c of candidates(project, pm, d).sort((a, b) => a.distance - b.distance)) {
     if (out.length >= max) break;
     if (seen.has(c.label)) continue;
@@ -303,6 +302,11 @@ export function repairsFor(
     const next = settle(c.project);
     if (c.added && !(next.runParts ?? []).some((r) => r.key === c.added)) continue;
     const after = buildProjectModel(next);
+    if (locked.length) {
+      const now = boundsOf(after);
+      if (locked.some((id) => JSON.stringify(now.get(id)) !== JSON.stringify(was.get(id))))
+        continue;
+    }
     if (after.diagnostics.some((e) => sameProblem(d, e))) continue;
     if (after.diagnostics.some((e) => e.severity === 'error' && !before.has(errorKey(e)))) continue;
     const preview: Repair['preview'] = [];

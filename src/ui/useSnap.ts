@@ -22,6 +22,9 @@ function stored(): boolean {
 }
 let on = stored();
 
+/** The toggle as it is now, for handlers outside React (ADR-094: a drop from the piece list). */
+export const snapIsOn = () => on;
+
 export function setSnap(v: boolean) {
   on = v;
   try {

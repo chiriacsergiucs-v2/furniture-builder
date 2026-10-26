@@ -50,6 +50,7 @@ const PATHS = {
   more: 'M5 12h.5M11.75 12h.5M18.5 12h.5',
   'chevron-left': 'm15 6-6 6 6 6',
   'chevron-up': 'm6 15 6-6 6 6',
+  lock: 'M6 11h12v10H6zM8 11V7a4 4 0 0 1 8 0v4',
   sliders: 'M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0M14 4v4M8 10v4M16 16v4',
 } as const;
 

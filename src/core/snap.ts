@@ -3,17 +3,17 @@
  * placed pieces and the room, never stored; the same drag always gives the same snap. A separate layer over the
  * ADR-065 drag: with snapping off (or Alt held) the UI uses `dragPosition` exactly as before.
  *
- * Compatibility rules (one table, `RULES`):
- *  - side to side: only between pieces with the same placement kind (floor with floor, wall with wall);
- *  - back to wall: any piece;
- *  - into an inside corner: the back against one wall and a side against the other;
- *  - a turned piece's faces are turned with it; depth and height differences are allowed but named.
+ * Compatibility rules are data in `compat.ts` (ADR-100): sides join sides, same placement kind, back to wall and the
+ * family rule refuse a candidate; depth and height differences are allowed but named. Into an inside corner: the back
+ * against one wall and a side against the other. A turned piece's faces are turned with it.
  */
+import { evaluate, mountOf, type Mount } from './compat';
 import {
   DRAG_STEP,
   dragPosition,
   isWallHung,
   placementBases,
+  tapPosition,
   type PlacedPiece,
   type Project,
   type ProjectItem,
@@ -25,8 +25,7 @@ import type { Box, Mm } from './types';
 export const SNAP_RANGE: Mm = 60;
 
 export type Axis = 'x' | 'z';
-/** How a piece hangs for the side-to-side rule. */
-export type Mount = 'floor' | 'wall' | 'above';
+export { mountOf, type Mount };
 
 /** A vertical face of a piece's footprint on the plan. */
 export interface FaceConnector {
@@ -67,27 +66,6 @@ export interface Connectors {
   faces: FaceConnector[];
   walls: WallConnector[];
   corners: CornerConnector[];
-}
-
-/** The rule table (ADR-070), also the text of the "why won't this snap?" hint. */
-export const RULES = {
-  sideOnly: (a: string, b: string) => `a ${a} cannot join a ${b}; only sides join`,
-  mount: (a: Mount, b: Mount) => `a ${MOUNT_NAME[a]} cannot join a ${MOUNT_NAME[b]}`,
-  backToWall: (face: string) =>
-    `only the back of a piece goes against a wall (this is its ${face}); a side goes against a wall only in a corner`,
-} as const;
-
-const MOUNT_NAME: Record<Mount, string> = {
-  floor: 'floor unit',
-  wall: 'wall unit',
-  above: 'piece placed on another piece',
-};
-
-/** Whether the piece stands on the floor, hangs on the wall, or sits on another piece. */
-export function mountOf(item: ProjectItem): Mount {
-  const k = item.placement?.kind;
-  if (k === 'floor' || k === 'wall' || k === 'above') return k;
-  return isWallHung(item.design) ? 'wall' : 'floor';
 }
 
 /** The four faces of a placed footprint, turned with the piece. `box` overrides where the footprint is. */
@@ -228,6 +206,11 @@ export interface SnapResult {
   snap: Snapped | null;
   /** With nothing to snap to: why the nearest connector was rejected. */
   hint: string | null;
+  /**
+   * Neighbours within range the family rule refused (ADR-100), named even when the piece snaps elsewhere:
+   * "Won’t snap to Base cabinet: …". Nearest first.
+   */
+  refused: string[];
 }
 
 interface Move {
@@ -294,9 +277,23 @@ export function snapDrag(
   const conn = connectorsOf(others, project.room);
 
   const cands: Cand[] = [];
-  const rejected: { dist: number; key: string; kind: Cand['kind']; text: string }[] = [];
-  const reject = (kind: Cand['kind'], dist: number, key: string, target: string, why: string) =>
-    rejected.push({ dist, key, kind, text: `Won’t snap to ${target}: ${why}.` });
+  const rejected: {
+    dist: number;
+    key: string;
+    kind: Cand['kind'];
+    text: string;
+    /** Named even when the piece snaps elsewhere (ADR-100 `namedWhenSnapped`). */
+    named?: boolean;
+  }[] = [];
+  const reject = (
+    kind: Cand['kind'],
+    dist: number,
+    key: string,
+    target: string,
+    why: string,
+    named = false,
+  ) => rejected.push({ dist, key, kind, text: `Won’t snap to ${target}: ${why}.`, named });
+  const itemById = new Map(others.map((pc) => [pc.item.id, pc.item]));
 
   for (const f of faces) {
     for (const n of conn.faces) {
@@ -304,17 +301,32 @@ export function snapDrag(
       const d = n.at - f.at;
       if (Math.abs(d) > range) continue;
       const key = `piece:${n.owner}`;
-      if (f.face !== 'side' || n.face !== 'side') {
-        reject('side', Math.abs(d), key, n.name, RULES.sideOnly(`${f.face}`, `${n.face}`));
+      // The compatibility rules (ADR-100), in table order: the first failed `refuse` rule removes the candidate.
+      const found = evaluate('snap', {
+        a: me.item,
+        mountA: mine,
+        faceA: f.face,
+        b: itemById.get(n.owner)!,
+        mountB: n.mount,
+        faceB: n.face,
+        depthA: f.depth,
+        depthB: n.depth,
+        heightA: f.height,
+        heightB: n.height,
+      });
+      const refused = found.find((x) => x.rule.severity === 'refuse');
+      if (refused) {
+        reject('side', Math.abs(d), key, n.name, refused.message, refused.rule.namedWhenSnapped);
         continue;
       }
-      if (n.mount !== mine) {
-        reject('side', Math.abs(d), key, n.name, RULES.mount(mine, n.mount));
-        continue;
-      }
-      const notes: string[] = [];
-      if (f.depth !== n.depth) notes.push(`depth ${f.depth} vs ${n.depth}`);
-      if (f.height !== n.height) notes.push(`height ${f.height} vs ${n.height}`);
+      // Depth and height differences are allowed but named (ADR-070); failed `warning` rules are named too.
+      const notes = [
+        ...new Set([
+          ...(f.depth !== n.depth ? [`depth ${f.depth} vs ${n.depth}`] : []),
+          ...(f.height !== n.height ? [`height ${f.height} vs ${n.height}`] : []),
+          ...found.map((x) => x.message),
+        ]),
+      ];
       const move = f.axis === 'x' ? { x: d } : { z: d };
       cands.push({
         kind: 'side',
@@ -331,8 +343,11 @@ export function snapDrag(
       const d = w.at - f.at;
       if (Math.abs(d) > range) continue;
       const key = `wall:${String(w.wall).padStart(4, '0')}`;
-      if (f.face !== 'back') {
-        reject('wall', Math.abs(d), key, wallName(w.wall), RULES.backToWall(f.face));
+      const refused = evaluate('snap', { a: me.item, mountA: mine, faceA: f.face }).find(
+        (x) => x.rule.severity === 'refuse',
+      );
+      if (refused) {
+        reject('wall', Math.abs(d), key, wallName(w.wall), refused.message);
         continue;
       }
       const move = f.axis === 'x' ? { x: d } : { z: d };
@@ -371,6 +386,14 @@ export function snapDrag(
     });
   }
 
+  const refused = [
+    ...new Set(
+      [...rejected]
+        .filter((r) => r.named)
+        .sort(cmp)
+        .map((r) => r.text),
+    ),
+  ];
   if (!cands.length) {
     const near = [...rejected].sort(cmp)[0];
     return {
@@ -378,6 +401,7 @@ export function snapDrag(
       box: at(),
       snap: null,
       hint: near ? near.text : `Nothing to snap to within ${range} mm.`,
+      refused,
     };
   }
   const best = [...cands].sort(cmp)[0];
@@ -415,7 +439,7 @@ export function snapDrag(
     }
   }
   const position = { ...free, x: free.x + (move.x ?? 0), z: free.z + (move.z ?? 0) };
-  return { position, box: at(move), snap: { label, notes, kind }, hint: null };
+  return { position, box: at(move), snap: { label, notes, kind }, hint: null, refused };
 }
 
 /**
@@ -436,5 +460,35 @@ export function dropTarget(
   if (!me) return null;
   const position = dragPosition(me.item, dx, dz);
   const box = shifted(me.bounds, position.x - me.item.position.x, position.z - me.item.position.z);
-  return { position, box, snap: null, hint: null };
+  return { position, box, snap: null, hint: null, refused: [] };
+}
+
+/**
+ * Where a new piece dragged from the piece list lands (ADR-094). `me` is the piece as `placeItem` builds it from
+ * `makeItem` (any position): its left-back corner goes to the room point exactly as a tap places it (ADR-056,
+ * `tapPosition`), then, with `snap` on, it snaps as a dragged piece does (ADR-070). Whole mm.
+ */
+export function dropNewPiece(
+  project: Project,
+  pieces: PlacedPiece[],
+  me: PlacedPiece,
+  at: { x: number; z: number },
+  snap: boolean,
+  range: Mm = SNAP_RANGE,
+): SnapResult {
+  const position = tapPosition(me.item, at.x, at.z);
+  const item: ProjectItem = { ...me.item, position };
+  const moved: PlacedPiece = {
+    ...me,
+    item,
+    bounds: shifted(me.bounds, position.x - me.item.position.x, position.z - me.item.position.z),
+  };
+  const free: SnapResult = { position, box: moved.bounds, snap: null, hint: null, refused: [] };
+  if (!snap) return free;
+  const others = pieces.filter((pc) => pc.item.id !== item.id);
+  const withMe: Project = {
+    ...project,
+    items: [...project.items.filter((i) => i.id !== item.id), item],
+  };
+  return snapDrag(withMe, [...others, moved], item.id, 0, 0, range) ?? free;
 }

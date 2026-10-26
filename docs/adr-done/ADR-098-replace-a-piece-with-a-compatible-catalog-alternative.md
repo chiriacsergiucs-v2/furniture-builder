@@ -1,7 +1,8 @@
 # ADR-098: Replace a piece with a compatible catalog alternative
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-26
+- Implemented: 2026-10-26
 - Depends on: ADR-028, ADR-055, ADR-061
 - Design: docs/ui-design.md (Plan view)
 - Backlog: N96
@@ -22,7 +23,7 @@ a module and browse only compatible alternatives" (line 183). Each project piece
   Compatible = same placement kind (floor, wall, on another piece) and the same width as the piece; a **Show other
   widths** switch adds the rest, each with "neighbours may need moving".
 - **What carries over:** the project item keeps its id, position (left-back corner), quarter turn, quantity,
-  placement, clearance zones, lock ([ADR-095](ADR-095-lock-a-piece-so-automatic-moves-and-repairs-leave-it-alone.md)) and group ([ADR-097](ADR-097-select-several-pieces-and-keep-them-as-groups.md)). Its boards carry over by part role,
+  placement, clearance zones, lock ([ADR-095](../adr-done/ADR-095-lock-a-piece-so-automatic-moves-and-repairs-leave-it-alone.md)) and group ([ADR-097](../adr/ADR-097-select-several-pieces-and-keep-them-as-groups.md)). Its boards carry over by part role,
   as finish scope applies them ([ADR-055](../adr-done/ADR-055-apply-a-board-to-this-piece-this-run-or-the-whole-project.md)). The design is the new item's copy with its own catalog origin.
 - **What updates:** run parts refresh (ADR-061), checks rerun; the result says what changed ("Replaced. Worktop 2400
   → 2600 mm. 1 problem: …") and opens the problem with its repairs ([ADR-071](../adr-done/ADR-071-select-the-problem-and-offer-previewed-repairs-for-diagnosti.md)).
@@ -48,10 +49,12 @@ a module and browse only compatible alternatives" (line 183). Each project piece
 
 ## Done when
 
-- [ ] `replaceItem` keeps id, position, turn, quantity, placement, zones, lock, group and boards (unit tests)
-- [ ] Run parts follow a replaced piece of another width; one undo step (unit tests)
-- [ ] Find-it at 1440 and 390 px: select a base cabinet → **Replace…** → only same-width items listed → pick one →
-      the piece is replaced in place; Undo restores it; no page errors
+- [x] `replaceItem` keeps id, position, turn, quantity, placement, zones, lock, group and boards (unit tests,
+      `tests/replace.test.ts`)
+- [x] Run parts follow a replaced piece of another width; one undo step (unit tests, `tests/replace.test.ts`)
+- [x] Find-it at 1440 and 390 px: select a base cabinet → **Replace…** → only same-width items listed → pick one →
+      the piece is replaced in place; Undo restores it; no page errors (`tools/replace/find-it.mjs`, 30/30 PASS on
+      the production build, 2026-10-26)
 
 ## Answers (2026-10-26)
 

@@ -59,6 +59,18 @@ function withRoleBoard(d: Design, role: FinishRole, id: string): Design {
   return d;
 }
 
+/**
+ * The design with `board` on the parts of this role: the design's own board when it already has the same one (name,
+ * thickness, grain, picture), else a copy with a new id. Unchanged when the design has no such part.
+ */
+export function putRoleBoard(d: Design, role: FinishRole, board: Material): Design {
+  if (roleBoard(d, role) === null) return d;
+  const key = materialKey(board);
+  const have = d.materials.find((m) => materialKey(m) === key);
+  const mat = have ?? { ...board, id: newId() };
+  return withRoleBoard(have ? d : { ...d, materials: [...d.materials, mat] }, role, mat.id);
+}
+
 /** The pieces a scope reaches from the selected piece; "run" falls back to the piece when it is not in a run. */
 export function finishTargets(project: Project, id: string, scope: FinishScope): ProjectItem[] {
   if (scope === 'project') return project.items;
@@ -80,7 +92,6 @@ export function applyFinish(
   scope: FinishScope,
 ): FinishResult {
   const targets = new Set(finishTargets(project, id, scope).map((i) => i.id));
-  const key = materialKey(board);
   const applied: string[] = [],
     skipped: string[] = [];
   const items = project.items.map((it) => {
@@ -89,14 +100,8 @@ export function applyFinish(
       skipped.push(`${it.design.name} has no ${role === 'front' ? 'fronts' : 'carcass'}`);
       return it;
     }
-    const have = it.design.materials.find((m) => materialKey(m) === key);
-    const mat = have ?? { ...board, id: newId() };
     applied.push(it.design.name);
-    const d = {
-      ...it.design,
-      materials: have ? it.design.materials : [...it.design.materials, mat],
-    };
-    return { ...it, design: withRoleBoard(d, role, mat.id) };
+    return { ...it, design: putRoleBoard(it.design, role, board) };
   });
   // Fillers and covers next to changed fronts take the new board; the worktop keeps its own.
   const runParts =

@@ -29,7 +29,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { explode } from '../core/explode';
 import { hitToMm, inSelection, selectionBox } from '../core/selectPath';
 import { roomDisplayBoxes } from '../core/room';
-import { pieceBoxToRoom } from '../core/project';
+import { pieceBoxToRoom, type PlacedPiece } from '../core/project';
 import { inPlaneAxes, union } from '../core/geometry';
 import { aabbOf } from '../core/shape';
 import { boxUvs, finishLook, planeUvs } from '../core/surface';
@@ -43,9 +43,12 @@ import { useTheme } from '../ui/useTheme';
 import { useLook } from '../ui/useLook';
 import { SHADOW_CATCHER, setStage, useRendering } from './renderBridge';
 import { CountStepper } from '../ui/CountStepper';
+import { useSnap } from '../ui/useSnap';
+import { SNAP_RANGE } from '../core/snap';
+import { S, useGhost, useMoveMode, usePieceDrag, type PieceGhost } from './pieceDrag';
+import { landingY } from '../core/drag3d';
 import type { Box, MaterialImage, Panel } from '../core/types';
 
-const S = 0.001; // mm → metres
 const FRONT = new Set<Panel['role']>(['door', 'drawer-front']);
 const SELECT = '#2d5b4c';
 const HIGHLIGHT = '#f2c230';
@@ -133,6 +136,8 @@ function useTextures(urls: Map<string, string>): Map<string, Texture> {
 /**
  * Non-authoritative preview: renders the model's panels exactly as built, never edits them.
  * A tap selects the whole piece, then one level smaller per tap at the hit point (ADR-083).
+ * One exception (ADR-093): in a project, the Move button lets a piece be dragged across the floor and the turn
+ * buttons or R / Shift+R turn it; both go through the same store actions as the Plan.
  */
 export default function Viewer3D() {
   const view = useView();
@@ -181,6 +186,16 @@ export default function Viewer3D() {
       !s.project?.room,
   );
   const cardRef = useRef<HTMLDivElement>(null);
+  // Locked project pieces (ADR-095) get a "Locked" label over them: DOM spans placed each frame, as the counts card.
+  const projectPieces = useDesign((s) =>
+    view.mode === 'project' ? s.projectModel?.pieces : undefined,
+  );
+  const locked = useMemo(
+    () => (projectPieces ?? []).filter((pc) => pc.item.locked),
+    [projectPieces],
+  );
+  const showLocks = !exploded && !rendering && locked.length > 0;
+  const lockBadges = useRef(new Map<string, HTMLSpanElement>());
   // Bottom centre of the card at the anchor, kept inside the view (the anchor's screen point, or null to hide).
   const placeCard = useCallback((at: { x: number; y: number } | null) => {
     const el = cardRef.current,
@@ -198,6 +213,36 @@ export default function Viewer3D() {
     el.style.transform = `translate(${Math.round(left)}px, ${Math.round(top)}px)`;
     el.style.visibility = 'visible';
   }, []);
+  // Placing project pieces from 3D (ADR-093).
+  const inProject = view.mode === 'project';
+  const hasPieces = useDesign((s) => inProject && !!s.projectModel?.pieces.length);
+  const [moveOn, setMoveOn] = useMoveMode();
+  // Placing a new piece or drawing the room on the Plan turns moving and turning off, as on the Plan (ADR-056, 059).
+  const tapping = useDesign((s) => !!s.placingItemId || !!s.drawingRoom);
+  const moving = moveOn && hasPieces && !exploded && !rendering && !tapping;
+  const [snapOn, setSnapOn] = useSnap();
+  const turnId = useDesign((s) =>
+    inProject && s.selectedItemId && s.project?.items.some((i) => i.id === s.selectedItemId)
+      ? s.selectedItemId
+      : null,
+  );
+  const turnItem = useDesign((s) => s.turnItem);
+  // R / Shift+R turn the selected piece about its centre (ADR-069), as on the Plan; not while typing or in a dialog.
+  useEffect(() => {
+    if (!turnId || rendering || tapping) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() !== 'r' || e.ctrlKey || e.metaKey || e.altKey || e.defaultPrevented)
+        return;
+      const t = e.target as HTMLElement | null;
+      if (t?.closest?.('input, textarea, select, [contenteditable], dialog, .plan-piece')) return;
+      if (document.querySelector('dialog[open]')) return;
+      e.preventDefault();
+      // Holding the key turns once (each turn is an undo step).
+      if (!e.repeat) turnItem(turnId, e.shiftKey ? -1 : 1);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [turnId, rendering, tapping, turnItem]);
   return (
     <>
       <Canvas
@@ -237,14 +282,90 @@ export default function Viewer3D() {
             />
           </>
         )}
-        <Panels panels={panels} realistic={realistic} plain={rendering} />
+        <Panels
+          panels={panels}
+          realistic={realistic}
+          plain={rendering}
+          moving={moving}
+          snapOn={snapOn}
+        />
         {counts && !docked && (
           <CountsAnchor place={placeCard} inProject={view.mode === 'project'} />
         )}
         {view.mode === 'project' && !exploded && <RoomWalls />}
         {view.mode === 'project' && !exploded && <ModelItems plain={rendering} />}
+        {showLocks && <LockAnchors pieces={locked} badges={lockBadges} />}
         <Fit key={designId} bounds={bounds} />
       </Canvas>
+      {showLocks && (
+        <div className="lock-badges" aria-hidden="true">
+          {locked.map((pc) => (
+            <span
+              key={pc.item.id}
+              className="lock-badge-3d"
+              style={{ visibility: 'hidden' }}
+              ref={(el) => {
+                if (el) lockBadges.current.set(pc.item.id, el);
+                else lockBadges.current.delete(pc.item.id);
+              }}
+            >
+              Locked
+            </span>
+          ))}
+        </div>
+      )}
+      {hasPieces && !rendering && (
+        <div className="three-tools" role="toolbar" aria-label="Place pieces in 3D">
+          <button
+            type="button"
+            className="btn sm outline move-toggle"
+            aria-pressed={moving}
+            disabled={exploded}
+            title={
+              exploded
+                ? 'Turn off Exploded 3D to move pieces'
+                : 'Drag a piece to move it; dragging empty space turns the view'
+            }
+            onClick={() => setMoveOn(!moveOn)}
+          >
+            Move
+          </button>
+          {moving && (
+            <button
+              type="button"
+              className="btn sm outline snap-toggle"
+              aria-pressed={snapOn}
+              title={`Snap within ${SNAP_RANGE} mm to walls and neighbours; hold Alt to place freely`}
+              onClick={() => setSnapOn(!snapOn)}
+            >
+              Snap
+            </button>
+          )}
+          {turnId && !tapping && (
+            <>
+              <button
+                type="button"
+                className="btn sm outline"
+                aria-label="Turn 90° anticlockwise about its centre"
+                title="Turn about its centre (R)"
+                onClick={() => turnItem(turnId, 1)}
+              >
+                Turn 90° ↺
+              </button>
+              <button
+                type="button"
+                className="btn sm outline"
+                aria-label="Turn 90° clockwise about its centre"
+                title="Turn about its centre (Shift+R)"
+                onClick={() => turnItem(turnId, -1)}
+              >
+                Turn 90° ↻
+              </button>
+            </>
+          )}
+        </div>
+      )}
+      {moving && <DragNote snapOn={snapOn} />}
       {emptyProject && (
         <div className="no-3d empty-3d">
           <p>Add pieces under Compose to see them in 3D.</p>
@@ -521,6 +642,42 @@ function ModelItemMesh({ item, box, plain }: { item: ModelItem; box: Box; plain:
   );
 }
 
+/**
+ * Places the "Locked" labels of locked project pieces (ADR-095) each frame: centred on each piece, clear of the
+ * counts card over its top, and hidden when the point is behind the camera. Display only; the viewer only selects.
+ */
+function LockAnchors({
+  pieces,
+  badges,
+}: {
+  pieces: PlacedPiece[];
+  badges: { current: Map<string, HTMLSpanElement> };
+}) {
+  const v = useMemo(() => new Vector3(), []);
+  useFrame(({ camera, size }) => {
+    for (const pc of pieces) {
+      const el = badges.current.get(pc.item.id);
+      if (!el) continue;
+      const b = pc.bounds;
+      v.set((b.x + b.w / 2) * S, (b.y + b.h / 2) * S, (b.z + b.d / 2) * S).project(camera);
+      if (v.z > 1) {
+        el.style.visibility = 'hidden';
+        continue;
+      }
+      // The label is always "Locked": its size is read once, not each frame (no layout per frame).
+      if (!el.dataset.w && el.offsetWidth) {
+        el.dataset.w = String(el.offsetWidth);
+        el.dataset.h = String(el.offsetHeight);
+      }
+      const x = ((v.x + 1) / 2) * size.width - Number(el.dataset.w ?? 0) / 2;
+      const y = ((1 - v.y) / 2) * size.height - Number(el.dataset.h ?? 0) / 2;
+      el.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+      el.style.visibility = 'visible';
+    }
+  });
+  return null;
+}
+
 /** The project's room (ADR-058): translucent walls with openings, obstacles; display only, never picked. */
 function RoomWalls() {
   const room = useDesign((s) => s.project?.room);
@@ -619,11 +776,16 @@ function Panels({
   panels,
   realistic,
   plain,
+  moving = false,
+  snapOn = true,
 }: {
   panels: Panel[];
   realistic: boolean;
   /** No selection or hover tint (while rendering a picture). */
   plain: boolean;
+  /** Move mode in a project (ADR-093): pressing a piece drags it across the floor. */
+  moving?: boolean;
+  snapOn?: boolean;
 }) {
   const view = useView();
   const materials = view.materials;
@@ -665,6 +827,7 @@ function Panels({
         ? selectionBox(drillModel, selectedSpace)
         : undefined;
   const local = useMemo(() => new Map(drillModel.panels.map((p) => [p.id, p])), [drillModel]);
+  const drag = usePieceDrag(inProject && moving, snapOn);
   const prefix = drillItem ? `${drillItem.id}:` : '';
   const ownId = inProject ? `${prefix}${selectedSpace}` : selectedSpace;
   const isFaded = (p: Panel) => {
@@ -683,6 +846,7 @@ function Panels({
           box={outline}
         />
       )}
+      {moving && <MoveGhost panels={view.model.panels} showFronts={showFronts} />}
       {panels
         .filter((p) => showFronts || !FRONT.has(p.role))
         .map((p) => {
@@ -749,10 +913,13 @@ function Panels({
           // Outside in, one level per tap at the hit point (ADR-083).
           const onClick = (e: ThreeEvent<MouseEvent>) => {
             e.stopPropagation();
+            // The click ending a 3D move (or the press that selected the piece) does nothing more (ADR-093).
+            if (drag.clicked()) return;
             const at = hitToMm(e.point, built.get(p.id), exploded);
             if (view.mode === 'project') tapItem(p.nodeId.split(':')[0], at);
             else tapPiece(at.x, at.y);
           };
+          const onDown = (e: ThreeEvent<PointerEvent>) => drag.press(e, p.nodeId.split(':')[0]);
           const geometry =
             map && img ? (
               <PictureGeometry p={p} img={img} />
@@ -761,7 +928,13 @@ function Panels({
             );
           if (p.shape?.kind === 'profile') {
             return map && img ? (
-              <mesh key={p.id} onClick={onClick} castShadow={realistic} receiveShadow={realistic}>
+              <mesh
+                key={p.id}
+                onClick={onClick}
+                onPointerDown={onDown}
+                castShadow={realistic}
+                receiveShadow={realistic}
+              >
                 <PictureGeometry p={p} img={img} />
                 {look}
               </mesh>
@@ -770,6 +943,7 @@ function Panels({
                 key={p.id}
                 geometry={profileGeometry(p)}
                 onClick={onClick}
+                onPointerDown={onDown}
                 castShadow={realistic}
                 receiveShadow={realistic}
               >
@@ -782,6 +956,7 @@ function Panels({
               key={p.id}
               position={[(b.x + b.w / 2) * S, (b.y + b.h / 2) * S, (b.z + b.d / 2) * S]}
               onClick={onClick}
+              onPointerDown={onDown}
               castShadow={realistic}
               receiveShadow={realistic}
             >
@@ -807,6 +982,7 @@ function Panels({
                   (b.z + b.d / 2 - pv[2]) * S,
                 ]}
                 onClick={onClick}
+                onPointerDown={onDown}
                 castShadow={realistic}
                 receiveShadow={realistic}
               >
@@ -817,5 +993,85 @@ function Panels({
           );
         })}
     </group>
+  );
+}
+
+/**
+ * The translucent copy of a dragged piece (ADR-093), where it would land: its boards' outlines moved by the drop the
+ * core worked out. Display only, never picked.
+ */
+function MoveGhost({ panels, showFronts }: { panels: Panel[]; showFronts: boolean }) {
+  const ghost = useGhost();
+  // A locked piece does not follow the pointer (ADR-095): no ghost, the note says why.
+  return ghost && !ghost.blocked ? (
+    <GhostBoxes ghost={ghost} panels={panels} showFronts={showFronts} />
+  ) : null;
+}
+
+function GhostBoxes({
+  ghost,
+  panels,
+  showFronts,
+}: {
+  ghost: PieceGhost;
+  panels: Panel[];
+  showFronts: boolean;
+}) {
+  const own = useMemo(
+    () =>
+      panels
+        .filter((p) => p.nodeId.startsWith(`${ghost.id}:`) && (showFronts || !FRONT.has(p.role)))
+        .map(aabbOf),
+    [panels, ghost.id, showFronts],
+  );
+  const item = useDesign((s) => s.project?.items.find((i) => i.id === ghost.id));
+  if (!item) return null;
+  // Where the drop puts it (core): across the floor, and down to the floor when lifted off another piece.
+  const dx = ghost.target.position.x - item.position.x,
+    dy = landingY(item) - item.position.y,
+    dz = ghost.target.position.z - item.position.z;
+  const color = ghost.target.snap ? '#2e7d4f' : SELECT;
+  return (
+    <group position={[dx * S, dy * S, dz * S]}>
+      {own.map((b, i) => (
+        <mesh
+          key={i}
+          position={[(b.x + b.w / 2) * S, (b.y + b.h / 2) * S, (b.z + b.d / 2) * S]}
+          raycast={() => null}
+          renderOrder={5}
+        >
+          <boxGeometry args={[b.w * S, b.h * S, b.d * S]} />
+          <meshBasicMaterial color={color} transparent opacity={0.28} depthWrite={false} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+/** The live drop label over the 3D view while a piece is dragged (ADR-093), as on the Plan (ADR-080). */
+function DragNote({ snapOn }: { snapOn: boolean }) {
+  const ghost = useGhost();
+  // Why the last move did nothing (a locked piece, ADR-095), until the next change or selection.
+  const notice = useDesign((s) => s.notice);
+  if (!ghost)
+    return notice ? (
+      <span className="plan-drag-note three-drag-note locked" role="status">
+        {notice}
+      </span>
+    ) : null;
+  if (ghost.blocked)
+    return (
+      <span className="plan-drag-note three-drag-note locked" role="status">
+        {ghost.blocked}
+      </span>
+    );
+  const t = ghost.target;
+  return (
+    <span className="plan-drag-note three-drag-note" role="status">
+      From left {t.position.x} · From back {t.position.z} mm{' · '}
+      {t.snap
+        ? `Snaps: ${[t.snap.label, ...t.snap.notes].join(' · ')}`
+        : (t.hint ?? (!ghost.snapping && snapOn ? 'Alt held: placing freely.' : 'Snap is off.'))}
+    </span>
   );
 }

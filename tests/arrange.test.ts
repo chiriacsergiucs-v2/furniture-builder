@@ -358,8 +358,8 @@ describe('mirror a run (ADR-069)', () => {
   it('reflects positions about the run centre and mirrors each piece, one undo step', () => {
     s().openProject(p);
     const before = s().project!;
-    const reasons = s().mirrorRun(before.items[0].id);
-    expect(reasons).toEqual([]);
+    const res = s().mirrorRun(before.items[0].id);
+    expect(res).toEqual({ reasons: [] });
     const after = s().project!;
     const x = (q: Project, id: string) => boundsOf(q, id).x;
     const [a, b, c] = before.items.map((i) => i.id);

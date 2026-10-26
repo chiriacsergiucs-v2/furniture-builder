@@ -4,7 +4,10 @@ import { decorPatch, type Decor } from '../core/materials';
 import { touchingRun } from '../core/arrange';
 import { mergeCandidates } from '../core/merge';
 import {
+  isLocked,
   leftNeighbour,
+  LOCKED_HINT,
+  moveBlocked,
   materialKey,
   pieceBoxToRoom,
   placementBases,
@@ -17,7 +20,7 @@ import {
 } from '../core/project';
 import { dropTarget, SNAP_RANGE } from '../core/snap';
 import { inSelection, selectionBox } from '../core/selectPath';
-import type { Box, Material, Panel } from '../core/types';
+import type { Box, Design, Material, Panel } from '../core/types';
 import { listDecors, listDesigns, loadDesign, type StoredDesign } from '../persist/db';
 import { useDesign } from '../store/designStore';
 import { Counter, InfoTip, MmField, Segmented, Select, Toggle } from './controls';
@@ -30,6 +33,14 @@ import {
   type PointerAt,
 } from './planDrag';
 import { useSnap } from './useSnap';
+import { CompatRules } from './CompatRules';
+import {
+  consumeDragClick,
+  dragSource,
+  newPieceTarget,
+  registerPlanHit,
+  usePieceList,
+} from './pieceDrag';
 import {
   DEFAULT_ROOM_HEIGHT,
   doorSwing,
@@ -66,6 +77,7 @@ import {
   type FocusedProblem,
 } from './ProblemBanner';
 import { useProblem } from './problemStore';
+import { ReplaceButton } from './Replace';
 
 const FRONT_SIDE: Record<QuarterTurn, string> = {
   0: 'front faces you',
@@ -96,6 +108,11 @@ export function ProjectPanel({
   const edit = useDesign((s) => s.editItem);
   const updateProject = useDesign((s) => s.updateProject);
   const setGap = useDesign((s) => s.setGap);
+  const setLocked = useDesign((s) => s.setLocked);
+  const [gapMsg, setGapMsg] = useState<{ id: string | null; text: string | null }>({
+    id: null,
+    text: null,
+  });
   const [libMsg, setLibMsg] = useState<string | null>(null);
   const [pieceSettings, setPieceSettings] = useState(false);
   const [moveRight, setMoveRight] = useState(true);
@@ -105,6 +122,11 @@ export function ProjectPanel({
     [project, selectedId],
   );
   const piece = pm?.pieces.find((p) => p.item.id === selectedId);
+  // A locked piece, or one carrying a locked piece, is not moved or turned from the card either (ADR-095).
+  const blocked = useMemo(
+    () => (selectedId ? moveBlocked(project, [selectedId]) : null),
+    [project, selectedId],
+  );
   const model3d = project.models?.find((m) => m.id === selectedId);
 
   const updateFromLibrary = async () => {
@@ -142,6 +164,7 @@ export function ProjectPanel({
           onChange={(v) => updateProject((p) => ({ ...p, cutting: { kerf: v } }))}
         />
         <SaveProjectTemplate />
+        <CompatRules />
       </div>
     );
 
@@ -159,17 +182,41 @@ export function ProjectPanel({
           <div className="card-title">
             <span>Selected piece</span>
           </div>
-          <h3>{item.design.name}</h3>
+          <h3>
+            {item.design.name}
+            {isLocked(item) && (
+              <span className="chip lock-chip">
+                <Icon name="lock" className="sm" />
+                Locked
+              </span>
+            )}
+          </h3>
           <div className="split-actions">
             <button type="button" className="btn solid" onClick={() => edit(item.id)}>
               <Icon name="pencil" className="sm" />
               Edit this piece
             </button>
+            <ReplaceButton key={item.id} item={item} />
             {item.libraryId && (
               <button type="button" className="btn outline" onClick={updateFromLibrary}>
                 Update from saved piece
               </button>
             )}
+            {/* Lock keeps the piece where it is (ADR-095); its size and boards stay editable. */}
+            <button
+              type="button"
+              className="btn outline"
+              aria-pressed={isLocked(item)}
+              title={
+                isLocked(item)
+                  ? 'Let the piece be moved and turned again'
+                  : 'Keep the piece where it is: nothing moves or turns it'
+              }
+              onClick={() => setLocked(item.id, !isLocked(item))}
+            >
+              <Icon name="lock" className="sm" />
+              {isLocked(item) ? 'Unlock' : 'Lock'}
+            </button>
           </div>
           {libMsg && (
             <p className="hint" role="status">
@@ -201,34 +248,49 @@ export function ProjectPanel({
               Copies are added to parts, sheets and hardware; one is shown in the room.
             </p>
           )}
-          <Segmented<QuarterTurn>
-            label="Turn"
-            value={item.rotationY}
-            options={[
-              { value: 0, label: '0°' },
-              { value: 90, label: '90°' },
-              { value: 180, label: '180°' },
-              { value: 270, label: '270°' },
-            ]}
-            onChange={(v) => update(item.id, { rotationY: v })}
-          />
-          <p className="hint">{FRONT_SIDE[item.rotationY]}</p>
+          {blocked ? (
+            <p className="hint" role="note">
+              {isLocked(item) ? `${LOCKED_HINT}.` : blocked} It stays {item.position.x} mm from the
+              left and {item.position.z} mm from the back, {FRONT_SIDE[item.rotationY]}; turn, place
+              and gap are off until it is unlocked. Its size and boards can still be changed.
+            </p>
+          ) : (
+            <>
+              <Segmented<QuarterTurn>
+                label="Turn"
+                value={item.rotationY}
+                options={[
+                  { value: 0, label: '0°' },
+                  { value: 90, label: '90°' },
+                  { value: 180, label: '180°' },
+                  { value: 270, label: '270°' },
+                ]}
+                onChange={(v) => update(item.id, { rotationY: v })}
+              />
+              <p className="hint">{FRONT_SIDE[item.rotationY]}</p>
+            </>
+          )}
           <ArrangeFields key={item.id} item={item} />
-          <PlacementFields item={item} />
-          {item.placement?.kind === 'above' ? null : left ? (
+          {!blocked && <PlacementFields item={item} />}
+          {item.placement?.kind === 'above' || blocked ? null : left ? (
             <>
               <MmField
                 label={`Gap to ${left.item.design.name} on the left`}
                 value={left.gap}
                 min={0}
                 max={5000}
-                onChange={(v) => setGap(item.id, v, moveRight)}
+                onChange={(v) => setGapMsg({ id: item.id, text: setGap(item.id, v, moveRight) })}
               />
               <Toggle
                 label="Move the pieces on its right too"
                 checked={moveRight}
                 onChange={setMoveRight}
               />
+              {gapMsg.id === item.id && gapMsg.text && (
+                <p className="hint" role="status">
+                  {gapMsg.text}
+                </p>
+              )}
             </>
           ) : (
             <p className="hint">
@@ -453,10 +515,7 @@ function ArrangeFields({ item }: { item: ProjectItem }) {
           className="btn outline sm"
           aria-label="Turn 90° anticlockwise about its centre"
           title="Turn about its centre (R)"
-          onClick={() => {
-            setMsg(null);
-            turn(item.id, 1);
-          }}
+          onClick={() => setMsg(turn(item.id, 1))}
         >
           Turn 90° ↺
         </button>
@@ -465,10 +524,7 @@ function ArrangeFields({ item }: { item: ProjectItem }) {
           className="btn outline sm"
           aria-label="Turn 90° clockwise about its centre"
           title="Turn about its centre (Shift+R)"
-          onClick={() => {
-            setMsg(null);
-            turn(item.id, -1);
-          }}
+          onClick={() => setMsg(turn(item.id, -1))}
         >
           Turn 90° ↻
         </button>
@@ -480,8 +536,13 @@ function ArrangeFields({ item }: { item: ProjectItem }) {
             type="button"
             className="btn outline sm"
             onClick={() => {
-              const left = mirrorRun(item.id);
-              setMsg(left.length ? `Moved, nothing to mirror inside: ${left.join('; ')}.` : null);
+              const res = mirrorRun(item.id);
+              setMsg(
+                res.refused ??
+                  (res.reasons.length
+                    ? `Moved, nothing to mirror inside: ${res.reasons.join('; ')}.`
+                    : null),
+              );
             }}
           >
             Mirror the run ({run.length} pieces)
@@ -715,7 +776,9 @@ export function PlanView() {
     seenTap.current = tapped;
     ref.current?.scrollIntoView({ block: 'start' });
   }, [tapped]);
-  if (!pm || (!pm.pieces.length && !pm.models.length && !hasRoom && !drawing))
+  // With the piece list open the plan is shown even when empty: items are dropped onto it (ADR-094).
+  const listOpen = usePieceList((s) => s.open);
+  if (!pm || (!pm.pieces.length && !pm.models.length && !hasRoom && !drawing && !listOpen))
     return (
       <div className="no-3d">
         <p>Add pieces to see them on the plan.</p>
@@ -787,6 +850,14 @@ function useSpaceInRoom() {
   }, [project, model, sel, id]);
 }
 
+/** Screen point → room mm on the plan (x along the back wall, z away from it). */
+function roomPoint(svg: SVGSVGElement, clientX: number, clientY: number) {
+  const m = svg.getScreenCTM();
+  if (!m) return null;
+  const pt = new DOMPoint(clientX, clientY).matrixTransform(m.inverse());
+  return { x: Math.round(pt.x), z: Math.round(pt.y) };
+}
+
 function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem | null }) {
   const space = useSpaceInRoom();
   const selectedId = useDesign((s) => s.selectedItemId);
@@ -804,6 +875,8 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
   const moveItemBy = useDesign((s) => s.moveItemBy);
   const [showZones, setShowZones] = useState(false);
   const turnItem = useDesign((s) => s.turnItem);
+  /** Why the last move did nothing (a locked piece, ADR-095). */
+  const notice = useDesign((s) => s.notice);
   /** The press or drag in progress (ADR-065); the ref keeps pointer handlers in step between renders. */
   const [pressed, setDragState] = useState<DragGesture | null>(null);
   // Tap modes (placing a new piece, drawing the room) turn dragging off (ADR-056, ADR-059).
@@ -855,13 +928,8 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
     return () => svg.removeEventListener('touchmove', onMove);
   }, []);
   /** Screen point → room mm on the plan (x along the back wall, z away from it). */
-  const toRoom = (e: { clientX: number; clientY: number }) => {
-    const svg = svgRef.current,
-      m = svg?.getScreenCTM();
-    if (!svg || !m) return null;
-    const pt = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse());
-    return { x: Math.round(pt.x), z: Math.round(pt.y) };
-  };
+  const toRoom = (e: { clientX: number; clientY: number }) =>
+    svgRef.current ? roomPoint(svgRef.current, e.clientX, e.clientY) : null;
   const at = (e: { pointerId: number; clientX: number; clientY: number }): PointerAt => ({
     pointerId: e.pointerId,
     sx: e.clientX,
@@ -869,10 +937,38 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
     room: toRoom(e),
   });
   const dragged = drag?.dragging ? pm.pieces.find((pc) => pc.item.id === drag.id) : undefined;
+  // A locked piece, or one carrying one, does not follow the pointer (ADR-095): no outline, the hint instead.
+  const lockedDrag = useMemo(
+    () =>
+      dragged && project
+        ? isLocked(dragged.item)
+          ? LOCKED_HINT
+          : moveBlocked(project, [dragged.item.id])
+        : null,
+    [dragged, project],
+  );
+  // A catalog item dragged from the piece list (ADR-094): its outline follows the pointer over the plan, snapped
+  // the same way (with the Snap toggle, read by `newPieceTarget`).
+  const newDrag = usePieceList((s) => s.drag);
   const target =
-    dragged && drag && project
+    dragged && drag && project && !lockedDrag
       ? dropTarget(project, pm.pieces, drag.id, drag.dx, drag.dz, snapOn && !alt)
-      : null;
+      : newDrag
+        ? newPieceTarget(newDrag)
+        : null;
+  useEffect(() => {
+    registerPlanHit((cx, cy) => {
+      const svg = svgRef.current;
+      const r = svg?.getBoundingClientRect();
+      if (!svg || !r || !r.width || cx < r.left || cx > r.right || cy < r.top || cy > r.bottom)
+        return null;
+      // Only the plan's figure, not a sheet, banner or bar drawn over it.
+      const hit = document.elementFromPoint(cx, cy);
+      if (hit && !(svg.parentElement ?? svg).contains(hit)) return null;
+      return roomPoint(svg, cx, cy);
+    });
+    return () => registerPlanHit(null);
+  }, []);
   const pts = [...(room?.outline ?? []), ...(drawing ?? [])];
   // With Clearances on, the view also frames the zones (chair or service space beyond the pieces); models always.
   const framed = [
@@ -926,12 +1022,31 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
         within {SNAP_RANGE} mm; arrow keys never snap.
       </InfoTip>
       {/* Live snap feedback while a piece is dragged; over the plan, so it takes no room (ADR-080). */}
-      {target && (
+      {target ? (
         <span className="plan-drag-note" role="status">
           {target.snap
             ? `Snaps: ${[target.snap.label, ...target.snap.notes].join(' · ')}`
             : (target.hint ?? (snapOn ? 'Alt held: placing freely.' : 'Snap is off.'))}
+          {/* Neighbours the family rule refused, named even when the piece snaps elsewhere (ADR-100). */}
+          {target.refused
+            .filter((r) => r !== target.hint)
+            .map((r) => (
+              <span key={r} className="snap-refused">
+                {` · ${r}`}
+              </span>
+            ))}
         </span>
+      ) : lockedDrag ? (
+        <span className="plan-drag-note locked" role="status">
+          {lockedDrag}
+        </span>
+      ) : (
+        notice &&
+        !dragging && (
+          <span className="plan-drag-note locked" role="status">
+            {notice}
+          </span>
+        )
       )}
       <svg
         ref={svgRef}
@@ -1000,14 +1115,15 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
           );
           const size = Math.min(fs, b.w / 7);
           const dy = (stack.indexOf(pc) - (stack.length - 1) / 2) * size * 1.3;
+          const locked = isLocked(pc.item);
           return (
             <g
               key={pc.item.id}
-              className={`plan-piece ${on ? 'on' : ''} ${b.y > 0 ? 'raised' : ''}`}
+              className={`plan-piece ${on ? 'on' : ''} ${b.y > 0 ? 'raised' : ''} ${locked ? 'locked' : ''}`}
               role="button"
               tabIndex={0}
               aria-pressed={on}
-              aria-label={`${pc.item.design.name}, ${b.w} by ${b.d} mm`}
+              aria-label={`${pc.item.design.name}, ${b.w} by ${b.d} mm${locked ? ', locked' : ''}`}
               onClick={tapping ? undefined : () => select(pc.item.id)}
               onKeyDown={(e) => {
                 // R / Shift+R turn the focused piece about its centre (ADR-069).
@@ -1095,6 +1211,7 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
                 {pc.item.quantity > 1 ? `${pc.item.quantity}× ` : ''}
                 {pc.item.design.name}
               </text>
+              {locked && <LockBadge x={b.x} y={b.z} size={size} />}
             </g>
           );
         })}
@@ -1176,6 +1293,21 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
         )}
       </svg>
     </figure>
+  );
+}
+
+/** "Locked" in a corner of a piece on the plan or the front view (ADR-095); `x`, `y` is the piece's top-left corner. */
+function LockBadge({ x, y, size }: { x: number; y: number; size: number }) {
+  return (
+    <text
+      className="lock-badge"
+      x={x + size * 0.4}
+      y={y + size * 0.4}
+      fontSize={size}
+      dominantBaseline="hanging"
+    >
+      Locked
+    </text>
   );
 }
 
@@ -1360,6 +1492,16 @@ function RoomFront({ pm }: { pm: ProjectModel }) {
             onKeyDown={onKey(() => select(pc.item.id))}
           />
         ))}
+        {pm.pieces
+          .filter((pc) => isLocked(pc.item))
+          .map((pc) => (
+            <LockBadge
+              key={`lock-${pc.item.id}`}
+              x={pc.bounds.x}
+              y={Y(pc.bounds.y, pc.bounds.h)}
+              size={Math.min(span / 40, pc.bounds.w / 7)}
+            />
+          ))}
         <FrontModels pm={pm} fs={span / 40} />
         <Dim x1={x0} x2={x1} y={pad * 0.6} fontSize={dfs} label={`${x1 - x0}`} />
         <DimV y1={0} y2={-top} x={x0 - pad * 0.6} fontSize={dfs} label={`${top}`} />
@@ -1399,8 +1541,23 @@ function RoomFront({ pm }: { pm: ProjectModel }) {
 }
 
 /** Choose a starting piece or a saved piece to add to the project. */
-export function AddPieceList({ onDone, onBrowse }: { onDone: () => void; onBrowse?: () => void }) {
-  const add = useDesign((s) => s.addPiece);
+export function AddPieceList({
+  onDone,
+  onBrowse,
+  drag,
+}: {
+  onDone: () => void;
+  onBrowse?: () => void;
+  /** Items can also be dragged onto the plan (ADR-094: the piece list beside the plan). */
+  drag?: boolean;
+}) {
+  const addPiece = useDesign((s) => s.addPiece);
+  // A click that ends a drag from the list is not also a tap-pick (ADR-094).
+  const add = (d: Design, libraryId?: string) => {
+    if (drag && consumeDragClick()) return false;
+    addPiece(d, libraryId);
+    return true;
+  };
   const [saved, setSaved] = useState<StoredDesign[]>([]);
   useEffect(() => {
     listDesigns()
@@ -1411,10 +1568,18 @@ export function AddPieceList({ onDone, onBrowse }: { onDone: () => void; onBrows
     <>
       <StartFrom
         onPick={(d) => {
-          add(d);
-          onDone();
+          if (add(d)) onDone();
         }}
         onBrowse={onBrowse}
+        dragFor={
+          drag
+            ? (make) =>
+                dragSource(() => {
+                  const design = make();
+                  return design ? { design } : null;
+                })
+            : undefined
+        }
       />
       <MyModels onDone={onDone} />
       {saved.length > 0 && (
@@ -1426,9 +1591,9 @@ export function AddPieceList({ onDone, onBrowse }: { onDone: () => void; onBrows
                 <button
                   type="button"
                   className="row-btn"
+                  {...(drag ? dragSource(() => ({ design: r.design, libraryId: r.id })) : {})}
                   onClick={() => {
-                    add(r.design, r.id);
-                    onDone();
+                    if (add(r.design, r.id)) onDone();
                   }}
                 >
                   <span className="glyph">

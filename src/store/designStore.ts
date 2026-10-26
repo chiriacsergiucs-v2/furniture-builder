@@ -8,17 +8,18 @@ import {
   upgradeDesign,
   validateDesign,
 } from '../core/design';
-import { duplicateItem, mirrorItem, mirrorRun, turnAboutCentre } from '../core/arrange';
+import { duplicateItem, mirrorItem, mirrorRun, tryTurn } from '../core/arrange';
+import { floorDrop, type FloorPoint } from '../core/drag3d';
 import { applyFinish, type FinishRole, type FinishScope } from '../core/finish';
 import { mergeItems } from '../core/merge';
+import { replaceItem, replaceReport, type ReplaceReport } from '../core/replace';
 import { countRows, countSubject, stepCount, type CountKey } from '../core/counts';
 import { drill, type Selection } from '../core/selectPath';
 import { closeOutline, DEFAULT_ROOM_HEIGHT, snapCorner, type Pt, type Room } from '../core/room';
 import {
   buildProjectModel,
-  dragPosition,
-  liftOff,
   makeItem,
+  moveBy,
   planRuns,
   PROJECT_SCHEMA,
   refreshRunParts,
@@ -26,7 +27,9 @@ import {
   removeProjectItem,
   resolvePlacements,
   roomToPiece,
-  setGapLeft,
+  setLocked,
+  tapPosition,
+  trySetGap,
   type Project,
   type ProjectItem,
   type ProjectModel,
@@ -87,6 +90,11 @@ interface State {
   /** Project-level history (ADR-051): earlier and undone states of the open project. */
   projectPast: Project[];
   projectFuture: Project[];
+  /**
+   * Why the last move on the plan did nothing (ADR-095: a locked piece), shown over the plan until the next change or
+   * selection. UI state only.
+   */
+  notice: string | null;
   /** A piece just added and waiting to be placed by a tap on the plan (ADR-056). */
   placingItemId: string | null;
   /** Corners tapped so far while drawing the room on the plan (ADR-059), or null. */
@@ -137,23 +145,43 @@ interface State {
   closeProject: () => void;
   updateProject: (fn: (p: Project) => Project) => void;
   addPiece: (d: Design, libraryId?: string) => void;
+  /**
+   * Add a copy of a design with its left-back corner at a plan point (ADR-094: dropped from the piece list), whole
+   * mm; one undo step. The point is where `dropNewPiece` puts it (snapped or as a tap places it).
+   */
+  addPieceAt: (d: Design, x: number, z: number, libraryId?: string) => void;
   updateItem: (id: string, patch: Partial<ProjectItem>) => void;
   /**
    * Move a piece on the plan by a drag or an arrow key (ADR-065): rounded to the step, lifted off a base, one undo
-   * step. Nothing happens (no step) when the piece would not move.
+   * step. Nothing happens (no step) when the piece would not move; a locked piece stays and the reason is returned
+   * and shown as the plan's notice (ADR-095).
    */
-  moveItemBy: (id: string, dxMm: number, dzMm: number, step?: number) => void;
-  setGap: (id: string, gap: number, moveRight: boolean) => void;
+  moveItemBy: (id: string, dxMm: number, dzMm: number, step?: number) => string | null;
+  /**
+   * Drop a piece dragged in the 3D view (ADR-093) from room point `from` to `to` on its floor plane: the same drop
+   * as a Plan drag (snapping when `snap`), one undo step. A locked piece stays and the reason is returned (ADR-095).
+   */
+  dropItemAt: (id: string, from: FloorPoint, to: FloorPoint, snap: boolean) => string | null;
+  /** The gap tool (ADR-022); returns why nothing moved when it would move a locked piece (ADR-095), or null. */
+  setGap: (id: string, gap: number, moveRight: boolean) => string | null;
+  /** Lock or unlock a piece's placement (ADR-095); one undo step. */
+  setLocked: (id: string, on: boolean) => void;
   removeItem: (id: string) => void;
   /** Merge two touching cabinets into one (ADR-047); returns why not, or an empty list. */
   mergeItems: (a: string, b: string) => string[];
   /** Duplicate, turn about the centre, mirror a piece or its run (ADR-069); each is one undo step. */
   duplicateItem: (id: string) => void;
-  turnItem: (id: string, dir: 1 | -1) => void;
-  /** Returns why nothing changed ("Nothing to mirror in this piece"), or null. */
+  /** Put a catalog copy in the piece's place, keeping where and how it stands (ADR-098); one undo step. */
+  replaceItem: (id: string, design: Design) => ReplaceReport | null;
+  /** Returns why it did not turn (a locked piece, ADR-095), or null. */
+  turnItem: (id: string, dir: 1 | -1) => string | null;
+  /** Returns why nothing changed ("Nothing to mirror in this piece", a locked piece), or null. */
   mirrorItem: (id: string) => string | null;
-  /** Returns the pieces of the run that had nothing to mirror (they still move). */
-  mirrorRun: (id: string) => string[];
+  /**
+   * Returns the pieces of the run that had nothing to mirror (they still move), and why nothing moved when the run
+   * holds a locked piece (ADR-095).
+   */
+  mirrorRun: (id: string) => { reasons: string[]; refused?: string };
   selectItem: (id: string | null) => void;
   editItem: (id: string) => void;
   backToProject: () => void;
@@ -281,6 +309,7 @@ export const useDesign = create<State>((set, get) => {
       project: stamped,
       projectModel: buildProjectModel(stamped),
       projectDirtyAt: Date.now(),
+      notice: null,
       ...(prev
         ? { projectPast: [...get().projectPast, prev].slice(-HISTORY), projectFuture: [] }
         : {}),
@@ -297,6 +326,7 @@ export const useDesign = create<State>((set, get) => {
       projectFuture,
       projectDirtyAt: Date.now(),
       placingItemId: null,
+      notice: null,
       selectedItemId:
         sel && [...p.items, ...(p.models ?? [])].some((i) => i.id === sel) ? sel : null,
     });
@@ -327,6 +357,7 @@ export const useDesign = create<State>((set, get) => {
     placingItemId: null,
     drawingRoom: null,
     templateEdit: null,
+    notice: null,
 
     load: (raw, opts) => {
       const d = upgradeDesign(raw);
@@ -378,10 +409,12 @@ export const useDesign = create<State>((set, get) => {
         projectFuture: [],
         placingItemId: null,
         drawingRoom: null,
+        notice: null,
       });
     },
     closeProject: () =>
       set({
+        notice: null,
         project: null,
         projectModel: null,
         editingItemId: null,
@@ -403,6 +436,17 @@ export const useDesign = create<State>((set, get) => {
       commitProject({ ...p, items: [...p.items, item] });
       set({ selectedItemId: item.id, placingItemId: item.id });
     },
+    addPieceAt: (d, x, z, libraryId) => {
+      const p = get().project;
+      if (!p) return;
+      const made = makeItem(p, d, libraryId);
+      // Not clamped here: `dropNewPiece` already placed it as a tap does, and a snap may put it against a wall of
+      // a drawn room at x or z below 0.
+      const position = { ...made.position, x: Math.round(x) || 0, z: Math.round(z) || 0 };
+      const item: ProjectItem = { ...made, position };
+      commitProject({ ...p, items: [...p.items, item] });
+      set({ selectedItemId: item.id, placingItemId: null });
+    },
     updateItem: (id, patch) => {
       const p = get().project;
       if (p)
@@ -410,22 +454,37 @@ export const useDesign = create<State>((set, get) => {
     },
     moveItemBy: (id, dxMm, dzMm, step) => {
       const p = get().project;
+      if (!p) return null;
+      const res = moveBy(p, id, dxMm, dzMm, step);
+      if (res.reason) {
+        set({ notice: res.reason });
+        return res.reason;
+      }
+      if (res.project !== p) commitProject(res.project);
+      return null;
+    },
+    dropItemAt: (id, from, to, snap) => {
+      const p = get().project;
       const it = p?.items.find((i) => i.id === id);
-      if (!p || !it) return;
-      const position = dragPosition(it, dxMm, dzMm, step);
-      if (position.x === it.position.x && position.z === it.position.z) return;
-      const placement = liftOff(it);
-      const { placement: _old, ...rest } = it;
-      void _old;
-      const moved: ProjectItem = { ...rest, position, ...(placement ? { placement } : {}) };
-      commitProject({ ...p, items: p.items.map((i) => (i.id === id ? moved : i)) });
+      const pieces = get().projectModel?.pieces;
+      if (!p || !it || !pieces) return null;
+      const t = floorDrop(p, pieces, id, from, to, snap);
+      return t
+        ? get().moveItemBy(id, t.position.x - it.position.x, t.position.z - it.position.z, 1)
+        : null;
     },
     setGap: (id, gap, moveRight) => {
       const p = get().project;
-      if (p) {
-        const next = setGapLeft(p, id, gap, moveRight);
-        if (next !== p) commitProject(next);
-      }
+      if (!p) return null;
+      const res = trySetGap(p, id, gap, moveRight);
+      if (res.project !== p) commitProject(res.project);
+      return res.reason ?? null;
+    },
+    setLocked: (id, on) => {
+      const p = get().project;
+      if (!p) return;
+      const next = setLocked(p, id, on);
+      if (next !== p) commitProject(next);
     },
     removeItem: (id) => {
       const p = get().project;
@@ -444,6 +503,13 @@ export const useDesign = create<State>((set, get) => {
       }
       return res.issues;
     },
+    replaceItem: (id, design) => {
+      const { project: p, projectModel: pm } = get();
+      if (!p || !pm || !p.items.some((i) => i.id === id)) return null;
+      commitProject(replaceItem(p, id, design));
+      const { project: next, projectModel: nm } = get();
+      return replaceReport(p, pm, next!, nm!, id);
+    },
     duplicateItem: (id) => {
       const p = get().project;
       const res = p && duplicateItem(p, id);
@@ -453,9 +519,14 @@ export const useDesign = create<State>((set, get) => {
     },
     turnItem: (id, dir) => {
       const p = get().project;
-      if (!p) return;
-      const next = turnAboutCentre(p, id, dir);
-      if (next !== p) commitProject(next);
+      if (!p) return null;
+      const res = tryTurn(p, id, dir);
+      if (res.reason) {
+        set({ notice: res.reason });
+        return res.reason;
+      }
+      if (res.project !== p) commitProject(res.project);
+      return null;
     },
     mirrorItem: (id) => {
       const p = get().project;
@@ -467,15 +538,15 @@ export const useDesign = create<State>((set, get) => {
     },
     mirrorRun: (id) => {
       const p = get().project;
-      if (!p) return [];
+      if (!p) return { reasons: [] };
       const res = mirrorRun(p, id);
       if (res.project !== p) commitProject(res.project);
-      return res.reasons;
+      return { reasons: res.reasons, ...(res.refused ? { refused: res.refused } : {}) };
     },
     selectItem: (id) => {
       const { project, selectedItemId, drillItemId } = get();
       if (id && id === selectedItemId && id === drillItemId) return;
-      set({ selectedItemId: id });
+      set({ selectedItemId: id, notice: null });
       const item = id ? project?.items.find((i) => i.id === id) : undefined;
       if (item && !get().editingItemId) loadDrill(item, null);
       else set({ drillItemId: null });
@@ -601,11 +672,7 @@ export const useDesign = create<State>((set, get) => {
       const it = p?.items.find((i) => i.id === id);
       set({ placingItemId: null });
       if (!p || !it) return;
-      const position = {
-        ...it.position,
-        x: Math.max(0, Math.round(x)),
-        z: Math.max(0, Math.round(z)),
-      };
+      const position = tapPosition(it, x, z);
       commitProject({ ...p, items: p.items.map((i) => (i.id === it.id ? { ...i, position } : i)) });
     },
     stopPlacing: () => set({ placingItemId: null }),

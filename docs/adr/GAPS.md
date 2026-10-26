@@ -780,7 +780,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-080: Piece list open by default on desktop
 
-- Status: ADR-094
+- Status: Done (ADR-094)
 - Origin: ADR-094 open question (2026-10-26)
 - Missing: Whether the piece list is open by default on desktop; default closed.
 - Request: "New adr 6" (2026-10-26)
@@ -798,7 +798,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-082: Delete a locked piece
 
-- Status: ADR-095
+- Status: Done (ADR-095)
 - Origin: ADR-095 open question (2026-10-26)
 - Missing: Whether a locked piece may be deleted; default yes after confirmation.
 - Request: "New adr 8" (2026-10-26)
@@ -852,7 +852,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-088: Compatible width when replacing
 
-- Status: ADR-098
+- Status: Done (ADR-098)
 - Origin: ADR-098 open question (2026-10-26)
 - Missing: Which width counts as compatible; default the same width, others behind a switch.
 - Request: "New adr 5" (2026-10-26)
@@ -897,7 +897,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-093: Tolerance for depth and height differences
 
-- Status: ADR-100
+- Status: Done (ADR-100)
 - Origin: ADR-100 open question (2026-10-26)
 - Missing: Whether small depth or height differences pass without a warning; default any difference warns.
 - Request: "New adr 3" (2026-10-26)
@@ -975,3 +975,48 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Items “can be used to add as a new adr or mark as acknowledged and accepted” (G-050)
 - Questions: None while ADR-002 holds.
 - Suggested pick: Keep the hand-over to Claude (estimate for a GitHub-token write path: effort +60%, value +15%, and it breaks ADR-002)
+
+### G-102: Alternatives for a piece that sits on another piece
+
+- Status: Done (user answer 2026-10-26 "Same width only for stacked pieces")
+- Origin: ADR-098 implementation (2026-10-26, Claude: defaulted)
+- Missing: Which catalog items count as the same placement kind for a piece placed on or above another piece; built: every standing and wall-hung item (the piece keeps its on-another-piece placement).
+- Request: New adr 5 (2026-10-26): compatible = same placement kind (floor, wall, on another piece)
+- Questions: For a piece on another piece, offer every item, or only standing items, or only items of the same family?
+- Suggested pick: Every item, since the placement carries over (as built; narrowing to standing items is about +5 % of ADR-098's work)
+
+### G-103: Family rule for your own templates
+
+- Status: Open
+- Origin: ADR-100 (2026-10-26, Claude: not asked for)
+- Missing: The family rule reads the shipped catalog families only; a piece from one of your own templates (own-… families, stored on this device) has no known room group, so the family rule never refuses or warns for it.
+- Request: New adr 3
+- Questions: Should pieces from your own templates follow the family rule too (their template's rooms)?
+- Suggested pick: Yes: record the template's rooms on the inserted piece's catalog origin (a design document change, ADR-011; about +10 % of ADR-100's work, closes the rule for every piece).
+
+### G-104: Repairs for compatibility warnings
+
+- Status: Open
+- Origin: ADR-100 (2026-10-26, Claude: not asked for)
+- Missing: The depth, height and family warnings offer no previewed repair (ADR-071); each rule's repairs list is empty because no existing repair fixes them.
+- Request: New adr 3
+- Questions: Offer repairs such as 'Make Base cabinet 560 deep like its neighbour' or 'Move the bed away'?
+- Suggested pick: Add a 'match the neighbour's depth/height' repair (closest to fixing the warning; about +20 % of ADR-100's work).
+
+### G-105: Move display-only 3D models in the 3D view
+
+- Status: Open
+- Origin: ADR-093 (2026-10-26, Claude: skipped this iteration)
+- Missing: Move mode drags project pieces only; display-only 3D models (ADR-076) still move by their fields or on the Plan.
+- Request: New adr to override the conflicts for 4 and make it ready
+- Questions: Should Move in 3D also drag and turn display-only 3D models?
+- Suggested pick: Yes, the same Move and Turn (closest to direct manipulation in 2D/3D; about +15 % work for +10 % of the request, estimates).
+
+### G-106: Resizing a base moves a locked piece on it
+
+- Status: Open
+- Origin: ADR-095 (2026-10-26, Claude: found while building)
+- Missing: A locked piece placed on or above another piece still follows its base when the base's size changes in the piece editor (moving or turning the base is refused; resizing is not a move).
+- Request: Not a quote: ADR-095 'Nothing moves it for the user'
+- Questions: Should resizing a base keep a locked piece on it where it is (leaving its base), or refuse the resize?
+- Suggested pick: Refuse the resize with the reason, as a move of the base is refused (about +10 % of ADR-095's work).

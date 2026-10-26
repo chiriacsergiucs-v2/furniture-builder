@@ -4,6 +4,7 @@
  * millimetres and rotations quarter turns about the vertical axis, so every panel stays an axis-aligned box.
  */
 import { buildModel } from './build';
+import { compatChecks } from './compat';
 import { localClearances, type Clearance } from './clearance';
 import {
   BODY_CODES,
@@ -76,6 +77,11 @@ export interface ProjectItem {
   placement?: Placement;
   /** Chair, service and installation settings (ADR-073); absent = none. Saved from project schemaVersion 3. */
   zones?: ItemZones;
+  /**
+   * Placement locked (ADR-095): nothing moves or turns the piece until it is unlocked; its size, boards and
+   * construction stay editable. Absent = not locked. Saved from project schemaVersion 6.
+   */
+  locked?: true;
 }
 
 /**
@@ -129,13 +135,15 @@ export const requestKey = (r: Pick<RunRequest, 'kind' | 'from'>) => `${r.kind}|$
 /**
  * Project document versions (ADR-011): new and edited projects are written at `PROJECT_SCHEMA`; every version in
  * `PROJECT_SCHEMAS` still loads unchanged. 2 = room pipes and outlets (ADR-072); 3 = clearance zones on items
- * (ADR-073); 4 = run requests and trim run parts (ADR-075); 5 = display-only 3D models (ADR-076).
+ * (ADR-073); 4 = run requests and trim run parts (ADR-075); 5 = display-only 3D models (ADR-076); 6 = locked pieces
+ * (ADR-095).
  */
-export const PROJECT_SCHEMA = 5 as const;
-export const PROJECT_SCHEMAS: readonly number[] = [1, 2, 3, 4, PROJECT_SCHEMA];
-export type ProjectSchemaVersion = 1 | 2 | 3 | 4 | typeof PROJECT_SCHEMA;
+export const PROJECT_SCHEMA = 6 as const;
+export const PROJECT_SCHEMAS: readonly number[] = [1, 2, 3, 4, 5, PROJECT_SCHEMA];
+export type ProjectSchemaVersion = 1 | 2 | 3 | 4 | 5 | typeof PROJECT_SCHEMA;
 const RUN_REQUESTS_SINCE = 4;
 const MODELS_SINCE = 5;
+const LOCKS_SINCE = 6;
 
 export interface Project {
   schemaVersion: ProjectSchemaVersion;
@@ -284,12 +292,136 @@ export function dragPosition(
 }
 
 /**
+ * Where a tap on the plan puts a piece being placed (ADR-056): its left-back corner at the room point, in whole mm,
+ * clamped to x ≥ 0 and z ≥ 0; its height is kept. A piece dropped from the piece list starts here too (ADR-094).
+ */
+export function tapPosition(item: ProjectItem, x: number, z: number): ProjectItem['position'] {
+  const mm = (v: number) => (Number.isFinite(v) ? Math.max(0, Math.round(v)) : 0);
+  return { ...item.position, x: mm(x), z: mm(z) };
+}
+
+/**
  * A piece placed on or above another piece leaves it when dragged (ADR-065): wall-hung pieces become hung on the
  * wall at their current height, anything else stands on the floor. Other placements are returned unchanged.
  */
 export function liftOff(item: ProjectItem): Placement | undefined {
   if (item.placement?.kind !== 'above') return item.placement;
   return isWallHung(item.design) ? { kind: 'wall', height: item.position.y } : { kind: 'floor' };
+}
+
+// ---------------------------------------------------------------------------
+// Locked pieces (ADR-095)
+// ---------------------------------------------------------------------------
+
+/** The piece's placement is locked: nothing moves or turns it (ADR-095). */
+export const isLocked = (item: Pick<ProjectItem, 'locked'> | undefined): boolean => !!item?.locked;
+
+/** The hint shown when a locked piece is dragged, turned or mirrored (ADR-095). */
+export const LOCKED_HINT = 'Locked — unlock to move';
+
+/** What a move helper did: the project after it, or the same project and why nothing moved (ADR-095). */
+export interface MoveResult {
+  project: Project;
+  reason?: string;
+}
+
+/** A piece's name, with its number in the project when another piece has the same name. */
+export function pieceName(project: Project, id: string): string {
+  const i = project.items.findIndex((x) => x.id === id);
+  const name = project.items[i]?.design.name ?? '';
+  return project.items.some((x) => x.id !== id && x.design.name === name)
+    ? `${name} (piece ${i + 1})`
+    : name;
+}
+
+/** The pieces placed directly on each piece (ADR-031), by base id. */
+function piecesOn(project: Project): Map<string, ProjectItem[]> {
+  const on = new Map<string, ProjectItem[]>();
+  for (const it of project.items)
+    if (it.placement?.kind === 'above') {
+      const list = on.get(it.placement.baseId);
+      if (list) list.push(it);
+      else on.set(it.placement.baseId, [it]);
+    }
+  return on;
+}
+
+/**
+ * Pieces resting on any of `ids`, directly or on each other (ADR-031): they follow them when they move. Each piece once,
+ * none of `ids` themselves; `stop` ends the walk early at the first piece it accepts (returned last).
+ */
+export function carriedBy(
+  project: Project,
+  ids: string | readonly string[],
+  stop?: (it: ProjectItem, base: string) => boolean,
+): ProjectItem[] {
+  const roots = typeof ids === 'string' ? [ids] : ids;
+  const on = piecesOn(project);
+  const seen = new Set(roots);
+  const out: ProjectItem[] = [];
+  const todo = roots.map((id) => ({ id, root: id }));
+  for (let next = todo.shift(); next; next = todo.shift())
+    for (const c of on.get(next.id) ?? []) {
+      if (seen.has(c.id)) continue;
+      seen.add(c.id);
+      out.push(c);
+      if (stop?.(c, next.root)) return out;
+      todo.push({ id: c.id, root: next.root });
+    }
+  return out;
+}
+
+/**
+ * Why moving or turning the pieces `ids` is refused (ADR-095), or null: one of them is locked, or a locked piece rests
+ * on one of them and would follow it. The reason names the locked piece.
+ */
+export function moveBlocked(project: Project, ids: readonly string[]): string | null {
+  const moving = new Set(ids);
+  const own = project.items.find((it) => moving.has(it.id) && it.locked);
+  if (own) return `${pieceName(project, own.id)} is locked — unlock it to move it.`;
+  let base = '';
+  const found = carriedBy(project, ids, (it, root) => {
+    base = root;
+    return !!it.locked;
+  }).at(-1);
+  if (!found?.locked) return null;
+  const b = pieceName(project, base);
+  return `${pieceName(project, found.id)} sits on ${b} and is locked — unlock it to move ${b}.`;
+}
+
+/**
+ * Move piece `id` on the plan by a drag or an arrow key (ADR-065): rounded to `step`, lifted off a base. A locked
+ * piece, or one carrying a locked piece, stays where it is and the reason comes back (ADR-095). The same project comes
+ * back when nothing would move.
+ */
+export function moveBy(
+  project: Project,
+  id: string,
+  dxMm: number,
+  dzMm: number,
+  step: Mm = DRAG_STEP,
+): MoveResult {
+  const it = project.items.find((i) => i.id === id);
+  if (!it) return { project };
+  const position = dragPosition(it, dxMm, dzMm, step);
+  if (position.x === it.position.x && position.z === it.position.z) return { project };
+  const reason = moveBlocked(project, [id]);
+  if (reason) return { project, reason };
+  const placement = liftOff(it);
+  const { placement: _old, ...rest } = it;
+  void _old;
+  const moved: ProjectItem = { ...rest, position, ...(placement ? { placement } : {}) };
+  return { project: { ...project, items: project.items.map((i) => (i.id === id ? moved : i)) } };
+}
+
+/** Lock or unlock a piece's placement (ADR-095); the flag is absent when unlocked. */
+export function setLocked(project: Project, id: string, on: boolean): Project {
+  const it = project.items.find((i) => i.id === id);
+  if (!it || isLocked(it) === on) return project;
+  const { locked: _l, ...rest } = it;
+  void _l;
+  const next: ProjectItem = on ? { ...rest, locked: true } : rest;
+  return { ...project, items: project.items.map((i) => (i.id === id ? next : i)) };
 }
 
 /** Remove a piece; pieces that sat on it stay where they are (their placement becomes free). */
@@ -623,6 +755,8 @@ export function buildProjectModel(input: Project): ProjectModel {
         });
       }
     }
+  // Compatibility rules over pieces that touch side by side (ADR-100): warnings, never blocking.
+  diagnostics.push(...compatChecks(pieces, project.runParts ?? []));
   for (const pc of pieces)
     if (pc.bounds.y < 0)
       diagnostics.push({
@@ -972,14 +1106,15 @@ export function leftNeighbour(project: Project, id: string): { item: ProjectItem
 
 /**
  * Leave `gap` mm between piece `id` and its left neighbour by moving it along the wall. With `moveRight`, the pieces
- * on its right in the same run move by the same amount, so the rest of the run keeps its spacing.
+ * on its right in the same run move by the same amount, so the rest of the run keeps its spacing. Refused, with the
+ * reason, when it would move a locked piece (ADR-095).
  */
-export function setGapLeft(project: Project, id: string, gap: Mm, moveRight = true): Project {
+export function trySetGap(project: Project, id: string, gap: Mm, moveRight = true): MoveResult {
   const nb = leftNeighbour(project, id);
   const me = project.items.find((i) => i.id === id);
-  if (!nb || !me || !Number.isSafeInteger(gap) || gap < 0) return project;
+  if (!nb || !me || !Number.isSafeInteger(gap) || gap < 0) return { project };
   const dx = gap - nb.gap;
-  if (!dx) return project;
+  if (!dx) return { project };
   const mine = placedBounds(me);
   const moves = (it: ProjectItem) => {
     if (it.id === id) return true;
@@ -988,13 +1123,22 @@ export function setGapLeft(project: Project, id: string, gap: Mm, moveRight = tr
     const b = placedBounds(it);
     return b.x >= mine.x + mine.w && sameRun(b, mine);
   };
-  return resolvePlacements({
-    ...project,
-    items: project.items.map((it) =>
-      moves(it) ? { ...it, position: { ...it.position, x: it.position.x + dx } } : it,
-    ),
-  });
+  const ids = new Set(project.items.filter(moves).map((i) => i.id));
+  const reason = moveBlocked(project, [...ids]);
+  if (reason) return { project, reason };
+  return {
+    project: resolvePlacements({
+      ...project,
+      items: project.items.map((it) =>
+        ids.has(it.id) ? { ...it, position: { ...it.position, x: it.position.x + dx } } : it,
+      ),
+    }),
+  };
 }
+
+/** `trySetGap` without the reason: the same project when nothing moves. */
+export const setGapLeft = (project: Project, id: string, gap: Mm, moveRight = true): Project =>
+  trySetGap(project, id, gap, moveRight).project;
 
 /** Pieces whose own plinth is replaced by a run plinth (ADR-054). */
 export function plinthCovered(project: Project): Set<string> {
@@ -1685,6 +1829,11 @@ export function validateProject(p: unknown): string[] {
     )
       errs.push('Invalid item placement');
     if (it.zones !== undefined && !validZones(it.zones)) errs.push('Invalid item clearance zones');
+    if (it.locked !== undefined) {
+      if (it.locked !== true) errs.push('Invalid item lock');
+      else if ((p.schemaVersion as number) < LOCKS_SINCE)
+        errs.push(`Locked pieces need project schemaVersion ${LOCKS_SINCE}`);
+    }
     const de = validateDesign(it.design);
     if (de.length) errs.push(`Item ${String(it.id)}: ${de[0]}`);
   }
