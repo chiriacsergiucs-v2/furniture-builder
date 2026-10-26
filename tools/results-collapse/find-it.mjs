@@ -1,4 +1,4 @@
-// Find-it acceptance for the results tabs collapsed until tapped on phones (ADR-091, backlog N88),
+// Find-it acceptance for the results tabs collapsed until tapped on phones (ADR-091, backlog N89),
 // run against a production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/results-collapse/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.

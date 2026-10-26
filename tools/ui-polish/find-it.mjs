@@ -143,9 +143,16 @@ for (const width of [390, 1280]) {
   await page.waitForTimeout(300);
   await page.getByRole('radio', { name: /Build & Preview/ }).click();
   await page.waitForTimeout(1500);
-  const card = page.locator('.view.three').getByRole('group', { name: 'Quick counts' });
+  // On a phone the card is docked under the 3D view (G-070) and folds there (G-058); wide screens float it over 3D.
+  const card = page
+    .locator(phone ? '#count-dock' : '.view.three')
+    .getByRole('group', { name: 'Quick counts' });
   const fold = card.getByRole('button', { name: 'Quick counts' });
-  check(width, 'Quick counts card over 3D', await card.isVisible());
+  check(
+    width,
+    phone ? 'Quick counts card docked under 3D' : 'Quick counts card over 3D',
+    await card.isVisible(),
+  );
   if (phone) {
     check(
       width,

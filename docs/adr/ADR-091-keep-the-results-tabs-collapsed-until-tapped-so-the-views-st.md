@@ -4,7 +4,7 @@
 - Date: 2026-10-26
 - Depends on: ADR-079, ADR-081
 - Design: docs/ui-design.md (section 4, Build & Preview results tabs)
-- Backlog: N88
+- Backlog: N89
 - Agreed: 2026-10-26 "Only phones, next adr"; "Open it", "Always collapsed"
 
 ## Context

@@ -28,9 +28,12 @@ for (const width of [1440, 1024, 390, 360]) {
   const noSideScroll = async () =>
     page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
   await page.goto(url);
-  const tab = page.getByRole('link', { name: /Feature Research/ });
-  check(width, 'visible "Feature Research" tab in the top bar', await tab.isVisible());
-  await tab.click();
+  // Since the shell rebuild (ADR-078) Feature Research is in the ⋯ More menu, not a top-bar tab.
+  await page.locator('summary[aria-label="More"]').click();
+  const item = page.getByRole('button', { name: /Feature Research/ });
+  check(width, 'visible "Feature Research" in the More menu', await item.isVisible());
+  await item.click();
+  await page.getByRole('heading', { name: 'Feature Research & Catalog' }).waitFor();
   check(
     width,
     'page heading "Feature Research & Catalog"',

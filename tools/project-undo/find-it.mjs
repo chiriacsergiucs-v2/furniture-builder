@@ -30,8 +30,16 @@ for (const width of [1440, 375]) {
   const pieces = page.locator('ul.pieces > li');
   const undo = page.getByRole('button', { name: 'Undo', exact: true });
   const redo = page.getByRole('button', { name: 'Redo', exact: true });
+  // Phones (≤760 px, N82): the project panel is a bottom sheet; its peek row ("<project>: N pieces" or
+  // "Selected: …") opens it. Elsewhere the panel is always shown and the peek row is hidden.
+  const openSheet = async () => {
+    const peek = page.locator('.sheet-peek');
+    if ((await peek.isVisible()) && (await peek.getAttribute('aria-expanded')) === 'false')
+      await peek.click();
+  };
   const addPiece = async (search, name) => {
-    await page.getByRole('button', { name: 'Add a piece' }).dispatchEvent('click');
+    await openSheet();
+    await page.getByRole('button', { name: 'Add a piece' }).click();
     const dlg = page.locator('dialog[open]');
     await dlg.getByRole('searchbox', { name: 'Search the items' }).fill(search);
     await dlg.getByRole('button', { name }).first().click();
@@ -55,7 +63,8 @@ for (const width of [1440, 375]) {
   );
 
   // 2. Merge them (the confirmation now says undo brings them back).
-  await pieces.nth(0).getByRole('button').dispatchEvent('click');
+  await openSheet();
+  await pieces.nth(0).getByRole('button').click();
   await page
     .getByRole('button', { name: /^Merge with Base cabinet, drawer over door on the right$/ })
     .dispatchEvent('click');
@@ -88,7 +97,8 @@ for (const width of [1440, 375]) {
   await page.waitForTimeout(300);
 
   // 4. Remove a piece, then Ctrl+Z brings it back.
-  await pieces.nth(1).getByRole('button').dispatchEvent('click');
+  await openSheet();
+  await pieces.nth(1).getByRole('button').click();
   await page.getByRole('button', { name: 'Remove from project' }).dispatchEvent('click');
   await page.locator('dialog[open]').getByRole('button', { name: 'Remove', exact: true }).click();
   await page.waitForTimeout(300);

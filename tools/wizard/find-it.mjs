@@ -44,10 +44,17 @@ for (const width of [1440, 375]) {
   // The app starts on Home (N38); the editor is one visible tab away.
   await page.getByRole('link', { name: 'Editor' }).click();
 
-  /** Open the wizard by visible text: desktop through New → "New piece, step by step"; phones through the Catalog tab → "New piece". */
+  // Since the shell rebuild (ADR-078) "New…" is in the ⋯ More menu, not a top-bar button.
+  const newItem = () => page.getByRole('button', { name: /^New…/ });
+  const openNew = async () => {
+    await page.locator('summary[aria-label="More"]').click();
+    await newItem().click();
+  };
+
+  /** Open the wizard by visible text: desktop through More › New… → "New piece, step by step"; phones through the Catalog tab → "New piece". */
   const openWizard = async (via) => {
     if (via === 'new') {
-      await page.getByRole('button', { name: 'New', exact: true }).click();
+      await openNew();
       await page.getByText('New piece, step by step').click();
     } else {
       await page.getByRole('link', { name: /Catalog/ }).click();
@@ -61,8 +68,13 @@ for (const width of [1440, 375]) {
     if (!phone && via === 'new')
       check(
         width,
-        'visible text "New" in the top bar',
-        await page.getByRole('button', { name: 'New', exact: true }).getByText('New').isVisible(),
+        'visible "New…" in the More menu',
+        await (async () => {
+          await page.locator('summary[aria-label="More"]').click();
+          const ok = await newItem().isVisible();
+          await page.keyboard.press('Escape');
+          return ok;
+        })(),
       );
     if (via === 'catalog')
       check(
@@ -87,8 +99,18 @@ for (const width of [1440, 375]) {
     await wizard.getByRole('button', { name: 'Next' }).click();
     const name = `Find-it ${t.label.split(' ')[0]} ${width}`;
     await wizard.getByLabel('Name').fill(name);
-    await wizard.getByLabel(/^Width/).fill(String(t.width));
-    await wizard.getByLabel(/^Width/).blur();
+    if (t.label === 'Bed')
+      // A bed is sized from its mattress (on the Bed step): with the type chosen first, Size asks no width.
+      check(
+        width,
+        'Bed: Size asks the headboard height, not a width',
+        (await wizard.getByLabel(/^Headboard height/).isVisible()) &&
+          (await wizard.getByLabel(/^Width/).count()) === 0,
+      );
+    else {
+      await wizard.getByLabel(/^Width/).fill(String(t.width));
+      await wizard.getByLabel(/^Width/).blur();
+    }
     if (n === 0) await shot('1-size');
     await rail('Type').click();
     await page.waitForTimeout(150);
@@ -267,11 +289,14 @@ for (const width of [1440, 375]) {
   await page.getByRole('link', { name: /Catalog/ }).click();
   await page.getByRole('tab', { name: 'Saved on this device' }).click();
   await page.getByRole('button', { name: new RegExp(cabName) }).click();
-  const side = page.locator('aside.side');
-  await side.getByLabel('Width', { exact: true }).fill('1100');
-  await side.getByLabel('Width', { exact: true }).press('Enter');
+  // Size and "Open in wizard" are in the Settings dialog since ADR-080.
+  const settings = page.locator('dialog[open]');
+  const settingsWidth = () => settings.getByLabel('Width', { exact: true }).first();
+  await page.getByRole('button', { name: 'Settings' }).click();
+  await settingsWidth().fill('1100');
+  await settingsWidth().press('Enter');
   await page.waitForTimeout(600);
-  const reopen = page.getByRole('button', { name: 'Open in wizard' });
+  const reopen = settings.getByRole('button', { name: 'Open in wizard' });
   check(width, 'visible "Open in wizard" on a wizard piece', await reopen.isVisible());
   await reopen.click();
   check(
@@ -284,6 +309,9 @@ for (const width of [1440, 375]) {
     'reopened wizard warns that editor changes will be replaced',
     await wizard.getByText(/changed in the editor since/).isVisible(),
   );
+  // The wizard reopens on its first step, Type (G-059); the stored width is on Size.
+  await rail('Size').click();
+  await page.waitForTimeout(150);
   check(
     width,
     'reopened wizard holds the stored answers (width 1000)',
@@ -299,7 +327,12 @@ for (const width of [1440, 375]) {
     width,
     '"Update piece" keeps the piece and its name',
     (await page.getByLabel('Name of this piece').inputValue()) === cabName &&
-      (await side.getByLabel('Width', { exact: true }).inputValue()) === '1000',
+      (await (async () => {
+        await page.getByRole('button', { name: 'Settings' }).click();
+        const w = await settingsWidth().inputValue();
+        await settings.getByRole('button', { name: 'Done' }).click();
+        return w;
+      })()) === '1000',
   );
   await page.getByRole('link', { name: /Catalog/ }).click();
   await page.getByRole('tab', { name: 'Saved on this device' }).click();
@@ -316,7 +349,7 @@ for (const width of [1440, 375]) {
 
   // N36: pictures in Start from, and drawn in the browser for an edited family.
   await page.getByRole('link', { name: /Editor/ }).click();
-  await page.getByRole('button', { name: 'New', exact: true }).click();
+  await openNew();
   const thumbs = page.locator('dialog[open] .start-from img.thumb');
   await page.waitForTimeout(500);
   const loaded = await thumbs.evaluateAll(

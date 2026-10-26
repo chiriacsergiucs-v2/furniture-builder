@@ -28,8 +28,16 @@ for (const width of [1440, 375]) {
   const shot = (name) =>
     page.screenshot({ path: `${out}/merge-${name}-${width}.png`, fullPage: true });
   const pieces = page.locator('ul.pieces > li');
+  // Phones (≤760 px, N82): the project panel is a bottom sheet; its peek row ("<project>: N pieces" or
+  // "Selected: …") opens it. Elsewhere the panel is always shown and the peek row is hidden.
+  const openSheet = async () => {
+    const peek = page.locator('.sheet-peek');
+    if ((await peek.isVisible()) && (await peek.getAttribute('aria-expanded')) === 'false')
+      await peek.click();
+  };
   const addPiece = async (search, name) => {
-    await page.getByRole('button', { name: 'Add a piece' }).dispatchEvent('click');
+    await openSheet();
+    await page.getByRole('button', { name: 'Add a piece' }).click();
     const dlg = page.locator('dialog[open]');
     await dlg.getByRole('searchbox', { name: 'Search the items' }).fill(search);
     await dlg.getByRole('button', { name }).first().click();
@@ -47,7 +55,8 @@ for (const width of [1440, 375]) {
   check(width, 'two pieces in the project', (await pieces.count()) === 2);
 
   // 2. Select the first; the merge control is found by its visible text.
-  await pieces.nth(0).getByRole('button').dispatchEvent('click');
+  await openSheet();
+  await pieces.nth(0).getByRole('button').click();
   check(
     width,
     '"Merge into one piece" heading visible',
@@ -86,12 +95,16 @@ for (const width of [1440, 375]) {
 
   // 4. Open it in the editor: one cabinet, three uprights (two sides + one divider) in the parts.
   await page.getByRole('button', { name: 'Edit this piece' }).dispatchEvent('click');
+  // The parts list is under Build & Preview (ADR-080; on a phone Compose shows the drawing only, N82). A tap on the
+  // open tab closes the results on a phone (ADR-091), so only a closed tab is tapped.
+  await page.getByRole('radio', { name: /^Build & Preview/ }).click();
   {
     const t = page.getByRole('tab', { name: /Parts/ });
-    if ((await t.getAttribute('aria-selected')) !== 'true') await t.dispatchEvent('click');
+    if ((await t.getAttribute('aria-selected')) !== 'true') await t.click();
   }
   await page.waitForTimeout(300);
   const parts = await page.locator('#panel-parts').innerText();
+  await page.getByRole('radio', { name: 'Compose' }).click();
   check(
     width,
     'editor parts list the divider of the merged cabinet',
@@ -102,7 +115,8 @@ for (const width of [1440, 375]) {
 
   // 5. A taller piece next to it cannot be merged; the reason is shown and the button is disabled.
   await addPiece('chest of drawers', /Chest of drawers/);
-  await pieces.nth(1).getByRole('button').dispatchEvent('click');
+  await openSheet();
+  await pieces.nth(1).getByRole('button').click();
   const no = page.getByRole('button', {
     name: /^Merge with Base cabinet, 1 door \+ Base cabinet, drawer over door on the left$/,
   });

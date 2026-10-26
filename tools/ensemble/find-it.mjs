@@ -2,6 +2,9 @@
 // run against a production build:
 //   npm run build && npx vite preview --port 4173 &  node tools/ensemble/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `npm test`.
+// Updated for the app shell (ADR-078: Projects place, ⋯ More → Files, breadcrumb in place of banners), the editor
+// modes (ADR-079/080: Parts CSV and Print on the Parts list in Build & Preview, Materials in the Settings dialog)
+// and the phone layout (N82: the project panel is a bottom sheet; Compose shows the drawing only).
 import { chromium } from 'playwright';
 import { mkdirSync, readFileSync } from 'node:fs';
 
@@ -33,8 +36,26 @@ for (const width of [1440, 375]) {
     page.screenshot({ path: `${out}/ensemble-${name}-${width}.png`, fullPage: true });
   const dlg = page.locator('dialog[open]');
   const pieces = page.locator('ul.pieces > li');
+  // Phones (≤760 px): the project panel is a bottom sheet opened by its peek row; elsewhere the row is hidden.
+  const openSheet = async () => {
+    const peek = page.locator('.sheet-peek');
+    if ((await peek.isVisible()) && (await peek.getAttribute('aria-expanded')) === 'false')
+      await peek.click();
+  };
+  const closeSheet = async () => {
+    const peek = page.locator('.sheet-peek');
+    if ((await peek.isVisible()) && (await peek.getAttribute('aria-expanded')) === 'true')
+      await peek.click();
+  };
+  const selectPiece = async (i) => {
+    await openSheet();
+    await pieces.nth(i).getByRole('button').first().click();
+  };
+  const setMode = (name) => page.getByRole('radio', { name: new RegExp(`^${name}`) }).click();
+  const moreMenu = page.locator('summary[aria-label="More"]');
   const addPiece = async (search) => {
-    await page.getByRole('button', { name: 'Add a piece' }).dispatchEvent('click');
+    await openSheet();
+    await page.getByRole('button', { name: 'Add a piece' }).click();
     await dlg.getByRole('searchbox', { name: 'Search the items' }).fill(search);
     await dlg.locator('.start-group .row-btn').first().click();
     await dlg.waitFor({ state: 'detached' }).catch(() => {});
@@ -65,14 +86,14 @@ for (const width of [1440, 375]) {
   );
 
   // Precise numeric position: "From left" moves the selected piece by an exact mm value; gap to the left neighbour.
-  await pieces.nth(2).getByRole('button').first().dispatchEvent('click');
+  await selectPiece(2);
   const fromLeft = page.getByLabel('From left', { exact: true }).first();
   check(width, 'precise numeric: "From left" field found', await fromLeft.isVisible());
   await fromLeft.fill('4321');
   await fromLeft.press('Enter');
   await page.waitForTimeout(200);
   check(width, 'precise numeric: value kept as 4321 mm', (await fromLeft.inputValue()) === '4321');
-  await pieces.nth(1).getByRole('button').first().dispatchEvent('click');
+  await selectPiece(1);
   check(
     width,
     'precise numeric: "Gap to … on the left" field found',
@@ -83,7 +104,9 @@ for (const width of [1440, 375]) {
   );
 
   // Dimensioning + synchronous 2D/3D: the plan and front views show the pieces with mm sizes; 3D shows the same project.
-  await page.getByRole('radio', { name: 'Plan' }).click();
+  // On a phone Compose shows the drawing only and offers no View switch (ADR-081); the sheet steps aside.
+  if (phone) await closeSheet();
+  else await page.getByRole('radio', { name: 'Plan' }).click();
   const plan = page.getByRole('figure', { name: /Room plan, seen from above/ });
   const front = page.getByRole('figure', { name: /Room seen from the front/ });
   check(
@@ -98,6 +121,8 @@ for (const width of [1440, 375]) {
   );
   check(width, 'dimensions: plan shows mm measurements', dims.length >= 2, dims.join(', '));
   await shot('plan');
+  // On a phone the 3D view is in Build & Preview (ADR-080, N82).
+  if (phone) await setMode('Build & Preview');
   await page.getByRole('radio', { name: '3D' }).click();
   await page.waitForTimeout(1500);
   check(
@@ -106,41 +131,54 @@ for (const width of [1440, 375]) {
     await page.locator('.view.three canvas').isVisible(),
   );
   await shot('3d');
-  await page.getByRole('radio', { name: 'Plan' }).click();
+  if (phone) await setMode('Compose');
+  else await page.getByRole('radio', { name: 'Plan' }).click();
 
   // In-context editing: "Edit this piece" opens the piece inside the project; changes stay in the project.
-  await page.getByRole('button', { name: 'Edit this piece' }).dispatchEvent('click');
+  // Rewritten (ADR-078): the "Editing … in project" banner became the top-bar path "‹ <project> › <piece>".
+  await selectPiece(1);
+  await page.getByRole('button', { name: 'Edit this piece' }).click();
+  const backToProject = page.getByRole('button', { name: `Back to project Verify ${width}` });
   check(
     width,
-    'in-context: "Editing … in project" banner',
-    await page.getByText(/Editing .* in project Verify/).isVisible(),
+    'in-context: path "‹ project › piece" in the top bar',
+    (await backToProject.isVisible()) &&
+      /Wardrobe/i.test(await page.getByLabel('Name of this piece').inputValue()),
   );
-  await page.getByRole('button', { name: 'Back to project' }).dispatchEvent('click');
+  await backToProject.click();
   await page.waitForTimeout(200);
 
   // Keep identity: pieces stay separate rows; merging is an explicit, separate action.
   check(width, 'identity: still three separate pieces after editing', (await pieces.count()) === 3);
-  await pieces.nth(0).getByRole('button').first().dispatchEvent('click');
+  await selectPiece(0);
   check(
     width,
     'identity: "Merge into one piece" is a separate explicit action',
     await page.getByRole('heading', { name: 'Merge into one piece' }).isVisible(),
   );
 
-  // Automatic BOM: one Parts CSV for the whole project, rows from all three pieces.
-  const csv = await download(() => page.getByRole('button', { name: 'Parts CSV' }).click());
+  // Automatic BOM: one Parts CSV for the whole project, rows from all three pieces. Since ADR-079 the CSV and Print
+  // are on the Parts list in Build & Preview ("Download CSV").
+  await setMode('Build & Preview');
+  await page.getByRole('tab', { name: /^Parts/ }).click();
+  const partsPanel = page.locator('#panel-parts');
+  const csv = await download(() =>
+    partsPanel.getByRole('button', { name: 'Download CSV' }).click(),
+  );
   const lines = csv.trim().split('\n');
   check(width, 'BOM: project Parts CSV downloads', lines.length > 10, `${lines.length} lines`);
   check(
     width,
     'BOM: Print (cutting sheet) available',
-    await page.getByRole('button', { name: 'Print' }).isEnabled(),
+    await partsPanel.getByRole('button', { name: 'Print' }).isEnabled(),
   );
+  await setMode('Compose');
 
   // Saved designs: the project is kept on this device and offered again after a reload; project file export.
+  // ADR-078: exports moved to ⋯ More → Files.
   const json = await download(async () => {
-    await page.locator('summary[aria-label="Export"]').click();
-    await page.locator('.menu-items button').first().click();
+    await moreMenu.click();
+    await page.getByRole('button', { name: /^Project file/ }).click();
   });
   check(
     width,
@@ -149,7 +187,10 @@ for (const width of [1440, 375]) {
   );
   await page.waitForTimeout(1500);
   await page.reload();
-  await page.getByRole('link', { name: 'Home' }).click();
+  await page
+    .getByRole('navigation', { name: 'Places' })
+    .getByRole('link', { name: 'Projects' })
+    .click();
   check(
     width,
     'saved: project listed under "Choose a project" after reload',
@@ -165,12 +206,14 @@ for (const width of [1440, 375]) {
   );
   check(width, 'no sideways scroll (project)', await noSideScroll());
 
-  // Finishes + professional bridge on a single piece: Materials dialog; SVG, Fusion script, design file.
+  // Finishes + professional bridge on a single piece: boards in Settings (was the Materials dialog, ADR-080);
+  // SVG, Fusion script, design file in ⋯ More → Files (ADR-078).
   await page.getByRole('button', { name: 'New single piece' }).click();
   await dlg.locator('.start-group .row-btn').first().click();
   await page.locator('main.work').waitFor({ state: 'visible' });
-  await page.getByRole('button', { name: 'Materials' }).dispatchEvent('click');
-  await dlg.getByRole('heading', { name: 'Materials in this piece' }).waitFor();
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await page.getByRole('dialog', { name: /^Settings: / }).waitFor();
+  await dlg.locator('summary', { hasText: 'Boards, sheets and saw cut' }).click();
   check(
     width,
     'finishes: colour, name and "Add a picture" per board',
@@ -179,11 +222,11 @@ for (const width of [1440, 375]) {
   );
   await page.keyboard.press('Escape');
   await dlg.waitFor({ state: 'detached' }).catch(() => {});
-  await page.locator('summary[aria-label="Export"]').click();
+  await moreMenu.click();
   const items = (await page.locator('.menu-items').innerText()).replace(/\n/g, ' ');
   check(
     width,
-    'pro bridge: SVG drawing, Fusion 360 script and design file in Export',
+    'pro bridge: SVG drawing, Fusion 360 script and design file in More → Files',
     /Front view drawing/.test(items) &&
       /Fusion 360 script/.test(items) &&
       /Design file/.test(items),
