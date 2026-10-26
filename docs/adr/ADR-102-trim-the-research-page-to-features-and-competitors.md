@@ -38,11 +38,9 @@ assessment dashboard (demand, value, complexity, confidence, appreciation, resea
 
 ## Scope
 
-- In scope: the tabs, the dashboard move, the removed exports, ticks, bulk actions and Compare, unused code and
-  CSS, tests and the find-it script.
-- Out of scope (removed by the user's choice, recorded per ADR-082): research import and export (G-102); spec
-  export, ticks and compare (G-103); overview totals and the Findings, Contradictions, Sources and Coverage audit
-  views (G-104).
+- In scope: the tabs, the dashboard move, removing import and export, ticks, bulk actions and Compare, unused
+  code and CSS, tests and the find-it script.
+- The removed features are not kept as gaps: the user said "No need to keep them as gaps" (2026-10-26).
 
 ## Consequences
 
