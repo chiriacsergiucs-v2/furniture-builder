@@ -557,3 +557,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Run critique this design for the entire ui/ux; then 'Fix them directly' (answered for findings 1-6)
 - Questions: Which of these to fix next, and in what order?
 - Suggested pick: Fix 13, 14, 16, 18 next (layout bugs and a misleading message, closest to a broken UI; est. small each)
+
+### G-060: Five find-it scripts stale since ADR-080
+
+- Status: Open
+- Origin: Found 2026-10-26 while checking N82; predates it (same failures on main 4b1141b)
+- Missing: Five find-it scripts are stale since ADR-080: look-render (waits for a 'Materials' button), editor-modes (expects a 'Configure' mode), trims (radio 'Configure'), clearances ('Chair space depth' not found), plan-snap (no status in the room plan)
+- Request: Not a user request: R3 requires find-it scripts to pass against the production build
+- Questions: Update the five scripts to the ADR-080 layout (Settings dialog instead of Configure/Materials)?
+- Suggested pick: Update all five scripts to the current UI (est. small each; restores R3 evidence for ADR-067/068, ADR-079, trims, clearances, plan snap)
