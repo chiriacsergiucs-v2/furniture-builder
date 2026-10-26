@@ -1,7 +1,8 @@
 # ADR-099: Align centres and distribute pieces evenly
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-26
+- Implemented: 2026-10-26
 - Depends on: ADR-070, ADR-097
 - Design: docs/ui-design.md (Plan view)
 - Backlog: N97
@@ -44,9 +45,9 @@ once [ADR-097](../adr-done/ADR-097-select-several-pieces-and-keep-them-as-groups
 
 ## Done when
 
-- [ ] Align and distribute give exact whole-mm positions, leftover mm to the leftmost gaps (unit tests)
-- [ ] Centre snapping ranks with ADR-070 deterministically (unit test)
-- [ ] Find-it at 1440 and 390 px: select three pieces → **Distribute evenly** → equal gaps shown; drag a wall unit
+- [x] Align and distribute give exact whole-mm positions, leftover mm to the leftmost gaps (unit tests)
+- [x] Centre snapping ranks with ADR-070 deterministically (unit test)
+- [x] Find-it at 1440 and 390 px: select three pieces → **Distribute evenly** → equal gaps shown; drag a wall unit
       over a base unit → "centre" label; no page errors
 
 ## Answers (2026-10-26)

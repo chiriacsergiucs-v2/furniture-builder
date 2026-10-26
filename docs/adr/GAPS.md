@@ -870,7 +870,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-090: Distribute along the depth
 
-- Status: ADR-099
+- Status: Done (ADR-099)
 - Origin: ADR-099 open question (2026-10-26)
 - Missing: Whether Distribute works along the depth too; default along the wall only.
 - Request: "New adr 7" (2026-10-26)
