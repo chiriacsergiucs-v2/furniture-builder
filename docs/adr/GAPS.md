@@ -539,3 +539,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: “Divider(horizontal and vertical)/drawer/shelf/all other applicable pleces based on configuration + currentNuber - … Placement: above the selected piece”
 - Questions: Full find-it acceptance or light (ADR-066)?
 - Suggested pick: Full: the request is a visible control and R3 is the default (light saves an estimated 20% effort, adds no value)
+
+### G-058: Dragging pieces never tried in a browser
+
+- Status: Open
+- Origin: ADR-065, 2026-10-24 19:10 UTC; user decision
+- Missing: Dragging a piece on the plan (mouse, touch, arrow keys) is merged and deployed but was never tried in a browser; find-it was skipped. N60 says Done while its text says not verified.
+- Request: “Skip find-it for this onw”
+- Questions: Run a find-it for dragging now, or keep N60 as Partially done until someone tries it?
+- Suggested pick: Add a find-it: mouse drag at 1440 px changes From left, Undo restores; touch drag at 375 px with no sideways scroll; set N60 by the result. (estimate: effort +3%, value +6%)
