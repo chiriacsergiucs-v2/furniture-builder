@@ -10,3 +10,5 @@ docs/samples/*.project.json
 public/catalog/
 # Research papers kept verbatim; their lines are audited by tests/research.test.ts (ADR-043).
 docs/research/
+# Vendored verbatim from JuliusBrussee/caveman (Apache-2.0); see .claude/skills/caveman/NOTICE.
+.claude/skills/caveman/
