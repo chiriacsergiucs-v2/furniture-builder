@@ -102,7 +102,10 @@ for (const width of [1440, 375]) {
   const checksText = async () => {
     await click(mode(/Build & Preview/));
     await page.waitForTimeout(300);
-    await click(page.getByRole('tab', { name: /Checks/ }));
+    {
+      const t = page.getByRole('tab', { name: /Checks/ });
+      if ((await t.getAttribute('aria-selected')) !== 'true') await click(t);
+    }
     await page.waitForTimeout(200);
     const t = (await page.locator('#panel-checks').textContent()) ?? '';
     await shot('checks');

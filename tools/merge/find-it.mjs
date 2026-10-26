@@ -95,9 +95,13 @@ for (const width of [1440, 375]) {
 
   // 4. Open it in the editor: one cabinet, three uprights (two sides + one divider) in the parts.
   await page.getByRole('button', { name: 'Edit this piece' }).dispatchEvent('click');
-  // The parts list is under Build & Preview (ADR-080; on a phone Compose shows the drawing only, N82).
+  // The parts list is under Build & Preview (ADR-080; on a phone Compose shows the drawing only, N82). A tap on the
+  // open tab closes the results on a phone (ADR-091), so only a closed tab is tapped.
   await page.getByRole('radio', { name: /^Build & Preview/ }).click();
-  await page.getByRole('tab', { name: /Parts/ }).click();
+  {
+    const t = page.getByRole('tab', { name: /Parts/ });
+    if ((await t.getAttribute('aria-selected')) !== 'true') await t.click();
+  }
   await page.waitForTimeout(300);
   const parts = await page.locator('#panel-parts').innerText();
   await page.getByRole('radio', { name: 'Compose' }).click();

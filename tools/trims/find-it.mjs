@@ -164,7 +164,11 @@ for (const width of [375, 390, 1280, 1440]) {
   await page.getByRole('radio', { name: /Build & Preview/ }).click();
   await page.waitForTimeout(400);
   const partsTab = page.getByRole('tab', { name: /^Parts/ });
-  if (await partsTab.isVisible().catch(() => false)) await partsTab.click({ timeout: 30000 });
+  if (
+    (await partsTab.isVisible().catch(() => false)) &&
+    (await partsTab.getAttribute('aria-selected')) !== 'true'
+  )
+    await partsTab.click({ timeout: 30000 });
   await page.waitForTimeout(200);
   const body = await page.locator('body').innerText();
   for (const t of ['Run: Worktop', 'Run: Crown', 'Run: Pelmet'])

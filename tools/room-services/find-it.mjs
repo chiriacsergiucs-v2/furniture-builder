@@ -116,7 +116,11 @@ for (const width of [1440, 1280, 390, 375]) {
     if (phone && (await build.isVisible().catch(() => false))) await build.click();
     const checks = page.getByRole('tab', { name: /Checks/ });
     await checks.waitFor({ timeout: 5000 }).catch(() => {});
-    if (await checks.isVisible().catch(() => false)) await checks.click();
+    if (
+      (await checks.isVisible().catch(() => false)) &&
+      (await checks.getAttribute('aria-selected')) !== 'true'
+    )
+      await checks.click();
     await page.waitForTimeout(300);
   };
   await showChecks();

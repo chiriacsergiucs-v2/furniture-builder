@@ -5339,3 +5339,15 @@ button.tile:hover {
     display: none;
   }
 }
+
+/* Results collapsed until a tab is tapped, phones only (ADR-091): the views take the room. */
+@media (max-width: 760px) {
+  .output.collapsed {
+    grid-template-rows: auto;
+  }
+  .work.mode-build:has(.output.collapsed) .stage {
+    height: calc(
+      100dvh - var(--bar-h, 50px) - var(--modes-h, 52px) - var(--actions-h, 64px) - 96px
+    );
+  }
+}

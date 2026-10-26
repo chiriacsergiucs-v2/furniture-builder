@@ -253,7 +253,10 @@ for (const width of [1440, 375]) {
       .catch(() => '')) === 'Mobila — Dormitor',
   );
   check(width, 'Dormitor project has no errors (Download CSV enabled)', await noErrors(true));
-  await page.getByRole('tab', { name: /Hardware/ }).dispatchEvent('click');
+  {
+    const t = page.getByRole('tab', { name: /Hardware/ });
+    if ((await t.getAttribute('aria-selected')) !== 'true') await t.dispatchEvent('click');
+  }
   check(
     width,
     'Pat Noi: the two screwed joints are in the hardware list',

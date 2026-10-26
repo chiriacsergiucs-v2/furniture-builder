@@ -175,6 +175,11 @@ for (const [width, scheme] of [
   ck(width, 'Build & Preview shows the 3D view', (await canvases()) > 0);
   const csv = page.getByRole('button', { name: 'Download CSV' });
   const print = page.getByRole('button', { name: 'Print', exact: true });
+  // Phones keep the results collapsed until a tab is tapped (ADR-091).
+  {
+    const t = page.getByRole('tab', { name: /^Parts/ });
+    if ((await t.getAttribute('aria-selected')) !== 'true') await t.click();
+  }
   ck(
     width,
     'Parts tab has Download CSV and Print, enabled',
@@ -199,7 +204,10 @@ for (const [width, scheme] of [
     'Download CSV and Print disabled with an error',
     (await csv.isDisabled()) && (await print.isDisabled()),
   );
-  await page.getByRole('tab', { name: /Checks/ }).click();
+  {
+    const t = page.getByRole('tab', { name: /Checks/ });
+    if ((await t.getAttribute('aria-selected')) !== 'true') await t.click();
+  }
   ck(
     width,
     'Checks shows the error',

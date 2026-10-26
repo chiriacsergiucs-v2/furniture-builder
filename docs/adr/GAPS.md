@@ -696,3 +696,23 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Findings 8 + 9: 'Skip 8 and 9'. Finding 12: no request; the names are ADR-033's decision.
 - Questions: Write an ADR for 8 and 9 later? Keep the Romanian names (ADR-033) or show them only in search?
 - Suggested pick: Keep 12 as ADR-033 decided (no change); for 8 and 9, an ADR when you want the editor layout revisited (closest to the critique; est. +40 % work over a small fix, +60 % of 8/9 value)
+
+### G-074: Remember whether the results panel was open across reloads
+
+- Status: Acknowledged (2026-10-26)
+- Origin: ADR-091 out of scope
+- Missing: The results panel always starts collapsed after a reload; its open/closed state and tab are not saved
+- Request: They should be a collapsed view, onclick showing only, so the views with renders are kept as main
+- Questions: Should the app remember an open results panel after a reload?
+- Suggested pick: No: always start collapsed, closest to 'collapsed view, onclick showing only'
+- Answer: User 2026-10-26: "Always collapsed".
+
+### G-075: Results collapse at desktop width too
+
+- Status: ADR-091
+- Origin: ADR-091 open question
+- Missing: Unconfirmed default: the results tabs collapse at every width, not only on phones
+- Request: They should be a collapsed view, onclick showing only, so the views with renders are kept as main
+- Questions: Collapse at desktop width too, or only on phones?
+- Suggested pick: Every width: the request names no width and keeps the render views main everywhere
+- Answer: User 2026-10-26: "Only phones"; built in ADR-091 (desktop keeps a tab open).

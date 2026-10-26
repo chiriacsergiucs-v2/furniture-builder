@@ -92,7 +92,10 @@ for (const width of [1440, 1280, 390, 375]) {
 
   // 3. Build & Preview › Hardware and Shopping list, before a fastener is chosen.
   await mode(/Build & Preview/).click();
-  await tab('Hardware').click();
+  {
+    const t = tab('Hardware');
+    if ((await t.getAttribute('aria-selected')) !== 'true') await t.click();
+  }
   ck(
     'Hardware shows "Fasteners — guidance"',
     await panel('hardware').getByRole('heading', { name: 'Fasteners — guidance' }).isVisible(),
@@ -103,7 +106,10 @@ for (const width of [1440, 1280, 390, 375]) {
       (await panel('hardware').getByText('choose your fastener').first().isVisible()),
   );
   await shot('hardware-before');
-  await tab('Shopping list').click();
+  {
+    const t = tab('Shopping list');
+    if ((await t.getAttribute('aria-selected')) !== 'true') await t.click();
+  }
   const choose = panel('shopping').getByRole('region', { name: 'To choose before buying' });
   ck(
     'Shopping list: "Joint fixings: 18 joints — choose your fastener" under To choose before buying',
@@ -134,13 +140,19 @@ for (const width of [1440, 1280, 390, 375]) {
 
   // 5. The counted line in Hardware and Shopping list.
   await mode(/Build & Preview/).click();
-  await tab('Hardware').click();
+  {
+    const t = tab('Hardware');
+    if ((await t.getAttribute('aria-selected')) !== 'true') await t.click();
+  }
   ck(
     'Hardware shows "Confirmat 7 × 50, 2 per joint" → 36 pcs',
     (await panel('hardware').getByText('Confirmat 7 × 50, 2 per joint').isVisible()) &&
       (await panel('hardware').getByText('36 pcs').isVisible()),
   );
-  await tab('Shopping list').click();
+  {
+    const t = tab('Shopping list');
+    if ((await t.getAttribute('aria-selected')) !== 'true') await t.click();
+  }
   const hw = panel('shopping').getByRole('region', { name: 'Hardware' });
   const row = hw.getByRole('row', { name: /Confirmat 7 × 50/ });
   ck(

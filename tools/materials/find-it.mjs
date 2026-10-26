@@ -339,7 +339,10 @@ for (const width of [1440, 375]) {
     boardChoices.includes('PAL 18 white · Egger, Kitchen worktop') &&
       boardChoices.includes('Egger H1145 Bardolino Oak · Egger, PAL'),
   );
-  await page.getByRole('tab', { name: /Checks/ }).dispatchEvent('click');
+  {
+    const t = page.getByRole('tab', { name: /Checks/ });
+    if ((await t.getAttribute('aria-selected')) !== 'true') await t.dispatchEvent('click');
+  }
   check(
     width,
     'worktop board on other parts: guidance warning',
