@@ -16,6 +16,7 @@ import { SettingsDialog } from './Settings';
 import { WizardDialog } from './Wizard';
 import { CatalogPage } from './Catalog';
 import { ResearchPage } from './Research';
+import { GapsPage } from './Gaps';
 import { ConfirmHost } from './Confirm';
 import { catalogFamilies } from '../core/catalog';
 import { useTemplates } from '../store/templatesStore';
@@ -121,15 +122,16 @@ function ViewOptions({ menu, children }: { menu: boolean; children: ReactNode })
   );
 }
 
-type Page = 'projects' | 'editor' | 'catalog' | 'research';
-const PAGES: Page[] = ['projects', 'editor', 'catalog', 'research'];
+type Page = 'projects' | 'editor' | 'catalog' | 'research' | 'gaps';
+const PAGES: Page[] = ['projects', 'editor', 'catalog', 'research', 'gaps'];
 const pageFromHash = (): Page =>
   typeof location === 'undefined'
     ? 'projects'
     : (PAGES.find((p) => location.hash === `#${p}`) ?? 'projects');
 /**
  * The three places (ADR-078), linkable: the bare address and #projects open Projects, #editor the editor, #catalog
- * the Catalog (ADR-032); #research the Feature Research & Catalog (ADR-043), reached from the ⋯ menu.
+ * the Catalog (ADR-032); #research the Feature Research & Catalog (ADR-043) and #gaps the gaps ledger (ADR-101),
+ * both reached from the ⋯ menu.
  */
 function usePage(): [Page, (p: Page) => void] {
   const [page, setPage] = useState<Page>(pageFromHash);
@@ -607,6 +609,7 @@ export function App() {
               onNew={() => setDialog('new')}
               onOpened={() => setPage('editor')}
               onResearch={() => setPage('research')}
+              onGaps={() => setPage('gaps')}
             />
           </div>
         </header>
@@ -665,6 +668,7 @@ export function App() {
           />
         )}
         {page === 'research' && <ResearchPage onDone={() => setPage('editor')} />}
+        {page === 'gaps' && <GapsPage onDone={() => setPage('editor')} />}
         <main
           className={`work mode-${mode} ${sheetOpen ? 'sheet-open' : ''}`}
           hidden={page !== 'editor'}
