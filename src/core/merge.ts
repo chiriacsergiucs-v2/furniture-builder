@@ -211,6 +211,8 @@ export function mergeItems(
     position,
     rotationY: l.rotationY,
     ...(placement ? { placement } : {}),
+    // A lock on either piece stays on the merged one (ADR-095): merging never frees a locked piece.
+    ...(l.locked || r.locked ? { locked: true as const } : {}),
   };
   const items = project.items.flatMap((i) => {
     if (i.id === r.id) return [];

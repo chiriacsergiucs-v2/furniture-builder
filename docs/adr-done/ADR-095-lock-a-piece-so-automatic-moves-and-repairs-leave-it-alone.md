@@ -1,7 +1,8 @@
 # ADR-095: Lock a piece so automatic moves and repairs leave it alone
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-26
+- Implemented: 2026-10-26
 - Depends on: ADR-065, ADR-069, ADR-070, ADR-071
 - Design: docs/ui-design.md (Plan view)
 - Backlog: N93
@@ -34,7 +35,7 @@ piece placed on another following it (ADR-031).
 ## Alternatives considered
 
 - **Lock per axis** (x only, z only) — more control than the research asks; adds UI for little use.
-- **Lock as a group property** — groups are [ADR-097](ADR-097-select-several-pieces-and-keep-them-as-groups.md); a group can lock its members through this flag later.
+- **Lock as a group property** — groups are [ADR-097](../adr/ADR-097-select-several-pieces-and-keep-them-as-groups.md); a group can lock its members through this flag later.
 
 ## Scope
 
@@ -48,10 +49,10 @@ piece placed on another following it (ADR-031).
 
 ## Done when
 
-- [ ] Drag, turn, mirror, gap tool and mirror-the-run leave a locked piece where it is and return a reason (unit tests)
-- [ ] Repairs never move a locked piece (unit test with an overlap against a locked piece)
-- [ ] A project with a locked piece saves and reloads; older project versions still load (storage test)
-- [ ] Find-it at 1440 and 390 px: select a piece → **Lock** → dragging it does not move it and "Locked" shows →
+- [x] Drag, turn, mirror, gap tool and mirror-the-run leave a locked piece where it is and return a reason (unit tests)
+- [x] Repairs never move a locked piece (unit test with an overlap against a locked piece)
+- [x] A project with a locked piece saves and reloads; older project versions still load (storage test)
+- [x] Find-it at 1440 and 390 px: select a piece → **Lock** → dragging it does not move it and "Locked" shows →
       **Unlock** → it moves; no page errors
 
 ## Answers (2026-10-26)

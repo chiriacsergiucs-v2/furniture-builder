@@ -2,6 +2,7 @@ import { useThree, type ThreeEvent } from '@react-three/fiber';
 import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 import { Raycaster, Vector2 } from 'three';
 import { floorDrop, floorPoint, type FloorPoint } from '../core/drag3d';
+import { isLocked, LOCKED_HINT, moveBlocked } from '../core/project';
 import type { SnapResult } from '../core/snap';
 import { useDesign } from '../store/designStore';
 import { DRAG_THRESHOLD_PX } from '../ui/planDrag';
@@ -15,6 +16,8 @@ export interface PieceGhost {
   target: SnapResult;
   /** Snapping was asked for (Snap on, Alt not held), to say why nothing snapped. */
   snapping: boolean;
+  /** Why the piece will not move (locked, or carrying a locked piece, ADR-095): no ghost, this hint instead. */
+  blocked?: string;
 }
 
 // The ghost lives outside React state so a pointer move re-renders only the ghost and its note, not the scene.
@@ -127,7 +130,9 @@ export function usePieceDrag(enabled: boolean, snapOn: boolean) {
     if (!st.project || !pieces) return null;
     const snapping = live.current.snapOn && !g.alt;
     const target = floorDrop(st.project, pieces, g.id, g.from, g.to, snapping);
-    return target ? { id: g.id, target, snapping } : null;
+    const item = st.project.items.find((i) => i.id === g.id);
+    const blocked = isLocked(item) ? LOCKED_HINT : moveBlocked(st.project, [g.id]);
+    return target ? { id: g.id, target, snapping, ...(blocked ? { blocked } : {}) } : null;
   };
 
   const press = useCallback(

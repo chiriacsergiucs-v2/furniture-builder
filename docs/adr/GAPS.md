@@ -798,7 +798,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-082: Delete a locked piece
 
-- Status: ADR-095
+- Status: Done (ADR-095)
 - Origin: ADR-095 open question (2026-10-26)
 - Missing: Whether a locked piece may be deleted; default yes after confirmation.
 - Request: "New adr 8" (2026-10-26)
@@ -1011,3 +1011,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: New adr to override the conflicts for 4 and make it ready
 - Questions: Should Move in 3D also drag and turn display-only 3D models?
 - Suggested pick: Yes, the same Move and Turn (closest to direct manipulation in 2D/3D; about +15 % work for +10 % of the request, estimates).
+
+### G-106: Resizing a base moves a locked piece on it
+
+- Status: Open
+- Origin: ADR-095 (2026-10-26, Claude: found while building)
+- Missing: A locked piece placed on or above another piece still follows its base when the base's size changes in the piece editor (moving or turning the base is refused; resizing is not a move).
+- Request: Not a quote: ADR-095 'Nothing moves it for the user'
+- Questions: Should resizing a base keep a locked piece on it where it is (leaving its base), or refuse the resize?
+- Suggested pick: Refuse the resize with the reason, as a move of the base is refused (about +10 % of ADR-095's work).
