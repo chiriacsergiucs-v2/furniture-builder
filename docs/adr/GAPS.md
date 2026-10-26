@@ -878,3 +878,21 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: "New adr 3" (2026-10-26)
 - Questions: Allow a tolerance (mm) before warning?
 - Suggested pick: Any difference warns until the user names a tolerance (never invent a physical value, ADR-010).
+
+### G-094: Resizing a base moves a locked piece on it
+
+- Status: Open
+- Origin: ADR-095 (2026-10-26, Claude: found while building)
+- Missing: A locked piece placed on or above another piece still follows its base when the base's size changes in the piece editor (moving or turning the base is refused; resizing is not a move).
+- Request: Not a quote: ADR-095 'Nothing moves it for the user'
+- Questions: Should resizing a base keep a locked piece on it where it is (leaving its base), or refuse the resize?
+- Suggested pick: Refuse the resize with the reason, as a move of the base is refused (about +10 % of ADR-095's work).
+
+### G-095: 3D drag of a locked piece not checked
+
+- Status: Open
+- Origin: ADR-095 (2026-10-26, Claude: depends on ADR-093)
+- Missing: Dragging a piece in the 3D view does not exist yet (ADR-093, built in parallel); the lock refusal is in the shared move helper (moveBy / moveItemBy), so a 3D drag that uses it is refused too, but no 3D drag was checked.
+- Request: Not a quote: ADR-095 'dragging it (Plan, 3D, arrow keys) ... refused'
+- Questions: Check the 3D drag refusal when ADR-093 ships?
+- Suggested pick: Yes: add a locked-piece step to ADR-093's find-it once both are on main (about +5 % of ADR-095's work).

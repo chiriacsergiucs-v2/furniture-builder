@@ -6,8 +6,12 @@
 import { newId } from './design';
 import { overlaps } from './geometry';
 import {
+  LOCKED_HINT,
+  moveBlocked,
+  pieceName,
   placedBounds,
   resolvePlacements,
+  type MoveResult,
   type Project,
   type ProjectItem,
   type QuarterTurn,
@@ -166,8 +170,11 @@ export function duplicateItem(
     left = b.x - b.w;
   const x = free(right) || !free(left) ? right : left;
   const src = project.items[at];
+  // The copy is a new piece placed for the user: it starts unlocked (ADR-095).
+  const { locked: _locked, ...unlocked } = structuredClone(src);
+  void _locked;
   const copy: ProjectItem = {
-    ...shifted(structuredClone(src), x - b.x, 0),
+    ...shifted(unlocked, x - b.x, 0),
     id: newId(),
   };
   copy.design = { ...copy.design, id: newId() };
@@ -184,19 +191,33 @@ export function duplicateItem(
  * (ADR-031), so only its centre along x is kept. Unknown ids return the same project.
  */
 export function turnAboutCentre(project: Project, id: string, dir: 1 | -1 = 1): Project {
+  return tryTurn(project, id, dir).project;
+}
+
+/**
+ * `turnAboutCentre` with the reason when it is refused (ADR-095): a locked piece does not turn, and neither does a
+ * piece a locked piece rests on (it would follow).
+ */
+export function tryTurn(project: Project, id: string, dir: 1 | -1 = 1): MoveResult {
   const it = project.items.find((i) => i.id === id);
-  if (!it) return project;
+  if (!it) return { project };
+  const reason = moveBlocked(project, [id]);
+  if (reason) return { project, reason };
   const b = boundsOf(project).get(id)!;
   const rotationY = ((((it.rotationY + dir * 90) % 360) + 360) % 360) as QuarterTurn;
   const half = (n: number) => (rotationY % 180 === 0 ? Math.ceil(n / 2) : Math.floor(n / 2));
   const turned = { ...shifted(it, half(b.w - b.d), half(b.d - b.w)), rotationY };
-  return { ...project, items: project.items.map((i) => (i.id === id ? turned : i)) };
+  return { project: { ...project, items: project.items.map((i) => (i.id === id ? turned : i)) } };
 }
 
-/** Mirror one piece in place (ADR-069). `reason` is set when there was nothing to mirror (the project is unchanged). */
-export function mirrorItem(project: Project, id: string): { project: Project; reason?: string } {
+/**
+ * Mirror one piece in place (ADR-069). `reason` is set when there was nothing to mirror or the piece is locked
+ * (ADR-095); the project is unchanged then.
+ */
+export function mirrorItem(project: Project, id: string): MoveResult {
   const it = project.items.find((i) => i.id === id);
   if (!it) return { project };
+  if (it.locked) return { project, reason: `${LOCKED_HINT}: ${pieceName(project, id)}.` };
   const m = mirrorDesign(it.design);
   if (!m.ok) return { project, reason: m.reason };
   return {
@@ -251,7 +272,10 @@ const mirroredTurn = (r: QuarterTurn) => (r % 180 === 0 ? r : (((r + 180) % 360)
  * mirrored. Pieces resting on a run piece (and on those, at any depth) are mirrored too and keep their place over
  * their base, reflected. Pieces with nothing to mirror only move; `reasons` lists them.
  */
-export function mirrorRun(project: Project, id: string): { project: Project; reasons: string[] } {
+export function mirrorRun(
+  project: Project,
+  id: string,
+): { project: Project; reasons: string[]; refused?: string } {
   const bounds = boundsOf(project);
   const run = touchingRun(project, id, bounds);
   if (!run.length) return { project, reasons: [] };
@@ -268,6 +292,9 @@ export function mirrorRun(project: Project, id: string): { project: Project; rea
       }
     }
   }
+  // Every piece of the run and on it moves and is mirrored: refused when one is locked (ADR-095).
+  const refused = moveBlocked(project, [...run, ...stacked]);
+  if (refused) return { project, reasons: [], refused: `Mirror the run refused: ${refused}` };
   const x0 = Math.min(...run.map((r) => bounds.get(r)!.x)),
     x1 = Math.max(...run.map((r) => bounds.get(r)!.x + bounds.get(r)!.w));
   const reasons: string[] = [];

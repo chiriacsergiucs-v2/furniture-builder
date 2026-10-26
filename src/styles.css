@@ -2017,6 +2017,49 @@ td.note {
   font-weight: 500;
   pointer-events: none;
 }
+/* A locked piece (ADR-095): a solid heavier outline and the "Locked" badge in its corner. */
+.plan-piece.locked rect {
+  stroke-width: 2.6;
+}
+.plan .lock-badge {
+  fill: var(--warn);
+  font-family: var(--font);
+  font-weight: 700;
+  pointer-events: none;
+}
+.plan-drag-note.locked {
+  color: var(--warn);
+  font-weight: 600;
+}
+.lock-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: var(--s-2);
+  vertical-align: middle;
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+.lock-badges {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.lock-badge-3d {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 1px 6px;
+  border-radius: var(--r-pill);
+  background: var(--warn-soft);
+  color: var(--warn);
+  font: 600 var(--fs-xs) var(--font);
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
 .plan-piece:focus {
   outline: none;
 }

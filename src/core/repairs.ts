@@ -6,6 +6,7 @@
 import { overlapsBox } from './shape';
 import {
   buildProjectModel,
+  pieceName,
   refreshRunParts,
   resolvePlacements,
   type PlacedPiece,
@@ -104,14 +105,7 @@ const side = (axis: 'x' | 'z', s: number) =>
       ? 'away from the back wall'
       : 'towards the back wall';
 
-/** A piece's name, with its number in the project when another piece has the same name. */
-export function pieceName(project: Project, id: string): string {
-  const i = project.items.findIndex((x) => x.id === id);
-  const name = project.items[i]?.design.name ?? '';
-  return project.items.some((x) => x.id !== id && x.design.name === name)
-    ? `${name} (piece ${i + 1})`
-    : name;
-}
+export { pieceName };
 
 function moveCandidate(
   project: Project,
@@ -296,6 +290,8 @@ export function repairsFor(
   const boundsOf = (m: ProjectModel) =>
     new Map<string, Box>([...m.pieces.map((pc) => [pc.item.id, pc.bounds] as [string, Box])]);
   const was = boundsOf(pm);
+  // A locked piece is never moved by a repair (ADR-095), neither directly nor by following its base.
+  const locked = pm.pieces.filter((pc) => pc.item.locked).map((pc) => pc.item.id);
   for (const c of candidates(project, pm, d).sort((a, b) => a.distance - b.distance)) {
     if (out.length >= max) break;
     if (seen.has(c.label)) continue;
@@ -303,6 +299,11 @@ export function repairsFor(
     const next = settle(c.project);
     if (c.added && !(next.runParts ?? []).some((r) => r.key === c.added)) continue;
     const after = buildProjectModel(next);
+    if (locked.length) {
+      const now = boundsOf(after);
+      if (locked.some((id) => JSON.stringify(now.get(id)) !== JSON.stringify(was.get(id))))
+        continue;
+    }
     if (after.diagnostics.some((e) => sameProblem(d, e))) continue;
     if (after.diagnostics.some((e) => e.severity === 'error' && !before.has(errorKey(e)))) continue;
     const preview: Repair['preview'] = [];

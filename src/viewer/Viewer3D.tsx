@@ -29,7 +29,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { explode } from '../core/explode';
 import { hitToMm, inSelection, selectionBox } from '../core/selectPath';
 import { roomDisplayBoxes } from '../core/room';
-import { pieceBoxToRoom } from '../core/project';
+import { pieceBoxToRoom, type PlacedPiece } from '../core/project';
 import { inPlaneAxes, union } from '../core/geometry';
 import { aabbOf } from '../core/shape';
 import { boxUvs, finishLook, planeUvs } from '../core/surface';
@@ -181,6 +181,16 @@ export default function Viewer3D() {
       !s.project?.room,
   );
   const cardRef = useRef<HTMLDivElement>(null);
+  // Locked project pieces (ADR-095) get a "Locked" label over them: DOM spans placed each frame, as the counts card.
+  const projectPieces = useDesign((s) =>
+    view.mode === 'project' ? s.projectModel?.pieces : undefined,
+  );
+  const locked = useMemo(
+    () => (projectPieces ?? []).filter((pc) => pc.item.locked),
+    [projectPieces],
+  );
+  const showLocks = !exploded && !rendering && locked.length > 0;
+  const lockBadges = useRef(new Map<string, HTMLSpanElement>());
   // Bottom centre of the card at the anchor, kept inside the view (the anchor's screen point, or null to hide).
   const placeCard = useCallback((at: { x: number; y: number } | null) => {
     const el = cardRef.current,
@@ -243,8 +253,26 @@ export default function Viewer3D() {
         )}
         {view.mode === 'project' && !exploded && <RoomWalls />}
         {view.mode === 'project' && !exploded && <ModelItems plain={rendering} />}
+        {showLocks && <LockAnchors pieces={locked} badges={lockBadges} />}
         <Fit key={designId} bounds={bounds} />
       </Canvas>
+      {showLocks && (
+        <div className="lock-badges" aria-hidden="true">
+          {locked.map((pc) => (
+            <span
+              key={pc.item.id}
+              className="lock-badge-3d"
+              style={{ visibility: 'hidden' }}
+              ref={(el) => {
+                if (el) lockBadges.current.set(pc.item.id, el);
+                else lockBadges.current.delete(pc.item.id);
+              }}
+            >
+              Locked
+            </span>
+          ))}
+        </div>
+      )}
       {emptyProject && (
         <div className="no-3d empty-3d">
           <p>Add pieces under Compose to see them in 3D.</p>
@@ -519,6 +547,37 @@ function ModelItemMesh({ item, box, plain }: { item: ModelItem; box: Box; plain:
       )}
     </group>
   );
+}
+
+/**
+ * Places the "Locked" labels of locked project pieces (ADR-095) each frame: centred on each piece, clear of the
+ * counts card over its top, and hidden when the point is behind the camera. Display only; the viewer only selects.
+ */
+function LockAnchors({
+  pieces,
+  badges,
+}: {
+  pieces: PlacedPiece[];
+  badges: { current: Map<string, HTMLSpanElement> };
+}) {
+  const v = useMemo(() => new Vector3(), []);
+  useFrame(({ camera, size }) => {
+    for (const pc of pieces) {
+      const el = badges.current.get(pc.item.id);
+      if (!el) continue;
+      const b = pc.bounds;
+      v.set((b.x + b.w / 2) * S, (b.y + b.h / 2) * S, (b.z + b.d / 2) * S).project(camera);
+      if (v.z > 1) {
+        el.style.visibility = 'hidden';
+        continue;
+      }
+      const x = ((v.x + 1) / 2) * size.width - el.offsetWidth / 2;
+      const y = ((1 - v.y) / 2) * size.height - el.offsetHeight / 2;
+      el.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+      el.style.visibility = 'visible';
+    }
+  });
+  return null;
 }
 
 /** The project's room (ADR-058): translucent walls with openings, obstacles; display only, never picked. */
