@@ -66,6 +66,7 @@ import {
   type FocusedProblem,
 } from './ProblemBanner';
 import { useProblem } from './problemStore';
+import { ReplaceButton } from './Replace';
 
 const FRONT_SIDE: Record<QuarterTurn, string> = {
   0: 'front faces you',
@@ -165,6 +166,7 @@ export function ProjectPanel({
               <Icon name="pencil" className="sm" />
               Edit this piece
             </button>
+            <ReplaceButton key={item.id} item={item} />
             {item.libraryId && (
               <button type="button" className="btn outline" onClick={updateFromLibrary}>
                 Update from saved piece
