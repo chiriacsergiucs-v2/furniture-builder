@@ -12,6 +12,7 @@ import { duplicateItem, mirrorItem, mirrorRun, tryTurn } from '../core/arrange';
 import { floorDrop, type FloorPoint } from '../core/drag3d';
 import { applyFinish, type FinishRole, type FinishScope } from '../core/finish';
 import { mergeItems } from '../core/merge';
+import { alignItems, distributeItems, skippedText, type AlignHow } from '../core/align';
 import {
   duplicateItems,
   groupItems,
@@ -220,6 +221,13 @@ interface State {
   deleteSelection: () => void;
   /** Copy the selection as a block to its right; the copies become the selection. One undo step. */
   duplicateSelection: () => void;
+  /**
+   * Align the selection to its first piece (ADR-099); one undo step. Returns what to tell the user: the pieces a lock
+   * kept in place, or ''.
+   */
+  alignSelection: (how: AlignHow) => string;
+  /** Equal gaps along the wall between three or more selected pieces (ADR-099); one undo step. Says the gaps. */
+  distributeSelection: () => string;
   /** Keep the selection as a group (ADR-097); returns its id, or null with fewer than two pieces. */
   groupSelection: () => string | null;
   ungroup: (groupId: string) => void;
@@ -689,6 +697,22 @@ export const useDesign = create<State>((rawSet, get) => {
       if (!res.ids.length) return;
       commitProject(res.project);
       get().selectItems(res.ids);
+    },
+    alignSelection: (how) => {
+      const p = get().project;
+      if (!p) return '';
+      const res = alignItems(p, get().selectedItemIds, how);
+      if (res.project !== p && res.project.items.some((it, i) => it !== p.items[i]))
+        commitProject(res.project);
+      return skippedText(res);
+    },
+    distributeSelection: () => {
+      const p = get().project;
+      if (!p) return '';
+      const res = distributeItems(p, get().selectedItemIds);
+      if (res.project.items.some((it, i) => it !== p.items[i])) commitProject(res.project);
+      const gaps = res.gaps ? `Gaps now ${res.gaps.join(' · ')} mm.` : '';
+      return [gaps, skippedText(res)].filter(Boolean).join(' ');
     },
     groupSelection: () => {
       const p = get().project;

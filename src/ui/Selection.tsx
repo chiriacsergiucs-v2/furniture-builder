@@ -17,6 +17,8 @@ export function SelectionCard() {
   const group = useDesign((s) => s.groupSelection);
   const ungroup = useDesign((s) => s.ungroup);
   const clear = useDesign((s) => s.selectItem);
+  const align = useDesign((s) => s.alignSelection);
+  const distribute = useDesign((s) => s.distributeSelection);
   const [msg, setMsg] = useState<{ for: string; text: string | null }>({ for: '', text: null });
   if (!project || ids.length < 2) return null;
   const key = ids.join(',');
@@ -89,6 +91,40 @@ export function SelectionCard() {
         <button type="button" className="btn ghost sm" onClick={() => clear(null)}>
           Clear selection
         </button>
+      </div>
+      {/* Align to the first selected piece and distribute along the wall (ADR-099); each is one undo step. */}
+      <div className="align-actions" role="group" aria-label="Align to the first selected piece">
+        <span className="hint">
+          Align to {project.items.find((i) => i.id === ids[0])?.design.name}:
+        </span>
+        {(
+          [
+            ['left', 'Left'],
+            ['centre', 'Centre'],
+            ['right', 'Right'],
+            ['back', 'Back'],
+            ['front', 'Front'],
+          ] as const
+        ).map(([how, label]) => (
+          <button
+            key={how}
+            type="button"
+            className="btn outline sm"
+            aria-label={`Align ${label.toLowerCase()}`}
+            onClick={() => say(align(how) || null)}
+          >
+            {label}
+          </button>
+        ))}
+        {ids.length >= 3 && (
+          <button
+            type="button"
+            className="btn outline sm"
+            onClick={() => say(distribute() || null)}
+          >
+            Distribute evenly
+          </button>
+        )}
       </div>
       {msg.for === key && msg.text && (
         <p className="hint" role="status">
