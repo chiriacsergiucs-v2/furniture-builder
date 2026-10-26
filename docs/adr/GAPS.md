@@ -978,7 +978,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-102: Alternatives for a piece that sits on another piece
 
-- Status: Open
+- Status: Done (user answer 2026-10-26 "Same width only for stacked pieces")
 - Origin: ADR-098 implementation (2026-10-26, Claude: defaulted)
 - Missing: Which catalog items count as the same placement kind for a piece placed on or above another piece; built: every standing and wall-hung item (the piece keeps its on-another-piece placement).
 - Request: New adr 5 (2026-10-26): compatible = same placement kind (floor, wall, on another piece)
