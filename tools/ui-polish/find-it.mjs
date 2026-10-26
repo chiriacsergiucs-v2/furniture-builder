@@ -163,6 +163,8 @@ for (const width of [390, 1280]) {
     );
     await shot('3d-folded');
     await page.reload();
+    // A reload starts on Projects (ADR-078); the Editor place reopens the piece.
+    await places.getByRole('link', { name: /Editor/ }).click();
     await page.locator('main.work').waitFor({ state: 'visible' });
     await page.getByRole('radio', { name: 'Compose' }).click();
     const b2 = await page.locator('.view.front svg').first().boundingBox();
@@ -233,7 +235,7 @@ for (const width of [390, 1280]) {
     band.length === 2 && band[0] === band[1],
     band.join(' vs '),
   );
-  const safety = page.getByText(/I check safety-regulated items/);
+  const safety = page.getByText(/^I check safety-regulated items/).first();
   if (phone) {
     check(
       width,
@@ -269,7 +271,7 @@ for (const width of [390, 1280]) {
     ),
   );
   await shot('wizard');
-  await page.keyboard.press('Escape');
+  await dlg.getByRole('button', { name: 'Cancel', exact: true }).click();
   await dlg.waitFor({ state: 'detached' }).catch(() => {});
 
   // 8. The brand goes to Projects; each row keeps its buttons on one line.
@@ -284,25 +286,24 @@ for (const width of [390, 1280]) {
       await page.getByRole('heading', { name: 'Projects', level: 1 }).isVisible(),
     );
   } else check(width, 'brand visible on the Catalog page', false);
-  const rows = await page
-    .locator('main.projects-page ul.library > li')
-    .evaluateAll((lis) =>
-      lis.map(
-        (li) =>
-          new Set([...li.children].map((c) => Math.round(c.getBoundingClientRect().top / 10))).size,
-      ),
-    );
+  // One line: every child of a row overlaps the same horizontal band.
+  const rows = await page.locator('main.projects-page ul.library > li').evaluateAll((lis) =>
+    lis.map((li) => {
+      const r = [...li.children].map((c) => c.getBoundingClientRect());
+      return Math.max(...r.map((b) => b.top)) < Math.min(...r.map((b) => b.bottom));
+    }),
+  );
   check(
     width,
     'Projects rows: buttons on the row line',
-    rows.length > 0 && rows.every((n) => n === 1),
+    rows.length > 0 && rows.every(Boolean),
     JSON.stringify(rows),
   );
   await shot('projects');
 
   // 9. An empty project says so in 3D and under Checks.
   await page.getByRole('button', { name: 'Create a new project' }).click();
-  await dlg.locator('input').first().fill(`Empty ${width}`);
+  await page.getByRole('textbox', { name: 'Name of the new project' }).fill(`Empty ${width}`);
   await dlg.getByRole('button', { name: 'Create project' }).click();
   await page.locator('main.work').waitFor({ state: 'visible' });
   await page.getByRole('radio', { name: /Build & Preview/ }).click();

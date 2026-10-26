@@ -5308,3 +5308,13 @@ button.tile:hover {
     overflow-wrap: anywhere;
   }
 }
+/* A small phone gives a library row's name the room its 44 px buttons take: no glyph, the chip under the name. */
+@media (max-width: 480px) {
+  .library .row-btn {
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding-inline: 10px;
+  }
+  .library .row-btn .glyph {
+    display: none;
+  }
+}

@@ -218,7 +218,8 @@ export function App() {
   }
   // On a phone Compose is the drawing only, so the canvas is not mounted there (ADR-014).
   const shown = shownView(view, mode, phone);
-  const mount3d = has3d && shows3d(shown);
+  // Mounted only while the editor is the page shown (ADR-014): hidden on Projects or Catalog it kept rendering.
+  const mount3d = has3d && shows3d(shown) && page === 'editor';
 
   // A piece waiting to be placed (ADR-056) or a room being drawn (ADR-059) is done on the plan, in Compose.
   const tapMode = useDesign((s) =>

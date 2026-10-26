@@ -1,4 +1,5 @@
-// Find-it acceptance for the editor modes (ADR-079, backlog N74), run against a production build:
+// Find-it acceptance for the editor modes (ADR-079, backlog N74; ADR-080: two modes, Compose · Build & Preview, and
+// what was the Configure mode is now the Settings dialog from the app bar), run against a production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/editor-modes/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
 import { chromium } from 'playwright';
@@ -48,9 +49,20 @@ for (const [width, scheme] of [
   const peek = page.locator('.sheet-peek');
   const canvases = () => page.locator('canvas').count();
   const group = (name) => side.locator('details.group > summary', { hasText: name });
+  // The Settings dialog (ADR-080) holds what was the Configure mode.
+  const dlg = page.locator('dialog[open]');
+  const dgroup = (name) => dlg.locator('details.group > summary', { hasText: name });
+  const openSettings = async () => {
+    await page.getByRole('button', { name: 'Settings', exact: true }).click();
+    await dlg.getByRole('heading', { name: /^Settings: / }).waitFor();
+  };
+  const closeSettings = async () => {
+    await dlg.getByRole('button', { name: 'Done', exact: true }).click();
+    await dlg.waitFor({ state: 'detached' }).catch(() => {});
+  };
   const box = async (l) => (await l.boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
 
-  // 1. A new piece from the bare app; the three modes are there.
+  // 1. A new piece from the bare app; the two modes are there, Configure is gone and Settings is in the app bar.
   await page.goto(url);
   await page.getByRole('button', { name: 'New single piece' }).click();
   await page
@@ -61,10 +73,14 @@ for (const [width, scheme] of [
   await page.locator('main.work').waitFor({ state: 'visible' });
   ck(
     width,
-    'modes Compose · Configure · Build & Preview visible',
-    (await mode('Compose').isVisible()) &&
-      (await mode('Configure').isVisible()) &&
-      (await mode(/Build & Preview/).isVisible()),
+    'modes Compose · Build & Preview visible',
+    (await mode('Compose').isVisible()) && (await mode(/Build & Preview/).isVisible()),
+  );
+  ck(
+    width,
+    'no Configure mode; "Settings" button in the app bar',
+    (await mode('Configure').count()) === 0 &&
+      (await page.getByRole('button', { name: 'Settings', exact: true }).isVisible()),
   );
 
   // 2. Compose: tap a space; its editor has contents, doors and divide, and no whole-piece settings.
@@ -75,6 +91,9 @@ for (const [width, scheme] of [
       'Compose peek says "Tap a space to edit it"',
       (await peek.innerText()).includes('Tap a space to edit it'),
     );
+  // The first tap selects the whole piece, the next one at the same spot the space inside it (ADR-083).
+  await page.locator('.el-space').first().click({ force: true });
+  await page.waitForTimeout(200);
   await page.locator('.el-space').first().click({ force: true });
   await page.waitForTimeout(200);
   if (phone)
@@ -84,6 +103,8 @@ for (const [width, scheme] of [
       /^Selected: /.test(await peek.innerText()),
       await peek.innerText(),
     );
+  // On a phone a tapped space of a single piece leaves the sheet closed; the peek row opens the editor (N82).
+  if (phone && (await peek.getAttribute('aria-expanded')) !== 'true') await peek.click();
   for (const t of [/^contents$/i, /^doors and handles$/i, /^divide this space$/i]) {
     const l = side.getByText(t).first();
     await l.scrollIntoViewIfNeeded();
@@ -98,13 +119,13 @@ for (const [width, scheme] of [
   ck(width, 'no sideways scroll (Compose)', await noSideScroll());
   await shot('compose');
 
-  // 3. Configure: size, construction, boards (with Add a material) and drawers; no Materials button or dialog.
-  await mode('Configure').click();
+  // 3. Settings: size, construction, boards (with Add a material) and drawers; no Materials button or dialog.
+  await openSettings();
   await page.waitForTimeout(200);
   ck(
     width,
-    'Configure shows Width',
-    await side.getByLabel('Width', { exact: true }).first().isVisible(),
+    'Settings shows Width',
+    await dlg.getByLabel('Width', { exact: true }).first().isVisible(),
   );
   for (const t of [
     'Construction',
@@ -112,24 +133,24 @@ for (const [width, scheme] of [
     'Drawers and runners',
     'Boards, sheets and saw cut',
   ])
-    ck(width, `Configure shows "${t}"`, (await group(t).count()) > 0);
-  await group('Boards, sheets and saw cut').click();
-  const addMaterial = side.getByRole('button', { name: 'Add a material' });
+    ck(width, `Settings shows "${t}"`, (await dgroup(t).count()) > 0);
+  await dgroup('Boards, sheets and saw cut').click();
+  const addMaterial = dlg.getByRole('button', { name: 'Add a material' });
   await addMaterial.scrollIntoViewIfNeeded();
-  ck(width, 'Configure has "Add a material"', await addMaterial.isVisible());
+  ck(width, 'Settings has "Add a material"', await addMaterial.isVisible());
   ck(
     width,
     'no Materials button or dialog anywhere',
     (await page.getByRole('button', { name: 'Materials', exact: true }).count()) === 0 &&
       (await page.getByRole('dialog', { name: 'Materials in this piece' }).count()) === 0,
   );
-  if (phone) ck(width, 'no 3D canvas in Configure', (await canvases()) === 0);
+  if (phone) ck(width, 'no 3D canvas behind Settings (Compose)', (await canvases()) === 0);
   ck(
     width,
-    'no sideways scroll (Configure)',
+    'no sideways scroll (Settings)',
     await noSideScroll(),
     await page.evaluate(() =>
-      [...document.querySelectorAll('main *')]
+      [...document.querySelectorAll('main *, dialog[open] *')]
         .filter((e) => e.getBoundingClientRect().right > innerWidth + 1)
         .slice(0, 3)
         .map((e) => {
@@ -141,7 +162,8 @@ for (const [width, scheme] of [
         .join(', '),
     ),
   );
-  await shot('configure');
+  await shot('settings');
+  await closeSettings();
 
   // 4. Build & Preview: 3D and the parts with Download CSV and Print; an error blocks both.
   await mode('Build & Preview').click();
@@ -160,10 +182,11 @@ for (const [width, scheme] of [
   );
   ck(width, 'no sideways scroll (Build & Preview)', await noSideScroll());
   await shot('build');
-  await mode('Configure').click();
-  const w = side.getByLabel('Width', { exact: true }).first();
+  await openSettings();
+  const w = dlg.getByLabel('Width', { exact: true }).first();
   await w.fill('100');
   await w.press('Tab');
+  await closeSettings();
   await mode(/Build & Preview/).click();
   await page.waitForTimeout(300);
   ck(
@@ -187,7 +210,7 @@ for (const [width, scheme] of [
   );
   await shot('blocked');
 
-  // 5. Desktop: Compose/Configure left, drawing centre, Build right.
+  // 5. Desktop: Compose left, drawing centre, Build right.
   if (!phone) {
     await mode('Compose').click();
     const [a, b, c] = await Promise.all([
@@ -198,7 +221,7 @@ for (const [width, scheme] of [
     ck(width, 'side left, drawing centre, Build right', a.x < b.x && b.x < c.x && c.width > 0);
   }
 
-  // 6. A project opens in Compose with the plan; Configure holds the project settings; placing switches to Compose.
+  // 6. A project opens in Compose with the plan; Settings holds the project settings; placing switches to Compose.
   await page.locator('summary[aria-label="More"]').click();
   await page.getByRole('button', { name: /New…/ }).click();
   await page
@@ -212,13 +235,14 @@ for (const [width, scheme] of [
     'project shows its plan in Compose',
     await page.getByText('Add pieces to see them on the plan.').isVisible(),
   );
-  await mode('Configure').click();
+  await openSettings();
   ck(
     width,
-    'Configure holds the project settings',
-    (await side.getByRole('heading', { name: 'Project settings' }).isVisible()) &&
-      (await side.getByLabel('Saw cut (kerf) for this project', { exact: true }).isVisible()),
+    'Settings holds the project settings',
+    (await dlg.getByRole('heading', { name: 'Project settings' }).isVisible()) &&
+      (await dlg.getByLabel('Saw cut (kerf) for this project', { exact: true }).isVisible()),
   );
+  await closeSettings();
   await page
     .getByRole('navigation', { name: 'Places' })
     .getByRole('link', { name: /Catalog/ })
