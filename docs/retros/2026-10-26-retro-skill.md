@@ -13,20 +13,24 @@ Session: building the `retro` skill (PRs #63 and #66, branch `ccr-4254e05f-dr6cq
 6. "After i run retro skill, how to keep selected ones memorized/saved and not repeat them in the future?"
 7. "yes, apply all three, apply means merge"
 8. "Pull main"
+9. "Apply should be automatically called, the behaviour is also different, expected behaviour, a claude question
+   styles dialog with multiselect, options being the proposals, on selecting and hitting next they are applied"
 
 Earlier retros read: `2026-10-23-catalog.md` (no _Proposals_ ledger; its rules R1–R4 concern visible
 features and were not in play here).
 
 ## What went wrong
 
-| #   | Where                  | What happened                                                                                                                                                                                                    | User had to say                                                                                  |
-| --- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| 1   | First reply            | Read "before archiving a session" as "retro one past session" and asked which session, listing four                                                                                                              | "Any, on-demand, i am looking for info on how to achieve that"                                   |
-| 2   | First version of skill | Built a second mode that reads other sessions' transcripts (`list_sessions`, `list_events`) and an "ask which session" step. Not asked for                                                                       | "This is suboptimal … No new session calls or similar"                                           |
-| 3   | First version of skill | The agent itself said "a lesson only sticks if it's in the repo", yet the skill committed approved fixes to the session branch with no merge and kept no record of past proposals. The skill missed its own goal | "how to keep selected ones memorized/saved and not repeat them in the future?" → second PR (#66) |
-| 4   | PR #66                 | Picked a new `retro/<date>-<topic>` branch for applied fixes (instead of the session branch), flagged it as "say if you'd rather…", then merged it without an answer. An unconfirmed default treated as accepted | — (not caught yet)                                                                               |
-| 5   | Restarting the branch  | `git push -f` after resetting the session branch onto `main`; the auto-mode classifier denied it. The old tip was already in `main`, so a normal push fast-forwarded                                             | — (cost one denied call)                                                                         |
-| 6   | "Pull main"            | Pulled, then reported "1 commit ahead, not pushed" instead of pushing the session branch                                                                                                                         | Stop hook: "There are 1 unpushed commit(s) … Please push"                                        |
+| #   | Where                  | What happened                                                                                                                                                                                                    | User had to say                                                                                                                         |
+| --- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | First reply            | Read "before archiving a session" as "retro one past session" and asked which session, listing four                                                                                                              | "Any, on-demand, i am looking for info on how to achieve that"                                                                          |
+| 2   | First version of skill | Built a second mode that reads other sessions' transcripts (`list_sessions`, `list_events`) and an "ask which session" step. Not asked for                                                                       | "This is suboptimal … No new session calls or similar"                                                                                  |
+| 3   | First version of skill | The agent itself said "a lesson only sticks if it's in the repo", yet the skill committed approved fixes to the session branch with no merge and kept no record of past proposals. The skill missed its own goal | "how to keep selected ones memorized/saved and not repeat them in the future?" → second PR (#66)                                        |
+| 4   | PR #66                 | Picked a new `retro/<date>-<topic>` branch for applied fixes (instead of the session branch), flagged it as "say if you'd rather…", then merged it without an answer. An unconfirmed default treated as accepted | — (not caught yet)                                                                                                                      |
+| 5   | Restarting the branch  | `git push -f` after resetting the session branch onto `main`; the auto-mode classifier denied it. The old tip was already in `main`, so a normal push fast-forwarded                                             | — (cost one denied call)                                                                                                                |
+| 6   | "Pull main"            | Pulled, then reported "1 commit ahead, not pushed" instead of pushing the session branch                                                                                                                         | Stop hook: "There are 1 unpushed commit(s) … Please push"                                                                               |
+| 7   | Retro run              | The skill wrote the retro file but did not commit it                                                                                                                                                             | Stop hook: "There are untracked files in the repository"                                                                                |
+| 8   | Retro run              | Proposals ended with "reply apply 1, 3"; the user had to type a command                                                                                                                                          | "Apply should be automatically called … a claude question styles dialog with multiselect" (fixed in this change, at the user's request) |
 
 ## Root causes
 
@@ -51,6 +55,7 @@ features and were not in play here).
 | 1   | #4      | Decision on the retro branch + gap record (`GAPS.md`, retro skill step 7) | Proposed |
 | 2   | #5, #6  | `CLAUDE.md` › Git line                                                    | Proposed |
 | 3   | #2, #3  | Retro skill step 5: functional-slice check on proposals                   | Proposed |
+| 4   | #7      | Retro skill step 6: commit and push the retro file at once                | Proposed |
 
 **1. Retro branch (finding #4).** Needs your answer first: applied fixes go to
 
@@ -82,8 +87,18 @@ where it was missed. Add to retro skill step 5, before "Write each proposal…":
 Cost: 3 lines. Generic to any tooling the user asks for, but the retro skill is the only workflow that
 builds such mechanisms today.
 
+**4. Commit the retro file at once (finding #7).** Add to retro skill step 6, before "Reply briefly…":
+
+```diff
++- Commit the retro file and push it to the session's branch right away (the Stop hook flags untracked files).
+```
+
+Cost: 1 line.
+
 ## Not changed
 
 - #1: one-off; asking was correct.
+- #8: fixed directly in this change (the user asked for it): step 7 now opens a multi-select dialog of the
+  proposals and applies and merges the selection.
 - No new `CLAUDE.md` line for #2–#4: the rules exist (smallest functional slice, never auto-accept), so
   per the retro skill no reworded line is proposed.

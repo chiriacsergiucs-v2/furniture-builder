@@ -151,5 +151,5 @@ Lifecycle, one skill per step:
 - Only modify `chiriacsergiucs-v2/furniture-builder`.
 - Branch per ADR: `adr-NNN-short-title`; open a pull request for review.
 - Merge to `main` only on the user's instruction; then cite the `Deploy GitHub Pages` run id. Never force-push
-  `main`. "apply N" after a `retro` is that instruction (user rule 2026-10-26, `retro` skill).
+  `main`. Selecting proposals in the `retro` dialog is that instruction (user rule 2026-10-26, `retro` skill).
 - Ship commit message: `Ship ADR-NNN: <short title> — mark implemented`.
