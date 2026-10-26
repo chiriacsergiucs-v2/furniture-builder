@@ -21,3 +21,7 @@
 
 Boundaries: `src/core` imports nothing from React, three or Dexie (ADR-013). Views never generate geometry
 (ADR-004). The viewer never edits (ADR-014). Checks in `build.ts` do not trust generators (ADR-008).
+
+Agent sessions run behind a proxy that refuses the Pages URL and ikea.com: deploys are confirmed by their
+`Deploy GitHub Pages` run id only; live checks and the catalog feed (ADR-029, ADR-052) need the user or a
+session with that access (retro 2026-10-26).
