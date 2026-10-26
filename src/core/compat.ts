@@ -55,7 +55,7 @@ export interface CompatRule {
   messages: { snap?: string; checks?: string };
   /** A refusal named even when the piece snaps to something else (rules about what pieces are, not their faces). */
   namedWhenSnapped?: boolean;
-  /** ADR-071 repairs that may fix it (none exist for these rules yet, G-103). */
+  /** ADR-071 repairs that may fix it (none exist for these rules yet, G-104). */
   repairs: string[];
 }
 
@@ -160,7 +160,7 @@ export function mountOf(item: ProjectItem): Mount {
   return isWallHung(item.design) ? 'wall' : 'floor';
 }
 
-/** The catalog family a piece was inserted from (ADR-028 origin), if it is a shipped family (G-102). */
+/** The catalog family a piece was inserted from (ADR-028 origin), if it is a shipped family (G-103). */
 export function familyOf(item: ProjectItem): CatalogFamily | undefined {
   const id = item.design.catalog?.origin?.catalogId;
   return id ? findFamily(id) : undefined;

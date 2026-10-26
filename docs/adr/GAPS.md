@@ -897,7 +897,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-093: Tolerance for depth and height differences
 
-- Status: ADR-100
+- Status: Done (ADR-100)
 - Origin: ADR-100 open question (2026-10-26)
 - Missing: Whether small depth or height differences pass without a warning; default any difference warns.
 - Request: "New adr 3" (2026-10-26)
@@ -984,3 +984,21 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: New adr 5 (2026-10-26): compatible = same placement kind (floor, wall, on another piece)
 - Questions: For a piece on another piece, offer every item, or only standing items, or only items of the same family?
 - Suggested pick: Every item, since the placement carries over (as built; narrowing to standing items is about +5 % of ADR-098's work)
+
+### G-103: Family rule for your own templates
+
+- Status: Open
+- Origin: ADR-100 (2026-10-26, Claude: not asked for)
+- Missing: The family rule reads the shipped catalog families only; a piece from one of your own templates (own-… families, stored on this device) has no known room group, so the family rule never refuses or warns for it.
+- Request: New adr 3
+- Questions: Should pieces from your own templates follow the family rule too (their template's rooms)?
+- Suggested pick: Yes: record the template's rooms on the inserted piece's catalog origin (a design document change, ADR-011; about +10 % of ADR-100's work, closes the rule for every piece).
+
+### G-104: Repairs for compatibility warnings
+
+- Status: Open
+- Origin: ADR-100 (2026-10-26, Claude: not asked for)
+- Missing: The depth, height and family warnings offer no previewed repair (ADR-071); each rule's repairs list is empty because no existing repair fixes them.
+- Request: New adr 3
+- Questions: Offer repairs such as 'Make Base cabinet 560 deep like its neighbour' or 'Move the bed away'?
+- Suggested pick: Add a 'match the neighbour's depth/height' repair (closest to fixing the warning; about +20 % of ADR-100's work).
