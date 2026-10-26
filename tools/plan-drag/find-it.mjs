@@ -45,9 +45,11 @@ for (const width of [1440, 375]) {
   const plan = page.getByRole('figure', { name: /Room plan, seen from above/ });
   const piece = plan.getByRole('button', { name: /^Base cabinet.*, \d+ by \d+ mm$/ }).first();
   const label = plan.getByText(/From left \d+ · From back \d+ mm/);
+  // The plan drawing itself (the "About the plan" info button carries an svg icon too, ADR-080).
+  const drawing = plan.locator(':scope > svg');
   /** Screen point of a room point (mm) on the plan. */
   const screen = (x, z) =>
-    plan.locator('svg').evaluate(
+    drawing.evaluate(
       (svg, [x, z]) => {
         const p = new DOMPoint(x, z).matrixTransform(svg.getScreenCTM());
         return { x: p.x, y: p.y };
@@ -86,17 +88,33 @@ for (const width of [1440, 375]) {
     return { seen, scrolled };
   };
 
+  // On a phone the project's pieces sit in the Compose sheet: open it to add, close it to see the plan.
+  const sheet = async (open) => {
+    const peek = page.locator('.sheet-peek');
+    if (!(await peek.isVisible().catch(() => false))) return;
+    if (((await peek.getAttribute('aria-expanded')) === 'true') !== open) await peek.click();
+    await page.waitForTimeout(200);
+  };
+  const addBase = async () => {
+    await sheet(true);
+    await click(btn('Add a piece'));
+    await dlg.getByRole('searchbox', { name: 'Search the items' }).fill('Base cabinet');
+    await dlg.locator('.start-group .row-btn').first().click();
+    await dlg.waitFor({ state: 'detached' }).catch(() => {});
+    const place = btn('Place to the right');
+    await place.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
+    if (await place.isVisible()) await click(place);
+    await page.waitForTimeout(150);
+    await sheet(false);
+  };
+
   // 1. Bare app → new project → one base cabinet, placed.
   await page.goto(url);
   await click(btn('Create a new project'));
   await page.locator('dialog[open] input').fill(`Drag ${width}`);
   await dlg.getByRole('button', { name: 'Create project' }).click();
   await page.locator('main.work').waitFor({ state: 'visible' });
-  await click(btn('Add a piece'));
-  await dlg.getByRole('searchbox', { name: 'Search the items' }).fill('Base cabinet');
-  await dlg.locator('.start-group .row-btn').first().click();
-  await dlg.waitFor({ state: 'detached' }).catch(() => {});
-  if (await btn('Place to the right').isVisible()) await click(btn('Place to the right'));
+  await addBase();
   const planRadio = page.getByRole('radio', { name: 'Plan' });
   if (await planRadio.isVisible().catch(() => false)) await planRadio.click();
   check(width, 'the plan "Room plan, seen from above" is visible', await plan.isVisible());
@@ -152,12 +170,7 @@ for (const width of [1440, 375]) {
   // 5. Phone: a tap still selects, and a swipe on the empty plan still scrolls the page.
   if (phone) {
     // A second piece takes the selection, so the tap on the first one has something to change.
-    await click(btn('Add a piece'));
-    await dlg.getByRole('searchbox', { name: 'Search the items' }).fill('Base cabinet');
-    await dlg.locator('.start-group .row-btn').first().click();
-    await dlg.waitFor({ state: 'detached' }).catch(() => {});
-    if (await btn('Place to the right').isVisible()) await click(btn('Place to the right'));
-    await page.waitForTimeout(150);
+    await addBase();
     const before0 = await piece.getAttribute('aria-pressed');
     await piece.scrollIntoViewIfNeeded();
     const box = await piece.locator('rect').first().boundingBox();
@@ -169,9 +182,40 @@ for (const width of [1440, 375]) {
       before0 === 'false' && (await piece.getAttribute('aria-pressed')) === 'true',
       `aria-pressed ${before0} → ${await piece.getAttribute('aria-pressed')}`,
     );
-    const svgBox = await plan.locator('svg').boundingBox();
+    // Since the phone layout fits the screen (N82), the Compose view has nothing to scroll with a few pieces, so
+    // the swipe is checked as "not swallowed": the empty plan lets the browser pan (no `touch-action: none` from it
+    // up), a piece does not (ADR-065), the swipe moves nothing, and the page scrolls when it can.
+    const svgBox = await drawing.boundingBox();
     const empty = { x: svgBox.x + 4, y: svgBox.y + svgBox.height - 4 };
-    const before = await page.evaluate(() => window.scrollY);
+    const pans = await page.evaluate(
+      ([x, y]) => {
+        const chain = [];
+        for (let e = document.elementFromPoint(x, y); e; e = e.parentElement)
+          chain.push(getComputedStyle(e).touchAction);
+        return { onPlan: chain.length > 0, blocked: chain.filter((t) => t === 'none').length };
+      },
+      [empty.x, empty.y],
+    );
+    const pieceAction = await piece
+      .locator('rect')
+      .first()
+      .evaluate((r) => {
+        for (let e = r; e; e = e.parentElement)
+          if (getComputedStyle(e).touchAction === 'none') return 'none';
+        return 'auto';
+      });
+    check(
+      width,
+      'a piece takes the touch (touch-action: none), the empty plan does not',
+      pieceAction === 'none' && pans.onPlan && pans.blocked === 0,
+      `piece ${pieceAction}, empty plan blocked by ${pans.blocked}`,
+    );
+    const scrollers = () => page.evaluate(() => [window.scrollY]);
+    const canScroll = await page.evaluate(
+      () => document.documentElement.scrollHeight > window.innerHeight + 1,
+    );
+    const before = await scrollers();
+    const x1 = await fromLeft();
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [empty] });
     for (let i = 1; i <= 8; i++)
       await cdp.send('Input.dispatchTouchEvent', {
@@ -180,12 +224,18 @@ for (const width of [1440, 375]) {
       });
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
     await page.waitForTimeout(400);
-    const after = await page.evaluate(() => window.scrollY);
+    const after = await scrollers();
     check(
       width,
-      'a swipe on the empty plan still scrolls the page',
-      after > before,
-      `${before} → ${after}`,
+      'a swipe on the empty plan moves no piece',
+      (await fromLeft()) === x1,
+      `${x1} → ${await fromLeft()}`,
+    );
+    check(
+      width,
+      'a swipe on the empty plan scrolls the page when there is anything to scroll',
+      !canScroll || after[0] > before[0],
+      canScroll ? `${before[0]} → ${after[0]}` : 'the page fits the screen; nothing to scroll',
     );
   }
 

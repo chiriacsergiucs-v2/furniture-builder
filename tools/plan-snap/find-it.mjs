@@ -57,10 +57,23 @@ for (const width of [1440, 375]) {
     second = pieces.nth(1);
   const snap = plan.getByRole('button', { name: 'Snap', exact: true });
   const ghost = plan.locator('.drag-ghost');
-  const status = plan.getByRole('status');
+  // The live snap note shows over the plan only while a piece is dragged (ADR-080).
+  const status = plan.locator('.plan-drag-note[role="status"]');
+  // The plan drawing itself (the "About the plan" info button carries an svg icon too, ADR-080).
+  const drawing = plan.locator(':scope > svg');
+  const about = plan.getByRole('button', { name: 'About the plan' });
+  /** The text of the plan's "About the plan" popover (ADR-080: the idle Snap line moved there). */
+  const aboutText = async () => {
+    await click(about);
+    const note = plan.getByRole('note');
+    const t = (await note.textContent({ timeout: 3000 }).catch(() => '')) ?? '';
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(100);
+    return t;
+  };
   /** Screen point of a room point (mm) on the plan. */
   const screen = (x, z) =>
-    plan.locator('svg').evaluate(
+    drawing.evaluate(
       (svg, [x, z]) => {
         const p = new DOMPoint(x, z).matrixTransform(svg.getScreenCTM());
         return { x: p.x, y: p.y };
@@ -100,7 +113,7 @@ for (const width of [1440, 375]) {
         .evaluate((r) => getComputedStyle(r).strokeDasharray)
         .catch(() => ''),
       label: (await ghost.textContent().catch(() => '')) ?? '',
-      status: (await status.textContent()) ?? '',
+      status: (await status.textContent({ timeout: 1000 }).catch(() => '')) ?? '',
     };
     await shot(name);
     if (phone) await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
@@ -138,10 +151,12 @@ for (const width of [1440, 375]) {
   check(width, 'two "Base cabinet…" pieces are on the plan', (await pieces.count()) === 2);
   check(width, 'the "Snap" toggle is found above the plan', await snap.isVisible());
   check(width, '"Snap" is on by default', (await snap.getAttribute('aria-pressed')) === 'true');
+  const idle = await aboutText();
   check(
     width,
-    'the plan says "Snaps within 60 mm … hold Alt to place freely"',
-    /Snaps within 60 mm.*hold Alt to place freely/.test((await status.textContent()) ?? ''),
+    '"About the plan" says "Snaps within 60 mm … hold Alt to place freely"',
+    /Snaps within 60 mm.*hold Alt to place freely/.test(idle),
+    idle.slice(0, 80),
   );
   const firstX = Number(await first.locator('rect').first().getAttribute('x'));
   const w =
@@ -178,11 +193,12 @@ for (const width of [1440, 375]) {
   );
   check(
     width,
-    'the status line says "Snaps: … joins Base cabinet"',
+    'while dragging, the note over the plan says "Snaps: … joins Base cabinet"',
     /^Snaps: .*joins Base cabinet/i.test(back.status),
     back.status,
   );
   check(width, 'the preview is gone after release', !(await ghost.isVisible()));
+  check(width, 'the "Snaps:" note is gone after release', !(await status.isVisible()));
   const xSnap = await fromLeft();
   check(width, 'the drop is flush with the first piece', xSnap === w, `${xSnap} vs ${w}`);
   await shot('snapped');
@@ -198,6 +214,13 @@ for (const width of [1440, 375]) {
   // 3. Snap off: the same drag lands where released (on the 10 mm step), no snapped preview.
   await click(snap);
   check(width, '"Snap" turns off', (await snap.getAttribute('aria-pressed')) === 'false');
+  const idleOff = await aboutText();
+  check(
+    width,
+    'with Snap off "About the plan" says "Pieces go exactly where dropped."',
+    idleOff.startsWith('Pieces go exactly where dropped.'),
+    idleOff.slice(0, 80),
+  );
   const off = await drag(second, w + 35 - xAway, { name: 'snap-off' });
   check(
     width,
