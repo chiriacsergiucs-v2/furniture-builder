@@ -33,6 +33,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: “Render the furniture according to the selected material's color and structure”, then “any image as color/background for the material”.
 - Questions: Fill which drawings with the picture: plan, front view, SVG download, catalog pictures, cut sheets?
 - Suggested pick: Fill every 2D drawing with the picture as an SVG <pattern> (the data URL is already stored), rotated with the grain. Fill fronts in the front view. Use the same fill in catalog snapshots and the SVG download. Cut sheets keep a light tint, for legibility when printed. (estimate: effort +30%, value +25%)
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): text partly wrong. The front view already fills carcass panels with the picture, rotated with the grain (src/ui/Elevation.tsx:51-61, :147-164, since 009173a). Still plain colour: fronts in the front view (outlines), the SVG download (patterns stripped, src/ui/shell/files.ts:30-34), catalog snapshots (src/core/snapshot.ts:266), the plan and cut sheets.
 
 ### G-002: Decor list not in exports
 
@@ -42,6 +43,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: “Render the furniture according to the selected material's color and structure”, then “any image as color/background for the material”.
 - Questions: Embed only the decors a design uses, or offer the whole list too?
 - Suggested pick: Embed the decors a design uses in its export (the pictures already are), plus an optional “Include my whole decor list” checkbox. Needs a schemaVersion bump with old readers kept. (estimate: effort +10%, value +10%)
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): origin is ADR-049 (the decor list, Dexie v6 decors), not ADR-048. Boards made from decors already travel in exported files with their code (src/core/materials.ts:286-293). Only exporting the whole decor list remains.
 
 ### G-003: Materials fields overlap at 375 px
 
@@ -51,6 +53,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Phone-first (CLAUDE.md: no overlap or sideways scroll at 390 px) (context, not a quote)
 - Questions: None; it is a bug.
 - Suggested pick: Re-check at 375 px and fix the field grid. It is a bug, not a choice. (estimate: effort +1%, value +3%)
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): still likely (not checked in a browser): the phone materials row is 36px 1fr (src/styles.css:2333-2335). Materials now lives in the Settings dialog (ADR-080, src/ui/Settings.tsx), not inline.
 
 ### G-004: Oxlint as in reserv
 
@@ -135,12 +138,13 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-013: Templates from selected pieces
 
-- Status: Open
+- Status: Done (merged into G-032)
 - Origin: ADR-060, 2026-10-24 15:54 UTC; agent scoped it out
 - Missing: A template can only be made from a whole project, not from selected pieces.
 - Request: Reusable project templates (context, not a quote)
 - Questions: Build together with multi-select (G-032)?
 - Suggested pick: “Save selection as template”. It needs multi-select, which ADR-069 also left out, so build both together. (estimate: effort +15%, value +10%)
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): merged into G-032 (it needs multi-select).
 
 ### G-014: Undo across reloads and in the library
 
@@ -150,6 +154,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Undo and redo for project changes (context, not a quote)
 - Questions: Keep undo per project on the device? A 30-day Recently deleted list for the library?
 - Suggested pick: Keep the undo stack per project in IndexedDB (new Dexie version). Make library deletes go to a 30-day “Recently deleted” list instead of being final. (estimate: effort +20%, value +15%)
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): still valid; the library is now the Projects page (ADR-078). Dexie v8 has no undo table and there is no Recently deleted list.
 
 ### G-015: Egger catalogue import
 
@@ -168,6 +173,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Errors block export (ADR-008) (context, not a quote)
 - Questions: None; add the find-it step.
 - Suggested pick: Add a find-it step: make an error, check that CSV and Print are disabled, and that the message says why. (estimate: effort +2%, value +5%)
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): partly resolved. tools/editor-modes/find-it.mjs:202-216 checks CSV and Print are disabled on an error and tools/edge-band/find-it.mjs:218-221 checks CSV is blocked (both pass per N88). Not checked: the message saying why (src/ui/Output.tsx:139), and that the Shopping list CSV and Print are blocked.
 
 ### G-017: Drag a catalog item onto the plan
 
@@ -186,15 +192,17 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Drag and drop on the plan (context, not a quote)
 - Questions: A 90-degree turn handle on the selected piece?
 - Suggested pick: A turn handle on the selected piece that steps 90° (ADR-003 keeps whole angles). Fix the Esc bug. (estimate: effort +10%, value +10%)
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): partly resolved. ADR-069 added Turn 90° buttons and R / Shift+R. No turn handle on the plan. The Esc bug is most likely still there: the piece's onClick still calls select() (src/ui/Project.tsx:1011); not reproduced.
 
 ### G-019: Textures in Realistic mode
 
-- Status: Open
+- Status: Done (3a9dafe)
 - Origin: ADR-067, 2026-10-24 19:55 UTC; agent default, accepted by the user
 - Missing: No textures, so Realistic mode uses plain finishes (matte, satin, gloss).
 - Request: “Realistic looks … rendering high quality 3D designs … to sell designed kitchens”.
 - Questions: Use your own board pictures (ADR-048) as textures?
 - Suggested pick: Use your own board pictures (ADR-048) as textures in Realistic mode, to scale with the grain direction. This needs no bundled files and no licence question. (estimate: effort +20%, value +35%)
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): resolved: Realistic mode has used the user's board pictures as textures since it shipped (src/viewer/Viewer3D.tsx:701, 715-717; UVs follow the grain). Bundled wood-grain textures were not the suggested pick and stay out (ADR-067).
 
 ### G-020: Appliances, sinks, edge profiles, client sheet
 
@@ -204,6 +212,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: “To sell designed kitchens”.
 - Questions: Client sheet first? Which licence for bundled appliance models (CC0)?
 - Suggested pick: Client sheet: one printable page with the PNG render, the piece list and the ADR-062 price. Appliances come through ADR-076 imports plus a few CC0 models once you pick that licence. Edge profiles: three profile choices drawn on the worktop. (estimate: effort +45%, value +40%)
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): partly resolved. Appliances and sinks can be imported as .glb (ADR-076); appliance niches (ADR-036) and a sink base exist. Remaining: client sheet, worktop edge profiles, bundled CC0 models (licence question).
 
 ### G-021: Blender / glTF export
 
@@ -222,15 +231,17 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Laptop, preview quality (context, not a quote)
 - Questions: Can you run the render once on your laptop? Plan the WebGPU path-tracer upgrade?
 - Suggested pick: Run the full render find-it on a machine with a GPU. Write an ADR for the WebGPU path-tracer upgrade before the WebGL build stops working. (estimate: effort +5%, value +10%)
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): partly resolved per documents: ADR-068 records the user's full 256/256 render and Save PNG on a laptop; N88 ran the scripted full render and Save PNG at 1280 px and 18/18 at 390 px. Remaining: three-gpu-pathtracer still pinned at 0.0.27 on WebGL, no WebGPU ADR.
 
 ### G-023: No outline on selection in Realistic mode
 
-- Status: Open
+- Status: Done (ADR-087)
 - Origin: ADR-067, 2026-10-24 20:59 UTC; agent scoped it out
 - Missing: In Realistic mode a selected piece shows only a green tint, with no outline.
 - Request: Select pieces in 3D (ADR-014) (context, not a quote)
 - Questions: None; add the outline pass.
 - Suggested pick: Add an outline pass in Realistic mode, the same as Preview mode. (estimate: effort +5%, value +5%)
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): duplicate of G-064 (Done, ADR-087): SelectionOutline is drawn in Simple and Realistic (src/viewer/Viewer3D.tsx:647-681), checked by tools/selection-look/find-it.mjs.
 
 ### G-024: Research marks not readable
 
@@ -249,6 +260,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: The 14 features you selected at 21:28 (context, not a quote)
 - Questions: Check each against the app and write ADRs for what is missing?
 - Suggested pick: Check each against the app with find-it. Write an ADR for whatever is missing (likely: one project mixing a kitchen run with a desk, and room presets that place several pieces at once). (estimate: effort +30%, value +20%)
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): partly resolved; text partly wrong. Cross-family composition was already checked (N48, tools/ensemble/find-it.mjs: base cabinet + wardrobe + daybed). Remaining: built-in room presets that place several pieces; a kitchen run plus a desk in one project not checked.
 
 ### G-026: Free-angle rotation
 
@@ -267,6 +279,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: “Help with the sticky bars top and bottom, they occupy too much”.
 - Questions: Three stops for the sheet (peek, half, full)? Mode switch in the top bar on desktop?
 - Suggested pick: Drag handle with three stops (peek, half, full). Move the mode switch into the top bar on desktop. Update the old scripts so every earlier feature is found again in the new shell. (estimate: effort +25%, value +25%)
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): partly resolved. The old find-it scripts were fixed (N88, G-060 Done). Remaining: the phone sheet still opens only by tap (src/ui/App.tsx:673-681); the desktop mode switch is still its own row.
 
 ### G-028: Mobila sample files still in the repo
 
@@ -294,6 +307,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Pipes and outlets checked against the pieces (context, not a quote)
 - Questions: Cut the back as a shaped part at the zone? Templates carry room features?
 - Suggested pick: Make the back a shaped part with a rectangular cut-out at the zone (ADR-040 already does shaped parts), listed on the cut list and printed sheet. Templates carry room features. Add the missing test. (estimate: effort +35%, value +30%)
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): text partly wrong: templates already keep pipes and outlets when the room is included (src/core/projectTemplate.ts:97, :203), untested. Remaining: shaped back with a cut-out, electrical rules, the worktop/plinth-over-pipe test.
 
 ### G-031: ADR-072 defaults unconfirmed
 
@@ -303,6 +317,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Pipes and outlets checked against the pieces (context, not a quote)
 - Questions: Is a tall unit 1,600 mm or more? Does a zone reach 50 mm from the wall?
 - Suggested pick: Confirm them, or give your values. (estimate: effort 0%, value needs you)
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): the Origin says accepted by the user, but the two questions were never answered (no answer in product-context.md). Code still uses TALL_UNIT_HEIGHT=1600 and NEAR_WALL=50 (src/core/room.ts).
 
 ### G-032: Multi-select, fixed-hand mirroring, 1 mm drift
 
@@ -312,6 +327,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: “Duplicate, mirror and predictable rotate operations”.
 - Questions: Store a hand side on the lounger and daybed? Symmetric rounding for mirrored copies? Multi-select gesture?
 - Suggested pick: Store a hand (left or right) on those two pieces so they mirror. Use symmetric rounding for mirrored copies so they match to the mm. Add multi-select (Shift-click or long-press) for duplicate, mirror and move together. (estimate: effort +40%, value +30%)
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): still valid. Absorbs G-013 (Save selection as template), which needs multi-select.
 
 ### G-033: Snapping in the front view and 3D
 
@@ -393,6 +409,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: “Import 3D models and model libraries”.
 - Questions: Keep the separate Project.models list and write it into the ADR?
 - Suggested pick: Keep it (it lets one model be used many times), but write it into the ADR before shipping. Confirm. (estimate: effort 0%, value needs you)
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): ADR-076 is already Implemented, so the suggested pick (write it into the ADR before shipping) can no longer be done; record the answer here or in a new small ADR. Code uses Project.models (src/core/project.ts:159).
 
 ### G-042: Project fasteners panel and Romanian labels
 
@@ -402,6 +419,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: “Hardware and fastener completeness”.
 - Questions: Add the project-level panel? Draw drilling positions only from your values?
 - Suggested pick: Add the project-level panel. Translate the fastener labels (a bug). Draw drilling positions only from the values you enter, labelled as guidance (ADR-010). (estimate: effort +30%, value +25%)
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): partly resolved. A piece's Fasteners panel is reachable from a project via Inside this piece › Size, boards and construction (ADR-090). Remaining: Fasteners in the project's own Settings dialog; the Romanian shopping CSV still writes fastener lines and footer in English (src/core/fasteners.ts, src/core/shopping.ts:32-33); drilling patterns.
 
 ### G-043: Duplicate backlog id D02
 
@@ -429,6 +447,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: “Merge all mergeable, push, list what is left”.
 - Questions: Re-run every find-it on main? Answer the open questions above?
 - Suggested pick: Re-run every find-it script on the production build of main. Answer the open questions above. Then open one follow-up ADR per group of gaps, so the gaps are tracked and not lost behind Done. (estimate: effort +10%, value +15%)
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): partly resolved per N88: every find-it script passed on a local production build after merging main. Remaining: the open questions in G-027 and G-030 to G-042, follow-up ADRs, the live check (G-047).
 
 ### G-046: Settings dialog built as light
 
@@ -438,6 +457,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: “Add a tooltip icon with the text on hover on desktop and on click on mobile”; earlier, “Remove the idea of find-it pending”.
 - Questions: Write and run its find-it now?
 - Suggested pick: Write and run its find-it (About the plan, About the front view, Settings, Compose, Build & Preview) at phone and desktop widths, then ship it. (estimate: effort +10%, value +15%)
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): partly resolved per N88: tools/editor-modes checks Settings, Compose, Build & Preview (156/156) and tools/plan-snap checks About the plan (50/50). Remaining: no script checks About the front view or Settings for <name>; N75 stays Partially done.
 
 ### G-047: Nothing live-verified
 
@@ -447,15 +467,17 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: “R1: evidence from the running app the user will use”.
 - Questions: Allow chiriacsergiucs-v2.github.io in the environment network policy? Run the phone and screen-reader check together?
 - Suggested pick: Allow chiriacsergiucs-v2.github.io in this environment's network policy, so the find-it scripts can run against the live URL. Phone and screen-reader checks need you, about 15 minutes with a short script Claude writes. (estimate: effort +5%, value +20%)
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): still valid (github.io unreachable from this environment). Absorbs G-048: touch and 3D were checked only in Chromium emulation; one guided session on the user's phone covers both.
 
 ### G-048: Touch and 3D checked only in emulation
 
-- Status: Open
+- Status: Done (merged into G-047)
 - Origin: Verification, all sessions; blocked by the environment
 - Missing: Pieces of the 3D work and the touch features were checked only in desktop Chromium emulation.
 - Request: Phone-first (context, not a quote)
 - Questions: One guided session on your phone?
 - Suggested pick: Same as the row above: one session on your phone, guided by a checklist. (estimate: effort +3%, value +10%)
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): merged into G-047 (the same real-phone session).
 
 ### G-049: G ids on pre-ADR-082 notes
 
@@ -468,7 +490,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-050: No gaps page in the app
 
-- Status: Open
+- Status: Done (ADR-101)
 - Origin: ADR-082, 2026-10-25; agent scoped it out
 - Missing: The ledger is a repo file only; the app does not show it.
 - Request: “items from it can be used to add as a new adr or mark as acknowledged and accepted”
@@ -530,6 +552,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: “Divider(horizontal and vertical)/drawer/shelf/all other applicable pleces based on configuration + currentNuber - … Placement: above the selected piece”
 - Questions: Where does + add and - remove: at the end, or next to the selected bay? What goes in a new bay: empty, or a copy of its neighbour?
 - Suggested pick: End, with 2 shelves like the existing Add button (consistent with what the app does today; next-to-selection is estimated +15% effort for +5% value)
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): partly resolved; text out of date. ADR-089 decided a new bay is empty (src/core/counts.ts:89-99), so the 2-shelves default is gone, and ADR-086 changed what + acts on. Still unconfirmed: whether + adds at the end or next to the selection, and what - removes.
 
 ### G-057: Acceptance level for the count stepper
 
@@ -552,12 +575,13 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-059: UI critique findings 7-20 not fixed
 
-- Status: Open
+- Status: Done (20b2b27)
 - Origin: UI critique 2026-10-26 (N82); the user asked to fix findings 1-6 only
 - Missing: Findings 7-20 and the minor ones: one-yellow rule broken (Create project, New piece, Next, Done, catalog Open, active nav), desktop left panel titled Compose in Build & Preview, whole-piece editing split across card / Settings / Edit the interior, catalog counts disagree (118 vs 108, Living room 31 vs 33), wall cabinets first under Living room, Romanian subtitles in the English UI, Projects row Delete icon wraps to its own line, white band behind the catalog filter row, steps rail cut off at 390 px, empty project shows blank 3D and 'No problems found', crowded catalog header on phones, '1 shelf' label over the door line, brand mark looks like a menu, unexplained I/C badges, wizard asks size before type, Skip unclear, empty phone app bar on Projects/Catalog, hardware Item column wraps, repeated 'Edge band: not named yet', 'Clean up unused pictures' as prominent as Import
 - Request: Run critique this design for the entire ui/ux; then 'Fix them directly' (answered for findings 1-6)
 - Questions: Which of these to fix next, and in what order?
 - Suggested pick: Fix 13, 14, 16, 18 next (layout bugs and a misleading message, closest to a broken UI; est. small each)
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): resolved by a9e5780, merged in PR #71 (20b2b27), except findings 8, 9 and 12 (G-073). The catalog-counts item is not confirmed in a browser (only an N ready items label was added); tracked as its own gap.
 
 ### G-060: Five find-it scripts stale since ADR-080
 
@@ -571,12 +595,13 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-061: Dragging pieces never tried in a browser
 
-- Status: Open
+- Status: Done (ef0c832)
 - Origin: ADR-065, 2026-10-24 19:10 UTC; user decision
 - Missing: Dragging a piece on the plan (mouse, touch, arrow keys) is merged and deployed but was never tried in a browser; find-it was skipped. N60 says Done while its text says not verified.
 - Request: “Skip find-it for this onw”
 - Questions: Run a find-it for dragging now, or keep N60 as Partially done until someone tries it?
 - Suggested pick: Add a find-it: mouse drag at 1440 px changes From left, Undo restores; touch drag at 375 px with no sideways scroll; set N60 by the result. (estimate: effort +3%, value +6%)
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): resolved before this gap was written: ef0c832 (2026-10-24) added tools/plan-drag/find-it.mjs and fixed touch drag; N60 26/26, N88 28/28. Only the live / real-phone check remains (G-047).
 
 ### G-062: Which selection design
 
@@ -709,7 +734,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-075: Results collapse at desktop width too
 
-- Status: ADR-091
+- Status: Done (ADR-091)
 - Origin: ADR-091 open question
 - Missing: Unconfirmed default: the results tabs collapse at every width, not only on phones
 - Request: They should be a collapsed view, onclick showing only, so the views with renders are kept as main
@@ -827,7 +852,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-088: Compatible width when replacing
 
-- Status: ADR-098
+- Status: Done (ADR-098)
 - Origin: ADR-098 open question (2026-10-26)
 - Missing: Which width counts as compatible; default the same width, others behind a switch.
 - Request: "New adr 5" (2026-10-26)
@@ -879,7 +904,88 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Allow a tolerance (mm) before warning?
 - Suggested pick: Any difference warns until the user names a tolerance (never invent a physical value, ADR-010).
 
-### G-094: Resizing a base moves a locked piece on it
+### G-094: Stop hook not yet observed in a live session
+
+- Status: Open
+- Origin: ADR-082, 2026-10-26; the Stop hook was tested with sample inputs only (Done when), not observed in a live Claude Code session
+- Missing: Evidence that the Stop hook in .claude/settings.json fires and asks once in a real Claude Code session (a worker subagent gets SubagentStop, not Stop, so it could not observe it)
+- Request: “How to configure to have it always up to date? Hook?”
+- Questions: Should someone end a real top-level session with a reply that lists skipped items and confirm the hook asks once?
+- Suggested pick: Yes: one manual check in the next top-level session that ends with a Skipped this iteration list (estimate: effort +2%, value +10% of the hook's request)
+
+### G-095: Catalog counts agreement unconfirmed
+
+- Status: Open
+- Origin: Gap re-check 2026-10-26 (G-059); agent found it
+- Missing: UI critique said the catalog counts disagree (118 vs 108, Living room 31 vs 33). a9e5780 added an 'N ready items' label (src/ui/Catalog.tsx:196); nobody has confirmed in a browser that the numbers now agree.
+- Request: Run critique this design for the entire ui/ux; then 'Fix them directly' (G-059)
+- Questions: None; it is a check.
+- Suggested pick: Add a find-it step that compares the catalog total with the sum of its category counts at 390 and 1280 px; fix if they differ. (estimate: effort +2%, value +3%)
+
+### G-096: Empty Brands list promises a cancelled feed
+
+- Status: Open
+- Origin: Gap re-check 2026-10-26 (G-044); agent found it
+- Missing: When Brands is empty, src/ui/Catalog.tsx:539-540 says 'The weekly catalog feed (Mondays, IKEA first) adds them once it can reach the manufacturers' sites.' That feed was cancelled (ADR-027/029/052 Deferred, won't do), so the text is misleading.
+- Request: Catalog feed and brand filter (G-044) (context, not a quote)
+- Questions: Replace the text with how brand products get in today (import), or hide the Brands source while it is empty?
+- Suggested pick: Replace the text with what is true now: no brand products are bundled; import your own. Closest to the current app; no new feature. (estimate: effort +1%, value +3%)
+
+### G-097: Fastener notes point to a removed screen
+
+- Status: Open
+- Origin: Gap re-check 2026-10-26 (G-042); agent found it
+- Missing: The shopping-list footer (src/core/shopping.ts:33) and fastener guidance (src/core/fasteners.ts:298) tell the user to go to 'Materials › Fasteners', which no longer exists since ADR-080 moved Configure into the Settings dialog.
+- Request: Hardware and fastener completeness (G-042) (context, not a quote)
+- Questions: None; it is a wording bug. Fix together with the Romanian labels in G-042?
+- Suggested pick: Point both to the current path (Settings › Fasteners, or the piece's Size, boards and construction), and translate them in the Romanian CSV with G-042. (estimate: effort +1%, value +3%)
+
+### G-098: ADR-082 still Pending though built
+
+- Status: Done (ec9c7a8)
+- Origin: Gap re-check 2026-10-26; agent found it
+- Missing: The gaps ledger (docs/adr/GAPS.md), pnpm gaps and the Stop hook exist and are in use, but ADR-082 is still Pending in docs/adr/ and was never shipped.
+- Request: Gaps ledger (ADR-082, user rule 2026-10-25) (context, not a quote)
+- Questions: Ship ADR-082 now (ship-adr), after checking its Done-when list?
+- Suggested pick: Check ADR-082's Done-when list against the repo, then ship it with ship-adr. (estimate: effort +2%, value +2%)
+
+### G-099: Group gaps by origin
+
+- Status: Open
+- Origin: ADR-101, 2026-10-26; user did not pick it
+- Missing: The gaps page has no grouping by origin (the ADR or area a gap came from).
+- Request: “Add a gaps page, similar to reseaech” — offered options: Search + status filter, Group by origin, Overview counts, Full detail per gap
+- Questions: Add grouping by origin later?
+- Suggested pick: Leave it out (the user picked the other three); the search finds an ADR id in the Origin field. (estimate for grouping: effort +10%, value +5%)
+
+### G-100: Gap marks not in a file
+
+- Status: Open
+- Origin: ADR-101, 2026-10-26; agent scoped it out
+- Missing: Marks made on the gaps page cannot be exported or imported as a file; they live on one device. Copy decisions is the only way out.
+- Request: “Mark + hand to Claude”
+- Questions: Export and import the marks as a file, like research marks?
+- Suggested pick: Export / import a JSON of marks, like Research's Import & export (estimate: effort +10%, value +5%)
+
+### G-101: Ledger not editable from the app
+
+- Status: Open
+- Origin: ADR-101, 2026-10-26; ADR-002 (no backend, no tokens)
+- Missing: The page cannot write docs/adr/GAPS.md; decisions go through Claude via Copy decisions, and the page shows the ledger of the deployed build.
+- Request: Items “can be used to add as a new adr or mark as acknowledged and accepted” (G-050)
+- Questions: None while ADR-002 holds.
+- Suggested pick: Keep the hand-over to Claude (estimate for a GitHub-token write path: effort +60%, value +15%, and it breaks ADR-002)
+
+### G-102: Alternatives for a piece that sits on another piece
+
+- Status: Open
+- Origin: ADR-098 implementation (2026-10-26, Claude: defaulted)
+- Missing: Which catalog items count as the same placement kind for a piece placed on or above another piece; built: every standing and wall-hung item (the piece keeps its on-another-piece placement).
+- Request: New adr 5 (2026-10-26): compatible = same placement kind (floor, wall, on another piece)
+- Questions: For a piece on another piece, offer every item, or only standing items, or only items of the same family?
+- Suggested pick: Every item, since the placement carries over (as built; narrowing to standing items is about +5 % of ADR-098's work)
+
+### G-103: Resizing a base moves a locked piece on it
 
 - Status: Open
 - Origin: ADR-095 (2026-10-26, Claude: found while building)
@@ -888,7 +994,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Should resizing a base keep a locked piece on it where it is (leaving its base), or refuse the resize?
 - Suggested pick: Refuse the resize with the reason, as a move of the base is refused (about +10 % of ADR-095's work).
 
-### G-095: 3D drag of a locked piece not checked
+### G-104: 3D drag of a locked piece not checked
 
 - Status: Open
 - Origin: ADR-095 (2026-10-26, Claude: depends on ADR-093)

@@ -81,6 +81,34 @@ for (const width of [1280, 390]) {
     await page.getByRole('radio', { name: /^Compose/ }).click();
     await page.getByRole('radio', { name: /^Build & Preview/ }).click();
     check(width, 'still collapsed after switching modes', !(await csv.isVisible()));
+    const dlg = page.locator('dialog[open]');
+    await page.getByRole('button', { name: 'Settings', exact: true }).click();
+    await dlg.getByRole('heading', { name: /^Settings: / }).waitFor();
+    const w = dlg.getByLabel('Width', { exact: true }).first();
+    await w.fill('100');
+    await w.press('Tab');
+    await dlg.getByRole('button', { name: 'Done', exact: true }).click();
+    await dlg.waitFor({ state: 'detached' }).catch(() => {});
+    await page.getByRole('radio', { name: /^Build & Preview/ }).click();
+    await page.waitForTimeout(400);
+    const badge =
+      (await tab('Checks')
+        .locator('.badge')
+        .textContent()
+        .catch(() => '')) ?? '';
+    check(
+      width,
+      'an error keeps the panel collapsed',
+      (await page.locator('.tabpanel').count()) === 0 &&
+        (await tab('Checks').getAttribute('aria-expanded')) === 'false',
+    );
+    check(
+      width,
+      'Checks badge shows the error count',
+      Number(badge.trim()) > 0 && (await tab('Checks').locator('.badge.error').count()) === 1,
+      `badge "${badge}"`,
+    );
+    await shot('error');
     check(
       width,
       'no horizontal page scroll',
