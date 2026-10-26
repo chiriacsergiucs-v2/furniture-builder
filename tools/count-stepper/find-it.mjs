@@ -31,6 +31,8 @@ for (const width of [1280, 390]) {
   const mode = (name) => page.getByRole('radio', { name });
   const front = page.locator('.view.front');
   const three = page.locator('.view.three');
+  // The 3D view's card: over the view on a desktop, docked under it on a phone (G-066).
+  const dock3 = phone ? page.locator('#count-dock') : three;
   const card = (where) => where.getByRole('group', { name: 'Quick counts' });
   const valueOf = (where, label) => card(where).getByRole('status', { name: label }).innerText();
   const box = async (l) => (await l.boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
@@ -170,14 +172,21 @@ for (const width of [1280, 390]) {
   await mode(/Build & Preview/).click();
   await three.locator('canvas').waitFor({ state: 'visible', timeout: 20000 });
   await page.waitForTimeout(1500);
-  const c3 = card(three);
-  check(width, '"Quick counts" card over the 3D view', await c3.isVisible());
-  check(width, 'card is inside the 3D view', inside(await box(c3), await box(three)));
-  check(width, '3D card shows Doors 2', (await valueOf(three, 'Doors')) === '2');
+  const c3 = card(dock3);
+  check(width, '"Quick counts" card with the 3D view', await c3.isVisible());
+  if (phone) {
+    const v = await box(three);
+    check(
+      width,
+      'phone: the card is docked under the 3D view (G-066)',
+      (await box(c3)).y >= v.y + v.height - 1,
+    );
+  } else check(width, 'card is inside the 3D view', inside(await box(c3), await box(three)));
+  check(width, '3D card shows Doors 2', (await valueOf(dock3, 'Doors')) === '2');
   await shot('3d');
   await c3.getByRole('button', { name: 'Fewer doors' }).click();
   await page.waitForTimeout(250);
-  check(width, 'Fewer doors in 3D → 1', (await valueOf(three, 'Doors')) === '1');
+  check(width, 'Fewer doors in 3D → 1', (await valueOf(dock3, 'Doors')) === '1');
   check(width, 'no sideways scroll (3D)', await noSideScroll());
 
   check(width, 'no page errors', errors.length === 0, errors.join(' / '));

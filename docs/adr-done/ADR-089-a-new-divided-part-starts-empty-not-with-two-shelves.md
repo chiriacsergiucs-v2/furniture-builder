@@ -1,7 +1,8 @@
 # ADR-089: A new divided part starts empty, not with two shelves
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-26
+- Implemented: 2026-10-26
 - Depends on: ADR-086
 - Design: n/a
 - Backlog: N84

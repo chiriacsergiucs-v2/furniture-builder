@@ -1,7 +1,8 @@
 # ADR-088: Drill into a piece without leaving the project editor
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-26
+- Implemented: 2026-10-26
 - Depends on: ADR-083, ADR-086
 - Design: docs/ui-design.md (section 4, editor screen)
 - Backlog: N83
@@ -48,9 +49,10 @@ implemented and stays as it is; this ADR replaces that one rule. The user's new 
 ## Scope
 
 - In scope: the store change, drilling in project 3D, plan and room front view, the "Inside this piece" section, the
-  card and outline over the project 3D, tests of the user's steps, find-it script.
+  card and outline over the project 3D, the selected space outlined on the plan (its width × depth footprint) and on
+  the room front view with the rest faded (G-067, user 2026-10-26), tests of the user's steps, find-it script.
 - Out of scope: piece-wide settings (size, materials, carcass) from the project panel — they stay behind "Edit this
-  piece"; marking the selected space on the plan and the room front view (G-067).
+  piece" (G-068).
 
 ## Consequences
 
@@ -73,6 +75,8 @@ implemented and stays as it is; this ADR replaces that one rule. The user's new 
 - [x] `tools/project-drill/find-it.mjs` at 1280 and 390 px: from the bare app, a project with a Sideboard; plan taps
       keep the project open with "Inside this piece"; in 3D a further tap shows "Shelves", "More shelves" adds a
       part, "Compose" still shows the project, Undo takes it back, the next tap is the whole piece again.
+- [x] Same script: the plan and the room front view outline the selected space (G-067); taps on the room front
+      view drill too; at 390 px the card is docked under the 3D view.
 - [x] lint, format:check, typecheck, test, build, docs:check pass.
 
 ## Answered questions

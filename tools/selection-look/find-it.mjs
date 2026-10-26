@@ -28,6 +28,8 @@ for (const width of [1280, 390]) {
   const shot = (name) => page.screenshot({ path: `${out}/selection-look-${name}-${width}.png` });
   const front = page.locator('.view.front');
   const three = page.locator('.view.three');
+  // The 3D view's card: over the view on a desktop, docked under it on a phone (G-066).
+  const dock3 = phone ? page.locator('#count-dock') : three;
   const card = (where) => where.getByRole('group', { name: 'Quick counts' });
   // What is selected: the phone sheet's peek row, or the desktop inspector ("Selected: …" or the space's heading).
   const said = async () => {
@@ -118,11 +120,11 @@ for (const width of [1280, 390]) {
     await page.waitForTimeout(500);
   };
   await at(0.03, 0.97);
-  check(width, '3D: a tap on empty space clears the card', !(await card(three).isVisible()));
+  check(width, '3D: a tap on empty space clears the card', !(await card(dock3).isVisible()));
   // Three taps at one spot. The card's heading names what it acts on (G-065); on a phone it docks under the 3D view
   // instead of covering it (G-066), so the spot stays in sight.
   const heading = async () => {
-    const t = card(three).locator('.cs-title');
+    const t = card(dock3).locator('.cs-title');
     return (await t.count()) ? (await t.innerText()).trim() : '';
   };
   const titles = [];
@@ -147,7 +149,7 @@ for (const width of [1280, 390]) {
   );
   if (phone) {
     const cv = await canvas.boundingBox();
-    const cd = await card(three).boundingBox();
+    const cd = await card(dock3).boundingBox();
     check(
       width,
       'phone: the card sits under the 3D view, not over it',

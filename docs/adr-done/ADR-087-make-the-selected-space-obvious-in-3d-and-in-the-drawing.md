@@ -1,7 +1,8 @@
 # ADR-087: Make the selected space obvious in 3D and in the drawing
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-26
+- Implemented: 2026-10-26
 - Depends on: ADR-083, ADR-085
 - Design: docs/ui-design.md (§3 Components and states)
 - Backlog: N82
@@ -38,11 +39,16 @@ panel)` says whether a panel belongs to it (its front-view centre is inside).
    - **C — Glass volume.** A translucent green box filling the selected space's inside, with a solid edge.
    - **D — Corner brackets and a label.** L-brackets at the box's front corners and a chip "Middle bay · 427 × 864".
    - **E — Nested level outlines.** Ancestors thin and dashed, the selected level thick, its children thin.
-3. A in 3D (Simple look of a single piece): a 3.5 px green outline 3 mm outside the box, drawn over everything
-   (also through doors); panels outside faded to 28 %; the selected space's own panels keep green edges; the old
-   45 % tint is gone there. Not drawn in the exploded view (panels are away from their place). In the drawing
-   (G-059): the outline is thicker and everything outside it is faded to 30 %.
-4. Reproduction (2026-10-26, production build, 1280, 923 and 390 px, single piece and a piece opened from a
+3. A in 3D, Simple and Realistic (G-060): a 3.5 px green outline 3 mm outside the box, drawn over everything (also
+   through doors); panels outside faded to 28 %; the selected space's own panels keep green edges (Simple); the old
+   45 % tint is gone. Not drawn in the exploded view (panels are away from their place) or in a rendered picture
+   (ADR-068 pictures show the piece, not the selection). In the drawing (G-059): the outline is thicker and
+   everything outside it is faded to 30 %.
+4. The quick-count card is headed with what it acts on ("Whole cabinet", "Divided space", "Shelves") (G-065). On a
+   phone (≤ 760 px) the 3D view's card docks in a bar under the stage instead of floating over the short 3D view
+   (G-066); the stage keeps its height and the results move down. Over the drawing and on a desktop it floats as
+   before.
+5. Reproduction (2026-10-26, production build, 1280, 923 and 390 px, single piece and a piece opened from a
    project): the 3rd tap always selected the whole piece, and the card acted on it. The confusing part was the look:
    the whole piece tinted every panel lightly, so the small part's panels still looked highlighted. A fixes that.
 
@@ -53,10 +59,8 @@ panel)` says whether a panel belongs to it (its front-view centre is inside).
 
 ## Scope
 
-- In scope: the regression test, design A in Simple 3D and in the drawing, find-it checks.
-- Out of scope: the design in Realistic mode beyond today's tint (G-060); a heading on the card naming the
-  selection, cut because it made the card cover the tap point on phones (G-065); the card covering much of the phone
-  3D view, from ADR-085 (G-066). Pictures (ADR-068) stay without selection.
+- In scope: the regression test, design A in Simple and Realistic 3D and in the drawing, the card heading, the
+  phone dock, find-it checks (G-060, G-065, G-066, user 2026-10-26).
 
 ## Consequences
 
@@ -76,6 +80,8 @@ panel)` says whether a panel belongs to it (its front-view centre is inside).
 - [x] `tools/selection-look/find-it.mjs` at 1280 and 390 px: the user's steps in the drawing ("Whole cabinet",
       outline round the piece, nothing faded → "Shelves", bay outlined, rest faded → "Whole cabinet" again, and
       "More vertical dividers" then acts on the cabinet) and in 3D.
+- [x] Same script: the card is headed "Whole cabinet" → "Shelves" → "Whole cabinet" (G-065); Realistic selects the
+      bay with the same heading (G-060); at 390 px the card is docked under the 3D view (G-066).
 - [x] lint, format:check, typecheck, test, build, docs:check pass.
 
 ## Answered questions

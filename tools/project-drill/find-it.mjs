@@ -110,6 +110,44 @@ for (const width of [1280, 390]) {
     );
     const card = page.locator('.view.three').getByRole('group', { name: 'Quick counts' });
     check(width, '3D: "Quick counts" over the project 3D view', await card.isVisible());
+    // The space is outlined on the plan (its footprint) and on the room front view too (G-067).
+    await page.getByRole('radio', { name: 'Plan' }).click();
+    await page.waitForTimeout(300);
+    const outlines = page.locator('.view.front [aria-label="Selected space inside the piece"]');
+    check(
+      width,
+      'plan and room front view outline the selected space',
+      (await outlines.count()) === 2 &&
+        (await outlines.nth(0).isVisible()) &&
+        (await outlines.nth(1).isVisible()),
+      `${await outlines.count()} outlines`,
+    );
+    await shot('plan-space');
+    // Taps on the room front view drill too: at the bay's spot, the bay (innermost) wraps to the whole piece, then
+    // the bay again.
+    const hit = page.locator('.view.front .front-hit').first();
+    const tapFront = async () => {
+      const b = await hit.boundingBox();
+      await page.mouse.click(b.x + b.width * 0.83, b.y + b.height * 0.5);
+      await page.waitForTimeout(300);
+    };
+    await tapFront();
+    const wrapped = await inside.getByText('Selected: Whole cabinet').isVisible();
+    await tapFront();
+    const again = await inside
+      .getByRole('heading')
+      .first()
+      .innerText()
+      .catch(() => '');
+    check(
+      width,
+      'room front view: taps drill (bay → whole piece → bay), still the project editor',
+      wrapped && again === 'Shelves' && (await inProject()),
+      `${wrapped} / ${again}`,
+    );
+    await page.getByRole('radio', { name: '3D', exact: true }).click();
+    await canvas.waitFor({ state: 'visible' });
+    await page.waitForTimeout(800);
     const before = await partsCount();
     await card.getByRole('button', { name: 'More shelves' }).click();
     await page.waitForTimeout(300);
@@ -137,19 +175,23 @@ for (const width of [1280, 390]) {
     check(width, '"Edit this piece" still opens the piece editor', !(await inProject()));
   }
 
-  // 4. Phone: 3D is in Build & Preview; a tap there drills (just below the card, which covers much of the short
-  //    view, ADR-085), and Compose's project panel shows the space.
+  // 4. Phone: 3D is in Build & Preview, its card docked under the view (G-066); a tap there drills, and Compose's
+  //    project panel shows the space.
   if (phone) {
     await page.getByRole('radio', { name: /Build & Preview/ }).click();
     const canvas = page.locator('.view.three canvas');
     await canvas.waitFor({ state: 'visible', timeout: 20000 });
     await page.waitForTimeout(1500);
-    const card = page.locator('.view.three').getByRole('group', { name: 'Quick counts' });
+    const card = page.locator('#count-dock').getByRole('group', { name: 'Quick counts' });
     check(width, '3D: "Quick counts" over the project 3D view', await card.isVisible());
     const r = await canvas.boundingBox();
-    const cb = await card.boundingBox();
-    const fy = Math.min(0.92, Math.max(0.6, (cb.y + cb.height + 14 - r.y) / r.height));
-    await page.mouse.click(r.x + r.width * 0.62, r.y + r.height * fy);
+    const v = await page.locator('.view.three').boundingBox();
+    check(
+      width,
+      'phone: the card is docked under the 3D view (G-066)',
+      (await card.boundingBox()).y >= v.y + v.height - 1,
+    );
+    await page.mouse.click(r.x + r.width * 0.62, r.y + r.height * 0.6);
     await page.waitForTimeout(500);
     await shot('3d');
     await page.getByRole('radio', { name: 'Compose' }).click();

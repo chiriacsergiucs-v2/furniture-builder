@@ -542,7 +542,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-058: Which selection design
 
-- Status: ADR-087
+- Status: Done (ADR-087)
 - Origin: ADR-087, 2026-10-26, open question (Claude default)
 - Missing: Which of the five selection designs (A-E) is built
 - Request: The highlight of the selected item need to be more obvious, suggest 5 designs that can be applied so it is clearer which part of the piece is selected, or if it is entirely selected
@@ -552,7 +552,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-059: Selection look in the front drawing
 
-- Status: ADR-087
+- Status: Done (ADR-087)
 - Origin: ADR-087, 2026-10-26, open question (Claude default)
 - Missing: Whether the chosen selection design also applies to the front drawing
 - Request: The highlight of the selected item need to be more obvious, suggest 5 designs that can be applied so it is clearer which part of the piece is selected, or if it is entirely selected
@@ -562,7 +562,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-060: Selection look in Realistic mode
 
-- Status: ADR-087
+- Status: Done (ADR-087)
 - Origin: ADR-087, 2026-10-26, out of scope
 - Missing: The new selection look in Realistic mode beyond the current tint; pictures stay without selection
 - Request: The highlight of the selected item need to be more obvious, suggest 5 designs that can be applied so it is clearer which part of the piece is selected, or if it is entirely selected
@@ -572,7 +572,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-061: What the project panel shows for a selected space
 
-- Status: ADR-088
+- Status: Done (ADR-088)
 - Origin: ADR-088, 2026-10-26, open question (Claude default)
 - Missing: Which controls the project editor shows when a space inside a piece is selected
 - Request: one more ADR, which would keep the project editor open while we click on the item second time (yes editing of ), and it gives us the opportunity to add or remove shelves and change its structure. the item is triggered, but we should be kept on the edit of the project view.
@@ -582,7 +582,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-062: Second tap on the plan
 
-- Status: ADR-088
+- Status: Done (ADR-088)
 - Origin: ADR-088, 2026-10-26, open question (Claude default)
 - Missing: What a 2nd tap on a selected piece does on the plan, which has no height
 - Request: one more ADR, which would keep the project editor open while we click on the item second time (yes editing of ), and it gives us the opportunity to add or remove shelves and change its structure. the item is triggered, but we should be kept on the edit of the project view.
@@ -592,7 +592,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-063: Where a new divided part's content comes from
 
-- Status: ADR-089
+- Status: Done (ADR-089)
 - Origin: ADR-089, 2026-10-26, open question (Claude default)
 - Missing: What a new part made by a divider holds
 - Request: Add a horizontal divider (image 4) adds the divider, but somehow it decided to add also two shells in it. This is not wanted behavior.
@@ -602,7 +602,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-064: Empty new part for every way of dividing
 
-- Status: ADR-089
+- Status: Done (ADR-089)
 - Origin: ADR-089, 2026-10-26, open question (Claude default)
 - Missing: Whether vertical dividers, the Divide buttons and the Parts counter also add empty parts
 - Request: Add a horizontal divider (image 4) adds the divider, but somehow it decided to add also two shells in it. This is not wanted behavior.
@@ -612,7 +612,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-065: Quick-count card heading naming the selection
 
-- Status: ADR-087
+- Status: Done (ADR-087)
 - Origin: ADR-087, 2026-10-26, cut while building (Claude)
 - Missing: A heading on the quick-count card naming what it acts on (e.g. Whole cabinet)
 - Request: The highlight of the selected item need to be more obvious, suggest 5 designs that can be applied so it is clearer which part of the piece is selected, or if it is entirely selected
@@ -622,7 +622,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-066: Quick-count card covers much of the phone 3D view
 
-- Status: ADR-087
+- Status: Done (ADR-087)
 - Origin: ADR-087, 2026-10-26, out of scope (seen while testing, from ADR-085)
 - Missing: A placement or size of the quick-count card that leaves the piece visible in the short 390 px 3D view
 - Request: The highlight of the selected item need to be more obvious, suggest 5 designs that can be applied so it is clearer which part of the piece is selected, or if it is entirely selected
@@ -632,10 +632,19 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-067: Selected space not marked in the project's 2D views
 
-- Status: ADR-088
+- Status: Done (ADR-088)
 - Origin: ADR-088, 2026-10-26, out of scope (Claude)
 - Missing: Outline of the selected space inside a project piece on the plan and in the room front view (taps drill there, the 3D view and the panel show it)
 - Request: one more ADR, which would keep the project editor open while we click on the item second time (yes editing of ), and it gives us the opportunity to add or remove shelves and change its structure. the item is triggered, but we should be kept on the edit of the project view.
 - Questions: Mark the selected space on the room front view too (the plan, seen from above, cannot show a space's height)?
 - Suggested pick: Outline it on the room front view, as in the piece's front drawing (estimate +10 % work)
 - Answer: User 2026-10-26: "Room front + plan" — outline the space on the room front view and its width × depth footprint on the plan; moved into ADR-088.
+
+### G-068: Piece-wide settings from the project panel
+
+- Status: Open
+- Origin: ADR-088, 2026-10-26, out of scope (Claude)
+- Missing: Size, materials and carcass settings of a project piece edited from the project panel; they stay behind Edit this piece
+- Request: one more ADR, which would keep the project editor open while we click on the item second time (yes editing of ), and it gives us the opportunity to add or remove shelves and change its structure. the item is triggered, but we should be kept on the edit of the project view.
+- Questions: Should the project panel also edit a piece's size, boards and carcass, or is Edit this piece enough for those?
+- Suggested pick: Keep them behind Edit this piece; the request was shelves and structure (estimate)
