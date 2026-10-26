@@ -11,7 +11,7 @@ import {
 } from '../persist/db';
 import { useDesign } from '../store/designStore';
 import type { Design } from '../core/types';
-import { AddPieceDialog, NewDialog } from './Dialogs';
+import { NewDialog } from './Dialogs';
 import { SettingsDialog } from './Settings';
 import { WizardDialog } from './Wizard';
 import { CatalogPage } from './Catalog';
@@ -21,6 +21,8 @@ import { ConfirmHost } from './Confirm';
 import { catalogFamilies } from '../core/catalog';
 import { useTemplates } from '../store/templatesStore';
 import { PlanView, ProjectPanel } from './Project';
+import { PieceList } from './PieceList';
+import { usePieceList } from './pieceDrag';
 import { useView } from './useView';
 import { Elevation } from './Elevation';
 import { Inspector, selectionLabel } from './Inspector';
@@ -174,7 +176,7 @@ export function App() {
     canRedoPiece = useDesign((s) => s.future.length > 0);
   const canUndoProject = useDesign((s) => s.projectPast.length > 0),
     canRedoProject = useDesign((s) => s.projectFuture.length > 0);
-  const [dialog, setDialog] = useState<null | 'new' | 'add' | 'wizard' | 'render'>(null);
+  const [dialog, setDialog] = useState<null | 'new' | 'wizard' | 'render'>(null);
   const look = useLook();
   const openCatalog = () => {
     setDialog(null);
@@ -222,6 +224,20 @@ export function App() {
   const shown = shownView(view, mode, phone);
   // Mounted only while the editor is the page shown (ADR-014): hidden on Projects or Catalog it kept rendering.
   const mount3d = has3d && shows3d(shown) && page === 'editor';
+
+  // The piece list beside the plan (ADR-094): opened by Add a piece in Compose, only while the project is shown.
+  const piecesOpen = usePieceList((s) => s.open);
+  const setPiecesOpen = usePieceList((s) => s.setOpen);
+  const piecesShown = piecesOpen && inProject && mode === 'compose' && page === 'editor';
+  useEffect(() => {
+    if (piecesOpen && !(inProject && mode === 'compose')) setPiecesOpen(false);
+  }, [piecesOpen, inProject, mode, setPiecesOpen]);
+  const openPieces = () => {
+    setPiecesOpen(true);
+    // Items are dropped on the plan: it comes forward, and on a phone the Compose sheet steps aside.
+    setView(bringDrawingForward);
+    setSheetOpen(false);
+  };
 
   // A piece waiting to be placed (ADR-056) or a room being drawn (ADR-059) is done on the plan, in Compose.
   const tapMode = useDesign((s) =>
@@ -685,13 +701,24 @@ export function App() {
             </button>
             <div className="side-body">
               {inProject ? (
-                <ProjectPanel mode="compose" onAdd={() => setDialog('add')} />
+                <ProjectPanel mode="compose" onAdd={openPieces} />
               ) : (
                 <Inspector mode="compose" />
               )}
             </div>
           </aside>
-          <section className={`stage ${shown === 'both' ? 'both' : ''}`} aria-label="Drawing">
+          <section
+            className={`stage ${shown === 'both' ? 'both' : ''} ${piecesShown ? 'with-pieces' : ''}`}
+            aria-label="Drawing"
+          >
+            {piecesShown && (
+              <PieceList
+                onBrowse={() => {
+                  setPiecesOpen(false);
+                  openCatalog();
+                }}
+              />
+            )}
             <div className="stage-tools">
               {showsSwitch(mode, phone) && (
                 <div className="segmented small" role="radiogroup" aria-label="View">
@@ -827,11 +854,6 @@ export function App() {
           open={dialog === 'render'}
           onClose={() => setDialog((d) => (d === 'render' ? null : d))}
           name={inProject ? project!.name : design.name}
-        />
-        <AddPieceDialog
-          open={dialog === 'add'}
-          onClose={() => setDialog(null)}
-          onBrowse={openCatalog}
         />
       </div>
       <ConfirmHost />

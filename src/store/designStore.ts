@@ -29,6 +29,7 @@ import {
   resolvePlacements,
   roomToPiece,
   setGapLeft,
+  tapPosition,
   type Project,
   type ProjectItem,
   type ProjectModel,
@@ -139,6 +140,11 @@ interface State {
   closeProject: () => void;
   updateProject: (fn: (p: Project) => Project) => void;
   addPiece: (d: Design, libraryId?: string) => void;
+  /**
+   * Add a copy of a design with its left-back corner at a plan point (ADR-094: dropped from the piece list), whole
+   * mm; one undo step. The point is where `dropNewPiece` puts it (snapped or as a tap places it).
+   */
+  addPieceAt: (d: Design, x: number, z: number, libraryId?: string) => void;
   updateItem: (id: string, patch: Partial<ProjectItem>) => void;
   /**
    * Move a piece on the plan by a drag or an arrow key (ADR-065): rounded to the step, lifted off a base, one undo
@@ -412,6 +418,17 @@ export const useDesign = create<State>((set, get) => {
       commitProject({ ...p, items: [...p.items, item] });
       set({ selectedItemId: item.id, placingItemId: item.id });
     },
+    addPieceAt: (d, x, z, libraryId) => {
+      const p = get().project;
+      if (!p) return;
+      const made = makeItem(p, d, libraryId);
+      // Not clamped here: `dropNewPiece` already placed it as a tap does, and a snap may put it against a wall of
+      // a drawn room at x or z below 0.
+      const position = { ...made.position, x: Math.round(x) || 0, z: Math.round(z) || 0 };
+      const item: ProjectItem = { ...made, position };
+      commitProject({ ...p, items: [...p.items, item] });
+      set({ selectedItemId: item.id, placingItemId: null });
+    },
     updateItem: (id, patch) => {
       const p = get().project;
       if (p)
@@ -625,11 +642,7 @@ export const useDesign = create<State>((set, get) => {
       const it = p?.items.find((i) => i.id === id);
       set({ placingItemId: null });
       if (!p || !it) return;
-      const position = {
-        ...it.position,
-        x: Math.max(0, Math.round(x)),
-        z: Math.max(0, Math.round(z)),
-      };
+      const position = tapPosition(it, x, z);
       commitProject({ ...p, items: p.items.map((i) => (i.id === it.id ? { ...i, position } : i)) });
     },
     stopPlacing: () => set({ placingItemId: null }),

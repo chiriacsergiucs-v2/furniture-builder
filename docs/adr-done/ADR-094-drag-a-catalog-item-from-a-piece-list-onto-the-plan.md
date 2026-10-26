@@ -1,7 +1,8 @@
 # ADR-094: Drag a catalog item from a piece list onto the plan
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-26
+- Implemented: 2026-10-26
 - Depends on: ADR-056, ADR-065, ADR-078
 - Design: docs/ui-design.md (Plan view)
 - Backlog: N92
@@ -46,10 +47,10 @@ shell ([ADR-078](../adr-done/ADR-078-rebuild-the-app-shell-projects-catalog-and-
 
 ## Done when
 
-- [ ] Dropping an item at a room point gives the same piece and position as tap-to-place there (unit test)
-- [ ] Find-it at 1440 px: Compose → **Add a piece** → drag "Base cabinet" onto the plan → the piece appears there;
+- [x] Dropping an item at a room point gives the same piece and position as tap-to-place there (unit test)
+- [x] Find-it at 1440 px: Compose → **Add a piece** → drag "Base cabinet" onto the plan → the piece appears there;
       Undo removes it; Esc during a drag adds nothing
-- [ ] Find-it at 390 px: long-press an item → the sheet folds → drop on the plan → the piece appears; tap-to-place
+- [x] Find-it at 390 px: long-press an item → the sheet folds → drop on the plan → the piece appears; tap-to-place
       still works
 
 ## Answers (2026-10-26)
