@@ -4,6 +4,7 @@
  * millimetres and rotations quarter turns about the vertical axis, so every panel stays an axis-aligned box.
  */
 import { buildModel } from './build';
+import { compatChecks } from './compat';
 import { localClearances, type Clearance } from './clearance';
 import {
   BODY_CODES,
@@ -632,6 +633,8 @@ export function buildProjectModel(input: Project): ProjectModel {
         });
       }
     }
+  // Compatibility rules over pieces that touch side by side (ADR-100): warnings, never blocking.
+  diagnostics.push(...compatChecks(pieces, project.runParts ?? []));
   for (const pc of pieces)
     if (pc.bounds.y < 0)
       diagnostics.push({
