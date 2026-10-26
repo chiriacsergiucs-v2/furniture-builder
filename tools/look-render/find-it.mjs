@@ -2,6 +2,7 @@
 // run against a production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/look-render/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
+// (Updated for ADR-080: the Materials dialog is gone; Finish is under Settings › Boards, sheets and saw cut.)
 import { chromium } from 'playwright';
 import { mkdirSync, readFileSync } from 'node:fs';
 
@@ -51,13 +52,16 @@ for (const width of [1280, 390]) {
     await page.locator('main.work').waitFor({ state: 'visible' });
   };
 
-  // 1. Bare app → a piece → Materials → Finish: Gloss.
+  // 1. Bare app → a piece → Settings → Boards, sheets and saw cut → Finish: Gloss (ADR-080 moved the Materials
+  //    dialog's fields into the Settings dialog).
   await page.goto(url);
   await openPiece();
-  await page.getByRole('button', { name: 'Materials' }).dispatchEvent('click');
-  await dlg.getByRole('heading', { name: 'Materials in this piece' }).waitFor();
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await dlg.getByRole('heading', { name: /^Settings: / }).waitFor();
+  await dlg.locator('details.group > summary', { hasText: 'Boards, sheets and saw cut' }).click();
   const finish = dlg.getByRole('radiogroup', { name: 'Finish' }).first();
-  check(width, '"Finish" visible in Materials', await finish.isVisible());
+  await finish.scrollIntoViewIfNeeded();
+  check(width, '"Finish" visible in Settings › Boards', await finish.isVisible());
   check(
     width,
     'Finish offers Matte · Satin · Gloss',
@@ -69,7 +73,7 @@ for (const width of [1280, 390]) {
     'Gloss chosen',
     (await finish.getByRole('radio', { name: 'Gloss' }).getAttribute('aria-checked')) === 'true',
   );
-  check(width, 'no sideways scroll (Materials)', await noSideScroll());
+  check(width, 'no sideways scroll (Settings)', await noSideScroll());
   await closeDialog();
 
   // 2. 3D view → Look: Simple · Realistic, default by width.

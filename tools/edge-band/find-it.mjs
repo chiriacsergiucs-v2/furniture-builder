@@ -38,8 +38,9 @@ for (const width of [1440, 1280, 390, 375]) {
   const shot = (name) =>
     page.screenshot({ path: `${out}/edge-band-${name}-${width}.png`, fullPage: true });
   const mode = (name) => page.getByRole('radio', { name });
-  const side = page.locator('aside.side');
-  const band = (board) => side.getByRole('group', { name: `Edge band for ${board}` });
+  // Settings (ADR-080) holds the boards and their edge band fields; the Configure mode is gone.
+  const dlg = page.locator('dialog[open]');
+  const band = (board) => dlg.getByRole('group', { name: `Edge band for ${board}` });
   const fill = async (loc, text) => {
     await loc.scrollIntoViewIfNeeded();
     await loc.fill(text);
@@ -47,11 +48,18 @@ for (const width of [1440, 1280, 390, 375]) {
     await page.waitForTimeout(150);
   };
 
+  /** Settings › Boards, sheets and saw cut. */
   const openBoards = async () => {
-    const g = side.locator('details.group', {
+    await page.getByRole('button', { name: 'Settings' }).click();
+    await dlg.waitFor({ state: 'visible' });
+    const g = dlg.locator('details.group', {
       has: page.locator('summary', { hasText: 'Boards, sheets and saw cut' }),
     });
     if (!(await g.evaluate((d) => d.open))) await g.locator('summary').first().click();
+  };
+  const closeSettings = async () => {
+    await dlg.getByRole('button', { name: 'Done' }).click();
+    await dlg.waitFor({ state: 'detached' }).catch(() => {});
   };
 
   // 1. Bare app → New single piece → Chest of drawers → editor.
@@ -64,8 +72,7 @@ for (const width of [1440, 1280, 390, 375]) {
     .click();
   await page.locator('main.work').waitFor({ state: 'visible' });
 
-  // 2. Configure → Boards, sheets and saw cut → each board has "Edge band" with a "Band type".
-  await mode('Configure').dispatchEvent('click');
+  // 2. Settings → Boards, sheets and saw cut → each board has "Edge band" with a "Band type".
   await openBoards();
   const pal = band('PAL 18 white');
   await pal.scrollIntoViewIfNeeded();
@@ -113,9 +120,10 @@ for (const width of [1440, 1280, 390, 375]) {
     'front band named "ABS 2 × 22 mm"',
     await front.getByText('ABS 2 × 22 mm', { exact: true }).isVisible(),
   );
-  check(width, 'no sideways scroll (Configure, band fields)', await noSideScroll());
+  check(width, 'no sideways scroll (Settings, band fields)', await noSideScroll());
   await pal.scrollIntoViewIfNeeded();
-  await shot('configure');
+  await shot('settings');
+  await closeSettings();
 
   // 5. Build & Preview → Parts: each board header names its band.
   await mode(/Build & Preview/).dispatchEvent('click');
@@ -177,9 +185,9 @@ for (const width of [1440, 1280, 390, 375]) {
   await shot('shopping');
 
   // 7. A band narrower than the board: an error in Checks, exports blocked; fixed again.
-  await mode('Configure').dispatchEvent('click');
   await openBoards();
   await fill(band('PAL 18 white').getByLabel('Band width (mm)'), '15');
+  await closeSettings();
   await mode(/Build & Preview/).dispatchEvent('click');
   await page.getByRole('tab', { name: /Checks/ }).dispatchEvent('click');
   check(
@@ -199,9 +207,9 @@ for (const width of [1440, 1280, 390, 375]) {
     await page.getByRole('button', { name: 'Download CSV' }).isDisabled(),
   );
   await shot('narrow');
-  await mode('Configure').dispatchEvent('click');
   await openBoards();
   await fill(band('PAL 18 white').getByLabel('Band width (mm)'), '22');
+  await closeSettings();
   await mode(/Build & Preview/).dispatchEvent('click');
   await page.getByRole('tab', { name: /Parts/ }).dispatchEvent('click');
   check(
