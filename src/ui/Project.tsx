@@ -48,6 +48,7 @@ import {
 import { newId } from '../core/design';
 import { Dim, DimV, outlinePoints } from './Elevation';
 import { Icon } from './icons';
+import { InsideEditor } from './Inspector';
 import { templateGlyph } from './Templates';
 import { StartFrom } from './Catalog';
 import { askConfirm } from './Confirm';
@@ -85,6 +86,7 @@ export function ProjectPanel({
   const project = useDesign((s) => s.project)!;
   const pm = useDesign((s) => s.projectModel);
   const selectedId = useDesign((s) => s.selectedItemId);
+  const drillId = useDesign((s) => s.drillItemId);
   const select = useDesign((s) => s.selectItem);
   const update = useDesign((s) => s.updateItem);
   const remove = useDesign((s) => s.removeItem);
@@ -169,6 +171,14 @@ export function ProjectPanel({
             <p className="hint" role="status">
               {libMsg}
             </p>
+          )}
+          {drillId === item.id && (
+            <section className="inside-piece" aria-label="Inside this piece">
+              <div className="card-title">
+                <span>Inside this piece</span>
+              </div>
+              <InsideEditor />
+            </section>
           )}
           <Counter
             label="How many"

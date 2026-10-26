@@ -626,3 +626,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: The highlight of the selected item need to be more obvious, suggest 5 designs that can be applied so it is clearer which part of the piece is selected, or if it is entirely selected
 - Questions: Smaller card on phones, a card docked under the 3D view, or a taller 3D view?
 - Suggested pick: Dock the card under the 3D view on phones, so the piece and its outline stay in sight (estimate +10 % work)
+
+### G-067: Selected space not marked in the project's 2D views
+
+- Status: Open
+- Origin: ADR-088, 2026-10-26, out of scope (Claude)
+- Missing: Outline of the selected space inside a project piece on the plan and in the room front view (taps drill there, the 3D view and the panel show it)
+- Request: one more ADR, which would keep the project editor open while we click on the item second time (yes editing of ), and it gives us the opportunity to add or remove shelves and change its structure. the item is triggered, but we should be kept on the edit of the project view.
+- Questions: Mark the selected space on the room front view too (the plan, seen from above, cannot show a space's height)?
+- Suggested pick: Outline it on the room front view, as in the piece's front drawing (estimate +10 % work)

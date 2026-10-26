@@ -28,6 +28,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { explode } from '../core/explode';
 import { hitToMm, inSelection, selectionBox } from '../core/selectPath';
 import { roomDisplayBoxes } from '../core/room';
+import { pieceBoxToRoom } from '../core/project';
 import { inPlaneAxes, union } from '../core/geometry';
 import { aabbOf } from '../core/shape';
 import { boxUvs, finishLook, planeUvs } from '../core/surface';
@@ -158,7 +159,11 @@ export default function Viewer3D() {
     () => (exploded ? union(panels.map(aabbOf)) : (extent ?? view.model.bounds)),
     [exploded, panels, view, extent],
   );
-  const counts = view.mode === 'design' && !rendering;
+  // A project piece drilled into from the project editor (ADR-088) gets the card too.
+  const drillOn = useDesign(
+    (s) => !!s.project && !s.editingItemId && !!s.drillItemId && s.drillItemId === s.selectedItemId,
+  );
+  const counts = (view.mode === 'design' || (view.mode === 'project' && drillOn)) && !rendering;
   const cardRef = useRef<HTMLDivElement>(null);
   // Bottom centre of the card at the anchor, kept inside the view (the anchor's screen point, or null to hide).
   const placeCard = useCallback((at: { x: number; y: number } | null) => {
@@ -217,7 +222,7 @@ export default function Viewer3D() {
           </>
         )}
         <Panels panels={panels} realistic={realistic} plain={rendering} />
-        {counts && <CountsAnchor place={placeCard} />}
+        {counts && <CountsAnchor place={placeCard} inProject={view.mode === 'project'} />}
         {view.mode === 'project' && !exploded && <RoomWalls />}
         {view.mode === 'project' && !exploded && <ModelItems plain={rendering} />}
         <Fit key={designId} bounds={bounds} />
@@ -229,6 +234,15 @@ export default function Viewer3D() {
       )}
     </>
   );
+}
+
+/** The project piece loaded for edits from the project editor while it is the selected piece (ADR-088). */
+function useDrillItem() {
+  const project = useDesign((s) => s.project);
+  const id = useDesign((s) =>
+    s.project && !s.editingItemId && s.drillItemId === s.selectedItemId ? s.drillItemId : null,
+  );
+  return useMemo(() => (id ? project?.items.find((i) => i.id === id) : undefined), [project, id]);
 }
 
 /** How much of a panel outside the selected space shows (ADR-087). */
@@ -274,11 +288,23 @@ function SelectionOutline({ box }: { box: Box }) {
  * right above the front top edge of the selected space and kept inside the view. The viewer itself still only
  * selects; the card changes the design through the store.
  */
-function CountsAnchor({ place }: { place: (at: { x: number; y: number } | null) => void }) {
+function CountsAnchor({
+  place,
+  inProject,
+}: {
+  place: (at: { x: number; y: number } | null) => void;
+  inProject: boolean;
+}) {
   const selectedId = useDesign((s) => s.selectedId);
   const model = useDesign((s) => s.model);
+  const item = useDrillItem();
   // The whole piece (ADR-083 `null`) anchors on the piece's bounds; the same box the selection outline draws (ADR-087).
-  const box = useMemo(() => selectionBox(model, selectedId), [model, selectedId]);
+  // In a project the box is placed in the room like the piece (ADR-088).
+  const box = useMemo(() => {
+    const local = selectionBox(model, inProject ? (selectedId ?? null) : selectedId);
+    if (!inProject) return local;
+    return item && local ? pieceBoxToRoom(item, model, local) : undefined;
+  }, [model, selectedId, inProject, item]);
   const v = useMemo(() => new Vector3(), []);
   useFrame(({ camera, size }) => {
     if (!box) return place(null);
@@ -593,11 +619,34 @@ function Panels({
   const textures = useTextures(useImageUrls(imageKey(materials)));
   const hl = useMemo(() => new Set(highlight), [highlight]);
   // Selection look A (ADR-087): a thick outline round the selected space or piece, everything outside it faded.
-  // Simple look of a single piece only; Realistic and projects keep the tint (G-060).
-  const outline =
-    view.mode !== 'project' && !plain && !realistic
-      ? selectionBox(view.model, selectedSpace)
-      : undefined;
+  // Simple look only; Realistic keeps the tint (G-060). In a project, for the piece drilled into (ADR-088): the box
+  // is placed in the room, and the fade is decided in the piece's own mm.
+  const drillModel = useDesign((s) => s.model);
+  const drillItem = useDrillItem();
+  const inProject = view.mode === 'project';
+  const look = !plain && !realistic;
+  const outline = useMemo(() => {
+    if (!look) return undefined;
+    if (!inProject) return selectionBox(view.model, selectedSpace);
+    const local = drillItem && selectionBox(drillModel, selectedSpace ?? null);
+    return drillItem && local ? pieceBoxToRoom(drillItem, drillModel, local) : undefined;
+  }, [look, inProject, view.model, selectedSpace, drillItem, drillModel]);
+  const fadeBox = !look
+    ? undefined
+    : !inProject
+      ? outline
+      : drillItem && typeof selectedSpace === 'string'
+        ? selectionBox(drillModel, selectedSpace)
+        : undefined;
+  const local = useMemo(() => new Map(drillModel.panels.map((p) => [p.id, p])), [drillModel]);
+  const prefix = drillItem ? `${drillItem.id}:` : '';
+  const ownId = inProject ? `${prefix}${selectedSpace}` : selectedSpace;
+  const isFaded = (p: Panel) => {
+    if (!fadeBox) return false;
+    if (!inProject) return !inSelection(fadeBox, (built.get(p.id) ?? p).box);
+    const own = p.id.startsWith(prefix) ? local.get(p.id.slice(prefix.length)) : undefined;
+    return !own || !inSelection(fadeBox, own.box);
+  };
 
   return (
     <group>
@@ -619,10 +668,10 @@ function Panels({
               ? !!selectedId && p.nodeId.startsWith(`${selectedId}:`)
               : selectedId === null || p.nodeId === selectedId);
           const lit = !plain && hl.has(p.id);
-          const faded = !!outline && !inSelection(outline, (built.get(p.id) ?? p).box);
+          const faded = isFaded(p);
           // With the outline, only the selected space's own panels are marked (green edges), and no tint.
           const tinted = selected && !outline;
-          const own = !!outline && p.nodeId === selectedId;
+          const own = !!outline && p.nodeId === ownId;
           // A picture replaces the plain colour; without a readable one the plain colour stays (ADR-048).
           const img = images.get(p.materialId);
           const map = img ? textures.get(img.id) : undefined;

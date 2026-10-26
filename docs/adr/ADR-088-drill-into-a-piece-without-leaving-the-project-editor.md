@@ -24,16 +24,21 @@ implemented and stays as it is; this ADR replaces that one rule. The user's new 
 
 ## Decision
 
-- In a project, the 1st tap on a piece selects it (as today). Further taps on the selected piece drill into its
+- In a project, the 1st tap on a piece selects it, whole piece. Further taps on the selected piece drill into its
   spaces one level per tap (ADR-083 `drill`, the tap mapped into the piece by `roomToPiece`), **and the editor stays
-  on the project** (breadcrumb "Living", project panel, Compose tab still the project's).
-- The store keeps a project-level space selection: `selectedItemId` plus `selectedId` inside that item, without
-  `editItem`. After the innermost level the next tap wraps to the whole piece (G-051).
-- The project's left panel shows, under "Selected piece", the selected space's controls (G-061) and the quick-count
-  card shows over the project 3D, anchored on the space (ADR-085 placement). Each change edits that piece's design
-  through the project's undo (ADR-051), never a copy saved elsewhere.
+  on the project** (project panel, Compose tab still the project's). After the innermost level the next tap wraps
+  to the whole piece (G-051).
+- Store: `drillItemId`, the project piece loaded into `design`/`model` while the project editor stays open; active
+  only while it is the selected piece (`selectItem`, `tapItem` load it; selecting nothing, another project or "Edit
+  this piece" drop it). `editingItemId`, which switches the screen to the piece editor, is not set. Each change to
+  the loaded piece is written into the project as one project undo step (ADR-051); after a project undo, a move or a
+  removal the loaded piece follows its project copy or is dropped.
+- The project panel shows, under "Selected piece", an "Inside this piece" section: the selected space's own panel
+  (Contents, Doors and handles, Divide this space, Layouts, breadcrumb), or for the whole piece where to tap and its
+  quick counts (G-061). The quick-count card shows over the project 3D, and design A (ADR-087) outlines the space
+  there, placed in the room like the piece (`pieceBoxToRoom` in `src/core/project.ts`).
 - "Edit this piece" stays the only way into the piece editor.
-- Plan view (no height): the 2nd tap selects the piece's interior and stays in the project (G-062).
+- Plan view (no height): a further tap selects the piece's interior and stays in the project (G-062).
 
 ## Alternatives considered
 
@@ -42,29 +47,33 @@ implemented and stays as it is; this ADR replaces that one rule. The user's new 
 
 ## Scope
 
-- In scope: the store change, drilling in project 3D and room front view, the space controls in the project panel,
-  the card over the project 3D, regression test of the user's 3 steps, find-it update.
+- In scope: the store change, drilling in project 3D, plan and room front view, the "Inside this piece" section, the
+  card and outline over the project 3D, tests of the user's steps, find-it script.
 - Out of scope: piece-wide settings (size, materials, carcass) from the project panel — they stay behind "Edit this
-  piece" (G-061 covers what the panel shows).
+  piece"; marking the selected space on the plan and the room front view (G-067).
 
 ## Consequences
 
 - Positive: shelves and dividers of any piece change without leaving the project or losing its view.
 - Negative / risks: the project panel gets longer on a phone; a project space selection is a new store state that
-  undo/redo, delete and load must keep valid. `tools/drill-select/find-it.mjs` expects the piece editor today.
+  undo/redo, delete and load must keep valid. `tools/drill-select/find-it.mjs` expected the piece editor; its
+  project step now checks the new rule.
 - Harder to change later: the pair (`selectedItemId`, `selectedId`) becomes the project's selection.
 
 ## Done when
 
-- [ ] Store test of the user's steps: open project, tap item, tap again → the editor is still the project
-      (`editingItemId` unset), `selectedItemId` is the item, `selectedId` the space under the tap; a 4th tap at the
-      innermost level selects the whole piece again.
-- [ ] Shelves `+` on that space changes only that piece in the project; one undo restores it.
-- [ ] Undo/redo, removing the piece and opening another project leave a valid selection (store test).
-- [ ] `tools/drill-select/find-it.mjs` at 390 and 1280 px: from the bare app, open a project, tap a piece twice in
-      3D; "Project" heading still shows, the space controls show, "More shelves" changes the parts count; the
-      "Compose" tab still shows the project.
-- [ ] lint, format:check, typecheck, test, build, docs:check pass.
+- [x] Store test of the user's steps: open project, tap item, tap again → `editingItemId` still unset, the space
+      under the tap selected; a 4th tap at the innermost level selects the whole piece again; turned 0° and 90°
+      (`tests/select-path.test.ts`).
+- [x] Shelves `+` on that space changes only that piece in the project and the project model; one project undo
+      restores it and the loaded piece follows (same file).
+- [x] Selecting nothing, removing the piece and opening another project leave a valid selection; "Edit this piece"
+      still opens the piece editor; a selected space is placed in the room like its panels at 0/90/180/270° (same
+      file).
+- [x] `tools/project-drill/find-it.mjs` at 1280 and 390 px: from the bare app, a project with a Sideboard; plan taps
+      keep the project open with "Inside this piece"; in 3D a further tap shows "Shelves", "More shelves" adds a
+      part, "Compose" still shows the project, Undo takes it back, the next tap is the whole piece again.
+- [x] lint, format:check, typecheck, test, build, docs:check pass.
 
 ## Answered questions
 

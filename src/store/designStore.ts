@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { buildModel } from '../core/build';
 import {
   findInProduct,
+  productRoots,
   mapProductSpace,
   templates,
   upgradeDesign,
@@ -75,6 +76,11 @@ interface State {
   editingItemId: string | null;
   /** Piece selected in the project view. */
   selectedItemId: string | null;
+  /**
+   * Project piece whose design is loaded into `design`/`model` while the project editor stays open (ADR-088): taps
+   * drill into it and its spaces are edited from the project panel. Active only while it is the selected piece.
+   */
+  drillItemId: string | null;
   projectDirtyAt: number;
   /** Project-level history (ADR-051): earlier and undone states of the open project. */
   projectPast: Project[];
@@ -111,8 +117,9 @@ interface State {
   /** Tap on the piece at (x, y) mm, front view or 3D: whole piece first, then one level smaller per tap (ADR-083). */
   tapPiece: (x: number, y: number) => void;
   /**
-   * Tap on a project piece (ADR-083): the first tap selects it; a tap on the selected piece opens it with the space
-   * under the tap selected (room mm), or the whole piece when the point is unknown.
+   * Tap on a project piece (ADR-083, ADR-088): the first tap selects the whole piece; each further tap selects one
+   * level smaller under the tap (room mm), and the project editor stays open. With no point (the plan) a further tap
+   * selects the piece's interior.
    */
   tapItem: (id: string, at?: { x: number; y: number; z: number }) => void;
   setHighlight: (ids: string[]) => void;
@@ -201,7 +208,13 @@ export const useDesign = create<State>((set, get) => {
     const sel = get().selectedId;
     if (sel && !findInProduct(stamped.product, sel)) set({ selectedId: null });
     // Editing a project piece: the change lives in the project's embedded copy, never the library (ADR-022).
-    const { project, editingItemId } = get();
+    const { project, editingItemId, drillItemId } = get();
+    // Edited from the project editor (ADR-088): each change is one project undo step (ADR-051).
+    if (project && !editingItemId && drillItemId)
+      return commitProject({
+        ...project,
+        items: project.items.map((i) => (i.id === drillItemId ? { ...i, design: stamped } : i)),
+      });
     if (project && editingItemId) {
       set({
         project: {
@@ -227,6 +240,30 @@ export const useDesign = create<State>((set, get) => {
   };
   /** The project as it was when its piece editor opened; one undo step if the piece changed (ADR-051). */
   let projectBeforeEdit: Project | null = null;
+  /** Load a project piece for edits from the project editor (ADR-088), with `sel` selected inside it. */
+  const loadDrill = (item: ProjectItem, sel: Selection) => {
+    const d = upgradeDesign(item.design);
+    set({
+      drillItemId: item.id,
+      design: d,
+      model: buildModel(d),
+      selectedId: sel,
+      highlight: [],
+      past: [],
+      future: [],
+    });
+  };
+  /** After the project changed (undo, a move, a removal): the loaded piece follows its project copy or is dropped. */
+  const syncDrill = () => {
+    const { project, drillItemId, design, selectedId } = get();
+    if (!drillItemId) return;
+    const item = project?.items.find((i) => i.id === drillItemId);
+    if (!item) return set({ drillItemId: null, selectedId: undefined });
+    if (item.design === design) return;
+    const d = upgradeDesign(item.design);
+    const keep = typeof selectedId !== 'string' || findInProduct(d.product, selectedId);
+    set({ design: d, model: buildModel(d), selectedId: keep ? selectedId : null });
+  };
   const commitProject = (next: Project) => {
     // Pieces on or above others follow them (ADR-031); run parts follow the pieces in the same step (ADR-061).
     const stamped = {
@@ -243,6 +280,7 @@ export const useDesign = create<State>((set, get) => {
         ? { projectPast: [...get().projectPast, prev].slice(-HISTORY), projectFuture: [] }
         : {}),
     });
+    syncDrill();
   };
   /** Show an earlier or later state of the project; the selection survives if the piece still exists. */
   const restoreProject = (p: Project, projectPast: Project[], projectFuture: Project[]) => {
@@ -257,6 +295,7 @@ export const useDesign = create<State>((set, get) => {
       selectedItemId:
         sel && [...p.items, ...(p.models ?? [])].some((i) => i.id === sel) ? sel : null,
     });
+    syncDrill();
   };
   const initial = templates[0].create();
   return {
@@ -275,6 +314,7 @@ export const useDesign = create<State>((set, get) => {
     projectModel: null,
     editingItemId: null,
     selectedItemId: null,
+    drillItemId: null,
     projectDirtyAt: 0,
     projectPast: [],
     projectFuture: [],
@@ -297,22 +337,26 @@ export const useDesign = create<State>((set, get) => {
         projectModel: null,
         editingItemId: null,
         selectedItemId: null,
+        drillItemId: null,
         projectPast: [],
         projectFuture: [],
       });
     },
     tapPiece: (x, y) => set({ selectedId: drill(get().model, x, y, get().selectedId) }),
     tapItem: (id, at) => {
-      const { project, selectedItemId } = get();
+      const { project, selectedItemId, drillItemId, selectedId } = get();
       const item = project?.items.find((i) => i.id === id);
-      if (!item || selectedItemId !== id) {
-        set({ selectedItemId: id });
-        return;
+      if (!item) return get().selectItem(id);
+      // The first tap: the whole piece (ADR-083), loaded for edits without leaving the project (ADR-088).
+      if (selectedItemId !== id || drillItemId !== id) return get().selectItem(id);
+      if (!at) {
+        // The plan has no height: a further tap selects the piece's interior (G-062).
+        const roots = productRoots(get().design.product);
+        return set({ selectedId: roots.length === 1 ? roots[0].root.id : null });
       }
-      get().editItem(id);
-      if (!at) return set({ selectedId: null });
       const p = roomToPiece(item, at);
-      set({ selectedId: drill(get().model, p.x, p.y, null) });
+      const next = drill(get().model, p.x, p.y, selectedId === undefined ? null : selectedId);
+      set({ selectedId: next === undefined ? null : next });
     },
     openProject: (raw) => {
       const p = resolvePlacements(raw);
@@ -321,6 +365,7 @@ export const useDesign = create<State>((set, get) => {
         projectModel: buildProjectModel(p),
         editingItemId: null,
         selectedItemId: null,
+        drillItemId: null,
         highlight: [],
         projectDirtyAt: 0,
         projectPast: [],
@@ -335,6 +380,7 @@ export const useDesign = create<State>((set, get) => {
         projectModel: null,
         editingItemId: null,
         selectedItemId: null,
+        drillItemId: null,
         projectPast: [],
         projectFuture: [],
         placingItemId: null,
@@ -420,7 +466,14 @@ export const useDesign = create<State>((set, get) => {
       if (res.project !== p) commitProject(res.project);
       return res.reasons;
     },
-    selectItem: (id) => set({ selectedItemId: id }),
+    selectItem: (id) => {
+      const { project, selectedItemId, drillItemId } = get();
+      if (id && id === selectedItemId && id === drillItemId) return;
+      set({ selectedItemId: id });
+      const item = id ? project?.items.find((i) => i.id === id) : undefined;
+      if (item && !get().editingItemId) loadDrill(item, null);
+      else set({ drillItemId: null });
+    },
     editItem: (id) => {
       const item = get().project?.items.find((i) => i.id === id);
       if (!item) return;
@@ -428,6 +481,7 @@ export const useDesign = create<State>((set, get) => {
       projectBeforeEdit = get().project;
       set({
         editingItemId: id,
+        drillItemId: null,
         design: d,
         model: buildModel(d),
         selectedId: undefined,
@@ -452,6 +506,7 @@ export const useDesign = create<State>((set, get) => {
           : {};
       set({
         editingItemId: null,
+        drillItemId: null,
         project: p,
         projectModel: buildProjectModel(p),
         selectedId: undefined,
@@ -640,6 +695,7 @@ export const useDesign = create<State>((set, get) => {
         projectModel: null,
         editingItemId: null,
         selectedItemId: null,
+        drillItemId: null,
       });
     },
     finishTemplateEdit: (keep) => {
