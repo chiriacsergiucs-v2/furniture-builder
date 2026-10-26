@@ -539,7 +539,8 @@ export function setDrawerCount(s: Space, count: number): Space {
 export function splitSpace(s: Space, axis: 'x' | 'y', parts: number): Space {
   const n = Math.max(2, Math.min(8, Math.round(parts)));
   const first: Space = { ...s, id: newId(), front: null };
-  const children: Space[] = [first, ...Array.from({ length: n - 1 }, () => makeSpace('shelves'))];
+  // New parts start empty (ADR-089): a divider adds a divider and nothing else.
+  const children: Space[] = [first, ...Array.from({ length: n - 1 }, () => makeSpace('empty'))];
   return {
     id: s.id,
     kind: 'split',

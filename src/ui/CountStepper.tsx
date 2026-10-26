@@ -2,6 +2,7 @@ import { forwardRef, useMemo, useState, type CSSProperties } from 'react';
 import { countRows, countSubject } from '../core/counts';
 import { useDesign } from '../store/designStore';
 import { Icon } from './icons';
+import { selectionLabel } from './Inspector';
 
 // Folded or open over 3D on a phone (G-058), kept on this device only (localStorage, ADR-002). Open until folded.
 const FOLD_KEY = 'fb:counts3d';
@@ -39,6 +40,8 @@ export const CountStepper = forwardRef<
     return id ? countRows(product, id) : [];
   }, [product, selectedId]);
   if (!rows.length) return null;
+  // Names what the card acts on, the same thing the outline is drawn round (ADR-087, G-069).
+  const title = selectionLabel(product, selectedId);
   return (
     <div
       ref={ref}
@@ -56,6 +59,7 @@ export const CountStepper = forwardRef<
           <Icon name={folded ? 'chevron-down' : 'chevron-up'} className="sm" />
         </button>
       )}
+      {title && <span className="cs-title">{title}</span>}
       {rows.map((r) => (
         <div key={r.key} className="cs-row">
           <span className="cs-label">{r.label}</span>

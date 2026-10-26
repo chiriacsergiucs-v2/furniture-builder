@@ -1,4 +1,4 @@
-// Find-it acceptance for the UI critique follow-up (backlog N83: gaps G-058 and G-059, 2026-10-26), run against a
+// Find-it acceptance for the UI critique follow-up (backlog N87: gaps G-058 and G-059, 2026-10-26), run against a
 // production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/ui-polish/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.

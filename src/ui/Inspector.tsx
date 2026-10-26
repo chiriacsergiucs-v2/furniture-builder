@@ -48,6 +48,7 @@ import {
   type Step,
 } from './controls';
 import { Icon } from './icons';
+import { CountStepper } from './CountStepper';
 import { askConfirm } from './Confirm';
 import { useUi } from './shell/uiStore';
 import {
@@ -96,6 +97,35 @@ export function Inspector({ mode }: { mode: 'compose' | 'configure' }) {
   if (prod.kind === 'panels')
     return <PanelSetEditor p={prod.params} materials={design.materials} />;
   return <CabinetEditor p={prod.params} materials={design.materials} />;
+}
+
+/**
+ * Inside a project piece, edited without leaving the project editor (ADR-088): the selected space's own panel, or for
+ * the whole piece where to tap and its quick counts.
+ */
+export function InsideEditor() {
+  const design = useDesign((s) => s.design);
+  const selectedId = useDesign((s) => s.selectedId);
+  const prod = design.product;
+  const found = typeof selectedId === 'string' ? findInProduct(prod, selectedId) : undefined;
+  if (found)
+    return (
+      <SpaceEditor
+        space={found.space}
+        root={found.root}
+        rootLabel={found.label}
+        wholeLabel={WHOLE[prod.kind]}
+      />
+    );
+  return (
+    <>
+      <p className="hint">
+        Selected: {WHOLE[prod.kind]}. Tap the piece again to pick a space inside it; each tap goes
+        one level smaller.
+      </p>
+      <CountStepper />
+    </>
+  );
 }
 
 /** Compose with nothing selected: where to tap, or a way into each space tree. */

@@ -1,5 +1,6 @@
 import { useId, useLayoutEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
 import { productRoots } from '../core/design';
+import { inSelection, selectionBox } from '../core/selectPath';
 import { faceMapping } from '../core/surface';
 import { imageKey, useImageUrls } from '../persist/images';
 import { useDesign } from '../store/designStore';
@@ -83,11 +84,10 @@ export function Elevation() {
   const selectedPanels = new Set(
     model.panels.filter((p) => p.nodeId === selectedId).map((p) => p.id),
   );
-  // The whole piece selected (ADR-083) is outlined round its bounds.
-  const selectedSpace =
-    selectedId === null
-      ? { box: b }
-      : model.spaces.find((s) => s.nodeId === selectedId && s.view !== 'side');
+  // The whole piece selected (ADR-083) is outlined round its bounds; everything outside the outline is faded (ADR-087).
+  const selBox = selectionBox(model, selectedId);
+  const selectedSpace = selBox ? { box: selBox } : undefined;
+  const fade = (box: Panel['box']) => (selBox && !inSelection(selBox, box) ? ' faded' : '');
   const fontSize = Math.max(b.w, b.h) / 26;
 
   // Quick counts (ADR-084) float right above the selected space, inside the drawing; below its top edge when there
@@ -165,7 +165,7 @@ export function Elevation() {
         </defs>
         <rect className="floor" x={b.x - pad} y={0} width={b.w + 2 * pad} height={pad * 0.15} />
         {backs.map((p) => (
-          <polygon key={p.id} className="el-back" points={outlinePoints(p)} />
+          <polygon key={p.id} className={`el-back${fade(p.box)}`} points={outlinePoints(p)} />
         ))}
         {leaves.map((s) => (
           <g
@@ -188,14 +188,16 @@ export function Elevation() {
         {structure.map((p) => (
           <polygon
             key={p.id}
-            className={`el-panel ${selectedPanels.has(p.id) ? 'hl' : ''}`}
+            className={`el-panel ${selectedPanels.has(p.id) ? 'hl' : ''}${fade(p.box)}`}
             points={outlinePoints(p)}
             style={{ fill: fillOf(p) }}
             data-plain={mats.get(p.materialId)?.color}
           />
         ))}
         {showFronts &&
-          fronts.map((p) => <polygon key={p.id} className="el-front" points={outlinePoints(p)} />)}
+          fronts.map((p) => (
+            <polygon key={p.id} className={`el-front${fade(p.box)}`} points={outlinePoints(p)} />
+          ))}
         {showFronts &&
           fronts
             .filter((p) => p.handleHoles)
@@ -223,7 +225,7 @@ export function Elevation() {
         {leaves.map((s) => (
           <text
             key={`l-${s.nodeId}`}
-            className={`el-label ${s.nodeId === selectedId ? 'selected' : ''}`}
+            className={`el-label ${s.nodeId === selectedId ? 'selected' : ''}${fade(s.box)}`}
             x={s.box.x + s.box.w / 2}
             y={Y(s.box.y, s.box.h) + s.box.h / 2}
             fontSize={Math.min(fontSize, s.box.w / 6)}

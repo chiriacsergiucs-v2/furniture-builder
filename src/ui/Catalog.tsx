@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { buildModel } from '../core/build';
-import { useMediaQuery } from './useMediaQuery';
+import { PHONE, useMediaQuery } from './useMediaQuery';
 import { snapshotSvg } from '../core/snapshot';
 import {
   catalogFamilies,
@@ -286,7 +286,7 @@ export function CatalogPage({
   onNewPiece?: () => void;
 }) {
   const families = useCatalog();
-  const phone = useMediaQuery('(max-width: 760px)');
+  const phone = useMediaQuery(PHONE);
   const [grouping, setGrouping] = useGrouping();
   const [source, setSource] = useState<Source>('templates');
   const [query, setQuery] = useState('');

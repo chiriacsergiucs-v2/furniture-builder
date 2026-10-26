@@ -27,12 +27,12 @@ import { Output } from './Output';
 import { useProblem } from './problemStore';
 import { PrintSheet } from './PrintSheet';
 import { Icon } from './icons';
-import { useMediaQuery } from './useMediaQuery';
 import { setTheme, useTheme } from './useTheme';
 import { setLook, useLook } from './useLook';
 import { RenderDialog } from './RenderDialog';
 import { MoreMenu } from './shell/MoreMenu';
 import { ProjectsPage } from './shell/ProjectsPage';
+import { useMediaQuery } from './useMediaQuery';
 import { MODE_LABEL, MODES, useUi } from './shell/uiStore';
 import {
   bringDrawingForward,
@@ -788,6 +788,8 @@ export function App() {
               </div>
             </div>
           </section>
+          {/* Phones: the 3D view's quick-count card docks here, under the stage, which keeps its height (G-070). */}
+          {phone && <div id="count-dock" className="count-dock-slot" />}
           <Output />
         </main>
 

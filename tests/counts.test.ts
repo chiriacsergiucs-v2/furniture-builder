@@ -2,7 +2,7 @@ import 'fake-indexeddb/auto';
 import { describe, expect, it } from 'vitest';
 import { buildModel } from '../src/core/build';
 import { countRows, countSubject, stepCount, type CountKey } from '../src/core/counts';
-import { templates } from '../src/core/design';
+import { splitSpace, templates } from '../src/core/design';
 import type { Design, Space } from '../src/core/types';
 import { useDesign } from '../src/store/designStore';
 
@@ -88,7 +88,7 @@ describe('stepping counts (ADR-084)', () => {
     expect(stepCount(door, 'doors', 1).front).toMatchObject({ count: 2 });
     expect(stepCount(door, 'doors', -1)).toBe(door);
   });
-  it('+ on a leaf divides it; + on a split adds a bay with 2 shelves at the end', () => {
+  it('+ on a leaf divides it; + on a split adds an empty bay at the end (ADR-089)', () => {
     const leaf: Space = { id: 'a', kind: 'drawers', count: 3 };
     const one = stepCount(leaf, 'hdiv', 1);
     expect(one).toMatchObject({ id: 'a', kind: 'split', axis: 'y' });
@@ -97,7 +97,7 @@ describe('stepping counts (ADR-084)', () => {
     const two = stepCount(one, 'hdiv', 1);
     if (two.kind !== 'split') throw Error();
     expect(two.children).toHaveLength(3);
-    expect(two.children[2]).toMatchObject({ kind: 'shelves', count: 2 });
+    expect(two.children[2]).toMatchObject({ kind: 'empty' });
     expect(two.sizes).toHaveLength(3);
   });
   it('− removes the last bay and its size; from one divider the first bay’s contents stay', () => {
@@ -162,14 +162,55 @@ describe('quick counts in the store (ADR-084)', () => {
     expect(r1.children.map((c) => c.id)).toEqual([left, middle, right]);
     expect(r1.children[1]).toMatchObject({ id: middle, kind: 'split', axis: 'x' });
     expect(st().selectedId).toBe(middle);
-    st().select(right);
+    st().select(left);
     st().stepCount('shelves', 1);
     const r2 = root();
     if (r2.kind !== 'split') throw Error();
     expect(r2.children.map((c) => (c.kind === 'shelves' ? c.count : c.kind))).toEqual([
-      4,
+      5,
       'split',
-      3,
+      'empty',
     ]);
+    expect(r2.children[2].id).toBe(right);
+  });
+});
+
+describe('a new divided part starts empty (ADR-089)', () => {
+  const shelvesIn = (d: Design) => buildModel(d).panels.filter((p) => p.role === 'shelf').length;
+  const withInterior = (d: Design, s: Space): Design =>
+    d.product.kind === 'cabinet'
+      ? { ...d, product: { ...d.product, params: { ...d.product.params, interior: s } } }
+      : d;
+
+  it('+ horizontal divider on a space with 1 vertical divider adds an empty part and no shelves', () => {
+    const d = byTemplate('bookcase');
+    const column = stepCount(interior(d), 'vdiv', 1);
+    const before = withInterior(d, column);
+    const after = stepCount(column, 'hdiv', 1);
+    if (after.kind !== 'split') throw Error('not split');
+    expect(after.axis).toBe('y');
+    expect(after.children).toHaveLength(2);
+    expect(after.children[0]).toMatchObject({ kind: 'split', axis: 'x' });
+    if (after.children[0].kind !== 'split' || column.kind !== 'split') throw Error();
+    expect(after.children[0].children).toEqual(column.children);
+    expect(after.children[1].kind).toBe('empty');
+    expect(shelvesIn(withInterior(d, after))).toBe(shelvesIn(before));
+  });
+
+  it('+ vertical divider on an undivided bay and one more bay both add empty parts', () => {
+    const d = byTemplate('bookcase');
+    const once = stepCount(interior(d), 'vdiv', 1);
+    if (once.kind !== 'split') throw Error();
+    expect(once.children[1].kind).toBe('empty');
+    const twice = stepCount(once, 'vdiv', 1);
+    if (twice.kind !== 'split') throw Error();
+    expect(twice.children.map((c) => c.kind)).toEqual([interior(d).kind, 'empty', 'empty']);
+    expect(shelvesIn(withInterior(d, twice))).toBe(shelvesIn(d));
+  });
+
+  it('splitSpace (Side by side, Stacked, Parts +) fills new parts with empty spaces', () => {
+    const s = splitSpace(interior(byTemplate('bookcase')), 'y', 4);
+    if (s.kind !== 'split') throw Error();
+    expect(s.children.slice(1).map((c) => c.kind)).toEqual(['empty', 'empty', 'empty']);
   });
 });

@@ -57,10 +57,8 @@ export function MmField({
           onChange={(e) => setText(e.target.value.replace(/[^\d-]/g, ''))}
           onBlur={commit}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              commit();
-              (e.target as HTMLInputElement).blur();
-            }
+            // Enter leaves the field; the blur commits, once (committing here too made two undo steps).
+            if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
             if (e.key === 'Escape') setText(String(value));
           }}
         />

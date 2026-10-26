@@ -1584,10 +1584,15 @@ td.note {
   fill: var(--link);
   font-weight: 600;
 }
+/* Outside the selected space or piece (ADR-087; the room front view, G-071). */
+.elevation .faded,
+.plan .faded {
+  opacity: 0.3;
+}
 .el-selection {
   fill: none;
   stroke: var(--link);
-  stroke-width: 2.5;
+  stroke-width: 3.5;
   vector-effect: non-scaling-stroke;
   pointer-events: none;
 }
@@ -5045,6 +5050,14 @@ button.tile:hover {
   position: absolute;
   z-index: 2;
 }
+.cs-title {
+  flex-basis: 100%;
+  color: var(--link);
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .cs-row {
   display: grid;
   gap: 2px;
@@ -5094,6 +5107,13 @@ button.tile:hover {
 }
 .count-anchor .count-stepper {
   max-width: none;
+}
+/* Phones: the 3D view's card docks under the view instead of covering it (G-070); the view keeps its size. */
+.count-dock-slot .count-stepper {
+  max-width: none;
+  border-radius: 0;
+  border-inline: 0;
+  box-shadow: none;
 }
 
 /* UI critique fixes (N82, 2026-10-26) --------------------------------------- */
@@ -5249,7 +5269,8 @@ button.tile:hover {
   .count-stepper.foldable .cs-fold:hover {
     background: var(--surface-2);
   }
-  .count-stepper.folded .cs-row {
+  .count-stepper.folded .cs-row,
+  .count-stepper.folded .cs-title {
     display: none;
   }
 }

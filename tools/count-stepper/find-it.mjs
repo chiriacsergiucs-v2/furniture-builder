@@ -1,4 +1,5 @@
-// Find-it acceptance for quick counts over the drawing (ADR-084, backlog N79) and over 3D (ADR-085, N80),
+// Find-it acceptance for quick counts over the drawing (ADR-084, backlog N79), over 3D (ADR-085, N80) and empty new
+// parts (ADR-089, N85),
 // run against a production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/count-stepper/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
@@ -30,6 +31,8 @@ for (const width of [1280, 390]) {
   const mode = (name) => page.getByRole('radio', { name });
   const front = page.locator('.view.front');
   const three = page.locator('.view.three');
+  // The 3D view's card: over the view on a desktop, docked under it on a phone (G-070).
+  const dock3 = phone ? page.locator('#count-dock') : three;
   const card = (where) => where.getByRole('group', { name: 'Quick counts' });
   const valueOf = (where, label) => card(where).getByRole('status', { name: label }).innerText();
   const box = async (l) => (await l.boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
@@ -65,7 +68,11 @@ for (const width of [1280, 390]) {
   const c = card(front);
   check(width, '"Quick counts" card in the drawing', await c.isVisible());
   for (const t of ['Vertical dividers', 'Horizontal dividers', 'Drawers'])
-    check(width, `card shows "${t}"`, await c.getByText(t, { exact: true }).isVisible());
+    check(
+      width,
+      `card shows "${t}"`,
+      await c.locator('.cs-label').getByText(t, { exact: true }).isVisible(),
+    );
   const cb = await box(c);
   const sel = await box(front.locator('.el-selection'));
   check(
@@ -116,6 +123,39 @@ for (const width of [1280, 390]) {
     (await valueOf(front, 'Vertical dividers')) === '0' &&
       (await front.locator('.el-space').count()) === bays,
   );
+  // The user's bug (ADR-089): a section with 1 vertical divider, + Horizontal dividers adds the divider only, the new
+  // part is Empty (no shelves).
+  const labels = () =>
+    front.locator('.el-space').evaluateAll((es) => es.map((e) => e.getAttribute('aria-label')));
+  const shelfSpaces = async () =>
+    (await labels()).filter((l) => /shel(f|ves) space/.test(l)).length;
+  const emptySpaces = async () =>
+    (await labels()).filter((l) => l.startsWith('Empty space')).length;
+  const panels = () => front.locator('.el-panel').count();
+  await c.getByRole('button', { name: 'More vertical dividers' }).click();
+  await page.waitForTimeout(200);
+  const [shelves0, empty0, panels0] = [await shelfSpaces(), await emptySpaces(), await panels()];
+  await c.getByRole('button', { name: 'More horizontal dividers' }).click();
+  await page.waitForTimeout(200);
+  check(
+    width,
+    'More horizontal dividers on a section with 1 vertical divider → one divider, one Empty part, no shelves',
+    (await valueOf(front, 'Horizontal dividers')) === '1' &&
+      (await shelfSpaces()) === shelves0 &&
+      (await emptySpaces()) === empty0 + 1 &&
+      (await panels()) === panels0 + 1,
+    `shelf spaces ${shelves0} → ${await shelfSpaces()}, empty ${empty0} → ${await emptySpaces()}, panels ${panels0} → ${await panels()}`,
+  );
+  await shot('empty-part');
+  await c.getByRole('button', { name: 'Fewer horizontal dividers' }).click();
+  await page.waitForTimeout(200);
+  await card(front).getByRole('button', { name: 'Fewer vertical dividers' }).click();
+  await page.waitForTimeout(200);
+  check(
+    width,
+    'Fewer horizontal, fewer vertical → one section again',
+    (await front.locator('.el-space').count()) === bays,
+  );
   check(width, 'no sideways scroll (drawing)', await noSideScroll());
 
   // 4. Tap the left door space: Shelves and Doors rows; + Doors → 2.
@@ -132,14 +172,21 @@ for (const width of [1280, 390]) {
   await mode(/Build & Preview/).click();
   await three.locator('canvas').waitFor({ state: 'visible', timeout: 20000 });
   await page.waitForTimeout(1500);
-  const c3 = card(three);
-  check(width, '"Quick counts" card over the 3D view', await c3.isVisible());
-  check(width, 'card is inside the 3D view', inside(await box(c3), await box(three)));
-  check(width, '3D card shows Doors 2', (await valueOf(three, 'Doors')) === '2');
+  const c3 = card(dock3);
+  check(width, '"Quick counts" card with the 3D view', await c3.isVisible());
+  if (phone) {
+    const v = await box(three);
+    check(
+      width,
+      'phone: the card is docked under the 3D view (G-070)',
+      (await box(c3)).y >= v.y + v.height - 1,
+    );
+  } else check(width, 'card is inside the 3D view', inside(await box(c3), await box(three)));
+  check(width, '3D card shows Doors 2', (await valueOf(dock3, 'Doors')) === '2');
   await shot('3d');
   await c3.getByRole('button', { name: 'Fewer doors' }).click();
   await page.waitForTimeout(250);
-  check(width, 'Fewer doors in 3D → 1', (await valueOf(three, 'Doors')) === '1');
+  check(width, 'Fewer doors in 3D → 1', (await valueOf(dock3, 'Doors')) === '1');
   check(width, 'no sideways scroll (3D)', await noSideScroll());
 
   check(width, 'no page errors', errors.length === 0, errors.join(' / '));

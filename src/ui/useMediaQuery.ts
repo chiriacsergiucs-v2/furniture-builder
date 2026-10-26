@@ -13,3 +13,6 @@ export function useMediaQuery(q: string) {
   }, [q]);
   return match;
 }
+
+/** The phone layout's breakpoint (ADR-079). */
+export const PHONE = '(max-width: 760px)';

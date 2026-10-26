@@ -175,11 +175,12 @@ described above. Audit and wireframes are in `docs/research/2026-10-24-ui-redesi
   tabs, counters, fields, menu rows, summaries, breadcrumbs); a mouse keeps `--control-h` 38. No text is set
   below `--fs-xs` (13 px): badges, chips, tags, step meta and the quick-counts card use it. The result tabs
   wrap to a second row rather than scroll, so Checks is always in sight.
-- _Follow-up (N83, user 2026-10-26)._
+- _Follow-up (N87, user 2026-10-26)._
   - _Yellow:_ one yellow action per screen: Create a new project (Projects), New piece (Catalog), Next / Done in
     dialogs, Download CSV (editor). Catalog variant cards use an outline **Open**; the current place tab is green.
-  - _Quick counts over 3D on a phone_ (G-058): a **Quick counts** button folds the card to one row; open by
-    default, the choice kept on this device (`fb:counts3d`). Wide screens show no fold button.
+  - _Quick counts on a phone_ (G-058): the card docked under the 3D view (G-070) has a **Quick counts** button
+    that folds it to one row; open by default, the choice kept on this device (`fb:counts3d`). Wide screens
+    show no fold button.
   - _Brand:_ the mark is a link to Projects; on a phone outside the editor the bar also reads **Furniture
     Builder**.
   - _Projects:_ **Clean up unused pictures** moved to ⋯ More › Files. Row buttons stay on the row's line; a
