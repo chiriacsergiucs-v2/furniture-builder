@@ -5,6 +5,7 @@
 - Depends on: none
 - Design: n/a
 - Backlog: none
+- Agreed: not yet
 
 <!--
 HOW TO USE THIS TEMPLATE
@@ -17,6 +18,8 @@ HOW TO USE THIS TEMPLATE
 - The design line takes a path or link to the design reference (e.g. docs/ui-design.md),
   or "n/a" for work with no screen.
 - The backlog line names the docs/backlog.md items (e.g. "N45"), or "none".
+- The agreed line stays "not yet" until the user agrees the decisions and answers the open questions;
+  then it becomes `YYYY-MM-DD "<the user's words>"`. An ADR cannot ship without it (retro 2026-10-26).
 - Optional: "- Acceptance: light" (only when the user asks) skips the find-it test; the backlog
   rows keep the gap `find-it pending (light, ADR-066)` until a catch-up run. Omitted or "full" = R3 (ADR-066).
 - One ADR = one unit that can be built without loading the rest of the plan.

@@ -94,7 +94,12 @@ Write each proposal as an exact diff or exact text, not as advice. Mark each one
   Status is `Proposed`, then `Applied (PR #N)` or `Not chosen (YYYY-MM-DD)`.
 
 - Commit the retro file and push it to the session's branch right away (the Stop hook flags untracked files).
-- Reply briefly with the top findings, then go straight to step 7 in the same turn.
+- Reply in this order, then go straight to step 7 in the same turn (user rule 2026-10-26):
+  1. **Discovered items:** every row of the _What went wrong_ table, numbered as in the file, one line each:
+     what happened, the user's words if any, and the cause. Don't stop at the top ones, and keep the items that
+     get no proposal ("not changed", with the reason).
+  2. **Proposals:** every proposal by number, with the item it prevents.
+  3. Then the multi-choice dialog (step 7).
 
 ## 7. Choose in a dialog, then apply and merge (user rule 2026-10-26)
 
