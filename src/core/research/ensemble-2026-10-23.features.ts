@@ -12,6 +12,7 @@ import {
   ENSEMBLE_ASSESSMENTS,
   ENSEMBLE_PRIORITIES,
 } from './ensemble-2026-10-23.assessment';
+import { APP_CHECKED, ENSEMBLE_APP_STATUS, ENSEMBLE_MERGES } from './ensemble-2026-10-23.app';
 import type { Assessment, Contradiction, ResearchFeature } from './types';
 
 export const NOT_EVALUATED = 'not evaluated';
@@ -93,6 +94,25 @@ function F(slug: string, d: Draft): ResearchFeature {
     findings: (d.findings ?? []).map(n),
     inferredFrom: d.inferredFrom?.map(n),
     ...(assessment ? { assessment } : {}),
+    ...appOf(slug),
+  };
+}
+/** The app's status and any curated merge (ADR-092). */
+function appOf(slug: string): Pick<ResearchFeature, 'app' | 'mergedInto' | 'mergeReason'> {
+  const st = ENSEMBLE_APP_STATUS[slug];
+  const mg = ENSEMBLE_MERGES[slug];
+  return {
+    ...(st
+      ? {
+          app: {
+            status: st[0],
+            evidence: st[1],
+            ...(st[2] ? { missing: st[2] } : {}),
+            checked: APP_CHECKED,
+          },
+        }
+      : {}),
+    ...(mg ? { mergedInto: id(mg[0]), mergeReason: mg[1] } : {}),
   };
 }
 const P1 = 'Functional ensemble creation (phase 1)',

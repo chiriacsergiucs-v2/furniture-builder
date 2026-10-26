@@ -67,6 +67,20 @@ for (const width of [1440, 1024, 390, 360]) {
     (await page.getByRole('heading', { name: 'Research priority' }).isVisible()) &&
       (await page.getByRole('button', { name: 'P0 foundational' }).isVisible()),
   );
+  // ADR-092: what the app has built, and the dashboard on what is left
+  check(
+    width,
+    'overview: "Built in this app" with verified / in progress / left to build',
+    (await page.getByRole('heading', { name: 'Built in this app' }).isVisible()) &&
+      (await page.getByRole('button', { name: /left to build/ }).isVisible()),
+  );
+  const leftRadio = page.getByRole('radio', { name: /^Left to build \(\d+\)$/ });
+  check(
+    width,
+    'assessment dashboard defaults to "Left to build (…)"',
+    (await leftRadio.getAttribute('aria-checked')) === 'true',
+  );
+  await page.getByRole('radio', { name: /^All features \(\d+\)$/ }).click();
   await page
     .getByRole('button', { name: /features with value 4\.5–5\.0 and Low complexity/ })
     .click();
@@ -82,7 +96,31 @@ for (const width of [1440, 1024, 390, 360]) {
   await page.getByRole('tab', { name: 'Features' }).click();
   await page.getByRole('button', { name: 'Clear filters' }).click();
   const rows = await page.locator('table.features-table tbody tr').count();
-  check(width, 'every feature listed (≥ 150 rows)', rows >= 150, `${rows} rows`);
+  check(width, 'every feature not merged is listed (≥ 115 rows)', rows >= 115, `${rows} rows`);
+  await page.getByLabel('Show merged').check();
+  const withMerged = await page.locator('table.features-table tbody tr').count();
+  check(width, '"Show merged" lists all 157', withMerged === 157, `${withMerged} rows`);
+  await page.getByLabel('Show merged').uncheck();
+  await page.getByLabel('Left to build only').check();
+  const leftRows = await page.locator('table.features-table tbody tr').count();
+  check(
+    width,
+    '"Left to build only" narrows the list',
+    leftRows > 0 && leftRows < rows,
+    `${leftRows} rows`,
+  );
+  await page.getByLabel('Left to build only').uncheck();
+  await page.getByLabel('Search features').fill('CNC');
+  await page.getByRole('button', { name: 'Manufacturing/CAD/CNC export' }).first().click();
+  await page.getByRole('heading', { name: /This app:/ }).waitFor();
+  check(
+    width,
+    'feature page: "This app: In Progress" with "Missing:"',
+    (await page.getByRole('heading', { name: /This app:\s*In Progress/ }).isVisible()) &&
+      (await page.getByText('DXF, STEP and CNC output').first().isVisible()),
+  );
+  await page.getByRole('button', { name: '← All features' }).click();
+  await page.getByLabel('Search features').fill('');
   await page.getByLabel('Search features').fill('disable snapping');
   check(
     width,

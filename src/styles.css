@@ -5351,3 +5351,32 @@ button.tile:hover {
     );
   }
 }
+
+/* Research: what the app has built (ADR-092) */
+.app-status {
+  display: grid;
+  gap: var(--s-1);
+}
+.app-status h3 {
+  margin: 0;
+}
+.app-status p {
+  margin: 0;
+}
+.chip.impl-verified,
+.chip.impl-implemented {
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+.chip.impl-in-progress,
+.chip.impl-planned {
+  background: var(--accent-soft);
+  color: var(--on-accent);
+}
+.chip.impl-not-started {
+  background: var(--surface-2);
+  color: var(--ink-2);
+}
+.app-summary .link {
+  font-weight: 600;
+}
