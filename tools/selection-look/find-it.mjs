@@ -111,8 +111,17 @@ for (const width of [1280, 390]) {
   else await page.getByRole('radio', { name: '3D', exact: true }).click();
   const canvas = three.locator('canvas');
   await canvas.waitFor({ state: 'visible', timeout: 20000 });
-  const simple = page.getByRole('radio', { name: 'Simple' });
-  if (await simple.isVisible().catch(() => false)) await simple.click();
+  // A view option: on a phone in Build & Preview the view controls sit behind "Options" (N82); the menu closes after.
+  const viewOption = async (name) => {
+    const radio = page.getByRole('radio', { name });
+    const menu = page.locator('details.view-options');
+    const inMenu = (await menu.count()) > 0;
+    if (inMenu && !(await menu.evaluate((d) => d.open))) await menu.locator('summary').click();
+    await radio.click();
+    if (inMenu) await page.keyboard.press('Escape');
+    await page.waitForTimeout(200);
+  };
+  await viewOption('Simple');
   await page.waitForTimeout(1500);
   const at = async (fx, fy) => {
     const r = await canvas.boundingBox();
@@ -158,7 +167,7 @@ for (const width of [1280, 390]) {
     );
   }
   // Realistic (G-063): the same selection, the same heading.
-  await page.getByRole('radio', { name: 'Realistic' }).click();
+  await viewOption('Realistic');
   await page.waitForTimeout(1500);
   await at(0.62, 0.6);
   check(
@@ -168,7 +177,7 @@ for (const width of [1280, 390]) {
     `${await said()} / ${await heading()}`,
   );
   await shot('3d-realistic');
-  await page.getByRole('radio', { name: 'Simple' }).click();
+  await viewOption('Simple');
   await shot('3d-whole');
   check(
     width,
