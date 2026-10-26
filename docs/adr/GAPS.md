@@ -751,7 +751,160 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Should ship-adr update the research app record of the feature an ADR names, or should the research page be re-checked on request only?
 - Suggested pick: ship-adr updates the record (closest to keeping 'implemented' marked; about +5 % work per shipped ADR, +100 % of the freshness value; estimates).
 
-### G-077: Catalog counts agreement unconfirmed
+### G-077: Free-angle rotation of project pieces
+
+- Status: Open
+- Origin: ADR-093 (2026-10-26, the user chose 90° steps)
+- Missing: Free-angle rotation of project pieces; pieces still turn in 90° steps (ADR-022/ADR-004 kept).
+- Request: "New adr to override the conflicts for 4 and make it ready" (2026-10-26)
+- Questions: Override ADR-022/ADR-004 for free angles later?
+- Suggested pick: Free angles with oriented-box checks (closest to the research; about 3x the work of ADR-093, +40 % of the feature's value; estimates).
+
+### G-078: Change height by dragging in 3D
+
+- Status: Open
+- Origin: ADR-093 (2026-10-26, the user chose floor plane only)
+- Missing: Changing a piece's height by dragging in 3D; height comes from placement.
+- Request: "New adr to override the conflicts for 4 and make it ready" (2026-10-26)
+- Questions: Add a vertical handle later?
+- Suggested pick: Keep height from placement (the user's answer); a handle only if asked.
+
+### G-079: Drop a catalog item into the 3D view
+
+- Status: Open
+- Origin: ADR-094 (2026-10-26, Claude: not asked for)
+- Missing: Dropping a catalog item into the 3D view.
+- Request: "New adr 6" (2026-10-26)
+- Questions: Drop into 3D too, once ADR-093 exists?
+- Suggested pick: Drop onto the 3D floor plane with ADR-093's projection (about +30 % of ADR-094's work, +15 % value; estimates).
+
+### G-080: Piece list open by default on desktop
+
+- Status: ADR-094
+- Origin: ADR-094 open question (2026-10-26)
+- Missing: Whether the piece list is open by default on desktop; default closed.
+- Request: "New adr 6" (2026-10-26)
+- Questions: Open by default on desktop?
+- Suggested pick: Closed, opened with Add a piece (keeps the plan wide; open by default costs the same).
+
+### G-081: Lock a piece's sizes and parameters
+
+- Status: Open
+- Origin: ADR-095 (2026-10-26, Claude: not asked for)
+- Missing: Locking a piece's sizes and other parameters (the research's locked parameters); the lock covers placement only.
+- Request: "New adr 8" (2026-10-26)
+- Questions: Lock sizes and boards too?
+- Suggested pick: Lock named parameters (closest to the research; about +40 % of ADR-095's work, +20 % value; estimates).
+
+### G-082: Delete a locked piece
+
+- Status: ADR-095
+- Origin: ADR-095 open question (2026-10-26)
+- Missing: Whether a locked piece may be deleted; default yes after confirmation.
+- Request: "New adr 8" (2026-10-26)
+- Questions: Allow deleting a locked piece?
+- Suggested pick: Yes with the usual confirmation (no extra work).
+
+### G-083: Restore an older version of a project
+
+- Status: Open
+- Origin: ADR-096 (2026-10-26, Claude: not asked for)
+- Missing: A history of older project versions to go back to (research: version recovery).
+- Request: "New adr 9" (2026-10-26)
+- Questions: Keep older versions of a project to restore?
+- Suggested pick: Keep the last N saves per project in IndexedDB with Restore (about 20 points; closest to the research's version recovery).
+
+### G-084: Newer-template notice in the Library
+
+- Status: ADR-096
+- Origin: ADR-096 open question (2026-10-26)
+- Missing: Whether saved designs in the Library show the newer-template notice; default yes.
+- Request: "New adr 9" (2026-10-26)
+- Questions: Show the notice in the Library too?
+- Suggested pick: Yes (about +10 % of ADR-096's work).
+
+### G-085: Mirror a selection of pieces
+
+- Status: Open
+- Origin: ADR-097 (2026-10-26, Claude: not asked for)
+- Missing: Mirroring a selection of pieces.
+- Request: "New adr 2" (2026-10-26)
+- Questions: Mirror a selection as Mirror the run does?
+- Suggested pick: Mirror the selection about its centre (reuses ADR-069; about +10 % of ADR-097's work).
+
+### G-086: First tap on a grouped piece
+
+- Status: ADR-097
+- Origin: ADR-097 open question (2026-10-26)
+- Missing: Whether the first tap on a grouped piece selects the group; default yes, second tap the piece.
+- Request: "New adr 2" (2026-10-26)
+- Questions: Group first or piece first?
+- Suggested pick: Group first, as ADR-083 does whole-to-part (no extra work).
+
+### G-087: Keep a piece's own edits when replacing it
+
+- Status: Open
+- Origin: ADR-098 (2026-10-26, Claude: not asked for)
+- Missing: Carrying the old piece's own edits onto the replacing design.
+- Request: "New adr 5" (2026-10-26)
+- Questions: Try to map edits (shelves, drawers) onto the new design?
+- Suggested pick: Not mapped; the confirmation says edits are replaced (mapping is unreliable across space trees).
+
+### G-088: Compatible width when replacing
+
+- Status: ADR-098
+- Origin: ADR-098 open question (2026-10-26)
+- Missing: Which width counts as compatible; default the same width, others behind a switch.
+- Request: "New adr 5" (2026-10-26)
+- Questions: Same width only, or a tolerance?
+- Suggested pick: Same width, others behind Show other widths (closest to the research's 600 to 600 example).
+
+### G-089: Align the heights of wall units
+
+- Status: Open
+- Origin: ADR-099 (2026-10-26, Claude: not asked for)
+- Missing: Aligning heights (top or bottom of wall units).
+- Request: "New adr 7" (2026-10-26)
+- Questions: Align tops/bottoms of wall units too?
+- Suggested pick: Add Top/Bottom align for wall units (about +15 % of ADR-099's work).
+
+### G-090: Distribute along the depth
+
+- Status: ADR-099
+- Origin: ADR-099 open question (2026-10-26)
+- Missing: Whether Distribute works along the depth too; default along the wall only.
+- Request: "New adr 7" (2026-10-26)
+- Questions: Distribute along the depth too?
+- Suggested pick: Along the wall only (pieces stand against walls; depth distribution is rare).
+
+### G-091: Persistent connections between pieces
+
+- Status: Open
+- Origin: ADR-100 (2026-10-26, Claude: not asked for)
+- Missing: Persistent connections between pieces (research: connection hierarchy / assembly graph); rules apply while snapping and in checks only.
+- Request: "New adr 3" (2026-10-26)
+- Questions: Store connections so rules hold after placing?
+- Suggested pick: Store connections as a graph (about 40 points; makes the engine 'prevent invalid connections' as the research states).
+
+### G-092: User-written compatibility rules
+
+- Status: Open
+- Origin: ADR-100 (2026-10-26, Claude: not asked for)
+- Missing: Rules the user writes or edits.
+- Request: "New adr 3" (2026-10-26)
+- Questions: Let users add or edit compatibility rules?
+- Suggested pick: Not yet; the rule list is shown read-only (editing rules needs a rule editor, about 25 points).
+
+### G-093: Tolerance for depth and height differences
+
+- Status: ADR-100
+- Origin: ADR-100 open question (2026-10-26)
+- Missing: Whether small depth or height differences pass without a warning; default any difference warns.
+- Request: "New adr 3" (2026-10-26)
+- Questions: Allow a tolerance (mm) before warning?
+- Suggested pick: Any difference warns until the user names a tolerance (never invent a physical value, ADR-010).
+
+### G-094: Catalog counts agreement unconfirmed
 
 - Status: Open
 - Origin: Gap re-check 2026-10-26 (G-059); agent found it
@@ -760,7 +913,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: None; it is a check.
 - Suggested pick: Add a find-it step that compares the catalog total with the sum of its category counts at 390 and 1280 px; fix if they differ. (estimate: effort +2%, value +3%)
 
-### G-078: Empty Brands list promises a cancelled feed
+### G-095: Empty Brands list promises a cancelled feed
 
 - Status: Open
 - Origin: Gap re-check 2026-10-26 (G-044); agent found it
@@ -769,7 +922,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Replace the text with how brand products get in today (import), or hide the Brands source while it is empty?
 - Suggested pick: Replace the text with what is true now: no brand products are bundled; import your own. Closest to the current app; no new feature. (estimate: effort +1%, value +3%)
 
-### G-079: Fastener notes point to a removed screen
+### G-096: Fastener notes point to a removed screen
 
 - Status: Open
 - Origin: Gap re-check 2026-10-26 (G-042); agent found it
@@ -778,7 +931,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: None; it is a wording bug. Fix together with the Romanian labels in G-042?
 - Suggested pick: Point both to the current path (Settings › Fasteners, or the piece's Size, boards and construction), and translate them in the Romanian CSV with G-042. (estimate: effort +1%, value +3%)
 
-### G-080: ADR-082 still Pending though built
+### G-097: ADR-082 still Pending though built
 
 - Status: Open
 - Origin: Gap re-check 2026-10-26; agent found it
