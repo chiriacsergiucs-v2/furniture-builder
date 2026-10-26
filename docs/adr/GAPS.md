@@ -1020,3 +1020,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Not a quote: ADR-095 'dragging it (Plan, 3D, arrow keys) ... refused'
 - Questions: Check the 3D drag refusal when ADR-093 ships?
 - Suggested pick: Yes: add a locked-piece step to ADR-093's find-it once both are on main (about +5 % of ADR-095's work).
+
+### G-107: Keep mine for saved single pieces
+
+- Status: Open
+- Origin: ADR-096 (2026-10-26, Claude: scoped while building)
+- Missing: Saved single pieces in the Library (Projects → Single pieces) show 'Template updated (revision a → b)', but Keep mine and Replace are offered on project pieces only; a saved single piece has no field to remember a kept revision.
+- Request: Answer to 'Show the notice in the Library too?': "Library too" (2026-10-26)
+- Questions: Should a saved single piece also offer Keep mine (a design-document field) and Replace with the new revision?
+- Suggested pick: Notice only, as built (the answer asked for the notice); Keep mine on saved designs needs an optional Design field (about +20 % of ADR-096's work, +10 % value; estimates).

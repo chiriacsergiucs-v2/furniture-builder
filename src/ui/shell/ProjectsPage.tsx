@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { newId } from '../../core/design';
 import { newProject } from '../../core/project';
 import {
@@ -18,7 +18,7 @@ import { Icon, type IconName } from '../icons';
 import { templateGlyph } from '../Templates';
 import { importFile } from './importFile';
 import { catalogFamilies } from '../../core/catalog';
-import { newerCount, templateStatus } from '../../core/templateRevision';
+import { newerCount, newerText, templateStatus } from '../../core/templateRevision';
 import { useLocalTemplates } from '../Catalog';
 import { updatedText } from '../TemplateRevision';
 import { useUi } from './uiStore';
@@ -50,15 +50,21 @@ export function ProjectsPage({
   const [pieces, setPieces] = useState<StoredDesign[]>([]);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   // Saved designs and projects say when a piece's template has a newer revision (ADR-096, "Library too").
+  // Worked out once per list (not per render); nothing until this device's templates are read.
   const locals = useLocalTemplates();
-  const pieceNotice = (d: StoredDesign['design']) => {
-    const s = templateStatus({ design: d }, catalogFamilies, locals);
-    return s.kind === 'newer' ? ` · ${updatedText(s)}` : '';
-  };
-  const projectNotice = (p: StoredProject['project']) => {
-    const n = newerCount(p.items, catalogFamilies, locals);
-    return n ? ` · ${n} ${n === 1 ? 'piece has' : 'pieces have'} a newer template` : '';
-  };
+  const notices = useMemo(() => {
+    const out = new Map<string, string>();
+    if (!locals) return out;
+    for (const r of pieces) {
+      const s = templateStatus({ design: r.design }, catalogFamilies, locals);
+      if (s.kind === 'newer') out.set(r.id, ` · ${updatedText(s)}`);
+    }
+    for (const r of projects ?? []) {
+      const n = newerCount(r.project.items, catalogFamilies, locals);
+      if (n) out.set(r.id, ` · ${newerText(n)}`);
+    }
+    return out;
+  }, [pieces, projects, locals]);
   const refresh = () => {
     listProjects()
       .then(setProjects)
@@ -241,7 +247,7 @@ export function ProjectsPage({
                       r,
                       'project',
                       'project',
-                      `${r.project.items.length} ${r.project.items.length === 1 ? 'piece' : 'pieces'} · edited ${when(r.updatedAt)}${projectNotice(r.project)}`,
+                      `${r.project.items.length} ${r.project.items.length === 1 ? 'piece' : 'pieces'} · edited ${when(r.updatedAt)}${notices.get(r.id) ?? ''}`,
                       () => openProject(r.project),
                     ),
                   )}
@@ -257,7 +263,7 @@ export function ProjectsPage({
                       r,
                       'piece',
                       templateGlyph(r.design.product.kind),
-                      `${KIND_TEXT[r.design.product.kind]} · edited ${when(r.updatedAt)}${pieceNotice(r.design)}`,
+                      `${KIND_TEXT[r.design.product.kind]} · edited ${when(r.updatedAt)}${notices.get(r.id) ?? ''}`,
                       () => load(r.design, { fromStorage: true }),
                     ),
                   )}

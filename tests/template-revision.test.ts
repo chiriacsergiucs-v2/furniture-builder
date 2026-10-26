@@ -1,7 +1,12 @@
 import 'fake-indexeddb/auto';
 import { describe, expect, it } from 'vitest';
 import { catalogFamilies, findFamily, insertable, insertVariant } from '../src/core/catalog';
-import { mergeCatalog, shadowOf, type LocalTemplate } from '../src/core/catalog/local';
+import {
+  localRevision,
+  mergeCatalog,
+  shadowOf,
+  type LocalTemplate,
+} from '../src/core/catalog/local';
 import { templates } from '../src/core/design';
 import {
   keepTemplate,
@@ -74,6 +79,22 @@ describe('templateStatus (ADR-096)', () => {
       revision: local.revision,
       latest: local.revision + 1,
     });
+  });
+
+  it('a device edit of a later shipped version counts on from it (one scale with catalogVersion)', () => {
+    const shipped = [{ id: fam.id, catalogVersion: 3 }];
+    const d = taken({ ...fam, catalogVersion: 3 });
+    expect(d.catalog?.origin?.revision).toBe(3);
+    // Copied from version 3 and saved once: revision 4, newer than the piece.
+    const local: LocalTemplate = { ...shadowOf({ ...fam, catalogVersion: 3 }), revision: 2 };
+    expect(localRevision(local)).toBe(4);
+    expect(templateStatus({ design: d }, shipped, [local])).toMatchObject({
+      kind: 'newer',
+      revision: 3,
+      latest: 4,
+    });
+    // A family of the user's own counts its saves from 1.
+    expect(localRevision({ revision: 3 })).toBe(3);
   });
 
   it('Keep mine hides the notice for that revision only', () => {

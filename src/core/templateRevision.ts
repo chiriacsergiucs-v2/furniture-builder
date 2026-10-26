@@ -3,11 +3,13 @@
  * their own copy (ADR-022, ADR-028): nothing here changes a piece; it only tells the user, who decides per piece.
  *
  * A piece records `catalog.origin.revision` when it is taken: the shipped family's `catalogVersion`, or the revision of
- * the template as edited on this device (ADR-034). The template's revision now is the edited one when this device has
- * one for that family, else the shipped `catalogVersion`.
+ * the template as edited on this device (ADR-034, `localRevision`, counted on from the shipped version it was taken
+ * from). The template's revision now is the edited one when this device has one for that family, else the shipped
+ * `catalogVersion`. A device edit that is deleted again falls back to the shipped version: pieces taken from the edit
+ * then count as up to date (their revision is not lower).
  */
 import type { CatalogFamily } from './catalog/types';
-import type { LocalTemplate } from './catalog/local';
+import { localRevision, type LocalTemplate } from './catalog/local';
 import type { Design } from './types';
 
 export type TemplateStatus =
@@ -27,7 +29,7 @@ export function latestRevision(
   locals: readonly LocalTemplate[],
 ): number | null {
   const local = locals.find((t) => t.family.id === catalogId);
-  if (local) return local.revision;
+  if (local) return localRevision(local);
   return families.find((f) => f.id === catalogId)?.catalogVersion ?? null;
 }
 
@@ -52,6 +54,10 @@ export function templateStatus(
     return { kind: 'current', name, revision: o.revision, latest, kept: true };
   return { kind: 'newer', name, revision: o.revision, latest };
 }
+
+/** "2 pieces have a newer template" (ADR-096); empty for none. */
+export const newerText = (n: number): string =>
+  n ? `${n} ${n === 1 ? 'piece has' : 'pieces have'} a newer template` : '';
 
 /** How many of these pieces have a newer template (the project panel's count). */
 export const newerCount = (

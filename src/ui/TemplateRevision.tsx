@@ -3,7 +3,12 @@ import { catalogFamilies, insertable, insertVariant } from '../core/catalog';
 import type { ViewFamily } from '../core/catalog/local';
 import type { ProjectItem } from '../core/project';
 import { designEdited } from '../core/replace';
-import { newerCount, templateStatus, type TemplateStatus } from '../core/templateRevision';
+import {
+  newerCount,
+  newerText,
+  templateStatus,
+  type TemplateStatus,
+} from '../core/templateRevision';
 import type { Design } from '../core/types';
 import { useDesign } from '../store/designStore';
 import { useCatalog, useLocalTemplates } from './Catalog';
@@ -11,10 +16,19 @@ import { askConfirm } from './Confirm';
 import { Icon } from './icons';
 import { useUi } from './shell/uiStore';
 
-/** The template status of a piece or saved design against the catalog and this device's templates (ADR-096). */
-export function useTemplateStatus(item: { design: Design; templateSeen?: number }): TemplateStatus {
+/**
+ * The template status of a piece or saved design against the catalog and this device's templates (ADR-096); null until
+ * this device's templates are read, so the notice never shows a shipped-only answer first.
+ */
+export function useTemplateStatus(item: {
+  design: Design;
+  templateSeen?: number;
+}): TemplateStatus | null {
   const locals = useLocalTemplates();
-  return useMemo(() => templateStatus(item, catalogFamilies, locals), [item, locals]);
+  return useMemo(
+    () => (locals ? templateStatus(item, catalogFamilies, locals) : null),
+    [item, locals],
+  );
 }
 
 /** "Template updated (revision 3 → 4)" — the notice text (ADR-096). */
@@ -37,6 +51,7 @@ export function TemplateNotice({ item }: { item: ProjectItem }) {
   const status = useTemplateStatus(item);
   const families = useCatalog();
   const keep = useDesign((s) => s.keepTemplate);
+  if (!status) return null;
   if (status.kind === 'own')
     return (
       <p className="hint template-line">
@@ -64,8 +79,9 @@ export function TemplateNotice({ item }: { item: ProjectItem }) {
   const source = originVariant(families, item.design);
   const replace = async () => {
     if (!source) return;
+    // By its stamp only: against the newer template every piece would differ, edited or not.
     if (
-      designEdited(item.design, families) &&
+      designEdited(item.design) &&
       !(await askConfirm(
         `“${item.design.name}” was edited after it was added. Replacing it with revision ${status.latest} replaces those edits; position, turn, quantity, placement, zones and boards stay.`,
         { confirmLabel: 'Replace' },
@@ -93,6 +109,11 @@ export function TemplateNotice({ item }: { item: ProjectItem }) {
           </button>
         )}
       </div>
+      {!source && (
+        <p className="hint">
+          The item it was taken from is no longer in the template; use Replace… to choose another.
+        </p>
+      )}
     </div>
   );
 }
@@ -100,12 +121,14 @@ export function TemplateNotice({ item }: { item: ProjectItem }) {
 /** "2 pieces have a newer template" in the project panel (ADR-096); nothing when none has. */
 export function NewerTemplates({ items }: { items: ProjectItem[] }) {
   const locals = useLocalTemplates();
-  const n = useMemo(() => newerCount(items, catalogFamilies, locals), [items, locals]);
+  const n = useMemo(
+    () => (locals ? newerCount(items, catalogFamilies, locals) : 0),
+    [items, locals],
+  );
   if (!n) return null;
   return (
     <p className="hint template-count" role="status">
-      <Icon name="info" className="sm" /> {n} {n === 1 ? 'piece has' : 'pieces have'} a newer
-      template. Select one to keep it or replace it.
+      <Icon name="info" className="sm" /> {newerText(n)}. Select one to keep it or replace it.
     </p>
   );
 }
