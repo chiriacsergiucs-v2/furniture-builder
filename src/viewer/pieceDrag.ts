@@ -32,6 +32,23 @@ const subscribeGhost = (l: () => void) => {
 /** The piece being dragged in 3D and where it would land, or null. */
 export const useGhost = () => useSyncExternalStore(subscribeGhost, () => ghostNow);
 
+// The Move button stays on until tapped off (ADR-093), also while the 3D view is hidden and shown again; this page
+// only, never saved.
+let moveNow = false;
+const moveListeners = new Set<() => void>();
+const subscribeMove = (l: () => void) => {
+  moveListeners.add(l);
+  return () => moveListeners.delete(l);
+};
+function setMove(on: boolean) {
+  moveNow = on;
+  moveListeners.forEach((f) => f());
+}
+/** Move mode on, and the switch for it. */
+export function useMoveMode(): [boolean, (on: boolean) => void] {
+  return [useSyncExternalStore(subscribeMove, () => moveNow), setMove];
+}
+
 interface Gesture {
   id: string;
   pointerId: number;

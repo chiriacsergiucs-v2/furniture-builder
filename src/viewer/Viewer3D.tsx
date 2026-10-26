@@ -45,7 +45,7 @@ import { SHADOW_CATCHER, setStage, useRendering } from './renderBridge';
 import { CountStepper } from '../ui/CountStepper';
 import { useSnap } from '../ui/useSnap';
 import { SNAP_RANGE } from '../core/snap';
-import { S, useGhost, usePieceDrag, type PieceGhost } from './pieceDrag';
+import { S, useGhost, useMoveMode, usePieceDrag, type PieceGhost } from './pieceDrag';
 import { landingY } from '../core/drag3d';
 import type { Box, MaterialImage, Panel } from '../core/types';
 
@@ -206,7 +206,7 @@ export default function Viewer3D() {
   // Placing project pieces from 3D (ADR-093).
   const inProject = view.mode === 'project';
   const hasPieces = useDesign((s) => inProject && !!s.projectModel?.pieces.length);
-  const [moveOn, setMoveOn] = useState(false);
+  const [moveOn, setMoveOn] = useMoveMode();
   // Placing a new piece or drawing the room on the Plan turns moving and turning off, as on the Plan (ADR-056, 059).
   const tapping = useDesign((s) => !!s.placingItemId || !!s.drawingRoom);
   const moving = moveOn && hasPieces && !exploded && !rendering && !tapping;

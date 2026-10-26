@@ -5400,10 +5400,12 @@ button.tile:hover {
 .three-tools .btn {
   background: var(--surface);
 }
-.three-tools .btn[aria-pressed='true'] {
+.three-tools .btn[aria-pressed='true'],
+.three-tools .btn.outline[aria-pressed='true']:hover:not(:disabled) {
   background: var(--primary-soft);
   border-color: var(--primary);
   color: var(--ink);
+}
 
 /* Gaps page (ADR-101) ----------------------------------------------------- */
 .gaps-page {

@@ -74,6 +74,17 @@ for (const width of [1440, 390]) {
       await sheet(true);
     }
     const field = page.getByLabel('From left', { exact: true }).first();
+    if (!(await field.isVisible().catch(() => false))) {
+      // Nothing selected yet: tap the piece on the plan, as a user would.
+      await sheet(false);
+      const onPlan = page
+        .getByRole('figure', { name: /Room plan, seen from above/ })
+        .getByRole('button', { name: /^Base cabinet.*, \d+ by \d+ mm$/ })
+        .first();
+      await click(onPlan);
+      await page.waitForTimeout(200);
+      await sheet(true);
+    }
     await field.scrollIntoViewIfNeeded().catch(() => {});
     const x = Number(await field.inputValue({ timeout: 3000 }).catch(() => 'NaN'));
     const turn =
@@ -131,6 +142,15 @@ for (const width of [1440, 390]) {
   await page.locator('main.work').waitFor({ state: 'visible' });
   await addBase();
   await to3d();
+  // The Simple look draws fast enough in a software-rendered browser (it is kept on this device).
+  {
+    const menu = page.locator('details.view-options');
+    const inMenu = (await menu.count()) > 0;
+    if (inMenu && !(await menu.evaluate((d) => d.open))) await menu.locator('summary').click();
+    await page.getByRole('radio', { name: 'Simple' }).click();
+    if (inMenu) await page.keyboard.press('Escape');
+    await page.waitForTimeout(800);
+  }
   check(width, 'the 3D view shows the project', await canvas.isVisible());
   check(width, 'a "Move" button is over the 3D view', await move.isVisible());
   await shot('start');
@@ -152,7 +172,7 @@ for (const width of [1440, 390]) {
   check(
     width,
     'the drag changed the piece’s "From left"',
-    moved.x !== start.x && Number.isFinite(moved.x),
+    moved.x !== start.x && Number.isFinite(moved.x) && Number.isFinite(start.x),
     `${start.x} → ${moved.x}`,
   );
   check(
