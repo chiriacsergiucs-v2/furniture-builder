@@ -75,14 +75,20 @@ export function useGrouping(): [Grouping, (g: Grouping) => void] {
   ];
 }
 
-/** Shipped families merged with the ones edited on this device. Computed outside any store selector. */
-export function useCatalog(): ViewFamily[] {
+/** The templates edited on this device (ADR-034), read once from storage; null until they are read. */
+export function useLocalTemplates(): LocalTemplate[] | null {
   const locals = useTemplates((s) => s.locals);
   const loaded = useTemplates((s) => s.loaded);
   useEffect(() => {
     if (!loaded) void useTemplates.getState().refresh();
   }, [loaded]);
-  return useMemo(() => mergeCatalog(catalogFamilies, locals), [locals]);
+  return loaded ? locals : null;
+}
+
+/** Shipped families merged with the ones edited on this device. Computed outside any store selector. */
+export function useCatalog(): ViewFamily[] {
+  const locals = useLocalTemplates();
+  return useMemo(() => mergeCatalog(catalogFamilies, locals ?? []), [locals]);
 }
 
 interface Group {

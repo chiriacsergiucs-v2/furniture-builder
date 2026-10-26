@@ -27,6 +27,7 @@ import {
   removeProjectItem,
   resolvePlacements,
   roomToPiece,
+  keepTemplate,
   setLocked,
   tapPosition,
   trySetGap,
@@ -166,6 +167,8 @@ interface State {
   setGap: (id: string, gap: number, moveRight: boolean) => string | null;
   /** Lock or unlock a piece's placement (ADR-095); one undo step. */
   setLocked: (id: string, on: boolean) => void;
+  /** "Keep mine" (ADR-096): hide the newer-template notice for this revision; one undo step. */
+  keepTemplate: (id: string, revision: number) => void;
   removeItem: (id: string) => void;
   /** Merge two touching cabinets into one (ADR-047); returns why not, or an empty list. */
   mergeItems: (a: string, b: string) => string[];
@@ -484,6 +487,12 @@ export const useDesign = create<State>((set, get) => {
       const p = get().project;
       if (!p) return;
       const next = setLocked(p, id, on);
+      if (next !== p) commitProject(next);
+    },
+    keepTemplate: (id, revision) => {
+      const p = get().project;
+      if (!p) return;
+      const next = keepTemplate(p, id, revision);
       if (next !== p) commitProject(next);
     },
     removeItem: (id) => {

@@ -153,8 +153,10 @@ export function replaceItem(project: Project, itemId: string, design: Design): P
   const used = JSON.stringify(d.product);
   const unused = new Set(defaults.filter((id): id is string => !!id && !used.includes(id)));
   if (unused.size) d = { ...d, materials: d.materials.filter((m) => !unused.has(m.id)) };
-  const { libraryId: _lib, ...keep } = it;
+  // A fresh copy: the kept template revision (ADR-096) no longer applies.
+  const { libraryId: _lib, templateSeen: _seen, ...keep } = it;
   void _lib;
+  void _seen;
   const next: ProjectItem = { ...keep, design: d };
   return {
     ...project,

@@ -816,7 +816,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-084: Newer-template notice in the Library
 
-- Status: ADR-096
+- Status: Done (ADR-096)
 - Origin: ADR-096 open question (2026-10-26)
 - Missing: Whether saved designs in the Library show the newer-template notice; default yes.
 - Request: "New adr 9" (2026-10-26)
@@ -1020,3 +1020,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Not a quote: ADR-095 'Nothing moves it for the user'
 - Questions: Should resizing a base keep a locked piece on it where it is (leaving its base), or refuse the resize?
 - Suggested pick: Refuse the resize with the reason, as a move of the base is refused (about +10 % of ADR-095's work).
+
+### G-107: Keep mine for saved single pieces
+
+- Status: Open
+- Origin: ADR-096 (2026-10-26, Claude: scoped while building)
+- Missing: Saved single pieces in the Library (Projects → Single pieces) show 'Template updated (revision a → b)', but Keep mine and Replace are offered on project pieces only; a saved single piece has no field to remember a kept revision.
+- Request: Answer to 'Show the notice in the Library too?': "Library too" (2026-10-26)
+- Questions: Should a saved single piece also offer Keep mine (a design-document field) and Replace with the new revision?
+- Suggested pick: Notice only, as built (the answer asked for the notice); Keep mine on saved designs needs an optional Design field (about +20 % of ADR-096's work, +10 % value; estimates).

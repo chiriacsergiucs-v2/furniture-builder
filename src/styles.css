@@ -5549,6 +5549,24 @@ button.tile:hover {
     margin-bottom: var(--s-2);
   }
 }
+
+/* Template revision (ADR-096): the actions sit under the notice text, across both columns. */
+.template-notice .split-actions {
+  grid-column: 1 / -1;
+}
+.template-line,
+.template-count {
+  margin: 0;
+}
+.template-notice {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+.template-notice .split-actions {
+  flex-wrap: wrap;
+}
+.template-notice .split-actions .btn {
+  flex: 1 1 auto;
+}
 /* The piece list beside the plan (ADR-094): a side panel next to the plan on a desktop, a bottom sheet on a phone
    that folds away while an item is dragged. Items lift on a press (mouse) or a 300 ms hold (touch). */
 .stage.with-pieces {

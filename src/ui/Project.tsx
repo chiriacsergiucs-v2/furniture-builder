@@ -78,6 +78,7 @@ import {
 } from './ProblemBanner';
 import { useProblem } from './problemStore';
 import { ReplaceButton } from './Replace';
+import { NewerTemplates, TemplateNotice } from './TemplateRevision';
 
 const FRONT_SIDE: Record<QuarterTurn, string> = {
   0: 'front faces you',
@@ -191,6 +192,7 @@ export function ProjectPanel({
               </span>
             )}
           </h3>
+          <TemplateNotice item={item} />
           <div className="split-actions">
             <button type="button" className="btn solid" onClick={() => edit(item.id)}>
               <Icon name="pencil" className="sm" />
@@ -323,6 +325,7 @@ export function ProjectPanel({
         </section>
       )}
       {model3d && <ModelFields item={model3d} />}
+      <NewerTemplates items={project.items} />
       {project.items.length === 0 ? (
         <p className="empty center">
           <Icon name="project" />

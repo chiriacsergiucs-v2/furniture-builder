@@ -82,6 +82,11 @@ export interface ProjectItem {
    * construction stay editable. Absent = not locked. Saved from project schemaVersion 6.
    */
   locked?: true;
+  /**
+   * The template revision the user chose to keep this piece at ("Keep mine", ADR-096): the newer-template notice stays
+   * hidden until the template moves past it. Absent = never dismissed. Saved from project schemaVersion 7.
+   */
+  templateSeen?: number;
 }
 
 /**
@@ -136,14 +141,15 @@ export const requestKey = (r: Pick<RunRequest, 'kind' | 'from'>) => `${r.kind}|$
  * Project document versions (ADR-011): new and edited projects are written at `PROJECT_SCHEMA`; every version in
  * `PROJECT_SCHEMAS` still loads unchanged. 2 = room pipes and outlets (ADR-072); 3 = clearance zones on items
  * (ADR-073); 4 = run requests and trim run parts (ADR-075); 5 = display-only 3D models (ADR-076); 6 = locked pieces
- * (ADR-095).
+ * (ADR-095); 7 = a kept template revision on items (ADR-096).
  */
-export const PROJECT_SCHEMA = 6 as const;
-export const PROJECT_SCHEMAS: readonly number[] = [1, 2, 3, 4, 5, PROJECT_SCHEMA];
-export type ProjectSchemaVersion = 1 | 2 | 3 | 4 | 5 | typeof PROJECT_SCHEMA;
+export const PROJECT_SCHEMA = 7 as const;
+export const PROJECT_SCHEMAS: readonly number[] = [1, 2, 3, 4, 5, 6, PROJECT_SCHEMA];
+export type ProjectSchemaVersion = 1 | 2 | 3 | 4 | 5 | 6 | typeof PROJECT_SCHEMA;
 const RUN_REQUESTS_SINCE = 4;
 const MODELS_SINCE = 5;
 const LOCKS_SINCE = 6;
+const TEMPLATE_SEEN_SINCE = 7;
 
 export interface Project {
   schemaVersion: ProjectSchemaVersion;
@@ -422,6 +428,20 @@ export function setLocked(project: Project, id: string, on: boolean): Project {
   void _l;
   const next: ProjectItem = on ? { ...rest, locked: true } : rest;
   return { ...project, items: project.items.map((i) => (i.id === id ? next : i)) };
+}
+
+/**
+ * Keep a piece as it is although its template has revision `revision` (ADR-096 "Keep mine"): the notice stays hidden
+ * until the template moves past it. Nothing about the piece itself changes.
+ */
+export function keepTemplate(project: Project, id: string, revision: number): Project {
+  const it = project.items.find((i) => i.id === id);
+  if (!it || !Number.isSafeInteger(revision) || revision < 1 || it.templateSeen === revision)
+    return project;
+  return {
+    ...project,
+    items: project.items.map((i) => (i.id === id ? { ...i, templateSeen: revision } : i)),
+  };
 }
 
 /** Remove a piece; pieces that sat on it stay where they are (their placement becomes free). */
@@ -1833,6 +1853,11 @@ export function validateProject(p: unknown): string[] {
       if (it.locked !== true) errs.push('Invalid item lock');
       else if ((p.schemaVersion as number) < LOCKS_SINCE)
         errs.push(`Locked pieces need project schemaVersion ${LOCKS_SINCE}`);
+    }
+    if (it.templateSeen !== undefined) {
+      if (!isInt(it.templateSeen, 1)) errs.push('Invalid kept template revision');
+      else if ((p.schemaVersion as number) < TEMPLATE_SEEN_SINCE)
+        errs.push(`Kept template revisions need project schemaVersion ${TEMPLATE_SEEN_SINCE}`);
     }
     const de = validateDesign(it.design);
     if (de.length) errs.push(`Item ${String(it.id)}: ${de[0]}`);
