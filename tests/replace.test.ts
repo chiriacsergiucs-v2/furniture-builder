@@ -196,6 +196,20 @@ describe('replaceOptions (ADR-098: same width; others behind a switch)', () => {
     expect(fitsPlacement(p.items[0], baseDoor())).toBe(false);
   });
 
+  it('a piece on another piece is offered same-width items only (G-102)', () => {
+    const p = run([wall600()]);
+    const above = {
+      ...p.items[0],
+      placement: { kind: 'above', baseId: 'x', gap: 0, offsetX: 0 },
+    } as ProjectItem;
+    const opts = replaceOptions(above, catalogFamilies);
+    expect(opts.length).toBeGreaterThan(0);
+    expect(opts.every((o) => o.sameWidth && o.w === 600)).toBe(true);
+    // Standing and wall-hung items both count, as the placement carries over.
+    expect(opts.some((o) => o.family.id === 'wall-cabinet')).toBe(true);
+    expect(opts.some((o) => o.family.id !== 'wall-cabinet')).toBe(true);
+  });
+
   it('an edited piece is told apart from a fresh copy', () => {
     const d = baseDoor();
     expect(designEdited(d, catalogFamilies)).toBe(false);

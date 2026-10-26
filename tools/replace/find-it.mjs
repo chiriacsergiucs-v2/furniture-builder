@@ -144,6 +144,30 @@ for (const width of [1440, 390]) {
   await page.waitForTimeout(200);
   await openSheet();
   check(width, 'Undo restores the old piece', (await pieceName()) === name0, await pieceName());
+
+  // 6. A piece on another piece gets same-width items only, with no "Show other widths" switch (G-102).
+  await click(card.getByRole('radio', { name: 'On a piece', exact: true }));
+  await page.waitForTimeout(150);
+  await click(replace);
+  await dlg.waitFor({ state: 'visible' });
+  const stackedSizes = await rows.locator('.sub.num').allTextContents();
+  check(
+    width,
+    'a stacked piece lists only 600 mm items',
+    stackedSizes.length > 0 && stackedSizes.every((s) => /^600 × /.test(s.trim())),
+    [...new Set(stackedSizes.map((s) => s.trim().split(' ')[0]))].join(', '),
+  );
+  check(
+    width,
+    'a stacked piece has no "Show other widths" switch',
+    (await dlg.getByLabel('Show other widths').count()) === 0,
+  );
+  await shot('stacked');
+  await dlg
+    .getByRole('button', { name: /close/i })
+    .first()
+    .click()
+    .catch(() => page.keyboard.press('Escape'));
   check(width, 'no horizontal scroll', await noSideScroll());
   check(width, 'no page errors', errors.length === 0, errors.join(' | '));
   await ctx.close();
