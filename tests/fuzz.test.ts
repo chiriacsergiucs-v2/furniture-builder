@@ -608,56 +608,67 @@ function checkFrame(d: Design): string[] {
   return probs;
 }
 
-it('random frames keep the frame invariants (seeded fuzz, ADR-038)', () => {
-  const N = Math.ceil(Number(process.env.FUZZ_N ?? 3000) / 2);
-  const found: Record<string, { n: number; probs: string[] }> = {};
-  let clean = 0;
-  for (let i = 0; i < N; i++) {
-    const d = genFrame();
-    const probs = checkFrame(d);
-    try {
-      if (!buildModel(d).diagnostics.some((x) => x.severity === 'error')) clean++;
-    } catch {
-      /* reported above */
-    }
-    for (const p of probs) {
-      const k = p.split(' ')[0];
-      if (process.env.FUZZ_DEBUG && !found[k]) console.log(JSON.stringify(d.product.params));
-      found[k] ??= { n: 0, probs };
-      found[k].n++;
-    }
-  }
-  expect(clean).toBeGreaterThan(N / 4);
-  expect(found).toEqual({});
-});
+/** A deep run (FUZZ_N=30000, CLAUDE.md) needs more than vitest's 5 s per test: about 4 ms per design. */
+const FUZZ_TIMEOUT = Math.max(5000, Number(process.env.FUZZ_N ?? 3000) * 4);
 
-it('random designs keep every geometric invariant (seeded fuzz)', () => {
-  const N = Number(process.env.FUZZ_N ?? 3000);
-  const found: Record<string, { n: number; ex: Design; probs: string[] }> = {};
-  let clean = 0;
-  for (let i = 0; i < N; i++) {
-    const d = i % 4 === 3 ? genDesk() : i % 8 === 5 ? genDiagonal() : genCabinet();
-    const probs = check(d);
-    const m = (() => {
+it(
+  'random frames keep the frame invariants (seeded fuzz, ADR-038)',
+  () => {
+    const N = Math.ceil(Number(process.env.FUZZ_N ?? 3000) / 2);
+    const found: Record<string, { n: number; probs: string[] }> = {};
+    let clean = 0;
+    for (let i = 0; i < N; i++) {
+      const d = genFrame();
+      const probs = checkFrame(d);
       try {
-        return buildModel(d);
+        if (!buildModel(d).diagnostics.some((x) => x.severity === 'error')) clean++;
       } catch {
-        return null;
+        /* reported above */
       }
-    })();
-    if (m && !m.diagnostics.some((x) => x.severity === 'error')) clean++;
-    for (const p of probs) {
-      const key = p.split(' ')[0];
-      if (process.env.FUZZ_DEBUG && !found[key]) console.log(key, JSON.stringify(d));
-      if (!found[key]) found[key] = { n: 0, ex: d, probs };
-      found[key].n++;
+      for (const p of probs) {
+        const k = p.split(' ')[0];
+        if (process.env.FUZZ_DEBUG && !found[k]) console.log(JSON.stringify(d.product.params));
+        found[k] ??= { n: 0, probs };
+        found[k].n++;
+      }
     }
-  }
-  // At least a third of random designs must be buildable, or the generator is not exercising geometry.
-  expect(clean).toBeGreaterThan(N / 3);
-  expect(
-    Object.fromEntries(
-      Object.entries(found).map(([k, v]) => [k, { n: v.n, probs: v.probs.slice(0, 3) }]),
-    ),
-  ).toEqual({});
-});
+    expect(clean).toBeGreaterThan(N / 4);
+    expect(found).toEqual({});
+  },
+  FUZZ_TIMEOUT,
+);
+
+it(
+  'random designs keep every geometric invariant (seeded fuzz)',
+  () => {
+    const N = Number(process.env.FUZZ_N ?? 3000);
+    const found: Record<string, { n: number; ex: Design; probs: string[] }> = {};
+    let clean = 0;
+    for (let i = 0; i < N; i++) {
+      const d = i % 4 === 3 ? genDesk() : i % 8 === 5 ? genDiagonal() : genCabinet();
+      const probs = check(d);
+      const m = (() => {
+        try {
+          return buildModel(d);
+        } catch {
+          return null;
+        }
+      })();
+      if (m && !m.diagnostics.some((x) => x.severity === 'error')) clean++;
+      for (const p of probs) {
+        const key = p.split(' ')[0];
+        if (process.env.FUZZ_DEBUG && !found[key]) console.log(key, JSON.stringify(d));
+        if (!found[key]) found[key] = { n: 0, ex: d, probs };
+        found[key].n++;
+      }
+    }
+    // At least a third of random designs must be buildable, or the generator is not exercising geometry.
+    expect(clean).toBeGreaterThan(N / 3);
+    expect(
+      Object.fromEntries(
+        Object.entries(found).map(([k, v]) => [k, { n: v.n, probs: v.probs.slice(0, 3) }]),
+      ),
+    ).toEqual({});
+  },
+  FUZZ_TIMEOUT,
+);
