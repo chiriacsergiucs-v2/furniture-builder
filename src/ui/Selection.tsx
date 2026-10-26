@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { pieceName } from '../core/project';
 import { groupOf, sameIds } from '../core/selection';
 import { useDesign } from '../store/designStore';
 import { askConfirm } from './Confirm';
@@ -22,6 +23,8 @@ export function SelectionCard() {
   const [msg, setMsg] = useState<{ for: string; text: string | null }>({ for: '', text: null });
   if (!project || ids.length < 2) return null;
   const key = ids.join(',');
+  // Align and distribute act on the pieces (3D models are display only, ADR-076), to the first selected piece.
+  const pieceIds = ids.filter((id) => project.items.some((i) => i.id === id));
   const g = groupOf(project, ids[0]);
   const isGroup = !!g && sameIds(g.itemIds, ids);
   const say = (text: string | null) => setMsg({ for: key, text });
@@ -93,39 +96,39 @@ export function SelectionCard() {
         </button>
       </div>
       {/* Align to the first selected piece and distribute along the wall (ADR-099); each is one undo step. */}
-      <div className="align-actions" role="group" aria-label="Align to the first selected piece">
-        <span className="hint">
-          Align to {project.items.find((i) => i.id === ids[0])?.design.name}:
-        </span>
-        {(
-          [
-            ['left', 'Left'],
-            ['centre', 'Centre'],
-            ['right', 'Right'],
-            ['back', 'Back'],
-            ['front', 'Front'],
-          ] as const
-        ).map(([how, label]) => (
-          <button
-            key={how}
-            type="button"
-            className="btn outline sm"
-            aria-label={`Align ${label.toLowerCase()}`}
-            onClick={() => say(align(how) || null)}
-          >
-            {label}
-          </button>
-        ))}
-        {ids.length >= 3 && (
-          <button
-            type="button"
-            className="btn outline sm"
-            onClick={() => say(distribute() || null)}
-          >
-            Distribute evenly
-          </button>
-        )}
-      </div>
+      {pieceIds.length >= 2 && (
+        <div className="align-actions" role="group" aria-label="Align to the first selected piece">
+          <span className="hint">Align to {pieceName(project, pieceIds[0])}:</span>
+          {(
+            [
+              ['left', 'Left'],
+              ['centre', 'Centre'],
+              ['right', 'Right'],
+              ['back', 'Back'],
+              ['front', 'Front'],
+            ] as const
+          ).map(([how, label]) => (
+            <button
+              key={how}
+              type="button"
+              className="btn outline sm"
+              aria-label={`Align ${label.toLowerCase()}`}
+              onClick={() => say(align(how) || null)}
+            >
+              {label}
+            </button>
+          ))}
+          {pieceIds.length >= 3 && (
+            <button
+              type="button"
+              className="btn outline sm"
+              onClick={() => say(distribute() || null)}
+            >
+              Distribute evenly
+            </button>
+          )}
+        </div>
+      )}
       {msg.for === key && msg.text && (
         <p className="hint" role="status">
           {msg.text}

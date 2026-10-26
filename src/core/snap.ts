@@ -387,14 +387,17 @@ export function snapDrag(
     });
   }
 
-  // Centre to centre along the wall (ADR-099): a piece sharing depth with the dropped one (a wall unit over a base
-  // unit) offers its centre line, within the same range, ranked as the others (distance, then kind, then id).
+  // Centre to centre along the wall (ADR-099): a piece above or below the dropped one at the same depth (a wall unit
+  // over a base unit) offers its centre line, within the same range, ranked as the others (distance, then kind, then
+  // id). Pieces at the same height are left out: centred on each other they would stand in each other's place. It is
+  // an alignment, not a join, so the join rules (ADR-100) do not apply to it.
   const here = at();
   for (const n of others) {
     const b = n.bounds;
     if (overlap({ lo: here.z, hi: here.z + here.d }, { lo: b.z, hi: b.z + b.d }) <= 0) continue;
-    // Whole mm: a half-mm difference of centres rounds up.
-    const d = Math.round((2 * b.x + b.w - 2 * here.x - here.w) / 2);
+    if (overlap({ lo: here.y, hi: here.y + here.h }, { lo: b.y, hi: b.y + b.h }) > 0) continue;
+    // Whole mm, as Align Centre: a half mm rounds down.
+    const d = b.x + Math.floor((b.w - here.w) / 2) - here.x;
     if (Math.abs(d) > range) continue;
     cands.push({
       kind: 'centre',

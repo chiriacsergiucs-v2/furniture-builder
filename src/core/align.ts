@@ -5,8 +5,8 @@
  * equal; leftover millimetres go one each to the leftmost gaps (ADR-003). Locked pieces (ADR-095) do not move, and the
  * result says which; placement rules (ADR-031) apply to each piece.
  */
+import { movedTo } from './selection';
 import {
-  liftOff,
   moveBlocked,
   placedBounds,
   resolvePlacements,
@@ -21,8 +21,10 @@ export interface ArrangeResult {
   project: Project;
   /** The pieces that stayed where they are and why ("Tall 600 is locked …"). */
   skipped: string[];
-  /** Distribute: the gaps between neighbours after it, left to right (mm). */
+  /** Distribute: the gaps between neighbours after it, left to right (mm), as they now are. */
   gaps?: number[];
+  /** Why nothing was done (distribute over pieces at different heights). */
+  refused?: string;
 }
 
 /**
@@ -39,6 +41,11 @@ function shiftEach(project: Project, moves: Map<string, { dx: number; dz: number
     if (why) skipped.push(why);
     else go.set(id, m);
   }
+  // A selected piece that already lines up stays put, also when it rests on a base that moves (it would follow it).
+  for (const id of moves.keys()) {
+    const pl = project.items.find((i) => i.id === id)?.placement;
+    if (!go.has(id) && pl?.kind === 'above' && go.has(pl.baseId)) go.set(id, { dx: 0, dz: 0 });
+  }
   const items = project.items.map((it): ProjectItem => {
     const m = go.get(it.id);
     if (!m) return it;
@@ -49,14 +56,7 @@ function shiftEach(project: Project, moves: Map<string, { dx: number; dz: number
       if (m.dz === base.dz)
         return { ...it, placement: { ...pl, offsetX: pl.offsetX + m.dx - base.dx } };
     }
-    const placement = liftOff(it);
-    const { placement: _old, ...rest } = it;
-    void _old;
-    return {
-      ...rest,
-      position: { ...it.position, x: it.position.x + m.dx, z: it.position.z + m.dz },
-      ...(placement ? { placement } : {}),
-    };
+    return movedTo(it, { ...it.position, x: it.position.x + m.dx, z: it.position.z + m.dz });
   });
   return { project: { ...project, items }, skipped };
 }
@@ -96,12 +96,22 @@ export function alignItems(project: Project, ids: readonly string[], how: AlignH
  * Equal gaps between neighbours along the wall (ADR-099, user answer "Along the wall only"): with three or more pieces,
  * sorted by their left edge, the leftmost and rightmost stay and the others move so every gap is the same. The free
  * length splits exactly: leftover millimetres go one each to the leftmost gaps (ADR-003). A locked piece stays, named
- * in `skipped`; the gaps returned are the planned ones. Fewer than three known pieces: the same project.
+ * in `skipped`; the gaps returned are the ones the pieces now have. The pieces must stand in one row (their heights
+ * overlap): wall units over base units, or a piece on another, are refused with the reason. Fewer than three known
+ * pieces: the same project.
  */
 export function distributeItems(project: Project, ids: readonly string[]): ArrangeResult {
   const bounds = boundsOf(project);
   const known = ids.filter((id) => bounds.has(id));
   if (known.length < 3) return { project, skipped: [] };
+  const rows = (a: Box, b: Box) => Math.min(a.y + a.h, b.y + b.h) > Math.max(a.y, b.y);
+  if (!known.every((a) => known.every((b) => rows(bounds.get(a)!, bounds.get(b)!))))
+    return {
+      project,
+      skipped: [],
+      refused:
+        'Distribute works on pieces in one row along the wall; select the base units or the wall units, not both.',
+    };
   const order = [...known].sort(
     (a, b) => bounds.get(a)!.x - bounds.get(b)!.x || known.indexOf(a) - known.indexOf(b),
   );
@@ -120,9 +130,13 @@ export function distributeItems(project: Project, ids: readonly string[]): Arran
     moves.set(order[i], { dx: x - bounds.get(order[i])!.x, dz: 0 });
     x += widths[i];
   }
-  return { ...shiftEach(project, moves), gaps };
+  const res = shiftEach(project, moves);
+  // The gaps as they now are (a locked piece may have kept its place).
+  const now = boundsOf(res.project);
+  const after = order.map((id) => now.get(id)!);
+  return { ...res, gaps: after.slice(1).map((b, i) => b.x - (after[i].x + after[i].w)) };
 }
 
 /** What the UI says about an align or distribute that left pieces where they were (ADR-095), or ''. */
-export const skippedText = (r: Pick<ArrangeResult, 'skipped'>): string =>
-  r.skipped.length ? `Not moved: ${r.skipped.join(' ')}` : '';
+export const skippedText = (r: Pick<ArrangeResult, 'skipped' | 'refused'>): string =>
+  r.refused ?? (r.skipped.length ? `Not moved: ${r.skipped.join(' ')}` : '');

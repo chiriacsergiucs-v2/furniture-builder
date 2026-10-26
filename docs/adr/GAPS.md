@@ -1047,3 +1047,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: New adr 2 (2026-10-26): tapping the same spot again selects the next piece under the pointer
 - Questions: Over stacked pieces on the plan, should a further tap cycle (as built) or open the piece, with cycling on another gesture?
 - Suggested pick: Cycle as built (the ADR's words); opening stays one tap away in the front view (no extra work).
+
+### G-110: Distribute across rows and centre-snap rules
+
+- Status: Open
+- Origin: ADR-099 (2026-10-26, Claude: defaulted while building)
+- Missing: Distribute evenly over pieces at different heights (wall units and base units together, or a piece on another) is refused with the reason instead of spacing each row; centre snapping is offered only between pieces above and below each other (never at the same height) and the ADR-100 join rules do not apply to it (an alignment, not a join).
+- Request: New adr 7 (2026-10-26): Distribute evenly (three or more selected pieces, along the wall)
+- Questions: With a mixed selection, distribute each row on its own instead of refusing? Should the join rules also limit centre snapping?
+- Suggested pick: Distribute each row on its own (closest to 'tidy runs in one tap'; about +15 % of ADR-099's work, +10 % value; estimates); keep the join rules for joins only.

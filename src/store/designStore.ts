@@ -711,6 +711,7 @@ export const useDesign = create<State>((rawSet, get) => {
       if (!p) return '';
       const res = distributeItems(p, get().selectedItemIds);
       if (res.project.items.some((it, i) => it !== p.items[i])) commitProject(res.project);
+      // The gaps as they now are, also when a locked piece kept its place.
       const gaps = res.gaps ? `Gaps now ${res.gaps.join(' · ')} mm.` : '';
       return [gaps, skippedText(res)].filter(Boolean).join(' ');
     },

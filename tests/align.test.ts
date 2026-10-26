@@ -125,6 +125,66 @@ describe('distribute evenly along the wall (ADR-099)', () => {
   });
 });
 
+describe('align and distribute with stacked pieces (ADR-099 review)', () => {
+  it('a selected piece already in line stays put although its base moves', () => {
+    let p = at(
+      ['base-door', 'base-door', 'wall-cabinet'],
+      [
+        [0, 0],
+        [100, 0],
+        [0, 0],
+      ],
+    );
+    const [ref, base, top] = p.items;
+    // The top stands on the second base, pulled back so it already lines up with the first piece's left edge.
+    const off = placedBounds(ref).x - placedBounds(base).x;
+    p = resolvePlacements({
+      ...p,
+      items: [
+        ref,
+        base,
+        { ...top, placement: { kind: 'above', baseId: base.id, gap: 0, offsetX: off } },
+      ],
+    });
+    expect(b(p)[2].x).toBe(b(p)[0].x);
+    const out = b(alignItems(p, [ref.id, base.id, top.id], 'left').project);
+    expect(out.map((x) => x.x)).toEqual([b(p)[0].x, b(p)[0].x, b(p)[0].x]);
+  });
+
+  it('distribute refuses pieces at different heights (one row only) and reports gaps as they are', () => {
+    const p = at(
+      ['base-door', 'base-door', 'wall-cabinet'],
+      [
+        [0, 0],
+        [100, 0],
+        [300, 0],
+      ],
+    );
+    const r = distributeItems(
+      p,
+      p.items.map((i) => i.id),
+    );
+    expect(r.project).toBe(p);
+    expect(skippedText(r)).toMatch(/one row/);
+    const q = at(
+      ['base-door', 'base-door', 'base-door', 'base-door'],
+      [
+        [0, 0],
+        [100, 0],
+        [100, 0],
+        [700, 0],
+      ],
+    );
+    const locked = setLocked(q, q.items[1].id, true);
+    const res = distributeItems(
+      locked,
+      locked.items.map((i) => i.id),
+    );
+    const out = b(res.project);
+    expect(res.gaps).toEqual([0, 1, 2].map((i) => out[i + 1].x - (out[i].x + out[i].w)));
+  });
+});
+
 describe('centre snapping (ADR-099)', () => {
   /** A base cabinet and a wall cabinet hung at its depth, the wall cabinet `off` mm right of centred. */
   function wallOverBase(off: number): Project {
