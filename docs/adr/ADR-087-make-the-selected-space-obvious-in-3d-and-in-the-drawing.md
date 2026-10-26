@@ -27,23 +27,24 @@ which for the whole piece is the interior — so the card and the highlight can 
 
 ## Decision
 
-1. **Bug first.** Reproduce the user's 4 steps (3D and drawing) in a failing test; fix so the highlight is always
-   derived from the same `selectedId` the card acts on. One pure helper in `src/core/selectPath.ts`,
-   `selectionBox(model, sel)`, returns the box to highlight (the piece bounds for `null`); 3D, the drawing and the
-   card all use it.
+1. **Bug first.** Reproduce the user's 4 steps (3D and drawing) in a test; make the highlight come from the same
+   `selectedId` the card acts on. One pure helper in `src/core/selectPath.ts`, `selectionBox(model, sel)`, returns
+   the box to highlight (the piece bounds for `null`); 3D, the drawing and the card all use it. `inSelection(box,
+panel)` says whether a panel belongs to it (its front-view centre is inside).
 2. **One clear look** for the selected space, from these five; the user picked **A** (G-058):
    - **A — Outline and fade the rest.** A thick green box outline round the selected space; every panel outside it
-     drawn at ~35 % opacity. Whole piece: outline round the piece, nothing faded.
-   - **B — Tint everything inside.** Every panel inside the selected space (its dividers, shelves, drawers, children)
-     tinted strong green; the rest untouched. Whole piece: all panels tinted plus the outline.
-   - **C — Glass volume.** A translucent green box (≈20 % opacity) filling the selected space's inside, with a
-     solid edge. Whole piece: the volume round the whole piece.
-   - **D — Corner brackets and a label.** Four L-brackets at the selected box's front corners and a chip
-     "Middle bay · 427 × 864" pinned to it. Whole piece: brackets on the piece, chip "Whole cabinet".
-   - **E — Nested level outlines.** Each level of the path is outlined: ancestors thin and dashed, the selected
-     level thick and solid, its children thin. Shows depth as well as the selection.
-3. The quick-count card's heading names what it acts on ("Whole cabinet", "Divided space", "Shelves"), so the card
-   and the highlight say the same thing.
+     drawn at ~30 % opacity. Whole piece: outline round the piece, nothing faded.
+   - **B — Tint everything inside.** Every panel inside the selected space tinted strong green; the rest untouched.
+   - **C — Glass volume.** A translucent green box filling the selected space's inside, with a solid edge.
+   - **D — Corner brackets and a label.** L-brackets at the box's front corners and a chip "Middle bay · 427 × 864".
+   - **E — Nested level outlines.** Ancestors thin and dashed, the selected level thick, its children thin.
+3. A in 3D (Simple look of a single piece): a 3.5 px green outline 3 mm outside the box, drawn over everything
+   (also through doors); panels outside faded to 28 %; the selected space's own panels keep green edges; the old
+   45 % tint is gone there. Not drawn in the exploded view (panels are away from their place). In the drawing
+   (G-059): the outline is thicker and everything outside it is faded to 30 %.
+4. Reproduction (2026-10-26, production build, 1280, 923 and 390 px, single piece and a piece opened from a
+   project): the 3rd tap always selected the whole piece, and the card acted on it. The confusing part was the look:
+   the whole piece tinted every panel lightly, so the small part's panels still looked highlighted. A fixes that.
 
 ## Alternatives considered
 
@@ -52,26 +53,30 @@ which for the whole piece is the interior — so the card and the highlight can 
 
 ## Scope
 
-- In scope: the bug fix with a regression test, the chosen design in Simple 3D, the card heading, find-it checks.
-- Out of scope: the design in Realistic mode beyond today's tint (G-060). Pictures (ADR-068) stay without selection.
+- In scope: the regression test, design A in Simple 3D and in the drawing, find-it checks.
+- Out of scope: the design in Realistic mode beyond today's tint (G-060); a heading on the card naming the
+  selection, cut because it made the card cover the tap point on phones (G-065); the card covering much of the phone
+  3D view, from ADR-085 (G-066). Pictures (ADR-068) stay without selection.
 
 ## Consequences
 
 - Positive: one source for "what is selected" across 3D, drawing and card; the whole piece looks different from a
   part of it.
-- Negative / risks: A and C need transparency, which can sort badly in three.js; E is the busiest on a phone.
+- Negative / risks: faded panels are transparent, so the outline is drawn last in the transparent pass (else the
+  faded panels covered it), and a faded material is remounted (`transparent` does not switch on a live material).
 - Harder to change later: nothing structural; the look lives in `Viewer3D.tsx` and `Elevation.tsx`.
 
 ## Done when
 
-- [ ] Store test of the user's steps: tap piece, tap middle, tap again → `selectedId` is `null`, `selectionBox` is
-      the piece bounds and the card's subject is the whole piece; fails on today's code if the bug is in the model.
-- [ ] 3D draws the chosen design for a leaf, a divided space and the whole piece (unit test on the box/panel set it
-      uses).
-- [ ] The card heading names the selection ("Whole cabinet" after the third tap).
-- [ ] `tools/drill-select/find-it.mjs` at 390 and 1280 px: the user's 4 steps in 3D; after step 3 the card says
-      "Whole cabinet" and its dividers `+` adds a bay to the cabinet.
-- [ ] lint, format:check, typecheck, test, build, docs:check pass.
+- [x] Store test of the user's steps: tap piece, tap a bay, tap again → `selectedId` is `null`, `selectionBox` is the
+      piece bounds, the card's subject is the interior and no panel is outside the outline
+      (`tests/select-path.test.ts`).
+- [x] A bay keeps its own panels and the rest falls outside; a divided space keeps its divider and children (same
+      file).
+- [x] `tools/selection-look/find-it.mjs` at 1280 and 390 px: the user's steps in the drawing ("Whole cabinet",
+      outline round the piece, nothing faded → "Shelves", bay outlined, rest faded → "Whole cabinet" again, and
+      "More vertical dividers" then acts on the cabinet) and in 3D.
+- [x] lint, format:check, typecheck, test, build, docs:check pass.
 
 ## Answered questions
 

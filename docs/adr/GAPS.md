@@ -608,3 +608,21 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Apply 'new part starts empty' to every divider add (quick-count vertical and horizontal, Side by side, Stacked, Parts +), or only the horizontal quick count?
 - Suggested pick: Every way of dividing, so the same action never behaves two ways (estimate +5 % work)
 - Answer: User 2026-10-26: "Yes" — every way of dividing adds empty parts; moved into ADR-089.
+
+### G-065: Quick-count card heading naming the selection
+
+- Status: Open
+- Origin: ADR-087, 2026-10-26, cut while building (Claude)
+- Missing: A heading on the quick-count card naming what it acts on (e.g. Whole cabinet)
+- Request: The highlight of the selected item need to be more obvious, suggest 5 designs that can be applied so it is clearer which part of the piece is selected, or if it is entirely selected
+- Questions: Worth a heading if the card must then be made smaller on phones, or is the outline enough?
+- Suggested pick: Outline only (built); revisit with a smaller phone card: a heading made the card cover the tap point in the 390 px 3D view (estimate)
+
+### G-066: Quick-count card covers much of the phone 3D view
+
+- Status: Open
+- Origin: ADR-087, 2026-10-26, out of scope (seen while testing, from ADR-085)
+- Missing: A placement or size of the quick-count card that leaves the piece visible in the short 390 px 3D view
+- Request: The highlight of the selected item need to be more obvious, suggest 5 designs that can be applied so it is clearer which part of the piece is selected, or if it is entirely selected
+- Questions: Smaller card on phones, a card docked under the 3D view, or a taller 3D view?
+- Suggested pick: Dock the card under the 3D view on phones, so the piece and its outline stay in sight (estimate +10 % work)

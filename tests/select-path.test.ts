@@ -3,7 +3,8 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { buildModel } from '../src/core/build';
 import { splitSpace, templates } from '../src/core/design';
 import { makeItem, newProject, placeItem, type Project } from '../src/core/project';
-import { drill, hitToMm, pathAt } from '../src/core/selectPath';
+import { countSubject } from '../src/core/counts';
+import { drill, hitToMm, inSelection, pathAt, selectionBox } from '../src/core/selectPath';
 import type { Design, Space, SpaceOpening } from '../src/core/types';
 import { useDesign } from '../src/store/designStore';
 
@@ -139,5 +140,52 @@ describe('store: tapping a project piece (ADR-083)', () => {
     st().tapItem(id);
     expect(st().editingItemId).toBe(id);
     expect(st().selectedId).toBeNull();
+  });
+});
+
+describe('the selection look follows the selection (ADR-087)', () => {
+  const st = useDesign.getState;
+  beforeEach(() => st().load(piece().design));
+
+  it("the user's steps: piece, bay, tap again → the whole piece is outlined and the card acts on it", () => {
+    const p = piece();
+    st().load(p.design);
+    const [x, y] = centre(opening(p.design, p.left));
+    st().tapPiece(x, y);
+    st().tapPiece(x, y);
+    expect(st().selectedId).toBe(p.left);
+    expect(selectionBox(st().model, st().selectedId)).toEqual(opening(p.design, p.left).box);
+    st().tapPiece(x, y);
+    expect(st().selectedId).toBeNull();
+    const model = st().model;
+    expect(selectionBox(model, st().selectedId)).toEqual(model.bounds);
+    // The card acts on the piece's interior, and nothing is faded: every panel is inside the outline.
+    const product = st().design.product;
+    expect(countSubject(product, st().selectedId)).toBe(
+      product.kind === 'cabinet' ? product.params.interior.id : undefined,
+    );
+    expect(model.panels.every((q) => inSelection(model.bounds, q.box))).toBe(true);
+  });
+
+  it('a bay keeps its own shelves and fronts; a divided space keeps its divider and children', () => {
+    const p = piece();
+    const model = buildModel(p.design);
+    const inBox = (id: string) =>
+      new Set(
+        model.panels
+          .filter((q) => inSelection(selectionBox(model, id)!, q.box))
+          .map((q) => q.nodeId),
+      );
+    const left = inBox(p.left);
+    expect(left.has(p.left)).toBe(true);
+    expect(left.has(p.middle)).toBe(false);
+    expect(left.has(p.bottom)).toBe(false);
+    const middle = inBox(p.middle);
+    expect([p.middle, p.bottom].every((id) => middle.has(id))).toBe(true);
+    expect(middle.has(p.left)).toBe(false);
+    // Carcass sides, top and bottom sit outside any bay.
+    const sides = model.panels.filter((q) => q.role === 'side');
+    expect(sides.some((q) => inSelection(selectionBox(model, p.left)!, q.box))).toBe(false);
+    expect(selectionBox(model, undefined)).toBeUndefined();
   });
 });

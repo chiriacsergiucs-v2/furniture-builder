@@ -1,5 +1,5 @@
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
-import { ContactShadows, Edges, OrbitControls } from '@react-three/drei';
+import { ContactShadows, Edges, Line, OrbitControls } from '@react-three/drei';
 import { useCallback, useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
 import {
   BoxGeometry,
@@ -26,7 +26,7 @@ import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { explode } from '../core/explode';
-import { hitToMm } from '../core/selectPath';
+import { hitToMm, inSelection, selectionBox } from '../core/selectPath';
 import { roomDisplayBoxes } from '../core/room';
 import { inPlaneAxes, union } from '../core/geometry';
 import { aabbOf } from '../core/shape';
@@ -231,6 +231,44 @@ export default function Viewer3D() {
   );
 }
 
+/** How much of a panel outside the selected space shows (ADR-087). */
+const FADED = 0.28;
+
+/**
+ * The selected space's or piece's box as a thick outline (ADR-087), drawn over the panels so it shows through the
+ * doors, a few mm outside the box so it does not hide in the panel edges.
+ */
+function SelectionOutline({ box }: { box: Box }) {
+  const points = useMemo(() => {
+    const o = 3;
+    const [x0, x1] = [(box.x - o) * S, (box.x + box.w + o) * S];
+    const [y0, y1] = [(box.y - o) * S, (box.y + box.h + o) * S];
+    const [z0, z1] = [(box.z - o) * S, (box.z + box.d + o) * S];
+    const c = (x: number, y: number, z: number) => [x, y, z] as [number, number, number];
+    const corners = [x0, x1].flatMap((x) =>
+      [y0, y1].flatMap((y) => [z0, z1].map((z) => c(x, y, z))),
+    );
+    // Index = 4·x + 2·y + z; an edge joins corners that differ in one bit.
+    const segs: [number, number, number][] = [];
+    for (let i = 0; i < 8; i++)
+      for (const bit of [1, 2, 4]) if (!(i & bit)) segs.push(corners[i], corners[i | bit]);
+    return segs;
+  }, [box]);
+  return (
+    <Line
+      points={points}
+      segments
+      color={SELECT}
+      lineWidth={3.5}
+      depthTest={false}
+      // Drawn last, after the transparent (faded) panels, so nothing covers it.
+      transparent
+      renderOrder={10}
+      raycast={() => null}
+    />
+  );
+}
+
 /**
  * Quick counts (ADR-085): the same − N + card as over the drawing, a DOM overlay beside the canvas, placed each frame
  * right above the front top edge of the selected space and kept inside the view. The viewer itself still only
@@ -239,14 +277,8 @@ export default function Viewer3D() {
 function CountsAnchor({ place }: { place: (at: { x: number; y: number } | null) => void }) {
   const selectedId = useDesign((s) => s.selectedId);
   const model = useDesign((s) => s.model);
-  // The whole piece (ADR-083 `null`) anchors on the piece's bounds.
-  const box = useMemo(
-    () =>
-      selectedId === null
-        ? model.bounds
-        : model.spaces.find((o) => o.nodeId === selectedId && o.view !== 'side')?.box,
-    [model, selectedId],
-  );
+  // The whole piece (ADR-083 `null`) anchors on the piece's bounds; the same box the selection outline draws (ADR-087).
+  const box = useMemo(() => selectionBox(model, selectedId), [model, selectedId]);
   const v = useMemo(() => new Vector3(), []);
   useFrame(({ camera, size }) => {
     if (!box) return place(null);
@@ -560,9 +592,22 @@ function Panels({
   );
   const textures = useTextures(useImageUrls(imageKey(materials)));
   const hl = useMemo(() => new Set(highlight), [highlight]);
+  // Selection look A (ADR-087): a thick outline round the selected space or piece, everything outside it faded.
+  // Simple look of a single piece only; Realistic and projects keep the tint (G-060).
+  const outline =
+    view.mode !== 'project' && !plain && !realistic
+      ? selectionBox(view.model, selectedSpace)
+      : undefined;
 
   return (
     <group>
+      {outline && !exploded && (
+        // Keyed by the box: drei's segment line does not pick up changed points.
+        <SelectionOutline
+          key={`${outline.x},${outline.y},${outline.w},${outline.h}`}
+          box={outline}
+        />
+      )}
       {panels
         .filter((p) => showFronts || !FRONT.has(p.role))
         .map((p) => {
@@ -574,13 +619,17 @@ function Panels({
               ? !!selectedId && p.nodeId.startsWith(`${selectedId}:`)
               : selectedId === null || p.nodeId === selectedId);
           const lit = !plain && hl.has(p.id);
+          const faded = !!outline && !inSelection(outline, (built.get(p.id) ?? p).box);
+          // With the outline, only the selected space's own panels are marked (green edges), and no tint.
+          const tinted = selected && !outline;
+          const own = !!outline && p.nodeId === selectedId;
           // A picture replaces the plain colour; without a readable one the plain colour stays (ADR-048).
           const img = images.get(p.materialId);
           const map = img ? textures.get(img.id) : undefined;
           const base = map ? '#ffffff' : (colors.get(p.materialId) ?? '#cccccc');
           const color = lit
             ? HIGHLIGHT
-            : selected
+            : tinted
               ? new Color(base).lerp(new Color(SELECT), 0.45).getStyle()
               : base;
           const side = p.shape?.kind === 'profile' ? DoubleSide : FrontSide;
@@ -600,19 +649,22 @@ function Panels({
           ) : (
             <>
               <meshStandardMaterial
-                key={map ? map.uuid : 'plain'}
+                key={`${map ? map.uuid : 'plain'}${faded ? ':faded' : ''}`}
                 map={map ?? null}
                 color={color}
                 roughness={0.78}
                 metalness={0}
-                transparent={p.role === 'back'}
-                opacity={p.role === 'back' ? 0.92 : 1}
+                transparent={p.role === 'back' || faded}
+                opacity={faded ? FADED : p.role === 'back' ? 0.92 : 1}
+                depthWrite={!faded}
                 side={side}
               />
               <Edges
                 threshold={15}
-                color={selected ? SELECT : '#3b403c'}
-                lineWidth={selected ? 1.6 : 1}
+                color={tinted || own ? SELECT : '#3b403c'}
+                lineWidth={tinted || own ? 1.6 : 1}
+                transparent={faded}
+                opacity={faded ? FADED : 1}
               />
             </>
           );

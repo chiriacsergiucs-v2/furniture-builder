@@ -1565,10 +1565,14 @@ td.note {
   fill: var(--link);
   font-weight: 600;
 }
+/* Outside the selected space or piece (ADR-087). */
+.elevation .faded {
+  opacity: 0.3;
+}
 .el-selection {
   fill: none;
   stroke: var(--link);
-  stroke-width: 2.5;
+  stroke-width: 3.5;
   vector-effect: non-scaling-stroke;
   pointer-events: none;
 }
