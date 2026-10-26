@@ -43,15 +43,15 @@ new finding).
 
 ## Proposals
 
-| #   | Finding | Fix (target file)                                                                                                                           | Status              |
-| --- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
-| 1   | #2      | `next-adr` skill, new first step: `git fetch origin` and merge `origin/main` before building and again before every push                    | Applied (PR #PRNUM) |
-| 2   | #3      | `ship-adr` skill step 2: the `review` skill has run on the change and every finding is fixed or answered                                    | Applied (PR #PRNUM) |
-| 3   | #4      | `add-tests` skill › Rules: no assertion behind an `if` that can be false; test names match what the body sets up and asserts                | Applied (PR #PRNUM) |
-| 4   | #4      | `add-tests` skill › Rules: find-it scripts wait for content loaded after navigation (`locator.waitFor`), never bare `isVisible()`           | Applied (PR #PRNUM) |
-| 5   | #5      | `CLAUDE.md` › Process: status replies are a short Done / Not done list; "recheck" = fresh check of `main`, CI, deploy, open ADRs, live site | Applied (PR #PRNUM) |
-| 6   | #6      | `.gitignore`: `.claude/worktrees/`                                                                                                          | Applied (PR #PRNUM) |
-| 7   | #7      | `docs/architecture.md`: agent sessions cannot reach the Pages URL or ikea.com; deploys are confirmed by run id only                         | Applied (PR #PRNUM) |
+| #   | Finding | Fix (target file)                                                                                                                           | Status           |
+| --- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| 1   | #2      | `next-adr` skill, new first step: `git fetch origin` and merge `origin/main` before building and again before every push                    | Applied (PR #68) |
+| 2   | #3      | `ship-adr` skill step 2: the `review` skill has run on the change and every finding is fixed or answered                                    | Applied (PR #68) |
+| 3   | #4      | `add-tests` skill › Rules: no assertion behind an `if` that can be false; test names match what the body sets up and asserts                | Applied (PR #68) |
+| 4   | #4      | `add-tests` skill › Rules: find-it scripts wait for content loaded after navigation (`locator.waitFor`), never bare `isVisible()`           | Applied (PR #68) |
+| 5   | #5      | `CLAUDE.md` › Process: status replies are a short Done / Not done list; "recheck" = fresh check of `main`, CI, deploy, open ADRs, live site | Applied (PR #68) |
+| 6   | #6      | `.gitignore`: `.claude/worktrees/`                                                                                                          | Applied (PR #68) |
+| 7   | #7      | `docs/architecture.md`: agent sessions cannot reach the Pages URL or ikea.com; deploys are confirmed by run id only                         | Applied (PR #68) |
 
 Exact text:
 
