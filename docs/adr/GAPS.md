@@ -878,3 +878,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: "New adr 3" (2026-10-26)
 - Questions: Allow a tolerance (mm) before warning?
 - Suggested pick: Any difference warns until the user names a tolerance (never invent a physical value, ADR-010).
+
+### G-094: Stop hook not yet observed in a live session
+
+- Status: Open
+- Origin: ADR-082, 2026-10-26; the Stop hook was tested with sample inputs only (Done when), not observed in a live Claude Code session
+- Missing: Evidence that the Stop hook in .claude/settings.json fires and asks once in a real Claude Code session (a worker subagent gets SubagentStop, not Stop, so it could not observe it)
+- Request: “How to configure to have it always up to date? Hook?”
+- Questions: Should someone end a real top-level session with a reply that lists skipped items and confirm the hook asks once?
+- Suggested pick: Yes: one manual check in the next top-level session that ends with a Skipped this iteration list (estimate: effort +2%, value +10% of the hook's request)
