@@ -66,6 +66,15 @@ function free(it: ProjectItem, position: ProjectItem['position']): ProjectItem {
 }
 
 /**
+ * The item moved to `position` on the plan as a drag moves it (ADR-065): a piece resting on another is lifted off
+ * (hung on the wall at its height, or standing on the floor); any other placement stays.
+ */
+export function movedTo(it: ProjectItem, position: ProjectItem['position']): ProjectItem {
+  const placement = liftOff(it);
+  return { ...free(it, position), ...(placement ? { placement } : {}) };
+}
+
+/**
  * Move every selected piece by the same offset, rounded to whole `step`s as a drag is (ADR-065, ADR-097). A piece
  * resting on a selected piece follows it; one resting on a piece outside the selection is lifted off, as a drag does.
  * Refused with the reason when a piece is locked or carries a locked piece outside the selection (ADR-095). The same
@@ -94,11 +103,7 @@ export function moveItems(
       ...project,
       items: project.items.map((it) => {
         if (!moving.has(it.id) || carried(it, moving)) return it;
-        const placement = liftOff(it);
-        return {
-          ...free(it, { ...it.position, x: it.position.x + mx, z: it.position.z + mz }),
-          ...(placement ? { placement } : {}),
-        };
+        return movedTo(it, { ...it.position, x: it.position.x + mx, z: it.position.z + mz });
       }),
     },
   };
@@ -138,12 +143,7 @@ export function turnSelection(
     const b = bounds.get(it.id)!;
     const at = turned(b);
     if (carried(it, moving)) return { ...free(it, { x: at.x, y: b.y, z: at.z }), rotationY };
-    const placement = liftOff(it);
-    return {
-      ...free(it, { ...it.position, x: at.x, z: at.z }),
-      rotationY,
-      ...(placement ? { placement } : {}),
-    };
+    return { ...movedTo(it, { ...it.position, x: at.x, z: at.z }), rotationY };
   });
   return { project: { ...project, items: out } };
 }

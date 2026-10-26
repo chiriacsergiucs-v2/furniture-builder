@@ -5710,3 +5710,16 @@ button.tile:hover {
   flex: 1;
   min-width: 0;
 }
+
+/* Align and distribute (ADR-099): a wrapping row under the selection's actions. */
+.align-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  margin-top: var(--s-2);
+}
+.align-actions .hint {
+  flex-basis: 100%;
+  margin: 0;
+}

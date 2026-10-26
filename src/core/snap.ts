@@ -195,7 +195,8 @@ export interface Snapped {
   label: string;
   /** Allowed differences, named: "depth 560 vs 600". */
   notes: string[];
-  kind: 'corner' | 'wall' | 'side';
+  /** `centre`: the piece's centre line on a neighbour's (ADR-099). */
+  kind: 'corner' | 'wall' | 'side' | 'centre';
 }
 
 export interface SnapResult {
@@ -236,7 +237,7 @@ const shifted = (b: Box, dx: number, dz: number): Box => ({ ...b, x: b.x + dx, z
 const spanOf = (b: Box, face: FaceConnector) =>
   face.axis === 'x' ? { lo: b.z, hi: b.z + b.d } : { lo: b.x, hi: b.x + b.w };
 
-const RANK: Record<Cand['kind'], number> = { corner: 0, wall: 1, side: 2 };
+const RANK: Record<Cand['kind'], number> = { corner: 0, wall: 1, side: 2, centre: 3 };
 const overlap = (a: { lo: number; hi: number }, b: { lo: number; hi: number }) =>
   Math.min(a.hi, b.hi) - Math.max(a.lo, b.lo);
 const distOf = (m: Move) => Math.abs(m.x ?? 0) + Math.abs(m.z ?? 0);
@@ -247,7 +248,7 @@ const wallName = (w: number) => (w < 0 ? 'the back wall' : `wall ${w + 1}`);
 /**
  * Where a dragged piece lands with snapping on (ADR-070). `dx` / `dz` is the pointer's move in plan mm, as for
  * `dragPosition`. Candidates within `range` of the stepped drop are ranked by distance, then kind (corner, wall,
- * neighbour side), then id; when the best one fixes one axis only, the best candidate on the other axis is added.
+ * neighbour side, neighbour centre — ADR-099), then id; when the best one fixes one axis only, the best candidate on the other axis is added.
  * Pieces resting on the dragged piece follow it and are not neighbours. Never throws; never clamps.
  */
 export function snapDrag(
@@ -383,6 +384,28 @@ export function snapDrag(
       label: `Into the corner of walls ${c.walls[0] + 1} and ${c.walls[1] + 1}`,
       notes: [],
       walls: c.walls,
+    });
+  }
+
+  // Centre to centre along the wall (ADR-099): a piece above or below the dropped one at the same depth (a wall unit
+  // over a base unit) offers its centre line, within the same range, ranked as the others (distance, then kind, then
+  // id). Pieces at the same height are left out: centred on each other they would stand in each other's place. It is
+  // an alignment, not a join, so the join rules (ADR-100) do not apply to it.
+  const here = at();
+  for (const n of others) {
+    const b = n.bounds;
+    if (overlap({ lo: here.z, hi: here.z + here.d }, { lo: b.z, hi: b.z + b.d }) <= 0) continue;
+    if (overlap({ lo: here.y, hi: here.y + here.h }, { lo: b.y, hi: b.y + b.h }) > 0) continue;
+    // Whole mm, as Align Centre: a half mm rounds down.
+    const d = b.x + Math.floor((b.w - here.w) / 2) - here.x;
+    if (Math.abs(d) > range) continue;
+    cands.push({
+      kind: 'centre',
+      move: { x: d },
+      dist: Math.abs(d),
+      key: `centre:${n.item.id}`,
+      label: `Centre to centre with ${n.item.design.name}`,
+      notes: [],
     });
   }
 
