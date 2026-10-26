@@ -5404,4 +5404,103 @@ button.tile:hover {
   background: var(--primary-soft);
   border-color: var(--primary);
   color: var(--ink);
+
+/* Gaps page (ADR-101) ----------------------------------------------------- */
+.gaps-page {
+  grid-template-columns: minmax(0, 1fr);
+}
+.gaps-page > *,
+.gaps-page section {
+  min-width: 0;
+}
+.gaps-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  align-items: center;
+}
+.gaps-toolbar .search {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+.gaps-toolbar .search input {
+  width: 100%;
+}
+.gaps-toolbar .search:focus-within {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+}
+.gaps-page .chip.filter {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  padding: 4px 12px;
+  min-height: 32px;
+  cursor: pointer;
+}
+.gaps-page .chip.filter[aria-pressed='true'] {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+.gaps-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s-2);
+}
+.gaps-page .gap summary {
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.gaps-page .gap summary .chip {
+  margin-left: 4px;
+}
+.gaps-page .pairs {
+  margin-top: var(--s-2);
+}
+.gaps-page .pairs dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.gap-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  align-items: flex-end;
+  margin-top: var(--s-3);
+}
+.gap-actions .btn[aria-pressed='true'] {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+.gap-note {
+  display: grid;
+  gap: 4px;
+  flex: 1 1 220px;
+  font-size: var(--fs-sm);
+  color: var(--ink-2);
+}
+.gaps-page textarea {
+  font: inherit;
+  width: 100%;
+  box-sizing: border-box;
+}
+.gaps-decisions {
+  display: grid;
+  gap: var(--s-2);
+}
+.gaps-decisions h2 {
+  margin: 0;
+  font-size: var(--fs-lg);
+}
+@media (max-width: 520px) {
+  .gaps-page .pairs {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .gaps-page .pairs dd {
+    margin-bottom: var(--s-2);
+  }
 }

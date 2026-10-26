@@ -197,6 +197,13 @@ described above. Audit and wireframes are in `docs/research/2026-10-24-ui-redesi
   - _3D:_ the viewer mounts only while the editor is the page shown (ADR-014).
 - _Output actions._ **Download CSV** (the one primary button) and **Print** sit on top of the Parts tab, and
   are still disabled while there are errors (ADR-008).
+- _Gaps page (ADR-101)._ ⋯ More › **Gaps** opens `#gaps`, built like Feature Research: heading **Gaps**, a hint
+  saying the ledger is the one built into this version of the app, **Back to the editor**, status tiles (Open,
+  Acknowledged, Moved to an ADR, Done, Marked by you), a search box, status filter chips (Open on by default) and
+  **Copy decisions (N)**, the page's one yellow button. Each gap is a card that expands to every ledger field, with
+  **Acknowledge** and **Make ADR** (pressed state, tap again to clear) and **Your note** for Open and ADR gaps.
+  Copy decisions shows the text in **Decisions to paste to Claude** and copies it when the browser allows. At
+  ≤ 520 px the field list stacks label over value.
 
 ## 5. Rollout
 
