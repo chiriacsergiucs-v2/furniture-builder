@@ -44,6 +44,7 @@ import {
   type ResearchMark,
   type Selection,
 } from '../core/research/types';
+import { APP_CHECKED } from '../core/research/ensemble-2026-10-23.app';
 import { useResearch, type MarkPatch } from '../store/researchStore';
 import { askConfirm } from './Confirm';
 import { Icon } from './icons';
@@ -511,7 +512,7 @@ function AppSummary({ ctx }: { ctx: Ctx }) {
           <button type="button" className="link" onClick={() => go('features', { left: true })}>
             <strong className="num">{left}</strong> left to build
           </button>
-          . From the backlog and ADRs (checked 2026-10-26); a status you set yourself wins.{' '}
+          . From the backlog and ADRs (checked {APP_CHECKED}); a status you set yourself wins.{' '}
           <button
             type="button"
             className="link"
@@ -1260,9 +1261,10 @@ function FeatureDetail({ ctx, f, onBack }: { ctx: Ctx; f: ViewFeature; onBack: (
   const others = useMemo(
     () =>
       [...view.features.values()]
-        .filter((x) => x.id !== f.id)
+        // Not itself merged, and nothing merged into this one may move under another (no chains).
+        .filter((x) => x.id !== f.id && !mergedOf(x, marks))
         .sort((a, b) => a.name.localeCompare(b.name)),
-    [view, f.id],
+    [view, f.id, marks],
   );
   return (
     <article className="feature-detail" aria-label={f.name}>
@@ -1314,7 +1316,12 @@ function FeatureDetail({ ctx, f, onBack }: { ctx: Ctx; f: ViewFeature; onBack: (
             <button
               type="button"
               className="link"
-              onClick={() => setMarks([f.id], { mergedInto: f.mergedInto ? UNMERGED : undefined })}
+              onClick={() =>
+                // Undo the user's own merge first (back to the app's merge, if any), else undo the app's merge.
+                setMarks([f.id], {
+                  mergedInto: m.mergedInto && m.mergedInto !== UNMERGED ? undefined : UNMERGED,
+                })
+              }
             >
               Undo merge
             </button>
@@ -1360,7 +1367,7 @@ function FeatureDetail({ ctx, f, onBack }: { ctx: Ctx; f: ViewFeature; onBack: (
           </>
         ) : (
           <p className="hint">
-            Nothing in the backlog or the ADRs builds this yet (checked 2026-10-26).
+            Nothing in the backlog or the ADRs builds this yet (checked {APP_CHECKED}).
           </p>
         )}
       </section>

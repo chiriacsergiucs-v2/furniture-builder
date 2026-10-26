@@ -14,11 +14,18 @@ type Status = [status: Implementation, evidence: string, missing?: string];
 export const APP_CHECKED = '2026-10-26';
 
 export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
-  // Verify batch (N48: 11 features found in the app, find-it 40/40)
   'cross-family': ['verified', 'N48: one project mixes a base cabinet, a wardrobe and a daybed.'],
-  'precise-numeric': ['verified', 'N48, N13: From left kept at 4321 mm; Gap to … on the left.'],
-  'numeric-transform': ['verified', 'N48, N13: positions and gaps typed in whole mm.'],
-  'sync-2d-3d': ['verified', 'N48, N11, N76: plan, front and 3D views of the same project model.'],
+  'precise-numeric': [
+    'in-progress',
+    'N48, N13: From left kept at 4321 mm; Gap to … on the left.',
+    'typed rotation (turns are 90° steps, N64)',
+  ],
+  'numeric-transform': [
+    'in-progress',
+    'N48, N13: positions and gaps typed in whole mm.',
+    'typed rotation (turns are 90° steps, N64)',
+  ],
+  'sync-2d-3d': ['verified', 'N48, N11: plan, front and 3D views of the same project model.'],
   'ortho-plan': [
     'verified',
     'N48, N11: the plan is a top projection of the built model (ADR-004).',
@@ -45,11 +52,10 @@ export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
     'verified',
     'N48, N02, N04: printed project sheets and project Parts CSV.',
   ],
-  // Shipped ADRs that name the research row
   'transactional-undo': [
-    'verified',
+    'in-progress',
     'N46 (ADR-051): undo/redo for project changes, one step per drag (N60).',
-    'connections and groups (not built) are not undoable yet',
+    'undo of snap, unsnap, group and compound operations (connections and groups are not built)',
   ],
   'fillers-plinths-panels': [
     'verified',
@@ -65,9 +71,9 @@ export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
     'N26, N70 (ADR-075): one run worktop, or a worktop over chosen adjacent units.',
   ],
   'generated-parts': [
-    'verified',
+    'in-progress',
     'N26, N49, N56, N70: run parts derived from the pieces they span.',
-    'shared supports, sinks and handles are not generated',
+    'shared supports, sinks and handles as generated parts',
   ],
   'generated-part-mechanism': [
     'verified',
@@ -129,8 +135,9 @@ export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
   ],
   'floor-plan-2d': ['verified', 'N54 (ADR-059): draw axis-aligned L / U / alcove outlines.'],
   'ensemble-templates': [
-    'verified',
+    'in-progress',
     'N55 (ADR-060): save a project as a reusable project template.',
+    'templates keep copies, not item references, connections or generated-part recipes',
   ],
   'paste-ensemble': [
     'in-progress',
@@ -138,7 +145,7 @@ export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
     'inserting a saved template into an open project',
   ],
   'live-price': [
-    'verified',
+    'in-progress',
     "N57 (ADR-062): estimate from the user's own price list.",
     'live supplier prices (N58, ADR-063 deferred)',
   ],
@@ -207,7 +214,7 @@ export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
   'resize-generic': ['verified', "N86 (ADR-090): change a piece's size from the project editor."],
   'mobile-parity': [
     'verified',
-    'F18, N82: one phone-first app, same features on phone and desktop.',
+    'F18, N48: one responsive app; the N48 checks pass at 1440 and 375 px.',
   ],
   'precision-tooltips': [
     'verified',
@@ -218,7 +225,6 @@ export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
     'N65, N66, N56: snapping can be switched off, repairs are previewed, run-part removals are kept.',
   ],
   revalidation: ['verified', 'N04, N66: project checks rerun after every change.'],
-  // Built, tested, no browser acceptance of its own
   'domain-graph': [
     'implemented',
     'ADR-004: every view and list is a projection of buildModel(); nothing authoritative in three.js.',
@@ -235,15 +241,11 @@ export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
     'implemented',
     'N22, N34, N38: catalog, New-piece wizard and Home page start without modelling.',
   ],
-  'professional-review': [
-    'implemented',
-    'N04, N02: export the project file or print it for a professional to check.',
-  ],
   'independent-selection': [
-    'implemented',
+    'in-progress',
     'N84 (ADR-088): each project piece stays selectable with its own controls.',
+    'connections between pieces, which the feature is about',
   ],
-  // Partly built
   'semantic-connectors': [
     'in-progress',
     'N65 (ADR-070): snapping uses connectors derived from piece boxes and walls.',
@@ -304,11 +306,32 @@ export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
     'N34 (ADR-045): suggested combinations kept only when buildModel() has no errors — per piece.',
     'alternative layouts of a whole project',
   ],
+  'automated-fixes': [
+    'in-progress',
+    'N66 (ADR-071): a previewed repair is applied in one step.',
+    'fixes chosen and applied from repair strategies stored with each rule',
+  ],
+  'assembly-graph': [
+    'in-progress',
+    'N19 (ADR-031): a piece placed on another follows it (a parent/child relation).',
+    'connections between pieces beyond stacking, stored as a graph',
+  ],
+  'saved-design-codes': [
+    'in-progress',
+    'F14, N48: designs and projects saved and reopened on the device.',
+    'a code to share or reopen a design elsewhere',
+  ],
+  'gen-sinks-handles': [
+    'in-progress',
+    'N06 handles per piece; N49 sink fixed front.',
+    'sinks and handles generated for a run',
+  ],
 };
 
 /**
- * Remaining features merged into another with the same idea (user answer 2026-10-26: "Broad: same common idea").
- * Non-destructive: the feature stays, hidden from lists, and is shown on its target; the user can undo each merge.
+ * Remaining features merged into another unbuilt feature with the same idea (user answer 2026-10-26: "Broad: same
+ * common idea"). Non-destructive: the feature stays, hidden from lists, and is shown on its target; the user can undo
+ * each merge. A target is never one the app has built (review 2026-10-26), so merges never hide work left to do.
  */
 export const ENSEMBLE_MERGES: Record<string, [target: string, reason: string]> = {
   'reference-copies': [
@@ -358,27 +381,18 @@ export const ENSEMBLE_MERGES: Record<string, [target: string, reason: string]> =
     "The per-connector rules are the engine's content.",
   ],
   'interface-capabilities': [
-    'multi-supplier-catalogue',
-    "Interface capabilities exist so several suppliers' ranges can mate.",
+    'compatibility-engine',
+    'Compatibility checked by interface capability is how the engine decides what may mate.',
   ],
   'catalogue-validation': ['inspectable-rules', 'A by-product of rules stored as data (line 570).'],
   'support-diagnostics': ['inspectable-rules', 'A by-product of rules stored as data (line 570).'],
-  'rapier-queries': [
-    'collision-clearance',
-    'A query engine for the same collision and clearance checks.',
-  ],
   'transform-gizmos': ['direct-manipulation', 'Handles are one way of moving and rotating pieces.'],
   'named-groups': [
     'multi-select-groups',
     'Saved groups are part of "groups and whole-ensemble transforms".',
   ],
-  'local-propagation': ['dependency-regeneration', 'How dependency regeneration limits its work.'],
   'replace-workflow': ['compatible-swap', 'The workflow of compatible replacement.'],
   'preserve-intent': ['compatible-swap', 'What compatible replacement must keep.'],
-  'global-parameters': [
-    'material-propagation',
-    'The mechanism behind the finish scope selector (built as N50).',
-  ],
   'live-manufacturer-data': [
     'multi-supplier-catalogue',
     'Live data is how a cross-manufacturer catalogue stays current.',
@@ -395,13 +409,5 @@ export const ENSEMBLE_MERGES: Record<string, [target: string, reason: string]> =
   'ai-floorplan': ['ai-layout', 'AI layout on the room plan.'],
   'ai-explains': ['ai-layout', 'Part of the AI layout loop (propose, explain, validate).'],
   'inspiration-images': ['nl-generation', 'Another input to intent-driven generation.'],
-  'family-presets': [
-    'cross-family',
-    'Presets over one engine are how cross-family composition avoids separate modes.',
-  ],
   'yjs-crdt': ['collaboration', 'A technology for real-time collaboration.'],
-  'command-log': [
-    'transactional-undo',
-    "A technique for atomic undo; the app's snapshot undo (N46) meets the same need.",
-  ],
 };

@@ -1,7 +1,8 @@
 # ADR-092: Mark research features the app has built and merge the remaining duplicates
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-26
+- Implemented: 2026-10-26 (App records, merges and page updates; review findings fixed)
 - Depends on: ADR-043
 - Design: n/a
 - Backlog: N90
@@ -34,7 +35,9 @@ common idea, not only exact duplicates; the PR is merged and deployed once green
   features" on the assessment dashboard (default Left to build); a "Left to build only" filter; and a "This app"
   box on each feature page with evidence and what is missing. The status is shown in the list.
 
-Result 2026-10-26: 157 features, 36 merged, 121 shown — 75 Verified, 6 Implemented, 14 In Progress, 26 Not Started.
+Result 2026-10-26 (after the review): 157 features, 31 merged, 126 shown — 69 Verified, 4 Implemented, 25 In
+Progress, 28 Not Started (53 left to build). Verified and Implemented never carry a missing part; a merge target is
+never a feature the app has built, so a merge never hides work left to do (both enforced by validation).
 
 ## Alternatives considered
 
@@ -45,7 +48,7 @@ Result 2026-10-26: 157 features, 36 merged, 121 shown — 75 Verified, 6 Impleme
 
 ## Scope
 
-- In scope: app records for every built or partly built feature; 36 merges; page updates; tests.
+- In scope: app records for every built or partly built feature (98); 31 merges; page updates; tests.
 - Out of scope: updating the app records automatically when a later ADR ships (G-076).
 
 ## Consequences
@@ -57,8 +60,8 @@ Result 2026-10-26: 157 features, 36 merged, 121 shown — 75 Verified, 6 Impleme
 
 ## Done when
 
-- [ ] Every app record cites a backlog row or ADR, and In Progress names what is missing (`tests/research.test.ts`).
-- [ ] A status the user set wins over the app record, and imports never change it (tests).
-- [ ] Merges only take unbuilt features, with no chains and a reason, and merged features stay viewable (tests).
-- [ ] Find-it: Overview shows "Built in this app" and "Left to build (…)"; the feature page shows "This app:" with
+- [x] Every app record cites a backlog row or ADR, and In Progress names what is missing (`tests/research.test.ts`).
+- [x] A status the user set wins over the app record, and imports never change it (tests).
+- [x] Merges only take unbuilt features, with no chains and a reason, and merged features stay viewable (tests).
+- [x] Find-it: Overview shows "Built in this app" and "Left to build (…)"; the feature page shows "This app:" with
       "Missing:"; "Left to build only" filters the list (`tools/research/find-it.mjs`, 1440/1024/390/360 px).

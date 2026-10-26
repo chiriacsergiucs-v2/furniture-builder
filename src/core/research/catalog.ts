@@ -199,12 +199,20 @@ export function validateBundle(x: unknown): string[] {
         e.push(`${at}: app status needs its evidence.`);
       if (f.app.status === 'in-progress' && !f.app.missing?.trim())
         e.push(`${at}: In Progress must say what is missing.`);
+      if ((f.app.status === 'verified' || f.app.status === 'implemented') && f.app.missing)
+        e.push(`${at}: something is missing, so it is In Progress, not ${f.app.status}.`);
     }
     if (f.mergedInto !== undefined) {
       const target = b.features!.find((x) => x.id === f.mergedInto);
       if (!target) e.push(`${at}: merged into an unknown feature ${f.mergedInto}.`);
       else if (target.mergedInto)
         e.push(`${at}: merged into ${f.mergedInto}, which is itself merged.`);
+      else if (target.app?.status === 'verified' || target.app?.status === 'implemented')
+        e.push(
+          `${at}: merged into ${f.mergedInto}, which the app has built — that would hide work left to do.`,
+        );
+      if (f.app?.status === 'verified' || f.app?.status === 'implemented')
+        e.push(`${at}: built by the app, so it is not merged.`);
       if (f.mergedInto === f.id) e.push(`${at}: merged into itself.`);
       if (!isStr(f.mergeReason) || !f.mergeReason.trim())
         e.push(`${at}: a merge needs its reason.`);
@@ -871,6 +879,8 @@ export function validateMark(x: unknown): string[] {
   )
     e.push(`${m.id}: incomplete decision.`);
   if (m.mergedInto !== undefined && !isStr(m.mergedInto)) e.push(`${m.id}: bad merge target.`);
+  if (m.implementationSetAt !== undefined && !isStr(m.implementationSetAt))
+    e.push(`${m.id}: bad implementation date.`);
   return e;
 }
 
@@ -1201,7 +1211,8 @@ export function stats(view: CatalogView, marks: Record<string, ResearchMark>): C
   for (const f of all) {
     const m = markOf(marks, f.id);
     bySelection[m.selection]++;
-    byImplementation[implementationOf(f, marks)]++;
+    // Merged features are hidden from the lists, so they are not counted here either (review 2026-10-26).
+    if (!mergedOf(f, marks)) byImplementation[implementationOf(f, marks)]++;
   }
   return {
     features: all.length,

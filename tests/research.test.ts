@@ -714,6 +714,48 @@ describe('research catalog: what the app has built, and merged duplicates (ADR-0
     b.features.find((x) => x.id === one.mergedInto)!.mergedInto = one.id;
     expect(validateBundle(b).join()).toMatch(/itself merged/);
   });
+  it('never merges into a built feature, and never calls something with a gap Verified (review 2026-10-26)', () => {
+    for (const f of all.filter((x) => x.mergedInto)) {
+      const t = view.features.get(f.mergedInto!)!;
+      expect(
+        ['implemented', 'verified'],
+        `${f.id} → ${t.id} would hide work left to do`,
+      ).not.toContain(t.app?.status ?? 'not-started');
+    }
+    for (const f of all.filter((x) => x.app && x.app.status !== 'in-progress'))
+      expect(f.app!.missing, `${f.id} has a gap, so it is In Progress`).toBeUndefined();
+    const b = clone(B);
+    const target = b.features.find((x) => x.app?.status === 'verified')!;
+    b.features.find((x) => x.mergedInto)!.mergedInto = target.id;
+    expect(validateBundle(b).join()).toMatch(/which the app has built/);
+    const c = clone(B);
+    c.features.find((x) => x.app?.status === 'verified')!.app!.missing = 'something';
+    expect(validateBundle(c).join()).toMatch(/so it is In Progress/);
+  });
+  it("keeps the user's status through a new edition of the paper and through a decisions file", async () => {
+    const f = 'ens.f.guided-snapping';
+    const marks = { [f]: mark(f, { implementation: 'planned', implementationSetAt: AT }) };
+    const v2 = clone(B);
+    v2.document.version = 2;
+    const p = planImport([storedOf(B, AT)], v2, marks);
+    expect(p.status).toBe('new-version');
+    const after = buildView([storedOf(B, AT), storedOf(v2, AT)]);
+    expect(implementationOf(after.features.get(f)!, marks)).toBe('planned');
+    const r = mergeMarks(marks, [
+      mark(f, { implementation: 'verified', implementationSetAt: '2026-10-27T00:00:00.000Z' }),
+    ]);
+    expect(r.add).toEqual([]);
+    expect(r.kept).toBe(1);
+    expect(mergeMarks({}, [{ ...mark(f), implementationSetAt: 42 }]).invalid).toBe(1);
+  });
+  it('counts implementation statuses over the features shown, not the merged ones', () => {
+    const st = stats(view, {});
+    const shown = all.filter((x) => !mergedOf(x, {})).length;
+    expect(Object.values(st.byImplementation).reduce((n, x) => n + x, 0)).toBe(shown);
+    expect(st.byImplementation['not-started']).toBe(
+      filterFeatures(view, {}, { ...EMPTY_QUERY, implementation: 'not-started' }).length,
+    );
+  });
   it('keeps merged features and their evidence: hidden from the list, shown on the target, undoable', () => {
     const f = view.features.get('ens.f.build-a-run')!;
     expect(mergedOf(f, {})).toBe('ens.f.auto-fit-span');
