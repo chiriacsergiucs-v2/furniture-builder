@@ -5,7 +5,7 @@
 - Depends on: ADR-035, ADR-070
 - Design: docs/ui-design.md (Plan view)
 - Backlog: N98
-- Agreed: not yet
+- Agreed: 2026-10-26 "New adr 3"; answer "Any difference warns"
 
 ## Context
 
@@ -54,7 +54,6 @@ Today [ADR-070](../adr-done/ADR-070-snap-a-dragged-piece-to-neighbours-and-walls
 - [ ] Find-it at 1440 and 390 px: drag a bed next to a kitchen base → "Won't snap to … " names the family rule;
       two base units of different depths → Checks shows the depth warning; Configure › **Rules** lists the rules
 
-## Open questions
+## Answers (2026-10-26)
 
-1. Should depth or height differences under a set amount pass without a warning? Used until answered: any
-   difference warns (G-093).
+1. Any depth or height difference warns; no tolerance until the user names one (user, 2026-10-26). The question is closed (G-093).

@@ -5,7 +5,7 @@
 - Depends on: ADR-070, ADR-097
 - Design: docs/ui-design.md (Plan view)
 - Backlog: N97
-- Agreed: not yet
+- Agreed: 2026-10-26 "New adr 7"; answer "Along the wall only"
 
 ## Context
 
@@ -49,6 +49,6 @@ once [ADR-097](ADR-097-select-several-pieces-and-keep-them-as-groups.md) ships.
 - [ ] Find-it at 1440 and 390 px: select three pieces → **Distribute evenly** → equal gaps shown; drag a wall unit
       over a base unit → "centre" label; no page errors
 
-## Open questions
+## Answers (2026-10-26)
 
-1. Distribute along the depth too? Used until answered: along the wall only (G-090).
+1. Distribute works along the wall only (user, 2026-10-26). The question is closed (G-090).

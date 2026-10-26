@@ -5,7 +5,7 @@
 - Depends on: ADR-051, ADR-065, ADR-069
 - Design: docs/ui-design.md (Plan view)
 - Backlog: N95
-- Agreed: not yet
+- Agreed: 2026-10-26 "New adr 2"; answer "Group first, then the piece"
 
 ## Context
 
@@ -60,6 +60,6 @@ time (`selectedItemId`); run-wide actions exist ("This run", "Mirror the run").
 - [ ] Find-it at 1440 px: box-select three pieces → drag → all move; **Group** → tap selects the group, tap again
       the piece; at 390 px: **Select** → tap two pieces → **Delete** → Undo brings them back; no page errors
 
-## Open questions
+## Answers (2026-10-26)
 
-1. Does the first tap on a grouped piece select the group? Used until answered: yes, the second tap the piece (G-086).
+1. The first tap on a grouped piece selects the group, the next tap the piece (user, 2026-10-26). The question is closed (G-086).

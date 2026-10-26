@@ -5,7 +5,7 @@
 - Depends on: ADR-065, ADR-069, ADR-070, ADR-071
 - Design: docs/ui-design.md (Plan view)
 - Backlog: N93
-- Agreed: not yet
+- Agreed: 2026-10-26 "New adr 8"; answer "Yes, after the usual confirmation"
 
 ## Context
 
@@ -54,6 +54,6 @@ piece placed on another following it (ADR-031).
 - [ ] Find-it at 1440 and 390 px: select a piece → **Lock** → dragging it does not move it and "Locked" shows →
       **Unlock** → it moves; no page errors
 
-## Open questions
+## Answers (2026-10-26)
 
-1. May a locked piece be deleted? Used until answered: yes, after the usual confirmation (G-082).
+1. A locked piece may be deleted after the usual confirmation (user, 2026-10-26). The question is closed (G-082).

@@ -5,7 +5,7 @@
 - Depends on: ADR-028, ADR-034
 - Design: docs/ui-design.md (Plan view)
 - Backlog: N94
-- Agreed: not yet
+- Agreed: 2026-10-26 "New adr 9"; answer "Library too"
 
 ## Context
 
@@ -54,6 +54,6 @@ groups come with [ADR-097](ADR-097-select-several-pieces-and-keep-them-as-groups
 - [ ] Find-it at 1440 and 390 px: a project piece from an older template shows "Template updated" and Keep mine
       hides it; an up-to-date piece shows its revision; no page errors
 
-## Open questions
+## Answers (2026-10-26)
 
-1. Should saved designs in the Library show the same notice? Used until answered: yes (G-084).
+1. Saved designs in the Library show the same notice (user, 2026-10-26). The question is closed (G-084).

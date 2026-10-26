@@ -755,7 +755,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-080: Piece list open by default on desktop
 
-- Status: Open
+- Status: ADR-094
 - Origin: ADR-094 open question (2026-10-26)
 - Missing: Whether the piece list is open by default on desktop; default closed.
 - Request: "New adr 6" (2026-10-26)
@@ -773,7 +773,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-082: Delete a locked piece
 
-- Status: Open
+- Status: ADR-095
 - Origin: ADR-095 open question (2026-10-26)
 - Missing: Whether a locked piece may be deleted; default yes after confirmation.
 - Request: "New adr 8" (2026-10-26)
@@ -791,7 +791,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-084: Newer-template notice in the Library
 
-- Status: Open
+- Status: ADR-096
 - Origin: ADR-096 open question (2026-10-26)
 - Missing: Whether saved designs in the Library show the newer-template notice; default yes.
 - Request: "New adr 9" (2026-10-26)
@@ -809,7 +809,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-086: First tap on a grouped piece
 
-- Status: Open
+- Status: ADR-097
 - Origin: ADR-097 open question (2026-10-26)
 - Missing: Whether the first tap on a grouped piece selects the group; default yes, second tap the piece.
 - Request: "New adr 2" (2026-10-26)
@@ -827,7 +827,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-088: Compatible width when replacing
 
-- Status: Open
+- Status: ADR-098
 - Origin: ADR-098 open question (2026-10-26)
 - Missing: Which width counts as compatible; default the same width, others behind a switch.
 - Request: "New adr 5" (2026-10-26)
@@ -845,7 +845,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-090: Distribute along the depth
 
-- Status: Open
+- Status: ADR-099
 - Origin: ADR-099 open question (2026-10-26)
 - Missing: Whether Distribute works along the depth too; default along the wall only.
 - Request: "New adr 7" (2026-10-26)
@@ -872,7 +872,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-093: Tolerance for depth and height differences
 
-- Status: Open
+- Status: ADR-100
 - Origin: ADR-100 open question (2026-10-26)
 - Missing: Whether small depth or height differences pass without a warning; default any difference warns.
 - Request: "New adr 3" (2026-10-26)

@@ -5,7 +5,7 @@
 - Depends on: ADR-056, ADR-065, ADR-078
 - Design: docs/ui-design.md (Plan view)
 - Backlog: N92
-- Agreed: not yet
+- Agreed: 2026-10-26 "New adr 6"; answer "Closed, opened by Add a piece"
 
 ## Context
 
@@ -52,6 +52,6 @@ shell ([ADR-078](../adr-done/ADR-078-rebuild-the-app-shell-projects-catalog-and-
 - [ ] Find-it at 390 px: long-press an item → the sheet folds → drop on the plan → the piece appears; tap-to-place
       still works
 
-## Open questions
+## Answers (2026-10-26)
 
-1. Is the list open by default on desktop? Used until answered: closed, opened with **Add a piece** (G-080).
+1. The list is closed by default and opened with **Add a piece** (user, 2026-10-26). The question is closed (G-080).

@@ -5,7 +5,7 @@
 - Depends on: ADR-028, ADR-055, ADR-061
 - Design: docs/ui-design.md (Plan view)
 - Backlog: N96
-- Agreed: not yet
+- Agreed: 2026-10-26 "New adr 5"; answer "Same width; others behind a switch"
 
 ## Context
 
@@ -53,6 +53,6 @@ a module and browse only compatible alternatives" (line 183). Each project piece
 - [ ] Find-it at 1440 and 390 px: select a base cabinet → **Replace…** → only same-width items listed → pick one →
       the piece is replaced in place; Undo restores it; no page errors
 
-## Open questions
+## Answers (2026-10-26)
 
-1. Is "compatible" the same width only? Used until answered: same width, other widths behind a switch (G-088).
+1. Compatible means the same width; other widths behind **Show other widths** (user, 2026-10-26). The question is closed (G-088).
