@@ -1,7 +1,8 @@
 # ADR-096: Saved projects say when a piece's template has a newer revision
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-26
+- Implemented: 2026-10-26
 - Depends on: ADR-028, ADR-034
 - Design: docs/ui-design.md (Plan view)
 - Backlog: N94
@@ -15,7 +16,7 @@ instance parameter overrides and connection metadata — not merely a flattened 
 already embeds its design with `catalog.origin.revision`, the family's `catalogVersion` when it was taken
 ([ADR-028](../adr-done/ADR-028-catalog-metadata-and-origin-link-live-in-the-design-document.md)), and edited templates already say "The shipped template was updated" (ADR-034). What is
 missing is telling the user when a piece's template has moved on. Connections are not stored anywhere (ADR-070);
-groups come with [ADR-097](ADR-097-select-several-pieces-and-keep-them-as-groups.md).
+groups come with [ADR-097](../adr/ADR-097-select-several-pieces-and-keep-them-as-groups.md).
 
 ## Decision
 
@@ -49,9 +50,9 @@ groups come with [ADR-097](ADR-097-select-several-pieces-and-keep-them-as-groups
 
 ## Done when
 
-- [ ] `templateStatus` reports up to date / newer / own design correctly, incl. device-edited templates (unit tests)
-- [ ] Keep mine survives save and reload; older project versions load (storage test)
-- [ ] Find-it at 1440 and 390 px: a project piece from an older template shows "Template updated" and Keep mine
+- [x] `templateStatus` reports up to date / newer / own design correctly, incl. device-edited templates (unit tests)
+- [x] Keep mine survives save and reload; older project versions load (storage test)
+- [x] Find-it at 1440 and 390 px: a project piece from an older template shows "Template updated" and Keep mine
       hides it; an up-to-date piece shows its revision; no page errors
 
 ## Answers (2026-10-26)

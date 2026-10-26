@@ -816,7 +816,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-084: Newer-template notice in the Library
 
-- Status: ADR-096
+- Status: Done (ADR-096)
 - Origin: ADR-096 open question (2026-10-26)
 - Missing: Whether saved designs in the Library show the newer-template notice; default yes.
 - Request: "New adr 9" (2026-10-26)
