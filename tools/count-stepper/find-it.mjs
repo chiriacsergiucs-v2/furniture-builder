@@ -1,4 +1,5 @@
-// Find-it acceptance for quick counts over the drawing (ADR-084, backlog N79) and over 3D (ADR-085, N80),
+// Find-it acceptance for quick counts over the drawing (ADR-084, backlog N79), over 3D (ADR-085, N80) and empty new
+// parts (ADR-089, N84),
 // run against a production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/count-stepper/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
@@ -115,6 +116,39 @@ for (const width of [1280, 390]) {
     'Fewer vertical dividers → one section again',
     (await valueOf(front, 'Vertical dividers')) === '0' &&
       (await front.locator('.el-space').count()) === bays,
+  );
+  // The user's bug (ADR-089): a section with 1 vertical divider, + Horizontal dividers adds the divider only, the new
+  // part is Empty (no shelves).
+  const labels = () =>
+    front.locator('.el-space').evaluateAll((es) => es.map((e) => e.getAttribute('aria-label')));
+  const shelfSpaces = async () =>
+    (await labels()).filter((l) => /shel(f|ves) space/.test(l)).length;
+  const emptySpaces = async () =>
+    (await labels()).filter((l) => l.startsWith('Empty space')).length;
+  const panels = () => front.locator('.el-panel').count();
+  await c.getByRole('button', { name: 'More vertical dividers' }).click();
+  await page.waitForTimeout(200);
+  const [shelves0, empty0, panels0] = [await shelfSpaces(), await emptySpaces(), await panels()];
+  await c.getByRole('button', { name: 'More horizontal dividers' }).click();
+  await page.waitForTimeout(200);
+  check(
+    width,
+    'More horizontal dividers on a section with 1 vertical divider → one divider, one Empty part, no shelves',
+    (await valueOf(front, 'Horizontal dividers')) === '1' &&
+      (await shelfSpaces()) === shelves0 &&
+      (await emptySpaces()) === empty0 + 1 &&
+      (await panels()) === panels0 + 1,
+    `shelf spaces ${shelves0} → ${await shelfSpaces()}, empty ${empty0} → ${await emptySpaces()}, panels ${panels0} → ${await panels()}`,
+  );
+  await shot('empty-part');
+  await c.getByRole('button', { name: 'Fewer horizontal dividers' }).click();
+  await page.waitForTimeout(200);
+  await card(front).getByRole('button', { name: 'Fewer vertical dividers' }).click();
+  await page.waitForTimeout(200);
+  check(
+    width,
+    'Fewer horizontal, fewer vertical → one section again',
+    (await front.locator('.el-space').count()) === bays,
   );
   check(width, 'no sideways scroll (drawing)', await noSideScroll());
 

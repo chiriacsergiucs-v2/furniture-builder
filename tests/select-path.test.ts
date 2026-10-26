@@ -7,12 +7,17 @@ import { drill, hitToMm, pathAt } from '../src/core/selectPath';
 import type { Design, Space, SpaceOpening } from '../src/core/types';
 import { useDesign } from '../src/store/designStore';
 
-/** A sideboard: 2 vertical dividers (3 bays), the middle bay divided by a horizontal divider. */
+/** A sideboard: 2 vertical dividers (3 bays), the middle bay divided by a horizontal divider, 2 shelves below it. */
 function piece(): { design: Design; left: string; middle: string; top: string; bottom: string } {
   const d = templates.find((t) => t.id === 'sideboard')!.create();
   if (d.product.kind !== 'cabinet') throw new Error('cabinet expected');
   const root = d.product.params.interior as Extract<Space, { kind: 'split' }>;
-  const middle = splitSpace(root.children[1], 'y', 2) as Extract<Space, { kind: 'split' }>;
+  const halves = splitSpace(root.children[1], 'y', 2) as Extract<Space, { kind: 'split' }>;
+  // The bottom part holds 2 shelves (a new part starts empty, ADR-089); the project tap test aims at one.
+  const middle = {
+    ...halves,
+    children: [halves.children[0], { ...halves.children[1], kind: 'shelves', count: 2 } as Space],
+  };
   const interior = { ...root, children: [root.children[0], middle, root.children[2]] };
   const design = { ...d, product: { ...d.product, params: { ...d.product.params, interior } } };
   return {

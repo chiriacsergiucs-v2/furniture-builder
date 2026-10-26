@@ -14,7 +14,7 @@ Bug report from the user, 2026-10-26, in their words:
 > 2. Add a horizontal divider (image 4) adds the divider, but somehow it decided to add also two shells in it. This
 >    is not wanted behavior.
 
-Cause (read in the code, not yet reproduced in a test): `splitSpace` in `src/core/design.ts` keeps the old content
+Cause (reproduced 2026-10-26: the new tests fail on the old code; the find-it step on the old build counted 3 new panels, 1 divider and 2 shelves): `splitSpace` in `src/core/design.ts` keeps the old content
 in the first part and fills every new part with `makeSpace('shelves')`, which has `count: 2`. `stepDividers` in
 `src/core/counts.ts` does the same for an added bay ("A new bay goes at the end with 2 shelves", ADR-084). So `+`
 Horizontal dividers on the right column moved its vertical split to the top part and put 2 shelves in the new bottom
@@ -47,14 +47,14 @@ part. Same for vertical dividers, the "Side by side"/"Stacked" buttons and the P
 
 ## Done when
 
-- [ ] `tests/counts.test.ts`: on a space with 1 vertical divider, `+` Horizontal dividers gives 2 parts, the first
+- [x] `tests/counts.test.ts`: on a space with 1 vertical divider, `+` Horizontal dividers gives 2 parts, the first
       holding the vertical split unchanged, the second `empty`; no new shelf panels in the model. Fails on today's
       code.
-- [ ] Same for `+` Vertical dividers on an undivided bay and for `splitSpace` from the inspector buttons.
-- [ ] `pnpm catalog:snapshots` shows no change; fuzz `FUZZ_N=30000` passes.
-- [ ] `tools/count-stepper/find-it.mjs` at 390 and 1280 px: the user's steps; after "More horizontal dividers" the
+- [x] Same for `+` Vertical dividers on an undivided bay and for `splitSpace` from the inspector buttons.
+- [x] `pnpm catalog:snapshots` shows no change; fuzz `FUZZ_N=30000` passes.
+- [x] `tools/count-stepper/find-it.mjs` at 390 and 1280 px: the user's steps; after "More horizontal dividers" the
       parts count rises by the divider only (no shelves).
-- [ ] lint, format:check, typecheck, test, build, docs:check pass.
+- [x] lint, format:check, typecheck, test, build, docs:check pass.
 
 ## Answered questions
 
