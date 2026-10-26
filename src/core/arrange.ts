@@ -11,6 +11,7 @@ import {
   moveBlocked,
   pieceName,
   placedBounds,
+  quarterTurn,
   resolvePlacements,
   type MoveResult,
   type Project,
@@ -205,7 +206,7 @@ export function tryTurn(project: Project, id: string, dir: 1 | -1 = 1): MoveResu
   const reason = moveBlocked(project, [id]);
   if (reason) return { project, reason };
   const b = boundsOf(project).get(id)!;
-  const rotationY = ((((it.rotationY + dir * 90) % 360) + 360) % 360) as QuarterTurn;
+  const rotationY = quarterTurn(it.rotationY, dir);
   const half = (n: number) => (rotationY % 180 === 0 ? Math.ceil(n / 2) : Math.floor(n / 2));
   const turned = { ...shifted(it, half(b.w - b.d), half(b.d - b.w)), rotationY };
   return { project: { ...project, items: project.items.map((i) => (i.id === id ? turned : i)) } };

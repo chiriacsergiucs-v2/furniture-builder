@@ -209,8 +209,11 @@ interface State {
   selectItems: (ids: string[]) => void;
   selectAll: () => void;
   setMultiSelect: (on: boolean) => void;
-  /** Move every selected piece by the same whole mm (ADR-097); returns why not (a lock), or null. One undo step. */
-  moveSelectionBy: (dx: number, dz: number) => string | null;
+  /**
+   * Move every selected piece by the same offset, rounded to `step` (default 1 mm) (ADR-097); returns why not (a lock),
+   * or null. One undo step.
+   */
+  moveSelectionBy: (dx: number, dz: number, step?: number) => string | null;
   /** Turn the selection a quarter turn about its centre (ADR-097); returns why not, or null. One undo step. */
   turnSelectionBy: (dir: 1 | -1) => string | null;
   /** Remove every selected piece (one undo step). */
@@ -647,10 +650,10 @@ export const useDesign = create<State>((rawSet, get) => {
     },
     selectAll: () => get().selectItems((get().project?.items ?? []).map((i) => i.id)),
     setMultiSelect: (on) => set({ multiSelect: on }),
-    moveSelectionBy: (dx, dz) => {
+    moveSelectionBy: (dx, dz, step) => {
       const p = get().project;
       if (!p) return null;
-      const res = moveItems(p, get().selectedItemIds, dx, dz);
+      const res = moveItems(p, get().selectedItemIds, dx, dz, step);
       if (res.reason) {
         set({ notice: res.reason });
         return res.reason;

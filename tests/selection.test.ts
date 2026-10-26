@@ -62,6 +62,9 @@ describe('moving a selection (ADR-097)', () => {
     expect(c2).toEqual(boxes(p)[2]);
     expect(whole(res.project)).toBe(true);
     expect(moveItems(p, ids, 0.2, 0).project).toBe(p);
+    // On the drag step, as a drag rounds (ADR-065).
+    const stepped = moveItems(p, ids, 333, 0, 10).project;
+    expect(boxes(stepped)[0].x - boxes(p)[0].x).toBe(330);
     expect(moveItems(p, [], 100, 0).project).toBe(p);
   });
 
@@ -114,10 +117,21 @@ describe('turning a selection (ADR-097)', () => {
     expect(turnSelection(res.project, ids, -1).project.items.map((i) => i.rotationY)).toEqual([
       0, 0,
     ]);
+    // A piece standing on a selected base turns with it and keeps its exact turned place (now free).
     const s = stacked();
-    const turned = resolvePlacements(turnSelection(s, [s.items[0].id, s.items[1].id], 1).project);
-    expect(turned.items[1].placement?.kind).toBe('above');
+    const sel = [s.items[0].id];
+    const before2 = boxes(s);
+    const turned = resolvePlacements(turnSelection(s, sel, 1).project);
     expect(turned.items[1].rotationY).toBe(90);
+    expect(turned.items[1].placement).toBeUndefined();
+    const [tb, tt] = boxes(turned);
+    // Same relation as before, turned a quarter: backs stay together (z → x) and the top's overhang past the base's
+    // right end now runs towards the back (x → −z); same height.
+    const [b0, t0] = before2;
+    expect(tt.y).toBe(t0.y);
+    expect(tt.x - tb.x).toBe(t0.z - b0.z);
+    expect(tb.z - tt.z).toBe(t0.x + t0.w - (b0.x + b0.w));
+    expect([tb.w, tb.d]).toEqual([before2[0].d, before2[0].w]);
   });
 
   it('a locked piece refuses the turn', () => {
@@ -149,6 +163,11 @@ describe('duplicate, box, cycle (ADR-097)', () => {
     expect(placedBounds(resolvePlacements(res.project).items[3]).x).toBe(
       placedBounds(q.items[0]).x + w,
     );
+    // Copying only the top: its base is not copied, so the copy stands free at its place in the block.
+    const top = duplicateItems(q, [q.items[1].id]);
+    const copy = resolvePlacements(top.project).items[3];
+    expect(copy.placement).toBeUndefined();
+    expect(placedBounds(copy).y).toBe(placedBounds(resolvePlacements(q).items[1]).y);
   });
 
   it('a box selects the pieces it touches; a point lists stacked pieces in drawing order', () => {
@@ -177,10 +196,12 @@ describe('groups (ADR-097)', () => {
     expect(g1.project.groups?.[0]).toMatchObject({ name: 'Group 1', itemIds: [a, b] });
     expect(groupItems(p, [a]).groupId).toBeNull();
     const g2 = groupItems(g1.project, [b, c]);
-    expect(g2.project.groups?.map((g) => g.itemIds)).toEqual([[a], [b, c]]);
-    expect(g2.project.groups?.[1].name).toBe('Group 2');
+    // Group 1 is left with one piece: no group any more.
+    expect(g2.project.groups?.map((g) => g.itemIds)).toEqual([[b, c]]);
+    expect(g2.project.groups?.[0].name).toBe('Group 2');
     expect(groupOf(g2.project, c)?.id).toBe(g2.groupId);
-    expect(ungroup(g2.project, g2.groupId!).groups?.length).toBe(1);
+    expect(groupOf(g2.project, a)).toBeUndefined();
+    expect(ungroup(g2.project, g2.groupId!).groups?.length).toBe(0);
     expect(ungroup(g2.project, 'nope')).toBe(g2.project);
   });
 
@@ -201,12 +222,16 @@ describe('groups (ADR-097)', () => {
     );
     const bad = (groups: unknown) => validateProject({ ...g, groups } as never);
     expect(bad([{ id: 'x', name: 'G', itemIds: ['missing'] }])).toContain('Invalid group');
-    expect(bad([{ id: 'x', name: '', itemIds: [p.items[0].id] }])).toContain('Invalid group');
+    expect(bad([{ id: 'x', name: '', itemIds: p.items.map((i) => i.id) }])).toContain(
+      'Invalid group',
+    );
+    expect(bad([{ id: 'x', name: 'One', itemIds: [p.items[0].id] }])).toContain('Invalid group');
     const id0 = p.items[0].id;
+    const id1 = p.items[1].id;
     expect(
       bad([
-        { id: 'x', name: 'A', itemIds: [id0] },
-        { id: 'y', name: 'B', itemIds: [id0] },
+        { id: 'x', name: 'A', itemIds: [id0, id1] },
+        { id: 'y', name: 'B', itemIds: [id1, id0] },
       ]),
     ).toContain('Invalid group');
     const v7 = { ...p, id: 'v7', schemaVersion: 7 as const };
@@ -297,8 +322,8 @@ describe('the selection in the store (ADR-097)', () => {
     s().groupSelection();
     s().removeItem(c);
     expect(s().project!.groups?.[0].itemIds).toEqual([a, b]);
+    // One piece left is no group.
     s().removeItem(a);
-    s().removeItem(b);
     expect(s().project!.groups).toEqual([]);
   });
 });

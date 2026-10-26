@@ -385,8 +385,10 @@ function FinishFields({ item }: { item: ProjectItem }) {
   const project = useDesign((s) => s.project)!;
   const apply = useDesign((s) => s.applyFinish);
   const [role, setRole] = useState<FinishRole>('front');
-  const [scope, setScope] = useState<FinishScope>('piece');
+  const [chosenScope, setScope] = useState<FinishScope>('piece');
   const selectedCount = useDesign((s) => s.selectedItemIds.length);
+  // "Selected pieces" goes when the selection is one piece again: the scope falls back to this piece.
+  const scope = chosenScope === 'selection' && selectedCount < 2 ? 'piece' : chosenScope;
   const [boardKey, setBoardKey] = useState('');
   const [msg, setMsg] = useState<string | null>(null);
   const [decors, setDecors] = useState<Decor[]>([]);
@@ -898,6 +900,13 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
   };
   /** A pointer gesture just ended on a piece: the click that follows it is not a second selection. */
   const justTapped = useRef(false);
+  /** Where the last tap on a piece was (room mm): a tap on the same spot over stacked pieces goes to the next one. */
+  const lastTap = useRef<{ x: number; z: number } | null>(null);
+  /** The placed footprints the project model holds, for hit tests without building anything again. */
+  const footprints = useMemo(
+    () => new Map(pm.pieces.map((pc) => [pc.item.id, pc.bounds])),
+    [pm.pieces],
+  );
   const select = useDesign((s) => s.selectItem);
   const tapItem = useDesign((s) => s.tapItem);
   const placingId = useDesign((s) => s.placingItemId);
@@ -1139,7 +1148,7 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
           setBox(null);
           // A press without a drag is not a box.
           if (Math.abs(bx.a.x - bx.b.x) < 1 && Math.abs(bx.a.z - bx.b.z) < 1) return;
-          const hit = itemsInBox(project, bx.a, bx.b);
+          const hit = itemsInBox(project, bx.a, bx.b, footprints);
           selectItems(bx.add ? [...selectedIds, ...hit] : hit);
         }}
         onPointerCancel={() => setBox(null)}
@@ -1252,6 +1261,7 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
                       // Another pointer already pressing: the plan's handler cancels that drag instead.
                       const cur = dragRef.current;
                       if (cur && cur.pointerId !== e.pointerId) return;
+                      justTapped.current = false;
                       const g = pressPiece(null, pc.item.id, at(e));
                       if (!g) return;
                       e.currentTarget.setPointerCapture?.(e.pointerId);
@@ -1283,7 +1293,12 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
                   if (e.shiftKey || e.ctrlKey || e.metaKey || multi) return toggleItem(end.id);
                   // The same spot again over stacked pieces: the next one under the pointer (ADR-097).
                   const pt = toRoom(e);
-                  const under = pt && project ? itemsAt(project, pt.x, pt.z) : [];
+                  const prev = lastTap.current;
+                  lastTap.current = pt;
+                  const near = (span / 100) ** 2;
+                  const same =
+                    !!pt && !!prev && (pt.x - prev.x) ** 2 + (pt.z - prev.z) ** 2 <= near;
+                  const under = same && project ? itemsAt(project, pt!.x, pt!.z, footprints) : [];
                   if (
                     under.length > 1 &&
                     selectedIds.length === 1 &&
@@ -1301,13 +1316,12 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
                     snapping && project
                       ? dropTarget(project, others, end.id, end.dx, end.dz, true)
                       : null;
-                  const step = (v: number) => Math.round(v / DRAG_STEP) * DRAG_STEP;
                   if (t?.snap)
                     moveSelectionBy(
                       t.position.x - pc.item.position.x,
                       t.position.z - pc.item.position.z,
                     );
-                  else moveSelectionBy(step(end.dx), step(end.dz));
+                  else moveSelectionBy(end.dx, end.dz, DRAG_STEP);
                   return;
                 }
                 select(end.id);

@@ -175,22 +175,23 @@ export interface Project {
   models?: ModelItem[];
   /**
    * Named groups of pieces (ADR-097, schemaVersion 8): selected together, never merged, not connections. A piece is in
-   * at most one group; ids are always pieces of this project (`pruneGroups`). Absent = none.
+   * at most one group; a group holds two pieces or more, always pieces of this project (`pruneGroups`). Absent = none.
    */
   groups?: { id: string; name: string; itemIds: string[] }[];
 }
 
 /**
- * Groups keep only pieces still in the project, and a group left empty goes (ADR-097: a deleted piece leaves its
- * group). The same project when nothing changes; every commit applies it.
+ * Groups keep only pieces still in the project, and a group left with fewer than two goes (ADR-097: a deleted piece
+ * leaves its group). The same project when nothing changes; every commit applies it.
  */
 export function pruneGroups(project: Project): Project {
   if (!project.groups) return project;
   const ids = new Set(project.items.map((i) => i.id));
   const was = project.groups;
+  // A group keeps two pieces or more: one left alone is no group (ADR-097).
   const groups = was
     .map((g) => ({ ...g, itemIds: g.itemIds.filter((x) => ids.has(x)) }))
-    .filter((g) => g.itemIds.length);
+    .filter((g) => g.itemIds.length >= 2);
   const same =
     groups.length === was.length &&
     groups.every((g, i) => g.itemIds.length === was[i].itemIds.length);
@@ -342,6 +343,10 @@ export function liftOff(item: ProjectItem): Placement | undefined {
 // ---------------------------------------------------------------------------
 // Locked pieces (ADR-095)
 // ---------------------------------------------------------------------------
+
+/** A quarter turn on from `r`: `dir` 1 turns the front from facing you to facing right (ADR-069). */
+export const quarterTurn = (r: QuarterTurn, dir: 1 | -1): QuarterTurn =>
+  ((((r + dir * 90) % 360) + 360) % 360) as QuarterTurn;
 
 /** The piece's placement is locked: nothing moves or turns it (ADR-095). */
 export const isLocked = (item: Pick<ProjectItem, 'locked'> | undefined): boolean => !!item?.locked;
@@ -1985,7 +1990,7 @@ export function validateProject(p: unknown): string[] {
           !g.name.trim() ||
           g.name.length > 200 ||
           !Array.isArray(g.itemIds) ||
-          !g.itemIds.length ||
+          g.itemIds.length < 2 ||
           !g.itemIds.every((x) => typeof x === 'string' && ids.has(x) && !grouped.has(x))
         ) {
           errs.push('Invalid group');

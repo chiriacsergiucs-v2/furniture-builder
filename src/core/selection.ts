@@ -4,15 +4,17 @@
  * rules (ADR-031) apply to each piece. Groups never merge pieces and are not connections.
  */
 import { newId } from './design';
+import { union } from './geometry';
 import {
+  carriedBy,
   liftOff,
   moveBlocked,
   placedBounds,
+  quarterTurn,
   resolvePlacements,
   type MoveResult,
   type Project,
   type ProjectItem,
-  type QuarterTurn,
 } from './project';
 import type { Box } from './types';
 
@@ -51,27 +53,35 @@ export function selectionBounds(project: Project, ids: readonly string[]): Box |
   return { x: x0, y: y0, z: z0, w: x1 - x0, h: y1 - y0, d: z1 - z0 };
 }
 
-/**
- * A piece of the selection, moved by `dx`/`dz` and/or turned. A piece resting on a selected piece keeps resting on it
- * (it follows, ADR-031); one resting on a piece outside the selection is lifted off, as a drag does (ADR-065).
- */
+/** A piece resting on a selected piece (ADR-031): it follows its base, so it is not moved on its own. */
 function carried(it: ProjectItem, moving: Set<string>): boolean {
   return it.placement?.kind === 'above' && moving.has(it.placement.baseId);
 }
 
+/** The item without a placement: free, standing exactly where `position` says (ADR-031 "Anywhere"). */
+function free(it: ProjectItem, position: ProjectItem['position']): ProjectItem {
+  const { placement: _old, ...rest } = it;
+  void _old;
+  return { ...rest, position };
+}
+
 /**
- * Move every selected piece by the same whole-mm offset (ADR-097). Refused with the reason when a piece is locked or
- * carries a locked piece outside the selection (ADR-095). The same project when nothing moves.
+ * Move every selected piece by the same offset, rounded to whole `step`s as a drag is (ADR-065, ADR-097). A piece
+ * resting on a selected piece follows it; one resting on a piece outside the selection is lifted off, as a drag does.
+ * Refused with the reason when a piece is locked or carries a locked piece outside the selection (ADR-095). The same
+ * project when nothing moves.
  */
 export function moveItems(
   project: Project,
   ids: readonly string[],
   dx: number,
   dz: number,
+  step = 1,
 ): MoveResult {
   const items = known(project, ids);
-  const mx = Number.isFinite(dx) ? Math.round(dx) : 0,
-    mz = Number.isFinite(dz) ? Math.round(dz) : 0;
+  const snap = (d: number) => (Number.isFinite(d) ? Math.round(d / step) * step : 0) || 0;
+  const mx = snap(dx),
+    mz = snap(dz);
   if (!items.length || (!mx && !mz)) return { project };
   const reason = moveBlocked(
     project,
@@ -85,11 +95,8 @@ export function moveItems(
       items: project.items.map((it) => {
         if (!moving.has(it.id) || carried(it, moving)) return it;
         const placement = liftOff(it);
-        const { placement: _old, ...rest } = it;
-        void _old;
         return {
-          ...rest,
-          position: { ...it.position, x: it.position.x + mx, z: it.position.z + mz },
+          ...free(it, { ...it.position, x: it.position.x + mx, z: it.position.z + mz }),
           ...(placement ? { placement } : {}),
         };
       }),
@@ -99,50 +106,42 @@ export function moveItems(
 
 /**
  * Turn the selection a quarter turn about the centre of its footprint (ADR-097), rounded to whole mm; `dir` 1 turns
- * fronts from facing you to facing right, as a single piece's turn (ADR-069). Each piece turns and its footprint goes
- * round the centre; a piece resting on a selected piece keeps resting on it at its turned place along it. Refused
- * with the reason when a piece is locked (ADR-095).
+ * fronts from facing you to facing right, as a single piece's turn (ADR-069). Pieces resting on a selected piece turn
+ * with it, selected or not. Each piece turns and its footprint goes round the centre; a piece that rested on another
+ * keeps its exact turned place, now free (its base runs the other way). Refused with the reason when a piece is locked
+ * (ADR-095).
  */
 export function turnSelection(
   project: Project,
   ids: readonly string[],
   dir: 1 | -1 = 1,
 ): MoveResult {
-  const items = known(project, ids);
-  if (!items.length) return { project };
-  const reason = moveBlocked(
-    project,
-    items.map((i) => i.id),
-  );
+  const picked = known(project, ids).map((i) => i.id);
+  if (!picked.length) return { project };
+  const all = [...picked, ...carriedBy(project, picked).map((i) => i.id)];
+  const reason = moveBlocked(project, all);
   if (reason) return { project, reason };
   const placed = resolvePlacements(project);
   const bounds = new Map(placed.items.map((i) => [i.id, placedBounds(i)]));
-  const all = selectionBounds(project, ids)!;
-  const cx = Math.round(all.x + all.w / 2),
-    cz = Math.round(all.z + all.d / 2);
+  const around = union(all.map((id) => bounds.get(id)!));
+  const cx = Math.round(around.x + around.w / 2),
+    cz = Math.round(around.z + around.d / 2);
   // A footprint turned about (cx, cz) the way `rotateBox` turns a piece: dir 1 sends (x, z) to (z, −x).
   const turned = (b: Box) =>
     dir === 1
       ? { x: cx + (b.z - cz), z: cz - (b.x + b.w - cx) }
       : { x: cx - (b.z + b.d - cz), z: cz + (b.x - cx) };
-  const moving = new Set(items.map((i) => i.id));
-  const next = new Map<string, { x: number; z: number }>();
-  for (const it of items) next.set(it.id, turned(bounds.get(it.id)!));
+  const moving = new Set(all);
   const out = project.items.map((it): ProjectItem => {
     if (!moving.has(it.id)) return it;
-    const rotationY = ((((it.rotationY + dir * 90) % 360) + 360) % 360) as QuarterTurn;
-    const at = next.get(it.id)!;
-    if (carried(it, moving) && it.placement?.kind === 'above') {
-      const base = next.get(it.placement.baseId)!;
-      return { ...it, rotationY, placement: { ...it.placement, offsetX: at.x - base.x } };
-    }
+    const rotationY = quarterTurn(it.rotationY, dir);
+    const b = bounds.get(it.id)!;
+    const at = turned(b);
+    if (carried(it, moving)) return { ...free(it, { x: at.x, y: b.y, z: at.z }), rotationY };
     const placement = liftOff(it);
-    const { placement: _old, ...rest } = it;
-    void _old;
     return {
-      ...rest,
+      ...free(it, { ...it.position, x: at.x, z: at.z }),
       rotationY,
-      position: { ...it.position, x: at.x, z: at.z },
       ...(placement ? { placement } : {}),
     };
   });
@@ -151,8 +150,9 @@ export function turnSelection(
 
 /**
  * Copies of the selected pieces, new ids (ADR-011), placed as a block just right of the selection: every copy moves by
- * the selection's width. A copy resting on a copied piece rests on that copy. Copies start unlocked (ADR-095) and in
- * no group. Returns the copies' ids.
+ * the selection's width. A copy resting on a copied piece rests on that copy; one that rested on a piece outside the
+ * selection stands free at its place in the block. Copies start unlocked (ADR-095) and in no group. Returns the copies'
+ * ids.
  */
 export function duplicateItems(
   project: Project,
@@ -161,25 +161,24 @@ export function duplicateItems(
   const items = known(project, ids);
   const all = selectionBounds(project, ids);
   if (!items.length || !all) return { project, ids: [] };
+  const resolved = new Map(resolvePlacements(project).items.map((i) => [i.id, i.position]));
   const newIds = new Map(items.map((i) => [i.id, newId()]));
   const copies = items.map((src): ProjectItem => {
     const { locked: _locked, ...rest } = structuredClone(src);
     void _locked;
     const pl = rest.placement;
-    const inside = pl?.kind === 'above' && newIds.has(pl.baseId);
-    const placement =
-      pl?.kind === 'above'
-        ? inside
-          ? { ...pl, baseId: newIds.get(pl.baseId)! }
-          : { ...pl, offsetX: pl.offsetX + all.w }
-        : pl;
-    return {
+    const at = resolved.get(src.id) ?? rest.position;
+    const position = { ...at, x: at.x + all.w };
+    const base = {
       ...rest,
       id: newIds.get(src.id)!,
       design: { ...rest.design, id: newId() },
-      position: { ...rest.position, x: rest.position.x + all.w },
-      ...(placement ? { placement } : {}),
     };
+    if (pl?.kind === 'above')
+      return newIds.has(pl.baseId)
+        ? { ...base, position, placement: { ...pl, baseId: newIds.get(pl.baseId)! } }
+        : free(base, position);
+    return { ...base, position };
   });
   return {
     project: { ...project, items: [...project.items, ...copies] },
@@ -197,7 +196,7 @@ function nextName(project: Project): string {
 
 /**
  * Keep the selection as a named group (ADR-097). Its pieces leave any group they were in (a piece belongs to at most
- * one); a group left empty goes. Fewer than two known pieces: the same project.
+ * one); a group left with fewer than two goes. Fewer than two known pieces: the same project.
  */
 export function groupItems(
   project: Project,
@@ -207,9 +206,10 @@ export function groupItems(
   const items = known(project, ids).map((i) => i.id);
   if (items.length < 2) return { project, groupId: null };
   const taken = new Set(items);
+  // A group left with fewer than two pieces goes.
   const others = (project.groups ?? [])
     .map((g) => ({ ...g, itemIds: g.itemIds.filter((x) => !taken.has(x)) }))
-    .filter((g) => g.itemIds.length);
+    .filter((g) => g.itemIds.length >= 2);
   const group: Group = { id: newId(), name: name.trim() || nextName(project), itemIds: items };
   return { project: { ...project, groups: [...others, group] }, groupId: group.id };
 }
@@ -221,27 +221,49 @@ export function ungroup(project: Project, groupId: string): Project {
   return { ...project, groups };
 }
 
-/** The pieces whose footprint touches the plan rectangle (room mm, any corner order), in the project's order. */
+/** Each piece's placed footprint, by id; the project model's `pieces` already hold them. */
+export type Footprints = ReadonlyMap<string, Box>;
+const footprints = (project: Project): Footprints =>
+  new Map(resolvePlacements(project).items.map((i) => [i.id, placedBounds(i)]));
+
+/**
+ * The pieces whose footprint touches the plan rectangle (room mm, any corner order), in the project's order. Pass the
+ * placed footprints when they are at hand (the plan has them), so nothing is built again.
+ */
 export function itemsInBox(
   project: Project,
   a: { x: number; z: number },
   b: { x: number; z: number },
+  placed: Footprints = footprints(project),
 ): string[] {
   const x0 = Math.min(a.x, b.x),
     x1 = Math.max(a.x, b.x),
     z0 = Math.min(a.z, b.z),
     z1 = Math.max(a.z, b.z);
-  return resolvePlacements(project)
-    .items.filter((it) => {
-      const f = placedBounds(it);
-      return f.x <= x1 && f.x + f.w >= x0 && f.z <= z1 && f.z + f.d >= z0;
+  return project.items
+    .filter((it) => {
+      const f = placed.get(it.id);
+      return !!f && f.x <= x1 && f.x + f.w >= x0 && f.z <= z1 && f.z + f.d >= z0;
     })
     .map((it) => it.id);
 }
 
-/** The pieces under a plan point (room mm), in drawing order (the project's order), for cycling taps. */
-export function itemsAt(project: Project, x: number, z: number): string[] {
-  return itemsInBox(project, { x, z }, { x, z });
+/**
+ * The pieces under a plan point (room mm), in drawing order (the project's order), for cycling taps. Strictly inside:
+ * a point on the edge two neighbours share is under neither.
+ */
+export function itemsAt(
+  project: Project,
+  x: number,
+  z: number,
+  placed: Footprints = footprints(project),
+): string[] {
+  return project.items
+    .filter((it) => {
+      const f = placed.get(it.id);
+      return !!f && f.x < x && x < f.x + f.w && f.z < z && z < f.z + f.d;
+    })
+    .map((it) => it.id);
 }
 
 /** The next piece under the pointer after `current` (cyclic), or the first when `current` is not among them. */
