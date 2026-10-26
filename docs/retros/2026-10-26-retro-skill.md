@@ -50,12 +50,12 @@ features and were not in play here).
 
 ## Proposals
 
-| #   | Finding | Fix (target file)                                                         | Status   |
-| --- | ------- | ------------------------------------------------------------------------- | -------- |
-| 1   | #4      | Decision on the retro branch (retro skill step 7): user chose (a) `retro/` branch | Applied (PR #PRN) |
-| 2   | #5, #6  | `CLAUDE.md` › Git line | Applied (PR #PRN) |
-| 3   | #2, #3  | Retro skill step 5: functional-slice check on proposals | Not chosen (2026-10-26) |
-| 4   | #7      | Retro skill step 6: commit and push the retro file at once | Not chosen (2026-10-26) |
+| #   | Finding | Fix (target file)                                                                 | Status                  |
+| --- | ------- | --------------------------------------------------------------------------------- | ----------------------- |
+| 1   | #4      | Decision on the retro branch (retro skill step 7): user chose (a) `retro/` branch | Applied (PR #67)        |
+| 2   | #5, #6  | `CLAUDE.md` › Git line                                                            | Applied (PR #67)        |
+| 3   | #2, #3  | Retro skill step 5: functional-slice check on proposals                           | Not chosen (2026-10-26) |
+| 4   | #7      | Retro skill step 6: commit and push the retro file at once                        | Not chosen (2026-10-26) |
 
 **1. Retro branch (finding #4).** Needs your answer first: applied fixes go to
 
