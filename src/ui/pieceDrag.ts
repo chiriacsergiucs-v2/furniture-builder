@@ -110,15 +110,18 @@ function onMove(e: PointerEvent) {
   }
   const d = usePieceList.getState().drag;
   if (!d) return;
-  usePieceList
-    .getState()
-    .setDrag({ ...d, room: planHit?.(e.clientX, e.clientY) ?? null, alt: e.altKey });
+  const room = planHit?.(e.clientX, e.clientY) ?? null;
+  // Unchanged: no new state, so the plan does not redraw and re-snap for nothing.
+  if (room?.x === d.room?.x && room?.z === d.room?.z && e.altKey === d.alt) return;
+  usePieceList.getState().setDrag({ ...d, room, alt: e.altKey });
 }
 
 function onUp(e: PointerEvent) {
   if (!pending || e.pointerId !== pending.pointerId) return;
   const d = usePieceList.getState().drag;
-  const room = planHit?.(e.clientX, e.clientY) ?? null;
+  // Only a drag that reached the plan drops: a long-press released where it started (the sheet folded away from
+  // under the finger, so the plan may be there now) adds nothing.
+  const room = d?.room ? (planHit?.(e.clientX, e.clientY) ?? null) : null;
   const t = d && room ? newPieceTarget({ ...d, room, alt: e.altKey }) : null;
   const touch = pending.touch;
   endPieceDrag();
@@ -162,8 +165,11 @@ export function dragSource(make: () => { design: Design; libraryId?: string } | 
       if (e.pointerType === 'mouse' && e.button !== 0) return;
       if (pending) return endPieceDrag();
       const touch = e.pointerType !== 'mouse';
-      // A mouse press must not start a text selection or the browser's own image drag.
-      if (!touch) e.preventDefault();
+      // A mouse press must not start a text selection or the browser's own image drag; it still focuses the item.
+      if (!touch) {
+        e.preventDefault();
+        e.currentTarget.focus({ preventScroll: true });
+      }
       clickAfterDrag = false;
       pending = {
         pointerId: e.pointerId,

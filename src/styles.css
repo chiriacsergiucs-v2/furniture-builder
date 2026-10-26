@@ -5582,3 +5582,6 @@ button.tile:hover {
     transition: none;
   }
 }
+.piece-list:focus {
+  outline: none;
+}

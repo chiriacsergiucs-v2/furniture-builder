@@ -222,6 +222,19 @@ for (const width of [1440, 390]) {
       `${top0} → ${top1}`,
     );
     check(width, 'the swipe added nothing', (await pieces.count()) === n0 + 1);
+    // A long-press released without dragging adds nothing (the sheet folds back in).
+    const hb = await body.locator('.start-group .row-btn').first().boundingBox();
+    const h = { x: hb.x + hb.width / 2, y: hb.y + hb.height / 2 };
+    await touch('touchStart', h);
+    await page.waitForTimeout(600);
+    await touch('touchEnd');
+    await page.waitForTimeout(400);
+    check(
+      width,
+      'a long-press released in place adds nothing',
+      (await pieces.count()) === n0 + 1 && (await list.isVisible()),
+      `${await pieces.count()}`,
+    );
     // 4. Tap-to-place still works: tap an item, then tap the plan.
     await list.getByRole('searchbox', { name: 'Search the items' }).fill('Base cabinet');
     await page.waitForTimeout(150);

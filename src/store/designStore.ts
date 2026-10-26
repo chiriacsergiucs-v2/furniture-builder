@@ -416,6 +416,8 @@ export const useDesign = create<State>((set, get) => {
       const p = get().project;
       if (!p) return;
       const made = makeItem(p, d, libraryId);
+      // Not clamped here: `dropNewPiece` already placed it as a tap does, and a snap may put it against a wall of
+      // a drawn room at x or z below 0.
       const position = { ...made.position, x: Math.round(x) || 0, z: Math.round(z) || 0 };
       const item: ProjectItem = { ...made, position };
       commitProject({ ...p, items: [...p.items, item] });

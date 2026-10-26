@@ -798,6 +798,14 @@ function useSpaceInRoom() {
   }, [project, model, sel, id]);
 }
 
+/** Screen point → room mm on the plan (x along the back wall, z away from it). */
+function roomPoint(svg: SVGSVGElement, clientX: number, clientY: number) {
+  const m = svg.getScreenCTM();
+  if (!m) return null;
+  const pt = new DOMPoint(clientX, clientY).matrixTransform(m.inverse());
+  return { x: Math.round(pt.x), z: Math.round(pt.y) };
+}
+
 function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem | null }) {
   const space = useSpaceInRoom();
   const selectedId = useDesign((s) => s.selectedItemId);
@@ -866,13 +874,8 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
     return () => svg.removeEventListener('touchmove', onMove);
   }, []);
   /** Screen point → room mm on the plan (x along the back wall, z away from it). */
-  const toRoom = (e: { clientX: number; clientY: number }) => {
-    const svg = svgRef.current,
-      m = svg?.getScreenCTM();
-    if (!svg || !m) return null;
-    const pt = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse());
-    return { x: Math.round(pt.x), z: Math.round(pt.y) };
-  };
+  const toRoom = (e: { clientX: number; clientY: number }) =>
+    svgRef.current ? roomPoint(svgRef.current, e.clientX, e.clientY) : null;
   const at = (e: { pointerId: number; clientX: number; clientY: number }): PointerAt => ({
     pointerId: e.pointerId,
     sx: e.clientX,
@@ -898,10 +901,7 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
       // Only the plan's figure, not a sheet, banner or bar drawn over it.
       const hit = document.elementFromPoint(cx, cy);
       if (hit && !(svg.parentElement ?? svg).contains(hit)) return null;
-      const m = svg.getScreenCTM();
-      if (!m) return null;
-      const pt = new DOMPoint(cx, cy).matrixTransform(m.inverse());
-      return { x: Math.round(pt.x), z: Math.round(pt.y) };
+      return roomPoint(svg, cx, cy);
     });
     return () => registerPlanHit(null);
   }, []);
