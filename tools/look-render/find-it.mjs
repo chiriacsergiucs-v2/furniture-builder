@@ -75,6 +75,9 @@ for (const width of [1280, 390]) {
   // 2. 3D view → Look: Simple · Realistic, default by width.
   const before3d = chunks.length;
   await page.getByRole('radio', { name: '3D' }).click();
+  // On a phone in Build & Preview the view controls sit under "Options" (N82).
+  if (phone && (await page.getByText('Options', { exact: true }).isVisible()))
+    await page.getByText('Options', { exact: true }).click();
   const lookGroup = page.getByRole('radiogroup', { name: 'Look' });
   await lookGroup.waitFor();
   check(width, '"Look" visible in the 3D view', await lookGroup.isVisible());

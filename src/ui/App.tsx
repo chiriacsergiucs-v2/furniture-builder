@@ -94,6 +94,45 @@ function useMediaQuery(q: string) {
   return match;
 }
 
+/**
+ * The stage's view controls. On a phone in Build & Preview they sit behind one "Options" button so the 3D view keeps
+ * its height; Escape and a tap outside close it. Elsewhere they are shown as they are.
+ */
+function ViewOptions({ menu, children }: { menu: boolean; children: ReactNode }) {
+  const ref = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    if (!menu) return;
+    const close = () => ref.current?.removeAttribute('open');
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && ref.current?.open) {
+        close();
+        ref.current?.querySelector('summary')?.focus();
+      }
+    };
+    const onDown = (e: PointerEvent) => {
+      if (ref.current?.open && !ref.current.contains(e.target as Node)) close();
+    };
+    window.addEventListener('keydown', onKey);
+    document.addEventListener('pointerdown', onDown);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.removeEventListener('pointerdown', onDown);
+    };
+  }, [menu]);
+  if (!menu) return <>{children}</>;
+  return (
+    <details className="menu view-options" ref={ref}>
+      <summary>
+        Options
+        <Icon name="chevron-down" className="sm" />
+      </summary>
+      <div className="view-options-panel" role="group" aria-label="View options">
+        {children}
+      </div>
+    </details>
+  );
+}
+
 type Page = 'projects' | 'editor' | 'catalog' | 'research';
 const PAGES: Page[] = ['projects', 'editor', 'catalog', 'research'];
 const pageFromHash = (): Page =>
@@ -197,7 +236,8 @@ export function App() {
   const tapMode = useDesign((s) =>
     s.placingItemId ? `place:${s.placingItemId}` : s.drawingRoom ? 'draw' : '',
   );
-  // Choosing a space or a piece while configuring means composing it; on a phone the sheet opens on it.
+  // Choosing a piece in a project opens the sheet on it on a phone. A space of a single piece does not: the drawing
+  // keeps its height with the quick counts right above the selection, and the peek row opens the editor.
   const selKey = inProject ? selectedItemId : selectedId;
   const [lastTap, setLastTap] = useState(tapMode);
   const [lastSel, setLastSel] = useState(selKey);
@@ -211,7 +251,7 @@ export function App() {
   }
   if (selKey !== lastSel) {
     setLastSel(selKey);
-    if (selKey && !tapMode) setSheetOpen(true);
+    if (selKey && !tapMode && inProject) setSheetOpen(true);
   }
   // A project check tapped under Checks (ADR-071) is shown on the plan: the drawing comes forward, the sheet steps aside.
   const problemTap = useProblem((s) => s.tapped);
@@ -667,61 +707,63 @@ export function App() {
                   ))}
                 </div>
               )}
-              <label className="toggle small">
-                <input
-                  type="checkbox"
-                  checked={showFronts}
-                  onChange={(e) => setShowFronts(e.target.checked)}
-                />
-                <span>Doors and fronts</span>
-              </label>
-              {shows3d(shown) && (
+              <ViewOptions menu={phone && mode === 'build'}>
                 <label className="toggle small">
                   <input
                     type="checkbox"
-                    checked={exploded}
-                    onChange={(e) => setExploded(e.target.checked)}
+                    checked={showFronts}
+                    onChange={(e) => setShowFronts(e.target.checked)}
                   />
-                  <span>Exploded 3D</span>
+                  <span>Doors and fronts</span>
                 </label>
-              )}
-              {shows3d(shown) && (
-                <button
-                  type="button"
-                  className="btn sm"
-                  onClick={() => window.dispatchEvent(new Event('fb:fit'))}
-                >
-                  <Icon name="refresh" className="sm" />
-                  Reset view
-                </button>
-              )}
-              {mount3d && (
-                <div className="segmented small" role="radiogroup" aria-label="Look">
-                  {(['simple', 'realistic'] as const).map((l) => (
-                    <button
-                      key={l}
-                      type="button"
-                      role="radio"
-                      aria-checked={look === l}
-                      className={look === l ? 'on' : ''}
-                      onClick={() => setLook(l)}
-                    >
-                      {l === 'simple' ? 'Simple' : 'Realistic'}
-                    </button>
-                  ))}
-                </div>
-              )}
-              {mount3d && (
-                <button
-                  type="button"
-                  className="btn sm"
-                  title="Render a photo-quality picture. Best on a laptop; a phone may be slow."
-                  onClick={() => setDialog('render')}
-                >
-                  <Icon name="camera" className="sm" />
-                  Render
-                </button>
-              )}
+                {shows3d(shown) && (
+                  <label className="toggle small">
+                    <input
+                      type="checkbox"
+                      checked={exploded}
+                      onChange={(e) => setExploded(e.target.checked)}
+                    />
+                    <span>Exploded 3D</span>
+                  </label>
+                )}
+                {shows3d(shown) && (
+                  <button
+                    type="button"
+                    className="btn sm"
+                    onClick={() => window.dispatchEvent(new Event('fb:fit'))}
+                  >
+                    <Icon name="refresh" className="sm" />
+                    Reset view
+                  </button>
+                )}
+                {mount3d && (
+                  <div className="segmented small" role="radiogroup" aria-label="Look">
+                    {(['simple', 'realistic'] as const).map((l) => (
+                      <button
+                        key={l}
+                        type="button"
+                        role="radio"
+                        aria-checked={look === l}
+                        className={look === l ? 'on' : ''}
+                        onClick={() => setLook(l)}
+                      >
+                        {l === 'simple' ? 'Simple' : 'Realistic'}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {mount3d && (
+                  <button
+                    type="button"
+                    className="btn sm"
+                    title="Render a photo-quality picture. Best on a laptop; a phone may be slow."
+                    onClick={() => setDialog('render')}
+                  >
+                    <Icon name="camera" className="sm" />
+                    Render
+                  </button>
+                )}
+              </ViewOptions>
             </div>
             <div className={`views ${shown === 'both' ? 'both' : ''}`}>
               <div className={`view front ${showsDrawing(shown) ? 'active' : ''}`}>
