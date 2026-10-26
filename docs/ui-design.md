@@ -164,10 +164,17 @@ described above. Audit and wireframes are in `docs/research/2026-10-24-ui-redesi
   3D (Both from 1500 px).
 - _Phone._
   - Compose: the drawing fills the screen, with a bottom sheet over the nav. Its peek row reads _Selected: …_ or
-    _Tap a space to edit it_; the sheet opens on a selection, shrinks the drawing and steps aside while placing
-    or drawing.
-  - Build & Preview: the View switch, 3D (42 vh, mounted only here) over the output tabs; Both stacks the
-    drawing over 3D in a 72 vh stage.
+    _Tap a space to edit it_; the sheet steps aside while placing or drawing. A piece chosen in a project opens
+    the sheet; a space of a single piece does not (N82, user 2026-10-26): the drawing keeps its height with the
+    quick counts above the selection, and the peek row opens the editor. Open, the sheet takes at most 40 dvh
+    and the quick-counts card hides (the editor has the same counters).
+  - Build & Preview: the View switch and an **Options** menu in one row (Doors and fronts, Exploded 3D, Reset
+    view, Look, Render; N82), 3D (42 vh, mounted only here) over the output tabs; Both stacks the drawing over
+    3D in a 72 vh stage.
+- _Touch and type (N82)._ Under `pointer: coarse` every control is at least 44 × 44 px (buttons, segmented,
+  tabs, counters, fields, menu rows, summaries, breadcrumbs); a mouse keeps `--control-h` 38. No text is set
+  below `--fs-xs` (13 px): badges, chips, tags, step meta and the quick-counts card use it. The result tabs
+  wrap to a second row rather than scroll, so Checks is always in sight.
 - _Output actions._ **Download CSV** (the one primary button) and **Print** sit on top of the Parts tab, and
   are still disabled while there are errors (ADR-008).
 
