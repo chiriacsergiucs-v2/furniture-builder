@@ -489,7 +489,8 @@ function Wizard({
       />
       <div className="wz-body">
         <div className="wz-main">
-          {from && step.id === 'basics' && (
+          {/* On the first step, wherever the wizard opens (Type since G-059), so a reopen always warns first. */}
+          {from && step.id === steps[0]?.id && (
             <p className={`alert ${edited ? 'warning' : 'info'}`} role="status">
               <Icon name={edited ? 'alert-triangle' : 'info'} className="sm" />
               <span>

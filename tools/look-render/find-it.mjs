@@ -122,6 +122,9 @@ for (const width of [1280, 390]) {
     check(width, `size ${s} offered`, await dlg.getByRole('radio', { name: s }).isVisible());
   check(width, 'no sideways scroll (Render)', await noSideScroll());
 
+  // On a software GPU (CI containers, cloud sessions) the path tracer blocks the page for long stretches, so every
+  // wait during the render gets up to 3 minutes; the default comes back after it.
+  page.setDefaultTimeout(180000);
   if (phone) {
     // 4a. Start, then Cancel.
     await dlg.getByRole('radio', { name: '1280 × 720' }).click();
@@ -175,6 +178,7 @@ for (const width of [1280, 390]) {
     );
   }
   await closeDialog();
+  page.setDefaultTimeout(30000);
 
   // 5. The look survives a reload.
   await page.reload();

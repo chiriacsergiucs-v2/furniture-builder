@@ -230,7 +230,10 @@ for (const width of [1440, 375]) {
   // Pat Noi: Mobila — Dormitor. The in-app "Built in the app" list was removed (D02, 2026-10-24); the project ships as
   // docs/samples/mobila-dormitor.project.json and is opened with Projects → "Import a file". The bed frame is screwed
   // and listed.
-  await page.getByRole('link', { name: /Projects/ }).click();
+  await page
+    .getByRole('navigation', { name: 'Places' })
+    .getByRole('link', { name: /Projects/ })
+    .click();
   await page
     .getByLabel('Import a design, project or project template file')
     .setInputFiles(

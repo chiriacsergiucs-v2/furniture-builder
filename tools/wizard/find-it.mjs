@@ -99,8 +99,18 @@ for (const width of [1440, 375]) {
     await wizard.getByRole('button', { name: 'Next' }).click();
     const name = `Find-it ${t.label.split(' ')[0]} ${width}`;
     await wizard.getByLabel('Name').fill(name);
-    await wizard.getByLabel(/^Width/).fill(String(t.width));
-    await wizard.getByLabel(/^Width/).blur();
+    if (t.label === 'Bed')
+      // A bed is sized from its mattress (on the Bed step): with the type chosen first, Size asks no width.
+      check(
+        width,
+        'Bed: Size asks the headboard height, not a width',
+        (await wizard.getByLabel(/^Headboard height/).isVisible()) &&
+          (await wizard.getByLabel(/^Width/).count()) === 0,
+      );
+    else {
+      await wizard.getByLabel(/^Width/).fill(String(t.width));
+      await wizard.getByLabel(/^Width/).blur();
+    }
     if (n === 0) await shot('1-size');
     await rail('Type').click();
     await page.waitForTimeout(150);
@@ -299,6 +309,9 @@ for (const width of [1440, 375]) {
     'reopened wizard warns that editor changes will be replaced',
     await wizard.getByText(/changed in the editor since/).isVisible(),
   );
+  // The wizard reopens on its first step, Type (G-059); the stored width is on Size.
+  await rail('Size').click();
+  await page.waitForTimeout(150);
   check(
     width,
     'reopened wizard holds the stored answers (width 1000)',
