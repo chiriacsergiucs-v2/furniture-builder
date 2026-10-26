@@ -780,7 +780,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-080: Piece list open by default on desktop
 
-- Status: ADR-094
+- Status: Done (ADR-094)
 - Origin: ADR-094 open question (2026-10-26)
 - Missing: Whether the piece list is open by default on desktop; default closed.
 - Request: "New adr 6" (2026-10-26)
@@ -1003,7 +1003,16 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Offer repairs such as 'Make Base cabinet 560 deep like its neighbour' or 'Move the bed away'?
 - Suggested pick: Add a 'match the neighbour's depth/height' repair (closest to fixing the warning; about +20 % of ADR-100's work).
 
-### G-105: Resizing a base moves a locked piece on it
+### G-105: Move display-only 3D models in the 3D view
+
+- Status: Open
+- Origin: ADR-093 (2026-10-26, Claude: skipped this iteration)
+- Missing: Move mode drags project pieces only; display-only 3D models (ADR-076) still move by their fields or on the Plan.
+- Request: New adr to override the conflicts for 4 and make it ready
+- Questions: Should Move in 3D also drag and turn display-only 3D models?
+- Suggested pick: Yes, the same Move and Turn (closest to direct manipulation in 2D/3D; about +15 % work for +10 % of the request, estimates).
+
+### G-106: Resizing a base moves a locked piece on it
 
 - Status: Open
 - Origin: ADR-095 (2026-10-26, Claude: found while building)
@@ -1011,12 +1020,3 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Not a quote: ADR-095 'Nothing moves it for the user'
 - Questions: Should resizing a base keep a locked piece on it where it is (leaving its base), or refuse the resize?
 - Suggested pick: Refuse the resize with the reason, as a move of the base is refused (about +10 % of ADR-095's work).
-
-### G-106: 3D drag of a locked piece not checked
-
-- Status: Open
-- Origin: ADR-095 (2026-10-26, Claude: depends on ADR-093)
-- Missing: Dragging a piece in the 3D view does not exist yet (ADR-093, built in parallel); the lock refusal is in the shared move helper (moveBy / moveItemBy), so a 3D drag that uses it is refused too, but no 3D drag was checked.
-- Request: Not a quote: ADR-095 'dragging it (Plan, 3D, arrow keys) ... refused'
-- Questions: Check the 3D drag refusal when ADR-093 ships?
-- Suggested pick: Yes: add a locked-piece step to ADR-093's find-it once both are on main (about +5 % of ADR-095's work).

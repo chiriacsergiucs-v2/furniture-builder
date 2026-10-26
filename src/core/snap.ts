@@ -13,6 +13,7 @@ import {
   dragPosition,
   isWallHung,
   placementBases,
+  tapPosition,
   type PlacedPiece,
   type Project,
   type ProjectItem,
@@ -460,4 +461,34 @@ export function dropTarget(
   const position = dragPosition(me.item, dx, dz);
   const box = shifted(me.bounds, position.x - me.item.position.x, position.z - me.item.position.z);
   return { position, box, snap: null, hint: null, refused: [] };
+}
+
+/**
+ * Where a new piece dragged from the piece list lands (ADR-094). `me` is the piece as `placeItem` builds it from
+ * `makeItem` (any position): its left-back corner goes to the room point exactly as a tap places it (ADR-056,
+ * `tapPosition`), then, with `snap` on, it snaps as a dragged piece does (ADR-070). Whole mm.
+ */
+export function dropNewPiece(
+  project: Project,
+  pieces: PlacedPiece[],
+  me: PlacedPiece,
+  at: { x: number; z: number },
+  snap: boolean,
+  range: Mm = SNAP_RANGE,
+): SnapResult {
+  const position = tapPosition(me.item, at.x, at.z);
+  const item: ProjectItem = { ...me.item, position };
+  const moved: PlacedPiece = {
+    ...me,
+    item,
+    bounds: shifted(me.bounds, position.x - me.item.position.x, position.z - me.item.position.z),
+  };
+  const free: SnapResult = { position, box: moved.bounds, snap: null, hint: null, refused: [] };
+  if (!snap) return free;
+  const others = pieces.filter((pc) => pc.item.id !== item.id);
+  const withMe: Project = {
+    ...project,
+    items: [...project.items.filter((i) => i.id !== item.id), item],
+  };
+  return snapDrag(withMe, [...others, moved], item.id, 0, 0, range) ?? free;
 }

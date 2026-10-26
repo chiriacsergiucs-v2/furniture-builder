@@ -14,7 +14,6 @@ import { clearDecors, listDecors, replaceDecors, saveProject } from '../persist/
 import { useDesign } from '../store/designStore';
 import { Group, MmField, Segmented, Select, Toggle } from './controls';
 import { Icon } from './icons';
-import { AddPieceList } from './Project';
 import { BoardBand } from './BoardBand';
 import { StartFrom } from './Catalog';
 import { askConfirm } from './Confirm';
@@ -143,22 +142,6 @@ export function NewDialog({
           onBrowse={onBrowse}
         />
       )}
-    </Dialog>
-  );
-}
-
-export function AddPieceDialog({
-  open,
-  onClose,
-  onBrowse,
-}: {
-  open: boolean;
-  onClose: () => void;
-  onBrowse?: () => void;
-}) {
-  return (
-    <Dialog open={open} onClose={onClose} title="Add a piece to the project">
-      {open && <AddPieceList onDone={onClose} onBrowse={onBrowse} />}
     </Dialog>
   );
 }
