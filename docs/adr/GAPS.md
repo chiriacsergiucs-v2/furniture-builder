@@ -975,3 +975,48 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Items “can be used to add as a new adr or mark as acknowledged and accepted” (G-050)
 - Questions: None while ADR-002 holds.
 - Suggested pick: Keep the hand-over to Claude (estimate for a GitHub-token write path: effort +60%, value +15%, and it breaks ADR-002)
+
+### G-102: Accessibility checks in find-it
+
+- Status: Open
+- Origin: skill-finder review 2026-10-26 (session ccr-0f816a7f); agent suggested it, user chose composition A instead
+- Missing: find-it scripts have no accessibility-tree check, keyboard walk or reduced-motion check; no shared preview wrapper (tools/with-preview.mjs); no CI lint counting hard-coded colours for the N18 token overhaul
+- Request: “Skill finders to review and suggest new features” (scope chosen: both dev skills and app features); the user then picked option 2, local skill edits
+- Questions: Add a11y checks to every find-it script or a separate tools/a11y/find-it.mjs? Allow a local axe-core dev dependency (licence MPL-2.0)?
+- Suggested pick: Separate tools/a11y/find-it.mjs at 390 px and 1440 px with role/name tree and Tab walk, no new dependency, plus a literal-colour ratchet in scripts/ (estimate +20 % work over the script alone, +40 % of value)
+
+### G-103: .xlsx cut-list export
+
+- Status: Open
+- Origin: skill-finder review 2026-10-26 (session ccr-0f816a7f); agent suggested it, user chose composition A instead
+- Missing: No in-browser .xlsx export of the cut list, edge banding and hardware; only CSV exists
+- Request: “Skill finders to review and suggest new features” (scope chosen: both dev skills and app features); the user then picked option 2, local skill edits
+- Questions: Hand-written minimal xlsx writer (no dependency) or a bundled library with a known licence? One sheet per board or one sheet for all parts?
+- Suggested pick: Hand-written writer, offline, one sheet per board plus Hardware and Edge banding, SUM formulas, Romanian headers, formula-injection guard (estimate ~200 lines; +30 % work over one flat sheet, +50 % of value)
+
+### G-104: PWA upkeep: persistent storage and offline check
+
+- Status: Open
+- Origin: skill-finder review 2026-10-26 (session ccr-0f816a7f); agent suggested it, user chose composition A instead
+- Missing: No ADR or skill for PWA upkeep: update prompt behaviour, precache versioning, navigator.storage.persist(), iOS limits, an offline find-it run; no external skill covers it
+- Request: “Skill finders to review and suggest new features” (scope chosen: both dev skills and app features); the user then picked option 2, local skill edits
+- Questions: Ask the browser for persistent storage on first save, or only from Settings?
+- Suggested pick: One ADR: request persistent storage on first save, show its state in Settings, add an offline find-it run (estimate +25 % work over a checklist doc, +60 % of value)
+
+### G-105: DXF export for CNC
+
+- Status: Open
+- Origin: skill-finder review 2026-10-26 (session ccr-0f816a7f); agent suggested it, user chose composition A instead
+- Missing: No DXF/CNC export from buildModel(); no external skill exists
+- Request: “Skill finders to review and suggest new features” (scope chosen: both dev skills and app features); the user then picked option 2, local skill edits
+- Questions: Which CNC or software reads the file? DXF R12 outlines only, or with drilling layers?
+- Suggested pick: Research ADR first: DXF R12 outline per board with one layer per operation, written in src/core (estimate unknown until the target machine is named)
+
+### G-106: 3D drag guidance and non-drag alternative for ADR-093
+
+- Status: Open
+- Origin: skill-finder review 2026-10-26 (session ccr-0f816a7f); agent suggested it, user chose composition A instead
+- Missing: ADR-093 has no guidance yet from the R3F skill: pointer capture, drag on a plane, orbit paused while dragging, render on demand, and a non-drag alternative (nudge buttons, mm fields, 90° turn) for single-pointer access
+- Request: “Skill finders to review and suggest new features” (scope chosen: both dev skills and app features); the user then picked option 2, local skill edits
+- Questions: Fold these into ADR-093 or a follow-up ADR?
+- Suggested pick: Fold into ADR-093 before it is built, including the non-drag alternative (estimate +15 % work, +30 % of value: keyboard and one-finger users can move pieces)
