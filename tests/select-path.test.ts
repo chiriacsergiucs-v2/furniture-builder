@@ -213,6 +213,25 @@ describe('store: tapping a project piece (ADR-083, ADR-088)', () => {
       }
     });
 
+  it('the piece settings change the project copy; one project undo restores it (ADR-090)', () => {
+    const { id } = open(0);
+    st().tapItem(id);
+    expect(st().drillItemId).toBe(id);
+    const width = () => {
+      const d = st().project!.items.find((i) => i.id === id)!.design.product;
+      return d.kind === 'cabinet' ? d.params.width : undefined;
+    };
+    const before = width()!;
+    st().updateCabinet({ width: before + 100 });
+    expect(width()).toBe(before + 100);
+    expect(st().editingItemId).toBeNull();
+    const piece = () => st().projectModel!.pieces.find((q) => q.item.id === id)!;
+    expect(piece().bounds.w).toBe(before + 100);
+    st().undoProject();
+    expect(width()).toBe(before);
+    expect(piece().bounds.w).toBe(before);
+  });
+
   it('"Edit this piece" still opens the piece editor', () => {
     const { id } = open(0);
     st().tapItem(id);

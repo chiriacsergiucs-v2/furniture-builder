@@ -642,9 +642,10 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-068: Piece-wide settings from the project panel
 
-- Status: Open
+- Status: ADR-090
 - Origin: ADR-088, 2026-10-26, out of scope (Claude)
 - Missing: Size, materials and carcass settings of a project piece edited from the project panel; they stay behind Edit this piece
 - Request: one more ADR, which would keep the project editor open while we click on the item second time (yes editing of ), and it gives us the opportunity to add or remove shelves and change its structure. the item is triggered, but we should be kept on the edit of the project view.
 - Questions: Should the project panel also edit a piece's size, boards and carcass, or is Edit this piece enough for those?
 - Suggested pick: Keep them behind Edit this piece; the request was shelves and structure (estimate)
+- Answer: User 2026-10-26: "Go 068" — build it; moved into ADR-090.

@@ -51,6 +51,7 @@ import { newId } from '../core/design';
 import { Dim, DimV, outlinePoints } from './Elevation';
 import { Icon } from './icons';
 import { InsideEditor } from './Inspector';
+import { PieceSettingsDialog } from './Settings';
 import { templateGlyph } from './Templates';
 import { StartFrom } from './Catalog';
 import { askConfirm } from './Confirm';
@@ -96,6 +97,7 @@ export function ProjectPanel({
   const updateProject = useDesign((s) => s.updateProject);
   const setGap = useDesign((s) => s.setGap);
   const [libMsg, setLibMsg] = useState<string | null>(null);
+  const [pieceSettings, setPieceSettings] = useState(false);
   const [moveRight, setMoveRight] = useState(true);
   const item = project.items.find((i) => i.id === selectedId);
   const left = useMemo(
@@ -179,7 +181,12 @@ export function ProjectPanel({
               <div className="card-title">
                 <span>Inside this piece</span>
               </div>
+              <button type="button" className="btn outline" onClick={() => setPieceSettings(true)}>
+                <Icon name="sliders" className="sm" />
+                Size, boards and construction
+              </button>
               <InsideEditor />
+              <PieceSettingsDialog open={pieceSettings} onClose={() => setPieceSettings(false)} />
             </section>
           )}
           <Counter

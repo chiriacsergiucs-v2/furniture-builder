@@ -80,7 +80,33 @@ for (const width of [1280, 390]) {
       (await inProject()),
   );
   await shot('plan');
+
+  // 2b. The piece's size, boards and construction from the project editor (ADR-090): wider by 100 mm, still the
+  //     project; one Undo takes it back.
+  const planLabel = () => onPlan.getAttribute('aria-label');
+  const label0 = await planLabel();
+  await inside.getByRole('button', { name: 'Size, boards and construction' }).click();
+  const settings = page.locator('dialog[open]');
+  await settings.waitFor({ state: 'visible' });
+  const widthField = settings.getByLabel('Width', { exact: true }).first();
+  const w0 = Number(await widthField.inputValue());
+  await widthField.fill(String(w0 + 100));
+  await widthField.press('Enter');
+  await page.waitForTimeout(300);
+  await shot('piece-settings');
+  await settings.getByRole('button', { name: 'Done' }).click();
+  await page.waitForTimeout(300);
+  const label1 = await planLabel();
+  check(
+    width,
+    '"Size, boards and construction": Width +100 widens the piece in the project',
+    label1.startsWith(`Sideboard, ${w0 + 100} by`) && (await inProject()),
+    `${label0} → ${label1}`,
+  );
   await sheet(false);
+  await page.getByRole('button', { name: 'Undo' }).click();
+  await page.waitForTimeout(300);
+  check(width, 'Undo takes the width back', (await planLabel()) === label0, await planLabel());
 
   // 3. 3D (desktop, beside the panel): from the interior, a tap selects the bay under it; still the project.
   if (!phone) {
