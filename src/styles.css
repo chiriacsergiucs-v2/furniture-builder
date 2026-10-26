@@ -681,7 +681,7 @@ select {
 }
 .steps .n {
   font-family: var(--num);
-  font-size: 0.7rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   color: var(--ink-2);
 }
@@ -696,7 +696,7 @@ select {
 .steps .meta {
   grid-column: 2;
   font-family: var(--num);
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   color: var(--ink-2);
   line-height: 1.25;
   white-space: nowrap;
@@ -848,7 +848,7 @@ select {
 
 .badge {
   font-family: var(--num);
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   min-width: 20px;
   padding: 1px 6px;
   border-radius: var(--r-pill);
@@ -2350,7 +2350,7 @@ table.buy {
   border-radius: var(--r-pill);
   background: var(--primary-soft);
   color: var(--primary);
-  font-size: 0.7rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   vertical-align: middle;
 }
@@ -2398,7 +2398,7 @@ table.buy {
 }
 .start-row .more {
   font-family: var(--num);
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   margin-left: 2px;
 }
 .variant-picks {
@@ -2525,7 +2525,7 @@ table.buy {
 .chip {
   padding: 1px 8px;
   border-radius: var(--r-pill);
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   background: var(--primary-soft);
   color: var(--primary);
@@ -2583,7 +2583,7 @@ table.buy {
   margin-left: 6px;
   border-radius: var(--r-sm);
   font-family: var(--num);
-  font-size: 0.7rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   vertical-align: middle;
   border: 1px solid var(--line);
@@ -3694,7 +3694,7 @@ button.tile:hover {
   border-radius: var(--r-sm);
   background: var(--accent-soft);
   color: var(--on-accent);
-  font-size: 0.65rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   text-decoration: none;
   vertical-align: 1px;
@@ -5012,7 +5012,7 @@ button.tile:hover {
   border: 1px solid var(--line);
   border-radius: var(--r);
   box-shadow: 0 4px 14px rgb(0 0 0 / 0.14);
-  font-size: 0.8rem;
+  font-size: var(--fs-xs);
 }
 .count-stepper.floating {
   position: absolute;
@@ -5067,4 +5067,131 @@ button.tile:hover {
 }
 .count-anchor .count-stepper {
   max-width: none;
+}
+
+/* UI critique fixes (N82, 2026-10-26) --------------------------------------- */
+/* Every result tab stays in sight: tighter tabs, and a second row rather than a hidden sideways scroll. */
+.output .tabs {
+  flex-wrap: wrap;
+}
+.output .tabs button {
+  padding-inline: 7px;
+}
+/* The stage's view controls behind "Options" on a phone in Build & Preview (one toolbar row). */
+.view-options > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 var(--s-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  cursor: pointer;
+}
+.view-options > summary:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+}
+.view-options[open] > summary .icon {
+  transform: rotate(180deg);
+}
+.view-options-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 20;
+  display: grid;
+  justify-items: start;
+  gap: var(--s-3);
+  width: max-content;
+  max-width: calc(100vw - 24px);
+  padding: var(--s-3);
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-2);
+}
+.stage-tools:has(> .view-options) {
+  flex-wrap: nowrap;
+  justify-content: space-between;
+}
+@media (max-width: 760px) {
+  /* With the editor sheet open the drawing keeps most of the screen; the sheet already has the same counters. */
+  .work.mode-compose.sheet-open .side {
+    max-height: 40dvh;
+  }
+  .work.mode-compose.sheet-open .stage {
+    height: calc(
+      100dvh - var(--bar-h, 50px) - var(--modes-h, 52px) - var(--actions-h, 64px) - 40dvh
+    );
+    min-height: 200px;
+  }
+  .work.mode-compose.sheet-open .elevation .count-stepper {
+    display: none;
+  }
+}
+/* Touch screens: every control is at least 44 px in both directions. */
+@media (pointer: coarse) {
+  .btn,
+  .btn.sm,
+  .segmented button,
+  .tabs button,
+  .menu-items button,
+  .group > summary,
+  .catalog-files > summary,
+  .view-options > summary,
+  .group-index a,
+  .row-btn,
+  .toggle,
+  .mm,
+  .input,
+  select,
+  .catalog-toolbar .search,
+  .start-from .search,
+  .bar input.name,
+  .modes .segmented button,
+  .crumbs button {
+    min-height: 44px;
+  }
+  .segmented button {
+    min-width: 44px;
+  }
+  .crumbs button {
+    display: inline-flex;
+    align-items: center;
+  }
+  .btn.icon,
+  .btn.icon.sm,
+  .menu.more > summary {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+  }
+  .group-index a,
+  .toggle {
+    display: inline-flex;
+    align-items: center;
+  }
+  .counter {
+    grid-template-columns: 44px 52px 44px;
+  }
+  .counter button {
+    height: 44px;
+  }
+  .cs-counter {
+    grid-template-columns: 44px 32px 44px;
+  }
+  .cs-counter button {
+    height: 44px;
+  }
+  .mm {
+    grid-template-columns: 44px 1fr auto 44px;
+  }
+  .mm .step {
+    min-height: 44px;
+  }
 }
