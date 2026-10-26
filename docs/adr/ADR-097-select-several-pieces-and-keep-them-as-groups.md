@@ -26,7 +26,7 @@ time (`selectedItemId`); run-wide actions exist ("This run", "Mirror the run").
 - **Cycle overlapping:** tapping the same spot again selects the next piece under the pointer (stacked or
   overlapping pieces), in drawing order.
 - **Act on the selection:** dragging any selected piece moves them all by the same whole-mm offset; snapping uses
-  the moved piece; placement rules and locks ([ADR-095](ADR-095-lock-a-piece-so-automatic-moves-and-repairs-leave-it-alone.md)) apply to each. **Delete**, **Duplicate** and **Turn 90°**
+  the moved piece; placement rules and locks ([ADR-095](../adr-done/ADR-095-lock-a-piece-so-automatic-moves-and-repairs-leave-it-alone.md)) apply to each. **Delete**, **Duplicate** and **Turn 90°**
   (about the selection's centre, rounded to whole mm) work on the selection; finish scope gains **Selected pieces**
   ([ADR-055](../adr-done/ADR-055-apply-a-board-to-this-piece-this-run-or-the-whole-project.md)). Each action is one undo step.
 - **Groups:** **Group** keeps the selection as a named group (`Project.groups: {id, name, itemIds}[]`, project

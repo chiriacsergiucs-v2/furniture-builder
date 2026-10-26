@@ -23,7 +23,7 @@ once [ADR-097](ADR-097-select-several-pieces-and-keep-them-as-groups.md) ships.
 - **Distribute evenly** (three or more selected pieces, along the wall): the leftmost and rightmost stay; the others
   move so the gaps between neighbours are equal. Integer splits as ADR-003: leftover millimetres go one each to the
   leftmost gaps.
-- Placement rules apply; locked pieces ([ADR-095](ADR-095-lock-a-piece-so-automatic-moves-and-repairs-leave-it-alone.md)) do not move and the action says so. Each action is one undo
+- Placement rules apply; locked pieces ([ADR-095](../adr-done/ADR-095-lock-a-piece-so-automatic-moves-and-repairs-leave-it-alone.md)) do not move and the action says so. Each action is one undo
   step. Pure functions `alignItems` and `distributeItems` in `src/core`.
 
 ## Alternatives considered

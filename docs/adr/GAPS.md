@@ -798,7 +798,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-082: Delete a locked piece
 
-- Status: ADR-095
+- Status: Done (ADR-095)
 - Origin: ADR-095 open question (2026-10-26)
 - Missing: Whether a locked piece may be deleted; default yes after confirmation.
 - Request: "New adr 8" (2026-10-26)
