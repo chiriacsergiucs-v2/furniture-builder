@@ -566,3 +566,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Not a user request: R3 requires find-it scripts to pass against the production build
 - Questions: Update the five scripts to the ADR-080 layout (Settings dialog instead of Configure/Materials)?
 - Suggested pick: Update all five scripts to the current UI (est. small each; restores R3 evidence for ADR-067/068, ADR-079, trims, clearances, plan snap)
+
+### G-061: Dragging pieces never tried in a browser
+
+- Status: Open
+- Origin: ADR-065, 2026-10-24 19:10 UTC; user decision
+- Missing: Dragging a piece on the plan (mouse, touch, arrow keys) is merged and deployed but was never tried in a browser; find-it was skipped. N60 says Done while its text says not verified.
+- Request: “Skip find-it for this onw”
+- Questions: Run a find-it for dragging now, or keep N60 as Partially done until someone tries it?
+- Suggested pick: Add a find-it: mouse drag at 1440 px changes From left, Undo restores; touch drag at 375 px with no sideways scroll; set N60 by the result. (estimate: effort +3%, value +6%)

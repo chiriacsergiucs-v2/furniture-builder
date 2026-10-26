@@ -140,6 +140,8 @@ Lifecycle, one skill per step:
   `ADR-NNN` and becomes Done when that ADR ships (`pnpm gaps sync`, run by `ship-adr`). `pnpm docs:check` and a
   `Stop` hook (`.claude/settings.json`) enforce it.
 - Stop when a check fails (fix the cause, never the check) or when a change would need the network (ADR-002).
+- Status replies are a short Done / Not done list, one line per item, unless the user asks for detail. "Recheck"
+  means a fresh check of `main`, CI, deploy, open ADRs and the live site (user rule 2026-10-26).
 - Recommended options (user rule 2026-10-25): in questions, open questions and ADR defaults, never mark an
   option as recommended because it is the simplest. Recommend the option closest to what the user asked to
   build, and say so. If it is more complex, explain why and estimate how much more work it is (+N %) and how
