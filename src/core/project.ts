@@ -285,6 +285,15 @@ export function dragPosition(
 }
 
 /**
+ * Where a tap on the plan puts a piece being placed (ADR-056): its left-back corner at the room point, in whole mm,
+ * clamped to x ≥ 0 and z ≥ 0; its height is kept. A piece dropped from the piece list starts here too (ADR-094).
+ */
+export function tapPosition(item: ProjectItem, x: number, z: number): ProjectItem['position'] {
+  const mm = (v: number) => (Number.isFinite(v) ? Math.max(0, Math.round(v)) : 0);
+  return { ...item.position, x: mm(x), z: mm(z) };
+}
+
+/**
  * A piece placed on or above another piece leaves it when dragged (ADR-065): wall-hung pieces become hung on the
  * wall at their current height, anything else stands on the floor. Other placements are returned unchanged.
  */

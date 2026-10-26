@@ -5480,3 +5480,110 @@ button.tile:hover {
     margin-bottom: var(--s-2);
   }
 }
+/* The piece list beside the plan (ADR-094): a side panel next to the plan on a desktop, a bottom sheet on a phone
+   that folds away while an item is dragged. Items lift on a press (mouse) or a 300 ms hold (touch). */
+.stage.with-pieces {
+  grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
+}
+.stage.with-pieces > .stage-tools {
+  grid-row: 1;
+  grid-column: 1 / -1;
+}
+.stage.with-pieces > .piece-list {
+  grid-row: 2;
+  grid-column: 1;
+}
+.stage.with-pieces > .views {
+  grid-row: 2;
+  grid-column: 2;
+}
+.piece-list {
+  position: static;
+  inset: auto;
+  margin: 0;
+  padding: 0;
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  min-height: 0;
+  border: 0;
+  border-right: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+}
+.piece-list header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  border-bottom: 1px solid var(--line-2);
+}
+.piece-list header h2 {
+  font-size: var(--fs-lg);
+}
+.piece-list .close {
+  color: var(--ink-2);
+}
+.piece-list-body {
+  padding: var(--s-3) var(--s-4) var(--s-5);
+  display: grid;
+  align-content: start;
+  gap: var(--s-4);
+  overflow: auto;
+  min-height: 0;
+  overscroll-behavior: contain;
+}
+.piece-list-body .hint {
+  margin: 0;
+}
+.piece-list .row-btn {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+/* The pictures take no touches: a swipe that starts on one scrolls the list, and a press lifts the item. */
+.piece-list img {
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+.piece-list .template-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (max-width: 760px) {
+  .stage.with-pieces {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .stage.with-pieces > .views {
+    grid-column: 1;
+  }
+  .piece-list {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: var(--actions-h, 64px);
+    z-index: 6;
+    max-height: 58dvh;
+    border-right: 0;
+    border-top: 1px solid var(--line);
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    box-shadow: var(--shadow-3);
+    transition: transform 0.18s ease-out;
+  }
+  /* Long-pressed: the sheet folds away and the drag goes on over the plan. */
+  .piece-list.folded {
+    transform: translateY(calc(100% + var(--actions-h, 64px)));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .piece-list {
+    transition: none;
+  }
+}
+.piece-list:focus {
+  outline: none;
+}

@@ -780,7 +780,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-080: Piece list open by default on desktop
 
-- Status: ADR-094
+- Status: Done (ADR-094)
 - Origin: ADR-094 open question (2026-10-26)
 - Missing: Whether the piece list is open by default on desktop; default closed.
 - Request: "New adr 6" (2026-10-26)

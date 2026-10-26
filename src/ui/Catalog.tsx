@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type HTMLAttributes, type ReactNode } from 'react';
 import { buildModel } from '../core/build';
 import { PHONE, useMediaQuery } from './useMediaQuery';
 import { snapshotSvg } from '../core/snapshot';
@@ -173,9 +173,12 @@ function CatalogActions({ phone, children }: { phone: boolean; children: ReactNo
 export function StartFrom({
   onPick,
   onBrowse,
+  dragFor,
 }: {
   onPick: (d: Design) => void;
   onBrowse?: () => void;
+  /** Pointer handlers that let an item be dragged onto the plan (ADR-094); `make` builds its copy. */
+  dragFor?: (make: () => Design | null) => HTMLAttributes<HTMLButtonElement>;
 }) {
   const families = useCatalog();
   const [grouping, setGrouping] = useGrouping();
@@ -229,6 +232,7 @@ export function StartFrom({
                   <button
                     type="button"
                     className="row-btn"
+                    {...dragFor?.(() => insertVariant(f, v, now()))}
                     onClick={() => {
                       const d = insertVariant(f, v, now());
                       if (d) onPick(d);
