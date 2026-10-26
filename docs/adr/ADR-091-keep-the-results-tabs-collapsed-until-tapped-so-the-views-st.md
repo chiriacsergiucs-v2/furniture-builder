@@ -5,6 +5,7 @@
 - Depends on: ADR-079, ADR-081
 - Design: docs/ui-design.md (section 4, Build & Preview results tabs)
 - Backlog: N87
+- Agreed: not yet
 
 ## Context
 
