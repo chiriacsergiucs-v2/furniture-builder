@@ -5478,6 +5478,8 @@ button.tile:hover {
   }
   .gaps-page .pairs dd {
     margin-bottom: var(--s-2);
+  }
+}
 /* The piece list beside the plan (ADR-094): a side panel next to the plan on a desktop, a bottom sheet on a phone
    that folds away while an item is dragged. Items lift on a press (mouse) or a 300 ms hold (touch). */
 .stage.with-pieces {
