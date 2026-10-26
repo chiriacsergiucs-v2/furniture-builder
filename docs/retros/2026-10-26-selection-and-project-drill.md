@@ -43,12 +43,12 @@ Earlier retros read: `2026-10-23-catalog.md`, `2026-10-26-retro-skill.md`, `2026
 
 ## Proposals
 
-| #   | Finding | Fix (target file)                                                                                                          | Status   |
-| --- | ------- | -------------------------------------------------------------------------------------------------------------------------- | -------- |
-| 1   | #1      | check in `scripts/check-docs.py`: an ADR, N or G id that `origin/main` already has with a different title fails docs:check | Proposed |
-| 2   | #2      | `Stop` hook `scripts/main_moved_hook.py`: warn when the branch has its own commits and `origin/main` has new ones          | Proposed |
-| 3   | #4      | `CLAUDE.md` › Commands: how to run find-it scripts where Playwright is installed globally                                  | Proposed |
-| 4   | #5      | `tests/fuzz.test.ts`: per-test timeout scaled to `FUZZ_N`, so the documented command passes                                | Proposed |
+| #   | Finding | Fix (target file)                                                                                                          | Status           |
+| --- | ------- | -------------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| 1   | #1      | check in `scripts/check-docs.py`: an ADR, N or G id that `origin/main` already has with a different title fails docs:check | Applied (PR #69) |
+| 2   | #2      | `Stop` hook `scripts/main_moved_hook.py`: warn when the branch has its own commits and `origin/main` has new ones          | Applied (PR #69) |
+| 3   | #4      | `CLAUDE.md` › Commands: how to run find-it scripts where Playwright is installed globally                                  | Applied (PR #69) |
+| 4   | #5      | `tests/fuzz.test.ts`: per-test timeout scaled to `FUZZ_N`, so the documented command passes                                | Applied (PR #69) |
 
 Exact text:
 
