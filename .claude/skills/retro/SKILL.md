@@ -7,8 +7,8 @@ description: Run a retrospective on the current session — what went wrong, wha
 
 Project: **Furniture Builder**. Earlier retros: `docs/retros/` (format: `2026-10-23-catalog.md`).
 
-Cloud sessions keep no memory between sessions. A lesson lasts only if it lands in a file in the repo
-(or in the user's claude.ai preferences, which only the user can edit).
+Cloud sessions keep no memory between sessions. A lesson lasts only if it is **merged to `main`** (new
+sessions clone `main`), or lands in the user's claude.ai preferences, which only the user can edit.
 
 ## 1. Source: this session only
 
@@ -16,7 +16,16 @@ Use the conversation already in context, plus this session's git record (its bra
 threads and CI runs). Do not ask which session, list sessions, or read other sessions' transcripts. Start
 right away; no questions before the report.
 
-## 2. Find the friction (evidence first)
+## 2. Read the earlier retros
+
+Read every file in `docs/retros/`, above all its _Proposals_ ledger (see step 6). Use it to:
+
+- drop a finding whose fix is already `Applied`, unless it happened again; then the fix failed, so propose
+  a stronger form of it (step 5) and cite the earlier retro
+- not re-propose a `Not chosen` item unless the problem happened again in this session; then cite the
+  earlier retro and say how often it has now happened
+
+## 3. Find the friction (evidence first)
 
 List every point where the user had to step in, quoting their exact words, with the turn or commit it
 came from:
@@ -31,7 +40,7 @@ came from:
 
 Count only what the transcript shows. Don't invent problems to fill sections. "Nothing found" is a valid answer.
 
-## 3. Root causes
+## 4. Root causes
 
 For each item, give one cause:
 
@@ -46,7 +55,7 @@ For each item, give one cause:
 
 Group items that share a cause. Three instances of one cause are one finding.
 
-## 4. Propose fixes (strongest first)
+## 5. Propose fixes (strongest first)
 
 For each finding, pick the cheapest fix that actually prevents a repeat:
 
@@ -60,17 +69,47 @@ For each finding, pick the cheapest fix that actually prevents a repeat:
 6. **Personal preference** for the user's claude.ai profile (cross-project habits such as reply style). Give
    the exact text for the user to paste.
 
+When the cause is `rule-ignored`, never propose another CLAUDE.md line or a reworded one: the rule exists
+and text did not hold. Move it up the list instead (doc → CLAUDE.md → skill step → check → hook), to the
+strongest form that can check it. If nothing can check it by machine, say so and propose a skill step at the
+exact point in the workflow where it was missed.
+
 Write each proposal as an exact diff or exact text, not as advice. Mark each one with what it prevents
 (the finding) and its cost (lines added, false positives a hook might give).
 
-## 5. Write and propose in the same turn
+## 6. Write and propose in the same turn
 
 - Write `docs/retros/YYYY-MM-DD-<topic>.md` with these sections: what the user asked (their words),
-  what went wrong (table), root causes, proposed fixes, and _not changed_.
+  what went wrong (table), root causes, _Proposals_, and _not changed_.
+- _Proposals_ is a ledger table read by later retros:
+
+  | #   | Finding | Fix (target file)               | Status   |
+  | --- | ------- | ------------------------------- | -------- |
+  | 1   | …       | hook in `.claude/settings.json` | Proposed |
+
+  Status is `Proposed`, then `Applied (PR #N)` or `Not chosen (YYYY-MM-DD)`.
+
 - Reply briefly: the top findings, then the proposals, numbered so the user can answer "apply 1, 3".
-- **Apply nothing beyond the retro file until the user approves each proposal by number** (user rule
-  2026-10-25: never auto-accept). After approval, apply the changes, run `pnpm docs:check` and
-  `pnpm format:check`, then commit on the current branch with the message `Retro <date>: <topic>`.
+- **Apply nothing beyond the retro file until the user approves proposals by number** (user rule
+  2026-10-25: never auto-accept).
+
+## 7. "apply N" means apply and merge (user rule 2026-10-26)
+
+"apply 1, 3" (or "apply all", or "apply none") is the user's instruction to merge, so the lessons reach
+future sessions:
+
+1. Branch `retro/YYYY-MM-DD-<topic>` from the latest `origin/main`, not from the session's branch, so no
+   unmerged work rides along.
+2. Apply the chosen fixes and the retro file. Set each ledger row to `Applied (PR #N)` or
+   `Not chosen (YYYY-MM-DD)`. "apply none" still merges the retro file, so later retros see the ledger.
+3. Run the CI checks from CLAUDE.md (at least `pnpm lint`, `pnpm format:check`, `pnpm docs:check`; add
+   `pnpm typecheck`, `pnpm test` and `pnpm build` if a script, a hook or code changed). Check that a new hook
+   runs and does not block a clean session.
+4. Commit `Retro <date>: <topic>`, push, open a PR, and subscribe to its activity. When the `verify` check
+   passes, merge it (merge commit) and cite the `Deploy GitHub Pages` run id. If CI is red, fix it and push;
+   never merge red.
+5. Reply with the PR number, the merge commit, and which proposals were applied or not chosen. Claude.ai
+   preference texts (item 6 in step 5) can't be merged; list them for the user to paste.
 
 ## Rules
 
