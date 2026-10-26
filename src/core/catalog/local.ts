@@ -58,6 +58,9 @@ export function fromLocal(t: LocalTemplate, shipped?: CatalogFamily): ViewFamily
     localId: t.id,
     own: !t.shadows,
     shippedUpdated: !!shipped && t.basedOn !== undefined && shipped.catalogVersion > t.basedOn,
+    // A copy taken from a template edited here records the template's own revision (ADR-096), so a later edit of the
+    // template shows as a newer revision on the pieces taken before it.
+    catalogVersion: t.revision,
     variants: variants.map(({ design, ...v }) => ({
       ...v,
       ...(design ? { create: () => structuredClone(design) } : {}),

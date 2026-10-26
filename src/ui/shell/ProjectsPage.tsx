@@ -17,6 +17,10 @@ import { ProjectTemplateList } from '../ProjectTemplates';
 import { Icon, type IconName } from '../icons';
 import { templateGlyph } from '../Templates';
 import { importFile } from './importFile';
+import { catalogFamilies } from '../../core/catalog';
+import { newerCount, templateStatus } from '../../core/templateRevision';
+import { useLocalTemplates } from '../Catalog';
+import { updatedText } from '../TemplateRevision';
 import { useUi } from './uiStore';
 
 const KIND_TEXT = {
@@ -45,6 +49,16 @@ export function ProjectsPage({
   const [projects, setProjects] = useState<StoredProject[] | null>(null);
   const [pieces, setPieces] = useState<StoredDesign[]>([]);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  // Saved designs and projects say when a piece's template has a newer revision (ADR-096, "Library too").
+  const locals = useLocalTemplates();
+  const pieceNotice = (d: StoredDesign['design']) => {
+    const s = templateStatus({ design: d }, catalogFamilies, locals);
+    return s.kind === 'newer' ? ` · ${updatedText(s)}` : '';
+  };
+  const projectNotice = (p: StoredProject['project']) => {
+    const n = newerCount(p.items, catalogFamilies, locals);
+    return n ? ` · ${n} ${n === 1 ? 'piece has' : 'pieces have'} a newer template` : '';
+  };
   const refresh = () => {
     listProjects()
       .then(setProjects)
@@ -227,7 +241,7 @@ export function ProjectsPage({
                       r,
                       'project',
                       'project',
-                      `${r.project.items.length} ${r.project.items.length === 1 ? 'piece' : 'pieces'} · edited ${when(r.updatedAt)}`,
+                      `${r.project.items.length} ${r.project.items.length === 1 ? 'piece' : 'pieces'} · edited ${when(r.updatedAt)}${projectNotice(r.project)}`,
                       () => openProject(r.project),
                     ),
                   )}
@@ -243,7 +257,7 @@ export function ProjectsPage({
                       r,
                       'piece',
                       templateGlyph(r.design.product.kind),
-                      `${KIND_TEXT[r.design.product.kind]} · edited ${when(r.updatedAt)}`,
+                      `${KIND_TEXT[r.design.product.kind]} · edited ${when(r.updatedAt)}${pieceNotice(r.design)}`,
                       () => load(r.design, { fromStorage: true }),
                     ),
                   )}
