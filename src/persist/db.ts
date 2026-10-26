@@ -10,6 +10,7 @@ import { validFastenerChoice, type FastenerChoice, type JointType } from '../cor
 import { validateProjectTemplate, type ProjectTemplate } from '../core/projectTemplate';
 import { validateBundle, validateMark, type StoredBundle } from '../core/research/catalog';
 import type { ResearchMark } from '../core/research/types';
+import { validateGapMark, type GapMark } from '../core/gaps';
 
 export interface StoredDesign {
   id: string;
@@ -74,6 +75,7 @@ class FurnitureDb extends Dexie {
   projectTemplates!: Table<StoredProjectTemplate, string>;
   prices!: Table<PriceEntry, string>;
   models!: Table<StoredModel, string>;
+  gapMarks!: Table<GapMark, string>;
   constructor(name = 'furniture-builder') {
     super(name);
     // Never edit a shipped version block; add a new version for any change (ADR-012).
@@ -139,6 +141,20 @@ class FurnitureDb extends Dexie {
       prices: 'id',
       models: 'id, createdAt',
     });
+    // v9 (ADR-101): the user's marks on gaps (acknowledge, make an ADR, a note). Earlier tables untouched (additive).
+    this.version(9).stores({
+      designs: 'id, updatedAt, name',
+      projects: 'id, updatedAt, name',
+      templates: 'id, updatedAt',
+      researchDocs: 'key, docId',
+      researchMarks: 'id, updatedAt',
+      images: 'id',
+      decors: 'id',
+      projectTemplates: 'id, updatedAt, name',
+      prices: 'id',
+      models: 'id, createdAt',
+      gapMarks: 'gapId, updatedAt',
+    });
   }
 }
 
@@ -199,6 +215,15 @@ export async function saveResearchMarks(marks: ResearchMark[], database = db): P
 export async function listResearchMarks(database = db): Promise<ResearchMark[]> {
   const rows = await database.researchMarks.toArray();
   return rows.filter((r) => !validateMark(r).length);
+}
+
+export async function saveGapMark(mark: GapMark, database = db): Promise<void> {
+  await database.gapMarks.put(mark);
+}
+/** Gap marks that still validate; unreadable rows are skipped and kept (ADR-012). */
+export async function listGapMarks(database = db): Promise<GapMark[]> {
+  const rows = await database.gapMarks.toArray();
+  return rows.filter(validateGapMark);
 }
 
 export async function saveImage(img: StoredImage, database = db): Promise<void> {

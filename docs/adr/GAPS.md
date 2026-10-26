@@ -490,7 +490,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-050: No gaps page in the app
 
-- Status: Open
+- Status: ADR-101
 - Origin: ADR-082, 2026-10-25; agent scoped it out
 - Missing: The ledger is a repo file only; the app does not show it.
 - Request: “items from it can be used to add as a new adr or mark as acknowledged and accepted”
@@ -939,3 +939,30 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Gaps ledger (ADR-082, user rule 2026-10-25) (context, not a quote)
 - Questions: Ship ADR-082 now (ship-adr), after checking its Done-when list?
 - Suggested pick: Check ADR-082's Done-when list against the repo, then ship it with ship-adr. (estimate: effort +2%, value +2%)
+
+### G-098: Group gaps by origin
+
+- Status: Open
+- Origin: ADR-101, 2026-10-26; user did not pick it
+- Missing: The gaps page has no grouping by origin (the ADR or area a gap came from).
+- Request: “Add a gaps page, similar to reseaech” — offered options: Search + status filter, Group by origin, Overview counts, Full detail per gap
+- Questions: Add grouping by origin later?
+- Suggested pick: Leave it out (the user picked the other three); the search finds an ADR id in the Origin field. (estimate for grouping: effort +10%, value +5%)
+
+### G-099: Gap marks not in a file
+
+- Status: Open
+- Origin: ADR-101, 2026-10-26; agent scoped it out
+- Missing: Marks made on the gaps page cannot be exported or imported as a file; they live on one device. Copy decisions is the only way out.
+- Request: “Mark + hand to Claude”
+- Questions: Export and import the marks as a file, like research marks?
+- Suggested pick: Export / import a JSON of marks, like Research's Import & export (estimate: effort +10%, value +5%)
+
+### G-100: Ledger not editable from the app
+
+- Status: Open
+- Origin: ADR-101, 2026-10-26; ADR-002 (no backend, no tokens)
+- Missing: The page cannot write docs/adr/GAPS.md; decisions go through Claude via Copy decisions, and the page shows the ledger of the deployed build.
+- Request: Items “can be used to add as a new adr or mark as acknowledged and accepted” (G-050)
+- Questions: None while ADR-002 holds.
+- Suggested pick: Keep the hand-over to Claude (estimate for a GitHub-token write path: effort +60%, value +15%, and it breaks ADR-002)
