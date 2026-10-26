@@ -709,7 +709,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-075: Results collapse at desktop width too
 
-- Status: ADR-091
+- Status: Done (ADR-091)
 - Origin: ADR-091 open question
 - Missing: Unconfirmed default: the results tabs collapse at every width, not only on phones
 - Request: They should be a collapsed view, onclick showing only, so the views with renders are kept as main
