@@ -7,7 +7,8 @@ import { materialKey, runOf, type Project, type ProjectItem } from './project';
 import type { Design, Material } from './types';
 
 export type FinishRole = 'front' | 'body';
-export type FinishScope = 'piece' | 'run' | 'project';
+/** `selection`: the pieces selected together (ADR-097). */
+export type FinishScope = 'piece' | 'run' | 'selection' | 'project';
 
 /** Every board used by a piece in the project, one per board (name + thickness + grain + picture). */
 export function projectBoards(project: Project): Material[] {
@@ -72,9 +73,15 @@ export function putRoleBoard(d: Design, role: FinishRole, board: Material): Desi
 }
 
 /** The pieces a scope reaches from the selected piece; "run" falls back to the piece when it is not in a run. */
-export function finishTargets(project: Project, id: string, scope: FinishScope): ProjectItem[] {
+export function finishTargets(
+  project: Project,
+  id: string,
+  scope: FinishScope,
+  selection: readonly string[] = [id],
+): ProjectItem[] {
   if (scope === 'project') return project.items;
-  const ids = scope === 'run' ? (runOf(project, id) ?? [id]) : [id];
+  const ids =
+    scope === 'run' ? (runOf(project, id) ?? [id]) : scope === 'selection' ? selection : [id];
   return project.items.filter((i) => ids.includes(i.id));
 }
 
@@ -90,8 +97,9 @@ export function applyFinish(
   role: FinishRole,
   board: Material,
   scope: FinishScope,
+  selection?: readonly string[],
 ): FinishResult {
-  const targets = new Set(finishTargets(project, id, scope).map((i) => i.id));
+  const targets = new Set(finishTargets(project, id, scope, selection).map((i) => i.id));
   const applied: string[] = [],
     skipped: string[] = [];
   const items = project.items.map((it) => {

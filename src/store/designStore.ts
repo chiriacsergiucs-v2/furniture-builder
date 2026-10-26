@@ -12,6 +12,15 @@ import { duplicateItem, mirrorItem, mirrorRun, tryTurn } from '../core/arrange';
 import { floorDrop, type FloorPoint } from '../core/drag3d';
 import { applyFinish, type FinishRole, type FinishScope } from '../core/finish';
 import { mergeItems } from '../core/merge';
+import {
+  duplicateItems,
+  groupItems,
+  groupOf,
+  moveItems,
+  sameIds,
+  turnSelection,
+  ungroup,
+} from '../core/selection';
 import { replaceItem, replaceReport, type ReplaceReport } from '../core/replace';
 import { countRows, countSubject, stepCount, type CountKey } from '../core/counts';
 import { drill, type Selection } from '../core/selectPath';
@@ -21,6 +30,7 @@ import {
   makeItem,
   moveBy,
   planRuns,
+  pruneGroups,
   PROJECT_SCHEMA,
   refreshRunParts,
   requestKey,
@@ -80,8 +90,15 @@ interface State {
   projectModel: ProjectModel | null;
   /** Piece of the project being edited in the piece editor. */
   editingItemId: string | null;
-  /** Piece selected in the project view. */
+  /** Piece selected in the project view: the main one of `selectedItemIds`, shown on the card. */
   selectedItemId: string | null;
+  /**
+   * Every selected piece (ADR-097), the main one first; one piece = `[selectedItemId]`. Setting `selectedItemId` alone
+   * selects just that piece.
+   */
+  selectedItemIds: string[];
+  /** Phones: the plan's Select button is on, so taps add and remove pieces (ADR-097). UI state only. */
+  multiSelect: boolean;
   /**
    * Project piece whose design is loaded into `design`/`model` while the project editor stays open (ADR-088): taps
    * drill into it and its spaces are edited from the project panel. Active only while it is the selected piece.
@@ -186,6 +203,23 @@ interface State {
    */
   mirrorRun: (id: string) => { reasons: string[]; refused?: string };
   selectItem: (id: string | null) => void;
+  /** Shift/Ctrl/Cmd-click, or a tap with Select on (ADR-097): add the piece to the selection or take it out. */
+  toggleItem: (id: string) => void;
+  /** Select these pieces (the box, a group, Select all); the first is the main one. */
+  selectItems: (ids: string[]) => void;
+  selectAll: () => void;
+  setMultiSelect: (on: boolean) => void;
+  /** Move every selected piece by the same whole mm (ADR-097); returns why not (a lock), or null. One undo step. */
+  moveSelectionBy: (dx: number, dz: number) => string | null;
+  /** Turn the selection a quarter turn about its centre (ADR-097); returns why not, or null. One undo step. */
+  turnSelectionBy: (dir: 1 | -1) => string | null;
+  /** Remove every selected piece (one undo step). */
+  deleteSelection: () => void;
+  /** Copy the selection as a block to its right; the copies become the selection. One undo step. */
+  duplicateSelection: () => void;
+  /** Keep the selection as a group (ADR-097); returns its id, or null with fewer than two pieces. */
+  groupSelection: () => string | null;
+  ungroup: (groupId: string) => void;
   editItem: (id: string) => void;
   backToProject: () => void;
   undoProject: () => void;
@@ -222,7 +256,14 @@ interface State {
 
 const HISTORY = 100;
 
-export const useDesign = create<State>((set, get) => {
+export const useDesign = create<State>((rawSet, get) => {
+  // Setting the main selected piece alone selects just that piece (ADR-097).
+  const withIds = (p: Partial<State>): Partial<State> =>
+    'selectedItemId' in p && !('selectedItemIds' in p)
+      ? { ...p, selectedItemIds: p.selectedItemId ? [p.selectedItemId] : [] }
+      : p;
+  const set = (partial: Partial<State> | ((s: State) => Partial<State>)) =>
+    typeof partial === 'function' ? rawSet((s) => withIds(partial(s))) : rawSet(withIds(partial));
   /** Every edit goes through here: history, timestamp, rebuild. */
   const commit = (next: Design) => {
     const { design, past } = get();
@@ -302,8 +343,9 @@ export const useDesign = create<State>((set, get) => {
   };
   const commitProject = (next: Project) => {
     // Pieces on or above others follow them (ADR-031); run parts follow the pieces in the same step (ADR-061).
+    // A piece no longer in the project leaves its group (ADR-097).
     const stamped = {
-      ...refreshRunParts(resolvePlacements(next)),
+      ...refreshRunParts(resolvePlacements(pruneGroups(next))),
       schemaVersion: PROJECT_SCHEMA, // an edited project is saved in the current shape (ADR-011, ADR-073)
       updatedAt: new Date().toISOString(),
     };
@@ -317,7 +359,20 @@ export const useDesign = create<State>((set, get) => {
         ? { projectPast: [...get().projectPast, prev].slice(-HISTORY), projectFuture: [] }
         : {}),
     });
+    keepSelected(stamped);
     syncDrill();
+  };
+  /** The selection keeps the pieces still in the project; the main one falls to the next selected (ADR-097). */
+  const keepSelected = (p: Project) => {
+    const { selectedItemIds, selectedItemId } = get();
+    if (selectedItemIds.length < 2) return;
+    const have = new Set([...p.items, ...(p.models ?? [])].map((i) => i.id));
+    const ids = selectedItemIds.filter((x) => have.has(x));
+    if (ids.length === selectedItemIds.length) return;
+    set({
+      selectedItemIds: ids,
+      selectedItemId: ids.includes(selectedItemId ?? '') ? selectedItemId : (ids[0] ?? null),
+    });
   };
   /** Show an earlier or later state of the project; the selection survives if the piece still exists. */
   const restoreProject = (p: Project, projectPast: Project[], projectFuture: Project[]) => {
@@ -330,8 +385,13 @@ export const useDesign = create<State>((set, get) => {
       projectDirtyAt: Date.now(),
       placingItemId: null,
       notice: null,
-      selectedItemId:
-        sel && [...p.items, ...(p.models ?? [])].some((i) => i.id === sel) ? sel : null,
+      // The selected pieces that still exist stay selected (ADR-097), the main one first.
+      ...(() => {
+        const have = new Set([...p.items, ...(p.models ?? [])].map((i) => i.id));
+        const ids = get().selectedItemIds.filter((x) => have.has(x));
+        const main = sel && have.has(sel) ? sel : (ids[0] ?? null);
+        return { selectedItemId: main, selectedItemIds: ids };
+      })(),
     });
     syncDrill();
   };
@@ -353,6 +413,8 @@ export const useDesign = create<State>((set, get) => {
     projectModel: null,
     editingItemId: null,
     selectedItemId: null,
+    selectedItemIds: [],
+    multiSelect: false,
     drillItemId: null,
     projectDirtyAt: 0,
     projectPast: [],
@@ -387,6 +449,11 @@ export const useDesign = create<State>((set, get) => {
       const { project, selectedItemId, drillItemId, selectedId } = get();
       const item = project?.items.find((i) => i.id === id);
       if (!item) return get().selectItem(id);
+      // A grouped piece: the first tap selects the whole group, the next one the piece (ADR-097, user answer).
+      const group = project && groupOf(project, id);
+      const ids = get().selectedItemIds;
+      if (group && !sameIds(ids, group.itemIds) && !(ids.length === 1 && ids[0] === id))
+        return get().selectItems([id, ...group.itemIds.filter((x) => x !== id)]);
       // The first tap: the whole piece (ADR-083), loaded for edits without leaving the project (ADR-088).
       if (selectedItemId !== id || drillItemId !== id) return get().selectItem(id);
       if (!at) {
@@ -553,12 +620,85 @@ export const useDesign = create<State>((set, get) => {
       return { reasons: res.reasons, ...(res.refused ? { refused: res.refused } : {}) };
     },
     selectItem: (id) => {
-      const { project, selectedItemId, drillItemId } = get();
-      if (id && id === selectedItemId && id === drillItemId) return;
+      const { project, selectedItemId, drillItemId, selectedItemIds } = get();
+      if (id && id === selectedItemId && id === drillItemId && selectedItemIds.length === 1) return;
       set({ selectedItemId: id, notice: null });
       const item = id ? project?.items.find((i) => i.id === id) : undefined;
       if (item && !get().editingItemId) loadDrill(item, null);
       else set({ drillItemId: null });
+    },
+    toggleItem: (id) => {
+      const { selectedItemIds: ids } = get();
+      if (!ids.includes(id)) {
+        if (!ids.length) return get().selectItem(id);
+        return get().selectItems([...ids, id]);
+      }
+      const rest = ids.filter((x) => x !== id);
+      if (rest.length <= 1) return get().selectItem(rest[0] ?? null);
+      get().selectItems(rest);
+    },
+    selectItems: (ids) => {
+      const p = get().project;
+      const have = new Set([...(p?.items ?? []), ...(p?.models ?? [])].map((i) => i.id));
+      const keep = [...new Set(ids)].filter((x) => have.has(x));
+      if (keep.length <= 1) return get().selectItem(keep[0] ?? null);
+      // Several pieces: none is loaded for space edits (that is one piece's, ADR-088).
+      set({ selectedItemIds: keep, selectedItemId: keep[0], drillItemId: null, notice: null });
+    },
+    selectAll: () => get().selectItems((get().project?.items ?? []).map((i) => i.id)),
+    setMultiSelect: (on) => set({ multiSelect: on }),
+    moveSelectionBy: (dx, dz) => {
+      const p = get().project;
+      if (!p) return null;
+      const res = moveItems(p, get().selectedItemIds, dx, dz);
+      if (res.reason) {
+        set({ notice: res.reason });
+        return res.reason;
+      }
+      if (res.project !== p) commitProject(res.project);
+      return null;
+    },
+    turnSelectionBy: (dir) => {
+      const p = get().project;
+      if (!p) return null;
+      const res = turnSelection(p, get().selectedItemIds, dir);
+      if (res.reason) {
+        set({ notice: res.reason });
+        return res.reason;
+      }
+      if (res.project !== p) commitProject(res.project);
+      return null;
+    },
+    deleteSelection: () => {
+      const p = get().project;
+      const ids = get().selectedItemIds;
+      if (!p || !ids.length) return;
+      let next = p;
+      for (const id of ids) next = removeProjectItem(next, id);
+      const models = next.models?.filter((m) => !ids.includes(m.id));
+      commitProject(models && models.length !== next.models?.length ? { ...next, models } : next);
+      set({ selectedItemId: null });
+    },
+    duplicateSelection: () => {
+      const p = get().project;
+      if (!p) return;
+      const res = duplicateItems(p, get().selectedItemIds);
+      if (!res.ids.length) return;
+      commitProject(res.project);
+      get().selectItems(res.ids);
+    },
+    groupSelection: () => {
+      const p = get().project;
+      if (!p) return null;
+      const res = groupItems(p, get().selectedItemIds);
+      if (res.groupId) commitProject(res.project);
+      return res.groupId;
+    },
+    ungroup: (groupId) => {
+      const p = get().project;
+      if (!p) return;
+      const next = ungroup(p, groupId);
+      if (next !== p) commitProject(next);
     },
     editItem: (id) => {
       const item = get().project?.items.find((i) => i.id === id);
@@ -672,7 +812,7 @@ export const useDesign = create<State>((set, get) => {
     applyFinish: (id, role, board, scope) => {
       const p = get().project;
       if (!p) return { applied: [], skipped: [] };
-      const r = applyFinish(p, id, role, board, scope);
+      const r = applyFinish(p, id, role, board, scope, get().selectedItemIds);
       if (r.applied.length) commitProject(r.project);
       return { applied: r.applied, skipped: r.skipped };
     },
