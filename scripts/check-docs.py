@@ -108,6 +108,20 @@ for rel in files:
             if not (p.parent / link).exists():
                 errors.append(f"{rel}: broken link {link}")
 
+# Agreement (retro 2026-10-26): from number 091 on, an ADR records whether the user agreed to it, and only an
+# agreed ADR can be Implemented.
+AGREED = re.compile(r'\d{4}-\d{2}-\d{2} ["\u201c].+["\u201d]')
+for num, (path, status) in adrs.items():
+    if int(num) < 91:
+        continue
+    rel = path.relative_to(REPO)
+    ag = re.search(r"^- Agreed: (.+)$", path.read_text(), re.M)
+    value = ag.group(1).strip() if ag else ""
+    if value != "not yet" and not AGREED.fullmatch(value):
+        errors.append(f"{rel}: '- Agreed:' must be 'not yet' or 'YYYY-MM-DD \"<user's words>\"', is '{value}'")
+    elif status == "Implemented" and value == "not yet":
+        errors.append(f"{rel}: Implemented but the user never agreed to it ('- Agreed: not yet')")
+
 # Gaps ledger (ADR-082).
 sys.path.insert(0, str(REPO / "scripts"))
 import gaps  # noqa: E402
