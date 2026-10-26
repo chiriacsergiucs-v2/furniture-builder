@@ -81,10 +81,12 @@ for (const width of [1280, 390]) {
 
   // 2. 3D view → Look: Simple · Realistic, default by width.
   const before3d = chunks.length;
-  await page.getByRole('radio', { name: '3D' }).click();
-  // On a phone in Build & Preview the view controls sit under "Options" (N82).
-  if (phone && (await page.getByText('Options', { exact: true }).isVisible()))
-    await page.getByText('Options', { exact: true }).click();
+  // A phone shows 3D in Build & Preview only (ADR-079), its view controls under "Options" (N82); a desktop picks 3D.
+  if (phone) {
+    await page.getByRole('radio', { name: /Build & Preview/ }).click();
+    await page.locator('.view.three canvas').waitFor({ timeout: 20000 });
+    await page.locator('details.view-options > summary').click();
+  } else await page.getByRole('radio', { name: '3D' }).click();
   const lookGroup = page.getByRole('radiogroup', { name: 'Look' });
   await lookGroup.waitFor();
   check(width, '"Look" visible in the 3D view', await lookGroup.isVisible());
@@ -122,6 +124,9 @@ for (const width of [1280, 390]) {
     check(width, `size ${s} offered`, await dlg.getByRole('radio', { name: s }).isVisible());
   check(width, 'no sideways scroll (Render)', await noSideScroll());
 
+  // On a software GPU (CI containers, cloud sessions) the path tracer blocks the page for long stretches, so every
+  // wait during the render gets up to 3 minutes; the default comes back after it.
+  page.setDefaultTimeout(180000);
   if (phone) {
     // 4a. Start, then Cancel.
     await dlg.getByRole('radio', { name: '1280 × 720' }).click();
@@ -175,6 +180,7 @@ for (const width of [1280, 390]) {
     );
   }
   await closeDialog();
+  page.setDefaultTimeout(30000);
 
   // 5. The look survives a reload.
   await page.reload();

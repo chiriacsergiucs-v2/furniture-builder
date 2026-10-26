@@ -255,7 +255,13 @@ for (const width of [1280, 390, 360]) {
   check(
     width,
     'Catalog template files sit in a menu',
-    await page.locator('summary[aria-label="Template files"]').isVisible(),
+    await (async () => {
+      // On a phone the catalog's actions fold under "More catalog actions" (G-059).
+      const fold = page.locator('details.catalog-more');
+      if ((await fold.count()) && !(await fold.evaluate((d) => d.open)))
+        await fold.locator(':scope > summary').click();
+      return page.locator('summary[aria-label="Template files"]').isVisible();
+    })(),
   );
 
   // 9. Feature Research from ⋯; old links still open their pages.

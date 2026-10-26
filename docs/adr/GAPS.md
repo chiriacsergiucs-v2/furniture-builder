@@ -561,12 +561,13 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-060: Five find-it scripts stale since ADR-080
 
-- Status: Open
+- Status: Done (N88, 2026-10-26)
 - Origin: Found 2026-10-26 while checking N82; predates it (same failures on main 4b1141b)
 - Missing: Five find-it scripts are stale since ADR-080: look-render (waits for a 'Materials' button), editor-modes (expects a 'Configure' mode), trims (radio 'Configure'), clearances ('Chair space depth' not found), plan-snap (no status in the room plan)
 - Request: Not a user request: R3 requires find-it scripts to pass against the production build
 - Questions: Update the five scripts to the ADR-080 layout (Settings dialog instead of Configure/Materials)?
 - Suggested pick: Update all five scripts to the current UI (est. small each; restores R3 evidence for ADR-067/068, ADR-079, trims, clearances, plan snap)
+- Answer: User 2026-10-26: "fix G-060 stale find-it scripts"; all 28 find-it scripts pass on the production build (N88).
 
 ### G-061: Dragging pieces never tried in a browser
 
