@@ -62,7 +62,9 @@ CI is the source of truth. Before saying work is done, run the same checks CI ru
 
 Not in CI, run when relevant: `FUZZ_N=30000 pnpm exec vitest run tests/fuzz.test.ts` after any geometry change;
 `pnpm catalog:docs` and `pnpm catalog:snapshots` after catalog changes; the matching
-`tools/*/find-it.mjs` against `pnpm build && pnpm preview` for anything visible.
+`tools/*/find-it.mjs` against `pnpm build && pnpm preview` for anything visible. In a cloud session Playwright is
+installed globally and ES modules cannot see it: link it once with
+`ln -s "$(npm root -g)/playwright" node_modules/playwright` before `node tools/*/find-it.mjs` (retro 2026-10-26).
 
 ## How we plan and build: ADRs
 
