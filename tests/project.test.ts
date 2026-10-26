@@ -41,7 +41,10 @@ describe('projects (ADR-022)', () => {
   it('new pieces are placed side by side without overlapping; wall cabinets at mounting height', () => {
     const p = kitchen();
     const pm = buildProjectModel(p);
-    expect(pm.diagnostics).toEqual([]);
+    // The chest is shallower than the base cabinet it touches: only the depth-match warning (ADR-100).
+    expect(pm.diagnostics.map((d) => `${d.severity} ${d.code}`)).toEqual([
+      'warning compat-depth-match',
+    ]);
     expect(pm.pieces[1].bounds.x).toBe(pm.pieces[0].bounds.x + pm.pieces[0].bounds.w);
     expect(pm.pieces[3].bounds.y).toBe(1450);
   });

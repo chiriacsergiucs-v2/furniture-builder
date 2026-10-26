@@ -30,6 +30,7 @@ import {
   type PointerAt,
 } from './planDrag';
 import { useSnap } from './useSnap';
+import { CompatRules } from './CompatRules';
 import {
   DEFAULT_ROOM_HEIGHT,
   doorSwing,
@@ -143,6 +144,7 @@ export function ProjectPanel({
           onChange={(v) => updateProject((p) => ({ ...p, cutting: { kerf: v } }))}
         />
         <SaveProjectTemplate />
+        <CompatRules />
       </div>
     );
 
@@ -933,6 +935,14 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
           {target.snap
             ? `Snaps: ${[target.snap.label, ...target.snap.notes].join(' · ')}`
             : (target.hint ?? (snapOn ? 'Alt held: placing freely.' : 'Snap is off.'))}
+          {/* Neighbours the family rule refused, named even when the piece snaps elsewhere (ADR-100). */}
+          {target.refused
+            .filter((r) => r !== target.hint)
+            .map((r) => (
+              <span key={r} className="snap-refused">
+                {` · ${r}`}
+              </span>
+            ))}
         </span>
       )}
       <svg
