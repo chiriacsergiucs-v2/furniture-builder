@@ -28,7 +28,7 @@ for (const width of [1280, 390]) {
   const shot = (name) => page.screenshot({ path: `${out}/selection-look-${name}-${width}.png` });
   const front = page.locator('.view.front');
   const three = page.locator('.view.three');
-  // The 3D view's card: over the view on a desktop, docked under it on a phone (G-069).
+  // The 3D view's card: over the view on a desktop, docked under it on a phone (G-070).
   const dock3 = phone ? page.locator('#count-dock') : three;
   const card = (where) => where.getByRole('group', { name: 'Quick counts' });
   // What is selected: the phone sheet's peek row, or the desktop inspector ("Selected: …" or the space's heading).
@@ -130,8 +130,8 @@ for (const width of [1280, 390]) {
   };
   await at(0.03, 0.97);
   check(width, '3D: a tap on empty space clears the card', !(await card(dock3).isVisible()));
-  // Three taps at one spot. The card's heading names what it acts on (G-068); on a phone it docks under the 3D view
-  // instead of covering it (G-069), so the spot stays in sight.
+  // Three taps at one spot. The card's heading names what it acts on (G-069); on a phone it docks under the 3D view
+  // instead of covering it (G-070), so the spot stays in sight.
   const heading = async () => {
     const t = card(dock3).locator('.cs-title');
     return (await t.count()) ? (await t.innerText()).trim() : '';
@@ -166,7 +166,7 @@ for (const width of [1280, 390]) {
       `canvas bottom ${Math.round(cv.y + cv.height)}, card top ${Math.round(cd.y)}`,
     );
   }
-  // Realistic (G-063): the same selection, the same heading.
+  // Realistic (G-064): the same selection, the same heading.
   await viewOption('Realistic');
   await page.waitForTimeout(1500);
   await at(0.62, 0.6);

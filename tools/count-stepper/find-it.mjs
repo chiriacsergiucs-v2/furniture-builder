@@ -31,7 +31,7 @@ for (const width of [1280, 390]) {
   const mode = (name) => page.getByRole('radio', { name });
   const front = page.locator('.view.front');
   const three = page.locator('.view.three');
-  // The 3D view's card: over the view on a desktop, docked under it on a phone (G-069).
+  // The 3D view's card: over the view on a desktop, docked under it on a phone (G-070).
   const dock3 = phone ? page.locator('#count-dock') : three;
   const card = (where) => where.getByRole('group', { name: 'Quick counts' });
   const valueOf = (where, label) => card(where).getByRole('status', { name: label }).innerText();
@@ -178,7 +178,7 @@ for (const width of [1280, 390]) {
     const v = await box(three);
     check(
       width,
-      'phone: the card is docked under the 3D view (G-069)',
+      'phone: the card is docked under the 3D view (G-070)',
       (await box(c3)).y >= v.y + v.height - 1,
     );
   } else check(width, 'card is inside the 3D view', inside(await box(c3), await box(three)));

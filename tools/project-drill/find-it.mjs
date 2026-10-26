@@ -136,7 +136,7 @@ for (const width of [1280, 390]) {
     );
     const card = page.locator('.view.three').getByRole('group', { name: 'Quick counts' });
     check(width, '3D: "Quick counts" over the project 3D view', await card.isVisible());
-    // The space is outlined on the plan (its footprint) and on the room front view too (G-070).
+    // The space is outlined on the plan (its footprint) and on the room front view too (G-071).
     await page.getByRole('radio', { name: 'Plan' }).click();
     await page.waitForTimeout(300);
     const outlines = page.locator('.view.front [aria-label="Selected space inside the piece"]');
@@ -201,7 +201,7 @@ for (const width of [1280, 390]) {
     check(width, '"Edit this piece" still opens the piece editor', !(await inProject()));
   }
 
-  // 4. Phone: 3D is in Build & Preview, its card docked under the view (G-069); a tap there drills, and Compose's
+  // 4. Phone: 3D is in Build & Preview, its card docked under the view (G-070); a tap there drills, and Compose's
   //    project panel shows the space.
   if (phone) {
     await page.getByRole('radio', { name: /Build & Preview/ }).click();
@@ -214,7 +214,7 @@ for (const width of [1280, 390]) {
     const v = await page.locator('.view.three').boundingBox();
     check(
       width,
-      'phone: the card is docked under the 3D view (G-069)',
+      'phone: the card is docked under the 3D view (G-070)',
       (await card.boundingBox()).y >= v.y + v.height - 1,
     );
     await page.mouse.click(r.x + r.width * 0.62, r.y + r.height * 0.6);

@@ -771,7 +771,7 @@ export function PlanView() {
  */
 /**
  * The space selected inside the project piece drilled into (ADR-088), placed in the room; nothing while the whole
- * piece is selected (the piece itself is marked then). Outlined on the plan and the room front view (G-070).
+ * piece is selected (the piece itself is marked then). Outlined on the plan and the room front view (G-071).
  */
 function useSpaceInRoom() {
   const project = useDesign((s) => s.project);
@@ -1258,7 +1258,7 @@ function RoomOutline({ room, fs }: { room: Room; fs: number }) {
 /** The whole room seen from the front (looking at the back wall), floor at the bottom. Tap a piece to select it. */
 function RoomFront({ pm }: { pm: ProjectModel }) {
   const space = useSpaceInRoom();
-  // A space selected inside a piece: outlined, everything outside it faded (ADR-087 design A, G-070).
+  // A space selected inside a piece: outlined, everything outside it faded (ADR-087 design A, G-071).
   const fade = (b: Box) => (space && !inSelection(space, b) ? ' faded' : '');
   const selectedId = useDesign((s) => s.selectedItemId);
   const select = useDesign((s) => s.selectItem);

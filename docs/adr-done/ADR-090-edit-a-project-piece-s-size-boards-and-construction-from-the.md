@@ -11,7 +11,7 @@
 
 [ADR-088](../adr-done/ADR-088-drill-into-a-piece-without-leaving-the-project-editor.md) keeps the project editor
 open while a piece's spaces are edited, and left piece-wide settings (size, boards, construction) behind "Edit this
-piece" (G-071). The user, 2026-10-26: "Go 068" — build it.
+piece" (G-072). The user, 2026-10-26: "Go 068" — build it.
 
 ## Decision
 

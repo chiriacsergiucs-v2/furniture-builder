@@ -776,7 +776,7 @@ export function App() {
               </div>
             </div>
           </section>
-          {/* Phones: the 3D view's quick-count card docks here, under the stage, which keeps its height (G-069). */}
+          {/* Phones: the 3D view's quick-count card docks here, under the stage, which keeps its height (G-070). */}
           {phone && <div id="count-dock" className="count-dock-slot" />}
           <Output />
         </main>

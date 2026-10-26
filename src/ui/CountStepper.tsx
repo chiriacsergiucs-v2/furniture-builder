@@ -16,7 +16,7 @@ export const CountStepper = forwardRef<
     return id ? countRows(product, id) : [];
   }, [product, selectedId]);
   if (!rows.length) return null;
-  // Names what the card acts on, the same thing the outline is drawn round (ADR-087, G-068).
+  // Names what the card acts on, the same thing the outline is drawn round (ADR-087, G-069).
   const title = selectionLabel(product, selectedId);
   return (
     <div

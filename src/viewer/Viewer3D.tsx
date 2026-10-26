@@ -166,7 +166,7 @@ export default function Viewer3D() {
     (s) => !!s.project && !s.editingItemId && !!s.drillItemId && s.drillItemId === s.selectedItemId,
   );
   const counts = (view.mode === 'design' || (view.mode === 'project' && drillOn)) && !rendering;
-  // On a phone the short 3D view would be mostly covered by a floating card: it docks under the view (G-069).
+  // On a phone the short 3D view would be mostly covered by a floating card: it docks under the view (G-070).
   // The slot under the view, which App renders on phones before this lazy viewer mounts; floating when it is missing.
   const phone = useMediaQuery(PHONE);
   const dock = phone ? document.getElementById('count-dock') : null;
@@ -630,7 +630,7 @@ function Panels({
   const textures = useTextures(useImageUrls(imageKey(materials)));
   const hl = useMemo(() => new Set(highlight), [highlight]);
   // Selection look A (ADR-087): a thick outline round the selected space or piece, everything outside it faded.
-  // Simple and Realistic looks (G-063); never in a rendered picture. In a project, for the piece drilled into
+  // Simple and Realistic looks (G-064); never in a rendered picture. In a project, for the piece drilled into
   // (ADR-088): the box is placed in the room, and the fade is decided in the piece's own mm.
   const drillModel = useDesign((s) => s.model);
   const drillItem = useDrillItem();

@@ -140,6 +140,8 @@ Lifecycle, one skill per step:
   `ADR-NNN` and becomes Done when that ADR ships (`pnpm gaps sync`, run by `ship-adr`). `pnpm docs:check` and a
   `Stop` hook (`.claude/settings.json`) enforce it.
 - Stop when a check fails (fix the cause, never the check) or when a change would need the network (ADR-002).
+- Status replies are a short Done / Not done list, one line per item, unless the user asks for detail. "Recheck"
+  means a fresh check of `main`, CI, deploy, open ADRs and the live site (user rule 2026-10-26).
 - Recommended options (user rule 2026-10-25): in questions, open questions and ADR defaults, never mark an
   option as recommended because it is the simplest. Recommend the option closest to what the user asked to
   build, and say so. If it is more complex, explain why and estimate how much more work it is (+N %) and how
@@ -151,5 +153,8 @@ Lifecycle, one skill per step:
 - Only modify `chiriacsergiucs-v2/furniture-builder`.
 - Branch per ADR: `adr-NNN-short-title`; open a pull request for review.
 - Merge to `main` only on the user's instruction; then cite the `Deploy GitHub Pages` run id. Never force-push
-  `main`. "apply N" after a `retro` is that instruction (user rule 2026-10-26, `retro` skill).
+  `main`. Selecting proposals in the `retro` dialog is that instruction (user rule 2026-10-26, `retro` skill).
+- Session branch: after its PR merged, restart it with `git checkout -B <branch> origin/main` and push
+  normally (it fast-forwards); never force-push it. After pulling or merging into it, push it in the same
+  turn (retro 2026-10-26).
 - Ship commit message: `Ship ADR-NNN: <short title> — mark implemented`.

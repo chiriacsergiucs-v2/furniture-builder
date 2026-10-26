@@ -42,6 +42,9 @@ ADRs are all in `docs/adr-done/`.
 
 ## Workflow
 
+0. **Start from the latest main.** `git fetch origin` and merge `origin/main` into the branch;
+   do it again before every push, so ADR, backlog and G ids do not collide with work merged meanwhile
+   (retro 2026-10-26).
 1. **Pick the ADR.**
    ```bash
    bash .claude/skills/next-adr/next-adr.sh
