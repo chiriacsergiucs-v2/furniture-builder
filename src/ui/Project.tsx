@@ -17,7 +17,7 @@ import {
 } from '../core/project';
 import { dropTarget, SNAP_RANGE } from '../core/snap';
 import { inSelection, selectionBox } from '../core/selectPath';
-import type { Box, Material, Panel } from '../core/types';
+import type { Box, Design, Material, Panel } from '../core/types';
 import { listDecors, listDesigns, loadDesign, type StoredDesign } from '../persist/db';
 import { useDesign } from '../store/designStore';
 import { Counter, InfoTip, MmField, Segmented, Select, Toggle } from './controls';
@@ -30,6 +30,13 @@ import {
   type PointerAt,
 } from './planDrag';
 import { useSnap } from './useSnap';
+import {
+  consumeDragClick,
+  dragSource,
+  newPieceTarget,
+  registerPlanHit,
+  usePieceList,
+} from './pieceDrag';
 import {
   DEFAULT_ROOM_HEIGHT,
   doorSwing,
@@ -717,7 +724,9 @@ export function PlanView() {
     seenTap.current = tapped;
     ref.current?.scrollIntoView({ block: 'start' });
   }, [tapped]);
-  if (!pm || (!pm.pieces.length && !pm.models.length && !hasRoom && !drawing))
+  // With the piece list open the plan is shown even when empty: items are dropped onto it (ADR-094).
+  const listOpen = usePieceList((s) => s.open);
+  if (!pm || (!pm.pieces.length && !pm.models.length && !hasRoom && !drawing && !listOpen))
     return (
       <div className="no-3d">
         <p>Add pieces to see them on the plan.</p>
@@ -871,10 +880,31 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
     room: toRoom(e),
   });
   const dragged = drag?.dragging ? pm.pieces.find((pc) => pc.item.id === drag.id) : undefined;
+  // A catalog item dragged from the piece list (ADR-094): its outline follows the pointer over the plan, snapped
+  // the same way (with the Snap toggle, read by `newPieceTarget`).
+  const newDrag = usePieceList((s) => s.drag);
   const target =
     dragged && drag && project
       ? dropTarget(project, pm.pieces, drag.id, drag.dx, drag.dz, snapOn && !alt)
-      : null;
+      : newDrag
+        ? newPieceTarget(newDrag)
+        : null;
+  useEffect(() => {
+    registerPlanHit((cx, cy) => {
+      const svg = svgRef.current;
+      const r = svg?.getBoundingClientRect();
+      if (!svg || !r || !r.width || cx < r.left || cx > r.right || cy < r.top || cy > r.bottom)
+        return null;
+      // Only the plan's figure, not a sheet, banner or bar drawn over it.
+      const hit = document.elementFromPoint(cx, cy);
+      if (hit && !(svg.parentElement ?? svg).contains(hit)) return null;
+      const m = svg.getScreenCTM();
+      if (!m) return null;
+      const pt = new DOMPoint(cx, cy).matrixTransform(m.inverse());
+      return { x: Math.round(pt.x), z: Math.round(pt.y) };
+    });
+    return () => registerPlanHit(null);
+  }, []);
   const pts = [...(room?.outline ?? []), ...(drawing ?? [])];
   // With Clearances on, the view also frames the zones (chair or service space beyond the pieces); models always.
   const framed = [
@@ -1401,8 +1431,23 @@ function RoomFront({ pm }: { pm: ProjectModel }) {
 }
 
 /** Choose a starting piece or a saved piece to add to the project. */
-export function AddPieceList({ onDone, onBrowse }: { onDone: () => void; onBrowse?: () => void }) {
-  const add = useDesign((s) => s.addPiece);
+export function AddPieceList({
+  onDone,
+  onBrowse,
+  drag,
+}: {
+  onDone: () => void;
+  onBrowse?: () => void;
+  /** Items can also be dragged onto the plan (ADR-094: the piece list beside the plan). */
+  drag?: boolean;
+}) {
+  const addPiece = useDesign((s) => s.addPiece);
+  // A click that ends a drag from the list is not also a tap-pick (ADR-094).
+  const add = (d: Design, libraryId?: string) => {
+    if (drag && consumeDragClick()) return false;
+    addPiece(d, libraryId);
+    return true;
+  };
   const [saved, setSaved] = useState<StoredDesign[]>([]);
   useEffect(() => {
     listDesigns()
@@ -1413,10 +1458,18 @@ export function AddPieceList({ onDone, onBrowse }: { onDone: () => void; onBrows
     <>
       <StartFrom
         onPick={(d) => {
-          add(d);
-          onDone();
+          if (add(d)) onDone();
         }}
         onBrowse={onBrowse}
+        dragFor={
+          drag
+            ? (make) =>
+                dragSource(() => {
+                  const design = make();
+                  return design ? { design } : null;
+                })
+            : undefined
+        }
       />
       <MyModels onDone={onDone} />
       {saved.length > 0 && (
@@ -1428,9 +1481,9 @@ export function AddPieceList({ onDone, onBrowse }: { onDone: () => void; onBrows
                 <button
                   type="button"
                   className="row-btn"
+                  {...(drag ? dragSource(() => ({ design: r.design, libraryId: r.id })) : {})}
                   onClick={() => {
-                    add(r.design, r.id);
-                    onDone();
+                    if (add(r.design, r.id)) onDone();
                   }}
                 >
                   <span className="glyph">
