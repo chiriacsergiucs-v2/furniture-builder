@@ -66,9 +66,8 @@ implemented and stays as it is; this ADR replaces that one rule. The user's new 
       "Compose" tab still shows the project.
 - [ ] lint, format:check, typecheck, test, build, docs:check pass.
 
-## Open questions
+## Answered questions
 
-- What does the project panel show for a selected space? Recommended: the space's full panel (Contents, Doors and
-  handles, Divide this space, Layouts) plus the quick-count card — "add or remove shelves and change its structure"
-  needs Contents and Divide (estimate +40 % work, +50 % value over the card only) (G-061).
-- 2nd tap on the plan: select the interior and stay in the project (default) or open the piece editor? (G-062)
+- Project panel for a selected space: user 2026-10-26 "Agree" — the space's full panel plus the quick-count card
+  (G-061).
+- Plan, 2nd tap: user 2026-10-26 "Select" — select the piece's interior and stay in the project (G-062).

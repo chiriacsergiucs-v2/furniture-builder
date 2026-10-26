@@ -56,8 +56,7 @@ part. Same for vertical dividers, the "Side by side"/"Stacked" buttons and the P
       parts count rises by the divider only (no shelves).
 - [ ] lint, format:check, typecheck, test, build, docs:check pass.
 
-## Open questions
+## Answered questions
 
-- New part empty (default, the user said the shelves are not wanted) or a copy of the neighbour? (G-063)
-- Every way of dividing (default, so one action never behaves two ways; estimate +5 % work) or only the horizontal
-  quick count? (G-064)
+- New part: user 2026-10-26 "Empty" (G-063).
+- Every way of dividing: user 2026-10-26 "Yes" (G-064).

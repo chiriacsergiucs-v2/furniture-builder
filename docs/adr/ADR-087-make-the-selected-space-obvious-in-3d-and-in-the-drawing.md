@@ -31,7 +31,7 @@ which for the whole piece is the interior — so the card and the highlight can 
    derived from the same `selectedId` the card acts on. One pure helper in `src/core/selectPath.ts`,
    `selectionBox(model, sel)`, returns the box to highlight (the piece bounds for `null`); 3D, the drawing and the
    card all use it.
-2. **One clear look** for the selected space, picked by the user from these five (G-058):
+2. **One clear look** for the selected space, from these five; the user picked **A** (G-058):
    - **A — Outline and fade the rest.** A thick green box outline round the selected space; every panel outside it
      drawn at ~35 % opacity. Whole piece: outline round the piece, nothing faded.
    - **B — Tint everything inside.** Every panel inside the selected space (its dividers, shelves, drawers, children)
@@ -73,8 +73,7 @@ which for the whole piece is the interior — so the card and the highlight can 
       "Whole cabinet" and its dividers `+` adds a bay to the cabinet.
 - [ ] lint, format:check, typecheck, test, build, docs:check pass.
 
-## Open questions
+## Answered questions
 
-- Which design: A, B, C, D, E or a mix? Recommended **A** — it answers both "which part" and "entirely selected" at
-  a glance; same work as B–D (estimate), +10 % value over B (estimate). Building waits for the user's pick (G-058).
-- Same look in the front drawing too? Default: yes, both views (estimate +25 % work, +30 % value) (G-059).
+- Design: user 2026-10-26 "A" — outline round the selected space, the rest faded (G-058).
+- Front drawing too: user 2026-10-26 "Yes" (G-059).
