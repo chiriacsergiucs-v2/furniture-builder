@@ -5,7 +5,7 @@
 - Implemented: 2026-10-26
 - Depends on: ADR-086
 - Design: n/a
-- Backlog: N84
+- Backlog: N85
 
 ## Context
 
@@ -24,9 +24,9 @@ part. Same for vertical dividers, the "Side by side"/"Stacked" buttons and the P
 ## Decision
 
 - A new part made by a divider is empty (`makeSpace('empty')`); the existing content stays in the first part, as
-  today (G-063).
+  today (G-066).
 - It applies to every way of adding a part: quick-count vertical and horizontal dividers, "Side by side",
-  "Stacked" and Parts `+` (G-064).
+  "Stacked" and Parts `+` (G-067).
 - Removing a divider keeps today's rule (the first part's content survives).
 - Catalog layouts and templates that call `splitSpace` and then set each part's content are unchanged; the catalog
   snapshots (`pnpm catalog:snapshots`) must not change.
@@ -59,5 +59,5 @@ part. Same for vertical dividers, the "Side by side"/"Stacked" buttons and the P
 
 ## Answered questions
 
-- New part: user 2026-10-26 "Empty" (G-063).
-- Every way of dividing: user 2026-10-26 "Yes" (G-064).
+- New part: user 2026-10-26 "Empty" (G-066).
+- Every way of dividing: user 2026-10-26 "Yes" (G-067).

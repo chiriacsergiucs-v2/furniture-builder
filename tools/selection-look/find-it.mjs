@@ -1,4 +1,4 @@
-// Find-it acceptance for the selection look (ADR-087, backlog N82), run against a production build:
+// Find-it acceptance for the selection look (ADR-087, backlog N83), run against a production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/selection-look/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
 // The user's steps: tap the piece, tap a part of it, tap again → the whole piece is selected again, outlined, nothing
@@ -28,7 +28,7 @@ for (const width of [1280, 390]) {
   const shot = (name) => page.screenshot({ path: `${out}/selection-look-${name}-${width}.png` });
   const front = page.locator('.view.front');
   const three = page.locator('.view.three');
-  // The 3D view's card: over the view on a desktop, docked under it on a phone (G-066).
+  // The 3D view's card: over the view on a desktop, docked under it on a phone (G-069).
   const dock3 = phone ? page.locator('#count-dock') : three;
   const card = (where) => where.getByRole('group', { name: 'Quick counts' });
   // What is selected: the phone sheet's peek row, or the desktop inspector ("Selected: …" or the space's heading).
@@ -121,8 +121,8 @@ for (const width of [1280, 390]) {
   };
   await at(0.03, 0.97);
   check(width, '3D: a tap on empty space clears the card', !(await card(dock3).isVisible()));
-  // Three taps at one spot. The card's heading names what it acts on (G-065); on a phone it docks under the 3D view
-  // instead of covering it (G-066), so the spot stays in sight.
+  // Three taps at one spot. The card's heading names what it acts on (G-068); on a phone it docks under the 3D view
+  // instead of covering it (G-069), so the spot stays in sight.
   const heading = async () => {
     const t = card(dock3).locator('.cs-title');
     return (await t.count()) ? (await t.innerText()).trim() : '';
@@ -157,7 +157,7 @@ for (const width of [1280, 390]) {
       `canvas bottom ${Math.round(cv.y + cv.height)}, card top ${Math.round(cd.y)}`,
     );
   }
-  // Realistic (G-060): the same selection, the same heading.
+  // Realistic (G-063): the same selection, the same heading.
   await page.getByRole('radio', { name: 'Realistic' }).click();
   await page.waitForTimeout(1500);
   await at(0.62, 0.6);

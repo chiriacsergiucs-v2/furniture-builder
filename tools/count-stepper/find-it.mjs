@@ -1,5 +1,5 @@
 // Find-it acceptance for quick counts over the drawing (ADR-084, backlog N79), over 3D (ADR-085, N80) and empty new
-// parts (ADR-089, N84),
+// parts (ADR-089, N85),
 // run against a production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/count-stepper/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
@@ -31,7 +31,7 @@ for (const width of [1280, 390]) {
   const mode = (name) => page.getByRole('radio', { name });
   const front = page.locator('.view.front');
   const three = page.locator('.view.three');
-  // The 3D view's card: over the view on a desktop, docked under it on a phone (G-066).
+  // The 3D view's card: over the view on a desktop, docked under it on a phone (G-069).
   const dock3 = phone ? page.locator('#count-dock') : three;
   const card = (where) => where.getByRole('group', { name: 'Quick counts' });
   const valueOf = (where, label) => card(where).getByRole('status', { name: label }).innerText();
@@ -178,7 +178,7 @@ for (const width of [1280, 390]) {
     const v = await box(three);
     check(
       width,
-      'phone: the card is docked under the 3D view (G-066)',
+      'phone: the card is docked under the 3D view (G-069)',
       (await box(c3)).y >= v.y + v.height - 1,
     );
   } else check(width, 'card is inside the 3D view', inside(await box(c3), await box(three)));

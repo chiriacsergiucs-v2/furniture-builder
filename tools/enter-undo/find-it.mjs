@@ -1,4 +1,4 @@
-// Find-it acceptance for "Enter in a field is one undo step" (ADR-090, backlog N85), run against a production build:
+// Find-it acceptance for "Enter in a field is one undo step" (ADR-090, backlog N86), run against a production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/enter-undo/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Enter used to commit and then blur, and the blur committed again: two undo steps per Enter. For a millimetre field,
 // an edge band field and a clearance depth, a value typed + Enter must come back with one Undo. Not part of `pnpm test`.

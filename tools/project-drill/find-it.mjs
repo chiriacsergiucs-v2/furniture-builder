@@ -1,4 +1,4 @@
-// Find-it acceptance for drilling into a piece without leaving the project editor (ADR-088, backlog N83), run against
+// Find-it acceptance for drilling into a piece without leaving the project editor (ADR-088, backlog N84), run against
 // a production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/project-drill/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text. Not part of `pnpm test`.
@@ -136,7 +136,7 @@ for (const width of [1280, 390]) {
     );
     const card = page.locator('.view.three').getByRole('group', { name: 'Quick counts' });
     check(width, '3D: "Quick counts" over the project 3D view', await card.isVisible());
-    // The space is outlined on the plan (its footprint) and on the room front view too (G-067).
+    // The space is outlined on the plan (its footprint) and on the room front view too (G-070).
     await page.getByRole('radio', { name: 'Plan' }).click();
     await page.waitForTimeout(300);
     const outlines = page.locator('.view.front [aria-label="Selected space inside the piece"]');
@@ -201,7 +201,7 @@ for (const width of [1280, 390]) {
     check(width, '"Edit this piece" still opens the piece editor', !(await inProject()));
   }
 
-  // 4. Phone: 3D is in Build & Preview, its card docked under the view (G-066); a tap there drills, and Compose's
+  // 4. Phone: 3D is in Build & Preview, its card docked under the view (G-069); a tap there drills, and Compose's
   //    project panel shows the space.
   if (phone) {
     await page.getByRole('radio', { name: /Build & Preview/ }).click();
@@ -214,7 +214,7 @@ for (const width of [1280, 390]) {
     const v = await page.locator('.view.three').boundingBox();
     check(
       width,
-      'phone: the card is docked under the 3D view (G-066)',
+      'phone: the card is docked under the 3D view (G-069)',
       (await card.boundingBox()).y >= v.y + v.height - 1,
     );
     await page.mouse.click(r.x + r.width * 0.62, r.y + r.height * 0.6);

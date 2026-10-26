@@ -41,7 +41,7 @@ Read first: `docs/backlog.md`, `docs/adr/README.md`, `docs/product/product-conte
   (`pnpm catalog:docs`); `docs/retros/` — retrospectives
 - `.claude/skills/` — `new-adr`, `next-adr`, `ship-adr`, `verify`, `review`, `debug`, `add-tests`,
   `implement-design`, `design-review`, `add-storage-version`, `add-model-feature` (reserv's `add-endpoint`
-  counterpart), `security-review`
+  counterpart), `security-review`, `retro`
 - `.github/workflows/ci.yml` — CI; the source of truth for what "passing" means.
   `deploy.yml` publishes `main` to GitHub Pages.
 
@@ -151,5 +151,5 @@ Lifecycle, one skill per step:
 - Only modify `chiriacsergiucs-v2/furniture-builder`.
 - Branch per ADR: `adr-NNN-short-title`; open a pull request for review.
 - Merge to `main` only on the user's instruction; then cite the `Deploy GitHub Pages` run id. Never force-push
-  `main`.
+  `main`. "apply N" after a `retro` is that instruction (user rule 2026-10-26, `retro` skill).
 - Ship commit message: `Ship ADR-NNN: <short title> — mark implemented`.

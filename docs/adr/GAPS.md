@@ -540,7 +540,35 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Full find-it acceptance or light (ADR-066)?
 - Suggested pick: Full: the request is a visible control and R3 is the default (light saves an estimated 20% effort, adds no value)
 
-### G-058: Which selection design
+### G-058: Quick counts card still covers the 3D model on phones
+
+- Status: Open
+- Origin: UI critique 2026-10-26 (N82), finding 3; agent chose not to move the card (it would reverse ADR-084/085)
+- Missing: On a phone in Build & Preview the Quick counts card (two rows, ~150 px with 44 px buttons) still covers most of the 3D model; in the drawing the card's band still shifts the drawing down on the first selection
+- Request: Fix them directly (findings 1-6 of the UI critique; finding 3: the count card covers the top of the drawing, shows twice in Both). Not a quote for the finding text.
+- Questions: Collapse the card to a 'Quick counts' button over 3D on phones? Reserve the card band before the first selection so the drawing never moves?
+- Suggested pick: Collapsible card over 3D on phones, open by default, closest to ADR-085's 'same card over 3D' (est. +30 % work vs nothing, +20 % of finding 2/3 value)
+- Note: 2026-10-26, ADR-087 (G-069, user "Dock under 3D") docks the phone 3D card under the stage, so it no longer covers the model; the drawing part (the card's band shifting the drawing on the first selection) is still open.
+
+### G-059: UI critique findings 7-20 not fixed
+
+- Status: Open
+- Origin: UI critique 2026-10-26 (N82); the user asked to fix findings 1-6 only
+- Missing: Findings 7-20 and the minor ones: one-yellow rule broken (Create project, New piece, Next, Done, catalog Open, active nav), desktop left panel titled Compose in Build & Preview, whole-piece editing split across card / Settings / Edit the interior, catalog counts disagree (118 vs 108, Living room 31 vs 33), wall cabinets first under Living room, Romanian subtitles in the English UI, Projects row Delete icon wraps to its own line, white band behind the catalog filter row, steps rail cut off at 390 px, empty project shows blank 3D and 'No problems found', crowded catalog header on phones, '1 shelf' label over the door line, brand mark looks like a menu, unexplained I/C badges, wizard asks size before type, Skip unclear, empty phone app bar on Projects/Catalog, hardware Item column wraps, repeated 'Edge band: not named yet', 'Clean up unused pictures' as prominent as Import
+- Request: Run critique this design for the entire ui/ux; then 'Fix them directly' (answered for findings 1-6)
+- Questions: Which of these to fix next, and in what order?
+- Suggested pick: Fix 13, 14, 16, 18 next (layout bugs and a misleading message, closest to a broken UI; est. small each)
+
+### G-060: Five find-it scripts stale since ADR-080
+
+- Status: Open
+- Origin: Found 2026-10-26 while checking N82; predates it (same failures on main 4b1141b)
+- Missing: Five find-it scripts are stale since ADR-080: look-render (waits for a 'Materials' button), editor-modes (expects a 'Configure' mode), trims (radio 'Configure'), clearances ('Chair space depth' not found), plan-snap (no status in the room plan)
+- Request: Not a user request: R3 requires find-it scripts to pass against the production build
+- Questions: Update the five scripts to the ADR-080 layout (Settings dialog instead of Configure/Materials)?
+- Suggested pick: Update all five scripts to the current UI (est. small each; restores R3 evidence for ADR-067/068, ADR-079, trims, clearances, plan snap)
+
+### G-061: Which selection design
 
 - Status: Done (ADR-087)
 - Origin: ADR-087, 2026-10-26, open question (Claude default)
@@ -550,7 +578,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: A, outline round the selected space and the rest faded: answers both 'which part' and 'entirely selected' at a glance; estimate equal work to B-D, +10 % value over B
 - Answer: User 2026-10-26: "A" — design A, outline round the selected space and the rest faded; moved into ADR-087.
 
-### G-059: Selection look in the front drawing
+### G-062: Selection look in the front drawing
 
 - Status: Done (ADR-087)
 - Origin: ADR-087, 2026-10-26, open question (Claude default)
@@ -560,7 +588,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: Both views, so the selection reads the same everywhere (estimate +25 % work, +30 % value)
 - Answer: User 2026-10-26: "Yes" — the same look in the front drawing; moved into ADR-087.
 
-### G-060: Selection look in Realistic mode
+### G-063: Selection look in Realistic mode
 
 - Status: Done (ADR-087)
 - Origin: ADR-087, 2026-10-26, out of scope
@@ -570,7 +598,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: Yes, same design in Realistic (estimate +15 % work)
 - Answer: User 2026-10-26: "Yes, same as Simple" — design A (outline and fade) in Realistic too; moved into ADR-087.
 
-### G-061: What the project panel shows for a selected space
+### G-064: What the project panel shows for a selected space
 
 - Status: Done (ADR-088)
 - Origin: ADR-088, 2026-10-26, open question (Claude default)
@@ -580,7 +608,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: The space's full panel plus the quick-count card: 'add or remove shelves and change its structure' needs Contents and Divide (estimate +40 % work, +50 % value over the card only)
 - Answer: User 2026-10-26: "Agree" — the space's full panel plus the quick-count card in the project editor; moved into ADR-088.
 
-### G-062: Second tap on the plan
+### G-065: Second tap on the plan
 
 - Status: Done (ADR-088)
 - Origin: ADR-088, 2026-10-26, open question (Claude default)
@@ -590,7 +618,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: Stay in the project and select the piece's interior, same as 3D (estimate)
 - Answer: User 2026-10-26: "Select" — on the plan the 2nd tap selects the piece's interior and stays in the project; moved into ADR-088.
 
-### G-063: Where a new divided part's content comes from
+### G-066: Where a new divided part's content comes from
 
 - Status: Done (ADR-089)
 - Origin: ADR-089, 2026-10-26, open question (Claude default)
@@ -600,7 +628,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: Empty: the user said the added shelves are not wanted
 - Answer: User 2026-10-26: "Empty" — a new part starts empty; moved into ADR-089.
 
-### G-064: Empty new part for every way of dividing
+### G-067: Empty new part for every way of dividing
 
 - Status: Done (ADR-089)
 - Origin: ADR-089, 2026-10-26, open question (Claude default)
@@ -610,7 +638,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: Every way of dividing, so the same action never behaves two ways (estimate +5 % work)
 - Answer: User 2026-10-26: "Yes" — every way of dividing adds empty parts; moved into ADR-089.
 
-### G-065: Quick-count card heading naming the selection
+### G-068: Quick-count card heading naming the selection
 
 - Status: Done (ADR-087)
 - Origin: ADR-087, 2026-10-26, cut while building (Claude)
@@ -620,7 +648,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: Outline only (built); revisit with a smaller phone card: a heading made the card cover the tap point in the 390 px 3D view (estimate)
 - Answer: User 2026-10-26: "Yes, every card" — a heading on every quick-count card, once the phone card no longer covers the 3D view; moved into ADR-087.
 
-### G-066: Quick-count card covers much of the phone 3D view
+### G-069: Quick-count card covers much of the phone 3D view
 
 - Status: Done (ADR-087)
 - Origin: ADR-087, 2026-10-26, out of scope (seen while testing, from ADR-085)
@@ -630,7 +658,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: Dock the card under the 3D view on phones, so the piece and its outline stay in sight (estimate +10 % work)
 - Answer: User 2026-10-26: "Dock under 3D" — on phones the card sits in a bar under the 3D view; moved into ADR-087.
 
-### G-067: Selected space not marked in the project's 2D views
+### G-070: Selected space not marked in the project's 2D views
 
 - Status: Done (ADR-088)
 - Origin: ADR-088, 2026-10-26, out of scope (Claude)
@@ -640,7 +668,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: Outline it on the room front view, as in the piece's front drawing (estimate +10 % work)
 - Answer: User 2026-10-26: "Room front + plan" — outline the space on the room front view and its width × depth footprint on the plan; moved into ADR-088.
 
-### G-068: Piece-wide settings from the project panel
+### G-071: Piece-wide settings from the project panel
 
 - Status: Done (ADR-090)
 - Origin: ADR-088, 2026-10-26, out of scope (Claude)

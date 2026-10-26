@@ -5,7 +5,7 @@
 - Implemented: 2026-10-26
 - Depends on: ADR-083, ADR-086
 - Design: docs/ui-design.md (section 4, editor screen)
-- Backlog: N83
+- Backlog: N84
 
 ## Context
 
@@ -36,10 +36,10 @@ implemented and stays as it is; this ADR replaces that one rule. The user's new 
   removal the loaded piece follows its project copy or is dropped.
 - The project panel shows, under "Selected piece", an "Inside this piece" section: the selected space's own panel
   (Contents, Doors and handles, Divide this space, Layouts, breadcrumb), or for the whole piece where to tap and its
-  quick counts (G-061). The quick-count card shows over the project 3D, and design A (ADR-087) outlines the space
+  quick counts (G-064). The quick-count card shows over the project 3D, and design A (ADR-087) outlines the space
   there, placed in the room like the piece (`pieceBoxToRoom` in `src/core/project.ts`).
 - "Edit this piece" stays the only way into the piece editor.
-- Plan view (no height): a further tap selects the piece's interior and stays in the project (G-062).
+- Plan view (no height): a further tap selects the piece's interior and stays in the project (G-065).
 
 ## Alternatives considered
 
@@ -50,9 +50,9 @@ implemented and stays as it is; this ADR replaces that one rule. The user's new 
 
 - In scope: the store change, drilling in project 3D, plan and room front view, the "Inside this piece" section, the
   card and outline over the project 3D, the selected space outlined on the plan (its width × depth footprint) and on
-  the room front view with the rest faded (G-067, user 2026-10-26), tests of the user's steps, find-it script.
+  the room front view with the rest faded (G-070, user 2026-10-26), tests of the user's steps, find-it script.
 - Out of scope: piece-wide settings (size, materials, carcass) from the project panel — they stay behind "Edit this
-  piece" (G-068).
+  piece" (G-071).
 
 ## Consequences
 
@@ -75,12 +75,12 @@ implemented and stays as it is; this ADR replaces that one rule. The user's new 
 - [x] `tools/project-drill/find-it.mjs` at 1280 and 390 px: from the bare app, a project with a Sideboard; plan taps
       keep the project open with "Inside this piece"; in 3D a further tap shows "Shelves", "More shelves" adds a
       part, "Compose" still shows the project, Undo takes it back, the next tap is the whole piece again.
-- [x] Same script: the plan and the room front view outline the selected space (G-067); taps on the room front
+- [x] Same script: the plan and the room front view outline the selected space (G-070); taps on the room front
       view drill too; at 390 px the card is docked under the 3D view.
 - [x] lint, format:check, typecheck, test, build, docs:check pass.
 
 ## Answered questions
 
 - Project panel for a selected space: user 2026-10-26 "Agree" — the space's full panel plus the quick-count card
-  (G-061).
-- Plan, 2nd tap: user 2026-10-26 "Select" — select the piece's interior and stay in the project (G-062).
+  (G-064).
+- Plan, 2nd tap: user 2026-10-26 "Select" — select the piece's interior and stay in the project (G-065).

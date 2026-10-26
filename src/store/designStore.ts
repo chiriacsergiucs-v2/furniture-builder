@@ -350,7 +350,7 @@ export const useDesign = create<State>((set, get) => {
       // The first tap: the whole piece (ADR-083), loaded for edits without leaving the project (ADR-088).
       if (selectedItemId !== id || drillItemId !== id) return get().selectItem(id);
       if (!at) {
-        // The plan has no height: a further tap selects the piece's interior (G-062).
+        // The plan has no height: a further tap selects the piece's interior (G-065).
         const roots = productRoots(get().design.product);
         return set({ selectedId: roots.length === 1 ? roots[0].root.id : null });
       }
