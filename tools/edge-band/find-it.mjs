@@ -18,6 +18,8 @@ for (const width of [1440, 1280, 390, 375]) {
   const phone = width < 500;
   const ctx = await browser.newContext({ viewport: { width, height: phone ? 844 : 900 } });
   const page = await ctx.newPage();
+  // Build & Preview keeps a software-rendered 3D view busy; give clicks time.
+  page.setDefaultTimeout(60000);
   const errors = [];
   const remote = [];
   page.on('pageerror', (e) => errors.push(e.message));

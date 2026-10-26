@@ -85,6 +85,7 @@ for (const width of [1440, 375]) {
   const phone = width < 500;
   const ctx = await browser.newContext({ viewport: { width, height: phone ? 812 : 900 } });
   const page = await ctx.newPage();
+  page.setDefaultTimeout(60000);
   const errors = [];
   const remote = [];
   page.on('pageerror', (e) => errors.push(e.message));
@@ -141,8 +142,15 @@ for (const width of [1440, 375]) {
     await page.getByRole('radio', { name: 'Front' }).click();
     await page.waitForTimeout(300);
   };
+  // The 3D canvas never counts as "stable" while it renders: shoot its box from the page instead.
+  const shootBox = async (p, loc) => {
+    await loc.waitFor({ state: 'visible' });
+    await loc.evaluate((el) => el.scrollIntoView({ block: 'nearest' }));
+    const clip = await loc.boundingBox();
+    return p.screenshot({ clip });
+  };
   const canvasShare = async () =>
-    stripeShare(page, await page.locator('.view.three canvas').screenshot());
+    stripeShare(page, await shootBox(page, page.locator('.view.three canvas')));
 
   // 1. Bare app → New single piece → first Start from item → editor.
   await page.goto(url);
@@ -168,7 +176,7 @@ for (const width of [1440, 375]) {
   );
   for (const board of ['PAL 18 white', 'MDF 18 painted']) {
     await dlg.getByLabel(`Add a picture for ${board}`).setInputFiles(picture);
-    await dlg.getByRole('img', { name: `Picture of ${board}` }).waitFor({ timeout: 10000 });
+    await dlg.getByRole('img', { name: `Picture of ${board}` }).waitFor({ timeout: 60000 });
     check(
       width,
       `${board}: picture shown in Materials`,
@@ -191,7 +199,7 @@ for (const width of [1440, 375]) {
   // 3. A file that is not a picture: message, board keeps its picture, no crash.
   await dlg.getByLabel('Replace picture for PAL 18 white').setInputFiles(notPicture);
   const alert = dlg.getByRole('alert').filter({ hasText: 'could not be read as a picture' });
-  await alert.waitFor({ timeout: 10000 }).catch(() => {});
+  await alert.waitFor({ timeout: 60000 }).catch(() => {});
   check(width, 'not a picture: message shown', await alert.isVisible());
   check(
     width,
@@ -209,7 +217,10 @@ for (const width of [1440, 375]) {
     after.red > 0.02 && after.blue > 0.02,
     JSON.stringify(after),
   );
-  await page.locator('.view.three canvas').screenshot({ path: `${out}/materials-3d-${width}.png` });
+  writeFileSync(
+    `${out}/materials-3d-${width}.png`,
+    await shootBox(page, page.locator('.view.three canvas')),
+  );
   await showFront();
   const patterned = await page
     .locator('figure.elevation polygon.el-panel')
@@ -363,7 +374,7 @@ for (const width of [1440, 375]) {
   await toBuild(op);
   await op.getByRole('radio', { name: '3D' }).click();
   await op.waitForTimeout(1500);
-  const there = await stripeShare(op, await op.locator('.view.three canvas').screenshot());
+  const there = await stripeShare(op, await shootBox(op, op.locator('.view.three canvas')));
   check(
     width,
     'other device: imported file shows the pictures in 3D',
