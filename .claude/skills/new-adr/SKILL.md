@@ -51,8 +51,11 @@ Everything written to the repo is in **English**, whatever language the conversa
      test looks for), at most 8. Anything visible gets a find-it item. If the user chose
      light acceptance, add `- Acceptance: light` under `- Backlog:`, mark those items
      `(light — catch-up)` and put `find-it pending (light, ADR-066)` in the backlog row (ADR-066).
+   - **Gaps (ADR-082)** — each _Out of scope_ item and each open question gets a gap in
+     `docs/adr/GAPS.md` (`pnpm gaps add`), cited by its G id; `pnpm docs:check` enforces it. When
+     the ADR takes over an existing gap, set that gap's Status to `ADR-NNN`.
    - **Open questions** — every default the user has not confirmed, with the value used
-     until they answer. Never invent hardware specs, loads or supplier values (ADR-010);
+     until they answer, and the recommended option closest to the request (`CLAUDE.md`). Never invent hardware specs, loads or supplier values (ADR-010);
      ask instead.
 7. **Check the plan rules:**
    - Dependencies point to ADRs that exist and do not form a cycle.
@@ -61,7 +64,9 @@ Everything written to the repo is in **English**, whatever language the conversa
    - Status stays `Pending`. If open questions block building, set
      `- Status: Deferred (<reason>)` in the file **and** in the README row.
 8. **Run** `pnpm docs:check`.
-9. **Hand over.** Show the user the open questions. Suggest a branch named `adr-NNN-slug`
+9. **Hand over.** The ADR keeps `- Agreed: not yet`. Ask the user (`AskUserQuestion`) about each decision,
+   each out-of-scope item and each open question, then record their words in the `- Agreed:` line
+   (retro 2026-10-26). `pnpm docs:check` refuses to ship an ADR from number 091 on without it. Show the user the open questions. Suggest a branch named `adr-NNN-slug`
    and a pull request. Do not commit or push unless the user asks.
 
 ## Notes

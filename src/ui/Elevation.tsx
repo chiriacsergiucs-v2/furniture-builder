@@ -1,10 +1,12 @@
-import { useId, useMemo } from 'react';
+import { useId, useLayoutEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
 import { productRoots } from '../core/design';
+import { inSelection, selectionBox } from '../core/selectPath';
 import { faceMapping } from '../core/surface';
 import { imageKey, useImageUrls } from '../persist/images';
 import { useDesign } from '../store/designStore';
 import type { Panel, SpaceOpening } from '../core/types';
 import { frontOutline } from '../core/shape';
+import { CountStepper } from './CountStepper';
 
 /** SVG points of a panel's front outline (y flipped so the floor is at the bottom). */
 export const outlinePoints = (p: Panel) =>
@@ -37,13 +39,13 @@ function describe(s: SpaceOpening, count?: number): string {
 
 /**
  * Front elevation: the editing surface. Structure is drawn solid, fronts as dashed outlines,
- * every leaf space is a tap target. Y is flipped so the floor is at the bottom.
+ * a tap selects the whole piece, then one level smaller per tap (ADR-083). Y is flipped so the floor is at the bottom.
  */
 export function Elevation() {
   const model = useDesign((s) => s.model);
   const design = useDesign((s) => s.design);
   const selectedId = useDesign((s) => s.selectedId);
-  const select = useDesign((s) => s.select);
+  const tapPiece = useDesign((s) => s.tapPiece);
   const showFronts = useDesign((s) => s.showFronts);
   const mats = useMemo(() => new Map(design.materials.map((m) => [m.id, m])), [design.materials]);
   // Pictures on boards (ADR-048): one pattern per material and direction; plain colour while missing.
@@ -82,15 +84,66 @@ export function Elevation() {
   const selectedPanels = new Set(
     model.panels.filter((p) => p.nodeId === selectedId).map((p) => p.id),
   );
-  const selectedSpace = model.spaces.find((s) => s.nodeId === selectedId && s.view !== 'side');
+  // The whole piece selected (ADR-083) is outlined round its bounds; everything outside the outline is faded (ADR-087).
+  const selBox = selectionBox(model, selectedId);
+  const selectedSpace = selBox ? { box: selBox } : undefined;
+  const fade = (box: Panel['box']) => (selBox && !inSelection(selBox, box) ? ' faded' : '');
   const fontSize = Math.max(b.w, b.h) / 26;
 
-  // Leaf spaces on top so they receive taps; parents (splits) are selected from the breadcrumb.
+  // Quick counts (ADR-084) float right above the selected space, inside the drawing; below its top edge when there
+  // is no room above. Placed from the selection outline's screen box, so it follows zoom and resizes.
+  const figRef = useRef<HTMLElement>(null);
+  const selRef = useRef<SVGRectElement>(null);
+  const stepRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
+  // The drawing gives up the card's height at its top, so there is always room right above the selection.
+  const [cardH, setCardH] = useState(0);
+  const [tick, setTick] = useState(0);
+  useLayoutEffect(() => {
+    const fig = figRef.current;
+    if (!fig || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => setTick((t) => t + 1));
+    ro.observe(fig);
+    return () => ro.disconnect();
+  }, []);
+  const sb = selectedSpace?.box;
+  useLayoutEffect(() => {
+    const fig = figRef.current,
+      sel = selRef.current,
+      st = stepRef.current;
+    if (!fig || !sel || !st) {
+      setCardH(0);
+      return setPos(null);
+    }
+    setCardH(st.offsetHeight);
+    const f = fig.getBoundingClientRect(),
+      r = sel.getBoundingClientRect();
+    const w = st.offsetWidth,
+      h = st.offsetHeight,
+      gap = 6;
+    const left = Math.max(gap, Math.min(r.left + r.width / 2 - f.left - w / 2, f.width - w - gap));
+    const above = r.top - f.top - h - gap;
+    const top = above >= gap ? above : Math.max(gap, r.top - f.top + gap);
+    setPos((p) => (p && p.left === left && p.top === top ? p : { left, top }));
+  }, [sb?.x, sb?.y, sb?.w, sb?.h, b.x, b.y, b.w, b.h, tick, cardH, design.product]);
+
+  // A tap anywhere selects from the outside in, one level per tap (ADR-083); leaves stay keyboard targets.
+  const onTap = (e: MouseEvent<SVGSVGElement>) => {
+    const m = e.currentTarget.getScreenCTM();
+    if (!m) return;
+    const pt = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse());
+    tapPiece(Math.round(pt.x), Math.round(-pt.y));
+  };
   const leaves = model.spaces.filter((s) => s.leaf && s.view !== 'side');
 
   return (
-    <figure className="elevation" aria-label="Front view. Select a space to edit it.">
-      <svg viewBox={vb} preserveAspectRatio="xMidYMid meet" role="group">
+    <figure
+      ref={figRef}
+      className="elevation"
+      style={selectedSpace && cardH ? { paddingTop: cardH + 10 } : undefined}
+      aria-label="Front view. Select a space to edit it."
+    >
+      <svg viewBox={vb} preserveAspectRatio="xMidYMid meet" role="group" onClick={onTap}>
         <defs>
           {design.materials.flatMap((m) => {
             const url = m.image ? urls.get(m.image.id) : undefined;
@@ -112,7 +165,7 @@ export function Elevation() {
         </defs>
         <rect className="floor" x={b.x - pad} y={0} width={b.w + 2 * pad} height={pad * 0.15} />
         {backs.map((p) => (
-          <polygon key={p.id} className="el-back" points={outlinePoints(p)} />
+          <polygon key={p.id} className={`el-back${fade(p.box)}`} points={outlinePoints(p)} />
         ))}
         {leaves.map((s) => (
           <g
@@ -122,14 +175,10 @@ export function Elevation() {
             tabIndex={0}
             aria-pressed={s.nodeId === selectedId}
             aria-label={`${describe(s, counts.get(s.nodeId))} space, ${s.box.w} by ${s.box.h} mm`}
-            onClick={(e) => {
-              e.stopPropagation();
-              select(s.nodeId);
-            }}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                select(s.nodeId);
+                tapPiece(Math.round(s.box.x + s.box.w / 2), Math.round(s.box.y + s.box.h / 2));
               }
             }}
           >
@@ -139,18 +188,16 @@ export function Elevation() {
         {structure.map((p) => (
           <polygon
             key={p.id}
-            className={`el-panel ${selectedPanels.has(p.id) ? 'hl' : ''}`}
+            className={`el-panel ${selectedPanels.has(p.id) ? 'hl' : ''}${fade(p.box)}`}
             points={outlinePoints(p)}
             style={{ fill: fillOf(p) }}
             data-plain={mats.get(p.materialId)?.color}
-            onClick={(e) => {
-              e.stopPropagation();
-              select(p.nodeId === design.product.id ? null : p.nodeId);
-            }}
           />
         ))}
         {showFronts &&
-          fronts.map((p) => <polygon key={p.id} className="el-front" points={outlinePoints(p)} />)}
+          fronts.map((p) => (
+            <polygon key={p.id} className={`el-front${fade(p.box)}`} points={outlinePoints(p)} />
+          ))}
         {showFronts &&
           fronts
             .filter((p) => p.handleHoles)
@@ -178,7 +225,7 @@ export function Elevation() {
         {leaves.map((s) => (
           <text
             key={`l-${s.nodeId}`}
-            className={`el-label ${s.nodeId === selectedId ? 'selected' : ''}`}
+            className={`el-label ${s.nodeId === selectedId ? 'selected' : ''}${fade(s.box)}`}
             x={s.box.x + s.box.w / 2}
             y={Y(s.box.y, s.box.h) + s.box.h / 2}
             fontSize={Math.min(fontSize, s.box.w / 6)}
@@ -190,6 +237,7 @@ export function Elevation() {
         ))}
         {selectedSpace && (
           <rect
+            ref={selRef}
             className="el-selection"
             x={selectedSpace.box.x}
             y={Y(selectedSpace.box.y, selectedSpace.box.h)}
@@ -199,7 +247,7 @@ export function Elevation() {
         )}
         <Dim x1={b.x} x2={b.x + b.w} y={pad * 0.75} fontSize={fontSize} label={`${b.w}`} />
         <DimV y1={0} y2={-(b.y + b.h)} x={b.x - pad * 0.55} fontSize={fontSize} label={`${b.h}`} />
-        {selectedSpace && (
+        {selectedSpace && selectedId !== null && (
           <Dim
             x1={selectedSpace.box.x}
             x2={selectedSpace.box.x + selectedSpace.box.w}
@@ -210,6 +258,13 @@ export function Elevation() {
           />
         )}
       </svg>
+      {selectedSpace && (
+        <CountStepper
+          ref={stepRef}
+          className="floating"
+          style={pos ? { left: pos.left, top: pos.top } : { visibility: 'hidden' }}
+        />
+      )}
     </figure>
   );
 }

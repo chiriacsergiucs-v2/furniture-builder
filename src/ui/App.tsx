@@ -32,7 +32,18 @@ import { setLook, useLook } from './useLook';
 import { RenderDialog } from './RenderDialog';
 import { MoreMenu } from './shell/MoreMenu';
 import { ProjectsPage } from './shell/ProjectsPage';
+import { useMediaQuery } from './useMediaQuery';
 import { MODE_LABEL, MODES, useUi } from './shell/uiStore';
+import {
+  bringDrawingForward,
+  defaultView,
+  shows3d,
+  showsDrawing,
+  showsSwitch,
+  shownView,
+  viewOptions,
+  type StageView,
+} from './viewChoice';
 
 const Viewer3D = lazy(() => import('../viewer/Viewer3D'));
 
@@ -71,17 +82,43 @@ const SAVE_TEXT: Record<SaveState, string> = {
   failed: 'Not saved — browser storage unavailable',
 };
 
-function useMediaQuery(q: string) {
-  const [match, setMatch] = useState(
-    () => typeof matchMedia !== 'undefined' && matchMedia(q).matches,
-  );
+/**
+ * The stage's view controls. On a phone in Build & Preview they sit behind one "Options" button so the 3D view keeps
+ * its height; Escape and a tap outside close it. Elsewhere they are shown as they are.
+ */
+function ViewOptions({ menu, children }: { menu: boolean; children: ReactNode }) {
+  const ref = useRef<HTMLDetailsElement>(null);
   useEffect(() => {
-    const m = matchMedia(q);
-    const on = () => setMatch(m.matches);
-    m.addEventListener('change', on);
-    return () => m.removeEventListener('change', on);
-  }, [q]);
-  return match;
+    if (!menu) return;
+    const close = () => ref.current?.removeAttribute('open');
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && ref.current?.open) {
+        close();
+        ref.current?.querySelector('summary')?.focus();
+      }
+    };
+    const onDown = (e: PointerEvent) => {
+      if (ref.current?.open && !ref.current.contains(e.target as Node)) close();
+    };
+    window.addEventListener('keydown', onKey);
+    document.addEventListener('pointerdown', onDown);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.removeEventListener('pointerdown', onDown);
+    };
+  }, [menu]);
+  if (!menu) return <>{children}</>;
+  return (
+    <details className="menu view-options" ref={ref}>
+      <summary>
+        Options
+        <Icon name="chevron-down" className="sm" />
+      </summary>
+      <div className="view-options-panel" role="group" aria-label="View options">
+        {children}
+      </div>
+    </details>
+  );
 }
 
 type Page = 'projects' | 'editor' | 'catalog' | 'research';
@@ -170,22 +207,25 @@ export function App() {
   const phone = useMediaQuery('(max-width: 760px)');
   const wide = useMediaQuery('(min-width: 1500px)');
   const [has3d] = useState(webglAvailable);
-  const [view, setView] = useState<'front' | '3d'>(mode === 'build' && has3d ? '3d' : 'front');
-  const [lastMode, setLastMode] = useState(mode);
+  // The View switch (ADR-081): Front/Plan · 3D · Both. A mode, or crossing 1500 px, starts from its default view.
+  const [view, setView] = useState<StageView>(() => defaultView(mode, wide, has3d));
+  const viewKey = `${mode}|${wide}`;
+  const [lastViewKey, setLastViewKey] = useState(viewKey);
   const [sheetOpen, setSheetOpen] = useState(false);
-  if (mode !== lastMode) {
-    setLastMode(mode);
-    setView(mode === 'build' && has3d ? '3d' : 'front');
+  if (viewKey !== lastViewKey) {
+    setLastViewKey(viewKey);
+    setView(defaultView(mode, wide, has3d));
   }
-  // On a phone the mode alone decides: 3D only in Build & Preview, so the canvas is not mounted elsewhere (ADR-014).
-  const shown = phone ? (mode === 'build' ? '3d' : 'front') : view;
-  const mount3d = has3d && (wide || shown === '3d');
+  // On a phone Compose is the drawing only, so the canvas is not mounted there (ADR-014).
+  const shown = shownView(view, mode, phone);
+  const mount3d = has3d && shows3d(shown);
 
   // A piece waiting to be placed (ADR-056) or a room being drawn (ADR-059) is done on the plan, in Compose.
   const tapMode = useDesign((s) =>
     s.placingItemId ? `place:${s.placingItemId}` : s.drawingRoom ? 'draw' : '',
   );
-  // Choosing a space or a piece while configuring means composing it; on a phone the sheet opens on it.
+  // Choosing a piece in a project opens the sheet on it on a phone. A space of a single piece does not: the drawing
+  // keeps its height with the quick counts right above the selection, and the peek row opens the editor.
   const selKey = inProject ? selectedItemId : selectedId;
   const [lastTap, setLastTap] = useState(tapMode);
   const [lastSel, setLastSel] = useState(selKey);
@@ -193,13 +233,13 @@ export function App() {
     setLastTap(tapMode);
     // Placing a piece or drawing the room needs the plan: on a phone the sheet steps aside.
     if (tapMode) {
-      setView('front');
+      setView(bringDrawingForward);
       setSheetOpen(false);
     }
   }
   if (selKey !== lastSel) {
     setLastSel(selKey);
-    if (selKey && !tapMode) setSheetOpen(true);
+    if (selKey && !tapMode && inProject) setSheetOpen(true);
   }
   // A project check tapped under Checks (ADR-071) is shown on the plan: the drawing comes forward, the sheet steps aside.
   const problemTap = useProblem((s) => s.tapped);
@@ -207,7 +247,7 @@ export function App() {
   if (problemTap !== lastProblemTap) {
     setLastProblemTap(problemTap);
     if (inProject) {
-      setView('front');
+      setView(bringDrawingForward);
       setSheetOpen(false);
     }
   }
@@ -635,91 +675,89 @@ export function App() {
               )}
             </div>
           </aside>
-          <section className="stage" aria-label="Drawing">
+          <section className={`stage ${shown === 'both' ? 'both' : ''}`} aria-label="Drawing">
             <div className="stage-tools">
-              {!phone && (
+              {showsSwitch(mode, phone) && (
                 <div className="segmented small" role="radiogroup" aria-label="View">
-                  <button
-                    type="button"
-                    role="radio"
-                    aria-checked={view === 'front'}
-                    className={view === 'front' ? 'on' : ''}
-                    onClick={() => setView('front')}
-                  >
-                    {inProject ? 'Plan' : 'Front'}
-                  </button>
-                  <button
-                    type="button"
-                    role="radio"
-                    aria-checked={view === '3d'}
-                    className={view === '3d' ? 'on' : ''}
-                    onClick={() => setView('3d')}
-                  >
-                    3D
-                  </button>
-                </div>
-              )}
-              <label className="toggle small">
-                <input
-                  type="checkbox"
-                  checked={showFronts}
-                  onChange={(e) => setShowFronts(e.target.checked)}
-                />
-                <span>Doors and fronts</span>
-              </label>
-              {(wide || shown === '3d') && (
-                <label className="toggle small">
-                  <input
-                    type="checkbox"
-                    checked={exploded}
-                    onChange={(e) => setExploded(e.target.checked)}
-                  />
-                  <span>Exploded 3D</span>
-                </label>
-              )}
-              {shown === '3d' && (
-                <button
-                  type="button"
-                  className="btn sm"
-                  onClick={() => window.dispatchEvent(new Event('fb:fit'))}
-                >
-                  <Icon name="refresh" className="sm" />
-                  Reset view
-                </button>
-              )}
-              {mount3d && (
-                <div className="segmented small" role="radiogroup" aria-label="Look">
-                  {(['simple', 'realistic'] as const).map((l) => (
+                  {viewOptions(inProject, has3d).map((o) => (
                     <button
-                      key={l}
+                      key={o.id}
                       type="button"
                       role="radio"
-                      aria-checked={look === l}
-                      className={look === l ? 'on' : ''}
-                      onClick={() => setLook(l)}
+                      aria-checked={shown === o.id}
+                      className={shown === o.id ? 'on' : ''}
+                      disabled={o.disabled}
+                      title={o.reason}
+                      onClick={() => setView(o.id)}
                     >
-                      {l === 'simple' ? 'Simple' : 'Realistic'}
+                      {o.label}
                     </button>
                   ))}
                 </div>
               )}
-              {mount3d && (
-                <button
-                  type="button"
-                  className="btn sm"
-                  title="Render a photo-quality picture. Best on a laptop; a phone may be slow."
-                  onClick={() => setDialog('render')}
-                >
-                  <Icon name="camera" className="sm" />
-                  Render
-                </button>
-              )}
+              <ViewOptions menu={phone && mode === 'build'}>
+                <label className="toggle small">
+                  <input
+                    type="checkbox"
+                    checked={showFronts}
+                    onChange={(e) => setShowFronts(e.target.checked)}
+                  />
+                  <span>Doors and fronts</span>
+                </label>
+                {shows3d(shown) && (
+                  <label className="toggle small">
+                    <input
+                      type="checkbox"
+                      checked={exploded}
+                      onChange={(e) => setExploded(e.target.checked)}
+                    />
+                    <span>Exploded 3D</span>
+                  </label>
+                )}
+                {shows3d(shown) && (
+                  <button
+                    type="button"
+                    className="btn sm"
+                    onClick={() => window.dispatchEvent(new Event('fb:fit'))}
+                  >
+                    <Icon name="refresh" className="sm" />
+                    Reset view
+                  </button>
+                )}
+                {mount3d && (
+                  <div className="segmented small" role="radiogroup" aria-label="Look">
+                    {(['simple', 'realistic'] as const).map((l) => (
+                      <button
+                        key={l}
+                        type="button"
+                        role="radio"
+                        aria-checked={look === l}
+                        className={look === l ? 'on' : ''}
+                        onClick={() => setLook(l)}
+                      >
+                        {l === 'simple' ? 'Simple' : 'Realistic'}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {mount3d && (
+                  <button
+                    type="button"
+                    className="btn sm"
+                    title="Render a photo-quality picture. Best on a laptop; a phone may be slow."
+                    onClick={() => setDialog('render')}
+                  >
+                    <Icon name="camera" className="sm" />
+                    Render
+                  </button>
+                )}
+              </ViewOptions>
             </div>
-            <div className="views">
-              <div className={`view front ${shown === 'front' ? 'active' : ''}`}>
+            <div className={`views ${shown === 'both' ? 'both' : ''}`}>
+              <div className={`view front ${showsDrawing(shown) ? 'active' : ''}`}>
                 {inProject ? <PlanView /> : <Elevation />}
               </div>
-              <div className={`view three ${shown === '3d' ? 'active' : ''}`}>
+              <div className={`view three ${shows3d(shown) ? 'active' : ''}`}>
                 {mount3d ? (
                   <ViewerBoundary>
                     <Suspense
@@ -738,6 +776,8 @@ export function App() {
               </div>
             </div>
           </section>
+          {/* Phones: the 3D view's quick-count card docks here, under the stage, which keeps its height (G-070). */}
+          {phone && <div id="count-dock" className="count-dock-slot" />}
           <Output />
         </main>
 

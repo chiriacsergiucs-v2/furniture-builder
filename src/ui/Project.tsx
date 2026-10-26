@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react';
 import { projectBoards, roleBoard, type FinishRole, type FinishScope } from '../core/finish';
 import { decorPatch, type Decor } from '../core/materials';
 import { touchingRun } from '../core/arrange';
@@ -6,6 +6,7 @@ import { mergeCandidates } from '../core/merge';
 import {
   leftNeighbour,
   materialKey,
+  pieceBoxToRoom,
   placementBases,
   planRuns,
   runOf,
@@ -15,7 +16,8 @@ import {
   type QuarterTurn,
 } from '../core/project';
 import { dropTarget, SNAP_RANGE } from '../core/snap';
-import type { Material, Panel } from '../core/types';
+import { inSelection, selectionBox } from '../core/selectPath';
+import type { Box, Material, Panel } from '../core/types';
 import { listDecors, listDesigns, loadDesign, type StoredDesign } from '../persist/db';
 import { useDesign } from '../store/designStore';
 import { Counter, InfoTip, MmField, Segmented, Select, Toggle } from './controls';
@@ -48,6 +50,8 @@ import {
 import { newId } from '../core/design';
 import { Dim, DimV, outlinePoints } from './Elevation';
 import { Icon } from './icons';
+import { InsideEditor } from './Inspector';
+import { PieceSettingsDialog } from './Settings';
 import { templateGlyph } from './Templates';
 import { StartFrom } from './Catalog';
 import { askConfirm } from './Confirm';
@@ -85,6 +89,7 @@ export function ProjectPanel({
   const project = useDesign((s) => s.project)!;
   const pm = useDesign((s) => s.projectModel);
   const selectedId = useDesign((s) => s.selectedItemId);
+  const drillId = useDesign((s) => s.drillItemId);
   const select = useDesign((s) => s.selectItem);
   const update = useDesign((s) => s.updateItem);
   const remove = useDesign((s) => s.removeItem);
@@ -92,6 +97,7 @@ export function ProjectPanel({
   const updateProject = useDesign((s) => s.updateProject);
   const setGap = useDesign((s) => s.setGap);
   const [libMsg, setLibMsg] = useState<string | null>(null);
+  const [pieceSettings, setPieceSettings] = useState(false);
   const [moveRight, setMoveRight] = useState(true);
   const item = project.items.find((i) => i.id === selectedId);
   const left = useMemo(
@@ -169,6 +175,19 @@ export function ProjectPanel({
             <p className="hint" role="status">
               {libMsg}
             </p>
+          )}
+          {drillId === item.id && (
+            <section className="inside-piece" aria-label="Inside this piece">
+              <div className="card-title">
+                <span>Inside this piece</span>
+              </div>
+              <button type="button" className="btn outline" onClick={() => setPieceSettings(true)}>
+                <Icon name="sliders" className="sm" />
+                Size, boards and construction
+              </button>
+              <InsideEditor />
+              <PieceSettingsDialog open={pieceSettings} onClose={() => setPieceSettings(false)} />
+            </section>
           )}
           <Counter
             label="How many"
@@ -750,9 +769,29 @@ export function PlanView() {
  * Top-down plan of the room: x to the right, the back wall at the top. Tap a piece to select it; drag it, or use
  * the arrow keys on it, to move it (ADR-065).
  */
+/**
+ * The space selected inside the project piece drilled into (ADR-088), placed in the room; nothing while the whole
+ * piece is selected (the piece itself is marked then). Outlined on the plan and the room front view (G-071).
+ */
+function useSpaceInRoom() {
+  const project = useDesign((s) => s.project);
+  const model = useDesign((s) => s.model);
+  const sel = useDesign((s) => s.selectedId);
+  const id = useDesign((s) =>
+    s.project && !s.editingItemId && s.drillItemId === s.selectedItemId ? s.drillItemId : null,
+  );
+  return useMemo(() => {
+    const item = id ? project?.items.find((i) => i.id === id) : undefined;
+    const box = item && typeof sel === 'string' ? selectionBox(model, sel) : undefined;
+    return item && box ? pieceBoxToRoom(item, model, box) : undefined;
+  }, [project, model, sel, id]);
+}
+
 function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem | null }) {
+  const space = useSpaceInRoom();
   const selectedId = useDesign((s) => s.selectedItemId);
   const select = useDesign((s) => s.selectItem);
+  const tapItem = useDesign((s) => s.tapItem);
   const placingId = useDesign((s) => s.placingItemId);
   const placeAt = useDesign((s) => s.placeAt);
   const [hover, setHover] = useState<{ x: number; z: number } | null>(null);
@@ -1024,8 +1063,9 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
                 setDrag(null);
                 // A tap mode that started during the press ends the drag without moving anything.
                 if (tapping) return;
+                // A tap selects the piece; a tap on the selected piece opens it, whole piece selected (ADR-083).
+                if (end.kind !== 'drop') return tapItem(end.id);
                 select(end.id);
-                if (end.kind !== 'drop') return;
                 const snapping = snapOn && !e.altKey;
                 const t =
                   snapping && project
@@ -1124,6 +1164,16 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
             />
           </>
         )}
+        {space && (
+          <rect
+            className="el-selection"
+            x={space.x}
+            y={space.z}
+            width={space.w}
+            height={space.d}
+            aria-label="Selected space inside the piece"
+          />
+        )}
       </svg>
     </figure>
   );
@@ -1207,8 +1257,20 @@ function RoomOutline({ room, fs }: { room: Room; fs: number }) {
 
 /** The whole room seen from the front (looking at the back wall), floor at the bottom. Tap a piece to select it. */
 function RoomFront({ pm }: { pm: ProjectModel }) {
+  const space = useSpaceInRoom();
+  // A space selected inside a piece: outlined, everything outside it faded (ADR-087 design A, G-071).
+  const fade = (b: Box) => (space && !inSelection(space, b) ? ' faded' : '');
   const selectedId = useDesign((s) => s.selectedItemId);
   const select = useDesign((s) => s.selectItem);
+  const tapItem = useDesign((s) => s.tapItem);
+  // A tap on the selected piece opens it with the space under the tap selected (ADR-083). Seen from the front, a
+  // piece turned a quarter shows its side, so it opens with the whole piece selected.
+  const tapFront = (e: MouseEvent<SVGRectElement>, item: ProjectItem) => {
+    const m = e.currentTarget.ownerSVGElement?.getScreenCTM();
+    if (!m || item.rotationY % 180 !== 0) return tapItem(item.id);
+    const pt = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse());
+    tapItem(item.id, { x: Math.round(pt.x), y: Math.round(-pt.y), z: item.position.z });
+  };
   const showFronts = useDesign((s) => s.showFronts);
   const room = useDesign((s) => s.project?.room);
   const rv = useMemo(() => (room ? roomFrontView(room) : null), [room]);
@@ -1273,14 +1335,14 @@ function RoomFront({ pm }: { pm: ProjectModel }) {
         {structure.map(({ p, pc }) => (
           <polygon
             key={p.id}
-            className={`el-panel ${pc.item.id === selectedId ? 'hl' : ''}`}
+            className={`el-panel ${pc.item.id === selectedId && !space ? 'hl' : ''}${fade(p.box)}`}
             points={outlinePoints(p)}
             style={{ fill: colors.get(`${pc.item.id}:${p.materialId}`) }}
           />
         ))}
         {showFronts &&
           fronts.map(({ p }) => (
-            <polygon key={p.id} className="el-front" points={outlinePoints(p)} />
+            <polygon key={p.id} className={`el-front${fade(p.box)}`} points={outlinePoints(p)} />
           ))}
         {pm.pieces.map((pc) => (
           <rect
@@ -1294,7 +1356,7 @@ function RoomFront({ pm }: { pm: ProjectModel }) {
             tabIndex={0}
             aria-pressed={pc.item.id === selectedId}
             aria-label={`${pc.item.design.name}, ${pc.bounds.w} wide, ${pc.bounds.h} high`}
-            onClick={() => select(pc.item.id)}
+            onClick={(e) => tapFront(e, pc.item)}
             onKeyDown={onKey(() => select(pc.item.id))}
           />
         ))}
@@ -1320,6 +1382,16 @@ function RoomFront({ pm }: { pm: ProjectModel }) {
               subtle
             />
           </>
+        )}
+        {space && (
+          <rect
+            className="el-selection"
+            x={space.x}
+            y={-(space.y + space.h)}
+            width={space.w}
+            height={space.h}
+            aria-label="Selected space inside the piece"
+          />
         )}
       </svg>
     </figure>

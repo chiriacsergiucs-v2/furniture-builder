@@ -42,6 +42,9 @@ ADRs are all in `docs/adr-done/`.
 
 ## Workflow
 
+0. **Start from the latest main.** `git fetch origin` and merge `origin/main` into the branch;
+   do it again before every push, so ADR, backlog and G ids do not collide with work merged meanwhile
+   (retro 2026-10-26).
 1. **Pick the ADR.**
    ```bash
    bash .claude/skills/next-adr/next-adr.sh
@@ -53,13 +56,20 @@ ADRs are all in `docs/adr-done/`.
    propose a split before building: carve pieces into new ADRs at the next free numbers,
    keep the original number for the core, update `docs/adr/README.md`, re-run the picker.
    Skip the split only if the user asks.
-3. **Start building — do not ask for permission.** Announce the number and title in one
+3. **Agreement gate (retro 2026-10-26).** If the ADR says `- Agreed: not yet`, do not build. Ask with
+   `AskUserQuestion`: one question per decision in _Decision_, _Scope_ (each out-of-scope item) and
+   _Open questions_. Put the option closest to the request first, marked `(Recommended)`, with the
+   effort/value estimate (`CLAUDE.md`). Write the answers into the ADR and set
+   `- Agreed: YYYY-MM-DD "<the user's words>"`. A general "go" or "proceed" agrees only to what it
+   was asked about.
+   **Then start building — do not ask for permission again.** Announce the number and title in one
    line. Stop and ask only when a dependency is blocked, or when a physical or supplier
    fact is unknown (record it under _Open questions_ in `docs/backlog.md`; never invent it).
 4. **Read only what the ADR points to:** the ADR, its `Depends on` ADRs, the design
    reference, and the current code it touches (not docs alone).
 5. **Scope.** For each change ask "needed to demonstrate this now?" — if not, it goes under
-   _Skipped this iteration_. Non-trivial choices get a short Explore → Doubt → Compare.
+   _Skipped this iteration_, and every skipped item gets a gap in `docs/adr/GAPS.md`
+   (`pnpm gaps add`, ADR-082) in the same change, cited by its G id. Non-trivial choices get a short Explore → Doubt → Compare.
 6. **Implement** one vertical slice that meets the `Done when` list. Keep `src/core` pure;
    add a test for every new rule. Use the matching skill:
    - saved data or a new Dexie table → `add-storage-version`

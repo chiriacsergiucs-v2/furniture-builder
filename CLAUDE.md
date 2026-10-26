@@ -35,13 +35,13 @@ Read first: `docs/backlog.md`, `docs/adr/README.md`, `docs/product/product-conte
 - `scripts/check-docs.py` — checks ADRs, the index and every ADR and backlog id (`pnpm docs:check`)
 - `docs/adr/` — pending ADRs, `README.md` (index), `_template.md`
 - `docs/adr-done/` — implemented ADRs
-- `docs/backlog.md` — the single work ledger (F/N/D ids)
+- `docs/backlog.md` — the single work ledger (F/N/D ids); `docs/adr/GAPS.md` — everything not built (G ids, ADR-082)
 - `docs/product/product-context.md` — the user's decisions and answers so far; `docs/architecture.md` — how
   the code fits together; `docs/ui-design.md` — tokens, components and screens; `docs/catalog.md` — generated
   (`pnpm catalog:docs`); `docs/retros/` — retrospectives
 - `.claude/skills/` — `new-adr`, `next-adr`, `ship-adr`, `verify`, `review`, `debug`, `add-tests`,
   `implement-design`, `design-review`, `add-storage-version`, `add-model-feature` (reserv's `add-endpoint`
-  counterpart), `security-review`
+  counterpart), `security-review`, `retro`
 - `.github/workflows/ci.yml` — CI; the source of truth for what "passing" means.
   `deploy.yml` publishes `main` to GitHub Pages.
 
@@ -62,7 +62,9 @@ CI is the source of truth. Before saying work is done, run the same checks CI ru
 
 Not in CI, run when relevant: `FUZZ_N=30000 pnpm exec vitest run tests/fuzz.test.ts` after any geometry change;
 `pnpm catalog:docs` and `pnpm catalog:snapshots` after catalog changes; the matching
-`tools/*/find-it.mjs` against `pnpm build && pnpm preview` for anything visible.
+`tools/*/find-it.mjs` against `pnpm build && pnpm preview` for anything visible. In a cloud session Playwright is
+installed globally and ES modules cannot see it: link it once with
+`ln -s "$(npm root -g)/playwright" node_modules/playwright` before `node tools/*/find-it.mjs` (retro 2026-10-26).
 
 ## How we plan and build: ADRs
 
@@ -72,6 +74,8 @@ implement it. Read `docs/adr/README.md` for the conventions and the index.
 - File name: `ADR-NNN-short-kebab-title.md` (3-digit number).
 - Status: `Pending`, `Deferred (<reason>)` or `Implemented`. Never set `Implemented` by hand.
 - An ADR is agreed by the user. Unconfirmed defaults stay under _Open questions_ in the ADR.
+- Never auto-accept a recommended or default option. Treat it as accepted only when the user says so explicitly
+  (e.g. "accept defaults", "proceed with the recommended"); otherwise ask (user rule 2026-10-25).
 - Implemented ADRs are not edited; a changed decision gets a new ADR that links the old one.
 - Check `docs/adr/` and `docs/adr-done/` before proposing an alternative to a settled choice.
 - Authority: explicit user decision › implemented ADR › code and tests › earlier discussion › proposal.
@@ -98,7 +102,8 @@ Lifecycle, one skill per step:
   document shape bumps `schemaVersion` and keeps old readers (ADR-011).
 - Storage: never edit a shipped Dexie version; never delete rows the app cannot read (ADR-012). Use the
   `add-storage-version` skill. Nothing may delete or rewrite saved designs without the user's explicit decision.
-- The 3D viewer only selects, never edits, stays lazy and mounts only when visible (ADR-014).
+- The 3D viewer only selects, never edits, stays lazy and mounts only when visible (ADR-014). One exception: the
+  quick-count card over the 3D view (ADR-085).
 - Zustand selectors return stable references (no `.filter()`/`.map()` inside a selector).
 - Keyboard focus visible; no horizontal page scroll at 390 px.
 - No committed browser/E2E suite, refactors or polish unless the user asks (ADR-015, ADR-016).
@@ -130,12 +135,29 @@ Lifecycle, one skill per step:
   only if someone opened the published URL and checked it.
 - Every implementation reply ends with the backlog status table (including every row still marked
   `find-it pending (light, ADR-066)`) and a **Skipped this iteration** section.
+- Gaps ledger (ADR-082, user rule 2026-10-25): anything not built is recorded in `docs/adr/GAPS.md` in the same
+  change: each skipped item, out-of-scope line, defaulted open question or cut requirement. Use `pnpm gaps add`
+  with the origin, what is missing, the user's request in their words, questions and the suggested pick (the rule
+  below). Cite the G ids in the reply. Only the user acknowledges a gap. A gap moved into an ADR has Status
+  `ADR-NNN` and becomes Done when that ADR ships (`pnpm gaps sync`, run by `ship-adr`). `pnpm docs:check` and a
+  `Stop` hook (`.claude/settings.json`) enforce it.
 - Stop when a check fails (fix the cause, never the check) or when a change would need the network (ADR-002).
+- Status replies are a short Done / Not done list, one line per item, unless the user asks for detail. "Recheck"
+  means a fresh check of `main`, CI, deploy, open ADRs and the live site (user rule 2026-10-26).
+- Recommended options (user rule 2026-10-25): in questions, open questions and ADR defaults, never mark an
+  option as recommended because it is the simplest. Recommend the option closest to what the user asked to
+  build, and say so. If it is more complex, explain why and estimate how much more work it is (+N %) and how
+  much more of the request it delivers (+N % of value), labelled as estimates. "Smallest slice" applies to how
+  a chosen option is built, not to which option is recommended.
 
 ## Git
 
 - Only modify `chiriacsergiucs-v2/furniture-builder`.
 - Branch per ADR: `adr-NNN-short-title`; open a pull request for review.
-- Merge to `main` only on the user's instruction; then cite the `Deploy GitHub Pages` run id. Never force-push
-  `main`.
+- Merge to `main` only on the user's instruction, and only after the PR's `verify` check passed on its current
+  head, never while it is queued or running (retro 2026-10-26); then cite the `Deploy GitHub Pages` run id. Never force-push
+  `main`. Selecting proposals in the `retro` dialog is that instruction (user rule 2026-10-26, `retro` skill).
+- Session branch: after its PR merged, restart it with `git checkout -B <branch> origin/main` and push
+  normally (it fast-forwards); never force-push it. After pulling or merging into it, push it in the same
+  turn (retro 2026-10-26).
 - Ship commit message: `Ship ADR-NNN: <short title> — mark implemented`.

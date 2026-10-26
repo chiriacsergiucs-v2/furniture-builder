@@ -1,0 +1,20 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -I \"$CLAUDE_PROJECT_DIR/scripts/gaps_hook.py\"",
+            "timeout": 15
+          },
+          {
+            "type": "command",
+            "command": "python3 -I \"$CLAUDE_PROJECT_DIR/scripts/main_moved_hook.py\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}

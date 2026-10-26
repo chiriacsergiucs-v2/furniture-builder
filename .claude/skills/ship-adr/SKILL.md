@@ -26,7 +26,10 @@ Project: **Furniture Builder** — offline PWA for designing casework.
 
 1. **Identify the ADR.** Get the number from the user (e.g. `047`, `ADR-047`). If ambiguous, ask.
 2. **Check the evidence first.** Every `Done when` item is met by code and by a check you
-   ran (command output, CI run id, find-it result). The backlog row has that evidence.
+   ran (command output, CI run id, find-it result). The backlog row has that evidence. The
+   `review` skill has run on the change (a separate subagent for multi-ADR work) with every
+   finding fixed or answered (retro 2026-10-26). From number 091 on, the `- Agreed:` line quotes the
+   user; if it says `not yet`, stop and ask.
    An `Acceptance: light` ADR may ship without the find-it result; its backlog row keeps
    `find-it pending (light, ADR-066)` and stays Partially done until the catch-up run (ADR-066).
    If an item is not met, stop and tell the user rather than shipping (R1, R2).
@@ -35,8 +38,10 @@ Project: **Furniture Builder** — offline PWA for designing casework.
    bash .claude/skills/ship-adr/ship-adr.sh <NUMBER> ["optional implemented note"]
    ```
    It sets the status and `Implemented:` date, moves the file with `git mv`, rewrites
-   links across `docs/adr*/`, sets the README row to `✅ Implemented`, and warns about
-   unchecked `Done when` items and stale references elsewhere.
+   links across `docs/adr*/`, sets the README row to `✅ Implemented`, marks the gaps in
+   `docs/adr/GAPS.md` that moved into this ADR `Done (ADR-NNN)` (ADR-082), and warns about
+   unchecked `Done when` items and stale references elsewhere. Anything of the ADR still not
+   built gets a new gap (`pnpm gaps add`) before shipping, never a silent Done.
 4. **Review** `git status --short` and `git diff`; fix reported stale references by hand.
    Tick the `Done when` boxes you verified. Run `pnpm docs:check`.
 5. **Commit and push:**

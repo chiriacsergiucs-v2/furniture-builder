@@ -1,0 +1,216 @@
+import 'fake-indexeddb/auto';
+import { describe, expect, it } from 'vitest';
+import { buildModel } from '../src/core/build';
+import { countRows, countSubject, stepCount, type CountKey } from '../src/core/counts';
+import { splitSpace, templates } from '../src/core/design';
+import type { Design, Space } from '../src/core/types';
+import { useDesign } from '../src/store/designStore';
+
+const byTemplate = (id: string) => templates.find((t) => t.id === id)!.create();
+const interior = (d: Design): Space => {
+  if (d.product.kind !== 'cabinet') throw Error('not cabinet');
+  return d.product.params.interior;
+};
+const rowsOf = (d: Design, id: string) =>
+  Object.fromEntries(countRows(d.product, id).map((r) => [r.key, r]));
+const st = () => useDesign.getState();
+const value = (key: CountKey) =>
+  countRows(st().design.product, countSubject(st().design.product, st().selectedId)!).find(
+    (r) => r.key === key,
+  )?.value;
+
+describe('quick count rows (ADR-084)', () => {
+  it('a drawer space shows both divider rows at 0 and its drawers', () => {
+    const d = byTemplate('chest');
+    const r = rowsOf(d, interior(d).id);
+    expect(Object.keys(r)).toEqual(['vdiv', 'hdiv', 'drawers']);
+    expect([r.vdiv.value, r.hdiv.value, r.drawers.value]).toEqual([0, 0, 4]);
+    expect([r.drawers.min, r.drawers.max]).toEqual([1, 10]);
+  });
+  it('a shelf space behind a door shows shelves and doors; sliding doors show their own row', () => {
+    const d = byTemplate('base-door');
+    const s = interior(d);
+    expect(Object.keys(rowsOf(d, s.id))).toEqual(['vdiv', 'hdiv', 'shelves', 'doors']);
+    const sliding = { ...s, front: { kind: 'sliding', count: 2 } } as Space;
+    expect(stepCount(sliding, 'sliding', 1).front).toMatchObject({ count: 3 });
+    expect(stepCount(sliding, 'sliding', -1)).toBe(sliding);
+  });
+  it('a bay of a side-by-side split counts its own dividers, not its parent’s (ADR-086)', () => {
+    const d = byTemplate('sideboard');
+    const split = interior(d);
+    if (split.kind !== 'split') throw Error();
+    const bay = rowsOf(d, split.children[1].id);
+    expect(bay.vdiv).toMatchObject({ value: 0, target: split.children[1].id });
+    expect(bay.hdiv).toMatchObject({ value: 0, target: split.children[1].id });
+    expect(rowsOf(d, split.id).vdiv).toMatchObject({ value: 2, target: split.id });
+  });
+  it('the whole piece shows its interior’s counts; nothing selected shows none', () => {
+    const d = byTemplate('chest');
+    expect(countSubject(d.product, null)).toBe(interior(d).id);
+    expect(countSubject(d.product, undefined)).toBeUndefined();
+    expect(countSubject(byTemplate('panels').product, null)).toBeUndefined();
+    st().load(d);
+    st().select(null);
+    st().stepCount('drawers', 1);
+    expect(st().selectedId).toBeNull();
+    expect(
+      countRows(st().design.product, interior(d).id).find((r) => r.key === 'drawers')?.value,
+    ).toBe(5);
+  });
+  it('an id that is not a space gives no rows', () => {
+    const d = byTemplate('chest');
+    expect(countRows(d.product, 'nope')).toEqual([]);
+    expect(countRows(byTemplate('panels').product, 'x')).toEqual([]);
+  });
+});
+
+describe('stepping counts (ADR-084)', () => {
+  it('shelves, drawers and doors step both ways and stop at their bounds', () => {
+    const shelves: Space = { id: 's', kind: 'shelves', count: 0 };
+    expect(stepCount(shelves, 'shelves', -1)).toBe(shelves);
+    expect(stepCount(shelves, 'shelves', 1)).toMatchObject({ count: 1 });
+    expect(stepCount({ ...shelves, count: 12 }, 'shelves', 1)).toMatchObject({ count: 12 });
+    const drawers: Space = {
+      id: 'd',
+      kind: 'drawers',
+      count: 1,
+      heights: [{ mode: 'mm', value: 200 }],
+    };
+    expect(stepCount(drawers, 'drawers', -1)).toBe(drawers);
+    expect(stepCount(drawers, 'drawers', 1)).toMatchObject({
+      count: 2,
+      heights: [
+        { mode: 'mm', value: 200 },
+        { mode: 'fr', value: 1 },
+      ],
+    });
+    const door: Space = { ...shelves, front: { kind: 'doors', count: 1 } };
+    expect(stepCount(door, 'doors', 1).front).toMatchObject({ count: 2 });
+    expect(stepCount(door, 'doors', -1)).toBe(door);
+  });
+  it('+ on a leaf divides it; + on a split adds an empty bay at the end (ADR-089)', () => {
+    const leaf: Space = { id: 'a', kind: 'drawers', count: 3 };
+    const one = stepCount(leaf, 'hdiv', 1);
+    expect(one).toMatchObject({ id: 'a', kind: 'split', axis: 'y' });
+    if (one.kind !== 'split') throw Error();
+    expect(one.children[0]).toMatchObject({ kind: 'drawers', count: 3 });
+    const two = stepCount(one, 'hdiv', 1);
+    if (two.kind !== 'split') throw Error();
+    expect(two.children).toHaveLength(3);
+    expect(two.children[2]).toMatchObject({ kind: 'empty' });
+    expect(two.sizes).toHaveLength(3);
+  });
+  it('− removes the last bay and its size; from one divider the first bay’s contents stay', () => {
+    const d = byTemplate('sideboard');
+    const split = interior(d);
+    if (split.kind !== 'split') throw Error();
+    const fewer = stepCount(split, 'vdiv', -1);
+    if (fewer.kind !== 'split') throw Error();
+    expect(fewer.children.map((c) => c.id)).toEqual(split.children.slice(0, 2).map((c) => c.id));
+    expect(fewer.sizes).toEqual(split.sizes.slice(0, 2));
+    const none = stepCount(fewer, 'vdiv', -1);
+    expect(none).toMatchObject({ id: split.id, kind: 'shelves', count: 1 });
+    expect(none.front).toMatchObject({ kind: 'doors', count: 1 });
+    expect(stepCount(none, 'vdiv', -1)).toBe(none);
+  });
+  it('more drawers than fit give the existing error diagnostic, not a clamp', () => {
+    const d = byTemplate('chest');
+    const id = interior(d).id;
+    useDesign.getState().load({
+      ...d,
+      product: {
+        ...d.product,
+        params: { ...(d.product.params as object), height: 600 },
+      } as Design['product'],
+    });
+    useDesign.getState().select(id);
+    expect(buildModel(st().design).diagnostics.some((x) => x.severity === 'error')).toBe(false);
+    for (let i = 0; i < 6; i++) useDesign.getState().stepCount('drawers', 1);
+    expect(value('drawers')).toBe(10);
+    expect(buildModel(st().design).diagnostics.some((x) => x.severity === 'error')).toBe(true);
+  });
+});
+
+describe('quick counts in the store (ADR-084)', () => {
+  it('each press is one undo step', () => {
+    const d = byTemplate('chest');
+    st().load(d);
+    st().select(interior(d).id);
+    st().stepCount('drawers', 1);
+    st().stepCount('drawers', 1);
+    expect(value('drawers')).toBe(6);
+    st().undo();
+    expect(value('drawers')).toBe(5);
+    st().undo();
+    expect(value('drawers')).toBe(4);
+  });
+  it('cabinet with 3 bays: + on the middle bay divides that bay only; shelves change that bay only (ADR-086)', () => {
+    const d = byTemplate('bookcase');
+    st().load(d);
+    st().select(null);
+    st().stepCount('vdiv', 1);
+    st().stepCount('vdiv', 1);
+    const root = () => interior(st().design);
+    const r0 = root();
+    if (r0.kind !== 'split') throw Error();
+    expect(r0.children).toHaveLength(3);
+    const [left, middle, right] = r0.children.map((c) => c.id);
+    st().select(middle);
+    st().stepCount('vdiv', 1);
+    const r1 = root();
+    if (r1.kind !== 'split') throw Error();
+    expect(r1.children.map((c) => c.id)).toEqual([left, middle, right]);
+    expect(r1.children[1]).toMatchObject({ id: middle, kind: 'split', axis: 'x' });
+    expect(st().selectedId).toBe(middle);
+    st().select(left);
+    st().stepCount('shelves', 1);
+    const r2 = root();
+    if (r2.kind !== 'split') throw Error();
+    expect(r2.children.map((c) => (c.kind === 'shelves' ? c.count : c.kind))).toEqual([
+      5,
+      'split',
+      'empty',
+    ]);
+    expect(r2.children[2].id).toBe(right);
+  });
+});
+
+describe('a new divided part starts empty (ADR-089)', () => {
+  const shelvesIn = (d: Design) => buildModel(d).panels.filter((p) => p.role === 'shelf').length;
+  const withInterior = (d: Design, s: Space): Design =>
+    d.product.kind === 'cabinet'
+      ? { ...d, product: { ...d.product, params: { ...d.product.params, interior: s } } }
+      : d;
+
+  it('+ horizontal divider on a space with 1 vertical divider adds an empty part and no shelves', () => {
+    const d = byTemplate('bookcase');
+    const column = stepCount(interior(d), 'vdiv', 1);
+    const before = withInterior(d, column);
+    const after = stepCount(column, 'hdiv', 1);
+    if (after.kind !== 'split') throw Error('not split');
+    expect(after.axis).toBe('y');
+    expect(after.children).toHaveLength(2);
+    expect(after.children[0]).toMatchObject({ kind: 'split', axis: 'x' });
+    if (after.children[0].kind !== 'split' || column.kind !== 'split') throw Error();
+    expect(after.children[0].children).toEqual(column.children);
+    expect(after.children[1].kind).toBe('empty');
+    expect(shelvesIn(withInterior(d, after))).toBe(shelvesIn(before));
+  });
+
+  it('+ vertical divider on an undivided bay and one more bay both add empty parts', () => {
+    const d = byTemplate('bookcase');
+    const once = stepCount(interior(d), 'vdiv', 1);
+    if (once.kind !== 'split') throw Error();
+    expect(once.children[1].kind).toBe('empty');
+    const twice = stepCount(once, 'vdiv', 1);
+    if (twice.kind !== 'split') throw Error();
+    expect(twice.children.map((c) => c.kind)).toEqual([interior(d).kind, 'empty', 'empty']);
+    expect(shelvesIn(withInterior(d, twice))).toBe(shelvesIn(d));
+  });
+
+  it('splitSpace (Side by side, Stacked, Parts +) fills new parts with empty spaces', () => {
+    const s = splitSpace(interior(byTemplate('bookcase')), 'y', 4);
+    if (s.kind !== 'split') throw Error();
+    expect(s.children.slice(1).map((c) => c.kind)).toEqual(['empty', 'empty', 'empty']);
+  });
+});

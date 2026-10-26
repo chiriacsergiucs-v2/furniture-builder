@@ -18,6 +18,7 @@ import {
   usesPedestal,
 } from '../core/design';
 import { materialLabel } from '../core/materials';
+import type { Selection } from '../core/selectPath';
 import type {
   CabinetParams,
   CornerParams,
@@ -47,6 +48,7 @@ import {
   type Step,
 } from './controls';
 import { Icon } from './icons';
+import { CountStepper } from './CountStepper';
 import { askConfirm } from './Confirm';
 import { useUi } from './shell/uiStore';
 import {
@@ -97,19 +99,50 @@ export function Inspector({ mode }: { mode: 'compose' | 'configure' }) {
   return <CabinetEditor p={prod.params} materials={design.materials} />;
 }
 
+/**
+ * Inside a project piece, edited without leaving the project editor (ADR-088): the selected space's own panel, or for
+ * the whole piece where to tap and its quick counts.
+ */
+export function InsideEditor() {
+  const design = useDesign((s) => s.design);
+  const selectedId = useDesign((s) => s.selectedId);
+  const prod = design.product;
+  const found = typeof selectedId === 'string' ? findInProduct(prod, selectedId) : undefined;
+  if (found)
+    return (
+      <SpaceEditor
+        space={found.space}
+        root={found.root}
+        rootLabel={found.label}
+        wholeLabel={WHOLE[prod.kind]}
+      />
+    );
+  return (
+    <>
+      <p className="hint">
+        Selected: {WHOLE[prod.kind]}. Tap the piece again to pick a space inside it; each tap goes
+        one level smaller.
+      </p>
+      <CountStepper />
+    </>
+  );
+}
+
 /** Compose with nothing selected: where to tap, or a way into each space tree. */
 function ComposeStart() {
   const prod = useDesign((s) => s.design.product);
   const select = useDesign((s) => s.select);
+  const whole = useDesign((s) => s.selectedId === null);
   const setSettingsOpen = useUi((s) => s.setSettingsOpen);
   const roots = productRoots(prod);
   return (
     <div className="inspector compose-start">
       <header className="insp-head">
         <h2>Compose</h2>
+        {whole && <p className="selected-whole">Selected: {WHOLE[prod.kind]}</p>}
         <p className="hint">
           {roots.length
-            ? 'Tap a space in the front view to fill it with shelves, drawers or hanging, add doors, or divide it.'
+            ? 'Tap the drawing: the first tap selects the whole piece, each further tap at the same spot one space smaller. Fill a space with shelves, drawers or hanging, add doors, or divide it.'
             : 'This piece has no spaces to fill. Its sizes and boards are under Settings.'}
         </p>
       </header>
@@ -136,7 +169,8 @@ function ComposeStart() {
 }
 
 /** One line naming what is selected in the piece, for the phone sheet's peek row (ADR-079). */
-export function selectionLabel(prod: Parameters<typeof findInProduct>[0], id: string | null) {
+export function selectionLabel(prod: Parameters<typeof findInProduct>[0], id: Selection) {
+  if (id === null) return WHOLE[prod.kind];
   const found = id ? findInProduct(prod, id) : undefined;
   if (!found) return null;
   return found.space.id === found.root.id
