@@ -64,7 +64,9 @@ Everything written to the repo is in **English**, whatever language the conversa
    - Status stays `Pending`. If open questions block building, set
      `- Status: Deferred (<reason>)` in the file **and** in the README row.
 8. **Run** `pnpm docs:check`.
-9. **Hand over.** Show the user the open questions. Suggest a branch named `adr-NNN-slug`
+9. **Hand over.** The ADR keeps `- Agreed: not yet`. Ask the user (`AskUserQuestion`) about each decision,
+   each out-of-scope item and each open question, then record their words in the `- Agreed:` line
+   (retro 2026-10-26). `pnpm docs:check` refuses to ship an ADR from number 091 on without it. Show the user the open questions. Suggest a branch named `adr-NNN-slug`
    and a pull request. Do not commit or push unless the user asks.
 
 ## Notes

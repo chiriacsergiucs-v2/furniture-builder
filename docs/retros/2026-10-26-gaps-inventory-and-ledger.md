@@ -55,11 +55,11 @@ Earlier retros read:
 
 ## Proposals
 
-| #   | Finding | Fix (target file)                                                                                                                                                                                                | Status   |
-| --- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| 1   | #2      | check in `scripts/check-docs.py` plus a step in `new-adr` / `next-adr`: ADRs from ADR-083 on carry `- Agreed: not yet` or `- Agreed: YYYY-MM-DD "<user's words>"`; an ADR in `adr-done/` without the quote fails | Proposed |
-| 2   | #3      | `CLAUDE.md` › Git: merge only after the PR's `verify` check passed on its current head, never while it is queued or running                                                                                      | Proposed |
-| 3   | #3      | GitHub branch protection on `main`: require the `verify` status check (repository settings, only the owner can set it)                                                                                           | Proposed |
+| #   | Finding | Fix (target file)                                                                                                                                                                                                | Status                            |
+| --- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
+| 1   | #2      | check in `scripts/check-docs.py` plus a step in `new-adr` / `next-adr`: ADRs from ADR-083 on carry `- Agreed: not yet` or `- Agreed: YYYY-MM-DD "<user's words>"`; an ADR in `adr-done/` without the quote fails | Applied (PR #70)                  |
+| 2   | #3      | `CLAUDE.md` › Git: merge only after the PR's `verify` check passed on its current head, never while it is queued or running                                                                                      | Applied (PR #70)                  |
+| 3   | #3      | GitHub branch protection on `main`: require the `verify` status check (repository settings, only the owner can set it)                                                                                           | Selected; owner sets it in GitHub |
 
 ## Not changed
 

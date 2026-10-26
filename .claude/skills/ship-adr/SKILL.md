@@ -28,7 +28,8 @@ Project: **Furniture Builder** — offline PWA for designing casework.
 2. **Check the evidence first.** Every `Done when` item is met by code and by a check you
    ran (command output, CI run id, find-it result). The backlog row has that evidence. The
    `review` skill has run on the change (a separate subagent for multi-ADR work) with every
-   finding fixed or answered (retro 2026-10-26).
+   finding fixed or answered (retro 2026-10-26). From number 091 on, the `- Agreed:` line quotes the
+   user; if it says `not yet`, stop and ask.
    An `Acceptance: light` ADR may ship without the find-it result; its backlog row keeps
    `find-it pending (light, ADR-066)` and stays Partially done until the catch-up run (ADR-066).
    If an item is not met, stop and tell the user rather than shipping (R1, R2).
