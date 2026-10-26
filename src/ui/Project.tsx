@@ -6,6 +6,7 @@ import { mergeCandidates } from '../core/merge';
 import {
   leftNeighbour,
   materialKey,
+  pieceBoxToRoom,
   placementBases,
   planRuns,
   runOf,
@@ -15,7 +16,8 @@ import {
   type QuarterTurn,
 } from '../core/project';
 import { dropTarget, SNAP_RANGE } from '../core/snap';
-import type { Material, Panel } from '../core/types';
+import { inSelection, selectionBox } from '../core/selectPath';
+import type { Box, Material, Panel } from '../core/types';
 import { listDecors, listDesigns, loadDesign, type StoredDesign } from '../persist/db';
 import { useDesign } from '../store/designStore';
 import { Counter, InfoTip, MmField, Segmented, Select, Toggle } from './controls';
@@ -760,7 +762,26 @@ export function PlanView() {
  * Top-down plan of the room: x to the right, the back wall at the top. Tap a piece to select it; drag it, or use
  * the arrow keys on it, to move it (ADR-065).
  */
+/**
+ * The space selected inside the project piece drilled into (ADR-088), placed in the room; nothing while the whole
+ * piece is selected (the piece itself is marked then). Outlined on the plan and the room front view (G-067).
+ */
+function useSpaceInRoom() {
+  const project = useDesign((s) => s.project);
+  const model = useDesign((s) => s.model);
+  const sel = useDesign((s) => s.selectedId);
+  const id = useDesign((s) =>
+    s.project && !s.editingItemId && s.drillItemId === s.selectedItemId ? s.drillItemId : null,
+  );
+  return useMemo(() => {
+    const item = id ? project?.items.find((i) => i.id === id) : undefined;
+    const box = item && typeof sel === 'string' ? selectionBox(model, sel) : undefined;
+    return item && box ? pieceBoxToRoom(item, model, box) : undefined;
+  }, [project, model, sel, id]);
+}
+
 function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem | null }) {
+  const space = useSpaceInRoom();
   const selectedId = useDesign((s) => s.selectedItemId);
   const select = useDesign((s) => s.selectItem);
   const tapItem = useDesign((s) => s.tapItem);
@@ -1136,6 +1157,16 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
             />
           </>
         )}
+        {space && (
+          <rect
+            className="el-selection"
+            x={space.x}
+            y={space.z}
+            width={space.w}
+            height={space.d}
+            aria-label="Selected space inside the piece"
+          />
+        )}
       </svg>
     </figure>
   );
@@ -1219,6 +1250,9 @@ function RoomOutline({ room, fs }: { room: Room; fs: number }) {
 
 /** The whole room seen from the front (looking at the back wall), floor at the bottom. Tap a piece to select it. */
 function RoomFront({ pm }: { pm: ProjectModel }) {
+  const space = useSpaceInRoom();
+  // A space selected inside a piece: outlined, everything outside it faded (ADR-087 design A, G-067).
+  const fade = (b: Box) => (space && !inSelection(space, b) ? ' faded' : '');
   const selectedId = useDesign((s) => s.selectedItemId);
   const select = useDesign((s) => s.selectItem);
   const tapItem = useDesign((s) => s.tapItem);
@@ -1294,14 +1328,14 @@ function RoomFront({ pm }: { pm: ProjectModel }) {
         {structure.map(({ p, pc }) => (
           <polygon
             key={p.id}
-            className={`el-panel ${pc.item.id === selectedId ? 'hl' : ''}`}
+            className={`el-panel ${pc.item.id === selectedId && !space ? 'hl' : ''}${fade(p.box)}`}
             points={outlinePoints(p)}
             style={{ fill: colors.get(`${pc.item.id}:${p.materialId}`) }}
           />
         ))}
         {showFronts &&
           fronts.map(({ p }) => (
-            <polygon key={p.id} className="el-front" points={outlinePoints(p)} />
+            <polygon key={p.id} className={`el-front${fade(p.box)}`} points={outlinePoints(p)} />
           ))}
         {pm.pieces.map((pc) => (
           <rect
@@ -1341,6 +1375,16 @@ function RoomFront({ pm }: { pm: ProjectModel }) {
               subtle
             />
           </>
+        )}
+        {space && (
+          <rect
+            className="el-selection"
+            x={space.x}
+            y={-(space.y + space.h)}
+            width={space.w}
+            height={space.h}
+            aria-label="Selected space inside the piece"
+          />
         )}
       </svg>
     </figure>

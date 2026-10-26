@@ -1,6 +1,7 @@
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import { ContactShadows, Edges, Line, OrbitControls } from '@react-three/drei';
 import { useCallback, useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   BoxGeometry,
   Color,
@@ -37,6 +38,7 @@ import { loadModelScene, type ModelScene } from '../persist/models';
 import { modelYaw, type ModelItem } from '../core/model3d';
 import { useDesign } from '../store/designStore';
 import { useView } from '../ui/useView';
+import { PHONE, useMediaQuery } from '../ui/useMediaQuery';
 import { useTheme } from '../ui/useTheme';
 import { useLook } from '../ui/useLook';
 import { SHADOW_CATCHER, setStage, useRendering } from './renderBridge';
@@ -164,6 +166,11 @@ export default function Viewer3D() {
     (s) => !!s.project && !s.editingItemId && !!s.drillItemId && s.drillItemId === s.selectedItemId,
   );
   const counts = (view.mode === 'design' || (view.mode === 'project' && drillOn)) && !rendering;
+  // On a phone the short 3D view would be mostly covered by a floating card: it docks under the view (G-066).
+  // The slot under the view, which App renders on phones before this lazy viewer mounts; floating when it is missing.
+  const phone = useMediaQuery(PHONE);
+  const dock = phone ? document.getElementById('count-dock') : null;
+  const docked = !!dock;
   const cardRef = useRef<HTMLDivElement>(null);
   // Bottom centre of the card at the anchor, kept inside the view (the anchor's screen point, or null to hide).
   const placeCard = useCallback((at: { x: number; y: number } | null) => {
@@ -222,12 +229,15 @@ export default function Viewer3D() {
           </>
         )}
         <Panels panels={panels} realistic={realistic} plain={rendering} />
-        {counts && <CountsAnchor place={placeCard} inProject={view.mode === 'project'} />}
+        {counts && !docked && (
+          <CountsAnchor place={placeCard} inProject={view.mode === 'project'} />
+        )}
         {view.mode === 'project' && !exploded && <RoomWalls />}
         {view.mode === 'project' && !exploded && <ModelItems plain={rendering} />}
         <Fit key={designId} bounds={bounds} />
       </Canvas>
-      {counts && (
+      {counts && dock && createPortal(<CountStepper className="in-3d docked" />, dock)}
+      {counts && !docked && (
         <div ref={cardRef} className="count-anchor" style={{ visibility: 'hidden' }}>
           <CountStepper className="in-3d" />
         </div>
@@ -275,6 +285,7 @@ function SelectionOutline({ box }: { box: Box }) {
       color={SELECT}
       lineWidth={3.5}
       depthTest={false}
+      depthWrite={false}
       // Drawn last, after the transparent (faded) panels, so nothing covers it.
       transparent
       renderOrder={10}
@@ -619,12 +630,12 @@ function Panels({
   const textures = useTextures(useImageUrls(imageKey(materials)));
   const hl = useMemo(() => new Set(highlight), [highlight]);
   // Selection look A (ADR-087): a thick outline round the selected space or piece, everything outside it faded.
-  // Simple look only; Realistic keeps the tint (G-060). In a project, for the piece drilled into (ADR-088): the box
-  // is placed in the room, and the fade is decided in the piece's own mm.
+  // Simple and Realistic looks (G-060); never in a rendered picture. In a project, for the piece drilled into
+  // (ADR-088): the box is placed in the room, and the fade is decided in the piece's own mm.
   const drillModel = useDesign((s) => s.model);
   const drillItem = useDrillItem();
   const inProject = view.mode === 'project';
-  const look = !plain && !realistic;
+  const look = !plain;
   const outline = useMemo(() => {
     if (!look) return undefined;
     if (!inProject) return selectionBox(view.model, selectedSpace);
@@ -684,14 +695,17 @@ function Panels({
           const side = p.shape?.kind === 'profile' ? DoubleSide : FrontSide;
           const look = realistic ? (
             <>
-              {/* Realistic (ADR-067): the finish sets how matte or glossy a board is; backs stay opaque. The selection shows
-                  as the green tint only: drei's outline is a mesh that the occlusion pass would smear. */}
+              {/* Realistic (ADR-067): the finish sets how matte or glossy a board is; backs stay opaque. Panel edges are
+                  not drawn (drei's edge outline is a mesh the occlusion pass would smear); the selection outline is. */}
               <meshPhysicalMaterial
-                key={map ? map.uuid : 'plain'}
+                key={`${map ? map.uuid : 'plain'}${faded ? ':faded' : ''}`}
                 map={map ?? null}
                 color={color}
                 metalness={0}
                 {...finishLook(finishes.get(p.materialId))}
+                transparent={faded}
+                opacity={faded ? FADED : 1}
+                depthWrite={!faded}
                 side={side}
               />
             </>

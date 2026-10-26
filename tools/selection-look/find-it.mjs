@@ -119,16 +119,18 @@ for (const width of [1280, 390]) {
   };
   await at(0.03, 0.97);
   check(width, '3D: a tap on empty space clears the card', !(await card(three).isVisible()));
-  // On a phone the card covers much of the short 3D view (ADR-085), and it moves with the selection; each later tap
-  // goes just below it, in the same bay, as a user would tap the part of the piece still in sight.
+  // Three taps at one spot. The card's heading names what it acts on (G-065); on a phone it docks under the 3D view
+  // instead of covering it (G-066), so the spot stays in sight.
+  const heading = async () => {
+    const t = card(three).locator('.cs-title');
+    return (await t.count()) ? (await t.innerText()).trim() : '';
+  };
   const titles = [];
-  await at(0.62, 0.6);
-  titles.push(await said());
-  for (let i = 1; i < 3; i++) {
-    const r = await canvas.boundingBox();
-    const cb = await card(three).boundingBox();
-    await at(0.62, Math.min(0.92, Math.max(0.6, (cb.y + cb.height + 14 - r.y) / r.height)));
+  const headings = [];
+  for (let i = 0; i < 3; i++) {
+    await at(0.62, 0.6);
     titles.push(await said());
+    headings.push(await heading());
     if (i === 1) await shot('3d-part');
   }
   check(
@@ -137,6 +139,34 @@ for (const width of [1280, 390]) {
     titles.join(' → ') === 'Whole cabinet → Shelves → Whole cabinet',
     titles.join(' → '),
   );
+  check(
+    width,
+    'the card is headed with what it acts on',
+    headings.join(' → ') === 'Whole cabinet → Shelves → Whole cabinet',
+    headings.join(' → '),
+  );
+  if (phone) {
+    const cv = await canvas.boundingBox();
+    const cd = await card(three).boundingBox();
+    check(
+      width,
+      'phone: the card sits under the 3D view, not over it',
+      cd.y >= cv.y + cv.height - 1,
+      `canvas bottom ${Math.round(cv.y + cv.height)}, card top ${Math.round(cd.y)}`,
+    );
+  }
+  // Realistic (G-060): the same selection, the same heading.
+  await page.getByRole('radio', { name: 'Realistic' }).click();
+  await page.waitForTimeout(1500);
+  await at(0.62, 0.6);
+  check(
+    width,
+    'Realistic: a tap selects the bay, the card says "Shelves"',
+    (await said()) === 'Shelves' && (await heading()) === 'Shelves',
+    `${await said()} / ${await heading()}`,
+  );
+  await shot('3d-realistic');
+  await page.getByRole('radio', { name: 'Simple' }).click();
   await shot('3d-whole');
   check(
     width,

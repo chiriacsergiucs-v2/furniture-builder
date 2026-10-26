@@ -1565,8 +1565,9 @@ td.note {
   fill: var(--link);
   font-weight: 600;
 }
-/* Outside the selected space or piece (ADR-087). */
-.elevation .faded {
+/* Outside the selected space or piece (ADR-087; the room front view, G-067). */
+.elevation .faded,
+.plan .faded {
   opacity: 0.3;
 }
 .el-selection {
@@ -5022,6 +5023,14 @@ button.tile:hover {
   position: absolute;
   z-index: 2;
 }
+.cs-title {
+  flex-basis: 100%;
+  color: var(--link);
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .cs-row {
   display: grid;
   gap: 2px;
@@ -5071,4 +5080,11 @@ button.tile:hover {
 }
 .count-anchor .count-stepper {
   max-width: none;
+}
+/* Phones: the 3D view's card docks under the view instead of covering it (G-066); the view keeps its size. */
+.count-dock-slot .count-stepper {
+  max-width: none;
+  border-radius: 0;
+  border-inline: 0;
+  box-shadow: none;
 }

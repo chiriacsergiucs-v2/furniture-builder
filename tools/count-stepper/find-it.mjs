@@ -66,7 +66,11 @@ for (const width of [1280, 390]) {
   const c = card(front);
   check(width, '"Quick counts" card in the drawing', await c.isVisible());
   for (const t of ['Vertical dividers', 'Horizontal dividers', 'Drawers'])
-    check(width, `card shows "${t}"`, await c.getByText(t, { exact: true }).isVisible());
+    check(
+      width,
+      `card shows "${t}"`,
+      await c.locator('.cs-label').getByText(t, { exact: true }).isVisible(),
+    );
   const cb = await box(c);
   const sel = await box(front.locator('.el-selection'));
   check(

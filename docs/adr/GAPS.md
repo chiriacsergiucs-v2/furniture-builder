@@ -562,12 +562,13 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-060: Selection look in Realistic mode
 
-- Status: Open
+- Status: ADR-087
 - Origin: ADR-087, 2026-10-26, out of scope
 - Missing: The new selection look in Realistic mode beyond the current tint; pictures stay without selection
 - Request: The highlight of the selected item need to be more obvious, suggest 5 designs that can be applied so it is clearer which part of the piece is selected, or if it is entirely selected
 - Questions: Should Realistic mode show the full selection design too?
 - Suggested pick: Yes, same design in Realistic (estimate +15 % work)
+- Answer: User 2026-10-26: "Yes, same as Simple" — design A (outline and fade) in Realistic too; moved into ADR-087.
 
 ### G-061: What the project panel shows for a selected space
 
@@ -611,27 +612,30 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-065: Quick-count card heading naming the selection
 
-- Status: Open
+- Status: ADR-087
 - Origin: ADR-087, 2026-10-26, cut while building (Claude)
 - Missing: A heading on the quick-count card naming what it acts on (e.g. Whole cabinet)
 - Request: The highlight of the selected item need to be more obvious, suggest 5 designs that can be applied so it is clearer which part of the piece is selected, or if it is entirely selected
 - Questions: Worth a heading if the card must then be made smaller on phones, or is the outline enough?
 - Suggested pick: Outline only (built); revisit with a smaller phone card: a heading made the card cover the tap point in the 390 px 3D view (estimate)
+- Answer: User 2026-10-26: "Yes, every card" — a heading on every quick-count card, once the phone card no longer covers the 3D view; moved into ADR-087.
 
 ### G-066: Quick-count card covers much of the phone 3D view
 
-- Status: Open
+- Status: ADR-087
 - Origin: ADR-087, 2026-10-26, out of scope (seen while testing, from ADR-085)
 - Missing: A placement or size of the quick-count card that leaves the piece visible in the short 390 px 3D view
 - Request: The highlight of the selected item need to be more obvious, suggest 5 designs that can be applied so it is clearer which part of the piece is selected, or if it is entirely selected
 - Questions: Smaller card on phones, a card docked under the 3D view, or a taller 3D view?
 - Suggested pick: Dock the card under the 3D view on phones, so the piece and its outline stay in sight (estimate +10 % work)
+- Answer: User 2026-10-26: "Dock under 3D" — on phones the card sits in a bar under the 3D view; moved into ADR-087.
 
 ### G-067: Selected space not marked in the project's 2D views
 
-- Status: Open
+- Status: ADR-088
 - Origin: ADR-088, 2026-10-26, out of scope (Claude)
 - Missing: Outline of the selected space inside a project piece on the plan and in the room front view (taps drill there, the 3D view and the panel show it)
 - Request: one more ADR, which would keep the project editor open while we click on the item second time (yes editing of ), and it gives us the opportunity to add or remove shelves and change its structure. the item is triggered, but we should be kept on the edit of the project view.
 - Questions: Mark the selected space on the room front view too (the plan, seen from above, cannot show a space's height)?
 - Suggested pick: Outline it on the room front view, as in the piece's front drawing (estimate +10 % work)
+- Answer: User 2026-10-26: "Room front + plan" — outline the space on the room front view and its width × depth footprint on the plan; moved into ADR-088.
