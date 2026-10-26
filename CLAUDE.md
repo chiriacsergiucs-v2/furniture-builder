@@ -152,4 +152,7 @@ Lifecycle, one skill per step:
 - Branch per ADR: `adr-NNN-short-title`; open a pull request for review.
 - Merge to `main` only on the user's instruction; then cite the `Deploy GitHub Pages` run id. Never force-push
   `main`. Selecting proposals in the `retro` dialog is that instruction (user rule 2026-10-26, `retro` skill).
+- Session branch: after its PR merged, restart it with `git checkout -B <branch> origin/main` and push
+  normally (it fast-forwards); never force-push it. After pulling or merging into it, push it in the same
+  turn (retro 2026-10-26).
 - Ship commit message: `Ship ADR-NNN: <short title> — mark implemented`.

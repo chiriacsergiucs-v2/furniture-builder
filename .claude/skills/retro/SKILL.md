@@ -108,7 +108,7 @@ Call `AskUserQuestion` right after the findings; never wait for the user to type
 Then, without asking again:
 
 1. Branch `retro/YYYY-MM-DD-<topic>` from the latest `origin/main` plus the retro file commit, not from the
-   session's other work, so no unmerged work rides along.
+   session's other work, so no unmerged work rides along (user decision 2026-10-26).
 2. Apply the selected fixes. Set each ledger row to `Applied (PR #N)` or `Not chosen (YYYY-MM-DD)`.
 3. Run the CI checks from CLAUDE.md (at least `pnpm lint`, `pnpm format:check`, `pnpm docs:check`; add
    `pnpm typecheck`, `pnpm test` and `pnpm build` if a script, a hook or code changed). Check that a new hook
