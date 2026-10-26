@@ -483,7 +483,7 @@ export function dropNewPiece(
     item,
     bounds: shifted(me.bounds, position.x - me.item.position.x, position.z - me.item.position.z),
   };
-  const free: SnapResult = { position, box: moved.bounds, snap: null, hint: null };
+  const free: SnapResult = { position, box: moved.bounds, snap: null, hint: null, refused: [] };
   if (!snap) return free;
   const others = pieces.filter((pc) => pc.item.id !== item.id);
   const withMe: Project = {
