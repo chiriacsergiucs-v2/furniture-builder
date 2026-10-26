@@ -1,6 +1,6 @@
 # ADR-027: Catalog page: browse furniture by category, brand and "Saved on this device"
 
-- Status: Pending
+- Status: Deferred (won't do: depends on ADR-029, which is won't do — user decision 2026-10-25)
 - Date: 2026-10-22
 - Decided by: user request; defaults below await confirmation
 - Depends on: ADR-052
