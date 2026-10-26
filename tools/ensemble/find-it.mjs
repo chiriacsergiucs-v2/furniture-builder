@@ -160,7 +160,10 @@ for (const width of [1440, 375]) {
   // Automatic BOM: one Parts CSV for the whole project, rows from all three pieces. Since ADR-079 the CSV and Print
   // are on the Parts list in Build & Preview ("Download CSV").
   await setMode('Build & Preview');
-  await page.getByRole('tab', { name: /^Parts/ }).click();
+  {
+    const t = page.getByRole('tab', { name: /^Parts/ });
+    if ((await t.getAttribute('aria-selected')) !== 'true') await t.click();
+  }
   const partsPanel = page.locator('#panel-parts');
   const csv = await download(() =>
     partsPanel.getByRole('button', { name: 'Download CSV' }).click(),

@@ -119,7 +119,10 @@ for (const width of [390, 1280]) {
   );
 
   // 3. Hardware on a phone: the item column gets the room.
-  await page.getByRole('tab', { name: /^Hardware/ }).click();
+  {
+    const t = page.getByRole('tab', { name: /^Hardware/ });
+    if ((await t.getAttribute('aria-selected')) !== 'true') await t.click();
+  }
   await page.waitForTimeout(300);
   const share = await page.evaluate(() => {
     const t = document.querySelector('.hardware table.cut');
@@ -320,7 +323,10 @@ for (const width of [390, 1280]) {
     'empty project: 3D says "Add pieces under Compose"',
     await page.getByText('Add pieces under Compose to see them in 3D.').isVisible(),
   );
-  await page.getByRole('tab', { name: /^Checks/ }).click();
+  {
+    const t = page.getByRole('tab', { name: /^Checks/ });
+    if ((await t.getAttribute('aria-selected')) !== 'true') await t.click();
+  }
   check(
     width,
     'empty project: Checks says "Nothing to check yet", not "No problems found"',
