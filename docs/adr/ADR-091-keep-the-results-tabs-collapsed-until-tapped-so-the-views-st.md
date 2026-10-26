@@ -5,7 +5,7 @@
 - Depends on: ADR-079, ADR-081
 - Design: docs/ui-design.md (section 4, Build & Preview results tabs)
 - Backlog: N87
-- Agreed: not yet
+- Agreed: 2026-10-26 "Only phones, next adr"; "Open it", "Always collapsed"
 
 ## Context
 
@@ -23,6 +23,9 @@ User answers 2026-10-26:
 - Closing: **tapping the open tab again** closes it.
 - Errors: **stay collapsed, badge only**; nothing opens by itself.
 - Acceptance level: **full** (find-it script, R3).
+- Width: **only phones** (G-074).
+- Settings cut-list link: **open it**.
+- Reload: **always collapsed** (G-073).
 
 ## Decision
 
@@ -37,7 +40,8 @@ User answers 2026-10-26:
   panel on Checks or Parts as today, because the user asked to see the results.
 - Accessibility: tabs keep `role="tab"`; while collapsed every tab has `aria-selected="false"` and
   `aria-expanded="false"`; the open tab has `aria-selected="true"`, `aria-expanded="true"`. Focus stays visible.
-- Applies at every width (default, open question G-074).
+- Phones only (`max-width: 760px`, the phone layout of ADR-079; user answer, G-074). Desktop keeps today's
+  layout: a tab is always open.
 - Print and CSV stay inside the Parts panel; printing (`setPrinting`) does not depend on the panel being open.
 
 ## Alternatives considered
@@ -50,7 +54,7 @@ User answers 2026-10-26:
 
 - In scope: `Output.tsx` collapse/expand, store flag, the Settings link, styles for the collapsed strip, tests,
   a find-it script.
-- Out of scope: remembering the open state across reloads (G-073).
+- Out of scope: remembering the open state across reloads (G-073, user answer "Always collapsed").
 
 ## Consequences
 
@@ -73,5 +77,4 @@ User answers 2026-10-26:
 
 ## Open questions
 
-- Collapse at desktop width too, or only on phones? Default used: every width; recommended, since the request
-  names no width and asks to keep the render views main (G-074).
+None. Answered 2026-10-26: width "Only phones" (G-074).

@@ -689,18 +689,20 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-073: Remember whether the results panel was open across reloads
 
-- Status: Open
+- Status: Acknowledged (2026-10-26)
 - Origin: ADR-091 out of scope
 - Missing: The results panel always starts collapsed after a reload; its open/closed state and tab are not saved
 - Request: They should be a collapsed view, onclick showing only, so the views with renders are kept as main
 - Questions: Should the app remember an open results panel after a reload?
 - Suggested pick: No: always start collapsed, closest to 'collapsed view, onclick showing only'
+- Answer: User 2026-10-26: "Always collapsed".
 
 ### G-074: Results collapse at desktop width too
 
-- Status: Open
+- Status: ADR-091
 - Origin: ADR-091 open question
 - Missing: Unconfirmed default: the results tabs collapse at every width, not only on phones
 - Request: They should be a collapsed view, onclick showing only, so the views with renders are kept as main
 - Questions: Collapse at desktop width too, or only on phones?
 - Suggested pick: Every width: the request names no width and keeps the render views main everywhere
+- Answer: User 2026-10-26: "Only phones"; built in ADR-091 (desktop keeps a tab open).

@@ -11,10 +11,16 @@ import { download, fileName } from './shell/files';
 import { useUi } from './shell/uiStore';
 import { mayRepair, problemPanels } from '../core/repairs';
 import { useProblem } from './problemStore';
+import { PHONE, useMediaQuery } from './useMediaQuery';
 
 export function Output() {
   const tab = useDesign((s) => s.tab);
   const setTab = useDesign((s) => s.setTab);
+  const toggleTab = useDesign((s) => s.toggleTab);
+  const resultsOpen = useDesign((s) => s.resultsOpen);
+  // Phones keep the results collapsed until a tab is tapped, so the views stay main (ADR-091).
+  const phone = useMediaQuery(PHONE);
+  const open = !phone || resultsOpen;
   const view = useView();
   const errors = view.diagnostics.filter((d) => d.severity === 'error').length;
   const warnings = view.diagnostics.length - errors;
@@ -32,7 +38,7 @@ export function Output() {
     },
   ];
   return (
-    <section className="output" aria-label="Results">
+    <section className={`output ${open ? '' : 'collapsed'}`} aria-label="Results">
       <div className="tabs" role="tablist">
         {tabs.map((t) => (
           <button
@@ -40,23 +46,31 @@ export function Output() {
             role="tab"
             type="button"
             id={`tab-${t.id}`}
-            aria-selected={tab === t.id}
-            aria-controls={`panel-${t.id}`}
-            className={tab === t.id ? 'on' : ''}
-            onClick={() => setTab(t.id)}
+            aria-selected={open && tab === t.id}
+            aria-expanded={phone ? open && tab === t.id : undefined}
+            aria-controls={open && tab === t.id ? `panel-${t.id}` : undefined}
+            className={open && tab === t.id ? 'on' : ''}
+            onClick={() => (phone ? toggleTab(t.id) : setTab(t.id))}
           >
             {t.label}
             {t.badge ? <span className={`badge ${t.kind}`}>{t.badge}</span> : null}
           </button>
         ))}
       </div>
-      <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`} className="tabpanel">
-        {tab === 'parts' && <Parts />}
-        {tab === 'sheets' && <Sheets />}
-        {tab === 'hardware' && <Hardware />}
-        {tab === 'shopping' && <ShoppingList />}
-        {tab === 'checks' && <Checks />}
-      </div>
+      {open && (
+        <div
+          role="tabpanel"
+          id={`panel-${tab}`}
+          aria-labelledby={`tab-${tab}`}
+          className="tabpanel"
+        >
+          {tab === 'parts' && <Parts />}
+          {tab === 'sheets' && <Sheets />}
+          {tab === 'hardware' && <Hardware />}
+          {tab === 'shopping' && <ShoppingList />}
+          {tab === 'checks' && <Checks />}
+        </div>
+      )}
     </section>
   );
 }

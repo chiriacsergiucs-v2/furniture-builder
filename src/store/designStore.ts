@@ -64,6 +64,8 @@ interface State {
   /** 3D preview with the panels pushed apart (display only). */
   exploded: boolean;
   tab: Tab;
+  /** Phones: the results panel under the views is open (ADR-091). UI state only; a reload starts collapsed. */
+  resultsOpen: boolean;
   past: Design[];
   future: Design[];
   dirtyAt: number;
@@ -125,7 +127,10 @@ interface State {
   setHighlight: (ids: string[]) => void;
   setShowFronts: (v: boolean) => void;
   setExploded: (v: boolean) => void;
+  /** Show a results tab, opening the panel (ADR-091). */
   setTab: (t: Tab) => void;
+  /** A tap on a results tab: opens it, switches to it, or closes it when it is the open one (ADR-091). */
+  toggleTab: (t: Tab) => void;
   undo: () => void;
   redo: () => void;
   openProject: (p: Project) => void;
@@ -306,6 +311,7 @@ export const useDesign = create<State>((set, get) => {
     showFronts: true,
     exploded: false,
     tab: 'parts',
+    resultsOpen: false,
     past: [],
     future: [],
     dirtyAt: 0,
@@ -765,7 +771,11 @@ export const useDesign = create<State>((set, get) => {
     setHighlight: (ids) => set({ highlight: ids }),
     setShowFronts: (v) => set({ showFronts: v }),
     setExploded: (v) => set({ exploded: v }),
-    setTab: (t) => set({ tab: t }),
+    setTab: (t) => set({ tab: t, resultsOpen: true }),
+    toggleTab: (t) =>
+      set((s) =>
+        s.resultsOpen && s.tab === t ? { resultsOpen: false } : { tab: t, resultsOpen: true },
+      ),
     undo: () => {
       const { past, design, future } = get();
       const prev = past[past.length - 1];
