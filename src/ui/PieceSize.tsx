@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { sizeFields, type SizeField } from '../core/pieceSize';
 import type { Product } from '../core/types';
+import { SIZE_LOCKED_HINT } from '../core/sizeLock';
 import { MmField } from './controls';
 
 /**
@@ -11,10 +12,13 @@ export function PieceSize({
   product,
   onChange,
   className,
+  locked = false,
 }: {
   product: Product;
   onChange: (key: SizeField['key'], value: number) => void;
   className?: string;
+  /** The piece's size is locked (ADR-122): the fields are off and say why. */
+  locked?: boolean;
 }) {
   const fields = useMemo(() => sizeFields(product), [product]);
   if (!fields.length) return null;
@@ -32,8 +36,14 @@ export function PieceSize({
           min={f.min}
           max={f.max}
           onChange={(v) => onChange(f.key, v)}
+          disabled={locked}
         />
       ))}
+      {locked && (
+        <p className="hint size-lock-hint" role="note">
+          {SIZE_LOCKED_HINT}
+        </p>
+      )}
     </div>
   );
 }

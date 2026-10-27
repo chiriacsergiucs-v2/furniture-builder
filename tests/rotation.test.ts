@@ -24,6 +24,8 @@ import {
 } from '../src/core/project';
 import { projectFromTemplate, templateFromProject } from '../src/core/projectTemplate';
 import { mirrorItems } from '../src/core/selection';
+import { setWallHeight } from '../src/core/height';
+import { setSizeLocked } from '../src/core/sizeLock';
 import { catalogFamilies } from '../src/core/catalog';
 import { resolveItem, syncRef } from '../src/core/ownEdits';
 import { followProject, setProjectSetting } from '../src/core/projectSettings';
@@ -315,5 +317,34 @@ describe('angled pieces with ADR-124 (share codes, template references, project 
     expect(set.items.map(rotationOf)).toEqual([75, 0]);
     const follow = followProject(set, p.items[0].id, 'plinthHeight');
     expect(follow.items[0].angle).toBe(75);
+  });
+});
+
+describe('angled pieces with ADR-122 (size lock, height drag)', () => {
+  it('a size-locked piece still turns: the lock is on its size only', () => {
+    const p0 = run(['base-door']);
+    const id = p0.items[0].id;
+    const p = setSizeLocked(p0, id, true);
+    useDesign.getState().openProject(p);
+    expect(useDesign.getState().setRotation(id, 30)).toBeNull();
+    const it = useDesign.getState().project!.items[0];
+    expect(rotationOf(it)).toBe(30);
+    expect(it.sizeLocked).toBe(true);
+    useDesign.getState().undoProject();
+    expect(rotationOf(useDesign.getState().project!.items[0])).toBe(0);
+  });
+
+  it('an angled wall unit changes height and keeps its angle', () => {
+    const p0 = run(['wall-cabinet']);
+    const id = p0.items[0].id;
+    const turned = setItemRotation(p0, id, 20).project;
+    expect(turned.items[0].placement?.kind).toBe('wall');
+    const r = setWallHeight(turned, id, 1500);
+    expect(r.reason).toBeUndefined();
+    const it = r.project.items[0];
+    expect(rotationOf(it)).toBe(20);
+    const pm = buildProjectModel(r.project);
+    expect(pm.pieces[0].bounds.y).toBe(1500);
+    expect(pm.pieces[0].outline.yaw?.deg).toBe(20);
   });
 });

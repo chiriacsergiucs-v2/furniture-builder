@@ -37,6 +37,9 @@ export function ProjectSettingsPanel() {
   const s = project.settings ?? {};
   const apply = (key: SettingKey, value: Parameters<typeof set>[1]) => {
     const applied = set(key, value);
+    // Refused because it would resize a size-locked piece (ADR-122): the store's notice says which.
+    const refused = useDesign.getState().notice;
+    if (refused) return setMsg(refused);
     setMsg(
       value === undefined
         ? `${SETTING_LABEL[key]}: not set. Pieces keep what they have.`

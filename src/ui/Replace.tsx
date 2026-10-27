@@ -60,7 +60,9 @@ function ReplaceDialog({ item, onClose }: { item: ProjectItem; onClose: () => vo
     const d = insertVariant(o.family, o.variant);
     if (!d) return;
     const report = useDesign.getState().replaceItem(item.id, d, { families });
-    if (!report) return;
+    // Refused (a size-locked piece, ADR-122): say why.
+    const why = useDesign.getState().notice;
+    if (!report) return void (why && useUi.getState().setNotice({ ok: false, text: why }));
     useUi.getState().setNotice({ ok: !report.problems.length, text: report.text });
     const project = useDesign.getState().project;
     if (report.problems[0] && project) useProblem.getState().show(report.problems[0], project.id);

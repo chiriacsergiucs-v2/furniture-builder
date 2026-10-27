@@ -1,3 +1,4 @@
+import { isSizeLocked } from '../core/sizeLock';
 import {
   useEffect,
   useLayoutEffect,
@@ -138,6 +139,7 @@ export function ProjectPanel({
   const updateProject = useDesign((s) => s.updateProject);
   const setGap = useDesign((s) => s.setGap);
   const setLocked = useDesign((s) => s.setLocked);
+  const setSizeLocked = useDesign((s) => s.setSizeLocked);
   const resizeItem = useDesign((s) => s.resizeItem);
   // A space, shelf or side inside the drilled piece is selected: its size is not the piece's (ADR-106).
   const insideSelected = useDesign(
@@ -278,6 +280,12 @@ export function ProjectPanel({
                 Locked
               </span>
             )}
+            {isSizeLocked(item) && (
+              <span className="chip lock-chip">
+                <Icon name="lock" className="sm" />
+                Size locked
+              </span>
+            )}
           </h3>
           <TemplateNotice item={item} />
           <LinkedCopies item={item} />
@@ -287,6 +295,7 @@ export function ProjectPanel({
               key={`size-${item.id}`}
               product={item.design.product}
               onChange={(k, v) => resizeItem(item.id, k, v)}
+              locked={isSizeLocked(item)}
             />
           )}
           <div className="split-actions">
@@ -315,6 +324,21 @@ export function ProjectPanel({
             >
               <Icon name="lock" className="sm" />
               {isLocked(item) ? 'Unlock' : 'Lock'}
+            </button>
+            {/* Lock size keeps its width, height and depth (ADR-122); separate from Lock (placement). */}
+            <button
+              type="button"
+              className="btn outline"
+              aria-pressed={isSizeLocked(item)}
+              title={
+                isSizeLocked(item)
+                  ? 'Let the piece be resized again'
+                  : 'Keep its width, height and depth: nothing resizes it'
+              }
+              onClick={() => setSizeLocked(item.id, !isSizeLocked(item))}
+            >
+              <Icon name="lock" className="sm" />
+              {isSizeLocked(item) ? 'Unlock size' : 'Lock size'}
             </button>
           </div>
           {libMsg && (

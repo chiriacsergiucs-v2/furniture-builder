@@ -1,3 +1,4 @@
+import { isSizeLocked, SIZE_LOCKED_HINT } from '../core/sizeLock';
 import { useMemo, useState } from 'react';
 import {
   bayLayoutOf,
@@ -94,14 +95,43 @@ export function Inspector({ mode }: { mode: 'compose' | 'configure' }) {
     ) : (
       <ComposeStart />
     );
-  if (prod.kind === 'desk')
-    return <DeskEditor p={prod.params} deskId={prod.id} materials={design.materials} />;
-  if (prod.kind === 'corner') return <CornerEditor p={prod.params} materials={design.materials} />;
-  if (prod.kind === 'panel') return <PanelEditor p={prod.params} materials={design.materials} />;
-  if (prod.kind === 'frame') return <FrameEditor p={prod.params} materials={design.materials} />;
-  if (prod.kind === 'panels')
-    return <PanelSetEditor p={prod.params} materials={design.materials} />;
-  return <CabinetEditor p={prod.params} materials={design.materials} />;
+  const editor =
+    prod.kind === 'desk' ? (
+      <DeskEditor p={prod.params} deskId={prod.id} materials={design.materials} />
+    ) : prod.kind === 'corner' ? (
+      <CornerEditor p={prod.params} materials={design.materials} />
+    ) : prod.kind === 'panel' ? (
+      <PanelEditor p={prod.params} materials={design.materials} />
+    ) : prod.kind === 'frame' ? (
+      <FrameEditor p={prod.params} materials={design.materials} />
+    ) : prod.kind === 'panels' ? (
+      <PanelSetEditor p={prod.params} materials={design.materials} />
+    ) : (
+      <CabinetEditor p={prod.params} materials={design.materials} />
+    );
+  return (
+    <>
+      <SizeLockNote />
+      {editor}
+    </>
+  );
+}
+
+/**
+ * A project piece open in the editor with its size locked (ADR-122): says so, and why the last size edit was refused.
+ */
+function SizeLockNote() {
+  const locked = useDesign((s) => {
+    const id = s.editingItemId ?? s.drillItemId;
+    return isSizeLocked(s.project?.items.find((i) => i.id === id));
+  });
+  const notice = useDesign((s) => s.notice);
+  if (!locked) return null;
+  return (
+    <p className="alert info size-lock-note" role="status">
+      {SIZE_LOCKED_HINT}. {notice ?? 'Edits that change its width, height or depth are refused.'}
+    </p>
+  );
 }
 
 /**
@@ -141,6 +171,10 @@ function ComposeStart() {
   const select = useDesign((s) => s.select);
   const whole = useDesign((s) => s.selectedId === null);
   const resize = useDesign((s) => s.resizePiece);
+  // A project piece drilled into with its size locked (ADR-122): its size fields are off.
+  const sizeLocked = useDesign((s) =>
+    isSizeLocked(s.project?.items.find((i) => i.id === (s.editingItemId ?? s.drillItemId))),
+  );
   const setSettingsOpen = useUi((s) => s.setSettingsOpen);
   const roots = productRoots(prod);
   return (
@@ -163,7 +197,7 @@ function ComposeStart() {
           </p>
         )}
       </header>
-      {whole && <PieceSize product={prod} onChange={resize} />}
+      {whole && <PieceSize product={prod} onChange={resize} locked={sizeLocked} />}
       {roots.map((r) => (
         <button key={r.root.id} type="button" className="row-btn" onClick={() => select(r.root.id)}>
           <span className="glyph">

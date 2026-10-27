@@ -21,6 +21,7 @@ import {
   FrontSide,
   Matrix4,
   PMREMGenerator,
+  Plane,
   RepeatWrapping,
   SRGBColorSpace,
   Shape,
@@ -56,6 +57,9 @@ import { SNAP_RANGE } from '../core/snap';
 import { S, useGhost, useMoveMode, usePieceDrag, type PieceGhost } from './pieceDrag';
 import { landingY } from '../core/drag3d';
 import { useModelResize, useResizePreview, type HandleAxis } from './modelResize';
+import { useHeightDrag, useHeightPreview } from './heightDrag';
+import { AXIS_LABEL, cutAt, setSection, useSection, type SectionAxis } from './section';
+import { heightDraggable, heightLabel } from '../core/height';
 import type { Box, MaterialImage, Panel } from '../core/types';
 
 const FRONT = new Set<Panel['role']>(['door', 'drawer-front']);
@@ -166,10 +170,16 @@ export default function Viewer3D() {
   }, [theme]);
   const designId = `${view.mode === 'project' ? 'project' : `design:${useDesign.getState().design.id}`}:${exploded ? 'exploded' : 'built'}`;
   // Exploded: positions only, for looking; parts, sheets and checks always use the built model.
-  const panels = useMemo(
-    () => (exploded ? explode(view.pieces) : view.model.panels),
-    [exploded, view],
-  );
+  // Isolate (ADR-122): only the selected project pieces are shown; the model, checks and exports are unchanged.
+  const section = useSection();
+  const selectedIds = useDesign((s) => s.selectedItemIds);
+  const isolating = view.mode === 'project' && section.isolate && selectedIds.length > 0;
+  const panels = useMemo(() => {
+    const all = exploded ? explode(view.pieces) : view.model.panels;
+    if (!isolating) return all;
+    const keep = new Set(selectedIds);
+    return all.filter((p) => keep.has(p.nodeId.split(':')[0]));
+  }, [exploded, view, isolating, selectedIds]);
   // A project's display-only 3D models (ADR-076) are framed too.
   const extent = useDesign((s) => (view.mode === 'project' ? s.projectModel?.extent : undefined));
   const bounds = useMemo(
@@ -256,6 +266,17 @@ export default function Viewer3D() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [turnId, rendering, tapping, turnItem]);
+  // Section (ADR-122): a cut across one axis of what is shown, in the project's 3D view; never in a rendered picture.
+  const sectionOn = inProject && section.on && !rendering;
+  const span = (a: SectionAxis): [number, number] =>
+    a === 'x'
+      ? [bounds.x, bounds.x + bounds.w]
+      : a === 'y'
+        ? [bounds.y, bounds.y + bounds.h]
+        : [bounds.z, bounds.z + bounds.d];
+  const [lo, hi] = span(section.axis);
+  const cut = sectionOn ? cutAt(section, lo, hi) : null;
+  const canIsolate = inProject && selectedIds.length > 0;
   return (
     <>
       <Canvas
@@ -307,8 +328,12 @@ export default function Viewer3D() {
         {counts && !docked && (
           <CountsAnchor place={placeCard} inProject={view.mode === 'project'} />
         )}
-        {view.mode === 'project' && !exploded && <RoomWalls />}
-        {view.mode === 'project' && !exploded && <ModelItems plain={rendering} moving={moving} />}
+        {view.mode === 'project' && !exploded && !isolating && <RoomWalls />}
+        {view.mode === 'project' && !exploded && !isolating && (
+          <ModelItems plain={rendering} moving={moving} />
+        )}
+        {moving && turnId && <HeightHandle id={turnId} />}
+        {sectionOn && <SectionClip axis={section.axis} at={cut!} />}
         {showLocks && <LockAnchors pieces={locked} badges={lockBadges} />}
         <Fit key={designId} bounds={bounds} />
       </Canvas>
@@ -378,10 +403,59 @@ export default function Viewer3D() {
               </button>
             </>
           )}
+          <button
+            type="button"
+            className="btn sm outline section-toggle"
+            aria-pressed={section.on}
+            title="Cut through the project to see inside"
+            onClick={() => setSection({ on: !section.on })}
+          >
+            Section
+          </button>
+          {(canIsolate || section.isolate) && (
+            <button
+              type="button"
+              className="btn sm outline isolate-toggle"
+              aria-pressed={isolating}
+              title="Show only the selected pieces"
+              onClick={() => setSection({ isolate: !section.isolate })}
+            >
+              Isolate
+            </button>
+          )}
+          {sectionOn && (
+            <div className="section-tools" role="group" aria-label="Section cut">
+              {(['x', 'y', 'z'] as const).map((a) => (
+                <button
+                  key={a}
+                  type="button"
+                  className="btn sm outline"
+                  aria-pressed={section.axis === a}
+                  title={`Cut across the ${AXIS_LABEL[a].toLowerCase()}`}
+                  onClick={() => setSection({ axis: a, at: null })}
+                >
+                  {AXIS_LABEL[a]}
+                </button>
+              ))}
+              <label className="section-cut">
+                <span>Cut at {cut} mm</span>
+                <input
+                  type="range"
+                  min={lo}
+                  max={hi}
+                  step={1}
+                  value={cut ?? lo}
+                  aria-label={`Cut position across the ${AXIS_LABEL[section.axis].toLowerCase()}, mm`}
+                  onChange={(e) => setSection({ at: Number(e.target.value) })}
+                />
+              </label>
+            </div>
+          )}
         </div>
       )}
       {moving && <DragNote snapOn={snapOn} />}
       {moving && <ResizeNote />}
+      {moving && <HeightNote />}
       {emptyProject && (
         <div className="no-3d empty-3d">
           <p>Add pieces under Compose to see them in 3D.</p>
@@ -733,6 +807,84 @@ function ResizeHandles({ item, box }: { item: ModelItem; box: Box }) {
       ))}
     </>
   );
+}
+
+/**
+ * The selected wall unit's height handle in Move mode (ADR-122, wall-placed pieces only): on the middle of its top
+ * front edge. Dragging it goes through `setWallHeight` (core); while dragging a translucent copy shows where it hangs.
+ */
+function HeightHandle({ id }: { id: string }) {
+  const press = useHeightDrag();
+  const project = useDesign((s) => s.project);
+  const pc = useDesign((s) => s.projectModel?.pieces.find((x) => x.item.id === id));
+  const preview = useHeightPreview();
+  if (!project || !pc || !heightDraggable(project, id) || pc.item.placement?.kind !== 'wall')
+    return null;
+  const b = pc.bounds;
+  const start = pc.item.placement.height;
+  const at: [number, number, number] = [b.x + b.w / 2, b.y + b.h, b.z + b.d];
+  const dy = preview?.id === id ? preview.height - start : 0;
+  return (
+    <>
+      <Html position={at.map((v) => v * S) as [number, number, number]} center zIndexRange={[2, 1]}>
+        <button
+          type="button"
+          className="model-handle height-handle"
+          aria-label="Change height"
+          title="Change height: drag up or down"
+          onPointerDown={(e) => press(e, id, start, at)}
+        >
+          ↕
+        </button>
+      </Html>
+      {dy !== 0 && (
+        <mesh
+          position={[(b.x + b.w / 2) * S, (b.y + dy + b.h / 2) * S, (b.z + b.d / 2) * S]}
+          raycast={() => null}
+          renderOrder={5}
+        >
+          <boxGeometry args={[b.w * S, b.h * S, b.d * S]} />
+          <meshBasicMaterial color={SELECT} transparent opacity={0.28} depthWrite={false} />
+        </mesh>
+      )}
+    </>
+  );
+}
+
+/** The live height while a wall unit's height handle is dragged (ADR-122): "From floor 1450 mm". */
+function HeightNote() {
+  const preview = useHeightPreview();
+  if (!preview) return null;
+  return (
+    <span
+      className={`plan-drag-note three-drag-note${preview.height < 0 ? ' locked' : ''}`}
+      role="status"
+    >
+      {heightLabel(preview.height)}
+      {preview.height < 0 ? ' — below the floor, it will not move' : ''}
+    </span>
+  );
+}
+
+/**
+ * Section (ADR-122): the renderer clips everything past the cut, `at` mm across `axis`; what is shown only (the model,
+ * checks and exports are unchanged). Kept: the side toward the back wall, the floor or the left.
+ */
+function SectionClip({ axis, at }: { axis: SectionAxis; at: number }) {
+  const get = useThree((s) => s.get);
+  useEffect(() => {
+    // The renderer is read when the cut changes (not held as React state, which is never written to).
+    const renderer = get().gl;
+    const n = new Vector3(axis === 'x' ? -1 : 0, axis === 'y' ? -1 : 0, axis === 'z' ? -1 : 0);
+    renderer.clippingPlanes = [new Plane(n, at * S)];
+    // Drawn on demand (ADR-121): a cut set outside React's props needs a frame of its own.
+    invalidate();
+    return () => {
+      renderer.clippingPlanes = [];
+      invalidate();
+    };
+  }, [get, axis, at]);
+  return null;
 }
 
 /** The live size while a 3D model's handle is dragged (ADR-102). */

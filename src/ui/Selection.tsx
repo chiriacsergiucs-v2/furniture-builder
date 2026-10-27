@@ -121,6 +121,8 @@ export function SelectionCard() {
               ['right', 'Right'],
               ['back', 'Back'],
               ['front', 'Front'],
+              ['top', 'Top'],
+              ['bottom', 'Bottom'],
             ] as const
           ).map(([how, label]) => (
             <button
