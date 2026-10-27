@@ -247,7 +247,8 @@ for (const [width, scheme] of [
   ck(
     width,
     'Settings holds the project settings',
-    (await dlg.getByRole('heading', { name: 'Project settings' }).isVisible()) &&
+    // Titled by the dialog only since ADR-114 ("Settings: <project>", its ⓘ "About project settings").
+    (await dlg.getByRole('button', { name: 'About project settings' }).isVisible()) &&
       (await dlg.getByLabel('Saw cut (kerf) for this project', { exact: true }).isVisible()),
   );
   await closeSettings();

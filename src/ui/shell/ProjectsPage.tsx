@@ -263,8 +263,8 @@ export function ProjectsPage({
           <>
             {projects.length > 0 && (
               <>
-                <h3 className="list-head">Projects</h3>
-                <ul className="library">
+                {/* No "Projects" label here: the page title says it (ADR-114). */}
+                <ul className="library" aria-label="Projects">
                   {projects.map((r) =>
                     row(
                       r,

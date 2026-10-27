@@ -222,7 +222,7 @@ export function StartFrom({
   return (
     <div className="start-from">
       <div className="start-head">
-        <h3 className="list-head">
+        <h3>
           Start from <span className="count">{total} ready items</span>
         </h3>
         <GroupToggle value={grouping} onChange={setGrouping} />
@@ -250,7 +250,7 @@ export function StartFrom({
         if (!rows.length) return null;
         return (
           <section key={g.key} className="start-group" aria-label={g.label}>
-            <h4>
+            <h4 className="list-head">
               {g.label} <span className="count">{rows.length}</span>
             </h4>
             <ul className="template-list template-grid">

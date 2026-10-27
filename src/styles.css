@@ -83,6 +83,8 @@
   /* Layout */
   --side: 360px;
   --out: 400px;
+  /* The phone's bottom bar: measured at run time (App.tsx); this is its height before the first measure. */
+  --actions-h: 64px;
   /* One control height (ADR-112): buttons, fields, segmented controls, steppers and tabs. The small one is for
      toolbars and tables only. Both are 44 px on a touch screen. */
   --control-h: 38px;
@@ -201,6 +203,15 @@ button:disabled {
 :focus-visible {
   outline: 2px solid var(--link);
   outline-offset: 2px;
+}
+/* One heading scale (ADR-114): h1 24, h2 20, h3 17, all 600; below h3 a section label (`.list-head`, `.card-title`:
+   13 px uppercase). One title per level on a screen: a dialog's title is its h2. */
+h1 {
+  font-size: var(--fs-2xl);
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
 }
 h2 {
   font-size: var(--fs-xl);
@@ -397,7 +408,7 @@ output,
   align-items: flex-start;
   justify-content: center;
   gap: 0;
-  padding-block: 6px;
+  padding-block: var(--s-1);
   text-align: left;
 }
 .btn.stack > span {
@@ -559,7 +570,7 @@ select:focus,
   box-shadow: 0 0 0 2px var(--primary-soft);
 }
 select {
-  padding-right: 28px;
+  padding-right: calc(var(--s-6) + var(--s-1));
   appearance: none;
   -webkit-appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%235a625e' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
@@ -606,7 +617,7 @@ select {
   background: transparent;
   width: 100%;
   min-width: 0;
-  padding: 6px 0 6px 2px;
+  padding: var(--s-1) 0 var(--s-1) var(--s-1);
   font-size: 1.05rem;
   font-weight: 600;
   text-align: right;
@@ -618,7 +629,7 @@ select {
 .mm .unit {
   font-size: var(--fs-xs);
   color: var(--ink-2);
-  padding: 0 var(--s-1) 0 3px;
+  padding: 0 var(--s-1);
 }
 .mm .step {
   border: 0;
@@ -650,16 +661,19 @@ select {
   border: 1px solid var(--line);
   border-radius: var(--r);
   background: var(--surface);
-  padding: 3px;
-  gap: 2px;
+  padding: var(--s-1);
+  gap: 0;
 }
+/* Its height is the control height (ADR-112): the option's min-height plus the 4 px inset and the border; the label
+   line stays inside that min-height. */
 .segmented button {
   flex: 1 1 auto;
   min-width: 0;
-  min-height: calc(var(--control-h) - 8px);
+  min-height: calc(var(--control-h) - 2 * var(--s-1) - 2px);
   border: 0;
   background: none;
-  padding: 4px 8px;
+  padding: 0 var(--s-2);
+  line-height: 1.25;
   border-radius: var(--r-sm);
   font-weight: 500;
   color: var(--ink-2);
@@ -683,8 +697,8 @@ select {
   outline-color: var(--accent);
 }
 .segmented.small button {
-  min-height: calc(var(--control-h-sm) - 8px);
-  padding: 0 12px;
+  min-height: calc(var(--control-h-sm) - 2 * var(--s-1) - 2px);
+  padding: 0 var(--s-3);
 }
 
 /* Counter: − n + */
@@ -749,7 +763,7 @@ select {
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: minmax(0, auto);
-  gap: 2px;
+  gap: var(--s-1);
 }
 .steps li {
   min-width: 0;
@@ -758,10 +772,10 @@ select {
   width: 100%;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  column-gap: 4px;
+  column-gap: var(--s-1);
   align-items: baseline;
   text-align: left;
-  padding: 6px 4px;
+  padding: var(--s-1);
   border: 1px solid transparent;
   border-radius: var(--r);
   background: none;
@@ -842,7 +856,7 @@ select {
   align-items: center;
   justify-content: space-between;
   gap: var(--s-2);
-  font-size: var(--fs-sm);
+  font-size: var(--fs-xs);
   font-weight: 600;
   color: var(--ink-2);
   text-transform: uppercase;
@@ -857,7 +871,7 @@ select {
   grid-template-columns: auto 1fr auto;
   column-gap: var(--s-3);
   align-items: center;
-  padding: 10px 12px;
+  padding: var(--s-2) var(--s-3);
   border: 1px solid var(--line);
   border-radius: var(--r);
   background: var(--surface);
@@ -903,7 +917,7 @@ select {
 
 .alert {
   margin: 0;
-  padding: 10px 12px;
+  padding: var(--s-2) var(--s-3);
   border-left: 3px solid;
   border-radius: var(--r-sm);
   font-size: var(--fs-sm);
@@ -947,7 +961,7 @@ select {
   font-family: var(--num);
   font-size: var(--fs-xs);
   min-width: 20px;
-  padding: 1px 6px;
+  padding: 0 var(--s-1);
   border-radius: var(--r-pill);
   color: var(--on-error);
   text-align: center;
@@ -980,13 +994,13 @@ select {
   border: 0;
   background: none;
   min-height: var(--control-h);
-  padding: 2px 12px 0;
+  padding: var(--s-1) var(--s-3) 0;
   font-weight: 500;
   color: var(--ink-2);
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
   display: inline-flex;
-  gap: 6px;
+  gap: var(--s-1);
   align-items: center;
   white-space: nowrap;
   transition:
@@ -1109,12 +1123,12 @@ table.cut th {
   font-weight: 500;
   color: var(--ink-2);
   font-size: var(--fs-xs);
-  padding: 6px;
+  padding: var(--s-1);
   background: var(--surface);
   border-bottom: 1px solid var(--line);
 }
 table.cut td {
-  padding: 6px;
+  padding: var(--s-1);
   border-bottom: 1px solid var(--line-2);
   vertical-align: middle;
 }
@@ -1146,7 +1160,7 @@ td.labels .drill {
   display: block;
   color: var(--ink);
   font-size: var(--fs-xs);
-  margin-top: 2px;
+  margin-top: var(--s-1);
 }
 td.note {
   color: var(--ink-2);
@@ -1174,14 +1188,14 @@ td.note {
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
   box-shadow: var(--shadow-2);
-  padding: 6px;
+  padding: var(--s-1);
   display: grid;
 }
 .menu-items button {
   text-align: left;
   background: none;
   border: 0;
-  padding: 9px 10px;
+  padding: var(--s-2);
   border-radius: var(--r);
   color: var(--ink);
   font-weight: 500;
@@ -1286,7 +1300,7 @@ td.note {
 .confirm-msg .icon {
   color: var(--error);
   flex: none;
-  margin-top: 3px;
+  margin-top: var(--s-1);
 }
 .btn.danger.solid {
   background: var(--error-fill);
@@ -1314,7 +1328,7 @@ td.note {
   transform: translateX(-50%);
   background: var(--bar-bg);
   color: var(--bar-ink);
-  padding: 10px 14px;
+  padding: var(--s-2) var(--s-3);
   border-radius: var(--r-lg);
   display: flex;
   gap: var(--s-3);
@@ -1335,11 +1349,13 @@ td.note {
   grid-template-rows: auto auto 1fr;
 }
 
+/* The top bar: this one rule, plus the phone rule in section 14 (sticky, narrower sides). It never wraps (ADR-114). */
 .bar {
   display: flex;
+  flex-wrap: nowrap;
   align-items: center;
   gap: var(--s-3);
-  padding: 6px var(--s-4);
+  padding: var(--s-1) var(--s-4);
   background: var(--bar-bg);
   color: var(--bar-ink);
 }
@@ -1380,7 +1396,7 @@ td.note {
   color: var(--bar-ink);
   font-weight: 600;
   font-size: 1.05rem;
-  padding: 4px 8px;
+  padding: var(--s-1) var(--s-2);
   min-width: 8ch;
   width: min(32ch, 28vw);
   min-height: 36px;
@@ -1422,7 +1438,7 @@ td.note {
   margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: var(--s-1);
 }
 .bar > .theme {
   order: 1;
@@ -1440,7 +1456,7 @@ td.note {
 .actions .cluster {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: var(--s-1);
 }
 .actions .btn {
   color: var(--bar-ink);
@@ -1473,7 +1489,7 @@ td.note {
   width: 1px;
   height: 22px;
   background: var(--bar-line);
-  margin: 0 6px;
+  margin: 0 var(--s-1);
 }
 .actions .menu > summary {
   display: inline-flex;
@@ -1501,7 +1517,7 @@ td.note {
   gap: var(--s-3);
   align-items: center;
   justify-content: space-between;
-  padding: 8px 16px;
+  padding: var(--s-2) var(--s-4);
   background: var(--accent);
   color: var(--on-accent);
   font-size: var(--fs-sm);
@@ -1613,7 +1629,7 @@ td.note {
 .elevation {
   margin: 0;
   height: 100%;
-  padding: 4px 16px 16px;
+  padding: var(--s-1) var(--s-4) var(--s-4);
 }
 .elevation svg {
   width: 100%;
@@ -1729,7 +1745,7 @@ td.note {
 
 /* 9. Inspector (left panel) ----------------------------------------------- */
 .inspector {
-  padding: var(--s-4) var(--s-4) 48px;
+  padding: var(--s-4) var(--s-4) calc(var(--s-8) + var(--s-4));
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--s-4);
@@ -1752,27 +1768,27 @@ td.note {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 2px;
+  gap: var(--s-1);
   font-size: var(--fs-sm);
   color: var(--ink-2);
 }
 .crumbs button {
   background: none;
   border: 0;
-  padding: 2px 4px;
+  padding: var(--s-1);
   color: var(--link);
   text-decoration: underline;
   text-underline-offset: 2px;
   border-radius: 2px;
 }
 .crumbs [aria-current] {
-  padding: 2px 4px;
+  padding: var(--s-1);
   color: var(--ink);
   font-weight: 500;
 }
 .crumbs .sep {
   color: var(--ink-3);
-  padding: 0 2px;
+  padding: 0 var(--s-1);
 }
 .rail {
   min-width: 0;
@@ -1794,7 +1810,7 @@ td.note {
   justify-content: space-between;
   align-items: center;
   gap: var(--s-2);
-  padding: 6px 0;
+  padding: var(--s-1) 0;
   border-radius: var(--r-sm);
 }
 .group > summary::-webkit-details-marker {
@@ -1825,7 +1841,7 @@ td.note {
   background: var(--surface);
 }
 .section > .card-title {
-  margin-bottom: -2px;
+  margin-bottom: calc(-1 * var(--s-1));
 }
 
 /* `.split-actions` and `.arrange-actions` (Duplicate, turn and mirror, ADR-069) are 2-column grids (ADR-112, section
@@ -1835,12 +1851,12 @@ td.note {
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 6px;
+  gap: var(--s-1);
 }
 .parts-sizes li {
   display: grid;
   grid-template-columns: 1fr 80px 70px 64px;
-  gap: 6px;
+  gap: var(--s-1);
   align-items: center;
 }
 .parts-sizes .part-name {
@@ -1876,7 +1892,7 @@ td.note {
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 6px;
+  gap: var(--s-1);
 }
 
 /* 10. Output (right panel) ------------------------------------------------- */
@@ -1896,7 +1912,7 @@ td.note {
 .edgemark {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--s-1);
   white-space: nowrap;
 }
 .edgemark svg {
@@ -1934,7 +1950,7 @@ td.note {
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 6px;
+  gap: var(--s-1);
 }
 .checks button {
   width: 100%;
@@ -1945,7 +1961,7 @@ td.note {
   border: 0;
   border-left: 3px solid;
   border-radius: var(--r-sm);
-  padding: 10px 12px;
+  padding: var(--s-2) var(--s-3);
   font-size: var(--fs-sm);
   color: var(--ink);
   align-items: start;
@@ -1969,7 +1985,7 @@ td.note {
 }
 .checks .sev {
   font-weight: 600;
-  margin-right: 6px;
+  margin-right: var(--s-1);
 }
 .checks .error .sev {
   color: var(--error);
@@ -2006,7 +2022,7 @@ td.note {
 }
 .merge-fields ul {
   margin: var(--s-1) 0 0;
-  padding-left: 1.2em;
+  padding-left: var(--s-5);
 }
 .list-head {
   margin: 0;
@@ -2026,7 +2042,7 @@ td.note {
   margin: 0;
   height: 100%;
   min-height: 0;
-  padding: 4px 16px 16px;
+  padding: var(--s-1) var(--s-4) var(--s-4);
   display: grid;
   grid-template-rows: minmax(0, 1fr);
 }
@@ -2128,7 +2144,7 @@ td.note {
 .lock-chip {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--s-1);
   margin-left: var(--s-2);
   vertical-align: middle;
   background: var(--warn-soft);
@@ -2145,7 +2161,7 @@ td.note {
   position: absolute;
   top: 0;
   left: 0;
-  padding: 1px 6px;
+  padding: 0 var(--s-1);
   border-radius: var(--r-pill);
   background: var(--warn-soft);
   color: var(--warn);
@@ -2170,14 +2186,12 @@ td.note {
 }
 .mat-sheets h3 {
   margin: 0;
-  font-size: var(--fs-md);
-  font-weight: 600;
 }
 .mat-sheets h3 span {
   font-weight: 400;
   color: var(--ink-2);
   font-size: var(--fs-xs);
-  margin-left: 6px;
+  margin-left: var(--s-1);
 }
 .sheet {
   margin: 0;
@@ -2185,7 +2199,7 @@ td.note {
 .sheet figcaption {
   font-size: var(--fs-xs);
   color: var(--ink-2);
-  margin-bottom: 4px;
+  margin-bottom: var(--s-1);
 }
 .sheet svg {
   width: 100%;
@@ -2238,12 +2252,12 @@ table.buy {
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 6px;
+  gap: var(--s-1);
 }
 .template-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
+  gap: var(--s-1);
 }
 .library li {
   display: grid;
@@ -2251,7 +2265,7 @@ table.buy {
   grid-template-columns: minmax(0, 1fr);
   grid-auto-flow: column;
   grid-auto-columns: auto;
-  gap: 6px;
+  gap: var(--s-1);
   align-items: center;
 }
 .library li.current .row-btn {
@@ -2368,12 +2382,10 @@ table.buy {
     min-height: 100%;
   }
   .bar {
-    flex-wrap: wrap;
-    gap: 4px var(--s-2);
     position: sticky;
     top: 0;
     z-index: 5;
-    padding: 6px var(--s-3);
+    padding: var(--s-1) var(--s-3);
   }
   .bar .name {
     width: auto;
@@ -2397,17 +2409,18 @@ table.buy {
     margin: 0;
     flex-wrap: wrap;
     justify-content: space-between;
-    row-gap: 2px;
+    row-gap: var(--s-1);
     background: var(--bar-bg);
     border-top: 1px solid var(--bar-line);
-    padding: 6px max(12px, env(safe-area-inset-right, 0px))
-      calc(6px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
+    padding: var(--s-1) max(var(--s-3), env(safe-area-inset-right, 0px))
+      calc(var(--s-1) + env(safe-area-inset-bottom, 0px))
+      max(var(--s-3), env(safe-area-inset-left, 0px));
   }
   .app {
-    padding-bottom: var(--actions-h, 60px);
+    padding-bottom: var(--actions-h);
   }
   .catalog-page {
-    padding-bottom: calc(var(--actions-h, 60px) + var(--s-6));
+    padding-bottom: calc(var(--actions-h) + var(--s-6));
   }
   .bar > .theme {
     margin-left: auto;
@@ -2509,8 +2522,8 @@ table.buy {
 }
 .tag {
   display: inline-block;
-  margin-left: 6px;
-  padding: 0 6px;
+  margin-left: var(--s-1);
+  padding: 0 var(--s-1);
   border-radius: var(--r-pill);
   background: var(--primary-soft);
   color: var(--primary);
@@ -2543,15 +2556,12 @@ table.buy {
   margin-right: auto;
 }
 .start-group h4 {
-  font-size: var(--fs-sm);
-  color: var(--ink-2);
-  margin: 0 0 6px;
-  font-weight: 600;
+  margin: 0 0 var(--s-1);
 }
 .start-row {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 4px;
+  gap: var(--s-1);
   align-items: center;
 }
 .start-row .row-btn {
@@ -2563,18 +2573,18 @@ table.buy {
 .start-row .more {
   font-family: var(--num);
   font-size: var(--fs-xs);
-  margin-left: 2px;
+  margin-left: var(--s-1);
 }
 .variant-picks {
   list-style: none;
-  margin: 4px 0 6px 48px;
+  margin: var(--s-1) 0 var(--s-1) calc(var(--s-8) + var(--s-4));
   padding: 0;
   display: grid;
-  gap: 2px;
+  gap: var(--s-1);
 }
 .variant-picks .link {
   text-align: left;
-  padding: 2px 0;
+  padding: var(--s-1) 0;
 }
 .variant-picks .link:disabled {
   color: var(--ink-3);
@@ -2599,10 +2609,10 @@ table.buy {
 .catalog-toolbar .search {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--s-1);
   border: 1px solid var(--line);
   border-radius: var(--r);
-  padding: 0 8px;
+  padding: 0 var(--s-2);
   min-height: var(--control-h-sm);
   flex: 1 1 200px;
 }
@@ -2615,7 +2625,6 @@ table.buy {
   font: inherit;
 }
 .group-head {
-  font-size: var(--fs-lg);
   margin: var(--s-2) 0;
 }
 .fam-grid {
@@ -2675,19 +2684,19 @@ table.buy {
   color: var(--link);
 }
 .fam-card .configs ul {
-  margin: 4px 0 0;
-  padding-left: 18px;
+  margin: var(--s-1) 0 0;
+  padding-left: var(--s-5);
   font-size: var(--fs-sm);
   color: var(--ink-2);
 }
 .chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: var(--s-1);
   margin: 0;
 }
 .chip {
-  padding: 1px 8px;
+  padding: 0 var(--s-2);
   border-radius: var(--r-pill);
   font-size: var(--fs-xs);
   font-weight: 600;
@@ -2719,7 +2728,7 @@ table.buy {
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 4px;
+  gap: var(--s-1);
   border-top: 1px solid var(--line-2);
   padding-top: var(--s-2);
 }
@@ -2742,8 +2751,8 @@ table.buy {
 .kind {
   display: inline-grid;
   place-items: center;
-  padding: 0 6px;
-  margin-left: 6px;
+  padding: 0 var(--s-1);
+  margin-left: var(--s-1);
   border-radius: var(--r-sm);
   font-family: var(--num);
   font-size: var(--fs-xs);
@@ -2771,7 +2780,7 @@ table.buy {
 .template-editor .rooms {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px var(--s-3);
+  gap: var(--s-1) var(--s-3);
   border: 0;
   padding: 0;
   margin: 0;
@@ -2779,7 +2788,7 @@ table.buy {
 .template-editor .rooms legend {
   font-size: var(--fs-sm);
   color: var(--ink-2);
-  margin-bottom: 4px;
+  margin-bottom: var(--s-1);
 }
 .variant-edit {
   list-style: none;
@@ -2791,7 +2800,7 @@ table.buy {
 .variant-edit li {
   display: grid;
   grid-template-columns: 1fr 1.4fr;
-  gap: 6px;
+  gap: var(--s-1);
   padding: var(--s-2);
   border: 1px solid var(--line-2);
   border-radius: var(--r);
@@ -2800,7 +2809,7 @@ table.buy {
   grid-column: 1 / -1;
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: var(--s-1);
 }
 .piece-info {
   display: grid;
@@ -2827,14 +2836,14 @@ table.buy {
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 4px;
+  gap: var(--s-1);
 }
 .run-list li {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: var(--s-2);
   align-items: center;
-  padding: 6px 8px;
+  padding: var(--s-1) var(--s-2);
   border: 1px solid var(--line-2);
   border-radius: var(--r);
 }
@@ -2864,8 +2873,8 @@ table.buy {
 }
 .pages {
   display: flex;
-  gap: 2px;
-  padding: 2px;
+  gap: var(--s-1);
+  padding: var(--s-1);
   border: 1px solid var(--bar-line);
   border-radius: var(--r);
   flex: none;
@@ -2873,8 +2882,8 @@ table.buy {
 .pages a {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
+  gap: var(--s-1);
+  padding: var(--s-1) var(--s-3);
   border-radius: var(--r-sm);
   color: var(--bar-ink);
   text-decoration: none;
@@ -2921,7 +2930,7 @@ table.buy {
   font-size: var(--fs-2xl);
 }
 .catalog-head .hint {
-  margin: 4px 0 0;
+  margin: var(--s-1) 0 0;
 }
 .catalog-page .catalog-toolbar {
   top: 0;
@@ -2946,10 +2955,10 @@ table.buy {
 .group-index {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--s-1);
 }
 .group-index a {
-  padding: 2px 10px;
+  padding: var(--s-1) var(--s-2);
   border: 1px solid var(--line);
   border-radius: var(--r-pill);
   color: var(--link);
@@ -2963,7 +2972,7 @@ table.buy {
 }
 .catalog-group .group-head {
   border-bottom: 2px solid var(--line-2);
-  padding-bottom: 4px;
+  padding-bottom: var(--s-1);
 }
 .family {
   border: 1px solid var(--line-2);
@@ -2989,14 +2998,14 @@ table.buy {
   color: var(--ink-2);
 }
 .family-head h3 {
-  margin: 0 0 4px;
+  margin: 0 0 var(--s-1);
   font-size: var(--fs-lg);
 }
 .ro {
   color: var(--ink-2);
   font-weight: 400;
   font-size: var(--fs-sm);
-  margin-left: 6px;
+  margin-left: var(--s-1);
 }
 .aliases {
   color: var(--ink-2);
@@ -3013,8 +3022,8 @@ table.buy {
   margin: 0;
 }
 .family-body ul {
-  margin: 2px 0 0;
-  padding-left: 18px;
+  margin: var(--s-1) 0 0;
+  padding-left: var(--s-5);
 }
 .family-body strong {
   color: var(--ink);
@@ -3039,7 +3048,7 @@ table.buy {
 }
 .item .item-text {
   display: grid;
-  gap: 1px;
+  gap: 0;
 }
 .item .snap {
   grid-column: 1 / -1;
@@ -3071,10 +3080,10 @@ table.buy {
 .start-from .search {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--s-1);
   border: 1px solid var(--line);
   border-radius: var(--r);
-  padding: 0 8px;
+  padding: 0 var(--s-2);
   min-height: var(--control-h);
 }
 .start-from .search input {
@@ -3097,7 +3106,7 @@ table.buy {
     justify-self: start;
   }
   .pages a {
-    padding: 4px 8px;
+    padding: var(--s-1) var(--s-2);
   }
 }
 /* The catalog (ADR-116 on a phone, ADR-117 at every width): source and grouping in one row that scrolls away, only
@@ -3132,9 +3141,9 @@ table.buy {
 /* Picture | name and summary | Open, then the meta line (tags first) under both, so the tags have the width. */
 .item.compact {
   grid-template-columns: 96px minmax(0, 1fr) auto;
-  gap: 2px var(--s-2);
+  gap: var(--s-1) var(--s-2);
   align-items: center;
-  padding: 4px var(--s-2) 4px 4px;
+  padding: var(--s-1) var(--s-2) var(--s-1) var(--s-1);
   line-height: 16px;
 }
 .item.compact > .snap {
@@ -3219,7 +3228,7 @@ table.buy {
 .item-meta {
   display: flex;
   flex-wrap: nowrap;
-  gap: 4px;
+  gap: var(--s-1);
   align-items: center;
   min-width: 0;
   overflow: hidden;
@@ -3268,11 +3277,11 @@ table.buy {
   }
   .items {
     grid-template-columns: minmax(0, 1fr);
-    gap: 4px;
+    gap: var(--s-1);
   }
   .family {
     padding: var(--s-3);
-    gap: 6px;
+    gap: var(--s-1);
   }
 }
 
@@ -3344,7 +3353,7 @@ table.buy {
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 6px;
+  gap: var(--s-1);
 }
 .home-list .row-btn[aria-current='true'] {
   border-color: var(--primary);
@@ -3546,7 +3555,7 @@ table.buy {
 .research-page .inline-field {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--s-1);
   font-size: var(--fs-sm);
   color: var(--ink-2);
 }
@@ -3564,7 +3573,7 @@ table.buy {
 }
 .tile {
   display: grid;
-  gap: 2px;
+  gap: var(--s-1);
   text-align: left;
   padding: var(--s-3);
   border: 1px solid var(--line-2);
@@ -3595,7 +3604,7 @@ button.tile:hover {
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 4px;
+  gap: var(--s-1);
 }
 .bars li {
   display: grid;
@@ -3648,7 +3657,7 @@ button.tile:hover {
   font-weight: 600;
 }
 .features-table .fname .chips {
-  margin-top: 4px;
+  margin-top: var(--s-1);
 }
 .features-table .desc {
   max-width: 420px;
@@ -3666,7 +3675,7 @@ button.tile:hover {
   opacity: 0.6;
 }
 .research-page .group-head .toggle {
-  margin-right: 6px;
+  margin-right: var(--s-1);
   vertical-align: middle;
 }
 .feature-detail {
@@ -3675,13 +3684,13 @@ button.tile:hover {
 }
 .feature-detail header h2 {
   font-size: var(--fs-2xl);
-  margin-bottom: 6px;
+  margin-bottom: var(--s-1);
 }
 .feature-detail h3 {
-  margin-bottom: 6px;
+  margin-bottom: var(--s-1);
 }
 .feature-detail h4 {
-  margin: var(--s-2) 0 4px;
+  margin: var(--s-2) 0 var(--s-1);
   font-size: var(--fs-md);
 }
 .card-like {
@@ -3703,7 +3712,7 @@ button.tile:hover {
 .pairs {
   display: grid;
   grid-template-columns: max-content 1fr;
-  gap: 4px var(--s-3);
+  gap: var(--s-1) var(--s-3);
   margin: 0;
   font-size: var(--fs-sm);
 }
@@ -3721,9 +3730,9 @@ button.tile:hover {
 }
 .detail-list {
   margin: 0;
-  padding-left: 20px;
+  padding-left: var(--s-5);
   display: grid;
-  gap: 3px;
+  gap: var(--s-1);
   font-size: var(--fs-sm);
 }
 .finding {
@@ -3733,7 +3742,7 @@ button.tile:hover {
   padding: var(--s-2) var(--s-3);
   background: var(--surface);
   display: grid;
-  gap: 4px;
+  gap: var(--s-1);
   margin-bottom: var(--s-2);
 }
 .finding.negative {
@@ -3754,7 +3763,7 @@ button.tile:hover {
 .finding-head {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--s-1);
   align-items: center;
 }
 .finding-head .src {
@@ -3773,7 +3782,7 @@ button.tile:hover {
   color: var(--link);
 }
 .excerpt {
-  margin: 4px 0 0;
+  margin: var(--s-1) 0 0;
   padding: var(--s-2) var(--s-3);
   border-left: 3px solid var(--line);
   background: var(--surface-2);
@@ -3784,18 +3793,18 @@ button.tile:hover {
 .cites {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px var(--s-3);
+  gap: var(--s-1) var(--s-3);
   font-size: var(--fs-xs);
 }
 .cite a {
-  margin-left: 4px;
+  margin-left: var(--s-1);
   color: var(--link);
 }
 .pill {
   border: 1px solid var(--line);
   background: var(--surface);
   border-radius: var(--r-pill);
-  padding: 2px 10px;
+  padding: var(--s-1) var(--s-2);
   font-size: var(--fs-sm);
   color: var(--link);
 }
@@ -3809,7 +3818,7 @@ button.tile:hover {
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 4px;
+  gap: var(--s-1);
   font-size: var(--fs-sm);
 }
 .checks li {
@@ -3867,7 +3876,7 @@ button.tile:hover {
     grid-template-columns: 1fr;
   }
   .pairs dt {
-    margin-top: 4px;
+    margin-top: var(--s-1);
   }
   /* Phones: each feature row becomes a card; labels come from data-label. */
   .features-table thead,
@@ -3896,7 +3905,7 @@ button.tile:hover {
   .features-table td,
   .coverage-table td {
     border: 0;
-    padding: 2px 0;
+    padding: var(--s-1) 0;
   }
   .features-table td[data-label]:not([data-label=''])::before,
   .coverage-table td[data-label]::before {
@@ -3915,20 +3924,14 @@ button.tile:hover {
     flex: 1 1 45%;
   }
 }
-/* Three page tabs (Editor | Catalog | Feature Research): the bar wraps onto a second row instead of running off
-   the screen; every tab and action stays labelled and reachable (CLAUDE.md R3). */
-.bar {
-  flex-wrap: wrap;
-  row-gap: 4px;
-}
 @media (max-width: 440px) {
   .pages .count,
   .pages a .icon {
     display: none;
   }
   .pages a {
-    padding: 4px 6px;
-    gap: 4px;
+    padding: var(--s-1);
+    gap: var(--s-1);
   }
   .pages {
     max-width: 100%;
@@ -3998,11 +4001,11 @@ button.tile:hover {
     gap: var(--s-2);
     text-align: left;
     border-bottom: 1px solid var(--line-2);
-    padding: 4px 0;
+    padding: var(--s-1) 0;
   }
   .features-table td[data-label]:not([data-label=''])::before {
     display: block;
-    padding-top: 2px;
+    padding-top: var(--s-1);
   }
   .features-table td.desc {
     -webkit-line-clamp: unset;
@@ -4027,7 +4030,7 @@ button.tile:hover {
 }
 .assessment h3 {
   font-size: var(--fs-md);
-  margin-bottom: 4px;
+  margin-bottom: var(--s-1);
 }
 .overview-cols.four {
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
@@ -4035,7 +4038,7 @@ button.tile:hover {
 .assessed {
   display: inline-grid;
   place-items: center;
-  margin-left: 4px;
+  margin-left: var(--s-1);
   width: 16px;
   height: 16px;
   border-radius: var(--r-sm);
@@ -4088,9 +4091,9 @@ button.tile:hover {
 }
 .ranked {
   margin: 0;
-  padding-left: 22px;
+  padding-left: var(--s-5);
   display: grid;
-  gap: 6px;
+  gap: var(--s-1);
   font-size: var(--fs-sm);
 }
 .ranked .link {
@@ -4134,7 +4137,7 @@ button.tile:hover {
 }
 .wizard .steps {
   overflow-x: auto;
-  padding-bottom: 2px;
+  padding-bottom: var(--s-1);
 }
 .wz-body {
   display: grid;
@@ -4223,7 +4226,7 @@ button.tile:hover {
 }
 .wz-parts {
   margin: 0;
-  padding-left: 1.2em;
+  padding-left: var(--s-5);
   font-size: var(--fs-sm);
 }
 .wz-suggest {
@@ -4356,8 +4359,8 @@ button.tile:hover {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-4);
   background: var(--accent-soft, var(--surface-2));
   border-bottom: 1px solid var(--line);
   font-size: var(--fs-sm);
@@ -4475,7 +4478,7 @@ button.tile:hover {
 .room .wall-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 8px;
+  gap: var(--s-2);
   list-style: none;
   padding: 0;
   margin: 0;
@@ -4487,15 +4490,15 @@ button.tile:hover {
 .room .room-feature {
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 8px;
-  margin: 8px 0;
+  padding: var(--s-2);
+  margin: var(--s-2) 0;
   display: grid;
-  gap: 6px;
+  gap: var(--s-1);
   min-width: 0;
 }
 .shopping {
   display: grid;
-  gap: 10px;
+  gap: var(--s-2);
 }
 .shopping .estimate {
   margin: 0;
@@ -4507,12 +4510,12 @@ button.tile:hover {
 .shopping .price-tools {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--s-2);
   align-items: end;
 }
 .shopping .price-edit {
   display: inline-flex;
-  gap: 4px;
+  gap: var(--s-1);
   align-items: center;
   flex-wrap: wrap;
 }
@@ -4588,10 +4591,6 @@ button.tile:hover {
   flex: 1 1 auto;
   min-height: 0;
 }
-.bar {
-  flex-wrap: nowrap;
-  gap: var(--s-2) var(--s-3);
-}
 .bar .path {
   display: flex;
   align-items: center;
@@ -4620,9 +4619,9 @@ button.tile:hover {
 .bar button.crumb.back {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: var(--s-1);
   min-height: 36px;
-  padding: 0 6px;
+  padding: 0 var(--s-1);
   background: transparent;
   border: 1px solid transparent;
   border-radius: var(--r);
@@ -4650,7 +4649,8 @@ button.tile:hover {
   margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 2px;
+  /* Icon buttons carry their own padding; no gap keeps the piece name's room on a phone. */
+  gap: 0;
   flex: none;
 }
 .bar-tools .btn {
@@ -4683,7 +4683,7 @@ button.tile:hover {
   outline-offset: 2px;
 }
 .menu-head {
-  margin: 8px 10px 2px;
+  margin: var(--s-2) var(--s-2) var(--s-1);
   font-size: var(--fs-xs);
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -4696,7 +4696,7 @@ button.tile:hover {
 .menu-sep {
   height: 1px;
   background: var(--line-2);
-  margin: 6px 4px;
+  margin: var(--s-1);
 }
 .menu-items .menu-file {
   position: relative;
@@ -4704,7 +4704,7 @@ button.tile:hover {
   grid-template-columns: auto 1fr;
   column-gap: var(--s-2);
   align-items: center;
-  padding: 9px 10px;
+  padding: var(--s-2);
   border-radius: var(--r);
   color: var(--ink);
   font-weight: 500;
@@ -4735,7 +4735,7 @@ button.tile:hover {
 .catalog-files > summary {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--s-1);
   min-height: 32px;
   padding: 0 var(--s-3);
   border: 1px solid var(--line);
@@ -4763,7 +4763,7 @@ button.tile:hover {
 
 /* Editor modes: Compose · Configure · Build & Preview (ADR-079) */
 .modes {
-  padding: 6px var(--s-4);
+  padding: var(--s-1) var(--s-4);
   background: var(--surface);
   border-bottom: 1px solid var(--line);
 }
@@ -4777,7 +4777,7 @@ button.tile:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: var(--s-1);
   font-weight: 600;
 }
 .modes .segmented button.on .badge {
@@ -4785,10 +4785,6 @@ button.tile:hover {
 }
 .sheet-peek {
   display: none;
-}
-.compose-start {
-  display: grid;
-  gap: var(--s-2);
 }
 .out-actions {
   margin-bottom: var(--s-3);
@@ -4802,11 +4798,7 @@ button.tile:hover {
 
 @media (max-width: 760px) {
   .app {
-    padding-bottom: var(--actions-h, 64px);
-  }
-  .bar {
-    flex-wrap: nowrap;
-    padding: 6px var(--s-3);
+    padding-bottom: var(--actions-h);
   }
   /* The editor's bar holds the path; elsewhere the phone bar names the app (G-059). */
   .app.page-editor .bar .brand {
@@ -4850,21 +4842,22 @@ button.tile:hover {
     z-index: 6;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 4px;
+    gap: var(--s-1);
     max-width: none;
     border: 0;
     border-top: 1px solid var(--bar-line);
     border-radius: 0;
     background: var(--bar-bg);
-    padding: 4px max(8px, env(safe-area-inset-right, 0px))
-      calc(4px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px));
+    padding: var(--s-1) max(var(--s-2), env(safe-area-inset-right, 0px))
+      calc(var(--s-1) + env(safe-area-inset-bottom, 0px))
+      max(var(--s-2), env(safe-area-inset-left, 0px));
   }
   .pages.places a {
     flex-direction: column;
     justify-content: center;
-    gap: 2px;
+    gap: var(--s-1);
     min-height: 48px;
-    padding: 4px;
+    padding: var(--s-1);
     font-size: var(--fs-xs);
   }
   .pages.places a .icon {
@@ -4879,10 +4872,10 @@ button.tile:hover {
     position: sticky;
     top: var(--bar-h, 50px);
     z-index: 4;
-    padding: 6px var(--s-3);
+    padding: var(--s-1) var(--s-3);
   }
   .modes .segmented button {
-    padding: 4px 2px;
+    padding: var(--s-1);
     font-size: var(--fs-sm);
   }
   .modes .segmented button .badge {
@@ -4904,7 +4897,7 @@ button.tile:hover {
   .work.mode-compose .stage {
     height: calc(100dvh - var(--bar-h, 50px) - var(--modes-h, 52px) - var(--actions-h, 64px));
     min-height: 316px;
-    padding-bottom: 56px;
+    padding-bottom: calc(var(--s-8) + var(--s-6));
   }
   .work.mode-compose .output {
     display: none;
@@ -4929,8 +4922,8 @@ button.tile:hover {
   }
   .work.mode-build .stage-tools,
   .work.mode-compose .stage-tools {
-    gap: 6px var(--s-2);
-    padding: 6px var(--s-3);
+    gap: var(--s-1) var(--s-2);
+    padding: var(--s-1) var(--s-3);
   }
   .work.mode-compose .sheet-peek {
     display: flex;
@@ -5008,8 +5001,8 @@ button.tile:hover {
 }
 .problem-banner {
   display: grid;
-  gap: 6px;
-  padding: 8px 16px;
+  gap: var(--s-1);
+  padding: var(--s-2) var(--s-4);
   border-bottom: 1px solid var(--line);
   border-left: 3px solid var(--error);
   background: var(--error-soft);
@@ -5041,18 +5034,18 @@ button.tile:hover {
   padding: 0;
   border: 0;
   display: grid;
-  gap: 2px;
+  gap: var(--s-1);
   min-width: 0;
 }
 .problem-banner .repairs legend {
   padding: 0;
-  margin-bottom: 2px;
+  margin-bottom: var(--s-1);
   color: var(--ink-2);
 }
 .problem-banner .repairs label {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 8px;
+  gap: var(--s-2);
   align-items: center;
   min-height: 32px;
   cursor: pointer;
@@ -5060,7 +5053,7 @@ button.tile:hover {
 .problem-banner .repair-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--s-2);
 }
 .plan .problem-zone {
   fill: var(--error);
@@ -5085,7 +5078,7 @@ button.tile:hover {
 }
 .checks .check-more {
   display: block;
-  margin-top: 2px;
+  margin-top: var(--s-1);
   text-decoration: underline;
   color: var(--ink-2);
 }
@@ -5109,7 +5102,7 @@ button.tile:hover {
 }
 .fastener-head {
   display: grid;
-  gap: 2px;
+  gap: var(--s-1);
 }
 .fastener-fields {
   display: grid;
@@ -5131,7 +5124,7 @@ button.tile:hover {
 }
 .plan-tools {
   /* Room on the right for the info button. */
-  padding-right: 48px;
+  padding-right: calc(var(--s-8) + var(--s-4));
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -5164,7 +5157,7 @@ button.tile:hover {
   display: inline-block;
   width: 12px;
   height: 12px;
-  margin-right: 6px;
+  margin-right: var(--s-1);
   vertical-align: -2px;
   border: 2px solid currentColor;
   background: repeating-linear-gradient(45deg, currentColor 0 2px, transparent 2px 5px);
@@ -5239,7 +5232,7 @@ button.tile:hover {
 }
 .run-pick {
   display: grid;
-  gap: 2px;
+  gap: var(--s-1);
   margin: 0;
   padding: var(--s-2);
   border: 1px solid var(--line-2);
@@ -5359,7 +5352,7 @@ button.tile:hover {
 .info-row {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: var(--s-1);
   min-width: 0;
 }
 .label-row > .info-tip,
@@ -5379,7 +5372,7 @@ button.tile:hover {
 }
 /* After a live line of text (a count, a size): keeps the line its own height. */
 p > .info-tip {
-  margin-block: -12px;
+  margin-block: calc(-1 * var(--s-3));
 }
 /* A Group's info button sits on its title row, outside the summary, before the chevron's end. */
 .group-wrap {
@@ -5387,7 +5380,7 @@ p > .info-tip {
   min-width: 0;
 }
 .group-wrap > .group > summary {
-  padding-right: 44px;
+  padding-right: calc(var(--s-8) + var(--s-3));
 }
 .group-wrap > .info-tip {
   position: absolute;
@@ -5428,7 +5421,7 @@ p > .info-tip {
   display: flex;
   flex-wrap: wrap;
   gap: var(--s-2);
-  padding: 6px;
+  padding: var(--s-1);
   max-width: min(calc(100% - 12px), 26rem);
   background: var(--surface);
   border: 1px solid var(--line);
@@ -5443,8 +5436,8 @@ p > .info-tip {
 /* The compact card over the drawing (ADR-110): one row per count, short label then − N +, no heading. */
 .count-stepper.compact {
   display: grid;
-  gap: 2px;
-  padding: 2px 4px;
+  gap: var(--s-1);
+  padding: var(--s-1);
   width: max-content;
 }
 .count-stepper.compact .cs-row {
@@ -5463,7 +5456,7 @@ p > .info-tip {
 }
 .cs-row {
   display: grid;
-  gap: 2px;
+  gap: var(--s-1);
   justify-items: center;
 }
 .cs-label {
@@ -5525,13 +5518,13 @@ p > .info-tip {
   flex-wrap: wrap;
 }
 .output .tabs button {
-  padding-inline: 7px;
+  padding-inline: var(--s-2);
 }
 /* The stage's view controls behind "Options" on a phone in Build & Preview (one toolbar row). */
 .view-options > summary {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--s-1);
   min-height: 30px;
   padding: 0 var(--s-3);
   border: 1px solid var(--line);
@@ -5632,7 +5625,7 @@ p > .info-tip {
     align-items: center;
   }
   .group-index a {
-    gap: 0.3em;
+    gap: var(--s-1);
   }
   .counter {
     grid-template-columns: 44px 52px 44px;
@@ -5685,7 +5678,7 @@ p > .info-tip {
 .catalog-more > summary {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--s-1);
   min-height: 44px;
   padding: 0 var(--s-3);
   border: 1px solid var(--line);
@@ -5740,7 +5733,7 @@ p > .info-tip {
 @media (max-width: 480px) {
   .library .row-btn {
     grid-template-columns: minmax(0, 1fr) auto;
-    padding-inline: 10px;
+    padding-inline: var(--s-2);
   }
   .library .row-btn .glyph {
     display: none;
@@ -5871,7 +5864,7 @@ p > .info-tip {
   border: 1px solid var(--line);
   background: var(--surface);
   color: var(--ink);
-  padding: 4px 12px;
+  padding: var(--s-1) var(--s-3);
   min-height: 32px;
   cursor: pointer;
 }
@@ -5892,7 +5885,7 @@ p > .info-tip {
   overflow-wrap: anywhere;
 }
 .gaps-page .gap summary .chip {
-  margin-left: 4px;
+  margin-left: var(--s-1);
 }
 .gaps-page .pairs {
   margin-top: var(--s-2);
@@ -5915,7 +5908,7 @@ p > .info-tip {
 }
 .gap-note {
   display: grid;
-  gap: 4px;
+  gap: var(--s-1);
   flex: 1 1 220px;
   font-size: var(--fs-sm);
   color: var(--ink-2);
@@ -6001,9 +5994,6 @@ p > .info-tip {
   gap: var(--s-3);
   padding: var(--s-3) var(--s-4);
   border-bottom: 1px solid var(--line-2);
-}
-.piece-list header h2 {
-  font-size: var(--fs-lg);
 }
 .piece-list .close {
   color: var(--ink-2);
