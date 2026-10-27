@@ -382,6 +382,8 @@ export interface CabinetParams {
   topKind?: 'panel' | 'rails';
   /** Depth of each top rail (default 100). */
   railDepth?: Mm;
+  /** 2: two body panels glued as the top, the second under the first; outer height unchanged (ADR-105). Absent = 1. */
+  topLayers?: 1 | 2;
   /** 'under': the bottom runs the full width and the sides stand on it. 'none': no bottom (over-hood units). Absent = between the sides. */
   bottom?: 'between' | 'under' | 'none';
   back: 'none' | 'applied' | 'inset';
@@ -441,6 +443,8 @@ export interface CornerParams {
   frontMaterialId: string;
   backMaterialId: string;
   top: 'over' | 'between';
+  /** 2: a doubled top, as on a cabinet (ADR-105). Absent = 1. */
+  topLayers?: 1 | 2;
   back: 'none' | 'applied' | 'inset';
   backInset: Mm;
   plinthHeight: Mm;

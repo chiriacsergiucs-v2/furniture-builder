@@ -4,6 +4,7 @@ import { cutlist, lengthsList } from '../src/core/cutlist';
 import {
   cabinet,
   cabinetDefaults,
+  cornerDefaults,
   frameDefaults,
   newId,
   panelDefaults,
@@ -338,5 +339,51 @@ describe('catalog metadata in the design (ADR-028)', () => {
         }),
       ),
     ).toEqual([]);
+  });
+});
+
+describe('doubled top (ADR-105)', () => {
+  const tops = (d: Design) => buildModel(d).panels.filter((p) => p.role === 'top');
+  for (const top of ['over', 'between'] as const)
+    it(`top ${top}: two top panels under H, outer height and side joints kept, opening one panel lower`, () => {
+      const single = cab({ top, height: 720 });
+      const d = cab({ top, height: 720, topLayers: 2 });
+      const [a, b] = tops(d);
+      const t = a.box.h;
+      expect(tops(d)).toHaveLength(2);
+      expect(Math.max(a.box.y, b.box.y) + t).toBe(tops(single)[0].box.y + t);
+      expect(Math.min(a.box.y, b.box.y)).toBe(tops(single)[0].box.y - t);
+      expect({ ...a.box, y: 0 }).toEqual({ ...b.box, y: 0 });
+      expect(a.banded).toEqual(b.banded);
+      expect(buildModel(d).spaces[0].box.h).toBe(buildModel(single).spaces[0].box.h - t);
+      expect(errors(d)).toEqual([]);
+      noOverlaps(d);
+    });
+  it('the cut list shows one Top row with quantity 2', () => {
+    const d = cab({ topLayers: 2 });
+    const rows = cutlist(buildModel(d), d.materials).filter((r) => r.labels.includes('Top'));
+    expect(rows).toHaveLength(1);
+    expect(rows[0].quantity).toBe(2);
+  });
+  it('a rails top stays single and warns; an invalid value fails validation', () => {
+    const d = cab({ topKind: 'rails', back: 'none', topLayers: 2 });
+    expect(buildModel(d).panels.filter((p) => p.role === 'rail')).toHaveLength(2);
+    expect(codes(d)).toContain('top-layers-rails');
+    expect(codes(cab({ topLayers: 2 }))).not.toContain('top-layers-rails');
+    const bad = cab({ topLayers: 3 as unknown as 2 });
+    expect(validateDesign(bad)).toContain('topLayers must be 1 or 2');
+  });
+  it('corner cabinets double their top too', () => {
+    for (const v of ['blind', 'l-shape', 'diagonal'] as const) {
+      const one = wrap('C', { kind: 'corner', id: 'C', params: cornerDefaults(v) });
+      const two = wrap('C', {
+        kind: 'corner',
+        id: 'C',
+        params: { ...cornerDefaults(v), topLayers: 2 },
+      });
+      expect(tops(two).length, v).toBe(2 * tops(one).length);
+      expect(errors(two), v).toEqual([]);
+      noOverlaps(two);
+    }
   });
 });

@@ -35,6 +35,7 @@ function carcass(
     frontMaterialId: p.frontMaterialId,
     backMaterialId: p.backMaterialId,
     top: p.top,
+    ...(p.topLayers === 2 ? { topLayers: 2 as const } : {}),
     back: p.back,
     backInset: p.backInset,
     plinthHeight: p.plinthHeight,
@@ -235,9 +236,12 @@ function buildDiagonal(
     });
   board('bottom', 'bottom', 'Bottom', ph);
   board('top', 'top', 'Top', H - t);
-  const room = H - ph - 2 * t - s.count * t;
+  // A doubled top (ADR-105): a second board under the first; the outer height stays.
+  const tt = p.topLayers === 2 ? 2 * t : t;
+  if (tt > t) board('top/1', 'top', 'Top', H - tt);
+  const room = H - ph - t - tt - s.count * t;
   if (s.count < 0 || room < (s.count + 1) * 20)
-    return err('shelves-crowded', `${s.count} shelves do not fit in ${H - ph - 2 * t} mm.`);
+    return err('shelves-crowded', `${s.count} shelves do not fit in ${H - ph - t - tt} mm.`);
   let y = ph + t;
   for (const [i, gap] of equalParts(room, s.count + 1)
     .slice(0, -1)
