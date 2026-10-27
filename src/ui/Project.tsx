@@ -7,7 +7,7 @@ import {
   type KeyboardEvent,
   type MouseEvent,
 } from 'react';
-import { CountStepper } from './CountStepper';
+import { boxIn, cardCorner, CountStepper } from './CountStepper';
 import { projectBoards, roleBoard, type FinishRole, type FinishScope } from '../core/finish';
 import { decorPatch, type Decor } from '../core/materials';
 import { touchingRun } from '../core/arrange';
@@ -1089,7 +1089,12 @@ function RoomPlan({
     <figure className="plan with-tools" aria-label="Room plan, seen from above. Select a piece.">
       <div className="plan-tools">
         {fronts && (
-          <Toggle label="Doors and fronts" checked={showFronts} onChange={setShowFronts} />
+          <Toggle
+            label="Fronts"
+            name="Doors and fronts"
+            checked={showFronts}
+            onChange={setShowFronts}
+          />
         )}
         <button
           type="button"
@@ -1623,8 +1628,9 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
   const sel =
     pm.pieces.find((p) => p.item.id === selectedId)?.bounds ??
     pm.models.find((m) => m.item.id === selectedId)?.box;
-  // Quick counts and the whole piece's size float over the selected piece from the first tap (ADR-109), as over a
-  // single piece's drawing (ADR-084, ADR-106): right above the selected piece or space, below its top when no room.
+  // Quick counts show over the selected piece from the first tap (ADR-109), as over a single piece's drawing
+  // (ADR-084): counts only, in the corner of the view farthest from the selected piece, its size labels and the ⓘ
+  // button (ADR-110). Width and Depth stay in the side panel and the bottom sheet.
   const counts = useDesign(
     (s) =>
       !!card &&
@@ -1635,9 +1641,9 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
   );
   const figRef = useRef<HTMLElement>(null);
   const anchorRef = useRef<SVGRectElement>(null);
+  const selDimsRef = useRef<SVGGElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
-  const [cardH, setCardH] = useState(0);
   const [tick, setTick] = useState(0);
   useLayoutEffect(() => {
     const fig = figRef.current;
@@ -1653,29 +1659,17 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
     const fig = figRef.current,
       a = anchorRef.current,
       st = cardRef.current;
-    if (!fig || !a || !st) {
-      setCardH(0);
-      return setPos(null);
-    }
-    // The view gives up the card's height at its top, so there is room right above the piece (as ADR-084).
-    setCardH(st.offsetHeight);
-    const f = fig.getBoundingClientRect(),
-      r = a.getBoundingClientRect();
-    const w = st.offsetWidth,
-      h = st.offsetHeight,
-      gap = 6;
-    const left = Math.max(gap, Math.min(r.left + r.width / 2 - f.left - w / 2, f.width - w - gap));
-    const above = r.top - f.top - h - gap;
-    const top = above >= gap ? above : Math.max(gap, r.top - f.top + gap);
-    setPos((p) => (p && p.left === left && p.top === top ? p : { left, top }));
-  }, [at?.x, at?.y, at?.w, at?.h, tick, cardH, pm]);
+    if (!fig || !a || !st) return setPos(null);
+    const f = fig.getBoundingClientRect();
+    const next = cardCorner(f.width, f.height, st.offsetWidth, st.offsetHeight, [
+      ...boxIn(f, a, 4),
+      ...boxIn(f, selDimsRef.current, 2),
+      ...boxIn(f, fig.querySelector(':scope > .info-tip'), 2),
+    ]);
+    setPos((p) => (p && p.left === next.left && p.top === next.top ? p : next));
+  }, [at?.x, at?.y, at?.w, at?.h, tick, pm]);
   return (
-    <figure
-      className="plan"
-      ref={figRef}
-      style={at && cardH ? { paddingTop: cardH + 12 } : undefined}
-      aria-label="Room seen from the front. Select a piece."
-    >
+    <figure className="plan" ref={figRef} aria-label="Room seen from the front. Select a piece.">
       <InfoTip label="About the front view">
         Seen from the front. Sizes in mm: overall in yellow, the selected piece in green.
         {rv &&
@@ -1746,7 +1740,7 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
         <Dim x1={x0} x2={x1} y={pad * 0.6} fontSize={dfs} label={`${x1 - x0}`} />
         <DimV y1={0} y2={-top} x={x0 - pad * 0.6} fontSize={dfs} label={`${top}`} />
         {sel && (
-          <>
+          <g ref={selDimsRef}>
             <Dim
               x1={sel.x}
               x2={sel.x + sel.w}
@@ -1763,7 +1757,7 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
               label={`${sel.h}`}
               subtle
             />
-          </>
+          </g>
         )}
         {space && (
           <rect
@@ -1791,7 +1785,7 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
         <CountStepper
           ref={cardRef}
           className="floating"
-          withSize
+          compact
           style={pos ? { left: pos.left, top: pos.top } : { visibility: 'hidden' }}
         />
       )}

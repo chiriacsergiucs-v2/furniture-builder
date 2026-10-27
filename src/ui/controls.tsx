@@ -148,14 +148,22 @@ export function Toggle({
   label,
   checked,
   onChange,
+  name,
 }: {
   label: string;
   checked: boolean;
   onChange: (v: boolean) => void;
+  /** The accessible name when the visible label is shortened (ADR-110). */
+  name?: string;
 }) {
   return (
     <label className="toggle">
-      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      <input
+        type="checkbox"
+        aria-label={name}
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+      />
       <span>{label}</span>
     </label>
   );
