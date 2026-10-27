@@ -236,6 +236,14 @@ describe('wall row (ADR-104)', () => {
     expect(any.problems.some((p) => p.code === 'wall-row-low')).toBe(true);
   });
 
+  it('a piece problem is reported as one, not as a wall row that does not fit', () => {
+    for (const wallRow of ['always', 'any'] as const) {
+      const r = suggestMixes(wall({ depth: 30, wallRow }));
+      expect(r.mixes).toEqual([]);
+      expect(r.problems.map((p) => p.code)).toEqual(['wall-errors']);
+    }
+  });
+
   it('any shows mixes with and without a wall row; never shows none', () => {
     const any = suggestMixes(wall());
     expect(any.mixes.some((m) => m.wall)).toBe(true);

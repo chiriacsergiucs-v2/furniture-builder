@@ -663,8 +663,7 @@ export function suggestMixes(input: WallInput, limit = MIXES_FIRST): WallFill {
     const project = mixProject(c.slots, input, wall);
     const model = buildProjectModel(project);
     if (model.diagnostics.some((d) => d.severity === 'error')) {
-      if (w) wallFailed++;
-      else failed++;
+      failed++;
       continue;
     }
     const tallWarn: Diagnostic[] = [];
