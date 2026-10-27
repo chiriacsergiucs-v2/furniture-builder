@@ -1678,3 +1678,75 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Accept default, /batch all ready (ADR-125: run sinks and handles)
 - Questions: Draw the cut-out outline on the plan and in 3D?
 - Suggested pick: Outline on the plan only (where the worktop is drawn from above)
+
+### G-213: Retros list rules as Applied that a454ce2 reverted
+
+- Status: Open
+- Origin: Memory maintenance 2026-10-27 (proposal awaiting approval)
+- Missing: Retros 2026-10-25/26 mark rules Applied (PR #67–#70, #74) that commit a454ce2 removed (retro skill, main-moved hook, Agreed gate, id-collision check, next-adr fetch step, ship-adr review step, add-tests if/waitFor rules, CLAUDE.md status/recheck, merge-after-verify, answer-doesn't-fit, Playwright note); fuzz timeout also absent
+- Request: Perform project AI memory maintenance … Propose changes to uncertain or conflicting information … Require approval before deleting or superseding memories.
+- Questions: Annotate those retro rows 'Reverted 2026-10-27 (a454ce2)', or restore some rules (which)?
+- Suggested pick: Annotate the rows (additive, keeps history; estimate +2 % work, resolves the contradiction)
+
+### G-214: Snapshot-before-tests rule missing from skills
+
+- Status: Open
+- Origin: Memory maintenance 2026-10-27 (proposal awaiting approval)
+- Missing: CLAUDE.md snapshot-before-tests rule is not in the ff, next-adr or implement-design skills; its scope for ff, Acceptance: light, typecheck and build is unstated
+- Request: Perform project AI memory maintenance … Propose changes to uncertain or conflicting information … Require approval before deleting or superseding memories.
+- Questions: Does it apply to ff and light work? Does it cover typecheck and build?
+- Suggested pick: Apply to every UI change incl. ff and light, before any check (closest to 'before running any tests or checks'); add one line to the three skills
+
+### G-215: CLAUDE.md ff checks differ from ff skill
+
+- Status: Open
+- Origin: Memory maintenance 2026-10-27 (proposal awaiting approval)
+- Missing: CLAUDE.md says ff runs only pnpm typecheck and pnpm build; the ff skill also runs pnpm format and pnpm docs:check
+- Request: Perform project AI memory maintenance … Propose changes to uncertain or conflicting information … Require approval before deleting or superseding memories.
+- Questions: Align CLAUDE.md with the skill, or the skill with CLAUDE.md?
+- Suggested pick: Align CLAUDE.md with the skill (format and docs:check keep CI green on main)
+
+### G-216: Recommended-option rule stated three times in CLAUDE.md
+
+- Status: Open
+- Origin: Memory maintenance 2026-10-27 (proposal awaiting approval)
+- Missing: The recommended-option rule appears 3 times (ADR section twice, Process once) and smallest slice twice
+- Request: Perform project AI memory maintenance … Propose changes to uncertain or conflicting information … Require approval before deleting or superseding memories.
+- Questions: Merge into one Process bullet keeping both dates and every clause?
+- Suggested pick: Merge, keeping every clause and date verbatim (no meaning lost)
+
+### G-217: Caveman no-tables rule vs required backlog table
+
+- Status: Open
+- Origin: Memory maintenance 2026-10-27 (proposal awaiting approval)
+- Missing: Caveman skill says no decorative tables; CLAUDE.md requires the backlog status table at the end of implementation replies
+- Request: Perform project AI memory maintenance … Propose changes to uncertain or conflicting information … Require approval before deleting or superseding memories.
+- Questions: Add a line that the required backlog table is content, not decoration?
+- Suggested pick: Add the line to the caveman skill
+
+### G-218: product-context.md mixes current facts and history
+
+- Status: Open
+- Origin: Memory maintenance 2026-10-27 (proposal awaiting approval)
+- Missing: product-context.md log ends 2026-10-24, calls ADR-032–046 Proposed (now Implemented) and names branch rebuild/v1
+- Request: Perform project AI memory maintenance … Propose changes to uncertain or conflicting information … Require approval before deleting or superseding memories.
+- Questions: Split into Current facts and History log, and mark ADR-032–046 Implemented?
+- Suggested pick: Split and annotate, no text removed
+
+### G-219: README.md stale UI names and fuzz count
+
+- Status: Open
+- Origin: Memory maintenance 2026-10-27 (proposal awaiting approval)
+- Missing: README says Library (now Projects), Export → (now More › Files), FUZZ_N=50000 (CLAUDE.md 30000), and its test list omits find-it
+- Request: Perform project AI memory maintenance … Propose changes to uncertain or conflicting information … Require approval before deleting or superseding memories.
+- Questions: Fix these four in README.md?
+- Suggested pick: Fix all four
+
+### G-220: Caveman skill names missing skills
+
+- Status: Open
+- Origin: Memory maintenance 2026-10-27 (proposal awaiting approval)
+- Missing: caveman SKILL.md and activate.md mention ultracave, megacave and caveman-compress, which are not in the repo
+- Request: Perform project AI memory maintenance … Propose changes to uncertain or conflicting information … Require approval before deleting or superseding memories.
+- Questions: Drop the mentions or add those skills?
+- Suggested pick: Drop the mentions (the repo has only caveman)
