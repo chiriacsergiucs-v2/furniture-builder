@@ -223,6 +223,8 @@ export function App() {
   }
   // On a phone Compose is the drawing only, so the canvas is not mounted there (ADR-014).
   const shown = shownView(view, mode, phone);
+  // A project's drawing has its own tool row (Snap, Select, Clearances): Doors and fronts joins it there (ADR-109).
+  const frontsInPlan = inProject && mode === 'compose' && showsDrawing(shown);
   // Mounted only while the editor is the page shown (ADR-014): hidden on Projects or Catalog it kept rendering.
   const mount3d = has3d && shows3d(shown) && page === 'editor';
 
@@ -755,14 +757,16 @@ export function App() {
                 </div>
               )}
               <ViewOptions menu={phone && mode === 'build'}>
-                <label className="toggle small">
-                  <input
-                    type="checkbox"
-                    checked={showFronts}
-                    onChange={(e) => setShowFronts(e.target.checked)}
-                  />
-                  <span>Doors and fronts</span>
-                </label>
+                {!frontsInPlan && (
+                  <label className="toggle small">
+                    <input
+                      type="checkbox"
+                      checked={showFronts}
+                      onChange={(e) => setShowFronts(e.target.checked)}
+                    />
+                    <span>Doors and fronts</span>
+                  </label>
+                )}
                 {shows3d(shown) && (
                   <label className="toggle small">
                     <input
@@ -814,7 +818,11 @@ export function App() {
             </div>
             <div className={`views ${shown === 'both' ? 'both' : ''}`}>
               <div className={`view front ${showsDrawing(shown) ? 'active' : ''}`}>
-                {inProject ? <PlanView /> : <Elevation />}
+                {inProject ? (
+                  <PlanView fronts={frontsInPlan} card={!(phone && shows3d(shown))} />
+                ) : (
+                  <Elevation />
+                )}
               </div>
               <div className={`view three ${shows3d(shown) ? 'active' : ''}`}>
                 {mount3d ? (
