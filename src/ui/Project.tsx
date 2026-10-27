@@ -179,15 +179,8 @@ export function ProjectPanel({
 
   if (mode === 'configure')
     return (
+      // Titled by the Settings dialog, which carries its info button (ADR-114: one h2 per dialog).
       <div className="inspector">
-        <header className="insp-head">
-          <div className="info-row">
-            <h2>Project settings</h2>
-            <InfoTip label="About project settings" align="start">
-              These apply to every piece in {project.name}.
-            </InfoTip>
-          </div>
-        </header>
         <RunParts />
         <MmField
           label="Saw cut (kerf) for this project"
@@ -2273,7 +2266,7 @@ function RoomSection() {
             onChange={(v) => setRoom({ ...room, height: v })}
             hint="Measure your ceiling"
           />
-          <h4>Walls</h4>
+          <h4 className="list-head">Walls</h4>
           <ul className="wall-list">
             {walls.map((i) => (
               <li key={i}>
@@ -2296,7 +2289,7 @@ function RoomSection() {
             <Icon name="pencil" className="sm" />
             Draw the room again
           </button>
-          <h4>Doors, windows, obstacles, pipes and outlets</h4>
+          <h4 className="list-head">Doors, windows, obstacles, pipes and outlets</h4>
           {room.features.length === 0 && <p className="hint">None yet.</p>}
           {room.features.map((f) => (
             <fieldset key={f.id} className="room-feature" aria-label={f.label}>

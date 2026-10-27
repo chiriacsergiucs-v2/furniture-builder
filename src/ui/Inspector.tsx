@@ -74,7 +74,8 @@ const KIND_LABEL: Record<SpaceKind, string> = {
 
 /**
  * The piece editor (ADR-079). Compose edits the selected space (contents, doors, divide); `configure` edits the
- * whole piece (size, construction, boards, drawers), whatever is selected, and is shown in Settings (ADR-080).
+ * whole piece (size, construction, boards, drawers), whatever is selected, and is shown in Settings (ADR-080),
+ * where the dialog title is the h2 and the editor its h3 (ADR-114).
  */
 export function Inspector({ mode }: { mode: 'compose' | 'configure' }) {
   const design = useDesign((s) => s.design);
@@ -833,7 +834,7 @@ function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material
       <EditorRail steps={steps} inside={() => select(p.interior.id)} />
       <header className="insp-head">
         <div className="info-row">
-          <h2>Whole cabinet</h2>
+          <h3>Whole cabinet</h3>
           <InfoTip label="About the whole cabinet" align="start">
             Sizes, construction and boards. Fill or divide the spaces under Compose.
           </InfoTip>
@@ -1157,7 +1158,7 @@ function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[]
       <EditorRail steps={steps} inside={() => select(p.interior.id)} />
       <header className="insp-head">
         <div className="info-row">
-          <h2>Corner unit</h2>
+          <h3>Corner unit</h3>
           <InfoTip label="About the corner unit" align="start">
             {blind
               ? 'A blind section the neighbouring cabinet covers, joined to a normal cabinet.'
@@ -1364,7 +1365,7 @@ function PanelSetEditor({ p, materials }: { p: PanelSetParams; materials: Materi
       <EditorRail steps={steps} />
       <header className="insp-head">
         <div className="info-row">
-          <h2>Loose panels</h2>
+          <h3>Loose panels</h3>
           <InfoTip label="About loose panels" align="start">
             Parts known by their cut sizes. They go to the cut list and sheets. Parts with a known
             place are built where they sit; the rest lie in a pile beside them.
@@ -1612,7 +1613,7 @@ function DeskEditor({
         }}
       />
       <header className="insp-head">
-        <h2>Desk</h2>
+        <h3>Desk</h3>
       </header>
       <PieceInfo />
       <div className="dims3">

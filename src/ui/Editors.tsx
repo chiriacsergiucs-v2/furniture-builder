@@ -395,7 +395,7 @@ export function PanelEditor({ p, materials }: { p: PanelParams; materials: Mater
     <div className="inspector">
       <header className="insp-head">
         <div className="info-row">
-          <h2>{PURPOSE[p.purpose]}</h2>
+          <h3>{PURPOSE[p.purpose]}</h3>
           <InfoTip label="About this panel" align="start">
             A front with no carcass behind it.
           </InfoTip>
@@ -489,7 +489,7 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
     <div className="inspector">
       <header className="insp-head">
         <div className="info-row">
-          <h2>{b && b.tierGap > 0 ? 'Bunk bed' : FRAME_LABEL[p.kind]}</h2>
+          <h3>{b && b.tierGap > 0 ? 'Bunk bed' : FRAME_LABEL[p.kind]}</h3>
           <InfoTip label="About this frame" align="start">
             Legs, rails and slats are solid timber listed by length; tops and boards come from
             sheets.
