@@ -1285,7 +1285,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-136: How an info button shows its text
 
-- Status: Open
+- Status: Acknowledged (2026-10-27)
 - Origin: ADR-111
 - Missing: The way the moved intro text opens is a default the user has not confirmed: tap or click the ⓘ button opens a small popover under it; tap outside, Escape or a second tap closes it
 - Request: Move info text from Project to a tooltip, apply same to other similar UX occurences
@@ -1294,7 +1294,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-137: Heading scale for drawings and print sheets
 
-- Status: Open
+- Status: Acknowledged (2026-10-27)
 - Origin: ADR-114
 - Missing: Text sizes inside SVG drawings and the printed sheets keep their own sizes
 - Request: Run a critique for listings, headers, text, button sizes, gaps, groupings
@@ -1303,7 +1303,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-138: Catalog density on desktop
 
-- Status: Open
+- Status: ADR-117
 - Origin: ADR-116
 - Missing: The Catalog is 36 785 px tall at 1280 px; ADR-116 makes only the phone layout compact
 - Request: Run a critique for listings, headers, text, button sizes, gaps, groupings; answer Catalog density + wizard
@@ -1312,7 +1312,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-139: Lower-severity critique items not picked
 
-- Status: Open
+- Status: ADR-118
 - Origin: docs/retros/2026-10-27-ui-critique.md
 - Missing: Mixed checkbox/pressed toggles in the plan toolbar; Width/Depth and counts three times on desktop; Projects row names wrap beside three icon buttons; editor name field cut without ellipsis; 'Back to the editor' chevron points right; ADR numbers in UI text; Romanian names inside English descriptions; Projects groupings (Import beside list heading, Fill a wall twice); 'front faces you' lone line
 - Request: Run a critique for listings, headers, text, button sizes, gaps, groupings
@@ -1321,7 +1321,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-140: Count card can cover part of a piece that fills the front view
 
-- Status: Open
+- Status: Acknowledged (2026-10-27)
 - Origin: ADR-110 (found while building)
 - Missing: At 390 px in a project, when the whole selected piece fills the front view no corner is free: the card covers about 6 % of the piece (the plinth corner); a 3-row card cannot avoid a centre bay; taps on the drawing under the card hit the card
 - Request: Increment/decrement card must be inside the rendered 2d view, not over
@@ -1330,7 +1330,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-141: Count card hidden while the bottom sheet is open
 
-- Status: Open
+- Status: Acknowledged (2026-10-27)
 - Origin: ADR-110 (found while building)
 - Missing: On a phone the floating count card is hidden while the bottom sheet is open (the sheet holds the same counters); before, a single piece already did this, now the project front view does too
 - Request: Force 2d view to maintain it's size, bottom cars can cover it partially, but not push it
@@ -1339,7 +1339,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-142: Wording changed while moving intro text
 
-- Status: Open
+- Status: Acknowledged (2026-10-27)
 - Origin: ADR-111 (found while building)
 - Missing: Catalog checkbox now 'I check safety-regulated items myself' (examples moved to its info); '(ADR-036)' dropped from a panel intro; shopping hint now 'Your prices, saved on this device.'; the quantity info shows at any quantity; wizard per-field help kept visible
 - Request: Move info text from Project to a tooltip, apply same to other similar UX occurences
@@ -1348,9 +1348,27 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-143: Phone catalog cards cut text with no way to read it
 
-- Status: Open
+- Status: ADR-117
 - Origin: ADR-116 (found while building)
 - Missing: At 390 px each catalog card's text lines (variant names, sizes/parts line, 'You choose: …') are cut to one line with an ellipsis and cannot be expanded; source and grouping switches read 'Saved', 'Room', 'Type'; room chips and 'also called' moved behind 'About this family'; wizard Cancel removed at every width
 - Request: Run a critique for listings, headers, text, button sizes, gaps, groupings; answer Catalog density + wizard
 - Questions: Should cut card text expand on tap (or show in the item detail), and are the short labels and Cancel removal fine?
 - Suggested pick: Full text in the item's detail view on tap (closest to the request: compact list, nothing unreachable; estimate +10 % work, +10 % of value)
+
+### G-144: Where a cut catalog card's full text shows
+
+- Status: Open
+- Origin: ADR-117
+- Missing: The Catalog has no item detail view (tapping a card opens the item), so G-143's pick needs a place for the full text
+- Request: accept gap picks
+- Questions: A More toggle that expands the card in place, or the text in an info popover?
+- Suggested pick: More toggle in place (closest to the request: the text is on the card, one tap, works on touch and keyboard)
+
+### G-145: Lower-severity critique fixes not agreed
+
+- Status: Open
+- Origin: ADR-118
+- Missing: The nine fixes in ADR-118 are the critique's proposals; none is agreed
+- Request: accept gap picks (G-139: one follow-up ADR for all of them)
+- Questions: Accept the nine fixes as written in ADR-118, or change any?
+- Suggested pick: Accept as written (each is the critique's fix for the item it names)
