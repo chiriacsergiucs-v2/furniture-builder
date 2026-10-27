@@ -1681,7 +1681,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-213: Import OBJ, STL and FBX models directly
 
-- Status: Open
+- Status: Acknowledged (2026-10-27)
 - Origin: Question 2026-10-27 (Fusion 360 / Blender import)
 - Missing: 3D model import accepts only .glb/.gltf (ADR-076); OBJ, STL and FBX from Fusion 360 or Blender need converting in Blender first
 - Request: What about fusion 360 or blender import?
@@ -1690,7 +1690,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-214: Import a Fusion 360 or Blender model as editable furniture
 
-- Status: Open
+- Status: Acknowledged (2026-10-27)
 - Origin: Question 2026-10-27 (Fusion 360 / Blender import)
 - Missing: Imported models are display-only; no import turns box-shaped bodies from STEP or glTF into boards with a cut list, banding and hardware
 - Request: What about fusion 360 or blender import?
