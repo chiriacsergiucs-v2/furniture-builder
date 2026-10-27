@@ -1528,7 +1528,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-163: Run sinks: what is generated
 
-- Status: Open
+- Status: ADR-125
 - Origin: ADR-125 (open question)
 - Missing: Sinks are not generated for a run
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1537,7 +1537,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-164: Run handles: where the line sits
 
-- Status: Open
+- Status: ADR-125
 - Origin: ADR-125 (open question)
 - Missing: Handles are chosen per piece; nothing lines them up across a run
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1546,9 +1546,36 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-165: Rapier: trial or adopt
 
-- Status: Open
+- Status: ADR-125
 - Origin: ADR-125 (open question)
 - Missing: No spatial query engine; checks are hand-written box tests
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
 - Questions: Run a measured trial (decision recorded, nothing shipped unless it wins), or adopt Rapier for the checks now?
 - Suggested pick: Measured trial first (the research says 'evaluate'; a new WASM dependency needs its licence, size and offline behaviour checked)
+
+### G-210: Project templates drop run handles and sinks
+
+- Status: Open
+- Origin: ADR-125 (found while building)
+- Missing: Saving a project as a project template (ADR-060) keeps neither its run handles nor its sinks; a project made from it has none
+- Request: Accept default, /batch all ready (ADR-125: run sinks and handles)
+- Questions: Should project templates keep run handles and sinks (with the piece ids remapped)?
+- Suggested pick: Keep them, remapped like run-part keys (closest to a reusable kitchen layout)
+
+### G-211: Run handles not shown inside the piece editor
+
+- Status: Open
+- Origin: ADR-125 (found while building)
+- Missing: Opening one piece of a handled run shows and edits its own handles; the run's handle shows only in the project views, cut list and hardware
+- Request: Accept default, /batch all ready (ADR-125: run sinks and handles)
+- Questions: Should the piece editor show the run's handle (read-only) with a note that the run sets it?
+- Suggested pick: Show it read-only with 'Set by Handles for this run' (no change to the piece's own design)
+
+### G-212: Sink cut-out not drawn
+
+- Status: Open
+- Origin: ADR-125 (found while building)
+- Missing: The sink cut-out is a cut-list note, a shopping line and checks; it is not drawn on the plan, the front view or in 3D (worktop cut-outs were already not drawn)
+- Request: Accept default, /batch all ready (ADR-125: run sinks and handles)
+- Questions: Draw the cut-out outline on the plan and in 3D?
+- Suggested pick: Outline on the plan only (where the worktop is drawn from above)

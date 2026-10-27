@@ -42,10 +42,12 @@ import type {
   Diagnostic,
   Face,
   FurnitureModel,
+  Handle,
   HardwareItem,
   Material,
   Mm,
   Panel,
+  Space,
 } from './types';
 
 export type QuarterTurn = 0 | 90 | 180 | 270;
@@ -143,22 +145,51 @@ export interface RunRequest {
 }
 export const requestKey = (r: Pick<RunRequest, 'kind' | 'from'>) => `${r.kind}|${r.from.join(',')}`;
 
+/** Bar handle hole centres offered (ADR-024), mm: the handle list run handles choose from (ADR-010, ADR-125). */
+export const BAR_SPACINGS: readonly Mm[] = [96, 128, 160, 192, 224, 256, 320];
+
+/**
+ * One handle on every door and drawer front of a run of base units, on one line (ADR-125). Applied when the model is
+ * built (`applyRunHandles`), never written into the pieces' designs, so removing it gives each piece its own handles
+ * back. The run is found again from `from` on every build: a piece added to the run gets the handle too.
+ */
+export interface RunHandle {
+  id: string;
+  /** The run's pieces when it was made; any one of them still in a run finds that run. */
+  from: string[];
+  handle: Pick<Handle, 'kind' | 'holeSpacing'>;
+  /** Height of the handle line above the floor, whole mm; absent = near the top of each front. */
+  height?: Mm;
+  /** Pieces that keep their own handles (overrides, ADR-061). */
+  own?: string[];
+}
+
+/** A sink over a base unit (ADR-125): a cut-out in the run worktop, its size the user's (ADR-010). */
+export interface RunSink {
+  id: string;
+  baseId: string;
+  /** Cut-out width and depth, mm. */
+  w: Mm;
+  d: Mm;
+}
+
 /**
  * Project document versions (ADR-011): new and edited projects are written at `PROJECT_SCHEMA`; every version in
  * `PROJECT_SCHEMAS` still loads unchanged. 2 = room pipes and outlets (ADR-072); 3 = clearance zones on items
  * (ADR-073); 4 = run requests and trim run parts (ADR-075); 5 = display-only 3D models (ADR-076); 6 = locked pieces
  * (ADR-095); 7 = a kept template revision on items (ADR-096); 8 = groups of pieces
- * (ADR-097); 9 = linked copies (ADR-111).
+ * (ADR-097); 9 = linked copies (ADR-111); 13 = run handles and sinks (ADR-125).
  */
-export const PROJECT_SCHEMA = 9 as const;
-export const PROJECT_SCHEMAS: readonly number[] = [1, 2, 3, 4, 5, 6, 7, 8, PROJECT_SCHEMA];
-export type ProjectSchemaVersion = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | typeof PROJECT_SCHEMA;
+export const PROJECT_SCHEMA = 13 as const;
+export const PROJECT_SCHEMAS: readonly number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, PROJECT_SCHEMA];
+export type ProjectSchemaVersion = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | typeof PROJECT_SCHEMA;
 const RUN_REQUESTS_SINCE = 4;
 const MODELS_SINCE = 5;
 const LOCKS_SINCE = 6;
 const TEMPLATE_SEEN_SINCE = 7;
 const GROUPS_SINCE = 8;
 const LINKS_SINCE = 9;
+const RUN_EXTRAS_SINCE = 13;
 
 export interface Project {
   schemaVersion: ProjectSchemaVersion;
@@ -185,6 +216,10 @@ export interface Project {
    * at most one group; a group holds two pieces or more, always pieces of this project (`pruneGroups`). Absent = none.
    */
   groups?: { id: string; name: string; itemIds: string[] }[];
+  /** Handles for a run of base units (ADR-125, schemaVersion 13). Absent = none. */
+  runHandles?: RunHandle[];
+  /** Sinks over base units: worktop cut-outs (ADR-125, schemaVersion 13). Absent = none. */
+  sinks?: RunSink[];
 }
 
 /**
@@ -756,7 +791,8 @@ function runMaterial(project: Project, m: Material): Material {
 }
 
 export function buildProjectModel(input: Project): ProjectModel {
-  const project = resolvePlacements(input);
+  // Run handles reach the pieces' fronts when built (ADR-125).
+  const project = applyRunHandles(resolvePlacements(input));
   const covered = plinthCovered(project);
   const pieces = project.items.map((i) => placeItem(i, { noPlinth: covered.has(i.id) }));
   const materials = new Map<string, Material>();
@@ -888,6 +924,7 @@ export function buildProjectModel(input: Project): ProjectModel {
         nodeId: `run:${rp.id}`,
       });
   }
+  diagnostics.push(...sinkChecks(project, placedById));
   // Run parts the user asked for that could not be made (ADR-075): an error, never left out silently (ADR-008).
   const made = new Set((project.runParts ?? []).map((rp) => rp.key));
   const missing = (project.runRequests ?? []).filter((r) => !made.has(requestKey(r)));
@@ -1295,6 +1332,140 @@ export function runOf(project: Project, id: string): string[] | null {
     .map((r) => r.map((pc) => pc.item.id))
     .find((r) => r.includes(id));
   return ids ?? null;
+}
+
+/** A design with one handle on every front that takes one (doors, drawer fronts; not drawers inside doors). */
+function withHandle(d: Design, h: Handle): Design {
+  const fix = (sp: Space, inside: boolean): Space => {
+    const children =
+      sp.kind === 'split' ? sp.children.map((c) => fix(c, inside || !!sp.front)) : undefined;
+    const next = children ? ({ ...sp, children } as Space) : sp;
+    return !inside && (next.front || next.kind === 'drawers') ? { ...next, handle: h } : next;
+  };
+  const p = d.product;
+  if (p.kind === 'cabinet')
+    return {
+      ...d,
+      product: { ...p, params: { ...p.params, interior: fix(p.params.interior, false) } },
+    };
+  if (p.kind === 'corner')
+    return {
+      ...d,
+      product: {
+        ...p,
+        params: {
+          ...p.params,
+          interior: fix(p.params.interior, false),
+          wingInterior: fix(p.params.wingInterior, false),
+        },
+      },
+    };
+  return d;
+}
+
+/** The pieces a run handle reaches now (ADR-125): the run holding any of its pieces, less those keeping their own. */
+export function runHandleMembers(project: Project, rh: RunHandle): string[] {
+  const runs = groupRuns(resolvePlacements(project).items.map((i) => placeItem(i)));
+  const run = runs.find((r) => r.some((pc) => rh.from.includes(pc.item.id)));
+  return run ? run.map((pc) => pc.item.id) : [];
+}
+
+/**
+ * The project as built with its run handles (ADR-125): each piece of a handled run gets the run's handle on every
+ * front, its line converted to the piece's own height. Pieces in `own` keep theirs; the first run handle wins.
+ * The same project when there are none. Never saved: the pieces' designs keep their own handles.
+ */
+export function applyRunHandles(project: Project): Project {
+  if (!project.runHandles?.length) return project;
+  const placed = resolvePlacements(project).items.map((i) => placeItem(i));
+  const runs = groupRuns(placed);
+  const handles = new Map<string, Handle>();
+  for (const rh of project.runHandles) {
+    const run = runs.find((r) => r.some((pc) => rh.from.includes(pc.item.id)));
+    for (const pc of run ?? []) {
+      if (rh.own?.includes(pc.item.id) || handles.has(pc.item.id)) continue;
+      // Room height to the piece's own: the outline's lowest point (model bounds.y) sits at bounds.y in the room.
+      const lineY =
+        rh.height === undefined ? undefined : rh.height - pc.bounds.y + pc.model.bounds.y;
+      handles.set(pc.item.id, {
+        ...rh.handle,
+        position: 'top',
+        ...(lineY !== undefined ? { lineY } : {}),
+      });
+    }
+  }
+  if (!handles.size) return project;
+  return {
+    ...project,
+    items: project.items.map((i) =>
+      handles.has(i.id) ? { ...i, design: withHandle(i.design, handles.get(i.id)!) } : i,
+    ),
+  };
+}
+
+/** Run handles and sinks keep only pieces still in the project (ADR-125). The same project when nothing changes. */
+export function pruneRunExtras(project: Project): Project {
+  if (!project.runHandles && !project.sinks) return project;
+  const ids = new Set(project.items.map((i) => i.id));
+  const handles = project.runHandles
+    ?.map((rh) => ({
+      ...rh,
+      from: rh.from.filter((x) => ids.has(x)),
+      ...(rh.own ? { own: rh.own.filter((x) => ids.has(x)) } : {}),
+    }))
+    .filter((rh) => rh.from.length);
+  const sinks = project.sinks?.filter((sk) => ids.has(sk.baseId));
+  const same =
+    JSON.stringify(handles) === JSON.stringify(project.runHandles) &&
+    (sinks?.length ?? 0) === (project.sinks?.length ?? 0);
+  return same ? project : { ...project, runHandles: handles, sinks };
+}
+
+/** The run worktop over a base unit, if any (ADR-125). */
+export const worktopOver = (project: Project, baseId: string): RunPart | undefined =>
+  (project.runParts ?? []).find((rp) => rp.kind === 'worktop' && rp.from?.includes(baseId));
+
+/** Sinks for the shopping list (ADR-125): the base each is over and its cut-out. */
+export function sinkList(project: Project): { over: string; w: Mm; d: Mm }[] {
+  return (project.sinks ?? []).map((sk) => ({
+    over: project.items.find((i) => i.id === sk.baseId)?.design.name ?? 'a removed piece',
+    w: sk.w,
+    d: sk.d,
+  }));
+}
+
+/** Diagnostics of the sinks (ADR-125): no worktop to cut, a cut-out wider than its base or through the worktop. */
+function sinkChecks(project: Project, placedById: Map<string, PlacedPiece>): Diagnostic[] {
+  const out: Diagnostic[] = [];
+  for (const sk of project.sinks ?? []) {
+    const base = placedById.get(sk.baseId);
+    if (!base) continue;
+    const name = base.item.design.name;
+    const top = worktopOver(project, sk.baseId);
+    const nodeId = `sink:${sk.id}`;
+    if (!top)
+      out.push({
+        severity: 'warning',
+        code: 'sink-no-worktop',
+        message: `The sink over ${name} has no worktop to be cut out of; add the run worktop.`,
+        nodeId,
+      });
+    else if (sk.d >= top.box.d)
+      out.push({
+        severity: 'error',
+        code: 'sink-cutout-deep',
+        message: `Sink cut-out ${sk.w} × ${sk.d} mm is as deep as the worktop over ${name} (${top.box.d} mm) or deeper.`,
+        nodeId,
+      });
+    if (sk.w > base.bounds.w)
+      out.push({
+        severity: 'warning',
+        code: 'sink-cutout-wide',
+        message: `Sink cut-out ${sk.w} mm is wider than ${name} under it (${base.bounds.w} mm).`,
+        nodeId,
+      });
+  }
+  return out;
 }
 
 /**
@@ -1727,10 +1898,26 @@ export function refreshRunParts(project: Project): Project {
   return { ...project, runParts: next, runPartsRemoved: removed };
 }
 
+/** A worktop's label with the sink cut-outs to make in it (ADR-125): the note on its cut-list row. */
+function withSinkNote(project: Project, rp: RunPart): RunPart {
+  if (rp.kind !== 'worktop') return rp;
+  const cuts = (project.sinks ?? []).filter((sk) => rp.from?.includes(sk.baseId));
+  return cuts.length
+    ? {
+        ...rp,
+        label: `${rp.label}, sink cut-out ${cuts.map((sk) => `${sk.w} × ${sk.d} mm`).join(' and ')}`,
+      }
+    : rp;
+}
+
 /** Parts for the whole project: each piece's cut list × its quantity, merged across pieces, then the run parts. */
-export function projectCutlist(project: Project): CutRow[] {
+export function projectCutlist(input: Project): CutRow[] {
+  const project = applyRunHandles(input);
   const rows = new Map<string, CutRow>();
-  const extra = (project.runParts ?? []).map((rp) => ({ rp, key: materialKey(rp.material) }));
+  const extra = (project.runParts ?? []).map((rp) => ({
+    rp: withSinkNote(project, rp),
+    key: materialKey(rp.material),
+  }));
   if (extra.length) {
     const mats = [
       ...new Map(
@@ -1803,7 +1990,8 @@ export function projectCutlist(project: Project): CutRow[] {
   );
 }
 
-export function projectHardware(project: Project): HardwareItem[] {
+export function projectHardware(input: Project): HardwareItem[] {
+  const project = applyRunHandles(input);
   return hardwareSummary({
     panels: [],
     spaces: [],
@@ -2033,6 +2221,48 @@ export function validateProject(p: unknown): string[] {
         groupIds.add(g.id);
         for (const x of g.itemIds) grouped.add(x as string);
       }
+  }
+  if (p.runHandles !== undefined || p.sinks !== undefined) {
+    if ((p.schemaVersion as number) < RUN_EXTRAS_SINCE)
+      errs.push(`Run handles and sinks need project schemaVersion ${RUN_EXTRAS_SINCE}`);
+    const strs = (v: unknown) => Array.isArray(v) && v.every((x) => typeof x === 'string');
+    if (p.runHandles !== undefined) {
+      if (!Array.isArray(p.runHandles)) errs.push('Invalid run handles');
+      else
+        for (const rh of p.runHandles) {
+          const h = isObj(rh) ? rh.handle : null;
+          if (
+            !isObj(rh) ||
+            typeof rh.id !== 'string' ||
+            !rh.id ||
+            !strs(rh.from) ||
+            !(rh.from as string[]).length ||
+            (rh.own !== undefined && !strs(rh.own)) ||
+            (rh.height !== undefined && !(isInt(rh.height, 1) && (rh.height as number) <= 3000)) ||
+            !isObj(h) ||
+            !['bar', 'knob', 'push'].includes(h.kind as string) ||
+            (h.holeSpacing !== undefined && !BAR_SPACINGS.includes(h.holeSpacing as number))
+          )
+            errs.push('Invalid run handle');
+        }
+    }
+    if (p.sinks !== undefined) {
+      if (!Array.isArray(p.sinks)) errs.push('Invalid sinks');
+      else
+        for (const sk of p.sinks)
+          if (
+            !isObj(sk) ||
+            typeof sk.id !== 'string' ||
+            !sk.id ||
+            typeof sk.baseId !== 'string' ||
+            !ids.has(sk.baseId) ||
+            !isInt(sk.w, 1) ||
+            (sk.w as number) > 3000 ||
+            !isInt(sk.d, 1) ||
+            (sk.d as number) > 3000
+          )
+            errs.push('Invalid sink');
+    }
   }
   if (p.models !== undefined) {
     if ((p.schemaVersion as number) < MODELS_SINCE)
