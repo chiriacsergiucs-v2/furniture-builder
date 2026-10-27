@@ -1,11 +1,13 @@
 # ADR-121: Research batch 1: render 3D on demand, review pack, typed rotation, mirror a selection
 
-- Status: Deferred (open questions G-149, G-150)
+- Status: Pending
 - Date: 2026-10-27
 - Depends on: ADR-069, ADR-093, ADR-097
 - Design: docs/ui-design.md (project editor, selected-piece card, 3D toolbar)
 - Backlog: N122
 - Acceptance: browser
+- Agreed: 2026-10-27 "Accept default" (G-149: exact rotated-box checks; G-150: .zip plus the Share sheet where
+  offered, the app making no request)
 
 ## Context
 
@@ -34,21 +36,32 @@ the largest part of this batch and changes the project document (ADR-011).
 
 ## Decision
 
-1. **Render on demand.** The 3D `Canvas` renders only when something changes (`frameloop="demand"`): camera
-   moves, store changes that reach the scene, Move-mode drags and the realistic look's loading. Idle = no frames.
-   Viewer-only; nothing in `src/core` changes.
-2. **Review pack.** **Hand to a professional…** in the project ⋯ menu builds one package for review from the
-   project's existing outputs: the project file (ADR-022), the parts CSV (ADR-020, Romanian), the SVG drawings
-   and a printable summary (pieces, sizes, problems). Built from `buildProjectModel()` only (ADR-004); nothing is
-   sent anywhere by the app (ADR-002). Its form and delivery wait for G-150.
-3. **Typed rotation.** The selected-piece card gets **Rotation (°)**, whole degrees 0–359, beside From left / From
-   back; Turn 90° keeps working. The project item stores degrees (`rotationY`), project `schemaVersion` raised to
-   the next free version; older projects load (quarter turns become 0/90/180/270). Snapping, overlap, room and
-   clearance checks use the turned piece; how exactly waits for G-149. Out-of-range input is a diagnostic, never
-   clamped (ADR-008). One undo step per edit.
-4. **Mirror a selection.** **Mirror** works on two or more selected pieces: positions mirror about the selection's
-   centre line (left–right) and each piece's design mirrors as **Mirror the run** does (ADR-069 `mirrorDesign`).
-   Locked pieces (ADR-095) refuse with their name; one undo step. Pure `mirrorItems` in `src/core/selection.ts`.
+1. **Render on demand.** The 3D `Canvas` draws only when something changes (`frameloop="demand"`): orbiting, store
+   changes that reach the scene, Move-mode drags, pictures and the realistic look's light arriving (`invalidate()`).
+   Idle = no frames. Viewer-only; nothing in `src/core` changes.
+2. **Review pack (G-150).** **Hand to a professional…** in the project ⋯ menu opens a dialog listing the pack:
+   a printable summary (`-rezumat.html`: pieces with size, place and turn, every problem the app found), the parts
+   CSV (`-piese.csv`, ADR-020), the plan seen from above and the 3D view (`.svg`) and the project file
+   (`-proiect.json`, pictures included as in the Project file). **Download .zip** saves one store-only .zip
+   (`src/core/zip.ts`, no dependency); **Share…** shows where the device can share files and hands the .zip to the
+   operating system. Built from `buildProjectModel()` only (ADR-004, `src/core/reviewPack.ts`); the app sends
+   nothing (ADR-002). The summary is in Romanian (ADR-020); the problems keep the app's own words.
+3. **Typed rotation (G-149).** The selected-piece card gets **Rotation (°)**, whole degrees 0–359, under the quarter
+   Turn; Turn 90° keeps working. The item keeps its quarter turn in `rotationY` and stores the rest as `angle`
+   (1–89, absent = 0), so quarter-turned projects are unchanged; project `schemaVersion` 10, older versions load.
+   The piece turns about the centre of its quarter-turned outline; `position` stays that outline's corner. Placed
+   panels, opening clearances and envelopes of an angled piece carry the turn (`Box.yaw`), and overlap, room
+   (walls, obstacles, doors), opening and envelope checks test the turned boxes exactly (separating axes on the
+   floor outline). Plan, front view, 3D, exploded view and pictures draw the piece turned. A number outside 0–359
+   or a locked piece is refused with the reason, never clamped (ADR-008, ADR-095). One undo step per edit.
+   Built with limits recorded as gaps: snapping and the mm amounts in messages use the box around an angled piece
+   (G-170); an angled piece is not part of a run (G-171); the 3D selection outline and Move ghost are unturned
+   (G-172).
+4. **Mirror a selection.** **Mirror** on two or more selected pieces: positions mirror about the selection's
+   centre line (left–right), each piece's design mirrors as **Mirror the run** does (ADR-069 `mirrorDesign`) and its
+   turn θ becomes −θ. Pieces resting on them follow. A locked piece refuses the whole action with its name
+   (ADR-095); pieces with nothing to mirror only move and are named. One undo step. `mirrorItems` in
+   `src/core/selection.ts` over the shared `mirrorSet` that **Mirror the run** now uses too.
 
 Built as one change, one pull request, one test run and one ship (the user's request).
 
@@ -61,7 +74,9 @@ Built as one change, one pull request, one test run and one ship (the user's req
 ## Scope
 
 - In scope: the four features above, core and UI-logic tests, fuzz for rotation, browser find-it.
-- Out of scope: nothing; the undecided parts are the open questions (G-149, G-150).
+- Out of scope: nothing; the undecided parts were the open questions (G-149, G-150, answered 2026-10-27).
+- Skipped while building: snapping along turned faces and exact amounts (G-170); angled pieces in runs (G-171);
+  turned 3D outlines (G-172).
 
 ## Consequences
 
@@ -81,9 +96,5 @@ Built as one change, one pull request, one test run and one ship (the user's req
 
 ## Open questions
 
-- **G-149** Typed rotation: any whole degree with exact rotated-box checks, any whole degree checked by each turned
-  piece's enclosing box, or a typed field limited to 0/90/180/270? Suggested: exact rotated-box checks (closest to
-  the request; estimate +60 % work over enclosing boxes, +25 % of value: no false overlap errors).
-- **G-150** Review pack: a .zip download, the device Share sheet with download fallback, or print only? Suggested:
-  .zip plus Share where offered (estimate +15 % work, +20 % of value). Share hands files to the operating system;
-  the app makes no request — confirm this fits ADR-002.
+None open. Answered 2026-10-27 ("Accept default"): G-149 exact rotated-box checks; G-150 .zip plus the Share sheet
+where offered.

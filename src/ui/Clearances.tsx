@@ -207,6 +207,10 @@ export function ZoneOverlay({ zones, fs }: { zones: ClearanceZone[]; fs: number 
             width={z.box.w}
             height={z.box.d}
             fill={`url(#${uid}-${z.severity})`}
+            // A zone of a piece at an angle (ADR-121) is drawn turned the way the core turned it.
+            transform={
+              z.box.yaw ? `rotate(${-z.box.yaw.deg} ${z.box.yaw.cx} ${z.box.yaw.cz})` : undefined
+            }
           >
             <title>
               {z.label.startsWith(KIND_NAME[z.kind]) ? z.label : `${KIND_NAME[z.kind]}: ${z.label}`}

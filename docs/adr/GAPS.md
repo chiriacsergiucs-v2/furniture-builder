@@ -1402,7 +1402,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-149: Typed rotation: exact checks or bounding boxes
 
-- Status: Open
+- Status: ADR-121
 - Origin: ADR-121 (open question)
 - Missing: Typed rotation in whole degrees is not built; every check, snap and drawing assumes axis-aligned boxes (quarter turns only)
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1411,7 +1411,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-150: Review pack: what it holds and how it leaves the device
 
-- Status: Open
+- Status: ADR-121
 - Origin: ADR-121 (open question)
 - Missing: No single package to hand a project to a professional for review
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1552,6 +1552,42 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
 - Questions: Run a measured trial (decision recorded, nothing shipped unless it wins), or adopt Rapier for the checks now?
 - Suggested pick: Measured trial first (the research says 'evaluate'; a new WASM dependency needs its licence, size and offline behaviour checked)
+
+### G-170: Angled pieces snap and measure by their enclosing box
+
+- Status: Open
+- Origin: ADR-121 (found while building)
+- Missing: A piece typed at an angle snaps to neighbours and walls by the axis-aligned box around it, not its turned faces; the mm amounts in overlap and blocked-opening messages are measured on those boxes. Detection itself is exact.
+- Request: Accept default, /batch all ready
+- Questions: Snap angled pieces face to face along their turned sides, and measure overlaps exactly?
+- Suggested pick: Snap along turned faces and measure exactly (closest to typed rotation 'while snapping keeps working'; estimate +40 % work on ADR-121's rotation part, +15 % of value)
+
+### G-171: Angled pieces are not part of runs
+
+- Status: Open
+- Origin: ADR-121 (found while building)
+- Missing: A piece at an angle is left out of runs: no shared worktop, run plinth, fillers, covers, trims or side-by-side compatibility rules for it
+- Request: Accept default, /batch all ready
+- Questions: Should run parts follow an angled piece (a worktop cut at an angle), or is leaving it out right?
+- Suggested pick: Leave it out (run parts are straight boards along a wall, ADR-036; an angled worktop is a new cut shape)
+
+### G-172: 3D outlines of an angled piece are drawn unturned
+
+- Status: Open
+- Origin: ADR-121 (found while building)
+- Missing: In the 3D view, the selection outline of a space inside an angled piece and the Move-mode ghost are drawn as the unturned or enclosing boxes; the boards themselves are drawn turned
+- Request: Accept default, /batch all ready
+- Questions: Turn the selection outline and the Move ghost with the piece?
+- Suggested pick: Turn them (estimate +5 % work, +5 % of value)
+
+### G-173: Selected space hides its piece's boards in 3D
+
+- Status: Open
+- Origin: ADR-121 (found while building)
+- Missing: With a space selected inside a piece, that piece's boards do not draw in the 3D view; only the selection outline shows. Also on main (happens at 0° and with the always-on render loop)
+- Request: Accept default, /batch all ready
+- Questions: Fix it in this PR or in a separate change?
+- Suggested pick: Fix it in this PR, since this PR touches Viewer3D (estimate +5 % work)
 
 ### G-180: Lock parameters other than size
 

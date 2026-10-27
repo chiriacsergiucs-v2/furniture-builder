@@ -18,8 +18,8 @@ import {
   type ItemZones,
 } from './envelopes';
 import {
+  boxInside,
   outlineIssues,
-  rectInside,
   roomChecks,
   serviceChecks,
   validateRoom,
@@ -28,7 +28,15 @@ import {
 import { bandKey, cutlist, hardwareSummary, type CutRow } from './cutlist';
 import { bandFor, bandProblems, bandText } from './materials';
 import { DEFAULT_KERF, newId, sheetOf, upgradeDesign, validateDesign } from './design';
-import { cutDimensions, intersection, overlaps, union } from './geometry';
+import {
+  cutDimensions,
+  enclosing,
+  footprintOf,
+  intersection,
+  overlaps,
+  union,
+  yawPoint,
+} from './geometry';
 import { aabbOf, overlapsBox, panelsOverlap, turnShape } from './shape';
 import { modelBox, modelChecks, validateModelItems, type ModelItem } from './model3d';
 import type { SheetSettings } from './nesting';
@@ -49,6 +57,7 @@ import type {
   Mm,
   Panel,
   Space,
+  Yaw,
 } from './types';
 
 export type QuarterTurn = 0 | 90 | 180 | 270;
@@ -96,6 +105,12 @@ export interface ProjectItem {
    * the others (`src/core/linked.ts`). Absent = not linked. Saved from project schemaVersion 9.
    */
   linkId?: string;
+  /**
+   * Extra whole degrees (1–89) on top of the quarter turn (ADR-121): the piece is turned `rotationY + angle` degrees in
+   * all, about the centre of its quarter-turned outline; `position` stays that outline's lowest corner. Absent = 0.
+   * Saved from project schemaVersion 10.
+   */
+  angle?: number;
   /**
    * Size locked (ADR-122): its width, height and depth do not change until it is unlocked; nothing resizes it for the
    * user either. Separate from `locked` (placement). Absent = not locked. Saved from project schemaVersion 11.
@@ -204,8 +219,8 @@ export interface RunSink {
  * `PROJECT_SCHEMAS` still loads unchanged. 2 = room pipes and outlets (ADR-072); 3 = clearance zones on items
  * (ADR-073); 4 = run requests and trim run parts (ADR-075); 5 = display-only 3D models (ADR-076); 6 = locked pieces
  * (ADR-095); 7 = a kept template revision on items (ADR-096); 8 = groups of pieces
- * (ADR-097); 9 = linked copies (ADR-111); 11 = size-locked pieces (ADR-122); 12 = template references and
- * project-wide settings (ADR-124); 13 = run handles and sinks (ADR-125). (10 is kept for ADR-121.)
+ * (ADR-097); 9 = linked copies (ADR-111); 10 = pieces typed at an angle (ADR-121); 11 = size-locked pieces
+ * (ADR-122); 12 = template references and project-wide settings (ADR-124); 13 = run handles and sinks (ADR-125).
  */
 export const PROJECT_SCHEMA = 13 as const;
 export const PROJECT_SCHEMAS: readonly number[] = [
@@ -218,18 +233,20 @@ export const PROJECT_SCHEMAS: readonly number[] = [
   7,
   8,
   9,
+  10,
   11,
   12,
   PROJECT_SCHEMA,
 ];
 export type ProjectSchemaVersion =
-  1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 11 | 12 | typeof PROJECT_SCHEMA;
+  1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | typeof PROJECT_SCHEMA;
 const RUN_REQUESTS_SINCE = 4;
 const MODELS_SINCE = 5;
 const LOCKS_SINCE = 6;
 const TEMPLATE_SEEN_SINCE = 7;
 const GROUPS_SINCE = 8;
 const LINKS_SINCE = 9;
+const ANGLE_SINCE = 10;
 const SIZE_LOCK_SINCE = 11;
 const REFS_SINCE = 12;
 const RUN_EXTRAS_SINCE = 13;
@@ -436,6 +453,23 @@ export function liftOff(item: ProjectItem): Placement | undefined {
 /** A quarter turn on from `r`: `dir` 1 turns the front from facing you to facing right (ADR-069). */
 export const quarterTurn = (r: QuarterTurn, dir: 1 | -1): QuarterTurn =>
   ((((r + dir * 90) % 360) + 360) % 360) as QuarterTurn;
+
+/** A piece's whole turn in degrees, 0–359 (ADR-121): its quarter turn plus its extra angle. */
+export const rotationOf = (item: Pick<ProjectItem, 'rotationY' | 'angle'>): number =>
+  item.rotationY + (item.angle ?? 0);
+
+/** Whole degrees as a quarter turn and the extra angle the item stores (ADR-121); null outside 0–359. */
+export function splitRotation(deg: number): { rotationY: QuarterTurn; angle?: number } | null {
+  if (!Number.isInteger(deg) || deg < 0 || deg > 359) return null;
+  const rotationY = (Math.floor(deg / 90) * 90) as QuarterTurn,
+    angle = deg - rotationY;
+  return angle ? { rotationY, angle } : { rotationY };
+}
+
+/** The turn after mirroring left–right (ADR-121): the front's sideways part flips, so θ becomes −θ. */
+export function mirroredRotation(item: Pick<ProjectItem, 'rotationY' | 'angle'>) {
+  return splitRotation((360 - rotationOf(item)) % 360)!;
+}
 
 /** The piece's placement is locked: nothing moves or turns it (ADR-095). */
 export const isLocked = (item: Pick<ProjectItem, 'locked'> | undefined): boolean => !!item?.locked;
@@ -689,7 +723,21 @@ export interface PlacedPiece {
   facing: { axis: 'x' | 'z'; sign: 1 | -1 };
   /** Chair, installation and service envelopes in room coordinates (ADR-073). */
   envelopes: Envelope[];
+  /** The whole piece as one box, turned when the piece is typed at an angle (ADR-121); `bounds` encloses it. */
+  outline: Box;
+  /** Its floor outline: four corners (x, z) in order, turned with the piece (ADR-121). */
+  footprint: [number, number][];
+  /** The front edge on the floor, x1 z1 x2 z2 (ADR-121). */
+  front: [number, number, number, number];
 }
+
+/** Which corners of `footprintOf` (back-left, back-right, front-right, front-left when unturned) carry the front. */
+const FRONT_CORNERS: Record<QuarterTurn, [number, number]> = {
+  0: [3, 2],
+  90: [1, 2],
+  180: [0, 1],
+  270: [0, 3],
+};
 
 /**
  * A room point (mm) back in the piece's own coordinates, undoing its quarter turn and position as `placeItem` applies
@@ -702,6 +750,12 @@ export function roomToPiece(
   const built = buildModel(item.design);
   const r = item.rotationY;
   const rb = union(built.panels.map((p) => rotateBox(aabbOf(p), r)));
+  // An angled piece (ADR-121): turn the point back about the piece's centre first.
+  const yaw = yawOf(item, rb);
+  if (yaw) {
+    const [x, z] = yawPoint({ ...yaw, deg: -yaw.deg }, pt.x, pt.z);
+    pt = { x, y: pt.y, z };
+  }
   const back = rotateBox(
     {
       x: pt.x - item.position.x + rb.x,
@@ -725,13 +779,25 @@ export function pieceBoxToRoom(item: ProjectItem, built: FurnitureModel, box: Bo
   const r = item.rotationY;
   const rb = union(built.panels.map((p) => rotateBox(aabbOf(p), r)));
   const t = rotateBox(box, r);
-  return {
+  return withYaw(item, rb, {
     ...t,
     x: t.x + item.position.x - rb.x,
     y: t.y + item.position.y - rb.y,
     z: t.z + item.position.z - rb.z,
-  };
+  });
 }
+
+/** The yaw of an angled piece (ADR-121): about the centre of its quarter-turned outline `rb` placed at `position`. */
+export function yawOf(item: ProjectItem, rb: Pick<Box, 'w' | 'd'>): Yaw | undefined {
+  return item.angle
+    ? { deg: item.angle, cx: item.position.x + rb.w / 2, cz: item.position.z + rb.d / 2 }
+    : undefined;
+}
+
+const withYaw = (item: ProjectItem, rb: Pick<Box, 'w' | 'd'>, b: Box): Box => {
+  const yaw = yawOf(item, rb);
+  return yaw ? { ...b, yaw } : b;
+};
 
 export function placeItem(item: ProjectItem, opts?: { noPlinth?: boolean }): PlacedPiece {
   const built = buildModel(item.design);
@@ -750,7 +816,12 @@ export function placeItem(item: ProjectItem, opts?: { noPlinth?: boolean }): Pla
     ...p,
     id: `${item.id}:${p.id}`,
     nodeId: `${item.id}:${p.nodeId}`,
-    box: { ...rotated[i], x: rotated[i].x + dx, y: rotated[i].y + dy, z: rotated[i].z + dz },
+    box: withYaw(item, rb, {
+      ...rotated[i],
+      x: rotated[i].x + dx,
+      y: rotated[i].y + dy,
+      z: rotated[i].z + dz,
+    }),
     thicknessAxis: swap(p.thicknessAxis, r),
     grainAxis: swap(p.grainAxis, r),
     banded: p.banded.map((f) => ROT_FACE[r][f]),
@@ -774,7 +845,7 @@ export function placeItem(item: ProjectItem, opts?: { noPlinth?: boolean }): Pla
     return {
       ...c,
       panelId: `${item.id}:${c.panelId}`,
-      box: { ...rc, x: rc.x + dx, y: rc.y + dy, z: rc.z + dz },
+      box: withYaw(item, rb, { ...rc, x: rc.x + dx, y: rc.y + dy, z: rc.z + dz }),
     };
   });
   const facing = FACING[r];
@@ -783,20 +854,37 @@ export function placeItem(item: ProjectItem, opts?: { noPlinth?: boolean }): Pla
     item.position.y === 0 && item.placement?.kind !== 'above' && !isWallHung(item.design);
   const envelopes = envelopesOf(item.design, item.zones, standsUp, built).map((e) => {
     const rc = rotateBox(e.box, r);
-    return { ...e, box: { ...rc, x: rc.x + dx, y: rc.y + dy, z: rc.z + dz } };
+    return { ...e, box: withYaw(item, rb, { ...rc, x: rc.x + dx, y: rc.y + dy, z: rc.z + dz }) };
   });
+  // The outline on the floor and the front edge, turned with the piece (ADR-121), for the plan and room checks.
+  const outline = withYaw(item, rb, full);
+  const corners = footprintOf(outline);
+  const [f1, f2] = FRONT_CORNERS[r];
   return {
     item,
     model,
     panels,
-    bounds: model === built ? union(panels.map(aabbOf)) : full,
+    bounds: model === built ? union(panels.map(aabbOf)) : enclosing(outline),
     clearances,
     facing,
     envelopes,
+    outline,
+    footprint: corners,
+    front: [...corners[f1], ...corners[f2]] as [number, number, number, number],
   };
 }
 
 export const placedBounds = (item: ProjectItem): Box => placeItem(item).bounds;
+
+/**
+ * The piece as one box before its extra angle (ADR-121): `position` is its lowest corner and it shares its centre with
+ * `placedBounds`. The same box as `placedBounds` for a piece at a quarter turn.
+ */
+export function placedOutline(item: ProjectItem): Box {
+  const { yaw: _yaw, ...flat } = placeItem(item).outline;
+  void _yaw;
+  return flat;
+}
 
 // ---------------------------------------------------------------------------
 // The whole room
@@ -994,6 +1082,7 @@ export function buildProjectModel(input: Project): ProjectModel {
     id: pc.item.id,
     name: pc.item.design.name,
     bounds: pc.bounds,
+    outline: pc.outline,
     hitsPanels: (b: Box) => pc.panels.some((q) => overlapsBox(q, b)),
     covers: (b: Box) =>
       pc.panels.find((q) => COVER_ROLES.has(q.role) && overlapsBox(q, b))?.role ?? null,
@@ -1128,15 +1217,14 @@ function clearanceZones(
       itemId: id,
       kind: 'body',
       label: pc.item.design.name,
-      box: pc.bounds,
+      box: pc.outline,
       severity: body,
     });
     for (const c of pc.clearances) {
       const role = pc.panels.find((p) => p.id === c.panelId)?.role;
       const bad =
         blockedBoxes.has(c.box) ||
-        (!!room &&
-          !rectInside(room.outline, c.box.x, c.box.z, c.box.x + c.box.w, c.box.z + c.box.d)) ||
+        (!!room && !boxInside(room.outline, c.box)) ||
         pieces.some((o) => o !== pc && o.clearances.some((y) => overlaps(c.box, y.box)));
       out.push({
         itemId: id,
@@ -1350,6 +1438,7 @@ function groupRuns(placed: PlacedPiece[]): PlacedPiece[][] {
       return (
         (k === 'cabinet' || k === 'corner') &&
         pc.item.rotationY === 0 &&
+        !pc.item.angle &&
         pc.bounds.y === 0 &&
         pc.bounds.h <= RUN_MAX_HEIGHT &&
         !isWallHung(pc.item.design)
@@ -1819,6 +1908,7 @@ export function requestName(r: RunRequest, project: Project): string {
 /** Wall units, and tall units standing on the floor, facing the room: the pieces a trim runs along (ADR-075). */
 export const takesTrim = (pc: PlacedPiece) =>
   pc.item.rotationY === 0 &&
+  !pc.item.angle &&
   (pc.item.design.product.kind === 'cabinet' || pc.item.design.product.kind === 'corner') &&
   (isWallHung(pc.item.design) || (pc.bounds.y === 0 && pc.bounds.h > RUN_MAX_HEIGHT));
 
@@ -2166,6 +2256,12 @@ export function validateProject(p: unknown): string[] {
       errs.push('Item position must be whole mm (height ≥ 0)');
     if (![0, 90, 180, 270].includes(it.rotationY as number))
       errs.push('Item rotation must be a quarter turn');
+    if (it.angle !== undefined) {
+      if (!isInt(it.angle, 1) || (it.angle as number) > 89)
+        errs.push('Item angle must be whole degrees from 1 to 89');
+      else if ((p.schemaVersion as number) < ANGLE_SINCE)
+        errs.push(`Pieces at an angle need project schemaVersion ${ANGLE_SINCE}`);
+    }
     const pl = it.placement;
     if (
       pl !== undefined &&

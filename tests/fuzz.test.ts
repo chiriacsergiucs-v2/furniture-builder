@@ -16,7 +16,7 @@ import {
   upgradeDesign,
 } from '../src/core/design';
 import { explode } from '../src/core/explode';
-import { contains, cutDimensions } from '../src/core/geometry';
+import { contains, cutDimensions, enclosing, footprintOf, overlaps } from '../src/core/geometry';
 import { cutlist } from '../src/core/cutlist';
 import { bandFor } from '../src/core/materials';
 import { frameDefaults, solidMaterials } from '../src/core/design';
@@ -682,6 +682,48 @@ it(
         Object.entries(found).map(([k, v]) => [k, { n: v.n, probs: v.probs.slice(0, 3) }]),
       ),
     ).toEqual({});
+  },
+  FUZZ_TIMEOUT,
+);
+
+it(
+  'random turned boxes: exact overlap agrees with the enclosing test and with touching (seeded fuzz, ADR-121)',
+  () => {
+    const N = Number(process.env.FUZZ_N ?? 3000);
+    const probs: string[] = [];
+    for (let i = 0; i < N && probs.length < 5; i++) {
+      const w = ri(50, 1200),
+        d = ri(50, 800),
+        h = ri(50, 2000);
+      const yaw = { deg: ri(1, 89), cx: ri(0, 2000) + 0.5 * ri(0, 1), cz: ri(0, 2000) };
+      const a = { x: ri(0, 1500), y: 0, z: ri(0, 1500), w, h, d, yaw };
+      // A second box in the same turned frame: beside a (touching), or 1 mm into it.
+      const into = rnd() < 0.5;
+      const b = { ...a, x: a.x + w - (into ? 1 : 0), w: ri(50, 900) };
+      if (overlaps(a, b) !== into) probs.push(`frame ${JSON.stringify({ a, b, into })}`);
+      if (overlaps(a, b) !== overlaps(b, a)) probs.push(`symmetry ${JSON.stringify({ a, b })}`);
+      // Any box: a true overlap implies the enclosing boxes overlap; the outline lies inside the enclosing box.
+      const c = {
+        x: ri(-500, 2500),
+        y: ri(-100, 100),
+        z: ri(-500, 2500),
+        w: ri(1, 900),
+        h: ri(1, 900),
+        d: ri(1, 900),
+        ...(rnd() < 0.5 ? { yaw: { deg: ri(1, 89), cx: ri(0, 2000), cz: ri(0, 2000) } } : {}),
+      };
+      if (overlaps(a, c) && !overlaps(enclosing(a), enclosing(c)))
+        probs.push(`enclosing ${JSON.stringify({ a, c })}`);
+      const e = enclosing(a);
+      if (
+        !footprintOf(a).every(
+          ([x, z]) =>
+            x >= e.x - 1e-6 && x <= e.x + e.w + 1e-6 && z >= e.z - 1e-6 && z <= e.z + e.d + 1e-6,
+        )
+      )
+        probs.push(`outline ${JSON.stringify(a)}`);
+    }
+    expect(probs).toEqual([]);
   },
   FUZZ_TIMEOUT,
 );

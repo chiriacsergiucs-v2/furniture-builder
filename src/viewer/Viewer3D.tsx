@@ -1,6 +1,14 @@
-import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
+import { Canvas, invalidate, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import { ContactShadows, Edges, Html, Line, OrbitControls } from '@react-three/drei';
-import { useCallback, useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentRef,
+  type ReactElement,
+} from 'react';
 import { createPortal } from 'react-dom';
 import {
   BoxGeometry,
@@ -126,7 +134,8 @@ function useTextures(urls: Map<string, string>): Map<string, Texture> {
     const loader = new TextureLoader();
     for (const [id, url] of urls) {
       if (url === 'missing') continue;
-      const t = loader.load(url);
+      // Rendered on demand (ADR-121): draw again once the picture has arrived.
+      const t = loader.load(url, () => invalidate());
       t.wrapS = t.wrapT = RepeatWrapping;
       t.colorSpace = SRGBColorSpace;
       t.anisotropy = 4;
@@ -272,6 +281,8 @@ export default function Viewer3D() {
     <>
       <Canvas
         camera={{ fov: 32, near: 0.01, far: 100 }}
+        // Draw only when something changes (ADR-121): orbiting, a change in the scene, a drag. Idle = no frames.
+        frameloop="demand"
         dpr={[1, 2]}
         shadows={realistic}
         onPointerMissed={() => {
@@ -560,6 +571,7 @@ function RoomLight() {
     const env = pmrem.fromScene(room, 0.04).texture;
     scene.environment = env;
     scene.environmentIntensity = 0.35;
+    invalidate();
     room.dispose();
     pmrem.dispose();
     return () => {
@@ -586,6 +598,7 @@ function KeyLight({ bounds }: { bounds: Box }) {
     l.target.position.set(cx, cy, cz);
     scene.add(l.target);
     l.shadow.camera.updateProjectionMatrix();
+    invalidate();
     return () => {
       scene.remove(l.target);
     };
@@ -864,8 +877,11 @@ function SectionClip({ axis, at }: { axis: SectionAxis; at: number }) {
     const renderer = get().gl;
     const n = new Vector3(axis === 'x' ? -1 : 0, axis === 'y' ? -1 : 0, axis === 'z' ? -1 : 0);
     renderer.clippingPlanes = [new Plane(n, at * S)];
+    // Drawn on demand (ADR-121): a cut set outside React's props needs a frame of its own.
+    invalidate();
     return () => {
       renderer.clippingPlanes = [];
+      invalidate();
     };
   }, [get, axis, at]);
   return null;
@@ -988,6 +1004,7 @@ function Fit({ bounds }: { bounds: Box }) {
     camera.lookAt(...target);
     controls.current?.target.set(...target);
     controls.current?.update();
+    invalidate();
     const onFit = () => {
       camera.position.set(
         target[0] + dist * 0.55,
@@ -996,6 +1013,7 @@ function Fit({ bounds }: { bounds: Box }) {
       );
       controls.current?.target.set(...target);
       controls.current?.update();
+      invalidate();
     };
     window.addEventListener('fb:fit', onFit);
     return () => window.removeEventListener('fb:fit', onFit);
@@ -1090,149 +1108,172 @@ function Panels({
       {moving && <MoveGhost panels={view.model.panels} showFronts={showFronts} />}
       {panels
         .filter((p) => showFronts || !FRONT.has(p.role))
-        .map((p) => {
-          const b = p.box;
-          // The whole piece selected (ADR-083) tints every panel.
-          const selected =
-            !plain &&
-            (view.mode === 'project'
-              ? !!selectedId && p.nodeId.startsWith(`${selectedId}:`)
-              : selectedId === null || p.nodeId === selectedId);
-          const lit = !plain && hl.has(p.id);
-          const faded = isFaded(p);
-          // With the outline, only the selected space's own panels are marked (green edges), and no tint.
-          const tinted = selected && !outline;
-          const own = !!outline && p.nodeId === ownId;
-          // A picture replaces the plain colour; without a readable one the plain colour stays (ADR-048).
-          const img = images.get(p.materialId);
-          const map = img ? textures.get(img.id) : undefined;
-          const base = map ? '#ffffff' : (colors.get(p.materialId) ?? '#cccccc');
-          const color = lit
-            ? HIGHLIGHT
-            : tinted
-              ? new Color(base).lerp(new Color(SELECT), 0.45).getStyle()
-              : base;
-          const side = p.shape?.kind === 'profile' ? DoubleSide : FrontSide;
-          const look = realistic ? (
-            <>
-              {/* Realistic (ADR-067): the finish sets how matte or glossy a board is; backs stay opaque. Panel edges are
+        .map((p) =>
+          yawed(
+            p,
+            (() => {
+              const b = p.box;
+              // The whole piece selected (ADR-083) tints every panel.
+              const selected =
+                !plain &&
+                (view.mode === 'project'
+                  ? !!selectedId && p.nodeId.startsWith(`${selectedId}:`)
+                  : selectedId === null || p.nodeId === selectedId);
+              const lit = !plain && hl.has(p.id);
+              const faded = isFaded(p);
+              // With the outline, only the selected space's own panels are marked (green edges), and no tint.
+              const tinted = selected && !outline;
+              const own = !!outline && p.nodeId === ownId;
+              // A picture replaces the plain colour; without a readable one the plain colour stays (ADR-048).
+              const img = images.get(p.materialId);
+              const map = img ? textures.get(img.id) : undefined;
+              const base = map ? '#ffffff' : (colors.get(p.materialId) ?? '#cccccc');
+              const color = lit
+                ? HIGHLIGHT
+                : tinted
+                  ? new Color(base).lerp(new Color(SELECT), 0.45).getStyle()
+                  : base;
+              const side = p.shape?.kind === 'profile' ? DoubleSide : FrontSide;
+              const look = realistic ? (
+                <>
+                  {/* Realistic (ADR-067): the finish sets how matte or glossy a board is; backs stay opaque. Panel edges are
                   not drawn (drei's edge outline is a mesh the occlusion pass would smear); the selection outline is. */}
-              <meshPhysicalMaterial
-                key={`${map ? map.uuid : 'plain'}${faded ? ':faded' : ''}`}
-                map={map ?? null}
-                color={color}
-                metalness={0}
-                {...finishLook(finishes.get(p.materialId))}
-                transparent={faded}
-                opacity={faded ? FADED : 1}
-                depthWrite={!faded}
-                side={side}
-              />
-            </>
-          ) : (
-            <>
-              <meshStandardMaterial
-                key={`${map ? map.uuid : 'plain'}${faded ? ':faded' : ''}`}
-                map={map ?? null}
-                color={color}
-                roughness={0.78}
-                metalness={0}
-                transparent={p.role === 'back' || faded}
-                opacity={faded ? FADED : p.role === 'back' ? 0.92 : 1}
-                depthWrite={!faded}
-                side={side}
-              />
-              <Edges
-                threshold={15}
-                color={tinted || own ? SELECT : '#3b403c'}
-                lineWidth={tinted || own ? 1.6 : 1}
-                transparent={faded}
-                opacity={faded ? FADED : 1}
-              />
-            </>
-          );
-          // Outside in, one level per tap at the hit point (ADR-083).
-          const onClick = (e: ThreeEvent<MouseEvent>) => {
-            e.stopPropagation();
-            // The click ending a 3D move (or the press that selected the piece) does nothing more (ADR-093).
-            if (drag.clicked()) return;
-            const at = hitToMm(e.point, built.get(p.id), exploded);
-            if (view.mode === 'project') tapItem(p.nodeId.split(':')[0], at);
-            else tapPiece(at.x, at.y);
-          };
-          const onDown = (e: ThreeEvent<PointerEvent>) => drag.press(e, p.nodeId.split(':')[0]);
-          const geometry =
-            map && img ? (
-              <PictureGeometry p={p} img={img} />
-            ) : (
-              <boxGeometry args={[b.w * S, b.h * S, b.d * S]} />
-            );
-          if (p.shape?.kind === 'profile') {
-            return map && img ? (
-              <mesh
-                key={p.id}
-                onClick={onClick}
-                onPointerDown={onDown}
-                castShadow={realistic}
-                receiveShadow={realistic}
-              >
-                <PictureGeometry p={p} img={img} />
-                {look}
-              </mesh>
-            ) : (
-              <mesh
-                key={p.id}
-                geometry={profileGeometry(p)}
-                onClick={onClick}
-                onPointerDown={onDown}
-                castShadow={realistic}
-                receiveShadow={realistic}
-              >
-                {look}
-              </mesh>
-            );
-          }
-          const mesh = (
-            <mesh
-              key={p.id}
-              position={[(b.x + b.w / 2) * S, (b.y + b.h / 2) * S, (b.z + b.d / 2) * S]}
-              onClick={onClick}
-              onPointerDown={onDown}
-              castShadow={realistic}
-              receiveShadow={realistic}
-            >
-              {geometry}
-              {look}
-            </mesh>
-          );
-          if (p.shape?.kind !== 'tilt') return mesh;
-          // Tilted part (ADR-040): the blank turned about its pivot, right-hand rule, as in the model.
-          const s = p.shape,
-            pv = [b.x + s.pivot[0], b.y + s.pivot[1], b.z + s.pivot[2]],
-            a = (s.angleDeg * Math.PI) / 180;
-          return (
-            <group
-              key={p.id}
-              position={[pv[0] * S, pv[1] * S, pv[2] * S]}
-              rotation={[s.axis === 'x' ? a : 0, s.axis === 'y' ? a : 0, s.axis === 'z' ? a : 0]}
-            >
-              <mesh
-                position={[
-                  (b.x + b.w / 2 - pv[0]) * S,
-                  (b.y + b.h / 2 - pv[1]) * S,
-                  (b.z + b.d / 2 - pv[2]) * S,
-                ]}
-                onClick={onClick}
-                onPointerDown={onDown}
-                castShadow={realistic}
-                receiveShadow={realistic}
-              >
-                {geometry}
-                {look}
-              </mesh>
-            </group>
-          );
-        })}
+                  <meshPhysicalMaterial
+                    key={`${map ? map.uuid : 'plain'}${faded ? ':faded' : ''}`}
+                    map={map ?? null}
+                    color={color}
+                    metalness={0}
+                    {...finishLook(finishes.get(p.materialId))}
+                    transparent={faded}
+                    opacity={faded ? FADED : 1}
+                    depthWrite={!faded}
+                    side={side}
+                  />
+                </>
+              ) : (
+                <>
+                  <meshStandardMaterial
+                    key={`${map ? map.uuid : 'plain'}${faded ? ':faded' : ''}`}
+                    map={map ?? null}
+                    color={color}
+                    roughness={0.78}
+                    metalness={0}
+                    transparent={p.role === 'back' || faded}
+                    opacity={faded ? FADED : p.role === 'back' ? 0.92 : 1}
+                    depthWrite={!faded}
+                    side={side}
+                  />
+                  <Edges
+                    threshold={15}
+                    color={tinted || own ? SELECT : '#3b403c'}
+                    lineWidth={tinted || own ? 1.6 : 1}
+                    transparent={faded}
+                    opacity={faded ? FADED : 1}
+                  />
+                </>
+              );
+              // Outside in, one level per tap at the hit point (ADR-083).
+              const onClick = (e: ThreeEvent<MouseEvent>) => {
+                e.stopPropagation();
+                // The click ending a 3D move (or the press that selected the piece) does nothing more (ADR-093).
+                if (drag.clicked()) return;
+                const at = hitToMm(e.point, built.get(p.id), exploded);
+                if (view.mode === 'project') tapItem(p.nodeId.split(':')[0], at);
+                else tapPiece(at.x, at.y);
+              };
+              const onDown = (e: ThreeEvent<PointerEvent>) => drag.press(e, p.nodeId.split(':')[0]);
+              const geometry =
+                map && img ? (
+                  <PictureGeometry p={p} img={img} />
+                ) : (
+                  <boxGeometry args={[b.w * S, b.h * S, b.d * S]} />
+                );
+              if (p.shape?.kind === 'profile') {
+                return map && img ? (
+                  <mesh
+                    key={p.id}
+                    onClick={onClick}
+                    onPointerDown={onDown}
+                    castShadow={realistic}
+                    receiveShadow={realistic}
+                  >
+                    <PictureGeometry p={p} img={img} />
+                    {look}
+                  </mesh>
+                ) : (
+                  <mesh
+                    key={p.id}
+                    geometry={profileGeometry(p)}
+                    onClick={onClick}
+                    onPointerDown={onDown}
+                    castShadow={realistic}
+                    receiveShadow={realistic}
+                  >
+                    {look}
+                  </mesh>
+                );
+              }
+              const mesh = (
+                <mesh
+                  key={p.id}
+                  position={[(b.x + b.w / 2) * S, (b.y + b.h / 2) * S, (b.z + b.d / 2) * S]}
+                  onClick={onClick}
+                  onPointerDown={onDown}
+                  castShadow={realistic}
+                  receiveShadow={realistic}
+                >
+                  {geometry}
+                  {look}
+                </mesh>
+              );
+              if (p.shape?.kind !== 'tilt') return mesh;
+              // Tilted part (ADR-040): the blank turned about its pivot, right-hand rule, as in the model.
+              const s = p.shape,
+                pv = [b.x + s.pivot[0], b.y + s.pivot[1], b.z + s.pivot[2]],
+                a = (s.angleDeg * Math.PI) / 180;
+              return (
+                <group
+                  key={p.id}
+                  position={[pv[0] * S, pv[1] * S, pv[2] * S]}
+                  rotation={[
+                    s.axis === 'x' ? a : 0,
+                    s.axis === 'y' ? a : 0,
+                    s.axis === 'z' ? a : 0,
+                  ]}
+                >
+                  <mesh
+                    position={[
+                      (b.x + b.w / 2 - pv[0]) * S,
+                      (b.y + b.h / 2 - pv[1]) * S,
+                      (b.z + b.d / 2 - pv[2]) * S,
+                    ]}
+                    onClick={onClick}
+                    onPointerDown={onDown}
+                    castShadow={realistic}
+                    receiveShadow={realistic}
+                  >
+                    {geometry}
+                    {look}
+                  </mesh>
+                </group>
+              );
+            })(),
+          ),
+        )}
+    </group>
+  );
+}
+
+/**
+ * A part of a piece at an angle (ADR-121): drawn inside a group turned about the piece's vertical line. Three.js turns
+ * (x, z) about y the same way the core's yaw does, so the angle is used as it is.
+ */
+function yawed(p: Panel, el: ReactElement): ReactElement {
+  const y = p.box.yaw;
+  if (!y) return el;
+  return (
+    <group key={p.id} position={[y.cx * S, 0, y.cz * S]} rotation={[0, (y.deg * Math.PI) / 180, 0]}>
+      <group position={[-y.cx * S, 0, -y.cz * S]}>{el}</group>
     </group>
   );
 }

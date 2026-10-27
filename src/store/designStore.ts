@@ -8,7 +8,7 @@ import {
   upgradeDesign,
   validateDesign,
 } from '../core/design';
-import { duplicateItem, mirrorItem, mirrorRun, tryTurn } from '../core/arrange';
+import { duplicateItem, mirrorItem, mirrorRun, setItemRotation, tryTurn } from '../core/arrange';
 import { floorDrop, type FloorPoint } from '../core/drag3d';
 import { applyFinish, type FinishRole, type FinishScope } from '../core/finish';
 import { mergeItems } from '../core/merge';
@@ -22,6 +22,7 @@ import {
   duplicateItems,
   groupItems,
   groupOf,
+  mirrorItems,
   moveItems,
   sameIds,
   turnSelection,
@@ -261,6 +262,11 @@ interface State {
   followProject: (id: string, key: SettingKey) => void;
   /** Returns why it did not turn (a locked piece, ADR-095), or null. */
   turnItem: (id: string, dir: 1 | -1) => string | null;
+  /**
+   * Turn a piece to whole degrees 0–359 about its centre (ADR-121); one undo step. Returns why not (a locked piece,
+   * a number outside 0–359), or null. Nothing is clamped (ADR-008).
+   */
+  setRotation: (id: string, deg: number) => string | null;
   /** Returns why nothing changed ("Nothing to mirror in this piece", a locked piece), or null. */
   mirrorItem: (id: string) => string | null;
   /**
@@ -282,6 +288,11 @@ interface State {
   moveSelectionBy: (dx: number, dz: number, step?: number) => string | null;
   /** Turn the selection a quarter turn about its centre (ADR-097); returns why not, or null. One undo step. */
   turnSelectionBy: (dir: 1 | -1) => string | null;
+  /**
+   * Mirror the selected pieces left–right about the selection's centre (ADR-121); one undo step. Returns what to tell
+   * the user: why nothing moved (a lock), the pieces with nothing to mirror, or ''.
+   */
+  mirrorSelection: () => string;
   /** Remove every selected piece (one undo step). */
   deleteSelection: () => void;
   /** Copy the selection as a block to its right; the copies become the selection. One undo step. */
@@ -823,6 +834,17 @@ export const useDesign = create<State>((rawSet, get) => {
       if (res.project !== p) commitProject(res.project);
       return null;
     },
+    setRotation: (id, deg) => {
+      const p = get().project;
+      if (!p) return null;
+      const res = setItemRotation(p, id, deg);
+      if (res.reason) {
+        set({ notice: res.reason });
+        return res.reason;
+      }
+      if (res.project !== p) commitProject(res.project);
+      return null;
+    },
     mirrorItem: (id) => {
       const p = get().project;
       if (!p) return null;
@@ -887,6 +909,17 @@ export const useDesign = create<State>((rawSet, get) => {
       }
       if (res.project !== p) commitProject(res.project);
       return null;
+    },
+    mirrorSelection: () => {
+      const p = get().project;
+      if (!p) return '';
+      const res = mirrorItems(p, get().selectedItemIds);
+      if (res.refused) {
+        set({ notice: res.refused });
+        return res.refused;
+      }
+      if (res.project !== p) commitProject(res.project);
+      return res.reasons.length ? `Moved without mirroring: ${res.reasons.join('; ')}` : '';
     },
     deleteSelection: () => {
       const p = get().project;

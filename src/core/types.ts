@@ -20,6 +20,19 @@ export interface Box {
   w: Mm;
   h: Mm;
   d: Mm;
+  /**
+   * A project piece typed at an angle (ADR-121): the box is turned `deg` whole degrees about the vertical line
+   * through (cx, cz), the same way as a quarter turn (90 turns +z towards +x). Only placed panels, clearances and
+   * envelopes of an angled piece carry it; a piece's own model never does. Absent = axis-aligned.
+   */
+  yaw?: Yaw;
+}
+
+/** A turn about a vertical line (ADR-121): whole degrees 1–89, the line at room (cx, cz) in mm (may be .5). */
+export interface Yaw {
+  deg: number;
+  cx: number;
+  cz: number;
 }
 
 export interface Material {

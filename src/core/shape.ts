@@ -3,7 +3,7 @@
  * millimetres that the cut list, nesting and integer checks use. `shape` only says how the blank is placed (tilt) or
  * cut (profile). Floating point appears here only, for drawing and the oriented overlap test; never in sizes.
  */
-import { box, inPlaneAxes, overlaps } from './geometry';
+import { box, enclosing, inPlaneAxes, overlaps } from './geometry';
 import type { Axis, Box, Panel, PanelShape } from './types';
 
 export type V3 = [number, number, number];
@@ -77,6 +77,21 @@ export interface Solid {
 
 /** The convex solid a panel occupies: its blank, tilted when tilted, or the convex hull of its profile, extruded. */
 export function solidOf(p: Panel): Solid {
+  const flat = flatSolidOf(p),
+    y = p.box.yaw;
+  if (!y) return flat;
+  // A piece typed at an angle (ADR-121): the whole solid turned about the piece's vertical line.
+  const pivot: V3 = [y.cx, 0, y.cz],
+    turn = (v: V3) => rotateAbout(v, 'y', y.deg, pivot),
+    dir = (v: V3) => rotateAbout(v, 'y', y.deg, [0, 0, 0]);
+  return {
+    vertices: flat.vertices.map(turn),
+    normals: flat.normals.map(dir),
+    edges: flat.edges.map(dir),
+  };
+}
+
+function flatSolidOf(p: Panel): Solid {
   const b = p.box,
     s = p.shape;
   if (s?.kind === 'profile') {
@@ -106,7 +121,7 @@ export function solidOf(p: Panel): Solid {
 
 /** Whole-mm box around everything a panel occupies (the blank itself for plain panels). */
 export function aabbOf(p: Panel): Box {
-  if (!p.shape) return p.box;
+  if (!p.shape) return enclosing(p.box);
   const v = solidOf(p).vertices;
   const lo = [0, 1, 2].map((i) => Math.floor(Math.min(...v.map((q) => q[i])) + 1e-6));
   const hi = [0, 1, 2].map((i) => Math.ceil(Math.max(...v.map((q) => q[i])) - 1e-6));
@@ -144,8 +159,9 @@ export function panelsOverlap(a: Panel, b: Panel): boolean {
 
 /** Does a panel occupy any of an axis-aligned box (a run part, a filler)? */
 export function overlapsBox(p: Panel, b: Box): boolean {
+  if (!p.shape) return overlaps(p.box, b);
   if (!overlaps(aabbOf(p), b)) return false;
-  return !p.shape || solidsOverlap(solidOf(p), solidOf({ ...p, box: b, shape: undefined }));
+  return solidsOverlap(solidOf(p), solidOf({ ...p, box: b, shape: undefined }));
 }
 
 /** Problems with a panel's shape (ADR-008: reported, never thrown). */
@@ -242,14 +258,15 @@ export function turnShape(s: PanelShape, from: Box, to: Box, t: Axis, tTo: Axis,
  */
 export function frontOutline(p: Panel): [number, number][] {
   const b = p.box;
-  if (!p.shape)
+  // A part of a piece at an angle (ADR-121) shows its turned solid's silhouette.
+  if (!p.shape && !b.yaw)
     return [
       [b.x, b.y],
       [b.x + b.w, b.y],
       [b.x + b.w, b.y + b.h],
       [b.x, b.y + b.h],
     ];
-  if (p.shape.kind === 'profile' && p.thicknessAxis === 'z')
+  if (p.shape?.kind === 'profile' && p.thicknessAxis === 'z' && !b.yaw)
     return p.shape.points.map(([u, v]) => [b.x + u, b.y + v]);
   return hull2(
     solidOf(p).vertices.map(

@@ -8,15 +8,17 @@ import { overlaps } from './geometry';
 import {
   carriedBy,
   LOCKED_HINT,
+  mirroredRotation,
   moveBlocked,
   pieceName,
   placedBounds,
+  placedOutline,
   quarterTurn,
   resolvePlacements,
+  splitRotation,
   type MoveResult,
   type Project,
   type ProjectItem,
-  type QuarterTurn,
 } from './project';
 import { placedBox } from './panelset';
 import type { Box, Design, Product, Space } from './types';
@@ -144,6 +146,10 @@ export function mirrorDesign(d: Design): MirrorResult {
 const boundsOf = (project: Project) =>
   new Map(resolvePlacements(project).items.map((i) => [i.id, placedBounds(i)]));
 
+/** Each piece as one box before any extra angle (ADR-121): same centre as its bounds, its own width and depth. */
+const outlinesOf = (project: Project) =>
+  new Map(resolvePlacements(project).items.map((i) => [i.id, placedOutline(i)]));
+
 /** Move an item by `dx` / `dz`: its stored position, and its offset when it sits on another piece. */
 function shifted(it: ProjectItem, dx: number, dz: number): ProjectItem {
   const position = { ...it.position, x: it.position.x + dx, z: it.position.z + dz };
@@ -206,11 +212,44 @@ export function tryTurn(project: Project, id: string, dir: 1 | -1 = 1): MoveResu
   if (!it) return { project };
   const reason = moveBlocked(project, [id]);
   if (reason) return { project, reason };
-  const b = boundsOf(project).get(id)!;
+  // The quarter-turned outline, not the box around an angled piece (ADR-121): the extra angle turns with it.
+  const b = outlinesOf(project).get(id)!;
   const rotationY = quarterTurn(it.rotationY, dir);
   const half = (n: number) => (rotationY % 180 === 0 ? Math.ceil(n / 2) : Math.floor(n / 2));
   const turned = { ...shifted(it, half(b.w - b.d), half(b.d - b.w)), rotationY };
   return { project: { ...project, items: project.items.map((i) => (i.id === id ? turned : i)) } };
+}
+
+/**
+ * Turn a piece to whole degrees `deg` (0–359) about the centre of its footprint (ADR-121): the quarter part turns as
+ * `tryTurn` does (the same whole-mm rounding), the rest is the piece's extra angle about that centre. Outside 0–359 or
+ * not whole is refused with the reason, never clamped (ADR-008); so is a locked piece (ADR-095).
+ */
+export function setItemRotation(project: Project, id: string, deg: number): MoveResult {
+  const it = project.items.find((i) => i.id === id);
+  if (!it) return { project };
+  const split = splitRotation(deg);
+  if (!split) return { project, reason: 'Rotation must be whole degrees from 0 to 359.' };
+  if (split.rotationY === it.rotationY && (split.angle ?? 0) === (it.angle ?? 0))
+    return { project };
+  const reason = moveBlocked(project, [id]);
+  if (reason) return { project, reason };
+  let next = project;
+  // Quarter turns first, the short way round, each keeping the centre.
+  const steps = ((split.rotationY - it.rotationY) / 90 + 4) % 4;
+  for (let i = 0; i < (steps === 3 ? 1 : steps); i++)
+    next = tryTurn(next, id, steps === 3 ? -1 : 1).project;
+  return {
+    project: {
+      ...next,
+      items: next.items.map((i) => {
+        if (i.id !== id) return i;
+        const { angle: _angle, ...flat } = i;
+        void _angle;
+        return split.angle ? { ...flat, angle: split.angle } : flat;
+      }),
+    },
+  };
 }
 
 /**
@@ -267,9 +306,6 @@ export function touchingRun(project: Project, id: string, placed?: Map<string, B
   return [...run].sort((a, b) => bounds.get(a)!.x - bounds.get(b)!.x);
 }
 
-/** A piece turned 90° or 270° also turns 180° when mirrored along x, so its front faces the mirrored way. */
-const mirroredTurn = (r: QuarterTurn) => (r % 180 === 0 ? r : (((r + 180) % 360) as QuarterTurn));
-
 /**
  * Mirror the run `id` is in (ADR-069): every piece's position reflects about the run's centre and each piece is
  * mirrored. Pieces resting on a run piece (and on those, at any depth) are mirrored too and keep their place over
@@ -279,23 +315,43 @@ export function mirrorRun(
   project: Project,
   id: string,
 ): { project: Project; reasons: string[]; refused?: string } {
-  const bounds = boundsOf(project);
-  const run = touchingRun(project, id, bounds);
+  const run = touchingRun(project, id);
   if (!run.length) return { project, reasons: [] };
-  const inRun = new Set(run);
-  // Pieces resting on a run piece, at any depth (ADR-031), are mirrored with it.
-  const stacked = new Set(carriedBy(project, run).map((i) => i.id));
-  // Every piece of the run and on it moves and is mirrored: refused when one is locked (ADR-095).
-  const refused = moveBlocked(project, [...run, ...stacked]);
-  if (refused) return { project, reasons: [], refused: `Mirror the run refused: ${refused}` };
-  const x0 = Math.min(...run.map((r) => bounds.get(r)!.x)),
-    x1 = Math.max(...run.map((r) => bounds.get(r)!.x + bounds.get(r)!.w));
+  const r = mirrorSet(project, run);
+  return r.refused ? { ...r, refused: `Mirror the run refused: ${r.refused}` } : r;
+}
+
+/**
+ * Mirror several pieces together (ADR-069, ADR-121): positions reflect left–right about the centre of the space they
+ * take, each piece's design is mirrored, and a piece's turn becomes −θ so its front faces the mirrored way. Pieces
+ * resting on them follow, reflected over their base. Refused, naming the piece, when one is locked (ADR-095).
+ */
+export function mirrorSet(
+  project: Project,
+  ids: readonly string[],
+): { project: Project; reasons: string[]; refused?: string } {
+  const bounds = boundsOf(project),
+    outlines = outlinesOf(project);
+  const set = ids.filter((i) => bounds.has(i));
+  if (!set.length) return { project, reasons: [] };
+  const inSet = new Set(set);
+  // Pieces resting on a mirrored piece, at any depth (ADR-031), are mirrored with it.
+  const stacked = new Set(
+    carriedBy(project, set)
+      .map((i) => i.id)
+      .filter((i) => !inSet.has(i)),
+  );
+  // Every piece of the set and on it moves and is mirrored: refused when one is locked (ADR-095).
+  const refused = moveBlocked(project, [...set, ...stacked]);
+  if (refused) return { project, reasons: [], refused };
+  const x0 = Math.min(...set.map((r) => bounds.get(r)!.x)),
+    x1 = Math.max(...set.map((r) => bounds.get(r)!.x + bounds.get(r)!.w));
   const reasons: string[] = [];
   const items = project.items.map((it): ProjectItem => {
-    if (!inRun.has(it.id) && !stacked.has(it.id)) return it;
+    if (!inSet.has(it.id) && !stacked.has(it.id)) return it;
     const m = mirrorDesign(it.design);
     if (!m.ok) reasons.push(`${it.design.name}: ${m.reason}`);
-    const own = bounds.get(it.id)!;
+    const own = outlines.get(it.id)!;
     const pl = it.placement;
     const moved =
       stacked.has(it.id) && pl?.kind === 'above'
@@ -303,11 +359,21 @@ export function mirrorRun(
             ...it,
             placement: {
               ...pl,
-              offsetX: bounds.get(pl.baseId)!.w - (pl.offsetX + own.w),
+              offsetX: outlines.get(pl.baseId)!.w - (pl.offsetX + own.w),
             },
           }
         : shifted(it, x0 + x1 - (own.x + own.w) - own.x, 0);
-    return { ...moved, design: m.design, rotationY: mirroredTurn(it.rotationY) };
+    const turn = mirroredRotation(it);
+    // −θ of an angled piece can need the other quarter (−20° is 270° + 70°): its outline swaps width and depth, so
+    // keep its centre as `tryTurn` does, with the same rounding (mirroring twice gives the same place back).
+    const half = (n: number) => (turn.rotationY % 180 === 0 ? Math.ceil(n / 2) : Math.floor(n / 2));
+    const recentred =
+      (turn.rotationY - it.rotationY) % 180 !== 0 && pl?.kind !== 'above'
+        ? shifted(moved, half(own.w - own.d), half(own.d - own.w))
+        : moved;
+    const { angle: _angle, ...flat } = recentred;
+    void _angle;
+    return { ...flat, design: m.design, ...turn };
   });
   return { project: { ...project, items }, reasons };
 }

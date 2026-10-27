@@ -5,6 +5,7 @@
  * warning. Pipes and outlets (ADR-072) are zones on a wall: a back, plinth or worktop over one, or an outlet hidden
  * behind a piece, is a warning. Optional on a project: absent = no room checks, as before.
  */
+import { footprintOf } from './geometry';
 import type { Box, Diagnostic, Mm } from './types';
 
 export type Pt = [Mm, Mm];
@@ -151,6 +152,31 @@ export function rectInside(outline: Pt[], x0: number, z0: number, x1: number, z1
     if (ax === bx) {
       if (ax > x0 && ax < x1 && Math.max(az, bz) > z0 && Math.min(az, bz) < z1) return false;
     } else if (az > z0 && az < z1 && Math.max(ax, bx) > x0 && Math.min(ax, bx) < x1) return false;
+  }
+  return true;
+}
+
+/**
+ * A box's floor outline lies inside the room (ADR-121): a turned box by its four corners, and no corner of the walls
+ * strictly inside it (walls are straight along x or z, so that is the only way one can pass through it).
+ */
+export function boxInside(outline: Pt[], b: Box): boolean {
+  if (!b.yaw) return rectInside(outline, b.x, b.z, b.x + b.w, b.z + b.d);
+  const pts = footprintOf(b);
+  if (!pts.every(([x, z]) => inside(outline, x, z))) return false;
+  return !outline.some(([x, z]) => strictlyInConvex(pts, x, z));
+}
+
+function strictlyInConvex(poly: [number, number][], x: number, z: number): boolean {
+  let sign = 0;
+  for (let i = 0; i < poly.length; i++) {
+    const [ax, az] = poly[i],
+      [bx, bz] = poly[(i + 1) % poly.length];
+    const c = (bx - ax) * (z - az) - (bz - az) * (x - ax);
+    if (Math.abs(c) < 1e-6) return false;
+    const s = Math.sign(c);
+    if (sign && s !== sign) return false;
+    sign = s;
   }
   return true;
 }
@@ -302,6 +328,8 @@ export function roomChecks(
     id: string;
     name: string;
     bounds: Box;
+    /** The piece as one box, turned when typed at an angle (ADR-121); absent = `bounds`. */
+    outline?: Box;
     hitsPanels: (b: Box) => boolean;
     /** The back, plinth or worktop panel (its role) that enters a box, or null (ADR-072). */
     covers?: (b: Box) => string | null;
@@ -354,7 +382,7 @@ export function roomChecks(
   const clearanceIssues: Diagnostic[] = [];
   for (const pc of pieces) {
     const b = pc.bounds;
-    if (!rectInside(room.outline, b.x, b.z, b.x + b.w, b.z + b.d)) {
+    if (!boxInside(room.outline, pc.outline ?? b)) {
       // ADR-071: how far it has to move to stand inside (the shortest move along the floor), when it fits at all.
       const way = movesInside(room.outline, b)[0];
       const amount = way ? Math.abs(way.dx) + Math.abs(way.dz) : undefined;
@@ -409,7 +437,7 @@ export function roomChecks(
     // Opening clearances that reach through a wall (ADR-057).
     for (const c of pc.clearances) {
       const cb = c.box;
-      if (!rectInside(room.outline, cb.x, cb.z, cb.x + cb.w, cb.z + cb.d))
+      if (!boxInside(room.outline, cb))
         clearanceIssues.push({
           severity: 'warning',
           code: 'opening-blocked',

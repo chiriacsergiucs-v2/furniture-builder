@@ -7,6 +7,7 @@ import { withPictures } from '../../persist/images';
 import { withModels } from '../../persist/models';
 import { useDesign } from '../../store/designStore';
 import { askConfirm } from '../Confirm';
+import { ReviewPackDialog } from '../ReviewPack';
 import { Icon } from '../icons';
 import { CopyCodeDialog } from '../ShareCode';
 import { download, downloadFrontSvg, fileName } from './files';
@@ -35,6 +36,7 @@ export function MoreMenu({
   const editingItemId = useDesign((s) => s.editingItemId);
   const inProject = !!project && !editingItemId;
   const setNotice = useUi((s) => s.setNotice);
+  const [pack, setPack] = useState(false);
   const close = () => ref.current?.removeAttribute('open');
   const [codeOpen, setCodeOpen] = useState(false);
 
@@ -128,7 +130,15 @@ export function MoreMenu({
                 <Icon name="download" />
                 Project file <small>to open on another device</small>
               </button>
-            ) : (
+            ) : null}
+            {/* The review pack (ADR-121): summary, parts, drawings and the project file in one .zip. */}
+            {inProject && (
+              <button type="button" onClick={run(() => setPack(true))}>
+                <Icon name="upload" />
+                Hand to a professional… <small>one .zip to check the plan</small>
+              </button>
+            )}
+            {inProject ? null : (
               <>
                 <button
                   type="button"
@@ -208,6 +218,8 @@ export function MoreMenu({
         </div>
       </details>
       {/* Out of the app bar, whose styles are for its own buttons. */}
+      {pack &&
+        createPortal(<ReviewPackDialog open onClose={() => setPack(false)} />, document.body)}
       {codeOpen &&
         createPortal(<CopyCodeDialog onClose={() => setCodeOpen(false)} />, document.body)}
     </>
