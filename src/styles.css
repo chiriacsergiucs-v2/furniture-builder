@@ -1124,7 +1124,7 @@ td.note {
 .dialog::backdrop {
   background: var(--backdrop);
 }
-.dialog header {
+.dialog > header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1132,7 +1132,7 @@ td.note {
   padding: var(--s-4) var(--s-5);
   border-bottom: 1px solid var(--line-2);
 }
-.dialog header h2 {
+.dialog > header h2 {
   font-size: var(--fs-xl);
 }
 .dialog .close {
@@ -1141,6 +1141,8 @@ td.note {
 .dialog-body {
   padding: var(--s-4) var(--s-5) var(--s-5);
   display: grid;
+  /* Rows keep their content height in this height-limited, scrolling grid (ADR-113). */
+  grid-auto-rows: max-content;
   gap: var(--s-4);
   overflow: auto;
   min-height: 0;
@@ -2387,7 +2389,7 @@ table.buy {
     width: calc(100vw - 16px);
     max-height: calc(100dvh - 16px);
   }
-  .dialog header,
+  .dialog > header,
   .dialog-body,
   .dialog-footer {
     padding-left: var(--s-4);
@@ -2729,6 +2731,7 @@ table.buy {
 }
 .run-parts {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--s-2);
 }
 .run-list {
@@ -2836,6 +2839,12 @@ table.buy {
   top: 0;
   /* Sticky over the page, so it takes the page's colour, not a white band. */
   background: var(--bg);
+}
+/* On a phone the app bar is sticky too: the filter row sits under it, never behind it (ADR-113). */
+@media (max-width: 760px) {
+  .catalog-page .catalog-toolbar {
+    top: var(--bar-h, 50px);
+  }
 }
 .catalog-actions {
   display: flex;
@@ -5287,7 +5296,12 @@ button.tile:hover {
   .bar input.name,
   .brand,
   .modes .segmented button,
-  .crumbs button {
+  .crumbs button,
+  .dialog.confirm input,
+  .steps button,
+  .wizard .field > input,
+  .template-editor .field > input,
+  .variant-edit input {
     min-height: 44px;
   }
   .segmented button {
