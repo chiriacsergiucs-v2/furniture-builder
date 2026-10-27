@@ -117,6 +117,10 @@ export function ProjectPanel({
   const setGap = useDesign((s) => s.setGap);
   const setLocked = useDesign((s) => s.setLocked);
   const resizeItem = useDesign((s) => s.resizeItem);
+  // A space, shelf or side inside the drilled piece is selected: its size is not the piece's (ADR-106).
+  const insideSelected = useDesign(
+    (s) => s.drillItemId !== null && typeof s.selectedId === 'string',
+  );
   const [gapMsg, setGapMsg] = useState<{ id: string | null; text: string | null }>({
     id: null,
     text: null,
@@ -201,11 +205,14 @@ export function ProjectPanel({
             )}
           </h3>
           <TemplateNotice item={item} />
-          <PieceSize
-            key={item.id}
-            product={item.design.product}
-            onChange={(k, v) => resizeItem(item.id, k, v)}
-          />
+          {!(drillId === item.id && insideSelected) && (
+            <PieceSize
+              // Not the bare item id: ArrangeFields below already uses it in this list (duplicate keys left stale rows).
+              key={`size-${item.id}`}
+              product={item.design.product}
+              onChange={(k, v) => resizeItem(item.id, k, v)}
+            />
+          )}
           <div className="split-actions">
             <button type="button" className="btn solid" onClick={() => edit(item.id)}>
               <Icon name="pencil" className="sm" />
