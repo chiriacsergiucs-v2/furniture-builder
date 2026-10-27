@@ -9,7 +9,7 @@
 
 ## Context
 
-Same request as [ADR-103](ADR-103-fill-a-wall-width-with-a-suggested-mix-of-pieces-reverse-bui.md) (user,
+Same request as [ADR-103](../adr-done/ADR-103-fill-a-wall-width-with-a-suggested-mix-of-pieces-reverse-bui.md) (user,
 2026-10-27: "a reverse furniture building, total width, to the mix of furniture pieces that fill that space …
 So basically a mix and match"). Asked which piece kinds may appear, the user also chose **Wall cabinets above**.
 That doubles the ADR, so the user chose a second ADR built right after ADR-103.
