@@ -11,7 +11,8 @@ describe.each(WIDTHS)('history, templates and styles at %ipx (find-it, ADR-123)'
     const { user } = await renderApp(width);
     await user.click(await screen.findByRole('button', { name: 'Create a new project' }));
     const create = await screen.findByRole('dialog');
-    await user.type(within(create).getByRole('textbox'), 'History test');
+    // Named per width: saved templates can outlive one render in jsdom's IndexedDB.
+    await user.type(within(create).getByRole('textbox'), `History test ${width}`);
     await user.click(within(create).getByRole('button', { name: 'Create project' }));
 
     const panel = await screen.findByRole('complementary', { name: 'Compose' });
@@ -20,7 +21,9 @@ describe.each(WIDTHS)('history, templates and styles at %ipx (find-it, ADR-123)'
     await user.click(within(panel).getByRole('button', { name: 'Add a piece' }));
     let dlg = await screen.findByRole('dialog');
     await user.type(within(dlg).getByRole('searchbox', { name: 'Search the items' }), 'Base');
-    await user.click(within(dlg).getAllByRole('button', { name: /Base cabinet, doors: 1 door/ })[0]);
+    await user.click(
+      within(dlg).getAllByRole('button', { name: /Base cabinet, doors: 1 door/ })[0],
+    );
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     const placeRight = screen.queryByRole('button', { name: 'Place to the right' });
     if (placeRight) await user.click(placeRight);
@@ -33,7 +36,7 @@ describe.each(WIDTHS)('history, templates and styles at %ipx (find-it, ADR-123)'
     const fromLeft = within(card).getByLabelText('From left', { exact: true });
     await user.clear(fromLeft);
     await user.type(fromLeft, '300{Enter}');
-    const undo = screen.getByRole('button', { name: 'Undo', exact: true });
+    const undo = screen.getByRole('button', { name: 'Undo' });
     await waitFor(() => expect(undo.getAttribute('title')).toMatch(/^Undo Move /));
 
     // A style through finish scope.
@@ -54,7 +57,7 @@ describe.each(WIDTHS)('history, templates and styles at %ipx (find-it, ADR-123)'
     await user.click(within(panel).getByRole('button', { name: 'Save a version' }));
     const restore = await within(panel).findByRole('button', { name: 'Restore' });
     await user.click(restore);
-    const ask = await screen.findByRole('dialog');
+    const ask = await screen.findByRole('dialog', { name: 'Confirm' });
     await user.click(within(ask).getByRole('button', { name: 'Restore' }));
     await waitFor(() =>
       expect(within(panel).getAllByRole('button', { name: 'Restore' }).length).toBe(2),
@@ -64,7 +67,7 @@ describe.each(WIDTHS)('history, templates and styles at %ipx (find-it, ADR-123)'
     await user.click(screen.getByRole('button', { name: 'Settings' }));
     const settings = await screen.findByRole('dialog');
     await user.click(within(settings).getByRole('button', { name: 'Save as project template' }));
-    const name = await screen.findByRole('dialog', { name: /Name of the project template/ });
+    const name = await screen.findByRole('dialog', { name: 'Confirm' });
     await user.click(within(name).getByRole('button', { name: 'Save template' }));
     await within(settings).findByText(/Saved as project template/);
     await user.click(within(settings).getByRole('button', { name: 'Close' }));
@@ -73,7 +76,10 @@ describe.each(WIDTHS)('history, templates and styles at %ipx (find-it, ADR-123)'
     await user.click(within(panel).getByRole('button', { name: 'Add a piece' }));
     dlg = await screen.findByRole('dialog');
     expect(await within(dlg).findByRole('heading', { name: 'Project templates' })).toBeTruthy();
-    await user.click(within(dlg).getByRole('button', { name: /History test/ }));
+    const templates = within(dlg).getByRole('list', { name: 'Project templates' });
+    await user.click(
+      within(templates).getByRole('button', { name: new RegExp(`History test ${width}`) }),
+    );
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(await screen.findByText(/Tap the plan to place/)).toBeTruthy();
     expect(within(panel).getByRole('list', { name: 'Pieces' }).children).toHaveLength(2);

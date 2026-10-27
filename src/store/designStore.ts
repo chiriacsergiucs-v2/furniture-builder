@@ -427,10 +427,9 @@ export const useDesign = create<State>((rawSet, get) => {
       ...(prev && !amend
         ? {
             projectPast: [...get().projectPast, prev].slice(-HISTORY),
-            projectPastNames: [
-              ...get().projectPastNames,
-              name ?? describeChange(prev, next),
-            ].slice(-HISTORY),
+            projectPastNames: [...get().projectPastNames, name ?? describeChange(prev, next)].slice(
+              -HISTORY,
+            ),
             projectFuture: [],
             projectFutureNames: [],
           }
@@ -829,8 +828,7 @@ export const useDesign = create<State>((rawSet, get) => {
       const p = get().project;
       if (!p) return null;
       const res = groupItems(p, get().selectedItemIds);
-      if (res.groupId)
-        commitProject(res.project, `Group ${get().selectedItemIds.length} pieces`);
+      if (res.groupId) commitProject(res.project, `Group ${get().selectedItemIds.length} pieces`);
       return res.groupId;
     },
     ungroup: (groupId) => {
@@ -896,13 +894,10 @@ export const useDesign = create<State>((rawSet, get) => {
       const prev = projectPast[projectPast.length - 1];
       if (!project || !prev || editingItemId) return;
       const name = pn[pn.length - 1] ?? 'Change the project';
-      restoreProject(
-        prev,
-        projectPast.slice(0, -1),
-        [project, ...projectFuture],
-        pn.slice(0, -1),
-        [name, ...fn],
-      );
+      restoreProject(prev, projectPast.slice(0, -1), [project, ...projectFuture], pn.slice(0, -1), [
+        name,
+        ...fn,
+      ]);
     },
     redoProject: () => {
       const { project, projectPast, projectFuture, editingItemId } = get();

@@ -7,7 +7,8 @@ import type { Project, ProjectItem } from './project';
 
 const pieces = (n: number) => `${n} pieces`;
 /** "Base 600" for one piece, "3 pieces" for more. */
-const what = (list: ProjectItem[]) => (list.length === 1 ? list[0].design.name : pieces(list.length));
+const what = (list: ProjectItem[]) =>
+  list.length === 1 ? list[0].design.name : pieces(list.length);
 
 const samePos = (a: ProjectItem, b: ProjectItem) =>
   a.position.x === b.position.x && a.position.y === b.position.y && a.position.z === b.position.z;

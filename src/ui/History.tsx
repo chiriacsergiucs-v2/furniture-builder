@@ -93,7 +93,8 @@ export function ProjectHistory() {
                       ))
                     )
                       return;
-                    if (await restoreVersion(v)) setMsg(`Restored the version of ${when(v.savedAt)}.`);
+                    if (await restoreVersion(v))
+                      setMsg(`Restored the version of ${when(v.savedAt)}.`);
                     again();
                   }}
                 >
@@ -105,10 +106,13 @@ export function ProjectHistory() {
                   aria-label={`Delete the version of ${when(v.savedAt)}`}
                   onClick={async () => {
                     if (
-                      !(await askConfirm(`Delete the version of ${when(v.savedAt)}? It cannot be undone.`, {
-                        confirmLabel: 'Delete',
-                        danger: true,
-                      }))
+                      !(await askConfirm(
+                        `Delete the version of ${when(v.savedAt)}? It cannot be undone.`,
+                        {
+                          confirmLabel: 'Delete',
+                          danger: true,
+                        },
+                      ))
                     )
                       return;
                     await deleteProjectVersion(v.id);

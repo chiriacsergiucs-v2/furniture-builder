@@ -80,7 +80,10 @@ export function withHandleKind(d: Design, kind: HandleKind): Design {
     if (s.handle && s.handle.kind !== kind)
       product = mapProductSpace(product, s.id, (x) => ({ ...x, handle: { ...x.handle!, kind } }));
   if (product.kind === 'panel' && product.params.handle && product.params.handle.kind !== kind)
-    product = { ...product, params: { ...product.params, handle: { ...product.params.handle, kind } } };
+    product = {
+      ...product,
+      params: { ...product.params, handle: { ...product.params.handle, kind } },
+    };
   return product === d.product ? d : { ...d, product };
 }
 

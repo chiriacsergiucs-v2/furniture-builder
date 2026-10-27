@@ -6104,7 +6104,7 @@ p > .info-tip {
 }
 .style-row .swatches {
   display: flex;
-  gap: 2px;
+  gap: var(--s-1);
 }
 .style-row .swatch {
   width: 16px;

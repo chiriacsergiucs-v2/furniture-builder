@@ -627,7 +627,9 @@ export function App() {
                   disabled={!canRedo}
                   aria-label="Redo"
                   title={
-                    inProject && redoName ? `Redo ${redoName} (Ctrl+Shift+Z)` : 'Redo (Ctrl+Shift+Z)'
+                    inProject && redoName
+                      ? `Redo ${redoName} (Ctrl+Shift+Z)`
+                      : 'Redo (Ctrl+Shift+Z)'
                   }
                 >
                   <Icon name="redo" />

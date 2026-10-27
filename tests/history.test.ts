@@ -49,7 +49,7 @@ describe('insert a project template into an open project (ADR-123)', () => {
     const linked = addLinkedCopy(src, src.items[0].id)!;
     src = linked.project;
     const tpl = templateFromProject(src, 'Kit');
-    const target = run(['base-drawers']);
+    const target = run(['sideboard']);
     // The open project has a link of its own, with the same link id as the template's.
     const own = { ...target.items[0], linkId: src.items[0].linkId };
     const res = insertTemplate({ ...target, items: [own] }, tpl, { x: 2000, z: 100 });
@@ -61,7 +61,8 @@ describe('insert a project template into an open project (ADR-123)', () => {
     const xs = added.map((i) => i.position.x);
     expect(Math.min(...xs)).toBe(2000);
     expect(added.every((i) => i.position.z === 100)).toBe(true);
-    const srcXs = src.items.map((i) => i.position.x - src.items[0].position.x);
+    const left = Math.min(...src.items.map((i) => i.position.x));
+    const srcXs = src.items.map((i) => i.position.x - left);
     expect(xs.map((x) => x - 2000)).toEqual(srcXs);
     // The template's linked pair stays linked, with a new link id never shared with the project's own.
     const links = added.filter((i) => i.linkId).map((i) => i.linkId);
@@ -93,7 +94,7 @@ describe('named undo steps (ADR-123)', () => {
   beforeEach(() => s().openProject(run(['base-door', 'base-door'])));
 
   it('derives a name from what changed', () => {
-    const p = run(['base-door', 'base-drawers']);
+    const p = run(['base-door', 'sideboard']);
     const [a, b] = p.items;
     const moved = { ...p, items: [{ ...a, position: { ...a.position, x: 50 } }, b] };
     expect(describeChange(p, moved)).toBe(`Move ${a.design.name}`);
@@ -129,7 +130,7 @@ describe('named undo steps (ADR-123)', () => {
     const steps = s().projectPast.length;
     const [a, b] = start.items;
     s().transact(`Replace ${a.design.name}`, () => {
-      s().replaceItem(a.id, t('base-drawers'));
+      s().replaceItem(a.id, t('sideboard'));
       // The repair: move the other piece along.
       s().moveItemBy(b.id, 50, 0);
     });
@@ -165,7 +166,19 @@ describe('style suggestions (ADR-123)', () => {
   });
 
   it('applies through finish scope to the scoped pieces only, one undo step', () => {
-    const p = run(['base-door', 'base-door', 'base-door']);
+    // Base cabinets with a bar handle on their door, so the style's knobs have a handle to replace.
+    const plain = run(['base-door', 'base-door', 'base-door']);
+    const p = {
+      ...plain,
+      items: plain.items.map((i) => {
+        const c = i.design.product.params as CabinetParams;
+        const interior = { ...c.interior, handle: { kind: 'bar' as const } };
+        return {
+          ...i,
+          design: { ...i.design, product: { ...i.design.product, params: { ...c, interior } } },
+        } as ProjectItem;
+      }),
+    };
     const oak = builtInStyles().find((x) => x.id === 'all-oak')!;
     const r = applyStyle(p, p.items[0].id, oak, 'piece');
     expect(r.applied).toEqual([p.items[0].design.name]);
@@ -184,7 +197,10 @@ describe('style suggestions (ADR-123)', () => {
   it('fronts without a handle stay without one', () => {
     const d = t('base-door');
     const p = d.product.params as CabinetParams;
-    const bare = { ...d, product: { ...d.product, params: { ...p, interior: { ...p.interior, handle: null } } } } as typeof d;
+    const bare = {
+      ...d,
+      product: { ...d.product, params: { ...p, interior: { ...p.interior, handle: null } } },
+    } as typeof d;
     expect(withHandleKind(bare, 'knob')).toBe(bare);
   });
 
@@ -226,8 +242,12 @@ describe('kept project versions (ADR-123, Dexie v10)', () => {
     await old.open();
     const p = run(['base-door']);
     await old.table('projects').put({ id: p.id, name: p.name, updatedAt: p.updatedAt, project: p });
-    await old.table('designs').put({ id: 'd', name: 'D', updatedAt: '2026', design: t('base-door') });
-    await old.table('gapMarks').put({ gapId: 'G-001', decision: null, note: '', updatedAt: '2026' });
+    await old
+      .table('designs')
+      .put({ id: 'd', name: 'D', updatedAt: '2026', design: t('base-door') });
+    await old
+      .table('gapMarks')
+      .put({ gapId: 'G-001', decision: null, note: '', updatedAt: '2026' });
     old.close();
     const Fresh = db.constructor as new (n: string) => typeof db;
     const nw = new Fresh(name);
@@ -246,7 +266,7 @@ describe('kept project versions (ADR-123, Dexie v10)', () => {
     s().openProject(p);
     const v1 = await saveVersionNow();
     const kept = structuredClone(v1);
-    s().addPiece(t('base-drawers'));
+    s().addPiece(t('sideboard'));
     s().stopPlacing();
     expect(s().project!.items).toHaveLength(2);
     expect(await restoreVersion(v1!)).toBe(true);
@@ -292,7 +312,7 @@ describe('kept project versions (ADR-123, Dexie v10)', () => {
     expect(validateVersion({ ...v, projectId: 'other' })).toContain(
       'The version belongs to another project',
     );
-    const now = run(['base-drawers']);
+    const now = run(['sideboard']);
     expect(restoredProject(now, { ...v, projectId: now.id }).id).toBe(now.id);
   });
 });

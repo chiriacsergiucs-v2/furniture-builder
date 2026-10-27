@@ -64,7 +64,9 @@ export function insertTemplate(
     ...project,
     items: [...project.items, ...items],
     ...(recipe && !project.runSettings ? { runSettings: { ...recipe.settings } } : {}),
-    ...(removed.length ? { runPartsRemoved: [...(project.runPartsRemoved ?? []), ...removed] } : {}),
+    ...(removed.length
+      ? { runPartsRemoved: [...(project.runPartsRemoved ?? []), ...removed] }
+      : {}),
   };
   return { project: next, ids: items.map((i) => i.id) };
 }
