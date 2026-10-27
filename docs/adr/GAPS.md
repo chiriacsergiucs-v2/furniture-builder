@@ -1229,7 +1229,43 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Should a selected group of pieces be savable as one catalog item?
 - Suggested pick: One piece at a time, as asked (0 % extra work).
 
-### G-130: Clearances wraps to a second row of the project plan toolbar on a phone
+### G-130: jsdom find-it cannot check layout
+
+- Status: Open
+- Origin: ADR-108 (Open question)
+- Missing: jsdom applies no CSS, so the 390 px no-side-scroll rule and bounding-box checks are not tested by the default find-it
+- Request: "Move to B as default, keep the priginal as a flag to be abke to tevert"
+- Questions: Which ADRs must still run the browser script for layout?
+- Suggested pick: ADRs that change layout or CSS set Acceptance browser; others stay jsdom
+
+### G-131: jsdom find-it cannot render the 3D view
+
+- Status: Open
+- Origin: ADR-108 (Out of scope)
+- Missing: The three.js viewer does not render in jsdom; 3D features are not found by the default find-it
+- Request: "Move to B as default, keep the priginal as a flag to be abke to tevert"
+- Questions: Should ADRs that touch the 3D view always use Acceptance browser?
+- Suggested pick: Yes: ADRs touching the 3D view or Move mode use browser
+
+### G-132: Existing browser find-it scripts are not ported to jsdom
+
+- Status: Open
+- Origin: ADR-108 (Out of scope)
+- Missing: The 42 tools/*/find-it.mjs scripts stay; no jsdom versions for shipped ADRs
+- Request: "Move to B as default, keep the priginal as a flag to be abke to tevert"
+- Questions: Port any of them?
+- Suggested pick: No; keep them as the browser regression set
+
+### G-133: Light ADR catch-up mode after ADR-108
+
+- Status: Open
+- Origin: ADR-108 (Open question)
+- Missing: Undecided whether catch-up acceptance for light ADRs runs jsdom or the browser script
+- Request: "Move to B as default, keep the priginal as a flag to be abke to tevert"
+- Questions: Catch up acceptance with jsdom or browser?
+- Suggested pick: jsdom, unless the ADR is layout or 3D
+
+### G-134: Clearances wraps to a second row of the project plan toolbar on a phone
 
 - Status: Open
 - Origin: ADR-109

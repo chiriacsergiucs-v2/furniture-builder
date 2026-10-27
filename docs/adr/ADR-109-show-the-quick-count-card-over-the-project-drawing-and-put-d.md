@@ -4,7 +4,7 @@
 - Date: 2026-10-27
 - Depends on: ADR-106
 - Design: docs/ui-design.md (section 4, editor screen: stage toolbar, quick-count card)
-- Backlog: N106
+- Backlog: N107
 - Agreed: 2026-10-27 "Same row as Snap (Recommended)", "Show on 1st tap (Recommended)"
 
 ## Context
@@ -38,7 +38,7 @@ user chose "Same row as Snap (Recommended)" and "Show on 1st tap (Recommended)".
 ## Scope
 
 - In scope: the toggle's place, the floating card on the project front view, the find-it script.
-- Out of scope: at 390 px "Clearances" wraps to a second row of the plan toolbar (G-130).
+- Out of scope: at 390 px "Clearances" wraps to a second row of the plan toolbar (G-134).
 
 ## Consequences
 
@@ -58,4 +58,4 @@ user chose "Same row as Snap (Recommended)" and "Show on 1st tap (Recommended)".
 
 ## Open questions
 
-- None open; the toolbar wrap at 390 px is G-130.
+- None open; the toolbar wrap at 390 px is G-134.
