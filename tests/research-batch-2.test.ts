@@ -1,9 +1,8 @@
 import 'fake-indexeddb/auto';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { alignItems, skippedText } from '../src/core/align';
 import { templates } from '../src/core/design';
 import { dragHeight, heightDraggable, heightLabel, setWallHeight } from '../src/core/height';
-import { addLinkedCopy } from '../src/core/linked';
 import { resizeProduct } from '../src/core/pieceSize';
 import {
   buildProjectModel,
@@ -69,7 +68,8 @@ describe('align Top and Bottom (ADR-122)', () => {
   });
 
   it('a locked wall unit stays and is named; one below the floor is refused', () => {
-    const p = setLocked(walls(), walls().items[1].id, true);
+    const w = walls();
+    const p = setLocked(w, w.items[1].id, true);
     const res = alignItems(p, [p.items[0].id, p.items[1].id], 'bottom');
     expect(res.project.items[1].placement).toEqual(p.items[1].placement);
     expect(skippedText(res)).toMatch(/locked/);
@@ -77,11 +77,17 @@ describe('align Top and Bottom (ADR-122)', () => {
 
   it('in the store it is one undo step', () => {
     s().openProject(walls());
-    const ids = s().project!.items.slice(0, 3).map((i) => i.id);
+    const ids = s()
+      .project!.items.slice(0, 3)
+      .map((i) => i.id);
     s().selectItems(ids);
     expect(s().alignSelection('bottom')).toBe('');
     expect(s().projectPast.length).toBe(1);
-    expect(bounds(s().project!).slice(0, 3).map((b) => b.y)).toEqual([1450, 1450, 1450]);
+    expect(
+      bounds(s().project!)
+        .slice(0, 3)
+        .map((b) => b.y),
+    ).toEqual([1450, 1450, 1450]);
     s().undoProject();
     expect(bounds(s().project!)[1].y).toBe(1400);
   });
@@ -92,19 +98,25 @@ describe('Lock size (ADR-122)', () => {
     ...p,
     items: p.items.map((it, j) =>
       j === i
-        ? { ...it, design: { ...it.design, product: resizeProduct(it.design.product, 'width', 700) } }
+        ? {
+            ...it,
+            design: { ...it.design, product: resizeProduct(it.design.product, 'width', 700) },
+          }
         : it,
     ),
   });
 
   it('a size-locked piece may not change its outside size; boards may change', () => {
-    const p = setSizeLocked(run(['base-door', 'chest']), run(['base-door', 'chest']).items[0].id, true);
+    const base = run(['base-door', 'chest']);
+    const p = setSizeLocked(base, base.items[0].id, true);
     expect(isSizeLocked(p.items[0])).toBe(true);
     expect(sizeLockBlocked(p, resized(p, 0))).toMatch(/size locked/);
     expect(sizeLockBlocked(p, resized(p, 1))).toBeNull();
     const reboarded = {
       ...p,
-      items: p.items.map((it, j) => (j === 0 ? { ...it, design: { ...it.design, name: 'Renamed' } } : it)),
+      items: p.items.map((it, j) =>
+        j === 0 ? { ...it, design: { ...it.design, name: 'Renamed' } } : it,
+      ),
     };
     expect(sizeLockBlocked(p, reboarded)).toBeNull();
     expect(outerSize(p.items[0].design).w).toBeGreaterThan(0);
@@ -138,7 +150,6 @@ describe('Lock size (ADR-122)', () => {
       linked.items.find((i) => i.id === id)!.design,
     );
     expect(SIZE_LOCKED_HINT).toBe('Size locked — unlock to change');
-    void addLinkedCopy;
   });
 
   it('saves at the current version; older projects still load; the flag needs version 11', async () => {

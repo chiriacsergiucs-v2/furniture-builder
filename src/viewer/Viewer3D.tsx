@@ -843,7 +843,10 @@ function HeightNote() {
   const preview = useHeightPreview();
   if (!preview) return null;
   return (
-    <span className={`plan-drag-note three-drag-note${preview.height < 0 ? ' locked' : ''}`} role="status">
+    <span
+      className={`plan-drag-note three-drag-note${preview.height < 0 ? ' locked' : ''}`}
+      role="status"
+    >
       {heightLabel(preview.height)}
       {preview.height < 0 ? ' — below the floor, it will not move' : ''}
     </span>
@@ -855,14 +858,16 @@ function HeightNote() {
  * checks and exports are unchanged). Kept: the side toward the back wall, the floor or the left.
  */
 function SectionClip({ axis, at }: { axis: SectionAxis; at: number }) {
-  const gl = useThree((s) => s.gl);
+  const get = useThree((s) => s.get);
   useEffect(() => {
+    // The renderer is read when the cut changes (not held as React state, which is never written to).
+    const renderer = get().gl;
     const n = new Vector3(axis === 'x' ? -1 : 0, axis === 'y' ? -1 : 0, axis === 'z' ? -1 : 0);
-    gl.clippingPlanes = [new Plane(n, at * S)];
+    renderer.clippingPlanes = [new Plane(n, at * S)];
     return () => {
-      gl.clippingPlanes = [];
+      renderer.clippingPlanes = [];
     };
-  }, [gl, axis, at]);
+  }, [get, axis, at]);
   return null;
 }
 

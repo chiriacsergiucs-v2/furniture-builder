@@ -39,6 +39,14 @@ for (const width of [1280, 390]) {
     await loc.click({ timeout: 3000 }).catch(() => loc.dispatchEvent('click'));
   };
   const btn = (name, exact = true) => page.getByRole('button', { name, exact });
+  /** Click a toggle until it reads `want` (the first tap after a touch drag can be taken by the view). */
+  const toggle = async (loc, want) => {
+    for (let i = 0; i < 3 && (await loc.getAttribute('aria-pressed')) !== String(want); i++) {
+      await click(loc);
+      await page.waitForTimeout(500);
+    }
+    return (await loc.getAttribute('aria-pressed')) === String(want);
+  };
   const plan = page.getByRole('figure', { name: /Room plan, seen from above/ });
   const pieces = plan.locator('g.plan-piece');
   const sheet = async (open) => {
@@ -96,7 +104,11 @@ for (const width of [1280, 390]) {
     }
     await page.waitForTimeout(300);
     await shot(name);
-    const note = (await three.locator('.three-drag-note').textContent().catch(() => '')) ?? '';
+    const note =
+      (await three
+        .locator('.three-drag-note')
+        .textContent()
+        .catch(() => '')) ?? '';
     if (phone) await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
     else await page.mouse.up();
     await page.waitForTimeout(400);
@@ -125,7 +137,12 @@ for (const width of [1280, 390]) {
     await page.keyboard.up('Shift');
   }
   const pressed = await pieces.evaluateAll((gs) => gs.map((g) => g.getAttribute('aria-pressed')));
-  check(width, 'both wall cabinets selected', pressed.every((v) => v === 'true'), JSON.stringify(pressed));
+  check(
+    width,
+    'both wall cabinets selected',
+    pressed.every((v) => v === 'true'),
+    JSON.stringify(pressed),
+  );
   // On a phone the cards are under Compose.
   const compose = async () => {
     if (phone) await page.getByRole('radio', { name: /Compose/ }).click();
@@ -150,13 +167,31 @@ for (const width of [1280, 390]) {
   await tap(0);
   await compose();
   const lockSize = btn('Lock size');
-  check(width, '"Lock size" is on the selected-piece card', await lockSize.isVisible().catch(() => false));
+  check(
+    width,
+    '"Lock size" is on the selected-piece card',
+    await lockSize.isVisible().catch(() => false),
+  );
   await click(lockSize);
   await page.waitForTimeout(200);
-  check(width, 'the card says "Size locked"', await page.getByText('Size locked', { exact: true }).first().isVisible());
+  check(
+    width,
+    'the card says "Size locked"',
+    await page.getByText('Size locked', { exact: true }).first().isVisible(),
+  );
   const hint = page.getByText('Size locked — unlock to change').first();
-  check(width, 'the size fields say "Size locked — unlock to change"', await hint.isVisible().catch(() => false));
-  check(width, '"Unlock size" is offered', await btn('Unlock size').isVisible().catch(() => false));
+  check(
+    width,
+    'the size fields say "Size locked — unlock to change"',
+    await hint.isVisible().catch(() => false),
+  );
+  check(
+    width,
+    '"Unlock size" is offered',
+    await btn('Unlock size')
+      .isVisible()
+      .catch(() => false),
+  );
   await hint.scrollIntoViewIfNeeded().catch(() => {});
   await shot('size-lock');
 
@@ -166,13 +201,18 @@ for (const width of [1280, 390]) {
     const menu = page.locator('details.view-options');
     const inMenu = (await menu.count()) > 0;
     if (inMenu && !(await menu.evaluate((d) => d.open))) await menu.locator('summary').click();
-    await page.getByRole('radio', { name: 'Simple' }).click().catch(() => {});
+    await page
+      .getByRole('radio', { name: 'Simple' })
+      .click()
+      .catch(() => {});
     if (inMenu) await page.keyboard.press('Escape');
     await page.waitForTimeout(600);
   }
   const tools = page.getByRole('toolbar', { name: 'Place pieces in 3D' });
-  await click(tools.getByRole('button', { name: 'Move', exact: true }));
-  await page.waitForTimeout(500);
+  const move = tools.getByRole('button', { name: 'Move', exact: true });
+  // The view may still be settling after the look changed.
+  await toggle(move, true);
+  check(width, 'Move turns on (pressed)', (await move.getAttribute('aria-pressed')) === 'true');
   const handle = btn('Change height');
   if (!(await handle.isVisible().catch(() => false))) {
     // Nothing selected in this view: tap a wall cabinet (pressing a piece in Move mode selects it).
@@ -182,20 +222,23 @@ for (const width of [1280, 390]) {
     else await page.mouse.click(c.x, c.y);
     await page.waitForTimeout(500);
   }
-  check(width, 'Move mode shows a "Change height" handle on the wall unit', await handle.isVisible().catch(() => false));
+  check(
+    width,
+    'Move mode shows a "Change height" handle on the wall unit',
+    await handle.isVisible().catch(() => false),
+  );
   const hb = (await handle.isVisible().catch(() => false)) ? await handle.boundingBox() : null;
   if (!hb) await shot('move');
   if (hb) {
     const note = await drag({ x: hb.x + hb.width / 2, y: hb.y + hb.height / 2 }, 0, -60, 'height');
     check(width, 'dragging it shows "From floor … mm"', /From floor \d+ mm/.test(note), note);
   }
-  await click(tools.getByRole('button', { name: 'Move', exact: true }));
+  await toggle(move, false);
 
   // 5. Section → Width / Height / Depth and "Cut at … mm"; Isolate.
   const section = tools.getByRole('button', { name: 'Section', exact: true });
   check(width, '"Section" is in the 3D toolbar', await section.isVisible().catch(() => false));
-  await click(section);
-  await page.waitForTimeout(400);
+  await toggle(section, true);
   check(
     width,
     'Section offers "Width", "Height", "Depth" and "Cut at … mm"',
@@ -206,11 +249,18 @@ for (const width of [1280, 390]) {
   );
   await shot('section');
   const isolate = tools.getByRole('button', { name: 'Isolate', exact: true });
-  check(width, '"Isolate" is offered with a piece selected', await isolate.isVisible().catch(() => false));
-  await click(section);
-  await click(isolate);
-  await page.waitForTimeout(400);
-  check(width, 'Isolate turns on (pressed)', (await isolate.getAttribute('aria-pressed')) === 'true');
+  check(
+    width,
+    '"Isolate" is offered with a piece selected',
+    await isolate.isVisible().catch(() => false),
+  );
+  await toggle(section, false);
+  await toggle(isolate, true);
+  check(
+    width,
+    'Isolate turns on (pressed)',
+    (await isolate.getAttribute('aria-pressed')) === 'true',
+  );
   await shot('isolate');
 
   check(

@@ -85,7 +85,9 @@ function liftEach(project: Project, moves: Map<string, number>) {
     if (!dy) continue;
     const name = pieceName(project, id);
     if (pl?.kind === 'floor') {
-      skipped.push(`${name} stands on the floor; Top and Bottom move wall units and stacked pieces.`);
+      skipped.push(
+        `${name} stands on the floor; Top and Bottom move wall units and stacked pieces.`,
+      );
       continue;
     }
     const why = moveBlocked(project, [id]);
