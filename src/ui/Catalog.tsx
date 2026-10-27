@@ -270,10 +270,13 @@ export function StartFrom({
                       <strong>
                         {f.name}: {v.name}
                       </strong>
-                      <span className="sub">
-                        {v.summary}
-                        {VARIANT_RO[v.id] ? ` · ${f.nameRo}: ${VARIANT_RO[v.id]}` : ''}
-                      </span>
+                      <span className="sub">{v.summary}</span>
+                      {/* The Romanian name on its own line, not inside the English text (ADR-118). */}
+                      {VARIANT_RO[v.id] && (
+                        <span className="sub ro-line" lang="ro">
+                          RO: {f.nameRo}: {VARIANT_RO[v.id]}
+                        </span>
+                      )}
                     </span>
                     <Icon name="chevron-right" className="chev sm" />
                   </button>
@@ -312,9 +315,12 @@ type Source = 'templates' | 'saved' | 'brands';
 export function CatalogPage({
   onDone,
   onNewPiece,
+  designOpen = true,
 }: {
   onDone: () => void;
   onNewPiece?: () => void;
+  /** Whether a design or project is open, so "Back to the editor" has somewhere to go (ADR-118). */
+  designOpen?: boolean;
 }) {
   const families = useCatalog();
   const phone = useMediaQuery(PHONE);
@@ -451,10 +457,13 @@ export function CatalogPage({
               New piece
             </button>
           )}
-          <button type="button" className="btn outline" onClick={onDone}>
-            <Icon name="chevron-right" className="sm" />
-            Back to the editor
-          </button>
+          {/* Only when there is a design to go back to (ADR-118). */}
+          {designOpen && (
+            <button type="button" className="btn outline" onClick={onDone}>
+              <Icon name="chevron-left" className="sm" />
+              Back to the editor
+            </button>
+          )}
         </div>
       </header>
       {/* Source and grouping share one row that scrolls away; only the search row stays (ADR-116 on a phone, ADR-117
@@ -717,6 +726,8 @@ function ItemCard({
     if (!card || open) return;
     const measure = () => setCut(cardCut(card));
     measure();
+    // Text widths change once the web font has loaded, without the card changing size (ADR-118's RO line).
+    void document.fonts?.ready.then(measure);
     if (typeof ResizeObserver === 'undefined') return;
     const watch = new ResizeObserver(measure);
     watch.observe(card);
@@ -739,10 +750,7 @@ function ItemCard({
           <strong>{v.name}</strong>
         </span>
         <span className="summary-row">
-          <span className="sub summary">
-            {VARIANT_RO[v.id] && <span className="ro">{VARIANT_RO[v.id]} · </span>}
-            {v.summary}
-          </span>
+          <span className="sub summary">{v.summary}</span>
           {(cut || open) && (
             <button
               type="button"
@@ -769,6 +777,12 @@ function ItemCard({
           </span>
           {facts && <span className="num">{factsLine(facts)}</span>}
         </span>
+        {/* The Romanian name on its own line, not inside the English summary (ADR-118). */}
+        {VARIANT_RO[v.id] && (
+          <span className="sub ro-line" lang="ro">
+            RO: {VARIANT_RO[v.id]}
+          </span>
+        )}
         {v.hardware && <span className="sub">You choose: {v.hardware}</span>}
         {!ok && (
           <span className="sub waits-why">

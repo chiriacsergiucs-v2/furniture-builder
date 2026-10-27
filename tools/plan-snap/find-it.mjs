@@ -55,7 +55,7 @@ for (const width of [1440, 375]) {
   const pieces = plan.getByRole('button', { name: /^Base cabinet.*, \d+ by \d+ mm$/ });
   const first = pieces.nth(0),
     second = pieces.nth(1);
-  const snap = plan.getByRole('button', { name: 'Snap', exact: true });
+  const snap = plan.getByRole('checkbox', { name: 'Snap', exact: true });
   const ghost = plan.locator('.drag-ghost');
   // The live snap note shows over the plan only while a piece is dragged (ADR-080).
   const status = plan.locator('.plan-drag-note[role="status"]');
@@ -150,7 +150,7 @@ for (const width of [1440, 375]) {
   check(width, 'the plan "Room plan, seen from above" is visible', await plan.isVisible());
   check(width, 'two "Base cabinet…" pieces are on the plan', (await pieces.count()) === 2);
   check(width, 'the "Snap" toggle is found above the plan', await snap.isVisible());
-  check(width, '"Snap" is on by default', (await snap.getAttribute('aria-pressed')) === 'true');
+  check(width, '"Snap" is on by default', await snap.isChecked());
   const idle = await aboutText();
   check(
     width,
@@ -213,7 +213,7 @@ for (const width of [1440, 375]) {
 
   // 3. Snap off: the same drag lands where released (on the 10 mm step), no snapped preview.
   await click(snap);
-  check(width, '"Snap" turns off', (await snap.getAttribute('aria-pressed')) === 'false');
+  check(width, '"Snap" turns off', !(await snap.isChecked()));
   const idleOff = await aboutText();
   check(
     width,
@@ -248,13 +248,11 @@ for (const width of [1440, 375]) {
     );
     if (await planRadio.isVisible().catch(() => false)) await planRadio.click();
   }
-  const kept =
-    (await snap.isVisible().catch(() => false)) &&
-    (await snap.getAttribute('aria-pressed')) === 'false';
+  const kept = (await snap.isVisible().catch(() => false)) && !(await snap.isChecked());
   check(width, '"Snap" stays off after a reload', kept);
   if (await snap.isVisible().catch(() => false)) {
     await click(snap);
-    check(width, '"Snap" turns back on', (await snap.getAttribute('aria-pressed')) === 'true');
+    check(width, '"Snap" turns back on', await snap.isChecked());
   }
 
   // 5. Desktop: Alt held while dragging places freely even with Snap on.

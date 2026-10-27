@@ -674,7 +674,7 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
                       max={25}
                       step={1}
                       onChange={(v) => set({ back: { ...p.back!, angleDeg: v } })}
-                      hint="Leans back from upright (ADR-040); 8° is typical"
+                      hint="Leans back from upright; 8° is typical"
                     />
                   )}
                 </div>

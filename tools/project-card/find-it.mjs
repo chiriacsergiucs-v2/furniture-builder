@@ -71,7 +71,7 @@ for (const width of [1280, 390]) {
 
   // 2. "Doors and fronts" (shown as "Fronts", ADR-110) sits in the same row as Snap, Select and Clear.
   const doors = front.getByRole('checkbox', { name: 'Doors and fronts', exact: true });
-  const snap = front.getByRole('button', { name: 'Snap', exact: true });
+  const snap = front.getByRole('checkbox', { name: 'Snap', exact: true });
   const [db, sb] = [await doors.boundingBox(), await snap.boundingBox()];
   check(
     width,

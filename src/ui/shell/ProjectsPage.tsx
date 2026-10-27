@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { newId } from '../../core/design';
 import { newProject } from '../../core/project';
 import {
@@ -23,6 +23,10 @@ import { newerCount, newerText, templateStatus } from '../../core/templateRevisi
 import { useLocalTemplates } from '../Catalog';
 import { updatedText } from '../TemplateRevision';
 import { useUi } from './uiStore';
+import { useMediaQuery } from '../useMediaQuery';
+
+/** Where a saved row's three buttons fold into one menu (ADR-118). */
+const NARROW = '(max-width: 520px)';
 
 const KIND_TEXT = {
   desk: 'Desk',
@@ -40,11 +44,9 @@ const KIND_TEXT = {
 export function ProjectsPage({
   onOpened,
   onNewPiece,
-  onFillWall,
 }: {
   onOpened: () => void;
   onNewPiece: () => void;
-  onFillWall?: () => void;
 }) {
   const load = useDesign((s) => s.load);
   const openProject = useDesign((s) => s.openProject);
@@ -82,6 +84,7 @@ export function ProjectsPage({
   // Read on arrival; settings changed from this list are saved by the autosave, so read again once the dialog closes.
   const settingsOpen = useUi((s) => s.settingsOpen);
   const setSettingsOpen = useUi((s) => s.setSettingsOpen);
+  const narrow = useMediaQuery(NARROW);
   useEffect(() => {
     if (!settingsOpen) refresh();
   }, [settingsOpen]);
@@ -131,60 +134,76 @@ export function ProjectsPage({
     glyph: IconName,
     sub: string,
     open: () => void,
-  ) => (
-    <li key={r.id} className={r.id === currentId ? 'current' : ''}>
-      <button
-        type="button"
-        className="row-btn"
-        aria-current={r.id === currentId ? 'true' : undefined}
-        onClick={() => {
-          open();
-          onOpened();
-        }}
-      >
-        <span className="glyph">
-          <Icon name={glyph} />
-        </span>
-        <span>
-          <strong>{r.name}</strong>
-          <span className="sub">{sub}</span>
-        </span>
-        {r.id === currentId && <span className="chip">Open now</span>}
-      </button>
-      <button
-        type="button"
-        className="btn sm icon"
-        aria-label={`Settings for ${r.name}`}
-        title="Settings"
-        onClick={() => {
-          // Settings edit the open copy (ADR-080): this row becomes the one open now, and autosave writes it back.
-          if (r.id !== currentId) open();
-          setSettingsOpen(true);
-        }}
-      >
-        <Icon name="sliders" className="sm" />
-      </button>
-      <button
-        type="button"
-        className="btn sm icon"
-        onClick={() => void duplicate(r, kind)}
-        aria-label={`Duplicate ${r.name}`}
-        title="Duplicate"
-      >
-        <Icon name="copy" className="sm" />
-      </button>
-      <button
-        type="button"
-        className="btn sm icon danger"
-        disabled={r.id === currentId}
-        aria-label={`Delete ${r.name}`}
-        title={r.id === currentId ? 'Open something else first' : 'Delete'}
-        onClick={() => void remove(r, kind)}
-      >
-        <Icon name="trash" className="sm" />
-      </button>
-    </li>
-  );
+  ) => {
+    // Settings edit the open copy (ADR-080): this row becomes the one open now, and autosave writes it back.
+    const settings = () => {
+      if (r.id !== currentId) open();
+      setSettingsOpen(true);
+    };
+    return (
+      <li key={r.id} className={r.id === currentId ? 'current' : ''}>
+        <button
+          type="button"
+          className="row-btn"
+          aria-current={r.id === currentId ? 'true' : undefined}
+          onClick={() => {
+            open();
+            onOpened();
+          }}
+        >
+          <span className="glyph">
+            <Icon name={glyph} />
+          </span>
+          <span>
+            <strong>{r.name}</strong>
+            <span className="sub">{sub}</span>
+          </span>
+          {r.id === currentId && <span className="chip">Open now</span>}
+        </button>
+        {/* A small phone folds the three buttons into one ⋯ menu, so the name keeps its line (ADR-118). */}
+        {narrow ? (
+          <RowMenu
+            name={r.name}
+            isOpen={r.id === currentId}
+            onSettings={settings}
+            onDuplicate={() => void duplicate(r, kind)}
+            onDelete={() => void remove(r, kind)}
+          />
+        ) : (
+          <>
+            <button
+              type="button"
+              className="btn sm icon"
+              aria-label={`Settings for ${r.name}`}
+              title="Settings"
+              onClick={settings}
+            >
+              <Icon name="sliders" className="sm" />
+            </button>
+            <button
+              type="button"
+              className="btn sm icon"
+              onClick={() => void duplicate(r, kind)}
+              aria-label={`Duplicate ${r.name}`}
+              title="Duplicate"
+            >
+              <Icon name="copy" className="sm" />
+            </button>
+            <button
+              type="button"
+              className="btn sm icon danger"
+              disabled={r.id === currentId}
+              aria-label={`Delete ${r.name}`}
+              title={r.id === currentId ? 'Open something else first' : 'Delete'}
+              onClick={() => void remove(r, kind)}
+            >
+              <Icon name="trash" className="sm" />
+            </button>
+          </>
+        )}
+      </li>
+    );
+  };
 
   return (
     <main className="home-page projects-page" aria-label="Projects">
@@ -205,34 +224,27 @@ export function ProjectsPage({
             <Icon name="cube" />
             New single piece
           </button>
-          {onFillWall && (
-            <button type="button" className="btn outline lg" onClick={onFillWall}>
-              <Icon name="project" />
-              Fill a wall
-            </button>
-          )}
+          {/* Beside New (ADR-118); "Fill a wall" is in the New dialog only. */}
+          <label className="btn outline lg file-btn">
+            <Icon name="upload" />
+            Import a file
+            <input
+              type="file"
+              accept="application/json,.json"
+              aria-label="Import a design, project or project template file"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) void onImport(f);
+                e.target.value = '';
+              }}
+            />
+          </label>
         </div>
       </header>
 
       <section className="home-section" aria-labelledby="home-projects">
         <div className="home-section-head">
           <h2 id="home-projects">Choose a project</h2>
-          <div className="split-actions">
-            <label className="btn sm outline file-btn">
-              <Icon name="upload" className="sm" />
-              Import a file
-              <input
-                type="file"
-                accept="application/json,.json"
-                aria-label="Import a design, project or project template file"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) void onImport(f);
-                  e.target.value = '';
-                }}
-              />
-            </label>
-          </div>
         </div>
         {msg && (
           <p className={`alert ${msg.ok ? 'info' : 'error'}`} role={msg.ok ? 'status' : 'alert'}>
@@ -286,5 +298,70 @@ export function ProjectsPage({
         <ProjectTemplateList onOpened={onOpened} />
       </section>
     </main>
+  );
+}
+
+/**
+ * A saved row's Settings, Duplicate and Delete in one ⋯ menu on a small phone (ADR-118). Escape and a tap outside
+ * close it, as in the More menu.
+ */
+function RowMenu({
+  name,
+  isOpen,
+  onSettings,
+  onDuplicate,
+  onDelete,
+}: {
+  name: string;
+  isOpen: boolean;
+  onSettings: () => void;
+  onDuplicate: () => void;
+  onDelete: () => void;
+}) {
+  const ref = useRef<HTMLDetailsElement>(null);
+  const close = () => ref.current?.removeAttribute('open');
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && ref.current?.open) {
+        ref.current.removeAttribute('open');
+        ref.current.querySelector('summary')?.focus();
+      }
+    };
+    const onDown = (e: PointerEvent) => {
+      if (ref.current?.open && !ref.current.contains(e.target as Node))
+        ref.current.removeAttribute('open');
+    };
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('pointerdown', onDown);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('pointerdown', onDown);
+    };
+  }, []);
+  const run = (fn: () => void) => {
+    close();
+    fn();
+  };
+  return (
+    <details className="menu row-menu" ref={ref}>
+      <summary className="btn sm icon" aria-label={`Actions for ${name}`} title="Actions">
+        <Icon name="more" className="sm" />
+      </summary>
+      <div className="menu-items">
+        <button type="button" onClick={() => run(onSettings)}>
+          <Icon name="sliders" />
+          Settings
+        </button>
+        <button type="button" onClick={() => run(onDuplicate)}>
+          <Icon name="copy" />
+          Duplicate
+        </button>
+        <button type="button" disabled={isOpen} onClick={() => run(onDelete)}>
+          <Icon name="trash" />
+          Delete
+          {isOpen && <small>open something else first</small>}
+        </button>
+      </div>
+    </details>
   );
 }
