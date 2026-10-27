@@ -222,6 +222,6 @@ export function useOpenLink(
       if (r.message) onMessage(r.message);
       if (r.opened) onOpened();
     })();
-    // Once, on arrival.
-  }, []);
+    // Runs again when the callbacks change, but the #part is gone by then: once per link.
+  }, [onOpened, onMessage]);
 }

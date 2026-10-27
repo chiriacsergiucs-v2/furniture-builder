@@ -177,7 +177,15 @@ function setPath(d: Design, path: string, value: unknown): Design | null {
     } else {
       // A setting the new design has, or an optional one beside settings it has (a handle on a space).
       const was = at[last];
-      if (was !== undefined && was !== null && value !== null && typeof was !== typeof value)
+      // A board goes in as the board itself, where the design holds its id.
+      const board = isBoardKey(last) && isBoard(value);
+      if (
+        !board &&
+        was !== undefined &&
+        was !== null &&
+        value !== null &&
+        typeof was !== typeof value
+      )
         return null;
       const p = placeBoards(next, structuredClone(value), last);
       next = p.d;
@@ -215,15 +223,17 @@ export const SIZE_SKIP: Record<string, string> = {
 
 /**
  * `target` with the edits applied one by one: a path it does not have, or one that would add an error, is not
- * kept. `skip` paths are listed as not kept with their reason.
+ * kept. `skip` paths are listed as not kept with their reason. `checked: false` applies every edit the design has a
+ * place for, errors or not: rebuilding a piece from its own template (`resolveItem`) must give the piece as it is.
  */
 export function carryEdits(
   target: Design,
   edits: Overrides,
   skip: Record<string, string> = {},
+  checked = true,
 ): CarryResult {
   let d = target;
-  let errors = errorCount(d);
+  let errors = checked ? errorCount(d) : 0;
   const kept: string[] = [],
     notKept: string[] = [];
   for (const [path, value] of Object.entries(edits).sort(([a], [b]) => a.localeCompare(b))) {
@@ -236,7 +246,7 @@ export function carryEdits(
       notKept.push(`${editLabel(path)} — the new piece has no such setting`);
       continue;
     }
-    const e = errorCount(next);
+    const e = checked ? errorCount(next) : 0;
     if (e > errors) {
       notKept.push(`${editLabel(path)} — it does not fit the new piece`);
       continue;
@@ -270,7 +280,7 @@ export function resolveItem(
 ): Design {
   const t = item.ref && templateOf(item.design, families);
   if (!t || !item.ref) return item.design;
-  const r = carryEdits(t, item.ref.overrides);
+  const r = carryEdits(t, item.ref.overrides, {}, false);
   return {
     ...r.design,
     id: item.design.id,

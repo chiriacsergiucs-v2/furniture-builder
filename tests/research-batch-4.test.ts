@@ -35,7 +35,10 @@ import { useDesign } from '../src/store/designStore';
 
 const variant = (familyId: string, variantId: string): Design => {
   const f = catalogFamilies.find((x) => x.id === familyId)!;
-  return insertVariant(f, f.variants.find((v) => v.id === variantId)!)!;
+  return insertVariant(
+    f,
+    f.variants.find((v) => v.id === variantId)!,
+  )!;
 };
 const baseDoor = () => variant('base-doors', 'base-door');
 const drawers3 = () => variant('base-drawers', 'drawers-3');
@@ -56,7 +59,9 @@ function project(designs: Design[]): Project {
 }
 /** The params without ids, to compare two designs by content. */
 const content = (d: Design) =>
-  JSON.stringify(d.product.params, (k, v: unknown) => (k === 'id' || /Id$/.test(k) ? undefined : v));
+  JSON.stringify(d.product.params, (k, v: unknown) =>
+    k === 'id' || /Id$/.test(k) ? undefined : v,
+  );
 
 describe('design codes (ADR-124)', () => {
   it('a project round-trips through a code and through its link', async () => {
@@ -142,7 +147,10 @@ describe('template references (ADR-124, G-161)', () => {
 
   it('overrides follow the piece; template + overrides rebuilds the same design', () => {
     const item = makeItem(newProject(), baseDoor());
-    const edited = { ...item, design: withSettings(item.design, { handle: knob, plinthHeight: 120 }) };
+    const edited = {
+      ...item,
+      design: withSettings(item.design, { handle: knob, plinthHeight: 120 }),
+    };
     const synced = syncRef(edited, catalogFamilies);
     expect(Object.keys(synced.ref!.overrides).sort()).toEqual(
       Object.keys(settingsDiff(baseDoor(), edited.design)).sort(),
@@ -161,7 +169,13 @@ describe('template references (ADR-124, G-161)', () => {
     // The template moved on: the stored overrides are the piece's edits.
     expect(ownEdits(item, bumped)).toEqual(item.ref!.overrides);
     const f = bumped.find((x) => x.id === 'base-doors')!;
-    const next = carryEdits(insertVariant(f, f.variants.find((v) => v.id === 'base-door')!)!, ownEdits(item, bumped));
+    const next = carryEdits(
+      insertVariant(
+        f,
+        f.variants.find((v) => v.id === 'base-door')!,
+      )!,
+      ownEdits(item, bumped),
+    );
     expect(settingOf(next.design, 'handle')).toBe(JSON.stringify(knob));
     expect(resolveItem(item, [])).toBe(item.design);
   });

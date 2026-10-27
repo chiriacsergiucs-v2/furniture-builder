@@ -59,15 +59,26 @@ describe.each(WIDTHS)('ADR-124 at %ipx (find-it)', (width) => {
     await user.click(screen.getByLabelText('More'));
     await user.click(await screen.findByRole('button', { name: /Copy code/ }));
     const dlg = await screen.findByRole('dialog', { name: /^Code for / });
-    const code = within(dlg).getByLabelText('Code') as HTMLTextAreaElement;
+    // The code is made asynchronously (CompressionStream): its box appears when it is ready.
+    const code = (await within(dlg).findByLabelText(
+      'Code',
+      {},
+      { timeout: 5000 },
+    )) as HTMLTextAreaElement;
     await waitFor(() => expect(code.value.startsWith('FB1-')).toBe(true));
-    expect((within(dlg).getByLabelText('Link') as HTMLTextAreaElement).value).toContain('#open=FB1-');
+    expect((within(dlg).getByLabelText('Link') as HTMLTextAreaElement).value).toContain(
+      '#open=FB1-',
+    );
     expect(within(dlg).getByRole('button', { name: 'Copy code' })).toBeTruthy();
     expect(within(dlg).getByRole('button', { name: 'Copy link' })).toBeTruthy();
     const text = code.value;
     await user.click(within(dlg).getByRole('button', { name: 'Done' }));
 
-    await user.click(screen.getAllByRole('link', { name: 'Projects' }).concat(screen.queryAllByRole('button', { name: 'Projects' }))[0]);
+    await user.click(
+      screen
+        .getAllByRole('link', { name: 'Projects' })
+        .concat(screen.queryAllByRole('button', { name: 'Projects' }))[0],
+    );
     await user.click(await screen.findByRole('button', { name: 'Open from code' }));
     const open = await screen.findByRole('dialog', { name: 'Open a code' });
     await user.click(within(open).getByLabelText('Code or link'));
