@@ -441,7 +441,7 @@ describe('3D model storage (ADR-076)', () => {
     const Fresh = db.constructor as new (n: string) => typeof db;
     const nw = new Fresh(name);
     await nw.open();
-    expect(nw.verno).toBe(9);
+    expect(nw.verno).toBe(10);
     expect(await nw.projects.get('p1')).toMatchObject({ project: { a: 1 } });
     expect(await nw.prices.get('pr')).toBeDefined();
     expect(await nw.models.count()).toBe(0);
