@@ -14,6 +14,7 @@ import type { Design } from '../core/types';
 import { NewDialog } from './Dialogs';
 import { SettingsDialog } from './Settings';
 import { WizardDialog } from './Wizard';
+import { WallFillDialog } from './WallFill';
 import { CatalogPage } from './Catalog';
 import { ResearchPage } from './Research';
 import { GapsPage } from './Gaps';
@@ -176,7 +177,7 @@ export function App() {
     canRedoPiece = useDesign((s) => s.future.length > 0);
   const canUndoProject = useDesign((s) => s.projectPast.length > 0),
     canRedoProject = useDesign((s) => s.projectFuture.length > 0);
-  const [dialog, setDialog] = useState<null | 'new' | 'wizard' | 'render'>(null);
+  const [dialog, setDialog] = useState<null | 'new' | 'wizard' | 'render' | 'wallfill'>(null);
   const look = useLook();
   const openCatalog = () => {
     setDialog(null);
@@ -683,7 +684,11 @@ export function App() {
         )}
 
         {page === 'projects' && (
-          <ProjectsPage onOpened={() => setPage('editor')} onNewPiece={() => setDialog('new')} />
+          <ProjectsPage
+            onOpened={() => setPage('editor')}
+            onNewPiece={() => setDialog('new')}
+            onFillWall={() => setDialog('wallfill')}
+          />
         )}
         {page === 'catalog' && (
           <CatalogPage
@@ -844,6 +849,12 @@ export function App() {
             setWizardFrom(null);
             setDialog('wizard');
           }}
+          onFillWall={() => setDialog('wallfill')}
+          onOpened={() => setPage('editor')}
+        />
+        <WallFillDialog
+          open={dialog === 'wallfill'}
+          onClose={() => setDialog((d) => (d === 'wallfill' ? null : d))}
           onOpened={() => setPage('editor')}
         />
         <WizardDialog
