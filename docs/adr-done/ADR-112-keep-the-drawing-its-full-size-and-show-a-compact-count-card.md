@@ -1,7 +1,8 @@
 # ADR-112: Keep the drawing its full size and show a compact count card inside it
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-27
+- Implemented: 2026-10-27
 - Depends on: ADR-109
 - Design: docs/ui-design.md (section 4, editor screen: stage, quick-count card, bottom sheet)
 - Backlog: N111
@@ -15,7 +16,7 @@ The user, 2026-10-27, with a phone screenshot of a project piece selected in Com
 inside the rendered 2d view, not over. It's size should also be much smaller. Also it should not contain the
 width/height, keep that only part of the side/bottom drawer." and "Force 2d view to maintain it's size, bottom cars can
 cover it partially, but not push it." In the screenshot the drawing had shrunk to a strip about 180 × 50 px: the card
-([ADR-109](ADR-109-show-the-quick-count-card-over-the-project-drawing-and-put-d.md)) takes its height from the top of
+([ADR-109](../adr/ADR-109-show-the-quick-count-card-over-the-project-drawing-and-put-d.md)) takes its height from the top of
 the view, and the bottom sheet takes the rest. This replaces, for the card, the ADR-106 decision to show Width and
 Depth "in the quick-count card over the drawing and the 3D view"
 ([ADR-106](../adr-done/ADR-106-change-a-whole-piece-s-width-and-depth-where-it-is-selected.md)); Width and Depth stay in
@@ -55,11 +56,11 @@ the side panel and the bottom sheet.
 
 ## Done when
 
-- [ ] With a piece or a project piece selected, the card over the drawing and the 3D view shows no "Width" or "Depth";
+- [x] With a piece or a project piece selected, the card over the drawing and the 3D view shows no "Width" or "Depth";
       the side panel / bottom sheet still shows both and typing a width resizes the piece.
-- [ ] The card lies inside the stage's box and does not cover the selected part, at 390 and 1280 px.
-- [ ] Each card row is at most 52 px tall and its buttons at least 44 × 44 px at 390 px with touch.
-- [ ] At 390 px the stage's height and the drawing's scale are the same with nothing selected, with a piece selected
+- [x] The card lies inside the stage's box and does not cover the selected part, at 390 and 1280 px.
+- [x] Each card row is at most 52 px tall and its buttons at least 44 × 44 px at 390 px with touch.
+- [x] At 390 px the stage's height and the drawing's scale are the same with nothing selected, with a piece selected
       and with the bottom sheet open.
-- [ ] At 390 px "Fronts", "Snap", "Select" and "Clear." sit on one row of the plan toolbar.
-- [ ] Find-it passes from the bare app at phone and desktop widths (`tools/stage-card/find-it.mjs`, production build).
+- [x] At 390 px "Fronts", "Snap", "Select" and "Clear." sit on one row of the plan toolbar.
+- [x] Find-it passes from the bare app at phone and desktop widths (`tools/stage-card/find-it.mjs`, production build).

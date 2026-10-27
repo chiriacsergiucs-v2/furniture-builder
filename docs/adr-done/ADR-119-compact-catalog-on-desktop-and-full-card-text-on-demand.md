@@ -1,7 +1,8 @@
 # ADR-119: Compact catalog on desktop and full card text on demand
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-27
+- Implemented: 2026-10-27
 - Depends on: ADR-118
 - Design: docs/ui-design.md (section 4, catalog)
 - Backlog: N118
@@ -10,7 +11,7 @@
 
 ## Context
 
-Critique: [2026-10-27 UI critique](../retros/2026-10-27-ui-critique.md). [ADR-118](ADR-118-make-the-catalog-compact-on-a-phone-and-put-the-wizard-form.md) made the Catalog compact only at
+Critique: [2026-10-27 UI critique](../retros/2026-10-27-ui-critique.md). [ADR-118](../adr-done/ADR-118-make-the-catalog-compact-on-a-phone-and-put-the-wizard-form.md) made the Catalog compact only at
 ≤ 760 px; at 1280 px it is still 36 785 px tall (G-140). On a phone each card's text lines end in an ellipsis with no
 way to read the rest (G-145). The user, 2026-10-27: "accept gap picks". G-145's pick named "the item's detail view",
 but the Catalog has no item detail view: tapping a card opens the item. Where the full text shows is G-146.
@@ -38,6 +39,6 @@ but the Catalog has no item detail view: tapping a card opens the item. Where th
 
 ## Done when
 
-- [ ] At 1280 px the Catalog page is under 15 000 px tall and "About this family" opens the details.
-- [ ] At 390 and 1280 px every cut card line can be read in full from the card without opening the item.
-- [ ] Find-it passes from the bare app at phone and desktop widths (`tools/catalog-compact/find-it.mjs`, extended).
+- [x] At 1280 px the Catalog page is under 15 000 px tall and "About this family" opens the details.
+- [x] At 390 and 1280 px every cut card line can be read in full from the card without opening the item.
+- [x] Find-it passes from the bare app at phone and desktop widths (`tools/catalog-compact/find-it.mjs`, extended).

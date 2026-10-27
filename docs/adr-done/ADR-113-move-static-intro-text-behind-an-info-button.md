@@ -1,7 +1,8 @@
 # ADR-113: Move static intro text behind an info button
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-27
+- Implemented: 2026-10-27
 - Depends on: none
 - Design: docs/ui-design.md (section 3, components: info button)
 - Backlog: N112
@@ -46,12 +47,12 @@ user chose "Move to ⓘ". This changes how ADR-010's labelled guidance is shown:
 
 ## Done when
 
-- [ ] The Project panel shows no "Pieces are cut and bought together" until its ⓘ button is pressed; pressing it shows
+- [x] The Project panel shows no "Pieces are cut and bought together" until its ⓘ button is pressed; pressing it shows
       the text, Escape hides it and focus returns to the button.
-- [ ] Every intro and guidance line in the inventory is behind an ⓘ button; no warning, error, diagnostic, empty
+- [x] Every intro and guidance line in the inventory is behind an ⓘ button; no warning, error, diagnostic, empty
       state or live value moved; guidance popovers start with "Guidance".
-- [ ] ⓘ buttons are at least 44 × 44 px under touch and have an accessible name.
-- [ ] Find-it passes from the bare app at phone and desktop widths (`tests/find-it/info-tip.test.tsx`, jsdom).
+- [x] ⓘ buttons are at least 44 × 44 px under touch and have an accessible name.
+- [x] Find-it passes from the bare app at phone and desktop widths (`tests/find-it/info-tip.test.tsx`, jsdom).
 
 ## Open questions
 

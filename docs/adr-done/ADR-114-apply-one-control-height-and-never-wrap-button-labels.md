@@ -1,7 +1,8 @@
 # ADR-114: Apply one control height and never wrap button labels
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-27
+- Implemented: 2026-10-27
 - Depends on: none
 - Design: docs/ui-design.md (section 2, tokens; section 3, buttons)
 - Backlog: N113
@@ -40,8 +41,8 @@ full-width Lock and Print buttons, ragged Arrange rows. Asked, the user chose "A
 
 ## Done when
 
-- [ ] At 390 (touch) and 1280 px no button, tab or segmented label in the editor, Build & Preview, Projects, Catalog
+- [x] At 390 (touch) and 1280 px no button, tab or segmented label in the editor, Build & Preview, Projects, Catalog
       or Settings is taller than one line (find-it measures each against its line height).
-- [ ] Every control is 38 px tall with a mouse (30 in toolbars and tables) and at least 44 × 44 px with touch.
-- [ ] "Build & Preview", "Merge with right piece", "Suggest run parts" and the five result tabs each fit one row at 390.
-- [ ] Find-it passes from the bare app at phone and desktop widths (`tools/control-rule/find-it.mjs`, production build).
+- [x] Every control is 38 px tall with a mouse (30 in toolbars and tables) and at least 44 × 44 px with touch.
+- [x] "Build & Preview", "Merge with right piece", "Suggest run parts" and the five result tabs each fit one row at 390.
+- [x] Find-it passes from the bare app at phone and desktop widths (`tools/control-rule/find-it.mjs`, production build).
