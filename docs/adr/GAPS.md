@@ -1076,28 +1076,82 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Should the 3D view get resize handles for models?
 - Suggested pick: Typed fields only (the request is to make the sizes editable; handles would be an exception to ADR-014's select-only viewer).
 
-### G-113: Doubled rails on a rails top
+### G-113: Fill a wall: corner and L walls
 
 - Status: Open
-- Origin: ADR-103, 2026-10-27, Claude default
+- Origin: ADR-103, 2026-10-27; Claude scoped it out
+- Missing: Fill a wall works on one straight wall only; corner and L-shaped walls are not filled.
+- Request: a reverse furniture building, total width, to the mix of furniture pieces that fill that space (context: corners not mentioned)
+- Questions: Should Fill a wall also fill corner or L walls, with a corner cabinet at the joint?
+- Suggested pick: Fill each straight wall with ADR-103, then join two walls with a catalog corner cabinet (ADR-025). (estimate: effort +40%, value +15%)
+
+### G-114: Fill a wall: room openings shape the mix
+
+- Status: Open
+- Origin: ADR-103, 2026-10-27; Claude scoped it out
+- Missing: Room windows, doors, pipes and outlets do not shape the suggested mixes; they are checked only after the project is made.
+- Request: a reverse furniture building, total width, to the mix of furniture pieces that fill that space (context: room openings not mentioned)
+- Questions: Should Fill a wall read the project room (ADR-058) and avoid windows, doors and outlets?
+- Suggested pick: Start Fill a wall from a wall of the project room and skip mixes that clash with its openings, using the existing room checks. (estimate: effort +30%, value +15%)
+
+### G-115: Fill a wall: when the wall row appears
+
+- Status: Open
+- Origin: ADR-104, 2026-10-27; open question defaulted by Claude
+- Missing: Whether every mix gets a wall row, or a Refine choice decides (any / always / never).
+- Request: Wall cabinets above (answer to: Which kinds of pieces may appear in a mix?)
+- Questions: Should the wall row appear in every mix, in some mixes, or be chosen in Refine (any / always / never)?
+- Suggested pick: Refine choice 'Wall cabinets: any / always / never', default any, so the first 4 cards show mixes with and without a wall row. (estimate: effort +3%, value +10%)
+
+### G-116: Fill a wall: carcasses with 3 or more equal fronts
+
+- Status: Open
+- Origin: ADR-103, 2026-10-27; Claude cut it while building
+- Missing: Equal fronts puts 1 or 2 fronts on a carcass only (a door front has 1 or 2 leaves); carcasses with 3 or more fronts are not suggested, so fronts under 200 mm wide (with the 400 mm min) give no mix.
+- Request: 6 equal front panels, what's behind is to be configured (answer: Equal fronts, any carcass widths)
+- Questions: Should a carcass carry 3 or more equal fronts (with dividers inside), for narrow fronts?
+- Suggested pick: Allow 3–4 fronts per carcass, built as equal bays with a divider and one door each, so narrow fronts still fill the wall. (estimate: effort +10%, value +5%)
+
+### G-117: Fill a wall: tall cabinet height
+
+- Status: Open
+- Origin: ADR-103, 2026-10-27; default chosen by Claude while building
+- Missing: Tall cabinets are always the catalog height (2200 mm, ADR-036 typical value); there is no tall-height field. A wall lower than that gets the warning on every mix with a tall cabinet.
+- Request: allow with a warning items like tall cabinets, above this height
+- Questions: Should Refine have a tall cabinet height field, or should tall cabinets follow the entered height?
+- Suggested pick: Add a Tall cabinet height field in Refine, catalog value prefilled; the warning stays when it is above the entered height. (estimate: effort +3%, value +10%)
+
+### G-118: Fill a wall: a width per base kind
+
+- Status: Open
+- Origin: ADR-103, 2026-10-27; Claude narrowed it while building
+- Missing: All base kinds in one mix share one width (tall cabinets may have their own round width); mixes such as an 800 drawer base next to 600 shelf bases are not suggested.
+- Request: So basically a mix and match (answer: Equal per kind, exact split)
+- Questions: Should each base kind (open shelves, drawers, door + shelves) get its own width in a mix?
+- Suggested pick: Also try one round width per base kind (steps of 50 mm), ranked after the shared width, so the cards show such mixes too. (estimate: effort +10%, value +15%)
+
+### G-119: Doubled rails on a rails top
+
+- Status: Open
+- Origin: ADR-105, 2026-10-27, Claude default
 - Missing: A doubled top on a rails top (two rails) is not built: the rails stay single and a warning says so.
 - Request: Add the doubled top support … 2 panels
 - Questions: Should 'Doubled' also double the two rails of a rails top, or stay a panel-top option only?
 - Suggested pick: Panel top only (default used): the user's answer was '2 panels', a rails top has no panel; doubling rails is a separate request (+5 % work, +0 % of this request).
 
-### G-114: Glue and screws for the doubled top
+### G-120: Glue and screws for the doubled top
 
 - Status: Open
-- Origin: ADR-103, 2026-10-27, Claude (ADR-010)
+- Origin: ADR-105, 2026-10-27, Claude (ADR-010)
 - Missing: No glue or screw line in the hardware list for joining the two top layers; the layers count as a carcass joint in the fastener tally only.
 - Request: Add the doubled top support … 2 panels
 - Questions: Which glue and screws (length, spacing) join the two layers? Not known; ADR-010 forbids inventing them.
 - Suggested pick: Leave it to the user's own fastener choice for carcass joints until they name a glue and screw (0 % work now).
 
-### G-115: Doubled bottom, sides or shelves
+### G-121: Doubled bottom, sides or shelves
 
 - Status: Open
-- Origin: ADR-103, 2026-10-27, Claude scope
+- Origin: ADR-105, 2026-10-27, Claude scope
 - Missing: Only the top can be doubled; a doubled bottom, side or shelf is not built.
 - Request: Add the doubled top support
 - Questions: Do you also want a doubled bottom or doubled sides?

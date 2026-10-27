@@ -342,7 +342,7 @@ describe('catalog metadata in the design (ADR-028)', () => {
   });
 });
 
-describe('doubled top (ADR-103)', () => {
+describe('doubled top (ADR-105)', () => {
   const tops = (d: Design) => buildModel(d).panels.filter((p) => p.role === 'top');
   for (const top of ['over', 'between'] as const)
     it(`top ${top}: two top panels under H, outer height and side joints kept, opening one panel lower`, () => {

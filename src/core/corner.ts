@@ -236,7 +236,7 @@ function buildDiagonal(
     });
   board('bottom', 'bottom', 'Bottom', ph);
   board('top', 'top', 'Top', H - t);
-  // A doubled top (ADR-103): a second board under the first; the outer height stays.
+  // A doubled top (ADR-105): a second board under the first; the outer height stays.
   const tt = p.topLayers === 2 ? 2 * t : t;
   if (tt > t) board('top/1', 'top', 'Top', H - tt);
   const room = H - ph - t - tt - s.count * t;

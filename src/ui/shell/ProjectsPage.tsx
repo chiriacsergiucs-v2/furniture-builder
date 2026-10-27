@@ -39,9 +39,11 @@ const KIND_TEXT = {
 export function ProjectsPage({
   onOpened,
   onNewPiece,
+  onFillWall,
 }: {
   onOpened: () => void;
   onNewPiece: () => void;
+  onFillWall?: () => void;
 }) {
   const load = useDesign((s) => s.load);
   const openProject = useDesign((s) => s.openProject);
@@ -200,6 +202,12 @@ export function ProjectsPage({
             <Icon name="cube" />
             New single piece
           </button>
+          {onFillWall && (
+            <button type="button" className="btn outline lg" onClick={onFillWall}>
+              <Icon name="project" />
+              Fill a wall
+            </button>
+          )}
         </div>
       </header>
 
