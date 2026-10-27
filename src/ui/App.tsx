@@ -10,6 +10,7 @@ import {
   saveProject,
 } from '../persist/db';
 import { useDesign } from '../store/designStore';
+import { keepSessionVersion } from '../store/versions';
 import type { Design } from '../core/types';
 import { NewDialog } from './Dialogs';
 import { SettingsDialog } from './Settings';
@@ -177,6 +178,9 @@ export function App() {
     canRedoPiece = useDesign((s) => s.future.length > 0);
   const canUndoProject = useDesign((s) => s.projectPast.length > 0),
     canRedoProject = useDesign((s) => s.projectFuture.length > 0);
+  // The step each would undo or redo, named (ADR-123).
+  const undoName = useDesign((s) => s.projectPastNames[s.projectPastNames.length - 1]),
+    redoName = useDesign((s) => s.projectFutureNames[0]);
   const [dialog, setDialog] = useState<null | 'new' | 'wizard' | 'render' | 'wallfill'>(null);
   const look = useLook();
   const openCatalog = () => {
@@ -395,6 +399,8 @@ export function App() {
     if (!project || !projectDirtyAt) return;
     const t = setTimeout(() => {
       setSave('saving');
+      // The project as it was opened is kept as a version at its first change (ADR-123, G-155).
+      void keepSessionVersion().catch(() => {});
       saveProject(project)
         .then(() => setSave('saved'))
         .catch(() => setSave('failed'));
@@ -610,7 +616,7 @@ export function App() {
                   onClick={undo}
                   disabled={!canUndo}
                   aria-label="Undo"
-                  title="Undo (Ctrl+Z)"
+                  title={inProject && undoName ? `Undo ${undoName} (Ctrl+Z)` : 'Undo (Ctrl+Z)'}
                 >
                   <Icon name="undo" />
                 </button>
@@ -620,7 +626,9 @@ export function App() {
                   onClick={redo}
                   disabled={!canRedo}
                   aria-label="Redo"
-                  title="Redo (Ctrl+Shift+Z)"
+                  title={
+                    inProject && redoName ? `Redo ${redoName} (Ctrl+Shift+Z)` : 'Redo (Ctrl+Shift+Z)'
+                  }
                 >
                   <Icon name="redo" />
                 </button>

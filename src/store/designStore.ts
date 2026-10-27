@@ -12,6 +12,10 @@ import { duplicateItem, mirrorItem, mirrorRun, tryTurn } from '../core/arrange';
 import { floorDrop, type FloorPoint } from '../core/drag3d';
 import { applyFinish, type FinishRole, type FinishScope } from '../core/finish';
 import { mergeItems } from '../core/merge';
+import { describeChange } from '../core/history';
+import { insertTemplate } from '../core/insertTemplate';
+import type { ProjectTemplate } from '../core/projectTemplate';
+import { applyStyle, type Style } from '../core/styles';
 import { addLinkedCopy, propagateLinks } from '../core/linked';
 import { alignItems, distributeItems, skippedText, type AlignHow } from '../core/align';
 import {
@@ -114,6 +118,19 @@ interface State {
   /** Project-level history (ADR-051): earlier and undone states of the open project. */
   projectPast: Project[];
   projectFuture: Project[];
+  /**
+   * Step names (ADR-123): `projectPastNames[i]` names the step that came after `projectPast[i]`;
+   * `projectFutureNames[i]` the step that redoing `projectFuture[i]` makes. Same lengths as the snapshots.
+   */
+  projectPastNames: string[];
+  projectFutureNames: string[];
+  /** The pieces of a just-inserted project template, placed together by the next tap on the plan (ADR-123). */
+  placingIds: string[];
+  /**
+   * The project as it was opened, until its first change (ADR-123, G-155): kept as a "When opened" version then.
+   * Taken (and cleared) by `takeSessionBase`.
+   */
+  sessionBase: Project | null;
   /**
    * Why the last move on the plan did nothing (ADR-095: a locked piece), shown over the plan until the next change or
    * selection. UI state only.
@@ -251,6 +268,25 @@ interface State {
   backToProject: () => void;
   undoProject: () => void;
   redoProject: () => void;
+  /** Jump `steps` back (negative) or forward (positive) in the project history (ADR-123 Edit history). */
+  jumpProject: (steps: number) => void;
+  /**
+   * Run `fn` as one named project step (ADR-123): every change made inside it undoes together. Nested calls fold into
+   * the outermost.
+   */
+  transact: (name: string, fn: () => void) => void;
+  /** Add a project template's pieces (ADR-123), selected and waiting for a tap on the plan; one undo step. */
+  insertTemplate: (t: ProjectTemplate) => string[];
+  /** Put a restored version's content in place of the open project (ADR-123); one undo step. */
+  restoreProjectTo: (p: Project) => void;
+  /** The opened project, once, if it changed since opening (ADR-123, G-155); null otherwise. */
+  takeSessionBase: () => Project | null;
+  /** Put a style on the pieces a finish scope reaches (ADR-123); one undo step. */
+  applyStyle: (
+    id: string,
+    style: Style,
+    scope: FinishScope,
+  ) => { applied: string[]; skipped: string[] };
   /** Run parts (ADR-036, ADR-054, ADR-061): propose again (forgets removals, turns automatic refresh on), remove one, settings. */
   suggestRunParts: () => void;
   removeRunPart: (id: string) => void;
@@ -368,7 +404,9 @@ export const useDesign = create<State>((rawSet, get) => {
     const keep = typeof selectedId !== 'string' || findInProduct(d.product, selectedId);
     set({ design: d, model: buildModel(d), selectedId: keep ? selectedId : null });
   };
-  const commitProject = (next: Project) => {
+  /** Inside `transact`: the depth, and the project and history as they were when it started. */
+  let txDepth = 0;
+  const commitProject = (next: Project, name?: string, opts?: { amend?: boolean }) => {
     // Pieces on or above others follow them (ADR-031); run parts follow the pieces in the same step (ADR-061).
     // A piece no longer in the project leaves its group (ADR-097).
     // A change to a linked copy reaches the others, or unlinks it (ADR-111).
@@ -379,14 +417,26 @@ export const useDesign = create<State>((rawSet, get) => {
       updatedAt: new Date().toISOString(),
     };
     const prev = get().project;
+    // Amending (a template placed by the tap after its insert): the change joins the step before it (ADR-123).
+    const amend = !!opts?.amend && get().projectPast.length > 0;
     set({
       project: stamped,
       projectModel: buildProjectModel(stamped),
       projectDirtyAt: Date.now(),
       notice: null,
-      ...(prev
-        ? { projectPast: [...get().projectPast, prev].slice(-HISTORY), projectFuture: [] }
-        : {}),
+      ...(prev && !amend
+        ? {
+            projectPast: [...get().projectPast, prev].slice(-HISTORY),
+            projectPastNames: [
+              ...get().projectPastNames,
+              name ?? describeChange(prev, next),
+            ].slice(-HISTORY),
+            projectFuture: [],
+            projectFutureNames: [],
+          }
+        : amend
+          ? { projectFuture: [], projectFutureNames: [] }
+          : {}),
     });
     keepSelected(stamped);
     syncDrill();
@@ -404,13 +454,22 @@ export const useDesign = create<State>((rawSet, get) => {
     });
   };
   /** Show an earlier or later state of the project; the selection survives if the piece still exists. */
-  const restoreProject = (p: Project, projectPast: Project[], projectFuture: Project[]) => {
+  const restoreProject = (
+    p: Project,
+    projectPast: Project[],
+    projectFuture: Project[],
+    projectPastNames: string[],
+    projectFutureNames: string[],
+  ) => {
     const sel = get().selectedItemId;
     set({
       project: p,
       projectModel: buildProjectModel(p),
       projectPast,
       projectFuture,
+      projectPastNames,
+      projectFutureNames,
+      placingIds: [],
       projectDirtyAt: Date.now(),
       placingItemId: null,
       notice: null,
@@ -449,6 +508,10 @@ export const useDesign = create<State>((rawSet, get) => {
     projectDirtyAt: 0,
     projectPast: [],
     projectFuture: [],
+    projectPastNames: [],
+    projectFutureNames: [],
+    placingIds: [],
+    sessionBase: null,
     placingItemId: null,
     drawingRoom: null,
     templateEdit: null,
@@ -472,6 +535,10 @@ export const useDesign = create<State>((rawSet, get) => {
         drillItemId: null,
         projectPast: [],
         projectFuture: [],
+        projectPastNames: [],
+        projectFutureNames: [],
+        placingIds: [],
+        sessionBase: null,
       });
     },
     tapPiece: (x, y) => set({ selectedId: drill(get().model, x, y, get().selectedId) }),
@@ -507,6 +574,10 @@ export const useDesign = create<State>((rawSet, get) => {
         projectDirtyAt: 0,
         projectPast: [],
         projectFuture: [],
+        projectPastNames: [],
+        projectFutureNames: [],
+        placingIds: [],
+        sessionBase: p,
         placingItemId: null,
         drawingRoom: null,
         notice: null,
@@ -522,6 +593,10 @@ export const useDesign = create<State>((rawSet, get) => {
         drillItemId: null,
         projectPast: [],
         projectFuture: [],
+        projectPastNames: [],
+        projectFutureNames: [],
+        placingIds: [],
+        sessionBase: null,
         placingItemId: null,
         drawingRoom: null,
       }),
@@ -618,7 +693,8 @@ export const useDesign = create<State>((rawSet, get) => {
     replaceItem: (id, design) => {
       const { project: p, projectModel: pm } = get();
       if (!p || !pm || !p.items.some((i) => i.id === id)) return null;
-      commitProject(replaceItem(p, id, design));
+      const was = p.items.find((i) => i.id === id)!;
+      commitProject(replaceItem(p, id, design), `Replace ${was.design.name}`);
       const { project: next, projectModel: nm } = get();
       return replaceReport(p, pm, next!, nm!, id);
     },
@@ -660,7 +736,7 @@ export const useDesign = create<State>((rawSet, get) => {
       const p = get().project;
       if (!p) return { reasons: [] };
       const res = mirrorRun(p, id);
-      if (res.project !== p) commitProject(res.project);
+      if (res.project !== p) commitProject(res.project, 'Mirror the run');
       return { reasons: res.reasons, ...(res.refused ? { refused: res.refused } : {}) };
     },
     selectItem: (id) => {
@@ -736,14 +812,15 @@ export const useDesign = create<State>((rawSet, get) => {
       if (!p) return '';
       const res = alignItems(p, get().selectedItemIds, how);
       if (res.project !== p && res.project.items.some((it, i) => it !== p.items[i]))
-        commitProject(res.project);
+        commitProject(res.project, 'Align');
       return skippedText(res);
     },
     distributeSelection: () => {
       const p = get().project;
       if (!p) return '';
       const res = distributeItems(p, get().selectedItemIds);
-      if (res.project.items.some((it, i) => it !== p.items[i])) commitProject(res.project);
+      if (res.project.items.some((it, i) => it !== p.items[i]))
+        commitProject(res.project, 'Distribute');
       // The gaps as they now are, also when a locked piece kept its place.
       const gaps = res.gaps ? `Gaps now ${res.gaps.join(' · ')} mm.` : '';
       return [gaps, skippedText(res)].filter(Boolean).join(' ');
@@ -752,14 +829,15 @@ export const useDesign = create<State>((rawSet, get) => {
       const p = get().project;
       if (!p) return null;
       const res = groupItems(p, get().selectedItemIds);
-      if (res.groupId) commitProject(res.project);
+      if (res.groupId)
+        commitProject(res.project, `Group ${get().selectedItemIds.length} pieces`);
       return res.groupId;
     },
     ungroup: (groupId) => {
       const p = get().project;
       if (!p) return;
       const next = ungroup(p, groupId);
-      if (next !== p) commitProject(next);
+      if (next !== p) commitProject(next, 'Ungroup');
     },
     editItem: (id) => {
       const item = get().project?.items.find((i) => i.id === id);
@@ -788,9 +866,18 @@ export const useDesign = create<State>((rawSet, get) => {
       const p = refreshRunParts(resolvePlacements(propagateLinks(before, raw, get().linkAll)));
       // Edits made in the piece editor become one project undo step.
       projectBeforeEdit = null;
+      const edited = p.items.find((i) => i.id === get().editingItemId);
       const history =
         before && before !== p
-          ? { projectPast: [...get().projectPast, before].slice(-HISTORY), projectFuture: [] }
+          ? {
+              projectPast: [...get().projectPast, before].slice(-HISTORY),
+              projectPastNames: [
+                ...get().projectPastNames,
+                edited ? `Edit ${edited.design.name}` : describeChange(before, p),
+              ].slice(-HISTORY),
+              projectFuture: [],
+              projectFutureNames: [],
+            }
           : {};
       set({
         editingItemId: null,
@@ -805,15 +892,86 @@ export const useDesign = create<State>((rawSet, get) => {
     },
     undoProject: () => {
       const { project, projectPast, projectFuture, editingItemId } = get();
+      const { projectPastNames: pn, projectFutureNames: fn } = get();
       const prev = projectPast[projectPast.length - 1];
       if (!project || !prev || editingItemId) return;
-      restoreProject(prev, projectPast.slice(0, -1), [project, ...projectFuture]);
+      const name = pn[pn.length - 1] ?? 'Change the project';
+      restoreProject(
+        prev,
+        projectPast.slice(0, -1),
+        [project, ...projectFuture],
+        pn.slice(0, -1),
+        [name, ...fn],
+      );
     },
     redoProject: () => {
       const { project, projectPast, projectFuture, editingItemId } = get();
+      const { projectPastNames: pn, projectFutureNames: fn } = get();
       const next = projectFuture[0];
       if (!project || !next || editingItemId) return;
-      restoreProject(next, [...projectPast, project], projectFuture.slice(1));
+      restoreProject(
+        next,
+        [...projectPast, project],
+        projectFuture.slice(1),
+        [...pn, fn[0] ?? 'Change the project'],
+        fn.slice(1),
+      );
+    },
+    jumpProject: (steps) => {
+      const n = Math.trunc(Math.abs(steps));
+      for (let i = 0; i < n; i++) {
+        const before = get().project;
+        if (steps < 0) get().undoProject();
+        else get().redoProject();
+        if (get().project === before) break;
+      }
+    },
+    transact: (name, fn) => {
+      const start = get().project;
+      const past = get().projectPast,
+        names = get().projectPastNames;
+      txDepth++;
+      try {
+        fn();
+      } finally {
+        txDepth--;
+      }
+      if (txDepth || !start || get().project === start) return;
+      // Every step made inside becomes one: the history as it was, plus the state before (ADR-123, G-157).
+      set({
+        projectPast: [...past, start].slice(-HISTORY),
+        projectPastNames: [...names, name].slice(-HISTORY),
+        projectFuture: [],
+        projectFutureNames: [],
+      });
+    },
+    insertTemplate: (t) => {
+      const p = get().project;
+      if (!p) return [];
+      const res = insertTemplate(p, t);
+      if (!res.ids.length) return [];
+      commitProject(res.project, `Insert ${t.name}`);
+      set({ placingIds: res.ids, placingItemId: res.ids[0] });
+      get().selectItems(res.ids);
+      return res.ids;
+    },
+    restoreProjectTo: (next) => {
+      const p = get().project;
+      if (!p) return;
+      commitProject({ ...next, id: p.id }, 'Restore a version');
+    },
+    takeSessionBase: () => {
+      const { sessionBase, project } = get();
+      if (!sessionBase || !project || project === sessionBase) return null;
+      set({ sessionBase: null });
+      return sessionBase;
+    },
+    applyStyle: (id, style, scope) => {
+      const p = get().project;
+      if (!p) return { applied: [], skipped: [] };
+      const r = applyStyle(p, id, style, scope, get().selectedItemIds);
+      if (r.applied.length) commitProject(r.project, `Apply style ${style.name}`);
+      return { applied: r.applied, skipped: r.skipped };
     },
     suggestRunParts: () => {
       const p = get().project;
@@ -875,18 +1033,31 @@ export const useDesign = create<State>((rawSet, get) => {
       const p = get().project;
       if (!p) return { applied: [], skipped: [] };
       const r = applyFinish(p, id, role, board, scope, get().selectedItemIds);
-      if (r.applied.length) commitProject(r.project);
+      if (r.applied.length) commitProject(r.project, 'Apply finish');
       return { applied: r.applied, skipped: r.skipped };
     },
     placeAt: (x, z) => {
-      const { project: p, placingItemId: id } = get();
+      const { project: p, placingItemId: id, placingIds } = get();
       const it = p?.items.find((i) => i.id === id);
-      set({ placingItemId: null });
+      set({ placingItemId: null, placingIds: [] });
       if (!p || !it) return;
       const position = tapPosition(it, x, z);
+      // A just-inserted template moves as a block, in the same undo step as its insert (ADR-123).
+      if (placingIds.length) {
+        const left = Math.min(
+          ...p.items.filter((i) => placingIds.includes(i.id)).map((i) => i.position.x),
+        );
+        const back = Math.min(
+          ...p.items.filter((i) => placingIds.includes(i.id)).map((i) => i.position.z),
+        );
+        const res = moveItems(p, placingIds, position.x - left, position.z - back);
+        if (!res.reason && res.project !== p)
+          commitProject(res.project, undefined, { amend: true });
+        return;
+      }
       commitProject({ ...p, items: p.items.map((i) => (i.id === it.id ? { ...i, position } : i)) });
     },
-    stopPlacing: () => set({ placingItemId: null }),
+    stopPlacing: () => set({ placingItemId: null, placingIds: [] }),
     setRoom: (room) => {
       const p = get().project;
       if (!p) return;
