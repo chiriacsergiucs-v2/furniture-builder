@@ -268,18 +268,6 @@ export interface ResearchBundle {
   features: ResearchFeature[];
   contradictions: Contradiction[];
   unextracted: Unextracted[];
-  /** Features deleted because the app has built them (ADR-111); one line each so the audit still accounts for their findings. Never shown. */
-  removed?: RemovedFeature[];
-}
-
-/** A feature deleted from the bundle because the app has built it (ADR-111). */
-export interface RemovedFeature {
-  id: string;
-  name: string;
-  /** The backlog row or ADR that shows it built, or the built feature it was merged into. */
-  reason: string;
-  /** Findings it was linked to, including those an inferred feature came from. */
-  findings: string[];
 }
 
 export const SELECTIONS = [

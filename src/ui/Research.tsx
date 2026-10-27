@@ -261,21 +261,14 @@ function AppSummary({ ctx }: { ctx: Ctx }) {
   const shown = all.filter((f) => !mergedOf(f, marks));
   const n = (s: Implementation) => shown.filter((f) => implementationOf(f, marks) === s).length;
   const built = n('implemented') + n('verified');
-  // Features the app has built are deleted from the research data (ADR-111); a status set on the page still counts.
-  const removed = view.documents.reduce((k, d) => k + (d.latest.removed?.length ?? 0), 0);
   return (
     <section className="app-summary" aria-label="Built in this app">
       <h2 className="group-head">Built in this app</h2>
       <p className="alert ok">
         <Icon name="check" className="sm" />
         <span>
-          {removed > 0 && (
-            <>
-              <strong className="num">{removed}</strong> features the app has built are no longer
-              listed.{' '}
-            </>
-          )}
-          Of the {shown.length} left (after {all.length - shown.length} merged as the same idea):{' '}
+          Features the app has built are no longer listed (ADR-111). Of the {shown.length} left
+          (after {all.length - shown.length} merged as the same idea):{' '}
           <button
             type="button"
             className="link"

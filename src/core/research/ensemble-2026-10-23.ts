@@ -7,7 +7,6 @@
 import text from '../../../docs/research/2026-10-23-furniture-ensemble-builder.md?raw';
 import { ENSEMBLE_CITATIONS } from './ensemble-2026-10-23.citations';
 import { ENSEMBLE_CONTRADICTIONS, ENSEMBLE_FEATURES } from './ensemble-2026-10-23.features';
-import { ENSEMBLE_REMOVED } from './ensemble-2026-10-23.app';
 import {
   RESEARCH_FORMAT,
   RESEARCH_SCHEMA,
@@ -2225,10 +2224,4 @@ export const ENSEMBLE_BUNDLE: ResearchBundle = {
   features: ENSEMBLE_FEATURES,
   contradictions: ENSEMBLE_CONTRADICTIONS,
   unextracted: [],
-  removed: ENSEMBLE_REMOVED.map(([slug, name, reason, findings]) => ({
-    id: `ens.f.${slug}`,
-    name,
-    reason,
-    findings: findings.map((n) => `ens.n.${n}`),
-  })),
 };
