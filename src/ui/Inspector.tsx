@@ -49,6 +49,7 @@ import {
 } from './controls';
 import { Icon } from './icons';
 import { CountStepper } from './CountStepper';
+import { PieceSize } from './PieceSize';
 import { askConfirm } from './Confirm';
 import { useUi } from './shell/uiStore';
 import {
@@ -133,6 +134,7 @@ function ComposeStart() {
   const prod = useDesign((s) => s.design.product);
   const select = useDesign((s) => s.select);
   const whole = useDesign((s) => s.selectedId === null);
+  const resize = useDesign((s) => s.resizePiece);
   const setSettingsOpen = useUi((s) => s.setSettingsOpen);
   const roots = productRoots(prod);
   return (
@@ -146,6 +148,7 @@ function ComposeStart() {
             : 'This piece has no spaces to fill. Its sizes and boards are under Settings.'}
         </p>
       </header>
+      {whole && <PieceSize product={prod} onChange={resize} />}
       {roots.map((r) => (
         <button key={r.root.id} type="button" className="row-btn" onClick={() => select(r.root.id)}>
           <span className="glyph">

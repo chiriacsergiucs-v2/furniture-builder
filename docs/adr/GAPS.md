@@ -1165,3 +1165,21 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: suggest a good width per piece ... resulting in a few pieces of furniture mixed (context: no limit was asked for)
 - Questions: Is 40 pieces per wall enough, or should the limit be higher?
 - Suggested pick: Keep 40: a 400 mm min fills a 16 m wall; longer runs are better as several walls. (estimate: effort 0%, value 0%)
+
+### G-123: Width and depth card over the project view for a selected piece
+
+- Status: Open
+- Origin: ADR-106
+- Missing: In a project, a piece selected but not opened (Inside this piece) gets Width and Depth in its Selected piece card only; no floating card over the project drawing or 3D (the quick-count card shows there only for an opened piece, ADR-088).
+- Request: Add the posibility to change width/depth when whole cabinet or whole piece is selected; answer: Card + side panel
+- Questions: Should a selected project piece also get a floating Width/Depth card over the project plan, elevation and 3D?
+- Suggested pick: Yes, a floating card over the project views (closest to 'Card + side panel'; estimate +60 % work, +15 % of value)
+
+### G-124: No width/depth fields for a bed or a set of loose panels
+
+- Status: Open
+- Origin: ADR-106
+- Missing: A bed's size comes from its mattress and a set of loose panels has no outside size, so neither shows Width/Depth when selected; a filler/cover panel shows Width only (it has no depth).
+- Request: Add the posibility to change width/depth when whole cabinet or whole piece is selected
+- Questions: Should a bed show its mattress size there instead, and loose panels nothing?
+- Suggested pick: Bed: show the mattress width and length there (closest to the request; estimate +10 % work, +5 % of value)
