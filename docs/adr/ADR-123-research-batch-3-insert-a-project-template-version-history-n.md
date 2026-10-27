@@ -1,10 +1,11 @@
 # ADR-123: Research batch 3: insert a project template, version history, named undo steps, style suggestions
 
-- Status: Deferred (open questions G-155, G-156, G-157, G-158)
+- Status: Pending
 - Date: 2026-10-27
 - Depends on: ADR-051, ADR-055, ADR-060
 - Design: docs/ui-design.md (project editor, project panel, Add a piece list)
 - Backlog: N124
+- Agreed: 2026-10-27: "Accept default" (G-155 to G-158: the suggested picks)
 
 ## Context
 
@@ -28,20 +29,28 @@ and rule-based (no remote AI, ADR-002).
 ## Decision
 
 1. **Insert a project template.** The **Add a piece** list (ADR-094) gets a **Project templates** group; tapping one
-   then tapping the plan (or dragging) places all its pieces at that point, keeping their relative positions,
-   groups, linked copies and run parts (ADR-060 `projectFromTemplate` remapping) with new ids (ADR-011). Overlaps
-   are diagnostics (ADR-008). One undo step.
+   adds all its pieces to the right of the project's pieces and selects them; the next tap on the plan places the
+   block there (its left-back corner at the tap), and a drag moves the selection (ADR-097). Relative positions,
+   placements, linked copies (with new link ids, so they never join the project's own links) and the run-part
+   recipe are kept, with new ids (ADR-011). Overlaps are diagnostics (ADR-008). Insert and place are one undo step.
 2. **Version history.** The project panel gets **History**: a list of kept versions (date, piece count, name) with
    **Restore** and **Delete**. Restore keeps the current state as a version first, then opens the chosen one; it
-   never rewrites a version. Stored in a new table `projectVersions` (next Dexie version, additive; ADR-012).
-   When versions are kept waits for G-155, how many for G-156.
+   never rewrites a version. Stored in a new table `projectVersions` (Dexie v10, additive; ADR-012).
+   **When (G-155):** automatically once per editing session (the project as it was opened, kept at the first
+   change after opening) plus **Save a version** by hand. **How many (G-156):** every version is kept until the
+   user deletes it; nothing removes versions automatically.
 3. **Named undo steps.** Every project change is recorded with a name ("Move Base 600", "Group 3 pieces", "Replace
    Wall 800"); a compound action (replace + run parts + repair) is one transaction and one step. Undo/Redo show the
-   step's name, and **Edit history** lists the steps and jumps back to any of them. How it is stored waits for G-157.
+   step's name, and **Edit history** lists the steps and jumps back to any of them. **Storage (G-157):** labelled
+   snapshots: the existing project snapshots, each with its step name, given by the action or derived from what
+   changed (pure `describeChange` in `src/core/history.ts`); `transact(name, fn)` folds every change made inside
+   it into one step.
 4. **Style suggestions.** **Suggest a style** on the finish panel (ADR-055) lists board and handle combinations,
    each with a preview swatch; applying one uses finish scope (This piece / This run / Selected / Whole project),
-   one undo step. Suggestions are taste, not physical facts, and are labelled as suggestions. Where they come
-   from waits for G-158.
+   one undo step. Suggestions are taste, not physical facts, and are labelled as suggestions. **Source (G-158):**
+   built-in named styles (front board, carcass board and handle kind from the shipped board list and the ADR-024
+   handle kinds only) and the user's own combinations, counted from the pieces of their saved projects. A style's
+   handle kind replaces the kind on fronts that already have a handle; fronts without one stay so.
 
 Built as one change, one pull request, one test run and one ship (the user's request).
 
@@ -53,7 +62,8 @@ Built as one change, one pull request, one test run and one ship (the user's req
 ## Scope
 
 - In scope: the four features above, the Dexie version, core, storage and UI-logic tests, jsdom find-it.
-- Out of scope: nothing; the undecided parts are the open questions (G-155 to G-158).
+- Out of scope: nothing; the open questions G-155 to G-158 are answered above.
+- Found while building: versions of a deleted project stay on the device, unlisted (G-190).
 
 ## Consequences
 
@@ -63,7 +73,7 @@ Built as one change, one pull request, one test run and one ship (the user's req
 
 ## Done when
 
-- [ ] Inserting a template adds its pieces with new ids, relative positions, groups and links, one undo step (tests).
+- [ ] Inserting a template adds its pieces with new ids, relative positions and new links, one undo step (tests).
 - [ ] The new Dexie version keeps every existing row; projects and designs read back unchanged (storage tests).
 - [ ] Restore keeps the current state as a version first and never rewrites or deletes a version (storage tests).
 - [ ] Each project action records its step name; a replace with run parts and a repair undoes as one step (tests).
@@ -73,11 +83,5 @@ Built as one change, one pull request, one test run and one ship (the user's req
 
 ## Open questions
 
-- **G-155** When is a version kept: automatically once per editing session plus **Save a version** by hand, by hand
-  only, or on every change? Suggested: per session plus by hand (estimate +10 % work, +30 % of value).
-- **G-156** How many: every version until the user deletes it, or the last N with older ones dropped automatically?
-  Suggested: keep every version (nothing deleted without the user, ADR-012).
-- **G-157** Undo storage: labelled snapshots grouped into transactions, or inverse commands? Suggested: labelled
-  snapshots (gives the named log and atomic steps; inverse commands estimate +80 % work, under +5 % of value).
-- **G-158** Style source: built-in named styles from the shipped board and handle lists, the user's own past
-  combinations, or both? Suggested: both (estimate +30 % work, +40 % of value).
+None. Answered 2026-10-27 ("Accept default"): G-155 per session plus by hand; G-156 keep every version; G-157
+labelled snapshots grouped into transactions; G-158 built-in styles and the user's own combinations.

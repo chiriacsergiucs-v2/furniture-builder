@@ -13,6 +13,10 @@ import {
   resolvePlacements,
   rotationOf,
   roomToPiece,
+  runHandleMembers,
+  runOf,
+  suggestRunParts,
+  applyRunHandles,
   setLocked,
   splitRotation,
   validateProject,
@@ -161,12 +165,26 @@ describe('typed rotation of a project piece (ADR-121)', () => {
     expect(pm.pieces[0].clearances.every((c) => c.box.yaw?.deg === 30)).toBe(true);
   });
 
-  it('keeps an angled piece out of runs and their worktops', () => {
-    const p = run(['base-door', 'base-door']);
-    const turned = setItemRotation(p, p.items[0].id, 10).project;
+  it('keeps an angled piece out of runs, their worktops and run handles (G-171, ADR-125)', () => {
+    const p = run(['base-door', 'base-door', 'base-door']);
+    const ids = p.items.map((i) => i.id);
+    expect(runOf(p, ids[2])).toEqual(ids);
+    const turned = setItemRotation(p, ids[2], 10).project;
     const pm = buildProjectModel(turned);
-    expect(pm.pieces[0].footprint).toHaveLength(4);
-    expect(pm.pieces[0].outline.yaw?.deg).toBe(10);
+    expect(pm.pieces[2].footprint).toHaveLength(4);
+    expect(pm.pieces[2].outline.yaw?.deg).toBe(10);
+    expect(runOf(turned, ids[2])).toBeNull();
+    expect(suggestRunParts(turned).every((rp) => !rp.from?.includes(ids[2]))).toBe(true);
+    // A run handle over all three reaches the two straight pieces only; the angled one keeps its own design.
+    const handled: Project = {
+      ...turned,
+      schemaVersion: PROJECT_SCHEMA,
+      runHandles: [{ id: 'rh', from: ids, handle: { kind: 'bar', holeSpacing: 128 }, height: 600 }],
+    };
+    expect(runHandleMembers(handled, handled.runHandles![0])).toEqual(ids.slice(0, 2));
+    const built = applyRunHandles(handled);
+    expect(built.items[2]).toBe(handled.items[2]);
+    expect(built.items[0]).not.toBe(handled.items[0]);
   });
 
   it('maps a tap back into the piece through its angle (ADR-083)', () => {
@@ -188,7 +206,8 @@ describe('saving pieces at an angle (ADR-011)', () => {
       ...setItemRotation(p, p.items[0].id, 30).project,
       schemaVersion: PROJECT_SCHEMA,
     };
-    expect(PROJECT_SCHEMA).toBe(10);
+    expect(PROJECT_SCHEMA).toBeGreaterThanOrEqual(10);
+    expect(validateProject({ ...turned, schemaVersion: 10 })).toEqual([]);
     expect(validateProject(turned)).toEqual([]);
     expect(validateProject({ ...turned, schemaVersion: 9 })).toContain(
       'Pieces at an angle need project schemaVersion 10',

@@ -2,18 +2,24 @@
  * Run parts the user asks for (ADR-075): a worktop over chosen adjacent base units, a worktop's overhangs, and
  * crown, pelmet and ceiling-filler trims over wall or tall units. Every size comes from the core plan
  * (`planRuns`); this only collects the choice. Trim heights have no default: the user enters them.
+ * Also handles for a run and sinks over base units (ADR-125).
  */
-import { useMemo, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
+import { newId } from '../core/design';
 import { projectBoards, roleBoard } from '../core/finish';
 import {
+  BAR_SPACINGS,
   materialKey,
   requestCandidates,
   requestKey,
+  runHandleMembers,
   WORKTOP_OVERHANG,
+  type RunHandle,
   type RunPart,
   type RunRequest,
   type TrimKind,
 } from '../core/project';
+import type { Handle } from '../core/types';
 import { useDesign } from '../store/designStore';
 import { MmField, Segmented, Select, Toggle } from './controls';
 import { Icon } from './icons';
@@ -294,5 +300,297 @@ function HeightField({
         {showErr ? 'Whole number from 1 to 3000.' : 'Enter the height; there is no default.'}
       </p>
     </div>
+  );
+}
+
+/** A whole-mm size the user types, empty until then (no default, ADR-010). */
+function TypedMm({
+  label,
+  value,
+  onChange,
+  hint,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  hint: string;
+}) {
+  const id = useId();
+  const showErr = value.trim() !== '' && typed(value) === null;
+  return (
+    <div className="field">
+      <label htmlFor={id}>{label}</label>
+      <div className={`mm ${showErr ? 'invalid' : ''}`}>
+        <input
+          id={id}
+          inputMode="numeric"
+          value={value}
+          placeholder="mm"
+          aria-invalid={showErr}
+          aria-describedby={`${id}-hint`}
+          onChange={(e) => onChange(e.target.value.replace(/[^\d]/g, ''))}
+        />
+        <span className="unit">mm</span>
+      </div>
+      <p className={showErr ? 'field-error' : 'hint'} id={`${id}-hint`}>
+        {showErr ? 'Whole number from 1 to 3000.' : hint}
+      </p>
+    </div>
+  );
+}
+
+/** The typed whole mm from 1 to 3000, or null. */
+const typed = (v: string): number | null => {
+  const n = Number(v);
+  return v.trim() !== '' && Number.isInteger(n) && n >= 1 && n <= 3000 ? n : null;
+};
+
+const HANDLE_KINDS: { value: Handle['kind']; label: string }[] = [
+  { value: 'bar', label: 'Bar' },
+  { value: 'knob', label: 'Knob' },
+  { value: 'push', label: 'Push to open' },
+];
+
+const handleText = (h: RunHandle['handle']) =>
+  h.kind === 'bar'
+    ? `Bar, ${h.holeSpacing ?? 128} mm centres`
+    : h.kind === 'knob'
+      ? 'Knob'
+      : 'Push to open';
+
+/**
+ * Handles for a run and sinks over base units (ADR-125): one handle on every front of a run, on a line at a height
+ * the user enters or at the top of the fronts; a sink's worktop cut-out, sized by the user. The core applies them.
+ */
+export function RunHandlesAndSinks() {
+  const project = useDesign((s) => s.project)!;
+  const setRunHandle = useDesign((s) => s.setRunHandle);
+  const removeRunHandle = useDesign((s) => s.removeRunHandle);
+  const setSink = useDesign((s) => s.setSink);
+  const removeSink = useDesign((s) => s.removeSink);
+  const runs = useMemo(() => requestCandidates(project).runs, [project]);
+  const [open, setOpen] = useState<'handles' | 'sink' | null>(null);
+  const [runIdx, setRunIdx] = useState('0');
+  const [kind, setKind] = useState<Handle['kind']>('bar');
+  const [spacing, setSpacing] = useState('128');
+  const [line, setLine] = useState<'height' | 'top'>('height');
+  const [height, setHeight] = useState('');
+  const [baseId, setBaseId] = useState('');
+  const [w, setW] = useState('');
+  const [d, setD] = useState('');
+  const name = (id: string) => project.items.find((i) => i.id === id)?.design.name ?? id;
+  const run = runs[Number(runIdx)] ?? runs[0];
+  // Push to open has no handle to line up.
+  const byHeight = kind !== 'push' && line === 'height';
+  const lineH = typed(height);
+  const handlesReady = !!run && (!byHeight || lineH !== null);
+  const bases = runs.flat();
+  const base = bases.includes(baseId) ? baseId : bases[0];
+  const sinkW = typed(w),
+    sinkD = typed(d);
+  const addHandles = () => {
+    if (!handlesReady) return;
+    setRunHandle({
+      id: newId(),
+      from: run,
+      handle: kind === 'bar' ? { kind, holeSpacing: Number(spacing) } : { kind },
+      ...(byHeight ? { height: lineH! } : {}),
+    });
+    setOpen(null);
+    setHeight('');
+  };
+  const addSink = () => {
+    if (!base || sinkW === null || sinkD === null) return;
+    setSink({ id: newId(), baseId: base, w: sinkW, d: sinkD });
+    setOpen(null);
+    setW('');
+    setD('');
+  };
+  const toggleOwn = (rh: RunHandle, id: string, own: boolean) => {
+    const rest = (rh.own ?? []).filter((x) => x !== id);
+    const next = own ? [...rest, id] : rest;
+    setRunHandle({ ...rh, own: next.length ? next : undefined });
+  };
+  const handles = project.runHandles ?? [];
+  const sinks = project.sinks ?? [];
+  return (
+    <>
+      {(handles.length > 0 || sinks.length > 0) && (
+        <ul className="run-list">
+          {handles.map((rh) => {
+            const members = runHandleMembers(project, rh);
+            const names = members.map(name).join(' + ');
+            return (
+              <li key={rh.id}>
+                <span>
+                  <strong>Handles for this run</strong>{' '}
+                  <span className="sub">
+                    {handleText(rh.handle)} ·{' '}
+                    {rh.height === undefined
+                      ? 'top of fronts'
+                      : `line ${rh.height} mm above the floor`}{' '}
+                    · {names || 'no run now'}
+                  </span>
+                </span>
+                <button
+                  type="button"
+                  className="btn icon ghost sm"
+                  aria-label={`Remove handles for the run of ${names}`}
+                  onClick={() => removeRunHandle(rh.id)}
+                >
+                  <Icon name="trash" />
+                </button>
+                {members.length > 0 && (
+                  <fieldset className="run-pick">
+                    <legend>Keeps its own handles</legend>
+                    {members.map((id) => (
+                      <Toggle
+                        key={id}
+                        label={name(id)}
+                        checked={!!rh.own?.includes(id)}
+                        onChange={(on) => toggleOwn(rh, id, on)}
+                      />
+                    ))}
+                  </fieldset>
+                )}
+              </li>
+            );
+          })}
+          {sinks.map((sk) => (
+            <li key={sk.id}>
+              <span>
+                <strong>Sink over {name(sk.baseId)}</strong>{' '}
+                <span className="num">
+                  cut-out {sk.w} × {sk.d}
+                </span>
+              </span>
+              <button
+                type="button"
+                className="btn icon ghost sm"
+                aria-label={`Remove the sink over ${name(sk.baseId)}`}
+                onClick={() => removeSink(sk.id)}
+              >
+                <Icon name="trash" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="run-ask-actions">
+        <button
+          type="button"
+          className="btn outline sm"
+          aria-expanded={open === 'handles'}
+          onClick={() => setOpen(open === 'handles' ? null : 'handles')}
+        >
+          <Icon name="plus" className="sm" />
+          Handles for this run…
+        </button>
+        <button
+          type="button"
+          className="btn outline sm"
+          aria-expanded={open === 'sink'}
+          onClick={() => setOpen(open === 'sink' ? null : 'sink')}
+        >
+          <Icon name="plus" className="sm" />
+          Add sink…
+        </button>
+      </div>
+      {open === 'handles' && (
+        <div className="run-ask" aria-label="Handles for this run" role="group">
+          {run ? (
+            <>
+              {runs.length > 1 ? (
+                <Select
+                  label="Run"
+                  value={String(runs.indexOf(run))}
+                  options={runs.map((r, i) => ({
+                    value: String(i),
+                    label: r.map(name).join(' + '),
+                  }))}
+                  onChange={setRunIdx}
+                />
+              ) : (
+                <p className="hint">Run: {run.map(name).join(' + ')}</p>
+              )}
+              <Segmented label="Handle" value={kind} options={HANDLE_KINDS} onChange={setKind} />
+              {kind === 'bar' && (
+                <Select
+                  label="Hole centres"
+                  value={spacing}
+                  options={BAR_SPACINGS.map((v) => ({ value: String(v), label: `${v} mm` }))}
+                  onChange={setSpacing}
+                />
+              )}
+              {kind !== 'push' && (
+                <Segmented<'height' | 'top'>
+                  label="Handle line"
+                  value={line}
+                  options={[
+                    { value: 'height', label: 'Height' },
+                    { value: 'top', label: 'Top of fronts' },
+                  ]}
+                  onChange={setLine}
+                />
+              )}
+              {byHeight && (
+                <TypedMm
+                  label="Line height above the floor"
+                  value={height}
+                  onChange={setHeight}
+                  hint="Enter the height; there is no default. A front the line does not cross gets the handle near its top."
+                />
+              )}
+              <button
+                type="button"
+                className="btn primary"
+                disabled={!handlesReady}
+                onClick={addHandles}
+              >
+                Add handles
+              </button>
+            </>
+          ) : (
+            <p className="hint">No base units on the floor facing the room yet.</p>
+          )}
+        </div>
+      )}
+      {open === 'sink' && (
+        <div className="run-ask" aria-label="Sink over a base unit" role="group">
+          {base ? (
+            <>
+              <Select
+                label="Sink over"
+                value={base}
+                options={bases.map((id) => ({ value: id, label: name(id) }))}
+                onChange={setBaseId}
+              />
+              <TypedMm
+                label="Cut-out width"
+                value={w}
+                onChange={setW}
+                hint="From the sink's installation drawing; there is no default."
+              />
+              <TypedMm
+                label="Cut-out depth"
+                value={d}
+                onChange={setD}
+                hint="From the sink's installation drawing; there is no default."
+              />
+              <button
+                type="button"
+                className="btn primary"
+                disabled={sinkW === null || sinkD === null}
+                onClick={addSink}
+              >
+                Add sink
+              </button>
+            </>
+          ) : (
+            <p className="hint">No base units on the floor facing the room yet.</p>
+          )}
+        </div>
+      )}
+    </>
   );
 }
