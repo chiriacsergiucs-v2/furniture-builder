@@ -38,17 +38,32 @@ export const kerfOf = (d: Design) => d.cutting?.kerf ?? DEFAULT_KERF;
 
 /** The document shape this app writes: 3 adds edge band specs on boards (ADR-077); 1 and 2 still load. */
 export const SCHEMA_VERSION = 3;
+/** A design that leaves parts out is written as 4 (`Design.omit`, N124). */
+export const OMIT_SINCE = 4;
+
+/** Leave parts out (`on`) or put them back (N124); version 4 only while something is left out. */
+export function setOmitted(d: Design, ids: string[], on: boolean): Design {
+  const cur = new Set(d.omit ?? []);
+  for (const id of ids) {
+    if (on) cur.add(id);
+    else cur.delete(id);
+  }
+  const { omit: _old, ...rest } = d;
+  void _old;
+  return cur.size
+    ? { ...rest, omit: [...cur], schemaVersion: OMIT_SINCE }
+    : { ...rest, schemaVersion: d.schemaVersion === OMIT_SINCE ? SCHEMA_VERSION : d.schemaVersion };
+}
 
 /**
  * Older versions → 3 in memory: version 1 gets stock sheets and cutting settings; 2 → 3 adds only optional band
  * fields, so nothing else changes. Returns the same object when already current.
  */
 export function upgradeDesign(d: Design): Design {
-  if (d.schemaVersion === SCHEMA_VERSION && d.cutting && d.materials.every((m) => m.sheet))
-    return d;
+  if (d.schemaVersion >= SCHEMA_VERSION && d.cutting && d.materials.every((m) => m.sheet)) return d;
   return {
     ...d,
-    schemaVersion: SCHEMA_VERSION,
+    schemaVersion: d.schemaVersion === OMIT_SINCE ? OMIT_SINCE : SCHEMA_VERSION,
     cutting: d.cutting ?? { kerf: DEFAULT_KERF },
     materials: d.materials.map((m) => (m.sheet ? m : { ...m, sheet: defaultSheetFor(m) })),
   };
@@ -921,8 +936,18 @@ function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0)
 export function validateDesign(d: unknown): string[] {
   const errs: string[] = [];
   if (!isObj(d)) return ['Design must be an object'];
-  if (d.schemaVersion !== 1 && d.schemaVersion !== 2 && d.schemaVersion !== 3)
+  if (![1, 2, 3, OMIT_SINCE].includes(d.schemaVersion as number))
     errs.push('Unsupported schemaVersion');
+  if (d.omit !== undefined) {
+    if (
+      !Array.isArray(d.omit) ||
+      d.omit.length > 2000 ||
+      !d.omit.every((x) => typeof x === 'string' && x.length > 0 && x.length <= 300)
+    )
+      errs.push('Invalid left-out parts');
+    else if ((d.schemaVersion as number) < OMIT_SINCE)
+      errs.push(`Left-out parts need schemaVersion ${OMIT_SINCE}`);
+  }
   if (
     d.cutting !== undefined &&
     !(isObj(d.cutting) && isInt(d.cutting.kerf) && (d.cutting.kerf as number) <= 20)

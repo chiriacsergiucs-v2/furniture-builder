@@ -383,7 +383,7 @@ function Suggestions({
 
 /**
  * `from`: a piece made in the wizard, reopened with its stored answers; "Update piece" replaces it in place (ADR-046).
- * `toProject`: started from a project's Add a piece; "Add to project" saves the piece and adds it to the open project,
+ * `toProject`: started from the Catalog with a project open; "Add to project" saves the piece and adds it to the open project,
  * which stays open (ADR-107).
  */
 export function WizardDialog({

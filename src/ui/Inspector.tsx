@@ -36,6 +36,7 @@ import type {
   SplitSize,
 } from '../core/types';
 import { useDesign } from '../store/designStore';
+import { LeaveOutParts } from './LeaveOut';
 import {
   Counter,
   Group,
@@ -79,6 +80,19 @@ const KIND_LABEL: Record<SpaceKind, string> = {
  * where the dialog title is the h2 and the editor its h3 (ADR-116).
  */
 export function Inspector({ mode }: { mode: 'compose' | 'configure' }) {
+  const design = useDesign((s) => s.design);
+  return (
+    <>
+      <InspectorBody mode={mode} />
+      {/* Leave out parts of this piece (N124), its frame too. */}
+      <Group title="Leave out parts" defaultOpen={false}>
+        <LeaveOutParts design={design} />
+      </Group>
+    </>
+  );
+}
+
+function InspectorBody({ mode }: { mode: 'compose' | 'configure' }) {
   const design = useDesign((s) => s.design);
   const selectedId = useDesign((s) => s.selectedId);
   const prod = design.product;

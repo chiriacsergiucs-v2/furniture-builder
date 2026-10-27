@@ -22,8 +22,6 @@ import { ConfirmHost } from './Confirm';
 import { catalogFamilies } from '../core/catalog';
 import { useTemplates } from '../store/templatesStore';
 import { PlanView, ProjectPanel } from './Project';
-import { PieceList } from './PieceList';
-import { usePieceList } from './pieceDrag';
 import { useView } from './useView';
 import { Elevation } from './Elevation';
 import { Inspector, selectionLabel } from './Inspector';
@@ -185,7 +183,7 @@ export function App() {
   };
   /** The piece reopened in the wizard, or null for a new one (ADR-046). */
   const [wizardFrom, setWizardFrom] = useState<Design | null>(null);
-  /** The wizard was started from a project's Add a piece: its piece joins the project (ADR-107). */
+  /** The wizard was started from the Catalog with a project open: its piece joins the project (ADR-107). */
   const [wizardToProject, setWizardToProject] = useState(false);
   const openWizard = (from: Design | null, toProject = false) => {
     setWizardFrom(from);
@@ -238,20 +236,6 @@ export function App() {
   const frontsInPlan = inProject && mode === 'compose' && showsDrawing(shown);
   // Mounted only while the editor is the page shown (ADR-014): hidden on Projects or Catalog it kept rendering.
   const mount3d = has3d && shows3d(shown) && page === 'editor';
-
-  // The piece list beside the plan (ADR-094): opened by Add a piece in Compose, only while the project is shown.
-  const piecesOpen = usePieceList((s) => s.open);
-  const setPiecesOpen = usePieceList((s) => s.setOpen);
-  const piecesShown = piecesOpen && inProject && mode === 'compose' && page === 'editor';
-  useEffect(() => {
-    if (piecesOpen && !(inProject && mode === 'compose')) setPiecesOpen(false);
-  }, [piecesOpen, inProject, mode, setPiecesOpen]);
-  const openPieces = () => {
-    setPiecesOpen(true);
-    // Items are dropped on the plan: it comes forward, and on a phone the Compose sheet steps aside.
-    setView(bringDrawingForward);
-    setSheetOpen(false);
-  };
 
   // A piece waiting to be placed (ADR-056) or a room being drawn (ADR-059) is done on the plan, in Compose.
   const tapMode = useDesign((s) =>
@@ -703,7 +687,7 @@ export function App() {
           <CatalogPage
             onDone={() => setPage('editor')}
             designOpen={designOpen}
-            onNewPiece={() => openWizard(null)}
+            onNewPiece={() => openWizard(null, inProject)}
           />
         )}
         {page === 'research' && <ResearchPage onDone={() => setPage('editor')} />}
@@ -724,25 +708,13 @@ export function App() {
             </button>
             <div className="side-body">
               {inProject ? (
-                <ProjectPanel mode="compose" onAdd={openPieces} />
+                <ProjectPanel mode="compose" onAdd={openCatalog} />
               ) : (
                 <Inspector mode="compose" />
               )}
             </div>
           </aside>
-          <section
-            className={`stage ${shown === 'both' ? 'both' : ''} ${piecesShown ? 'with-pieces' : ''}`}
-            aria-label="Drawing"
-          >
-            {piecesShown && (
-              <PieceList
-                onBrowse={() => {
-                  setPiecesOpen(false);
-                  openCatalog();
-                }}
-                onWizard={() => openWizard(null, true)}
-              />
-            )}
+          <section className={`stage ${shown === 'both' ? 'both' : ''}`} aria-label="Drawing">
             <div className="stage-tools">
               {showsSwitch(mode, phone) && (
                 <div className="segmented small" role="radiogroup" aria-label="View">

@@ -14,6 +14,7 @@ import { touchingRun } from '../core/arrange';
 import { linkCount } from '../core/linked';
 import { mergeCandidates } from '../core/merge';
 import { JOIN_NAME, JOIN_SIDES, joinChain } from '../core/join';
+import { LeaveOutParts } from './LeaveOut';
 import {
   DRAG_STEP,
   isLocked,
@@ -35,8 +36,8 @@ import {
 import { dropTarget, SNAP_RANGE } from '../core/snap';
 import { groupOf, itemsAt, itemsInBox, nextUnder } from '../core/selection';
 import { inSelection, selectionBox } from '../core/selectPath';
-import type { Box, Design, Diagnostic, Material, Panel } from '../core/types';
-import { listDecors, listDesigns, loadDesign, type StoredDesign } from '../persist/db';
+import type { Box, Diagnostic, Material, Panel } from '../core/types';
+import { listDecors, loadDesign } from '../persist/db';
 import { useDesign } from '../store/designStore';
 import { Counter, Group, InfoTip, MmField, Segmented, Select, Toggle } from './controls';
 import {
@@ -49,13 +50,6 @@ import {
 } from './planDrag';
 import { useSnap } from './useSnap';
 import { CompatRules } from './CompatRules';
-import {
-  consumeDragClick,
-  dragSource,
-  newPieceTarget,
-  registerPlanHit,
-  usePieceList,
-} from './pieceDrag';
 import {
   DEFAULT_ROOM_HEIGHT,
   doorSwing,
@@ -79,11 +73,9 @@ import { Icon } from './icons';
 import { InsideEditor } from './Inspector';
 import { PieceSize } from './PieceSize';
 import { PieceSettingsDialog } from './Settings';
-import { templateGlyph } from './Templates';
-import { StartFrom } from './Catalog';
 import { askConfirm } from './Confirm';
 import { SaveProjectTemplate } from './ProjectTemplates';
-import { FrontModels, ModelFields, ModelList, MyModels, PlanModels } from './Models3D';
+import { FrontModels, ModelFields, ModelList, PlanModels } from './Models3D';
 import { AskRunParts, WorktopOverhang } from './RunRequests';
 import { ClearanceFields, ZoneOverlay, ZoneToolbar } from './Clearances';
 import {
@@ -403,6 +395,9 @@ export function ProjectPanel({
           <Group title="Join outer piece" defaultOpen={false}>
             <JoinFields item={item} />
           </Group>
+          <Group title="Leave out parts" defaultOpen={false}>
+            <LeaveOutParts design={item.design} itemId={item.id} />
+          </Group>
           {piece && (
             <p className="hint">
               Takes {piece.bounds.w} × {piece.bounds.d} mm of floor, {piece.bounds.h} mm high.
@@ -430,8 +425,8 @@ export function ProjectPanel({
       <GroupList />
       <ModelList pm={pm} />
       <button type="button" className="btn outline block" onClick={onAdd}>
-        <Icon name="plus" />
-        Add a piece
+        <Icon name="catalog" />
+        Add from Catalog
       </button>
       <RoomSection />
     </div>
@@ -984,9 +979,7 @@ export function PlanView({ fronts, card }: { fronts?: boolean; card?: boolean })
     seenTap.current = tapped;
     ref.current?.scrollIntoView({ block: 'start' });
   }, [tapped]);
-  // With the piece list open the plan is shown even when empty: items are dropped onto it (ADR-094).
-  const listOpen = usePieceList((s) => s.open);
-  if (!pm || (!pm.pieces.length && !pm.models.length && !hasRoom && !drawing && !listOpen))
+  if (!pm || (!pm.pieces.length && !pm.models.length && !hasRoom && !drawing))
     return (
       <div className="no-3d">
         <p>Add pieces to see them on the plan.</p>
@@ -1203,28 +1196,10 @@ function RoomPlan({
         : null,
     [dragged, project, group],
   );
-  // A catalog item dragged from the piece list (ADR-094): its outline follows the pointer over the plan, snapped
-  // the same way (with the Snap toggle, read by `newPieceTarget`).
-  const newDrag = usePieceList((s) => s.drag);
   const target =
     dragged && drag && project && !lockedDrag
       ? dropTarget(project, others, drag.id, drag.dx, drag.dz, snapOn && !alt)
-      : newDrag
-        ? newPieceTarget(newDrag)
-        : null;
-  useEffect(() => {
-    registerPlanHit((cx, cy) => {
-      const svg = svgRef.current;
-      const r = svg?.getBoundingClientRect();
-      if (!svg || !r || !r.width || cx < r.left || cx > r.right || cy < r.top || cy > r.bottom)
-        return null;
-      // Only the plan's figure, not a sheet, banner or bar drawn over it.
-      const hit = document.elementFromPoint(cx, cy);
-      if (hit && !(svg.parentElement ?? svg).contains(hit)) return null;
-      return roomPoint(svg, cx, cy);
-    });
-    return () => registerPlanHit(null);
-  }, []);
+      : null;
   const pts = [...(room?.outline ?? []), ...(drawing ?? [])];
   // With Clearances on, the view also frames the zones (chair or service space beyond the pieces); models always.
   const framed = [
@@ -1943,106 +1918,6 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
         />
       )}
     </figure>
-  );
-}
-
-/** Choose a starting piece or a saved piece to add to the project. */
-export function AddPieceList({
-  onDone,
-  onBrowse,
-  onWizard,
-  drag,
-}: {
-  onDone: () => void;
-  onBrowse?: () => void;
-  /** "New piece, step by step": the wizard, adding its piece to this project (ADR-107). */
-  onWizard?: () => void;
-  /** Items can also be dragged onto the plan (ADR-094: the piece list beside the plan). */
-  drag?: boolean;
-}) {
-  const addPiece = useDesign((s) => s.addPiece);
-  // A click that ends a drag from the list is not also a tap-pick (ADR-094).
-  const add = (d: Design, libraryId?: string) => {
-    if (drag && consumeDragClick()) return false;
-    addPiece(d, libraryId);
-    return true;
-  };
-  const [saved, setSaved] = useState<StoredDesign[]>([]);
-  useEffect(() => {
-    listDesigns()
-      .then(setSaved)
-      .catch(() => setSaved([]));
-  }, []);
-  return (
-    <>
-      {onWizard && (
-        <button
-          type="button"
-          className="row-btn"
-          onClick={() => {
-            onDone();
-            onWizard();
-          }}
-        >
-          <span className="glyph">
-            <Icon name="plus" />
-          </span>
-          <span>
-            <strong>New piece, step by step</strong>
-            <span className="sub">
-              The wizard; the piece is saved on this device and added to this project.
-            </span>
-          </span>
-          <Icon name="chevron-right" className="chev sm" />
-        </button>
-      )}
-      <StartFrom
-        onPick={(d) => {
-          if (add(d)) onDone();
-        }}
-        onBrowse={onBrowse}
-        dragFor={
-          drag
-            ? (make) =>
-                dragSource(() => {
-                  const design = make();
-                  return design ? { design } : null;
-                })
-            : undefined
-        }
-      />
-      <MyModels onDone={onDone} />
-      {saved.length > 0 && (
-        <>
-          <h3 className="list-head">Your saved pieces</h3>
-          <ul className="template-list">
-            {saved.map((r) => (
-              <li key={r.id}>
-                <button
-                  type="button"
-                  className="row-btn"
-                  {...(drag ? dragSource(() => ({ design: r.design, libraryId: r.id })) : {})}
-                  onClick={() => {
-                    if (add(r.design, r.id)) onDone();
-                  }}
-                >
-                  <span className="glyph">
-                    <Icon name={templateGlyph(r.design.product.kind)} />
-                  </span>
-                  <span>
-                    <strong>{r.name}</strong>
-                    <span className="sub">
-                      A copy is added; “Update from saved piece” pulls later changes.
-                    </span>
-                  </span>
-                  <Icon name="chevron-right" className="chev sm" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-    </>
   );
 }
 

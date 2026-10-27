@@ -5,6 +5,7 @@ import {
   productRoots,
   mapProductSpace,
   newId,
+  setOmitted,
   templates,
   upgradeDesign,
   validateDesign,
@@ -124,6 +125,11 @@ interface State {
   notice: string | null;
   /** A piece just added and waiting to be placed by a tap on the plan (ADR-056). */
   placingItemId: string | null;
+  /** The part last tapped in 3D (N124: offered to leave out); a room id `item:panel` in a project. UI state only. */
+  tappedPanelId: string | null;
+  setTappedPanel: (id: string | null) => void;
+  /** Leave parts out of a piece or put them back (N124); `itemId` = a project piece, else the open design. */
+  leaveOut: (panelIds: string[], on: boolean, itemId?: string) => void;
   /** Corners tapped so far while drawing the room on the plan (ADR-059), or null. */
   drawingRoom: Pt[] | null;
   /** Editing one variant of a local template (ADR-034); the piece open before comes back afterwards. */
@@ -176,11 +182,6 @@ interface State {
   closeProject: () => void;
   updateProject: (fn: (p: Project) => Project) => void;
   addPiece: (d: Design, libraryId?: string) => void;
-  /**
-   * Add a copy of a design with its left-back corner at a plan point (ADR-094: dropped from the piece list), whole
-   * mm; one undo step. The point is where `dropNewPiece` puts it (snapped or as a tap places it).
-   */
-  addPieceAt: (d: Design, x: number, z: number, libraryId?: string) => void;
   updateItem: (id: string, patch: Partial<ProjectItem>) => void;
   /**
    * Move a piece on the plan by a drag or an arrow key (ADR-065): rounded to the step, lifted off a base, one undo
@@ -457,6 +458,22 @@ export const useDesign = create<State>((rawSet, get) => {
     projectPast: [],
     projectFuture: [],
     placingItemId: null,
+    tappedPanelId: null,
+    setTappedPanel: (id) => set({ tappedPanelId: id }),
+    leaveOut: (panelIds, on, itemId) => {
+      const p = get().project;
+      if (itemId) {
+        if (p)
+          commitProject({
+            ...p,
+            items: p.items.map((i) =>
+              i.id === itemId ? { ...i, design: setOmitted(i.design, panelIds, on) } : i,
+            ),
+          });
+        return;
+      }
+      commit(setOmitted(get().design, panelIds, on));
+    },
     drawingRoom: null,
     templateEdit: null,
     notice: null,
@@ -542,17 +559,6 @@ export const useDesign = create<State>((rawSet, get) => {
       const item = makeItem(p, d, libraryId);
       commitProject({ ...p, items: [...p.items, item] });
       set({ selectedItemId: item.id, placingItemId: item.id });
-    },
-    addPieceAt: (d, x, z, libraryId) => {
-      const p = get().project;
-      if (!p) return;
-      const made = makeItem(p, d, libraryId);
-      // Not clamped here: `dropNewPiece` already placed it as a tap does, and a snap may put it against a wall of
-      // a drawn room at x or z below 0.
-      const position = { ...made.position, x: Math.round(x) || 0, z: Math.round(z) || 0 };
-      const item: ProjectItem = { ...made, position };
-      commitProject({ ...p, items: [...p.items, item] });
-      set({ selectedItemId: item.id, placingItemId: null });
     },
     updateItem: (id, patch) => {
       const p = get().project;

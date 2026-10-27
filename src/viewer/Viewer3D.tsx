@@ -1008,6 +1008,8 @@ function Panels({
             // The click ending a 3D move (or the press that selected the piece) does nothing more (ADR-093).
             if (drag.clicked()) return;
             const at = hitToMm(e.point, built.get(p.id), exploded);
+            // The tapped part is offered under "Leave out parts" (N124); selecting only, nothing changes here.
+            useDesign.getState().setTappedPanel(p.id);
             if (view.mode === 'project') tapItem(p.nodeId.split(':')[0], at);
             else tapPiece(at.x, at.y);
           };

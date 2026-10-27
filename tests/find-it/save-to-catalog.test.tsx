@@ -20,9 +20,13 @@ describe.each(WIDTHS)('save a project piece to the catalog at %ipx (find-it, ADR
   it('project › a piece › Save to catalog › name, room › Save › Catalog › Templates lists it', async () => {
     const { user } = await renderApp(width);
     await openProject(user);
-    await user.click(await screen.findByRole('button', { name: 'Add a piece' }));
-    const list = await screen.findByRole('dialog', { name: 'Add a piece' });
-    await user.click(within(list).getAllByRole('button', { name: /Base cabinet/ })[0]);
+    await user.click(await screen.findByRole('button', { name: 'Add from Catalog' }));
+    const cat = await screen.findByRole('main', { name: 'Catalog' });
+    await user.type(within(cat).getByRole('searchbox', { name: 'Search the catalog' }), 'Base');
+    const block = within(cat)
+      .getAllByText(/Base cabinet/)[0]
+      .closest('section')!;
+    await user.click(within(block as HTMLElement).getAllByRole('button', { name: 'Add' })[0]);
 
     await user.click(await screen.findByRole('button', { name: 'Save to catalog' }));
     const dlg = await screen.findByRole('dialog', { name: 'Save to catalog' });
@@ -40,14 +44,14 @@ describe.each(WIDTHS)('save a project piece to the catalog at %ipx (find-it, ADR
     expect((await screen.findAllByText('Hall cabinet')).length).toBeGreaterThan(0);
   });
 
-  it('project › Add a piece › New piece, step by step › Add to project adds one piece', async () => {
+  it('project › Add from Catalog › New piece › Add to project adds one piece', async () => {
     const { user } = await renderApp(width);
     await openProject(user);
     const side = screen.getByRole('complementary', { name: 'Compose' });
     expect(within(side).getByText(/No pieces yet/)).toBeTruthy();
-    await user.click(await screen.findByRole('button', { name: 'Add a piece' }));
-    const list = await screen.findByRole('dialog', { name: 'Add a piece' });
-    await user.click(within(list).getByRole('button', { name: /New piece, step by step/ }));
+    await user.click(await screen.findByRole('button', { name: 'Add from Catalog' }));
+    const cat = await screen.findByRole('main', { name: 'Catalog' });
+    await user.click(within(cat).getByRole('button', { name: 'New piece' }));
     const wiz = await screen.findByRole('dialog', { name: 'New piece' });
     // Skip on the type step takes the first type; Next keeps each step's defaults up to the review.
     await user.click(within(wiz).getByRole('button', { name: 'Skip' }));

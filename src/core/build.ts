@@ -32,7 +32,18 @@ export function buildModel(design: Design): FurnitureModel {
               ? buildPanelSet(prod.params, prod.id, materials)
               : buildDesk(prod.params, prod.id, materials);
   const diagnostics: Diagnostic[] = [...partial.diagnostics];
-  const panels = partial.panels;
+  // Parts the user left out (N124): not built, cut or nested; a warning that stays, never an error.
+  const omit = new Set(design.omit ?? []);
+  const out = omit.size ? partial.panels.filter((p) => omit.has(p.id)) : [];
+  const panels = out.length ? partial.panels.filter((p) => !omit.has(p.id)) : partial.panels;
+  if (out.length)
+    diagnostics.push({
+      severity: 'warning',
+      code: 'parts-left-out',
+      message: `${out.length} ${out.length === 1 ? 'part is' : 'parts are'} left out of the parts list and sheets: ${out.map((p) => p.label).join(', ')}. Cut ${out.length === 1 ? 'it' : 'them'} from leftovers or decide later; hardware is unchanged.`,
+      nodeId: out[0].nodeId,
+      panelIds: out.map((p) => p.id),
+    });
 
   // Integer millimetres and positive size, always.
   for (const p of panels) {
@@ -172,7 +183,8 @@ export function buildModel(design: Design): FurnitureModel {
     spaces: partial.spaces,
     hardware: partial.hardware,
     diagnostics,
-    bounds: union(panels.map(aabbOf)),
+    // The piece keeps its full outline with parts left out: it stands and is placed where it did (N124).
+    bounds: union(partial.panels.map(aabbOf)),
   };
   // Construction guidance (ADR-035): labelled warnings and reminders, after the independent checks above.
   const ruled = runRules(design, model, materials);

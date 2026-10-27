@@ -632,9 +632,9 @@ export interface RuleSettings {
 export interface Design {
   /**
    * 2 adds stock sheets and cutting settings (ADR-019); 3 adds edge band specs on boards (ADR-077). Older files are
-   * upgraded in memory on load.
+   * upgraded in memory on load. 4 = parts left out (`omit`, N124); written only by a design that leaves parts out.
    */
-  schemaVersion: 1 | 2 | 3;
+  schemaVersion: 1 | 2 | 3 | 4;
   id: string;
   name: string;
   createdAt: string;
@@ -649,6 +649,11 @@ export interface Design {
   settings?: { rules?: RuleSettings };
   /** Answers of the New-piece wizard that made this piece, so it can be reopened there (ADR-046). Never geometry. */
   wizard?: { answers: WizardAnswers };
+  /**
+   * Parts left out (N124, schemaVersion 4): panel ids (`Panel.id`) not built, cut or nested, with a warning that
+   * stays (cut them from leftovers or decide later). Ids no longer built are ignored. Absent = every part.
+   */
+  omit?: string[];
 }
 
 /** Wizard answers as stored: text, numbers, or a list of those or of compartments (`src/core/wizard/types.ts`). */

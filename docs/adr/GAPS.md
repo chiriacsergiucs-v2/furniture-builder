@@ -1426,3 +1426,30 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: add possibility to replace same outer box/frame piece with 1 common piece (upper cabinets above the tv in my case), 3 items, 1 nice whole bottom, then the column on the side, 2 items, 1 nice side piece.
 - Questions: Which fixing joins each box to the common board (you name it; no screw or connector spec is invented, ADR-010)? Should duplicate/templates keep joins?
 - Suggested pick: Keep joins in duplicate and templates; fixing named by you (estimate: effort +25%, value +15%)
+
+### G-152: 28 browser find-it scripts still open the removed Add a piece panel
+
+- Status: Open
+- Origin: N123 (ff)
+- Missing: tools/*/find-it.mjs scripts (align-distribute, arrange, clearances, compat-rules, control-rule, drill-select, ensemble, enter-undo, lock-piece, merge, model-size, models3d, move-3d, multi-select, piece-size, plan-drag, plan-snap, project-card, project-drill, project-undo, repairs, replace, room-services, shell, stage-card, template-revision, trims) still click 'Add a piece' and search its panel; they fail until rewritten to Add from Catalog. Not run in CI; the jsdom tests were updated.
+- Request: Ff remove the add a piece screeb completely, only use catalog as the source. Replace all places of add a piece with catalog, cleanup dead code and tests.
+- Questions: Rewrite all 28 now (each run against the production build), or as each area is next touched?
+- Suggested pick: Rewrite all now with one shared 'add from catalog' helper and run them (estimate: effort +60%, value +25%)
+
+### G-153: Drag a piece onto the plan is gone
+
+- Status: Open
+- Origin: N123 (ff)
+- Missing: ADR-094's drag from the piece list onto the plan went with the panel; a piece added from the Catalog is placed to the right (or by a tap on the plan) and then moved. ADR-094 is implemented; no new ADR records the change (ff).
+- Request: Ff remove the add a piece screeb completely, only use catalog as the source. Replace all places of add a piece with catalog, cleanup dead code and tests.
+- Questions: Is placing to the right, then moving, enough, or should the Catalog offer 'Add, then tap the plan to place'?
+- Suggested pick: Keep as built: the user asked only for the Catalog as the source (estimate: effort 0%, value 0%)
+
+### G-154: Leave out parts: tap in the plan and front view, hardware
+
+- Status: Open
+- Origin: N124 (ff)
+- Missing: A part is found by a tap in 3D or in the piece's parts list; a tap in the plan or front view does not offer it. Hardware (hinges, runners) of a left-out part stays in the schedule; no ADR records design schemaVersion 4 (ff).
+- Request: Ff also add the possibility to remove with a warning (non-blocking on user acknowledgement) any piece of an item, even if main frane. Sometimes i have the right leftovers, or i don't know what will be used there.
+- Questions: Should a tap in the front view offer the part too? Should hardware of a left-out door or drawer front drop with it?
+- Suggested pick: Front-view tap too; hardware stays (you may still fit leftovers with it) (estimate: effort +25%, value +15%)

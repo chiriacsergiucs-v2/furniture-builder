@@ -164,12 +164,9 @@ described above. Audit and wireframes are in `docs/research/2026-10-24-ui-redesi
 - _View captions (ADR-080)._ The plan's and the front view's captions, and the plan's Snap line, sit behind an
   info button at the view's top-right (_About the plan_, _About the front view_): hover or focus with a mouse,
   tap on touch; outside tap or Esc closes. While dragging, the live snap note shows over the plan.
-- _Piece list (ADR-094)._ In a project's Compose, **Add a piece** opens the piece list (closed by default; its
-  search, Room/Type grouping and pictures are Start from's): a side panel left of the plan on a desktop, a bottom
-  sheet on a phone. Press and drag an item onto the plan (a phone: hold it 300 ms; the sheet folds away); its
-  dashed outline follows the pointer, snapped as a dragged piece, with "From left … · From back …". Release on
-  the plan adds it (one undo step); release elsewhere or Esc adds nothing. A tap on an item keeps "Tap the plan to
-  place" and closes the list. × or Esc closes it.
+- _Add from Catalog (N123, replaces ADR-094's piece list)._ In a project, **Add from Catalog** opens the
+  Catalog page; **Add** on an item, a saved piece or **My 3D models** adds it and returns to the project, and
+  **New piece** runs the wizard into the project. Pieces are placed to the right; move them on the plan.
 - _View switch (ADR-081)._ `.segmented.small` _View_ in the stage tools: **Front · 3D · Both** (**Plan · 3D ·
   Both** in a project). Both splits the stage: side by side, stacked when the stage is taller than wide. 3D and
   Both are disabled without WebGL (title: _3D preview is not available in this browser_). A mode change resets

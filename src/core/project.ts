@@ -626,7 +626,7 @@ export function roomToPiece(
 ): { x: Mm; y: Mm; z: Mm } {
   const built = buildModel(item.design);
   const r = item.rotationY;
-  const rb = union(built.panels.map((p) => rotateBox(aabbOf(p), r)));
+  const rb = rotateBox(built.bounds, r);
   const back = rotateBox(
     {
       x: pt.x - item.position.x + rb.x,
@@ -648,7 +648,7 @@ export function roomToPiece(
  */
 export function pieceBoxToRoom(item: ProjectItem, built: FurnitureModel, box: Box): Box {
   const r = item.rotationY;
-  const rb = union(built.panels.map((p) => rotateBox(aabbOf(p), r)));
+  const rb = rotateBox(built.bounds, r);
   const t = rotateBox(box, r);
   return {
     ...t,
@@ -676,8 +676,8 @@ export function placeItem(
       : built;
   const r = item.rotationY;
   const rotated = model.panels.map((p) => rotateBox(p.box, r));
-  // The piece is placed by its full outline, so leaving the plinth out does not move it.
-  const rb = union(built.panels.map((p) => rotateBox(aabbOf(p), r)));
+  // The piece is placed by its full outline, so leaving the plinth or a part out (N124) does not move it.
+  const rb = rotateBox(built.bounds, r);
   const dx = item.position.x - rb.x,
     dy = item.position.y - rb.y,
     dz = item.position.z - rb.z;
@@ -724,7 +724,7 @@ export function placeItem(
     item,
     model,
     panels,
-    bounds: model === built ? union(panels.map(aabbOf)) : full,
+    bounds: full,
     clearances,
     facing,
     envelopes,
@@ -824,6 +824,14 @@ export function buildProjectModel(input: Project): ProjectModel {
         nodeId: `${pc.item.id}:${h.nodeId}`,
         quantity: h.quantity * pc.item.quantity,
       });
+    // Parts left out of a piece (N124): its warning shows in the project's checks too.
+    for (const d of pc.model.diagnostics)
+      if (d.code === 'parts-left-out')
+        diagnostics.push({
+          ...d,
+          message: `${pc.item.design.name}: ${d.message}`,
+          nodeId: pc.item.id,
+        });
     const errs = pc.model.diagnostics.filter((d) => d.severity === 'error').length;
     if (errs)
       diagnostics.push({

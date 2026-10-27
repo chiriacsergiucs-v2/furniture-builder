@@ -5,10 +5,10 @@ import {
   useMemo,
   useRef,
   useState,
-  type HTMLAttributes,
   type ReactNode,
 } from 'react';
 import { buildModel } from '../core/build';
+import { MyModels } from './Models3D';
 import { PHONE, useMediaQuery } from './useMediaQuery';
 import { snapshotSvg } from '../core/snapshot';
 import {
@@ -194,18 +194,15 @@ function CatalogActions({ phone, children }: { phone: boolean; children: ReactNo
 }
 
 /**
- * "Start from" (ADR-032) in New and in a project's "Add a piece": every catalog item, grouped by room or type, with
+ * "Start from" (ADR-032) in New: every catalog item, grouped by room or type, with
  * search. Picking one makes an independent copy with its origin recorded.
  */
 export function StartFrom({
   onPick,
   onBrowse,
-  dragFor,
 }: {
   onPick: (d: Design) => void;
   onBrowse?: () => void;
-  /** Pointer handlers that let an item be dragged onto the plan (ADR-094); `make` builds its copy. */
-  dragFor?: (make: () => Design | null) => HTMLAttributes<HTMLButtonElement>;
 }) {
   const families = useCatalog();
   const [grouping, setGrouping] = useGrouping();
@@ -259,7 +256,6 @@ export function StartFrom({
                   <button
                     type="button"
                     className="row-btn"
-                    {...dragFor?.(() => insertVariant(f, v, now()))}
                     onClick={() => {
                       const d = insertVariant(f, v, now());
                       if (d) onPick(d);
@@ -305,7 +301,7 @@ function itemFacts(f: ViewFamily, v: CatalogVariant) {
   };
 }
 
-type Source = 'templates' | 'saved' | 'brands';
+type Source = 'templates' | 'saved' | 'brands' | 'models';
 
 /**
  * The Catalog page (ADR-027 as amended by ADR-032): a full page, reached from the "Catalog" tab in the top bar or
@@ -333,8 +329,8 @@ export function CatalogPage({
   const project = useDesign((s) => s.project);
   const editingItem = useDesign((s) => s.editingItemId);
   const toProject = !!project && !editingItem;
-  const take = (d: Design) => {
-    if (toProject) useDesign.getState().addPiece(d);
+  const take = (d: Design, libraryId?: string) => {
+    if (toProject) useDesign.getState().addPiece(d, libraryId);
     else useDesign.getState().load(d);
     onDone();
   };
@@ -348,7 +344,7 @@ export function CatalogPage({
   const ready = all.filter(insertable).length;
   const sources = (
     <div className="segmented small" role="tablist" aria-label="Source">
-      {(['templates', 'saved', 'brands'] as const).map((s) => (
+      {(['templates', 'saved', 'brands', 'models'] as const).map((s) => (
         <button
           key={s}
           type="button"
@@ -364,7 +360,11 @@ export function CatalogPage({
               ? phone
                 ? 'Saved'
                 : 'Saved on this device'
-              : 'Brands'}
+              : s === 'brands'
+                ? 'Brands'
+                : phone
+                  ? '3D models'
+                  : 'My 3D models'}
         </button>
       ))}
     </div>
@@ -587,6 +587,7 @@ export function CatalogPage({
             ))}
           </section>
         ))}
+      {source === 'models' && <MyModels onDone={onDone} canAdd={toProject} />}
       {source === 'saved' && (
         <>
           <SavedList onTake={take} />
@@ -1015,7 +1016,7 @@ function SaveAsTemplate() {
   );
 }
 
-function SavedList({ onTake }: { onTake: (d: Design) => void }) {
+function SavedList({ onTake }: { onTake: (d: Design, libraryId?: string) => void }) {
   const [rows, setRows] = useState<StoredDesign[] | null>(null);
   useEffect(() => {
     listDesigns()
@@ -1034,7 +1035,7 @@ function SavedList({ onTake }: { onTake: (d: Design) => void }) {
     <ul className="template-list template-grid">
       {rows.map((r) => (
         <li key={r.id}>
-          <button type="button" className="row-btn" onClick={() => onTake(r.design)}>
+          <button type="button" className="row-btn" onClick={() => onTake(r.design, r.id)}>
             <span className="glyph">
               <Icon name={templateGlyph(r.design.product.kind)} />
             </span>
