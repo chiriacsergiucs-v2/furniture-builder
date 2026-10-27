@@ -391,27 +391,12 @@ export function WizardDialog({
 }) {
   return (
     <Dialog open={open} onClose={onClose} title={from ? `Wizard: ${from.name}` : 'New piece'} wide>
-      {open && (
-        <Wizard
-          key={from?.id ?? 'new'}
-          onClose={onClose}
-          onCreated={onCreated}
-          from={from ?? null}
-        />
-      )}
+      {open && <Wizard key={from?.id ?? 'new'} onCreated={onCreated} from={from ?? null} />}
     </Dialog>
   );
 }
 
-function Wizard({
-  onClose,
-  onCreated,
-  from,
-}: {
-  onClose: () => void;
-  onCreated: () => void;
-  from: Design | null;
-}) {
+function Wizard({ onCreated, from }: { onCreated: () => void; from: Design | null }) {
   const load = useDesign((s) => s.load);
   const [a, setA] = useState<Answers>(() => (from && storedAnswers(from)) || {});
   const [stepId, setStepId] = useState<string>(TYPE);
@@ -584,10 +569,8 @@ function Wizard({
         >
           Back
         </button>
+        {/* No Cancel (ADR-116): the dialog's × closes the wizard. */}
         <span className="wz-spacer" />
-        <button type="button" className="btn ghost" onClick={onClose}>
-          Cancel
-        </button>
         {!isReview && (
           <button
             type="button"

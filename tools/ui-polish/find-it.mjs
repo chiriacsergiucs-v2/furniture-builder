@@ -278,7 +278,8 @@ for (const width of [390, 1280]) {
     ),
   );
   await shot('wizard');
-  await dlg.getByRole('button', { name: 'Cancel', exact: true }).click();
+  // The wizard has no Cancel since ADR-116; the dialog's × closes it.
+  await dlg.getByRole('button', { name: 'Close', exact: true }).click();
   await dlg.waitFor({ state: 'detached' }).catch(() => {});
 
   // 8. The brand goes to Projects; each row keeps its buttons on one line.
