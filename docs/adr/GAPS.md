@@ -1318,3 +1318,39 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Run a critique for listings, headers, text, button sizes, gaps, groupings
 - Questions: Build these in a follow-up ADR?
 - Suggested pick: One follow-up ADR for all of them (estimate +25 % work, +15 % of value)
+
+### G-140: Count card can cover part of a piece that fills the front view
+
+- Status: Open
+- Origin: ADR-110 (found while building)
+- Missing: At 390 px in a project, when the whole selected piece fills the front view no corner is free: the card covers about 6 % of the piece (the plinth corner); a 3-row card cannot avoid a centre bay; taps on the drawing under the card hit the card
+- Request: Increment/decrement card must be inside the rendered 2d view, not over
+- Questions: Accept the small overlap, or shrink the drawing only in that case, or move the card outside the drawing when no corner is free?
+- Suggested pick: Accept the overlap (closest to the request: the card stays inside the view and the drawing keeps its size)
+
+### G-141: Count card hidden while the bottom sheet is open
+
+- Status: Open
+- Origin: ADR-110 (found while building)
+- Missing: On a phone the floating count card is hidden while the bottom sheet is open (the sheet holds the same counters); before, a single piece already did this, now the project front view does too
+- Request: Force 2d view to maintain it's size, bottom cars can cover it partially, but not push it
+- Questions: Keep the card hidden while the sheet is open, or show it in the visible part of the stage?
+- Suggested pick: Keep hidden (the sheet shows the same counters; no duplicate)
+
+### G-142: Wording changed while moving intro text
+
+- Status: Open
+- Origin: ADR-111 (found while building)
+- Missing: Catalog checkbox now 'I check safety-regulated items myself' (examples moved to its info); '(ADR-036)' dropped from a panel intro; shopping hint now 'Your prices, saved on this device.'; the quantity info shows at any quantity; wizard per-field help kept visible
+- Request: Move info text from Project to a tooltip, apply same to other similar UX occurences
+- Questions: Approve these three wording changes and the two choices?
+- Suggested pick: Approve (shorter labels fit one row; the ADR number is not user text)
+
+### G-143: Phone catalog cards cut text with no way to read it
+
+- Status: Open
+- Origin: ADR-116 (found while building)
+- Missing: At 390 px each catalog card's text lines (variant names, sizes/parts line, 'You choose: …') are cut to one line with an ellipsis and cannot be expanded; source and grouping switches read 'Saved', 'Room', 'Type'; room chips and 'also called' moved behind 'About this family'; wizard Cancel removed at every width
+- Request: Run a critique for listings, headers, text, button sizes, gaps, groupings; answer Catalog density + wizard
+- Questions: Should cut card text expand on tap (or show in the item detail), and are the short labels and Cancel removal fine?
+- Suggested pick: Full text in the item's detail view on tap (closest to the request: compact list, nothing unreachable; estimate +10 % work, +10 % of value)
