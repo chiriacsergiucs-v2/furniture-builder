@@ -12,7 +12,7 @@ import {
 import { newProject } from '../core/project';
 import { clearDecors, listDecors, replaceDecors, saveProject } from '../persist/db';
 import { useDesign } from '../store/designStore';
-import { Group, MmField, Segmented, Select, Toggle } from './controls';
+import { Group, InfoTip, MmField, Segmented, Select, Toggle } from './controls';
 import { Icon } from './icons';
 import { BoardBand } from './BoardBand';
 import { StartFrom } from './Catalog';
@@ -28,6 +28,7 @@ export function Dialog({
   children,
   footer,
   wide,
+  info,
 }: {
   open: boolean;
   onClose: () => void;
@@ -35,6 +36,8 @@ export function Dialog({
   children: ReactNode;
   footer?: ReactNode;
   wide?: boolean;
+  /** An `InfoTip` beside the title (ADR-113); Esc while it is open closes only the tip. */
+  info?: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
@@ -54,7 +57,14 @@ export function Dialog({
       aria-label={title}
     >
       <header>
-        <h2>{title}</h2>
+        {info ? (
+          <div className="info-row">
+            <h2>{title}</h2>
+            {info}
+          </div>
+        ) : (
+          <h2>{title}</h2>
+        )}
         <button
           type="button"
           className="btn icon ghost sm close"
@@ -96,7 +106,11 @@ export function NewDialog({
       open={open}
       onClose={onClose}
       title="Start something new"
-      footer={<p className="hint start">What you have open now is already saved on this device.</p>}
+      info={
+        <InfoTip label="About starting something new" align="start">
+          What you have open now is already saved on this device.
+        </InfoTip>
+      }
     >
       {onWizard && (
         <button type="button" className="row-btn" onClick={onWizard}>
@@ -224,11 +238,17 @@ export function MaterialsPanel() {
         d.thickness === m.thickness,
     )?.id ?? '';
   return (
-    <Group title="Boards, sheets and saw cut" id="g-boards" defaultOpen={false}>
-      <p className="hint">
-        Changing a thickness rebuilds every part made from that board. Colours and pictures only
-        change how the board looks on screen.
-      </p>
+    <Group
+      title="Boards, sheets and saw cut"
+      id="g-boards"
+      defaultOpen={false}
+      info={
+        <InfoTip label="About boards and sheets">
+          Changing a thickness rebuilds every part made from that board. Colours and pictures only
+          change how the board looks on screen.
+        </InfoTip>
+      }
+    >
       <MmField
         label="Saw cut (kerf)"
         value={kerf}
@@ -236,13 +256,22 @@ export function MaterialsPanel() {
         max={20}
         step={1}
         onChange={setKerf}
-        hint="Material lost in every cut. Sheet length runs along the grain."
+        info={
+          <InfoTip label="About the saw cut" align="start">
+            Material lost in every cut. Sheet length runs along the grain.
+          </InfoTip>
+        }
       />
       <div className="decor-list">
         <p className="hint">
           {decors.length
-            ? `Decor list: ${decors[0].list}, ${decors.length} decor${decors.length === 1 ? '' : 's'}. Choose one on any board below.`
-            : `Decor list: none. Import your own CSV with the columns ${DECOR_COLUMNS} (whole mm, #rrggbb) to choose decors on the boards.`}
+            ? `Decor list: ${decors[0].list}, ${decors.length} decor${decors.length === 1 ? '' : 's'}.`
+            : 'Decor list: none.'}{' '}
+          <InfoTip label="About the decor list" align="start">
+            {decors.length
+              ? 'Choose one on any board below.'
+              : `Import your own CSV with the columns ${DECOR_COLUMNS} (whole mm, #rrggbb) to choose decors on the boards.`}
+          </InfoTip>
         </p>
         <div className="mat-picture-row">
           <label className="btn sm outline file-btn">

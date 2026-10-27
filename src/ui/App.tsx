@@ -200,6 +200,10 @@ export function App() {
   const selectedItemId = useDesign((s) => s.selectedItemId);
   const vd = useView();
   const inProject = !!project && !editingItemId;
+  // The start-up placeholder, untouched, is not an open design: the Catalog's "Back to the editor" waits (ADR-120).
+  const [placeholderId] = useState(() => useDesign.getState().design.id);
+  const pristine = useDesign((s) => s.pristine);
+  const designOpen = !!project || design.id !== placeholderId || !pristine;
   // The project view undoes project changes (ADR-051); the piece editor undoes piece edits.
   const undo = inProject ? undoProject : undoPiece,
     redo = inProject ? redoProject : redoPiece;
@@ -693,14 +697,14 @@ export function App() {
         )}
 
         {page === 'projects' && (
-          <ProjectsPage
-            onOpened={() => setPage('editor')}
-            onNewPiece={() => setDialog('new')}
-            onFillWall={() => setDialog('wallfill')}
-          />
+          <ProjectsPage onOpened={() => setPage('editor')} onNewPiece={() => setDialog('new')} />
         )}
         {page === 'catalog' && (
-          <CatalogPage onDone={() => setPage('editor')} onNewPiece={() => openWizard(null)} />
+          <CatalogPage
+            onDone={() => setPage('editor')}
+            designOpen={designOpen}
+            onNewPiece={() => openWizard(null)}
+          />
         )}
         {page === 'research' && <ResearchPage onDone={() => setPage('editor')} />}
         {page === 'gaps' && <GapsPage onDone={() => setPage('editor')} />}

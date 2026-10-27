@@ -377,12 +377,10 @@ export default function Viewer3D() {
         </div>
       )}
       {/* The docked card (G-070) folds to one row on a phone (G-058). */}
-      {counts &&
-        dock &&
-        createPortal(<CountStepper className="in-3d docked" foldable withSize />, dock)}
+      {counts && dock && createPortal(<CountStepper className="in-3d docked" foldable />, dock)}
       {counts && !docked && (
         <div ref={cardRef} className="count-anchor" style={{ visibility: 'hidden' }}>
-          <CountStepper className="in-3d" foldable withSize />
+          <CountStepper className="in-3d" foldable />
         </div>
       )}
     </>

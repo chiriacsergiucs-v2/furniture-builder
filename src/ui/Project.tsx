@@ -7,7 +7,7 @@ import {
   type KeyboardEvent,
   type MouseEvent,
 } from 'react';
-import { CountStepper } from './CountStepper';
+import { boxIn, cardCorner, CountStepper } from './CountStepper';
 import { projectBoards, roleBoard, type FinishRole, type FinishScope } from '../core/finish';
 import { decorPatch, type Decor } from '../core/materials';
 import { touchingRun } from '../core/arrange';
@@ -32,10 +32,10 @@ import {
 import { dropTarget, SNAP_RANGE } from '../core/snap';
 import { groupOf, itemsAt, itemsInBox, nextUnder } from '../core/selection';
 import { inSelection, selectionBox } from '../core/selectPath';
-import type { Box, Design, Material, Panel } from '../core/types';
+import type { Box, Design, Diagnostic, Material, Panel } from '../core/types';
 import { listDecors, listDesigns, loadDesign, type StoredDesign } from '../persist/db';
 import { useDesign } from '../store/designStore';
-import { Counter, InfoTip, MmField, Segmented, Select, Toggle } from './controls';
+import { Counter, Group, InfoTip, MmField, Segmented, Select, Toggle } from './controls';
 import {
   arrowMove,
   movePointer,
@@ -153,6 +153,15 @@ export function ProjectPanel({
     [project, selectedId],
   );
   const model3d = project.models?.find((m) => m.id === selectedId);
+  const diagnostics = pm?.diagnostics;
+  const positionErrors = useMemo(
+    () => pieceErrors(diagnostics, selectedId, POSITION_ERRORS),
+    [diagnostics, selectedId],
+  );
+  const clearanceErrors = useMemo(
+    () => pieceErrors(diagnostics, selectedId, CLEARANCE_ERRORS),
+    [diagnostics, selectedId],
+  );
 
   const updateFromLibrary = async () => {
     if (!item?.libraryId) return;
@@ -174,11 +183,8 @@ export function ProjectPanel({
 
   if (mode === 'configure')
     return (
+      // Titled by the Settings dialog, which carries its info button (ADR-116: one h2 per dialog).
       <div className="inspector">
-        <header className="insp-head">
-          <h2>Project settings</h2>
-          <p className="hint">These apply to every piece in {project.name}.</p>
-        </header>
         <RunParts />
         <MmField
           label="Saw cut (kerf) for this project"
@@ -196,12 +202,56 @@ export function ProjectPanel({
   return (
     <div className="inspector">
       <header className="insp-head">
-        <h2>Project</h2>
-        <p className="hint">
-          Pieces are cut and bought together. Each piece is a copy; editing it here never changes
-          your saved pieces.
-        </p>
+        <div className="info-row">
+          <h2>Project</h2>
+          <InfoTip label="About the project" align="start">
+            Pieces are cut and bought together. Each piece is a copy; editing it here never changes
+            your saved pieces.
+          </InfoTip>
+        </div>
       </header>
+      {project.items.length > 0 && (
+        <h3 className="list-head" id="pieces-head">
+          Pieces
+        </h3>
+      )}
+      {project.items.length === 0 ? (
+        <p className="empty center">
+          <Icon name="project" />
+          No pieces yet. Add a cabinet, a corner unit or a desk to start.
+        </p>
+      ) : (
+        <ul className="pieces" aria-labelledby="pieces-head">
+          {project.items.map((i) => {
+            const b = pm?.pieces.find((p) => p.item.id === i.id)?.bounds;
+            return (
+              <li key={i.id}>
+                <button
+                  type="button"
+                  className={`row-btn ${selectedIds.includes(i.id) ? 'on' : ''}`}
+                  aria-pressed={selectedIds.includes(i.id)}
+                  onClick={(e) =>
+                    e.shiftKey || e.ctrlKey || e.metaKey ? toggleItem(i.id) : select(i.id)
+                  }
+                >
+                  <span>
+                    <strong>
+                      {i.quantity > 1 ? `${i.quantity} × ` : ''}
+                      {i.design.name}
+                    </strong>
+                    {b && (
+                      <span className="sub num">
+                        {b.w} × {b.h} × {b.d} mm
+                      </span>
+                    )}
+                  </span>
+                  <Icon name="chevron-right" className="chev sm" />
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
       <SelectionCard />
       {item && (
         <section className="piece-edit section" aria-label={`Selected piece: ${item.design.name}`}>
@@ -280,22 +330,26 @@ export function ProjectPanel({
             min={1}
             max={99}
             onChange={(v) => update(item.id, { quantity: v })}
+            info={
+              <InfoTip label="About how many" align="start">
+                Copies are added to parts, sheets and hardware; one is shown in the room.
+              </InfoTip>
+            }
           />
-          {item.quantity > 1 && (
-            <p className="hint">
-              Copies are added to parts, sheets and hardware; one is shown in the room.
-            </p>
-          )}
-          {blocked ? (
-            <p className="hint" role="note">
-              {isLocked(item) ? `${LOCKED_HINT}.` : blocked} It stays {item.position.x} mm from the
-              left and {item.position.z} mm from the back, {FRONT_SIDE[item.rotationY]}; turn, place
-              and gap are off until it is unlocked. Its size and boards can still be changed.
-            </p>
-          ) : (
-            <>
+          <ArrangeFields key={item.id} item={item} />
+          <Group title="Position" defaultOpen={false} openOn={openKey(item.id, positionErrors)}>
+            <GroupErrors messages={positionErrors} />
+            {blocked ? (
+              <p className="hint" role="note">
+                {isLocked(item) ? `${LOCKED_HINT}.` : blocked} It stays {item.position.x} mm from
+                the left and {item.position.z} mm from the back, {FRONT_SIDE[item.rotationY]}; turn,
+                place and gap are off until it is unlocked. Its size and boards can still be
+                changed.
+              </p>
+            ) : (
               <Segmented<QuarterTurn>
-                label="Turn"
+                // Where the front faces joins the label instead of a lone line under it (ADR-120).
+                label={`Turn · ${FRONT_SIDE[item.rotationY]}`}
                 value={item.rotationY}
                 options={[
                   { value: 0, label: '0°' },
@@ -305,39 +359,44 @@ export function ProjectPanel({
                 ]}
                 onChange={(v) => update(item.id, { rotationY: v })}
               />
-              <p className="hint">{FRONT_SIDE[item.rotationY]}</p>
-            </>
-          )}
-          <ArrangeFields key={item.id} item={item} />
-          {!blocked && <PlacementFields item={item} />}
-          {item.placement?.kind === 'above' || blocked ? null : left ? (
-            <>
-              <MmField
-                label={`Gap to ${left.item.design.name} on the left`}
-                value={left.gap}
-                min={0}
-                max={5000}
-                onChange={(v) => setGapMsg({ id: item.id, text: setGap(item.id, v, moveRight) })}
-              />
-              <Toggle
-                label="Move the pieces on its right too"
-                checked={moveRight}
-                onChange={setMoveRight}
-              />
-              {gapMsg.id === item.id && gapMsg.text && (
-                <p className="hint" role="status">
-                  {gapMsg.text}
-                </p>
-              )}
-            </>
-          ) : (
-            <p className="hint">
-              No piece on its left at this height; set “From left” to place it.
-            </p>
-          )}
-          <ClearanceFields item={item} />
-          <FinishFields item={item} />
-          <MergeFields item={item} />
+            )}
+            {!blocked && <PlacementFields item={item} />}
+            {item.placement?.kind === 'above' || blocked ? null : left ? (
+              <>
+                <MmField
+                  label={`Gap to ${left.item.design.name} on the left`}
+                  value={left.gap}
+                  min={0}
+                  max={5000}
+                  onChange={(v) => setGapMsg({ id: item.id, text: setGap(item.id, v, moveRight) })}
+                />
+                <Toggle
+                  label="Move the pieces on its right too"
+                  checked={moveRight}
+                  onChange={setMoveRight}
+                />
+                {gapMsg.id === item.id && gapMsg.text && (
+                  <p className="hint" role="status">
+                    {gapMsg.text}
+                  </p>
+                )}
+              </>
+            ) : (
+              <p className="hint">
+                No piece on its left at this height; set “From left” to place it.
+              </p>
+            )}
+          </Group>
+          <Group title="Clearance" defaultOpen={false} openOn={openKey(item.id, clearanceErrors)}>
+            <GroupErrors messages={clearanceErrors} />
+            <ClearanceFields item={item} />
+          </Group>
+          <Group title="Finish" defaultOpen={false}>
+            <FinishFields item={item} />
+          </Group>
+          <Group title="Merge" defaultOpen={false}>
+            <MergeFields item={item} />
+          </Group>
           {piece && (
             <p className="hint">
               Takes {piece.bounds.w} × {piece.bounds.d} mm of floor, {piece.bounds.h} mm high.
@@ -362,43 +421,6 @@ export function ProjectPanel({
       )}
       {model3d && <ModelFields item={model3d} />}
       <NewerTemplates items={project.items} />
-      {project.items.length === 0 ? (
-        <p className="empty center">
-          <Icon name="project" />
-          No pieces yet. Add a cabinet, a corner unit or a desk to start.
-        </p>
-      ) : (
-        <ul className="pieces">
-          {project.items.map((i) => {
-            const b = pm?.pieces.find((p) => p.item.id === i.id)?.bounds;
-            return (
-              <li key={i.id}>
-                <button
-                  type="button"
-                  className={`row-btn ${selectedIds.includes(i.id) ? 'on' : ''}`}
-                  aria-pressed={selectedIds.includes(i.id)}
-                  onClick={(e) =>
-                    e.shiftKey || e.ctrlKey || e.metaKey ? toggleItem(i.id) : select(i.id)
-                  }
-                >
-                  <span>
-                    <strong>
-                      {i.quantity > 1 ? `${i.quantity} × ` : ''}
-                      {i.design.name}
-                    </strong>
-                    {b && (
-                      <span className="sub num">
-                        {b.w} × {b.h} × {b.d} mm
-                      </span>
-                    )}
-                  </span>
-                  <Icon name="chevron-right" className="chev sm" />
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      )}
       <GroupList />
       <ModelList pm={pm} />
       <button type="button" className="btn outline block" onClick={onAdd}>
@@ -408,6 +430,46 @@ export function ProjectPanel({
       <RoomSection />
     </div>
   );
+}
+
+/** Error codes about where a piece stands, shown and opened in its Position group (ADR-117, ADR-008). */
+const POSITION_ERRORS = new Set([
+  'placement-cycle',
+  'pieces-overlap',
+  'below-floor',
+  'outside-room',
+  'hits-obstacle',
+]);
+/** Error codes about a piece's clearances, shown and opened in its Clearance group (ADR-117, ADR-008). */
+const CLEARANCE_ERRORS = new Set(['installation-height']);
+
+/** The messages of the project's error diagnostics about piece `id` with one of `codes`. */
+function pieceErrors(
+  diagnostics: Diagnostic[] | undefined,
+  id: string | null,
+  codes: Set<string>,
+): string[] {
+  if (!diagnostics || !id) return [];
+  return diagnostics
+    .filter(
+      (d) =>
+        d.severity === 'error' &&
+        codes.has(d.code) &&
+        (d.nodeId === id || (d.itemIds?.includes(id) ?? false)),
+    )
+    .map((d) => d.message);
+}
+
+/** Opens a group again for each piece and each new error; empty (stays as the user left it) without errors. */
+const openKey = (id: string, errors: string[]) => (errors.length ? [id, ...errors].join('\n') : '');
+
+/** The errors a folded group of the selected piece holds; the group opens itself while there are any. */
+function GroupErrors({ messages }: { messages: string[] }) {
+  return messages.map((m) => (
+    <p key={m} className="field-error" role="alert">
+      {m}
+    </p>
+  ));
 }
 
 /** Finish scope (ADR-055): one board on the fronts or the carcass of this piece, its run or the whole project. */
@@ -465,7 +527,6 @@ function FinishFields({ item }: { item: ProjectItem }) {
   };
   return (
     <div className="finish-fields">
-      <h4>Finish</h4>
       <Segmented<FinishRole>
         label="Parts"
         value={role}
@@ -647,7 +708,6 @@ function MergeFields({ item }: { item: ProjectItem }) {
   const candidates = useMemo(() => mergeCandidates(project, item.id), [project, item.id]);
   return (
     <div className="merge-fields">
-      <h4>Merge into one piece</h4>
       {candidates.length === 0 ? (
         <p className="hint">
           Nothing touches it on the left or right. Set the gap to 0 next to another cabinet to merge
@@ -658,8 +718,9 @@ function MergeFields({ item }: { item: ProjectItem }) {
           <div key={c.item.id}>
             <button
               type="button"
-              className="btn outline"
+              className="btn outline stack"
               disabled={c.issues.length > 0}
+              title={`Merge with ${c.item.design.name} on the ${c.side}`}
               onClick={async () => {
                 const [l, r] = c.side === 'right' ? [item, c.item] : [c.item, item];
                 if (
@@ -672,7 +733,8 @@ function MergeFields({ item }: { item: ProjectItem }) {
                 merge(item.id, c.item.id);
               }}
             >
-              Merge with {c.item.design.name} on the {c.side}
+              <span className="lbl">Merge with {c.side} piece</span>{' '}
+              <span className="sub">{c.item.design.name}</span>
             </button>
             {c.issues.length > 0 && (
               <ul className="hint" role="note">
@@ -768,6 +830,11 @@ function PlacementFields({ item }: { item: ProjectItem }) {
             value={pl.baseId}
             options={bases.map((b) => ({ value: b.id, label: b.design.name }))}
             onChange={(v) => update(item.id, { placement: { ...pl, baseId: v } })}
+            info={
+              <InfoTip label="About on or above" align="start">
+                Backs line up; it moves with the piece below.
+              </InfoTip>
+            }
           />
           <div className="dims2">
             <MmField
@@ -786,7 +853,6 @@ function PlacementFields({ item }: { item: ProjectItem }) {
               onChange={(v) => update(item.id, { placement: { ...pl, offsetX: v } })}
             />
           </div>
-          <p className="hint">Backs line up; it moves with the piece below.</p>
         </>
       )}
       {kind === 'free' && (
@@ -1130,26 +1196,17 @@ function RoomPlan({
     <figure className="plan with-tools" aria-label="Room plan, seen from above. Select a piece.">
       <div className="plan-tools">
         {fronts && (
-          <Toggle label="Doors and fronts" checked={showFronts} onChange={setShowFronts} />
+          <Toggle
+            label="Fronts"
+            name="Doors and fronts"
+            checked={showFronts}
+            onChange={setShowFronts}
+          />
         )}
-        <button
-          type="button"
-          className="btn sm outline snap-toggle"
-          aria-pressed={snapOn}
-          onClick={() => setSnapOn(!snapOn)}
-        >
-          Snap
-        </button>
+        {/* Checkboxes like Fronts and Clear.: one toggle style in the row (ADR-120). */}
+        <Toggle label="Snap" checked={snapOn} onChange={setSnapOn} />
         {/* Phones: taps add and remove pieces, and a drag on empty plan draws a selection box (ADR-097). */}
-        <button
-          type="button"
-          className="btn sm outline select-toggle"
-          aria-pressed={multi}
-          title="Select several pieces: tap to add or remove, drag on empty plan for a box"
-          onClick={() => setMulti(!multi)}
-        >
-          Select
-        </button>
+        <Toggle label="Select" checked={multi} onChange={setMulti} />
         <ZoneToolbar on={showZones} onChange={setShowZones} />
       </div>
       <InfoTip label="About the plan">
@@ -1664,8 +1721,9 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
   const sel =
     pm.pieces.find((p) => p.item.id === selectedId)?.bounds ??
     pm.models.find((m) => m.item.id === selectedId)?.box;
-  // Quick counts and the whole piece's size float over the selected piece from the first tap (ADR-109), as over a
-  // single piece's drawing (ADR-084, ADR-106): right above the selected piece or space, below its top when no room.
+  // Quick counts show over the selected piece from the first tap (ADR-109), as over a single piece's drawing
+  // (ADR-084): counts only, in the corner of the view farthest from the selected piece, its size labels and the ⓘ
+  // button (ADR-112). Width and Depth stay in the side panel and the bottom sheet.
   const counts = useDesign(
     (s) =>
       !!card &&
@@ -1676,9 +1734,9 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
   );
   const figRef = useRef<HTMLElement>(null);
   const anchorRef = useRef<SVGRectElement>(null);
+  const selDimsRef = useRef<SVGGElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
-  const [cardH, setCardH] = useState(0);
   const [tick, setTick] = useState(0);
   useLayoutEffect(() => {
     const fig = figRef.current;
@@ -1694,29 +1752,17 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
     const fig = figRef.current,
       a = anchorRef.current,
       st = cardRef.current;
-    if (!fig || !a || !st) {
-      setCardH(0);
-      return setPos(null);
-    }
-    // The view gives up the card's height at its top, so there is room right above the piece (as ADR-084).
-    setCardH(st.offsetHeight);
-    const f = fig.getBoundingClientRect(),
-      r = a.getBoundingClientRect();
-    const w = st.offsetWidth,
-      h = st.offsetHeight,
-      gap = 6;
-    const left = Math.max(gap, Math.min(r.left + r.width / 2 - f.left - w / 2, f.width - w - gap));
-    const above = r.top - f.top - h - gap;
-    const top = above >= gap ? above : Math.max(gap, r.top - f.top + gap);
-    setPos((p) => (p && p.left === left && p.top === top ? p : { left, top }));
-  }, [at?.x, at?.y, at?.w, at?.h, tick, cardH, pm]);
+    if (!fig || !a || !st) return setPos(null);
+    const f = fig.getBoundingClientRect();
+    const next = cardCorner(f.width, f.height, st.offsetWidth, st.offsetHeight, [
+      ...boxIn(f, a, 4),
+      ...boxIn(f, selDimsRef.current, 2),
+      ...boxIn(f, fig.querySelector(':scope > .info-tip'), 2),
+    ]);
+    setPos((p) => (p && p.left === next.left && p.top === next.top ? p : next));
+  }, [at?.x, at?.y, at?.w, at?.h, tick, pm]);
   return (
-    <figure
-      className="plan"
-      ref={figRef}
-      style={at && cardH ? { paddingTop: cardH + 12 } : undefined}
-      aria-label="Room seen from the front. Select a piece."
-    >
+    <figure className="plan" ref={figRef} aria-label="Room seen from the front. Select a piece.">
       <InfoTip label="About the front view">
         Seen from the front. Sizes in mm: overall in yellow, the selected piece in green.
         {rv &&
@@ -1787,7 +1833,7 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
         <Dim x1={x0} x2={x1} y={pad * 0.6} fontSize={dfs} label={`${x1 - x0}`} />
         <DimV y1={0} y2={-top} x={x0 - pad * 0.6} fontSize={dfs} label={`${top}`} />
         {sel && (
-          <>
+          <g ref={selDimsRef}>
             <Dim
               x1={sel.x}
               x2={sel.x + sel.w}
@@ -1804,7 +1850,7 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
               label={`${sel.h}`}
               subtle
             />
-          </>
+          </g>
         )}
         {space && (
           <rect
@@ -1832,7 +1878,7 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
         <CountStepper
           ref={cardRef}
           className="floating"
-          withSize
+          compact
           style={pos ? { left: pos.left, top: pos.top } : { visibility: 'hidden' }}
         />
       )}
@@ -1975,14 +2021,16 @@ function RunParts() {
   return (
     <section className="section run-parts" aria-label="Run parts">
       <div className="card-title">
-        <span>Run parts</span>
+        <span className="info-row">
+          <span>Run parts</span>
+          <InfoTip label="About run parts" align="start">
+            For rows of base units side by side: one worktop, a filler in each gap, a cover panel on
+            each open end, and one plinth along the run when the cabinets stand on their bottoms (it
+            replaces their own plinths). Add a worktop over chosen pieces, or a crown, pelmet or
+            ceiling filler over wall and tall units.
+          </InfoTip>
+        </span>
       </div>
-      <p className="hint">
-        For rows of base units side by side: one worktop, a filler in each gap, a cover panel on
-        each open end, and one plinth along the run when the cabinets stand on their bottoms (it
-        replaces their own plinths). Add a worktop over chosen pieces, or a crown, pelmet or ceiling
-        filler over wall and tall units.
-      </p>
       {parts.length > 0 && (
         <ul className="run-list">
           {parts.map((rp) => (
@@ -2041,9 +2089,10 @@ function RunParts() {
         className="btn outline block"
         onClick={suggest}
         disabled={!project.items.length}
+        title="Suggest worktop, plinth, fillers and covers"
       >
         <Icon name="refresh" className="sm" />
-        {parts.length ? 'Suggest again' : 'Suggest worktop, plinth, fillers and covers'}
+        {parts.length ? 'Suggest again' : 'Suggest run parts'}
       </button>
     </section>
   );
@@ -2266,7 +2315,7 @@ function RoomSection() {
             onChange={(v) => setRoom({ ...room, height: v })}
             hint="Measure your ceiling"
           />
-          <h4>Walls</h4>
+          <h4 className="list-head">Walls</h4>
           <ul className="wall-list">
             {walls.map((i) => (
               <li key={i}>
@@ -2289,7 +2338,7 @@ function RoomSection() {
             <Icon name="pencil" className="sm" />
             Draw the room again
           </button>
-          <h4>Doors, windows, obstacles, pipes and outlets</h4>
+          <h4 className="list-head">Doors, windows, obstacles, pipes and outlets</h4>
           {room.features.length === 0 && <p className="hint">None yet.</p>}
           {room.features.map((f) => (
             <fieldset key={f.id} className="room-feature" aria-label={f.label}>

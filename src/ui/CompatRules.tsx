@@ -1,5 +1,6 @@
 import { FUNCTION_LABEL } from '../core/catalog';
 import { COMPAT_RULES, type CompatRule } from '../core/compat';
+import { InfoTip } from './controls';
 
 const KIND_LABEL: Record<string, string> = {
   cabinet: 'cabinets',
@@ -47,12 +48,15 @@ export function CompatRules() {
   return (
     <section className="section compat-rules" aria-label="Rules">
       <div className="card-title">
-        <span>Rules</span>
+        <span className="info-row">
+          <span>Rules</span>
+          <InfoTip label="About the rules" align="start">
+            Compatibility rules used when snapping on the plan and in Checks. A refused snap is
+            named while dragging; hold Alt (or turn Snap off) to place freely. Warnings never block
+            export.
+          </InfoTip>
+        </span>
       </div>
-      <p className="hint">
-        Compatibility rules used when snapping on the plan and in Checks. A refused snap is named
-        while dragging; hold Alt (or turn Snap off) to place freely. Warnings never block export.
-      </p>
       <ul className="run-list">
         {COMPAT_RULES.map((r) => (
           <li key={r.id}>

@@ -8,9 +8,11 @@ import '@fontsource/barlow-semi-condensed/600.css';
 import './styles.css';
 import { App } from './ui/App';
 import { applyTheme } from './ui/useTheme';
+import { installCutTitles } from './ui/cutTitle';
 import { registerSW } from 'virtual:pwa-register';
 
 applyTheme();
+installCutTitles();
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />

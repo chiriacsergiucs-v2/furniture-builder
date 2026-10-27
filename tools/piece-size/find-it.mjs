@@ -1,8 +1,8 @@
 // Find-it acceptance for changing a whole piece's width and depth where it is selected (ADR-106, backlog N104), run
 // against a production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/piece-size/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
-// Starts from the bare app at each width and finds everything by visible text: a single Sideboard (Compose panel,
-// the card over the drawing and over 3D), then a Sideboard from the catalog in a project (its Selected piece card, gone once a space inside is selected).
+// Starts from the bare app at each width and finds everything by visible text: a single Sideboard (Compose panel;
+// since ADR-112 never the card over the drawing or over 3D), then a Sideboard from the catalog in a project (its Selected piece card, gone once a space inside is selected).
 // Not part of `pnpm test`.
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
@@ -56,18 +56,20 @@ for (const width of [1280, 390]) {
   await front.getByRole('button', { name: /^3 drawers space/ }).click({ force: true });
   await page.waitForTimeout(300);
 
-  // 2. The card over the drawing holds Width and Depth; a typed width changes the drawing's width dimension.
-  const onDrawing = size(card(front));
+  // 2. The card over the drawing has counts only (ADR-112); Width typed in the Compose panel changes the drawing.
   check(
     width,
-    'card over the drawing: "Width" and "Depth" for the whole piece',
-    (await onDrawing.getByLabel('Width', { exact: true }).isVisible()) &&
-      (await onDrawing.getByLabel('Depth', { exact: true }).isVisible()),
+    'card over the drawing: no "Width" or "Depth"',
+    (await card(front).isVisible()) &&
+      (await card(front).getByLabel('Width').count()) === 0 &&
+      (await card(front).getByLabel('Depth').count()) === 0,
   );
-  await type(onDrawing.getByLabel('Width', { exact: true }), 1500);
+  await sheet(true);
+  await type(size(page.locator('.compose-start')).getByLabel('Width', { exact: true }), 1500);
+  await sheet(false);
   check(
     width,
-    'typing Width 1500 in the card: the drawing says 1500',
+    'typing Width 1500 in the Compose panel: the drawing says 1500',
     await front
       .locator('svg text', { hasText: /^1500$/ })
       .first()
@@ -103,19 +105,17 @@ for (const width of [1280, 390]) {
   check(width, 'Undo: Depth back from 420', afterUndo !== '420', afterUndo);
   await sheet(false);
 
-  // 5. 3D: the card over the view (docked under it on a phone, G-070) has Width and Depth too.
+  // 5. 3D: the card over the view (docked under it on a phone, G-070) has no Width or Depth (ADR-112).
   await page.getByRole('radio', { name: /Build & Preview/ }).click();
   await page.locator('.view.three canvas').waitFor({ state: 'visible', timeout: 20000 });
   await page.waitForTimeout(1500);
   const dock3 = phone ? page.locator('#count-dock') : page.locator('.view.three');
-  const in3d = size(card(dock3));
   check(
     width,
-    'card over 3D: "Width" 1500 for the whole piece',
-    (await in3d
-      .getByLabel('Width', { exact: true })
-      .inputValue()
-      .catch(() => '')) === '1500',
+    'card over 3D: counts, no "Width" or "Depth"',
+    (await card(dock3).isVisible()) &&
+      (await card(dock3).getByLabel('Width').count()) === 0 &&
+      (await card(dock3).getByLabel('Depth').count()) === 0,
   );
   await shot('card-3d');
 

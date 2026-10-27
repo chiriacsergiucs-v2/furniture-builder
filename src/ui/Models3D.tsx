@@ -15,7 +15,7 @@ import { deleteModelIfUnused, listModels, loadModel, type StoredModel } from '..
 import { forgetModelScene, importModelFile } from '../persist/models';
 import { useDesign } from '../store/designStore';
 import { askConfirm } from './Confirm';
-import { MmField, Segmented, Toggle } from './controls';
+import { InfoTip, MmField, Segmented, Toggle } from './controls';
 import { useKeepProportions } from './keepProportions';
 import { Icon } from './icons';
 import { arrowMove } from './planDrag';
@@ -68,13 +68,15 @@ export function ModelFields({ item }: { item: ModelItem }) {
   return (
     <section className="piece-edit section" aria-label={`Selected 3D model: ${item.name}`}>
       <div className="card-title">
-        <span>Selected 3D model</span>
+        <span className="info-row">
+          <span>Selected 3D model</span>
+          <InfoTip label="About 3D models" align="start">
+            Display only: never in the parts list, sheets, costs or shopping list. Its box is
+            checked against the pieces and the room.
+          </InfoTip>
+        </span>
       </div>
       <h3>{item.name}</h3>
-      <p className="hint">
-        Display only: never in the parts list, sheets, costs or shopping list. Its box is checked
-        against the pieces and the room.
-      </p>
       {missing && (
         <p className="hint" role="status">
           This 3D model is not on this device; it is drawn as a box.
@@ -98,12 +100,18 @@ export function ModelFields({ item }: { item: ModelItem }) {
           />
         ))}
       </div>
-      <Toggle label="Keep proportions" checked={keep} onChange={setKeep} />
-      <p className="hint">
-        {keep
-          ? 'Changing one side scales the other two with it.'
-          : 'Each side changes on its own; the model stretches to fill its box.'}
-      </p>
+      <Toggle
+        label="Keep proportions"
+        checked={keep}
+        onChange={setKeep}
+        info={
+          <InfoTip label="About keep proportions" align="start">
+            {keep
+              ? 'Changing one side scales the other two with it.'
+              : 'Each side changes on its own; the model stretches to fill its box.'}
+          </InfoTip>
+        }
+      />
       {natural &&
         (natural.w !== item.size.w || natural.h !== item.size.h || natural.d !== item.size.d) && (
           <button
@@ -130,10 +138,12 @@ export function ModelFields({ item }: { item: ModelItem }) {
         value={item.front ?? 'front'}
         options={FRONTS}
         onChange={(v) => patch(item.id, v === 'front' ? { front: undefined } : { front: v })}
+        info={
+          <InfoTip label="About front faces" align="start">
+            The side of the model that is its front, if it came in facing the wrong way.
+          </InfoTip>
+        }
       />
-      <p className="hint">
-        The side of the model that is its front, if it came in facing the wrong way.
-      </p>
       <div className="dims3">
         <MmField
           label="From left"
@@ -307,13 +317,15 @@ export function MyModels({ onDone }: { onDone: () => void }) {
 
   return (
     <section className="my-models" aria-labelledby="my-models-head">
-      <h3 className="list-head" id="my-models-head">
-        My 3D models
-      </h3>
-      <p className="hint">
-        Appliances, sinks or decor from a .glb or .gltf file on this device, up to 30 MB and 500 000
-        triangles. Display only: never cut, priced or bought. Nothing is uploaded.
-      </p>
+      <div className="info-row">
+        <h3 className="list-head" id="my-models-head">
+          My 3D models
+        </h3>
+        <InfoTip label="About my 3D models" align="start">
+          Appliances, sinks or decor from a .glb or .gltf file on this device, up to 30 MB and 500
+          000 triangles. Display only: never cut, priced or bought. Nothing is uploaded.
+        </InfoTip>
+      </div>
       <input
         ref={input}
         type="file"
