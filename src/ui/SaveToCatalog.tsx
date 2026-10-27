@@ -77,8 +77,7 @@ function SaveForm({
       }}
     >
       <p className="hint">
-        A new template on this device, in Catalog › Templates and in Add a piece. This piece stays
-        linked to it.
+        A new template on this device, in Catalog › Templates. This piece stays linked to it.
       </p>
       <div className="field">
         <label htmlFor="stc-name">Name</label>

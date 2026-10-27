@@ -1399,3 +1399,66 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: accept as written (ADR-120: no ADR numbers in UI text; Back to the editor only when a design is open)
 - Questions: Remove ADR ids from those two pages and hide Back there too, and give Select an info tip?
 - Suggested pick: Keep the ids on Gaps and Research (they are the page's subject); hide Back there too; add an info tip to Select (estimate +5 % work, +5 % of value)
+
+### G-149: Two common boards meeting at one corner
+
+- Status: Open
+- Origin: N122 (ff)
+- Missing: A piece with two joins that meet at a corner (e.g. common bottom and common side on the same piece) gets an error 'take the same corner' instead of one board cut short against the other.
+- Request: add possibility to replace same outer box/frame piece with 1 common piece (upper cabinets above the tv in my case), 3 items, 1 nice whole bottom, then the column on the side, 2 items, 1 nice side piece.
+- Questions: Which board runs through at a corner: the bottom/top, or the side?
+- Suggested pick: Top and bottom run through, sides stop under/over them, as the joined cabinets themselves are built (estimate: effort +30%, value +15%)
+
+### G-150: Boards that run past a common board are refused
+
+- Status: Open
+- Origin: N122 (ff)
+- Missing: When a piece's side runs past the board being joined (sides to the floor around a plinth, a back over the bottom edge), the join is an error instead of cutting that board around it.
+- Request: add possibility to replace same outer box/frame piece with 1 common piece (upper cabinets above the tv in my case), 3 items, 1 nice whole bottom, then the column on the side, 2 items, 1 nice side piece.
+- Questions: Should the common board be notched around those boards, or those boards shortened onto it?
+- Suggested pick: Shorten them onto the common board, as for sides that stop at it (estimate: effort +20%, value +10%)
+
+### G-151: Joined boards: fixings, templates and copies
+
+- Status: Open
+- Origin: N122 (ff)
+- Missing: Hardware schedule and drilling are unchanged by a join (no connectors between the boxes and the common board); joins are not kept by duplicate, project templates or catalog saves; no ADR records the schemaVersion 10 project field (user chose ff 2026-10-27).
+- Request: add possibility to replace same outer box/frame piece with 1 common piece (upper cabinets above the tv in my case), 3 items, 1 nice whole bottom, then the column on the side, 2 items, 1 nice side piece.
+- Questions: Which fixing joins each box to the common board (you name it; no screw or connector spec is invented, ADR-010)? Should duplicate/templates keep joins?
+- Suggested pick: Keep joins in duplicate and templates; fixing named by you (estimate: effort +25%, value +15%)
+
+### G-152: 28 browser find-it scripts still open the removed Add a piece panel
+
+- Status: Open
+- Origin: N123 (ff)
+- Missing: tools/*/find-it.mjs scripts (align-distribute, arrange, clearances, compat-rules, control-rule, drill-select, ensemble, enter-undo, lock-piece, merge, model-size, models3d, move-3d, multi-select, piece-size, plan-drag, plan-snap, project-card, project-drill, project-undo, repairs, replace, room-services, shell, stage-card, template-revision, trims) still click 'Add a piece' and search its panel; they fail until rewritten to Add from Catalog. Not run in CI; the jsdom tests were updated.
+- Request: Ff remove the add a piece screeb completely, only use catalog as the source. Replace all places of add a piece with catalog, cleanup dead code and tests.
+- Questions: Rewrite all 28 now (each run against the production build), or as each area is next touched?
+- Suggested pick: Rewrite all now with one shared 'add from catalog' helper and run them (estimate: effort +60%, value +25%)
+
+### G-153: Drag a piece onto the plan is gone
+
+- Status: Open
+- Origin: N123 (ff)
+- Missing: ADR-094's drag from the piece list onto the plan went with the panel; a piece added from the Catalog is placed to the right (or by a tap on the plan) and then moved. ADR-094 is implemented; no new ADR records the change (ff).
+- Request: Ff remove the add a piece screeb completely, only use catalog as the source. Replace all places of add a piece with catalog, cleanup dead code and tests.
+- Questions: Is placing to the right, then moving, enough, or should the Catalog offer 'Add, then tap the plan to place'?
+- Suggested pick: Keep as built: the user asked only for the Catalog as the source (estimate: effort 0%, value 0%)
+
+### G-154: Leave out parts: tap in the plan and front view, hardware
+
+- Status: Open
+- Origin: N124 (ff)
+- Missing: A part is found by a tap in 3D or in the piece's parts list; a tap in the plan or front view does not offer it. Hardware (hinges, runners) of a left-out part stays in the schedule; no ADR records design schemaVersion 4 (ff).
+- Request: Ff also add the possibility to remove with a warning (non-blocking on user acknowledgement) any piece of an item, even if main frane. Sometimes i have the right leftovers, or i don't know what will be used there.
+- Questions: Should a tap in the front view offer the part too? Should hardware of a left-out door or drawer front drop with it?
+- Suggested pick: Front-view tap too; hardware stays (you may still fit leftovers with it) (estimate: effort +25%, value +15%)
+
+### G-155: Selection parts and sheets: Print, hardware, shopping
+
+- Status: Open
+- Origin: N125 (ff)
+- Missing: With Selection chosen, Parts (and its Download CSV) and Sheets show only the selected pieces; Print, Hardware and the Shopping list still show the whole project. Run parts, run requests and joined boards count only when made from selected pieces alone.
+- Request: Ff Add the possibility to see the optimized cut-list and sheets and cuts image for current selection,ONLY if selection is multiple items.
+- Questions: Should Print, Hardware and Shopping follow the Selection switch too?
+- Suggested pick: Print follows it (the cut list and sheets you asked for, on paper); Hardware and Shopping stay whole-project (estimate: effort +15%, value +15%)

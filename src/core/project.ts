@@ -33,6 +33,7 @@ import { aabbOf, overlapsBox, panelsOverlap, turnShape } from './shape';
 import { modelBox, modelChecks, validateModelItems, type ModelItem } from './model3d';
 import type { SheetSettings } from './nesting';
 import { jobsFromCutlist } from './nesting';
+import { applyJoinEdit, planJoins, pruneJoins, validJoins, type Join, type JoinEdit } from './join';
 import type { NestJob } from './nesting/types';
 import type {
   Box,
@@ -148,17 +149,18 @@ export const requestKey = (r: Pick<RunRequest, 'kind' | 'from'>) => `${r.kind}|$
  * `PROJECT_SCHEMAS` still loads unchanged. 2 = room pipes and outlets (ADR-072); 3 = clearance zones on items
  * (ADR-073); 4 = run requests and trim run parts (ADR-075); 5 = display-only 3D models (ADR-076); 6 = locked pieces
  * (ADR-095); 7 = a kept template revision on items (ADR-096); 8 = groups of pieces
- * (ADR-097); 9 = linked copies (ADR-111).
+ * (ADR-097); 9 = linked copies (ADR-111); 10 = joined outer boards (`src/core/join.ts`, N122).
  */
-export const PROJECT_SCHEMA = 9 as const;
-export const PROJECT_SCHEMAS: readonly number[] = [1, 2, 3, 4, 5, 6, 7, 8, PROJECT_SCHEMA];
-export type ProjectSchemaVersion = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | typeof PROJECT_SCHEMA;
+export const PROJECT_SCHEMA = 10 as const;
+export const PROJECT_SCHEMAS: readonly number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, PROJECT_SCHEMA];
+export type ProjectSchemaVersion = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | typeof PROJECT_SCHEMA;
 const RUN_REQUESTS_SINCE = 4;
 const MODELS_SINCE = 5;
 const LOCKS_SINCE = 6;
 const TEMPLATE_SEEN_SINCE = 7;
 const GROUPS_SINCE = 8;
 const LINKS_SINCE = 9;
+const JOINS_SINCE = 10;
 
 export interface Project {
   schemaVersion: ProjectSchemaVersion;
@@ -185,6 +187,11 @@ export interface Project {
    * at most one group; a group holds two pieces or more, always pieces of this project (`pruneGroups`). Absent = none.
    */
   groups?: { id: string; name: string; itemIds: string[] }[];
+  /**
+   * Joined outer boards (schemaVersion 10, `src/core/join.ts`): touching pieces cut one common top, bottom or side
+   * instead of each its own. Only the side and the pieces are saved; the board is rebuilt. Absent = none.
+   */
+  joins?: Join[];
 }
 
 /**
@@ -515,7 +522,7 @@ export function removeProjectItem(project: Project, id: string): Project {
   const runRequests = project.runRequests
     ?.map((r) => ({ ...r, from: r.from.filter((x) => x !== id) }))
     .filter((r) => r.from.length);
-  return pruneGroups({ ...project, items, ...(runRequests ? { runRequests } : {}) });
+  return pruneJoins(pruneGroups({ ...project, items, ...(runRequests ? { runRequests } : {}) }));
 }
 
 /** Placement problems: a missing base, a piece resting on itself, a piece in the air that is not built to hang. */
@@ -619,7 +626,7 @@ export function roomToPiece(
 ): { x: Mm; y: Mm; z: Mm } {
   const built = buildModel(item.design);
   const r = item.rotationY;
-  const rb = union(built.panels.map((p) => rotateBox(aabbOf(p), r)));
+  const rb = rotateBox(built.bounds, r);
   const back = rotateBox(
     {
       x: pt.x - item.position.x + rb.x,
@@ -641,7 +648,7 @@ export function roomToPiece(
  */
 export function pieceBoxToRoom(item: ProjectItem, built: FurnitureModel, box: Box): Box {
   const r = item.rotationY;
-  const rb = union(built.panels.map((p) => rotateBox(aabbOf(p), r)));
+  const rb = rotateBox(built.bounds, r);
   const t = rotateBox(box, r);
   return {
     ...t,
@@ -651,16 +658,26 @@ export function pieceBoxToRoom(item: ProjectItem, built: FurnitureModel, box: Bo
   };
 }
 
-export function placeItem(item: ProjectItem, opts?: { noPlinth?: boolean }): PlacedPiece {
+export function placeItem(
+  item: ProjectItem,
+  opts?: { noPlinth?: boolean; join?: JoinEdit },
+): PlacedPiece {
   const built = buildModel(item.design);
-  // A run plinth replaces the piece's own plinth (ADR-054).
-  const model = opts?.noPlinth
-    ? { ...built, panels: built.panels.filter((p) => p.role !== 'plinth') }
-    : built;
+  // A run plinth replaces the piece's own plinth (ADR-054); a common board replaces its own (N122).
+  const model =
+    opts?.noPlinth || opts?.join
+      ? {
+          ...built,
+          panels: applyJoinEdit(
+            opts.noPlinth ? built.panels.filter((p) => p.role !== 'plinth') : built.panels,
+            opts.join,
+          ),
+        }
+      : built;
   const r = item.rotationY;
   const rotated = model.panels.map((p) => rotateBox(p.box, r));
-  // The piece is placed by its full outline, so leaving the plinth out does not move it.
-  const rb = union(built.panels.map((p) => rotateBox(aabbOf(p), r)));
+  // The piece is placed by its full outline, so leaving the plinth or a part out (N124) does not move it.
+  const rb = rotateBox(built.bounds, r);
   const dx = item.position.x - rb.x,
     dy = item.position.y - rb.y,
     dz = item.position.z - rb.z;
@@ -707,7 +724,7 @@ export function placeItem(item: ProjectItem, opts?: { noPlinth?: boolean }): Pla
     item,
     model,
     panels,
-    bounds: model === built ? union(panels.map(aabbOf)) : full,
+    bounds: full,
     clearances,
     facing,
     envelopes,
@@ -758,7 +775,13 @@ function runMaterial(project: Project, m: Material): Material {
 export function buildProjectModel(input: Project): ProjectModel {
   const project = resolvePlacements(input);
   const covered = plinthCovered(project);
-  const pieces = project.items.map((i) => placeItem(i, { noPlinth: covered.has(i.id) }));
+  const placed = project.items.map((i) => placeItem(i, { noPlinth: covered.has(i.id) }));
+  const joins = planJoins(project, placed);
+  const pieces = placed.map((pc) =>
+    joins.edits.has(pc.item.id)
+      ? placeItem(pc.item, { noPlinth: covered.has(pc.item.id), join: joins.edits.get(pc.item.id) })
+      : pc,
+  );
   const materials = new Map<string, Material>();
   const panels: Panel[] = [];
   const piecePanels: Panel[][] = [];
@@ -801,6 +824,14 @@ export function buildProjectModel(input: Project): ProjectModel {
         nodeId: `${pc.item.id}:${h.nodeId}`,
         quantity: h.quantity * pc.item.quantity,
       });
+    // Parts left out of a piece (N124): its warning shows in the project's checks too.
+    for (const d of pc.model.diagnostics)
+      if (d.code === 'parts-left-out')
+        diagnostics.push({
+          ...d,
+          message: `${pc.item.design.name}: ${d.message}`,
+          nodeId: pc.item.id,
+        });
     const errs = pc.model.diagnostics.filter((d) => d.severity === 'error').length;
     if (errs)
       diagnostics.push({
@@ -809,6 +840,14 @@ export function buildProjectModel(input: Project): ProjectModel {
         message: `${pc.item.design.name} has ${errs} ${errs === 1 ? 'problem' : 'problems'}; open it to fix.`,
         nodeId: pc.item.id,
       });
+  }
+  // Common boards of joined pieces (N122): their own parts, like run parts.
+  diagnostics.push(...joins.diagnostics);
+  for (const m of joins.materials)
+    if (!materials.has(m.id)) materials.set(m.id, { ...m, sheet: sheetOf(m) });
+  for (const p of joins.panels) {
+    panels.push(p);
+    piecePanels.push([p]);
   }
   // Pieces may touch but not occupy the same space (bounding boxes first, then panels).
   const overlapping = new Set<string>();
@@ -1727,6 +1766,36 @@ export function refreshRunParts(project: Project): Project {
   return { ...project, runParts: next, runPartsRemoved: removed };
 }
 
+/**
+ * The selected pieces as a project of their own (N125: parts and sheets for a multiple selection): only those pieces,
+ * placed where they stand, with the run parts, run requests and joined boards made from them alone. Room, 3D models and
+ * groups are left out. A piece standing on one not selected keeps its place.
+ */
+export function selectionProject(project: Project, ids: readonly string[]): Project {
+  const keep = new Set(ids);
+  const placed = resolvePlacements(project);
+  const within = (from: readonly string[] | undefined) =>
+    !!from?.length && from.every((x) => keep.has(x));
+  const items = placed.items
+    .filter((i) => keep.has(i.id))
+    .map((i) =>
+      i.placement?.kind === 'above' && !keep.has(i.placement.baseId)
+        ? { ...i, placement: undefined }
+        : i,
+    );
+  const { room: _r, models: _m, groups: _g, ...rest } = placed;
+  void _r;
+  void _m;
+  void _g;
+  return {
+    ...rest,
+    items,
+    runParts: (placed.runParts ?? []).filter((rp) => within(rp.from)),
+    runRequests: (placed.runRequests ?? []).filter((r) => within(r.from)),
+    joins: (placed.joins ?? []).filter((j) => within(j.itemIds)),
+  };
+}
+
 /** Parts for the whole project: each piece's cut list × its quantity, merged across pieces, then the run parts. */
 export function projectCutlist(project: Project): CutRow[] {
   const rows = new Map<string, CutRow>();
@@ -1759,11 +1828,42 @@ export function projectCutlist(project: Project): CutRow[] {
       );
   }
   const covered = plinthCovered(project);
+  const joins = project.joins?.length
+    ? (() => {
+        const placed = resolvePlacements(project);
+        return planJoins(
+          placed,
+          placed.items.map((i) => placeItem(i, { noPlinth: covered.has(i.id) })),
+        );
+      })()
+    : null;
+  if (joins?.panels.length) {
+    const model: FurnitureModel = {
+      panels: joins.panels,
+      spaces: [],
+      hardware: [],
+      diagnostics: [],
+      bounds: { x: 0, y: 0, z: 0, w: 0, h: 0, d: 0 },
+    };
+    for (const r of cutlist(model, joins.materials))
+      rows.set(
+        ['join', r.materialId, r.length, r.width, r.edgesL, r.edgesW, bandKey(r.band)].join('|'),
+        { ...r, labels: r.labels.map((l) => `Joined: ${l}`) },
+      );
+  }
   for (const item of project.items) {
     const built = buildModel(item.design);
-    const model = covered.has(item.id)
-      ? { ...built, panels: built.panels.filter((p) => p.role !== 'plinth') }
-      : built;
+    const edit = joins?.edits.get(item.id);
+    const model =
+      covered.has(item.id) || edit
+        ? {
+            ...built,
+            panels: applyJoinEdit(
+              covered.has(item.id) ? built.panels.filter((p) => p.role !== 'plinth') : built.panels,
+              edit,
+            ),
+          }
+        : built;
     for (const r of cutlist(model, item.design.materials)) {
       const mat = item.design.materials.find((m) => m.id === r.materialId)!;
       const id = materialKey(mat);
@@ -2033,6 +2133,11 @@ export function validateProject(p: unknown): string[] {
         groupIds.add(g.id);
         for (const x of g.itemIds) grouped.add(x as string);
       }
+  }
+  if (p.joins !== undefined) {
+    if ((p.schemaVersion as number) < JOINS_SINCE)
+      errs.push(`Joined boards need project schemaVersion ${JOINS_SINCE}`);
+    if (!validJoins(p.joins, ids)) errs.push('Invalid joined boards');
   }
   if (p.models !== undefined) {
     if ((p.schemaVersion as number) < MODELS_SINCE)

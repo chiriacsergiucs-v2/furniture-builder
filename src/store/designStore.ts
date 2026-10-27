@@ -4,6 +4,8 @@ import {
   findInProduct,
   productRoots,
   mapProductSpace,
+  newId,
+  setOmitted,
   templates,
   upgradeDesign,
   validateDesign,
@@ -12,6 +14,7 @@ import { duplicateItem, mirrorItem, mirrorRun, tryTurn } from '../core/arrange';
 import { floorDrop, type FloorPoint } from '../core/drag3d';
 import { applyFinish, type FinishRole, type FinishScope } from '../core/finish';
 import { mergeItems } from '../core/merge';
+import { addJoin, joinChain, pruneJoins, removeJoin, type JoinSide } from '../core/join';
 import { addLinkedCopy, propagateLinks } from '../core/linked';
 import { alignItems, distributeItems, skippedText, type AlignHow } from '../core/align';
 import {
@@ -32,6 +35,7 @@ import {
   buildProjectModel,
   makeItem,
   moveBy,
+  placeItem,
   planRuns,
   pruneGroups,
   PROJECT_SCHEMA,
@@ -121,6 +125,11 @@ interface State {
   notice: string | null;
   /** A piece just added and waiting to be placed by a tap on the plan (ADR-056). */
   placingItemId: string | null;
+  /** The part last tapped in 3D (N124: offered to leave out); a room id `item:panel` in a project. UI state only. */
+  tappedPanelId: string | null;
+  setTappedPanel: (id: string | null) => void;
+  /** Leave parts out of a piece or put them back (N124); `itemId` = a project piece, else the open design. */
+  leaveOut: (panelIds: string[], on: boolean, itemId?: string) => void;
   /** Corners tapped so far while drawing the room on the plan (ADR-059), or null. */
   drawingRoom: Pt[] | null;
   /** Editing one variant of a local template (ADR-034); the piece open before comes back afterwards. */
@@ -173,11 +182,6 @@ interface State {
   closeProject: () => void;
   updateProject: (fn: (p: Project) => Project) => void;
   addPiece: (d: Design, libraryId?: string) => void;
-  /**
-   * Add a copy of a design with its left-back corner at a plan point (ADR-094: dropped from the piece list), whole
-   * mm; one undo step. The point is where `dropNewPiece` puts it (snapped or as a tap places it).
-   */
-  addPieceAt: (d: Design, x: number, z: number, libraryId?: string) => void;
   updateItem: (id: string, patch: Partial<ProjectItem>) => void;
   /**
    * Move a piece on the plan by a drag or an arrow key (ADR-065): rounded to the step, lifted off a base, one undo
@@ -201,6 +205,10 @@ interface State {
   removeItem: (id: string) => void;
   /** Merge two touching cabinets into one (ADR-047); returns why not, or an empty list. */
   mergeItems: (a: string, b: string) => string[];
+  /** Cut one common board on that side of the piece and the pieces in line with it (N122); one undo step. */
+  joinOuter: (id: string, side: JoinSide) => void;
+  /** Back to each piece's own board (N122); one undo step. */
+  separateJoin: (joinId: string) => void;
   /** Duplicate, turn about the centre, mirror a piece or its run (ADR-069); each is one undo step. */
   duplicateItem: (id: string) => void;
   /** Place a linked copy beside the piece (ADR-111); one undo step. */
@@ -374,7 +382,7 @@ export const useDesign = create<State>((rawSet, get) => {
     // A change to a linked copy reaches the others, or unlinks it (ADR-111).
     const linked = propagateLinks(get().project, next, get().linkAll);
     const stamped = {
-      ...refreshRunParts(resolvePlacements(pruneGroups(linked))),
+      ...refreshRunParts(resolvePlacements(pruneJoins(pruneGroups(linked)))),
       schemaVersion: PROJECT_SCHEMA, // an edited project is saved in the current shape (ADR-011, ADR-073)
       updatedAt: new Date().toISOString(),
     };
@@ -450,6 +458,22 @@ export const useDesign = create<State>((rawSet, get) => {
     projectPast: [],
     projectFuture: [],
     placingItemId: null,
+    tappedPanelId: null,
+    setTappedPanel: (id) => set({ tappedPanelId: id }),
+    leaveOut: (panelIds, on, itemId) => {
+      const p = get().project;
+      if (itemId) {
+        if (p)
+          commitProject({
+            ...p,
+            items: p.items.map((i) =>
+              i.id === itemId ? { ...i, design: setOmitted(i.design, panelIds, on) } : i,
+            ),
+          });
+        return;
+      }
+      commit(setOmitted(get().design, panelIds, on));
+    },
     drawingRoom: null,
     templateEdit: null,
     notice: null,
@@ -536,17 +560,6 @@ export const useDesign = create<State>((rawSet, get) => {
       commitProject({ ...p, items: [...p.items, item] });
       set({ selectedItemId: item.id, placingItemId: item.id });
     },
-    addPieceAt: (d, x, z, libraryId) => {
-      const p = get().project;
-      if (!p) return;
-      const made = makeItem(p, d, libraryId);
-      // Not clamped here: `dropNewPiece` already placed it as a tap does, and a snap may put it against a wall of
-      // a drawn room at x or z below 0.
-      const position = { ...made.position, x: Math.round(x) || 0, z: Math.round(z) || 0 };
-      const item: ProjectItem = { ...made, position };
-      commitProject({ ...p, items: [...p.items, item] });
-      set({ selectedItemId: item.id, placingItemId: null });
-    },
     updateItem: (id, patch) => {
       const p = get().project;
       if (p)
@@ -614,6 +627,22 @@ export const useDesign = create<State>((rawSet, get) => {
         set({ selectedItemId: res.mergedId });
       }
       return res.issues;
+    },
+    joinOuter: (id, side) => {
+      const p = get().project;
+      if (!p) return;
+      // Each piece as built on its own: a board already joined still counts as its own.
+      const itemIds = joinChain(
+        resolvePlacements(p).items.map((i) => placeItem(i)),
+        id,
+        side,
+      );
+      if (itemIds.length < 2) return;
+      commitProject(addJoin(p, { id: newId(), side, itemIds }));
+    },
+    separateJoin: (joinId) => {
+      const p = get().project;
+      if (p) commitProject(removeJoin(p, joinId));
     },
     replaceItem: (id, design) => {
       const { project: p, projectModel: pm } = get();

@@ -20,15 +20,17 @@ describe.each(WIDTHS)('selected piece card at %ipx (find-it, ADR-117)', (width) 
     // Phones: the panel is a bottom sheet opened from its peek row.
     const peek = panel.querySelector<HTMLButtonElement>('.sheet-peek');
     if (peek?.getAttribute('aria-expanded') === 'false') await user.click(peek);
-    const addPiece = async (name: RegExp) => {
-      await user.click(within(panel).getByRole('button', { name: 'Add a piece' }));
-      const dlg = await screen.findByRole('dialog');
-      await user.type(within(dlg).getByRole('searchbox', { name: 'Search the items' }), 'Base');
-      await user.click(within(dlg).getAllByRole('button', { name })[0]);
-      await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    const addPiece = async (variant: RegExp) => {
+      await user.click(within(panel).getByRole('button', { name: 'Add from Catalog' }));
+      const cat = await screen.findByRole('main', { name: 'Catalog' });
+      await user.type(within(cat).getByRole('searchbox', { name: 'Search the catalog' }), 'Base');
+      const row = within(cat).getAllByText(variant)[0].closest('li')!;
+      await user.click(within(row as HTMLElement).getByRole('button', { name: 'Add' }));
+      await waitFor(() => expect(screen.queryByRole('main', { name: 'Catalog' })).toBeNull());
+      if (peek?.getAttribute('aria-expanded') === 'false') await user.click(peek);
     };
-    await addPiece(/Base cabinet, doors: 1 door \+ shelf/);
-    await addPiece(/Base cabinet, doors: Drawer over door/);
+    await addPiece(/^1 door \+ shelf$/);
+    await addPiece(/^Drawer over door$/);
 
     const list = within(panel).getByRole('list', { name: 'Pieces' });
     expect(within(list).getAllByRole('listitem')).toHaveLength(2);

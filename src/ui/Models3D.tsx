@@ -21,7 +21,7 @@ import { Icon } from './icons';
 import { arrowMove } from './planDrag';
 
 /**
- * Display-only 3D models in a project (ADR-076): the library under Add a piece → My 3D models, the selected model's
+ * Display-only 3D models in a project (ADR-076): the library under Catalog → My 3D models, the selected model's
  * fields, and its labelled box on the plan and in the front view. Boxes come from `buildProjectModel` (ADR-004).
  */
 
@@ -240,8 +240,8 @@ function useThumbs(rows: StoredModel[]): Map<string, string> {
   return urls;
 }
 
-/** Add a piece → My 3D models: import files from the device, add one to the project, delete unused ones. */
-export function MyModels({ onDone }: { onDone: () => void }) {
+/** Catalog → My 3D models: import files from the device, add one to the open project, delete unused ones. */
+export function MyModels({ onDone, canAdd = true }: { onDone: () => void; canAdd?: boolean }) {
   const [rows, setRows] = useState<StoredModel[]>([]);
   const [busy, setBusy] = useState(false);
   const [notes, setNotes] = useState<{ ok: boolean; text: string }[]>([]);
@@ -352,11 +352,12 @@ export function MyModels({ onDone }: { onDone: () => void }) {
           {n.text}
         </p>
       ))}
+      {rows.length > 0 && !canAdd && <p className="hint">Open a project to add a model to it.</p>}
       {rows.length > 0 && (
         <ul className="template-list">
           {rows.map((r) => (
             <li key={r.id} className="model-row">
-              <button type="button" className="row-btn" onClick={() => add(r)}>
+              <button type="button" className="row-btn" disabled={!canAdd} onClick={() => add(r)}>
                 <span className="glyph">
                   {thumbs.get(r.id) ? (
                     <img src={thumbs.get(r.id)} alt="" width={36} height={36} />
