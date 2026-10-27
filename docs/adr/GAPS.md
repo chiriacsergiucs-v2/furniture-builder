@@ -1372,3 +1372,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: accept gap picks (G-139: one follow-up ADR for all of them)
 - Questions: Accept the nine fixes as written in ADR-118, or change any?
 - Suggested pick: Accept as written (each is the critique's fix for the item it names)
+
+### G-146: ADR ids and Back link left on the Gaps and Research pages; Select lost its tooltip
+
+- Status: Open
+- Origin: ADR-118 (found while building)
+- Missing: The Gaps page search placeholder still names ADR-072 and the Research page lists ADR ids (they are the content); Gaps and Research always show 'Back to the editor', not only with a design open; the Select checkbox lost the tooltip the old button had
+- Request: accept as written (ADR-118: no ADR numbers in UI text; Back to the editor only when a design is open)
+- Questions: Remove ADR ids from those two pages and hide Back there too, and give Select an info tip?
+- Suggested pick: Keep the ids on Gaps and Research (they are the page's subject); hide Back there too; add an info tip to Select (estimate +5 % work, +5 % of value)
