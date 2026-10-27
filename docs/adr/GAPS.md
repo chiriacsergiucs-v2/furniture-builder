@@ -1282,3 +1282,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: "Move to B as default, keep the priginal as a flag to be abke to tevert"
 - Questions: Is the keyboard route enough for drawing taps, or should tap-position work use Acceptance browser?
 - Suggested pick: Keyboard route in jsdom; ADRs that change tap hit-testing use browser
+
+### G-136: How an info button shows its text
+
+- Status: Open
+- Origin: ADR-111
+- Missing: The way the moved intro text opens is a default the user has not confirmed: tap or click the ⓘ button opens a small popover under it; tap outside, Escape or a second tap closes it
+- Request: Move info text from Project to a tooltip, apply same to other similar UX occurences
+- Questions: Popover on tap (also on hover on desktop), or hover-only tooltip?
+- Suggested pick: Popover on tap and click, Escape closes (closest to the request: a hover-only tooltip cannot open on a phone)
