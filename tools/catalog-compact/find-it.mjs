@@ -1,5 +1,5 @@
-// Find-it acceptance for a compact Catalog on a phone and the wizard's form first (ADR-116, backlog N114), run
-// against a production build:
+// Find-it acceptance for a compact Catalog at every width with "More" for cut card text (ADR-116 on a phone,
+// backlog N114; ADR-117 at every width, N115) and the wizard's form first, run against a production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/catalog-compact/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by role and visible text. Not part of `pnpm test`.
 import { chromium } from 'playwright';
@@ -69,124 +69,272 @@ for (const width of [1280, 390]) {
   const firstFamily = page.getByRole('article').first();
   const about = firstFamily.getByRole('button', { name: 'About this family' });
   const structure = firstFamily.getByText('Default structure:');
-  if (phone) {
-    check(width, 'Catalog page under 30 000 px tall', height < 30000, `${height} px`);
+  // ADR-117: the compact catalog at every width; a phone shows the short switch labels, a desktop the full ones.
+  const limit = phone ? 30000 : 15000;
+  check(width, `Catalog page under ${limit} px tall`, height < limit, `${height} px`);
+  const switchText = [(await saved.innerText()).trim(), (await byRoom.innerText()).trim()];
+  check(
+    width,
+    `switch labels read ${phone ? '"Saved", "Room"' : '"Saved on this device", "By room"'}`,
+    switchText.join('|') === (phone ? 'Saved|Room' : 'Saved on this device|By room'),
+    switchText.join(' / '),
+  );
 
-    // 2. Source and grouping share one row; the search row is its own.
-    const [tb, rb, sb] = [
-      await templates.boundingBox(),
-      await byRoom.boundingBox(),
-      await search.boundingBox(),
-    ];
-    check(
-      width,
-      'source and grouping switches in one row',
-      !!tb && !!rb && Math.abs(tb.y - rb.y) < 4 && rb.x > tb.x,
-      tb && rb ? `Templates y ${Math.round(tb.y)}, By room y ${Math.round(rb.y)}` : 'not found',
-    );
-    check(width, 'search row below the switches', !!sb && !!tb && sb.y > tb.y + tb.height - 1);
+  // 2. Source and grouping share one row; the search row is its own.
+  const [tb, rb, sb] = [
+    await templates.boundingBox(),
+    await byRoom.boundingBox(),
+    await search.boundingBox(),
+  ];
+  check(
+    width,
+    'source and grouping switches in one row',
+    !!tb && !!rb && Math.abs(tb.y - rb.y) < 4 && rb.x > tb.x,
+    tb && rb ? `Templates y ${Math.round(tb.y)}, By room y ${Math.round(rb.y)}` : 'not found',
+  );
+  check(width, 'search row below the switches', !!sb && !!tb && sb.y > tb.y + tb.height - 1);
 
-    // 3. Every item card: tags on one meta line, none clipped.
-    const tags = await page.evaluate(() => {
-      const cards = [...document.querySelectorAll('.catalog-page li.item')];
-      const bad = [];
-      for (const c of cards) {
-        const meta = c.querySelector('.item-meta');
-        const ts = [...c.querySelectorAll('.tag, .kind')];
-        if (!meta || !ts.length) {
-          bad.push(`${c.querySelector('.item-name')?.textContent}: no meta line`);
-          continue;
-        }
-        const m = meta.getBoundingClientRect();
-        const ok = ts.every((t) => {
-          const r = t.getBoundingClientRect();
-          return (
-            meta.contains(t) &&
-            Math.abs(r.top - ts[0].getBoundingClientRect().top) < 2 &&
-            r.right <= m.right + 0.5 &&
-            r.bottom <= m.bottom + 0.5
-          );
-        });
-        if (!ok) bad.push(c.querySelector('.item-name')?.textContent ?? '?');
+  // 3. Every item card: tags on one meta line, none clipped.
+  const tags = await page.evaluate(() => {
+    const cards = [...document.querySelectorAll('.catalog-page li.item')];
+    const bad = [];
+    for (const c of cards) {
+      const meta = c.querySelector('.item-meta');
+      const ts = [...c.querySelectorAll('.tag, .kind')];
+      if (!meta || !ts.length) {
+        bad.push(`${c.querySelector('.item-name')?.textContent}: no meta line`);
+        continue;
       }
-      return { cards: cards.length, bad };
+      const m = meta.getBoundingClientRect();
+      const ok = ts.every((t) => {
+        const r = t.getBoundingClientRect();
+        return (
+          meta.contains(t) &&
+          Math.abs(r.top - ts[0].getBoundingClientRect().top) < 2 &&
+          r.right <= m.right + 0.5 &&
+          r.bottom <= m.bottom + 0.5
+        );
+      });
+      if (!ok) bad.push(c.querySelector('.item-name')?.textContent ?? '?');
+    }
+    return { cards: cards.length, bad };
+  });
+  check(
+    width,
+    "each item card's tags sit on one meta line, unclipped",
+    tags.cards > 100 && tags.bad.length === 0,
+    `${tags.cards} cards, ${tags.bad.length} off: ${tags.bad.slice(0, 3).join(' / ')}`,
+  );
+  const pic = await page
+    .locator('.catalog-page li.item img.snap')
+    .first()
+    .evaluate((i) => Math.round(i.getBoundingClientRect().width));
+  check(width, 'item picture 96 px wide', pic === 96, `${pic} px`);
+
+  // 4. "About this family" holds the details, closed until tapped.
+  check(
+    width,
+    '"About this family" closed: Default structure hidden',
+    (await about.getAttribute('aria-expanded')) === 'false' && (await structure.count()) === 0,
+  );
+  await about.click();
+  check(
+    width,
+    '"About this family" opens Default structure and Configurations',
+    (await about.getAttribute('aria-expanded')) === 'true' &&
+      (await structure.isVisible()) &&
+      (await firstFamily.getByText('Configurations:').isVisible()),
+  );
+  await shot('about-open');
+  await about.click();
+
+  // 5. "More" on a card whose text is cut (ADR-117): shown only then, measured again on resize.
+  /** Per card: whether it has a "More" button, and whether any of its lines is cut (text wider than its box). */
+  const moreMatchesCut = () =>
+    page.evaluate(() => {
+      const LINES = '.item-name, .sub, .item-meta, .item-meta .num';
+      const bad = [];
+      let more = 0;
+      for (const c of document.querySelectorAll('.catalog-page li.item')) {
+        const b = [...c.querySelectorAll('button')].find((x) => x.textContent.trim() === 'More');
+        const cut = [...c.querySelectorAll(LINES)].some((el) => el.scrollWidth > el.clientWidth);
+        if (b) more++;
+        if (!!b !== cut)
+          bad.push(
+            `${c.querySelector('.item-name')?.textContent} (${b ? 'More, nothing cut' : 'cut, no More'})`,
+          );
+      }
+      return { more, bad };
     });
-    check(
-      width,
-      "each item card's tags sit on one meta line, unclipped",
-      tags.cards > 100 && tags.bad.length === 0,
-      `${tags.cards} cards, ${tags.bad.length} off: ${tags.bad.slice(0, 3).join(' / ')}`,
-    );
-    const pic = await page
-      .locator('.catalog-page li.item img.snap')
-      .first()
-      .evaluate((i) => Math.round(i.getBoundingClientRect().width));
-    check(width, 'item picture 96 px wide', pic === 96, `${pic} px`);
+  const mm = await moreMatchesCut();
+  check(
+    width,
+    '"More" shows on exactly the cards with a cut line',
+    mm.more > 0 && mm.bad.length === 0,
+    `${mm.more} cards with More, ${mm.bad.length} off: ${mm.bad.slice(0, 3).join(' / ')}`,
+  );
+  const wider = phone ? 690 : 1000;
+  await page.setViewportSize({ width: wider, height: phone ? 844 : 900 });
+  await page.waitForTimeout(600);
+  const mw = await moreMatchesCut();
+  check(
+    width,
+    `resized to ${wider} px: "More" re-checked, still exactly the cut cards`,
+    mw.bad.length === 0 && mw.more !== mm.more,
+    `${mw.more} cards with More (was ${mm.more}), ${mw.bad.length} off: ${mw.bad.slice(0, 3).join(' / ')}`,
+  );
+  await page.setViewportSize({ width, height: phone ? 844 : 900 });
+  await page.waitForTimeout(600);
+  const mb = await moreMatchesCut();
+  check(
+    width,
+    'resized back: the same cards show "More"',
+    mb.bad.length === 0 && mb.more === mm.more,
+    `${mb.more} cards with More`,
+  );
 
-    // 4. "About this family" holds the details, closed until tapped.
+  // The first card with "More": by tap or click, then by keyboard (Enter, Space).
+  // Pinned by its place in the list: a filter on "More" would move on to the next card once it reads "Less".
+  const at = await page.evaluate(() =>
+    [...document.querySelectorAll('.catalog-page li.item')].findIndex((c) =>
+      [...c.querySelectorAll('button')].some((b) => b.textContent.trim() === 'More'),
+    ),
+  );
+  const card = page.locator('.catalog-page li.item').nth(at);
+  const more = card.getByRole('button', { name: /^(More|Less)$/ });
+  // In the middle of the screen, clear of the sticky search row and a phone's bottom bar.
+  await more.evaluate((b) => b.scrollIntoView({ block: 'center' }));
+  await page.waitForTimeout(200);
+  const mbox = await more.boundingBox();
+  if (phone)
     check(
       width,
-      '"About this family" closed: Default structure hidden',
-      (await about.getAttribute('aria-expanded')) === 'false' && (await structure.count()) === 0,
+      '"More" is at least 44 × 44 px on a touch screen',
+      !!mbox && mbox.width >= 44 && mbox.height >= 44,
+      mbox ? `${Math.round(mbox.width)} × ${Math.round(mbox.height)}` : 'not found',
     );
-    await about.click();
-    check(
-      width,
-      '"About this family" opens Default structure and Configurations',
-      (await about.getAttribute('aria-expanded')) === 'true' &&
-        (await structure.isVisible()) &&
-        (await firstFamily.getByText('Configurations:').isVisible()),
-    );
-    await shot('about-open');
-    await about.click();
+  check(width, '"More" takes the tap at its centre', await shown(more));
+  /** Whether every line of a card shows its whole text, inside the card. */
+  const linesFull = (loc) =>
+    loc.evaluate((c) => {
+      const box = c.getBoundingClientRect();
+      return [...c.querySelectorAll('.item-name, .sub, .item-meta, .item-meta .num')].every(
+        (el) => {
+          const r = el.getBoundingClientRect();
+          return (
+            el.scrollWidth <= el.clientWidth &&
+            r.left >= box.left - 0.5 &&
+            r.right <= box.right + 0.5 &&
+            r.bottom <= box.bottom + 0.5
+          );
+        },
+      );
+    });
+  const name = (await card.locator('.item-name').innerText()).trim();
+  if (phone) await more.tap();
+  else await more.click();
+  check(
+    width,
+    `${phone ? 'tapping' : 'clicking'} "More" on "${name}" shows its full text in place`,
+    (await more.getAttribute('aria-expanded')) === 'true' &&
+      (await more.innerText()).trim() === 'Less' &&
+      (await linesFull(card)) &&
+      (await page.locator('dialog[open]').count()) === 0 &&
+      (await page.getByRole('heading', { name: 'Catalog', level: 1 }).isVisible()),
+  );
+  await shot('more-open');
+  await more.focus();
+  await page.keyboard.press('Enter');
+  check(
+    width,
+    'Enter on "Less" folds the card again',
+    (await more.getAttribute('aria-expanded')) === 'false' &&
+      (await more.innerText()).trim() === 'More' &&
+      !(await linesFull(card)),
+  );
+  await page.keyboard.press('Space');
+  check(
+    width,
+    'Space on "More" opens it again',
+    (await more.getAttribute('aria-expanded')) === 'true' && (await linesFull(card)),
+  );
+  await page.keyboard.press('Space');
 
-    // 5. Scrolled: only the search row stays on screen under the app bar.
-    await page.evaluate(() => window.scrollTo(0, 6000));
-    await page.waitForTimeout(400);
-    await shot('scrolled');
-    check(width, 'scrolled: the search row stays on screen', await shown(search));
-    check(
-      width,
-      'scrolled: "Templates" and "By room" scroll away',
-      !(await shown(templates)) && !(await shown(byRoom)),
-    );
-    await search.fill('wardrobe');
-    await page.waitForTimeout(300);
-    check(
-      width,
-      'searching from the sticky row filters the list',
-      (await page.getByRole('article').count()) > 0 &&
-        (await page.getByRole('article').count()) < 20,
-      `${await page.getByRole('article').count()} families`,
-    );
-    await search.fill('');
-    await page.evaluate(() => window.scrollTo(0, 0));
-  } else {
-    // Desktop layout unchanged: details shown directly, full item cards, one sticky toolbar.
-    check(
-      width,
-      'desktop: Default structure shown without a tap, no "About this family"',
-      (await structure.isVisible()) && (await about.count()) === 0,
-    );
-    const [tb, rb, sb] = [
-      await templates.boundingBox(),
-      await byRoom.boundingBox(),
-      await search.boundingBox(),
-    ];
-    check(
-      width,
-      'desktop: source, grouping and search in one row',
-      !!tb && !!rb && !!sb && Math.abs(tb.y - rb.y) < 4 && Math.abs(tb.y - sb.y) < 8,
-    );
-    await page.evaluate(() => window.scrollTo(0, 6000));
-    await page.waitForTimeout(300);
-    check(
-      width,
-      'desktop: scrolled, the whole filter row stays',
-      (await shown(templates)) && (await shown(search)),
-    );
-    await page.evaluate(() => window.scrollTo(0, 0));
-  }
+  // Every card with "More": each cut line reads whole after More, the card stays clear of the others, Less folds it.
+  const every = await page.evaluate(async () => {
+    const LINES = '.item-name, .sub, .item-meta, .item-meta .num';
+    const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    const toggle = (c) =>
+      [...c.querySelectorAll('button')].find((x) => /^(More|Less)$/.test(x.textContent.trim()));
+    const bad = [];
+    let opened = 0;
+    let lines = 0;
+    for (const c of document.querySelectorAll('.catalog-page li.item')) {
+      const b = toggle(c);
+      if (!b) continue;
+      const label = c.querySelector('.item-name')?.textContent ?? '?';
+      const cut = [...c.querySelectorAll(LINES)].filter((el) => el.scrollWidth > el.clientWidth);
+      b.click();
+      await frame();
+      opened++;
+      lines += cut.length;
+      const box = c.getBoundingClientRect();
+      const whole = cut.every((el) => {
+        const r = el.getBoundingClientRect();
+        return (
+          el.isConnected &&
+          el.scrollWidth <= el.clientWidth &&
+          r.left >= box.left - 0.5 &&
+          r.right <= box.right + 0.5 &&
+          r.bottom <= box.bottom + 0.5
+        );
+      });
+      const clear = [...c.parentElement.children].every((o) => {
+        if (o === c) return true;
+        const r = o.getBoundingClientRect();
+        return (
+          r.bottom <= box.top + 0.5 ||
+          r.top >= box.bottom - 0.5 ||
+          r.right <= box.left + 0.5 ||
+          r.left >= box.right - 0.5
+        );
+      });
+      if (b.getAttribute('aria-expanded') !== 'true' || !whole || !clear)
+        bad.push(`${label}${whole ? '' : ' (still cut)'}${clear ? '' : ' (overlaps)'}`);
+      toggle(c).click();
+      await frame();
+      if (toggle(c)?.getAttribute('aria-expanded') !== 'false')
+        bad.push(`${label} (Less did not fold)`);
+    }
+    return { opened, lines, bad };
+  });
+  check(
+    width,
+    'every cut card line reads in full after "More", and "Less" folds it',
+    every.opened === mm.more && every.lines >= every.opened && every.bad.length === 0,
+    `${every.opened} cards, ${every.lines} cut lines, ${every.bad.length} off: ${every.bad.slice(0, 3).join(' / ')}`,
+  );
+
+  // 6. Scrolled: only the search row stays on screen under the app bar.
+  await page.evaluate(() => window.scrollTo(0, 6000));
+  await page.waitForTimeout(400);
+  await shot('scrolled');
+  check(width, 'scrolled: the search row stays on screen', await shown(search));
+  check(
+    width,
+    'scrolled: "Templates" and "By room" scroll away',
+    !(await shown(templates)) && !(await shown(byRoom)),
+  );
+  await search.fill('wardrobe');
+  await page.waitForTimeout(300);
+  check(
+    width,
+    'searching from the sticky row filters the list',
+    (await page.getByRole('article').count()) > 0 && (await page.getByRole('article').count()) < 20,
+    `${await page.getByRole('article').count()} families`,
+  );
+  await search.fill('');
+  await page.evaluate(() => window.scrollTo(0, 0));
   check(width, 'no sideways scroll (Catalog)', await noSideScroll());
 
   // 6. The wizard from the Catalog: form first on a phone; footer Back, Skip, Next; no Cancel.

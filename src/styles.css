@@ -2936,7 +2936,7 @@ table.buy {
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
   gap: var(--s-2);
 }
 .item {
@@ -3012,8 +3012,9 @@ table.buy {
     padding: 4px 8px;
   }
 }
-/* A phone's catalog (ADR-116): source and grouping in one row that scrolls away, only the search row stays under
-   the app bar; family details behind "About this family"; compact item cards (96 px picture, name, one meta line). */
+/* The catalog (ADR-116 on a phone, ADR-117 at every width): source and grouping in one row that scrolls away, only
+   the search row stays; family details behind "About this family"; compact item cards (96 px picture, name, one meta
+   line) whose cut lines "More" shows in full, in place. */
 .catalog-switches {
   display: flex;
   flex-wrap: nowrap;
@@ -3029,17 +3030,147 @@ table.buy {
 }
 .family-tools {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: var(--s-2);
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
 }
 .family-about[aria-expanded='true'] .icon {
   transform: rotate(180deg);
 }
+.family-body > .chips {
+  grid-column: 1 / -1;
+}
+/* Picture | name and summary | Open, then the meta line (tags first) under both, so the tags have the width. */
+.item.compact {
+  grid-template-columns: 96px minmax(0, 1fr) auto;
+  gap: 2px var(--s-2);
+  align-items: center;
+  padding: 4px var(--s-2) 4px 4px;
+  line-height: 16px;
+}
+.item.compact > .snap {
+  grid-column: 1;
+  grid-row: 1 / span 3;
+  align-self: start;
+  width: 96px;
+  height: 60px;
+}
+.item.compact .item-text {
+  display: contents;
+}
+.item.compact .item-name {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: end;
+}
+/* The summary, and "More" / "Less" at its end when a line is cut (ADR-117). */
+.item.compact .summary-row {
+  grid-column: 2;
+  grid-row: 2;
+  display: flex;
+  gap: var(--s-2);
+  align-items: center;
+  min-width: 0;
+}
+.item.compact .summary {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+}
+/* Its box reaches over the name and meta lines (above them, so it takes the taps) instead of making the row taller. */
+.item.compact .item-more {
+  flex: none;
+  position: relative;
+  z-index: 1;
+  min-height: 30px;
+  margin-block: -7px;
+  padding: 0 var(--s-2);
+}
+.item.compact > .btn {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+}
+.item.compact .item-meta {
+  grid-column: 2 / 4;
+  grid-row: 3;
+}
+.item.compact .item-text > .sub:not(.summary) {
+  grid-column: 2 / 4;
+}
+.item.compact:not(:has(> .snap)) .item-name,
+.item.compact:not(:has(> .snap)) .summary-row {
+  grid-column: 1 / 3;
+}
+.item.compact:not(:has(> .snap)) .item-meta,
+.item.compact:not(:has(> .snap)) .item-text > .sub:not(.summary) {
+  grid-column: 1 / 4;
+}
+.item.compact .item-name,
+.item.compact .sub {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.item.compact .item-name strong {
+  font-size: var(--fs-sm);
+}
+.item.compact .ro {
+  display: inline;
+  margin: 0;
+  font-size: inherit;
+}
+.item-meta {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  color: var(--ink-2);
+  font-size: var(--fs-xs);
+}
+.item-meta .tag,
+.item-meta .kind {
+  flex: none;
+  margin: 0;
+}
+.item-meta .num {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* "More": every line of the card wraps to its full text (ADR-117). */
+.item.compact.open .summary-row {
+  align-items: start;
+}
+.item.compact.open .item-name,
+.item.compact.open .sub,
+.item.compact.open .item-meta,
+.item.compact.open .item-meta .num {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
+}
+.item.compact.open .item-meta {
+  flex-wrap: wrap;
+}
+@media (pointer: coarse) {
+  .item.compact .item-more {
+    min-width: 44px;
+    min-height: 44px;
+    margin-block: -14px;
+  }
+}
 @media (max-width: 760px) {
   .catalog-page .catalog-toolbar {
     top: var(--bar-h, 0px);
+  }
+  .family-head > .family-tools {
+    grid-column: 1 / -1;
+    justify-content: space-between;
   }
   .items {
     grid-template-columns: minmax(0, 1fr);
@@ -3048,87 +3179,6 @@ table.buy {
   .family {
     padding: var(--s-3);
     gap: 6px;
-  }
-  /* Picture | name and summary | Open, then the meta line (tags first) under both, so the tags have the width. */
-  .item.compact {
-    grid-template-columns: 96px minmax(0, 1fr) auto;
-    gap: 2px var(--s-2);
-    align-items: center;
-    padding: 4px var(--s-2) 4px 4px;
-    line-height: 16px;
-  }
-  .item.compact > .snap {
-    grid-column: 1;
-    grid-row: 1 / span 3;
-    width: 96px;
-    height: 60px;
-  }
-  .item.compact .item-text {
-    display: contents;
-  }
-  .item.compact .item-name {
-    grid-column: 2;
-    grid-row: 1;
-    align-self: end;
-  }
-  .item.compact .summary {
-    grid-column: 2;
-    grid-row: 2;
-    align-self: start;
-  }
-  .item.compact > .btn {
-    grid-column: 3;
-    grid-row: 1 / span 2;
-  }
-  .item.compact .item-meta {
-    grid-column: 2 / 4;
-    grid-row: 3;
-  }
-  .item.compact .item-text > .sub:not(.summary) {
-    grid-column: 2 / 4;
-  }
-  .item.compact:not(:has(> .snap)) .item-name,
-  .item.compact:not(:has(> .snap)) .summary {
-    grid-column: 1 / 3;
-  }
-  .item.compact:not(:has(> .snap)) .item-meta,
-  .item.compact:not(:has(> .snap)) .item-text > .sub:not(.summary) {
-    grid-column: 1 / 4;
-  }
-  .item.compact .item-name,
-  .item.compact .sub {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .item.compact .item-name strong {
-    font-size: var(--fs-sm);
-  }
-  .item.compact .ro {
-    display: inline;
-    margin: 0;
-    font-size: inherit;
-  }
-  .item-meta {
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 4px;
-    align-items: center;
-    min-width: 0;
-    overflow: hidden;
-    white-space: nowrap;
-    color: var(--ink-2);
-    font-size: var(--fs-xs);
-  }
-  .item-meta .tag,
-  .item-meta .kind {
-    flex: none;
-    margin: 0;
-  }
-  .item-meta .num {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 }
 
