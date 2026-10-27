@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type HTMLAttributes, type ReactNode } from 'react';
+import { useEffect, useId, useMemo, useState, type HTMLAttributes, type ReactNode } from 'react';
 import { buildModel } from '../core/build';
 import { PHONE, useMediaQuery } from './useMediaQuery';
 import { snapshotSvg } from '../core/snapshot';
@@ -123,26 +123,37 @@ export function groupFamilies(families: ViewFamily[], by: Grouping): Group[] {
 
 const itemCount = (g: Group) => g.items.reduce((n, i) => n + i.family.variants.length, 0);
 
-function GroupToggle({ value, onChange }: { value: Grouping; onChange: (g: Grouping) => void }) {
+/** `short`: the phone catalog's one switches row (ADR-116) shows "Room" / "Type"; the names stay "By room" / "By type". */
+function GroupToggle({
+  value,
+  onChange,
+  short,
+}: {
+  value: Grouping;
+  onChange: (g: Grouping) => void;
+  short?: boolean;
+}) {
   return (
     <div className="segmented small" role="radiogroup" aria-label="Group by">
       <button
         type="button"
         role="radio"
         aria-checked={value === 'room'}
+        aria-label={short ? 'By room' : undefined}
         className={value === 'room' ? 'on' : ''}
         onClick={() => onChange('room')}
       >
-        By room
+        {short ? 'Room' : 'By room'}
       </button>
       <button
         type="button"
         role="radio"
         aria-checked={value === 'type'}
+        aria-label={short ? 'By type' : undefined}
         className={value === 'type' ? 'on' : ''}
         onClick={() => onChange('type')}
       >
-        By type
+        {short ? 'Type' : 'By type'}
       </button>
     </div>
   );
@@ -320,6 +331,41 @@ export function CatalogPage({
   const groups = useMemo(() => groupFamilies(shown, grouping), [shown, grouping]);
   const all = families.flatMap((f) => f.variants);
   const ready = all.filter(insertable).length;
+  const sources = (
+    <div className="segmented small" role="tablist" aria-label="Source">
+      {(['templates', 'saved', 'brands'] as const).map((s) => (
+        <button
+          key={s}
+          type="button"
+          role="tab"
+          aria-selected={source === s}
+          aria-label={phone && s === 'saved' ? 'Saved on this device' : undefined}
+          className={source === s ? 'on' : ''}
+          onClick={() => setSource(s)}
+        >
+          {s === 'templates'
+            ? 'Templates'
+            : s === 'saved'
+              ? phone
+                ? 'Saved'
+                : 'Saved on this device'
+              : 'Brands'}
+        </button>
+      ))}
+    </div>
+  );
+  const search = (
+    <label className="search">
+      <Icon name="search" className="sm" />
+      <input
+        type="search"
+        placeholder="Search, e.g. wardrobe, dulap, bed"
+        aria-label="Search the catalog"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+      />
+    </label>
+  );
   const startEdit = (f: ViewFamily) => {
     const local = f.localId
       ? useTemplates.getState().locals.find((t) => t.id === f.localId)
@@ -402,37 +448,28 @@ export function CatalogPage({
           </button>
         </div>
       </header>
-      <div className="catalog-toolbar">
-        <div className="segmented small" role="tablist" aria-label="Source">
-          {(['templates', 'saved', 'brands'] as const).map((s) => (
-            <button
-              key={s}
-              type="button"
-              role="tab"
-              aria-selected={source === s}
-              className={source === s ? 'on' : ''}
-              onClick={() => setSource(s)}
-            >
-              {s === 'templates' ? 'Templates' : s === 'saved' ? 'Saved on this device' : 'Brands'}
-            </button>
-          ))}
+      {phone ? (
+        // A phone (ADR-116): source and grouping share one row that scrolls away; only the search row stays.
+        <>
+          <div className="catalog-switches">
+            {sources}
+            {source === 'templates' && (
+              <GroupToggle value={grouping} onChange={setGrouping} short />
+            )}
+          </div>
+          {source === 'templates' && <div className="catalog-toolbar">{search}</div>}
+        </>
+      ) : (
+        <div className="catalog-toolbar">
+          {sources}
+          {source === 'templates' && (
+            <>
+              <GroupToggle value={grouping} onChange={setGrouping} />
+              {search}
+            </>
+          )}
         </div>
-        {source === 'templates' && (
-          <>
-            <GroupToggle value={grouping} onChange={setGrouping} />
-            <label className="search">
-              <Icon name="search" className="sm" />
-              <input
-                type="search"
-                placeholder="Search, e.g. wardrobe, dulap, bed"
-                aria-label="Search the catalog"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-              />
-            </label>
-          </>
-        )}
-      </div>
+      )}
       {source === 'templates' && (
         <CatalogActions phone={phone}>
           <span className="info-row">
@@ -537,6 +574,7 @@ export function CatalogPage({
                 key={`${g.key}:${family.id}`}
                 f={family}
                 also={also}
+                phone={phone}
                 q={q}
                 toProject={toProject}
                 onTake={take}
@@ -642,10 +680,20 @@ const SUPPORT_TEXT = {
   reference: 'Reference',
 } as const;
 
-/** One family: its default structure and what can be changed, then every item (variant) as its own card. */
+/** "1600 × 450 × 438 mm · 9 parts · 2 to check": an item's size, parts and checks in one line. */
+const factsLine = (fx: NonNullable<ReturnType<typeof itemFacts>>) =>
+  `${fx.w} × ${fx.h} × ${fx.d} mm · ${fx.parts} parts${
+    fx.errors ? ` · ${fx.errors} problems` : fx.warnings ? ` · ${fx.warnings} to check` : ''
+  }`;
+
+/**
+ * One family: its default structure and what can be changed, then every item (variant) as its own card. On a phone
+ * (ADR-116) the structure and configurations wait behind "About this family" and each item is a compact card.
+ */
 function FamilyBlock({
   f,
   also,
+  phone,
   q,
   toProject,
   onTake,
@@ -653,6 +701,7 @@ function FamilyBlock({
 }: {
   f: ViewFamily;
   also?: boolean;
+  phone: boolean;
   q: string;
   toProject: boolean;
   onTake: (d: Design) => void;
@@ -661,6 +710,44 @@ function FamilyBlock({
   const remove = useTemplates((s) => s.remove);
   const items = f.variants.filter((v) => matches(f, v, q));
   const facts = useMemo(() => new Map(f.variants.map((v) => [v.id, itemFacts(f, v)])), [f]);
+  const [about, setAbout] = useState(false);
+  const aboutId = useId();
+  const edit = (
+    <button type="button" className="btn sm" onClick={onEdit}>
+      <Icon name="pencil" className="sm" />
+      Edit template
+    </button>
+  );
+  const rooms = f.rooms.map((r) => (
+    <span key={r} className="chip subtle">
+      {ROOM_LABEL[r as Room]}
+    </span>
+  ));
+  const aliases = f.aliases.length > 0 && (
+    <span className="aliases">also called {f.aliases.join(', ')}</span>
+  );
+  const body = (
+    <div className="family-body" id={aboutId}>
+      {/* A phone shows the rooms and other names here too, behind "About this family" (ADR-116). */}
+      {phone && (f.rooms.length > 0 || aliases) && (
+        <p className="chips">
+          {rooms}
+          {aliases}
+        </p>
+      )}
+      <p className="structure">
+        <strong>Default structure:</strong> {f.structure}
+      </p>
+      <div className="configs">
+        <strong>Configurations:</strong>
+        <ul>
+          {f.configurations.map((c) => (
+            <li key={c}>{c}</li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
   return (
     <article className={`family support-${f.support}`} aria-label={f.name}>
       <header className="family-head">
@@ -674,11 +761,7 @@ function FamilyBlock({
           <p className="chips">
             <span className={`chip ${f.support}`}>{SUPPORT_TEXT[f.support]}</span>
             <span className="chip">{FUNCTION_LABEL[f.function as FunctionGroup]}</span>
-            {f.rooms.map((r) => (
-              <span key={r} className="chip subtle">
-                {ROOM_LABEL[r as Room]}
-              </span>
-            ))}
+            {!phone && rooms}
             {f.localId && (
               <span className="chip edited">
                 {f.own ? 'Your template' : 'Edited on this device'}
@@ -687,34 +770,96 @@ function FamilyBlock({
             {also && (
               <span className="chip subtle">main room: {ROOM_LABEL[f.rooms[0] as Room]}</span>
             )}
-            {f.aliases.length > 0 && (
-              <span className="aliases">also called {f.aliases.join(', ')}</span>
-            )}
+            {!phone && aliases}
           </p>
         </div>
-        <button type="button" className="btn sm" onClick={onEdit}>
-          <Icon name="pencil" className="sm" />
-          Edit template
-        </button>
+        {!phone && edit}
       </header>
-      <div className="family-body">
-        <p className="structure">
-          <strong>Default structure:</strong> {f.structure}
-        </p>
-        <div className="configs">
-          <strong>Configurations:</strong>
-          <ul>
-            {f.configurations.map((c) => (
-              <li key={c}>{c}</li>
-            ))}
-          </ul>
-        </div>
-      </div>
+      {phone ? (
+        <>
+          <div className="family-tools">
+            <button
+              type="button"
+              className="btn sm ghost family-about"
+              aria-expanded={about}
+              aria-controls={aboutId}
+              onClick={() => setAbout(!about)}
+            >
+              About this family
+              <Icon name="chevron-down" className="sm" />
+            </button>
+            {edit}
+          </div>
+          {about && body}
+        </>
+      ) : (
+        body
+      )}
       {f.shippedUpdated && <ShippedUpdated f={f} />}
       <ul className="items">
         {items.map((v, i) => {
           const ok = insertable(v);
           const fx = facts.get(v.id);
+          const tags = (
+            <>
+              {i === 0 && f.variants[0].id === v.id && <span className="tag subtle">default</span>}
+              <span
+                className={`kind ${v.kind}`}
+                title={
+                  v.kind === 'interior'
+                    ? 'Interior-only: built on an existing product'
+                    : 'Needed new construction'
+                }
+              >
+                {v.kind === 'interior' ? 'Interior only' : 'New construction'}
+              </span>
+            </>
+          );
+          if (phone)
+            return (
+              <li key={v.id} className={`item compact ${ok ? '' : 'waits'}`}>
+                {ok && (
+                  <ItemPicture
+                    f={f}
+                    v={v}
+                    className="snap"
+                    width={96}
+                    height={60}
+                    alt={`${f.name}: ${v.name}, 3D view`}
+                  />
+                )}
+                <div className="item-text">
+                  <span className="item-name">
+                    <strong>{v.name}</strong>
+                  </span>
+                  <span className="sub summary">
+                    {VARIANT_RO[v.id] && <span className="ro">{VARIANT_RO[v.id]} · </span>}
+                    {v.summary}
+                  </span>
+                  <span className="item-meta">
+                    {tags}
+                    {fx && <span className="num">{factsLine(fx)}</span>}
+                  </span>
+                  {v.hardware && <span className="sub">You choose: {v.hardware}</span>}
+                  {!ok && (
+                    <span className="sub waits-why">
+                      Not available yet: {waitsFor(v.requires) || 'no design'}
+                    </span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  className="btn sm outline"
+                  disabled={!ok}
+                  onClick={() => {
+                    const d = insertVariant(f, v);
+                    if (d) onTake(d);
+                  }}
+                >
+                  {toProject ? 'Add' : 'Open'}
+                </button>
+              </li>
+            );
           return (
             <li key={v.id} className={`item ${ok ? '' : 'waits'}`}>
               {ok && (
@@ -730,32 +875,11 @@ function FamilyBlock({
               <div className="item-text">
                 <span className="item-name">
                   <strong>{v.name}</strong>
-                  {i === 0 && f.variants[0].id === v.id && (
-                    <span className="tag subtle">default</span>
-                  )}
-                  <span
-                    className={`kind ${v.kind}`}
-                    title={
-                      v.kind === 'interior'
-                        ? 'Interior-only: built on an existing product'
-                        : 'Needed new construction'
-                    }
-                  >
-                    {v.kind === 'interior' ? 'Interior only' : 'New construction'}
-                  </span>
+                  {tags}
                 </span>
                 {VARIANT_RO[v.id] && <span className="ro">{VARIANT_RO[v.id]}</span>}
                 <span className="sub">{v.summary}</span>
-                {fx && (
-                  <span className="sub num">
-                    {fx.w} × {fx.h} × {fx.d} mm · {fx.parts} parts
-                    {fx.errors
-                      ? ` · ${fx.errors} problems`
-                      : fx.warnings
-                        ? ` · ${fx.warnings} to check`
-                        : ''}
-                  </span>
-                )}
+                {fx && <span className="sub num">{factsLine(fx)}</span>}
                 {v.hardware && <span className="sub">You choose: {v.hardware}</span>}
                 {!ok && (
                   <span className="sub waits-why">

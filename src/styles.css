@@ -3012,6 +3012,125 @@ table.buy {
     padding: 4px 8px;
   }
 }
+/* A phone's catalog (ADR-116): source and grouping in one row that scrolls away, only the search row stays under
+   the app bar; family details behind "About this family"; compact item cards (96 px picture, name, one meta line). */
+.catalog-switches {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--s-2);
+  align-items: center;
+  justify-content: space-between;
+}
+.catalog-switches .segmented {
+  flex-wrap: nowrap;
+}
+.catalog-switches .segmented.small button {
+  padding: 2px var(--s-2);
+}
+.family-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  align-items: center;
+  justify-content: space-between;
+}
+.family-about[aria-expanded='true'] .icon {
+  transform: rotate(180deg);
+}
+@media (max-width: 760px) {
+  .catalog-page .catalog-toolbar {
+    top: var(--bar-h, 0px);
+  }
+  .items {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+  .family {
+    padding: var(--s-3);
+    gap: 6px;
+  }
+  /* Picture | name and summary | Open, then the meta line (tags first) under both, so the tags have the width. */
+  .item.compact {
+    grid-template-columns: 96px minmax(0, 1fr) auto;
+    gap: 2px var(--s-2);
+    align-items: center;
+    padding: 4px var(--s-2) 4px 4px;
+    line-height: 16px;
+  }
+  .item.compact > .snap {
+    grid-column: 1;
+    grid-row: 1 / span 3;
+    width: 96px;
+    height: 60px;
+  }
+  .item.compact .item-text {
+    display: contents;
+  }
+  .item.compact .item-name {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: end;
+  }
+  .item.compact .summary {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: start;
+  }
+  .item.compact > .btn {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+  }
+  .item.compact .item-meta {
+    grid-column: 2 / 4;
+    grid-row: 3;
+  }
+  .item.compact .item-text > .sub:not(.summary) {
+    grid-column: 2 / 4;
+  }
+  .item.compact:not(:has(> .snap)) .item-name,
+  .item.compact:not(:has(> .snap)) .summary {
+    grid-column: 1 / 3;
+  }
+  .item.compact:not(:has(> .snap)) .item-meta,
+  .item.compact:not(:has(> .snap)) .item-text > .sub:not(.summary) {
+    grid-column: 1 / 4;
+  }
+  .item.compact .item-name,
+  .item.compact .sub {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .item.compact .item-name strong {
+    font-size: var(--fs-sm);
+  }
+  .item.compact .ro {
+    display: inline;
+    margin: 0;
+    font-size: inherit;
+  }
+  .item-meta {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 4px;
+    align-items: center;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    color: var(--ink-2);
+    font-size: var(--fs-xs);
+  }
+  .item-meta .tag,
+  .item-meta .kind {
+    flex: none;
+    margin: 0;
+  }
+  .item-meta .num {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
 
 /* Home: the welcome page the app starts on (N38) ---------- */
 .app.on-home .bar > .name,
@@ -4054,9 +4173,9 @@ button.tile:hover {
   .wizard .steps .lbl {
     overflow: visible;
   }
+  /* The step's fields come first, the preview after them (ADR-116). */
   .wz-preview {
     position: static;
-    order: -1;
   }
   .wz-preview img {
     max-height: 160px;
