@@ -1,6 +1,6 @@
 // Find-it acceptance for Fill a wall (CLAUDE.md R3, backlogs N101 and N102, ADR-103 and ADR-104), run against a production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/wall-fill/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
-// Starts from the bare app at each width and finds everything by visible text: Projects → Fill a wall, a 3000 mm
+// Starts from the bare app at each width and finds everything by visible text: Projects → New → Fill a wall, a 3000 mm
 // wall 2000 mm high, 4 suggested mixes with pictures (5 × 600 first, the tall cabinet warned), Refine with a max
 // piece width of 550 and with 6 equal fronts, Wall cabinets Any (with and without a wall row) and Always (every card has
 // one beside the tall cabinet), a 2600 mm wall with a top box over the tall cabinet, then Use this mix opens a saved project with both rows.
@@ -49,24 +49,24 @@ for (const width of widths) {
       .locator('.wf-card img')
       .evaluateAll((imgs) => imgs.filter((i) => i.complete && i.naturalWidth > 0).length);
 
-  // 1. Bare app → Projects → "Fill a wall"; also listed in the "Start something new" dialog.
+  // 1. Bare app → Projects → New single piece → "Fill a wall" in the "Start something new" dialog, its one place
+  //    since ADR-118 (no longer on Projects itself).
   await page.goto(url);
   await page.getByRole('heading', { name: 'Projects', level: 1 }).waitFor();
+  check(
+    width,
+    '"Fill a wall" is not repeated on Projects',
+    (await btn('Fill a wall').count()) === 0,
+  );
   await btn('New single piece').click();
+  const entry = dlg.getByRole('button', { name: /^Fill a wall/ });
   check(
     width,
     '"Fill a wall" is listed in Start something new',
-    await dlg
-      .getByRole('button', { name: /^Fill a wall/ })
-      .isVisible()
-      .catch(() => false),
+    await entry.isVisible().catch(() => false),
   );
-  await dlg.getByRole('button', { name: 'Close' }).click();
-  await dlg.waitFor({ state: 'detached' }).catch(() => {});
-  const entry = btn('Fill a wall');
-  check(width, '"Fill a wall" is found on Projects', await entry.isVisible().catch(() => false));
   await entry.click();
-  await dlg.waitFor();
+  await dlg.getByLabel('Width', { exact: true }).waitFor();
 
   // 2. The Wall step asks width, depth, height and the tall cabinet depth.
   for (const l of ['Width', 'Depth', 'Height', 'Tall cabinet depth'])

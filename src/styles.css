@@ -1386,6 +1386,10 @@ td.note {
   min-height: 36px;
   flex: 0 1 auto; /* gives way so the three page tabs and every action fit (ADR-043) */
 }
+/* A name too long for the field ends in an ellipsis instead of being cut mid-letter (ADR-118). */
+.bar input.name {
+  text-overflow: ellipsis;
+}
 .bar .name:hover {
   border-color: var(--bar-line);
 }
@@ -3135,7 +3139,8 @@ table.buy {
 }
 .item.compact > .snap {
   grid-column: 1;
-  grid-row: 1 / span 3;
+  /* Name, summary, meta and the Romanian name (ADR-118). */
+  grid-row: 1 / span 4;
   align-self: start;
   width: 96px;
   height: 60px;
@@ -3203,6 +3208,13 @@ table.buy {
   display: inline;
   margin: 0;
   font-size: inherit;
+}
+/* "RO: …" on its own short line under the English text (ADR-118), so the card grows little. */
+.item.compact .ro-line {
+  font-size: var(--fs-xs);
+  line-height: 14px;
+  /* Tucked under the meta line's chips instead of a full row gap below them. */
+  margin-top: -2px;
 }
 .item-meta {
   display: flex;
@@ -5125,12 +5137,6 @@ button.tile:hover {
   align-items: center;
   gap: var(--s-2) var(--s-3);
   min-width: 0;
-}
-.plan .snap-toggle[aria-pressed='true'],
-.plan .select-toggle[aria-pressed='true'] {
-  background: var(--primary-soft);
-  border-color: var(--primary);
-  color: var(--ink);
 }
 .plan .drag-ghost.snapped rect {
   fill: var(--ok-soft);

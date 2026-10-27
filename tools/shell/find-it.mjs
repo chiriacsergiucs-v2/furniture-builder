@@ -186,10 +186,20 @@ for (const width of [1280, 390, 360]) {
   );
   const rows = page.locator('main.projects-page ul.library > li');
   const before = await rows.count();
-  await page.getByRole('button', { name: /^Duplicate Imported via menu$/ }).click();
+  // Up to 520 px a row's Settings, Duplicate and Delete sit in its ⋯ menu (ADR-118).
+  const rowAction = async (action, name) => {
+    if (width > 520)
+      return page.getByRole('button', { name: `${action} ${name}`, exact: true }).click();
+    const menu = page.locator('details.row-menu', {
+      has: page.locator(`summary[aria-label="Actions for ${name}"]`),
+    });
+    await menu.locator('summary').click();
+    await menu.getByRole('button', { name: action, exact: true }).click();
+  };
+  await rowAction('Duplicate', 'Imported via menu');
   await page.waitForTimeout(400);
   check(width, 'Duplicate adds a copy', (await rows.count()) === before + 1);
-  await page.getByRole('button', { name: /^Delete Imported via menu \(copy\)$/ }).click();
+  await rowAction('Delete', 'Imported via menu (copy)');
   await page.locator('dialog[open]').getByRole('button', { name: 'Delete', exact: true }).click();
   await page.waitForTimeout(400);
   check(width, 'Delete removes it after asking', (await rows.count()) === before);

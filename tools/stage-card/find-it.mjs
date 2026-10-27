@@ -242,8 +242,8 @@ for (const width of [1280, 390]) {
   // 7. The plan toolbar: "Fronts", "Snap", "Select" and "Clear." on one row; the checkboxes keep their full names.
   const tools = [
     front.getByText('Fronts', { exact: true }),
-    front.getByRole('button', { name: 'Snap', exact: true }),
-    front.getByRole('button', { name: 'Select', exact: true }),
+    front.getByRole('checkbox', { name: 'Snap', exact: true }),
+    front.getByRole('checkbox', { name: 'Select', exact: true }),
     front.getByText('Clear.', { exact: true }),
   ];
   const tb = await Promise.all(tools.map(box));

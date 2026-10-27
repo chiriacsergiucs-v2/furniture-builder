@@ -347,20 +347,18 @@ export function ProjectPanel({
                 changed.
               </p>
             ) : (
-              <>
-                <Segmented<QuarterTurn>
-                  label="Turn"
-                  value={item.rotationY}
-                  options={[
-                    { value: 0, label: '0°' },
-                    { value: 90, label: '90°' },
-                    { value: 180, label: '180°' },
-                    { value: 270, label: '270°' },
-                  ]}
-                  onChange={(v) => update(item.id, { rotationY: v })}
-                />
-                <p className="hint">{FRONT_SIDE[item.rotationY]}</p>
-              </>
+              <Segmented<QuarterTurn>
+                // Where the front faces joins the label instead of a lone line under it (ADR-118).
+                label={`Turn · ${FRONT_SIDE[item.rotationY]}`}
+                value={item.rotationY}
+                options={[
+                  { value: 0, label: '0°' },
+                  { value: 90, label: '90°' },
+                  { value: 180, label: '180°' },
+                  { value: 270, label: '270°' },
+                ]}
+                onChange={(v) => update(item.id, { rotationY: v })}
+              />
             )}
             {!blocked && <PlacementFields item={item} />}
             {item.placement?.kind === 'above' || blocked ? null : left ? (
@@ -1171,24 +1169,10 @@ function RoomPlan({
             onChange={setShowFronts}
           />
         )}
-        <button
-          type="button"
-          className="btn sm outline snap-toggle"
-          aria-pressed={snapOn}
-          onClick={() => setSnapOn(!snapOn)}
-        >
-          Snap
-        </button>
+        {/* Checkboxes like Fronts and Clear.: one toggle style in the row (ADR-118). */}
+        <Toggle label="Snap" checked={snapOn} onChange={setSnapOn} />
         {/* Phones: taps add and remove pieces, and a drag on empty plan draws a selection box (ADR-097). */}
-        <button
-          type="button"
-          className="btn sm outline select-toggle"
-          aria-pressed={multi}
-          title="Select several pieces: tap to add or remove, drag on empty plan for a box"
-          onClick={() => setMulti(!multi)}
-        >
-          Select
-        </button>
+        <Toggle label="Select" checked={multi} onChange={setMulti} />
         <ZoneToolbar on={showZones} onChange={setShowZones} />
       </div>
       <InfoTip label="About the plan">
