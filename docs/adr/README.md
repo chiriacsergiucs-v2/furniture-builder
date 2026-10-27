@@ -14,6 +14,8 @@ Pages, no backend (ADR-002, ADR-013).
 - **Template:** copy [`_template.md`](_template.md), or run the `new-adr` skill.
 - **Status:** `Pending` (agreed, waiting for implementation), `Deferred (<reason>)`,
   or `Implemented`. Never set `Implemented` by hand; the `ship-adr` skill does it.
+- **Recommendations are suggestions.** A recommended option is never applied until the user
+  picks it; an unanswered open question blocks building what it affects.
 - **An ADR is agreed by the user.** Defaults the user has not confirmed stay listed under
   _Open questions_ in the ADR; an ADR whose open questions block building is `Deferred`.
 - **Authority:** explicit user decision › implemented ADR › code and tests › earlier discussion › proposal.
@@ -39,6 +41,10 @@ amendments) and have no `Done when` list; their evidence is in `docs/backlog.md`
 4. Review, merge (only on the user's instruction) and deploy.
 5. `ship ADR-NNN` — the `ship-adr` skill marks it Implemented, moves it to
    `docs/adr-done/`, fixes links and sets the status below.
+
+Steps 1–3 can run together: `new-adr` asks the user to approve the new ADR, and on explicit
+approval `next-adr` builds that ADR at once, in the same branch and pull request (user rule
+2026-10-27).
 
 ## Index
 

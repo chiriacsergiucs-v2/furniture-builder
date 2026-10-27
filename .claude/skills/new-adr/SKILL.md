@@ -56,8 +56,9 @@ Everything written to the repo is in **English**, whatever language the conversa
    - **Gaps (ADR-082)** — each _Out of scope_ item and each open question gets a gap in
      `docs/adr/GAPS.md` (`pnpm gaps add`), cited by its G id; `pnpm docs:check` enforces it. When
      the ADR takes over an existing gap, set that gap's Status to `ADR-NNN`.
-   - **Open questions** — every default the user has not confirmed, with the value used
-     until they answer, and the recommended option closest to the request (`CLAUDE.md`). Never invent hardware specs, loads or supplier values (ADR-010);
+   - **Open questions** — every choice the user has not made, with the options and the
+     recommended one closest to the request (`CLAUDE.md`). The recommendation is a suggestion
+     only: never write it into the Decision or apply it until the user picks it. Never invent hardware specs, loads or supplier values (ADR-010);
      ask instead.
 7. **Check the plan rules:**
    - Dependencies point to ADRs that exist and do not form a cycle.
@@ -66,8 +67,15 @@ Everything written to the repo is in **English**, whatever language the conversa
    - Status stays `Pending`. If open questions block building, set
      `- Status: Deferred (<reason>)` in the file **and** in the README row.
 8. **Run** `pnpm docs:check`.
-9. **Hand over.** Show the user the open questions. Suggest a branch named `adr-NNN-slug`
-   and a pull request. Do not commit or push unless the user asks.
+9. **Hand over and ask for approval.** Show the user the ADR summary and its open questions,
+   and ask whether to build it now (user rule 2026-10-27, `CLAUDE.md`):
+   - **Approved** (explicitly, with open questions answered or accepted) → continue with the
+     `next-adr` skill on **this ADR** (not the lowest-numbered one), on the same branch, in the
+     same pull request. No separate pull request for the ADR file. Its dependencies must still be
+     implemented; if one is not, say so and stop.
+   - **Not approved** → suggest a branch named `adr-NNN-slug` and a pull request. Do not commit
+     or push unless the user asks.
+     Never treat silence or a recommended default as approval.
 
 ## Notes
 
