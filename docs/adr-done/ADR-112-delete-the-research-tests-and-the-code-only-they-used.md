@@ -1,7 +1,8 @@
 # ADR-112: Delete the research tests and the code only they used
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-27
+- Implemented: 2026-10-27
 - Depends on: ADR-110, ADR-111
 - Design: n/a
 - Backlog: N110
