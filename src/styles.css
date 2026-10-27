@@ -5135,6 +5135,10 @@ button.tile:hover {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.count-stepper .cs-size {
+  flex-basis: 100%;
+  min-width: min(100%, 15rem);
+}
 .cs-row {
   display: grid;
   gap: 2px;
@@ -5347,6 +5351,7 @@ button.tile:hover {
     background: var(--surface-2);
   }
   .count-stepper.folded .cs-row,
+  .count-stepper.folded .cs-size,
   .count-stepper.folded .cs-title {
     display: none;
   }

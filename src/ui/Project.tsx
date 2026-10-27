@@ -64,6 +64,7 @@ import { newId } from '../core/design';
 import { Dim, DimV, outlinePoints } from './Elevation';
 import { Icon } from './icons';
 import { InsideEditor } from './Inspector';
+import { PieceSize } from './PieceSize';
 import { PieceSettingsDialog } from './Settings';
 import { templateGlyph } from './Templates';
 import { StartFrom } from './Catalog';
@@ -115,6 +116,7 @@ export function ProjectPanel({
   const updateProject = useDesign((s) => s.updateProject);
   const setGap = useDesign((s) => s.setGap);
   const setLocked = useDesign((s) => s.setLocked);
+  const resizeItem = useDesign((s) => s.resizeItem);
   const [gapMsg, setGapMsg] = useState<{ id: string | null; text: string | null }>({
     id: null,
     text: null,
@@ -199,6 +201,11 @@ export function ProjectPanel({
             )}
           </h3>
           <TemplateNotice item={item} />
+          <PieceSize
+            key={item.id}
+            product={item.design.product}
+            onChange={(k, v) => resizeItem(item.id, k, v)}
+          />
           <div className="split-actions">
             <button type="button" className="btn solid" onClick={() => edit(item.id)}>
               <Icon name="pencil" className="sm" />

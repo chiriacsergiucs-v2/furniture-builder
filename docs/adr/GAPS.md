@@ -1184,23 +1184,23 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: When the wall cabinets would reach into the base row, should the wizard drop the wall row (now), shorten the wall cabinets to fit, or offer the mix with the overlap error shown?
 - Suggested pick: Shorten the wall cabinets to the room left above the base row (never below the catalog minimum), labelled on the card, so a wall row still appears. (estimate: effort +5%, value +10%)
 
-### G-125: Save a project piece back over an existing template
+### G-125: Width and depth card over the project view for a selected piece
 
 - Status: Open
-- Origin: ADR-106, 2026-10-27, Claude scope
-- Missing: Saving a project piece always makes a new catalog template; it never overwrites the template the piece came from.
-- Request: New adr to add the possibility to save a new piece to catalog when created it inside a project
-- Questions: Do you also want 'Update the template' to write a project piece's changes back into its existing template as a new revision?
-- Suggested pick: New template only, as asked (0 % extra work).
+- Origin: ADR-106
+- Missing: In a project, a piece selected but not opened (Inside this piece) gets Width and Depth in its Selected piece card only; no floating card over the project drawing or 3D (the quick-count card shows there only for an opened piece, ADR-088).
+- Request: Add the posibility to change width/depth when whole cabinet or whole piece is selected; answer: Card + side panel
+- Questions: Should a selected project piece also get a floating Width/Depth card over the project plan, elevation and 3D?
+- Suggested pick: Yes, a floating card over the project views (closest to 'Card + side panel'; estimate +60 % work, +15 % of value)
 
-### G-126: Save a group or several pieces as one catalog item
+### G-126: No width/depth fields for a bed or a set of loose panels
 
 - Status: Open
-- Origin: ADR-106, 2026-10-27, Claude scope
-- Missing: Only one piece at a time is saved to the catalog; a group or multi-selection is not saved as one item (project templates, ADR-060, cover whole projects).
-- Request: New adr to add the possibility to save a new piece to catalog when created it inside a project
-- Questions: Should a selected group of pieces be savable as one catalog item?
-- Suggested pick: One piece at a time, as asked (0 % extra work).
+- Origin: ADR-106
+- Missing: A bed's size comes from its mattress and a set of loose panels has no outside size, so neither shows Width/Depth when selected; a filler/cover panel shows Width only (it has no depth).
+- Request: Add the posibility to change width/depth when whole cabinet or whole piece is selected
+- Questions: Should a bed show its mattress size there instead, and loose panels nothing?
+- Suggested pick: Bed: show the mattress width and length there (closest to the request; estimate +10 % work, +5 % of value)
 
 ### G-127: Fill a wall: the over-hood cabinet is not placed over a hood
 
@@ -1210,3 +1210,21 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Yes, every catalog wall variant
 - Questions: Should the over-hood cabinet appear only above a hob or hood, or stay anywhere in the row?
 - Suggested pick: Anywhere, as answered ('every catalog wall variant', 0 % extra work).
+
+### G-128: Save a project piece back over an existing template
+
+- Status: Open
+- Origin: ADR-107, 2026-10-27, Claude scope
+- Missing: Saving a project piece always makes a new catalog template; it never overwrites the template the piece came from.
+- Request: New adr to add the possibility to save a new piece to catalog when created it inside a project
+- Questions: Do you also want 'Update the template' to write a project piece's changes back into its existing template as a new revision?
+- Suggested pick: New template only, as asked (0 % extra work).
+
+### G-129: Save a group or several pieces as one catalog item
+
+- Status: Open
+- Origin: ADR-107, 2026-10-27, Claude scope
+- Missing: Only one piece at a time is saved to the catalog; a group or multi-selection is not saved as one item (project templates, ADR-060, cover whole projects).
+- Request: New adr to add the possibility to save a new piece to catalog when created it inside a project
+- Questions: Should a selected group of pieces be savable as one catalog item?
+- Suggested pick: One piece at a time, as asked (0 % extra work).

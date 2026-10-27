@@ -25,6 +25,7 @@ import {
 import { replaceItem, replaceReport, type ReplaceReport } from '../core/replace';
 import { countRows, countSubject, stepCount, type CountKey } from '../core/counts';
 import { drill, type Selection } from '../core/selectPath';
+import { resizeProduct, type SizeField } from '../core/pieceSize';
 import { closeOutline, DEFAULT_ROOM_HEIGHT, snapCorner, type Pt, type Room } from '../core/room';
 import {
   buildProjectModel,
@@ -56,6 +57,7 @@ import type {
   FrameParams,
   FurnitureModel,
   Material,
+  Mm,
   PanelParams,
   PanelSetParams,
   Space,
@@ -130,6 +132,10 @@ interface State {
   updatePanelSet: (patch: Partial<PanelSetParams>) => void;
   updatePanel: (patch: Partial<PanelParams>) => void;
   updateFrame: (patch: Partial<FrameParams>) => void;
+  /** Width or depth of the whole open piece, from its selection (ADR-106). */
+  resizePiece: (key: SizeField['key'], value: Mm) => void;
+  /** Width or depth of a project piece, from its Selected piece card; one project undo step (ADR-106). */
+  resizeItem: (id: string, key: SizeField['key'], value: Mm) => void;
   /** Catalog metadata and guidance settings (ADR-028, ADR-035). */
   updateMeta: (patch: Partial<Pick<Design, 'catalog' | 'settings'>>) => void;
   editTemplateVariant: (template: LocalTemplate, variantId: string) => void;
@@ -924,6 +930,25 @@ export const useDesign = create<State>((rawSet, get) => {
       const d = get().design;
       if (d.product.kind !== 'frame') return;
       commit({ ...d, product: { ...d.product, params: { ...d.product.params, ...patch } } });
+    },
+    resizePiece: (key, value) => {
+      const d = get().design;
+      const product = resizeProduct(d.product, key, value);
+      if (product !== d.product) commit({ ...d, product });
+    },
+    resizeItem: (id, key, value) => {
+      const it = get().project?.items.find((i) => i.id === id);
+      if (!it) return;
+      const product = resizeProduct(it.design.product, key, value);
+      if (product === it.design.product) return;
+      // Resized, a brand's product is no longer that brand's product; its origin stays (ADR-028), as in `commit`.
+      const catalog =
+        it.design.catalog?.brand && it.design.catalog.origin
+          ? { ...it.design.catalog, brand: undefined }
+          : it.design.catalog;
+      get().updateItem(id, {
+        design: { ...it.design, catalog, product, updatedAt: new Date().toISOString() },
+      });
     },
     updateMeta: (patch) => commit({ ...get().design, ...patch }),
     editTemplateVariant: (template, variantId) => {

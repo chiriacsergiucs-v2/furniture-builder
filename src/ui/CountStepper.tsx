@@ -3,6 +3,8 @@ import { countRows, countSubject } from '../core/counts';
 import { useDesign } from '../store/designStore';
 import { Icon } from './icons';
 import { selectionLabel } from './Inspector';
+import { PieceSize } from './PieceSize';
+import { sizeFields } from '../core/pieceSize';
 
 // Folded or open over 3D on a phone (G-058), kept on this device only (localStorage, ADR-002). Open until folded.
 const FOLD_KEY = 'fb:counts3d';
@@ -16,12 +18,13 @@ function storedFolded() {
 
 /**
  * The counts that apply to the selected space or piece, each as − N + (ADR-084). Nothing when none apply.
- * `foldable` (over 3D) adds a "Quick counts" button that folds the card to one row on a phone (G-058).
+ * `foldable` (over 3D) adds a "Quick counts" button that folds the card to one row on a phone (G-058). `withSize`
+ * (over the drawing and 3D) adds the whole piece's width and depth while the whole piece is selected (ADR-106).
  */
 export const CountStepper = forwardRef<
   HTMLDivElement,
-  { style?: CSSProperties; className?: string; foldable?: boolean }
->(function CountStepper({ style, className, foldable }, ref) {
+  { style?: CSSProperties; className?: string; foldable?: boolean; withSize?: boolean }
+>(function CountStepper({ style, className, foldable, withSize }, ref) {
   const [folded, setFolded] = useState(storedFolded);
   const toggle = () => {
     const next = !folded;
@@ -35,11 +38,13 @@ export const CountStepper = forwardRef<
   const product = useDesign((s) => s.design.product);
   const selectedId = useDesign((s) => s.selectedId);
   const step = useDesign((s) => s.stepCount);
+  const resize = useDesign((s) => s.resizePiece);
   const rows = useMemo(() => {
     const id = countSubject(product, selectedId);
     return id ? countRows(product, id) : [];
   }, [product, selectedId]);
-  if (!rows.length) return null;
+  const size = !!withSize && selectedId === null && sizeFields(product).length > 0;
+  if (!rows.length && !size) return null;
   // Names what the card acts on, the same thing the outline is drawn round (ADR-087, G-069).
   const title = selectionLabel(product, selectedId);
   return (
@@ -60,6 +65,7 @@ export const CountStepper = forwardRef<
         </button>
       )}
       {title && <span className="cs-title">{title}</span>}
+      {size && <PieceSize product={product} onChange={resize} className="cs-size" />}
       {rows.map((r) => (
         <div key={r.key} className="cs-row">
           <span className="cs-label">{r.label}</span>

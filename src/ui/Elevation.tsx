@@ -262,6 +262,7 @@ export function Elevation() {
         <CountStepper
           ref={stepRef}
           className="floating"
+          withSize
           style={pos ? { left: pos.left, top: pos.top } : { visibility: 'hidden' }}
         />
       )}
