@@ -1,10 +1,11 @@
 # ADR-125: Research batch 5: run sinks and handles, spatial query engine trial
 
-- Status: Deferred (open questions G-163, G-164, G-165)
+- Status: Pending
 - Date: 2026-10-27
 - Depends on: ADR-061, ADR-075
 - Design: docs/ui-design.md (project editor, run parts)
 - Backlog: N126
+- Agreed: 2026-10-27: "Accept default" (the suggested picks of G-163, G-164 and G-165)
 
 ## Context
 
@@ -26,15 +27,25 @@ can be a dependency (CLAUDE.md: no dependency with an unknown licence or telemet
 
 ## Decision
 
-1. **Run handles.** A run (ADR-054/061) gets **Handles for this run**: one handle type and one height line for
-   every front in the run, kept as a generated run part, refreshed when pieces change; a piece can override it
-   (ADR-061 overrides survive). Handle specs come from the shipped handle list only (ADR-010). Where the line sits
-   waits for G-164.
-2. **Run sinks.** A sink is a generated run part over a base the user picks: what it produces waits for G-163.
-   Sizes are the user's input, never invented (ADR-010); the shopping list (ADR-064) gets its line.
-3. **Spatial query trial.** A measured trial of Rapier as a query engine only (no physics): the same projects
-   checked by today's box tests and by Rapier queries, comparing results, time and bundle size, lazy-loaded so the
-   first load is unchanged. The result is recorded in this ADR's backlog row; adopting it waits for G-165.
+1. **Run handles.** **Handles for this run** in Run parts: for a run of base units (the runs of ADR-054/061), one
+   handle from the shipped handle list (Bar with the existing hole-centre list, Knob, Push to open; ADR-010, ADR-024)
+   on every door and drawer front of the run, on one line. The line is a **height in mm** above the floor the user
+   enters, or **Top of fronts** in one tap (G-164, accepted). A front the line does not cross gets the handle near its
+   top. Stored as `Project.runHandles` (`from` = the run's pieces, `own` = pieces that keep their own handles,
+   ADR-061 overrides); applied when the model is built (`applyRunHandles`, ADR-004), never written into the pieces'
+   designs, so removing it gives each piece its own handles back. The run is found again on every build, so a piece
+   added to the run gets the handles; a removed run handle is not proposed again.
+2. **Run sinks.** **Sink** in Run parts: over a base the user picks, a cut-out in the run worktop whose width and
+   depth the user enters (no default, ADR-010; G-163, accepted): a note on the worktop's cut-list row ("sink
+   cut-out W × D mm") and a line "Sink (your choice)" under _To choose before buying_ in the shopping list. No 3D
+   sink. Diagnostics: no worktop over the base (warning), a cut-out wider than the base (warning), a cut-out as deep
+   as the worktop or deeper (error, ADR-008). Stored as `Project.sinks`.
+3. **Spatial query trial.** A measured trial of `@dimforge/rapier3d-compat` as a query engine only (no physics),
+   added as a **devDependency** only (G-165, accepted: nothing ships in the app unless it wins): the sample projects
+   checked by today's box tests and by Rapier contact queries, comparing answers, time and package size. The numbers
+   go in N126; adopting it needs a new ADR.
+
+Project `schemaVersion` 13 stores `runHandles` and `sinks` (ADR-011); older versions still load.
 
 Built as one change, one pull request, one test run and one ship (the user's request).
 
@@ -47,7 +58,9 @@ Built as one change, one pull request, one test run and one ship (the user's req
 ## Scope
 
 - In scope: the two features above, core and UI-logic tests, jsdom find-it, the trial's measurements.
-- Out of scope: nothing; the undecided parts are the open questions (G-163 to G-165).
+- Out of scope: nothing; the answered questions are G-163 to G-165.
+- Skipped while building: project templates keep no run handles or sinks (G-210); the piece editor shows the piece's own
+  handles, not the run's (G-211); the sink cut-out is not drawn (G-212).
 
 ## Consequences
 
@@ -58,18 +71,14 @@ Built as one change, one pull request, one test run and one ship (the user's req
 
 ## Done when
 
-- [ ] Run handles: every front in the run gets the run's handle on one line; an overridden piece keeps its own
+- [x] Run handles: every front in the run gets the run's handle on one line; an overridden piece keeps its own
       (tests).
-- [ ] Adding a piece to the run refreshes the handles; removing a run handle stays removed (ADR-061) (tests).
-- [ ] A sink over the chosen base appears in the cut list note and the shopping list with the user's size (tests).
-- [ ] The trial's numbers (agreement with box tests, time, bundle size, licence) are recorded in N126.
-- [ ] jsdom find-it at 390 and 1280 px: "Handles for this run", "Sink".
+- [x] Adding a piece to the run refreshes the handles; removing a run handle stays removed (ADR-061) (tests).
+- [x] A sink over the chosen base appears in the cut list note and the shopping list with the user's size (tests).
+- [x] The trial's numbers (agreement with box tests, time, bundle size, licence) are recorded in N126.
+- [x] jsdom find-it at 390 and 1280 px: "Handles for this run", "Sink".
 
 ## Open questions
 
-- **G-163** Sinks: a cut-out in the run worktop sized by the user, a cut-list note and a shopping line — or also a
-  sink as a 3D item? Suggested: cut-out, note and shopping line (no sink sizes invented, ADR-010).
-- **G-164** Handle line: at the top of fronts, centred, or a height in mm the user enters? Suggested: a height in mm
-  with top-of-front as a one-tap choice.
-- **G-165** Rapier: a measured trial with nothing shipped unless it wins, or adopt it now? Suggested: trial first
-  (the research says "evaluate").
+Answered 2026-10-27 ("Accept default"): G-163 cut-out, note and shopping line; G-164 a height in mm with Top of fronts
+as a one-tap choice; G-165 a measured trial first.

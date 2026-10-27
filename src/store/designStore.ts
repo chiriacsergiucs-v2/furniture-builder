@@ -48,6 +48,7 @@ import {
   moveBy,
   planRuns,
   pruneGroups,
+  pruneRunExtras,
   PROJECT_SCHEMA,
   refreshRunParts,
   requestKey,
@@ -63,8 +64,10 @@ import {
   type ProjectItem,
   type ProjectModel,
   type ProjectSettings,
+  type RunHandle,
   type RunRequest,
   type RunSettings,
+  type RunSink,
 } from '../core/project';
 import type {
   CabinetParams,
@@ -321,6 +324,12 @@ interface State {
   setRunRequest: (r: RunRequest) => void;
   /** Drop a request that could not be made (ADR-075). */
   removeRunRequest: (key: string) => void;
+  /** Handles for a run (ADR-125): add or replace the one with the same id, or remove it. One undo step each. */
+  setRunHandle: (rh: RunHandle) => void;
+  removeRunHandle: (id: string) => void;
+  /** A sink over a base unit (ADR-125): add or replace the one with the same id, or remove it. */
+  setSink: (sk: RunSink) => void;
+  removeSink: (id: string) => void;
   /** Put one board on the fronts or carcass of the selected piece, its run or the whole project (ADR-055). */
   applyFinish: (
     id: string,
@@ -438,7 +447,7 @@ export const useDesign = create<State>((rawSet, get) => {
     const items = linked.items.map((i) => syncRef(i, catalogFamilies));
     if (items.some((i, n) => i !== linked.items[n])) linked = { ...linked, items };
     const stamped = {
-      ...refreshRunParts(resolvePlacements(pruneGroups(linked))),
+      ...refreshRunParts(resolvePlacements(pruneRunExtras(pruneGroups(linked)))),
       schemaVersion: PROJECT_SCHEMA, // an edited project is saved in the current shape (ADR-011, ADR-073)
       updatedAt: new Date().toISOString(),
     };
@@ -1063,6 +1072,29 @@ export const useDesign = create<State>((rawSet, get) => {
       const p = get().project;
       if (!p?.runRequests) return;
       commitProject({ ...p, runRequests: p.runRequests.filter((r) => requestKey(r) !== key) });
+    },
+    setRunHandle: (rh) => {
+      const p = get().project;
+      if (!p) return;
+      const rest = (p.runHandles ?? []).filter((x) => x.id !== rh.id);
+      commitProject({ ...p, runHandles: [...rest, rh] });
+    },
+    removeRunHandle: (id) => {
+      const p = get().project;
+      if (!p?.runHandles) return;
+      const rest = p.runHandles.filter((x) => x.id !== id);
+      commitProject({ ...p, runHandles: rest.length ? rest : undefined });
+    },
+    setSink: (sk) => {
+      const p = get().project;
+      if (!p) return;
+      commitProject({ ...p, sinks: [...(p.sinks ?? []).filter((x) => x.id !== sk.id), sk] });
+    },
+    removeSink: (id) => {
+      const p = get().project;
+      if (!p?.sinks) return;
+      const rest = p.sinks.filter((x) => x.id !== id);
+      commitProject({ ...p, sinks: rest.length ? rest : undefined });
     },
     setRunSettings: (patch) => {
       const p = get().project;

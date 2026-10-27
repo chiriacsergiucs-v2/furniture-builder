@@ -192,7 +192,8 @@ describe('template references (ADR-124, G-161)', () => {
     expect(validateProject({ ...old9, settings: { handle: knob } })).toContain(
       'Project settings need project schemaVersion 12',
     );
-    expect(PROJECT_SCHEMA).toBe(12);
+    expect(PROJECT_SCHEMA).toBeGreaterThanOrEqual(12);
+    expect(validateProject({ ...p, schemaVersion: 12 })).toEqual([]);
     expect(validateProject({ ...p, settings: { plinthHeight: 900 } })).toContain(
       'Project plinth height must be 0 to 500 mm',
     );
