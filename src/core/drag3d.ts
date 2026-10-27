@@ -41,6 +41,33 @@ export function floorPoint(ray: Ray, y: Mm, reach: Mm = MAX_REACH): FloorPoint |
 }
 
 /**
+ * Where along a room axis a ray passes closest to the line through `at` along that axis (mm on that axis), or null
+ * when the ray runs parallel to it or the point lies behind the camera or beyond `reach`. Used to drag a 3D model's
+ * resize handle (ADR-102). Never throws.
+ */
+export function axisPoint(
+  ray: Ray,
+  at: [number, number, number],
+  axis: 'x' | 'y' | 'z',
+  reach: Mm = MAX_REACH,
+): number | null {
+  const i = axis === 'x' ? 0 : axis === 'y' ? 1 : 2;
+  const [ox, oy, oz] = ray.origin;
+  const len = Math.hypot(...ray.dir);
+  if (![...ray.origin, ...ray.dir, ...at].every(Number.isFinite) || len === 0) return null;
+  const d = ray.dir.map((v) => v / len);
+  // Closest points of two lines: the ray o + t·d and the axis at + s·e, with e the unit axis.
+  const w = [ox - at[0], oy - at[1], oz - at[2]];
+  const b = d[i];
+  const denom = 1 - b * b;
+  if (denom < 1e-6) return null;
+  const dw = d[0] * w[0] + d[1] * w[1] + d[2] * w[2];
+  const t = (b * w[i] - dw) / denom;
+  if (!(t > 0) || t > reach) return null;
+  return at[i] + w[i] + t * b;
+}
+
+/**
  * The drop for a piece pressed at room point `from` and dragged to `to` on its floor plane: the same result as a Plan
  * drag by the same move (`dropTarget`), so 3D and Plan always agree. `snap` is the Snap toggle with Alt not held.
  */
