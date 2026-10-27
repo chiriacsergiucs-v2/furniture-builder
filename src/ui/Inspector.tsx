@@ -11,6 +11,7 @@ import {
   findInProduct,
   findSpace,
   productRoots,
+  insideDoors,
   parentOf,
   pedestalRoot,
   splitSpace,
@@ -336,6 +337,8 @@ function SpaceEditor({
   const diags = useMemo(() => allDiags.filter((d) => d.nodeId === space.id), [allDiags, space.id]);
   const set = (fn: (s: Space) => Space) => update(space.id, fn);
   const parent = parentOf(root, space.id);
+  // Doors and handles go on the outside only: a space inside other doors gets none (N109).
+  const behindDoors = insideDoors(root, space.id);
 
   return (
     <div className="inspector">
@@ -469,16 +472,30 @@ function SpaceEditor({
       )}
 
       <Section title="Doors and handles">
-        <FrontEditor space={space} onChange={set} />
-        {space.kind === 'drawers' && space.front && (
+        {behindDoors && !space.front && !space.handle ? (
           <p className="hint">
-            Drawers behind doors are built as internal drawers without their own fronts.
+            This space is inside the doors of the space around it. Doors and handles go on the
+            outside only.
           </p>
-        )}
-        {space.front || space.kind === 'drawers' ? (
-          <HandleEditor space={space} onChange={set} />
         ) : (
-          <p className="hint">Handles appear once there are doors or drawers.</p>
+          <>
+            {behindDoors && (
+              <p className="hint">
+                This space is inside other doors. Set its front and handles to None.
+              </p>
+            )}
+            <FrontEditor space={space} onChange={set} />
+            {space.kind === 'drawers' && space.front && (
+              <p className="hint">
+                Drawers behind doors are built as internal drawers without their own fronts.
+              </p>
+            )}
+            {space.front || space.handle || (space.kind === 'drawers' && !behindDoors) ? (
+              <HandleEditor space={space} onChange={set} />
+            ) : (
+              <p className="hint">Handles appear once there are doors or drawers.</p>
+            )}
+          </>
         )}
       </Section>
 
