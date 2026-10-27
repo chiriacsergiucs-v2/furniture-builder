@@ -1282,3 +1282,21 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: "Move to B as default, keep the priginal as a flag to be abke to tevert"
 - Questions: Is the keyboard route enough for drawing taps, or should tap-position work use Acceptance browser?
 - Suggested pick: Keyboard route in jsdom; ADRs that change tap hit-testing use browser
+
+### G-136: Link pieces that are already 100% identical
+
+- Status: Open
+- Origin: ADR-111, 2026-10-27, user choice
+- Missing: Only copies made with 'Add a linked copy' are linked; identical pieces added separately, by Duplicate or by adding the same item again stay independent (user picked explicit links and only 'Add a linked copy').
+- Request: use a piece, a item created by the user, added to the project, added multiple times, and give the possibility to bulk update the width/height/drawers, just like it would be 1 piece, with 2 symlinks to it, change to 1 changes all the other, including internal, and it should be propagated further to the ones in the 100% same.
+- Questions: Should 'Link N identical pieces' link existing identical pieces, or should Duplicate / adding the same item again make linked copies?
+- Suggested pick: 'Link N identical pieces' on the card: closest to 'propagated further to the ones in the 100% same' (est. +20 % work).
+
+### G-137: Linked copies across projects and templates
+
+- Status: Open
+- Origin: ADR-111, 2026-10-27, Claude scope
+- Missing: Links live inside one project; a change does not reach copies in other projects, saved designs or catalog templates (earlier request 2026-10-27, replaced by the user).
+- Request: give the possibility to update the original template, and it should be propagated further to the ones in the templates.
+- Questions: Should a change also reach the template and copies in other projects?
+- Suggested pick: One project only, as in the current request (0 % extra work).
