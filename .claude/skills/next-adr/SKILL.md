@@ -54,7 +54,8 @@ ADRs are all in `docs/adr-done/`.
    keep the original number for the core, update `docs/adr/README.md`, re-run the picker.
    Skip the split only if the user asks.
 3. **Start building — do not ask for permission.** Announce the number and title in one
-   line. Stop and ask only when a dependency is blocked, or when a physical or supplier
+   line. Stop and ask only when a dependency is blocked, when an open question the build needs is
+   unanswered (never build with the recommended option by default), or when a physical or supplier
    fact is unknown (record it under _Open questions_ in `docs/backlog.md`; never invent it).
 4. **Read only what the ADR points to:** the ADR, its `Depends on` ADRs, the design
    reference, and the current code it touches (not docs alone).
@@ -84,6 +85,9 @@ ADRs are all in `docs/adr-done/`.
 
 ## Notes
 
+- **After `new-adr` (user rule 2026-10-27):** when the user approved building a just-created
+  ADR, skip step 1's picker choice and build that ADR; keep the size gate and dependency check.
+  The ADR file and its implementation go in one branch and one pull request.
 - Picking is read-only — the script never edits or moves anything.
 - A dependency still in `docs/adr/` counts as blocked even if its code exists. Ship it first
   (or the user can override).
