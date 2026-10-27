@@ -33,7 +33,14 @@ import { dropTarget, SNAP_RANGE } from '../core/snap';
 import { groupOf, itemsAt, itemsInBox, nextUnder } from '../core/selection';
 import { inSelection, selectionBox } from '../core/selectPath';
 import type { Box, Design, Diagnostic, Material, Panel } from '../core/types';
-import { listDecors, listDesigns, loadDesign, type StoredDesign } from '../persist/db';
+import {
+  listDecors,
+  listDesigns,
+  listProjectTemplates,
+  loadDesign,
+  type StoredDesign,
+} from '../persist/db';
+import type { ProjectTemplate } from '../core/projectTemplate';
 import { useDesign } from '../store/designStore';
 import { Counter, Group, InfoTip, MmField, Segmented, Select, Toggle } from './controls';
 import {
@@ -94,6 +101,7 @@ import { ReplaceButton } from './Replace';
 import { SavedToCatalog, SaveToCatalog } from './SaveToCatalog';
 import { NewerTemplates, TemplateNotice } from './TemplateRevision';
 import { GroupList, SelectionCard } from './Selection';
+import { ProjectHistory, StyleSuggestions } from './History';
 
 const FRONT_SIDE: Record<QuarterTurn, string> = {
   0: 'front faces you',
@@ -428,6 +436,7 @@ export function ProjectPanel({
         Add a piece
       </button>
       <RoomSection />
+      <ProjectHistory />
     </div>
   );
 }
@@ -579,6 +588,7 @@ function FinishFields({ item }: { item: ProjectItem }) {
           {msg}
         </p>
       )}
+      <StyleSuggestions itemId={item.id} scope={scope} />
     </div>
   );
 }
@@ -908,6 +918,8 @@ export function PlanView({ fronts, card }: { fronts?: boolean; card?: boolean })
   const undoProject = useDesign((s) => s.undoProject);
   const ref = useRef<HTMLDivElement>(null);
   const placing = pm?.pieces.find((pc) => pc.item.id === placingId);
+  // A just-inserted project template is placed as one block (ADR-123).
+  const blockCount = useDesign((s) => s.placingIds.length);
   const drawing = useDesign((s) => s.drawingRoom);
   const hasRoom = useDesign((s) => !!s.project?.room);
   const finishDraw = useDesign((s) => s.finishDrawRoom);
@@ -956,7 +968,15 @@ export function PlanView({ fronts, card }: { fronts?: boolean; card?: boolean })
       {placing && (
         <div className="place-banner" role="status">
           <span>
-            Tap the plan to place <strong>{placing.item.design.name}</strong>
+            {blockCount > 1 ? (
+              <>
+                Tap the plan to place the template's <strong>{blockCount} pieces</strong>
+              </>
+            ) : (
+              <>
+                Tap the plan to place <strong>{placing.item.design.name}</strong>
+              </>
+            )}
           </span>
           <button type="button" className="btn sm" onClick={stop}>
             Place to the right
@@ -1913,6 +1933,14 @@ export function AddPieceList({
       .then(setSaved)
       .catch(() => setSaved([]));
   }, []);
+  // Saved project templates go in as a block of pieces (ADR-123, research "paste ensemble").
+  const insertTemplate = useDesign((s) => s.insertTemplate);
+  const [projectTemplates, setProjectTemplates] = useState<ProjectTemplate[]>([]);
+  useEffect(() => {
+    listProjectTemplates()
+      .then(setProjectTemplates)
+      .catch(() => setProjectTemplates([]));
+  }, []);
   return (
     <>
       {onWizard && (
@@ -1973,6 +2001,38 @@ export function AddPieceList({
                     <strong>{r.name}</strong>
                     <span className="sub">
                       A copy is added; “Update from saved piece” pulls later changes.
+                    </span>
+                  </span>
+                  <Icon name="chevron-right" className="chev sm" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      {projectTemplates.length > 0 && (
+        <>
+          <h3 className="list-head" id="project-templates-head">
+            Project templates
+          </h3>
+          <ul className="template-list" aria-labelledby="project-templates-head">
+            {projectTemplates.map((t) => (
+              <li key={t.id}>
+                <button
+                  type="button"
+                  className="row-btn"
+                  onClick={() => {
+                    if (insertTemplate(t).length) onDone();
+                  }}
+                >
+                  <span className="glyph">
+                    <Icon name="project" />
+                  </span>
+                  <span>
+                    <strong>{t.name}</strong>
+                    <span className="sub">
+                      {t.items.length} {t.items.length === 1 ? 'piece' : 'pieces'}, added together;
+                      tap the plan to place them.
                     </span>
                   </span>
                   <Icon name="chevron-right" className="chev sm" />

@@ -6065,3 +6065,50 @@ p > .info-tip {
   flex-basis: 100%;
   margin: 0;
 }
+
+/* History and style suggestions (ADR-123). */
+.versions,
+.steps-log,
+.style-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s-1);
+}
+.version-row,
+.style-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+.version-row > span:first-child,
+.style-row > span:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+}
+.version-row .split-actions {
+  flex-wrap: nowrap;
+}
+.steps-log .row-btn.undone {
+  opacity: 0.6;
+}
+.style-list {
+  display: grid;
+  gap: var(--s-2);
+  margin-top: var(--s-2);
+}
+.style-list h4 {
+  margin: 0;
+}
+.style-row .swatches {
+  display: flex;
+  gap: var(--s-1);
+}
+.style-row .swatch {
+  width: 16px;
+  height: 24px;
+  border-radius: 3px;
+  border: 1px solid var(--line);
+}
