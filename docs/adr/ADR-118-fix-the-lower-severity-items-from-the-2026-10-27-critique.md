@@ -1,6 +1,6 @@
 # ADR-118: Fix the lower-severity items from the 2026-10-27 critique
 
-- Status: Deferred (open question G-145: the proposed fixes are not agreed yet)
+- Status: Pending
 - Date: 2026-10-27
 - Depends on: ADR-112
 - Design: docs/ui-design.md (sections 3 and 4)
@@ -11,9 +11,9 @@
 ## Context
 
 Critique: [2026-10-27 UI critique](../retros/2026-10-27-ui-critique.md). The lower-severity items were not picked to build first (G-139); the user, 2026-10-27, accepted G-139's pick: one
-follow-up ADR for all of them. Each fix below is the critique's proposal, not yet agreed (G-145).
+follow-up ADR for all of them. The user accepted the nine fixes below "as written" (2026-10-27, G-145).
 
-## Decision (proposed, G-145)
+## Decision
 
 1. Plan toolbar: Snap and Select become checkboxes like Fronts and Clear. (one toggle style per row).
 2. Desktop: Width and Depth show once, in the panel's Selected piece card; the inspector's copy goes.
@@ -44,7 +44,3 @@ follow-up ADR for all of them. Each fix below is the critique's proposal, not ye
 - [ ] Each of the nine items is visible as described at 390 (touch) and 1280 px.
 - [ ] Find-it passes from the bare app at phone and desktop widths (`tools/critique-low/find-it.mjs`, production
       build).
-
-## Open questions
-
-- Accept the nine proposed fixes as written, or change any? Until answered this ADR is Deferred. G-145.

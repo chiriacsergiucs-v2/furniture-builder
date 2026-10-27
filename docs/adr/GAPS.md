@@ -1357,7 +1357,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-144: Where a cut catalog card's full text shows
 
-- Status: Open
+- Status: Acknowledged (2026-10-27)
 - Origin: ADR-117
 - Missing: The Catalog has no item detail view (tapping a card opens the item), so G-143's pick needs a place for the full text
 - Request: accept gap picks
@@ -1366,7 +1366,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-145: Lower-severity critique fixes not agreed
 
-- Status: Open
+- Status: Acknowledged (2026-10-27)
 - Origin: ADR-118
 - Missing: The nine fixes in ADR-118 are the critique's proposals; none is agreed
 - Request: accept gap picks (G-139: one follow-up ADR for all of them)
