@@ -172,9 +172,10 @@ export function duplicateItem(
     left = b.x - b.w;
   const x = free(right) || !free(left) ? right : left;
   const src = project.items[at];
-  // The copy is a new piece placed for the user: it starts unlocked (ADR-095).
-  const { locked: _locked, ...unlocked } = structuredClone(src);
+  // The copy is a new piece placed for the user: it starts unlocked (ADR-095) and not linked (ADR-111).
+  const { locked: _locked, linkId: _link, ...unlocked } = structuredClone(src);
   void _locked;
+  void _link;
   const copy: ProjectItem = {
     ...shifted(unlocked, x - b.x, 0),
     id: newId(),

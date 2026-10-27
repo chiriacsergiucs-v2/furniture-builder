@@ -6,6 +6,7 @@
 import { newId, validateDesign } from './design';
 import {
   planRuns,
+  PROJECT_SCHEMA,
   validateProject,
   type Placement,
   type Project,
@@ -23,6 +24,8 @@ export interface TemplateItem {
   rotationY: QuarterTurn;
   offset: { x: Mm; y: Mm; z: Mm };
   placement?: Placement;
+  /** Linked copies (ADR-111): template items with the same `linkId` stay linked in projects made from it. */
+  linkId?: string;
 }
 
 export interface ProjectTemplate {
@@ -85,6 +88,7 @@ export function templateFromProject(
       rotationY: i.rotationY,
       offset: { x: i.position.x - ox, y: i.position.y, z: i.position.z - oz },
       ...(i.placement ? { placement: structuredClone(i.placement) } : {}),
+      ...(i.linkId ? { linkId: i.linkId } : {}),
     })),
     ...(p.runParts?.length || p.runSettings
       ? {
@@ -114,10 +118,12 @@ export function projectFromTemplate(t: ProjectTemplate, name = t.name): Project 
       position: { ...i.offset },
       rotationY: i.rotationY,
       ...(pl ? { placement: pl } : {}),
+      ...(i.linkId ? { linkId: i.linkId } : {}),
     };
   });
   const base: Project = {
-    schemaVersion: 1,
+    // Linked copies need the project version that stores them (ADR-111).
+    schemaVersion: items.some((i) => i.linkId) ? PROJECT_SCHEMA : 1,
     id: newId(),
     name,
     createdAt: now,
@@ -186,6 +192,11 @@ export function validateProjectTemplate(t: unknown): string[] {
       )
     )
       errs.push(`${name}: invalid placement`);
+    if (
+      it.linkId !== undefined &&
+      (typeof it.linkId !== 'string' || !it.linkId || it.linkId.length > 100)
+    )
+      errs.push(`${name}: invalid link`);
   }
   const rr = t.runRecipe;
   if (rr !== undefined) {

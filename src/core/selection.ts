@@ -164,8 +164,9 @@ export function duplicateItems(
   const resolved = new Map(resolvePlacements(project).items.map((i) => [i.id, i.position]));
   const newIds = new Map(items.map((i) => [i.id, newId()]));
   const copies = items.map((src): ProjectItem => {
-    const { locked: _locked, ...rest } = structuredClone(src);
+    const { locked: _locked, linkId: _link, ...rest } = structuredClone(src);
     void _locked;
+    void _link;
     const pl = rest.placement;
     const at = resolved.get(src.id) ?? rest.position;
     const position = { ...at, x: at.x + all.w };

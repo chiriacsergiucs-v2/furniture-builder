@@ -29,20 +29,24 @@ This changes the project document (`src/core/project.ts`, ADR-011): a new option
 ## Decision
 
 - **Storage:** `ProjectItem.linkId?: string`. Items with the same `linkId` in one project are linked copies.
-  `PROJECT_SCHEMA` 8 → 9; projects of versions 1–8 still load (no `linkId` = not linked). Project templates
-  (ADR-060) and project files keep the field; imported projects get a new `linkId` per group, consistently.
-  Validation drops a `linkId` that is not a non-empty string.
+  `PROJECT_SCHEMA` 8 → 9; projects of versions 1–8 still load (no `linkId` = not linked). The id is local to a
+  project, so project files and project templates (ADR-060, optional `TemplateItem.linkId`) keep it as is; a project
+  made from a template with links is written at version 9. Validation refuses a `linkId` that is not a non-empty
+  string, or one in a project below version 9.
 - **Shared:** the whole `design` (size, interior, drawers, doors, boards, name). Each copy keeps its own id,
   position, rotation, placement, quantity, lock and `templateSeen`.
 - **Add a linked copy** on the selected-piece card: places a copy as Duplicate does (ADR-069) and gives both the same
   `linkId` (the original's, or a new one). One undo step.
 - **Card:** a linked piece shows **Linked: N copies** and a switch **Change all copies**, on by default (UI state,
   not saved).
-- **Edits:** every store write of a project item's design (drilled-in edits ADR-088, the editor, width and depth
-  ADR-106, quick counts ADR-084/ADR-109, Replace ADR-098) goes through one pure function
-  `applyLinked(project, itemId, design, all)` in `src/core`. With the switch on it sets that design on every item with
-  the same `linkId`; with it off it sets it on this item and removes its `linkId`. A group left with one item loses
-  its `linkId`. One undo step per edit.
+- **Edits:** every project write goes through `commitProject`, which runs a pure function
+  `propagateLinks(before, next, all)` from `src/core/linked.ts` (and so does Back to project from the piece editor).
+  For each link group where some copies' designs changed and others did not: with the switch on, the unchanged ones
+  take the changed design (keeping their own design id); with it off, the changed ones leave the group. When every
+  copy changed (e.g. a board applied to the whole project) nothing is carried. A group left with one item loses its
+  `linkId`. This covers drilled-in edits (ADR-088), the piece editor, width and depth (ADR-106), quick counts
+  (ADR-084/ADR-109), Replace (ADR-098) and Mirror (ADR-069). One undo step per edit.
+- Duplicate and duplicating a selection make independent copies (no `linkId`); a merged piece is not linked.
 - Diagnostics, the cut list and the hardware schedule are unchanged: each copy is still a placed item.
 
 ## Alternatives considered
@@ -67,12 +71,12 @@ This changes the project document (`src/core/project.ts`, ADR-011): a new option
 
 ## Done when
 
-- [ ] `applyLinked`: switch on changes every copy's design and nothing else; switch off changes one copy and unlinks
+- [x] `propagateLinks`: switch on changes every copy's design and nothing else; switch off changes one copy and unlinks
       it; a group of one loses its `linkId` (unit tests).
-- [ ] Add a linked copy, then width (ADR-106), a drawer count and a drilled-in shelf change on one copy reach the
+- [x] Add a linked copy, then width (ADR-106), a drawer count and a drilled-in shelf change on one copy reach the
       other; undo reverts both in one step (store test).
-- [ ] Projects of schemaVersion 8 load unlinked; `linkId` survives save and reload, project templates and file
-      export/import (storage test).
+- [x] Projects of schemaVersion 8 load unlinked; `linkId` survives a JSON round trip, validation and project
+      templates (storage test).
 - [ ] Find-it (light — catch-up): "Add a linked copy", "Linked: 2 copies", "Change all copies".
 
 ## Open questions

@@ -88,6 +88,11 @@ export interface ProjectItem {
    * hidden until the template moves past it. Absent = never dismissed. Saved from project schemaVersion 7.
    */
   templateSeen?: number;
+  /**
+   * Linked copies (ADR-111): items of one project with the same `linkId` share their design; a change to one reaches
+   * the others (`src/core/linked.ts`). Absent = not linked. Saved from project schemaVersion 9.
+   */
+  linkId?: string;
 }
 
 /**
@@ -143,16 +148,17 @@ export const requestKey = (r: Pick<RunRequest, 'kind' | 'from'>) => `${r.kind}|$
  * `PROJECT_SCHEMAS` still loads unchanged. 2 = room pipes and outlets (ADR-072); 3 = clearance zones on items
  * (ADR-073); 4 = run requests and trim run parts (ADR-075); 5 = display-only 3D models (ADR-076); 6 = locked pieces
  * (ADR-095); 7 = a kept template revision on items (ADR-096); 8 = groups of pieces
- * (ADR-097).
+ * (ADR-097); 9 = linked copies (ADR-111).
  */
-export const PROJECT_SCHEMA = 8 as const;
-export const PROJECT_SCHEMAS: readonly number[] = [1, 2, 3, 4, 5, 6, 7, PROJECT_SCHEMA];
-export type ProjectSchemaVersion = 1 | 2 | 3 | 4 | 5 | 6 | 7 | typeof PROJECT_SCHEMA;
+export const PROJECT_SCHEMA = 9 as const;
+export const PROJECT_SCHEMAS: readonly number[] = [1, 2, 3, 4, 5, 6, 7, 8, PROJECT_SCHEMA];
+export type ProjectSchemaVersion = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | typeof PROJECT_SCHEMA;
 const RUN_REQUESTS_SINCE = 4;
 const MODELS_SINCE = 5;
 const LOCKS_SINCE = 6;
 const TEMPLATE_SEEN_SINCE = 7;
 const GROUPS_SINCE = 8;
+const LINKS_SINCE = 9;
 
 export interface Project {
   schemaVersion: ProjectSchemaVersion;
@@ -1909,6 +1915,12 @@ export function validateProject(p: unknown): string[] {
       if (!isInt(it.templateSeen, 1)) errs.push('Invalid kept template revision');
       else if ((p.schemaVersion as number) < TEMPLATE_SEEN_SINCE)
         errs.push(`Kept template revisions need project schemaVersion ${TEMPLATE_SEEN_SINCE}`);
+    }
+    if (it.linkId !== undefined) {
+      if (typeof it.linkId !== 'string' || !it.linkId || it.linkId.length > 100)
+        errs.push('Invalid item link');
+      else if ((p.schemaVersion as number) < LINKS_SINCE)
+        errs.push(`Linked copies need project schemaVersion ${LINKS_SINCE}`);
     }
     const de = validateDesign(it.design);
     if (de.length) errs.push(`Item ${String(it.id)}: ${de[0]}`);
