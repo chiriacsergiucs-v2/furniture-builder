@@ -753,7 +753,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-077: Free-angle rotation of project pieces
 
-- Status: Open
+- Status: ADR-121
 - Origin: ADR-093 (2026-10-26, the user chose 90° steps)
 - Missing: Free-angle rotation of project pieces; pieces still turn in 90° steps (ADR-022/ADR-004 kept).
 - Request: "New adr to override the conflicts for 4 and make it ready" (2026-10-26)
@@ -762,7 +762,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-078: Change height by dragging in 3D
 
-- Status: Open
+- Status: ADR-122
 - Origin: ADR-093 (2026-10-26, the user chose floor plane only)
 - Missing: Changing a piece's height by dragging in 3D; height comes from placement.
 - Request: "New adr to override the conflicts for 4 and make it ready" (2026-10-26)
@@ -789,7 +789,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-081: Lock a piece's sizes and parameters
 
-- Status: Open
+- Status: ADR-122
 - Origin: ADR-095 (2026-10-26, Claude: not asked for)
 - Missing: Locking a piece's sizes and other parameters (the research's locked parameters); the lock covers placement only.
 - Request: "New adr 8" (2026-10-26)
@@ -807,7 +807,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-083: Restore an older version of a project
 
-- Status: Open
+- Status: ADR-123
 - Origin: ADR-096 (2026-10-26, Claude: not asked for)
 - Missing: A history of older project versions to go back to (research: version recovery).
 - Request: "New adr 9" (2026-10-26)
@@ -825,7 +825,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-085: Mirror a selection of pieces
 
-- Status: Open
+- Status: ADR-121
 - Origin: ADR-097 (2026-10-26, Claude: not asked for)
 - Missing: Mirroring a selection of pieces.
 - Request: "New adr 2" (2026-10-26)
@@ -843,7 +843,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-087: Keep a piece's own edits when replacing it
 
-- Status: Open
+- Status: ADR-124
 - Origin: ADR-098 (2026-10-26, Claude: not asked for)
 - Missing: Carrying the old piece's own edits onto the replacing design.
 - Request: "New adr 5" (2026-10-26)
@@ -861,7 +861,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-089: Align the heights of wall units
 
-- Status: Open
+- Status: ADR-122
 - Origin: ADR-099 (2026-10-26, Claude: not asked for)
 - Missing: Aligning heights (top or bottom of wall units).
 - Request: "New adr 7" (2026-10-26)
@@ -1399,3 +1399,156 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: accept as written (ADR-120: no ADR numbers in UI text; Back to the editor only when a design is open)
 - Questions: Remove ADR ids from those two pages and hide Back there too, and give Select an info tip?
 - Suggested pick: Keep the ids on Gaps and Research (they are the page's subject); hide Back there too; add an info tip to Select (estimate +5 % work, +5 % of value)
+
+### G-149: Typed rotation: exact checks or bounding boxes
+
+- Status: Open
+- Origin: ADR-121 (open question)
+- Missing: Typed rotation in whole degrees is not built; every check, snap and drawing assumes axis-aligned boxes (quarter turns only)
+- Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
+- Questions: Any whole degree with exact rotated-box checks, any whole degree with each turned piece checked by its enclosing box, or a typed field limited to 0/90/180/270?
+- Suggested pick: Any whole degree with exact rotated-box checks (closest to the research's typed rotation; estimate +60 % work over enclosing boxes, +25 % of value: no false overlap errors)
+
+### G-150: Review pack: what it holds and how it leaves the device
+
+- Status: Open
+- Origin: ADR-121 (open question)
+- Missing: No single package to hand a project to a professional for review
+- Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
+- Questions: Contents (project file, parts CSV, SVG drawings, a printable HTML summary) and delivery: a .zip download, the device Share sheet with download fallback, or print only?
+- Suggested pick: A .zip download plus the device Share sheet where offered (closest to handing a plan over; Share hands files to the OS, the app makes no request; estimate +15 % work, +20 % of value)
+
+### G-151: Align Top/Bottom with floor pieces selected
+
+- Status: Open
+- Origin: ADR-122 (open question)
+- Missing: Align Top and Bottom do not exist; a floor piece's height cannot move without resizing it
+- Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
+- Questions: Skip floor pieces and say why, or resize them to reach the line?
+- Suggested pick: Skip them and say why (alignment moves pieces, as ADR-099; resizing is a separate action)
+
+### G-152: Size lock: separate or part of Lock
+
+- Status: Open
+- Origin: ADR-122 (open question)
+- Missing: A piece's sizes cannot be locked (G-081)
+- Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
+- Questions: A separate Lock size toggle, or one Lock that covers position and size?
+- Suggested pick: Separate Lock size (the research names locked parameters apart from pinned positions; estimate +10 % work, +15 % of value)
+
+### G-153: Height drag in 3D: which pieces
+
+- Status: Open
+- Origin: ADR-122 (open question)
+- Missing: No vertical drag in 3D Move mode (G-078)
+- Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
+- Questions: Only wall-placed pieces, or also floor pieces (which would then become raised)?
+- Suggested pick: Wall-placed pieces only (height comes from placement, ADR-031; floor pieces stay on the floor)
+
+### G-154: Section view: which cut planes
+
+- Status: Open
+- Origin: ADR-122 (open question)
+- Missing: No section, cutaway or isolate in the 3D view
+- Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
+- Questions: One front-to-back cut, or a cut along any of the three axes?
+- Suggested pick: Any of the three axes (closest to 'cut through the ensemble'; estimate +15 % work, +20 % of value)
+
+### G-155: Project versions: when one is kept
+
+- Status: Open
+- Origin: ADR-123 (open question)
+- Missing: No history of older project versions (G-083)
+- Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
+- Questions: Automatic (one version each time a project is opened for editing, plus Save a version by hand), by hand only, or on every change?
+- Suggested pick: Automatic per editing session plus by hand (closest to 'stronger recovery': nothing to remember; estimate +10 % work, +30 % of value)
+
+### G-156: Project versions: how many are kept
+
+- Status: Open
+- Origin: ADR-123 (open question)
+- Missing: Keeping versions grows storage; removing old ones deletes saved data, which needs the user's decision (ADR-012)
+- Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
+- Questions: Keep every version until the user deletes it, or keep the last N and drop older ones automatically?
+- Suggested pick: Keep every version until the user deletes it (nothing deleted without the user, ADR-012)
+
+### G-157: Undo log: labelled snapshots or inverse commands
+
+- Status: Open
+- Origin: ADR-123 (open question)
+- Missing: Undo is a list of unlabelled snapshots; no named steps, no step list, no explicit transactions
+- Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
+- Questions: Labelled snapshots grouped into transactions, or a log of inverse commands?
+- Suggested pick: Labelled snapshots grouped into transactions (gives the named log and atomic steps the research describes; inverse commands estimate +80 % work, under +5 % of value)
+
+### G-158: Style suggestions: where they come from
+
+- Status: Open
+- Origin: ADR-123 (open question)
+- Missing: No style or material suggestions
+- Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
+- Questions: Built-in named styles (board and handle combinations from the shipped lists), combinations from the user's own projects, or both?
+- Suggested pick: Both (estimate +30 % work over built-in only, +40 % of value: suggestions match what the user actually uses)
+
+### G-159: Design codes: link or text
+
+- Status: Open
+- Origin: ADR-124 (open question)
+- Missing: No code to share or reopen a design or project elsewhere
+- Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
+- Questions: A link that opens the app with the design, plus the text code, or the text code only?
+- Suggested pick: Link plus text code (closest to IKEA-style codes that reopen a design; estimate +10 % work, +25 % of value)
+
+### G-160: Replace: which own edits carry over
+
+- Status: Open
+- Origin: ADR-124 (open question)
+- Missing: Replacing a piece drops its own edits (G-087)
+- Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
+- Questions: Every changed setting that also exists on the new design (listing the rest), or only size and boards?
+- Suggested pick: Every changed setting that exists on the new design, with a list of what could not carry (closest to G-087; estimate +40 % work, +50 % of value)
+
+### G-161: Template references: default and fallback
+
+- Status: Open
+- Origin: ADR-124 (open question)
+- Missing: Project pieces are full copies (ADR-022); none refers to its template and stores only its changes
+- Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
+- Questions: New catalog pieces refer to their template with a kept copy as fallback, refer with no copy (only changes stored), or opt in per piece?
+- Suggested pick: Refer by default and keep a copy as fallback (closest to the research while a missing template never loses a piece, ADR-012; estimate +20 % work over no copy, same value)
+
+### G-162: Project-wide settings: which ones
+
+- Status: Open
+- Origin: ADR-124 (open question)
+- Missing: No project-wide parameters that every piece follows unless it overrides them
+- Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
+- Questions: Which settings: carcass, front and back boards and banding; handle type; front overlay; plinth height — all, or a subset?
+- Suggested pick: All of them (the settings the catalog families share; estimate +40 % work over boards only, +60 % of value)
+
+### G-163: Run sinks: what is generated
+
+- Status: Open
+- Origin: ADR-125 (open question)
+- Missing: Sinks are not generated for a run
+- Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
+- Questions: A sink cut-out in the run worktop over a chosen base, sized by the user, plus a shopping line — or a sink as a 3D item too?
+- Suggested pick: Cut-out sized by the user, a cut-list note and a shopping line (no sink sizes invented, ADR-010)
+
+### G-164: Run handles: where the line sits
+
+- Status: Open
+- Origin: ADR-125 (open question)
+- Missing: Handles are chosen per piece; nothing lines them up across a run
+- Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
+- Questions: One handle type and one height line for every front in the run: line at the top of fronts, centred, or a height in mm the user enters?
+- Suggested pick: A height in mm the user enters, with top-of-front as a one-tap choice (closest to a generated, aligned handle line)
+
+### G-165: Rapier: trial or adopt
+
+- Status: Open
+- Origin: ADR-125 (open question)
+- Missing: No spatial query engine; checks are hand-written box tests
+- Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
+- Questions: Run a measured trial (decision recorded, nothing shipped unless it wins), or adopt Rapier for the checks now?
+- Suggested pick: Measured trial first (the research says 'evaluate'; a new WASM dependency needs its licence, size and offline behaviour checked)
