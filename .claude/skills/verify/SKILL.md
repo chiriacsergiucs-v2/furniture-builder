@@ -29,8 +29,9 @@ Project: **Furniture Builder** — offline PWA.
    no `any` / `@ts-ignore` / `eslint-disable` to silence errors.
 4. **Run the extra checks the change needs** (not in CI): `FUZZ_N=30000 pnpm exec vitest run
 tests/fuzz.test.ts` after geometry changes; `pnpm catalog:docs` /
-   `pnpm catalog:snapshots` after catalog changes; the feature's `tools/*/find-it.mjs`
-   on the production build for anything visible (not for an `Acceptance: light` ADR: report
+   `pnpm catalog:snapshots` after catalog changes; jsdom find-it tests (`tests/find-it/`) run in
+   `pnpm test`; for an `Acceptance: browser` ADR, the feature's `tools/*/find-it.mjs`
+   on the production build (ADR-108) (not for an `Acceptance: light` ADR: report
    "find-it pending (light)" instead, ADR-066).
 5. **Compare with CI.** If `.github/workflows/ci.yml` runs a check that is not in the table
    (or the commands differ), tell the user and suggest updating the table.

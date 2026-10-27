@@ -48,7 +48,9 @@ Everything written to the repo is in **English**, whatever language the conversa
    - **Context** (the user's words), **Decision**, **Alternatives considered** (2–4 real
      options), **Scope**, **Consequences**.
    - **Done when** — verifiable items only (tests, diagnostics, visible text the find-it
-     test looks for), at most 8. Anything visible gets a find-it item. If the user chose
+     test looks for), at most 8. Anything visible gets a find-it item: jsdom by default
+     (`tests/find-it/<area>.test.tsx`); for layout/CSS, 3D view or Move mode work add
+     `- Acceptance: browser` under `- Backlog:` (ADR-108). If the user chose
      light acceptance, add `- Acceptance: light` under `- Backlog:`, mark those items
      `(light — catch-up)` and put `find-it pending (light, ADR-066)` in the backlog row (ADR-066).
    - **Gaps (ADR-082)** — each _Out of scope_ item and each open question gets a gap in

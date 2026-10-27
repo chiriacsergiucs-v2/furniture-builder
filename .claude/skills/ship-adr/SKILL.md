@@ -26,7 +26,8 @@ Project: **Furniture Builder** — offline PWA for designing casework.
 
 1. **Identify the ADR.** Get the number from the user (e.g. `047`, `ADR-047`). If ambiguous, ask.
 2. **Check the evidence first.** Every `Done when` item is met by code and by a check you
-   ran (command output, CI run id, find-it result). The backlog row has that evidence. The
+   ran (command output, CI run id, find-it result: jsdom test or, for `Acceptance: browser`, the
+   browser script, ADR-108). The backlog row has that evidence. The
    `review` skill has run on the change (a separate subagent for multi-ADR work) with every
    finding fixed or answered (retro 2026-10-26). From number 091 on, the `- Agreed:` line quotes the
    user; if it says `not yet`, stop and ask.

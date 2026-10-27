@@ -117,12 +117,15 @@ Lifecycle, one skill per step:
   (below) marks each visible requirement _not checked in a browser_ instead.
 - **R2 No avoidance:** never drop or relabel a requirement ("reference", "waits", "gap", "deferred") to skip
   building it; ask instead.
-- **R3 Find-it test:** UI acceptance starts from the bare app and finds features by visible text at phone and
-  desktop widths (`tools/*/find-it.mjs` against the production build). Exception (ADR-066): an ADR whose
-  header the user set to `- Acceptance: light` skips the find-it script and any browser run; its backlog rows
-  stay Partially done with the gap `find-it pending (light, ADR-066)`, naming the visible text to find, until
-  the user says "catch up acceptance", which writes and runs the missing scripts on the production build of
-  `main` or on the live URL.
+- **R3 Find-it test:** UI acceptance starts from the bare app and finds features by role and visible text at
+  phone and desktop widths. Default find-it mode: **jsdom** (ADR-108) — `tests/find-it/<area>.test.tsx` with the
+  `tests/find-it/setup.tsx` helper (390 and 1280 px), run by `pnpm test` and CI. An ADR that changes layout or CSS,
+  or touches the 3D view or Move mode, sets `- Acceptance: browser`: `tools/<area>/find-it.mjs` against the
+  production build in Chromium (the rule before ADR-108). To revert every ADR to the browser script, change the
+  default above to **browser**. Exception (ADR-066): an ADR whose header the user set to `- Acceptance: light`
+  skips the find-it test; its backlog rows stay Partially done with the gap `find-it pending (light, ADR-066)`,
+  naming the visible text to find, until the user says "catch up acceptance", which writes and runs the missing
+  tests (jsdom, or the browser script for layout/CSS or 3D work, on the production build of `main` or the live URL).
 - **R4 Outcome first:** replies open with where to click and whether it is live.
 
 ## Process (standing user rules)

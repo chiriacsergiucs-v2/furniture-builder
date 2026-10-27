@@ -4,7 +4,8 @@
 - every ADR in docs/adr/ (Pending or Deferred) and docs/adr-done/ (Implemented) has a valid header;
 - the docs/adr/README.md index lists each ADR once, with the right link and status;
 - every ADR id, ADR link and backlog id used in the repository exists;
-- an ADR with "- Acceptance: light" keeps the find-it marker on its backlog rows until they are Done (ADR-066);
+- "- Acceptance:" is light, full or browser (ADR-066, ADR-108); a light ADR keeps the find-it marker on its backlog
+  rows until they are Done (ADR-066);
 - docs/adr/GAPS.md is well formed, every G id used exists, and an ADR from ADR-082 on cites a gap for each
   out-of-scope line and open question (ADR-082).
 
@@ -77,8 +78,8 @@ for num, (path, status) in adrs.items():
             errors.append(f"{rel}: unknown backlog id {b}")
     # Light acceptance (ADR-066): the backlog row keeps the marker until a find-it run makes it Done.
     acc = re.search(r"^- Acceptance: (.+)$", text, re.M)
-    if acc and acc.group(1).strip() not in ("light", "full"):
-        errors.append(f"{rel}: Acceptance must be light or full, is '{acc.group(1).strip()}'")
+    if acc and acc.group(1).strip() not in ("light", "full", "browser"):
+        errors.append(f"{rel}: Acceptance must be light, full or browser, is '{acc.group(1).strip()}'")
     if acc and acc.group(1).strip() == "light":
         for b in re.findall(r"\b[FND]\d{2,}\b", bl.group(1) if bl else ""):
             if b not in backlog:
