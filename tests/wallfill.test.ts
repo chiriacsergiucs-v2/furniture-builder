@@ -255,6 +255,14 @@ describe('wall row (ADR-104)', () => {
     );
   });
 
+  it('a piece problem is reported as one, not as a wall row that does not fit', () => {
+    for (const wallRow of ['always', 'any'] as const) {
+      const r = suggestMixes(wall({ depth: 30, wallRow }));
+      expect(r.mixes).toEqual([]);
+      expect(r.problems.map((p) => p.code)).toEqual(['wall-errors']);
+    }
+  });
+
   it("always by default (the user's answer); any shows both; never shows none", () => {
     expect(suggestMixes(wall()).mixes.every((m) => m.wall)).toBe(true);
     const any = suggestMixes(wall({ wallRow: 'any' }));
