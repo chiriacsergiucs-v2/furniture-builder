@@ -245,7 +245,7 @@ export function buildCabinet(
   if (p.topLayers === 2 && p.topKind === 'rails')
     warn(
       'top-layers-rails',
-      'A doubled top applies to a full top panel; the two top rails stay single.',
+      'A doubled top applies to a full top panel; the two top rails stay single. Choose "A full panel" to use it, or set Top layers to Single first to clear this.',
       opts.productNodeId,
     );
   const tt = doubled ? 2 * t : t;

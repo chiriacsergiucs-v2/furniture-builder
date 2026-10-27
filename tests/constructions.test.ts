@@ -359,6 +359,19 @@ describe('doubled top (ADR-105)', () => {
       expect(errors(d)).toEqual([]);
       noOverlaps(d);
     });
+  it('a half-overlay front stops at the centre of the 36 mm stack', () => {
+    const door = (d: Design) => buildModel(d).panels.find((p) => p.role === 'door')!.box;
+    const one = cab(
+      { frontStyle: 'half', height: 720 },
+      { id: 'in', kind: 'shelves', count: 1, front: { kind: 'doors', count: 1 } },
+    );
+    const two = cab(
+      { frontStyle: 'half', height: 720, topLayers: 2 },
+      { id: 'in', kind: 'shelves', count: 1, front: { kind: 'doors', count: 1 } },
+    );
+    const t = tops(two)[0].box.h;
+    expect(door(two).y + door(two).h).toBe(door(one).y + door(one).h - t / 2);
+  });
   it('the cut list shows one Top row with quantity 2', () => {
     const d = cab({ topLayers: 2 });
     const rows = cutlist(buildModel(d), d.materials).filter((r) => r.labels.includes('Top'));
@@ -382,6 +395,11 @@ describe('doubled top (ADR-105)', () => {
         params: { ...cornerDefaults(v), topLayers: 2 },
       });
       expect(tops(two).length, v).toBe(2 * tops(one).length);
+      const t = tops(two)[0].box.h;
+      expect(buildModel(two).spaces[0].box.h, v).toBe(buildModel(one).spaces[0].box.h - t);
+      // The inside space ends at the lower top: no top board reaches into it.
+      for (const sp of buildModel(two).spaces)
+        for (const tp of tops(two)) expect(overlaps(sp.box, tp.box), `${v} ${tp.id}`).toBe(false);
       expect(errors(two), v).toEqual([]);
       noOverlaps(two);
     }

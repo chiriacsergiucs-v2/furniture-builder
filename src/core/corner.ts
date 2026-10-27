@@ -315,7 +315,7 @@ function buildDiagonal(
   local.spaces.push({
     nodeId: s.id,
     kind: 'shelves',
-    box: box(bt, ph + t, bt, Wb, H - ph - 2 * t, Wb),
+    box: box(bt, ph + t, bt, Wb, H - ph - t - tt, Wb),
     depth: 0,
     leaf: true,
     hasDoors: !!doors,

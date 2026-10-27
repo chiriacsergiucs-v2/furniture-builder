@@ -1,11 +1,12 @@
 # ADR-105: Doubled top: two body panels glued as the cabinet top
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-27
+- Implemented: 2026-10-27
 - Depends on: ADR-036
 - Design: docs/ui-design.md (Construction group)
 - Backlog: N103
-- Agreed: 2026-10-27 "2 panels"; "Option on every cabinet"; "Under the top, height stays"; "Both banded like the top"; "Full find-it"
+- Agreed: 2026-10-27 "2 panels"; "Option on every cabinet"; "Under the top, height stays"; "Both banded like the top"; "Full find-it"; half overlay: "Centre of the 36 mm stack"
 
 ## Context
 
@@ -26,12 +27,13 @@ designs build exactly as before. It extends ADR-036's construction flags and rep
   stays `H`:
   - top **on the sides**: the sides get one `t` shorter;
   - top **between the sides**: sides keep their height;
-  - in both, the inside opening, an inset back and the half-overlay front line lose one `t`.
+  - in both, the inside opening and an inset back lose one `t`; a half-overlay front stops at the centre of the
+    `2t` stack, half a `t` lower than on a single top (user, 2026-10-27: "Centre of the 36 mm stack").
 - Corner cabinets get the same `CornerParams.topLayers`: blind and L pass it to their carcasses; the diagonal
   adds a second five-sided top board under the first.
 - Both layers are labelled "Top", so the cut list shows one row "Top" × 2 (Romanian "Capac").
-- The two layers touch face to face, so the fastener tally (ADR-074) counts them as one carcass joint with the user's
-  own fastener choice; no glue or screw spec is invented (ADR-010, G-120).
+- The two layers touch face to face, so the fastener tally (ADR-074) counts the face between them as one more carcass joint
+  (a top between the sides also adds the lower layer's joints to both sides) with the user's own fastener choice; no glue or screw spec is invented (ADR-010, G-120).
 - With a rails top, `topLayers: 2` builds single rails and gives a warning `top-layers-rails` (G-119).
 - Inspector › Construction: a "Top layers" control **Single · Doubled**, shown when the top is a full panel. The merge
   conflict list (`src/core/merge.ts`) names it "top layers".
@@ -55,12 +57,12 @@ designs build exactly as before. It extends ADR-036's construction flags and rep
 
 ## Done when
 
-- [ ] Doubled top, on the sides and between the sides: two `top` panels, no overlaps, outer height unchanged, inside
+- [x] Doubled top, on the sides and between the sides: two `top` panels, no overlaps, outer height unchanged, inside
       opening one `t` lower (tests).
-- [ ] Cut list shows "Top" with quantity 2 for a doubled top (test).
-- [ ] Rails top with `topLayers: 2` warns `top-layers-rails`; an invalid `topLayers` fails validation (tests).
-- [ ] Fuzz picks `topLayers` and passes with `FUZZ_N=30000`.
-- [ ] Find-it from the bare app at phone and desktop widths: open a cabinet, Construction › "Top layers" ›
+- [x] Cut list shows "Top" with quantity 2 for a doubled top (test).
+- [x] Rails top with `topLayers: 2` warns `top-layers-rails`; an invalid `topLayers` fails validation (tests).
+- [x] Fuzz picks `topLayers` and passes with `FUZZ_N=30000`.
+- [x] Find-it from the bare app at phone and desktop widths: open a cabinet, Construction › "Top layers" ›
       "Doubled", the parts list shows "Top" × 2.
 
 ## Open questions
