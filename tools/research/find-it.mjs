@@ -83,9 +83,11 @@ for (const width of [1440, 1024, 390, 360]) {
   // ADR-092: what the app has built, and the dashboard on what is left
   check(
     width,
-    'dashboard: "Built in this app" with verified / in progress / left to build',
+    'dashboard: "Built in this app" says built features are no longer listed; in progress / not started',
     (await page.getByRole('heading', { name: 'Built in this app' }).isVisible()) &&
-      (await page.getByRole('button', { name: /left to build/ }).isVisible()),
+      (await page.getByText(/92 features the app has built are no longer listed/).isVisible()) &&
+      (await page.getByRole('button', { name: /in progress/ }).isVisible()) &&
+      (await page.getByRole('button', { name: /not started/ }).isVisible()),
   );
   const leftRadio = page.getByRole('radio', { name: /^Left to build \(\d+\)$/ });
   check(
@@ -95,7 +97,7 @@ for (const width of [1440, 1024, 390, 360]) {
   );
   await page.getByRole('radio', { name: /^All features \(\d+\)$/ }).click();
   await page
-    .getByRole('button', { name: /features with value 4\.5–5\.0 and Low complexity/ })
+    .getByRole('button', { name: /features with value 4\.5–5\.0 and Medium complexity/ })
     .click();
   check(
     width,
@@ -107,17 +109,22 @@ for (const width of [1440, 1024, 390, 360]) {
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: `${out}/research-dashboard-${width}.png`, fullPage: false });
   const rows = await page.locator('table.features-table tbody tr').count();
-  check(width, 'every feature not merged is listed (≥ 115 rows)', rows >= 115, `${rows} rows`);
+  check(
+    width,
+    'only the 44 features left to build are listed (ADR-111)',
+    rows === 44,
+    `${rows} rows`,
+  );
   await page.getByLabel('Show merged').check();
   const withMerged = await page.locator('table.features-table tbody tr').count();
-  check(width, '"Show merged" lists all 157', withMerged === 157, `${withMerged} rows`);
+  check(width, '"Show merged" lists 65', withMerged === 65, `${withMerged} rows`);
   await page.getByLabel('Show merged').uncheck();
   await page.getByLabel('Left to build only').check();
   const leftRows = await page.locator('table.features-table tbody tr').count();
   check(
     width,
-    '"Left to build only" narrows the list',
-    leftRows > 0 && leftRows < rows,
+    '"Left to build only" keeps every row (nothing built is listed)',
+    leftRows === rows,
     `${leftRows} rows`,
   );
   await page.getByLabel('Left to build only').uncheck();
@@ -135,19 +142,25 @@ for (const width of [1440, 1024, 390, 360]) {
   await page.getByLabel('Search features').fill('disable snapping');
   check(
     width,
-    'search finds the snap override',
-    await page.getByRole('button', { name: 'Snap override (modifier key or toggle)' }).isVisible(),
+    'a built feature (snap override) is gone from the search',
+    (await page.locator('table.features-table tbody tr').count()) === 0,
+  );
+  await page.getByLabel('Search features').fill('cutaway');
+  check(
+    width,
+    'search finds a feature left to build',
+    await page
+      .getByRole('button', { name: 'Section/cutaway and visibility isolation' })
+      .isVisible(),
   );
   await page.getByLabel('Search features').fill('');
-  const sel = page.getByLabel(
-    'Your decision on Automatically generated shared countertops/worktops',
-  );
+  const sel = page.getByLabel('Your decision on Live price/cost estimate');
   await sel.selectOption('shortlisted');
   check(width, 'no sideways scroll on the feature list', await noSideScroll());
   await page.screenshot({ path: `${out}/research-features-${width}.png`, fullPage: false });
 
   await page
-    .getByRole('button', { name: 'Guided connection snapping with live preview and orientation' })
+    .getByRole('button', { name: 'Precise numeric position, dimensions and gaps' })
     .first()
     .click();
   check(
@@ -169,15 +182,14 @@ for (const width of [1440, 1024, 390, 360]) {
   check(
     width,
     'decision kept after reload',
-    (await page
-      .getByLabel('Your decision on Automatically generated shared countertops/worktops')
-      .inputValue()) === 'shortlisted',
+    (await page.getByLabel('Your decision on Live price/cost estimate').inputValue()) ===
+      'shortlisted',
   );
   await page.getByLabel('Shortlisted and approved only').check();
   const planned = await page.locator('table.features-table tbody tr').count();
   check(width, 'shortlisted + approved filter', planned === 2, `${planned} rows`);
   await page
-    .getByRole('button', { name: 'Guided connection snapping with live preview and orientation' })
+    .getByRole('button', { name: 'Precise numeric position, dimensions and gaps' })
     .first()
     .click();
   check(

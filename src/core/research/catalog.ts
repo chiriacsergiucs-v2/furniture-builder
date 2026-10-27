@@ -224,6 +224,16 @@ export function validateBundle(x: unknown): string[] {
     for (const f of c.features ?? [])
       if (!feats.has(f)) e.push(`Contradiction ${c.id}: unknown feature ${f}.`);
   }
+  if (b.removed !== undefined && !Array.isArray(b.removed)) e.push('"removed" must be a list.');
+  else
+    for (const r of b.removed ?? []) {
+      const at = `Removed feature ${String(r?.id)}`;
+      if (!isStr(r?.id) || !r.id || feats.has(r.id)) e.push(`${at}: needs an id no feature has.`);
+      if (!isStr(r?.name) || !r.name || !isStr(r?.reason) || !r.reason)
+        e.push(`${at}: needs a name and a reason.`);
+      if (!isStrArr(r?.findings)) e.push(`${at}: "findings" must be a list of text.`);
+      else for (const n of r.findings) if (!finds.has(n)) e.push(`${at}: unknown finding ${n}.`);
+    }
   for (const u of b.unextracted!) {
     inDoc(`Unextracted ${u.id}`, u.lines);
     if (!isStr(u.reason) || !u.reason) e.push(`Unextracted ${u.id}: a reason is required.`);
@@ -544,7 +554,10 @@ export function coverage(b: ResearchBundle): CoverageReport {
   });
   const unextracted = new Set<number>();
   for (const u of b.unextracted) for (let l = u.lines[0]; l <= u.lines[1]; l++) unextracted.add(l);
-  const linked = new Set(b.features.flatMap((f) => [...f.findings, ...(f.inferredFrom ?? [])]));
+  const linked = new Set([
+    ...b.features.flatMap((f) => [...f.findings, ...(f.inferredFrom ?? [])]),
+    ...(b.removed ?? []).flatMap((r) => r.findings),
+  ]);
   const contra = new Set(b.contradictions.flatMap((c) => c.findings));
   // Most specific section for a line: the smallest range that holds it.
   const sectionOf = (l: number) =>
@@ -632,7 +645,11 @@ export function auditChecks(b: ResearchBundle): AuditCheck[] {
     ...b.citations.flatMap((c) => c.urls),
     ...b.bibliography.map((x) => x.url),
   ]);
-  const linked = new Set(b.features.flatMap((f) => f.findings));
+  // A feature deleted because the app built it (ADR-111) still accounts for its findings.
+  const linked = new Set([
+    ...b.features.flatMap((f) => f.findings),
+    ...(b.removed ?? []).flatMap((r) => r.findings),
+  ]);
   const lines = text.split('\n');
   const unlinked = (kinds: ResearchFinding['kind'][]) =>
     b.findings.filter((f) => kinds.includes(f.kind) && !linked.has(f.id)).map((f) => f.id);

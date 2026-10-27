@@ -80,6 +80,11 @@ function dropFeature(b: ResearchBundle, id: string): ResearchBundle {
     })),
   };
 }
+/** The feature deleted because the app built it (ADR-111) that held the finding on `line`, if any. */
+const removedAt = (line: number) => {
+  const n = B.findings.find((f) => f.lines[0] === line)?.id;
+  return n ? B.removed?.find((r) => r.findings.includes(n)) : undefined;
+};
 const mark = (id: string, patch: Partial<ResearchMark> = {}): ResearchMark => ({
   id,
   selection: 'approved',
@@ -118,13 +123,19 @@ describe('research catalog: extracted data (ADR-043)', () => {
       expect(n).toBeLessThan(30);
     }
   });
-  it("has a feature for every ranked row, with the paper's ratings word for word", () => {
+  it("has a feature for every ranked row left to build, with the paper's ratings word for word", () => {
     expect(RANKED_ROWS).toHaveLength(39);
+    let left = 0;
     for (const [rank, name] of RANKED_ROWS) {
       const c = cells(rankLine(rank));
       expect(c[1]).toBe(name);
       const f = B.features.find((x) => x.rank === rank)!;
-      expect(f, `rank ${rank}`).toBeDefined();
+      // A row the app has built is held by a removed feature instead (ADR-111).
+      if (!f) {
+        expect(removedAt(rankLine(rank)), `rank ${rank}`).toBeDefined();
+        continue;
+      }
+      left++;
       expect([
         f.demand,
         f.appreciation,
@@ -136,19 +147,21 @@ describe('research catalog: extracted data (ADR-043)', () => {
       ]).toEqual(c.slice(2));
       expect(f.findings).toContain(`ens.n.rank-${String(rank).padStart(2, '0')}`);
     }
+    expect(left).toBeGreaterThan(10);
   });
-  it('links every top-fifteen recommendation and every MVP row to a feature', () => {
+  it('links every top-fifteen recommendation and every MVP row to a feature, or to one the app has built', () => {
     for (const [r, name] of RECOMMENDATION_ROWS) {
       expect(LINES[recommendationLine(r) - 1]).toContain(`**${name}**`);
       expect(
-        B.features.some((f) => f.recommendationRank === r),
+        B.features.some((f) => f.recommendationRank === r) ||
+          removedAt(recommendationLine(r)) !== undefined,
         `recommendation ${r}`,
       ).toBe(true);
     }
     for (const [line, name] of MVP_ROWS) {
       expect(cells(line)[0]).toBe(name);
       const f = B.features.find((x) => x.mvp === cells(line)[1]);
-      expect(f, `MVP ${name}`).toBeDefined();
+      expect(f ?? removedAt(line), `MVP ${name}`).toBeDefined();
     }
   });
   it('has a record for every compared competitor, every footnote and every listed source', () => {
@@ -203,39 +216,39 @@ describe('research catalog: view, filters and relationships', () => {
     const st = stats(view, {});
     expect(st.features).toBe(B.features.length);
     expect(st.topLevel + st.subfeatures).toBe(st.features);
-    expect(st.subfeatures).toBeGreaterThan(50);
-    expect(view.features.get('ens.f.guided-snapping')!.children).toEqual(
-      expect.arrayContaining(['ens.f.snap-preview', 'ens.f.snap-override']),
+    expect(st.subfeatures).toBeGreaterThan(20);
+    expect(view.features.get('ens.f.generated-parts')!.children).toEqual(
+      expect.arrayContaining(['ens.f.shared-support', 'ens.f.gen-sinks-handles']),
     );
-    expect(descendants(view, 'ens.f.collision-clearance').map((f) => f.id)).toContain(
-      'ens.f.env-drawer',
+    expect(descendants(view, 'ens.f.composition-layer').map((f) => f.id)).toContain(
+      'ens.f.reference-copies',
     );
-    expect(view.competitors.get('c.planner5d')!.features).toContain('ens.f.snap-override');
+    expect(view.competitors.get('c.pcon')!.features).toContain('ens.f.template-instancing');
   });
   it('searches, filters, sorts and groups', () => {
     const marks = {
-      'ens.f.countertops': mark('ens.f.countertops', { selection: 'shortlisted' }),
-      'ens.f.auto-bom': mark('ens.f.auto-bom'),
+      'ens.f.live-price': mark('ens.f.live-price', { selection: 'shortlisted' }),
+      'ens.f.quotation': mark('ens.f.quotation'),
     };
-    expect(
-      filterFeatures(view, {}, { ...EMPTY_QUERY, q: 'disable snapping' }).map((f) => f.id),
-    ).toContain('ens.f.snap-override');
+    expect(filterFeatures(view, {}, { ...EMPTY_QUERY, q: 'cutaway' }).map((f) => f.id)).toContain(
+      'ens.f.section-cutaway',
+    );
     expect(
       filterFeatures(view, marks, { ...EMPTY_QUERY, planned: true })
         .map((f) => f.id)
         .sort(),
-    ).toEqual(['ens.f.auto-bom', 'ens.f.countertops']);
+    ).toEqual(['ens.f.live-price', 'ens.f.quotation']);
     expect(
       filterFeatures(view, {}, { ...EMPTY_QUERY, category: 'ai' }).every(
         (f) => f.category === 'ai',
       ),
     ).toBe(true);
-    expect(filterFeatures(view, {}, { ...EMPTY_QUERY, origin: 'inferred' }).length).toBe(2);
+    expect(filterFeatures(view, {}, { ...EMPTY_QUERY, origin: 'inferred' }).length).toBe(1);
     expect(filterFeatures(view, {}, { ...EMPTY_QUERY, evidence: 'without' })).toEqual([]);
     const byValue = sortFeatures([...view.features.values()], 'impact', {});
-    expect(byValue[0].impact).toBe('5.0');
+    expect(byValue[0].impact).toBe('4.9');
     expect(sortFeatures([...view.features.values()], 'research', {})[0].id).toBe(
-      'ens.f.guided-snapping',
+      'ens.f.precise-numeric',
     );
     const groups = groupFeatures([...view.features.values()], 'priority', view, {});
     expect(groups[0].key).toBe('P0');
@@ -244,19 +257,19 @@ describe('research catalog: view, filters and relationships', () => {
     ).toEqual(['unreviewed', 'shortlisted', 'approved']);
     expect(
       groupFeatures([...view.features.values()], 'parent', view, {}).find(
-        (g) => g.key === 'ens.f.generated-parts',
+        (g) => g.key === 'ens.f.semantic-connectors',
       )!.items.length,
-    ).toBeGreaterThan(10);
+    ).toBeGreaterThan(5);
   });
   it('keeps contradictions and conflicting estimates visible and resolvable to records', () => {
     for (const c of view.contradictions) {
       for (const n of c.findings) expect(view.findings.has(n), `${c.id} → ${n}`).toBe(true);
       for (const f of c.features) expect(view.features.has(f), `${c.id} → ${f}`).toBe(true);
     }
-    expect(view.features.get('ens.f.auto-bom')!.priority).toBe('P0/P1');
-    expect(view.contradictions.find((c) => c.title.startsWith('BOM priority'))!.features).toContain(
-      'ens.f.auto-bom',
-    );
+    expect(view.features.get('ens.f.live-price')!.priority).toBe('P1/P2');
+    expect(
+      view.contradictions.find((c) => c.title.startsWith('Dual priorities'))!.features,
+    ).toContain('ens.f.live-price');
   });
   it('reports a feature that has no evidence instead of hiding it', () => {
     const b = clone(B);
@@ -282,9 +295,9 @@ describe('research catalog: a newer shipped edition (paper import removed, ADR-1
   it('uses the newest edition; features it drops stay visible as retired', () => {
     const v2 = dropFeature(clone(B), 'ens.f.ar-placement');
     v2.document.version = 2;
-    v2.features.find((f) => f.id === 'ens.f.countertops')!.description = 'Edition 2 wording.';
+    v2.features.find((f) => f.id === 'ens.f.live-price')!.description = 'Edition 2 wording.';
     const view = buildView([v1, storedOf(v2, AT)]);
-    expect(view.features.get('ens.f.countertops')!.description).toBe('Edition 2 wording.');
+    expect(view.features.get('ens.f.live-price')!.description).toBe('Edition 2 wording.');
     expect(view.features.get('ens.f.ar-placement')!.retired).toBe(true);
     expect(view.documents[0].versions).toEqual([1, 2]);
   });
@@ -394,15 +407,15 @@ describe('research catalog: page', () => {
     expect(html).toContain('Implementation status');
   });
   it('shows a feature in full: sub-features, requirements, evidence with sources', () => {
-    const html = render({ initialTab: 'features', initialDetail: 'ens.f.guided-snapping' });
+    const html = render({ initialTab: 'features', initialDetail: 'ens.f.precise-numeric' });
     for (const s of [
-      'Snap preview before commit',
-      'Snap override',
+      'Sub-features',
+      'Numeric transform entry',
       'Functional requirements',
       'Competitor comparison',
       'Pain points and complaints',
       'reddit.com',
-      'lines 75',
+      `lines ${rankLine(4)}`,
     ])
       expect(html).toContain(s);
   });
@@ -419,7 +432,7 @@ describe('research catalog: assessment of demand, value, complexity and confiden
         expect(rating(f, d).source).toBe('paper');
     }
     const assessed = all.filter((x) => !x.rank);
-    expect(assessed).toHaveLength(118);
+    expect(assessed).toHaveLength(48);
     for (const f of assessed) {
       expect(f.assessment, f.id).toBeDefined();
       expect(validateAssessment(f.assessment!), f.id).toEqual([]);
@@ -428,16 +441,16 @@ describe('research catalog: assessment of demand, value, complexity and confiden
   });
   it("computes value with the paper's weights", () => {
     expect(ASSESSMENT_CRITERIA.reduce((n, [, , w]) => n + w, 0)).toBeCloseTo(1);
-    const so = view.features.get('ens.f.snap-override')!;
+    const so = view.features.get('ens.f.numeric-transform')!;
     expect(so.assessment!.scores).toEqual({
       relevance: 5,
       demand: 5,
       ux: 5,
       adoption: 4,
       differentiation: 3,
-      leverage: 2,
+      leverage: 3,
     });
-    expect(assessedValue(so.assessment!)).toBe('4.5'); // 1.5 + 1 + 1 + .6 + .3 + .1
+    expect(assessedValue(so.assessment!)).toBe('4.6'); // 1.5 + 1 + 1 + .6 + .3 + .15
     expect(rating(view.features.get('ens.f.composition-layer')!, 'demand').value).toBe('Indirect');
   });
   it("gives every assessed feature a research priority with its basis; the paper's priorities stay as written", () => {
@@ -448,8 +461,8 @@ describe('research catalog: assessment of demand, value, complexity and confiden
     }
     for (const f of all.filter((x) => x.rank))
       expect(rating(f, 'priority')).toEqual({ value: f.priority, source: 'paper' });
-    expect(rating(view.features.get('ens.f.snap-override')!, 'priority').value).toBe('P0'); // MVP table row
-    expect(rating(view.features.get('ens.f.clearance-envelopes')!, 'priority').value).toBe('P1'); // phase 2
+    expect(rating(view.features.get('ens.f.numeric-transform')!, 'priority').value).toBe('P0'); // MVP table row
+    expect(rating(view.features.get('ens.f.hard-soft-constraints')!, 'priority').value).toBe('P1'); // phase 2
     expect(rating(view.features.get('ens.f.composition-layer')!, 'priority').value).toBe(
       'P0 internal',
     );
@@ -486,13 +499,20 @@ describe('research catalog: assessment of demand, value, complexity and confiden
         /^Parent: (.+?) \("(.+?)", rank (\d+)\)/,
       );
       if (parent)
-        expect(all.find((x) => x.rank === Number(parent[3]))!.appreciation, f.id).toBe(parent[2]);
+        // The parent's row in the paper, which may be a feature the app has built (ADR-111).
+        expect(cells(rankLine(Number(parent[3])))[3], f.id).toBe(parent[2]);
     }
     for (const f of all.filter((x) => x.rank))
       expect(rating(f, 'appreciation')).toEqual({ value: f.appreciation, source: 'paper' });
-    expect(rating(view.features.get('ens.f.cross-family')!, 'appreciation').value).toBe('Unproven');
-    expect(rating(view.features.get('ens.f.env-chair')!, 'appreciation').value).toBe('Unproven');
-    expect(rating(view.features.get('ens.f.snap-preview')!, 'appreciation').value).toBe('High');
+    expect(rating(view.features.get('ens.f.automated-fixes')!, 'appreciation').value).toBe(
+      'Unproven',
+    );
+    expect(rating(view.features.get('ens.f.shared-support')!, 'appreciation').value).toBe(
+      'Unproven',
+    );
+    expect(rating(view.features.get('ens.f.hard-soft-constraints')!, 'appreciation').value).toBe(
+      'High',
+    );
     const st = assessmentStats(all);
     expect(st.byAppreciation.reduce((n, r) => n + r.n, 0)).toBe(all.length);
     expect(st.byAppreciation.find((r) => r.key === 'Other')).toBeUndefined();
@@ -503,13 +523,13 @@ describe('research catalog: assessment of demand, value, complexity and confiden
     ).toBe(true);
     expect(
       validateAssessment({
-        ...view.features.get('ens.f.snap-override')!.assessment!,
+        ...view.features.get('ens.f.numeric-transform')!.assessment!,
         appreciationBasis: '',
       }).join(),
     ).toMatch(/appreciation needs/);
   });
   it('rejects an assessment off the scales or without a rationale', () => {
-    const a = { ...view.features.get('ens.f.snap-override')!.assessment! };
+    const a = { ...view.features.get('ens.f.numeric-transform')!.assessment! };
     expect(validateAssessment({ ...a, scores: { ...a.scores, ux: 6 } }).join()).toMatch(/ux/);
     expect(validateAssessment({ ...a, complexity: 'Tiny' as never }).join()).toMatch(/complexity/);
     expect(validateAssessment({ ...a, rationale: ' ' }).join()).toMatch(/rationale/);
@@ -521,8 +541,8 @@ describe('research catalog: assessment of demand, value, complexity and confiden
   });
   it('summarises the assessment for the dashboard and filters by it', () => {
     const st = assessmentStats(all);
-    expect(st.ratedByPaper).toBe(39);
-    expect(st.assessed).toBe(118);
+    expect(st.ratedByPaper).toBe(17);
+    expect(st.assessed).toBe(48);
     expect(st.unrated).toBe(0);
     expect(st.matrix.flatMap((r) => r.cells.flatMap((c) => c.ids)).length).toBe(all.length);
     for (const k of ['byDemand', 'byComplexity', 'byConfidence', 'byValue'] as const)
@@ -530,12 +550,12 @@ describe('research catalog: assessment of demand, value, complexity and confiden
         st[k].reduce((n, r) => n + r.n, 0),
         k,
       ).toBe(all.length);
-    expect(st.top[0].impact).toBe('5.0');
+    expect(st.top[0].impact).toBe('4.9');
     for (const f of st.quickWins) {
       expect(Number(rating(f, 'impact').value)).toBeGreaterThanOrEqual(4);
       expect(['Low', 'Low-medium', 'Medium']).toContain(complexityOf(f));
     }
-    expect(st.quickWins.map((f) => f.id)).toContain('ens.f.snap-override');
+    expect(st.quickWins.map((f) => f.id)).toContain('ens.f.numeric-transform');
     const cell = filterFeatures(
       view,
       {},
@@ -546,7 +566,7 @@ describe('research catalog: assessment of demand, value, complexity and confiden
     );
     expect(
       filterFeatures(view, {}, { ...EMPTY_QUERY, rated: 'paper', showMerged: true }),
-    ).toHaveLength(39);
+    ).toHaveLength(17);
   });
   it('shows the assessment on the dashboard and on the feature, labelled as such', () => {
     const over = renderToStaticMarkup(createElement(ResearchPage, { onDone: () => {} }));
@@ -564,7 +584,7 @@ describe('research catalog: assessment of demand, value, complexity and confiden
       createElement(ResearchPage, {
         onDone: () => {},
         initialTab: 'features',
-        initialDetail: 'ens.f.snap-override',
+        initialDetail: 'ens.f.numeric-transform',
       }),
     );
     expect(det).toContain('Assessment, not research.');
@@ -573,7 +593,7 @@ describe('research catalog: assessment of demand, value, complexity and confiden
       createElement(ResearchPage, {
         onDone: () => {},
         initialTab: 'features',
-        initialDetail: 'ens.f.guided-snapping',
+        initialDetail: 'ens.f.precise-numeric',
       }),
     );
     expect(paper).not.toContain('Assessment, not research.');
@@ -585,12 +605,11 @@ describe('research catalog: what the app has built, and merged duplicates (ADR-0
   const all = [...view.features.values()];
   it("records the app's status with evidence; In Progress always says what is missing", () => {
     const withApp = all.filter((f) => f.app);
-    expect(withApp.length).toBeGreaterThan(80);
+    expect(withApp.length).toBeGreaterThan(20);
     for (const f of withApp) {
       expect(f.app!.evidence, f.id).toMatch(/\b(N\d+|F\d+|ADR-\d+)\b/);
       if (f.app!.status === 'in-progress') expect(f.app!.missing, f.id).toBeTruthy();
     }
-    expect(implementationOf(view.features.get('ens.f.guided-snapping')!, {})).toBe('verified');
     expect(implementationOf(view.features.get('ens.f.semantic-connectors')!, {})).toBe(
       'in-progress',
     );
@@ -600,19 +619,19 @@ describe('research catalog: what the app has built, and merged duplicates (ADR-0
     expect(validateBundle(b).join()).toMatch(/In Progress must say what is missing/);
   });
   it("lets the user's own status win, including an explicit Not Started, and never changes it by itself", () => {
-    const f = view.features.get('ens.f.guided-snapping')!;
+    const f = view.features.get('ens.f.semantic-connectors')!;
     const user = { [f.id]: mark(f.id, { implementation: 'not-started', implementationSetAt: AT }) };
     expect(implementationOf(f, user)).toBe('not-started');
     expect(implementationSource(f, user)).toBe('user');
     const older = { [f.id]: mark(f.id, { implementation: 'planned' }) }; // set before ADR-092: no timestamp
     expect(implementationOf(f, older)).toBe('planned');
     const untouched = { [f.id]: mark(f.id, { implementation: 'not-started' }) }; // the default, never chosen
-    expect(implementationOf(f, untouched)).toBe('verified');
+    expect(implementationOf(f, untouched)).toBe('in-progress');
     expect(implementationSource(f, untouched)).toBe('app');
   });
   it('merges only features the app has not built, into a target that is not merged itself, with a reason', () => {
     const merged = all.filter((f) => f.mergedInto);
-    expect(merged.length).toBeGreaterThanOrEqual(30);
+    expect(merged.length).toBeGreaterThanOrEqual(20);
     for (const f of merged) {
       const t = view.features.get(f.mergedInto!)!;
       expect(t, f.id).toBeDefined();
@@ -638,15 +657,16 @@ describe('research catalog: what the app has built, and merged duplicates (ADR-0
     for (const f of all.filter((x) => x.app && x.app.status !== 'in-progress'))
       expect(f.app!.missing, `${f.id} has a gap, so it is In Progress`).toBeUndefined();
     const b = clone(B);
-    const target = b.features.find((x) => x.app?.status === 'verified')!;
-    b.features.find((x) => x.mergedInto)!.mergedInto = target.id;
+    const target = b.features.find((x) => x.app?.status === 'in-progress' && !x.mergedInto)!;
+    target.app = { ...target.app!, status: 'verified', missing: undefined };
+    b.features.find((x) => x.mergedInto && x.mergedInto !== target.id)!.mergedInto = target.id;
     expect(validateBundle(b).join()).toMatch(/which the app has built/);
     const c = clone(B);
-    c.features.find((x) => x.app?.status === 'verified')!.app!.missing = 'something';
+    c.features.find((x) => x.app?.status === 'in-progress')!.app!.status = 'verified';
     expect(validateBundle(c).join()).toMatch(/so it is In Progress/);
   });
   it("keeps the user's status through a new edition of the paper", async () => {
-    const f = 'ens.f.guided-snapping';
+    const f = 'ens.f.semantic-connectors';
     const marks = { [f]: mark(f, { implementation: 'planned', implementationSetAt: AT }) };
     const v2 = clone(B);
     v2.document.version = 2;
@@ -665,8 +685,8 @@ describe('research catalog: what the app has built, and merged duplicates (ADR-0
     );
   });
   it('keeps merged features and their evidence: hidden from the list, shown on the target, undoable', () => {
-    const f = view.features.get('ens.f.build-a-run')!;
-    expect(mergedOf(f, {})).toBe('ens.f.auto-fit-span');
+    const f = view.features.get('ens.f.connector-frame')!;
+    expect(mergedOf(f, {})).toBe('ens.f.semantic-connectors');
     expect(filterFeatures(view, {}, EMPTY_QUERY).map((x) => x.id)).not.toContain(f.id);
     expect(
       filterFeatures(view, {}, { ...EMPTY_QUERY, showMerged: true }).map((x) => x.id),
@@ -676,11 +696,11 @@ describe('research catalog: what the app has built, and merged duplicates (ADR-0
       createElement(ResearchPage, {
         onDone: () => {},
         initialTab: 'features',
-        initialDetail: 'ens.f.auto-fit-span',
+        initialDetail: 'ens.f.semantic-connectors',
       }),
     );
     expect(html).toContain('Merged into this');
-    expect(html).toContain('&quot;Build a run&quot; workflow');
+    expect(html).toContain('Connector as a coordinate frame');
   });
   it('filters to what is left to build and summarises it on the Overview', () => {
     const left = filterFeatures(view, {}, { ...EMPTY_QUERY, left: true });
@@ -699,5 +719,46 @@ describe('research catalog: what the app has built, and merged duplicates (ADR-0
     );
     expect(det).toContain('This app: <span class="chip impl-in-progress">In Progress</span>');
     expect(det).toContain('DXF, STEP and CNC output');
+  });
+});
+
+describe('research catalog: built features deleted from the data (ADR-111)', () => {
+  it('ships no Verified or Implemented feature; each built one is a removed record with its evidence', () => {
+    expect(
+      B.features.filter((f) => ['verified', 'implemented'].includes(f.app?.status ?? '')),
+    ).toEqual([]);
+    const removed = B.removed ?? [];
+    expect(removed).toHaveLength(92);
+    const ids = new Set(B.features.map((f) => f.id));
+    for (const r of removed) {
+      expect(ids.has(r.id), r.id).toBe(false);
+      expect(r.reason, r.id).toMatch(/\b(N\d+|F\d+|ADR-\d+)\b|merged into/);
+    }
+    for (const f of B.features) {
+      for (const d of [...f.dependencies, ...f.related, ...(f.parent ? [f.parent] : [])])
+        expect(ids.has(d), `${f.id} → ${d}`).toBe(true);
+      if (f.mergedInto) expect(ids.has(f.mergedInto), f.id).toBe(true);
+    }
+    for (const c of B.contradictions) expect(c.features.length, c.id).toBeGreaterThan(0);
+    // A sub-feature of a deleted feature is now top level (user answer "Become top-level").
+    expect(B.features.find((f) => f.id === 'ens.f.rapier-queries')!.parent).toBeUndefined();
+  });
+  it('rejects a removed record that is still a feature or names an unknown finding', () => {
+    const b = clone(B);
+    b.removed = [...b.removed!, { id: b.features[0].id, name: 'x', reason: 'N1', findings: [] }];
+    expect(validateBundle(b).join()).toMatch(/needs an id no feature has/);
+    const c = clone(B);
+    c.removed![0] = { ...c.removed![0], findings: ['ens.n.nope'] };
+    expect(validateBundle(c).join()).toMatch(/unknown finding ens\.n\.nope/);
+    const d = clone(B);
+    delete d.removed;
+    expect(validateBundle(d)).toEqual([]);
+    expect(auditChecks(d).find((x) => x.id === 'ranked')!.ok).toBe(false);
+  });
+  it('shows only features left to build on the page', () => {
+    const html = renderToStaticMarkup(createElement(ResearchPage, { onDone: () => {} }));
+    for (const r of B.removed!.slice(0, 10))
+      expect(html, r.id).not.toContain(`Your decision on ${r.name.replace(/&/g, '&amp;')}`);
+    expect(html).toMatch(/Left to build \(\d+\)/);
   });
 });

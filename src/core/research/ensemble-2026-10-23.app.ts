@@ -1,20 +1,19 @@
 /**
- * Where this app stands on each research feature, and the remaining features merged because they share one idea
- * (ADR-092, 2026-10-26). Repository records, not research: every status cites the backlog row or ADR that shows it.
+ * Where this app stands on each research feature left to build, and the features merged because they share one idea
+ * (ADR-092, re-checked 2026-10-27 for ADR-111). Repository records, not research: every status cites the backlog row
+ * or ADR that shows it.
  *
- * Statuses: Verified — built, and shipped with a find-it pass recorded in `docs/backlog.md`; Implemented — built and
- * unit-tested, no browser acceptance of its own; In Progress — part of it is built, `missing` says what is not (user
- * answer 2026-10-26: "In Progress + what's missing"). Features not listed are Not Started. A status the user sets on
- * the page wins over these.
+ * Statuses: In Progress — part of it is built, `missing` says what is not (user answer 2026-10-26: "In Progress +
+ * what's missing"). Features not listed are Not Started. Built features (Verified, Implemented) are deleted from the
+ * data (ADR-111) and listed in `ENSEMBLE_REMOVED`. A status the user sets on the page wins over these.
  */
 import type { Implementation } from './types';
 
 type Status = [status: Implementation, evidence: string, missing?: string];
 
-export const APP_CHECKED = '2026-10-26';
+export const APP_CHECKED = '2026-10-27';
 
 export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
-  'cross-family': ['verified', 'N48: one project mixes a base cabinet, a wardrobe and a daybed.'],
   'precise-numeric': [
     'in-progress',
     'N48, N13: From left kept at 4321 mm; Gap to … on the left.',
@@ -25,115 +24,16 @@ export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
     'N48, N13: positions and gaps typed in whole mm.',
     'typed rotation (turns are 90° steps, N64)',
   ],
-  'sync-2d-3d': ['verified', 'N48, N11: plan, front and 3D views of the same project model.'],
-  'ortho-plan': [
-    'verified',
-    'N48, N11: the plan is a top projection of the built model (ADR-004).',
-  ],
-  dimensioning: ['verified', 'N48, N11: plan measurements in mm.'],
-  'in-context-editing': [
-    'verified',
-    "N48, N86: edit a project piece's size, boards and construction in the project.",
-  ],
-  'keep-identity': [
-    'verified',
-    'N48: pieces stay separate after editing; merging is a separate action (N42).',
-  ],
-  'finish-change': ['verified', 'N48, F16, N43: board colour, name and a picture from the device.'],
-  'structured-exports': [
-    'verified',
-    'N48, F09, N03: Parts CSV, design/project JSON files, Fusion 360 script.',
-  ],
-  'production-drawings': [
-    'verified',
-    'N48, N02: SVG front drawing and printed cutting sheets (PDF).',
-  ],
-  'project-documentation': [
-    'verified',
-    'N48, N02, N04: printed project sheets and project Parts CSV.',
-  ],
   'transactional-undo': [
     'in-progress',
     'N46 (ADR-051): undo/redo for project changes, one step per drag (N60).',
     'undo of snap, unsnap, group and compound operations (connections and groups are not built)',
-  ],
-  'fillers-plinths-panels': [
-    'verified',
-    'N26, N49 (ADR-054): run fillers with scribe, cover panels, run plinth.',
-  ],
-  'gen-filler': ['verified', 'N26, N49 (ADR-054): run fillers with scribe allowance.'],
-  'gen-plinth': ['verified', "N49 (ADR-054): run plinth replacing the pieces' plinths."],
-  'gen-end-panel': ['verified', 'N26, N49: cover panels on exposed run ends.'],
-  'gen-trim': ['verified', 'N70 (ADR-075): crown, pelmet and ceiling filler trims.'],
-  'crown-moulding': ['verified', 'N70 (ADR-075): crown trim over wall or tall units.'],
-  countertops: [
-    'verified',
-    'N26, N70 (ADR-075): one run worktop, or a worktop over chosen adjacent units.',
   ],
   'generated-parts': [
     'in-progress',
     'N26, N49, N56, N70: run parts derived from the pieces they span.',
     'shared supports, sinks and handles as generated parts',
   ],
-  'generated-part-mechanism': [
-    'verified',
-    'N56 (ADR-061): run parts are one generated kind, rebuilt from their pieces.',
-  ],
-  'generated-overrides': [
-    'verified',
-    'N56 (ADR-061): removed run parts stay removed; settings kept.',
-  ],
-  'dependency-regeneration': [
-    'verified',
-    'N56 (ADR-061): run parts refresh by themselves after a change.',
-  ],
-  'material-propagation': [
-    'verified',
-    'N50 (ADR-055): apply a board to this piece, this run or the whole project.',
-  ],
-  'finish-scope': ['verified', 'N50 (ADR-055): This piece / This run / Whole project.'],
-  'material-overrides': [
-    'verified',
-    'N50 (ADR-055): a piece keeps its own board when applied to "this piece".',
-  ],
-  'ensemble-workspace': [
-    'verified',
-    'N51 (ADR-056), N22: pick a catalog item, tap the plan to place it.',
-  ],
-  'catalogue-placement': ['verified', 'N51, N04: add several catalog pieces to one project.'],
-  'catalogue-categories': ['verified', 'N22: catalog by room or by type.'],
-  'collision-clearance': [
-    'verified',
-    'N04, N52 (ADR-057), N68 (ADR-073): overlaps, opening and use clearances checked.',
-  ],
-  'static-collision': ['verified', 'N04, N10: "… overlap in the room", "goes below the floor".'],
-  'env-solid': ['verified', 'N04: piece bodies checked against each other.'],
-  'env-door': ['verified', 'N52 (ADR-057): door swing needs free space.'],
-  'env-drawer': ['verified', 'N52 (ADR-057): drawer travel needs free space.'],
-  'clearance-envelopes': [
-    'verified',
-    'N52, N68: doors, drawers, flaps, chair, installation and service zones.',
-  ],
-  'env-chair': ['verified', 'N68 (ADR-073): chair space depth.'],
-  'env-installation': ['verified', 'N68 (ADR-073): installation height when assembled lying down.'],
-  'env-service': ['verified', 'N68 (ADR-073): service zone depth.'],
-  'clearance-overlays': [
-    'verified',
-    'N68 (ADR-073): Clearances toggle on the plan, three severities.',
-  ],
-  'room-geometry': [
-    'verified',
-    'N53 (ADR-058): room size, doors, windows and obstacles, checked against pieces.',
-  ],
-  'room-walls': ['verified', 'N53, N54: walls and corners, incl. L / U / alcove outlines.'],
-  'room-openings': ['verified', 'N53 (ADR-058): doors and windows, "higher than its sill".'],
-  'room-obstacles': ['verified', 'N53 (ADR-058): "runs into Obstacle 1".'],
-  'room-services': ['verified', 'N67 (ADR-072): pipes and outlets checked against pieces.'],
-  'room-validation': [
-    'verified',
-    'N53, N54: pieces checked against walls, openings, obstacles and the outline.',
-  ],
-  'floor-plan-2d': ['verified', 'N54 (ADR-059): draw axis-aligned L / U / alcove outlines.'],
   'ensemble-templates': [
     'in-progress',
     'N55 (ADR-060): save a project as a reusable project template.',
@@ -149,117 +49,15 @@ export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
     "N57 (ADR-062): estimate from the user's own price list.",
     'live supplier prices (N58, ADR-063 deferred)',
   ],
-  'auto-bom': [
-    'verified',
-    'N59 (ADR-064): one shopping list for the project — boards, banding, hardware, run parts.',
-  ],
-  'order-completeness': [
-    'verified',
-    'N59 (ADR-064): "to choose before buying" lists what is still missing.',
-  ],
-  'guided-snapping': [
-    'verified',
-    'N65 (ADR-070): snap to neighbours and walls with preview, toggle and Alt override.',
-  ],
-  'snap-preview': ['verified', 'N65 (ADR-070): dashed snapped preview with its label.'],
-  'snap-override': ['verified', 'N65 (ADR-070): Snap toggle; Alt places freely.'],
-  'snap-candidate-ranking': ['verified', 'N65 (ADR-070): candidates ranked in `snapDrag`.'],
-  'why-wont-connect': ['verified', 'N65 (ADR-070): "Won\'t snap to …" hint.'],
-  'duplicate-mirror-rotate': [
-    'verified',
-    'N64 (ADR-069): duplicate, mirror, mirror the run, turn 90°.',
-  ],
-  'explainable-warnings': [
-    'verified',
-    'N66 (ADR-071): select the problem, explain it, offer previewed repairs.',
-  ],
-  'select-and-explain': [
-    'verified',
-    'N66 (ADR-071): "Show on the plan and see repairs"; "… overlap by 34 mm".',
-  ],
-  'repair-suggestions': [
-    'verified',
-    'N66 (ADR-071): move either piece, hang higher/lower, add a filler, move inside the room.',
-  ],
-  'hardware-completeness': [
-    'verified',
-    'F10, N69 (ADR-074): hardware schedule and fastener counts, labelled as guidance (ADR-010).',
-  ],
-  'board-bom': [
-    'verified',
-    'F09, F10, N69: cut list, hardware schedule and fastener counts per project.',
-  ],
-  deduplication: ['verified', 'F09, N69: identical parts grouped; shopping lines combined.'],
-  'model-import': ['verified', 'N71 (ADR-076): import GLB/glTF models as display-only items.'],
-  'photoreal-rendering': [
-    'verified',
-    'N62, N63 (ADR-067/068): realistic look and a photo-quality still, checked by the user on the live app.',
-  ],
-  'exploded-view': ['verified', 'N12: exploded 3D view of a piece and a project.'],
-  'cut-list': ['verified', 'F09: grouped cut list with edge banding and CSV.'],
-  'sheet-optimisation': [
-    'verified',
-    'N01: guillotine sheet nesting with an independent validator.',
-  ],
-  'drag-drop-placement': [
-    'in-progress',
-    'N60 (ADR-065): drag a piece on the plan to move it; N51: tap the plan to place.',
-    'dragging a catalog item into the plan',
-  ],
-  picking: ['verified', 'F12, N78: tap or click to select in the drawing and in 3D.'],
-  'custom-furniture': [
-    'verified',
-    'F01–F13, N34: design pieces from scratch or with the New-piece wizard.',
-  ],
-  'resize-generic': ['verified', "N86 (ADR-090): change a piece's size from the project editor."],
-  'mobile-parity': [
-    'verified',
-    'F18, N48: one responsive app; the N48 checks pass at 1440 and 375 px.',
-  ],
-  'precision-tooltips': [
-    'verified',
-    'N60 (ADR-065): "From left … · From back …" label while dragging.',
-  ],
-  'controllable-automation': [
-    'verified',
-    'N65, N66, N56: snapping can be switched off, repairs are previewed, run-part removals are kept.',
-  ],
-  revalidation: ['verified', 'N04, N66: project checks rerun after every change.'],
-  'domain-graph': [
-    'implemented',
-    'ADR-004: every view and list is a projection of buildModel(); nothing authoritative in three.js.',
-  ],
-  'schema-migrations': [
-    'implemented',
-    'ADR-011, ADR-012: schemaVersion upgrades keep old readers; Dexie versions never edited (storage tests).',
-  ],
-  'template-api': [
-    'implemented',
-    'ADR-004: buildModel() exposes bounds; the store edits parameters from outside the editor.',
-  ],
-  'approachable-complexity': [
-    'implemented',
-    'N22, N34, N38: catalog, New-piece wizard and Home page start without modelling.',
-  ],
   'independent-selection': [
     'in-progress',
-    'N84 (ADR-088): each project piece stays selectable with its own controls.',
+    'N84 (ADR-088), N95 (ADR-097): each project piece stays selectable with its own controls; a grouped piece is reached by a second tap.',
     'connections between pieces, which the feature is about',
   ],
   'semantic-connectors': [
     'in-progress',
     'N65 (ADR-070): snapping uses connectors derived from piece boxes and walls.',
     'authored, typed connectors with frames and orientations on templates',
-  ],
-  'compatibility-engine': [
-    'in-progress',
-    'N25 rules registry; N65 snap rules refuse some targets.',
-    'product-family, dimension and exclusion rules for connections',
-  ],
-  'inspectable-rules': [
-    'in-progress',
-    'N25 (ADR-035): rules registry as data, labelled warnings.',
-    'repair strategies stored with each rule',
   ],
   'cad-cnc-export': [
     'in-progress',
@@ -268,18 +66,8 @@ export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
   ],
   'direct-manipulation': [
     'in-progress',
-    'N60, N64: drag and turn pieces on the plan.',
-    'moving in 3D (the viewer only selects, ADR-014) and free rotation',
-  ],
-  'alignment-distribution': [
-    'in-progress',
-    'N65 (ADR-070): snapping aligns faces to neighbours and walls.',
-    'centre alignment and equal distribution',
-  ],
-  'multi-select-groups': [
-    'in-progress',
-    'N50, N64: run-wide actions (this run, mirror the run).',
-    'multi-select, selection box and saved groups',
+    'N60, N64: drag and turn pieces on the plan; N91 (ADR-093): move and turn them in the 3D view.',
+    'free rotation (turns are 90° steps, ADR-093)',
   ],
   'composition-layer': [
     'in-progress',
@@ -288,13 +76,13 @@ export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
   ],
   'ensemble-model': [
     'in-progress',
-    'N04, N53, N56: project with items, room and run parts.',
-    'connections, groups and template references',
+    'N04, N53, N56: project with items, room and run parts; N95: saved groups; N94: template references with revisions.',
+    'connections',
   ],
   'versioned-save': [
     'in-progress',
-    'N48, F14: projects saved and reopened with every piece and position.',
-    'template versions and connections',
+    'N48, F14: projects saved and reopened with every piece and position; N94: template revisions kept per piece.',
+    'connections',
   ],
   'propagation-pipeline': [
     'in-progress',
@@ -303,7 +91,7 @@ export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
   ],
   'deterministic-alternatives': [
     'in-progress',
-    'N34 (ADR-045): suggested combinations kept only when buildModel() has no errors — per piece.',
+    'N34 (ADR-045): suggested combinations kept only when buildModel() has no errors — per piece; N101, N102 (ADR-103, ADR-104): four suggested mixes for one wall run.',
     'alternative layouts of a whole project',
   ],
   'automated-fixes': [
@@ -325,6 +113,21 @@ export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
     'in-progress',
     'N06 handles per piece; N49 sink fixed front.',
     'sinks and handles generated for a run',
+  ],
+  'locks-overrides': [
+    'in-progress',
+    'N93 (ADR-095): Lock a piece; drags, turns, the gap tool and repairs leave it alone.',
+    'locks on single named parameters (rotation only, a width only)',
+  ],
+  'no-silent-moves': [
+    'in-progress',
+    'N93 (ADR-095): a locked piece is never moved; the action is refused with a reason.',
+    'stopping and explaining when a change cannot keep every hard rule, for unlocked pieces',
+  ],
+  'template-instancing': [
+    'in-progress',
+    'N94 (ADR-096), N105 (ADR-107): project pieces name their template and revision.',
+    'store only the parameters that differ (pieces still hold a full copy, ADR-022)',
   ],
 };
 
@@ -372,38 +175,13 @@ export const ENSEMBLE_MERGES: Record<string, [target: string, reason: string]> =
   ],
   'connection-status': ['assembly-graph', "Status is stored on the graph's connections."],
   unsnap: ['assembly-graph', 'Removing an edge of the assembly graph.'],
-  'inference-points': [
-    'alignment-distribution',
-    'Snapping to corners, centres and midpoints is alignment.',
-  ],
-  'connector-compat-rules': [
-    'compatibility-engine',
-    "The per-connector rules are the engine's content.",
-  ],
-  'interface-capabilities': [
-    'compatibility-engine',
-    'Compatibility checked by interface capability is how the engine decides what may mate.',
-  ],
-  'catalogue-validation': ['inspectable-rules', 'A by-product of rules stored as data (line 570).'],
-  'support-diagnostics': ['inspectable-rules', 'A by-product of rules stored as data (line 570).'],
   'transform-gizmos': ['direct-manipulation', 'Handles are one way of moving and rotating pieces.'],
-  'named-groups': [
-    'multi-select-groups',
-    'Saved groups are part of "groups and whole-ensemble transforms".',
-  ],
-  'replace-workflow': ['compatible-swap', 'The workflow of compatible replacement.'],
-  'preserve-intent': ['compatible-swap', 'What compatible replacement must keep.'],
   'live-manufacturer-data': [
     'multi-supplier-catalogue',
     'Live data is how a cross-manufacturer catalogue stays current.',
   ],
   labels: ['cad-cnc-export', 'Part labels are a manufacturing output.'],
   'manufacturing-adapter': ['cad-cnc-export', 'The layer that produces manufacturing output.'],
-  'build-a-run': ['auto-fit-span', 'The workflow of auto-fitting a span.'],
-  'auto-fill-span': [
-    'auto-fit-span',
-    'Filling the rest of a span with modules and fillers is auto-fit on the free length.',
-  ],
   'budget-style-filters': ['deterministic-alternatives', 'Filters on the generated alternatives.'],
   'layout-optimisation': ['deterministic-alternatives', 'Ranking generated alternatives.'],
   'ai-floorplan': ['ai-layout', 'AI layout on the room plan.'],
@@ -411,3 +189,323 @@ export const ENSEMBLE_MERGES: Record<string, [target: string, reason: string]> =
   'inspiration-images': ['nl-generation', 'Another input to intent-driven generation.'],
   'yjs-crdt': ['collaboration', 'A technology for real-time collaboration.'],
 };
+
+/**
+ * Features deleted from the research data because the app has built them (ADR-111, user 2026-10-27: "Re-validate,
+ * remove implemented ones"; "Delete from the data"). One line each, never shown: the coverage audit still accounts
+ * for the paper's rows they held. `[slug, name, evidence, findings]`.
+ */
+export const ENSEMBLE_REMOVED: [
+  slug: string,
+  name: string,
+  evidence: string,
+  findings: string[],
+][] = [
+  [
+    'alignment-distribution',
+    'Edge/face/centre alignment and equal distribution',
+    'N97 (ADR-099)',
+    ['rank-17', '036', '097', '107', '110'],
+  ],
+  [
+    'approachable-complexity',
+    'Hide technical complexity behind drag-and-drop and templates',
+    'N22, N34, N38',
+    ['047', '051', '038', '025'],
+  ],
+  [
+    'auto-bom',
+    'Automatic BOM / order list',
+    'N59 (ADR-064)',
+    ['rank-15', 'rec-15', 'mvp-15', '068', '077', 'phase-1'],
+  ],
+  [
+    'auto-fill-span',
+    'Auto-fill remaining span with modules + fillers',
+    'merged into auto-fit-span, built',
+    ['rank-27', '122'],
+  ],
+  [
+    'auto-fit-span',
+    'Auto-fit a run/span using valid discrete module widths',
+    'N101, N102 (ADR-103, ADR-104)',
+    ['rank-20', '084', '097', '110', '122', 'phase-2'],
+  ],
+  [
+    'board-bom',
+    'Detailed hardware and board-level BOM',
+    'F09, F10, N69',
+    ['123', 'phase-3', '052'],
+  ],
+  ['build-a-run', '"Build a run" workflow', 'merged into auto-fit-span, built', ['084', '155']],
+  ['catalogue-categories', 'Catalogue categories incl. existing designs', 'N22', ['071']],
+  [
+    'catalogue-placement',
+    'Catalogue placement of multiple instances',
+    'N51, N04',
+    ['mvp-2', '061', 'phase-1'],
+  ],
+  [
+    'catalogue-validation',
+    'Catalogue validation and QA tooling',
+    'merged into inspectable-rules, built',
+    ['137'],
+  ],
+  [
+    'clearance-envelopes',
+    'Operational clearance envelopes',
+    'N52, N68',
+    ['129', '093', '094', '097', '011', 'phase-2'],
+  ],
+  ['clearance-overlays', 'Clearance overlays with severity levels', 'N68 (ADR-073)', ['130']],
+  [
+    'collision-clearance',
+    'Collision + operational-clearance detection',
+    'N04, N52 (ADR-057), N68 (ADR-073)',
+    ['rank-03', 'rec-03', '011', '012', '013', '029', '032', '064', 'phase-1', 'phase-2'],
+  ],
+  [
+    'compatibility-engine',
+    'Compatibility-rule engine preventing invalid connections',
+    'N98 (ADR-100)',
+    ['rank-02', 'rec-02', 'mvp-8', '011', '012', '029', '056', '058', '128', '106'],
+  ],
+  [
+    'compatible-swap',
+    'Smart replace/swap with compatible alternatives',
+    'N96 (ADR-098)',
+    ['rank-11', 'rec-11', '085', '134', '135', 'phase-2'],
+  ],
+  [
+    'connector-compat-rules',
+    'Connector compatibility rules',
+    'merged into compatibility-engine, built',
+    ['093'],
+  ],
+  [
+    'controllable-automation',
+    'Controllable automation (visible cause, escape hatch)',
+    'N65, N66, N56',
+    ['131', '132', '065', '108', '010'],
+  ],
+  [
+    'countertops',
+    'Automatically generated shared countertops/worktops',
+    'N26, N70 (ADR-075)',
+    ['rank-13', '080', '101', '116', '133'],
+  ],
+  [
+    'cross-family',
+    'Unified cross-family composition',
+    'N48',
+    ['017', '018', '019', '033', '063', '127', '173'],
+  ],
+  ['crown-moulding', 'Generated crown moulding', 'N70 (ADR-075)', ['014', '015', '050', '098']],
+  ['custom-furniture', 'Create custom furniture', 'F01\u2013F13, N34', ['044', '046']],
+  ['cut-list', 'Cut-list generation', 'F09', ['rank-31', '052', 'phase-3']],
+  ['cycle-overlapping', 'Cycle through overlapping objects', 'N95 (ADR-097)', ['043', '010']],
+  ['deduplication', 'Deduplication', 'F09, N69', ['phase-3']],
+  [
+    'dependency-regeneration',
+    'Derived-component dependency regeneration',
+    'N56 (ADR-061)',
+    ['rank-23', '101', '109', '077', '015'],
+  ],
+  ['dimensioning', 'Dimensions and measurements', 'N48, N11', ['039', '061']],
+  [
+    'domain-graph',
+    'Authoritative domain graph, render tree as projection',
+    'ADR-004',
+    ['103', '112', 'stack-06'],
+  ],
+  ['drag-drop-placement', 'Drag-and-drop placement', 'N92 (ADR-094)', ['061', '062', '042', '047']],
+  [
+    'duplicate-mirror-rotate',
+    'Duplicate, mirror and predictable rotate operations',
+    'N64 (ADR-069)',
+    ['rank-19'],
+  ],
+  [
+    'ensemble-workspace',
+    'Catalogue-led ensemble workspace',
+    'N51 (ADR-056), N22',
+    ['071', '028', '062', '153'],
+  ],
+  ['env-chair', 'Envelope: chair/user clearance', 'N68 (ADR-073)', ['129']],
+  ['env-door', 'Envelope: door swing', 'N52 (ADR-057)', ['129', '011', '081']],
+  ['env-drawer', 'Envelope: drawer extension', 'N52 (ADR-057)', ['129', '011', '012', '136']],
+  ['env-installation', 'Envelope: installation clearance', 'N68 (ADR-073)', ['129', '016']],
+  ['env-service', 'Envelope: service/maintenance zone', 'N68 (ADR-073)', ['129', '093']],
+  ['env-solid', 'Envelope: solid body', 'N04', ['129', '094']],
+  [
+    'explainable-warnings',
+    'Explainable warnings with suggested repairs',
+    'N66 (ADR-071)',
+    ['rank-07', 'rec-07', '081', '082', 'phase-2'],
+  ],
+  ['exploded-view', 'Exploded assembly view', 'N12', ['rank-29', '124', 'phase-3']],
+  [
+    'fillers-plinths-panels',
+    'Automatic fillers, plinths/toe-kicks, end panels and trim',
+    'N26, N49 (ADR-054)',
+    ['rank-14', '016', '064', '080', '133', 'phase-2'],
+  ],
+  ['finish-change', 'Change finishes and materials', 'N48, F16, N43', ['061', '044', '050', '034']],
+  [
+    'finish-scope',
+    'Scope selector: This item / Connected run / Entire ensemble',
+    'N50 (ADR-055)',
+    ['079', 'rec-12'],
+  ],
+  ['floor-plan-2d', 'Construct the floor plan in 2D', 'N54 (ADR-059)', ['044', '032']],
+  ['gen-end-panel', 'Generated end panels', 'N26, N49', ['rec-13', '098', '133']],
+  ['gen-filler', 'Generated fillers', 'N26, N49 (ADR-054)', ['011', '016', '098', '133']],
+  ['gen-plinth', 'Generated plinths / toe-kicks', 'N49 (ADR-054)', ['080', '015', '098']],
+  ['gen-trim', 'Generated trims', 'N70 (ADR-075)', ['rank-14', '133']],
+  ['generated-overrides', 'User overrides survive regeneration', 'N56 (ADR-061)', ['098', '101']],
+  [
+    'generated-part-mechanism',
+    'Generic GeneratedPart mechanism',
+    'N56 (ADR-061)',
+    ['116', '098', '101'],
+  ],
+  [
+    'guided-snapping',
+    'Guided connection snapping with live preview and orientation',
+    'N65 (ADR-070)',
+    ['rank-01', '007', '008', '009', '010', '073', '075', '043', '063'],
+  ],
+  [
+    'hardware-completeness',
+    'Hardware/fastener completeness',
+    'F10, N69 (ADR-074)',
+    ['rank-25', '064', '133', '142', 'phase-3', '123'],
+  ],
+  [
+    'in-context-editing',
+    'Configure individual parametric items inside an ensemble',
+    'N48, N86',
+    ['rank-05', 'rec-05', 'mvp-11', '076', '039', '046'],
+  ],
+  [
+    'inference-points',
+    'Inference points (corners, centres, midpoints)',
+    'merged into alignment-distribution, built',
+    ['036'],
+  ],
+  ['inspectable-rules', 'Constraints as inspectable domain data', 'N98 (ADR-100)', ['136', '137']],
+  [
+    'interface-capabilities',
+    'Interface capabilities instead of brand checks',
+    'merged into compatibility-engine, built',
+    ['139', '140'],
+  ],
+  ['keep-identity', 'Grouping keeps object identity (no flattening)', 'N48', ['069', 'mvp-10']],
+  ['material-overrides', 'Per-instance material overrides', 'N50 (ADR-055)', ['095']],
+  [
+    'material-propagation',
+    'Shared material/finish propagation',
+    'N50 (ADR-055)',
+    ['rank-12', 'rec-12', '079', '039', '134'],
+  ],
+  ['mobile-parity', 'Mobile and desktop feature parity', 'F18, N48', ['018', '032', '048']],
+  ['model-import', 'Import 3D models and model libraries', 'N71 (ADR-076)', ['044', '049']],
+  [
+    'multi-select-groups',
+    'Multi-select, groups and whole-ensemble transforms',
+    'N95 (ADR-097)',
+    ['rank-08', 'rec-08', 'mvp-10', '010', '043', '063', '069', '076', '100'],
+  ],
+  [
+    'named-groups',
+    'Named selection groups',
+    'merged into multi-select-groups, built',
+    ['099', '100'],
+  ],
+  ['order-completeness', 'Consumer order completeness', 'N59 (ADR-064)', ['123', '029', '133']],
+  ['ortho-plan', '2D plan as orthographic view of the same model', 'N48, N11', ['stack-05', '120']],
+  [
+    'photoreal-rendering',
+    'Photorealistic rendering and AI imagery',
+    'N62, N63 (ADR-067/068)',
+    ['008', '128', '003'],
+  ],
+  ['picking', 'Picking (raycasting / pointer events)', 'F12, N78', ['089', 'stack-02']],
+  ['precision-tooltips', 'Precision feedback and tooltips', 'N60 (ADR-065)', ['043']],
+  [
+    'preserve-intent',
+    'Preserve user intent through change',
+    'merged into compatible-swap, built',
+    ['134', '135'],
+  ],
+  ['production-drawings', 'Design-to-production drawing exports', 'N48, N02', ['046']],
+  [
+    'project-documentation',
+    'Project documentation and item lists',
+    'N48, N02, N04',
+    ['053', '068'],
+  ],
+  ['repair-suggestions', 'Suggested repairs', 'N66 (ADR-071)', ['081', '136', 'rec-07', 'phase-2']],
+  [
+    'replace-workflow',
+    'Replace workflow (browse only compatible alternatives)',
+    'merged into compatible-swap, built',
+    ['085', '155'],
+  ],
+  ['resize-generic', 'Resize generic objects', 'N86 (ADR-090)', ['044']],
+  ['revalidation', 'Automatic revalidation after parameter changes', 'N04, N66', ['mvp-12', '077']],
+  [
+    'room-geometry',
+    'Room/wall geometry, windows, doors and obstacles',
+    'N53 (ADR-058)',
+    ['rank-16', 'rec-14', '061', '044', '042', '102', '032'],
+  ],
+  ['room-obstacles', 'Obstacle zones', 'N53 (ADR-058)', ['rec-14', 'rank-16']],
+  ['room-openings', 'Doors and windows', 'N53 (ADR-058)', ['rec-14', 'rank-16']],
+  ['room-services', 'Pipes and outlets', 'N67 (ADR-072)', ['rec-14']],
+  ['room-validation', 'Validity checked against the room', 'N53, N54', ['rec-14', '011']],
+  ['room-walls', 'Walls and corners', 'N53, N54', ['rec-14', 'rank-16']],
+  [
+    'schema-migrations',
+    'Versioned records with migrations',
+    'ADR-011, ADR-012',
+    ['stack-08', '099'],
+  ],
+  ['select-and-explain', 'Select and explain the problem', 'N66 (ADR-071)', ['081']],
+  ['selection-box', 'Selection box', 'N95 (ADR-097)', ['043', '063']],
+  ['sheet-optimisation', 'Sheet/material optimisation', 'N01', ['rank-32', '052', '123']],
+  ['snap-candidate-ranking', 'Deterministic snap candidate ranking', 'N65 (ADR-070)', ['074']],
+  [
+    'snap-override',
+    'Snap override (modifier key or toggle)',
+    'N65 (ADR-070)',
+    ['mvp-6', '009', '010', '043', '065', '075', '131'],
+  ],
+  [
+    'snap-preview',
+    'Snap preview before commit (ghost placement)',
+    'N65 (ADR-070)',
+    ['mvp-5', '073', '075', '132'],
+  ],
+  [
+    'static-collision',
+    'Static body collision detection (AABB/OBB)',
+    'N04, N10',
+    ['mvp-9', 'stack-04', 'phase-1'],
+  ],
+  ['structured-exports', 'BOM/CSV/JSON and CAD exports', 'N48, F09, N03', ['056']],
+  [
+    'support-diagnostics',
+    'Support diagnostics from rules',
+    'merged into inspectable-rules, built',
+    ['137'],
+  ],
+  [
+    'sync-2d-3d',
+    'Synchronous 2D plan + 3D view',
+    'N48, N11',
+    ['rank-06', 'rec-06', '060', '061', '062', 'stack-01', '089', 'stack-05', '120', 'phase-1'],
+  ],
+  ['template-api', 'Template API exposing parameters and bounds', 'ADR-004', ['phase-1', '119']],
+  ['why-wont-connect', '"Why won\'t this connect?" explanation', 'N65 (ADR-070)', ['073']],
+];
