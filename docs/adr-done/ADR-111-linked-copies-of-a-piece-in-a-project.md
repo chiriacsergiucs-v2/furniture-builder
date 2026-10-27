@@ -1,7 +1,8 @@
 # ADR-111: Linked copies of a piece in a project: change one, all change
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-27
+- Implemented: 2026-10-27
 - Depends on: ADR-069, ADR-088, ADR-106
 - Design: docs/ui-design.md (project editor, selected-piece card)
 - Backlog: N110

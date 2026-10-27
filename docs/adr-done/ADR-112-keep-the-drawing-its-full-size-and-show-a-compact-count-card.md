@@ -16,7 +16,7 @@ The user, 2026-10-27, with a phone screenshot of a project piece selected in Com
 inside the rendered 2d view, not over. It's size should also be much smaller. Also it should not contain the
 width/height, keep that only part of the side/bottom drawer." and "Force 2d view to maintain it's size, bottom cars can
 cover it partially, but not push it." In the screenshot the drawing had shrunk to a strip about 180 × 50 px: the card
-([ADR-109](../adr/ADR-109-show-the-quick-count-card-over-the-project-drawing-and-put-d.md)) takes its height from the top of
+([ADR-109](../adr-done/ADR-109-show-the-quick-count-card-over-the-project-drawing-and-put-d.md)) takes its height from the top of
 the view, and the bottom sheet takes the rest. This replaces, for the card, the ADR-106 decision to show Width and
 Depth "in the quick-count card over the drawing and the 3D view"
 ([ADR-106](../adr-done/ADR-106-change-a-whole-piece-s-width-and-depth-where-it-is-selected.md)); Width and Depth stay in
