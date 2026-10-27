@@ -71,12 +71,12 @@ Built as one change, one pull request, one test run and one ship (the user's req
 
 ## Done when
 
-- [ ] Run handles: every front in the run gets the run's handle on one line; an overridden piece keeps its own
+- [x] Run handles: every front in the run gets the run's handle on one line; an overridden piece keeps its own
       (tests).
-- [ ] Adding a piece to the run refreshes the handles; removing a run handle stays removed (ADR-061) (tests).
-- [ ] A sink over the chosen base appears in the cut list note and the shopping list with the user's size (tests).
-- [ ] The trial's numbers (agreement with box tests, time, bundle size, licence) are recorded in N126.
-- [ ] jsdom find-it at 390 and 1280 px: "Handles for this run", "Sink".
+- [x] Adding a piece to the run refreshes the handles; removing a run handle stays removed (ADR-061) (tests).
+- [x] A sink over the chosen base appears in the cut list note and the shopping list with the user's size (tests).
+- [x] The trial's numbers (agreement with box tests, time, bundle size, licence) are recorded in N126.
+- [x] jsdom find-it at 390 and 1280 px: "Handles for this run", "Sink".
 
 ## Open questions
 

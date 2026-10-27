@@ -21,13 +21,15 @@ describe.each(WIDTHS)('run handles and sinks at %ipx (find-it, ADR-125)', (width
       await user.click(within(panel).getByRole('button', { name: 'Add a piece' }));
       const dlg = await screen.findByRole('dialog');
       await user.type(within(dlg).getByRole('searchbox', { name: 'Search the items' }), 'Base');
-      await user.click(within(dlg).getAllByRole('button', { name: /Base cabinet, doors: 1 door/ })[0]);
+      await user.click(
+        within(dlg).getAllByRole('button', { name: /Base cabinet, doors: 1 door/ })[0],
+      );
       await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
       const right = screen.queryByRole('button', { name: 'Place to the right' });
       if (right) await user.click(right);
     }
 
-    await user.click(screen.getByRole('button', { name: 'Settings', exact: true }));
+    await user.click(screen.getByRole('button', { name: 'Settings' }));
     const settings = await screen.findByRole('dialog');
     const runParts = within(settings).getByRole('region', { name: 'Run parts' });
     await user.click(within(runParts).getByRole('button', { name: /Suggest run parts/ }));

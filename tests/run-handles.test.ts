@@ -26,8 +26,7 @@ const cab = (d: Design, patch: Partial<CabinetParams>): Design =>
   d.product.kind === 'cabinet'
     ? { ...d, product: { ...d.product, params: { ...d.product.params, ...patch } } }
     : d;
-const drawers = () =>
-  cab(t('base-door'), { interior: { id: 'dr', kind: 'drawers', count: 3 } });
+const drawers = () => cab(t('base-door'), { interior: { id: 'dr', kind: 'drawers', count: 3 } });
 
 /** Base units side by side on the floor, left to right. */
 function run(designs: Design[]): Project {
@@ -80,13 +79,15 @@ describe('run handles (ADR-125)', () => {
   it('fronts the line does not cross get the handle near their top; Top of fronts lines up the tops', () => {
     const p0 = run([drawers(), t('base-door')]);
     const ids = p0.items.map((i) => i.id);
-    const p = { ...p0, runHandles: [bar(ids, { handle: { kind: 'knob' }, height: 300 })] };
+    const p = { ...p0, runHandles: [bar(ids, { handle: { kind: 'knob' }, height: 400 })] };
     const fs = fronts(p);
     const drawerFronts = fs.filter((x) => x.role === 'drawer-front');
     expect(drawerFronts).toHaveLength(3);
-    const crossed = drawerFronts.filter((x) => x.box.y + 20 <= 300 && x.box.y + x.box.h - 20 >= 300);
+    const crossed = drawerFronts.filter(
+      (x) => x.box.y + 20 <= 400 && x.box.y + x.box.h - 20 >= 400,
+    );
     expect(crossed.length).toBe(1);
-    for (const f of crossed) expect(holeHeight(f)).toBe(300);
+    for (const f of crossed) expect(holeHeight(f)).toBe(400);
     for (const f of drawerFronts.filter((x) => !crossed.includes(x)))
       expect(holeHeight(f)).toBe(f.box.y + f.box.h - 40);
     const top = { ...p0, runHandles: [bar(ids, { handle: { kind: 'knob' }, height: undefined })] };
@@ -206,7 +207,11 @@ describe('project document (ADR-011, ADR-125)', () => {
       }),
     ).toContain('Invalid run handle');
     expect(
-      validateProject({ ...p0, schemaVersion: 13, sinks: [{ id: 's', baseId: 'gone', w: 1, d: 1 }] }),
+      validateProject({
+        ...p0,
+        schemaVersion: 13,
+        sinks: [{ id: 's', baseId: 'gone', w: 1, d: 1 }],
+      }),
     ).toContain('Invalid sink');
   });
 });

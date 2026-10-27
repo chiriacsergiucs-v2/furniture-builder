@@ -1898,26 +1898,29 @@ export function refreshRunParts(project: Project): Project {
   return { ...project, runParts: next, runPartsRemoved: removed };
 }
 
-/** A worktop's label with the sink cut-outs to make in it (ADR-125): the note on its cut-list row. */
-function withSinkNote(project: Project, rp: RunPart): RunPart {
-  if (rp.kind !== 'worktop') return rp;
+/**
+ * The sink cut-outs to make in a worktop (ADR-125), the note added to its cut-list row; null when none. Added after
+ * grouping, since part labels lose their numbers there (`baseLabel`).
+ */
+function sinkNote(project: Project, rp: RunPart): string | null {
+  if (rp.kind !== 'worktop') return null;
   const cuts = (project.sinks ?? []).filter((sk) => rp.from?.includes(sk.baseId));
   return cuts.length
-    ? {
-        ...rp,
-        label: `${rp.label}, sink cut-out ${cuts.map((sk) => `${sk.w} × ${sk.d} mm`).join(' and ')}`,
-      }
-    : rp;
+    ? `sink cut-out ${cuts.map((sk) => `${sk.w} × ${sk.d} mm`).join(' and ')}`
+    : null;
 }
 
 /** Parts for the whole project: each piece's cut list × its quantity, merged across pieces, then the run parts. */
 export function projectCutlist(input: Project): CutRow[] {
   const project = applyRunHandles(input);
   const rows = new Map<string, CutRow>();
-  const extra = (project.runParts ?? []).map((rp) => ({
-    rp: withSinkNote(project, rp),
-    key: materialKey(rp.material),
-  }));
+  const extra = (project.runParts ?? []).map((rp) => ({ rp, key: materialKey(rp.material) }));
+  const notes = new Map(
+    extra.flatMap(({ rp }) => {
+      const n = sinkNote(project, rp);
+      return n ? [[`run:${rp.id}`, n] as [string, string]] : [];
+    }),
+  );
   if (extra.length) {
     const mats = [
       ...new Map(
@@ -1936,14 +1939,16 @@ export function projectCutlist(input: Project): CutRow[] {
       diagnostics: [],
       bounds: { x: 0, y: 0, z: 0, w: 0, h: 0, d: 0 },
     };
-    for (const r of cutlist(model, mats))
+    for (const r of cutlist(model, mats)) {
+      const cut = r.panelIds.flatMap((id) => notes.get(id) ?? []);
       rows.set(
         ['run', r.materialId, r.length, r.width, r.edgesL, r.edgesW, bandKey(r.band)].join('|'),
         {
           ...r,
-          labels: r.labels.map((l) => `Run: ${l}`),
+          labels: r.labels.map((l) => `Run: ${l}${cut.length ? `, ${cut.join(' and ')}` : ''}`),
         },
       );
+    }
   }
   const covered = plinthCovered(project);
   for (const item of project.items) {

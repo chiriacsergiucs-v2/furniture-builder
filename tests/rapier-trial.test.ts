@@ -90,9 +90,7 @@ function layouts(n: number): Project[] {
 describe.runIf(process.env.RAPIER_TRIAL)('Rapier trial (ADR-125)', () => {
   it('compares overlap answers and time with the box checks', async () => {
     await RAPIER.init();
-    const placed = layouts(300).map((p) =>
-      resolvePlacements(p).items.map((i) => placeItem(i)),
-    );
+    const placed = layouts(300).map((p) => resolvePlacements(p).items.map((i) => placeItem(i)));
     let t = performance.now();
     const ours = placed.map(boxPairs);
     const tOurs = performance.now() - t;
