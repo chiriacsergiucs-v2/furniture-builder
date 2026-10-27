@@ -154,10 +154,16 @@ export function replaceItem(project: Project, itemId: string, design: Design): P
   const unused = new Set(defaults.filter((id): id is string => !!id && !used.includes(id)));
   if (unused.size) d = { ...d, materials: d.materials.filter((m) => !unused.has(m.id)) };
   // A fresh copy: the kept template revision (ADR-096) no longer applies.
-  const { libraryId: _lib, templateSeen: _seen, ...keep } = it;
+  // The template reference follows the new design's origin (ADR-124); its overrides are worked out on commit.
+  const { libraryId: _lib, templateSeen: _seen, ref: _ref, ...keep } = it;
   void _lib;
   void _seen;
-  const next: ProjectItem = { ...keep, design: d };
+  void _ref;
+  const next: ProjectItem = {
+    ...keep,
+    design: d,
+    ...(d.catalog?.origin ? { ref: { overrides: {} } } : {}),
+  };
   return {
     ...project,
     items: project.items.map((i) =>

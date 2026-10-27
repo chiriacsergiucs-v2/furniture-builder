@@ -102,6 +102,7 @@ import { ReplaceButton } from './Replace';
 import { SavedToCatalog, SaveToCatalog } from './SaveToCatalog';
 import { NewerTemplates, TemplateNotice } from './TemplateRevision';
 import { GroupList, SelectionCard } from './Selection';
+import { PieceProjectSettings, ProjectSettingsPanel } from './ProjectSettings';
 import { ProjectHistory, StyleSuggestions } from './History';
 
 const FRONT_SIDE: Record<QuarterTurn, string> = {
@@ -196,6 +197,7 @@ export function ProjectPanel({
       // Titled by the Settings dialog, which carries its info button (ADR-116: one h2 per dialog).
       <div className="inspector">
         <RunParts />
+        <ProjectSettingsPanel />
         <MmField
           label="Saw cut (kerf) for this project"
           value={project.cutting?.kerf ?? 4}
@@ -423,6 +425,11 @@ export function ProjectPanel({
           <Group title="Finish" defaultOpen={false}>
             <FinishFields item={item} />
           </Group>
+          {project.settings && (
+            <Group title="Project settings" defaultOpen={false}>
+              <PieceProjectSettings item={item} />
+            </Group>
+          )}
           <Group title="Merge" defaultOpen={false}>
             <MergeFields item={item} />
           </Group>

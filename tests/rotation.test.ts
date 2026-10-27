@@ -24,6 +24,11 @@ import {
 } from '../src/core/project';
 import { projectFromTemplate, templateFromProject } from '../src/core/projectTemplate';
 import { mirrorItems } from '../src/core/selection';
+import { catalogFamilies } from '../src/core/catalog';
+import { resolveItem, syncRef } from '../src/core/ownEdits';
+import { followProject, setProjectSetting } from '../src/core/projectSettings';
+import { decodeCode, encodeCode } from '../src/core/shareCode';
+import { importDocument } from '../src/ui/shell/importFile';
 import { loadProject, saveProject } from '../src/persist/db';
 import { useDesign } from '../src/store/designStore';
 
@@ -274,5 +279,41 @@ describe('mirror a selection (ADR-121, G-085)', () => {
       before.items.map((i) => i.position),
     );
     expect(mirrorRun(p, p.items[0].id).project.items[1].position.x).toBe(0);
+  });
+});
+
+describe('angled pieces with ADR-124 (share codes, template references, project settings)', () => {
+  const angled = (): Project => {
+    const p0 = run(['base-door', 'chest']);
+    return { ...setItemRotation(p0, p0.items[0].id, 75).project, schemaVersion: PROJECT_SCHEMA };
+  };
+
+  it('a share code round-trips an angled piece, also when opened as a new copy', async () => {
+    const p = angled();
+    const back = await decodeCode(await encodeCode(p));
+    expect(back.ok).toBe(true);
+    if (!back.ok) return;
+    expect(validateProject(back.doc)).toEqual([]);
+    expect((back.doc as Project).items.map(rotationOf)).toEqual([75, 0]);
+    const r = await importDocument(back.doc);
+    expect(r.opened).toBe(true);
+    const opened = useDesign.getState().project!;
+    expect(opened.id).not.toBe(p.id);
+    expect(opened.items.map(rotationOf)).toEqual([75, 0]);
+    expect(opened.items[0].angle).toBe(75);
+  });
+
+  it('a template reference and a project setting keep the angle', () => {
+    const p = angled();
+    const it0 = { ...p.items[0], ref: { overrides: {} } };
+    expect(syncRef(it0, catalogFamilies).angle).toBe(75);
+    // The design is rebuilt from the template; the item and its angle stay as they are.
+    const withRef: Project = { ...p, items: [it0, p.items[1]] };
+    expect(buildProjectModel(withRef).pieces[0].outline.yaw?.deg).toBe(75);
+    expect(resolveItem(it0, catalogFamilies).id).toBe(it0.design.id);
+    const set = setProjectSetting(p, 'plinthHeight', 120).project;
+    expect(set.items.map(rotationOf)).toEqual([75, 0]);
+    const follow = followProject(set, p.items[0].id, 'plinthHeight');
+    expect(follow.items[0].angle).toBe(75);
   });
 });

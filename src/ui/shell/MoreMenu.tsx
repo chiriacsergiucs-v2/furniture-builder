@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { exportFusionPython } from '../../core/fusion';
 import { imageIdsOf } from '../../core/surface';
 import { deleteImages, unusedImageIds } from '../../persist/db';
@@ -8,6 +9,7 @@ import { useDesign } from '../../store/designStore';
 import { askConfirm } from '../Confirm';
 import { ReviewPackDialog } from '../ReviewPack';
 import { Icon } from '../icons';
+import { CopyCodeDialog } from '../ShareCode';
 import { download, downloadFrontSvg, fileName } from './files';
 import { importFile } from './importFile';
 import { useUi } from './uiStore';
@@ -36,6 +38,7 @@ export function MoreMenu({
   const setNotice = useUi((s) => s.setNotice);
   const [pack, setPack] = useState(false);
   const close = () => ref.current?.removeAttribute('open');
+  const [codeOpen, setCodeOpen] = useState(false);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -175,6 +178,10 @@ export function MoreMenu({
                 </button>
               </>
             )}
+            <button type="button" onClick={run(() => setCodeOpen(true))}>
+              <Icon name="copy" />
+              Copy code <small>a code or link to open on another device</small>
+            </button>
             <label className="menu-file">
               <Icon name="upload" />
               Import a file <small>design, project or project template</small>
@@ -210,7 +217,11 @@ export function MoreMenu({
           </button>
         </div>
       </details>
-      <ReviewPackDialog open={pack} onClose={() => setPack(false)} />
+      {/* Out of the app bar, whose styles are for its own buttons. */}
+      {pack &&
+        createPortal(<ReviewPackDialog open onClose={() => setPack(false)} />, document.body)}
+      {codeOpen &&
+        createPortal(<CopyCodeDialog onClose={() => setCodeOpen(false)} />, document.body)}
     </>
   );
 }
