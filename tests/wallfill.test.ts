@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest';
 import { buildModel } from '../src/core/build';
 import { RULE_DEFAULTS } from '../src/core/rules';
 import {
+  MAX_PIECES,
   MIXES_FIRST,
   exactSplit,
   mixProject,
@@ -150,6 +151,21 @@ describe('input problems', () => {
     );
     expect(suggestMixes(wall({ pieces: 2 })).problems[0].message).toMatch(/No mix fills 3000 mm/);
     expect(suggestMixes(wall({ equalFronts: 30 })).problems[0].message).toMatch(/equal fronts/);
+  });
+
+  it('a tiny min width or a huge front count is answered quickly, and says why when nothing fits', () => {
+    for (const over of [
+      { minWidth: 10 },
+      { minWidth: 1, maxWidth: 1200 },
+      { equalFronts: 10000 },
+      { width: 100000 },
+    ]) {
+      const t = performance.now();
+      const r = suggestMixes(wall(over));
+      expect(performance.now() - t).toBeLessThan(3000);
+      for (const m of r.mixes) expect(m.slots.length).toBeLessThanOrEqual(MAX_PIECES);
+      if (!r.mixes.length) expect(r.problems[0].message).toMatch(/more than 40 pieces/);
+    }
   });
 
   it('a long wall is answered quickly', () => {

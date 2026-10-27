@@ -91,6 +91,8 @@ const EXAMPLE_WIDTH = 600;
 const DEAL: Exclude<PieceKind, 'tall'>[] = ['shelves', 'drawers', 'door', 'shelves'];
 /** Candidates built at most per call, so a long wall cannot hang the page. */
 const MAX_BUILDS = 120;
+/** Most pieces in one mix, so a tiny min width or a huge front count cannot freeze the page (reported, not clamped). */
+export const MAX_PIECES = 40;
 
 const KIND_TEXT: Record<PieceKind, string> = {
   tall: 'tall',
@@ -250,16 +252,20 @@ function candidates(input: WallInput): Candidate[] {
   const out: Candidate[] = [];
   const nMin = Math.max(1, Math.ceil(W / max)),
     nMax = Math.floor(W / min);
-  const counts = input.pieces !== undefined ? [input.pieces] : range(nMin, nMax);
+  const counts = (input.pieces !== undefined ? [input.pieces] : range(nMin, nMax)).filter(
+    (n) => n <= MAX_PIECES,
+  );
   const talls = input.tallCount !== undefined ? [input.tallCount] : [1, 0, 2];
 
   if (input.equalFronts !== undefined) {
     const N = input.equalFronts;
+    if (N > 2 * MAX_PIECES) return out;
     const fronts = exactSplit(W, N);
     // Carcasses of 1 or 2 fronts (a door front has 1 or 2 leaves); uniform first, then mixed and symmetric.
     for (const groups of frontGroups(N))
       for (const t of talls) {
         const n = groups.length;
+        if (n > MAX_PIECES) continue;
         if (input.pieces !== undefined && n !== input.pieces) continue;
         const at = tallIndices(n, t, input.tallPosition ?? (t === 2 ? 'ends' : 'left'));
         if (!at) continue;
@@ -433,8 +439,14 @@ export function mixProject(
   input: WallInput,
   name = `Wall ${input.width} mm`,
 ): Project {
-  let p = newProject(name);
-  for (const s of slots) p = { ...p, items: [...p.items, makeItem(p, piece(s, input))] };
+  const p = newProject(name);
+  let x = 0;
+  for (const s of slots) {
+    // Placed from the left by the slot widths: a cabinet is exactly as wide as its slot.
+    const item = makeItem(p, piece(s, input));
+    p.items.push({ ...item, position: { ...item.position, x } });
+    x += s.width;
+  }
   return p;
 }
 
@@ -495,6 +507,17 @@ export function suggestMixes(input: WallInput, limit = MIXES_FIRST): WallFill {
         info(
           'wall-narrow',
           `The wall (${input.width} mm) is narrower than the min piece width, ${min} mm.`,
+        ),
+      );
+    else if (
+      Math.ceil(input.width / max) > MAX_PIECES ||
+      (input.pieces ?? 0) > MAX_PIECES ||
+      (input.equalFronts ?? 0) > 2 * MAX_PIECES
+    )
+      problems.push(
+        info(
+          'wall-many',
+          `These settings need more than ${MAX_PIECES} pieces; raise the min or max piece width, or lower the counts.`,
         ),
       );
     else if (input.equalFronts !== undefined)

@@ -1156,3 +1156,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Add the doubled top support
 - Questions: Do you also want a doubled bottom or doubled sides?
 - Suggested pick: Top only, as asked (0 % extra work).
+
+### G-122: Fill a wall: at most 40 pieces per mix
+
+- Status: Open
+- Origin: ADR-103 review, 2026-10-27; Claude added the bound
+- Missing: A mix has at most 40 pieces (Equal fronts at most 80 fronts), so a tiny min width cannot freeze the page; beyond that the wizard says so instead of suggesting.
+- Request: suggest a good width per piece ... resulting in a few pieces of furniture mixed (context: no limit was asked for)
+- Questions: Is 40 pieces per wall enough, or should the limit be higher?
+- Suggested pick: Keep 40: a 400 mm min fills a 16 m wall; longer runs are better as several walls. (estimate: effort 0%, value 0%)
