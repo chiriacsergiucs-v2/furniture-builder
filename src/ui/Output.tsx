@@ -10,8 +10,8 @@ import { useDesign, type Tab } from '../store/designStore';
 import { Sheets } from './Sheets';
 import { FastenerCounts } from './Fasteners';
 import { ShoppingList } from './Shopping';
-import { useView } from './useView';
-import { GuidanceTip, InfoTip } from './controls';
+import { useMultiSelection, useResultView, useView } from './useView';
+import { GuidanceTip, InfoTip, Segmented } from './controls';
 import { Icon } from './icons';
 import { cutlistCsvRo } from '../core/ro';
 import { download, fileName } from './shell/files';
@@ -31,7 +31,7 @@ export function Output() {
   const view = useView();
   const errors = view.diagnostics.filter((d) => d.severity === 'error').length;
   const warnings = view.diagnostics.length - errors;
-  const parts = view.rows.reduce((n, r) => n + r.quantity, 0);
+  const parts = useResultView().rows.reduce((n, r) => n + r.quantity, 0);
   // Short labels keep the five tabs in one row on a phone (ADR-114); `name` is the full accessible name.
   const tabs: { id: Tab; label: string; name?: string; badge?: number; kind?: string }[] = [
     { id: 'parts', label: 'Parts', badge: parts || undefined, kind: 'neutral' },
@@ -73,6 +73,7 @@ export function Output() {
           aria-labelledby={`tab-${tab}`}
           className="tabpanel"
         >
+          {(tab === 'parts' || tab === 'sheets') && <ScopeSwitch />}
           {tab === 'parts' && <Parts />}
           {tab === 'sheets' && <Sheets />}
           {tab === 'hardware' && <Hardware />}
@@ -84,8 +85,27 @@ export function Output() {
   );
 }
 
+/** Whole project or only the selected pieces, for Parts and Sheets (N125); shown only with two pieces or more selected. */
+function ScopeSwitch() {
+  const ids = useMultiSelection();
+  const only = useUi((s) => s.selectionOnly);
+  const setOnly = useUi((s) => s.setSelectionOnly);
+  if (!ids) return null;
+  return (
+    <Segmented
+      label="Show"
+      value={only ? 'selection' : 'project'}
+      options={[
+        { value: 'project', label: 'Whole project' },
+        { value: 'selection', label: `Selection (${ids.length})` },
+      ]}
+      onChange={(v) => setOnly(v === 'selection')}
+    />
+  );
+}
+
 function Parts() {
-  const view = useView();
+  const view = useResultView();
   const setHighlight = useDesign((s) => s.setHighlight);
   const highlight = useDesign((s) => s.highlight);
   const rows = view.rows;
@@ -213,7 +233,7 @@ function Parts() {
 
 /** Solid timber bought in lengths (ADR-038): first-fit packing per section, a heuristic. */
 function Lengths() {
-  const view = useView();
+  const view = useResultView();
   const groups = useMemo(() => {
     const mats = new Map(view.materials.map((m) => [m.id, m]));
     return lengthsList(view.rows, (id) => mats.get(id)?.lengths ?? [2400, 3000], view.kerf);

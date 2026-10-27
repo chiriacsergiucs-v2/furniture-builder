@@ -1766,6 +1766,36 @@ export function refreshRunParts(project: Project): Project {
   return { ...project, runParts: next, runPartsRemoved: removed };
 }
 
+/**
+ * The selected pieces as a project of their own (N125: parts and sheets for a multiple selection): only those pieces,
+ * placed where they stand, with the run parts, run requests and joined boards made from them alone. Room, 3D models and
+ * groups are left out. A piece standing on one not selected keeps its place.
+ */
+export function selectionProject(project: Project, ids: readonly string[]): Project {
+  const keep = new Set(ids);
+  const placed = resolvePlacements(project);
+  const within = (from: readonly string[] | undefined) =>
+    !!from?.length && from.every((x) => keep.has(x));
+  const items = placed.items
+    .filter((i) => keep.has(i.id))
+    .map((i) =>
+      i.placement?.kind === 'above' && !keep.has(i.placement.baseId)
+        ? { ...i, placement: undefined }
+        : i,
+    );
+  const { room: _r, models: _m, groups: _g, ...rest } = placed;
+  void _r;
+  void _m;
+  void _g;
+  return {
+    ...rest,
+    items,
+    runParts: (placed.runParts ?? []).filter((rp) => within(rp.from)),
+    runRequests: (placed.runRequests ?? []).filter((r) => within(r.from)),
+    joins: (placed.joins ?? []).filter((j) => within(j.itemIds)),
+  };
+}
+
 /** Parts for the whole project: each piece's cut list × its quantity, merged across pieces, then the run parts. */
 export function projectCutlist(project: Project): CutRow[] {
   const rows = new Map<string, CutRow>();

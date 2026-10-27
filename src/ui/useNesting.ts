@@ -3,7 +3,7 @@ import type { CutRow } from '../core/cutlist';
 import { nest } from '../core/nesting';
 import type { NestJob, NestResult } from '../core/nesting/types';
 import type { NestResponse } from '../core/nesting/worker';
-import { useView } from './useView';
+import { useResultView, useView } from './useView';
 
 export type NestState =
   | { status: 'idle' }
@@ -15,8 +15,11 @@ export type NestState =
  * Lay out sheets in a Web Worker whenever the design changes while the Sheets tab is open (ADR-018).
  * Falls back to the main thread if workers are unavailable. Designs with errors are never laid out.
  */
-export function useNesting(active: boolean): NestState & { blocked: boolean } {
-  const view = useView();
+export function useNesting(active: boolean, scoped = false): NestState & { blocked: boolean } {
+  // `scoped`: Sheets follows the Whole project / Selection switch (N125); the shopping list keeps the project.
+  const all = useView(),
+    selected = useResultView();
+  const view = scoped ? selected : all;
   const [state, setState] = useState<NestState>({ status: 'idle' });
   const worker = useRef<Worker | null>(null);
   const req = useRef(0);

@@ -36,6 +36,9 @@ interface Ui {
   /** The Settings dialog (ADR-080) is open for what is open in the editor. */
   settingsOpen: boolean;
   setSettingsOpen: (v: boolean) => void;
+  /** Parts and Sheets show only the selected pieces (N125); applies only while two pieces or more are selected. */
+  selectionOnly: boolean;
+  setSelectionOnly: (v: boolean) => void;
 }
 
 /** UI-only state shared by the shell and the editors; nothing here is part of a design (remembered per device only). */
@@ -55,4 +58,6 @@ export const useUi = create<Ui>((set) => ({
   setNotice: (notice) => set({ notice }),
   settingsOpen: false,
   setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
+  selectionOnly: false,
+  setSelectionOnly: (selectionOnly) => set({ selectionOnly }),
 }));

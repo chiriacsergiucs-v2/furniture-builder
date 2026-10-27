@@ -3,7 +3,7 @@ import { sheetOf } from '../core/design';
 import type { NestJob, NestResult, SheetLayout } from '../core/nesting/types';
 import { useDesign } from '../store/designStore';
 import { useNesting } from './useNesting';
-import { useView } from './useView';
+import { useResultView } from './useView';
 import { InfoTip } from './controls';
 import { Icon } from './icons';
 
@@ -14,8 +14,8 @@ const REASON: Record<string, string> = {
 };
 
 export function Sheets() {
-  const n = useNesting(true);
-  const view = useView();
+  const n = useNesting(true, true);
+  const view = useResultView();
   const setHighlight = useDesign((s) => s.setHighlight);
   if (n.blocked)
     return (

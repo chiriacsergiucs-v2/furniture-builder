@@ -1453,3 +1453,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Ff also add the possibility to remove with a warning (non-blocking on user acknowledgement) any piece of an item, even if main frane. Sometimes i have the right leftovers, or i don't know what will be used there.
 - Questions: Should a tap in the front view offer the part too? Should hardware of a left-out door or drawer front drop with it?
 - Suggested pick: Front-view tap too; hardware stays (you may still fit leftovers with it) (estimate: effort +25%, value +15%)
+
+### G-155: Selection parts and sheets: Print, hardware, shopping
+
+- Status: Open
+- Origin: N125 (ff)
+- Missing: With Selection chosen, Parts (and its Download CSV) and Sheets show only the selected pieces; Print, Hardware and the Shopping list still show the whole project. Run parts, run requests and joined boards count only when made from selected pieces alone.
+- Request: Ff Add the possibility to see the optimized cut-list and sheets and cuts image for current selection,ONLY if selection is multiple items.
+- Questions: Should Print, Hardware and Shopping follow the Selection switch too?
+- Suggested pick: Print follows it (the cut list and sheets you asked for, on paper); Hardware and Shopping stay whole-project (estimate: effort +15%, value +15%)
