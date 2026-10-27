@@ -76,7 +76,7 @@ const KIND_LABEL: Record<SpaceKind, string> = {
 /**
  * The piece editor (ADR-079). Compose edits the selected space (contents, doors, divide); `configure` edits the
  * whole piece (size, construction, boards, drawers), whatever is selected, and is shown in Settings (ADR-080),
- * where the dialog title is the h2 and the editor its h3 (ADR-115).
+ * where the dialog title is the h2 and the editor its h3 (ADR-116).
  */
 export function Inspector({ mode }: { mode: 'compose' | 'configure' }) {
   const design = useDesign((s) => s.design);

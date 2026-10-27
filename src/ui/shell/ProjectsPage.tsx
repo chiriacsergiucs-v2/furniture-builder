@@ -25,7 +25,7 @@ import { updatedText } from '../TemplateRevision';
 import { useUi } from './uiStore';
 import { useMediaQuery } from '../useMediaQuery';
 
-/** Where a saved row's three buttons fold into one menu (ADR-119). */
+/** Where a saved row's three buttons fold into one menu (ADR-120). */
 const NARROW = '(max-width: 520px)';
 
 const KIND_TEXT = {
@@ -160,7 +160,7 @@ export function ProjectsPage({
           </span>
           {r.id === currentId && <span className="chip">Open now</span>}
         </button>
-        {/* A small phone folds the three buttons into one ⋯ menu, so the name keeps its line (ADR-119). */}
+        {/* A small phone folds the three buttons into one ⋯ menu, so the name keeps its line (ADR-120). */}
         {narrow ? (
           <RowMenu
             name={r.name}
@@ -224,7 +224,7 @@ export function ProjectsPage({
             <Icon name="cube" />
             New single piece
           </button>
-          {/* Beside New (ADR-119); "Fill a wall" is in the New dialog only. */}
+          {/* Beside New (ADR-120); "Fill a wall" is in the New dialog only. */}
           <label className="btn outline lg file-btn">
             <Icon name="upload" />
             Import a file
@@ -263,7 +263,7 @@ export function ProjectsPage({
           <>
             {projects.length > 0 && (
               <>
-                {/* No "Projects" label here: the page title says it (ADR-115). */}
+                {/* No "Projects" label here: the page title says it (ADR-116). */}
                 <ul className="library" aria-label="Projects">
                   {projects.map((r) =>
                     row(
@@ -302,7 +302,7 @@ export function ProjectsPage({
 }
 
 /**
- * A saved row's Settings, Duplicate and Delete in one ⋯ menu on a small phone (ADR-119). Escape and a tap outside
+ * A saved row's Settings, Duplicate and Delete in one ⋯ menu on a small phone (ADR-120). Escape and a tap outside
  * close it, as in the More menu.
  */
 function RowMenu({

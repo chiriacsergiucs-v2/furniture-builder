@@ -50,7 +50,7 @@ for (const width of widths) {
       .evaluateAll((imgs) => imgs.filter((i) => i.complete && i.naturalWidth > 0).length);
 
   // 1. Bare app → Projects → New single piece → "Fill a wall" in the "Start something new" dialog, its one place
-  //    since ADR-119 (no longer on Projects itself).
+  //    since ADR-120 (no longer on Projects itself).
   await page.goto(url);
   await page.getByRole('heading', { name: 'Projects', level: 1 }).waitFor();
   check(

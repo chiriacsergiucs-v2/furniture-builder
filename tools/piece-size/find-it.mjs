@@ -2,7 +2,7 @@
 // against a production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/piece-size/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text: a single Sideboard (Compose panel;
-// since ADR-111 never the card over the drawing or over 3D), then a Sideboard from the catalog in a project (its Selected piece card, gone once a space inside is selected).
+// since ADR-112 never the card over the drawing or over 3D), then a Sideboard from the catalog in a project (its Selected piece card, gone once a space inside is selected).
 // Not part of `pnpm test`.
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
@@ -56,7 +56,7 @@ for (const width of [1280, 390]) {
   await front.getByRole('button', { name: /^3 drawers space/ }).click({ force: true });
   await page.waitForTimeout(300);
 
-  // 2. The card over the drawing has counts only (ADR-111); Width typed in the Compose panel changes the drawing.
+  // 2. The card over the drawing has counts only (ADR-112); Width typed in the Compose panel changes the drawing.
   check(
     width,
     'card over the drawing: no "Width" or "Depth"',
@@ -105,7 +105,7 @@ for (const width of [1280, 390]) {
   check(width, 'Undo: Depth back from 420', afterUndo !== '420', afterUndo);
   await sheet(false);
 
-  // 5. 3D: the card over the view (docked under it on a phone, G-070) has no Width or Depth (ADR-111).
+  // 5. 3D: the card over the view (docked under it on a phone, G-070) has no Width or Depth (ADR-112).
   await page.getByRole('radio', { name: /Build & Preview/ }).click();
   await page.locator('.view.three canvas').waitFor({ state: 'visible', timeout: 20000 });
   await page.waitForTimeout(1500);

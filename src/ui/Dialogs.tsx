@@ -36,7 +36,7 @@ export function Dialog({
   children: ReactNode;
   footer?: ReactNode;
   wide?: boolean;
-  /** An `InfoTip` beside the title (ADR-112); Esc while it is open closes only the tip. */
+  /** An `InfoTip` beside the title (ADR-113); Esc while it is open closes only the tip. */
   info?: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);

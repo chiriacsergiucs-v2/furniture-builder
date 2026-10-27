@@ -85,7 +85,7 @@
   --out: 400px;
   /* The phone's bottom bar: measured at run time (App.tsx); this is its height before the first measure. */
   --actions-h: 64px;
-  /* One control height (ADR-113): buttons, fields, segmented controls, steppers and tabs. The small one is for
+  /* One control height (ADR-114): buttons, fields, segmented controls, steppers and tabs. The small one is for
      toolbars and tables only. Both are 44 px on a touch screen. */
   --control-h: 38px;
   --control-h-sm: 30px;
@@ -204,7 +204,7 @@ button:disabled {
   outline: 2px solid var(--link);
   outline-offset: 2px;
 }
-/* One heading scale (ADR-115): h1 24, h2 20, h3 17, all 600; below h3 a section label (`.list-head`, `.card-title`:
+/* One heading scale (ADR-116): h1 24, h2 20, h3 17, all 600; below h3 a section label (`.list-head`, `.card-title`:
    13 px uppercase). One title per level on a screen: a dialog's title is its h2. */
 h1 {
   font-size: var(--fs-2xl);
@@ -268,7 +268,7 @@ output,
 
 /* 3. Buttons --------------------------------------------------------------- */
 /* .btn + one variant: primary (one per screen), outline, ghost, danger, link; size: sm; shape: icon. A label never
-   wraps: it ends in an ellipsis inside its box, and the full text shows in `title` (ADR-113, `cutTitle.ts`). */
+   wraps: it ends in an ellipsis inside its box, and the full text shows in `title` (ADR-114, `cutTitle.ts`). */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -356,7 +356,7 @@ output,
 .btn > .icon {
   flex: none;
 }
-/* `sm` is a smaller label; it takes the small height only in toolbars and tables (ADR-113). */
+/* `sm` is a smaller label; it takes the small height only in toolbars and tables (ADR-114). */
 .btn.sm {
   min-height: var(--control-h);
   padding: 0 var(--s-3);
@@ -484,7 +484,7 @@ output,
 .btn-row.end > .btn {
   flex: 0 0 auto;
 }
-/* Button rows are a 2-column equal grid; a single action fills its row (ADR-113). */
+/* Button rows are a 2-column equal grid; a single action fills its row (ADR-114). */
 .btn-row:not(.end),
 .split-actions,
 .arrange-actions,
@@ -664,7 +664,7 @@ select {
   padding: var(--s-1);
   gap: 0;
 }
-/* Its height is the control height (ADR-113): the option's min-height plus the 4 px inset and the border; the label
+/* Its height is the control height (ADR-114): the option's min-height plus the 4 px inset and the border; the label
    line stays inside that min-height. */
 .segmented button {
   flex: 1 1 auto;
@@ -1253,7 +1253,7 @@ td.note {
 .dialog-body {
   padding: var(--s-4) var(--s-5) var(--s-5);
   display: grid;
-  /* Rows keep their content height in this height-limited, scrolling grid (ADR-114). */
+  /* Rows keep their content height in this height-limited, scrolling grid (ADR-115). */
   grid-auto-rows: max-content;
   gap: var(--s-4);
   overflow: auto;
@@ -1349,7 +1349,7 @@ td.note {
   grid-template-rows: auto auto 1fr;
 }
 
-/* The top bar: this one rule, plus the phone rule in section 14 (sticky, narrower sides). It never wraps (ADR-115). */
+/* The top bar: this one rule, plus the phone rule in section 14 (sticky, narrower sides). It never wraps (ADR-116). */
 .bar {
   display: flex;
   flex-wrap: nowrap;
@@ -1402,7 +1402,7 @@ td.note {
   min-height: 36px;
   flex: 0 1 auto; /* gives way so the three page tabs and every action fit (ADR-043) */
 }
-/* A name too long for the field ends in an ellipsis instead of being cut mid-letter (ADR-119). */
+/* A name too long for the field ends in an ellipsis instead of being cut mid-letter (ADR-120). */
 .bar input.name {
   text-overflow: ellipsis;
 }
@@ -1844,7 +1844,7 @@ td.note {
   margin-bottom: calc(-1 * var(--s-1));
 }
 
-/* `.split-actions` and `.arrange-actions` (Duplicate, turn and mirror, ADR-069) are 2-column grids (ADR-113, section
+/* `.split-actions` and `.arrange-actions` (Duplicate, turn and mirror, ADR-069) are 2-column grids (ADR-114, section
    3 above). */
 .parts-sizes {
   list-style: none;
@@ -2937,7 +2937,7 @@ table.buy {
   /* Sticky over the page, so it takes the page's colour, not a white band. */
   background: var(--bg);
 }
-/* On a phone the app bar is sticky too: the filter row sits under it, never behind it (ADR-114). */
+/* On a phone the app bar is sticky too: the filter row sits under it, never behind it (ADR-115). */
 @media (max-width: 760px) {
   .catalog-page .catalog-toolbar {
     top: var(--bar-h, 50px);
@@ -3109,7 +3109,7 @@ table.buy {
     padding: var(--s-1) var(--s-2);
   }
 }
-/* The catalog (ADR-117 on a phone, ADR-118 at every width): source and grouping in one row that scrolls away, only
+/* The catalog (ADR-118 on a phone, ADR-119 at every width): source and grouping in one row that scrolls away, only
    the search row stays; family details behind "About this family"; compact item cards (96 px picture, name, one meta
    line) whose cut lines "More" shows in full, in place. */
 .catalog-switches {
@@ -3148,7 +3148,7 @@ table.buy {
 }
 .item.compact > .snap {
   grid-column: 1;
-  /* Name, summary, meta and the Romanian name (ADR-119). */
+  /* Name, summary, meta and the Romanian name (ADR-120). */
   grid-row: 1 / span 4;
   align-self: start;
   width: 96px;
@@ -3162,7 +3162,7 @@ table.buy {
   grid-row: 1;
   align-self: end;
 }
-/* The summary, and "More" / "Less" at its end when a line is cut (ADR-118). */
+/* The summary, and "More" / "Less" at its end when a line is cut (ADR-119). */
 .item.compact .summary-row {
   grid-column: 2;
   grid-row: 2;
@@ -3218,7 +3218,7 @@ table.buy {
   margin: 0;
   font-size: inherit;
 }
-/* "RO: …" on its own short line under the English text (ADR-119), so the card grows little. */
+/* "RO: …" on its own short line under the English text (ADR-120), so the card grows little. */
 .item.compact .ro-line {
   font-size: var(--fs-xs);
   line-height: 14px;
@@ -3246,7 +3246,7 @@ table.buy {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-/* "More": every line of the card wraps to its full text (ADR-118). */
+/* "More": every line of the card wraps to its full text (ADR-119). */
 .item.compact.open .summary-row {
   align-items: start;
 }
@@ -4256,7 +4256,7 @@ button.tile:hover {
   .wizard .steps .lbl {
     overflow: visible;
   }
-  /* The step's fields come first, the preview after them (ADR-117). */
+  /* The step's fields come first, the preview after them (ADR-118). */
   .wz-preview {
     position: static;
   }
@@ -4828,7 +4828,7 @@ button.tile:hover {
     z-index: auto;
   }
   /* Compose: the stage fills the free height between the toolbars and the nav; the selection editor is a sheet
-     laid over its lower part, a peek row when closed (ADR-111). The drawing keeps clear of the peek row, and opening
+     laid over its lower part, a peek row when closed (ADR-112). The drawing keeps clear of the peek row, and opening
      the sheet never resizes the stage or rescales the drawing. */
   .work.mode-compose .stage {
     height: calc(100dvh - var(--bar-h, 50px) - var(--modes-h, 52px) - var(--actions-h, 64px));
@@ -4852,7 +4852,7 @@ button.tile:hover {
     border-radius: var(--r-lg) var(--r-lg) 0 0;
     box-shadow: var(--shadow-3);
   }
-  /* The open sheet covers the stage's lower part; the stage keeps its size (ADR-111). */
+  /* The open sheet covers the stage's lower part; the stage keeps its size (ADR-112). */
   .work.mode-compose.sheet-open .side {
     max-height: 52dvh;
   }
@@ -5245,7 +5245,7 @@ button.tile:hover {
   display: inline-flex;
   vertical-align: middle;
 }
-/* A square ⓘ of the control height (ADR-113; 44 × 44 with touch, ADR-112). With a mouse it takes no more room in
+/* A square ⓘ of the control height (ADR-114; 44 × 44 with touch, ADR-113). With a mouse it takes no more room in
    its heading row than the small height. */
 .btn.icon.sm.info-btn,
 .btn.icon.info-btn {
@@ -5274,7 +5274,7 @@ button.tile:hover {
   white-space: normal;
   color: var(--ink);
 }
-/* ADR-112: beside a heading on the left the popover opens from the button's left edge; InfoTip moves either kind
+/* ADR-113: beside a heading on the left the popover opens from the button's left edge; InfoTip moves either kind
    back inside the screen. An open one sits above the floating count card and the sticky bars. */
 .info-pop.start {
   right: auto;
@@ -5369,7 +5369,7 @@ p > .info-tip {
   position: absolute;
   z-index: 2;
 }
-/* The compact card over the drawing (ADR-111): one row per count, short label then − N +, no heading. */
+/* The compact card over the drawing (ADR-112): one row per count, short label then − N +, no heading. */
 .count-stepper.compact {
   display: grid;
   gap: var(--s-1);
@@ -5499,7 +5499,7 @@ p > .info-tip {
   justify-content: space-between;
 }
 @media (max-width: 760px) {
-  /* The editor sheet covers at most 40 % of the screen over the stage, which keeps its size (ADR-111); the card
+  /* The editor sheet covers at most 40 % of the screen over the stage, which keeps its size (ADR-112); the card
      over the drawing steps aside, as the sheet already has the same counters. */
   .work.mode-compose.sheet-open .side {
     max-height: 40dvh;

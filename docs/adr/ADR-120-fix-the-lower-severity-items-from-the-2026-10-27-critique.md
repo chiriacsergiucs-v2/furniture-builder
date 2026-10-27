@@ -1,17 +1,17 @@
-# ADR-119: Fix the lower-severity items from the 2026-10-27 critique
+# ADR-120: Fix the lower-severity items from the 2026-10-27 critique
 
 - Status: Pending
 - Date: 2026-10-27
-- Depends on: ADR-113
+- Depends on: ADR-114
 - Design: docs/ui-design.md (sections 3 and 4)
-- Backlog: N118
+- Backlog: N119
 - Acceptance: light
-- Agreed: 2026-10-27 "accept gap picks" (G-139 "One follow-up ADR for all of them")
+- Agreed: 2026-10-27 "accept gap picks" (G-141 "One follow-up ADR for all of them")
 
 ## Context
 
-Critique: [2026-10-27 UI critique](../retros/2026-10-27-ui-critique.md). The lower-severity items were not picked to build first (G-139); the user, 2026-10-27, accepted G-139's pick: one
-follow-up ADR for all of them. The user accepted the nine fixes below "as written" (2026-10-27, G-145).
+Critique: [2026-10-27 UI critique](../retros/2026-10-27-ui-critique.md). The lower-severity items were not picked to build first (G-141); the user, 2026-10-27, accepted G-141's pick: one
+follow-up ADR for all of them. The user accepted the nine fixes below "as written" (2026-10-27, G-147).
 
 ## Decision
 
@@ -27,7 +27,7 @@ follow-up ADR for all of them. The user accepted the nine fixes below "as writte
 
 ## Alternatives considered
 
-- **Leave them** — not chosen (G-139 pick).
+- **Leave them** — not chosen (G-141 pick).
 
 ## Scope
 

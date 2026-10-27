@@ -1,10 +1,10 @@
-# ADR-116: Put the pieces list first and fold the selected piece's sections
+# ADR-117: Put the pieces list first and fold the selected piece's sections
 
 - Status: Pending
 - Date: 2026-10-27
 - Depends on: none
 - Design: docs/ui-design.md (section 4, project panel)
-- Backlog: N115
+- Backlog: N116
 - Agreed: 2026-10-27 "Selected piece card"
 
 ## Context

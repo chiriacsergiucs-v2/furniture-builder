@@ -604,7 +604,7 @@ function Wizard({
         >
           Back
         </button>
-        {/* No Cancel (ADR-117): the dialog's × closes the wizard. */}
+        {/* No Cancel (ADR-118): the dialog's × closes the wizard. */}
         <span className="wz-spacer" />
         {!isReview && (
           <button

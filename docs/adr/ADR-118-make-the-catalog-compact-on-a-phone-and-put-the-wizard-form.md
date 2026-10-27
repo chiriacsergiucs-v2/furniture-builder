@@ -1,10 +1,10 @@
-# ADR-117: Make the catalog compact on a phone and put the wizard form first
+# ADR-118: Make the catalog compact on a phone and put the wizard form first
 
 - Status: Pending
 - Date: 2026-10-27
 - Depends on: none
 - Design: docs/ui-design.md (section 4, catalog and wizard)
-- Backlog: N116
+- Backlog: N117
 - Acceptance: browser
 - Agreed: 2026-10-27 "Catalog density + wizard"
 
@@ -32,7 +32,7 @@ Cancel."
 ## Scope
 
 - In scope: the Catalog list layout and the wizard order and footer on a phone; a browser find-it script.
-- Out of scope: catalog data; the desktop catalog layout (G-138).
+- Out of scope: catalog data; the desktop catalog layout (G-140).
 
 ## Consequences
 

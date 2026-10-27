@@ -1,10 +1,10 @@
-# ADR-115: Use one heading scale and the spacing tokens everywhere
+# ADR-116: Use one heading scale and the spacing tokens everywhere
 
 - Status: Pending
 - Date: 2026-10-27
-- Depends on: ADR-113
+- Depends on: ADR-114
 - Design: docs/ui-design.md (section 2, tokens)
-- Backlog: N114
+- Backlog: N115
 - Acceptance: light
 - Agreed: 2026-10-27 "Heading + spacing scale"
 
@@ -30,7 +30,7 @@ tokens; `.bar` is defined five times. The user picked "Heading + spacing scale".
 ## Scope
 
 - In scope: `src/styles.css`, heading levels in `src/ui`, a browser find-it script.
-- Out of scope: text in SVG drawings and print sheets (G-137); low-severity critique items (G-139).
+- Out of scope: text in SVG drawings and print sheets (G-139); low-severity critique items (G-141).
 
 ## Consequences
 

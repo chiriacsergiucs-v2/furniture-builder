@@ -54,7 +54,7 @@ for (const width of [1280, 390]) {
   await mode('Compose').click();
 
   // 2. First tap selects the whole piece (ADR-083): the card shows the piece's dividers. A second tap on the drawer
-  //    bank selects it: the card lies inside the drawing, in a corner away from it (ADR-111).
+  //    bank selects it: the card lies inside the drawing, in a corner away from it (ADR-112).
   const bank = front.getByRole('button', { name: /^3 drawers space/ });
   await bank.click({ force: true });
   await page.waitForTimeout(250);
@@ -67,7 +67,7 @@ for (const width of [1280, 390]) {
   await page.waitForTimeout(250);
   const c = card(front);
   check(width, '"Quick counts" card in the drawing', await c.isVisible());
-  // Short visible labels over the drawing (ADR-111); the counts keep their full names.
+  // Short visible labels over the drawing (ADR-112); the counts keep their full names.
   for (const t of ['V. dividers', 'H. dividers', 'Drawers'])
     check(
       width,
@@ -83,7 +83,7 @@ for (const width of [1280, 390]) {
     sel.y + sel.height <= cb.y;
   check(
     width,
-    'card does not cover the selected space (ADR-111)',
+    'card does not cover the selected space (ADR-112)',
     apart,
     `card ${Math.round(cb.x)},${Math.round(cb.y)} ${Math.round(cb.width)}×${Math.round(cb.height)}, space ${Math.round(sel.x)},${Math.round(sel.y)}`,
   );

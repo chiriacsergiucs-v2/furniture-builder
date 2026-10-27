@@ -1,10 +1,10 @@
-# ADR-112: Move static intro text behind an info button
+# ADR-113: Move static intro text behind an info button
 
 - Status: Pending
 - Date: 2026-10-27
 - Depends on: none
 - Design: docs/ui-design.md (section 3, components: info button)
-- Backlog: N111
+- Backlog: N112
 - Agreed: 2026-10-27 "All static intros (Recommended)"
 
 ## Context
@@ -20,7 +20,7 @@ user chose "Move to ⓘ". This changes how ADR-010's labelled guidance is shown:
 
 - Reuse `InfoTip` (`src/ui/controls.tsx`, ADR-080: hover or focus with a mouse, tap with touch; a tap outside, a
   second tap or Esc closes it) beside a heading or label, accessible name "About <section>". Fixes: an `align="start"`
-  prop, a z-index above the count card, and Esc inside a `<dialog>` closes only the popover. G-136 asks whether
+  prop, a z-index above the count card, and Esc inside a `<dialog>` closes only the popover. G-138 asks whether
   ADR-080's behaviour stays.
 - Every static intro paragraph app-wide moves into an `InfoTip` on its heading; the inventory is made by the critique
   (file:line list in the implementing change).
@@ -36,7 +36,7 @@ user chose "Move to ⓘ". This changes how ADR-010's labelled guidance is shown:
 ## Scope
 
 - In scope: the component, moving every static intro, a jsdom find-it test.
-- Out of scope: rewording the texts. How the popover opens is G-136.
+- Out of scope: rewording the texts. How the popover opens is G-138.
 
 ## Consequences
 
@@ -55,4 +55,4 @@ user chose "Move to ⓘ". This changes how ADR-010's labelled guidance is shown:
 
 ## Open questions
 
-- Keep ADR-080's InfoTip behaviour (hover/focus with a mouse, tap with touch)? Used until answered. G-136.
+- Keep ADR-080's InfoTip behaviour (hover/focus with a mouse, tap with touch)? Used until answered. G-138.

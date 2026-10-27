@@ -278,7 +278,7 @@ for (const width of [390, 1280]) {
     ),
   );
   await shot('wizard');
-  // The wizard has no Cancel since ADR-117; the dialog's × closes it.
+  // The wizard has no Cancel since ADR-118; the dialog's × closes it.
   await dlg.getByRole('button', { name: 'Close', exact: true }).click();
   await dlg.waitFor({ state: 'detached' }).catch(() => {});
 

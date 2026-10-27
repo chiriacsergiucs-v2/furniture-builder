@@ -1,5 +1,5 @@
 /**
- * Button labels never wrap; a label too long for its box ends in an ellipsis (ADR-113). This gives such a button its
+ * Button labels never wrap; a label too long for its box ends in an ellipsis (ADR-114). This gives such a button its
  * full text in `title` when the pointer or the keyboard reaches it, and takes the title away again once the label
  * fits. Buttons with their own `title` are left alone; the accessible name never changes (it comes from the text).
  */

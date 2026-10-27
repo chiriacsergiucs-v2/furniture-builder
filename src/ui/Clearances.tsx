@@ -156,7 +156,7 @@ const SEVERITY_NAME: Record<ClearanceZone['severity'], string> = {
   error: 'error',
 };
 
-/** The Clearances toggle and legend, in the plan's own tool row ("Clear." on screen, ADR-111). */
+/** The Clearances toggle and legend, in the plan's own tool row ("Clear." on screen, ADR-112). */
 export function ZoneToolbar({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
   return (
     <>

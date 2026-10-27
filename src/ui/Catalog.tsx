@@ -132,7 +132,7 @@ export function groupFamilies(families: ViewFamily[], by: Grouping): Group[] {
 
 const itemCount = (g: Group) => g.items.reduce((n, i) => n + i.family.variants.length, 0);
 
-/** `short`: the phone catalog's one switches row (ADR-117) shows "Room" / "Type"; the names stay "By room" / "By type". */
+/** `short`: the phone catalog's one switches row (ADR-118) shows "Room" / "Type"; the names stay "By room" / "By type". */
 function GroupToggle({
   value,
   onChange,
@@ -271,7 +271,7 @@ export function StartFrom({
                         {f.name}: {v.name}
                       </strong>
                       <span className="sub">{v.summary}</span>
-                      {/* The Romanian name on its own line, not inside the English text (ADR-119). */}
+                      {/* The Romanian name on its own line, not inside the English text (ADR-120). */}
                       {VARIANT_RO[v.id] && (
                         <span className="sub ro-line" lang="ro">
                           RO: {f.nameRo}: {VARIANT_RO[v.id]}
@@ -319,7 +319,7 @@ export function CatalogPage({
 }: {
   onDone: () => void;
   onNewPiece?: () => void;
-  /** Whether a design or project is open, so "Back to the editor" has somewhere to go (ADR-119). */
+  /** Whether a design or project is open, so "Back to the editor" has somewhere to go (ADR-120). */
   designOpen?: boolean;
 }) {
   const families = useCatalog();
@@ -457,7 +457,7 @@ export function CatalogPage({
               New piece
             </button>
           )}
-          {/* Only when there is a design to go back to (ADR-119). */}
+          {/* Only when there is a design to go back to (ADR-120). */}
           {designOpen && (
             <button type="button" className="btn outline" onClick={onDone}>
               <Icon name="chevron-left" className="sm" />
@@ -466,7 +466,7 @@ export function CatalogPage({
           )}
         </div>
       </header>
-      {/* Source and grouping share one row that scrolls away; only the search row stays (ADR-117 on a phone, ADR-118
+      {/* Source and grouping share one row that scrolls away; only the search row stays (ADR-118 on a phone, ADR-119
           at every width). A phone shows the short labels. */}
       <div className="catalog-switches">
         {sources}
@@ -690,15 +690,15 @@ const factsLine = (fx: NonNullable<ReturnType<typeof itemFacts>>) =>
     fx.errors ? ` · ${fx.errors} problems` : fx.warnings ? ` · ${fx.warnings} to check` : ''
   }`;
 
-/** The lines of a compact item card that end in an ellipsis when they do not fit (ADR-117). */
+/** The lines of a compact item card that end in an ellipsis when they do not fit (ADR-118). */
 const CARD_LINES = '.item-name, .sub, .item-meta, .item-meta .num';
 /** Whether any of a card's lines is cut: its text is wider than its box. */
 const cardCut = (card: HTMLElement) =>
   [...card.querySelectorAll<HTMLElement>(CARD_LINES)].some((el) => el.scrollWidth > el.clientWidth);
 
 /**
- * One item (variant) as a compact card: picture, name and summary beside Open, then one meta line (ADR-117). When a
- * line is cut, "More" shows the card's full text in place and "Less" folds it again (ADR-118); it is measured, so it
+ * One item (variant) as a compact card: picture, name and summary beside Open, then one meta line (ADR-118). When a
+ * line is cut, "More" shows the card's full text in place and "Less" folds it again (ADR-119); it is measured, so it
  * shows only when something is cut, and measured again when the card changes size.
  */
 function ItemCard({
@@ -726,7 +726,7 @@ function ItemCard({
     if (!card || open) return;
     const measure = () => setCut(cardCut(card));
     measure();
-    // Text widths change once the web font has loaded, without the card changing size (ADR-119's RO line).
+    // Text widths change once the web font has loaded, without the card changing size (ADR-120's RO line).
     void document.fonts?.ready.then(measure);
     if (typeof ResizeObserver === 'undefined') return;
     const watch = new ResizeObserver(measure);
@@ -777,7 +777,7 @@ function ItemCard({
           </span>
           {facts && <span className="num">{factsLine(facts)}</span>}
         </span>
-        {/* The Romanian name on its own line, not inside the English summary (ADR-119). */}
+        {/* The Romanian name on its own line, not inside the English summary (ADR-120). */}
         {VARIANT_RO[v.id] && (
           <span className="sub ro-line" lang="ro">
             RO: {VARIANT_RO[v.id]}
@@ -807,7 +807,7 @@ function ItemCard({
 
 /**
  * One family, then every item (variant) as its own compact card. Its default structure, configurations, rooms and
- * other names wait behind "About this family" (ADR-117 on a phone, ADR-118 at every width).
+ * other names wait behind "About this family" (ADR-118 on a phone, ADR-119 at every width).
  */
 function FamilyBlock({
   f,

@@ -32,7 +32,7 @@ export function Output() {
   const errors = view.diagnostics.filter((d) => d.severity === 'error').length;
   const warnings = view.diagnostics.length - errors;
   const parts = view.rows.reduce((n, r) => n + r.quantity, 0);
-  // Short labels keep the five tabs in one row on a phone (ADR-113); `name` is the full accessible name.
+  // Short labels keep the five tabs in one row on a phone (ADR-114); `name` is the full accessible name.
   const tabs: { id: Tab; label: string; name?: string; badge?: number; kind?: string }[] = [
     { id: 'parts', label: 'Parts', badge: parts || undefined, kind: 'neutral' },
     { id: 'sheets', label: 'Sheets' },

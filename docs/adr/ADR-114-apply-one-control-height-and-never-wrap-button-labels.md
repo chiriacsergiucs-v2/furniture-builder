@@ -1,10 +1,10 @@
-# ADR-113: Apply one control height and never wrap button labels
+# ADR-114: Apply one control height and never wrap button labels
 
 - Status: Pending
 - Date: 2026-10-27
 - Depends on: none
 - Design: docs/ui-design.md (section 2, tokens; section 3, buttons)
-- Backlog: N112
+- Backlog: N113
 - Acceptance: browser
 - Agreed: 2026-10-27 "App-wide rule (Recommended)"
 

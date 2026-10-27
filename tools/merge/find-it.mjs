@@ -18,7 +18,7 @@ for (const width of [1440, 375]) {
   const phone = width < 500;
   const ctx = await browser.newContext({ viewport: { width, height: phone ? 812 : 900 } });
   const page = await ctx.newPage();
-  // ADR-116: the selected piece's Position, Clearance, Finish and Merge are folded groups: open one by its title
+  // ADR-117: the selected piece's Position, Clearance, Finish and Merge are folded groups: open one by its title
   // (when it is on screen; a phone's closed sheet hides the whole card, which is read as before).
   const openGroup = async (title) => {
     const s = page
@@ -69,7 +69,7 @@ for (const width of [1440, 375]) {
   await pieces.nth(0).getByRole('button').click();
   check(
     width,
-    '"Merge" group in the selected piece (folded since ADR-116)',
+    '"Merge" group in the selected piece (folded since ADR-117)',
     await page.locator('details.group > summary', { hasText: /^Merge$/ }).isVisible(),
   );
   await openGroup('Merge');
