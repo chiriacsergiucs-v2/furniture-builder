@@ -14,7 +14,16 @@ import type {
   Space,
 } from '../core/types';
 import { useDesign } from '../store/designStore';
-import { Counter, Group, MmField, Segmented, Select, Toggle } from './controls';
+import {
+  Counter,
+  Group,
+  GuidanceTip,
+  InfoTip,
+  MmField,
+  Segmented,
+  Select,
+  Toggle,
+} from './controls';
 import { Icon } from './icons';
 
 const matOptions = (materials: Material[], filter?: (m: Material) => boolean) =>
@@ -79,6 +88,12 @@ export function FrontEditor({
             min={2}
             max={4}
             onChange={(v) => set({ ...f, count: v as 2 | 3 | 4 })}
+            info={
+              <GuidanceTip topic="sliding doors">
+                Doors run in two planes in front of the carcass. Check track, rollers and door sizes
+                with the sliding system's datasheet.
+              </GuidanceTip>
+            }
           />
           <div className="dims2">
             <MmField
@@ -98,10 +113,6 @@ export function FrontEditor({
               onChange={(v) => set({ ...f, track: v })}
             />
           </div>
-          <p className="hint">
-            Doors run in two planes in front of the carcass. Check track, rollers and door sizes
-            with the sliding system's datasheet.
-          </p>
         </>
       )}
       {f?.kind === 'flap' && (
@@ -116,7 +127,12 @@ export function FrontEditor({
             onChange={(v) => set({ ...f, direction: v })}
           />
           <div className="field">
-            <label htmlFor={`fit-${space.id}`}>Fitting you chose</label>
+            <div className="label-row">
+              <label htmlFor={`fit-${space.id}`}>Fitting you chose</label>
+              <GuidanceTip topic="flap fitting">
+                Choose it by front weight and height; a check stays until it is named.
+              </GuidanceTip>
+            </div>
             <input
               id={`fit-${space.id}`}
               defaultValue={f.fitting ?? ''}
@@ -131,9 +147,6 @@ export function FrontEditor({
                 );
               }}
             />
-            <p className="hint">
-              Choose it by front weight and height; a check stays until it is named.
-            </p>
           </div>
         </>
       )}
@@ -195,6 +208,12 @@ export function ApplianceEditor({
             value={a.kind}
             options={APPLIANCES.map((k) => ({ value: k, label: k[0].toUpperCase() + k.slice(1) }))}
             onChange={(k) => set({ ...a, kind: k })}
+            info={
+              <GuidanceTip topic="appliance sizes">
+                Type every size from the appliance's installation drawing; Mobila has no appliance
+                sizes of its own.
+              </GuidanceTip>
+            }
           />
           <div className="dims3">
             <MmField
@@ -219,10 +238,6 @@ export function ApplianceEditor({
               onChange={(v) => set({ ...a, d: v })}
             />
           </div>
-          <p className="hint">
-            Type every size from the appliance's installation drawing; Mobila has no appliance sizes
-            of its own.
-          </p>
         </>
       )}
     </>
@@ -240,7 +255,12 @@ export function LayoutPicker({
   const presets = useMemo(() => layoutPresets(catalogFamilies), []);
   return (
     <div className="field">
-      <label htmlFor={`preset-${space.id}`}>Apply a layout from the catalog</label>
+      <div className="label-row">
+        <label htmlFor={`preset-${space.id}`}>Apply a layout from the catalog</label>
+        <InfoTip label="About applying a layout" align="start">
+          Replaces what is inside this space; the outer size stays. Undo brings it back.
+        </InfoTip>
+      </div>
       <select
         id={`preset-${space.id}`}
         value=""
@@ -256,9 +276,6 @@ export function LayoutPicker({
           </option>
         ))}
       </select>
-      <p className="hint">
-        Replaces what is inside this space; the outer size stays. Undo brings it back.
-      </p>
     </div>
   );
 }
@@ -319,10 +336,17 @@ export function ChecksGroup() {
   const set = (patch: Partial<RuleSettings>) =>
     updateMeta({ settings: { ...settings, rules: { ...rules, ...patch } } });
   return (
-    <Group title="Checks" id="g-checks" defaultOpen={false}>
-      <p className="hint">
-        Typical values that raise warnings, never errors. Confirm them for your boards and hardware.
-      </p>
+    <Group
+      title="Checks"
+      id="g-checks"
+      defaultOpen={false}
+      info={
+        <GuidanceTip topic="checks" align="end">
+          Typical values that raise warnings, never errors. Confirm them for your boards and
+          hardware.
+        </GuidanceTip>
+      }
+    >
       <div className="dims2">
         <MmField
           label="Longest shelf (18 mm board)"
@@ -370,8 +394,16 @@ export function PanelEditor({ p, materials }: { p: PanelParams; materials: Mater
   return (
     <div className="inspector">
       <header className="insp-head">
-        <h2>{PURPOSE[p.purpose]}</h2>
-        <p className="hint">A front with no carcass behind it (ADR-036).</p>
+        <div className="info-row">
+          <h3>{PURPOSE[p.purpose]}</h3>
+          <InfoTip label="About this panel" align="start">
+            A front with no carcass behind it.
+          </InfoTip>
+          <GuidanceTip topic="fitting the panel">
+            Line it up with the neighbouring fronts; the fixing kit and its positions come from the
+            appliance's installation drawing.
+          </GuidanceTip>
+        </div>
       </header>
       <PieceInfo />
       <Select<PanelParams['purpose']>
@@ -419,10 +451,6 @@ export function PanelEditor({ p, materials }: { p: PanelParams; materials: Mater
           }
         />
       )}
-      <p className="hint">
-        Line it up with the neighbouring fronts; the fixing kit and its positions come from the
-        appliance's installation drawing.
-      </p>
       <ChecksGroup />
     </div>
   );
@@ -460,10 +488,13 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
   return (
     <div className="inspector">
       <header className="insp-head">
-        <h2>{b && b.tierGap > 0 ? 'Bunk bed' : FRAME_LABEL[p.kind]}</h2>
-        <p className="hint">
-          Legs, rails and slats are solid timber listed by length; tops and boards come from sheets.
-        </p>
+        <div className="info-row">
+          <h3>{b && b.tierGap > 0 ? 'Bunk bed' : FRAME_LABEL[p.kind]}</h3>
+          <InfoTip label="About this frame" align="start">
+            Legs, rails and slats are solid timber listed by length; tops and boards come from
+            sheets.
+          </InfoTip>
+        </div>
       </header>
       <PieceInfo />
       {b ? (
@@ -486,6 +517,11 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
           </div>
           <Select
             label="Mattress size"
+            info={
+              <GuidanceTip topic="mattress sizes">
+                Typical sizes; check the mattress you buy.
+              </GuidanceTip>
+            }
             value={`${b.mattress.w}x${b.mattress.l}`}
             onChange={(v) => {
               const [w, l] = v.split('x').map(Number);
@@ -501,7 +537,6 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
               ),
             ]}
           />
-          <p className="hint">Typical sizes; check the mattress you buy.</p>
           <div className="dims2">
             <MmField
               label="Clearance each side"
@@ -639,7 +674,7 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
                       max={25}
                       step={1}
                       onChange={(v) => set({ back: { ...p.back!, angleDeg: v } })}
-                      hint="Leans back from upright (ADR-040); 8° is typical"
+                      hint="Leans back from upright; 8° is typical"
                     />
                   )}
                 </div>

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { InfoTip } from './controls';
 import { Icon } from './icons';
 import { AddPieceList } from './Project';
 import { endPieceDrag, pieceDragActive, usePieceList } from './pieceDrag';
@@ -42,7 +43,12 @@ export function PieceList({
       }}
     >
       <header>
-        <h2>Add a piece</h2>
+        <div className="info-row">
+          <h2>Add a piece</h2>
+          <InfoTip label="About adding a piece" align="start">
+            Drag an item onto the plan (on a phone, hold it first), or tap it and then tap the plan.
+          </InfoTip>
+        </div>
         <button
           type="button"
           className="btn icon ghost sm close"
@@ -53,9 +59,6 @@ export function PieceList({
         </button>
       </header>
       <div className="piece-list-body">
-        <p className="hint">
-          Drag an item onto the plan (on a phone, hold it first), or tap it and then tap the plan.
-        </p>
         <AddPieceList onDone={() => setOpen(false)} onBrowse={onBrowse} onWizard={onWizard} drag />
       </div>
     </dialog>

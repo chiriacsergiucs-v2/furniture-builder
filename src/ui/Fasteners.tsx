@@ -14,7 +14,7 @@ import {
 } from '../core/fasteners';
 import { deleteFastener, listFasteners, saveFastener } from '../persist/db';
 import { useDesign } from '../store/designStore';
-import { Group } from './controls';
+import { GuidanceTip, Group, InfoTip } from './controls';
 import { Icon } from './icons';
 
 /**
@@ -100,12 +100,18 @@ export function FastenersPanel() {
   const counts = useFastenerCounts();
   const byJoint = useMemo(() => new Map(counts.map((c) => [c.joint, c.count])), [counts]);
   return (
-    <Group title="Fasteners" id="g-fasteners" defaultOpen={false}>
-      <p className="hint">
-        Name what you fix each joint type with and how many per joint. The app counts the joints
-        from the model as guidance; it never chooses a screw, dowel, length or spacing. Your list is
-        saved on this device and used for every piece and project.
-      </p>
+    <Group
+      title="Fasteners"
+      id="g-fasteners"
+      defaultOpen={false}
+      info={
+        <InfoTip label="About fasteners">
+          Name what you fix each joint type with and how many per joint. The app counts the joints
+          from the model as guidance; it never chooses a screw, dowel, length or spacing. Your list
+          is saved on this device and used for every piece and project.
+        </InfoTip>
+      }
+    >
       {error && (
         <p className="alert error" role="alert">
           <Icon name="alert-circle" className="sm" />
@@ -209,11 +215,13 @@ export function FastenerCounts() {
   if (!shown.length) return null;
   return (
     <section className="fastener-counts" aria-label="Fasteners">
-      <h3 className="list-head">Fasteners — guidance</h3>
-      <p className="hint">
-        {GUIDANCE}. The fastener and how many per joint are yours: set them under Settings ›
-        Fasteners.
-      </p>
+      <div className="info-row">
+        <h3 className="list-head">Fasteners — guidance</h3>
+        <GuidanceTip topic="fastener counts">
+          {GUIDANCE}. The fastener and how many per joint are yours: set them under Settings ›
+          Fasteners.
+        </GuidanceTip>
+      </div>
       <table className="cut">
         <thead>
           <tr>

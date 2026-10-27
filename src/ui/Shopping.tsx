@@ -22,6 +22,7 @@ import {
 import { listPrices, savePrice, savePrices } from '../persist/db';
 import { useDesign } from '../store/designStore';
 import { useFastenerChoices, useFastenerCounts } from './Fasteners';
+import { GuidanceTip, InfoTip } from './controls';
 import { Icon } from './icons';
 import { useNesting } from './useNesting';
 import { useView } from './useView';
@@ -141,21 +142,26 @@ export function ShoppingList() {
           </span>
         </p>
       )}
-      <p className="estimate" role="status">
-        <strong>
-          Estimate: {formatMoney(est.total)} {currency}
-        </strong>
-        {est.missing.length ? (
-          <span className="warn">
-            {' '}
-            — {est.missing.length} {est.missing.length === 1 ? 'price' : 'prices'} missing
-            (incomplete)
-          </span>
-        ) : est.priced ? (
-          <span> — every line priced</span>
-        ) : null}
-        <span className="hint"> · your prices, saved on this device</span>
-      </p>
+      <div className="info-row">
+        <p className="estimate" role="status">
+          <strong>
+            Estimate: {formatMoney(est.total)} {currency}
+          </strong>
+          {est.missing.length ? (
+            <span className="warn">
+              {' '}
+              — {est.missing.length} {est.missing.length === 1 ? 'price' : 'prices'} missing
+              (incomplete)
+            </span>
+          ) : est.priced ? (
+            <span> — every line priced</span>
+          ) : null}
+        </p>
+        <InfoTip label="About the estimate">Your prices, saved on this device.</InfoTip>
+        <GuidanceTip topic="what is not counted" align="end">
+          {NOT_COUNTED}
+        </GuidanceTip>
+      </div>
       <div className="split-actions">
         <button
           type="button"
@@ -265,7 +271,6 @@ export function ShoppingList() {
           </section>
         );
       })}
-      <p className="hint">{NOT_COUNTED}</p>
     </div>
   );
 }
