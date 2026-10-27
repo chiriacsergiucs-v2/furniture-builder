@@ -1,8 +1,8 @@
 // Find-it acceptance for changing a whole piece's width and depth where it is selected (ADR-106, backlog N104), run
 // against a production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/piece-size/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
-// Starts from the bare app at each width and finds everything by visible text: a single Sideboard (Compose panel,
-// the card over the drawing and over 3D), then a Sideboard from the catalog in a project (its Selected piece card, gone once a space inside is selected).
+// Starts from the bare app at each width and finds everything by visible text: a single Sideboard (Compose panel;
+// none on the card over the drawing or 3D, N110), then a Sideboard from the catalog in a project (its Selected piece card, gone once a space inside is selected).
 // Not part of `pnpm test`.
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
@@ -56,34 +56,32 @@ for (const width of [1280, 390]) {
   await front.getByRole('button', { name: /^3 drawers space/ }).click({ force: true });
   await page.waitForTimeout(300);
 
-  // 2. The card over the drawing holds Width and Depth; a typed width changes the drawing's width dimension.
-  const onDrawing = size(card(front));
+  // 2. The card over the drawing has no Width or Depth (user 2026-10-27, N110: only in the editor panel).
   check(
     width,
-    'card over the drawing: "Width" and "Depth" for the whole piece',
-    (await onDrawing.getByLabel('Width', { exact: true }).isVisible()) &&
-      (await onDrawing.getByLabel('Depth', { exact: true }).isVisible()),
-  );
-  await type(onDrawing.getByLabel('Width', { exact: true }), 1500);
-  check(
-    width,
-    'typing Width 1500 in the card: the drawing says 1500',
-    await front
-      .locator('svg text', { hasText: /^1500$/ })
-      .first()
-      .isVisible(),
+    'card over the drawing: no "Width" or "Depth"',
+    (await size(card(front)).count()) === 0,
   );
   await shot('card-drawing');
 
-  // 3. Compose panel: the same fields; Depth 420 shows in both.
+  // 3. Compose panel: Width and Depth; Width 1500 shows in the drawing, Depth 420 is kept.
   await sheet(true);
   const panel = page.locator('.compose-start');
   const inPanel = size(panel);
   check(
     width,
-    'Compose panel, whole piece: "Width" 1500 and "Depth"',
-    (await inPanel.getByLabel('Width', { exact: true }).inputValue()) === '1500' &&
+    'Compose panel, whole piece: "Width" and "Depth"',
+    (await inPanel.getByLabel('Width', { exact: true }).isVisible()) &&
       (await inPanel.getByLabel('Depth', { exact: true }).isVisible()),
+  );
+  await type(inPanel.getByLabel('Width', { exact: true }), 1500);
+  check(
+    width,
+    'typing Width 1500 in the panel: the drawing says 1500',
+    await front
+      .locator('svg text', { hasText: /^1500$/ })
+      .first()
+      .isVisible(),
   );
   await type(inPanel.getByLabel('Depth', { exact: true }), 420);
   check(
@@ -103,20 +101,12 @@ for (const width of [1280, 390]) {
   check(width, 'Undo: Depth back from 420', afterUndo !== '420', afterUndo);
   await sheet(false);
 
-  // 5. 3D: the card over the view (docked under it on a phone, G-070) has Width and Depth too.
+  // 5. 3D: the card over the view (docked under it on a phone, G-070) has no Width or Depth either.
   await page.getByRole('radio', { name: /Build & Preview/ }).click();
   await page.locator('.view.three canvas').waitFor({ state: 'visible', timeout: 20000 });
   await page.waitForTimeout(1500);
   const dock3 = phone ? page.locator('#count-dock') : page.locator('.view.three');
-  const in3d = size(card(dock3));
-  check(
-    width,
-    'card over 3D: "Width" 1500 for the whole piece',
-    (await in3d
-      .getByLabel('Width', { exact: true })
-      .inputValue()
-      .catch(() => '')) === '1500',
-  );
+  check(width, 'card over 3D: no "Width" or "Depth"', (await size(card(dock3)).count()) === 0);
   await shot('card-3d');
 
   // 6. Bare app → a new project → Add a piece → Sideboard from the catalog; its Selected piece card has the fields.

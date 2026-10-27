@@ -130,7 +130,7 @@ for (const width of [1280, 390]) {
   };
   await at(0.03, 0.97);
   check(width, '3D: a tap on empty space clears the card', !(await card(dock3).isVisible()));
-  // Three taps at one spot. The card's heading names what it acts on (G-069); on a phone it docks under the 3D view
+  // Three taps at one spot. The card has no heading (N110, was G-069); on a phone it docks under the 3D view
   // instead of covering it (G-070), so the spot stays in sight.
   const heading = async () => {
     const t = card(dock3).locator('.cs-title');
@@ -152,8 +152,8 @@ for (const width of [1280, 390]) {
   );
   check(
     width,
-    'the card is headed with what it acts on',
-    headings.join(' → ') === 'Whole cabinet → Shelves → Whole cabinet',
+    'the card has no heading, only counts (user 2026-10-27, N110)',
+    headings.join('') === '',
     headings.join(' → '),
   );
   if (phone) {
@@ -166,14 +166,14 @@ for (const width of [1280, 390]) {
       `canvas bottom ${Math.round(cv.y + cv.height)}, card top ${Math.round(cd.y)}`,
     );
   }
-  // Realistic (G-064): the same selection, the same heading.
+  // Realistic (G-064): the same selection; the card has counts and no heading (N110).
   await viewOption('Realistic');
   await page.waitForTimeout(1500);
   await at(0.62, 0.6);
   check(
     width,
-    'Realistic: a tap selects the bay, the card says "Shelves"',
-    (await said()) === 'Shelves' && (await heading()) === 'Shelves',
+    'Realistic: a tap selects the bay, the card shows its counts',
+    (await said()) === 'Shelves' && (await heading()) === '' && (await card(dock3).isVisible()),
     `${await said()} / ${await heading()}`,
   );
   await shot('3d-realistic');

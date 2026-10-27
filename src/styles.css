@@ -5075,10 +5075,6 @@ button.tile:hover {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.count-stepper .cs-size {
-  flex-basis: 100%;
-  min-width: min(100%, 15rem);
-}
 .cs-row {
   display: grid;
   gap: 2px;
@@ -5291,7 +5287,6 @@ button.tile:hover {
     background: var(--surface-2);
   }
   .count-stepper.folded .cs-row,
-  .count-stepper.folded .cs-size,
   .count-stepper.folded .cs-title {
     display: none;
   }
@@ -5317,27 +5312,6 @@ button.tile:hover {
   }
   .count-stepper.foldable .cs-fold {
     min-height: 29px;
-  }
-  .count-stepper .field {
-    gap: 2px;
-  }
-  .count-stepper .field > label {
-    font-size: 0.6875rem;
-  }
-  .count-stepper .mm {
-    grid-template-columns: 29px 1fr auto 29px;
-    min-height: 25px;
-  }
-  .count-stepper .mm .step {
-    min-height: 29px;
-    font-size: 0.75rem;
-  }
-  .count-stepper .mm input {
-    padding: 3px 0 3px 2px;
-    font-size: 0.75rem;
-  }
-  .count-stepper .mm .unit {
-    font-size: 0.6875rem;
   }
 }
 /* On a phone the catalog's own actions fold under one button (G-059). */

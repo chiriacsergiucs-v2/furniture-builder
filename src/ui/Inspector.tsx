@@ -124,7 +124,7 @@ export function InsideEditor() {
         Selected: {WHOLE[prod.kind]}. Tap the piece again to pick a space inside it; each tap goes
         one level smaller.
       </p>
-      <CountStepper />
+      <CountStepper titled />
     </>
   );
 }

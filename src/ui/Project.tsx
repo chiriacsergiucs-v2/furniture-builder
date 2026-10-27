@@ -1796,7 +1796,6 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
         <CountStepper
           ref={cardRef}
           className="floating"
-          withSize
           style={pos ? { left: pos.left, top: pos.top } : { visibility: 'hidden' }}
         />
       )}

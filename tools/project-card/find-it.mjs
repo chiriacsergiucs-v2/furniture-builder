@@ -93,7 +93,8 @@ for (const width of [1280, 390]) {
   await page.waitForTimeout(300);
   await shot('row');
 
-  // 3. One tap on the piece in the front view: the card floats over the drawing with Width and Depth.
+  // 3. One tap on the piece in the front view: the card floats over the drawing with counts only — no Width,
+  // Depth or heading (user 2026-10-27, N110).
   const piece = front.getByRole('button', { name: /^Sideboard, \d+ wide/ });
   const tapPiece = async (fx = 0.5, fy = 0.5) => {
     const b = await piece.boundingBox();
@@ -103,26 +104,15 @@ for (const width of [1280, 390]) {
   await tapPiece();
   check(
     width,
-    '1st tap: the card over the drawing has "Width" and "Depth"',
-    (await size.getByLabel('Width', { exact: true }).isVisible()) &&
-      (await size.getByLabel('Depth', { exact: true }).isVisible()) &&
+    '1st tap: the card over the drawing has counts, no "Width", "Depth" or heading',
+    (await card.getByRole('button', { name: /^More / }).count()) > 0 &&
+      (await size.count()) === 0 &&
+      (await card.locator('.cs-title').count()) === 0 &&
       (await inView(card)),
-  );
-  const w0 = Number(await size.getByLabel('Width', { exact: true }).inputValue());
-  const field = size.getByLabel('Width', { exact: true });
-  await field.fill(String(w0 + 200));
-  await field.press('Enter');
-  await page.waitForTimeout(400);
-  check(
-    width,
-    'typing Width +200 in the card resizes the piece',
-    (await front
-      .getByRole('button', { name: new RegExp(`^Sideboard, ${w0 + 200} wide`) })
-      .count()) === 1,
   );
   await shot('card');
 
-  // 4. A further tap selects a space inside: the card keeps its counts and drops Width and Depth.
+  // 4. A further tap selects a space inside: the card keeps its counts.
   await tapPiece(0.5, 0.5);
   check(
     width,
@@ -131,14 +121,6 @@ for (const width of [1280, 390]) {
   );
   await shot('inside');
 
-  // 5. Undo takes the width back in one step.
-  await page.getByRole('button', { name: 'Undo' }).first().click();
-  await page.waitForTimeout(400);
-  check(
-    width,
-    'Undo: the piece is its old width again',
-    (await front.getByRole('button', { name: new RegExp(`^Sideboard, ${w0} wide`) }).count()) === 1,
-  );
   check(width, 'no sideways scroll', await noSideScroll());
   check(width, 'no page errors', errors.length === 0, errors.join(' | '));
   await ctx.close();
