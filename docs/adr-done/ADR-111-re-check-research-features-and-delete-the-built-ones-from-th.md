@@ -1,7 +1,8 @@
 # ADR-111: Re-check research features and delete the built ones from the data
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-27
+- Implemented: 2026-10-27
 - Depends on: ADR-043, ADR-092, ADR-110
 - Design: n/a
 - Acceptance: browser
