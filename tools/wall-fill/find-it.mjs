@@ -168,12 +168,13 @@ for (const width of widths) {
   const wallSeg = dlg.getByRole('radiogroup', { name: 'Wall cabinets' });
   check(
     width,
-    '"Wall cabinets" choice is found, Any on',
+    '"Wall cabinets" choice is found, Always on',
     await wallSeg
-      .getByRole('radio', { name: 'Any' })
+      .getByRole('radio', { name: 'Always' })
       .isChecked()
       .catch(() => false),
   );
+  await wallSeg.getByRole('radio', { name: 'Any' }).click();
   await dlg.getByRole('button', { name: 'Suggest again' }).click();
   await cards.first().waitFor();
   const wallLines = () => cards.locator('.wf-wall').allInnerTexts();

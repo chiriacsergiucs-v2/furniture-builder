@@ -1096,7 +1096,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-115: Fill a wall: when the wall row appears
 
-- Status: ADR-104
+- Status: Done (ADR-104)
 - Origin: ADR-104, 2026-10-27; open question defaulted by Claude
 - Missing: Whether every mix gets a wall row, or a Refine choice decides (any / always / never).
 - Request: Wall cabinets above (answer to: Which kinds of pieces may appear in a mix?)
@@ -1201,3 +1201,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: New adr to add the possibility to save a new piece to catalog when created it inside a project
 - Questions: Should a selected group of pieces be savable as one catalog item?
 - Suggested pick: One piece at a time, as asked (0 % extra work).
+
+### G-127: Fill a wall: the over-hood cabinet is not placed over a hood
+
+- Status: Open
+- Origin: ADR-104, 2026-10-27, review nit
+- Missing: The over-hood wall variant (no bottom) is dealt into the wall row at any position; nothing ties it to a hood or hob below.
+- Request: Yes, every catalog wall variant
+- Questions: Should the over-hood cabinet appear only above a hob or hood, or stay anywhere in the row?
+- Suggested pick: Anywhere, as answered ('every catalog wall variant', 0 % extra work).

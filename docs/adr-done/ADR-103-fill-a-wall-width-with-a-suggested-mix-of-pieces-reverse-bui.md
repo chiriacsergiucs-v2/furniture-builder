@@ -21,7 +21,7 @@ width input, suggest further optimised mixes)."
 
 Nothing goes from a wall to several pieces today: the New-piece wizard (ADR-044) builds one piece; projects
 (ADR-022) hold placed pieces; rules (ADR-035) hold the shelf-span guidance; catalog pictures are SVG snapshots
-(ADR-042). Wall cabinets above are [ADR-104](../adr/ADR-104-add-a-row-of-wall-cabinets-to-the-fill-a-wall-mixes.md).
+(ADR-042). Wall cabinets above are [ADR-104](../adr-done/ADR-104-add-a-row-of-wall-cabinets-to-the-fill-a-wall-mixes.md).
 
 Requirement ledger (R1): (1) a mix of pieces fills the width; (2) the wizard asks width, depth, height; (3) tall
 items above that height are allowed with a warning; (4) piece widths stay in a range [x, y], no sagging shelves;

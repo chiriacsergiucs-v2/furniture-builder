@@ -64,7 +64,7 @@ const START: Form = {
   drawers: '',
   door: '',
   equalFronts: '',
-  wallRow: 'any',
+  wallRow: 'always',
   wallHeight: String(WALL_HEIGHT),
 };
 

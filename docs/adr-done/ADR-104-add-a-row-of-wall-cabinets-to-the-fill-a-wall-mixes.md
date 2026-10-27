@@ -1,11 +1,12 @@
 # ADR-104: Add a row of wall cabinets to the fill-a-wall mixes
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-27
+- Implemented: 2026-10-27
 - Depends on: ADR-103
 - Design: docs/ui-design.md (section 4, screens; wizard and catalog cards)
 - Backlog: N102
-- Agreed: 2026-10-27 "Wall cabinets above", "Second ADR right after (Recommended)", "Own mix, same total width", "Up to the entered height", "The whole wall width", "Catalog height, Refine field", "Door over shelves, Open shelves, Lift-up flap, Any", "Top box sized to the gap", "Yes, every catalog wall variant", "Full find-it test (Recommended)", "Refine choice, default any (Recommended)"
+- Agreed: 2026-10-27 "Wall cabinets above", "Second ADR right after (Recommended)", "Own mix, same total width", "Up to the entered height", "The whole wall width", "Catalog height, Refine field", "Door over shelves, Open shelves, Lift-up flap, Any", "Top box sized to the gap", "Yes, every catalog wall variant", "Full find-it test (Recommended)", "Refine choice, default any (Recommended)"; later answer, which wins: "Refine choice, default always"
 
 ## Context
 
@@ -20,8 +21,9 @@ a top box fills the gap up to the entered height; (5) any catalog wall-cabinet v
 
 ## Decision
 
-- **Wall row:** Refine gets **Wall cabinets: any / always / never** (default any, the user's answer; G-115) and
+- **Wall row:** Refine gets **Wall cabinets: any / always / never** (default always, the user's later answer; G-115) and
   **Wall cabinet height** (catalog default). With any, the first 4 cards show mixes with and without a wall row.
+  A gap over a tall cabinet too thin for a top box to build is left open, and the Suggestions step says so.
 - **Widths:** the wall row is its own mix (not aligned with the base joints), with the same rules as ADR-103: any
   whole mm in [min, max], one width per stretch, exact split (ADR-003). It covers the whole wall width; over a tall
   cabinet only where a top box fits. Wall cabinets keep the catalog depth (G-123).
