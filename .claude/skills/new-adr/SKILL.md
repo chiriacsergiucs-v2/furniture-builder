@@ -66,8 +66,15 @@ Everything written to the repo is in **English**, whatever language the conversa
    - Status stays `Pending`. If open questions block building, set
      `- Status: Deferred (<reason>)` in the file **and** in the README row.
 8. **Run** `pnpm docs:check`.
-9. **Hand over.** Show the user the open questions. Suggest a branch named `adr-NNN-slug`
-   and a pull request. Do not commit or push unless the user asks.
+9. **Hand over and ask for approval.** Show the user the ADR summary and its open questions,
+   and ask whether to build it now (user rule 2026-10-27, `CLAUDE.md`):
+   - **Approved** (explicitly, with open questions answered or accepted) → continue with the
+     `next-adr` skill on **this ADR** (not the lowest-numbered one), on the same branch, in the
+     same pull request. No separate pull request for the ADR file. Its dependencies must still be
+     implemented; if one is not, say so and stop.
+   - **Not approved** → suggest a branch named `adr-NNN-slug` and a pull request. Do not commit
+     or push unless the user asks.
+     Never treat silence or a recommended default as approval.
 
 ## Notes
 

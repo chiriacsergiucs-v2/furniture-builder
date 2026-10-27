@@ -40,6 +40,10 @@ amendments) and have no `Done when` list; their evidence is in `docs/backlog.md`
 5. `ship ADR-NNN` — the `ship-adr` skill marks it Implemented, moves it to
    `docs/adr-done/`, fixes links and sets the status below.
 
+Steps 1–3 can run together: `new-adr` asks the user to approve the new ADR, and on explicit
+approval `next-adr` builds that ADR at once, in the same branch and pull request (user rule
+2026-10-27).
+
 ## Index
 
 The **last column is the status**: the `ship-adr` skill rewrites it to

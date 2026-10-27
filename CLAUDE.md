@@ -84,6 +84,11 @@ Lifecycle, one skill per step:
 2. `next ADR` — pick and implement the next ready ADR (`next-adr` skill)
 3. `ship ADR-NNN` — mark it implemented, move it, fix links (`ship-adr` skill)
 
+New and next together (user rule 2026-10-27): after `new-adr` writes an ADR, show it with its open questions and
+ask the user to approve it. Only on explicit approval (and answered or accepted open questions) build that same
+ADR straight away with `next-adr`, on the same branch and in the same pull request. No approval, no build; the
+ADR stays `Pending` for a later `next ADR`.
+
 ## Engineering conventions (hard rules)
 
 - Do not read, write or migrate the previous app or its data (`mobila-cutlist-build-kit`) (ADR-001).
@@ -152,7 +157,8 @@ Lifecycle, one skill per step:
 ## Git
 
 - Only modify `chiriacsergiucs-v2/furniture-builder`.
-- Branch per ADR: `adr-NNN-short-title`; open a pull request for review.
+- Branch per ADR: `adr-NNN-short-title`; open a pull request for review. An ADR created and approved for building
+  in the same run (new and next together, above) shares one branch and one pull request with its implementation.
 - Merge to `main` only on the user's instruction; then cite the `Deploy GitHub Pages` run id. Never force-push
   `main`.
 - Ship commit message: `Ship ADR-NNN: <short title> — mark implemented`.
