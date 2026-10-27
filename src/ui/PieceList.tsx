@@ -5,7 +5,13 @@ import { AddPieceList } from './Project';
 import { endPieceDrag, pieceDragActive, usePieceList } from './pieceDrag';
 
 /** The list panel or sheet; rendered only while open. */
-export function PieceList({ onBrowse }: { onBrowse?: () => void }) {
+export function PieceList({
+  onBrowse,
+  onWizard,
+}: {
+  onBrowse?: () => void;
+  onWizard?: () => void;
+}) {
   const open = usePieceList((s) => s.open);
   const dragging = usePieceList((s) => !!s.drag);
   const setOpen = usePieceList((s) => s.setOpen);
@@ -53,7 +59,7 @@ export function PieceList({ onBrowse }: { onBrowse?: () => void }) {
         </button>
       </header>
       <div className="piece-list-body">
-        <AddPieceList onDone={() => setOpen(false)} onBrowse={onBrowse} drag />
+        <AddPieceList onDone={() => setOpen(false)} onBrowse={onBrowse} onWizard={onWizard} drag />
       </div>
     </dialog>
   );

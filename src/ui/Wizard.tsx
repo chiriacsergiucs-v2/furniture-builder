@@ -381,27 +381,49 @@ function Suggestions({
   );
 }
 
-/** `from`: a piece made in the wizard, reopened with its stored answers; "Update piece" replaces it in place (ADR-046). */
+/**
+ * `from`: a piece made in the wizard, reopened with its stored answers; "Update piece" replaces it in place (ADR-046).
+ * `toProject`: started from a project's Add a piece; "Add to project" saves the piece and adds it to the open project,
+ * which stays open (ADR-107).
+ */
 export function WizardDialog({
   open,
   onClose,
   onCreated,
   from,
+  toProject,
 }: {
   open: boolean;
   onClose: () => void;
   onCreated: () => void;
   from?: Design | null;
+  toProject?: boolean;
 }) {
   return (
     <Dialog open={open} onClose={onClose} title={from ? `Wizard: ${from.name}` : 'New piece'} wide>
-      {open && <Wizard key={from?.id ?? 'new'} onCreated={onCreated} from={from ?? null} />}
+      {open && (
+        <Wizard
+          key={from?.id ?? 'new'}
+          onCreated={onCreated}
+          from={from ?? null}
+          toProject={!!toProject && !from}
+        />
+      )}
     </Dialog>
   );
 }
 
-function Wizard({ onCreated, from }: { onCreated: () => void; from: Design | null }) {
+function Wizard({
+  onCreated,
+  from,
+  toProject,
+}: {
+  onCreated: () => void;
+  from: Design | null;
+  toProject: boolean;
+}) {
   const load = useDesign((s) => s.load);
+  const addPiece = useDesign((s) => s.addPiece);
   const [a, setA] = useState<Answers>(() => (from && storedAnswers(from)) || {});
   const [stepId, setStepId] = useState<string>(TYPE);
   const [done, setDone] = useState<Set<string>>(
@@ -452,7 +474,8 @@ function Wizard({ onCreated, from }: { onCreated: () => void; from: Design | nul
     if (!res.ok) return;
     try {
       await saveDesign(res.design);
-      load(res.design);
+      if (toProject) addPiece(res.design, res.design.id);
+      else load(res.design);
       onCreated();
     } catch {
       setSaveError('The piece could not be saved in this browser’s storage.');
@@ -616,7 +639,7 @@ function Wizard({ onCreated, from }: { onCreated: () => void; from: Design | nul
             onClick={() => void create()}
           >
             <Icon name="plus" className="sm" />
-            {from ? 'Update piece' : 'Create piece'}
+            {from ? 'Update piece' : toProject ? 'Add to project' : 'Create piece'}
           </button>
         )}
       </div>

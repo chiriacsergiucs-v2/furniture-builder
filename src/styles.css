@@ -3630,19 +3630,6 @@ button.tile:hover {
   height: 100%;
   background: var(--primary);
 }
-.bulk-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--s-2);
-  align-items: center;
-  padding: var(--s-2) var(--s-3);
-  border: 1px solid var(--accent);
-  background: var(--accent-soft);
-  border-radius: var(--r);
-  position: sticky;
-  top: 0;
-  z-index: 3;
-}
 .table-wrap {
   overflow-x: auto;
   max-width: 100%;
@@ -3800,19 +3787,6 @@ button.tile:hover {
   margin-left: var(--s-1);
   color: var(--link);
 }
-.pill {
-  border: 1px solid var(--line);
-  background: var(--surface);
-  border-radius: var(--r-pill);
-  padding: var(--s-1) var(--s-2);
-  font-size: var(--fs-sm);
-  color: var(--link);
-}
-.pill.on {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: var(--on-primary);
-}
 .checks {
   list-style: none;
   margin: 0;
@@ -3832,36 +3806,6 @@ button.tile:hover {
 .checks li.bad .icon {
   color: var(--error);
 }
-.coverage-table .ids,
-.citations .url {
-  display: block;
-  overflow-wrap: anywhere;
-  font-size: var(--fs-xs);
-}
-.citations .url {
-  color: var(--link);
-}
-.compare-table th[scope='row'] {
-  white-space: nowrap;
-  color: var(--ink-2);
-  font-weight: 500;
-}
-.compare-table td,
-.compare-table th {
-  vertical-align: top;
-  text-align: left;
-  min-width: 180px;
-}
-.research-page .file-btn {
-  position: relative;
-  overflow: hidden;
-}
-.research-page .file-btn input {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  cursor: pointer;
-}
 @media (max-width: 1100px) {
   .overview-cols {
     grid-template-columns: 1fr 1fr;
@@ -3879,36 +3823,28 @@ button.tile:hover {
     margin-top: var(--s-1);
   }
   /* Phones: each feature row becomes a card; labels come from data-label. */
-  .features-table thead,
-  .coverage-table thead {
+  .features-table thead {
     display: none;
   }
   .features-table,
   .features-table tbody,
   .features-table tr,
-  .features-table td,
-  .coverage-table,
-  .coverage-table tbody,
-  .coverage-table tr,
-  .coverage-table td {
+  .features-table td {
     display: block;
     width: 100%;
   }
-  .features-table tr,
-  .coverage-table tr {
+  .features-table tr {
     border: 1px solid var(--line-2);
     border-radius: var(--r);
     padding: var(--s-2) var(--s-3);
     margin-bottom: var(--s-2);
     background: var(--surface);
   }
-  .features-table td,
-  .coverage-table td {
+  .features-table td {
     border: 0;
     padding: var(--s-1) 0;
   }
-  .features-table td[data-label]:not([data-label=''])::before,
-  .coverage-table td[data-label]::before {
+  .features-table td[data-label]:not([data-label=''])::before {
     content: attr(data-label);
     display: block;
     font-size: var(--fs-xs);

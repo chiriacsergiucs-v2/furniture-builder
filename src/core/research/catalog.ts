@@ -482,29 +482,6 @@ export function buildView(stored: StoredBundle[]): CatalogView {
   return view;
 }
 
-// ── Import planning ─────────────────────────────────────────────────────────────────────────────────────────────
-
-export type ImportStatus =
-  'invalid' | 'new-document' | 'new-version' | 'unchanged' | 'conflict' | 'older-version';
-export interface ImportPlan {
-  status: ImportStatus;
-  /** Store it (new document, new version, or an older edition kept as history). */
-  store: boolean;
-  errors: string[];
-  docId: string;
-  version: number;
-  added: string[];
-  changed: string[];
-  /** Features of the previous edition missing from this one: kept, shown as retired. */
-  retired: string[];
-  /** Features of this paper that already exist from another paper: evidence is added, fields are kept. */
-  mergedEvidence: string[];
-  /** Different id, same name as a feature already in the catalog: offer to merge, never automatic. */
-  possibleDuplicates: [string, string][];
-  /** User decisions on this paper's features; never changed by an import. */
-  decisionsKept: number;
-}
-
 /** JSON with sorted keys, so two copies of the same content compare equal whatever their key order. */
 export function canonical(v: unknown): string {
   if (Array.isArray(v)) return `[${v.map(canonical).join(',')}]`;
@@ -516,105 +493,6 @@ export function canonical(v: unknown): string {
       .join(',')}}`;
   return JSON.stringify(v);
 }
-const normName = (s: string) =>
-  s
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim();
-
-/** What importing `incoming` would do, given what is stored and the user's decisions. Nothing is written here. */
-export function planImport(
-  stored: StoredBundle[],
-  incoming: unknown,
-  marks: Record<string, ResearchMark> = {},
-): ImportPlan {
-  const errors = validateBundle(incoming);
-  const b = incoming as ResearchBundle;
-  const base: ImportPlan = {
-    status: 'invalid',
-    store: false,
-    errors,
-    docId: b?.document?.id ?? '',
-    version: b?.document?.version ?? 0,
-    added: [],
-    changed: [],
-    retired: [],
-    mergedEvidence: [],
-    possibleDuplicates: [],
-    decisionsKept: 0,
-  };
-  if (errors.length) return base;
-  const same = stored.filter((s) => s.docId === b.document.id);
-  const others = stored.filter((s) => s.docId !== b.document.id);
-  const exact = same.find((s) => s.version === b.document.version);
-  if (exact) {
-    const equal = canonical(exact.bundle) === canonical(b);
-    return {
-      ...base,
-      status: equal ? 'unchanged' : 'conflict',
-      errors: equal
-        ? []
-        : [
-            `Version ${b.document.version} of “${b.document.title}” is already stored with different content. Raise the version number to import the new edition.`,
-          ],
-    };
-  }
-  // Ids that must be unique across papers (findings and sections are evidence of one paper only).
-  const otherView = buildView(others);
-  const clash = b.findings
-    .filter((f) => otherView.findings.has(f.id))
-    .map((f) => f.id)
-    .concat(
-      b.sections.filter((s) => otherView.sections.some((x) => x.id === s.id)).map((s) => s.id),
-    );
-  if (clash.length)
-    return {
-      ...base,
-      errors: [
-        `These ids already belong to another paper: ${clash.slice(0, 8).join(', ')}${clash.length > 8 ? ' …' : ''}.`,
-      ],
-    };
-  const newest = same.reduce<StoredBundle | undefined>(
-    (a, s) => (!a || s.version > a.version ? s : a),
-    undefined,
-  );
-  const status: ImportStatus = !newest
-    ? 'new-document'
-    : b.document.version > newest.version
-      ? 'new-version'
-      : 'older-version';
-  const prev = new Map((newest?.bundle.features ?? []).map((f) => [f.id, f]));
-  const next = new Set(b.features.map((f) => f.id));
-  const added: string[] = [],
-    changed: string[] = [];
-  for (const f of b.features) {
-    const p = prev.get(f.id);
-    if (!p) added.push(f.id);
-    else if (canonical(p) !== canonical(f)) changed.push(f.id);
-  }
-  const retired = status === 'new-version' ? [...prev.keys()].filter((id) => !next.has(id)) : [];
-  const mergedEvidence = b.features.filter((f) => otherView.features.has(f.id)).map((f) => f.id);
-  const names = new Map([...otherView.features.values()].map((f) => [normName(f.name), f.id]));
-  const possibleDuplicates = b.features.flatMap((f) => {
-    const hit = names.get(normName(f.name));
-    return hit && hit !== f.id ? [[f.id, hit] as [string, string]] : [];
-  });
-  const decisionsKept = [...new Set([...b.features.map((f) => f.id), ...prev.keys()])].filter(
-    (id) => marks[id],
-  ).length;
-  return {
-    ...base,
-    status,
-    store: true,
-    added: status === 'new-document' ? b.features.map((f) => f.id) : added,
-    changed,
-    retired,
-    mergedEvidence,
-    possibleDuplicates,
-    decisionsKept,
-  };
-}
-
 // ── Coverage audit ──────────────────────────────────────────────────────────────────────────────────────────────
 
 export interface SectionCoverage {
@@ -882,27 +760,6 @@ export function validateMark(x: unknown): string[] {
   if (m.implementationSetAt !== undefined && !isStr(m.implementationSetAt))
     e.push(`${m.id}: bad implementation date.`);
   return e;
-}
-
-/** Decisions from a file join the device's; when both have one for the same record, the device's is kept. */
-export function mergeMarks(
-  local: Record<string, ResearchMark>,
-  incoming: unknown[],
-): { add: ResearchMark[]; kept: number; invalid: number } {
-  const add: ResearchMark[] = [];
-  let kept = 0,
-    invalid = 0;
-  for (const m of incoming) {
-    if (validateMark(m).length) {
-      invalid++;
-      continue;
-    }
-    const mk = m as ResearchMark;
-    const cur = local[mk.id];
-    if (!cur) add.push(mk);
-    else if (canonical(cur) !== canonical(mk)) kept++;
-  }
-  return { add, kept, invalid };
 }
 
 // ── Catalog projection ──────────────────────────────────────────────────────────────────────────────────────────
@@ -1195,7 +1052,6 @@ export interface CatalogStats {
   citations: number;
   sources: number;
   contradictions: number;
-  coverage: { doc: string; title: string; covered: number; total: number; complete: boolean }[];
 }
 
 export function stats(view: CatalogView, marks: Record<string, ResearchMark>): CatalogStats {
@@ -1236,157 +1092,7 @@ export function stats(view: CatalogView, marks: Record<string, ResearchMark>): C
     citations: view.citations.size,
     sources: view.bibliography.length,
     contradictions: view.contradictions.length,
-    coverage: view.documents.map((d) => {
-      const r = coverage(d.latest);
-      const total = r.sections.reduce((n, s) => n + s.total, 0);
-      return {
-        doc: d.doc.id,
-        title: d.doc.title,
-        covered: r.coveredLines,
-        total,
-        complete: r.sections.every((s) => s.status === 'complete') && r.checks.every((c) => c.ok),
-      };
-    }),
   };
-}
-
-// ── Specification export ────────────────────────────────────────────────────────────────────────────────────────
-
-const bullet = (items: string[], none = '_not evaluated_') =>
-  items.length ? items.map((s) => `- ${s}`).join('\n') : none;
-
-/** Markdown specification of chosen features for a later development session. Selection only; nothing is built. */
-export function specMarkdown(
-  view: CatalogView,
-  marks: Record<string, ResearchMark>,
-  ids: string[],
-  generatedAt: string,
-): string {
-  const name = (id: string) => view.features.get(id)?.name ?? id;
-  const out: string[] = [
-    '# Selected features — specification for a future development session',
-    '',
-    `Generated ${generatedAt} from the Feature Research & Catalog page. ${ids.length} feature(s).`,
-    '',
-    '> Selection is a planning decision only. None of these features has been started because it was selected; implementation is a separate, explicitly approved step.',
-    '',
-    `Sources: ${view.documents.map((d) => `${d.doc.title} (v${d.doc.version}, ${d.doc.date}${d.doc.file ? `, \`${d.doc.file}\`` : ''})`).join('; ')}.`,
-  ];
-  for (const id of ids) {
-    const f = view.features.get(id);
-    if (!f) continue;
-    const m = markOf(marks, id);
-    const cat = view.categories.find((c) => c.id === f.category)?.label ?? f.category;
-    out.push(
-      '',
-      `## ${f.name}`,
-      '',
-      `\`${f.id}\` · ${cat} › ${f.subcategory}${f.parent ? ` · part of ${name(f.parent)}` : ''} · ${f.origin === 'inferred' ? '**Inferred opportunity (not a research conclusion)**' : 'Named in the research'}${f.retired ? ' · retired in the latest paper edition' : ''}`,
-      '',
-    );
-    const r = (d: RatingDim) => {
-      const x = rating(f, d);
-      return x.source === 'assessment' ? `${x.value} (assessed)` : x.value;
-    };
-    out.push(
-      `| Your decision | Implementation | Your priority | Research priority | Value | Complexity | Demand | Appreciation | Competitor adoption | Confidence |`,
-      '|---|---|---|---|---|---|---|---|---|---|',
-      `| ${m.selection} | ${implementationOf(f, marks)} | ${m.priority || '—'} | ${r('priority')} | ${r('impact')} | ${r('complexity')} | ${r('demand')} | ${r('appreciation')} | ${r('adoption')} | ${r('confidence')} |`,
-      '',
-    );
-    if (f.assessment)
-      out.push(
-        `> **Assessment, not research:** the paper does not rate this feature. Scores (1–5) with the paper's method — ${ASSESSMENT_CRITERIA.map(([k, label]) => `${label} ${f.assessment!.scores[k]}`).join(', ')} → value ${assessedValue(f.assessment)}. ${f.assessment.rationale} Research priority ${r('priority')}: ${f.assessment.priorityBasis} Appreciation ${r('appreciation')}: ${f.assessment.appreciationBasis} (${f.assessment.by}, ${f.assessment.date})`,
-        '',
-      );
-    out.push(f.description, '');
-    out.push(`**User problem:** ${f.userProblem}`, '', `**User benefit:** ${f.userBenefit}`, '');
-    if (f.mvp) out.push(`**MVP acceptance criterion (research):** ${f.mvp}`, '');
-    out.push(
-      '**Functional requirements**',
-      '',
-      bullet(f.requirements),
-      '',
-      '**Use cases**',
-      '',
-      bullet(f.useCases),
-      '',
-      '**Workflow**',
-      '',
-      bullet(f.workflow),
-      '',
-      '**Technical considerations**',
-      '',
-      bullet(f.technical),
-      '',
-    );
-    out.push(
-      '**Sub-features**',
-      '',
-      bullet(
-        descendants(view, id).map((c) => `${c.name} (\`${c.id}\`)`),
-        '_none_',
-      ),
-      '',
-    );
-    out.push(
-      '**Dependencies**',
-      '',
-      bullet(
-        f.dependencies.map((d) => `${name(d)} (\`${d}\`)`),
-        '_none listed_',
-      ),
-      '',
-      '**Related**',
-      '',
-      bullet(
-        union(f.related, m.links).map((d) => `${name(d)} (\`${d}\`)`),
-        '_none listed_',
-      ),
-      '',
-    );
-    out.push(
-      '**Competitors**',
-      '',
-      bullet(
-        f.competitors.map((c) => view.competitors.get(c)?.name ?? c),
-        '_none listed_',
-      ),
-      '',
-    );
-    const contra = view.contradictions.filter((c) => c.features.includes(id));
-    if (contra.length)
-      out.push(
-        '**Contradictions and conflicts**',
-        '',
-        bullet(
-          contra.map(
-            (c) =>
-              `${c.title} (${c.basis === 'app' ? 'research vs this app' : c.basis === 'inferred' ? 'inferred tension' : 'stated in the paper'}): ${c.description}`,
-          ),
-        ),
-        '',
-      );
-    if (f.appNotes?.length)
-      out.push(
-        '**This app today (repository observation, not research)**',
-        '',
-        bullet(f.appNotes),
-        '',
-      );
-    out.push('**Research evidence**', '');
-    for (const n of union(f.findings, f.inferredFrom ?? [])) {
-      const fd = view.findings.get(n);
-      if (!fd) continue;
-      const doc = view.documents.find((d) => d.doc.id === fd.doc)?.doc;
-      const urls = fd.allRefs.flatMap((r) => view.citations.get(`${fd.doc}#${r}`)?.urls ?? []);
-      out.push(
-        `- \`${fd.id}\` (${fd.kind}${fd.polarity ? `, ${fd.polarity}` : ''}) — ${fd.statement} _[${doc?.file ?? fd.doc}, lines ${fd.lines[0]}–${fd.lines[1]}]_${urls.length ? `\n  - Sources: ${[...new Set(urls)].join(' · ')}` : ''}`,
-      );
-    }
-    if (m.notes.trim()) out.push('', '**Your notes**', '', m.notes.trim());
-  }
-  return out.join('\n') + '\n';
 }
 
 /** First band of the effective research priority ("P0/P1" → P0, "P1 internal" → P1); '' when none. */

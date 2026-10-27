@@ -90,6 +90,7 @@ import {
 } from './ProblemBanner';
 import { useProblem } from './problemStore';
 import { ReplaceButton } from './Replace';
+import { SavedToCatalog, SaveToCatalog } from './SaveToCatalog';
 import { NewerTemplates, TemplateNotice } from './TemplateRevision';
 import { GroupList, SelectionCard } from './Selection';
 
@@ -135,6 +136,8 @@ export function ProjectPanel({
     text: null,
   });
   const [libMsg, setLibMsg] = useState<string | null>(null);
+  /** The piece just saved to the catalog (ADR-107): its card shows the confirmation. */
+  const [savedId, setSavedId] = useState<string | null>(null);
   const [pieceSettings, setPieceSettings] = useState(false);
   const [moveRight, setMoveRight] = useState(true);
   const item = project.items.find((i) => i.id === selectedId);
@@ -278,6 +281,7 @@ export function ProjectPanel({
               Edit this piece
             </button>
             <ReplaceButton key={item.id} item={item} />
+            <SaveToCatalog item={item} onSaved={() => setSavedId(item.id)} />
             {item.libraryId && (
               <button type="button" className="btn outline" onClick={updateFromLibrary}>
                 Update from saved piece
@@ -304,6 +308,7 @@ export function ProjectPanel({
               {libMsg}
             </p>
           )}
+          {savedId === item.id && <SavedToCatalog />}
           {drillId === item.id && (
             <section className="inside-piece" aria-label="Inside this piece">
               <div className="card-title">
@@ -1849,10 +1854,13 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
 export function AddPieceList({
   onDone,
   onBrowse,
+  onWizard,
   drag,
 }: {
   onDone: () => void;
   onBrowse?: () => void;
+  /** "New piece, step by step": the wizard, adding its piece to this project (ADR-107). */
+  onWizard?: () => void;
   /** Items can also be dragged onto the plan (ADR-094: the piece list beside the plan). */
   drag?: boolean;
 }) {
@@ -1871,6 +1879,27 @@ export function AddPieceList({
   }, []);
   return (
     <>
+      {onWizard && (
+        <button
+          type="button"
+          className="row-btn"
+          onClick={() => {
+            onDone();
+            onWizard();
+          }}
+        >
+          <span className="glyph">
+            <Icon name="plus" />
+          </span>
+          <span>
+            <strong>New piece, step by step</strong>
+            <span className="sub">
+              The wizard; the piece is saved on this device and added to this project.
+            </span>
+          </span>
+          <Icon name="chevron-right" className="chev sm" />
+        </button>
+      )}
       <StartFrom
         onPick={(d) => {
           if (add(d)) onDone();

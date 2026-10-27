@@ -1,11 +1,12 @@
 # ADR-107: Save a project piece to the catalog, and make new pieces inside a project
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-27
+- Implemented: 2026-10-27
 - Depends on: ADR-034, ADR-044, ADR-088, ADR-096
 - Design: docs/ui-design.md (project editor, selected-piece card; dialogs)
 - Backlog: N105
-- Agreed: 2026-10-27 "New adr to add the possibility to save a new piece to catalog when created it inside a project"; answers "Catalog template"; "Any piece, plus wizard"; "Linked"; "Full find-it"; "Name, room and type"; "Added to the project"
+- Agreed: 2026-10-27 "New adr to add the possibility to save a new piece to catalog when created it inside a project"; answers "Catalog template"; "Any piece, plus wizard"; "Linked"; "Full find-it"; "Name, room and type"; "Added to the project"; dialog pre-fill "Keep pre-fill, confirm it" (2026-10-27)
 
 ## Context
 
@@ -18,7 +19,8 @@ project's _Add a piece_, and its _Create piece_ replaces the open design.
 
 Answers: save as a **catalog template** (a local family, ADR-034); **any** project piece can be saved, and the wizard
 is added to _Add a piece_; the piece stays **linked** to the new template; the dialog asks **name, room and type**;
-a wizard piece is **added to the project**; **full find-it** acceptance.
+a wizard piece is **added to the project**; **full find-it** acceptance. The dialog pre-fill below (name from the piece; room and type from its
+template, else "other" / "storage") was confirmed by the user on 2026-10-27.
 
 No change to `src/core/types.ts`: the link uses the existing `CatalogMeta.origin` (ADR-028), and templates use the
 existing Dexie `templates` table (ADR-034). No `schemaVersion` bump.
@@ -64,14 +66,14 @@ existing Dexie `templates` table (ADR-034). No `schemaVersion` bump.
 
 ## Done when
 
-- [ ] `templateFromDesign` with name, room and type gives a family with those values whose only variant deep-equals
+- [x] `templateFromDesign` with name, room and type gives a family with those values whose only variant deep-equals
       the piece's design without `catalog` (test).
-- [ ] Saving a project piece stores one template and sets that item's `origin` to it with revision 1; undo removes
+- [x] Saving a project piece stores one template and sets that item's `origin` to it with revision 1; undo removes
       the link and keeps the template; the other items are unchanged (store test).
-- [ ] Wizard in project mode adds one item to the open project, saves the design, and keeps the project (test).
-- [ ] Find-it from the bare app at 1440 and 390 px: open a project, select a piece, "Save to catalog", type a name,
+- [x] Wizard in project mode adds one item to the open project, saves the design, and keeps the project (test).
+- [x] Find-it from the bare app at 1440 and 390 px: open a project, select a piece, "Save to catalog", type a name,
       pick a room, "Save", see "Saved to the catalog", then Catalog › Templates lists the name.
-- [ ] Find-it: in a project, "Add a piece" › "New piece, step by step" › "Add to project"; the project lists one more
+- [x] Find-it: in a project, "Add a piece" › "New piece, step by step" › "Add to project"; the project lists one more
       piece; no horizontal scroll at 390 px.
 
 ## Open questions

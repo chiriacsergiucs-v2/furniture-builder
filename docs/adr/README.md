@@ -14,6 +14,8 @@ Pages, no backend (ADR-002, ADR-013).
 - **Template:** copy [`_template.md`](_template.md), or run the `new-adr` skill.
 - **Status:** `Pending` (agreed, waiting for implementation), `Deferred (<reason>)`,
   or `Implemented`. Never set `Implemented` by hand; the `ship-adr` skill does it.
+- **Recommendations are suggestions.** A recommended option is never applied until the user
+  picks it; an unanswered open question blocks building what it affects.
 - **An ADR is agreed by the user.** Defaults the user has not confirmed stay listed under
   _Open questions_ in the ADR; an ADR whose open questions block building is `Deferred`.
 - **Authority:** explicit user decision › implemented ADR › code and tests › earlier discussion › proposal.
@@ -39,6 +41,10 @@ amendments) and have no `Done when` list; their evidence is in `docs/backlog.md`
 4. Review, merge (only on the user's instruction) and deploy.
 5. `ship ADR-NNN` — the `ship-adr` skill marks it Implemented, moves it to
    `docs/adr-done/`, fixes links and sets the status below.
+
+Steps 1–3 can run together: `new-adr` asks the user to approve the new ADR, and on explicit
+approval `next-adr` builds that ADR at once, in the same branch and pull request (user rule
+2026-10-27).
 
 ## Index
 
@@ -157,9 +163,10 @@ The **last column is the status**: the `ship-adr` skill rewrites it to
 | [ADR-104](../adr-done/ADR-104-add-a-row-of-wall-cabinets-to-the-fill-a-wall-mixes.md)           | Add a row of wall cabinets to the fill-a-wall mixes                                                                     | ADR-103                                     | ✅ Implemented                                                                                      |
 | [ADR-105](../adr-done/ADR-105-doubled-top-two-body-panels-glued-as-the-cabinet-top.md)          | Doubled top: two body panels glued as the cabinet top                                                                   | ADR-036                                     | ✅ Implemented                                                                                      |
 | [ADR-106](../adr-done/ADR-106-change-a-whole-piece-s-width-and-depth-where-it-is-selected.md)   | Change a whole piece's width and depth where it is selected                                                             | ADR-083, ADR-085, ADR-088                   | ✅ Implemented                                                                                      |
-| [ADR-107](ADR-107-save-a-project-piece-to-the-catalog-and-make-new-pieces-insi.md)              | Save a project piece to the catalog, and make new pieces inside a project                                               | ADR-034, ADR-044, ADR-088, ADR-096          | Pending                                                                                             |
+| [ADR-107](../adr-done/ADR-107-save-a-project-piece-to-the-catalog-and-make-new-pieces-insi.md)  | Save a project piece to the catalog, and make new pieces inside a project                                               | ADR-034, ADR-044, ADR-088, ADR-096          | ✅ Implemented                                                                                      |
 | [ADR-108](../adr-done/ADR-108-run-find-it-acceptance-in-vitest-and-jsdom-by-default-keep-t.md)  | Run find-it acceptance in Vitest and jsdom by default; keep the browser script as a flag                                | ADR-015, ADR-066                            | ✅ Implemented                                                                                      |
 | [ADR-109](ADR-109-show-the-quick-count-card-over-the-project-drawing-and-put-d.md)              | Show the quick-count card over the project drawing and put Doors and fronts beside Snap                                 | ADR-106                                     | Pending                                                                                             |
+| [ADR-110](../adr-done/ADR-110-trim-the-research-page-to-features-and-competitors.md)            | Trim the research page to Features and Competitors                                                                      | ADR-043, ADR-092                            | ✅ Implemented                                                                                      |
 | [ADR-111](ADR-111-keep-the-drawing-its-full-size-and-show-a-compact-count-card.md)              | Keep the drawing its full size and show a compact count card inside it                                                  | ADR-109                                     | Pending                                                                                             |
 | [ADR-112](ADR-112-move-static-intro-text-behind-an-info-button.md)                              | Move static intro text behind an info button                                                                            | —                                           | Pending                                                                                             |
 | [ADR-113](ADR-113-apply-one-control-height-and-never-wrap-button-labels.md)                     | Apply one control height and never wrap button labels                                                                   | ADR-111                                     | Pending                                                                                             |

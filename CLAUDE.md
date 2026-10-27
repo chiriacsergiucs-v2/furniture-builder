@@ -74,6 +74,9 @@ implement it. Read `docs/adr/README.md` for the conventions and the index.
 - An ADR is agreed by the user. Unconfirmed defaults stay under _Open questions_ in the ADR.
 - Never auto-accept a recommended or default option. Treat it as accepted only when the user says so explicitly
   (e.g. "accept defaults", "proceed with the recommended"); otherwise ask (user rule 2026-10-25).
+- A recommended option is only a suggestion (user rule 2026-10-27). Never apply it by default: do not write it
+  into the Decision, code, tests or data, and do not build with it, until the user picks it. An unanswered open
+  question blocks building the part it affects; ask.
 - Implemented ADRs are not edited; a changed decision gets a new ADR that links the old one.
 - Check `docs/adr/` and `docs/adr-done/` before proposing an alternative to a settled choice.
 - Authority: explicit user decision › implemented ADR › code and tests › earlier discussion › proposal.
@@ -83,6 +86,11 @@ Lifecycle, one skill per step:
 1. `new ADR` — create and register an ADR (`new-adr` skill)
 2. `next ADR` — pick and implement the next ready ADR (`next-adr` skill)
 3. `ship ADR-NNN` — mark it implemented, move it, fix links (`ship-adr` skill)
+
+New and next together (user rule 2026-10-27): after `new-adr` writes an ADR, show it with its open questions and
+ask the user to approve it. Only on explicit approval (and answered or accepted open questions) build that same
+ADR straight away with `next-adr`, on the same branch and in the same pull request. No approval, no build; the
+ADR stays `Pending` for a later `next ADR`.
 
 ## Engineering conventions (hard rules)
 
@@ -137,7 +145,7 @@ Lifecycle, one skill per step:
 - Every implementation reply ends with the backlog status table (including every row still marked
   `find-it pending (light, ADR-066)`) and a **Skipped this iteration** section.
 - Gaps ledger (ADR-082, user rule 2026-10-25): anything not built is recorded in `docs/adr/GAPS.md` in the same
-  change: each skipped item, out-of-scope line, defaulted open question or cut requirement. Use `pnpm gaps add`
+  change: each skipped item, out-of-scope line, unanswered open question or cut requirement. Use `pnpm gaps add`
   with the origin, what is missing, the user's request in their words, questions and the suggested pick (the rule
   below). Cite the G ids in the reply. Only the user acknowledges a gap. A gap moved into an ADR has Status
   `ADR-NNN` and becomes Done when that ADR ships (`pnpm gaps sync`, run by `ship-adr`). `pnpm docs:check` and a
@@ -152,7 +160,8 @@ Lifecycle, one skill per step:
 ## Git
 
 - Only modify `chiriacsergiucs-v2/furniture-builder`.
-- Branch per ADR: `adr-NNN-short-title`; open a pull request for review.
+- Branch per ADR: `adr-NNN-short-title`; open a pull request for review. An ADR created and approved for building
+  in the same run (new and next together, above) shares one branch and one pull request with its implementation.
 - Merge to `main` only on the user's instruction; then cite the `Deploy GitHub Pages` run id. Never force-push
   `main`.
 - Ship commit message: `Ship ADR-NNN: <short title> — mark implemented`.
