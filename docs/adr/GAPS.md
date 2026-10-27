@@ -1492,7 +1492,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-159: Design codes: link or text
 
-- Status: Open
+- Status: ADR-124
 - Origin: ADR-124 (open question)
 - Missing: No code to share or reopen a design or project elsewhere
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1501,7 +1501,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-160: Replace: which own edits carry over
 
-- Status: Open
+- Status: ADR-124
 - Origin: ADR-124 (open question)
 - Missing: Replacing a piece drops its own edits (G-087)
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1510,7 +1510,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-161: Template references: default and fallback
 
-- Status: Open
+- Status: ADR-124
 - Origin: ADR-124 (open question)
 - Missing: Project pieces are full copies (ADR-022); none refers to its template and stores only its changes
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1519,7 +1519,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-162: Project-wide settings: which ones
 
-- Status: Open
+- Status: ADR-124
 - Origin: ADR-124 (open question)
 - Missing: No project-wide parameters that every piece follows unless it overrides them
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1552,3 +1552,21 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
 - Questions: Run a measured trial (decision recorded, nothing shipped unless it wins), or adopt Rapier for the checks now?
 - Suggested pick: Measured trial first (the research says 'evaluate'; a new WASM dependency needs its licence, size and offline behaviour checked)
+
+### G-200: Project-wide settings and the size lock
+
+- Status: Open
+- Origin: ADR-124 (found while building)
+- Missing: Project settings and Replace do not check ADR-122's size lock: ADR-122 is not on main when ADR-124 is built
+- Request: Accept default, /batch all ready
+- Questions: When both are merged: should a size-locked piece refuse project settings that change its size (plinth height) and Replace?
+- Suggested pick: Refuse and name the piece, as ADR-122 says for Fill-a-wall, Replace and linked edits
+
+### G-201: Pictures and 3D models in design codes
+
+- Status: Open
+- Origin: ADR-124 (scope)
+- Missing: A design code carries the document only; board pictures and display-only 3D models stay on this device (a project file carries them)
+- Request: Accept default, /batch all ready
+- Questions: Should codes also carry pictures and 3D models (much longer codes), or stay document-only?
+- Suggested pick: Document-only (codes stay short enough to paste; the project file carries the rest)

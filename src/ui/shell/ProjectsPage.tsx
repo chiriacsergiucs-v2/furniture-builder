@@ -18,6 +18,7 @@ import { InfoTip } from '../controls';
 import { Icon, type IconName } from '../icons';
 import { templateGlyph } from '../Templates';
 import { importFile } from './importFile';
+import { OpenFromCode, useOpenLink } from '../ShareCode';
 import { catalogFamilies } from '../../core/catalog';
 import { newerCount, newerText, templateStatus } from '../../core/templateRevision';
 import { useLocalTemplates } from '../Catalog';
@@ -97,6 +98,8 @@ export function ProjectsPage({
     openProject(p);
     onOpened();
   };
+  // A link with a design code (ADR-124) opens here, after asking.
+  useOpenLink(onOpened, setMsg);
   const onImport = async (f: File) => {
     const r = await importFile(f);
     if (r.opened && !r.message) {
@@ -239,6 +242,7 @@ export function ProjectsPage({
               }}
             />
           </label>
+          <OpenFromCode onOpened={onOpened} onMessage={setMsg} />
         </div>
       </header>
 
