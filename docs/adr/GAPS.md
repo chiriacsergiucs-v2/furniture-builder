@@ -1399,3 +1399,30 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: accept as written (ADR-120: no ADR numbers in UI text; Back to the editor only when a design is open)
 - Questions: Remove ADR ids from those two pages and hide Back there too, and give Select an info tip?
 - Suggested pick: Keep the ids on Gaps and Research (they are the page's subject); hide Back there too; add an info tip to Select (estimate +5 % work, +5 % of value)
+
+### G-149: Two common boards meeting at one corner
+
+- Status: Open
+- Origin: N122 (ff)
+- Missing: A piece with two joins that meet at a corner (e.g. common bottom and common side on the same piece) gets an error 'take the same corner' instead of one board cut short against the other.
+- Request: add possibility to replace same outer box/frame piece with 1 common piece (upper cabinets above the tv in my case), 3 items, 1 nice whole bottom, then the column on the side, 2 items, 1 nice side piece.
+- Questions: Which board runs through at a corner: the bottom/top, or the side?
+- Suggested pick: Top and bottom run through, sides stop under/over them, as the joined cabinets themselves are built (estimate: effort +30%, value +15%)
+
+### G-150: Boards that run past a common board are refused
+
+- Status: Open
+- Origin: N122 (ff)
+- Missing: When a piece's side runs past the board being joined (sides to the floor around a plinth, a back over the bottom edge), the join is an error instead of cutting that board around it.
+- Request: add possibility to replace same outer box/frame piece with 1 common piece (upper cabinets above the tv in my case), 3 items, 1 nice whole bottom, then the column on the side, 2 items, 1 nice side piece.
+- Questions: Should the common board be notched around those boards, or those boards shortened onto it?
+- Suggested pick: Shorten them onto the common board, as for sides that stop at it (estimate: effort +20%, value +10%)
+
+### G-151: Joined boards: fixings, templates and copies
+
+- Status: Open
+- Origin: N122 (ff)
+- Missing: Hardware schedule and drilling are unchanged by a join (no connectors between the boxes and the common board); joins are not kept by duplicate, project templates or catalog saves; no ADR records the schemaVersion 10 project field (user chose ff 2026-10-27).
+- Request: add possibility to replace same outer box/frame piece with 1 common piece (upper cabinets above the tv in my case), 3 items, 1 nice whole bottom, then the column on the side, 2 items, 1 nice side piece.
+- Questions: Which fixing joins each box to the common board (you name it; no screw or connector spec is invented, ADR-010)? Should duplicate/templates keep joins?
+- Suggested pick: Keep joins in duplicate and templates; fixing named by you (estimate: effort +25%, value +15%)

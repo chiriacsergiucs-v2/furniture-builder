@@ -4,6 +4,7 @@ import {
   findInProduct,
   productRoots,
   mapProductSpace,
+  newId,
   templates,
   upgradeDesign,
   validateDesign,
@@ -12,6 +13,7 @@ import { duplicateItem, mirrorItem, mirrorRun, tryTurn } from '../core/arrange';
 import { floorDrop, type FloorPoint } from '../core/drag3d';
 import { applyFinish, type FinishRole, type FinishScope } from '../core/finish';
 import { mergeItems } from '../core/merge';
+import { addJoin, joinChain, pruneJoins, removeJoin, type JoinSide } from '../core/join';
 import { addLinkedCopy, propagateLinks } from '../core/linked';
 import { alignItems, distributeItems, skippedText, type AlignHow } from '../core/align';
 import {
@@ -32,6 +34,7 @@ import {
   buildProjectModel,
   makeItem,
   moveBy,
+  placeItem,
   planRuns,
   pruneGroups,
   PROJECT_SCHEMA,
@@ -201,6 +204,10 @@ interface State {
   removeItem: (id: string) => void;
   /** Merge two touching cabinets into one (ADR-047); returns why not, or an empty list. */
   mergeItems: (a: string, b: string) => string[];
+  /** Cut one common board on that side of the piece and the pieces in line with it (N122); one undo step. */
+  joinOuter: (id: string, side: JoinSide) => void;
+  /** Back to each piece's own board (N122); one undo step. */
+  separateJoin: (joinId: string) => void;
   /** Duplicate, turn about the centre, mirror a piece or its run (ADR-069); each is one undo step. */
   duplicateItem: (id: string) => void;
   /** Place a linked copy beside the piece (ADR-111); one undo step. */
@@ -374,7 +381,7 @@ export const useDesign = create<State>((rawSet, get) => {
     // A change to a linked copy reaches the others, or unlinks it (ADR-111).
     const linked = propagateLinks(get().project, next, get().linkAll);
     const stamped = {
-      ...refreshRunParts(resolvePlacements(pruneGroups(linked))),
+      ...refreshRunParts(resolvePlacements(pruneJoins(pruneGroups(linked)))),
       schemaVersion: PROJECT_SCHEMA, // an edited project is saved in the current shape (ADR-011, ADR-073)
       updatedAt: new Date().toISOString(),
     };
@@ -614,6 +621,22 @@ export const useDesign = create<State>((rawSet, get) => {
         set({ selectedItemId: res.mergedId });
       }
       return res.issues;
+    },
+    joinOuter: (id, side) => {
+      const p = get().project;
+      if (!p) return;
+      // Each piece as built on its own: a board already joined still counts as its own.
+      const itemIds = joinChain(
+        resolvePlacements(p).items.map((i) => placeItem(i)),
+        id,
+        side,
+      );
+      if (itemIds.length < 2) return;
+      commitProject(addJoin(p, { id: newId(), side, itemIds }));
+    },
+    separateJoin: (joinId) => {
+      const p = get().project;
+      if (p) commitProject(removeJoin(p, joinId));
     },
     replaceItem: (id, design) => {
       const { project: p, projectModel: pm } = get();

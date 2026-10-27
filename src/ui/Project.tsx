@@ -13,6 +13,7 @@ import { decorPatch, type Decor } from '../core/materials';
 import { touchingRun } from '../core/arrange';
 import { linkCount } from '../core/linked';
 import { mergeCandidates } from '../core/merge';
+import { JOIN_NAME, JOIN_SIDES, joinChain } from '../core/join';
 import {
   DRAG_STEP,
   isLocked,
@@ -21,8 +22,10 @@ import {
   moveBlocked,
   materialKey,
   pieceBoxToRoom,
+  placeItem,
   placementBases,
   planRuns,
+  resolvePlacements,
   runOf,
   type Placement,
   type ProjectItem,
@@ -397,6 +400,9 @@ export function ProjectPanel({
           <Group title="Merge" defaultOpen={false}>
             <MergeFields item={item} />
           </Group>
+          <Group title="Join outer piece" defaultOpen={false}>
+            <JoinFields item={item} />
+          </Group>
           {piece && (
             <p className="hint">
               Takes {piece.bounds.w} × {piece.bounds.d} mm of floor, {piece.bounds.h} mm high.
@@ -697,6 +703,60 @@ function ArrangeFields({ item }: { item: ProjectItem }) {
           {msg}
         </p>
       )}
+    </div>
+  );
+}
+
+/**
+ * Join outer piece (N122): the selected piece and the pieces in line with it keep their boxes but share one common
+ * top, bottom or side board.
+ */
+function JoinFields({ item }: { item: ProjectItem }) {
+  const project = useDesign((s) => s.project)!;
+  const join = useDesign((s) => s.joinOuter);
+  const separate = useDesign((s) => s.separateJoin);
+  const pieces = useMemo(
+    () => resolvePlacements(project).items.map((i) => placeItem(i)),
+    [project],
+  );
+  const name = (id: string) => project.items.find((i) => i.id === id)?.design.name ?? id;
+  const mine = (project.joins ?? []).filter((j) => j.itemIds.includes(item.id));
+  return (
+    <div className="merge-fields">
+      {mine.map((j) => (
+        <div key={j.id}>
+          <p className="hint">
+            Common {JOIN_NAME[j.side]}: {j.itemIds.map(name).join(' + ')}
+          </p>
+          <button type="button" className="btn outline" onClick={() => separate(j.id)}>
+            Separate common {JOIN_NAME[j.side]}
+          </button>
+        </div>
+      ))}
+      {JOIN_SIDES.filter((side) => !mine.some((j) => j.side === side)).map((side) => {
+        const chain = joinChain(pieces, item.id, side);
+        return (
+          <div key={side}>
+            <button
+              type="button"
+              className="btn outline stack"
+              disabled={chain.length < 2}
+              onClick={() => join(item.id, side)}
+            >
+              <span className="lbl">Join {JOIN_NAME[side]}</span>{' '}
+              <span className="sub">
+                {chain.length < 2
+                  ? `Nothing in line on the ${JOIN_NAME[side]}`
+                  : `${chain.length} pieces: ${chain.map(name).join(' + ')}`}
+              </span>
+            </button>
+          </div>
+        );
+      })}
+      <p className="hint">
+        Each piece keeps its box; the touching pieces get one board on that side instead of one
+        each. Pieces in line: side by side for a top or bottom, stacked for a side.
+      </p>
     </div>
   );
 }
