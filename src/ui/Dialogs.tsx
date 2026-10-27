@@ -75,12 +75,14 @@ export function NewDialog({
   onClose,
   onBrowse,
   onWizard,
+  onFillWall,
   onOpened,
 }: {
   open: boolean;
   onClose: () => void;
   onBrowse?: () => void;
   onWizard?: () => void;
+  onFillWall?: () => void;
   onOpened?: () => void;
 }) {
   const load = useDesign((s) => s.load);
@@ -133,6 +135,21 @@ export function NewDialog({
         </span>
         <Icon name="chevron-right" className="chev sm" />
       </button>
+      {onFillWall && (
+        <button type="button" className="row-btn" onClick={onFillWall}>
+          <span className="glyph">
+            <Icon name="project" />
+          </span>
+          <span>
+            <strong>Fill a wall</strong>
+            <span className="sub">
+              Enter a wall's width, depth and height; get suggested mixes of tall and base cabinets
+              that fill it exactly, then refine them.
+            </span>
+          </span>
+          <Icon name="chevron-right" className="chev sm" />
+        </button>
+      )}
       {open && (
         <StartFrom
           onPick={(d) => {

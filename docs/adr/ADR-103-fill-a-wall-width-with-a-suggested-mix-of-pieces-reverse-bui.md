@@ -18,14 +18,9 @@ would range between x and y, resulting in a few pieces of furniture mixed. Sugge
 (just like in the catalog), suggest at least a few at first, then based on user's additional info (like max cabinet
 width input, suggest further optimised mixes)."
 
-The New-piece wizard ([ADR-044](../adr-done/ADR-044-new-piece-is-a-data-driven-wizard-a-step-library-and-a-const.md))
-builds one piece. Nothing goes from a wall to several pieces. Projects
-([ADR-022](../adr-done/ADR-022-projects-several-pieces-placed-in-one-room-with-combined-par.md)) hold placed pieces;
-the kitchen catalog has base and tall families; rules
-([ADR-035](../adr-done/ADR-035-construction-guidance-is-a-rules-registry-keyed-by-part-role.md)) hold the shelf-span
-guidance; catalog pictures are SVG snapshots
-([ADR-042](../adr-done/ADR-042-catalog-pictures-are-svg-snapshots-of-the-built-model-made-b.md)). Wall cabinets above
-the base row are [ADR-104](ADR-104-add-a-row-of-wall-cabinets-to-the-fill-a-wall-mixes.md) (user: "Second ADR right after").
+Nothing goes from a wall to several pieces today: the New-piece wizard (ADR-044) builds one piece; projects
+(ADR-022) hold placed pieces; rules (ADR-035) hold the shelf-span guidance; catalog pictures are SVG snapshots
+(ADR-042). Wall cabinets above are [ADR-104](ADR-104-add-a-row-of-wall-cabinets-to-the-fill-a-wall-mixes.md).
 
 Requirement ledger (R1): (1) a mix of pieces fills the width; (2) the wizard asks width, depth, height; (3) tall
 items above that height are allowed with a warning; (4) piece widths stay in a range [x, y], no sagging shelves;
@@ -33,12 +28,12 @@ items above that height are allowed with a warning; (4) piece widths stay in a r
 
 ## Decision
 
-- **Entry:** Projects → New → **Fill a wall**. Steps: **Wall** (width, depth, height, tall depth prefilled with
+- **Entry:** **Fill a wall** on Projects and in Start something new. Steps: **Wall** (width, depth, height, tall depth prefilled with
   the depth) → **Suggestions** (4 cards) → **Refine** → **Use this mix**.
 - **Kinds:** tall cabinet, base with open shelves, base with drawers, base with a door over shelves (the user's
   "with a front"). Each uses its kitchen catalog variant (ADR-007, ADR-032), resized.
 - **Widths:** any whole mm in [min, max], default **400–1200** (the user's values). Pieces of one kind share one
-  width; the wall remainder is spread 1 mm at a time from the left (exact split, ADR-003). Widths in steps of
+  width (all base kinds share one width in this slice, G-118); the wall remainder is spread 1 mm at a time from the left (exact split, ADR-003). Widths in steps of
   50 mm are tried first. The sum is always exactly the wall width.
 - **Sag:** a shelf piece whose inner width exceeds `settings.rules.shelfSpan` (guidance, 900 mm for 18 mm board)
   gets a centre divider, two bays, so no shelf exceeds the span.
@@ -46,12 +41,12 @@ items above that height are allowed with a warning; (4) piece widths stay in a r
   warning on its card and stays offered; nothing is clamped (ADR-008).
 - **Core:** `src/core/wallfill.ts`, pure. `suggestMixes(input)` enumerates kind counts and widths, builds each mix
   as a `Project` through `buildProjectModel()` (ADR-004), drops mixes with an error, and ranks them: closest to
-  the example first (fewest distinct widths, then symmetry, then fewest pieces). Deterministic and bounded.
-- **Picture:** `projectSnapshotSvg()` reuses the `snapshotSvg` projection on the placed panels of the whole mix,
-  drawn on each card, with its widths ("600 · 600 · 600 · 600 · 600").
+  the example first (fewest distinct widths, round widths, one tall cabinet, widths near 600 mm, then no odd
+  millimetre, symmetry, fewest pieces). Deterministic and bounded. Tall cabinets keep the catalog height (G-117).
+- **Picture:** `snapshotSvg` of the project model (the placed panels of the whole mix), drawn on each card, with its widths ("600 · 600 · 600 · 600 · 600").
 - **Refine:** min and max piece width, number of pieces, tall cabinets (count; left, right, both ends or centre),
   at least N drawer / door / shelf bases, and **Equal fronts: N**. Equal fronts gives every door the same width
-  (W / N, exact split); a carcass holds 1 or more fronts, so carcass widths may differ; the insides start empty, to
+  (W / N, exact split); a carcass holds 1 or 2 fronts (G-116), so carcass widths may differ; the insides start empty, to
   be configured in the editor. **Suggest again** recomputes.
 - **Use this mix** saves and opens an ordinary project, pieces side by side on the floor (ADR-046). No new stored
   shape and no Dexie change.
@@ -67,21 +62,25 @@ items above that height are allowed with a warning; (4) piece widths stay in a r
 - In scope: the wizard, `suggestMixes`, the centre divider, the project picture, Refine with equal fronts, Use this
   mix, core, fuzz and UI-logic tests, find-it.
 - Out of scope: corner and L walls (G-113); room windows, doors and outlets shaping the mix (G-114).
+- Skipped while building: 3+ fronts per carcass (G-116); a tall-height field (G-117); a width per base kind (G-118).
 
 ## Consequences
 
 - Positive: a first layout for a whole wall in a few taps, from pieces the app already builds.
 - Negative / risks: combinations grow with the wall width; the search is bounded and has a time test.
+- Doors under equal fronts match within 1 mm: the 3 mm front gap has integer half reveals at carcass edges
+  (ADR-006), so a 2-door carcass's leaves can be 1 mm narrower than a 1-door carcass's door.
 - Harder to change later: nothing stored beyond an ordinary project.
 
 ## Done when
 
-- [ ] Core: for 3000 mm, 400–1200, every mix sums to 3000, has no error and stays in range; "5 × 600: 1 tall, 2
+- [x] Core: for 3000 mm, 400–1200, every mix sums to 3000, has no error and stays in range; "5 × 600: 1 tall, 2
       shelves, 1 drawers, 1 door over shelves" is first (tests).
-- [ ] Core: max 600 drops wider pieces; 0 tall drops tall pieces; 3017 mm splits exactly in whole mm (tests).
-- [ ] Core: a shelf piece wider than the shelf span gets a centre divider; no shelf exceeds the span (tests).
-- [ ] Core: Equal fronts 6 on 3000 mm gives six 500 mm doors on carcasses in range, insides empty (tests).
-- [ ] Fuzz: random walls and Refine inputs never throw; an empty result gives a diagnostic that says why.
-- [ ] A tall piece above the entered height shows a warning on its card and is still offered.
-- [ ] Refine → Max piece width → Suggest again changes the cards; Use this mix opens a saved project.
-- [ ] Find-it passes from the bare app at phone and desktop widths (`tools/wall-fill/find-it.mjs`, production build).
+- [x] Core: max 600 drops wider pieces; 0 tall drops tall pieces; 3017 mm splits exactly in whole mm (tests).
+- [x] Core: a shelf piece wider than the shelf span gets a centre divider; no shelf exceeds the span (tests).
+- [x] Core: Equal fronts 6 on 3000 mm gives six doors, one per 500 mm front width, equal within 1 mm, on
+      carcasses in range, insides empty (tests).
+- [x] Fuzz: random walls and Refine inputs never throw; an empty result gives a diagnostic that says why.
+- [x] A tall piece above the entered height shows a warning on its card and is still offered.
+- [x] Refine → Max piece width → Suggest again changes the cards; Use this mix opens a saved project.
+- [x] Find-it passes from the bare app at phone and desktop widths (`tools/wall-fill/find-it.mjs`, production build).

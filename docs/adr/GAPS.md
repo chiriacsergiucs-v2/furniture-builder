@@ -1102,3 +1102,30 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Wall cabinets above (answer to: Which kinds of pieces may appear in a mix?)
 - Questions: Should the wall row appear in every mix, in some mixes, or be chosen in Refine (any / always / never)?
 - Suggested pick: Refine choice 'Wall cabinets: any / always / never', default any, so the first 4 cards show mixes with and without a wall row. (estimate: effort +3%, value +10%)
+
+### G-116: Fill a wall: carcasses with 3 or more equal fronts
+
+- Status: Open
+- Origin: ADR-103, 2026-10-27; Claude cut it while building
+- Missing: Equal fronts puts 1 or 2 fronts on a carcass only (a door front has 1 or 2 leaves); carcasses with 3 or more fronts are not suggested, so fronts under 200 mm wide (with the 400 mm min) give no mix.
+- Request: 6 equal front panels, what's behind is to be configured (answer: Equal fronts, any carcass widths)
+- Questions: Should a carcass carry 3 or more equal fronts (with dividers inside), for narrow fronts?
+- Suggested pick: Allow 3–4 fronts per carcass, built as equal bays with a divider and one door each, so narrow fronts still fill the wall. (estimate: effort +10%, value +5%)
+
+### G-117: Fill a wall: tall cabinet height
+
+- Status: Open
+- Origin: ADR-103, 2026-10-27; default chosen by Claude while building
+- Missing: Tall cabinets are always the catalog height (2200 mm, ADR-036 typical value); there is no tall-height field. A wall lower than that gets the warning on every mix with a tall cabinet.
+- Request: allow with a warning items like tall cabinets, above this height
+- Questions: Should Refine have a tall cabinet height field, or should tall cabinets follow the entered height?
+- Suggested pick: Add a Tall cabinet height field in Refine, catalog value prefilled; the warning stays when it is above the entered height. (estimate: effort +3%, value +10%)
+
+### G-118: Fill a wall: a width per base kind
+
+- Status: Open
+- Origin: ADR-103, 2026-10-27; Claude narrowed it while building
+- Missing: All base kinds in one mix share one width (tall cabinets may have their own round width); mixes such as an 800 drawer base next to 600 shelf bases are not suggested.
+- Request: So basically a mix and match (answer: Equal per kind, exact split)
+- Questions: Should each base kind (open shelves, drawers, door + shelves) get its own width in a mix?
+- Suggested pick: Also try one round width per base kind (steps of 50 mm), ranked after the shared width, so the cards show such mixes too. (estimate: effort +10%, value +15%)
