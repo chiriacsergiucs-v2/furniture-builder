@@ -1,7 +1,8 @@
 # ADR-110: Trim the research page to Features and Competitors
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-26
+- Implemented: 2026-10-27
 - Depends on: ADR-043, ADR-092
 - Design: n/a
 - Acceptance: browser
