@@ -172,8 +172,12 @@ export function ProjectPanel({
     return (
       <div className="inspector">
         <header className="insp-head">
-          <h2>Project settings</h2>
-          <p className="hint">These apply to every piece in {project.name}.</p>
+          <div className="info-row">
+            <h2>Project settings</h2>
+            <InfoTip label="About project settings" align="start">
+              These apply to every piece in {project.name}.
+            </InfoTip>
+          </div>
         </header>
         <RunParts />
         <MmField
@@ -192,11 +196,13 @@ export function ProjectPanel({
   return (
     <div className="inspector">
       <header className="insp-head">
-        <h2>Project</h2>
-        <p className="hint">
-          Pieces are cut and bought together. Each piece is a copy; editing it here never changes
-          your saved pieces.
-        </p>
+        <div className="info-row">
+          <h2>Project</h2>
+          <InfoTip label="About the project" align="start">
+            Pieces are cut and bought together. Each piece is a copy; editing it here never changes
+            your saved pieces.
+          </InfoTip>
+        </div>
       </header>
       <SelectionCard />
       {item && (
@@ -273,12 +279,12 @@ export function ProjectPanel({
             min={1}
             max={99}
             onChange={(v) => update(item.id, { quantity: v })}
+            info={
+              <InfoTip label="About how many" align="start">
+                Copies are added to parts, sheets and hardware; one is shown in the room.
+              </InfoTip>
+            }
           />
-          {item.quantity > 1 && (
-            <p className="hint">
-              Copies are added to parts, sheets and hardware; one is shown in the room.
-            </p>
-          )}
           {blocked ? (
             <p className="hint" role="note">
               {isLocked(item) ? `${LOCKED_HINT}.` : blocked} It stays {item.position.x} mm from the
@@ -727,6 +733,11 @@ function PlacementFields({ item }: { item: ProjectItem }) {
             value={pl.baseId}
             options={bases.map((b) => ({ value: b.id, label: b.design.name }))}
             onChange={(v) => update(item.id, { placement: { ...pl, baseId: v } })}
+            info={
+              <InfoTip label="About on or above" align="start">
+                Backs line up; it moves with the piece below.
+              </InfoTip>
+            }
           />
           <div className="dims2">
             <MmField
@@ -745,7 +756,6 @@ function PlacementFields({ item }: { item: ProjectItem }) {
               onChange={(v) => update(item.id, { placement: { ...pl, offsetX: v } })}
             />
           </div>
-          <p className="hint">Backs line up; it moves with the piece below.</p>
         </>
       )}
       {kind === 'free' && (
@@ -1910,14 +1920,16 @@ function RunParts() {
   return (
     <section className="section run-parts" aria-label="Run parts">
       <div className="card-title">
-        <span>Run parts</span>
+        <span className="info-row">
+          <span>Run parts</span>
+          <InfoTip label="About run parts" align="start">
+            For rows of base units side by side: one worktop, a filler in each gap, a cover panel on
+            each open end, and one plinth along the run when the cabinets stand on their bottoms (it
+            replaces their own plinths). Add a worktop over chosen pieces, or a crown, pelmet or
+            ceiling filler over wall and tall units.
+          </InfoTip>
+        </span>
       </div>
-      <p className="hint">
-        For rows of base units side by side: one worktop, a filler in each gap, a cover panel on
-        each open end, and one plinth along the run when the cabinets stand on their bottoms (it
-        replaces their own plinths). Add a worktop over chosen pieces, or a crown, pelmet or ceiling
-        filler over wall and tall units.
-      </p>
       {parts.length > 0 && (
         <ul className="run-list">
           {parts.map((rp) => (

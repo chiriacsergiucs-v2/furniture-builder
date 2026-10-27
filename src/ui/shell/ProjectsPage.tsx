@@ -14,6 +14,7 @@ import {
 import { useDesign } from '../../store/designStore';
 import { askConfirm, askText } from '../Confirm';
 import { ProjectTemplateList } from '../ProjectTemplates';
+import { InfoTip } from '../controls';
 import { Icon, type IconName } from '../icons';
 import { templateGlyph } from '../Templates';
 import { importFile } from './importFile';
@@ -188,11 +189,13 @@ export function ProjectsPage({
   return (
     <main className="home-page projects-page" aria-label="Projects">
       <header className="home-hero">
-        <h1>Projects</h1>
-        <p className="hint">
-          Everything you design is saved on this device only. Start a project, a single piece, or
-          open what you made before.
-        </p>
+        <div className="info-row">
+          <h1>Projects</h1>
+          <InfoTip label="About projects" align="start">
+            Everything you design is saved on this device only. Start a project, a single piece, or
+            open what you made before.
+          </InfoTip>
+        </div>
         <div className="home-start">
           <button type="button" className="btn primary lg" onClick={() => void create()}>
             <Icon name="plus" />

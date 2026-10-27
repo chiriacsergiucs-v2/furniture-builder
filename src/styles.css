@@ -5073,6 +5073,7 @@ button.tile:hover {
 .info-tip {
   position: relative;
   display: inline-flex;
+  vertical-align: middle;
 }
 .info-btn {
   min-width: 44px;
@@ -5091,8 +5092,62 @@ button.tile:hover {
   background: var(--surface);
   box-shadow: var(--shadow-2);
   font-size: var(--fs-sm);
+  font-weight: 400;
   line-height: 1.45;
+  letter-spacing: normal;
+  text-transform: none;
+  text-align: left;
+  white-space: normal;
   color: var(--ink);
+}
+/* ADR-111: beside a heading on the left the popover opens from the button's left edge; InfoTip moves either kind
+   back inside the screen. An open one sits above the floating count card and the sticky bars. */
+.info-pop.start {
+  right: auto;
+  left: 0;
+}
+.info-tip.open {
+  z-index: 21;
+}
+/* A title or label with its info button right after it; the 44 px button does not make the row taller. */
+.label-row,
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+.label-row > .info-tip,
+.info-row > .info-tip {
+  flex: none;
+  margin-block: -10px;
+}
+.label-row > :not(.info-tip),
+.info-row > :not(.info-tip) {
+  min-width: 0;
+}
+.catalog-actions > .info-row {
+  margin-right: auto;
+}
+.info-row.end {
+  justify-content: flex-end;
+}
+/* After a live line of text (a count, a size): keeps the line its own height. */
+p > .info-tip {
+  margin-block: -12px;
+}
+/* A Group's info button sits on its title row, outside the summary, before the chevron's end. */
+.group-wrap {
+  position: relative;
+  min-width: 0;
+}
+.group-wrap > .group > summary {
+  padding-right: 44px;
+}
+.group-wrap > .info-tip {
+  position: absolute;
+  top: 2px;
+  right: 0;
 }
 .info-lead {
   display: block;

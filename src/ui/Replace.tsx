@@ -12,7 +12,7 @@ import {
 import { useDesign } from '../store/designStore';
 import { ItemPicture, useCatalog } from './Catalog';
 import { askConfirm } from './Confirm';
-import { Toggle } from './controls';
+import { InfoTip, Toggle } from './controls';
 import { Dialog } from './Dialogs';
 import { Icon } from './icons';
 import { useProblem } from './problemStore';
@@ -66,11 +66,19 @@ function ReplaceDialog({ item, onClose }: { item: ProjectItem; onClose: () => vo
     if (report.problems[0] && project) useProblem.getState().show(report.problems[0], project.id);
   };
   return (
-    <Dialog open onClose={onClose} title={`Replace ${item.design.name}`}>
+    <Dialog
+      open
+      onClose={onClose}
+      title={`Replace ${item.design.name}`}
+      info={
+        <InfoTip label="About replacing a piece" align="start">
+          The piece keeps its place, turn, quantity, placement, zones and boards; undo puts it back.
+        </InfoTip>
+      }
+    >
       <p className="hint">
         Items that stand the same way
-        {others ? '' : ` and are ${width} mm wide`}. The piece keeps its place, turn, quantity,
-        placement, zones and boards; undo puts it back.
+        {others ? '' : ` and are ${width} mm wide`}.
       </p>
       {!stacked && <Toggle label="Show other widths" checked={others} onChange={setOthers} />}
       {shown.length === 0 ? (
