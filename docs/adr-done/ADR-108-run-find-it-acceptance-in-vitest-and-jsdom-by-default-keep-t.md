@@ -1,7 +1,8 @@
 # ADR-108: Run find-it acceptance in Vitest and jsdom by default; keep the browser script as a flag
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-27
+- Implemented: 2026-10-27
 - Depends on: ADR-015, ADR-066
 - Design: n/a
 - Backlog: N106
@@ -63,13 +64,13 @@ asked for them here. ADR-015 and ADR-066 stay as they are; this ADR changes only
 
 ## Done when
 
-- [ ] `pnpm test` runs `tests/find-it/count-stepper.test.tsx` from the bare app at 390 and 1280 px and finds
+- [x] `pnpm test` runs `tests/find-it/count-stepper.test.tsx` from the bare app at 390 and 1280 px and finds
       "Quick counts" by visible text; it fails when that card is removed (shown once, then restored).
-- [ ] CI `verify` passes with the new tests on the PR head.
-- [ ] `scripts/check-docs.py` accepts `- Acceptance: light|full|browser` and rejects anything else.
-- [ ] `CLAUDE.md` R3, `docs/adr/_template.md` and the eight skills name jsdom as the default and
+- [x] CI `verify` passes with the new tests on the PR head.
+- [x] `scripts/check-docs.py` accepts `- Acceptance: light|full|browser` and rejects anything else.
+- [x] `CLAUDE.md` R3, `docs/adr/_template.md` and the eight skills name jsdom as the default and
       `- Acceptance: browser` as the revert flag.
-- [ ] `node tools/count-stepper/find-it.mjs` still passes on the production build (the old path still works).
+- [x] `node tools/count-stepper/find-it.mjs` still passes on the production build (the old path still works).
 
 ## Answered questions (2026-10-27)
 
