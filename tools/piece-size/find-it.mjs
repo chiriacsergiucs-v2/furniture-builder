@@ -2,7 +2,7 @@
 // against a production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/piece-size/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text: a single Sideboard (Compose panel,
-// the card over the drawing and over 3D), then a Sideboard from the catalog in a project (its Selected piece card).
+// the card over the drawing and over 3D), then a Sideboard from the catalog in a project (its Selected piece card, gone once a space inside is selected).
 // Not part of `pnpm test`.
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
@@ -169,6 +169,32 @@ for (const width of [1280, 390]) {
     Number(db) === Number(da) - 100 && Number(wb) === Number(wa) + 200,
     `${label0} → ${label1}`,
   );
+  // 7. Drilled in: the whole piece keeps Width and Depth; a space inside it (2nd tap) shows none (user, 2026-10-27).
+  const tapPlan = async () => {
+    const p = await onPlan.boundingBox();
+    await page.mouse.click(p.x + p.width / 2, p.y + p.height / 2);
+    await page.waitForTimeout(300);
+  };
+  const inside = page.getByRole('region', { name: 'Inside this piece' });
+  await tapPlan();
+  await sheet(true);
+  check(
+    width,
+    'drilled, whole piece selected: "Width" in its card',
+    (await inside.getByText('Selected: Whole cabinet').isVisible()) &&
+      (await inCard.getByLabel('Width', { exact: true }).isVisible()),
+  );
+  await sheet(false);
+  await tapPlan();
+  await sheet(true);
+  check(
+    width,
+    'drilled, a space inside selected: no "Width" or "Depth" in the card',
+    (await inside.getByRole('heading', { name: 'Divided space' }).isVisible()) &&
+      (await inCard.count()) === 0,
+  );
+  await shot('project-inside');
+  await sheet(false);
   check(width, 'no sideways scroll (project)', await noSideScroll());
   check(width, 'no page errors', errors.length === 0, errors.join(' | '));
   await ctx.close();

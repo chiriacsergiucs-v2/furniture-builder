@@ -1186,7 +1186,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-125: Width and depth card over the project view for a selected piece
 
-- Status: Open
+- Status: ADR-109
 - Origin: ADR-106
 - Missing: In a project, a piece selected but not opened (Inside this piece) gets Width and Depth in its Selected piece card only; no floating card over the project drawing or 3D (the quick-count card shows there only for an opened piece, ADR-088).
 - Request: Add the posibility to change width/depth when whole cabinet or whole piece is selected; answer: Card + side panel
@@ -1264,3 +1264,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: "Move to B as default, keep the priginal as a flag to be abke to tevert"
 - Questions: Catch up acceptance with jsdom or browser?
 - Suggested pick: jsdom, unless the ADR is layout or 3D
+
+### G-134: Clearances wraps to a second row of the project plan toolbar on a phone
+
+- Status: Open
+- Origin: ADR-109
+- Missing: At 390 px the plan toolbar holds Doors and fronts, Snap and Select on one row; Clearances wraps to a second row.
+- Request: i dont see doors text moved with other; answer: Same row as Snap (Recommended)
+- Questions: Should all four plan controls fit one row on a phone (shorter labels or icons), or is the wrap fine?
+- Suggested pick: Keep the wrap (closest to the request: Doors and fronts is in Snap's row); one row would need shorter labels (estimate +20 % work, +5 % of value)
