@@ -11,6 +11,7 @@ import { boxIn, cardCorner, CountStepper } from './CountStepper';
 import { projectBoards, roleBoard, type FinishRole, type FinishScope } from '../core/finish';
 import { decorPatch, type Decor } from '../core/materials';
 import { touchingRun } from '../core/arrange';
+import { linkCount } from '../core/linked';
 import { mergeCandidates } from '../core/merge';
 import {
   DRAG_STEP,
@@ -267,6 +268,7 @@ export function ProjectPanel({
             )}
           </h3>
           <TemplateNotice item={item} />
+          <LinkedCopies item={item} />
           {!(drillId === item.id && insideSelected) && (
             <PieceSize
               // Not the bare item id: ArrangeFields below already uses it in this list (duplicate keys left stale rows).
@@ -582,12 +584,35 @@ function FinishFields({ item }: { item: ProjectItem }) {
 }
 
 /**
+ * Linked copies (ADR-111): how many copies share this piece's design, and whether a change reaches all of them.
+ */
+function LinkedCopies({ item }: { item: ProjectItem }) {
+  const project = useDesign((s) => s.project)!;
+  const linkAll = useDesign((s) => s.linkAll);
+  const setLinkAll = useDesign((s) => s.setLinkAll);
+  const n = useMemo(() => linkCount(project, item.id), [project, item.id]);
+  if (n < 2) return null;
+  return (
+    <div className="linked-copies" role="group" aria-label="Linked copies">
+      <p className="hint">
+        <strong>Linked: {n} copies</strong>.{' '}
+        {linkAll
+          ? 'A change to this piece changes every copy, inside too.'
+          : 'A change to this piece changes it alone and unlinks it.'}
+      </p>
+      <Toggle label="Change all copies" checked={linkAll} onChange={setLinkAll} />
+    </div>
+  );
+}
+
+/**
  * Duplicate, turn about the centre and mirror the selected piece or its run (ADR-069); each is one undo step. Keys:
  * Ctrl/Cmd+D duplicates, R / Shift+R turn the piece focused on the plan.
  */
 function ArrangeFields({ item }: { item: ProjectItem }) {
   const project = useDesign((s) => s.project)!;
   const duplicate = useDesign((s) => s.duplicateItem);
+  const addLinked = useDesign((s) => s.addLinkedCopy);
   const turn = useDesign((s) => s.turnItem);
   const mirror = useDesign((s) => s.mirrorItem);
   const mirrorRun = useDesign((s) => s.mirrorRun);
@@ -616,6 +641,17 @@ function ArrangeFields({ item }: { item: ProjectItem }) {
           }}
         >
           Duplicate
+        </button>
+        <button
+          type="button"
+          className="btn outline sm"
+          title="A copy that changes with this piece"
+          onClick={() => {
+            setMsg(null);
+            addLinked(item.id);
+          }}
+        >
+          Add a linked copy
         </button>
         <button
           type="button"
