@@ -24,8 +24,9 @@ const SHORT: Partial<Record<CountKey, string>> = {
 /**
  * The counts that apply to the selected space or piece, each as − N + (ADR-084). Nothing when none apply.
  * `foldable` (over 3D) adds a "Quick counts" button that folds the card to one row on a phone (G-058). `compact`
- * (over the drawing) is one short row per count with no heading (ADR-112). Width and Depth are never in the card:
- * they stay in the side panel and the bottom sheet (ADR-112, replacing ADR-106 for the card).
+ * (over the drawing) is one short row per count with no heading (ADR-112); the 3D card has no heading either (N121).
+ * Width and Depth are never in the card: they stay in the side panel and the bottom sheet (ADR-112, replacing
+ * ADR-106 for the card).
  */
 export const CountStepper = forwardRef<
   HTMLDivElement,
@@ -49,8 +50,9 @@ export const CountStepper = forwardRef<
     return id ? countRows(product, id) : [];
   }, [product, selectedId]);
   if (!rows.length) return null;
-  // Names what the card acts on, the same thing the outline is drawn round (ADR-087, G-069).
-  const title = selectionLabel(product, selectedId);
+  // Names what the card acts on, the same thing the outline is drawn round (ADR-087, G-069). Only in the editor
+  // panel: the cards over the drawing and 3D show only the counts (user 2026-10-27, N121).
+  const title = foldable ? '' : selectionLabel(product, selectedId);
   return (
     <div
       ref={ref}
