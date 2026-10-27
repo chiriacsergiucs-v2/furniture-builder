@@ -18,7 +18,8 @@ Dexie storage, React UI, lazy three.js viewer.
    unavailable (private mode) — the save status says so.
 3. **Reproduce.** Smallest reproduction: best a failing Vitest test in `tests/` built from
    the design (core and store are testable without a browser). For UI-only bugs, a
-   production build and a scripted Chromium run (as in `tools/*/find-it.mjs`).
+   jsdom test (as in `tests/find-it/`, ADR-108); for layout, CSS or 3D bugs, a production build
+   and a scripted Chromium run (as in `tools/*/find-it.mjs`).
 4. **Isolate.** Which layer: generator (`src/core`), independent checks (`build.ts`),
    store/selectors, storage, UI. Bisect with `git log` / `git bisect`. One hypothesis at a
    time, tested with evidence.

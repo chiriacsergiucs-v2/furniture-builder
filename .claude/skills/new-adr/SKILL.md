@@ -48,7 +48,9 @@ Everything written to the repo is in **English**, whatever language the conversa
    - **Context** (the user's words), **Decision**, **Alternatives considered** (2–4 real
      options), **Scope**, **Consequences**.
    - **Done when** — verifiable items only (tests, diagnostics, visible text the find-it
-     test looks for), at most 8. Anything visible gets a find-it item. If the user chose
+     test looks for), at most 8. Anything visible gets a find-it item: jsdom by default
+     (`tests/find-it/<area>.test.tsx`); for layout/CSS, 3D view or Move mode work add
+     `- Acceptance: browser` under `- Backlog:` (ADR-108). If the user chose
      light acceptance, add `- Acceptance: light` under `- Backlog:`, mark those items
      `(light — catch-up)` and put `find-it pending (light, ADR-066)` in the backlog row (ADR-066).
    - **Gaps (ADR-082)** — each _Out of scope_ item and each open question gets a gap in
@@ -64,9 +66,7 @@ Everything written to the repo is in **English**, whatever language the conversa
    - Status stays `Pending`. If open questions block building, set
      `- Status: Deferred (<reason>)` in the file **and** in the README row.
 8. **Run** `pnpm docs:check`.
-9. **Hand over.** The ADR keeps `- Agreed: not yet`. Ask the user (`AskUserQuestion`) about each decision,
-   each out-of-scope item and each open question, then record their words in the `- Agreed:` line
-   (retro 2026-10-26). `pnpm docs:check` refuses to ship an ADR from number 091 on without it. Show the user the open questions. Suggest a branch named `adr-NNN-slug`
+9. **Hand over.** Show the user the open questions. Suggest a branch named `adr-NNN-slug`
    and a pull request. Do not commit or push unless the user asks.
 
 ## Notes

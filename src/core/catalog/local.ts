@@ -51,6 +51,14 @@ export function toLocal(f: CatalogFamily): LocalFamily {
   };
 }
 
+/**
+ * A template's revision as edited on this device (ADR-096), on the same scale as the shipped `catalogVersion`: an edit
+ * of shipped version N counts on from N (the copy starts at revision 1, each save adds one), so an edit is always newer
+ * than the shipped version it was taken from. A family of the user's own counts its saves from 1.
+ */
+export const localRevision = (t: Pick<LocalTemplate, 'basedOn' | 'revision'>): number =>
+  (t.basedOn ?? 1) + t.revision - 1;
+
 export function fromLocal(t: LocalTemplate, shipped?: CatalogFamily): ViewFamily {
   const { variants, ...rest } = t.family;
   return {
@@ -58,6 +66,9 @@ export function fromLocal(t: LocalTemplate, shipped?: CatalogFamily): ViewFamily
     localId: t.id,
     own: !t.shadows,
     shippedUpdated: !!shipped && t.basedOn !== undefined && shipped.catalogVersion > t.basedOn,
+    // A copy taken from a template edited here records the template's revision (ADR-096), so a later edit of the
+    // template shows as a newer revision on the pieces taken before it.
+    catalogVersion: localRevision(t),
     variants: variants.map(({ design, ...v }) => ({
       ...v,
       ...(design ? { create: () => structuredClone(design) } : {}),

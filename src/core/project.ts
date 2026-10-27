@@ -82,6 +82,11 @@ export interface ProjectItem {
    * construction stay editable. Absent = not locked. Saved from project schemaVersion 6.
    */
   locked?: true;
+  /**
+   * The template revision the user chose to keep this piece at ("Keep mine", ADR-096): the newer-template notice stays
+   * hidden until the template moves past it. Absent = never dismissed. Saved from project schemaVersion 7.
+   */
+  templateSeen?: number;
 }
 
 /**
@@ -136,14 +141,17 @@ export const requestKey = (r: Pick<RunRequest, 'kind' | 'from'>) => `${r.kind}|$
  * Project document versions (ADR-011): new and edited projects are written at `PROJECT_SCHEMA`; every version in
  * `PROJECT_SCHEMAS` still loads unchanged. 2 = room pipes and outlets (ADR-072); 3 = clearance zones on items
  * (ADR-073); 4 = run requests and trim run parts (ADR-075); 5 = display-only 3D models (ADR-076); 6 = locked pieces
- * (ADR-095).
+ * (ADR-095); 7 = a kept template revision on items (ADR-096); 8 = groups of pieces
+ * (ADR-097).
  */
-export const PROJECT_SCHEMA = 6 as const;
-export const PROJECT_SCHEMAS: readonly number[] = [1, 2, 3, 4, 5, PROJECT_SCHEMA];
-export type ProjectSchemaVersion = 1 | 2 | 3 | 4 | 5 | typeof PROJECT_SCHEMA;
+export const PROJECT_SCHEMA = 8 as const;
+export const PROJECT_SCHEMAS: readonly number[] = [1, 2, 3, 4, 5, 6, 7, PROJECT_SCHEMA];
+export type ProjectSchemaVersion = 1 | 2 | 3 | 4 | 5 | 6 | 7 | typeof PROJECT_SCHEMA;
 const RUN_REQUESTS_SINCE = 4;
 const MODELS_SINCE = 5;
 const LOCKS_SINCE = 6;
+const TEMPLATE_SEEN_SINCE = 7;
+const GROUPS_SINCE = 8;
 
 export interface Project {
   schemaVersion: ProjectSchemaVersion;
@@ -165,6 +173,29 @@ export interface Project {
   room?: Room;
   /** Display-only 3D models (ADR-076, schemaVersion 5): never cut, priced, bought or nested. Absent = none. */
   models?: ModelItem[];
+  /**
+   * Named groups of pieces (ADR-097, schemaVersion 8): selected together, never merged, not connections. A piece is in
+   * at most one group; a group holds two pieces or more, always pieces of this project (`pruneGroups`). Absent = none.
+   */
+  groups?: { id: string; name: string; itemIds: string[] }[];
+}
+
+/**
+ * Groups keep only pieces still in the project, and a group left with fewer than two goes (ADR-097: a deleted piece
+ * leaves its group). The same project when nothing changes; every commit applies it.
+ */
+export function pruneGroups(project: Project): Project {
+  if (!project.groups) return project;
+  const ids = new Set(project.items.map((i) => i.id));
+  const was = project.groups;
+  // A group keeps two pieces or more: one left alone is no group (ADR-097).
+  const groups = was
+    .map((g) => ({ ...g, itemIds: g.itemIds.filter((x) => ids.has(x)) }))
+    .filter((g) => g.itemIds.length >= 2);
+  const same =
+    groups.length === was.length &&
+    groups.every((g, i) => g.itemIds.length === was[i].itemIds.length);
+  return same ? project : { ...project, groups };
 }
 
 export interface RunSettings {
@@ -313,6 +344,10 @@ export function liftOff(item: ProjectItem): Placement | undefined {
 // Locked pieces (ADR-095)
 // ---------------------------------------------------------------------------
 
+/** A quarter turn on from `r`: `dir` 1 turns the front from facing you to facing right (ADR-069). */
+export const quarterTurn = (r: QuarterTurn, dir: 1 | -1): QuarterTurn =>
+  ((((r + dir * 90) % 360) + 360) % 360) as QuarterTurn;
+
 /** The piece's placement is locked: nothing moves or turns it (ADR-095). */
 export const isLocked = (item: Pick<ProjectItem, 'locked'> | undefined): boolean => !!item?.locked;
 
@@ -424,6 +459,20 @@ export function setLocked(project: Project, id: string, on: boolean): Project {
   return { ...project, items: project.items.map((i) => (i.id === id ? next : i)) };
 }
 
+/**
+ * Keep a piece as it is although its template has revision `revision` (ADR-096 "Keep mine"): the notice stays hidden
+ * until the template moves past it. Nothing about the piece itself changes.
+ */
+export function keepTemplate(project: Project, id: string, revision: number): Project {
+  const it = project.items.find((i) => i.id === id);
+  if (!it || !Number.isSafeInteger(revision) || revision < 1 || it.templateSeen === revision)
+    return project;
+  return {
+    ...project,
+    items: project.items.map((i) => (i.id === id ? { ...i, templateSeen: revision } : i)),
+  };
+}
+
 /** Remove a piece; pieces that sat on it stay where they are (their placement becomes free). */
 export function removeProjectItem(project: Project, id: string): Project {
   const items = project.items
@@ -438,7 +487,7 @@ export function removeProjectItem(project: Project, id: string): Project {
   const runRequests = project.runRequests
     ?.map((r) => ({ ...r, from: r.from.filter((x) => x !== id) }))
     .filter((r) => r.from.length);
-  return { ...project, items, ...(runRequests ? { runRequests } : {}) };
+  return pruneGroups({ ...project, items, ...(runRequests ? { runRequests } : {}) });
 }
 
 /** Placement problems: a missing base, a piece resting on itself, a piece in the air that is not built to hang. */
@@ -1834,6 +1883,11 @@ export function validateProject(p: unknown): string[] {
       else if ((p.schemaVersion as number) < LOCKS_SINCE)
         errs.push(`Locked pieces need project schemaVersion ${LOCKS_SINCE}`);
     }
+    if (it.templateSeen !== undefined) {
+      if (!isInt(it.templateSeen, 1)) errs.push('Invalid kept template revision');
+      else if ((p.schemaVersion as number) < TEMPLATE_SEEN_SINCE)
+        errs.push(`Kept template revisions need project schemaVersion ${TEMPLATE_SEEN_SINCE}`);
+    }
     const de = validateDesign(it.design);
     if (de.length) errs.push(`Item ${String(it.id)}: ${de[0]}`);
   }
@@ -1919,6 +1973,33 @@ export function validateProject(p: unknown): string[] {
     !(Array.isArray(p.runPartsRemoved) && p.runPartsRemoved.every((k) => typeof k === 'string'))
   )
     errs.push('Invalid removed run parts');
+  if (p.groups !== undefined) {
+    if ((p.schemaVersion as number) < GROUPS_SINCE)
+      errs.push(`Groups need project schemaVersion ${GROUPS_SINCE}`);
+    const grouped = new Set<string>();
+    const groupIds = new Set<string>();
+    if (!Array.isArray(p.groups)) errs.push('Invalid groups');
+    else
+      for (const g of p.groups) {
+        if (
+          !isObj(g) ||
+          typeof g.id !== 'string' ||
+          !g.id ||
+          groupIds.has(g.id) ||
+          typeof g.name !== 'string' ||
+          !g.name.trim() ||
+          g.name.length > 200 ||
+          !Array.isArray(g.itemIds) ||
+          g.itemIds.length < 2 ||
+          !g.itemIds.every((x) => typeof x === 'string' && ids.has(x) && !grouped.has(x))
+        ) {
+          errs.push('Invalid group');
+          continue;
+        }
+        groupIds.add(g.id);
+        for (const x of g.itemIds) grouped.add(x as string);
+      }
+  }
   if (p.models !== undefined) {
     if ((p.schemaVersion as number) < MODELS_SINCE)
       errs.push(`3D models need project schemaVersion ${MODELS_SINCE}`);

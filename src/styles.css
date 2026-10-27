@@ -1449,6 +1449,10 @@ td.note {
   padding: var(--s-2) var(--s-4);
   flex-wrap: wrap;
 }
+/* A project's Compose drawing on a phone: Doors and fronts moved into the plan's own tool row (ADR-109). */
+.stage-tools:empty {
+  display: none;
+}
 .stage-tools .spacer {
   flex: 1;
 }
@@ -3923,6 +3927,39 @@ button.tile:hover {
 .wz-card .btn {
   width: 100%;
 }
+/* Fill a wall (ADR-103) */
+.wf-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--s-2) var(--s-3);
+}
+.wf-cards {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+.wf-card {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.wf-card img {
+  width: 100%;
+  max-width: 220px;
+  height: 120px;
+}
+@media (max-width: 760px) {
+  .wz-cards.wf-cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.wf-warnings {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s-1);
+  width: 100%;
+  text-align: start;
+  font-size: var(--fs-xs);
+}
 .wizard-footer {
   position: sticky;
   bottom: calc(-1 * var(--s-5));
@@ -4776,7 +4813,8 @@ button.tile:hover {
   gap: var(--s-2) var(--s-3);
   min-width: 0;
 }
-.plan .snap-toggle[aria-pressed='true'] {
+.plan .snap-toggle[aria-pressed='true'],
+.plan .select-toggle[aria-pressed='true'] {
   background: var(--primary-soft);
   border-color: var(--primary);
   color: var(--ink);
@@ -5037,6 +5075,10 @@ button.tile:hover {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.count-stepper .cs-size {
+  flex-basis: 100%;
+  min-width: min(100%, 15rem);
+}
 .cs-row {
   display: grid;
   gap: 2px;
@@ -5249,6 +5291,7 @@ button.tile:hover {
     background: var(--surface-2);
   }
   .count-stepper.folded .cs-row,
+  .count-stepper.folded .cs-size,
   .count-stepper.folded .cs-title {
     display: none;
   }
@@ -5386,6 +5429,34 @@ button.tile:hover {
   color: var(--ink);
 }
 
+/* 3D model resize handles in Move mode (ADR-102) --------------------------- */
+.model-handle {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 2px solid var(--primary);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--ink);
+  font: 600 var(--fs-sm) var(--font);
+  box-shadow: var(--shadow-1);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.model-handle:active {
+  cursor: grabbing;
+  background: var(--primary-soft);
+}
+@media (pointer: coarse) {
+  .model-handle {
+    width: 44px;
+    height: 44px;
+  }
+}
+
 /* Gaps page (ADR-101) ----------------------------------------------------- */
 .gaps-page {
   grid-template-columns: minmax(0, 1fr);
@@ -5484,6 +5555,24 @@ button.tile:hover {
   .gaps-page .pairs dd {
     margin-bottom: var(--s-2);
   }
+}
+
+/* Template revision (ADR-096): the actions sit under the notice text, across both columns. */
+.template-notice .split-actions {
+  grid-column: 1 / -1;
+}
+.template-line,
+.template-count {
+  margin: 0;
+}
+.template-notice {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+.template-notice .split-actions {
+  flex-wrap: wrap;
+}
+.template-notice .split-actions .btn {
+  flex: 1 1 auto;
 }
 /* The piece list beside the plan (ADR-094): a side panel next to the plan on a desktop, a bottom sheet on a phone
    that folds away while an item is dragged. Items lift on a press (mouse) or a 300 ms hold (touch). */
@@ -5596,4 +5685,47 @@ button.tile:hover {
 /* The selected-piece card's actions (Edit, Replace…, Update, Lock) wrap instead of widening the panel (ADR-095). */
 .piece-edit > .split-actions {
   flex-wrap: wrap;
+}
+
+/* Several selected pieces and groups (ADR-097). */
+.plan .select-box {
+  fill: var(--primary-soft);
+  fill-opacity: 0.35;
+  stroke: var(--primary);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 4;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+/* With Select on (phones), a drag on empty plan draws the box instead of scrolling the page. */
+.plan svg.selecting {
+  touch-action: none;
+}
+.selection-card .card-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+.groups .group-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+.groups .group-row .row-btn {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Align and distribute (ADR-099): a wrapping row under the selection's actions. */
+.align-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  margin-top: var(--s-2);
+}
+.align-actions .hint {
+  flex-basis: 100%;
+  margin: 0;
 }

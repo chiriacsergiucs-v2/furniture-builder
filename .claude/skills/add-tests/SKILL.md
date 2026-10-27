@@ -22,7 +22,8 @@ Project: **Furniture Builder** — pure TypeScript model, Vitest (ADR-015).
      version, unreadable rows kept, import gets new ids.
    - **Store** for undo/redo, selection and stable selectors.
    - **No committed browser suite** unless the user asks (ADR-015). Visible behaviour is
-     proven by a find-it script in `tools/<feature>/find-it.mjs`, run on the production build
+     proven by a jsdom find-it test in `tests/find-it/<feature>.test.tsx` (ADR-108), or, for an
+     `Acceptance: browser` ADR, a script in `tools/<feature>/find-it.mjs` run on the production build
      (for an `Acceptance: light` ADR: later, at the catch-up; record `find-it pending (light, ADR-066)`, ADR-066).
 4. **Cases this domain breaks on:** minimum and maximum sizes, thickness larger than the
    space, odd millimetres in equal splits, every quarter turn in projects, every front style,
@@ -37,9 +38,7 @@ Project: **Furniture Builder** — pure TypeScript model, Vitest (ADR-015).
 ## Rules
 
 - Never delete, skip or weaken a test, or lower a fuzz count, to make a run pass.
-- No assertion behind an `if` that can be false: build the fixture so the case always exists. A test name
-  says exactly what the body sets up and asserts (retro 2026-10-26).
-- In find-it scripts, wait for content that loads after navigation (`locator.waitFor`), never a bare
-  `isVisible()` (retro 2026-10-26).
+- jsdom find-it: the drawing hit-tests taps by screen position, which jsdom cannot compute; select a
+  space with its keyboard route (focus it, press Enter), which runs the same tap (ADR-108).
 - No real personal data in fixtures. Generate images in the test rather than committing binaries.
 - Report: tests added, which `Done when` item each covers, and any case not covered and why.

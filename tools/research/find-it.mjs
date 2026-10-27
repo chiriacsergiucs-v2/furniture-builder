@@ -38,7 +38,7 @@ for (const width of [1440, 1024, 390, 360]) {
     'page heading "Feature Research & Catalog"',
     await page.getByRole('heading', { name: 'Feature Research & Catalog' }).isVisible(),
   );
-  // ADR-102: only Features (dashboard on top) and Competitors are left; no ticks, no export.
+  // ADR-110: only Features (dashboard on top) and Competitors are left; no ticks, no export.
   const tabs = await page.getByRole('tab').allInnerTexts();
   check(
     width,

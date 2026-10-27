@@ -14,6 +14,7 @@ import type { Design } from '../core/types';
 import { NewDialog } from './Dialogs';
 import { SettingsDialog } from './Settings';
 import { WizardDialog } from './Wizard';
+import { WallFillDialog } from './WallFill';
 import { CatalogPage } from './Catalog';
 import { ResearchPage } from './Research';
 import { GapsPage } from './Gaps';
@@ -176,7 +177,7 @@ export function App() {
     canRedoPiece = useDesign((s) => s.future.length > 0);
   const canUndoProject = useDesign((s) => s.projectPast.length > 0),
     canRedoProject = useDesign((s) => s.projectFuture.length > 0);
-  const [dialog, setDialog] = useState<null | 'new' | 'wizard' | 'render'>(null);
+  const [dialog, setDialog] = useState<null | 'new' | 'wizard' | 'render' | 'wallfill'>(null);
   const look = useLook();
   const openCatalog = () => {
     setDialog(null);
@@ -222,6 +223,8 @@ export function App() {
   }
   // On a phone Compose is the drawing only, so the canvas is not mounted there (ADR-014).
   const shown = shownView(view, mode, phone);
+  // A project's drawing has its own tool row (Snap, Select, Clearances): Doors and fronts joins it there (ADR-109).
+  const frontsInPlan = inProject && mode === 'compose' && showsDrawing(shown);
   // Mounted only while the editor is the page shown (ADR-014): hidden on Projects or Catalog it kept rendering.
   const mount3d = has3d && shows3d(shown) && page === 'editor';
 
@@ -413,6 +416,14 @@ export function App() {
           st.duplicateItem(st.selectedItemId);
         }
       }
+      // Ctrl/Cmd+A selects every piece of the open project (ADR-097).
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
+        const st = useDesign.getState();
+        if (page === 'editor' && st.project && !st.editingItemId && !st.placingItemId) {
+          e.preventDefault();
+          st.selectAll();
+        }
+      }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
         e.preventDefault();
         redo();
@@ -435,11 +446,14 @@ export function App() {
       ? `${warnings} to check`
       : '';
   const selectedItem = project?.items.find((i) => i.id === selectedItemId);
+  const selectedCount = useDesign((s) => s.selectedItemIds.length);
   const selectedModel = project?.models?.find((m) => m.id === selectedItemId);
   const peek = inProject
-    ? selectedItem || selectedModel
-      ? `Selected: ${selectedItem?.design.name ?? selectedModel?.name}`
-      : `${project!.name}: ${project!.items.length} ${project!.items.length === 1 ? 'piece' : 'pieces'}`
+    ? selectedCount > 1
+      ? `${selectedCount} pieces selected`
+      : selectedItem || selectedModel
+        ? `Selected: ${selectedItem?.design.name ?? selectedModel?.name}`
+        : `${project!.name}: ${project!.items.length} ${project!.items.length === 1 ? 'piece' : 'pieces'}`
     : (() => {
         const l = selectionLabel(design.product, selectedId);
         return l ? `Selected: ${l}` : 'Tap a space to edit it';
@@ -672,7 +686,11 @@ export function App() {
         )}
 
         {page === 'projects' && (
-          <ProjectsPage onOpened={() => setPage('editor')} onNewPiece={() => setDialog('new')} />
+          <ProjectsPage
+            onOpened={() => setPage('editor')}
+            onNewPiece={() => setDialog('new')}
+            onFillWall={() => setDialog('wallfill')}
+          />
         )}
         {page === 'catalog' && (
           <CatalogPage
@@ -739,14 +757,16 @@ export function App() {
                 </div>
               )}
               <ViewOptions menu={phone && mode === 'build'}>
-                <label className="toggle small">
-                  <input
-                    type="checkbox"
-                    checked={showFronts}
-                    onChange={(e) => setShowFronts(e.target.checked)}
-                  />
-                  <span>Doors and fronts</span>
-                </label>
+                {!frontsInPlan && (
+                  <label className="toggle small">
+                    <input
+                      type="checkbox"
+                      checked={showFronts}
+                      onChange={(e) => setShowFronts(e.target.checked)}
+                    />
+                    <span>Doors and fronts</span>
+                  </label>
+                )}
                 {shows3d(shown) && (
                   <label className="toggle small">
                     <input
@@ -798,7 +818,11 @@ export function App() {
             </div>
             <div className={`views ${shown === 'both' ? 'both' : ''}`}>
               <div className={`view front ${showsDrawing(shown) ? 'active' : ''}`}>
-                {inProject ? <PlanView /> : <Elevation />}
+                {inProject ? (
+                  <PlanView fronts={frontsInPlan} card={!(phone && shows3d(shown))} />
+                ) : (
+                  <Elevation />
+                )}
               </div>
               <div className={`view three ${shows3d(shown) ? 'active' : ''}`}>
                 {mount3d ? (
@@ -833,6 +857,12 @@ export function App() {
             setWizardFrom(null);
             setDialog('wizard');
           }}
+          onFillWall={() => setDialog('wallfill')}
+          onOpened={() => setPage('editor')}
+        />
+        <WallFillDialog
+          open={dialog === 'wallfill'}
+          onClose={() => setDialog((d) => (d === 'wallfill' ? null : d))}
           onOpened={() => setPage('editor')}
         />
         <WizardDialog

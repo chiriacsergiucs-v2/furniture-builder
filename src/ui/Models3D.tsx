@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import {
   makeModelItem,
   modelYaw,
-  scaleToWidth,
+  MODEL_SIDE_MAX,
+  resizeModel,
   type ModelFront,
   type ModelItem,
   type ModelTurn,
@@ -14,7 +15,8 @@ import { deleteModelIfUnused, listModels, loadModel, type StoredModel } from '..
 import { forgetModelScene, importModelFile } from '../persist/models';
 import { useDesign } from '../store/designStore';
 import { askConfirm } from './Confirm';
-import { MmField, Segmented } from './controls';
+import { MmField, Segmented, Toggle } from './controls';
+import { useKeepProportions } from './keepProportions';
 import { Icon } from './icons';
 import { arrowMove } from './planDrag';
 
@@ -46,8 +48,9 @@ export function ModelFields({ item }: { item: ModelItem }) {
   const updateProject = useDesign((s) => s.updateProject);
   const select = useDesign((s) => s.selectItem);
   const [missing, setMissing] = useState(false);
-  // The stored model's own size: resizing keeps its proportions exactly, whatever was typed before.
+  // The stored model's own size, for Reset size (ADR-102).
   const [natural, setNatural] = useState<StoredModel['size'] | null>(null);
+  const [keep, setKeep] = useKeepProportions(item.id);
   useEffect(() => {
     let live = true;
     loadModel(item.modelId)
@@ -77,14 +80,40 @@ export function ModelFields({ item }: { item: ModelItem }) {
           This 3D model is not on this device; it is drawn as a box.
         </p>
       )}
-      <MmField
-        label="Width"
-        value={item.size.w}
-        min={1}
-        max={10000}
-        hint={`Height ${item.size.h} · depth ${item.size.d} mm; proportions are kept.`}
-        onChange={(v) => patch(item.id, { size: scaleToWidth(natural ?? item.size, v) })}
-      />
+      <div className="dims3">
+        {(
+          [
+            ['w', 'Width'],
+            ['h', 'Height'],
+            ['d', 'Depth'],
+          ] as const
+        ).map(([side, label]) => (
+          <MmField
+            key={side}
+            label={label}
+            value={item.size[side]}
+            min={1}
+            max={MODEL_SIDE_MAX}
+            onChange={(v) => patch(item.id, { size: resizeModel(item.size, side, v, keep) })}
+          />
+        ))}
+      </div>
+      <Toggle label="Keep proportions" checked={keep} onChange={setKeep} />
+      <p className="hint">
+        {keep
+          ? 'Changing one side scales the other two with it.'
+          : 'Each side changes on its own; the model stretches to fill its box.'}
+      </p>
+      {natural &&
+        (natural.w !== item.size.w || natural.h !== item.size.h || natural.d !== item.size.d) && (
+          <button
+            type="button"
+            className="btn sm outline"
+            onClick={() => patch(item.id, { size: { ...natural } })}
+          >
+            Reset size
+          </button>
+        )}
       <Segmented<ModelTurn>
         label="Turn"
         value={item.rotationY}

@@ -23,7 +23,7 @@ a module and browse only compatible alternatives" (line 183). Each project piece
   Compatible = same placement kind (floor, wall, on another piece) and the same width as the piece; a **Show other
   widths** switch adds the rest, each with "neighbours may need moving".
 - **What carries over:** the project item keeps its id, position (left-back corner), quarter turn, quantity,
-  placement, clearance zones, lock ([ADR-095](../adr-done/ADR-095-lock-a-piece-so-automatic-moves-and-repairs-leave-it-alone.md)) and group ([ADR-097](../adr/ADR-097-select-several-pieces-and-keep-them-as-groups.md)). Its boards carry over by part role,
+  placement, clearance zones, lock ([ADR-095](../adr-done/ADR-095-lock-a-piece-so-automatic-moves-and-repairs-leave-it-alone.md)) and group ([ADR-097](../adr-done/ADR-097-select-several-pieces-and-keep-them-as-groups.md)). Its boards carry over by part role,
   as finish scope applies them ([ADR-055](../adr-done/ADR-055-apply-a-board-to-this-piece-this-run-or-the-whole-project.md)). The design is the new item's copy with its own catalog origin.
 - **What updates:** run parts refresh (ADR-061), checks rerun; the result says what changed ("Replaced. Worktop 2400
   → 2600 mm. 1 problem: …") and opens the problem with its repairs ([ADR-071](../adr-done/ADR-071-select-the-problem-and-offer-previewed-repairs-for-diagnosti.md)).

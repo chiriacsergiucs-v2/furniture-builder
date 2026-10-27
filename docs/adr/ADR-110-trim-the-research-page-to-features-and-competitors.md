@@ -1,10 +1,11 @@
-# ADR-102: Trim the research page to Features and Competitors
+# ADR-110: Trim the research page to Features and Competitors
 
 - Status: Pending
 - Date: 2026-10-26
 - Depends on: ADR-043, ADR-092
 - Design: n/a
-- Backlog: N100
+- Acceptance: browser
+- Backlog: N108
 - Agreed: 2026-10-26 "Remove tabs and underlying dead info : Overview, Compare, Findings, Contradictions, Sources, Coverage audit, Import & export"; answers "Move them to the Features tab", "Remove all, including spec export", "Ticks and bulk actions too", "Only code that nothing uses any more"
 
 ## Context

@@ -33,7 +33,9 @@ trust a claim you did not see run. Default mode is **read-only**: report, do not
      shapes bump `schemaVersion` and keep old readers (ADR-011).
    - **UI** (`src/ui`, `src/viewer`): stable Zustand selectors, the viewer only selects and
      stays lazy, focus visible, no horizontal scroll at 390 px, error diagnostics not
-     hidden; find-it test from the bare app at phone and desktop widths (R3), or, for an
+     hidden; find-it test from the bare app at phone and desktop widths (R3): jsdom by default,
+     the browser script for `Acceptance: browser`, which layout/CSS, 3D view and Move mode
+     ADRs must use (ADR-108); or, for an
      `Acceptance: light` ADR, the backlog marker `find-it pending (light, ADR-066)` (ADR-066).
    - **Release:** no network request, CDN or telemetry (ADR-002), lockfile committed, no
      dependency with unknown licence, base path intact, README claims match behaviour.

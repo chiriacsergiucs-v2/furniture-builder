@@ -1,5 +1,5 @@
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
-import { ContactShadows, Edges, Line, OrbitControls } from '@react-three/drei';
+import { ContactShadows, Edges, Html, Line, OrbitControls } from '@react-three/drei';
 import { useCallback, useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
@@ -35,7 +35,7 @@ import { aabbOf } from '../core/shape';
 import { boxUvs, finishLook, planeUvs } from '../core/surface';
 import { imageKey, useImageUrls } from '../persist/images';
 import { loadModelScene, type ModelScene } from '../persist/models';
-import { modelYaw, type ModelItem } from '../core/model3d';
+import { modelBox, modelYaw, type ModelItem } from '../core/model3d';
 import { useDesign } from '../store/designStore';
 import { useView } from '../ui/useView';
 import { PHONE, useMediaQuery } from '../ui/useMediaQuery';
@@ -47,6 +47,7 @@ import { useSnap } from '../ui/useSnap';
 import { SNAP_RANGE } from '../core/snap';
 import { S, useGhost, useMoveMode, usePieceDrag, type PieceGhost } from './pieceDrag';
 import { landingY } from '../core/drag3d';
+import { useModelResize, useResizePreview, type HandleAxis } from './modelResize';
 import type { Box, MaterialImage, Panel } from '../core/types';
 
 const FRONT = new Set<Panel['role']>(['door', 'drawer-front']);
@@ -215,7 +216,10 @@ export default function Viewer3D() {
   }, []);
   // Placing project pieces from 3D (ADR-093).
   const inProject = view.mode === 'project';
-  const hasPieces = useDesign((s) => inProject && !!s.projectModel?.pieces.length);
+  // 3D models count too: in Move mode their size can be dragged (ADR-102).
+  const hasPieces = useDesign(
+    (s) => inProject && !!(s.projectModel?.pieces.length || s.projectModel?.models.length),
+  );
   const [moveOn, setMoveOn] = useMoveMode();
   // Placing a new piece or drawing the room on the Plan turns moving and turning off, as on the Plan (ADR-056, 059).
   const tapping = useDesign((s) => !!s.placingItemId || !!s.drawingRoom);
@@ -293,7 +297,7 @@ export default function Viewer3D() {
           <CountsAnchor place={placeCard} inProject={view.mode === 'project'} />
         )}
         {view.mode === 'project' && !exploded && <RoomWalls />}
-        {view.mode === 'project' && !exploded && <ModelItems plain={rendering} />}
+        {view.mode === 'project' && !exploded && <ModelItems plain={rendering} moving={moving} />}
         {showLocks && <LockAnchors pieces={locked} badges={lockBadges} />}
         <Fit key={designId} bounds={bounds} />
       </Canvas>
@@ -366,16 +370,19 @@ export default function Viewer3D() {
         </div>
       )}
       {moving && <DragNote snapOn={snapOn} />}
+      {moving && <ResizeNote />}
       {emptyProject && (
         <div className="no-3d empty-3d">
           <p>Add pieces under Compose to see them in 3D.</p>
         </div>
       )}
       {/* The docked card (G-070) folds to one row on a phone (G-058). */}
-      {counts && dock && createPortal(<CountStepper className="in-3d docked" foldable />, dock)}
+      {counts &&
+        dock &&
+        createPortal(<CountStepper className="in-3d docked" foldable withSize />, dock)}
       {counts && !docked && (
         <div ref={cardRef} className="count-anchor" style={{ visibility: 'hidden' }}>
-          <CountStepper className="in-3d" foldable />
+          <CountStepper className="in-3d" foldable withSize />
         </div>
       )}
     </>
@@ -572,21 +579,44 @@ function Occlusion() {
   return null;
 }
 
-/** Display-only 3D models of the project (ADR-076): shown and selectable, never edited (ADR-014). */
-function ModelItems({ plain }: { plain: boolean }) {
+/** Display-only 3D models of the project (ADR-076): shown and selectable; in Move mode the selected one is resized (ADR-102). */
+function ModelItems({ plain, moving }: { plain: boolean; moving: boolean }) {
   const models = useDesign((s) => s.projectModel?.models);
+  const preview = useResizePreview();
   if (!models?.length) return null;
   return (
     <>
-      {models.map((m) => (
-        <ModelItemMesh key={m.item.id} item={m.item} box={m.box} plain={plain} />
-      ))}
+      {models.map((m) => {
+        // While a handle is dragged (ADR-102), the model shows the size it would get.
+        const item = preview?.id === m.item.id ? { ...m.item, size: preview.size } : m.item;
+        const box = item === m.item ? m.box : modelBox(item);
+        return (
+          <ModelItemMesh
+            key={m.item.id}
+            item={item}
+            box={box}
+            plain={plain}
+            handles={moving ? m.item : null}
+          />
+        );
+      })}
     </>
   );
 }
 
-/** One model scaled to its size in mm and turned in its box; a plain box while loading or when not on this device. */
-function ModelItemMesh({ item, box, plain }: { item: ModelItem; box: Box; plain: boolean }) {
+/** One model stretched to its size in mm and turned in its box; a plain box while loading or when not on this device. */
+function ModelItemMesh({
+  item,
+  box,
+  plain,
+  handles,
+}: {
+  item: ModelItem;
+  box: Box;
+  plain: boolean;
+  /** In Move mode, the saved item whose size the handles change when it is selected (ADR-102). */
+  handles: ModelItem | null;
+}) {
   const [loaded, setLoaded] = useState<{ id: string; scene: ModelScene | null } | null>(null);
   useEffect(() => {
     let live = true;
@@ -604,41 +634,105 @@ function ModelItemMesh({ item, box, plain }: { item: ModelItem; box: Box; plain:
   const { w, h, d } = item.size;
   const outline = useMemo(() => new EdgesGeometry(new BoxGeometry(w * S, h * S, d * S)), [w, h, d]);
   useEffect(() => () => outline.dispose(), [outline]);
-  // Uniform scale (proportions locked), taken along the model's longest side.
-  const scale = (() => {
-    if (!ms) return 1;
+  // Stretched on each axis to fill its box (ADR-102); a flat side takes the scale of the longest.
+  const scale = ((): [number, number, number] => {
+    if (!ms) return [1, 1, 1];
     const native = ms.size,
       mm = [w, h, d];
     const k = native.indexOf(Math.max(...native));
-    return native[k] > 0 ? (mm[k] * S) / native[k] : 1;
+    const even = native[k] > 0 ? (mm[k] * S) / native[k] : 1;
+    return [0, 1, 2].map((i) => (native[i] > 0 ? (mm[i] * S) / native[i] : even)) as [
+      number,
+      number,
+      number,
+    ];
   })();
   return (
-    <group
-      position={[(box.x + box.w / 2) * S, (box.y + box.h / 2) * S, (box.z + box.d / 2) * S]}
-      rotation={[0, (modelYaw(item) * Math.PI) / 180, 0]}
-      onClick={(e) => {
-        e.stopPropagation();
-        selectItem(item.id);
-      }}
-    >
-      {clone && ms ? (
-        <group scale={scale}>
-          <group position={[-ms.center[0], -ms.center[1], -ms.center[2]]}>
-            <primitive object={clone} />
+    <>
+      {selected && handles && <ResizeHandles item={handles} box={box} />}
+      <group
+        position={[(box.x + box.w / 2) * S, (box.y + box.h / 2) * S, (box.z + box.d / 2) * S]}
+        rotation={[0, (modelYaw(item) * Math.PI) / 180, 0]}
+        onClick={(e) => {
+          e.stopPropagation();
+          selectItem(item.id);
+        }}
+      >
+        {clone && ms ? (
+          <group scale={scale}>
+            <group position={[-ms.center[0], -ms.center[1], -ms.center[2]]}>
+              <primitive object={clone} />
+            </group>
           </group>
-        </group>
-      ) : (
-        <mesh>
-          <boxGeometry args={[w * S, h * S, d * S]} />
-          <meshStandardMaterial color="#9aa3a0" transparent opacity={0.45} depthWrite={false} />
-        </mesh>
-      )}
-      {selected && (
-        <lineSegments geometry={outline} raycast={() => null}>
-          <lineBasicMaterial color={SELECT} />
-        </lineSegments>
-      )}
-    </group>
+        ) : (
+          <mesh>
+            <boxGeometry args={[w * S, h * S, d * S]} />
+            <meshStandardMaterial color="#9aa3a0" transparent opacity={0.45} depthWrite={false} />
+          </mesh>
+        )}
+        {selected && (
+          <lineSegments geometry={outline} raycast={() => null}>
+            <lineBasicMaterial color={SELECT} />
+          </lineSegments>
+        )}
+      </group>
+    </>
+  );
+}
+
+const HANDLES: { axis: HandleAxis; label: string; glyph: string }[] = [
+  { axis: 'x', label: 'Resize width', glyph: '↔' },
+  { axis: 'y', label: 'Resize height', glyph: '↕' },
+  { axis: 'z', label: 'Resize depth', glyph: '⤢' },
+];
+
+/**
+ * The selected model's resize handles in Move mode (ADR-102): on the right face (width along the room), the top
+ * (height) and the front (depth); the left, bottom and back stay put. Dragging one goes through `dragResize` (core).
+ */
+function ResizeHandles({ item, box }: { item: ModelItem; box: Box }) {
+  const press = useModelResize();
+  const cx = box.x + box.w / 2,
+    cy = box.y + box.h / 2,
+    cz = box.z + box.d / 2;
+  const at: Record<HandleAxis, [number, number, number]> = {
+    x: [box.x + box.w, cy, cz],
+    y: [cx, box.y + box.h, cz],
+    z: [cx, cy, box.z + box.d],
+  };
+  return (
+    <>
+      {HANDLES.map((hd) => (
+        <Html
+          key={hd.axis}
+          position={at[hd.axis].map((v) => v * S) as [number, number, number]}
+          center
+          zIndexRange={[2, 1]}
+        >
+          <button
+            type="button"
+            className="model-handle"
+            aria-label={hd.label}
+            title={`${hd.label}: drag`}
+            onPointerDown={(e) => press(e, item, hd.axis, at[hd.axis])}
+          >
+            {hd.glyph}
+          </button>
+        </Html>
+      ))}
+    </>
+  );
+}
+
+/** The live size while a 3D model's handle is dragged (ADR-102). */
+function ResizeNote() {
+  const preview = useResizePreview();
+  if (!preview) return null;
+  const { w, h, d } = preview.size;
+  return (
+    <span className="plan-drag-note three-drag-note" role="status">
+      {w} × {h} × {d} mm (W × H × D)
+    </span>
   );
 }
 

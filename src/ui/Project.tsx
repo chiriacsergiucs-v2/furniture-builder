@@ -1,9 +1,19 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type MouseEvent,
+} from 'react';
+import { CountStepper } from './CountStepper';
 import { projectBoards, roleBoard, type FinishRole, type FinishScope } from '../core/finish';
 import { decorPatch, type Decor } from '../core/materials';
 import { touchingRun } from '../core/arrange';
 import { mergeCandidates } from '../core/merge';
 import {
+  DRAG_STEP,
   isLocked,
   leftNeighbour,
   LOCKED_HINT,
@@ -19,6 +29,7 @@ import {
   type QuarterTurn,
 } from '../core/project';
 import { dropTarget, SNAP_RANGE } from '../core/snap';
+import { groupOf, itemsAt, itemsInBox, nextUnder } from '../core/selection';
 import { inSelection, selectionBox } from '../core/selectPath';
 import type { Box, Design, Material, Panel } from '../core/types';
 import { listDecors, listDesigns, loadDesign, type StoredDesign } from '../persist/db';
@@ -62,6 +73,7 @@ import { newId } from '../core/design';
 import { Dim, DimV, outlinePoints } from './Elevation';
 import { Icon } from './icons';
 import { InsideEditor } from './Inspector';
+import { PieceSize } from './PieceSize';
 import { PieceSettingsDialog } from './Settings';
 import { templateGlyph } from './Templates';
 import { StartFrom } from './Catalog';
@@ -78,6 +90,8 @@ import {
 } from './ProblemBanner';
 import { useProblem } from './problemStore';
 import { ReplaceButton } from './Replace';
+import { NewerTemplates, TemplateNotice } from './TemplateRevision';
+import { GroupList, SelectionCard } from './Selection';
 
 const FRONT_SIDE: Record<QuarterTurn, string> = {
   0: 'front faces you',
@@ -103,12 +117,19 @@ export function ProjectPanel({
   const selectedId = useDesign((s) => s.selectedItemId);
   const drillId = useDesign((s) => s.drillItemId);
   const select = useDesign((s) => s.selectItem);
+  const toggleItem = useDesign((s) => s.toggleItem);
+  const selectedIds = useDesign((s) => s.selectedItemIds);
   const update = useDesign((s) => s.updateItem);
   const remove = useDesign((s) => s.removeItem);
   const edit = useDesign((s) => s.editItem);
   const updateProject = useDesign((s) => s.updateProject);
   const setGap = useDesign((s) => s.setGap);
   const setLocked = useDesign((s) => s.setLocked);
+  const resizeItem = useDesign((s) => s.resizeItem);
+  // A space, shelf or side inside the drilled piece is selected: its size is not the piece's (ADR-106).
+  const insideSelected = useDesign(
+    (s) => s.drillItemId !== null && typeof s.selectedId === 'string',
+  );
   const [gapMsg, setGapMsg] = useState<{ id: string | null; text: string | null }>({
     id: null,
     text: null,
@@ -177,6 +198,7 @@ export function ProjectPanel({
           your saved pieces.
         </p>
       </header>
+      <SelectionCard />
       {item && (
         <section className="piece-edit section" aria-label={`Selected piece: ${item.design.name}`}>
           <div className="card-title">
@@ -191,6 +213,15 @@ export function ProjectPanel({
               </span>
             )}
           </h3>
+          <TemplateNotice item={item} />
+          {!(drillId === item.id && insideSelected) && (
+            <PieceSize
+              // Not the bare item id: ArrangeFields below already uses it in this list (duplicate keys left stale rows).
+              key={`size-${item.id}`}
+              product={item.design.product}
+              onChange={(k, v) => resizeItem(item.id, k, v)}
+            />
+          )}
           <div className="split-actions">
             <button type="button" className="btn solid" onClick={() => edit(item.id)}>
               <Icon name="pencil" className="sm" />
@@ -323,6 +354,7 @@ export function ProjectPanel({
         </section>
       )}
       {model3d && <ModelFields item={model3d} />}
+      <NewerTemplates items={project.items} />
       {project.items.length === 0 ? (
         <p className="empty center">
           <Icon name="project" />
@@ -336,9 +368,11 @@ export function ProjectPanel({
               <li key={i.id}>
                 <button
                   type="button"
-                  className={`row-btn ${i.id === selectedId ? 'on' : ''}`}
-                  aria-pressed={i.id === selectedId}
-                  onClick={() => select(i.id)}
+                  className={`row-btn ${selectedIds.includes(i.id) ? 'on' : ''}`}
+                  aria-pressed={selectedIds.includes(i.id)}
+                  onClick={(e) =>
+                    e.shiftKey || e.ctrlKey || e.metaKey ? toggleItem(i.id) : select(i.id)
+                  }
                 >
                   <span>
                     <strong>
@@ -358,6 +392,7 @@ export function ProjectPanel({
           })}
         </ul>
       )}
+      <GroupList />
       <ModelList pm={pm} />
       <button type="button" className="btn outline block" onClick={onAdd}>
         <Icon name="plus" />
@@ -373,7 +408,10 @@ function FinishFields({ item }: { item: ProjectItem }) {
   const project = useDesign((s) => s.project)!;
   const apply = useDesign((s) => s.applyFinish);
   const [role, setRole] = useState<FinishRole>('front');
-  const [scope, setScope] = useState<FinishScope>('piece');
+  const [chosenScope, setScope] = useState<FinishScope>('piece');
+  const selectedCount = useDesign((s) => s.selectedItemIds.length);
+  // "Selected pieces" goes when the selection is one piece again: the scope falls back to this piece.
+  const scope = chosenScope === 'selection' && selectedCount < 2 ? 'piece' : chosenScope;
   const [boardKey, setBoardKey] = useState('');
   const [msg, setMsg] = useState<string | null>(null);
   const [decors, setDecors] = useState<Decor[]>([]);
@@ -459,6 +497,9 @@ function FinishFields({ item }: { item: ProjectItem }) {
         options={[
           { value: 'piece', label: 'This piece' },
           ...(run && run.length > 1 ? [{ value: 'run' as const, label: 'This run' }] : []),
+          ...(selectedCount > 1
+            ? [{ value: 'selection' as const, label: `Selected pieces (${selectedCount})` }]
+            : []),
           { value: 'project', label: 'Whole project' },
         ]}
       />
@@ -752,7 +793,7 @@ const onKey = (f: () => void) => (e: KeyboardEvent) => {
 };
 
 /** The project drawing: the plan from above, and the whole room seen from the front below it. */
-export function PlanView() {
+export function PlanView({ fronts, card }: { fronts?: boolean; card?: boolean }) {
   const pm = useDesign((s) => s.projectModel);
   const placingId = useDesign((s) => s.placingItemId);
   const stop = useDesign((s) => s.stopPlacing);
@@ -819,10 +860,10 @@ export function PlanView() {
         </div>
       )}
       {problem && !placing && !drawing && <ProblemBanner problem={problem} />}
-      <RoomPlan pm={pm} problem={problem} />
+      <RoomPlan pm={pm} problem={problem} fronts={fronts} />
       {/* While a problem is shown the plan takes the room the front view had (ADR-071). */}
       {(pm.pieces.length > 0 || pm.models.length > 0) && !(problem && !placing && !drawing) && (
-        <RoomFront pm={pm} />
+        <RoomFront pm={pm} card={card} />
       )}
     </div>
   );
@@ -858,9 +899,48 @@ function roomPoint(svg: SVGSVGElement, clientX: number, clientY: number) {
   return { x: Math.round(pt.x), z: Math.round(pt.y) };
 }
 
-function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem | null }) {
+function RoomPlan({
+  pm,
+  problem,
+  fronts,
+}: {
+  pm: ProjectModel;
+  problem?: FocusedProblem | null;
+  /** "Doors and fronts" sits in this row instead of the stage toolbar (ADR-109). */
+  fronts?: boolean;
+}) {
+  const showFronts = useDesign((s) => s.showFronts);
+  const setShowFronts = useDesign((s) => s.setShowFronts);
   const space = useSpaceInRoom();
   const selectedId = useDesign((s) => s.selectedItemId);
+  // Several selected pieces (ADR-097): Shift/Ctrl/Cmd-click or Select on a phone; a box on empty plan.
+  const selectedIds = useDesign((s) => s.selectedItemIds);
+  const multi = useDesign((s) => s.multiSelect);
+  const setMulti = useDesign((s) => s.setMultiSelect);
+  const toggleItem = useDesign((s) => s.toggleItem);
+  const selectItems = useDesign((s) => s.selectItems);
+  const moveSelectionBy = useDesign((s) => s.moveSelectionBy);
+  /** The selection box being drawn on empty plan (room mm), or null. */
+  const [box, setBoxState] = useState<{
+    pointerId: number;
+    a: { x: number; z: number };
+    b: { x: number; z: number };
+    add: boolean;
+  } | null>(null);
+  const boxRef = useRef<typeof box>(null);
+  const setBox = (v: typeof box) => {
+    boxRef.current = v;
+    setBoxState(v);
+  };
+  /** A pointer gesture just ended on a piece: the click that follows it is not a second selection. */
+  const justTapped = useRef(false);
+  /** Where the last tap on a piece was (room mm): a tap on the same spot over stacked pieces goes to the next one. */
+  const lastTap = useRef<{ x: number; z: number } | null>(null);
+  /** The placed footprints the project model holds, for hit tests without building anything again. */
+  const footprints = useMemo(
+    () => new Map(pm.pieces.map((pc) => [pc.item.id, pc.bounds])),
+    [pm.pieces],
+  );
   const select = useDesign((s) => s.selectItem);
   const tapItem = useDesign((s) => s.tapItem);
   const placingId = useDesign((s) => s.placingItemId);
@@ -922,7 +1002,7 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
     const svg = svgRef.current;
     if (!svg) return;
     const onMove = (e: TouchEvent) => {
-      if (dragRef.current) e.preventDefault();
+      if (dragRef.current || boxRef.current) e.preventDefault();
     };
     svg.addEventListener('touchmove', onMove, { passive: false });
     return () => svg.removeEventListener('touchmove', onMove);
@@ -937,22 +1017,31 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
     room: toRoom(e),
   });
   const dragged = drag?.dragging ? pm.pieces.find((pc) => pc.item.id === drag.id) : undefined;
+  // Dragging a piece of a selection of several moves them all (ADR-097).
+  const group =
+    dragged && selectedIds.length > 1 && selectedIds.includes(dragged.item.id) ? selectedIds : null;
+  // Snapping uses the moved piece; the other selected pieces move with it, so they are not its neighbours.
+  const others = useMemo(
+    () =>
+      group ? pm.pieces.filter((pc) => !group.includes(pc.item.id) || pc === dragged) : pm.pieces,
+    [group, pm.pieces, dragged],
+  );
   // A locked piece, or one carrying one, does not follow the pointer (ADR-095): no outline, the hint instead.
   const lockedDrag = useMemo(
     () =>
       dragged && project
         ? isLocked(dragged.item)
           ? LOCKED_HINT
-          : moveBlocked(project, [dragged.item.id])
+          : moveBlocked(project, group ?? [dragged.item.id])
         : null,
-    [dragged, project],
+    [dragged, project, group],
   );
   // A catalog item dragged from the piece list (ADR-094): its outline follows the pointer over the plan, snapped
   // the same way (with the Snap toggle, read by `newPieceTarget`).
   const newDrag = usePieceList((s) => s.drag);
   const target =
     dragged && drag && project && !lockedDrag
-      ? dropTarget(project, pm.pieces, drag.id, drag.dx, drag.dz, snapOn && !alt)
+      ? dropTarget(project, others, drag.id, drag.dx, drag.dz, snapOn && !alt)
       : newDrag
         ? newPieceTarget(newDrag)
         : null;
@@ -999,6 +1088,9 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
   return (
     <figure className="plan with-tools" aria-label="Room plan, seen from above. Select a piece.">
       <div className="plan-tools">
+        {fronts && (
+          <Toggle label="Doors and fronts" checked={showFronts} onChange={setShowFronts} />
+        )}
         <button
           type="button"
           className="btn sm outline snap-toggle"
@@ -1006,6 +1098,16 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
           onClick={() => setSnapOn(!snapOn)}
         >
           Snap
+        </button>
+        {/* Phones: taps add and remove pieces, and a drag on empty plan draws a selection box (ADR-097). */}
+        <button
+          type="button"
+          className="btn sm outline select-toggle"
+          aria-pressed={multi}
+          title="Select several pieces: tap to add or remove, drag on empty plan for a box"
+          onClick={() => setMulti(!multi)}
+        >
+          Select
         </button>
         <ZoneToolbar on={showZones} onChange={setShowZones} />
       </div>
@@ -1018,8 +1120,10 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
         Seen from above. The yellow edge is each piece's front; dashed pieces hang on the wall; red
         dashes show where a selected piece's doors or drawers cannot open. Drag a piece, or use the
         arrow keys on it, to move it; Esc cancels a drag. R turns the focused piece about its
-        centre. With Snap on, a dropped piece joins a wall, an inside corner or a neighbour’s side
-        within {SNAP_RANGE} mm; arrow keys never snap.
+        centre. Shift- or Ctrl-click adds pieces to the selection (Select on a phone); drag on empty
+        plan to draw a box; tap a spot again to reach a piece under another; Ctrl+A selects all. A
+        grouped piece selects its group first, then itself. With Snap on, a dropped piece joins a
+        wall, an inside corner or a neighbour’s side within {SNAP_RANGE} mm; arrow keys never snap.
       </InfoTip>
       {/* Live snap feedback while a piece is dragged; over the plan, so it takes no room (ADR-080). */}
       {target ? (
@@ -1051,13 +1155,40 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
       <svg
         ref={svgRef}
         viewBox={`${x0 - pad * 1.2} ${z0 - pad * 1.6} ${x1 - x0 + pad * 2.4} ${z1 - z0 + pad * 2.8}`}
-        className={tapping ? 'placing' : undefined}
-        onPointerMove={tapping ? (e) => setHover(toRoom(e)) : undefined}
+        className={tapping ? 'placing' : multi ? 'selecting' : undefined}
+        onPointerMove={(e) => {
+          if (tapping) setHover(toRoom(e));
+          const bx = boxRef.current;
+          if (bx && e.pointerId === bx.pointerId) {
+            const p = toRoom(e);
+            if (p) setBox({ ...bx, b: p });
+          }
+        }}
         onPointerLeave={() => setHover(null)}
         onPointerDown={(e) => {
           // A second finger (or any other pointer) while a piece is pressed cancels the drag.
           if (dragRef.current && e.pointerId !== dragRef.current.pointerId) setDrag(null);
+          if (boxRef.current && e.pointerId !== boxRef.current.pointerId) setBox(null);
+          // A press on empty plan starts a selection box (ADR-097): with a mouse or pen, or with Select on.
+          const onPiece = (e.target as Element).closest?.('.plan-piece, .plan-model');
+          if (tapping || onPiece || dragRef.current || boxRef.current) return;
+          if (e.pointerType === 'touch' && !multi) return;
+          if (e.pointerType === 'mouse' && e.button !== 0) return;
+          const p = toRoom(e);
+          if (!p) return;
+          e.currentTarget.setPointerCapture?.(e.pointerId);
+          setBox({ pointerId: e.pointerId, a: p, b: p, add: e.shiftKey || e.ctrlKey || e.metaKey });
         }}
+        onPointerUp={(e) => {
+          const bx = boxRef.current;
+          if (!bx || e.pointerId !== bx.pointerId || !project) return;
+          setBox(null);
+          // A press without a drag is not a box.
+          if (Math.abs(bx.a.x - bx.b.x) < 1 && Math.abs(bx.a.z - bx.b.z) < 1) return;
+          const hit = itemsInBox(project, bx.a, bx.b, footprints);
+          selectItems(bx.add ? [...selectedIds, ...hit] : hit);
+        }}
+        onPointerCancel={() => setBox(null)}
         onClick={
           tapping
             ? (e) => {
@@ -1104,7 +1235,7 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
         {pm.pieces.map((pc) => {
           const b = pc.bounds;
           const [fx1, fz1, fx2, fz2] = frontLine(b, pc.item.rotationY);
-          const on = pc.item.id === selectedId;
+          const on = selectedIds.includes(pc.item.id);
           // Pieces stacked on the same floor area (a wall run above a base run) get their names on separate lines.
           const stack = pm.pieces.filter(
             (q) =>
@@ -1124,7 +1255,17 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
               tabIndex={0}
               aria-pressed={on}
               aria-label={`${pc.item.design.name}, ${b.w} by ${b.d} mm${locked ? ', locked' : ''}`}
-              onClick={tapping ? undefined : () => select(pc.item.id)}
+              onClick={
+                tapping
+                  ? undefined
+                  : () => {
+                      if (justTapped.current) {
+                        justTapped.current = false;
+                        return;
+                      }
+                      select(pc.item.id);
+                    }
+              }
               onKeyDown={(e) => {
                 // R / Shift+R turn the focused piece about its centre (ADR-069).
                 if (
@@ -1144,7 +1285,10 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
                 const m = tapping ? null : arrowMove(e.key, e.shiftKey);
                 if (!m) return onKey(() => select(pc.item.id))(e);
                 e.preventDefault();
-                moveItemBy(pc.item.id, m.dx, m.dz);
+                // On a piece of a selection of several, the arrows move them all (ADR-097).
+                if (selectedIds.length > 1 && selectedIds.includes(pc.item.id))
+                  moveSelectionBy(m.dx, m.dz);
+                else moveItemBy(pc.item.id, m.dx, m.dz);
               }}
               onPointerDown={
                 tapping
@@ -1154,6 +1298,7 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
                       // Another pointer already pressing: the plan's handler cancels that drag instead.
                       const cur = dragRef.current;
                       if (cur && cur.pointerId !== e.pointerId) return;
+                      justTapped.current = false;
                       const g = pressPiece(null, pc.item.id, at(e));
                       if (!g) return;
                       e.currentTarget.setPointerCapture?.(e.pointerId);
@@ -1179,10 +1324,44 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
                 setDrag(null);
                 // A tap mode that started during the press ends the drag without moving anything.
                 if (tapping) return;
-                // A tap selects the piece; a tap on the selected piece opens it, whole piece selected (ADR-083).
-                if (end.kind !== 'drop') return tapItem(end.id);
-                select(end.id);
+                justTapped.current = true;
+                if (end.kind !== 'drop') {
+                  // Shift/Ctrl/Cmd, or Select on: add the piece to the selection or take it out (ADR-097).
+                  if (e.shiftKey || e.ctrlKey || e.metaKey || multi) return toggleItem(end.id);
+                  // The same spot again over stacked pieces: the next one under the pointer (ADR-097).
+                  const pt = toRoom(e);
+                  const prev = lastTap.current;
+                  lastTap.current = pt;
+                  const near = (span / 100) ** 2;
+                  const same =
+                    !!pt && !!prev && (pt.x - prev.x) ** 2 + (pt.z - prev.z) ** 2 <= near;
+                  const under = same && project ? itemsAt(project, pt!.x, pt!.z, footprints) : [];
+                  if (
+                    under.length > 1 &&
+                    selectedIds.length === 1 &&
+                    under.includes(selectedIds[0]) &&
+                    !groupOf(project!, end.id)
+                  )
+                    return select(nextUnder(under, selectedIds[0]) ?? end.id);
+                  // A tap selects the piece (its group first); a tap on the selected piece opens it (ADR-083).
+                  return tapItem(end.id);
+                }
                 const snapping = snapOn && !e.altKey;
+                // A piece of a selection of several: all move by the same whole mm (ADR-097).
+                if (selectedIds.length > 1 && selectedIds.includes(end.id)) {
+                  const t =
+                    snapping && project
+                      ? dropTarget(project, others, end.id, end.dx, end.dz, true)
+                      : null;
+                  if (t?.snap)
+                    moveSelectionBy(
+                      t.position.x - pc.item.position.x,
+                      t.position.z - pc.item.position.z,
+                    );
+                  else moveSelectionBy(end.dx, end.dz, DRAG_STEP);
+                  return;
+                }
+                select(end.id);
                 const t =
                   snapping && project
                     ? dropTarget(project, pm.pieces, end.id, end.dx, end.dz, true)
@@ -1215,6 +1394,16 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
             </g>
           );
         })}
+        {box && (
+          <rect
+            className="select-box"
+            x={Math.min(box.a.x, box.b.x)}
+            y={Math.min(box.a.z, box.b.z)}
+            width={Math.abs(box.b.x - box.a.x)}
+            height={Math.abs(box.b.z - box.a.z)}
+            aria-hidden="true"
+          />
+        )}
         {showZones && <ZoneOverlay zones={pm.zones} fs={fs} />}
         <PlanModels pm={pm} fs={fs} tapping={tapping} />
         {pm.blocked
@@ -1388,7 +1577,7 @@ function RoomOutline({ room, fs }: { room: Room; fs: number }) {
 }
 
 /** The whole room seen from the front (looking at the back wall), floor at the bottom. Tap a piece to select it. */
-function RoomFront({ pm }: { pm: ProjectModel }) {
+function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
   const space = useSpaceInRoom();
   // A space selected inside a piece: outlined, everything outside it faded (ADR-087 design A, G-071).
   const fade = (b: Box) => (space && !inSelection(space, b) ? ' faded' : '');
@@ -1434,8 +1623,59 @@ function RoomFront({ pm }: { pm: ProjectModel }) {
   const sel =
     pm.pieces.find((p) => p.item.id === selectedId)?.bounds ??
     pm.models.find((m) => m.item.id === selectedId)?.box;
+  // Quick counts and the whole piece's size float over the selected piece from the first tap (ADR-109), as over a
+  // single piece's drawing (ADR-084, ADR-106): right above the selected piece or space, below its top when no room.
+  const counts = useDesign(
+    (s) =>
+      !!card &&
+      !s.editingItemId &&
+      !!s.drillItemId &&
+      s.drillItemId === s.selectedItemId &&
+      s.selectedItemIds.length <= 1,
+  );
+  const figRef = useRef<HTMLElement>(null);
+  const anchorRef = useRef<SVGRectElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
+  const [cardH, setCardH] = useState(0);
+  const [tick, setTick] = useState(0);
+  useLayoutEffect(() => {
+    const fig = figRef.current;
+    if (!fig || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => setTick((t) => t + 1));
+    ro.observe(fig);
+    return () => ro.disconnect();
+  }, []);
+  const at = counts
+    ? (space ?? (pm.pieces.some((p) => p.item.id === selectedId) ? sel : null))
+    : null;
+  useLayoutEffect(() => {
+    const fig = figRef.current,
+      a = anchorRef.current,
+      st = cardRef.current;
+    if (!fig || !a || !st) {
+      setCardH(0);
+      return setPos(null);
+    }
+    // The view gives up the card's height at its top, so there is room right above the piece (as ADR-084).
+    setCardH(st.offsetHeight);
+    const f = fig.getBoundingClientRect(),
+      r = a.getBoundingClientRect();
+    const w = st.offsetWidth,
+      h = st.offsetHeight,
+      gap = 6;
+    const left = Math.max(gap, Math.min(r.left + r.width / 2 - f.left - w / 2, f.width - w - gap));
+    const above = r.top - f.top - h - gap;
+    const top = above >= gap ? above : Math.max(gap, r.top - f.top + gap);
+    setPos((p) => (p && p.left === left && p.top === top ? p : { left, top }));
+  }, [at?.x, at?.y, at?.w, at?.h, tick, cardH, pm]);
   return (
-    <figure className="plan" aria-label="Room seen from the front. Select a piece.">
+    <figure
+      className="plan"
+      ref={figRef}
+      style={at && cardH ? { paddingTop: cardH + 12 } : undefined}
+      aria-label="Room seen from the front. Select a piece."
+    >
       <InfoTip label="About the front view">
         Seen from the front. Sizes in mm: overall in yellow, the selected piece in green.
         {rv &&
@@ -1535,7 +1775,26 @@ function RoomFront({ pm }: { pm: ProjectModel }) {
             aria-label="Selected space inside the piece"
           />
         )}
+        {at && (
+          <rect
+            ref={anchorRef}
+            x={at.x}
+            y={-(at.y + at.h)}
+            width={at.w}
+            height={at.h}
+            fill="none"
+            pointerEvents="none"
+          />
+        )}
       </svg>
+      {at && (
+        <CountStepper
+          ref={cardRef}
+          className="floating"
+          withSize
+          style={pos ? { left: pos.left, top: pos.top } : { visibility: 'hidden' }}
+        />
+      )}
     </figure>
   );
 }

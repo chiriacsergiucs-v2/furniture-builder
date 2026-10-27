@@ -49,6 +49,7 @@ import {
 } from './controls';
 import { Icon } from './icons';
 import { CountStepper } from './CountStepper';
+import { PieceSize } from './PieceSize';
 import { askConfirm } from './Confirm';
 import { useUi } from './shell/uiStore';
 import {
@@ -133,6 +134,7 @@ function ComposeStart() {
   const prod = useDesign((s) => s.design.product);
   const select = useDesign((s) => s.select);
   const whole = useDesign((s) => s.selectedId === null);
+  const resize = useDesign((s) => s.resizePiece);
   const setSettingsOpen = useUi((s) => s.setSettingsOpen);
   const roots = productRoots(prod);
   return (
@@ -146,6 +148,7 @@ function ComposeStart() {
             : 'This piece has no spaces to fill. Its sizes and boards are under Settings.'}
         </p>
       </header>
+      {whole && <PieceSize product={prod} onChange={resize} />}
       {roots.map((r) => (
         <button key={r.root.id} type="button" className="row-btn" onClick={() => select(r.root.id)}>
           <span className="glyph">
@@ -881,6 +884,17 @@ function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material
           ]}
           onChange={(v) => set({ topKind: v })}
         />
+        {p.topKind !== 'rails' && (
+          <Segmented<1 | 2>
+            label="Top layers"
+            value={p.topLayers ?? 1}
+            options={[
+              { value: 1, label: 'Single' },
+              { value: 2, label: 'Doubled', title: 'Two panels glued, the second under the top' },
+            ]}
+            onChange={(v) => set({ topLayers: v })}
+          />
+        )}
         {p.topKind === 'rails' && (
           <MmField
             label="Rail depth"
@@ -1225,6 +1239,15 @@ function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[]
             { value: 'between', label: 'Between sides' },
           ]}
           onChange={(v) => set({ top: v })}
+        />
+        <Segmented<1 | 2>
+          label="Top layers"
+          value={p.topLayers ?? 1}
+          options={[
+            { value: 1, label: 'Single' },
+            { value: 2, label: 'Doubled', title: 'Two panels glued, the second under the top' },
+          ]}
+          onChange={(v) => set({ topLayers: v })}
         />
         <Segmented
           label="Back"

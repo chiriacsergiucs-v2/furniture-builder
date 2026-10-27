@@ -816,7 +816,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-084: Newer-template notice in the Library
 
-- Status: ADR-096
+- Status: Done (ADR-096)
 - Origin: ADR-096 open question (2026-10-26)
 - Missing: Whether saved designs in the Library show the newer-template notice; default yes.
 - Request: "New adr 9" (2026-10-26)
@@ -834,7 +834,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-086: First tap on a grouped piece
 
-- Status: ADR-097
+- Status: Done (ADR-097)
 - Origin: ADR-097 open question (2026-10-26)
 - Missing: Whether the first tap on a grouped piece selects the group; default yes, second tap the piece.
 - Request: "New adr 2" (2026-10-26)
@@ -870,7 +870,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-090: Distribute along the depth
 
-- Status: ADR-099
+- Status: Done (ADR-099)
 - Origin: ADR-099 open question (2026-10-26)
 - Missing: Whether Distribute works along the depth too; default along the wall only.
 - Request: "New adr 7" (2026-10-26)
@@ -1020,3 +1020,265 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Not a quote: ADR-095 'Nothing moves it for the user'
 - Questions: Should resizing a base keep a locked piece on it where it is (leaving its base), or refuse the resize?
 - Suggested pick: Refuse the resize with the reason, as a move of the base is refused (about +10 % of ADR-095's work).
+
+### G-107: Keep mine for saved single pieces
+
+- Status: Open
+- Origin: ADR-096 (2026-10-26, Claude: scoped while building)
+- Missing: Saved single pieces in the Library (Projects → Single pieces) show 'Template updated (revision a → b)', but Keep mine and Replace are offered on project pieces only; a saved single piece has no field to remember a kept revision.
+- Request: Answer to 'Show the notice in the Library too?': "Library too" (2026-10-26)
+- Questions: Should a saved single piece also offer Keep mine (a design-document field) and Replace with the new revision?
+- Suggested pick: Notice only, as built (the answer asked for the notice); Keep mine on saved designs needs an optional Design field (about +20 % of ADR-096's work, +10 % value; estimates).
+
+### G-108: Multi-select in the front view and 3D
+
+- Status: Open
+- Origin: ADR-097 (2026-10-26, Claude: scoped while building)
+- Missing: Shift/Ctrl/Cmd-click adds pieces to the selection on the plan and in the project's piece list; in the room front view and in 3D a click still selects one piece.
+- Request: New adr 2 (2026-10-26): Desktop: Shift- or Ctrl/Cmd-click adds or removes a piece
+- Questions: Add Shift/Ctrl-click to the room front view and to 3D too?
+- Suggested pick: Yes, the same toggle in both views (about +10 % of ADR-097's work, +10 % value; estimates).
+
+### G-109: Cycling stacked pieces on the plan replaces opening them
+
+- Status: Open
+- Origin: ADR-097 (2026-10-26, Claude: defaulted while building)
+- Missing: On the plan, a tap on the same spot over stacked pieces selects the next piece under it (ADR-097) instead of opening the selected piece's interior (ADR-083, G-066); stacked pieces open from the room front view, 3D or the card.
+- Request: New adr 2 (2026-10-26): tapping the same spot again selects the next piece under the pointer
+- Questions: Over stacked pieces on the plan, should a further tap cycle (as built) or open the piece, with cycling on another gesture?
+- Suggested pick: Cycle as built (the ADR's words); opening stays one tap away in the front view (no extra work).
+
+### G-110: Distribute across rows and centre-snap rules
+
+- Status: Open
+- Origin: ADR-099 (2026-10-26, Claude: defaulted while building)
+- Missing: Distribute evenly over pieces at different heights (wall units and base units together, or a piece on another) is refused with the reason instead of spacing each row; centre snapping is offered only between pieces above and below each other (never at the same height) and the ADR-100 join rules do not apply to it (an alignment, not a join).
+- Request: New adr 7 (2026-10-26): Distribute evenly (three or more selected pieces, along the wall)
+- Questions: With a mixed selection, distribute each row on its own instead of refusing? Should the join rules also limit centre snapping?
+- Suggested pick: Distribute each row on its own (closest to 'tidy runs in one tap'; about +15 % of ADR-099's work, +10 % value; estimates); keep the join rules for joins only.
+
+### G-111: Keep proportions switch is not saved
+
+- Status: Done (user answer 2026-10-27 "Screen only, on each time")
+- Origin: ADR-102 (2026-10-27, Claude: defaulted while drafting)
+- Missing: The Keep proportions switch is screen state only: it starts on each time a model is selected and is not saved in the project.
+- Request: Width and height of an item must be editable adr; answer 'Yes, on by default' (Keep proportions switch)
+- Questions: Should the switch remember its setting per model in the saved project (a project schemaVersion bump)?
+- Suggested pick: Screen state only, on each time (the answer 'on by default'; saving it adds a schema change for little value; estimate +25 % effort, +5 % value).
+- Answer: User 2026-10-27: "Screen only, on each time" — kept as built in ADR-102.
+
+### G-112: Resize a 3D model by dragging in the 3D view
+
+- Status: Done (ADR-102)
+- Origin: ADR-102 (2026-10-27, Claude: out of scope)
+- Missing: Resizing an imported 3D model with handles in the 3D view; sizes are typed in the fields only.
+- Request: Width and height of an item must be editable adr
+- Questions: Should the 3D view get resize handles for models?
+- Suggested pick: Typed fields only (the request is to make the sizes editable; handles would be an exception to ADR-014's select-only viewer).
+
+### G-113: Fill a wall: corner and L walls
+
+- Status: Open
+- Origin: ADR-103, 2026-10-27; Claude scoped it out
+- Missing: Fill a wall works on one straight wall only; corner and L-shaped walls are not filled.
+- Request: a reverse furniture building, total width, to the mix of furniture pieces that fill that space (context: corners not mentioned)
+- Questions: Should Fill a wall also fill corner or L walls, with a corner cabinet at the joint?
+- Suggested pick: Fill each straight wall with ADR-103, then join two walls with a catalog corner cabinet (ADR-025). (estimate: effort +40%, value +15%)
+
+### G-114: Fill a wall: room openings shape the mix
+
+- Status: Open
+- Origin: ADR-103, 2026-10-27; Claude scoped it out
+- Missing: Room windows, doors, pipes and outlets do not shape the suggested mixes; they are checked only after the project is made.
+- Request: a reverse furniture building, total width, to the mix of furniture pieces that fill that space (context: room openings not mentioned)
+- Questions: Should Fill a wall read the project room (ADR-058) and avoid windows, doors and outlets?
+- Suggested pick: Start Fill a wall from a wall of the project room and skip mixes that clash with its openings, using the existing room checks. (estimate: effort +30%, value +15%)
+
+### G-115: Fill a wall: when the wall row appears
+
+- Status: Done (ADR-104)
+- Origin: ADR-104, 2026-10-27; open question defaulted by Claude
+- Missing: Whether every mix gets a wall row, or a Refine choice decides (any / always / never).
+- Request: Wall cabinets above (answer to: Which kinds of pieces may appear in a mix?)
+- Questions: Should the wall row appear in every mix, in some mixes, or be chosen in Refine (any / always / never)?
+- Suggested pick: Refine choice 'Wall cabinets: any / always / never', default any, so the first 4 cards show mixes with and without a wall row. (estimate: effort +3%, value +10%)
+
+### G-116: Fill a wall: carcasses with 3 or more equal fronts
+
+- Status: Open
+- Origin: ADR-103, 2026-10-27; Claude cut it while building
+- Missing: Equal fronts puts 1 or 2 fronts on a carcass only (a door front has 1 or 2 leaves); carcasses with 3 or more fronts are not suggested, so fronts under 200 mm wide (with the 400 mm min) give no mix.
+- Request: 6 equal front panels, what's behind is to be configured (answer: Equal fronts, any carcass widths)
+- Questions: Should a carcass carry 3 or more equal fronts (with dividers inside), for narrow fronts?
+- Suggested pick: Allow 3–4 fronts per carcass, built as equal bays with a divider and one door each, so narrow fronts still fill the wall. (estimate: effort +10%, value +5%)
+
+### G-117: Fill a wall: tall cabinet height
+
+- Status: Open
+- Origin: ADR-103, 2026-10-27; default chosen by Claude while building
+- Missing: Tall cabinets are always the catalog height (2200 mm, ADR-036 typical value); there is no tall-height field. A wall lower than that gets the warning on every mix with a tall cabinet.
+- Request: allow with a warning items like tall cabinets, above this height
+- Questions: Should Refine have a tall cabinet height field, or should tall cabinets follow the entered height?
+- Suggested pick: Add a Tall cabinet height field in Refine, catalog value prefilled; the warning stays when it is above the entered height. (estimate: effort +3%, value +10%)
+
+### G-118: Fill a wall: a width per base kind
+
+- Status: Open
+- Origin: ADR-103, 2026-10-27; Claude narrowed it while building
+- Missing: All base kinds in one mix share one width (tall cabinets may have their own round width); mixes such as an 800 drawer base next to 600 shelf bases are not suggested.
+- Request: So basically a mix and match (answer: Equal per kind, exact split)
+- Questions: Should each base kind (open shelves, drawers, door + shelves) get its own width in a mix?
+- Suggested pick: Also try one round width per base kind (steps of 50 mm), ranked after the shared width, so the cards show such mixes too. (estimate: effort +10%, value +15%)
+
+### G-119: Doubled rails on a rails top
+
+- Status: Open
+- Origin: ADR-105, 2026-10-27, Claude default
+- Missing: A doubled top on a rails top (two rails) is not built: the rails stay single and a warning says so.
+- Request: Add the doubled top support … 2 panels
+- Questions: Should 'Doubled' also double the two rails of a rails top, or stay a panel-top option only?
+- Suggested pick: Panel top only (default used): the user's answer was '2 panels', a rails top has no panel; doubling rails is a separate request (+5 % work, +0 % of this request).
+
+### G-120: Glue and screws for the doubled top
+
+- Status: Open
+- Origin: ADR-105, 2026-10-27, Claude (ADR-010)
+- Missing: No glue or screw line in the hardware list for joining the two top layers; the layers count as a carcass joint in the fastener tally only.
+- Request: Add the doubled top support … 2 panels
+- Questions: Which glue and screws (length, spacing) join the two layers? Not known; ADR-010 forbids inventing them.
+- Suggested pick: Leave it to the user's own fastener choice for carcass joints until they name a glue and screw (0 % work now).
+
+### G-121: Doubled bottom, sides or shelves
+
+- Status: Open
+- Origin: ADR-105, 2026-10-27, Claude scope
+- Missing: Only the top can be doubled; a doubled bottom, side or shelf is not built.
+- Request: Add the doubled top support
+- Questions: Do you also want a doubled bottom or doubled sides?
+- Suggested pick: Top only, as asked (0 % extra work).
+
+### G-122: Fill a wall: at most 40 pieces per mix
+
+- Status: Open
+- Origin: ADR-103 review, 2026-10-27; Claude added the bound
+- Missing: A mix has at most 40 pieces (Equal fronts at most 80 fronts), so a tiny min width cannot freeze the page; beyond that the wizard says so instead of suggesting.
+- Request: suggest a good width per piece ... resulting in a few pieces of furniture mixed (context: no limit was asked for)
+- Questions: Is 40 pieces per wall enough, or should the limit be higher?
+- Suggested pick: Keep 40: a 400 mm min fills a 16 m wall; longer runs are better as several walls. (estimate: effort 0%, value 0%)
+
+### G-123: Fill a wall: wall cabinet depth
+
+- Status: Open
+- Origin: ADR-104, 2026-10-27; default chosen by Claude while building
+- Missing: Wall cabinets keep the catalog depth (320 mm carcass); there is no wall cabinet depth field.
+- Request: Wall cabinets above (answer to: Which kinds of pieces may appear in a mix?)
+- Questions: Should Refine have a wall cabinet depth field?
+- Suggested pick: Add Wall cabinet depth in Refine, catalog value prefilled. (estimate: effort +2%, value +5%)
+
+### G-124: Fill a wall: wall row reaching into the base row
+
+- Status: Open
+- Origin: ADR-104, 2026-10-27; Claude changed the agreed handling while building (ADR-008)
+- Missing: The ADR said a wall cabinet reaching into the base row would be warned and still offered. It overlaps the base cabinet, which projects report as an error (pieces-overlap), and mixes with errors are never offered. Such wall rows are now dropped and the Suggestions step says by how much and to lower the wall cabinet height.
+- Request: Catalog height, Refine field (answer to: How tall are the wall cabinets themselves?)
+- Questions: When the wall cabinets would reach into the base row, should the wizard drop the wall row (now), shorten the wall cabinets to fit, or offer the mix with the overlap error shown?
+- Suggested pick: Shorten the wall cabinets to the room left above the base row (never below the catalog minimum), labelled on the card, so a wall row still appears. (estimate: effort +5%, value +10%)
+
+### G-125: Width and depth card over the project view for a selected piece
+
+- Status: ADR-109
+- Origin: ADR-106
+- Missing: In a project, a piece selected but not opened (Inside this piece) gets Width and Depth in its Selected piece card only; no floating card over the project drawing or 3D (the quick-count card shows there only for an opened piece, ADR-088).
+- Request: Add the posibility to change width/depth when whole cabinet or whole piece is selected; answer: Card + side panel
+- Questions: Should a selected project piece also get a floating Width/Depth card over the project plan, elevation and 3D?
+- Suggested pick: Yes, a floating card over the project views (closest to 'Card + side panel'; estimate +60 % work, +15 % of value)
+
+### G-126: No width/depth fields for a bed or a set of loose panels
+
+- Status: Open
+- Origin: ADR-106
+- Missing: A bed's size comes from its mattress and a set of loose panels has no outside size, so neither shows Width/Depth when selected; a filler/cover panel shows Width only (it has no depth).
+- Request: Add the posibility to change width/depth when whole cabinet or whole piece is selected
+- Questions: Should a bed show its mattress size there instead, and loose panels nothing?
+- Suggested pick: Bed: show the mattress width and length there (closest to the request; estimate +10 % work, +5 % of value)
+
+### G-127: Fill a wall: the over-hood cabinet is not placed over a hood
+
+- Status: Open
+- Origin: ADR-104, 2026-10-27, review nit
+- Missing: The over-hood wall variant (no bottom) is dealt into the wall row at any position; nothing ties it to a hood or hob below.
+- Request: Yes, every catalog wall variant
+- Questions: Should the over-hood cabinet appear only above a hob or hood, or stay anywhere in the row?
+- Suggested pick: Anywhere, as answered ('every catalog wall variant', 0 % extra work).
+
+### G-128: Save a project piece back over an existing template
+
+- Status: Open
+- Origin: ADR-107, 2026-10-27, Claude scope
+- Missing: Saving a project piece always makes a new catalog template; it never overwrites the template the piece came from.
+- Request: New adr to add the possibility to save a new piece to catalog when created it inside a project
+- Questions: Do you also want 'Update the template' to write a project piece's changes back into its existing template as a new revision?
+- Suggested pick: New template only, as asked (0 % extra work).
+
+### G-129: Save a group or several pieces as one catalog item
+
+- Status: Open
+- Origin: ADR-107, 2026-10-27, Claude scope
+- Missing: Only one piece at a time is saved to the catalog; a group or multi-selection is not saved as one item (project templates, ADR-060, cover whole projects).
+- Request: New adr to add the possibility to save a new piece to catalog when created it inside a project
+- Questions: Should a selected group of pieces be savable as one catalog item?
+- Suggested pick: One piece at a time, as asked (0 % extra work).
+
+### G-130: jsdom find-it cannot check layout
+
+- Status: Open
+- Origin: ADR-108 (Open question)
+- Missing: jsdom applies no CSS, so the 390 px no-side-scroll rule and bounding-box checks are not tested by the default find-it
+- Request: "Move to B as default, keep the priginal as a flag to be abke to tevert"
+- Questions: Which ADRs must still run the browser script for layout?
+- Suggested pick: ADRs that change layout or CSS set Acceptance browser; others stay jsdom
+
+### G-131: jsdom find-it cannot render the 3D view
+
+- Status: Open
+- Origin: ADR-108 (Out of scope)
+- Missing: The three.js viewer does not render in jsdom; 3D features are not found by the default find-it
+- Request: "Move to B as default, keep the priginal as a flag to be abke to tevert"
+- Questions: Should ADRs that touch the 3D view always use Acceptance browser?
+- Suggested pick: Yes: ADRs touching the 3D view or Move mode use browser
+
+### G-132: Existing browser find-it scripts are not ported to jsdom
+
+- Status: Open
+- Origin: ADR-108 (Out of scope)
+- Missing: The 42 tools/*/find-it.mjs scripts stay; no jsdom versions for shipped ADRs
+- Request: "Move to B as default, keep the priginal as a flag to be abke to tevert"
+- Questions: Port any of them?
+- Suggested pick: No; keep them as the browser regression set
+
+### G-133: Light ADR catch-up mode after ADR-108
+
+- Status: Open
+- Origin: ADR-108 (Open question)
+- Missing: Undecided whether catch-up acceptance for light ADRs runs jsdom or the browser script
+- Request: "Move to B as default, keep the priginal as a flag to be abke to tevert"
+- Questions: Catch up acceptance with jsdom or browser?
+- Suggested pick: jsdom, unless the ADR is layout or 3D
+
+### G-134: Clearances wraps to a second row of the project plan toolbar on a phone
+
+- Status: Open
+- Origin: ADR-109
+- Missing: At 390 px the plan toolbar holds Doors and fronts, Snap and Select on one row; Clearances wraps to a second row.
+- Request: i dont see doors text moved with other; answer: Same row as Snap (Recommended)
+- Questions: Should all four plan controls fit one row on a phone (shorter labels or icons), or is the wrap fine?
+- Suggested pick: Keep the wrap (closest to the request: Doors and fronts is in Snap's row); one row would need shorter labels (estimate +20 % work, +5 % of value)
+
+### G-135: jsdom find-it cannot tap the drawing by position
+
+- Status: Open
+- Origin: ADR-108 (found while building)
+- Missing: The drawing hit-tests taps by screen position (getScreenCTM), which jsdom has no layout for; jsdom tests use each space's keyboard route (Enter), which runs the same tap at the space's centre, so a tap off-centre is not tested
+- Request: "Move to B as default, keep the priginal as a flag to be abke to tevert"
+- Questions: Is the keyboard route enough for drawing taps, or should tap-position work use Acceptance browser?
+- Suggested pick: Keyboard route in jsdom; ADRs that change tap hit-testing use browser

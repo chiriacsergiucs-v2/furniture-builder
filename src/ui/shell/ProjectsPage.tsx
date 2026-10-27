@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { newId } from '../../core/design';
 import { newProject } from '../../core/project';
 import {
@@ -17,6 +17,10 @@ import { ProjectTemplateList } from '../ProjectTemplates';
 import { Icon, type IconName } from '../icons';
 import { templateGlyph } from '../Templates';
 import { importFile } from './importFile';
+import { catalogFamilies } from '../../core/catalog';
+import { newerCount, newerText, templateStatus } from '../../core/templateRevision';
+import { useLocalTemplates } from '../Catalog';
+import { updatedText } from '../TemplateRevision';
 import { useUi } from './uiStore';
 
 const KIND_TEXT = {
@@ -35,9 +39,11 @@ const KIND_TEXT = {
 export function ProjectsPage({
   onOpened,
   onNewPiece,
+  onFillWall,
 }: {
   onOpened: () => void;
   onNewPiece: () => void;
+  onFillWall?: () => void;
 }) {
   const load = useDesign((s) => s.load);
   const openProject = useDesign((s) => s.openProject);
@@ -45,6 +51,22 @@ export function ProjectsPage({
   const [projects, setProjects] = useState<StoredProject[] | null>(null);
   const [pieces, setPieces] = useState<StoredDesign[]>([]);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  // Saved designs and projects say when a piece's template has a newer revision (ADR-096, "Library too").
+  // Worked out once per list (not per render); nothing until this device's templates are read.
+  const locals = useLocalTemplates();
+  const notices = useMemo(() => {
+    const out = new Map<string, string>();
+    if (!locals) return out;
+    for (const r of pieces) {
+      const s = templateStatus({ design: r.design }, catalogFamilies, locals);
+      if (s.kind === 'newer') out.set(r.id, ` · ${updatedText(s)}`);
+    }
+    for (const r of projects ?? []) {
+      const n = newerCount(r.project.items, catalogFamilies, locals);
+      if (n) out.set(r.id, ` · ${newerText(n)}`);
+    }
+    return out;
+  }, [pieces, projects, locals]);
   const refresh = () => {
     listProjects()
       .then(setProjects)
@@ -180,6 +202,12 @@ export function ProjectsPage({
             <Icon name="cube" />
             New single piece
           </button>
+          {onFillWall && (
+            <button type="button" className="btn outline lg" onClick={onFillWall}>
+              <Icon name="project" />
+              Fill a wall
+            </button>
+          )}
         </div>
       </header>
 
@@ -227,7 +255,7 @@ export function ProjectsPage({
                       r,
                       'project',
                       'project',
-                      `${r.project.items.length} ${r.project.items.length === 1 ? 'piece' : 'pieces'} · edited ${when(r.updatedAt)}`,
+                      `${r.project.items.length} ${r.project.items.length === 1 ? 'piece' : 'pieces'} · edited ${when(r.updatedAt)}${notices.get(r.id) ?? ''}`,
                       () => openProject(r.project),
                     ),
                   )}
@@ -243,7 +271,7 @@ export function ProjectsPage({
                       r,
                       'piece',
                       templateGlyph(r.design.product.kind),
-                      `${KIND_TEXT[r.design.product.kind]} · edited ${when(r.updatedAt)}`,
+                      `${KIND_TEXT[r.design.product.kind]} · edited ${when(r.updatedAt)}${notices.get(r.id) ?? ''}`,
                       () => load(r.design, { fromStorage: true }),
                     ),
                   )}

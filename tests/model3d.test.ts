@@ -7,7 +7,7 @@ import {
   countTriangles,
   makeModelItem,
   modelBox,
-  scaleToWidth,
+  resizeModel,
   type ModelItem,
 } from '../src/core/model3d';
 import {
@@ -207,7 +207,11 @@ describe('model items in a project (ADR-076)', () => {
     expect(modelBox(fridge())).toEqual({ x: 0, y: 0, z: 0, w: 600, h: 1800, d: 650 });
     expect(modelBox(fridge({ rotationY: 90 }))).toMatchObject({ w: 650, d: 600 });
     expect(modelBox(fridge({ rotationY: 90, front: 'left' }))).toMatchObject({ w: 600, d: 650 });
-    expect(scaleToWidth({ w: 600, h: 1800, d: 650 }, 300)).toEqual({ w: 300, h: 900, d: 325 });
+    expect(resizeModel({ w: 600, h: 1800, d: 650 }, 'w', 300, true)).toEqual({
+      w: 300,
+      h: 900,
+      d: 325,
+    });
   });
   it('validates; projects of the previous schemaVersion still load', () => {
     const v1: Project = {

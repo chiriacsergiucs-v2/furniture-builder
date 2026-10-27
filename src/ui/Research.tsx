@@ -46,7 +46,7 @@ import { useResearch, type MarkPatch } from '../store/researchStore';
 import { askConfirm } from './Confirm';
 import { Icon } from './icons';
 
-/** Features (with the assessment dashboard above the list) and Competitors (ADR-102). */
+/** Features (with the assessment dashboard above the list) and Competitors (ADR-110). */
 export type Tab = 'features' | 'competitors';
 const TABS: [Tab, string][] = [
   ['features', 'Features'],

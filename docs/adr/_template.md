@@ -5,7 +5,6 @@
 - Depends on: none
 - Design: n/a
 - Backlog: none
-- Agreed: not yet
 
 <!--
 HOW TO USE THIS TEMPLATE
@@ -18,10 +17,10 @@ HOW TO USE THIS TEMPLATE
 - The design line takes a path or link to the design reference (e.g. docs/ui-design.md),
   or "n/a" for work with no screen.
 - The backlog line names the docs/backlog.md items (e.g. "N45"), or "none".
-- The agreed line stays "not yet" until the user agrees the decisions and answers the open questions;
-  then it becomes `YYYY-MM-DD "<the user's words>"`. An ADR cannot ship without it (retro 2026-10-26).
-- Optional: "- Acceptance: light" (only when the user asks) skips the find-it test; the backlog
-  rows keep the gap `find-it pending (light, ADR-066)` until a catch-up run. Omitted or "full" = R3 (ADR-066).
+- Optional "- Acceptance:" line. Omitted or "full" = R3 with the default jsdom find-it
+  (`tests/find-it/<area>.test.tsx`, ADR-108). "browser" = the Chromium script `tools/<area>/find-it.mjs`;
+  use it for layout/CSS, 3D view or Move mode work (ADR-108). "light" (only when the user asks) skips the
+  find-it test; the backlog rows keep the gap `find-it pending (light, ADR-066)` until a catch-up run.
 - One ADR = one unit that can be built without loading the rest of the plan.
   Target: up to ~110 lines, ~6.5 KB, 8 checklist items. Bigger means split it.
 - Link sibling ADRs as [ADR-XXX](ADR-XXX-short-title.md).

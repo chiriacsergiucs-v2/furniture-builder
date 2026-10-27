@@ -1095,6 +1095,8 @@ export function validateDesign(d: unknown): string[] {
       (!isInt(params.railDepth, 1) || (params.railDepth as number) > 1000)
     )
       errs.push('railDepth must be a whole number of mm');
+    if (params.topLayers !== undefined && params.topLayers !== 1 && params.topLayers !== 2)
+      errs.push('topLayers must be 1 or 2');
     if (
       params.shelfClearance !== undefined &&
       (!isInt(params.shelfClearance) || (params.shelfClearance as number) > 20)
@@ -1165,6 +1167,8 @@ export function validateDesign(d: unknown): string[] {
       errs.push('Invalid corner variant');
     if (params.side !== 'left' && params.side !== 'right') errs.push('Invalid corner side');
     if (params.top !== 'over' && params.top !== 'between') errs.push('Invalid top joint');
+    if (params.topLayers !== undefined && params.topLayers !== 1 && params.topLayers !== 2)
+      errs.push('topLayers must be 1 or 2');
     if (!['none', 'applied', 'inset'].includes(params.back as string)) errs.push('Invalid back');
     const seen = new Set<string>();
     validateSpace(params.interior, errs, seen);

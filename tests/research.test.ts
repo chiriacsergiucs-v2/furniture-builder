@@ -277,7 +277,7 @@ describe('research catalog: view, filters and relationships', () => {
   });
 });
 
-describe('research catalog: a newer shipped edition (paper import removed, ADR-102)', () => {
+describe('research catalog: a newer shipped edition (paper import removed, ADR-110)', () => {
   const v1 = storedOf(B, AT);
   it('uses the newest edition; features it drops stay visible as retired', () => {
     const v2 = dropFeature(clone(B), 'ens.f.ar-placement');
