@@ -26,7 +26,7 @@ export interface ModelItem {
   /** Row id in the device's `models` table. */
   modelId: string;
   name: string;
-  /** Size in mm before turning: w along the file's x, h up, d along the file's z (proportions locked). */
+  /** Size in mm before turning: w along the file's x, h up, d along the file's z (each side its own, ADR-102). */
   size: ModelSize;
   /** The lowest corner (min x, y, z) of its turned box in the room. */
   position: { x: Mm; y: Mm; z: Mm };
@@ -59,10 +59,47 @@ export function modelBox(m: ModelItem): Box {
   };
 }
 
-/** The size with a new width, proportions kept; every side stays at least 1 mm. */
-export function scaleToWidth(size: ModelSize, w: Mm): ModelSize {
-  const k = w / size.w;
-  return { w, h: Math.max(1, Math.round(size.h * k)), d: Math.max(1, Math.round(size.d * k)) };
+/** The largest side a model can be given by typing or dragging (mm), as the size fields allow. */
+export const MODEL_SIDE_MAX: Mm = 10_000;
+
+/**
+ * The size with one side set to `value` (ADR-102). With `keep` (Keep proportions), the other two sides scale by the
+ * same factor from `size`; without, only that side changes. Every side stays at least 1 mm.
+ */
+export function resizeModel(
+  size: ModelSize,
+  side: keyof ModelSize,
+  value: Mm,
+  keep: boolean,
+): ModelSize {
+  if (!keep) return { ...size, [side]: value };
+  const k = value / size[side];
+  const scaled = (v: Mm) => Math.max(1, Math.round(v * k));
+  return { w: scaled(size.w), h: scaled(size.h), d: scaled(size.d), [side]: value };
+}
+
+/** The side of the model's own size that lies along a room axis, after its turn: x and z swap at 90° and 270°. */
+export function roomSide(m: Pick<ModelItem, 'rotationY' | 'front'>, axis: 'x' | 'y' | 'z') {
+  if (axis === 'y') return 'h';
+  const across = modelYaw(m) % 180 !== 0;
+  return (axis === 'x') !== across ? 'w' : 'd';
+}
+
+/**
+ * The size after dragging a resize handle in 3D (ADR-102) `by` mm along a room axis from the size the drag started
+ * with: the right handle widens along x, the top raises y, the front deepens z; the left, bottom and back stay put
+ * (the position is the box's lowest corner). Whole mm, held between 1 mm and `MODEL_SIDE_MAX` while dragging.
+ */
+export function dragResize(
+  m: Pick<ModelItem, 'rotationY' | 'front'>,
+  start: ModelSize,
+  axis: 'x' | 'y' | 'z',
+  by: number,
+  keep: boolean,
+): ModelSize {
+  const side = roomSide(m, axis);
+  const value = Math.min(MODEL_SIDE_MAX, Math.max(1, Math.round(start[side] + by)));
+  return resizeModel(start, side, value, keep);
 }
 
 /** Whole-mm size from a model's bounds in metres (glTF units); a flat side becomes 1 mm. */

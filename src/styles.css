@@ -5451,6 +5451,34 @@ button.tile:hover {
   color: var(--ink);
 }
 
+/* 3D model resize handles in Move mode (ADR-102) --------------------------- */
+.model-handle {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 2px solid var(--primary);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--ink);
+  font: 600 var(--fs-sm) var(--font);
+  box-shadow: var(--shadow-1);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.model-handle:active {
+  cursor: grabbing;
+  background: var(--primary-soft);
+}
+@media (pointer: coarse) {
+  .model-handle {
+    width: 44px;
+    height: 44px;
+  }
+}
+
 /* Gaps page (ADR-101) ----------------------------------------------------- */
 .gaps-page {
   grid-template-columns: minmax(0, 1fr);

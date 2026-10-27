@@ -65,13 +65,13 @@ in Move mode, on the right, top and front faces, whole mm, Keep proportions appl
 
 ## Done when
 
-- [ ] Core: resizing with proportions kept scales the other two sides from any edited side; off changes one side
+- [x] Core: resizing with proportions kept scales the other two sides from any edited side; off changes one side
       only; every side stays at least 1 mm (covered by tests).
-- [ ] Selecting a model shows Width, Height, Depth, Keep proportions (on) and, after a change, Reset size.
-- [ ] With Keep proportions off, typing a height changes only the height on the plan box and in the front view.
-- [ ] The 3D model fills its box on each axis after an independent change.
-- [ ] Reset size returns the imported size; each field change is one undo step.
-- [ ] In Move mode, dragging the top handle of a selected model changes only its height with Keep proportions off,
+- [x] Selecting a model shows Width, Height, Depth, Keep proportions (on) and, after a change, Reset size.
+- [x] With Keep proportions off, typing a height changes only the height on the plan box and in the front view.
+- [x] The 3D model fills its box on each axis after an independent change.
+- [x] Reset size returns the imported size; each field change is one undo step.
+- [x] In Move mode, dragging the top handle of a selected model changes only its height with Keep proportions off,
       and all three sides with it on; one undo step per drag (covered by tests of the core resize).
-- [ ] Find-it test passes from the bare app at phone and desktop widths
+- [x] Find-it test passes from the bare app at phone and desktop widths
       (`tools/model-size/find-it.mjs`, production build), including a handle drag in 3D at desktop width.
