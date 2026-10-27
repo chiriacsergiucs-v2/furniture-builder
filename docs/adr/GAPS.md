@@ -1579,3 +1579,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Accept default, /batch all ready
 - Questions: Turn the selection outline and the Move ghost with the piece?
 - Suggested pick: Turn them (estimate +5 % work, +5 % of value)
+
+### G-173: Selected space hides its piece's boards in 3D
+
+- Status: Open
+- Origin: ADR-121 (found while building)
+- Missing: With a space selected inside a piece, that piece's boards do not draw in the 3D view; only the selection outline shows. Also on main (happens at 0° and with the always-on render loop)
+- Request: Accept default, /batch all ready
+- Questions: Fix it in this PR or in a separate change?
+- Suggested pick: Fix it in this PR, since this PR touches Viewer3D (estimate +5 % work)
