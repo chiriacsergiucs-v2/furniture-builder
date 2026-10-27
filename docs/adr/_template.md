@@ -64,4 +64,4 @@ discussion. For a pure technology choice, state the choice and the reasons.
 
 ## Open questions
 
-- <Question for the user, with the default used until it is answered, and its gap (G-NNN). Delete the section when there are none.>
+- <Question for the user, with the options and the suggested pick (not applied until the user picks it), and its gap (G-NNN). Delete the section when there are none.>

@@ -54,7 +54,8 @@ ADRs are all in `docs/adr-done/`.
    keep the original number for the core, update `docs/adr/README.md`, re-run the picker.
    Skip the split only if the user asks.
 3. **Start building — do not ask for permission.** Announce the number and title in one
-   line. Stop and ask only when a dependency is blocked, or when a physical or supplier
+   line. Stop and ask only when a dependency is blocked, when an open question the build needs is
+   unanswered (never build with the recommended option by default), or when a physical or supplier
    fact is unknown (record it under _Open questions_ in `docs/backlog.md`; never invent it).
 4. **Read only what the ADR points to:** the ADR, its `Depends on` ADRs, the design
    reference, and the current code it touches (not docs alone).

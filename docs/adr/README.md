@@ -14,6 +14,8 @@ Pages, no backend (ADR-002, ADR-013).
 - **Template:** copy [`_template.md`](_template.md), or run the `new-adr` skill.
 - **Status:** `Pending` (agreed, waiting for implementation), `Deferred (<reason>)`,
   or `Implemented`. Never set `Implemented` by hand; the `ship-adr` skill does it.
+- **Recommendations are suggestions.** A recommended option is never applied until the user
+  picks it; an unanswered open question blocks building what it affects.
 - **An ADR is agreed by the user.** Defaults the user has not confirmed stay listed under
   _Open questions_ in the ADR; an ADR whose open questions block building is `Deferred`.
 - **Authority:** explicit user decision › implemented ADR › code and tests › earlier discussion › proposal.

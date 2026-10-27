@@ -56,8 +56,9 @@ Everything written to the repo is in **English**, whatever language the conversa
    - **Gaps (ADR-082)** — each _Out of scope_ item and each open question gets a gap in
      `docs/adr/GAPS.md` (`pnpm gaps add`), cited by its G id; `pnpm docs:check` enforces it. When
      the ADR takes over an existing gap, set that gap's Status to `ADR-NNN`.
-   - **Open questions** — every default the user has not confirmed, with the value used
-     until they answer, and the recommended option closest to the request (`CLAUDE.md`). Never invent hardware specs, loads or supplier values (ADR-010);
+   - **Open questions** — every choice the user has not made, with the options and the
+     recommended one closest to the request (`CLAUDE.md`). The recommendation is a suggestion
+     only: never write it into the Decision or apply it until the user picks it. Never invent hardware specs, loads or supplier values (ADR-010);
      ask instead.
 7. **Check the plan rules:**
    - Dependencies point to ADRs that exist and do not form a cycle.
