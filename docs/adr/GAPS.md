@@ -1561,3 +1561,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Accept default
 - Questions: Should other parameters (boards, construction, insides) be lockable too, and one by one or together?
 - Suggested pick: Leave as is until asked (the user's pick was a separate Lock size)
+
+### G-181: Move/Section toggle sometimes ignores the first tap after a touch drag or while the 3D view settles
+
+- Status: Open
+- Origin: ADR-122 (found while checking)
+- Missing: In the production-build find-it run, Move and Section sometimes stayed off after one tap: right after a touch drag on a phone, or while the 3D view was settling after the look changed; the script now taps again until the toggle reads pressed
+- Request: Push, merge
+- Questions: Trace and fix the dropped tap, or keep the retry in the find-it script?
+- Suggested pick: Trace and fix (estimate +10 % work)

@@ -39,7 +39,10 @@ for (const width of [1280, 390]) {
     await loc.click({ timeout: 3000 }).catch(() => loc.dispatchEvent('click'));
   };
   const btn = (name, exact = true) => page.getByRole('button', { name, exact });
-  /** Click a toggle until it reads `want` (the first tap after a touch drag can be taken by the view). */
+  /**
+   * Click a toggle until it reads `want`: the first tap after a touch drag, or while the 3D view settles, is sometimes
+   * not taken. Not traced yet: gap G-181.
+   */
   const toggle = async (loc, want) => {
     for (let i = 0; i < 3 && (await loc.getAttribute('aria-pressed')) !== String(want); i++) {
       await click(loc);
