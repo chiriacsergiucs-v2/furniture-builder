@@ -1075,3 +1075,30 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Width and height of an item must be editable adr
 - Questions: Should the 3D view get resize handles for models?
 - Suggested pick: Typed fields only (the request is to make the sizes editable; handles would be an exception to ADR-014's select-only viewer).
+
+### G-113: Fill a wall: corner and L walls
+
+- Status: Open
+- Origin: ADR-103, 2026-10-27; Claude scoped it out
+- Missing: Fill a wall works on one straight wall only; corner and L-shaped walls are not filled.
+- Request: a reverse furniture building, total width, to the mix of furniture pieces that fill that space (context: corners not mentioned)
+- Questions: Should Fill a wall also fill corner or L walls, with a corner cabinet at the joint?
+- Suggested pick: Fill each straight wall with ADR-103, then join two walls with a catalog corner cabinet (ADR-025). (estimate: effort +40%, value +15%)
+
+### G-114: Fill a wall: room openings shape the mix
+
+- Status: Open
+- Origin: ADR-103, 2026-10-27; Claude scoped it out
+- Missing: Room windows, doors, pipes and outlets do not shape the suggested mixes; they are checked only after the project is made.
+- Request: a reverse furniture building, total width, to the mix of furniture pieces that fill that space (context: room openings not mentioned)
+- Questions: Should Fill a wall read the project room (ADR-058) and avoid windows, doors and outlets?
+- Suggested pick: Start Fill a wall from a wall of the project room and skip mixes that clash with its openings, using the existing room checks. (estimate: effort +30%, value +15%)
+
+### G-115: Fill a wall: when the wall row appears
+
+- Status: Open
+- Origin: ADR-104, 2026-10-27; open question defaulted by Claude
+- Missing: Whether every mix gets a wall row, or a Refine choice decides (any / always / never).
+- Request: Wall cabinets above (answer to: Which kinds of pieces may appear in a mix?)
+- Questions: Should the wall row appear in every mix, in some mixes, or be chosen in Refine (any / always / never)?
+- Suggested pick: Refine choice 'Wall cabinets: any / always / never', default any, so the first 4 cards show mixes with and without a wall row. (estimate: effort +3%, value +10%)
