@@ -27,7 +27,7 @@ for (const width of [1440, 375]) {
     isMobile: phone,
   });
   const page = await ctx.newPage();
-  // ADR-115: the selected piece's Position, Clearance, Finish and Merge are folded groups: open one by its title
+  // ADR-116: the selected piece's Position, Clearance, Finish and Merge are folded groups: open one by its title
   // (when it is on screen; a phone's closed sheet hides the whole card, which is read as before).
   const openGroup = async (title) => {
     const s = page

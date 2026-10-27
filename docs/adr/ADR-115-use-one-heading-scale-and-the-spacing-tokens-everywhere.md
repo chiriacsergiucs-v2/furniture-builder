@@ -1,10 +1,10 @@
-# ADR-114: Use one heading scale and the spacing tokens everywhere
+# ADR-115: Use one heading scale and the spacing tokens everywhere
 
 - Status: Pending
 - Date: 2026-10-27
-- Depends on: ADR-112
+- Depends on: ADR-113
 - Design: docs/ui-design.md (section 2, tokens)
-- Backlog: N112
+- Backlog: N114
 - Acceptance: light
 - Agreed: 2026-10-27 "Heading + spacing scale"
 

@@ -1,4 +1,4 @@
-// Find-it acceptance for one control height and button labels that never wrap (ADR-112, backlog N110), run against a
+// Find-it acceptance for one control height and button labels that never wrap (ADR-113, backlog N112), run against a
 // production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/control-rule/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at 1280 px (mouse) and 390 px (touch) and walks Projects, Catalog, the editor (Compose and

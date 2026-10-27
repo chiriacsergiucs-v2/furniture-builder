@@ -60,7 +60,7 @@ Barlow Semi Condensed, tabular, so columns of millimetres line up.
 | Shape    | `--r-sm` 4, `--r` 6, `--r-lg` 10, `--r-pill`                                                                            |                                                 |                                                              |
 | Depth    | `--shadow-1/2/3` (card, menu, dialog); `--backdrop`                                                                     |                                                 |                                                              |
 | Motion   | `--t-fast` 120 ms, `--t-base` 180 ms, ease-out; everything off under `prefers-reduced-motion`                           |                                                 |                                                              |
-| Layout   | `--side` 360, `--out` 400, `--control-h` 38, `--control-h-sm` 30 (both 44 under `pointer: coarse`, ADR-112)             |                                                 |                                                              |
+| Layout   | `--side` 360, `--out` 400, `--control-h` 38, `--control-h-sm` 30 (both 44 under `pointer: coarse`, ADR-113)             |                                                 |                                                              |
 
 Contrast (computed, WCAG 2.2 AA ≥ 4.5:1 for text): ink-2 on surface-2 5.85, on bg 5.48; white on primary 7.74
 (dark 5.59); white on warn fill 5.43; white on error fill 6.54; bar-ink-2 on bar 7.0; dark ink-2 on surface 7.21;
@@ -99,7 +99,7 @@ Iconography: inline SVG, 24-unit grid, 1.75 stroke, round caps — the same cons
 | Dialog                                | `Dialog` with `footer` → `.dialog`, `.dialog-body`, `.dialog-footer`                                                                     | open animation (not under reduced motion), backdrop, Escape, close button                                                                                    |
 | Toast                                 | `.toast`                                                                                                                                 | update prompt                                                                                                                                                |
 
-**Control rule (ADR-112, 2026-10-27).** One height: `--control-h` (38 px with a mouse, 44 under `pointer: coarse`) for
+**Control rule (ADR-113, 2026-10-27).** One height: `--control-h` (38 px with a mouse, 44 under `pointer: coarse`) for
 buttons, fields, segmented controls, steppers and tabs; `--control-h-sm` (30 px, 44 with touch) only in toolbars and
 tables (`.btn.sm` takes it there and `--control-h` elsewhere). Labels never wrap: `white-space: nowrap` and an
 ellipsis, with the full text in `title` when cut (`src/ui/cutTitle.ts`). Button rows (`.split-actions`,

@@ -1,5 +1,5 @@
-// Find-it acceptance for a compact Catalog at every width with "More" for cut card text (ADR-116 on a phone,
-// backlog N114; ADR-117 at every width, N115) and the wizard's form first, run against a production build:
+// Find-it acceptance for a compact Catalog at every width with "More" for cut card text (ADR-117 on a phone,
+// backlog N116; ADR-118 at every width, N117) and the wizard's form first, run against a production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/catalog-compact/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by role and visible text. Not part of `pnpm test`.
 import { chromium } from 'playwright';
@@ -69,7 +69,7 @@ for (const width of [1280, 390]) {
   const firstFamily = page.getByRole('article').first();
   const about = firstFamily.getByRole('button', { name: 'About this family' });
   const structure = firstFamily.getByText('Default structure:');
-  // ADR-117: the compact catalog at every width; a phone shows the short switch labels, a desktop the full ones.
+  // ADR-118: the compact catalog at every width; a phone shows the short switch labels, a desktop the full ones.
   const limit = phone ? 30000 : 15000;
   check(width, `Catalog page under ${limit} px tall`, height < limit, `${height} px`);
   const switchText = [(await saved.innerText()).trim(), (await byRoom.innerText()).trim()];
@@ -148,7 +148,7 @@ for (const width of [1280, 390]) {
   await shot('about-open');
   await about.click();
 
-  // 5. "More" on a card whose text is cut (ADR-117): shown only then, measured again on resize.
+  // 5. "More" on a card whose text is cut (ADR-118): shown only then, measured again on resize.
   /** Per card: whether it has a "More" button, and whether any of its lines is cut (text wider than its box). */
   const moreMatchesCut = () =>
     page.evaluate(() => {

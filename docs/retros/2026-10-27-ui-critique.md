@@ -2,9 +2,9 @@
 
 User request: "Run a critique for listings, headers, text, button sizes, gaps, groupings." Measured on the production
 build (local, branch `ccr-f59485c7-l9ci3p`, commit 5a0c220 code) with Playwright at 390 × 844 (touch, `pointer: coarse`)
-and 1280 × 800. Nothing here is built yet; ADR-110 and ADR-111 cover the first two sections.
+and 1280 × 800. Nothing here is built yet; ADR-111 and ADR-112 cover the first two sections.
 
-## Editor stage and count card (ADR-110)
+## Editor stage and count card (ADR-111)
 
 | Case                                     | Drawing, no card | With card          | Card    |
 | ---------------------------------------- | ---------------- | ------------------ | ------- |
@@ -21,7 +21,7 @@ and 1280 × 800. Nothing here is built yet; ADR-110 and ADR-111 cover the first 
 - Medium: on desktop Width/Depth and counts show three times (side panel, panel counters, card).
 - Low: checkboxes (Doors and fronts, Clearances) and pressed buttons (Snap, Select) mixed in one row.
 
-## Intro text (ADR-111)
+## Intro text (ADR-112)
 
 - `InfoTip` exists (`src/ui/controls.tsx:307`, ADR-080): hover/focus with a mouse, tap with touch, Esc closes.
   Needs: `align="start"` (clips off the left beside a left heading), a z-index above the count card, Esc must not also

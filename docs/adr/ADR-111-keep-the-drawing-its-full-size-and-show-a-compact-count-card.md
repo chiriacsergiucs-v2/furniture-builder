@@ -1,10 +1,10 @@
-# ADR-110: Keep the drawing its full size and show a compact count card inside it
+# ADR-111: Keep the drawing its full size and show a compact count card inside it
 
 - Status: Pending
 - Date: 2026-10-27
 - Depends on: ADR-109
 - Design: docs/ui-design.md (section 4, editor screen: stage, quick-count card, bottom sheet)
-- Backlog: N108
+- Backlog: N110
 - Acceptance: browser
 - Agreed: 2026-10-27 "Remove from the drawing and 3d card, keep only in drawer", "Compact, keep 44 px (Recommended)",
   "Full free height (Recommended)", "Shorter labels"

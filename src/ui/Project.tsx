@@ -179,7 +179,7 @@ export function ProjectPanel({
 
   if (mode === 'configure')
     return (
-      // Titled by the Settings dialog, which carries its info button (ADR-114: one h2 per dialog).
+      // Titled by the Settings dialog, which carries its info button (ADR-115: one h2 per dialog).
       <div className="inspector">
         <RunParts />
         <MmField
@@ -341,7 +341,7 @@ export function ProjectPanel({
               </p>
             ) : (
               <Segmented<QuarterTurn>
-                // Where the front faces joins the label instead of a lone line under it (ADR-118).
+                // Where the front faces joins the label instead of a lone line under it (ADR-119).
                 label={`Turn · ${FRONT_SIDE[item.rotationY]}`}
                 value={item.rotationY}
                 options={[
@@ -425,7 +425,7 @@ export function ProjectPanel({
   );
 }
 
-/** Error codes about where a piece stands, shown and opened in its Position group (ADR-115, ADR-008). */
+/** Error codes about where a piece stands, shown and opened in its Position group (ADR-116, ADR-008). */
 const POSITION_ERRORS = new Set([
   'placement-cycle',
   'pieces-overlap',
@@ -433,7 +433,7 @@ const POSITION_ERRORS = new Set([
   'outside-room',
   'hits-obstacle',
 ]);
-/** Error codes about a piece's clearances, shown and opened in its Clearance group (ADR-115, ADR-008). */
+/** Error codes about a piece's clearances, shown and opened in its Clearance group (ADR-116, ADR-008). */
 const CLEARANCE_ERRORS = new Set(['installation-height']);
 
 /** The messages of the project's error diagnostics about piece `id` with one of `codes`. */
@@ -1162,7 +1162,7 @@ function RoomPlan({
             onChange={setShowFronts}
           />
         )}
-        {/* Checkboxes like Fronts and Clear.: one toggle style in the row (ADR-118). */}
+        {/* Checkboxes like Fronts and Clear.: one toggle style in the row (ADR-119). */}
         <Toggle label="Snap" checked={snapOn} onChange={setSnapOn} />
         {/* Phones: taps add and remove pieces, and a drag on empty plan draws a selection box (ADR-097). */}
         <Toggle label="Select" checked={multi} onChange={setMulti} />
@@ -1682,7 +1682,7 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
     pm.models.find((m) => m.item.id === selectedId)?.box;
   // Quick counts show over the selected piece from the first tap (ADR-109), as over a single piece's drawing
   // (ADR-084): counts only, in the corner of the view farthest from the selected piece, its size labels and the ⓘ
-  // button (ADR-110). Width and Depth stay in the side panel and the bottom sheet.
+  // button (ADR-111). Width and Depth stay in the side panel and the bottom sheet.
   const counts = useDesign(
     (s) =>
       !!card &&

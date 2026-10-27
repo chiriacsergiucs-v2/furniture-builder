@@ -14,7 +14,7 @@ function storedFolded() {
   }
 }
 
-// Short visible labels for the compact card over the drawing (ADR-110); accessible names keep the full words.
+// Short visible labels for the compact card over the drawing (ADR-111); accessible names keep the full words.
 const SHORT: Partial<Record<CountKey, string>> = {
   vdiv: 'V. dividers',
   hdiv: 'H. dividers',
@@ -24,8 +24,8 @@ const SHORT: Partial<Record<CountKey, string>> = {
 /**
  * The counts that apply to the selected space or piece, each as − N + (ADR-084). Nothing when none apply.
  * `foldable` (over 3D) adds a "Quick counts" button that folds the card to one row on a phone (G-058). `compact`
- * (over the drawing) is one short row per count with no heading (ADR-110). Width and Depth are never in the card:
- * they stay in the side panel and the bottom sheet (ADR-110, replacing ADR-106 for the card).
+ * (over the drawing) is one short row per count with no heading (ADR-111). Width and Depth are never in the card:
+ * they stay in the side panel and the bottom sheet (ADR-111, replacing ADR-106 for the card).
  */
 export const CountStepper = forwardRef<
   HTMLDivElement,
@@ -105,7 +105,7 @@ const overlap = (a: Box, b: Box) =>
   Math.max(0, Math.min(a.top + a.height, b.top + b.height) - Math.max(a.top, b.top));
 
 /**
- * Where the compact card goes inside a `frameW` × `frameH` view (ADR-110): the corner that covers least of `avoid`
+ * Where the compact card goes inside a `frameW` × `frameH` view (ADR-111): the corner that covers least of `avoid`
  * (the selected part first, then its size labels and the view's own buttons), the one farthest from the selected part
  * on a tie. All boxes are in the view's coordinates; the card never changes the view's size.
  */

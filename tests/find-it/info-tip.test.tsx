@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// Find-it for static intro text behind an info button (ADR-111, N109), in jsdom (ADR-108): from the bare app, by role
+// Find-it for static intro text behind an info button (ADR-112, N111), in jsdom (ADR-108): from the bare app, by role
 // and visible text, at phone and desktop widths.
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
@@ -16,7 +16,7 @@ function expectNamedInfoButtons() {
   for (const b of all) expect(named).toContain(b);
 }
 
-describe.each(WIDTHS)('info buttons at %ipx (find-it, ADR-111)', (width) => {
+describe.each(WIDTHS)('info buttons at %ipx (find-it, ADR-112)', (width) => {
   it('bare app → Create a new project → Project: the intro opens from its ⓘ and Esc closes it', async () => {
     const { user } = await renderApp(width);
     await user.click(await screen.findByRole('button', { name: 'Create a new project' }));

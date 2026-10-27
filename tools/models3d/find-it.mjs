@@ -239,7 +239,7 @@ for (const width of widths) {
     const peek = page.locator('.sheet-peek');
     if (await peek.isVisible().catch(() => false)) await peek.click();
   }
-  // The explanation sits behind the card's info button (ADR-111).
+  // The explanation sits behind the card's info button (ADR-112).
   await sel
     .getByRole('button', { name: 'About 3D models' })
     .click()

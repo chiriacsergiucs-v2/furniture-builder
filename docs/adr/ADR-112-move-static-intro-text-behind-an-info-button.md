@@ -1,10 +1,10 @@
-# ADR-111: Move static intro text behind an info button
+# ADR-112: Move static intro text behind an info button
 
 - Status: Pending
 - Date: 2026-10-27
 - Depends on: none
 - Design: docs/ui-design.md (section 3, components: info button)
-- Backlog: N109
+- Backlog: N111
 - Agreed: 2026-10-27 "All static intros (Recommended)"
 
 ## Context

@@ -1,10 +1,10 @@
-# ADR-116: Make the catalog compact on a phone and put the wizard form first
+# ADR-117: Make the catalog compact on a phone and put the wizard form first
 
 - Status: Pending
 - Date: 2026-10-27
 - Depends on: none
 - Design: docs/ui-design.md (section 4, catalog and wizard)
-- Backlog: N114
+- Backlog: N116
 - Acceptance: browser
 - Agreed: 2026-10-27 "Catalog density + wizard"
 

@@ -116,7 +116,7 @@ for (const width of [390, 1280, 1600]) {
 
   if (phone) {
     // 1. A tap selects; the sheet stays closed, the drawing keeps its height, the card is right above the selection.
-    // The upper part, clear of the card, which now lies in a lower corner of the drawing (ADR-110).
+    // The upper part, clear of the card, which now lies in a lower corner of the drawing (ADR-111).
     const svg = front.locator('svg').first();
     const b = await svg.boundingBox();
     await page.touchscreen.tap(b.x + b.width * 0.3, b.y + b.height * 0.4);

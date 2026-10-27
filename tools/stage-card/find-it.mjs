@@ -1,4 +1,4 @@
-// Find-it acceptance for the full-size drawing and the compact count card inside it (ADR-110, backlog N108), run
+// Find-it acceptance for the full-size drawing and the compact count card inside it (ADR-111, backlog N110), run
 // against a production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/stage-card/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at 1280 px and at 390 px with touch, and finds everything by role and visible text: a single
@@ -277,7 +277,7 @@ for (const width of [1280, 390]) {
   check(width, 'project: no "Width" or "Depth" in the card', await noSize(c4));
   check(width, 'project: card inside the front view', inside(c4b, await box(fv)), fmt(c4b));
   // A whole piece that fills the front view leaves no free corner at 390 px; the card then takes the corner that
-  // covers least of it (ADR-110, "the card can cover part of the drawing").
+  // covers least of it (ADR-111, "the card can cover part of the drawing").
   const covered = overlap(c4b, pieceB) / Math.max(1, pieceB.width * pieceB.height);
   check(
     width,

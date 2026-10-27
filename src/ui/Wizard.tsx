@@ -581,7 +581,7 @@ function Wizard({ onCreated, from }: { onCreated: () => void; from: Design | nul
         >
           Back
         </button>
-        {/* No Cancel (ADR-116): the dialog's × closes the wizard. */}
+        {/* No Cancel (ADR-117): the dialog's × closes the wizard. */}
         <span className="wz-spacer" />
         {!isReview && (
           <button

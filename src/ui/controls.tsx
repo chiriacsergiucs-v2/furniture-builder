@@ -21,7 +21,7 @@ export function MmField({
   step?: number;
   unit?: string;
   hint?: string;
-  /** An `InfoTip` shown beside the label (ADR-111). */
+  /** An `InfoTip` shown beside the label (ADR-112). */
   info?: ReactNode;
 }) {
   const id = useId();
@@ -165,7 +165,7 @@ export function Toggle({
   checked: boolean;
   onChange: (v: boolean) => void;
   info?: ReactNode;
-  /** The accessible name when the visible label is shortened (ADR-110). */
+  /** The accessible name when the visible label is shortened (ADR-111). */
   name?: string;
 }) {
   return withInfo(
@@ -225,7 +225,7 @@ export function Counter({
 
 /**
  * Collapsible section. `id` lets the steps rail open and scroll to it. `openOn`: while it is non-empty the group
- * opens itself, and again whenever it changes (an error it holds is never left folded away, ADR-008, ADR-115).
+ * opens itself, and again whenever it changes (an error it holds is never left folded away, ADR-008, ADR-116).
  */
 export function Group({
   title,
@@ -239,7 +239,7 @@ export function Group({
   children: ReactNode;
   defaultOpen?: boolean;
   id?: string;
-  /** An `InfoTip` on the title row (ADR-111); it sits beside the summary, never inside it. */
+  /** An `InfoTip` on the title row (ADR-112); it sits beside the summary, never inside it. */
   info?: ReactNode;
   openOn?: string;
 }) {
@@ -286,7 +286,7 @@ export function Section({
   title: string;
   children: ReactNode;
   aside?: ReactNode;
-  /** An `InfoTip` right after the title (ADR-111). */
+  /** An `InfoTip` right after the title (ADR-112). */
   info?: ReactNode;
 }) {
   return (
@@ -352,7 +352,7 @@ export function Steps({
   );
 }
 
-/** A label or title with its info button right after it (ADR-111); just the label when there is none. */
+/** A label or title with its info button right after it (ADR-112); just the label when there is none. */
 function withInfo(label: ReactNode, info: ReactNode) {
   if (!info) return label;
   return (
@@ -370,7 +370,7 @@ const POP_MARGIN = 16;
  * An info button whose text opens over the content (ADR-080): on hover or keyboard focus with a mouse, on tap with
  * touch. A tap outside, a second tap or Esc closes it. The text is in the page only while open.
  *
- * ADR-111: `align="start"` opens it from the button's left edge (for a button beside a heading on the left); either
+ * ADR-112: `align="start"` opens it from the button's left edge (for a button beside a heading on the left); either
  * way it is moved back inside the screen if it would run off an edge. Esc closes only the popover, never the dialog
  * or the selection under it, and focus stays on (or returns to) the button.
  */
@@ -468,7 +468,7 @@ export function InfoTip({
 }
 
 /**
- * ADR-010 guidance behind an info button (ADR-111): named "Guidance: <topic>", and its text starts with "Guidance", so
+ * ADR-010 guidance behind an info button (ADR-112): named "Guidance: <topic>", and its text starts with "Guidance", so
  * it stays labelled as guidance, one tap away.
  */
 export function GuidanceTip({

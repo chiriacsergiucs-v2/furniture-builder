@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// Find-it for the project panel's order and the selected piece's folded sections (ADR-115, N113), in jsdom (ADR-108):
+// Find-it for the project panel's order and the selected piece's folded sections (ADR-116, N115), in jsdom (ADR-108):
 // the pieces list comes before "Selected piece"; Position, Clearance, Finish and Merge are closed groups; Width and
 // Depth stay open; a group holding an error opens itself (ADR-008).
 import { screen, waitFor, within } from '@testing-library/react';
@@ -8,7 +8,7 @@ import { renderApp, WIDTHS } from './setup';
 
 const GROUPS = ['Position', 'Clearance', 'Finish', 'Merge'] as const;
 
-describe.each(WIDTHS)('selected piece card at %ipx (find-it, ADR-115)', (width) => {
+describe.each(WIDTHS)('selected piece card at %ipx (find-it, ADR-116)', (width) => {
   it('bare app → new project → two pieces → list first, folded groups, an error opens Position', async () => {
     const { user } = await renderApp(width);
     await user.click(await screen.findByRole('button', { name: 'Create a new project' }));

@@ -193,7 +193,7 @@ export function App() {
   const selectedItemId = useDesign((s) => s.selectedItemId);
   const vd = useView();
   const inProject = !!project && !editingItemId;
-  // The start-up placeholder, untouched, is not an open design: the Catalog's "Back to the editor" waits (ADR-118).
+  // The start-up placeholder, untouched, is not an open design: the Catalog's "Back to the editor" waits (ADR-119).
   const [placeholderId] = useState(() => useDesign.getState().design.id);
   const pristine = useDesign((s) => s.pristine);
   const designOpen = !!project || design.id !== placeholderId || !pristine;

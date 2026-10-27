@@ -21,7 +21,7 @@ for (const width of [1440, 375]) {
     acceptDownloads: true,
   });
   const page = await ctx.newPage();
-  // ADR-115: the selected piece's Position, Clearance, Finish and Merge are folded groups: open one by its title
+  // ADR-116: the selected piece's Position, Clearance, Finish and Merge are folded groups: open one by its title
   // (when it is on screen; a phone's closed sheet hides the whole card, which is read as before).
   const openGroup = async (title) => {
     const s = page
@@ -214,7 +214,7 @@ for (const width of [1440, 375]) {
   await finish.scrollIntoViewIfNeeded();
   check(
     width,
-    'ADR-055 "Finish" group open in the selected piece (folded since ADR-115)',
+    'ADR-055 "Finish" group open in the selected piece (folded since ADR-116)',
     await finish.getByRole('button', { name: 'Apply finish' }).isVisible(),
   );
   const opts = await finish.getByLabel('Board').locator('option').allTextContents();

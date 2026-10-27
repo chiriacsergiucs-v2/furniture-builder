@@ -1,4 +1,4 @@
-// Find-it acceptance for the high-severity layout bugs from the 2026-10-27 critique (ADR-113, backlog N111), run
+// Find-it acceptance for the high-severity layout bugs from the 2026-10-27 critique (ADR-114, backlog N113), run
 // against a production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/critique-bugs/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width (390 with touch, 1280 with a mouse) and finds everything by role and
@@ -154,7 +154,7 @@ for (const width of [390, 1280]) {
   await page.waitForTimeout(500);
   await page.mouse.wheel(0, 3000);
   await page.waitForTimeout(500);
-  // Only the search row stays sticky (ADR-116 on a phone, ADR-117 at every width).
+  // Only the search row stays sticky (ADR-117 on a phone, ADR-118 at every width).
   const tab = page.getByRole('searchbox', { name: 'Search the catalog' });
   const vis = await tab.evaluate((el) => {
     const r = el.getBoundingClientRect();

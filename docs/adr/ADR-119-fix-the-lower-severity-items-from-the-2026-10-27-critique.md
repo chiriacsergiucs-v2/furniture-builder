@@ -1,10 +1,10 @@
-# ADR-118: Fix the lower-severity items from the 2026-10-27 critique
+# ADR-119: Fix the lower-severity items from the 2026-10-27 critique
 
 - Status: Pending
 - Date: 2026-10-27
-- Depends on: ADR-112
+- Depends on: ADR-113
 - Design: docs/ui-design.md (sections 3 and 4)
-- Backlog: N116
+- Backlog: N118
 - Acceptance: light
 - Agreed: 2026-10-27 "accept gap picks" (G-139 "One follow-up ADR for all of them")
 

@@ -91,7 +91,7 @@ export function Elevation() {
   const fontSize = Math.max(b.w, b.h) / 26;
 
   // Quick counts (ADR-084) lie inside the drawing in the corner farthest from the selection and its size label
-  // (ADR-110). Placed from the outline's screen box, so it follows zoom and resizes; it never changes the drawing.
+  // (ADR-111). Placed from the outline's screen box, so it follows zoom and resizes; it never changes the drawing.
   const figRef = useRef<HTMLElement>(null);
   const selRef = useRef<SVGRectElement>(null);
   const selDimRef = useRef<SVGGElement>(null);

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// Button labels never wrap; a cut label shows its full text in `title` (ADR-112). jsdom has no layout, so the
+// Button labels never wrap; a cut label shows its full text in `title` (ADR-113). jsdom has no layout, so the
 // widths are set by hand.
 import { afterEach, describe, expect, it } from 'vitest';
 import { installCutTitles, syncCutTitle } from '../src/ui/cutTitle';
@@ -25,7 +25,7 @@ afterEach(() => {
   document.body.innerHTML = '';
 });
 
-describe('cut button labels get their full text in title (ADR-112)', () => {
+describe('cut button labels get their full text in title (ADR-113)', () => {
   it('a cut label gets a title; it goes again once the label fits', () => {
     const { b, span } = button('Merge with right piece', 180, 120);
     syncCutTitle(b);

@@ -186,7 +186,7 @@ for (const width of [1280, 390, 360]) {
   );
   const rows = page.locator('main.projects-page ul.library > li');
   const before = await rows.count();
-  // Up to 520 px a row's Settings, Duplicate and Delete sit in its ⋯ menu (ADR-118).
+  // Up to 520 px a row's Settings, Duplicate and Delete sit in its ⋯ menu (ADR-119).
   const rowAction = async (action, name) => {
     if (width > 520)
       return page.getByRole('button', { name: `${action} ${name}`, exact: true }).click();

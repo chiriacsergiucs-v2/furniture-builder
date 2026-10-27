@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
-// ADR-114: every gap, padding and margin in the stylesheet uses the --s-* spacing tokens, and the top bar has one rule.
+// ADR-115: every gap, padding and margin in the stylesheet uses the --s-* spacing tokens, and the top bar has one rule.
 const CSS = readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
 
 /**
@@ -18,7 +18,7 @@ const ALLOW: { selector: string; prop: string; why: string }[] = [
   {
     selector: '.item.compact .ro-line',
     prop: 'margin-top',
-    why: 'a negative offset: the RO line tucks under the meta chips (ADR-118) instead of a full row gap',
+    why: 'a negative offset: the RO line tucks under the meta chips (ADR-119) instead of a full row gap',
   },
   {
     selector: '.label-row > .info-tip, .info-row > .info-tip',
@@ -70,7 +70,7 @@ const decls = declarations(CSS);
 const inScope = (d: Decl) =>
   !d.selector.startsWith(':root') && !d.atRules.some((a) => /^@media\b.*\bprint\b/.test(a));
 
-describe('spacing tokens (ADR-114)', () => {
+describe('spacing tokens (ADR-115)', () => {
   it('reads the stylesheet', () => {
     expect(decls.filter((d) => SPACING.test(d.prop)).length).toBeGreaterThan(400);
   });
@@ -113,7 +113,7 @@ describe('spacing tokens (ADR-114)', () => {
   });
 });
 
-describe('the top bar (ADR-114)', () => {
+describe('the top bar (ADR-115)', () => {
   const bar = decls.filter((d) => d.selector === '.bar');
   it('has one base rule and one phone rule', () => {
     const rules = new Set(bar.map((d) => d.atRules.join(' | ')));
@@ -127,7 +127,7 @@ describe('the top bar (ADR-114)', () => {
   });
 });
 
-describe('the heading scale (ADR-114)', () => {
+describe('the heading scale (ADR-115)', () => {
   const base = (sel: string, prop: string) =>
     decls.find((d) => d.selector === sel && d.prop === prop && !d.atRules.length)?.value;
   it('h1 24, h2 20, h3 17, all 600', () => {
