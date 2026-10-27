@@ -25,5 +25,6 @@ export default defineConfig({
   ],
   // three.js is ~1 MB and lazy-loaded on demand (ADR-013).
   build: { chunkSizeWarningLimit: 1100 },
-  test: { environment: 'node', include: ['tests/**/*.test.ts'] },
+  // Find-it tests (tests/find-it, ADR-108) walk the whole app in jsdom and need longer than the default 5 s.
+  test: { environment: 'node', include: ['tests/**/*.test.{ts,tsx}'], testTimeout: 30000 },
 });

@@ -68,8 +68,10 @@ ADRs are all in `docs/adr-done/`.
    - tests → `add-tests`
 7. **Verify.** Run the `verify` skill. Geometry changes also run
    `FUZZ_N=30000 pnpm exec vitest run tests/fuzz.test.ts`. Anything visible: write or extend
-   `tools/<feature>/find-it.mjs` and run it on the production build from the bare app at
-   phone (375–390 px) and desktop (1280–1440 px) widths (R3). If the ADR header says
+   `tests/find-it/<feature>.test.tsx` (jsdom, `renderApp` from `tests/find-it/setup.tsx`, both
+   `WIDTHS`), run by `pnpm test` (R3, ADR-108). If the header says `- Acceptance: browser`, write
+   `tools/<feature>/find-it.mjs` instead and run it on the production build from the bare app at
+   phone (375–390 px) and desktop (1280–1440 px) widths. If the ADR header says
    `- Acceptance: light`, skip the script, preview and browser; the backlog row stays
    Partially done with the gap `find-it pending (light, ADR-066)` and the visible text to find (ADR-066).
 8. **Ledger.** Update the backlog row in `docs/backlog.md` in the same change, with the

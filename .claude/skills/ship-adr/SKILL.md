@@ -26,7 +26,8 @@ Project: **Furniture Builder** — offline PWA for designing casework.
 
 1. **Identify the ADR.** Get the number from the user (e.g. `047`, `ADR-047`). If ambiguous, ask.
 2. **Check the evidence first.** Every `Done when` item is met by code and by a check you
-   ran (command output, CI run id, find-it result). The backlog row has that evidence.
+   ran (command output, CI run id, find-it result: jsdom test or, for `Acceptance: browser`, the
+   browser script, ADR-108). The backlog row has that evidence.
    An `Acceptance: light` ADR may ship without the find-it result; its backlog row keeps
    `find-it pending (light, ADR-066)` and stays Partially done until the catch-up run (ADR-066).
    If an item is not met, stop and tell the user rather than shipping (R1, R2).

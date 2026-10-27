@@ -1273,3 +1273,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: i dont see doors text moved with other; answer: Same row as Snap (Recommended)
 - Questions: Should all four plan controls fit one row on a phone (shorter labels or icons), or is the wrap fine?
 - Suggested pick: Keep the wrap (closest to the request: Doors and fronts is in Snap's row); one row would need shorter labels (estimate +20 % work, +5 % of value)
+
+### G-135: jsdom find-it cannot tap the drawing by position
+
+- Status: Open
+- Origin: ADR-108 (found while building)
+- Missing: The drawing hit-tests taps by screen position (getScreenCTM), which jsdom has no layout for; jsdom tests use each space's keyboard route (Enter), which runs the same tap at the space's centre, so a tap off-centre is not tested
+- Request: "Move to B as default, keep the priginal as a flag to be abke to tevert"
+- Questions: Is the keyboard route enough for drawing taps, or should tap-position work use Acceptance browser?
+- Suggested pick: Keyboard route in jsdom; ADRs that change tap hit-testing use browser

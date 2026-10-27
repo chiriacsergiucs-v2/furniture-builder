@@ -1,7 +1,8 @@
 # ADR-106: Change a whole piece's width and depth where it is selected
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-27
+- Implemented: 2026-10-27
 - Depends on: ADR-083, ADR-085, ADR-088
 - Design: docs/ui-design.md (section 3, components: `MmField`; section 4, editor screen)
 - Backlog: N104

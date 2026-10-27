@@ -26,9 +26,11 @@ no visual, copy or flow changes without the user's approval.
    - every state from step 2; error diagnostics never hidden or softened;
    - keyboard focus visible, labels on icon buttons and inputs, touch targets ≥ 44 px.
 5. **Copy:** English in the app; Romanian only on printed sheets and the parts CSV (ADR-020).
-6. **Find-it test (R3):** write `tools/<feature>/find-it.mjs` (copy an existing one) that
-   starts from the bare app and finds the feature by its visible text at phone and desktop
-   widths, with screenshots; run it on `pnpm build` + `vite preview`. Skip it when the ADR
+6. **Find-it test (R3):** write `tests/find-it/<feature>.test.tsx` (jsdom, ADR-108; copy
+   `count-stepper.test.tsx`) that starts from the bare app and finds the feature by role and
+   visible text at both `WIDTHS`. jsdom has no CSS: for an ADR with `- Acceptance: browser`
+   (layout/CSS, 3D view, Move mode) write `tools/<feature>/find-it.mjs` instead (copy an existing
+   one), with screenshots, and run it on `pnpm build` + `vite preview`. Skip it when the ADR
    says `- Acceptance: light`, and record `find-it pending (light, ADR-066)` in the backlog row (ADR-066).
 7. **Verify** with the `verify` skill, add logic tests with `add-tests`, and report what
    was built, which states are covered, screenshots, and any deviation with the reason.
