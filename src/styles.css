@@ -4760,12 +4760,13 @@ button.tile:hover {
     order: 0;
     z-index: auto;
   }
-  /* Compose: the drawing fills the screen; the selection editor is a sheet with a peek row above the nav. */
+  /* Compose: the stage fills the free height between the toolbars and the nav; the selection editor is a sheet
+     laid over its lower part, a peek row when closed (ADR-110). The drawing keeps clear of the peek row, and opening
+     the sheet never resizes the stage or rescales the drawing. */
   .work.mode-compose .stage {
-    height: calc(
-      100dvh - var(--bar-h, 50px) - var(--modes-h, 52px) - var(--actions-h, 64px) - 56px
-    );
-    min-height: 260px;
+    height: calc(100dvh - var(--bar-h, 50px) - var(--modes-h, 52px) - var(--actions-h, 64px));
+    min-height: 316px;
+    padding-bottom: 56px;
   }
   .work.mode-compose .output {
     display: none;
@@ -4784,15 +4785,9 @@ button.tile:hover {
     border-radius: var(--r-lg) var(--r-lg) 0 0;
     box-shadow: var(--shadow-3);
   }
-  /* With the sheet open the drawing shrinks to the space above it, so the selection stays in sight. */
+  /* The open sheet covers the stage's lower part; the stage keeps its size (ADR-110). */
   .work.mode-compose.sheet-open .side {
     max-height: 52dvh;
-  }
-  .work.mode-compose.sheet-open .stage {
-    height: calc(
-      100dvh - var(--bar-h, 50px) - var(--modes-h, 52px) - var(--actions-h, 64px) - 52dvh
-    );
-    min-height: 150px;
   }
   .work.mode-build .stage-tools,
   .work.mode-compose .stage-tools {
@@ -5314,6 +5309,19 @@ p > .info-tip {
   position: absolute;
   z-index: 2;
 }
+/* The compact card over the drawing (ADR-110): one row per count, short label then − N +, no heading. */
+.count-stepper.compact {
+  display: grid;
+  gap: 2px;
+  padding: 2px 4px;
+  width: max-content;
+}
+.count-stepper.compact .cs-row {
+  grid-template-columns: auto auto;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s-2);
+}
 .cs-title {
   flex-basis: 100%;
   color: var(--link);
@@ -5321,10 +5329,6 @@ p > .info-tip {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-.count-stepper .cs-size {
-  flex-basis: 100%;
-  min-width: min(100%, 15rem);
 }
 .cs-row {
   display: grid;
@@ -5435,17 +5439,13 @@ p > .info-tip {
   justify-content: space-between;
 }
 @media (max-width: 760px) {
-  /* With the editor sheet open the drawing keeps most of the screen; the sheet already has the same counters. */
+  /* The editor sheet covers at most 40 % of the screen over the stage, which keeps its size (ADR-110); the card
+     over the drawing steps aside, as the sheet already has the same counters. */
   .work.mode-compose.sheet-open .side {
     max-height: 40dvh;
   }
-  .work.mode-compose.sheet-open .stage {
-    height: calc(
-      100dvh - var(--bar-h, 50px) - var(--modes-h, 52px) - var(--actions-h, 64px) - 40dvh
-    );
-    min-height: 200px;
-  }
-  .work.mode-compose.sheet-open .elevation .count-stepper {
+  .work.mode-compose.sheet-open .elevation .count-stepper,
+  .work.mode-compose.sheet-open .view.front .count-stepper.floating {
     display: none;
   }
 }
@@ -5543,7 +5543,6 @@ p > .info-tip {
     background: var(--surface-2);
   }
   .count-stepper.folded .cs-row,
-  .count-stepper.folded .cs-size,
   .count-stepper.folded .cs-title {
     display: none;
   }

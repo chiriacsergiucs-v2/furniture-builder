@@ -156,11 +156,11 @@ const SEVERITY_NAME: Record<ClearanceZone['severity'], string> = {
   error: 'error',
 };
 
-/** The Clearances toggle and legend above the plan. */
+/** The Clearances toggle and legend, in the plan's own tool row ("Clear." on screen, ADR-110). */
 export function ZoneToolbar({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
   return (
-    <div className="plan-tools">
-      <Toggle label="Clearances" checked={on} onChange={onChange} />
+    <>
+      <Toggle label="Clear." name="Clearances" checked={on} onChange={onChange} />
       {on && (
         <p className="zone-legend" aria-label="Clearance legend">
           <span className="key none">No problem</span>
@@ -168,7 +168,7 @@ export function ZoneToolbar({ on, onChange }: { on: boolean; onChange: (v: boole
           <span className="key error">Error</span>
         </p>
       )}
-    </div>
+    </>
   );
 }
 
