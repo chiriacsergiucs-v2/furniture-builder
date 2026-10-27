@@ -16,7 +16,7 @@
   cutlist.ts grouping, edges L/W, grain, m², band metres, CSV, hardware summary
   geometry.ts boxes, overlap, distribute, cutDimensions
                           │
- src/persist  Dexie `furniture-builder` v1: designs   (autosave, library, import/export)
+ src/persist  Dexie `furniture-builder` v1–v10 (src/persist/db.ts)   (autosave, projects, import/export)
 ```
 
 Boundaries: `src/core` imports nothing from React, three or Dexie (ADR-013). Views never generate geometry

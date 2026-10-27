@@ -12,7 +12,7 @@ Dexie storage, React UI, lazy three.js viewer.
 
 1. **Understand the symptom.** Expected vs actual, since when, how triggered. Get the exact
    error, the steps, the width (phone or desktop) and, if possible, the design file
-   (Export → design file). If too vague to reproduce, ask one specific question.
+   (⋯ More › Files › Design file). If too vague to reproduce, ask one specific question.
 2. **Rule out the environment first:** Node version (24, `.nvmrc`; CI uses 24), `pnpm install --frozen-lockfile` clean, a stale
    service worker or old cached build (hard reload, or the update prompt), storage
    unavailable (private mode) — the save status says so.

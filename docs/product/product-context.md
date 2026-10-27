@@ -22,7 +22,7 @@ Catalog (2026-10-23, ADR-032–039, Proposed with defaults, built on `feat/catal
 complete design snapshots copied on insert (origin kept, ADR-028), 1–5 variants each, Start from + Catalog tab grouped
 by Room (default) or Type; local template edits in Dexie v3; rules registry (`src/core/rules.ts`); kitchen flags
 (rails top, no bottom, appliance niches typed by the user), `panel` and `frame` roots, sliding doors and flaps, solid
-stock in a lengths list, project run parts. `docs/catalog.md` is generated (`npm run catalog:docs`). No formula engine,
+stock in a lengths list, project run parts. `docs/catalog.md` is generated (`pnpm catalog:docs`). No formula engine,
 no template inheritance; shaped parts (raked backs, diagonal fronts) need a future ADR.
 
 User answers 2026-10-23 (all ADR open questions): kitchen carcass 720 + plinth 100; shelf span 900 (18 mm), door 600,

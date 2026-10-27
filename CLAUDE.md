@@ -41,7 +41,8 @@ Read first: `docs/backlog.md`, `docs/adr/README.md`, `docs/product/product-conte
   (`pnpm catalog:docs`); `docs/retros/` — retrospectives
 - `.claude/skills/` — `new-adr`, `next-adr`, `ship-adr`, `verify`, `review`, `debug`, `add-tests`,
   `implement-design`, `design-review`, `add-storage-version`, `add-model-feature` (reserv's `add-endpoint`
-  counterpart), `security-review`, `ff`
+  counterpart), `security-review`, `ff`, `caveman` (reply voice, started by the `SessionStart` hook in
+  `.claude/settings.json`)
 - `.github/workflows/ci.yml` — CI; the source of truth for what "passing" means.
   `deploy.yml` publishes `main` to GitHub Pages.
 

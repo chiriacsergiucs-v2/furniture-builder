@@ -69,7 +69,7 @@ app loads or sends over the network**. This review is engineering guidance, not 
 
 - `src/main.tsx` builds the update bar with `innerHTML` from a constant string; flag it only if
   anything variable is ever added to it.
-- Imports: design/project files in `src/ui/Dialogs.tsx` (Library) and `src/ui/Catalog.tsx`;
+- Imports: design/project files in `src/ui/shell/importFile.ts` (⋯ More › Files) and `src/ui/Catalog.tsx`;
   pictures in `src/persist/images.ts`; decor CSV in `src/ui/Dialogs.tsx`.
 - Exports: `cutlistCsvRo` (`src/core/ro.ts`), `exportFusionPython` (`src/core/fusion.ts`), SVG in
-  `src/ui/App.tsx`, project and design files with pictures (`withPictures`).
+  `src/ui/shell/files.ts`, project and design files with pictures (`withPictures`).
