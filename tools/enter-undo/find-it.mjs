@@ -19,6 +19,16 @@ for (const width of [1280, 390]) {
   const phone = width < 500;
   const ctx = await browser.newContext({ viewport: { width, height: phone ? 844 : 900 } });
   const page = await ctx.newPage();
+  // ADR-115: the selected piece's Position, Clearance, Finish and Merge are folded groups: open one by its title
+  // (when it is on screen; a phone's closed sheet hides the whole card, which is read as before).
+  const openGroup = async (title) => {
+    const s = page
+      .locator('details.group > summary')
+      .filter({ hasText: new RegExp(`^${title}$`) })
+      .first();
+    if ((await s.isVisible()) && !(await s.evaluate((el) => el.parentElement.open)))
+      await s.click({ timeout: 5000 });
+  };
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => {
@@ -92,6 +102,7 @@ for (const width of [1280, 390]) {
   const place = page.getByRole('button', { name: 'Place to the right', exact: true });
   if (await place.isVisible()) await place.click();
   if (phone && (await peek.getAttribute('aria-expanded')) !== 'true') await peek.click();
+  await openGroup('Clearance');
   const zones = page.getByRole('group', { name: 'Clearance zones' });
   await zones.scrollIntoViewIfNeeded();
   await zones.getByRole('radio', { name: 'Front' }).click();

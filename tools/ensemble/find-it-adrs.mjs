@@ -21,6 +21,16 @@ for (const width of [1440, 375]) {
     acceptDownloads: true,
   });
   const page = await ctx.newPage();
+  // ADR-115: the selected piece's Position, Clearance, Finish and Merge are folded groups: open one by its title
+  // (when it is on screen; a phone's closed sheet hides the whole card, which is read as before).
+  const openGroup = async (title) => {
+    const s = page
+      .locator('details.group > summary')
+      .filter({ hasText: new RegExp(`^${title}$`) })
+      .first();
+    if ((await s.isVisible()) && !(await s.evaluate((el) => el.parentElement.open)))
+      await s.click({ timeout: 5000 });
+  };
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => {
@@ -67,9 +77,13 @@ for (const width of [1440, 375]) {
     await dlg.locator('.start-group .row-btn').first().click();
     await dlg.waitFor({ state: 'detached' }).catch(() => {});
   };
-  const selectPiece = async (i) => click(pieces.nth(i).getByRole('button').first());
+  const selectPiece = async (i) => {
+    await click(pieces.nth(i).getByRole('button').first());
+    await openGroup('Position');
+  };
   const field = (label) => page.getByLabel(label, { exact: true }).first();
   const setField = async (label, v) => {
+    await openGroup('Position');
     const f = field(label);
     await f.scrollIntoViewIfNeeded();
     await f.fill(String(v));
@@ -127,6 +141,7 @@ for (const width of [1440, 375]) {
   await click(btn('Place to the right'));
   await addPiece('Base cabinet');
   await tapPlan(2000, 300);
+  await openGroup('Position');
   check(
     width,
     'ADR-056 tapped piece placed at the tapped point (From left ≈ 2000)',
@@ -194,12 +209,13 @@ for (const width of [1440, 375]) {
   await click(btn('Place to the right'));
   check(width, 'ADR-055 wardrobe added away from the run', (await pieces.count()) === 4);
   await selectPiece(0);
+  await openGroup('Finish');
   const finish = page.locator('.finish-fields');
   await finish.scrollIntoViewIfNeeded();
   check(
     width,
-    'ADR-055 "Finish" heading in the selected piece',
-    await finish.getByRole('heading', { name: 'Finish' }).isVisible(),
+    'ADR-055 "Finish" group open in the selected piece (folded since ADR-115)',
+    await finish.getByRole('button', { name: 'Apply finish' }).isVisible(),
   );
   const opts = await finish.getByLabel('Board').locator('option').allTextContents();
   // A board no door uses yet, so "not on the chosen board" really means the wardrobe was left alone.

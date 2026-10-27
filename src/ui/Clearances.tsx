@@ -95,9 +95,6 @@ export function ClearanceFields({ item }: { item: ProjectItem }) {
   const standsUp = !isWallHung(item.design) && item.placement?.kind !== 'above';
   return (
     <div className="zone-fields" role="group" aria-label="Clearance zones">
-      <div className="card-title">
-        <span>Clearance zones</span>
-      </div>
       {kneeSpan(item.design) && (
         <OptionalMm
           label="Chair space depth"

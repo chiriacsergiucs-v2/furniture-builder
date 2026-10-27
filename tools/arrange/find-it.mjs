@@ -23,6 +23,16 @@ for (const width of [1280, 390]) {
     isMobile: phone,
   });
   const page = await ctx.newPage();
+  // ADR-115: the selected piece's Position, Clearance, Finish and Merge are folded groups: open one by its title
+  // (when it is on screen; a phone's closed sheet hides the whole card, which is read as before).
+  const openGroup = async (title) => {
+    const s = page
+      .locator('details.group > summary')
+      .filter({ hasText: new RegExp(`^${title}$`) })
+      .first();
+    if ((await s.isVisible()) && !(await s.evaluate((el) => el.parentElement.open)))
+      await s.click({ timeout: 5000 });
+  };
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => {
@@ -54,13 +64,19 @@ for (const width of [1280, 390]) {
     if (await btn('Place to the right').isVisible()) await click(btn('Place to the right'));
     await openSheet();
   };
-  const fromLeft = async () =>
-    Number(await page.getByLabel('From left', { exact: true }).first().inputValue());
-  const turnSel = async () =>
-    (await page
-      .getByRole('radio', { name: /^\d+°$/, checked: true })
-      .first()
-      .textContent()) ?? '';
+  const fromLeft = async () => {
+    await openGroup('Position');
+    return Number(await page.getByLabel('From left', { exact: true }).first().inputValue());
+  };
+  const turnSel = async () => {
+    await openGroup('Position');
+    return (
+      (await page
+        .getByRole('radio', { name: /^\d+°$/, checked: true })
+        .first()
+        .textContent()) ?? ''
+    );
+  };
 
   // 1. Bare app → new project → one base cabinet, selected.
   await page.goto(url);
