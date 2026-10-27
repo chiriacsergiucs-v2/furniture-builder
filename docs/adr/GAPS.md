@@ -1156,3 +1156,21 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Add the doubled top support
 - Questions: Do you also want a doubled bottom or doubled sides?
 - Suggested pick: Top only, as asked (0 % extra work).
+
+### G-122: Save a project piece back over an existing template
+
+- Status: Open
+- Origin: ADR-106, 2026-10-27, Claude scope
+- Missing: Saving a project piece always makes a new catalog template; it never overwrites the template the piece came from.
+- Request: New adr to add the possibility to save a new piece to catalog when created it inside a project
+- Questions: Do you also want 'Update the template' to write a project piece's changes back into its existing template as a new revision?
+- Suggested pick: New template only, as asked (0 % extra work).
+
+### G-123: Save a group or several pieces as one catalog item
+
+- Status: Open
+- Origin: ADR-106, 2026-10-27, Claude scope
+- Missing: Only one piece at a time is saved to the catalog; a group or multi-selection is not saved as one item (project templates, ADR-060, cover whole projects).
+- Request: New adr to add the possibility to save a new piece to catalog when created it inside a project
+- Questions: Should a selected group of pieces be savable as one catalog item?
+- Suggested pick: One piece at a time, as asked (0 % extra work).
