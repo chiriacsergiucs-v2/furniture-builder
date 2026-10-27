@@ -3110,7 +3110,7 @@ table.buy {
   flex-wrap: nowrap;
 }
 .catalog-switches .segmented.small button {
-  padding: 2px var(--s-2);
+  padding: 0 var(--s-2);
 }
 .family-tools {
   display: flex;
@@ -3167,8 +3167,8 @@ table.buy {
   flex: none;
   position: relative;
   z-index: 1;
-  min-height: 30px;
-  margin-block: -7px;
+  min-height: var(--control-h);
+  margin-block: calc((1lh - var(--control-h)) / 2);
   padding: 0 var(--s-2);
 }
 .item.compact > .btn {
@@ -3244,8 +3244,6 @@ table.buy {
 @media (pointer: coarse) {
   .item.compact .item-more {
     min-width: 44px;
-    min-height: 44px;
-    margin-block: -14px;
   }
 }
 @media (max-width: 760px) {

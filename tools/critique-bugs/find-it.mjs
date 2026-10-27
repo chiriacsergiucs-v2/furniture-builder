@@ -154,10 +154,8 @@ for (const width of [390, 1280]) {
   await page.waitForTimeout(500);
   await page.mouse.wheel(0, 3000);
   await page.waitForTimeout(500);
-  // The search row is the sticky part on a phone (ADR-116); "Templates" stays sticky on desktop.
-  const tab = phone
-    ? page.getByRole('searchbox', { name: 'Search the catalog' })
-    : page.getByRole('tab', { name: 'Templates' });
+  // Only the search row stays sticky (ADR-116 on a phone, ADR-117 at every width).
+  const tab = page.getByRole('searchbox', { name: 'Search the catalog' });
   const vis = await tab.evaluate((el) => {
     const r = el.getBoundingClientRect();
     const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
@@ -169,9 +167,7 @@ for (const width of [390, 1280]) {
   });
   check(
     width,
-    phone
-      ? 'Catalog scrolled: the sticky search row is visible below the app bar'
-      : 'Catalog scrolled: "Templates" in the filter row is visible below the app bar',
+    'Catalog scrolled: the sticky search row is visible below the app bar',
     vis.ok && vis.top >= 0 && (!phone || vis.scrolled > 0),
     `top ${vis.top}, page scrolled ${vis.scrolled}`,
   );

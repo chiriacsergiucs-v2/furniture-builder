@@ -40,8 +40,8 @@ build now, the user picked "High bugs".
 
 - [ ] At 390 with touch the New dialog's rows do not overlap (each row's box contains its text).
 - [ ] At 390 Settings › Run parts has no child wider than its card.
-- [ ] After scrolling the Catalog, the sticky row is visible below the app bar: the search row at 390 (only it stays
-      sticky, ADR-116), "Templates" at 1280.
+- [ ] After scrolling the Catalog, the sticky row is visible below the app bar: the search row (only it stays sticky,
+      ADR-116 and ADR-117).
 - [ ] Under touch the ask-text input, wizard Name, wizard step buttons and template-editor inputs are ≥ 44 px tall;
       the trash button is found by the name "Remove variant".
 - [ ] Find-it passes from the bare app at phone and desktop widths (`tools/critique-bugs/find-it.mjs`, production
