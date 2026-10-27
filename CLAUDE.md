@@ -41,7 +41,7 @@ Read first: `docs/backlog.md`, `docs/adr/README.md`, `docs/product/product-conte
   (`pnpm catalog:docs`); `docs/retros/` — retrospectives
 - `.claude/skills/` — `new-adr`, `next-adr`, `ship-adr`, `verify`, `review`, `debug`, `add-tests`,
   `implement-design`, `design-review`, `add-storage-version`, `add-model-feature` (reserv's `add-endpoint`
-  counterpart), `security-review`
+  counterpart), `security-review`, `ff`
 - `.github/workflows/ci.yml` — CI; the source of truth for what "passing" means.
   `deploy.yml` publishes `main` to GitHub Pages.
 
@@ -91,6 +91,11 @@ New and next together (user rule 2026-10-27): after `new-adr` writes an ADR, sho
 ask the user to approve it. Only on explicit approval (and answered or accepted open questions) build that same
 ADR straight away with `next-adr`, on the same branch and in the same pull request. No approval, no build; the
 ADR stays `Pending` for a later `next ADR`.
+
+Fast forward, `ff` (user rule 2026-10-27, `ff` skill): on "ff" the request is built without an ADR, branch or pull
+request, with light acceptance: no tests, lint or find-it, only `pnpm typecheck` and `pnpm build`. One backlog row
+(`find-it pending (light, ADR-066)`) and gaps for anything not built. Before pushing straight to `main`, list what
+changed and push only on the user's explicit approval. Model, document, storage and network changes still need an ADR.
 
 ## Engineering conventions (hard rules)
 

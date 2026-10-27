@@ -130,7 +130,7 @@ for (const width of [1280, 390]) {
   };
   await at(0.03, 0.97);
   check(width, '3D: a tap on empty space clears the card', !(await card(dock3).isVisible()));
-  // Three taps at one spot. The card has no heading (N120, was G-069); on a phone it docks under the 3D view
+  // Three taps at one spot. The card has no heading (N121, was G-069); on a phone it docks under the 3D view
   // instead of covering it (G-070), so the spot stays in sight.
   const heading = async () => {
     const t = card(dock3).locator('.cs-title');
@@ -152,7 +152,7 @@ for (const width of [1280, 390]) {
   );
   check(
     width,
-    'the card has no heading, only counts (user 2026-10-27, N120)',
+    'the card has no heading, only counts (user 2026-10-27, N121)',
     headings.join('') === '',
     headings.join(' → '),
   );
@@ -166,7 +166,7 @@ for (const width of [1280, 390]) {
       `canvas bottom ${Math.round(cv.y + cv.height)}, card top ${Math.round(cd.y)}`,
     );
   }
-  // Realistic (G-064): the same selection; the card has counts and no heading (N120).
+  // Realistic (G-064): the same selection; the card has counts and no heading (N121).
   await viewOption('Realistic');
   await page.waitForTimeout(1500);
   await at(0.62, 0.6);
