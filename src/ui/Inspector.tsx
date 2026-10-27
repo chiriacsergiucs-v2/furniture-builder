@@ -881,6 +881,17 @@ function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material
           ]}
           onChange={(v) => set({ topKind: v })}
         />
+        {p.topKind !== 'rails' && (
+          <Segmented<1 | 2>
+            label="Top layers"
+            value={p.topLayers ?? 1}
+            options={[
+              { value: 1, label: 'Single' },
+              { value: 2, label: 'Doubled', title: 'Two panels glued, the second under the top' },
+            ]}
+            onChange={(v) => set({ topLayers: v })}
+          />
+        )}
         {p.topKind === 'rails' && (
           <MmField
             label="Rail depth"
@@ -1225,6 +1236,15 @@ function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[]
             { value: 'between', label: 'Between sides' },
           ]}
           onChange={(v) => set({ top: v })}
+        />
+        <Segmented<1 | 2>
+          label="Top layers"
+          value={p.topLayers ?? 1}
+          options={[
+            { value: 1, label: 'Single' },
+            { value: 2, label: 'Doubled', title: 'Two panels glued, the second under the top' },
+          ]}
+          onChange={(v) => set({ topLayers: v })}
         />
         <Segmented
           label="Back"

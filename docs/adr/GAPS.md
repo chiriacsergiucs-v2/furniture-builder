@@ -1130,7 +1130,34 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Should each base kind (open shelves, drawers, door + shelves) get its own width in a mix?
 - Suggested pick: Also try one round width per base kind (steps of 50 mm), ranked after the shared width, so the cards show such mixes too. (estimate: effort +10%, value +15%)
 
-### G-119: Fill a wall: at most 40 pieces per mix
+### G-119: Doubled rails on a rails top
+
+- Status: Open
+- Origin: ADR-105, 2026-10-27, Claude default
+- Missing: A doubled top on a rails top (two rails) is not built: the rails stay single and a warning says so.
+- Request: Add the doubled top support … 2 panels
+- Questions: Should 'Doubled' also double the two rails of a rails top, or stay a panel-top option only?
+- Suggested pick: Panel top only (default used): the user's answer was '2 panels', a rails top has no panel; doubling rails is a separate request (+5 % work, +0 % of this request).
+
+### G-120: Glue and screws for the doubled top
+
+- Status: Open
+- Origin: ADR-105, 2026-10-27, Claude (ADR-010)
+- Missing: No glue or screw line in the hardware list for joining the two top layers; the layers count as a carcass joint in the fastener tally only.
+- Request: Add the doubled top support … 2 panels
+- Questions: Which glue and screws (length, spacing) join the two layers? Not known; ADR-010 forbids inventing them.
+- Suggested pick: Leave it to the user's own fastener choice for carcass joints until they name a glue and screw (0 % work now).
+
+### G-121: Doubled bottom, sides or shelves
+
+- Status: Open
+- Origin: ADR-105, 2026-10-27, Claude scope
+- Missing: Only the top can be doubled; a doubled bottom, side or shelf is not built.
+- Request: Add the doubled top support
+- Questions: Do you also want a doubled bottom or doubled sides?
+- Suggested pick: Top only, as asked (0 % extra work).
+
+### G-122: Fill a wall: at most 40 pieces per mix
 
 - Status: Open
 - Origin: ADR-103 review, 2026-10-27; Claude added the bound
