@@ -1,7 +1,8 @@
 # ADR-115: Fix the high-severity layout bugs from the 2026-10-27 critique
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-27
+- Implemented: 2026-10-27
 - Depends on: none
 - Design: docs/ui-design.md (sections 3 and 4)
 - Backlog: N114
@@ -38,11 +39,11 @@ build now, the user picked "High bugs".
 
 ## Done when
 
-- [ ] At 390 with touch the New dialog's rows do not overlap (each row's box contains its text).
-- [ ] At 390 Settings › Run parts has no child wider than its card.
-- [ ] After scrolling the Catalog, the sticky row is visible below the app bar: the search row (only it stays sticky,
+- [x] At 390 with touch the New dialog's rows do not overlap (each row's box contains its text).
+- [x] At 390 Settings › Run parts has no child wider than its card.
+- [x] After scrolling the Catalog, the sticky row is visible below the app bar: the search row (only it stays sticky,
       ADR-118 and ADR-119).
-- [ ] Under touch the ask-text input, wizard Name, wizard step buttons and template-editor inputs are ≥ 44 px tall;
+- [x] Under touch the ask-text input, wizard Name, wizard step buttons and template-editor inputs are ≥ 44 px tall;
       the trash button is found by the name "Remove variant".
-- [ ] Find-it passes from the bare app at phone and desktop widths (`tools/critique-bugs/find-it.mjs`, production
+- [x] Find-it passes from the bare app at phone and desktop widths (`tools/critique-bugs/find-it.mjs`, production
       build).

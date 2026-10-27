@@ -1,7 +1,8 @@
 # ADR-120: Fix the lower-severity items from the 2026-10-27 critique
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-27
+- Implemented: 2026-10-27
 - Depends on: ADR-114
 - Design: docs/ui-design.md (sections 3 and 4)
 - Backlog: N119

@@ -1267,7 +1267,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-134: Clearances wraps to a second row of the project plan toolbar on a phone
 
-- Status: ADR-112
+- Status: Done (ADR-112)
 - Origin: ADR-109
 - Missing: At 390 px the plan toolbar holds Doors and fronts, Snap and Select on one row; Clearances wraps to a second row.
 - Request: i dont see doors text moved with other; answer: Same row as Snap (Recommended)
@@ -1321,7 +1321,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-140: Catalog density on desktop
 
-- Status: ADR-119
+- Status: Done (ADR-119)
 - Origin: ADR-118
 - Missing: The Catalog is 36 785 px tall at 1280 px; ADR-118 makes only the phone layout compact
 - Request: Run a critique for listings, headers, text, button sizes, gaps, groupings; answer Catalog density + wizard
@@ -1330,7 +1330,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-141: Lower-severity critique items not picked
 
-- Status: ADR-120
+- Status: Done (ADR-120)
 - Origin: docs/retros/2026-10-27-ui-critique.md
 - Missing: Mixed checkbox/pressed toggles in the plan toolbar; Width/Depth and counts three times on desktop; Projects row names wrap beside three icon buttons; editor name field cut without ellipsis; 'Back to the editor' chevron points right; ADR numbers in UI text; Romanian names inside English descriptions; Projects groupings (Import beside list heading, Fill a wall twice); 'front faces you' lone line
 - Request: Run a critique for listings, headers, text, button sizes, gaps, groupings
@@ -1366,7 +1366,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-145: Phone catalog cards cut text with no way to read it
 
-- Status: ADR-119
+- Status: Done (ADR-119)
 - Origin: ADR-118 (found while building)
 - Missing: At 390 px each catalog card's text lines (variant names, sizes/parts line, 'You choose: …') are cut to one line with an ellipsis and cannot be expanded; source and grouping switches read 'Saved', 'Room', 'Type'; room chips and 'also called' moved behind 'About this family'; wizard Cancel removed at every width
 - Request: Run a critique for listings, headers, text, button sizes, gaps, groupings; answer Catalog density + wizard

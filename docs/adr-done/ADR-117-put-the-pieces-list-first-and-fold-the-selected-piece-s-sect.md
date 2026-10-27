@@ -1,7 +1,8 @@
 # ADR-117: Put the pieces list first and fold the selected piece's sections
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-27
+- Implemented: 2026-10-27
 - Depends on: none
 - Design: docs/ui-design.md (section 4, project panel)
 - Backlog: N116
@@ -37,7 +38,7 @@ picked "Selected piece card: pieces list first; Position, Clearance, Finish, Mer
 
 ## Done when
 
-- [ ] In a project with two pieces, the pieces list heading comes before "Selected piece" in the panel.
-- [ ] With a piece selected, "Position", "Clearance", "Finish" and "Merge" are closed groups; opening one shows its
+- [x] In a project with two pieces, the pieces list heading comes before "Selected piece" in the panel.
+- [x] With a piece selected, "Position", "Clearance", "Finish" and "Merge" are closed groups; opening one shows its
       fields; Width and Depth are visible without opening anything.
-- [ ] Find-it passes from the bare app at phone and desktop widths (`tests/find-it/selected-piece.test.tsx`, jsdom).
+- [x] Find-it passes from the bare app at phone and desktop widths (`tests/find-it/selected-piece.test.tsx`, jsdom).
