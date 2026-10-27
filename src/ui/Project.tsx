@@ -1,4 +1,13 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type MouseEvent,
+} from 'react';
+import { CountStepper } from './CountStepper';
 import { projectBoards, roleBoard, type FinishRole, type FinishScope } from '../core/finish';
 import { decorPatch, type Decor } from '../core/materials';
 import { touchingRun } from '../core/arrange';
@@ -117,6 +126,10 @@ export function ProjectPanel({
   const setGap = useDesign((s) => s.setGap);
   const setLocked = useDesign((s) => s.setLocked);
   const resizeItem = useDesign((s) => s.resizeItem);
+  // A space, shelf or side inside the drilled piece is selected: its size is not the piece's (ADR-106).
+  const insideSelected = useDesign(
+    (s) => s.drillItemId !== null && typeof s.selectedId === 'string',
+  );
   const [gapMsg, setGapMsg] = useState<{ id: string | null; text: string | null }>({
     id: null,
     text: null,
@@ -201,11 +214,14 @@ export function ProjectPanel({
             )}
           </h3>
           <TemplateNotice item={item} />
-          <PieceSize
-            key={item.id}
-            product={item.design.product}
-            onChange={(k, v) => resizeItem(item.id, k, v)}
-          />
+          {!(drillId === item.id && insideSelected) && (
+            <PieceSize
+              // Not the bare item id: ArrangeFields below already uses it in this list (duplicate keys left stale rows).
+              key={`size-${item.id}`}
+              product={item.design.product}
+              onChange={(k, v) => resizeItem(item.id, k, v)}
+            />
+          )}
           <div className="split-actions">
             <button type="button" className="btn solid" onClick={() => edit(item.id)}>
               <Icon name="pencil" className="sm" />
@@ -777,7 +793,7 @@ const onKey = (f: () => void) => (e: KeyboardEvent) => {
 };
 
 /** The project drawing: the plan from above, and the whole room seen from the front below it. */
-export function PlanView() {
+export function PlanView({ fronts, card }: { fronts?: boolean; card?: boolean }) {
   const pm = useDesign((s) => s.projectModel);
   const placingId = useDesign((s) => s.placingItemId);
   const stop = useDesign((s) => s.stopPlacing);
@@ -844,10 +860,10 @@ export function PlanView() {
         </div>
       )}
       {problem && !placing && !drawing && <ProblemBanner problem={problem} />}
-      <RoomPlan pm={pm} problem={problem} />
+      <RoomPlan pm={pm} problem={problem} fronts={fronts} />
       {/* While a problem is shown the plan takes the room the front view had (ADR-071). */}
       {(pm.pieces.length > 0 || pm.models.length > 0) && !(problem && !placing && !drawing) && (
-        <RoomFront pm={pm} />
+        <RoomFront pm={pm} card={card} />
       )}
     </div>
   );
@@ -883,7 +899,18 @@ function roomPoint(svg: SVGSVGElement, clientX: number, clientY: number) {
   return { x: Math.round(pt.x), z: Math.round(pt.y) };
 }
 
-function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem | null }) {
+function RoomPlan({
+  pm,
+  problem,
+  fronts,
+}: {
+  pm: ProjectModel;
+  problem?: FocusedProblem | null;
+  /** "Doors and fronts" sits in this row instead of the stage toolbar (ADR-109). */
+  fronts?: boolean;
+}) {
+  const showFronts = useDesign((s) => s.showFronts);
+  const setShowFronts = useDesign((s) => s.setShowFronts);
   const space = useSpaceInRoom();
   const selectedId = useDesign((s) => s.selectedItemId);
   // Several selected pieces (ADR-097): Shift/Ctrl/Cmd-click or Select on a phone; a box on empty plan.
@@ -1061,6 +1088,9 @@ function RoomPlan({ pm, problem }: { pm: ProjectModel; problem?: FocusedProblem 
   return (
     <figure className="plan with-tools" aria-label="Room plan, seen from above. Select a piece.">
       <div className="plan-tools">
+        {fronts && (
+          <Toggle label="Doors and fronts" checked={showFronts} onChange={setShowFronts} />
+        )}
         <button
           type="button"
           className="btn sm outline snap-toggle"
@@ -1547,7 +1577,7 @@ function RoomOutline({ room, fs }: { room: Room; fs: number }) {
 }
 
 /** The whole room seen from the front (looking at the back wall), floor at the bottom. Tap a piece to select it. */
-function RoomFront({ pm }: { pm: ProjectModel }) {
+function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
   const space = useSpaceInRoom();
   // A space selected inside a piece: outlined, everything outside it faded (ADR-087 design A, G-071).
   const fade = (b: Box) => (space && !inSelection(space, b) ? ' faded' : '');
@@ -1593,8 +1623,59 @@ function RoomFront({ pm }: { pm: ProjectModel }) {
   const sel =
     pm.pieces.find((p) => p.item.id === selectedId)?.bounds ??
     pm.models.find((m) => m.item.id === selectedId)?.box;
+  // Quick counts and the whole piece's size float over the selected piece from the first tap (ADR-109), as over a
+  // single piece's drawing (ADR-084, ADR-106): right above the selected piece or space, below its top when no room.
+  const counts = useDesign(
+    (s) =>
+      !!card &&
+      !s.editingItemId &&
+      !!s.drillItemId &&
+      s.drillItemId === s.selectedItemId &&
+      s.selectedItemIds.length <= 1,
+  );
+  const figRef = useRef<HTMLElement>(null);
+  const anchorRef = useRef<SVGRectElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
+  const [cardH, setCardH] = useState(0);
+  const [tick, setTick] = useState(0);
+  useLayoutEffect(() => {
+    const fig = figRef.current;
+    if (!fig || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => setTick((t) => t + 1));
+    ro.observe(fig);
+    return () => ro.disconnect();
+  }, []);
+  const at = counts
+    ? (space ?? (pm.pieces.some((p) => p.item.id === selectedId) ? sel : null))
+    : null;
+  useLayoutEffect(() => {
+    const fig = figRef.current,
+      a = anchorRef.current,
+      st = cardRef.current;
+    if (!fig || !a || !st) {
+      setCardH(0);
+      return setPos(null);
+    }
+    // The view gives up the card's height at its top, so there is room right above the piece (as ADR-084).
+    setCardH(st.offsetHeight);
+    const f = fig.getBoundingClientRect(),
+      r = a.getBoundingClientRect();
+    const w = st.offsetWidth,
+      h = st.offsetHeight,
+      gap = 6;
+    const left = Math.max(gap, Math.min(r.left + r.width / 2 - f.left - w / 2, f.width - w - gap));
+    const above = r.top - f.top - h - gap;
+    const top = above >= gap ? above : Math.max(gap, r.top - f.top + gap);
+    setPos((p) => (p && p.left === left && p.top === top ? p : { left, top }));
+  }, [at?.x, at?.y, at?.w, at?.h, tick, cardH, pm]);
   return (
-    <figure className="plan" aria-label="Room seen from the front. Select a piece.">
+    <figure
+      className="plan"
+      ref={figRef}
+      style={at && cardH ? { paddingTop: cardH + 12 } : undefined}
+      aria-label="Room seen from the front. Select a piece."
+    >
       <InfoTip label="About the front view">
         Seen from the front. Sizes in mm: overall in yellow, the selected piece in green.
         {rv &&
@@ -1694,7 +1775,26 @@ function RoomFront({ pm }: { pm: ProjectModel }) {
             aria-label="Selected space inside the piece"
           />
         )}
+        {at && (
+          <rect
+            ref={anchorRef}
+            x={at.x}
+            y={-(at.y + at.h)}
+            width={at.w}
+            height={at.h}
+            fill="none"
+            pointerEvents="none"
+          />
+        )}
       </svg>
+      {at && (
+        <CountStepper
+          ref={cardRef}
+          className="floating"
+          withSize
+          style={pos ? { left: pos.left, top: pos.top } : { visibility: 'hidden' }}
+        />
+      )}
     </figure>
   );
 }

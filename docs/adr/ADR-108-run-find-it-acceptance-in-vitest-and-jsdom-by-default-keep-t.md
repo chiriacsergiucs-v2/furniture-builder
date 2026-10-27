@@ -51,7 +51,7 @@ asked for them here. ADR-015 and ADR-066 stay as they are; this ADR changes only
   `CLAUDE.md` R3 and the skills that mention find-it (`new-adr`, `next-adr`, `implement-design`, `add-tests`,
   `verify`, `review`, `ship-adr`, `debug`).
 - Out of scope: 3D view and Move mode in jsdom (G-131); porting the 42 existing scripts (G-132); off-centre
-  taps on the drawing, which jsdom tests through the keyboard route (G-134).
+  taps on the drawing, which jsdom tests through the keyboard route (G-135).
 
 ## Consequences
 

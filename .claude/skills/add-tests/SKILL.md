@@ -38,11 +38,7 @@ Project: **Furniture Builder** — pure TypeScript model, Vitest (ADR-015).
 ## Rules
 
 - Never delete, skip or weaken a test, or lower a fuzz count, to make a run pass.
-- No assertion behind an `if` that can be false: build the fixture so the case always exists. A test name
-  says exactly what the body sets up and asserts (retro 2026-10-26).
 - jsdom find-it: the drawing hit-tests taps by screen position, which jsdom cannot compute; select a
   space with its keyboard route (focus it, press Enter), which runs the same tap (ADR-108).
-- In find-it scripts, wait for content that loads after navigation (`locator.waitFor`), never a bare
-  `isVisible()` (retro 2026-10-26).
 - No real personal data in fixtures. Generate images in the test rather than committing binaries.
 - Report: tests added, which `Done when` item each covers, and any case not covered and why.

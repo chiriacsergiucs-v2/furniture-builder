@@ -1449,6 +1449,10 @@ td.note {
   padding: var(--s-2) var(--s-4);
   flex-wrap: wrap;
 }
+/* A project's Compose drawing on a phone: Doors and fronts moved into the plan's own tool row (ADR-109). */
+.stage-tools:empty {
+  display: none;
+}
 .stage-tools .spacer {
   flex: 1;
 }

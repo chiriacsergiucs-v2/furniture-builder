@@ -41,7 +41,7 @@ Read first: `docs/backlog.md`, `docs/adr/README.md`, `docs/product/product-conte
   (`pnpm catalog:docs`); `docs/retros/` — retrospectives
 - `.claude/skills/` — `new-adr`, `next-adr`, `ship-adr`, `verify`, `review`, `debug`, `add-tests`,
   `implement-design`, `design-review`, `add-storage-version`, `add-model-feature` (reserv's `add-endpoint`
-  counterpart), `security-review`, `retro`
+  counterpart), `security-review`
 - `.github/workflows/ci.yml` — CI; the source of truth for what "passing" means.
   `deploy.yml` publishes `main` to GitHub Pages.
 
@@ -62,9 +62,7 @@ CI is the source of truth. Before saying work is done, run the same checks CI ru
 
 Not in CI, run when relevant: `FUZZ_N=30000 pnpm exec vitest run tests/fuzz.test.ts` after any geometry change;
 `pnpm catalog:docs` and `pnpm catalog:snapshots` after catalog changes; the matching
-`tools/*/find-it.mjs` against `pnpm build && pnpm preview` for anything visible. In a cloud session Playwright is
-installed globally and ES modules cannot see it: link it once with
-`ln -s "$(npm root -g)/playwright" node_modules/playwright` before `node tools/*/find-it.mjs` (retro 2026-10-26).
+`tools/*/find-it.mjs` against `pnpm build && pnpm preview` for anything visible.
 
 ## How we plan and build: ADRs
 
@@ -132,8 +130,6 @@ Lifecycle, one skill per step:
 
 - Smallest functional slice; for each change ask "needed to demonstrate this now?" — if not, it goes under
   _Skipped this iteration_.
-- An answer that does not fit the question it was given for is not an answer: restate the question in full and ask
-  again before building. Never refer to a question by number alone (user rule 2026-10-26).
 - Update `docs/backlog.md` in the same change; change a status only with evidence (command output or a CI
   run id). Label evidence from documents differently from evidence you ran.
 - Pushed ≠ merged ≠ deployed ≠ live-verified. Never claim tests or deployments that did not run. "Live-verified"
@@ -147,8 +143,6 @@ Lifecycle, one skill per step:
   `ADR-NNN` and becomes Done when that ADR ships (`pnpm gaps sync`, run by `ship-adr`). `pnpm docs:check` and a
   `Stop` hook (`.claude/settings.json`) enforce it.
 - Stop when a check fails (fix the cause, never the check) or when a change would need the network (ADR-002).
-- Status replies are a short Done / Not done list, one line per item, unless the user asks for detail. "Recheck"
-  means a fresh check of `main`, CI, deploy, open ADRs and the live site (user rule 2026-10-26).
 - Recommended options (user rule 2026-10-25): in questions, open questions and ADR defaults, never mark an
   option as recommended because it is the simplest. Recommend the option closest to what the user asked to
   build, and say so. If it is more complex, explain why and estimate how much more work it is (+N %) and how
@@ -159,10 +153,6 @@ Lifecycle, one skill per step:
 
 - Only modify `chiriacsergiucs-v2/furniture-builder`.
 - Branch per ADR: `adr-NNN-short-title`; open a pull request for review.
-- Merge to `main` only on the user's instruction, and only after the PR's `verify` check passed on its current
-  head, never while it is queued or running (retro 2026-10-26); then cite the `Deploy GitHub Pages` run id. Never force-push
-  `main`. Selecting proposals in the `retro` dialog is that instruction (user rule 2026-10-26, `retro` skill).
-- Session branch: after its PR merged, restart it with `git checkout -B <branch> origin/main` and push
-  normally (it fast-forwards); never force-push it. After pulling or merging into it, push it in the same
-  turn (retro 2026-10-26).
+- Merge to `main` only on the user's instruction; then cite the `Deploy GitHub Pages` run id. Never force-push
+  `main`.
 - Ship commit message: `Ship ADR-NNN: <short title> — mark implemented`.

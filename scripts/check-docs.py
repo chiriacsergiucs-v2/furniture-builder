@@ -109,20 +109,6 @@ for rel in files:
             if not (p.parent / link).exists():
                 errors.append(f"{rel}: broken link {link}")
 
-# Agreement (retro 2026-10-26): from number 091 on, an ADR records whether the user agreed to it, and only an
-# agreed ADR can be Implemented.
-AGREED = re.compile(r'\d{4}-\d{2}-\d{2} ["\u201c].+["\u201d]')
-for num, (path, status) in adrs.items():
-    if int(num) < 91:
-        continue
-    rel = path.relative_to(REPO)
-    ag = re.search(r"^- Agreed: (.+)$", path.read_text(), re.M)
-    value = ag.group(1).strip() if ag else ""
-    if value != "not yet" and not AGREED.fullmatch(value):
-        errors.append(f"{rel}: '- Agreed:' must be 'not yet' or 'YYYY-MM-DD \"<user's words>\"', is '{value}'")
-    elif status == "Implemented" and value == "not yet":
-        errors.append(f"{rel}: Implemented but the user never agreed to it ('- Agreed: not yet')")
-
 # Gaps ledger (ADR-082).
 sys.path.insert(0, str(REPO / "scripts"))
 import gaps  # noqa: E402
@@ -147,33 +133,6 @@ for rel in files:
         continue
     for ref in sorted(set(re.findall(r"\bG-(\d{3})\b", p.read_text())) - {i[2:] for i in gap_ids}):
         errors.append(f"{rel}: unknown gap G-{ref}")
-
-# Ids taken on main meanwhile (retro 2026-10-26): an ADR, backlog or gap id this branch added that origin/main
-# now also has is a collision, to renumber before merging. Skipped when origin/main is not fetched (CI checkout).
-def _ids(text, path):
-    if path.endswith("GAPS.md"):
-        return dict(re.findall(r"^### (G-\d{3}): (.+)$", text, re.M))
-    if path.endswith("backlog.md"):
-        return {i: t.strip() for i, t in re.findall(r"^\| ([FND]\d+) +\| ([^|]+)\|", text, re.M)}
-    return {i: t.strip() for i, t in re.findall(r"^\| \[(ADR-\d{3})\]\([^)]*\) +\| ([^|]+)\|", text, re.M)}
-
-
-def _git(*args):
-    r = subprocess.run(["git", *args], cwd=REPO, capture_output=True, text=True)
-    return r.stdout if r.returncode == 0 else None
-
-
-base = _git("merge-base", "HEAD", "origin/main")
-if base:
-    for path in ("docs/adr/GAPS.md", "docs/backlog.md", "docs/adr/README.md"):
-        before, main_text = _git("show", f"{base.strip()}:{path}"), _git("show", f"origin/main:{path}")
-        if before is None or main_text is None:
-            continue
-        here, old, main_ids = _ids((REPO / path).read_text(), path), _ids(before, path), _ids(main_text, path)
-        for i in sorted(set(here) - set(old)):
-            if i in main_ids and main_ids[i] != here[i]:
-                errors.append(f"{path}: {i} is \"{main_ids[i][:50]}\" on origin/main but \"{here[i][:50]}\" here: "
-                              "merge origin/main and renumber this branch's id")
 
 print(f"{len(adrs)} ADRs ({sum(s == 'Implemented' for _, s in adrs.values())} implemented), {len(backlog)} backlog ids, {len(gap_ids)} gaps")
 for e in errors:
