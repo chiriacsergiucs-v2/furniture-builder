@@ -49,7 +49,7 @@ const START: Form = {
   width: '3000',
   depth: '560',
   height: '2400',
-  tallDepth: '560',
+  tallDepth: '',
   minWidth: String(WALL_DEFAULTS.minWidth),
   maxWidth: String(WALL_DEFAULTS.maxWidth),
   baseHeight: String(BASE_HEIGHT),
@@ -211,7 +211,12 @@ function WallFill({ onClose, onOpened }: { onClose: () => void; onOpened: () => 
             <Field label="Width" value={form.width} onChange={set('width')} />
             <Field label="Depth" value={form.depth} onChange={set('depth')} />
             <Field label="Height" value={form.height} onChange={set('height')} />
-            <Field label="Tall cabinet depth" value={form.tallDepth} onChange={set('tallDepth')} />
+            <Field
+              label="Tall cabinet depth"
+              value={form.tallDepth}
+              onChange={set('tallDepth')}
+              placeholder="same as depth"
+            />
           </div>
         </section>
       )}
