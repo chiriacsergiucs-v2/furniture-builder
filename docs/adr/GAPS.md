@@ -1456,7 +1456,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-155: Project versions: when one is kept
 
-- Status: Open
+- Status: ADR-123
 - Origin: ADR-123 (open question)
 - Missing: No history of older project versions (G-083)
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1465,7 +1465,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-156: Project versions: how many are kept
 
-- Status: Open
+- Status: ADR-123
 - Origin: ADR-123 (open question)
 - Missing: Keeping versions grows storage; removing old ones deletes saved data, which needs the user's decision (ADR-012)
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1474,7 +1474,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-157: Undo log: labelled snapshots or inverse commands
 
-- Status: Open
+- Status: ADR-123
 - Origin: ADR-123 (open question)
 - Missing: Undo is a list of unlabelled snapshots; no named steps, no step list, no explicit transactions
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1483,7 +1483,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-158: Style suggestions: where they come from
 
-- Status: Open
+- Status: ADR-123
 - Origin: ADR-123 (open question)
 - Missing: No style or material suggestions
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1552,3 +1552,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
 - Questions: Run a measured trial (decision recorded, nothing shipped unless it wins), or adopt Rapier for the checks now?
 - Suggested pick: Measured trial first (the research says 'evaluate'; a new WASM dependency needs its licence, size and offline behaviour checked)
+
+### G-190: Versions of a deleted project
+
+- Status: Open
+- Origin: ADR-123 (found while building)
+- Missing: Deleting a project leaves its kept versions on the device; nothing lists or removes them (G-156: nothing removes versions without the user)
+- Request: Accept default, /batch all ready (G-156: keep every version until the user deletes it)
+- Questions: When a project is deleted, ask whether to delete its versions too, keep them silently, or list orphaned versions somewhere to restore or delete?
+- Suggested pick: Ask on delete, defaulting to keep (closest to G-156: nothing removed without the user's decision)

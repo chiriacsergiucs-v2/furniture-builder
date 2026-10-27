@@ -11,6 +11,7 @@ import { validateProjectTemplate, type ProjectTemplate } from '../core/projectTe
 import { validateBundle, validateMark, type StoredBundle } from '../core/research/catalog';
 import type { ResearchMark } from '../core/research/types';
 import { validateGapMark, type GapMark } from '../core/gaps';
+import { validateVersion, type ProjectVersion } from '../core/projectVersion';
 
 export interface StoredDesign {
   id: string;
@@ -76,6 +77,7 @@ class FurnitureDb extends Dexie {
   prices!: Table<PriceEntry, string>;
   models!: Table<StoredModel, string>;
   gapMarks!: Table<GapMark, string>;
+  projectVersions!: Table<ProjectVersion, string>;
   constructor(name = 'furniture-builder') {
     super(name);
     // Never edit a shipped version block; add a new version for any change (ADR-012).
@@ -155,6 +157,21 @@ class FurnitureDb extends Dexie {
       models: 'id, createdAt',
       gapMarks: 'gapId, updatedAt',
     });
+    // v10 (ADR-123): kept versions of projects, kept until the user deletes them. Earlier tables untouched (additive).
+    this.version(10).stores({
+      designs: 'id, updatedAt, name',
+      projects: 'id, updatedAt, name',
+      templates: 'id, updatedAt',
+      researchDocs: 'key, docId',
+      researchMarks: 'id, updatedAt',
+      images: 'id',
+      decors: 'id',
+      projectTemplates: 'id, updatedAt, name',
+      prices: 'id',
+      models: 'id, createdAt',
+      gapMarks: 'gapId, updatedAt',
+      projectVersions: 'id, projectId, savedAt',
+    });
   }
 }
 
@@ -189,6 +206,29 @@ export async function loadProject(id: string, database = db): Promise<Project | 
   return row.project;
 }
 export const deleteProject = (id: string, database = db) => database.projects.delete(id);
+
+/** Keep a version of a project (ADR-123); a version is never rewritten. */
+export async function saveProjectVersion(v: ProjectVersion, database = db): Promise<void> {
+  await database.projectVersions.add(v);
+}
+/** A project's kept versions, newest first; unreadable rows are skipped and kept (ADR-012). */
+export async function listProjectVersions(
+  projectId: string,
+  database = db,
+): Promise<ProjectVersion[]> {
+  const rows = await database.projectVersions.where('projectId').equals(projectId).toArray();
+  const usable = (v: unknown) => {
+    try {
+      return !validateVersion(v).length;
+    } catch {
+      return false;
+    }
+  };
+  return rows.filter(usable).sort((a, b) => b.savedAt.localeCompare(a.savedAt));
+}
+/** Only on the user's Delete (ADR-123, G-156: nothing removes versions automatically). */
+export const deleteProjectVersion = (id: string, database = db) =>
+  database.projectVersions.delete(id);
 
 export async function saveTemplate(t: LocalTemplate, database = db): Promise<void> {
   await database.templates.put({ id: t.id, updatedAt: t.updatedAt, template: t });
