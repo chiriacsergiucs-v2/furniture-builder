@@ -4,7 +4,13 @@ import { AddPieceList } from './Project';
 import { endPieceDrag, pieceDragActive, usePieceList } from './pieceDrag';
 
 /** The list panel or sheet; rendered only while open. */
-export function PieceList({ onBrowse }: { onBrowse?: () => void }) {
+export function PieceList({
+  onBrowse,
+  onWizard,
+}: {
+  onBrowse?: () => void;
+  onWizard?: () => void;
+}) {
   const open = usePieceList((s) => s.open);
   const dragging = usePieceList((s) => !!s.drag);
   const setOpen = usePieceList((s) => s.setOpen);
@@ -50,7 +56,7 @@ export function PieceList({ onBrowse }: { onBrowse?: () => void }) {
         <p className="hint">
           Drag an item onto the plan (on a phone, hold it first), or tap it and then tap the plan.
         </p>
-        <AddPieceList onDone={() => setOpen(false)} onBrowse={onBrowse} drag />
+        <AddPieceList onDone={() => setOpen(false)} onBrowse={onBrowse} onWizard={onWizard} drag />
       </div>
     </dialog>
   );

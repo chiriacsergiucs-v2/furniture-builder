@@ -185,6 +185,13 @@ export function App() {
   };
   /** The piece reopened in the wizard, or null for a new one (ADR-046). */
   const [wizardFrom, setWizardFrom] = useState<Design | null>(null);
+  /** The wizard was started from a project's Add a piece: its piece joins the project (ADR-107). */
+  const [wizardToProject, setWizardToProject] = useState(false);
+  const openWizard = (from: Design | null, toProject = false) => {
+    setWizardFrom(from);
+    setWizardToProject(toProject);
+    setDialog('wizard');
+  };
   const templateEdit = useDesign((s) => s.templateEdit);
   const project = useDesign((s) => s.project);
   const editingItemId = useDesign((s) => s.editingItemId);
@@ -693,13 +700,7 @@ export function App() {
           />
         )}
         {page === 'catalog' && (
-          <CatalogPage
-            onDone={() => setPage('editor')}
-            onNewPiece={() => {
-              setWizardFrom(null);
-              setDialog('wizard');
-            }}
-          />
+          <CatalogPage onDone={() => setPage('editor')} onNewPiece={() => openWizard(null)} />
         )}
         {page === 'research' && <ResearchPage onDone={() => setPage('editor')} />}
         {page === 'gaps' && <GapsPage onDone={() => setPage('editor')} />}
@@ -735,6 +736,7 @@ export function App() {
                   setPiecesOpen(false);
                   openCatalog();
                 }}
+                onWizard={() => openWizard(null, true)}
               />
             )}
             <div className="stage-tools">
@@ -853,10 +855,7 @@ export function App() {
           open={dialog === 'new'}
           onClose={() => setDialog((d) => (d === 'new' ? null : d))}
           onBrowse={openCatalog}
-          onWizard={() => {
-            setWizardFrom(null);
-            setDialog('wizard');
-          }}
+          onWizard={() => openWizard(null)}
           onFillWall={() => setDialog('wallfill')}
           onOpened={() => setPage('editor')}
         />
@@ -868,18 +867,14 @@ export function App() {
         <WizardDialog
           open={dialog === 'wizard'}
           from={wizardFrom}
+          toProject={wizardToProject}
           onClose={() => setDialog((d) => (d === 'wizard' ? null : d))}
           onCreated={() => {
             setDialog(null);
             setPage('editor');
           }}
         />
-        <SettingsDialog
-          onWizard={() => {
-            setWizardFrom(design);
-            setDialog('wizard');
-          }}
-        />
+        <SettingsDialog onWizard={() => openWizard(design)} />
         <RenderDialog
           open={dialog === 'render'}
           onClose={() => setDialog((d) => (d === 'render' ? null : d))}

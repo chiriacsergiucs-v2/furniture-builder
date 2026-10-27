@@ -40,6 +40,7 @@ import {
   resolvePlacements,
   roomToPiece,
   keepTemplate,
+  linkItemOrigin,
   setLocked,
   tapPosition,
   trySetGap,
@@ -51,6 +52,7 @@ import {
 } from '../core/project';
 import type {
   CabinetParams,
+  CatalogMeta,
   CornerParams,
   DeskParams,
   Design,
@@ -193,6 +195,8 @@ interface State {
   setLocked: (id: string, on: boolean) => void;
   /** "Keep mine" (ADR-096): hide the newer-template notice for this revision; one undo step. */
   keepTemplate: (id: string, revision: number) => void;
+  /** Link a piece to the catalog template it was saved as (ADR-107); one undo step. */
+  linkTemplate: (id: string, origin: NonNullable<CatalogMeta['origin']>) => void;
   removeItem: (id: string) => void;
   /** Merge two touching cabinets into one (ADR-047); returns why not, or an empty list. */
   mergeItems: (a: string, b: string) => string[];
@@ -577,6 +581,12 @@ export const useDesign = create<State>((rawSet, get) => {
       const p = get().project;
       if (!p) return;
       const next = keepTemplate(p, id, revision);
+      if (next !== p) commitProject(next);
+    },
+    linkTemplate: (id, origin) => {
+      const p = get().project;
+      if (!p) return;
+      const next = linkItemOrigin(p, id, origin);
       if (next !== p) commitProject(next);
     },
     removeItem: (id) => {

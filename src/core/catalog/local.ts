@@ -4,7 +4,7 @@
  * data, so a local template is self-contained and survives app updates; nothing is replaced without the user's say.
  */
 import { newId, validateDesign } from '../design';
-import type { Design } from '../types';
+import type { CatalogMeta, Design } from '../types';
 import {
   BUILT_CAPABILITIES,
   FUNCTIONS,
@@ -139,6 +139,21 @@ export function templateFromDesign(
     },
   };
 }
+
+/**
+ * The origin link of a piece saved to the catalog as template `t` (ADR-107): the template's first variant at its
+ * current revision, so the piece reads "From <name>, revision 1" (ADR-096).
+ */
+export const templateOrigin = (
+  t: LocalTemplate,
+  now = new Date().toISOString(),
+): NonNullable<CatalogMeta['origin']> => ({
+  catalogId: t.family.id,
+  variantId: t.family.variants[0]?.id,
+  revision: localRevision(t),
+  productName: t.family.name,
+  takenAt: now,
+});
 
 const isObj = (v: unknown): v is Record<string, unknown> =>
   !!v && typeof v === 'object' && !Array.isArray(v);
