@@ -239,11 +239,17 @@ for (const width of widths) {
     const peek = page.locator('.sheet-peek');
     if (await peek.isVisible().catch(() => false)) await peek.click();
   }
+  // The explanation sits behind the card's info button (ADR-111).
+  await sel
+    .getByRole('button', { name: 'About 3D models' })
+    .click()
+    .catch(() => {});
   check(
     width,
-    '"Selected 3D model" shows with "Display only"',
+    '"Selected 3D model" shows with "Display only" behind "About 3D models"',
     (await sel.textContent().catch(() => ''))?.includes('Display only') ?? false,
   );
+  await page.keyboard.press('Escape');
   await shot('plan');
 
   // 4. The parts list stays empty: a display-only item is never cut.

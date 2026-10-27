@@ -38,6 +38,8 @@ import { useDesign } from '../store/designStore';
 import {
   Counter,
   Group,
+  GuidanceTip,
+  InfoTip,
   MmField,
   revealGroup,
   Section,
@@ -121,8 +123,10 @@ export function InsideEditor() {
   return (
     <>
       <p className="hint">
-        Selected: {WHOLE[prod.kind]}. Tap the piece again to pick a space inside it; each tap goes
-        one level smaller.
+        Selected: {WHOLE[prod.kind]}.{' '}
+        <InfoTip label="About picking a space" align="start">
+          Tap the piece again to pick a space inside it; each tap goes one level smaller.
+        </InfoTip>
       </p>
       <CountStepper />
     </>
@@ -140,13 +144,22 @@ function ComposeStart() {
   return (
     <div className="inspector compose-start">
       <header className="insp-head">
-        <h2>Compose</h2>
+        <div className="info-row">
+          <h2>Compose</h2>
+          {roots.length > 0 && (
+            <InfoTip label="About compose" align="start">
+              Tap the drawing: the first tap selects the whole piece, each further tap at the same
+              spot one space smaller. Fill a space with shelves, drawers or hanging, add doors, or
+              divide it.
+            </InfoTip>
+          )}
+        </div>
         {whole && <p className="selected-whole">Selected: {WHOLE[prod.kind]}</p>}
-        <p className="hint">
-          {roots.length
-            ? 'Tap the drawing: the first tap selects the whole piece, each further tap at the same spot one space smaller. Fill a space with shelves, drawers or hanging, add doors, or divide it.'
-            : 'This piece has no spaces to fill. Its sizes and boards are under Settings.'}
-        </p>
+        {!roots.length && (
+          <p className="hint">
+            This piece has no spaces to fill. Its sizes and boards are under Settings.
+          </p>
+        )}
       </header>
       {whole && <PieceSize product={prod} onChange={resize} />}
       {roots.map((r) => (
@@ -468,13 +481,18 @@ function SpaceEditor({
         </Section>
       )}
 
-      <Section title="Doors and handles">
+      <Section
+        title="Doors and handles"
+        info={
+          space.kind === 'drawers' &&
+          space.front && (
+            <InfoTip label="About drawers behind doors" align="start">
+              Drawers behind doors are built as internal drawers without their own fronts.
+            </InfoTip>
+          )
+        }
+      >
         <FrontEditor space={space} onChange={set} />
-        {space.kind === 'drawers' && space.front && (
-          <p className="hint">
-            Drawers behind doors are built as internal drawers without their own fronts.
-          </p>
-        )}
         {space.front || space.kind === 'drawers' ? (
           <HandleEditor space={space} onChange={set} />
         ) : (
@@ -594,6 +612,14 @@ function DrawerHeights({
     <>
       <Segmented<'equal' | 'custom'>
         label="Drawer heights"
+        info={
+          custom && (
+            <InfoTip label="About drawer heights" align="start">
+              Top to bottom. Heights are front heights; a share splits whatever the fixed drawers
+              leave.
+            </InfoTip>
+          )
+        }
         value={custom ? 'custom' : 'equal'}
         options={[
           { value: 'equal', label: 'Equal' },
@@ -648,11 +674,6 @@ function DrawerHeights({
             </li>
           ))}
         </ul>
-      )}
-      {custom && (
-        <p className="hint">
-          Top to bottom. Heights are front heights; a share splits whatever the fixed drawers leave.
-        </p>
       )}
     </>
   );
@@ -811,10 +832,12 @@ function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material
     <div className="inspector">
       <EditorRail steps={steps} inside={() => select(p.interior.id)} />
       <header className="insp-head">
-        <h2>Whole cabinet</h2>
-        <p className="hint">
-          Sizes, construction and boards. Fill or divide the spaces under Compose.
-        </p>
+        <div className="info-row">
+          <h2>Whole cabinet</h2>
+          <InfoTip label="About the whole cabinet" align="start">
+            Sizes, construction and boards. Fill or divide the spaces under Compose.
+          </InfoTip>
+        </div>
       </header>
       <PieceInfo />
       <div className="dims3">
@@ -1082,7 +1105,12 @@ function DrawerSettingsGroup({
         onChange={(v) => onChange({ ...d, bottomMaterialId: v })}
       />
       <div className="field">
-        <label htmlFor="runner-lengths">Runner lengths you can buy</label>
+        <div className="label-row">
+          <label htmlFor="runner-lengths">Runner lengths you can buy</label>
+          <InfoTip label="About runner lengths" align="start">
+            The longest one that fits the depth is chosen.
+          </InfoTip>
+        </div>
         <input
           id="runner-lengths"
           defaultValue={d.runnerLengths.join(', ')}
@@ -1095,7 +1123,6 @@ function DrawerSettingsGroup({
             if (v.length) onChange({ ...d, runnerLengths: [...new Set(v)].sort((a, b) => a - b) });
           }}
         />
-        <p className="hint">The longest one that fits the depth is chosen.</p>
       </div>
     </Group>
   );
@@ -1129,14 +1156,16 @@ function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[]
     <div className="inspector">
       <EditorRail steps={steps} inside={() => select(p.interior.id)} />
       <header className="insp-head">
-        <h2>Corner unit</h2>
-        <p className="hint">
-          {blind
-            ? 'A blind section the neighbouring cabinet covers, joined to a normal cabinet.'
-            : diagonal
-              ? 'Five-sided: the same width along both walls, a return at each end and the door across the diagonal at 45°. Bottom, top and shelves are cut to a template.'
-              : 'Two wings open to each other at the corner, with a folding door pair. The front view shows the back-wall wing.'}
-        </p>
+        <div className="info-row">
+          <h2>Corner unit</h2>
+          <InfoTip label="About the corner unit" align="start">
+            {blind
+              ? 'A blind section the neighbouring cabinet covers, joined to a normal cabinet.'
+              : diagonal
+                ? 'Five-sided: the same width along both walls, a return at each end and the door across the diagonal at 45°. Bottom, top and shelves are cut to a template.'
+                : 'Two wings open to each other at the corner, with a folding door pair. The front view shows the back-wall wing.'}
+          </InfoTip>
+        </div>
       </header>
       <PieceInfo />
       <Segmented<CornerParams['variant']>
@@ -1334,11 +1363,13 @@ function PanelSetEditor({ p, materials }: { p: PanelSetParams; materials: Materi
     <div className="inspector">
       <EditorRail steps={steps} />
       <header className="insp-head">
-        <h2>Loose panels</h2>
-        <p className="hint">
-          Parts known by their cut sizes. They go to the cut list and sheets. Parts with a known
-          place are built where they sit; the rest lie in a pile beside them.
-        </p>
+        <div className="info-row">
+          <h2>Loose panels</h2>
+          <InfoTip label="About loose panels" align="start">
+            Parts known by their cut sizes. They go to the cut list and sheets. Parts with a known
+            place are built where they sit; the rest lie in a pile beside them.
+          </InfoTip>
+        </div>
         {p.note && <p className="hint">{p.note}</p>}
       </header>
       {p.panels.map((lp) => (
@@ -1488,7 +1519,14 @@ function JointsEditor({ p }: { p: PanelSetParams }) {
   if (placed.length < 2 && !joints.length) return null;
   const opts = placed.map((lp) => ({ value: lp.id, label: lp.name }));
   return (
-    <Section title="Screwed joints">
+    <Section
+      title="Screwed joints"
+      info={
+        <GuidanceTip topic="screwed joints">
+          Screw type, length and count are your choice for the board (guidance only).
+        </GuidanceTip>
+      }
+    >
       {joints.length ? (
         <ul className="plain-list">
           {joints.map((j, i) => (
@@ -1528,9 +1566,6 @@ function JointsEditor({ p }: { p: PanelSetParams }) {
       >
         Add screwed joint
       </button>
-      <p className="hint">
-        Screw type, length and count are your choice for the board (guidance only).
-      </p>
     </Section>
   );
 }
@@ -1627,7 +1662,12 @@ function DeskEditor({
       )}
       {ped && (
         <div className="field">
-          <span className="field-label">Inside the drawer units</span>
+          <div className="label-row">
+            <span className="field-label">Inside the drawer units</span>
+            <InfoTip label="About the drawer units" align="start">
+              Or tap a drawer unit in the front view. Each unit is laid out on its own.
+            </InfoTip>
+          </div>
           <div className="split-actions">
             {sides.map((sd) => (
               <button
@@ -1640,9 +1680,6 @@ function DeskEditor({
               </button>
             ))}
           </div>
-          <p className="hint">
-            Or tap a drawer unit in the front view. Each unit is laid out on its own.
-          </p>
         </div>
       )}
       <Group title="Construction" id="g-build">
@@ -1735,6 +1772,14 @@ function BaysGroup({ interior, onChange }: { interior: Space; onChange: (s: Spac
       )}
       <Counter
         label="Bays (divided by uprights)"
+        info={
+          layout &&
+          layout.bays > 1 && (
+            <InfoTip label="About bays" align="start">
+              Tap a bay in the front view to give it its own width, shelves or drawers.
+            </InfoTip>
+          )
+        }
         value={cur.bays}
         min={1}
         max={MAX_BAYS}
@@ -1757,11 +1802,6 @@ function BaysGroup({ interior, onChange }: { interior: Space; onChange: (s: Spac
         ]}
         onChange={(v) => apply({ doors: v })}
       />
-      {layout && layout.bays > 1 && (
-        <p className="hint">
-          Tap a bay in the front view to give it its own width, shelves or drawers.
-        </p>
-      )}
     </Group>
   );
 }

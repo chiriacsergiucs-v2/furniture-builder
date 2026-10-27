@@ -36,6 +36,7 @@ import { useDesign } from '../store/designStore';
 import { useTemplates } from '../store/templatesStore';
 import { ProjectTemplateList } from './ProjectTemplates';
 import { askConfirm, askText } from './Confirm';
+import { InfoTip } from './controls';
 import { Icon } from './icons';
 import { familyGlyph, templateGlyph } from './Templates';
 
@@ -375,13 +376,17 @@ export function CatalogPage({
     <main className="catalog-page" aria-label="Catalog">
       <header className="catalog-head">
         <div>
-          <h1>Catalog</h1>
+          <div className="info-row">
+            <h1>Catalog</h1>
+            <InfoTip label="About the catalog" align="start">
+              {toProject
+                ? 'Pick one to add it to the open project.'
+                : 'Pick one to open your own copy in the editor.'}
+            </InfoTip>
+          </div>
           <p className="hint">
             <strong className="num">{all.length} items</strong> in {families.length} families ·{' '}
-            {ready} open right away.{' '}
-            {toProject
-              ? 'Pick one to add it to the open project.'
-              : 'Pick one to open your own copy in the editor.'}
+            {ready} open right away.
           </p>
         </div>
         <div className="split-actions">
@@ -430,16 +435,20 @@ export function CatalogPage({
       </div>
       {source === 'templates' && (
         <CatalogActions phone={phone}>
-          <label className="toggle small">
-            <input
-              type="checkbox"
-              checked={safety}
-              onChange={(e) => toggleSafety(e.target.checked)}
-            />
-            <span>
-              I check safety-regulated items (bunk bed, cradle) against the standards myself
-            </span>
-          </label>
+          <span className="info-row">
+            <label className="toggle small">
+              <input
+                type="checkbox"
+                checked={safety}
+                onChange={(e) => toggleSafety(e.target.checked)}
+              />
+              <span>I check safety-regulated items myself</span>
+            </label>
+            <InfoTip label="About safety-regulated items" align="start">
+              Safety-regulated items (bunk bed, cradle): you check them against the standards
+              yourself.
+            </InfoTip>
+          </span>
           <SaveAsTemplate />
           <details className="menu catalog-files">
             <summary aria-label="Template files" title="Export or import your own templates">
@@ -944,8 +953,12 @@ function TemplateEditor({
   return (
     <section className="template-editor" aria-label={`Edit template ${f.name}`}>
       <div className="card-title">
-        <span>Edit template</span>
-        <span className="hint">Saved on this device only; the shipped template never changes.</span>
+        <span className="info-row">
+          <span>Edit template</span>
+          <InfoTip label="About editing a template" align="start">
+            Saved on this device only; the shipped template never changes.
+          </InfoTip>
+        </span>
       </div>
       <div className="dims2">
         <div className="field">

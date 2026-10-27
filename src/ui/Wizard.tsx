@@ -27,7 +27,7 @@ import { CARDS_FIRST, generatorAt, suggestions, type Suggestion } from '../core/
 import type { Answers, AnswerValue, Compartment, FieldDef } from '../core/wizard/types';
 import { saveDesign } from '../persist/db';
 import { useDesign } from '../store/designStore';
-import { Counter, Segmented, Select, Steps } from './controls';
+import { Counter, InfoTip, Segmented, Select, Steps } from './controls';
 import { Dialog } from './Dialogs';
 import { Icon } from './icons';
 
@@ -349,8 +349,12 @@ function Suggestions({
   return (
     <section className="wz-suggest" aria-label="Suggested combinations">
       <div className="card-title">
-        <span>Suggested combinations</span>
-        <span className="hint">Fit the sizes entered so far, checked by the model</span>
+        <span className="info-row">
+          <span>Suggested combinations</span>
+          <InfoTip label="About suggested combinations" align="start">
+            Fit the sizes entered so far, checked by the model.
+          </InfoTip>
+        </span>
       </div>
       {list.length ? (
         <ul className="wz-cards">
@@ -502,8 +506,16 @@ function Wizard({
               </span>
             </p>
           )}
-          <h3>{step.title}</h3>
-          {step.help && <p className="hint">{step.help}</p>}
+          {step.help ? (
+            <div className="info-row">
+              <h3>{step.title}</h3>
+              <InfoTip label="About this step" align="start">
+                {step.help}
+              </InfoTip>
+            </div>
+          ) : (
+            <h3>{step.title}</h3>
+          )}
           {fields.map((f) => (
             <FieldInput key={f.id} f={f} a={a} r={r} set={set} />
           ))}

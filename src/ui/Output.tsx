@@ -11,6 +11,7 @@ import { Sheets } from './Sheets';
 import { FastenerCounts } from './Fasteners';
 import { ShoppingList } from './Shopping';
 import { useView } from './useView';
+import { GuidanceTip, InfoTip } from './controls';
 import { Icon } from './icons';
 import { cutlistCsvRo } from '../core/ro';
 import { download, fileName } from './shell/files';
@@ -143,9 +144,11 @@ function Parts() {
         </p>
       )}
       <p className="summary">
-        {total} parts in {byMat.length} {byMat.length === 1 ? 'material' : 'materials'}. Sizes are
-        finished sizes; edges marked for banding.
-        {allUnnamed && ' Edge bands are not named yet.'}
+        {total} parts in {byMat.length} {byMat.length === 1 ? 'material' : 'materials'}.
+        {allUnnamed && ' Edge bands are not named yet.'}{' '}
+        <InfoTip label="About the parts list" align="start">
+          Sizes are finished sizes; edges marked for banding.
+        </InfoTip>
       </p>
       {byMat.map(([mid, list]) => {
         const name = list[0].materialName;
@@ -216,11 +219,13 @@ function Lengths() {
   if (!groups.length) return null;
   return (
     <section className="lengths" aria-label="Solid timber lengths">
-      <h3 className="list-head">Solid timber to buy</h3>
-      <p className="hint">
-        Parts packed into the lengths you can buy, longest first, with a {view.kerf} mm saw cut
-        between parts. A quick heuristic, not an optimum.
-      </p>
+      <div className="info-row">
+        <h3 className="list-head">Solid timber to buy</h3>
+        <GuidanceTip topic="solid timber lengths">
+          Parts packed into the lengths you can buy, longest first, with a {view.kerf} mm saw cut
+          between parts. A quick heuristic, not an optimum.
+        </GuidanceTip>
+      </div>
       {groups.map((g) => (
         <table key={`${g.materialId}|${g.section}`} className="cut">
           <caption>
@@ -294,6 +299,13 @@ function Hardware() {
     );
   return (
     <div className="hardware">
+      <div className="info-row end">
+        <GuidanceTip topic="hardware counts" align="end">
+          Screws and connectors are counted below only as joints (guidance), except screwed joints a
+          design names (their screws are your choice). Hinge and shelf-pin counts follow common
+          guidance; the maker's datasheet decides.
+        </GuidanceTip>
+      </div>
       <table className="cut">
         <thead>
           <tr>
@@ -314,11 +326,6 @@ function Hardware() {
           ))}
         </tbody>
       </table>
-      <p className="hint">
-        Screws and connectors are counted below only as joints (guidance), except screwed joints a
-        design names (their screws are your choice). Hinge and shelf-pin counts follow common
-        guidance; the maker's datasheet decides.
-      </p>
       <FastenerCounts />
     </div>
   );
