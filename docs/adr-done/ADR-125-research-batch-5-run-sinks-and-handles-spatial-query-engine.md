@@ -1,7 +1,8 @@
 # ADR-125: Research batch 5: run sinks and handles, spatial query engine trial
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-27
+- Implemented: 2026-10-27
 - Depends on: ADR-061, ADR-075
 - Design: docs/ui-design.md (project editor, run parts)
 - Backlog: N126
@@ -13,7 +14,7 @@ The user (2026-10-27): "Check which features are left in the features reasearch,
 missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features, and ship it as
 1 big change, 1 Pr, 1 run of the tests, 1 ship, 4 features."
 
-Last batch of the features left after ADR-093…120 (list in [ADR-121](ADR-121-research-batch-1-render-3d-on-demand-review-pack-typed-rotat.md)). 18 features left, so this batch has
+Last batch of the features left after ADR-093…120 (list in [ADR-121](../adr-done/ADR-121-research-batch-1-render-3d-on-demand-review-pack-typed-rotat.md)). 18 features left, so this batch has
 two, not four:
 
 | Research feature (id)                                            | Complexity  | What is missing here                  |
@@ -53,7 +54,7 @@ Built as one change, one pull request, one test run and one ship (the user's req
 
 - **Handles stay per piece** — no aligned line across a run, which the research asks for.
 - **Skip Rapier** — would drop a listed feature (R2); a trial costs little and informs typed rotation
-  ([ADR-121](ADR-121-research-batch-1-render-3d-on-demand-review-pack-typed-rotat.md), G-149).
+  ([ADR-121](../adr-done/ADR-121-research-batch-1-render-3d-on-demand-review-pack-typed-rotat.md), G-149).
 
 ## Scope
 

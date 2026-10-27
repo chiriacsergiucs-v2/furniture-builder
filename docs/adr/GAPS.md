@@ -753,7 +753,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-077: Free-angle rotation of project pieces
 
-- Status: ADR-121
+- Status: Done (ADR-121)
 - Origin: ADR-093 (2026-10-26, the user chose 90° steps)
 - Missing: Free-angle rotation of project pieces; pieces still turn in 90° steps (ADR-022/ADR-004 kept).
 - Request: "New adr to override the conflicts for 4 and make it ready" (2026-10-26)
@@ -762,7 +762,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-078: Change height by dragging in 3D
 
-- Status: ADR-122
+- Status: Done (ADR-122)
 - Origin: ADR-093 (2026-10-26, the user chose floor plane only)
 - Missing: Changing a piece's height by dragging in 3D; height comes from placement.
 - Request: "New adr to override the conflicts for 4 and make it ready" (2026-10-26)
@@ -789,7 +789,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-081: Lock a piece's sizes and parameters
 
-- Status: ADR-122
+- Status: Done (ADR-122)
 - Origin: ADR-095 (2026-10-26, Claude: not asked for)
 - Missing: Locking a piece's sizes and other parameters (the research's locked parameters); the lock covers placement only.
 - Request: "New adr 8" (2026-10-26)
@@ -807,7 +807,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-083: Restore an older version of a project
 
-- Status: ADR-123
+- Status: Done (ADR-123)
 - Origin: ADR-096 (2026-10-26, Claude: not asked for)
 - Missing: A history of older project versions to go back to (research: version recovery).
 - Request: "New adr 9" (2026-10-26)
@@ -825,7 +825,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-085: Mirror a selection of pieces
 
-- Status: ADR-121
+- Status: Done (ADR-121)
 - Origin: ADR-097 (2026-10-26, Claude: not asked for)
 - Missing: Mirroring a selection of pieces.
 - Request: "New adr 2" (2026-10-26)
@@ -843,7 +843,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-087: Keep a piece's own edits when replacing it
 
-- Status: ADR-124
+- Status: Done (ADR-124)
 - Origin: ADR-098 (2026-10-26, Claude: not asked for)
 - Missing: Carrying the old piece's own edits onto the replacing design.
 - Request: "New adr 5" (2026-10-26)
@@ -861,7 +861,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-089: Align the heights of wall units
 
-- Status: ADR-122
+- Status: Done (ADR-122)
 - Origin: ADR-099 (2026-10-26, Claude: not asked for)
 - Missing: Aligning heights (top or bottom of wall units).
 - Request: "New adr 7" (2026-10-26)
@@ -1402,7 +1402,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-149: Typed rotation: exact checks or bounding boxes
 
-- Status: ADR-121
+- Status: Done (ADR-121)
 - Origin: ADR-121 (open question)
 - Missing: Typed rotation in whole degrees is not built; every check, snap and drawing assumes axis-aligned boxes (quarter turns only)
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1411,7 +1411,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-150: Review pack: what it holds and how it leaves the device
 
-- Status: ADR-121
+- Status: Done (ADR-121)
 - Origin: ADR-121 (open question)
 - Missing: No single package to hand a project to a professional for review
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1420,7 +1420,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-151: Align Top/Bottom with floor pieces selected
 
-- Status: ADR-122
+- Status: Done (ADR-122)
 - Origin: ADR-122 (open question)
 - Missing: Align Top and Bottom do not exist; a floor piece's height cannot move without resizing it
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1429,7 +1429,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-152: Size lock: separate or part of Lock
 
-- Status: ADR-122
+- Status: Done (ADR-122)
 - Origin: ADR-122 (open question)
 - Missing: A piece's sizes cannot be locked (G-081)
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1438,7 +1438,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-153: Height drag in 3D: which pieces
 
-- Status: ADR-122
+- Status: Done (ADR-122)
 - Origin: ADR-122 (open question)
 - Missing: No vertical drag in 3D Move mode (G-078)
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1447,7 +1447,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-154: Section view: which cut planes
 
-- Status: ADR-122
+- Status: Done (ADR-122)
 - Origin: ADR-122 (open question)
 - Missing: No section, cutaway or isolate in the 3D view
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1456,7 +1456,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-155: Project versions: when one is kept
 
-- Status: ADR-123
+- Status: Done (ADR-123)
 - Origin: ADR-123 (open question)
 - Missing: No history of older project versions (G-083)
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1465,7 +1465,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-156: Project versions: how many are kept
 
-- Status: ADR-123
+- Status: Done (ADR-123)
 - Origin: ADR-123 (open question)
 - Missing: Keeping versions grows storage; removing old ones deletes saved data, which needs the user's decision (ADR-012)
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1474,7 +1474,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-157: Undo log: labelled snapshots or inverse commands
 
-- Status: ADR-123
+- Status: Done (ADR-123)
 - Origin: ADR-123 (open question)
 - Missing: Undo is a list of unlabelled snapshots; no named steps, no step list, no explicit transactions
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1483,7 +1483,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-158: Style suggestions: where they come from
 
-- Status: ADR-123
+- Status: Done (ADR-123)
 - Origin: ADR-123 (open question)
 - Missing: No style or material suggestions
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1492,7 +1492,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-159: Design codes: link or text
 
-- Status: ADR-124
+- Status: Done (ADR-124)
 - Origin: ADR-124 (open question)
 - Missing: No code to share or reopen a design or project elsewhere
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1501,7 +1501,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-160: Replace: which own edits carry over
 
-- Status: ADR-124
+- Status: Done (ADR-124)
 - Origin: ADR-124 (open question)
 - Missing: Replacing a piece drops its own edits (G-087)
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1510,7 +1510,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-161: Template references: default and fallback
 
-- Status: ADR-124
+- Status: Done (ADR-124)
 - Origin: ADR-124 (open question)
 - Missing: Project pieces are full copies (ADR-022); none refers to its template and stores only its changes
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1519,7 +1519,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-162: Project-wide settings: which ones
 
-- Status: ADR-124
+- Status: Done (ADR-124)
 - Origin: ADR-124 (open question)
 - Missing: No project-wide parameters that every piece follows unless it overrides them
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1528,7 +1528,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-163: Run sinks: what is generated
 
-- Status: ADR-125
+- Status: Done (ADR-125)
 - Origin: ADR-125 (open question)
 - Missing: Sinks are not generated for a run
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1537,7 +1537,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-164: Run handles: where the line sits
 
-- Status: ADR-125
+- Status: Done (ADR-125)
 - Origin: ADR-125 (open question)
 - Missing: Handles are chosen per piece; nothing lines them up across a run
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1546,7 +1546,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-165: Rapier: trial or adopt
 
-- Status: ADR-125
+- Status: Done (ADR-125)
 - Origin: ADR-125 (open question)
 - Missing: No spatial query engine; checks are hand-written box tests
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1618,7 +1618,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-200: Project-wide settings and the size lock
 
-- Status: ADR-122
+- Status: Done (ADR-122)
 - Origin: ADR-124 (found while building)
 - Missing: Project settings and Replace do not check ADR-122's size lock: ADR-122 is not on main when ADR-124 is built
 - Request: Accept default, /batch all ready
