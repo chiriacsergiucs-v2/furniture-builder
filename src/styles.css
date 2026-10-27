@@ -1250,6 +1250,18 @@ td.note {
 .dialog .close {
   color: var(--ink-2);
 }
+/* The review pack's file list (ADR-121): each file with its name under it. */
+.pack-files {
+  margin: 0;
+  padding-left: var(--s-5);
+  display: grid;
+  gap: var(--s-2);
+}
+.pack-files small {
+  display: block;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
 .dialog-body {
   padding: var(--s-4) var(--s-5) var(--s-5);
   display: grid;
@@ -2098,20 +2110,24 @@ td.note {
   stroke-width: 3;
   vector-effect: non-scaling-stroke;
 }
-.plan-piece rect {
+.plan-piece rect,
+.plan-piece polygon {
   fill: var(--el-back);
   stroke: var(--ink);
   stroke-width: 1.4;
   vector-effect: non-scaling-stroke;
 }
-.plan-piece.raised rect {
+.plan-piece.raised rect,
+.plan-piece.raised polygon {
   fill-opacity: 0.55;
   stroke-dasharray: 6 4;
 }
-.plan-piece:hover rect {
+.plan-piece:hover rect,
+.plan-piece:hover polygon {
   fill: var(--surface-2);
 }
-.plan-piece.on rect {
+.plan-piece.on rect,
+.plan-piece.on polygon {
   fill: var(--primary-soft);
   stroke: var(--primary);
   stroke-width: 2.4;
@@ -2128,7 +2144,8 @@ td.note {
   pointer-events: none;
 }
 /* A locked piece (ADR-095): a solid heavier outline and the "Locked" badge in its corner. */
-.plan-piece.locked rect {
+.plan-piece.locked rect,
+.plan-piece.locked polygon {
   stroke-width: 2.6;
 }
 .plan .lock-badge {
@@ -2173,7 +2190,8 @@ td.note {
 .plan-piece:focus {
   outline: none;
 }
-.plan-piece:focus-visible rect {
+.plan-piece:focus-visible rect,
+.plan-piece:focus-visible polygon {
   stroke: var(--link);
   stroke-width: 3;
 }

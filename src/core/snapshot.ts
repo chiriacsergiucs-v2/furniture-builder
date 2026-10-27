@@ -5,7 +5,7 @@
  */
 import { inPlaneAxes } from './geometry';
 import { aabbOf, area2, profileWorld, rotateAbout, type V3 } from './shape';
-import type { Box, FurnitureModel, Material, Panel } from './types';
+import type { Box, FurnitureModel, Material, Panel, PanelShape } from './types';
 
 /** View from the front right, above: azimuth 30°, elevation 25°. */
 const AZ = Math.PI / 6,
@@ -70,8 +70,9 @@ const norm = (v: V3): V3 => {
  * profile's two outline faces and one side face per outline edge.
  */
 function shapedFaces(p: Panel): { shade: number; pts: P[] }[] {
+  // A plain part of a piece at an angle (ADR-121) is drawn as an untilted blank, then turned.
   const b = p.box,
-    s = p.shape!;
+    s: PanelShape = p.shape ?? { kind: 'tilt', axis: 'x', angleDeg: 0, pivot: [0, 0, 0] };
   const all: { n: V3; pts: P[] }[] = [];
   if (s.kind === 'tilt') {
     const x0 = b.x,
@@ -169,6 +170,12 @@ function shapedFaces(p: Panel): { shade: number; pts: P[] }[] {
     // Outline faces last: a visible one is nearer than the part's own side faces (notches included).
     all.push({ n: tn, pts: front }, { n: [-tn[0], -tn[1], -tn[2]], pts: back });
   }
+  const y = b.yaw;
+  if (y)
+    for (const f of all) {
+      f.n = rotateAbout(f.n, 'y', y.deg, [0, 0, 0]);
+      f.pts = f.pts.map((q) => rotateAbout(q as V3, 'y', y.deg, [y.cx, 0, y.cz]));
+    }
   // Normals are outward; keep the faces turned towards the viewer.
   return all
     .filter((f) => f.n[0] * V[0] + f.n[1] * V[1] + f.n[2] * V[2] > 1e-9)
@@ -289,7 +296,7 @@ export function snapshotSvg(model: FurnitureModel, materials: Material[], size =
     const p = panels[i];
     const c = colour.get(p.materialId) ?? '#c8c4bb';
     const edge = tint(c, 0.55);
-    for (const fc of p.shape ? shapedFaces(p) : faces(p.box))
+    for (const fc of p.shape || p.box.yaw ? shapedFaces(p) : faces(p.box))
       out.push(
         `<path d="M${fc.pts.map(pt).join('L')}Z" fill="${tint(c, fc.shade)}" stroke="${edge}"/>`,
       );

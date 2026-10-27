@@ -23,6 +23,7 @@ import {
   pieceBoxToRoom,
   placementBases,
   planRuns,
+  rotationOf,
   runOf,
   type Placement,
   type ProjectItem,
@@ -122,6 +123,7 @@ export function ProjectPanel({
   const toggleItem = useDesign((s) => s.toggleItem);
   const selectedIds = useDesign((s) => s.selectedItemIds);
   const update = useDesign((s) => s.updateItem);
+  const setRotation = useDesign((s) => s.setRotation);
   const remove = useDesign((s) => s.removeItem);
   const edit = useDesign((s) => s.editItem);
   const updateProject = useDesign((s) => s.updateProject);
@@ -358,6 +360,25 @@ export function ProjectPanel({
                   { value: 270, label: '270°' },
                 ]}
                 onChange={(v) => update(item.id, { rotationY: v })}
+              />
+            )}
+            {/* Any whole degree, about the piece's centre (ADR-121); checks use the turned piece. */}
+            {!blocked && (
+              <MmField
+                label="Rotation (°)"
+                unit="°"
+                value={rotationOf(item)}
+                min={0}
+                max={359}
+                step={15}
+                onChange={(v) => setRotation(item.id, v)}
+                info={
+                  <InfoTip label="About rotation" align="start">
+                    Whole degrees, 0 to 359, about the piece&apos;s centre. Overlaps, the room and
+                    door clearances are checked on the turned piece. A piece at an angle is not part
+                    of a run, so it gets no shared worktop or plinth.
+                  </InfoTip>
+                }
               />
             )}
             {!blocked && <PlacementFields item={item} />}
@@ -1476,8 +1497,24 @@ function RoomPlan({
               }}
               onPointerCancel={() => setDrag(null)}
             >
-              <rect x={b.x} y={b.z} width={b.w} height={b.d} />
-              <line className="front" x1={fx1} y1={fz1} x2={fx2} y2={fz2} />
+              {pc.item.angle ? (
+                // A piece at an angle (ADR-121): its turned outline and front edge, from the core.
+                <>
+                  <polygon points={pc.footprint.map((p) => p.join(',')).join(' ')} />
+                  <line
+                    className="front"
+                    x1={pc.front[0]}
+                    y1={pc.front[1]}
+                    x2={pc.front[2]}
+                    y2={pc.front[3]}
+                  />
+                </>
+              ) : (
+                <>
+                  <rect x={b.x} y={b.z} width={b.w} height={b.d} />
+                  <line className="front" x1={fx1} y1={fz1} x2={fx2} y2={fz2} />
+                </>
+              )}
               <text
                 x={b.x + b.w / 2}
                 y={b.z + b.d / 2 + dy}
@@ -1514,6 +1551,9 @@ function RoomPlan({
               y={c.box.z}
               width={c.box.w}
               height={c.box.d}
+              transform={
+                c.box.yaw ? `rotate(${-c.box.yaw.deg} ${c.box.yaw.cx} ${c.box.yaw.cz})` : undefined
+              }
             >
               <title>Needed to open; something is in the way</title>
             </rect>

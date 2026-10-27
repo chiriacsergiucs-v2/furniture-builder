@@ -26,6 +26,8 @@ export interface TemplateItem {
   placement?: Placement;
   /** Linked copies (ADR-111): template items with the same `linkId` stay linked in projects made from it. */
   linkId?: string;
+  /** Extra whole degrees on top of the quarter turn (ADR-121), 1–89; absent = 0. */
+  angle?: number;
 }
 
 export interface ProjectTemplate {
@@ -89,6 +91,7 @@ export function templateFromProject(
       offset: { x: i.position.x - ox, y: i.position.y, z: i.position.z - oz },
       ...(i.placement ? { placement: structuredClone(i.placement) } : {}),
       ...(i.linkId ? { linkId: i.linkId } : {}),
+      ...(i.angle ? { angle: i.angle } : {}),
     })),
     ...(p.runParts?.length || p.runSettings
       ? {
@@ -119,11 +122,12 @@ export function projectFromTemplate(t: ProjectTemplate, name = t.name): Project 
       rotationY: i.rotationY,
       ...(pl ? { placement: pl } : {}),
       ...(i.linkId ? { linkId: i.linkId } : {}),
+      ...(i.angle ? { angle: i.angle } : {}),
     };
   });
   const base: Project = {
-    // Linked copies need the project version that stores them (ADR-111).
-    schemaVersion: items.some((i) => i.linkId) ? PROJECT_SCHEMA : 1,
+    // Linked copies and angled pieces need the project version that stores them (ADR-111, ADR-121).
+    schemaVersion: items.some((i) => i.linkId || i.angle) ? PROJECT_SCHEMA : 1,
     id: newId(),
     name,
     createdAt: now,
@@ -173,6 +177,11 @@ export function validateProjectTemplate(t: unknown): string[] {
     if (!isInt(it.quantity, 1, 99)) errs.push(`${name}: quantity must be 1 to 99`);
     if (![0, 90, 180, 270].includes(it.rotationY as number))
       errs.push(`${name}: rotation must be a quarter turn`);
+    if (
+      it.angle !== undefined &&
+      !(Number.isInteger(it.angle) && (it.angle as number) >= 1 && (it.angle as number) <= 89)
+    )
+      errs.push(`${name}: angle must be whole degrees from 1 to 89`);
     const o = it.offset;
     if (!isObj(o) || !isInt(o.x) || !isInt(o.y, 0) || !isInt(o.z))
       errs.push(`${name}: offset must be whole mm (height ≥ 0)`);

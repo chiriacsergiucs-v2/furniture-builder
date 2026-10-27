@@ -11,7 +11,7 @@ import { upgradeDesign } from './design';
 import { putRoleBoard, roleBoard, type FinishRole } from './finish';
 import {
   isWallHung,
-  placedBounds,
+  placedOutline,
   type Project,
   type ProjectItem,
   type ProjectModel,
@@ -172,8 +172,9 @@ export function replaceItem(project: Project, itemId: string, design: Design): P
  * left grows from its other end. Its height from the floor (or the wall height) stays.
  */
 function anchored(old: ProjectItem, next: ProjectItem): ProjectItem['position'] {
-  const a = placedBounds(old),
-    b = placedBounds(next);
+  // The quarter-turned outlines (ADR-121): `position` is their corner, also for a piece at an angle.
+  const a = placedOutline(old),
+    b = placedOutline(next);
   const r = old.rotationY;
   // Back face and left side per turn: 0 back -z left -x; 90 back -x left +z; 180 back +z left +x; 270 back +x left -z.
   const maxX = r === 180 || r === 270,
