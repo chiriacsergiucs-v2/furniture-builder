@@ -1096,7 +1096,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-115: Fill a wall: when the wall row appears
 
-- Status: Open
+- Status: ADR-104
 - Origin: ADR-104, 2026-10-27; open question defaulted by Claude
 - Missing: Whether every mix gets a wall row, or a Refine choice decides (any / always / never).
 - Request: Wall cabinets above (answer to: Which kinds of pieces may appear in a mix?)
@@ -1165,3 +1165,21 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: suggest a good width per piece ... resulting in a few pieces of furniture mixed (context: no limit was asked for)
 - Questions: Is 40 pieces per wall enough, or should the limit be higher?
 - Suggested pick: Keep 40: a 400 mm min fills a 16 m wall; longer runs are better as several walls. (estimate: effort 0%, value 0%)
+
+### G-123: Fill a wall: wall cabinet depth
+
+- Status: Open
+- Origin: ADR-104, 2026-10-27; default chosen by Claude while building
+- Missing: Wall cabinets keep the catalog depth (320 mm carcass); there is no wall cabinet depth field.
+- Request: Wall cabinets above (answer to: Which kinds of pieces may appear in a mix?)
+- Questions: Should Refine have a wall cabinet depth field?
+- Suggested pick: Add Wall cabinet depth in Refine, catalog value prefilled. (estimate: effort +2%, value +5%)
+
+### G-124: Fill a wall: wall row reaching into the base row
+
+- Status: Open
+- Origin: ADR-104, 2026-10-27; Claude changed the agreed handling while building (ADR-008)
+- Missing: The ADR said a wall cabinet reaching into the base row would be warned and still offered. It overlaps the base cabinet, which projects report as an error (pieces-overlap), and mixes with errors are never offered. Such wall rows are now dropped and the Suggestions step says by how much and to lower the wall cabinet height.
+- Request: Catalog height, Refine field (answer to: How tall are the wall cabinets themselves?)
+- Questions: When the wall cabinets would reach into the base row, should the wizard drop the wall row (now), shorten the wall cabinets to fit, or offer the mix with the overlap error shown?
+- Suggested pick: Shorten the wall cabinets to the room left above the base row (never below the catalog minimum), labelled on the card, so a wall row still appears. (estimate: effort +5%, value +10%)

@@ -1,8 +1,10 @@
-// Find-it acceptance for Fill a wall (CLAUDE.md R3, backlog N101, ADR-103), run against a production build:
+// Find-it acceptance for Fill a wall (CLAUDE.md R3, backlogs N101 and N102, ADR-103 and ADR-104), run against a production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/wall-fill/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text: Projects → Fill a wall, a 3000 mm
 // wall 2000 mm high, 4 suggested mixes with pictures (5 × 600 first, the tall cabinet warned), Refine with a max
-// piece width of 550 and with 6 equal fronts, then Use this mix opens a saved project. Not part of `pnpm test`.
+// piece width of 550 and with 6 equal fronts, Wall cabinets Any (with and without a wall row) and Always (every card has
+// one beside the tall cabinet), a 2600 mm wall with a top box over the tall cabinet, then Use this mix opens a saved project with both rows.
+// Not part of `pnpm test`.
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
 
@@ -154,12 +156,68 @@ for (const width of widths) {
   );
   await shot('fronts');
 
-  // 6. Back to the default mixes, Use this mix: a saved project opens in the editor with its 5 pieces.
+  // 6. Wall cabinets (ADR-104): Any shows cards with and without a wall row; Always gives every card a 3000 mm one.
   await dlg.getByRole('button', { name: 'Refine' }).last().click();
   await field('Tall cabinets').fill('');
   await field('Equal fronts').fill('');
+  check(
+    width,
+    '"Wall cabinet height" is found in Refine',
+    await field('Wall cabinet height').isVisible(),
+  );
+  const wallSeg = dlg.getByRole('radiogroup', { name: 'Wall cabinets' });
+  check(
+    width,
+    '"Wall cabinets" choice is found, Any on',
+    await wallSeg
+      .getByRole('radio', { name: 'Any' })
+      .isChecked()
+      .catch(() => false),
+  );
   await dlg.getByRole('button', { name: 'Suggest again' }).click();
   await cards.first().waitFor();
+  const wallLines = () => cards.locator('.wf-wall').allInnerTexts();
+  const anyTexts = await cards.allInnerTexts();
+  check(
+    width,
+    'Any: cards with and without a wall row',
+    anyTexts.some((t) => t.includes('Wall: ')) && anyTexts.some((t) => !t.includes('Wall: ')),
+  );
+  await dlg.getByRole('button', { name: 'Refine' }).last().click();
+  await wallSeg.getByRole('radio', { name: 'Always' }).click();
+  await dlg.getByRole('button', { name: 'Suggest again' }).click();
+  await cards.first().waitFor();
+  const lines = await wallLines();
+  const sumOf = (t) =>
+    t
+      .replace(/[^0-9·]/g, '')
+      .split('·')
+      .map(Number)
+      .reduce((x, y) => x + y, 0);
+  // At 2000 mm the 2200 mm tall cabinet leaves no room for a top box: the wall row covers the rest of the wall.
+  const bases = await cardWidths();
+  check(
+    width,
+    'Always: every card has a wall row over the wall beside the tall cabinet',
+    lines.length === (await cards.count()) &&
+      lines.every((t, i) => sumOf(t) === 3000 - bases[i][0]),
+    lines.join(' / '),
+  );
+  await shot('wall-row');
+  check(width, 'no sideways scroll (wall row)', await noSideScroll());
+  // A 2600 mm wall: a 400 mm top box stands on the 2200 mm tall cabinet.
+  await dlg.getByRole('button', { name: 'Wall', exact: false }).first().click();
+  await field('Height').fill('2600');
+  await dlg.getByRole('button', { name: 'Show suggestions' }).click();
+  await cards.first().waitFor();
+  check(
+    width,
+    'a 2600 mm wall gets a top box over the tall cabinet; the wall row is 3000 mm wide',
+    (await cards.first().innerText()).includes('+ top box') &&
+      sumOf((await wallLines())[0] ?? '') === 3000,
+  );
+
+  // 7. Use this mix on that card: a saved project opens with 5 base and tall pieces, a top box and 4 wall cabinets.
   await cards.first().getByRole('button', { name: 'Use this mix' }).click();
   await dlg.waitFor({ state: 'detached' }).catch(() => {});
   await page.locator('main.work').waitFor({ state: 'visible' });
@@ -180,8 +238,8 @@ for (const width of widths) {
     .catch(() => '');
   check(
     width,
-    'the project is saved with 5 pieces',
-    /5 pieces/.test(savedText),
+    'the project is saved with 10 pieces (5 + top box + 4 wall cabinets)',
+    /10 pieces/.test(savedText),
     savedText.replace(/\s+/g, ' '),
   );
 
