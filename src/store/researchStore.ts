@@ -1,13 +1,5 @@
 import { create } from 'zustand';
-import {
-  canonical,
-  defaultMark,
-  mergeMarks,
-  planImport,
-  storedOf,
-  type ImportPlan,
-  type StoredBundle,
-} from '../core/research/catalog';
+import { canonical, defaultMark, storedOf, type StoredBundle } from '../core/research/catalog';
 import { SHIPPED_RESEARCH } from '../core/research';
 import type { ResearchBundle, ResearchMark } from '../core/research/types';
 import {
@@ -31,8 +23,6 @@ interface ResearchState {
   error: string | null;
   init: () => Promise<void>;
   setMarks: (ids: string[], patch: MarkPatch) => Promise<void>;
-  importBundle: (bundle: unknown) => Promise<ImportPlan>;
-  importMarks: (list: unknown[]) => Promise<{ added: number; kept: number; invalid: number }>;
 }
 
 const now = () => new Date().toISOString();
@@ -94,21 +84,5 @@ export const useResearch = create<ResearchState>((set, get) => ({
     } catch {
       set({ error: 'Your decision could not be saved on this device.' });
     }
-  },
-  importBundle: async (bundle) => {
-    const plan = planImport(get().stored, bundle, get().marks);
-    if (!plan.store) return plan;
-    const row = storedOf(bundle as ResearchBundle, now());
-    await saveResearchBundle(row);
-    set({ stored: [...get().stored.filter((s) => s.key !== row.key), row] });
-    return plan;
-  },
-  importMarks: async (list) => {
-    const { add, kept, invalid } = mergeMarks(get().marks, list);
-    if (add.length) {
-      await saveResearchMarks(add);
-      set({ marks: { ...get().marks, ...Object.fromEntries(add.map((m) => [m.id, m])) } });
-    }
-    return { added: add.length, kept, invalid };
   },
 }));
