@@ -70,7 +70,7 @@ export const BUILT_CAPABILITIES: ReadonlySet<Capability> = new Set<Capability>([
 
 /** Plain-language reason a capability is missing, shown on a greyed variant. */
 export const CAPABILITY_WAITS: Partial<Record<Capability, string>> = {
-  shape: 'needs angled or shaped parts (a future ADR, see ADR-039)',
+  shape: 'needs angled or shaped parts (not built yet)',
   'front:fixed': 'needs a fixed false front (not built yet)',
   'front:lid': 'needs a lid hinged on the top (not built yet)',
   'frame:arms': 'needs arm rests on the frame root (not built yet)',

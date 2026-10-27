@@ -24,6 +24,16 @@ for (const width of [1440, 390]) {
     isMobile: phone,
   });
   const page = await ctx.newPage();
+  // ADR-117: the selected piece's Position, Clearance, Finish and Merge are folded groups: open one by its title
+  // (when it is on screen; a phone's closed sheet hides the whole card, which is read as before).
+  const openGroup = async (title) => {
+    const s = page
+      .locator('details.group > summary')
+      .filter({ hasText: new RegExp(`^${title}$`) })
+      .first();
+    if ((await s.isVisible()) && !(await s.evaluate((el) => el.parentElement.open)))
+      await s.click({ timeout: 5000 });
+  };
   const cdp = await ctx.newCDPSession(page);
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
@@ -42,8 +52,10 @@ for (const width of [1440, 390]) {
   const drawing = plan.locator(':scope > svg');
   const pieces = plan.getByRole('button', { name: /^Base cabinet.*, \d+ by \d+ mm$/ });
   const label = plan.getByText(/From left \d+ · From back \d+ mm/);
-  const field = async (name) =>
-    Number(await page.getByLabel(name, { exact: true }).first().inputValue());
+  const field = async (name) => {
+    await openGroup('Position');
+    return Number(await page.getByLabel(name, { exact: true }).first().inputValue());
+  };
   /** Screen point of a room point (mm) on the plan. */
   const screen = (x, z) =>
     drawing.evaluate(

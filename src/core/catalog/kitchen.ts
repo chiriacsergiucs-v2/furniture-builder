@@ -107,7 +107,7 @@ export const kitchen: CatalogFamily[] = [
       'Carcass on a plinth with a bank of drawers on side-mount runners; fronts split top to bottom.',
     configurations: [
       'Drawers 1–5',
-      'Front heights equal, fixed or shares (ADR-023)',
+      'Front heights equal, fixed or shares',
       'Runner length from your list',
       'Rails instead of a top under a hob',
     ],

@@ -1,4 +1,5 @@
 import { useDesign } from '../store/designStore';
+import { InfoTip } from './controls';
 import { Dialog, MaterialsPanel } from './Dialogs';
 import { FastenersPanel } from './Fasteners';
 import { Inspector } from './Inspector';
@@ -25,6 +26,13 @@ export function SettingsDialog({ onWizard }: { onWizard: () => void }) {
       open={open}
       onClose={close}
       title={`Settings: ${name}`}
+      info={
+        inProject ? (
+          <InfoTip label="About project settings" align="start">
+            These apply to every piece in {name}.
+          </InfoTip>
+        ) : undefined
+      }
       wide
       footer={
         <button type="button" className="btn primary" onClick={close}>

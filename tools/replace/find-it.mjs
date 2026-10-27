@@ -23,6 +23,16 @@ for (const width of [1440, 390]) {
     isMobile: phone,
   });
   const page = await ctx.newPage();
+  // ADR-117: the selected piece's Position, Clearance, Finish and Merge are folded groups: open one by its title
+  // (when it is on screen; a phone's closed sheet hides the whole card, which is read as before).
+  const openGroup = async (title) => {
+    const s = page
+      .locator('details.group > summary')
+      .filter({ hasText: new RegExp(`^${title}$`) })
+      .first();
+    if ((await s.isVisible()) && !(await s.evaluate((el) => el.parentElement.open)))
+      await s.click({ timeout: 5000 });
+  };
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => {
@@ -54,8 +64,10 @@ for (const width of [1440, 390]) {
     if (await btn('Place to the right').isVisible()) await click(btn('Place to the right'));
     await openSheet();
   };
-  const fromLeft = async () =>
-    Number(await page.getByLabel('From left', { exact: true }).first().inputValue());
+  const fromLeft = async () => {
+    await openGroup('Position');
+    return Number(await page.getByLabel('From left', { exact: true }).first().inputValue());
+  };
   const pieceName = async () => ((await card.locator('h3').first().textContent()) ?? '').trim();
 
   // 1. Bare app → new project → two base cabinets in a row; select the second.
@@ -146,6 +158,7 @@ for (const width of [1440, 390]) {
   check(width, 'Undo restores the old piece', (await pieceName()) === name0, await pieceName());
 
   // 6. A piece on another piece gets same-width items only, with no "Show other widths" switch (G-102).
+  await openGroup('Position');
   await click(card.getByRole('radio', { name: 'On a piece', exact: true }));
   await page.waitForTimeout(150);
   await click(replace);

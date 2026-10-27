@@ -12,6 +12,7 @@ import { duplicateItem, mirrorItem, mirrorRun, tryTurn } from '../core/arrange';
 import { floorDrop, type FloorPoint } from '../core/drag3d';
 import { applyFinish, type FinishRole, type FinishScope } from '../core/finish';
 import { mergeItems } from '../core/merge';
+import { addLinkedCopy, propagateLinks } from '../core/linked';
 import { alignItems, distributeItems, skippedText, type AlignHow } from '../core/align';
 import {
   duplicateItems,
@@ -202,6 +203,11 @@ interface State {
   mergeItems: (a: string, b: string) => string[];
   /** Duplicate, turn about the centre, mirror a piece or its run (ADR-069); each is one undo step. */
   duplicateItem: (id: string) => void;
+  /** Place a linked copy beside the piece (ADR-111); one undo step. */
+  addLinkedCopy: (id: string) => void;
+  /** "Change all copies" (ADR-111): on, a change to a linked piece reaches its copies; off, the piece leaves them. */
+  linkAll: boolean;
+  setLinkAll: (v: boolean) => void;
   /** Put a catalog copy in the piece's place, keeping where and how it stands (ADR-098); one undo step. */
   replaceItem: (id: string, design: Design) => ReplaceReport | null;
   /** Returns why it did not turn (a locked piece, ADR-095), or null. */
@@ -365,8 +371,10 @@ export const useDesign = create<State>((rawSet, get) => {
   const commitProject = (next: Project) => {
     // Pieces on or above others follow them (ADR-031); run parts follow the pieces in the same step (ADR-061).
     // A piece no longer in the project leaves its group (ADR-097).
+    // A change to a linked copy reaches the others, or unlinks it (ADR-111).
+    const linked = propagateLinks(get().project, next, get().linkAll);
     const stamped = {
-      ...refreshRunParts(resolvePlacements(pruneGroups(next))),
+      ...refreshRunParts(resolvePlacements(pruneGroups(linked))),
       schemaVersion: PROJECT_SCHEMA, // an edited project is saved in the current shape (ADR-011, ADR-073)
       updatedAt: new Date().toISOString(),
     };
@@ -423,6 +431,7 @@ export const useDesign = create<State>((rawSet, get) => {
     selectedId: undefined,
     highlight: [],
     showFronts: true,
+    linkAll: true,
     exploded: false,
     tab: 'parts',
     resultsOpen: false,
@@ -620,6 +629,14 @@ export const useDesign = create<State>((rawSet, get) => {
       commitProject(res.project);
       set({ selectedItemId: res.id });
     },
+    addLinkedCopy: (id) => {
+      const p = get().project;
+      const res = p && addLinkedCopy(p, id);
+      if (!res) return;
+      commitProject(res.project);
+      set({ selectedItemId: res.id });
+    },
+    setLinkAll: (v) => set({ linkAll: v }),
     turnItem: (id, dir) => {
       const p = get().project;
       if (!p) return null;
@@ -766,9 +783,10 @@ export const useDesign = create<State>((rawSet, get) => {
       const raw = get().project;
       if (!raw) return;
       // A resized piece moves whatever sits on it; run parts follow it (ADR-061).
-      const p = refreshRunParts(resolvePlacements(raw));
-      // Edits made in the piece editor become one project undo step.
+      // Edits made in the piece editor reach its linked copies, or unlink it (ADR-111).
       const before = projectBeforeEdit;
+      const p = refreshRunParts(resolvePlacements(propagateLinks(before, raw, get().linkAll)));
+      // Edits made in the piece editor become one project undo step.
       projectBeforeEdit = null;
       const history =
         before && before !== p

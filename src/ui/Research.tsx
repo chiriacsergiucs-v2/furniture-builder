@@ -127,7 +127,7 @@ export function ResearchPage({
           </p>
         </div>
         <button type="button" className="btn outline" onClick={onDone}>
-          <Icon name="chevron-right" className="sm" />
+          <Icon name="chevron-left" className="sm" />
           Back to the editor
         </button>
       </header>

@@ -6,7 +6,7 @@ import { imageKey, useImageUrls } from '../persist/images';
 import { useDesign } from '../store/designStore';
 import type { Panel, SpaceOpening } from '../core/types';
 import { frontOutline } from '../core/shape';
-import { CountStepper } from './CountStepper';
+import { boxIn, cardCorner, CountStepper } from './CountStepper';
 
 /** SVG points of a panel's front outline (y flipped so the floor is at the bottom). */
 export const outlinePoints = (p: Panel) =>
@@ -90,14 +90,13 @@ export function Elevation() {
   const fade = (box: Panel['box']) => (selBox && !inSelection(selBox, box) ? ' faded' : '');
   const fontSize = Math.max(b.w, b.h) / 26;
 
-  // Quick counts (ADR-084) float right above the selected space, inside the drawing; below its top edge when there
-  // is no room above. Placed from the selection outline's screen box, so it follows zoom and resizes.
+  // Quick counts (ADR-084) lie inside the drawing in the corner farthest from the selection and its size label
+  // (ADR-112). Placed from the outline's screen box, so it follows zoom and resizes; it never changes the drawing.
   const figRef = useRef<HTMLElement>(null);
   const selRef = useRef<SVGRectElement>(null);
+  const selDimRef = useRef<SVGGElement>(null);
   const stepRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
-  // The drawing gives up the card's height at its top, so there is always room right above the selection.
-  const [cardH, setCardH] = useState(0);
   const [tick, setTick] = useState(0);
   useLayoutEffect(() => {
     const fig = figRef.current;
@@ -111,21 +110,14 @@ export function Elevation() {
     const fig = figRef.current,
       sel = selRef.current,
       st = stepRef.current;
-    if (!fig || !sel || !st) {
-      setCardH(0);
-      return setPos(null);
-    }
-    setCardH(st.offsetHeight);
-    const f = fig.getBoundingClientRect(),
-      r = sel.getBoundingClientRect();
-    const w = st.offsetWidth,
-      h = st.offsetHeight,
-      gap = 6;
-    const left = Math.max(gap, Math.min(r.left + r.width / 2 - f.left - w / 2, f.width - w - gap));
-    const above = r.top - f.top - h - gap;
-    const top = above >= gap ? above : Math.max(gap, r.top - f.top + gap);
-    setPos((p) => (p && p.left === left && p.top === top ? p : { left, top }));
-  }, [sb?.x, sb?.y, sb?.w, sb?.h, b.x, b.y, b.w, b.h, tick, cardH, design.product]);
+    if (!fig || !sel || !st) return setPos(null);
+    const f = fig.getBoundingClientRect();
+    const next = cardCorner(f.width, f.height, st.offsetWidth, st.offsetHeight, [
+      ...boxIn(f, sel, 4),
+      ...boxIn(f, selDimRef.current, 2),
+    ]);
+    setPos((p) => (p && p.left === next.left && p.top === next.top ? p : next));
+  }, [sb?.x, sb?.y, sb?.w, sb?.h, b.x, b.y, b.w, b.h, tick, design.product]);
 
   // A tap anywhere selects from the outside in, one level per tap (ADR-083); leaves stay keyboard targets.
   const onTap = (e: MouseEvent<SVGSVGElement>) => {
@@ -137,12 +129,7 @@ export function Elevation() {
   const leaves = model.spaces.filter((s) => s.leaf && s.view !== 'side');
 
   return (
-    <figure
-      ref={figRef}
-      className="elevation"
-      style={selectedSpace && cardH ? { paddingTop: cardH + 10 } : undefined}
-      aria-label="Front view. Select a space to edit it."
-    >
+    <figure ref={figRef} className="elevation" aria-label="Front view. Select a space to edit it.">
       <svg viewBox={vb} preserveAspectRatio="xMidYMid meet" role="group" onClick={onTap}>
         <defs>
           {design.materials.flatMap((m) => {
@@ -248,20 +235,23 @@ export function Elevation() {
         <Dim x1={b.x} x2={b.x + b.w} y={pad * 0.75} fontSize={fontSize} label={`${b.w}`} />
         <DimV y1={0} y2={-(b.y + b.h)} x={b.x - pad * 0.55} fontSize={fontSize} label={`${b.h}`} />
         {selectedSpace && selectedId !== null && (
-          <Dim
-            x1={selectedSpace.box.x}
-            x2={selectedSpace.box.x + selectedSpace.box.w}
-            y={-(b.y + b.h) - pad * 0.45}
-            fontSize={fontSize * 0.85}
-            label={`${selectedSpace.box.w}`}
-            subtle
-          />
+          <g ref={selDimRef}>
+            <Dim
+              x1={selectedSpace.box.x}
+              x2={selectedSpace.box.x + selectedSpace.box.w}
+              y={-(b.y + b.h) - pad * 0.45}
+              fontSize={fontSize * 0.85}
+              label={`${selectedSpace.box.w}`}
+              subtle
+            />
+          </g>
         )}
       </svg>
       {selectedSpace && (
         <CountStepper
           ref={stepRef}
           className="floating"
+          compact
           style={pos ? { left: pos.left, top: pos.top } : { visibility: 'hidden' }}
         />
       )}

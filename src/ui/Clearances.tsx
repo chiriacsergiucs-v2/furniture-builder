@@ -13,7 +13,7 @@ import {
 } from '../core/envelopes';
 import { isWallHung, type ProjectItem } from '../core/project';
 import { useDesign } from '../store/designStore';
-import { Segmented, Toggle } from './controls';
+import { GuidanceTip, Segmented, Toggle } from './controls';
 
 /** A millimetre field that may be left empty (= not set). Bad input is shown, never clamped or saved (ADR-008). */
 function OptionalMm({
@@ -95,9 +95,6 @@ export function ClearanceFields({ item }: { item: ProjectItem }) {
   const standsUp = !isWallHung(item.design) && item.placement?.kind !== 'above';
   return (
     <div className="zone-fields" role="group" aria-label="Clearance zones">
-      <div className="card-title">
-        <span>Clearance zones</span>
-      </div>
       {kneeSpan(item.design) && (
         <OptionalMm
           label="Chair space depth"
@@ -133,13 +130,13 @@ export function ClearanceFields({ item }: { item: ProjectItem }) {
           label="Assembled lying down"
           checked={!!z.lyingDown}
           onChange={(v) => set({ lyingDown: v })}
+          info={
+            <GuidanceTip topic="standing a piece up">
+              A piece tipped up from lying on its back sweeps its side diagonal. When it is
+              assembled lying down, no room to stand it up is an error; otherwise a warning.
+            </GuidanceTip>
+          }
         />
-      )}
-      {standsUp && (
-        <p className="hint">
-          Guidance: a piece tipped up from lying on its back sweeps its side diagonal. When it is
-          assembled lying down, no room to stand it up is an error; otherwise a warning.
-        </p>
       )}
     </div>
   );
@@ -159,11 +156,11 @@ const SEVERITY_NAME: Record<ClearanceZone['severity'], string> = {
   error: 'error',
 };
 
-/** The Clearances toggle and legend above the plan. */
+/** The Clearances toggle and legend, in the plan's own tool row ("Clear." on screen, ADR-112). */
 export function ZoneToolbar({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
   return (
-    <div className="plan-tools">
-      <Toggle label="Clearances" checked={on} onChange={onChange} />
+    <>
+      <Toggle label="Clear." name="Clearances" checked={on} onChange={onChange} />
       {on && (
         <p className="zone-legend" aria-label="Clearance legend">
           <span className="key none">No problem</span>
@@ -171,7 +168,7 @@ export function ZoneToolbar({ on, onChange }: { on: boolean; onChange: (v: boole
           <span className="key error">Error</span>
         </p>
       )}
-    </div>
+    </>
   );
 }
 

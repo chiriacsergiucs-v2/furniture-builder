@@ -104,7 +104,7 @@ for (const width of [1440, 390]) {
   // 2. Select the three: Select + taps on a phone, Shift-click on a desktop.
   await page.keyboard.press('Escape');
   if (phone) {
-    await click(plan.getByRole('button', { name: 'Select', exact: true }));
+    await click(plan.getByRole('checkbox', { name: 'Select', exact: true }));
     for (const i of [0, 1, 2]) await tap(i);
   } else {
     await tap(0);
@@ -150,7 +150,7 @@ for (const width of [1440, 390]) {
     JSON.stringify(g),
   );
   check(width, 'the drawn gaps are the ones said', text.includes(`${g[0]} · ${g[1]}`), text);
-  if (phone) await click(plan.getByRole('button', { name: 'Select', exact: true }));
+  if (phone) await click(plan.getByRole('checkbox', { name: 'Select', exact: true }));
   await page.keyboard.press('Escape');
 
   // 4. A wall unit dragged over a base unit: the "centre" label.

@@ -1186,7 +1186,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-125: Width and depth card over the project view for a selected piece
 
-- Status: ADR-109
+- Status: Done (ADR-109)
 - Origin: ADR-106
 - Missing: In a project, a piece selected but not opened (Inside this piece) gets Width and Depth in its Selected piece card only; no floating card over the project drawing or 3D (the quick-count card shows there only for an opened piece, ADR-088).
 - Request: Add the posibility to change width/depth when whole cabinet or whole piece is selected; answer: Card + side panel
@@ -1267,7 +1267,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-134: Clearances wraps to a second row of the project plan toolbar on a phone
 
-- Status: Open
+- Status: Done (ADR-112)
 - Origin: ADR-109
 - Missing: At 390 px the plan toolbar holds Doors and fronts, Snap and Select on one row; Clearances wraps to a second row.
 - Request: i dont see doors text moved with other; answer: Same row as Snap (Recommended)
@@ -1282,3 +1282,120 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: "Move to B as default, keep the priginal as a flag to be abke to tevert"
 - Questions: Is the keyboard route enough for drawing taps, or should tap-position work use Acceptance browser?
 - Suggested pick: Keyboard route in jsdom; ADRs that change tap hit-testing use browser
+
+### G-136: Link pieces that are already 100% identical
+
+- Status: Open
+- Origin: ADR-111, 2026-10-27, user choice
+- Missing: Only copies made with 'Add a linked copy' are linked; identical pieces added separately, by Duplicate or by adding the same item again stay independent (user picked explicit links and only 'Add a linked copy').
+- Request: use a piece, a item created by the user, added to the project, added multiple times, and give the possibility to bulk update the width/height/drawers, just like it would be 1 piece, with 2 symlinks to it, change to 1 changes all the other, including internal, and it should be propagated further to the ones in the 100% same.
+- Questions: Should 'Link N identical pieces' link existing identical pieces, or should Duplicate / adding the same item again make linked copies?
+- Suggested pick: 'Link N identical pieces' on the card: closest to 'propagated further to the ones in the 100% same' (est. +20 % work).
+
+### G-137: Linked copies across projects and templates
+
+- Status: Open
+- Origin: ADR-111, 2026-10-27, Claude scope
+- Missing: Links live inside one project; a change does not reach copies in other projects, saved designs or catalog templates (earlier request 2026-10-27, replaced by the user).
+- Request: give the possibility to update the original template, and it should be propagated further to the ones in the templates.
+- Questions: Should a change also reach the template and copies in other projects?
+- Suggested pick: One project only, as in the current request (0 % extra work).
+
+### G-138: How an info button shows its text
+
+- Status: Acknowledged (2026-10-27)
+- Origin: ADR-113
+- Missing: The way the moved intro text opens is a default the user has not confirmed: tap or click the ⓘ button opens a small popover under it; tap outside, Escape or a second tap closes it
+- Request: Move info text from Project to a tooltip, apply same to other similar UX occurences
+- Questions: Popover on tap (also on hover on desktop), or hover-only tooltip?
+- Suggested pick: Popover on tap and click, Escape closes (closest to the request: a hover-only tooltip cannot open on a phone)
+
+### G-139: Heading scale for drawings and print sheets
+
+- Status: Acknowledged (2026-10-27)
+- Origin: ADR-116
+- Missing: Text sizes inside SVG drawings and the printed sheets keep their own sizes
+- Request: Run a critique for listings, headers, text, button sizes, gaps, groupings
+- Questions: Should drawing labels and print sheets follow the app heading scale?
+- Suggested pick: Keep their sizes (print is Romanian sheets with their own layout, ADR-020)
+
+### G-140: Catalog density on desktop
+
+- Status: Done (ADR-119)
+- Origin: ADR-118
+- Missing: The Catalog is 36 785 px tall at 1280 px; ADR-118 makes only the phone layout compact
+- Request: Run a critique for listings, headers, text, button sizes, gaps, groupings; answer Catalog density + wizard
+- Questions: Compact cards and folded family details on desktop too?
+- Suggested pick: Yes, same disclosure on desktop (closest to the request; estimate +15 % work, +20 % of value)
+
+### G-141: Lower-severity critique items not picked
+
+- Status: Done (ADR-120)
+- Origin: docs/retros/2026-10-27-ui-critique.md
+- Missing: Mixed checkbox/pressed toggles in the plan toolbar; Width/Depth and counts three times on desktop; Projects row names wrap beside three icon buttons; editor name field cut without ellipsis; 'Back to the editor' chevron points right; ADR numbers in UI text; Romanian names inside English descriptions; Projects groupings (Import beside list heading, Fill a wall twice); 'front faces you' lone line
+- Request: Run a critique for listings, headers, text, button sizes, gaps, groupings
+- Questions: Build these in a follow-up ADR?
+- Suggested pick: One follow-up ADR for all of them (estimate +25 % work, +15 % of value)
+
+### G-142: Count card can cover part of a piece that fills the front view
+
+- Status: Acknowledged (2026-10-27)
+- Origin: ADR-112 (found while building)
+- Missing: At 390 px in a project, when the whole selected piece fills the front view no corner is free: the card covers about 6 % of the piece (the plinth corner); a 3-row card cannot avoid a centre bay; taps on the drawing under the card hit the card
+- Request: Increment/decrement card must be inside the rendered 2d view, not over
+- Questions: Accept the small overlap, or shrink the drawing only in that case, or move the card outside the drawing when no corner is free?
+- Suggested pick: Accept the overlap (closest to the request: the card stays inside the view and the drawing keeps its size)
+
+### G-143: Count card hidden while the bottom sheet is open
+
+- Status: Acknowledged (2026-10-27)
+- Origin: ADR-112 (found while building)
+- Missing: On a phone the floating count card is hidden while the bottom sheet is open (the sheet holds the same counters); before, a single piece already did this, now the project front view does too
+- Request: Force 2d view to maintain it's size, bottom cars can cover it partially, but not push it
+- Questions: Keep the card hidden while the sheet is open, or show it in the visible part of the stage?
+- Suggested pick: Keep hidden (the sheet shows the same counters; no duplicate)
+
+### G-144: Wording changed while moving intro text
+
+- Status: Acknowledged (2026-10-27)
+- Origin: ADR-113 (found while building)
+- Missing: Catalog checkbox now 'I check safety-regulated items myself' (examples moved to its info); '(ADR-036)' dropped from a panel intro; shopping hint now 'Your prices, saved on this device.'; the quantity info shows at any quantity; wizard per-field help kept visible
+- Request: Move info text from Project to a tooltip, apply same to other similar UX occurences
+- Questions: Approve these three wording changes and the two choices?
+- Suggested pick: Approve (shorter labels fit one row; the ADR number is not user text)
+
+### G-145: Phone catalog cards cut text with no way to read it
+
+- Status: Done (ADR-119)
+- Origin: ADR-118 (found while building)
+- Missing: At 390 px each catalog card's text lines (variant names, sizes/parts line, 'You choose: …') are cut to one line with an ellipsis and cannot be expanded; source and grouping switches read 'Saved', 'Room', 'Type'; room chips and 'also called' moved behind 'About this family'; wizard Cancel removed at every width
+- Request: Run a critique for listings, headers, text, button sizes, gaps, groupings; answer Catalog density + wizard
+- Questions: Should cut card text expand on tap (or show in the item detail), and are the short labels and Cancel removal fine?
+- Suggested pick: Full text in the item's detail view on tap (closest to the request: compact list, nothing unreachable; estimate +10 % work, +10 % of value)
+
+### G-146: Where a cut catalog card's full text shows
+
+- Status: Acknowledged (2026-10-27)
+- Origin: ADR-119
+- Missing: The Catalog has no item detail view (tapping a card opens the item), so G-145's pick needs a place for the full text
+- Request: accept gap picks
+- Questions: A More toggle that expands the card in place, or the text in an info popover?
+- Suggested pick: More toggle in place (closest to the request: the text is on the card, one tap, works on touch and keyboard)
+
+### G-147: Lower-severity critique fixes not agreed
+
+- Status: Acknowledged (2026-10-27)
+- Origin: ADR-120
+- Missing: The nine fixes in ADR-120 are the critique's proposals; none is agreed
+- Request: accept gap picks (G-141: one follow-up ADR for all of them)
+- Questions: Accept the nine fixes as written in ADR-120, or change any?
+- Suggested pick: Accept as written (each is the critique's fix for the item it names)
+
+### G-148: ADR ids and Back link left on the Gaps and Research pages; Select lost its tooltip
+
+- Status: Open
+- Origin: ADR-120 (found while building)
+- Missing: The Gaps page search placeholder still names ADR-072 and the Research page lists ADR ids (they are the content); Gaps and Research always show 'Back to the editor', not only with a design open; the Select checkbox lost the tooltip the old button had
+- Request: accept as written (ADR-120: no ADR numbers in UI text; Back to the editor only when a design is open)
+- Questions: Remove ADR ids from those two pages and hide Back there too, and give Select an info tip?
+- Suggested pick: Keep the ids on Gaps and Research (they are the page's subject); hide Back there too; add an info tip to Select (estimate +5 % work, +5 % of value)

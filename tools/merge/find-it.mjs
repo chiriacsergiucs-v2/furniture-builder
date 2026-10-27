@@ -18,6 +18,16 @@ for (const width of [1440, 375]) {
   const phone = width < 500;
   const ctx = await browser.newContext({ viewport: { width, height: phone ? 812 : 900 } });
   const page = await ctx.newPage();
+  // ADR-117: the selected piece's Position, Clearance, Finish and Merge are folded groups: open one by its title
+  // (when it is on screen; a phone's closed sheet hides the whole card, which is read as before).
+  const openGroup = async (title) => {
+    const s = page
+      .locator('details.group > summary')
+      .filter({ hasText: new RegExp(`^${title}$`) })
+      .first();
+    if ((await s.isVisible()) && !(await s.evaluate((el) => el.parentElement.open)))
+      await s.click({ timeout: 5000 });
+  };
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => {
@@ -59,16 +69,17 @@ for (const width of [1440, 375]) {
   await pieces.nth(0).getByRole('button').click();
   check(
     width,
-    '"Merge into one piece" heading visible',
-    await page.getByRole('heading', { name: 'Merge into one piece' }).isVisible(),
+    '"Merge" group in the selected piece (folded since ADR-117)',
+    await page.locator('details.group > summary', { hasText: /^Merge$/ }).isVisible(),
   );
+  await openGroup('Merge');
   const btn = page.getByRole('button', {
-    name: /^Merge with Base cabinet, drawer over door on the right$/,
+    name: /^Merge with right piece Base cabinet, drawer over door$/,
   });
   await btn.scrollIntoViewIfNeeded();
   check(
     width,
-    '"Merge with … on the right" button enabled',
+    '"Merge with right piece" (Base cabinet, drawer over door) button enabled',
     (await btn.isVisible()) && (await btn.isEnabled()),
   );
   check(width, 'no sideways scroll (before)', await noSideScroll());
@@ -117,8 +128,9 @@ for (const width of [1440, 375]) {
   await addPiece('chest of drawers', /Chest of drawers/);
   await openSheet();
   await pieces.nth(1).getByRole('button').click();
+  await openGroup('Merge');
   const no = page.getByRole('button', {
-    name: /^Merge with Base cabinet, 1 door \+ Base cabinet, drawer over door on the left$/,
+    name: /^Merge with left piece Base cabinet, 1 door \+ Base cabinet, drawer over door$/,
   });
   await no.scrollIntoViewIfNeeded();
   check(

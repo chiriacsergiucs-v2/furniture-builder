@@ -3,6 +3,7 @@ import { pieceName } from '../core/project';
 import { groupOf, sameIds } from '../core/selection';
 import { useDesign } from '../store/designStore';
 import { askConfirm } from './Confirm';
+import { InfoTip } from './controls';
 import { Icon } from './icons';
 
 /**
@@ -34,12 +35,14 @@ export function SelectionCard() {
       aria-label={`${ids.length} pieces selected${isGroup ? `: ${g!.name}` : ''}`}
     >
       <div className="card-title">
-        <span>{isGroup ? g!.name : 'Selected pieces'}</span>
+        <span className="info-row">
+          <span>{isGroup ? g!.name : 'Selected pieces'}</span>
+          <InfoTip label="About the selected pieces" align="start">
+            These act on all {ids.length}; drag any of them on the plan to move them together.
+          </InfoTip>
+        </span>
         <span className="chip">{ids.length} pieces</span>
       </div>
-      <p className="hint">
-        These act on all {ids.length}; drag any of them on the plan to move them together.
-      </p>
       <div className="arrange-actions">
         <button
           type="button"
