@@ -1056,3 +1056,22 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: New adr 7 (2026-10-26): Distribute evenly (three or more selected pieces, along the wall)
 - Questions: With a mixed selection, distribute each row on its own instead of refusing? Should the join rules also limit centre snapping?
 - Suggested pick: Distribute each row on its own (closest to 'tidy runs in one tap'; about +15 % of ADR-099's work, +10 % value; estimates); keep the join rules for joins only.
+
+### G-111: Keep proportions switch is not saved
+
+- Status: Done (user answer 2026-10-27 "Screen only, on each time")
+- Origin: ADR-102 (2026-10-27, Claude: defaulted while drafting)
+- Missing: The Keep proportions switch is screen state only: it starts on each time a model is selected and is not saved in the project.
+- Request: Width and height of an item must be editable adr; answer 'Yes, on by default' (Keep proportions switch)
+- Questions: Should the switch remember its setting per model in the saved project (a project schemaVersion bump)?
+- Suggested pick: Screen state only, on each time (the answer 'on by default'; saving it adds a schema change for little value; estimate +25 % effort, +5 % value).
+- Answer: User 2026-10-27: "Screen only, on each time" — kept as built in ADR-102.
+
+### G-112: Resize a 3D model by dragging in the 3D view
+
+- Status: ADR-102
+- Origin: ADR-102 (2026-10-27, Claude: out of scope)
+- Missing: Resizing an imported 3D model with handles in the 3D view; sizes are typed in the fields only.
+- Request: Width and height of an item must be editable adr
+- Questions: Should the 3D view get resize handles for models?
+- Suggested pick: Typed fields only (the request is to make the sizes editable; handles would be an exception to ADR-014's select-only viewer).
