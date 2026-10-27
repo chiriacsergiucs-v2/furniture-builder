@@ -63,7 +63,7 @@ items above that height are allowed with a warning; (4) piece widths stay in a r
 - In scope: the wizard, `suggestMixes`, the centre divider, the project picture, Refine with equal fronts, Use this
   mix, core, fuzz and UI-logic tests, find-it.
 - Out of scope: corner and L walls (G-113); room windows, doors and outlets shaping the mix (G-114).
-- Skipped while building: 3+ fronts per carcass (G-116); a tall-height field (G-117); a width per base kind (G-118).
+- Skipped while building: 3+ fronts per carcass (G-116); a tall-height field (G-117); a width per base kind (G-118); at most 40 pieces per mix (G-122, review).
 
 ## Consequences
 

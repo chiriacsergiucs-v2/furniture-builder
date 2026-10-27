@@ -2,11 +2,14 @@
  * Fill a wall (ADR-103): from a wall's width, depth and height, suggest mixes of tall and base cabinets whose widths
  * add up to exactly the wall width. Every mix is an ordinary project built by `buildProjectModel()` (ADR-004); a mix
  * with an error is never offered (ADR-008). Pure and deterministic: the same input gives the same mixes.
+ * ADR-104 adds an optional row of wall cabinets with its own widths over the whole wall, and a top box over each
+ * tall cabinet up to the entered height.
  */
 import { buildModel } from './build';
 import {
   KITCHEN_BASE,
   KITCHEN_TALL,
+  KITCHEN_WALL,
   base,
   door,
   drawers,
@@ -18,6 +21,9 @@ import {
   splitY,
   tall,
 } from './catalog/helpers';
+import { kitchen } from './catalog/kitchen';
+import { insertable } from './catalog/types';
+import { newId } from './design';
 import {
   buildProjectModel,
   makeItem,
@@ -29,6 +35,8 @@ import type { Design, Diagnostic, Mm, Space } from './types';
 
 export type PieceKind = 'tall' | 'shelves' | 'drawers' | 'door';
 export type TallPosition = 'left' | 'right' | 'ends' | 'centre';
+/** Whether mixes get a row of wall cabinets (ADR-104): some with and some without, every mix, or none. */
+export type WallRow = 'any' | 'always' | 'never';
 
 export interface WallInput {
   width: Mm;
@@ -51,6 +59,22 @@ export interface WallInput {
   atLeast?: Partial<Record<Exclude<PieceKind, 'tall'>, number>>;
   /** Equal fronts: every door the same width (wall / N), carcasses of 1 or 2 fronts, insides empty. */
   equalFronts?: number;
+  /** Row of wall cabinets (ADR-104); absent = any. */
+  wallRow?: WallRow;
+  /** Wall cabinet height; absent = the catalog wall cabinet height. Their tops sit at `height`. */
+  wallHeight?: Mm;
+}
+
+/** A piece of the wall row: a catalog wall cabinet, or a top box standing on a tall cabinet (ADR-104). */
+export interface WallSlot {
+  /** Catalog wall-cabinet variant id, or 'top-box'. */
+  variant: string;
+  width: Mm;
+  height: Mm;
+  /** Left edge, room mm. */
+  x: Mm;
+  /** Top box: index of the tall cabinet slot it stands on. */
+  over?: number;
 }
 
 export interface Slot {
@@ -67,6 +91,10 @@ export interface Mix {
   widths: string;
   /** "1 tall, 2 open shelves, 1 drawers, 1 door + shelves" */
   summary: string;
+  /** The wall row, left to right; absent = no wall row. */
+  wall?: WallSlot[];
+  /** "750 · 750 · 750 · 750" for the wall row. */
+  wallWidths?: string;
   project: Project;
   model: ProjectModel;
   /** Warnings shown on the card: pieces above the entered height first, then the model's. */
@@ -85,14 +113,15 @@ export const WALL_DEFAULTS = { minWidth: 400, maxWidth: 1200 } as const;
 /** The catalog's own sizes (ADR-036 defaults, typical values to confirm). */
 export const BASE_HEIGHT = KITCHEN_BASE.height!;
 export const TALL_HEIGHT = KITCHEN_TALL.height!;
+export const WALL_HEIGHT = KITCHEN_WALL.height!;
 /** The example's width and the catalog default width: mixes nearest it rank first ("closest to your example"). */
 const EXAMPLE_WIDTH = 600;
 /** Base kinds are dealt in the example's proportion: 2 open shelves, 1 drawers, 1 door + shelves. */
 const DEAL: Exclude<PieceKind, 'tall'>[] = ['shelves', 'drawers', 'door', 'shelves'];
 /** Candidates built at most per call, so a long wall cannot hang the page. */
 const MAX_BUILDS = 120;
-/** A search bound, not a physical limit: more pieces than this are refused with a diagnostic, never searched. */
-export const MAX_PIECES = 200;
+/** Most pieces in one mix, so a tiny min width or a huge front count cannot freeze the page (reported, not clamped). */
+export const MAX_PIECES = 40;
 
 const KIND_TEXT: Record<PieceKind, string> = {
   tall: 'tall',
@@ -127,6 +156,7 @@ export function checkWall(input: WallInput): Diagnostic[] {
   pos(input.height, 'Height');
   if (input.tallDepth !== undefined) pos(input.tallDepth, 'Tall depth');
   if (input.baseHeight !== undefined) pos(input.baseHeight, 'Base height');
+  if (input.wallHeight !== undefined) pos(input.wallHeight, 'Wall cabinet height');
   const min = input.minWidth ?? WALL_DEFAULTS.minWidth,
     max = input.maxWidth ?? WALL_DEFAULTS.maxWidth;
   pos(min, 'Min piece width');
@@ -139,21 +169,6 @@ export function checkWall(input: WallInput): Diagnostic[] {
   ] as const)
     if (v !== undefined && (!whole(v) || v < 1))
       out.push(err('wall-input', `${label} must be 1 or more.`));
-  // Past the search limit the search would be unbounded: refused with a reason before searching (ADR-008).
-  if (whole(input.width) && whole(max) && max > 0 && Math.ceil(input.width / max) > MAX_PIECES)
-    out.push(
-      err(
-        'wall-input',
-        `A ${input.width} mm wall needs more than ${MAX_PIECES} pieces of at most ${max} mm; split it into shorter walls.`,
-      ),
-    );
-  for (const [v, cap, label] of [
-    [input.pieces, MAX_PIECES, 'Number of pieces'],
-    [input.tallCount, MAX_PIECES, 'Tall cabinets'],
-    [input.equalFronts, 2 * MAX_PIECES, 'Equal fronts'],
-  ] as const)
-    if (whole(v) && v > cap)
-      out.push(err('wall-input', `${label} ${v} is more than the suggestion limit of ${cap}.`));
   for (const [v, label] of [
     [input.tallCount, 'Tall cabinets'],
     [input.atLeast?.shelves, 'Open shelf bases'],
@@ -266,17 +281,21 @@ function candidates(input: WallInput): Candidate[] {
   const inRange = (w: Mm) => w >= min && w <= max;
   const out: Candidate[] = [];
   const nMin = Math.max(1, Math.ceil(W / max)),
-    nMax = Math.min(Math.floor(W / min), MAX_PIECES);
-  const counts = input.pieces !== undefined ? [input.pieces] : range(nMin, nMax);
+    nMax = Math.floor(W / min);
+  const counts = (input.pieces !== undefined ? [input.pieces] : range(nMin, nMax)).filter(
+    (n) => n <= MAX_PIECES,
+  );
   const talls = input.tallCount !== undefined ? [input.tallCount] : [1, 0, 2];
 
   if (input.equalFronts !== undefined) {
     const N = input.equalFronts;
+    if (N > 2 * MAX_PIECES) return out;
     const fronts = exactSplit(W, N);
     // Carcasses of 1 or 2 fronts (a door front has 1 or 2 leaves); uniform first, then mixed and symmetric.
     for (const groups of frontGroups(N))
       for (const t of talls) {
         const n = groups.length;
+        if (n > MAX_PIECES) continue;
         if (input.pieces !== undefined && n !== input.pieces) continue;
         const at = tallIndices(n, t, input.tallPosition ?? (t === 2 ? 'ends' : 'left'));
         if (!at) continue;
@@ -423,6 +442,132 @@ function piece(slot: Slot, input: WallInput): Design {
   return last!;
 }
 
+// ---------------------------------------------------------------------------
+// Wall row (ADR-104)
+// ---------------------------------------------------------------------------
+
+/** Wall-cabinet variants dealt left to right, in the order the user named them; then the rest of the family. */
+const WALL_ORDER = ['wall-1-door', 'wall-open', 'wall-flap', 'wall-cabinet', 'wall-hood'];
+const wallFamily = kitchen.find((f) => f.id === 'wall-cabinet')!;
+export const WALL_VARIANTS = [
+  ...WALL_ORDER.map((id) => wallFamily.variants.find((v) => v.id === id)).filter((v) => !!v),
+  ...wallFamily.variants.filter((v) => !WALL_ORDER.includes(v.id)),
+].filter(insertable);
+
+/** Best number of equal pieces for a stretch of wall: round widths near 600 first, then no odd mm, then fewer. */
+function bestSplit(S: Mm, min: Mm, max: Mm): number | null {
+  let best: { m: number; score: number[] } | null = null;
+  for (
+    let m = Math.max(1, Math.ceil(S / max));
+    m <= Math.min(Math.floor(S / min), MAX_PIECES);
+    m++
+  ) {
+    const q = Math.floor(S / m);
+    if (q < min || Math.ceil(S / m) > max) continue;
+    const score = [q % 50 ? 1 : 0, Math.round(Math.abs(q - EXAMPLE_WIDTH) / 50), S % m ? 1 : 0, m];
+    if (!best || cmp(score, best.score) < 0) best = { m, score };
+  }
+  return best?.m ?? null;
+}
+
+/**
+ * The wall row for a base row: its own widths over each stretch above base cabinets, a top box over each tall cabinet
+ * sized to the entered height (none when there is no room). Null when a stretch cannot be split in range.
+ */
+export function wallRowFor(slots: Slot[], input: WallInput): WallSlot[] | null {
+  const min = input.minWidth ?? WALL_DEFAULTS.minWidth,
+    max = input.maxWidth ?? WALL_DEFAULTS.maxWidth;
+  const h = input.wallHeight ?? WALL_HEIGHT;
+  const out: WallSlot[] = [];
+  let x = 0,
+    dealt = 0;
+  for (let i = 0; i < slots.length;) {
+    if (slots[i].kind === 'tall') {
+      const gap = input.height - TALL_HEIGHT;
+      if (gap > 0) out.push({ variant: 'top-box', width: slots[i].width, height: gap, x, over: i });
+      x += slots[i].width;
+      i++;
+      continue;
+    }
+    let S = 0;
+    const x0 = x;
+    while (i < slots.length && slots[i].kind !== 'tall') {
+      S += slots[i].width;
+      i++;
+    }
+    x += S;
+    const m = bestSplit(S, min, max);
+    if (m === null) return null;
+    let at = x0;
+    for (const w of exactSplit(S, m)) {
+      out.push({
+        variant: WALL_VARIANTS[dealt++ % WALL_VARIANTS.length].id,
+        width: w,
+        height: h,
+        x: at,
+      });
+      at += w;
+    }
+  }
+  return out;
+}
+
+const renew = (s: Space): Space =>
+  s.kind === 'split'
+    ? { ...s, id: newId(), children: s.children.map(renew) }
+    : { ...s, id: newId() };
+
+/** A wall-row piece: the catalog variant resized, tried with one door, two doors, then two bays (sag, ADR-103). */
+function wallPiece(ws: WallSlot, input: WallInput): Design {
+  if (ws.variant === 'top-box') {
+    const size = {
+      width: ws.width,
+      height: ws.height,
+      depth: input.tallDepth ?? input.depth,
+      plinthHeight: 0,
+    };
+    const name = `Top box ${ws.width}`;
+    let last: Design | null = null;
+    for (const s of [empty(door(1)), empty(door(2))]) {
+      last = tall(name, size, s);
+      if (!buildModel(last).diagnostics.some((d) => AVOID.has(d.code))) return last;
+    }
+    return last!;
+  }
+  const v = WALL_VARIANTS.find((x) => x.id === ws.variant)!;
+  const made = v.create!();
+  const prod = made.product;
+  if (prod.kind !== 'cabinet') return made;
+  const params = prod.params;
+  const sized = (interior: Space): Design => ({
+    ...made,
+    id: newId(),
+    name: `${made.name} ${ws.width}`,
+    product: {
+      ...prod,
+      id: newId(),
+      params: {
+        ...params,
+        width: ws.width,
+        height: ws.height,
+        mountHeight: input.height - ws.height,
+        interior,
+      },
+    },
+  });
+  const inner = params.interior;
+  const tries: Space[] = [inner];
+  if (inner.front?.kind === 'doors' && inner.front.count === 1)
+    tries.push({ ...renew(inner), front: door(2) });
+  tries.push(splitX(even(2), [renew(inner), renew(inner)]));
+  let last: Design | null = null;
+  for (const s of tries) {
+    last = sized(s);
+    if (!buildModel(last).diagnostics.some((d) => AVOID.has(d.code))) return last;
+  }
+  return last!;
+}
+
 const summaryOf = (slots: Slot[]) => {
   if (slots.some((s) => s.fronts)) {
     const n = slots.reduce((a, s) => a + (s.fronts ?? 0), 0);
@@ -448,10 +593,36 @@ const summaryOf = (slots: Slot[]) => {
 export function mixProject(
   slots: Slot[],
   input: WallInput,
+  wall?: WallSlot[] | null,
   name = `Wall ${input.width} mm`,
 ): Project {
-  let p = newProject(name);
-  for (const s of slots) p = { ...p, items: [...p.items, makeItem(p, piece(s, input))] };
+  const p = newProject(name);
+  let x = 0;
+  for (const s of slots) {
+    // Placed from the left by the slot widths: a cabinet is exactly as wide as its slot.
+    const item = makeItem(p, piece(s, input));
+    p.items.push({ ...item, position: { ...item.position, x } });
+    x += s.width;
+  }
+  const baseItems = [...p.items];
+  for (const ws of wall ?? []) {
+    // Wall cabinets hang with their tops at the entered height (ADR-031); a top box stands on its tall cabinet.
+    const item = makeItem(p, wallPiece(ws, input));
+    p.items.push({
+      ...item,
+      position: { ...item.position, x: ws.x },
+      ...(ws.over !== undefined
+        ? {
+            placement: {
+              kind: 'above' as const,
+              baseId: baseItems[ws.over].id,
+              gap: 0,
+              offsetX: 0,
+            },
+          }
+        : {}),
+    });
+  }
   return p;
 }
 
@@ -472,16 +643,28 @@ export function suggestMixes(input: WallInput, limit = MIXES_FIRST): WallFill {
   const mixes: Mix[] = [];
   const seen = new Set<string>();
   let built = 0,
-    failed = 0;
-  for (const c of list) {
+    failed = 0,
+    wallFailed = 0;
+  const row = input.wallRow ?? 'any';
+  // "any": each base row once without and once with a wall row, so the cards show both (ADR-104).
+  const withWall = row === 'never' ? [false] : row === 'always' ? [true] : [false, true];
+  const tries = list.flatMap((c) => withWall.map((w) => ({ c, w })));
+  for (const { c, w } of tries) {
     if (mixes.length >= limit || built >= MAX_BUILDS) break;
-    if (seen.has(c.signature)) continue;
-    seen.add(c.signature);
+    const key = `${c.signature}${w ? '|wall' : ''}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const wall = w ? wallRowFor(c.slots, input) : null;
+    if (w && !wall) {
+      wallFailed++;
+      continue;
+    }
     built++;
-    const project = mixProject(c.slots, input);
+    const project = mixProject(c.slots, input, wall);
     const model = buildProjectModel(project);
     if (model.diagnostics.some((d) => d.severity === 'error')) {
-      failed++;
+      if (w) wallFailed++;
+      else failed++;
       continue;
     }
     const tallWarn: Diagnostic[] = [];
@@ -496,10 +679,15 @@ export function suggestMixes(input: WallInput, limit = MIXES_FIRST): WallFill {
         });
     }
     mixes.push({
-      key: c.signature,
+      key,
       slots: c.slots,
       widths: c.slots.map((s) => s.width).join(' · '),
-      summary: summaryOf(c.slots),
+      summary: wall
+        ? `${summaryOf(c.slots)}; wall row: ${wall.filter((x) => x.variant !== 'top-box').length} wall cabinets${
+            wall.some((x) => x.variant === 'top-box') ? ' + top box' : ''
+          }`
+        : summaryOf(c.slots),
+      ...(wall ? { wall, wallWidths: wall.map((x) => x.width).join(' · ') } : {}),
       project,
       model,
       warnings: [...tallWarn, ...model.diagnostics.filter((d) => d.severity === 'warning')],
@@ -515,12 +703,37 @@ export function suggestMixes(input: WallInput, limit = MIXES_FIRST): WallFill {
         'With Equal fronts the insides are left to configure, so the "At least" bases do not apply.',
       ),
     );
+  const wallH = input.wallHeight ?? WALL_HEIGHT,
+    baseTop = input.baseHeight ?? BASE_HEIGHT;
+  // A wall cabinet reaching into the base row would overlap it, an error (ADR-008): such mixes are not offered.
+  if (row !== 'never' && input.height - wallH < baseTop)
+    problems.push(
+      info(
+        'wall-row-low',
+        `Wall cabinets ${wallH} mm high under a ${input.height} mm height would reach ${baseTop - (input.height - wallH)} mm into the base row; lower the wall cabinet height to show a wall row.`,
+      ),
+    );
+  else if (row !== 'never' && wallFailed && !mixes.some((m) => m.wall))
+    problems.push(
+      info('wall-row-none', `No wall row fits these mixes with pieces ${min}–${max} mm wide.`),
+    );
   if (!mixes.length) {
     if (input.width < min)
       problems.push(
         info(
           'wall-narrow',
           `The wall (${input.width} mm) is narrower than the min piece width, ${min} mm.`,
+        ),
+      );
+    else if (
+      Math.ceil(input.width / max) > MAX_PIECES ||
+      (input.pieces ?? 0) > MAX_PIECES ||
+      (input.equalFronts ?? 0) > 2 * MAX_PIECES
+    )
+      problems.push(
+        info(
+          'wall-many',
+          `These settings need more than ${MAX_PIECES} pieces; raise the min or max piece width, or lower the counts.`,
         ),
       );
     else if (input.equalFronts !== undefined)

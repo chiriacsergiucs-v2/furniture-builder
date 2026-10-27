@@ -7,11 +7,13 @@ import { useId, useMemo, useState } from 'react';
 import { snapshotSvg } from '../core/snapshot';
 import {
   BASE_HEIGHT,
+  WALL_HEIGHT,
   MIXES_FIRST,
   WALL_DEFAULTS,
   suggestMixes,
   type Mix,
   type TallPosition,
+  type WallRow,
   type WallInput,
 } from '../core/wallfill';
 import { saveProject } from '../persist/db';
@@ -43,13 +45,15 @@ interface Form {
   drawers: string;
   door: string;
   equalFronts: string;
+  wallRow: WallRow;
+  wallHeight: string;
 }
 
 const START: Form = {
   width: '3000',
   depth: '560',
   height: '2400',
-  tallDepth: '560',
+  tallDepth: '',
   minWidth: String(WALL_DEFAULTS.minWidth),
   maxWidth: String(WALL_DEFAULTS.maxWidth),
   baseHeight: String(BASE_HEIGHT),
@@ -60,6 +64,8 @@ const START: Form = {
   drawers: '',
   door: '',
   equalFronts: '',
+  wallRow: 'any',
+  wallHeight: String(WALL_HEIGHT),
 };
 
 /** Empty = any (absent); anything else goes to the core as a number, which reports what is wrong with it. */
@@ -80,6 +86,8 @@ function toInput(f: Form): WallInput {
     tallPosition: f.tallPosition === 'auto' ? undefined : f.tallPosition,
     atLeast: { shelves: opt(f.shelves), drawers: opt(f.drawers), door: opt(f.door) },
     equalFronts: opt(f.equalFronts),
+    wallRow: f.wallRow,
+    wallHeight: opt(f.wallHeight),
   };
 }
 
@@ -124,7 +132,13 @@ function MixCard({ m, onUse }: { m: Mix; onUse: () => void }) {
   const src = useMemo(() => picture(m), [m]);
   return (
     <li className="wz-card wf-card">
-      <img src={src} alt={`Mix: ${m.widths} mm`} width={180} height={110} />
+      <img
+        src={src}
+        alt={`Mix: ${m.wallWidths ? `wall ${m.wallWidths} mm, ` : ''}${m.widths} mm`}
+        width={180}
+        height={110}
+      />
+      {m.wallWidths && <span className="wz-card-label num wf-wall">Wall: {m.wallWidths} mm</span>}
       <span className="wz-card-label num">
         <strong>{m.widths}</strong> mm
       </span>
@@ -172,16 +186,7 @@ function WallFill({ onClose, onOpened }: { onClose: () => void; onOpened: () => 
   const [applied, setApplied] = useState<Form>(START);
   const [step, setStep] = useState<StepId>('wall');
   const [saveError, setSaveError] = useState<string | null>(null);
-  // Tall cabinet depth follows Depth until it is edited (ADR-103: prefilled with the depth).
-  const [tallEdited, setTallEdited] = useState(false);
-  const set = (k: keyof Form) => (v: string) => {
-    if (k === 'tallDepth') setTallEdited(true);
-    setForm((f) => ({
-      ...f,
-      [k]: v,
-      ...(k === 'depth' && !tallEdited ? { tallDepth: v } : {}),
-    }));
-  };
+  const set = (k: keyof Form) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
   const result = useMemo(() => suggestMixes(toInput(applied)), [applied]);
   const go = (s: StepId) => {
     setStep(s);
@@ -220,7 +225,12 @@ function WallFill({ onClose, onOpened }: { onClose: () => void; onOpened: () => 
             <Field label="Width" value={form.width} onChange={set('width')} />
             <Field label="Depth" value={form.depth} onChange={set('depth')} />
             <Field label="Height" value={form.height} onChange={set('height')} />
-            <Field label="Tall cabinet depth" value={form.tallDepth} onChange={set('tallDepth')} />
+            <Field
+              label="Tall cabinet depth"
+              value={form.tallDepth}
+              onChange={set('tallDepth')}
+              placeholder="same as depth"
+            />
           </div>
         </section>
       )}
@@ -278,7 +288,23 @@ function WallFill({ onClose, onOpened }: { onClose: () => void; onOpened: () => 
               placeholder="off"
               hint="Every door the same width; insides left empty to configure later."
             />
+            <Field
+              label="Wall cabinet height"
+              value={form.wallHeight}
+              onChange={set('wallHeight')}
+              hint="Wall cabinet tops sit at the wall height."
+            />
           </div>
+          <Segmented
+            label="Wall cabinets"
+            value={form.wallRow}
+            onChange={(v) => setForm((f) => ({ ...f, wallRow: v }))}
+            options={[
+              { value: 'any', label: 'Any' },
+              { value: 'always', label: 'Always' },
+              { value: 'never', label: 'Never' },
+            ]}
+          />
           <Segmented
             label="Tall cabinets stand"
             value={form.tallPosition}

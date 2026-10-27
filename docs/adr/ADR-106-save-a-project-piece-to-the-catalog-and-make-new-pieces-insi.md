@@ -31,7 +31,7 @@ existing Dexie `templates` table (ADR-034). No `schemaVersion` bump.
   lists, defaults: the piece's template's values if it has one, else "other" / "storage"). **Save** is disabled while
   the name is blank.
 - Save calls `templateFromDesign` (extended to take `rooms` and `function` from the dialog) with the piece's
-  current design, stored through `useTemplates.save`. It always makes a **new** template (G-122).
+  current design, stored through `useTemplates.save`. It always makes a **new** template (G-125).
 - **Linked:** the project item's `design.catalog.origin` is set to the new template (`catalogId` = family id,
   `variantId`, `revision: 1`, `productName` = name, `takenAt` now). The card then reads "From _<name>_, revision 1"
   (ADR-096). One undo step (ADR-051) reverts the link; the template stays.
@@ -53,8 +53,8 @@ existing Dexie `templates` table (ADR-034). No `schemaVersion` bump.
 
 - In scope: the button and dialog, `templateFromDesign` rooms/type, the origin link, the wizard row and _Add to
   project_, tests, find-it.
-- Out of scope: overwriting the template a piece came from (G-122); saving a group or several pieces as one item
-  (G-123).
+- Out of scope: overwriting the template a piece came from (G-125); saving a group or several pieces as one item
+  (G-126).
 
 ## Consequences
 
@@ -76,4 +76,4 @@ existing Dexie `templates` table (ADR-034). No `schemaVersion` bump.
 
 ## Open questions
 
-- None open; scope limits are recorded as G-122 and G-123.
+- None open; scope limits are recorded as G-125 and G-126.
