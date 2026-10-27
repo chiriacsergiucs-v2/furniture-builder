@@ -1,7 +1,8 @@
 # ADR-122: Research batch 2: align heights, lock sizes, height drag in 3D, section view
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-27
+- Implemented: 2026-10-27
 - Depends on: ADR-093, ADR-095, ADR-099
 - Design: docs/ui-design.md (project editor, selected-piece card, 3D toolbar)
 - Backlog: N123
@@ -15,7 +16,7 @@ The user (2026-10-27): "Check which features are left in the features reasearch,
 missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features, and ship it as
 1 big change, 1 Pr, 1 run of the tests, 1 ship, 4 features."
 
-Second batch of the features left after ADR-093…120 (see [ADR-121](ADR-121-research-batch-1-render-3d-on-demand-review-pack-typed-rotat.md) for the list), all rated Medium:
+Second batch of the features left after ADR-093…120 (see [ADR-121](../adr-done/ADR-121-research-batch-1-render-3d-on-demand-review-pack-typed-rotat.md) for the list), all rated Medium:
 
 | Research feature (id)                                        | What is missing here                                  |
 | ------------------------------------------------------------ | ----------------------------------------------------- |
@@ -37,7 +38,7 @@ Second batch of the features left after ADR-093…120 (see [ADR-121](ADR-121-res
    project-wide changes) is refused as a whole and the reason names the piece. Its boards, insides and place still
    change. Pure `src/core/sizeLock.ts` (`isSizeLocked`, `sizeLockBlocked`, sizes from the built model, ADR-004); the
    store's project commit applies it. Stored as `ProjectItem.sizeLocked: true`, project `schemaVersion` 11 (10 is
-   [ADR-121](ADR-121-research-batch-1-render-3d-on-demand-review-pack-typed-rotat.md)'s); older projects load unchanged (ADR-011). Fill-a-wall only makes new projects, so it has no locked piece to refuse.
+   [ADR-121](../adr-done/ADR-121-research-batch-1-render-3d-on-demand-review-pack-typed-rotat.md)'s); older projects load unchanged (ADR-011). Fill-a-wall only makes new projects, so it has no locked piece to refuse.
 3. **Height drag in 3D.** In Move mode (ADR-093) a selected **wall-placed** piece (G-153) shows a **Change height**
    handle on its top front edge; dragging projects the pointer onto the vertical axis (`axisPoint`), whole mm, with
    a translucent copy where it would hang and the label "From floor … mm". Release calls `setWallHeight` (core,
@@ -70,12 +71,12 @@ Built as one change, one pull request, one test run and one ship (the user's req
 
 ## Done when
 
-- [ ] Align Top on three wall units puts their tops on the first one's top, whole mm, one undo step (tests).
-- [ ] A size-locked piece refuses resize from fields, the editor, Replace and linked edits, naming it (tests).
-- [ ] A project saved before the size lock loads unchanged (storage tests).
-- [ ] Height drag on a wall unit changes its placement height in whole mm, one undo step (core tests).
-- [ ] Section hides the scene in front of the plane; Isolate shows only the selection; exports unchanged (tests).
-- [ ] Browser find-it at 390 and 1280 px: "Top", "Bottom", "Lock size"/"Size locked", the height handle label
+- [x] Align Top on three wall units puts their tops on the first one's top, whole mm, one undo step (tests).
+- [x] A size-locked piece refuses resize from fields, the editor, Replace and linked edits, naming it (tests).
+- [x] A project saved before the size lock loads unchanged (storage tests).
+- [x] Height drag on a wall unit changes its placement height in whole mm, one undo step (core tests).
+- [x] Section hides the scene in front of the plane; Isolate shows only the selection; exports unchanged (tests).
+- [x] Browser find-it at 390 and 1280 px: "Top", "Bottom", "Lock size"/"Size locked", the height handle label
       "From floor", "Section" and "Isolate".
 
 ## Open questions

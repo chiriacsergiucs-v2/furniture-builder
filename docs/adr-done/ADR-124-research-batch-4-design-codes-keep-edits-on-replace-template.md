@@ -1,7 +1,8 @@
 # ADR-124: Research batch 4: design codes, keep edits on replace, template references, project-wide settings
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-27
+- Implemented: 2026-10-27
 - Depends on: ADR-055, ADR-096, ADR-098
 - Design: docs/ui-design.md (project editor, selected-piece card, project panel)
 - Backlog: N125
@@ -13,7 +14,7 @@ The user (2026-10-27): "Check which features are left in the features reasearch,
 missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features, and ship it as
 1 big change, 1 Pr, 1 run of the tests, 1 ship, 4 features."
 
-Fourth batch of the features left after ADR-093…120 (list in [ADR-121](ADR-121-research-batch-1-render-3d-on-demand-review-pack-typed-rotat.md)):
+Fourth batch of the features left after ADR-093…120 (list in [ADR-121](../adr-done/ADR-121-research-batch-1-render-3d-on-demand-review-pack-typed-rotat.md)):
 
 | Research feature (id)                                          | Complexity  | What is missing here                         |
 | -------------------------------------------------------------- | ----------- | -------------------------------------------- |
@@ -51,7 +52,7 @@ design inside a project. Both template references and project-wide settings chan
    A piece follows a setting while its own value equals the project's; changing the setting changes every
    following piece and no other, one undo step. The selected piece's **Project settings** group shows "Follows
    project" or "Own: …" with **Follow project**. Pieces without such a part (a bed has no fronts) are skipped.
-   Locked sizes ([ADR-122](ADR-122-research-batch-2-align-heights-lock-sizes-height-drag-in-3d.md)) are not on main yet; respecting them is G-200.
+   Locked sizes ([ADR-122](../adr-done/ADR-122-research-batch-2-align-heights-lock-sizes-height-drag-in-3d.md)) are not on main yet; respecting them is G-200.
 
 Built as one change, one pull request, one test run and one ship (the user's request).
 
@@ -75,12 +76,12 @@ Built as one change, one pull request, one test run and one ship (the user's req
 
 ## Done when
 
-- [ ] Copy code → Open from code gives an equal design with new ids; a damaged code shows a message (tests).
-- [ ] Replace carries every listed own edit that exists on the new design and lists the rest (tests).
-- [ ] A referenced piece resolves to template + overrides; Update to revision N keeps the overrides (tests, fuzz).
-- [ ] Projects saved before this ADR load unchanged and still save for old readers' fields (storage tests).
-- [ ] Changing a project setting changes every following piece and no overriding piece, one undo step (tests).
-- [ ] jsdom find-it at 390 and 1280 px: "Copy code", "Open from code", "Kept:", "Project settings", "Follow project".
+- [x] Copy code → Open from code gives an equal design with new ids; a damaged code shows a message (tests).
+- [x] Replace carries every listed own edit that exists on the new design and lists the rest (tests).
+- [x] A referenced piece resolves to template + overrides; Update to revision N keeps the overrides (tests, fuzz).
+- [x] Projects saved before this ADR load unchanged and still save for old readers' fields (storage tests).
+- [x] Changing a project setting changes every following piece and no overriding piece, one undo step (tests).
+- [x] jsdom find-it at 390 and 1280 px: "Copy code", "Open from code", "Kept:", "Project settings", "Follow project".
 
 ## Open questions
 

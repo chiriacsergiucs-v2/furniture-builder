@@ -1,7 +1,8 @@
 # ADR-123: Research batch 3: insert a project template, version history, named undo steps, style suggestions
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-27
+- Implemented: 2026-10-27
 - Depends on: ADR-051, ADR-055, ADR-060
 - Design: docs/ui-design.md (project editor, project panel, Add a piece list)
 - Backlog: N124
@@ -13,7 +14,7 @@ The user (2026-10-27): "Check which features are left in the features reasearch,
 missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features, and ship it as
 1 big change, 1 Pr, 1 run of the tests, 1 ship, 4 features."
 
-Third batch of the features left after ADR-093…120 (list in [ADR-121](ADR-121-research-batch-1-render-3d-on-demand-review-pack-typed-rotat.md)), all rated Medium:
+Third batch of the features left after ADR-093…120 (list in [ADR-121](../adr-done/ADR-121-research-batch-1-render-3d-on-demand-review-pack-typed-rotat.md)), all rated Medium:
 
 | Research feature (id)                                                           | What is missing here                                    |
 | ------------------------------------------------------------------------------- | ------------------------------------------------------- |
@@ -73,12 +74,12 @@ Built as one change, one pull request, one test run and one ship (the user's req
 
 ## Done when
 
-- [ ] Inserting a template adds its pieces with new ids, relative positions and new links, one undo step (tests).
-- [ ] The new Dexie version keeps every existing row; projects and designs read back unchanged (storage tests).
-- [ ] Restore keeps the current state as a version first and never rewrites or deletes a version (storage tests).
-- [ ] Each project action records its step name; a replace with run parts and a repair undoes as one step (tests).
-- [ ] Applying a style through finish scope changes only the scoped pieces, one undo step (tests).
-- [ ] jsdom find-it at 390 and 1280 px: "Project templates", "History", "Restore", "Undo Move", "Edit history",
+- [x] Inserting a template adds its pieces with new ids, relative positions and new links, one undo step (tests).
+- [x] The new Dexie version keeps every existing row; projects and designs read back unchanged (storage tests).
+- [x] Restore keeps the current state as a version first and never rewrites or deletes a version (storage tests).
+- [x] Each project action records its step name; a replace with run parts and a repair undoes as one step (tests).
+- [x] Applying a style through finish scope changes only the scoped pieces, one undo step (tests).
+- [x] jsdom find-it at 390 and 1280 px: "Project templates", "History", "Restore", "Undo Move", "Edit history",
       "Suggest a style".
 
 ## Open questions

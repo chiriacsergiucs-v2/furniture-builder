@@ -1,7 +1,8 @@
 # ADR-121: Research batch 1: render 3D on demand, review pack, typed rotation, mirror a selection
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-27
+- Implemented: 2026-10-27
 - Depends on: ADR-069, ADR-093, ADR-097
 - Design: docs/ui-design.md (project editor, selected-piece card, 3D toolbar)
 - Backlog: N122
@@ -86,13 +87,13 @@ Built as one change, one pull request, one test run and one ship (the user's req
 
 ## Done when
 
-- [ ] Idle 3D renders no frames after it settles, and orbit, selection and Move still update it (browser find-it).
-- [ ] The review pack holds the project file, parts CSV, drawings and summary, each from `buildProjectModel()` (tests).
-- [ ] A project saved with quarter turns loads with 0/90/180/270 degrees; old readers keep working (storage tests).
-- [ ] Rotation 45° on a piece: overlap, room and clearance checks report what the turned piece touches (tests, fuzz).
-- [ ] "Rotation (°)" on the selected-piece card, typed 30, shows the piece turned in Plan and 3D (browser find-it).
-- [ ] Mirror on three selected pieces mirrors positions and designs in one undo step; a locked one refuses (tests).
-- [ ] Find-it at 390 and 1280 px: "Hand to a professional…", "Rotation (°)", "Mirror" on a selection.
+- [x] Idle 3D renders no frames after it settles, and orbit, selection and Move still update it (browser find-it).
+- [x] The review pack holds the project file, parts CSV, drawings and summary, each from `buildProjectModel()` (tests).
+- [x] A project saved with quarter turns loads with 0/90/180/270 degrees; old readers keep working (storage tests).
+- [x] Rotation 45° on a piece: overlap, room and clearance checks report what the turned piece touches (tests, fuzz).
+- [x] "Rotation (°)" on the selected-piece card, typed 30, shows the piece turned in Plan and 3D (browser find-it).
+- [x] Mirror on three selected pieces mirrors positions and designs in one undo step; a locked one refuses (tests).
+- [x] Find-it at 390 and 1280 px: "Hand to a professional…", "Rotation (°)", "Mirror" on a selection.
 
 ## Open questions
 
