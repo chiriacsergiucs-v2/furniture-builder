@@ -83,9 +83,17 @@
   /* Layout */
   --side: 360px;
   --out: 400px;
+  /* One control height (ADR-112): buttons, fields, segmented controls, steppers and tabs. The small one is for
+     toolbars and tables only. Both are 44 px on a touch screen. */
   --control-h: 38px;
-  --touch: 40px;
+  --control-h-sm: 30px;
   color-scheme: light;
+}
+@media (pointer: coarse) {
+  :root {
+    --control-h: 44px;
+    --control-h-sm: 44px;
+  }
 }
 
 /* Dark theme: follows the system unless the user picked one (data-theme). Print always uses the light set. */
@@ -248,13 +256,19 @@ output,
 }
 
 /* 3. Buttons --------------------------------------------------------------- */
-/* .btn + one variant: primary (one per screen), outline, ghost, danger, link; size: sm; shape: icon */
+/* .btn + one variant: primary (one per screen), outline, ghost, danger, link; size: sm; shape: icon. A label never
+   wraps: it ends in an ellipsis inside its box, and the full text shows in `title` (ADR-112, `cutTitle.ts`). */
 .btn {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: var(--s-2);
   min-height: var(--control-h);
+  min-width: 0;
+  max-width: 100%;
+  /* A label too long for its box keeps its start in sight (`safe`) and ends in an ellipsis. */
+  justify-content: safe center;
+  overflow: hidden;
+  text-overflow: ellipsis;
   padding: 0 var(--s-4);
   border-radius: var(--r);
   border: 1px solid var(--line);
@@ -322,17 +336,77 @@ output,
   border-color: var(--error);
   background: var(--error-soft);
 }
+.btn > span:not(.badge) {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.btn > .icon {
+  flex: none;
+}
+/* `sm` is a smaller label; it takes the small height only in toolbars and tables (ADR-112). */
 .btn.sm {
-  min-height: 30px;
+  min-height: var(--control-h);
   padding: 0 var(--s-3);
   font-size: var(--fs-sm);
 }
+/* Icon buttons are square and carry an aria-label. */
 .btn.icon {
   padding: 0;
   width: var(--control-h);
+  flex: none;
 }
-.btn.icon.sm {
-  width: 30px;
+:is(
+    .bar,
+    .stage-tools,
+    .plan-tools,
+    .view-tools,
+    .view-options-panel,
+    .catalog-toolbar,
+    .family-tools,
+    .price-tools,
+    .bulk-bar,
+    .count-stepper,
+    table,
+    [role='toolbar']
+  )
+  .btn.sm {
+  min-height: var(--control-h-sm);
+}
+:is(
+    .bar,
+    .stage-tools,
+    .plan-tools,
+    .view-tools,
+    .view-options-panel,
+    .catalog-toolbar,
+    .family-tools,
+    .price-tools,
+    .bulk-bar,
+    .count-stepper,
+    table,
+    [role='toolbar']
+  )
+  .btn.icon.sm {
+  width: var(--control-h-sm);
+}
+/* A button with a name and a sub-line (Merge with right piece / the piece's name): two runs, neither wraps. */
+.btn.stack {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0;
+  padding-block: 6px;
+  text-align: left;
+}
+.btn.stack > span {
+  max-width: 100%;
+}
+.btn.stack > .sub {
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  color: var(--ink-2);
 }
 .btn.block {
   width: 100%;
@@ -393,14 +467,34 @@ output,
   gap: var(--s-2);
   flex-wrap: wrap;
 }
-.btn-row > .btn {
-  flex: 1 1 auto;
-}
 .btn-row.end {
   justify-content: flex-end;
 }
 .btn-row.end > .btn {
   flex: 0 0 auto;
+}
+/* Button rows are a 2-column equal grid; a single action fills its row (ADR-112). */
+.btn-row:not(.end),
+.split-actions,
+.arrange-actions,
+.out-actions,
+.run-ask-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-2);
+}
+:is(.btn-row:not(.end), .split-actions, .arrange-actions, .out-actions, .run-ask-actions)
+  > :last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+:is(.btn-row:not(.end), .split-actions, .arrange-actions, .out-actions, .run-ask-actions) > .btn {
+  padding-inline: var(--s-3);
+}
+/* "Add worktop over…" does not fit half a Settings card on a phone: each of the two fills its row there. */
+@media (max-width: 480px) {
+  .run-ask-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 /* 4. Fields ---------------------------------------------------------------- */
@@ -530,7 +624,7 @@ select {
   border: 0;
   background: none;
   height: 100%;
-  min-height: 36px;
+  min-height: calc(var(--control-h) - 2px);
   color: var(--ink-2);
   font-size: 1.1rem;
   border-radius: var(--r-sm);
@@ -562,7 +656,7 @@ select {
 .segmented button {
   flex: 1 1 auto;
   min-width: 0;
-  min-height: 30px;
+  min-height: calc(var(--control-h) - 8px);
   border: 0;
   background: none;
   padding: 4px 8px;
@@ -570,6 +664,8 @@ select {
   font-weight: 500;
   color: var(--ink-2);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   transition:
     background var(--t-fast),
     color var(--t-fast);
@@ -587,7 +683,8 @@ select {
   outline-color: var(--accent);
 }
 .segmented.small button {
-  padding: 2px 12px;
+  min-height: calc(var(--control-h-sm) - 8px);
+  padding: 0 12px;
 }
 
 /* Counter: − n + */
@@ -604,7 +701,7 @@ select {
   border: 0;
   background: none;
   font-size: 1.1rem;
-  height: 36px;
+  height: calc(var(--control-h) - 2px);
   color: var(--ink-2);
 }
 .counter button:hover:not(:disabled) {
@@ -882,7 +979,8 @@ select {
 .tabs button {
   border: 0;
   background: none;
-  padding: 12px 12px 10px;
+  min-height: var(--control-h);
+  padding: 2px 12px 0;
   font-weight: 500;
   color: var(--ink-2);
   border-bottom: 2px solid transparent;
@@ -1726,19 +1824,8 @@ td.note {
   margin-bottom: -2px;
 }
 
-.split-actions {
-  display: flex;
-  gap: var(--s-2);
-}
-.split-actions .btn {
-  flex: 1;
-}
-/* Duplicate, turn and mirror in the selected-piece card (ADR-069): wraps at phone width. */
-.arrange-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--s-2);
-}
+/* `.split-actions` and `.arrange-actions` (Duplicate, turn and mirror, ADR-069) are 2-column grids (ADR-112, section
+   3 above). */
 .parts-sizes {
   list-style: none;
   margin: 0;
@@ -1911,10 +1998,7 @@ td.note {
   margin: 0;
 }
 .merge-fields .btn {
-  white-space: normal;
-  text-align: left;
-  max-width: 100%;
-  padding-block: var(--s-2);
+  width: 100%;
 }
 .merge-fields ul {
   margin: var(--s-1) 0 0;
@@ -2515,7 +2599,7 @@ table.buy {
   border: 1px solid var(--line);
   border-radius: var(--r);
   padding: 0 8px;
-  min-height: 32px;
+  min-height: var(--control-h-sm);
   flex: 1 1 200px;
 }
 .catalog-toolbar .search input {
@@ -2987,7 +3071,7 @@ table.buy {
   border: 1px solid var(--line);
   border-radius: var(--r);
   padding: 0 8px;
-  min-height: 34px;
+  min-height: var(--control-h);
 }
 .start-from .search input {
   border: 0;
@@ -3226,7 +3310,7 @@ table.buy {
   margin-top: var(--s-2);
 }
 .btn.lg {
-  min-height: 44px;
+  min-height: var(--control-h);
   padding: 0 var(--s-4);
   font-size: var(--fs-md);
 }
@@ -4675,11 +4759,11 @@ button.tile:hover {
 }
 .modes .segmented {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
   max-width: 600px;
 }
 .modes .segmented button {
-  min-height: 38px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -4697,9 +4781,6 @@ button.tile:hover {
   gap: var(--s-2);
 }
 .out-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--s-2);
   margin-bottom: var(--s-3);
 }
 .side .materials li {
@@ -4793,9 +4874,6 @@ button.tile:hover {
   .modes .segmented button {
     padding: 4px 2px;
     font-size: var(--fs-sm);
-    white-space: normal;
-    line-height: 1.15;
-    text-align: center;
   }
   .modes .segmented button .badge {
     display: none;
@@ -5147,11 +5225,6 @@ button.tile:hover {
 .run-list .run-edit > .btn {
   justify-self: start;
 }
-.run-ask-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--s-2);
-}
 .run-ask {
   display: grid;
   gap: var(--s-2);
@@ -5239,9 +5312,13 @@ button.tile:hover {
   display: inline-flex;
   vertical-align: middle;
 }
-.info-btn {
-  min-width: 44px;
-  min-height: 44px;
+/* A square ⓘ of the control height (ADR-112; 44 × 44 with touch, ADR-111). With a mouse it takes no more room in
+   its heading row than the small height. */
+.btn.icon.sm.info-btn,
+.btn.icon.info-btn {
+  width: var(--control-h);
+  min-height: var(--control-h);
+  margin-block: calc((var(--control-h-sm) - var(--control-h)) / 2);
   color: var(--ink-2);
 }
 .info-pop {
@@ -5528,8 +5605,11 @@ p > .info-tip {
   .variant-edit input {
     min-height: 44px;
   }
-  .segmented button {
+  .segmented button,
+  .segmented.small button,
+  .catalog-switches .segmented.small button {
     min-width: 44px;
+    min-height: 44px;
   }
   .crumbs button {
     display: inline-flex;

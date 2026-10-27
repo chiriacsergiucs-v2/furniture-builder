@@ -173,7 +173,7 @@ for (const width of [1440, 375]) {
     await click(page.getByRole('radio', { name: 'Under the sides' }));
     await click(btn('Back to project'));
   }
-  await click(btn('Suggest worktop, plinth, fillers and covers'));
+  await click(btn('Suggest run parts'));
   const runList = page.getByRole('region', { name: 'Run parts' });
   check(
     width,

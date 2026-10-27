@@ -32,11 +32,12 @@ export function Output() {
   const errors = view.diagnostics.filter((d) => d.severity === 'error').length;
   const warnings = view.diagnostics.length - errors;
   const parts = view.rows.reduce((n, r) => n + r.quantity, 0);
-  const tabs: { id: Tab; label: string; badge?: number; kind?: string }[] = [
+  // Short labels keep the five tabs in one row on a phone (ADR-112); `name` is the full accessible name.
+  const tabs: { id: Tab; label: string; name?: string; badge?: number; kind?: string }[] = [
     { id: 'parts', label: 'Parts', badge: parts || undefined, kind: 'neutral' },
     { id: 'sheets', label: 'Sheets' },
     { id: 'hardware', label: 'Hardware' },
-    { id: 'shopping', label: 'Shopping list' },
+    { id: 'shopping', label: 'Shopping', name: 'Shopping list' },
     {
       id: 'checks',
       label: 'Checks',
@@ -53,6 +54,7 @@ export function Output() {
             role="tab"
             type="button"
             id={`tab-${t.id}`}
+            aria-label={t.name}
             aria-selected={open && tab === t.id}
             aria-expanded={phone ? open && tab === t.id : undefined}
             aria-controls={open && tab === t.id ? `panel-${t.id}` : undefined}

@@ -686,8 +686,9 @@ function MergeFields({ item }: { item: ProjectItem }) {
           <div key={c.item.id}>
             <button
               type="button"
-              className="btn outline"
+              className="btn outline stack"
               disabled={c.issues.length > 0}
+              title={`Merge with ${c.item.design.name} on the ${c.side}`}
               onClick={async () => {
                 const [l, r] = c.side === 'right' ? [item, c.item] : [c.item, item];
                 if (
@@ -700,7 +701,8 @@ function MergeFields({ item }: { item: ProjectItem }) {
                 merge(item.id, c.item.id);
               }}
             >
-              Merge with {c.item.design.name} on the {c.side}
+              <span className="lbl">Merge with {c.side} piece</span>{' '}
+              <span className="sub">{c.item.design.name}</span>
             </button>
             {c.issues.length > 0 && (
               <ul className="hint" role="note">
@@ -2045,9 +2047,10 @@ function RunParts() {
         className="btn outline block"
         onClick={suggest}
         disabled={!project.items.length}
+        title="Suggest worktop, plinth, fillers and covers"
       >
         <Icon name="refresh" className="sm" />
-        {parts.length ? 'Suggest again' : 'Suggest worktop, plinth, fillers and covers'}
+        {parts.length ? 'Suggest again' : 'Suggest run parts'}
       </button>
     </section>
   );
