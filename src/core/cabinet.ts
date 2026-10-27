@@ -240,7 +240,16 @@ export function buildCabinet(
   const under = p.bottom === 'under';
   const noBottom = p.bottom === 'none';
   const sideY = under ? ph + t : 0;
-  const sideH = (p.top === 'over' ? H - t : H) - sideY;
+  // A doubled top (ADR-102) is two panels stacked down from H; only a full panel top is doubled.
+  const doubled = p.topLayers === 2 && p.topKind !== 'rails';
+  if (p.topLayers === 2 && p.topKind === 'rails')
+    warn(
+      'top-layers-rails',
+      'A doubled top applies to a full top panel; the two top rails stay single.',
+      opts.productNodeId,
+    );
+  const tt = doubled ? 2 * t : t;
+  const sideH = (p.top === 'over' ? H - tt : H) - sideY;
   // Inner span between the sides; an omitted side lets everything run to that edge.
   const L = opts.omitSide === 'left' ? 0 : t,
     R = opts.omitSide === 'right' ? 0 : t;
@@ -280,9 +289,34 @@ export function buildCabinet(
         1,
       );
     }
-  } else if (p.top === 'over')
-    add(pid, 'top', 'Top', body.id, box(0, H - t, z0, W, t, Dc), 'y', 'x', ['+z', '-x', '+x']);
-  else add(pid, 'top', 'Top', body.id, box(L, H - t, z0, span, t, Dc), 'y', 'x', ['+z']);
+  } else
+    for (let i = 0; i < (doubled ? 2 : 1); i++) {
+      const y = H - (i + 1) * t;
+      if (p.top === 'over')
+        add(
+          pid,
+          'top',
+          'Top',
+          body.id,
+          box(0, y, z0, W, t, Dc),
+          'y',
+          'x',
+          ['+z', '-x', '+x'],
+          i || undefined,
+        );
+      else
+        add(
+          pid,
+          'top',
+          'Top',
+          body.id,
+          box(L, y, z0, span, t, Dc),
+          'y',
+          'x',
+          ['+z'],
+          i || undefined,
+        );
+    }
   if (noBottom) {
     if (!wall)
       warn(
@@ -316,7 +350,7 @@ export function buildCabinet(
       'back',
       'Back',
       backM.id,
-      box(L, ph + (noBottom ? 0 : t), p.backInset, span, H - ph - (noBottom ? 1 : 2) * t, bt),
+      box(L, ph + (noBottom ? 0 : t), p.backInset, span, H - ph - (noBottom ? 0 : t) - tt, bt),
       'z',
       'y',
       [],
@@ -358,7 +392,7 @@ export function buildCabinet(
           x0: lo(t) + hi(g),
           x1: W - t + lo(t) - lo(g),
           y0: ph + lo(t) + hi(g),
-          y1: H - t + lo(t) - lo(g),
+          y1: H - tt + lo(tt) - lo(g),
         }
       : { x0: r, x1: W - r, y0: ph + r, y1: H - r };
   const rootFront: FrontZone = {
@@ -372,7 +406,7 @@ export function buildCabinet(
       ph + (noBottom ? 0 : t),
       openZ,
       span,
-      H - ph - (noBottom ? 1 : 2) * t,
+      H - ph - (noBottom ? 0 : t) - tt,
       D - openZ,
     ),
     front: rootFront,

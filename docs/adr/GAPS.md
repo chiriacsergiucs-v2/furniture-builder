@@ -1056,3 +1056,30 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: New adr 7 (2026-10-26): Distribute evenly (three or more selected pieces, along the wall)
 - Questions: With a mixed selection, distribute each row on its own instead of refusing? Should the join rules also limit centre snapping?
 - Suggested pick: Distribute each row on its own (closest to 'tidy runs in one tap'; about +15 % of ADR-099's work, +10 % value; estimates); keep the join rules for joins only.
+
+### G-111: Doubled rails on a rails top
+
+- Status: Open
+- Origin: ADR-102, 2026-10-27, Claude default
+- Missing: A doubled top on a rails top (two rails) is not built: the rails stay single and a warning says so.
+- Request: Add the doubled top support … 2 panels
+- Questions: Should 'Doubled' also double the two rails of a rails top, or stay a panel-top option only?
+- Suggested pick: Panel top only (default used): the user's answer was '2 panels', a rails top has no panel; doubling rails is a separate request (+5 % work, +0 % of this request).
+
+### G-112: Glue and screws for the doubled top
+
+- Status: Open
+- Origin: ADR-102, 2026-10-27, Claude (ADR-010)
+- Missing: No glue or screw line in the hardware list for joining the two top layers; the layers count as a carcass joint in the fastener tally only.
+- Request: Add the doubled top support … 2 panels
+- Questions: Which glue and screws (length, spacing) join the two layers? Not known; ADR-010 forbids inventing them.
+- Suggested pick: Leave it to the user's own fastener choice for carcass joints until they name a glue and screw (0 % work now).
+
+### G-113: Doubled bottom, sides or shelves
+
+- Status: Open
+- Origin: ADR-102, 2026-10-27, Claude scope
+- Missing: Only the top can be doubled; a doubled bottom, side or shelf is not built.
+- Request: Add the doubled top support
+- Questions: Do you also want a doubled bottom or doubled sides?
+- Suggested pick: Top only, as asked (0 % extra work).

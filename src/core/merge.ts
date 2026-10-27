@@ -67,6 +67,7 @@ const LABEL: Partial<Record<keyof CabinetParams, string>> = {
   shelfSetback: 'shelf setback',
   drawers: 'drawer settings',
   railDepth: 'rail depth',
+  topLayers: 'top layers',
   shelfClearance: 'shelf clearance',
   pinRowSetback: 'pin row setback',
 };
