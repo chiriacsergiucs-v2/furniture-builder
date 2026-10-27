@@ -43,7 +43,7 @@ design through the store): while the whole piece is selected the card also holds
 
 - In scope: core helper, two store actions, the fields in Compose, the quick-count card and the project card,
   tests, find-it.
-- Out of scope: a floating card over the project views for a piece not opened (G-123); bed and loose panels (G-124).
+- Out of scope: a floating card over the project views for a piece not opened (G-125); bed and loose panels (G-126).
 
 ## Consequences
 
@@ -65,5 +65,5 @@ design through the store): while the whole piece is selected the card also holds
 
 ## Open questions
 
-- A floating Width/Depth card over the project views for a selected piece not opened? Default: no (G-123).
-- Bed and loose panels: show the mattress size, or nothing? Default: nothing (G-124).
+- A floating Width/Depth card over the project views for a selected piece not opened? Default: no (G-125).
+- Bed and loose panels: show the mattress size, or nothing? Default: nothing (G-126).
