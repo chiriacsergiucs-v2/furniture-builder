@@ -5296,6 +5296,50 @@ button.tile:hover {
     display: none;
   }
 }
+/* Phones: the quick-count card at about 65 % of its size, in every place it shows (user 2026-10-27). Text stays
+   at 11 px or more to stay readable. */
+@media (max-width: 760px) {
+  .count-stepper {
+    gap: 5px;
+    padding: 4px;
+    max-width: min(calc(100% - 12px), 17rem);
+    font-size: 0.6875rem;
+  }
+  .count-anchor .count-stepper {
+    max-width: 17rem;
+  }
+  .count-stepper .cs-counter {
+    grid-template-columns: 29px 21px 29px;
+  }
+  .count-stepper .cs-counter button {
+    height: 29px;
+    font-size: 0.75rem;
+  }
+  .count-stepper.foldable .cs-fold {
+    min-height: 29px;
+  }
+  .count-stepper .field {
+    gap: 2px;
+  }
+  .count-stepper .field > label {
+    font-size: 0.6875rem;
+  }
+  .count-stepper .mm {
+    grid-template-columns: 29px 1fr auto 29px;
+    min-height: 25px;
+  }
+  .count-stepper .mm .step {
+    min-height: 29px;
+    font-size: 0.75rem;
+  }
+  .count-stepper .mm input {
+    padding: 3px 0 3px 2px;
+    font-size: 0.75rem;
+  }
+  .count-stepper .mm .unit {
+    font-size: 0.6875rem;
+  }
+}
 /* On a phone the catalog's own actions fold under one button (G-059). */
 .catalog-more > summary {
   display: inline-flex;
