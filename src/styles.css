@@ -6066,6 +6066,42 @@ p > .info-tip {
   margin: 0;
 }
 
+/* Design codes and project settings (ADR-124) ------------------------------- */
+.share-code {
+  display: grid;
+  gap: var(--s-3);
+}
+.share-code textarea {
+  font: inherit;
+  font-family: var(--font-mono, monospace);
+  font-size: var(--fs-sm);
+  width: 100%;
+  box-sizing: border-box;
+  word-break: break-all;
+}
+.project-settings {
+  display: grid;
+  gap: var(--s-3);
+}
+.project-settings h3 {
+  margin: 0;
+}
+.setting-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s-2);
+}
+.setting-rows li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  font-size: var(--fs-sm);
+}
+
 /* History and style suggestions (ADR-123). */
 .versions,
 .steps-log,

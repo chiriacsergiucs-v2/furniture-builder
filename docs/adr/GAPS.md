@@ -1492,7 +1492,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-159: Design codes: link or text
 
-- Status: Open
+- Status: ADR-124
 - Origin: ADR-124 (open question)
 - Missing: No code to share or reopen a design or project elsewhere
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1501,7 +1501,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-160: Replace: which own edits carry over
 
-- Status: Open
+- Status: ADR-124
 - Origin: ADR-124 (open question)
 - Missing: Replacing a piece drops its own edits (G-087)
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1510,7 +1510,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-161: Template references: default and fallback
 
-- Status: Open
+- Status: ADR-124
 - Origin: ADR-124 (open question)
 - Missing: Project pieces are full copies (ADR-022); none refers to its template and stores only its changes
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1519,7 +1519,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-162: Project-wide settings: which ones
 
-- Status: Open
+- Status: ADR-124
 - Origin: ADR-124 (open question)
 - Missing: No project-wide parameters that every piece follows unless it overrides them
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1561,6 +1561,42 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Accept default, /batch all ready (G-156: keep every version until the user deletes it)
 - Questions: When a project is deleted, ask whether to delete its versions too, keep them silently, or list orphaned versions somewhere to restore or delete?
 - Suggested pick: Ask on delete, defaulting to keep (closest to G-156: nothing removed without the user's decision)
+
+### G-200: Project-wide settings and the size lock
+
+- Status: Open
+- Origin: ADR-124 (found while building)
+- Missing: Project settings and Replace do not check ADR-122's size lock: ADR-122 is not on main when ADR-124 is built
+- Request: Accept default, /batch all ready
+- Questions: When both are merged: should a size-locked piece refuse project settings that change its size (plinth height) and Replace?
+- Suggested pick: Refuse and name the piece, as ADR-122 says for Fill-a-wall, Replace and linked edits
+
+### G-201: Pictures and 3D models in design codes
+
+- Status: Open
+- Origin: ADR-124 (scope)
+- Missing: A design code carries the document only; board pictures and display-only 3D models stay on this device (a project file carries them)
+- Request: Accept default, /batch all ready
+- Questions: Should codes also carry pictures and 3D models (much longer codes), or stay document-only?
+- Suggested pick: Document-only (codes stay short enough to paste; the project file carries the rest)
+
+### G-202: Replace and the outer size
+
+- Status: Open
+- Origin: ADR-124 (found while building)
+- Missing: Replace never carries the piece's own outer width, height or depth; this narrows the accepted G-160 pick 'every changed setting'
+- Request: Accept default, /batch all ready
+- Questions: Carry size too (neighbours may then overlap; those become diagnostics), or keep the catalog item's size?
+- Suggested pick: Carry size too (closest to the pick; estimate +10 % work, +15 % of value)
+
+### G-203: Wizard and template pieces and the project settings
+
+- Status: Open
+- Origin: ADR-124 (found while building)
+- Missing: Pieces added from the wizard or by inserting a template do not take the project settings; only Add a piece does
+- Request: Accept default, /batch all ready
+- Questions: Should they take the project settings like Add a piece?
+- Suggested pick: They take them, like Add a piece (estimate +5 % work)
 
 ### G-210: Project templates drop run handles and sinks
 

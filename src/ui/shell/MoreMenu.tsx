@@ -1,4 +1,5 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { exportFusionPython } from '../../core/fusion';
 import { imageIdsOf } from '../../core/surface';
 import { deleteImages, unusedImageIds } from '../../persist/db';
@@ -7,6 +8,7 @@ import { withModels } from '../../persist/models';
 import { useDesign } from '../../store/designStore';
 import { askConfirm } from '../Confirm';
 import { Icon } from '../icons';
+import { CopyCodeDialog } from '../ShareCode';
 import { download, downloadFrontSvg, fileName } from './files';
 import { importFile } from './importFile';
 import { useUi } from './uiStore';
@@ -34,6 +36,7 @@ export function MoreMenu({
   const inProject = !!project && !editingItemId;
   const setNotice = useUi((s) => s.setNotice);
   const close = () => ref.current?.removeAttribute('open');
+  const [codeOpen, setCodeOpen] = useState(false);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -90,114 +93,123 @@ export function MoreMenu({
   };
 
   return (
-    <details className="menu more" ref={ref}>
-      <summary aria-label="More" title="New, files and Feature Research">
-        <Icon name="more" />
-      </summary>
-      <div className="menu-items">
-        <button type="button" onClick={run(onNew)}>
-          <Icon name="plus" />
-          New… <small>piece or project</small>
-        </button>
-        <p className="menu-head" id="menu-files">
-          Files
-        </p>
-        <div role="group" aria-labelledby="menu-files">
-          {inProject ? (
-            <button
-              type="button"
-              onClick={run(async () =>
-                download(
-                  `${fileName(project.name)}-project.json`,
-                  JSON.stringify(
-                    await withPictures(await withModels(project), [
-                      ...project.items.map((i) => i.design),
-                      { materials: (project.runParts ?? []).map((r) => r.material) },
-                    ]),
-                    null,
-                    2,
-                  ),
-                  'application/json',
-                ),
-              )}
-            >
-              <Icon name="download" />
-              Project file <small>to open on another device</small>
-            </button>
-          ) : (
-            <>
+    <>
+      <details className="menu more" ref={ref}>
+        <summary aria-label="More" title="New, files and Feature Research">
+          <Icon name="more" />
+        </summary>
+        <div className="menu-items">
+          <button type="button" onClick={run(onNew)}>
+            <Icon name="plus" />
+            New… <small>piece or project</small>
+          </button>
+          <p className="menu-head" id="menu-files">
+            Files
+          </p>
+          <div role="group" aria-labelledby="menu-files">
+            {inProject ? (
               <button
                 type="button"
                 onClick={run(async () =>
                   download(
-                    `${fileName(design.name)}.json`,
-                    JSON.stringify(await withPictures(design, [design]), null, 2),
+                    `${fileName(project.name)}-project.json`,
+                    JSON.stringify(
+                      await withPictures(await withModels(project), [
+                        ...project.items.map((i) => i.design),
+                        { materials: (project.runParts ?? []).map((r) => r.material) },
+                      ]),
+                      null,
+                      2,
+                    ),
                     'application/json',
                   ),
                 )}
               >
                 <Icon name="download" />
-                Design file <small>to open on another device</small>
+                Project file <small>to open on another device</small>
               </button>
-              <button
-                type="button"
-                onClick={run(() => {
-                  if (!downloadFrontSvg(design))
-                    setNotice({ ok: false, text: 'Open the piece in the editor first.' });
-                })}
-              >
-                <Icon name="front" />
-                Front view drawing <small>SVG</small>
-              </button>
-              <button
-                type="button"
-                onClick={run(() =>
-                  download(
-                    `${fileName(design.name)}-fusion.py`,
-                    exportFusionPython(design, model),
-                    'text/x-python',
-                  ),
-                )}
-              >
-                <Icon name="cube" />
-                Fusion 360 script <small>not yet tested in Fusion</small>
-              </button>
-            </>
-          )}
-          <label className="menu-file">
-            <Icon name="upload" />
-            Import a file <small>design, project or project template</small>
-            <input
-              type="file"
-              accept="application/json,.json"
-              aria-label="Import a file"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                e.target.value = '';
-                close();
-                if (!f) return;
-                void importFile(f).then((r) => {
-                  setNotice(r.message ?? null);
-                  if (r.opened) onOpened();
-                });
-              }}
-            />
-          </label>
-          <button type="button" onClick={run(cleanUp)}>
-            <Icon name="trash" />
-            Clean up unused pictures <small>no piece or project uses them</small>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={run(async () =>
+                    download(
+                      `${fileName(design.name)}.json`,
+                      JSON.stringify(await withPictures(design, [design]), null, 2),
+                      'application/json',
+                    ),
+                  )}
+                >
+                  <Icon name="download" />
+                  Design file <small>to open on another device</small>
+                </button>
+                <button
+                  type="button"
+                  onClick={run(() => {
+                    if (!downloadFrontSvg(design))
+                      setNotice({ ok: false, text: 'Open the piece in the editor first.' });
+                  })}
+                >
+                  <Icon name="front" />
+                  Front view drawing <small>SVG</small>
+                </button>
+                <button
+                  type="button"
+                  onClick={run(() =>
+                    download(
+                      `${fileName(design.name)}-fusion.py`,
+                      exportFusionPython(design, model),
+                      'text/x-python',
+                    ),
+                  )}
+                >
+                  <Icon name="cube" />
+                  Fusion 360 script <small>not yet tested in Fusion</small>
+                </button>
+              </>
+            )}
+            <button type="button" onClick={run(() => setCodeOpen(true))}>
+              <Icon name="copy" />
+              Copy code <small>a code or link to open on another device</small>
+            </button>
+            <label className="menu-file">
+              <Icon name="upload" />
+              Import a file <small>design, project or project template</small>
+              <input
+                type="file"
+                accept="application/json,.json"
+                aria-label="Import a file"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  e.target.value = '';
+                  close();
+                  if (!f) return;
+                  void importFile(f).then((r) => {
+                    setNotice(r.message ?? null);
+                    if (r.opened) onOpened();
+                  });
+                }}
+              />
+            </label>
+            <button type="button" onClick={run(cleanUp)}>
+              <Icon name="trash" />
+              Clean up unused pictures <small>no piece or project uses them</small>
+            </button>
+          </div>
+          <span className="menu-sep" aria-hidden="true" />
+          <button type="button" onClick={run(onResearch)}>
+            <Icon name="search" />
+            Feature Research <small>papers and decisions</small>
+          </button>
+          <button type="button" onClick={run(onGaps)}>
+            <Icon name="alert-triangle" />
+            Gaps <small>what is not built yet</small>
           </button>
         </div>
-        <span className="menu-sep" aria-hidden="true" />
-        <button type="button" onClick={run(onResearch)}>
-          <Icon name="search" />
-          Feature Research <small>papers and decisions</small>
-        </button>
-        <button type="button" onClick={run(onGaps)}>
-          <Icon name="alert-triangle" />
-          Gaps <small>what is not built yet</small>
-        </button>
-      </div>
-    </details>
+      </details>
+      {/* Out of the app bar, whose styles are for its own buttons. */}
+      {codeOpen &&
+        createPortal(<CopyCodeDialog onClose={() => setCodeOpen(false)} />, document.body)}
+    </>
   );
 }
