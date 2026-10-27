@@ -1183,3 +1183,21 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Catalog height, Refine field (answer to: How tall are the wall cabinets themselves?)
 - Questions: When the wall cabinets would reach into the base row, should the wizard drop the wall row (now), shorten the wall cabinets to fit, or offer the mix with the overlap error shown?
 - Suggested pick: Shorten the wall cabinets to the room left above the base row (never below the catalog minimum), labelled on the card, so a wall row still appears. (estimate: effort +5%, value +10%)
+
+### G-125: Width and depth card over the project view for a selected piece
+
+- Status: Open
+- Origin: ADR-106
+- Missing: In a project, a piece selected but not opened (Inside this piece) gets Width and Depth in its Selected piece card only; no floating card over the project drawing or 3D (the quick-count card shows there only for an opened piece, ADR-088).
+- Request: Add the posibility to change width/depth when whole cabinet or whole piece is selected; answer: Card + side panel
+- Questions: Should a selected project piece also get a floating Width/Depth card over the project plan, elevation and 3D?
+- Suggested pick: Yes, a floating card over the project views (closest to 'Card + side panel'; estimate +60 % work, +15 % of value)
+
+### G-126: No width/depth fields for a bed or a set of loose panels
+
+- Status: Open
+- Origin: ADR-106
+- Missing: A bed's size comes from its mattress and a set of loose panels has no outside size, so neither shows Width/Depth when selected; a filler/cover panel shows Width only (it has no depth).
+- Request: Add the posibility to change width/depth when whole cabinet or whole piece is selected
+- Questions: Should a bed show its mattress size there instead, and loose panels nothing?
+- Suggested pick: Bed: show the mattress width and length there (closest to the request; estimate +10 % work, +5 % of value)
