@@ -93,6 +93,11 @@ export interface ProjectItem {
    * the others (`src/core/linked.ts`). Absent = not linked. Saved from project schemaVersion 9.
    */
   linkId?: string;
+  /**
+   * Size locked (ADR-122): its width, height and depth do not change until it is unlocked; nothing resizes it for the
+   * user either. Separate from `locked` (placement). Absent = not locked. Saved from project schemaVersion 11.
+   */
+  sizeLocked?: true;
 }
 
 /**
@@ -148,17 +153,18 @@ export const requestKey = (r: Pick<RunRequest, 'kind' | 'from'>) => `${r.kind}|$
  * `PROJECT_SCHEMAS` still loads unchanged. 2 = room pipes and outlets (ADR-072); 3 = clearance zones on items
  * (ADR-073); 4 = run requests and trim run parts (ADR-075); 5 = display-only 3D models (ADR-076); 6 = locked pieces
  * (ADR-095); 7 = a kept template revision on items (ADR-096); 8 = groups of pieces
- * (ADR-097); 9 = linked copies (ADR-111).
+ * (ADR-097); 9 = linked copies (ADR-111); 11 = size-locked pieces (ADR-122; 10 is ADR-121's typed rotation).
  */
-export const PROJECT_SCHEMA = 9 as const;
-export const PROJECT_SCHEMAS: readonly number[] = [1, 2, 3, 4, 5, 6, 7, 8, PROJECT_SCHEMA];
-export type ProjectSchemaVersion = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | typeof PROJECT_SCHEMA;
+export const PROJECT_SCHEMA = 11 as const;
+export const PROJECT_SCHEMAS: readonly number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, PROJECT_SCHEMA];
+export type ProjectSchemaVersion = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | typeof PROJECT_SCHEMA;
 const RUN_REQUESTS_SINCE = 4;
 const MODELS_SINCE = 5;
 const LOCKS_SINCE = 6;
 const TEMPLATE_SEEN_SINCE = 7;
 const GROUPS_SINCE = 8;
 const LINKS_SINCE = 9;
+const SIZE_LOCK_SINCE = 11;
 
 export interface Project {
   schemaVersion: ProjectSchemaVersion;
@@ -1921,6 +1927,11 @@ export function validateProject(p: unknown): string[] {
         errs.push('Invalid item link');
       else if ((p.schemaVersion as number) < LINKS_SINCE)
         errs.push(`Linked copies need project schemaVersion ${LINKS_SINCE}`);
+    }
+    if (it.sizeLocked !== undefined) {
+      if (it.sizeLocked !== true) errs.push('Invalid item size lock');
+      else if ((p.schemaVersion as number) < SIZE_LOCK_SINCE)
+        errs.push(`Size-locked pieces need project schemaVersion ${SIZE_LOCK_SINCE}`);
     }
     const de = validateDesign(it.design);
     if (de.length) errs.push(`Item ${String(it.id)}: ${de[0]}`);

@@ -1420,7 +1420,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-151: Align Top/Bottom with floor pieces selected
 
-- Status: Open
+- Status: ADR-122
 - Origin: ADR-122 (open question)
 - Missing: Align Top and Bottom do not exist; a floor piece's height cannot move without resizing it
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1429,7 +1429,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-152: Size lock: separate or part of Lock
 
-- Status: Open
+- Status: ADR-122
 - Origin: ADR-122 (open question)
 - Missing: A piece's sizes cannot be locked (G-081)
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1438,7 +1438,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-153: Height drag in 3D: which pieces
 
-- Status: Open
+- Status: ADR-122
 - Origin: ADR-122 (open question)
 - Missing: No vertical drag in 3D Move mode (G-078)
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1447,7 +1447,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-154: Section view: which cut planes
 
-- Status: Open
+- Status: ADR-122
 - Origin: ADR-122 (open question)
 - Missing: No section, cutaway or isolate in the 3D view
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
@@ -1552,3 +1552,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
 - Questions: Run a measured trial (decision recorded, nothing shipped unless it wins), or adopt Rapier for the checks now?
 - Suggested pick: Measured trial first (the research says 'evaluate'; a new WASM dependency needs its licence, size and offline behaviour checked)
+
+### G-180: Lock parameters other than size
+
+- Status: Open
+- Origin: ADR-122 (found while building)
+- Missing: Lock size covers width, height and depth only; boards, construction and insides of a size-locked piece stay editable (the research's locked parameters, G-081, beyond size)
+- Request: Accept default
+- Questions: Should other parameters (boards, construction, insides) be lockable too, and one by one or together?
+- Suggested pick: Leave as is until asked (the user's pick was a separate Lock size)

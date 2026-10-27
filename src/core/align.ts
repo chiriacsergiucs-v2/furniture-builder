@@ -3,11 +3,14 @@
  * Align: to the first selected piece — Left, Centre, Right along the wall, Back, Front in depth. Distribute evenly:
  * along the wall only (user answer), the leftmost and rightmost pieces stay and the gaps between neighbours become
  * equal; leftover millimetres go one each to the leftmost gaps (ADR-003). Locked pieces (ADR-095) do not move, and the
- * result says which; placement rules (ADR-031) apply to each piece.
+ * result says which; placement rules (ADR-031) apply to each piece. Top and Bottom (ADR-122) move pieces up or down to
+ * the first piece's top or underside by changing how high they hang; a piece standing on the floor stays and the result
+ * says why (user answer 2026-10-27 "Accept default": skip floor pieces, never resize them).
  */
 import { movedTo } from './selection';
 import {
   moveBlocked,
+  pieceName,
   placedBounds,
   resolvePlacements,
   type Project,
@@ -15,7 +18,7 @@ import {
 } from './project';
 import type { Box } from './types';
 
-export type AlignHow = 'left' | 'centre' | 'right' | 'back' | 'front';
+export type AlignHow = 'left' | 'centre' | 'right' | 'back' | 'front' | 'top' | 'bottom';
 
 export interface ArrangeResult {
   project: Project;
@@ -61,19 +64,66 @@ function shiftEach(project: Project, moves: Map<string, { dx: number; dz: number
   return { project: { ...project, items }, skipped };
 }
 
+/**
+ * Move pieces up or down by their own offsets (whole mm, ADR-122): a wall unit hangs higher or lower, a piece above
+ * another sits with a larger or smaller gap over it, a piece with no placement moves its stored height. A piece on the
+ * floor, locked, carrying a locked piece, or that would go below the floor or into its base stays, named in `skipped`.
+ */
+function liftEach(project: Project, moves: Map<string, number>) {
+  const skipped: string[] = [];
+  const go = new Map<string, ProjectItem>();
+  /** What each moved piece moved by: a stacked piece whose base moves too only needs the difference. */
+  const moved = new Map<string, number>();
+  const kind = (id: string) => project.items.find((i) => i.id === id)?.placement?.kind;
+  // Bases before the pieces stacked on them.
+  const order = [...moves].sort(([a], [b]) => +(kind(a) === 'above') - +(kind(b) === 'above'));
+  for (const [id, want] of order) {
+    const it = project.items.find((i) => i.id === id);
+    if (!it) continue;
+    const pl = it.placement;
+    const dy = want - (pl?.kind === 'above' ? (moved.get(pl.baseId) ?? 0) : 0);
+    if (!dy) continue;
+    const name = pieceName(project, id);
+    if (pl?.kind === 'floor') {
+      skipped.push(`${name} stands on the floor; Top and Bottom move wall units and stacked pieces.`);
+      continue;
+    }
+    const why = moveBlocked(project, [id]);
+    if (why) {
+      skipped.push(why);
+      continue;
+    }
+    if (pl?.kind === 'wall') {
+      if (pl.height + dy < 0) skipped.push(`${name} would go below the floor.`);
+      else go.set(id, { ...it, placement: { kind: 'wall', height: pl.height + dy } });
+    } else if (pl?.kind === 'above') {
+      if (pl.gap + dy < 0) skipped.push(`${name} would sink into the piece under it.`);
+      else go.set(id, { ...it, placement: { ...pl, gap: pl.gap + dy } });
+    } else if (it.position.y + dy < 0) skipped.push(`${name} would go below the floor.`);
+    else go.set(id, { ...it, position: { ...it.position, y: it.position.y + dy } });
+    if (go.has(id)) moved.set(id, want);
+  }
+  const items = project.items.map((it) => go.get(it.id) ?? it);
+  return { project: { ...project, items }, skipped };
+}
+
 const boundsOf = (project: Project) =>
   new Map(resolvePlacements(project).items.map((i) => [i.id, placedBounds(i)]));
 
 /**
  * Align the selected pieces to the first one (ADR-099): its left edge, centre line or right edge along the wall, or its
- * back or front in depth. A centre that falls on a half mm rounds down (whole mm). Fewer than two known pieces: the
- * same project.
+ * back or front in depth, or its top or underside in height (ADR-122). A centre that falls on a half mm rounds down
+ * (whole mm). Fewer than two known pieces: the same project.
  */
 export function alignItems(project: Project, ids: readonly string[], how: AlignHow): ArrangeResult {
   const bounds = boundsOf(project);
   const known = ids.filter((id) => bounds.has(id));
   if (known.length < 2) return { project, skipped: [] };
   const ref = bounds.get(known[0])!;
+  if (how === 'top' || how === 'bottom') {
+    const dy = (b: Box) => (how === 'top' ? ref.y + ref.h - (b.y + b.h) : ref.y - b.y);
+    return liftEach(project, new Map(known.slice(1).map((id) => [id, dy(bounds.get(id)!)])));
+  }
   const target = (b: Box): { dx: number; dz: number } => {
     switch (how) {
       case 'left':
@@ -86,6 +136,8 @@ export function alignItems(project: Project, ids: readonly string[], how: AlignH
         return { dx: 0, dz: ref.z - b.z };
       case 'front':
         return { dx: 0, dz: ref.z + ref.d - (b.z + b.d) };
+      default:
+        return { dx: 0, dz: 0 };
     }
   };
   const moves = new Map(known.slice(1).map((id) => [id, target(bounds.get(id)!)]));

@@ -92,6 +92,9 @@ export function TemplateNotice({ item }: { item: ProjectItem }) {
     if (!d) return;
     const report = useDesign.getState().replaceItem(item.id, d);
     if (report) useUi.getState().setNotice({ ok: !report.problems.length, text: report.text });
+    // Refused (a size-locked piece, ADR-122): say why.
+    else if (useDesign.getState().notice)
+      useUi.getState().setNotice({ ok: false, text: useDesign.getState().notice! });
   };
   return (
     <div className="alert info template-notice" role="status">

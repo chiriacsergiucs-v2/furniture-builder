@@ -535,6 +535,11 @@ output,
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--s-2);
 }
+/* A size-locked piece (ADR-122): the hint spans the size fields. */
+.size-lock-hint {
+  grid-column: 1 / -1;
+  margin: 0;
+}
 
 .input,
 select,
@@ -5766,6 +5771,28 @@ p > .info-tip {
   background: var(--primary-soft);
   border-color: var(--primary);
   color: var(--ink);
+}
+
+/* Section and Isolate in the project's 3D view (ADR-122) ------------------- */
+.three-tools .section-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-1) var(--s-2);
+  flex-basis: 100%;
+}
+.three-tools .section-cut {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  padding: 0 var(--s-2);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  font-size: var(--fs-xs);
+  white-space: nowrap;
+}
+.three-tools .section-cut input {
+  width: 140px;
 }
 
 /* 3D model resize handles in Move mode (ADR-102) --------------------------- */
