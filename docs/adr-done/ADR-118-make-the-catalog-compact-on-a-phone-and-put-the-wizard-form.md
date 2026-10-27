@@ -1,7 +1,8 @@
 # ADR-118: Make the catalog compact on a phone and put the wizard form first
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-27
+- Implemented: 2026-10-27
 - Depends on: none
 - Design: docs/ui-design.md (section 4, catalog and wizard)
 - Backlog: N117
@@ -42,8 +43,8 @@ Cancel."
 
 ## Done when
 
-- [ ] At 390 px the Catalog page is under 30 000 px tall and each item card's tags sit on one meta line.
-- [ ] At 390 px only the search row stays on screen when the Catalog is scrolled; "About this family" opens the details.
-- [ ] At 390 px the wizard's first field is above the preview; the footer has no "Cancel".
-- [ ] Find-it passes from the bare app at phone and desktop widths (`tools/catalog-compact/find-it.mjs`, production
+- [x] At 390 px the Catalog page is under 30 000 px tall and each item card's tags sit on one meta line.
+- [x] At 390 px only the search row stays on screen when the Catalog is scrolled; "About this family" opens the details.
+- [x] At 390 px the wizard's first field is above the preview; the footer has no "Cancel".
+- [x] Find-it passes from the bare app at phone and desktop widths (`tools/catalog-compact/find-it.mjs`, production
       build).
