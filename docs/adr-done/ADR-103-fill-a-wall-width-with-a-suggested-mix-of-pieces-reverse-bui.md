@@ -1,7 +1,8 @@
 # ADR-103: Fill a wall width with a suggested mix of pieces (reverse build wizard)
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-27
+- Implemented: 2026-10-27
 - Depends on: ADR-022, ADR-035, ADR-042, ADR-044, ADR-046
 - Design: docs/ui-design.md (section 4, screens; wizard and catalog cards)
 - Backlog: N101
@@ -20,7 +21,7 @@ width input, suggest further optimised mixes)."
 
 Nothing goes from a wall to several pieces today: the New-piece wizard (ADR-044) builds one piece; projects
 (ADR-022) hold placed pieces; rules (ADR-035) hold the shelf-span guidance; catalog pictures are SVG snapshots
-(ADR-042). Wall cabinets above are [ADR-104](ADR-104-add-a-row-of-wall-cabinets-to-the-fill-a-wall-mixes.md).
+(ADR-042). Wall cabinets above are [ADR-104](../adr/ADR-104-add-a-row-of-wall-cabinets-to-the-fill-a-wall-mixes.md).
 
 Requirement ledger (R1): (1) a mix of pieces fills the width; (2) the wizard asks width, depth, height; (3) tall
 items above that height are allowed with a warning; (4) piece widths stay in a range [x, y], no sagging shelves;
