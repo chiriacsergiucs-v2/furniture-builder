@@ -5,7 +5,7 @@
 - Depends on: ADR-106
 - Design: docs/ui-design.md (section 4, editor screen: stage toolbar, quick-count card)
 - Backlog: N107
-- Agreed: 2026-10-27 "Same row as Snap (Recommended)", "Show on 1st tap (Recommended)"
+- Agreed: 2026-10-27 "Same row as Snap (Recommended)", "Show on 1st tap (Recommended)"; "Fix the clearances wrap, shorted text to doors, use less spacing between buttons and texts for this this div only"
 
 ## Context
 
@@ -20,7 +20,9 @@ user chose "Same row as Snap (Recommended)" and "Show on 1st tap (Recommended)".
 
 - **Doors and fronts:** in a project's Compose drawing, the toggle moves from the stage toolbar into the plan's tool
   row, first, beside Snap, Select and Clearances. Elsewhere (single piece, 3D only, Build & Preview) it stays where it
-  is. An empty stage toolbar is hidden.
+  is. An empty stage toolbar is hidden. There it reads **Doors**, and the row's gaps and button padding are tighter (this
+  toolbar only), so Doors, Snap, Select and Clearances fit one row at 390 px (user, after merge: "Fix the clearances
+  wrap, shorted text to doors, use less spacing between buttons and texts for this this div only"; takes over G-134).
 - **Card over the project front view:** from the first tap on a piece (the piece loaded for edits, ADR-088), the
   quick-count card floats right above the selected piece in the room front view, with Width and Depth while the whole
   piece is selected (ADR-106) and the counts of a space inside it after a further tap. As over a single piece's
@@ -38,7 +40,7 @@ user chose "Same row as Snap (Recommended)" and "Show on 1st tap (Recommended)".
 ## Scope
 
 - In scope: the toggle's place, the floating card on the project front view, the find-it script.
-- Out of scope: at 390 px "Clearances" wraps to a second row of the plan toolbar (G-134).
+- Out of scope: one row below 390 px; at 360 px "Clearances" still wraps (G-135).
 
 ## Consequences
 
@@ -48,8 +50,8 @@ user chose "Same row as Snap (Recommended)" and "Show on 1st tap (Recommended)".
 
 ## Done when
 
-- [x] In a project's Compose drawing "Doors and fronts" is in the row with "Snap", shown once, and unticking it hides
-      the doors in the front view.
+- [x] In a project's Compose drawing "Doors" is in the row with "Snap" and "Clearances" at 390 px, shown once, and
+      unticking it hides the doors in the front view.
 - [x] One tap on a project piece shows the card over the front view with "Width" and "Depth", on screen and not
       covered; typing a width resizes the piece; one Undo takes it back.
 - [x] A further tap selects a space: the card keeps its counts and drops Width and Depth.
@@ -58,4 +60,4 @@ user chose "Same row as Snap (Recommended)" and "Show on 1st tap (Recommended)".
 
 ## Open questions
 
-- None open; the toolbar wrap at 390 px is G-134.
+- None open; the wrap below 390 px is G-135.

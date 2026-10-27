@@ -1267,9 +1267,18 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-134: Clearances wraps to a second row of the project plan toolbar on a phone
 
-- Status: Open
+- Status: ADR-109
 - Origin: ADR-109
 - Missing: At 390 px the plan toolbar holds Doors and fronts, Snap and Select on one row; Clearances wraps to a second row.
 - Request: i dont see doors text moved with other; answer: Same row as Snap (Recommended)
 - Questions: Should all four plan controls fit one row on a phone (shorter labels or icons), or is the wrap fine?
 - Suggested pick: Keep the wrap (closest to the request: Doors and fronts is in Snap's row); one row would need shorter labels (estimate +20 % work, +5 % of value)
+
+### G-135: Plan toolbar wraps below 390 px
+
+- Status: Open
+- Origin: ADR-109
+- Missing: At 360 px Clearances still wraps to a second row of the project plan toolbar; at 390 px and wider the four controls fit one row.
+- Request: Fix the clearances wrap, shorted text to doors, use less spacing between buttons and texts for this this div only
+- Questions: Should the row also fit at 360 px (e.g. an icon for Clearances, or a shorter label)?
+- Suggested pick: Shorten Clearances to an icon with a label for screen readers below 390 px (closest to 'fix the wrap'; estimate +15 % work, +5 % of value)

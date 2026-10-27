@@ -4877,6 +4877,19 @@ button.tile:hover {
   gap: var(--s-2) var(--s-3);
   min-width: 0;
 }
+/* The project plan's tool row holds Doors, Snap, Select and Clearances on one row at 390 px (ADR-109, G-134). */
+.plan > .plan-tools {
+  gap: var(--s-1) var(--s-2);
+}
+.plan > .plan-tools .plan-tools {
+  display: contents;
+}
+.plan > .plan-tools .toggle {
+  gap: var(--s-1);
+}
+.plan > .plan-tools .btn.sm {
+  padding: 0 var(--s-2);
+}
 .plan .snap-toggle[aria-pressed='true'],
 .plan .select-toggle[aria-pressed='true'] {
   background: var(--primary-soft);

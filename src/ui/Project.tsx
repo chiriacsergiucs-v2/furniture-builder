@@ -1088,9 +1088,7 @@ function RoomPlan({
   return (
     <figure className="plan with-tools" aria-label="Room plan, seen from above. Select a piece.">
       <div className="plan-tools">
-        {fronts && (
-          <Toggle label="Doors and fronts" checked={showFronts} onChange={setShowFronts} />
-        )}
+        {fronts && <Toggle label="Doors" checked={showFronts} onChange={setShowFronts} />}
         <button
           type="button"
           className="btn sm outline snap-toggle"
