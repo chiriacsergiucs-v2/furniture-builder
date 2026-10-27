@@ -363,9 +363,17 @@ export function mirrorSet(
             },
           }
         : shifted(it, x0 + x1 - (own.x + own.w) - own.x, 0);
-    const { angle: _angle, ...flat } = moved;
+    const turn = mirroredRotation(it);
+    // −θ of an angled piece can need the other quarter (−20° is 270° + 70°): its outline swaps width and depth, so
+    // keep its centre as `tryTurn` does, with the same rounding (mirroring twice gives the same place back).
+    const half = (n: number) => (turn.rotationY % 180 === 0 ? Math.ceil(n / 2) : Math.floor(n / 2));
+    const recentred =
+      (turn.rotationY - it.rotationY) % 180 !== 0 && pl?.kind !== 'above'
+        ? shifted(moved, half(own.w - own.d), half(own.d - own.w))
+        : moved;
+    const { angle: _angle, ...flat } = recentred;
     void _angle;
-    return { ...flat, design: m.design, ...mirroredRotation(it) };
+    return { ...flat, design: m.design, ...turn };
   });
   return { project: { ...project, items }, reasons };
 }

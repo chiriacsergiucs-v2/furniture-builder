@@ -89,7 +89,7 @@ describe('typed rotation of a project piece (ADR-121)', () => {
     expect(setItemRotation(p, id, 400).reason).toMatch(/0 to 359/);
     expect(setItemRotation(p, id, 400).project).toBe(p);
     const locked = setLocked(p, id, true);
-    expect(setItemRotation(locked, id, 30).reason).toMatch(/Locked/);
+    expect(setItemRotation(locked, id, 30).reason).toMatch(/is locked/);
   });
 
   it('checks overlaps on the turned piece: enclosing boxes may meet, the pieces do not', () => {
@@ -99,19 +99,36 @@ describe('typed rotation of a project piece (ADR-121)', () => {
     // Turned 45°, the first piece reaches past its old right side into the second.
     const turned = setItemRotation(p, a.id, 45).project;
     expect(codes(turned)).toContain('pieces-overlap');
-    // Moved left by its enclosing growth, the turned piece no longer touches the second; the boxes still meet.
+    // The second piece set into the box around the turned one, 300 mm in front of its right-most corner: at 45° the
+    // turned piece's sides have drawn back 300 mm there, so the boxes meet but the pieces do not.
     const pm = buildProjectModel(turned);
-    const ea = pm.pieces[0].bounds;
-    const gap = ea.x + ea.w - pm.pieces[1].bounds.x;
-    const apart = {
+    const right = pm.pieces[0].footprint.reduce((m, q) => (q[0] > m[0] ? q : m));
+    const near = {
       ...turned,
       items: turned.items.map((i) =>
-        i.id === a.id ? { ...i, position: { ...i.position, x: i.position.x - gap + 60 } } : i,
+        i.id === b.id
+          ? {
+              ...i,
+              position: {
+                ...i.position,
+                x: Math.floor(right[0]) - 30,
+                z: Math.ceil(right[1]) + 300,
+              },
+            }
+          : i,
       ),
     };
-    const pm2 = buildProjectModel(apart);
+    const pm2 = buildProjectModel(near);
     expect(overlaps(pm2.pieces[0].bounds, pm2.pieces[1].bounds)).toBe(true);
     expect(pm2.diagnostics.map((d) => d.code)).not.toContain('pieces-overlap');
+    // 30 mm further left, level with the corner, they do overlap.
+    const level = {
+      ...near,
+      items: near.items.map((i) =>
+        i.id === b.id ? { ...i, position: { ...i.position, z: Math.floor(right[1]) - 10 } } : i,
+      ),
+    };
+    expect(codes(level)).toContain('pieces-overlap');
     void b;
   });
 

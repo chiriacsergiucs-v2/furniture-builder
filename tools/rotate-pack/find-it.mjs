@@ -101,6 +101,16 @@ for (const width of [1280, 390]) {
   await rot.press('Enter');
   await page.waitForTimeout(300);
   check(width, 'Rotation (°) reads 30', (await rot.inputValue()) === '30');
+  // The card's Position group names the overlap the turned piece now makes.
+  check(
+    width,
+    'its overlap with the next piece is an error on the card',
+    await page
+      .getByText(/overlap by \d+ mm in the room/)
+      .first()
+      .isVisible()
+      .catch(() => false),
+  );
   await shot('rotation-field');
   await sheet(false);
   check(
@@ -108,31 +118,26 @@ for (const width of [1280, 390]) {
     'the turned piece is drawn turned on the plan',
     (await pieces.nth(0).locator('polygon').count()) === 1,
   );
-  check(
-    width,
-    'its overlap with the next piece is an error',
-    (await page
-      .getByText(/overlap by \d+ mm/)
-      .first()
-      .isVisible()
-      .catch(() => false)) ||
-      (await page
-        .getByText(/1 problem/)
-        .first()
-        .isVisible()),
-  );
   await shot('rotation-plan');
 
-  // 3. 3D: drawn on demand — no draws while idle, draws again on orbit.
-  const r3d = page.getByRole('radio', { name: '3D' });
-  if (await r3d.isVisible().catch(() => false)) await r3d.click();
-  const canvas = page.locator('canvas').first();
-  await canvas.waitFor({ state: 'visible', timeout: 10000 });
-  await page.waitForTimeout(3000);
+  // 3. 3D: drawn on demand — once it has settled, no draws while idle; it draws again on orbit.
+  // (A phone shows the 3D view under Build & Preview; a computer has the 3D view switch.)
+  if (phone) await page.getByRole('radio', { name: /Build & Preview/ }).click();
+  else await page.getByRole('radio', { name: '3D', exact: true }).click();
+  const canvas = page.locator('.view.three canvas');
+  await canvas.waitFor({ state: 'visible', timeout: 20000 });
+  // Settled: the first 1.5 s window without a draw, within 15 s (loading, saving and the light arriving draw).
+  let settled = false;
+  for (let i = 0; i < 10 && !settled; i++) {
+    const a = await draws();
+    await page.waitForTimeout(1500);
+    settled = (await draws()) === a;
+  }
+  check(width, 'the 3D view settles', settled);
   const d0 = await draws();
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(3000);
   const d1 = await draws();
-  check(width, 'idle 3D view draws nothing', d1 === d0, `${d1 - d0} draws in 1.5 s`);
+  check(width, 'idle 3D view draws nothing', d1 === d0, `${d1 - d0} draws in 3 s`);
   const cb = await canvas.boundingBox();
   const cx = cb.x + cb.width / 2,
     cy = cb.y + cb.height / 2;
@@ -147,7 +152,9 @@ for (const width of [1280, 390]) {
   await page.waitForTimeout(500);
   check(width, 'orbiting or tapping draws again', (await draws()) > d1);
   await shot('3d');
-  if (await planRadio.isVisible().catch(() => false)) await planRadio.click();
+  if (phone) await page.getByRole('radio', { name: /Compose/ }).click();
+  else await planRadio.click();
+  await page.waitForTimeout(300);
 
   // 4. Select all three → Mirror: positions mirror, the turned piece's turn becomes 330°.
   if (phone) {

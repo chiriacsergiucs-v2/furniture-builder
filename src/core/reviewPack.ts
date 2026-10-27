@@ -71,7 +71,7 @@ export function summaryHtml(pm: ProjectModel, project: Project, date: string): s
       return `<tr><td>${esc(pc.item.design.name)}</td><td class="n">${pc.item.quantity}</td><td class="n">${b.w} × ${b.h} × ${b.d}</td><td class="n">${p.x} / ${p.y} / ${p.z}</td><td class="n">${rotationOf(pc.item)}°</td></tr>`;
     })
     .join('');
-  const problems = pm.diagnostics.filter((d) => d.severity !== 'info');
+  const problems = pm.diagnostics;
   const list = problems.length
     ? `<ul>${problems.map((d) => `<li><b>${d.severity === 'error' ? 'Eroare' : 'Atenție'}:</b> ${esc(d.message)}</li>`).join('')}</ul>`
     : '<p>Aplicația nu a găsit probleme.</p>';

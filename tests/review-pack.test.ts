@@ -88,8 +88,10 @@ describe('the review pack (ADR-121)', () => {
     expect(html).toContain('Kitchen &lt;A&amp;B&gt;');
     expect(html).not.toContain('<A&B>');
     expect(html).toContain('30°');
-    for (const d of pm.diagnostics.filter((x) => x.severity === 'error'))
-      expect(html).toContain('Eroare');
+    const errors = pm.diagnostics.filter((x) => x.severity === 'error');
+    // The turned piece overlaps its neighbour: there is at least one error, and each is listed.
+    expect(errors.length).toBeGreaterThan(0);
+    for (const d of errors) expect(html).toContain(`<b>Eroare:</b> ${d.message}`);
     expect((html.match(/<tr><td>/g) ?? []).length).toBe(3);
   });
 
