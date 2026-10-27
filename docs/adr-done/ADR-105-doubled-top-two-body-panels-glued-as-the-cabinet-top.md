@@ -1,7 +1,8 @@
 # ADR-105: Doubled top: two body panels glued as the cabinet top
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-27
+- Implemented: 2026-10-27
 - Depends on: ADR-036
 - Design: docs/ui-design.md (Construction group)
 - Backlog: N103
@@ -55,12 +56,12 @@ designs build exactly as before. It extends ADR-036's construction flags and rep
 
 ## Done when
 
-- [ ] Doubled top, on the sides and between the sides: two `top` panels, no overlaps, outer height unchanged, inside
+- [x] Doubled top, on the sides and between the sides: two `top` panels, no overlaps, outer height unchanged, inside
       opening one `t` lower (tests).
-- [ ] Cut list shows "Top" with quantity 2 for a doubled top (test).
-- [ ] Rails top with `topLayers: 2` warns `top-layers-rails`; an invalid `topLayers` fails validation (tests).
-- [ ] Fuzz picks `topLayers` and passes with `FUZZ_N=30000`.
-- [ ] Find-it from the bare app at phone and desktop widths: open a cabinet, Construction › "Top layers" ›
+- [x] Cut list shows "Top" with quantity 2 for a doubled top (test).
+- [x] Rails top with `topLayers: 2` warns `top-layers-rails`; an invalid `topLayers` fails validation (tests).
+- [x] Fuzz picks `topLayers` and passes with `FUZZ_N=30000`.
+- [x] Find-it from the bare app at phone and desktop widths: open a cabinet, Construction › "Top layers" ›
       "Doubled", the parts list shows "Top" × 2.
 
 ## Open questions

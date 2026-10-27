@@ -359,6 +359,21 @@ describe('doubled top (ADR-105)', () => {
       expect(errors(d)).toEqual([]);
       noOverlaps(d);
     });
+  it('half overlay: the front line drops one full panel, half over the lower layer', () => {
+    const doorTop = (d: Design) =>
+      Math.max(
+        ...buildModel(d)
+          .panels.filter((p) => p.role === 'door')
+          .map((p) => p.box.y + p.box.h),
+      );
+    const door: Space = { id: 'in', kind: 'shelves', count: 1, front: { kind: 'doors', count: 1 } };
+    const single = cab({ frontStyle: 'half' }, door);
+    const d = cab({ frontStyle: 'half', topLayers: 2 }, door);
+    const t = tops(d)[0].box.h;
+    expect(Number.isFinite(doorTop(single))).toBe(true);
+    expect(doorTop(d)).toBe(doorTop(single) - t);
+    expect(errors(d)).toEqual([]);
+  });
   it('the cut list shows one Top row with quantity 2', () => {
     const d = cab({ topLayers: 2 });
     const rows = cutlist(buildModel(d), d.materials).filter((r) => r.labels.includes('Top'));

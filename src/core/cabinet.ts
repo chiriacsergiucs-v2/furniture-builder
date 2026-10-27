@@ -392,7 +392,7 @@ export function buildCabinet(
           x0: lo(t) + hi(g),
           x1: W - t + lo(t) - lo(g),
           y0: ph + lo(t) + hi(g),
-          y1: H - tt + lo(tt) - lo(g),
+          y1: H - tt + lo(t) - lo(g),
         }
       : { x0: r, x1: W - r, y0: ph + r, y1: H - r };
   const rootFront: FrontZone = {

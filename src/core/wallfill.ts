@@ -484,7 +484,9 @@ export function wallRowFor(slots: Slot[], input: WallInput): WallSlot[] | null {
   for (let i = 0; i < slots.length;) {
     if (slots[i].kind === 'tall') {
       const gap = input.height - TALL_HEIGHT;
-      if (gap > 0) out.push({ variant: 'top-box', width: slots[i].width, height: gap, x, over: i });
+      const box: WallSlot = { variant: 'top-box', width: slots[i].width, height: gap, x, over: i };
+      // A gap too thin to build a box in is left open, like no room (ADR-104), and noted by suggestMixes.
+      if (gap > 0 && topBoxFits(box, input)) out.push(box);
       x += slots[i].width;
       i++;
       continue;
@@ -511,6 +513,10 @@ export function wallRowFor(slots: Slot[], input: WallInput): WallSlot[] | null {
   }
   return out;
 }
+
+/** Whether a top box of this size builds without an error. */
+const topBoxFits = (box: WallSlot, input: WallInput) =>
+  !buildModel(wallPiece(box, input)).diagnostics.some((d) => d.severity === 'error');
 
 const renew = (s: Space): Space =>
   s.kind === 'split'
@@ -645,7 +651,8 @@ export function suggestMixes(input: WallInput, limit = MIXES_FIRST): WallFill {
   let built = 0,
     failed = 0,
     wallFailed = 0;
-  const row = input.wallRow ?? 'any';
+  // Default always: the user's answer to the ADR-104 open question ("Refine choice, default always").
+  const row = input.wallRow ?? 'always';
   // "any": each base row once without and once with a wall row, so the cards show both (ADR-104).
   const withWall = row === 'never' ? [false] : row === 'always' ? [true] : [false, true];
   const tries = list.flatMap((c) => withWall.map((w) => ({ c, w })));
@@ -693,6 +700,31 @@ export function suggestMixes(input: WallInput, limit = MIXES_FIRST): WallFill {
     });
   }
   const problems: Diagnostic[] = [];
+  const gap = input.height - TALL_HEIGHT;
+  if (
+    gap > 0 &&
+    mixes.some(
+      (m) =>
+        m.wall &&
+        m.slots.some((x) => x.kind === 'tall') &&
+        !m.wall.some((x) => x.variant === 'top-box'),
+    )
+  )
+    problems.push(
+      info(
+        'wall-top-box-small',
+        `The ${gap} mm over the tall cabinets is too small for a top box, so it is left open.`,
+      ),
+    );
+  const a = input.atLeast;
+  // Equal fronts leave the insides empty, so the base-kind minimums cannot apply: said, not dropped (ADR-008).
+  if (input.equalFronts !== undefined && ((a?.shelves ?? 0) || (a?.drawers ?? 0) || (a?.door ?? 0)))
+    problems.push(
+      info(
+        'wall-atleast-ignored',
+        'With Equal fronts the insides are left to configure, so the "At least" bases do not apply.',
+      ),
+    );
   const wallH = input.wallHeight ?? WALL_HEIGHT,
     baseTop = input.baseHeight ?? BASE_HEIGHT;
   // A wall cabinet reaching into the base row would overlap it, an error (ADR-008): such mixes are not offered.

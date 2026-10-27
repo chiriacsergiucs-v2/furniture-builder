@@ -1201,3 +1201,30 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Add the posibility to change width/depth when whole cabinet or whole piece is selected
 - Questions: Should a bed show its mattress size there instead, and loose panels nothing?
 - Suggested pick: Bed: show the mattress width and length there (closest to the request; estimate +10 % work, +5 % of value)
+
+### G-127: Fill a wall: the over-hood cabinet is not placed over a hood
+
+- Status: Open
+- Origin: ADR-104, 2026-10-27, review nit
+- Missing: The over-hood wall variant (no bottom) is dealt into the wall row at any position; nothing ties it to a hood or hob below.
+- Request: Yes, every catalog wall variant
+- Questions: Should the over-hood cabinet appear only above a hob or hood, or stay anywhere in the row?
+- Suggested pick: Anywhere, as answered ('every catalog wall variant', 0 % extra work).
+
+### G-128: Save a project piece back over an existing template
+
+- Status: Open
+- Origin: ADR-107, 2026-10-27, Claude scope
+- Missing: Saving a project piece always makes a new catalog template; it never overwrites the template the piece came from.
+- Request: New adr to add the possibility to save a new piece to catalog when created it inside a project
+- Questions: Do you also want 'Update the template' to write a project piece's changes back into its existing template as a new revision?
+- Suggested pick: New template only, as asked (0 % extra work).
+
+### G-129: Save a group or several pieces as one catalog item
+
+- Status: Open
+- Origin: ADR-107, 2026-10-27, Claude scope
+- Missing: Only one piece at a time is saved to the catalog; a group or multi-selection is not saved as one item (project templates, ADR-060, cover whole projects).
+- Request: New adr to add the possibility to save a new piece to catalog when created it inside a project
+- Questions: Should a selected group of pieces be savable as one catalog item?
+- Suggested pick: One piece at a time, as asked (0 % extra work).

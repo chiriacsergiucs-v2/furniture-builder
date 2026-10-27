@@ -30,7 +30,7 @@ const sum = (ws: number[]) => ws.reduce((a, b) => a + b, 0);
 
 describe('suggestMixes', () => {
   it('fills 3000 mm exactly, in range and without errors; the example comes first', () => {
-    const r = suggestMixes(wall());
+    const r = suggestMixes(wall({ wallRow: 'never' }));
     expect(r.mixes).toHaveLength(MIXES_FIRST);
     for (const m of r.mixes) {
       expect(sum(m.slots.map((s) => s.width))).toBe(3000);
@@ -171,6 +171,15 @@ describe('input problems', () => {
     }
   });
 
+  it('Equal fronts with At least bases says they do not apply', () => {
+    const r = suggestMixes(wall({ equalFronts: 6, atLeast: { drawers: 2 } }));
+    expect(r.mixes.length).toBeGreaterThan(0);
+    expect(r.problems.map((p) => p.code)).toContain('wall-atleast-ignored');
+    expect(suggestMixes(wall({ equalFronts: 6 })).problems.map((p) => p.code)).not.toContain(
+      'wall-atleast-ignored',
+    );
+  });
+
   it('a long wall is answered quickly', () => {
     const t = performance.now();
     const r = suggestMixes(wall({ width: 9000 }));
@@ -230,10 +239,20 @@ describe('wall row (ADR-104)', () => {
     const always = suggestMixes(wall({ height: 1400, wallRow: 'always' }));
     expect(always.mixes).toEqual([]);
     expect(always.problems[0].message).toMatch(/reach 140 mm into the base row/);
-    const any = suggestMixes(wall({ height: 1400 }));
+    const any = suggestMixes(wall({ height: 1400, wallRow: 'any' }));
     expect(any.mixes.length).toBeGreaterThan(0);
     expect(any.mixes.every((m) => !m.wall)).toBe(true);
     expect(any.problems.some((p) => p.code === 'wall-row-low')).toBe(true);
+  });
+
+  it('a gap over a tall cabinet too thin for a top box is left open and said, the mixes stay', () => {
+    const r = suggestMixes(wall({ height: 2230, tallCount: 1 }));
+    expect(r.mixes.length).toBeGreaterThan(0);
+    for (const m of r.mixes) expect(m.wall!.some((x) => x.variant === 'top-box')).toBe(false);
+    expect(r.problems.map((p) => p.code)).toContain('wall-top-box-small');
+    expect(suggestMixes(wall({ height: 2600 })).problems.map((p) => p.code)).not.toContain(
+      'wall-top-box-small',
+    );
   });
 
   it('a piece problem is reported as one, not as a wall row that does not fit', () => {
@@ -244,8 +263,9 @@ describe('wall row (ADR-104)', () => {
     }
   });
 
-  it('any shows mixes with and without a wall row; never shows none', () => {
-    const any = suggestMixes(wall());
+  it("always by default (the user's answer); any shows both; never shows none", () => {
+    expect(suggestMixes(wall()).mixes.every((m) => m.wall)).toBe(true);
+    const any = suggestMixes(wall({ wallRow: 'any' }));
     expect(any.mixes.some((m) => m.wall)).toBe(true);
     expect(any.mixes.some((m) => !m.wall)).toBe(true);
     expect(any.mixes[0].wall).toBeUndefined();
