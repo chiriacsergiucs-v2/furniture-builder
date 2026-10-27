@@ -1186,7 +1186,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-125: Width and depth card over the project view for a selected piece
 
-- Status: ADR-109
+- Status: Done (ADR-109)
 - Origin: ADR-106
 - Missing: In a project, a piece selected but not opened (Inside this piece) gets Width and Depth in its Selected piece card only; no floating card over the project drawing or 3D (the quick-count card shows there only for an opened piece, ADR-088).
 - Request: Add the posibility to change width/depth when whole cabinet or whole piece is selected; answer: Card + side panel

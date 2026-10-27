@@ -1,7 +1,8 @@
 # ADR-109: Show the quick-count card over the project drawing and put Doors and fronts beside Snap
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-27
+- Implemented: 2026-10-27
 - Depends on: ADR-106
 - Design: docs/ui-design.md (section 4, editor screen: stage toolbar, quick-count card)
 - Backlog: N107
