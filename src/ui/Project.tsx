@@ -31,10 +31,10 @@ import {
 import { dropTarget, SNAP_RANGE } from '../core/snap';
 import { groupOf, itemsAt, itemsInBox, nextUnder } from '../core/selection';
 import { inSelection, selectionBox } from '../core/selectPath';
-import type { Box, Design, Material, Panel } from '../core/types';
+import type { Box, Design, Diagnostic, Material, Panel } from '../core/types';
 import { listDecors, listDesigns, loadDesign, type StoredDesign } from '../persist/db';
 import { useDesign } from '../store/designStore';
-import { Counter, InfoTip, MmField, Segmented, Select, Toggle } from './controls';
+import { Counter, Group, InfoTip, MmField, Segmented, Select, Toggle } from './controls';
 import {
   arrowMove,
   movePointer,
@@ -149,6 +149,15 @@ export function ProjectPanel({
     [project, selectedId],
   );
   const model3d = project.models?.find((m) => m.id === selectedId);
+  const diagnostics = pm?.diagnostics;
+  const positionErrors = useMemo(
+    () => pieceErrors(diagnostics, selectedId, POSITION_ERRORS),
+    [diagnostics, selectedId],
+  );
+  const clearanceErrors = useMemo(
+    () => pieceErrors(diagnostics, selectedId, CLEARANCE_ERRORS),
+    [diagnostics, selectedId],
+  );
 
   const updateFromLibrary = async () => {
     if (!item?.libraryId) return;
@@ -204,6 +213,48 @@ export function ProjectPanel({
           </InfoTip>
         </div>
       </header>
+      {project.items.length > 0 && (
+        <h3 className="list-head" id="pieces-head">
+          Pieces
+        </h3>
+      )}
+      {project.items.length === 0 ? (
+        <p className="empty center">
+          <Icon name="project" />
+          No pieces yet. Add a cabinet, a corner unit or a desk to start.
+        </p>
+      ) : (
+        <ul className="pieces" aria-labelledby="pieces-head">
+          {project.items.map((i) => {
+            const b = pm?.pieces.find((p) => p.item.id === i.id)?.bounds;
+            return (
+              <li key={i.id}>
+                <button
+                  type="button"
+                  className={`row-btn ${selectedIds.includes(i.id) ? 'on' : ''}`}
+                  aria-pressed={selectedIds.includes(i.id)}
+                  onClick={(e) =>
+                    e.shiftKey || e.ctrlKey || e.metaKey ? toggleItem(i.id) : select(i.id)
+                  }
+                >
+                  <span>
+                    <strong>
+                      {i.quantity > 1 ? `${i.quantity} × ` : ''}
+                      {i.design.name}
+                    </strong>
+                    {b && (
+                      <span className="sub num">
+                        {b.w} × {b.h} × {b.d} mm
+                      </span>
+                    )}
+                  </span>
+                  <Icon name="chevron-right" className="chev sm" />
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
       <SelectionCard />
       {item && (
         <section className="piece-edit section" aria-label={`Selected piece: ${item.design.name}`}>
@@ -285,58 +336,69 @@ export function ProjectPanel({
               </InfoTip>
             }
           />
-          {blocked ? (
-            <p className="hint" role="note">
-              {isLocked(item) ? `${LOCKED_HINT}.` : blocked} It stays {item.position.x} mm from the
-              left and {item.position.z} mm from the back, {FRONT_SIDE[item.rotationY]}; turn, place
-              and gap are off until it is unlocked. Its size and boards can still be changed.
-            </p>
-          ) : (
-            <>
-              <Segmented<QuarterTurn>
-                label="Turn"
-                value={item.rotationY}
-                options={[
-                  { value: 0, label: '0°' },
-                  { value: 90, label: '90°' },
-                  { value: 180, label: '180°' },
-                  { value: 270, label: '270°' },
-                ]}
-                onChange={(v) => update(item.id, { rotationY: v })}
-              />
-              <p className="hint">{FRONT_SIDE[item.rotationY]}</p>
-            </>
-          )}
           <ArrangeFields key={item.id} item={item} />
-          {!blocked && <PlacementFields item={item} />}
-          {item.placement?.kind === 'above' || blocked ? null : left ? (
-            <>
-              <MmField
-                label={`Gap to ${left.item.design.name} on the left`}
-                value={left.gap}
-                min={0}
-                max={5000}
-                onChange={(v) => setGapMsg({ id: item.id, text: setGap(item.id, v, moveRight) })}
-              />
-              <Toggle
-                label="Move the pieces on its right too"
-                checked={moveRight}
-                onChange={setMoveRight}
-              />
-              {gapMsg.id === item.id && gapMsg.text && (
-                <p className="hint" role="status">
-                  {gapMsg.text}
-                </p>
-              )}
-            </>
-          ) : (
-            <p className="hint">
-              No piece on its left at this height; set “From left” to place it.
-            </p>
-          )}
-          <ClearanceFields item={item} />
-          <FinishFields item={item} />
-          <MergeFields item={item} />
+          <Group title="Position" defaultOpen={false} openOn={openKey(item.id, positionErrors)}>
+            <GroupErrors messages={positionErrors} />
+            {blocked ? (
+              <p className="hint" role="note">
+                {isLocked(item) ? `${LOCKED_HINT}.` : blocked} It stays {item.position.x} mm from
+                the left and {item.position.z} mm from the back, {FRONT_SIDE[item.rotationY]}; turn,
+                place and gap are off until it is unlocked. Its size and boards can still be
+                changed.
+              </p>
+            ) : (
+              <>
+                <Segmented<QuarterTurn>
+                  label="Turn"
+                  value={item.rotationY}
+                  options={[
+                    { value: 0, label: '0°' },
+                    { value: 90, label: '90°' },
+                    { value: 180, label: '180°' },
+                    { value: 270, label: '270°' },
+                  ]}
+                  onChange={(v) => update(item.id, { rotationY: v })}
+                />
+                <p className="hint">{FRONT_SIDE[item.rotationY]}</p>
+              </>
+            )}
+            {!blocked && <PlacementFields item={item} />}
+            {item.placement?.kind === 'above' || blocked ? null : left ? (
+              <>
+                <MmField
+                  label={`Gap to ${left.item.design.name} on the left`}
+                  value={left.gap}
+                  min={0}
+                  max={5000}
+                  onChange={(v) => setGapMsg({ id: item.id, text: setGap(item.id, v, moveRight) })}
+                />
+                <Toggle
+                  label="Move the pieces on its right too"
+                  checked={moveRight}
+                  onChange={setMoveRight}
+                />
+                {gapMsg.id === item.id && gapMsg.text && (
+                  <p className="hint" role="status">
+                    {gapMsg.text}
+                  </p>
+                )}
+              </>
+            ) : (
+              <p className="hint">
+                No piece on its left at this height; set “From left” to place it.
+              </p>
+            )}
+          </Group>
+          <Group title="Clearance" defaultOpen={false} openOn={openKey(item.id, clearanceErrors)}>
+            <GroupErrors messages={clearanceErrors} />
+            <ClearanceFields item={item} />
+          </Group>
+          <Group title="Finish" defaultOpen={false}>
+            <FinishFields item={item} />
+          </Group>
+          <Group title="Merge" defaultOpen={false}>
+            <MergeFields item={item} />
+          </Group>
           {piece && (
             <p className="hint">
               Takes {piece.bounds.w} × {piece.bounds.d} mm of floor, {piece.bounds.h} mm high.
@@ -361,43 +423,6 @@ export function ProjectPanel({
       )}
       {model3d && <ModelFields item={model3d} />}
       <NewerTemplates items={project.items} />
-      {project.items.length === 0 ? (
-        <p className="empty center">
-          <Icon name="project" />
-          No pieces yet. Add a cabinet, a corner unit or a desk to start.
-        </p>
-      ) : (
-        <ul className="pieces">
-          {project.items.map((i) => {
-            const b = pm?.pieces.find((p) => p.item.id === i.id)?.bounds;
-            return (
-              <li key={i.id}>
-                <button
-                  type="button"
-                  className={`row-btn ${selectedIds.includes(i.id) ? 'on' : ''}`}
-                  aria-pressed={selectedIds.includes(i.id)}
-                  onClick={(e) =>
-                    e.shiftKey || e.ctrlKey || e.metaKey ? toggleItem(i.id) : select(i.id)
-                  }
-                >
-                  <span>
-                    <strong>
-                      {i.quantity > 1 ? `${i.quantity} × ` : ''}
-                      {i.design.name}
-                    </strong>
-                    {b && (
-                      <span className="sub num">
-                        {b.w} × {b.h} × {b.d} mm
-                      </span>
-                    )}
-                  </span>
-                  <Icon name="chevron-right" className="chev sm" />
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      )}
       <GroupList />
       <ModelList pm={pm} />
       <button type="button" className="btn outline block" onClick={onAdd}>
@@ -407,6 +432,46 @@ export function ProjectPanel({
       <RoomSection />
     </div>
   );
+}
+
+/** Error codes about where a piece stands, shown and opened in its Position group (ADR-115, ADR-008). */
+const POSITION_ERRORS = new Set([
+  'placement-cycle',
+  'pieces-overlap',
+  'below-floor',
+  'outside-room',
+  'hits-obstacle',
+]);
+/** Error codes about a piece's clearances, shown and opened in its Clearance group (ADR-115, ADR-008). */
+const CLEARANCE_ERRORS = new Set(['installation-height']);
+
+/** The messages of the project's error diagnostics about piece `id` with one of `codes`. */
+function pieceErrors(
+  diagnostics: Diagnostic[] | undefined,
+  id: string | null,
+  codes: Set<string>,
+): string[] {
+  if (!diagnostics || !id) return [];
+  return diagnostics
+    .filter(
+      (d) =>
+        d.severity === 'error' &&
+        codes.has(d.code) &&
+        (d.nodeId === id || (d.itemIds?.includes(id) ?? false)),
+    )
+    .map((d) => d.message);
+}
+
+/** Opens a group again for each piece and each new error; empty (stays as the user left it) without errors. */
+const openKey = (id: string, errors: string[]) => (errors.length ? [id, ...errors].join('\n') : '');
+
+/** The errors a folded group of the selected piece holds; the group opens itself while there are any. */
+function GroupErrors({ messages }: { messages: string[] }) {
+  return messages.map((m) => (
+    <p key={m} className="field-error" role="alert">
+      {m}
+    </p>
+  ));
 }
 
 /** Finish scope (ADR-055): one board on the fronts or the carcass of this piece, its run or the whole project. */
@@ -464,7 +529,6 @@ function FinishFields({ item }: { item: ProjectItem }) {
   };
   return (
     <div className="finish-fields">
-      <h4>Finish</h4>
       <Segmented<FinishRole>
         label="Parts"
         value={role}
@@ -612,7 +676,6 @@ function MergeFields({ item }: { item: ProjectItem }) {
   const candidates = useMemo(() => mergeCandidates(project, item.id), [project, item.id]);
   return (
     <div className="merge-fields">
-      <h4>Merge into one piece</h4>
       {candidates.length === 0 ? (
         <p className="hint">
           Nothing touches it on the left or right. Set the gap to 0 next to another cabinet to merge

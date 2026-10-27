@@ -26,6 +26,16 @@ for (const width of [1440, 390]) {
     isMobile: phone,
   });
   const page = await ctx.newPage();
+  // ADR-115: the selected piece's Position, Clearance, Finish and Merge are folded groups: open one by its title
+  // (when it is on screen; a phone's closed sheet hides the whole card, which is read as before).
+  const openGroup = async (title) => {
+    const s = page
+      .locator('details.group > summary')
+      .filter({ hasText: new RegExp(`^${title}$`) })
+      .first();
+    if ((await s.isVisible()) && !(await s.evaluate((el) => el.parentElement.open)))
+      await s.click({ timeout: 5000 });
+  };
   const cdp = await ctx.newCDPSession(page);
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
@@ -73,6 +83,7 @@ for (const width of [1440, 390]) {
       await page.waitForTimeout(300);
       await sheet(true);
     }
+    await openGroup('Position');
     const field = page.getByLabel('From left', { exact: true }).first();
     if (!(await field.isVisible().catch(() => false))) {
       // Nothing selected yet: tap the piece on the plan, as a user would.
@@ -84,6 +95,7 @@ for (const width of [1440, 390]) {
       await click(onPlan);
       await page.waitForTimeout(200);
       await sheet(true);
+      await openGroup('Position');
     }
     await field.scrollIntoViewIfNeeded().catch(() => {});
     const x = Number(await field.inputValue({ timeout: 3000 }).catch(() => 'NaN'));

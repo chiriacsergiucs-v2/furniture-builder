@@ -25,6 +25,16 @@ for (const width of [1440, 375]) {
     acceptDownloads: true,
   });
   const page = await ctx.newPage();
+  // ADR-115: the selected piece's Position, Clearance, Finish and Merge are folded groups: open one by its title
+  // (when it is on screen; a phone's closed sheet hides the whole card, which is read as before).
+  const openGroup = async (title) => {
+    const s = page
+      .locator('details.group > summary')
+      .filter({ hasText: new RegExp(`^${title}$`) })
+      .first();
+    if ((await s.isVisible()) && !(await s.evaluate((el) => el.parentElement.open)))
+      await s.click({ timeout: 5000 });
+  };
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => {
@@ -87,6 +97,7 @@ for (const width of [1440, 375]) {
 
   // Precise numeric position: "From left" moves the selected piece by an exact mm value; gap to the left neighbour.
   await selectPiece(2);
+  await openGroup('Position');
   const fromLeft = page.getByLabel('From left', { exact: true }).first();
   check(width, 'precise numeric: "From left" field found', await fromLeft.isVisible());
   await fromLeft.fill('4321');
@@ -94,6 +105,7 @@ for (const width of [1440, 375]) {
   await page.waitForTimeout(200);
   check(width, 'precise numeric: value kept as 4321 mm', (await fromLeft.inputValue()) === '4321');
   await selectPiece(1);
+  await openGroup('Position');
   check(
     width,
     'precise numeric: "Gap to … on the left" field found',
@@ -153,8 +165,8 @@ for (const width of [1440, 375]) {
   await selectPiece(0);
   check(
     width,
-    'identity: "Merge into one piece" is a separate explicit action',
-    await page.getByRole('heading', { name: 'Merge into one piece' }).isVisible(),
+    'identity: "Merge" is a separate explicit action (a folded group since ADR-115)',
+    await page.locator('details.group > summary', { hasText: /^Merge$/ }).isVisible(),
   );
 
   // Automatic BOM: one Parts CSV for the whole project, rows from all three pieces. Since ADR-079 the CSV and Print

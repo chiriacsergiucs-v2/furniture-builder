@@ -215,13 +215,17 @@ export function Counter({
   );
 }
 
-/** Collapsible section. `id` lets the steps rail open and scroll to it. */
+/**
+ * Collapsible section. `id` lets the steps rail open and scroll to it. `openOn`: while it is non-empty the group
+ * opens itself, and again whenever it changes (an error it holds is never left folded away, ADR-008, ADR-115).
+ */
 export function Group({
   title,
   children,
   defaultOpen = true,
   id,
   info,
+  openOn,
 }: {
   title: string;
   children: ReactNode;
@@ -229,9 +233,14 @@ export function Group({
   id?: string;
   /** An `InfoTip` on the title row (ADR-111); it sits beside the summary, never inside it. */
   info?: ReactNode;
+  openOn?: string;
 }) {
+  const ref = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    if (openOn && ref.current) ref.current.open = true;
+  }, [openOn]);
   const group = (
-    <details className="group" open={defaultOpen} id={id}>
+    <details ref={ref} className="group" open={defaultOpen} id={id}>
       <summary>
         {title}
         <Icon name="chevron-down" className="chev" />

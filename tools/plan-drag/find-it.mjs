@@ -24,6 +24,16 @@ for (const width of [1440, 375]) {
     isMobile: phone,
   });
   const page = await ctx.newPage();
+  // ADR-115: the selected piece's Position, Clearance, Finish and Merge are folded groups: open one by its title
+  // (when it is on screen; a phone's closed sheet hides the whole card, which is read as before).
+  const openGroup = async (title) => {
+    const s = page
+      .locator('details.group > summary')
+      .filter({ hasText: new RegExp(`^${title}$`) })
+      .first();
+    if ((await s.isVisible()) && !(await s.evaluate((el) => el.parentElement.open)))
+      await s.click({ timeout: 5000 });
+  };
   const cdp = await ctx.newCDPSession(page);
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
@@ -40,8 +50,10 @@ for (const width of [1440, 375]) {
     await loc.click({ timeout: 3000 }).catch(() => loc.dispatchEvent('click'));
   };
   const btn = (name, exact = true) => page.getByRole('button', { name, exact });
-  const fromLeft = async () =>
-    Number(await page.getByLabel('From left', { exact: true }).first().inputValue());
+  const fromLeft = async () => {
+    await openGroup('Position');
+    return Number(await page.getByLabel('From left', { exact: true }).first().inputValue());
+  };
   const plan = page.getByRole('figure', { name: /Room plan, seen from above/ });
   const piece = plan.getByRole('button', { name: /^Base cabinet.*, \d+ by \d+ mm$/ }).first();
   const label = plan.getByText(/From left \d+ · From back \d+ mm/);
