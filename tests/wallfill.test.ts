@@ -137,6 +137,11 @@ describe('input problems', () => {
       wall({ minWidth: 900, maxWidth: 500 }),
       wall({ pieces: 0 }),
       wall({ tallCount: -1 }),
+      // Past the search limit (review of ADR-103): refused, never searched.
+      wall({ pieces: 10_000_000_000 }),
+      wall({ equalFronts: 100_000 }),
+      wall({ tallCount: 1_000_000 }),
+      wall({ width: 1_000_000_000, minWidth: 1 }),
     ]) {
       const r = suggestMixes(bad);
       expect(r.mixes).toEqual([]);
@@ -150,6 +155,13 @@ describe('input problems', () => {
     );
     expect(suggestMixes(wall({ pieces: 2 })).problems[0].message).toMatch(/No mix fills 3000 mm/);
     expect(suggestMixes(wall({ equalFronts: 30 })).problems[0].message).toMatch(/equal fronts/);
+  });
+
+  it('Equal fronts with At least bases says they do not apply', () => {
+    const r = suggestMixes(wall({ equalFronts: 6, atLeast: { drawers: 2 } }));
+    expect(r.mixes.length).toBeGreaterThan(0);
+    expect(r.problems.map((p) => p.code)).toContain('wall-atleast-ignored');
+    expect(suggestMixes(wall({ equalFronts: 6 })).problems).toEqual([]);
   });
 
   it('a long wall is answered quickly', () => {
@@ -169,17 +181,17 @@ describe('fuzz', () => {
     for (let i = 0; i < N; i++) {
       const min = pick([150, 300, 400, 450, 600, 800]);
       const input: WallInput = {
-        width: pick([0, 250, 401, 1200, 2317, 3000, 3600, 4999, 6100]),
+        width: pick([0, 250, 401, 1200, 2317, 3000, 3600, 4999, 6100, 1_000_000_000]),
         depth: pick([300, 400, 560, 600, 700]),
         height: pick([1800, 2100, 2400, 2700]),
         tallDepth: pick([undefined, 400, 600]),
         minWidth: min,
         maxWidth: pick([min, min + 150, 900, 1200]),
-        pieces: pick([undefined, undefined, 1, 3, 5, 8]),
+        pieces: pick([undefined, undefined, 1, 3, 5, 8, 201, 10_000_000_000]),
         tallCount: pick([undefined, 0, 1, 2, 3]),
         tallPosition: pick([undefined, 'left', 'right', 'ends', 'centre'] as const),
         atLeast: { drawers: pick([undefined, 0, 1, 3]), door: pick([undefined, 1]) },
-        equalFronts: pick([undefined, undefined, undefined, 4, 6, 9]),
+        equalFronts: pick([undefined, undefined, undefined, 4, 6, 9, 401, 100_000]),
       };
       const r = suggestMixes(input);
       if (!r.mixes.length) expect(r.problems.length).toBeGreaterThan(0);
@@ -191,5 +203,5 @@ describe('fuzz', () => {
         );
       }
     }
-  });
+  }, 600_000); // FUZZ_N=30000 takes about 20 s
 });

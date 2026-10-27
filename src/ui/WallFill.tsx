@@ -172,7 +172,16 @@ function WallFill({ onClose, onOpened }: { onClose: () => void; onOpened: () => 
   const [applied, setApplied] = useState<Form>(START);
   const [step, setStep] = useState<StepId>('wall');
   const [saveError, setSaveError] = useState<string | null>(null);
-  const set = (k: keyof Form) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
+  // Tall cabinet depth follows Depth until it is edited (ADR-103: prefilled with the depth).
+  const [tallEdited, setTallEdited] = useState(false);
+  const set = (k: keyof Form) => (v: string) => {
+    if (k === 'tallDepth') setTallEdited(true);
+    setForm((f) => ({
+      ...f,
+      [k]: v,
+      ...(k === 'depth' && !tallEdited ? { tallDepth: v } : {}),
+    }));
+  };
   const result = useMemo(() => suggestMixes(toInput(applied)), [applied]);
   const go = (s: StepId) => {
     setStep(s);

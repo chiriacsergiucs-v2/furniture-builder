@@ -75,6 +75,15 @@ for (const width of widths) {
         .isVisible()
         .catch(() => false),
     );
+  // Tall cabinet depth follows Depth until it is edited (review of ADR-103).
+  await field('Depth').fill('600');
+  check(
+    width,
+    'Tall cabinet depth follows Depth',
+    (await field('Tall cabinet depth').inputValue()) === '600',
+    await field('Tall cabinet depth').inputValue(),
+  );
+  await field('Depth').fill('560');
   await field('Width').fill('3000');
   await field('Height').fill('2000');
   await shot('wall');

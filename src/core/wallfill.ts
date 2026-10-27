@@ -91,6 +91,8 @@ const EXAMPLE_WIDTH = 600;
 const DEAL: Exclude<PieceKind, 'tall'>[] = ['shelves', 'drawers', 'door', 'shelves'];
 /** Candidates built at most per call, so a long wall cannot hang the page. */
 const MAX_BUILDS = 120;
+/** A search bound, not a physical limit: more pieces than this are refused with a diagnostic, never searched. */
+export const MAX_PIECES = 200;
 
 const KIND_TEXT: Record<PieceKind, string> = {
   tall: 'tall',
@@ -137,6 +139,21 @@ export function checkWall(input: WallInput): Diagnostic[] {
   ] as const)
     if (v !== undefined && (!whole(v) || v < 1))
       out.push(err('wall-input', `${label} must be 1 or more.`));
+  // Past the search limit the search would be unbounded: refused with a reason before searching (ADR-008).
+  if (whole(input.width) && whole(max) && max > 0 && Math.ceil(input.width / max) > MAX_PIECES)
+    out.push(
+      err(
+        'wall-input',
+        `A ${input.width} mm wall needs more than ${MAX_PIECES} pieces of at most ${max} mm; split it into shorter walls.`,
+      ),
+    );
+  for (const [v, cap, label] of [
+    [input.pieces, MAX_PIECES, 'Number of pieces'],
+    [input.tallCount, MAX_PIECES, 'Tall cabinets'],
+    [input.equalFronts, 2 * MAX_PIECES, 'Equal fronts'],
+  ] as const)
+    if (whole(v) && v > cap)
+      out.push(err('wall-input', `${label} ${v} is more than the suggestion limit of ${cap}.`));
   for (const [v, label] of [
     [input.tallCount, 'Tall cabinets'],
     [input.atLeast?.shelves, 'Open shelf bases'],
@@ -249,7 +266,7 @@ function candidates(input: WallInput): Candidate[] {
   const inRange = (w: Mm) => w >= min && w <= max;
   const out: Candidate[] = [];
   const nMin = Math.max(1, Math.ceil(W / max)),
-    nMax = Math.floor(W / min);
+    nMax = Math.min(Math.floor(W / min), MAX_PIECES);
   const counts = input.pieces !== undefined ? [input.pieces] : range(nMin, nMax);
   const talls = input.tallCount !== undefined ? [input.tallCount] : [1, 0, 2];
 
@@ -489,6 +506,15 @@ export function suggestMixes(input: WallInput, limit = MIXES_FIRST): WallFill {
     });
   }
   const problems: Diagnostic[] = [];
+  const a = input.atLeast;
+  // Equal fronts leave the insides empty, so the base-kind minimums cannot apply: said, not dropped (ADR-008).
+  if (input.equalFronts !== undefined && ((a?.shelves ?? 0) || (a?.drawers ?? 0) || (a?.door ?? 0)))
+    problems.push(
+      info(
+        'wall-atleast-ignored',
+        'With Equal fronts the insides are left to configure, so the "At least" bases do not apply.',
+      ),
+    );
   if (!mixes.length) {
     if (input.width < min)
       problems.push(
