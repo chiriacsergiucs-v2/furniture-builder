@@ -56,5 +56,7 @@ describe('width and depth of the whole piece (ADR-106)', () => {
     expect(params(after.design.product).depth).toBe(420);
     expect(params(d.product).depth).not.toBe(420);
     expect(st().projectModel!.pieces[0].bounds.d).toBeGreaterThanOrEqual(420);
+    st().undoProject();
+    expect(params(st().project!.items[0].design.product).depth).toBe(params(d.product).depth);
   });
 });
