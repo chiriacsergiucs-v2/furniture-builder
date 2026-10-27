@@ -328,6 +328,59 @@ export function PieceInfo() {
   );
 }
 
+/** A board for any single part of the piece, instead of its group's board; lost part ids are listed to clear. */
+export function PartBoardsGroup() {
+  const panels = useDesign((s) => s.model.panels);
+  const materials = useDesign((s) => s.design.materials);
+  const own = useDesign((s) => s.design.partMaterials);
+  const setPart = useDesign((s) => s.setPartMaterial);
+  const rows = useMemo(() => {
+    const seen = new Map<string, number>();
+    return panels.map((p) => {
+      const n = (seen.get(p.label) ?? 0) + 1;
+      seen.set(p.label, n);
+      return { id: p.id, label: n > 1 ? `${p.label} (${n})` : p.label };
+    });
+  }, [panels]);
+  const lost = useMemo(
+    () => Object.keys(own ?? {}).filter((id) => !panels.some((p) => p.id === id)),
+    [own, panels],
+  );
+  const options = [{ value: '', label: 'Same as its group' }, ...matOptions(materials)];
+  return (
+    <Group
+      title="Part boards"
+      id="g-part-boards"
+      defaultOpen={false}
+      info={
+        <InfoTip label="About part boards" align="end">
+          Give any single part its own board. A board of another thickness is flagged under Checks.
+        </InfoTip>
+      }
+    >
+      {rows.map((r) => (
+        <Select
+          key={r.id}
+          label={r.label}
+          value={own?.[r.id] ?? ''}
+          options={options}
+          onChange={(v) => setPart(r.id, v || null)}
+        />
+      ))}
+      {lost.map((id) => (
+        <p key={id} className="alert warning">
+          <span>
+            {id} no longer exists; its board is not used.{' '}
+            <button type="button" className="btn outline sm" onClick={() => setPart(id, null)}>
+              Clear
+            </button>
+          </span>
+        </p>
+      ))}
+    </Group>
+  );
+}
+
 /** Guidance thresholds (ADR-035): typical defaults the user can change for this piece. */
 export function ChecksGroup() {
   const rules = useDesign((s) => s.design.settings?.rules);
@@ -451,6 +504,7 @@ export function PanelEditor({ p, materials }: { p: PanelParams; materials: Mater
           }
         />
       )}
+      <PartBoardsGroup />
       <ChecksGroup />
     </div>
   );
@@ -912,6 +966,7 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
           onChange={(v) => set({ panelMaterialId: v })}
         />
       </Group>
+      <PartBoardsGroup />
       <ChecksGroup />
     </div>
   );

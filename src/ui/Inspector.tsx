@@ -58,6 +58,7 @@ import { useUi } from './shell/uiStore';
 import {
   ApplianceEditor,
   ChecksGroup,
+  PartBoardsGroup,
   FrameEditor,
   FrontEditor,
   LayoutPicker,
@@ -1069,6 +1070,7 @@ function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material
         materials={materials}
         onChange={(d) => set({ drawers: d })}
       />
+      <PartBoardsGroup />
       <ChecksGroup />
     </div>
   );
@@ -1343,6 +1345,7 @@ function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[]
           onChange={(v) => set({ backMaterialId: v })}
         />
       </Group>
+      <PartBoardsGroup />
       <ChecksGroup />
     </div>
   );
@@ -1762,6 +1765,7 @@ function DeskEditor({
           onChange={(d) => set({ drawers: d })}
         />
       )}
+      <PartBoardsGroup />
       <ChecksGroup />
     </div>
   );

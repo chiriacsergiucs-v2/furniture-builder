@@ -631,10 +631,10 @@ export interface RuleSettings {
 
 export interface Design {
   /**
-   * 2 adds stock sheets and cutting settings (ADR-019); 3 adds edge band specs on boards (ADR-077). Older files are
-   * upgraded in memory on load.
+   * 2 adds stock sheets and cutting settings (ADR-019); 3 adds edge band specs on boards (ADR-077); 4 adds a
+   * board per part (`partMaterials`). Older files are upgraded in memory on load.
    */
-  schemaVersion: 1 | 2 | 3;
+  schemaVersion: 1 | 2 | 3 | 4;
   id: string;
   name: string;
   createdAt: string;
@@ -647,6 +647,11 @@ export interface Design {
   catalog?: CatalogMeta;
   /** Guidance thresholds (ADR-035). */
   settings?: { rules?: RuleSettings };
+  /**
+   * A board for one part instead of its group's board (schemaVersion 4): panel id → material id. A part id the piece no
+   * longer builds is kept and warned about, never dropped silently. Absent = every part uses its group's board.
+   */
+  partMaterials?: Record<string, string>;
   /** Answers of the New-piece wizard that made this piece, so it can be reopened there (ADR-046). Never geometry. */
   wizard?: { answers: WizardAnswers };
 }
