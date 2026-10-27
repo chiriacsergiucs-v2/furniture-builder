@@ -577,7 +577,7 @@ function Occlusion() {
   return null;
 }
 
-/** Display-only 3D models of the project (ADR-076): shown and selectable, never edited (ADR-014). */
+/** Display-only 3D models of the project (ADR-076): shown and selectable; in Move mode the selected one is resized (ADR-102). */
 function ModelItems({ plain, moving }: { plain: boolean; moving: boolean }) {
   const models = useDesign((s) => s.projectModel?.models);
   const preview = useResizePreview();

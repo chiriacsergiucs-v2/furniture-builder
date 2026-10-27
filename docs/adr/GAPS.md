@@ -1069,7 +1069,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-112: Resize a 3D model by dragging in the 3D view
 
-- Status: ADR-102
+- Status: Done (ADR-102)
 - Origin: ADR-102 (2026-10-27, Claude: out of scope)
 - Missing: Resizing an imported 3D model with handles in the 3D view; sizes are typed in the fields only.
 - Request: Width and height of an item must be editable adr

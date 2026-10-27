@@ -1,7 +1,8 @@
 # ADR-102: Edit an imported 3D model's width, height and depth separately
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-27
+- Implemented: 2026-10-27
 - Depends on: ADR-076, ADR-093
 - Design: docs/ui-design.md (section 3, components; section 4, editor screen)
 - Backlog: N100
