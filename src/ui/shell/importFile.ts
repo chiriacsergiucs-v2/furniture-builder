@@ -26,6 +26,14 @@ export async function importFile(f: File): Promise<ImportResult> {
   } catch {
     return { opened: false, message: { ok: false, text: 'That file could not be read as JSON.' } };
   }
+  return importDocument(parsed);
+}
+
+/**
+ * Import a parsed document — a file's contents or a design code's (ADR-124): validated before anything is stored,
+ * saved under a new id and opened.
+ */
+export async function importDocument(parsed: unknown): Promise<ImportResult> {
   try {
     if (
       parsed &&

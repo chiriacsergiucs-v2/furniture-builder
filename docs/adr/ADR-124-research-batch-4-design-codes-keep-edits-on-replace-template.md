@@ -1,10 +1,11 @@
 # ADR-124: Research batch 4: design codes, keep edits on replace, template references, project-wide settings
 
-- Status: Deferred (open questions G-159, G-160, G-161, G-162)
+- Status: Pending
 - Date: 2026-10-27
 - Depends on: ADR-055, ADR-096, ADR-098
 - Design: docs/ui-design.md (project editor, selected-piece card, project panel)
 - Backlog: N125
+- Agreed: 2026-10-27: "Accept default" (the suggested picks of G-159, G-160, G-161, G-162)
 
 ## Context
 
@@ -28,20 +29,29 @@ design inside a project. Both template references and project-wide settings chan
 
 ## Decision
 
-1. **Design codes.** **Copy code** on a design and on a project produces a compact text code (the validated
-   document, compressed with the browser's `CompressionStream`, base64url — no dependency, no network). **Open
-   from code** on Projects pastes one; it is validated before load and gets new ids (ADR-011); a bad code is a
-   message, never a throw. Link form waits for G-159.
-2. **Keep edits on replace.** Replace (ADR-098) compares the old piece with its catalog origin, carries the changed
-   settings onto the new design, and the result lists what carried and what could not ("Kept: handles, back
-   board. Not kept: drawer 3 height — the new piece has 2 drawers"). One undo step. Which settings waits for G-160.
-3. **Template references.** A piece added from the catalog stores `{ templateId, revision, overrides }`; its design
-   is the template plus overrides, rebuilt by a pure `resolveItem` in `src/core`. **Update to revision N** (ADR-096)
-   keeps the overrides. A missing template never loses a piece (ADR-012). The fallback waits for G-161.
-4. **Project-wide settings.** A **Project settings** panel holds choices every piece follows unless it overrides
-   them (as material overrides do, ADR-055); a piece's card shows "Follows project" or "Own: …" with **Follow
-   project**. Changing a setting rebuilds the pieces and reruns checks; one undo step. Which settings waits for
-   G-162; locked sizes ([ADR-122](ADR-122-research-batch-2-align-heights-lock-sizes-height-drag-in-3d.md)) are respected if built first.
+1. **Design codes.** **Copy code** in the ⋯ menu (Files), for the open design or project, shows a compact text code
+   (the document as saved, compressed with the browser's `CompressionStream`, base64url — no dependency, no
+   network) and a link `…/furniture-builder/#open=<code>` (G-159), each with Copy. **Open from code** on Projects
+   takes a code or a link; opening a link asks first. Either way the document is validated before it is stored and
+   gets a new id, as an imported file (ADR-011); a damaged code is a message, never a throw. Pictures and 3D models
+   stay on the device; the code says so (a project file carries them).
+2. **Keep edits on replace.** Replace (ADR-098) carries every setting the piece changed against its template that
+   also exists on the new design (G-160), and the result lists the rest ("Kept: handle kind. Not kept: interior
+   space 3 — the new piece has no such setting."). A carried setting that would make the new design invalid is not
+   kept and is listed. The outer width, height and depth are the new item's (the list was chosen by size) and are
+   listed as not kept. One undo step. Pure `ownEdits` / `carryEdits` in `src/core/ownEdits.ts`.
+3. **Template references.** A piece added from the catalog stores `ref: { overrides }` (project `schemaVersion`
+   12): the template is its catalog origin (id, variant, revision; ADR-096) and `overrides` are the settings that
+   differ from it, kept up to date on every project change while that revision is the catalog's. The full copy stays
+   as the fallback (G-161): a missing or newer template never loses a piece (ADR-012), and old readers still read
+   the copy. `resolveItem` rebuilds template + overrides. **Replace with the new revision** (ADR-096) applies the
+   overrides to the new revision and lists what could not carry.
+4. **Project-wide settings.** **Project settings** in Configure holds carcass, front and back boards (with their
+   banding), handle, front overlay and plinth height (G-162), all optional (`Project.settings`, `schemaVersion` 12).
+   A piece follows a setting while its own value equals the project's; changing the setting changes every
+   following piece and no other, one undo step. The selected piece's **Project settings** group shows "Follows
+   project" or "Own: …" with **Follow project**. Pieces without such a part (a bed has no fronts) are skipped.
+   Locked sizes ([ADR-122](ADR-122-research-batch-2-align-heights-lock-sizes-height-drag-in-3d.md)) are not on main yet; respecting them is G-200.
 
 Built as one change, one pull request, one test run and one ship (the user's request).
 
@@ -55,7 +65,7 @@ Built as one change, one pull request, one test run and one ship (the user's req
 
 - In scope: the four features above, document validation and migration, core, storage and UI-logic tests, fuzz on
   resolved designs, jsdom find-it.
-- Out of scope: nothing; the undecided parts are the open questions (G-159 to G-162).
+- Out of scope: respecting ADR-122's size lock (G-200); pictures and 3D models in codes (G-201). Found while building: Replace keeps the catalog item's size (G-202); wizard and template pieces do not take project settings (G-203).
 
 ## Consequences
 
@@ -74,11 +84,5 @@ Built as one change, one pull request, one test run and one ship (the user's req
 
 ## Open questions
 
-- **G-159** A link that opens the app with the design plus the text code, or the text code only? Suggested: link
-  plus code (estimate +10 % work, +25 % of value).
-- **G-160** Which edits carry on replace: every changed setting that also exists on the new design, or size and
-  boards only? Suggested: every one, listing the rest (estimate +40 % work, +50 % of value).
-- **G-161** References: refer by default and keep a copy as fallback, refer with no copy, or opt in per piece?
-  Suggested: refer with a kept copy (estimate +20 % work over no copy, same value).
-- **G-162** Which project-wide settings: carcass, front and back boards and banding; handle type; front overlay;
-  plinth height — all or a subset? Suggested: all (estimate +40 % work over boards only, +60 % of value).
+Answered 2026-10-27 ("Accept default"): G-159 link plus code; G-160 every changed setting, listing the rest; G-161
+refer with a kept copy; G-162 all the listed settings.

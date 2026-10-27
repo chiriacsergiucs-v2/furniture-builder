@@ -52,14 +52,14 @@ function ReplaceDialog({ item, onClose }: { item: ProjectItem; onClose: () => vo
     if (
       designEdited(item.design, families) &&
       !(await askConfirm(
-        `“${item.design.name}” was edited after it was added. Replacing it with ${name} replaces those edits; position, turn, quantity, placement, zones and boards stay.`,
+        `“${item.design.name}” was edited after it was added. Its own changes go onto ${name} where it has the same setting; the result lists what was kept and what was not. Position, turn, quantity, placement, zones and boards stay.`,
         { confirmLabel: 'Replace' },
       ))
     )
       return;
     const d = insertVariant(o.family, o.variant);
     if (!d) return;
-    const report = useDesign.getState().replaceItem(item.id, d);
+    const report = useDesign.getState().replaceItem(item.id, d, { families });
     // Refused (a size-locked piece, ADR-122): say why.
     const why = useDesign.getState().notice;
     if (!report) return void (why && useUi.getState().setNotice({ ok: false, text: why }));

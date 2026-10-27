@@ -28,6 +28,16 @@ import {
   ungroup,
 } from '../core/selection';
 import { replaceItem, replaceReport, type ReplaceReport } from '../core/replace';
+import { catalogFamilies } from '../core/catalog';
+import type { CatalogFamily } from '../core/catalog/types';
+import { carryEdits, carryText, ownEdits, SIZE_SKIP, syncRef } from '../core/ownEdits';
+import {
+  followProject,
+  setProjectSetting,
+  SETTING_LABEL,
+  withSettings,
+  type SettingKey,
+} from '../core/projectSettings';
 import { countRows, countSubject, stepCount, type CountKey } from '../core/counts';
 import { drill, type Selection } from '../core/selectPath';
 import { resizeProduct, type SizeField } from '../core/pieceSize';
@@ -55,6 +65,7 @@ import {
   type Project,
   type ProjectItem,
   type ProjectModel,
+  type ProjectSettings,
   type RunHandle,
   type RunRequest,
   type RunSettings,
@@ -235,7 +246,19 @@ interface State {
   linkAll: boolean;
   setLinkAll: (v: boolean) => void;
   /** Put a catalog copy in the piece's place, keeping where and how it stands (ADR-098); one undo step. */
-  replaceItem: (id: string, design: Design) => ReplaceReport | null;
+  replaceItem: (
+    id: string,
+    design: Design,
+    /**
+     * Carry the piece's own edits (ADR-124): `families` the catalog as this device shows it; `keepSize` false on
+     * Replace (the new item's size is used), true for a newer revision of the same template.
+     */
+    opts?: { families?: CatalogFamily[]; keepSize?: boolean },
+  ) => ReplaceReport | null;
+  /** Set or clear a project-wide setting (ADR-124); returns the names of the pieces that took it. One undo step. */
+  setProjectSetting: (key: SettingKey, value: ProjectSettings[SettingKey] | undefined) => string[];
+  /** The piece takes the project's value of the setting again (ADR-124). One undo step. */
+  followProject: (id: string, key: SettingKey) => void;
   /** Returns why it did not turn (a locked piece, ADR-095), or null. */
   turnItem: (id: string, dir: 1 | -1) => string | null;
   /** Returns why nothing changed ("Nothing to mirror in this piece", a locked piece), or null. */
@@ -438,8 +461,12 @@ export const useDesign = create<State>((rawSet, get) => {
     // Pieces on or above others follow them (ADR-031); run parts follow the pieces in the same step (ADR-061).
     // A piece no longer in the project leaves its group (ADR-097).
     // A change to a linked copy reaches the others, or unlinks it (ADR-111).
-    const linked = propagateLinks(get().project, next, get().linkAll);
-    // Nothing resizes a size-locked piece (ADR-122), also through a linked copy: the whole change is refused.
+    let linked = propagateLinks(get().project, next, get().linkAll);
+    // Template references keep their overrides up to date while the template's revision is the catalog's (ADR-124).
+    const items = linked.items.map((i) => syncRef(i, catalogFamilies));
+    if (items.some((i, n) => i !== linked.items[n])) linked = { ...linked, items };
+    // Nothing resizes a size-locked piece (ADR-122), also through a linked copy, a project-wide setting or Replace:
+    // the whole change is refused.
     const locked = sizeLockBlocked(get().project, linked);
     if (locked) {
       set({ notice: locked });
@@ -642,14 +669,15 @@ export const useDesign = create<State>((rawSet, get) => {
     addPiece: (d, libraryId) => {
       const p = get().project;
       if (!p) return;
-      const item = makeItem(p, d, libraryId);
+      // A new piece follows the project settings (ADR-124).
+      const item = makeItem(p, withSettings(d, p.settings), libraryId);
       commitProject({ ...p, items: [...p.items, item] });
       set({ selectedItemId: item.id, placingItemId: item.id });
     },
     addPieceAt: (d, x, z, libraryId) => {
       const p = get().project;
       if (!p) return;
-      const made = makeItem(p, d, libraryId);
+      const made = makeItem(p, withSettings(d, p.settings), libraryId);
       // Not clamped here: `dropNewPiece` already placed it as a tap does, and a snap may put it against a wall of
       // a drawn room at x or z below 0.
       const position = { ...made.position, x: Math.round(x) || 0, z: Math.round(z) || 0 };
@@ -741,13 +769,33 @@ export const useDesign = create<State>((rawSet, get) => {
       }
       return res.issues;
     },
-    replaceItem: (id, design) => {
+    replaceItem: (id, design, opts) => {
       const { project: p, projectModel: pm } = get();
-      if (!p || !pm || !p.items.some((i) => i.id === id)) return null;
-      const was = p.items.find((i) => i.id === id)!;
-      if (commitProject(replaceItem(p, id, design), `Replace ${was.design.name}`)) return null;
+      const item = p?.items.find((i) => i.id === id);
+      if (!p || !pm || !item) return null;
+      // The piece's own edits go onto the new design where it has them (ADR-124, G-160).
+      const edits = ownEdits(item, opts?.families ?? catalogFamilies);
+      const carry = carryEdits(design, edits, opts?.keepSize ? {} : SIZE_SKIP);
+      if (commitProject(replaceItem(p, id, carry.design), `Replace ${item.design.name}`))
+        return null;
       const { project: next, projectModel: nm } = get();
-      return replaceReport(p, pm, next!, nm!, id);
+      const report = replaceReport(p, pm, next!, nm!, id);
+      const extra = carryText(carry);
+      return extra ? { ...report, text: `${report.text} ${extra}` } : report;
+    },
+    setProjectSetting: (key, value) => {
+      const p = get().project;
+      if (!p) return [];
+      const res = setProjectSetting(p, key, value);
+      // Refused when it would resize a size-locked piece (ADR-122): nothing is applied; the notice says why.
+      if (commitProject(res.project, `Set ${SETTING_LABEL[key].toLowerCase()}`)) return [];
+      return res.applied;
+    },
+    followProject: (id, key) => {
+      const p = get().project;
+      if (!p) return;
+      const next = followProject(p, id, key);
+      if (next !== p) commitProject(next, `Follow project ${SETTING_LABEL[key].toLowerCase()}`);
     },
     duplicateItem: (id) => {
       const p = get().project;

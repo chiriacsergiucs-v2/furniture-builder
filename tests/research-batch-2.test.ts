@@ -24,6 +24,7 @@ import {
   sizeLockBlocked,
 } from '../src/core/sizeLock';
 import { loadProject, saveProject } from '../src/persist/db';
+import { setProjectSetting } from '../src/core/projectSettings';
 import { useDesign } from '../src/store/designStore';
 import { cutAt } from '../src/viewer/section';
 
@@ -172,6 +173,26 @@ describe('Lock size (ADR-122)', () => {
     const old = { ...run(['chest']), schemaVersion: 9 as const };
     await saveProject(old);
     expect(await loadProject(old.id)).toEqual(old);
+  });
+});
+
+describe('the size lock and ADR-124 (G-200)', () => {
+  it('project-wide settings go through the size lock: one that keeps the outside size applies', () => {
+    const base = run(['base-door', 'base-door']);
+    const p = setSizeLocked(base, base.items[0].id, true);
+    // The plinth height is inside a base cabinet's outside height: the locked piece follows it.
+    const res = setProjectSetting(p, 'plinthHeight', 150);
+    expect(res.applied.length).toBe(2);
+    expect(sizeLockBlocked(p, res.project)).toBeNull();
+    s().openProject(p);
+    expect(s().setProjectSetting('plinthHeight', 150)).toHaveLength(2);
+    expect(s().notice).toBeNull();
+    // Any change that would resize it is refused in the same commit (the guard every project change passes).
+    const id = s().project!.items[0].id;
+    const before = s().project;
+    s().resizeItem(id, 'width', 700);
+    expect(s().project).toBe(before);
+    expect(s().notice).toMatch(/size locked/);
   });
 });
 

@@ -152,8 +152,10 @@ describe('Keep mine in a project (ADR-096)', () => {
     expect(validateProject(k)).toEqual([]);
     await saveProject(k);
     expect((await loadProject(k.id))?.items[0].templateSeen).toBe(3);
+    // As saved by those versions: without the template reference new catalog pieces carry since version 12 (ADR-124).
+    const old = { ...q, items: q.items.map(({ ref: _ref, ...it }) => (void _ref, it)) };
     for (const v of [1, 2, 3, 4, 5, 6])
-      expect(validateProject({ ...q, schemaVersion: v })).toEqual([]);
+      expect(validateProject({ ...old, schemaVersion: v })).toEqual([]);
     expect(validateProject({ ...k, schemaVersion: 6 })).toContain(
       'Kept template revisions need project schemaVersion 7',
     );
@@ -161,7 +163,7 @@ describe('Keep mine in a project (ADR-096)', () => {
       'Invalid kept template revision',
     );
     // A stored version-6 project (no kept revisions) loads unchanged.
-    const v6 = { ...q, id: 'v6', schemaVersion: 6 as const };
+    const v6 = { ...old, id: 'v6', schemaVersion: 6 as const };
     await saveProject(v6);
     expect(await loadProject('v6')).toEqual(v6);
   });

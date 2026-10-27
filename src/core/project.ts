@@ -41,6 +41,7 @@ import type {
   Design,
   Diagnostic,
   Face,
+  FrontStyle,
   FurnitureModel,
   Handle,
   HardwareItem,
@@ -100,6 +101,26 @@ export interface ProjectItem {
    * user either. Separate from `locked` (placement). Absent = not locked. Saved from project schemaVersion 11.
    */
   sizeLocked?: true;
+  /**
+   * Template reference (ADR-124): the piece refers to its catalog origin (`design.catalog.origin`: template, variant,
+   * revision) and `overrides` are the settings it changed against it (`src/core/ownEdits.ts`), kept up to date while
+   * that revision is the catalog's. `design` stays the full copy, the fallback (G-161). Absent = a plain copy.
+   * Saved from project schemaVersion 12.
+   */
+  ref?: { overrides: Record<string, unknown> };
+}
+
+/**
+ * Project-wide settings (ADR-124): choices every piece follows while its own value equals the project's
+ * (`src/core/projectSettings.ts`). Each is optional; absent = not set. Saved from project schemaVersion 12.
+ */
+export interface ProjectSettings {
+  body?: Material;
+  front?: Material;
+  back?: Material;
+  handle?: Handle | null;
+  frontStyle?: FrontStyle;
+  plinthHeight?: Mm;
 }
 
 /**
@@ -183,12 +204,26 @@ export interface RunSink {
  * `PROJECT_SCHEMAS` still loads unchanged. 2 = room pipes and outlets (ADR-072); 3 = clearance zones on items
  * (ADR-073); 4 = run requests and trim run parts (ADR-075); 5 = display-only 3D models (ADR-076); 6 = locked pieces
  * (ADR-095); 7 = a kept template revision on items (ADR-096); 8 = groups of pieces
- * (ADR-097); 9 = linked copies (ADR-111); 11 = size-locked pieces (ADR-122); 13 = run handles and sinks (ADR-125).
- * (10 and 12 are kept for ADR-121 and ADR-124.)
+ * (ADR-097); 9 = linked copies (ADR-111); 11 = size-locked pieces (ADR-122); 12 = template references and
+ * project-wide settings (ADR-124); 13 = run handles and sinks (ADR-125). (10 is kept for ADR-121.)
  */
 export const PROJECT_SCHEMA = 13 as const;
-export const PROJECT_SCHEMAS: readonly number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, PROJECT_SCHEMA];
-export type ProjectSchemaVersion = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 11 | typeof PROJECT_SCHEMA;
+export const PROJECT_SCHEMAS: readonly number[] = [
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  11,
+  12,
+  PROJECT_SCHEMA,
+];
+export type ProjectSchemaVersion =
+  1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 11 | 12 | typeof PROJECT_SCHEMA;
 const RUN_REQUESTS_SINCE = 4;
 const MODELS_SINCE = 5;
 const LOCKS_SINCE = 6;
@@ -196,6 +231,7 @@ const TEMPLATE_SEEN_SINCE = 7;
 const GROUPS_SINCE = 8;
 const LINKS_SINCE = 9;
 const SIZE_LOCK_SINCE = 11;
+const REFS_SINCE = 12;
 const RUN_EXTRAS_SINCE = 13;
 
 export interface Project {
@@ -223,6 +259,8 @@ export interface Project {
    * at most one group; a group holds two pieces or more, always pieces of this project (`pruneGroups`). Absent = none.
    */
   groups?: { id: string; name: string; itemIds: string[] }[];
+  /** Project-wide settings (ADR-124, schemaVersion 12). Absent = none set. */
+  settings?: ProjectSettings;
   /** Handles for a run of base units (ADR-125, schemaVersion 13). Absent = none. */
   runHandles?: RunHandle[];
   /** Sinks over base units: worktop cut-outs (ADR-125, schemaVersion 13). Absent = none. */
@@ -288,6 +326,8 @@ export function makeItem(project: Project, design: Design, libraryId?: string): 
     rotationY: 0,
     placement,
     ...(libraryId ? { libraryId } : {}),
+    // A catalog piece refers to its template (ADR-124); the copy stays as the fallback.
+    ...(d.catalog?.origin ? { ref: { overrides: {} } } : {}),
   };
 }
 
@@ -2057,6 +2097,43 @@ function validZones(z: unknown): boolean {
   );
 }
 
+const validBoard = (m: unknown) =>
+  isObj(m) &&
+  typeof m.id === 'string' &&
+  typeof m.name === 'string' &&
+  isInt(m.thickness, 1) &&
+  typeof m.grain === 'boolean' &&
+  (m.band === undefined || bandProblems(m.band).length === 0) &&
+  (m.frontBand === undefined || bandProblems(m.frontBand).length === 0);
+
+/** Project-wide settings (ADR-124): each one optional, each one checked. */
+function validateSettings(s: unknown): string[] {
+  if (!isObj(s)) return ['Invalid project settings'];
+  const errs: string[] = [];
+  for (const k of ['body', 'front', 'back'] as const)
+    if (s[k] !== undefined && !validBoard(s[k])) errs.push(`Invalid project ${k} board`);
+  const h = s.handle;
+  if (
+    h !== undefined &&
+    h !== null &&
+    !(
+      isObj(h) &&
+      ['bar', 'knob', 'push'].includes(h.kind as string) &&
+      (h.holeSpacing === undefined || isInt(h.holeSpacing, 1)) &&
+      (h.position === undefined || ['top', 'centre', 'bottom'].includes(h.position as string))
+    )
+  )
+    errs.push('Invalid project handle');
+  if (s.frontStyle !== undefined && !['overlay', 'half', 'inset'].includes(s.frontStyle as string))
+    errs.push('Invalid project front overlay');
+  if (
+    s.plinthHeight !== undefined &&
+    !(isInt(s.plinthHeight, 0) && (s.plinthHeight as number) <= 500)
+  )
+    errs.push('Project plinth height must be 0 to 500 mm');
+  return errs;
+}
+
 export function validateProject(p: unknown): string[] {
   if (!isObj(p)) return ['Project must be an object'];
   const errs: string[] = [];
@@ -2126,6 +2203,11 @@ export function validateProject(p: unknown): string[] {
       if (it.sizeLocked !== true) errs.push('Invalid item size lock');
       else if ((p.schemaVersion as number) < SIZE_LOCK_SINCE)
         errs.push(`Size-locked pieces need project schemaVersion ${SIZE_LOCK_SINCE}`);
+    }
+    if (it.ref !== undefined) {
+      if (!isObj(it.ref) || !isObj(it.ref.overrides)) errs.push('Invalid template reference');
+      else if ((p.schemaVersion as number) < REFS_SINCE)
+        errs.push(`Template references need project schemaVersion ${REFS_SINCE}`);
     }
     const de = validateDesign(it.design);
     if (de.length) errs.push(`Item ${String(it.id)}: ${de[0]}`);
@@ -2238,6 +2320,11 @@ export function validateProject(p: unknown): string[] {
         groupIds.add(g.id);
         for (const x of g.itemIds) grouped.add(x as string);
       }
+  }
+  if (p.settings !== undefined) {
+    if ((p.schemaVersion as number) < REFS_SINCE)
+      errs.push(`Project settings need project schemaVersion ${REFS_SINCE}`);
+    errs.push(...validateSettings(p.settings));
   }
   if (p.runHandles !== undefined || p.sinks !== undefined) {
     if ((p.schemaVersion as number) < RUN_EXTRAS_SINCE)
