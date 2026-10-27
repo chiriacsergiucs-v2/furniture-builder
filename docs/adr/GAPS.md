@@ -1570,3 +1570,21 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Accept default, /batch all ready
 - Questions: Should codes also carry pictures and 3D models (much longer codes), or stay document-only?
 - Suggested pick: Document-only (codes stay short enough to paste; the project file carries the rest)
+
+### G-202: Replace and the outer size
+
+- Status: Open
+- Origin: ADR-124 (found while building)
+- Missing: Replace never carries the piece's own outer width, height or depth; this narrows the accepted G-160 pick 'every changed setting'
+- Request: Accept default, /batch all ready
+- Questions: Carry size too (neighbours may then overlap; those become diagnostics), or keep the catalog item's size?
+- Suggested pick: Carry size too (closest to the pick; estimate +10 % work, +15 % of value)
+
+### G-203: Wizard and template pieces and the project settings
+
+- Status: Open
+- Origin: ADR-124 (found while building)
+- Missing: Pieces added from the wizard or by inserting a template do not take the project settings; only Add a piece does
+- Request: Accept default, /batch all ready
+- Questions: Should they take the project settings like Add a piece?
+- Suggested pick: They take them, like Add a piece (estimate +5 % work)

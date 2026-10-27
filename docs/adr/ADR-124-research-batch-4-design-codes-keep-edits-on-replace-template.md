@@ -65,7 +65,7 @@ Built as one change, one pull request, one test run and one ship (the user's req
 
 - In scope: the four features above, document validation and migration, core, storage and UI-logic tests, fuzz on
   resolved designs, jsdom find-it.
-- Out of scope: respecting ADR-122's size lock (G-200); pictures and 3D models in codes (G-201).
+- Out of scope: respecting ADR-122's size lock (G-200); pictures and 3D models in codes (G-201). Found while building: Replace keeps the catalog item's size (G-202); wizard and template pieces do not take project settings (G-203).
 
 ## Consequences
 
