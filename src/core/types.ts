@@ -292,6 +292,11 @@ export interface Handle {
   /** Hole centres of a bar handle (default 128). */
   holeSpacing?: Mm;
   position?: 'top' | 'centre' | 'bottom';
+  /**
+   * Height of the handle centre line in the piece's own coordinates, mm (ADR-125). Set only by a run handle when the
+   * project model is built (`applyRunHandles`), never saved; a front the line does not cross uses `position`.
+   */
+  lineY?: Mm;
 }
 
 export type FrontStyle = 'overlay' | 'half' | 'inset';

@@ -88,7 +88,7 @@ import { StartFrom } from './Catalog';
 import { askConfirm } from './Confirm';
 import { SaveProjectTemplate } from './ProjectTemplates';
 import { FrontModels, ModelFields, ModelList, MyModels, PlanModels } from './Models3D';
-import { AskRunParts, WorktopOverhang } from './RunRequests';
+import { AskRunParts, RunHandlesAndSinks, WorktopOverhang } from './RunRequests';
 import { ClearanceFields, ZoneOverlay, ZoneToolbar } from './Clearances';
 import {
   ProblemBanner,
@@ -2124,6 +2124,7 @@ function RunParts() {
         </p>
       ))}
       <AskRunParts />
+      <RunHandlesAndSinks />
       {removed.length > 0 && (
         <p className="hint">
           {removed.length} removed {removed.length === 1 ? 'part stays' : 'parts stay'} removed.
