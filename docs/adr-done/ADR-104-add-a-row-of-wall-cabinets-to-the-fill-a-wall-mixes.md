@@ -1,7 +1,8 @@
 # ADR-104: Add a row of wall cabinets to the fill-a-wall mixes
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-27
+- Implemented: 2026-10-27
 - Depends on: ADR-103
 - Design: docs/ui-design.md (section 4, screens; wizard and catalog cards)
 - Backlog: N102

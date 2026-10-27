@@ -1096,7 +1096,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-115: Fill a wall: when the wall row appears
 
-- Status: ADR-104
+- Status: Done (ADR-104)
 - Origin: ADR-104, 2026-10-27; open question defaulted by Claude
 - Missing: Whether every mix gets a wall row, or a Refine choice decides (any / always / never).
 - Request: Wall cabinets above (answer to: Which kinds of pieces may appear in a mix?)
