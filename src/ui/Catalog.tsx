@@ -1086,7 +1086,8 @@ function TemplateEditor({
                 </button>
                 <button
                   type="button"
-                  className="btn sm danger"
+                  className="btn icon sm danger"
+                  aria-label="Remove variant"
                   disabled={f.variants.length <= 1}
                   onClick={() => setF({ variants: f.variants.filter((_, j) => j !== i) })}
                 >
