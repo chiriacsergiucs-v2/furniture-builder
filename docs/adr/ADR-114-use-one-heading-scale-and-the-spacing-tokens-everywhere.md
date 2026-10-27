@@ -5,7 +5,7 @@
 - Depends on: ADR-112
 - Design: docs/ui-design.md (section 2, tokens)
 - Backlog: N112
-- Acceptance: browser
+- Acceptance: light
 - Agreed: 2026-10-27 "Heading + spacing scale"
 
 ## Context
@@ -44,4 +44,5 @@ tokens; `.bar` is defined five times. The user picked "Heading + spacing scale".
       hairlines (a test greps the file).
 - [ ] At 390 and 1280 px, on Projects, Catalog, editor and Settings, every h1/h2/h3 has the scale's size and no
       level repeats the same text in a row.
-- [ ] Find-it passes from the bare app at phone and desktop widths (`tools/type-scale/find-it.mjs`, production build).
+- [ ] Find-it from the bare app at phone and desktop widths (light — catch-up; user 2026-10-27 "Dont run find it
+      on these").

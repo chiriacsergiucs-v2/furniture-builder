@@ -5,7 +5,7 @@
 - Depends on: ADR-112
 - Design: docs/ui-design.md (sections 3 and 4)
 - Backlog: N116
-- Acceptance: browser
+- Acceptance: light
 - Agreed: 2026-10-27 "accept gap picks" (G-139 "One follow-up ADR for all of them")
 
 ## Context
@@ -42,5 +42,5 @@ follow-up ADR for all of them. The user accepted the nine fixes below "as writte
 ## Done when
 
 - [ ] Each of the nine items is visible as described at 390 (touch) and 1280 px.
-- [ ] Find-it passes from the bare app at phone and desktop widths (`tools/critique-low/find-it.mjs`, production
-      build).
+- [ ] Find-it from the bare app at phone and desktop widths (light — catch-up; user 2026-10-27 "Dont run find it
+      on these").
