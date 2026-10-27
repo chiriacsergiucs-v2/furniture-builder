@@ -5297,18 +5297,19 @@ button.tile:hover {
   .count-stepper {
     gap: 5px;
     padding: 4px;
-    max-width: min(calc(100% - 12px), 17rem);
     font-size: 0.6875rem;
-  }
-  .count-anchor .count-stepper {
-    max-width: 17rem;
   }
   .count-stepper .cs-counter {
     grid-template-columns: 29px 21px 29px;
   }
+  /* Buttons and value just taller than one line of their text (15 px line, 18 px box; user 2026-10-27). */
   .count-stepper .cs-counter button {
-    height: 29px;
+    height: 18px;
     font-size: 0.75rem;
+    line-height: 1.25;
+  }
+  .count-stepper .cs-counter output {
+    line-height: 1.25;
   }
   .count-stepper.foldable .cs-fold {
     min-height: 29px;
