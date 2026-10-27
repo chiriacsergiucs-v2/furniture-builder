@@ -74,12 +74,12 @@ for (const width of [1440, 375]) {
   );
   await openGroup('Merge');
   const btn = page.getByRole('button', {
-    name: /^Merge with Base cabinet, drawer over door on the right$/,
+    name: /^Merge with right piece Base cabinet, drawer over door$/,
   });
   await btn.scrollIntoViewIfNeeded();
   check(
     width,
-    '"Merge with … on the right" button enabled',
+    '"Merge with right piece" (Base cabinet, drawer over door) button enabled',
     (await btn.isVisible()) && (await btn.isEnabled()),
   );
   check(width, 'no sideways scroll (before)', await noSideScroll());
@@ -130,7 +130,7 @@ for (const width of [1440, 375]) {
   await pieces.nth(1).getByRole('button').click();
   await openGroup('Merge');
   const no = page.getByRole('button', {
-    name: /^Merge with Base cabinet, 1 door \+ Base cabinet, drawer over door on the left$/,
+    name: /^Merge with left piece Base cabinet, 1 door \+ Base cabinet, drawer over door$/,
   });
   await no.scrollIntoViewIfNeeded();
   check(

@@ -77,7 +77,7 @@ for (const width of [1440, 375]) {
   await pieces.nth(0).getByRole('button').click();
   await openGroup('Merge');
   await page
-    .getByRole('button', { name: /^Merge with Base cabinet, drawer over door on the right$/ })
+    .getByRole('button', { name: /^Merge with right piece Base cabinet, drawer over door$/ })
     .dispatchEvent('click');
   const dlg = page.locator('dialog[open]');
   check(
