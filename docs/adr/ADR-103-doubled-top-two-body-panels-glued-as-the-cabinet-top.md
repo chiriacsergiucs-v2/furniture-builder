@@ -1,10 +1,10 @@
-# ADR-102: Doubled top: two body panels glued as the cabinet top
+# ADR-103: Doubled top: two body panels glued as the cabinet top
 
 - Status: Pending
 - Date: 2026-10-27
 - Depends on: ADR-036
 - Design: docs/ui-design.md (Construction group)
-- Backlog: N100
+- Backlog: N101
 - Agreed: 2026-10-27 "2 panels"; "Option on every cabinet"; "Under the top, height stays"; "Both banded like the top"; "Full find-it"
 
 ## Context
@@ -31,8 +31,8 @@ designs build exactly as before. It extends ADR-036's construction flags and rep
   adds a second five-sided top board under the first.
 - Both layers are labelled "Top", so the cut list shows one row "Top" × 2 (Romanian "Capac").
 - The two layers touch face to face, so the fastener tally (ADR-074) counts them as one carcass joint with the user's
-  own fastener choice; no glue or screw spec is invented (ADR-010, G-112).
-- With a rails top, `topLayers: 2` builds single rails and gives a warning `top-layers-rails` (G-111).
+  own fastener choice; no glue or screw spec is invented (ADR-010, G-114).
+- With a rails top, `topLayers: 2` builds single rails and gives a warning `top-layers-rails` (G-113).
 - Inspector › Construction: a "Top layers" control **Single · Doubled**, shown when the top is a full panel. The merge
   conflict list (`src/core/merge.ts`) names it "top layers".
 
@@ -45,7 +45,7 @@ designs build exactly as before. It extends ADR-036's construction flags and rep
 ## Scope
 
 - In scope: the field, validation, geometry, diagnostics, Inspector control, tests, fuzz, find-it.
-- Out of scope: doubled rails (G-111), glue and screw line (G-112), doubled bottom, sides or shelves (G-113).
+- Out of scope: doubled rails (G-113), glue and screw line (G-114), doubled bottom, sides or shelves (G-115).
 
 ## Consequences
 
@@ -65,5 +65,5 @@ designs build exactly as before. It extends ADR-036's construction flags and rep
 
 ## Open questions
 
-- Rails top with "Doubled": default is single rails plus a warning (G-111).
-- Glue and screws between the layers: not specified until the user names them (G-112).
+- Rails top with "Doubled": default is single rails plus a warning (G-113).
+- Glue and screws between the layers: not specified until the user names them (G-114).

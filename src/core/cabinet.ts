@@ -240,7 +240,7 @@ export function buildCabinet(
   const under = p.bottom === 'under';
   const noBottom = p.bottom === 'none';
   const sideY = under ? ph + t : 0;
-  // A doubled top (ADR-102) is two panels stacked down from H; only a full panel top is doubled.
+  // A doubled top (ADR-103) is two panels stacked down from H; only a full panel top is doubled.
   const doubled = p.topLayers === 2 && p.topKind !== 'rails';
   if (p.topLayers === 2 && p.topKind === 'rails')
     warn(

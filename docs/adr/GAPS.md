@@ -1057,28 +1057,47 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: With a mixed selection, distribute each row on its own instead of refusing? Should the join rules also limit centre snapping?
 - Suggested pick: Distribute each row on its own (closest to 'tidy runs in one tap'; about +15 % of ADR-099's work, +10 % value; estimates); keep the join rules for joins only.
 
-### G-111: Doubled rails on a rails top
+### G-111: Keep proportions switch is not saved
+
+- Status: Done (user answer 2026-10-27 "Screen only, on each time")
+- Origin: ADR-102 (2026-10-27, Claude: defaulted while drafting)
+- Missing: The Keep proportions switch is screen state only: it starts on each time a model is selected and is not saved in the project.
+- Request: Width and height of an item must be editable adr; answer 'Yes, on by default' (Keep proportions switch)
+- Questions: Should the switch remember its setting per model in the saved project (a project schemaVersion bump)?
+- Suggested pick: Screen state only, on each time (the answer 'on by default'; saving it adds a schema change for little value; estimate +25 % effort, +5 % value).
+- Answer: User 2026-10-27: "Screen only, on each time" — kept as built in ADR-102.
+
+### G-112: Resize a 3D model by dragging in the 3D view
+
+- Status: Done (ADR-102)
+- Origin: ADR-102 (2026-10-27, Claude: out of scope)
+- Missing: Resizing an imported 3D model with handles in the 3D view; sizes are typed in the fields only.
+- Request: Width and height of an item must be editable adr
+- Questions: Should the 3D view get resize handles for models?
+- Suggested pick: Typed fields only (the request is to make the sizes editable; handles would be an exception to ADR-014's select-only viewer).
+
+### G-113: Doubled rails on a rails top
 
 - Status: Open
-- Origin: ADR-102, 2026-10-27, Claude default
+- Origin: ADR-103, 2026-10-27, Claude default
 - Missing: A doubled top on a rails top (two rails) is not built: the rails stay single and a warning says so.
 - Request: Add the doubled top support … 2 panels
 - Questions: Should 'Doubled' also double the two rails of a rails top, or stay a panel-top option only?
 - Suggested pick: Panel top only (default used): the user's answer was '2 panels', a rails top has no panel; doubling rails is a separate request (+5 % work, +0 % of this request).
 
-### G-112: Glue and screws for the doubled top
+### G-114: Glue and screws for the doubled top
 
 - Status: Open
-- Origin: ADR-102, 2026-10-27, Claude (ADR-010)
+- Origin: ADR-103, 2026-10-27, Claude (ADR-010)
 - Missing: No glue or screw line in the hardware list for joining the two top layers; the layers count as a carcass joint in the fastener tally only.
 - Request: Add the doubled top support … 2 panels
 - Questions: Which glue and screws (length, spacing) join the two layers? Not known; ADR-010 forbids inventing them.
 - Suggested pick: Leave it to the user's own fastener choice for carcass joints until they name a glue and screw (0 % work now).
 
-### G-113: Doubled bottom, sides or shelves
+### G-115: Doubled bottom, sides or shelves
 
 - Status: Open
-- Origin: ADR-102, 2026-10-27, Claude scope
+- Origin: ADR-103, 2026-10-27, Claude scope
 - Missing: Only the top can be doubled; a doubled bottom, side or shelf is not built.
 - Request: Add the doubled top support
 - Questions: Do you also want a doubled bottom or doubled sides?
