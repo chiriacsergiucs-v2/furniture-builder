@@ -7,7 +7,7 @@
 - Backlog: N108
 - Acceptance: browser
 - Agreed: 2026-10-27 "Remove from the drawing and 3d card, keep only in drawer", "Compact, keep 44 px (Recommended)",
-  "Full free height (Recommended)"
+  "Full free height (Recommended)", "Shorter labels"
 
 ## Context
 
@@ -31,6 +31,9 @@ the side panel and the bottom sheet.
 - **The stage keeps its size:** on a phone the stage fills the free height between the toolbars and the bottom nav.
   The bottom sheet, collapsed or open, overlays its lower part and never resizes it. The card and the sheet never
   change the drawing's scale.
+- **Plan toolbar on one row (takes over G-134):** visible labels "Fronts" (was "Doors and fronts") and "Clear." (was
+  "Clearances"); accessible names keep the full words. The nested `.plan-tools` row goes. User answer 2026-10-27
+  "Shorter labels".
 - No model, store or document change.
 
 ## Alternatives considered
@@ -43,7 +46,6 @@ the side panel and the bottom sheet.
 
 - In scope: the card's content, size and place over the drawing, project front view and 3D view; the phone stage
   height with the bottom sheet; the find-it script.
-- Out of scope: Clearances wrapping in the plan toolbar stays G-134 until the critique's wrap fixes are agreed.
 
 ## Consequences
 
@@ -59,8 +61,5 @@ the side panel and the bottom sheet.
 - [ ] Each card row is at most 52 px tall and its buttons at least 44 × 44 px at 390 px with touch.
 - [ ] At 390 px the stage's height and the drawing's scale are the same with nothing selected, with a piece selected
       and with the bottom sheet open.
+- [ ] At 390 px "Fronts", "Snap", "Select" and "Clear." sit on one row of the plan toolbar.
 - [ ] Find-it passes from the bare app at phone and desktop widths (`tools/stage-card/find-it.mjs`, production build).
-
-## Open questions
-
-- None open; the plan toolbar wrap is G-134.

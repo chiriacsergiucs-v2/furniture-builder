@@ -1267,7 +1267,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-134: Clearances wraps to a second row of the project plan toolbar on a phone
 
-- Status: Open
+- Status: ADR-110
 - Origin: ADR-109
 - Missing: At 390 px the plan toolbar holds Doors and fronts, Snap and Select on one row; Clearances wraps to a second row.
 - Request: i dont see doors text moved with other; answer: Same row as Snap (Recommended)
@@ -1291,3 +1291,30 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Move info text from Project to a tooltip, apply same to other similar UX occurences
 - Questions: Popover on tap (also on hover on desktop), or hover-only tooltip?
 - Suggested pick: Popover on tap and click, Escape closes (closest to the request: a hover-only tooltip cannot open on a phone)
+
+### G-137: Heading scale for drawings and print sheets
+
+- Status: Open
+- Origin: ADR-114
+- Missing: Text sizes inside SVG drawings and the printed sheets keep their own sizes
+- Request: Run a critique for listings, headers, text, button sizes, gaps, groupings
+- Questions: Should drawing labels and print sheets follow the app heading scale?
+- Suggested pick: Keep their sizes (print is Romanian sheets with their own layout, ADR-020)
+
+### G-138: Catalog density on desktop
+
+- Status: Open
+- Origin: ADR-116
+- Missing: The Catalog is 36 785 px tall at 1280 px; ADR-116 makes only the phone layout compact
+- Request: Run a critique for listings, headers, text, button sizes, gaps, groupings; answer Catalog density + wizard
+- Questions: Compact cards and folded family details on desktop too?
+- Suggested pick: Yes, same disclosure on desktop (closest to the request; estimate +15 % work, +20 % of value)
+
+### G-139: Lower-severity critique items not picked
+
+- Status: Open
+- Origin: docs/retros/2026-10-27-ui-critique.md
+- Missing: Mixed checkbox/pressed toggles in the plan toolbar; Width/Depth and counts three times on desktop; Projects row names wrap beside three icon buttons; editor name field cut without ellipsis; 'Back to the editor' chevron points right; ADR numbers in UI text; Romanian names inside English descriptions; Projects groupings (Import beside list heading, Fill a wall twice); 'front faces you' lone line
+- Request: Run a critique for listings, headers, text, button sizes, gaps, groupings
+- Questions: Build these in a follow-up ADR?
+- Suggested pick: One follow-up ADR for all of them (estimate +25 % work, +15 % of value)
