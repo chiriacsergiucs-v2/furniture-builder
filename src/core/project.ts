@@ -97,6 +97,11 @@ export interface ProjectItem {
    */
   linkId?: string;
   /**
+   * Size locked (ADR-122): its width, height and depth do not change until it is unlocked; nothing resizes it for the
+   * user either. Separate from `locked` (placement). Absent = not locked. Saved from project schemaVersion 11.
+   */
+  sizeLocked?: true;
+  /**
    * Template reference (ADR-124): the piece refers to its catalog origin (`design.catalog.origin`: template, variant,
    * revision) and `overrides` are the settings it changed against it (`src/core/ownEdits.ts`), kept up to date while
    * that revision is the catalog's. `design` stays the full copy, the fallback (G-161). Absent = a plain copy.
@@ -199,18 +204,33 @@ export interface RunSink {
  * `PROJECT_SCHEMAS` still loads unchanged. 2 = room pipes and outlets (ADR-072); 3 = clearance zones on items
  * (ADR-073); 4 = run requests and trim run parts (ADR-075); 5 = display-only 3D models (ADR-076); 6 = locked pieces
  * (ADR-095); 7 = a kept template revision on items (ADR-096); 8 = groups of pieces
- * (ADR-097); 9 = linked copies (ADR-111); 12 = template references and project-wide settings (ADR-124);
- * 13 = run handles and sinks (ADR-125).
+ * (ADR-097); 9 = linked copies (ADR-111); 11 = size-locked pieces (ADR-122); 12 = template references and
+ * project-wide settings (ADR-124); 13 = run handles and sinks (ADR-125). (10 is kept for ADR-121.)
  */
 export const PROJECT_SCHEMA = 13 as const;
-export const PROJECT_SCHEMAS: readonly number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 12, PROJECT_SCHEMA];
-export type ProjectSchemaVersion = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 12 | typeof PROJECT_SCHEMA;
+export const PROJECT_SCHEMAS: readonly number[] = [
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  11,
+  12,
+  PROJECT_SCHEMA,
+];
+export type ProjectSchemaVersion =
+  1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 11 | 12 | typeof PROJECT_SCHEMA;
 const RUN_REQUESTS_SINCE = 4;
 const MODELS_SINCE = 5;
 const LOCKS_SINCE = 6;
 const TEMPLATE_SEEN_SINCE = 7;
 const GROUPS_SINCE = 8;
 const LINKS_SINCE = 9;
+const SIZE_LOCK_SINCE = 11;
 const REFS_SINCE = 12;
 const RUN_EXTRAS_SINCE = 13;
 
@@ -2178,6 +2198,11 @@ export function validateProject(p: unknown): string[] {
         errs.push('Invalid item link');
       else if ((p.schemaVersion as number) < LINKS_SINCE)
         errs.push(`Linked copies need project schemaVersion ${LINKS_SINCE}`);
+    }
+    if (it.sizeLocked !== undefined) {
+      if (it.sizeLocked !== true) errs.push('Invalid item size lock');
+      else if ((p.schemaVersion as number) < SIZE_LOCK_SINCE)
+        errs.push(`Size-locked pieces need project schemaVersion ${SIZE_LOCK_SINCE}`);
     }
     if (it.ref !== undefined) {
       if (!isObj(it.ref) || !isObj(it.ref.overrides)) errs.push('Invalid template reference');

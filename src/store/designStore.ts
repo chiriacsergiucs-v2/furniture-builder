@@ -41,6 +41,8 @@ import {
 import { countRows, countSubject, stepCount, type CountKey } from '../core/counts';
 import { drill, type Selection } from '../core/selectPath';
 import { resizeProduct, type SizeField } from '../core/pieceSize';
+import { resizeBlocked, setSizeLocked, sizeLockBlocked } from '../core/sizeLock';
+import { setWallHeight } from '../core/height';
 import { closeOutline, DEFAULT_ROOM_HEIGHT, snapCorner, type Pt, type Room } from '../core/room';
 import {
   buildProjectModel,
@@ -225,6 +227,10 @@ interface State {
   setGap: (id: string, gap: number, moveRight: boolean) => string | null;
   /** Lock or unlock a piece's placement (ADR-095); one undo step. */
   setLocked: (id: string, on: boolean) => void;
+  /** Lock or unlock a piece's size (ADR-122); one undo step. */
+  setSizeLocked: (id: string, on: boolean) => void;
+  /** Hang a wall unit at a new height, e.g. dragged in 3D (ADR-122); one undo step. Returns why not, or null. */
+  setItemHeight: (id: string, height: number) => string | null;
   /** "Keep mine" (ADR-096): hide the newer-template notice for this revision; one undo step. */
   keepTemplate: (id: string, revision: number) => void;
   /** Link a piece to the catalog template it was saved as (ADR-107); one undo step. */
@@ -363,6 +369,14 @@ export const useDesign = create<State>((rawSet, get) => {
   const commit = (next: Design) => {
     const { design, past } = get();
     if (next === design) return;
+    // A project piece whose size is locked keeps its size (ADR-122): the edit is refused and the reason shown.
+    const open = get().editingItemId ?? get().drillItemId;
+    const p0 = get().project;
+    const locked = p0 && open ? resizeBlocked(p0, open, next) : null;
+    if (locked) {
+      set({ notice: locked });
+      return;
+    }
     // A copy of a brand's product stops being that brand's product once edited; its origin stays (ADR-028).
     const debranded =
       next.catalog?.brand && next.catalog.origin
@@ -438,7 +452,12 @@ export const useDesign = create<State>((rawSet, get) => {
   };
   /** Inside `transact`: the depth, and the project and history as they were when it started. */
   let txDepth = 0;
-  const commitProject = (next: Project, name?: string, opts?: { amend?: boolean }) => {
+  /** Commit a project change as one named step; returns why it was refused (a size-locked piece, ADR-122), or null. */
+  const commitProject = (
+    next: Project,
+    name?: string,
+    opts?: { amend?: boolean },
+  ): string | null => {
     // Pieces on or above others follow them (ADR-031); run parts follow the pieces in the same step (ADR-061).
     // A piece no longer in the project leaves its group (ADR-097).
     // A change to a linked copy reaches the others, or unlinks it (ADR-111).
@@ -446,6 +465,14 @@ export const useDesign = create<State>((rawSet, get) => {
     // Template references keep their overrides up to date while the template's revision is the catalog's (ADR-124).
     const items = linked.items.map((i) => syncRef(i, catalogFamilies));
     if (items.some((i, n) => i !== linked.items[n])) linked = { ...linked, items };
+    // Nothing resizes a size-locked piece (ADR-122), also through a linked copy, a project-wide setting or Replace:
+    // the whole change is refused.
+    const locked = sizeLockBlocked(get().project, linked);
+    if (locked) {
+      set({ notice: locked });
+      syncDrill();
+      return locked;
+    }
     const stamped = {
       ...refreshRunParts(resolvePlacements(pruneRunExtras(pruneGroups(linked)))),
       schemaVersion: PROJECT_SCHEMA, // an edited project is saved in the current shape (ADR-011, ADR-073)
@@ -474,6 +501,7 @@ export const useDesign = create<State>((rawSet, get) => {
     });
     keepSelected(stamped);
     syncDrill();
+    return null;
   };
   /** The selection keeps the pieces still in the project; the main one falls to the next selected (ADR-097). */
   const keepSelected = (p: Project) => {
@@ -696,6 +724,22 @@ export const useDesign = create<State>((rawSet, get) => {
       const next = setLocked(p, id, on);
       if (next !== p) commitProject(next);
     },
+    setSizeLocked: (id, on) => {
+      const p = get().project;
+      if (!p) return;
+      const next = setSizeLocked(p, id, on);
+      if (next !== p) commitProject(next);
+    },
+    setItemHeight: (id, height) => {
+      const p = get().project;
+      if (!p) return null;
+      const res = setWallHeight(p, id, height);
+      if (res.reason) {
+        set({ notice: res.reason });
+        return res.reason;
+      }
+      return res.project !== p ? commitProject(res.project) : null;
+    },
     keepTemplate: (id, revision) => {
       const p = get().project;
       if (!p) return;
@@ -732,7 +776,8 @@ export const useDesign = create<State>((rawSet, get) => {
       // The piece's own edits go onto the new design where it has them (ADR-124, G-160).
       const edits = ownEdits(item, opts?.families ?? catalogFamilies);
       const carry = carryEdits(design, edits, opts?.keepSize ? {} : SIZE_SKIP);
-      commitProject(replaceItem(p, id, carry.design), `Replace ${item.design.name}`);
+      if (commitProject(replaceItem(p, id, carry.design), `Replace ${item.design.name}`))
+        return null;
       const { project: next, projectModel: nm } = get();
       const report = replaceReport(p, pm, next!, nm!, id);
       const extra = carryText(carry);
@@ -742,7 +787,8 @@ export const useDesign = create<State>((rawSet, get) => {
       const p = get().project;
       if (!p) return [];
       const res = setProjectSetting(p, key, value);
-      commitProject(res.project, `Set ${SETTING_LABEL[key].toLowerCase()}`);
+      // Refused when it would resize a size-locked piece (ADR-122): nothing is applied; the notice says why.
+      if (commitProject(res.project, `Set ${SETTING_LABEL[key].toLowerCase()}`)) return [];
       return res.applied;
     },
     followProject: (id, key) => {
