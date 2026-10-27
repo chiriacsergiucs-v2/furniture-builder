@@ -37,6 +37,7 @@ import type { NestJob } from './nesting/types';
 import type {
   Box,
   CabinetParams,
+  CatalogMeta,
   Design,
   Diagnostic,
   Face,
@@ -470,6 +471,27 @@ export function keepTemplate(project: Project, id: string, revision: number): Pr
   return {
     ...project,
     items: project.items.map((i) => (i.id === id ? { ...i, templateSeen: revision } : i)),
+  };
+}
+
+/**
+ * Link a piece to the catalog template it was saved as (ADR-107): its design's `catalog.origin` becomes `origin`; the
+ * rest of the piece is unchanged. A "Keep mine" mark for an earlier origin no longer applies and goes.
+ */
+export function linkItemOrigin(
+  project: Project,
+  id: string,
+  origin: NonNullable<CatalogMeta['origin']>,
+): Project {
+  if (!project.items.some((i) => i.id === id)) return project;
+  return {
+    ...project,
+    items: project.items.map((i) => {
+      if (i.id !== id) return i;
+      const { templateSeen: _seen, ...rest } = i;
+      void _seen;
+      return { ...rest, design: { ...i.design, catalog: { ...i.design.catalog, origin } } };
+    }),
   };
 }
 
