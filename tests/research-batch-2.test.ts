@@ -155,12 +155,14 @@ describe('Lock size (ADR-122)', () => {
   it('saves at the current version; older projects still load; the flag needs version 11', async () => {
     const base = run(['base-door']);
     const p = setSizeLocked(base, base.items[0].id, true);
-    expect(PROJECT_SCHEMA).toBe(11);
+    expect(PROJECT_SCHEMA).toBeGreaterThanOrEqual(11);
+    expect(p.schemaVersion).toBe(PROJECT_SCHEMA);
     expect(validateProject(p)).toEqual([]);
     await saveProject(p);
     expect((await loadProject(p.id))?.items[0].sizeLocked).toBe(true);
-    for (const v of [1, 2, 3, 4, 5, 6, 7, 8, 9])
+    for (const v of [1, 2, 3, 4, 5, 6, 7, 8, 9, 11])
       expect(validateProject({ ...base, schemaVersion: v })).toEqual([]);
+    expect(validateProject({ ...p, schemaVersion: 11 })).toEqual([]);
     expect(validateProject({ ...p, schemaVersion: 9 })).toContain(
       'Size-locked pieces need project schemaVersion 11',
     );
