@@ -1678,3 +1678,21 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Accept default, /batch all ready (ADR-125: run sinks and handles)
 - Questions: Draw the cut-out outline on the plan and in 3D?
 - Suggested pick: Outline on the plan only (where the worktop is drawn from above)
+
+### G-213: Import OBJ, STL and FBX models directly
+
+- Status: Open
+- Origin: Question 2026-10-27 (Fusion 360 / Blender import)
+- Missing: 3D model import accepts only .glb/.gltf (ADR-076); OBJ, STL and FBX from Fusion 360 or Blender need converting in Blender first
+- Request: What about fusion 360 or blender import?
+- Questions: Accept OBJ, STL and FBX directly as display-only models, or keep glTF only?
+- Suggested pick: Accept OBJ and STL directly (estimate small to medium work, +30 % of value for Fusion users; FBX needs a larger loader)
+
+### G-214: Import a Fusion 360 or Blender model as editable furniture
+
+- Status: Open
+- Origin: Question 2026-10-27 (Fusion 360 / Blender import)
+- Missing: Imported models are display-only; no import turns box-shaped bodies from STEP or glTF into boards with a cut list, banding and hardware
+- Request: What about fusion 360 or blender import?
+- Questions: Build an import that turns each box body into a board (materials, joints, grain decided how?), or not?
+- Suggested pick: Ask the user first: high complexity (estimate several ADRs), value depends on how often designs start in Fusion or Blender
