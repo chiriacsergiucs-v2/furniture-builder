@@ -1,6 +1,6 @@
 # ADR-126: Set a colour or picture as the background of each room wall
 
-- Status: Deferred (open questions G-213, G-214, G-215)
+- Status: Pending
 - Date: 2026-10-28
 - Depends on: ADR-048, ADR-058, ADR-059
 - Design: docs/ui-design.md (room editor in the project Settings; 3D view)
@@ -26,13 +26,16 @@ picture from the device in the `images` table and keep only a reference in the d
 2. **Pictures.** Wall pictures go in the existing `images` table (no new Dexie version). Project files with pictures
    (`withPictures`) also carry wall pictures; the unused-picture cleanup already keeps any id found in a saved row.
 3. **Room editor.** Under _Walls_, each `Wall N` row gets a _Background_ control: _None_, _Colour_ (colour field)
-   or _Picture_ (pick from the device, as for boards, with its tile size; see G-214).
+   or _Picture_ (pick from the device, as for boards). A picture repeats; one copy covers _Tile width_ × _Tile height_
+   mm, set by the user, starting at the picture's own proportions, 1000 mm wide, with the hint "Set the real size"
+   (G-214, user 2026-10-28).
 4. **3D view.** `RoomWalls` paints each wall's inner face with its colour or repeating picture, to scale. A
-   _Solid walls_ switch (G-215) changes walls between see-through and opaque. Walls stay display-only, never picked.
+   _Solid walls_ switch changes walls between see-through and opaque. It is a 3D view setting on this device, not
+   saved in the project, starting see-through (G-215, user 2026-10-28). Walls stay display-only, never picked.
 5. **Front view.** Behind a piece in a project with a room, the front view fills the background with the finish of
-   the wall that piece stands against (which wall and what area: G-213). Pieces draw on top, unchanged.
-
-The open questions below block items 3–5 until the user answers them.
+   the wall the piece's back stands against (back on the wall line, same tolerance as wall snapping, ADR-070),
+   from the floor to the room height. No background when the piece stands against no wall or the project has no
+   room (G-213, user 2026-10-28). Pieces draw on top, unchanged.
 
 ## Alternatives considered
 
@@ -67,13 +70,5 @@ The open questions below block items 3–5 until the user answers them.
 
 ## Open questions
 
-- **G-213 Front view: which wall and area?** Options: the wall the piece's back stands against, or a wall the user
-  picks in the front view; fill the whole drawing or floor to room height. Recommended: the wall the back stands
-  against (same tolerance as wall snapping, ADR-070), floor to room height; nothing when there is no such wall.
-  Closest to "the wall behind the piece".
-- **G-214 Picture tile size.** Options: user-set width × height in mm, like ADR-048; or stretch one copy over the
-  whole wall. Recommended: user-set, starting at the picture's aspect, 1000 mm wide, with a hint to set the real size.
-  Tiles and wallpaper repeat; stretching distorts them.
-- **G-215 Solid walls switch.** Options: saved in the project, or a 3D view setting on this device; start solid or
-  see-through. Recommended: a view setting on this device, starting see-through (today's look). It is a viewing
-  choice, not part of the room.
+None. Answered by the user 2026-10-28: G-213 (wall behind, floor to room height), G-214 (user-set tile size in mm),
+G-215 (view setting on this device, starts see-through). Build not yet approved ("Not yet").

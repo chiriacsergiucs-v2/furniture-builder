@@ -1681,7 +1681,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-213: Front-view wall background: which wall and area
 
-- Status: Open
+- Status: ADR-126
 - Origin: ADR-126 (open question)
 - Missing: Front view: which wall's background is drawn behind a piece, and over what area
 - Request: Set wall background; answers 2026-10-28: colour or picture, 3D view and front view, per wall, toggle solid/see-through
@@ -1690,7 +1690,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-214: Wall picture tile size
 
-- Status: Open
+- Status: ADR-126
 - Origin: ADR-126 (open question)
 - Missing: Size one copy of a wall picture covers before it repeats
 - Request: Set wall background; answers 2026-10-28: colour or picture, 3D view and front view, per wall, toggle solid/see-through
@@ -1699,7 +1699,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-215: Wall toggle: saved or per device
 
-- Status: Open
+- Status: ADR-126
 - Origin: ADR-126 (open question)
 - Missing: Where the solid / see-through toggle lives and what it starts as
 - Request: Set wall background; answers 2026-10-28: colour or picture, 3D view and front view, per wall, toggle solid/see-through
