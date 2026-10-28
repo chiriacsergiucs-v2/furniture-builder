@@ -252,7 +252,7 @@ describe('kept project versions (ADR-123, Dexie v10)', () => {
     const Fresh = db.constructor as new (n: string) => typeof db;
     const nw = new Fresh(name);
     await nw.open();
-    expect(nw.verno).toBe(10);
+    expect(nw.verno).toBe(11);
     expect((await nw.projects.get(p.id))?.project).toEqual(p);
     expect(await nw.designs.get('d')).toBeDefined();
     expect(await nw.gapMarks.get('G-001')).toBeDefined();

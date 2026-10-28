@@ -92,3 +92,32 @@ export function zipStore(files: ZipEntry[], when = new Date(1980, 0, 1)): Uint8A
   }
   return out;
 }
+
+/**
+ * Read a .zip written with stored entries, as `zipStore` writes (ADR-133 restores a backup .zip). Compressed entries
+ * are skipped and named in `skipped`; a damaged file gives the entries read so far. Never throws.
+ */
+export function unzipStore(bytes: Uint8Array): { files: ZipEntry[]; skipped: string[] } {
+  const files: ZipEntry[] = [];
+  const skipped: string[] = [];
+  const dec = new TextDecoder();
+  const v = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  let p = 0;
+  try {
+    while (p + 30 <= bytes.length && v.getUint32(p, true) === 0x04034b50) {
+      const method = v.getUint16(p + 8, true);
+      const size = v.getUint32(p + 18, true);
+      const nameLen = v.getUint16(p + 26, true);
+      const extra = v.getUint16(p + 28, true);
+      const name = dec.decode(bytes.subarray(p + 30, p + 30 + nameLen));
+      const start = p + 30 + nameLen + extra;
+      if (start + size > bytes.length) break;
+      if (method === 0) files.push({ name, data: bytes.slice(start, start + size) });
+      else skipped.push(name);
+      p = start + size;
+    }
+  } catch {
+    /* damaged: keep what was read */
+  }
+  return { files, skipped };
+}

@@ -205,6 +205,10 @@ export function MoreMenu({
               <Icon name="trash" />
               Clean up unused pictures <small>no piece or project uses them</small>
             </button>
+            <button type="button" onClick={run(() => useUi.getState().setSavedDataOpen(true))}>
+              <Icon name="hdd" />
+              Saved data and backup <small>keep, back up and restore</small>
+            </button>
           </div>
           <span className="menu-sep" aria-hidden="true" />
           <button type="button" onClick={run(onResearch)}>

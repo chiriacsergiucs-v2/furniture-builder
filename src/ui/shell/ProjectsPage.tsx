@@ -24,6 +24,7 @@ import { newerCount, newerText, templateStatus } from '../../core/templateRevisi
 import { useLocalTemplates } from '../Catalog';
 import { updatedText } from '../TemplateRevision';
 import { useUi } from './uiStore';
+import { DeviceOnlyNotice } from '../SavedData';
 import { useMediaQuery } from '../useMediaQuery';
 
 /** Where a saved row's three buttons fold into one menu (ADR-120). */
@@ -210,6 +211,7 @@ export function ProjectsPage({
 
   return (
     <main className="home-page projects-page" aria-label="Projects">
+      <DeviceOnlyNotice />
       <header className="home-hero">
         <div className="info-row">
           <h1>Projects</h1>

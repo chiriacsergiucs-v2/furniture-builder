@@ -40,6 +40,8 @@ import { ProjectsPage } from './shell/ProjectsPage';
 import { useMediaQuery } from './useMediaQuery';
 import { MODE_LABEL, MODES, useUi } from './shell/uiStore';
 import { ViewOptions } from './ViewOptions';
+import { BackupReminder, SavedDataDialog, startChangeClock } from './SavedData';
+import { startAutoBackup } from '../persist/backup';
 import {
   bringDrawingForward,
   inOptions,
@@ -323,6 +325,13 @@ export function App() {
       useDesign.setState({ pristine: true });
       done();
     }
+  }, []);
+
+  // After any save: ask the browser to keep data once, back up to the chosen folder, and keep the save times for the
+  // backup reminder (ADR-133, ADR-141).
+  useEffect(() => {
+    const offs = [startAutoBackup(), startChangeClock()];
+    return () => offs.forEach((off) => off());
   }, []);
 
   // Autosave shortly after each change; also save a freshly opened template so it appears in the library.
@@ -843,6 +852,8 @@ export function App() {
           }}
         />
         <SettingsDialog onWizard={() => openWizard(design)} />
+        <SavedDataDialog />
+        <BackupReminder />
         <RenderDialog
           open={dialog === 'render'}
           onClose={() => setDialog((d) => (d === 'render' ? null : d))}
