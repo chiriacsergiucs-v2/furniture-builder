@@ -1678,3 +1678,48 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Accept default, /batch all ready (ADR-125: run sinks and handles)
 - Questions: Draw the cut-out outline on the plan and in 3D?
 - Suggested pick: Outline on the plan only (where the worktop is drawn from above)
+
+### G-213: Front-view wall background: which wall and area
+
+- Status: Open
+- Origin: ADR-126 (open question)
+- Missing: Front view: which wall's background is drawn behind a piece, and over what area
+- Request: Set wall background; answers 2026-10-28: colour or picture, 3D view and front view, per wall, toggle solid/see-through
+- Questions: Use the wall the piece's back stands against (back on the wall line, same tolerance as wall snapping, ADR-070), or let the user pick the wall in the front view? Fill the whole drawing area or only the wall height above the floor?
+- Suggested pick: The wall the piece's back stands against; fill from the floor to the room height across the drawing; no background when the piece stands against no wall or the project has no room. Closest to 'the wall behind the piece'.
+
+### G-214: Wall picture tile size
+
+- Status: Open
+- Origin: ADR-126 (open question)
+- Missing: Size one copy of a wall picture covers before it repeats
+- Request: Set wall background; answers 2026-10-28: colour or picture, 3D view and front view, per wall, toggle solid/see-through
+- Questions: Set by the user in mm (width × height), like board pictures (ADR-048)? What starting size?
+- Suggested pick: User-set width × height in mm, like ADR-048; the picture starts at its own aspect ratio, 1000 mm wide, and the field says to set the real size (a starting value, not a spec).
+
+### G-215: Wall toggle: saved or per device
+
+- Status: Open
+- Origin: ADR-126 (open question)
+- Missing: Where the solid / see-through toggle lives and what it starts as
+- Request: Set wall background; answers 2026-10-28: colour or picture, 3D view and front view, per wall, toggle solid/see-through
+- Questions: Saved in the project (same on every device and in exports), or a view setting on this device only? Start solid or see-through?
+- Suggested pick: A 3D view setting on this device ('Solid walls'), starting see-through as today; the front view always shows the background. Keeps the project document smaller and today's look unchanged.
+
+### G-216: Wall backgrounds outside 3D and front view
+
+- Status: Open
+- Origin: ADR-126 (out of scope)
+- Missing: Wall backgrounds on the 2D floor plan, the SVG download, catalog snapshots and cut sheets
+- Request: Set wall background; answers 2026-10-28: colour or picture, 3D view and front view, per wall, toggle solid/see-through
+- Questions: Show the wall colour on the plan too?
+- Suggested pick: Colour strip along each wall on the plan only; the others stay as they are.
+
+### G-217: Floor background
+
+- Status: Open
+- Origin: ADR-126 (out of scope)
+- Missing: Floor colour or picture
+- Request: Set wall background; answers 2026-10-28: colour or picture, 3D view and front view, per wall, toggle solid/see-through
+- Questions: Set the floor like the walls?
+- Suggested pick: Same picker for the floor in a later ADR, reusing this one's code.
