@@ -5,7 +5,7 @@
 - Depends on: ADR-133
 - Design: docs/ui-design.md (Toast, Settings dialog)
 - Backlog: N142
-- Acceptance: full
+- Acceptance: light
 - Proposed by: Claude, not requested (2026-10-28 task: "propose further architecture and UX ADRs")
 
 ## Context
@@ -36,8 +36,11 @@ possible (browsers without folder access, or permission not granted again after 
 
 ## Done when
 
+Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
+catch-up run.
+
 - [ ] The rule shows the toast only when the interval passed and something changed (unit test with fixed dates).
-- [ ] jsdom find-it at 390 and 1280 px: "Last backup:", "Back up now", the interval setting.
+- [ ] jsdom find-it at 390 and 1280 px: "Last backup:", "Back up now", the interval setting (light — catch-up).
 
 ## Open questions
 

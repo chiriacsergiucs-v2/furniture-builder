@@ -5,7 +5,7 @@
 - Depends on: ADR-127
 - Design: n/a
 - Backlog: N132
-- Acceptance: browser
+- Acceptance: light
 
 ## Context
 
@@ -56,6 +56,9 @@ Settled:
 - Harder to change later: none beyond the vendor choice.
 
 ## Done when
+
+Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
+catch-up run.
 
 - [ ] Production build: every screen opens with zero CSP violations (browser script, 390 and 1280 px).
 - [ ] Signed out, the production build requests only its own origin (browser script).

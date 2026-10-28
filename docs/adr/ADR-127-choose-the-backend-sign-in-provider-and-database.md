@@ -5,7 +5,7 @@
 - Depends on: ADR-126
 - Design: n/a
 - Backlog: N128
-- Acceptance: full
+- Acceptance: light
 
 ## Context
 
@@ -49,6 +49,9 @@ Each candidate stays here until the user picks one (none is chosen).
 - Harder to change later: moving accounts between auth providers can force password resets.
 
 ## Done when
+
+Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
+catch-up run.
 
 - [ ] The user picked a vendor, region and owner; the facts used are cited with URL and date in this ADR.
 - [ ] The picked client SDK's licence and telemetry are checked and recorded (no telemetry allowed, ADR-126).

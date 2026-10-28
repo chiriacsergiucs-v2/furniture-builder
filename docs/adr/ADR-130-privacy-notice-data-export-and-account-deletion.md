@@ -5,7 +5,7 @@
 - Depends on: ADR-127
 - Design: docs/ui-design.md (Dialog, Section card, Button `danger`)
 - Backlog: N131
-- Acceptance: full
+- Acceptance: light
 
 ## Context
 
@@ -47,10 +47,13 @@ Settled by the request and GDPR principles (data minimisation, access, erasure, 
 
 ## Done when
 
+Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
+catch-up run.
+
 - [ ] Notice opens from the sign-in dialog before any request; names vendor, region, data and contact.
 - [ ] Export my data gives files that the app's Import opens (test with a fake backend).
 - [ ] Delete my account removes every server record and share link of that user and keeps local rows (test).
-- [ ] jsdom find-it at 390 and 1280 px: "Privacy notice", "Export my data", "Delete my account".
+- [ ] jsdom find-it at 390 and 1280 px: "Privacy notice", "Export my data", "Delete my account" (light — catch-up).
 
 ## Open questions
 

@@ -5,7 +5,7 @@
 - Depends on: ADR-012
 - Design: docs/ui-design.md (Settings dialog, Section card, Alert, Status)
 - Backlog: N134
-- Acceptance: browser
+- Acceptance: light
 
 ## Context
 
@@ -52,12 +52,15 @@ Settled:
 
 ## Done when
 
+Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
+catch-up run.
+
 - [ ] `persist()` result and storage estimate shown in Settings › Saved data (jsdom test with a stubbed API).
 - [ ] `planBackup` covers every row of the chosen tables; unreadable rows are copied as they are (test).
 - [ ] `planRestore` never deletes or overwrites a saved row; invalid files are listed (test).
 - [ ] Dexie upgrade test: version 10 rows, including an unreadable one, survive (persist test).
 - [ ] Browser find-it on the production build at 390 and 1280 px: Settings › "Saved data", "Choose backup folder",
-      "Back up now", "Last backup:"; the fallback shown where folder access is missing.
+      "Back up now", "Last backup:"; the fallback shown where folder access is missing (light — catch-up).
 
 ## Open questions
 

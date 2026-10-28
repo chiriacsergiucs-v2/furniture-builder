@@ -5,7 +5,7 @@
 - Depends on: ADR-128
 - Design: docs/ui-design.md (Dialog, Alert, Status)
 - Backlog: N130
-- Acceptance: full
+- Acceptance: light
 
 ## Context
 
@@ -47,11 +47,14 @@ Settled by the hard rules:
 
 ## Done when
 
+Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
+catch-up run.
+
 - [ ] `planSync` never yields an action that deletes or overwrites a local row without a user choice (fuzz test).
 - [ ] First sign-in with 3 local pieces asks once; Not now uploads nothing (store test).
 - [ ] Offline edit of an account item is kept locally and uploaded when back online (test with a fake backend).
 - [ ] A two-device conflict keeps both versions (test).
-- [ ] jsdom find-it at 390 and 1280 px: the first-sign-in question and a Conflict state are reachable by text.
+- [ ] jsdom find-it at 390 and 1280 px: the first-sign-in question and a Conflict state are reachable by text (light — catch-up).
 
 ## Open questions
 

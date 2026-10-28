@@ -5,7 +5,7 @@
 - Depends on: ADR-128, ADR-131
 - Design: n/a
 - Backlog: N133
-- Acceptance: full
+- Acceptance: light
 
 ## Context
 
@@ -42,6 +42,9 @@ Settled:
 - Harder to change later: links already handed out.
 
 ## Done when
+
+Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
+catch-up run.
 
 - [ ] Server rule: a share id reads one body and name and nothing else; a wrong id gives not found (backend test).
 - [ ] Opening a link gives a copy with new ids; the owner's record is byte-identical after (test).

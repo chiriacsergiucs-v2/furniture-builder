@@ -5,7 +5,7 @@
 - Depends on: ADR-127, ADR-130, ADR-131, ADR-135
 - Design: docs/ui-design.md (tokens; Dialog, Button, `.input`, Alert, Status, top bar)
 - Backlog: N137
-- Acceptance: browser
+- Acceptance: light
 
 ## Context
 
@@ -54,12 +54,15 @@ fragment after reading it (as ADR-124 does for `#open=`).
 
 ## Done when
 
+Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
+catch-up run.
+
 - [ ] Each state's copy above renders in jsdom from a fake provider (tests).
 - [ ] Forgot password shows the same text for a known and an unknown email (test).
 - [ ] Reset with an expired token shows the expired text and **Send a new link** (test).
 - [ ] Sign out keeps every local row (store test).
 - [ ] Browser find-it on the production build at 390 and 1280 px: Account › "Sign in", "Forgot password?",
-      "Send reset link", "Sign out"; no horizontal scroll at 390 px; focus visible.
+      "Send reset link", "Sign out"; no horizontal scroll at 390 px; focus visible (light — catch-up).
 - [ ] Screenshots at 390 and 1280 px shown to the user before tests (standing rule).
 
 ## Open questions

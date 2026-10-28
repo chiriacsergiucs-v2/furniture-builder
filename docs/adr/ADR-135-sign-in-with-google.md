@@ -5,7 +5,7 @@
 - Depends on: ADR-127, ADR-130, ADR-131
 - Design: docs/ui-design.md (Button `outline`, Dialog)
 - Backlog: N136
-- Acceptance: browser
+- Acceptance: light
 
 ## Context
 
@@ -45,11 +45,14 @@ Settled:
 
 ## Done when
 
+Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
+catch-up run.
+
 - [ ] Only `openid email profile` are requested (unit test on the request built for the provider).
 - [ ] Cancel and failure leave the app unchanged and show the message (test with a fake provider).
 - [ ] Offline: the button is disabled with the offline text (jsdom test).
 - [ ] Browser find-it on the production build at 390 and 1280 px: "Continue with Google" is reachable from the bare
-      app and starts the flow (provider stubbed or a test project).
+      app and starts the flow (provider stubbed or a test project) (light — catch-up).
 
 ## Open questions
 

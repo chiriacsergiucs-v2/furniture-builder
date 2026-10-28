@@ -5,7 +5,7 @@
 - Depends on: ADR-132, ADR-137
 - Design: docs/ui-design.md (Menu, Dialog, Button, Alert)
 - Backlog: N139
-- Acceptance: full
+- Acceptance: light
 
 ## Context
 
@@ -43,10 +43,13 @@ Settled:
 
 ## Done when
 
+Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
+catch-up run.
+
 - [ ] Share link creates one share id for the record and shows a copyable link (test, fake backend).
 - [ ] Opening the link gives a copy with new ids and the owner's record unchanged (test).
 - [ ] Stopped, unknown and offline links show their messages and change nothing (tests).
-- [ ] jsdom find-it at 390 and 1280 px: "Share link", "Copy link", then "Open a copy" from the link.
+- [ ] jsdom find-it at 390 and 1280 px: "Share link", "Copy link", then "Open a copy" from the link (light — catch-up).
 
 ## Open questions
 

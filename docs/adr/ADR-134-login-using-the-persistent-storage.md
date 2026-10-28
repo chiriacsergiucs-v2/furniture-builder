@@ -5,7 +5,7 @@
 - Depends on: ADR-133
 - Design: docs/ui-design.md (Dialog, top bar)
 - Backlog: N135
-- Acceptance: browser
+- Acceptance: light
 
 ## Context
 
@@ -48,10 +48,13 @@ Settled for both readings:
 
 ## Done when
 
+Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
+catch-up run.
+
 - [ ] The user picked a reading; the Decision is completed and the Depends on line updated to match.
 - [ ] (B) Reload and an offline start show the signed-in name without a network request (browser script).
 - [ ] (A) The chosen lock or profiles work after a reload and never expose saved data while locked (tests).
-- [ ] Browser find-it on the production build at 390 and 1280 px for the chosen reading's visible text.
+- [ ] Browser find-it on the production build at 390 and 1280 px for the chosen reading's visible text (light — catch-up).
 
 ## Open questions
 

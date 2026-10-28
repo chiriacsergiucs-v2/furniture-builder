@@ -5,7 +5,7 @@
 - Depends on: none
 - Design: n/a
 - Backlog: N127
-- Acceptance: full
+- Acceptance: light
 
 ## Context
 
@@ -60,6 +60,9 @@ Settled by the request and the hard rules (the open questions below are not part
 - Harder to change later: once accounts exist, users' data lives on a server that must be kept or exported.
 
 ## Done when
+
+Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
+catch-up run.
 
 - [ ] Decision recorded; CLAUDE.md, `docs/architecture.md` and the security-review skill cite ADR-126 next to ADR-002.
 - [ ] A test fails if any module outside the online folder calls `fetch`, XHR, WebSocket or `sendBeacon`.

@@ -5,7 +5,7 @@
 - Depends on: ADR-137
 - Design: docs/ui-design.md (Status `.status`, Badge, top bar)
 - Backlog: N140
-- Acceptance: browser
+- Acceptance: light
 - Proposed by: Claude, not requested (2026-10-28 task: "propose further architecture and UX ADRs")
 
 ## Context
@@ -38,8 +38,11 @@ status (`.status.saving` / `.saved` / `.failed`).
 
 ## Done when
 
+Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
+catch-up run.
+
 - [ ] Each status text renders from the matching sync state (jsdom test).
-- [ ] Browser find-it on the production build at 390 and 1280 px: the status is visible, no horizontal scroll.
+- [ ] Browser find-it on the production build at 390 and 1280 px: the status is visible, no horizontal scroll (light — catch-up).
 
 ## Open questions
 

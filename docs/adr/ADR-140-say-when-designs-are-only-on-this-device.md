@@ -5,7 +5,7 @@
 - Depends on: ADR-133
 - Design: docs/ui-design.md (Alert `.alert.info`, Library)
 - Backlog: N141
-- Acceptance: browser
+- Acceptance: light
 - Proposed by: Claude, not requested (2026-10-28 task: "propose further architecture and UX ADRs")
 
 ## Context
@@ -38,8 +38,11 @@ protects their work.
 
 ## Done when
 
+Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
+catch-up run.
+
 - [ ] Notice shows exactly when its conditions hold (jsdom tests).
-- [ ] Browser find-it on the production build at 390 and 1280 px: "only on this device", **Back up**.
+- [ ] Browser find-it on the production build at 390 and 1280 px: "only on this device", **Back up** (light — catch-up).
 
 ## Open questions
 

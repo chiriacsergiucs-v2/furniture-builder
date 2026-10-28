@@ -5,7 +5,7 @@
 - Depends on: ADR-129, ADR-136
 - Design: docs/ui-design.md (Menu, Dialog)
 - Backlog: N143
-- Acceptance: browser
+- Acceptance: light
 - Proposed by: Claude, not requested (2026-10-28 task: "propose further architecture and UX ADRs")
 
 ## Context
@@ -36,8 +36,11 @@ person may keep a work and a private account. ADR-136 allows one signed-in accou
 
 ## Done when
 
+Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
+catch-up run.
+
 - [ ] Switching shows only the chosen account's items plus device-only items; no row is deleted (store test).
-- [ ] Browser find-it on the production build at 390 and 1280 px: "Add another account", switch, back.
+- [ ] Browser find-it on the production build at 390 and 1280 px: "Add another account", switch, back (light — catch-up).
 
 ## Open questions
 

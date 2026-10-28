@@ -5,7 +5,7 @@
 - Depends on: ADR-128, ADR-129, ADR-136
 - Design: docs/ui-design.md (Row button, Badge, Status, Library and Catalog screens)
 - Backlog: N138
-- Acceptance: full
+- Acceptance: light
 
 ## Context
 
@@ -45,11 +45,14 @@ Settled:
 
 ## Done when
 
+Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
+catch-up run.
+
 - [ ] Save to account uploads one record, links the row, badge reads "In your account" (store test, fake backend).
 - [ ] Remove from account deletes the server record only; the local row is unchanged (test).
 - [ ] Open from "In your account" gives a validated copy; an invalid body is reported and not stored (test).
 - [ ] A local template saved and opened on a second (fake) device equals the original except ids and dates (test).
-- [ ] jsdom find-it at 390 and 1280 px from the bare app: sign in (fake), "Save to account", "In your account".
+- [ ] jsdom find-it at 390 and 1280 px from the bare app: sign in (fake), "Save to account", "In your account" (light — catch-up).
 
 ## Open questions
 

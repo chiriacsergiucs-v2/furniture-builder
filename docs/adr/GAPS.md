@@ -2149,7 +2149,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-265: 2D label for Front too
 
-- Status: Open
+- Status: ADR-144
 - Origin: ADR-144, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: The piece editor labels the drawing Front, not Plan; the request names only Plan.
 - Request: User 2026-10-28: "ADR to have the views container same in compose and build and preview. Same 2D(rename it to 2D from Plan), 3D and both toggle"
@@ -2158,7 +2158,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-266: View kept across modes
 
-- Status: Open
+- Status: ADR-144
 - Origin: ADR-144, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: Today changing mode resets the view to that mode's default (ADR-081).
 - Request: User 2026-10-28: "ADR to have the views container same in compose and build and preview. Same 2D(rename it to 2D from Plan), 3D and both toggle"
@@ -2167,7 +2167,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-267: View switch in phone Compose
 
-- Status: Open
+- Status: ADR-144
 - Origin: ADR-144, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: On a phone Compose has no View switch and never mounts 3D (ADR-079, ADR-081).
 - Request: User 2026-10-28: "ADR to have the views container same in compose and build and preview. Same 2D(rename it to 2D from Plan), 3D and both toggle"
@@ -2176,7 +2176,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-268: One default view
 
-- Status: Open
+- Status: ADR-144
 - Origin: ADR-144, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No single default view for both modes.
 - Request: User 2026-10-28: "ADR to have the views container same in compose and build and preview. Same 2D(rename it to 2D from Plan), 3D and both toggle"
@@ -2185,9 +2185,9 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-269: Phone view tools in both modes
 
-- Status: Open
+- Status: ADR-144
 - Origin: ADR-144, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: On a phone the view tools sit behind an Options button only in Build & Preview.
 - Request: User 2026-10-28: "ADR to have the views container same in compose and build and preview. Same 2D(rename it to 2D from Plan), 3D and both toggle"
-- Questions: Use the Options button on a phone in both modes, or inline tools in both?
+- Questions: Use the Options button on a phone in both modes, or inline tools in both? Answer 2026-10-28: "in options all except Fronts, Select, Move, Turn 90 both of them"
 - Suggested pick: The Options button in both modes on a phone (keeps the stage height; estimate effort +2 %)

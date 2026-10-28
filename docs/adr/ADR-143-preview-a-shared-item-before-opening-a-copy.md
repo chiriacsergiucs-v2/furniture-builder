@@ -5,7 +5,7 @@
 - Depends on: ADR-138
 - Design: docs/ui-design.md (Dialog, front view drawing)
 - Backlog: N144
-- Acceptance: browser
+- Acceptance: light
 - Proposed by: Claude, not requested (2026-10-28 task: "propose further architecture and UX ADRs")
 
 ## Context
@@ -36,8 +36,11 @@ they received would rather see it first, without adding it to their library.
 
 ## Done when
 
+Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
+catch-up run.
+
 - [ ] Preview from a fake link shows name, size, front view and part count; nothing is stored (jsdom test).
-- [ ] Browser find-it on the production build at 390 and 1280 px: preview, "Open a copy", no horizontal scroll.
+- [ ] Browser find-it on the production build at 390 and 1280 px: preview, "Open a copy", no horizontal scroll (light — catch-up).
 
 ## Open questions
 

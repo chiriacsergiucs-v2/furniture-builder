@@ -5,7 +5,7 @@
 - Depends on: ADR-127
 - Design: n/a
 - Backlog: N129
-- Acceptance: full
+- Acceptance: light
 
 ## Context
 
@@ -49,6 +49,9 @@ revision, updatedAt, deletedAt? }`. `body` is the document exactly as exported t
 - Harder to change later: the record shape once users have data in it.
 
 ## Done when
+
+Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
+catch-up run.
 
 - [ ] Record shape and access rule written in the backend (migration file in the repo, reviewed).
 - [ ] A Dexie upgrade test opens a version-10 database with an unreadable row; every row survives (persist test).
