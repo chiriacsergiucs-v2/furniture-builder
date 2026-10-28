@@ -80,9 +80,10 @@ describe.each(WIDTHS)('accounts, backup and share links at %ipx (find-it, N130â€
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
 
     // N140, N138 (ADR-139, ADR-137): the sync status and the item's badge; the notice is gone.
-    expect(
-      await screen.findByRole('button', { name: /In your account/ }, { timeout: 5000 }),
-    ).toBeTruthy();
+    await waitFor(
+      () => expect(document.querySelector('.sync-status')?.textContent).toMatch(/In your account/),
+      { timeout: 5000 },
+    );
     expect(await screen.findByText('In your account', { selector: '.badge' })).toBeTruthy();
     await waitFor(() =>
       expect(screen.queryByText(/Your designs are only on this device/)).toBeNull(),
@@ -146,7 +147,9 @@ describe.each(WIDTHS)('accounts, backup and share links at %ipx (find-it, N130â€
 
     // N130 (ADR-129): changed here and in the account too â€” both are kept.
     server.offline = false;
-    const rec = (await backend.listRecords()).find((r) => r.name === row.name)!;
+    // The account record of exactly this piece (two pieces are both named Sideboard).
+    const own = (await db.accountLinks.toArray()).find((l) => l.localId === row.id)!;
+    const rec = (await backend.listRecords()).find((r) => r.id === own.remoteId)!;
     await backend.saveRecord({
       id: rec.id,
       kind: 'design',
