@@ -24,6 +24,9 @@ import { newerCount, newerText, templateStatus } from '../../core/templateRevisi
 import { useLocalTemplates } from '../Catalog';
 import { updatedText } from '../TemplateRevision';
 import { useUi } from './uiStore';
+import { DeviceOnlyNotice } from '../SavedData';
+import { AccountBadge, AccountRowActions, InYourAccount } from '../Account';
+import { useAccount } from '../../store/accountStore';
 import { useMediaQuery } from '../useMediaQuery';
 
 /** Where a saved row's three buttons fold into one menu (ADR-120). */
@@ -53,6 +56,12 @@ export function ProjectsPage({
   const openProject = useDesign((s) => s.openProject);
   const currentId = useDesign((s) => (s.project ? s.project.id : s.design.id));
   const [projects, setProjects] = useState<StoredProject[] | null>(null);
+  // Accounts (ADR-137, ADR-142): another account's copies are hidden here, never removed.
+  const hidden = useAccount((s) => s.hidden);
+  const configured = useAccount((s) => s.configured);
+  const signedIn = useAccount((s) => !!s.user);
+  const setAccountDialog = useAccount((s) => s.setDialog);
+  const lastSync = useAccount((s) => s.sync?.lastSyncAt);
   const [pieces, setPieces] = useState<StoredDesign[]>([]);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   // Saved designs and projects say when a piece's template has a newer revision (ADR-096, "Library too").
@@ -86,9 +95,10 @@ export function ProjectsPage({
   const settingsOpen = useUi((s) => s.settingsOpen);
   const setSettingsOpen = useUi((s) => s.setSettingsOpen);
   const narrow = useMediaQuery(NARROW);
+  // Read again when Settings close, and after a sync that may bring or change items (ADR-137).
   useEffect(() => {
     if (!settingsOpen) refresh();
-  }, [settingsOpen]);
+  }, [settingsOpen, lastSync]);
 
   const create = async () => {
     const name = await askText('Name of the new project', 'New project', 'Create project');
@@ -162,7 +172,9 @@ export function ProjectsPage({
             <span className="sub">{sub}</span>
           </span>
           {r.id === currentId && <span className="chip">Open now</span>}
+          {kind === 'piece' && <AccountBadge table="designs" id={r.id} />}
         </button>
+        {kind === 'piece' && <AccountRowActions table="designs" id={r.id} name={r.name} />}
         {/* A small phone folds the three buttons into one ⋯ menu, so the name keeps its line (ADR-120). */}
         {narrow ? (
           <RowMenu
@@ -210,6 +222,9 @@ export function ProjectsPage({
 
   return (
     <main className="home-page projects-page" aria-label="Projects">
+      <DeviceOnlyNotice
+        signIn={configured && !signedIn ? () => setAccountDialog('sign-in') : undefined}
+      />
       <header className="home-hero">
         <div className="info-row">
           <h1>Projects</h1>
@@ -285,15 +300,17 @@ export function ProjectsPage({
               <>
                 <h3 className="list-head">Single pieces</h3>
                 <ul className="library">
-                  {pieces.map((r) =>
-                    row(
-                      r,
-                      'piece',
-                      templateGlyph(r.design.product.kind),
-                      `${KIND_TEXT[r.design.product.kind]} · edited ${when(r.updatedAt)}${notices.get(r.id) ?? ''}`,
-                      () => load(r.design, { fromStorage: true }),
-                    ),
-                  )}
+                  {pieces
+                    .filter((r) => !hidden.has(`designs:${r.id}`))
+                    .map((r) =>
+                      row(
+                        r,
+                        'piece',
+                        templateGlyph(r.design.product.kind),
+                        `${KIND_TEXT[r.design.product.kind]} · edited ${when(r.updatedAt)}${notices.get(r.id) ?? ''}`,
+                        () => load(r.design, { fromStorage: true }),
+                      ),
+                    )}
                 </ul>
               </>
             )}
@@ -301,6 +318,7 @@ export function ProjectsPage({
         )}
         <ProjectTemplateList onOpened={onOpened} />
       </section>
+      <InYourAccount onOpened={onOpened} />
     </main>
   );
 }

@@ -1,7 +1,8 @@
 # ADR-137: Save your templates and pieces in your account
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-28
+- Implemented: 2026-10-28 (2026-10-28 (light acceptance; find-it pending (ADR-066)))
 - Depends on: ADR-128, ADR-129, ADR-136
 - Design: docs/ui-design.md (Row button, Badge, Status, Library and Catalog screens)
 - Backlog: N138
@@ -54,11 +55,18 @@ Settled:
 Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
 catch-up run.
 
-- [ ] Save to account uploads one record, links the row, badge reads "In your account" (store test, fake backend).
-- [ ] Remove from account deletes the server record only; the local row is unchanged (test).
-- [ ] Open from "In your account" gives a validated copy; an invalid body is reported and not stored (test).
-- [ ] A local template saved and opened on a second (fake) device equals the original except ids and dates (test).
+- [x] Save to account uploads one record, links the row, badge reads "In your account" (store test, fake backend).
+- [x] Remove from account deletes the server record only; the local row is unchanged (test).
+- [x] Open from "In your account" gives a validated copy; an invalid body is reported and not stored (test).
+- [x] A local template saved and opened on a second (fake) device equals the original except ids and dates (test).
 - [ ] jsdom find-it at 390 and 1280 px from the bare app: sign in (fake), "Save to account", "In your account" (light — catch-up).
+
+## Implementation (2026-10-28)
+
+Automatic upload with **Keep on this device only** per item (G-255); edited shipped templates too (G-256).
+Badges (In your account, Waiting to upload, Only on this device) on Projects › Single pieces and on Catalog
+templates; a cloud ⋯ per item with Share link and Keep on this device only / Save to account; **In your account**
+on Projects lists records not on this device with Open. Tests: `tests/sync.test.ts`, `tests/account-ui.test.tsx`.
 
 ## Open questions
 

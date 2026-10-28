@@ -170,21 +170,22 @@ described above. Audit and wireframes are in `docs/research/2026-10-24-ui-redesi
   dashed outline follows the pointer, snapped as a dragged piece, with "From left … · From back …". Release on
   the plan adds it (one undo step); release elsewhere or Esc adds nothing. A tap on an item keeps "Tap the plan to
   place" and closes the list. × or Esc closes it.
-- _View switch (ADR-081)._ `.segmented.small` _View_ in the stage tools: **Front · 3D · Both** (**Plan · 3D ·
-  Both** in a project). Both splits the stage: side by side, stacked when the stage is taller than wide. 3D and
-  Both are disabled without WebGL (title: _3D preview is not available in this browser_). A mode change resets
-  the view: Both from 1500 px, else 3D in Build & Preview and the drawing in Compose.
-- _Desktop._ The left panel shows Compose. Build is always the right column. Build & Preview turns the centre to
-  3D (Both from 1500 px).
+- _View switch (ADR-081, ADR-144)._ One view container in Compose and Build & Preview, piece and project alike:
+  `.segmented.small` _View_ in the stage tools reads **2D · 3D · Both** at every width, phones included. Both
+  splits the stage: side by side, stacked when the stage is taller than wide. 3D and Both are disabled without
+  WebGL (title: _3D preview is not available in this browser_). The chosen view stays when the mode changes; the
+  default is 2D below 1500 px and Both from 1500 px. On a phone, in both modes, **Fronts**, **Select**, **Move**
+  and **Turn 90°** stay in the row and every other view tool sits behind **Options** (`inOptions`).
+- _Desktop._ The left panel shows Compose. Build is always the right column. The centre shows the chosen view.
 - _Phone._
   - Compose: the drawing fills the screen, with a bottom sheet over the nav. Its peek row reads _Selected: …_ or
     _Tap a space to edit it_; the sheet steps aside while placing or drawing. A piece chosen in a project opens
     the sheet; a space of a single piece does not (N82, user 2026-10-26): the drawing keeps its height with the
     quick counts above the selection, and the peek row opens the editor. Open, the sheet takes at most 40 dvh
     and the quick-counts card hides (the editor has the same counters).
-  - Build & Preview: the View switch and an **Options** menu in one row (Doors and fronts, Exploded 3D, Reset
-    view, Look, Render; N82), 3D (42 vh, mounted only here) over the output tabs; Both stacks the drawing over
-    3D in a 72 vh stage.
+  - Both modes (ADR-144): the View switch, **Doors and fronts** and an **Options** menu in one row (Exploded 3D,
+    Reset view, Look, Render; on the plan, Snap and Clearances), Fronts and Select on the plan. 3D mounts only
+    while 3D or Both is shown; Both stacks the drawing over 3D.
 - _Touch and type (N82)._ Under `pointer: coarse` every control is at least 44 × 44 px (buttons, segmented,
   tabs, counters, fields, menu rows, summaries, breadcrumbs); a mouse keeps `--control-h` 38. No text is set
   below `--fs-xs` (13 px): badges, chips, tags, step meta and the quick-counts card use it. The result tabs

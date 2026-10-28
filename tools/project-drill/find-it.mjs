@@ -53,7 +53,7 @@ for (const width of [1280, 390]) {
   await sheet(false);
 
   // 2. The plan (no height): the 1st tap selects the whole piece, the 2nd its interior; the project stays open.
-  const planRadio = page.getByRole('radio', { name: 'Plan' });
+  const planRadio = page.getByRole('radio', { name: '2D' });
   if (await planRadio.isVisible().catch(() => false)) await planRadio.click();
   const onPlan = page.locator('g.plan-piece', { hasText: 'Sideboard' }).first();
   const tapPlan = async () => {
@@ -137,7 +137,7 @@ for (const width of [1280, 390]) {
     const card = page.locator('.view.three').getByRole('group', { name: 'Quick counts' });
     check(width, '3D: "Quick counts" over the project 3D view', await card.isVisible());
     // The space is outlined on the plan (its footprint) and on the room front view too (G-071).
-    await page.getByRole('radio', { name: 'Plan' }).click();
+    await page.getByRole('radio', { name: '2D' }).click();
     await page.waitForTimeout(300);
     const outlines = page.locator('.view.front [aria-label="Selected space inside the piece"]');
     check(

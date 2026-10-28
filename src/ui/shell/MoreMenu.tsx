@@ -13,6 +13,7 @@ import { Icon } from '../icons';
 import { CopyCodeDialog } from '../ShareCode';
 import { download, downloadFrontSvg, fileName } from './files';
 import { importFile } from './importFile';
+import { useAccount } from '../../store/accountStore';
 import { useUi } from './uiStore';
 
 /**
@@ -37,6 +38,7 @@ export function MoreMenu({
   const editingItemId = useDesign((s) => s.editingItemId);
   const inProject = !!project && !editingItemId;
   const setNotice = useUi((s) => s.setNotice);
+  const signedIn = useAccount((s) => !!s.user);
   const [pack, setPack] = useState(false);
   const close = () => ref.current?.removeAttribute('open');
   const [codeOpen, setCodeOpen] = useState(false);
@@ -172,6 +174,20 @@ export function MoreMenu({
                 </button>
               </>
             )}
+            {/* A server link for the open piece, once signed in (ADR-138); codes stay beside it (G-257). */}
+            {signedIn && !inProject && (
+              <button
+                type="button"
+                onClick={run(() =>
+                  useAccount.getState().set({
+                    shareFor: { table: 'designs', id: design.id, name: design.name },
+                  }),
+                )}
+              >
+                <Icon name="link" />
+                Share link <small>anyone with the link can open a copy</small>
+              </button>
+            )}
             <button type="button" onClick={run(() => setCodeOpen(true))}>
               <Icon name="copy" />
               Copy code <small>a code or link to open on another device</small>
@@ -198,6 +214,10 @@ export function MoreMenu({
             <button type="button" onClick={run(cleanUp)}>
               <Icon name="trash" />
               Clean up unused pictures <small>no piece or project uses them</small>
+            </button>
+            <button type="button" onClick={run(() => useUi.getState().setSavedDataOpen(true))}>
+              <Icon name="hdd" />
+              Saved data and backup <small>keep, back up and restore</small>
             </button>
           </div>
           <span className="menu-sep" aria-hidden="true" />

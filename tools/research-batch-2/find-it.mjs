@@ -79,7 +79,7 @@ for (const width of [1280, 390]) {
   };
   const toPlan = async () => {
     if (phone) await page.getByRole('radio', { name: /Build & Preview/ }).click();
-    const planRadio = page.getByRole('radio', { name: 'Plan' });
+    const planRadio = page.getByRole('radio', { name: '2D' });
     if (await planRadio.isVisible().catch(() => false)) await planRadio.click();
     await page.waitForTimeout(300);
   };

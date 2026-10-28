@@ -51,7 +51,7 @@ for (const width of [1440, 390]) {
   const bed = plan.getByRole('button', { name: /^Bed.*, \d+ by \d+ mm$/ }).first();
   const status = plan.locator('.plan-drag-note[role="status"]');
   const drawing = plan.locator(':scope > svg');
-  const planRadio = page.getByRole('radio', { name: 'Plan' });
+  const planRadio = page.getByRole('radio', { name: '2D' });
   const showPlan = async () => {
     await sheet(false);
     if (await planRadio.isVisible().catch(() => false)) await planRadio.click();

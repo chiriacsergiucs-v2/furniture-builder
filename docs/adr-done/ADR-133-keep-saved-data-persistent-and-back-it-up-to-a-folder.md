@@ -1,7 +1,8 @@
 # ADR-133: Keep saved data persistent and back it up to a folder
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-28
+- Implemented: 2026-10-28 (2026-10-28 (light acceptance; find-it pending (ADR-066)))
 - Depends on: ADR-012
 - Design: docs/ui-design.md (Settings dialog, Section card, Alert, Status)
 - Backlog: N134
@@ -65,12 +66,22 @@ Settled:
 Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
 catch-up run.
 
-- [ ] `persist()` result and storage estimate shown in Settings › Saved data (jsdom test with a stubbed API).
-- [ ] `planBackup` covers every row of the chosen tables; unreadable rows are copied as they are (test).
-- [ ] `planRestore` never deletes or overwrites a saved row; invalid files are listed (test).
-- [ ] Dexie upgrade test: version 10 rows, including an unreadable one, survive (persist test).
+- [x] `persist()` result and storage estimate shown in Settings › Saved data (jsdom test with a stubbed API).
+- [x] `planBackup` covers every row of the chosen tables; unreadable rows are copied as they are (test).
+- [x] `planRestore` never deletes or overwrites a saved row; invalid files are listed (test).
+- [x] Dexie upgrade test: version 10 rows, including an unreadable one, survive (persist test).
 - [ ] Browser find-it on the production build at 390 and 1280 px: Settings › "Saved data", "Choose backup folder",
       "Back up now", "Last backup:"; the fallback shown where folder access is missing (light — catch-up).
+
+## Implementation (2026-10-28)
+
+`src/core/backup.ts` (`planBackup`, `planRestore`), `src/persist/backup.ts` (persist, folder handle in Dexie v11
+`settings`, writes one file per item and removes the backup's own files of deleted items, auto backup 4 s after a
+save, .zip download and restore), `src/ui/SavedData.tsx` (Settings › Saved data, and ⋯ › Saved data and backup).
+Answers: persist at the first save (G-239); everything (G-240); one file per item (G-241); automatic and Back up now
+(G-242); .zip where folders are missing (G-243); restore as new copies, identical ones skipped (G-244, G-282).
+Tests: `tests/backup.test.ts`, `tests/saved-data.test.tsx`. Browser: the panel renders in the production build at
+1280 px (Chromium has folder access); the folder picker itself was not driven (needs a user gesture).
 
 ## Open questions
 

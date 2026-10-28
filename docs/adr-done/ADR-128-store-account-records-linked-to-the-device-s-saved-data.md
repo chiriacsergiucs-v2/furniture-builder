@@ -1,7 +1,8 @@
 # ADR-128: Store account records linked to the device's saved data
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-28
+- Implemented: 2026-10-28 (2026-10-28 (light acceptance; find-it pending (ADR-066)))
 - Depends on: ADR-127
 - Design: n/a
 - Backlog: N129
@@ -60,10 +61,20 @@ revision, updatedAt, deletedAt? }`. `body` is the document exactly as exported t
 Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
 catch-up run.
 
-- [ ] Record shape and access rule written in the backend (migration file in the repo, reviewed).
-- [ ] A Dexie upgrade test opens a version-10 database with an unreadable row; every row survives (persist test).
-- [ ] An invalid server body is never stored locally and is reported, never thrown (test).
-- [ ] Round trip: local design → server body → local copy is deep-equal except ids and dates (test).
+- [x] Record shape and access rule written in the backend (migration file in the repo, reviewed).
+- [x] A Dexie upgrade test opens a version-10 database with an unreadable row; every row survives (persist test).
+- [x] An invalid server body is never stored locally and is reported, never thrown (test).
+- [x] Round trip: local design → server body → local copy is deep-equal except ids and dates (test).
+
+## Implementation (2026-10-28)
+
+Records: `records (id, owner, kind design|template|image, name, body jsonb, body_schema, revision,
+updated_at, deleted_at)`, owner-only by row-level security; writes through `save_record` with a revision check;
+caps by trigger (G-278). Local link: Dexie v11 `accountLinks [accountId+table+localId]` (G-222; documents unchanged,
+no `schemaVersion` bump), shared with ADR-133's `settings`. Pictures used by pieces and templates go too (G-221);
+pieces inside projects do not. Evidence: `bash tools/supabase/test-sql.sh` (PostgreSQL 16, 2026-10-28) — ALL SERVER
+CHECKS PASSED; `tests/backup.test.ts` (v10 → v11 upgrade keeps every row, an unreadable one too);
+`tests/sync.test.ts` (an invalid account body is refused and not stored; template round trip).
 
 ## Open questions
 

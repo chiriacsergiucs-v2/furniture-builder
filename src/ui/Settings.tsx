@@ -6,6 +6,7 @@ import { Inspector } from './Inspector';
 import { ProjectPanel } from './Project';
 import { Icon } from './icons';
 import { useUi } from './shell/uiStore';
+import { SavedDataPanel } from './SavedData';
 
 /**
  * Settings (ADR-080): everything that was the Configure mode (ADR-079), in a dialog. A project shows what applies
@@ -69,6 +70,10 @@ export function SettingsDialog({ onWizard }: { onWizard: () => void }) {
               </div>
             </>
           )}
+          {/* This device's saved data and backup (ADR-133), the same in every Settings. */}
+          <div className="inspector">
+            <SavedDataPanel />
+          </div>
         </div>
       )}
     </Dialog>

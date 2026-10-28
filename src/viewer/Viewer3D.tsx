@@ -2,6 +2,7 @@ import { Canvas, invalidate, useFrame, useThree, type ThreeEvent } from '@react-
 import { ContactShadows, Edges, Html, Line, OrbitControls } from '@react-three/drei';
 import {
   useCallback,
+  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -48,7 +49,7 @@ import { imageKey, useImageUrls } from '../persist/images';
 import { loadModelScene, type ModelScene } from '../persist/models';
 import { modelBox, modelYaw, type ModelItem } from '../core/model3d';
 import { useDesign } from '../store/designStore';
-import { useView } from '../ui/useView';
+import { useView, ViewOverride } from '../ui/useView';
 import { PHONE, useMediaQuery } from '../ui/useMediaQuery';
 import { useTheme } from '../ui/useTheme';
 import { useLook } from '../ui/useLook';
@@ -158,6 +159,8 @@ function useTextures(urls: Map<string, string>): Map<string, Texture> {
  */
 export default function Viewer3D() {
   const view = useView();
+  // A shared item's preview (ADR-143): shown only, nothing selected, no tools or cards.
+  const preview = !!useContext(ViewOverride);
   const exploded = useDesign((s) => s.exploded);
   const theme = useTheme();
   const look = useLook();
@@ -171,7 +174,7 @@ export default function Viewer3D() {
       getComputedStyle(document.documentElement).getPropertyValue('--stage-3d').trim() || '#e7eae7'
     );
   }, [theme]);
-  const designId = `${view.mode === 'project' ? 'project' : `design:${useDesign.getState().design.id}`}:${exploded ? 'exploded' : 'built'}`;
+  const designId = `${preview ? `preview:${view.title}` : view.mode === 'project' ? 'project' : `design:${useDesign.getState().design.id}`}:${exploded ? 'exploded' : 'built'}`;
   // Exploded: positions only, for looking; parts, sheets and checks always use the built model.
   // Isolate (ADR-122): only the selected project pieces are shown; the model, checks and exports are unchanged.
   const section = useSection();
@@ -193,7 +196,8 @@ export default function Viewer3D() {
   const drillOn = useDesign(
     (s) => !!s.project && !s.editingItemId && !!s.drillItemId && s.drillItemId === s.selectedItemId,
   );
-  const counts = (view.mode === 'design' || (view.mode === 'project' && drillOn)) && !rendering;
+  const counts =
+    (view.mode === 'design' || (view.mode === 'project' && drillOn)) && !rendering && !preview;
   // On a phone the short 3D view would be mostly covered by a floating card: it docks under the view (G-070).
   // The slot under the view, which App renders on phones before this lazy viewer mounts; floating when it is missing.
   const phone = useMediaQuery(PHONE);
@@ -291,6 +295,7 @@ export default function Viewer3D() {
         dpr={[1, 2]}
         shadows={realistic}
         onPointerMissed={() => {
+          if (preview) return;
           const st = useDesign.getState();
           if (st.project && !st.editingItemId) st.selectItem(null);
           else st.select(undefined);
@@ -1141,10 +1146,11 @@ function Panels({
   snapOn?: boolean;
 }) {
   const view = useView();
+  const preview = !!useContext(ViewOverride);
   const materials = view.materials;
   const selectedSpace = useDesign((s) => s.selectedId);
   const selectedItem = useDesign((s) => s.selectedItemId);
-  const selectedId = view.mode === 'project' ? selectedItem : selectedSpace;
+  const selectedId = preview ? undefined : view.mode === 'project' ? selectedItem : selectedSpace;
   const highlight = useDesign((s) => s.highlight);
   const showFronts = useDesign((s) => s.showFronts);
   const tapPiece = useDesign((s) => s.tapPiece);
@@ -1270,7 +1276,7 @@ function Panels({
               const onClick = (e: ThreeEvent<MouseEvent>) => {
                 e.stopPropagation();
                 // The click ending a 3D move (or the press that selected the piece) does nothing more (ADR-093).
-                if (drag.clicked()) return;
+                if (drag.clicked() || preview) return;
                 const at = hitToMm(e.point, built.get(p.id), exploded);
                 if (view.mode === 'project') tapItem(p.nodeId.split(':')[0], at);
                 else tapPiece(at.x, at.y);

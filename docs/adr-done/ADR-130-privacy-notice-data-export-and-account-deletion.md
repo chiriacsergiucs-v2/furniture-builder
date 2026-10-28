@@ -1,7 +1,8 @@
 # ADR-130: Privacy notice, data export and account deletion
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-28
+- Implemented: 2026-10-28 (2026-10-28 (light acceptance; find-it pending (ADR-066)))
 - Depends on: ADR-127
 - Design: docs/ui-design.md (Dialog, Section card, Button `danger`)
 - Backlog: N131
@@ -59,10 +60,19 @@ Settled by the request and GDPR principles (data minimisation, access, erasure, 
 Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
 catch-up run.
 
-- [ ] Notice opens from the sign-in dialog before any request; names vendor, region, data and contact.
-- [ ] Export my data gives files that the app's Import opens (test with a fake backend).
-- [ ] Delete my account removes every server record and share link of that user and keeps local rows (test).
+- [x] Notice opens from the sign-in dialog before any request; names vendor, region, data and contact.
+- [x] Export my data gives files that the app's Import opens (test with a fake backend).
+- [x] Delete my account removes every server record and share link of that user and keeps local rows (test).
 - [ ] jsdom find-it at 390 and 1280 px: "Privacy notice", "Export my data", "Delete my account" (light — catch-up).
+
+## Implementation (2026-10-28)
+
+Privacy notice in English (G-231) from the sign-in dialog and Account: controller the app's owner as a person,
+contact Beliserii@gmail.com (G-229); Supabase in the EU; what is stored and why; the session kept on the device in
+one line, no banner (G-230); 7-day Trash; delete at once (G-232); rights and ANSPDCP. No legal review (G-233, the
+user's decision). Export my data: a .zip of the account's records as importable files plus `account.json`. Delete my
+account: `delete_my_account()` removes the sign-in, every record and share at once; device rows stay. Tests:
+`tests/account-ui.test.tsx`, `tests/sync.test.ts`, `tools/supabase/test.sql` (step 7).
 
 ## Open questions
 

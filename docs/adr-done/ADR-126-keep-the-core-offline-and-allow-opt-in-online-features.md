@@ -1,7 +1,8 @@
 # ADR-126: Keep the core offline and allow opt-in online features
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-28
+- Implemented: 2026-10-28 (2026-10-28 (light acceptance; find-it pending (ADR-066)))
 - Depends on: none
 - Design: n/a
 - Backlog: N127
@@ -72,9 +73,19 @@ Settled by the request and the hard rules (the open questions below are not part
 Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
 catch-up run.
 
-- [ ] Decision recorded; CLAUDE.md, `docs/architecture.md` and the security-review skill cite ADR-126 next to ADR-002.
-- [ ] A test fails if any module outside the online folder calls `fetch`, XHR, WebSocket or `sendBeacon`.
-- [ ] With no sign-in, a production build makes no request to any origin but its own (browser check, ADR-131).
+- [x] Decision recorded; CLAUDE.md, `docs/architecture.md` and the security-review skill cite ADR-126 next to ADR-002.
+- [x] A test fails if any module outside the online folder calls `fetch`, XHR, WebSocket or `sendBeacon`.
+- [x] With no sign-in, a production build makes no request to any origin but its own (browser check, ADR-131).
+
+## Implementation (2026-10-28)
+
+`src/online/` holds every online module; `src/online/origins.ts` lists the allowed origin (the build's
+`VITE_SUPABASE_URL`). `tests/network-boundary.test.ts` fails on `fetch`, XHR, WebSocket, `sendBeacon` or
+`EventSource` outside `src/online`, and on any static import of `src/online` (only `import()`; G-215). The account
+store loads the online chunk only when an account is used; a share link loads it at once (G-216). Paid plans: none
+(G-213). CLAUDE.md, `docs/architecture.md` and the security-review skill cite ADR-126. Browser check (ran 2026-10-28,
+production build, Chromium, 390 and 1280 px, Projects › New single piece › Both › Saved data › Catalog): no request
+to any other origin, with and without a backend URL in the build, and none on opening Sign in.
 
 ## Open questions
 

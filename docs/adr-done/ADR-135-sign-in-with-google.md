@@ -1,7 +1,8 @@
 # ADR-135: Sign in with Google
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-28
+- Implemented: 2026-10-28 (2026-10-28 (light acceptance; find-it pending (ADR-066)))
 - Depends on: ADR-127, ADR-130, ADR-131
 - Design: docs/ui-design.md (Button `outline`, Dialog)
 - Backlog: N136
@@ -55,11 +56,18 @@ Settled:
 Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
 catch-up run.
 
-- [ ] Only `openid email profile` are requested (unit test on the request built for the provider).
-- [ ] Cancel and failure leave the app unchanged and show the message (test with a fake provider).
-- [ ] Offline: the button is disabled with the offline text (jsdom test).
+- [x] Only `openid email profile` are requested (unit test on the request built for the provider).
+- [x] Cancel and failure leave the app unchanged and show the message (test with a fake provider).
+- [x] Offline: the button is disabled with the offline text (jsdom test).
 - [ ] Browser find-it on the production build at 390 and 1280 px: "Continue with Google" is reachable from the bare
       app and starts the flow (provider stubbed or a test project) (light — catch-up).
+
+## Implementation (2026-10-28)
+
+Continue with Google → Supabase OAuth, full-page redirect (G-247), PKCE, scopes `openid email profile`, back to
+the app's URL; `?error_description=` on return shows "Google sign-in did not finish. Try again." No account
+linking (G-249, revised with G-254). The Google OAuth client is the owner's to register (G-248, G-277). Tests:
+`tests/supabase-adapter.test.ts`, `tests/account-ui.test.tsx`.
 
 ## Open questions
 

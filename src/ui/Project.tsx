@@ -97,6 +97,9 @@ import { SaveProjectTemplate } from './ProjectTemplates';
 import { FrontModels, ModelFields, ModelList, MyModels, PlanModels } from './Models3D';
 import { AskRunParts, RunHandlesAndSinks, WorktopOverhang } from './RunRequests';
 import { ClearanceFields, ZoneOverlay, ZoneToolbar } from './Clearances';
+import { useMediaQuery } from './useMediaQuery';
+import { ViewOptions } from './ViewOptions';
+import { inOptions } from './viewChoice';
 import {
   ProblemBanner,
   ProblemOutline,
@@ -1093,6 +1096,7 @@ function RoomPlan({
   /** "Doors and fronts" sits in this row instead of the stage toolbar (ADR-109). */
   fronts?: boolean;
 }) {
+  const phone = useMediaQuery('(max-width: 760px)');
   const showFronts = useDesign((s) => s.showFronts);
   const setShowFronts = useDesign((s) => s.setShowFronts);
   const space = useSpaceInRoom();
@@ -1280,11 +1284,14 @@ function RoomPlan({
             onChange={setShowFronts}
           />
         )}
-        {/* Checkboxes like Fronts and Clear.: one toggle style in the row (ADR-120). */}
-        <Toggle label="Snap" checked={snapOn} onChange={setSnapOn} />
         {/* Phones: taps add and remove pieces, and a drag on empty plan draws a selection box (ADR-097). */}
         <Toggle label="Select" checked={multi} onChange={setMulti} />
-        <ZoneToolbar on={showZones} onChange={setShowZones} />
+        {/* Checkboxes like Fronts and Clear.: one toggle style in the row (ADR-120). On a phone Snap and the
+            clearances sit behind Options; Fronts and Select stay in the row (ADR-144, G-269). */}
+        <ViewOptions menu={inOptions('snap', phone)}>
+          <Toggle label="Snap" checked={snapOn} onChange={setSnapOn} />
+          <ZoneToolbar on={showZones} onChange={setShowZones} />
+        </ViewOptions>
       </div>
       <InfoTip label="About the plan">
         <span className="info-lead">

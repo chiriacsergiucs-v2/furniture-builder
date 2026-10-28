@@ -21,6 +21,8 @@
 
 Boundaries: `src/core` imports nothing from React, three or Dexie (ADR-013). Views never generate geometry
 (ADR-004). The viewer never edits a design (ADR-014); it only places project pieces with Move and Turn (ADR-093, `src/viewer/pieceDrag.ts` → `src/core/drag3d.ts`). Checks in `build.ts` do not trust generators (ADR-008).
+Network (ADR-126, replacing ADR-002's rule): the offline core makes no request; online features live in `src/online`,
+are imported only dynamically after the user opts in, and contact only `onlineOrigins()` (`tests/network-boundary.test.ts`).
 
 Agent sessions run behind a proxy that refuses the Pages URL and ikea.com: deploys are confirmed by their
 `Deploy GitHub Pages` run id only; live checks and the catalog feed (ADR-029, ADR-052) need the user or a

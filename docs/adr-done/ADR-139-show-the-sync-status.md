@@ -1,7 +1,8 @@
 # ADR-139: Show the sync status
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-28
+- Implemented: 2026-10-28 (2026-10-28 (light acceptance; find-it pending (ADR-066)))
 - Depends on: ADR-137
 - Design: docs/ui-design.md (Status `.status`, Badge, top bar)
 - Backlog: N140
@@ -46,8 +47,14 @@ status (`.status.saving` / `.saved` / `.failed`).
 Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
 catch-up run.
 
-- [ ] Each status text renders from the matching sync state (jsdom test).
+- [x] Each status text renders from the matching sync state (jsdom test).
 - [ ] Browser find-it on the production build at 390 and 1280 px: the status is visible, no horizontal scroll (light — catch-up).
+
+## Implementation (2026-10-28)
+
+`SyncStatus` beside the save status in the top bar (text hidden on a phone, icon kept) and a badge per item
+(G-260): In your account, Uploading…, Waiting for a connection (n), Upload failed — Retry, Kept both. Test:
+`tests/account-ui.test.tsx`.
 
 ## Open questions
 

@@ -62,7 +62,7 @@ for (const width of [1440, 390]) {
   };
   const selectPiece = async (i) => {
     await sheet(false);
-    const planRadio = page.getByRole('radio', { name: 'Plan' });
+    const planRadio = page.getByRole('radio', { name: '2D' });
     if (await planRadio.isVisible().catch(() => false)) await planRadio.click();
     await click(pieces.nth(i));
     await page.waitForTimeout(200);

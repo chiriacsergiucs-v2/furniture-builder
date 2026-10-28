@@ -1,7 +1,8 @@
 # ADR-127: Choose the backend, sign-in provider and database
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-28
+- Implemented: 2026-10-28 (2026-10-28 (light acceptance; find-it pending (ADR-066)))
 - Depends on: ADR-126
 - Design: n/a
 - Backlog: N128
@@ -13,7 +14,7 @@
 Items 3–6 of the user's list (2026-10-28: "gmail login", "ui login … forgot password/reset password", "save user
 templates and created pieces in db", "share link to templates/pieces") need a sign-in provider with Google and
 email/password, an email sender for resets, a database and an HTTP API reachable from the static site on GitHub
-Pages ([ADR-126](ADR-126-keep-the-core-offline-and-allow-opt-in-online-features.md)). Nothing is chosen.
+Pages ([ADR-126](../adr-done/ADR-126-keep-the-core-offline-and-allow-opt-in-online-features.md)). Nothing is chosen.
 
 Vendor facts below come from earlier research (2026-10-27/28, secondary sources, **unverified**) or are
 **unknown**. No price, quota or licence is stated as fact (ADR-010 by analogy).
@@ -59,9 +60,21 @@ Supabase was picked (G-217); the others stay listed.
 Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
 catch-up run.
 
-- [ ] The Supabase facts used are cited with URL and date in this ADR (G-220).
-- [ ] The picked client SDK's licence and telemetry are checked and recorded (no telemetry allowed, ADR-126).
-- [ ] The vendor's server-side access rules are written down for ADR-128's tables.
+- [x] The Supabase facts used are cited with URL and date in this ADR (G-220).
+- [x] The picked client SDK's licence and telemetry are checked and recorded (no telemetry allowed, ADR-126).
+- [x] The vendor's server-side access rules are written down for ADR-128's tables.
+
+## Implementation (2026-10-28)
+
+Supabase (G-217), EU region (G-218), the owner's personal account (G-219). Facts (G-220), from a web search on
+2026-10-28 citing https://supabase.com/pricing and https://supabase.com/docs/guides/auth/rate-limits;
+supabase.com itself was not reachable from the build session, so they are **not checked on the page**: free plan 500
+MB database, 1 GB file storage, 50,000 monthly active users, 2 active projects, free projects pause after 1 week of
+inactivity (restorable, no data deleted), Pro $25 per month; the built-in email sender sends only to the project
+team, about 2 emails per hour (G-276). Client: `@supabase/supabase-js` 2.118.0 and its five packages, all MIT (npm
+registry, 2026-10-28); their code holds no analytics or beacon endpoint; it sends a version header to the project's
+own API only. Rules: `supabase/migrations/20261028000000_accounts.sql`; setup steps: `docs/supabase-setup.md`. No
+project exists yet (G-277).
 
 ## Open questions
 

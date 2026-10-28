@@ -1,7 +1,8 @@
 # ADR-134: Login using the persistent storage
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-28
+- Implemented: 2026-10-28 (2026-10-28 (light acceptance; find-it pending (ADR-066)))
 - Depends on: ADR-127, ADR-131, ADR-133
 - Design: docs/ui-design.md (Dialog, top bar)
 - Backlog: N135
@@ -11,7 +12,7 @@
 ## Context
 
 The user asked (2026-10-28): "New adr for login using that persistent storage", right after "new ADR for
-persistent storage and folder backup" ([ADR-133](ADR-133-keep-saved-data-persistent-and-back-it-up-to-a-folder.md)).
+persistent storage and folder backup" ([ADR-133](../adr-done/ADR-133-keep-saved-data-persistent-and-back-it-up-to-a-folder.md)).
 The words allow two readings, and the user has not said which:
 
 - **(A) Local login, no server.** A profile or lock on this device, stored in the persistent storage of ADR-133.
@@ -56,8 +57,15 @@ Which reading is built: see the answers below.
 Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
 catch-up run.
 
-- [ ] (B) Reload and an offline start show the signed-in name without a network request (browser script).
+- [x] (B) Reload and an offline start show the signed-in name without a network request (browser script).
 - [ ] Browser find-it on the production build at 390 and 1280 px for the chosen reading's visible text (light — catch-up).
+
+## Implementation (2026-10-28)
+
+Reading B (G-245): the account is remembered in localStorage (`fb:account`) and shown at once; the session is kept
+by Supabase in this browser's storage (G-234); `initAccount` checks it when the online chunk loads and keeps the
+remembered account while offline. Reading A is not built (G-246). Test: `tests/account-ui.test.tsx` ("a remembered
+account shows at once with no request, offline too") — jsdom, not a browser script.
 
 ## Open questions
 

@@ -1,7 +1,8 @@
 # ADR-144: Use one view container with 2D, 3D and Both in Compose and Build & Preview
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-28
+- Implemented: 2026-10-28 (2026-10-28 (light acceptance; find-it pending (ADR-066)))
 - Depends on: ADR-079, ADR-081
 - Design: docs/ui-design.md (§4 Screens: editor, stage tools; Segmented)
 - Backlog: N145
@@ -64,15 +65,24 @@ ADR-014 stays: the 2D drawing is where you edit; 3D only selects, stays lazy and
 
 ## Done when
 
-- [ ] `viewOptions` returns 2D · 3D · Both in piece and project; no "Plan" or "Front" view label remains (unit test).
-- [ ] View rules are the same for both modes at 390, 1280 and 1600 px; the view stays on a mode change; defaults
+- [x] `viewOptions` returns 2D · 3D · Both in piece and project; no "Plan" or "Front" view label remains (unit test).
+- [x] View rules are the same for both modes at 390, 1280 and 1600 px; the view stays on a mode change; defaults
       2D / Both (`tests/view-choice.test.ts`).
-- [ ] 3D mounts only while 3D or Both is shown, in both modes, phone included (UI-logic test, ADR-014).
-- [ ] Phone tool rule: Fronts, Select, Move, Turn 90° inline; the rest behind Options, in both modes (UI-logic test).
+- [x] 3D mounts only while 3D or Both is shown, in both modes, phone included (UI-logic test, ADR-014).
+- [x] Phone tool rule: Fronts, Select, Move, Turn 90° inline; the rest behind Options, in both modes (UI-logic test).
 - [ ] Browser find-it on the production build at 390 and 1280 px: in Compose and Build & Preview the _View_
       radiogroup shows "2D", "3D", "Both"; on a phone "Options" holds the other tools; no horizontal scroll
       (light — catch-up).
-- [ ] Screenshots at 390 and 1280 px, both modes, shown to the user before tests (standing rule).
+- [x] Screenshots at 390 and 1280 px, both modes, shown to the user before tests (standing rule).
+
+## Implementation (2026-10-28)
+
+`src/ui/viewChoice.ts` (`viewOptions(has3d)`, `defaultView(wide, has3d)`, `PHONE_INLINE`, `inOptions`),
+`src/ui/ViewOptions.tsx`; App keeps the view across modes; phone Compose shows the switch and mounts 3D only for 3D
+or Both; on a phone Options holds Exploded 3D, Reset view, Look, Render and, on the plan, Snap and Clearances;
+"Doors and fronts" reads "Fronts" on a phone. Find-it scripts in `tools/` use "2D". Tests:
+`tests/view-choice.test.ts`; screenshots (production build, 390 and 1280 px, both modes) sent to the user without
+waiting ("Full auto-mode").
 
 ## Open questions
 
