@@ -3,7 +3,9 @@
  * is loaded lazily after the user opts in (G-215); the offline core never imports this folder statically.
  * The backend origin comes from the build (`VITE_SUPABASE_URL`, ADR-127); without it no online feature is offered.
  */
-export function onlineOrigins(url: string | undefined = import.meta.env.VITE_SUPABASE_URL): string[] {
+export function onlineOrigins(
+  url: string | undefined = import.meta.env.VITE_SUPABASE_URL,
+): string[] {
   if (!url) return [];
   try {
     const u = new URL(url);

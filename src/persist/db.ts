@@ -14,6 +14,7 @@ import { validateGapMark, type GapMark } from '../core/gaps';
 import { validateVersion, type ProjectVersion } from '../core/projectVersion';
 import { BACKUP_TABLES, keyOf } from '../core/backup';
 import { emitSavedChange } from './events';
+import type { AccountLink } from '../core/sync';
 
 /** A device setting kept in IndexedDB (ADR-133): values that localStorage cannot hold, like a folder handle. */
 export interface SettingRow {
@@ -87,6 +88,7 @@ class FurnitureDb extends Dexie {
   gapMarks!: Table<GapMark, string>;
   projectVersions!: Table<ProjectVersion, string>;
   settings!: Table<SettingRow, string>;
+  accountLinks!: Table<AccountLink, [string, string, string]>;
   constructor(name = 'furniture-builder') {
     super(name);
     // Never edit a shipped version block; add a new version for any change (ADR-012).
@@ -181,8 +183,8 @@ class FurnitureDb extends Dexie {
       gapMarks: 'gapId, updatedAt',
       projectVersions: 'id, projectId, savedAt',
     });
-    // v11 (ADR-133): device settings that are not localStorage-safe, e.g. the backup folder handle, kept by key.
-    // Earlier tables untouched (additive).
+    // v11 (ADR-133, ADR-128): device settings that are not localStorage-safe, e.g. the backup folder handle, kept by
+    // key; and the links between saved items and account records. Earlier tables untouched (additive).
     this.version(11).stores({
       designs: 'id, updatedAt, name',
       projects: 'id, updatedAt, name',
@@ -197,6 +199,9 @@ class FurnitureDb extends Dexie {
       gapMarks: 'gapId, updatedAt',
       projectVersions: 'id, projectId, savedAt',
       settings: 'key',
+      // ADR-128 (G-222): which saved item is which record in which account; kept apart from the documents, so the
+      // link never travels in exported files or design codes.
+      accountLinks: '[accountId+table+localId], accountId, remoteId',
     });
     // Every user table reports its changes after the write (backup, account upload; src/persist/events.ts).
     for (const [name] of BACKUP_TABLES) {

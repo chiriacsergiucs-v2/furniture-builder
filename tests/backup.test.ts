@@ -32,7 +32,7 @@ describe('folder backup plan (ADR-133)', () => {
   });
 
   it('covers every row of every table, unreadable rows copied as they are', () => {
-    const tables = Object.fromEntries(
+    const tables: Record<string, unknown[]> = Object.fromEntries(
       BACKUP_TABLES.map(([t, key]) => [t, [{ [key]: `${t}-a` }, { [key]: `${t}-b`, junk: true }]]),
     );
     tables.designs = [{ id: 'bad', design: { schemaVersion: 99 } }];
@@ -196,6 +196,7 @@ describe('device storage: backup .zip and restore (ADR-133)', () => {
     expect((await nw.designs.get(d.id))?.design).toEqual(d);
     expect(await nw.designs.get('bad')).toBeDefined();
     expect(await nw.settings.count()).toBe(0);
+    expect(await nw.accountLinks.count()).toBe(0);
     nw.close();
   });
 });
