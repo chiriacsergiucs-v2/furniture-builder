@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { pictureHolders } from '../core/project';
 import { reviewPackFiles, reviewPackZip, type PackFile } from '../core/reviewPack';
 import { withPictures } from '../persist/images';
 import { withModels } from '../persist/models';
@@ -33,10 +34,7 @@ export function ReviewPackDialog({ open, onClose }: { open: boolean; onClose: ()
     let live = true;
     void (async () => {
       const json = JSON.stringify(
-        await withPictures(await withModels(project), [
-          ...project.items.map((i) => i.design),
-          { materials: (project.runParts ?? []).map((r) => r.material) },
-        ]),
+        await withPictures(await withModels(project), pictureHolders(project)),
         null,
         2,
       );

@@ -4436,11 +4436,23 @@ button.tile:hover {
 .room .room-sizes,
 .room .wall-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: var(--s-2);
   list-style: none;
   padding: 0;
   margin: 0;
+}
+/* A wall's background under its length (ADR-126). */
+.room .wall-list li,
+.wall-bg {
+  display: grid;
+  gap: var(--s-1);
+  min-width: 0;
+}
+.wall-colour {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
 }
 /* Five "Add …" buttons (ADR-072) wrap instead of widening the side panel on a phone. */
 .room .split-actions {
