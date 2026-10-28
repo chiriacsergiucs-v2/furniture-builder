@@ -39,6 +39,9 @@ the row-level security rules and the functions the app calls. The same rules are
 
 ## 4. Turn accounts on in the deployed app
 
+The project is `https://nllwhcxvcbtjfkdhsyse.supabase.co`; its URL and publishable key are set in
+`.github/workflows/deploy.yml` (user 2026-10-28). Repository variables, when set, take their place.
+
 In GitHub: Settings › Secrets and variables › Actions › **Variables**, add:
 
 - `SUPABASE_URL` = the project URL
