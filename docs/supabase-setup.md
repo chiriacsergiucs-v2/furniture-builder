@@ -1,7 +1,7 @@
 # Setting up accounts (Supabase)
 
 Accounts, saving pieces and templates to an account, and share links (ADR-126 to ADR-138) need a Supabase project.
-Until the two repository variables below are set, the deployed app is built without accounts and works as before.
+The deployed app is built with the project set in section 4; the steps below make that project ready.
 These steps are done once, by the owner of the backend account (G-219). Nothing here can be done from the app.
 
 ## 1. Create the project
@@ -39,13 +39,13 @@ the row-level security rules and the functions the app calls. The same rules are
 
 ## 4. Turn accounts on in the deployed app
 
-The project is `https://nllwhcxvcbtjfkdhsyse.supabase.co`; its URL and publishable key are set in
-`.github/workflows/deploy.yml` (user 2026-10-28). Repository variables, when set, take their place.
+Nothing to do here. The project is `https://nllwhcxvcbtjfkdhsyse.supabase.co`; its URL and publishable key are
+set as defaults in `.github/workflows/deploy.yml` (user 2026-10-28), so every `Deploy GitHub Pages` run already
+builds with accounts: the **Account** button appears in the top bar and the content security policy allows only
+that Supabase origin (ADR-131).
 
-In GitHub: Settings › Secrets and variables › Actions › **Variables**, add:
+Only to point the app at a different project, add repository variables in GitHub (Settings › Secrets and
+variables › Actions › **Variables**); when set, they take the place of the defaults:
 
 - `SUPABASE_URL` = the project URL
-- `SUPABASE_ANON_KEY` = the anon key
-
-The next `Deploy GitHub Pages` run builds with them: the **Account** button appears in the top bar and the content
-security policy allows only that Supabase origin (ADR-131).
+- `SUPABASE_ANON_KEY` = the anon (publishable) key
