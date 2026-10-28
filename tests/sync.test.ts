@@ -198,6 +198,9 @@ describe('sync engine with a fake server (ADR-129, ADR-137)', () => {
       'Other device',
       'This device',
     ]);
+    let st: client.SyncStatus | undefined;
+    client.onSyncStatus((x) => (st = x))();
+    expect(st!.conflicts).toEqual(['This device']); // still reported after the second round
   });
 
   it('an unchanged item takes the account’s newer revision', async () => {

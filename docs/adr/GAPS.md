@@ -451,7 +451,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-046: Settings dialog built as light
 
-- Status: Open
+- Status: Done (catch-up find-it 2026-10-28, tests/find-it/catch-up-editor.test.tsx)
 - Origin: ADR-080, 2026-10-25 10:31 UTC; agent scoped it out
 - Missing: The Settings dialog ADR (Configure moves into a modal, view captions behind an info icon) was built as light acceptance, against your 23:29 decision. N75 is Partially done, “find-it pending”, and not checked in a browser.
 - Request: “Add a tooltip icon with the text on hover on desktop and on click on mobile”; earlier, “Remove the idea of find-it pending”.

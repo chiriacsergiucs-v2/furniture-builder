@@ -209,7 +209,8 @@ async function syncOnce(): Promise<void> {
       otherAccountsItems(user.id),
     ]);
     const locals = all.filter((i) => !others.has(`${i.table}:${i.id}`));
-    const conflicts: string[] = [];
+    // Items kept twice stay listed until the user has seen them in Account (G-226).
+    const conflicts = [...status.conflicts];
     for (const a of planSync(locals, remotes, ls, user.id)) {
       if (a.type === 'create') {
         const r = await b.saveRecord({
@@ -348,6 +349,11 @@ export function startAutoSync(delayMs = 3000): void {
   };
   void sync();
 }
+/** The user has seen the items kept twice (the Account panel closed). */
+export function clearConflicts(): void {
+  if (status.conflicts.length) setStatus({ conflicts: [] });
+}
+
 export function stopAutoSync(): void {
   stopAuto?.();
   stopAuto = null;
