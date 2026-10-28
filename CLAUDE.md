@@ -13,7 +13,8 @@ Read first: `docs/backlog.md`, `docs/adr/README.md`, `docs/product/product-conte
 - three + @react-three/fiber + drei, lazy-loaded (ADR-013, ADR-014)
 - Dexie 4 (IndexedDB), vite-plugin-pwa (ADR-012)
 - Node 24, pnpm 12, Vitest, ESLint + Prettier (ADR-053, the same tooling as reserv)
-- Static site on GitHub Pages; no backend, accounts, cloud, telemetry, remote AI or CDN (ADR-002)
+- Static site on GitHub Pages; offline core with no request until the user opts in to an online feature; no
+  telemetry, analytics, remote AI or CDN (ADR-002, network rule replaced by ADR-126)
 - GitHub for source control and CI/CD
 
 ## Language
@@ -100,7 +101,9 @@ changed and push only on the user's explicit approval. Model, document, storage 
 ## Engineering conventions (hard rules)
 
 - Do not read, write or migrate the previous app or its data (`mobila-cutlist-build-kit`) (ADR-001).
-- No backend, accounts, cloud, telemetry, remote AI, runtime third-party requests or CDN (ADR-002).
+- Offline core (ADR-002, ADR-126): every feature works signed out and offline with no request. Online features
+  (accounts, account storage, share links) are opt-in, live only in `src/online`, are imported only dynamically,
+  and contact only the origins in `src/online/origins.ts`. Never telemetry, analytics, remote AI, CDN or remote fonts.
 - Integer millimetres; x width, y height from floor, z depth from back; exact integer splits (ADR-003).
 - Every view and list is a projection of `buildModel()`; never compute geometry in UI code (ADR-004).
 - New product families reuse `buildCabinet` where a carcass exists (ADR-007).
