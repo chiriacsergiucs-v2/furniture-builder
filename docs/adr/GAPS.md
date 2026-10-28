@@ -1678,3 +1678,568 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Accept default, /batch all ready (ADR-125: run sinks and handles)
 - Questions: Draw the cut-out outline on the plan and in 3D?
 - Suggested pick: Outline on the plan only (where the worktop is drawn from above)
+
+### G-213: Paid backend allowed
+
+- Status: ADR-126
+- Origin: ADR-126, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No decision on whether the online features may use a paid plan; ADR-002 says the owner wants no paid dependency.
+- Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
+- Questions: Free tier only, or a paid plan up to a monthly amount you set?
+- Suggested pick: Free tier only until a limit is reached, then you decide (keeps ADR-002's no-paid-dependency wish; estimate effort +0 %; risk: free-tier pauses and limits, unverified)
+- Note: Answered by the user 2026-10-28: Free tier only.
+
+### G-214: Who can create an account
+
+- Status: ADR-126
+- Origin: ADR-126, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No decision on who may sign up.
+- Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
+- Questions: Only you (allow-list of emails), people you invite, or anyone (public sign-up)?
+- Suggested pick: Anyone (closest to “user accounts” and share links; estimate effort +15 % for abuse limits and GDPR work, value +30 % over owner-only)
+- Note: Answered by the user 2026-10-28: Anyone (public sign-up).
+
+### G-215: How online code is loaded
+
+- Status: ADR-126
+- Origin: ADR-126, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No decision on whether the online client code is in the main bundle.
+- Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
+- Questions: Load the online client in a lazy chunk only after the user opts in, or ship it in the main bundle?
+- Suggested pick: Lazy chunk after opt-in (closest to an offline core; estimate effort +5 %)
+- Note: Answered by the user 2026-10-28: Lazy chunk after opt-in.
+
+### G-216: Opening a share link asks first
+
+- Status: ADR-126
+- Origin: ADR-126, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No decision on whether opening a share link contacts the server at once.
+- Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
+- Questions: Fetch the shared item as soon as the link opens, or ask “Load this shared item from the server?” first?
+- Suggested pick: Ask first, like ADR-124's #open= links (estimate effort +2 %)
+- Note: Answered by the user 2026-10-28: Load at once (no ask).
+
+### G-217: Backend vendor not chosen
+
+- Status: ADR-127
+- Origin: ADR-127, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No backend, auth provider or database is chosen.
+- Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
+- Questions: Supabase, Cloudflare D1 with a Worker (plus an auth provider), Turso or Neon (plus an auth provider), Firebase, or self-hosted PocketBase / Appwrite?
+- Suggested pick: Supabase: the only candidate in the earlier research that offers Google sign-in, email/password with reset and a database in one service, i.e. items 3, 4 and 5 (estimate: least extra work among candidates covering all six items; risk: free projects pause after 1 week idle, unverified)
+- Note: Answered by the user 2026-10-28: Supabase.
+
+### G-218: Data region
+
+- Status: ADR-127
+- Origin: ADR-127, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No data region chosen.
+- Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
+- Questions: An EU region, or any region the vendor offers?
+- Suggested pick: An EU region (users in Romania, GDPR; estimate effort +0 %)
+- Note: Answered by the user 2026-10-28: EU region.
+
+### G-219: Owner of the backend account and keys
+
+- Status: ADR-127
+- Origin: ADR-127, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No owner of the vendor account, billing and keys.
+- Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
+- Questions: Your personal account, or a company account?
+- Suggested pick: Your own account, keys held by you (closest to a single-owner app); only you can answer
+- Note: Answered by the user 2026-10-28: My personal account.
+
+### G-220: Vendor facts unverified
+
+- Status: ADR-127
+- Origin: ADR-127, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: Free-tier quotas, idle pauses, prices, licences and telemetry of every candidate are unknown or come from unverified secondary research (2026-10-27/28).
+- Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
+- Questions: Verify each fact on the vendor's own pages, with URL and date, before choosing?
+- Suggested pick: Yes, recorded in ADR-127 before approval (estimate effort +5 %)
+- Note: Answered by the user 2026-10-28: Yes, verify vendor facts.
+
+### G-221: Which records go to the account
+
+- Status: ADR-128
+- Origin: ADR-128, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No decision on which saved data is stored in the account.
+- Request: “New adr for save user templates and created pieces in db”
+- Questions: Library pieces and your templates only (your words), plus the board pictures they use, or also projects, project templates, prices, decors and 3D models? Does “created pieces” include pieces inside projects?
+- Suggested pick: Pieces and templates plus the pictures they use (a piece without its pictures opens with plain colours; estimate effort +15 %, value +20 %)
+- Note: Answered by the user 2026-10-28: Pieces, templates + pictures; created pieces = library pieces only (not pieces inside projects).
+
+### G-222: Where the local-to-account link is kept
+
+- Status: ADR-128
+- Origin: ADR-128, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No decision on where a local row records its account copy.
+- Request: “New adr for save user templates and created pieces in db”
+- Questions: A separate Dexie table (next free version, documents unchanged), or a field in the design document (schemaVersion 4)?
+- Suggested pick: Separate table: the link is per device and per account and must not travel in exported files or design codes (estimate effort +0 %)
+- Note: Answered by the user 2026-10-28: Separate table.
+
+### G-223: Per-account limits
+
+- Status: ADR-128
+- Origin: ADR-128, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No caps on the number or size of account records.
+- Request: “New adr for save user templates and created pieces in db”
+- Questions: Which per-account count and size caps?
+- Suggested pick: validateDesign's caps per document plus a total size cap set once the vendor's free quota is known (unknown today)
+- Note: Answered by the user 2026-10-28: Design caps + total cap.
+
+### G-224: Designs saved before sign-in
+
+- Status: ADR-129
+- Origin: ADR-129, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No decision on what happens to local designs at the first sign-in.
+- Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
+- Questions: Ask once (Upload all / Choose / Not now), upload everything silently, or upload nothing?
+- Suggested pick: Ask once; nothing moves without your decision (estimate effort +5 %)
+- Note: Answered by the user 2026-10-28: Upload all silently.
+
+### G-225: Edits while offline and signed in
+
+- Status: ADR-129
+- Origin: ADR-129, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No offline policy for account items.
+- Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
+- Questions: Save locally and send later, or block editing account items while offline?
+- Suggested pick: Save locally and send later (closest to offline-first; estimate effort +20 %)
+- Note: Answered by the user 2026-10-28: Save locally, upload later.
+
+### G-226: Same item changed on two devices
+
+- Status: ADR-129
+- Origin: ADR-129, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No conflict policy between devices.
+- Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
+- Questions: Keep both (the second saved as a copy named after its device), last save wins, or ask with a compare?
+- Suggested pick: Keep both: never loses work; last save wins would rewrite a saved design without your decision (estimate effort +10 %)
+- Note: Answered by the user 2026-10-28: Keep both.
+
+### G-227: Signing out on a shared device
+
+- Status: ADR-129
+- Origin: ADR-129, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No decision on local copies after sign-out.
+- Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
+- Questions: Keep the local copies, offer to remove them (with confirmation), or remove them automatically?
+- Suggested pick: Offer to remove, default keep (estimate effort +3 %)
+- Note: Answered by the user 2026-10-28: Offer to remove, default keep.
+
+### G-228: Deleting an item that is in the account
+
+- Status: ADR-129
+- Origin: ADR-129, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No decision on how a delete reaches other devices.
+- Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
+- Questions: Delete everywhere at once, move to an account Trash kept for N days (you pick N), or delete only on this device?
+- Suggested pick: Account Trash; N is your choice (estimate effort +10 %)
+- Note: Answered by the user 2026-10-28: Account Trash, 7 days.
+
+### G-229: Data controller and contact
+
+- Status: ADR-130
+- Origin: ADR-130, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: The privacy notice has no controller name or contact.
+- Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
+- Questions: Who is named as controller (you as a person, or a company) and which contact email?
+- Suggested pick: The person or company that owns the backend account (ADR-127); only you can answer
+- Note: Answered by the user 2026-10-28: Controller: the user as a person; contact Beliserii@gmail.com.
+
+### G-230: Consent for sign-in storage
+
+- Status: ADR-130
+- Origin: ADR-130, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No decision on a consent banner for the session stored on the device.
+- Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
+- Questions: A consent banner, or a line at sign-in explaining the strictly necessary session storage?
+- Suggested pick: A line at sign-in, no banner (engineering guidance, not legal advice; to be checked)
+- Note: Answered by the user 2026-10-28: Line at sign-in, no banner.
+
+### G-231: Privacy notice language
+
+- Status: ADR-130
+- Origin: ADR-130, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No language chosen for the privacy notice.
+- Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
+- Questions: Romanian, English or both?
+- Suggested pick: Both: the app UI is English (ADR-020) and users are in Romania (estimate effort +5 %)
+- Note: Answered by the user 2026-10-28: English.
+
+### G-232: Retention after account deletion
+
+- Status: ADR-130
+- Origin: ADR-130, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No retention period; the vendor's backup period is unknown.
+- Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
+- Questions: Delete at once (vendor backups age out), or keep N days so a deletion can be undone?
+- Suggested pick: Delete at once and state the vendor's backup period once known
+- Note: Answered by the user 2026-10-28: Delete at once.
+
+### G-233: Privacy notice not reviewed by a lawyer
+
+- Status: ADR-130
+- Origin: ADR-130, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: Nobody with legal training has reviewed the notice or the GDPR approach.
+- Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
+- Questions: Have the notice reviewed before public sign-up opens?
+- Suggested pick: Yes, before public sign-up
+- Note: Answered by the user 2026-10-28: No legal review.
+
+### G-234: Where the sign-in session is kept
+
+- Status: ADR-131
+- Origin: ADR-131, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No decision on session storage.
+- Request: “New adr for login using that persistent storage”
+- Questions: IndexedDB or localStorage on the device (survives restarts and offline starts), memory only (sign in on every visit), or an httpOnly cookie (needs a server on the same site; GitHub Pages cannot set one)?
+- Suggested pick: Device storage, protected by a strict CSP (closest to “login using that persistent storage”; estimate effort +0 %)
+- Note: Answered by the user 2026-10-28: On the device.
+
+### G-235: Rate-limit values
+
+- Status: ADR-131
+- Origin: ADR-131, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No rate-limit numbers for sign-in, share-link creation and share-link opening.
+- Request: “New adr share link to templates/pieces”
+- Questions: Which limits per account and per address?
+- Suggested pick: Vendor defaults for sign-in; own share-link limits set once the vendor is known (values unknown today)
+- Note: Answered by the user 2026-10-28: Vendor defaults first.
+
+### G-236: Who can open a share link
+
+- Status: ADR-132
+- Origin: ADR-132, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No access model for share links.
+- Request: “New adr share link to templates/pieces”
+- Questions: Anyone with the link (unlisted), signed-in users only, named people, or a public gallery?
+- Suggested pick: Anyone with the link (closest to “share link”; estimate effort +0 %)
+- Note: Answered by the user 2026-10-28: Anyone with the link.
+
+### G-237: Share-link expiry and revoking
+
+- Status: ADR-132
+- Origin: ADR-132, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No decision on expiry or revoking.
+- Request: “New adr share link to templates/pieces”
+- Questions: No expiry, an expiry the owner sets, or a fixed expiry? Can the owner stop a link?
+- Suggested pick: No expiry by default; the owner can stop a link (estimate effort +5 %)
+- Note: Answered by the user 2026-10-28: No expiry, owner can stop.
+
+### G-238: What a share link shows
+
+- Status: ADR-132
+- Origin: ADR-132, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No decision on snapshot or latest version.
+- Request: “New adr share link to templates/pieces”
+- Questions: The item as it was when shared, or always its latest saved version?
+- Suggested pick: Latest saved version: the link points at the item in the database (estimate effort +5 %)
+- Note: Answered by the user 2026-10-28: Latest saved version.
+
+### G-239: When to ask the browser to keep data
+
+- Status: ADR-133
+- Origin: ADR-133, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No decision on when navigator.storage.persist() is called.
+- Request: “new ADR for persistent storage and folder backup”
+- Questions: At the first save automatically, or only from a button in Settings?
+- Suggested pick: At the first save, with the state shown in Settings (closest to “persistent storage”; estimate effort +2 %)
+- Note: Answered by the user 2026-10-28: At the first save.
+
+### G-240: What a backup holds
+
+- Status: ADR-133
+- Origin: ADR-133, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No decision on backup contents.
+- Request: “new ADR for persistent storage and folder backup”
+- Questions: Everything you made (all saved tables: pieces, projects, templates, pictures, 3D models, decors, prices, versions), or pieces, projects and templates only?
+- Suggested pick: Everything (estimate effort +10 %, value +25 %)
+- Note: Answered by the user 2026-10-28: Everything.
+
+### G-241: Backup layout
+
+- Status: ADR-133
+- Origin: ADR-133, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No backup layout chosen.
+- Request: “new ADR for persistent storage and folder backup”
+- Questions: One importable file per item in subfolders, or one .zip?
+- Suggested pick: One file per item, readable and copyable (closest to “folder backup”; estimate effort +5 %)
+- Note: Answered by the user 2026-10-28: One file per item.
+
+### G-242: When backups run
+
+- Status: ADR-133
+- Origin: ADR-133, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No backup trigger chosen.
+- Request: “new ADR for persistent storage and folder backup”
+- Questions: Manual Back up now, automatic after changes while the app is open, or both?
+- Suggested pick: Both (estimate effort +15 %)
+- Note: Answered by the user 2026-10-28: Both.
+
+### G-243: Browsers without folder access
+
+- Status: ADR-133
+- Origin: ADR-133, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: Folder access (showDirectoryPicker) is missing on some browsers, e.g. iPhone Safari and Firefox (to verify on MDN when building).
+- Request: “new ADR for persistent storage and folder backup”
+- Questions: Download a .zip backup there, or offer nothing?
+- Suggested pick: A .zip download with the same layout (ADR-121 zip; estimate effort +5 %)
+- Note: Answered by the user 2026-10-28: .zip download.
+
+### G-244: Restoring a backup
+
+- Status: ADR-133
+- Origin: ADR-133, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No restore rule.
+- Request: “new ADR for persistent storage and folder backup”
+- Questions: Restore as new copies (new ids, ADR-011), or by id replacing existing rows?
+- Suggested pick: New copies, skipping items identical to one already saved; replacing would rewrite saved designs
+- Note: Answered by the user 2026-10-28: New copies.
+
+### G-245: What 'login using that persistent storage' means
+
+- Status: ADR-134
+- Origin: ADR-134, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: Item 2 has two readings and no Decision for that part.
+- Request: “New adr for login using that persistent storage”
+- Questions: (A) a local profile or lock on this device with no server, or (B) the account sign-in of ADR-135/136 kept in persistent storage so it survives restarts and offline starts?
+- Suggested pick: B: items 3 and 4 are logins to an account (estimate: B +10 % on top of ADR-131; A +25 % as a separate feature, and a real lock needs encryption)
+- Note: Answered by the user 2026-10-28: B: account session kept on the device.
+
+### G-246: Reading A: lock or profiles
+
+- Status: ADR-134
+- Origin: ADR-134, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: If reading A is chosen, its form is open.
+- Request: “New adr for login using that persistent storage”
+- Questions: A PIN/passphrase lock (needs the saved data encrypted to protect anything), or several local profiles each with its own designs?
+- Suggested pick: Only if A is chosen: a passphrase lock with encrypted storage (closest to “login”)
+- Note: Answered by the user 2026-10-28: Not applicable (reading B chosen).
+
+### G-247: Google sign-in: redirect or popup
+
+- Status: ADR-135
+- Origin: ADR-135, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No sign-in flow chosen.
+- Request: “New adr for gmail login”
+- Questions: Full-page redirect or popup?
+- Suggested pick: Redirect: works in the installed app and on phones that block popups (estimate effort +0 %)
+- Note: Answered by the user 2026-10-28: Full-page redirect.
+
+### G-248: Google OAuth client and consent screen
+
+- Status: ADR-135
+- Origin: ADR-135, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No Google Cloud OAuth client or consent screen exists; Google's verification requirements are unknown.
+- Request: “New adr for gmail login”
+- Questions: Who registers the OAuth client and consent screen (app name, privacy notice link)?
+- Suggested pick: You, under the account of ADR-127
+- Note: Answered by the user 2026-10-28: The user, under the same personal account.
+
+### G-249: Same email by Google and by password
+
+- Status: ADR-135
+- Origin: ADR-135, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No rule for one email used with both sign-in methods.
+- Request: “New adr for gmail login”
+- Questions: Link them when the email is verified, keep separate accounts, or ask?
+- Suggested pick: Link when verified (estimate effort +0-5 %)
+- Note: Answered by the user 2026-10-28: Link when verified, then revised with G-254: no linking; Google and password logins with one email stay separate.
+
+### G-250: Email provider for reset emails
+
+- Status: ADR-136
+- Origin: ADR-136, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: Forgot/reset password and email verification need an email sender; none is chosen.
+- Request: “New adr for ui login (including gmail)/logout/forgot password/reset password”
+- Questions: The backend's built-in email (limits unknown), or your own sender through SMTP (e.g. Brevo, Resend, Amazon SES; facts unknown)?
+- Suggested pick: Your own sender set in the backend, after checking its free limits (reset mail must arrive; estimate effort +10 %)
+- Note: Answered by the user 2026-10-28: Supabase built-in email.
+
+### G-251: Where Account sits
+
+- Status: ADR-136
+- Origin: ADR-136, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No place chosen for the Account entry.
+- Request: “New adr for ui login (including gmail)/logout/forgot password/reset password”
+- Questions: An Account icon button in the top bar, an item in the ⋯ menu, or Settings?
+- Suggested pick: Top bar icon button, visible at 390 and 1280 px (estimate effort +3 %)
+- Note: Answered by the user 2026-10-28: Top bar icon.
+
+### G-252: Create account screen
+
+- Status: ADR-136
+- Origin: ADR-136, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: Item 4 names login, logout, forgot and reset, not sign-up.
+- Request: “New adr for ui login (including gmail)/logout/forgot password/reset password”
+- Questions: Include Create account with email and password, or allow new accounts only through Google?
+- Suggested pick: Include it: forgot and reset password imply email accounts (estimate effort +10 %)
+- Note: Answered by the user 2026-10-28: Yes, Create account.
+
+### G-253: Password rules
+
+- Status: ADR-136
+- Origin: ADR-136, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No password rule chosen.
+- Request: “New adr for ui login (including gmail)/logout/forgot password/reset password”
+- Questions: The provider's default, or a minimum length you set?
+- Suggested pick: The provider's default, shown under the field
+- Note: Answered by the user 2026-10-28: Supabase default.
+
+### G-254: Email verification
+
+- Status: ADR-136
+- Origin: ADR-136, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No decision on verifying the email before the first sign-in.
+- Request: “New adr for ui login (including gmail)/logout/forgot password/reset password”
+- Questions: Require verification, or not?
+- Suggested pick: Require it (stops sign-ups with someone else's email; estimate effort +5 %)
+- Note: Answered by the user 2026-10-28: No email verification.
+
+### G-255: Automatic or per item
+
+- Status: ADR-137
+- Origin: ADR-137, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No decision on how items reach the account.
+- Request: “New adr for save user templates and created pieces in db”
+- Questions: While signed in, every saved piece and template goes to the account automatically, or only those marked Save to account?
+- Suggested pick: Automatic, with Keep on this device only per item (closest to “save ... in db”; estimate effort +10 %)
+- Note: Answered by the user 2026-10-28: Automatic, with Keep on this device only.
+
+### G-256: Edited shipped templates
+
+- Status: ADR-137
+- Origin: ADR-137, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No decision on local templates that shadow shipped ones (ADR-034).
+- Request: “New adr for save user templates and created pieces in db”
+- Questions: Save your edits of shipped templates to the account too?
+- Suggested pick: Yes: they are your templates (estimate effort +2 %)
+- Note: Answered by the user 2026-10-28: Yes.
+
+### G-257: Share links beside design codes
+
+- Status: ADR-138
+- Origin: ADR-138, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No decision on Copy code (ADR-124) once share links exist.
+- Request: “New adr share link to templates/pieces”
+- Questions: Keep Copy code beside Share link, or replace it?
+- Suggested pick: Keep both: codes work offline and without an account (estimate effort +0 %)
+- Note: Answered by the user 2026-10-28: Keep both.
+
+### G-258: Share-link form
+
+- Status: ADR-138
+- Origin: ADR-138, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No link form chosen.
+- Request: “New adr share link to templates/pieces”
+- Questions: A fragment link …/furniture-builder/#share=<id> (never sent to GitHub Pages), or a path …/s/<id> (needs a 404.html redirect on Pages)?
+- Suggested pick: Fragment (estimate effort +0 %)
+- Note: Answered by the user 2026-10-28: #share=<id>.
+
+### G-259: List of your shared links
+
+- Status: ADR-138
+- Origin: ADR-138, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No overview of shared links.
+- Request: “New adr share link to templates/pieces”
+- Questions: A Shared links list in Account with Stop sharing, or only per item?
+- Suggested pick: Per item plus the list (estimate effort +10 %)
+- Note: Answered by the user 2026-10-28: Per item + list.
+
+### G-260: Where sync status shows
+
+- Status: ADR-139
+- Origin: ADR-139, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: Proposed by Claude, not requested.
+- Request: Task 2026-10-28: “propose further architecture and UX ADRs” (proposed by Claude, not requested)
+- Questions: Beside the save status in the top bar, as a badge per item in lists, or both?
+- Suggested pick: Both (estimate effort +10 %)
+- Note: Answered by the user 2026-10-28: Both.
+
+### G-261: When the device-only banner shows
+
+- Status: ADR-140
+- Origin: ADR-140, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: Proposed by Claude, not requested.
+- Request: Task 2026-10-28: “propose further architecture and UX ADRs” (proposed by Claude, not requested)
+- Questions: Always while nothing is backed up or in an account (dismissible for N days you choose), or once only?
+- Suggested pick: Dismissible, back after N days you choose
+- Note: Answered by the user 2026-10-28: Dismissible, back after 7 days.
+
+### G-262: Backup reminder interval
+
+- Status: ADR-141
+- Origin: ADR-141, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: Proposed by Claude, not requested.
+- Request: Task 2026-10-28: “propose further architecture and UX ADRs” (proposed by Claude, not requested)
+- Questions: A fixed interval, or a Settings choice (including Off) starting at a value you pick?
+- Suggested pick: A Settings choice; the starting value is yours
+- Note: Answered by the user 2026-10-28: Settings choice with Off, starting at 30 days.
+
+### G-263: Several accounts on one device
+
+- Status: ADR-142
+- Origin: ADR-142, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: Proposed by Claude, not requested.
+- Request: Task 2026-10-28: “propose further architecture and UX ADRs” (proposed by Claude, not requested)
+- Questions: Several accounts with separate account copies, or one account at a time?
+- Suggested pick: Several, each with its own account copies; device-only items stay visible to all (estimate effort +20 %)
+- Note: Answered by the user 2026-10-28: Several accounts.
+
+### G-264: What the shared-item preview shows
+
+- Status: ADR-143
+- Origin: ADR-143, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: Proposed by Claude, not requested.
+- Request: Task 2026-10-28: “propose further architecture and UX ADRs” (proposed by Claude, not requested)
+- Questions: Name, front view and part count; plus 3D; or plus the full cut list?
+- Suggested pick: Name, front view and part count, then Open a copy (estimate effort +0 %)
+- Note: Answered by the user 2026-10-28: Name, front view, parts, plus 3D.
+
+### G-265: 2D label for Front too
+
+- Status: ADR-144
+- Origin: ADR-144, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: The piece editor labels the drawing Front, not Plan; the request names only Plan.
+- Request: User 2026-10-28: "ADR to have the views container same in compose and build and preview. Same 2D(rename it to 2D from Plan), 3D and both toggle"
+- Questions: Rename Front to 2D too, or only Plan?
+- Suggested pick: Both become 2D: one label in every container (closest to 'same'; estimate effort +2 %)
+
+### G-266: View kept across modes
+
+- Status: ADR-144
+- Origin: ADR-144, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: Today changing mode resets the view to that mode's default (ADR-081).
+- Request: User 2026-10-28: "ADR to have the views container same in compose and build and preview. Same 2D(rename it to 2D from Plan), 3D and both toggle"
+- Questions: Keep one chosen view across Compose and Build & Preview, or keep a separate default per mode?
+- Suggested pick: One chosen view kept across modes (closest to 'same'; estimate effort +3 %)
+
+### G-267: View switch in phone Compose
+
+- Status: ADR-144
+- Origin: ADR-144, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: On a phone Compose has no View switch and never mounts 3D (ADR-079, ADR-081).
+- Request: User 2026-10-28: "ADR to have the views container same in compose and build and preview. Same 2D(rename it to 2D from Plan), 3D and both toggle"
+- Questions: Show 2D, 3D and Both in phone Compose too (the 3D canvas then mounts there when chosen), or keep phone Compose 2D only?
+- Suggested pick: Show them in phone Compose too (closest to 'same'; estimate effort +10 %, risk: 3D on a phone while composing is slower)
+
+### G-268: One default view
+
+- Status: ADR-144
+- Origin: ADR-144, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No single default view for both modes.
+- Request: User 2026-10-28: "ADR to have the views container same in compose and build and preview. Same 2D(rename it to 2D from Plan), 3D and both toggle"
+- Questions: Default view for both modes: 2D below 1500 px and Both from 1500 px; 3D below 1500 px; or Both everywhere?
+- Suggested pick: 2D below 1500 px and Both from 1500 px (keeps the editing drawing first, ADR-014; estimate effort +0 %)
+
+### G-269: Phone view tools in both modes
+
+- Status: ADR-144
+- Origin: ADR-144, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: On a phone the view tools sit behind an Options button only in Build & Preview.
+- Request: User 2026-10-28: "ADR to have the views container same in compose and build and preview. Same 2D(rename it to 2D from Plan), 3D and both toggle"
+- Questions: Use the Options button on a phone in both modes, or inline tools in both? Answer 2026-10-28: "in options all except Fronts, Select, Move, Turn 90 both of them"
+- Suggested pick: The Options button in both modes on a phone (keeps the stage height; estimate effort +2 %)
