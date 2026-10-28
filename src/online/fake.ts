@@ -21,6 +21,13 @@ export const fakeServer = (): FakeServer => ({
   offline: false,
 });
 
+/** A server row without its owner, as the app sees it. */
+function strip<T extends { owner: string }>(row: T): Omit<T, 'owner'> {
+  const out: Partial<T> = { ...row };
+  delete out.owner;
+  return out as Omit<T, 'owner'>;
+}
+
 let seq = 0;
 const id = () => `id-${++seq}-${Math.random().toString(36).slice(2, 8)}`;
 const now = () => new Date().toISOString();
@@ -92,7 +99,7 @@ export function fakeBackend(server: FakeServer = fakeServer()): Backend & { serv
       const o = own();
       return [...server.records.values()]
         .filter((r) => r.owner === o)
-        .map(({ owner: _o, ...r }) => structuredClone(r));
+        .map((r) => structuredClone(strip(r)));
     },
     async saveRecord(r) {
       const o = own();
@@ -109,8 +116,7 @@ export function fakeBackend(server: FakeServer = fakeServer()): Backend & { serv
           owner: o,
         };
         server.records.set(rec.id, rec);
-        const { owner: _o, ...out } = rec;
-        return { ok: true, record: structuredClone(out) };
+        return { ok: true, record: structuredClone(strip(rec)) };
       }
       const cur = server.records.get(r.id);
       if (!cur || cur.owner !== o || cur.revision !== r.baseRevision)
@@ -123,8 +129,7 @@ export function fakeBackend(server: FakeServer = fakeServer()): Backend & { serv
         updatedAt: now(),
         deletedAt: null,
       });
-      const { owner: _o, ...out } = cur;
-      return { ok: true, record: structuredClone(out) };
+      return { ok: true, record: structuredClone(strip(cur)) };
     },
     async trashRecord(rid, trash) {
       const o = own();
@@ -148,14 +153,11 @@ export function fakeBackend(server: FakeServer = fakeServer()): Backend & { serv
       if (!rec || rec.owner !== o || rec.deletedAt) throw new Error('not found');
       const s = { id: shareId, recordId, createdAt: now(), stoppedAt: null, owner: o };
       server.shares.set(shareId, s);
-      const { owner: _o, ...out } = s;
-      return out;
+      return strip(s);
     },
     async listShares() {
       const o = own();
-      return [...server.shares.values()]
-        .filter((s) => s.owner === o)
-        .map(({ owner: _o, ...s }) => s);
+      return [...server.shares.values()].filter((s) => s.owner === o).map(strip);
     },
     async stopShare(shareId) {
       const o = own();
