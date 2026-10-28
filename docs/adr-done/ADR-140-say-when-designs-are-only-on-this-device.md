@@ -1,7 +1,8 @@
 # ADR-140: Say when designs are only on this device
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-28
+- Implemented: 2026-10-28 (2026-10-28 (light acceptance; find-it pending (ADR-066)))
 - Depends on: ADR-133
 - Design: docs/ui-design.md (Alert `.alert.info`, Library)
 - Backlog: N141

@@ -1,7 +1,8 @@
 # ADR-137: Save your templates and pieces in your account
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-28
+- Implemented: 2026-10-28 (2026-10-28 (light acceptance; find-it pending (ADR-066)))
 - Depends on: ADR-128, ADR-129, ADR-136
 - Design: docs/ui-design.md (Row button, Badge, Status, Library and Catalog screens)
 - Backlog: N138

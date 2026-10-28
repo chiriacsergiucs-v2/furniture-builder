@@ -1,7 +1,8 @@
 # ADR-133: Keep saved data persistent and back it up to a folder
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-28
+- Implemented: 2026-10-28 (2026-10-28 (light acceptance; find-it pending (ADR-066)))
 - Depends on: ADR-012
 - Design: docs/ui-design.md (Settings dialog, Section card, Alert, Status)
 - Backlog: N134

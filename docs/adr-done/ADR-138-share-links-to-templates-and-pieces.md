@@ -1,7 +1,8 @@
 # ADR-138: Share links to templates and pieces
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-28
+- Implemented: 2026-10-28 (2026-10-28 (light acceptance; find-it pending (ADR-066)))
 - Depends on: ADR-132, ADR-137
 - Design: docs/ui-design.md (Menu, Dialog, Button, Alert)
 - Backlog: N139

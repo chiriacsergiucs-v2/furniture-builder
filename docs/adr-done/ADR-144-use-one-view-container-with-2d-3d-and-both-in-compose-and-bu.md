@@ -1,7 +1,8 @@
 # ADR-144: Use one view container with 2D, 3D and Both in Compose and Build & Preview
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-28
+- Implemented: 2026-10-28 (2026-10-28 (light acceptance; find-it pending (ADR-066)))
 - Depends on: ADR-079, ADR-081
 - Design: docs/ui-design.md (§4 Screens: editor, stage tools; Segmented)
 - Backlog: N145

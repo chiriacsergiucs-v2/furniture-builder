@@ -1,7 +1,8 @@
 # ADR-127: Choose the backend, sign-in provider and database
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-28
+- Implemented: 2026-10-28 (2026-10-28 (light acceptance; find-it pending (ADR-066)))
 - Depends on: ADR-126
 - Design: n/a
 - Backlog: N128
@@ -13,7 +14,7 @@
 Items 3–6 of the user's list (2026-10-28: "gmail login", "ui login … forgot password/reset password", "save user
 templates and created pieces in db", "share link to templates/pieces") need a sign-in provider with Google and
 email/password, an email sender for resets, a database and an HTTP API reachable from the static site on GitHub
-Pages ([ADR-126](ADR-126-keep-the-core-offline-and-allow-opt-in-online-features.md)). Nothing is chosen.
+Pages ([ADR-126](../adr-done/ADR-126-keep-the-core-offline-and-allow-opt-in-online-features.md)). Nothing is chosen.
 
 Vendor facts below come from earlier research (2026-10-27/28, secondary sources, **unverified**) or are
 **unknown**. No price, quota or licence is stated as fact (ADR-010 by analogy).

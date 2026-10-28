@@ -1,7 +1,8 @@
 # ADR-134: Login using the persistent storage
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-28
+- Implemented: 2026-10-28 (2026-10-28 (light acceptance; find-it pending (ADR-066)))
 - Depends on: ADR-127, ADR-131, ADR-133
 - Design: docs/ui-design.md (Dialog, top bar)
 - Backlog: N135
@@ -11,7 +12,7 @@
 ## Context
 
 The user asked (2026-10-28): "New adr for login using that persistent storage", right after "new ADR for
-persistent storage and folder backup" ([ADR-133](ADR-133-keep-saved-data-persistent-and-back-it-up-to-a-folder.md)).
+persistent storage and folder backup" ([ADR-133](../adr-done/ADR-133-keep-saved-data-persistent-and-back-it-up-to-a-folder.md)).
 The words allow two readings, and the user has not said which:
 
 - **(A) Local login, no server.** A profile or lock on this device, stored in the persistent storage of ADR-133.

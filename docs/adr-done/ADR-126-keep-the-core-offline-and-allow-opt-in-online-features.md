@@ -1,7 +1,8 @@
 # ADR-126: Keep the core offline and allow opt-in online features
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-28
+- Implemented: 2026-10-28 (2026-10-28 (light acceptance; find-it pending (ADR-066)))
 - Depends on: none
 - Design: n/a
 - Backlog: N127

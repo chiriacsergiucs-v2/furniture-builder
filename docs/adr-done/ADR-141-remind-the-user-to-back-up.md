@@ -1,7 +1,8 @@
 # ADR-141: Remind the user to back up
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-28
+- Implemented: 2026-10-28 (2026-10-28 (light acceptance; find-it pending (ADR-066)))
 - Depends on: ADR-133
 - Design: docs/ui-design.md (Toast, Settings dialog)
 - Backlog: N142

@@ -1,7 +1,8 @@
 # ADR-130: Privacy notice, data export and account deletion
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-28
+- Implemented: 2026-10-28 (2026-10-28 (light acceptance; find-it pending (ADR-066)))
 - Depends on: ADR-127
 - Design: docs/ui-design.md (Dialog, Section card, Button `danger`)
 - Backlog: N131

@@ -1681,7 +1681,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-213: Paid backend allowed
 
-- Status: ADR-126
+- Status: Done (ADR-126)
 - Origin: ADR-126, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No decision on whether the online features may use a paid plan; ADR-002 says the owner wants no paid dependency.
 - Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
@@ -1691,7 +1691,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-214: Who can create an account
 
-- Status: ADR-126
+- Status: Done (ADR-126)
 - Origin: ADR-126, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No decision on who may sign up.
 - Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
@@ -1701,7 +1701,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-215: How online code is loaded
 
-- Status: ADR-126
+- Status: Done (ADR-126)
 - Origin: ADR-126, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No decision on whether the online client code is in the main bundle.
 - Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
@@ -1711,7 +1711,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-216: Opening a share link asks first
 
-- Status: ADR-126
+- Status: Done (ADR-126)
 - Origin: ADR-126, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No decision on whether opening a share link contacts the server at once.
 - Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
@@ -1721,7 +1721,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-217: Backend vendor not chosen
 
-- Status: ADR-127
+- Status: Done (ADR-127)
 - Origin: ADR-127, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No backend, auth provider or database is chosen.
 - Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
@@ -1731,7 +1731,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-218: Data region
 
-- Status: ADR-127
+- Status: Done (ADR-127)
 - Origin: ADR-127, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No data region chosen.
 - Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
@@ -1741,7 +1741,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-219: Owner of the backend account and keys
 
-- Status: ADR-127
+- Status: Done (ADR-127)
 - Origin: ADR-127, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No owner of the vendor account, billing and keys.
 - Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
@@ -1751,7 +1751,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-220: Vendor facts unverified
 
-- Status: ADR-127
+- Status: Done (ADR-127)
 - Origin: ADR-127, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: Free-tier quotas, idle pauses, prices, licences and telemetry of every candidate are unknown or come from unverified secondary research (2026-10-27/28).
 - Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
@@ -1761,7 +1761,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-221: Which records go to the account
 
-- Status: ADR-128
+- Status: Done (ADR-128)
 - Origin: ADR-128, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No decision on which saved data is stored in the account.
 - Request: “New adr for save user templates and created pieces in db”
@@ -1771,7 +1771,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-222: Where the local-to-account link is kept
 
-- Status: ADR-128
+- Status: Done (ADR-128)
 - Origin: ADR-128, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No decision on where a local row records its account copy.
 - Request: “New adr for save user templates and created pieces in db”
@@ -1781,7 +1781,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-223: Per-account limits
 
-- Status: ADR-128
+- Status: Done (ADR-128)
 - Origin: ADR-128, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No caps on the number or size of account records.
 - Request: “New adr for save user templates and created pieces in db”
@@ -1791,7 +1791,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-224: Designs saved before sign-in
 
-- Status: ADR-129
+- Status: Done (ADR-129)
 - Origin: ADR-129, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No decision on what happens to local designs at the first sign-in.
 - Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
@@ -1801,7 +1801,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-225: Edits while offline and signed in
 
-- Status: ADR-129
+- Status: Done (ADR-129)
 - Origin: ADR-129, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No offline policy for account items.
 - Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
@@ -1811,7 +1811,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-226: Same item changed on two devices
 
-- Status: ADR-129
+- Status: Done (ADR-129)
 - Origin: ADR-129, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No conflict policy between devices.
 - Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
@@ -1821,7 +1821,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-227: Signing out on a shared device
 
-- Status: ADR-129
+- Status: Done (ADR-129)
 - Origin: ADR-129, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No decision on local copies after sign-out.
 - Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
@@ -1831,7 +1831,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-228: Deleting an item that is in the account
 
-- Status: ADR-129
+- Status: Done (ADR-129)
 - Origin: ADR-129, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No decision on how a delete reaches other devices.
 - Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
@@ -1841,7 +1841,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-229: Data controller and contact
 
-- Status: ADR-130
+- Status: Done (ADR-130)
 - Origin: ADR-130, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: The privacy notice has no controller name or contact.
 - Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
@@ -1851,7 +1851,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-230: Consent for sign-in storage
 
-- Status: ADR-130
+- Status: Done (ADR-130)
 - Origin: ADR-130, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No decision on a consent banner for the session stored on the device.
 - Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
@@ -1861,7 +1861,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-231: Privacy notice language
 
-- Status: ADR-130
+- Status: Done (ADR-130)
 - Origin: ADR-130, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No language chosen for the privacy notice.
 - Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
@@ -1871,7 +1871,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-232: Retention after account deletion
 
-- Status: ADR-130
+- Status: Done (ADR-130)
 - Origin: ADR-130, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No retention period; the vendor's backup period is unknown.
 - Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
@@ -1881,7 +1881,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-233: Privacy notice not reviewed by a lawyer
 
-- Status: ADR-130
+- Status: Done (ADR-130)
 - Origin: ADR-130, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: Nobody with legal training has reviewed the notice or the GDPR approach.
 - Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts, with templates and pieces saved in a database and shareable”
@@ -1891,7 +1891,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-234: Where the sign-in session is kept
 
-- Status: ADR-131
+- Status: Done (ADR-131)
 - Origin: ADR-131, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No decision on session storage.
 - Request: “New adr for login using that persistent storage”
@@ -1901,7 +1901,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-235: Rate-limit values
 
-- Status: ADR-131
+- Status: Done (ADR-131)
 - Origin: ADR-131, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No rate-limit numbers for sign-in, share-link creation and share-link opening.
 - Request: “New adr share link to templates/pieces”
@@ -1911,7 +1911,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-236: Who can open a share link
 
-- Status: ADR-132
+- Status: Done (ADR-132)
 - Origin: ADR-132, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No access model for share links.
 - Request: “New adr share link to templates/pieces”
@@ -1921,7 +1921,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-237: Share-link expiry and revoking
 
-- Status: ADR-132
+- Status: Done (ADR-132)
 - Origin: ADR-132, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No decision on expiry or revoking.
 - Request: “New adr share link to templates/pieces”
@@ -1931,7 +1931,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-238: What a share link shows
 
-- Status: ADR-132
+- Status: Done (ADR-132)
 - Origin: ADR-132, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No decision on snapshot or latest version.
 - Request: “New adr share link to templates/pieces”
@@ -1941,7 +1941,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-239: When to ask the browser to keep data
 
-- Status: ADR-133
+- Status: Done (ADR-133)
 - Origin: ADR-133, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No decision on when navigator.storage.persist() is called.
 - Request: “new ADR for persistent storage and folder backup”
@@ -1951,7 +1951,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-240: What a backup holds
 
-- Status: ADR-133
+- Status: Done (ADR-133)
 - Origin: ADR-133, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No decision on backup contents.
 - Request: “new ADR for persistent storage and folder backup”
@@ -1961,7 +1961,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-241: Backup layout
 
-- Status: ADR-133
+- Status: Done (ADR-133)
 - Origin: ADR-133, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No backup layout chosen.
 - Request: “new ADR for persistent storage and folder backup”
@@ -1971,7 +1971,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-242: When backups run
 
-- Status: ADR-133
+- Status: Done (ADR-133)
 - Origin: ADR-133, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No backup trigger chosen.
 - Request: “new ADR for persistent storage and folder backup”
@@ -1981,7 +1981,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-243: Browsers without folder access
 
-- Status: ADR-133
+- Status: Done (ADR-133)
 - Origin: ADR-133, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: Folder access (showDirectoryPicker) is missing on some browsers, e.g. iPhone Safari and Firefox (to verify on MDN when building).
 - Request: “new ADR for persistent storage and folder backup”
@@ -1991,7 +1991,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-244: Restoring a backup
 
-- Status: ADR-133
+- Status: Done (ADR-133)
 - Origin: ADR-133, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No restore rule.
 - Request: “new ADR for persistent storage and folder backup”
@@ -2001,7 +2001,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-245: What 'login using that persistent storage' means
 
-- Status: ADR-134
+- Status: Done (ADR-134)
 - Origin: ADR-134, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: Item 2 has two readings and no Decision for that part.
 - Request: “New adr for login using that persistent storage”
@@ -2011,7 +2011,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-246: Reading A: lock or profiles
 
-- Status: ADR-134
+- Status: Done (ADR-134)
 - Origin: ADR-134, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: If reading A is chosen, its form is open.
 - Request: “New adr for login using that persistent storage”
@@ -2021,7 +2021,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-247: Google sign-in: redirect or popup
 
-- Status: ADR-135
+- Status: Done (ADR-135)
 - Origin: ADR-135, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No sign-in flow chosen.
 - Request: “New adr for gmail login”
@@ -2031,7 +2031,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-248: Google OAuth client and consent screen
 
-- Status: ADR-135
+- Status: Done (ADR-135)
 - Origin: ADR-135, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No Google Cloud OAuth client or consent screen exists; Google's verification requirements are unknown.
 - Request: “New adr for gmail login”
@@ -2041,7 +2041,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-249: Same email by Google and by password
 
-- Status: ADR-135
+- Status: Done (ADR-135)
 - Origin: ADR-135, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No rule for one email used with both sign-in methods.
 - Request: “New adr for gmail login”
@@ -2051,7 +2051,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-250: Email provider for reset emails
 
-- Status: ADR-136
+- Status: Done (ADR-136)
 - Origin: ADR-136, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: Forgot/reset password and email verification need an email sender; none is chosen.
 - Request: “New adr for ui login (including gmail)/logout/forgot password/reset password”
@@ -2061,7 +2061,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-251: Where Account sits
 
-- Status: ADR-136
+- Status: Done (ADR-136)
 - Origin: ADR-136, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No place chosen for the Account entry.
 - Request: “New adr for ui login (including gmail)/logout/forgot password/reset password”
@@ -2071,7 +2071,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-252: Create account screen
 
-- Status: ADR-136
+- Status: Done (ADR-136)
 - Origin: ADR-136, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: Item 4 names login, logout, forgot and reset, not sign-up.
 - Request: “New adr for ui login (including gmail)/logout/forgot password/reset password”
@@ -2081,7 +2081,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-253: Password rules
 
-- Status: ADR-136
+- Status: Done (ADR-136)
 - Origin: ADR-136, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No password rule chosen.
 - Request: “New adr for ui login (including gmail)/logout/forgot password/reset password”
@@ -2091,7 +2091,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-254: Email verification
 
-- Status: ADR-136
+- Status: Done (ADR-136)
 - Origin: ADR-136, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No decision on verifying the email before the first sign-in.
 - Request: “New adr for ui login (including gmail)/logout/forgot password/reset password”
@@ -2101,7 +2101,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-255: Automatic or per item
 
-- Status: ADR-137
+- Status: Done (ADR-137)
 - Origin: ADR-137, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No decision on how items reach the account.
 - Request: “New adr for save user templates and created pieces in db”
@@ -2111,7 +2111,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-256: Edited shipped templates
 
-- Status: ADR-137
+- Status: Done (ADR-137)
 - Origin: ADR-137, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No decision on local templates that shadow shipped ones (ADR-034).
 - Request: “New adr for save user templates and created pieces in db”
@@ -2121,7 +2121,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-257: Share links beside design codes
 
-- Status: ADR-138
+- Status: Done (ADR-138)
 - Origin: ADR-138, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No decision on Copy code (ADR-124) once share links exist.
 - Request: “New adr share link to templates/pieces”
@@ -2131,7 +2131,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-258: Share-link form
 
-- Status: ADR-138
+- Status: Done (ADR-138)
 - Origin: ADR-138, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No link form chosen.
 - Request: “New adr share link to templates/pieces”
@@ -2141,7 +2141,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-259: List of your shared links
 
-- Status: ADR-138
+- Status: Done (ADR-138)
 - Origin: ADR-138, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No overview of shared links.
 - Request: “New adr share link to templates/pieces”
@@ -2151,7 +2151,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-260: Where sync status shows
 
-- Status: ADR-139
+- Status: Done (ADR-139)
 - Origin: ADR-139, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: Proposed by Claude, not requested.
 - Request: Task 2026-10-28: “propose further architecture and UX ADRs” (proposed by Claude, not requested)
@@ -2161,7 +2161,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-261: When the device-only banner shows
 
-- Status: ADR-140
+- Status: Done (ADR-140)
 - Origin: ADR-140, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: Proposed by Claude, not requested.
 - Request: Task 2026-10-28: “propose further architecture and UX ADRs” (proposed by Claude, not requested)
@@ -2171,7 +2171,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-262: Backup reminder interval
 
-- Status: ADR-141
+- Status: Done (ADR-141)
 - Origin: ADR-141, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: Proposed by Claude, not requested.
 - Request: Task 2026-10-28: “propose further architecture and UX ADRs” (proposed by Claude, not requested)
@@ -2181,7 +2181,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-263: Several accounts on one device
 
-- Status: ADR-142
+- Status: Done (ADR-142)
 - Origin: ADR-142, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: Proposed by Claude, not requested.
 - Request: Task 2026-10-28: “propose further architecture and UX ADRs” (proposed by Claude, not requested)
@@ -2191,7 +2191,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-264: What the shared-item preview shows
 
-- Status: ADR-143
+- Status: Done (ADR-143)
 - Origin: ADR-143, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: Proposed by Claude, not requested.
 - Request: Task 2026-10-28: “propose further architecture and UX ADRs” (proposed by Claude, not requested)
@@ -2201,7 +2201,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-265: 2D label for Front too
 
-- Status: ADR-144
+- Status: Done (ADR-144)
 - Origin: ADR-144, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: The piece editor labels the drawing Front, not Plan; the request names only Plan.
 - Request: User 2026-10-28: "ADR to have the views container same in compose and build and preview. Same 2D(rename it to 2D from Plan), 3D and both toggle"
@@ -2210,7 +2210,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-266: View kept across modes
 
-- Status: ADR-144
+- Status: Done (ADR-144)
 - Origin: ADR-144, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: Today changing mode resets the view to that mode's default (ADR-081).
 - Request: User 2026-10-28: "ADR to have the views container same in compose and build and preview. Same 2D(rename it to 2D from Plan), 3D and both toggle"
@@ -2219,7 +2219,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-267: View switch in phone Compose
 
-- Status: ADR-144
+- Status: Done (ADR-144)
 - Origin: ADR-144, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: On a phone Compose has no View switch and never mounts 3D (ADR-079, ADR-081).
 - Request: User 2026-10-28: "ADR to have the views container same in compose and build and preview. Same 2D(rename it to 2D from Plan), 3D and both toggle"
@@ -2228,7 +2228,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-268: One default view
 
-- Status: ADR-144
+- Status: Done (ADR-144)
 - Origin: ADR-144, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: No single default view for both modes.
 - Request: User 2026-10-28: "ADR to have the views container same in compose and build and preview. Same 2D(rename it to 2D from Plan), 3D and both toggle"
@@ -2237,7 +2237,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-269: Phone view tools in both modes
 
-- Status: ADR-144
+- Status: Done (ADR-144)
 - Origin: ADR-144, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
 - Missing: On a phone the view tools sit behind an Options button only in Build & Preview.
 - Request: User 2026-10-28: "ADR to have the views container same in compose and build and preview. Same 2D(rename it to 2D from Plan), 3D and both toggle"

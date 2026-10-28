@@ -1,7 +1,8 @@
 # ADR-132: Share-link access model
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-28
+- Implemented: 2026-10-28 (2026-10-28 (light acceptance; find-it pending (ADR-066)))
 - Depends on: ADR-128, ADR-131
 - Design: n/a
 - Backlog: N133
