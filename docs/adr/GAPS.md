@@ -2146,3 +2146,48 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Task 2026-10-28: “propose further architecture and UX ADRs” (proposed by Claude, not requested)
 - Questions: Name, front view and part count; plus 3D; or plus the full cut list?
 - Suggested pick: Name, front view and part count, then Open a copy (estimate effort +0 %)
+
+### G-265: 2D label for Front too
+
+- Status: Open
+- Origin: ADR-144, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: The piece editor labels the drawing Front, not Plan; the request names only Plan.
+- Request: User 2026-10-28: "ADR to have the views container same in compose and build and preview. Same 2D(rename it to 2D from Plan), 3D and both toggle"
+- Questions: Rename Front to 2D too, or only Plan?
+- Suggested pick: Both become 2D: one label in every container (closest to 'same'; estimate effort +2 %)
+
+### G-266: View kept across modes
+
+- Status: Open
+- Origin: ADR-144, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: Today changing mode resets the view to that mode's default (ADR-081).
+- Request: User 2026-10-28: "ADR to have the views container same in compose and build and preview. Same 2D(rename it to 2D from Plan), 3D and both toggle"
+- Questions: Keep one chosen view across Compose and Build & Preview, or keep a separate default per mode?
+- Suggested pick: One chosen view kept across modes (closest to 'same'; estimate effort +3 %)
+
+### G-267: View switch in phone Compose
+
+- Status: Open
+- Origin: ADR-144, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: On a phone Compose has no View switch and never mounts 3D (ADR-079, ADR-081).
+- Request: User 2026-10-28: "ADR to have the views container same in compose and build and preview. Same 2D(rename it to 2D from Plan), 3D and both toggle"
+- Questions: Show 2D, 3D and Both in phone Compose too (the 3D canvas then mounts there when chosen), or keep phone Compose 2D only?
+- Suggested pick: Show them in phone Compose too (closest to 'same'; estimate effort +10 %, risk: 3D on a phone while composing is slower)
+
+### G-268: One default view
+
+- Status: Open
+- Origin: ADR-144, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: No single default view for both modes.
+- Request: User 2026-10-28: "ADR to have the views container same in compose and build and preview. Same 2D(rename it to 2D from Plan), 3D and both toggle"
+- Questions: Default view for both modes: 2D below 1500 px and Both from 1500 px; 3D below 1500 px; or Both everywhere?
+- Suggested pick: 2D below 1500 px and Both from 1500 px (keeps the editing drawing first, ADR-014; estimate effort +0 %)
+
+### G-269: Phone view tools in both modes
+
+- Status: Open
+- Origin: ADR-144, 2026-10-28; open question in the ADR (Claude wrote the ADR, nothing chosen)
+- Missing: On a phone the view tools sit behind an Options button only in Build & Preview.
+- Request: User 2026-10-28: "ADR to have the views container same in compose and build and preview. Same 2D(rename it to 2D from Plan), 3D and both toggle"
+- Questions: Use the Options button on a phone in both modes, or inline tools in both?
+- Suggested pick: The Options button in both modes on a phone (keeps the stage height; estimate effort +2 %)
