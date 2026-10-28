@@ -47,6 +47,7 @@ import { ProjectTemplateList } from './ProjectTemplates';
 import { askConfirm, askText } from './Confirm';
 import { InfoTip } from './controls';
 import { Icon } from './icons';
+import { AccountBadge, AccountRowActions } from './Account';
 import { familyGlyph, templateGlyph } from './Templates';
 
 export type Grouping = 'room' | 'type';
@@ -850,12 +851,14 @@ function FamilyBlock({
                 {f.own ? 'Your template' : 'Edited on this device'}
               </span>
             )}
+            {f.localId && <AccountBadge table="templates" id={f.localId} />}
             {also && (
               <span className="chip subtle">main room: {ROOM_LABEL[f.rooms[0] as Room]}</span>
             )}
           </p>
         </div>
         <div className="family-tools">
+          {f.localId && <AccountRowActions table="templates" id={f.localId} name={f.name} />}
           <button
             type="button"
             className="btn sm ghost family-about"

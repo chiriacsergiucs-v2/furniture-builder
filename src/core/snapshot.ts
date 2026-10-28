@@ -303,3 +303,34 @@ export function snapshotSvg(model: FurnitureModel, materials: Material[], size =
   }
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" stroke-width="0.5" stroke-linejoin="round">${out.join('')}</svg>\n`;
 }
+
+/**
+ * A front view of a built model as SVG (ADR-143): each panel's width × height rectangle in its board's colour, back
+ * to front, y up from the floor. No text, so nothing from a shared file can reach the markup.
+ */
+export function frontSvg(model: FurnitureModel, materials: Material[], size = 240): string {
+  const colour = new Map(materials.map((m) => [m.id, m.color]));
+  const boxes = model.panels.map((p) => ({
+    b: aabbOf(p),
+    fill: colour.get(p.materialId) ?? '#c8c2b4',
+  }));
+  if (!boxes.length)
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}"/>\n`;
+  const x0 = Math.min(...boxes.map(({ b }) => b.x)),
+    x1 = Math.max(...boxes.map(({ b }) => b.x + b.w)),
+    y0 = Math.min(...boxes.map(({ b }) => b.y)),
+    y1 = Math.max(...boxes.map(({ b }) => b.y + b.h));
+  const pad = 6;
+  const k = (size - 2 * pad) / Math.max(x1 - x0, y1 - y0, 1);
+  const w = Math.round((x1 - x0) * k + 2 * pad),
+    h = Math.round((y1 - y0) * k + 2 * pad);
+  const safe = (c: string) => (/^#[0-9a-fA-F]{3,8}$/.test(c) ? c : '#c8c2b4');
+  const rects = boxes
+    .sort((a, b) => a.b.z + a.b.d - (b.b.z + b.b.d))
+    .map(
+      ({ b, fill }) =>
+        `<rect x="${(pad + (b.x - x0) * k).toFixed(1)}" y="${(pad + (y1 - b.y - b.h) * k).toFixed(1)}" width="${(b.w * k).toFixed(1)}" height="${(b.h * k).toFixed(1)}" fill="${safe(fill)}" stroke="#22272a" stroke-width="0.8"/>`,
+    )
+    .join('');
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}">${rects}</svg>\n`;
+}

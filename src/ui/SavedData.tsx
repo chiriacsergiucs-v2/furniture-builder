@@ -27,6 +27,7 @@ import { db, getSetting, setSetting } from '../persist/db';
 import { onSavedChange } from '../persist/events';
 import { Dialog } from './Dialogs';
 import { Icon } from './icons';
+import { useAccount } from '../store/accountStore';
 import { useUi } from './shell/uiStore';
 
 const mb = (n?: number) => (n === undefined ? '?' : `${Math.max(0.1, n / 1e6).toFixed(1)} MB`);
@@ -50,13 +51,16 @@ export function startChangeClock(): () => void {
   return onSavedChange(async (c) => {
     if (c.table === 'settings') return;
     const now = new Date().toISOString();
-    if (!(await getSetting<string>(FIRST_SAVE_KEY))) await setSetting(FIRST_SAVE_KEY, now).catch(() => {});
+    if (!(await getSetting<string>(FIRST_SAVE_KEY)))
+      await setSetting(FIRST_SAVE_KEY, now).catch(() => {});
     await setSetting(LAST_CHANGE_KEY, now).catch(() => {});
   });
 }
 
 function restoreText(p: RestorePlan): string {
-  const parts = [`Restored ${p.actions.length} item${p.actions.length === 1 ? '' : 's'} as new copies`];
+  const parts = [
+    `Restored ${p.actions.length} item${p.actions.length === 1 ? '' : 's'} as new copies`,
+  ];
   if (p.identical) parts.push(`${p.identical} already saved`);
   if (p.skipped.length)
     parts.push(
@@ -132,7 +136,11 @@ export function SavedDataPanel() {
             run(async () => {
               const ok = await askPersist();
               setStore(await storageState());
-              if (!ok) setMessage({ ok: false, text: 'The browser said no. Back up to a folder instead.' });
+              if (!ok)
+                setMessage({
+                  ok: false,
+                  text: 'The browser said no. Back up to a folder instead.',
+                });
             })
           }
         >
@@ -142,8 +150,8 @@ export function SavedDataPanel() {
       {canFolder ? (
         <>
           <p className="hint">
-            {dir.name ? `Backup folder: ${dir.name}` : 'No backup folder chosen yet.'} Backups run after each
-            change while the app is open, one file per item.
+            {dir.name ? `Backup folder: ${dir.name}` : 'No backup folder chosen yet.'} Backups run
+            after each change while the app is open, one file per item.
           </p>
           <div className="btn-row">
             <button
@@ -192,7 +200,8 @@ export function SavedDataPanel() {
       ) : (
         <>
           <p className="hint">
-            This browser cannot write to a folder. Download a backup instead: one .zip with a file per item.
+            This browser cannot write to a folder. Download a backup instead: one .zip with a file
+            per item.
           </p>
           <button
             type="button"
@@ -241,7 +250,12 @@ export function SavedDataPanel() {
             Restore from backup
           </button>
         )}
-        <button type="button" className="btn" disabled={busy} onClick={() => zipInput.current?.click()}>
+        <button
+          type="button"
+          className="btn"
+          disabled={busy}
+          onClick={() => zipInput.current?.click()}
+        >
           <Icon name="upload" className="sm" />
           Restore a .zip
         </button>
@@ -309,12 +323,6 @@ export function SavedDataDialog() {
   );
 }
 
-/** Whether the user's designs are in an account (ADR-137); set by the account module once it is loaded. */
-let accountCopies = () => 0;
-export const setAccountCopiesProbe = (f: () => number) => {
-  accountCopies = f;
-};
-
 /**
  * "Your designs are only on this device" (ADR-140): while something is saved, no backup was ever made and nothing is
  * in an account. Dismiss hides it for 7 days (G-261).
@@ -322,6 +330,10 @@ export const setAccountCopiesProbe = (f: () => number) => {
 export function DeviceOnlyNotice({ signIn }: { signIn?: () => void }) {
   const [shown, setShown] = useState(false);
   const setSavedData = useUi((s) => s.setSavedDataOpen);
+  // Items in an account count as kept (ADR-140).
+  const accountCopies = useAccount((s) =>
+    s.user ? Object.values(s.sync?.items ?? {}).filter((v) => v === 'in-account').length : 0,
+  );
   useEffect(() => {
     let live = true;
     const check = async () => {
@@ -336,7 +348,7 @@ export function DeviceOnlyNotice({ signIn }: { signIn?: () => void }) {
         deviceNoticeShown({
           savedItems: designs + projects,
           lastBackupAt: status && !status.error ? status.at : undefined,
-          accountCopies: accountCopies(),
+          accountCopies,
           dismissedAt,
           now: new Date().toISOString(),
         }),
@@ -348,7 +360,7 @@ export function DeviceOnlyNotice({ signIn }: { signIn?: () => void }) {
       live = false;
       offB();
     };
-  }, []);
+  }, [accountCopies]);
   if (!shown) return null;
   return (
     <div className="alert info device-only" role="status">

@@ -12,6 +12,7 @@ import { Icon } from '../icons';
 import { CopyCodeDialog } from '../ShareCode';
 import { download, downloadFrontSvg, fileName } from './files';
 import { importFile } from './importFile';
+import { useAccount } from '../../store/accountStore';
 import { useUi } from './uiStore';
 
 /**
@@ -36,6 +37,7 @@ export function MoreMenu({
   const editingItemId = useDesign((s) => s.editingItemId);
   const inProject = !!project && !editingItemId;
   const setNotice = useUi((s) => s.setNotice);
+  const signedIn = useAccount((s) => !!s.user);
   const [pack, setPack] = useState(false);
   const close = () => ref.current?.removeAttribute('open');
   const [codeOpen, setCodeOpen] = useState(false);
@@ -177,6 +179,20 @@ export function MoreMenu({
                   Fusion 360 script <small>not yet tested in Fusion</small>
                 </button>
               </>
+            )}
+            {/* A server link for the open piece, once signed in (ADR-138); codes stay beside it (G-257). */}
+            {signedIn && !inProject && (
+              <button
+                type="button"
+                onClick={run(() =>
+                  useAccount.getState().set({
+                    shareFor: { table: 'designs', id: design.id, name: design.name },
+                  }),
+                )}
+              >
+                <Icon name="link" />
+                Share link <small>anyone with the link can open a copy</small>
+              </button>
             )}
             <button type="button" onClick={run(() => setCodeOpen(true))}>
               <Icon name="copy" />

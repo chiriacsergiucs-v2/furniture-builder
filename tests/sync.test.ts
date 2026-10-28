@@ -27,7 +27,12 @@ const remote = (id: string, revision: number, deletedAt: string | null = null): 
   updatedAt: '2026',
   deletedAt,
 });
-const link = (localId: string, remoteId: string, revision: number, syncedHash: string): AccountLink => ({
+const link = (
+  localId: string,
+  remoteId: string,
+  revision: number,
+  syncedHash: string,
+): AccountLink => ({
   accountId: A,
   table: 'designs',
   localId,
@@ -83,7 +88,7 @@ describe('planSync (ADR-129)', () => {
 
   it('fuzz: no plan replaces an item changed here, and no action deletes a saved item', () => {
     let seed = 7;
-    const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+    const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
     for (let n = 0; n < 3000; n++) {
       const locals: LocalItem[] = [];
       const remotes: RemoteRecord[] = [];
@@ -151,7 +156,7 @@ describe('sync engine with a fake server (ADR-129, ADR-137)', () => {
     off();
     expect(st!.items[`designs:${d1.id}`]).toBe('in-account');
     expect(st!.waiting).toBe(0);
-    expect((await db.accountLinks.where('accountId').equals(user.id).count())).toBe(2);
+    expect(await db.accountLinks.where('accountId').equals(user.id).count()).toBe(2);
   });
 
   it('offline edits stay here and upload when back (G-225); the local row is never lost', async () => {
@@ -175,13 +180,23 @@ describe('sync engine with a fake server (ADR-129, ADR-137)', () => {
     await saveDesign(d);
     await client.sync();
     const rec = [...server.records.values()][0];
-    await b.saveRecord({ id: rec.id, kind: 'design', name: 'Other device', body: { ...d, name: 'Other device' }, bodySchema: 3, baseRevision: rec.revision });
+    await b.saveRecord({
+      id: rec.id,
+      kind: 'design',
+      name: 'Other device',
+      body: { ...d, name: 'Other device' },
+      bodySchema: 3,
+      baseRevision: rec.revision,
+    });
     await saveDesign({ ...d, name: 'This device' });
     await client.sync();
     const names = (await db.designs.toArray()).map((r) => r.name).sort();
     expect(names).toEqual(['Other device (from your account)', 'This device']);
     expect(server.records.size).toBe(2);
-    expect([...server.records.values()].map((r) => r.name).sort()).toEqual(['Other device', 'This device']);
+    expect([...server.records.values()].map((r) => r.name).sort()).toEqual([
+      'Other device',
+      'This device',
+    ]);
   });
 
   it('an unchanged item takes the account’s newer revision', async () => {
@@ -190,7 +205,14 @@ describe('sync engine with a fake server (ADR-129, ADR-137)', () => {
     await saveDesign(d);
     await client.sync();
     const rec = [...server.records.values()][0];
-    await b.saveRecord({ id: rec.id, kind: 'design', name: 'Newer', body: { ...d, name: 'Newer' }, bodySchema: 3, baseRevision: rec.revision });
+    await b.saveRecord({
+      id: rec.id,
+      kind: 'design',
+      name: 'Newer',
+      body: { ...d, name: 'Newer' },
+      bodySchema: 3,
+      baseRevision: rec.revision,
+    });
     await client.sync();
     expect((await db.designs.get(d.id))?.name).toBe('Newer');
     expect(await db.designs.count()).toBe(1);
@@ -219,7 +241,12 @@ describe('sync engine with a fake server (ADR-129, ADR-137)', () => {
     const { b } = await signedIn();
     const d = templates[0].create();
     await b.saveRecord({ kind: 'design', name: d.name, body: d, bodySchema: 3 });
-    await b.saveRecord({ kind: 'design', name: 'Broken', body: { schemaVersion: 99 }, bodySchema: 3 });
+    await b.saveRecord({
+      kind: 'design',
+      name: 'Broken',
+      body: { schemaVersion: 99 },
+      bodySchema: 3,
+    });
     await client.sync();
     let st: client.SyncStatus | undefined;
     client.onSyncStatus((s) => (st = s))();

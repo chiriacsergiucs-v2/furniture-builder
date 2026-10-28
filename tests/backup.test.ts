@@ -84,7 +84,12 @@ describe('restore plan (ADR-133, G-244)', () => {
     const files = planBackup({ designs: [{ id: a.id, design: a }] });
     const first = planRestore(files, { designs: [], projects: [], templates: [], keys: {} });
     const restored = (first.actions[0] as { design: typeof a }).design;
-    const second = planRestore(files, { designs: [restored], projects: [], templates: [], keys: {} });
+    const second = planRestore(files, {
+      designs: [restored],
+      projects: [],
+      templates: [],
+      keys: {},
+    });
     expect(second.actions).toHaveLength(0);
     expect(second.identical).toBe(1);
   });
@@ -109,7 +114,12 @@ describe('restore plan (ADR-133, G-244)', () => {
   });
 
   it('other rows are added only when their key is free', () => {
-    const files = planBackup({ prices: [{ id: 'p1', price: 1 }, { id: 'p2', price: 2 }] });
+    const files = planBackup({
+      prices: [
+        { id: 'p1', price: 1 },
+        { id: 'p2', price: 2 },
+      ],
+    });
     const p = planRestore(files, {
       designs: [],
       projects: [],
@@ -236,9 +246,9 @@ describe('device-only notice and backup reminder (ADR-140, ADR-141)', () => {
     expect(reminderDue({ ...base, intervalDays: 0 })).toBe(false);
     expect(reminderDue({ ...base, laterAt: ago(0.5) })).toBe(false);
     expect(reminderDue({ ...base, laterAt: ago(1) })).toBe(true);
-    expect(
-      reminderDue({ intervalDays: 7, firstSaveAt: ago(8), lastChangeAt: ago(1), now }),
-    ).toBe(true);
+    expect(reminderDue({ intervalDays: 7, firstSaveAt: ago(8), lastChangeAt: ago(1), now })).toBe(
+      true,
+    );
     expect(reminderDue({ intervalDays: 7, lastChangeAt: ago(1), now })).toBe(false);
     expect(daysSince(ago(31), now)).toBe(31);
   });

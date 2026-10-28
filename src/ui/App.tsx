@@ -42,6 +42,9 @@ import { MODE_LABEL, MODES, useUi } from './shell/uiStore';
 import { ViewOptions } from './ViewOptions';
 import { BackupReminder, SavedDataDialog, startChangeClock } from './SavedData';
 import { startAutoBackup } from '../persist/backup';
+import { AccountButton, AccountDialog, SyncStatus } from './Account';
+import { ShareLinkDialog, SharedItemDialog, useShareLink } from './Share';
+import { initAccount } from '../store/accountActions';
 import {
   bringDrawingForward,
   inOptions,
@@ -333,6 +336,12 @@ export function App() {
     const offs = [startAutoBackup(), startChangeClock()];
     return () => offs.forEach((off) => off());
   }, []);
+  // A remembered account shows at once; the session is checked when the online part loads (ADR-134).
+  useEffect(() => {
+    void initAccount();
+  }, []);
+  // A share link opens its preview (ADR-138, ADR-143).
+  useShareLink();
 
   // Autosave shortly after each change; also save a freshly opened template so it appears in the library.
   useEffect(() => {
@@ -569,6 +578,7 @@ export function App() {
               )}
             </span>
           )}
+          <SyncStatus />
           <div className="bar-tools">
             {page === 'editor' && (
               <>
@@ -607,6 +617,7 @@ export function App() {
                 </button>
               </>
             )}
+            <AccountButton />
             <button
               type="button"
               className="btn icon theme"
@@ -853,6 +864,9 @@ export function App() {
         />
         <SettingsDialog onWizard={() => openWizard(design)} />
         <SavedDataDialog />
+        <AccountDialog />
+        <ShareLinkDialog />
+        <SharedItemDialog onOpened={() => setPage('editor')} />
         <BackupReminder />
         <RenderDialog
           open={dialog === 'render'}

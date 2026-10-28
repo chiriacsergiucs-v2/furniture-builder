@@ -10,11 +10,16 @@ const files = (dir: string): string[] =>
   existsSync(dir)
     ? readdirSync(dir).flatMap((n) => {
         const p = join(dir, n);
-        return statSync(p).isDirectory() ? files(p) : /\.(ts|tsx|js|mjs|html|json)$/.test(n) ? [p] : [];
+        return statSync(p).isDirectory()
+          ? files(p)
+          : /\.(ts|tsx|js|mjs|html|json)$/.test(n)
+            ? [p]
+            : [];
       })
     : [];
 // A Supabase service-role JWT names its role in the payload; new-style secret keys start with sb_secret_.
-const SECRET = /service_role|sb_secret_[A-Za-z0-9]|SUPABASE_SERVICE|eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]*c2VydmljZV9yb2xl/;
+const SECRET =
+  /service_role|sb_secret_[A-Za-z0-9]|SUPABASE_SERVICE|eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]*c2VydmljZV9yb2xl/;
 
 describe('content security policy (ADR-131)', () => {
   it('allows only the app itself without a backend', () => {
