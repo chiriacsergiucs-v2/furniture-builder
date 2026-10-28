@@ -1,6 +1,7 @@
 import { isSizeLocked } from '../core/sizeLock';
 import {
   useEffect,
+  useId,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -45,6 +46,8 @@ import {
 import type { ProjectTemplate } from '../core/projectTemplate';
 import { useDesign } from '../store/designStore';
 import { Counter, Group, InfoTip, MmField, Segmented, Select, Toggle } from './controls';
+import { WallBackground } from './WallBackground';
+import { imageKey, useImageUrls } from '../persist/images';
 import {
   arrowMove,
   movePointer,
@@ -68,11 +71,13 @@ import {
   DEFAULT_OUTLET_ZONE,
   DEFAULT_PIPE_ZONE,
   featureBox,
+  keepWallFinishes,
   outlineIssues,
   roomFrontView,
   setWallLength,
   shapeOutline,
   wallEnds,
+  wallFinish,
   wallLength,
   type Room,
   type RoomFeature,
@@ -1784,6 +1789,15 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
   const showFronts = useDesign((s) => s.showFronts);
   const room = useDesign((s) => s.project?.room);
   const rv = useMemo(() => (room ? roomFrontView(room) : null), [room]);
+  // Back-wall backgrounds (ADR-145): floor to room height behind the pieces against them; a picture repeats to scale.
+  const wallUrls = useImageUrls(imageKey(room?.walls ?? []));
+  const bgId = useId().replace(/[^a-zA-Z0-9_-]/g, '');
+  const backs = (rv?.walls ?? []).flatMap((w) => {
+    const f = room && wallFinish(room, w.wall);
+    if (!f) return [];
+    const url = f.image ? wallUrls.get(f.image.id) : undefined;
+    return [{ ...w, f, url: url && url !== 'missing' ? url : undefined }];
+  });
   const colors = useMemo(
     () =>
       new Map(
@@ -1863,6 +1877,42 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
         viewBox={`${x0 - pad * 1.2} ${-top - pad * 0.8} ${x1 - x0 + pad * 2.4} ${top + pad * 1.8}`}
       >
         <rect className="floor" x={x0 - pad} y={0} width={x1 - x0 + 2 * pad} height={pad * 0.15} />
+        {backs.length > 0 && (
+          <g className="room-wall-bg" aria-hidden="true">
+            <defs>
+              {backs.map(
+                (w) =>
+                  w.url &&
+                  w.f.image && (
+                    <pattern
+                      key={w.wall}
+                      id={`${bgId}-wall-${w.wall}`}
+                      patternUnits="userSpaceOnUse"
+                      width={w.f.image.tileWidth}
+                      height={w.f.image.tileHeight}
+                    >
+                      <image
+                        href={w.url}
+                        width={w.f.image.tileWidth}
+                        height={w.f.image.tileHeight}
+                        preserveAspectRatio="none"
+                      />
+                    </pattern>
+                  ),
+              )}
+            </defs>
+            {backs.map((w) => (
+              <rect
+                key={w.wall}
+                x={w.x}
+                y={-rv!.height}
+                width={w.w}
+                height={rv!.height}
+                style={{ fill: w.url ? `url(#${bgId}-wall-${w.wall})` : w.f.colour }}
+              />
+            ))}
+          </g>
+        )}
         {rv && (
           <g className="room-front">
             <line className="room-ceiling" x1={rv.x0} y1={-rv.height} x2={rv.x1} y2={-rv.height}>
@@ -2272,6 +2322,7 @@ function RoomSection() {
       features: room?.features ?? [],
       outline: shapeOutline(sh, sz),
       shape: { kind: sh, sizes: sz },
+      ...keepWallFinishes(room?.walls, shapeOutline(sh, sz)),
     });
   const shown = room?.shape?.sizes ?? sizes;
   const setSize = (k: keyof ShapeSizes, v: number) => {
@@ -2458,6 +2509,7 @@ function RoomSection() {
                   max={30000}
                   onChange={(v) => setRoom(setWallLength(room, i, v))}
                 />
+                <WallBackground room={room} wall={i} setRoom={setRoom} />
               </li>
             ))}
           </ul>

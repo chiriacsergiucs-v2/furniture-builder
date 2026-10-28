@@ -219,6 +219,6 @@ export function base64ToBytes(b64: string): ArrayBuffer {
   return u.buffer;
 }
 
-/** Picture ids the materials of these designs refer to. */
-export const imageIdsOf = (designs: { materials: { image?: MaterialImage }[] }[]): Set<string> =>
+/** Picture ids the materials of these designs (or wall backgrounds, ADR-145) refer to. */
+export const imageIdsOf = (designs: { materials: { image?: { id: string } }[] }[]): Set<string> =>
   new Set(designs.flatMap((d) => d.materials.flatMap((m) => (m.image ? [m.image.id] : []))));

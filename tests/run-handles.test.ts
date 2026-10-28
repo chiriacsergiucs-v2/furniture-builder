@@ -8,6 +8,7 @@ import {
   buildProjectModel,
   makeItem,
   newProject,
+  PROJECT_SCHEMA,
   projectCutlist,
   projectHardware,
   pruneRunExtras,
@@ -131,7 +132,8 @@ describe('run handles in the store (ADR-125)', () => {
     const ids = st.project!.items.map((i) => i.id);
     st.setRunHandle(bar(ids));
     expect(useDesign.getState().project!.runHandles).toHaveLength(1);
-    expect(useDesign.getState().project!.schemaVersion).toBe(13);
+    // An edited project is saved at the current project version (13 when ADR-125 shipped).
+    expect(useDesign.getState().project!.schemaVersion).toBe(PROJECT_SCHEMA);
     useDesign.getState().removeRunHandle('rh1');
     expect(useDesign.getState().project!.runHandles).toBeUndefined();
     useDesign.getState().suggestRunParts();

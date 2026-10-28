@@ -44,7 +44,14 @@ import { drill, type Selection } from '../core/selectPath';
 import { resizeProduct, type SizeField } from '../core/pieceSize';
 import { resizeBlocked, setSizeLocked, sizeLockBlocked } from '../core/sizeLock';
 import { setWallHeight } from '../core/height';
-import { closeOutline, DEFAULT_ROOM_HEIGHT, snapCorner, type Pt, type Room } from '../core/room';
+import {
+  closeOutline,
+  DEFAULT_ROOM_HEIGHT,
+  keepWallFinishes,
+  snapCorner,
+  type Pt,
+  type Room,
+} from '../core/room';
 import {
   buildProjectModel,
   makeItem,
@@ -1241,6 +1248,8 @@ export const useDesign = create<State>((rawSet, get) => {
           height: p.room?.height ?? DEFAULT_ROOM_HEIGHT,
           features: p.room?.features ?? [],
           outline: closeOutline(pts),
+          // Wall backgrounds stay on the walls the new outline still has (ADR-145).
+          ...keepWallFinishes(p.room?.walls, closeOutline(pts)),
         },
       });
       return true;

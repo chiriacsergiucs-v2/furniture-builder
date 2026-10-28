@@ -220,9 +220,10 @@ export interface RunSink {
  * (ADR-073); 4 = run requests and trim run parts (ADR-075); 5 = display-only 3D models (ADR-076); 6 = locked pieces
  * (ADR-095); 7 = a kept template revision on items (ADR-096); 8 = groups of pieces
  * (ADR-097); 9 = linked copies (ADR-111); 10 = pieces typed at an angle (ADR-121); 11 = size-locked pieces
- * (ADR-122); 12 = template references and project-wide settings (ADR-124); 13 = run handles and sinks (ADR-125).
+ * (ADR-122); 12 = template references and project-wide settings (ADR-124); 13 = run handles and sinks (ADR-125);
+ * 14 = wall backgrounds (ADR-145).
  */
-export const PROJECT_SCHEMA = 13 as const;
+export const PROJECT_SCHEMA = 14 as const;
 export const PROJECT_SCHEMAS: readonly number[] = [
   1,
   2,
@@ -236,10 +237,11 @@ export const PROJECT_SCHEMAS: readonly number[] = [
   10,
   11,
   12,
+  13,
   PROJECT_SCHEMA,
 ];
 export type ProjectSchemaVersion =
-  1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | typeof PROJECT_SCHEMA;
+  1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | typeof PROJECT_SCHEMA;
 const RUN_REQUESTS_SINCE = 4;
 const MODELS_SINCE = 5;
 const LOCKS_SINCE = 6;
@@ -250,6 +252,7 @@ const ANGLE_SINCE = 10;
 const SIZE_LOCK_SINCE = 11;
 const REFS_SINCE = 12;
 const RUN_EXTRAS_SINCE = 13;
+const WALLS_SINCE = 14;
 
 export interface Project {
   schemaVersion: ProjectSchemaVersion;
@@ -283,6 +286,16 @@ export interface Project {
   /** Sinks over base units: worktop cut-outs (ADR-125, schemaVersion 13). Absent = none. */
   sinks?: RunSink[];
 }
+
+/**
+ * Everything in a project that can hold a picture (ADR-048, ADR-145): the pieces' materials, the run parts' and the
+ * wall backgrounds. For files that carry their pictures and for the unused-picture cleanup.
+ */
+export const pictureHolders = (p: Project): { materials: { image?: { id: string } }[] }[] => [
+  ...p.items.map((i) => i.design),
+  { materials: (p.runParts ?? []).map((r) => r.material) },
+  { materials: p.room?.walls ?? [] },
+];
 
 /**
  * Groups keep only pieces still in the project, and a group left with fewer than two goes (ADR-097: a deleted piece
@@ -2384,7 +2397,11 @@ export function validateProject(p: unknown): string[] {
         p.runParts.some((rp) => isObj(rp) && TRIM_KINDS.includes(rp.kind as TrimKind))))
   )
     errs.push(`Trims and chosen worktops need project schemaVersion ${RUN_REQUESTS_SINCE}`);
-  if (p.room !== undefined) errs.push(...validateRoom(p.room));
+  if (p.room !== undefined) {
+    errs.push(...validateRoom(p.room));
+    if (isObj(p.room) && p.room.walls !== undefined && (p.schemaVersion as number) < WALLS_SINCE)
+      errs.push(`Wall backgrounds need project schemaVersion ${WALLS_SINCE}`);
+  }
   if (
     p.runPartsRemoved !== undefined &&
     !(Array.isArray(p.runPartsRemoved) && p.runPartsRemoved.every((k) => typeof k === 'string'))
