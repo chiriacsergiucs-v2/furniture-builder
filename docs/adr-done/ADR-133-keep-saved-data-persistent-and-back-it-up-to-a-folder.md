@@ -79,7 +79,7 @@ catch-up run.
 `settings`, writes one file per item and removes the backup's own files of deleted items, auto backup 4 s after a
 save, .zip download and restore), `src/ui/SavedData.tsx` (Settings › Saved data, and ⋯ › Saved data and backup).
 Answers: persist at the first save (G-239); everything (G-240); one file per item (G-241); automatic and Back up now
-(G-242); .zip where folders are missing (G-243); restore as new copies, identical ones skipped (G-244, G-276).
+(G-242); .zip where folders are missing (G-243); restore as new copies, identical ones skipped (G-244, G-282).
 Tests: `tests/backup.test.ts`, `tests/saved-data.test.tsx`. Browser: the panel renders in the production build at
 1280 px (Chromium has folder access); the folder picker itself was not driven (needs a user gesture).
 

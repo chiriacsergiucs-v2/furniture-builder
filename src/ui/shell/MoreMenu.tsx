@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { exportFusionPython } from '../../core/fusion';
+import { pictureHolders } from '../../core/project';
 import { imageIdsOf } from '../../core/surface';
 import { deleteImages, unusedImageIds } from '../../persist/db';
 import { withPictures } from '../../persist/images';
@@ -63,11 +64,7 @@ export function MoreMenu({
   // Pictures no saved piece, project or template uses (ADR-048), after the user confirms.
   const cleanUp = async () => {
     const st = useDesign.getState();
-    const keep = imageIdsOf([
-      st.design,
-      ...(st.project?.items.map((i) => i.design) ?? []),
-      { materials: (st.project?.runParts ?? []).map((r) => r.material) },
-    ]);
+    const keep = imageIdsOf([st.design, ...(st.project ? pictureHolders(st.project) : [])]);
     try {
       const ids = await unusedImageIds(keep);
       if (!ids.length) {
@@ -118,10 +115,7 @@ export function MoreMenu({
                   download(
                     `${fileName(project.name)}-project.json`,
                     JSON.stringify(
-                      await withPictures(await withModels(project), [
-                        ...project.items.map((i) => i.design),
-                        { materials: (project.runParts ?? []).map((r) => r.material) },
-                      ]),
+                      await withPictures(await withModels(project), pictureHolders(project)),
                       null,
                       2,
                     ),

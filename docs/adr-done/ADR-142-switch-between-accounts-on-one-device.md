@@ -52,7 +52,7 @@ catch-up run.
 
 Several accounts (G-263): the device remembers them; Account › Switch to … and Add another account; another
 account's copies are hidden on this device, never removed, and never uploaded to the current account. A switch signs
-out and asks for the other account's password (G-275). Tests: `tests/sync.test.ts`, `tests/account-ui.test.tsx`.
+out and asks for the other account's password (G-281). Tests: `tests/sync.test.ts`, `tests/account-ui.test.tsx`.
 
 ## Open questions
 

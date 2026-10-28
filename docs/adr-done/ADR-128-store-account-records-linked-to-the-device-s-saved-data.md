@@ -70,7 +70,7 @@ catch-up run.
 
 Records: `records (id, owner, kind design|template|image, name, body jsonb, body_schema, revision,
 updated_at, deleted_at)`, owner-only by row-level security; writes through `save_record` with a revision check;
-caps by trigger (G-272). Local link: Dexie v11 `accountLinks [accountId+table+localId]` (G-222; documents unchanged,
+caps by trigger (G-278). Local link: Dexie v11 `accountLinks [accountId+table+localId]` (G-222; documents unchanged,
 no `schemaVersion` bump), shared with ADR-133's `settings`. Pictures used by pieces and templates go too (G-221);
 pieces inside projects do not. Evidence: `bash tools/supabase/test-sql.sh` (PostgreSQL 16, 2026-10-28) — ALL SERVER
 CHECKS PASSED; `tests/backup.test.ts` (v10 → v11 upgrade keeps every row, an unreadable one too);

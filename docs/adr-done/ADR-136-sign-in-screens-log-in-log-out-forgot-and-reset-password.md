@@ -79,7 +79,7 @@ catch-up run.
 `src/ui/Account.tsx`: Account icon button in the top bar (G-251); one dialog with Sign in, Create account (G-252,
 no email verification, G-254), Forgot password, Check your inbox, Reset password, Account, Sign out, Delete my
 account and Privacy notice; offline line and disabled sign-in buttons; password rule left to Supabase (G-253);
-Supabase built-in email (G-250, see G-270). Screenshots of the production build (Sign in at 390 px) were sent to the
+Supabase built-in email (G-250, see G-276). Screenshots of the production build (Sign in at 390 px) were sent to the
 user without waiting, as asked ("Full auto-mode"). Tests: `tests/account-ui.test.tsx`.
 
 ## Open questions

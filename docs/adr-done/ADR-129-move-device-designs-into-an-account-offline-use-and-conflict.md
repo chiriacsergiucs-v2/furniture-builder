@@ -71,8 +71,8 @@ catch-up run.
 `src/core/sync.ts` (`planSync`, pure) and `src/online/client.ts` (`sync`, auto after saves, on `online`, on
 sign-in). Answers built: everything uploads silently at the first sign-in (G-224, replaces "asks once"); offline
 edits wait and upload later (G-225); a conflict keeps both, the account's version as "… (from your account)"
-(G-226, G-274); sign-out offers to remove this account's copies, default keep (G-227); a delete here moves the
-record to the account Trash, purged after 7 days by `purge_trash` (G-228; no Trash list yet, G-273). Items of another
+(G-226, G-280); sign-out offers to remove this account's copies, default keep (G-227); a delete here moves the
+record to the account Trash, purged after 7 days by `purge_trash` (G-228; no Trash list yet, G-279). Items of another
 account on the same device are never uploaded (found while testing). Tests: `tests/sync.test.ts` (3,000-case fuzz:
 no pull replaces an item changed here; silent first upload; offline; conflict; Trash; device-only).
 

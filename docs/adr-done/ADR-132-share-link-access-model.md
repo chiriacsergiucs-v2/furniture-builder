@@ -63,7 +63,7 @@ catch-up run.
 Shares: 22-character base64url ids from 128 random bits (`newShareId`); made and stopped only by
 `create_share` / `stop_share` (owner checked); `open_share` returns name, kind, body, schema and date only, for
 anyone with the link (G-236), no expiry, stoppable (G-237), latest saved version (G-238); 30 links per account per
-hour, 120 opens per link per hour (G-272). Tests: `tools/supabase/test.sql` steps 4–6 (another user cannot share
+hour, 120 opens per link per hour (G-278). Tests: `tools/supabase/test.sql` steps 4–6 (another user cannot share
 your record or insert a share directly; anon reads only through `open_share`), `tests/sync.test.ts`,
 `tests/account-ui.test.tsx` (the copy gets a new id; nothing saved before Open a copy).
 

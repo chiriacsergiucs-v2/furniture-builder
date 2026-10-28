@@ -79,9 +79,9 @@ CSP meta tag first in `<head>` (`csp.ts`, Vite plugin): `default-src 'self'`, `s
 `style-src 'self' 'unsafe-inline'` (React and three.js inline styles), `img-src 'self' data: blob:`,
 `connect-src 'self'` plus the build's backend origin only, `object-src 'none'`, `base-uri 'self'`,
 `form-action 'self'`. Session on the device (G-234); Supabase default sign-in limits, own share limits (G-235,
-G-272). `tests/security.test.ts`: CSP text, the built page carries it, no service or secret key in `src/` or `dist/`,
+G-278). `tests/security.test.ts`: CSP text, the built page carries it, no service or secret key in `src/` or `dist/`,
 no runtime caching. Browser check (2026-10-28, 390 and 1280 px): zero CSP violations or page errors on Projects,
-the editor in Both, Saved data, Catalog and Sign in. Not checked: sign-out against Supabase in a browser (G-271);
+the editor in Both, Saved data, Catalog and Sign in. Not checked: sign-out against Supabase in a browser (G-277);
 `pnpm audit` (no network for it in the build session).
 
 ## Open questions

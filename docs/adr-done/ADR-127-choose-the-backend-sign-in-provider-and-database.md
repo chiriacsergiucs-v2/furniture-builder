@@ -71,10 +71,10 @@ Supabase (G-217), EU region (G-218), the owner's personal account (G-219). Facts
 supabase.com itself was not reachable from the build session, so they are **not checked on the page**: free plan 500
 MB database, 1 GB file storage, 50,000 monthly active users, 2 active projects, free projects pause after 1 week of
 inactivity (restorable, no data deleted), Pro $25 per month; the built-in email sender sends only to the project
-team, about 2 emails per hour (G-270). Client: `@supabase/supabase-js` 2.118.0 and its five packages, all MIT (npm
+team, about 2 emails per hour (G-276). Client: `@supabase/supabase-js` 2.118.0 and its five packages, all MIT (npm
 registry, 2026-10-28); their code holds no analytics or beacon endpoint; it sends a version header to the project's
 own API only. Rules: `supabase/migrations/20261028000000_accounts.sql`; setup steps: `docs/supabase-setup.md`. No
-project exists yet (G-271).
+project exists yet (G-277).
 
 ## Open questions
 

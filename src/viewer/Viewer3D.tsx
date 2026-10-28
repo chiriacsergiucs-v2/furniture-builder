@@ -9,6 +9,7 @@ import {
   useState,
   type ComponentRef,
   type ReactElement,
+  type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
 import {
@@ -23,6 +24,7 @@ import {
   Matrix4,
   PMREMGenerator,
   Plane,
+  PlaneGeometry,
   RepeatWrapping,
   SRGBColorSpace,
   Shape,
@@ -38,7 +40,7 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { explode } from '../core/explode';
 import { hitToMm, inSelection, selectionBox } from '../core/selectPath';
-import { roomDisplayBoxes } from '../core/room';
+import { roomDisplayBoxes, wallFinish } from '../core/room';
 import { pieceBoxToRoom, type PlacedPiece } from '../core/project';
 import { inPlaneAxes, union } from '../core/geometry';
 import { aabbOf } from '../core/shape';
@@ -51,6 +53,7 @@ import { useView, ViewOverride } from '../ui/useView';
 import { PHONE, useMediaQuery } from '../ui/useMediaQuery';
 import { useTheme } from '../ui/useTheme';
 import { useLook } from '../ui/useLook';
+import { setSolidWalls, useSolidWalls } from '../ui/useSolidWalls';
 import { SHADOW_CATCHER, setStage, useRendering } from './renderBridge';
 import { CountStepper } from '../ui/CountStepper';
 import { useSnap } from '../ui/useSnap';
@@ -281,6 +284,8 @@ export default function Viewer3D() {
   const [lo, hi] = span(section.axis);
   const cut = sectionOn ? cutAt(section, lo, hi) : null;
   const canIsolate = inProject && selectedIds.length > 0;
+  const hasRoom = useDesign((s) => !!s.project?.room);
+  const solidWalls = useSolidWalls();
   return (
     <>
       <Canvas
@@ -426,6 +431,17 @@ export default function Viewer3D() {
               onClick={() => setSection({ isolate: !section.isolate })}
             >
               Isolate
+            </button>
+          )}
+          {view.mode === 'project' && hasRoom && (
+            <button
+              type="button"
+              className="btn sm outline walls-toggle"
+              aria-pressed={solidWalls}
+              title="Show the room walls solid or see-through"
+              onClick={() => setSolidWalls(!solidWalls)}
+            >
+              Solid walls
             </button>
           )}
           {sectionOn && (
@@ -940,10 +956,17 @@ function LockAnchors({
   return null;
 }
 
-/** The project's room (ADR-058): translucent walls with openings, obstacles; display only, never picked. */
+/**
+ * The project's room (ADR-058): walls with openings, obstacles; display only, never picked. Walls are drawn as their
+ * inner faces (ADR-145): see-through by default; with Solid walls on they are opaque and seen only from inside the
+ * room, so the walls between the camera and the pieces drop away. A wall's background paints it with its colour or
+ * its picture, repeating to scale from the floor.
+ */
 function RoomWalls() {
   const room = useDesign((s) => s.project?.room);
+  const solid = useSolidWalls();
   const boxes = useMemo(() => (room ? roomDisplayBoxes(room) : null), [room]);
+  const textures = useTextures(useImageUrls(imageKey(room?.walls ?? [])));
   if (!boxes) return null;
   const mesh = (b: Box, key: string, color: string, opacity: number) => (
     <mesh
@@ -957,10 +980,81 @@ function RoomWalls() {
   );
   return (
     <>
-      {boxes.walls.map((b, i) => mesh(b, `w${i}`, '#c9cdc8', 0.28))}
+      {boxes.walls.map((b, i) => {
+        const f = room && wallFinish(room, boxes.wallOf[i]);
+        const tex = f?.image ? textures.get(f.image.id) : undefined;
+        return (
+          <WallFace
+            key={`w${i}`}
+            box={b}
+            inward={boxes.inward[i]}
+            tile={tex && f?.image ? [f.image.tileWidth, f.image.tileHeight] : null}
+          >
+            <meshStandardMaterial
+              color={tex ? '#ffffff' : (f?.colour ?? '#c9cdc8')}
+              map={tex ?? null}
+              transparent={!solid}
+              opacity={solid ? 1 : f ? 0.5 : 0.28}
+              depthWrite={solid}
+              side={solid ? FrontSide : DoubleSide}
+            />
+          </WallFace>
+        );
+      })}
       {boxes.obstacles.map((b, i) => mesh(b, `o${i}`, '#b3261e', 0.35))}
       {room && boxes.walls.length > 0 && <RoomFloor outline={room.outline} />}
     </>
+  );
+}
+
+/**
+ * The inner face of a wall box, facing into the room. With a picture, it repeats every `tile` mm (width along the
+ * wall, height up from the floor), continuing across the openings and never mirrored from inside.
+ */
+function WallFace({
+  box: b,
+  inward: [nx, nz],
+  tile,
+  children,
+}: {
+  box: Box;
+  inward: [number, number];
+  tile: [number, number] | null;
+  children: ReactNode;
+}) {
+  const alongX = nz !== 0;
+  const len = alongX ? b.w : b.d;
+  // The face on the room side of the box; the plane faces +z before it is turned to face `inward`.
+  const x = alongX ? b.x + b.w / 2 : nx > 0 ? b.x + b.w : b.x;
+  const z = alongX ? (nz > 0 ? b.z + b.d : b.z) : b.z + b.d / 2;
+  const turn = nz > 0 ? 0 : nz < 0 ? Math.PI : nx > 0 ? Math.PI / 2 : -Math.PI / 2;
+  // Local +x runs along the world axis this way, so the picture keeps its place across the wall's pieces.
+  const sign = nz > 0 || nx < 0 ? 1 : -1;
+  const start = alongX ? b.x : b.z;
+  const [tw, th] = tile ?? [0, 0];
+  const g = useMemo(() => {
+    const geo = new PlaneGeometry(len * S, b.h * S);
+    if (tw && th) {
+      const pos = geo.getAttribute('position');
+      const uv: number[] = [];
+      for (let k = 0; k < pos.count; k++) {
+        const along = start + len / 2 + (sign * pos.getX(k)) / S;
+        uv.push((sign * along) / tw, (b.y + b.h / 2 + pos.getY(k) / S) / th);
+      }
+      geo.setAttribute('uv', new Float32BufferAttribute(uv, 2));
+    }
+    return geo;
+  }, [len, b.h, b.y, start, sign, tw, th]);
+  useEffect(() => () => g.dispose(), [g]);
+  return (
+    <mesh
+      position={[x * S, (b.y + b.h / 2) * S, z * S]}
+      rotation={[0, turn, 0]}
+      raycast={() => null}
+    >
+      <primitive object={g} attach="geometry" />
+      {children}
+    </mesh>
   );
 }
 

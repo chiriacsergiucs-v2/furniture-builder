@@ -66,7 +66,7 @@ catch-up run.
 
 Continue with Google → Supabase OAuth, full-page redirect (G-247), PKCE, scopes `openid email profile`, back to
 the app's URL; `?error_description=` on return shows "Google sign-in did not finish. Try again." No account
-linking (G-249, revised with G-254). The Google OAuth client is the owner's to register (G-248, G-271). Tests:
+linking (G-249, revised with G-254). The Google OAuth client is the owner's to register (G-248, G-277). Tests:
 `tests/supabase-adapter.test.ts`, `tests/account-ui.test.tsx`.
 
 ## Open questions

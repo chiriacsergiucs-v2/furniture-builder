@@ -35,7 +35,7 @@ the row-level security rules and the functions the app calls. The same rules are
   Supabase's automatic linking of unverified identities off.
 - **Emails (G-250):** the built-in email sender is used. Note: search results (2026-10-28) say Supabase's built-in
   sender sends only to addresses of the project's own team, about 2 emails per hour. Password-reset emails will then
-  not reach other users. A custom SMTP sender (Authentication › Emails › SMTP) fixes that; see G-270.
+  not reach other users. A custom SMTP sender (Authentication › Emails › SMTP) fixes that; see G-276.
 
 ## 4. Turn accounts on in the deployed app
 

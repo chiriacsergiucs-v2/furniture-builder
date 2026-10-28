@@ -2244,7 +2244,61 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Use the Options button on a phone in both modes, or inline tools in both? Answer 2026-10-28: "in options all except Fronts, Select, Move, Turn 90 both of them"
 - Suggested pick: The Options button in both modes on a phone (keeps the stage height; estimate effort +2 %)
 
-### G-270: Reset emails and the built-in sender
+### G-270: Front-view wall background: which wall and area
+
+- Status: Done (ADR-145)
+- Origin: ADR-145 (open question)
+- Missing: Front view: which wall's background is drawn behind a piece, and over what area
+- Request: Set wall background; answers 2026-10-28: colour or picture, 3D view and front view, per wall, toggle solid/see-through
+- Questions: Use the wall the piece's back stands against (back on the wall line, same tolerance as wall snapping, ADR-070), or let the user pick the wall in the front view? Fill the whole drawing area or only the wall height above the floor?
+- Suggested pick: The wall the piece's back stands against; fill from the floor to the room height across the drawing; no background when the piece stands against no wall or the project has no room. Closest to 'the wall behind the piece'.
+
+### G-271: Wall picture tile size
+
+- Status: Done (ADR-145)
+- Origin: ADR-145 (open question)
+- Missing: Size one copy of a wall picture covers before it repeats
+- Request: Set wall background; answers 2026-10-28: colour or picture, 3D view and front view, per wall, toggle solid/see-through
+- Questions: Set by the user in mm (width × height), like board pictures (ADR-048)? What starting size?
+- Suggested pick: User-set width × height in mm, like ADR-048; the picture starts at its own aspect ratio, 1000 mm wide, and the field says to set the real size (a starting value, not a spec).
+
+### G-272: Wall toggle: saved or per device
+
+- Status: Done (ADR-145)
+- Origin: ADR-145 (open question)
+- Missing: Where the solid / see-through toggle lives and what it starts as
+- Request: Set wall background; answers 2026-10-28: colour or picture, 3D view and front view, per wall, toggle solid/see-through
+- Questions: Saved in the project (same on every device and in exports), or a view setting on this device only? Start solid or see-through?
+- Suggested pick: A 3D view setting on this device ('Solid walls'), starting see-through as today; the front view always shows the background. Keeps the project document smaller and today's look unchanged.
+
+### G-273: Wall backgrounds outside 3D and front view
+
+- Status: Open
+- Origin: ADR-145 (out of scope)
+- Missing: Wall backgrounds on the 2D floor plan, the SVG download, catalog snapshots and cut sheets
+- Request: Set wall background; answers 2026-10-28: colour or picture, 3D view and front view, per wall, toggle solid/see-through
+- Questions: Show the wall colour on the plan too?
+- Suggested pick: Colour strip along each wall on the plan only; the others stay as they are.
+
+### G-274: Floor background
+
+- Status: Open
+- Origin: ADR-145 (out of scope)
+- Missing: Floor colour or picture
+- Request: Set wall background; answers 2026-10-28: colour or picture, 3D view and front view, per wall, toggle solid/see-through
+- Questions: Set the floor like the walls?
+- Suggested pick: Same picker for the floor in a later ADR, reusing this one's code.
+
+### G-275: Wall background in the single-piece front view
+
+- Status: Open
+- Origin: ADR-145 (found while building)
+- Missing: The wall background shows in the project's front view (the whole room seen from the front); the front view of a single piece, opened from the project, shows no wall behind it
+- Request: Set wall background adr; answers 2026-10-28: 3D view and front view
+- Questions: Show the wall the piece stands against behind it in the single-piece front view too?
+- Suggested pick: Yes: the same floor-to-room-height fill behind the piece when it is opened from a project with a room (estimate: effort +10%, value +10%)
+
+### G-276: Reset emails and the built-in sender
 
 - Status: Open
 - Origin: ADR-136, 2026-10-28; found while building (Claude)
@@ -2253,7 +2307,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Keep the built-in sender (resets only for team addresses), or set a custom SMTP sender in Supabase?
 - Suggested pick: A custom SMTP sender in Supabase (no app change; estimate effort +2 %, value: forgot password works for everyone)
 
-### G-271: Supabase project not set up
+### G-277: Supabase project not set up
 
 - Status: Open
 - Origin: ADR-127, 2026-10-28; found while building (Claude)
@@ -2262,7 +2316,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Create the Supabase project and Google client (docs/supabase-setup.md), then let a session test sign-in, sync and share links against it?
 - Suggested pick: Yes: follow docs/supabase-setup.md, then run a live check (estimate 1 hour of your time)
 
-### G-272: Account and share-link limits
+### G-278: Account and share-link limits
 
 - Status: Open
 - Origin: ADR-128, ADR-132, 2026-10-28; Claude chose values
@@ -2271,7 +2325,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Keep these limits, or set your own?
 - Suggested pick: Keep them until a limit is hit (estimate effort +0 %)
 
-### G-273: No Trash list to restore from
+### G-279: No Trash list to restore from
 
 - Status: Open
 - Origin: ADR-129, 2026-10-28; found while building (Claude)
@@ -2280,7 +2334,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Add a Trash list in Account with Restore?
 - Suggested pick: Yes, in Account (estimate effort +10 %)
 
-### G-274: Conflict copies are not named after a device
+### G-280: Conflict copies are not named after a device
 
 - Status: Open
 - Origin: ADR-129, 2026-10-28; found while building (Claude)
@@ -2289,7 +2343,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Name devices (asked once per device), or keep “(from your account)”?
 - Suggested pick: Keep “(from your account)” (estimate effort +0 %; naming devices +5 %)
 
-### G-275: Switching accounts needs a sign-in
+### G-281: Switching accounts needs a sign-in
 
 - Status: Open
 - Origin: ADR-142, 2026-10-28; found while building (Claude)
@@ -2298,7 +2352,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Keep sign-out-and-sign-in, or keep several sessions at once (one Supabase client per account)?
 - Suggested pick: Keep it (estimate effort +0 %; several sessions +25 %)
 
-### G-276: Restored copies lose version and template links
+### G-282: Restored copies lose version and template links
 
 - Status: Open
 - Origin: ADR-133, 2026-10-28; found while building (Claude)

@@ -6,6 +6,7 @@
  * behind a piece, is a warning. Optional on a project: absent = no room checks, as before.
  */
 import { footprintOf } from './geometry';
+import { MAX_TILE } from './surface';
 import type { Box, Diagnostic, Mm } from './types';
 
 export type Pt = [Mm, Mm];
@@ -48,7 +49,48 @@ export interface Room {
   features: RoomFeature[];
   /** The ready shape and sizes it was made from; absent once walls are drawn or edited one by one. */
   shape?: { kind: RoomShape; sizes: ShapeSizes };
+  /** Wall backgrounds (ADR-145, project schemaVersion 14), at most one per wall. Absent = the plain see-through grey. */
+  walls?: WallFinish[];
 }
+
+/**
+ * A wall's background (ADR-145): a colour, or a picture from this device (stored like board pictures, ADR-048) that
+ * repeats, one copy covering `tileWidth` × `tileHeight` mm of wall. With a picture, `colour` is its average colour.
+ */
+export interface WallFinish {
+  /** Index of the wall (outline[i] → outline[i+1]), as for features. */
+  wall: number;
+  colour: string;
+  image?: WallImage;
+}
+export interface WallImage {
+  id: string;
+  name: string;
+  tileWidth: Mm;
+  tileHeight: Mm;
+}
+
+/** The finish of wall `i`, if it has one. */
+export const wallFinish = (r: Room, i: number): WallFinish | undefined =>
+  r.walls?.find((f) => f.wall === i);
+
+/** The room with wall `i` set to `f` (undefined = back to plain); finishes of walls the outline no longer has go. */
+export function setWallFinish(r: Room, i: number, f: Omit<WallFinish, 'wall'> | undefined): Room {
+  const rest = (r.walls ?? []).filter((x) => x.wall !== i && x.wall < r.outline.length);
+  const walls = f ? [...rest, { ...f, wall: i }].sort((a, b) => a.wall - b.wall) : rest;
+  const { walls: _w, ...base } = r;
+  void _w;
+  return walls.length ? { ...base, walls } : base;
+}
+
+/** Finishes kept for a new outline: only walls it still has (a redrawn room, ADR-145). */
+export function keepWallFinishes(walls: WallFinish[] | undefined, outline: Pt[]) {
+  const kept = walls?.filter((f) => f.wall < outline.length);
+  return kept?.length ? { walls: kept } : {};
+}
+
+const HEX = /^#[0-9a-f]{6}$/i;
+const isTile = (v: unknown) => isInt(v, 1) && (v as number) <= MAX_TILE;
 
 export type RoomShape = 'rectangle' | 'l-shape' | 'u-shape' | 'alcove';
 /** Shape sizes: width and depth of the room, then the cut-out (L), notch (U) or alcove: its width, depth and offset. */
@@ -287,6 +329,8 @@ export function roomFrontView(r: Room): {
   x0: Mm;
   x1: Mm;
   height: Mm;
+  /** The back walls along x, for their backgrounds (ADR-145). */
+  walls: { wall: number; x: Mm; w: Mm }[];
   features: { id: string; kind: RoomFeature['kind']; label: string; x: Mm; w: Mm; y: Mm; h: Mm }[];
 } | null {
   if (outlineIssues(r.outline).length) return null;
@@ -305,7 +349,11 @@ export function roomFrontView(r: Room): {
       const y = f.kind === 'door' ? 0 : f.sill;
       return { id: f.id, kind: f.kind, label: f.label, x: b.x, w: b.w, y, h: f.height };
     });
-  return { x0: Math.min(...xs), x1: Math.max(...xs), height: r.height, features };
+  const walls = back.map((i) => {
+    const [a, b] = wallEnds(r, i);
+    return { wall: i, x: Math.min(a[0], b[0]), w: Math.abs(b[0] - a[0]) };
+  });
+  return { x0: Math.min(...xs), x1: Math.max(...xs), height: r.height, walls, features };
 }
 
 export const NEAR_WALL = 50;
@@ -628,6 +676,35 @@ export function validateRoom(r: unknown): string[] {
     )
   )
     errs.push('Invalid room shape');
+  if (r.walls !== undefined) {
+    const seen = new Set<number>();
+    if (!Array.isArray(r.walls)) errs.push('Invalid wall backgrounds');
+    else
+      for (const f of r.walls) {
+        const img = isObj(f) ? f.image : undefined;
+        if (
+          !isObj(f) ||
+          !isInt(f.wall, 0) ||
+          seen.has(f.wall as number) ||
+          (Array.isArray(r.outline) && (f.wall as number) >= r.outline.length) ||
+          typeof f.colour !== 'string' ||
+          !HEX.test(f.colour) ||
+          (img !== undefined &&
+            !(
+              isObj(img) &&
+              typeof img.id === 'string' &&
+              !!img.id &&
+              img.id.length <= 200 &&
+              typeof img.name === 'string' &&
+              img.name.length <= 500 &&
+              isTile(img.tileWidth) &&
+              isTile(img.tileHeight)
+            ))
+        )
+          errs.push('Invalid wall background');
+        else seen.add(f.wall as number);
+      }
+  }
   return errs;
 }
 
@@ -635,9 +712,15 @@ export function validateRoom(r: unknown): string[] {
  * Walls for the 3D view (ADR-058): thin boxes just outside the outline, full room height, with door and window
  * openings left as gaps; obstacles as their own boxes. Display only.
  */
-export function roomDisplayBoxes(r: Room, thick = 20): { walls: Box[]; obstacles: Box[] } {
-  if (outlineIssues(r.outline).length) return { walls: [], obstacles: [] };
+export function roomDisplayBoxes(
+  r: Room,
+  thick = 20,
+): { walls: Box[]; wallOf: number[]; inward: Pt[]; obstacles: Box[] } {
+  if (outlineIssues(r.outline).length) return { walls: [], wallOf: [], inward: [], obstacles: [] };
   const walls: Box[] = [];
+  /** The wall each box belongs to and the way into the room from it (ADR-145: its background, faced inward). */
+  const wallOf: number[] = [];
+  const inward: Pt[] = [];
   for (let i = 0; i < r.outline.length; i++) {
     const len = wallLength(r, i);
     const open = r.features
@@ -652,7 +735,12 @@ export function roomDisplayBoxes(r: Room, thick = 20): { walls: Box[]; obstacles
       .sort((p, q) => p.a - q.a);
     let at = 0;
     const seg = (a: number, b: number, y0: number, y1: number) => {
-      if (b > a && y1 > y0) walls.push(wallBox(r, i, a, b - a, -thick, y0, y1 - y0));
+      if (b > a && y1 > y0) {
+        walls.push(wallBox(r, i, a, b - a, -thick, y0, y1 - y0));
+        wallOf.push(i);
+        const { nx, nz } = frame(r, i);
+        inward.push([nx, nz]);
+      }
     };
     for (const o of open) {
       seg(at, o.a, 0, r.height);
@@ -666,5 +754,5 @@ export function roomDisplayBoxes(r: Room, thick = 20): { walls: Box[]; obstacles
     .filter((f) => f.kind === 'obstacle')
     .map((f) => featureBox(r, f))
     .filter((b): b is Box => !!b);
-  return { walls, obstacles };
+  return { walls, wallOf, inward, obstacles };
 }
