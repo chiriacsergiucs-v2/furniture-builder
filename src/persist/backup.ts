@@ -100,7 +100,9 @@ export interface FolderState {
   permission: Permission | 'none';
 }
 
-const folder = () => getSetting<DirHandle>(FOLDER_KEY);
+/** The chosen folder: kept in memory for this visit, read from IndexedDB once after a restart. */
+let chosen: DirHandle | undefined;
+const folder = async () => (chosen ??= await getSetting<DirHandle>(FOLDER_KEY));
 
 export async function folderState(): Promise<FolderState> {
   const h = await folder();
@@ -121,6 +123,7 @@ export async function chooseFolder(): Promise<FolderState | 'cancelled'> {
   if (!pick) return { permission: 'none' };
   try {
     const h = await pick({ mode: 'readwrite', id: 'furniture-builder-backup' });
+    chosen = h;
     await setSetting(FOLDER_KEY, h);
     return { name: h.name, permission: 'granted' };
   } catch {

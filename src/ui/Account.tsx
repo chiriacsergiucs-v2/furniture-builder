@@ -554,6 +554,13 @@ function AccountPanel() {
   const error = useAccount((s) => s.error);
   const setDialog = useAccount((s) => s.setDialog);
   const others = known.filter((k) => k.user.id !== user.id);
+  // "Kept both" stays in the top bar until this panel has shown it (G-226).
+  useEffect(
+    () => () => {
+      void online().then((c) => c.clearConflicts());
+    },
+    [],
+  );
   return (
     <div className="account-form">
       <p className="account-who">

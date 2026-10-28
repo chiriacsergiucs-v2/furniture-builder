@@ -451,7 +451,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-046: Settings dialog built as light
 
-- Status: Open
+- Status: Done (catch-up find-it 2026-10-28, tests/find-it/catch-up-editor.test.tsx)
 - Origin: ADR-080, 2026-10-25 10:31 UTC; agent scoped it out
 - Missing: The Settings dialog ADR (Configure moves into a modal, view captions behind an info icon) was built as light acceptance, against your 23:29 decision. N75 is Partially done, “find-it pending”, and not checked in a browser.
 - Request: “Add a tooltip icon with the text on hover on desktop and on click on mobile”; earlier, “Remove the idea of find-it pending”.
@@ -2315,6 +2315,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts”; answers G-217 Supabase, G-219 my personal account
 - Questions: Create the Supabase project and Google client (docs/supabase-setup.md), then let a session test sign-in, sync and share links against it?
 - Suggested pick: Yes: follow docs/supabase-setup.md, then run a live check (estimate 1 hour of your time)
+- Note: 2026-10-28: the user created the project `https://nllwhcxvcbtjfkdhsyse.supabase.co` and gave its publishable key; both are set in `deploy.yml`. Still open: the migration, Google sign-in and the email settings in the dashboard, and a live check.
 
 ### G-278: Account and share-link limits
 
