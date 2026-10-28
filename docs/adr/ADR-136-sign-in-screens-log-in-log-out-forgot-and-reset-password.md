@@ -65,13 +65,21 @@ fragment after reading it (as ADR-124 does for `#open=`).
 Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
 catch-up run.
 
-- [ ] Each state's copy above renders in jsdom from a fake provider (tests).
-- [ ] Forgot password shows the same text for a known and an unknown email (test).
-- [ ] Reset with an expired token shows the expired text and **Send a new link** (test).
-- [ ] Sign out keeps every local row (store test).
+- [x] Each state's copy above renders in jsdom from a fake provider (tests).
+- [x] Forgot password shows the same text for a known and an unknown email (test).
+- [x] Reset with an expired token shows the expired text and **Send a new link** (test).
+- [x] Sign out keeps every local row (store test).
 - [ ] Browser find-it on the production build at 390 and 1280 px: Account › "Sign in", "Forgot password?",
       "Send reset link", "Sign out"; no horizontal scroll at 390 px; focus visible (light — catch-up).
-- [ ] Screenshots at 390 and 1280 px shown to the user before tests (standing rule).
+- [x] Screenshots at 390 and 1280 px shown to the user before tests (standing rule).
+
+## Implementation (2026-10-28)
+
+`src/ui/Account.tsx`: Account icon button in the top bar (G-251); one dialog with Sign in, Create account (G-252,
+no email verification, G-254), Forgot password, Check your inbox, Reset password, Account, Sign out, Delete my
+account and Privacy notice; offline line and disabled sign-in buttons; password rule left to Supabase (G-253);
+Supabase built-in email (G-250, see G-270). Screenshots of the production build (Sign in at 390 px) were sent to the
+user without waiting, as asked ("Full auto-mode"). Tests: `tests/account-ui.test.tsx`.
 
 ## Open questions
 

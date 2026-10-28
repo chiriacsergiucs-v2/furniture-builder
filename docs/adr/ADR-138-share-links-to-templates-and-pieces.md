@@ -53,10 +53,17 @@ Settled:
 Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
 catch-up run.
 
-- [ ] Share link creates one share id for the record and shows a copyable link (test, fake backend).
-- [ ] Opening the link gives a copy with new ids and the owner's record unchanged (test).
-- [ ] Stopped, unknown and offline links show their messages and change nothing (tests).
+- [x] Share link creates one share id for the record and shows a copyable link (test, fake backend).
+- [x] Opening the link gives a copy with new ids and the owner's record unchanged (test).
+- [x] Stopped, unknown and offline links show their messages and change nothing (tests).
 - [ ] jsdom find-it at 390 and 1280 px: "Share link", "Copy link", then "Open a copy" from the link (light — catch-up).
+
+## Implementation (2026-10-28)
+
+Share link from the item's cloud menu, from ⋯ for the open piece, with Make a link, Copy link and Stop sharing;
+Copy code stays (G-257); links `…/furniture-builder/#share=<id>` (G-258); Account lists Shared links with Stop
+sharing (G-259). Opening a link loads at once (G-216) into the ADR-143 preview. Tests: `tests/account-ui.test.tsx`,
+`tests/sync.test.ts`.
 
 ## Open questions
 

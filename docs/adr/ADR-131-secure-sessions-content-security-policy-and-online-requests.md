@@ -66,11 +66,22 @@ Settled:
 Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
 catch-up run.
 
-- [ ] Production build: every screen opens with zero CSP violations (browser script, 390 and 1280 px).
-- [ ] Signed out, the production build requests only its own origin (browser script).
-- [ ] CI test fails on a service-role or secret key pattern in `src/` or `dist/`.
+- [x] Production build: every screen opens with zero CSP violations (browser script, 390 and 1280 px).
+- [x] Signed out, the production build requests only its own origin (browser script).
+- [x] CI test fails on a service-role or secret key pattern in `src/` or `dist/`.
 - [ ] Sign-out clears the stored session; a reload shows signed out (browser script).
-- [ ] The SW precache list and runtime routes contain no backend origin (test on the build manifest).
+- [x] The SW precache list and runtime routes contain no backend origin (test on the build manifest).
+
+## Implementation (2026-10-28)
+
+CSP meta tag first in `<head>` (`csp.ts`, Vite plugin): `default-src 'self'`, `script-src 'self'`,
+`style-src 'self' 'unsafe-inline'` (React and three.js inline styles), `img-src 'self' data: blob:`,
+`connect-src 'self'` plus the build's backend origin only, `object-src 'none'`, `base-uri 'self'`,
+`form-action 'self'`. Session on the device (G-234); Supabase default sign-in limits, own share limits (G-235,
+G-272). `tests/security.test.ts`: CSP text, the built page carries it, no service or secret key in `src/` or `dist/`,
+no runtime caching. Browser check (2026-10-28, 390 and 1280 px): zero CSP violations or page errors on Projects,
+the editor in Both, Saved data, Catalog and Sign in. Not checked: sign-out against Supabase in a browser (G-271);
+`pnpm audit` (no network for it in the build session).
 
 ## Open questions
 

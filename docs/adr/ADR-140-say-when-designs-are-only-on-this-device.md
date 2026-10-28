@@ -46,8 +46,14 @@ protects their work.
 Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
 catch-up run.
 
-- [ ] Notice shows exactly when its conditions hold (jsdom tests).
+- [x] Notice shows exactly when its conditions hold (jsdom tests).
 - [ ] Browser find-it on the production build at 390 and 1280 px: "only on this device", **Back up** (light — catch-up).
+
+## Implementation (2026-10-28)
+
+`DeviceOnlyNotice` on Projects: while something is saved, no backup was made and nothing is in an account; Back
+up, Sign in (when accounts exist) and Dismiss (back after 7 days, G-261). Tests: `tests/backup.test.ts`,
+`tests/saved-data.test.tsx`.
 
 ## Open questions
 

@@ -2243,3 +2243,66 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: User 2026-10-28: "ADR to have the views container same in compose and build and preview. Same 2D(rename it to 2D from Plan), 3D and both toggle"
 - Questions: Use the Options button on a phone in both modes, or inline tools in both? Answer 2026-10-28: "in options all except Fronts, Select, Move, Turn 90 both of them"
 - Suggested pick: The Options button in both modes on a phone (keeps the stage height; estimate effort +2 %)
+
+### G-270: Reset emails and the built-in sender
+
+- Status: Open
+- Origin: ADR-136, 2026-10-28; found while building (Claude)
+- Missing: Supabase's built-in email sender reportedly sends only to the project team's addresses, about 2 emails per hour (web search 2026-10-28; supabase.com not reachable from the build session). With public sign-up (G-214) and the built-in sender (G-250), password-reset emails will not reach other users.
+- Request: “New adr for ui login (including gmail)/logout/forgot password/reset password”; answer G-250: Supabase built-in email
+- Questions: Keep the built-in sender (resets only for team addresses), or set a custom SMTP sender in Supabase?
+- Suggested pick: A custom SMTP sender in Supabase (no app change; estimate effort +2 %, value: forgot password works for everyone)
+
+### G-271: Supabase project not set up
+
+- Status: Open
+- Origin: ADR-127, 2026-10-28; found while building (Claude)
+- Missing: No Supabase project exists yet: the migration is not applied, Google sign-in is not registered, and the repository variables SUPABASE_URL and SUPABASE_ANON_KEY are not set, so the deployed app is built without accounts. Online features are tested with an in-memory backend and the SQL rules on a local PostgreSQL, never against Supabase itself.
+- Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts”; answers G-217 Supabase, G-219 my personal account
+- Questions: Create the Supabase project and Google client (docs/supabase-setup.md), then let a session test sign-in, sync and share links against it?
+- Suggested pick: Yes: follow docs/supabase-setup.md, then run a live check (estimate 1 hour of your time)
+
+### G-272: Account and share-link limits
+
+- Status: Open
+- Origin: ADR-128, ADR-132, 2026-10-28; Claude chose values
+- Missing: Values chosen while building, not by the user: one item at most 2 MB, one account at most 25 MB (about 20 full accounts in the 500 MB free database), at most 30 new share links per account per hour, at most 120 opens per link per hour.
+- Request: Answers G-223 “Design caps + total cap”, G-235 “Vendor defaults first”
+- Questions: Keep these limits, or set your own?
+- Suggested pick: Keep them until a limit is hit (estimate effort +0 %)
+
+### G-273: No Trash list to restore from
+
+- Status: Open
+- Origin: ADR-129, 2026-10-28; found while building (Claude)
+- Missing: Deleted account items go to the Trash for 7 days on the server, but the app has no Trash list to restore them from.
+- Request: Answer G-228: “Account Trash”, 7 days
+- Questions: Add a Trash list in Account with Restore?
+- Suggested pick: Yes, in Account (estimate effort +10 %)
+
+### G-274: Conflict copies are not named after a device
+
+- Status: Open
+- Origin: ADR-129, 2026-10-28; found while building (Claude)
+- Missing: On a conflict, the account's version is kept as a copy named “… (from your account)”, not after the other device: devices have no names.
+- Request: Answer G-226: “Keep both … the second is saved as a copy named after its device”
+- Questions: Name devices (asked once per device), or keep “(from your account)”?
+- Suggested pick: Keep “(from your account)” (estimate effort +0 %; naming devices +5 %)
+
+### G-275: Switching accounts needs a sign-in
+
+- Status: Open
+- Origin: ADR-142, 2026-10-28; found while building (Claude)
+- Missing: Supabase keeps one session per browser, so Switch to … signs out and asks for the other account's password (the email is filled in); it is not a one-tap switch.
+- Request: Answer G-263: “Several (Recommended)”
+- Questions: Keep sign-out-and-sign-in, or keep several sessions at once (one Supabase client per account)?
+- Suggested pick: Keep it (estimate effort +0 %; several sessions +25 %)
+
+### G-276: Restored copies lose version and template links
+
+- Status: Open
+- Origin: ADR-133, 2026-10-28; found while building (Claude)
+- Missing: Restore gives every restored piece, project and template a new id (G-244), so kept project versions and template links in the backup point at the old ids and stay apart from the restored copies.
+- Request: Answer G-244: “New copies (Recommended)”
+- Questions: Keep new ids always, or keep the old id when nothing on this device uses it?
+- Suggested pick: Keep the old id when it is free (closer to a full restore; estimate effort +3 %)

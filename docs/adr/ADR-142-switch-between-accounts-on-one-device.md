@@ -44,8 +44,14 @@ person may keep a work and a private account. ADR-136 allows one signed-in accou
 Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
 catch-up run.
 
-- [ ] Switching shows only the chosen account's items plus device-only items; no row is deleted (store test).
+- [x] Switching shows only the chosen account's items plus device-only items; no row is deleted (store test).
 - [ ] Browser find-it on the production build at 390 and 1280 px: "Add another account", switch, back (light — catch-up).
+
+## Implementation (2026-10-28)
+
+Several accounts (G-263): the device remembers them; Account › Switch to … and Add another account; another
+account's copies are hidden on this device, never removed, and never uploaded to the current account. A switch signs
+out and asks for the other account's password (G-275). Tests: `tests/sync.test.ts`, `tests/account-ui.test.tsx`.
 
 ## Open questions
 

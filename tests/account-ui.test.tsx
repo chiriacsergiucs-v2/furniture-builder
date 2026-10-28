@@ -2,7 +2,7 @@
 import 'fake-indexeddb/auto';
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { templates } from '../src/core/design';
 import { db, saveDesign } from '../src/persist/db';
 import { fakeBackend, fakeServer, type FakeServer } from '../src/online/fake';
@@ -243,5 +243,47 @@ describe('signed in (ADR-130, ADR-137, ADR-139, ADR-142)', () => {
       await screen.findByText('This link no longer works. Ask the owner for a new one.'),
     ).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Open a copy' })).toBeNull();
+  });
+});
+
+describe('start-up (ADR-134, ADR-135)', () => {
+  it('a remembered account shows at once with no request, offline too (reading B)', async () => {
+    setOnline(false);
+    const calls: string[] = [];
+    client.setBackend(
+      new Proxy(fakeBackend(server), {
+        get: (t, k) => {
+          calls.push(String(k));
+          return t[k as keyof typeof t];
+        },
+      }),
+    );
+    localStorage.setItem(
+      'fb:account',
+      JSON.stringify({ id: 'u1', email: 'kept@example.com', provider: 'email' }),
+    );
+    vi.resetModules();
+    const { useAccount: fresh } = await import('../src/store/accountStore');
+    const { AccountButton: Btn } = await import('../src/ui/Account');
+    fresh.setState({ configured: true });
+    render(<Btn />);
+    expect(screen.getByRole('button', { name: 'Account' }).textContent).toBe('K');
+    expect(calls).toEqual([]);
+  });
+
+  it('coming back from a failed Google sign-in says so and changes nothing', async () => {
+    window.history.replaceState(null, '', '/?error_description=access_denied#projects');
+    vi.resetModules();
+    const store = await import('../src/store/accountStore');
+    const fresh = await import('../src/online/client');
+    fresh.setBackend(fakeBackend(server));
+    store.useAccount.setState({ configured: true });
+    const { initAccount } = await import('../src/store/accountActions');
+    await initAccount();
+    const st = store.useAccount.getState();
+    expect(st.dialog).toBe('sign-in');
+    expect(st.error).toBe('Google sign-in did not finish. Try again.');
+    expect(st.user).toBeNull();
+    expect(location.search).toBe('');
   });
 });

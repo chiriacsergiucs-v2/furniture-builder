@@ -44,8 +44,14 @@ they received would rather see it first, without adding it to their library.
 Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
 catch-up run.
 
-- [ ] Preview from a fake link shows name, size, front view and part count; nothing is stored (jsdom test).
+- [x] Preview from a fake link shows name, size, front view and part count; nothing is stored (jsdom test).
 - [ ] Browser find-it on the production build at 390 and 1280 px: preview, "Open a copy", no horizontal scroll (light — catch-up).
+
+## Implementation (2026-10-28)
+
+`SharedItemDialog`: name, Piece or Template, outer size, part count, a front view (`frontSvg`, no text from the
+file) and **Show in 3D** (the lazy viewer through `ViewOverride`, read-only: it selects nothing) (G-264); Open a
+copy or Cancel; nothing saved before. Test: `tests/account-ui.test.tsx`.
 
 ## Open questions
 

@@ -44,8 +44,14 @@ possible (browsers without folder access, or permission not granted again after 
 Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
 catch-up run.
 
-- [ ] The rule shows the toast only when the interval passed and something changed (unit test with fixed dates).
+- [x] The rule shows the toast only when the interval passed and something changed (unit test with fixed dates).
 - [ ] jsdom find-it at 390 and 1280 px: "Last backup:", "Back up now", the interval setting (light — catch-up).
+
+## Implementation (2026-10-28)
+
+`BackupReminder` toast "Last backup: n days ago." with Back up now and Later (1 day); Settings › Saved data ›
+Remind me to back up: 7, 14, 30 (start, G-262), 90 days or Off. Tests: `tests/backup.test.ts`,
+`tests/saved-data.test.tsx`.
 
 ## Open questions
 

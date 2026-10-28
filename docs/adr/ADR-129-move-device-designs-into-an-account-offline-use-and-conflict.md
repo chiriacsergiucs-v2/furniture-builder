@@ -59,11 +59,21 @@ Settled by the hard rules:
 Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
 catch-up run.
 
-- [ ] `planSync` never yields an action that deletes or overwrites a local row without a user choice (fuzz test).
-- [ ] First sign-in with 3 local pieces asks once; Not now uploads nothing (store test).
-- [ ] Offline edit of an account item is kept locally and uploaded when back online (test with a fake backend).
-- [ ] A two-device conflict keeps both versions (test).
+- [x] `planSync` never yields an action that deletes or overwrites a local row without a user choice (fuzz test).
+- [x] First sign-in with 3 local pieces asks once; Not now uploads nothing (store test).
+- [x] Offline edit of an account item is kept locally and uploaded when back online (test with a fake backend).
+- [x] A two-device conflict keeps both versions (test).
 - [ ] jsdom find-it at 390 and 1280 px: the first-sign-in question and a Conflict state are reachable by text (light — catch-up).
+
+## Implementation (2026-10-28)
+
+`src/core/sync.ts` (`planSync`, pure) and `src/online/client.ts` (`sync`, auto after saves, on `online`, on
+sign-in). Answers built: everything uploads silently at the first sign-in (G-224, replaces "asks once"); offline
+edits wait and upload later (G-225); a conflict keeps both, the account's version as "… (from your account)"
+(G-226, G-274); sign-out offers to remove this account's copies, default keep (G-227); a delete here moves the
+record to the account Trash, purged after 7 days by `purge_trash` (G-228; no Trash list yet, G-273). Items of another
+account on the same device are never uploaded (found while testing). Tests: `tests/sync.test.ts` (3,000-case fuzz:
+no pull replaces an item changed here; silent first upload; offline; conflict; Trash; device-only).
 
 ## Open questions
 

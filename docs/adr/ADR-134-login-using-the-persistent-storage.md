@@ -56,8 +56,15 @@ Which reading is built: see the answers below.
 Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
 catch-up run.
 
-- [ ] (B) Reload and an offline start show the signed-in name without a network request (browser script).
+- [x] (B) Reload and an offline start show the signed-in name without a network request (browser script).
 - [ ] Browser find-it on the production build at 390 and 1280 px for the chosen reading's visible text (light — catch-up).
+
+## Implementation (2026-10-28)
+
+Reading B (G-245): the account is remembered in localStorage (`fb:account`) and shown at once; the session is kept
+by Supabase in this browser's storage (G-234); `initAccount` checks it when the online chunk loads and keeps the
+remembered account while offline. Reading A is not built (G-246). Test: `tests/account-ui.test.tsx` ("a remembered
+account shows at once with no request, offline too") — jsdom, not a browser script.
 
 ## Open questions
 

@@ -4,7 +4,8 @@ import type { RemoteRecord } from '../src/core/account';
 import { newShareId, shareIdFrom, shareLink } from '../src/core/account';
 import { templates } from '../src/core/design';
 import { contentHash, planSync, type AccountLink, type LocalItem } from '../src/core/sync';
-import { db, saveDesign } from '../src/persist/db';
+import { db, saveDesign, saveTemplate } from '../src/persist/db';
+import { templateFromDesign } from '../src/core/catalog/local';
 import { fakeBackend, fakeServer } from '../src/online/fake';
 import * as client from '../src/online/client';
 
@@ -297,6 +298,25 @@ describe('sync engine with a fake server (ADR-129, ADR-137)', () => {
     expect(server.records.size).toBe(0);
     expect(server.users.size).toBe(0);
     expect(await db.designs.count()).toBe(1); // this device's rows stay
+  });
+
+  it('a local template saved here opens on a second device equal except its id (ADR-137)', async () => {
+    const { b } = await signedIn();
+    const t = templateFromDesign(templates[0].create(), {
+      name: 'My chest',
+      function: 'storage',
+      rooms: ['bedroom'],
+    } as never);
+    await saveTemplate(t);
+    await client.sync();
+    // The second device: nothing saved, same account.
+    await db.templates.clear();
+    await db.accountLinks.clear();
+    const rec = (await b.listRecords()).find((r) => r.kind === 'template')!;
+    const r = await client.openFromAccount(rec);
+    if (!r.ok) throw new Error(r.error);
+    const back = await db.templates.get(r.id);
+    expect({ ...back!.template, id: 'x' }).toEqual({ ...t, id: 'x' });
   });
 
   it('accounts on one device: another account’s copies are hidden, device-only items are not (ADR-142)', async () => {

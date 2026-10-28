@@ -59,9 +59,21 @@ Supabase was picked (G-217); the others stay listed.
 Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
 catch-up run.
 
-- [ ] The Supabase facts used are cited with URL and date in this ADR (G-220).
-- [ ] The picked client SDK's licence and telemetry are checked and recorded (no telemetry allowed, ADR-126).
-- [ ] The vendor's server-side access rules are written down for ADR-128's tables.
+- [x] The Supabase facts used are cited with URL and date in this ADR (G-220).
+- [x] The picked client SDK's licence and telemetry are checked and recorded (no telemetry allowed, ADR-126).
+- [x] The vendor's server-side access rules are written down for ADR-128's tables.
+
+## Implementation (2026-10-28)
+
+Supabase (G-217), EU region (G-218), the owner's personal account (G-219). Facts (G-220), from a web search on
+2026-10-28 citing https://supabase.com/pricing and https://supabase.com/docs/guides/auth/rate-limits;
+supabase.com itself was not reachable from the build session, so they are **not checked on the page**: free plan 500
+MB database, 1 GB file storage, 50,000 monthly active users, 2 active projects, free projects pause after 1 week of
+inactivity (restorable, no data deleted), Pro $25 per month; the built-in email sender sends only to the project
+team, about 2 emails per hour (G-270). Client: `@supabase/supabase-js` 2.118.0 and its five packages, all MIT (npm
+registry, 2026-10-28); their code holds no analytics or beacon endpoint; it sends a version header to the project's
+own API only. Rules: `supabase/migrations/20261028000000_accounts.sql`; setup steps: `docs/supabase-setup.md`. No
+project exists yet (G-271).
 
 ## Open questions
 
