@@ -91,7 +91,7 @@ for (const width of [1440, 1280, 390, 375]) {
   await shot('panel');
 
   // 3. Drawn on the plan as small marked zones with their names.
-  const planRadio = page.getByRole('radio', { name: 'Plan' });
+  const planRadio = page.getByRole('radio', { name: '2D' });
   if (await planRadio.isVisible().catch(() => false)) await planRadio.click();
   await plan.scrollIntoViewIfNeeded().catch(() => {});
   check(width, 'the plan is visible', await plan.isVisible());

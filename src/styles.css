@@ -5521,6 +5521,21 @@ p > .info-tip {
   flex-wrap: nowrap;
   justify-content: space-between;
 }
+/* ADR-144: on a phone the View switch keeps one row and never shrinks; Fronts takes the rest of the row. */
+.stage-tools:has(> .view-options) > .segmented {
+  flex: none;
+}
+.stage-tools .fronts-short {
+  display: none;
+}
+@media (max-width: 760px) {
+  .stage-tools .fronts-long {
+    display: none;
+  }
+  .stage-tools .fronts-short {
+    display: inline;
+  }
+}
 @media (max-width: 760px) {
   /* The editor sheet covers at most 40 % of the screen over the stage, which keeps its size (ADR-112); the card
      over the drawing steps aside, as the sheet already has the same counters. */

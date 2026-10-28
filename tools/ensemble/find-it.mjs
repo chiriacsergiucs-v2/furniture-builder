@@ -118,7 +118,7 @@ for (const width of [1440, 375]) {
   // Dimensioning + synchronous 2D/3D: the plan and front views show the pieces with mm sizes; 3D shows the same project.
   // On a phone Compose shows the drawing only and offers no View switch (ADR-081); the sheet steps aside.
   if (phone) await closeSheet();
-  else await page.getByRole('radio', { name: 'Plan' }).click();
+  else await page.getByRole('radio', { name: '2D' }).click();
   const plan = page.getByRole('figure', { name: /Room plan, seen from above/ });
   const front = page.getByRole('figure', { name: /Room seen from the front/ });
   check(
@@ -144,7 +144,7 @@ for (const width of [1440, 375]) {
   );
   await shot('3d');
   if (phone) await setMode('Compose');
-  else await page.getByRole('radio', { name: 'Plan' }).click();
+  else await page.getByRole('radio', { name: '2D' }).click();
 
   // In-context editing: "Edit this piece" opens the piece inside the project; changes stay in the project.
   // Rewritten (ADR-078): the "Editing … in project" banner became the top-bar path "‹ <project> › <piece>".

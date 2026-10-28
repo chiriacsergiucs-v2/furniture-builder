@@ -149,7 +149,7 @@ for (const width of [1280, 390]) {
     !(await page.getByRole('region', { name: 'Inside this piece' }).isVisible()),
   );
   await sheet(false);
-  const planRadio = page.getByRole('radio', { name: 'Plan' });
+  const planRadio = page.getByRole('radio', { name: '2D' });
   if (await planRadio.isVisible().catch(() => false)) await planRadio.click();
   const onPlan = page.locator('g.plan-piece', { hasText: 'Sideboard' }).first();
   const label0 = await onPlan.getAttribute('aria-label');

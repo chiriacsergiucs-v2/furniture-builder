@@ -108,7 +108,7 @@ for (const width of [1440, 375]) {
         .catch(() => false)
     )
       await click(mode('Compose'));
-    const planRadio = page.getByRole('radio', { name: 'Plan' });
+    const planRadio = page.getByRole('radio', { name: '2D' });
     if (await planRadio.isVisible().catch(() => false)) await planRadio.click();
   };
   const checksText = async () => {

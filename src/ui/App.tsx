@@ -39,13 +39,13 @@ import { MoreMenu } from './shell/MoreMenu';
 import { ProjectsPage } from './shell/ProjectsPage';
 import { useMediaQuery } from './useMediaQuery';
 import { MODE_LABEL, MODES, useUi } from './shell/uiStore';
+import { ViewOptions } from './ViewOptions';
 import {
   bringDrawingForward,
+  inOptions,
   defaultView,
   shows3d,
   showsDrawing,
-  showsSwitch,
-  shownView,
   viewOptions,
   type StageView,
 } from './viewChoice';
@@ -86,45 +86,6 @@ const SAVE_TEXT: Record<SaveState, string> = {
   saved: 'Saved on this device',
   failed: 'Not saved — browser storage unavailable',
 };
-
-/**
- * The stage's view controls. On a phone in Build & Preview they sit behind one "Options" button so the 3D view keeps
- * its height; Escape and a tap outside close it. Elsewhere they are shown as they are.
- */
-function ViewOptions({ menu, children }: { menu: boolean; children: ReactNode }) {
-  const ref = useRef<HTMLDetailsElement>(null);
-  useEffect(() => {
-    if (!menu) return;
-    const close = () => ref.current?.removeAttribute('open');
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && ref.current?.open) {
-        close();
-        ref.current?.querySelector('summary')?.focus();
-      }
-    };
-    const onDown = (e: PointerEvent) => {
-      if (ref.current?.open && !ref.current.contains(e.target as Node)) close();
-    };
-    window.addEventListener('keydown', onKey);
-    document.addEventListener('pointerdown', onDown);
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      document.removeEventListener('pointerdown', onDown);
-    };
-  }, [menu]);
-  if (!menu) return <>{children}</>;
-  return (
-    <details className="menu view-options" ref={ref}>
-      <summary>
-        Options
-        <Icon name="chevron-down" className="sm" />
-      </summary>
-      <div className="view-options-panel" role="group" aria-label="View options">
-        {children}
-      </div>
-    </details>
-  );
-}
 
 type Page = 'projects' | 'editor' | 'catalog' | 'research' | 'gaps';
 const PAGES: Page[] = ['projects', 'editor', 'catalog', 'research', 'gaps'];
@@ -227,17 +188,17 @@ export function App() {
   const phone = useMediaQuery('(max-width: 760px)');
   const wide = useMediaQuery('(min-width: 1500px)');
   const [has3d] = useState(webglAvailable);
-  // The View switch (ADR-081): Front/Plan · 3D · Both. A mode, or crossing 1500 px, starts from its default view.
-  const [view, setView] = useState<StageView>(() => defaultView(mode, wide, has3d));
-  const viewKey = `${mode}|${wide}`;
-  const [lastViewKey, setLastViewKey] = useState(viewKey);
+  // The View switch (ADR-081, ADR-144): 2D · 3D · Both, the same in both modes. The choice stays when the mode
+  // changes (G-266); only crossing 1500 px starts again from the default (G-268).
+  const [view, setView] = useState<StageView>(() => defaultView(wide, has3d));
+  const [lastWide, setLastWide] = useState(wide);
   const [sheetOpen, setSheetOpen] = useState(false);
-  if (viewKey !== lastViewKey) {
-    setLastViewKey(viewKey);
-    setView(defaultView(mode, wide, has3d));
+  if (wide !== lastWide) {
+    setLastWide(wide);
+    setView(defaultView(wide, has3d));
   }
-  // On a phone Compose is the drawing only, so the canvas is not mounted there (ADR-014).
-  const shown = shownView(view, mode, phone);
+  // 3D mounts only while 3D or Both is shown, in either mode, phone included (ADR-014, G-267).
+  const shown = view;
   // A project's drawing has its own tool row (Snap, Select, Clearances): Doors and fronts joins it there (ADR-109).
   const frontsInPlan = inProject && mode === 'compose' && showsDrawing(shown);
   // Mounted only while the editor is the page shown (ADR-014): hidden on Projects or Catalog it kept rendering.
@@ -288,14 +249,6 @@ export function App() {
       setSheetOpen(false);
     }
   }
-  const seenProblemTap = useRef(problemTap);
-  useEffect(() => {
-    if (problemTap === seenProblemTap.current) return;
-    seenProblemTap.current = problemTap;
-    // On a phone Build & Preview shows 3D only: the plan is in Compose.
-    if (window.matchMedia?.('(max-width: 760px)').matches && useUi.getState().mode === 'build')
-      useUi.getState().setMode('compose');
-  }, [problemTap]);
   useEffect(() => {
     if (tapMode) useUi.getState().setMode('compose');
   }, [tapMode]);
@@ -754,35 +707,36 @@ export function App() {
               />
             )}
             <div className="stage-tools">
-              {showsSwitch(mode, phone) && (
-                <div className="segmented small" role="radiogroup" aria-label="View">
-                  {viewOptions(inProject, has3d).map((o) => (
-                    <button
-                      key={o.id}
-                      type="button"
-                      role="radio"
-                      aria-checked={shown === o.id}
-                      className={shown === o.id ? 'on' : ''}
-                      disabled={o.disabled}
-                      title={o.reason}
-                      onClick={() => setView(o.id)}
-                    >
-                      {o.label}
-                    </button>
-                  ))}
-                </div>
+              <div className="segmented small" role="radiogroup" aria-label="View">
+                {viewOptions(has3d).map((o) => (
+                  <button
+                    key={o.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={shown === o.id}
+                    className={shown === o.id ? 'on' : ''}
+                    disabled={o.disabled}
+                    title={o.reason}
+                    onClick={() => setView(o.id)}
+                  >
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+              {/* Fronts stays in the row on a phone too (G-269); the other tools go behind Options there. */}
+              {!frontsInPlan && (
+                <label className="toggle small">
+                  <input
+                    type="checkbox"
+                    aria-label="Doors and fronts"
+                    checked={showFronts}
+                    onChange={(e) => setShowFronts(e.target.checked)}
+                  />
+                  <span className="fronts-long">Doors and fronts</span>
+                  <span className="fronts-short">Fronts</span>
+                </label>
               )}
-              <ViewOptions menu={phone && mode === 'build'}>
-                {!frontsInPlan && (
-                  <label className="toggle small">
-                    <input
-                      type="checkbox"
-                      checked={showFronts}
-                      onChange={(e) => setShowFronts(e.target.checked)}
-                    />
-                    <span>Doors and fronts</span>
-                  </label>
-                )}
+              <ViewOptions menu={inOptions('exploded', phone)}>
                 {shows3d(shown) && (
                   <label className="toggle small">
                     <input

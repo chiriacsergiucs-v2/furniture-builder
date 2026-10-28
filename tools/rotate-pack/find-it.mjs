@@ -84,7 +84,7 @@ for (const width of [1280, 390]) {
   await dlg.getByRole('button', { name: 'Create project' }).click();
   await page.locator('main.work').waitFor({ state: 'visible' });
   for (const q of ['Base cabinet', 'Base cabinet', 'Chest']) await addPiece(q);
-  const planRadio = page.getByRole('radio', { name: 'Plan' });
+  const planRadio = page.getByRole('radio', { name: '2D' });
   if (await planRadio.isVisible().catch(() => false)) await planRadio.click();
   check(width, 'three pieces on the plan', (await pieces.count()) === 3, `${await pieces.count()}`);
 
