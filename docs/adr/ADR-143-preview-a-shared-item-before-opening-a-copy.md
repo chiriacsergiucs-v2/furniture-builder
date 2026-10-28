@@ -6,6 +6,7 @@
 - Design: docs/ui-design.md (Dialog, front view drawing)
 - Backlog: N144
 - Acceptance: light
+- Answers: 2026-10-28, the user answered every open question (below)
 - Proposed by: Claude, not requested (2026-10-28 task: "propose further architecture and UX ADRs")
 
 ## Context
@@ -18,6 +19,10 @@ they received would rather see it first, without adding it to their library.
 - Opening a share link shows a preview built from the shared body with `buildModel()` (ADR-004): name, kind, outer
   size, the front view drawing and the part count; then **Open a copy** or **Cancel**.
 - Nothing is saved until **Open a copy**; an invalid body shows its diagnostics instead of a drawing (ADR-008).
+
+**Answers (user, 2026-10-28):**
+
+- The preview also shows the **3D view**, mounted lazily and only while the preview is open (G-264, ADR-014).
 
 ## Alternatives considered
 
@@ -44,4 +49,4 @@ catch-up run.
 
 ## Open questions
 
-- Name, front view and part count; plus 3D; or plus the full cut list? Suggested: the first (G-264).
+- None open. Answered 2026-10-28, one by one: G-264 name, front view, part count, plus 3D.

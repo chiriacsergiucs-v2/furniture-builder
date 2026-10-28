@@ -2,10 +2,11 @@
 
 - Status: Pending
 - Date: 2026-10-28
-- Depends on: ADR-133
+- Depends on: ADR-127, ADR-131, ADR-133
 - Design: docs/ui-design.md (Dialog, top bar)
 - Backlog: N135
 - Acceptance: light
+- Answers: 2026-10-28, the user answered every open question (below)
 
 ## Context
 
@@ -28,7 +29,11 @@ Settled for both readings:
 - Signing in or out never deletes or rewrites saved designs (ADR-012, ADR-129).
 - An offline start shows the last login state and keeps every offline feature working.
 
-**Not written: which reading is built.** The rest of this Decision waits for G-245 (and G-246 if A).
+Which reading is built: see the answers below.
+
+**Answers (user, 2026-10-28):**
+
+- **Reading B** (G-245): the account sign-in of ADR-135 and ADR-136 is kept in the device's persistent storage (ADR-131, G-234), so a reload or an offline start opens signed in, showing the name and email, without a request. A local lock or profiles (reading A, G-246) are not built.
 
 ## Alternatives considered
 
@@ -51,15 +56,9 @@ Settled for both readings:
 Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
 catch-up run.
 
-- [ ] The user picked a reading; the Decision is completed and the Depends on line updated to match.
 - [ ] (B) Reload and an offline start show the signed-in name without a network request (browser script).
-- [ ] (A) The chosen lock or profiles work after a reload and never expose saved data while locked (tests).
 - [ ] Browser find-it on the production build at 390 and 1280 px for the chosen reading's visible text (light — catch-up).
 
 ## Open questions
 
-- Reading A (local profile or lock, no server) or reading B (account session kept in persistent storage)?
-  Suggested: B, because items 3 and 4 are logins to an account (estimate: B +10 % on top of ADR-131; A +25 % as a
-  separate feature) (G-245).
-- If A: a passphrase lock with encrypted storage, or several local profiles? Suggested, only if A: the lock
-  (G-246).
+- None open. Answered 2026-10-28, one by one: G-245 reading B; G-246 not applicable.

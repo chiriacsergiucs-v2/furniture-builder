@@ -6,6 +6,7 @@
 - Design: docs/ui-design.md (Row button, Badge, Status, Library and Catalog screens)
 - Backlog: N138
 - Acceptance: light
+- Answers: 2026-10-28, the user answered every open question (below)
 
 ## Context
 
@@ -25,7 +26,12 @@ Settled:
 - A new section **In your account** lists account items not on this device; **Open** downloads a validated local
   copy, linked to the record.
 - Signed out, nothing changes: no badges, no account section.
-- Whether saving is automatic or per item is open (G-255); this Decision does not choose it.
+- Saving is automatic (answers below).
+
+**Answers (user, 2026-10-28):**
+
+- **Automatic** (G-255): while signed in, every saved piece and template is uploaded; each has **Keep on this device only**.
+- Edits of shipped templates (local templates that shadow them) are uploaded too (G-256).
 
 ## Alternatives considered
 
@@ -56,7 +62,4 @@ catch-up run.
 
 ## Open questions
 
-- Automatic for every saved piece and template while signed in, or only those marked Save to account? Suggested:
-  automatic with Keep on this device only per item (+10 %) (G-255).
-- Your edits of shipped templates (local templates that shadow them) too? Suggested: yes (+2 %) (G-256).
-- Which records, and whether pieces inside projects count as "created pieces": see G-221.
+- None open. Answered 2026-10-28, one by one: G-255 automatic; G-256 yes.

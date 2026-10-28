@@ -6,6 +6,7 @@
 - Design: n/a
 - Backlog: N129
 - Acceptance: light
+- Answers: 2026-10-28, the user answered every open question (below)
 
 ## Context
 
@@ -30,6 +31,12 @@ revision, updatedAt, deletedAt? }`. `body` is the document exactly as exported t
 - `revision` increases by one on every accepted write; a write that names an older revision is a conflict
   (ADR-129).
 - Built with the add-storage-version skill. Existing local rows are not changed by the upgrade.
+
+**Answers (user, 2026-10-28):**
+
+- **Records** (G-221): library pieces (`designs`), local templates (`templates`) and the pictures (`images`) they use. Pieces inside projects, projects and other tables stay on the device.
+- **Link** (G-222): a separate Dexie table in the next free version; documents unchanged, no `schemaVersion` bump; the link never travels in exports or design codes.
+- **Limits** (G-223): `validateDesign`'s caps per document, plus a total size cap per account set once Supabase's free quota is verified (G-220).
 
 ## Alternatives considered
 
@@ -60,9 +67,4 @@ catch-up run.
 
 ## Open questions
 
-- Which records go to the account: pieces and templates only, plus the pictures they use, or also projects,
-  project templates, prices, decors and 3D models? Does "created pieces" include pieces inside projects?
-  Suggested: pieces and templates plus their pictures (+15 % effort, +20 % value) (G-221).
-- Where the local-to-server link lives: a separate Dexie table (documents unchanged, no `schemaVersion` bump), or a
-  field in the design document (`schemaVersion` 4)? Suggested: separate table (G-222).
-- Per-account count and size caps? Suggested: `validateDesign` caps plus a total cap once quotas are known (G-223).
+- None open. Answered 2026-10-28, one by one: G-221 pieces, templates and their pictures; "created pieces" = library pieces only; G-222 separate Dexie table; G-223 design caps plus a total cap.

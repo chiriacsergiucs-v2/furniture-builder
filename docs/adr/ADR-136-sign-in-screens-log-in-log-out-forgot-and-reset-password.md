@@ -6,6 +6,7 @@
 - Design: docs/ui-design.md (tokens; Dialog, Button, `.input`, Alert, Status, top bar)
 - Backlog: N137
 - Acceptance: light
+- Answers: 2026-10-28, the user answered every open question (below)
 
 ## Context
 
@@ -19,16 +20,16 @@ an email sender (G-250).
 
 **States and copy** (one `Dialog`, title `--fs-xl`, body gap `--s-4`, controls `--control-h`):
 
-| State           | What shows                                                                                                                                                                                                                                                                                                                        |
-| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Logged out      | "Sign in to save your pieces and templates to your account. Everything still works on this device without an account." **Continue with Google** (`outline`, block); "or"; Email, Password (`.input`); **Sign in** (`primary`); links **Forgot password?**, **Create account** (only if G-252 is answered yes), **Privacy notice** |
-| Logging in      | Sign in button `loading`; fields disabled                                                                                                                                                                                                                                                                                         |
-| Error           | `.alert.error`: "Email or password is wrong." / "Check your connection and try again." Fields keep their text                                                                                                                                                                                                                     |
-| Logged in       | Name and email; **Sign out** (`outline`); **Export my data**, **Delete my account** (ADR-130)                                                                                                                                                                                                                                     |
-| Offline         | `.alert.info`: "You are offline. Your designs still work on this device." Sign-in buttons disabled                                                                                                                                                                                                                                |
-| Forgot password | Email; **Send reset link**; then "If an account exists for <email>, we sent a link. Check your inbox." (same text whether or not it exists)                                                                                                                                                                                       |
-| Reset password  | Opened from the mail link: New password, Confirm; **Save new password**; "Password changed. You are signed in." Expired link: "This link has expired. Ask for a new one." with **Send a new link**                                                                                                                                |
-| Signing out     | "Sign out of <email>? Your designs stay on this device." **Sign out** / **Cancel** (local copies: ADR-129, G-227)                                                                                                                                                                                                                 |
+| State           | What shows                                                                                                                                                                                                                                                                                        |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Logged out      | "Sign in to save your pieces and templates to your account. Everything still works on this device without an account." **Continue with Google** (`outline`, block); "or"; Email, Password (`.input`); **Sign in** (`primary`); links **Forgot password?**, **Create account**, **Privacy notice** |
+| Logging in      | Sign in button `loading`; fields disabled                                                                                                                                                                                                                                                         |
+| Error           | `.alert.error`: "Email or password is wrong." / "Check your connection and try again." Fields keep their text                                                                                                                                                                                     |
+| Logged in       | Name and email; **Sign out** (`outline`); **Export my data**, **Delete my account** (ADR-130)                                                                                                                                                                                                     |
+| Offline         | `.alert.info`: "You are offline. Your designs still work on this device." Sign-in buttons disabled                                                                                                                                                                                                |
+| Forgot password | Email; **Send reset link**; then "If an account exists for <email>, we sent a link. Check your inbox." (same text whether or not it exists)                                                                                                                                                       |
+| Reset password  | Opened from the mail link: New password, Confirm; **Save new password**; "Password changed. You are signed in." Expired link: "This link has expired. Ask for a new one." with **Send a new link**                                                                                                |
+| Signing out     | "Sign out of <email>? Your designs stay on this device." **Sign out** / **Cancel** (local copies: ADR-129, G-227)                                                                                                                                                                                 |
 
 **Layouts.** 390 px: the dialog fills the screen (`--s-4` side padding), buttons full width, no horizontal scroll.
 1280 px: a centred dialog `--out` (400 px) wide, `--shadow-3`, `--backdrop`. Both light and dark tokens; focus
@@ -36,6 +37,13 @@ ring visible on every control; errors linked with `aria-describedby`.
 
 The reset link returns to the app's base URL with the provider's token in the fragment; the app clears the
 fragment after reading it (as ADR-124 does for `#open=`).
+
+**Answers (user, 2026-10-28):**
+
+- Reset mails come from **Supabase's built-in email** (G-250); its sending limits are checked under G-220.
+- **Account** is an icon button in the **top bar** (G-251).
+- **Create account** with email and password is included (G-252); it signs in at once, with **no email verification** (G-254).
+- Password rule: **Supabase's default**, shown under the field (G-253).
 
 ## Alternatives considered
 
@@ -67,10 +75,4 @@ catch-up run.
 
 ## Open questions
 
-- Email sender for verification and reset mails: the backend's built-in email (limits unknown), or your own SMTP
-  sender (e.g. Brevo, Resend, Amazon SES; facts unknown)? Suggested: your own sender (+10 %) (G-250).
-- Where Account sits: top bar, ⋯ menu, or Settings? Suggested: top bar (+3 %) (G-251).
-- Include Create account with email and password? Suggested: yes (+10 %) (G-252).
-- Password rule: provider default or your minimum length? Suggested: provider default, shown under the field
-  (G-253).
-- Require email verification before the first sign-in? Suggested: yes (+5 %) (G-254).
+- None open. Answered 2026-10-28, one by one: G-250 Supabase built-in email; G-251 top bar; G-252 Create account; G-253 Supabase default; G-254 no verification.

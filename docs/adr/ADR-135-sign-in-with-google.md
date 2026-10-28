@@ -6,6 +6,7 @@
 - Design: docs/ui-design.md (Button `outline`, Dialog)
 - Backlog: N136
 - Acceptance: light
+- Answers: 2026-10-28, the user answered every open question (below)
 
 ## Context
 
@@ -25,6 +26,12 @@ Settled:
   finish. Try again." and leaves the app as it was.
 - The privacy notice (ADR-130) is linked under the button before the flow starts.
 - Offline, the button is disabled with "You are offline. Sign in when you are back online."
+
+**Answers (user, 2026-10-28):**
+
+- **Full-page redirect** (G-247).
+- The user registers the Google OAuth client and consent screen under their personal account (G-248).
+- **No account linking** (G-249, revised 2026-10-28 with G-254): a Google login and a password login with the same email stay separate accounts. Emails are not verified, so linking them would let anyone take over a Google user's account.
 
 ## Alternatives considered
 
@@ -56,8 +63,4 @@ catch-up run.
 
 ## Open questions
 
-- Full-page redirect or popup? Suggested: redirect, works in the installed app and on phones (G-247).
-- Who registers the Google OAuth client and consent screen (requirements unknown)? Suggested: you, under the
-  ADR-127 account (G-248).
-- Same email by Google and by password: link when verified, keep separate, or ask? Suggested: link when verified
-  (G-249).
+- None open. Answered 2026-10-28, one by one: G-247 redirect; G-248 the user registers the OAuth client; G-249 revised: no linking.

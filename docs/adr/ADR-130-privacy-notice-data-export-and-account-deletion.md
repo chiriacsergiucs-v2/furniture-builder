@@ -6,6 +6,7 @@
 - Design: docs/ui-design.md (Dialog, Section card, Button `danger`)
 - Backlog: N131
 - Acceptance: light
+- Answers: 2026-10-28, the user answered every open question (below)
 
 ## Context
 
@@ -28,6 +29,14 @@ Settled by the request and GDPR principles (data minimisation, access, erasure, 
 - **Delete my account**: Account › Delete my account, confirmed by typing the email; removes the server records,
   share links and the sign-in; local device copies stay unless the user also removes them (ADR-129).
 - Copy is final only after the open questions below are answered.
+
+**Answers (user, 2026-10-28):**
+
+- **Controller** (G-229): the app's owner as a person; contact **Beliserii@gmail.com**.
+- **Consent** (G-230): one line at sign-in explains the strictly necessary session storage; no banner.
+- **Language** (G-231): English, like the app UI.
+- **After account deletion** (G-232): server data is deleted at once; the notice states Supabase's backup period once verified.
+- **Legal review** (G-233): none; the user decided to publish without one.
 
 ## Alternatives considered
 
@@ -57,10 +66,4 @@ catch-up run.
 
 ## Open questions
 
-- Who is named as controller, and which contact email? Only you can answer (G-229).
-- Consent banner, or a line at sign-in about the strictly necessary session storage? Suggested: a line at sign-in,
-  to be checked (G-230).
-- Notice language: Romanian, English or both? Suggested: both (+5 %) (G-231).
-- After deletion: delete at once, or keep N days for undo? Suggested: at once, stating the vendor's backup period
-  once known (G-232).
-- Legal review before public sign-up? Suggested: yes (G-233).
+- None open. Answered 2026-10-28, one by one: G-229 the user as a person, contact Beliserii@gmail.com; G-230 a line at sign-in; G-231 English; G-232 delete at once; G-233 no legal review.

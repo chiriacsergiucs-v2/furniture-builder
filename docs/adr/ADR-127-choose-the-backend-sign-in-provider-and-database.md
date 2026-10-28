@@ -6,6 +6,7 @@
 - Design: n/a
 - Backlog: N128
 - Acceptance: light
+- Answers: 2026-10-28, the user answered every open question (below)
 
 ## Context
 
@@ -22,11 +23,16 @@ Vendor facts below come from earlier research (2026-10-27/28, secondary sources,
 Settled: the vendor must offer, or be paired with, (1) Google sign-in, (2) email/password with verification and
 reset, (3) a database with per-user access rules enforced on the server, (4) an HTTPS API callable from
 `https://chiriacsergiucs-v2.github.io` with CORS, (5) data export and account deletion (ADR-130), (6) a published
-licence and telemetry posture for any client SDK shipped in the bundle. The vendor, region and owner stay open.
+licence and telemetry posture for any client SDK shipped in the bundle. The vendor, region and owner are in the answers below.
+
+**Answers (user, 2026-10-28):**
+
+- **Supabase** (G-217), in an **EU region** (G-218), under **the user's personal account**, who holds the keys (G-219).
+- Before building, every Supabase fact used (free quota, idle pause, prices, client SDK licence and telemetry, email limits) is checked on Supabase's own pages and recorded here with URL and date (G-220).
 
 ## Alternatives considered
 
-Each candidate stays here until the user picks one (none is chosen).
+Supabase was picked (G-217); the others stay listed.
 
 - **Supabase** — auth with Google; email/password with reset; Postgres database; free projects pause after 1 week
   idle; Pro is $25/mo (earlier research, unverified). Licence, quotas, client SDK telemetry: unknown.
@@ -53,16 +59,10 @@ Each candidate stays here until the user picks one (none is chosen).
 Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
 catch-up run.
 
-- [ ] The user picked a vendor, region and owner; the facts used are cited with URL and date in this ADR.
+- [ ] The Supabase facts used are cited with URL and date in this ADR (G-220).
 - [ ] The picked client SDK's licence and telemetry are checked and recorded (no telemetry allowed, ADR-126).
 - [ ] The vendor's server-side access rules are written down for ADR-128's tables.
 
 ## Open questions
 
-- Which vendor: Supabase, Cloudflare D1 + Worker (+ auth), Turso or Neon (+ auth), Firebase, or self-hosted
-  PocketBase / Appwrite? Suggested: Supabase, the only candidate in the earlier research that covers items 3, 4 and
-  5 in one service; risk: idle pause (unverified) (G-217).
-- Data region: EU, or any? Suggested: EU (G-218).
-- Whose account owns the backend, billing and keys? Suggested: yours; only you can answer (G-219).
-- Verify every vendor fact on the vendor's pages before choosing? Suggested: yes (+5 %) (G-220).
-- Email sender for verification and reset mails: see G-250.
+- None open. Answered 2026-10-28, one by one: G-217 Supabase; G-218 EU region; G-219 the user's personal account; G-220 verify vendor facts first.

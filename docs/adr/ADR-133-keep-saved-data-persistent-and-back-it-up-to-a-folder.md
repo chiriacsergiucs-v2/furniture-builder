@@ -6,6 +6,7 @@
 - Design: docs/ui-design.md (Settings dialog, Section card, Alert, Status)
 - Backlog: N134
 - Acceptance: light
+- Answers: 2026-10-28, the user answered every open question (below)
 
 ## Context
 
@@ -32,6 +33,15 @@ Settled:
 - **Restore from backup** reads a folder (or file set), validates each document (ADR-011) and reports skipped
   files by name. It never deletes or overwrites a saved row (ADR-012).
 - Pure planning (`planBackup(rows) → files`, `planRestore(files, rows) → actions`) lives in `src/core`.
+
+**Answers (user, 2026-10-28):**
+
+- `persist()` is called **at the first save** (G-239).
+- A backup holds **everything the user made**: every saved table (G-240).
+- Layout: **one importable file per item**, in a subfolder per table (G-241).
+- Backups run **automatically after changes** while the app is open, and from **Back up now** (G-242).
+- Without folder access: **Download backup (.zip)** with the same layout (G-243).
+- Restore makes **new copies** with new ids and skips items identical to one already saved (G-244).
 
 ## Alternatives considered
 
@@ -64,12 +74,4 @@ catch-up run.
 
 ## Open questions
 
-- Ask the browser to keep data at the first save, or only from a button? Suggested: at the first save, state in
-  Settings (+2 %) (G-239).
-- Backup contents: everything you made, or pieces, projects and templates only? Suggested: everything (+10 %,
-  +25 % value) (G-240).
-- Layout: one importable file per item in subfolders, or one .zip? Suggested: one file per item (+5 %) (G-241).
-- Trigger: Back up now, automatic after changes, or both? Suggested: both (+15 %) (G-242).
-- Browsers without folder access (e.g. iPhone Safari, Firefox; verify on MDN): a .zip download, or nothing?
-  Suggested: .zip (+5 %) (G-243).
-- Restore as new copies or by id replacing rows? Suggested: new copies, skipping identical items (G-244).
+- None open. Answered 2026-10-28, one by one: G-239 at the first save; G-240 everything; G-241 one file per item; G-242 both; G-243 .zip download; G-244 new copies.

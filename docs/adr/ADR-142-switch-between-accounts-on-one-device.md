@@ -6,6 +6,7 @@
 - Design: docs/ui-design.md (Menu, Dialog)
 - Backlog: N143
 - Acceptance: light
+- Answers: 2026-10-28, the user answered every open question (below)
 - Proposed by: Claude, not requested (2026-10-28 task: "propose further architecture and UX ADRs")
 
 ## Context
@@ -18,6 +19,10 @@ person may keep a work and a private account. ADR-136 allows one signed-in accou
 - Account menu: the signed-in account, other accounts used on this device, **Add another account**.
 - Switching never deletes or rewrites saved designs (ADR-012); account items of the other account are hidden, not
   removed.
+
+**Answers (user, 2026-10-28):**
+
+- **Several accounts** on one device, each with its own account copies; device-only items stay visible to all (G-263).
 
 ## Alternatives considered
 
@@ -44,4 +49,4 @@ catch-up run.
 
 ## Open questions
 
-- Several accounts with separate account copies, or one at a time? Suggested: several (+20 %) (G-263).
+- None open. Answered 2026-10-28, one by one: G-263 several accounts.

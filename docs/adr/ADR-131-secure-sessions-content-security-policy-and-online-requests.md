@@ -6,6 +6,7 @@
 - Design: n/a
 - Backlog: N132
 - Acceptance: light
+- Answers: 2026-10-28, the user answered every open question (below)
 
 ## Context
 
@@ -39,6 +40,11 @@ Settled:
 - **Untrusted text** from the server renders as text only; downloaded bodies are validated (ADR-128).
 - **Dependencies:** the vendor SDK passes `pnpm audit --omit=dev` and the licence and telemetry check (ADR-127).
 
+**Answers (user, 2026-10-28):**
+
+- **Session** (G-234): kept on the device (Supabase client storage in IndexedDB or localStorage), so it survives restarts and offline starts; the CSP above protects it.
+- **Rate limits** (G-235): Supabase's defaults for sign-in; share-link limits set once its quotas are verified.
+
 ## Alternatives considered
 
 - **No CSP** — the session token would be one injected script away from theft.
@@ -68,7 +74,4 @@ catch-up run.
 
 ## Open questions
 
-- Session storage: IndexedDB or localStorage on the device, memory only, or an httpOnly cookie (needs a server on
-  the same site)? Suggested: device storage behind the CSP, closest to "login using that persistent storage" (G-234).
-- Rate-limit values per account and address? Suggested: vendor defaults for sign-in; share-link limits once the
-  vendor is known (G-235).
+- None open. Answered 2026-10-28, one by one: G-234 session kept on the device; G-235 vendor defaults first.

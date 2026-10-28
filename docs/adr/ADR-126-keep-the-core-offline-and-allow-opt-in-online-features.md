@@ -6,6 +6,7 @@
 - Design: n/a
 - Backlog: N127
 - Acceptance: light
+- Answers: 2026-10-28, the user answered every open question (below)
 
 ## Context
 
@@ -40,6 +41,13 @@ Settled by the request and the hard rules (the open questions below are not part
 - `docs/architecture.md`, the security-review skill and CLAUDE.md's ADR-002 lines are updated to cite this ADR
   when it is built.
 
+**Answers (user, 2026-10-28):**
+
+- **Free tier only** (G-213): no paid plan; when a free limit is reached the user decides.
+- **Anyone can create an account** (G-214): public sign-up, with ADR-131's rate limits.
+- **Online client in a lazy chunk** (G-215), downloaded only after the user signs in or opens a share link.
+- **Opening a share link loads it at once** (G-216): opening the link is the opt-in action; no extra question.
+
 ## Alternatives considered
 
 - **Keep ADR-002 as is** — items 2 (reading B) to 6 cannot be built.
@@ -70,9 +78,4 @@ catch-up run.
 
 ## Open questions
 
-- Paid backend allowed? Free tier only, or a paid plan up to an amount you set? Suggested: free tier only until a
-  limit is reached (G-213).
-- Who can create an account: only you, people you invite, or anyone? Suggested: anyone, closest to "user accounts"
-  and share links (estimate effort +15 %, value +30 % over owner-only) (G-214).
-- Online client code: lazy chunk loaded after opt-in, or in the main bundle? Suggested: lazy chunk (+5 %) (G-215).
-- Opening a share link: fetch at once, or ask first? Suggested: ask first, like ADR-124's links (+2 %) (G-216).
+- None open. Answered 2026-10-28, one by one: G-213 free tier only; G-214 anyone can sign up; G-215 lazy chunk after opt-in; G-216 a share link loads at once (no ask).

@@ -6,6 +6,7 @@
 - Design: docs/ui-design.md (Toast, Settings dialog)
 - Backlog: N142
 - Acceptance: light
+- Answers: 2026-10-28, the user answered every open question (below)
 - Proposed by: Claude, not requested (2026-10-28 task: "propose further architecture and UX ADRs")
 
 ## Context
@@ -18,6 +19,10 @@ possible (browsers without folder access, or permission not granted again after 
 - When the last backup is older than the chosen interval and something changed since, a `.toast` reads "Last
   backup: <n> days ago." with **Back up now** and **Later**.
 - Settings › Saved data holds the interval, including **Off**.
+
+**Answers (user, 2026-10-28):**
+
+- The interval is a Settings choice, with **Off**, starting at **30 days** (G-262).
 
 ## Alternatives considered
 
@@ -44,5 +49,4 @@ catch-up run.
 
 ## Open questions
 
-- A fixed interval, or a Settings choice (with Off) starting at a value you pick? Suggested: a Settings choice
-  (G-262).
+- None open. Answered 2026-10-28, one by one: G-262 a Settings choice with Off, starting at 30 days.

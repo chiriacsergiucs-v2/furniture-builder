@@ -6,6 +6,7 @@
 - Design: docs/ui-design.md (Alert `.alert.info`, Library)
 - Backlog: N141
 - Acceptance: light
+- Answers: 2026-10-28, the user answered every open question (below)
 - Proposed by: Claude, not requested (2026-10-28 task: "propose further architecture and UX ADRs")
 
 ## Context
@@ -20,6 +21,10 @@ protects their work.
   account." with **Back up** (and **Sign in** once ADR-136 exists) and **Dismiss**, while storage is not
   persistent or no backup and no account copy exists.
 - It never blocks work and never shows in printed sheets.
+
+**Answers (user, 2026-10-28):**
+
+- **Dismiss** hides it for 7 days; it returns while the conditions still hold (G-261).
 
 ## Alternatives considered
 
@@ -46,4 +51,4 @@ catch-up run.
 
 ## Open questions
 
-- Always while unprotected (dismissible for N days you choose), or once only? Suggested: dismissible (G-261).
+- None open. Answered 2026-10-28, one by one: G-261 dismissible, back after 7 days.

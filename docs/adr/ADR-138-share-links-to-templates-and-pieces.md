@@ -6,6 +6,7 @@
 - Design: docs/ui-design.md (Menu, Dialog, Button, Alert)
 - Backlog: N139
 - Acceptance: light
+- Answers: 2026-10-28, the user answered every open question (below)
 
 ## Context
 
@@ -25,6 +26,12 @@ Settled:
   longer works. Ask the owner for a new one." Offline: "You are offline. Open this link when you are back online."
 - The link part of the address is cleared after reading it, as ADR-124 does for `#open=`.
 - Templates open into Catalog › Templates; pieces open in the editor as a new library item.
+
+**Answers (user, 2026-10-28):**
+
+- **Copy code** stays beside **Share link** (G-257).
+- Link form: `…/furniture-builder/#share=<id>` (G-258).
+- **Shared links** list in Account with **Stop sharing**, plus per item (G-259).
 
 ## Alternatives considered
 
@@ -53,8 +60,4 @@ catch-up run.
 
 ## Open questions
 
-- Keep Copy code (ADR-124) beside Share link, or replace it? Suggested: keep both (G-257).
-- Link form: fragment `…/furniture-builder/#share=<id>`, or a path `…/s/<id>` (needs a 404.html redirect)?
-  Suggested: fragment (G-258).
-- A Shared links list in Account with Stop sharing, or only per item? Suggested: both (+10 %) (G-259).
-- Who can open, lifetime, snapshot or latest: see G-236, G-237, G-238.
+- None open. Answered 2026-10-28, one by one: G-257 keep both; G-258 #share=<id>; G-259 per item plus a list.

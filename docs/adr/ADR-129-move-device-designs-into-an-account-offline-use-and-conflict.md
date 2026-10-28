@@ -6,6 +6,7 @@
 - Design: docs/ui-design.md (Dialog, Alert, Status)
 - Backlog: N130
 - Acceptance: light
+- Answers: 2026-10-28, the user answered every open question (below)
 
 ## Context
 
@@ -27,6 +28,14 @@ Settled by the hard rules:
   (component: `.status`, ADR-139 proposes the indicator).
 - **Logic in `src/core`** as pure functions (`planSync(local, remote) → actions`), unit-tested, with a fuzz test
   that no plan drops a document.
+
+**Answers (user, 2026-10-28):**
+
+- **First sign-in** (G-224): everything on the device in ADR-128's records is uploaded without asking. This is the user's standing choice; the local rows are not changed.
+- **Offline** (G-225): edits are saved locally and uploaded when back online.
+- **Conflict** (G-226): both are kept; the second is saved as a copy named after its device.
+- **Sign-out** (G-227): the app offers to remove the account copies from this device; the default keeps them.
+- **Delete** (G-228): an account item moves to an account **Trash** for **7 days**, then is removed; it can be restored meanwhile.
 
 ## Alternatives considered
 
@@ -58,13 +67,4 @@ catch-up run.
 
 ## Open questions
 
-- Designs saved before sign-in: ask once (Upload all / Choose / Not now), upload all silently, or upload none?
-  Suggested: ask once (+5 %) (G-224).
-- Offline and signed in: save locally and send later, or block editing account items? Suggested: send later
-  (+20 %) (G-225).
-- Same item changed on two devices: keep both, last save wins, or ask with a compare? Suggested: keep both
-  (+10 %) (G-226).
-- Signing out on a shared device: keep local copies, offer to remove them, or remove automatically? Suggested:
-  offer, default keep (G-227).
-- A delete of an account item: everywhere at once, account Trash for N days (you pick N), or this device only?
-  Suggested: Trash (G-228).
+- None open. Answered 2026-10-28, one by one: G-224 upload all silently; G-225 save locally, upload later; G-226 keep both; G-227 offer to remove, default keep; G-228 account Trash, 7 days.

@@ -6,6 +6,7 @@
 - Design: n/a
 - Backlog: N133
 - Acceptance: light
+- Answers: 2026-10-28, the user answered every open question (below)
 
 ## Context
 
@@ -24,6 +25,12 @@ Settled:
 - The owner can see every link they made for an item.
 - Server reads through a share id return only the body and name: no owner email or other account field.
 - Creating and opening links are rate-limited on the server (ADR-131).
+
+**Answers (user, 2026-10-28):**
+
+- **Anyone with the link** can open it, without an account (G-236).
+- **No expiry**; the owner can **stop** a link at any time (G-237).
+- A link shows the item's **latest saved version** (G-238).
 
 ## Alternatives considered
 
@@ -52,8 +59,4 @@ catch-up run.
 
 ## Open questions
 
-- Who can open a link: anyone with it, signed-in users only, named people, or a public gallery? Suggested: anyone
-  with the link (G-236).
-- Expiry and revoke: none, owner-set, or fixed; can the owner stop a link? Suggested: no expiry, revocable (+5 %)
-  (G-237).
-- Snapshot at share time, or always the latest saved version? Suggested: latest (+5 %) (G-238).
+- None open. Answered 2026-10-28, one by one: G-236 anyone with the link; G-237 no expiry, the owner can stop a link; G-238 latest saved version.

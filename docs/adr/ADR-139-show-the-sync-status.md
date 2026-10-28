@@ -6,6 +6,7 @@
 - Design: docs/ui-design.md (Status `.status`, Badge, top bar)
 - Backlog: N140
 - Acceptance: light
+- Answers: 2026-10-28, the user answered every open question (below)
 - Proposed by: Claude, not requested (2026-10-28 task: "propose further architecture and UX ADRs")
 
 ## Context
@@ -20,6 +21,10 @@ status (`.status.saving` / `.saved` / `.failed`).
   connection (n)** or **Upload failed — Retry**; failures stay visible until resolved (like `.status.failed`).
 - Tapping it opens a short list of waiting and conflicting items with **Open**.
 - Signed out, nothing is shown.
+
+**Answers (user, 2026-10-28):**
+
+- Shown in the top bar and as a badge per item (G-260).
 
 ## Alternatives considered
 
@@ -46,4 +51,4 @@ catch-up run.
 
 ## Open questions
 
-- Beside the save status, a badge per item, or both? Suggested: both (+10 %) (G-260).
+- None open. Answered 2026-10-28, one by one: G-260 both.
