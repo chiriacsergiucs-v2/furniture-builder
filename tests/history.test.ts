@@ -110,17 +110,18 @@ describe('named undo steps (ADR-123)', () => {
     s().moveItemBy(a.id, 100, 0);
     s().selectAll();
     s().groupSelection();
+    // A grouped piece turns with its whole group (ADR-148).
     s().turnItem(a.id, 1);
     expect(s().projectPastNames).toEqual([
       `Move ${a.design.name}`,
       'Group 2 pieces',
-      `Turn ${a.design.name}`,
+      'Turn 2 pieces',
     ]);
     expect(s().projectPastNames).toHaveLength(s().projectPast.length);
     s().undoProject();
-    expect(s().projectFutureNames).toEqual([`Turn ${a.design.name}`]);
+    expect(s().projectFutureNames).toEqual(['Turn 2 pieces']);
     s().redoProject();
-    expect(s().projectPastNames.at(-1)).toBe(`Turn ${a.design.name}`);
+    expect(s().projectPastNames.at(-1)).toBe('Turn 2 pieces');
     expect(s().projectFutureNames).toEqual([]);
   });
 
