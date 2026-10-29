@@ -85,9 +85,10 @@ ADRs are all in `docs/adr-done/`.
 
 ## Notes
 
-- **After `new-adr` (user rule 2026-10-27):** when the user approved building a just-created
-  ADR, skip step 1's picker choice and build that ADR; keep the size gate and dependency check.
-  The ADR file and its implementation go in one branch and one pull request.
+- **After `new-adr` (user rules 2026-10-27, 2026-10-29):** when the user answered every open
+  question of a just-created ADR (the answers are the approval), skip step 1's picker choice and build that ADR; keep the size gate and dependency check.
+  The ADR file and its implementation go in one branch and one pull request. A question that
+  arises while building is asked at once with the interactive question tool, options with reasoning.
 - Picking is read-only — the script never edits or moves anything.
 - A dependency still in `docs/adr/` counts as blocked even if its code exists. Ship it first
   (or the user can override).

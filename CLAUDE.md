@@ -88,10 +88,13 @@ Lifecycle, one skill per step:
 2. `next ADR` — pick and implement the next ready ADR (`next-adr` skill)
 3. `ship ADR-NNN` — mark it implemented, move it, fix links (`ship-adr` skill)
 
-New and next together (user rule 2026-10-27): after `new-adr` writes an ADR, show it with its open questions and
-ask the user to approve it. Only on explicit approval (and answered or accepted open questions) build that same
-ADR straight away with `next-adr`, on the same branch and in the same pull request. No approval, no build; the
-ADR stays `Pending` for a later `next ADR`.
+New and next together (user rule 2026-10-27, changed 2026-10-29): ask every question that defines an ADR the moment it
+arises, while writing it, with the interactive question tool: each option with its reasoning (what it delivers, the
+work it costs, labelled estimates) and the recommended one per the rule below. Do not leave a question only in the
+ADR file for later. Once every question is answered, record the answers in the ADR and build that same ADR straight
+away with `next-adr`, on the same branch and in the same pull request; the answers are the approval. Questions that
+arise while building are asked the same way, at once. Never treat silence or a recommended default as an answer; an
+unanswered question leaves the ADR `Deferred` for a later `next ADR`.
 
 Fast forward, `ff` (user rule 2026-10-27, `ff` skill): on "ff" the request is built without an ADR, branch or pull
 request, with light acceptance: no tests, lint or find-it, only `pnpm typecheck` and `pnpm build`. One backlog row
