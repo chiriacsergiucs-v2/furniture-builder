@@ -34,7 +34,8 @@ export function parseLang(v: string | null | undefined): Lang {
   return LANGS.find((l) => l === v) ?? 'en';
 }
 
-const RU_ALL: Record<string, string> = { ...ruData, ...ru };
+// Data entries win: a part named "Back" is the back panel, not the "Back" button.
+const RU_ALL: Record<string, string> = { ...ru, ...ruData };
 
 /** Russian plural form: 0 one (1, 21), 1 few (2–4, 22–24), 2 many (5–20, 25…). */
 export function ruPlural(n: number): 0 | 1 | 2 {

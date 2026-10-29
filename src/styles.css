@@ -3138,7 +3138,8 @@ table.buy {
    line) whose cut lines "More" shows in full, in place. */
 .catalog-switches {
   display: flex;
-  flex-wrap: nowrap;
+  /* Wraps when the words are longer (Russian, ADR-154): no horizontal scroll at 390 px. */
+  flex-wrap: wrap;
   gap: var(--s-2);
   align-items: center;
   justify-content: space-between;
