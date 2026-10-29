@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { sheetOf } from '../core/design';
+import { t, tr } from '../core/i18n';
 import type { NestJob, NestResult, SheetLayout } from '../core/nesting/types';
 import { useDesign } from '../store/designStore';
 import { useNesting } from './useNesting';
@@ -8,9 +9,9 @@ import { InfoTip } from './controls';
 import { Icon } from './icons';
 
 const REASON: Record<string, string> = {
-  'too-large': 'larger than the usable sheet',
-  'no-sheet-left': 'no sheets left in stock',
-  'invalid-job': 'sheet settings are invalid',
+  'too-large': t('larger than the usable sheet'),
+  'no-sheet-left': t('no sheets left in stock'),
+  'invalid-job': t('sheet settings are invalid'),
 };
 
 export function Sheets() {
@@ -22,17 +23,17 @@ export function Sheets() {
       <p className="alert error blocked">
         <Icon name="alert-circle" className="sm" />
         <span>
-          Fix the problems under Checks first; sheets are laid out only for a valid design.
+          {t('Fix the problems under Checks first; sheets are laid out only for a valid design.')}
         </span>
       </p>
     );
   if (n.status === 'idle' || n.status === 'running')
-    return <p className="loading">Laying out sheets…</p>;
+    return <p className="loading">{t('Laying out sheets…')}</p>;
   if (n.status === 'error')
     return (
       <p className="alert error blocked">
         <Icon name="alert-circle" className="sm" />
-        <span>{n.error}</span>
+        <span>{tr(n.error)}</span>
       </p>
     );
   const kerf = view.kerf;
@@ -40,10 +41,11 @@ export function Sheets() {
   return (
     <div className="sheets">
       <p className="summary">
-        Saw cut {kerf} mm; trim per material below.{' '}
-        <InfoTip label="About the sheet layout" align="start">
-          Heuristic layout for a panel saw (edge-to-edge cuts): usually close to the fewest sheets,
-          not guaranteed.
+        {t('Saw cut {kerf} mm; trim per material below.', { kerf })}{' '}
+        <InfoTip label={t('About the sheet layout')} align="start">
+          {t(
+            'Heuristic layout for a panel saw (edge-to-edge cuts): usually close to the fewest sheets, not guaranteed.',
+          )}
         </InfoTip>
       </p>
       <BuyList results={n.results} jobs={n.jobs} />
@@ -69,26 +71,26 @@ function BuyList({ results, jobs }: { results: NestResult[]; jobs: NestJob[] }) 
   return (
     <table className="cut buy">
       <caption>
-        <strong>Sheets to buy</strong>
+        <strong>{t('Sheets to buy')}</strong>
       </caption>
       <thead>
         <tr>
-          <th scope="col">Qty</th>
-          <th scope="col">Board</th>
-          <th scope="col">Sheet</th>
-          <th scope="col">Used</th>
+          <th scope="col">{t('Qty')}</th>
+          <th scope="col">{t('Board')}</th>
+          <th scope="col">{t('Sheet')}</th>
+          <th scope="col">{t('Used')}</th>
         </tr>
       </thead>
       <tbody>
         {results.map((r, i) => (
           <tr key={r.materialId}>
             <td className="num">{r.valid ? r.stats.sheetsUsed : '—'}</td>
-            <td>{jobs[i].materialName}</td>
+            <td>{tr(jobs[i].materialName)}</td>
             <td className="num">
               {jobs[i].sheet.length} × {jobs[i].sheet.width}
             </td>
             <td className="num">
-              {r.valid ? `${Math.round(r.stats.utilisation * 100)}%` : 'invalid'}
+              {r.valid ? `${Math.round(r.stats.utilisation * 100)}%` : t('invalid')}
             </td>
           </tr>
         ))}
@@ -115,11 +117,11 @@ function MaterialSheets({
   if (!result.valid) {
     return (
       <section className="mat-sheets">
-        <h3>{job.materialName}</h3>
+        <h3>{tr(job.materialName)}</h3>
         <p className="alert error blocked">
           <Icon name="alert-circle" className="sm" />
           <span>
-            This layout failed its own check and is not shown:{' '}
+            {t('This layout failed its own check and is not shown:')}{' '}
             {result.errors.slice(0, 3).join('; ')}
           </span>
         </p>
@@ -129,11 +131,14 @@ function MaterialSheets({
   return (
     <section className="mat-sheets">
       <h3>
-        {job.materialName}{' '}
+        {tr(job.materialName)}{' '}
         <span>
-          {result.stats.sheetsUsed} {result.stats.sheetsUsed === 1 ? 'sheet' : 'sheets'},{' '}
-          {Math.round(result.stats.utilisation * 100)}% used, trim {trim} mm
-          {job.grain ? ', grain along the length' : ''}
+          {t('{n|# sheet|# sheets}, {used}% used, trim {trim} mm', {
+            n: result.stats.sheetsUsed,
+            used: Math.round(result.stats.utilisation * 100),
+            trim,
+          })}
+          {job.grain ? t(', grain along the length') : ''}
         </span>
       </h3>
       {result.unplaced.length > 0 && (
@@ -149,8 +154,14 @@ function MaterialSheets({
               <li key={k} className="alert error">
                 <Icon name="alert-circle" className="sm" />
                 <span>
-                  {q} × {labelOf(key)?.labels.join(', ') ?? key} not placed:{' '}
-                  {REASON[reason] ?? reason}.
+                  {t('{q} × {parts} not placed: {reason}.', {
+                    q,
+                    parts:
+                      labelOf(key)
+                        ?.labels.map((l) => tr(l))
+                        .join(', ') ?? key,
+                    reason: REASON[reason] ?? reason,
+                  })}
                 </span>
               </li>
             );
@@ -182,11 +193,14 @@ export function SheetSvg({
   );
   return (
     <figure className="sheet">
-      <figcaption>Sheet {sheet.index + 1}</figcaption>
+      <figcaption>{t('Sheet {n}', { n: sheet.index + 1 })}</figcaption>
       <svg
         viewBox={`0 0 ${sheet.length} ${sheet.width}`}
         role="img"
-        aria-label={`Sheet ${sheet.index + 1}: ${sheet.placements.length} parts`}
+        aria-label={t('Sheet {n}: {count} parts', {
+          n: sheet.index + 1,
+          count: sheet.placements.length,
+        })}
       >
         <rect className="sh-sheet" x={0} y={0} width={sheet.length} height={sheet.width} />
         <rect
@@ -197,7 +211,7 @@ export function SheetSvg({
           height={sheet.usable.width}
         />
         {placements.map((p) => {
-          const label = p.info?.labels[0] ?? '';
+          const label = tr(p.info?.labels[0] ?? '');
           const dims = `${p.rotated ? p.width : p.length}×${p.rotated ? p.length : p.width}`;
           const big = p.length > fs * 4.2 && p.width > fs * 1.6;
           return (

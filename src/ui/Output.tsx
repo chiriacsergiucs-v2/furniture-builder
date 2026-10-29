@@ -6,6 +6,7 @@ import {
   boardBandText,
   lengthsList,
 } from '../core/cutlist';
+import { t, tr } from '../core/i18n';
 import { useDesign, type Tab } from '../store/designStore';
 import { Sheets } from './Sheets';
 import { FastenerCounts } from './Fasteners';
@@ -34,35 +35,35 @@ export function Output() {
   const parts = view.rows.reduce((n, r) => n + r.quantity, 0);
   // Short labels keep the five tabs in one row on a phone (ADR-114); `name` is the full accessible name.
   const tabs: { id: Tab; label: string; name?: string; badge?: number; kind?: string }[] = [
-    { id: 'parts', label: 'Parts', badge: parts || undefined, kind: 'neutral' },
-    { id: 'sheets', label: 'Sheets' },
-    { id: 'hardware', label: 'Hardware' },
-    { id: 'shopping', label: 'Shopping', name: 'Shopping list' },
+    { id: 'parts', label: t('Parts'), badge: parts || undefined, kind: 'neutral' },
+    { id: 'sheets', label: t('Sheets') },
+    { id: 'hardware', label: t('Hardware') },
+    { id: 'shopping', label: t('Shopping'), name: t('Shopping list') },
     {
       id: 'checks',
-      label: 'Checks',
+      label: t('Checks'),
       badge: errors || warnings || undefined,
       kind: errors ? 'error' : 'warning',
     },
   ];
   return (
-    <section className={`output ${open ? '' : 'collapsed'}`} aria-label="Results">
+    <section className={`output ${open ? '' : 'collapsed'}`} aria-label={t('Results')}>
       <div className="tabs" role="tablist">
-        {tabs.map((t) => (
+        {tabs.map((b) => (
           <button
-            key={t.id}
+            key={b.id}
             role="tab"
             type="button"
-            id={`tab-${t.id}`}
-            aria-label={t.name}
-            aria-selected={open && tab === t.id}
-            aria-expanded={phone ? open && tab === t.id : undefined}
-            aria-controls={open && tab === t.id ? `panel-${t.id}` : undefined}
-            className={open && tab === t.id ? 'on' : ''}
-            onClick={() => (phone ? toggleTab(t.id) : setTab(t.id))}
+            id={`tab-${b.id}`}
+            aria-label={b.name}
+            aria-selected={open && tab === b.id}
+            aria-expanded={phone ? open && tab === b.id : undefined}
+            aria-controls={open && tab === b.id ? `panel-${b.id}` : undefined}
+            className={open && tab === b.id ? 'on' : ''}
+            onClick={() => (phone ? toggleTab(b.id) : setTab(b.id))}
           >
-            {t.label}
-            {t.badge ? <span className={`badge ${t.kind}`}>{t.badge}</span> : null}
+            {b.label}
+            {b.badge ? <span className={`badge ${b.kind}`}>{b.badge}</span> : null}
           </button>
         ))}
       </div>
@@ -104,7 +105,7 @@ function Parts() {
   const total = rows.reduce((n, r) => n + r.quantity, 0);
 
   const setPrinting = useUi((s) => s.setPrinting);
-  const why = blocked ? 'Fix the problems listed under Checks first' : undefined;
+  const why = blocked ? t('Fix the problems listed under Checks first') : undefined;
 
   return (
     <div className="parts">
@@ -113,7 +114,7 @@ function Parts() {
           type="button"
           className="btn primary"
           disabled={blocked}
-          title={why ?? 'Download the parts list as CSV (Romanian)'}
+          title={why ?? t('Download the parts list as CSV (in the print language)')}
           onClick={() =>
             download(
               `${fileName(view.title)}-parts.csv`,
@@ -123,37 +124,38 @@ function Parts() {
           }
         >
           <Icon name="download" />
-          Download CSV
+          {t('Download CSV')}
         </button>
         <button
           type="button"
           className="btn outline"
           disabled={blocked}
-          title={why ?? 'Print the cutting sheet (Romanian, A4) or save it as PDF'}
+          title={why ?? t('Print the cutting sheet (Romanian, A4) or save it as PDF')}
           onClick={() => setPrinting(true)}
         >
           <Icon name="printer" />
-          Print
+          {t('Print')}
         </button>
       </div>
       {blocked && (
         <p className="alert error blocked">
           <Icon name="alert-circle" className="sm" />
           <span>
-            {view.mode === 'project' ? 'This project' : 'This design'} has problems (see Checks).
-            Fix them before cutting.
+            {view.mode === 'project'
+              ? t('This project has problems (see Checks). Fix them before cutting.')
+              : t('This design has problems (see Checks). Fix them before cutting.')}
           </span>
         </p>
       )}
       <p className="summary">
-        {total} parts in {byMat.length} {byMat.length === 1 ? 'material' : 'materials'}.
-        {allUnnamed && ' Edge bands are not named yet.'}{' '}
-        <InfoTip label="About the parts list" align="start">
-          Sizes are finished sizes; edges marked for banding.
+        {t('{total} parts in {n|# material|# materials}.', { total, n: byMat.length })}
+        {allUnnamed && t(' Edge bands are not named yet.')}{' '}
+        <InfoTip label={t('About the parts list')} align="start">
+          {t('Sizes are finished sizes; edges marked for banding.')}
         </InfoTip>
       </p>
       {byMat.map(([mid, list]) => {
-        const name = list[0].materialName;
+        const name = tr(list[0].materialName);
         // Said once in the summary when no board names its band yet (G-059), else per board.
         const bandText = allUnnamed ? null : boardBandText(list);
         return (
@@ -161,19 +163,19 @@ function Parts() {
             <caption>
               <strong>{name}</strong>
               <span>
-                {areaM2(rows, mid).toFixed(2)} m²
-                {bands.get(mid) ? `, ${bands.get(mid)!.toFixed(1)} m edge band` : ''}
-                {list[0].grain ? ', grain along length' : ''}
+                {t('{n} m²', { n: areaM2(rows, mid).toFixed(2) })}
+                {bands.get(mid) ? t(', {n} m edge band', { n: bands.get(mid)!.toFixed(1) }) : ''}
+                {list[0].grain ? t(', grain along length') : ''}
               </span>
               {bandText && <span className="band">{bandText}</span>}
             </caption>
             <thead>
               <tr>
-                <th scope="col">Qty</th>
-                <th scope="col">Length</th>
-                <th scope="col">Width</th>
-                <th scope="col">Edges</th>
-                <th scope="col">Part</th>
+                <th scope="col">{t('Qty')}</th>
+                <th scope="col">{t('Length')}</th>
+                <th scope="col">{t('Width')}</th>
+                <th scope="col">{t('Edges')}</th>
+                <th scope="col">{t('Part')}</th>
               </tr>
             </thead>
             <tbody>
@@ -196,8 +198,12 @@ function Parts() {
                       <EdgeMark l={r.edgesL} w={r.edgesW} />
                     </td>
                     <td className="labels">
-                      {r.labels.join(', ')}
-                      {r.drilling && <span className="drill">Drill: {r.drilling}</span>}
+                      {r.labels.map((l) => tr(l)).join(', ')}
+                      {r.drilling && (
+                        <span className="drill">
+                          {t('Drill: {what}', { what: tr(r.drilling) })}
+                        </span>
+                      )}
                     </td>
                   </tr>
                 );
@@ -220,27 +226,32 @@ function Lengths() {
   }, [view]);
   if (!groups.length) return null;
   return (
-    <section className="lengths" aria-label="Solid timber lengths">
+    <section className="lengths" aria-label={t('Solid timber lengths')}>
       <div className="info-row">
-        <h3 className="list-head">Solid timber to buy</h3>
-        <GuidanceTip topic="solid timber lengths">
-          Parts packed into the lengths you can buy, longest first, with a {view.kerf} mm saw cut
-          between parts. A quick heuristic, not an optimum.
+        <h3 className="list-head">{t('Solid timber to buy')}</h3>
+        <GuidanceTip topic={t('solid timber lengths')}>
+          {t(
+            'Parts packed into the lengths you can buy, longest first, with a {kerf} mm saw cut between parts. A quick heuristic, not an optimum.',
+            { kerf: view.kerf },
+          )}
         </GuidanceTip>
       </div>
       {groups.map((g) => (
         <table key={`${g.materialId}|${g.section}`} className="cut">
           <caption>
-            <strong>{g.materialName}</strong>
+            <strong>{tr(g.materialName)}</strong>
             <span>
-              section {g.section} mm, {g.bars.length} {g.bars.length === 1 ? 'length' : 'lengths'}
+              {t('section {section} mm, {n|# length|# lengths}', {
+                section: g.section,
+                n: g.bars.length,
+              })}
             </span>
           </caption>
           <thead>
             <tr>
-              <th scope="col">Length</th>
-              <th scope="col">Cut into</th>
-              <th scope="col">Left over</th>
+              <th scope="col">{t('Length')}</th>
+              <th scope="col">{t('Cut into')}</th>
+              <th scope="col">{t('Left over')}</th>
             </tr>
           </thead>
           <tbody>
@@ -248,7 +259,7 @@ function Lengths() {
               <tr key={i}>
                 <td className="num">{b.stock}</td>
                 <td className="labels">
-                  {b.parts.map((p) => `${p.length} (${p.label})`).join(' + ')}
+                  {b.parts.map((p) => `${p.length} (${tr(p.label)})`).join(' + ')}
                 </td>
                 <td className="num">{b.waste}</td>
               </tr>
@@ -257,7 +268,10 @@ function Lengths() {
               <tr key={`long-${i}`} className="too-long">
                 <td className="num">—</td>
                 <td className="labels">
-                  {p.length} ({p.label}) is longer than any length you buy
+                  {t('{length} ({part}) is longer than any length you buy', {
+                    length: p.length,
+                    part: tr(p.label),
+                  })}
                 </td>
                 <td />
               </tr>
@@ -272,7 +286,7 @@ function Lengths() {
 /** Small rectangle with the banded edges drawn heavy: long sides = length edges, short sides = width edges. */
 function EdgeMark({ l, w }: { l: number; w: number }) {
   return (
-    <span className="edgemark" title={`Banded: ${l} along length, ${w} along width`}>
+    <span className="edgemark" title={t('Banded: {l} along length, {w} along width', { l, w })}>
       <svg viewBox="0 0 30 16" aria-hidden="true">
         <rect x="3" y="3" width="24" height="10" className="e-body" />
         <line x1="3" y1="3" x2="27" y2="3" className={l >= 1 ? 'e-on' : 'e-off'} />
@@ -280,9 +294,7 @@ function EdgeMark({ l, w }: { l: number; w: number }) {
         <line x1="3" y1="3" x2="3" y2="13" className={w >= 1 ? 'e-on' : 'e-off'} />
         <line x1="27" y1="3" x2="27" y2="13" className={w >= 2 ? 'e-on' : 'e-off'} />
       </svg>
-      <span className="e-text">
-        L{l} W{w}
-      </span>
+      <span className="e-text">{t('L{l} W{w}', { l, w })}</span>
     </span>
   );
 }
@@ -294,7 +306,7 @@ function Hardware() {
       <div className="hardware">
         <p className="empty center">
           <Icon name="box" />
-          No hardware needed yet. Add drawers, doors or a hanging rail.
+          {t('No hardware needed yet. Add drawers, doors or a hanging rail.')}
         </p>
         <FastenerCounts />
       </div>
@@ -302,28 +314,28 @@ function Hardware() {
   return (
     <div className="hardware">
       <div className="info-row end">
-        <GuidanceTip topic="hardware counts" align="end">
-          Screws and connectors are counted below only as joints (guidance), except screwed joints a
-          design names (their screws are your choice). Hinge and shelf-pin counts follow common
-          guidance; the maker's datasheet decides.
+        <GuidanceTip topic={t('hardware counts')} align="end">
+          {t(
+            "Screws and connectors are counted below only as joints (guidance), except screwed joints a design names (their screws are your choice). Hinge and shelf-pin counts follow common guidance; the maker's datasheet decides.",
+          )}
         </GuidanceTip>
       </div>
       <table className="cut">
         <thead>
           <tr>
-            <th scope="col">Qty</th>
-            <th scope="col">Item</th>
-            <th scope="col">Size</th>
-            <th scope="col">Note</th>
+            <th scope="col">{t('Qty')}</th>
+            <th scope="col">{t('Item')}</th>
+            <th scope="col">{t('Size')}</th>
+            <th scope="col">{t('Note')}</th>
           </tr>
         </thead>
         <tbody>
           {items.map((h, i) => (
             <tr key={i}>
               <td className="num">{h.quantity}</td>
-              <td>{h.label}</td>
-              <td className="num">{h.sizeMm ? `${h.sizeMm} mm` : ''}</td>
-              <td className="note">{h.note}</td>
+              <td>{tr(h.label)}</td>
+              <td className="num">{h.sizeMm ? t('{n} mm', { n: h.sizeMm }) : ''}</td>
+              <td className="note">{h.note ? tr(h.note) : h.note}</td>
             </tr>
           ))}
         </tbody>
@@ -352,14 +364,14 @@ function Checks() {
     return (
       <p className="empty center">
         <Icon name="info" />
-        Nothing to check yet. Add pieces under Compose.
+        {t('Nothing to check yet. Add pieces under Compose.')}
       </p>
     );
   if (!diags.length)
     return (
       <p className="empty ok center">
         <Icon name="check" />
-        No problems found. Parts fit, nothing overlaps, every size is a whole millimetre.
+        {t('No problems found. Parts fit, nothing overlaps, every size is a whole millimetre.')}
       </p>
     );
   const sorted = [...diags].sort((a, b) =>
@@ -385,11 +397,11 @@ function Checks() {
               className="sm"
             />
             <span>
-              <span className="sev">{d.severity === 'error' ? 'Problem' : 'Check'}</span>
-              {d.message}
+              <span className="sev">{d.severity === 'error' ? t('Problem') : t('Check')}</span>
+              {tr(d.message)}
               {view.mode === 'project' && d.itemIds?.length ? (
                 <span className="check-more">
-                  {mayRepair(d) ? 'Show on the plan and see repairs' : 'Show on the plan'}
+                  {mayRepair(d) ? t('Show on the plan and see repairs') : t('Show on the plan')}
                 </span>
               ) : null}
             </span>

@@ -9,6 +9,7 @@ import {
   parseTenths,
   tenthsText,
 } from '../core/materials';
+import { t, tr } from '../core/i18n';
 import type { EdgeBand, EdgeBandKind, Material } from '../core/types';
 import { useDesign } from '../store/designStore';
 import { Segmented, Select, Toggle } from './controls';
@@ -27,15 +28,21 @@ export function BoardBand({ m }: { m: Material }) {
     setFront(!!m.frontBand);
   }
   return (
-    <div className="mat-band" role="group" aria-label={`Edge band for ${m.name}`}>
+    <div
+      className="mat-band"
+      role="group"
+      aria-label={t('Edge band for {name}', { name: tr(m.name) })}
+    >
       <BandFields
-        title="Edge band"
+        title={t('Edge band')}
         value={m.band}
         onChange={(band) => update(m.id, { band })}
-        empty="Not named: the shopping list puts this board's banding under To choose before buying."
+        empty={t(
+          "Not named: the shopping list puts this board's banding under To choose before buying.",
+        )}
       />
       <Toggle
-        label="Fronts banded differently"
+        label={t('Fronts banded differently')}
         checked={front}
         onChange={(v) => {
           setFront(v);
@@ -44,10 +51,12 @@ export function BoardBand({ m }: { m: Material }) {
       />
       {front && (
         <BandFields
-          title="Front edge band"
+          title={t('Front edge band')}
           value={m.frontBand}
           onChange={(frontBand) => update(m.id, { frontBand })}
-          empty="Doors and drawer fronts of this board use the board's band until this one is complete."
+          empty={t(
+            "Doors and drawer fronts of this board use the board's band until this one is complete.",
+          )}
         />
       )}
     </div>
@@ -75,10 +84,16 @@ const draftOf = (b: EdgeBand | undefined): Draft => ({
 });
 
 const wholeIn = (s: string, lo: number, hi: number) => {
-  const t = s.trim();
-  if (!/^\d+$/.test(t)) return null;
-  const v = Number(t);
+  const w = s.trim();
+  if (!/^\d+$/.test(w)) return null;
+  const v = Number(w);
   return v >= lo && v <= hi ? v : null;
+};
+
+const MISSING: Record<string, string> = {
+  type: t('type'),
+  thickness: t('thickness'),
+  width: t('width'),
 };
 
 /** What the draft names, or why not yet. */
@@ -182,40 +197,52 @@ function BandFields({
         <span className="hint">{p.band ? bandText(p.band) : draft.kind ? '' : empty}</span>
       </p>
       <Select
-        label="Band type"
+        label={t('Band type')}
         value={draft.kind}
-        options={[{ value: '', label: 'Not named' }, ...BAND_KINDS]}
+        options={[
+          { value: '', label: t('Not named') },
+          ...BAND_KINDS.map((k) => ({ ...k, label: tr(k.label) })),
+        ]}
         onChange={(v) => set({ kind: v as EdgeBandKind | '' }, true)}
       />
       {draft.kind && (
         <>
           <Segmented
-            label="Band thickness, common supplier sizes"
+            label={t('Band thickness, common supplier sizes')}
             value={chosen ?? -1}
-            options={COMMON_BAND_THICKNESS.map((t) => ({
-              value: t,
-              label: `${tenthsText(t)} mm`,
+            options={COMMON_BAND_THICKNESS.map((v) => ({
+              value: v,
+              label: t('{n} mm', { n: tenthsText(v) }),
             }))}
-            onChange={(t) => set({ thickness: tenthsText(t) }, true)}
+            onChange={(v) => set({ thickness: tenthsText(v) }, true)}
           />
           <div className="sheet-fields">
-            {field('width', 'Band width (mm)', `Whole mm from 1 to ${BAND_MAX_WIDTH}.`, {
-              inputMode: 'numeric',
-            })}
-            {field('thickness', 'Band thickness (mm)', 'From 0.1 to 10 mm, one decimal.', {
+            {field(
+              'width',
+              t('Band width (mm)'),
+              t('Whole mm from 1 to {max}.', { max: BAND_MAX_WIDTH }),
+              {
+                inputMode: 'numeric',
+              },
+            )}
+            {field('thickness', t('Band thickness (mm)'), t('From 0.1 to 10 mm, one decimal.'), {
               inputMode: 'decimal',
-              placeholder: 'e.g. 1.5',
+              placeholder: t('e.g. 1.5'),
             })}
-            {field('code', 'Band code (optional)', '', { maxLength: BAND_MAX_CODE })}
+            {field('code', t('Band code (optional)'), '', { maxLength: BAND_MAX_CODE })}
             {field(
               'allowance',
-              'Trim allowance per edge (mm)',
-              `Whole mm from 0 to ${BAND_MAX_ALLOWANCE}.`,
+              t('Trim allowance per edge (mm)'),
+              t('Whole mm from 0 to {max}.', { max: BAND_MAX_ALLOWANCE }),
               { inputMode: 'numeric', placeholder: '0' },
             )}
           </div>
           {!p.band && p.missing.length > 0 && (
-            <p className="hint">Enter the band {p.missing.join(' and ')} to name it.</p>
+            <p className="hint">
+              {t('Enter the band {list} to name it.', {
+                list: p.missing.map((w) => MISSING[w]).join(t(' and ')),
+              })}
+            </p>
           )}
         </>
       )}

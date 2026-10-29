@@ -1,29 +1,34 @@
 import { FUNCTION_LABEL } from '../core/catalog';
 import { COMPAT_RULES, type CompatRule } from '../core/compat';
+import { t, tr } from '../core/i18n';
 import { InfoTip } from './controls';
 
 const KIND_LABEL: Record<string, string> = {
-  cabinet: 'cabinets',
-  corner: 'corner units',
-  desk: 'desks',
-  panel: 'panels',
-  frame: 'frames',
-  panels: 'panel sets',
+  cabinet: t('cabinets'),
+  corner: t('corner units'),
+  desk: t('desks'),
+  panel: t('panels'),
+  frame: t('frames'),
+  panels: t('panel sets'),
 };
 const PLACEMENT_LABEL: Record<string, string> = {
-  floor: 'on the floor',
-  wall: 'on the wall',
-  above: 'on another piece',
+  floor: t('on the floor'),
+  wall: t('on the wall'),
+  above: t('on another piece'),
 };
 
 /** "Applies to" in words, from the rule's data. */
 export function appliesText(r: CompatRule): string {
   const a = r.appliesTo;
   const parts = [
-    a.productKinds ? a.productKinds.map((k) => KIND_LABEL[k] ?? k).join(' and ') : 'any piece',
-    a.functions ? `in ${a.functions.map((f) => FUNCTION_LABEL[f]).join(', ')}` : '',
-    a.placements ? a.placements.map((p) => PLACEMENT_LABEL[p]).join(' or ') : '',
-    a.when ?? '',
+    a.productKinds
+      ? a.productKinds.map((k) => KIND_LABEL[k] ?? k).join(t(' and '))
+      : t('any piece'),
+    a.functions
+      ? t('in {list}', { list: a.functions.map((f) => tr(FUNCTION_LABEL[f])).join(', ') })
+      : '',
+    a.placements ? a.placements.map((p) => PLACEMENT_LABEL[p]).join(t(' or ')) : '',
+    a.when ? tr(a.when) : '',
   ];
   return parts.filter(Boolean).join(', ');
 }
@@ -33,11 +38,10 @@ export function severityText(r: CompatRule): string {
   const snap = r.where.includes('snap'),
     checks = r.where.includes('checks');
   if (r.severity === 'refuse')
-    return checks ? 'Refuses a snap; a warning in Checks' : 'Refuses a snap';
-  return [snap && 'Named in the snap preview', checks && 'a warning in Checks']
-    .filter(Boolean)
-    .join('; ')
-    .replace(/^a/, 'A');
+    return checks ? t('Refuses a snap; a warning in Checks') : t('Refuses a snap');
+  if (snap && checks) return t('Named in the snap preview; a warning in Checks');
+  if (snap) return t('Named in the snap preview');
+  return checks ? t('A warning in Checks') : '';
 }
 
 /**
@@ -46,14 +50,14 @@ export function severityText(r: CompatRule): string {
  */
 export function CompatRules() {
   return (
-    <section className="section compat-rules" aria-label="Rules">
+    <section className="section compat-rules" aria-label={t('Rules')}>
       <div className="card-title">
         <span className="info-row">
-          <span>Rules</span>
-          <InfoTip label="About the rules" align="start">
-            Compatibility rules used when snapping on the plan and in Checks. A refused snap is
-            named while dragging; hold Alt (or turn Snap off) to place freely. Warnings never block
-            export.
+          <span>{t('Rules')}</span>
+          <InfoTip label={t('About the rules')} align="start">
+            {t(
+              'Compatibility rules used when snapping on the plan and in Checks. A refused snap is named while dragging; hold Alt (or turn Snap off) to place freely. Warnings never block export.',
+            )}
           </InfoTip>
         </span>
       </div>
@@ -61,9 +65,9 @@ export function CompatRules() {
         {COMPAT_RULES.map((r) => (
           <li key={r.id}>
             <span>
-              <strong>{r.name}</strong>
-              <span className="sub">{r.text}</span>
-              <span className="sub">Applies to: {appliesText(r)}</span>
+              <strong>{tr(r.name)}</strong>
+              <span className="sub">{tr(r.text)}</span>
+              <span className="sub">{t('Applies to: {list}', { list: appliesText(r) })}</span>
               <span className="sub">{severityText(r)}</span>
             </span>
           </li>

@@ -3,6 +3,7 @@ import { catalogFamilies } from '../core/catalog';
 import { applyLayout, layoutPresets } from '../core/catalog/presets';
 import { DEFAULT_SLIDING_OVERLAP, DEFAULT_SLIDING_TRACK } from '../core/cabinet';
 import { RULE_DEFAULTS } from '../core/rules';
+import { t, tr } from '../core/i18n';
 import { materialLabel } from '../core/materials';
 import type {
   ApplianceNiche,
@@ -24,6 +25,7 @@ import {
   Select,
   Toggle,
 } from './controls';
+import { tNode } from './i18n';
 import { Icon } from './icons';
 
 const matOptions = (materials: Material[], filter?: (m: Material) => boolean) =>
@@ -46,14 +48,14 @@ export function FrontEditor({
   return (
     <>
       <Segmented<FrontKind>
-        label="Front"
+        label={t('Front')}
         value={frontKind(f)}
         options={[
-          { value: 'none', label: 'None' },
-          { value: 'doors1', label: 'Door' },
-          { value: 'doors2', label: 'Pair' },
-          { value: 'sliding', label: 'Sliding' },
-          { value: 'flap', label: 'Flap' },
+          { value: 'none', label: t('None') },
+          { value: 'doors1', label: t('Door') },
+          { value: 'doors2', label: t('Pair') },
+          { value: 'sliding', label: t('Sliding') },
+          { value: 'flap', label: t('Flap') },
         ]}
         onChange={(k) =>
           set(
@@ -71,11 +73,11 @@ export function FrontEditor({
       />
       {f?.kind === 'doors' && f.count === 1 && (
         <Segmented<'left' | 'right'>
-          label="Hinges on"
+          label={t('Hinges on')}
           value={f.hinge ?? 'left'}
           options={[
-            { value: 'left', label: 'Left' },
-            { value: 'right', label: 'Right' },
+            { value: 'left', label: t('Left') },
+            { value: 'right', label: t('Right') },
           ]}
           onChange={(v) => set({ ...f, hinge: v })}
         />
@@ -83,21 +85,22 @@ export function FrontEditor({
       {f?.kind === 'sliding' && (
         <>
           <Counter
-            label="Sliding doors"
+            label={t('Sliding doors')}
             value={f.count}
             min={2}
             max={4}
             onChange={(v) => set({ ...f, count: v as 2 | 3 | 4 })}
             info={
-              <GuidanceTip topic="sliding doors">
-                Doors run in two planes in front of the carcass. Check track, rollers and door sizes
-                with the sliding system's datasheet.
+              <GuidanceTip topic={t('sliding doors')}>
+                {t(
+                  "Doors run in two planes in front of the carcass. Check track, rollers and door sizes with the sliding system's datasheet.",
+                )}
               </GuidanceTip>
             }
           />
           <div className="dims2">
             <MmField
-              label="Overlap"
+              label={t('Overlap')}
               value={f.overlap ?? DEFAULT_SLIDING_OVERLAP}
               min={0}
               max={200}
@@ -105,7 +108,7 @@ export function FrontEditor({
               onChange={(v) => set({ ...f, overlap: v })}
             />
             <MmField
-              label="Track depth"
+              label={t('Track depth')}
               value={f.track ?? DEFAULT_SLIDING_TRACK}
               min={20}
               max={300}
@@ -118,26 +121,26 @@ export function FrontEditor({
       {f?.kind === 'flap' && (
         <>
           <Segmented<'up' | 'down'>
-            label="Opens"
+            label={t('Opens')}
             value={f.direction}
             options={[
-              { value: 'up', label: 'Lifts up' },
-              { value: 'down', label: 'Drops down' },
+              { value: 'up', label: t('Lifts up') },
+              { value: 'down', label: t('Drops down') },
             ]}
             onChange={(v) => set({ ...f, direction: v })}
           />
           <div className="field">
             <div className="label-row">
-              <label htmlFor={`fit-${space.id}`}>Fitting you chose</label>
-              <GuidanceTip topic="flap fitting">
-                Choose it by front weight and height; a check stays until it is named.
+              <label htmlFor={`fit-${space.id}`}>{t('Fitting you chose')}</label>
+              <GuidanceTip topic={t('flap fitting')}>
+                {t('Choose it by front weight and height; a check stays until it is named.')}
               </GuidanceTip>
             </div>
             <input
               id={`fit-${space.id}`}
               defaultValue={f.fitting ?? ''}
               key={f.fitting ?? ''}
-              placeholder="Maker and type, from its datasheet"
+              placeholder={t('Maker and type, from its datasheet')}
               onBlur={(e) => {
                 const v = e.target.value.trim();
                 set(
@@ -162,6 +165,14 @@ const APPLIANCES: ApplianceNiche['kind'][] = [
   'hob',
   'other',
 ];
+const APPLIANCE_LABEL: Record<ApplianceNiche['kind'], string> = {
+  oven: t('Oven'),
+  microwave: t('Microwave'),
+  fridge: t('Fridge'),
+  dishwasher: t('Dishwasher'),
+  hob: t('Hob'),
+  other: t('Other'),
+};
 
 /** Appliance niche on an empty space (ADR-036): every size typed from the appliance's installation drawing. */
 export function ApplianceEditor({
@@ -186,7 +197,7 @@ export function ApplianceEditor({
   return (
     <>
       <Toggle
-        label="Niche for a built-in appliance"
+        label={t('Niche for a built-in appliance')}
         checked={!!a}
         onChange={(v) =>
           set(
@@ -204,34 +215,35 @@ export function ApplianceEditor({
       {a && (
         <>
           <Select<ApplianceNiche['kind']>
-            label="Appliance"
+            label={t('Appliance')}
             value={a.kind}
-            options={APPLIANCES.map((k) => ({ value: k, label: k[0].toUpperCase() + k.slice(1) }))}
+            options={APPLIANCES.map((k) => ({ value: k, label: APPLIANCE_LABEL[k] }))}
             onChange={(k) => set({ ...a, kind: k })}
             info={
-              <GuidanceTip topic="appliance sizes">
-                Type every size from the appliance's installation drawing; Mobila has no appliance
-                sizes of its own.
+              <GuidanceTip topic={t('appliance sizes')}>
+                {t(
+                  "Type every size from the appliance's installation drawing; Mobila has no appliance sizes of its own.",
+                )}
               </GuidanceTip>
             }
           />
           <div className="dims3">
             <MmField
-              label="Niche width"
+              label={t('Niche width')}
               value={a.w}
               min={1}
               max={3000}
               onChange={(v) => set({ ...a, w: v })}
             />
             <MmField
-              label="Niche height"
+              label={t('Niche height')}
               value={a.h}
               min={1}
               max={3000}
               onChange={(v) => set({ ...a, h: v })}
             />
             <MmField
-              label="Niche depth"
+              label={t('Niche depth')}
               value={a.d}
               min={1}
               max={1200}
@@ -256,9 +268,9 @@ export function LayoutPicker({
   return (
     <div className="field">
       <div className="label-row">
-        <label htmlFor={`preset-${space.id}`}>Apply a layout from the catalog</label>
-        <InfoTip label="About applying a layout" align="start">
-          Replaces what is inside this space; the outer size stays. Undo brings it back.
+        <label htmlFor={`preset-${space.id}`}>{t('Apply a layout from the catalog')}</label>
+        <InfoTip label={t('About applying a layout')} align="start">
+          {t('Replaces what is inside this space; the outer size stays. Undo brings it back.')}
         </InfoTip>
       </div>
       <select
@@ -269,10 +281,10 @@ export function LayoutPicker({
           if (p) onChange((s) => applyLayout(s, p.space()));
         }}
       >
-        <option value="">Choose a layout…</option>
+        <option value="">{t('Choose a layout…')}</option>
         {presets.map((p) => (
           <option key={p.id} value={p.id}>
-            {p.family}: {p.name}
+            {tr(p.family)}: {tr(p.name)}
           </option>
         ))}
       </select>
@@ -290,18 +302,22 @@ export function PieceInfo() {
     <div className="piece-info">
       {o && (
         <p className="hint">
-          <Icon name="catalog" className="sm" /> Based on{' '}
-          <strong>
-            {o.brand ? `${o.brand} ` : ''}
-            {o.productName}
-          </strong>{' '}
-          (catalog revision {o.revision})
+          <Icon name="catalog" className="sm" />{' '}
+          {tNode('Based on {name} (catalog revision {revision})', {
+            name: (
+              <strong>
+                {o.brand ? `${o.brand} ` : ''}
+                {tr(o.productName)}
+              </strong>
+            ),
+            revision: o.revision,
+          })}
           {o.sourceUrl && (
             <>
               {' '}
               ·{' '}
               <a href={o.sourceUrl} target="_blank" rel="noopener noreferrer">
-                source
+                {t('source')}
               </a>
             </>
           )}
@@ -310,7 +326,9 @@ export function PieceInfo() {
       {catalog.hardwareToChoose && (
         <p className="alert warning">
           <Icon name="alert-triangle" className="sm" />
-          <span>To choose from a datasheet: {catalog.hardwareToChoose}.</span>
+          <span>
+            {t('To choose from a datasheet: {list}.', { list: tr(catalog.hardwareToChoose) })}
+          </span>
           <button
             type="button"
             className="btn sm"
@@ -320,7 +338,7 @@ export function PieceInfo() {
               updateMeta({ catalog: rest });
             }}
           >
-            Chosen
+            {t('Chosen')}
           </button>
         </p>
       )}
@@ -339,22 +357,24 @@ export function PartBoardsGroup() {
     return panels.map((p) => {
       const n = (seen.get(p.label) ?? 0) + 1;
       seen.set(p.label, n);
-      return { id: p.id, label: n > 1 ? `${p.label} (${n})` : p.label };
+      return { id: p.id, label: n > 1 ? `${tr(p.label)} (${n})` : tr(p.label) };
     });
   }, [panels]);
   const lost = useMemo(
     () => Object.keys(own ?? {}).filter((id) => !panels.some((p) => p.id === id)),
     [own, panels],
   );
-  const options = [{ value: '', label: 'Same as its group' }, ...matOptions(materials)];
+  const options = [{ value: '', label: t('Same as its group') }, ...matOptions(materials)];
   return (
     <Group
-      title="Part boards"
+      title={t('Part boards')}
       id="g-part-boards"
       defaultOpen={false}
       info={
-        <InfoTip label="About part boards" align="end">
-          Give any single part its own board. A board of another thickness is flagged under Checks.
+        <InfoTip label={t('About part boards')} align="end">
+          {t(
+            'Give any single part its own board. A board of another thickness is flagged under Checks.',
+          )}
         </InfoTip>
       }
     >
@@ -370,9 +390,9 @@ export function PartBoardsGroup() {
       {lost.map((id) => (
         <p key={id} className="alert warning">
           <span>
-            {id} no longer exists; its board is not used.{' '}
+            {t('{id} no longer exists; its board is not used.', { id })}{' '}
             <button type="button" className="btn outline sm" onClick={() => setPart(id, null)}>
-              Clear
+              {t('Clear')}
             </button>
           </span>
         </p>
@@ -390,45 +410,46 @@ export function ChecksGroup() {
     updateMeta({ settings: { ...settings, rules: { ...rules, ...patch } } });
   return (
     <Group
-      title="Checks"
+      title={t('Checks')}
       id="g-checks"
       defaultOpen={false}
       info={
-        <GuidanceTip topic="checks" align="end">
-          Typical values that raise warnings, never errors. Confirm them for your boards and
-          hardware.
+        <GuidanceTip topic={t('checks')} align="end">
+          {t(
+            'Typical values that raise warnings, never errors. Confirm them for your boards and hardware.',
+          )}
         </GuidanceTip>
       }
     >
       <div className="dims2">
         <MmField
-          label="Longest shelf (18 mm board)"
+          label={t('Longest shelf (18 mm board)')}
           value={rules?.shelfSpan ?? RULE_DEFAULTS.shelfSpan}
           min={200}
           max={2000}
           onChange={(v) => set({ shelfSpan: v })}
         />
         <MmField
-          label="Widest single door"
+          label={t('Widest single door')}
           value={rules?.doorMaxWidth ?? RULE_DEFAULTS.doorMaxWidth}
           min={200}
           max={1500}
           onChange={(v) => set({ doorMaxWidth: v })}
         />
         <MmField
-          label="Depth for hangers"
+          label={t('Depth for hangers')}
           value={rules?.hangerDepth ?? RULE_DEFAULTS.hangerDepth}
           min={200}
           max={1000}
           onChange={(v) => set({ hangerDepth: v })}
         />
         <MmField
-          label="Room height (0 = not checked)"
+          label={t('Room height (0 = not checked)')}
           value={rules?.roomHeight ?? 0}
           min={0}
           max={6000}
           onChange={(v) => set({ roomHeight: v || undefined })}
-          hint="For the stand-up check when a tall piece is built lying down."
+          hint={t('For the stand-up check when a tall piece is built lying down.')}
         />
       </div>
     </Group>
@@ -436,10 +457,10 @@ export function ChecksGroup() {
 }
 
 const PURPOSE: Record<PanelParams['purpose'], string> = {
-  dishwasher: 'Dishwasher front',
-  fridge: 'Fridge door',
-  cover: 'Cover panel',
-  filler: 'Filler',
+  dishwasher: t('Dishwasher front'),
+  fridge: t('Fridge door'),
+  cover: t('Cover panel'),
+  filler: t('Filler'),
 };
 
 export function PanelEditor({ p, materials }: { p: PanelParams; materials: Material[] }) {
@@ -449,18 +470,19 @@ export function PanelEditor({ p, materials }: { p: PanelParams; materials: Mater
       <header className="insp-head">
         <div className="info-row">
           <h3>{PURPOSE[p.purpose]}</h3>
-          <InfoTip label="About this panel" align="start">
-            A front with no carcass behind it.
+          <InfoTip label={t('About this panel')} align="start">
+            {t('A front with no carcass behind it.')}
           </InfoTip>
-          <GuidanceTip topic="fitting the panel">
-            Line it up with the neighbouring fronts; the fixing kit and its positions come from the
-            appliance's installation drawing.
+          <GuidanceTip topic={t('fitting the panel')}>
+            {t(
+              "Line it up with the neighbouring fronts; the fixing kit and its positions come from the appliance's installation drawing.",
+            )}
           </GuidanceTip>
         </div>
       </header>
       <PieceInfo />
       <Select<PanelParams['purpose']>
-        label="Used as"
+        label={t('Used as')}
         value={p.purpose}
         options={(Object.keys(PURPOSE) as PanelParams['purpose'][]).map((k) => ({
           value: k,
@@ -470,14 +492,14 @@ export function PanelEditor({ p, materials }: { p: PanelParams; materials: Mater
       />
       <div className="dims2">
         <MmField
-          label="Width"
+          label={t('Width')}
           value={p.width}
           min={20}
           max={3000}
           onChange={(v) => set({ width: v })}
         />
         <MmField
-          label="Height"
+          label={t('Height')}
           value={p.height}
           min={50}
           max={3000}
@@ -485,19 +507,19 @@ export function PanelEditor({ p, materials }: { p: PanelParams; materials: Mater
         />
       </div>
       <Select
-        label="Board"
+        label={t('Board')}
         value={p.materialId}
         options={matOptions(materials, (m) => m.stock !== 'solid')}
         onChange={(v) => set({ materialId: v })}
       />
       {(p.purpose === 'dishwasher' || p.purpose === 'fridge') && (
         <Segmented<'none' | 'bar' | 'knob'>
-          label="Handle"
+          label={t('Handle')}
           value={p.handle?.kind === 'bar' || p.handle?.kind === 'knob' ? p.handle.kind : 'none'}
           options={[
-            { value: 'none', label: 'None' },
-            { value: 'bar', label: 'Bar' },
-            { value: 'knob', label: 'Knob' },
+            { value: 'none', label: t('None') },
+            { value: 'bar', label: t('Bar') },
+            { value: 'knob', label: t('Knob') },
           ]}
           onChange={(v) =>
             set({ handle: v === 'none' ? null : { kind: v, holeSpacing: 128, position: 'top' } })
@@ -512,25 +534,25 @@ export function PanelEditor({ p, materials }: { p: PanelParams; materials: Mater
 
 /** Typical mattress sizes (EU, UK, US). Check the mattress you buy. */
 const MATTRESSES: [number, number, string][] = [
-  [900, 2000, 'EU single'],
-  [1400, 2000, 'EU double'],
-  [1600, 2000, 'EU queen'],
-  [1800, 2000, 'EU king'],
-  [900, 1900, 'UK single'],
-  [1350, 1900, 'UK double'],
-  [1500, 2000, 'UK king'],
-  [965, 1905, 'US twin'],
-  [1372, 1905, 'US full'],
-  [1524, 2032, 'US queen'],
-  [1930, 2032, 'US king'],
+  [900, 2000, t('EU single')],
+  [1400, 2000, t('EU double')],
+  [1600, 2000, t('EU queen')],
+  [1800, 2000, t('EU king')],
+  [900, 1900, t('UK single')],
+  [1350, 1900, t('UK double')],
+  [1500, 2000, t('UK king')],
+  [965, 1905, t('US twin')],
+  [1372, 1905, t('US full')],
+  [1524, 2032, t('US queen')],
+  [1930, 2032, t('US king')],
 ];
 
 const FRAME_LABEL: Record<FrameParams['kind'], string> = {
-  table: 'Table',
-  bench: 'Bench',
-  stool: 'Stool',
-  chair: 'Chair',
-  bed: 'Bed',
+  table: t('Table'),
+  bench: t('Bench'),
+  stool: t('Stool'),
+  chair: t('Chair'),
+  bed: t('Bed'),
 };
 
 /** Frames (ADR-038): legs, rails, stretchers, slats; beds by mattress size. */
@@ -543,10 +565,11 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
     <div className="inspector">
       <header className="insp-head">
         <div className="info-row">
-          <h3>{b && b.tierGap > 0 ? 'Bunk bed' : FRAME_LABEL[p.kind]}</h3>
-          <InfoTip label="About this frame" align="start">
-            Legs, rails and slats are solid timber listed by length; tops and boards come from
-            sheets.
+          <h3>{b && b.tierGap > 0 ? t('Bunk bed') : FRAME_LABEL[p.kind]}</h3>
+          <InfoTip label={t('About this frame')} align="start">
+            {t(
+              'Legs, rails and slats are solid timber listed by length; tops and boards come from sheets.',
+            )}
           </InfoTip>
         </div>
       </header>
@@ -555,14 +578,14 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
         <>
           <div className="dims2">
             <MmField
-              label="Mattress width"
+              label={t('Mattress width')}
               value={b.mattress.w}
               min={300}
               max={2200}
               onChange={(v) => set({ bed: { ...b, mattress: { ...b.mattress, w: v } } })}
             />
             <MmField
-              label="Mattress length"
+              label={t('Mattress length')}
               value={b.mattress.l}
               min={600}
               max={2300}
@@ -570,10 +593,10 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
             />
           </div>
           <Select
-            label="Mattress size"
+            label={t('Mattress size')}
             info={
-              <GuidanceTip topic="mattress sizes">
-                Typical sizes; check the mattress you buy.
+              <GuidanceTip topic={t('mattress sizes')}>
+                {t('Typical sizes; check the mattress you buy.')}
               </GuidanceTip>
             }
             value={`${b.mattress.w}x${b.mattress.l}`}
@@ -593,7 +616,7 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
           />
           <div className="dims2">
             <MmField
-              label="Clearance each side"
+              label={t('Clearance each side')}
               value={b.clearance}
               min={0}
               max={50}
@@ -601,41 +624,41 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
               onChange={(v) => set({ bed: { ...b, clearance: v } })}
             />
             <MmField
-              label="Slats top above floor"
+              label={t('Slats top above floor')}
               value={b.deckHeight}
               min={150}
               max={900}
               onChange={(v) => set({ bed: { ...b, deckHeight: v } })}
             />
             <MmField
-              label="Side rail height"
+              label={t('Side rail height')}
               value={b.railHeight}
               min={100}
               max={500}
               onChange={(v) => set({ bed: { ...b, railHeight: v } })}
             />
             <MmField
-              label="Headboard height"
+              label={t('Headboard height')}
               value={b.headboardHeight}
               min={200}
               max={2000}
               onChange={(v) => set({ bed: { ...b, headboardHeight: v } })}
             />
             <MmField
-              label="Footboard height"
+              label={t('Footboard height')}
               value={b.footboardHeight}
               min={0}
               max={2000}
               onChange={(v) => set({ bed: { ...b, footboardHeight: v } })}
-              hint="0 = just above the rails"
+              hint={t('0 = just above the rails')}
             />
             <MmField
-              label="Side panel height"
+              label={t('Side panel height')}
               value={b.sidePanelHeight}
               min={0}
               max={1500}
               onChange={(v) => set({ bed: { ...b, sidePanelHeight: v } })}
-              hint="0 = none (daybed back)"
+              hint={t('0 = none (daybed back)')}
             />
           </div>
         </>
@@ -643,21 +666,21 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
         <>
           <div className="dims3">
             <MmField
-              label="Width"
+              label={t('Width')}
               value={p.width}
               min={200}
               max={4000}
               onChange={(v) => set({ width: v })}
             />
             <MmField
-              label="Height"
+              label={t('Height')}
               value={p.height}
               min={200}
               max={1500}
               onChange={(v) => set({ height: v })}
             />
             <MmField
-              label="Depth"
+              label={t('Depth')}
               value={p.depth}
               min={200}
               max={2000}
@@ -665,18 +688,18 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
             />
           </div>
           <Segmented<'panel' | 'slats'>
-            label={p.kind === 'table' ? 'Top' : 'Seat'}
+            label={p.kind === 'table' ? t('Top') : t('Seat')}
             value={p.top}
             options={[
-              { value: 'panel', label: 'One board' },
-              { value: 'slats', label: 'Slats' },
+              { value: 'panel', label: t('One board') },
+              { value: 'slats', label: t('Slats') },
             ]}
             onChange={(v) => set({ top: v })}
           />
           {(p.kind === 'chair' || p.kind === 'bench') && (
             <>
               <Toggle
-                label="Back"
+                label={t('Back')}
                 checked={!!p.back}
                 onChange={(v) =>
                   set({
@@ -695,24 +718,24 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
               {p.back && (
                 <div className="dims2">
                   <MmField
-                    label="Seat height"
+                    label={t('Seat height')}
                     value={p.back.seatHeight}
                     min={200}
                     max={900}
                     onChange={(v) => set({ back: { ...p.back!, seatHeight: v } })}
                   />
                   <Select<'slats' | 'panel'>
-                    label="Back of"
+                    label={t('Back of')}
                     value={p.back.style}
                     options={[
-                      { value: 'slats', label: 'Slats' },
-                      { value: 'panel', label: 'A panel' },
+                      { value: 'slats', label: t('Slats') },
+                      { value: 'panel', label: t('A panel') },
                     ]}
                     onChange={(v) => set({ back: { ...p.back!, style: v } })}
                   />
                   {p.back.style === 'slats' && (
                     <Counter
-                      label="Back slats"
+                      label={t('Back slats')}
                       value={p.back.count}
                       min={1}
                       max={12}
@@ -721,21 +744,21 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
                   )}
                   {!p.recline && (
                     <MmField
-                      label="Back rake"
+                      label={t('Back rake')}
                       unit="°"
                       value={p.back.angleDeg ?? 0}
                       min={0}
                       max={25}
                       step={1}
                       onChange={(v) => set({ back: { ...p.back!, angleDeg: v } })}
-                      hint="Leans back from upright; 8° is typical"
+                      hint={t('Leans back from upright; 8° is typical')}
                     />
                   )}
                 </div>
               )}
               {p.back && p.recline && (
                 <Segmented<number>
-                  label="Reclining position shown"
+                  label={t('Reclining position shown')}
                   value={p.recline.at}
                   options={p.recline.positions.map((a, i) => ({ value: i, label: `${a}°` }))}
                   onChange={(v) => set({ recline: { ...p.recline!, at: v } })}
@@ -743,7 +766,7 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
               )}
               {p.back && (
                 <Toggle
-                  label="Reclining back (bought mechanism)"
+                  label={t('Reclining back (bought mechanism)')}
                   checked={!!p.recline}
                   onChange={(v) =>
                     set({
@@ -760,7 +783,7 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
               )}
               {p.recline && (
                 <Toggle
-                  label="Footrest"
+                  label={t('Footrest')}
                   checked={!!p.recline.footrest}
                   onChange={(v) =>
                     set({
@@ -781,7 +804,7 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
               )}
               {p.back && (
                 <Toggle
-                  label="Arm rests"
+                  label={t('Arm rests')}
                   checked={!!p.arms}
                   onChange={(v) =>
                     set({ arms: v ? { height: (p.back?.seatHeight ?? 450) + 220 } : null })
@@ -790,7 +813,7 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
               )}
               {p.arms && (
                 <MmField
-                  label="Arm rest top above floor"
+                  label={t('Arm rest top above floor')}
                   value={p.arms.height}
                   min={200}
                   max={1500}
@@ -799,7 +822,7 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
               )}
               {p.kind === 'bench' && !p.back && p.top === 'slats' && (
                 <Toggle
-                  label="Lifting backrest (bought prop)"
+                  label={t('Lifting backrest (bought prop)')}
                   checked={!!p.backrest}
                   onChange={(v) =>
                     set({
@@ -817,14 +840,14 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
               {p.backrest && (
                 <>
                   <MmField
-                    label="Backrest length"
+                    label={t('Backrest length')}
                     value={p.backrest.length}
                     min={100}
                     max={2000}
                     onChange={(v) => set({ backrest: { ...p.backrest!, length: v } })}
                   />
                   <Segmented<number>
-                    label="Backrest position shown"
+                    label={t('Backrest position shown')}
                     value={p.backrest.at}
                     options={p.backrest.positions.map((a, i) => ({ value: i, label: `${a}°` }))}
                     onChange={(v) => set({ backrest: { ...p.backrest!, at: v } })}
@@ -833,21 +856,21 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
               )}
               {p.kind === 'chair' && (
                 <Segmented<'legs' | 'bought'>
-                  label="Stands on"
+                  label={t('Stands on')}
                   value={p.base ?? 'legs'}
                   options={[
-                    { value: 'legs', label: 'Legs' },
-                    { value: 'bought', label: 'Bought base (gas lift)' },
+                    { value: 'legs', label: t('Legs') },
+                    { value: 'bought', label: t('Bought base (gas lift)') },
                   ]}
                   onChange={(v) => set({ base: v })}
                 />
               )}
             </>
           )}
-          <Group title="Legs, rails and stretchers" id="g-build">
+          <Group title={t('Legs, rails and stretchers')} id="g-build">
             <div className="dims2">
               <MmField
-                label="Leg width"
+                label={t('Leg width')}
                 value={p.leg.w}
                 min={15}
                 max={200}
@@ -855,7 +878,7 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
                 onChange={(v) => set({ leg: { ...p.leg, w: v } })}
               />
               <MmField
-                label="Leg depth"
+                label={t('Leg depth')}
                 value={p.leg.d}
                 min={15}
                 max={200}
@@ -863,7 +886,7 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
                 onChange={(v) => set({ leg: { ...p.leg, d: v } })}
               />
               <MmField
-                label="Legs set in"
+                label={t('Legs set in')}
                 value={p.legInset}
                 min={0}
                 max={300}
@@ -871,16 +894,16 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
                 onChange={(v) => set({ legInset: v })}
               />
               <MmField
-                label="Rail height"
+                label={t('Rail height')}
                 value={p.apron.height}
                 min={0}
                 max={300}
                 step={5}
                 onChange={(v) => set({ apron: { ...p.apron, height: v } })}
-                hint="0 = no rails"
+                hint={t('0 = no rails')}
               />
               <MmField
-                label="Rail thickness"
+                label={t('Rail thickness')}
                 value={p.apron.thickness}
                 min={10}
                 max={60}
@@ -889,18 +912,18 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
               />
             </div>
             <Segmented<FrameParams['stretchers']>
-              label="Stretchers"
+              label={t('Stretchers')}
               value={p.stretchers}
               options={[
-                { value: 'none', label: 'None' },
-                { value: 'box', label: 'All round' },
-                { value: 'h', label: 'H' },
+                { value: 'none', label: t('None') },
+                { value: 'box', label: t('All round') },
+                { value: 'h', label: t('H') },
               ]}
               onChange={(v) => set({ stretchers: v })}
             />
             {p.stretchers !== 'none' && (
               <MmField
-                label="Stretchers above floor"
+                label={t('Stretchers above floor')}
                 value={p.stretcherHeight}
                 min={50}
                 max={800}
@@ -909,14 +932,14 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
             )}
             {p.kind === 'table' && (
               <Toggle
-                label="Lower shelf"
+                label={t('Lower shelf')}
                 checked={!!p.shelf}
                 onChange={(v) => set({ shelf: v ? { height: 150 } : null })}
               />
             )}
             {p.shelf && (
               <MmField
-                label="Shelf top above floor"
+                label={t('Shelf top above floor')}
                 value={p.shelf.height}
                 min={50}
                 max={800}
@@ -928,7 +951,7 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
       )}
       <div className="dims3">
         <MmField
-          label="Slat width"
+          label={t('Slat width')}
           value={p.slats.width}
           min={20}
           max={200}
@@ -936,7 +959,7 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
           onChange={(v) => set({ slats: { ...p.slats, width: v } })}
         />
         <MmField
-          label="Slat thickness"
+          label={t('Slat thickness')}
           value={p.slats.thickness}
           min={8}
           max={60}
@@ -944,7 +967,7 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
           onChange={(v) => set({ slats: { ...p.slats, thickness: v } })}
         />
         <MmField
-          label="Slat gap"
+          label={t('Slat gap')}
           value={p.slats.gap}
           min={0}
           max={200}
@@ -952,15 +975,15 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
           onChange={(v) => set({ slats: { ...p.slats, gap: v } })}
         />
       </div>
-      <Group title="Materials" id="g-materials">
+      <Group title={t('Materials')} id="g-materials">
         <Select
-          label="Solid timber"
+          label={t('Solid timber')}
           value={p.solidMaterialId}
           options={solid.length ? solid : matOptions(materials)}
           onChange={(v) => set({ solidMaterialId: v })}
         />
         <Select
-          label="Boards (top, seat, ends)"
+          label={t('Boards (top, seat, ends)')}
           value={p.panelMaterialId}
           options={sheets}
           onChange={(v) => set({ panelMaterialId: v })}

@@ -12,6 +12,7 @@ import {
   type JointInfo,
   type JointType,
 } from '../core/fasteners';
+import { t, tr } from '../core/i18n';
 import { deleteFastener, listFasteners, saveFastener } from '../persist/db';
 import { useDesign } from '../store/designStore';
 import { GuidanceTip, Group, InfoTip } from './controls';
@@ -45,18 +46,18 @@ export const useFastenerList = create<FastenerState>((set, get) => ({
         set({
           loaded: false,
           ready: true,
-          error: 'Your fastener list could not be read from this browser.',
+          error: t('Your fastener list could not be read from this browser.'),
         }),
       );
   },
   set: (c) => {
     set((s) => ({ choices: [...s.choices.filter((x) => x.joint !== c.joint), c], error: null }));
-    saveFastener(c).catch(() => failed(set, 'The fastener could not be saved on this device.'));
+    saveFastener(c).catch(() => failed(set, t('The fastener could not be saved on this device.')));
   },
   clear: (joint) => {
     set((s) => ({ choices: s.choices.filter((x) => x.joint !== joint), error: null }));
     deleteFastener(joint).catch(() =>
-      failed(set, 'The fastener could not be removed from this device.'),
+      failed(set, t('The fastener could not be removed from this device.')),
     );
   },
 }));
@@ -101,14 +102,14 @@ export function FastenersPanel() {
   const byJoint = useMemo(() => new Map(counts.map((c) => [c.joint, c.count])), [counts]);
   return (
     <Group
-      title="Fasteners"
+      title={t('Fasteners')}
       id="g-fasteners"
       defaultOpen={false}
       info={
-        <InfoTip label="About fasteners">
-          Name what you fix each joint type with and how many per joint. The app counts the joints
-          from the model as guidance; it never chooses a screw, dowel, length or spacing. Your list
-          is saved on this device and used for every piece and project.
+        <InfoTip label={t('About fasteners')}>
+          {t(
+            'Name what you fix each joint type with and how many per joint. The app counts the joints from the model as guidance; it never chooses a screw, dowel, length or spacing. Your list is saved on this device and used for every piece and project.',
+          )}
         </InfoTip>
       }
     >
@@ -164,18 +165,21 @@ function FastenerRow({
   return (
     <li className="fastener">
       <div className="fastener-head">
-        <strong>{joint.title}</strong>
+        <strong>{tr(joint.title)}</strong>
         <span className="hint">
-          {amount(count, joint)} here · guidance: {joint.how}
+          {t('{amount} here · guidance: {how}', {
+            amount: amount(count, joint),
+            how: tr(joint.how),
+          })}
         </span>
       </div>
       <div className="fastener-fields">
         <div className="field">
-          <label htmlFor={`${id}-name`}>Your fastener</label>
+          <label htmlFor={`${id}-name`}>{t('Your fastener')}</label>
           <input
             id={`${id}-name`}
-            aria-label={`${joint.title}: your fastener`}
-            placeholder="Not chosen"
+            aria-label={t('{joint}: your fastener', { joint: tr(joint.title) })}
+            placeholder={t('Not chosen')}
             value={name}
             maxLength={80}
             onChange={(e) => setName(e.target.value)}
@@ -184,10 +188,13 @@ function FastenerRow({
           />
         </div>
         <div className="field per">
-          <label htmlFor={`${id}-per`}>Per {joint.one}</label>
+          <label htmlFor={`${id}-per`}>{t('Per {one}', { one: tr(joint.one) })}</label>
           <input
             id={`${id}-per`}
-            aria-label={`${joint.title}: how many per ${joint.one}`}
+            aria-label={t('{joint}: how many per {one}', {
+              joint: tr(joint.title),
+              one: tr(joint.one),
+            })}
             inputMode="numeric"
             value={per}
             aria-invalid={!perOk}
@@ -200,7 +207,7 @@ function FastenerRow({
       </div>
       {!perOk && (
         <p className="field-error" id={`${id}-err`}>
-          Whole number, 1 or more. Not saved until it is.
+          {t('Whole number, 1 or more. Not saved until it is.')}
         </p>
       )}
     </li>
@@ -214,21 +221,21 @@ export function FastenerCounts() {
   const shown = counts.filter((c) => c.count > 0);
   if (!shown.length) return null;
   return (
-    <section className="fastener-counts" aria-label="Fasteners">
+    <section className="fastener-counts" aria-label={t('Fasteners')}>
       <div className="info-row">
-        <h3 className="list-head">Fasteners — guidance</h3>
-        <GuidanceTip topic="fastener counts">
-          {GUIDANCE}. The fastener and how many per joint are yours: set them under Settings ›
-          Fasteners.
+        <h3 className="list-head">{t('Fasteners — guidance')}</h3>
+        <GuidanceTip topic={t('fastener counts')}>
+          {tr(GUIDANCE)}.{' '}
+          {t('The fastener and how many per joint are yours: set them under Settings › Fasteners.')}
         </GuidanceTip>
       </div>
       <table className="cut">
         <thead>
           <tr>
-            <th scope="col">Count</th>
-            <th scope="col">Joint type</th>
-            <th scope="col">Your fastener</th>
-            <th scope="col">To buy</th>
+            <th scope="col">{t('Count')}</th>
+            <th scope="col">{t('Joint type')}</th>
+            <th scope="col">{t('Your fastener')}</th>
+            <th scope="col">{t('To buy')}</th>
           </tr>
         </thead>
         <tbody>
@@ -238,15 +245,15 @@ export function FastenerCounts() {
             return (
               <tr key={c.joint}>
                 <td className="num">{amount(c.count, j)}</td>
-                <td>{j.title}</td>
+                <td>{tr(j.title)}</td>
                 <td>
                   {pick ? (
-                    `${pick.name}, ${pick.per} per ${j.one}${c.joint === 'shelf-pin' ? ' (bought instead of the scheduled shelf pins)' : ''}`
+                    `${t('{name}, {per} per {one}', { name: pick.name, per: pick.per, one: tr(j.one) })}${c.joint === 'shelf-pin' ? t(' (bought instead of the scheduled shelf pins)') : ''}`
                   ) : (
-                    <span className="hint">choose your fastener</span>
+                    <span className="hint">{t('choose your fastener')}</span>
                   )}
                 </td>
-                <td className="num">{pick ? `${c.count * pick.per} pcs` : '—'}</td>
+                <td className="num">{pick ? t('{n} pcs', { n: c.count * pick.per }) : '—'}</td>
               </tr>
             );
           })}

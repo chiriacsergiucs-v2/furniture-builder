@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { t, tr } from '../core/i18n';
 import { sizeFields, type SizeField } from '../core/pieceSize';
 import type { Product } from '../core/types';
 import { SIZE_LOCKED_HINT } from '../core/sizeLock';
@@ -26,12 +27,12 @@ export function PieceSize({
     <div
       className={`piece-size ${fields.length === 3 ? 'dims3' : fields.length === 2 ? 'dims2' : ''} ${className ?? ''}`}
       role="group"
-      aria-label="Size of the whole piece"
+      aria-label={t('Size of the whole piece')}
     >
       {fields.map((f) => (
         <MmField
           key={f.key}
-          label={f.label}
+          label={tr(f.label)}
           value={f.value}
           min={f.min}
           max={f.max}
@@ -41,7 +42,7 @@ export function PieceSize({
       ))}
       {locked && (
         <p className="hint size-lock-hint" role="note">
-          {SIZE_LOCKED_HINT}
+          {tr(SIZE_LOCKED_HINT)}
         </p>
       )}
     </div>
