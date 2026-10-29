@@ -1,4 +1,4 @@
 Caveman skill — vendored from https://github.com/JuliusBrussee/caveman
 at commit 9b68f7ed12b05e7efaff18e65c5a3fc2849fd0a4 (skills/caveman/SKILL.md, src/rules/caveman-activate.md).
 Copyright 2026 Julius Brussee. Licensed under the Apache License 2.0 (see LICENSE).
-Modified: the length rule (activate.md "Cut 67%", SKILL.md rule 10, user rules 2026-10-28 and 2026-10-29). activate.md is injected at every session start by the SessionStart hook in .claude/settings.json.
+Modified: the length rule (activate.md "Cut 83%", SKILL.md rule 10, user rules 2026-10-28 and 2026-10-29) and terse questions (activate.md, SKILL.md "Questions to the user", user rule 2026-10-29). activate.md is injected at every session start by the SessionStart hook in .claude/settings.json.
