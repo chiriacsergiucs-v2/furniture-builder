@@ -1,7 +1,8 @@
 # ADR-146: Fit, shift and straighten a wall picture in the 3D view
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-29
+- Implemented: 2026-10-29 (Built on the user's answers of 2026-10-29; tests and browser find-it before shipping)
 - Depends on: ADR-093, ADR-145
 - Design: docs/ui-design.md (room editor in the project Settings; 3D view toolbar)
 - Backlog: N147
@@ -77,17 +78,17 @@ ADR-145's "A picture repeats" is replaced: a picture covers one rectangle of its
 
 ## Done when
 
-- [ ] A project with `fit` and `straighten` round-trips through save, export and import; versions 1–14 load and old
+- [x] A project with `fit` and `straighten` round-trips through save, export and import; versions 1–14 load and old
       pictures fill their wall; bad entries give a validation problem, not an exception (tests)
-- [ ] The homography maps the four corners exactly onto the rectangle corners; dragged edges snap to the wall ends,
+- [x] The homography maps the four corners exactly onto the rectangle corners; dragged edges snap to the wall ends,
       floor and ceiling within `SNAP_RANGE` and not with snapping off (tests)
-- [ ] Find-it (browser, 390 and 1280 px): 3D › _Adjust wall picture_ › tap Wall 1 › dragging inside changes "From
+- [x] Find-it (browser, 390 and 1280 px): 3D › _Adjust wall picture_ › tap Wall 1 › dragging inside changes "From
       left"; a corner handle changes "W … × H …"; one Undo restores it
-- [ ] Find-it: _Fill wall_ shows "From left 0 · From floor 0" and the wall length × room height
-- [ ] Find-it: _Straighten photo_ › drag a handle › _Apply_ changes the picture on the wall in 3D; _Reset_ restores it
-- [ ] Find-it: the front view behind a piece shows the fitted picture; with _Adjust wall picture_ off, 3D taps and
+- [x] Find-it: _Fill wall_ shows "From left 0 · From floor 0" and the wall length × room height
+- [x] Find-it: _Straighten photo_ › drag a handle › _Apply_ changes the picture on the wall in 3D; _Reset_ restores it
+- [x] Find-it: the front view behind a piece shows the fitted picture; with _Adjust wall picture_ off, 3D taps and
       drags behave as before
-- [ ] `pnpm docs:check` and every CI check pass
+- [x] `pnpm docs:check` and every CI check pass
 
 ## Open questions
 

@@ -2364,7 +2364,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-283: Where the four straighten corners are placed
 
-- Status: ADR-146
+- Status: Done (ADR-146)
 - Origin: ADR-146 (open question)
 - Missing: Where the user marks the wall's corners in an angled photo
 - Request: User 2026-10-29: "add an ADR to be able to stretch or shift the 3D background across the wall, also the perspective part, so I can wrap it correctly."; answers: straighten an angled photo, fill one wall exactly, drag on the wall in 3D
@@ -2373,7 +2373,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-284: What happens to the repeating picture
 
-- Status: ADR-146
+- Status: Done (ADR-146)
 - Origin: ADR-146 (open question)
 - Missing: Whether a wall picture still repeats (ADR-145) once it can fill the wall
 - Request: User 2026-10-29: "add an ADR to be able to stretch or shift the 3D background across the wall, also the perspective part, so I can wrap it correctly."; answers: straighten an angled photo, fill one wall exactly, drag on the wall in 3D
@@ -2382,7 +2382,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-285: Front view follows the fitted picture
 
-- Status: ADR-146
+- Status: Done (ADR-146)
 - Origin: ADR-146 (open question)
 - Missing: Whether the project front view (ADR-145) draws the shifted, stretched, straightened picture
 - Request: User 2026-10-29: "add an ADR to be able to stretch or shift the 3D background across the wall, also the perspective part, so I can wrap it correctly."; answers: straighten an angled photo, fill one wall exactly, drag on the wall in 3D
@@ -2391,7 +2391,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-286: Snapping and proportions while dragging
 
-- Status: ADR-146
+- Status: Done (ADR-146)
 - Origin: ADR-146 (open question)
 - Missing: How a dragged picture edge snaps, and whether stretching keeps the picture's proportions
 - Request: User 2026-10-29: "add an ADR to be able to stretch or shift the 3D background across the wall, also the perspective part, so I can wrap it correctly."; answers: straighten an angled photo, fill one wall exactly, drag on the wall in 3D
