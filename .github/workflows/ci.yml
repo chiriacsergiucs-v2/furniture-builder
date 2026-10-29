@@ -10,7 +10,29 @@ permissions:
   contents: read
 
 jobs:
+  # A pull request whose latest commit ships an ADR ("Ship ADR-NNN: … — mark implemented") only moves docs and is
+  # merged straight away (user rule 2026-10-29); `verify` is skipped for it. Pushes to main always run.
+  ship-check:
+    runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.msg.outputs.skip }}
+    steps:
+      - id: msg
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          skip=false
+          if [ "$EVENT" = pull_request ]; then
+            subject=$(gh api "repos/${{ github.repository }}/commits/$SHA" --jq '.commit.message' | head -n 1)
+            case "$subject" in "Ship ADR-"*) skip=true ;; esac
+          fi
+          echo "skip=$skip" >> "$GITHUB_OUTPUT"
+
   verify:
+    needs: ship-check
+    if: needs.ship-check.outputs.skip != 'true'
     runs-on: ubuntu-latest
 
     steps:
