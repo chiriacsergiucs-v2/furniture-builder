@@ -174,6 +174,10 @@ changed and push only on the user's explicit approval. Model, document, storage 
 - Only modify `chiriacsergiucs-v2/furniture-builder`.
 - Branch per ADR: `adr-NNN-short-title`; open a pull request for review. An ADR created and approved for building
   in the same run (new and next together, above) shares one branch and one pull request with its implementation.
+- Open the pull request automatically (user rule 2026-10-29): as soon as an implementation is done (its checks pass
+  and it is pushed to its branch), open the pull request without asking, using the repo's template if one exists.
+  Not for `ff` (no pull request) or an ADR-only change that is not approved for building. Merging still waits for the
+  user's instruction.
 - Merge to `main` only on the user's instruction; then cite the `Deploy GitHub Pages` run id. Never force-push
   `main`.
 - Ship commit message: `Ship ADR-NNN: <short title> — mark implemented`.
