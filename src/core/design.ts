@@ -36,12 +36,12 @@ export function defaultSheetFor(m: Pick<Material, 'id' | 'name'>): NonNullable<M
 export const sheetOf = (m: Material) => m.sheet ?? defaultSheetFor(m);
 export const kerfOf = (d: Design) => d.cutting?.kerf ?? DEFAULT_KERF;
 
-/** The document shape this app writes: 3 adds edge band specs on boards (ADR-077); 1 and 2 still load. */
-export const SCHEMA_VERSION = 3;
+/** The document shape this app writes: 4 adds a board per part (`partMaterials`); 1 to 3 still load. */
+export const SCHEMA_VERSION = 4;
 
 /**
- * Older versions → 3 in memory: version 1 gets stock sheets and cutting settings; 2 → 3 adds only optional band
- * fields, so nothing else changes. Returns the same object when already current.
+ * Older versions → 4 in memory: version 1 gets stock sheets and cutting settings; 2 → 3 → 4 add only optional fields
+ * (band specs, part boards), so nothing else changes. Returns the same object when already current.
  */
 export function upgradeDesign(d: Design): Design {
   if (d.schemaVersion === SCHEMA_VERSION && d.cutting && d.materials.every((m) => m.sheet))
@@ -756,6 +756,16 @@ function validFront(f: unknown): boolean {
 const isOptStr = (v: unknown, max = 300) =>
   v === undefined || (typeof v === 'string' && v.length <= max);
 
+/** A board per part (schemaVersion 4): panel id → a material of the piece; checked when present, never throws. */
+function validatePartMaterials(pm: unknown, version: unknown, mids: Set<string>, errs: string[]) {
+  if (pm === undefined) return;
+  if (!isObj(pm) || Object.keys(pm).length > 2000) return void errs.push('Invalid part boards');
+  if ((version as number) < 4) errs.push('Part boards need schemaVersion 4');
+  for (const [k, v] of Object.entries(pm))
+    if (!k || !mids.has(v as string))
+      errs.push(`Part board for ${k} refers to an unknown material`);
+}
+
 /** ADR-028: optional catalog metadata; checked when present, never throws. */
 function validateCatalog(c: unknown, errs: string[]) {
   if (c === undefined) return;
@@ -921,8 +931,7 @@ function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0)
 export function validateDesign(d: unknown): string[] {
   const errs: string[] = [];
   if (!isObj(d)) return ['Design must be an object'];
-  if (d.schemaVersion !== 1 && d.schemaVersion !== 2 && d.schemaVersion !== 3)
-    errs.push('Unsupported schemaVersion');
+  if (![1, 2, 3, 4].includes(d.schemaVersion as number)) errs.push('Unsupported schemaVersion');
   if (
     d.cutting !== undefined &&
     !(isObj(d.cutting) && isInt(d.cutting.kerf) && (d.cutting.kerf as number) <= 20)
@@ -995,6 +1004,7 @@ export function validateDesign(d: unknown): string[] {
   const matRef = (k: string, obj: Record<string, unknown>) => {
     if (!mids.has(obj[k] as string)) errs.push(`${k} refers to an unknown material`);
   };
+  validatePartMaterials(d.partMaterials, d.schemaVersion, mids, errs);
   validateCatalog(d.catalog, errs);
   validateRules(d.settings, errs);
   validateWizard(d.wizard, errs);

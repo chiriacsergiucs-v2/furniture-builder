@@ -4,6 +4,7 @@ import {
   findInProduct,
   productRoots,
   mapProductSpace,
+  SCHEMA_VERSION,
   templates,
   upgradeDesign,
   validateDesign,
@@ -177,6 +178,8 @@ interface State {
   updateDesk: (patch: Partial<DeskParams>) => void;
   updateCorner: (patch: Partial<CornerParams>) => void;
   updatePanelSet: (patch: Partial<PanelSetParams>) => void;
+  /** A board for one part instead of its group's board; null goes back to the group's board. */
+  setPartMaterial: (panelId: string, materialId: string | null) => void;
   updatePanel: (patch: Partial<PanelParams>) => void;
   updateFrame: (patch: Partial<FrameParams>) => void;
   /** Width or depth of the whole open piece, from its selection (ADR-106). */
@@ -1308,6 +1311,17 @@ export const useDesign = create<State>((rawSet, get) => {
       commit({ ...d, cutting: { ...d.cutting, kerf } });
     },
     rename: (name) => commit({ ...get().design, name }),
+    setPartMaterial: (panelId, materialId) => {
+      const d = get().design;
+      const next = { ...d.partMaterials };
+      if (materialId) next[panelId] = materialId;
+      else delete next[panelId];
+      commit({
+        ...d,
+        schemaVersion: SCHEMA_VERSION,
+        partMaterials: Object.keys(next).length ? next : undefined,
+      });
+    },
     updateCabinet: (patch) => {
       const d = get().design;
       if (d.product.kind !== 'cabinet') return;

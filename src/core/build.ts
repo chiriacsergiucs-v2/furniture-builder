@@ -32,7 +32,19 @@ export function buildModel(design: Design): FurnitureModel {
               ? buildPanelSet(prod.params, prod.id, materials)
               : buildDesk(prod.params, prod.id, materials);
   const diagnostics: Diagnostic[] = [...partial.diagnostics];
-  const panels = partial.panels;
+  // A board chosen for one part replaces its group's board; the checks below judge the result (thickness, band).
+  const own = design.partMaterials ?? {};
+  const panels = partial.panels.map((p) =>
+    own[p.id] && materials.has(own[p.id]) ? { ...p, materialId: own[p.id] } : p,
+  );
+  const built = new Set(panels.map((p) => p.id));
+  const lost = Object.keys(own).filter((id) => !built.has(id));
+  if (lost.length)
+    diagnostics.push({
+      severity: 'warning',
+      code: 'part-board-lost',
+      message: `${lost.length === 1 ? 'A part' : `${lost.length} parts`} with ${lost.length === 1 ? 'its' : 'their'} own board no longer ${lost.length === 1 ? 'exists' : 'exist'} (the piece changed); the board choice is not used. Clear it under Part boards.`,
+    });
 
   // Integer millimetres and positive size, always.
   for (const p of panels) {
