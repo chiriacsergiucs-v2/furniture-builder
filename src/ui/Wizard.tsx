@@ -25,6 +25,7 @@ import {
 import { compartmentsOf, contentUses, listOf } from '../core/wizard/steps';
 import { CARDS_FIRST, generatorAt, suggestions, type Suggestion } from '../core/wizard/suggest';
 import type { Answers, AnswerValue, Compartment, FieldDef } from '../core/wizard/types';
+import { t, tr } from '../core/i18n';
 import { saveDesign } from '../persist/db';
 import { useDesign } from '../store/designStore';
 import { Counter, InfoTip, Segmented, Select, Steps } from './controls';
@@ -92,13 +93,19 @@ function FieldInput({
   set: (id: string, v: AnswerValue) => void;
 }) {
   const v = r[f.id];
-  const opts = fieldOptions(f, a);
+  const opts = fieldOptions(f, a).map((o) => ({
+    ...o,
+    label: tr(o.label),
+    help: o.help && tr(o.help),
+  }));
+  const label = tr(f.label);
+  const help = f.help && tr(f.help);
   const { min, max } = fieldRange(f, a);
   switch (f.kind) {
     case 'text':
       return (
         <div className="field">
-          <label htmlFor={`wz-${f.id}`}>{f.label}</label>
+          <label htmlFor={`wz-${f.id}`}>{label}</label>
           <input
             id={`wz-${f.id}`}
             value={String(v ?? '')}
@@ -109,15 +116,19 @@ function FieldInput({
     case 'int':
       return f.unit || max - min > 20 ? (
         <IntInput
-          label={`${f.label} (${min}–${max}${f.unit ? ' mm' : ''})`}
+          label={
+            f.unit
+              ? t('{label} ({min}–{max} mm)', { label, min, max })
+              : t('{label} ({min}–{max})', { label, min, max })
+          }
           value={v}
-          unit={f.unit}
-          hint={f.help}
+          unit={f.unit && t('mm')}
+          hint={help}
           onChange={(x) => set(f.id, x)}
         />
       ) : (
         <Counter
-          label={f.label}
+          label={label}
           value={typeof v === 'number' ? v : min}
           min={min}
           max={max}
@@ -128,7 +139,7 @@ function FieldInput({
       if (opts.some((o) => o.help)) {
         return (
           <fieldset className="field wz-options">
-            <legend>{f.label}</legend>
+            <legend>{label}</legend>
             {opts.map((o) => (
               <button
                 key={o.value}
@@ -153,16 +164,16 @@ function FieldInput({
       return opts.length <= 4 ? (
         <>
           <Segmented
-            label={f.label}
+            label={label}
             value={String(v ?? '')}
             options={opts}
             onChange={(x) => set(f.id, x)}
           />
-          {f.help && <p className="hint">{f.help}</p>}
+          {help && <p className="hint">{help}</p>}
         </>
       ) : (
         <Select
-          label={f.label}
+          label={label}
           value={String(v ?? '')}
           options={opts}
           onChange={(x) => set(f.id, x)}
@@ -189,20 +200,20 @@ function FieldInput({
               }
             >
               <Icon name="copy" className="sm" />
-              Apply compartment 1 to all
+              {t('Apply compartment 1 to all')}
             </button>
           )}
           {cs.map((c, i) => (
             <div className="wz-row" key={i}>
               <Select
-                label={`${f.label} ${i + 1}`}
+                label={`${label} ${i + 1}`}
                 value={c.kind}
                 options={opts}
                 onChange={(k) => put(i, { ...c, kind: k })}
               />
               {contentUses(c.kind).includes('shelves') && (
                 <Counter
-                  label="Shelves"
+                  label={t('Shelves')}
                   value={c.shelves}
                   min={0}
                   max={max}
@@ -211,7 +222,7 @@ function FieldInput({
               )}
               {contentUses(c.kind).includes('drawers') && (
                 <Counter
-                  label="Drawers"
+                  label={t('Drawers')}
                   value={c.drawers}
                   min={1}
                   max={10}
@@ -239,13 +250,13 @@ function FieldInput({
               }
             >
               <Icon name="copy" className="sm" />
-              Apply compartment 1 to all
+              {t('Apply compartment 1 to all')}
             </button>
           )}
           {list.map((x, i) => (
             <Segmented
               key={i}
-              label={`${f.label} ${i + 1}`}
+              label={`${label} ${i + 1}`}
               value={x}
               options={opts}
               onChange={(y) =>
@@ -263,14 +274,14 @@ function FieldInput({
       const list = listOf<number>(r, f.id, 0);
       return (
         <div className="wz-list">
-          <p className="hint">{f.label}</p>
+          <p className="hint">{label}</p>
           <div className="wz-row">
             {list.map((x, i) => (
               <IntInput
                 key={i}
-                label={`Compartment ${i + 1}`}
+                label={t('Compartment {n}', { n: i + 1 })}
                 value={x}
-                unit="mm"
+                unit={t('mm')}
                 onChange={(y) =>
                   set(
                     f.id,
@@ -294,7 +305,7 @@ function ProblemList({ problems, limit }: { problems: Problem[]; limit?: number 
     return (
       <p className="alert ok">
         <Icon name="check" className="sm" />
-        <span>No problems found.</span>
+        <span>{t('No problems found.')}</span>
       </p>
     );
   return (
@@ -306,7 +317,7 @@ function ProblemList({ problems, limit }: { problems: Problem[]; limit?: number 
         </li>
       ))}
       {limit !== undefined && problems.length > limit && (
-        <li className="hint">…and {problems.length - limit} more on Review.</li>
+        <li className="hint">{t('…and {n} more on Review.', { n: problems.length - limit })}</li>
       )}
     </ul>
   );
@@ -318,15 +329,15 @@ function Card({ s, onUse }: { s: Suggestion; onUse: () => void }) {
     <li className="wz-card">
       <img src={src} alt="" width={120} height={90} />
       <span className="wz-card-label">
-        {s.isDefault && <span className="badge neutral">Default</span>} {s.label}
+        {s.isDefault && <span className="badge neutral">{t('Default')}</span>} {s.label}
       </span>
       {s.warnings > 0 && (
-        <span className="badge warning" title="Warnings: see Review after using it">
-          {s.warnings} {s.warnings === 1 ? 'warning' : 'warnings'}
+        <span className="badge warning" title={t('Warnings: see Review after using it')}>
+          {t('{n|# warning|# warnings}', { n: s.warnings })}
         </span>
       )}
       <button type="button" className="btn sm primary" onClick={onUse}>
-        Use this
+        {t('Use this')}
       </button>
     </li>
   );
@@ -347,12 +358,12 @@ function Suggestions({
   const deferred = useDeferredValue(a);
   const list = useMemo(() => suggestions(deferred, stepId), [deferred, stepId]);
   return (
-    <section className="wz-suggest" aria-label="Suggested combinations">
+    <section className="wz-suggest" aria-label={t('Suggested combinations')}>
       <div className="card-title">
         <span className="info-row">
-          <span>Suggested combinations</span>
-          <InfoTip label="About suggested combinations" align="start">
-            Fit the sizes entered so far, checked by the model.
+          <span>{t('Suggested combinations')}</span>
+          <InfoTip label={t('About suggested combinations')} align="start">
+            {t('Fit the sizes entered so far, checked by the model.')}
           </InfoTip>
         </span>
       </div>
@@ -364,17 +375,17 @@ function Suggestions({
         </ul>
       ) : (
         <p className="hint">
-          No combination fits these sizes without errors; set the answers by hand.
+          {t('No combination fits these sizes without errors; set the answers by hand.')}
         </p>
       )}
       <div className="split-actions">
         {list.length > shown && (
           <button type="button" className="btn sm" onClick={() => setShown(shown + CARDS_FIRST)}>
-            Show more ({list.length - shown})
+            {t('Show more ({n})', { n: list.length - shown })}
           </button>
         )}
         <button type="button" className="btn sm outline" onClick={onBlank}>
-          Start blank
+          {t('Start blank')}
         </button>
       </div>
     </section>
@@ -400,7 +411,12 @@ export function WizardDialog({
   toProject?: boolean;
 }) {
   return (
-    <Dialog open={open} onClose={onClose} title={from ? `Wizard: ${from.name}` : 'New piece'} wide>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      title={from ? t('Wizard: {name}', { name: from.name }) : t('New piece')}
+      wide
+    >
       {open && (
         <Wizard
           key={from?.id ?? 'new'}
@@ -478,7 +494,7 @@ function Wizard({
       else load(res.design);
       onCreated();
     } catch {
-      setSaveError('The piece could not be saved in this browser’s storage.');
+      setSaveError(t('The piece could not be saved in this browser’s storage.'));
     }
   };
   const isReview = step.id === REVIEW;
@@ -487,12 +503,12 @@ function Wizard({
   return (
     <div className="wizard">
       <Steps
-        label="Wizard steps"
+        label={t('Wizard steps')}
         current={step.id}
         onSelect={go}
         steps={steps.map((s) => ({
           id: s.id,
-          label: s.title,
+          label: tr(s.title),
           done: done.has(s.id),
           tone: c.problems.some((p) => p.step === s.id && p.severity === 'error')
             ? 'error'
@@ -506,23 +522,25 @@ function Wizard({
             <p className={`alert ${edited ? 'warning' : 'info'}`} role="status">
               <Icon name={edited ? 'alert-triangle' : 'info'} className="sm" />
               <span>
-                Reopened with the answers it was made from. “Update piece” replaces “{from.name}” in
-                place.
+                {t(
+                  'Reopened with the answers it was made from. “Update piece” replaces “{name}” in place.',
+                  { name: from.name },
+                )}
                 {edited
-                  ? ' It was changed in the editor since; those changes will be replaced.'
+                  ? t(' It was changed in the editor since; those changes will be replaced.')
                   : ''}
               </span>
             </p>
           )}
           {step.help ? (
             <div className="info-row">
-              <h3>{step.title}</h3>
-              <InfoTip label="About this step" align="start">
-                {step.help}
+              <h3>{tr(step.title)}</h3>
+              <InfoTip label={t('About this step')} align="start">
+                {tr(step.help)}
               </InfoTip>
             </div>
           ) : (
-            <h3>{step.title}</h3>
+            <h3>{tr(step.title)}</h3>
           )}
           {fields.map((f) => (
             <FieldInput key={f.id} f={f} a={a} r={r} set={set} />
@@ -539,32 +557,35 @@ function Wizard({
           )}
           {isReview && (
             <>
-              <section aria-label="Parts">
+              <section aria-label={t('Parts')}>
                 <div className="card-title">
-                  <span>Parts</span>
-                  <span className="hint">from the built model</span>
+                  <span>{t('Parts')}</span>
+                  <span className="hint">{t('from the built model')}</span>
                 </div>
                 <p className="num">
-                  {c.model?.panels.length ?? 0} parts · {rows.length} different cut sizes ·{' '}
-                  {rows.reduce((n, x) => n + x.quantity, 0)} pieces to cut
+                  {t('{parts} parts · {sizes} different cut sizes · {pieces} pieces to cut', {
+                    parts: c.model?.panels.length ?? 0,
+                    sizes: rows.length,
+                    pieces: rows.reduce((n, x) => n + x.quantity, 0),
+                  })}
                 </p>
                 <ul className="wz-parts">
                   {rows.slice(0, 12).map((x, k) => (
                     <li key={k} className="num">
-                      {x.quantity} × {x.labels[0]} — {x.length} × {x.width} × {x.thickness} mm{' '}
-                      {x.materialName}
+                      {x.quantity} × {tr(x.labels[0])} — {x.length} × {x.width} × {x.thickness}{' '}
+                      {t('mm')} {tr(x.materialName)}
                     </li>
                   ))}
                 </ul>
                 {rows.length > 12 && (
                   <p className="hint">
-                    …and {rows.length - 12} more in the parts list after creating.
+                    {t('…and {n} more in the parts list after creating.', { n: rows.length - 12 })}
                   </p>
                 )}
               </section>
-              <section aria-label="Problems">
+              <section aria-label={t('Problems')}>
                 <div className="card-title">
-                  <span>Checks</span>
+                  <span>{t('Checks')}</span>
                 </div>
                 <ProblemList problems={c.problems} />
               </section>
@@ -577,19 +598,19 @@ function Wizard({
             </>
           )}
         </div>
-        <aside className="wz-preview" aria-label="Preview">
+        <aside className="wz-preview" aria-label={t('Preview')}>
           {c.model && c.design && c.model.panels.length > 0 ? (
             <img
               src={picture(c.model, c.design.materials, 260)}
-              alt={`Preview of ${c.design.name}`}
+              alt={t('Preview of {name}', { name: c.design.name })}
             />
           ) : (
-            <p className="hint">Choose a type to see the piece.</p>
+            <p className="hint">{t('Choose a type to see the piece.')}</p>
           )}
           {c.model && (
             <p className="num">
-              {c.model.bounds.w} × {c.model.bounds.h} × {c.model.bounds.d} mm ·{' '}
-              {c.model.panels.length} parts
+              {c.model.bounds.w} × {c.model.bounds.h} × {c.model.bounds.d} {t('mm')} ·{' '}
+              {t('{n} parts', { n: c.model.panels.length })}
             </p>
           )}
           {!isReview && c.design && <ProblemList problems={c.problems} limit={3} />}
@@ -602,7 +623,7 @@ function Wizard({
           disabled={i === 0}
           onClick={() => go(steps[i - 1].id)}
         >
-          Back
+          {t('Back')}
         </button>
         {/* No Cancel (ADR-118): the dialog's × closes the wizard. */}
         <span className="wz-spacer" />
@@ -612,12 +633,12 @@ function Wizard({
             className="btn outline"
             title={
               step.id === TYPE
-                ? 'Skip: use the first type'
-                : 'Skip: put this step back to its defaults'
+                ? t('Skip: use the first type')
+                : t('Skip: put this step back to its defaults')
             }
             onClick={() => next(false)}
           >
-            Skip
+            {t('Skip')}
           </button>
         )}
         {!isReview && (
@@ -627,7 +648,7 @@ function Wizard({
             disabled={step.id === TYPE && !a.type}
             onClick={() => next(true)}
           >
-            Next
+            {t('Next')}
           </button>
         )}
         {isReview && (
@@ -635,11 +656,11 @@ function Wizard({
             type="button"
             className="btn primary"
             disabled={!c.design || c.errors > 0}
-            title={c.errors ? 'Fix the problems listed under Checks first' : undefined}
+            title={c.errors ? t('Fix the problems listed under Checks first') : undefined}
             onClick={() => void create()}
           >
             <Icon name="plus" className="sm" />
-            {from ? 'Update piece' : toProject ? 'Add to project' : 'Create piece'}
+            {from ? t('Update piece') : toProject ? t('Add to project') : t('Create piece')}
           </button>
         )}
       </div>

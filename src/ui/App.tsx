@@ -12,6 +12,7 @@ import {
 import { useDesign } from '../store/designStore';
 import { keepSessionVersion } from '../store/versions';
 import type { Design } from '../core/types';
+import { t, tr } from '../core/i18n';
 import { NewDialog } from './Dialogs';
 import { SettingsDialog } from './Settings';
 import { WizardDialog } from './Wizard';
@@ -80,7 +81,7 @@ const NoViewer = () => (
   <div className="no-3d">
     <p className="empty center">
       <Icon name="cube" />
-      3D preview is not available in this browser. The front view and parts list still work.
+      {t('3D preview is not available in this browser. The front view and parts list still work.')}
     </p>
   </div>
 );
@@ -88,9 +89,9 @@ const NoViewer = () => (
 type SaveState = 'idle' | 'saving' | 'saved' | 'failed';
 const SAVE_TEXT: Record<SaveState, string> = {
   idle: '',
-  saving: 'Saving…',
-  saved: 'Saved on this device',
-  failed: 'Not saved — browser storage unavailable',
+  saving: t('Saving…'),
+  saved: t('Saved on this device'),
+  failed: t('Not saved — browser storage unavailable'),
 };
 
 type Page = 'projects' | 'editor' | 'catalog' | 'research' | 'gaps' | 'info';
@@ -123,9 +124,9 @@ function usePage(): [Page, (p: Page) => void] {
 }
 const CATALOG_ITEMS = catalogFamilies.reduce((n, f) => n + f.variants.length, 0);
 const PLACES: { page: Page; label: string; icon: 'folder' | 'catalog' | 'front' }[] = [
-  { page: 'projects', label: 'Projects', icon: 'folder' },
-  { page: 'catalog', label: 'Catalog', icon: 'catalog' },
-  { page: 'editor', label: 'Editor', icon: 'front' },
+  { page: 'projects', label: t('Projects'), icon: 'folder' },
+  { page: 'catalog', label: t('Catalog'), icon: 'catalog' },
+  { page: 'editor', label: t('Editor'), icon: 'front' },
 ];
 
 export function App() {
@@ -430,28 +431,28 @@ export function App() {
   const errors = vd.diagnostics.filter((d) => d.severity === 'error').length;
   const warnings = vd.diagnostics.length - errors;
   const buildMeta = errors
-    ? `${errors} ${errors === 1 ? 'problem' : 'problems'}`
+    ? t('{n|problem|problems}', { n: errors })
     : warnings
-      ? `${warnings} to check`
+      ? t('to check')
       : '';
   const selectedItem = project?.items.find((i) => i.id === selectedItemId);
   const selectedCount = useDesign((s) => s.selectedItemIds.length);
   const selectedModel = project?.models?.find((m) => m.id === selectedItemId);
   const peek = inProject
     ? selectedCount > 1
-      ? `${selectedCount} pieces selected`
+      ? t('{n} pieces selected', { n: selectedCount })
       : selectedItem || selectedModel
-        ? `Selected: ${selectedItem?.design.name ?? selectedModel?.name}`
-        : `${project!.name}: ${project!.items.length} ${project!.items.length === 1 ? 'piece' : 'pieces'}`
+        ? t('Selected: {name}', { name: String(selectedItem?.design.name ?? selectedModel?.name) })
+        : t('{name}: {n|# piece|# pieces}', { name: project!.name, n: project!.items.length })
     : (() => {
         const l = selectionLabel(design.product, selectedId);
-        return l ? `Selected: ${l}` : 'Tap a space to edit it';
+        return l ? t('Selected: {name}', { name: l }) : t('Tap a space to edit it');
       })();
 
   const nameField = (
     <input
       className="name"
-      aria-label={inProject ? 'Name of this project' : 'Name of this piece'}
+      aria-label={inProject ? t('Name of this project') : t('Name of this piece')}
       defaultValue={inProject ? project!.name : design.name}
       key={inProject ? `p-${project!.id}-${project!.name}` : `${design.id}-${design.name}`}
       onBlur={(e) => {
@@ -475,8 +476,8 @@ export function App() {
           <a
             className="brand"
             href="#"
-            title="Projects"
-            aria-label="Furniture Builder, go to Projects"
+            title={t('Projects')}
+            aria-label={t('Furniture Builder, go to Projects')}
             onClick={(e) => {
               e.preventDefault();
               setPage('projects');
@@ -489,7 +490,7 @@ export function App() {
             </svg>
             <span className="brand-name">Furniture Builder</span>
           </a>
-          <nav className="pages places" aria-label="Places" ref={navRef}>
+          <nav className="pages places" aria-label={t('Places')} ref={navRef}>
             {PLACES.map((p) => (
               <a
                 key={p.page}
@@ -510,31 +511,32 @@ export function App() {
             <div className="path">
               {templateEdit ? (
                 <>
-                  <span className="crumb family" title="Template">
-                    {templateEdit.template.family.name}
+                  <span className="crumb family" title={t('Template')}>
+                    {tr(templateEdit.template.family.name)}
                   </span>
                   <span className="sep family" aria-hidden="true">
                     ›
                   </span>
                   <span className="crumb here">
-                    {
+                    {tr(
                       templateEdit.template.family.variants.find(
                         (v) => v.id === templateEdit.variantId,
-                      )?.name
-                    }
+                      )?.name ?? '',
+                    )}
                   </span>
                   <button
                     type="button"
                     className="btn sm primary"
-                    aria-label="Save to template"
-                    title="Saved to the template on this device"
+                    aria-label={t('Save to template')}
+                    title={t('Saved to the template on this device')}
                     onClick={() => {
                       const t = useDesign.getState().finishTemplateEdit(true);
                       if (t) void useTemplates.getState().save(t);
                       setPage('catalog');
                     }}
                   >
-                    Save<span className="lbl-long"> to template</span>
+                    {t('Save')}
+                    <span className="lbl-long">{t(' to template')}</span>
                   </button>
                   <button
                     type="button"
@@ -544,7 +546,7 @@ export function App() {
                       setPage('catalog');
                     }}
                   >
-                    Cancel
+                    {t('Cancel')}
                   </button>
                 </>
               ) : editingItemId && project ? (
@@ -552,8 +554,12 @@ export function App() {
                   <button
                     type="button"
                     className="crumb back"
-                    aria-label={`Back to project ${project.name}`}
-                    title={`Changes to ${editingName ?? 'this piece'} stay in this project`}
+                    aria-label={t('Back to project {name}', { name: project.name })}
+                    title={
+                      editingName
+                        ? t('Changes to {name} stay in this project', { name: editingName })
+                        : t('Changes to this piece stay in this project')
+                    }
                     onClick={() => useDesign.getState().backToProject()}
                   >
                     <Icon name="chevron-left" className="sm" />
@@ -588,8 +594,12 @@ export function App() {
                   className="btn icon"
                   onClick={undo}
                   disabled={!canUndo}
-                  aria-label="Undo"
-                  title={inProject && undoName ? `Undo ${undoName} (Ctrl+Z)` : 'Undo (Ctrl+Z)'}
+                  aria-label={t('Undo')}
+                  title={
+                    inProject && undoName
+                      ? t('Undo {step} (Ctrl+Z)', { step: tr(undoName) })
+                      : t('Undo (Ctrl+Z)')
+                  }
                 >
                   <Icon name="undo" />
                 </button>
@@ -598,11 +608,11 @@ export function App() {
                   className="btn icon"
                   onClick={redo}
                   disabled={!canRedo}
-                  aria-label="Redo"
+                  aria-label={t('Redo')}
                   title={
                     inProject && redoName
-                      ? `Redo ${redoName} (Ctrl+Shift+Z)`
-                      : 'Redo (Ctrl+Shift+Z)'
+                      ? t('Redo {step} (Ctrl+Shift+Z)', { step: tr(redoName) })
+                      : t('Redo (Ctrl+Shift+Z)')
                   }
                 >
                   <Icon name="redo" />
@@ -611,8 +621,10 @@ export function App() {
                   type="button"
                   className="btn icon"
                   onClick={() => setSettingsOpen(true)}
-                  aria-label="Settings"
-                  title={inProject ? 'Project settings' : 'Size, construction, boards and drawers'}
+                  aria-label={t('Settings')}
+                  title={
+                    inProject ? t('Project settings') : t('Size, construction, boards and drawers')
+                  }
                 >
                   <Icon name="sliders" />
                 </button>
@@ -624,9 +636,9 @@ export function App() {
               className="btn icon theme"
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
               aria-label={
-                theme === 'dark' ? 'Switch to the light theme' : 'Switch to the dark theme'
+                theme === 'dark' ? t('Switch to the light theme') : t('Switch to the dark theme')
               }
-              title={theme === 'dark' ? 'Light theme' : 'Dark theme'}
+              title={theme === 'dark' ? t('Light theme') : t('Dark theme')}
             >
               <Icon name={theme === 'dark' ? 'sun' : 'moon'} />
             </button>
@@ -641,7 +653,7 @@ export function App() {
         </header>
         {page === 'editor' && (
           <div className="modes" ref={modesRef}>
-            <div className="segmented" role="radiogroup" aria-label="Editor mode">
+            <div className="segmented" role="radiogroup" aria-label={t('Editor mode')}>
               {MODES.map((m) => (
                 <button
                   key={m}
@@ -655,7 +667,7 @@ export function App() {
                   {m === 'build' && buildMeta && (
                     <span className={`badge ${errors ? 'error' : 'warning'}`}>
                       {errors || warnings}
-                      <span className="badge-words"> {buildMeta.replace(/^\d+ /, '')}</span>
+                      <span className="badge-words"> {buildMeta}</span>
                     </span>
                   )}
                 </button>
@@ -673,7 +685,7 @@ export function App() {
             <button
               type="button"
               className="btn icon ghost sm"
-              aria-label="Dismiss"
+              aria-label={t('Dismiss')}
               onClick={() => setNotice(null)}
             >
               <Icon name="x" className="sm" />
@@ -698,7 +710,7 @@ export function App() {
           className={`work mode-${mode} ${sheetOpen ? 'sheet-open' : ''}`}
           hidden={page !== 'editor'}
         >
-          <aside className="side" aria-label="Compose">
+          <aside className="side" aria-label={t('Compose')}>
             <button
               type="button"
               className="sheet-peek"
@@ -718,7 +730,7 @@ export function App() {
           </aside>
           <section
             className={`stage ${shown === 'both' ? 'both' : ''} ${piecesShown ? 'with-pieces' : ''}`}
-            aria-label="Drawing"
+            aria-label={t('Drawing')}
           >
             {piecesShown && (
               <PieceList
@@ -730,7 +742,7 @@ export function App() {
               />
             )}
             <div className="stage-tools">
-              <div className="segmented small" role="radiogroup" aria-label="View">
+              <div className="segmented small" role="radiogroup" aria-label={t('View')}>
                 {viewOptions(has3d).map((o) => (
                   <button
                     key={o.id}
@@ -751,12 +763,12 @@ export function App() {
                 <label className="toggle small">
                   <input
                     type="checkbox"
-                    aria-label="Doors and fronts"
+                    aria-label={t('Doors and fronts')}
                     checked={showFronts}
                     onChange={(e) => setShowFronts(e.target.checked)}
                   />
-                  <span className="fronts-long">Doors and fronts</span>
-                  <span className="fronts-short">Fronts</span>
+                  <span className="fronts-long">{t('Doors and fronts')}</span>
+                  <span className="fronts-short">{t('Fronts')}</span>
                 </label>
               )}
               <ViewOptions menu={inOptions('exploded', phone)}>
@@ -767,7 +779,7 @@ export function App() {
                       checked={exploded}
                       onChange={(e) => setExploded(e.target.checked)}
                     />
-                    <span>Exploded 3D</span>
+                    <span>{t('Exploded 3D')}</span>
                   </label>
                 )}
                 {shows3d(shown) && (
@@ -777,11 +789,11 @@ export function App() {
                     onClick={() => window.dispatchEvent(new Event('fb:fit'))}
                   >
                     <Icon name="refresh" className="sm" />
-                    Reset view
+                    {t('Reset view')}
                   </button>
                 )}
                 {mount3d && (
-                  <div className="segmented small" role="radiogroup" aria-label="Look">
+                  <div className="segmented small" role="radiogroup" aria-label={t('Look')}>
                     {(['simple', 'realistic'] as const).map((l) => (
                       <button
                         key={l}
@@ -791,7 +803,7 @@ export function App() {
                         className={look === l ? 'on' : ''}
                         onClick={() => setLook(l)}
                       >
-                        {l === 'simple' ? 'Simple' : 'Realistic'}
+                        {l === 'simple' ? t('Simple') : t('Realistic')}
                       </button>
                     ))}
                   </div>
@@ -800,11 +812,13 @@ export function App() {
                   <button
                     type="button"
                     className="btn sm"
-                    title="Render a photo-quality picture. Best on a laptop; a phone may be slow."
+                    title={t(
+                      'Render a photo-quality picture. Best on a laptop; a phone may be slow.',
+                    )}
                     onClick={() => setDialog('render')}
                   >
                     <Icon name="camera" className="sm" />
-                    Render
+                    {t('Render')}
                   </button>
                 )}
               </ViewOptions>
@@ -823,7 +837,7 @@ export function App() {
                     <Suspense
                       fallback={
                         <div className="no-3d">
-                          <p className="loading">Loading 3D…</p>
+                          <p className="loading">{t('Loading 3D…')}</p>
                         </div>
                       }
                     >

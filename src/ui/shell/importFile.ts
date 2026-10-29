@@ -1,4 +1,5 @@
 import { newId, validateDesign } from '../../core/design';
+import { t } from '../../core/i18n';
 import type { Design } from '../../core/types';
 import { validateProject, type Project } from '../../core/project';
 import { saveDesign, saveProject, saveProjectTemplate } from '../../persist/db';
@@ -24,7 +25,10 @@ export async function importFile(f: File): Promise<ImportResult> {
   try {
     parsed = JSON.parse(await f.text());
   } catch {
-    return { opened: false, message: { ok: false, text: 'That file could not be read as JSON.' } };
+    return {
+      opened: false,
+      message: { ok: false, text: t('That file could not be read as JSON.') },
+    };
   }
   return importDocument(parsed);
 }
@@ -47,14 +51,17 @@ export async function importDocument(parsed: unknown): Promise<ImportResult> {
       } catch {
         return {
           opened: false,
-          message: { ok: false, text: 'The project template could not be saved on this device.' },
+          message: {
+            ok: false,
+            text: t('The project template could not be saved on this device.'),
+          },
         };
       }
       return {
         opened: false,
         message: {
           ok: true,
-          text: `Project template “${r.template.name}” imported. Use it from Projects → Create from a project template.${r.problems.length ? ` ${r.problems.slice(0, 3).join(' ')}` : ''}`,
+          text: `${t('Project template “{name}” imported. Use it from Projects → Create from a project template.', { name: r.template.name })}${r.problems.length ? ` ${r.problems.slice(0, 3).join(' ')}` : ''}`,
         },
       };
     }
@@ -65,7 +72,13 @@ export async function importDocument(parsed: unknown): Promise<ImportResult> {
         opened: false,
         message: {
           ok: false,
-          text: `That file is not a valid ${isProject ? 'project' : 'design'}: ${errs.slice(0, 3).join('; ')}.`,
+          text: isProject
+            ? t('That file is not a valid project: {errors}.', {
+                errors: errs.slice(0, 3).join('; '),
+              })
+            : t('That file is not a valid design: {errors}.', {
+                errors: errs.slice(0, 3).join('; '),
+              }),
         },
       };
     // Pictures carried in the file go to this device (ADR-048); a bad one is reported, the file still opens.
@@ -86,13 +99,16 @@ export async function importDocument(parsed: unknown): Promise<ImportResult> {
     return problems.length
       ? {
           opened: true,
-          message: { ok: false, text: `Opened, but ${problems.slice(0, 3).join(' ')}` },
+          message: {
+            ok: false,
+            text: t('Opened, but {problems}', { problems: problems.slice(0, 3).join(' ') }),
+          },
         }
       : { opened: true };
   } catch {
     return {
       opened: false,
-      message: { ok: false, text: 'That file could not be saved on this device.' },
+      message: { ok: false, text: t('That file could not be saved on this device.') },
     };
   }
 }

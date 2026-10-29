@@ -1,2 +1,357 @@
 /** Russian text for shell (ADR-153). Key: the English text; value: the Russian text. */
-export const ru_shell = {} satisfies Record<string, string>;
+export const ru_shell = {
+  // App shell
+  '3D preview is not available in this browser. The front view and parts list still work.':
+    '3D-просмотр недоступен в этом браузере. Вид спереди и список деталей по-прежнему работают.',
+  'Saving…': 'Сохранение…',
+  'Saved on this device': 'Сохранено на этом устройстве',
+  'Not saved — browser storage unavailable': 'Не сохранено — хранилище браузера недоступно',
+  Projects: 'Проекты',
+  Catalog: 'Каталог',
+  Editor: 'Редактор',
+  '{n|problem|problems}': '{n|проблема|проблемы|проблем}',
+  'to check': 'проверить',
+  '{n} pieces selected': 'Выбрано изделий: {n}',
+  'Selected: {name}': 'Выбрано: {name}',
+  '{name}: {n|# piece|# pieces}': '{name}: {n|# изделие|# изделия|# изделий}',
+  'Tap a space to edit it': 'Нажмите на секцию, чтобы изменить её',
+  'Name of this project': 'Название проекта',
+  'Name of this piece': 'Название изделия',
+  'Furniture Builder, go to Projects': 'Furniture Builder, перейти к проектам',
+  Places: 'Разделы',
+  Template: 'Шаблон',
+  'Save to template': 'Сохранить в шаблон',
+  'Saved to the template on this device': 'Сохраняется в шаблон на этом устройстве',
+  Save: 'Сохранить',
+  ' to template': ' в шаблон',
+  Cancel: 'Отмена',
+  'Back to project {name}': 'Назад к проекту {name}',
+  'Changes to {name} stay in this project': 'Изменения в «{name}» остаются в этом проекте',
+  'Changes to this piece stay in this project': 'Изменения этого изделия остаются в этом проекте',
+  Undo: 'Отменить',
+  'Undo {step} (Ctrl+Z)': 'Отменить: {step} (Ctrl+Z)',
+  'Undo (Ctrl+Z)': 'Отменить (Ctrl+Z)',
+  Redo: 'Повторить',
+  'Redo {step} (Ctrl+Shift+Z)': 'Повторить: {step} (Ctrl+Shift+Z)',
+  'Redo (Ctrl+Shift+Z)': 'Повторить (Ctrl+Shift+Z)',
+  Settings: 'Настройки',
+  'Project settings': 'Настройки проекта',
+  'Size, construction, boards and drawers': 'Размер, конструкция, плиты и ящики',
+  'Switch to the light theme': 'Включить светлую тему',
+  'Switch to the dark theme': 'Включить тёмную тему',
+  'Light theme': 'Светлая тема',
+  'Dark theme': 'Тёмная тема',
+  'Editor mode': 'Режим редактора',
+  Compose: 'Компоновка',
+  'Build & Preview': 'Сборка и просмотр',
+  Dismiss: 'Скрыть',
+  Drawing: 'Чертёж',
+  View: 'Вид',
+  'Doors and fronts': 'Дверцы и фасады',
+  Fronts: 'Фасады',
+  'Exploded 3D': '3D в разнесённом виде',
+  'Reset view': 'Сбросить вид',
+  Look: 'Отображение',
+  Simple: 'Простое',
+  Realistic: 'Реалистичное',
+  'Render a photo-quality picture. Best on a laptop; a phone may be slow.':
+    'Создать изображение фотокачества. Лучше на ноутбуке; на телефоне может быть медленно.',
+  Render: 'Рендер',
+  'Loading 3D…': 'Загрузка 3D…',
+  'A new version is ready.': 'Готова новая версия.',
+  'Update now': 'Обновить сейчас',
+
+  // More menu
+  'No unused pictures on this device.': 'На этом устройстве нет неиспользуемых картинок.',
+  'Delete {n|# picture|# pictures} that no saved piece, project or template uses? This cannot be undone.':
+    'Удалить {n|# картинку|# картинки|# картинок}, которые не используются ни в одном сохранённом изделии, проекте или шаблоне? Это нельзя отменить.',
+  'Delete pictures': 'Удалить картинки',
+  '{n|# unused picture|# unused pictures} deleted.': 'Удалено неиспользуемых картинок: {n}.',
+  'Pictures could not be read from this browser.':
+    'Не удалось прочитать картинки из этого браузера.',
+  More: 'Ещё',
+  'New, files and Feature Research': 'Создание, файлы и исследование функций',
+  'New…': 'Создать…',
+  'piece or project': 'изделие или проект',
+  Files: 'Файлы',
+  'Project file': 'Файл проекта',
+  'to open on another device': 'чтобы открыть на другом устройстве',
+  'Hand to a professional…': 'Передать специалисту…',
+  'one .zip to check the plan': 'один .zip для проверки плана',
+  'Design file': 'Файл изделия',
+  'Open the piece in the editor first.': 'Сначала откройте изделие в редакторе.',
+  'Front view drawing': 'Чертёж вида спереди',
+  'Fusion 360 script': 'Скрипт Fusion 360',
+  'not yet tested in Fusion': 'ещё не проверен в Fusion',
+  'Share link': 'Ссылка для доступа',
+  'anyone with the link can open a copy': 'любой со ссылкой может открыть копию',
+  'Copy code': 'Скопировать код',
+  'a code or link to open on another device': 'код или ссылка, чтобы открыть на другом устройстве',
+  'Import a file': 'Импортировать файл',
+  'design, project or project template': 'изделие, проект или шаблон проекта',
+  'Clean up unused pictures': 'Удалить неиспользуемые картинки',
+  'no piece or project uses them': 'их не использует ни одно изделие или проект',
+  'Saved data and backup': 'Сохранённые данные и резервная копия',
+  'keep, back up and restore': 'хранение, резервное копирование и восстановление',
+  'Information and guides': 'Информация и руководства',
+  'every feature, by domain': 'все функции по разделам',
+  'Feature Research': 'Исследование функций',
+  'papers and decisions': 'статьи и решения',
+  Gaps: 'Пробелы',
+  'what is not built yet': 'что ещё не сделано',
+
+  // Import
+  'That file could not be read as JSON.': 'Этот файл не удалось прочитать как JSON.',
+  'The project template could not be saved on this device.':
+    'Шаблон проекта не удалось сохранить на этом устройстве.',
+  'Project template “{name}” imported. Use it from Projects → Create from a project template.':
+    'Шаблон проекта «{name}» импортирован. Используйте его в разделе Проекты → Создать из шаблона проекта.',
+  'That file is not a valid project: {errors}.':
+    'Этот файл не является корректным проектом: {errors}.',
+  'That file is not a valid design: {errors}.':
+    'Этот файл не является корректным изделием: {errors}.',
+  'Opened, but {problems}': 'Открыто, но {problems}',
+  'That file could not be saved on this device.':
+    'Этот файл не удалось сохранить на этом устройстве.',
+
+  // Confirm
+  OK: 'ОК',
+  Confirm: 'Подтверждение',
+
+  // Problem banner
+  'Applied: {repair}. Undo puts it back.': 'Применено: {repair}. «Отменить» вернёт как было.',
+  'Problem and repairs': 'Проблема и исправления',
+  Problem: 'Проблема',
+  Check: 'Проверка',
+  'Repairs — the dashed outline on the plan shows the chosen one':
+    'Исправления — пунктирный контур на плане показывает выбранное',
+  ' · smallest move': ' · наименьшее перемещение',
+  'No repair clears this without causing another problem. Move or change the pieces yourself.':
+    'Ни одно исправление не устраняет это, не создавая другой проблемы. Переместите или измените изделия сами.',
+  Apply: 'Применить',
+  Close: 'Закрыть',
+  'After repair': 'После исправления',
+
+  // Settings
+  'Settings: {name}': 'Настройки: {name}',
+  'About project settings': 'О настройках проекта',
+  'These apply to every piece in {name}.': 'Они применяются ко всем изделиям в «{name}».',
+  Done: 'Готово',
+  'Made with the New-piece wizard.': 'Создано мастером нового изделия.',
+  'Open in wizard': 'Открыть в мастере',
+  'Size, boards and construction: {name}': 'Размер, плиты и конструкция: {name}',
+
+  // Project settings
+  '{setting}: not set. Pieces keep what they have.':
+    '{setting}: не задано. Изделия сохраняют свои значения.',
+  '{setting}: applied to {n|# piece|# pieces}.':
+    '{setting}: применено к {n|# изделию|# изделиям|# изделиям}.',
+  '{setting}: no piece follows it.': '{setting}: ни одно изделие не следует этому значению.',
+  '{name} {n} mm': '{name} {n} мм',
+  'Not set': 'Не задано',
+  "Every piece follows these while its own value is the project's. A piece changed on its own keeps its value; its card offers Follow project.":
+    'Каждое изделие следует этим значениям, пока его собственное значение совпадает с проектным. Изделие, изменённое отдельно, сохраняет своё значение; в его карточке есть «Следовать проекту».',
+  'Bar handle': 'Ручка-скоба',
+  'Knob handle': 'Ручка-кнопка',
+  'Push-to-open': 'Нажимное открывание',
+  'No handle': 'Без ручки',
+  Overlay: 'Накладной',
+  'Half overlay': 'Полунакладной',
+  Inset: 'Вкладной',
+  'Same plinth height for every piece': 'Одинаковая высота цоколя для всех изделий',
+  'No project settings apply to this piece. Set them in Settings › Project settings.':
+    'К этому изделию не применяются настройки проекта. Задайте их в Настройки › Настройки проекта.',
+  'Follows project': 'Следует проекту',
+  'Own: {value}': 'Своё: {value}',
+  'Follow project': 'Следовать проекту',
+
+  // Controls
+  mm: 'мм',
+  'Decrease {label}': 'Уменьшить: {label}',
+  'Increase {label}': 'Увеличить: {label}',
+  'Whole number from {min} to {max}.': 'Целое число от {min} до {max}.',
+  'Fewer {label}': 'Меньше: {label}',
+  'More {label}': 'Больше: {label}',
+  'Guidance: {topic}': 'Рекомендация: {topic}',
+  Guidance: 'Рекомендация',
+
+  // Dialogs and boards
+  Matte: 'Матовая',
+  Satin: 'Полуматовая',
+  Gloss: 'Глянцевая',
+  PAL: 'ЛДСП',
+  MDF: 'МДФ',
+  'Kitchen worktop': 'Кухонная столешница',
+  Other: 'Другое',
+  'Start something new': 'Начать новое',
+  'About starting something new': 'О создании нового',
+  'What you have open now is already saved on this device.':
+    'То, что сейчас открыто, уже сохранено на этом устройстве.',
+  'New piece, step by step': 'Новое изделие, шаг за шагом',
+  'Size, type, then only the questions that apply (dividers, shelves, drawers, doors, base), with suggested combinations. Saved to the Catalog.':
+    'Размер, тип, затем только нужные вопросы (перегородки, полки, ящики, дверцы, основание) с предложенными сочетаниями. Сохраняется в каталог.',
+  'Project with several pieces': 'Проект из нескольких изделий',
+  'A kitchen, a bedroom or a room: place pieces, then get one parts list and one set of sheets.':
+    'Кухня, спальня или комната: расставьте изделия и получите один список деталей и один комплект листов.',
+  'Fill a wall': 'Заполнить стену',
+  "Enter a wall's width, depth and height; get suggested mixes of tall and base cabinets that fill it exactly, then refine them.":
+    'Введите ширину, глубину и высоту стены; получите варианты сочетаний высоких и напольных шкафов, точно заполняющих её, и доработайте их.',
+  '{file} could not be read.': 'Не удалось прочитать {file}.',
+  'No decors imported. {problems}': 'Декоры не импортированы. {problems}',
+  'The decor list could not be saved on this device.':
+    'Список декоров не удалось сохранить на этом устройстве.',
+  '{n|# decor|# decors} imported from {file}.':
+    'Импортировано из {file}: {n|# декор|# декора|# декоров}.',
+  '{n|# row|# rows} skipped: {problems}': 'Пропущено {n|# строка|# строки|# строк}: {problems}',
+  'Not from the list': 'Не из списка',
+  '{maker} {code} {name}, {n} mm': '{maker} {code} {name}, {n} мм',
+  'Boards, sheets and saw cut': 'Плиты, листы и пропил',
+  'About boards and sheets': 'О плитах и листах',
+  'Changing a thickness rebuilds every part made from that board. Colours and pictures only change how the board looks on screen.':
+    'Изменение толщины перестраивает все детали из этой плиты. Цвета и картинки меняют только вид плиты на экране.',
+  'Saw cut (kerf)': 'Пропил',
+  'About the saw cut': 'О пропиле',
+  'Material lost in every cut. Sheet length runs along the grain.':
+    'Материал, теряемый при каждом резе. Длина листа идёт вдоль текстуры.',
+  'Decor list: {list}, {n|# decor|# decors}.':
+    'Список декоров: {list}, {n|# декор|# декора|# декоров}.',
+  'Decor list: none.': 'Список декоров: нет.',
+  'About the decor list': 'О списке декоров',
+  'Choose one on any board below.': 'Выберите декор для любой плиты ниже.',
+  'Import your own CSV with the columns {columns} (whole mm, #rrggbb) to choose decors on the boards.':
+    'Импортируйте свой CSV со столбцами {columns} (целые мм, #rrggbb), чтобы выбирать декоры для плит.',
+  'Import decor list (CSV)': 'Импортировать список декоров (CSV)',
+  'Remove the decor list from this device? Boards keep their names, colours and labels.':
+    'Удалить список декоров с этого устройства? Плиты сохранят свои названия, цвета и метки.',
+  'Remove list': 'Удалить список',
+  'Remove decor list': 'Удалить список декоров',
+  '{name} colour': 'Цвет: {name}',
+  Name: 'Название',
+  Thickness: 'Толщина',
+  'Has grain': 'Есть текстура',
+  Finish: 'Поверхность',
+  Manufacturer: 'Производитель',
+  Type: 'Тип',
+  'Decor from your list': 'Декор из вашего списка',
+  'Sheet length': 'Длина листа',
+  'Sheet width': 'Ширина листа',
+  'Trim each edge': 'Обрезка каждой кромки',
+  'Sheets in stock': 'Листов в наличии',
+  '0 = buy as needed': '0 = покупать по необходимости',
+  'Remove board': 'Удалить плиту',
+  'New board': 'Новая плита',
+  'Add a material': 'Добавить материал',
+  'The board keeps its current picture.': 'Плита сохраняет текущую картинку.',
+  'The board keeps its plain colour.': 'Плита сохраняет простой цвет.',
+  'Picture of {name}': 'Картинка: {name}',
+  'Preparing picture…': 'Подготовка картинки…',
+  'Replace picture': 'Заменить картинку',
+  'Add a picture': 'Добавить картинку',
+  'Replace picture for {name}': 'Заменить картинку для {name}',
+  'Add a picture for {name}': 'Добавить картинку для {name}',
+  'Remove picture': 'Удалить картинку',
+  'The picture {name} is not on this device. The plain colour is shown; add the picture again to see it.':
+    'Картинки {name} нет на этом устройстве. Показан простой цвет; добавьте картинку снова, чтобы её увидеть.',
+  'One picture covers, along the grain': 'Одна картинка покрывает вдоль текстуры',
+  'One picture covers, across': 'Одна картинка покрывает поперёк',
+  'Turn picture 90°': 'Повернуть картинку на 90°',
+
+  // Saved data
+  '{n} MB': '{n} МБ',
+  'Restored {n|# item|# items} as new copies':
+    'Восстановлено {n|# элемент|# элемента|# элементов} как новые копии',
+  '{n} already saved': 'уже сохранено: {n}',
+  '{n} skipped: {list}': 'пропущено {n}: {list}',
+  'Saved data': 'Сохранённые данные',
+  'Kept: the browser will not clear your saved data on its own.':
+    'Хранятся: браузер не удалит сохранённые данные сам.',
+  'Not kept: the browser may clear saved data when space runs low. Back up to a folder.':
+    'Не защищены: браузер может удалить сохранённые данные при нехватке места. Сделайте резервную копию в папку.',
+  'This browser does not say whether it keeps saved data. Back up to a folder.':
+    'Этот браузер не сообщает, хранит ли он сохранённые данные. Сделайте резервную копию в папку.',
+  ' Space used: {size}.': ' Занято: {size}.',
+  'The browser said no. Back up to a folder instead.':
+    'Браузер отказал. Сделайте резервную копию в папку.',
+  'Keep saved data': 'Хранить сохранённые данные',
+  'Backup folder: {name}': 'Папка резервных копий: {name}',
+  'No backup folder chosen yet.': 'Папка резервных копий ещё не выбрана.',
+  'Backups run after each change while the app is open, one file per item.':
+    'Резервные копии создаются после каждого изменения, пока приложение открыто, по одному файлу на элемент.',
+  'Choose backup folder': 'Выбрать папку резервных копий',
+  'Allow backup folder': 'Разрешить папку резервных копий',
+  'Back up now': 'Создать копию сейчас',
+  'This browser cannot write to a folder. Download a backup instead: one .zip with a file per item.':
+    'Этот браузер не может записывать в папку. Скачайте резервную копию: один .zip с файлом на каждый элемент.',
+  'Download backup (.zip)': 'Скачать резервную копию (.zip)',
+  'Last backup: {when} — {n|# item|# items}':
+    'Последняя копия: {when} — {n|# элемент|# элемента|# элементов}',
+  'Restore from backup': 'Восстановить из копии',
+  'Restore a .zip': 'Восстановить из .zip',
+  'Restoring adds new copies; nothing saved is overwritten or deleted.':
+    'Восстановление добавляет новые копии; ничего сохранённое не перезаписывается и не удаляется.',
+  'Remind me to back up': 'Напоминать о резервной копии',
+  'Every {n} days': '{n|Каждый # день|Каждые # дня|Каждые # дней}',
+  Off: 'Выкл.',
+  'Your designs are only on this device. Back up to a folder or save them to your account.':
+    'Ваши изделия есть только на этом устройстве. Сделайте резервную копию в папку или сохраните их в аккаунт.',
+  'Your designs are only on this device. Back up to a folder.':
+    'Ваши изделия есть только на этом устройстве. Сделайте резервную копию в папку.',
+  'Back up': 'Создать копию',
+  'Sign in': 'Войти',
+  'No backup yet.': 'Резервной копии ещё нет.',
+  'Last backup: {n} days ago.': 'Последняя копия: {n|# день|# дня|# дней} назад.',
+  Later: 'Позже',
+
+  // Wizard
+  '{label} ({min}–{max} mm)': '{label} ({min}–{max} мм)',
+  '{label} ({min}–{max})': '{label} ({min}–{max})',
+  Shelves: 'Полки',
+  Drawers: 'Ящики',
+  'Compartment {n}': 'Секция {n}',
+  'No problems found.': 'Проблем не найдено.',
+  '…and {n} more on Review.': '…и ещё {n} на шаге «Проверка».',
+  Default: 'По умолчанию',
+  'Warnings: see Review after using it': 'Предупреждения: смотрите «Проверку» после выбора',
+  '{n|# warning|# warnings}': '{n|# предупреждение|# предупреждения|# предупреждений}',
+  'Use this': 'Выбрать',
+  'Suggested combinations': 'Предлагаемые сочетания',
+  'About suggested combinations': 'О предлагаемых сочетаниях',
+  'Fit the sizes entered so far, checked by the model.':
+    'Подходят к уже введённым размерам, проверены моделью.',
+  'No combination fits these sizes without errors; set the answers by hand.':
+    'Ни одно сочетание не подходит к этим размерам без ошибок; задайте ответы вручную.',
+  'Show more ({n})': 'Показать ещё ({n})',
+  'Start blank': 'Начать с нуля',
+  'Wizard: {name}': 'Мастер: {name}',
+  'New piece': 'Новое изделие',
+  'The piece could not be saved in this browser’s storage.':
+    'Изделие не удалось сохранить в хранилище этого браузера.',
+  'Wizard steps': 'Шаги мастера',
+  'Reopened with the answers it was made from. “Update piece” replaces “{name}” in place.':
+    'Открыто снова с ответами, по которым оно создано. «Обновить изделие» заменит «{name}» на месте.',
+  ' It was changed in the editor since; those changes will be replaced.':
+    ' С тех пор оно менялось в редакторе; эти изменения будут заменены.',
+  'About this step': 'Об этом шаге',
+  Parts: 'Детали',
+  'from the built model': 'из построенной модели',
+  '{parts} parts · {sizes} different cut sizes · {pieces} pieces to cut':
+    '{parts|# деталь|# детали|# деталей} · {sizes|# размер|# размера|# размеров} раскроя · {pieces|# заготовка|# заготовки|# заготовок}',
+  '…and {n} more in the parts list after creating.': '…и ещё {n} в списке деталей после создания.',
+  Problems: 'Проблемы',
+  Checks: 'Проверки',
+  Preview: 'Предпросмотр',
+  'Preview of {name}': 'Предпросмотр: {name}',
+  'Choose a type to see the piece.': 'Выберите тип, чтобы увидеть изделие.',
+  '{n} parts': '{n|# деталь|# детали|# деталей}',
+  Back: 'Назад',
+  'Skip: use the first type': 'Пропустить: использовать первый тип',
+  'Skip: put this step back to its defaults':
+    'Пропустить: вернуть этот шаг к значениям по умолчанию',
+  Skip: 'Пропустить',
+  Next: 'Далее',
+  'Fix the problems listed under Checks first': 'Сначала исправьте проблемы из раздела «Проверки»',
+  'Update piece': 'Обновить изделие',
+  'Add to project': 'Добавить в проект',
+  'Create piece': 'Создать изделие',
+  'Apply compartment 1 to all': 'Применить секцию 1 ко всем',
+} satisfies Record<string, string>;

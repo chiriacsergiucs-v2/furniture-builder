@@ -25,14 +25,16 @@ import {
 } from '../persist/backup';
 import { db, getSetting, setSetting } from '../persist/db';
 import { onSavedChange } from '../persist/events';
+import { getLang, t } from '../core/i18n';
 import { Dialog } from './Dialogs';
 import { Icon } from './icons';
 import { useAccount } from '../store/accountStore';
 import { useUi } from './shell/uiStore';
 
-const mb = (n?: number) => (n === undefined ? '?' : `${Math.max(0.1, n / 1e6).toFixed(1)} MB`);
+const mb = (n?: number) =>
+  n === undefined ? '?' : t('{n} MB', { n: Math.max(0.1, n / 1e6).toFixed(1) });
 const when = (iso: string) =>
-  new Date(iso).toLocaleString('en-GB', {
+  new Date(iso).toLocaleString(getLang() === 'ru' ? 'ru-RU' : 'en-GB', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
@@ -58,16 +60,17 @@ export function startChangeClock(): () => void {
 }
 
 function restoreText(p: RestorePlan): string {
-  const parts = [
-    `Restored ${p.actions.length} item${p.actions.length === 1 ? '' : 's'} as new copies`,
-  ];
-  if (p.identical) parts.push(`${p.identical} already saved`);
+  const parts = [t('Restored {n|# item|# items} as new copies', { n: p.actions.length })];
+  if (p.identical) parts.push(t('{n} already saved', { n: p.identical }));
   if (p.skipped.length)
     parts.push(
-      `${p.skipped.length} skipped: ${p.skipped
-        .slice(0, 3)
-        .map((s) => `${s.path} (${s.reason})`)
-        .join('; ')}`,
+      t('{n} skipped: {list}', {
+        n: p.skipped.length,
+        list: p.skipped
+          .slice(0, 3)
+          .map((s) => `${s.path} (${s.reason})`)
+          .join('; '),
+      }),
     );
   return `${parts.join('; ')}.`;
 }
@@ -110,20 +113,22 @@ export function SavedDataPanel() {
   };
 
   return (
-    <section className="section saved-data" aria-label="Saved data">
+    <section className="section saved-data" aria-label={t('Saved data')}>
       <div className="card-title">
-        <span>Saved data</span>
+        <span>{t('Saved data')}</span>
       </div>
       {store && (
         <p className={`alert ${store.persisted ? 'ok' : 'warning'}`} role="status">
           <Icon name={store.persisted ? 'check' : 'alert-triangle'} className="sm" />
           <span>
             {store.persisted
-              ? 'Kept: the browser will not clear your saved data on its own.'
+              ? t('Kept: the browser will not clear your saved data on its own.')
               : store.supported
-                ? 'Not kept: the browser may clear saved data when space runs low. Back up to a folder.'
-                : 'This browser does not say whether it keeps saved data. Back up to a folder.'}
-            {store.usage !== undefined && ` Space used: ${mb(store.usage)}.`}
+                ? t(
+                    'Not kept: the browser may clear saved data when space runs low. Back up to a folder.',
+                  )
+                : t('This browser does not say whether it keeps saved data. Back up to a folder.')}
+            {store.usage !== undefined && t(' Space used: {size}.', { size: mb(store.usage) })}
           </span>
         </p>
       )}
@@ -139,19 +144,21 @@ export function SavedDataPanel() {
               if (!ok)
                 setMessage({
                   ok: false,
-                  text: 'The browser said no. Back up to a folder instead.',
+                  text: t('The browser said no. Back up to a folder instead.'),
                 });
             })
           }
         >
-          Keep saved data
+          {t('Keep saved data')}
         </button>
       )}
       {canFolder ? (
         <>
           <p className="hint">
-            {dir.name ? `Backup folder: ${dir.name}` : 'No backup folder chosen yet.'} Backups run
-            after each change while the app is open, one file per item.
+            {dir.name
+              ? t('Backup folder: {name}', { name: dir.name })
+              : t('No backup folder chosen yet.')}{' '}
+            {t('Backups run after each change while the app is open, one file per item.')}
           </p>
           <div className="btn-row">
             <button
@@ -168,7 +175,7 @@ export function SavedDataPanel() {
               }
             >
               <Icon name="folder" className="sm" />
-              Choose backup folder
+              {t('Choose backup folder')}
             </button>
             {dir.permission === 'prompt' ? (
               <button
@@ -182,7 +189,7 @@ export function SavedDataPanel() {
                   })
                 }
               >
-                Allow backup folder
+                {t('Allow backup folder')}
               </button>
             ) : (
               <button
@@ -192,7 +199,7 @@ export function SavedDataPanel() {
                 onClick={() => run(async () => setStatus(await backupNow()))}
               >
                 <Icon name="hdd" className="sm" />
-                Back up now
+                {t('Back up now')}
               </button>
             )}
           </div>
@@ -200,8 +207,9 @@ export function SavedDataPanel() {
       ) : (
         <>
           <p className="hint">
-            This browser cannot write to a folder. Download a backup instead: one .zip with a file
-            per item.
+            {t(
+              'This browser cannot write to a folder. Download a backup instead: one .zip with a file per item.',
+            )}
           </p>
           <button
             type="button"
@@ -218,7 +226,7 @@ export function SavedDataPanel() {
             }
           >
             <Icon name="download" className="sm" />
-            Download backup (.zip)
+            {t('Download backup (.zip)')}
           </button>
         </>
       )}
@@ -230,7 +238,10 @@ export function SavedDataPanel() {
           </p>
         ) : (
           <p className="hint" role="status">
-            Last backup: {when(status.at)} — {status.items} item{status.items === 1 ? '' : 's'}
+            {t('Last backup: {when} — {n|# item|# items}', {
+              when: when(status.at),
+              n: status.items,
+            })}
           </p>
         ))}
       <div className="btn-row">
@@ -247,7 +258,7 @@ export function SavedDataPanel() {
             }
           >
             <Icon name="upload" className="sm" />
-            Restore from backup
+            {t('Restore from backup')}
           </button>
         )}
         <button
@@ -257,13 +268,13 @@ export function SavedDataPanel() {
           onClick={() => zipInput.current?.click()}
         >
           <Icon name="upload" className="sm" />
-          Restore a .zip
+          {t('Restore a .zip')}
         </button>
         <input
           ref={zipInput}
           type="file"
           accept=".zip,application/zip"
-          aria-label="Restore a .zip"
+          aria-label={t('Restore a .zip')}
           hidden
           onChange={(e) => {
             const f = e.target.files?.[0];
@@ -276,9 +287,11 @@ export function SavedDataPanel() {
           }}
         />
       </div>
-      <p className="hint">Restoring adds new copies; nothing saved is overwritten or deleted.</p>
+      <p className="hint">
+        {t('Restoring adds new copies; nothing saved is overwritten or deleted.')}
+      </p>
       <label className="field">
-        <span>Remind me to back up</span>
+        <span>{t('Remind me to back up')}</span>
         <select
           value={days}
           onChange={(e) => {
@@ -289,7 +302,7 @@ export function SavedDataPanel() {
         >
           {REMINDER_DAYS.map((d) => (
             <option key={d} value={d}>
-              {d ? `Every ${d} days` : 'Off'}
+              {d ? t('Every {n} days', { n: d }) : t('Off')}
             </option>
           ))}
         </select>
@@ -311,10 +324,10 @@ export function SavedDataDialog() {
     <Dialog
       open={open}
       onClose={() => setOpen(false)}
-      title="Saved data and backup"
+      title={t('Saved data and backup')}
       footer={
         <button type="button" className="btn primary" onClick={() => setOpen(false)}>
-          Done
+          {t('Done')}
         </button>
       }
     >
@@ -366,16 +379,19 @@ export function DeviceOnlyNotice({ signIn }: { signIn?: () => void }) {
     <div className="alert info device-only" role="status">
       <Icon name="info" className="sm" />
       <span>
-        Your designs are only on this device. Back up to a folder
-        {signIn ? ' or save them to your account' : ''}.
+        {signIn
+          ? t(
+              'Your designs are only on this device. Back up to a folder or save them to your account.',
+            )
+          : t('Your designs are only on this device. Back up to a folder.')}
       </span>
       <span className="device-only-actions">
         <button type="button" className="btn sm" onClick={() => setSavedData(true)}>
-          Back up
+          {t('Back up')}
         </button>
         {signIn && (
           <button type="button" className="btn sm" onClick={signIn}>
-            Sign in
+            {t('Sign in')}
           </button>
         )}
         <button
@@ -386,7 +402,7 @@ export function DeviceOnlyNotice({ signIn }: { signIn?: () => void }) {
             void setSetting(NOTICE_KEY, new Date().toISOString());
           }}
         >
-          Dismiss
+          {t('Dismiss')}
         </button>
       </span>
     </div>
@@ -433,7 +449,9 @@ export function BackupReminder() {
   if (!due) return null;
   return (
     <div className="toast backup-reminder" role="status">
-      <span>{due.days === null ? 'No backup yet.' : `Last backup: ${due.days} days ago.`}</span>
+      <span>
+        {due.days === null ? t('No backup yet.') : t('Last backup: {n} days ago.', { n: due.days })}
+      </span>
       <button
         type="button"
         className="btn sm primary"
@@ -446,7 +464,7 @@ export function BackupReminder() {
           else setSavedData(true);
         }}
       >
-        Back up now
+        {t('Back up now')}
       </button>
       <button
         type="button"
@@ -456,7 +474,7 @@ export function BackupReminder() {
           void setSetting(LATER_KEY, new Date().toISOString());
         }}
       >
-        Later
+        {t('Later')}
       </button>
     </div>
   );

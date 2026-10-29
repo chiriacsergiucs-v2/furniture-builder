@@ -15,6 +15,7 @@ import '@fontsource/fira-sans-condensed/cyrillic-500.css';
 import '@fontsource/fira-sans-condensed/cyrillic-600.css';
 import './styles.css';
 import { App } from './ui/App';
+import { t } from './core/i18n';
 import { applyTheme } from './ui/useTheme';
 import { installCutTitles } from './ui/cutTitle';
 import { registerSW } from 'virtual:pwa-register';
@@ -33,9 +34,11 @@ const updateSW = registerSW({
     const bar = document.createElement('div');
     bar.className = 'toast';
     bar.setAttribute('role', 'status');
-    bar.innerHTML = '<span>A new version is ready.</span>';
+    const msg = document.createElement('span');
+    msg.textContent = t('A new version is ready.');
+    bar.append(msg);
     const btn = Object.assign(document.createElement('button'), {
-      textContent: 'Update now',
+      textContent: t('Update now'),
       type: 'button',
       className: 'btn primary sm',
     });

@@ -8,6 +8,7 @@ import { repairsFor, sameProblem, type Repair } from '../core/repairs';
 import type { Project } from '../core/project';
 import type { Diagnostic } from '../core/types';
 import { useDesign } from '../store/designStore';
+import { t } from '../core/i18n';
 import { Icon } from './icons';
 import { useProblem } from './problemStore';
 import { useUi } from './shell/uiStore';
@@ -55,40 +56,42 @@ export function ProblemBanner({ problem }: { problem: FocusedProblem }) {
     updateProject(() => r.project);
     setHighlight([]);
     close();
-    setNotice({ ok: true, text: `Applied: ${r.label}. Undo puts it back.` });
+    setNotice({ ok: true, text: t('Applied: {repair}. Undo puts it back.', { repair: r.label }) });
   };
   const error = d.severity === 'error';
   return (
-    <section className={`problem-banner ${d.severity}`} aria-label="Problem and repairs">
+    <section className={`problem-banner ${d.severity}`} aria-label={t('Problem and repairs')}>
       <p className="problem-msg">
         <Icon name={error ? 'alert-circle' : 'alert-triangle'} className="sm" />
         <span>
-          <strong>{error ? 'Problem' : 'Check'}</strong> {d.message}
+          <strong>{error ? t('Problem') : t('Check')}</strong> {d.message}
         </span>
       </p>
       {repairs.length ? (
         <fieldset className="repairs">
-          <legend>Repairs — the dashed outline on the plan shows the chosen one</legend>
+          <legend>{t('Repairs — the dashed outline on the plan shows the chosen one')}</legend>
           {repairs.map((r, i) => (
             <label key={r.id}>
               <input type="radio" name="repair" checked={r === chosen} onChange={() => choose(i)} />
               <span>
                 {r.label}
-                {i === 0 ? <span className="hint"> · smallest move</span> : null}
+                {i === 0 ? <span className="hint">{t(' · smallest move')}</span> : null}
               </span>
             </label>
           ))}
         </fieldset>
       ) : (
         <p className="hint">
-          No repair clears this without causing another problem. Move or change the pieces yourself.
+          {t(
+            'No repair clears this without causing another problem. Move or change the pieces yourself.',
+          )}
         </p>
       )}
       <div className="repair-actions">
         {chosen && (
           <button type="button" className="btn sm primary" onClick={() => apply(chosen)}>
             <Icon name="check" className="sm" />
-            Apply
+            {t('Apply')}
           </button>
         )}
         <button
@@ -99,7 +102,7 @@ export function ProblemBanner({ problem }: { problem: FocusedProblem }) {
             close();
           }}
         >
-          Close
+          {t('Close')}
         </button>
       </div>
     </section>
@@ -118,7 +121,7 @@ export function ProblemOutline({ problem, fs }: { problem: FocusedProblem; fs: n
         <g key={p.id} className="repair-preview">
           <rect x={p.box.x} y={p.box.z} width={p.box.w} height={p.box.d} />
           <text x={p.box.x} y={p.box.z - fs * 0.4} fontSize={fs}>
-            After repair
+            {t('After repair')}
           </text>
         </g>
       ))}

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { create } from 'zustand';
+import { t } from '../core/i18n';
 import { Icon } from './icons';
 
 /**
@@ -23,7 +24,7 @@ export const askConfirm = (
     useAsk.setState({
       ask: {
         message,
-        confirmLabel: opts.confirmLabel ?? 'OK',
+        confirmLabel: opts.confirmLabel ?? t('OK'),
         danger: !!opts.danger,
         resolve: (v) => resolve(v === true),
       },
@@ -33,7 +34,7 @@ export const askConfirm = (
 export const askText = (
   message: string,
   initial = '',
-  confirmLabel = 'Save',
+  confirmLabel = t('Save'),
 ): Promise<string | null> =>
   new Promise((resolve) =>
     useAsk.setState({
@@ -71,7 +72,7 @@ export function ConfirmHost() {
     <dialog
       ref={ref}
       className="dialog confirm"
-      aria-label="Confirm"
+      aria-label={t('Confirm')}
       onCancel={(e) => {
         e.preventDefault();
         done(ask?.input !== undefined ? null : false);
@@ -106,7 +107,7 @@ export function ConfirmHost() {
               className="btn outline"
               onClick={() => done(ask.input !== undefined ? null : false)}
             >
-              Cancel
+              {t('Cancel')}
             </button>
             <button
               type="submit"
