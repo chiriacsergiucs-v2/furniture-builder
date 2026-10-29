@@ -1,4 +1,4 @@
-# ADR-151: Delete research features built by the research batches
+# ADR-152: Delete research features built by the research batches
 
 - Status: Pending
 - Date: 2026-10-29
