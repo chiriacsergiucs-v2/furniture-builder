@@ -2524,7 +2524,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-300: Distribute evenly with grouped pieces
 
-- Status: Open
+- Status: Done (user 2026-10-29 "fix distribute too"; built in N154)
 - Origin: Bug fix 2026-10-29 (align with groups, N154)
 - Missing: Distribute evenly still moves each selected piece on its own; when several selected pieces share a group, the group is carried by the first member's offset, so the gaps may not come out equal. Not checked.
 - Request: The align is bugged because when I select a piece and I press align left, it moves to the right.

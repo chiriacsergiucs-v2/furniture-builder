@@ -142,19 +142,12 @@ export function alignItems(project: Project, ids: readonly string[], how: AlignH
   const ref = bounds.get(known[0])!;
   const refGroup = groupOf(project, known[0]);
   // One entry per piece, or per group through its first selected member, with the box that aligns.
-  const units: [string, Box][] = [];
-  const seen = new Set<string>();
-  const sameGroup: string[] = [];
-  for (const id of known.slice(1)) {
-    const g = groupOf(project, id);
-    if (!g) units.push([id, bounds.get(id)!]);
-    else if (g === refGroup) sameGroup.push(id);
-    else if (!seen.has(g.id)) {
-      seen.add(g.id);
-      const boxes = g.itemIds.flatMap((m) => (bounds.has(m) ? [bounds.get(m)!] : []));
-      units.push([id, unionOf(boxes)]);
-    }
-  }
+  const sameGroup = known.slice(1).filter((id) => !!refGroup && groupOf(project, id) === refGroup);
+  const units = blocksOf(
+    project,
+    bounds,
+    known.slice(1).filter((id) => !sameGroup.includes(id)),
+  );
   const stays = (moves: boolean[]) =>
     moves.some(Boolean)
       ? [
@@ -194,31 +187,60 @@ export function alignItems(project: Project, ids: readonly string[], how: AlignH
 }
 
 /**
+ * Each selected piece, or each selected group as one block (ADR-148: grouped pieces move together): the id that moves
+ * it (the group's first selected member; the store carries the rest) and its outer box over every member.
+ */
+function blocksOf(project: Project, bounds: Map<string, Box>, ids: readonly string[]) {
+  const out: [string, Box][] = [];
+  const seen = new Set<string>();
+  for (const id of ids) {
+    const g = groupOf(project, id);
+    if (!g) out.push([id, bounds.get(id)!]);
+    else if (!seen.has(g.id)) {
+      seen.add(g.id);
+      out.push([id, unionOf(g.itemIds.flatMap((m) => (bounds.has(m) ? [bounds.get(m)!] : [])))]);
+    }
+  }
+  return out;
+}
+
+/**
  * Equal gaps between neighbours along the wall (ADR-099, user answer "Along the wall only"): with three or more pieces,
  * sorted by their left edge, the leftmost and rightmost stay and the others move so every gap is the same. The free
  * length splits exactly: leftover millimetres go one each to the leftmost gaps (ADR-003). A locked piece stays, named
  * in `skipped`; the gaps returned are the ones the pieces now have. The pieces must stand in one row (their heights
- * overlap): wall units over base units, or a piece on another, are refused with the reason. Fewer than three known
- * pieces: the same project.
+ * overlap): wall units over base units, or a piece on another, are refused with the reason. A group counts as one block
+ * by its outer box (user 2026-10-29 "fix distribute too", G-300); fewer than three pieces or groups is refused with the
+ * reason. Fewer than three known pieces: the same project.
  */
 export function distributeItems(project: Project, ids: readonly string[]): ArrangeResult {
   const bounds = boundsOf(project);
   const known = ids.filter((id) => bounds.has(id));
   if (known.length < 3) return { project, skipped: [] };
+  const blocks = blocksOf(project, bounds, known);
+  if (blocks.length < 3)
+    return {
+      project,
+      skipped: [],
+      refused:
+        'Distribute needs three or more pieces or groups; the pieces of a group move together, so ungroup them to space them.',
+    };
+  const box = new Map(blocks);
+  const lead = blocks.map(([id]) => id);
   const rows = (a: Box, b: Box) => Math.min(a.y + a.h, b.y + b.h) > Math.max(a.y, b.y);
-  if (!known.every((a) => known.every((b) => rows(bounds.get(a)!, bounds.get(b)!))))
+  if (!lead.every((a) => lead.every((b) => rows(box.get(a)!, box.get(b)!))))
     return {
       project,
       skipped: [],
       refused:
         'Distribute works on pieces in one row along the wall; select the base units or the wall units, not both.',
     };
-  const order = [...known].sort(
-    (a, b) => bounds.get(a)!.x - bounds.get(b)!.x || known.indexOf(a) - known.indexOf(b),
+  const order = [...lead].sort(
+    (a, b) => box.get(a)!.x - box.get(b)!.x || lead.indexOf(a) - lead.indexOf(b),
   );
-  const first = bounds.get(order[0])!,
-    last = bounds.get(order[order.length - 1])!;
-  const widths = order.map((id) => bounds.get(id)!.w);
+  const first = box.get(order[0])!,
+    last = box.get(order[order.length - 1])!;
+  const widths = order.map((id) => box.get(id)!.w);
   const free = last.x + last.w - first.x - widths.reduce((a, w) => a + w, 0);
   const n = order.length - 1;
   const each = Math.floor(free / n);
@@ -228,13 +250,17 @@ export function distributeItems(project: Project, ids: readonly string[]): Arran
   let x = first.x + first.w;
   for (let i = 1; i < order.length - 1; i++) {
     x += gaps[i - 1];
-    moves.set(order[i], { dx: x - bounds.get(order[i])!.x, dz: 0 });
+    moves.set(order[i], { dx: x - box.get(order[i])!.x, dz: 0 });
     x += widths[i];
   }
   const res = shiftEach(project, moves);
-  // The gaps as they now are (a locked piece may have kept its place).
+  // The gaps as they now are (a locked piece may have kept its place); a moved group's lead moved by its block's offset.
   const now = boundsOf(res.project);
-  const after = order.map((id) => now.get(id)!);
+  const after = order.map((id) => {
+    const b = box.get(id)!,
+      dx = now.get(id)!.x - bounds.get(id)!.x;
+    return { ...b, x: b.x + dx };
+  });
   return { ...res, gaps: after.slice(1).map((b, i) => b.x - (after[i].x + after[i].w)) };
 }
 
