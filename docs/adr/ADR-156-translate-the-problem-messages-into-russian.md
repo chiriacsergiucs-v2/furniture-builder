@@ -33,7 +33,7 @@ Answer: scope "UI + diagnostics + print/CSV".
 
 ## Done when
 
-- [ ] With Russian chosen, a design with a known error gives its Russian message and the same code
+- [x] With Russian chosen, a design with a known error gives its Russian message and the same code
       (`tests/i18n.test.ts`).
 
 ## Open questions

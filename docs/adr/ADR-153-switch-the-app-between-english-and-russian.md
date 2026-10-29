@@ -62,11 +62,11 @@ The CLAUDE.md line "the app UI is in English" (ADR-020) becomes "English by defa
 
 ## Done when
 
-- [ ] `t` fills placeholders and picks English and Russian plural forms (`tests/i18n.test.ts`).
-- [ ] A key without a Russian entry fails `pnpm typecheck` (`@ts-expect-error` in `tests/i18n.test.ts`).
-- [ ] Find-it at 390 and 1280 px: More → "Language" → "Русский" saves `ru` and reloads
+- [x] `t` fills placeholders and picks English and Russian plural forms (`tests/i18n.test.ts`).
+- [x] A key without a Russian entry fails `pnpm typecheck` (`@ts-expect-error` in `tests/i18n.test.ts`).
+- [x] Find-it at 390 and 1280 px: More → "Language" → "Русский" saves `ru` and reloads
       (`tests/find-it/language.test.tsx`).
-- [ ] CLAUDE.md has the translation rule.
+- [x] CLAUDE.md has the translation rule.
 
 ## Open questions
 

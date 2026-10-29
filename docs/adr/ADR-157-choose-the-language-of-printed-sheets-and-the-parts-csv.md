@@ -38,11 +38,11 @@ user chooses".
 
 ## Done when
 
-- [ ] Romanian CSV and sheet text are unchanged (`tests/ro.test.ts` passes unchanged).
-- [ ] With print language `ru` and `en` the CSV header and part names are Russian and English
+- [x] Romanian CSV and sheet text are unchanged (`tests/ro.test.ts` passes unchanged).
+- [x] With print language `ru` and `en` the CSV header and part names are Russian and English
       (`tests/i18n-print.test.ts`).
-- [ ] Find-it at 390 and 1280 px: More → "Print language" → "English" is kept (`tests/find-it/language.test.tsx`).
+- [x] Find-it at 390 and 1280 px: More → "Print language" → "English" is kept (`tests/find-it/language.test.tsx`).
 
 ## Open questions
 
-None. All answered by the user on 2026-10-29.
+- The CSV separator stays a semicolon in every print language; whether English uses commas is open (G-306).

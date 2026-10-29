@@ -38,8 +38,9 @@ of Feature Research and 8k words of catalog and wizard text) is translated too: 
 
 ## Done when
 
-- [ ] A test walks every catalog, wizard and research text and finds a Russian entry for each
-      (`tests/i18n-data.test.ts`).
+- [x] A test walks every catalog, wizard and research text and finds a Russian entry for each
+      (`tests/i18n-data.test.ts`, `tests/i18n-wizard.test.ts`, `tests/i18n-research.test.ts`,
+      `tests/i18n-research2.test.ts`).
 
 ## Open questions
 

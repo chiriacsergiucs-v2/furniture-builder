@@ -40,7 +40,7 @@ guides page".
 
 ## Done when
 
-- [ ] Find-it at 390 and 1280 px: More → "Information and guides" → heading "Features" → "Moving", "Aligning"
+- [x] Find-it at 390 and 1280 px: More → "Information and guides" → heading "Features" → "Moving", "Aligning"
       (`tests/find-it/info.test.tsx`).
 
 ## Open questions

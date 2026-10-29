@@ -2575,3 +2575,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: add a page where you list all the features that the app currently supports
 - Questions: Which guides should the page hold?
 - Suggested pick: Ask the user when guides are wanted
+
+### G-306: CSV separator per print language
+
+- Status: Open
+- Origin: ADR-157 (open question)
+- Missing: The CSV column separator per print language (semicolon in all three today)
+- Request: add support for Russian language ... also translate all the existing content
+- Questions: Should the English CSV use commas, as English Excel expects?
+- Suggested pick: Ask the user; semicolons stay until answered

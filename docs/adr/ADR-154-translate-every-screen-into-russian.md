@@ -38,8 +38,8 @@ Russian "I translate, no review".
 
 ## Done when
 
-- [ ] Every existing test still passes in English.
-- [ ] Find-it at 390 and 1280 px in Russian: "Проекты", "Каталог", "Редактор" and the More menu items are found by
+- [x] Every existing test still passes in English.
+- [x] Find-it at 390 and 1280 px in Russian: "Проекты", "Каталог", "Редактор" and the More menu items are found by
       role and text (`tests/find-it/language.test.tsx`).
 
 ## Open questions
