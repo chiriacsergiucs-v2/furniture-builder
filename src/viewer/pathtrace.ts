@@ -13,6 +13,7 @@ import {
 } from 'three';
 import { GradientEquirectTexture, WebGLPathTracer } from 'three-gpu-pathtracer';
 import { getStage, setRendering, SHADOW_CATCHER } from './renderBridge';
+import { t } from '../core/i18n';
 
 /**
  * A photo-quality still of the 3D view (ADR-068): the scene the user is looking at, path-traced on this device's
@@ -42,7 +43,7 @@ export async function startRender({
   onProgress: (n: number) => void;
 }): Promise<RenderJob> {
   const stage = getStage();
-  if (!stage) throw new Error('Open the 3D view first.');
+  if (!stage) throw new Error(t('Open the 3D view first.'));
   // Realistic look with no selection tint; two frames so React and the viewer have redrawn.
   setRendering(true);
   let renderer: WebGLRenderer | null = null;
@@ -114,14 +115,14 @@ export async function startRender({
   setRendering(false);
 
   const r = renderer,
-    t = tracer;
+    pt = tracer;
   let stopped = false;
   let finish: (b: Blob | null) => void = () => {};
   const done = new Promise<Blob | null>((res) => (finish = res));
   const tick = () => {
     if (stopped) return;
-    t.renderSample();
-    const n = Math.min(samples, Math.floor(t.samples));
+    pt.renderSample();
+    const n = Math.min(samples, Math.floor(pt.samples));
     onProgress(n);
     if (n >= samples) {
       stopped = true;
@@ -140,7 +141,7 @@ export async function startRender({
     dispose: () => {
       stopped = true;
       finish(null);
-      t.dispose();
+      pt.dispose();
       r.dispose();
       r.forceContextLoss();
     },

@@ -4,6 +4,7 @@
  * The mixes are worked out in `src/core/wallfill.ts`; this file only collects the answers and shows the result.
  */
 import { useId, useMemo, useState } from 'react';
+import { getLang, t } from '../core/i18n';
 import { snapshotSvg } from '../core/snapshot';
 import {
   BASE_HEIGHT,
@@ -24,9 +25,9 @@ import { Icon } from './icons';
 
 type StepId = 'wall' | 'mixes' | 'refine';
 const STEPS: { id: StepId; label: string }[] = [
-  { id: 'wall', label: 'Wall' },
-  { id: 'mixes', label: 'Suggestions' },
-  { id: 'refine', label: 'Refine' },
+  { id: 'wall', label: t('Wall') },
+  { id: 'mixes', label: t('Suggestions') },
+  { id: 'refine', label: t('Refine') },
 ];
 
 /** What the user typed, kept as text so a wrong entry shows as a problem instead of vanishing (ADR-008). */
@@ -96,7 +97,7 @@ function Field({
   value,
   onChange,
   hint,
-  unit = 'mm',
+  unit = t('mm'),
   placeholder,
 }: {
   label: string;
@@ -134,13 +135,19 @@ function MixCard({ m, onUse }: { m: Mix; onUse: () => void }) {
     <li className="wz-card wf-card">
       <img
         src={src}
-        alt={`Mix: ${m.wallWidths ? `wall ${m.wallWidths} mm, ` : ''}${m.widths} mm`}
+        alt={
+          m.wallWidths
+            ? t('Mix: wall {wall} mm, {widths} mm', { wall: m.wallWidths, widths: m.widths })
+            : t('Mix: {widths} mm', { widths: m.widths })
+        }
         width={180}
         height={110}
       />
-      {m.wallWidths && <span className="wz-card-label num wf-wall">Wall: {m.wallWidths} mm</span>}
+      {m.wallWidths && (
+        <span className="wz-card-label num wf-wall">{t('Wall: {w} mm', { w: m.wallWidths })}</span>
+      )}
       <span className="wz-card-label num">
-        <strong>{m.widths}</strong> mm
+        <strong>{m.widths}</strong> {t('mm')}
       </span>
       <span className="wz-card-label">{m.summary}</span>
       {m.warnings.length > 0 && (
@@ -152,12 +159,14 @@ function MixCard({ m, onUse }: { m: Mix; onUse: () => void }) {
             </li>
           ))}
           {m.warnings.length > 3 && (
-            <li className="hint">…and {m.warnings.length - 3} more in the project.</li>
+            <li className="hint">
+              {t('…and {n} more in the project.', { n: m.warnings.length - 3 })}
+            </li>
           )}
         </ul>
       )}
       <button type="button" className="btn sm primary" onClick={onUse}>
-        Use this mix
+        {t('Use this mix')}
       </button>
     </li>
   );
@@ -173,7 +182,7 @@ export function WallFillDialog({
   onOpened: () => void;
 }) {
   return (
-    <Dialog open={open} onClose={onClose} title="Fill a wall" wide>
+    <Dialog open={open} onClose={onClose} title={t('Fill a wall')} wide>
       {open && <WallFill onClose={onClose} onOpened={onOpened} />}
     </Dialog>
   );
@@ -203,128 +212,133 @@ function WallFill({ onClose, onOpened }: { onClose: () => void; onOpened: () => 
       onClose();
       onOpened();
     } catch {
-      setSaveError('The project could not be saved in this browser’s storage.');
+      setSaveError(t('The project could not be saved in this browser’s storage.'));
     }
   };
   return (
     <div className="wizard wall-fill">
       <Steps
-        label="Fill a wall steps"
+        label={t('Fill a wall steps')}
         current={step}
         onSelect={(id) => (id === 'mixes' ? suggest() : go(id as StepId))}
         steps={STEPS.map((s) => ({ ...s, done: s.id === 'wall' && step !== 'wall' }))}
       />
       {step === 'wall' && (
-        <section aria-label="Wall">
-          <h3>Wall</h3>
+        <section aria-label={t('Wall')}>
+          <h3>{t('Wall')}</h3>
           <p className="hint">
-            The space to fill, in mm. Pieces taller than the height are still suggested, with a
-            warning.
+            {t(
+              'The space to fill, in mm. Pieces taller than the height are still suggested, with a warning.',
+            )}
           </p>
           <div className="wf-grid">
-            <Field label="Width" value={form.width} onChange={set('width')} />
-            <Field label="Depth" value={form.depth} onChange={set('depth')} />
-            <Field label="Height" value={form.height} onChange={set('height')} />
+            <Field label={t('Width')} value={form.width} onChange={set('width')} />
+            <Field label={t('Depth')} value={form.depth} onChange={set('depth')} />
+            <Field label={t('Height')} value={form.height} onChange={set('height')} />
             <Field
-              label="Tall cabinet depth"
+              label={t('Tall cabinet depth')}
               value={form.tallDepth}
               onChange={set('tallDepth')}
-              placeholder="same as depth"
+              placeholder={t('same as depth')}
             />
           </div>
         </section>
       )}
       {step === 'refine' && (
-        <section aria-label="Refine">
-          <h3>Refine</h3>
+        <section aria-label={t('Refine')}>
+          <h3>{t('Refine')}</h3>
           <p className="hint">
-            Leave a field empty for any. The width range is your choice; shelves wider than the
-            shelf-span guidance get a centre divider.
+            {t(
+              'Leave a field empty for any. The width range is your choice; shelves wider than the shelf-span guidance get a centre divider.',
+            )}
           </p>
           <div className="wf-grid">
-            <Field label="Min piece width" value={form.minWidth} onChange={set('minWidth')} />
-            <Field label="Max piece width" value={form.maxWidth} onChange={set('maxWidth')} />
-            <Field label="Base height" value={form.baseHeight} onChange={set('baseHeight')} />
+            <Field label={t('Min piece width')} value={form.minWidth} onChange={set('minWidth')} />
+            <Field label={t('Max piece width')} value={form.maxWidth} onChange={set('maxWidth')} />
+            <Field label={t('Base height')} value={form.baseHeight} onChange={set('baseHeight')} />
             <Field
-              label="Number of pieces"
+              label={t('Number of pieces')}
               value={form.pieces}
               onChange={set('pieces')}
               unit=""
-              placeholder="any"
+              placeholder={t('any')}
             />
             <Field
-              label="Tall cabinets"
+              label={t('Tall cabinets')}
               value={form.tallCount}
               onChange={set('tallCount')}
               unit=""
-              placeholder="any"
+              placeholder={t('any')}
             />
             <Field
-              label="At least, open shelf bases"
+              label={t('At least, open shelf bases')}
               value={form.shelves}
               onChange={set('shelves')}
               unit=""
-              placeholder="any"
+              placeholder={t('any')}
             />
             <Field
-              label="At least, drawer bases"
+              label={t('At least, drawer bases')}
               value={form.drawers}
               onChange={set('drawers')}
               unit=""
-              placeholder="any"
+              placeholder={t('any')}
             />
             <Field
-              label="At least, door bases"
+              label={t('At least, door bases')}
               value={form.door}
               onChange={set('door')}
               unit=""
-              placeholder="any"
+              placeholder={t('any')}
             />
             <Field
-              label="Equal fronts"
+              label={t('Equal fronts')}
               value={form.equalFronts}
               onChange={set('equalFronts')}
               unit=""
-              placeholder="off"
-              hint="Every door the same width; insides left empty to configure later."
+              placeholder={t('off')}
+              hint={t('Every door the same width; insides left empty to configure later.')}
             />
             <Field
-              label="Wall cabinet height"
+              label={t('Wall cabinet height')}
               value={form.wallHeight}
               onChange={set('wallHeight')}
-              hint="Wall cabinet tops sit at the wall height."
+              hint={t('Wall cabinet tops sit at the wall height.')}
             />
           </div>
           <Segmented
-            label="Wall cabinets"
+            label={t('Wall cabinets')}
             value={form.wallRow}
             onChange={(v) => setForm((f) => ({ ...f, wallRow: v }))}
             options={[
-              { value: 'any', label: 'Any' },
-              { value: 'always', label: 'Always' },
-              { value: 'never', label: 'Never' },
+              { value: 'any', label: t('Any') },
+              { value: 'always', label: t('Always') },
+              { value: 'never', label: t('Never') },
             ]}
           />
           <Segmented
-            label="Tall cabinets stand"
+            label={t('Tall cabinets stand')}
             value={form.tallPosition}
             onChange={(v) => setForm((f) => ({ ...f, tallPosition: v }))}
             options={[
-              { value: 'auto', label: 'Auto' },
-              { value: 'left', label: 'Left' },
-              { value: 'right', label: 'Right' },
-              { value: 'ends', label: 'Both ends' },
-              { value: 'centre', label: 'Centre' },
+              { value: 'auto', label: t('Auto') },
+              { value: 'left', label: t('Left') },
+              { value: 'right', label: t('Right') },
+              { value: 'ends', label: t('Both ends') },
+              { value: 'centre', label: t('Centre') },
             ]}
           />
         </section>
       )}
       {step === 'mixes' && (
-        <section className="wz-suggest" aria-label="Suggested mixes">
+        <section className="wz-suggest" aria-label={t('Suggested mixes')}>
           <div className="card-title">
-            <span>Suggested mixes</span>
+            <span>{t('Suggested mixes')}</span>
             <span className="hint">
-              {applied.width} mm wall · best {MIXES_FIRST}, checked by the model
+              {t('{width} mm wall · best {n}, checked by the model', {
+                width: applied.width,
+                n: MIXES_FIRST,
+              })}
             </span>
           </div>
           {result.problems.map((p, i) => (
@@ -355,25 +369,25 @@ function WallFill({ onClose, onOpened }: { onClose: () => void; onOpened: () => 
           disabled={step === 'wall'}
           onClick={() => go(step === 'refine' ? 'mixes' : 'wall')}
         >
-          Back
+          {getLang() === 'ru' ? 'Назад' : 'Back'}
         </button>
         <span className="wz-spacer" />
         <button type="button" className="btn ghost" onClick={onClose}>
-          Cancel
+          {t('Cancel')}
         </button>
         {step === 'wall' && (
           <button type="button" className="btn primary" onClick={suggest}>
-            Show suggestions
+            {t('Show suggestions')}
           </button>
         )}
         {step === 'mixes' && (
           <button type="button" className="btn primary" onClick={() => go('refine')}>
-            Refine
+            {t('Refine')}
           </button>
         )}
         {step === 'refine' && (
           <button type="button" className="btn primary" onClick={suggest}>
-            Suggest again
+            {t('Suggest again')}
           </button>
         )}
       </div>

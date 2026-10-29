@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import { t } from '../core/i18n';
 
 /** A room axis the section cuts across: x along the wall (width), y up (height), z out from the wall (depth). */
 export type SectionAxis = 'x' | 'y' | 'z';
@@ -35,4 +36,8 @@ export const useSection = () => useSyncExternalStore(subscribe, () => now);
 export const cutAt = (s: Pick<SectionState, 'at'>, min: number, max: number): number =>
   s.at === null ? Math.round((min + max) / 2) : Math.min(max, Math.max(min, s.at));
 
-export const AXIS_LABEL: Record<SectionAxis, string> = { x: 'Width', y: 'Height', z: 'Depth' };
+export const AXIS_LABEL: Record<SectionAxis, string> = {
+  x: t('Width'),
+  y: t('Height'),
+  z: t('Depth'),
+};

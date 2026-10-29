@@ -43,6 +43,7 @@ import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { explode } from '../core/explode';
+import { t } from '../core/i18n';
 import { hitToMm, inSelection, selectionBox } from '../core/selectPath';
 import {
   roomDisplayBoxes,
@@ -396,13 +397,13 @@ export default function Viewer3D() {
                 else lockBadges.current.delete(pc.item.id);
               }}
             >
-              Locked
+              {t('Locked')}
             </span>
           ))}
         </div>
       )}
       {(hasPieces || hasPicture) && !rendering && (
-        <div className="three-tools" role="toolbar" aria-label="Place pieces in 3D">
+        <div className="three-tools" role="toolbar" aria-label={t('Place pieces in 3D')}>
           {hasPieces && (
             <button
               type="button"
@@ -411,15 +412,15 @@ export default function Viewer3D() {
               disabled={exploded}
               title={
                 exploded
-                  ? 'Turn off Exploded 3D to move pieces'
-                  : 'Drag a piece to move it; dragging empty space turns the view'
+                  ? t('Turn off Exploded 3D to move pieces')
+                  : t('Drag a piece to move it; dragging empty space turns the view')
               }
               onClick={() => {
                 setMoveOn(!moveOn);
                 setAdjustOn(false);
               }}
             >
-              Move
+              {t('Move')}
             </button>
           )}
           {hasPicture && (
@@ -430,25 +431,27 @@ export default function Viewer3D() {
               disabled={exploded}
               title={
                 exploded
-                  ? 'Turn off Exploded 3D to adjust a wall picture'
-                  : 'Tap a wall with a picture, then drag the picture to shift it or its handles to stretch it'
+                  ? t('Turn off Exploded 3D to adjust a wall picture')
+                  : t(
+                      'Tap a wall with a picture, then drag the picture to shift it or its handles to stretch it',
+                    )
               }
               onClick={() => {
                 setAdjustOn(!adjustOn);
                 setMoveOn(false);
               }}
             >
-              Adjust wall picture
+              {t('Adjust wall picture')}
             </button>
           )}
           {adjusting && adjustWall !== null && (
             <button
               type="button"
               className="btn sm outline"
-              title="Make the picture cover the whole wall"
+              title={t('Make the picture cover the whole wall')}
               onClick={() => setPictureFit(adjustWall, null)}
             >
-              Fill wall
+              {t('Fill wall')}
             </button>
           )}
           {(moving || adjusting) && (
@@ -456,10 +459,12 @@ export default function Viewer3D() {
               type="button"
               className="btn sm outline snap-toggle"
               aria-pressed={snapOn}
-              title={`Snap within ${SNAP_RANGE} mm to walls and neighbours; hold Alt to place freely`}
+              title={t('Snap within {n} mm to walls and neighbours; hold Alt to place freely', {
+                n: SNAP_RANGE,
+              })}
               onClick={() => setSnapOn(!snapOn)}
             >
-              Snap
+              {t('Snap')}
             </button>
           )}
           {turnId && !tapping && (
@@ -467,20 +472,20 @@ export default function Viewer3D() {
               <button
                 type="button"
                 className="btn sm outline"
-                aria-label="Turn 90° anticlockwise about its centre"
-                title="Turn about its centre (R)"
+                aria-label={t('Turn 90° anticlockwise about its centre')}
+                title={t('Turn about its centre (R)')}
                 onClick={() => turnItem(turnId, 1)}
               >
-                Turn 90° ↺
+                {t('Turn 90° ↺')}
               </button>
               <button
                 type="button"
                 className="btn sm outline"
-                aria-label="Turn 90° clockwise about its centre"
-                title="Turn about its centre (Shift+R)"
+                aria-label={t('Turn 90° clockwise about its centre')}
+                title={t('Turn about its centre (Shift+R)')}
                 onClick={() => turnItem(turnId, -1)}
               >
-                Turn 90° ↻
+                {t('Turn 90° ↻')}
               </button>
             </>
           )}
@@ -492,7 +497,7 @@ export default function Viewer3D() {
               aria-expanded={moveToOpen}
               onClick={() => setMoveToOpen(!moveToOpen)}
             >
-              Move to…
+              {t('Move to…')}
             </button>
           )}
           {moving && turnId && moveToOpen && (
@@ -502,20 +507,20 @@ export default function Viewer3D() {
             type="button"
             className="btn sm outline section-toggle"
             aria-pressed={section.on}
-            title="Cut through the project to see inside"
+            title={t('Cut through the project to see inside')}
             onClick={() => setSection({ on: !section.on })}
           >
-            Section
+            {t('Section')}
           </button>
           {(canIsolate || section.isolate) && (
             <button
               type="button"
               className="btn sm outline isolate-toggle"
               aria-pressed={isolating}
-              title="Show only the selected pieces"
+              title={t('Show only the selected pieces')}
               onClick={() => setSection({ isolate: !section.isolate })}
             >
-              Isolate
+              {t('Isolate')}
             </button>
           )}
           {view.mode === 'project' && hasRoom && (
@@ -523,35 +528,35 @@ export default function Viewer3D() {
               type="button"
               className="btn sm outline walls-toggle"
               aria-pressed={solidWalls}
-              title="Show the room walls solid or see-through"
+              title={t('Show the room walls solid or see-through')}
               onClick={() => setSolidWalls(!solidWalls)}
             >
-              Solid walls
+              {t('Solid walls')}
             </button>
           )}
           {sectionOn && (
-            <div className="section-tools" role="group" aria-label="Section cut">
+            <div className="section-tools" role="group" aria-label={t('Section cut')}>
               {(['x', 'y', 'z'] as const).map((a) => (
                 <button
                   key={a}
                   type="button"
                   className="btn sm outline"
                   aria-pressed={section.axis === a}
-                  title={`Cut across the ${AXIS_LABEL[a].toLowerCase()}`}
+                  title={CUT_ACROSS[a]}
                   onClick={() => setSection({ axis: a, at: null })}
                 >
                   {AXIS_LABEL[a]}
                 </button>
               ))}
               <label className="section-cut">
-                <span>Cut at {cut} mm</span>
+                <span>{t('Cut at {n} mm', { n: cut ?? '' })}</span>
                 <input
                   type="range"
                   min={lo}
                   max={hi}
                   step={1}
                   value={cut ?? lo}
-                  aria-label={`Cut position across the ${AXIS_LABEL[section.axis].toLowerCase()}, mm`}
+                  aria-label={CUT_POSITION[section.axis]}
                   onChange={(e) => setSection({ at: Number(e.target.value) })}
                 />
               </label>
@@ -565,7 +570,7 @@ export default function Viewer3D() {
       {moving && <HeightNote />}
       {emptyProject && (
         <div className="no-3d empty-3d">
-          <p>Add pieces under Compose to see them in 3D.</p>
+          <p>{t('Add pieces under Compose to see them in 3D.')}</p>
         </div>
       )}
       {/* The docked card (G-070) folds to one row on a phone (G-058). */}
@@ -873,10 +878,22 @@ function ModelItemMesh({
 }
 
 const HANDLES: { axis: HandleAxis; label: string; glyph: string }[] = [
-  { axis: 'x', label: 'Resize width', glyph: '↔' },
-  { axis: 'y', label: 'Resize height', glyph: '↕' },
-  { axis: 'z', label: 'Resize depth', glyph: '⤢' },
+  { axis: 'x', label: t('Resize width'), glyph: '↔' },
+  { axis: 'y', label: t('Resize height'), glyph: '↕' },
+  { axis: 'z', label: t('Resize depth'), glyph: '⤢' },
 ];
+
+/** The Section axis buttons' titles and the cut slider's label, one whole sentence per axis. */
+const CUT_ACROSS: Record<SectionAxis, string> = {
+  x: t('Cut across the width'),
+  y: t('Cut across the height'),
+  z: t('Cut across the depth'),
+};
+const CUT_POSITION: Record<SectionAxis, string> = {
+  x: t('Cut position across the width, mm'),
+  y: t('Cut position across the height, mm'),
+  z: t('Cut position across the depth, mm'),
+};
 
 /**
  * The selected model's resize handles in Move mode (ADR-102): on the right face (width along the room), the top
@@ -905,7 +922,7 @@ function ResizeHandles({ item, box }: { item: ModelItem; box: Box }) {
             type="button"
             className="model-handle"
             aria-label={hd.label}
-            title={`${hd.label}: drag`}
+            title={t('{label}: drag', { label: hd.label })}
             onPointerDown={(e) => press(e, item, hd.axis, at[hd.axis])}
           >
             {hd.glyph}
@@ -937,8 +954,8 @@ function HeightHandle({ id }: { id: string }) {
         <button
           type="button"
           className="model-handle height-handle"
-          aria-label="Change height"
-          title="Change height: drag up or down"
+          aria-label={t('Change height')}
+          title={t('Change height: drag up or down')}
           onPointerDown={(e) => press(e, id, start, at)}
         >
           ↕
@@ -968,7 +985,7 @@ function HeightNote() {
       role="status"
     >
       {heightLabel(preview.height)}
-      {preview.height < 0 ? ' — below the floor, it will not move' : ''}
+      {preview.height < 0 ? t(' — below the floor, it will not move') : ''}
     </span>
   );
 }
@@ -1001,7 +1018,7 @@ function ResizeNote() {
   const { w, h, d } = preview.size;
   return (
     <span className="plan-drag-note three-drag-note" role="status">
-      {w} × {h} × {d} mm (W × H × D)
+      {t('{w} × {h} × {d} mm (W × H × D)', { w, h, d })}
     </span>
   );
 }
@@ -1204,14 +1221,14 @@ const PICTURE_HANDLES: {
   glyph: string;
   at: [number, number];
 }[] = [
-  { handle: 'nw', label: 'top-left corner', glyph: '⤡', at: [0, 1] },
-  { handle: 'n', label: 'top edge', glyph: '↕', at: [0.5, 1] },
-  { handle: 'ne', label: 'top-right corner', glyph: '⤢', at: [1, 1] },
-  { handle: 'e', label: 'right edge', glyph: '↔', at: [1, 0.5] },
-  { handle: 'se', label: 'bottom-right corner', glyph: '⤡', at: [1, 0] },
-  { handle: 's', label: 'bottom edge', glyph: '↕', at: [0.5, 0] },
-  { handle: 'sw', label: 'bottom-left corner', glyph: '⤢', at: [0, 0] },
-  { handle: 'w', label: 'left edge', glyph: '↔', at: [0, 0.5] },
+  { handle: 'nw', label: t('top-left corner'), glyph: '⤡', at: [0, 1] },
+  { handle: 'n', label: t('top edge'), glyph: '↕', at: [0.5, 1] },
+  { handle: 'ne', label: t('top-right corner'), glyph: '⤢', at: [1, 1] },
+  { handle: 'e', label: t('right edge'), glyph: '↔', at: [1, 0.5] },
+  { handle: 'se', label: t('bottom-right corner'), glyph: '⤡', at: [1, 0] },
+  { handle: 's', label: t('bottom edge'), glyph: '↕', at: [0.5, 0] },
+  { handle: 'sw', label: t('bottom-left corner'), glyph: '⤢', at: [0, 0] },
+  { handle: 'w', label: t('left edge'), glyph: '↔', at: [0, 0.5] },
 ];
 
 /** The chosen wall picture's outline and its eight stretch handles (ADR-146), just in front of the wall. */
@@ -1240,8 +1257,8 @@ function PictureHandles({
           <button
             type="button"
             className="model-handle"
-            aria-label={`Stretch the picture: ${hd.label}`}
-            title={`Stretch the picture: drag the ${hd.label}`}
+            aria-label={t('Stretch the picture: {handle}', { handle: hd.label })}
+            title={t('Stretch the picture: drag the {handle}', { handle: hd.label })}
             onPointerDown={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -1265,13 +1282,13 @@ function PictureNote() {
   if (!room || wall === null || !img)
     return (
       <span className="plan-drag-note three-drag-note" role="status">
-        Tap a wall with a picture to adjust it
+        {t('Tap a wall with a picture to adjust it')}
       </span>
     );
   const rect = live?.wall === wall ? live.rect : pictureRect(room, wall, img);
   return (
     <span className="plan-drag-note three-drag-note" role="status">
-      Wall {wall + 1} picture: {rectLabel(rect)}
+      {t('Wall {n} picture: {rect}', { n: wall + 1, rect: rectLabel(rect) })}
     </span>
   );
 }
@@ -1665,13 +1682,15 @@ function DragNote({ snapOn }: { snapOn: boolean }) {
         {ghost.blocked}
       </span>
     );
-  const t = ghost.target;
+  const tg = ghost.target;
   return (
     <span className="plan-drag-note three-drag-note" role="status">
-      From left {t.position.x} · From back {t.position.z} mm{' · '}
-      {t.snap
-        ? `Snaps: ${[t.snap.label, ...t.snap.notes].join(' · ')}`
-        : (t.hint ?? (!ghost.snapping && snapOn ? 'Alt held: placing freely.' : 'Snap is off.'))}
+      {t('From left {x} · From back {z} mm', { x: tg.position.x, z: tg.position.z })}
+      {' · '}
+      {tg.snap
+        ? t('Snaps: {list}', { list: [tg.snap.label, ...tg.snap.notes].join(' · ') })
+        : (tg.hint ??
+          (!ghost.snapping && snapOn ? t('Alt held: placing freely.') : t('Snap is off.')))}
     </span>
   );
 }

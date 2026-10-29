@@ -9,6 +9,7 @@ import {
   type ModelTurn,
 } from '../core/model3d';
 import { newId } from '../core/design';
+import { getLang, t } from '../core/i18n';
 import { PROJECT_SCHEMA, type ProjectModel } from '../core/project';
 import type { Box } from '../core/types';
 import { deleteModelIfUnused, listModels, loadModel, type StoredModel } from '../persist/db';
@@ -26,10 +27,11 @@ import { arrowMove } from './planDrag';
  */
 
 const FRONTS: { value: ModelFront; label: string }[] = [
-  { value: 'front', label: 'Front' },
-  { value: 'right', label: 'Right' },
-  { value: 'back', label: 'Back' },
-  { value: 'left', label: 'Left' },
+  { value: 'front', label: t('Front') },
+  { value: 'right', label: t('Right') },
+  // 'Back' is also the back panel and the Back button; the side of a model needs its own word in Russian.
+  { value: 'back', label: getLang() === 'ru' ? 'Сзади' : 'Back' },
+  { value: 'left', label: t('Left') },
 ];
 
 /** Change one model item of the open project (one undo step). */
@@ -66,28 +68,32 @@ export function ModelFields({ item }: { item: ModelItem }) {
   }, [item.modelId]);
   const pos = item.position;
   return (
-    <section className="piece-edit section" aria-label={`Selected 3D model: ${item.name}`}>
+    <section
+      className="piece-edit section"
+      aria-label={t('Selected 3D model: {name}', { name: item.name })}
+    >
       <div className="card-title">
         <span className="info-row">
-          <span>Selected 3D model</span>
-          <InfoTip label="About 3D models" align="start">
-            Display only: never in the parts list, sheets, costs or shopping list. Its box is
-            checked against the pieces and the room.
+          <span>{t('Selected 3D model')}</span>
+          <InfoTip label={t('About 3D models')} align="start">
+            {t(
+              'Display only: never in the parts list, sheets, costs or shopping list. Its box is checked against the pieces and the room.',
+            )}
           </InfoTip>
         </span>
       </div>
       <h3>{item.name}</h3>
       {missing && (
         <p className="hint" role="status">
-          This 3D model is not on this device; it is drawn as a box.
+          {t('This 3D model is not on this device; it is drawn as a box.')}
         </p>
       )}
       <div className="dims3">
         {(
           [
-            ['w', 'Width'],
-            ['h', 'Height'],
-            ['d', 'Depth'],
+            ['w', t('Width')],
+            ['h', t('Height')],
+            ['d', t('Depth')],
           ] as const
         ).map(([side, label]) => (
           <MmField
@@ -101,14 +107,14 @@ export function ModelFields({ item }: { item: ModelItem }) {
         ))}
       </div>
       <Toggle
-        label="Keep proportions"
+        label={t('Keep proportions')}
         checked={keep}
         onChange={setKeep}
         info={
-          <InfoTip label="About keep proportions" align="start">
+          <InfoTip label={t('About keep proportions')} align="start">
             {keep
-              ? 'Changing one side scales the other two with it.'
-              : 'Each side changes on its own; the model stretches to fill its box.'}
+              ? t('Changing one side scales the other two with it.')
+              : t('Each side changes on its own; the model stretches to fill its box.')}
           </InfoTip>
         }
       />
@@ -119,11 +125,11 @@ export function ModelFields({ item }: { item: ModelItem }) {
             className="btn sm outline"
             onClick={() => patch(item.id, { size: { ...natural } })}
           >
-            Reset size
+            {t('Reset size')}
           </button>
         )}
       <Segmented<ModelTurn>
-        label="Turn"
+        label={t('Turn')}
         value={item.rotationY}
         options={[
           { value: 0, label: '0°' },
@@ -134,33 +140,33 @@ export function ModelFields({ item }: { item: ModelItem }) {
         onChange={(v) => patch(item.id, { rotationY: v })}
       />
       <Segmented<ModelFront>
-        label="Front faces"
+        label={t('Front faces')}
         value={item.front ?? 'front'}
         options={FRONTS}
         onChange={(v) => patch(item.id, v === 'front' ? { front: undefined } : { front: v })}
         info={
-          <InfoTip label="About front faces" align="start">
-            The side of the model that is its front, if it came in facing the wrong way.
+          <InfoTip label={t('About front faces')} align="start">
+            {t('The side of the model that is its front, if it came in facing the wrong way.')}
           </InfoTip>
         }
       />
       <div className="dims3">
         <MmField
-          label="From left"
+          label={t('From left')}
           value={pos.x}
           min={-20000}
           max={20000}
           onChange={(v) => patch(item.id, { position: { ...pos, x: v } })}
         />
         <MmField
-          label="From back"
+          label={t('From back')}
           value={pos.z}
           min={-20000}
           max={20000}
           onChange={(v) => patch(item.id, { position: { ...pos, z: v } })}
         />
         <MmField
-          label="Height above floor"
+          label={t('Height above floor')}
           value={pos.y}
           min={0}
           max={5000}
@@ -172,8 +178,8 @@ export function ModelFields({ item }: { item: ModelItem }) {
         className="danger-link"
         onClick={async () => {
           if (
-            await askConfirm(`Remove “${item.name}” from this project?`, {
-              confirmLabel: 'Remove',
+            await askConfirm(t('Remove “{name}” from this project?', { name: item.name }), {
+              confirmLabel: t('Remove'),
               danger: true,
             })
           ) {
@@ -185,7 +191,7 @@ export function ModelFields({ item }: { item: ModelItem }) {
           }
         }}
       >
-        Remove from project
+        {t('Remove from project')}
       </button>
     </section>
   );
@@ -198,7 +204,7 @@ export function ModelList({ pm }: { pm: ProjectModel | null }) {
   if (!pm?.models.length) return null;
   return (
     <>
-      <h3 className="list-head">3D models (display only)</h3>
+      <h3 className="list-head">{t('3D models (display only)')}</h3>
       <ul className="pieces">
         {pm.models.map(({ item, box }) => (
           <li key={item.id}>
@@ -211,7 +217,7 @@ export function ModelList({ pm }: { pm: ProjectModel | null }) {
               <span>
                 <strong>{item.name}</strong>
                 <span className="sub num">
-                  {box.w} × {box.h} × {box.d} mm
+                  {box.w} × {box.h} × {box.d} {t('mm')}
                 </span>
               </span>
               <Icon name="chevron-right" className="chev sm" />
@@ -263,7 +269,9 @@ export function MyModels({ onDone }: { onDone: () => void }) {
     for (const f of files) {
       const r = await importModelFile(f);
       out.push(
-        r.ok ? { ok: true, text: `Imported ${r.model.name}.` } : { ok: false, text: r.problem },
+        r.ok
+          ? { ok: true, text: t('Imported {name}.', { name: r.model.name }) }
+          : { ok: false, text: r.problem },
       );
     }
     setNotes(out);
@@ -287,8 +295,8 @@ export function MyModels({ onDone }: { onDone: () => void }) {
 
   const remove = async (row: StoredModel) => {
     if (
-      !(await askConfirm(`Delete “${row.name}” from this device's 3D models?`, {
-        confirmLabel: 'Delete',
+      !(await askConfirm(t("Delete “{name}” from this device's 3D models?", { name: row.name }), {
+        confirmLabel: t('Delete'),
         danger: true,
       }))
     )
@@ -303,14 +311,17 @@ export function MyModels({ onDone }: { onDone: () => void }) {
       if (r.deleted) forgetModelScene(row.id);
       setNotes([
         r.deleted
-          ? { ok: true, text: `Deleted ${row.name}.` }
+          ? { ok: true, text: t('Deleted {name}.', { name: row.name }) }
           : {
               ok: false,
-              text: `${row.name} is used by ${[...new Set(r.usedBy)].slice(0, 3).join(', ')}; remove it there first.`,
+              text: t('{name} is used by {list}; remove it there first.', {
+                name: row.name,
+                list: [...new Set(r.usedBy)].slice(0, 3).join(', '),
+              }),
             },
       ]);
     } catch {
-      setNotes([{ ok: false, text: `${row.name} could not be deleted.` }]);
+      setNotes([{ ok: false, text: t('{name} could not be deleted.', { name: row.name }) }]);
     }
     await refresh();
   };
@@ -319,11 +330,12 @@ export function MyModels({ onDone }: { onDone: () => void }) {
     <section className="my-models" aria-labelledby="my-models-head">
       <div className="info-row">
         <h3 className="list-head" id="my-models-head">
-          My 3D models
+          {t('My 3D models')}
         </h3>
-        <InfoTip label="About my 3D models" align="start">
-          Appliances, sinks or decor from a .glb or .gltf file on this device, up to 30 MB and 500
-          000 triangles. Display only: never cut, priced or bought. Nothing is uploaded.
+        <InfoTip label={t('About my 3D models')} align="start">
+          {t(
+            'Appliances, sinks or decor from a .glb or .gltf file on this device, up to 30 MB and 500 000 triangles. Display only: never cut, priced or bought. Nothing is uploaded.',
+          )}
         </InfoTip>
       </div>
       <input
@@ -345,7 +357,7 @@ export function MyModels({ onDone }: { onDone: () => void }) {
         onClick={() => input.current?.click()}
       >
         <Icon name="upload" />
-        {busy ? 'Importing…' : 'Import 3D model'}
+        {busy ? t('Importing…') : t('Import 3D model')}
       </button>
       {notes.map((n, i) => (
         <p key={i} className={n.ok ? 'hint' : 'alert error'} role={n.ok ? 'status' : 'alert'}>
@@ -367,8 +379,8 @@ export function MyModels({ onDone }: { onDone: () => void }) {
                 <span>
                   <strong>{r.name}</strong>
                   <span className="sub num">
-                    {r.size.w} × {r.size.h} × {r.size.d} mm · {r.triangles.toLocaleString('en')}{' '}
-                    triangles
+                    {r.size.w} × {r.size.h} × {r.size.d} {t('mm')} ·{' '}
+                    {t('{n} triangles', { n: r.triangles.toLocaleString('en') })}
                   </span>
                 </span>
                 <Icon name="plus" className="chev sm" />
@@ -376,7 +388,7 @@ export function MyModels({ onDone }: { onDone: () => void }) {
               <button
                 type="button"
                 className="btn sm ghost"
-                aria-label={`Delete ${r.name}`}
+                aria-label={t('Delete {name}', { name: r.name })}
                 onClick={() => void remove(r)}
               >
                 <Icon name="trash" className="sm" />
@@ -432,7 +444,7 @@ export function PlanModels({
             role="button"
             tabIndex={0}
             aria-pressed={on}
-            aria-label={`${item.name} (3D model), ${b.w} by ${b.d} mm`}
+            aria-label={t('{name} (3D model), {w} by {d} mm', { name: item.name, w: b.w, d: b.d })}
             onClick={tapping ? undefined : () => select(item.id)}
             onKeyDown={(e) => {
               const m = tapping ? null : arrowMove(e.key, e.shiftKey);
@@ -480,7 +492,11 @@ export function FrontModels({ pm, fs }: { pm: ProjectModel; fs: number }) {
             role="button"
             tabIndex={0}
             aria-pressed={item.id === selectedId}
-            aria-label={`${item.name} (3D model), ${b.w} wide, ${b.h} high`}
+            aria-label={t('{name} (3D model), {w} wide, {h} high', {
+              name: item.name,
+              w: b.w,
+              h: b.h,
+            })}
             onClick={() => select(item.id)}
             onKeyDown={onEnter(() => select(item.id))}
           >
