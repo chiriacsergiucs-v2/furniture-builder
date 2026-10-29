@@ -184,5 +184,7 @@ changed and push only on the user's explicit approval. Model, document, storage 
   user's instruction.
 - Merge to `main` only on the user's instruction; then cite the `Deploy GitHub Pages` run id. Never force-push
   `main`. Exception (user rule 2026-10-29, `babysit` skill): a pull request Claude opened and babysits is shipped
-  on its branch (`ship-adr`) and merged once green, without asking again.
+  on its branch (`ship-adr`) and merged once green, without asking again. Ship pull requests are always merged
+  straight after the ship commit is pushed, without waiting for CI on it (user rule 2026-10-29); run
+  `pnpm docs:check` and `pnpm format:check` locally first.
 - Ship commit message: `Ship ADR-NNN: <short title> — mark implemented`.

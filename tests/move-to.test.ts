@@ -182,7 +182,7 @@ describe('Move to: up and down (ADR-147)', () => {
   });
 });
 
-describe('Move to: stacked and freely turned pieces (ADR-147, G-291, G-293)', () => {
+describe('Move to: stacked and freely turned pieces (ADR-147, G-295, G-297)', () => {
   it('a stacked piece slides along its base and stops at the base end', () => {
     const p = project([
       { tpl: 'sideboard', x: 1000 },
@@ -240,6 +240,23 @@ describe('Move to: refused with the reason (ADR-147, ADR-008)', () => {
         expect(r.reason ?? null).toBe(off);
         expect(r.project === p).toBe(off !== null);
       }
+  });
+});
+
+describe('Move to with grouped pieces (ADR-147, ADR-148)', () => {
+  it('a grouped piece takes its group along; its group-mate is not in the way', () => {
+    const base = project([
+      { tpl: 'base-door', x: 1000, z: 600 },
+      { tpl: 'base-door', x: 1600, z: 600 },
+    ]);
+    const p = { ...base, groups: [{ id: 'g', name: 'Pair', itemIds: ['p0', 'p1'] }] };
+    const q = go(p, 'p1', 'wall');
+    expect([box(q, 'p0').z, box(q, 'p1').z]).toEqual([0, 0]);
+    // The group stops when its first member reaches the wall.
+    const r = go(p, 'p1', 'left');
+    expect(box(r, 'p1').x - box(r, 'p0').x).toBe(box(p, 'p1').x - box(p, 'p0').x);
+    expect(box(r, 'p0').x).toBe(0);
+    expect(box(r, 'p1').x).toBe(1600 - 1000);
   });
 });
 

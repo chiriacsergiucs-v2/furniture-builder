@@ -2425,7 +2425,46 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Add a floating Move to bar over the plan?
 - Suggested pick: Not now; the user picked panel + 3D
 
-### G-290: Move to for several selected pieces
+### G-290: Group width for pieces not in columns
+
+- Status: Open
+- Origin: ADR-148, 2026-10-29; scope (Claude)
+- Missing: A group whose pieces overlap in x without sharing the same span (e.g. a wall unit straddling two base units) refuses a Width change.
+- Request: add the possibility to set the width, height and depth of grouped items, add the possibility to block group items from being moved separately.
+- Questions: Refuse, or scale every position around the left edge (pieces may stop touching by 1 mm)?
+- Suggested pick: Scale positions around the left edge, rounding shared edges once (closer to the request; estimate effort +25 %, value +10 %)
+- Answer: 2026-10-29 (user) "Refuse (as in ADR)"; ADR-148 refuses with the reason
+
+### G-291: Vertical moves of a grouped piece do not carry the group
+
+- Status: Done (ADR-148)
+- Origin: ADR-148, 2026-10-29; scope (Claude)
+- Missing: The wall-height drag in 3D, the From floor field and the gap tool move one grouped piece up/down or along alone.
+- Request: add the possibility to set the width, height and depth of grouped items, add the possibility to block group items from being moved separately.
+- Questions: Should vertical moves and the gap tool also move the whole group?
+- Suggested pick: Yes, move the whole group (closer to 'block group items from being moved separately'; estimate effort +20 %)
+- Answer: 2026-10-29 (user) "Yes, move group"; built in ADR-148
+
+### G-292: Mirror of one grouped piece alone
+
+- Status: Done (ADR-148)
+- Origin: ADR-148, 2026-10-29; scope (Claude)
+- Missing: Mirroring a single grouped piece from its own card is not routed to the group.
+- Request: add the possibility to set the width, height and depth of grouped items, add the possibility to block group items from being moved separately.
+- Questions: Mirror the whole group, or allow a single piece to mirror in place?
+- Suggested pick: Mirror the whole group (closer to the request; estimate effort +5 %)
+- Answer: 2026-10-29 (user) "Mirror the group"; built in ADR-148
+
+### G-293: Repairs and Mirror the run move a grouped piece alone
+
+- Status: Open
+- Origin: ADR-148, 2026-10-29; scope (Claude)
+- Missing: Automatic repairs from the problem banner and Mirror the run can still move one grouped piece without its group.
+- Request: add the possibility to set the width, height and depth of grouped items, add the possibility to block group items from being moved separately.
+- Questions: Should repairs and Mirror the run also carry or refuse grouped pieces?
+- Suggested pick: Carry the whole group, refusing a repair the group cannot follow (closer to the request; estimate effort +10 %)
+
+### G-294: Move to for several selected pieces
 
 - Status: Open
 - Origin: ADR-147, 2026-10-29; out of scope
@@ -2434,7 +2473,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Should Move to move every selected piece as one block?
 - Suggested pick: Yes, as one block (closest to how drag moves a selection; estimate +20 % work)
 
-### G-291: Move to for a stacked piece
+### G-295: Move to for a stacked piece
 
 - Status: Done (ADR-147)
 - Origin: ADR-147, 2026-10-29; open question
@@ -2444,7 +2483,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: (a), keeps it on its base (estimate +10 % work)
 - Answer: User 2026-10-29: "Slide along base" — sideways moves change its offset on the piece below; To ceiling lifts it off.
 
-### G-292: Align top or front: which neighbour
+### G-296: Align top or front: which neighbour
 
 - Status: Done (ADR-147)
 - Origin: ADR-147, 2026-10-29; open question
@@ -2454,7 +2493,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: (a), says exactly which piece (estimate +5 % work)
 - Answer: User 2026-10-29: "Left / right buttons" — Align top and Align front each for the left and the right neighbour.
 
-### G-293: Move to for a freely turned piece
+### G-297: Move to for a freely turned piece
 
 - Status: Done (ADR-147)
 - Origin: ADR-147, 2026-10-29; open question

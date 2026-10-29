@@ -5,6 +5,7 @@
  * slides until it touches the first room wall or piece whose outline overlaps its path in plan and in height; there is
  * no distance limit. Nothing is clamped silently: an action that cannot move the piece is disabled with its reason.
  */
+import { carryGroups, withGroups } from './groupMove';
 import {
   carriedBy,
   moveBlocked,
@@ -103,8 +104,10 @@ interface Hit {
 interface Ctx {
   project: Project;
   me: PlacedPiece;
-  /** The other pieces, without the ones resting on this one (they move with it). */
+  /** The other pieces, without the ones resting on this one or in its group (they move with it). */
   others: PlacedPiece[];
+  /** The other pieces of its group (ADR-148): they slide with it, so they stop it too. */
+  mates: Box[];
 }
 
 /** The first piece in the way of `b` going `way`: it overlaps the path across and in height and lies ahead. */
@@ -177,7 +180,7 @@ const DIR_WORD: Record<Dir, string> = {
 /** Plan for one action: the moved item, or why it cannot move. */
 type Plan = { item: ProjectItem } | { reason: string };
 
-/** The limit of a slide along the piece under it (ADR-147, G-291): its base's ends. */
+/** The limit of a slide along the piece under it (ADR-147, G-295): its base's ends. */
 function baseLimit(ctx: Ctx, way: Way): Hit | null {
   const pl = ctx.me.item.placement;
   if (pl?.kind !== 'above') return null;
@@ -207,6 +210,13 @@ function reach(
       reason: `Sits on another piece and follows it ${dir === 'back' ? 'back' : 'that way'}.`,
     };
   let hit = firstHit(ctx, b, way);
+  // Its group-mates move by the same offset: the first of them to touch something stops them all.
+  const dx = b.x - ctx.me.bounds.x,
+    dz = b.z - ctx.me.bounds.z;
+  for (const m of ctx.mates) {
+    const h = firstHit(ctx, { ...m, x: m.x + dx, z: m.z + dz }, way);
+    if (h && (!hit || h.dist < hit.dist)) hit = h;
+  }
   const end = baseLimit(ctx, way);
   if (end && (!hit || end.dist < hit.dist)) hit = end;
   return { hit };
@@ -367,29 +377,33 @@ function plan(ctx: Ctx, action: MoveToAction): Plan {
 function context(project: Project, id: string): Ctx | null {
   const item = project.items.find((i) => i.id === id);
   if (!item) return null;
-  const riding = new Set(carriedBy(project, id).map((i) => i.id));
-  const pieces = project.items.filter((i) => !riding.has(i.id)).map((i) => placeItem(i));
+  // Pieces resting on it and the other pieces of its group move with it (ADR-031, ADR-148): not in the way.
+  const group = new Set(withGroups(project, [id]).filter((m) => m !== id));
+  const riding = new Set(carriedBy(project, [id, ...group]).map((i) => i.id));
+  const pieces = project.items.map((i) => placeItem(i));
   const me = pieces.find((p) => p.item.id === id)!;
-  return { project, me, others: pieces.filter((p) => p !== me) };
+  return {
+    project,
+    me,
+    others: pieces.filter((p) => p !== me && !riding.has(p.item.id) && !group.has(p.item.id)),
+    mates: pieces.filter((p) => group.has(p.item.id)).map((p) => p.bounds),
+  };
 }
 
 /** Each action, enabled (null) or disabled with the reason, for piece `id` (ADR-147). */
 export function moveToOptions(project: Project, id: string): Record<MoveToAction, string | null> {
   const out = {} as Record<MoveToAction, string | null>;
-  const ctx = context(project, id);
-  const locked = moveBlocked(project, [id]);
   for (const a of MOVE_TO_ACTIONS) {
-    if (!ctx) out[a] = 'No piece selected.';
-    else if (locked) out[a] = locked;
-    else {
-      const p = plan(ctx, a);
-      out[a] = 'reason' in p ? p.reason : null;
-    }
+    const r = moveTo(project, id, a);
+    out[a] = r.reason ?? (r.project === project ? 'No piece selected.' : null);
   }
   return out;
 }
 
-/** Do one Move to action on piece `id`: the project after it, or the same project and the reason (ADR-147). */
+/**
+ * Do one Move to action on piece `id`: the project after it, or the same project and the reason (ADR-147). A piece in
+ * a group takes its group with it (ADR-148); a member that cannot follow refuses the move with its reason.
+ */
 export function moveTo(project: Project, id: string, action: MoveToAction): MoveResult {
   const ctx = context(project, id);
   if (!ctx) return { project };
@@ -397,5 +411,5 @@ export function moveTo(project: Project, id: string, action: MoveToAction): Move
   if (locked) return { project, reason: locked };
   const p = plan(ctx, action);
   if ('reason' in p) return { project, reason: p.reason };
-  return { project: withItem(project, p.item) };
+  return carryGroups(project, withItem(project, p.item), [id]);
 }

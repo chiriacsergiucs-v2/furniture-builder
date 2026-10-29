@@ -42,6 +42,8 @@ import {
 import { countRows, countSubject, stepCount, type CountKey } from '../core/counts';
 import { drill, type Selection } from '../core/selectPath';
 import { resizeProduct, type SizeField } from '../core/pieceSize';
+import { carryGroups, withGroups } from '../core/groupMove';
+import { resizeGroup, type WidthSplit } from '../core/groupSize';
 import { resizeBlocked, setSizeLocked, sizeLockBlocked } from '../core/sizeLock';
 import { setWallHeight } from '../core/height';
 import { moveTo, type MoveToAction } from '../core/moveTo';
@@ -181,6 +183,11 @@ interface State {
   resizePiece: (key: SizeField['key'], value: Mm) => void;
   /** Width or depth of a project piece, from its Selected piece card; one project undo step (ADR-106). */
   resizeItem: (id: string, key: SizeField['key'], value: Mm) => void;
+  /**
+   * The group's width (extent along the wall, shared by `split`), height or depth (every piece) (ADR-148); one project
+   * undo step. Returns what to tell the user: why nothing changed, or the pieces that kept their size; '' otherwise.
+   */
+  resizeGroup: (groupId: string, key: SizeField['key'], value: Mm, split: WidthSplit) => string;
   /** Catalog metadata and guidance settings (ADR-028, ADR-035). */
   updateMeta: (patch: Partial<Pick<Design, 'catalog' | 'settings'>>) => void;
   editTemplateVariant: (template: LocalTemplate, variantId: string) => void;
@@ -708,13 +715,20 @@ export const useDesign = create<State>((rawSet, get) => {
     },
     updateItem: (id, patch) => {
       const p = get().project;
-      if (p)
-        commitProject({ ...p, items: p.items.map((i) => (i.id === id ? { ...i, ...patch } : i)) });
+      if (!p) return;
+      const next = { ...p, items: p.items.map((i) => (i.id === id ? { ...i, ...patch } : i)) };
+      // A grouped piece moved from its fields takes its group along (ADR-148).
+      const res = 'position' in patch || 'placement' in patch ? carryGroups(p, next, [id]) : null;
+      if (res?.reason) return set({ notice: res.reason });
+      commitProject(res?.project ?? next);
     },
     moveItemBy: (id, dxMm, dzMm, step) => {
       const p = get().project;
       if (!p) return null;
-      const res = moveBy(p, id, dxMm, dzMm, step);
+      // A grouped piece moves with its whole group (ADR-148).
+      const group = withGroups(p, [id]);
+      const res =
+        group.length > 1 ? moveItems(p, group, dxMm, dzMm, step) : moveBy(p, id, dxMm, dzMm, step);
       if (res.reason) {
         set({ notice: res.reason });
         return res.reason;
@@ -735,7 +749,8 @@ export const useDesign = create<State>((rawSet, get) => {
     setGap: (id, gap, moveRight) => {
       const p = get().project;
       if (!p) return null;
-      const res = trySetGap(p, id, gap, moveRight);
+      const set1 = trySetGap(p, id, gap, moveRight);
+      const res = set1.reason ? set1 : carryGroups(p, set1.project, [id]);
       if (res.project !== p) commitProject(res.project);
       return res.reason ?? null;
     },
@@ -765,7 +780,8 @@ export const useDesign = create<State>((rawSet, get) => {
     setItemHeight: (id, height) => {
       const p = get().project;
       if (!p) return null;
-      const res = setWallHeight(p, id, height);
+      const one = setWallHeight(p, id, height);
+      const res = one.reason ? one : carryGroups(p, one.project, [id]);
       if (res.reason) {
         set({ notice: res.reason });
         return res.reason;
@@ -847,7 +863,9 @@ export const useDesign = create<State>((rawSet, get) => {
     turnItem: (id, dir) => {
       const p = get().project;
       if (!p) return null;
-      const res = tryTurn(p, id, dir);
+      // A grouped piece turns with its whole group, about the group's centre (ADR-148).
+      const group = withGroups(p, [id]);
+      const res = group.length > 1 ? turnSelection(p, group, dir) : tryTurn(p, id, dir);
       if (res.reason) {
         set({ notice: res.reason });
         return res.reason;
@@ -858,7 +876,8 @@ export const useDesign = create<State>((rawSet, get) => {
     setRotation: (id, deg) => {
       const p = get().project;
       if (!p) return null;
-      const res = setItemRotation(p, id, deg);
+      const one = setItemRotation(p, id, deg);
+      const res = one.reason ? one : carryGroups(p, one.project, [id]);
       if (res.reason) {
         set({ notice: res.reason });
         return res.reason;
@@ -869,6 +888,14 @@ export const useDesign = create<State>((rawSet, get) => {
     mirrorItem: (id) => {
       const p = get().project;
       if (!p) return null;
+      // A grouped piece mirrors with its whole group (ADR-148).
+      const group = withGroups(p, [id]);
+      if (group.length > 1) {
+        const all = mirrorItems(p, group);
+        if (all.refused) return all.refused;
+        if (all.project !== p) commitProject(all.project);
+        return all.reasons.length ? `Moved without mirroring: ${all.reasons.join('; ')}` : null;
+      }
       const res = mirrorItem(p, id);
       if (res.reason) return res.reason;
       if (res.project !== p) commitProject(res.project);
@@ -912,7 +939,7 @@ export const useDesign = create<State>((rawSet, get) => {
     moveSelectionBy: (dx, dz, step) => {
       const p = get().project;
       if (!p) return null;
-      const res = moveItems(p, get().selectedItemIds, dx, dz, step);
+      const res = moveItems(p, withGroups(p, get().selectedItemIds), dx, dz, step);
       if (res.reason) {
         set({ notice: res.reason });
         return res.reason;
@@ -923,7 +950,7 @@ export const useDesign = create<State>((rawSet, get) => {
     turnSelectionBy: (dir) => {
       const p = get().project;
       if (!p) return null;
-      const res = turnSelection(p, get().selectedItemIds, dir);
+      const res = turnSelection(p, withGroups(p, get().selectedItemIds), dir);
       if (res.reason) {
         set({ notice: res.reason });
         return res.reason;
@@ -934,7 +961,7 @@ export const useDesign = create<State>((rawSet, get) => {
     mirrorSelection: () => {
       const p = get().project;
       if (!p) return '';
-      const res = mirrorItems(p, get().selectedItemIds);
+      const res = mirrorItems(p, withGroups(p, get().selectedItemIds));
       if (res.refused) {
         set({ notice: res.refused });
         return res.refused;
@@ -963,17 +990,24 @@ export const useDesign = create<State>((rawSet, get) => {
     alignSelection: (how) => {
       const p = get().project;
       if (!p) return '';
-      const res = alignItems(p, get().selectedItemIds, how);
-      if (res.project !== p && res.project.items.some((it, i) => it !== p.items[i]))
-        commitProject(res.project, 'Align');
+      const ids = get().selectedItemIds;
+      const res = alignItems(p, ids, how);
+      // Grouped pieces take their groups along (ADR-148).
+      const carried = carryGroups(p, res.project, ids);
+      if (carried.reason) return carried.reason;
+      if (carried.project !== p && carried.project.items.some((it, i) => it !== p.items[i]))
+        commitProject(carried.project, 'Align');
       return skippedText(res);
     },
     distributeSelection: () => {
       const p = get().project;
       if (!p) return '';
-      const res = distributeItems(p, get().selectedItemIds);
-      if (res.project.items.some((it, i) => it !== p.items[i]))
-        commitProject(res.project, 'Distribute');
+      const ids = get().selectedItemIds;
+      const res = distributeItems(p, ids);
+      const carried = carryGroups(p, res.project, ids);
+      if (carried.reason) return carried.reason;
+      if (carried.project.items.some((it, i) => it !== p.items[i]))
+        commitProject(carried.project, 'Distribute');
       // The gaps as they now are, also when a locked piece kept its place.
       const gaps = res.gaps ? `Gaps now ${res.gaps.join(' · ')} mm.` : '';
       return [gaps, skippedText(res)].filter(Boolean).join(' ');
@@ -1322,6 +1356,15 @@ export const useDesign = create<State>((rawSet, get) => {
       get().updateItem(id, {
         design: { ...it.design, catalog, product, updatedAt: new Date().toISOString() },
       });
+    },
+    resizeGroup: (groupId, key, value, split) => {
+      const p = get().project;
+      const g = p?.groups?.find((x) => x.id === groupId);
+      if (!p || !g) return '';
+      const res = resizeGroup(p, g.itemIds, key, value, split);
+      if (res.reason) return res.reason;
+      if (res.project !== p) commitProject(res.project, `Resize ${g.name}`);
+      return res.kept.length ? `Kept: ${res.kept.join(', ')}.` : '';
     },
     updateMeta: (patch) => commit({ ...get().design, ...patch }),
     editTemplateVariant: (template, variantId) => {

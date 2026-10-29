@@ -19,8 +19,8 @@ and no vertical snap at all. User answers 2026-10-29: buttons in the piece panel
 ([ADR-093](../adr-done/ADR-093-move-and-turn-project-pieces-in-the-3d-view.md)); directions follow the piece's own
 front; a floor piece sent to the ceiling becomes wall-hung; extras: down to floor / onto piece below, into nearest
 corner, align top / front with neighbour, centre between neighbours. Answers 2026-10-29 to the open questions:
-stacked piece "Slide along base" (G-291), align "Left / right buttons" (G-292), freely turned piece "Vertical only"
-(G-293).
+stacked piece "Slide along base" (G-295), align "Left / right buttons" (G-296), freely turned piece "Vertical only"
+(G-297).
 
 ## Decision
 
@@ -40,11 +40,11 @@ stacked piece "Slide along base" (G-291), align "Left / right buttons" (G-292), 
     floor (placement becomes floor).
   - **Into corner** — _To wall_, then slide toward the nearer side (left or right) until contact; one undo step.
   - **Align top ←/→** / **Align front ←/→** — match the top height / front line of the first piece on its left /
-    right (four buttons; G-292).
+    right (four buttons; G-296).
   - **Centre** — centred between what it touches when sliding left and right (wall or piece); odd mm rounds left.
-- **Stacked piece** (`above`, G-291): left, right, corner and centre slide it along its base by changing
+- **Stacked piece** (`above`, G-295): left, right, corner and centre slide it along its base by changing
   `offsetX`, with the base's ends as limits as well as the first piece in the way; To ceiling lifts it off first.
-- **Freely turned piece** (ADR-121, G-293): only To ceiling and Down; the others are off, "Turned freely".
+- **Freely turned piece** (ADR-121, G-297): only To ceiling and Down; the others are off, "Turned freely".
 - **Refused, with the reason, never silent** (ADR-008): a locked piece shows `LOCKED_HINT` (ADR-095); no room
   drawn → wall, corner and ceiling are disabled, "Draw the room first"; carried pieces follow `moveBlocked`.
 - **UI:** a "Move to" button row in the piece panel's Position group; the same buttons in the 3D toolbar while
@@ -61,7 +61,7 @@ stacked piece "Slide along base" (G-291), align "Left / right buttons" (G-292), 
 
 - In scope: the actions above, their reasons, panel row and 3D toolbar buttons.
 - Out of scope: these actions on the 2D plan as an overlay bar (G-289); moving several selected pieces at once
-  (G-290).
+  (G-294).
 
 ## Consequences
 
@@ -89,4 +89,6 @@ stacked piece "Slide along base" (G-291), align "Left / right buttons" (G-292), 
   in the 3D toolbar while Move is on (so eleven buttons do not cover the view on a phone). An action that cannot move
   the piece stays tappable and marked off; a tap says why ("To left piece: Already touching …"), as phones have no
   hover. Already touching what it would slide to also counts as off.
-- Tests: `tests/move-to.test.ts` (24); browser find-it `tools/move-to/find-it.mjs` (24 checks at 1280 and 390 px).
+- Grouped pieces (ADR-148, merged into `main` while this was open): a piece in a group takes its group along
+  (`carryGroups`); its group-mates are not in its way, and the first of them to touch something stops the slide.
+- Tests: `tests/move-to.test.ts` (25); browser find-it `tools/move-to/find-it.mjs` (24 checks at 1280 and 390 px).

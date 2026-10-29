@@ -11,17 +11,20 @@ const st = () => useDesign.getState();
 const params = (p: Product) => p.params as unknown as Record<string, unknown>;
 
 describe('width and depth of the whole piece (ADR-106)', () => {
-  it('a cabinet, a desk and a corner unit offer width and depth with their Settings limits', () => {
+  it('a cabinet, a desk and a corner unit offer width, height (ADR-148) and depth with their Settings limits', () => {
     expect(sizeFields(byTemplate('chest').product).map((f) => [f.key, f.min, f.max])).toEqual([
       ['width', 100, 4000],
+      ['height', 100, 3000],
       ['depth', 100, 1200],
     ]);
     expect(sizeFields(byTemplate('desk-pedestal').product).map((f) => f.key)).toEqual([
       'width',
+      'height',
       'depth',
     ]);
     expect(sizeFields(byTemplate('corner-l').product).map((f) => f.label)).toEqual([
       'Back wing',
+      'Height',
       'Depth',
     ]);
   });
