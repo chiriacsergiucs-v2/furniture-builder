@@ -168,7 +168,11 @@ function withPlacement(it: ProjectItem, placement: Placement | undefined): Proje
   return placement ? { ...rest, placement } : rest;
 }
 
-const DIR_WORD: Record<Dir, string> = { left: 'its left', right: 'its right', back: 'behind it' };
+const DIR_WORD: Record<Dir, string> = {
+  left: 'on its left',
+  right: 'on its right',
+  back: 'behind it',
+};
 
 /** Plan for one action: the moved item, or why it cannot move. */
 type Plan = { item: ProjectItem } | { reason: string };

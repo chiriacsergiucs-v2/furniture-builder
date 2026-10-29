@@ -70,12 +70,22 @@ stacked piece "Slide along base" (G-291), align "Left / right buttons" (G-292), 
 
 ## Done when
 
-- [ ] Each action on a turned piece (0/90/180/270) moves it to contact with the first wall or piece in the way,
+- [x] Each action on a turned piece (0/90/180/270) moves it to contact with the first wall or piece in the way,
       whole mm (unit tests)
-- [ ] To ceiling turns a floor piece wall-hung at room height − h; Down lands on the piece below or the floor
+- [x] To ceiling turns a floor piece wall-hung at room height − h; Down lands on the piece below or the floor
       (unit tests)
-- [ ] Locked piece, no room, nothing in the way: disabled with the reason and the project unchanged (unit tests)
-- [ ] One undo step per tap (store test)
-- [ ] "Move to" buttons in the panel and in the 3D Move toolbar found at 390 and 1280 px; a tap moves the piece
+- [x] Locked piece, no room, nothing in the way: disabled with the reason and the project unchanged (unit tests)
+- [x] One undo step per tap (store test)
+- [x] "Move to" buttons in the panel and in the 3D Move toolbar found at 390 and 1280 px; a tap moves the piece
       (browser find-it, `tools/move-to/find-it.mjs`)
-- [ ] All CI checks pass; `FUZZ_N=30000` fuzz passes
+- [x] All CI checks pass; `FUZZ_N=30000` fuzz passes
+
+## Implementation
+
+- Core: `src/core/moveTo.ts` (`moveTo`, `moveToOptions`, `MOVE_TO_ACTIONS`, `MOVE_TO_LABELS`); store `moveItemTo`
+  (one undo step, refused taps set the notice and leave history alone).
+- UI: `src/ui/MoveTo.tsx` (`MoveToButtons`), in the Position group of the piece panel and, behind a **Move to…** toggle,
+  in the 3D toolbar while Move is on (so eleven buttons do not cover the view on a phone). An action that cannot move
+  the piece stays tappable and marked off; a tap says why ("To left piece: Already touching …"), as phones have no
+  hover. Already touching what it would slide to also counts as off.
+- Tests: `tests/move-to.test.ts` (24); browser find-it `tools/move-to/find-it.mjs` (24 checks at 1280 and 390 px).
