@@ -1,6 +1,6 @@
 /** Russian text for catalog (ADR-153). Key: the English text; value: the Russian text. */
 export const ru_catalog = {
-  'Group by': 'Группировать',
+  'Group by': 'Группировать по',
   'By room': 'По комнатам',
   Room: 'Комната',
   'By type': 'По типу',
@@ -12,7 +12,7 @@ export const ru_catalog = {
   'Search, e.g. wardrobe, dulap, bed': 'Поиск, напр. шкаф, dulap, кровать',
   'Search the items': 'Поиск изделий',
   Source: 'Источник',
-  'Saved on this device': 'Сохранённые на этом устройстве',
+  'Saved on this device': 'Сохранено на этом устройстве',
   Templates: 'Шаблоны',
   Saved: 'Сохранённые',
   Brands: 'Бренды',
@@ -56,7 +56,7 @@ export const ru_catalog = {
   '{n} to check': 'проверить: {n}',
   '{name}, 3D view': '{name}, 3D-вид',
   Less: 'Меньше',
-  More: 'Больше',
+  More: 'Ещё',
   default: 'по умолчанию',
   'Interior-only: built on an existing product':
     'Только наполнение: строится на существующем изделии',
@@ -179,7 +179,7 @@ export const ru_catalog = {
   Alternatives: 'Альтернативы',
   'Neighbours may need moving.': 'Возможно, соседние изделия придётся сдвинуть.',
   Desk: 'Стол',
-  'Corner unit': 'Угловой модуль',
+  'Corner unit': 'Угловой шкаф',
   Cabinet: 'Шкаф',
   'Front panel': 'Фасадная панель',
   Frame: 'Каркас',

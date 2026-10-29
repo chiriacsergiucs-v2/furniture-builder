@@ -4,7 +4,7 @@
  * The mixes are worked out in `src/core/wallfill.ts`; this file only collects the answers and shows the result.
  */
 import { useId, useMemo, useState } from 'react';
-import { getLang, t } from '../core/i18n';
+import { t } from '../core/i18n';
 import { snapshotSvg } from '../core/snapshot';
 import {
   BASE_HEIGHT,
@@ -369,7 +369,7 @@ function WallFill({ onClose, onOpened }: { onClose: () => void; onOpened: () => 
           disabled={step === 'wall'}
           onClick={() => go(step === 'refine' ? 'mixes' : 'wall')}
         >
-          {getLang() === 'ru' ? 'Назад' : 'Back'}
+          {t('Back')}
         </button>
         <span className="wz-spacer" />
         <button type="button" className="btn ghost" onClick={onClose}>

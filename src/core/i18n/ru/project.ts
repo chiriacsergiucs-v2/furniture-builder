@@ -59,7 +59,7 @@ export const ru_project = {
   Merge: 'Объединить',
   'Takes {w} × {d} mm of floor, {h} mm high.': 'Занимает {w} × {d} мм пола, высота {h} мм.',
   'Remove “{name}” from this project?': 'Убрать «{name}» из этого проекта?',
-  Remove: 'Убрать',
+  Remove: 'Удалить',
   'Remove from project': 'Убрать из проекта',
   'Add a piece': 'Добавить изделие',
   '{name}, {thickness} mm': '{name}, {thickness} мм',
@@ -75,7 +75,7 @@ export const ru_project = {
     'У этого изделия нет фасадов; «Весь проект» всё равно затронет остальные.',
   'This piece has no carcass; “Whole project” still reaches the others.':
     'У этого изделия нет корпуса; «Весь проект» всё равно затронет остальные.',
-  Board: 'Материал',
+  Board: 'Плита',
   'Apply to': 'Применить к',
   'This piece': 'Это изделие',
   'This run': 'Этот ряд',
@@ -176,7 +176,7 @@ export const ru_project = {
   'Room height {h}': 'Высота комнаты {h}',
   '{label} on the back wall': '{label} на задней стене',
   '{name}, {w} wide, {h} high': '{name}, ширина {w}, высота {h}',
-  'New piece, step by step': 'Новое изделие по шагам',
+  'New piece, step by step': 'Новое изделие, шаг за шагом',
   'The wizard; the piece is saved on this device and added to this project.':
     'Мастер; изделие сохраняется на этом устройстве и добавляется в этот проект.',
   'Your saved pieces': 'Ваши сохранённые изделия',
@@ -187,7 +187,7 @@ export const ru_project = {
     '{n|# изделие|# изделия|# изделий}, добавляются вместе; нажмите на план, чтобы разместить их.',
   'Suggest the run parts again for where the pieces are now? Parts you removed come back.':
     'Предложить детали ряда заново для текущего положения изделий? Удалённые детали вернутся.',
-  'Suggest again': 'Предложить заново',
+  'Suggest again': 'Предложить снова',
   'Run parts': 'Детали ряда',
   'About run parts': 'О деталях ряда',
   'For rows of base units side by side: one worktop, a filler in each gap, a cover panel on each open end, and one plinth along the run when the cabinets stand on their bottoms (it replaces their own plinths). Add a worktop over chosen pieces, or a crown, pelmet or ceiling filler over wall and tall units.':
@@ -221,10 +221,10 @@ export const ru_project = {
   'Room width': 'Ширина комнаты',
   'Room depth': 'Глубина комнаты',
   'Alcove width': 'Ширина ниши',
-  'Notch width': 'Ширина выступа',
+  'Notch width': 'Ширина выреза',
   'Cut-out width': 'Ширина выреза',
   'Alcove depth': 'Глубина ниши',
-  'Notch depth': 'Глубина выступа',
+  'Notch depth': 'Глубина выреза',
   'Cut-out depth': 'Глубина выреза',
   'Alcove from the left': 'Ниша от левого края',
   'Notch from the left': 'Выступ от левого края',

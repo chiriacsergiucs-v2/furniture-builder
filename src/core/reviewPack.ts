@@ -103,12 +103,12 @@ export function reviewPackFiles(
 ): PackFile[] {
   return [
     {
-      name: `${base}-rezumat.html`,
+      name: `${base}-${pt('rezumat')}.html`,
       text: summaryHtml(pm, project, date),
       what: 'Summary to print',
     },
     {
-      name: `${base}-piese.csv`,
+      name: `${base}-${pt('piese')}.csv`,
       text: cutlistCsvRo(projectCutlist(project)),
       what: 'Parts list (CSV)',
     },
@@ -118,7 +118,11 @@ export function reviewPackFiles(
       text: snapshotSvg(pm.model, pm.materials, 900),
       what: '3D view (SVG)',
     },
-    { name: `${base}-proiect.json`, text: projectJson, what: 'Project file (opens in this app)' },
+    {
+      name: `${base}-${pt('proiect')}.json`,
+      text: projectJson,
+      what: 'Project file (opens in this app)',
+    },
   ];
 }
 

@@ -131,9 +131,9 @@ export function SelectionCard() {
               ['left', t('Left'), t('Align left')],
               ['centre', t('Centre'), t('Align centre')],
               ['right', t('Right'), t('Align right')],
-              ['back', t('Back'), t('Align back')],
-              ['front', t('Front'), t('Align front')],
-              ['top', t('Top'), t('Align top')],
+              ['back', t('Back@@side'), t('Align back')],
+              ['front', t('Front@@side'), t('Align front')],
+              ['top', t('Top@@side'), t('Align top')],
               ['bottom', t('Bottom'), t('Align bottom')],
             ] as const
           ).map(([how, label, name]) => (

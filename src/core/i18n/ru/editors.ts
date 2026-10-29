@@ -115,11 +115,11 @@ export const ru_editors = {
   'Side panel height': 'Высота боковой панели',
   '0 = none (daybed back)': '0 = нет (спинка кушетки)',
   Depth: 'Глубина',
-  Top: 'Крышка',
+  Top: 'Верх',
   Seat: 'Сиденье',
   'One board': 'Цельный щит',
   Slats: 'Ламели',
-  Back: 'Спинка',
+  Back: 'Назад',
   'Seat height': 'Высота сиденья',
   'Back of': 'Спинка из',
   'A panel': 'Панели',
@@ -235,14 +235,14 @@ export const ru_editors = {
     'Действуют на все {n}; перетащите любое на плане, чтобы переместить их вместе.',
   ' The pieces of a group always move together; ungroup to move one alone.':
     ' Изделия группы всегда перемещаются вместе; разгруппируйте, чтобы переместить одно.',
-  '{n} pieces': 'Изделий: {n}',
+  '{n} pieces': '{n|# изделие|# изделия|# изделий}',
   Duplicate: 'Дублировать',
   'Turn the selection 90° anticlockwise about its centre':
     'Повернуть выбранное на 90° против часовой стрелки вокруг центра',
-  'Turn 90° ↺': 'Повернуть 90° ↺',
+  'Turn 90° ↺': 'Повернуть на 90° ↺',
   'Turn the selection 90° clockwise about its centre':
     'Повернуть выбранное на 90° по часовой стрелке вокруг центра',
-  'Turn 90° ↻': 'Повернуть 90° ↻',
+  'Turn 90° ↻': 'Повернуть на 90° ↻',
   'Mirror the selection left to right': 'Отразить выбранное слева направо',
   Mirror: 'Отразить',
   Ungroup: 'Разгруппировать',
@@ -352,7 +352,7 @@ export const ru_editors = {
   Boards: 'Плиты',
   'Edge banding': 'Кромка',
   Hardware: 'Фурнитура',
-  'Run parts': 'Детали линии',
+  'Run parts': 'Детали ряда',
   'To choose before buying': 'Выбрать перед покупкой',
   sheets: 'листов',
   'm²': 'м²',
@@ -367,8 +367,7 @@ export const ru_editors = {
   'No prices imported.': 'Цены не импортированы.',
   '{n} prices imported': 'Импортировано цен: {n}',
   ', {n} rows skipped: {list}': ', пропущено строк: {n}: {list}',
-  'Fix the problems listed under Checks first':
-    'Сначала исправьте проблемы, перечисленные в «Проверках»',
+  'Fix the problems listed under Checks first': 'Сначала исправьте проблемы из раздела «Проверки»',
   'Fix the problems under Checks first; sheets are counted only for a valid design. Boards are shown in m² until then.':
     'Сначала исправьте проблемы в «Проверках»; листы считаются только для корректного проекта. До тех пор плиты показаны в м².',
   'Estimate: {amount} {currency}': 'Оценка: {amount} {currency}',
@@ -402,8 +401,12 @@ export const ru_editors = {
   'Download the parts list as CSV (in the print language)':
     'Скачать список деталей в CSV (на языке печати)',
   'Download CSV': 'Скачать CSV',
-  'Print the cutting sheet (Romanian, A4) or save it as PDF':
-    'Распечатать лист раскроя (на румынском, A4) или сохранить в PDF',
+  'Print the cutting sheet (in the print language, A4) or save it as PDF':
+    'Распечатать лист раскроя (на языке печати, A4) или сохранить в PDF',
+  'Shopping list — {name}': 'Список покупок — {name}',
+  'Estimate: {total} {currency}': 'Оценка: {total} {currency}',
+  ' — {n|# price missing|# prices missing}': ' — нет цены: {n}',
+  ' (your prices)': ' (ваши цены)',
   Print: 'Печать',
   'This project has problems (see Checks). Fix them before cutting.':
     'В этом проекте есть проблемы (см. «Проверки»). Исправьте их перед раскроем.',

@@ -9,6 +9,7 @@ import { Dialog } from './Dialogs';
 import { InfoTip } from './controls';
 import { Icon } from './icons';
 import { fileName } from './shell/files';
+import { getPrintLang, PRINT_DATE_LOCALE, pt } from '../core/i18n/print';
 
 /** Save bytes as a file on the device. */
 function save(name: string, bytes: Uint8Array) {
@@ -45,10 +46,14 @@ export function ReviewPackDialog({ open, onClose }: { open: boolean; onClose: ()
         pm,
         json,
         base,
-        new Date().toLocaleDateString('ro-RO'),
+        new Date().toLocaleDateString(PRINT_DATE_LOCALE[getPrintLang()]),
       );
       if (live)
-        setPack({ files, zip: reviewPackZip(files, new Date()), name: `${base}-de-verificat.zip` });
+        setPack({
+          files,
+          zip: reviewPackZip(files, new Date()),
+          name: `${base}-${pt('de-verificat')}.zip`,
+        });
     })();
     return () => {
       live = false;

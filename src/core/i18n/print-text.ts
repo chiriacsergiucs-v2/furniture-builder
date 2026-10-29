@@ -131,6 +131,10 @@ export const PRINT_RU = {
   Fișiere: 'Файлы',
   'Lista de piese (CSV), planul văzut de sus și vederea 3D (SVG), fișierul proiectului (JSON, se deschide în aplicație).':
     'Список деталей (CSV), план сверху и 3D-вид (SVG), файл проекта (JSON, открывается в приложении).',
+  // Review pack file names (src/core/reviewPack.ts, src/ui/ReviewPack.tsx)
+  rezumat: 'сводка',
+  piese: 'детали',
+  'de-verificat': 'на-проверку',
 } satisfies Record<string, string>;
 
 export const PRINT_EN: Record<keyof typeof PRINT_RU, string> = {
@@ -256,4 +260,7 @@ export const PRINT_EN: Record<keyof typeof PRINT_RU, string> = {
   Fișiere: 'Files',
   'Lista de piese (CSV), planul văzut de sus și vederea 3D (SVG), fișierul proiectului (JSON, se deschide în aplicație).':
     'Cut list (CSV), plan seen from above and 3D view (SVG), project file (JSON, opens in the app).',
+  rezumat: 'summary',
+  piese: 'parts',
+  'de-verificat': 'to-check',
 };

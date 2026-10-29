@@ -24,7 +24,9 @@ function Domain({ d, open }: { d: FeatureDomain; open: boolean }) {
           ))}
         </ul>
       )}
-      {d.children?.map((c) => <Domain key={c.name} d={c} open={open} />)}
+      {d.children?.map((c) => (
+        <Domain key={c.name} d={c} open={open} />
+      ))}
     </details>
   );
 }
@@ -42,9 +44,12 @@ export function InfoPage({ onDone }: { onDone: () => void }) {
         <div>
           <h1>{t('Information and guides')}</h1>
           <p className="hint">
-            {t('What this version of the app can do: {n|# feature|# features}, grouped by domain.', {
-              n: total,
-            })}
+            {t(
+              'What this version of the app can do: {n|# feature|# features}, grouped by domain.',
+              {
+                n: total,
+              },
+            )}
           </p>
         </div>
         <button type="button" className="btn outline" onClick={onDone}>

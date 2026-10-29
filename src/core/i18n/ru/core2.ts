@@ -212,7 +212,7 @@ export const ru_core2 = {
   'Into corner': 'В угол',
   'Back to the wall, then sideways to the nearer side':
     'Назад к стене, затем вбок к ближней стороне',
-  Centre: 'В центре',
+  Centre: 'По центру',
   'Centre it between what is on its left and right':
     'Поставить по центру между тем, что слева и справа',
   'To ceiling': 'К потолку',

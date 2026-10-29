@@ -812,7 +812,7 @@ function SplitEditor({
         ]}
         onChange={(a) => onChange((s) => (s.kind === 'split' ? { ...s, axis: a } : s))}
       />
-      <Counter label={t('Parts')} value={n} min={2} max={8} onChange={setCount} />
+      <Counter label={t('Parts@@split')} value={n} min={2} max={8} onChange={setCount} />
       <div className="field">
         <span className="field-label">
           {across ? t('Width of each part') : t('Height of each part')}
@@ -966,7 +966,7 @@ function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material
       )}
       <Group title={t('Construction')} id="g-build">
         <Segmented
-          label={t('Top')}
+          label={t('Top@@panel')}
           value={p.top}
           options={[
             { value: 'over', label: t('On the sides') },
@@ -1020,7 +1020,7 @@ function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material
           onChange={(v) => set({ bottom: v })}
         />
         <Segmented
-          label={t('Back')}
+          label={t('Back@@panel')}
           value={p.back}
           options={[
             { value: 'applied', label: t('Nailed on') },
@@ -1122,7 +1122,7 @@ function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material
           onChange={(v) => set({ frontMaterialId: v })}
         />
         <Select
-          label={t('Back')}
+          label={t('Back@@panel')}
           value={p.backMaterialId}
           options={thinMats}
           onChange={(v) => set({ backMaterialId: v })}
@@ -1350,7 +1350,7 @@ function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[]
       </div>
       <Group title={t('Construction')} id="g-build">
         <Segmented
-          label={t('Top')}
+          label={t('Top@@panel')}
           value={p.top}
           options={[
             { value: 'over', label: t('On the sides') },
@@ -1372,7 +1372,7 @@ function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[]
           onChange={(v) => set({ topLayers: v })}
         />
         <Segmented
-          label={t('Back')}
+          label={t('Back@@panel')}
           value={p.back}
           options={[
             { value: 'applied', label: t('Nailed on') },
@@ -1412,7 +1412,7 @@ function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[]
           onChange={(v) => set({ frontMaterialId: v })}
         />
         <Select
-          label={t('Back')}
+          label={t('Back@@panel')}
           value={p.backMaterialId}
           options={matOptions(materials)}
           onChange={(v) => set({ backMaterialId: v })}

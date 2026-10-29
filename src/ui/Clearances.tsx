@@ -113,8 +113,8 @@ export function ClearanceFields({ item }: { item: ProjectItem }) {
         value={side}
         options={[
           { value: 'none', label: t('None') },
-          { value: 'front', label: t('Front') },
-          { value: 'back', label: t('Back') },
+          { value: 'front', label: t('Front@@side') },
+          { value: 'back', label: t('Back@@side') },
           { value: 'left', label: t('Left') },
           { value: 'right', label: t('Right') },
         ]}

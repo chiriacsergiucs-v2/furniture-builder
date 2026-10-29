@@ -9,7 +9,7 @@ import {
   type ModelTurn,
 } from '../core/model3d';
 import { newId } from '../core/design';
-import { getLang, t } from '../core/i18n';
+import { t } from '../core/i18n';
 import { PROJECT_SCHEMA, type ProjectModel } from '../core/project';
 import type { Box } from '../core/types';
 import { deleteModelIfUnused, listModels, loadModel, type StoredModel } from '../persist/db';
@@ -27,10 +27,10 @@ import { arrowMove } from './planDrag';
  */
 
 const FRONTS: { value: ModelFront; label: string }[] = [
-  { value: 'front', label: t('Front') },
+  { value: 'front', label: t('Front@@side') },
   { value: 'right', label: t('Right') },
   // 'Back' is also the back panel and the Back button; the side of a model needs its own word in Russian.
-  { value: 'back', label: getLang() === 'ru' ? 'Сзади' : 'Back' },
+  { value: 'back', label: t('Back@@side') },
   { value: 'left', label: t('Left') },
 ];
 

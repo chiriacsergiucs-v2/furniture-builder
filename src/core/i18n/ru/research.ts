@@ -157,7 +157,7 @@ export const ru_research = {
   'Use the app’s record': 'Использовать запись приложения',
   'Nothing in the backlog or the ADRs builds this yet (checked {date}).':
     'Ни бэклог, ни ADR пока это не реализуют (проверено {date}).',
-  'Not set': 'Не задан',
+  'Not set': 'Не задано',
   'Your notes': 'Ваши заметки',
   'Saved on this device when you leave the box':
     'Сохраняется на этом устройстве, когда вы покидаете поле',
@@ -248,4 +248,66 @@ export const ru_research = {
     'Оценено по данным исследования его методом — это не оценка из исследования',
   'You merged this feature into {feature}': 'Вы объединили эту функцию с {feature}',
   'Merged this feature into {feature}': 'Эта функция объединена с {feature}',
+  // Research file problems (src/core/research/catalog.ts)
+  '"{k}" must be a list.': '«{k}» должно быть списком.',
+  'Citation {id}: urls must be a list.': 'Ссылка {id}: urls должно быть списком.',
+  'Competitor {id}: missing name.': 'Конкурент {id}: нет названия.',
+  'Contradiction {id}: unknown feature {f}.': 'Противоречие {id}: неизвестная функция {f}.',
+  'Contradiction {id}: unknown finding {n}.': 'Противоречие {id}: неизвестный вывод {n}.',
+  'Feature {id}': 'Функция {id}',
+  'Finding {id}': 'Вывод {id}',
+  'Finding {id}: missing statement.': 'Вывод {id}: нет формулировки.',
+  'Finding {id}: unknown competitor {c}.': 'Вывод {id}: неизвестный конкурент {c}.',
+  'Finding {id}: unknown section {section}.': 'Вывод {id}: неизвестный раздел {section}.',
+  'Section {id}': 'Раздел {id}',
+  'Section {id}: missing title.': 'Раздел {id}: нет заголовка.',
+  'Section {id}: unknown parent {parent}.': 'Раздел {id}: неизвестный родитель {parent}.',
+  'Unextracted {id}': 'Неизвлечённое {id}',
+  'Unextracted {id}: a reason is required.': 'Неизвлечённое {id}: нужна причина.',
+  'complexity must be one of {list}.': 'сложность должна быть одной из: {list}.',
+  'confidence must be one of {list}.': 'уверенность должна быть одной из: {list}.',
+  '{at}: "{k}" must be a list of text.': '{at}: «{k}» должно быть списком текстов.',
+  '{at}: In Progress must say what is missing.':
+    '{at}: для «В работе» нужно указать, чего не хватает.',
+  '{at}: a merge needs its reason.': '{at}: для объединения нужна причина.',
+  '{at}: an inferred feature must list the findings it is inferred from.':
+    '{at}: выведенная функция должна перечислять выводы, из которых она следует.',
+  '{at}: app status needs its evidence.': '{at}: статусу в приложении нужно подтверждение.',
+  '{at}: built by the app, so it is not merged.':
+    '{at}: уже сделана в приложении, поэтому не объединяется.',
+  '{at}: is its own parent.': '{at}: является своим собственным родителем.',
+  '{at}: merged into an unknown feature {target}.':
+    '{at}: объединена с неизвестной функцией {target}.',
+  '{at}: merged into itself.': '{at}: объединена сама с собой.',
+  '{at}: merged into {target}, which is itself merged.':
+    '{at}: объединена с {target}, которая сама объединена.',
+  '{at}: needs a name and a description.': '{at}: нужны название и описание.',
+  '{at}: origin must be explicit or inferred.':
+    '{at}: происхождение должно быть явным или выведенным.',
+  '{at}: something is missing, so it is In Progress, not {status}.':
+    '{at}: чего-то не хватает, поэтому статус «В работе», а не {status}.',
+  '{at}: unknown app status.': '{at}: неизвестный статус в приложении.',
+  '{at}: unknown category {category}.': '{at}: неизвестная категория {category}.',
+  '{at}: unknown competitor {c}.': '{at}: неизвестный конкурент {c}.',
+  '{at}: unknown finding {n}.': '{at}: неизвестный вывод {n}.',
+  '{at}: user decisions are not part of a research file.':
+    '{at}: решения пользователя не входят в файл исследования.',
+  '{id}: bad implementation date.': '{id}: неверная дата реализации.',
+  '{id}: bad merge target.': '{id}: неверная цель объединения.',
+  '{id}: incomplete decision.': '{id}: неполное решение.',
+  '{id}: unknown implementation status.': '{id}: неизвестный статус реализации.',
+  '{id}: unknown priority.': '{id}: неизвестный приоритет.',
+  '{id}: unknown selection state.': '{id}: неизвестное состояние выбора.',
+  '{kind}: duplicate id {i}.': '{kind}: повторяющийся id {i}.',
+  '{kind}: missing id.': '{kind}: нет id.',
+  '{k} must be a whole score 1–5.': '{k} должно быть целой оценкой от 1 до 5.',
+  '{what}: lines must be [first, last].': '{what}: строки должны быть [первая, последняя].',
+  '{what}: lines {first}–{last} are past the end of the document.':
+    '{what}: строки {first}–{last} за концом документа.',
+  Section: 'Раздел',
+  Finding: 'Вывод',
+  Citation: 'Ссылка',
+  Competitor: 'Конкурент',
+  Contradiction: 'Противоречие',
+  Unextracted: 'Неизвлечённое',
 } satisfies Record<string, string>;

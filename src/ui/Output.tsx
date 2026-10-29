@@ -130,7 +130,7 @@ function Parts() {
           type="button"
           className="btn outline"
           disabled={blocked}
-          title={why ?? t('Print the cutting sheet (Romanian, A4) or save it as PDF')}
+          title={why ?? t('Print the cutting sheet (in the print language, A4) or save it as PDF')}
           onClick={() => setPrinting(true)}
         >
           <Icon name="printer" />

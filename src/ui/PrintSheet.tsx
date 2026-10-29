@@ -2,15 +2,13 @@ import { useMemo } from 'react';
 import { areaM2, bandMetersFromRows } from '../core/cutlist';
 import { sheetOf } from '../core/design';
 import { nest } from '../core/nesting';
-import { getPrintLang, pt } from '../core/i18n/print';
+import { getPrintLang, PRINT_DATE_LOCALE, pt } from '../core/i18n/print';
 import { boardBandRo, drillingRo, hardwareRo, partRo } from '../core/ro';
 import { useDesign } from '../store/designStore';
 import { Elevation } from './Elevation';
 import { SheetSvg } from './Sheets';
 import { useView } from './useView';
 import { OVERLAP, PAGE, profileTemplates } from '../core/template';
-
-const DATE_LOCALE = { ro: 'ro-RO', ru: 'ru-RU', en: 'en-GB' } as const;
 
 /**
  * Printable cutting sheet for the panel shop, A4 portrait (ADR-020), in the print language (ADR-157). Rendered only while printing;
@@ -32,7 +30,7 @@ export function PrintSheet() {
   const labelOf = (key: string) => layouts.rows.find((r) => r.panelIds[0] === key);
   const colorOf = (id: string) => view.materials.find((m) => m.id === id)?.color ?? '#ddd';
   const templates = useMemo(() => profileTemplates(view.model.panels), [view]);
-  const locale = DATE_LOCALE[getPrintLang()];
+  const locale = PRINT_DATE_LOCALE[getPrintLang()];
   const mm = pt('mm');
 
   return (

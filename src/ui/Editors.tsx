@@ -688,7 +688,7 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
             />
           </div>
           <Segmented<'panel' | 'slats'>
-            label={p.kind === 'table' ? t('Top') : t('Seat')}
+            label={p.kind === 'table' ? t('Top@@table') : t('Seat')}
             value={p.top}
             options={[
               { value: 'panel', label: t('One board') },
@@ -699,7 +699,7 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
           {(p.kind === 'chair' || p.kind === 'bench') && (
             <>
               <Toggle
-                label={t('Back')}
+                label={t('Back@@chair')}
                 checked={!!p.back}
                 onChange={(v) =>
                   set({

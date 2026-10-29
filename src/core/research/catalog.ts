@@ -28,6 +28,7 @@ import {
   type Selection,
   type Unextracted,
 } from './types';
+import { t, tr } from '../i18n';
 
 // ── Stored versions ─────────────────────────────────────────────────────────────────────────────────────────────
 
@@ -90,15 +91,15 @@ export function validateBundle(x: unknown): string[] {
     'contradictions',
     'unextracted',
   ] as const) {
-    if (!Array.isArray(b[k])) e.push(`"${k}" must be a list.`);
+    if (!Array.isArray(b[k])) e.push(t('"{k}" must be a list.', { k }));
   }
   if (e.length) return e;
   const lineCount = isStr(d!.text) ? d!.text.split('\n').length : Infinity;
   const unique = (kind: string, ids: unknown[]) => {
     const seen = new Set<unknown>();
     for (const i of ids) {
-      if (!isStr(i) || !i) e.push(`${kind}: missing id.`);
-      else if (seen.has(i)) e.push(`${kind}: duplicate id ${i}.`);
+      if (!isStr(i) || !i) e.push(t('{kind}: missing id.', { kind: tr(kind) }));
+      else if (seen.has(i)) e.push(t('{kind}: duplicate id {i}.', { kind: tr(kind), i }));
       seen.add(i);
     }
     return seen as Set<string>;
@@ -140,31 +141,41 @@ export function validateBundle(x: unknown): string[] {
     b.unextracted!.map((u) => u?.id),
   );
   const inDoc = (what: string, l: unknown) => {
-    if (!isLines(l)) e.push(`${what}: lines must be [first, last].`);
+    if (!isLines(l)) e.push(t('{what}: lines must be [first, last].', { what }));
     else if (l[1] > lineCount)
-      e.push(`${what}: lines ${l[0]}–${l[1]} are past the end of the document.`);
+      e.push(
+        t('{what}: lines {first}–{last} are past the end of the document.', {
+          what,
+          first: l[0],
+          last: l[1],
+        }),
+      );
   };
   for (const s of b.sections!) {
-    if (!isStr(s.title)) e.push(`Section ${s.id}: missing title.`);
-    inDoc(`Section ${s.id}`, s.lines);
-    if (s.parent && !secs.has(s.parent)) e.push(`Section ${s.id}: unknown parent ${s.parent}.`);
+    if (!isStr(s.title)) e.push(t('Section {id}: missing title.', { id: s.id }));
+    inDoc(t('Section {id}', { id: s.id }), s.lines);
+    if (s.parent && !secs.has(s.parent))
+      e.push(t('Section {id}: unknown parent {parent}.', { id: s.id, parent: s.parent }));
   }
   for (const f of b.findings!) {
-    if (!secs.has(f.section)) e.push(`Finding ${f.id}: unknown section ${f.section}.`);
-    if (!isStr(f.statement) || !f.statement) e.push(`Finding ${f.id}: missing statement.`);
-    inDoc(`Finding ${f.id}`, f.lines);
+    if (!secs.has(f.section))
+      e.push(t('Finding {id}: unknown section {section}.', { id: f.id, section: f.section }));
+    if (!isStr(f.statement) || !f.statement)
+      e.push(t('Finding {id}: missing statement.', { id: f.id }));
+    inDoc(t('Finding {id}', { id: f.id }), f.lines);
     for (const c of f.competitors ?? [])
-      if (!comps.has(c)) e.push(`Finding ${f.id}: unknown competitor ${c}.`);
+      if (!comps.has(c)) e.push(t('Finding {id}: unknown competitor {c}.', { id: f.id, c }));
   }
   for (const c of b.citations!)
-    if (!isStrArr(c.urls)) e.push(`Citation ${c.id}: urls must be a list.`);
+    if (!isStrArr(c.urls)) e.push(t('Citation {id}: urls must be a list.', { id: c.id }));
   for (const c of b.competitors!)
-    if (!isStr(c.name) || !c.name) e.push(`Competitor ${c.id}: missing name.`);
+    if (!isStr(c.name) || !c.name) e.push(t('Competitor {id}: missing name.', { id: c.id }));
   for (const f of b.features!) {
-    const at = `Feature ${f.id}`;
+    const at = t('Feature {id}', { id: f.id });
     if (!isStr(f.name) || !f.name || !isStr(f.description))
-      e.push(`${at}: needs a name and a description.`);
-    if (!cats.has(f.category)) e.push(`${at}: unknown category ${f.category}.`);
+      e.push(t('{at}: needs a name and a description.', { at }));
+    if (!cats.has(f.category))
+      e.push(t('{at}: unknown category {category}.', { at, category: f.category }));
     for (const k of [
       'useCases',
       'workflow',
@@ -176,57 +187,67 @@ export function validateBundle(x: unknown): string[] {
       'findings',
       'tags',
     ] as const)
-      if (!isStrArr(f[k])) e.push(`${at}: "${k}" must be a list of text.`);
+      if (!isStrArr(f[k])) e.push(t('{at}: "{k}" must be a list of text.', { at, k }));
     if (!isStrArr(f.findings)) continue;
-    for (const n of f.findings) if (!finds.has(n)) e.push(`${at}: unknown finding ${n}.`);
+    for (const n of f.findings)
+      if (!finds.has(n)) e.push(t('{at}: unknown finding {n}.', { at, n }));
     for (const c of f.competitors ?? [])
-      if (!comps.has(c)) e.push(`${at}: unknown competitor ${c}.`);
+      if (!comps.has(c)) e.push(t('{at}: unknown competitor {c}.', { at, c }));
     if (
       f.origin === 'inferred' &&
       !(f.inferredFrom?.length && f.inferredFrom.every((n) => finds.has(n)))
     )
-      e.push(`${at}: an inferred feature must list the findings it is inferred from.`);
+      e.push(t('{at}: an inferred feature must list the findings it is inferred from.', { at }));
     if (f.origin !== 'explicit' && f.origin !== 'inferred')
-      e.push(`${at}: origin must be explicit or inferred.`);
-    if (f.parent === f.id) e.push(`${at}: is its own parent.`);
+      e.push(t('{at}: origin must be explicit or inferred.', { at }));
+    if (f.parent === f.id) e.push(t('{at}: is its own parent.', { at }));
     if ('selection' in f || 'notes' in f)
-      e.push(`${at}: user decisions are not part of a research file.`);
+      e.push(t('{at}: user decisions are not part of a research file.', { at }));
     if (f.assessment)
       e.push(...validateAssessment(f.assessment).map((x) => `${at}: assessment ${x}`));
     if (f.app) {
-      if (!IMPLEMENTATIONS.includes(f.app.status)) e.push(`${at}: unknown app status.`);
+      if (!IMPLEMENTATIONS.includes(f.app.status)) e.push(t('{at}: unknown app status.', { at }));
       if (!isStr(f.app.evidence) || !f.app.evidence.trim())
-        e.push(`${at}: app status needs its evidence.`);
+        e.push(t('{at}: app status needs its evidence.', { at }));
       if (f.app.status === 'in-progress' && !f.app.missing?.trim())
-        e.push(`${at}: In Progress must say what is missing.`);
+        e.push(t('{at}: In Progress must say what is missing.', { at }));
       if ((f.app.status === 'verified' || f.app.status === 'implemented') && f.app.missing)
-        e.push(`${at}: something is missing, so it is In Progress, not ${f.app.status}.`);
+        e.push(
+          t('{at}: something is missing, so it is In Progress, not {status}.', {
+            at,
+            status: f.app.status,
+          }),
+        );
     }
     if (f.mergedInto !== undefined) {
       const target = b.features!.find((x) => x.id === f.mergedInto);
-      if (!target) e.push(`${at}: merged into an unknown feature ${f.mergedInto}.`);
+      if (!target)
+        e.push(t('{at}: merged into an unknown feature {target}.', { at, target: f.mergedInto }));
       else if (target.mergedInto)
-        e.push(`${at}: merged into ${f.mergedInto}, which is itself merged.`);
+        e.push(
+          t('{at}: merged into {target}, which is itself merged.', { at, target: f.mergedInto }),
+        );
       else if (target.app?.status === 'verified' || target.app?.status === 'implemented')
         e.push(
           `${at}: merged into ${f.mergedInto}, which the app has built — that would hide work left to do.`,
         );
       if (f.app?.status === 'verified' || f.app?.status === 'implemented')
-        e.push(`${at}: built by the app, so it is not merged.`);
-      if (f.mergedInto === f.id) e.push(`${at}: merged into itself.`);
+        e.push(t('{at}: built by the app, so it is not merged.', { at }));
+      if (f.mergedInto === f.id) e.push(t('{at}: merged into itself.', { at }));
       if (!isStr(f.mergeReason) || !f.mergeReason.trim())
-        e.push(`${at}: a merge needs its reason.`);
+        e.push(t('{at}: a merge needs its reason.', { at }));
     }
   }
   for (const c of b.contradictions!) {
     for (const n of c.findings ?? [])
-      if (!finds.has(n)) e.push(`Contradiction ${c.id}: unknown finding ${n}.`);
+      if (!finds.has(n)) e.push(t('Contradiction {id}: unknown finding {n}.', { id: c.id, n }));
     for (const f of c.features ?? [])
-      if (!feats.has(f)) e.push(`Contradiction ${c.id}: unknown feature ${f}.`);
+      if (!feats.has(f)) e.push(t('Contradiction {id}: unknown feature {f}.', { id: c.id, f }));
   }
   for (const u of b.unextracted!) {
-    inDoc(`Unextracted ${u.id}`, u.lines);
-    if (!isStr(u.reason) || !u.reason) e.push(`Unextracted ${u.id}: a reason is required.`);
+    inDoc(t('Unextracted {id}', { id: u.id }), u.lines);
+    if (!isStr(u.reason) || !u.reason)
+      e.push(t('Unextracted {id}: a reason is required.', { id: u.id }));
   }
   return e;
 }
@@ -236,12 +257,12 @@ export function validateAssessment(a: Assessment): string[] {
   const e: string[] = [];
   for (const [k] of ASSESSMENT_CRITERIA) {
     const v = a.scores?.[k];
-    if (!Number.isInteger(v) || v < 1 || v > 5) e.push(`${k} must be a whole score 1–5.`);
+    if (!Number.isInteger(v) || v < 1 || v > 5) e.push(t('{k} must be a whole score 1–5.', { k }));
   }
   if (!COMPLEXITY_SCALE.includes(a.complexity))
-    e.push(`complexity must be one of ${COMPLEXITY_SCALE.join(', ')}.`);
+    e.push(t('complexity must be one of {list}.', { list: COMPLEXITY_SCALE.join(', ') }));
   if (!CONFIDENCE_SCALE.includes(a.confidence))
-    e.push(`confidence must be one of ${CONFIDENCE_SCALE.join(', ')}.`);
+    e.push(t('confidence must be one of {list}.', { list: CONFIDENCE_SCALE.join(', ') }));
   if (!isStr(a.priority) || !/^P[0-3](\/P[0-3])?$/.test(a.priority))
     e.push('priority must be P0–P3 (or two bands such as P0/P1).');
   if (!isStr(a.priorityBasis) || !a.priorityBasis.trim()) e.push('priority needs its basis.');
@@ -511,10 +532,12 @@ export function validateMark(x: unknown): string[] {
   const m = x as Partial<ResearchMark>;
   if (!m || typeof m !== 'object' || !isStr(m.id) || !m.id) return ['Decision without an id.'];
   const e: string[] = [];
-  if (!SELECTIONS.includes(m.selection as Selection)) e.push(`${m.id}: unknown selection state.`);
+  if (!SELECTIONS.includes(m.selection as Selection))
+    e.push(t('{id}: unknown selection state.', { id: m.id }));
   if (!IMPLEMENTATIONS.includes(m.implementation as Implementation))
-    e.push(`${m.id}: unknown implementation status.`);
-  if (!USER_PRIORITIES.includes(m.priority as never)) e.push(`${m.id}: unknown priority.`);
+    e.push(t('{id}: unknown implementation status.', { id: m.id }));
+  if (!USER_PRIORITIES.includes(m.priority as never))
+    e.push(t('{id}: unknown priority.', { id: m.id }));
   if (
     !isStr(m.notes) ||
     typeof m.reviewed !== 'boolean' ||
@@ -522,10 +545,11 @@ export function validateMark(x: unknown): string[] {
     !isStr(m.createdAt) ||
     !isStr(m.updatedAt)
   )
-    e.push(`${m.id}: incomplete decision.`);
-  if (m.mergedInto !== undefined && !isStr(m.mergedInto)) e.push(`${m.id}: bad merge target.`);
+    e.push(t('{id}: incomplete decision.', { id: m.id }));
+  if (m.mergedInto !== undefined && !isStr(m.mergedInto))
+    e.push(t('{id}: bad merge target.', { id: m.id }));
   if (m.implementationSetAt !== undefined && !isStr(m.implementationSetAt))
-    e.push(`${m.id}: bad implementation date.`);
+    e.push(t('{id}: bad implementation date.', { id: m.id }));
   return e;
 }
 

@@ -15,6 +15,13 @@ export const PRINT_LANG_NAME: Record<PrintLang, string> = {
   en: 'English',
 };
 
+/** The date format of each print language. */
+export const PRINT_DATE_LOCALE: Record<PrintLang, string> = {
+  ro: 'ro-RO',
+  ru: 'ru-RU',
+  en: 'en-GB',
+};
+
 let printLang: PrintLang = 'ro';
 
 export function setPrintLang(l: PrintLang): void {

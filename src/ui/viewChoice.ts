@@ -1,4 +1,4 @@
-import { getLang, t } from '../core/i18n';
+import { t } from '../core/i18n';
 
 /** What the stage shows (ADR-081): the 2D drawing, the 3D view, or both side by side. */
 export type StageView = 'front' | '3d' | 'both';
@@ -22,7 +22,7 @@ export function viewOptions(has3d: boolean): ViewOption[] {
   return [
     { id: 'front', label: '2D', disabled: false },
     { id: '3d', label: '3D', disabled: !has3d, ...no3d },
-    { id: 'both', label: getLang() === 'ru' ? 'Оба' : 'Both', disabled: !has3d, ...no3d },
+    { id: 'both', label: t('Both@@view'), disabled: !has3d, ...no3d },
   ];
 }
 

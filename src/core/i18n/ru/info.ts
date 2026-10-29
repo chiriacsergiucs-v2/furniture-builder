@@ -42,7 +42,7 @@ export const ru_info = {
   'Merge two touching cabinets': 'Объединить два соседних шкафа',
   'The two become one cabinet with a divider where they met; any other difference refuses the merge.':
     'Два шкафа становятся одним с перегородкой на месте стыка; любое другое различие запрещает объединение.',
-  Contents: 'Содержимое',
+  Contents: 'Наполнение',
   'Shelves, fixed or adjustable': 'Полки, неподвижные или переставные',
   'Adjustable shelves get 32 mm pin-row notes on the sides.':
     'Для переставных полок на боковинах отмечаются ряды отверстий с шагом 32 мм.',
@@ -164,7 +164,7 @@ export const ru_info = {
   'Suggested along a run of base units and kept up to date.':
     'Предлагаются вдоль ряда нижних шкафов и обновляются сами.',
   'One plinth for the whole run': 'Один цоколь на весь ряд',
-  'Scribe allowance for fillers': 'Припуск на подгонку доборов',
+  'Scribe allowance for fillers': 'Припуск на подгонку доборных планок',
   'Worktop over chosen pieces, with overhangs': 'Столешница над выбранными изделиями, со свесами',
   'Crown, pelmet and ceiling filler': 'Карниз, нижний карниз и добор до потолка',
   'Handles for a whole run': 'Ручки для всего ряда',
@@ -269,7 +269,7 @@ export const ru_info = {
   'Shopping list': 'Список покупок',
   'Boards, banding, hardware, run parts and what is still to choose.':
     'Материалы, кромка, фурнитура, детали ряда и то, что ещё нужно выбрать.',
-  'Shopping list CSV': 'CSV списка покупок',
+  'Shopping list CSV': 'Список покупок CSV',
   'Cost estimate from your price list': 'Оценка стоимости по вашему прайс-листу',
   'Printing and files': 'Печать и файлы',
   'Print sheets or save as PDF': 'Печать листов или сохранение в PDF',
@@ -298,7 +298,7 @@ export const ru_info = {
   'A catalog piece keeps only what differs from its template.':
     'Изделие из каталога хранит только отличия от своего шаблона.',
   'Undo and redo with named steps': 'Отмена и повтор с названиями шагов',
-  'Edit history': 'История правок',
+  'Edit history': 'История изменений',
   'Version history': 'История версий',
   'Save as a project template': 'Сохранить как шаблон проекта',
   'Catalog and templates': 'Каталог и шаблоны',

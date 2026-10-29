@@ -100,7 +100,7 @@ export const ru_viewer = {
   'Base height': 'Высота нижних шкафов',
   'Number of pieces': 'Количество изделий',
   any: 'любое',
-  'Tall cabinets': 'Высокие шкафы',
+  'Tall cabinets': 'Пеналы',
   'At least, open shelf bases': 'Не меньше, открытых нижних шкафов с полками',
   'At least, drawer bases': 'Не меньше, нижних шкафов с ящиками',
   'At least, door bases': 'Не меньше, нижних шкафов с дверцами',
@@ -110,7 +110,7 @@ export const ru_viewer = {
     'Все дверцы одной ширины; внутреннее наполнение остаётся пустым, чтобы настроить позже.',
   'Wall cabinet height': 'Высота настенных шкафов',
   'Wall cabinet tops sit at the wall height.': 'Верх настенных шкафов — на высоте стены.',
-  'Wall cabinets': 'Настенные шкафы',
+  'Wall cabinets': 'Навесные шкафы',
   Any: 'Любые',
   Always: 'Всегда',
   Never: 'Никогда',
@@ -119,7 +119,7 @@ export const ru_viewer = {
   Left: 'Слева',
   Right: 'Справа',
   'Both ends': 'По краям',
-  Centre: 'В центре',
+  Centre: 'По центру',
   'Suggested mixes': 'Предложенные наборы',
   '{width} mm wall · best {n}, checked by the model':
     'Стена {width} мм · лучшие {n}, проверены моделью',
@@ -127,7 +127,7 @@ export const ru_viewer = {
   'Suggest again': 'Предложить снова',
 
   // 3D models (Models3D.tsx)
-  Front: 'Спереди',
+  Front: 'Фасад',
   'Selected 3D model: {name}': 'Выбранная 3D-модель: {name}',
   'Selected 3D model': 'Выбранная 3D-модель',
   'About 3D models': 'О 3D-моделях',
@@ -253,6 +253,6 @@ export const ru_viewer = {
   'Wall {n} picture: {rect}': 'Картинка стены {n}: {rect}',
   'From left {x} · From back {z} mm': 'От левого края {x} · От задней стены {z} мм',
   'Snaps: {list}': 'Привязка: {list}',
-  'Alt held: placing freely.': 'Alt удерживается: свободная расстановка.',
+  'Alt held: placing freely.': 'Alt зажат: свободное размещение.',
   'Snap is off.': 'Привязка выключена.',
 } satisfies Record<string, string>;

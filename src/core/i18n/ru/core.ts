@@ -306,7 +306,7 @@ export const ru_core = {
   'Rename the project': 'Переименовать проект',
   'Change the project': 'Изменить проект',
   'No project is open.': 'Проект не открыт.',
-  'Replace {name}': 'Заменить: {name}',
+  'Replace {name}': 'Заменить {name}',
   'Set {setting}': 'Задать: {setting}',
   'Follow project {setting}': 'Как в проекте: {setting}',
   'Moved without mirroring: {reasons}': 'Перемещено без зеркального отражения: {reasons}',

@@ -52,7 +52,8 @@
   --on-material-2: #5a625e; /* text drawn on material-coloured fills */
   /* Type */
   --font: 'Barlow', 'Fira Sans', system-ui, sans-serif;
-  --num: 'Barlow Semi Condensed', 'Barlow', 'Fira Sans Condensed', 'Fira Sans', system-ui, sans-serif;
+  --num:
+    'Barlow Semi Condensed', 'Barlow', 'Fira Sans Condensed', 'Fira Sans', system-ui, sans-serif;
   --fs-xs: 0.8125rem; /* 13 px: hints, captions, table heads */
   --fs-sm: 0.875rem; /* 14 px: labels, secondary rows */
   --fs-md: 0.9375rem; /* 15 px: body */

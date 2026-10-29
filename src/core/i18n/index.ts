@@ -6,6 +6,9 @@
  *
  * Placeholders: `{name}` takes `params.name`. Plurals: `{n|part|parts}` in English and `{n|деталь|детали|деталей}`
  * in Russian pick a form by `params.n`; `#` inside a form is the number itself (`{n|# part|# parts}`).
+ *
+ * Context: one English word with two meanings gets a key per meaning, `Back@@panel` (the back panel) beside `Back`
+ * (go back); English shows the text before `@@`.
  */
 import { ru, ruData } from './ru';
 
@@ -57,15 +60,56 @@ export function format(text: string, params: Params | undefined, l: Lang = lang)
   });
 }
 
-/** The text in the current language. */
-export function t(key: Key, params?: Params): string {
-  return format(lang === 'ru' ? ru[key] : key, params);
+/** The English text of a key: the key without its `@@context`. */
+export function english(key: string): string {
+  const at = key.indexOf('@@');
+  return at < 0 ? key : key.slice(0, at);
 }
 
-/** A text from data, in the current language; the English text when it has no entry. */
+/** The text in the current language. */
+export function t(key: Key, params?: Params): string {
+  return format(lang === 'ru' ? ru[key] : english(key), params);
+}
+
+const NUM = /\d+(?:[.,]\d+)?/g;
+const HOLE = '\u0001';
+/** Keys with simple placeholders, by their text with each placeholder as a hole: `Top box {w}` → `Top box ␁`. */
+let shapes: Map<string, { names: string[]; value: string }> | null = null;
+function shapeOf(text: string): { names: string[]; value: string } | undefined {
+  if (!shapes) {
+    shapes = new Map();
+    for (const [k, value] of Object.entries(RU_ALL)) {
+      const names = [...k.matchAll(/\{(\w+)\}/g)].map((m) => m[1]);
+      if (names.length) shapes.set(k.replace(/\{\w+\}/g, HOLE), { names, value });
+    }
+  }
+  return shapes.get(text);
+}
+
+/** Russian for a data text with no entry of its own: numbers in it fill a key's placeholders, `A: B` both sides. */
+function trLoose(text: string): string | undefined {
+  const nums = text.match(NUM);
+  if (nums) {
+    const s = shapeOf(text.replace(NUM, HOLE));
+    if (s && s.names.length === nums.length)
+      return format(s.value, Object.fromEntries(s.names.map((n, i) => [n, nums[i]])), 'ru');
+  }
+  const at = text.indexOf(': ');
+  if (at > 0) {
+    const a = tr(text.slice(0, at));
+    const b = tr(text.slice(at + 2));
+    if (a !== text.slice(0, at) || b !== text.slice(at + 2)) return `${a}: ${b}`;
+  }
+  return undefined;
+}
+
+/**
+ * A text from data, in the current language; the English text when it has no entry. A generated name with numbers
+ * in it ("Top box 600") uses the key with placeholders ("Top box {w}"); "Piece: part" translates each side.
+ */
 export function tr(text: string, params?: Params): string {
   if (lang === 'ru') {
-    const v = RU_ALL[text];
+    const v = RU_ALL[text] ?? (params ? undefined : trLoose(text));
     if (v !== undefined) return format(v, params);
   }
   return format(text, params);

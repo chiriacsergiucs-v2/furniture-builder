@@ -16,7 +16,9 @@ describe.each(WIDTHS)('language at %i px', (width) => {
     const reload = vi.spyOn(page, 'reload').mockImplementation(() => {});
     await openMore(user, /^More$/);
     const group = screen.getByRole('group', { name: 'Language' });
-    expect(within(group).getByRole('button', { name: 'English' }).getAttribute('aria-pressed')).toBe('true');
+    expect(
+      within(group).getByRole('button', { name: 'English' }).getAttribute('aria-pressed'),
+    ).toBe('true');
     await user.click(within(group).getByRole('button', { name: 'Русский' }));
     expect(localStorage.getItem('fb:lang')).toBe('ru');
     expect(reload).toHaveBeenCalledOnce();
@@ -40,6 +42,8 @@ describe.each(WIDTHS)('language at %i px', (width) => {
     const group = screen.getByRole('group', { name: /Print language/ });
     await user.click(within(group).getByRole('button', { name: 'English' }));
     expect(localStorage.getItem('fb:print-lang')).toBe('en');
-    expect(within(group).getByRole('button', { name: 'English' }).getAttribute('aria-pressed')).toBe('true');
+    expect(
+      within(group).getByRole('button', { name: 'English' }).getAttribute('aria-pressed'),
+    ).toBe('true');
   });
 });

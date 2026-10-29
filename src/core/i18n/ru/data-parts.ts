@@ -305,6 +305,12 @@ const FIXED: Record<string, string> = {
   'Top box': 'Антресоль',
   'Base, {n|# front|# fronts} {w}': 'Нижний, {n|# фасад|# фасада|# фасадов} {w}',
   'Tall cabinet, {n|# front|# fronts} {w}': 'Пенал, {n|# фасад|# фасада|# фасадов} {w}',
+  // Default labels of room features ("Door 1"), saved in the project and shown through tr().
+  'Door {n}': 'Дверь {n}',
+  'Window {n}': 'Окно {n}',
+  'Obstacle {n}': 'Препятствие {n}',
+  'Pipe {n}': 'Труба {n}',
+  'Outlet {n}': 'Розетка {n}',
   'Top box {w}': 'Антресоль {w}',
   'Wall {w} mm': 'Стена {w} мм',
   'Crown over {names}': 'Карниз над {names}',

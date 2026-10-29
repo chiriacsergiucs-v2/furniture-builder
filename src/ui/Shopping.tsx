@@ -36,7 +36,7 @@ const SECTIONS: { id: ShopSection; title: string }[] = [
   { id: 'run', title: 'Run parts' },
   { id: 'choose', title: 'To choose before buying' },
 ];
-/** The section titles on screen; the printed list keeps `SECTIONS` (print language is set elsewhere). */
+/** The section titles, on screen and on the printed list (both in the app's language, ADR-154). */
 const SECTION_TITLE: Record<ShopSection, string> = {
   boards: t('Boards'),
   banding: t('Edge banding'),
@@ -50,7 +50,6 @@ const UNIT_SHOWN: Record<ShopUnit, string> = {
   m: t('m'),
   piece: t('pcs'),
 };
-const UNIT: Record<ShopUnit, string> = { sheet: 'sheets', m2: 'm²', m: 'm', piece: 'pcs' };
 const PER: Record<ShopUnit, string> = {
   sheet: t('per sheet'),
   m2: t('per m²'),
@@ -147,16 +146,24 @@ export function ShoppingList() {
     const rowsHtml = SECTIONS.map((s) => {
       const ls = lines.filter((l) => l.section === s.id);
       return ls.length
-        ? `<h2>${s.title}</h2><table><tr><th>Qty</th><th>Item</th><th>Details</th><th>Price</th></tr>${ls
+        ? `<h2>${esc(SECTION_TITLE[s.id])}</h2><table><tr><th>${esc(t('Qty'))}</th><th>${esc(t('Item'))}</th><th>${esc(t('Details'))}</th><th>${esc(t('Price'))}</th></tr>${ls
             .map((l) => {
               const p = linePrice(l, map);
-              return `<tr><td>${l.quantity} ${UNIT[l.unit]}</td><td>${esc(l.label)}</td><td>${esc(l.detail)}</td><td>${p === null ? '' : `${formatMoney(p)} ${esc(currency)}`}</td></tr>`;
+              return `<tr><td>${l.quantity} ${UNIT_SHOWN[l.unit]}</td><td>${esc(tr(l.label))}</td><td>${esc(tr(l.detail))}</td><td>${p === null ? '' : `${formatMoney(p)} ${esc(currency)}`}</td></tr>`;
             })
             .join('')}</table>`
         : '';
     }).join('');
+    const title = esc(t('Shopping list — {name}', { name: view.title }));
+    const estimate = esc(
+      t('Estimate: {total} {currency}', { total: formatMoney(est.total), currency }) +
+        (est.missing.length
+          ? t(' — {n|# price missing|# prices missing}', { n: est.missing.length })
+          : '') +
+        t(' (your prices)'),
+    );
     w.document.write(
-      `<!doctype html><meta charset="utf-8"><title>Shopping list — ${esc(view.title)}</title><style>body{font:12px sans-serif;margin:16px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #999;padding:3px 6px;text-align:left}h2{font-size:14px;margin:14px 0 4px}</style><h1>Shopping list — ${esc(view.title)}</h1>${rowsHtml}<p>${esc(NOT_COUNTED)}</p><p>Estimate: ${formatMoney(est.total)} ${esc(currency)}${est.missing.length ? ` — ${est.missing.length} prices missing` : ''} (your prices)</p>`,
+      `<!doctype html><meta charset="utf-8"><title>${title}</title><style>body{font:12px sans-serif;margin:16px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #999;padding:3px 6px;text-align:left}h2{font-size:14px;margin:14px 0 4px}</style><h1>${title}</h1>${rowsHtml}<p>${esc(NOT_COUNTED)}</p><p>${estimate}</p>`,
     );
     w.document.close();
     w.focus();
