@@ -43,38 +43,42 @@ import {
 } from '../core/research/types';
 import { APP_CHECKED } from '../core/research/ensemble-2026-10-23.app';
 import { useResearch, type MarkPatch } from '../store/researchStore';
+import { t, tr } from '../core/i18n';
 import { askConfirm } from './Confirm';
+import { tNode } from './i18n';
 import { Icon } from './icons';
 
 /** Features (with the assessment dashboard above the list) and Competitors (ADR-110). */
 export type Tab = 'features' | 'competitors';
 const TABS: [Tab, string][] = [
-  ['features', 'Features'],
-  ['competitors', 'Competitors'],
+  ['features', t('Features')],
+  ['competitors', t('Competitors')],
 ];
 
 const ne = (s: string) =>
-  s === 'not evaluated' || s === 'unknown' ? <span className="ne">{s}</span> : s;
+  s === 'not evaluated' || s === 'unknown' ? <span className="ne">{tr(s)}</span> : tr(s);
 /** A rating with its source: the paper's own words, or our assessment marked "A" (never shown as research). */
 function Rated({ f, dim }: { f: ViewFeature; dim: RatingDim }) {
   const r = rating(f, dim);
-  if (r.source === 'none') return <span className="ne">{r.value}</span>;
+  if (r.source === 'none') return <span className="ne">{tr(r.value)}</span>;
   return (
     <span className={`rated ${r.source}`}>
-      {r.value}
+      {tr(r.value)}
       {r.source === 'assessment' && (
         <abbr
           className="assessed"
-          title="Assessed from the paper's evidence with the paper's method — not a rating in the paper"
+          title={t(
+            "Assessed from the paper's evidence with the paper's method — not a rating in the paper",
+          )}
         >
-          A
+          {t('A')}
         </abbr>
       )}
     </span>
   );
 }
 const catLabel = (view: CatalogView, id: string) =>
-  view.categories.find((c) => c.id === id)?.label ?? id;
+  tr(view.categories.find((c) => c.id === id)?.label ?? id);
 
 /**
  * Feature Research & Catalog (ADR-043): every record extracted from the research papers, searchable and selectable
@@ -106,29 +110,37 @@ export function ResearchPage({
     setTab('features');
     window.scrollTo({ top: 0 });
   };
-  const go = (t: Tab, q?: Partial<FeatureQuery>) => {
+  const go = (tb: Tab, q?: Partial<FeatureQuery>) => {
     if (q) setQuery({ ...EMPTY_QUERY, ...q });
     setDetail(null);
-    setTab(t);
+    setTab(tb);
     window.scrollTo({ top: 0 });
   };
   const st = useMemo(() => stats(view, marks), [view, marks]);
   const ctx: Ctx = { view, marks, open, go };
   return (
-    <main className="catalog-page research-page" aria-label="Feature Research & Catalog">
+    <main className="catalog-page research-page" aria-label={t('Feature Research & Catalog')}>
       <header className="catalog-head">
         <div>
-          <h1>Feature Research &amp; Catalog</h1>
+          <h1>{t('Feature Research & Catalog')}</h1>
           <p className="hint">
-            <strong className="num">{st.features} features</strong> ({st.topLevel} features,{' '}
-            {st.subfeatures} sub-features) and {st.findings} findings from {view.documents.length}{' '}
-            research {view.documents.length === 1 ? 'paper' : 'papers'}. Selecting a feature records
-            a decision only — nothing is implemented from here.
+            {tNode(
+              '{total} ({top}, {subs}) and {findings} from {papers}. Selecting a feature records a decision only — nothing is implemented from here.',
+              {
+                total: <strong className="num">{t('{n} features', { n: st.features })}</strong>,
+                top: t('{n} features', { n: st.topLevel }),
+                subs: t('{n} sub-features', { n: st.subfeatures }),
+                findings: t('{n} findings', { n: st.findings }),
+                papers: t('{n|# research paper|# research papers}', {
+                  n: view.documents.length,
+                }),
+              },
+            )}
           </p>
         </div>
         <button type="button" className="btn outline" onClick={onDone}>
           <Icon name="chevron-left" className="sm" />
-          Back to the editor
+          {t('Back to the editor')}
         </button>
       </header>
       {error && (
@@ -137,15 +149,19 @@ export function ResearchPage({
           <span>{error}</span>
         </p>
       )}
-      <nav className="segmented small research-tabs" role="tablist" aria-label="Research sections">
-        {TABS.map(([t, label]) => (
+      <nav
+        className="segmented small research-tabs"
+        role="tablist"
+        aria-label={t('Research sections')}
+      >
+        {TABS.map(([tb, label]) => (
           <button
-            key={t}
+            key={tb}
             type="button"
             role="tab"
-            aria-selected={tab === t}
-            className={tab === t ? 'on' : ''}
-            onClick={() => go(t)}
+            aria-selected={tab === tb}
+            className={tab === tb ? 'on' : ''}
+            onClick={() => go(tb)}
           >
             {label}
           </button>
@@ -200,10 +216,10 @@ function Dist({
           <li key={r.key}>
             {onPick && r.key !== 'Other' ? (
               <button type="button" className="link" onClick={() => onPick(r.key)}>
-                {r.label ?? r.key}
+                {tr(r.label ?? r.key)}
               </button>
             ) : (
-              <span>{r.label ?? r.key}</span>
+              <span>{tr(r.label ?? r.key)}</span>
             )}
             <span className="bar-track">
               <span style={{ width: `${(r.n / max) * 100}%` }} />
@@ -237,12 +253,18 @@ function RankedList({
           {items.map((f) => (
             <li key={f.id}>
               <button type="button" className="link" onClick={() => ctx.open(f.id)}>
-                {f.name}
+                {tr(f.name)}
               </button>
               <span className="facts">
-                Value <Rated f={f} dim="impact" /> · Demand <Rated f={f} dim="demand" /> ·
-                Complexity <Rated f={f} dim="complexity" /> · Confidence{' '}
-                <Rated f={f} dim="confidence" />
+                {tNode(
+                  'Value {impact} · Demand {demand} · Complexity {complexity} · Confidence {confidence}',
+                  {
+                    impact: <Rated f={f} dim="impact" />,
+                    demand: <Rated f={f} dim="demand" />,
+                    complexity: <Rated f={f} dim="complexity" />,
+                    confidence: <Rated f={f} dim="confidence" />,
+                  },
+                )}
               </span>
             </li>
           ))}
@@ -262,19 +284,21 @@ function AppSummary({ ctx }: { ctx: Ctx }) {
   const n = (s: Implementation) => shown.filter((f) => implementationOf(f, marks) === s).length;
   const built = n('implemented') + n('verified');
   return (
-    <section className="app-summary" aria-label="Built in this app">
-      <h2 className="group-head">Built in this app</h2>
+    <section className="app-summary" aria-label={t('Built in this app')}>
+      <h2 className="group-head">{t('Built in this app')}</h2>
       <p className="alert ok">
         <Icon name="check" className="sm" />
         <span>
-          Features the app has built are no longer listed (ADR-149). Of the {shown.length} left
-          (after {all.length - shown.length} merged as the same idea):{' '}
+          {t(
+            'Features the app has built are no longer listed (ADR-149). Of the {left} left (after {merged} merged as the same idea):',
+            { left: shown.length, merged: all.length - shown.length },
+          )}{' '}
           <button
             type="button"
             className="link"
             onClick={() => go('features', { implementation: 'in-progress' })}
           >
-            <strong className="num">{n('in-progress')}</strong> in progress
+            {tNode('{n} in progress', { n: <strong className="num">{n('in-progress')}</strong> })}
           </button>
           ,{' '}
           <button
@@ -282,7 +306,7 @@ function AppSummary({ ctx }: { ctx: Ctx }) {
             className="link"
             onClick={() => go('features', { implementation: 'not-started' })}
           >
-            <strong className="num">{n('not-started')}</strong> not started
+            {tNode('{n} not started', { n: <strong className="num">{n('not-started')}</strong> })}
           </button>
           {n('planned') > 0 && (
             <>
@@ -292,22 +316,28 @@ function AppSummary({ ctx }: { ctx: Ctx }) {
                 className="link"
                 onClick={() => go('features', { implementation: 'planned' })}
               >
-                <strong className="num">{n('planned')}</strong> planned
+                {tNode('{n} planned', { n: <strong className="num">{n('planned')}</strong> })}
               </button>
             </>
           )}
           {built > 0 && (
             <>
-              , <strong className="num">{built}</strong> built by a status you set
+              ,{' '}
+              {tNode('{n} built by a status you set', {
+                n: <strong className="num">{built}</strong>,
+              })}
             </>
           )}
-          . From the backlog and ADRs (checked {APP_CHECKED}); a status you set yourself wins.{' '}
+          .{' '}
+          {t('From the backlog and ADRs (checked {date}); a status you set yourself wins.', {
+            date: APP_CHECKED,
+          })}{' '}
           <button
             type="button"
             className="link"
             onClick={() => go('features', { showMerged: true, q: '' })}
           >
-            See merged features
+            {t('See merged features')}
           </button>
         </span>
       </p>
@@ -338,9 +368,13 @@ function AssessmentDashboard({ ctx }: { ctx: Ctx }) {
   );
   const a = useMemo(() => assessmentStats(list), [list]);
   return (
-    <section className="assessment" aria-label="Assessment">
-      <h2 className="group-head">Assessment: demand, value, complexity, confidence</h2>
-      <div className="segmented small" role="radiogroup" aria-label="Features in the assessment">
+    <section className="assessment" aria-label={t('Assessment')}>
+      <h2 className="group-head">{t('Assessment: demand, value, complexity, confidence')}</h2>
+      <div
+        className="segmented small"
+        role="radiogroup"
+        aria-label={t('Features in the assessment')}
+      >
         <button
           type="button"
           role="radio"
@@ -348,7 +382,7 @@ function AssessmentDashboard({ ctx }: { ctx: Ctx }) {
           className={scope === 'left' ? 'on' : ''}
           onClick={() => setScope('left')}
         >
-          Left to build ({all.length - built.size})
+          {t('Left to build ({n})', { n: all.length - built.size })}
         </button>
         <button
           type="button"
@@ -357,34 +391,39 @@ function AssessmentDashboard({ ctx }: { ctx: Ctx }) {
           className={scope === 'all' ? 'on' : ''}
           onClick={() => setScope('all')}
         >
-          All features ({all.length})
+          {t('All features ({n})', { n: all.length })}
         </button>
       </div>
       <p className="alert info">
         <Icon name="info" className="sm" />
         <span>
-          <strong className="num">
-            {list.length - a.unrated} of {list.length}
-          </strong>{' '}
-          features rated: <strong>{a.ratedByPaper}</strong> by the paper itself,{' '}
-          <strong>{a.assessed}</strong> assessed here (demand, appreciation, value, complexity,
-          confidence and research priority) from the paper’s evidence with the paper’s own method
-          (marked <abbr className="assessed">A</abbr>). Value = core relevance 30 % · demand 20 % ·
-          UX 20 % · competitor adoption 15 % · differentiation 10 % · downstream leverage 5 %, each
-          1–5. Assessments are judgements, not research results; open a feature for its scores and
-          rationale.
+          {tNode(
+            '{rated} features rated: {paper} by the paper itself, {assessed} assessed here (demand, appreciation, value, complexity, confidence and research priority) from the paper’s evidence with the paper’s own method (marked {a}). Value = core relevance 30 % · demand 20 % · UX 20 % · competitor adoption 15 % · differentiation 10 % · downstream leverage 5 %, each 1–5. Assessments are judgements, not research results; open a feature for its scores and rationale.',
+            {
+              rated: (
+                <strong className="num">
+                  {t('{n} of {total}', { n: list.length - a.unrated, total: list.length })}
+                </strong>
+              ),
+              paper: <strong>{a.ratedByPaper}</strong>,
+              assessed: <strong>{a.assessed}</strong>,
+              a: <abbr className="assessed">{t('A')}</abbr>,
+            },
+          )}
         </span>
       </p>
       <div className="table-wrap">
-        <table className="cut matrix" aria-label="Value by complexity">
+        <table className="cut matrix" aria-label={t('Value by complexity')}>
           <caption>
-            Value (rows) × complexity (columns) — number of features; pick a cell to list them
+            {t(
+              'Value (rows) × complexity (columns) — number of features; pick a cell to list them',
+            )}
           </caption>
           <thead>
             <tr>
-              <th>Value</th>
+              <th>{t('Value')}</th>
               {COMPLEXITY_SCALE.map((c) => (
-                <th key={c}>{c}</th>
+                <th key={c}>{tr(c)}</th>
               ))}
             </tr>
           </thead>
@@ -392,7 +431,7 @@ function AssessmentDashboard({ ctx }: { ctx: Ctx }) {
             {a.matrix.map((r) => (
               <tr key={r.band}>
                 <th scope="row" className="num">
-                  {r.label}
+                  {tr(r.label)}
                 </th>
                 {r.cells.map((c) => (
                   <td
@@ -403,8 +442,15 @@ function AssessmentDashboard({ ctx }: { ctx: Ctx }) {
                       <button
                         type="button"
                         className="cell-btn num"
-                        title={c.ids.map((id) => view.features.get(id)?.name).join('\n')}
-                        aria-label={`${c.ids.length} features with value ${r.label} and ${c.complexity} complexity`}
+                        title={c.ids.map((id) => tr(view.features.get(id)?.name ?? '')).join('\n')}
+                        aria-label={t(
+                          '{n} features with value {value} and {complexity} complexity',
+                          {
+                            n: c.ids.length,
+                            value: tr(r.label),
+                            complexity: tr(c.complexity),
+                          },
+                        )}
                         onClick={() =>
                           go('features', {
                             valueBand: r.band,
@@ -426,54 +472,59 @@ function AssessmentDashboard({ ctx }: { ctx: Ctx }) {
         </table>
       </div>
       <div className="overview-cols four">
-        <Dist title="Demand" rows={a.byDemand} onPick={(k) => go('features', { demand: k })} />
+        <Dist title={t('Demand')} rows={a.byDemand} onPick={(k) => go('features', { demand: k })} />
         <Dist
-          title="Appreciation"
+          title={t('Appreciation')}
           rows={a.byAppreciation}
           onPick={(k) => go('features', { appreciation: k })}
         />
         <Dist
-          title="Value (1–5)"
+          title={t('Value (1–5)')}
           rows={a.byValue}
           onPick={(k) => go('features', { valueBand: k })}
         />
         <Dist
-          title="Complexity"
+          title={t('Complexity')}
           rows={a.byComplexity}
           onPick={(k) => go('features', { complexity: k })}
         />
         <Dist
-          title="Confidence in the evidence"
+          title={t('Confidence in the evidence')}
           rows={a.byConfidence}
           onPick={(k) => go('features', { confidence: k })}
         />
         <Dist
-          title="Research priority"
+          title={t('Research priority')}
           rows={a.byPriority.map((r) => ({
             ...r,
             label: {
-              P0: 'P0 foundational',
-              P1: 'P1 next stage',
-              P2: 'P2 advanced/professional',
-              P3: 'P3 experimental/later',
+              P0: t('P0 foundational'),
+              P1: t('P1 next stage'),
+              P2: t('P2 advanced/professional'),
+              P3: t('P3 experimental/later'),
             }[r.key],
           }))}
           onPick={(k) => go('features', { priority: k })}
         />
       </div>
       <div className="overview-cols">
-        <RankedList ctx={ctx} title="Highest value" items={a.top} empty="No rated features." />
         <RankedList
           ctx={ctx}
-          title="Quick wins (value ≥ 4.0, complexity Medium or lower)"
-          items={a.quickWins}
-          empty="None."
+          title={t('Highest value')}
+          items={a.top}
+          empty={t('No rated features.')}
         />
         <RankedList
           ctx={ctx}
-          title="High value, weak evidence (check before committing)"
+          title={t('Quick wins (value ≥ 4.0, complexity Medium or lower)')}
+          items={a.quickWins}
+          empty={t('None.')}
+        />
+        <RankedList
+          ctx={ctx}
+          title={t('High value, weak evidence (check before committing)')}
           items={a.weakEvidence}
-          empty="Every feature valued 4.0 or more has at least medium confidence."
+          empty={t('Every feature valued 4.0 or more has at least medium confidence.')}
         />
       </div>
     </section>
@@ -483,36 +534,36 @@ function AssessmentDashboard({ ctx }: { ctx: Ctx }) {
 // ── Explorer ────────────────────────────────────────────────────────────────────────────────────────────────────
 
 const SORTS: [SortKey, string][] = [
-  ['research', 'Research rank'],
-  ['name', 'Name'],
-  ['category', 'Category'],
-  ['impact', 'Value 1–5 (impact)'],
-  ['demand', 'Demand'],
-  ['complexity', 'Complexity (low first)'],
-  ['confidence', 'Confidence'],
-  ['priority', 'Research priority'],
-  ['selection', 'Your decision'],
-  ['yours', 'Your priority'],
+  ['research', t('Research rank')],
+  ['name', t('Name')],
+  ['category', t('Category')],
+  ['impact', t('Value 1–5 (impact)')],
+  ['demand', t('Demand')],
+  ['complexity', t('Complexity (low first)')],
+  ['confidence', t('Confidence')],
+  ['priority', t('Research priority')],
+  ['selection', t('Your decision')],
+  ['yours', t('Your priority')],
 ];
 const GROUPS: [GroupBy, string][] = [
-  ['category', 'Category'],
-  ['parent', 'Parent feature'],
-  ['priority', 'Research priority'],
-  ['selection', 'Your decision'],
-  ['none', 'No grouping'],
+  ['category', t('Category')],
+  ['parent', t('Parent feature')],
+  ['priority', t('Research priority')],
+  ['selection', t('Your decision')],
+  ['none', t('No grouping')],
 ];
 
 function SelectionSelect({ id, value, label }: { id: string; value: Selection; label?: string }) {
   return (
     <select
-      aria-label={label ?? 'Your decision'}
+      aria-label={label ?? t('Your decision')}
       className={`sel-${value}`}
       value={value}
       onChange={(e) => setMarks([id], { selection: e.target.value as Selection })}
     >
       {SELECTIONS.map((s) => (
         <option key={s} value={s}>
-          {SELECTION_LABEL[s]}
+          {tr(SELECTION_LABEL[s])}
         </option>
       ))}
     </select>
@@ -521,13 +572,13 @@ function SelectionSelect({ id, value, label }: { id: string; value: Selection; l
 function ImplementationSelect({ id, value }: { id: string; value: Implementation }) {
   return (
     <select
-      aria-label="Implementation status"
+      aria-label={t('Implementation status')}
       value={value}
       onChange={(e) => setMarks([id], { implementation: e.target.value as Implementation })}
     >
       {IMPLEMENTATIONS.map((s) => (
         <option key={s} value={s}>
-          {IMPLEMENTATION_LABEL[s]}
+          {tr(IMPLEMENTATION_LABEL[s])}
         </option>
       ))}
     </select>
@@ -567,146 +618,146 @@ function Explorer({
           <Icon name="search" className="sm" />
           <input
             type="search"
-            placeholder="Search features, e.g. snapping, countertop, BOM"
-            aria-label="Search features"
+            placeholder={t('Search features, e.g. snapping, countertop, BOM')}
+            aria-label={t('Search features')}
             value={query.q}
             onChange={(e) => q({ q: e.target.value })}
           />
         </label>
         <select
-          aria-label="Category"
+          aria-label={t('Category')}
           value={query.category}
           onChange={(e) => q({ category: e.target.value })}
         >
-          <option value="">All categories</option>
+          <option value="">{t('All categories')}</option>
           {view.categories.map((c) => (
             <option key={c.id} value={c.id}>
-              {c.label}
+              {tr(c.label)}
             </option>
           ))}
         </select>
         <select
-          aria-label="Filter by your decision"
+          aria-label={t('Filter by your decision')}
           value={query.selection}
           onChange={(e) => q({ selection: e.target.value as Selection | '' })}
         >
-          <option value="">Any decision</option>
+          <option value="">{t('Any decision')}</option>
           {SELECTIONS.map((s) => (
             <option key={s} value={s}>
-              {SELECTION_LABEL[s]}
+              {tr(SELECTION_LABEL[s])}
             </option>
           ))}
         </select>
         <select
-          aria-label="Filter by implementation status"
+          aria-label={t('Filter by implementation status')}
           value={query.implementation}
           onChange={(e) => q({ implementation: e.target.value as Implementation | '' })}
         >
-          <option value="">Any implementation</option>
+          <option value="">{t('Any implementation')}</option>
           {IMPLEMENTATIONS.map((s) => (
             <option key={s} value={s}>
-              {IMPLEMENTATION_LABEL[s]}
+              {tr(IMPLEMENTATION_LABEL[s])}
             </option>
           ))}
         </select>
         <select
-          aria-label="Research priority"
+          aria-label={t('Research priority')}
           value={query.priority}
           onChange={(e) => q({ priority: e.target.value })}
         >
-          <option value="">Any research priority</option>
+          <option value="">{t('Any research priority')}</option>
           {priorities.map((p) => (
             <option key={p} value={p}>
-              {p}
+              {tr(p)}
             </option>
           ))}
         </select>
         <select
-          aria-label="Origin"
+          aria-label={t('Origin')}
           value={query.origin}
           onChange={(e) => q({ origin: e.target.value as FeatureQuery['origin'] })}
         >
-          <option value="">Named or inferred</option>
-          <option value="explicit">Named in the research</option>
-          <option value="inferred">Inferred opportunities</option>
+          <option value="">{t('Named or inferred')}</option>
+          <option value="explicit">{t('Named in the research')}</option>
+          <option value="inferred">{t('Inferred opportunities')}</option>
         </select>
         <select
-          aria-label="Demand"
+          aria-label={t('Demand')}
           value={query.demand}
           onChange={(e) => q({ demand: e.target.value })}
         >
-          <option value="">Any demand</option>
+          <option value="">{t('Any demand')}</option>
           {[...DEMAND_SCALE, 'Indirect / emerging'].map((d) => (
             <option key={d} value={d}>
-              {d}
+              {tr(d)}
             </option>
           ))}
         </select>
         <select
-          aria-label="Appreciation"
+          aria-label={t('Appreciation')}
           value={query.appreciation}
           onChange={(e) => q({ appreciation: e.target.value })}
         >
-          <option value="">Any appreciation</option>
+          <option value="">{t('Any appreciation')}</option>
           {APPRECIATION_KEYS.map((d) => (
             <option key={d} value={d}>
-              {d}
+              {tr(d)}
             </option>
           ))}
         </select>
         <select
-          aria-label="Value"
+          aria-label={t('Value')}
           value={query.valueBand}
           onChange={(e) => q({ valueBand: e.target.value })}
         >
-          <option value="">Any value</option>
+          <option value="">{t('Any value')}</option>
           {VALUE_BANDS.map(([k, l]) => (
             <option key={k} value={k}>
-              Value {l}
+              {t('Value {band}', { band: tr(l) })}
             </option>
           ))}
         </select>
         <select
-          aria-label="Complexity"
+          aria-label={t('Complexity')}
           value={query.complexity}
           onChange={(e) => q({ complexity: e.target.value })}
         >
-          <option value="">Any complexity</option>
+          <option value="">{t('Any complexity')}</option>
           {COMPLEXITY_SCALE.map((c) => (
             <option key={c} value={c}>
-              {c}
+              {tr(c)}
             </option>
           ))}
         </select>
         <select
-          aria-label="Confidence"
+          aria-label={t('Confidence')}
           value={query.confidence}
           onChange={(e) => q({ confidence: e.target.value })}
         >
-          <option value="">Any confidence</option>
+          <option value="">{t('Any confidence')}</option>
           {[...CONFIDENCE_SCALE].reverse().map((c) => (
             <option key={c} value={c}>
-              {c}
+              {tr(c)}
             </option>
           ))}
         </select>
         <select
-          aria-label="Rated by"
+          aria-label={t('Rated by')}
           value={query.rated}
           onChange={(e) => q({ rated: e.target.value as FeatureQuery['rated'] })}
         >
-          <option value="">Rated by paper or assessment</option>
-          <option value="paper">Rated by the paper</option>
-          <option value="assessment">Assessed here (A)</option>
+          <option value="">{t('Rated by paper or assessment')}</option>
+          <option value="paper">{t('Rated by the paper')}</option>
+          <option value="assessment">{t('Assessed here (A)')}</option>
         </select>
         <select
-          aria-label="Evidence"
+          aria-label={t('Evidence')}
           value={query.evidence}
           onChange={(e) => q({ evidence: e.target.value as FeatureQuery['evidence'] })}
         >
-          <option value="">Any evidence</option>
-          <option value="with">With evidence</option>
-          <option value="without">Missing evidence</option>
+          <option value="">{t('Any evidence')}</option>
+          <option value="with">{t('With evidence')}</option>
+          <option value="without">{t('Missing evidence')}</option>
         </select>
       </div>
       <div className="catalog-actions">
@@ -716,7 +767,7 @@ function Explorer({
             checked={query.planned}
             onChange={(e) => q({ planned: e.target.checked })}
           />
-          <span>Shortlisted and approved only</span>
+          <span>{t('Shortlisted and approved only')}</span>
         </label>
         <label className="toggle small">
           <input
@@ -724,7 +775,7 @@ function Explorer({
             checked={query.topLevel}
             onChange={(e) => q({ topLevel: e.target.checked })}
           />
-          <span>Top-level only</span>
+          <span>{t('Top-level only')}</span>
         </label>
         <label className="toggle small">
           <input
@@ -732,7 +783,7 @@ function Explorer({
             checked={query.showMerged}
             onChange={(e) => q({ showMerged: e.target.checked })}
           />
-          <span>Show merged</span>
+          <span>{t('Show merged')}</span>
         </label>
         <label className="toggle small">
           <input
@@ -740,10 +791,10 @@ function Explorer({
             checked={query.left}
             onChange={(e) => q({ left: e.target.checked })}
           />
-          <span>Left to build only</span>
+          <span>{t('Left to build only')}</span>
         </label>
         <label className="inline-field">
-          Group by{' '}
+          {t('Group by')}{' '}
           <select value={group} onChange={(e) => setGroup(e.target.value as GroupBy)}>
             {GROUPS.map(([k, l]) => (
               <option key={k} value={k}>
@@ -753,7 +804,7 @@ function Explorer({
           </select>
         </label>
         <label className="inline-field">
-          Sort by{' '}
+          {t('Sort by')}{' '}
           <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)}>
             {SORTS.map(([k, l]) => (
               <option key={k} value={k}>
@@ -766,43 +817,51 @@ function Explorer({
           type="button"
           className="btn sm"
           onClick={() => setDesc(!desc)}
-          aria-label={desc ? 'Sort ascending' : 'Sort descending'}
+          aria-label={desc ? t('Sort ascending') : t('Sort descending')}
         >
-          {desc ? '↓ Reversed' : '↑ Normal order'}
+          {desc ? t('↓ Reversed') : t('↑ Normal order')}
         </button>
         <button type="button" className="btn sm ghost" onClick={() => setQuery(EMPTY_QUERY)}>
-          Clear filters
+          {t('Clear filters')}
         </button>
       </div>
       <p className="hint">
-        <strong className="num">{list.length}</strong> of {view.features.size} features shown.
+        {tNode('{n} of {total} features shown.', {
+          n: <strong className="num">{list.length}</strong>,
+          total: view.features.size,
+        })}
       </p>
       {list.length === 0 && (
         <p className="empty center">
           <Icon name="search" />
-          No feature matches these filters.
+          {t('No feature matches these filters.')}
         </p>
       )}
       {groups.map((g) => {
+        // The core writes "Research priority P0"; translate the words and the rating apart.
+        const label =
+          group === 'priority' && g.label === `Research priority ${g.key}`
+            ? tr('Research priority {value}', { value: tr(g.key) })
+            : tr(g.label);
         return (
-          <section key={g.key} className="catalog-group" aria-label={g.label}>
+          <section key={g.key} className="catalog-group" aria-label={label}>
             <h2 className="group-head">
-              {g.label} <span className="count">{g.items.length}</span>
+              {label} <span className="count">{g.items.length}</span>
             </h2>
             <div className="table-wrap">
               <table className="cut features-table">
                 <thead>
                   <tr>
-                    <th>Feature</th>
-                    <th>Category</th>
-                    <th>Description</th>
-                    <th>Demand</th>
-                    <th>Value 1–5 (impact)</th>
-                    <th>Complexity</th>
-                    <th>Confidence</th>
-                    <th>Dependencies</th>
-                    <th>Your decision</th>
-                    <th>Implementation</th>
+                    <th>{t('Feature')}</th>
+                    <th>{t('Category')}</th>
+                    <th>{t('Description')}</th>
+                    <th>{t('Demand')}</th>
+                    <th>{t('Value 1–5 (impact)')}</th>
+                    <th>{t('Complexity')}</th>
+                    <th>{t('Confidence')}</th>
+                    <th>{t('Dependencies')}</th>
+                    <th>{t('Your decision')}</th>
+                    <th>{t('Implementation')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -825,9 +884,9 @@ function FeatureRow({ f, ctx, onOpen }: { f: ViewFeature; ctx: Ctx; onOpen: () =
   const parent = f.parent ? view.features.get(f.parent) : undefined;
   return (
     <tr className={mergedOf(f, marks) ? 'merged' : ''}>
-      <td data-label="Feature" className="fname">
+      <td data-label={t('Feature')} className="fname">
         <button type="button" className="link" onClick={onOpen}>
-          {f.name}
+          {tr(f.name)}
         </button>
         <span className="chips">
           {f.rank && <span className="chip subtle">#{f.rank}</span>}
@@ -836,53 +895,60 @@ function FeatureRow({ f, ctx, onOpen }: { f: ViewFeature; ctx: Ctx; onOpen: () =
               <Rated f={f} dim="priority" />
             </span>
           )}
-          {f.mvp && <span className="chip edited">MVP</span>}
-          {f.origin === 'inferred' && <span className="chip safety">Inferred</span>}
+          {f.mvp && <span className="chip edited">{t('MVP')}</span>}
+          {f.origin === 'inferred' && <span className="chip safety">{t('Inferred')}</span>}
           {f.children.length > 0 && (
-            <span className="chip subtle">{f.children.length} sub-features</span>
+            <span className="chip subtle">{t('{n} sub-features', { n: f.children.length })}</span>
           )}
-          {parent && <span className="chip subtle">in {parent.name}</span>}
-          {f.retired && <span className="chip reference">Retired</span>}
-          {mergedOf(f, marks) && <span className="chip reference">Merged</span>}
-          {!f.findings.length && <span className="chip safety">No evidence</span>}
+          {parent && (
+            <span className="chip subtle">{t('in {name}', { name: tr(parent.name) })}</span>
+          )}
+          {f.retired && <span className="chip reference">{t('Retired')}</span>}
+          {mergedOf(f, marks) && <span className="chip reference">{t('Merged')}</span>}
+          {!f.findings.length && <span className="chip safety">{t('No evidence')}</span>}
         </span>
       </td>
-      <td data-label="Category">
+      <td data-label={t('Category')}>
         <span>
           {catLabel(view, f.category)}
-          <span className="sub">{f.subcategory}</span>
+          <span className="sub">{tr(f.subcategory)}</span>
         </span>
       </td>
-      <td data-label="Description" className="desc">
-        {f.description}
+      <td data-label={t('Description')} className="desc">
+        {tr(f.description)}
       </td>
-      <td data-label="Demand">
+      <td data-label={t('Demand')}>
         <Rated f={f} dim="demand" />
       </td>
-      <td data-label="Value 1–5 (impact)" className="num">
+      <td data-label={t('Value 1–5 (impact)')} className="num">
         <Rated f={f} dim="impact" />
       </td>
-      <td data-label="Complexity">
+      <td data-label={t('Complexity')}>
         <Rated f={f} dim="complexity" />
       </td>
-      <td data-label="Confidence">
+      <td data-label={t('Confidence')}>
         <Rated f={f} dim="confidence" />
       </td>
-      <td data-label="Dependencies">
+      <td data-label={t('Dependencies')}>
         {f.dependencies.length ? (
-          f.dependencies.map((d) => view.features.get(d)?.name ?? d).join(', ')
+          f.dependencies.map((d) => tr(view.features.get(d)?.name ?? d)).join(', ')
         ) : (
-          <span className="ne">none listed</span>
+          <span className="ne">{t('none listed')}</span>
         )}
       </td>
-      <td data-label="Your decision">
-        <SelectionSelect id={f.id} value={m.selection} label={`Your decision on ${f.name}`} />
+      <td data-label={t('Your decision')}>
+        <SelectionSelect
+          id={f.id}
+          value={m.selection}
+          label={t('Your decision on {name}', { name: tr(f.name) })}
+        />
       </td>
-      <td data-label="Implementation">
+      <td data-label={t('Implementation')}>
         <ImplementationSelect id={f.id} value={implementationOf(f, marks)} />
         {implementationSource(f, marks) === 'app' && (
-          <span className="sub" title={f.app!.evidence}>
-            from this app’s record{f.app!.missing ? ` — missing: ${f.app!.missing}` : ''}
+          <span className="sub" title={tr(f.app!.evidence)}>
+            {t('from this app’s record')}
+            {f.app!.missing ? t(' — missing: {missing}', { missing: tr(f.app!.missing) }) : ''}
           </span>
         )}
       </td>
@@ -893,26 +959,29 @@ function FeatureRow({ f, ctx, onOpen }: { f: ViewFeature; ctx: Ctx; onOpen: () =
 // ── Feature detail ──────────────────────────────────────────────────────────────────────────────────────────────
 
 const EVIDENCE_GROUPS: { label: string; kinds: FindingKind[] }[] = [
-  { label: 'Demand — user requests', kinds: ['request'] },
-  { label: 'Appreciation — praise', kinds: ['praise'] },
-  { label: 'Pain points and complaints', kinds: ['complaint'] },
-  { label: 'Adoption — competitor implementations', kinds: ['competitor', 'adoption', 'pricing'] },
+  { label: t('Demand — user requests'), kinds: ['request'] },
+  { label: t('Appreciation — praise'), kinds: ['praise'] },
+  { label: t('Pain points and complaints'), kinds: ['complaint'] },
   {
-    label: 'Ranked and recommended in the research',
+    label: t('Adoption — competitor implementations'),
+    kinds: ['competitor', 'adoption', 'pricing'],
+  },
+  {
+    label: t('Ranked and recommended in the research'),
     kinds: ['feature', 'recommendation', 'conclusion', 'strategy'],
   },
   {
-    label: 'Requirements, workflows and principles',
+    label: t('Requirements, workflows and principles'),
     kinds: ['requirement', 'workflow', 'principle', 'example', 'claim'],
   },
-  { label: 'Technical and architecture findings', kinds: ['technical', 'architecture'] },
+  { label: t('Technical and architecture findings'), kinds: ['technical', 'architecture'] },
   {
-    label: 'Caveats, limitations and estimates',
+    label: t('Caveats, limitations and estimates'),
     kinds: ['caveat', 'limitation', 'estimate', 'methodology', 'source', 'question'],
   },
 ];
 
-function List({ items, none = 'not evaluated' }: { items: ReactNode[]; none?: string }) {
+function List({ items, none = tr('not evaluated') }: { items: ReactNode[]; none?: string }) {
   return items.length ? (
     <ul className="detail-list">
       {items.map((x, i) => (
@@ -928,10 +997,10 @@ function FeatureLink({ ctx, id }: { ctx: Ctx; id: string }) {
   const f = ctx.view.features.get(id);
   return f ? (
     <button type="button" className="link" onClick={() => ctx.open(id)}>
-      {f.name}
+      {tr(f.name)}
     </button>
   ) : (
-    <span className="ne">{id} (not in the catalog)</span>
+    <span className="ne">{t('{id} (not in the catalog)', { id })}</span>
   );
 }
 
@@ -962,30 +1031,34 @@ function FeatureDetail({ ctx, f, onBack }: { ctx: Ctx; f: ViewFeature; onBack: (
     [view, f.id, marks],
   );
   return (
-    <article className="feature-detail" aria-label={f.name}>
+    <article className="feature-detail" aria-label={tr(f.name)}>
       <button type="button" className="btn sm back" onClick={onBack}>
-        ← All features
+        {t('← All features')}
       </button>
       <header>
-        <h2>{f.name}</h2>
+        <h2>{tr(f.name)}</h2>
         <p className="chips">
           <span className="chip">{catLabel(view, f.category)}</span>
-          <span className="chip subtle">{f.subcategory}</span>
+          <span className="chip subtle">{tr(f.subcategory)}</span>
           <span className={`chip ${f.origin === 'inferred' ? 'safety' : 'subtle'}`}>
-            {f.origin === 'inferred' ? 'Inferred opportunity' : 'Named in the research'}
+            {f.origin === 'inferred' ? t('Inferred opportunity') : t('Named in the research')}
           </span>
-          {f.rank && <span className="chip subtle">Ranked #{f.rank} of 39</span>}
+          {f.rank && <span className="chip subtle">{t('Ranked #{n} of 39', { n: f.rank })}</span>}
           {f.recommendationRank && (
-            <span className="chip subtle">Recommendation #{f.recommendationRank} of 15</span>
+            <span className="chip subtle">
+              {t('Recommendation #{n} of 15', { n: f.recommendationRank })}
+            </span>
           )}
-          {f.mvp && <span className="chip edited">MVP capability</span>}
-          {f.phase && <span className="chip subtle">{f.phase}</span>}
-          {f.retired && <span className="chip reference">Retired in the latest edition</span>}
+          {f.mvp && <span className="chip edited">{t('MVP capability')}</span>}
+          {f.phase && <span className="chip subtle">{tr(f.phase)}</span>}
+          {f.retired && (
+            <span className="chip reference">{t('Retired in the latest edition')}</span>
+          )}
           <span className="chip subtle num">{f.id}</span>
         </p>
         {parent && (
           <p className="hint">
-            Part of <FeatureLink ctx={ctx} id={parent.id} />
+            {tNode('Part of {feature}', { feature: <FeatureLink ctx={ctx} id={parent.id} /> })}
           </p>
         )}
       </header>
@@ -993,8 +1066,9 @@ function FeatureDetail({ ctx, f, onBack }: { ctx: Ctx; f: ViewFeature; onBack: (
         <p className="alert warning">
           <Icon name="alert-triangle" className="sm" />
           <span>
-            This is an opportunity inferred from the findings below —{' '}
-            <strong>not a research conclusion</strong>.
+            {tNode('This is an opportunity inferred from the findings below — {not}.', {
+              not: <strong>{t('not a research conclusion')}</strong>,
+            })}
           </span>
         </p>
       )}
@@ -1002,12 +1076,16 @@ function FeatureDetail({ ctx, f, onBack }: { ctx: Ctx; f: ViewFeature; onBack: (
         <p className="alert info">
           <Icon name="info" className="sm" />
           <span>
-            {m.mergedInto === merged ? 'You merged' : 'Merged'} this feature into{' '}
-            <FeatureLink ctx={ctx} id={merged} />
-            {m.mergedInto !== merged && f.mergeReason ? (
-              <> — same idea: {f.mergeReason}</>
-            ) : null}{' '}
-            Its evidence is shown there too; nothing was deleted.{' '}
+            {tNode(
+              m.mergedInto === merged
+                ? 'You merged this feature into {feature}'
+                : 'Merged this feature into {feature}',
+              { feature: <FeatureLink ctx={ctx} id={merged} /> },
+            )}
+            {m.mergedInto !== merged && f.mergeReason
+              ? t(' — same idea: {reason}', { reason: tr(f.mergeReason) })
+              : null}{' '}
+            {t('Its evidence is shown there too; nothing was deleted.')}{' '}
             <button
               type="button"
               className="link"
@@ -1018,32 +1096,41 @@ function FeatureDetail({ ctx, f, onBack }: { ctx: Ctx; f: ViewFeature; onBack: (
                 })
               }
             >
-              Undo merge
+              {t('Undo merge')}
             </button>
           </span>
         </p>
       )}
-      <section className="app-status card-like" aria-label="This app">
+      <section className="app-status card-like" aria-label={t('This app')}>
         <h3>
-          This app: <span className={`chip impl-${impl}`}>{IMPLEMENTATION_LABEL[impl]}</span>
+          {tNode('This app: {status}', {
+            status: <span className={`chip impl-${impl}`}>{tr(IMPLEMENTATION_LABEL[impl])}</span>,
+          })}
         </h3>
         {f.app ? (
           <>
             <p>
-              <strong>Built:</strong> {f.app.evidence}
+              <strong>{t('Built:')}</strong> {tr(f.app.evidence)}
             </p>
             {f.app.missing && (
               <p>
-                <strong>Missing:</strong> {f.app.missing}
+                <strong>{t('Missing:')}</strong> {tr(f.app.missing)}
               </p>
             )}
             <p className="hint">
-              From the repository (backlog and ADRs), checked {f.app.checked}. Not research.
+              {t('From the repository (backlog and ADRs), checked {date}. Not research.', {
+                date: f.app.checked,
+              })}
               {implSource === 'user' && (
                 <>
                   {' '}
-                  You set the status to {IMPLEMENTATION_LABEL[impl]} yourself, so it is shown
-                  instead of the app’s record ({IMPLEMENTATION_LABEL[f.app.status]}).{' '}
+                  {t(
+                    'You set the status to {status} yourself, so it is shown instead of the app’s record ({record}).',
+                    {
+                      status: tr(IMPLEMENTATION_LABEL[impl]),
+                      record: tr(IMPLEMENTATION_LABEL[f.app.status]),
+                    },
+                  )}{' '}
                   <button
                     type="button"
                     className="link"
@@ -1054,7 +1141,7 @@ function FeatureDetail({ ctx, f, onBack }: { ctx: Ctx; f: ViewFeature; onBack: (
                       })
                     }
                   >
-                    Use the app’s record
+                    {t('Use the app’s record')}
                   </button>
                 </>
               )}
@@ -1062,15 +1149,17 @@ function FeatureDetail({ ctx, f, onBack }: { ctx: Ctx; f: ViewFeature; onBack: (
           </>
         ) : (
           <p className="hint">
-            Nothing in the backlog or the ADRs builds this yet (checked {APP_CHECKED}).
+            {t('Nothing in the backlog or the ADRs builds this yet (checked {date}).', {
+              date: APP_CHECKED,
+            })}
           </p>
         )}
       </section>
 
-      <section className="decision card-like" aria-label="Your decision">
+      <section className="decision card-like" aria-label={t('Your decision')}>
         <div className="dims3">
           <div className="field">
-            <label htmlFor="d-sel">Your decision</label>
+            <label htmlFor="d-sel">{t('Your decision')}</label>
             <select
               id="d-sel"
               value={m.selection}
@@ -1078,13 +1167,13 @@ function FeatureDetail({ ctx, f, onBack }: { ctx: Ctx; f: ViewFeature; onBack: (
             >
               {SELECTIONS.map((s) => (
                 <option key={s} value={s}>
-                  {SELECTION_LABEL[s]}
+                  {tr(SELECTION_LABEL[s])}
                 </option>
               ))}
             </select>
           </div>
           <div className="field">
-            <label htmlFor="d-impl">Implementation status</label>
+            <label htmlFor="d-impl">{t('Implementation status')}</label>
             <select
               id="d-impl"
               value={impl}
@@ -1094,13 +1183,13 @@ function FeatureDetail({ ctx, f, onBack }: { ctx: Ctx; f: ViewFeature; onBack: (
             >
               {IMPLEMENTATIONS.map((s) => (
                 <option key={s} value={s}>
-                  {IMPLEMENTATION_LABEL[s]}
+                  {tr(IMPLEMENTATION_LABEL[s])}
                 </option>
               ))}
             </select>
           </div>
           <div className="field">
-            <label htmlFor="d-pri">Your priority</label>
+            <label htmlFor="d-pri">{t('Your priority')}</label>
             <select
               id="d-pri"
               value={m.priority}
@@ -1110,14 +1199,14 @@ function FeatureDetail({ ctx, f, onBack }: { ctx: Ctx; f: ViewFeature; onBack: (
             >
               {USER_PRIORITIES.map((p) => (
                 <option key={p} value={p}>
-                  {p || 'Not set'}
+                  {p || t('Not set')}
                 </option>
               ))}
             </select>
           </div>
         </div>
         <div className="field">
-          <label htmlFor="d-notes">Your notes</label>
+          <label htmlFor="d-notes">{t('Your notes')}</label>
           <textarea
             id="d-notes"
             rows={3}
@@ -1126,17 +1215,17 @@ function FeatureDetail({ ctx, f, onBack }: { ctx: Ctx; f: ViewFeature; onBack: (
             onBlur={() => {
               if (notes !== m.notes) setMarks([f.id], { notes });
             }}
-            placeholder="Saved on this device when you leave the box"
+            placeholder={t('Saved on this device when you leave the box')}
           />
         </div>
         <div className="action-row">
           <label className="inline-field">
-            Link or merge with{' '}
+            {t('Link or merge with')}{' '}
             <select value={linkTo} onChange={(e) => setLinkTo(e.target.value)}>
-              <option value="">Choose a feature…</option>
+              <option value="">{t('Choose a feature…')}</option>
               {others.map((o) => (
                 <option key={o.id} value={o.id}>
-                  {o.name}
+                  {tr(o.name)}
                 </option>
               ))}
             </select>
@@ -1150,7 +1239,7 @@ function FeatureDetail({ ctx, f, onBack }: { ctx: Ctx; f: ViewFeature; onBack: (
               setLinkTo('');
             }}
           >
-            Add link
+            {t('Add link')}
           </button>
           <button
             type="button"
@@ -1161,8 +1250,11 @@ function FeatureDetail({ ctx, f, onBack }: { ctx: Ctx; f: ViewFeature; onBack: (
               if (
                 target &&
                 (await askConfirm(
-                  `Merge “${f.name}” into “${target.name}”? It is hidden from the list and its evidence shows on “${target.name}”. Nothing is deleted; you can undo it.`,
-                  { confirmLabel: 'Merge' },
+                  t(
+                    'Merge “{name}” into “{target}”? It is hidden from the list and its evidence shows on “{target}”. Nothing is deleted; you can undo it.',
+                    { name: tr(f.name), target: tr(target.name) },
+                  ),
+                  { confirmLabel: t('Merge') },
                 ))
               ) {
                 setMarks([f.id], { mergedInto: linkTo });
@@ -1170,52 +1262,53 @@ function FeatureDetail({ ctx, f, onBack }: { ctx: Ctx; f: ViewFeature; onBack: (
               }
             }}
           >
-            Merge into it
+            {t('Merge into it')}
           </button>
         </div>
         <p className="hint">
-          Your decision and implementation status are independent. Approving a feature never starts
-          its implementation.
+          {t(
+            'Your decision and implementation status are independent. Approving a feature never starts its implementation.',
+          )}
         </p>
       </section>
 
-      <section aria-label="Description">
-        <h3>Description</h3>
-        <p>{f.description}</p>
+      <section aria-label={t('Description')}>
+        <h3>{t('Description')}</h3>
+        <p>{tr(f.description)}</p>
         <dl className="pairs">
-          <dt>User problem</dt>
+          <dt>{t('User problem')}</dt>
           <dd>{ne(f.userProblem)}</dd>
-          <dt>User benefit</dt>
+          <dt>{t('User benefit')}</dt>
           <dd>{ne(f.userBenefit)}</dd>
           {f.mvp && (
             <>
-              <dt>MVP acceptance criterion</dt>
-              <dd>{f.mvp}</dd>
+              <dt>{t('MVP acceptance criterion')}</dt>
+              <dd>{tr(f.mvp)}</dd>
             </>
           )}
         </dl>
       </section>
-      <section aria-label="Ratings">
-        <h3>Ratings</h3>
+      <section aria-label={t('Ratings')}>
+        <h3>{t('Ratings')}</h3>
         <div className="table-wrap">
           <table className="cut ratings-table">
             <thead>
               <tr>
-                <th>Rating</th>
-                <th>Value</th>
-                <th>Source</th>
+                <th>{t('Rating')}</th>
+                <th>{t('Value')}</th>
+                <th>{t('Source')}</th>
               </tr>
             </thead>
             <tbody>
               {(
                 [
-                  ['User demand', 'demand'],
-                  ['Appreciation', 'appreciation'],
-                  ['Value (impact), 1–5', 'impact'],
-                  ['Implementation complexity', 'complexity'],
-                  ['Evidence confidence', 'confidence'],
-                  ['Research priority', 'priority'],
-                  ['Competitor adoption', 'adoption'],
+                  [t('User demand'), 'demand'],
+                  [t('Appreciation'), 'appreciation'],
+                  [t('Value (impact), 1–5'), 'impact'],
+                  [t('Implementation complexity'), 'complexity'],
+                  [t('Evidence confidence'), 'confidence'],
+                  [t('Research priority'), 'priority'],
+                  [t('Competitor adoption'), 'adoption'],
                 ] as const
               ).map(([k, d]) => {
                 const r = rating(f, d);
@@ -1227,9 +1320,9 @@ function FeatureDetail({ ctx, f, onBack }: { ctx: Ctx; f: ViewFeature; onBack: (
                     </td>
                     <td>
                       {r.source === 'paper'
-                        ? 'The paper (ranked table)'
+                        ? t('The paper (ranked table)')
                         : r.source === 'assessment'
-                          ? 'Assessment — not from the paper'
+                          ? t('Assessment — not from the paper')
                           : '—'}
                     </td>
                   </tr>
@@ -1243,30 +1336,32 @@ function FeatureDetail({ ctx, f, onBack }: { ctx: Ctx; f: ViewFeature; onBack: (
             <p className="alert warning">
               <Icon name="alert-triangle" className="sm" />
               <span>
-                <strong>Assessment, not research.</strong> The paper does not rate this feature.
-                These scores apply the paper’s own method (line 71) to the findings linked below.{' '}
-                {f.assessment.by}, {f.assessment.date}.
+                <strong>{t('Assessment, not research.')}</strong>{' '}
+                {t(
+                  'The paper does not rate this feature. These scores apply the paper’s own method (line 71) to the findings linked below.',
+                )}{' '}
+                {tr(f.assessment.by)}, {f.assessment.date}.
               </span>
             </p>
             <div className="table-wrap">
               <table className="cut">
                 <thead>
                   <tr>
-                    <th>Criterion</th>
-                    <th>Weight</th>
-                    <th>Score (1–5)</th>
+                    <th>{t('Criterion')}</th>
+                    <th>{t('Weight')}</th>
+                    <th>{t('Score (1–5)')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {ASSESSMENT_CRITERIA.map(([k, label, w]) => (
                     <tr key={k}>
-                      <th scope="row">{label}</th>
+                      <th scope="row">{tr(label)}</th>
                       <td className="num">{Math.round(w * 100)} %</td>
                       <td className="num">{f.assessment!.scores[k]}</td>
                     </tr>
                   ))}
                   <tr>
-                    <th scope="row">Value (weighted)</th>
+                    <th scope="row">{t('Value (weighted)')}</th>
                     <td />
                     <td className="num">
                       <strong>{assessedValue(f.assessment)}</strong>
@@ -1276,92 +1371,95 @@ function FeatureDetail({ ctx, f, onBack }: { ctx: Ctx; f: ViewFeature; onBack: (
               </table>
             </div>
             <p>
-              <strong>Why:</strong> {f.assessment.rationale}
+              <strong>{t('Why:')}</strong> {tr(f.assessment.rationale)}
             </p>
             <p>
               <strong>
-                Research priority <Rated f={f} dim="priority" />
+                {t('Research priority')} <Rated f={f} dim="priority" />
               </strong>{' '}
-              — {f.assessment.priorityBasis}
+              — {tr(f.assessment.priorityBasis)}
             </p>
             <p>
               <strong>
-                Appreciation <Rated f={f} dim="appreciation" />
+                {t('Appreciation')} <Rated f={f} dim="appreciation" />
               </strong>{' '}
-              — {f.assessment.appreciationBasis}
+              — {tr(f.assessment.appreciationBasis)}
             </p>
             {f.assessment.internal && (
               <p className="hint">
-                Internal capability: users do not ask for it by name, so demand reads “Indirect”, as
-                the paper does for its internal rows.
+                {t(
+                  'Internal capability: users do not ask for it by name, so demand reads “Indirect”, as the paper does for its internal rows.',
+                )}
               </p>
             )}
           </div>
         )}
       </section>
       <div className="detail-cols">
-        <section aria-label="Functional requirements">
-          <h3>Functional requirements</h3>
-          <List items={f.requirements} />
+        <section aria-label={t('Functional requirements')}>
+          <h3>{t('Functional requirements')}</h3>
+          <List items={f.requirements.map((x) => tr(x))} />
         </section>
-        <section aria-label="Use cases">
-          <h3>User scenarios</h3>
-          <List items={f.useCases} />
+        <section aria-label={t('Use cases')}>
+          <h3>{t('User scenarios')}</h3>
+          <List items={f.useCases.map((x) => tr(x))} />
         </section>
-        <section aria-label="Workflow">
-          <h3>User workflow</h3>
+        <section aria-label={t('Workflow')}>
+          <h3>{t('User workflow')}</h3>
           {f.workflow.length ? (
             <ol className="detail-list">
               {f.workflow.map((w, i) => (
-                <li key={i}>{w}</li>
+                <li key={i}>{tr(w)}</li>
               ))}
             </ol>
           ) : (
-            <p className="ne">not evaluated</p>
+            <p className="ne">{tr('not evaluated')}</p>
           )}
         </section>
-        <section aria-label="Technical considerations">
-          <h3>Technical considerations</h3>
-          <List items={f.technical} />
+        <section aria-label={t('Technical considerations')}>
+          <h3>{t('Technical considerations')}</h3>
+          <List items={f.technical.map((x) => tr(x))} />
         </section>
-        <section aria-label="Sub-features">
+        <section aria-label={t('Sub-features')}>
           <h3>
-            Sub-features <span className="count">{subs.length}</span>
+            {t('Sub-features')} <span className="count">{subs.length}</span>
           </h3>
           <List
-            none="none"
+            none={t('none')}
             items={subs.map((s) => (
               <>
                 <FeatureLink ctx={ctx} id={s.id} />
                 {s.parent !== f.id && (
-                  <span className="hint"> (in {view.features.get(s.parent!)?.name})</span>
+                  <span className="hint">
+                    {t(' (in {name})', { name: tr(view.features.get(s.parent!)?.name ?? '') })}
+                  </span>
                 )}
               </>
             ))}
           />
         </section>
-        <section aria-label="Dependencies and related">
-          <h3>Dependencies</h3>
+        <section aria-label={t('Dependencies and related')}>
+          <h3>{t('Dependencies')}</h3>
           <List
-            none="none listed"
+            none={t('none listed')}
             items={f.dependencies.map((d) => (
               <FeatureLink ctx={ctx} id={d} />
             ))}
           />
-          <h3>Related</h3>
+          <h3>{t('Related')}</h3>
           <List
-            none="none listed"
+            none={t('none listed')}
             items={[
               ...f.related.map((d) => <FeatureLink ctx={ctx} id={d} />),
               ...m.links.map((d) => (
                 <>
-                  <FeatureLink ctx={ctx} id={d} /> <span className="hint">your link</span>{' '}
+                  <FeatureLink ctx={ctx} id={d} /> <span className="hint">{t('your link')}</span>{' '}
                   <button
                     type="button"
                     className="link danger"
                     onClick={() => setMarks([f.id], { links: m.links.filter((x) => x !== d) })}
                   >
-                    remove
+                    {t('remove')}
                   </button>
                 </>
               )),
@@ -1369,14 +1467,14 @@ function FeatureDetail({ ctx, f, onBack }: { ctx: Ctx; f: ViewFeature; onBack: (
           />
           {mergedIn.length > 0 && (
             <>
-              <h3>Merged into this</h3>
+              <h3>{t('Merged into this')}</h3>
               <List
                 items={mergedIn.map((x) => (
                   <>
                     <FeatureLink ctx={ctx} id={x.id} />{' '}
                     <span className="hint">
-                      ({IMPLEMENTATION_LABEL[implementationOf(x, marks)]})
-                      {x.mergeReason ? ` — ${x.mergeReason}` : ''}
+                      ({tr(IMPLEMENTATION_LABEL[implementationOf(x, marks)])})
+                      {x.mergeReason ? ` — ${tr(x.mergeReason)}` : ''}
                     </span>
                   </>
                 ))}
@@ -1389,22 +1487,22 @@ function FeatureDetail({ ctx, f, onBack }: { ctx: Ctx; f: ViewFeature; onBack: (
         <p className="alert info">
           <Icon name="info" className="sm" />
           <span>
-            <strong>This app today</strong> (repository observation, not research):{' '}
-            {f.appNotes.join(' ')}
+            <strong>{t('This app today')}</strong> {t('(repository observation, not research):')}{' '}
+            {f.appNotes.map((x) => tr(x)).join(' ')}
           </span>
         </p>
       ) : null}
-      <section aria-label="Competitors">
-        <h3>Competitor comparison</h3>
+      <section aria-label={t('Competitors')}>
+        <h3>{t('Competitor comparison')}</h3>
         {f.competitors.length ? (
           <div className="table-wrap">
             <table className="cut">
               <thead>
                 <tr>
-                  <th>Product</th>
-                  <th>Ensemble behaviour</th>
-                  <th>Praise / complaints</th>
-                  <th>Confidence</th>
+                  <th>{t('Product')}</th>
+                  <th>{t('Ensemble behaviour')}</th>
+                  <th>{t('Praise / complaints')}</th>
+                  <th>{t('Confidence')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -1412,13 +1510,13 @@ function FeatureDetail({ ctx, f, onBack }: { ctx: Ctx; f: ViewFeature; onBack: (
                   const x = view.competitors.get(c);
                   return (
                     <tr key={c}>
-                      <td data-label="Product">
+                      <td data-label={t('Product')}>
                         <strong>{x?.name ?? c}</strong>
-                        <span className="sub">{x?.group}</span>
+                        <span className="sub">{x?.group && tr(x.group)}</span>
                       </td>
-                      <td data-label="Behaviour">{x?.behaviour}</td>
-                      <td data-label="Signal">{x?.signal}</td>
-                      <td data-label="Confidence">{x?.confidence}</td>
+                      <td data-label={t('Behaviour')}>{x?.behaviour && tr(x.behaviour)}</td>
+                      <td data-label={t('Signal')}>{x?.signal && tr(x.signal)}</td>
+                      <td data-label={t('Confidence')}>{x?.confidence && tr(x.confidence)}</td>
                     </tr>
                   );
                 })}
@@ -1426,25 +1524,25 @@ function FeatureDetail({ ctx, f, onBack }: { ctx: Ctx; f: ViewFeature; onBack: (
             </table>
           </div>
         ) : (
-          <p className="ne">No competitor named for this feature.</p>
+          <p className="ne">{t('No competitor named for this feature.')}</p>
         )}
       </section>
       {contra.length > 0 && (
-        <section aria-label="Contradictions">
-          <h3>Contradictions and conflicts</h3>
+        <section aria-label={t('Contradictions')}>
+          <h3>{t('Contradictions and conflicts')}</h3>
           {contra.map((c) => (
             <ContradictionCard key={c.id} ctx={ctx} c={c} />
           ))}
         </section>
       )}
-      <section aria-label="Research evidence">
+      <section aria-label={t('Research evidence')}>
         <h3>
-          Research evidence <span className="count">{findings.length}</span>
+          {t('Research evidence')} <span className="count">{findings.length}</span>
         </h3>
         {findings.length === 0 && (
           <p className="alert warning">
             <Icon name="alert-triangle" className="sm" />
-            <span>No supporting finding is linked to this feature.</span>
+            <span>{t('No supporting finding is linked to this feature.')}</span>
           </p>
         )}
         {EVIDENCE_GROUPS.map((g) => {
@@ -1493,13 +1591,18 @@ function FindingCard({
         <span
           className={`chip ${f.kind === 'complaint' ? 'safety' : f.kind === 'praise' ? '' : 'subtle'}`}
         >
-          {FINDING_KIND_LABEL[f.kind]}
+          {tr(FINDING_KIND_LABEL[f.kind])}
         </span>
-        {f.polarity && <span className="chip subtle">{f.polarity}</span>}
-        {f.quality && <span className="chip subtle">evidence: {f.quality}</span>}
+        {f.polarity && <span className="chip subtle">{tr(f.polarity)}</span>}
+        {f.quality && (
+          <span className="chip subtle">
+            {t('evidence: {quality}', { quality: tr(f.quality) })}
+          </span>
+        )}
         <span className="src num">
-          {doc?.file ?? f.doc} · lines {f.lines[0]}
-          {f.lines[1] !== f.lines[0] ? `–${f.lines[1]}` : ''} · {section?.title}
+          {doc?.file ?? f.doc} · {t('lines')} {f.lines[0]}
+          {f.lines[1] !== f.lines[0] ? `–${f.lines[1]}` : ''} ·{' '}
+          {section?.title && tr(section.title)}
         </span>
         <label className="toggle small reviewed">
           <input
@@ -1507,13 +1610,13 @@ function FindingCard({
             checked={reviewed}
             onChange={(e) => setMarks([f.id], { reviewed: e.target.checked })}
           />
-          <span>Reviewed</span>
+          <span>{t('Reviewed')}</span>
         </label>
       </p>
-      <p className="statement">{f.statement}</p>
+      <p className="statement">{tr(f.statement)}</p>
       {f.excerpt && (
         <details>
-          <summary>Original text</summary>
+          <summary>{t('Original text')}</summary>
           <blockquote className="excerpt">{f.excerpt}</blockquote>
         </details>
       )}
@@ -1529,7 +1632,7 @@ function FindingCard({
                   </a>
                 ))
               ) : (
-                <span className="ne">no record</span>
+                <span className="ne">{t('no record')}</span>
               )}
             </span>
           ))}
@@ -1537,12 +1640,14 @@ function FindingCard({
       )}
       {(f.competitors?.length ?? 0) > 0 && (
         <p className="hint">
-          Competitors: {f.competitors!.map((c) => view.competitors.get(c)?.name ?? c).join(', ')}
+          {t('Competitors: {list}', {
+            list: f.competitors!.map((c) => view.competitors.get(c)?.name ?? c).join(', '),
+          })}
         </p>
       )}
       {showFeatures && (
         <p className="hint">
-          Features:{' '}
+          {t('Features:')}{' '}
           {linked.length ? (
             linked.map((x, i) => (
               <Fragment key={x.id}>
@@ -1551,7 +1656,7 @@ function FindingCard({
               </Fragment>
             ))
           ) : (
-            <span className="ne">none — kept as supporting research</span>
+            <span className="ne">{t('none — kept as supporting research')}</span>
           )}
         </p>
       )}
@@ -1567,31 +1672,33 @@ function Competitors({ ctx }: { ctx: Ctx }) {
   return (
     <div className="competitors">
       <p className="hint">
-        {view.competitors.size} products, as compared in the research. Confidence is the paper’s own
-        evidence rating.
+        {t(
+          '{n} products, as compared in the research. Confidence is the paper’s own evidence rating.',
+          { n: view.competitors.size },
+        )}
       </p>
       <div className="fam-grid">
         {[...view.competitors.values()].map((c) => (
           <article key={c.id} className="fam-card" aria-label={c.name}>
             <h3>{c.name}</h3>
             <p className="chips">
-              <span className="chip subtle">{c.group}</span>
-              <span className="chip">{c.confidence}</span>
+              <span className="chip subtle">{tr(c.group)}</span>
+              <span className="chip">{tr(c.confidence)}</span>
             </p>
             <dl className="pairs">
-              <dt>Ensemble behaviour</dt>
-              <dd>{c.behaviour}</dd>
-              <dt>Praise / complaints / missing</dt>
-              <dd>{c.signal}</dd>
-              <dt>Commercial model</dt>
-              <dd>{c.commercial}</dd>
+              <dt>{t('Ensemble behaviour')}</dt>
+              <dd>{tr(c.behaviour)}</dd>
+              <dt>{t('Praise / complaints / missing')}</dt>
+              <dd>{tr(c.signal)}</dd>
+              <dt>{t('Commercial model')}</dt>
+              <dd>{tr(c.commercial)}</dd>
             </dl>
             <p className="hint">
-              {c.findings.length} findings · line {c.line}
+              {t('{n} findings · line {line}', { n: c.findings.length, line: c.line })}
             </p>
             {c.features.length > 0 && (
               <details>
-                <summary>{c.features.length} related features</summary>
+                <summary>{t('{n} related features', { n: c.features.length })}</summary>
                 <ul className="detail-list">
                   {c.features.map((id) => (
                     <li key={id}>
@@ -1609,9 +1716,9 @@ function Competitors({ ctx }: { ctx: Ctx }) {
 }
 
 const BASIS = {
-  paper: 'Stated in the paper',
-  inferred: 'Inferred tension (not stated by the paper)',
-  app: 'Research vs this app',
+  paper: t('Stated in the paper'),
+  inferred: t('Inferred tension (not stated by the paper)'),
+  app: t('Research vs this app'),
 } as const;
 function ContradictionCard({ ctx, c }: { ctx: Ctx; c: CatalogView['contradictions'][number] }) {
   return (
@@ -1620,22 +1727,22 @@ function ContradictionCard({ ctx, c }: { ctx: Ctx; c: CatalogView['contradiction
         <span className={`chip ${c.basis === 'paper' ? 'subtle' : 'safety'}`}>
           {BASIS[c.basis]}
         </span>
-        <strong>{c.title}</strong>
+        <strong>{tr(c.title)}</strong>
       </p>
-      <p className="statement">{c.description}</p>
+      <p className="statement">{tr(c.description)}</p>
       <p className="hint">
-        Findings:{' '}
+        {t('Findings:')}{' '}
         {c.findings
           .map((id) => {
             const f = ctx.view.findings.get(id);
             return f
-              ? `${id.replace(/^.*\.n\./, '')} (lines ${f.lines[0]}${f.lines[1] !== f.lines[0] ? `–${f.lines[1]}` : ''})`
+              ? `${id.replace(/^.*\.n\./, '')} (${t('lines')} ${f.lines[0]}${f.lines[1] !== f.lines[0] ? `–${f.lines[1]}` : ''})`
               : id;
           })
           .join(' · ')}
       </p>
       <p className="hint">
-        Features:{' '}
+        {t('Features:')}{' '}
         {c.features.map((id, i) => (
           <Fragment key={id}>
             {i > 0 && ', '}
