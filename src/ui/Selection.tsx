@@ -1,9 +1,10 @@
-import { useState } from 'react';
-import { pieceName } from '../core/project';
-import { groupOf, sameIds } from '../core/selection';
+import { useMemo, useState } from 'react';
+import { groupSizeFields, type WidthSplit } from '../core/groupSize';
+import { pieceName, type Project } from '../core/project';
+import { groupOf, sameIds, type Group } from '../core/selection';
 import { useDesign } from '../store/designStore';
 import { askConfirm } from './Confirm';
-import { InfoTip } from './controls';
+import { InfoTip, MmField, Segmented } from './controls';
 import { Icon } from './icons';
 
 /**
@@ -40,6 +41,7 @@ export function SelectionCard() {
           <span>{isGroup ? g!.name : 'Selected pieces'}</span>
           <InfoTip label="About the selected pieces" align="start">
             These act on all {ids.length}; drag any of them on the plan to move them together.
+            {isGroup && ' The pieces of a group always move together; ungroup to move one alone.'}
           </InfoTip>
         </span>
         <span className="chip">{ids.length} pieces</span>
@@ -146,12 +148,63 @@ export function SelectionCard() {
           )}
         </div>
       )}
+      {isGroup && <GroupSize project={project} group={g!} say={say} />}
       {msg.for === key && msg.text && (
         <p className="hint" role="status">
           {msg.text}
         </p>
       )}
     </section>
+  );
+}
+
+/**
+ * The size of a whole group (ADR-148): Width along the wall, shared by the columns Proportionally or Equally; Height
+ * and Depth set on every piece. Each change is one undo step; why nothing changed, or which pieces kept their size,
+ * goes to the card's message.
+ */
+function GroupSize({
+  project,
+  group,
+  say,
+}: {
+  project: Project;
+  group: Group;
+  say: (text: string | null) => void;
+}) {
+  const resize = useDesign((s) => s.resizeGroup);
+  const [split, setSplit] = useState<WidthSplit>('proportional');
+  const fields = useMemo(() => groupSizeFields(project, group.itemIds), [project, group.itemIds]);
+  return (
+    <div className="group-size" role="group" aria-label="Size of the group">
+      <span className="field-label">Size of the group</span>
+      <div className={fields.length === 3 ? 'dims3' : 'dims2'}>
+        {fields.map((f) => (
+          <MmField
+            key={f.key}
+            label={f.label}
+            value={f.value}
+            min={1}
+            max={20000}
+            hint={f.differs ? 'Pieces differ' : undefined}
+            onChange={(v) => say(resize(group.id, f.key, v, split) || null)}
+          />
+        ))}
+      </div>
+      <Segmented<WidthSplit>
+        label="Split width"
+        value={split}
+        options={[
+          {
+            value: 'proportional',
+            label: 'Proportionally',
+            title: 'Each column by its share of the width',
+          },
+          { value: 'equal', label: 'Equally', title: 'The same for each column' },
+        ]}
+        onChange={setSplit}
+      />
+    </div>
   );
 }
 

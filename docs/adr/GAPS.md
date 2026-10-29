@@ -2425,3 +2425,42 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Write the jsdom find-it now in PR #132, or wait for 'catch up acceptance'?
 - Suggested pick: Write it now in PR #132 (closest to the request: proves the feature is reachable). Estimate +15 % work, +10 % value (evidence, not new behaviour).
 - Note: User 2026-10-29: "2 write". Built: `tests/find-it/part-boards.test.tsx` (390 and 1280 px), passes locally.
+
+### G-290: Group width for pieces not in columns
+
+- Status: Open
+- Origin: ADR-148, 2026-10-29; scope (Claude)
+- Missing: A group whose pieces overlap in x without sharing the same span (e.g. a wall unit straddling two base units) refuses a Width change.
+- Request: add the possibility to set the width, height and depth of grouped items, add the possibility to block group items from being moved separately.
+- Questions: Refuse, or scale every position around the left edge (pieces may stop touching by 1 mm)?
+- Suggested pick: Scale positions around the left edge, rounding shared edges once (closer to the request; estimate effort +25 %, value +10 %)
+- Answer: 2026-10-29 (user) "Refuse (as in ADR)"; ADR-148 refuses with the reason
+
+### G-291: Vertical moves of a grouped piece do not carry the group
+
+- Status: Done (ADR-148)
+- Origin: ADR-148, 2026-10-29; scope (Claude)
+- Missing: The wall-height drag in 3D, the From floor field and the gap tool move one grouped piece up/down or along alone.
+- Request: add the possibility to set the width, height and depth of grouped items, add the possibility to block group items from being moved separately.
+- Questions: Should vertical moves and the gap tool also move the whole group?
+- Suggested pick: Yes, move the whole group (closer to 'block group items from being moved separately'; estimate effort +20 %)
+- Answer: 2026-10-29 (user) "Yes, move group"; built in ADR-148
+
+### G-292: Mirror of one grouped piece alone
+
+- Status: Done (ADR-148)
+- Origin: ADR-148, 2026-10-29; scope (Claude)
+- Missing: Mirroring a single grouped piece from its own card is not routed to the group.
+- Request: add the possibility to set the width, height and depth of grouped items, add the possibility to block group items from being moved separately.
+- Questions: Mirror the whole group, or allow a single piece to mirror in place?
+- Suggested pick: Mirror the whole group (closer to the request; estimate effort +5 %)
+- Answer: 2026-10-29 (user) "Mirror the group"; built in ADR-148
+
+### G-293: Repairs and Mirror the run move a grouped piece alone
+
+- Status: Open
+- Origin: ADR-148, 2026-10-29; scope (Claude)
+- Missing: Automatic repairs from the problem banner and Mirror the run can still move one grouped piece without its group.
+- Request: add the possibility to set the width, height and depth of grouped items, add the possibility to block group items from being moved separately.
+- Questions: Should repairs and Mirror the run also carry or refuse grouped pieces?
+- Suggested pick: Carry the whole group, refusing a repair the group cannot follow (closer to the request; estimate effort +10 %)

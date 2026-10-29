@@ -55,7 +55,8 @@ Green = CI passes on the latest commit, no merge conflict, no review thread wait
 every `Done when` item has evidence, and the user confirmed the screenshots.
 
 1. Run the `ship-adr` skill for the pull request's ADR **on the branch** and push the ship
-   commit (`Ship ADR-NNN: <short title> — mark implemented`). Wait for CI to pass on it.
+   commit (`Ship ADR-NNN: <short title> — mark implemented`) after `pnpm docs:check` and
+   `pnpm format:check` pass locally. Do not wait for CI on the ship commit (user rule 2026-10-29).
 2. Merge the pull request into `main` (merge commit; never force-push `main`).
 3. Wait for the `Deploy GitHub Pages` run on `main` and cite its run id. Say "deployed", not
    "live-verified", unless the published URL was opened and checked.
