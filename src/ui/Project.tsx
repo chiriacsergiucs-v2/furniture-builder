@@ -1,4 +1,6 @@
 import { isSizeLocked } from '../core/sizeLock';
+import { t, tr } from '../core/i18n';
+import { tNode } from './i18n';
 import {
   useEffect,
   useId,
@@ -118,10 +120,10 @@ import { PieceProjectSettings, ProjectSettingsPanel } from './ProjectSettings';
 import { ProjectHistory, StyleSuggestions } from './History';
 
 const FRONT_SIDE: Record<QuarterTurn, string> = {
-  0: 'front faces you',
-  90: 'front faces right',
-  180: 'front faces the back wall',
-  270: 'front faces left',
+  0: t('front faces you'),
+  90: t('front faces right'),
+  180: t('front faces the back wall'),
+  270: t('front faces left'),
 };
 
 /** Left panel in the project view: the pieces, and the one selected (ADR-022). */
@@ -194,18 +196,21 @@ export function ProjectPanel({
     if (!item?.libraryId) return;
     const d = await loadDesign(item.libraryId).catch(() => undefined);
     if (!d) {
-      setLibMsg('The saved piece this came from no longer exists.');
+      setLibMsg(t('The saved piece this came from no longer exists.'));
       return;
     }
     if (
       !(await askConfirm(
-        `Replace “${item.design.name}” in this project with the current saved version? Position, turn and quantity stay.`,
-        { confirmLabel: 'Replace' },
+        t(
+          'Replace “{name}” in this project with the current saved version? Position, turn and quantity stay.',
+          { name: tr(item.design.name) },
+        ),
+        { confirmLabel: t('Replace') },
       ))
     )
       return;
     update(item.id, { design: structuredClone(d) });
-    setLibMsg('Updated from the saved piece.');
+    setLibMsg(t('Updated from the saved piece.'));
   };
 
   if (mode === 'configure')
@@ -215,7 +220,7 @@ export function ProjectPanel({
         <RunParts />
         <ProjectSettingsPanel />
         <MmField
-          label="Saw cut (kerf) for this project"
+          label={t('Saw cut (kerf) for this project')}
           value={project.cutting?.kerf ?? 4}
           min={0}
           max={20}
@@ -231,22 +236,23 @@ export function ProjectPanel({
     <div className="inspector">
       <header className="insp-head">
         <div className="info-row">
-          <h2>Project</h2>
-          <InfoTip label="About the project" align="start">
-            Pieces are cut and bought together. Each piece is a copy; editing it here never changes
-            your saved pieces.
+          <h2>{t('Project')}</h2>
+          <InfoTip label={t('About the project')} align="start">
+            {t(
+              'Pieces are cut and bought together. Each piece is a copy; editing it here never changes your saved pieces.',
+            )}
           </InfoTip>
         </div>
       </header>
       {project.items.length > 0 && (
         <h3 className="list-head" id="pieces-head">
-          Pieces
+          {t('Pieces')}
         </h3>
       )}
       {project.items.length === 0 ? (
         <p className="empty center">
           <Icon name="project" />
-          No pieces yet. Add a cabinet, a corner unit or a desk to start.
+          {t('No pieces yet. Add a cabinet, a corner unit or a desk to start.')}
         </p>
       ) : (
         <ul className="pieces" aria-labelledby="pieces-head">
@@ -265,11 +271,11 @@ export function ProjectPanel({
                   <span>
                     <strong>
                       {i.quantity > 1 ? `${i.quantity} × ` : ''}
-                      {i.design.name}
+                      {tr(i.design.name)}
                     </strong>
                     {b && (
                       <span className="sub num">
-                        {b.w} × {b.h} × {b.d} mm
+                        {t('{w} × {h} × {d} mm', { w: b.w, h: b.h, d: b.d })}
                       </span>
                     )}
                   </span>
@@ -282,22 +288,25 @@ export function ProjectPanel({
       )}
       <SelectionCard />
       {item && (
-        <section className="piece-edit section" aria-label={`Selected piece: ${item.design.name}`}>
+        <section
+          className="piece-edit section"
+          aria-label={t('Selected piece: {name}', { name: tr(item.design.name) })}
+        >
           <div className="card-title">
-            <span>Selected piece</span>
+            <span>{t('Selected piece')}</span>
           </div>
           <h3>
-            {item.design.name}
+            {tr(item.design.name)}
             {isLocked(item) && (
               <span className="chip lock-chip">
                 <Icon name="lock" className="sm" />
-                Locked
+                {t('Locked')}
               </span>
             )}
             {isSizeLocked(item) && (
               <span className="chip lock-chip">
                 <Icon name="lock" className="sm" />
-                Size locked
+                {t('Size locked')}
               </span>
             )}
           </h3>
@@ -315,13 +324,13 @@ export function ProjectPanel({
           <div className="split-actions">
             <button type="button" className="btn solid" onClick={() => edit(item.id)}>
               <Icon name="pencil" className="sm" />
-              Edit this piece
+              {t('Edit this piece')}
             </button>
             <ReplaceButton key={item.id} item={item} />
             <SaveToCatalog item={item} onSaved={() => setSavedId(item.id)} />
             {item.libraryId && (
               <button type="button" className="btn outline" onClick={updateFromLibrary}>
-                Update from saved piece
+                {t('Update from saved piece')}
               </button>
             )}
             {/* Lock keeps the piece where it is (ADR-095); its size and boards stay editable. */}
@@ -331,13 +340,13 @@ export function ProjectPanel({
               aria-pressed={isLocked(item)}
               title={
                 isLocked(item)
-                  ? 'Let the piece be moved and turned again'
-                  : 'Keep the piece where it is: nothing moves or turns it'
+                  ? t('Let the piece be moved and turned again')
+                  : t('Keep the piece where it is: nothing moves or turns it')
               }
               onClick={() => setLocked(item.id, !isLocked(item))}
             >
               <Icon name="lock" className="sm" />
-              {isLocked(item) ? 'Unlock' : 'Lock'}
+              {isLocked(item) ? t('Unlock') : t('Lock')}
             </button>
             {/* Lock size keeps its width, height and depth (ADR-122); separate from Lock (placement). */}
             <button
@@ -346,13 +355,13 @@ export function ProjectPanel({
               aria-pressed={isSizeLocked(item)}
               title={
                 isSizeLocked(item)
-                  ? 'Let the piece be resized again'
-                  : 'Keep its width, height and depth: nothing resizes it'
+                  ? t('Let the piece be resized again')
+                  : t('Keep its width, height and depth: nothing resizes it')
               }
               onClick={() => setSizeLocked(item.id, !isSizeLocked(item))}
             >
               <Icon name="lock" className="sm" />
-              {isSizeLocked(item) ? 'Unlock size' : 'Lock size'}
+              {isSizeLocked(item) ? t('Unlock size') : t('Lock size')}
             </button>
           </div>
           {libMsg && (
@@ -362,44 +371,49 @@ export function ProjectPanel({
           )}
           {savedId === item.id && <SavedToCatalog />}
           {drillId === item.id && (
-            <section className="inside-piece" aria-label="Inside this piece">
+            <section className="inside-piece" aria-label={t('Inside this piece')}>
               <div className="card-title">
-                <span>Inside this piece</span>
+                <span>{t('Inside this piece')}</span>
               </div>
               <button type="button" className="btn outline" onClick={() => setPieceSettings(true)}>
                 <Icon name="sliders" className="sm" />
-                Size, boards and construction
+                {t('Size, boards and construction')}
               </button>
               <InsideEditor />
               <PieceSettingsDialog open={pieceSettings} onClose={() => setPieceSettings(false)} />
             </section>
           )}
           <Counter
-            label="How many"
+            label={t('How many')}
             value={item.quantity}
             min={1}
             max={99}
             onChange={(v) => update(item.id, { quantity: v })}
             info={
-              <InfoTip label="About how many" align="start">
-                Copies are added to parts, sheets and hardware; one is shown in the room.
+              <InfoTip label={t('About how many')} align="start">
+                {t('Copies are added to parts, sheets and hardware; one is shown in the room.')}
               </InfoTip>
             }
           />
           <ArrangeFields key={item.id} item={item} />
-          <Group title="Position" defaultOpen={false} openOn={openKey(item.id, positionErrors)}>
+          <Group
+            title={t('Position')}
+            defaultOpen={false}
+            openOn={openKey(item.id, positionErrors)}
+          >
             <GroupErrors messages={positionErrors} />
             {blocked ? (
               <p className="hint" role="note">
-                {isLocked(item) ? `${LOCKED_HINT}.` : blocked} It stays {item.position.x} mm from
-                the left and {item.position.z} mm from the back, {FRONT_SIDE[item.rotationY]}; turn,
-                place and gap are off until it is unlocked. Its size and boards can still be
-                changed.
+                {isLocked(item) ? `${LOCKED_HINT}.` : blocked}{' '}
+                {t(
+                  'It stays {x} mm from the left and {z} mm from the back, {side}; turn, place and gap are off until it is unlocked. Its size and boards can still be changed.',
+                  { x: item.position.x, z: item.position.z, side: FRONT_SIDE[item.rotationY] },
+                )}
               </p>
             ) : (
               <Segmented<QuarterTurn>
                 // Where the front faces joins the label instead of a lone line under it (ADR-120).
-                label={`Turn · ${FRONT_SIDE[item.rotationY]}`}
+                label={t('Turn · {side}', { side: FRONT_SIDE[item.rotationY] })}
                 value={item.rotationY}
                 options={[
                   { value: 0, label: '0°' },
@@ -413,7 +427,7 @@ export function ProjectPanel({
             {/* Any whole degree, about the piece's centre (ADR-121); checks use the turned piece. */}
             {!blocked && (
               <MmField
-                label="Rotation (°)"
+                label={t('Rotation (°)')}
                 unit="°"
                 value={rotationOf(item)}
                 min={0}
@@ -421,10 +435,10 @@ export function ProjectPanel({
                 step={15}
                 onChange={(v) => setRotation(item.id, v)}
                 info={
-                  <InfoTip label="About rotation" align="start">
-                    Whole degrees, 0 to 359, about the piece&apos;s centre. Overlaps, the room and
-                    door clearances are checked on the turned piece. A piece at an angle is not part
-                    of a run, so it gets no shared worktop or plinth.
+                  <InfoTip label={t('About rotation')} align="start">
+                    {t(
+                      "Whole degrees, 0 to 359, about the piece's centre. Overlaps, the room and door clearances are checked on the turned piece. A piece at an angle is not part of a run, so it gets no shared worktop or plinth.",
+                    )}
                   </InfoTip>
                 }
               />
@@ -435,14 +449,14 @@ export function ProjectPanel({
             {item.placement?.kind === 'above' || blocked ? null : left ? (
               <>
                 <MmField
-                  label={`Gap to ${left.item.design.name} on the left`}
+                  label={t('Gap to {name} on the left', { name: tr(left.item.design.name) })}
                   value={left.gap}
                   min={0}
                   max={5000}
                   onChange={(v) => setGapMsg({ id: item.id, text: setGap(item.id, v, moveRight) })}
                 />
                 <Toggle
-                  label="Move the pieces on its right too"
+                  label={t('Move the pieces on its right too')}
                   checked={moveRight}
                   onChange={setMoveRight}
                 />
@@ -454,28 +468,36 @@ export function ProjectPanel({
               </>
             ) : (
               <p className="hint">
-                No piece on its left at this height; set “From left” to place it.
+                {t('No piece on its left at this height; set “From left” to place it.')}
               </p>
             )}
           </Group>
-          <Group title="Clearance" defaultOpen={false} openOn={openKey(item.id, clearanceErrors)}>
+          <Group
+            title={t('Clearance')}
+            defaultOpen={false}
+            openOn={openKey(item.id, clearanceErrors)}
+          >
             <GroupErrors messages={clearanceErrors} />
             <ClearanceFields item={item} />
           </Group>
-          <Group title="Finish" defaultOpen={false}>
+          <Group title={t('Finish')} defaultOpen={false}>
             <FinishFields item={item} />
           </Group>
           {project.settings && (
-            <Group title="Project settings" defaultOpen={false}>
+            <Group title={t('Project settings')} defaultOpen={false}>
               <PieceProjectSettings item={item} />
             </Group>
           )}
-          <Group title="Merge" defaultOpen={false}>
+          <Group title={t('Merge')} defaultOpen={false}>
             <MergeFields item={item} />
           </Group>
           {piece && (
             <p className="hint">
-              Takes {piece.bounds.w} × {piece.bounds.d} mm of floor, {piece.bounds.h} mm high.
+              {t('Takes {w} × {d} mm of floor, {h} mm high.', {
+                w: piece.bounds.w,
+                d: piece.bounds.d,
+                h: piece.bounds.h,
+              })}
             </p>
           )}
           <button
@@ -483,15 +505,18 @@ export function ProjectPanel({
             className="danger-link"
             onClick={async () => {
               if (
-                await askConfirm(`Remove “${item.design.name}” from this project?`, {
-                  confirmLabel: 'Remove',
-                  danger: true,
-                })
+                await askConfirm(
+                  t('Remove “{name}” from this project?', { name: tr(item.design.name) }),
+                  {
+                    confirmLabel: t('Remove'),
+                    danger: true,
+                  },
+                )
               )
                 remove(item.id);
             }}
           >
-            Remove from project
+            {t('Remove from project')}
           </button>
         </section>
       )}
@@ -501,7 +526,7 @@ export function ProjectPanel({
       <ModelList pm={pm} />
       <button type="button" className="btn outline block" onClick={onAdd}>
         <Icon name="plus" />
-        Add a piece
+        {t('Add a piece')}
       </button>
       <RoomSection />
       <ProjectHistory />
@@ -571,10 +596,16 @@ function FinishFields({ item }: { item: ProjectItem }) {
   const currentId = roleBoard(item.design, role);
   const current = item.design.materials.find((m) => m.id === currentId);
   const options = [
-    ...boards.map((m) => ({ value: materialKey(m), label: `${m.name}, ${m.thickness} mm` })),
+    ...boards.map((m) => ({
+      value: materialKey(m),
+      label: t('{name}, {thickness} mm', { name: tr(m.name), thickness: m.thickness }),
+    })),
     ...decors.map((d) => ({
       value: `decor:${d.id}`,
-      label: `${d.makerText} ${d.code} ${d.name}, ${d.thickness} mm (your list)`,
+      label: t('{name}, {thickness} mm (your list)', {
+        name: `${d.makerText} ${d.code} ${d.name}`,
+        thickness: d.thickness,
+      }),
     })),
   ];
   const chosen = boardKey || (current ? materialKey(current) : (options[0]?.value ?? ''));
@@ -598,18 +629,18 @@ function FinishFields({ item }: { item: ProjectItem }) {
     const r = apply(item.id, role, b, scope);
     setMsg(
       r.applied.length
-        ? `Applied to ${r.applied.length} ${r.applied.length === 1 ? 'piece' : 'pieces'}${r.skipped.length ? `, ${r.skipped.length} skipped: ${r.skipped.join('; ')}` : ''}.`
-        : `Nothing changed: ${r.skipped.join('; ') || 'no piece reached'}.`,
+        ? `${t('Applied to {n|# piece|# pieces}', { n: r.applied.length })}${r.skipped.length ? t(', {n} skipped: {list}', { n: r.skipped.length, list: r.skipped.join('; ') }) : ''}.`
+        : t('Nothing changed: {why}.', { why: r.skipped.join('; ') || t('no piece reached') }),
     );
   };
   return (
     <div className="finish-fields">
       <Segmented<FinishRole>
-        label="Parts"
+        label={t('Parts')}
         value={role}
         options={[
-          { value: 'front', label: 'Fronts' },
-          { value: 'body', label: 'Carcass' },
+          { value: 'front', label: t('Fronts') },
+          { value: 'body', label: t('Carcass') },
         ]}
         onChange={(v) => {
           setRole(v);
@@ -619,12 +650,13 @@ function FinishFields({ item }: { item: ProjectItem }) {
       />
       {currentId === null ? (
         <p className="hint">
-          This piece has no {role === 'front' ? 'fronts' : 'carcass'}; “Whole project” still reaches
-          the others.
+          {role === 'front'
+            ? t('This piece has no fronts; “Whole project” still reaches the others.')
+            : t('This piece has no carcass; “Whole project” still reaches the others.')}
         </p>
       ) : null}
       <Select
-        label="Board"
+        label={t('Board')}
         value={chosen}
         options={options}
         onChange={(v) => {
@@ -633,23 +665,28 @@ function FinishFields({ item }: { item: ProjectItem }) {
         }}
       />
       <Segmented<FinishScope>
-        label="Apply to"
+        label={t('Apply to')}
         value={scope}
         onChange={(v) => {
           setScope(v);
           setMsg(null);
         }}
         options={[
-          { value: 'piece', label: 'This piece' },
-          ...(run && run.length > 1 ? [{ value: 'run' as const, label: 'This run' }] : []),
+          { value: 'piece', label: t('This piece') },
+          ...(run && run.length > 1 ? [{ value: 'run' as const, label: t('This run') }] : []),
           ...(selectedCount > 1
-            ? [{ value: 'selection' as const, label: `Selected pieces (${selectedCount})` }]
+            ? [
+                {
+                  value: 'selection' as const,
+                  label: t('Selected pieces ({n})', { n: selectedCount }),
+                },
+              ]
             : []),
-          { value: 'project', label: 'Whole project' },
+          { value: 'project', label: t('Whole project') },
         ]}
       />
       <button type="button" className="btn outline" onClick={go} disabled={!options.length}>
-        Apply finish
+        {t('Apply finish')}
       </button>
       {msg && (
         <p className="hint" role="status">
@@ -671,14 +708,14 @@ function LinkedCopies({ item }: { item: ProjectItem }) {
   const n = useMemo(() => linkCount(project, item.id), [project, item.id]);
   if (n < 2) return null;
   return (
-    <div className="linked-copies" role="group" aria-label="Linked copies">
+    <div className="linked-copies" role="group" aria-label={t('Linked copies')}>
       <p className="hint">
-        <strong>Linked: {n} copies</strong>.{' '}
+        <strong>{t('Linked: {n} copies', { n })}</strong>.{' '}
         {linkAll
-          ? 'A change to this piece changes every copy, inside too.'
-          : 'A change to this piece changes it alone and unlinks it.'}
+          ? t('A change to this piece changes every copy, inside too.')
+          : t('A change to this piece changes it alone and unlinks it.')}
       </p>
-      <Toggle label="Change all copies" checked={linkAll} onChange={setLinkAll} />
+      <Toggle label={t('Change all copies')} checked={linkAll} onChange={setLinkAll} />
     </div>
   );
 }
@@ -707,50 +744,50 @@ function ArrangeFields({ item }: { item: ProjectItem }) {
     [project, pm, item.id],
   );
   return (
-    <div className="arrange" role="group" aria-label="Arrange this piece">
+    <div className="arrange" role="group" aria-label={t('Arrange this piece')}>
       <div className="arrange-actions">
         <button
           type="button"
           className="btn outline sm"
-          title="Duplicate (Ctrl+D)"
+          title={t('Duplicate (Ctrl+D)')}
           onClick={() => {
             setMsg(null);
             duplicate(item.id);
           }}
         >
-          Duplicate
+          {t('Duplicate')}
         </button>
         <button
           type="button"
           className="btn outline sm"
-          title="A copy that changes with this piece"
+          title={t('A copy that changes with this piece')}
           onClick={() => {
             setMsg(null);
             addLinked(item.id);
           }}
         >
-          Add a linked copy
+          {t('Add a linked copy')}
         </button>
         <button
           type="button"
           className="btn outline sm"
-          aria-label="Turn 90° anticlockwise about its centre"
-          title="Turn about its centre (R)"
+          aria-label={t('Turn 90° anticlockwise about its centre')}
+          title={t('Turn about its centre (R)')}
           onClick={() => setMsg(turn(item.id, 1))}
         >
-          Turn 90° ↺
+          {t('Turn 90° ↺')}
         </button>
         <button
           type="button"
           className="btn outline sm"
-          aria-label="Turn 90° clockwise about its centre"
-          title="Turn about its centre (Shift+R)"
+          aria-label={t('Turn 90° clockwise about its centre')}
+          title={t('Turn about its centre (Shift+R)')}
           onClick={() => setMsg(turn(item.id, -1))}
         >
-          Turn 90° ↻
+          {t('Turn 90° ↻')}
         </button>
         <button type="button" className="btn outline sm" onClick={() => setMsg(mirror(item.id))}>
-          Mirror
+          {t('Mirror')}
         </button>
         {run.length > 1 && (
           <button
@@ -761,12 +798,14 @@ function ArrangeFields({ item }: { item: ProjectItem }) {
               setMsg(
                 res.refused ??
                   (res.reasons.length
-                    ? `Moved, nothing to mirror inside: ${res.reasons.join('; ')}.`
+                    ? t('Moved, nothing to mirror inside: {reasons}.', {
+                        reasons: res.reasons.join('; '),
+                      })
                     : null),
               );
             }}
           >
-            Mirror the run ({run.length} pieces)
+            {t('Mirror the run ({n} pieces)', { n: run.length })}
           </button>
         )}
       </div>
@@ -788,8 +827,9 @@ function MergeFields({ item }: { item: ProjectItem }) {
     <div className="merge-fields">
       {candidates.length === 0 ? (
         <p className="hint">
-          Nothing touches it on the left or right. Set the gap to 0 next to another cabinet to merge
-          the two.
+          {t(
+            'Nothing touches it on the left or right. Set the gap to 0 next to another cabinet to merge the two.',
+          )}
         </p>
       ) : (
         candidates.map((c) => (
@@ -798,21 +838,30 @@ function MergeFields({ item }: { item: ProjectItem }) {
               type="button"
               className="btn outline stack"
               disabled={c.issues.length > 0}
-              title={`Merge with ${c.item.design.name} on the ${c.side}`}
+              title={
+                c.side === 'right'
+                  ? t('Merge with {name} on the right', { name: tr(c.item.design.name) })
+                  : t('Merge with {name} on the left', { name: tr(c.item.design.name) })
+              }
               onClick={async () => {
                 const [l, r] = c.side === 'right' ? [item, c.item] : [c.item, item];
                 if (
                   !(await askConfirm(
-                    `Merge “${l.design.name}” and “${r.design.name}” into one cabinet? The two sides that meet become one divider; each keeps its contents and fronts. Undo brings the two pieces back.`,
-                    { confirmLabel: 'Merge' },
+                    t(
+                      'Merge “{a}” and “{b}” into one cabinet? The two sides that meet become one divider; each keeps its contents and fronts. Undo brings the two pieces back.',
+                      { a: tr(l.design.name), b: tr(r.design.name) },
+                    ),
+                    { confirmLabel: t('Merge') },
                   ))
                 )
                   return;
                 merge(item.id, c.item.id);
               }}
             >
-              <span className="lbl">Merge with {c.side} piece</span>{' '}
-              <span className="sub">{c.item.design.name}</span>
+              <span className="lbl">
+                {c.side === 'right' ? t('Merge with right piece') : t('Merge with left piece')}
+              </span>{' '}
+              <span className="sub">{tr(c.item.design.name)}</span>
             </button>
             {c.issues.length > 0 && (
               <ul className="hint" role="note">
@@ -852,14 +901,14 @@ function PlacementFields({ item }: { item: ProjectItem }) {
   const xz = (
     <div className="dims2">
       <MmField
-        label="From left"
+        label={t('From left')}
         value={pos.x}
         min={-20000}
         max={20000}
         onChange={(v) => update(item.id, { position: { ...pos, x: v } })}
       />
       <MmField
-        label="From back"
+        label={t('From back')}
         value={pos.z}
         min={-20000}
         max={20000}
@@ -870,22 +919,22 @@ function PlacementFields({ item }: { item: ProjectItem }) {
   return (
     <>
       <Segmented<PlacementKind>
-        label="Placed"
+        label={t('Placed')}
         value={kind}
         onChange={setPlacement}
         options={[
-          { value: 'floor', label: 'Floor', title: 'Stands on the floor' },
-          { value: 'wall', label: 'Wall', title: 'Hung on the wall at a height' },
+          { value: 'floor', label: t('Floor'), title: t('Stands on the floor') },
+          { value: 'wall', label: t('Wall'), title: t('Hung on the wall at a height') },
           ...(bases.length
             ? [
                 {
                   value: 'above' as const,
-                  label: 'On a piece',
-                  title: 'Stands on, or hangs above, another piece and follows it',
+                  label: t('On a piece'),
+                  title: t('Stands on, or hangs above, another piece and follows it'),
                 },
               ]
             : []),
-          { value: 'free', label: 'Anywhere', title: 'Set all three distances yourself' },
+          { value: 'free', label: t('Anywhere'), title: t('Set all three distances yourself') },
         ]}
       />
       {kind === 'floor' && xz}
@@ -893,7 +942,7 @@ function PlacementFields({ item }: { item: ProjectItem }) {
         <>
           {xz}
           <MmField
-            label="Underside above the floor"
+            label={t('Underside above the floor')}
             value={pl.height}
             min={0}
             max={3000}
@@ -904,27 +953,27 @@ function PlacementFields({ item }: { item: ProjectItem }) {
       {kind === 'above' && pl?.kind === 'above' && (
         <>
           <Select
-            label="On or above"
+            label={t('On or above')}
             value={pl.baseId}
-            options={bases.map((b) => ({ value: b.id, label: b.design.name }))}
+            options={bases.map((b) => ({ value: b.id, label: tr(b.design.name) }))}
             onChange={(v) => update(item.id, { placement: { ...pl, baseId: v } })}
             info={
-              <InfoTip label="About on or above" align="start">
-                Backs line up; it moves with the piece below.
+              <InfoTip label={t('About on or above')} align="start">
+                {t('Backs line up; it moves with the piece below.')}
               </InfoTip>
             }
           />
           <div className="dims2">
             <MmField
-              label="Gap above it"
+              label={t('Gap above it')}
               value={pl.gap}
               min={0}
               max={3000}
               onChange={(v) => update(item.id, { placement: { ...pl, gap: v } })}
-              hint="0 = stands on it"
+              hint={t('0 = stands on it')}
             />
             <MmField
-              label="From its left edge"
+              label={t('From its left edge')}
               value={pl.offsetX}
               min={-5000}
               max={5000}
@@ -936,21 +985,21 @@ function PlacementFields({ item }: { item: ProjectItem }) {
       {kind === 'free' && (
         <div className="dims3">
           <MmField
-            label="From left"
+            label={t('From left')}
             value={pos.x}
             min={-20000}
             max={20000}
             onChange={(v) => update(item.id, { position: { ...pos, x: v } })}
           />
           <MmField
-            label="From back"
+            label={t('From back')}
             value={pos.z}
             min={-20000}
             max={20000}
             onChange={(v) => update(item.id, { position: { ...pos, z: v } })}
           />
           <MmField
-            label="Above floor"
+            label={t('Above floor')}
             value={pos.y}
             min={0}
             max={3000}
@@ -1009,7 +1058,7 @@ export function PlanView({ fronts, card }: { fronts?: boolean; card?: boolean })
   if (!pm || (!pm.pieces.length && !pm.models.length && !hasRoom && !drawing && !listOpen))
     return (
       <div className="no-3d">
-        <p>Add pieces to see them on the plan.</p>
+        <p>{t('Add pieces to see them on the plan.')}</p>
       </div>
     );
   return (
@@ -1017,8 +1066,10 @@ export function PlanView({ fronts, card }: { fronts?: boolean; card?: boolean })
       {drawing && (
         <div className="place-banner" role="status">
           <span>
-            Tap the corners of the room, going round it ({drawing.length} so far). Walls snap along
-            the room.
+            {t(
+              'Tap the corners of the room, going round it ({n} so far). Walls snap along the room.',
+              { n: drawing.length },
+            )}
           </span>
           <button
             type="button"
@@ -1026,31 +1077,29 @@ export function PlanView({ fronts, card }: { fronts?: boolean; card?: boolean })
             disabled={drawing.length < 3}
             onClick={finishDraw}
           >
-            Close the room
+            {t('Close the room')}
           </button>
           <button type="button" className="btn sm ghost" onClick={cancelDraw}>
-            Cancel
+            {t('Cancel')}
           </button>
         </div>
       )}
       {placing && (
         <div className="place-banner" role="status">
           <span>
-            {blockCount > 1 ? (
-              <>
-                Tap the plan to place the template's <strong>{blockCount} pieces</strong>
-              </>
-            ) : (
-              <>
-                Tap the plan to place <strong>{placing.item.design.name}</strong>
-              </>
-            )}
+            {blockCount > 1
+              ? tNode("Tap the plan to place the template's {pieces}", {
+                  pieces: <strong>{t('{n} pieces', { n: blockCount })}</strong>,
+                })
+              : tNode('Tap the plan to place {name}', {
+                  name: <strong>{tr(placing.item.design.name)}</strong>,
+                })}
           </span>
           <button type="button" className="btn sm" onClick={stop}>
-            Place to the right
+            {t('Place to the right')}
           </button>
           <button type="button" className="btn sm ghost" onClick={undoProject}>
-            Cancel
+            {t('Cancel')}
           </button>
         </div>
       )}
@@ -1282,45 +1331,47 @@ function RoomPlan({
           ? [b.x, b.z, b.x + b.w, b.z]
           : [b.x, b.z, b.x, b.z + b.d];
   return (
-    <figure className="plan with-tools" aria-label="Room plan, seen from above. Select a piece.">
+    <figure
+      className="plan with-tools"
+      aria-label={t('Room plan, seen from above. Select a piece.')}
+    >
       <div className="plan-tools">
         {fronts && (
           <Toggle
-            label="Fronts"
-            name="Doors and fronts"
+            label={t('Fronts')}
+            name={t('Doors and fronts')}
             checked={showFronts}
             onChange={setShowFronts}
           />
         )}
         {/* Phones: taps add and remove pieces, and a drag on empty plan draws a selection box (ADR-097). */}
-        <Toggle label="Select" checked={multi} onChange={setMulti} />
+        <Toggle label={t('Select')} checked={multi} onChange={setMulti} />
         {/* Checkboxes like Fronts and Clear.: one toggle style in the row (ADR-120). On a phone Snap and the
             clearances sit behind Options; Fronts and Select stay in the row (ADR-144, G-269). */}
         <ViewOptions menu={inOptions('snap', phone)}>
-          <Toggle label="Snap" checked={snapOn} onChange={setSnapOn} />
+          <Toggle label={t('Snap')} checked={snapOn} onChange={setSnapOn} />
           <ZoneToolbar on={showZones} onChange={setShowZones} />
         </ViewOptions>
       </div>
-      <InfoTip label="About the plan">
+      <InfoTip label={t('About the plan')}>
         <span className="info-lead">
           {snapOn
-            ? `Snaps within ${SNAP_RANGE} mm to walls and neighbours; hold Alt to place freely.`
-            : 'Pieces go exactly where dropped.'}
+            ? t('Snaps within {range} mm to walls and neighbours; hold Alt to place freely.', {
+                range: SNAP_RANGE,
+              })
+            : t('Pieces go exactly where dropped.')}
         </span>
-        Seen from above. The yellow edge is each piece's front; dashed pieces hang on the wall; red
-        dashes show where a selected piece's doors or drawers cannot open. Drag a piece, or use the
-        arrow keys on it, to move it; Esc cancels a drag. R turns the focused piece about its
-        centre. Shift- or Ctrl-click adds pieces to the selection (Select on a phone); drag on empty
-        plan to draw a box; tap a spot again to reach a piece under another; Ctrl+A selects all. A
-        grouped piece selects its group first, then itself. With Snap on, a dropped piece joins a
-        wall, an inside corner or a neighbour’s side within {SNAP_RANGE} mm; arrow keys never snap.
+        {t(
+          "Seen from above. The yellow edge is each piece's front; dashed pieces hang on the wall; red dashes show where a selected piece's doors or drawers cannot open. Drag a piece, or use the arrow keys on it, to move it; Esc cancels a drag. R turns the focused piece about its centre. Shift- or Ctrl-click adds pieces to the selection (Select on a phone); drag on empty plan to draw a box; tap a spot again to reach a piece under another; Ctrl+A selects all. A grouped piece selects its group first, then itself. With Snap on, a dropped piece joins a wall, an inside corner or a neighbour’s side within {range} mm; arrow keys never snap.",
+          { range: SNAP_RANGE },
+        )}
       </InfoTip>
       {/* Live snap feedback while a piece is dragged; over the plan, so it takes no room (ADR-080). */}
       {target ? (
         <span className="plan-drag-note" role="status">
           {target.snap
-            ? `Snaps: ${[target.snap.label, ...target.snap.notes].join(' · ')}`
-            : (target.hint ?? (snapOn ? 'Alt held: placing freely.' : 'Snap is off.'))}
+            ? t('Snaps: {list}', { list: [target.snap.label, ...target.snap.notes].join(' · ') })
+            : (target.hint ?? (snapOn ? t('Alt held: placing freely.') : t('Snap is off.')))}
           {/* Neighbours the family rule refused, named even when the piece snaps elsewhere (ADR-100). */}
           {target.refused
             .filter((r) => r !== target.hint)
@@ -1401,7 +1452,7 @@ function RoomPlan({
           <>
             <line className="wall" x1={x0 - pad} y1={0} x2={x1 + pad} y2={0} />
             <text className="wall-label" x={x0} y={-pad * 0.5} fontSize={fs}>
-              Back wall
+              {t('Back wall')}
             </text>
           </>
         )}
@@ -1444,7 +1495,7 @@ function RoomPlan({
               role="button"
               tabIndex={0}
               aria-pressed={on}
-              aria-label={`${pc.item.design.name}, ${b.w} by ${b.d} mm${locked ? ', locked' : ''}`}
+              aria-label={`${t('{name}, {w} by {d} mm', { name: tr(pc.item.design.name), w: b.w, d: b.d })}${locked ? t(', locked') : ''}`}
               onClick={
                 tapping
                   ? undefined
@@ -1594,7 +1645,7 @@ function RoomPlan({
                 dominantBaseline="middle"
               >
                 {pc.item.quantity > 1 ? `${pc.item.quantity}× ` : ''}
-                {pc.item.design.name}
+                {tr(pc.item.design.name)}
               </text>
               {locked && <LockBadge x={b.x} y={b.z} size={size} />}
             </g>
@@ -1626,7 +1677,7 @@ function RoomPlan({
                 c.box.yaw ? `rotate(${-c.box.yaw.deg} ${c.box.yaw.cx} ${c.box.yaw.cz})` : undefined
               }
             >
-              <title>Needed to open; something is in the way</title>
+              <title>{t('Needed to open; something is in the way')}</title>
             </rect>
           ))}
         {problem && !tapping && <ProblemOutline problem={problem} fs={fs} />}
@@ -1634,7 +1685,10 @@ function RoomPlan({
           <g className={`drag-ghost ${target.snap ? 'snapped' : ''}`} aria-hidden="true">
             <rect x={target.box.x} y={target.box.z} width={target.box.w} height={target.box.d} />
             <text x={target.box.x} y={target.box.z - fs * 0.5} fontSize={fs}>
-              From left {target.position.x} · From back {target.position.z} mm
+              {t('From left {x} · From back {z} mm', {
+                x: target.position.x,
+                z: target.position.z,
+              })}
             </text>
             {target.snap && (
               <text
@@ -1686,7 +1740,7 @@ function RoomPlan({
             y={space.z}
             width={space.w}
             height={space.d}
-            aria-label="Selected space inside the piece"
+            aria-label={t('Selected space inside the piece')}
           />
         )}
       </svg>
@@ -1704,7 +1758,7 @@ function LockBadge({ x, y, size }: { x: number; y: number; size: number }) {
       fontSize={size}
       dominantBaseline="hanging"
     >
-      Locked
+      {t('Locked')}
     </text>
   );
 }
@@ -1727,7 +1781,7 @@ function RoomOutline({ room, fs }: { room: Room; fs: number }) {
               fontSize={fs * 0.8}
               textAnchor="middle"
               dominantBaseline="middle"
-            >{`Wall ${i + 1} · ${wallLength(room, i)}`}</text>
+            >{`${t('Wall {n}', { n: i + 1 })} · ${wallLength(room, i)}`}</text>
           </g>
         );
       })}
@@ -1737,20 +1791,22 @@ function RoomOutline({ room, fs }: { room: Room; fs: number }) {
         if (f.kind === 'obstacle')
           return (
             <rect key={f.id} className="room-obstacle" x={b.x} y={b.z} width={b.w} height={b.d}>
-              <title>{f.label}</title>
+              <title>{tr(f.label)}</title>
             </rect>
           );
         if (f.kind === 'window')
           return (
             <rect key={f.id} className="room-window" x={b.x} y={b.z} width={b.w} height={b.d}>
-              <title>{f.label}</title>
+              <title>{tr(f.label)}</title>
             </rect>
           );
         if (f.kind === 'pipe' || f.kind === 'outlet')
           return (
             <g key={f.id} className={`room-${f.kind}`}>
               <rect x={b.x} y={b.z} width={b.w} height={b.d}>
-                <title>{`${f.label}: keep backs, plinths and worktops clear`}</title>
+                <title>
+                  {t('{label}: keep backs, plinths and worktops clear', { label: tr(f.label) })}
+                </title>
               </rect>
               <text
                 x={b.x + b.w / 2}
@@ -1759,7 +1815,7 @@ function RoomOutline({ room, fs }: { room: Room; fs: number }) {
                 textAnchor="middle"
                 dominantBaseline="hanging"
               >
-                {f.label}
+                {tr(f.label)}
               </text>
             </g>
           );
@@ -1768,14 +1824,14 @@ function RoomOutline({ room, fs }: { room: Room; fs: number }) {
           <g key={f.id}>
             {/* The area the check keeps free (as deep as the door is wide), drawn faintly. */}
             <rect className="room-door" x={b.x} y={b.z} width={b.w} height={b.d}>
-              <title>{`${f.label}: keep free for the swing`}</title>
+              <title>{t('{label}: keep free for the swing', { label: tr(f.label) })}</title>
             </rect>
             {sw && (
               <path
                 className="room-door-swing"
                 d={`M ${sw.hinge.join(' ')} L ${sw.closed.join(' ')} A ${sw.radius} ${sw.radius} 0 0 ${sw.sweep} ${sw.open.join(' ')} Z`}
               >
-                <title>{`${f.label}: door swing`}</title>
+                <title>{t('{label}: door swing', { label: tr(f.label) })}</title>
               </path>
             )}
           </g>
@@ -1884,11 +1940,15 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
     setPos((p) => (p && p.left === next.left && p.top === next.top ? p : next));
   }, [at?.x, at?.y, at?.w, at?.h, tick, pm]);
   return (
-    <figure className="plan" ref={figRef} aria-label="Room seen from the front. Select a piece.">
-      <InfoTip label="About the front view">
-        Seen from the front. Sizes in mm: overall in yellow, the selected piece in green.
+    <figure
+      className="plan"
+      ref={figRef}
+      aria-label={t('Room seen from the front. Select a piece.')}
+    >
+      <InfoTip label={t('About the front view')}>
+        {t('Seen from the front. Sizes in mm: overall in yellow, the selected piece in green.')}
         {rv &&
-          ' The room height and the doors, windows and obstacles on the back wall are outlined.'}
+          ` ${t('The room height and the doors, windows and obstacles on the back wall are outlined.')}`}
       </InfoTip>
       <svg
         viewBox={`${x0 - pad * 1.2} ${-top - pad * 0.8} ${x1 - x0 + pad * 2.4} ${top + pad * 1.8}`}
@@ -1930,7 +1990,7 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
         {rv && (
           <g className="room-front">
             <line className="room-ceiling" x1={rv.x0} y1={-rv.height} x2={rv.x1} y2={-rv.height}>
-              <title>{`Room height ${rv.height}`}</title>
+              <title>{t('Room height {h}', { h: rv.height })}</title>
             </line>
             {rv.features.map((f) => (
               <rect
@@ -1941,7 +2001,7 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
                 width={f.w}
                 height={f.h}
               >
-                <title>{`${f.label} on the back wall`}</title>
+                <title>{t('{label} on the back wall', { label: tr(f.label) })}</title>
               </rect>
             ))}
           </g>
@@ -1969,7 +2029,11 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
             role="button"
             tabIndex={0}
             aria-pressed={pc.item.id === selectedId}
-            aria-label={`${pc.item.design.name}, ${pc.bounds.w} wide, ${pc.bounds.h} high`}
+            aria-label={t('{name}, {w} wide, {h} high', {
+              name: tr(pc.item.design.name),
+              w: pc.bounds.w,
+              h: pc.bounds.h,
+            })}
             onClick={(e) => tapFront(e, pc.item)}
             onKeyDown={onKey(() => select(pc.item.id))}
           />
@@ -2014,7 +2078,7 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
             y={-(space.y + space.h)}
             width={space.w}
             height={space.h}
-            aria-label="Selected space inside the piece"
+            aria-label={t('Selected space inside the piece')}
           />
         )}
         {at && (
@@ -2091,9 +2155,9 @@ export function AddPieceList({
             <Icon name="plus" />
           </span>
           <span>
-            <strong>New piece, step by step</strong>
+            <strong>{t('New piece, step by step')}</strong>
             <span className="sub">
-              The wizard; the piece is saved on this device and added to this project.
+              {t('The wizard; the piece is saved on this device and added to this project.')}
             </span>
           </span>
           <Icon name="chevron-right" className="chev sm" />
@@ -2117,7 +2181,7 @@ export function AddPieceList({
       <MyModels onDone={onDone} />
       {saved.length > 0 && (
         <>
-          <h3 className="list-head">Your saved pieces</h3>
+          <h3 className="list-head">{t('Your saved pieces')}</h3>
           <ul className="template-list">
             {saved.map((r) => (
               <li key={r.id}>
@@ -2135,7 +2199,7 @@ export function AddPieceList({
                   <span>
                     <strong>{r.name}</strong>
                     <span className="sub">
-                      A copy is added; “Update from saved piece” pulls later changes.
+                      {t('A copy is added; “Update from saved piece” pulls later changes.')}
                     </span>
                   </span>
                   <Icon name="chevron-right" className="chev sm" />
@@ -2148,26 +2212,27 @@ export function AddPieceList({
       {projectTemplates.length > 0 && (
         <>
           <h3 className="list-head" id="project-templates-head">
-            Project templates
+            {t('Project templates')}
           </h3>
           <ul className="template-list" aria-labelledby="project-templates-head">
-            {projectTemplates.map((t) => (
-              <li key={t.id}>
+            {projectTemplates.map((tpl) => (
+              <li key={tpl.id}>
                 <button
                   type="button"
                   className="row-btn"
                   onClick={() => {
-                    if (insertTemplate(t).length) onDone();
+                    if (insertTemplate(tpl).length) onDone();
                   }}
                 >
                   <span className="glyph">
                     <Icon name="project" />
                   </span>
                   <span>
-                    <strong>{t.name}</strong>
+                    <strong>{tpl.name}</strong>
                     <span className="sub">
-                      {t.items.length} {t.items.length === 1 ? 'piece' : 'pieces'}, added together;
-                      tap the plan to place them.
+                      {t('{n|# piece|# pieces}, added together; tap the plan to place them.', {
+                        n: tpl.items.length,
+                      })}
                     </span>
                   </span>
                   <Icon name="chevron-right" className="chev sm" />
@@ -2206,23 +2271,22 @@ function RunParts() {
     if (
       (parts.length || removed.length) &&
       !(await askConfirm(
-        'Suggest the run parts again for where the pieces are now? Parts you removed come back.',
-        { confirmLabel: 'Suggest again' },
+        t('Suggest the run parts again for where the pieces are now? Parts you removed come back.'),
+        { confirmLabel: t('Suggest again') },
       ))
     )
       return;
     suggestParts();
   };
   return (
-    <section className="section run-parts" aria-label="Run parts">
+    <section className="section run-parts" aria-label={t('Run parts')}>
       <div className="card-title">
         <span className="info-row">
-          <span>Run parts</span>
-          <InfoTip label="About run parts" align="start">
-            For rows of base units side by side: one worktop, a filler in each gap, a cover panel on
-            each open end, and one plinth along the run when the cabinets stand on their bottoms (it
-            replaces their own plinths). Add a worktop over chosen pieces, or a crown, pelmet or
-            ceiling filler over wall and tall units.
+          <span>{t('Run parts')}</span>
+          <InfoTip label={t('About run parts')} align="start">
+            {t(
+              'For rows of base units side by side: one worktop, a filler in each gap, a cover panel on each open end, and one plinth along the run when the cabinets stand on their bottoms (it replaces their own plinths). Add a worktop over chosen pieces, or a crown, pelmet or ceiling filler over wall and tall units.',
+            )}
           </InfoTip>
         </span>
       </div>
@@ -2231,19 +2295,19 @@ function RunParts() {
           {parts.map((rp) => (
             <li key={rp.id}>
               <span>
-                <strong>{rp.label}</strong>{' '}
+                <strong>{tr(rp.label)}</strong>{' '}
                 <span className="num">
                   {rp.box.w} × {rp.box.h} × {rp.box.d}
                 </span>
                 <span className="sub">
-                  {rp.reason}
-                  {rp.changed ? ` · updated: ${rp.changed}` : ''}
+                  {tr(rp.reason)}
+                  {rp.changed ? ` · ${t('updated: {what}', { what: tr(rp.changed) })}` : ''}
                 </span>
               </span>
               <button
                 type="button"
                 className="btn icon ghost sm"
-                aria-label={`Remove ${rp.label}`}
+                aria-label={t('Remove {name}', { name: tr(rp.label) })}
                 onClick={() => removeRunPart(rp.id)}
               >
                 <Icon name="trash" />
@@ -2262,20 +2326,20 @@ function RunParts() {
       <RunHandlesAndSinks />
       {removed.length > 0 && (
         <p className="hint">
-          {removed.length} removed {removed.length === 1 ? 'part stays' : 'parts stay'} removed.
+          {t('{n|# removed part stays|# removed parts stay} removed.', { n: removed.length })}
         </p>
       )}
       <MmField
-        label="Scribe allowance for fillers"
+        label={t('Scribe allowance for fillers')}
         value={settings?.scribe ?? 0}
         min={0}
         max={200}
         onChange={(v) => setRunSettings({ scribe: v })}
-        hint="Cut fillers this much wider to scribe them to fit; 0 = exact"
+        hint={t('Cut fillers this much wider to scribe them to fit; 0 = exact')}
       />
       {(parts.length > 0 || settings?.auto) && (
         <Toggle
-          label="Keep run parts up to date"
+          label={t('Keep run parts up to date')}
           checked={!!settings?.auto}
           onChange={(v) => setRunSettings({ auto: v })}
         />
@@ -2285,27 +2349,35 @@ function RunParts() {
         className="btn outline block"
         onClick={suggest}
         disabled={!project.items.length}
-        title="Suggest worktop, plinth, fillers and covers"
+        title={t('Suggest worktop, plinth, fillers and covers')}
       >
         <Icon name="refresh" className="sm" />
-        {parts.length ? 'Suggest again' : 'Suggest run parts'}
+        {parts.length ? t('Suggest again') : t('Suggest run parts')}
       </button>
     </section>
   );
 }
 
 const SHAPES: { value: RoomShape; label: string }[] = [
-  { value: 'rectangle', label: 'Rectangle' },
-  { value: 'l-shape', label: 'L-shape' },
-  { value: 'u-shape', label: 'U-shape' },
-  { value: 'alcove', label: 'Alcove' },
+  { value: 'rectangle', label: t('Rectangle') },
+  { value: 'l-shape', label: t('L-shape') },
+  { value: 'u-shape', label: t('U-shape') },
+  { value: 'alcove', label: t('Alcove') },
 ];
+/** Default labels of new room features: stored in the project, so kept in English. */
 const FEATURE_KIND: Record<RoomFeature['kind'], string> = {
   door: 'Door',
   window: 'Window',
   obstacle: 'Obstacle',
   pipe: 'Pipe',
   outlet: 'Outlet',
+};
+const REMOVE_FEATURE: Record<RoomFeature['kind'], string> = {
+  door: t('Remove door'),
+  window: t('Remove window'),
+  obstacle: t('Remove obstacle'),
+  pipe: t('Remove pipe'),
+  outlet: t('Remove outlet'),
 };
 
 /** The room (ADR-058/0056): shape and walls, height, doors, windows and obstacles, checked against the pieces. */
@@ -2407,24 +2479,30 @@ function RoomSection() {
       features: room.features.map((f) => (f.id === id ? { ...f, ...patch } : f)),
     });
   return (
-    <section className="section room" aria-label="Room">
+    <section className="section room" aria-label={t('Room')}>
       <div className="card-title">
-        <span>Room</span>
+        <span>{t('Room')}</span>
       </div>
       {!room ? (
         <>
           <p className="hint">
-            Add the room to check the pieces against its walls, doors, windows, obstacles, pipes and
-            outlets.
+            {t(
+              'Add the room to check the pieces against its walls, doors, windows, obstacles, pipes and outlets.',
+            )}
           </p>
-          <Segmented<RoomShape> label="Shape" value={shape} options={SHAPES} onChange={setShape} />
+          <Segmented<RoomShape>
+            label={t('Shape')}
+            value={shape}
+            options={SHAPES}
+            onChange={setShape}
+          />
           <button type="button" className="btn outline block" onClick={() => make(shape, sizes)}>
             <Icon name="plus" className="sm" />
-            Add the room
+            {t('Add the room')}
           </button>
           <button type="button" className="btn ghost block" onClick={startDraw}>
             <Icon name="pencil" className="sm" />
-            Draw the room
+            {t('Draw the room')}
           </button>
         </>
       ) : (
@@ -2432,7 +2510,7 @@ function RoomSection() {
           {room.shape ? (
             <>
               <Segmented<RoomShape>
-                label="Shape"
+                label={t('Shape')}
                 value={shape}
                 options={SHAPES}
                 onChange={(v) => {
@@ -2442,14 +2520,14 @@ function RoomSection() {
               />
               <div className="room-sizes">
                 <MmField
-                  label="Room width"
+                  label={t('Room width')}
                   value={shown.width}
                   min={500}
                   max={30000}
                   onChange={(v) => setSize('width', v)}
                 />
                 <MmField
-                  label="Room depth"
+                  label={t('Room depth')}
                   value={shown.depth}
                   min={500}
                   max={30000}
@@ -2460,10 +2538,10 @@ function RoomSection() {
                     <MmField
                       label={
                         shape === 'alcove'
-                          ? 'Alcove width'
+                          ? t('Alcove width')
                           : shape === 'u-shape'
-                            ? 'Notch width'
-                            : 'Cut-out width'
+                            ? t('Notch width')
+                            : t('Cut-out width')
                       }
                       value={shown.cutWidth}
                       min={100}
@@ -2473,10 +2551,10 @@ function RoomSection() {
                     <MmField
                       label={
                         shape === 'alcove'
-                          ? 'Alcove depth'
+                          ? t('Alcove depth')
                           : shape === 'u-shape'
-                            ? 'Notch depth'
-                            : 'Cut-out depth'
+                            ? t('Notch depth')
+                            : t('Cut-out depth')
                       }
                       value={shown.cutDepth}
                       min={100}
@@ -2485,7 +2563,9 @@ function RoomSection() {
                     />
                     {shape !== 'l-shape' && (
                       <MmField
-                        label={shape === 'alcove' ? 'Alcove from the left' : 'Notch from the left'}
+                        label={
+                          shape === 'alcove' ? t('Alcove from the left') : t('Notch from the left')
+                        }
                         value={shown.offset}
                         min={0}
                         max={20000}
@@ -2498,26 +2578,26 @@ function RoomSection() {
             </>
           ) : (
             <p className="hint">
-              Drawn or edited wall by wall.{' '}
+              {t('Drawn or edited wall by wall.')}{' '}
               <button type="button" className="link" onClick={() => make(shapeChoice, sizes)}>
-                Use a ready shape instead
+                {t('Use a ready shape instead')}
               </button>
             </p>
           )}
           <MmField
-            label="Room height"
+            label={t('Room height')}
             value={room.height}
             min={1000}
             max={10000}
             onChange={(v) => setRoom({ ...room, height: v })}
-            hint="Measure your ceiling"
+            hint={t('Measure your ceiling')}
           />
-          <h4 className="list-head">Walls</h4>
+          <h4 className="list-head">{t('Walls')}</h4>
           <ul className="wall-list">
             {walls.map((i) => (
               <li key={i}>
                 <MmField
-                  label={`Wall ${i + 1}`}
+                  label={t('Wall {n}', { n: i + 1 })}
                   value={wallLength(room, i)}
                   min={100}
                   max={30000}
@@ -2534,19 +2614,19 @@ function RoomSection() {
           ))}
           <button type="button" className="btn ghost" onClick={startDraw}>
             <Icon name="pencil" className="sm" />
-            Draw the room again
+            {t('Draw the room again')}
           </button>
-          <h4 className="list-head">Doors, windows, obstacles, pipes and outlets</h4>
-          {room.features.length === 0 && <p className="hint">None yet.</p>}
+          <h4 className="list-head">{t('Doors, windows, obstacles, pipes and outlets')}</h4>
+          {room.features.length === 0 && <p className="hint">{t('None yet.')}</p>}
           {room.features.map((f) => (
-            <fieldset key={f.id} className="room-feature" aria-label={f.label}>
-              <legend>{f.label}</legend>
+            <fieldset key={f.id} className="room-feature" aria-label={tr(f.label)}>
+              <legend>{tr(f.label)}</legend>
               <Select
-                label="On"
+                label={t('On')}
                 value={f.wall === null ? 'floor' : String(f.wall)}
                 options={[
-                  ...walls.map((i) => ({ value: String(i), label: `Wall ${i + 1}` })),
-                  ...(f.kind === 'obstacle' ? [{ value: 'floor', label: 'Free-standing' }] : []),
+                  ...walls.map((i) => ({ value: String(i), label: t('Wall {n}', { n: i + 1 }) })),
+                  ...(f.kind === 'obstacle' ? [{ value: 'floor', label: t('Free-standing') }] : []),
                 ]}
                 onChange={(v) =>
                   setFeature(f.id, v === 'floor' ? { wall: null, x: 0, z: 0 } : { wall: Number(v) })
@@ -2555,14 +2635,14 @@ function RoomSection() {
               {f.wall === null ? (
                 <>
                   <MmField
-                    label="From left"
+                    label={t('From left')}
                     value={f.x ?? 0}
                     min={-30000}
                     max={30000}
                     onChange={(v) => setFeature(f.id, { x: v })}
                   />
                   <MmField
-                    label="From back"
+                    label={t('From back')}
                     value={f.z ?? 0}
                     min={-30000}
                     max={30000}
@@ -2571,7 +2651,7 @@ function RoomSection() {
                 </>
               ) : (
                 <MmField
-                  label="From the wall's start"
+                  label={t("From the wall's start")}
                   value={f.from}
                   min={0}
                   max={30000}
@@ -2579,7 +2659,7 @@ function RoomSection() {
                 />
               )}
               <MmField
-                label="Width"
+                label={t('Width')}
                 value={f.width}
                 min={10}
                 max={30000}
@@ -2587,7 +2667,7 @@ function RoomSection() {
               />
               {f.kind !== 'door' && (
                 <MmField
-                  label={f.kind === 'window' ? 'Sill height' : 'Bottom above floor'}
+                  label={f.kind === 'window' ? t('Sill height') : t('Bottom above floor')}
                   value={f.sill}
                   min={0}
                   max={10000}
@@ -2595,7 +2675,7 @@ function RoomSection() {
                 />
               )}
               <MmField
-                label="Height"
+                label={t('Height')}
                 value={f.height}
                 min={10}
                 max={10000}
@@ -2603,7 +2683,7 @@ function RoomSection() {
               />
               {f.kind === 'obstacle' && (
                 <MmField
-                  label="Comes out"
+                  label={t('Comes out')}
                   value={f.depth}
                   min={1}
                   max={30000}
@@ -2617,25 +2697,25 @@ function RoomSection() {
                   setRoom({ ...room, features: room.features.filter((x) => x.id !== f.id) })
                 }
               >
-                Remove {FEATURE_KIND[f.kind].toLowerCase()}
+                {REMOVE_FEATURE[f.kind]}
               </button>
             </fieldset>
           ))}
           <div className="split-actions">
             <button type="button" className="btn outline sm" onClick={() => addFeature('door')}>
-              Add door
+              {t('Add door')}
             </button>
             <button type="button" className="btn outline sm" onClick={() => addFeature('window')}>
-              Add window
+              {t('Add window')}
             </button>
             <button type="button" className="btn outline sm" onClick={() => addFeature('obstacle')}>
-              Add obstacle
+              {t('Add obstacle')}
             </button>
             <button type="button" className="btn outline sm" onClick={() => addFeature('pipe')}>
-              Add pipe
+              {t('Add pipe')}
             </button>
             <button type="button" className="btn outline sm" onClick={() => addFeature('outlet')}>
-              Add outlet
+              {t('Add outlet')}
             </button>
           </div>
           <button
@@ -2643,15 +2723,15 @@ function RoomSection() {
             className="danger-link"
             onClick={async () => {
               if (
-                await askConfirm('Remove the room? The pieces stay.', {
-                  confirmLabel: 'Remove',
+                await askConfirm(t('Remove the room? The pieces stay.'), {
+                  confirmLabel: t('Remove'),
                   danger: true,
                 })
               )
                 setRoom(undefined);
             }}
           >
-            Remove the room
+            {t('Remove the room')}
           </button>
         </>
       )}
