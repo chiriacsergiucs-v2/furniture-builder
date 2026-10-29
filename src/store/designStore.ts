@@ -98,6 +98,7 @@ import type {
   Space,
 } from '../core/types';
 import type { LocalTemplate } from '../core/catalog/local';
+import { t } from '../core/i18n';
 
 /** A space selection that no longer exists in the design falls back to the whole piece. */
 const keepSelection = (d: Design, sel: Selection): Selection =>
@@ -812,7 +813,7 @@ export const useDesign = create<State>((rawSet, get) => {
     },
     mergeItems: (a, b) => {
       const p = get().project;
-      if (!p) return ['No project is open.'];
+      if (!p) return [t('No project is open.')];
       const res = mergeItems(p, a, b);
       if (res.mergedId) {
         commitProject(res.project);
@@ -827,7 +828,12 @@ export const useDesign = create<State>((rawSet, get) => {
       // The piece's own edits go onto the new design where it has them (ADR-124, G-160).
       const edits = ownEdits(item, opts?.families ?? catalogFamilies);
       const carry = carryEdits(design, edits, opts?.keepSize ? {} : SIZE_SKIP);
-      if (commitProject(replaceItem(p, id, carry.design), `Replace ${item.design.name}`))
+      if (
+        commitProject(
+          replaceItem(p, id, carry.design),
+          t('Replace {name}', { name: item.design.name }),
+        )
+      )
         return null;
       const { project: next, projectModel: nm } = get();
       const report = replaceReport(p, pm, next!, nm!, id);
@@ -839,14 +845,24 @@ export const useDesign = create<State>((rawSet, get) => {
       if (!p) return [];
       const res = setProjectSetting(p, key, value);
       // Refused when it would resize a size-locked piece (ADR-122): nothing is applied; the notice says why.
-      if (commitProject(res.project, `Set ${SETTING_LABEL[key].toLowerCase()}`)) return [];
+      if (
+        commitProject(
+          res.project,
+          t('Set {setting}', { setting: SETTING_LABEL[key].toLowerCase() }),
+        )
+      )
+        return [];
       return res.applied;
     },
     followProject: (id, key) => {
       const p = get().project;
       if (!p) return;
       const next = followProject(p, id, key);
-      if (next !== p) commitProject(next, `Follow project ${SETTING_LABEL[key].toLowerCase()}`);
+      if (next !== p)
+        commitProject(
+          next,
+          t('Follow project {setting}', { setting: SETTING_LABEL[key].toLowerCase() }),
+        );
     },
     duplicateItem: (id) => {
       const p = get().project;
@@ -897,7 +913,9 @@ export const useDesign = create<State>((rawSet, get) => {
         const all = mirrorItems(p, group);
         if (all.refused) return all.refused;
         if (all.project !== p) commitProject(all.project);
-        return all.reasons.length ? `Moved without mirroring: ${all.reasons.join('; ')}` : null;
+        return all.reasons.length
+          ? t('Moved without mirroring: {reasons}', { reasons: all.reasons.join('; ') })
+          : null;
       }
       const res = mirrorItem(p, id);
       if (res.reason) return res.reason;
@@ -908,7 +926,7 @@ export const useDesign = create<State>((rawSet, get) => {
       const p = get().project;
       if (!p) return { reasons: [] };
       const res = mirrorRun(p, id);
-      if (res.project !== p) commitProject(res.project, 'Mirror the run');
+      if (res.project !== p) commitProject(res.project, t('Mirror the run'));
       return { reasons: res.reasons, ...(res.refused ? { refused: res.refused } : {}) };
     },
     selectItem: (id) => {
@@ -970,7 +988,9 @@ export const useDesign = create<State>((rawSet, get) => {
         return res.refused;
       }
       if (res.project !== p) commitProject(res.project);
-      return res.reasons.length ? `Moved without mirroring: ${res.reasons.join('; ')}` : '';
+      return res.reasons.length
+        ? t('Moved without mirroring: {reasons}', { reasons: res.reasons.join('; ') })
+        : '';
     },
     deleteSelection: () => {
       const p = get().project;
@@ -999,7 +1019,7 @@ export const useDesign = create<State>((rawSet, get) => {
       const carried = carryGroups(p, res.project, ids);
       if (carried.reason) return carried.reason;
       if (carried.project !== p && carried.project.items.some((it, i) => it !== p.items[i]))
-        commitProject(carried.project, 'Align');
+        commitProject(carried.project, t('Align'));
       return skippedText(res);
     },
     distributeSelection: () => {
@@ -1010,23 +1030,27 @@ export const useDesign = create<State>((rawSet, get) => {
       const carried = carryGroups(p, res.project, ids);
       if (carried.reason) return carried.reason;
       if (carried.project.items.some((it, i) => it !== p.items[i]))
-        commitProject(carried.project, 'Distribute');
+        commitProject(carried.project, t('Distribute'));
       // The gaps as they now are, also when a locked piece kept its place.
-      const gaps = res.gaps ? `Gaps now ${res.gaps.join(' · ')} mm.` : '';
+      const gaps = res.gaps ? t('Gaps now {gaps} mm.', { gaps: res.gaps.join(' · ') }) : '';
       return [gaps, skippedText(res)].filter(Boolean).join(' ');
     },
     groupSelection: () => {
       const p = get().project;
       if (!p) return null;
       const res = groupItems(p, get().selectedItemIds);
-      if (res.groupId) commitProject(res.project, `Group ${get().selectedItemIds.length} pieces`);
+      if (res.groupId)
+        commitProject(
+          res.project,
+          t('Group {n|# piece|# pieces}', { n: get().selectedItemIds.length }),
+        );
       return res.groupId;
     },
     ungroup: (groupId) => {
       const p = get().project;
       if (!p) return;
       const next = ungroup(p, groupId);
-      if (next !== p) commitProject(next, 'Ungroup');
+      if (next !== p) commitProject(next, t('Ungroup'));
     },
     editItem: (id) => {
       const item = get().project?.items.find((i) => i.id === id);
@@ -1062,7 +1086,7 @@ export const useDesign = create<State>((rawSet, get) => {
               projectPast: [...get().projectPast, before].slice(-HISTORY),
               projectPastNames: [
                 ...get().projectPastNames,
-                edited ? `Edit ${edited.design.name}` : describeChange(before, p),
+                edited ? t('Edit {what}', { what: edited.design.name }) : describeChange(before, p),
               ].slice(-HISTORY),
               projectFuture: [],
               projectFutureNames: [],
@@ -1084,7 +1108,7 @@ export const useDesign = create<State>((rawSet, get) => {
       const { projectPastNames: pn, projectFutureNames: fn } = get();
       const prev = projectPast[projectPast.length - 1];
       if (!project || !prev || editingItemId) return;
-      const name = pn[pn.length - 1] ?? 'Change the project';
+      const name = pn[pn.length - 1] ?? t('Change the project');
       restoreProject(prev, projectPast.slice(0, -1), [project, ...projectFuture], pn.slice(0, -1), [
         name,
         ...fn,
@@ -1099,7 +1123,7 @@ export const useDesign = create<State>((rawSet, get) => {
         next,
         [...projectPast, project],
         projectFuture.slice(1),
-        [...pn, fn[0] ?? 'Change the project'],
+        [...pn, fn[0] ?? t('Change the project')],
         fn.slice(1),
       );
     },
@@ -1131,12 +1155,12 @@ export const useDesign = create<State>((rawSet, get) => {
         projectFutureNames: [],
       });
     },
-    insertTemplate: (t) => {
+    insertTemplate: (tpl) => {
       const p = get().project;
       if (!p) return [];
-      const res = insertTemplate(p, t);
+      const res = insertTemplate(p, tpl);
       if (!res.ids.length) return [];
-      commitProject(res.project, `Insert ${t.name}`);
+      commitProject(res.project, t('Insert {name}', { name: tpl.name }));
       set({ placingIds: res.ids, placingItemId: res.ids[0] });
       get().selectItems(res.ids);
       return res.ids;
@@ -1144,7 +1168,7 @@ export const useDesign = create<State>((rawSet, get) => {
     restoreProjectTo: (next) => {
       const p = get().project;
       if (!p) return;
-      commitProject({ ...next, id: p.id }, 'Restore a version');
+      commitProject({ ...next, id: p.id }, t('Restore a version'));
     },
     takeSessionBase: () => {
       const { sessionBase, project } = get();
@@ -1156,7 +1180,7 @@ export const useDesign = create<State>((rawSet, get) => {
       const p = get().project;
       if (!p) return { applied: [], skipped: [] };
       const r = applyStyle(p, id, style, scope, get().selectedItemIds);
-      if (r.applied.length) commitProject(r.project, `Apply style ${style.name}`);
+      if (r.applied.length) commitProject(r.project, t('Apply style {name}', { name: style.name }));
       return { applied: r.applied, skipped: r.skipped };
     },
     suggestRunParts: () => {
@@ -1242,7 +1266,7 @@ export const useDesign = create<State>((rawSet, get) => {
       const p = get().project;
       if (!p) return { applied: [], skipped: [] };
       const r = applyFinish(p, id, role, board, scope, get().selectedItemIds);
-      if (r.applied.length) commitProject(r.project, 'Apply finish');
+      if (r.applied.length) commitProject(r.project, t('Apply finish'));
       return { applied: r.applied, skipped: r.skipped };
     },
     placeAt: (x, z) => {
@@ -1377,7 +1401,7 @@ export const useDesign = create<State>((rawSet, get) => {
       if (!p || !g) return '';
       const res = resizeGroup(p, g.itemIds, key, value, split);
       if (res.reason) return res.reason;
-      if (res.project !== p) commitProject(res.project, `Resize ${g.name}`);
+      if (res.project !== p) commitProject(res.project, t('Resize {name}', { name: g.name }));
       return res.kept.length ? `Kept: ${res.kept.join(', ')}.` : '';
     },
     updateMeta: (patch) => commit({ ...get().design, ...patch }),
@@ -1462,7 +1486,9 @@ export const useDesign = create<State>((rawSet, get) => {
       const next = { ...d, materials: d.materials.filter((m) => m.id !== id) };
       if (next.materials.length === d.materials.length) return null;
       if (validateDesign(next).length)
-        return 'This board is still used by parts of the piece. Choose another board for them first.';
+        return t(
+          'This board is still used by parts of the piece. Choose another board for them first.',
+        );
       commit(next);
       return null;
     },

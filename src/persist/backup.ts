@@ -16,6 +16,7 @@ import type { Project } from '../core/project';
 import type { LocalTemplate } from '../core/catalog/local';
 import { db, getSetting, saveDesign, saveProject, saveTemplate, setSetting } from './db';
 import { onSavedChange } from './events';
+import { t } from '../core/i18n';
 
 /**
  * Persistent storage and the folder backup (ADR-133). Browser APIs only: what to write and what to restore is decided
@@ -200,10 +201,10 @@ async function writeFolder(root: DirHandle, files: BackupFile[]): Promise<void> 
 export async function backupNow(): Promise<BackupStatus> {
   const at = new Date().toISOString();
   const h = await folder();
-  if (!h) return record({ at, items: 0, error: 'No backup folder chosen.' });
+  if (!h) return record({ at, items: 0, error: t('No backup folder chosen.') });
   try {
     if ((await h.queryPermission?.({ mode: 'readwrite' })) === 'prompt')
-      return record({ at, items: 0, error: 'Allow the backup folder again to back up.' });
+      return record({ at, items: 0, error: t('Allow the backup folder again to back up.') });
     const files = planBackup(await readTables());
     await writeFolder(h, files);
     return record({ at, items: files.length });
@@ -211,7 +212,7 @@ export async function backupNow(): Promise<BackupStatus> {
     return record({
       at,
       items: 0,
-      error: `Backup failed: ${(e as Error).message || 'unknown error'}`,
+      error: t('Backup failed: {why}', { why: (e as Error).message || t('unknown error') }),
     });
   }
 }
@@ -310,7 +311,7 @@ export async function restoreFromZip(file: File): Promise<RestorePlan> {
   const dec = new TextDecoder();
   const plan = await restoreFiles(files.map((f) => ({ path: f.name, text: dec.decode(f.data) })));
   plan.skipped.push(
-    ...skipped.map((path) => ({ path, reason: 'compressed; not written by this app' })),
+    ...skipped.map((path) => ({ path, reason: t('compressed; not written by this app') })),
   );
   return plan;
 }

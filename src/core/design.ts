@@ -15,6 +15,7 @@ import type {
 } from './types';
 import { isFinish, materialImageProblems } from './surface';
 import { bandProblems, materialLabelProblems } from './materials';
+import { t } from './i18n';
 
 export type PedestalSide = 'left' | 'right';
 
@@ -650,16 +651,16 @@ export interface ProductRoot {
 }
 
 export function productRoots(prod: Product): ProductRoot[] {
-  if (prod.kind === 'cabinet') return [{ root: prod.params.interior, label: 'Interior' }];
+  if (prod.kind === 'cabinet') return [{ root: prod.params.interior, label: t('Interior') }];
   if (prod.kind === 'panel' || prod.kind === 'frame' || prod.kind === 'panels') return [];
   if (prod.kind === 'corner') {
     if (prod.params.variant === 'diagonal')
-      return [{ root: prod.params.interior, label: 'Interior', wing: 'a' }];
+      return [{ root: prod.params.interior, label: t('Interior'), wing: 'a' }];
     return prod.params.variant === 'blind'
-      ? [{ root: prod.params.interior, label: 'Usable section', wing: 'a' }]
+      ? [{ root: prod.params.interior, label: t('Usable section'), wing: 'a' }]
       : [
-          { root: prod.params.interior, label: 'Back-wall wing', wing: 'a' },
-          { root: prod.params.wingInterior, label: 'Side-wall wing', wing: 'b' },
+          { root: prod.params.interior, label: t('Back-wall wing'), wing: 'a' },
+          { root: prod.params.wingInterior, label: t('Side-wall wing'), wing: 'b' },
         ];
   }
   const desk = prod.params;
@@ -668,7 +669,7 @@ export function productRoots(prod: Product): ProductRoot[] {
     .map((side) => ({
       root: pedestalRoot(desk, side, prod.id),
       side,
-      label: `${side === 'left' ? 'Left' : 'Right'} drawer unit`,
+      label: side === 'left' ? t('Left drawer unit') : t('Right drawer unit'),
     }));
 }
 
@@ -759,22 +760,22 @@ const isOptStr = (v: unknown, max = 300) =>
 /** A board per part (schemaVersion 4): panel id → a material of the piece; checked when present, never throws. */
 function validatePartMaterials(pm: unknown, version: unknown, mids: Set<string>, errs: string[]) {
   if (pm === undefined) return;
-  if (!isObj(pm) || Object.keys(pm).length > 2000) return void errs.push('Invalid part boards');
-  if ((version as number) < 4) errs.push('Part boards need schemaVersion 4');
+  if (!isObj(pm) || Object.keys(pm).length > 2000) return void errs.push(t('Invalid part boards'));
+  if ((version as number) < 4) errs.push(t('Part boards need schemaVersion 4'));
   for (const [k, v] of Object.entries(pm))
     if (!k || !mids.has(v as string))
-      errs.push(`Part board for ${k} refers to an unknown material`);
+      errs.push(t('Part board for {k} refers to an unknown material', { k }));
 }
 
 /** ADR-028: optional catalog metadata; checked when present, never throws. */
 function validateCatalog(c: unknown, errs: string[]) {
   if (c === undefined) return;
   if (!isObj(c)) {
-    errs.push('Invalid catalog metadata');
+    errs.push(t('Invalid catalog metadata'));
     return;
   }
   for (const k of ['category', 'brand', 'productName', 'articleNumber', 'hardwareToChoose'])
-    if (!isOptStr(c[k])) errs.push(`Invalid catalog ${k}`);
+    if (!isOptStr(c[k])) errs.push(t('Invalid catalog {k}', { k }));
   const o = c.origin;
   if (o === undefined) return;
   if (
@@ -786,7 +787,7 @@ function validateCatalog(c: unknown, errs: string[]) {
     !isOptStr(o.brand) ||
     !isOptStr(o.variantId)
   ) {
-    errs.push('Invalid catalog origin');
+    errs.push(t('Invalid catalog origin'));
     return;
   }
   if (
@@ -797,7 +798,7 @@ function validateCatalog(c: unknown, errs: string[]) {
       o.sourceUrl.length < 2000
     )
   )
-    errs.push('Catalog source link must be an http(s) address');
+    errs.push(t('Catalog source link must be an http(s) address'));
 }
 
 /** ADR-046: the wizard answers a piece was made from; checked when present, never geometry. */
@@ -805,7 +806,7 @@ function validateWizard(w: unknown, errs: string[]) {
   if (w === undefined) return;
   const a = isObj(w) ? w.answers : undefined;
   if (!isObj(a) || Object.keys(a).length > 100 || JSON.stringify(a).length > 20_000) {
-    errs.push('Invalid wizard answers');
+    errs.push(t('Invalid wizard answers'));
     return;
   }
   const scalar = (v: unknown) =>
@@ -821,7 +822,7 @@ function validateWizard(w: unknown, errs: string[]) {
       Number.isFinite(v.drawers));
   for (const v of Object.values(a))
     if (!(scalar(v) || (Array.isArray(v) && v.length <= 20 && v.every(item)))) {
-      errs.push('Invalid wizard answers');
+      errs.push(t('Invalid wizard answers'));
       return;
     }
 }
@@ -829,27 +830,27 @@ function validateWizard(w: unknown, errs: string[]) {
 function validateRules(s: unknown, errs: string[]) {
   if (s === undefined) return;
   if (!isObj(s) || (s.rules !== undefined && !isObj(s.rules))) {
-    errs.push('Invalid settings');
+    errs.push(t('Invalid settings'));
     return;
   }
   const r = (s.rules ?? {}) as Record<string, unknown>;
   for (const k of ['shelfSpan', 'doorMaxWidth', 'hangerDepth', 'roomHeight'])
     if (r[k] !== undefined && (!isInt(r[k], 1) || (r[k] as number) > MAX_MM))
-      errs.push(`Invalid rule setting ${k}`);
+      errs.push(t('Invalid rule setting {k}', { k }));
 }
 
 function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0) {
   if (depth > 12) {
-    errs.push('Space tree is too deep');
+    errs.push(t('Space tree is too deep'));
     return;
   }
   if (!isObj(s) || !isStr(s.id)) {
-    errs.push('Invalid space');
+    errs.push(t('Invalid space'));
     return;
   }
-  if (seen.has(s.id as string)) errs.push(`Duplicate space id ${String(s.id)}`);
+  if (seen.has(s.id as string)) errs.push(t('Duplicate space id {id}', { id: String(s.id) }));
   seen.add(s.id as string);
-  if (s.front != null && !validFront(s.front)) errs.push('Invalid doors');
+  if (s.front != null && !validFront(s.front)) errs.push(t('Invalid doors'));
   if (
     s.handle != null &&
     !(
@@ -861,7 +862,7 @@ function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0)
         ['top', 'centre', 'bottom'].includes(s.handle.position as string))
     )
   )
-    errs.push('Invalid handle');
+    errs.push(t('Invalid handle'));
   switch (s.kind) {
     case 'empty':
       if (
@@ -877,16 +878,16 @@ function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0)
           [s.appliance.w, s.appliance.h, s.appliance.d].every((v) => (v as number) <= MAX_MM)
         )
       )
-        errs.push('Invalid appliance niche');
+        errs.push(t('Invalid appliance niche'));
       return;
     case 'shelves':
-      if (!isInt(s.count) || (s.count as number) > MAX_SHELVES) errs.push('Invalid shelf count');
+      if (!isInt(s.count) || (s.count as number) > MAX_SHELVES) errs.push(t('Invalid shelf count'));
       if (s.adjustable !== undefined && typeof s.adjustable !== 'boolean')
-        errs.push('Invalid adjustable flag');
+        errs.push(t('Invalid adjustable flag'));
       return;
     case 'drawers':
       if (!isInt(s.count, 1) || (s.count as number) > MAX_DRAWERS)
-        errs.push('Invalid drawer count');
+        errs.push(t('Invalid drawer count'));
       if (
         s.uCut != null &&
         !(
@@ -897,17 +898,17 @@ function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0)
           (s.uCut.depth as number) <= MAX_MM
         )
       )
-        errs.push('Invalid U-cut');
+        errs.push(t('Invalid U-cut'));
       if (s.fixedTop !== undefined && typeof s.fixedTop !== 'boolean')
-        errs.push('Invalid fixed front');
+        errs.push(t('Invalid fixed front'));
       if (s.heights !== undefined) {
         if (!Array.isArray(s.heights) || s.heights.length !== s.count)
-          errs.push('Drawer heights must list one size per drawer');
-        else for (const z of s.heights) if (!validSize(z)) errs.push('Invalid drawer height');
+          errs.push(t('Drawer heights must list one size per drawer'));
+        else for (const z of s.heights) if (!validSize(z)) errs.push(t('Invalid drawer height'));
       }
       return;
     case 'hanging':
-      if (!isInt(s.railDrop)) errs.push('Invalid rail drop');
+      if (!isInt(s.railDrop)) errs.push(t('Invalid rail drop'));
       return;
     case 'split':
       if (
@@ -917,28 +918,28 @@ function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0)
         s.children.length !== s.sizes.length ||
         s.children.length < 2
       ) {
-        errs.push('Invalid split');
+        errs.push(t('Invalid split'));
         return;
       }
-      for (const z of s.sizes) if (!validSize(z)) errs.push('Invalid split size');
+      for (const z of s.sizes) if (!validSize(z)) errs.push(t('Invalid split size'));
       for (const c of s.children) validateSpace(c, errs, seen, depth + 1);
       return;
     default:
-      errs.push(`Unknown space kind ${String(s.kind)}`);
+      errs.push(t('Unknown space kind {kind}', { kind: String(s.kind) }));
   }
 }
 
 export function validateDesign(d: unknown): string[] {
   const errs: string[] = [];
-  if (!isObj(d)) return ['Design must be an object'];
-  if (![1, 2, 3, 4].includes(d.schemaVersion as number)) errs.push('Unsupported schemaVersion');
+  if (!isObj(d)) return [t('Design must be an object')];
+  if (![1, 2, 3, 4].includes(d.schemaVersion as number)) errs.push(t('Unsupported schemaVersion'));
   if (
     d.cutting !== undefined &&
     !(isObj(d.cutting) && isInt(d.cutting.kerf) && (d.cutting.kerf as number) <= 20)
   )
-    errs.push('Invalid cutting settings');
-  if (!isStr(d.id) || !isStr(d.name)) errs.push('Missing id or name');
-  if (!Array.isArray(d.materials) || !d.materials.length) return [...errs, 'Materials missing'];
+    errs.push(t('Invalid cutting settings'));
+  if (!isStr(d.id) || !isStr(d.name)) errs.push(t('Missing id or name'));
+  if (!Array.isArray(d.materials) || !d.materials.length) return [...errs, t('Materials missing')];
   const mids = new Set<string>();
   for (const m of d.materials) {
     if (
@@ -950,7 +951,7 @@ export function validateDesign(d: unknown): string[] {
       typeof m.grain !== 'boolean' ||
       typeof m.color !== 'string'
     )
-      errs.push('Invalid material');
+      errs.push(t('Invalid material'));
     else if (
       m.sheet !== undefined &&
       !(
@@ -963,9 +964,9 @@ export function validateDesign(d: unknown): string[] {
         (m.sheet.count === null || isInt(m.sheet.count))
       )
     )
-      errs.push(`Invalid sheet for ${String(m.name)}`);
+      errs.push(t('Invalid sheet for {name}', { name: String(m.name) }));
     else if (m.stock !== undefined && m.stock !== 'sheet' && m.stock !== 'solid')
-      errs.push(`Invalid stock for ${String(m.name)}`);
+      errs.push(t('Invalid stock for {name}', { name: String(m.name) }));
     else if (
       m.lengths !== undefined &&
       !(
@@ -974,35 +975,54 @@ export function validateDesign(d: unknown): string[] {
         m.lengths.every((v) => isInt(v, 100) && (v as number) <= 20_000)
       )
     )
-      errs.push(`Invalid stock lengths for ${String(m.name)}`);
+      errs.push(t('Invalid stock lengths for {name}', { name: String(m.name) }));
     else if (m.image !== undefined && materialImageProblems(m.image).length)
       errs.push(
-        `Invalid picture for ${String(m.name)}: ${materialImageProblems(m.image).join(', ')}`,
+        t('Invalid picture for {name}: {problems}', {
+          name: String(m.name),
+          problems: materialImageProblems(m.image).join(', '),
+        }),
       );
     else if (m.finish !== undefined && !isFinish(m.finish))
-      errs.push(`Invalid finish for ${String(m.name)}: use matte, satin or gloss`);
+      errs.push(
+        t('Invalid finish for {name}: use matte, satin or gloss', { name: String(m.name) }),
+      );
     else if (m.band !== undefined && bandProblems(m.band).length)
-      errs.push(`Invalid edge band for ${String(m.name)}: ${bandProblems(m.band).join(', ')}`);
+      errs.push(
+        t('Invalid edge band for {name}: {problems}', {
+          name: String(m.name),
+          problems: bandProblems(m.band).join(', '),
+        }),
+      );
     else if (m.frontBand !== undefined && bandProblems(m.frontBand).length)
       errs.push(
-        `Invalid front edge band for ${String(m.name)}: ${bandProblems(m.frontBand).join(', ')}`,
+        t('Invalid front edge band for {name}: {problems}', {
+          name: String(m.name),
+          problems: bandProblems(m.frontBand).join(', '),
+        }),
       );
     else if (materialLabelProblems(m).length)
-      errs.push(`Invalid labels for ${String(m.name)}: ${materialLabelProblems(m).join(', ')}`);
-    else if (mids.has(m.id as string)) errs.push(`Duplicate material ${String(m.id)}`);
+      errs.push(
+        t('Invalid labels for {name}: {problems}', {
+          name: String(m.name),
+          problems: materialLabelProblems(m).join(', '),
+        }),
+      );
+    else if (mids.has(m.id as string))
+      errs.push(t('Duplicate material {id}', { id: String(m.id) }));
     else mids.add(m.id as string);
   }
   const p = d.product;
-  if (!isObj(p) || !isStr(p.id) || !isObj(p.params)) return [...errs, 'Invalid product'];
+  if (!isObj(p) || !isStr(p.id) || !isObj(p.params)) return [...errs, t('Invalid product')];
   const params = p.params;
   // Sizes are whole mm up to 100 m: generous for furniture, far from floating-point trouble.
   const ints = (keys: string[], obj: Record<string, unknown>) =>
     keys.forEach((k) => {
       if (!isInt(obj[k]) || (obj[k] as number) > MAX_MM)
-        errs.push(`${k} must be a whole number of mm`);
+        errs.push(t('{k} must be a whole number of mm', { k }));
     });
   const matRef = (k: string, obj: Record<string, unknown>) => {
-    if (!mids.has(obj[k] as string)) errs.push(`${k} refers to an unknown material`);
+    if (!mids.has(obj[k] as string)) errs.push(t('{k} refers to an unknown material', { k }));
   };
   validatePartMaterials(d.partMaterials, d.schemaVersion, mids, errs);
   validateCatalog(d.catalog, errs);
@@ -1010,7 +1030,7 @@ export function validateDesign(d: unknown): string[] {
   validateWizard(d.wizard, errs);
   if (p.kind === 'panels') {
     if (!Array.isArray(params.panels) || params.panels.length > MAX_LOOSE)
-      return [...errs, 'Invalid panel list'];
+      return [...errs, t('Invalid panel list')];
     const ids = new Set<string>();
     for (const lp of params.panels) {
       if (
@@ -1020,13 +1040,15 @@ export function validateDesign(d: unknown): string[] {
         typeof lp.name !== 'string' ||
         lp.name.length > 200
       ) {
-        errs.push('Invalid panel');
+        errs.push(t('Invalid panel'));
         continue;
       }
       ids.add(lp.id as string);
       ints(['length', 'width'], lp);
       if (!isInt(lp.quantity, 1) || (lp.quantity as number) > MAX_LOOSE)
-        errs.push(`Quantity of ${String(lp.name)} must be 1 to ${MAX_LOOSE}`);
+        errs.push(
+          t('Quantity of {name} must be 1 to {max}', { name: String(lp.name), max: MAX_LOOSE }),
+        );
       matRef('materialId', lp);
       if (lp.place !== undefined) {
         const pl = lp.place;
@@ -1034,17 +1056,19 @@ export function validateDesign(d: unknown): string[] {
           !isObj(pl) ||
           !['flat-x', 'flat-z', 'edge-x', 'edge-z', 'up-x', 'up-z'].includes(pl.lie as string)
         )
-          errs.push(`Invalid place for ${String(lp.name)}`);
+          errs.push(t('Invalid place for {name}', { name: String(lp.name) }));
         else ints(['x', 'y', 'z'], pl);
         if (lp.quantity !== 1)
           errs.push(
-            `${String(lp.name)}: a placed panel has quantity 1 (list each copy with its own place)`,
+            t('{name}: a placed panel has quantity 1 (list each copy with its own place)', {
+              name: String(lp.name),
+            }),
           );
       }
     }
     if (params.joints !== undefined) {
       if (!Array.isArray(params.joints) || params.joints.length > 4 * MAX_LOOSE)
-        errs.push('Invalid joints');
+        errs.push(t('Invalid joints'));
       else
         for (const j of params.joints)
           if (
@@ -1054,21 +1078,21 @@ export function validateDesign(d: unknown): string[] {
             !ids.has(j.b as string) ||
             j.a === j.b
           )
-            errs.push('Invalid joint');
+            errs.push(t('Invalid joint'));
     }
-    if (params.note !== undefined && typeof params.note !== 'string') errs.push('Invalid note');
+    if (params.note !== undefined && typeof params.note !== 'string') errs.push(t('Invalid note'));
     return errs;
   }
   if (p.kind === 'panel') {
     ints(['width', 'height'], params);
     matRef('materialId', params);
     if (!['dishwasher', 'fridge', 'cover', 'filler'].includes(params.purpose as string))
-      errs.push('Invalid panel purpose');
+      errs.push(t('Invalid panel purpose'));
     if (
       params.handle != null &&
       !(isObj(params.handle) && ['bar', 'knob', 'push'].includes(params.handle.kind as string))
     )
-      errs.push('Invalid handle');
+      errs.push(t('Invalid handle'));
     return errs;
   }
   if (p.kind === 'frame') {
@@ -1077,7 +1101,7 @@ export function validateDesign(d: unknown): string[] {
   }
   const dr = params.drawers;
   if (!isObj(dr) || !Array.isArray(dr.runnerLengths) || !dr.runnerLengths.every((v) => isInt(v, 1)))
-    errs.push('Invalid drawer settings');
+    errs.push(t('Invalid drawer settings'));
   else {
     ints(['sideClearance', 'verticalClearance', 'rearClearance'], dr);
     matRef('boxMaterialId', dr);
@@ -1098,41 +1122,41 @@ export function validateDesign(d: unknown): string[] {
       params,
     );
     ['bodyMaterialId', 'frontMaterialId', 'backMaterialId'].forEach((k) => matRef(k, params));
-    if (params.top !== 'over' && params.top !== 'between') errs.push('Invalid top joint');
+    if (params.top !== 'over' && params.top !== 'between') errs.push(t('Invalid top joint'));
     if (
       params.bottom !== undefined &&
       !['between', 'under', 'none'].includes(params.bottom as string)
     )
-      errs.push('Invalid bottom joint');
+      errs.push(t('Invalid bottom joint'));
     if (params.topKind !== undefined && params.topKind !== 'panel' && params.topKind !== 'rails')
-      errs.push('Invalid top kind');
+      errs.push(t('Invalid top kind'));
     if (
       params.railDepth !== undefined &&
       (!isInt(params.railDepth, 1) || (params.railDepth as number) > 1000)
     )
-      errs.push('railDepth must be a whole number of mm');
+      errs.push(t('railDepth must be a whole number of mm'));
     if (params.topLayers !== undefined && params.topLayers !== 1 && params.topLayers !== 2)
-      errs.push('topLayers must be 1 or 2');
+      errs.push(t('topLayers must be 1 or 2'));
     if (
       params.shelfClearance !== undefined &&
       (!isInt(params.shelfClearance) || (params.shelfClearance as number) > 20)
     )
-      errs.push('shelfClearance must be a whole number of mm');
+      errs.push(t('shelfClearance must be a whole number of mm'));
     if (
       params.pinRowSetback !== undefined &&
       (!isInt(params.pinRowSetback, 8) || (params.pinRowSetback as number) > 300)
     )
-      errs.push('pinRowSetback must be 8 to 300 mm');
+      errs.push(t('pinRowSetback must be 8 to 300 mm'));
     if (
       params.frontStyle !== undefined &&
       !['overlay', 'half', 'inset'].includes(params.frontStyle as string)
     )
-      errs.push('Invalid front style');
+      errs.push(t('Invalid front style'));
     if (params.mount !== undefined && params.mount !== 'floor' && params.mount !== 'wall')
-      errs.push('Invalid mount');
+      errs.push(t('Invalid mount'));
     if (params.mountHeight !== undefined && !isInt(params.mountHeight))
-      errs.push('mountHeight must be a whole number of mm');
-    if (!['none', 'applied', 'inset'].includes(params.back as string)) errs.push('Invalid back');
+      errs.push(t('mountHeight must be a whole number of mm'));
+    if (!['none', 'applied', 'inset'].includes(params.back as string)) errs.push(t('Invalid back'));
     validateSpace(params.interior, errs, new Set());
   } else if (p.kind === 'desk') {
     ints(['width', 'depth', 'height', 'frontOverhang', 'frontGap'], params);
@@ -1142,14 +1166,14 @@ export function validateDesign(d: unknown): string[] {
         params.support as string,
       )
     )
-      errs.push('Invalid support');
+      errs.push(t('Invalid support'));
     if (
       !isObj(params.pedestal) ||
       !isInt(params.pedestal.width, 1) ||
       !isInt(params.pedestal.drawerCount, 1) ||
       (params.pedestal.drawerCount as number) > MAX_DRAWERS
     )
-      errs.push('Invalid pedestal');
+      errs.push(t('Invalid pedestal'));
     else {
       const seen = new Set<string>();
       for (const side of ['left', 'right'] as const)
@@ -1161,7 +1185,7 @@ export function validateDesign(d: unknown): string[] {
       !isInt(params.modesty.height) ||
       !isInt(params.modesty.setback)
     )
-      errs.push('Invalid modesty panel');
+      errs.push(t('Invalid modesty panel'));
   } else if (p.kind === 'corner') {
     ints(
       [
@@ -1180,16 +1204,16 @@ export function validateDesign(d: unknown): string[] {
     );
     ['bodyMaterialId', 'frontMaterialId', 'backMaterialId'].forEach((k) => matRef(k, params));
     if (!['blind', 'l-shape', 'diagonal'].includes(params.variant as string))
-      errs.push('Invalid corner variant');
-    if (params.side !== 'left' && params.side !== 'right') errs.push('Invalid corner side');
-    if (params.top !== 'over' && params.top !== 'between') errs.push('Invalid top joint');
+      errs.push(t('Invalid corner variant'));
+    if (params.side !== 'left' && params.side !== 'right') errs.push(t('Invalid corner side'));
+    if (params.top !== 'over' && params.top !== 'between') errs.push(t('Invalid top joint'));
     if (params.topLayers !== undefined && params.topLayers !== 1 && params.topLayers !== 2)
-      errs.push('topLayers must be 1 or 2');
-    if (!['none', 'applied', 'inset'].includes(params.back as string)) errs.push('Invalid back');
+      errs.push(t('topLayers must be 1 or 2'));
+    if (!['none', 'applied', 'inset'].includes(params.back as string)) errs.push(t('Invalid back'));
     const seen = new Set<string>();
     validateSpace(params.interior, errs, seen);
     validateSpace(params.wingInterior, errs, seen);
-  } else errs.push('Unknown product kind');
+  } else errs.push(t('Unknown product kind'));
   return errs;
 }
 
@@ -1200,29 +1224,29 @@ function validateFrame(
   matRef: (k: string, obj: Record<string, unknown>) => void,
 ) {
   if (!['table', 'bench', 'stool', 'chair', 'bed'].includes(f.kind as string))
-    errs.push('Invalid frame kind');
+    errs.push(t('Invalid frame kind'));
   ints(['width', 'depth', 'height', 'legInset', 'stretcherHeight'], f);
   matRef('panelMaterialId', f);
   matRef('solidMaterialId', f);
-  if (f.top !== 'panel' && f.top !== 'slats') errs.push('Invalid frame top');
-  if (!['none', 'box', 'h'].includes(f.stretchers as string)) errs.push('Invalid stretchers');
+  if (f.top !== 'panel' && f.top !== 'slats') errs.push(t('Invalid frame top'));
+  if (!['none', 'box', 'h'].includes(f.stretchers as string)) errs.push(t('Invalid stretchers'));
   const obj = (k: string, keys: string[], min = 0) => {
     const o = f[k];
     if (!isObj(o)) {
-      errs.push(`Invalid ${k}`);
+      errs.push(t('Invalid {k}', { k }));
       return;
     }
     for (const key of keys)
       if (!isInt(o[key], min) || (o[key] as number) > MAX_MM)
-        errs.push(`${k}.${key} must be a whole number of mm`);
+        errs.push(t('{k} must be a whole number of mm', { k: `${k}.${key}` }));
   };
   obj('leg', ['w', 'd'], 1);
   obj('apron', ['height', 'thickness']);
   obj('slats', ['width', 'thickness', 'gap']);
   if (isObj(f.slats) && (!isInt(f.slats.width, 1) || !isInt(f.slats.thickness, 1)))
-    errs.push('Slats need a size');
+    errs.push(t('Slats need a size'));
   if (f.shelf != null && !(isObj(f.shelf) && isInt(f.shelf.height, 1)))
-    errs.push('Invalid lower shelf');
+    errs.push(t('Invalid lower shelf'));
   if (f.back != null) {
     const b = f.back;
     if (
@@ -1233,9 +1257,9 @@ function validateFrame(
       (b.count as number) > 20 ||
       (b.style !== 'slats' && b.style !== 'panel')
     )
-      errs.push('Invalid back');
+      errs.push(t('Invalid back'));
     else if (b.angleDeg !== undefined && (!isInt(b.angleDeg) || (b.angleDeg as number) > 60))
-      errs.push('Back rake must be a whole number of degrees from 0 to 60');
+      errs.push(t('Back rake must be a whole number of degrees from 0 to 60'));
   }
   // ADR-040: positions are seat-to-back angles in whole degrees, 91–179 (180 = flat); `at` picks the one shown.
   const positions = (o: Record<string, unknown>) =>
@@ -1247,7 +1271,7 @@ function validateFrame(
     (o.at as number) < o.positions.length;
   if (f.recline != null) {
     const r = f.recline;
-    if (!isObj(r) || !positions(r)) errs.push('Invalid recline positions');
+    if (!isObj(r) || !positions(r)) errs.push(t('Invalid recline positions'));
     else if (
       r.footrest != null &&
       !(
@@ -1259,21 +1283,22 @@ function validateFrame(
         r.footrest.angles.every((v) => isInt(v) && (v as number) <= 90)
       )
     )
-      errs.push('Invalid footrest');
-    if (f.back == null) errs.push('A reclining frame needs a back');
+      errs.push(t('Invalid footrest'));
+    if (f.back == null) errs.push(t('A reclining frame needs a back'));
   }
   if (f.backrest != null) {
     const r = f.backrest;
     if (!isObj(r) || !positions(r) || !isInt(r.length, 100) || (r.length as number) > MAX_MM)
-      errs.push('Invalid backrest');
-    if (f.top !== 'slats') errs.push('A lifting backrest needs a slatted seat');
+      errs.push(t('Invalid backrest'));
+    if (f.top !== 'slats') errs.push(t('A lifting backrest needs a slatted seat'));
   }
   if (
     f.arms != null &&
     !(isObj(f.arms) && isInt(f.arms.height, 1) && (f.arms.height as number) <= MAX_MM)
   )
-    errs.push('Invalid arms');
-  if (f.base !== undefined && f.base !== 'legs' && f.base !== 'bought') errs.push('Invalid base');
+    errs.push(t('Invalid arms'));
+  if (f.base !== undefined && f.base !== 'legs' && f.base !== 'bought')
+    errs.push(t('Invalid base'));
   if (f.kind === 'bed') {
     const b = f.bed;
     if (
@@ -1292,6 +1317,6 @@ function validateFrame(
         'guardHeight',
       ].every((k) => isInt(b[k]) && (b[k] as number) <= MAX_MM)
     )
-      errs.push('Invalid bed settings');
+      errs.push(t('Invalid bed settings'));
   }
 }

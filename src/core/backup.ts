@@ -2,6 +2,7 @@ import { newId, validateDesign } from './design';
 import { validateProject, type Project } from './project';
 import { validateLocalTemplate, type LocalTemplate } from './catalog/local';
 import type { Design } from './types';
+import { t } from './i18n';
 
 /**
  * Folder backup of everything saved on this device (ADR-133). Pure: the persist layer reads the tables and writes
@@ -147,14 +148,14 @@ export function planRestore(files: BackupFile[], existing: Existing): RestorePla
   for (const f of files) {
     const table = BACKUP_TABLES.find(([t]) => f.path.startsWith(`${t}/`))?.[0];
     if (!table || !f.path.endsWith('.json')) {
-      plan.skipped.push({ path: f.path, reason: 'not part of a backup' });
+      plan.skipped.push({ path: f.path, reason: t('not part of a backup') });
       continue;
     }
     let value: unknown;
     try {
       value = decodeRow(f.text);
     } catch {
-      plan.skipped.push({ path: f.path, reason: 'not readable as JSON' });
+      plan.skipped.push({ path: f.path, reason: t('not readable as JSON') });
       continue;
     }
     if (table === 'designs' || table === 'projects' || table === 'templates') {
@@ -182,7 +183,7 @@ export function planRestore(files: BackupFile[], existing: Existing): RestorePla
     }
     const key = keyOf(table);
     if (!isObj(value) || typeof value[key] !== 'string') {
-      plan.skipped.push({ path: f.path, reason: `no ${key}` });
+      plan.skipped.push({ path: f.path, reason: t('no {key}', { key }) });
       continue;
     }
     const set = keys.get(table) ?? new Set<string>();

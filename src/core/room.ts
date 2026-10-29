@@ -8,6 +8,7 @@
 import { footprintOf } from './geometry';
 import { MAX_TILE } from './surface';
 import type { Box, Diagnostic, Mm } from './types';
+import { t } from './i18n';
 
 export type Pt = [Mm, Mm];
 
@@ -244,15 +245,18 @@ function strictlyInConvex(poly: [number, number][], x: number, z: number): boole
 /** Problems with the outline itself; room checks are skipped while there are any (ADR-008). */
 export function outlineIssues(outline: Pt[]): string[] {
   const n = outline.length;
-  if (n < 4) return ['A room needs at least four walls.'];
+  if (n < 4) return [t('A room needs at least four walls.')];
   const out: string[] = [];
   for (let i = 0; i < n; i++) {
     const [a, b] = [outline[i], outline[(i + 1) % n]];
     if (a[0] !== b[0] && a[1] !== b[1])
       out.push(
-        `Wall ${i + 1} is not straight along the room: change another wall by ${Math.abs(b[0] - a[0])} or ${Math.abs(b[1] - a[1])} mm so the walls close square.`,
+        t(
+          'Wall {n} is not straight along the room: change another wall by {a} or {b} mm so the walls close square.',
+          { n: i + 1, a: Math.abs(b[0] - a[0]), b: Math.abs(b[1] - a[1]) },
+        ),
       );
-    else if (a[0] === b[0] && a[1] === b[1]) out.push(`Wall ${i + 1} has no length.`);
+    else if (a[0] === b[0] && a[1] === b[1]) out.push(t('Wall {n} has no length.', { n: i + 1 }));
   }
   if (out.length) return out;
   // Walls that are not neighbours must not touch or cross.
@@ -260,7 +264,7 @@ export function outlineIssues(outline: Pt[]): string[] {
     for (let j = i + 2; j < n; j++) {
       if (i === 0 && j === n - 1) continue;
       if (segmentsMeet(outline[i], outline[(i + 1) % n], outline[j], outline[(j + 1) % n])) {
-        out.push(`Walls ${i + 1} and ${j + 1} cross.`);
+        out.push(t('Walls {a} and {b} cross.', { a: i + 1, b: j + 1 }));
         return out;
       }
     }
@@ -420,7 +424,7 @@ export function roomChecks(
       diagnostics: bad.map((m) => ({
         severity: 'error',
         code: 'room-outline',
-        message: `Room: ${m}`,
+        message: t('Room: {problem}', { problem: m }),
       })),
       obstacles: [],
       clearanceIssues: [],
@@ -432,7 +436,7 @@ export function roomChecks(
       diagnostics.push({
         severity: 'error',
         code: 'room-feature',
-        message: `${f.label} is on a wall the room does not have.`,
+        message: t('{name} is on a wall the room does not have.', { name: f.label }),
       });
       continue;
     }
@@ -442,13 +446,16 @@ export function roomChecks(
         diagnostics.push({
           severity: 'error',
           code: 'room-feature',
-          message: `${f.label} runs ${f.from + f.width - len} mm past the end of wall ${f.wall + 1} (${len} mm long): move it or make it narrower.`,
+          message: t(
+            '{name} runs {mm} mm past the end of wall {n} ({len} mm long): move it or make it narrower.',
+            { name: f.label, mm: f.from + f.width - len, n: f.wall + 1, len },
+          ),
         });
     } else if (!rectInside(room.outline, b.x, b.z, b.x + b.w, b.z + b.d))
       diagnostics.push({
         severity: 'error',
         code: 'room-feature',
-        message: `${f.label} is outside the room: move it inside the walls.`,
+        message: t('{name} is outside the room: move it inside the walls.', { name: f.label }),
       });
     if (f.kind === 'obstacle') obstacles.push({ label: f.label, box: b });
   }
@@ -462,7 +469,12 @@ export function roomChecks(
       diagnostics.push({
         severity: 'error',
         code: 'outside-room',
-        message: `${pc.name} is outside the room (through a wall)${amount ? `: it is ${amount} mm too far out` : ''}.`,
+        message: amount
+          ? t('{name} is outside the room (through a wall): it is {mm} mm too far out.', {
+              name: pc.name,
+              mm: amount,
+            })
+          : t('{name} is outside the room (through a wall).', { name: pc.name }),
         nodeId: pc.id,
         itemIds: [pc.id],
         box: b,
@@ -472,7 +484,10 @@ export function roomChecks(
       diagnostics.push({
         severity: 'error',
         code: 'outside-room',
-        message: `${pc.name} is ${b.y + b.h - room.height} mm taller than the room.`,
+        message: t('{name} is {mm} mm taller than the room.', {
+          name: pc.name,
+          mm: b.y + b.h - room.height,
+        }),
         nodeId: pc.id,
         itemIds: [pc.id],
         box: b,
@@ -485,14 +500,18 @@ export function roomChecks(
         diagnostics.push({
           severity: 'error',
           code: 'hits-obstacle',
-          message: `${pc.name} runs into ${f.label}.`,
+          message: t('{name} runs into {other}.', { name: pc.name, other: f.label }),
           nodeId: pc.id,
         });
       if (f.kind === 'door' && boxesOverlap(b, fb) && pc.hitsPanels(fb))
         diagnostics.push({
           severity: 'warning',
           code: 'blocks-door',
-          message: `${pc.name} is in the way of ${f.label} (it needs ${f.width} mm to swing).`,
+          message: t('{name} is in the way of {door} (it needs {mm} mm to swing).', {
+            name: pc.name,
+            door: f.label,
+            mm: f.width,
+          }),
           nodeId: pc.id,
         });
       if (f.kind === 'window' && f.wall !== null) {
@@ -501,7 +520,10 @@ export function roomChecks(
           diagnostics.push({
             severity: 'warning',
             code: 'covers-window',
-            message: `${pc.name} covers the window ${f.label}: it stands against its wall and is ${b.y + b.h - f.sill} mm higher than its sill.`,
+            message: t(
+              '{name} covers the window {window}: it stands against its wall and is {mm} mm higher than its sill.',
+              { name: pc.name, window: f.label, mm: b.y + b.h - f.sill },
+            ),
             nodeId: pc.id,
           });
       }
@@ -514,7 +536,11 @@ export function roomChecks(
         clearanceIssues.push({
           severity: 'warning',
           code: 'opening-blocked',
-          message: `${c.label} of ${pc.name} cannot open fully: it hits a wall (needs ${c.need} mm).`,
+          message: t('{front} of {name} cannot open fully: it hits a wall (needs {need} mm).', {
+            front: c.label,
+            name: pc.name,
+            need: c.need,
+          }),
           nodeId: pc.id,
           itemIds: [pc.id],
           box: cb,
@@ -595,7 +621,10 @@ function serviceIssue(
     return {
       severity: 'warning',
       code: 'outlet-hidden',
-      message: `${f.label} is hidden behind ${pc.name}: move the outlet or the piece.`,
+      message: t('{outlet} is hidden behind {name}: move the outlet or the piece.', {
+        outlet: f.label,
+        name: pc.name,
+      }),
       nodeId: pc.id,
     };
   const part = pc.covers?.(zone);
@@ -603,7 +632,12 @@ function serviceIssue(
   return {
     severity: 'warning',
     code: 'covers-service',
-    message: `${f.kind === 'pipe' ? 'Pipe' : 'Outlet'} behind ${pc.name} (${f.label}): cut the ${part} or move the piece.`,
+    message: t(
+      f.kind === 'pipe'
+        ? 'Pipe behind {name} ({label}): cut the {part} or move the piece.'
+        : 'Outlet behind {name} ({label}): cut the {part} or move the piece.',
+      { name: pc.name, label: f.label, part },
+    ),
     nodeId: pc.id,
   };
 }
@@ -692,16 +726,16 @@ export function isQuad(v: unknown): boolean {
 }
 
 export function validateRoom(r: unknown): string[] {
-  if (!isObj(r)) return ['Invalid room'];
+  if (!isObj(r)) return [t('Invalid room')];
   const errs: string[] = [];
-  if (!isInt(r.height, 1)) errs.push('Room height must be whole mm');
+  if (!isInt(r.height, 1)) errs.push(t('Room height must be whole mm'));
   if (
     !Array.isArray(r.outline) ||
     r.outline.length < 4 ||
     !r.outline.every((p) => Array.isArray(p) && p.length === 2 && isInt(p[0]) && isInt(p[1]))
   )
-    errs.push('Room outline must be at least four whole-mm corners');
-  if (!Array.isArray(r.features)) errs.push('Room features missing');
+    errs.push(t('Room outline must be at least four whole-mm corners'));
+  if (!Array.isArray(r.features)) errs.push(t('Room features missing'));
   else
     for (const f of r.features) {
       if (
@@ -718,7 +752,7 @@ export function validateRoom(r: unknown): string[] {
         (f.x !== undefined && !isInt(f.x)) ||
         (f.z !== undefined && !isInt(f.z))
       )
-        errs.push('Invalid room feature');
+        errs.push(t('Invalid room feature'));
     }
   if (
     r.shape !== undefined &&
@@ -731,10 +765,10 @@ export function validateRoom(r: unknown): string[] {
       )
     )
   )
-    errs.push('Invalid room shape');
+    errs.push(t('Invalid room shape'));
   if (r.walls !== undefined) {
     const seen = new Set<number>();
-    if (!Array.isArray(r.walls)) errs.push('Invalid wall backgrounds');
+    if (!Array.isArray(r.walls)) errs.push(t('Invalid wall backgrounds'));
     else
       for (const f of r.walls) {
         const img = isObj(f) ? f.image : undefined;
@@ -759,7 +793,7 @@ export function validateRoom(r: unknown): string[] {
               (img.straighten === undefined || isQuad(img.straighten))
             ))
         )
-          errs.push('Invalid wall background');
+          errs.push(t('Invalid wall background'));
         else seen.add(f.wall as number);
       }
   }

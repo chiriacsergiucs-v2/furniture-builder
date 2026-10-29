@@ -59,6 +59,7 @@ import type {
   Space,
   Yaw,
 } from './types';
+import { t, type Key } from './i18n';
 
 export type QuarterTurn = 0 | 90 | 180 | 270;
 
@@ -490,7 +491,7 @@ export function mirroredRotation(item: Pick<ProjectItem, 'rotationY' | 'angle'>)
 export const isLocked = (item: Pick<ProjectItem, 'locked'> | undefined): boolean => !!item?.locked;
 
 /** The hint shown when a locked piece is dragged, turned or mirrored (ADR-095). */
-export const LOCKED_HINT = 'Locked — unlock to move';
+export const LOCKED_HINT = t('Locked — unlock to move');
 
 /** What a move helper did: the project after it, or the same project and why nothing moved (ADR-095). */
 export interface MoveResult {
@@ -503,7 +504,7 @@ export function pieceName(project: Project, id: string): string {
   const i = project.items.findIndex((x) => x.id === id);
   const name = project.items[i]?.design.name ?? '';
   return project.items.some((x) => x.id !== id && x.design.name === name)
-    ? `${name} (piece ${i + 1})`
+    ? t('{name} (piece {n})', { name, n: i + 1 })
     : name;
 }
 
@@ -551,7 +552,8 @@ export function carriedBy(
 export function moveBlocked(project: Project, ids: readonly string[]): string | null {
   const moving = new Set(ids);
   const own = project.items.find((it) => moving.has(it.id) && it.locked);
-  if (own) return `${pieceName(project, own.id)} is locked — unlock it to move it.`;
+  if (own)
+    return t('{name} is locked — unlock it to move it.', { name: pieceName(project, own.id) });
   let base = '';
   const found = carriedBy(project, ids, (it, root) => {
     base = root;
@@ -559,7 +561,10 @@ export function moveBlocked(project: Project, ids: readonly string[]): string | 
   }).at(-1);
   if (!found?.locked) return null;
   const b = pieceName(project, base);
-  return `${pieceName(project, found.id)} sits on ${b} and is locked — unlock it to move ${b}.`;
+  return t('{name} sits on {base} and is locked — unlock it to move {base}.', {
+    name: pieceName(project, found.id),
+    base: b,
+  });
 }
 
 /**
@@ -662,14 +667,20 @@ export function placementIssues(project: Project): Diagnostic[] {
         out.push({
           severity: 'warning',
           code: 'placement-base-missing',
-          message: `${name} was placed on a piece that is no longer in the project; it stays where it is.`,
+          message: t(
+            '{name} was placed on a piece that is no longer in the project; it stays where it is.',
+            { name },
+          ),
           nodeId: it.id,
         });
       else if (!placementBases(project, it.id).some((b) => b.id === base.id))
         out.push({
           severity: 'error',
           code: 'placement-cycle',
-          message: `${name} and ${base.design.name} are placed on each other.`,
+          message: t('{name} and {other} are placed on each other.', {
+            name,
+            other: base.design.name,
+          }),
           nodeId: it.id,
         });
     }
@@ -678,14 +689,17 @@ export function placementIssues(project: Project): Diagnostic[] {
       out.push({
         severity: 'warning',
         code: 'placement-not-hung',
-        message: `${name} is off the floor with nothing under it; set it to hang on wall brackets (Whole cabinet → Stands on).`,
+        message: t(
+          '{name} is off the floor with nothing under it; set it to hang on wall brackets (Whole cabinet → Stands on).',
+          { name },
+        ),
         nodeId: it.id,
       });
     if (pl?.kind === 'floor' && isWallHung(it.design))
       out.push({
         severity: 'warning',
         code: 'placement-wall-on-floor',
-        message: `${name} is built to hang on the wall but is placed on the floor.`,
+        message: t('{name} is built to hang on the wall but is placed on the floor.', { name }),
         nodeId: it.id,
       });
   }
@@ -970,7 +984,10 @@ export function buildProjectModel(input: Project): ProjectModel {
         diagnostics.push({
           severity: 'warning',
           code: 'material-sheet-conflict',
-          message: `${m.name} has different sheet settings in ${pc.item.design.name}; the first piece's sheet (${a.length} × ${a.width}) is used for the whole project.`,
+          message: t(
+            "{board} has different sheet settings in {name}; the first piece's sheet ({l} × {w}) is used for the whole project.",
+            { board: m.name, name: pc.item.design.name, l: a.length, w: a.width },
+          ),
           nodeId: pc.item.id,
         });
       }
@@ -992,7 +1009,10 @@ export function buildProjectModel(input: Project): ProjectModel {
       diagnostics.push({
         severity: 'error',
         code: 'piece-errors',
-        message: `${pc.item.design.name} has ${errs} ${errs === 1 ? 'problem' : 'problems'}; open it to fix.`,
+        message: t('{name} has {n|# problem|# problems}; open it to fix.', {
+          name: pc.item.design.name,
+          n: errs,
+        }),
         nodeId: pc.item.id,
       });
   }
@@ -1010,7 +1030,11 @@ export function buildProjectModel(input: Project): ProjectModel {
         diagnostics.push({
           severity: 'error',
           code: 'pieces-overlap',
-          message: `${pieces[a].item.design.name} and ${pieces[b].item.design.name} overlap by ${amount} mm in the room.`,
+          message: t('{a} and {b} overlap by {amount} mm in the room.', {
+            a: pieces[a].item.design.name,
+            b: pieces[b].item.design.name,
+            amount,
+          }),
           nodeId: pieces[b].item.id,
           itemIds: [pieces[a].item.id, pieces[b].item.id],
           box,
@@ -1025,7 +1049,7 @@ export function buildProjectModel(input: Project): ProjectModel {
       diagnostics.push({
         severity: 'error',
         code: 'below-floor',
-        message: `${pc.item.design.name} goes below the floor.`,
+        message: t('{name} goes below the floor.', { name: pc.item.design.name }),
         nodeId: pc.item.id,
       });
   // Run parts (ADR-036): their own panels, checked against every piece like pieces are against each other.
@@ -1043,7 +1067,10 @@ export function buildProjectModel(input: Project): ProjectModel {
       diagnostics.push({
         severity: 'error',
         code: 'run-part-stale',
-        message: `${rp.label} was made for pieces that changed or were removed; suggest the run parts again.`,
+        message: t(
+          '{part} was made for pieces that changed or were removed; suggest the run parts again.',
+          { part: rp.label },
+        ),
         nodeId: `run:${rp.id}`,
       });
     const k = materialKey(rp.material);
@@ -1053,12 +1080,17 @@ export function buildProjectModel(input: Project): ProjectModel {
     const band = panel.banded.length
       ? bandFor(runMaterial(project, rp.material), panel.role)
       : undefined;
-    const t = cutDimensions(panel, rp.material.grain).thickness;
-    if (band && band.width < t)
+    const th = cutDimensions(panel, rp.material.grain).thickness;
+    if (band && band.width < th)
       diagnostics.push({
         severity: 'error',
         code: 'band-narrow',
-        message: `Edge band ${bandText(band)} on ${rp.material.name} (${rp.label}) is narrower than the ${t} mm board.`,
+        message: t('Edge band {band} on {board} ({part}) is narrower than the {t} mm board.', {
+          band: bandText(band),
+          board: rp.material.name,
+          part: rp.label,
+          t: th,
+        }),
         nodeId: `run:${rp.id}`,
       });
     panels.push(panel);
@@ -1070,7 +1102,10 @@ export function buildProjectModel(input: Project): ProjectModel {
       diagnostics.push({
         severity: 'error',
         code: 'run-part-overlap',
-        message: `${rp.label} overlaps ${hit.item.design.name}; suggest the run parts again after moving pieces.`,
+        message: t('{part} overlaps {name}; suggest the run parts again after moving pieces.', {
+          part: rp.label,
+          name: hit.item.design.name,
+        }),
         nodeId: `run:${rp.id}`,
       });
   }
@@ -1086,7 +1121,9 @@ export function buildProjectModel(input: Project): ProjectModel {
         code: 'run-request',
         message:
           unmade[requestKey(r)] ??
-          `${requestName(r, project)} is not made yet; suggest the run parts again.`,
+          t('{part} is not made yet; suggest the run parts again.', {
+            part: requestName(r, project),
+          }),
         nodeId: `request:${requestKey(r)}`,
       });
     }
@@ -1315,7 +1352,10 @@ function openingChecks(
       diagnostics.push({
         severity: 'warning',
         code: 'opening-blocked',
-        message: `${c.label} of ${pc.item.design.name} cannot open fully: it hits ${near.name} (needs ${c.need} mm, ${free} mm free).`,
+        message: t(
+          '{front} of {name} cannot open fully: it hits {other} (needs {need} mm, {free} mm free).',
+          { front: c.label, name: pc.item.design.name, other: near.name, need: c.need, free },
+        ),
         nodeId: pc.item.id,
         // ADR-071: the front, the piece in the way (when it is one), the blocked zone and the space missing.
         panelIds: [c.panelId],
@@ -1335,7 +1375,12 @@ function openingChecks(
       diagnostics.push({
         severity: 'warning',
         code: 'openings-clash',
-        message: `${clash.label} of ${pieces[a].item.design.name} and ${other.label} of ${pieces[b].item.design.name} open into the same space.`,
+        message: t('{front} of {a} and {other} of {b} open into the same space.', {
+          front: clash.label,
+          a: pieces[a].item.design.name,
+          other: other.label,
+          b: pieces[b].item.design.name,
+        }),
         nodeId: pieces[b].item.id,
       });
     }
@@ -1579,7 +1624,7 @@ export const worktopOver = (project: Project, baseId: string): RunPart | undefin
 /** Sinks for the shopping list (ADR-125): the base each is over and its cut-out. */
 export function sinkList(project: Project): { over: string; w: Mm; d: Mm }[] {
   return (project.sinks ?? []).map((sk) => ({
-    over: project.items.find((i) => i.id === sk.baseId)?.design.name ?? 'a removed piece',
+    over: project.items.find((i) => i.id === sk.baseId)?.design.name ?? t('a removed piece'),
     w: sk.w,
     d: sk.d,
   }));
@@ -1598,21 +1643,30 @@ function sinkChecks(project: Project, placedById: Map<string, PlacedPiece>): Dia
       out.push({
         severity: 'warning',
         code: 'sink-no-worktop',
-        message: `The sink over ${name} has no worktop to be cut out of; add the run worktop.`,
+        message: t('The sink over {name} has no worktop to be cut out of; add the run worktop.', {
+          name,
+        }),
         nodeId,
       });
     else if (sk.d >= top.box.d)
       out.push({
         severity: 'error',
         code: 'sink-cutout-deep',
-        message: `Sink cut-out ${sk.w} × ${sk.d} mm is as deep as the worktop over ${name} (${top.box.d} mm) or deeper.`,
+        message: t(
+          'Sink cut-out {w} × {d} mm is as deep as the worktop over {name} ({depth} mm) or deeper.',
+          { w: sk.w, d: sk.d, name, depth: top.box.d },
+        ),
         nodeId,
       });
     if (sk.w > base.bounds.w)
       out.push({
         severity: 'warning',
         code: 'sink-cutout-wide',
-        message: `Sink cut-out ${sk.w} mm is wider than ${name} under it (${base.bounds.w} mm).`,
+        message: t('Sink cut-out {w} mm is wider than {name} under it ({width} mm).', {
+          w: sk.w,
+          name,
+          width: base.bounds.w,
+        }),
         nodeId,
       });
   }
@@ -1641,7 +1695,7 @@ export function planRuns(project: Project): {
   const requests = project.runRequests ?? [];
   const unmade: Record<string, string> = {};
   const fail = (r: RunRequest, why: string) => {
-    const note = `${requestName(r, project)}: ${why}.`;
+    const note = t('{part}: {why}.', { part: requestName(r, project), why });
     unmade[requestKey(r)] = note;
     notes.push(note);
   };
@@ -1750,39 +1804,56 @@ export function planRuns(project: Project): {
       const each = (f: (c: { pc: PlacedPiece; p: CabinetParams }) => string) =>
         ok.map((c) => `${c.pc.item.design.name} ${f(c)}`).join(', ');
       let why = '';
-      if (ok.length < n) why = 'a corner unit in the run keeps its own plinth';
+      if (ok.length < n) why = t('a corner unit in the run keeps its own plinth');
       else if (ok.some((c) => c.p.plinthHeight <= 0))
-        why = `no plinth on ${names((c) => c.p.plinthHeight <= 0)}`;
+        why = t('no plinth on {names}', { names: names((c) => c.p.plinthHeight <= 0) });
       else if (ok.some((c) => c.p.bottom !== 'under'))
-        why = `the sides of ${names((c) => c.p.bottom !== 'under')} reach the floor; set Bottom → under the sides`;
+        why = t('the sides of {names} reach the floor; set Bottom → under the sides', {
+          names: names((c) => c.p.bottom !== 'under'),
+        });
       else if (new Set(ok.map((c) => c.p.plinthHeight)).size > 1)
-        why = `plinth heights differ (${ok.map((c) => `${c.pc.item.design.name} ${c.p.plinthHeight} mm`).join(', ')})`;
+        why = t('plinth heights differ ({list})', {
+          list: ok
+            .map((c) => t('{name} {mm} mm', { name: c.pc.item.design.name, mm: c.p.plinthHeight }))
+            .join(', '),
+        });
       else if (new Set(ok.map((c) => c.p.plinthSetback)).size > 1)
-        why = `plinth setbacks differ (${each((c) => `${c.p.plinthSetback} mm`)})`;
+        why = t('plinth setbacks differ ({list})', {
+          list: each((c) => t('{mm} mm', { mm: c.p.plinthSetback })),
+        });
       else if (new Set(ok.map(plinthLine)).size > 1)
-        why = `plinth fronts are not in line (${each((c) => `${plinthLine(c)} mm from the back`)})`;
+        why = t('plinth fronts are not in line ({list})', {
+          list: each((c) => t('{mm} mm from the back', { mm: plinthLine(c) })),
+        });
       else if (new Set(ok.map(bodyKey)).size > 1)
-        why = `body boards differ (${each((c) => {
-          const m = bodyOf(c);
-          return m
-            ? `${m.name} ${m.thickness} mm${m.grain ? ' grained' : ''}${m.image ? ' with a picture' : ''}`
-            : 'no board';
-        })})`;
+        why = t('body boards differ ({list})', {
+          list: each((c) => {
+            const m = bodyOf(c);
+            return m
+              ? t('{name} {mm} mm', { name: m.name, mm: m.thickness }) +
+                  (m.grain ? t(' grained') : '') +
+                  (m.image ? t(' with a picture') : '')
+              : t('no board');
+          }),
+        });
       if (why)
         notes.push(
-          `No run plinth for ${run.map((pc) => pc.item.design.name).join(' + ')}: ${why}.`,
+          t('No run plinth for {names}: {why}.', {
+            names: run.map((pc) => pc.item.design.name).join(' + '),
+            why,
+          }),
         );
       else {
         const c0 = ok[0],
-          t = bodyT(c0);
+          bt = bodyT(c0);
         const m = c0.pc.item.design.materials.find((x) => x.id === c0.p.bodyMaterialId)!;
         const bx: Box = {
           x: x0,
           y: 0,
-          z: plinthLine(c0) - t,
+          z: plinthLine(c0) - bt,
           w: x1 - x0,
           h: c0.p.plinthHeight,
-          d: t,
+          d: bt,
         };
         const key = `plinth|${ids.join(',')}`;
         if (free(bx, new Set(ids)))
@@ -1801,7 +1872,9 @@ export function planRuns(project: Project): {
           });
         else
           notes.push(
-            `No run plinth for ${run.map((pc) => pc.item.design.name).join(' + ')}: it would overlap a filler or another piece.`,
+            t('No run plinth for {names}: it would overlap a filler or another piece.', {
+              names: run.map((pc) => pc.item.design.name).join(' + '),
+            }),
           );
       }
     }
@@ -1858,13 +1931,16 @@ export function planRuns(project: Project): {
           r.side,
         );
         if (out.some((o) => overlaps(o.box, wb.box)))
-          fail(r, 'it would overlap another worktop or run part');
+          fail(r, t('it would overlap another worktop or run part'));
         else out.push(wb);
       }
       const bare = run.filter((pc) => !asked.some((r) => r.from.includes(pc.item.id)));
       if (bare.length)
         notes.push(
-          `No worktop over ${bare.map((pc) => pc.item.design.name).join(' + ')}: worktops were chosen for other pieces of this run (Add worktop over… adds one).`,
+          t(
+            'No worktop over {names}: worktops were chosen for other pieces of this run (Add worktop over… adds one).',
+            { names: bare.map((pc) => pc.item.design.name).join(' + ') },
+          ),
         );
       return;
     }
@@ -1887,17 +1963,17 @@ export function planRuns(project: Project): {
       if (out.some((o) => o.key === key) || unmade[key]) continue;
       const why =
         !r.from.length || r.from.some((id) => !byId.has(id))
-          ? 'a piece it was made for is no longer in the project'
+          ? t('a piece it was made for is no longer in the project')
           : !runs.some((run) => r.from.every((id) => run.some((pc) => pc.item.id === id)))
-            ? 'the pieces are not side by side in one run of base units'
-            : 'the pieces are not next to each other';
+            ? t('the pieces are not side by side in one run of base units')
+            : t('the pieces are not next to each other');
       fail(r, why);
       continue;
     }
     const part = planTrim(r, byId, project.room, out);
     if (typeof part === 'string') fail(r, part);
     else if (out.some((o) => overlaps(o.box, part.box)))
-      fail(r, 'it would overlap another run part');
+      fail(r, t('it would overlap another run part'));
     else out.push(part);
   }
   return { parts: out, notes, unmade };
@@ -1912,12 +1988,19 @@ const TRIM_LABEL: Record<RunRequest['kind'], string> = {
   'ceiling-filler': 'Ceiling filler',
 };
 
+const REQUEST_NAME = {
+  worktop: 'Worktop over {names}',
+  crown: 'Crown over {names}',
+  pelmet: 'Pelmet over {names}',
+  'ceiling-filler': 'Ceiling filler over {names}',
+} as const satisfies Record<RunRequest['kind'], Key>;
+
 /** "Crown over Wall unit + Wall unit 2", for notes and diagnostics. */
 export function requestName(r: RunRequest, project: Project): string {
   const names = r.from.map(
-    (id) => project.items.find((i) => i.id === id)?.design.name ?? 'a removed piece',
+    (id) => project.items.find((i) => i.id === id)?.design.name ?? t('a removed piece'),
   );
-  return `${TRIM_LABEL[r.kind]} over ${names.join(' + ')}`;
+  return t(REQUEST_NAME[r.kind], { names: names.join(' + ') });
 }
 
 /** Wall units, and tall units standing on the floor, facing the room: the pieces a trim runs along (ADR-075). */
@@ -1962,14 +2045,15 @@ function planTrim(
 ): RunPart | string {
   const found = r.from.map((id) => byId.get(id));
   if (!found.length || found.some((pc) => !pc))
-    return 'a piece it was made for is no longer in the project';
+    return t('a piece it was made for is no longer in the project');
   const pcs = (found as PlacedPiece[]).slice().sort((a, b) => a.bounds.x - b.bounds.x);
   const odd = pcs.find((pc) => !takesTrim(pc));
-  if (odd) return `${odd.item.design.name} is not a wall or tall unit facing the room`;
+  if (odd)
+    return t('{name} is not a wall or tall unit facing the room', { name: odd.item.design.name });
   for (let i = 1; i < pcs.length; i++)
-    if (!sideBySide(pcs[i - 1].bounds, pcs[i].bounds)) return 'the pieces are not side by side';
+    if (!sideBySide(pcs[i - 1].bounds, pcs[i].bounds)) return t('the pieces are not side by side');
   const m = r.material;
-  if (!m) return 'choose its board';
+  if (!m) return t('choose its board');
   const x0 = pcs[0].bounds.x,
     x1 = Math.max(...pcs.map((pc) => pc.bounds.x + pc.bounds.w));
   const top = Math.max(...pcs.map((pc) => pc.bounds.y + pc.bounds.h));
@@ -1977,17 +2061,17 @@ function planTrim(
   const zf = Math.max(...pcs.map((pc) => pc.bounds.z + pc.bounds.d));
   let y: Mm, h: Mm, reason: string;
   if (r.kind === 'ceiling-filler') {
-    if (!room) return 'set the room and its height first (Room)';
+    if (!room) return t('set the room and its height first (Room)');
     const crown = out.filter((o) => o.kind === 'crown' && o.box.x < x1 && o.box.x + o.box.w > x0);
     y = Math.max(top, ...crown.map((c) => c.box.y + c.box.h));
     h = room.height - y;
-    if (h <= 0) return `the run already reaches the ${room.height} mm ceiling`;
+    if (h <= 0) return t('the run already reaches the {h} mm ceiling', { h: room.height });
     reason = `from ${y} mm up to the ${room.height} mm ceiling`;
   } else {
-    if (!r.height) return 'enter its height';
+    if (!r.height) return t('enter its height');
     h = r.height;
     y = r.kind === 'crown' ? top : bottom - h;
-    if (y < 0) return `it would go ${-y} mm below the floor`;
+    if (y < 0) return t('it would go {mm} mm below the floor', { mm: -y });
     reason = r.kind === 'crown' ? `on top, ${h} mm high` : `under the units, ${h} mm high`;
   }
   const key = requestKey(r);
@@ -2213,10 +2297,10 @@ const validBoard = (m: unknown) =>
 
 /** Project-wide settings (ADR-124): each one optional, each one checked. */
 function validateSettings(s: unknown): string[] {
-  if (!isObj(s)) return ['Invalid project settings'];
+  if (!isObj(s)) return [t('Invalid project settings')];
   const errs: string[] = [];
   for (const k of ['body', 'front', 'back'] as const)
-    if (s[k] !== undefined && !validBoard(s[k])) errs.push(`Invalid project ${k} board`);
+    if (s[k] !== undefined && !validBoard(s[k])) errs.push(t('Invalid project {k} board', { k }));
   const h = s.handle;
   if (
     h !== undefined &&
@@ -2228,54 +2312,54 @@ function validateSettings(s: unknown): string[] {
       (h.position === undefined || ['top', 'centre', 'bottom'].includes(h.position as string))
     )
   )
-    errs.push('Invalid project handle');
+    errs.push(t('Invalid project handle'));
   if (s.frontStyle !== undefined && !['overlay', 'half', 'inset'].includes(s.frontStyle as string))
-    errs.push('Invalid project front overlay');
+    errs.push(t('Invalid project front overlay'));
   if (
     s.plinthHeight !== undefined &&
     !(isInt(s.plinthHeight, 0) && (s.plinthHeight as number) <= 500)
   )
-    errs.push('Project plinth height must be 0 to 500 mm');
+    errs.push(t('Project plinth height must be 0 to 500 mm'));
   return errs;
 }
 
 export function validateProject(p: unknown): string[] {
-  if (!isObj(p)) return ['Project must be an object'];
+  if (!isObj(p)) return [t('Project must be an object')];
   const errs: string[] = [];
   if (!PROJECT_SCHEMAS.includes(p.schemaVersion as number))
-    errs.push('Unsupported project schemaVersion');
+    errs.push(t('Unsupported project schemaVersion'));
   if (typeof p.id !== 'string' || !p.id || typeof p.name !== 'string' || !p.name)
-    errs.push('Missing project id or name');
+    errs.push(t('Missing project id or name'));
   if (
     p.cutting !== undefined &&
     !(isObj(p.cutting) && isInt(p.cutting.kerf, 0) && (p.cutting.kerf as number) <= 20)
   )
-    errs.push('Invalid cutting settings');
-  if (!Array.isArray(p.items)) return [...errs, 'Items missing'];
+    errs.push(t('Invalid cutting settings'));
+  if (!Array.isArray(p.items)) return [...errs, t('Items missing')];
   const ids = new Set<string>();
   for (const it of p.items) {
     if (!isObj(it) || typeof it.id !== 'string' || !it.id) {
-      errs.push('Invalid item');
+      errs.push(t('Invalid item'));
       continue;
     }
-    if (ids.has(it.id)) errs.push(`Duplicate item ${it.id}`);
+    if (ids.has(it.id)) errs.push(t('Duplicate item {id}', { id: it.id }));
     ids.add(it.id);
     if (!isInt(it.quantity, 1) || (it.quantity as number) > 99)
-      errs.push('Item quantity must be 1 to 99');
+      errs.push(t('Item quantity must be 1 to 99'));
     if (
       !isObj(it.position) ||
       !isInt(it.position.x) ||
       !isInt(it.position.y, 0) ||
       !isInt(it.position.z)
     )
-      errs.push('Item position must be whole mm (height ≥ 0)');
+      errs.push(t('Item position must be whole mm (height ≥ 0)'));
     if (![0, 90, 180, 270].includes(it.rotationY as number))
-      errs.push('Item rotation must be a quarter turn');
+      errs.push(t('Item rotation must be a quarter turn'));
     if (it.angle !== undefined) {
       if (!isInt(it.angle, 1) || (it.angle as number) > 89)
-        errs.push('Item angle must be whole degrees from 1 to 89');
+        errs.push(t('Item angle must be whole degrees from 1 to 89'));
       else if ((p.schemaVersion as number) < ANGLE_SINCE)
-        errs.push(`Pieces at an angle need project schemaVersion ${ANGLE_SINCE}`);
+        errs.push(t('Pieces at an angle need project schemaVersion {v}', { v: ANGLE_SINCE }));
     }
     const pl = it.placement;
     if (
@@ -2292,39 +2376,42 @@ export function validateProject(p: unknown): string[] {
             isInt(pl.offsetX)))
       )
     )
-      errs.push('Invalid item placement');
-    if (it.zones !== undefined && !validZones(it.zones)) errs.push('Invalid item clearance zones');
+      errs.push(t('Invalid item placement'));
+    if (it.zones !== undefined && !validZones(it.zones))
+      errs.push(t('Invalid item clearance zones'));
     if (it.locked !== undefined) {
-      if (it.locked !== true) errs.push('Invalid item lock');
+      if (it.locked !== true) errs.push(t('Invalid item lock'));
       else if ((p.schemaVersion as number) < LOCKS_SINCE)
-        errs.push(`Locked pieces need project schemaVersion ${LOCKS_SINCE}`);
+        errs.push(t('Locked pieces need project schemaVersion {v}', { v: LOCKS_SINCE }));
     }
     if (it.templateSeen !== undefined) {
-      if (!isInt(it.templateSeen, 1)) errs.push('Invalid kept template revision');
+      if (!isInt(it.templateSeen, 1)) errs.push(t('Invalid kept template revision'));
       else if ((p.schemaVersion as number) < TEMPLATE_SEEN_SINCE)
-        errs.push(`Kept template revisions need project schemaVersion ${TEMPLATE_SEEN_SINCE}`);
+        errs.push(
+          t('Kept template revisions need project schemaVersion {v}', { v: TEMPLATE_SEEN_SINCE }),
+        );
     }
     if (it.linkId !== undefined) {
       if (typeof it.linkId !== 'string' || !it.linkId || it.linkId.length > 100)
-        errs.push('Invalid item link');
+        errs.push(t('Invalid item link'));
       else if ((p.schemaVersion as number) < LINKS_SINCE)
-        errs.push(`Linked copies need project schemaVersion ${LINKS_SINCE}`);
+        errs.push(t('Linked copies need project schemaVersion {v}', { v: LINKS_SINCE }));
     }
     if (it.sizeLocked !== undefined) {
-      if (it.sizeLocked !== true) errs.push('Invalid item size lock');
+      if (it.sizeLocked !== true) errs.push(t('Invalid item size lock'));
       else if ((p.schemaVersion as number) < SIZE_LOCK_SINCE)
-        errs.push(`Size-locked pieces need project schemaVersion ${SIZE_LOCK_SINCE}`);
+        errs.push(t('Size-locked pieces need project schemaVersion {v}', { v: SIZE_LOCK_SINCE }));
     }
     if (it.ref !== undefined) {
-      if (!isObj(it.ref) || !isObj(it.ref.overrides)) errs.push('Invalid template reference');
+      if (!isObj(it.ref) || !isObj(it.ref.overrides)) errs.push(t('Invalid template reference'));
       else if ((p.schemaVersion as number) < REFS_SINCE)
-        errs.push(`Template references need project schemaVersion ${REFS_SINCE}`);
+        errs.push(t('Template references need project schemaVersion {v}', { v: REFS_SINCE }));
     }
     const de = validateDesign(it.design);
-    if (de.length) errs.push(`Item ${String(it.id)}: ${de[0]}`);
+    if (de.length) errs.push(t('Item {id}: {problem}', { id: String(it.id), problem: de[0] }));
   }
   if (p.runParts !== undefined) {
-    if (!Array.isArray(p.runParts)) errs.push('Invalid run parts');
+    if (!Array.isArray(p.runParts)) errs.push(t('Invalid run parts'));
     else
       for (const rp of p.runParts) {
         const b = isObj(rp) ? rp.box : null;
@@ -2353,7 +2440,7 @@ export function validateProject(p: unknown): string[] {
           !['x', 'y', 'z'].includes(rp.grainAxis as string) ||
           !Array.isArray(rp.banded)
         )
-          errs.push('Invalid run part');
+          errs.push(t('Invalid run part'));
       }
   }
   if (
@@ -2365,9 +2452,9 @@ export function validateProject(p: unknown): string[] {
       typeof p.runSettings.auto === 'boolean'
     )
   )
-    errs.push('Invalid run settings');
+    errs.push(t('Invalid run settings'));
   if (p.runRequests !== undefined) {
-    if (!Array.isArray(p.runRequests)) errs.push('Invalid run requests');
+    if (!Array.isArray(p.runRequests)) errs.push(t('Invalid run requests'));
     else
       for (const r of p.runRequests) {
         const m = isObj(r) ? r.material : undefined;
@@ -2388,7 +2475,7 @@ export function validateProject(p: unknown): string[] {
               typeof m.grain === 'boolean'
             ))
         )
-          errs.push('Invalid run request');
+          errs.push(t('Invalid run request'));
       }
   }
   // Run requests and trim run parts came with version 2 (ADR-075).
@@ -2398,11 +2485,13 @@ export function validateProject(p: unknown): string[] {
       (Array.isArray(p.runParts) &&
         p.runParts.some((rp) => isObj(rp) && TRIM_KINDS.includes(rp.kind as TrimKind))))
   )
-    errs.push(`Trims and chosen worktops need project schemaVersion ${RUN_REQUESTS_SINCE}`);
+    errs.push(
+      t('Trims and chosen worktops need project schemaVersion {v}', { v: RUN_REQUESTS_SINCE }),
+    );
   if (p.room !== undefined) {
     errs.push(...validateRoom(p.room));
     if (isObj(p.room) && p.room.walls !== undefined && (p.schemaVersion as number) < WALLS_SINCE)
-      errs.push(`Wall backgrounds need project schemaVersion ${WALLS_SINCE}`);
+      errs.push(t('Wall backgrounds need project schemaVersion {v}', { v: WALLS_SINCE }));
     if (
       isObj(p.room) &&
       Array.isArray(p.room.walls) &&
@@ -2414,19 +2503,21 @@ export function validateProject(p: unknown): string[] {
       ) &&
       (p.schemaVersion as number) < FITTED_WALLS_SINCE
     )
-      errs.push(`Fitted wall pictures need project schemaVersion ${FITTED_WALLS_SINCE}`);
+      errs.push(
+        t('Fitted wall pictures need project schemaVersion {v}', { v: FITTED_WALLS_SINCE }),
+      );
   }
   if (
     p.runPartsRemoved !== undefined &&
     !(Array.isArray(p.runPartsRemoved) && p.runPartsRemoved.every((k) => typeof k === 'string'))
   )
-    errs.push('Invalid removed run parts');
+    errs.push(t('Invalid removed run parts'));
   if (p.groups !== undefined) {
     if ((p.schemaVersion as number) < GROUPS_SINCE)
-      errs.push(`Groups need project schemaVersion ${GROUPS_SINCE}`);
+      errs.push(t('Groups need project schemaVersion {v}', { v: GROUPS_SINCE }));
     const grouped = new Set<string>();
     const groupIds = new Set<string>();
-    if (!Array.isArray(p.groups)) errs.push('Invalid groups');
+    if (!Array.isArray(p.groups)) errs.push(t('Invalid groups'));
     else
       for (const g of p.groups) {
         if (
@@ -2441,7 +2532,7 @@ export function validateProject(p: unknown): string[] {
           g.itemIds.length < 2 ||
           !g.itemIds.every((x) => typeof x === 'string' && ids.has(x) && !grouped.has(x))
         ) {
-          errs.push('Invalid group');
+          errs.push(t('Invalid group'));
           continue;
         }
         groupIds.add(g.id);
@@ -2450,15 +2541,15 @@ export function validateProject(p: unknown): string[] {
   }
   if (p.settings !== undefined) {
     if ((p.schemaVersion as number) < REFS_SINCE)
-      errs.push(`Project settings need project schemaVersion ${REFS_SINCE}`);
+      errs.push(t('Project settings need project schemaVersion {v}', { v: REFS_SINCE }));
     errs.push(...validateSettings(p.settings));
   }
   if (p.runHandles !== undefined || p.sinks !== undefined) {
     if ((p.schemaVersion as number) < RUN_EXTRAS_SINCE)
-      errs.push(`Run handles and sinks need project schemaVersion ${RUN_EXTRAS_SINCE}`);
+      errs.push(t('Run handles and sinks need project schemaVersion {v}', { v: RUN_EXTRAS_SINCE }));
     const strs = (v: unknown) => Array.isArray(v) && v.every((x) => typeof x === 'string');
     if (p.runHandles !== undefined) {
-      if (!Array.isArray(p.runHandles)) errs.push('Invalid run handles');
+      if (!Array.isArray(p.runHandles)) errs.push(t('Invalid run handles'));
       else
         for (const rh of p.runHandles) {
           const h = isObj(rh) ? rh.handle : null;
@@ -2474,11 +2565,11 @@ export function validateProject(p: unknown): string[] {
             !['bar', 'knob', 'push'].includes(h.kind as string) ||
             (h.holeSpacing !== undefined && !BAR_SPACINGS.includes(h.holeSpacing as number))
           )
-            errs.push('Invalid run handle');
+            errs.push(t('Invalid run handle'));
         }
     }
     if (p.sinks !== undefined) {
-      if (!Array.isArray(p.sinks)) errs.push('Invalid sinks');
+      if (!Array.isArray(p.sinks)) errs.push(t('Invalid sinks'));
       else
         for (const sk of p.sinks)
           if (
@@ -2492,12 +2583,12 @@ export function validateProject(p: unknown): string[] {
             !isInt(sk.d, 1) ||
             (sk.d as number) > 3000
           )
-            errs.push('Invalid sink');
+            errs.push(t('Invalid sink'));
     }
   }
   if (p.models !== undefined) {
     if ((p.schemaVersion as number) < MODELS_SINCE)
-      errs.push(`3D models need project schemaVersion ${MODELS_SINCE}`);
+      errs.push(t('3D models need project schemaVersion {v}', { v: MODELS_SINCE }));
     errs.push(...validateModelItems(p.models, ids));
   }
   return errs;

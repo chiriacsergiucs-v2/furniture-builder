@@ -7,6 +7,7 @@ import { newId } from '../core/design';
 import { validateProjectTemplate, type ProjectTemplate } from '../core/projectTemplate';
 import { db } from './db';
 import { takePictures, withPictures } from './images';
+import { t } from '../core/i18n';
 
 /** The template as a file: the template plus `pictures` (when any are on this device). */
 export const projectTemplateFile = (t: ProjectTemplate) =>
@@ -27,12 +28,14 @@ export async function readProjectTemplateFile(
   try {
     errs = validateProjectTemplate(parsed);
   } catch {
-    errs = ['it could not be checked'];
+    errs = [t('it could not be checked')];
   }
   if (errs.length)
     return {
       ok: false,
-      error: `That file is not a valid project template: ${errs.slice(0, 3).join('; ')}.`,
+      error: t('That file is not a valid project template: {problems}.', {
+        problems: errs.slice(0, 3).join('; '),
+      }),
     };
   const { data, problems } = await takePictures(parsed, database);
   return {
