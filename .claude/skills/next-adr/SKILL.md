@@ -82,6 +82,9 @@ ADRs are all in `docs/adr-done/`.
 9. **Do not ship in this skill.** When the checklist is met, report (outcome first: where to
    click, whether it is merged and deployed), end with the backlog table and
    **Skipped this iteration**, and suggest `ship ADR-NNN` once it is merged.
+10. **Open the pull request** (user rule 2026-10-29): once the checks pass and the branch is
+    pushed, open the pull request for the branch without asking (one pull request with the ADR
+    file when it was created in the same run), and link it in the report. Do not merge it.
 
 ## Notes
 

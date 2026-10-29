@@ -2416,15 +2416,14 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Should the front view also drag the picture?
 - Suggested pick: Not asked; the user chose dragging in 3D
 
-### G-289: Part boards find-it test
+### G-289: Move to actions on the 2D plan
 
-- Status: Done (PR #132)
-- Origin: N148 (PR #132, light acceptance)
-- Missing: jsdom find-it test for Settings → Part boards: pick a board for one part, see it in the Parts list, the lost-part warning and Clear
-- Request: Ff any piece of the item can have own material changed.
-- Questions: Write the jsdom find-it now in PR #132, or wait for 'catch up acceptance'?
-- Suggested pick: Write it now in PR #132 (closest to the request: proves the feature is reachable). Estimate +15 % work, +10 % value (evidence, not new behaviour).
-- Note: User 2026-10-29: "2 write". Built: `tests/find-it/part-boards.test.tsx` (390 and 1280 px), passes locally.
+- Status: Open
+- Origin: ADR-147, 2026-10-29; out of scope
+- Missing: No overlay bar of Move to buttons over the 2D plan; they are in the piece panel and the 3D Move toolbar
+- Request: add a move action for a piece, snap to closest wall, snap to closest ceiling, snap to closest left piece, snap to closest right piece, and any other snaps you think would be appropriate
+- Questions: Add a floating Move to bar over the plan?
+- Suggested pick: Not now; the user picked panel + 3D
 
 ### G-290: Group width for pieces not in columns
 
@@ -2464,3 +2463,61 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: add the possibility to set the width, height and depth of grouped items, add the possibility to block group items from being moved separately.
 - Questions: Should repairs and Mirror the run also carry or refuse grouped pieces?
 - Suggested pick: Carry the whole group, refusing a repair the group cannot follow (closer to the request; estimate effort +10 %)
+
+### G-294: Move to for several selected pieces
+
+- Status: Open
+- Origin: ADR-147, 2026-10-29; out of scope
+- Missing: Move to actions move only the selected piece, not a multi-selection
+- Request: add a move action for a piece, snap to closest wall, snap to closest ceiling, snap to closest left piece, snap to closest right piece, and any other snaps you think would be appropriate
+- Questions: Should Move to move every selected piece as one block?
+- Suggested pick: Yes, as one block (closest to how drag moves a selection; estimate +20 % work)
+
+### G-295: Move to for a stacked piece
+
+- Status: Done (ADR-147)
+- Origin: ADR-147, 2026-10-29; open question
+- Missing: How sideways and ceiling moves work for a piece placed above another
+- Request: add a move action for a piece, snap to closest wall, snap to closest ceiling, snap to closest left piece, snap to closest right piece, and any other snaps you think would be appropriate
+- Questions: (a) move along its base via offsetX, lift off for ceiling; (b) lift off and move freely; (c) disabled
+- Suggested pick: (a), keeps it on its base (estimate +10 % work)
+- Answer: User 2026-10-29: "Slide along base" — sideways moves change its offset on the piece below; To ceiling lifts it off.
+
+### G-296: Align top or front: which neighbour
+
+- Status: Done (ADR-147)
+- Origin: ADR-147, 2026-10-29; open question
+- Missing: Which neighbour Align top and Align front use
+- Request: add a move action for a piece, snap to closest wall, snap to closest ceiling, snap to closest left piece, snap to closest right piece, and any other snaps you think would be appropriate
+- Questions: (a) separate left and right buttons; (b) the nearer neighbour, left on a tie
+- Suggested pick: (a), says exactly which piece (estimate +5 % work)
+- Answer: User 2026-10-29: "Left / right buttons" — Align top and Align front each for the left and the right neighbour.
+
+### G-297: Move to for a freely turned piece
+
+- Status: Done (ADR-147)
+- Origin: ADR-147, 2026-10-29; open question
+- Missing: What Move to does for a piece turned by a free angle (ADR-121)
+- Request: add a move action for a piece, snap to closest wall, snap to closest ceiling, snap to closest left piece, snap to closest right piece, and any other snaps you think would be appropriate
+- Questions: (a) all actions disabled; (b) vertical actions only
+- Suggested pick: (b), keeps ceiling and floor working (estimate +3 % work)
+- Answer: User 2026-10-29: "Vertical only" — To ceiling and Down work; the other actions are off, "turned freely".
+
+### G-298: Research data stale after research batches 1-5
+
+- Status: Open
+- Origin: ADR-149 (merged with main 2026-10-29)
+- Missing: Research features built by ADR-121..125 (research batches 1-5: on-demand rendering, typed rotation, version history, design codes, sinks and handles, spatial query engine and others) are still listed as not built in the research data
+- Request: "Re-validate, remove implemented ones"
+- Questions: Re-validate again against ADR-121..125 and delete those features too?
+- Suggested pick: Yes, re-check and delete them the same way as ADR-149 (estimate: effort +20% of ADR-149, value: keeps the list to what is left)
+
+### G-299: Part boards find-it test
+
+- Status: Done (PR #132)
+- Origin: N152 (PR #132, light acceptance)
+- Missing: jsdom find-it test for Settings → Part boards: pick a board for one part, see it in the Parts list, the lost-part warning and Clear
+- Request: Ff any piece of the item can have own material changed.
+- Questions: Write the jsdom find-it now in PR #132, or wait for 'catch up acceptance'?
+- Suggested pick: Write it now in PR #132 (closest to the request: proves the feature is reachable). Estimate +15 % work, +10 % value (evidence, not new behaviour).
+- Note: User 2026-10-29: "2 write". Built: `tests/find-it/part-boards.test.tsx` (390 and 1280 px), passes locally.

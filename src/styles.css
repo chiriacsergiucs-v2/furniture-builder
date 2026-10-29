@@ -5812,10 +5812,32 @@ p > .info-tip {
   background: var(--surface);
 }
 .three-tools .btn[aria-pressed='true'],
+.three-tools .btn[aria-expanded='true'],
 .three-tools .btn.outline[aria-pressed='true']:hover:not(:disabled) {
   background: var(--primary-soft);
   border-color: var(--primary);
   color: var(--ink);
+}
+
+/* One-tap Move to buttons (ADR-147) ----------------------------------------- */
+.move-to {
+  display: grid;
+  gap: var(--s-1);
+}
+.move-to-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+  gap: var(--s-1);
+}
+.move-to .btn[aria-disabled='true'] {
+  opacity: 0.5;
+}
+.three-tools .three-move-to {
+  flex: 1 1 100%;
+}
+.three-tools .three-move-to .hint {
+  background: var(--surface);
+  padding: var(--s-1);
 }
 
 /* Section and Isolate in the project's 3D view (ADR-122) ------------------- */

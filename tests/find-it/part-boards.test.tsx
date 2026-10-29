@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// Find-it for part boards (N148, G-289), in jsdom (ADR-108): any single part of a piece gets its own board.
+// Find-it for part boards (N152, G-299), in jsdom (ADR-108): any single part of a piece gets its own board.
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { renderApp, WIDTHS } from './setup';
