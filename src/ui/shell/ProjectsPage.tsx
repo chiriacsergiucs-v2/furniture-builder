@@ -28,18 +28,19 @@ import { DeviceOnlyNotice } from '../SavedData';
 import { AccountBadge, AccountRowActions, InYourAccount } from '../Account';
 import { useAccount } from '../../store/accountStore';
 import { useMediaQuery } from '../useMediaQuery';
+import { t } from '../../core/i18n';
 
 /** Where a saved row's three buttons fold into one menu (ADR-120). */
 const NARROW = '(max-width: 520px)';
 
 const KIND_TEXT = {
-  desk: 'Desk',
-  corner: 'Corner unit',
-  cabinet: 'Cabinet',
-  panel: 'Front panel',
-  frame: 'Frame',
-  panels: 'Loose panels',
-} as const;
+  desk: t('Desk'),
+  corner: t('Corner unit'),
+  cabinet: t('Cabinet'),
+  panel: t('Front panel'),
+  frame: t('Frame'),
+  panels: t('Loose panels'),
+};
 
 /**
  * Projects (ADR-078): everything saved on this device in one place — the former Home page and Library dialog.
@@ -85,11 +86,13 @@ export function ProjectsPage({
       .then(setProjects)
       .catch(() => {
         setProjects([]);
-        setMsg({ ok: false, text: 'Saved work could not be read from this browser.' });
+        setMsg({ ok: false, text: t('Saved work could not be read from this browser.') });
       });
     listDesigns()
       .then(setPieces)
-      .catch(() => setMsg({ ok: false, text: 'Saved work could not be read from this browser.' }));
+      .catch(() =>
+        setMsg({ ok: false, text: t('Saved work could not be read from this browser.') }),
+      );
   };
   // Read on arrival; settings changed from this list are saved by the autosave, so read again once the dialog closes.
   const settingsOpen = useUi((s) => s.settingsOpen);
@@ -101,9 +104,9 @@ export function ProjectsPage({
   }, [settingsOpen, lastSync]);
 
   const create = async () => {
-    const name = await askText('Name of the new project', 'New project', 'Create project');
+    const name = await askText(t('Name of the new project'), t('New project'), t('Create project'));
     if (name === null) return;
-    const p = newProject(name.trim() || 'New project');
+    const p = newProject(name.trim() || t('New project'));
     void saveProject(p);
     openProject(p);
     onOpened();
@@ -121,7 +124,12 @@ export function ProjectsPage({
   };
   const duplicate = async (r: StoredDesign | StoredProject, kind: 'piece' | 'project') => {
     const now = new Date().toISOString();
-    const copy = { id: newId(), name: `${r.name} (copy)`, createdAt: now, updatedAt: now };
+    const copy = {
+      id: newId(),
+      name: t('{name} (copy)', { name: r.name }),
+      createdAt: now,
+      updatedAt: now,
+    };
     if (kind === 'project') await saveProject({ ...(r as StoredProject).project, ...copy });
     else await saveDesign({ ...(r as StoredDesign).design, ...copy });
     refresh();
@@ -130,9 +138,9 @@ export function ProjectsPage({
     if (
       !(await askConfirm(
         kind === 'project'
-          ? `Delete project “${r.name}”? This cannot be undone.`
-          : `Delete “${r.name}”? This cannot be undone.`,
-        { confirmLabel: 'Delete', danger: true },
+          ? t('Delete project “{name}”? This cannot be undone.', { name: r.name })
+          : t('Delete “{name}”? This cannot be undone.', { name: r.name }),
+        { confirmLabel: t('Delete'), danger: true },
       ))
     )
       return;
@@ -171,7 +179,7 @@ export function ProjectsPage({
             <strong>{r.name}</strong>
             <span className="sub">{sub}</span>
           </span>
-          {r.id === currentId && <span className="chip">Open now</span>}
+          {r.id === currentId && <span className="chip">{t('Open now')}</span>}
           {kind === 'piece' && <AccountBadge table="designs" id={r.id} />}
         </button>
         {kind === 'piece' && <AccountRowActions table="designs" id={r.id} name={r.name} />}
@@ -189,8 +197,8 @@ export function ProjectsPage({
             <button
               type="button"
               className="btn sm icon"
-              aria-label={`Settings for ${r.name}`}
-              title="Settings"
+              aria-label={t('Settings for {name}', { name: r.name })}
+              title={t('Settings')}
               onClick={settings}
             >
               <Icon name="sliders" className="sm" />
@@ -199,8 +207,8 @@ export function ProjectsPage({
               type="button"
               className="btn sm icon"
               onClick={() => void duplicate(r, kind)}
-              aria-label={`Duplicate ${r.name}`}
-              title="Duplicate"
+              aria-label={t('Duplicate {name}', { name: r.name })}
+              title={t('Duplicate')}
             >
               <Icon name="copy" className="sm" />
             </button>
@@ -208,8 +216,8 @@ export function ProjectsPage({
               type="button"
               className="btn sm icon danger"
               disabled={r.id === currentId}
-              aria-label={`Delete ${r.name}`}
-              title={r.id === currentId ? 'Open something else first' : 'Delete'}
+              aria-label={t('Delete {name}', { name: r.name })}
+              title={r.id === currentId ? t('Open something else first') : t('Delete')}
               onClick={() => void remove(r, kind)}
             >
               <Icon name="trash" className="sm" />
@@ -221,35 +229,36 @@ export function ProjectsPage({
   };
 
   return (
-    <main className="home-page projects-page" aria-label="Projects">
+    <main className="home-page projects-page" aria-label={t('Projects')}>
       <DeviceOnlyNotice
         signIn={configured && !signedIn ? () => setAccountDialog('sign-in') : undefined}
       />
       <header className="home-hero">
         <div className="info-row">
-          <h1>Projects</h1>
-          <InfoTip label="About projects" align="start">
-            Everything you design is saved on this device only. Start a project, a single piece, or
-            open what you made before.
+          <h1>{t('Projects')}</h1>
+          <InfoTip label={t('About projects')} align="start">
+            {t(
+              'Everything you design is saved on this device only. Start a project, a single piece, or open what you made before.',
+            )}
           </InfoTip>
         </div>
         <div className="home-start">
           <button type="button" className="btn primary lg" onClick={() => void create()}>
             <Icon name="plus" />
-            Create a new project
+            {t('Create a new project')}
           </button>
           <button type="button" className="btn outline lg" onClick={onNewPiece}>
             <Icon name="cube" />
-            New single piece
+            {t('New single piece')}
           </button>
           {/* Beside New (ADR-120); "Fill a wall" is in the New dialog only. */}
           <label className="btn outline lg file-btn">
             <Icon name="upload" />
-            Import a file
+            {t('Import a file')}
             <input
               type="file"
               accept="application/json,.json"
-              aria-label="Import a design, project or project template file"
+              aria-label={t('Import a design, project or project template file')}
               onChange={(e) => {
                 const f = e.target.files?.[0];
                 if (f) void onImport(f);
@@ -263,7 +272,7 @@ export function ProjectsPage({
 
       <section className="home-section" aria-labelledby="home-projects">
         <div className="home-section-head">
-          <h2 id="home-projects">Choose a project</h2>
+          <h2 id="home-projects">{t('Choose a project')}</h2>
         </div>
         {msg && (
           <p className={`alert ${msg.ok ? 'info' : 'error'}`} role={msg.ok ? 'status' : 'alert'}>
@@ -272,24 +281,24 @@ export function ProjectsPage({
           </p>
         )}
         {projects === null ? (
-          <p className="loading">Loading…</p>
+          <p className="loading">{t('Loading…')}</p>
         ) : projects.length === 0 && pieces.length === 0 ? (
           <p className="empty center">
             <Icon name="folder" />
-            No projects saved yet. Create a new project or a single piece, or import a file.
+            {t('No projects saved yet. Create a new project or a single piece, or import a file.')}
           </p>
         ) : (
           <>
             {projects.length > 0 && (
               <>
                 {/* No "Projects" label here: the page title says it (ADR-116). */}
-                <ul className="library" aria-label="Projects">
+                <ul className="library" aria-label={t('Projects')}>
                   {projects.map((r) =>
                     row(
                       r,
                       'project',
                       'project',
-                      `${r.project.items.length} ${r.project.items.length === 1 ? 'piece' : 'pieces'} · edited ${when(r.updatedAt)}${notices.get(r.id) ?? ''}`,
+                      `${t('{n|# piece|# pieces} · edited {date}', { n: r.project.items.length, date: when(r.updatedAt) })}${notices.get(r.id) ?? ''}`,
                       () => openProject(r.project),
                     ),
                   )}
@@ -298,7 +307,7 @@ export function ProjectsPage({
             )}
             {pieces.length > 0 && (
               <>
-                <h3 className="list-head">Single pieces</h3>
+                <h3 className="list-head">{t('Single pieces')}</h3>
                 <ul className="library">
                   {pieces
                     .filter((r) => !hidden.has(`designs:${r.id}`))
@@ -307,7 +316,7 @@ export function ProjectsPage({
                         r,
                         'piece',
                         templateGlyph(r.design.product.kind),
-                        `${KIND_TEXT[r.design.product.kind]} · edited ${when(r.updatedAt)}${notices.get(r.id) ?? ''}`,
+                        `${t('{kind} · edited {date}', { kind: KIND_TEXT[r.design.product.kind], date: when(r.updatedAt) })}${notices.get(r.id) ?? ''}`,
                         () => load(r.design, { fromStorage: true }),
                       ),
                     )}
@@ -366,22 +375,26 @@ function RowMenu({
   };
   return (
     <details className="menu row-menu" ref={ref}>
-      <summary className="btn sm icon" aria-label={`Actions for ${name}`} title="Actions">
+      <summary
+        className="btn sm icon"
+        aria-label={t('Actions for {name}', { name })}
+        title={t('Actions')}
+      >
         <Icon name="more" className="sm" />
       </summary>
       <div className="menu-items">
         <button type="button" onClick={() => run(onSettings)}>
           <Icon name="sliders" />
-          Settings
+          {t('Settings')}
         </button>
         <button type="button" onClick={() => run(onDuplicate)}>
           <Icon name="copy" />
-          Duplicate
+          {t('Duplicate')}
         </button>
         <button type="button" disabled={isOpen} onClick={() => run(onDelete)}>
           <Icon name="trash" />
-          Delete
-          {isOpen && <small>open something else first</small>}
+          {t('Delete')}
+          {isOpen && <small>{t('open something else first')}</small>}
         </button>
       </div>
     </details>

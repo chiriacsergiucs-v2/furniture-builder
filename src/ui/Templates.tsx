@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import type { Template } from '../core/design';
 import { Icon, type IconName } from './icons';
+import { tr } from '../core/i18n';
 
 const GLYPH: Record<string, IconName> = {
   chest: 'chest',
@@ -84,8 +85,8 @@ export function TemplateButton({
         <Icon name={templateGlyph(t.id)} />
       </span>
       <span>
-        <strong>{t.name}</strong>
-        <span className="sub">{sub ?? t.description}</span>
+        <strong>{tr(t.name)}</strong>
+        <span className="sub">{sub ?? tr(t.description)}</span>
       </span>
       <Icon name="chevron-right" className="chev sm" />
     </button>
