@@ -1,11 +1,11 @@
 /**
  * Where this app stands on each research feature left to build, and the features merged because they share one idea
- * (ADR-092, re-checked 2026-10-27 for ADR-111). Repository records, not research: every status cites the backlog row
+ * (ADR-092, re-checked 2026-10-27 for ADR-149). Repository records, not research: every status cites the backlog row
  * or ADR that shows it.
  *
  * Statuses: In Progress — part of it is built, `missing` says what is not (user answer 2026-10-26: "In Progress +
  * what's missing"). Features not listed are Not Started. Built features (Verified, Implemented) are deleted from the
- * data (ADR-111). A status the user sets on the page wins over these.
+ * data (ADR-149). A status the user sets on the page wins over these.
  */
 import type { Implementation } from './types';
 

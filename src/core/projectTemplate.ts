@@ -6,6 +6,7 @@
 import { newId, validateDesign } from './design';
 import {
   planRuns,
+  PROJECT_SCHEMA,
   validateProject,
   type Placement,
   type Project,
@@ -23,6 +24,10 @@ export interface TemplateItem {
   rotationY: QuarterTurn;
   offset: { x: Mm; y: Mm; z: Mm };
   placement?: Placement;
+  /** Linked copies (ADR-111): template items with the same `linkId` stay linked in projects made from it. */
+  linkId?: string;
+  /** Extra whole degrees on top of the quarter turn (ADR-121), 1–89; absent = 0. */
+  angle?: number;
 }
 
 export interface ProjectTemplate {
@@ -85,6 +90,8 @@ export function templateFromProject(
       rotationY: i.rotationY,
       offset: { x: i.position.x - ox, y: i.position.y, z: i.position.z - oz },
       ...(i.placement ? { placement: structuredClone(i.placement) } : {}),
+      ...(i.linkId ? { linkId: i.linkId } : {}),
+      ...(i.angle ? { angle: i.angle } : {}),
     })),
     ...(p.runParts?.length || p.runSettings
       ? {
@@ -114,10 +121,13 @@ export function projectFromTemplate(t: ProjectTemplate, name = t.name): Project 
       position: { ...i.offset },
       rotationY: i.rotationY,
       ...(pl ? { placement: pl } : {}),
+      ...(i.linkId ? { linkId: i.linkId } : {}),
+      ...(i.angle ? { angle: i.angle } : {}),
     };
   });
   const base: Project = {
-    schemaVersion: 1,
+    // Linked copies and angled pieces need the project version that stores them (ADR-111, ADR-121).
+    schemaVersion: items.some((i) => i.linkId || i.angle) ? PROJECT_SCHEMA : 1,
     id: newId(),
     name,
     createdAt: now,
@@ -167,6 +177,11 @@ export function validateProjectTemplate(t: unknown): string[] {
     if (!isInt(it.quantity, 1, 99)) errs.push(`${name}: quantity must be 1 to 99`);
     if (![0, 90, 180, 270].includes(it.rotationY as number))
       errs.push(`${name}: rotation must be a quarter turn`);
+    if (
+      it.angle !== undefined &&
+      !(Number.isInteger(it.angle) && (it.angle as number) >= 1 && (it.angle as number) <= 89)
+    )
+      errs.push(`${name}: angle must be whole degrees from 1 to 89`);
     const o = it.offset;
     if (!isObj(o) || !isInt(o.x) || !isInt(o.y, 0) || !isInt(o.z))
       errs.push(`${name}: offset must be whole mm (height ≥ 0)`);
@@ -186,6 +201,11 @@ export function validateProjectTemplate(t: unknown): string[] {
       )
     )
       errs.push(`${name}: invalid placement`);
+    if (
+      it.linkId !== undefined &&
+      (typeof it.linkId !== 'string' || !it.linkId || it.linkId.length > 100)
+    )
+      errs.push(`${name}: invalid link`);
   }
   const rr = t.runRecipe;
   if (rr !== undefined) {

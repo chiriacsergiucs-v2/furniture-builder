@@ -4,6 +4,7 @@ import type { NestJob, NestResult, SheetLayout } from '../core/nesting/types';
 import { useDesign } from '../store/designStore';
 import { useNesting } from './useNesting';
 import { useView } from './useView';
+import { InfoTip } from './controls';
 import { Icon } from './icons';
 
 const REASON: Record<string, string> = {
@@ -39,8 +40,11 @@ export function Sheets() {
   return (
     <div className="sheets">
       <p className="summary">
-        Heuristic layout for a panel saw (edge-to-edge cuts): usually close to the fewest sheets,
-        not guaranteed. Saw cut {kerf} mm; trim per material below.
+        Saw cut {kerf} mm; trim per material below.{' '}
+        <InfoTip label="About the sheet layout" align="start">
+          Heuristic layout for a panel saw (edge-to-edge cuts): usually close to the fewest sheets,
+          not guaranteed.
+        </InfoTip>
       </p>
       <BuyList results={n.results} jobs={n.jobs} />
       {n.results.map((r, i) => {

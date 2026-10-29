@@ -18,6 +18,16 @@ for (const width of [1440, 375]) {
   const phone = width < 500;
   const ctx = await browser.newContext({ viewport: { width, height: phone ? 812 : 900 } });
   const page = await ctx.newPage();
+  // ADR-117: the selected piece's Position, Clearance, Finish and Merge are folded groups: open one by its title
+  // (when it is on screen; a phone's closed sheet hides the whole card, which is read as before).
+  const openGroup = async (title) => {
+    const s = page
+      .locator('details.group > summary')
+      .filter({ hasText: new RegExp(`^${title}$`) })
+      .first();
+    if ((await s.isVisible()) && !(await s.evaluate((el) => el.parentElement.open)))
+      await s.click({ timeout: 5000 });
+  };
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => {
@@ -65,8 +75,9 @@ for (const width of [1440, 375]) {
   // 2. Merge them (the confirmation now says undo brings them back).
   await openSheet();
   await pieces.nth(0).getByRole('button').click();
+  await openGroup('Merge');
   await page
-    .getByRole('button', { name: /^Merge with Base cabinet, drawer over door on the right$/ })
+    .getByRole('button', { name: /^Merge with right piece Base cabinet, drawer over door$/ })
     .dispatchEvent('click');
   const dlg = page.locator('dialog[open]');
   check(

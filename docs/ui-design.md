@@ -60,7 +60,7 @@ Barlow Semi Condensed, tabular, so columns of millimetres line up.
 | Shape    | `--r-sm` 4, `--r` 6, `--r-lg` 10, `--r-pill`                                                                            |                                                 |                                                              |
 | Depth    | `--shadow-1/2/3` (card, menu, dialog); `--backdrop`                                                                     |                                                 |                                                              |
 | Motion   | `--t-fast` 120 ms, `--t-base` 180 ms, ease-out; everything off under `prefers-reduced-motion`                           |                                                 |                                                              |
-| Layout   | `--side` 360, `--out` 400, `--control-h` 38, `--touch` 40                                                               |                                                 |                                                              |
+| Layout   | `--side` 360, `--out` 400, `--control-h` 38, `--control-h-sm` 30 (both 44 under `pointer: coarse`, ADR-114)             |                                                 |                                                              |
 
 Contrast (computed, WCAG 2.2 AA ≥ 4.5:1 for text): ink-2 on surface-2 5.85, on bg 5.48; white on primary 7.74
 (dark 5.59); white on warn fill 5.43; white on error fill 6.54; bar-ink-2 on bar 7.0; dark ink-2 on surface 7.21;
@@ -82,7 +82,7 @@ Iconography: inline SVG, 24-unit grid, 1.75 stroke, round caps — the same cons
 | Button                                | `.btn` + `primary` (one per screen: Parts CSV) / `solid` / `outline` / `ghost` / `danger` / `link` / `icon` / `sm` / `block` / `loading` | default, hover, active, focus-visible (2 px ring, accent on dark bar), disabled (50 %), loading (spinner, text hidden)                                       |
 | Millimetre field                      | `MmField` → `.mm`                                                                                                                        | default, hover, focus-within ring, invalid (red border + message linked by `aria-describedby`), hint                                                         |
 | Select / text input                   | `select`, `.input`, `.mat-name`                                                                                                          | default, hover, focus; custom chevron; dark variant                                                                                                          |
-| Segmented (radio group)               | `Segmented` → `.segmented`                                                                                                               | on (primary fill), hover, focus-visible inside; wraps at narrow widths                                                                                       |
+| Segmented (radio group)               | `Segmented` → `.segmented`                                                                                                               | on (primary fill), hover, focus-visible inside; `--control-h` tall (`.small`: `--control-h-sm`); labels never wrap                                           |
 | Counter                               | `Counter` → `.counter`                                                                                                                   | hover, disabled at min/max, live `output`                                                                                                                    |
 | Toggle                                | `Toggle` → `.toggle`                                                                                                                     | native checkbox, accent colour                                                                                                                               |
 | Steps rail (wizard-ready)             | `Steps`, `Step` → `.steps`                                                                                                               | per step: `done` (green number), tone `ok` / `warn` / `error` (status colour), `aria-current="step"` (current), `disabled`; `.wizard-footer` for Back / Next |
@@ -91,13 +91,21 @@ Iconography: inline SVG, 24-unit grid, 1.75 stroke, round caps — the same cons
 | Row button (template, library, piece) | `.row-btn` with `.glyph` `.sub` `.chev`                                                                                                  | hover, `on` / `aria-pressed` / `aria-current` (primary border + soft fill)                                                                                   |
 | Alert                                 | `.alert.error` / `.warning` / `.info` / `.ok`                                                                                            | icon + text; used inline, in tabs, in lists                                                                                                                  |
 | Badge                                 | `.badge.error` / `.warning` / `.neutral`                                                                                                 | —                                                                                                                                                            |
-| Tabs                                  | `.tabs`                                                                                                                                  | on (primary underline), hover, focus-visible; horizontal scroll on narrow                                                                                    |
+| Tabs                                  | `.tabs`                                                                                                                                  | on (primary underline), hover, focus-visible; `--control-h` tall; the five result tabs fit one row at 390 px ("Shopping")                                    |
 | Status                                | `.status.saving` / `.saved` / `.failed`                                                                                                  | dot (pulse while saving), text, failed always visible                                                                                                        |
 | Empty / loading                       | `.empty` (+ `.ok`, `.center`), `.loading`                                                                                                | icon or spinner                                                                                                                                              |
 | Table                                 | `table.cut`                                                                                                                              | sticky head (desktop), row hover / `on` (accent-soft), focus ring                                                                                            |
 | Menu                                  | `.menu` (details)                                                                                                                        | open, hover, Escape, outside click                                                                                                                           |
 | Dialog                                | `Dialog` with `footer` → `.dialog`, `.dialog-body`, `.dialog-footer`                                                                     | open animation (not under reduced motion), backdrop, Escape, close button                                                                                    |
 | Toast                                 | `.toast`                                                                                                                                 | update prompt                                                                                                                                                |
+
+**Control rule (ADR-114, 2026-10-27).** One height: `--control-h` (38 px with a mouse, 44 under `pointer: coarse`) for
+buttons, fields, segmented controls, steppers and tabs; `--control-h-sm` (30 px, 44 with touch) only in toolbars and
+tables (`.btn.sm` takes it there and `--control-h` elsewhere). Labels never wrap: `white-space: nowrap` and an
+ellipsis, with the full text in `title` when cut (`src/ui/cutTitle.ts`). Button rows (`.split-actions`,
+`.arrange-actions`, `.out-actions`, `.run-ask-actions`, `.btn-row`) are a 2-column equal grid; a single action fills
+its row. Icon buttons are square with an `aria-label`. A two-line button (`.btn.stack`) carries a name and a `.sub`
+line. Acceptance: `tools/control-rule/find-it.mjs`.
 
 ## 4. Screens, before → after (screenshots in the session log; same paths at 360 / 390 / 1280 / 1600 px, light and dark)
 
@@ -162,21 +170,22 @@ described above. Audit and wireframes are in `docs/research/2026-10-24-ui-redesi
   dashed outline follows the pointer, snapped as a dragged piece, with "From left … · From back …". Release on
   the plan adds it (one undo step); release elsewhere or Esc adds nothing. A tap on an item keeps "Tap the plan to
   place" and closes the list. × or Esc closes it.
-- _View switch (ADR-081)._ `.segmented.small` _View_ in the stage tools: **Front · 3D · Both** (**Plan · 3D ·
-  Both** in a project). Both splits the stage: side by side, stacked when the stage is taller than wide. 3D and
-  Both are disabled without WebGL (title: _3D preview is not available in this browser_). A mode change resets
-  the view: Both from 1500 px, else 3D in Build & Preview and the drawing in Compose.
-- _Desktop._ The left panel shows Compose. Build is always the right column. Build & Preview turns the centre to
-  3D (Both from 1500 px).
+- _View switch (ADR-081, ADR-144)._ One view container in Compose and Build & Preview, piece and project alike:
+  `.segmented.small` _View_ in the stage tools reads **2D · 3D · Both** at every width, phones included. Both
+  splits the stage: side by side, stacked when the stage is taller than wide. 3D and Both are disabled without
+  WebGL (title: _3D preview is not available in this browser_). The chosen view stays when the mode changes; the
+  default is 2D below 1500 px and Both from 1500 px. On a phone, in both modes, **Fronts**, **Select**, **Move**
+  and **Turn 90°** stay in the row and every other view tool sits behind **Options** (`inOptions`).
+- _Desktop._ The left panel shows Compose. Build is always the right column. The centre shows the chosen view.
 - _Phone._
   - Compose: the drawing fills the screen, with a bottom sheet over the nav. Its peek row reads _Selected: …_ or
     _Tap a space to edit it_; the sheet steps aside while placing or drawing. A piece chosen in a project opens
     the sheet; a space of a single piece does not (N82, user 2026-10-26): the drawing keeps its height with the
     quick counts above the selection, and the peek row opens the editor. Open, the sheet takes at most 40 dvh
     and the quick-counts card hides (the editor has the same counters).
-  - Build & Preview: the View switch and an **Options** menu in one row (Doors and fronts, Exploded 3D, Reset
-    view, Look, Render; N82), 3D (42 vh, mounted only here) over the output tabs; Both stacks the drawing over
-    3D in a 72 vh stage.
+  - Both modes (ADR-144): the View switch, **Doors and fronts** and an **Options** menu in one row (Exploded 3D,
+    Reset view, Look, Render; on the plan, Snap and Clearances), Fronts and Select on the plan. 3D mounts only
+    while 3D or Both is shown; Both stacks the drawing over 3D.
 - _Touch and type (N82)._ Under `pointer: coarse` every control is at least 44 × 44 px (buttons, segmented,
   tabs, counters, fields, menu rows, summaries, breadcrumbs); a mouse keeps `--control-h` 38. No text is set
   below `--fs-xs` (13 px): badges, chips, tags, step meta and the quick-counts card use it. The result tabs

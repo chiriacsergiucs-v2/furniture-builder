@@ -5,7 +5,7 @@
  */
 import { inPlaneAxes } from './geometry';
 import { aabbOf, area2, profileWorld, rotateAbout, type V3 } from './shape';
-import type { Box, FurnitureModel, Material, Panel } from './types';
+import type { Box, FurnitureModel, Material, Panel, PanelShape } from './types';
 
 /** View from the front right, above: azimuth 30°, elevation 25°. */
 const AZ = Math.PI / 6,
@@ -70,8 +70,9 @@ const norm = (v: V3): V3 => {
  * profile's two outline faces and one side face per outline edge.
  */
 function shapedFaces(p: Panel): { shade: number; pts: P[] }[] {
+  // A plain part of a piece at an angle (ADR-121) is drawn as an untilted blank, then turned.
   const b = p.box,
-    s = p.shape!;
+    s: PanelShape = p.shape ?? { kind: 'tilt', axis: 'x', angleDeg: 0, pivot: [0, 0, 0] };
   const all: { n: V3; pts: P[] }[] = [];
   if (s.kind === 'tilt') {
     const x0 = b.x,
@@ -169,6 +170,12 @@ function shapedFaces(p: Panel): { shade: number; pts: P[] }[] {
     // Outline faces last: a visible one is nearer than the part's own side faces (notches included).
     all.push({ n: tn, pts: front }, { n: [-tn[0], -tn[1], -tn[2]], pts: back });
   }
+  const y = b.yaw;
+  if (y)
+    for (const f of all) {
+      f.n = rotateAbout(f.n, 'y', y.deg, [0, 0, 0]);
+      f.pts = f.pts.map((q) => rotateAbout(q as V3, 'y', y.deg, [y.cx, 0, y.cz]));
+    }
   // Normals are outward; keep the faces turned towards the viewer.
   return all
     .filter((f) => f.n[0] * V[0] + f.n[1] * V[1] + f.n[2] * V[2] > 1e-9)
@@ -289,10 +296,41 @@ export function snapshotSvg(model: FurnitureModel, materials: Material[], size =
     const p = panels[i];
     const c = colour.get(p.materialId) ?? '#c8c4bb';
     const edge = tint(c, 0.55);
-    for (const fc of p.shape ? shapedFaces(p) : faces(p.box))
+    for (const fc of p.shape || p.box.yaw ? shapedFaces(p) : faces(p.box))
       out.push(
         `<path d="M${fc.pts.map(pt).join('L')}Z" fill="${tint(c, fc.shade)}" stroke="${edge}"/>`,
       );
   }
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" stroke-width="0.5" stroke-linejoin="round">${out.join('')}</svg>\n`;
+}
+
+/**
+ * A front view of a built model as SVG (ADR-143): each panel's width × height rectangle in its board's colour, back
+ * to front, y up from the floor. No text, so nothing from a shared file can reach the markup.
+ */
+export function frontSvg(model: FurnitureModel, materials: Material[], size = 240): string {
+  const colour = new Map(materials.map((m) => [m.id, m.color]));
+  const boxes = model.panels.map((p) => ({
+    b: aabbOf(p),
+    fill: colour.get(p.materialId) ?? '#c8c2b4',
+  }));
+  if (!boxes.length)
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}"/>\n`;
+  const x0 = Math.min(...boxes.map(({ b }) => b.x)),
+    x1 = Math.max(...boxes.map(({ b }) => b.x + b.w)),
+    y0 = Math.min(...boxes.map(({ b }) => b.y)),
+    y1 = Math.max(...boxes.map(({ b }) => b.y + b.h));
+  const pad = 6;
+  const k = (size - 2 * pad) / Math.max(x1 - x0, y1 - y0, 1);
+  const w = Math.round((x1 - x0) * k + 2 * pad),
+    h = Math.round((y1 - y0) * k + 2 * pad);
+  const safe = (c: string) => (/^#[0-9a-fA-F]{3,8}$/.test(c) ? c : '#c8c2b4');
+  const rects = boxes
+    .sort((a, b) => a.b.z + a.b.d - (b.b.z + b.b.d))
+    .map(
+      ({ b, fill }) =>
+        `<rect x="${(pad + (b.x - x0) * k).toFixed(1)}" y="${(pad + (y1 - b.y - b.h) * k).toFixed(1)}" width="${(b.w * k).toFixed(1)}" height="${(b.h * k).toFixed(1)}" fill="${safe(fill)}" stroke="#22272a" stroke-width="0.8"/>`,
+    )
+    .join('');
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}">${rects}</svg>\n`;
 }

@@ -1,8 +1,8 @@
 import type { Mm, Product } from './types';
 
-/** One outside size of a whole piece that can be changed from its selection (ADR-106). */
+/** One outside size of a whole piece that can be changed from its selection (ADR-106; height ADR-148). */
 export interface SizeField {
-  key: 'width' | 'depth';
+  key: 'width' | 'height' | 'depth';
   label: string;
   value: Mm;
   min: Mm;
@@ -10,8 +10,9 @@ export interface SizeField {
 }
 
 /**
- * The width and depth fields of a whole piece, with the same labels and limits as its Settings editor. A bed's size
- * comes from the mattress, a panel has no depth and a set of loose panels has no outside size, so those are left out.
+ * The width, height and depth fields of a whole piece, with the same labels and limits as its Settings editor. A bed's
+ * size comes from the mattress, a panel has no depth and a set of loose panels has no outside size, so those are left
+ * out.
  */
 export function sizeFields(product: Product): SizeField[] {
   const f = (key: SizeField['key'], label: string, value: Mm, min: Mm, max: Mm): SizeField => ({
@@ -25,11 +26,13 @@ export function sizeFields(product: Product): SizeField[] {
     case 'cabinet':
       return [
         f('width', 'Width', product.params.width, 100, 4000),
+        f('height', 'Height', product.params.height, 100, 3000),
         f('depth', 'Depth', product.params.depth, 100, 1200),
       ];
     case 'desk':
       return [
         f('width', 'Width', product.params.width, 400, 3000),
+        f('height', 'Height', product.params.height, 400, 1200),
         f('depth', 'Depth', product.params.depth, 300, 1200),
       ];
     case 'corner': {
@@ -37,6 +40,7 @@ export function sizeFields(product: Product): SizeField[] {
       const label = v === 'blind' ? 'Width' : v === 'diagonal' ? 'Along each wall' : 'Back wing';
       return [
         f('width', label, product.params.width, 300, 3000),
+        f('height', 'Height', product.params.height, 300, 2500),
         f('depth', 'Depth', product.params.depth, 200, 900),
       ];
     }
@@ -45,10 +49,14 @@ export function sizeFields(product: Product): SizeField[] {
         ? []
         : [
             f('width', 'Width', product.params.width, 200, 4000),
+            f('height', 'Height', product.params.height, 200, 1500),
             f('depth', 'Depth', product.params.depth, 200, 2000),
           ];
     case 'panel':
-      return [f('width', 'Width', product.params.width, 20, 3000)];
+      return [
+        f('width', 'Width', product.params.width, 20, 3000),
+        f('height', 'Height', product.params.height, 50, 3000),
+      ];
     case 'panels':
       return [];
   }

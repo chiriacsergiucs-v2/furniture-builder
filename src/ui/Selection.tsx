@@ -1,8 +1,10 @@
-import { useState } from 'react';
-import { pieceName } from '../core/project';
-import { groupOf, sameIds } from '../core/selection';
+import { useMemo, useState } from 'react';
+import { groupSizeFields, type WidthSplit } from '../core/groupSize';
+import { pieceName, type Project } from '../core/project';
+import { groupOf, sameIds, type Group } from '../core/selection';
 import { useDesign } from '../store/designStore';
 import { askConfirm } from './Confirm';
+import { InfoTip, MmField, Segmented } from './controls';
 import { Icon } from './icons';
 
 /**
@@ -15,6 +17,7 @@ export function SelectionCard() {
   const del = useDesign((s) => s.deleteSelection);
   const dup = useDesign((s) => s.duplicateSelection);
   const turn = useDesign((s) => s.turnSelectionBy);
+  const mirror = useDesign((s) => s.mirrorSelection);
   const group = useDesign((s) => s.groupSelection);
   const ungroup = useDesign((s) => s.ungroup);
   const clear = useDesign((s) => s.selectItem);
@@ -34,12 +37,15 @@ export function SelectionCard() {
       aria-label={`${ids.length} pieces selected${isGroup ? `: ${g!.name}` : ''}`}
     >
       <div className="card-title">
-        <span>{isGroup ? g!.name : 'Selected pieces'}</span>
+        <span className="info-row">
+          <span>{isGroup ? g!.name : 'Selected pieces'}</span>
+          <InfoTip label="About the selected pieces" align="start">
+            These act on all {ids.length}; drag any of them on the plan to move them together.
+            {isGroup && ' The pieces of a group always move together; ungroup to move one alone.'}
+          </InfoTip>
+        </span>
         <span className="chip">{ids.length} pieces</span>
       </div>
-      <p className="hint">
-        These act on all {ids.length}; drag any of them on the plan to move them together.
-      </p>
       <div className="arrange-actions">
         <button
           type="button"
@@ -67,6 +73,17 @@ export function SelectionCard() {
         >
           Turn 90° ↻
         </button>
+        {/* Mirror left–right about the selection's centre (ADR-121); one undo step. */}
+        {pieceIds.length >= 2 && (
+          <button
+            type="button"
+            className="btn outline sm"
+            aria-label="Mirror the selection left to right"
+            onClick={() => say(mirror() || null)}
+          >
+            Mirror
+          </button>
+        )}
         {isGroup ? (
           <button type="button" className="btn outline sm" onClick={() => ungroup(g!.id)}>
             Ungroup
@@ -106,6 +123,8 @@ export function SelectionCard() {
               ['right', 'Right'],
               ['back', 'Back'],
               ['front', 'Front'],
+              ['top', 'Top'],
+              ['bottom', 'Bottom'],
             ] as const
           ).map(([how, label]) => (
             <button
@@ -129,12 +148,63 @@ export function SelectionCard() {
           )}
         </div>
       )}
+      {isGroup && <GroupSize project={project} group={g!} say={say} />}
       {msg.for === key && msg.text && (
         <p className="hint" role="status">
           {msg.text}
         </p>
       )}
     </section>
+  );
+}
+
+/**
+ * The size of a whole group (ADR-148): Width along the wall, shared by the columns Proportionally or Equally; Height
+ * and Depth set on every piece. Each change is one undo step; why nothing changed, or which pieces kept their size,
+ * goes to the card's message.
+ */
+function GroupSize({
+  project,
+  group,
+  say,
+}: {
+  project: Project;
+  group: Group;
+  say: (text: string | null) => void;
+}) {
+  const resize = useDesign((s) => s.resizeGroup);
+  const [split, setSplit] = useState<WidthSplit>('proportional');
+  const fields = useMemo(() => groupSizeFields(project, group.itemIds), [project, group.itemIds]);
+  return (
+    <div className="group-size" role="group" aria-label="Size of the group">
+      <span className="field-label">Size of the group</span>
+      <div className={fields.length === 3 ? 'dims3' : 'dims2'}>
+        {fields.map((f) => (
+          <MmField
+            key={f.key}
+            label={f.label}
+            value={f.value}
+            min={1}
+            max={20000}
+            hint={f.differs ? 'Pieces differ' : undefined}
+            onChange={(v) => say(resize(group.id, f.key, v, split) || null)}
+          />
+        ))}
+      </div>
+      <Segmented<WidthSplit>
+        label="Split width"
+        value={split}
+        options={[
+          {
+            value: 'proportional',
+            label: 'Proportionally',
+            title: 'Each column by its share of the width',
+          },
+          { value: 'equal', label: 'Equally', title: 'The same for each column' },
+        ]}
+        onChange={setSplit}
+      />
+    </div>
   );
 }
 

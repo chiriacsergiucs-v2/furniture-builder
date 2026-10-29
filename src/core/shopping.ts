@@ -94,6 +94,8 @@ export function shoppingList(input: {
   hardware: HardwareItem[];
   sheets: Map<string, number> | null;
   runParts?: RunPart[];
+  /** Sinks over base units (ADR-125): the base's name and the user's cut-out size. */
+  sinks?: { over: string; w: number; d: number }[];
   diagnostics?: Diagnostic[];
   /** Fastener counts from the model and the user's fastener list (ADR-074). */
   fasteners?: { counts: FastenerCount[]; choices: FastenerChoice[] };
@@ -182,6 +184,15 @@ export function shoppingList(input: {
     });
   }
   lines.push(...banding.filter((l) => l.section === 'choose'));
+  // The sink is the user's to choose; only its cut-out is known (ADR-125, ADR-010).
+  for (const sk of input.sinks ?? [])
+    lines.push({
+      section: 'choose',
+      label: 'Sink (your choice)',
+      quantity: 1,
+      unit: 'piece',
+      detail: `cut-out ${sk.w} × ${sk.d} mm in the worktop over ${sk.over}`,
+    });
   for (const rp of input.runParts ?? []) {
     lines.push({
       section: 'run',

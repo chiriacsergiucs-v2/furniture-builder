@@ -87,7 +87,7 @@ for (const width of [1440, 390]) {
   await dlg.getByRole('button', { name: 'Create project' }).click();
   await page.locator('main.work').waitFor({ state: 'visible' });
   for (const q of ['Base cabinet', 'Base cabinet', 'Chest']) await addPiece(q);
-  const planRadio = page.getByRole('radio', { name: 'Plan' });
+  const planRadio = page.getByRole('radio', { name: '2D' });
   if (await planRadio.isVisible().catch(() => false)) await planRadio.click();
   await pieces.nth(2).focus();
   for (let i = 0; i < 5; i++) await page.keyboard.press('Shift+ArrowRight');
@@ -104,7 +104,7 @@ for (const width of [1440, 390]) {
   // 2. Select the three: Select + taps on a phone, Shift-click on a desktop.
   await page.keyboard.press('Escape');
   if (phone) {
-    await click(plan.getByRole('button', { name: 'Select', exact: true }));
+    await click(plan.getByRole('checkbox', { name: 'Select', exact: true }));
     for (const i of [0, 1, 2]) await tap(i);
   } else {
     await tap(0);
@@ -150,7 +150,7 @@ for (const width of [1440, 390]) {
     JSON.stringify(g),
   );
   check(width, 'the drawn gaps are the ones said', text.includes(`${g[0]} · ${g[1]}`), text);
-  if (phone) await click(plan.getByRole('button', { name: 'Select', exact: true }));
+  if (phone) await click(plan.getByRole('checkbox', { name: 'Select', exact: true }));
   await page.keyboard.press('Escape');
 
   // 4. A wall unit dragged over a base unit: the "centre" label.

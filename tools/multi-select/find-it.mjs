@@ -88,7 +88,7 @@ for (const width of [1440, 390]) {
   await dlg.getByRole('button', { name: 'Create project' }).click();
   await page.locator('main.work').waitFor({ state: 'visible' });
   for (const q of ['Base cabinet', 'Base cabinet', 'Chest']) await addPiece(q);
-  const planRadio = page.getByRole('radio', { name: 'Plan' });
+  const planRadio = page.getByRole('radio', { name: '2D' });
   if (await planRadio.isVisible().catch(() => false)) await planRadio.click();
   check(width, 'three pieces on the plan', (await pieces.count()) === 3, `${await pieces.count()}`);
 
@@ -181,12 +181,12 @@ for (const width of [1440, 390]) {
     check(width, 'Ctrl+A selects every piece', (await pressed()).every(Boolean));
   } else {
     // 5. Phone: Select → tap two pieces → Delete → Undo brings them back.
-    const sel = plan.getByRole('button', { name: 'Select', exact: true });
-    check(width, 'a "Select" button is on the plan', await sel.isVisible());
+    const sel = plan.getByRole('checkbox', { name: 'Select', exact: true });
+    check(width, 'a "Select" checkbox is on the plan', await sel.isVisible());
     // The piece added last is selected: start from nothing selected (Esc).
     await page.keyboard.press('Escape');
     await click(sel);
-    check(width, 'Select turns on', (await sel.getAttribute('aria-pressed')) === 'true');
+    check(width, 'Select turns on', await sel.isChecked());
     await tap(0);
     await tap(2);
     const p = await pressed();

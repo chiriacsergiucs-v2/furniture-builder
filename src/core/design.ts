@@ -504,6 +504,12 @@ export function parentOf(root: Space, id: string): Space | undefined {
   return undefined;
 }
 
+/** True when a space around `id` (not the space itself) has a front: the space is inside those doors. */
+export function insideDoors(root: Space, id: string): boolean {
+  for (let p = parentOf(root, id); p; p = parentOf(root, p.id)) if (p.front) return true;
+  return false;
+}
+
 export function mapSpace(root: Space, id: string, fn: (s: Space) => Space): Space {
   if (root.id === id) return fn(root);
   if (root.kind === 'split') {

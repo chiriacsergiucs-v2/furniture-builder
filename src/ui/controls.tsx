@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { Icon } from './icons';
 
 /** Whole-millimetre input. Commits on blur or Enter so typing "1" on the way to "1200" never rebuilds a 1 mm cabinet. */
@@ -11,6 +11,8 @@ export function MmField({
   step = 10,
   unit = 'mm',
   hint,
+  info,
+  disabled = false,
 }: {
   label: string;
   value: number;
@@ -20,6 +22,10 @@ export function MmField({
   step?: number;
   unit?: string;
   hint?: string;
+  /** An `InfoTip` shown beside the label (ADR-113). */
+  info?: ReactNode;
+  /** Shown but not changeable (a size-locked piece, ADR-122). */
+  disabled?: boolean;
 }) {
   const id = useId();
   const [text, setText] = useState(String(value));
@@ -38,12 +44,13 @@ export function MmField({
   const bump = (d: number) => onChange(Math.min(max, Math.max(min, value + d)));
   return (
     <div className="field">
-      <label htmlFor={id}>{label}</label>
+      {withInfo(<label htmlFor={id}>{label}</label>, info)}
       <div className={`mm ${valid ? '' : 'invalid'}`}>
         <button
           type="button"
           className="step"
           aria-label={`Decrease ${label}`}
+          disabled={disabled}
           onClick={() => bump(-step)}
         >
           −
@@ -52,6 +59,7 @@ export function MmField({
           id={id}
           inputMode="numeric"
           value={text}
+          disabled={disabled}
           aria-invalid={!valid}
           aria-describedby={!valid ? `${id}-err` : undefined}
           onChange={(e) => setText(e.target.value.replace(/[^\d-]/g, ''))}
@@ -67,6 +75,7 @@ export function MmField({
           type="button"
           className="step"
           aria-label={`Increase ${label}`}
+          disabled={disabled}
           onClick={() => bump(step)}
         >
           +
@@ -87,18 +96,23 @@ export function Segmented<T extends string | number>({
   value,
   options,
   onChange,
+  info,
 }: {
   label: string;
   value: T;
   options: { value: T; label: ReactNode; title?: string }[];
   onChange: (v: T) => void;
+  info?: ReactNode;
 }) {
   const id = useId();
   return (
     <div className="field">
-      <span id={id} className="field-label">
-        {label}
-      </span>
+      {withInfo(
+        <span id={id} className="field-label">
+          {label}
+        </span>,
+        info,
+      )}
       <div className="segmented" role="radiogroup" aria-labelledby={id}>
         {options.map((o) => (
           <button
@@ -123,16 +137,18 @@ export function Select<T extends string>({
   value,
   options,
   onChange,
+  info,
 }: {
   label: string;
   value: T;
   options: { value: T; label: string }[];
   onChange: (v: T) => void;
+  info?: ReactNode;
 }) {
   const id = useId();
   return (
     <div className="field">
-      <label htmlFor={id}>{label}</label>
+      {withInfo(<label htmlFor={id}>{label}</label>, info)}
       <select id={id} value={value} onChange={(e) => onChange(e.target.value as T)}>
         {options.map((o) => (
           <option key={o.value} value={o.value}>
@@ -148,16 +164,27 @@ export function Toggle({
   label,
   checked,
   onChange,
+  info,
+  name,
 }: {
   label: string;
   checked: boolean;
   onChange: (v: boolean) => void;
+  info?: ReactNode;
+  /** The accessible name when the visible label is shortened (ADR-112). */
+  name?: string;
 }) {
-  return (
+  return withInfo(
     <label className="toggle">
-      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      <input
+        type="checkbox"
+        aria-label={name}
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+      />
       <span>{label}</span>
-    </label>
+    </label>,
+    info,
   );
 }
 
@@ -167,16 +194,18 @@ export function Counter({
   min,
   max,
   onChange,
+  info,
 }: {
   label: string;
   value: number;
   min: number;
   max: number;
   onChange: (v: number) => void;
+  info?: ReactNode;
 }) {
   return (
     <div className="field">
-      <span className="field-label">{label}</span>
+      {withInfo(<span className="field-label">{label}</span>, info)}
       <div className="counter">
         <button
           type="button"
@@ -200,26 +229,45 @@ export function Counter({
   );
 }
 
-/** Collapsible section. `id` lets the steps rail open and scroll to it. */
+/**
+ * Collapsible section. `id` lets the steps rail open and scroll to it. `openOn`: while it is non-empty the group
+ * opens itself, and again whenever it changes (an error it holds is never left folded away, ADR-008, ADR-117).
+ */
 export function Group({
   title,
   children,
   defaultOpen = true,
   id,
+  info,
+  openOn,
 }: {
   title: string;
   children: ReactNode;
   defaultOpen?: boolean;
   id?: string;
+  /** An `InfoTip` on the title row (ADR-113); it sits beside the summary, never inside it. */
+  info?: ReactNode;
+  openOn?: string;
 }) {
-  return (
-    <details className="group" open={defaultOpen} id={id}>
+  const ref = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    if (openOn && ref.current) ref.current.open = true;
+  }, [openOn]);
+  const group = (
+    <details ref={ref} className="group" open={defaultOpen} id={id}>
       <summary>
         {title}
         <Icon name="chevron-down" className="chev" />
       </summary>
       <div className="group-body">{children}</div>
     </details>
+  );
+  if (!info) return group;
+  return (
+    <div className="group-wrap">
+      {group}
+      {info}
+    </div>
   );
 }
 
@@ -239,15 +287,25 @@ export function Section({
   title,
   children,
   aside,
+  info,
 }: {
   title: string;
   children: ReactNode;
   aside?: ReactNode;
+  /** An `InfoTip` right after the title (ADR-113). */
+  info?: ReactNode;
 }) {
   return (
     <section className="section" aria-label={title}>
       <div className="card-title">
-        <span>{title}</span>
+        {info ? (
+          <span className="info-row">
+            <span>{title}</span>
+            {info}
+          </span>
+        ) : (
+          <span>{title}</span>
+        )}
         {aside}
       </div>
       {children}
@@ -300,13 +358,42 @@ export function Steps({
   );
 }
 
+/** A label or title with its info button right after it (ADR-113); just the label when there is none. */
+function withInfo(label: ReactNode, info: ReactNode) {
+  if (!info) return label;
+  return (
+    <div className="label-row">
+      {label}
+      {info}
+    </div>
+  );
+}
+
+/** Space kept between an open popover and the screen edge. */
+const POP_MARGIN = 16;
+
 /**
  * An info button whose text opens over the content (ADR-080): on hover or keyboard focus with a mouse, on tap with
  * touch. A tap outside, a second tap or Esc closes it. The text is in the page only while open.
+ *
+ * ADR-113: `align="start"` opens it from the button's left edge (for a button beside a heading on the left); either
+ * way it is moved back inside the screen if it would run off an edge. Esc closes only the popover, never the dialog
+ * or the selection under it, and focus stays on (or returns to) the button.
  */
-export function InfoTip({ label, children }: { label: string; children: ReactNode }) {
+export function InfoTip({
+  label,
+  children,
+  align = 'end',
+}: {
+  label: string;
+  children: ReactNode;
+  align?: 'start' | 'end';
+}) {
   const id = useId();
   const ref = useRef<HTMLSpanElement>(null);
+  const btn = useRef<HTMLButtonElement>(null);
+  const pop = useRef<HTMLSpanElement>(null);
+  const quietFocus = useRef(false);
   const [pinned, setPinned] = useState(false);
   const [hover, setHover] = useState(false);
   const shown = pinned || hover;
@@ -319,24 +406,50 @@ export function InfoTip({ label, children }: { label: string; children: ReactNod
     const onDown = (e: PointerEvent) => {
       if (!ref.current?.contains(e.target as Node)) close();
     };
+    // Capture phase: runs before a dialog's or the editor's own Esc handling, which then never sees this key.
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') close();
+      if (e.key !== 'Escape') return;
+      e.preventDefault();
+      e.stopPropagation();
+      close();
+      const at = document.activeElement;
+      if (!at || at === document.body || ref.current?.contains(at)) {
+        quietFocus.current = true;
+        btn.current?.focus();
+        quietFocus.current = false;
+      }
     };
+    // A modal dialog's own close request on Esc while the popover is open: the dialog stays open.
+    const onCancel = (e: Event) => e.preventDefault();
     document.addEventListener('pointerdown', onDown);
-    document.addEventListener('keydown', onKey);
+    document.addEventListener('keydown', onKey, true);
+    document.addEventListener('cancel', onCancel, true);
     return () => {
       document.removeEventListener('pointerdown', onDown);
-      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('keydown', onKey, true);
+      document.removeEventListener('cancel', onCancel, true);
     };
+  }, [shown]);
+  useLayoutEffect(() => {
+    const el = pop.current;
+    if (!shown || !el) return;
+    el.style.translate = '';
+    const r = el.getBoundingClientRect();
+    const vw = document.documentElement.clientWidth || window.innerWidth;
+    let dx = 0;
+    if (r.right > vw - POP_MARGIN) dx = vw - POP_MARGIN - r.right;
+    if (r.left + dx < POP_MARGIN) dx = POP_MARGIN - r.left;
+    if (dx) el.style.translate = `${Math.round(dx)}px 0`;
   }, [shown]);
   return (
     <span
-      className="info-tip"
+      className={`info-tip ${shown ? 'open' : ''}`}
       ref={ref}
       onPointerEnter={(e) => e.pointerType === 'mouse' && setHover(true)}
       onPointerLeave={(e) => e.pointerType === 'mouse' && setHover(false)}
     >
       <button
+        ref={btn}
         type="button"
         className="btn icon ghost sm info-btn"
         aria-label={label}
@@ -344,16 +457,39 @@ export function InfoTip({ label, children }: { label: string; children: ReactNod
         aria-controls={shown ? id : undefined}
         onClick={() => setPinned((p) => !(p || hover))}
         // Keyboard focus only: a tap also focuses the button, and the tap itself toggles.
-        onFocus={(e) => e.currentTarget.matches(':focus-visible') && setHover(true)}
+        onFocus={(e) => {
+          if (!quietFocus.current && e.currentTarget.matches(':focus-visible')) setHover(true);
+        }}
         onBlur={() => setHover(false)}
       >
         <Icon name="info" className="sm" />
       </button>
       {shown && (
-        <span id={id} role="note" className="info-pop">
+        <span id={id} ref={pop} role="note" className={`info-pop ${align}`}>
           {children}
         </span>
       )}
     </span>
+  );
+}
+
+/**
+ * ADR-010 guidance behind an info button (ADR-113): named "Guidance: <topic>", and its text starts with "Guidance", so
+ * it stays labelled as guidance, one tap away.
+ */
+export function GuidanceTip({
+  topic,
+  children,
+  align = 'start',
+}: {
+  topic: string;
+  children: ReactNode;
+  align?: 'start' | 'end';
+}) {
+  return (
+    <InfoTip label={`Guidance: ${topic}`} align={align}>
+      <span className="info-lead">Guidance</span>
+      {children}
+    </InfoTip>
   );
 }

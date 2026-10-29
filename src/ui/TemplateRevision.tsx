@@ -83,15 +83,18 @@ export function TemplateNotice({ item }: { item: ProjectItem }) {
     if (
       designEdited(item.design) &&
       !(await askConfirm(
-        `“${item.design.name}” was edited after it was added. Replacing it with revision ${status.latest} replaces those edits; position, turn, quantity, placement, zones and boards stay.`,
+        `“${item.design.name}” was edited after it was added. Its own changes go onto revision ${status.latest} where it has the same setting; the result lists what was kept and what was not. Position, turn, quantity, placement, zones and boards stay.`,
         { confirmLabel: 'Replace' },
       ))
     )
       return;
     const d = insertVariant(source.family, source.variant);
     if (!d) return;
-    const report = useDesign.getState().replaceItem(item.id, d);
+    const report = useDesign.getState().replaceItem(item.id, d, { families, keepSize: true });
     if (report) useUi.getState().setNotice({ ok: !report.problems.length, text: report.text });
+    // Refused (a size-locked piece, ADR-122): say why.
+    else if (useDesign.getState().notice)
+      useUi.getState().setNotice({ ok: false, text: useDesign.getState().notice! });
   };
   return (
     <div className="alert info template-notice" role="status">

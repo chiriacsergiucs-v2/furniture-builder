@@ -91,7 +91,7 @@ describe('project templates (ADR-060)', () => {
     expect(projectFromTemplate(withRoom).items[0].position.x).toBe(p.items[0].position.x);
   });
   it('stored in Dexie v7 next to everything else; an unreadable row is skipped and kept', async () => {
-    expect(db.verno).toBe(9);
+    expect(db.verno).toBe(11);
     const tpl = templateFromProject(kitchen(), 'Stored');
     await saveProjectTemplate(tpl);
     await db.projectTemplates.put({
@@ -127,7 +127,7 @@ describe('project templates (ADR-060)', () => {
     ) => typeof db;
     const nw = new Fresh(name);
     await nw.open();
-    expect(nw.verno).toBe(9);
+    expect(nw.verno).toBe(11);
     expect(await nw.decors.get('x')).toBeDefined();
     expect(await nw.prices.count()).toBe(0);
     nw.close();

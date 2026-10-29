@@ -27,6 +27,16 @@ for (const width of [1440, 375]) {
     isMobile: phone,
   });
   const page = await ctx.newPage();
+  // ADR-117: the selected piece's Position, Clearance, Finish and Merge are folded groups: open one by its title
+  // (when it is on screen; a phone's closed sheet hides the whole card, which is read as before).
+  const openGroup = async (title) => {
+    const s = page
+      .locator('details.group > summary')
+      .filter({ hasText: new RegExp(`^${title}$`) })
+      .first();
+    if ((await s.isVisible()) && !(await s.evaluate((el) => el.parentElement.open)))
+      await s.click({ timeout: 5000 });
+  };
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => {
@@ -69,6 +79,8 @@ for (const width of [1440, 375]) {
   const field = (label) => page.getByLabel(label, { exact: true }).first();
   const type = async (label, v) => {
     await openSheet();
+    await openGroup('Position');
+    await openGroup('Clearance');
     const f = field(label);
     await f.scrollIntoViewIfNeeded();
     await f.fill(String(v));
@@ -96,7 +108,7 @@ for (const width of [1440, 375]) {
         .catch(() => false)
     )
       await click(mode('Compose'));
-    const planRadio = page.getByRole('radio', { name: 'Plan' });
+    const planRadio = page.getByRole('radio', { name: '2D' });
     if (await planRadio.isVisible().catch(() => false)) await planRadio.click();
   };
   const checksText = async () => {
@@ -129,6 +141,7 @@ for (const width of [1440, 375]) {
 
   // 2. Chair space depth: empty until the user types it (no default), then a chair zone on the overlay.
   await openSheet();
+  await openGroup('Clearance');
   const chair = field('Chair space depth');
   check(
     width,
@@ -181,6 +194,7 @@ for (const width of [1440, 375]) {
   // 3b. A service zone behind the chest, sized by the user: it reaches into the desk, so it is a warning.
   await pick(chest);
   await openSheet();
+  await openGroup('Clearance');
   await click(
     page.getByRole('radiogroup', { name: 'Service zone' }).getByRole('radio', { name: 'Back' }),
   );
@@ -247,6 +261,7 @@ for (const width of [1440, 375]) {
   );
   await pick(wardrobe);
   await openSheet();
+  await openGroup('Clearance');
   await click(page.getByRole('checkbox', { name: 'Assembled lying down', exact: true }));
   const te = await checksText();
   check(

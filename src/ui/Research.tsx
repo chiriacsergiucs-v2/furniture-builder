@@ -127,7 +127,7 @@ export function ResearchPage({
           </p>
         </div>
         <button type="button" className="btn outline" onClick={onDone}>
-          <Icon name="chevron-right" className="sm" />
+          <Icon name="chevron-left" className="sm" />
           Back to the editor
         </button>
       </header>
@@ -267,7 +267,7 @@ function AppSummary({ ctx }: { ctx: Ctx }) {
       <p className="alert ok">
         <Icon name="check" className="sm" />
         <span>
-          Features the app has built are no longer listed (ADR-111). Of the {shown.length} left
+          Features the app has built are no longer listed (ADR-149). Of the {shown.length} left
           (after {all.length - shown.length} merged as the same idea):{' '}
           <button
             type="button"

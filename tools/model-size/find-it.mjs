@@ -130,7 +130,7 @@ for (const width of widths) {
   };
   const compose = async () => {
     await page.getByRole('radio', { name: /Compose/ }).click();
-    const r = page.getByRole('radio', { name: 'Plan' });
+    const r = page.getByRole('radio', { name: '2D' });
     if (await r.isVisible().catch(() => false)) await r.click();
     await page.waitForTimeout(200);
     await panel();

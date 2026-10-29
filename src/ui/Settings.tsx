@@ -1,10 +1,12 @@
 import { useDesign } from '../store/designStore';
+import { InfoTip } from './controls';
 import { Dialog, MaterialsPanel } from './Dialogs';
 import { FastenersPanel } from './Fasteners';
 import { Inspector } from './Inspector';
 import { ProjectPanel } from './Project';
 import { Icon } from './icons';
 import { useUi } from './shell/uiStore';
+import { SavedDataPanel } from './SavedData';
 
 /**
  * Settings (ADR-080): everything that was the Configure mode (ADR-079), in a dialog. A project shows what applies
@@ -25,6 +27,13 @@ export function SettingsDialog({ onWizard }: { onWizard: () => void }) {
       open={open}
       onClose={close}
       title={`Settings: ${name}`}
+      info={
+        inProject ? (
+          <InfoTip label="About project settings" align="start">
+            These apply to every piece in {name}.
+          </InfoTip>
+        ) : undefined
+      }
       wide
       footer={
         <button type="button" className="btn primary" onClick={close}>
@@ -61,6 +70,10 @@ export function SettingsDialog({ onWizard }: { onWizard: () => void }) {
               </div>
             </>
           )}
+          {/* This device's saved data and backup (ADR-133), the same in every Settings. */}
+          <div className="inspector">
+            <SavedDataPanel />
+          </div>
         </div>
       )}
     </Dialog>

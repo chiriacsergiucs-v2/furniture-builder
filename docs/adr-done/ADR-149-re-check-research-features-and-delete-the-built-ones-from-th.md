@@ -1,4 +1,4 @@
-# ADR-111: Re-check research features and delete the built ones from the data
+# ADR-149: Re-check research features and delete the built ones from the data
 
 - Status: Implemented
 - Date: 2026-10-27
@@ -6,7 +6,7 @@
 - Depends on: ADR-043, ADR-092, ADR-110
 - Design: n/a
 - Acceptance: browser
-- Backlog: N109
+- Backlog: N150
 - Agreed: 2026-10-27 "Re-validate, remove implemented ones"; answers "Research features", "Delete from the data", "Apply all", "Verified + Implemented", "Become top-level", "Keep for what's left"
 
 ## Context

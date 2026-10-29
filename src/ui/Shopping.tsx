@@ -19,9 +19,11 @@ import {
   type ShopSection,
   type ShopUnit,
 } from '../core/shopping';
+import { sinkList } from '../core/project';
 import { listPrices, savePrice, savePrices } from '../persist/db';
 import { useDesign } from '../store/designStore';
 import { useFastenerChoices, useFastenerCounts } from './Fasteners';
+import { GuidanceTip, InfoTip } from './controls';
 import { Icon } from './icons';
 import { useNesting } from './useNesting';
 import { useView } from './useView';
@@ -56,6 +58,8 @@ export function ShoppingList() {
   const runParts = useDesign((s) =>
     s.project && !s.editingItemId ? s.project.runParts : undefined,
   );
+  const shownProject = useDesign((s) => (s.project && !s.editingItemId ? s.project : undefined));
+  const sinks = useMemo(() => (shownProject ? sinkList(shownProject) : []), [shownProject]);
   const n = useNesting(true);
   const fastenerCounts = useFastenerCounts();
   const fastenerChoices = useFastenerChoices();
@@ -82,10 +86,11 @@ export function ShoppingList() {
         hardware: view.hardware,
         sheets,
         runParts,
+        sinks,
         diagnostics: view.diagnostics,
         fasteners: { counts: fastenerCounts, choices: fastenerChoices },
       }),
-    [view, sheets, runParts, fastenerCounts, fastenerChoices],
+    [view, sheets, runParts, sinks, fastenerCounts, fastenerChoices],
   );
   const map = useMemo(() => new Map(prices.map((p) => [p.id, p])), [prices]);
   const currency = map.get(CURRENCY_ID)?.text ?? DEFAULT_CURRENCY;
@@ -141,21 +146,26 @@ export function ShoppingList() {
           </span>
         </p>
       )}
-      <p className="estimate" role="status">
-        <strong>
-          Estimate: {formatMoney(est.total)} {currency}
-        </strong>
-        {est.missing.length ? (
-          <span className="warn">
-            {' '}
-            — {est.missing.length} {est.missing.length === 1 ? 'price' : 'prices'} missing
-            (incomplete)
-          </span>
-        ) : est.priced ? (
-          <span> — every line priced</span>
-        ) : null}
-        <span className="hint"> · your prices, saved on this device</span>
-      </p>
+      <div className="info-row">
+        <p className="estimate" role="status">
+          <strong>
+            Estimate: {formatMoney(est.total)} {currency}
+          </strong>
+          {est.missing.length ? (
+            <span className="warn">
+              {' '}
+              — {est.missing.length} {est.missing.length === 1 ? 'price' : 'prices'} missing
+              (incomplete)
+            </span>
+          ) : est.priced ? (
+            <span> — every line priced</span>
+          ) : null}
+        </p>
+        <InfoTip label="About the estimate">Your prices, saved on this device.</InfoTip>
+        <GuidanceTip topic="what is not counted" align="end">
+          {NOT_COUNTED}
+        </GuidanceTip>
+      </div>
       <div className="split-actions">
         <button
           type="button"
@@ -265,7 +275,6 @@ export function ShoppingList() {
           </section>
         );
       })}
-      <p className="hint">{NOT_COUNTED}</p>
     </div>
   );
 }

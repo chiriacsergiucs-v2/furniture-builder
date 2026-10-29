@@ -1,4 +1,13 @@
-import { useEffect, useMemo, useState, type HTMLAttributes, type ReactNode } from 'react';
+import {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type HTMLAttributes,
+  type ReactNode,
+} from 'react';
 import { buildModel } from '../core/build';
 import { PHONE, useMediaQuery } from './useMediaQuery';
 import { snapshotSvg } from '../core/snapshot';
@@ -36,7 +45,9 @@ import { useDesign } from '../store/designStore';
 import { useTemplates } from '../store/templatesStore';
 import { ProjectTemplateList } from './ProjectTemplates';
 import { askConfirm, askText } from './Confirm';
+import { InfoTip } from './controls';
 import { Icon } from './icons';
+import { AccountBadge, AccountRowActions } from './Account';
 import { familyGlyph, templateGlyph } from './Templates';
 
 export type Grouping = 'room' | 'type';
@@ -122,26 +133,37 @@ export function groupFamilies(families: ViewFamily[], by: Grouping): Group[] {
 
 const itemCount = (g: Group) => g.items.reduce((n, i) => n + i.family.variants.length, 0);
 
-function GroupToggle({ value, onChange }: { value: Grouping; onChange: (g: Grouping) => void }) {
+/** `short`: the phone catalog's one switches row (ADR-118) shows "Room" / "Type"; the names stay "By room" / "By type". */
+function GroupToggle({
+  value,
+  onChange,
+  short,
+}: {
+  value: Grouping;
+  onChange: (g: Grouping) => void;
+  short?: boolean;
+}) {
   return (
     <div className="segmented small" role="radiogroup" aria-label="Group by">
       <button
         type="button"
         role="radio"
         aria-checked={value === 'room'}
+        aria-label={short ? 'By room' : undefined}
         className={value === 'room' ? 'on' : ''}
         onClick={() => onChange('room')}
       >
-        By room
+        {short ? 'Room' : 'By room'}
       </button>
       <button
         type="button"
         role="radio"
         aria-checked={value === 'type'}
+        aria-label={short ? 'By type' : undefined}
         className={value === 'type' ? 'on' : ''}
         onClick={() => onChange('type')}
       >
-        By type
+        {short ? 'Type' : 'By type'}
       </button>
     </div>
   );
@@ -201,7 +223,7 @@ export function StartFrom({
   return (
     <div className="start-from">
       <div className="start-head">
-        <h3 className="list-head">
+        <h3>
           Start from <span className="count">{total} ready items</span>
         </h3>
         <GroupToggle value={grouping} onChange={setGrouping} />
@@ -229,7 +251,7 @@ export function StartFrom({
         if (!rows.length) return null;
         return (
           <section key={g.key} className="start-group" aria-label={g.label}>
-            <h4>
+            <h4 className="list-head">
               {g.label} <span className="count">{rows.length}</span>
             </h4>
             <ul className="template-list template-grid">
@@ -249,10 +271,13 @@ export function StartFrom({
                       <strong>
                         {f.name}: {v.name}
                       </strong>
-                      <span className="sub">
-                        {v.summary}
-                        {VARIANT_RO[v.id] ? ` · ${f.nameRo}: ${VARIANT_RO[v.id]}` : ''}
-                      </span>
+                      <span className="sub">{v.summary}</span>
+                      {/* The Romanian name on its own line, not inside the English text (ADR-120). */}
+                      {VARIANT_RO[v.id] && (
+                        <span className="sub ro-line" lang="ro">
+                          RO: {f.nameRo}: {VARIANT_RO[v.id]}
+                        </span>
+                      )}
                     </span>
                     <Icon name="chevron-right" className="chev sm" />
                   </button>
@@ -291,9 +316,12 @@ type Source = 'templates' | 'saved' | 'brands';
 export function CatalogPage({
   onDone,
   onNewPiece,
+  designOpen = true,
 }: {
   onDone: () => void;
   onNewPiece?: () => void;
+  /** Whether a design or project is open, so "Back to the editor" has somewhere to go (ADR-120). */
+  designOpen?: boolean;
 }) {
   const families = useCatalog();
   const phone = useMediaQuery(PHONE);
@@ -319,6 +347,41 @@ export function CatalogPage({
   const groups = useMemo(() => groupFamilies(shown, grouping), [shown, grouping]);
   const all = families.flatMap((f) => f.variants);
   const ready = all.filter(insertable).length;
+  const sources = (
+    <div className="segmented small" role="tablist" aria-label="Source">
+      {(['templates', 'saved', 'brands'] as const).map((s) => (
+        <button
+          key={s}
+          type="button"
+          role="tab"
+          aria-selected={source === s}
+          aria-label={phone && s === 'saved' ? 'Saved on this device' : undefined}
+          className={source === s ? 'on' : ''}
+          onClick={() => setSource(s)}
+        >
+          {s === 'templates'
+            ? 'Templates'
+            : s === 'saved'
+              ? phone
+                ? 'Saved'
+                : 'Saved on this device'
+              : 'Brands'}
+        </button>
+      ))}
+    </div>
+  );
+  const search = (
+    <label className="search">
+      <Icon name="search" className="sm" />
+      <input
+        type="search"
+        placeholder="Search, e.g. wardrobe, dulap, bed"
+        aria-label="Search the catalog"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+      />
+    </label>
+  );
   const startEdit = (f: ViewFamily) => {
     const local = f.localId
       ? useTemplates.getState().locals.find((t) => t.id === f.localId)
@@ -375,13 +438,17 @@ export function CatalogPage({
     <main className="catalog-page" aria-label="Catalog">
       <header className="catalog-head">
         <div>
-          <h1>Catalog</h1>
+          <div className="info-row">
+            <h1>Catalog</h1>
+            <InfoTip label="About the catalog" align="start">
+              {toProject
+                ? 'Pick one to add it to the open project.'
+                : 'Pick one to open your own copy in the editor.'}
+            </InfoTip>
+          </div>
           <p className="hint">
             <strong className="num">{all.length} items</strong> in {families.length} families ·{' '}
-            {ready} open right away.{' '}
-            {toProject
-              ? 'Pick one to add it to the open project.'
-              : 'Pick one to open your own copy in the editor.'}
+            {ready} open right away.
           </p>
         </div>
         <div className="split-actions">
@@ -391,55 +458,40 @@ export function CatalogPage({
               New piece
             </button>
           )}
-          <button type="button" className="btn outline" onClick={onDone}>
-            <Icon name="chevron-right" className="sm" />
-            Back to the editor
-          </button>
+          {/* Only when there is a design to go back to (ADR-120). */}
+          {designOpen && (
+            <button type="button" className="btn outline" onClick={onDone}>
+              <Icon name="chevron-left" className="sm" />
+              Back to the editor
+            </button>
+          )}
         </div>
       </header>
-      <div className="catalog-toolbar">
-        <div className="segmented small" role="tablist" aria-label="Source">
-          {(['templates', 'saved', 'brands'] as const).map((s) => (
-            <button
-              key={s}
-              type="button"
-              role="tab"
-              aria-selected={source === s}
-              className={source === s ? 'on' : ''}
-              onClick={() => setSource(s)}
-            >
-              {s === 'templates' ? 'Templates' : s === 'saved' ? 'Saved on this device' : 'Brands'}
-            </button>
-          ))}
-        </div>
+      {/* Source and grouping share one row that scrolls away; only the search row stays (ADR-118 on a phone, ADR-119
+          at every width). A phone shows the short labels. */}
+      <div className="catalog-switches">
+        {sources}
         {source === 'templates' && (
-          <>
-            <GroupToggle value={grouping} onChange={setGrouping} />
-            <label className="search">
-              <Icon name="search" className="sm" />
-              <input
-                type="search"
-                placeholder="Search, e.g. wardrobe, dulap, bed"
-                aria-label="Search the catalog"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-              />
-            </label>
-          </>
+          <GroupToggle value={grouping} onChange={setGrouping} short={phone} />
         )}
       </div>
+      {source === 'templates' && <div className="catalog-toolbar">{search}</div>}
       {source === 'templates' && (
         <CatalogActions phone={phone}>
-          <label className="toggle small">
-            <input
-              type="checkbox"
-              checked={safety}
-              onChange={(e) => toggleSafety(e.target.checked)}
-            />
-            <span>
-              I check safety-regulated items (bunk bed, cradle) against the standards myself
-            </span>
-          </label>
+          <span className="info-row">
+            <label className="toggle small">
+              <input
+                type="checkbox"
+                checked={safety}
+                onChange={(e) => toggleSafety(e.target.checked)}
+              />
+              <span>I check safety-regulated items myself</span>
+            </label>
+            <InfoTip label="About safety-regulated items" align="start">
+              Safety-regulated items (bunk bed, cradle): you check them against the standards
+              yourself.
+            </InfoTip>
+          </span>
           <SaveAsTemplate />
           <details className="menu catalog-files">
             <summary aria-label="Template files" title="Export or import your own templates">
@@ -633,7 +685,131 @@ const SUPPORT_TEXT = {
   reference: 'Reference',
 } as const;
 
-/** One family: its default structure and what can be changed, then every item (variant) as its own card. */
+/** "1600 × 450 × 438 mm · 9 parts · 2 to check": an item's size, parts and checks in one line. */
+const factsLine = (fx: NonNullable<ReturnType<typeof itemFacts>>) =>
+  `${fx.w} × ${fx.h} × ${fx.d} mm · ${fx.parts} parts${
+    fx.errors ? ` · ${fx.errors} problems` : fx.warnings ? ` · ${fx.warnings} to check` : ''
+  }`;
+
+/** The lines of a compact item card that end in an ellipsis when they do not fit (ADR-118). */
+const CARD_LINES = '.item-name, .sub, .item-meta, .item-meta .num';
+/** Whether any of a card's lines is cut: its text is wider than its box. */
+const cardCut = (card: HTMLElement) =>
+  [...card.querySelectorAll<HTMLElement>(CARD_LINES)].some((el) => el.scrollWidth > el.clientWidth);
+
+/**
+ * One item (variant) as a compact card: picture, name and summary beside Open, then one meta line (ADR-118). When a
+ * line is cut, "More" shows the card's full text in place and "Less" folds it again (ADR-119); it is measured, so it
+ * shows only when something is cut, and measured again when the card changes size.
+ */
+function ItemCard({
+  f,
+  v,
+  isDefault,
+  facts,
+  toProject,
+  onTake,
+}: {
+  f: ViewFamily;
+  v: CatalogVariant;
+  isDefault: boolean;
+  facts: ReturnType<typeof itemFacts> | undefined;
+  toProject: boolean;
+  onTake: (d: Design) => void;
+}) {
+  const ok = insertable(v);
+  const ref = useRef<HTMLLIElement>(null);
+  const [open, setOpen] = useState(false);
+  const [cut, setCut] = useState(false);
+  const nameId = useId();
+  useLayoutEffect(() => {
+    const card = ref.current;
+    if (!card || open) return;
+    const measure = () => setCut(cardCut(card));
+    measure();
+    // Text widths change once the web font has loaded, without the card changing size (ADR-120's RO line).
+    void document.fonts?.ready.then(measure);
+    if (typeof ResizeObserver === 'undefined') return;
+    const watch = new ResizeObserver(measure);
+    watch.observe(card);
+    return () => watch.disconnect();
+  }, [open]);
+  return (
+    <li ref={ref} className={`item compact ${ok ? '' : 'waits'} ${open ? 'open' : ''}`}>
+      {ok && (
+        <ItemPicture
+          f={f}
+          v={v}
+          className="snap"
+          width={96}
+          height={60}
+          alt={`${f.name}: ${v.name}, 3D view`}
+        />
+      )}
+      <div className="item-text">
+        <span className="item-name" id={nameId}>
+          <strong>{v.name}</strong>
+        </span>
+        <span className="summary-row">
+          <span className="sub summary">{v.summary}</span>
+          {(cut || open) && (
+            <button
+              type="button"
+              className="btn sm ghost item-more"
+              aria-expanded={open}
+              aria-describedby={nameId}
+              onClick={() => setOpen(!open)}
+            >
+              {open ? 'Less' : 'More'}
+            </button>
+          )}
+        </span>
+        <span className="item-meta">
+          {isDefault && <span className="tag subtle">default</span>}
+          <span
+            className={`kind ${v.kind}`}
+            title={
+              v.kind === 'interior'
+                ? 'Interior-only: built on an existing product'
+                : 'Needed new construction'
+            }
+          >
+            {v.kind === 'interior' ? 'Interior only' : 'New construction'}
+          </span>
+          {facts && <span className="num">{factsLine(facts)}</span>}
+        </span>
+        {/* The Romanian name on its own line, not inside the English summary (ADR-120). */}
+        {VARIANT_RO[v.id] && (
+          <span className="sub ro-line" lang="ro">
+            RO: {VARIANT_RO[v.id]}
+          </span>
+        )}
+        {v.hardware && <span className="sub">You choose: {v.hardware}</span>}
+        {!ok && (
+          <span className="sub waits-why">
+            Not available yet: {waitsFor(v.requires) || 'no design'}
+          </span>
+        )}
+      </div>
+      <button
+        type="button"
+        className="btn sm outline"
+        disabled={!ok}
+        onClick={() => {
+          const d = insertVariant(f, v);
+          if (d) onTake(d);
+        }}
+      >
+        {toProject ? 'Add' : 'Open'}
+      </button>
+    </li>
+  );
+}
+
+/**
+ * One family, then every item (variant) as its own compact card. Its default structure, configurations, rooms and
+ * other names wait behind "About this family" (ADR-118 on a phone, ADR-119 at every width).
+ */
 function FamilyBlock({
   f,
   also,
@@ -652,6 +828,11 @@ function FamilyBlock({
   const remove = useTemplates((s) => s.remove);
   const items = f.variants.filter((v) => matches(f, v, q));
   const facts = useMemo(() => new Map(f.variants.map((v) => [v.id, itemFacts(f, v)])), [f]);
+  const [about, setAbout] = useState(false);
+  const aboutId = useId();
+  const aliases = f.aliases.length > 0 && (
+    <span className="aliases">also called {f.aliases.join(', ')}</span>
+  );
   return (
     <article className={`family support-${f.support}`} aria-label={f.name}>
       <header className="family-head">
@@ -665,109 +846,73 @@ function FamilyBlock({
           <p className="chips">
             <span className={`chip ${f.support}`}>{SUPPORT_TEXT[f.support]}</span>
             <span className="chip">{FUNCTION_LABEL[f.function as FunctionGroup]}</span>
-            {f.rooms.map((r) => (
-              <span key={r} className="chip subtle">
-                {ROOM_LABEL[r as Room]}
-              </span>
-            ))}
             {f.localId && (
               <span className="chip edited">
                 {f.own ? 'Your template' : 'Edited on this device'}
               </span>
             )}
+            {f.localId && <AccountBadge table="templates" id={f.localId} />}
             {also && (
               <span className="chip subtle">main room: {ROOM_LABEL[f.rooms[0] as Room]}</span>
             )}
-            {f.aliases.length > 0 && (
-              <span className="aliases">also called {f.aliases.join(', ')}</span>
-            )}
           </p>
         </div>
-        <button type="button" className="btn sm" onClick={onEdit}>
-          <Icon name="pencil" className="sm" />
-          Edit template
-        </button>
-      </header>
-      <div className="family-body">
-        <p className="structure">
-          <strong>Default structure:</strong> {f.structure}
-        </p>
-        <div className="configs">
-          <strong>Configurations:</strong>
-          <ul>
-            {f.configurations.map((c) => (
-              <li key={c}>{c}</li>
-            ))}
-          </ul>
+        <div className="family-tools">
+          {f.localId && <AccountRowActions table="templates" id={f.localId} name={f.name} />}
+          <button
+            type="button"
+            className="btn sm ghost family-about"
+            aria-expanded={about}
+            aria-controls={aboutId}
+            onClick={() => setAbout(!about)}
+          >
+            About this family
+            <Icon name="chevron-down" className="sm" />
+          </button>
+          <button type="button" className="btn sm" onClick={onEdit}>
+            <Icon name="pencil" className="sm" />
+            Edit template
+          </button>
         </div>
-      </div>
+      </header>
+      {about && (
+        <div className="family-body" id={aboutId}>
+          {(f.rooms.length > 0 || aliases) && (
+            <p className="chips">
+              {f.rooms.map((r) => (
+                <span key={r} className="chip subtle">
+                  {ROOM_LABEL[r as Room]}
+                </span>
+              ))}
+              {aliases}
+            </p>
+          )}
+          <p className="structure">
+            <strong>Default structure:</strong> {f.structure}
+          </p>
+          <div className="configs">
+            <strong>Configurations:</strong>
+            <ul>
+              {f.configurations.map((c) => (
+                <li key={c}>{c}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
       {f.shippedUpdated && <ShippedUpdated f={f} />}
       <ul className="items">
-        {items.map((v, i) => {
-          const ok = insertable(v);
-          const fx = facts.get(v.id);
-          return (
-            <li key={v.id} className={`item ${ok ? '' : 'waits'}`}>
-              {ok && (
-                <ItemPicture
-                  f={f}
-                  v={v}
-                  className="snap"
-                  width={240}
-                  height={150}
-                  alt={`${f.name}: ${v.name}, 3D view`}
-                />
-              )}
-              <div className="item-text">
-                <span className="item-name">
-                  <strong>{v.name}</strong>
-                  {i === 0 && f.variants[0].id === v.id && (
-                    <span className="tag subtle">default</span>
-                  )}
-                  <span
-                    className={`kind ${v.kind}`}
-                    title={
-                      v.kind === 'interior'
-                        ? 'Interior-only: built on an existing product'
-                        : 'Needed new construction'
-                    }
-                  >
-                    {v.kind === 'interior' ? 'Interior only' : 'New construction'}
-                  </span>
-                </span>
-                {VARIANT_RO[v.id] && <span className="ro">{VARIANT_RO[v.id]}</span>}
-                <span className="sub">{v.summary}</span>
-                {fx && (
-                  <span className="sub num">
-                    {fx.w} × {fx.h} × {fx.d} mm · {fx.parts} parts
-                    {fx.errors
-                      ? ` · ${fx.errors} problems`
-                      : fx.warnings
-                        ? ` · ${fx.warnings} to check`
-                        : ''}
-                  </span>
-                )}
-                {v.hardware && <span className="sub">You choose: {v.hardware}</span>}
-                {!ok && (
-                  <span className="sub waits-why">
-                    Not available yet: {waitsFor(v.requires) || 'no design'}
-                  </span>
-                )}
-              </div>
-              <button
-                type="button"
-                className="btn sm outline"
-                disabled={!ok}
-                onClick={() => {
-                  const d = insertVariant(f, v);
-                  if (d) onTake(d);
-                }}
-              >
-                {toProject ? 'Add' : 'Open'}
-              </button>
-            </li>
-          );
-        })}
+        {items.map((v, i) => (
+          <ItemCard
+            key={v.id}
+            f={f}
+            v={v}
+            isDefault={i === 0 && f.variants[0].id === v.id}
+            facts={facts.get(v.id)}
+            toProject={toProject}
+            onTake={onTake}
+          />
+        ))}
       </ul>
       {f.localId && !f.own && (
         <button
@@ -944,8 +1089,12 @@ function TemplateEditor({
   return (
     <section className="template-editor" aria-label={`Edit template ${f.name}`}>
       <div className="card-title">
-        <span>Edit template</span>
-        <span className="hint">Saved on this device only; the shipped template never changes.</span>
+        <span className="info-row">
+          <span>Edit template</span>
+          <InfoTip label="About editing a template" align="start">
+            Saved on this device only; the shipped template never changes.
+          </InfoTip>
+        </span>
       </div>
       <div className="dims2">
         <div className="field">
@@ -1086,7 +1235,8 @@ function TemplateEditor({
                 </button>
                 <button
                   type="button"
-                  className="btn sm danger"
+                  className="btn icon sm danger"
+                  aria-label="Remove variant"
                   disabled={f.variants.length <= 1}
                   onClick={() => setF({ variants: f.variants.filter((_, j) => j !== i) })}
                 >

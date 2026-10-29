@@ -48,8 +48,10 @@ Project: **Furniture Builder** — offline PWA for designing casework.
    git commit -m "Ship ADR-NNN: <short title> — mark implemented"
    git push -u origin <branch>
    ```
-   Never push to `main` directly or force-push it; merge only on the user's instruction,
-   then cite the `Deploy GitHub Pages` run id.
+   Never push to `main` directly or force-push it; merge only on the user's instruction (or
+   when green under the `babysit` skill), then cite the `Deploy GitHub Pages` run id. A ship pull
+   request is merged straight after the ship commit is pushed, without waiting for CI on it
+   (user rule 2026-10-29).
 
 ## Notes
 
