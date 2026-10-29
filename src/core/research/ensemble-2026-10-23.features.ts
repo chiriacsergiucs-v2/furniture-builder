@@ -144,7 +144,7 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
     findings: ['002', '006', '024', '088', '113', '152', '153', '154'],
     phase: P1,
     tags: ['core', 'architecture'],
-    related: ['ensemble-model', 'template-instancing', 'semantic-connectors'],
+    related: ['ensemble-model', 'semantic-connectors'],
   }),
   F('composition-metadata', {
     name: 'Composition metadata on templates',
@@ -164,41 +164,6 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
     phase: P1,
     tags: ['data-model'],
     related: ['semantic-connectors', 'connector-authoring'],
-  }),
-  F('template-instancing', {
-    name: 'Existing-template instancing',
-    parent: 'composition-layer',
-    category: 'assembly',
-    subcategory: 'Instances',
-    description:
-      'The ensemble editor creates FurnitureInstances that reference existing templates (id + version) and store only the parameters that differ from the template defaults. The template is never copied or destructively modified.',
-    userBenefit:
-      'No duplicated or re-implemented parametric logic; one template can be reused across many instances.',
-    mvp: "The ensemble editor creates instances from current furniture templates without duplicating/reimplementing the template's internal parametric logic.",
-    requirements: [
-      'Instance holds templateId and templateVersion.',
-      'Instance parameters hold only differences from template defaults.',
-      'Optional materialOverrides and ensembleId.',
-      'Dragging an item into the scene creates an instance; the template is not copied.',
-    ],
-    competitors: ['c.pcon'],
-    findings: ['mvp-1', '072', '095', '053', '114', '120'],
-    phase: P1,
-    tags: ['MVP', 'data-model'],
-    appNotes: [
-      'This app: project items embed a copy of a design (ADR-022, ADR-028); see the research-vs-app conflict record.',
-    ],
-  }),
-  F('reference-copies', {
-    name: 'Reference copies updated across instances',
-    parent: 'template-instancing',
-    category: 'assembly',
-    subcategory: 'Instances',
-    description:
-      'pCon reference copies let one product definition be reused and updated across multiple instances, instead of monolithic geometry.',
-    competitors: ['c.pcon'],
-    findings: ['053', '069'],
-    tags: ['competitor-capability'],
   }),
   F('ensemble-model', {
     name: 'Ensemble document model',
@@ -419,7 +384,6 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
     findings: ['mvp-3', '091', 'phase-1'],
     phase: P1,
     tags: ['MVP'],
-    related: ['precise-numeric'],
     appNotes: [
       'This app places project pieces in whole mm with quarter turns about the vertical axis only (ADR-022).',
     ],
@@ -433,38 +397,6 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
       'Three.js TransformControls as a baseline; furniture-specific constrained gizmos will probably need custom UX.',
     findings: ['089', 'stack-03'],
     tags: ['technology'],
-  }),
-  F('precise-numeric', {
-    name: 'Precise numeric position, dimensions and gaps',
-    category: 'positioning',
-    subcategory: 'Precision',
-    ...ranked(4),
-    recommendationRank: 4,
-    description:
-      'Dragging is fast; numbers make it trustworthy. Users type width, offset, gap, position and rotation while snapping keeps working.',
-    userProblem:
-      'Planner 5D feedback specifically criticises insufficient precision; dimension errors are among the biggest frustrations.',
-    userBenefit: 'Trustworthy, buildable sizes.',
-    requirements: [
-      'Type width, offset, gap, position and rotation.',
-      'Keep snapping while entering numbers.',
-    ],
-    competitors: ['c.planner5d', 'c.roomle', 'c.pcon'],
-    findings: ['rank-04', 'rec-04', '010', '043', '063', '064', '053'],
-    phase: P1,
-    tags: ['core', 'P0'],
-    appNotes: [
-      'This app: whole-mm sizes everywhere (ADR-003); gap between two project pieces along the wall (backlog N13).',
-    ],
-  }),
-  F('numeric-transform', {
-    name: 'Numeric transform entry',
-    parent: 'precise-numeric',
-    category: 'positioning',
-    subcategory: 'Precision',
-    description: 'Exact numeric position, offset, gap and rotation for instances.',
-    findings: ['mvp-3', 'rec-04', 'phase-1'],
-    tags: ['MVP'],
   }),
   F('locks-overrides', {
     name: 'Lock/pin modules and preserve manual overrides',
@@ -506,15 +438,6 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
   }),
 
   // ── Views ─────────────────────────────────────────────────────────────────────────────────────────────────────
-  F('section-cutaway', {
-    name: 'Section/cutaway and visibility isolation',
-    category: 'visual',
-    subcategory: 'Inspection views',
-    ...ranked(28),
-    description: 'Cut through the ensemble or isolate parts of it to see inside.',
-    findings: ['rank-28'],
-    tags: ['P2'],
-  }),
   F('ar-placement', {
     name: 'AR placement',
     category: 'visual',
@@ -525,15 +448,6 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
     competitors: ['c.ikea-planners'],
     findings: ['rank-39'],
     tags: ['P3'],
-  }),
-  F('on-demand-rendering', {
-    name: 'On-demand rendering',
-    category: 'architecture',
-    subcategory: 'Performance',
-    description:
-      'Render only when something changes (R3F on-demand rendering): most editor scenes are static much of the time, so this reduces continuous rendering on laptops and tablets.',
-    findings: ['111'],
-    tags: ['performance'],
   }),
 
   // ── Undo and persistence ──────────────────────────────────────────────────────────────────────────────────────
@@ -586,40 +500,8 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
     tags: ['core', 'MVP', 'P0'],
     appNotes: ['This app: autosaved local library and projects in IndexedDB (F14, ADR-012).'],
   }),
-  F('version-recovery', {
-    name: 'Version history and recovery',
-    parent: 'versioned-save',
-    category: 'persistence',
-    subcategory: 'History',
-    description:
-      'Stronger recovery and version history (Planner 5D request; better version recovery is among the most wanted needs).',
-    competitors: ['c.planner5d'],
-    findings: ['043', '063'],
-    tags: ['user-request'],
-  }),
-  F('saved-design-codes', {
-    name: 'Saved designs and personal codes',
-    parent: 'versioned-save',
-    category: 'persistence',
-    subcategory: 'Sharing',
-    description:
-      'IKEA planners keep saved designs; the IKEA Netherlands page describes saved/personal codes for designs.',
-    competitors: ['c.ikea-pax', 'c.ikea-planners'],
-    findings: ['030', '172'],
-    tags: ['competitor-capability'],
-  }),
 
   // ── Replace, materials, generated parts ───────────────────────────────────────────────────────────────────────
-  F('global-parameters', {
-    name: 'Global parameters propagating common choices',
-    category: 'parametric',
-    subcategory: 'Global parameters',
-    description:
-      'Roomle global parameters propagate common choices across components; the scope selector can be implemented the same way.',
-    competitors: ['c.roomle'],
-    findings: ['039', '079'],
-    tags: ['competitor-capability'],
-  }),
   F('generated-parts', {
     name: 'Generated shared components (ensemble-derived parts)',
     category: 'shared',
@@ -652,16 +534,6 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
     competitors: ['c.roomle', 'c.parametra'],
     findings: ['014', '015', '098', '056'],
     tags: ['generated-part'],
-  }),
-  F('gen-sinks-handles', {
-    name: 'Generated sinks, handles and other derived components',
-    parent: 'generated-parts',
-    category: 'shared',
-    subcategory: 'Generated parts',
-    description: 'Coohom also generates sinks, handles and other derived components.',
-    competitors: ['c.coohom'],
-    findings: ['050'],
-    tags: ['competitor-capability'],
   }),
   F('local-propagation', {
     name: 'Local propagation with targeted invalidation',
@@ -916,31 +788,8 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
     findings: ['141'],
     tags: ['ai-surface'],
   }),
-  F('style-recommendations', {
-    name: 'Style/material recommendations',
-    category: 'ai',
-    subcategory: 'Recommendations',
-    ...ranked(36),
-    description:
-      'Recommend styles and materials; style matching is one of the AI uses the paper accepts.',
-    findings: ['rank-36', '020', '142'],
-    phase: P4,
-    tags: ['P3'],
-  }),
 
   // ── UX and collaboration ──────────────────────────────────────────────────────────────────────────────────────
-  F('professional-review', {
-    name: 'Hand a plan to a professional for review',
-    origin: 'inferred',
-    inferredFrom: ['027', '062'],
-    category: 'integration',
-    subcategory: 'Review',
-    description:
-      'Opportunity read from competitor signals: IKEA offers specialist review of kitchen plans, and IKEA users start in the planner even when a professional later checks the result.',
-    competitors: ['c.ikea-kitchen'],
-    findings: ['027', '062'],
-    tags: ['inferred'],
-  }),
   F('collaboration', {
     name: 'Real-time collaboration/comments',
     category: 'ux',
@@ -973,16 +822,6 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
     competitors: ['c.pcon', 'c.ikea-planners'],
     findings: ['rank-21', '083', '086'],
     tags: ['P1'],
-  }),
-  F('paste-ensemble', {
-    name: '"Paste ensemble" workflow',
-    parent: 'ensemble-templates',
-    category: 'assembly',
-    subcategory: 'Templates',
-    description:
-      'Instantiate a previously saved assembly (an alternative workflow beside drag-and-drop).',
-    findings: ['086', '155'],
-    tags: ['workflow'],
   }),
 ];
 
@@ -1099,21 +938,12 @@ export const ENSEMBLE_CONTRADICTIONS: Contradiction[] = [
     ],
   },
   {
-    id: 'ens.x.12',
-    basis: 'app',
-    title: 'Research vs ADR-022/028: references vs embedded copies',
-    description:
-      "The paper's FurnitureInstance references a template and never copies it (pCon reference copies update across instances); this app's projects embed a copy of each design so library edits never flow in by themselves.",
-    findings: ['ens.n.072', 'ens.n.095', 'ens.n.053'],
-    features: ['ens.f.template-instancing', 'ens.f.reference-copies'],
-  },
-  {
     id: 'ens.x.13',
     basis: 'app',
     title: 'Research vs ADR-022: free rotation vs quarter turns',
     description:
       "The paper's Transform uses a quaternion rotation; this app keeps every panel an axis-aligned box and rotates project pieces in quarter turns about the vertical axis only.",
     findings: ['ens.n.091', 'ens.n.mvp-3'],
-    features: ['ens.f.direct-manipulation', 'ens.f.numeric-transform'],
+    features: ['ens.f.direct-manipulation'],
   },
 ];

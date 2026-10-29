@@ -11,23 +11,13 @@ import type { Implementation } from './types';
 
 type Status = [status: Implementation, evidence: string, missing?: string];
 
-export const APP_CHECKED = '2026-10-27';
+export const APP_CHECKED = '2026-10-29';
 
 export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
-  'precise-numeric': [
-    'in-progress',
-    'N48, N13: From left kept at 4321 mm; Gap to … on the left.',
-    'typed rotation (turns are 90° steps, N64)',
-  ],
-  'numeric-transform': [
-    'in-progress',
-    'N48, N13: positions and gaps typed in whole mm.',
-    'typed rotation (turns are 90° steps, N64)',
-  ],
   'transactional-undo': [
     'in-progress',
-    'N46 (ADR-051): undo/redo for project changes, one step per drag (N60).',
-    'undo of snap, unsnap, group and compound operations (connections and groups are not built)',
+    'N46 (ADR-051): undo/redo for project changes, one step per drag (N60); N124 (ADR-123): named steps, compound actions as one step, Edit history.',
+    'undo of snap and unsnap (connections are not built)',
   ],
   'generated-parts': [
     'in-progress',
@@ -38,11 +28,6 @@ export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
     'in-progress',
     'N55 (ADR-060): save a project as a reusable project template.',
     'templates keep copies, not item references, connections or generated-part recipes',
-  ],
-  'paste-ensemble': [
-    'in-progress',
-    'N55 (ADR-060): create a new project from a project template.',
-    'inserting a saved template into an open project',
   ],
   'live-price': [
     'in-progress',
@@ -66,8 +51,8 @@ export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
   ],
   'direct-manipulation': [
     'in-progress',
-    'N60, N64: drag and turn pieces on the plan; N91 (ADR-093): move and turn them in the 3D view.',
-    'free rotation (turns are 90° steps, ADR-093)',
+    'N60, N64: drag and turn pieces on the plan; N91 (ADR-093): move and turn them in the 3D view; N123 (ADR-122): drag a wall unit’s height in 3D.',
+    'rotating by dragging (any angle can be typed, N122 / ADR-121)',
   ],
   'composition-layer': [
     'in-progress',
@@ -104,30 +89,20 @@ export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
     'N19 (ADR-031): a piece placed on another follows it (a parent/child relation).',
     'connections between pieces beyond stacking, stored as a graph',
   ],
-  'saved-design-codes': [
-    'in-progress',
-    'F14, N48: designs and projects saved and reopened on the device.',
-    'a code to share or reopen a design elsewhere',
-  ],
-  'gen-sinks-handles': [
-    'in-progress',
-    'N06 handles per piece; N49 sink fixed front.',
-    'sinks and handles generated for a run',
-  ],
   'locks-overrides': [
     'in-progress',
-    'N93 (ADR-095): Lock a piece; drags, turns, the gap tool and repairs leave it alone.',
-    'locks on single named parameters (rotation only, a width only)',
+    'N93 (ADR-095): Lock a piece; drags, turns, the gap tool and repairs leave it alone; N123 (ADR-122): Lock size.',
+    'locks on single named parameters (rotation only, a width only); Lock size locks all three sizes together',
   ],
   'no-silent-moves': [
     'in-progress',
     'N93 (ADR-095): a locked piece is never moved; the action is refused with a reason.',
     'stopping and explaining when a change cannot keep every hard rule, for unlocked pieces',
   ],
-  'template-instancing': [
+  'rapier-queries': [
     'in-progress',
-    'N94 (ADR-096), N105 (ADR-107): project pieces name their template and revision.',
-    'store only the parameters that differ (pieces still hold a full copy, ADR-022)',
+    'N126 (ADR-125): Rapier measured as a query engine against the box checks (devDependency only).',
+    'adopting it in the app (needs a new ADR)',
   ],
 };
 
@@ -137,10 +112,6 @@ export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
  * each merge. A target is never one the app has built (review 2026-10-26), so merges never hide work left to do.
  */
 export const ENSEMBLE_MERGES: Record<string, [target: string, reason: string]> = {
-  'reference-copies': [
-    'template-instancing',
-    'Both make instances refer to one template definition instead of copying it.',
-  ],
   'composition-metadata': [
     'composition-layer',
     'The metadata is what the composition layer consists of.',

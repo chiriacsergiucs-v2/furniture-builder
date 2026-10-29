@@ -51,28 +51,6 @@ export const ENSEMBLE_ASSESSMENTS: Record<string, Row> = {
     'Needed for connectors, clearances and generated parts; the paper warns metadata authoring across many products adds substantial effort.',
     true,
   ],
-  'template-instancing': [
-    5,
-    3,
-    4,
-    5,
-    3,
-    5,
-    'Medium-high',
-    'High',
-    'First MVP row; reusable/configurable objects are among the most appreciated capabilities and pCon/Roomle work this way.',
-  ],
-  'reference-copies': [
-    4,
-    2,
-    3,
-    3,
-    3,
-    4,
-    'Medium',
-    'Medium',
-    "One pCon precedent; supports reuse across instances but conflicts with this app's copy-on-insert decision.",
-  ],
   'ensemble-model': [
     5,
     2,
@@ -270,17 +248,6 @@ export const ENSEMBLE_ASSESSMENTS: Record<string, Row> = {
     'Medium',
     'Baseline control exists; the paper expects furniture-specific handles to need custom UX.',
   ],
-  'numeric-transform': [
-    5,
-    5,
-    5,
-    4,
-    3,
-    3,
-    'Medium',
-    'High',
-    'MVP row and recommendation #4; insufficient precision is an explicit Planner 5D complaint.',
-  ],
   'propagation-pipeline': [
     5,
     3,
@@ -303,18 +270,6 @@ export const ENSEMBLE_ASSESSMENTS: Record<string, Row> = {
     'Medium',
     'Trust principle matching the frustration with automation that cannot be overridden.',
   ],
-  'on-demand-rendering': [
-    2,
-    1,
-    2,
-    3,
-    1,
-    1,
-    'Low',
-    'Medium',
-    'Performance technique from R3F documentation; no user evidence.',
-    true,
-  ],
   'command-log': [
     4,
     2,
@@ -325,40 +280,6 @@ export const ENSEMBLE_ASSESSMENTS: Record<string, Row> = {
     'Medium',
     'Medium-high',
     "The stack table's answer to atomic undo (ranked #9).",
-    true,
-  ],
-  'version-recovery': [
-    3,
-    4,
-    3,
-    3,
-    2,
-    2,
-    'Medium',
-    'Medium',
-    'Version-loss frustration is documented only from the Planner 5D subreddit.',
-  ],
-  'saved-design-codes': [
-    2,
-    2,
-    3,
-    3,
-    2,
-    2,
-    'Medium',
-    'Low-medium',
-    'IKEA offers saved/personal codes; no user evidence about them in the paper.',
-  ],
-  'global-parameters': [
-    4,
-    2,
-    3,
-    3,
-    3,
-    4,
-    'Medium-high',
-    'High',
-    'Documented Roomle mechanism; the engine under the scope selector.',
     true,
   ],
   'generated-parts': [
@@ -382,17 +303,6 @@ export const ENSEMBLE_ASSESSMENTS: Record<string, Row> = {
     'High',
     'Medium',
     'Roomle shelving and PARAMETRA show shared/dependent structure; no user evidence.',
-  ],
-  'gen-sinks-handles': [
-    3,
-    3,
-    3,
-    3,
-    2,
-    2,
-    'Medium-high',
-    'Low-medium',
-    'One competitor capability (Coohom); sinks and handles are kitchen-specific.',
   ],
   'local-propagation': [
     4,
@@ -529,17 +439,6 @@ export const ENSEMBLE_ASSESSMENTS: Record<string, Row> = {
     'Part of the proposed AI/engine division of labour; no evidence of use.',
   ],
   'inspiration-images': [1, 2, 2, 2, 3, 1, 'Very high', 'Low', 'Named once as a good AI surface.'],
-  'professional-review': [
-    2,
-    3,
-    2,
-    2,
-    2,
-    3,
-    'Low-medium',
-    'Low',
-    "Inferred from IKEA's specialist review and users having plans checked by professionals.",
-  ],
   'yjs-crdt': [
     1,
     1,
@@ -551,17 +450,6 @@ export const ENSEMBLE_ASSESSMENTS: Record<string, Row> = {
     'Medium',
     'Relevant only if collaboration becomes a requirement.',
     true,
-  ],
-  'paste-ensemble': [
-    4,
-    3,
-    4,
-    3,
-    2,
-    3,
-    'Medium',
-    'Medium',
-    'Alternative workflow paired with reusable ensemble templates (ranked #21).',
   ],
 };
 
@@ -577,11 +465,6 @@ export const ENSEMBLE_PRIORITIES: Record<string, [priority: string, basis: strin
     'Phase 1: "start by adding FurnitureInstance, Ensemble, connector metadata" (line 495).',
   ],
   'composition-metadata': ['P0', 'Phase 1: connector metadata comes first (line 495).'],
-  'template-instancing': ['P0', 'MVP table: "Existing-template instancing".'],
-  'reference-copies': [
-    'P2',
-    'Judgement: one pCon precedent, in neither the MVP table nor a phase.',
-  ],
   'ensemble-model': ['P0', 'Phase 1: "Ensemble document model" (line 488).'],
   'semantic-connectors': ['P0', 'MVP table: "Connectors".'],
   'connector-frame': ['P0', 'Parent: Semantic snap connectors (MVP, P0).'],
@@ -614,26 +497,14 @@ export const ENSEMBLE_PRIORITIES: Record<string, [priority: string, basis: strin
     'P1',
     'Judgement: dragging plus numeric entry meet the MVP row; furniture-specific handles "will probably need custom UX" (line 443).',
   ],
-  'numeric-transform': ['P0', 'MVP table: "Direct manipulation" (exact numeric transforms).'],
   'propagation-pipeline': ['P1', 'Phase 2: "parameter propagation" (line 489).'],
   'no-silent-moves': ['P1', 'Phase 2: governs parameter propagation (line 489).'],
-  'on-demand-rendering': ['P2', 'Judgement: a performance technique, needed when scenes grow.'],
   'command-log': ['P0', 'Parent: Transactional undo/redo (MVP, P0).'],
-  'version-recovery': [
-    'P1',
-    'Judgement: the MVP row is save and reopen; version history goes beyond it.',
-  ],
-  'saved-design-codes': ['P2', 'Judgement: an IKEA capability with no user evidence in the paper.'],
-  'global-parameters': ['P1', 'Parent: Shared material/finish propagation (P1).'],
   'generated-parts': [
     'P1',
     'Phase 2: generated countertops/plinths/fillers/end panels (line 489).',
   ],
   'shared-support': ['P2', 'Judgement: not in the phase-2 list of generated parts (line 489).'],
-  'gen-sinks-handles': [
-    'P2',
-    'Judgement: a kitchen-specific competitor capability, not in any phase.',
-  ],
   'local-propagation': ['P1', 'Parent: Derived-component dependency regeneration (P1 internal).'],
   quotation: [
     'P2',
@@ -653,9 +524,7 @@ export const ENSEMBLE_PRIORITIES: Record<string, [priority: string, basis: strin
   'ai-floorplan': ['P3', 'Parent: AI layout generation (P3).'],
   'ai-explains': ['P3', 'Parent: AI layout generation (P3).'],
   'inspiration-images': ['P3', 'Parent: Natural-language ensemble generation (P3).'],
-  'professional-review': ['P3', 'Judgement: an inferred opportunity with weak evidence.'],
   'yjs-crdt': ['P2', 'Parent: Real-time collaboration (P2); phase 4 "if justified".'],
-  'paste-ensemble': ['P1', 'Parent: Reusable ensemble templates (P1).'],
 };
 
 /**
@@ -672,14 +541,6 @@ export const ENSEMBLE_APPRECIATION: Record<string, [appreciation: string, basis:
   'composition-metadata': [
     'Indirect',
     'Internal capability: users do not see it to appreciate it ("Indirect", as the paper rates its internal rows).',
-  ],
-  'template-instancing': [
-    'High',
-    'Praise: reusable/configurable objects are among the most appreciated capabilities (line 65).',
-  ],
-  'reference-copies': [
-    'Medium',
-    'Judgement: reusable objects are appreciated (line 65), but the only precedent is pCon vendor documentation.',
   ],
   'ensemble-model': [
     'Indirect',
@@ -749,10 +610,6 @@ export const ENSEMBLE_APPRECIATION: Record<string, [appreciation: string, basis:
     'Medium',
     'Judgement: direct modelling is valued (line 43), but nothing is said about handles themselves.',
   ],
-  'numeric-transform': [
-    'High',
-    'Parent: Precise numeric position, dimensions and gaps ("High", rank 4).',
-  ],
   'propagation-pipeline': [
     'High',
     'Parent: Configure individual parametric items inside an ensemble ("High", rank 5).',
@@ -761,23 +618,7 @@ export const ENSEMBLE_APPRECIATION: Record<string, [appreciation: string, basis:
     'High',
     'Parent: Configure individual parametric items inside an ensemble ("High", rank 5).',
   ],
-  'on-demand-rendering': [
-    'Indirect',
-    'Internal capability: users do not see it to appreciate it ("Indirect", as the paper rates its internal rows).',
-  ],
   'command-log': [
-    'Indirect',
-    'Internal capability: users do not see it to appreciate it ("Indirect", as the paper rates its internal rows).',
-  ],
-  'version-recovery': [
-    'High',
-    'Parent: Versioned save/reload of entire ensembles ("High", rank 10).',
-  ],
-  'saved-design-codes': [
-    'Unproven',
-    'Judgement: an IKEA capability with no feedback cited — not inherited from Versioned save (High).',
-  ],
-  'global-parameters': [
     'Indirect',
     'Internal capability: users do not see it to appreciate it ("Indirect", as the paper rates its internal rows).',
   ],
@@ -786,10 +627,6 @@ export const ENSEMBLE_APPRECIATION: Record<string, [appreciation: string, basis:
     'Judgement: its own ranked children — countertops (rank 13) and fillers/plinths/end panels (rank 14) — are rated High appreciation.',
   ],
   'shared-support': ['Unproven', 'Judgement: no user feedback cited.'],
-  'gen-sinks-handles': [
-    'Unproven',
-    'Judgement: one competitor capability, no user feedback cited.',
-  ],
   'local-propagation': [
     'High when invisible',
     'Parent: Derived-component dependency regeneration ("High when invisible", rank 23).',
@@ -824,13 +661,8 @@ export const ENSEMBLE_APPRECIATION: Record<string, [appreciation: string, basis:
     'Unproven',
     'Parent: Natural-language ensemble generation ("Unproven", rank 38).',
   ],
-  'professional-review': [
-    'Medium',
-    'Judgement: IKEA users often start in the planner even when a professional later checks the result (line 65); the review itself is not praised.',
-  ],
   'yjs-crdt': [
     'Indirect',
     'Internal capability: users do not see it to appreciate it ("Indirect", as the paper rates its internal rows).',
   ],
-  'paste-ensemble': ['High', 'Parent: Reusable ensemble templates ("High", rank 21).'],
 };
