@@ -1,13 +1,17 @@
 /**
  * The gaps ledger (ADR-082) read for the Gaps page (ADR-101). Parses `docs/adr/GAPS.md` the same way
- * `scripts/gaps.py` does: a `### G-NNN: title` heading, then `- Key: value` lines. Malformed sections are skipped;
- * nothing here throws.
+ * `scripts/gaps.py` does: a `### Name` heading, then `- Key: value` lines, keyed by `- Id: <uuid>` and cited by
+ * `- Number: G-NNN HH:MM` (ADR-151). Malformed sections are skipped; nothing here throws.
  */
 
 export type GapStatusKind = 'open' | 'acknowledged' | 'adr' | 'done';
 
 export interface Gap {
+  /** The UUID from `- Id:` (ADR-151). */
   id: string;
+  /** "G-NNN", the number ADRs and replies cite; not unique across branches. */
+  number: string;
+  /** "G-NNN HH:MM Name". */
   title: string;
   /** The Status line as written, e.g. "Open", "ADR-101", "Done (ADR-087)". */
   status: string;
@@ -36,7 +40,9 @@ export const STATUS_LABEL: Record<GapStatusKind, string> = {
   done: 'Done',
 };
 
-const HEAD = /^### (G-\d{3}): (.+)$/gm;
+const HEAD = /^### (.+)$/gm;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+const NUMBER = /^(G-\d{3}) \d{2}:\d{2}$/;
 const FIELD = /^- ([A-Z][a-z]+(?: [a-z]+)?): (.*)$/gm;
 
 export function statusKind(status: string): GapStatusKind | null {
@@ -61,10 +67,13 @@ export function parseGaps(text: string): Gap[] {
     }
     const status = fields['Status'] ?? '';
     const kind = statusKind(status);
-    if (!kind) return;
+    const id = fields['Id'] ?? '';
+    const number = NUMBER.exec(fields['Number'] ?? '');
+    if (!kind || !UUID.test(id) || !number) return;
     gaps.push({
-      id: h[1],
-      title: h[2].trim(),
+      id,
+      number: number[1],
+      title: `${number[0]} ${h[1].trim()}`,
       status,
       kind,
       origin: fields['Origin'] ?? '',
@@ -105,6 +114,12 @@ export function filterGaps(gaps: Gap[], query: string, kinds: GapStatusKind[]): 
   });
 }
 
+/**
+ * The key a gap's mark is stored under: its UUID, or the G-NNN of a mark saved before ADR-151, read as it is.
+ */
+export const markKey = (g: Gap, marks: Record<string, GapMark>): string =>
+  !marks[g.id] && marks[g.number] ? g.number : g.id;
+
 /** A mark says something only when it has a decision or a note. */
 export const isMarked = (m: GapMark | undefined): m is GapMark =>
   !!m && (m.decision !== null || m.note.trim() !== '');
@@ -116,16 +131,16 @@ export const isMarked = (m: GapMark | undefined): m is GapMark =>
 export function decisionsText(gaps: Gap[], marks: Record<string, GapMark>): string {
   const lines: string[] = [];
   for (const g of gaps) {
-    const m = marks[g.id];
+    const m = marks[markKey(g, marks)];
     if (!isMarked(m) || (g.kind !== 'open' && g.kind !== 'adr')) continue;
     // One line per gap, whatever the note's line breaks.
     const note = m.note.trim().replace(/\s*\n\s*/g, ' ');
     const what =
       m.decision === 'acknowledge'
-        ? `acknowledge ${g.id} (${g.title})`
+        ? `acknowledge ${g.title}`
         : m.decision === 'adr'
-          ? `make an ADR from ${g.id} (${g.title})`
-          : `note on ${g.id} (${g.title})`;
+          ? `make an ADR from ${g.title}`
+          : `note on ${g.title}`;
     lines.push(`- ${what}${note ? `: ${note}` : ''}`);
   }
   return lines.length ? ['Gap decisions from the app (ADR-101):', ...lines].join('\n') : '';
@@ -136,7 +151,7 @@ export function validateGapMark(v: unknown): v is GapMark {
   const m = v as Record<string, unknown>;
   return (
     typeof m.gapId === 'string' &&
-    /^G-\d{3}$/.test(m.gapId) &&
+    (/^G-\d{3}$/.test(m.gapId) || UUID.test(m.gapId)) &&
     (m.decision === null || m.decision === 'acknowledge' || m.decision === 'adr') &&
     typeof m.note === 'string' &&
     typeof m.updatedAt === 'string'

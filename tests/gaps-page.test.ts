@@ -7,6 +7,7 @@ import {
   decisionsText,
   filterGaps,
   gapCounts,
+  markKey,
   parseGaps,
   statusKind,
   validateGapMark,
@@ -25,8 +26,10 @@ const mark = (gapId: string, decision: GapMark['decision'], note = ''): GapMark 
 
 const SAMPLE = `# Gaps
 
-### G-001: First
+### First
 
+- Id: 00000000-0000-4000-8000-000000000001
+- Number: G-001 12:00
 - Status: Open
 - Origin: ADR-001
 - Missing: a
@@ -36,8 +39,10 @@ const SAMPLE = `# Gaps
 - Note: one
 - Note: two
 
-### G-002: Second
+### Second
 
+- Id: 00000000-0000-4000-8000-000000000002
+- Number: G-002 12:00
 - Status: Acknowledged (2026-10-25)
 - Origin: x
 - Missing: x
@@ -45,8 +50,10 @@ const SAMPLE = `# Gaps
 - Questions: x
 - Suggested pick: x
 
-### G-003: Third
+### Third
 
+- Id: 00000000-0000-4000-8000-000000000003
+- Number: G-003 12:00
 - Status: ADR-101
 - Origin: x
 - Missing: drawer
@@ -54,8 +61,10 @@ const SAMPLE = `# Gaps
 - Questions: x
 - Suggested pick: x
 
-### G-004: Fourth
+### Fourth
 
+- Id: 00000000-0000-4000-8000-000000000004
+- Number: G-004 12:00
 - Status: Done (abc123)
 - Origin: x
 - Missing: x
@@ -63,17 +72,21 @@ const SAMPLE = `# Gaps
 - Questions: x
 - Suggested pick: x
 
-### G-005: Broken
+### Broken
 
+- Id: 00000000-0000-4000-8000-000000000005
+- Number: G-005 12:00
 - Status: Maybe
 `;
 
 describe('gaps ledger parser (ADR-101)', () => {
   it('reads ids, titles, statuses, every field and repeated notes; skips an unknown status', () => {
     const gaps = parseGaps(SAMPLE);
-    expect(gaps.map((g) => g.id)).toEqual(['G-001', 'G-002', 'G-003', 'G-004']);
+    expect(gaps.map((g) => g.number)).toEqual(['G-001', 'G-002', 'G-003', 'G-004']);
     expect(gaps[0]).toMatchObject({
-      title: 'First',
+      id: '00000000-0000-4000-8000-000000000001',
+      number: 'G-001',
+      title: 'G-001 12:00 First',
       kind: 'open',
       origin: 'ADR-001',
       missing: 'a',
@@ -85,6 +98,8 @@ describe('gaps ledger parser (ADR-101)', () => {
     expect(gaps.map((g) => g.kind)).toEqual(['open', 'acknowledged', 'adr', 'done']);
     expect(statusKind('Maybe')).toBeNull();
     expect(parseGaps('')).toEqual([]);
+    // A gap without a UUID Id or a 'G-NNN HH:MM' Number is skipped (ADR-151).
+    expect(parseGaps(SAMPLE.replace('- Number: G-001 12:00', '- Number: G-001'))).toHaveLength(3);
   });
 
   it('reads the real GAPS.md with the same ids and statuses as scripts/gaps.py', () => {
@@ -95,12 +110,12 @@ describe('gaps ledger parser (ADR-101)', () => {
         '-c',
         'import json,sys; sys.path.insert(0,"scripts"); import gaps; ' +
           't=open("docs/adr/GAPS.md").read(); ' +
-          'print(json.dumps([[g["id"], g["fields"].get("Status","")] for g in gaps.parse(t)]))',
+          'print(json.dumps([[g["id"], g["title"], g["fields"].get("Status","")] for g in gaps.parse(t)]))',
       ],
       { encoding: 'utf8' },
     );
-    const want = JSON.parse(py) as [string, string][];
-    const got = parseGaps(LEDGER).map((g) => [g.id, g.status]);
+    const want = JSON.parse(py) as [string, string, string][];
+    const got = parseGaps(LEDGER).map((g) => [g.id, g.title, g.status]);
     expect(got).toEqual(want);
     expect(got.length).toBeGreaterThan(90);
   });
@@ -108,36 +123,50 @@ describe('gaps ledger parser (ADR-101)', () => {
   it('counts by status, filters by words and status', () => {
     const gaps = parseGaps(SAMPLE);
     expect(gapCounts(gaps)).toEqual({ open: 1, acknowledged: 1, adr: 1, done: 1 });
-    expect(filterGaps(gaps, 'drawer', ['open', 'adr']).map((g) => g.id)).toEqual(['G-003']);
-    expect(filterGaps(gaps, 'g-001', ['open']).map((g) => g.id)).toEqual(['G-001']);
-    expect(filterGaps(gaps, '', ['done']).map((g) => g.id)).toEqual(['G-004']);
+    expect(filterGaps(gaps, 'drawer', ['open', 'adr']).map((g) => g.number)).toEqual(['G-003']);
+    expect(filterGaps(gaps, 'g-001', ['open']).map((g) => g.number)).toEqual(['G-001']);
+    expect(filterGaps(gaps, '', ['done']).map((g) => g.number)).toEqual(['G-004']);
   });
 
   it('decisions text lists only marked gaps that are Open or moved to an ADR', () => {
     const gaps = parseGaps(SAMPLE);
     expect(decisionsText(gaps, {})).toBe('');
     const text = decisionsText(gaps, {
-      'G-001': mark('G-001', 'acknowledge', ' fine as is '),
+      '00000000-0000-4000-8000-000000000001': mark(
+        '00000000-0000-4000-8000-000000000001',
+        'acknowledge',
+        ' fine as is ',
+      ),
       'G-002': mark('G-002', 'adr'),
       'G-003': mark('G-003', null, 'ask about drawers'),
       'G-004': mark('G-004', 'acknowledge'),
     });
     expect(text.split('\n')).toEqual([
       'Gap decisions from the app (ADR-101):',
-      '- acknowledge G-001 (First): fine as is',
-      '- note on G-003 (Third): ask about drawers',
+      '- acknowledge G-001 12:00 First: fine as is',
+      '- note on G-003 12:00 Third: ask about drawers',
     ]);
     expect(decisionsText(gaps, { 'G-001': mark('G-001', null, '  ') })).toBe('');
     expect(decisionsText(gaps, { 'G-001': mark('G-001', null, 'two\n  lines') })).toContain(
-      '- note on G-001 (First): two lines',
+      '- note on G-001 12:00 First: two lines',
     );
     expect(decisionsText(gaps, { 'G-001': mark('G-001', 'adr') })).toContain(
-      '- make an ADR from G-001 (First)',
+      '- make an ADR from G-001 12:00 First',
+    );
+  });
+
+  it('finds a mark by UUID, or by the G-NNN of a mark saved before ADR-151', () => {
+    const [g] = parseGaps(SAMPLE);
+    expect(markKey(g, {})).toBe(g.id);
+    expect(markKey(g, { 'G-001': mark('G-001', 'adr') })).toBe('G-001');
+    expect(markKey(g, { 'G-001': mark('G-001', 'adr'), [g.id]: mark(g.id, null, 'new') })).toBe(
+      g.id,
     );
   });
 
   it('validates stored marks', () => {
     expect(validateGapMark(mark('G-001', 'adr'))).toBe(true);
+    expect(validateGapMark(mark('00000000-0000-4000-8000-000000000001', 'adr'))).toBe(true);
     expect(validateGapMark({ ...mark('G-001', 'adr'), decision: 'later' })).toBe(false);
     expect(validateGapMark({ ...mark('X', null) })).toBe(false);
     expect(validateGapMark(null)).toBe(false);

@@ -1,11 +1,13 @@
 """Tests for the gaps ledger and its Stop hook (ADR-082). Run by pnpm docs:check."""
-import json, pathlib, subprocess, sys, tempfile, unittest
+import datetime, json, pathlib, subprocess, sys, tempfile, unittest
 
 import gaps
 import gaps_hook
 
-ENTRY = """### G-001: Example
+ENTRY = """### Example
 
+- Id: 0b6c2a1e-3f4d-4a5b-8c6d-7e8f9a0b1c2d
+- Number: G-001 12:00
 - Status: {status}
 - Origin: ADR-001, 2026-10-25; agent scoped it out
 - Missing: Something
@@ -27,7 +29,19 @@ class LedgerTest(unittest.TestCase):
 
     def test_a_duplicate_id_is_an_error(self):
         text = ENTRY.format(status="Open") * 2
-        self.assertIn("G-001 is listed twice", gaps.problems(text, {}))
+        self.assertIn("G-001 12:00 Example: Id 0b6c2a1e-3f4d-4a5b-8c6d-7e8f9a0b1c2d is listed twice",
+                      gaps.problems(text, {}))
+
+    def test_a_bad_id_or_number_is_an_error(self):
+        text = ENTRY.format(status="Open").replace("0b6c2a1e-", "x-").replace("G-001 12:00", "G-001")
+        errors = gaps.problems(text, {})
+        self.assertTrue(any("Id must be a lowercase UUID" in e for e in errors))
+        self.assertTrue(any("Number must be 'G-NNN HH:MM'" in e for e in errors))
+
+    def test_parse_reads_id_number_and_title(self):
+        (g,) = gaps.parse(ENTRY.format(status="Open"))
+        self.assertEqual((g["id"], g["number"], g["name"], g["title"]),
+                         ("0b6c2a1e-3f4d-4a5b-8c6d-7e8f9a0b1c2d", "G-001", "Example", "G-001 12:00 Example"))
 
     def test_a_gap_of_an_implemented_adr_must_be_done(self):
         text = ENTRY.format(status="ADR-007")
@@ -35,16 +49,18 @@ class LedgerTest(unittest.TestCase):
         self.assertEqual(gaps.problems(text, {"007": "Pending"}), [])
         self.assertTrue(any("unknown ADR-007" in e for e in gaps.problems(text, {})))
 
-    def test_add_takes_the_next_id(self):
-        gid, text = gaps.add(ENTRY.format(status="Open"), "Next", "o", "m", "r", "q", "p")
-        self.assertEqual(gid, "G-002")
-        self.assertEqual(gaps.ids(text), {"G-001", "G-002"})
+    def test_add_takes_the_next_number_the_time_and_a_new_uuid(self):
+        now = datetime.datetime(2026, 10, 29, 9, 5, tzinfo=datetime.timezone.utc)
+        title, text = gaps.add(ENTRY.format(status="Open"), "Next", "o", "m", "r", "q", "p", now)
+        self.assertEqual(title, "G-002 09:05 Next")
+        self.assertEqual(gaps.numbers(text), {"G-001", "G-002"})
+        self.assertEqual(len(gaps.ids(text)), 2)
         self.assertEqual(gaps.problems(text, {}), [])
 
     def test_sync_marks_gaps_of_implemented_adrs_done(self):
         text = ENTRY.format(status="ADR-007")
         new, changed = gaps.sync(text, {"007": "Implemented"})
-        self.assertEqual(changed, ["G-001"])
+        self.assertEqual(changed, ["G-001 12:00 Example"])
         self.assertIn("- Status: Done (ADR-007)", new)
         self.assertEqual(gaps.sync(text, {"007": "Pending"}), (text, []))
 

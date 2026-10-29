@@ -109,13 +109,14 @@ for rel in files:
             if not (p.parent / link).exists():
                 errors.append(f"{rel}: broken link {link}")
 
-# Gaps ledger (ADR-082).
+# Gaps ledger (ADR-082; keyed by UUID, cited by number, ADR-151).
 sys.path.insert(0, str(REPO / "scripts"))
 import gaps  # noqa: E402
 
 ledger = (REPO / "docs/adr/GAPS.md").read_text()
 errors += [f"docs/adr/GAPS.md: {e}" for e in gaps.problems(ledger, {n: s for n, (_, s) in adrs.items()})]
 gap_ids = gaps.ids(ledger)
+gap_numbers = gaps.numbers(ledger)
 for num, (path, _) in adrs.items():
     if int(num) < 82:
         continue
@@ -131,7 +132,7 @@ for rel in files:
     p = REPO / rel
     if p.suffix != ".md" or not p.is_file():
         continue
-    for ref in sorted(set(re.findall(r"\bG-(\d{3})\b", p.read_text())) - {i[2:] for i in gap_ids}):
+    for ref in sorted(set(re.findall(r"\bG-(\d{3})\b", p.read_text())) - {n[2:] for n in gap_numbers}):
         errors.append(f"{rel}: unknown gap G-{ref}")
 
 print(f"{len(adrs)} ADRs ({sum(s == 'Implemented' for _, s in adrs.values())} implemented), {len(backlog)} backlog ids, {len(gap_ids)} gaps")

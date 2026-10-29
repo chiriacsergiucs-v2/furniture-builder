@@ -5,6 +5,7 @@ import {
   filterGaps,
   gapCounts,
   isMarked,
+  markKey,
   parseGaps,
   STATUS_KINDS,
   STATUS_LABEL,
@@ -69,7 +70,9 @@ export function GapsPage({ onDone }: { onDone: () => void }) {
   const counts = useMemo(() => gapCounts(GAPS), []);
   const shown = useMemo(() => filterGaps(GAPS, query, kinds), [query, kinds]);
   const decisions = decisionsText(GAPS, marks);
-  const markedCount = GAPS.filter((g) => actionable(g) && isMarked(marks[g.id])).length;
+  const markedCount = GAPS.filter(
+    (g) => actionable(g) && isMarked(marks[markKey(g, marks)]),
+  ).length;
 
   const change = (gapId: string, patch: Partial<Pick<GapMark, 'decision' | 'note'>>) => {
     const old = marks[gapId] ?? { gapId, decision: null, note: '', updatedAt: '' };
@@ -182,9 +185,9 @@ export function GapsPage({ onDone }: { onDone: () => void }) {
           <GapRow
             key={g.id}
             gap={g}
-            mark={marks[g.id]}
+            mark={marks[markKey(g, marks)]}
             ready={ready}
-            onChange={(p) => change(g.id, p)}
+            onChange={(p) => change(markKey(g, marks), p)}
           />
         ))}
       </ul>
@@ -209,8 +212,7 @@ function GapRow({
     <li className="family gap">
       <details>
         <summary>
-          <strong>{g.id}</strong> {g.title}{' '}
-          <span className={`chip ${g.kind === 'open' ? '' : 'subtle'}`}>{g.status}</span>
+          {g.title} <span className={`chip ${g.kind === 'open' ? '' : 'subtle'}`}>{g.status}</span>
           {mark?.decision === 'acknowledge' && (
             <span className="chip edited">You: acknowledge</span>
           )}
