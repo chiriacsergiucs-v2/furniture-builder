@@ -1,10 +1,10 @@
-# ADR-146: One-tap Move to actions that snap a piece to walls, ceiling, floor and neighbours
+# ADR-147: One-tap Move to actions that snap a piece to walls, ceiling, floor and neighbours
 
 - Status: Pending
 - Date: 2026-10-29
 - Depends on: ADR-058, ADR-070, ADR-093
 - Design: docs/ui-design.md (Project editor, piece panel; 3D view toolbar)
-- Backlog: N147
+- Backlog: N148
 - Acceptance: browser
 
 ## Context
@@ -17,7 +17,9 @@ while it is dragged, within 60 mm. There is no way to send a piece to a wall or 
 and no vertical snap at all. User answers 2026-10-29: buttons in the piece panel and in the 3D Move toolbar
 ([ADR-093](../adr-done/ADR-093-move-and-turn-project-pieces-in-the-3d-view.md)); directions follow the piece's own
 front; a floor piece sent to the ceiling becomes wall-hung; extras: down to floor / onto piece below, into nearest
-corner, align top / front with neighbour, centre between neighbours.
+corner, align top / front with neighbour, centre between neighbours. Answers 2026-10-29 to the open questions:
+stacked piece "Slide along base" (G-291), align "Left / right buttons" (G-292), freely turned piece "Vertical only"
+(G-293).
 
 ## Decision
 
@@ -32,12 +34,16 @@ corner, align top / front with neighbour, centre between neighbours.
   - **To wall** — slide back until it touches the wall (or a piece) behind it.
   - **To left piece / To right piece** — slide left / right until it touches the first piece (or wall) there.
   - **To ceiling** — top at the room height. Wall-hung: its height changes. Floor piece: placement becomes
-    wall-hung at `room.height − h` (user answer). Stacked pieces: see open question.
+    wall-hung at `room.height − h` (user answer). A stacked piece lifts off, then rises.
   - **Down** — a wall-hung piece drops until it meets the first piece under it (sits on it, `above`, gap 0) or the
     floor (placement becomes floor).
   - **Into corner** — _To wall_, then slide toward the nearer side (left or right) until contact; one undo step.
-  - **Align top** / **Align front** — match the top height / front line of a neighbour (open question: which).
+  - **Align top ←/→** / **Align front ←/→** — match the top height / front line of the first piece on its left /
+    right (four buttons; G-292).
   - **Centre** — centred between what it touches when sliding left and right (wall or piece); odd mm rounds left.
+- **Stacked piece** (`above`, G-291): left, right, corner and centre slide it along its base by changing
+  `offsetX`, with the base's ends as limits as well as the first piece in the way; To ceiling lifts it off first.
+- **Freely turned piece** (ADR-121, G-293): only To ceiling and Down; the others are off, "Turned freely".
 - **Refused, with the reason, never silent** (ADR-008): a locked piece shows `LOCKED_HINT` (ADR-095); no room
   drawn → wall, corner and ceiling are disabled, "Draw the room first"; carried pieces follow `moveBlocked`.
 - **UI:** a "Move to" button row in the piece panel's Position group; the same buttons in the 3D toolbar while
@@ -53,8 +59,8 @@ corner, align top / front with neighbour, centre between neighbours.
 ## Scope
 
 - In scope: the actions above, their reasons, panel row and 3D toolbar buttons.
-- Out of scope: these actions on the 2D plan as an overlay bar (G-283); moving several selected pieces at once
-  (G-284).
+- Out of scope: these actions on the 2D plan as an overlay bar (G-289); moving several selected pieces at once
+  (G-290).
 
 ## Consequences
 
@@ -73,13 +79,3 @@ corner, align top / front with neighbour, centre between neighbours.
 - [ ] "Move to" buttons in the panel and in the 3D Move toolbar found at 390 and 1280 px; a tap moves the piece
       (browser find-it, `tools/move-to/find-it.mjs`)
 - [ ] All CI checks pass; `FUZZ_N=30000` fuzz passes
-
-## Open questions
-
-- Stacked (`above`) piece, sideways and ceiling moves (G-285): (a) move along its base by changing `offsetX`, lift
-  off for ceiling; (b) lift it off and move it freely; (c) disabled, "moves with the piece under it". Suggested:
-  (a), closest to "move a piece" while keeping it on its base (estimate +10 % work).
-- Align top / front: which neighbour (G-286): (a) four buttons, align with left / right neighbour; (b) the nearer
-  neighbour by gap, left on a tie. Suggested: (a), it says exactly which piece (estimate +5 % work, clearer).
-- A piece turned by a free angle (ADR-121, not a quarter turn) (G-287): (a) all actions disabled, "turned
-  freely"; (b) vertical actions only. Suggested: (b), keeps ceiling and floor working (estimate +3 % work).
