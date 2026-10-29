@@ -39,11 +39,10 @@ describe.each(WIDTHS)('editor catch-up at %ipx (find-it, N75, N110, N119)', (wid
     expect(screen.getByRole('button', { name: 'About the front view' })).toBeTruthy();
 
     // N119: Select stays in the plan row; Snap is in the row on a desktop, behind Options on a phone (ADR-144).
-    expect(screen.getByRole('checkbox', { name: 'Select' })).toBeTruthy();
-    if (phone) {
-      const plan = screen.getByRole('figure', { name: /Room plan/ });
-      await user.click(within(plan).getByText('Options'));
-    }
+    // The front view and the piece list have their own Select too (ADR-159): this one is the plan's.
+    const plan = screen.getByRole('figure', { name: /Room plan/ });
+    expect(within(plan).getByRole('checkbox', { name: 'Select' })).toBeTruthy();
+    if (phone) await user.click(within(plan).getByText('Options'));
     expect(screen.getByRole('checkbox', { name: 'Snap' })).toBeTruthy();
 
     // N119: the turn label says where the front faces; N110: a linked copy.

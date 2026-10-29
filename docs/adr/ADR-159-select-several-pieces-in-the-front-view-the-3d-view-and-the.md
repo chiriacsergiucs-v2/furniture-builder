@@ -59,11 +59,11 @@ Answers: a plan layer filter was picked first, then the plan stays as it is ("Ke
 
 ## Done when
 
-- [ ] With Select on in the front view, tapping a base cabinet and the wall cabinet above it selects both
+- [x] With Select on in the front view, tapping a base cabinet and the wall cabinet above it selects both
       (`aria-pressed` on both), and Group groups them (browser find-it, 390 and 1440 px).
-- [ ] In 3D with Select on, tapping two pieces selects both; the panel says "Selected pieces" (browser find-it).
-- [ ] Shift-click in 3D and in the front view adds a piece (desktop, browser find-it).
-- [ ] With Select on, tapping two rows in the Pieces list selects both (browser find-it, 390 px).
-- [ ] Turning Select on in one view shows it checked in the others (browser find-it).
-- [ ] Every new text has its Russian entry (`pnpm typecheck`); the feature tree lists it (ADR-158).
-- [ ] No horizontal scroll at 390 px; CI checks pass.
+- [x] In 3D with Select on, tapping two pieces selects both; the panel says "Selected pieces" (browser find-it).
+- [x] Shift-click in 3D and in the front view adds a piece (desktop, browser find-it).
+- [x] With Select on, tapping two rows in the Pieces list selects both (browser find-it, 390 px).
+- [x] Turning Select on in one view shows it checked in the others (browser find-it).
+- [x] Every new text has its Russian entry (`pnpm typecheck`); the feature tree lists it (ADR-158).
+- [x] No horizontal scroll at 390 px; CI checks pass.
