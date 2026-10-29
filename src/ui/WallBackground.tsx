@@ -1,16 +1,18 @@
 import { useState } from 'react';
 import { setWallFinish, wallFinish, type Room } from '../core/room';
-import { MAX_TILE } from '../core/surface';
+import { pictureRect, rectLabel } from '../core/wallPicture';
 import { importImage, useImageUrls } from '../persist/images';
-import { MmField, Select } from './controls';
+import { Select } from './controls';
 import { Icon } from './icons';
+import { StraightenPhoto } from './StraightenPhoto';
 
 /** Starting paint colour for a wall: the grey the 3D view shows walls in. */
 const WALL_GREY = '#c9cdc8';
 
 /**
- * A wall's background (ADR-145): none, a colour, or a picture from this device that repeats, one copy covering a
- * width × height the user sets. The picture is kept on this device like board pictures (ADR-048).
+ * A wall's background (ADR-145): none, a colour, or a picture from this device, kept like board pictures (ADR-048).
+ * A picture covers one rectangle of the wall once (ADR-146): the whole wall to start, moved and stretched in 3D with
+ * Adjust wall picture, and straightened here when the photo was taken at an angle.
  */
 export function WallBackground({
   room,
@@ -29,6 +31,7 @@ export function WallBackground({
   const [problem, setProblem] = useState<string | null>(null);
   // Picture chosen but none added yet: the wall keeps what it had until a picture arrives.
   const [wantPicture, setWantPicture] = useState(false);
+  const [straightening, setStraightening] = useState(false);
   const name = `Wall ${wall + 1}`;
   const kind = img || wantPicture ? 'picture' : f ? 'colour' : 'none';
   const set = (next: Parameters<typeof setWallFinish>[2]) =>
@@ -43,12 +46,8 @@ export function WallBackground({
       setProblem(`${r.problem} ${name} keeps its current background.`);
       return;
     }
-    // One copy starts 1000 mm wide with the picture's proportions (G-271), as a board picture starts along its length.
-    const { id, name: fileName, tileLength, tileWidth } = r.image;
-    set({
-      colour: r.color,
-      image: { id, name: fileName, tileWidth: tileLength, tileHeight: tileWidth },
-    });
+    // A new picture covers the whole wall (ADR-146, G-284).
+    set({ colour: r.color, image: { id: r.image.id, name: r.image.name } });
   };
   return (
     <div className="wall-bg">
@@ -116,23 +115,51 @@ export function WallBackground({
         </p>
       )}
       {img && (
-        <div className="sheet-fields">
-          <MmField
-            label="One picture covers, width"
-            value={img.tileWidth}
-            min={1}
-            max={MAX_TILE}
-            hint="Set the real size"
-            onChange={(v) => set({ colour: f!.colour, image: { ...img, tileWidth: v } })}
-          />
-          <MmField
-            label="One picture covers, height"
-            value={img.tileHeight}
-            min={1}
-            max={MAX_TILE}
-            onChange={(v) => set({ colour: f!.colour, image: { ...img, tileHeight: v } })}
-          />
+        <div className="wall-picture-fit">
+          <p className="hint" role="status">
+            Covers: {rectLabel(pictureRect(room, wall, img))}
+            {img.straighten ? ' · straightened' : ''}
+          </p>
+          <div className="row-actions">
+            <button
+              type="button"
+              className="btn sm outline"
+              disabled={!img.fit}
+              title="Make the picture cover the whole wall"
+              onClick={() => {
+                const { fit: _f, ...rest } = img;
+                void _f;
+                set({ colour: f!.colour, image: rest });
+              }}
+            >
+              Fill wall
+            </button>
+            <button
+              type="button"
+              className="btn sm outline"
+              disabled={!url || url === 'missing'}
+              aria-label={`Straighten photo on ${name}`}
+              onClick={() => setStraightening(true)}
+            >
+              Straighten photo
+            </button>
+          </div>
+          <p className="hint">Move and stretch it on the wall in 3D with Adjust wall picture.</p>
         </div>
+      )}
+      {straightening && img && url && url !== 'missing' && (
+        <StraightenPhoto
+          wallName={name}
+          url={url}
+          corners={img.straighten}
+          onClose={() => setStraightening(false)}
+          onApply={(c) => {
+            setStraightening(false);
+            const { straighten: _s, ...rest } = img;
+            void _s;
+            set({ colour: f!.colour, image: c ? { ...rest, straighten: c } : rest });
+          }}
+        />
       )}
     </div>
   );

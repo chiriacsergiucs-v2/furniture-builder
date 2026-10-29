@@ -21,10 +21,14 @@ import {
   ExtrudeGeometry,
   Float32BufferAttribute,
   FrontSide,
+  type Intersection,
   Matrix4,
+  Mesh,
   PMREMGenerator,
   Plane,
   PlaneGeometry,
+  type Raycaster,
+  ClampToEdgeWrapping,
   RepeatWrapping,
   SRGBColorSpace,
   Shape,
@@ -40,7 +44,31 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { explode } from '../core/explode';
 import { hitToMm, inSelection, selectionBox } from '../core/selectPath';
-import { roomDisplayBoxes, wallFinish } from '../core/room';
+import {
+  roomDisplayBoxes,
+  wallFinish,
+  type Room,
+  type WallFinish,
+  type WallRect,
+} from '../core/room';
+import {
+  boxSpan,
+  pictureRect,
+  rectLabel,
+  splitSpan,
+  wallAxes,
+  wallToRoom,
+  type PictureHandle,
+  type WallPatch,
+} from '../core/wallPicture';
+import { pictureKey, useWallPictureUrls } from '../ui/wallPictures';
+import {
+  setPictureFit,
+  useAdjustMode,
+  useAdjustWall,
+  usePictureDrag,
+  usePicturePreview,
+} from './wallPictureDrag';
 import { pieceBoxToRoom, type PlacedPiece } from '../core/project';
 import { inPlaneAxes, union } from '../core/geometry';
 import { aabbOf } from '../core/shape';
@@ -133,7 +161,7 @@ function PictureGeometry({ p, img }: { p: Panel; img: MaterialImage }) {
 }
 
 /** One texture per picture, shared by every part; freed when no material uses the picture any more. */
-function useTextures(urls: Map<string, string>): Map<string, Texture> {
+function useTextures(urls: Map<string, string>, repeat = true): Map<string, Texture> {
   const textures = useMemo(() => {
     const m = new Map<string, Texture>();
     const loader = new TextureLoader();
@@ -141,13 +169,13 @@ function useTextures(urls: Map<string, string>): Map<string, Texture> {
       if (url === 'missing') continue;
       // Rendered on demand (ADR-121): draw again once the picture has arrived.
       const t = loader.load(url, () => invalidate());
-      t.wrapS = t.wrapT = RepeatWrapping;
+      t.wrapS = t.wrapT = repeat ? RepeatWrapping : ClampToEdgeWrapping;
       t.colorSpace = SRGBColorSpace;
       t.anisotropy = 4;
       m.set(id, t);
     }
     return m;
-  }, [urls]);
+  }, [urls, repeat]);
   useEffect(() => () => textures.forEach((t) => t.dispose()), [textures]);
   return textures;
 }
@@ -252,6 +280,11 @@ export default function Viewer3D() {
   const tapping = useDesign((s) => !!s.placingItemId || !!s.drawingRoom);
   const moving = moveOn && hasPieces && !exploded && !rendering && !tapping;
   const [snapOn, setSnapOn] = useSnap();
+  // Adjusting a wall picture from 3D (ADR-146): only one of Move and Adjust wall picture is on.
+  const hasPicture = useDesign((s) => inProject && !!s.project?.room?.walls?.some((f) => f.image));
+  const [adjustOn, setAdjustOn] = useAdjustMode();
+  const adjusting = adjustOn && hasPicture && !exploded && !rendering && !tapping && !isolating;
+  const [adjustWall] = useAdjustWall();
   const turnId = useDesign((s) =>
     inProject && s.selectedItemId && s.project?.items.some((i) => i.id === s.selectedItemId)
       ? s.selectedItemId
@@ -340,7 +373,9 @@ export default function Viewer3D() {
         {counts && !docked && (
           <CountsAnchor place={placeCard} inProject={view.mode === 'project'} />
         )}
-        {view.mode === 'project' && !exploded && !isolating && <RoomWalls />}
+        {view.mode === 'project' && !exploded && !isolating && (
+          <RoomWalls adjusting={adjusting} snapOn={snapOn} />
+        )}
         {view.mode === 'project' && !exploded && !isolating && (
           <ModelItems plain={rendering} moving={moving} />
         )}
@@ -366,23 +401,57 @@ export default function Viewer3D() {
           ))}
         </div>
       )}
-      {hasPieces && !rendering && (
+      {(hasPieces || hasPicture) && !rendering && (
         <div className="three-tools" role="toolbar" aria-label="Place pieces in 3D">
-          <button
-            type="button"
-            className="btn sm outline move-toggle"
-            aria-pressed={moving}
-            disabled={exploded}
-            title={
-              exploded
-                ? 'Turn off Exploded 3D to move pieces'
-                : 'Drag a piece to move it; dragging empty space turns the view'
-            }
-            onClick={() => setMoveOn(!moveOn)}
-          >
-            Move
-          </button>
-          {moving && (
+          {hasPieces && (
+            <button
+              type="button"
+              className="btn sm outline move-toggle"
+              aria-pressed={moving}
+              disabled={exploded}
+              title={
+                exploded
+                  ? 'Turn off Exploded 3D to move pieces'
+                  : 'Drag a piece to move it; dragging empty space turns the view'
+              }
+              onClick={() => {
+                setMoveOn(!moveOn);
+                setAdjustOn(false);
+              }}
+            >
+              Move
+            </button>
+          )}
+          {hasPicture && (
+            <button
+              type="button"
+              className="btn sm outline adjust-toggle"
+              aria-pressed={adjusting}
+              disabled={exploded}
+              title={
+                exploded
+                  ? 'Turn off Exploded 3D to adjust a wall picture'
+                  : 'Tap a wall with a picture, then drag the picture to shift it or its handles to stretch it'
+              }
+              onClick={() => {
+                setAdjustOn(!adjustOn);
+                setMoveOn(false);
+              }}
+            >
+              Adjust wall picture
+            </button>
+          )}
+          {adjusting && adjustWall !== null && (
+            <button
+              type="button"
+              className="btn sm outline"
+              title="Make the picture cover the whole wall"
+              onClick={() => setPictureFit(adjustWall, null)}
+            >
+              Fill wall
+            </button>
+          )}
+          {(moving || adjusting) && (
             <button
               type="button"
               className="btn sm outline snap-toggle"
@@ -490,6 +559,7 @@ export default function Viewer3D() {
           )}
         </div>
       )}
+      {adjusting && <PictureNote />}
       {moving && <DragNote snapOn={snapOn} />}
       {moving && <ResizeNote />}
       {moving && <HeightNote />}
@@ -975,15 +1045,22 @@ function LockAnchors({
 /**
  * The project's room (ADR-058): walls with openings, obstacles; display only, never picked. Walls are drawn as their
  * inner faces (ADR-145): see-through by default; with Solid walls on they are opaque and seen only from inside the
- * room, so the walls between the camera and the pieces drop away. A wall's background paints it with its colour or
- * its picture, repeating to scale from the floor.
+ * room, so the walls between the camera and the pieces drop away. A wall's background paints it with its colour, or
+ * with its picture covering one rectangle of the wall once, straightened when asked, its average colour around it
+ * (ADR-146). With Adjust wall picture on, a wall with a picture is chosen by a tap and its picture dragged.
  */
-function RoomWalls() {
+function RoomWalls({ adjusting, snapOn }: { adjusting: boolean; snapOn: boolean }) {
   const room = useDesign((s) => s.project?.room);
   const solid = useSolidWalls();
   const boxes = useMemo(() => (room ? roomDisplayBoxes(room) : null), [room]);
-  const textures = useTextures(useImageUrls(imageKey(room?.walls ?? [])));
-  if (!boxes) return null;
+  const textures = useTextures(useWallPictureUrls(room?.walls ?? NO_WALLS), false);
+  const [chosen, choose] = useAdjustWall();
+  const live = usePicturePreview();
+  const press = usePictureDrag(snapOn);
+  // Leaving the 3D view forgets the chosen wall: its handles are never mounted with a new canvas, where their DOM
+  // overlay (drei Html) fails to unmount cleanly.
+  useEffect(() => () => choose(null), [choose]);
+  if (!boxes || !room) return null;
   const mesh = (b: Box, key: string, color: string, opacity: number) => (
     <mesh
       key={key}
@@ -994,83 +1071,208 @@ function RoomWalls() {
       <meshStandardMaterial color={color} transparent opacity={opacity} depthWrite={false} />
     </mesh>
   );
+  const rectOf = (w: number) => {
+    const img = wallFinish(room, w)?.image;
+    if (!img) return null;
+    return live?.wall === w ? live.rect : pictureRect(room, w, img);
+  };
   return (
     <>
-      {boxes.walls.map((b, i) => {
-        const f = room && wallFinish(room, boxes.wallOf[i]);
-        const tex = f?.image ? textures.get(f.image.id) : undefined;
-        return (
-          <WallFace
-            key={`w${i}`}
-            box={b}
-            inward={boxes.inward[i]}
-            tile={tex && f?.image ? [f.image.tileWidth, f.image.tileHeight] : null}
+      {boxes.walls.flatMap((b, i) => {
+        const w = boxes.wallOf[i];
+        const f = wallFinish(room, w);
+        const tex = f?.image ? textures.get(pictureKey(f.image)) : undefined;
+        const patches = splitSpan(boxSpan(room, w, b), tex ? rectOf(w) : null);
+        const pickable = adjusting && !!f?.image;
+        return patches.map((pt, k) => (
+          <WallPatchMesh
+            // A new mesh when its picture arrives: a material does not pick up a map added after its first frame.
+            key={`w${i}-${k}-${pt.picture && tex ? tex.uuid : 'plain'}`}
+            room={room}
+            wall={w}
+            patch={pt}
+            onPress={
+              pickable
+                ? (e) => {
+                    e.stopPropagation();
+                    if (chosen !== w) choose(w);
+                    else press(e.nativeEvent, w, 'move');
+                  }
+                : null
+            }
           >
             <meshStandardMaterial
-              color={tex ? '#ffffff' : (f?.colour ?? '#c9cdc8')}
-              map={tex ?? null}
+              color={pt.picture ? '#ffffff' : (f?.colour ?? '#c9cdc8')}
+              map={pt.picture ? (tex ?? null) : null}
               transparent={!solid}
               opacity={solid ? 1 : f ? 0.5 : 0.28}
               depthWrite={solid}
               side={solid ? FrontSide : DoubleSide}
             />
-          </WallFace>
-        );
+          </WallPatchMesh>
+        ));
       })}
+      {adjusting && chosen !== null && rectOf(chosen) && (
+        <PictureHandles room={room} wall={chosen} rect={rectOf(chosen)!} press={press} />
+      )}
       {boxes.obstacles.map((b, i) => mesh(b, `o${i}`, '#b3261e', 0.35))}
-      {room && boxes.walls.length > 0 && <RoomFloor outline={room.outline} />}
+      {boxes.walls.length > 0 && <RoomFloor outline={room.outline} />}
     </>
   );
 }
+const NO_WALLS: WallFinish[] = [];
+
+/** Wall coordinates (mm along from the left end, up from the floor, out into the room) → scene position. */
+function onWallAt(
+  room: Room,
+  wall: number,
+  u: number,
+  y: number,
+  out = 0,
+): [number, number, number] {
+  const [x, z] = wallToRoom(room, wall, u);
+  const [nx, nz] = wallAxes(room, wall).inward;
+  return [(x + nx * out) * S, y * S, (z + nz * out) * S];
+}
+
+/** The turn about y that makes a plane facing +z face into the room from the wall; its +x then runs to the right. */
+const wallTurn = ([nx, nz]: [number, number]) =>
+  nz > 0 ? 0 : nz < 0 ? Math.PI : nx > 0 ? Math.PI / 2 : -Math.PI / 2;
 
 /**
- * The inner face of a wall box, facing into the room. With a picture, it repeats every `tile` mm (width along the
- * wall, height up from the floor), continuing across the openings and never mirrored from inside.
+ * One part of a wall's inner face (ADR-146): the picture's part with its picture coordinates, or a plain part. With
+ * `onPress` (Adjust wall picture) it is picked, only from inside the room.
  */
-function WallFace({
-  box: b,
-  inward: [nx, nz],
-  tile,
+function WallPatchMesh({
+  room,
+  wall,
+  patch: pt,
+  onPress,
   children,
 }: {
-  box: Box;
-  inward: [number, number];
-  tile: [number, number] | null;
+  room: Room;
+  wall: number;
+  patch: WallPatch;
+  onPress: ((e: ThreeEvent<PointerEvent>) => void) | null;
   children: ReactNode;
 }) {
-  const alongX = nz !== 0;
-  const len = alongX ? b.w : b.d;
-  // The face on the room side of the box; the plane faces +z before it is turned to face `inward`.
-  const x = alongX ? b.x + b.w / 2 : nx > 0 ? b.x + b.w : b.x;
-  const z = alongX ? (nz > 0 ? b.z + b.d : b.z) : b.z + b.d / 2;
-  const turn = nz > 0 ? 0 : nz < 0 ? Math.PI : nx > 0 ? Math.PI / 2 : -Math.PI / 2;
-  // Local +x runs along the world axis this way, so the picture keeps its place across the wall's pieces.
-  const sign = nz > 0 || nx < 0 ? 1 : -1;
-  const start = alongX ? b.x : b.z;
-  const [tw, th] = tile ?? [0, 0];
+  const inward = wallAxes(room, wall).inward;
+  const w = pt.u1 - pt.u0,
+    h = pt.y1 - pt.y0;
+  const pic = pt.picture;
   const g = useMemo(() => {
-    const geo = new PlaneGeometry(len * S, b.h * S);
-    if (tw && th) {
-      const pos = geo.getAttribute('position');
-      const uv: number[] = [];
-      for (let k = 0; k < pos.count; k++) {
-        const along = start + len / 2 + (sign * pos.getX(k)) / S;
-        uv.push((sign * along) / tw, (b.y + b.h / 2 + pos.getY(k) / S) / th);
-      }
-      geo.setAttribute('uv', new Float32BufferAttribute(uv, 2));
-    }
+    const geo = new PlaneGeometry(w * S, h * S);
+    if (pic)
+      geo.setAttribute(
+        'uv',
+        // PlaneGeometry's corners: top-left, top-right, bottom-left, bottom-right.
+        new Float32BufferAttribute(
+          [pic.s0, pic.t1, pic.s1, pic.t1, pic.s0, pic.t0, pic.s1, pic.t0],
+          2,
+        ),
+      );
     return geo;
-  }, [len, b.h, b.y, start, sign, tw, th]);
+  }, [w, h, pic]);
   useEffect(() => () => g.dispose(), [g]);
+  const at = onWallAt(room, wall, (pt.u0 + pt.u1) / 2, (pt.y0 + pt.y1) / 2);
+  const [ax, , az] = at;
+  const [nx, nz] = inward;
+  const pick = useMemo(
+    () =>
+      function (this: Mesh, rc: Raycaster, hits: Intersection[]) {
+        const o = rc.ray.origin;
+        if ((o.x - ax) * nx + (o.z - az) * nz > 0) Mesh.prototype.raycast.call(this, rc, hits);
+      },
+    [ax, az, nx, nz],
+  );
   return (
     <mesh
-      position={[x * S, (b.y + b.h / 2) * S, z * S]}
-      rotation={[0, turn, 0]}
-      raycast={() => null}
+      position={at}
+      rotation={[0, wallTurn(inward), 0]}
+      raycast={onPress ? pick : () => null}
+      onPointerDown={onPress ?? undefined}
     >
       <primitive object={g} attach="geometry" />
       {children}
     </mesh>
+  );
+}
+
+const PICTURE_HANDLES: {
+  handle: PictureHandle;
+  label: string;
+  glyph: string;
+  at: [number, number];
+}[] = [
+  { handle: 'nw', label: 'top-left corner', glyph: '⤡', at: [0, 1] },
+  { handle: 'n', label: 'top edge', glyph: '↕', at: [0.5, 1] },
+  { handle: 'ne', label: 'top-right corner', glyph: '⤢', at: [1, 1] },
+  { handle: 'e', label: 'right edge', glyph: '↔', at: [1, 0.5] },
+  { handle: 'se', label: 'bottom-right corner', glyph: '⤡', at: [1, 0] },
+  { handle: 's', label: 'bottom edge', glyph: '↕', at: [0.5, 0] },
+  { handle: 'sw', label: 'bottom-left corner', glyph: '⤢', at: [0, 0] },
+  { handle: 'w', label: 'left edge', glyph: '↔', at: [0, 0.5] },
+];
+
+/** The chosen wall picture's outline and its eight stretch handles (ADR-146), just in front of the wall. */
+function PictureHandles({
+  room,
+  wall,
+  rect: r,
+  press,
+}: {
+  room: Room;
+  wall: number;
+  rect: WallRect;
+  press: ReturnType<typeof usePictureDrag>;
+}) {
+  const corner = (a: number, b: number) => onWallAt(room, wall, r.x + a * r.w, r.y + b * r.h, 4);
+  return (
+    <>
+      <Line
+        points={[corner(0, 0), corner(1, 0), corner(1, 1), corner(0, 1), corner(0, 0)]}
+        color={SELECT}
+        lineWidth={2}
+        raycast={() => null}
+      />
+      {PICTURE_HANDLES.map((hd) => (
+        <Html key={hd.handle} position={corner(...hd.at)} center zIndexRange={[2, 1]}>
+          <button
+            type="button"
+            className="model-handle"
+            aria-label={`Stretch the picture: ${hd.label}`}
+            title={`Stretch the picture: drag the ${hd.label}`}
+            onPointerDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              press(e, wall, hd.handle);
+            }}
+          >
+            {hd.glyph}
+          </button>
+        </Html>
+      ))}
+    </>
+  );
+}
+
+/** What Adjust wall picture is doing (ADR-146): the chosen picture's place and size, live while dragging. */
+function PictureNote() {
+  const [wall] = useAdjustWall();
+  const live = usePicturePreview();
+  const room = useDesign((s) => s.project?.room);
+  const img = room && wall !== null ? wallFinish(room, wall)?.image : undefined;
+  if (!room || wall === null || !img)
+    return (
+      <span className="plan-drag-note three-drag-note" role="status">
+        Tap a wall with a picture to adjust it
+      </span>
+    );
+  const rect = live?.wall === wall ? live.rect : pictureRect(room, wall, img);
+  return (
+    <span className="plan-drag-note three-drag-note" role="status">
+      Wall {wall + 1} picture: {rectLabel(rect)}
+    </span>
   );
 }
 

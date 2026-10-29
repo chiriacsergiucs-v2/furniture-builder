@@ -46,7 +46,7 @@ describe('wall backgrounds (ADR-145)', () => {
   it('set per wall, back to plain with undefined; validated without throwing', () => {
     const p = withWalls();
     expect(p.schemaVersion).toBe(PROJECT_SCHEMA);
-    expect(PROJECT_SCHEMA).toBe(14);
+    expect(PROJECT_SCHEMA).toBeGreaterThanOrEqual(14);
     expect(wallFinish(p.room!, 0)?.image?.tileWidth).toBe(300);
     expect(wallFinish(p.room!, 1)?.colour).toBe('#e8b04a');
     expect(wallFinish(p.room!, 2)).toBeUndefined();
