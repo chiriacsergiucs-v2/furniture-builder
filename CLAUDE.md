@@ -22,7 +22,15 @@ Read first: `docs/backlog.md`, `docs/adr/README.md`, `docs/product/product-conte
 - Everything written to the repo is in **English**: code, comments, commit messages, ADRs, skills,
   markdown files.
 - Reply to the user in the language they write in (Romanian or English).
-- Printed sheets and the parts CSV are in Romanian (ADR-020); the app UI is in English.
+- The app UI is in English by default, Russian on request (More → Language, ADR-153). Printed sheets and the parts
+  CSV are in Romanian by default, Russian or English on request (More → Print language, ADR-157).
+- **Translation rule (hard, user rule 2026-10-29, ADR-153):** every text added, changed or deleted in the app updates
+  its translations in the same change. Text written in code goes through `t()` (`src/core/i18n`) with its Russian
+  entry in `src/core/i18n/ru/<area>.ts` (a key without one fails `pnpm typecheck`); text from built-in data goes
+  through `tr()` with its entry in `src/core/i18n/ru/data-*.ts`; print and CSV text goes through `pt()` with its
+  Russian and English entries in `src/core/i18n/print-text.ts`. A deleted text deletes its entries. A new feature
+  also adds its line to the feature tree (`src/core/features.ts`, ADR-158). The Gaps page is not translated (user
+  2026-10-29).
 
 ## Repository layout
 

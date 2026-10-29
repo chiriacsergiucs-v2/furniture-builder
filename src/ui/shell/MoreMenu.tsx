@@ -15,6 +15,7 @@ import { download, downloadFrontSvg, fileName } from './files';
 import { importFile } from './importFile';
 import { useAccount } from '../../store/accountStore';
 import { useUi } from './uiStore';
+import { LanguageMenu } from './LanguageMenu';
 
 /**
  * The ⋯ More menu in the app bar (ADR-078): starting something new, every file in and out of the app (Files, with
@@ -25,11 +26,13 @@ export function MoreMenu({
   onOpened,
   onResearch,
   onGaps,
+  onInfo,
 }: {
   onNew: () => void;
   onOpened: () => void;
   onResearch: () => void;
   onGaps: () => void;
+  onInfo: () => void;
 }) {
   const ref = useRef<HTMLDetailsElement>(null);
   const design = useDesign((s) => s.design);
@@ -221,6 +224,12 @@ export function MoreMenu({
             </button>
           </div>
           <span className="menu-sep" aria-hidden="true" />
+          <LanguageMenu />
+          <span className="menu-sep" aria-hidden="true" />
+          <button type="button" onClick={run(onInfo)}>
+            <Icon name="info" />
+            Information and guides <small>every feature, by domain</small>
+          </button>
           <button type="button" onClick={run(onResearch)}>
             <Icon name="search" />
             Feature Research <small>papers and decisions</small>

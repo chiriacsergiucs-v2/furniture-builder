@@ -19,6 +19,7 @@ import { WallFillDialog } from './WallFill';
 import { CatalogPage } from './Catalog';
 import { ResearchPage } from './Research';
 import { GapsPage } from './Gaps';
+import { InfoPage } from './Info';
 import { ConfirmHost } from './Confirm';
 import { catalogFamilies } from '../core/catalog';
 import { useTemplates } from '../store/templatesStore';
@@ -92,8 +93,8 @@ const SAVE_TEXT: Record<SaveState, string> = {
   failed: 'Not saved — browser storage unavailable',
 };
 
-type Page = 'projects' | 'editor' | 'catalog' | 'research' | 'gaps';
-const PAGES: Page[] = ['projects', 'editor', 'catalog', 'research', 'gaps'];
+type Page = 'projects' | 'editor' | 'catalog' | 'research' | 'gaps' | 'info';
+const PAGES: Page[] = ['projects', 'editor', 'catalog', 'research', 'gaps', 'info'];
 const pageFromHash = (): Page =>
   typeof location === 'undefined'
     ? 'projects'
@@ -101,7 +102,7 @@ const pageFromHash = (): Page =>
 /**
  * The three places (ADR-078), linkable: the bare address and #projects open Projects, #editor the editor, #catalog
  * the Catalog (ADR-032); #research the Feature Research & Catalog (ADR-043) and #gaps the gaps ledger (ADR-101),
- * both reached from the ⋯ menu.
+ * both reached from the ⋯ menu, and #info Information and guides (ADR-158).
  */
 function usePage(): [Page, (p: Page) => void] {
   const [page, setPage] = useState<Page>(pageFromHash);
@@ -634,6 +635,7 @@ export function App() {
               onOpened={() => setPage('editor')}
               onResearch={() => setPage('research')}
               onGaps={() => setPage('gaps')}
+              onInfo={() => setPage('info')}
             />
           </div>
         </header>
@@ -691,6 +693,7 @@ export function App() {
         )}
         {page === 'research' && <ResearchPage onDone={() => setPage('editor')} />}
         {page === 'gaps' && <GapsPage onDone={() => setPage('editor')} />}
+        {page === 'info' && <InfoPage onDone={() => setPage('editor')} />}
         <main
           className={`work mode-${mode} ${sheetOpen ? 'sheet-open' : ''}`}
           hidden={page !== 'editor'}
