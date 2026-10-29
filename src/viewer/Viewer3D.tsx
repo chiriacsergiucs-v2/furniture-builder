@@ -280,6 +280,9 @@ export default function Viewer3D() {
   // Placing a new piece or drawing the room on the Plan turns moving and turning off, as on the Plan (ADR-056, 059).
   const tapping = useDesign((s) => !!s.placingItemId || !!s.drawingRoom);
   const moving = moveOn && hasPieces && !exploded && !rendering && !tapping;
+  // The views' shared Select (ADR-097, ADR-159): taps add and remove whole pieces.
+  const multi = useDesign((s) => s.multiSelect);
+  const setMulti = useDesign((s) => s.setMultiSelect);
   const [snapOn, setSnapOn] = useSnap();
   // Adjusting a wall picture from 3D (ADR-146): only one of Move and Adjust wall picture is on.
   const hasPicture = useDesign((s) => inProject && !!s.project?.room?.walls?.some((f) => f.image));
@@ -421,6 +424,17 @@ export default function Viewer3D() {
               }}
             >
               {t('Move')}
+            </button>
+          )}
+          {hasPieces && (
+            <button
+              type="button"
+              className="btn sm outline select-toggle"
+              aria-pressed={multi}
+              title={t('Tap pieces to add them to the selection or take them out')}
+              onClick={() => setMulti(!multi)}
+            >
+              {t('Select')}
             </button>
           )}
           {hasPicture && (
@@ -1390,6 +1404,10 @@ function Panels({
   const showFronts = useDesign((s) => s.showFronts);
   const tapPiece = useDesign((s) => s.tapPiece);
   const tapItem = useDesign((s) => s.tapItem);
+  // Several selected pieces (ADR-159): each is tinted; Select on, or Shift/Ctrl/Cmd, adds or removes one.
+  const selectedIds = useDesign((s) => s.selectedItemIds);
+  const multi = useDesign((s) => s.multiSelect);
+  const toggleItem = useDesign((s) => s.toggleItem);
   const exploded = useDesign((s) => s.exploded);
   const built = useMemo(() => new Map(view.model.panels.map((p) => [p.id, p])), [view.model]);
   const colors = useMemo(() => new Map(materials.map((m) => [m.id, m.color])), [materials]);
@@ -1452,7 +1470,7 @@ function Panels({
               const selected =
                 !plain &&
                 (view.mode === 'project'
-                  ? !!selectedId && p.nodeId.startsWith(`${selectedId}:`)
+                  ? !preview && selectedIds.includes(p.nodeId.split(':')[0])
                   : selectedId === null || p.nodeId === selectedId);
               const lit = !plain && hl.has(p.id);
               const faded = isFaded(p);
@@ -1513,7 +1531,10 @@ function Panels({
                 // The click ending a 3D move (or the press that selected the piece) does nothing more (ADR-093).
                 if (drag.clicked() || preview) return;
                 const at = hitToMm(e.point, built.get(p.id), exploded);
-                if (view.mode === 'project') tapItem(p.nodeId.split(':')[0], at);
+                const n = e.nativeEvent;
+                if (view.mode === 'project' && (multi || n.shiftKey || n.ctrlKey || n.metaKey))
+                  toggleItem(p.nodeId.split(':')[0]);
+                else if (view.mode === 'project') tapItem(p.nodeId.split(':')[0], at);
                 else tapPiece(at.x, at.y);
               };
               const onDown = (e: ThreeEvent<PointerEvent>) => drag.press(e, p.nodeId.split(':')[0]);

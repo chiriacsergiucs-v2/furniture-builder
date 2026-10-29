@@ -196,6 +196,8 @@ export const ru_viewer = {
   Locked: 'Закреплено',
   'Place pieces in 3D': 'Расстановка изделий в 3D',
   'Turn off Exploded 3D to move pieces': 'Выключите разнесённый 3D-вид, чтобы перемещать изделия',
+  'Tap pieces to add them to the selection or take them out':
+    'Нажимайте на изделия, чтобы добавить их в выделение или убрать из него',
   'Drag a piece to move it; dragging empty space turns the view':
     'Перетащите изделие, чтобы переместить его; перетаскивание пустого места поворачивает вид',
   Move: 'Переместить',

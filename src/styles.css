@@ -2050,6 +2050,13 @@ td.note {
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
+/* The Pieces heading with the shared Select toggle at its right (ADR-159). */
+.list-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
 .plan-views {
   height: 100%;
   display: grid;

@@ -116,6 +116,9 @@ export const ru_info = {
   'Select several pieces': 'Выделить несколько изделий',
   'Shift- or Ctrl-click, Select on a phone, or Ctrl+A.':
     'Щелчок с Shift или Ctrl, «Выбрать» на телефоне или Ctrl+A.',
+  'Select several pieces in the front view, 3D and the piece list':
+    'Выделение нескольких изделий на виде спереди, в 3D и в списке изделий',
+  'One Select switch shared by every view.': 'Один переключатель «Выбор» для всех видов.',
   'Selection box on the plan': 'Рамка выделения на плане',
   'Cycle through overlapping pieces': 'Перебор перекрывающихся изделий',
   'Keep pieces as named groups': 'Сохранять изделия как именованные группы',
