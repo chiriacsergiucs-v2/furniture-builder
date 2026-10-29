@@ -2,7 +2,8 @@
 """The gaps ledger, docs/adr/GAPS.md (ADR-082).
 
   pnpm gaps list                       open gaps and gaps moved into an ADR
-  pnpm gaps add --origin O --missing M --request R --questions Q --pick P "Title"
+  pnpm gaps add --id G-NNN --origin O --missing M --request R --questions Q --pick P "Title"
+                                       (claim G-NNN first: scripts/ids.py)
   pnpm gaps sync                       gaps of Implemented ADRs become Done (ADR-NNN)
 
 scripts/check-docs.py imports problems() so CI fails on a malformed or stale ledger."""
@@ -60,9 +61,9 @@ def ids(text):
     return {g["id"] for g in parse(text)}
 
 
-def add(text, title, origin, missing, request, questions, pick):
-    nums = [int(i[2:]) for i in ids(text)]
-    gid = f"G-{max(nums, default=0) + 1:03d}"
+def add(text, title, origin, missing, request, questions, pick, gid=None):
+    if gid is None:
+        gid = f"G-{max((int(i[2:]) for i in ids(text)), default=0) + 1:03d}"
     entry = (f"### {gid}: {title}\n\n- Status: Open\n- Origin: {origin}\n- Missing: {missing}\n"
              f"- Request: {request}\n- Questions: {questions}\n- Suggested pick: {pick}\n")
     return gid, text.rstrip("\n") + "\n\n" + entry
@@ -88,6 +89,7 @@ def main(argv):
     sub.add_parser("sync")
     a = sub.add_parser("add")
     a.add_argument("title")
+    a.add_argument("--id", required=True, help="a G-NNN claimed with scripts/ids.py")
     for key in ("origin", "missing", "request", "questions", "pick"):
         a.add_argument(f"--{key}", required=True)
     args = ap.parse_args(argv)
@@ -98,7 +100,10 @@ def main(argv):
             if st == "Open" or st.startswith("ADR-"):
                 print(f"{g['id']}  {st:<8}  {g['title']}")
     elif args.cmd == "add":
-        gid, text = add(text, args.title, args.origin, args.missing, args.request, args.questions, args.pick)
+        if not re.fullmatch(r"G-\d{3}", args.id) or args.id in ids(text):
+            print(f"{args.id} is not a free G-NNN id; claim one with scripts/ids.py", file=sys.stderr)
+            return 1
+        gid, text = add(text, args.title, args.origin, args.missing, args.request, args.questions, args.pick, args.id)
         LEDGER.write_text(text)
         print(gid)
     else:

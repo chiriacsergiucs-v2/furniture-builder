@@ -61,7 +61,7 @@ ADRs are all in `docs/adr-done/`.
    reference, and the current code it touches (not docs alone).
 5. **Scope.** For each change ask "needed to demonstrate this now?" — if not, it goes under
    _Skipped this iteration_, and every skipped item gets a gap in `docs/adr/GAPS.md`
-   (`pnpm gaps add`, ADR-082) in the same change, cited by its G id. Non-trivial choices get a short Explore → Doubt → Compare.
+   (`pnpm gaps add --id G-NNN`, claimed with `pnpm ids next G`, ADR-082) in the same change, cited by its G id. Non-trivial choices get a short Explore → Doubt → Compare.
 6. **Implement** one vertical slice that meets the `Done when` list. Keep `src/core` pure;
    add a test for every new rule. Use the matching skill:
    - saved data or a new Dexie table → `add-storage-version`

@@ -29,16 +29,20 @@ Everything written to the repo is in **English**, whatever language the conversa
    - anything that would delete or rewrite saved designs, or invent a physical fact,
      needs the user's explicit decision first.
 3. **Pick a title** — short, imperative, English (e.g. "Merge two touching cabinets into one").
-4. **Refresh remote state** so numbers do not collide with another branch:
+4. **Claim the number** (parallel sessions never collide, `scripts/ids.py`):
    ```bash
-   git fetch origin
+   git fetch origin main
+   pnpm ids next ADR            # prints the candidate number
    ```
+   Claim it with the GitHub MCP tool `create_branch` (branch `id/ADR-NNN`, from `main`). If GitHub
+   answers "Reference already exists", run `pnpm ids next ADR --after NNN` and claim that one. Never
+   write a number you have not claimed. If the claim cannot be made (no GitHub access), stop and say so.
 5. **Create the file** with the helper:
    ```bash
-   bash .claude/skills/new-adr/new-adr.sh "<Title>" ["ADR-012, ADR-022"]
+   ADR_ID=ADR-NNN bash .claude/skills/new-adr/new-adr.sh "<Title>" ["ADR-012, ADR-022"]
    ```
    The second argument lists dependencies (ADRs that must be implemented first); omit it
-   for none. The script picks the next free 3-digit number, writes
+   for none. The script refuses a number already used locally or on `origin/main`, writes
    `docs/adr/ADR-NNN-slug.md` from `_template.md` (title, date and dependencies filled in,
    guidance comment removed) and appends a row to the table in `docs/adr/README.md`.
 6. **Fill in the ADR.** Open the new file and replace every placeholder, in English:
@@ -54,7 +58,7 @@ Everything written to the repo is in **English**, whatever language the conversa
      light acceptance, add `- Acceptance: light` under `- Backlog:`, mark those items
      `(light — catch-up)` and put `find-it pending (light, ADR-066)` in the backlog row (ADR-066).
    - **Gaps (ADR-082)** — each _Out of scope_ item and each open question gets a gap in
-     `docs/adr/GAPS.md` (`pnpm gaps add`), cited by its G id; `pnpm docs:check` enforces it. When
+     `docs/adr/GAPS.md` (`pnpm gaps add --id G-NNN`, claimed like the ADR number with `pnpm ids next G`), cited by its G id; `pnpm docs:check` enforces it. When
      the ADR takes over an existing gap, set that gap's Status to `ADR-NNN`.
    - **Open questions** — every choice the user has not made, with the options and the
      recommended one closest to the request (`CLAUDE.md`). The recommendation is a suggestion
@@ -81,6 +85,5 @@ Everything written to the repo is in **English**, whatever language the conversa
 ## Notes
 
 - The helper never overwrites an existing file and never touches git history.
-- It also looks at `origin/main` (if fetched) when choosing the number, but two branches
-  created at the same time can still collide — the PR review is the final check.
+- A claimed number that ends up unused stays a hole; numbers are never reused or renumbered.
 - Never set `Implemented` by hand; that is the `ship-adr` skill's job.

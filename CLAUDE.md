@@ -125,7 +125,9 @@ changed and push only on the user's explicit approval. Model, document, storage 
 - Keyboard focus visible; no horizontal page scroll at 390 px.
 - No committed browser/E2E suite, refactors or polish unless the user asks (ADR-015, ADR-016).
 - No dependency with an unknown licence or telemetry. Lockfile committed; base path `/furniture-builder/`.
-- Never renumber ADR or F/N/D ids.
+- Never renumber ADR or F/N/D ids. Claim every new ADR and G number before writing it: `pnpm ids next ADR|G`,
+  then the GitHub MCP tool `create_branch` `id/<KIND>-NNN` from `main`; on "Reference already exists" take
+  `pnpm ids next <KIND> --after NNN`. GitHub refuses a branch name that exists, so parallel sessions never collide.
 
 ## Delivery (hard, auto-failing — user rule 2026-10-23, `docs/retros/2026-10-23-catalog.md`)
 
@@ -161,8 +163,8 @@ changed and push only on the user's explicit approval. Model, document, storage 
 - Every implementation reply ends with the backlog status table (including every row still marked
   `find-it pending (light, ADR-066)`) and a **Skipped this iteration** section.
 - Gaps ledger (ADR-082, user rule 2026-10-25): anything not built is recorded in `docs/adr/GAPS.md` in the same
-  change: each skipped item, out-of-scope line, unanswered open question or cut requirement. Use `pnpm gaps add`
-  with the origin, what is missing, the user's request in their words, questions and the suggested pick (the rule
+  change: each skipped item, out-of-scope line, unanswered open question or cut requirement. Use `pnpm gaps add --id G-NNN`
+  (claimed first, Engineering conventions) with the origin, what is missing, the user's request in their words, questions and the suggested pick (the rule
   below). Cite the G ids in the reply. Only the user acknowledges a gap. A gap moved into an ADR has Status
   `ADR-NNN` and becomes Done when that ADR ships (`pnpm gaps sync`, run by `ship-adr`). `pnpm docs:check` and a
   `Stop` hook (`.claude/settings.json`) enforce it.

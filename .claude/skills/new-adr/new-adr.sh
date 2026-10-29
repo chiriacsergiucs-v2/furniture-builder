@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 # Create a new ADR from docs/adr/_template.md and register it in docs/adr/README.md.
 #
-# Usage: new-adr.sh "<Title>" ["ADR-001, ADR-002"]
+# Usage: ADR_ID=ADR-NNN new-adr.sh "<Title>" ["ADR-001, ADR-002"]
+#   ADR_ID   the number claimed on GitHub first (branch id/ADR-NNN, see scripts/ids.py)
 #   Title    short, imperative, English (e.g. "Set up the monorepo structure")
 #   deps     optional dependencies; numbers or ADR-NNN ids, comma/space separated
 #
 # What it does:
-#   - picks the next free number, looking at docs/adr/, docs/adr-done/ and (if present)
-#     origin/main or origin/master, so parallel branches are less likely to collide
+#   - uses the claimed number; refuses it if docs/adr/, docs/adr-done/ or origin/main
+#     already has that number
 #   - writes docs/adr/ADR-NNN-slug.md from the template (title, date, deps filled in,
 #     the guidance comment removed)
 #   - appends a row after the last "| [ADR-" row of the Index table in docs/adr/README.md
@@ -39,35 +40,15 @@ if [ -z "$slug" ]; then
   exit 1
 fi
 
-# --- next free number --------------------------------------------------------
-max=0
-consider() {
-  local b n
-  b="$(basename "$1")"
-  case "$b" in
-    ADR-[0-9]*-*.md)
-      n="${b#ADR-}"
-      n=$((10#${n%%-*}))
-      if [ "$n" -gt "$max" ]; then max=$n; fi
-      ;;
-  esac
-}
-
-shopt -s nullglob
-for p in "$adr_dir"/ADR-*.md "$done_dir"/ADR-*.md; do
-  consider "$p"
-done
-
-# Numbers already used on the remote default branch (best effort; run `git fetch` first).
-for ref in origin/main origin/master; do
-  if git rev-parse --verify -q "$ref" >/dev/null; then
-    while IFS= read -r p; do
-      consider "$p"
-    done < <(git ls-tree -r --name-only "$ref" -- "$adr_dir" "$done_dir")
-  fi
-done
-
-num="$(printf '%03d' "$((max + 1))")"
+# --- claimed number ---------------------------------------------------------
+claimed="${ADR_ID:?set ADR_ID to the number claimed with scripts/ids.py (branch id/ADR-NNN)}"
+[[ "$claimed" =~ ^ADR-([0-9]{3})$ ]] || { echo "ADR_ID must look like ADR-NNN, is '$claimed'." >&2; exit 1; }
+num="${BASH_REMATCH[1]}"
+taken="$(ls "$adr_dir" "$done_dir" 2>/dev/null; git ls-tree -r --name-only origin/main -- "$adr_dir" "$done_dir" 2>/dev/null || true)"
+if printf '%s\n' "$taken" | grep -q "ADR-$num-"; then
+  echo "ADR-$num is already used; claim another number." >&2
+  exit 1
+fi
 dst="$adr_dir/ADR-$num-$slug.md"
 if [ -e "$dst" ]; then
   echo "$dst already exists." >&2

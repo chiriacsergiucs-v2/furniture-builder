@@ -39,7 +39,7 @@ Project: **Furniture Builder** — offline PWA for designing casework.
    links across `docs/adr*/`, sets the README row to `✅ Implemented`, marks the gaps in
    `docs/adr/GAPS.md` that moved into this ADR `Done (ADR-NNN)` (ADR-082), and warns about
    unchecked `Done when` items and stale references elsewhere. Anything of the ADR still not
-   built gets a new gap (`pnpm gaps add`) before shipping, never a silent Done.
+   built gets a new gap (`pnpm gaps add --id G-NNN`, claimed with `pnpm ids next G`) before shipping, never a silent Done.
 4. **Review** `git status --short` and `git diff`; fix reported stale references by hand.
    Tick the `Done when` boxes you verified. Run `pnpm docs:check`.
 5. **Commit and push:**
