@@ -1,7 +1,8 @@
 # ADR-148: Size a group as a whole and keep its pieces moving together
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-29
+- Implemented: 2026-10-29
 - Depends on: ADR-097, ADR-106, ADR-122
 - Design: docs/ui-design.md (Plan view, selection card)
 - Backlog: N149

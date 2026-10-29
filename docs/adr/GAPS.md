@@ -2428,7 +2428,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-291: Vertical moves of a grouped piece do not carry the group
 
-- Status: ADR-148
+- Status: Done (ADR-148)
 - Origin: ADR-148, 2026-10-29; scope (Claude)
 - Missing: The wall-height drag in 3D, the From floor field and the gap tool move one grouped piece up/down or along alone.
 - Request: add the possibility to set the width, height and depth of grouped items, add the possibility to block group items from being moved separately.
@@ -2438,7 +2438,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-292: Mirror of one grouped piece alone
 
-- Status: ADR-148
+- Status: Done (ADR-148)
 - Origin: ADR-148, 2026-10-29; scope (Claude)
 - Missing: Mirroring a single grouped piece from its own card is not routed to the group.
 - Request: add the possibility to set the width, height and depth of grouped items, add the possibility to block group items from being moved separately.
