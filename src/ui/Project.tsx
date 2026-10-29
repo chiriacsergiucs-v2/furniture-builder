@@ -58,6 +58,7 @@ import {
   type PointerAt,
 } from './planDrag';
 import { useSnap } from './useSnap';
+import { MoveToButtons } from './MoveTo';
 import { CompatRules } from './CompatRules';
 import {
   consumeDragClick,
@@ -429,6 +430,8 @@ export function ProjectPanel({
               />
             )}
             {!blocked && <PlacementFields item={item} />}
+            {/* One-tap Move to: walls, ceiling, floor and neighbours, from the piece's own front (ADR-147). */}
+            <MoveToButtons key={`move-to-${item.id}`} id={item.id} />
             {item.placement?.kind === 'above' || blocked ? null : left ? (
               <>
                 <MmField
