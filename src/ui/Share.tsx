@@ -6,6 +6,7 @@ import {
   type SharedItem,
   type ShareLink,
 } from '../core/account';
+import { t } from '../core/i18n';
 import type { LocalTable } from '../core/sync';
 import { buildModel } from '../core/build';
 import { cutlist, hardwareSummary } from '../core/cutlist';
@@ -69,27 +70,28 @@ function ShareLinkFor({ item }: { item: { table: LocalTable; id: string; name: s
       await navigator.clipboard.writeText(url);
       setCopied(url);
     } catch {
-      setError('This browser did not allow copying. Select the link and copy it.');
+      setError(t('This browser did not allow copying. Select the link and copy it.'));
     }
   };
   return (
     <Dialog
       open
       onClose={close}
-      title={`Share link: ${item.name}`}
+      title={t('Share link: {name}', { name: item.name })}
       footer={
         <button type="button" className="btn solid" onClick={close}>
-          Done
+          {t('Done')}
         </button>
       }
     >
       <div className="share-dialog">
         <p className="hint">
-          Anyone with the link can open a copy of the latest saved version. Your item never changes.
-          Stop sharing turns a link off.
+          {t(
+            'Anyone with the link can open a copy of the latest saved version. Your item never changes. Stop sharing turns a link off.',
+          )}
         </p>
         {links === null ? (
-          <p className="loading">Loading…</p>
+          <p className="loading">{t('Loading…')}</p>
         ) : (
           links.map((s) => {
             const url = shareLink(appBase(), s.id);
@@ -99,12 +101,12 @@ function ShareLinkFor({ item }: { item: { table: LocalTable; id: string; name: s
                   className="input"
                   readOnly
                   value={url}
-                  aria-label="Share link"
+                  aria-label={t('Share link')}
                   onFocus={(e) => e.target.select()}
                 />
                 <button type="button" className="btn sm" onClick={() => void copy(url)}>
                   <Icon name="copy" className="sm" />
-                  {copied === url ? 'Copied' : 'Copy link'}
+                  {copied === url ? t('Copied') : t('Copy link')}
                 </button>
                 <button
                   type="button"
@@ -114,7 +116,7 @@ function ShareLinkFor({ item }: { item: { table: LocalTable; id: string; name: s
                     load();
                   }}
                 >
-                  Stop sharing
+                  {t('Stop sharing')}
                 </button>
               </div>
             );
@@ -133,7 +135,7 @@ function ShareLinkFor({ item }: { item: { table: LocalTable; id: string; name: s
           onClick={() => void make()}
         >
           <Icon name="link" className="sm" />
-          {links?.length ? 'Make another link' : 'Make a link'}
+          {links?.length ? t('Make another link') : t('Make a link')}
         </button>
       </div>
     </Dialog>
@@ -156,7 +158,7 @@ export function useShareLink(): void {
   }, [set]);
 }
 
-const DESIGN_KIND: Record<string, string> = { design: 'Piece', template: 'Template' };
+const DESIGN_KIND: Record<string, string> = { design: t('Piece'), template: t('Template') };
 
 /** The design a shared piece or template shows: the piece, or the template's first variant. */
 function previewDesign(item: SharedItem): Design | null {
@@ -183,9 +185,9 @@ function SharedItemFor({ opening, onOpened }: { opening: string; onOpened: () =>
   const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
   const [state, setState] = useState<{ item?: SharedItem; error?: string } | null>(() =>
     opening === 'invalid'
-      ? { error: 'This link no longer works. Ask the owner for a new one.' }
+      ? { error: t('This link no longer works. Ask the owner for a new one.') }
       : offline
-        ? { error: 'You are offline. Open this link when you are back online.' }
+        ? { error: t('You are offline. Open this link when you are back online.') }
         : null,
   );
   const [show3d, setShow3d] = useState(false);
@@ -230,8 +232,8 @@ function SharedItemFor({ opening, onOpened }: { opening: string; onOpened: () =>
       close();
       onOpened();
     } else {
-      const t = item.body as LocalTemplate;
-      await saveTemplate({ ...t, id: newId(), shadows: undefined, updatedAt: now });
+      const tpl = item.body as LocalTemplate;
+      await saveTemplate({ ...tpl, id: newId(), shadows: undefined, updatedAt: now });
       set({ opening: null });
       location.hash = '#catalog';
     }
@@ -240,16 +242,16 @@ function SharedItemFor({ opening, onOpened }: { opening: string; onOpened: () =>
     <Dialog
       open
       onClose={close}
-      title={state?.item ? state.item.name : 'Shared item'}
+      title={state?.item ? state.item.name : t('Shared item')}
       wide
       footer={
         <>
           <button type="button" className="btn ghost" onClick={close}>
-            Cancel
+            {t('Cancel')}
           </button>
           {state?.item && view && (
             <button type="button" className="btn primary" onClick={() => void open()}>
-              Open a copy
+              {t('Open a copy')}
             </button>
           )}
         </>
@@ -257,7 +259,7 @@ function SharedItemFor({ opening, onOpened }: { opening: string; onOpened: () =>
     >
       <div className="shared-preview">
         {!state ? (
-          <p className="loading">Opening the link…</p>
+          <p className="loading">{t('Opening the link…')}</p>
         ) : state.error ? (
           <p className="alert error" role="alert">
             <Icon name="alert-circle" className="sm" />
@@ -265,31 +267,40 @@ function SharedItemFor({ opening, onOpened }: { opening: string; onOpened: () =>
           </p>
         ) : !view ? (
           <p className="alert error" role="alert">
-            This shared item is not a valid piece or template, so it cannot be opened.
+            {t('This shared item is not a valid piece or template, so it cannot be opened.')}
           </p>
         ) : (
           <>
             <p className="hint">
-              {DESIGN_KIND[state.item!.kind] ?? 'Item'} · {b!.w} × {b!.h} × {b!.d} mm · {parts}{' '}
-              parts. Open a copy to save it on this device; the original is not changed.
+              {t(
+                '{kind} · {w} × {h} × {d} mm · {n} parts. Open a copy to save it on this device; the original is not changed.',
+                {
+                  kind: DESIGN_KIND[state.item!.kind] ?? t('Item'),
+                  w: b!.w,
+                  h: b!.h,
+                  d: b!.d,
+                  n: parts,
+                },
+              )}
             </p>
             {view.diagnostics.some((d) => d.severity === 'error') && (
               <p className="alert warning" role="status">
-                It has problems to fix:{' '}
-                {view.diagnostics.filter((d) => d.severity === 'error').length} errors.
+                {t('It has problems to fix: {n} errors.', {
+                  n: view.diagnostics.filter((d) => d.severity === 'error').length,
+                })}
               </p>
             )}
             <div className="shared-views">
-              <figure className="shared-front" aria-label="Front view">
+              <figure className="shared-front" aria-label={t('Front view')}>
                 <img
-                  alt={`Front view of ${state.item!.name}`}
+                  alt={t('Front view of {name}', { name: state.item!.name })}
                   src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(frontSvg(view.model, view.materials))}`}
                 />
               </figure>
               {show3d ? (
                 <div className="shared-3d view three active">
                   <ViewOverride.Provider value={view}>
-                    <Suspense fallback={<p className="loading">Loading 3D…</p>}>
+                    <Suspense fallback={<p className="loading">{t('Loading 3D…')}</p>}>
                       <Viewer3D />
                     </Suspense>
                   </ViewOverride.Provider>
@@ -297,7 +308,7 @@ function SharedItemFor({ opening, onOpened }: { opening: string; onOpened: () =>
               ) : (
                 <button type="button" className="btn" onClick={() => setShow3d(true)}>
                   <Icon name="cube" className="sm" />
-                  Show in 3D
+                  {t('Show in 3D')}
                 </button>
               )}
             </div>

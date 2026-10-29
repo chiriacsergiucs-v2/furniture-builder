@@ -1,4 +1,5 @@
 import type { RecordKind, RemoteRecord } from './account';
+import { t } from './i18n';
 
 /**
  * What a sync does, decided from three lists: the items saved on this device, the account's records and the links
@@ -118,8 +119,8 @@ export function itemState(item: LocalItem, link: AccountLink | undefined): ItemS
 }
 
 export const STATE_LABEL: Record<ItemSyncState, string> = {
-  'in-account': 'In your account',
-  waiting: 'Waiting to upload',
-  'device-only': 'Only on this device',
-  conflict: 'Conflict',
+  'in-account': t('In your account'),
+  waiting: t('Waiting to upload'),
+  'device-only': t('Only on this device'),
+  conflict: t('Conflict'),
 };

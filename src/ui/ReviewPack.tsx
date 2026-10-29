@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { t } from '../core/i18n';
 import { pictureHolders } from '../core/project';
 import { reviewPackFiles, reviewPackZip, type PackFile } from '../core/reviewPack';
 import { withPictures } from '../persist/images';
@@ -67,11 +68,12 @@ export function ReviewPackDialog({ open, onClose }: { open: boolean; onClose: ()
         setMsg(null);
         onClose();
       }}
-      title="Hand to a professional"
+      title={t('Hand to a professional')}
       info={
-        <InfoTip label="About the review pack" align="start">
-          One .zip to send to a joiner or kitchen fitter to check the plan. Nothing leaves this
-          device until you send it yourself.
+        <InfoTip label={t('About the review pack')} align="start">
+          {t(
+            'One .zip to send to a joiner or kitchen fitter to check the plan. Nothing leaves this device until you send it yourself.',
+          )}
         </InfoTip>
       }
       footer={
@@ -83,11 +85,11 @@ export function ReviewPackDialog({ open, onClose }: { open: boolean; onClose: ()
               onClick={() =>
                 void navigator
                   .share({ files: [file!], title: project.name })
-                  .catch(() => setMsg('Sharing was cancelled; save the .zip instead.'))
+                  .catch(() => setMsg(t('Sharing was cancelled; save the .zip instead.')))
               }
             >
               <Icon name="upload" className="sm" />
-              Share…
+              {t('Share…')}
             </button>
           )}
           <button
@@ -97,16 +99,16 @@ export function ReviewPackDialog({ open, onClose }: { open: boolean; onClose: ()
             onClick={() => {
               if (!pack) return;
               save(pack.name, pack.zip);
-              setMsg(`Saved ${pack.name}.`);
+              setMsg(t('Saved {name}.', { name: pack.name }));
             }}
           >
             <Icon name="download" className="sm" />
-            Download .zip
+            {t('Download .zip')}
           </button>
         </>
       }
     >
-      <p>The pack holds:</p>
+      <p>{t('The pack holds:')}</p>
       <ul className="pack-files">
         {(pack?.files ?? []).map((f) => (
           <li key={f.name}>
@@ -116,8 +118,9 @@ export function ReviewPackDialog({ open, onClose }: { open: boolean; onClose: ()
       </ul>
       {errors > 0 && (
         <p className="hint" role="note">
-          The project has {errors} {errors === 1 ? 'problem' : 'problems'}; they are listed in the
-          summary.
+          {t('The project has {n|# problem|# problems}; they are listed in the summary.', {
+            n: errors,
+          })}
         </p>
       )}
       {msg && (

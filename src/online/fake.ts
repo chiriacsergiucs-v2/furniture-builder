@@ -1,4 +1,5 @@
 import type { AccountUser, Backend, RemoteRecord, ShareLink, SharedItem } from '../core/account';
+import { t } from '../core/i18n';
 
 /**
  * An in-memory backend with the same rules as the Supabase migration (owner-only records, revision checks, Trash,
@@ -35,7 +36,7 @@ const now = () => new Date().toISOString();
 export function fakeBackend(server: FakeServer = fakeServer()): Backend & { server: FakeServer } {
   let me: AccountUser | null = null;
   const net = () => {
-    if (server.offline) throw new Error('Check your connection and try again.');
+    if (server.offline) throw new Error(t('Check your connection and try again.'));
   };
   const own = () => {
     net();
@@ -48,29 +49,30 @@ export function fakeBackend(server: FakeServer = fakeServer()): Backend & { serv
       return me;
     },
     async signInWithPassword(email, password) {
-      if (server.offline) return { ok: false, error: 'Check your connection and try again.' };
+      if (server.offline) return { ok: false, error: t('Check your connection and try again.') };
       const u = [...server.users.values()].find(
         (x) => x.user.email === email && x.user.provider === 'email',
       );
-      if (!u || u.password !== password) return { ok: false, error: 'Email or password is wrong.' };
+      if (!u || u.password !== password)
+        return { ok: false, error: t('Email or password is wrong.') };
       me = u.user;
       return { ok: true, user: me };
     },
     async signUp(email, password) {
-      if (server.offline) return { ok: false, error: 'Check your connection and try again.' };
+      if (server.offline) return { ok: false, error: t('Check your connection and try again.') };
       if (
         [...server.users.values()].some(
           (x) => x.user.email === email && x.user.provider === 'email',
         )
       )
-        return { ok: false, error: 'An account with this email already exists.' };
+        return { ok: false, error: t('An account with this email already exists.') };
       const user: AccountUser = { id: id(), email, provider: 'email' };
       server.users.set(user.id, { user, password });
       me = user;
       return { ok: true, user };
     },
     async signInWithGoogle() {
-      if (server.offline) return { ok: false, error: 'Check your connection and try again.' };
+      if (server.offline) return { ok: false, error: t('Check your connection and try again.') };
       const user: AccountUser = {
         id: id(),
         email: 'google.user@example.com',
@@ -82,13 +84,13 @@ export function fakeBackend(server: FakeServer = fakeServer()): Backend & { serv
       return { ok: true };
     },
     async sendPasswordReset(email) {
-      if (server.offline) return { ok: false, error: 'Check your connection and try again.' };
+      if (server.offline) return { ok: false, error: t('Check your connection and try again.') };
       if ([...server.users.values()].some((x) => x.user.email === email))
         server.sentResets.push(email);
       return { ok: true };
     },
     async updatePassword(password) {
-      if (!me) return { ok: false, error: 'This link has expired. Ask for a new one.' };
+      if (!me) return { ok: false, error: t('This link has expired. Ask for a new one.') };
       server.users.get(me.id)!.password = password;
       return { ok: true, user: me };
     },

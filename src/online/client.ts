@@ -8,6 +8,7 @@ import {
   type SharedItem,
 } from '../core/account';
 import { decodeRow, encodeRow } from '../core/backup';
+import { t } from '../core/i18n';
 import { newId, validateDesign } from '../core/design';
 import { validateLocalTemplate, type LocalTemplate } from '../core/catalog/local';
 import type { Design } from '../core/types';
@@ -46,7 +47,7 @@ export async function getBackend(): Promise<Backend> {
   if (backend) return backend;
   const url = import.meta.env.VITE_SUPABASE_URL;
   const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
-  if (!onlineConfigured(url) || !key) throw new Error('Accounts are not set up in this build.');
+  if (!onlineConfigured(url) || !key) throw new Error(t('Accounts are not set up in this build.'));
   const { supabaseBackend } = await import('./supabase');
   backend = supabaseBackend(url!, key, appUrl());
   return backend;
@@ -295,7 +296,12 @@ async function syncOnce(): Promise<void> {
     const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
     await refreshStatus(user, status.conflicts, false).catch(() => {});
     setStatus({
-      state: offline || /connection/i.test(String(e)) ? 'offline' : 'error',
+      state:
+        offline ||
+        /connection/i.test(String(e)) ||
+        String(e).includes(t('Check your connection and try again.'))
+          ? 'offline'
+          : 'error',
       error: (e as Error).message,
     });
   }
@@ -378,13 +384,19 @@ export async function setDeviceOnly(
 export const removeFromAccount = (accountId: string, table: LocalTable, localId: string) =>
   setDeviceOnly(accountId, table, localId, true);
 
+const KIND_WORD: Record<RemoteRecord['kind'], string> = {
+  design: t('design'),
+  template: t('template'),
+  image: t('image'),
+};
+
 /** Open an account record that is not on this device: a validated local copy, linked to it (ADR-137). */
 export async function openFromAccount(
   remote: RemoteRecord,
 ): Promise<{ ok: true; table: LocalTable; id: string } | { ok: false; error: string }> {
   const b = await getBackend();
   const user = await b.currentUser();
-  if (!user) return { ok: false, error: 'Sign in first.' };
+  if (!user) return { ok: false, error: t('Sign in first.') };
   const table = TABLE_OF[remote.kind];
   // Pictures it uses come too, when they are in the account and missing here.
   const want = imageIdsIn(remote.body, new Set());
@@ -410,7 +422,10 @@ export async function openFromAccount(
   if (!stored)
     return {
       ok: false,
-      error: `“${remote.name}” could not be opened: it is not a valid ${remote.kind}.`,
+      error: t('“{name}” could not be opened: it is not a valid {kind}.', {
+        name: remote.name,
+        kind: KIND_WORD[remote.kind],
+      }),
     };
   await putLink({
     accountId: user.id,
@@ -481,13 +496,13 @@ export async function createShare(
 ): Promise<{ ok: true; share: ShareLink } | { ok: false; error: string }> {
   const b = await getBackend();
   const user = await b.currentUser();
-  if (!user) return { ok: false, error: 'Sign in to share a link.' };
+  if (!user) return { ok: false, error: t('Sign in to share a link.') };
   let link = await db.accountLinks.get([user.id, table, localId]);
   if (!link?.remoteId) {
     await sync();
     link = await db.accountLinks.get([user.id, table, localId]);
   }
-  if (!link?.remoteId) return { ok: false, error: 'Save to account first to share a link.' };
+  if (!link?.remoteId) return { ok: false, error: t('Save to account first to share a link.') };
   try {
     return { ok: true, share: await b.createShare(link.remoteId, newShareId()) };
   } catch (e) {
@@ -516,13 +531,13 @@ export async function openShare(
     const item = await (await getBackend()).openShare(id);
     return item
       ? { ok: true, item }
-      : { ok: false, error: 'This link no longer works. Ask the owner for a new one.' };
+      : { ok: false, error: t('This link no longer works. Ask the owner for a new one.') };
   } catch (e) {
     const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
     return {
       ok: false,
       error: offline
-        ? 'You are offline. Open this link when you are back online.'
+        ? t('You are offline. Open this link when you are back online.')
         : (e as Error).message,
     };
   }
@@ -534,7 +549,7 @@ export async function openShare(
 export async function exportMyData(): Promise<{ blob: Blob; name: string }> {
   const b = await getBackend();
   const user = await b.currentUser();
-  if (!user) throw new Error('Sign in first.');
+  if (!user) throw new Error(t('Sign in first.'));
   const enc = new TextEncoder();
   const records = await b.listRecords();
   const shares = await b.listShares();

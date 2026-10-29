@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient, type User } from '@supabase/supabase-js';
 import type { AccountUser, Backend, RemoteRecord, SaveResult, ShareLink } from '../core/account';
+import { t } from '../core/i18n';
 
 /**
  * The Supabase backend (ADR-127): auth with Google and email/password, the `records` and `shares` tables and their
@@ -47,13 +48,14 @@ const toShare = (s: ShareRow): ShareLink => ({
 /** Plain words for the messages the user sees; the provider's text when there is no better one. */
 function said(e: { message?: string; code?: string } | null | undefined): string {
   const m = e?.message ?? '';
-  if (/invalid login credentials/i.test(m)) return 'Email or password is wrong.';
+  if (/invalid login credentials/i.test(m)) return t('Email or password is wrong.');
   if (/already registered|already exists/i.test(m))
-    return 'An account with this email already exists.';
-  if (/fetch|network|failed to/i.test(m)) return 'Check your connection and try again.';
-  if (/rate limit/i.test(m)) return 'Too many tries. Wait a while and try again.';
-  if (/expired|invalid.*(token|link)/i.test(m)) return 'This link has expired. Ask for a new one.';
-  return m || 'Something went wrong. Try again.';
+    return t('An account with this email already exists.');
+  if (/fetch|network|failed to/i.test(m)) return t('Check your connection and try again.');
+  if (/rate limit/i.test(m)) return t('Too many tries. Wait a while and try again.');
+  if (/expired|invalid.*(token|link)/i.test(m))
+    return t('This link has expired. Ask for a new one.');
+  return m || t('Something went wrong. Try again.');
 }
 
 export function supabaseBackend(url: string, anonKey: string, appUrl: string): Backend {
@@ -81,7 +83,7 @@ export function supabaseBackend(url: string, anonKey: string, appUrl: string): B
       if (error || !data.user) return { ok: false, error: said(error) };
       // No email verification (G-254): the project's "Confirm email" setting is off, so a session comes back.
       if (!data.session)
-        return { ok: false, error: 'Check your inbox to finish creating the account.' };
+        return { ok: false, error: t('Check your inbox to finish creating the account.') };
       return { ok: true, user: toUser(data.user) };
     },
     async signInWithGoogle() {
@@ -128,7 +130,10 @@ export function supabaseBackend(url: string, anonKey: string, appUrl: string): B
       });
       if (error?.code === '40001') return { ok: false, conflict: true };
       if (error)
-        return { ok: false, error: error.code === '53100' ? 'Your account is full.' : said(error) };
+        return {
+          ok: false,
+          error: error.code === '53100' ? t('Your account is full.') : said(error),
+        };
       return { ok: true, record: toRecord(data as Row) };
     },
     async trashRecord(id, trash) {
@@ -143,7 +148,9 @@ export function supabaseBackend(url: string, anonKey: string, appUrl: string): B
     async createShare(recordId, shareId) {
       const { data, error } = await sb.rpc('create_share', { p_record: recordId, p_id: shareId });
       if (error)
-        throw new Error(error.code === '53400' ? 'Too many links in the last hour.' : said(error));
+        throw new Error(
+          error.code === '53400' ? t('Too many links in the last hour.') : said(error),
+        );
       return toShare(data as ShareRow);
     },
     async listShares() {
