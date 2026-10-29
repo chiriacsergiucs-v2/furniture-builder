@@ -54,8 +54,8 @@ export interface Room {
 }
 
 /**
- * A wall's background (ADR-145): a colour, or a picture from this device (stored like board pictures, ADR-048) that
- * repeats, one copy covering `tileWidth` × `tileHeight` mm of wall. With a picture, `colour` is its average colour.
+ * A wall's background (ADR-145): a colour, or a picture from this device (stored like board pictures, ADR-048). With a
+ * picture, `colour` is its average colour, shown on the wall around the picture.
  */
 export interface WallFinish {
   /** Index of the wall (outline[i] → outline[i+1]), as for features. */
@@ -63,11 +63,29 @@ export interface WallFinish {
   colour: string;
   image?: WallImage;
 }
+/**
+ * A wall picture (ADR-146): it covers one rectangle of its wall once, `fit`, or the whole wall when absent. Seen from
+ * inside the room, `x` runs from the wall's left end and `y` up from the floor (`src/core/wallPicture.ts`).
+ */
 export interface WallImage {
   id: string;
   name: string;
-  tileWidth: Mm;
-  tileHeight: Mm;
+  fit?: WallRect;
+  /**
+   * The wall's corners in the photo (bottom-left, bottom-right, top-right, top-left), in ten-thousandths of the
+   * photo's width and height from its top-left corner: that part of the photo, straightened, fills `fit`.
+   */
+  straighten?: [Pt, Pt, Pt, Pt];
+  /** The repeat size of ADR-145, kept as read from older projects; no longer used (ADR-146: pictures do not repeat). */
+  tileWidth?: Mm;
+  tileHeight?: Mm;
+}
+/** A rectangle on a wall in mm: `x` from the wall's left end seen from inside the room, `y` up from the floor. */
+export interface WallRect {
+  x: Mm;
+  y: Mm;
+  w: Mm;
+  h: Mm;
 }
 
 /** The finish of wall `i`, if it has one. */
@@ -261,6 +279,12 @@ function segmentsMeet(a: Pt, b: Pt, c: Pt, d: Pt) {
 }
 
 /** Unit direction of a wall and the normal pointing into the room. */
+/** The way into the room from wall `i`, as a unit step in x and z. */
+export function wallInward(r: Room, i: number): Pt {
+  const { nx, nz } = frame(r, i);
+  return [nx, nz];
+}
+
 function frame(r: Room, i: number) {
   const [a, b] = wallEnds(r, i);
   const dx = Math.sign(b[0] - a[0]),
@@ -635,6 +659,37 @@ const isObj = (v: unknown): v is Record<string, unknown> =>
 const isInt = (v: unknown, min = -1e7) =>
   typeof v === 'number' && Number.isSafeInteger(v) && v >= min && v <= 1e7;
 
+/** A fitted picture's rectangle (ADR-146): whole mm, at least 1 mm, within `MAX_TILE` of the wall. */
+const isWallRect = (v: unknown) =>
+  isObj(v) &&
+  isInt(v.x, -MAX_TILE) &&
+  isInt(v.y, -MAX_TILE) &&
+  isInt(v.w, 1) &&
+  isInt(v.h, 1) &&
+  [v.x, v.y, v.w, v.h].every((n) => (n as number) <= MAX_TILE);
+
+/** Four photo corners (ADR-146) in 0–10000 that make a convex quadrilateral: none crossed, no three in a line. */
+export function isQuad(v: unknown): boolean {
+  if (
+    !Array.isArray(v) ||
+    v.length !== 4 ||
+    !v.every(
+      (p) =>
+        Array.isArray(p) &&
+        p.length === 2 &&
+        p.every((n) => isInt(n, 0) && (n as number) <= 10_000),
+    )
+  )
+    return false;
+  const q = v as Pt[];
+  const turns = q.map((a, k) => {
+    const b = q[(k + 1) % 4],
+      c = q[(k + 2) % 4];
+    return Math.sign((b[0] - a[0]) * (c[1] - b[1]) - (b[1] - a[1]) * (c[0] - b[0]));
+  });
+  return turns[0] !== 0 && turns.every((t) => t === turns[0]);
+}
+
 export function validateRoom(r: unknown): string[] {
   if (!isObj(r)) return ['Invalid room'];
   const errs: string[] = [];
@@ -697,8 +752,10 @@ export function validateRoom(r: unknown): string[] {
               img.id.length <= 200 &&
               typeof img.name === 'string' &&
               img.name.length <= 500 &&
-              isTile(img.tileWidth) &&
-              isTile(img.tileHeight)
+              (img.tileWidth === undefined || isTile(img.tileWidth)) &&
+              (img.tileHeight === undefined || isTile(img.tileHeight)) &&
+              (img.fit === undefined || isWallRect(img.fit)) &&
+              (img.straighten === undefined || isQuad(img.straighten))
             ))
         )
           errs.push('Invalid wall background');

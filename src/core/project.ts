@@ -221,9 +221,9 @@ export interface RunSink {
  * (ADR-095); 7 = a kept template revision on items (ADR-096); 8 = groups of pieces
  * (ADR-097); 9 = linked copies (ADR-111); 10 = pieces typed at an angle (ADR-121); 11 = size-locked pieces
  * (ADR-122); 12 = template references and project-wide settings (ADR-124); 13 = run handles and sinks (ADR-125);
- * 14 = wall backgrounds (ADR-145).
+ * 14 = wall backgrounds (ADR-145); 15 = fitted and straightened wall pictures (ADR-146).
  */
-export const PROJECT_SCHEMA = 14 as const;
+export const PROJECT_SCHEMA = 15 as const;
 export const PROJECT_SCHEMAS: readonly number[] = [
   1,
   2,
@@ -238,10 +238,11 @@ export const PROJECT_SCHEMAS: readonly number[] = [
   11,
   12,
   13,
+  14,
   PROJECT_SCHEMA,
 ];
 export type ProjectSchemaVersion =
-  1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | typeof PROJECT_SCHEMA;
+  1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | typeof PROJECT_SCHEMA;
 const RUN_REQUESTS_SINCE = 4;
 const MODELS_SINCE = 5;
 const LOCKS_SINCE = 6;
@@ -253,6 +254,7 @@ const SIZE_LOCK_SINCE = 11;
 const REFS_SINCE = 12;
 const RUN_EXTRAS_SINCE = 13;
 const WALLS_SINCE = 14;
+const FITTED_WALLS_SINCE = 15;
 
 export interface Project {
   schemaVersion: ProjectSchemaVersion;
@@ -2401,6 +2403,18 @@ export function validateProject(p: unknown): string[] {
     errs.push(...validateRoom(p.room));
     if (isObj(p.room) && p.room.walls !== undefined && (p.schemaVersion as number) < WALLS_SINCE)
       errs.push(`Wall backgrounds need project schemaVersion ${WALLS_SINCE}`);
+    if (
+      isObj(p.room) &&
+      Array.isArray(p.room.walls) &&
+      p.room.walls.some(
+        (f) =>
+          isObj(f) &&
+          isObj(f.image) &&
+          (f.image.fit !== undefined || f.image.straighten !== undefined),
+      ) &&
+      (p.schemaVersion as number) < FITTED_WALLS_SINCE
+    )
+      errs.push(`Fitted wall pictures need project schemaVersion ${FITTED_WALLS_SINCE}`);
   }
   if (
     p.runPartsRemoved !== undefined &&

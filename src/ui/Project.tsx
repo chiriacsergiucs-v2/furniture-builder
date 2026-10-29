@@ -47,7 +47,8 @@ import type { ProjectTemplate } from '../core/projectTemplate';
 import { useDesign } from '../store/designStore';
 import { Counter, Group, InfoTip, MmField, Segmented, Select, Toggle } from './controls';
 import { WallBackground } from './WallBackground';
-import { imageKey, useImageUrls } from '../persist/images';
+import { pictureRect } from '../core/wallPicture';
+import { pictureKey, useWallPictureUrls } from './wallPictures';
 import {
   arrowMove,
   movePointer,
@@ -78,6 +79,7 @@ import {
   shapeOutline,
   wallEnds,
   wallFinish,
+  type WallFinish,
   wallLength,
   type Room,
   type RoomFeature,
@@ -126,6 +128,9 @@ const FRONT_SIDE: Record<QuarterTurn, string> = {
  * The project editor for one editor mode (ADR-079). Compose: the pieces, where they stand and the room. Configure:
  * what applies to the whole project (run parts, saw cut, saving it as a template).
  */
+/** No wall backgrounds: a stable empty list for the hooks that read them. */
+const NO_WALLS: WallFinish[] = [];
+
 export function ProjectPanel({
   onAdd,
   mode,
@@ -1796,14 +1801,16 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
   const showFronts = useDesign((s) => s.showFronts);
   const room = useDesign((s) => s.project?.room);
   const rv = useMemo(() => (room ? roomFrontView(room) : null), [room]);
-  // Back-wall backgrounds (ADR-145): floor to room height behind the pieces against them; a picture repeats to scale.
-  const wallUrls = useImageUrls(imageKey(room?.walls ?? []));
+  // Back-wall backgrounds (ADR-145): floor to room height behind the pieces against them; a picture covers its
+  // rectangle once, straightened when asked, its average colour around it, as in 3D (ADR-146).
+  const wallUrls = useWallPictureUrls(room?.walls ?? NO_WALLS);
   const bgId = useId().replace(/[^a-zA-Z0-9_-]/g, '');
   const backs = (rv?.walls ?? []).flatMap((w) => {
     const f = room && wallFinish(room, w.wall);
     if (!f) return [];
-    const url = f.image ? wallUrls.get(f.image.id) : undefined;
-    return [{ ...w, f, url: url && url !== 'missing' ? url : undefined }];
+    const url = f.image ? wallUrls.get(pictureKey(f.image)) : undefined;
+    const rect = room && f.image ? pictureRect(room, w.wall, f.image) : null;
+    return [{ ...w, f, rect, url: url && url !== 'missing' ? url : undefined }];
   });
   const colors = useMemo(
     () =>
@@ -1887,36 +1894,33 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
         {backs.length > 0 && (
           <g className="room-wall-bg" aria-hidden="true">
             <defs>
-              {backs.map(
-                (w) =>
-                  w.url &&
-                  w.f.image && (
-                    <pattern
-                      key={w.wall}
-                      id={`${bgId}-wall-${w.wall}`}
-                      patternUnits="userSpaceOnUse"
-                      width={w.f.image.tileWidth}
-                      height={w.f.image.tileHeight}
-                    >
-                      <image
-                        href={w.url}
-                        width={w.f.image.tileWidth}
-                        height={w.f.image.tileHeight}
-                        preserveAspectRatio="none"
-                      />
-                    </pattern>
-                  ),
-              )}
+              {backs.map((w) => (
+                <clipPath key={w.wall} id={`${bgId}-wall-${w.wall}`}>
+                  <rect x={w.x} y={-rv!.height} width={w.w} height={rv!.height} />
+                </clipPath>
+              ))}
             </defs>
             {backs.map((w) => (
-              <rect
-                key={w.wall}
-                x={w.x}
-                y={-rv!.height}
-                width={w.w}
-                height={rv!.height}
-                style={{ fill: w.url ? `url(#${bgId}-wall-${w.wall})` : w.f.colour }}
-              />
+              <g key={w.wall} clipPath={`url(#${bgId}-wall-${w.wall})`}>
+                <rect
+                  x={w.x}
+                  y={-rv!.height}
+                  width={w.w}
+                  height={rv!.height}
+                  style={{ fill: w.f.colour }}
+                />
+                {w.url && w.rect && (
+                  <image
+                    className="wall-picture"
+                    href={w.url}
+                    x={w.x + w.rect.x}
+                    y={-(w.rect.y + w.rect.h)}
+                    width={w.rect.w}
+                    height={w.rect.h}
+                    preserveAspectRatio="none"
+                  />
+                )}
+              </g>
             ))}
           </g>
         )}
