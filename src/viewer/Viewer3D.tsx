@@ -1041,6 +1041,9 @@ function RoomWalls({ adjusting, snapOn }: { adjusting: boolean; snapOn: boolean 
   const [chosen, choose] = useAdjustWall();
   const live = usePicturePreview();
   const press = usePictureDrag(snapOn);
+  // Leaving the 3D view forgets the chosen wall: its handles are never mounted with a new canvas, where their DOM
+  // overlay (drei Html) fails to unmount cleanly.
+  useEffect(() => () => choose(null), [choose]);
   if (!boxes || !room) return null;
   const mesh = (b: Box, key: string, color: string, opacity: number) => (
     <mesh
@@ -1067,7 +1070,8 @@ function RoomWalls({ adjusting, snapOn }: { adjusting: boolean; snapOn: boolean 
         const pickable = adjusting && !!f?.image;
         return patches.map((pt, k) => (
           <WallPatchMesh
-            key={`w${i}-${k}`}
+            // A new mesh when its picture arrives: a material does not pick up a map added after its first frame.
+            key={`w${i}-${k}-${pt.picture && tex ? tex.uuid : 'plain'}`}
             room={room}
             wall={w}
             patch={pt}

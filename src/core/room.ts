@@ -282,7 +282,8 @@ function segmentsMeet(a: Pt, b: Pt, c: Pt, d: Pt) {
 /** The way into the room from wall `i`, as a unit step in x and z. */
 export function wallInward(r: Room, i: number): Pt {
   const { nx, nz } = frame(r, i);
-  return [nx, nz];
+  // + 0 turns −0 into 0.
+  return [nx + 0, nz + 0];
 }
 
 function frame(r: Room, i: number) {

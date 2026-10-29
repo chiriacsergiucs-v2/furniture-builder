@@ -44,7 +44,7 @@ export const rectLabel = (f: WallRect) =>
  */
 export function wallAxes(r: Room, i: number): { left: Pt; right: Pt; inward: Pt } {
   const [nx, nz] = wallInward(r, i);
-  const right: Pt = [nz, -nx];
+  const right: Pt = [nz + 0, -nx + 0];
   const [a, b] = wallEnds(r, i);
   const along = (p: Pt) => p[0] * right[0] + p[1] * right[1];
   return { left: along(a) <= along(b) ? a : b, right, inward: [nx, nz] };
