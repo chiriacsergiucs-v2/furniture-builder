@@ -260,30 +260,15 @@ function AppSummary({ ctx }: { ctx: Ctx }) {
   const all = [...view.features.values()];
   const shown = all.filter((f) => !mergedOf(f, marks));
   const n = (s: Implementation) => shown.filter((f) => implementationOf(f, marks) === s).length;
-  const left = shown.length - n('implemented') - n('verified');
+  const built = n('implemented') + n('verified');
   return (
     <section className="app-summary" aria-label="Built in this app">
       <h2 className="group-head">Built in this app</h2>
       <p className="alert ok">
         <Icon name="check" className="sm" />
         <span>
-          Of {shown.length} features (after {all.length - shown.length} merged as the same idea):{' '}
-          <button
-            type="button"
-            className="link"
-            onClick={() => go('features', { implementation: 'verified' })}
-          >
-            <strong className="num">{n('verified')}</strong> verified
-          </button>
-          ,{' '}
-          <button
-            type="button"
-            className="link"
-            onClick={() => go('features', { implementation: 'implemented' })}
-          >
-            <strong className="num">{n('implemented')}</strong> implemented
-          </button>
-          ,{' '}
+          Features the app has built are no longer listed (ADR-149). Of the {shown.length} left
+          (after {all.length - shown.length} merged as the same idea):{' '}
           <button
             type="button"
             className="link"
@@ -292,9 +277,30 @@ function AppSummary({ ctx }: { ctx: Ctx }) {
             <strong className="num">{n('in-progress')}</strong> in progress
           </button>
           ,{' '}
-          <button type="button" className="link" onClick={() => go('features', { left: true })}>
-            <strong className="num">{left}</strong> left to build
+          <button
+            type="button"
+            className="link"
+            onClick={() => go('features', { implementation: 'not-started' })}
+          >
+            <strong className="num">{n('not-started')}</strong> not started
           </button>
+          {n('planned') > 0 && (
+            <>
+              ,{' '}
+              <button
+                type="button"
+                className="link"
+                onClick={() => go('features', { implementation: 'planned' })}
+              >
+                <strong className="num">{n('planned')}</strong> planned
+              </button>
+            </>
+          )}
+          {built > 0 && (
+            <>
+              , <strong className="num">{built}</strong> built by a status you set
+            </>
+          )}
           . From the backlog and ADRs (checked {APP_CHECKED}); a status you set yourself wins.{' '}
           <button
             type="button"

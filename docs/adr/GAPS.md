@@ -2502,3 +2502,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: (a) all actions disabled; (b) vertical actions only
 - Suggested pick: (b), keeps ceiling and floor working (estimate +3 % work)
 - Answer: User 2026-10-29: "Vertical only" — To ceiling and Down work; the other actions are off, "turned freely".
+
+### G-298: Research data stale after research batches 1-5
+
+- Status: Open
+- Origin: ADR-149 (merged with main 2026-10-29)
+- Missing: Research features built by ADR-121..125 (research batches 1-5: on-demand rendering, typed rotation, version history, design codes, sinks and handles, spatial query engine and others) are still listed as not built in the research data
+- Request: "Re-validate, remove implemented ones"
+- Questions: Re-validate again against ADR-121..125 and delete those features too?
+- Suggested pick: Yes, re-check and delete them the same way as ADR-149 (estimate: effort +20% of ADR-149, value: keeps the list to what is left)
