@@ -42,7 +42,7 @@ Read first: `docs/backlog.md`, `docs/adr/README.md`, `docs/product/product-conte
   (`pnpm catalog:docs`); `docs/retros/` — retrospectives
 - `.claude/skills/` — `new-adr`, `next-adr`, `ship-adr`, `verify`, `review`, `debug`, `add-tests`,
   `implement-design`, `design-review`, `add-storage-version`, `add-model-feature` (reserv's `add-endpoint`
-  counterpart), `security-review`, `ff`
+  counterpart), `security-review`, `ff`, `babysit`
 - `.github/workflows/ci.yml` — CI; the source of truth for what "passing" means.
   `deploy.yml` publishes `main` to GitHub Pages.
 
@@ -179,5 +179,6 @@ changed and push only on the user's explicit approval. Model, document, storage 
 - Branch per ADR: `adr-NNN-short-title`; open a pull request for review. An ADR created and approved for building
   in the same run (new and next together, above) shares one branch and one pull request with its implementation.
 - Merge to `main` only on the user's instruction; then cite the `Deploy GitHub Pages` run id. Never force-push
-  `main`.
+  `main`. Exception (user rule 2026-10-29, `babysit` skill): a pull request Claude opened and babysits is shipped
+  on its branch (`ship-adr`) and merged once green, without asking again.
 - Ship commit message: `Ship ADR-NNN: <short title> — mark implemented`.
