@@ -762,7 +762,8 @@ function validatePartMaterials(pm: unknown, version: unknown, mids: Set<string>,
   if (!isObj(pm) || Object.keys(pm).length > 2000) return void errs.push('Invalid part boards');
   if ((version as number) < 4) errs.push('Part boards need schemaVersion 4');
   for (const [k, v] of Object.entries(pm))
-    if (!k || !mids.has(v as string)) errs.push(`Part board for ${k} refers to an unknown material`);
+    if (!k || !mids.has(v as string))
+      errs.push(`Part board for ${k} refers to an unknown material`);
 }
 
 /** ADR-028: optional catalog metadata; checked when present, never throws. */
