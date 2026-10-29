@@ -2454,3 +2454,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: add the possibility to set the width, height and depth of grouped items, add the possibility to block group items from being moved separately.
 - Questions: Should repairs and Mirror the run also carry or refuse grouped pieces?
 - Suggested pick: Carry the whole group, refusing a repair the group cannot follow (closer to the request; estimate effort +10 %)
+
+### G-294: Research data stale after research batches 1-5
+
+- Status: Open
+- Origin: ADR-149 (merged with main 2026-10-29)
+- Missing: Research features built by ADR-121..125 (research batches 1-5: on-demand rendering, typed rotation, version history, design codes, sinks and handles, spatial query engine and others) are still listed as not built in the research data
+- Request: "Re-validate, remove implemented ones"
+- Questions: Re-validate again against ADR-121..125 and delete those features too?
+- Suggested pick: Yes, re-check and delete them the same way as ADR-149 (estimate: effort +20% of ADR-149, value: keeps the list to what is left)
