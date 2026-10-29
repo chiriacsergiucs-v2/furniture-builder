@@ -19,6 +19,7 @@ import { ru_project } from './project';
 import { ru_research } from './research';
 import { ru_shell } from './shell';
 import { ru_viewer } from './viewer';
+import { ru_wizard } from './wizard';
 
 export const ru = {
   ...ru_base,
@@ -33,6 +34,7 @@ export const ru = {
   ...ru_core,
   ...ru_core2,
   ...ru_info,
+  ...ru_wizard,
 };
 
 export const ruData: Record<string, string> = {
