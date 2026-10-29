@@ -1,7 +1,8 @@
 # ADR-152: Delete research features built by the research batches
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-29
+- Implemented: 2026-10-29
 - Depends on: ADR-149, ADR-121, ADR-122, ADR-123, ADR-124, ADR-125
 - Design: n/a
 - Backlog: N153

@@ -2505,7 +2505,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-298: Research data stale after research batches 1-5
 
-- Status: ADR-152
+- Status: Done (ADR-152)
 - Origin: ADR-149 (merged with main 2026-10-29)
 - Missing: Research features built by ADR-121..125 (research batches 1-5: on-demand rendering, typed rotation, version history, design codes, sinks and handles, spatial query engine and others) are still listed as not built in the research data
 - Request: "Re-validate, remove implemented ones"
