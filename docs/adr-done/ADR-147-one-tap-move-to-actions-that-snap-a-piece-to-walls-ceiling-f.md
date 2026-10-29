@@ -1,7 +1,8 @@
 # ADR-147: One-tap Move to actions that snap a piece to walls, ceiling, floor and neighbours
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-29
+- Implemented: 2026-10-29 (Merged to main via PR #129 on the user's instruction ("Ship, merge now, no ci wait"); local evidence in N148)
 - Depends on: ADR-058, ADR-070, ADR-093
 - Design: docs/ui-design.md (Project editor, piece panel; 3D view toolbar)
 - Backlog: N148

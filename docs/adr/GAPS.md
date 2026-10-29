@@ -2436,7 +2436,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-291: Move to for a stacked piece
 
-- Status: ADR-147
+- Status: Done (ADR-147)
 - Origin: ADR-147, 2026-10-29; open question
 - Missing: How sideways and ceiling moves work for a piece placed above another
 - Request: add a move action for a piece, snap to closest wall, snap to closest ceiling, snap to closest left piece, snap to closest right piece, and any other snaps you think would be appropriate
@@ -2446,7 +2446,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-292: Align top or front: which neighbour
 
-- Status: ADR-147
+- Status: Done (ADR-147)
 - Origin: ADR-147, 2026-10-29; open question
 - Missing: Which neighbour Align top and Align front use
 - Request: add a move action for a piece, snap to closest wall, snap to closest ceiling, snap to closest left piece, snap to closest right piece, and any other snaps you think would be appropriate
@@ -2456,7 +2456,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-293: Move to for a freely turned piece
 
-- Status: ADR-147
+- Status: Done (ADR-147)
 - Origin: ADR-147, 2026-10-29; open question
 - Missing: What Move to does for a piece turned by a free angle (ADR-121)
 - Request: add a move action for a piece, snap to closest wall, snap to closest ceiling, snap to closest left piece, snap to closest right piece, and any other snaps you think would be appropriate
