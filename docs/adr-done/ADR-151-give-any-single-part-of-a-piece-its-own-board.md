@@ -1,7 +1,8 @@
 # ADR-151: Give any single part of a piece its own board
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-29
+- Implemented: 2026-10-29 (Built and merged in PR #132 before this ADR was written; CI run 40861670801, Deploy GitHub Pages run 40861670678)
 - Depends on: ADR-011
 - Design: docs/ui-design.md (Settings dialog, collapsible groups)
 - Backlog: N152
