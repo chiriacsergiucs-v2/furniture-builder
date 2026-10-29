@@ -1,7 +1,8 @@
 # ADR-153: Switch the app between English and Russian
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-29
+- Implemented: 2026-10-29 (PR #137, CI run 40923177464)
 - Depends on: ADR-002, ADR-020
 - Design: docs/ui-design.md (More menu)
 - Backlog: N155
@@ -16,11 +17,11 @@ rule/constraint to also add translation on any text added/modified/deleted."
 Answers the same day: scope "UI + diagnostics + print/CSV"; toggle "EN/RU switch, default EN"; rule "CLAUDE.md +
 type check"; delivery "One PR, several ADRs"; Russian "I translate, no review"; data text "Everything, research
 too"; switching "Reload on switch"; font "Add a local Cyrillic font". The request is split into ADR-153 (this base),
-[ADR-154](ADR-154-translate-every-screen-into-russian.md) (screens),
-[ADR-155](ADR-155-translate-the-built-in-catalog-wizard-and-research-text-into.md) (built-in data),
-[ADR-156](ADR-156-translate-the-problem-messages-into-russian.md) (problem messages),
-[ADR-157](ADR-157-choose-the-language-of-printed-sheets-and-the-parts-csv.md) (print and CSV) and
-[ADR-158](ADR-158-add-an-information-and-guides-page-with-the-feature-tree.md) (Information and guides).
+[ADR-154](../adr-done/ADR-154-translate-every-screen-into-russian.md) (screens),
+[ADR-155](../adr-done/ADR-155-translate-the-built-in-catalog-wizard-and-research-text-into.md) (built-in data),
+[ADR-156](../adr-done/ADR-156-translate-the-problem-messages-into-russian.md) (problem messages),
+[ADR-157](../adr-done/ADR-157-choose-the-language-of-printed-sheets-and-the-parts-csv.md) (print and CSV) and
+[ADR-158](../adr-done/ADR-158-add-an-information-and-guides-page-with-the-feature-tree.md) (Information and guides).
 
 The CLAUDE.md line "the app UI is in English" (ADR-020) becomes "English by default, Russian on request".
 

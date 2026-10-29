@@ -1,7 +1,8 @@
 # ADR-155: Translate the built-in catalog, wizard and research text into Russian
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-29
+- Implemented: 2026-10-29 (PR #137, CI run 40923177464)
 - Depends on: ADR-153
 - Design: n/a
 - Backlog: N157
@@ -9,7 +10,7 @@
 ## Context
 
 Part of the user's request of 2026-10-29 ("translate all the existing content"), see
-[ADR-153](ADR-153-switch-the-app-between-english-and-russian.md). Asked whether built-in data text (about 20k words
+[ADR-153](../adr-done/ADR-153-switch-the-app-between-english-and-russian.md). Asked whether built-in data text (about 20k words
 of Feature Research and 8k words of catalog and wizard text) is translated too: "Everything, research too".
 
 ## Decision

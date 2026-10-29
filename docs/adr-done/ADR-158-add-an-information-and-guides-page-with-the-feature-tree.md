@@ -1,7 +1,8 @@
 # ADR-158: Add an Information and guides page with the feature tree
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-29
+- Implemented: 2026-10-29 (PR #137, CI run 40923177464)
 - Depends on: ADR-153
 - Design: docs/ui-design.md (pages)
 - Backlog: N160

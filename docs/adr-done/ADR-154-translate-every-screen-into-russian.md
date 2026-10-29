@@ -1,7 +1,8 @@
 # ADR-154: Translate every screen into Russian
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-29
+- Implemented: 2026-10-29 (PR #137, CI run 40923177464)
 - Depends on: ADR-153
 - Design: docs/ui-design.md
 - Backlog: N156
@@ -9,7 +10,7 @@
 ## Context
 
 Part of the user's request of 2026-10-29 ("translate all the existing content"), see
-[ADR-153](ADR-153-switch-the-app-between-english-and-russian.md). Answer: scope "UI + diagnostics + print/CSV",
+[ADR-153](../adr-done/ADR-153-switch-the-app-between-english-and-russian.md). Answer: scope "UI + diagnostics + print/CSV",
 Russian "I translate, no review".
 
 ## Decision

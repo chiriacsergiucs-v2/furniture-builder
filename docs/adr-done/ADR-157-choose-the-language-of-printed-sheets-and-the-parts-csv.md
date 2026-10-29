@@ -1,14 +1,15 @@
 # ADR-157: Choose the language of printed sheets and the parts CSV
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-29
+- Implemented: 2026-10-29 (PR #137, CI run 40923177464)
 - Depends on: ADR-020, ADR-153
 - Design: docs/ui-design.md (More menu)
 - Backlog: N159
 
 ## Context
 
-Part of the user's request of 2026-10-29, see [ADR-153](ADR-153-switch-the-app-between-english-and-russian.md).
+Part of the user's request of 2026-10-29, see [ADR-153](../adr-done/ADR-153-switch-the-app-between-english-and-russian.md).
 Answers: scope "UI + diagnostics + print/CSV"; with the UI in English, print and CSV use "Own setting: RO/RU/EN".
 
 This changes [ADR-020](../adr-done/ADR-020-printing-and-drawings-svg-from-the-model-plus-a-print-styles.md):
