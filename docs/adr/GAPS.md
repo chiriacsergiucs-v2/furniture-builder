@@ -2361,3 +2361,48 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Answer G-244: “New copies (Recommended)”
 - Questions: Keep new ids always, or keep the old id when nothing on this device uses it?
 - Suggested pick: Keep the old id when it is free (closer to a full restore; estimate effort +3 %)
+
+### G-283: Move to actions on the 2D plan
+
+- Status: Open
+- Origin: ADR-146, 2026-10-29; out of scope
+- Missing: No overlay bar of Move to buttons over the 2D plan; they are in the piece panel and the 3D Move toolbar
+- Request: add a move action for a piece, snap to closest wall, snap to closest ceiling, snap to closest left piece, snap to closest right piece, and any other snaps you think would be appropriate
+- Questions: Add a floating Move to bar over the plan?
+- Suggested pick: Not now; the user picked panel + 3D
+
+### G-284: Move to for several selected pieces
+
+- Status: Open
+- Origin: ADR-146, 2026-10-29; out of scope
+- Missing: Move to actions move only the selected piece, not a multi-selection
+- Request: add a move action for a piece, snap to closest wall, snap to closest ceiling, snap to closest left piece, snap to closest right piece, and any other snaps you think would be appropriate
+- Questions: Should Move to move every selected piece as one block?
+- Suggested pick: Yes, as one block (closest to how drag moves a selection; estimate +20 % work)
+
+### G-285: Move to for a stacked piece
+
+- Status: Open
+- Origin: ADR-146, 2026-10-29; open question
+- Missing: How sideways and ceiling moves work for a piece placed above another
+- Request: add a move action for a piece, snap to closest wall, snap to closest ceiling, snap to closest left piece, snap to closest right piece, and any other snaps you think would be appropriate
+- Questions: (a) move along its base via offsetX, lift off for ceiling; (b) lift off and move freely; (c) disabled
+- Suggested pick: (a), keeps it on its base (estimate +10 % work)
+
+### G-286: Align top or front: which neighbour
+
+- Status: Open
+- Origin: ADR-146, 2026-10-29; open question
+- Missing: Which neighbour Align top and Align front use
+- Request: add a move action for a piece, snap to closest wall, snap to closest ceiling, snap to closest left piece, snap to closest right piece, and any other snaps you think would be appropriate
+- Questions: (a) separate left and right buttons; (b) the nearer neighbour, left on a tie
+- Suggested pick: (a), says exactly which piece (estimate +5 % work)
+
+### G-287: Move to for a freely turned piece
+
+- Status: Open
+- Origin: ADR-146, 2026-10-29; open question
+- Missing: What Move to does for a piece turned by a free angle (ADR-121)
+- Request: add a move action for a piece, snap to closest wall, snap to closest ceiling, snap to closest left piece, snap to closest right piece, and any other snaps you think would be appropriate
+- Questions: (a) all actions disabled; (b) vertical actions only
+- Suggested pick: (b), keeps ceiling and floor working (estimate +3 % work)
