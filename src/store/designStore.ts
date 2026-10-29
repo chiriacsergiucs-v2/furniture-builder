@@ -44,6 +44,7 @@ import { drill, type Selection } from '../core/selectPath';
 import { resizeProduct, type SizeField } from '../core/pieceSize';
 import { resizeBlocked, setSizeLocked, sizeLockBlocked } from '../core/sizeLock';
 import { setWallHeight } from '../core/height';
+import { moveTo, type MoveToAction } from '../core/moveTo';
 import {
   closeOutline,
   DEFAULT_ROOM_HEIGHT,
@@ -233,6 +234,8 @@ interface State {
   dropItemAt: (id: string, from: FloorPoint, to: FloorPoint, snap: boolean) => string | null;
   /** The gap tool (ADR-022); returns why nothing moved when it would move a locked piece (ADR-095), or null. */
   setGap: (id: string, gap: number, moveRight: boolean) => string | null;
+  /** A one-tap Move to action (ADR-147); one undo step. Returns why nothing moved, or null. */
+  moveItemTo: (id: string, action: MoveToAction) => string | null;
   /** Lock or unlock a piece's placement (ADR-095); one undo step. */
   setLocked: (id: string, on: boolean) => void;
   /** Lock or unlock a piece's size (ADR-122); one undo step. */
@@ -735,6 +738,17 @@ export const useDesign = create<State>((rawSet, get) => {
       const res = trySetGap(p, id, gap, moveRight);
       if (res.project !== p) commitProject(res.project);
       return res.reason ?? null;
+    },
+    moveItemTo: (id, action) => {
+      const p = get().project;
+      if (!p) return null;
+      const res = moveTo(p, id, action);
+      if (res.reason) {
+        set({ notice: res.reason });
+        return res.reason;
+      }
+      if (res.project !== p) commitProject(res.project);
+      return null;
     },
     setLocked: (id, on) => {
       const p = get().project;

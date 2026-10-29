@@ -57,6 +57,7 @@ import { setSolidWalls, useSolidWalls } from '../ui/useSolidWalls';
 import { SHADOW_CATCHER, setStage, useRendering } from './renderBridge';
 import { CountStepper } from '../ui/CountStepper';
 import { useSnap } from '../ui/useSnap';
+import { MoveToButtons } from '../ui/MoveTo';
 import { SNAP_RANGE } from '../core/snap';
 import { S, useGhost, useMoveMode, usePieceDrag, type PieceGhost } from './pieceDrag';
 import { landingY } from '../core/drag3d';
@@ -257,6 +258,7 @@ export default function Viewer3D() {
       : null,
   );
   const turnItem = useDesign((s) => s.turnItem);
+  const [moveToOpen, setMoveToOpen] = useState(false);
   // R / Shift+R turn the selected piece about its centre (ADR-069), as on the Plan; not while typing or in a dialog.
   useEffect(() => {
     if (!turnId || rendering || tapping) return;
@@ -412,6 +414,20 @@ export default function Viewer3D() {
                 Turn 90° ↻
               </button>
             </>
+          )}
+          {/* One-tap Move to over the 3D view while Move is on (ADR-147), behind a toggle so it does not cover it. */}
+          {moving && turnId && (
+            <button
+              type="button"
+              className="btn sm outline"
+              aria-expanded={moveToOpen}
+              onClick={() => setMoveToOpen(!moveToOpen)}
+            >
+              Move to…
+            </button>
+          )}
+          {moving && turnId && moveToOpen && (
+            <MoveToButtons key={turnId} id={turnId} className="three-move-to" />
           )}
           <button
             type="button"
