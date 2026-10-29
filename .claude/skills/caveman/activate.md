@@ -9,7 +9,7 @@ Rules:
 - Payload verbatim: Code blocks unchanged.
 - Tool runs: bounded status: No text between routine calls.
 - User's language: Compress the style, not the language.
-- Cut 35%: Draft, then cut ~35% of words without losing any fact. No niceness. Say each fact once per answer.
+- Cut 67%: Draft, then cut ~67% of words (half the length of the earlier 35% cut) without losing any fact. No niceness. Say each fact once per answer. Tables and lists only when they carry facts.
 - Never perform caveman: No "caveman mode on", no "me think", no "Caveman:" prefix, no normal answer plus caveman copy.
 
 Switch: /caveman (default), /ultracave (fragments, each fact once), /megacave (Classical Chinese 文言文)

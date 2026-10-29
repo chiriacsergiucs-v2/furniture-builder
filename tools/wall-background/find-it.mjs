@@ -1,8 +1,8 @@
 // Find-it acceptance for wall backgrounds (CLAUDE.md R3, backlog N146, ADR-145), run against a production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/wall-background/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // Starts from the bare app at each width and finds everything by visible text: a new project gets a room; Settings ›
-// Room › "Wall 1 background" › Picture takes a picture from the device ("Add a picture for Wall 1"), sized by
-// "One picture covers, width/height" (hint "Set the real size"); Wall 4 gets a Colour. The 3D view shows the picture
+// Room › "Wall 1 background" › Picture takes a picture from the device ("Add a picture for Wall 1"), covering the
+// whole wall (ADR-146 replaced the repeat size); Wall 4 gets a Colour. The 3D view shows the picture
 // and the colour on the walls; "Solid walls" makes them opaque; the front view fills the back wall behind the piece.
 // Not part of `pnpm test`.
 import { chromium } from 'playwright';
@@ -108,18 +108,13 @@ for (const width of [1280, 390]) {
   const thumb = page.getByRole('img', { name: 'Picture on Wall 1' });
   await thumb.waitFor({ timeout: 8000 }).catch(() => {});
   check(width, 'the picked picture shows next to "Replace picture"', await thumb.isVisible());
-  const tw = page.getByLabel('One picture covers, width', { exact: true }).first();
+  // ADR-146: a picture no longer repeats; it covers the whole wall (tools/wall-picture-fit/find-it.mjs adjusts it).
+  const covers = page.getByText(/^Covers:/).first();
   check(
     width,
-    'one copy starts 1000 mm wide, with the hint "Set the real size"',
-    (await tw.inputValue()) === '1000' && (await page.getByText('Set the real size').isVisible()),
-    await tw.inputValue(),
+    'the picture covers the whole wall ("Covers: From left 0 · From floor 0")',
+    /From left 0 · From floor 0/.test((await covers.textContent()) ?? ''),
   );
-  await tw.fill('300');
-  await tw.press('Enter');
-  const th = page.getByLabel('One picture covers, height', { exact: true }).first();
-  await th.fill('300');
-  await th.press('Enter');
   // Wall 4 (the left wall, seen from the starting 3D view) → Colour.
   const bg4 = page.getByLabel('Wall 4 background', { exact: true });
   await bg4.selectOption({ label: 'Colour' });
@@ -133,12 +128,12 @@ for (const width of [1280, 390]) {
   await sheet(false);
   const front = page.getByRole('figure', { name: /Room seen from the front/ });
   await front.scrollIntoViewIfNeeded().catch(() => {});
-  const fill = await front
-    .locator('g.room-wall-bg rect')
+  const href = await front
+    .locator('g.room-wall-bg image')
     .first()
-    .evaluate((e) => e.style.fill)
+    .getAttribute('href')
     .catch(() => '');
-  check(width, 'the front view fills the back wall with its picture', /url\(/.test(fill), fill);
+  check(width, 'the front view fills the back wall with its picture', !!href, href ?? '');
   await front.screenshot({ path: `${out}/wall-background-front-${width}.png` });
 
   // 3D: Build & Preview on a phone, the 3D view switch on both.

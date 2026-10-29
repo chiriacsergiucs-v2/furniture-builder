@@ -17,7 +17,7 @@ Everything written to the repo is in **English**, whatever language the conversa
 
 1. **Understand the ADR.** Get the topic from the user, or draft it from the conversation.
    Write the user's request down **in their own words** (it becomes the Context and the
-   requirement ledger, R1 in `CLAUDE.md`). If the scope is unclear, ask one question.
+   requirement ledger, R1 in `CLAUDE.md`). If the scope is unclear, ask at once (rule in step 6, **Open questions**).
    Check `docs/adr/README.md` and `docs/adr-done/` first so the new ADR does not duplicate
    or contradict an existing one.
 2. **Change control.** If the request conflicts with an implemented ADR, or touches
@@ -60,6 +60,10 @@ Everything written to the repo is in **English**, whatever language the conversa
      recommended one closest to the request (`CLAUDE.md`). The recommendation is a suggestion
      only: never write it into the Decision or apply it until the user picks it. Never invent hardware specs, loads or supplier values (ADR-010);
      ask instead.
+     **Ask each one the moment it arises (user rule 2026-10-29)** with the interactive question
+     tool (`AskUserQuestion`): every option with its reasoning — what it delivers, the work it
+     costs (+N %, estimate) — and the recommended one first, marked "(Recommended)". Do not
+     finish the file and leave questions for later. Record each answer in the ADR.
 7. **Check the plan rules:**
    - Dependencies point to ADRs that exist and do not form a cycle.
    - Size stays within ~110 lines, ~6.5 KB and 8 `Done when` items. If it would be bigger,
@@ -67,15 +71,12 @@ Everything written to the repo is in **English**, whatever language the conversa
    - Status stays `Pending`. If open questions block building, set
      `- Status: Deferred (<reason>)` in the file **and** in the README row.
 8. **Run** `pnpm docs:check`.
-9. **Hand over and ask for approval.** Show the user the ADR summary and its open questions,
-   and ask whether to build it now (user rule 2026-10-27, `CLAUDE.md`):
-   - **Approved** (explicitly, with open questions answered or accepted) → continue with the
-     `next-adr` skill on **this ADR** (not the lowest-numbered one), on the same branch, in the
-     same pull request. No separate pull request for the ADR file. Its dependencies must still be
-     implemented; if one is not, say so and stop.
-   - **Not approved** → suggest a branch named `adr-NNN-slug` and a pull request. Do not commit
-     or push unless the user asks.
-     Never treat silence or a recommended default as approval.
+9. **Build (user rule 2026-10-29, `CLAUDE.md`).** When every open question is answered, record the
+   answers (Context, Decision, gaps moved to `ADR-NNN`), set Status `Pending` and continue with the
+   `next-adr` skill on **this ADR** (not the lowest-numbered one), on the same branch, in the same pull
+   request. The answers are the approval. Its dependencies must still be implemented; if one is not,
+   say so and stop. If a question stays unanswered, keep the ADR `Deferred`, suggest a branch named
+   `adr-NNN-slug`, and do not build. Never treat silence or a recommended default as an answer.
 
 ## Notes
 
