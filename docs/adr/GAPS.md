@@ -2361,3 +2361,57 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Answer G-244: “New copies (Recommended)”
 - Questions: Keep new ids always, or keep the old id when nothing on this device uses it?
 - Suggested pick: Keep the old id when it is free (closer to a full restore; estimate effort +3 %)
+
+### G-283: Where the four straighten corners are placed
+
+- Status: Open
+- Origin: ADR-146 (open question)
+- Missing: Where the user marks the wall's corners in an angled photo
+- Request: User 2026-10-29: "add an ADR to be able to stretch or shift the 3D background across the wall, also the perspective part, so I can wrap it correctly."; answers: straighten an angled photo, fill one wall exactly, drag on the wall in 3D
+- Questions: A: a Straighten dialog over the whole photo, four handles dragged onto the wall's corners in the photo; B: in 3D, each corner of the picture dragged freely on the wall
+- Suggested pick: A — it is what the user picked (handles onto the wall's corners in the photo); the whole photo stays visible, also the parts beyond the wall. B is ~+20 % work (estimate) for no more of the request
+
+### G-284: What happens to the repeating picture
+
+- Status: Open
+- Origin: ADR-146 (open question)
+- Missing: Whether a wall picture still repeats (ADR-145) once it can fill the wall
+- Request: User 2026-10-29: "add an ADR to be able to stretch or shift the 3D background across the wall, also the perspective part, so I can wrap it correctly."; answers: straighten an angled photo, fill one wall exactly, drag on the wall in 3D
+- Questions: A: a Repeat / Fill wall choice, a new picture starts as Repeat (today); B: a new picture starts as Fill wall, Repeat kept; C: drop Repeat, every picture fills its rectangle once
+- Suggested pick: B — fill one wall exactly is what the user asked; tiles (ADR-145) keep working. A and C: no extra work
+
+### G-285: Front view follows the fitted picture
+
+- Status: Open
+- Origin: ADR-146 (open question)
+- Missing: Whether the project front view (ADR-145) draws the shifted, stretched, straightened picture
+- Request: User 2026-10-29: "add an ADR to be able to stretch or shift the 3D background across the wall, also the perspective part, so I can wrap it correctly."; answers: straighten an angled photo, fill one wall exactly, drag on the wall in 3D
+- Questions: A: yes, the same rectangle and straightening; B: no, the front view keeps repeating tiles
+- Suggested pick: A — the user asked for the front view background in ADR-145, and a fitted wall looks wrong if the front view differs; ~+15 % work (estimate), +20 % of value (estimate)
+
+### G-286: Snapping and proportions while dragging
+
+- Status: Open
+- Origin: ADR-146 (open question)
+- Missing: How a dragged picture edge snaps, and whether stretching keeps the picture's proportions
+- Request: User 2026-10-29: "add an ADR to be able to stretch or shift the 3D background across the wall, also the perspective part, so I can wrap it correctly."; answers: straighten an angled photo, fill one wall exactly, drag on the wall in 3D
+- Questions: Snap: A: edges snap to the wall ends, floor and ceiling, off with the Snap toggle and Alt (ADR-070); B: no snap. Proportions: C: free stretch, D: kept, E: free, Shift keeps them
+- Suggested pick: A + C — fill one wall exactly needs edges that land on the wall ends; stretch means free. ~+10 % work for A (estimate)
+
+### G-287: Lens distortion of wall photos
+
+- Status: Open
+- Origin: ADR-146 (out of scope)
+- Missing: Correcting curved lines from wide-angle lenses (barrel distortion); straightening fixes the angle only
+- Request: User 2026-10-29: "add an ADR to be able to stretch or shift the 3D background across the wall, also the perspective part, so I can wrap it correctly."; answers: straighten an angled photo, fill one wall exactly, drag on the wall in 3D
+- Questions: Is barrel correction needed for your photos?
+- Suggested pick: Not asked; only if photos show curved wall edges after straightening
+
+### G-288: Adjust the wall picture from the front view
+
+- Status: Open
+- Origin: ADR-146 (out of scope)
+- Missing: Dragging the wall picture in the 2D front view; only the 3D view adjusts it
+- Request: User 2026-10-29: "add an ADR to be able to stretch or shift the 3D background across the wall, also the perspective part, so I can wrap it correctly."; answers: straighten an angled photo, fill one wall exactly, drag on the wall in 3D
+- Questions: Should the front view also drag the picture?
+- Suggested pick: Not asked; the user chose dragging in 3D
