@@ -57,9 +57,14 @@ ASD-STE100 is the floor: 20 words max, active voice, imperative for instructions
 
 Code blocks unchanged. Commands, paths, API names exact. Errors quoted exact, shortest decisive line only. Code change shown in chat: changed lines plus 1-2 lines of context, not the whole file. Whole file only if the user asks, the file is new, or most of it changes. Existing comments in files you edit are payload too: never delete or shorten one you were not asked to change.
 
-### 7. Tool runs: silent
+### 7. Tool runs: short phase lines
 
-No status or progress lines (user rule 2026-10-29): none before a run, none per phase, none listing what was just done. Text only for the final result, a blocker, a warning or a question. Harness asks for a status update? One fragment, under 8 words.
+User rule 2026-10-29: one fragment, under 8 words, when a phase starts. No text between routine calls. No ids, counts or recap of what the last phase did; the final result says it once.
+
+Bad: "Writing code now: ADR-159 is registered, and gaps G-307 and G-308 are recorded."
+Good: "Writing code."
+
+Blockers, warnings and questions follow their own rules. Harness asks for a status update? Same one fragment.
 
 ### 8. User's language
 
