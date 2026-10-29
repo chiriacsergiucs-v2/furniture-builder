@@ -3,6 +3,7 @@
  * Moves and turns are whole millimetres and quarter turns; locked pieces (ADR-095) refuse with the reason; placement
  * rules (ADR-031) apply to each piece. Groups never merge pieces and are not connections.
  */
+import { mirrorSet } from './arrange';
 import { newId } from './design';
 import { union } from './geometry';
 import {
@@ -10,6 +11,7 @@ import {
   liftOff,
   moveBlocked,
   placedBounds,
+  placedOutline,
   quarterTurn,
   resolvePlacements,
   type MoveResult,
@@ -140,7 +142,8 @@ export function turnSelection(
   const out = project.items.map((it): ProjectItem => {
     if (!moving.has(it.id)) return it;
     const rotationY = quarterTurn(it.rotationY, dir);
-    const b = bounds.get(it.id)!;
+    // Its quarter-turned outline (ADR-121): `position` is that box's corner, not the box around an angled piece.
+    const b = placedOutline(placed.items.find((i) => i.id === it.id)!);
     const at = turned(b);
     if (carried(it, moving)) return { ...free(it, { x: at.x, y: b.y, z: at.z }), rotationY };
     return { ...movedTo(it, { ...it.position, x: at.x, z: at.z }), rotationY };
@@ -272,4 +275,20 @@ export function nextUnder(under: readonly string[], current: string | null): str
   if (!under.length) return undefined;
   const i = current ? under.indexOf(current) : -1;
   return under[(i + 1) % under.length];
+}
+
+/**
+ * Mirror the selected pieces (ADR-121, G-085): positions reflect left–right about the selection's centre line and each
+ * design mirrors as Mirror the run does (ADR-069). Pieces resting on them follow. A locked piece refuses the whole
+ * action with its name (ADR-095); `reasons` lists pieces with nothing to mirror (they only move).
+ */
+export function mirrorItems(
+  project: Project,
+  ids: readonly string[],
+): { project: Project; reasons: string[]; refused?: string } {
+  const r = mirrorSet(
+    project,
+    known(project, ids).map((i) => i.id),
+  );
+  return r.refused ? { ...r, refused: `Mirror refused: ${r.refused}` } : r;
 }

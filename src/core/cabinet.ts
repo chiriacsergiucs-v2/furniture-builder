@@ -161,12 +161,16 @@ export function buildCabinet(
     const panel = out.panels[out.panels.length - 1];
     const pos = h.position ?? (kind === 'drawer' ? 'top' : 'centre');
     const inset = kind === 'drawer' ? 40 : 100;
+    // A run handle's line (ADR-125), where it crosses this front at least 20 mm from its edges.
+    const onLine = h.lineY === undefined ? null : h.lineY - panel.box.y;
     const vc =
-      pos === 'top'
-        ? hgt - Math.min(inset, lo(hgt))
-        : pos === 'bottom'
-          ? Math.min(inset, lo(hgt))
-          : lo(hgt);
+      onLine !== null && onLine >= 20 && onLine <= hgt - 20
+        ? onLine
+        : pos === 'top'
+          ? hgt - Math.min(inset, lo(hgt))
+          : pos === 'bottom'
+            ? Math.min(inset, lo(hgt))
+            : lo(hgt);
     const uc =
       kind === 'drawer'
         ? lo(w)

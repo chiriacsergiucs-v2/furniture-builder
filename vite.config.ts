@@ -1,11 +1,26 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import { loadEnv, type Plugin } from 'vite';
+import { contentSecurityPolicy } from './csp';
 
-export default defineConfig({
+/** The CSP meta tag (ADR-131), first in <head>, with this build's backend origin. */
+const csp = (mode: string): Plugin => ({
+  name: 'furniture-builder-csp',
+  transformIndexHtml: (html) =>
+    html.replace(
+      '<meta charset="UTF-8" />',
+      `<meta charset="UTF-8" />\n    <meta http-equiv="Content-Security-Policy" content="${contentSecurityPolicy(
+        loadEnv(mode, process.cwd(), 'VITE_').VITE_SUPABASE_URL,
+      )}" />`,
+    ),
+});
+
+export default defineConfig(({ mode }) => ({
   base: process.env.BASE_PATH ?? '/furniture-builder/',
   plugins: [
     react(),
+    csp(mode),
     VitePWA({
       registerType: 'prompt',
       manifest: {
@@ -27,4 +42,4 @@ export default defineConfig({
   build: { chunkSizeWarningLimit: 1100 },
   // Find-it tests (tests/find-it, ADR-108) walk the whole app in jsdom and need longer than the default 5 s.
   test: { environment: 'node', include: ['tests/**/*.test.{ts,tsx}'], testTimeout: 30000 },
-});
+}));

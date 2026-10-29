@@ -1,5 +1,7 @@
+import { isSizeLocked } from '../core/sizeLock';
 import {
   useEffect,
+  useId,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -23,6 +25,7 @@ import {
   pieceBoxToRoom,
   placementBases,
   planRuns,
+  rotationOf,
   runOf,
   type Placement,
   type ProjectItem,
@@ -33,9 +36,19 @@ import { dropTarget, SNAP_RANGE } from '../core/snap';
 import { groupOf, itemsAt, itemsInBox, nextUnder } from '../core/selection';
 import { inSelection, selectionBox } from '../core/selectPath';
 import type { Box, Design, Diagnostic, Material, Panel } from '../core/types';
-import { listDecors, listDesigns, loadDesign, type StoredDesign } from '../persist/db';
+import {
+  listDecors,
+  listDesigns,
+  listProjectTemplates,
+  loadDesign,
+  type StoredDesign,
+} from '../persist/db';
+import type { ProjectTemplate } from '../core/projectTemplate';
 import { useDesign } from '../store/designStore';
 import { Counter, Group, InfoTip, MmField, Segmented, Select, Toggle } from './controls';
+import { WallBackground } from './WallBackground';
+import { pictureRect } from '../core/wallPicture';
+import { pictureKey, useWallPictureUrls } from './wallPictures';
 import {
   arrowMove,
   movePointer,
@@ -59,11 +72,14 @@ import {
   DEFAULT_OUTLET_ZONE,
   DEFAULT_PIPE_ZONE,
   featureBox,
+  keepWallFinishes,
   outlineIssues,
   roomFrontView,
   setWallLength,
   shapeOutline,
   wallEnds,
+  wallFinish,
+  type WallFinish,
   wallLength,
   type Room,
   type RoomFeature,
@@ -81,8 +97,11 @@ import { StartFrom } from './Catalog';
 import { askConfirm } from './Confirm';
 import { SaveProjectTemplate } from './ProjectTemplates';
 import { FrontModels, ModelFields, ModelList, MyModels, PlanModels } from './Models3D';
-import { AskRunParts, WorktopOverhang } from './RunRequests';
+import { AskRunParts, RunHandlesAndSinks, WorktopOverhang } from './RunRequests';
 import { ClearanceFields, ZoneOverlay, ZoneToolbar } from './Clearances';
+import { useMediaQuery } from './useMediaQuery';
+import { ViewOptions } from './ViewOptions';
+import { inOptions } from './viewChoice';
 import {
   ProblemBanner,
   ProblemOutline,
@@ -94,6 +113,8 @@ import { ReplaceButton } from './Replace';
 import { SavedToCatalog, SaveToCatalog } from './SaveToCatalog';
 import { NewerTemplates, TemplateNotice } from './TemplateRevision';
 import { GroupList, SelectionCard } from './Selection';
+import { PieceProjectSettings, ProjectSettingsPanel } from './ProjectSettings';
+import { ProjectHistory, StyleSuggestions } from './History';
 
 const FRONT_SIDE: Record<QuarterTurn, string> = {
   0: 'front faces you',
@@ -107,6 +128,9 @@ const FRONT_SIDE: Record<QuarterTurn, string> = {
  * The project editor for one editor mode (ADR-079). Compose: the pieces, where they stand and the room. Configure:
  * what applies to the whole project (run parts, saw cut, saving it as a template).
  */
+/** No wall backgrounds: a stable empty list for the hooks that read them. */
+const NO_WALLS: WallFinish[] = [];
+
 export function ProjectPanel({
   onAdd,
   mode,
@@ -122,11 +146,13 @@ export function ProjectPanel({
   const toggleItem = useDesign((s) => s.toggleItem);
   const selectedIds = useDesign((s) => s.selectedItemIds);
   const update = useDesign((s) => s.updateItem);
+  const setRotation = useDesign((s) => s.setRotation);
   const remove = useDesign((s) => s.removeItem);
   const edit = useDesign((s) => s.editItem);
   const updateProject = useDesign((s) => s.updateProject);
   const setGap = useDesign((s) => s.setGap);
   const setLocked = useDesign((s) => s.setLocked);
+  const setSizeLocked = useDesign((s) => s.setSizeLocked);
   const resizeItem = useDesign((s) => s.resizeItem);
   // A space, shelf or side inside the drilled piece is selected: its size is not the piece's (ADR-106).
   const insideSelected = useDesign(
@@ -186,6 +212,7 @@ export function ProjectPanel({
       // Titled by the Settings dialog, which carries its info button (ADR-116: one h2 per dialog).
       <div className="inspector">
         <RunParts />
+        <ProjectSettingsPanel />
         <MmField
           label="Saw cut (kerf) for this project"
           value={project.cutting?.kerf ?? 4}
@@ -266,6 +293,12 @@ export function ProjectPanel({
                 Locked
               </span>
             )}
+            {isSizeLocked(item) && (
+              <span className="chip lock-chip">
+                <Icon name="lock" className="sm" />
+                Size locked
+              </span>
+            )}
           </h3>
           <TemplateNotice item={item} />
           <LinkedCopies item={item} />
@@ -275,6 +308,7 @@ export function ProjectPanel({
               key={`size-${item.id}`}
               product={item.design.product}
               onChange={(k, v) => resizeItem(item.id, k, v)}
+              locked={isSizeLocked(item)}
             />
           )}
           <div className="split-actions">
@@ -303,6 +337,21 @@ export function ProjectPanel({
             >
               <Icon name="lock" className="sm" />
               {isLocked(item) ? 'Unlock' : 'Lock'}
+            </button>
+            {/* Lock size keeps its width, height and depth (ADR-122); separate from Lock (placement). */}
+            <button
+              type="button"
+              className="btn outline"
+              aria-pressed={isSizeLocked(item)}
+              title={
+                isSizeLocked(item)
+                  ? 'Let the piece be resized again'
+                  : 'Keep its width, height and depth: nothing resizes it'
+              }
+              onClick={() => setSizeLocked(item.id, !isSizeLocked(item))}
+            >
+              <Icon name="lock" className="sm" />
+              {isSizeLocked(item) ? 'Unlock size' : 'Lock size'}
             </button>
           </div>
           {libMsg && (
@@ -360,6 +409,25 @@ export function ProjectPanel({
                 onChange={(v) => update(item.id, { rotationY: v })}
               />
             )}
+            {/* Any whole degree, about the piece's centre (ADR-121); checks use the turned piece. */}
+            {!blocked && (
+              <MmField
+                label="Rotation (°)"
+                unit="°"
+                value={rotationOf(item)}
+                min={0}
+                max={359}
+                step={15}
+                onChange={(v) => setRotation(item.id, v)}
+                info={
+                  <InfoTip label="About rotation" align="start">
+                    Whole degrees, 0 to 359, about the piece&apos;s centre. Overlaps, the room and
+                    door clearances are checked on the turned piece. A piece at an angle is not part
+                    of a run, so it gets no shared worktop or plinth.
+                  </InfoTip>
+                }
+              />
+            )}
             {!blocked && <PlacementFields item={item} />}
             {item.placement?.kind === 'above' || blocked ? null : left ? (
               <>
@@ -394,6 +462,11 @@ export function ProjectPanel({
           <Group title="Finish" defaultOpen={false}>
             <FinishFields item={item} />
           </Group>
+          {project.settings && (
+            <Group title="Project settings" defaultOpen={false}>
+              <PieceProjectSettings item={item} />
+            </Group>
+          )}
           <Group title="Merge" defaultOpen={false}>
             <MergeFields item={item} />
           </Group>
@@ -428,6 +501,7 @@ export function ProjectPanel({
         Add a piece
       </button>
       <RoomSection />
+      <ProjectHistory />
     </div>
   );
 }
@@ -579,6 +653,7 @@ function FinishFields({ item }: { item: ProjectItem }) {
           {msg}
         </p>
       )}
+      <StyleSuggestions itemId={item.id} scope={scope} />
     </div>
   );
 }
@@ -908,6 +983,8 @@ export function PlanView({ fronts, card }: { fronts?: boolean; card?: boolean })
   const undoProject = useDesign((s) => s.undoProject);
   const ref = useRef<HTMLDivElement>(null);
   const placing = pm?.pieces.find((pc) => pc.item.id === placingId);
+  // A just-inserted project template is placed as one block (ADR-123).
+  const blockCount = useDesign((s) => s.placingIds.length);
   const drawing = useDesign((s) => s.drawingRoom);
   const hasRoom = useDesign((s) => !!s.project?.room);
   const finishDraw = useDesign((s) => s.finishDrawRoom);
@@ -956,7 +1033,15 @@ export function PlanView({ fronts, card }: { fronts?: boolean; card?: boolean })
       {placing && (
         <div className="place-banner" role="status">
           <span>
-            Tap the plan to place <strong>{placing.item.design.name}</strong>
+            {blockCount > 1 ? (
+              <>
+                Tap the plan to place the template's <strong>{blockCount} pieces</strong>
+              </>
+            ) : (
+              <>
+                Tap the plan to place <strong>{placing.item.design.name}</strong>
+              </>
+            )}
           </span>
           <button type="button" className="btn sm" onClick={stop}>
             Place to the right
@@ -1016,6 +1101,7 @@ function RoomPlan({
   /** "Doors and fronts" sits in this row instead of the stage toolbar (ADR-109). */
   fronts?: boolean;
 }) {
+  const phone = useMediaQuery('(max-width: 760px)');
   const showFronts = useDesign((s) => s.showFronts);
   const setShowFronts = useDesign((s) => s.setShowFronts);
   const space = useSpaceInRoom();
@@ -1203,11 +1289,14 @@ function RoomPlan({
             onChange={setShowFronts}
           />
         )}
-        {/* Checkboxes like Fronts and Clear.: one toggle style in the row (ADR-120). */}
-        <Toggle label="Snap" checked={snapOn} onChange={setSnapOn} />
         {/* Phones: taps add and remove pieces, and a drag on empty plan draws a selection box (ADR-097). */}
         <Toggle label="Select" checked={multi} onChange={setMulti} />
-        <ZoneToolbar on={showZones} onChange={setShowZones} />
+        {/* Checkboxes like Fronts and Clear.: one toggle style in the row (ADR-120). On a phone Snap and the
+            clearances sit behind Options; Fronts and Select stay in the row (ADR-144, G-269). */}
+        <ViewOptions menu={inOptions('snap', phone)}>
+          <Toggle label="Snap" checked={snapOn} onChange={setSnapOn} />
+          <ZoneToolbar on={showZones} onChange={setShowZones} />
+        </ViewOptions>
       </div>
       <InfoTip label="About the plan">
         <span className="info-lead">
@@ -1476,8 +1565,24 @@ function RoomPlan({
               }}
               onPointerCancel={() => setDrag(null)}
             >
-              <rect x={b.x} y={b.z} width={b.w} height={b.d} />
-              <line className="front" x1={fx1} y1={fz1} x2={fx2} y2={fz2} />
+              {pc.item.angle ? (
+                // A piece at an angle (ADR-121): its turned outline and front edge, from the core.
+                <>
+                  <polygon points={pc.footprint.map((p) => p.join(',')).join(' ')} />
+                  <line
+                    className="front"
+                    x1={pc.front[0]}
+                    y1={pc.front[1]}
+                    x2={pc.front[2]}
+                    y2={pc.front[3]}
+                  />
+                </>
+              ) : (
+                <>
+                  <rect x={b.x} y={b.z} width={b.w} height={b.d} />
+                  <line className="front" x1={fx1} y1={fz1} x2={fx2} y2={fz2} />
+                </>
+              )}
               <text
                 x={b.x + b.w / 2}
                 y={b.z + b.d / 2 + dy}
@@ -1514,6 +1619,9 @@ function RoomPlan({
               y={c.box.z}
               width={c.box.w}
               height={c.box.d}
+              transform={
+                c.box.yaw ? `rotate(${-c.box.yaw.deg} ${c.box.yaw.cx} ${c.box.yaw.cz})` : undefined
+              }
             >
               <title>Needed to open; something is in the way</title>
             </rect>
@@ -1693,6 +1801,17 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
   const showFronts = useDesign((s) => s.showFronts);
   const room = useDesign((s) => s.project?.room);
   const rv = useMemo(() => (room ? roomFrontView(room) : null), [room]);
+  // Back-wall backgrounds (ADR-145): floor to room height behind the pieces against them; a picture covers its
+  // rectangle once, straightened when asked, its average colour around it, as in 3D (ADR-146).
+  const wallUrls = useWallPictureUrls(room?.walls ?? NO_WALLS);
+  const bgId = useId().replace(/[^a-zA-Z0-9_-]/g, '');
+  const backs = (rv?.walls ?? []).flatMap((w) => {
+    const f = room && wallFinish(room, w.wall);
+    if (!f) return [];
+    const url = f.image ? wallUrls.get(pictureKey(f.image)) : undefined;
+    const rect = room && f.image ? pictureRect(room, w.wall, f.image) : null;
+    return [{ ...w, f, rect, url: url && url !== 'missing' ? url : undefined }];
+  });
   const colors = useMemo(
     () =>
       new Map(
@@ -1772,6 +1891,39 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
         viewBox={`${x0 - pad * 1.2} ${-top - pad * 0.8} ${x1 - x0 + pad * 2.4} ${top + pad * 1.8}`}
       >
         <rect className="floor" x={x0 - pad} y={0} width={x1 - x0 + 2 * pad} height={pad * 0.15} />
+        {backs.length > 0 && (
+          <g className="room-wall-bg" aria-hidden="true">
+            <defs>
+              {backs.map((w) => (
+                <clipPath key={w.wall} id={`${bgId}-wall-${w.wall}`}>
+                  <rect x={w.x} y={-rv!.height} width={w.w} height={rv!.height} />
+                </clipPath>
+              ))}
+            </defs>
+            {backs.map((w) => (
+              <g key={w.wall} clipPath={`url(#${bgId}-wall-${w.wall})`}>
+                <rect
+                  x={w.x}
+                  y={-rv!.height}
+                  width={w.w}
+                  height={rv!.height}
+                  style={{ fill: w.f.colour }}
+                />
+                {w.url && w.rect && (
+                  <image
+                    className="wall-picture"
+                    href={w.url}
+                    x={w.x + w.rect.x}
+                    y={-(w.rect.y + w.rect.h)}
+                    width={w.rect.w}
+                    height={w.rect.h}
+                    preserveAspectRatio="none"
+                  />
+                )}
+              </g>
+            ))}
+          </g>
+        )}
         {rv && (
           <g className="room-front">
             <line className="room-ceiling" x1={rv.x0} y1={-rv.height} x2={rv.x1} y2={-rv.height}>
@@ -1913,6 +2065,14 @@ export function AddPieceList({
       .then(setSaved)
       .catch(() => setSaved([]));
   }, []);
+  // Saved project templates go in as a block of pieces (ADR-123, research "paste ensemble").
+  const insertTemplate = useDesign((s) => s.insertTemplate);
+  const [projectTemplates, setProjectTemplates] = useState<ProjectTemplate[]>([]);
+  useEffect(() => {
+    listProjectTemplates()
+      .then(setProjectTemplates)
+      .catch(() => setProjectTemplates([]));
+  }, []);
   return (
     <>
       {onWizard && (
@@ -1973,6 +2133,38 @@ export function AddPieceList({
                     <strong>{r.name}</strong>
                     <span className="sub">
                       A copy is added; “Update from saved piece” pulls later changes.
+                    </span>
+                  </span>
+                  <Icon name="chevron-right" className="chev sm" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      {projectTemplates.length > 0 && (
+        <>
+          <h3 className="list-head" id="project-templates-head">
+            Project templates
+          </h3>
+          <ul className="template-list" aria-labelledby="project-templates-head">
+            {projectTemplates.map((t) => (
+              <li key={t.id}>
+                <button
+                  type="button"
+                  className="row-btn"
+                  onClick={() => {
+                    if (insertTemplate(t).length) onDone();
+                  }}
+                >
+                  <span className="glyph">
+                    <Icon name="project" />
+                  </span>
+                  <span>
+                    <strong>{t.name}</strong>
+                    <span className="sub">
+                      {t.items.length} {t.items.length === 1 ? 'piece' : 'pieces'}, added together;
+                      tap the plan to place them.
                     </span>
                   </span>
                   <Icon name="chevron-right" className="chev sm" />
@@ -2064,6 +2256,7 @@ function RunParts() {
         </p>
       ))}
       <AskRunParts />
+      <RunHandlesAndSinks />
       {removed.length > 0 && (
         <p className="hint">
           {removed.length} removed {removed.length === 1 ? 'part stays' : 'parts stay'} removed.
@@ -2140,6 +2333,7 @@ function RoomSection() {
       features: room?.features ?? [],
       outline: shapeOutline(sh, sz),
       shape: { kind: sh, sizes: sz },
+      ...keepWallFinishes(room?.walls, shapeOutline(sh, sz)),
     });
   const shown = room?.shape?.sizes ?? sizes;
   const setSize = (k: keyof ShapeSizes, v: number) => {
@@ -2326,6 +2520,7 @@ function RoomSection() {
                   max={30000}
                   onChange={(v) => setRoom(setWallLength(room, i, v))}
                 />
+                <WallBackground room={room} wall={i} setRoom={setRoom} />
               </li>
             ))}
           </ul>

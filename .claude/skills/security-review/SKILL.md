@@ -6,7 +6,7 @@ description: Review a change or an area of the codebase for security and privacy
 # Security review
 
 Project: **Furniture Builder** — a static offline PWA on GitHub Pages. There is no backend, no
-accounts and no server-side data (ADR-002): everything the user makes stays in this browser
+accounts and no server-side data in the offline core (ADR-002; opt-in online features: ADR-126): everything the user makes stays in this browser
 (IndexedDB) or in files they export. The attack surface is therefore **files and text that come
 from someone else**, **what the app puts into the page and into exported files**, and **what the
 app loads or sends over the network**. This review is engineering guidance, not legal advice.
@@ -33,7 +33,8 @@ app loads or sends over the network**. This review is engineering guidance, not 
      `+`, `-` or `@` (spreadsheet formula injection) for names that come from the user; the
      Fusion 360 Python script must quote every user string so a piece name cannot end the
      string and run code inside Fusion; exported JSON is `JSON.stringify`, never hand-built.
-   - **Network boundary (ADR-002):** no `fetch`, XHR, WebSocket, beacon, remote font, CDN,
+   - **Network boundary (ADR-002, ADR-126):** outside `src/online` (imported only dynamically, after opt-in, and
+     contacting only `onlineOrigins()`), no `fetch`, XHR, WebSocket, beacon, remote font, CDN,
      analytics or error reporter; `dist/` has no third-party origin
      (`grep -rEo "https?://[^\"' )]+" dist | sort -u` lists only the app's own origin and
      standard namespaces); links to manufacturers' sites open only on the user's click.

@@ -20,6 +20,19 @@ export interface Box {
   w: Mm;
   h: Mm;
   d: Mm;
+  /**
+   * A project piece typed at an angle (ADR-121): the box is turned `deg` whole degrees about the vertical line
+   * through (cx, cz), the same way as a quarter turn (90 turns +z towards +x). Only placed panels, clearances and
+   * envelopes of an angled piece carry it; a piece's own model never does. Absent = axis-aligned.
+   */
+  yaw?: Yaw;
+}
+
+/** A turn about a vertical line (ADR-121): whole degrees 1–89, the line at room (cx, cz) in mm (may be .5). */
+export interface Yaw {
+  deg: number;
+  cx: number;
+  cz: number;
 }
 
 export interface Material {
@@ -292,6 +305,11 @@ export interface Handle {
   /** Hole centres of a bar handle (default 128). */
   holeSpacing?: Mm;
   position?: 'top' | 'centre' | 'bottom';
+  /**
+   * Height of the handle centre line in the piece's own coordinates, mm (ADR-125). Set only by a run handle when the
+   * project model is built (`applyRunHandles`), never saved; a front the line does not cross uses `position`.
+   */
+  lineY?: Mm;
 }
 
 export type FrontStyle = 'overlay' | 'half' | 'inset';

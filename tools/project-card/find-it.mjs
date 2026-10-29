@@ -66,7 +66,7 @@ for (const width of [1280, 390]) {
   const place = page.getByRole('button', { name: 'Place to the right', exact: true });
   if (await place.isVisible()) await place.click();
   await sheet(false);
-  const planRadio = page.getByRole('radio', { name: 'Plan' });
+  const planRadio = page.getByRole('radio', { name: '2D' });
   if (await planRadio.isVisible().catch(() => false)) await planRadio.click();
 
   // 2. "Doors and fronts" (shown as "Fronts", ADR-112) sits in the same row as Snap, Select and Clear.

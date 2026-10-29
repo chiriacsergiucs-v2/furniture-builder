@@ -130,7 +130,7 @@ export function useImageUrls(key: string): Map<string, ImageUrl> {
 const EMPTY = new Map<string, ImageUrl>();
 
 /** Sorted, de-duplicated picture ids of the materials, as the key `useImageUrls` takes. */
-export const imageKey = (materials: { image?: MaterialImage }[]) =>
+export const imageKey = (materials: { image?: { id: string } }[]) =>
   [...new Set(materials.flatMap((m) => (m.image ? [m.image.id] : [])))].sort().join(',');
 
 /**
@@ -139,7 +139,7 @@ export const imageKey = (materials: { image?: MaterialImage }[]) =>
  */
 export async function withPictures<T extends object>(
   data: T,
-  designs: { materials: { image?: MaterialImage }[] }[],
+  designs: { materials: { image?: { id: string } }[] }[],
 ): Promise<T & { pictures?: PictureFile[] }> {
   const pictures: PictureFile[] = [];
   for (const id of imageIdsOf(designs)) {

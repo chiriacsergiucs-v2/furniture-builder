@@ -116,7 +116,7 @@ for (const width of [1440, 390]) {
   await dlg.getByRole('button', { name: 'Create project' }).click();
   await page.locator('main.work').waitFor({ state: 'visible' });
   await addBase();
-  const planRadio = page.getByRole('radio', { name: 'Plan' });
+  const planRadio = page.getByRole('radio', { name: '2D' });
   if (await planRadio.isVisible().catch(() => false)) await planRadio.click();
   check(width, 'the plan "Room plan, seen from above" is visible', await plan.isVisible());
 

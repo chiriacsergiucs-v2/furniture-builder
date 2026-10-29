@@ -132,7 +132,7 @@ for (const width of [1440, 375]) {
   };
   const showFront = async () => {
     if (phone) await page.getByRole('radio', { name: 'Compose' }).click();
-    else await page.getByRole('radio', { name: 'Front' }).click();
+    else await page.getByRole('radio', { name: '2D' }).click();
     await page.waitForTimeout(300);
   };
   const canvasShare = async () =>

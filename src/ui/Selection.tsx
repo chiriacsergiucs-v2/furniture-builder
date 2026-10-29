@@ -16,6 +16,7 @@ export function SelectionCard() {
   const del = useDesign((s) => s.deleteSelection);
   const dup = useDesign((s) => s.duplicateSelection);
   const turn = useDesign((s) => s.turnSelectionBy);
+  const mirror = useDesign((s) => s.mirrorSelection);
   const group = useDesign((s) => s.groupSelection);
   const ungroup = useDesign((s) => s.ungroup);
   const clear = useDesign((s) => s.selectItem);
@@ -70,6 +71,17 @@ export function SelectionCard() {
         >
           Turn 90° ↻
         </button>
+        {/* Mirror left–right about the selection's centre (ADR-121); one undo step. */}
+        {pieceIds.length >= 2 && (
+          <button
+            type="button"
+            className="btn outline sm"
+            aria-label="Mirror the selection left to right"
+            onClick={() => say(mirror() || null)}
+          >
+            Mirror
+          </button>
+        )}
         {isGroup ? (
           <button type="button" className="btn outline sm" onClick={() => ungroup(g!.id)}>
             Ungroup
@@ -109,6 +121,8 @@ export function SelectionCard() {
               ['right', 'Right'],
               ['back', 'Back'],
               ['front', 'Front'],
+              ['top', 'Top'],
+              ['bottom', 'Bottom'],
             ] as const
           ).map(([how, label]) => (
             <button

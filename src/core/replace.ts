@@ -11,7 +11,7 @@ import { upgradeDesign } from './design';
 import { putRoleBoard, roleBoard, type FinishRole } from './finish';
 import {
   isWallHung,
-  placedBounds,
+  placedOutline,
   type Project,
   type ProjectItem,
   type ProjectModel,
@@ -154,10 +154,16 @@ export function replaceItem(project: Project, itemId: string, design: Design): P
   const unused = new Set(defaults.filter((id): id is string => !!id && !used.includes(id)));
   if (unused.size) d = { ...d, materials: d.materials.filter((m) => !unused.has(m.id)) };
   // A fresh copy: the kept template revision (ADR-096) no longer applies.
-  const { libraryId: _lib, templateSeen: _seen, ...keep } = it;
+  // The template reference follows the new design's origin (ADR-124); its overrides are worked out on commit.
+  const { libraryId: _lib, templateSeen: _seen, ref: _ref, ...keep } = it;
   void _lib;
   void _seen;
-  const next: ProjectItem = { ...keep, design: d };
+  void _ref;
+  const next: ProjectItem = {
+    ...keep,
+    design: d,
+    ...(d.catalog?.origin ? { ref: { overrides: {} } } : {}),
+  };
   return {
     ...project,
     items: project.items.map((i) =>
@@ -172,8 +178,9 @@ export function replaceItem(project: Project, itemId: string, design: Design): P
  * left grows from its other end. Its height from the floor (or the wall height) stays.
  */
 function anchored(old: ProjectItem, next: ProjectItem): ProjectItem['position'] {
-  const a = placedBounds(old),
-    b = placedBounds(next);
+  // The quarter-turned outlines (ADR-121): `position` is their corner, also for a piece at an angle.
+  const a = placedOutline(old),
+    b = placedOutline(next);
   const r = old.rotationY;
   // Back face and left side per turn: 0 back -z left -x; 90 back -x left +z; 180 back +z left +x; 270 back +x left -z.
   const maxX = r === 180 || r === 270,

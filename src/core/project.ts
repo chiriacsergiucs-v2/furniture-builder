@@ -18,8 +18,8 @@ import {
   type ItemZones,
 } from './envelopes';
 import {
+  boxInside,
   outlineIssues,
-  rectInside,
   roomChecks,
   serviceChecks,
   validateRoom,
@@ -28,7 +28,15 @@ import {
 import { bandKey, cutlist, hardwareSummary, type CutRow } from './cutlist';
 import { bandFor, bandProblems, bandText } from './materials';
 import { DEFAULT_KERF, newId, sheetOf, upgradeDesign, validateDesign } from './design';
-import { cutDimensions, intersection, overlaps, union } from './geometry';
+import {
+  cutDimensions,
+  enclosing,
+  footprintOf,
+  intersection,
+  overlaps,
+  union,
+  yawPoint,
+} from './geometry';
 import { aabbOf, overlapsBox, panelsOverlap, turnShape } from './shape';
 import { modelBox, modelChecks, validateModelItems, type ModelItem } from './model3d';
 import type { SheetSettings } from './nesting';
@@ -41,11 +49,15 @@ import type {
   Design,
   Diagnostic,
   Face,
+  FrontStyle,
   FurnitureModel,
+  Handle,
   HardwareItem,
   Material,
   Mm,
   Panel,
+  Space,
+  Yaw,
 } from './types';
 
 export type QuarterTurn = 0 | 90 | 180 | 270;
@@ -93,6 +105,37 @@ export interface ProjectItem {
    * the others (`src/core/linked.ts`). Absent = not linked. Saved from project schemaVersion 9.
    */
   linkId?: string;
+  /**
+   * Extra whole degrees (1–89) on top of the quarter turn (ADR-121): the piece is turned `rotationY + angle` degrees in
+   * all, about the centre of its quarter-turned outline; `position` stays that outline's lowest corner. Absent = 0.
+   * Saved from project schemaVersion 10.
+   */
+  angle?: number;
+  /**
+   * Size locked (ADR-122): its width, height and depth do not change until it is unlocked; nothing resizes it for the
+   * user either. Separate from `locked` (placement). Absent = not locked. Saved from project schemaVersion 11.
+   */
+  sizeLocked?: true;
+  /**
+   * Template reference (ADR-124): the piece refers to its catalog origin (`design.catalog.origin`: template, variant,
+   * revision) and `overrides` are the settings it changed against it (`src/core/ownEdits.ts`), kept up to date while
+   * that revision is the catalog's. `design` stays the full copy, the fallback (G-161). Absent = a plain copy.
+   * Saved from project schemaVersion 12.
+   */
+  ref?: { overrides: Record<string, unknown> };
+}
+
+/**
+ * Project-wide settings (ADR-124): choices every piece follows while its own value equals the project's
+ * (`src/core/projectSettings.ts`). Each is optional; absent = not set. Saved from project schemaVersion 12.
+ */
+export interface ProjectSettings {
+  body?: Material;
+  front?: Material;
+  back?: Material;
+  handle?: Handle | null;
+  frontStyle?: FrontStyle;
+  plinthHeight?: Mm;
 }
 
 /**
@@ -143,22 +186,75 @@ export interface RunRequest {
 }
 export const requestKey = (r: Pick<RunRequest, 'kind' | 'from'>) => `${r.kind}|${r.from.join(',')}`;
 
+/** Bar handle hole centres offered (ADR-024), mm: the handle list run handles choose from (ADR-010, ADR-125). */
+export const BAR_SPACINGS: readonly Mm[] = [96, 128, 160, 192, 224, 256, 320];
+
+/**
+ * One handle on every door and drawer front of a run of base units, on one line (ADR-125). Applied when the model is
+ * built (`applyRunHandles`), never written into the pieces' designs, so removing it gives each piece its own handles
+ * back. The run is found again from `from` on every build: a piece added to the run gets the handle too.
+ */
+export interface RunHandle {
+  id: string;
+  /** The run's pieces when it was made; any one of them still in a run finds that run. */
+  from: string[];
+  handle: Pick<Handle, 'kind' | 'holeSpacing'>;
+  /** Height of the handle line above the floor, whole mm; absent = near the top of each front. */
+  height?: Mm;
+  /** Pieces that keep their own handles (overrides, ADR-061). */
+  own?: string[];
+}
+
+/** A sink over a base unit (ADR-125): a cut-out in the run worktop, its size the user's (ADR-010). */
+export interface RunSink {
+  id: string;
+  baseId: string;
+  /** Cut-out width and depth, mm. */
+  w: Mm;
+  d: Mm;
+}
+
 /**
  * Project document versions (ADR-011): new and edited projects are written at `PROJECT_SCHEMA`; every version in
  * `PROJECT_SCHEMAS` still loads unchanged. 2 = room pipes and outlets (ADR-072); 3 = clearance zones on items
  * (ADR-073); 4 = run requests and trim run parts (ADR-075); 5 = display-only 3D models (ADR-076); 6 = locked pieces
  * (ADR-095); 7 = a kept template revision on items (ADR-096); 8 = groups of pieces
- * (ADR-097); 9 = linked copies (ADR-111).
+ * (ADR-097); 9 = linked copies (ADR-111); 10 = pieces typed at an angle (ADR-121); 11 = size-locked pieces
+ * (ADR-122); 12 = template references and project-wide settings (ADR-124); 13 = run handles and sinks (ADR-125);
+ * 14 = wall backgrounds (ADR-145); 15 = fitted and straightened wall pictures (ADR-146).
  */
-export const PROJECT_SCHEMA = 9 as const;
-export const PROJECT_SCHEMAS: readonly number[] = [1, 2, 3, 4, 5, 6, 7, 8, PROJECT_SCHEMA];
-export type ProjectSchemaVersion = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | typeof PROJECT_SCHEMA;
+export const PROJECT_SCHEMA = 15 as const;
+export const PROJECT_SCHEMAS: readonly number[] = [
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12,
+  13,
+  14,
+  PROJECT_SCHEMA,
+];
+export type ProjectSchemaVersion =
+  1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | typeof PROJECT_SCHEMA;
 const RUN_REQUESTS_SINCE = 4;
 const MODELS_SINCE = 5;
 const LOCKS_SINCE = 6;
 const TEMPLATE_SEEN_SINCE = 7;
 const GROUPS_SINCE = 8;
 const LINKS_SINCE = 9;
+const ANGLE_SINCE = 10;
+const SIZE_LOCK_SINCE = 11;
+const REFS_SINCE = 12;
+const RUN_EXTRAS_SINCE = 13;
+const WALLS_SINCE = 14;
+const FITTED_WALLS_SINCE = 15;
 
 export interface Project {
   schemaVersion: ProjectSchemaVersion;
@@ -185,7 +281,23 @@ export interface Project {
    * at most one group; a group holds two pieces or more, always pieces of this project (`pruneGroups`). Absent = none.
    */
   groups?: { id: string; name: string; itemIds: string[] }[];
+  /** Project-wide settings (ADR-124, schemaVersion 12). Absent = none set. */
+  settings?: ProjectSettings;
+  /** Handles for a run of base units (ADR-125, schemaVersion 13). Absent = none. */
+  runHandles?: RunHandle[];
+  /** Sinks over base units: worktop cut-outs (ADR-125, schemaVersion 13). Absent = none. */
+  sinks?: RunSink[];
 }
+
+/**
+ * Everything in a project that can hold a picture (ADR-048, ADR-145): the pieces' materials, the run parts' and the
+ * wall backgrounds. For files that carry their pictures and for the unused-picture cleanup.
+ */
+export const pictureHolders = (p: Project): { materials: { image?: { id: string } }[] }[] => [
+  ...p.items.map((i) => i.design),
+  { materials: (p.runParts ?? []).map((r) => r.material) },
+  { materials: p.room?.walls ?? [] },
+];
 
 /**
  * Groups keep only pieces still in the project, and a group left with fewer than two goes (ADR-097: a deleted piece
@@ -246,6 +358,8 @@ export function makeItem(project: Project, design: Design, libraryId?: string): 
     rotationY: 0,
     placement,
     ...(libraryId ? { libraryId } : {}),
+    // A catalog piece refers to its template (ADR-124); the copy stays as the fallback.
+    ...(d.catalog?.origin ? { ref: { overrides: {} } } : {}),
   };
 }
 
@@ -354,6 +468,23 @@ export function liftOff(item: ProjectItem): Placement | undefined {
 /** A quarter turn on from `r`: `dir` 1 turns the front from facing you to facing right (ADR-069). */
 export const quarterTurn = (r: QuarterTurn, dir: 1 | -1): QuarterTurn =>
   ((((r + dir * 90) % 360) + 360) % 360) as QuarterTurn;
+
+/** A piece's whole turn in degrees, 0–359 (ADR-121): its quarter turn plus its extra angle. */
+export const rotationOf = (item: Pick<ProjectItem, 'rotationY' | 'angle'>): number =>
+  item.rotationY + (item.angle ?? 0);
+
+/** Whole degrees as a quarter turn and the extra angle the item stores (ADR-121); null outside 0–359. */
+export function splitRotation(deg: number): { rotationY: QuarterTurn; angle?: number } | null {
+  if (!Number.isInteger(deg) || deg < 0 || deg > 359) return null;
+  const rotationY = (Math.floor(deg / 90) * 90) as QuarterTurn,
+    angle = deg - rotationY;
+  return angle ? { rotationY, angle } : { rotationY };
+}
+
+/** The turn after mirroring left–right (ADR-121): the front's sideways part flips, so θ becomes −θ. */
+export function mirroredRotation(item: Pick<ProjectItem, 'rotationY' | 'angle'>) {
+  return splitRotation((360 - rotationOf(item)) % 360)!;
+}
 
 /** The piece's placement is locked: nothing moves or turns it (ADR-095). */
 export const isLocked = (item: Pick<ProjectItem, 'locked'> | undefined): boolean => !!item?.locked;
@@ -607,7 +738,21 @@ export interface PlacedPiece {
   facing: { axis: 'x' | 'z'; sign: 1 | -1 };
   /** Chair, installation and service envelopes in room coordinates (ADR-073). */
   envelopes: Envelope[];
+  /** The whole piece as one box, turned when the piece is typed at an angle (ADR-121); `bounds` encloses it. */
+  outline: Box;
+  /** Its floor outline: four corners (x, z) in order, turned with the piece (ADR-121). */
+  footprint: [number, number][];
+  /** The front edge on the floor, x1 z1 x2 z2 (ADR-121). */
+  front: [number, number, number, number];
 }
+
+/** Which corners of `footprintOf` (back-left, back-right, front-right, front-left when unturned) carry the front. */
+const FRONT_CORNERS: Record<QuarterTurn, [number, number]> = {
+  0: [3, 2],
+  90: [1, 2],
+  180: [0, 1],
+  270: [0, 3],
+};
 
 /**
  * A room point (mm) back in the piece's own coordinates, undoing its quarter turn and position as `placeItem` applies
@@ -620,6 +765,12 @@ export function roomToPiece(
   const built = buildModel(item.design);
   const r = item.rotationY;
   const rb = union(built.panels.map((p) => rotateBox(aabbOf(p), r)));
+  // An angled piece (ADR-121): turn the point back about the piece's centre first.
+  const yaw = yawOf(item, rb);
+  if (yaw) {
+    const [x, z] = yawPoint({ ...yaw, deg: -yaw.deg }, pt.x, pt.z);
+    pt = { x, y: pt.y, z };
+  }
   const back = rotateBox(
     {
       x: pt.x - item.position.x + rb.x,
@@ -643,13 +794,25 @@ export function pieceBoxToRoom(item: ProjectItem, built: FurnitureModel, box: Bo
   const r = item.rotationY;
   const rb = union(built.panels.map((p) => rotateBox(aabbOf(p), r)));
   const t = rotateBox(box, r);
-  return {
+  return withYaw(item, rb, {
     ...t,
     x: t.x + item.position.x - rb.x,
     y: t.y + item.position.y - rb.y,
     z: t.z + item.position.z - rb.z,
-  };
+  });
 }
+
+/** The yaw of an angled piece (ADR-121): about the centre of its quarter-turned outline `rb` placed at `position`. */
+export function yawOf(item: ProjectItem, rb: Pick<Box, 'w' | 'd'>): Yaw | undefined {
+  return item.angle
+    ? { deg: item.angle, cx: item.position.x + rb.w / 2, cz: item.position.z + rb.d / 2 }
+    : undefined;
+}
+
+const withYaw = (item: ProjectItem, rb: Pick<Box, 'w' | 'd'>, b: Box): Box => {
+  const yaw = yawOf(item, rb);
+  return yaw ? { ...b, yaw } : b;
+};
 
 export function placeItem(item: ProjectItem, opts?: { noPlinth?: boolean }): PlacedPiece {
   const built = buildModel(item.design);
@@ -668,7 +831,12 @@ export function placeItem(item: ProjectItem, opts?: { noPlinth?: boolean }): Pla
     ...p,
     id: `${item.id}:${p.id}`,
     nodeId: `${item.id}:${p.nodeId}`,
-    box: { ...rotated[i], x: rotated[i].x + dx, y: rotated[i].y + dy, z: rotated[i].z + dz },
+    box: withYaw(item, rb, {
+      ...rotated[i],
+      x: rotated[i].x + dx,
+      y: rotated[i].y + dy,
+      z: rotated[i].z + dz,
+    }),
     thicknessAxis: swap(p.thicknessAxis, r),
     grainAxis: swap(p.grainAxis, r),
     banded: p.banded.map((f) => ROT_FACE[r][f]),
@@ -692,7 +860,7 @@ export function placeItem(item: ProjectItem, opts?: { noPlinth?: boolean }): Pla
     return {
       ...c,
       panelId: `${item.id}:${c.panelId}`,
-      box: { ...rc, x: rc.x + dx, y: rc.y + dy, z: rc.z + dz },
+      box: withYaw(item, rb, { ...rc, x: rc.x + dx, y: rc.y + dy, z: rc.z + dz }),
     };
   });
   const facing = FACING[r];
@@ -701,20 +869,37 @@ export function placeItem(item: ProjectItem, opts?: { noPlinth?: boolean }): Pla
     item.position.y === 0 && item.placement?.kind !== 'above' && !isWallHung(item.design);
   const envelopes = envelopesOf(item.design, item.zones, standsUp, built).map((e) => {
     const rc = rotateBox(e.box, r);
-    return { ...e, box: { ...rc, x: rc.x + dx, y: rc.y + dy, z: rc.z + dz } };
+    return { ...e, box: withYaw(item, rb, { ...rc, x: rc.x + dx, y: rc.y + dy, z: rc.z + dz }) };
   });
+  // The outline on the floor and the front edge, turned with the piece (ADR-121), for the plan and room checks.
+  const outline = withYaw(item, rb, full);
+  const corners = footprintOf(outline);
+  const [f1, f2] = FRONT_CORNERS[r];
   return {
     item,
     model,
     panels,
-    bounds: model === built ? union(panels.map(aabbOf)) : full,
+    bounds: model === built ? union(panels.map(aabbOf)) : enclosing(outline),
     clearances,
     facing,
     envelopes,
+    outline,
+    footprint: corners,
+    front: [...corners[f1], ...corners[f2]] as [number, number, number, number],
   };
 }
 
 export const placedBounds = (item: ProjectItem): Box => placeItem(item).bounds;
+
+/**
+ * The piece as one box before its extra angle (ADR-121): `position` is its lowest corner and it shares its centre with
+ * `placedBounds`. The same box as `placedBounds` for a piece at a quarter turn.
+ */
+export function placedOutline(item: ProjectItem): Box {
+  const { yaw: _yaw, ...flat } = placeItem(item).outline;
+  void _yaw;
+  return flat;
+}
 
 // ---------------------------------------------------------------------------
 // The whole room
@@ -756,7 +941,8 @@ function runMaterial(project: Project, m: Material): Material {
 }
 
 export function buildProjectModel(input: Project): ProjectModel {
-  const project = resolvePlacements(input);
+  // Run handles reach the pieces' fronts when built (ADR-125).
+  const project = applyRunHandles(resolvePlacements(input));
   const covered = plinthCovered(project);
   const pieces = project.items.map((i) => placeItem(i, { noPlinth: covered.has(i.id) }));
   const materials = new Map<string, Material>();
@@ -888,6 +1074,7 @@ export function buildProjectModel(input: Project): ProjectModel {
         nodeId: `run:${rp.id}`,
       });
   }
+  diagnostics.push(...sinkChecks(project, placedById));
   // Run parts the user asked for that could not be made (ADR-075): an error, never left out silently (ADR-008).
   const made = new Set((project.runParts ?? []).map((rp) => rp.key));
   const missing = (project.runRequests ?? []).filter((r) => !made.has(requestKey(r)));
@@ -910,6 +1097,7 @@ export function buildProjectModel(input: Project): ProjectModel {
     id: pc.item.id,
     name: pc.item.design.name,
     bounds: pc.bounds,
+    outline: pc.outline,
     hitsPanels: (b: Box) => pc.panels.some((q) => overlapsBox(q, b)),
     covers: (b: Box) =>
       pc.panels.find((q) => COVER_ROLES.has(q.role) && overlapsBox(q, b))?.role ?? null,
@@ -1044,15 +1232,14 @@ function clearanceZones(
       itemId: id,
       kind: 'body',
       label: pc.item.design.name,
-      box: pc.bounds,
+      box: pc.outline,
       severity: body,
     });
     for (const c of pc.clearances) {
       const role = pc.panels.find((p) => p.id === c.panelId)?.role;
       const bad =
         blockedBoxes.has(c.box) ||
-        (!!room &&
-          !rectInside(room.outline, c.box.x, c.box.z, c.box.x + c.box.w, c.box.z + c.box.d)) ||
+        (!!room && !boxInside(room.outline, c.box)) ||
         pieces.some((o) => o !== pc && o.clearances.some((y) => overlaps(c.box, y.box)));
       out.push({
         itemId: id,
@@ -1266,6 +1453,7 @@ function groupRuns(placed: PlacedPiece[]): PlacedPiece[][] {
       return (
         (k === 'cabinet' || k === 'corner') &&
         pc.item.rotationY === 0 &&
+        !pc.item.angle &&
         pc.bounds.y === 0 &&
         pc.bounds.h <= RUN_MAX_HEIGHT &&
         !isWallHung(pc.item.design)
@@ -1295,6 +1483,140 @@ export function runOf(project: Project, id: string): string[] | null {
     .map((r) => r.map((pc) => pc.item.id))
     .find((r) => r.includes(id));
   return ids ?? null;
+}
+
+/** A design with one handle on every front that takes one (doors, drawer fronts; not drawers inside doors). */
+function withHandle(d: Design, h: Handle): Design {
+  const fix = (sp: Space, inside: boolean): Space => {
+    const children =
+      sp.kind === 'split' ? sp.children.map((c) => fix(c, inside || !!sp.front)) : undefined;
+    const next = children ? ({ ...sp, children } as Space) : sp;
+    return !inside && (next.front || next.kind === 'drawers') ? { ...next, handle: h } : next;
+  };
+  const p = d.product;
+  if (p.kind === 'cabinet')
+    return {
+      ...d,
+      product: { ...p, params: { ...p.params, interior: fix(p.params.interior, false) } },
+    };
+  if (p.kind === 'corner')
+    return {
+      ...d,
+      product: {
+        ...p,
+        params: {
+          ...p.params,
+          interior: fix(p.params.interior, false),
+          wingInterior: fix(p.params.wingInterior, false),
+        },
+      },
+    };
+  return d;
+}
+
+/** The pieces a run handle reaches now (ADR-125): the run holding any of its pieces, less those keeping their own. */
+export function runHandleMembers(project: Project, rh: RunHandle): string[] {
+  const runs = groupRuns(resolvePlacements(project).items.map((i) => placeItem(i)));
+  const run = runs.find((r) => r.some((pc) => rh.from.includes(pc.item.id)));
+  return run ? run.map((pc) => pc.item.id) : [];
+}
+
+/**
+ * The project as built with its run handles (ADR-125): each piece of a handled run gets the run's handle on every
+ * front, its line converted to the piece's own height. Pieces in `own` keep theirs; the first run handle wins.
+ * The same project when there are none. Never saved: the pieces' designs keep their own handles.
+ */
+export function applyRunHandles(project: Project): Project {
+  if (!project.runHandles?.length) return project;
+  const placed = resolvePlacements(project).items.map((i) => placeItem(i));
+  const runs = groupRuns(placed);
+  const handles = new Map<string, Handle>();
+  for (const rh of project.runHandles) {
+    const run = runs.find((r) => r.some((pc) => rh.from.includes(pc.item.id)));
+    for (const pc of run ?? []) {
+      if (rh.own?.includes(pc.item.id) || handles.has(pc.item.id)) continue;
+      // Room height to the piece's own: the outline's lowest point (model bounds.y) sits at bounds.y in the room.
+      const lineY =
+        rh.height === undefined ? undefined : rh.height - pc.bounds.y + pc.model.bounds.y;
+      handles.set(pc.item.id, {
+        ...rh.handle,
+        position: 'top',
+        ...(lineY !== undefined ? { lineY } : {}),
+      });
+    }
+  }
+  if (!handles.size) return project;
+  return {
+    ...project,
+    items: project.items.map((i) =>
+      handles.has(i.id) ? { ...i, design: withHandle(i.design, handles.get(i.id)!) } : i,
+    ),
+  };
+}
+
+/** Run handles and sinks keep only pieces still in the project (ADR-125). The same project when nothing changes. */
+export function pruneRunExtras(project: Project): Project {
+  if (!project.runHandles && !project.sinks) return project;
+  const ids = new Set(project.items.map((i) => i.id));
+  const handles = project.runHandles
+    ?.map((rh) => ({
+      ...rh,
+      from: rh.from.filter((x) => ids.has(x)),
+      ...(rh.own ? { own: rh.own.filter((x) => ids.has(x)) } : {}),
+    }))
+    .filter((rh) => rh.from.length);
+  const sinks = project.sinks?.filter((sk) => ids.has(sk.baseId));
+  const same =
+    JSON.stringify(handles) === JSON.stringify(project.runHandles) &&
+    (sinks?.length ?? 0) === (project.sinks?.length ?? 0);
+  return same ? project : { ...project, runHandles: handles, sinks };
+}
+
+/** The run worktop over a base unit, if any (ADR-125). */
+export const worktopOver = (project: Project, baseId: string): RunPart | undefined =>
+  (project.runParts ?? []).find((rp) => rp.kind === 'worktop' && rp.from?.includes(baseId));
+
+/** Sinks for the shopping list (ADR-125): the base each is over and its cut-out. */
+export function sinkList(project: Project): { over: string; w: Mm; d: Mm }[] {
+  return (project.sinks ?? []).map((sk) => ({
+    over: project.items.find((i) => i.id === sk.baseId)?.design.name ?? 'a removed piece',
+    w: sk.w,
+    d: sk.d,
+  }));
+}
+
+/** Diagnostics of the sinks (ADR-125): no worktop to cut, a cut-out wider than its base or through the worktop. */
+function sinkChecks(project: Project, placedById: Map<string, PlacedPiece>): Diagnostic[] {
+  const out: Diagnostic[] = [];
+  for (const sk of project.sinks ?? []) {
+    const base = placedById.get(sk.baseId);
+    if (!base) continue;
+    const name = base.item.design.name;
+    const top = worktopOver(project, sk.baseId);
+    const nodeId = `sink:${sk.id}`;
+    if (!top)
+      out.push({
+        severity: 'warning',
+        code: 'sink-no-worktop',
+        message: `The sink over ${name} has no worktop to be cut out of; add the run worktop.`,
+        nodeId,
+      });
+    else if (sk.d >= top.box.d)
+      out.push({
+        severity: 'error',
+        code: 'sink-cutout-deep',
+        message: `Sink cut-out ${sk.w} × ${sk.d} mm is as deep as the worktop over ${name} (${top.box.d} mm) or deeper.`,
+        nodeId,
+      });
+    if (sk.w > base.bounds.w)
+      out.push({
+        severity: 'warning',
+        code: 'sink-cutout-wide',
+        message: `Sink cut-out ${sk.w} mm is wider than ${name} under it (${base.bounds.w} mm).`,
+        nodeId,
+      });
+  }
+  return out;
 }
 
 /**
@@ -1601,6 +1923,7 @@ export function requestName(r: RunRequest, project: Project): string {
 /** Wall units, and tall units standing on the floor, facing the room: the pieces a trim runs along (ADR-075). */
 export const takesTrim = (pc: PlacedPiece) =>
   pc.item.rotationY === 0 &&
+  !pc.item.angle &&
   (pc.item.design.product.kind === 'cabinet' || pc.item.design.product.kind === 'corner') &&
   (isWallHung(pc.item.design) || (pc.bounds.y === 0 && pc.bounds.h > RUN_MAX_HEIGHT));
 
@@ -1727,10 +2050,29 @@ export function refreshRunParts(project: Project): Project {
   return { ...project, runParts: next, runPartsRemoved: removed };
 }
 
+/**
+ * The sink cut-outs to make in a worktop (ADR-125), the note added to its cut-list row; null when none. Added after
+ * grouping, since part labels lose their numbers there (`baseLabel`).
+ */
+function sinkNote(project: Project, rp: RunPart): string | null {
+  if (rp.kind !== 'worktop') return null;
+  const cuts = (project.sinks ?? []).filter((sk) => rp.from?.includes(sk.baseId));
+  return cuts.length
+    ? `sink cut-out ${cuts.map((sk) => `${sk.w} × ${sk.d} mm`).join(' and ')}`
+    : null;
+}
+
 /** Parts for the whole project: each piece's cut list × its quantity, merged across pieces, then the run parts. */
-export function projectCutlist(project: Project): CutRow[] {
+export function projectCutlist(input: Project): CutRow[] {
+  const project = applyRunHandles(input);
   const rows = new Map<string, CutRow>();
   const extra = (project.runParts ?? []).map((rp) => ({ rp, key: materialKey(rp.material) }));
+  const notes = new Map(
+    extra.flatMap(({ rp }) => {
+      const n = sinkNote(project, rp);
+      return n ? [[`run:${rp.id}`, n] as [string, string]] : [];
+    }),
+  );
   if (extra.length) {
     const mats = [
       ...new Map(
@@ -1749,14 +2091,16 @@ export function projectCutlist(project: Project): CutRow[] {
       diagnostics: [],
       bounds: { x: 0, y: 0, z: 0, w: 0, h: 0, d: 0 },
     };
-    for (const r of cutlist(model, mats))
+    for (const r of cutlist(model, mats)) {
+      const cut = r.panelIds.flatMap((id) => notes.get(id) ?? []);
       rows.set(
         ['run', r.materialId, r.length, r.width, r.edgesL, r.edgesW, bandKey(r.band)].join('|'),
         {
           ...r,
-          labels: r.labels.map((l) => `Run: ${l}`),
+          labels: r.labels.map((l) => `Run: ${l}${cut.length ? `, ${cut.join(' and ')}` : ''}`),
         },
       );
+    }
   }
   const covered = plinthCovered(project);
   for (const item of project.items) {
@@ -1803,7 +2147,8 @@ export function projectCutlist(project: Project): CutRow[] {
   );
 }
 
-export function projectHardware(project: Project): HardwareItem[] {
+export function projectHardware(input: Project): HardwareItem[] {
+  const project = applyRunHandles(input);
   return hardwareSummary({
     panels: [],
     spaces: [],
@@ -1857,6 +2202,43 @@ function validZones(z: unknown): boolean {
   );
 }
 
+const validBoard = (m: unknown) =>
+  isObj(m) &&
+  typeof m.id === 'string' &&
+  typeof m.name === 'string' &&
+  isInt(m.thickness, 1) &&
+  typeof m.grain === 'boolean' &&
+  (m.band === undefined || bandProblems(m.band).length === 0) &&
+  (m.frontBand === undefined || bandProblems(m.frontBand).length === 0);
+
+/** Project-wide settings (ADR-124): each one optional, each one checked. */
+function validateSettings(s: unknown): string[] {
+  if (!isObj(s)) return ['Invalid project settings'];
+  const errs: string[] = [];
+  for (const k of ['body', 'front', 'back'] as const)
+    if (s[k] !== undefined && !validBoard(s[k])) errs.push(`Invalid project ${k} board`);
+  const h = s.handle;
+  if (
+    h !== undefined &&
+    h !== null &&
+    !(
+      isObj(h) &&
+      ['bar', 'knob', 'push'].includes(h.kind as string) &&
+      (h.holeSpacing === undefined || isInt(h.holeSpacing, 1)) &&
+      (h.position === undefined || ['top', 'centre', 'bottom'].includes(h.position as string))
+    )
+  )
+    errs.push('Invalid project handle');
+  if (s.frontStyle !== undefined && !['overlay', 'half', 'inset'].includes(s.frontStyle as string))
+    errs.push('Invalid project front overlay');
+  if (
+    s.plinthHeight !== undefined &&
+    !(isInt(s.plinthHeight, 0) && (s.plinthHeight as number) <= 500)
+  )
+    errs.push('Project plinth height must be 0 to 500 mm');
+  return errs;
+}
+
 export function validateProject(p: unknown): string[] {
   if (!isObj(p)) return ['Project must be an object'];
   const errs: string[] = [];
@@ -1889,6 +2271,12 @@ export function validateProject(p: unknown): string[] {
       errs.push('Item position must be whole mm (height ≥ 0)');
     if (![0, 90, 180, 270].includes(it.rotationY as number))
       errs.push('Item rotation must be a quarter turn');
+    if (it.angle !== undefined) {
+      if (!isInt(it.angle, 1) || (it.angle as number) > 89)
+        errs.push('Item angle must be whole degrees from 1 to 89');
+      else if ((p.schemaVersion as number) < ANGLE_SINCE)
+        errs.push(`Pieces at an angle need project schemaVersion ${ANGLE_SINCE}`);
+    }
     const pl = it.placement;
     if (
       pl !== undefined &&
@@ -1921,6 +2309,16 @@ export function validateProject(p: unknown): string[] {
         errs.push('Invalid item link');
       else if ((p.schemaVersion as number) < LINKS_SINCE)
         errs.push(`Linked copies need project schemaVersion ${LINKS_SINCE}`);
+    }
+    if (it.sizeLocked !== undefined) {
+      if (it.sizeLocked !== true) errs.push('Invalid item size lock');
+      else if ((p.schemaVersion as number) < SIZE_LOCK_SINCE)
+        errs.push(`Size-locked pieces need project schemaVersion ${SIZE_LOCK_SINCE}`);
+    }
+    if (it.ref !== undefined) {
+      if (!isObj(it.ref) || !isObj(it.ref.overrides)) errs.push('Invalid template reference');
+      else if ((p.schemaVersion as number) < REFS_SINCE)
+        errs.push(`Template references need project schemaVersion ${REFS_SINCE}`);
     }
     const de = validateDesign(it.design);
     if (de.length) errs.push(`Item ${String(it.id)}: ${de[0]}`);
@@ -2001,7 +2399,23 @@ export function validateProject(p: unknown): string[] {
         p.runParts.some((rp) => isObj(rp) && TRIM_KINDS.includes(rp.kind as TrimKind))))
   )
     errs.push(`Trims and chosen worktops need project schemaVersion ${RUN_REQUESTS_SINCE}`);
-  if (p.room !== undefined) errs.push(...validateRoom(p.room));
+  if (p.room !== undefined) {
+    errs.push(...validateRoom(p.room));
+    if (isObj(p.room) && p.room.walls !== undefined && (p.schemaVersion as number) < WALLS_SINCE)
+      errs.push(`Wall backgrounds need project schemaVersion ${WALLS_SINCE}`);
+    if (
+      isObj(p.room) &&
+      Array.isArray(p.room.walls) &&
+      p.room.walls.some(
+        (f) =>
+          isObj(f) &&
+          isObj(f.image) &&
+          (f.image.fit !== undefined || f.image.straighten !== undefined),
+      ) &&
+      (p.schemaVersion as number) < FITTED_WALLS_SINCE
+    )
+      errs.push(`Fitted wall pictures need project schemaVersion ${FITTED_WALLS_SINCE}`);
+  }
   if (
     p.runPartsRemoved !== undefined &&
     !(Array.isArray(p.runPartsRemoved) && p.runPartsRemoved.every((k) => typeof k === 'string'))
@@ -2033,6 +2447,53 @@ export function validateProject(p: unknown): string[] {
         groupIds.add(g.id);
         for (const x of g.itemIds) grouped.add(x as string);
       }
+  }
+  if (p.settings !== undefined) {
+    if ((p.schemaVersion as number) < REFS_SINCE)
+      errs.push(`Project settings need project schemaVersion ${REFS_SINCE}`);
+    errs.push(...validateSettings(p.settings));
+  }
+  if (p.runHandles !== undefined || p.sinks !== undefined) {
+    if ((p.schemaVersion as number) < RUN_EXTRAS_SINCE)
+      errs.push(`Run handles and sinks need project schemaVersion ${RUN_EXTRAS_SINCE}`);
+    const strs = (v: unknown) => Array.isArray(v) && v.every((x) => typeof x === 'string');
+    if (p.runHandles !== undefined) {
+      if (!Array.isArray(p.runHandles)) errs.push('Invalid run handles');
+      else
+        for (const rh of p.runHandles) {
+          const h = isObj(rh) ? rh.handle : null;
+          if (
+            !isObj(rh) ||
+            typeof rh.id !== 'string' ||
+            !rh.id ||
+            !strs(rh.from) ||
+            !(rh.from as string[]).length ||
+            (rh.own !== undefined && !strs(rh.own)) ||
+            (rh.height !== undefined && !(isInt(rh.height, 1) && (rh.height as number) <= 3000)) ||
+            !isObj(h) ||
+            !['bar', 'knob', 'push'].includes(h.kind as string) ||
+            (h.holeSpacing !== undefined && !BAR_SPACINGS.includes(h.holeSpacing as number))
+          )
+            errs.push('Invalid run handle');
+        }
+    }
+    if (p.sinks !== undefined) {
+      if (!Array.isArray(p.sinks)) errs.push('Invalid sinks');
+      else
+        for (const sk of p.sinks)
+          if (
+            !isObj(sk) ||
+            typeof sk.id !== 'string' ||
+            !sk.id ||
+            typeof sk.baseId !== 'string' ||
+            !ids.has(sk.baseId) ||
+            !isInt(sk.w, 1) ||
+            (sk.w as number) > 3000 ||
+            !isInt(sk.d, 1) ||
+            (sk.d as number) > 3000
+          )
+            errs.push('Invalid sink');
+    }
   }
   if (p.models !== undefined) {
     if ((p.schemaVersion as number) < MODELS_SINCE)

@@ -458,7 +458,7 @@ for (const width of [1440, 375]) {
   await dlg.getByRole('searchbox', { name: 'Search the items' }).fill('Chest of drawers');
   await dlg.locator('.start-group .row-btn').first().click();
   await dlg.waitFor({ state: 'detached' }).catch(() => {});
-  await click(page.getByRole('radio', { name: 'Front' }));
+  await click(page.getByRole('radio', { name: '2D' }));
   await page
     .getByRole('button', { name: /drawers space/ })
     .first()

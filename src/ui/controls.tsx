@@ -12,6 +12,7 @@ export function MmField({
   unit = 'mm',
   hint,
   info,
+  disabled = false,
 }: {
   label: string;
   value: number;
@@ -23,6 +24,8 @@ export function MmField({
   hint?: string;
   /** An `InfoTip` shown beside the label (ADR-113). */
   info?: ReactNode;
+  /** Shown but not changeable (a size-locked piece, ADR-122). */
+  disabled?: boolean;
 }) {
   const id = useId();
   const [text, setText] = useState(String(value));
@@ -47,6 +50,7 @@ export function MmField({
           type="button"
           className="step"
           aria-label={`Decrease ${label}`}
+          disabled={disabled}
           onClick={() => bump(-step)}
         >
           −
@@ -55,6 +59,7 @@ export function MmField({
           id={id}
           inputMode="numeric"
           value={text}
+          disabled={disabled}
           aria-invalid={!valid}
           aria-describedby={!valid ? `${id}-err` : undefined}
           onChange={(e) => setText(e.target.value.replace(/[^\d-]/g, ''))}
@@ -70,6 +75,7 @@ export function MmField({
           type="button"
           className="step"
           aria-label={`Increase ${label}`}
+          disabled={disabled}
           onClick={() => bump(step)}
         >
           +

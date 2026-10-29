@@ -98,6 +98,7 @@ function issuesOf(l: ProjectItem, r: ProjectItem, lb: Box, rb: Box): string[] {
     return out;
   }
   if (l.rotationY !== r.rotationY) out.push('They are turned differently.');
+  else if (l.angle || r.angle) out.push('One of them is turned at an angle.');
   if (l.quantity !== r.quantity)
     out.push(`The numbers of copies differ (${l.quantity} and ${r.quantity}).`);
   if (!samePlacement(l.placement, r.placement))

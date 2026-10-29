@@ -1,6 +1,16 @@
-import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
+import { Canvas, invalidate, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import { ContactShadows, Edges, Html, Line, OrbitControls } from '@react-three/drei';
-import { useCallback, useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentRef,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
 import { createPortal } from 'react-dom';
 import {
   BoxGeometry,
@@ -11,8 +21,14 @@ import {
   ExtrudeGeometry,
   Float32BufferAttribute,
   FrontSide,
+  type Intersection,
   Matrix4,
+  Mesh,
   PMREMGenerator,
+  Plane,
+  PlaneGeometry,
+  type Raycaster,
+  ClampToEdgeWrapping,
   RepeatWrapping,
   SRGBColorSpace,
   Shape,
@@ -28,7 +44,31 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { explode } from '../core/explode';
 import { hitToMm, inSelection, selectionBox } from '../core/selectPath';
-import { roomDisplayBoxes } from '../core/room';
+import {
+  roomDisplayBoxes,
+  wallFinish,
+  type Room,
+  type WallFinish,
+  type WallRect,
+} from '../core/room';
+import {
+  boxSpan,
+  pictureRect,
+  rectLabel,
+  splitSpan,
+  wallAxes,
+  wallToRoom,
+  type PictureHandle,
+  type WallPatch,
+} from '../core/wallPicture';
+import { pictureKey, useWallPictureUrls } from '../ui/wallPictures';
+import {
+  setPictureFit,
+  useAdjustMode,
+  useAdjustWall,
+  usePictureDrag,
+  usePicturePreview,
+} from './wallPictureDrag';
 import { pieceBoxToRoom, type PlacedPiece } from '../core/project';
 import { inPlaneAxes, union } from '../core/geometry';
 import { aabbOf } from '../core/shape';
@@ -37,10 +77,11 @@ import { imageKey, useImageUrls } from '../persist/images';
 import { loadModelScene, type ModelScene } from '../persist/models';
 import { modelBox, modelYaw, type ModelItem } from '../core/model3d';
 import { useDesign } from '../store/designStore';
-import { useView } from '../ui/useView';
+import { useView, ViewOverride } from '../ui/useView';
 import { PHONE, useMediaQuery } from '../ui/useMediaQuery';
 import { useTheme } from '../ui/useTheme';
 import { useLook } from '../ui/useLook';
+import { setSolidWalls, useSolidWalls } from '../ui/useSolidWalls';
 import { SHADOW_CATCHER, setStage, useRendering } from './renderBridge';
 import { CountStepper } from '../ui/CountStepper';
 import { useSnap } from '../ui/useSnap';
@@ -48,6 +89,9 @@ import { SNAP_RANGE } from '../core/snap';
 import { S, useGhost, useMoveMode, usePieceDrag, type PieceGhost } from './pieceDrag';
 import { landingY } from '../core/drag3d';
 import { useModelResize, useResizePreview, type HandleAxis } from './modelResize';
+import { useHeightDrag, useHeightPreview } from './heightDrag';
+import { AXIS_LABEL, cutAt, setSection, useSection, type SectionAxis } from './section';
+import { heightDraggable, heightLabel } from '../core/height';
 import type { Box, MaterialImage, Panel } from '../core/types';
 
 const FRONT = new Set<Panel['role']>(['door', 'drawer-front']);
@@ -116,20 +160,21 @@ function PictureGeometry({ p, img }: { p: Panel; img: MaterialImage }) {
 }
 
 /** One texture per picture, shared by every part; freed when no material uses the picture any more. */
-function useTextures(urls: Map<string, string>): Map<string, Texture> {
+function useTextures(urls: Map<string, string>, repeat = true): Map<string, Texture> {
   const textures = useMemo(() => {
     const m = new Map<string, Texture>();
     const loader = new TextureLoader();
     for (const [id, url] of urls) {
       if (url === 'missing') continue;
-      const t = loader.load(url);
-      t.wrapS = t.wrapT = RepeatWrapping;
+      // Rendered on demand (ADR-121): draw again once the picture has arrived.
+      const t = loader.load(url, () => invalidate());
+      t.wrapS = t.wrapT = repeat ? RepeatWrapping : ClampToEdgeWrapping;
       t.colorSpace = SRGBColorSpace;
       t.anisotropy = 4;
       m.set(id, t);
     }
     return m;
-  }, [urls]);
+  }, [urls, repeat]);
   useEffect(() => () => textures.forEach((t) => t.dispose()), [textures]);
   return textures;
 }
@@ -142,6 +187,8 @@ function useTextures(urls: Map<string, string>): Map<string, Texture> {
  */
 export default function Viewer3D() {
   const view = useView();
+  // A shared item's preview (ADR-143): shown only, nothing selected, no tools or cards.
+  const preview = !!useContext(ViewOverride);
   const exploded = useDesign((s) => s.exploded);
   const theme = useTheme();
   const look = useLook();
@@ -155,12 +202,18 @@ export default function Viewer3D() {
       getComputedStyle(document.documentElement).getPropertyValue('--stage-3d').trim() || '#e7eae7'
     );
   }, [theme]);
-  const designId = `${view.mode === 'project' ? 'project' : `design:${useDesign.getState().design.id}`}:${exploded ? 'exploded' : 'built'}`;
+  const designId = `${preview ? `preview:${view.title}` : view.mode === 'project' ? 'project' : `design:${useDesign.getState().design.id}`}:${exploded ? 'exploded' : 'built'}`;
   // Exploded: positions only, for looking; parts, sheets and checks always use the built model.
-  const panels = useMemo(
-    () => (exploded ? explode(view.pieces) : view.model.panels),
-    [exploded, view],
-  );
+  // Isolate (ADR-122): only the selected project pieces are shown; the model, checks and exports are unchanged.
+  const section = useSection();
+  const selectedIds = useDesign((s) => s.selectedItemIds);
+  const isolating = view.mode === 'project' && section.isolate && selectedIds.length > 0;
+  const panels = useMemo(() => {
+    const all = exploded ? explode(view.pieces) : view.model.panels;
+    if (!isolating) return all;
+    const keep = new Set(selectedIds);
+    return all.filter((p) => keep.has(p.nodeId.split(':')[0]));
+  }, [exploded, view, isolating, selectedIds]);
   // A project's display-only 3D models (ADR-076) are framed too.
   const extent = useDesign((s) => (view.mode === 'project' ? s.projectModel?.extent : undefined));
   const bounds = useMemo(
@@ -171,7 +224,8 @@ export default function Viewer3D() {
   const drillOn = useDesign(
     (s) => !!s.project && !s.editingItemId && !!s.drillItemId && s.drillItemId === s.selectedItemId,
   );
-  const counts = (view.mode === 'design' || (view.mode === 'project' && drillOn)) && !rendering;
+  const counts =
+    (view.mode === 'design' || (view.mode === 'project' && drillOn)) && !rendering && !preview;
   // On a phone the short 3D view would be mostly covered by a floating card: it docks under the view (G-070).
   // The slot under the view, which App renders on phones before this lazy viewer mounts; floating when it is missing.
   const phone = useMediaQuery(PHONE);
@@ -225,6 +279,11 @@ export default function Viewer3D() {
   const tapping = useDesign((s) => !!s.placingItemId || !!s.drawingRoom);
   const moving = moveOn && hasPieces && !exploded && !rendering && !tapping;
   const [snapOn, setSnapOn] = useSnap();
+  // Adjusting a wall picture from 3D (ADR-146): only one of Move and Adjust wall picture is on.
+  const hasPicture = useDesign((s) => inProject && !!s.project?.room?.walls?.some((f) => f.image));
+  const [adjustOn, setAdjustOn] = useAdjustMode();
+  const adjusting = adjustOn && hasPicture && !exploded && !rendering && !tapping && !isolating;
+  const [adjustWall] = useAdjustWall();
   const turnId = useDesign((s) =>
     inProject && s.selectedItemId && s.project?.items.some((i) => i.id === s.selectedItemId)
       ? s.selectedItemId
@@ -247,13 +306,29 @@ export default function Viewer3D() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [turnId, rendering, tapping, turnItem]);
+  // Section (ADR-122): a cut across one axis of what is shown, in the project's 3D view; never in a rendered picture.
+  const sectionOn = inProject && section.on && !rendering;
+  const span = (a: SectionAxis): [number, number] =>
+    a === 'x'
+      ? [bounds.x, bounds.x + bounds.w]
+      : a === 'y'
+        ? [bounds.y, bounds.y + bounds.h]
+        : [bounds.z, bounds.z + bounds.d];
+  const [lo, hi] = span(section.axis);
+  const cut = sectionOn ? cutAt(section, lo, hi) : null;
+  const canIsolate = inProject && selectedIds.length > 0;
+  const hasRoom = useDesign((s) => !!s.project?.room);
+  const solidWalls = useSolidWalls();
   return (
     <>
       <Canvas
         camera={{ fov: 32, near: 0.01, far: 100 }}
+        // Draw only when something changes (ADR-121): orbiting, a change in the scene, a drag. Idle = no frames.
+        frameloop="demand"
         dpr={[1, 2]}
         shadows={realistic}
         onPointerMissed={() => {
+          if (preview) return;
           const st = useDesign.getState();
           if (st.project && !st.editingItemId) st.selectItem(null);
           else st.select(undefined);
@@ -296,8 +371,14 @@ export default function Viewer3D() {
         {counts && !docked && (
           <CountsAnchor place={placeCard} inProject={view.mode === 'project'} />
         )}
-        {view.mode === 'project' && !exploded && <RoomWalls />}
-        {view.mode === 'project' && !exploded && <ModelItems plain={rendering} moving={moving} />}
+        {view.mode === 'project' && !exploded && !isolating && (
+          <RoomWalls adjusting={adjusting} snapOn={snapOn} />
+        )}
+        {view.mode === 'project' && !exploded && !isolating && (
+          <ModelItems plain={rendering} moving={moving} />
+        )}
+        {moving && turnId && <HeightHandle id={turnId} />}
+        {sectionOn && <SectionClip axis={section.axis} at={cut!} />}
         {showLocks && <LockAnchors pieces={locked} badges={lockBadges} />}
         <Fit key={designId} bounds={bounds} />
       </Canvas>
@@ -318,23 +399,57 @@ export default function Viewer3D() {
           ))}
         </div>
       )}
-      {hasPieces && !rendering && (
+      {(hasPieces || hasPicture) && !rendering && (
         <div className="three-tools" role="toolbar" aria-label="Place pieces in 3D">
-          <button
-            type="button"
-            className="btn sm outline move-toggle"
-            aria-pressed={moving}
-            disabled={exploded}
-            title={
-              exploded
-                ? 'Turn off Exploded 3D to move pieces'
-                : 'Drag a piece to move it; dragging empty space turns the view'
-            }
-            onClick={() => setMoveOn(!moveOn)}
-          >
-            Move
-          </button>
-          {moving && (
+          {hasPieces && (
+            <button
+              type="button"
+              className="btn sm outline move-toggle"
+              aria-pressed={moving}
+              disabled={exploded}
+              title={
+                exploded
+                  ? 'Turn off Exploded 3D to move pieces'
+                  : 'Drag a piece to move it; dragging empty space turns the view'
+              }
+              onClick={() => {
+                setMoveOn(!moveOn);
+                setAdjustOn(false);
+              }}
+            >
+              Move
+            </button>
+          )}
+          {hasPicture && (
+            <button
+              type="button"
+              className="btn sm outline adjust-toggle"
+              aria-pressed={adjusting}
+              disabled={exploded}
+              title={
+                exploded
+                  ? 'Turn off Exploded 3D to adjust a wall picture'
+                  : 'Tap a wall with a picture, then drag the picture to shift it or its handles to stretch it'
+              }
+              onClick={() => {
+                setAdjustOn(!adjustOn);
+                setMoveOn(false);
+              }}
+            >
+              Adjust wall picture
+            </button>
+          )}
+          {adjusting && adjustWall !== null && (
+            <button
+              type="button"
+              className="btn sm outline"
+              title="Make the picture cover the whole wall"
+              onClick={() => setPictureFit(adjustWall, null)}
+            >
+              Fill wall
+            </button>
+          )}
+          {(moving || adjusting) && (
             <button
               type="button"
               className="btn sm outline snap-toggle"
@@ -367,10 +482,71 @@ export default function Viewer3D() {
               </button>
             </>
           )}
+          <button
+            type="button"
+            className="btn sm outline section-toggle"
+            aria-pressed={section.on}
+            title="Cut through the project to see inside"
+            onClick={() => setSection({ on: !section.on })}
+          >
+            Section
+          </button>
+          {(canIsolate || section.isolate) && (
+            <button
+              type="button"
+              className="btn sm outline isolate-toggle"
+              aria-pressed={isolating}
+              title="Show only the selected pieces"
+              onClick={() => setSection({ isolate: !section.isolate })}
+            >
+              Isolate
+            </button>
+          )}
+          {view.mode === 'project' && hasRoom && (
+            <button
+              type="button"
+              className="btn sm outline walls-toggle"
+              aria-pressed={solidWalls}
+              title="Show the room walls solid or see-through"
+              onClick={() => setSolidWalls(!solidWalls)}
+            >
+              Solid walls
+            </button>
+          )}
+          {sectionOn && (
+            <div className="section-tools" role="group" aria-label="Section cut">
+              {(['x', 'y', 'z'] as const).map((a) => (
+                <button
+                  key={a}
+                  type="button"
+                  className="btn sm outline"
+                  aria-pressed={section.axis === a}
+                  title={`Cut across the ${AXIS_LABEL[a].toLowerCase()}`}
+                  onClick={() => setSection({ axis: a, at: null })}
+                >
+                  {AXIS_LABEL[a]}
+                </button>
+              ))}
+              <label className="section-cut">
+                <span>Cut at {cut} mm</span>
+                <input
+                  type="range"
+                  min={lo}
+                  max={hi}
+                  step={1}
+                  value={cut ?? lo}
+                  aria-label={`Cut position across the ${AXIS_LABEL[section.axis].toLowerCase()}, mm`}
+                  onChange={(e) => setSection({ at: Number(e.target.value) })}
+                />
+              </label>
+            </div>
+          )}
         </div>
       )}
+      {adjusting && <PictureNote />}
       {moving && <DragNote snapOn={snapOn} />}
       {moving && <ResizeNote />}
+      {moving && <HeightNote />}
       {emptyProject && (
         <div className="no-3d empty-3d">
           <p>Add pieces under Compose to see them in 3D.</p>
@@ -486,6 +662,7 @@ function RoomLight() {
     const env = pmrem.fromScene(room, 0.04).texture;
     scene.environment = env;
     scene.environmentIntensity = 0.35;
+    invalidate();
     room.dispose();
     pmrem.dispose();
     return () => {
@@ -512,6 +689,7 @@ function KeyLight({ bounds }: { bounds: Box }) {
     l.target.position.set(cx, cy, cz);
     scene.add(l.target);
     l.shadow.camera.updateProjectionMatrix();
+    invalidate();
     return () => {
       scene.remove(l.target);
     };
@@ -722,6 +900,84 @@ function ResizeHandles({ item, box }: { item: ModelItem; box: Box }) {
   );
 }
 
+/**
+ * The selected wall unit's height handle in Move mode (ADR-122, wall-placed pieces only): on the middle of its top
+ * front edge. Dragging it goes through `setWallHeight` (core); while dragging a translucent copy shows where it hangs.
+ */
+function HeightHandle({ id }: { id: string }) {
+  const press = useHeightDrag();
+  const project = useDesign((s) => s.project);
+  const pc = useDesign((s) => s.projectModel?.pieces.find((x) => x.item.id === id));
+  const preview = useHeightPreview();
+  if (!project || !pc || !heightDraggable(project, id) || pc.item.placement?.kind !== 'wall')
+    return null;
+  const b = pc.bounds;
+  const start = pc.item.placement.height;
+  const at: [number, number, number] = [b.x + b.w / 2, b.y + b.h, b.z + b.d];
+  const dy = preview?.id === id ? preview.height - start : 0;
+  return (
+    <>
+      <Html position={at.map((v) => v * S) as [number, number, number]} center zIndexRange={[2, 1]}>
+        <button
+          type="button"
+          className="model-handle height-handle"
+          aria-label="Change height"
+          title="Change height: drag up or down"
+          onPointerDown={(e) => press(e, id, start, at)}
+        >
+          ↕
+        </button>
+      </Html>
+      {dy !== 0 && (
+        <mesh
+          position={[(b.x + b.w / 2) * S, (b.y + dy + b.h / 2) * S, (b.z + b.d / 2) * S]}
+          raycast={() => null}
+          renderOrder={5}
+        >
+          <boxGeometry args={[b.w * S, b.h * S, b.d * S]} />
+          <meshBasicMaterial color={SELECT} transparent opacity={0.28} depthWrite={false} />
+        </mesh>
+      )}
+    </>
+  );
+}
+
+/** The live height while a wall unit's height handle is dragged (ADR-122): "From floor 1450 mm". */
+function HeightNote() {
+  const preview = useHeightPreview();
+  if (!preview) return null;
+  return (
+    <span
+      className={`plan-drag-note three-drag-note${preview.height < 0 ? ' locked' : ''}`}
+      role="status"
+    >
+      {heightLabel(preview.height)}
+      {preview.height < 0 ? ' — below the floor, it will not move' : ''}
+    </span>
+  );
+}
+
+/**
+ * Section (ADR-122): the renderer clips everything past the cut, `at` mm across `axis`; what is shown only (the model,
+ * checks and exports are unchanged). Kept: the side toward the back wall, the floor or the left.
+ */
+function SectionClip({ axis, at }: { axis: SectionAxis; at: number }) {
+  const get = useThree((s) => s.get);
+  useEffect(() => {
+    // The renderer is read when the cut changes (not held as React state, which is never written to).
+    const renderer = get().gl;
+    const n = new Vector3(axis === 'x' ? -1 : 0, axis === 'y' ? -1 : 0, axis === 'z' ? -1 : 0);
+    renderer.clippingPlanes = [new Plane(n, at * S)];
+    // Drawn on demand (ADR-121): a cut set outside React's props needs a frame of its own.
+    invalidate();
+    return () => {
+      renderer.clippingPlanes = [];
+      invalidate();
+    };
+  }, [get, axis, at]);
+  return null;
+}
+
 /** The live size while a 3D model's handle is dragged (ADR-102). */
 function ResizeNote() {
   const preview = useResizePreview();
@@ -770,11 +1026,25 @@ function LockAnchors({
   return null;
 }
 
-/** The project's room (ADR-058): translucent walls with openings, obstacles; display only, never picked. */
-function RoomWalls() {
+/**
+ * The project's room (ADR-058): walls with openings, obstacles; display only, never picked. Walls are drawn as their
+ * inner faces (ADR-145): see-through by default; with Solid walls on they are opaque and seen only from inside the
+ * room, so the walls between the camera and the pieces drop away. A wall's background paints it with its colour, or
+ * with its picture covering one rectangle of the wall once, straightened when asked, its average colour around it
+ * (ADR-146). With Adjust wall picture on, a wall with a picture is chosen by a tap and its picture dragged.
+ */
+function RoomWalls({ adjusting, snapOn }: { adjusting: boolean; snapOn: boolean }) {
   const room = useDesign((s) => s.project?.room);
+  const solid = useSolidWalls();
   const boxes = useMemo(() => (room ? roomDisplayBoxes(room) : null), [room]);
-  if (!boxes) return null;
+  const textures = useTextures(useWallPictureUrls(room?.walls ?? NO_WALLS), false);
+  const [chosen, choose] = useAdjustWall();
+  const live = usePicturePreview();
+  const press = usePictureDrag(snapOn);
+  // Leaving the 3D view forgets the chosen wall: its handles are never mounted with a new canvas, where their DOM
+  // overlay (drei Html) fails to unmount cleanly.
+  useEffect(() => () => choose(null), [choose]);
+  if (!boxes || !room) return null;
   const mesh = (b: Box, key: string, color: string, opacity: number) => (
     <mesh
       key={key}
@@ -785,12 +1055,208 @@ function RoomWalls() {
       <meshStandardMaterial color={color} transparent opacity={opacity} depthWrite={false} />
     </mesh>
   );
+  const rectOf = (w: number) => {
+    const img = wallFinish(room, w)?.image;
+    if (!img) return null;
+    return live?.wall === w ? live.rect : pictureRect(room, w, img);
+  };
   return (
     <>
-      {boxes.walls.map((b, i) => mesh(b, `w${i}`, '#c9cdc8', 0.28))}
+      {boxes.walls.flatMap((b, i) => {
+        const w = boxes.wallOf[i];
+        const f = wallFinish(room, w);
+        const tex = f?.image ? textures.get(pictureKey(f.image)) : undefined;
+        const patches = splitSpan(boxSpan(room, w, b), tex ? rectOf(w) : null);
+        const pickable = adjusting && !!f?.image;
+        return patches.map((pt, k) => (
+          <WallPatchMesh
+            // A new mesh when its picture arrives: a material does not pick up a map added after its first frame.
+            key={`w${i}-${k}-${pt.picture && tex ? tex.uuid : 'plain'}`}
+            room={room}
+            wall={w}
+            patch={pt}
+            onPress={
+              pickable
+                ? (e) => {
+                    e.stopPropagation();
+                    if (chosen !== w) choose(w);
+                    else press(e.nativeEvent, w, 'move');
+                  }
+                : null
+            }
+          >
+            <meshStandardMaterial
+              color={pt.picture ? '#ffffff' : (f?.colour ?? '#c9cdc8')}
+              map={pt.picture ? (tex ?? null) : null}
+              transparent={!solid}
+              opacity={solid ? 1 : f ? 0.5 : 0.28}
+              depthWrite={solid}
+              side={solid ? FrontSide : DoubleSide}
+            />
+          </WallPatchMesh>
+        ));
+      })}
+      {adjusting && chosen !== null && rectOf(chosen) && (
+        <PictureHandles room={room} wall={chosen} rect={rectOf(chosen)!} press={press} />
+      )}
       {boxes.obstacles.map((b, i) => mesh(b, `o${i}`, '#b3261e', 0.35))}
-      {room && boxes.walls.length > 0 && <RoomFloor outline={room.outline} />}
+      {boxes.walls.length > 0 && <RoomFloor outline={room.outline} />}
     </>
+  );
+}
+const NO_WALLS: WallFinish[] = [];
+
+/** Wall coordinates (mm along from the left end, up from the floor, out into the room) → scene position. */
+function onWallAt(
+  room: Room,
+  wall: number,
+  u: number,
+  y: number,
+  out = 0,
+): [number, number, number] {
+  const [x, z] = wallToRoom(room, wall, u);
+  const [nx, nz] = wallAxes(room, wall).inward;
+  return [(x + nx * out) * S, y * S, (z + nz * out) * S];
+}
+
+/** The turn about y that makes a plane facing +z face into the room from the wall; its +x then runs to the right. */
+const wallTurn = ([nx, nz]: [number, number]) =>
+  nz > 0 ? 0 : nz < 0 ? Math.PI : nx > 0 ? Math.PI / 2 : -Math.PI / 2;
+
+/**
+ * One part of a wall's inner face (ADR-146): the picture's part with its picture coordinates, or a plain part. With
+ * `onPress` (Adjust wall picture) it is picked, only from inside the room.
+ */
+function WallPatchMesh({
+  room,
+  wall,
+  patch: pt,
+  onPress,
+  children,
+}: {
+  room: Room;
+  wall: number;
+  patch: WallPatch;
+  onPress: ((e: ThreeEvent<PointerEvent>) => void) | null;
+  children: ReactNode;
+}) {
+  const inward = wallAxes(room, wall).inward;
+  const w = pt.u1 - pt.u0,
+    h = pt.y1 - pt.y0;
+  const pic = pt.picture;
+  const g = useMemo(() => {
+    const geo = new PlaneGeometry(w * S, h * S);
+    if (pic)
+      geo.setAttribute(
+        'uv',
+        // PlaneGeometry's corners: top-left, top-right, bottom-left, bottom-right.
+        new Float32BufferAttribute(
+          [pic.s0, pic.t1, pic.s1, pic.t1, pic.s0, pic.t0, pic.s1, pic.t0],
+          2,
+        ),
+      );
+    return geo;
+  }, [w, h, pic]);
+  useEffect(() => () => g.dispose(), [g]);
+  const at = onWallAt(room, wall, (pt.u0 + pt.u1) / 2, (pt.y0 + pt.y1) / 2);
+  const [ax, , az] = at;
+  const [nx, nz] = inward;
+  const pick = useMemo(
+    () =>
+      function (this: Mesh, rc: Raycaster, hits: Intersection[]) {
+        const o = rc.ray.origin;
+        if ((o.x - ax) * nx + (o.z - az) * nz > 0) Mesh.prototype.raycast.call(this, rc, hits);
+      },
+    [ax, az, nx, nz],
+  );
+  return (
+    <mesh
+      position={at}
+      rotation={[0, wallTurn(inward), 0]}
+      raycast={onPress ? pick : () => null}
+      onPointerDown={onPress ?? undefined}
+    >
+      <primitive object={g} attach="geometry" />
+      {children}
+    </mesh>
+  );
+}
+
+const PICTURE_HANDLES: {
+  handle: PictureHandle;
+  label: string;
+  glyph: string;
+  at: [number, number];
+}[] = [
+  { handle: 'nw', label: 'top-left corner', glyph: '⤡', at: [0, 1] },
+  { handle: 'n', label: 'top edge', glyph: '↕', at: [0.5, 1] },
+  { handle: 'ne', label: 'top-right corner', glyph: '⤢', at: [1, 1] },
+  { handle: 'e', label: 'right edge', glyph: '↔', at: [1, 0.5] },
+  { handle: 'se', label: 'bottom-right corner', glyph: '⤡', at: [1, 0] },
+  { handle: 's', label: 'bottom edge', glyph: '↕', at: [0.5, 0] },
+  { handle: 'sw', label: 'bottom-left corner', glyph: '⤢', at: [0, 0] },
+  { handle: 'w', label: 'left edge', glyph: '↔', at: [0, 0.5] },
+];
+
+/** The chosen wall picture's outline and its eight stretch handles (ADR-146), just in front of the wall. */
+function PictureHandles({
+  room,
+  wall,
+  rect: r,
+  press,
+}: {
+  room: Room;
+  wall: number;
+  rect: WallRect;
+  press: ReturnType<typeof usePictureDrag>;
+}) {
+  const corner = (a: number, b: number) => onWallAt(room, wall, r.x + a * r.w, r.y + b * r.h, 4);
+  return (
+    <>
+      <Line
+        points={[corner(0, 0), corner(1, 0), corner(1, 1), corner(0, 1), corner(0, 0)]}
+        color={SELECT}
+        lineWidth={2}
+        raycast={() => null}
+      />
+      {PICTURE_HANDLES.map((hd) => (
+        <Html key={hd.handle} position={corner(...hd.at)} center zIndexRange={[2, 1]}>
+          <button
+            type="button"
+            className="model-handle"
+            aria-label={`Stretch the picture: ${hd.label}`}
+            title={`Stretch the picture: drag the ${hd.label}`}
+            onPointerDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              press(e, wall, hd.handle);
+            }}
+          >
+            {hd.glyph}
+          </button>
+        </Html>
+      ))}
+    </>
+  );
+}
+
+/** What Adjust wall picture is doing (ADR-146): the chosen picture's place and size, live while dragging. */
+function PictureNote() {
+  const [wall] = useAdjustWall();
+  const live = usePicturePreview();
+  const room = useDesign((s) => s.project?.room);
+  const img = room && wall !== null ? wallFinish(room, wall)?.image : undefined;
+  if (!room || wall === null || !img)
+    return (
+      <span className="plan-drag-note three-drag-note" role="status">
+        Tap a wall with a picture to adjust it
+      </span>
+    );
+  const rect = live?.wall === wall ? live.rect : pictureRect(room, wall, img);
+  return (
+    <span className="plan-drag-note three-drag-note" role="status">
+      Wall {wall + 1} picture: {rectLabel(rect)}
+    </span>
   );
 }
 
@@ -839,6 +1305,7 @@ function Fit({ bounds }: { bounds: Box }) {
     camera.lookAt(...target);
     controls.current?.target.set(...target);
     controls.current?.update();
+    invalidate();
     const onFit = () => {
       camera.position.set(
         target[0] + dist * 0.55,
@@ -847,6 +1314,7 @@ function Fit({ bounds }: { bounds: Box }) {
       );
       controls.current?.target.set(...target);
       controls.current?.update();
+      invalidate();
     };
     window.addEventListener('fb:fit', onFit);
     return () => window.removeEventListener('fb:fit', onFit);
@@ -880,10 +1348,11 @@ function Panels({
   snapOn?: boolean;
 }) {
   const view = useView();
+  const preview = !!useContext(ViewOverride);
   const materials = view.materials;
   const selectedSpace = useDesign((s) => s.selectedId);
   const selectedItem = useDesign((s) => s.selectedItemId);
-  const selectedId = view.mode === 'project' ? selectedItem : selectedSpace;
+  const selectedId = preview ? undefined : view.mode === 'project' ? selectedItem : selectedSpace;
   const highlight = useDesign((s) => s.highlight);
   const showFronts = useDesign((s) => s.showFronts);
   const tapPiece = useDesign((s) => s.tapPiece);
@@ -941,149 +1410,172 @@ function Panels({
       {moving && <MoveGhost panels={view.model.panels} showFronts={showFronts} />}
       {panels
         .filter((p) => showFronts || !FRONT.has(p.role))
-        .map((p) => {
-          const b = p.box;
-          // The whole piece selected (ADR-083) tints every panel.
-          const selected =
-            !plain &&
-            (view.mode === 'project'
-              ? !!selectedId && p.nodeId.startsWith(`${selectedId}:`)
-              : selectedId === null || p.nodeId === selectedId);
-          const lit = !plain && hl.has(p.id);
-          const faded = isFaded(p);
-          // With the outline, only the selected space's own panels are marked (green edges), and no tint.
-          const tinted = selected && !outline;
-          const own = !!outline && p.nodeId === ownId;
-          // A picture replaces the plain colour; without a readable one the plain colour stays (ADR-048).
-          const img = images.get(p.materialId);
-          const map = img ? textures.get(img.id) : undefined;
-          const base = map ? '#ffffff' : (colors.get(p.materialId) ?? '#cccccc');
-          const color = lit
-            ? HIGHLIGHT
-            : tinted
-              ? new Color(base).lerp(new Color(SELECT), 0.45).getStyle()
-              : base;
-          const side = p.shape?.kind === 'profile' ? DoubleSide : FrontSide;
-          const look = realistic ? (
-            <>
-              {/* Realistic (ADR-067): the finish sets how matte or glossy a board is; backs stay opaque. Panel edges are
+        .map((p) =>
+          yawed(
+            p,
+            (() => {
+              const b = p.box;
+              // The whole piece selected (ADR-083) tints every panel.
+              const selected =
+                !plain &&
+                (view.mode === 'project'
+                  ? !!selectedId && p.nodeId.startsWith(`${selectedId}:`)
+                  : selectedId === null || p.nodeId === selectedId);
+              const lit = !plain && hl.has(p.id);
+              const faded = isFaded(p);
+              // With the outline, only the selected space's own panels are marked (green edges), and no tint.
+              const tinted = selected && !outline;
+              const own = !!outline && p.nodeId === ownId;
+              // A picture replaces the plain colour; without a readable one the plain colour stays (ADR-048).
+              const img = images.get(p.materialId);
+              const map = img ? textures.get(img.id) : undefined;
+              const base = map ? '#ffffff' : (colors.get(p.materialId) ?? '#cccccc');
+              const color = lit
+                ? HIGHLIGHT
+                : tinted
+                  ? new Color(base).lerp(new Color(SELECT), 0.45).getStyle()
+                  : base;
+              const side = p.shape?.kind === 'profile' ? DoubleSide : FrontSide;
+              const look = realistic ? (
+                <>
+                  {/* Realistic (ADR-067): the finish sets how matte or glossy a board is; backs stay opaque. Panel edges are
                   not drawn (drei's edge outline is a mesh the occlusion pass would smear); the selection outline is. */}
-              <meshPhysicalMaterial
-                key={`${map ? map.uuid : 'plain'}${faded ? ':faded' : ''}`}
-                map={map ?? null}
-                color={color}
-                metalness={0}
-                {...finishLook(finishes.get(p.materialId))}
-                transparent={faded}
-                opacity={faded ? FADED : 1}
-                depthWrite={!faded}
-                side={side}
-              />
-            </>
-          ) : (
-            <>
-              <meshStandardMaterial
-                key={`${map ? map.uuid : 'plain'}${faded ? ':faded' : ''}`}
-                map={map ?? null}
-                color={color}
-                roughness={0.78}
-                metalness={0}
-                transparent={p.role === 'back' || faded}
-                opacity={faded ? FADED : p.role === 'back' ? 0.92 : 1}
-                depthWrite={!faded}
-                side={side}
-              />
-              <Edges
-                threshold={15}
-                color={tinted || own ? SELECT : '#3b403c'}
-                lineWidth={tinted || own ? 1.6 : 1}
-                transparent={faded}
-                opacity={faded ? FADED : 1}
-              />
-            </>
-          );
-          // Outside in, one level per tap at the hit point (ADR-083).
-          const onClick = (e: ThreeEvent<MouseEvent>) => {
-            e.stopPropagation();
-            // The click ending a 3D move (or the press that selected the piece) does nothing more (ADR-093).
-            if (drag.clicked()) return;
-            const at = hitToMm(e.point, built.get(p.id), exploded);
-            if (view.mode === 'project') tapItem(p.nodeId.split(':')[0], at);
-            else tapPiece(at.x, at.y);
-          };
-          const onDown = (e: ThreeEvent<PointerEvent>) => drag.press(e, p.nodeId.split(':')[0]);
-          const geometry =
-            map && img ? (
-              <PictureGeometry p={p} img={img} />
-            ) : (
-              <boxGeometry args={[b.w * S, b.h * S, b.d * S]} />
-            );
-          if (p.shape?.kind === 'profile') {
-            return map && img ? (
-              <mesh
-                key={p.id}
-                onClick={onClick}
-                onPointerDown={onDown}
-                castShadow={realistic}
-                receiveShadow={realistic}
-              >
-                <PictureGeometry p={p} img={img} />
-                {look}
-              </mesh>
-            ) : (
-              <mesh
-                key={p.id}
-                geometry={profileGeometry(p)}
-                onClick={onClick}
-                onPointerDown={onDown}
-                castShadow={realistic}
-                receiveShadow={realistic}
-              >
-                {look}
-              </mesh>
-            );
-          }
-          const mesh = (
-            <mesh
-              key={p.id}
-              position={[(b.x + b.w / 2) * S, (b.y + b.h / 2) * S, (b.z + b.d / 2) * S]}
-              onClick={onClick}
-              onPointerDown={onDown}
-              castShadow={realistic}
-              receiveShadow={realistic}
-            >
-              {geometry}
-              {look}
-            </mesh>
-          );
-          if (p.shape?.kind !== 'tilt') return mesh;
-          // Tilted part (ADR-040): the blank turned about its pivot, right-hand rule, as in the model.
-          const s = p.shape,
-            pv = [b.x + s.pivot[0], b.y + s.pivot[1], b.z + s.pivot[2]],
-            a = (s.angleDeg * Math.PI) / 180;
-          return (
-            <group
-              key={p.id}
-              position={[pv[0] * S, pv[1] * S, pv[2] * S]}
-              rotation={[s.axis === 'x' ? a : 0, s.axis === 'y' ? a : 0, s.axis === 'z' ? a : 0]}
-            >
-              <mesh
-                position={[
-                  (b.x + b.w / 2 - pv[0]) * S,
-                  (b.y + b.h / 2 - pv[1]) * S,
-                  (b.z + b.d / 2 - pv[2]) * S,
-                ]}
-                onClick={onClick}
-                onPointerDown={onDown}
-                castShadow={realistic}
-                receiveShadow={realistic}
-              >
-                {geometry}
-                {look}
-              </mesh>
-            </group>
-          );
-        })}
+                  <meshPhysicalMaterial
+                    key={`${map ? map.uuid : 'plain'}${faded ? ':faded' : ''}`}
+                    map={map ?? null}
+                    color={color}
+                    metalness={0}
+                    {...finishLook(finishes.get(p.materialId))}
+                    transparent={faded}
+                    opacity={faded ? FADED : 1}
+                    depthWrite={!faded}
+                    side={side}
+                  />
+                </>
+              ) : (
+                <>
+                  <meshStandardMaterial
+                    key={`${map ? map.uuid : 'plain'}${faded ? ':faded' : ''}`}
+                    map={map ?? null}
+                    color={color}
+                    roughness={0.78}
+                    metalness={0}
+                    transparent={p.role === 'back' || faded}
+                    opacity={faded ? FADED : p.role === 'back' ? 0.92 : 1}
+                    depthWrite={!faded}
+                    side={side}
+                  />
+                  <Edges
+                    threshold={15}
+                    color={tinted || own ? SELECT : '#3b403c'}
+                    lineWidth={tinted || own ? 1.6 : 1}
+                    transparent={faded}
+                    opacity={faded ? FADED : 1}
+                  />
+                </>
+              );
+              // Outside in, one level per tap at the hit point (ADR-083).
+              const onClick = (e: ThreeEvent<MouseEvent>) => {
+                e.stopPropagation();
+                // The click ending a 3D move (or the press that selected the piece) does nothing more (ADR-093).
+                if (drag.clicked() || preview) return;
+                const at = hitToMm(e.point, built.get(p.id), exploded);
+                if (view.mode === 'project') tapItem(p.nodeId.split(':')[0], at);
+                else tapPiece(at.x, at.y);
+              };
+              const onDown = (e: ThreeEvent<PointerEvent>) => drag.press(e, p.nodeId.split(':')[0]);
+              const geometry =
+                map && img ? (
+                  <PictureGeometry p={p} img={img} />
+                ) : (
+                  <boxGeometry args={[b.w * S, b.h * S, b.d * S]} />
+                );
+              if (p.shape?.kind === 'profile') {
+                return map && img ? (
+                  <mesh
+                    key={p.id}
+                    onClick={onClick}
+                    onPointerDown={onDown}
+                    castShadow={realistic}
+                    receiveShadow={realistic}
+                  >
+                    <PictureGeometry p={p} img={img} />
+                    {look}
+                  </mesh>
+                ) : (
+                  <mesh
+                    key={p.id}
+                    geometry={profileGeometry(p)}
+                    onClick={onClick}
+                    onPointerDown={onDown}
+                    castShadow={realistic}
+                    receiveShadow={realistic}
+                  >
+                    {look}
+                  </mesh>
+                );
+              }
+              const mesh = (
+                <mesh
+                  key={p.id}
+                  position={[(b.x + b.w / 2) * S, (b.y + b.h / 2) * S, (b.z + b.d / 2) * S]}
+                  onClick={onClick}
+                  onPointerDown={onDown}
+                  castShadow={realistic}
+                  receiveShadow={realistic}
+                >
+                  {geometry}
+                  {look}
+                </mesh>
+              );
+              if (p.shape?.kind !== 'tilt') return mesh;
+              // Tilted part (ADR-040): the blank turned about its pivot, right-hand rule, as in the model.
+              const s = p.shape,
+                pv = [b.x + s.pivot[0], b.y + s.pivot[1], b.z + s.pivot[2]],
+                a = (s.angleDeg * Math.PI) / 180;
+              return (
+                <group
+                  key={p.id}
+                  position={[pv[0] * S, pv[1] * S, pv[2] * S]}
+                  rotation={[
+                    s.axis === 'x' ? a : 0,
+                    s.axis === 'y' ? a : 0,
+                    s.axis === 'z' ? a : 0,
+                  ]}
+                >
+                  <mesh
+                    position={[
+                      (b.x + b.w / 2 - pv[0]) * S,
+                      (b.y + b.h / 2 - pv[1]) * S,
+                      (b.z + b.d / 2 - pv[2]) * S,
+                    ]}
+                    onClick={onClick}
+                    onPointerDown={onDown}
+                    castShadow={realistic}
+                    receiveShadow={realistic}
+                  >
+                    {geometry}
+                    {look}
+                  </mesh>
+                </group>
+              );
+            })(),
+          ),
+        )}
+    </group>
+  );
+}
+
+/**
+ * A part of a piece at an angle (ADR-121): drawn inside a group turned about the piece's vertical line. Three.js turns
+ * (x, z) about y the same way the core's yaw does, so the angle is used as it is.
+ */
+function yawed(p: Panel, el: ReactElement): ReactElement {
+  const y = p.box.yaw;
+  if (!y) return el;
+  return (
+    <group key={p.id} position={[y.cx * S, 0, y.cz * S]} rotation={[0, (y.deg * Math.PI) / 180, 0]}>
+      <group position={[-y.cx * S, 0, -y.cz * S]}>{el}</group>
     </group>
   );
 }

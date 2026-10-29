@@ -289,6 +289,8 @@ function depthOf(pc: PlacedPiece): Mm {
  */
 export function touchSideBySide(a: PlacedPiece, b: PlacedPiece): boolean {
   if (a.facing.axis !== b.facing.axis || a.facing.sign !== b.facing.sign) return false;
+  // A piece at an angle (ADR-121) does not stand side by side with anything: its box is only an enclosure.
+  if (a.item.angle || b.item.angle) return false;
   const along: 'x' | 'z' = a.facing.axis === 'z' ? 'x' : 'z';
   const lo = (p: Box) => (along === 'x' ? p.x : p.z);
   const hi = (p: Box) => (along === 'x' ? p.x + p.w : p.z + p.d);

@@ -87,7 +87,7 @@ for (const width of [1440, 390]) {
   await dlg.getByRole('button', { name: 'Create project' }).click();
   await page.locator('main.work').waitFor({ state: 'visible' });
   for (const q of ['Base cabinet', 'Base cabinet', 'Chest']) await addPiece(q);
-  const planRadio = page.getByRole('radio', { name: 'Plan' });
+  const planRadio = page.getByRole('radio', { name: '2D' });
   if (await planRadio.isVisible().catch(() => false)) await planRadio.click();
   await pieces.nth(2).focus();
   for (let i = 0; i < 5; i++) await page.keyboard.press('Shift+ArrowRight');

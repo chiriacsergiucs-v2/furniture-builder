@@ -13,7 +13,8 @@ Read first: `docs/backlog.md`, `docs/adr/README.md`, `docs/product/product-conte
 - three + @react-three/fiber + drei, lazy-loaded (ADR-013, ADR-014)
 - Dexie 4 (IndexedDB), vite-plugin-pwa (ADR-012)
 - Node 24, pnpm 12, Vitest, ESLint + Prettier (ADR-053, the same tooling as reserv)
-- Static site on GitHub Pages; no backend, accounts, cloud, telemetry, remote AI or CDN (ADR-002)
+- Static site on GitHub Pages; offline core with no request until the user opts in to an online feature; no
+  telemetry, analytics, remote AI or CDN (ADR-002, network rule replaced by ADR-126)
 - GitHub for source control and CI/CD
 
 ## Language
@@ -41,7 +42,7 @@ Read first: `docs/backlog.md`, `docs/adr/README.md`, `docs/product/product-conte
   (`pnpm catalog:docs`); `docs/retros/` — retrospectives
 - `.claude/skills/` — `new-adr`, `next-adr`, `ship-adr`, `verify`, `review`, `debug`, `add-tests`,
   `implement-design`, `design-review`, `add-storage-version`, `add-model-feature` (reserv's `add-endpoint`
-  counterpart), `security-review`, `ff`
+  counterpart), `security-review`, `ff`, `babysit`
 - `.github/workflows/ci.yml` — CI; the source of truth for what "passing" means.
   `deploy.yml` publishes `main` to GitHub Pages.
 
@@ -87,10 +88,13 @@ Lifecycle, one skill per step:
 2. `next ADR` — pick and implement the next ready ADR (`next-adr` skill)
 3. `ship ADR-NNN` — mark it implemented, move it, fix links (`ship-adr` skill)
 
-New and next together (user rule 2026-10-27): after `new-adr` writes an ADR, show it with its open questions and
-ask the user to approve it. Only on explicit approval (and answered or accepted open questions) build that same
-ADR straight away with `next-adr`, on the same branch and in the same pull request. No approval, no build; the
-ADR stays `Pending` for a later `next ADR`.
+New and next together (user rule 2026-10-27, changed 2026-10-29): ask every question that defines an ADR the moment it
+arises, while writing it, with the interactive question tool: each option with its reasoning (what it delivers, the
+work it costs, labelled estimates) and the recommended one per the rule below. Do not leave a question only in the
+ADR file for later. Once every question is answered, record the answers in the ADR and build that same ADR straight
+away with `next-adr`, on the same branch and in the same pull request; the answers are the approval. Questions that
+arise while building are asked the same way, at once. Never treat silence or a recommended default as an answer; an
+unanswered question leaves the ADR `Deferred` for a later `next ADR`.
 
 Fast forward, `ff` (user rule 2026-10-27, `ff` skill): on "ff" the request is built without an ADR, branch or pull
 request, with light acceptance: no tests, lint or find-it, only `pnpm typecheck` and `pnpm build`. One backlog row
@@ -100,7 +104,9 @@ changed and push only on the user's explicit approval. Model, document, storage 
 ## Engineering conventions (hard rules)
 
 - Do not read, write or migrate the previous app or its data (`mobila-cutlist-build-kit`) (ADR-001).
-- No backend, accounts, cloud, telemetry, remote AI, runtime third-party requests or CDN (ADR-002).
+- Offline core (ADR-002, ADR-126): every feature works signed out and offline with no request. Online features
+  (accounts, account storage, share links) are opt-in, live only in `src/online`, are imported only dynamically,
+  and contact only the origins in `src/online/origins.ts`. Never telemetry, analytics, remote AI, CDN or remote fonts.
 - Integer millimetres; x width, y height from floor, z depth from back; exact integer splits (ADR-003).
 - Every view and list is a projection of `buildModel()`; never compute geometry in UI code (ADR-004).
 - New product families reuse `buildCabinet` where a carcass exists (ADR-007).
@@ -144,7 +150,8 @@ changed and push only on the user's explicit approval. Model, document, storage 
 - Snapshot before tests (user rule 2026-10-27): for a UI change, before running any tests or checks, show the user a
   screenshot of the fix attempt (dev or production build, phone and desktop width where relevant) and wait. Proceed
   to tests and the next steps only on their confirmation; otherwise fix the new requirements and show a new
-  screenshot for confirmation again.
+  screenshot for confirmation again. The screenshots for approval come last in the reply, right above the
+  questions if there are any (user rule 2026-10-29).
 - Smallest functional slice; for each change ask "needed to demonstrate this now?" — if not, it goes under
   _Skipped this iteration_.
 - Update `docs/backlog.md` in the same change; change a status only with evidence (command output or a CI
@@ -172,5 +179,6 @@ changed and push only on the user's explicit approval. Model, document, storage 
 - Branch per ADR: `adr-NNN-short-title`; open a pull request for review. An ADR created and approved for building
   in the same run (new and next together, above) shares one branch and one pull request with its implementation.
 - Merge to `main` only on the user's instruction; then cite the `Deploy GitHub Pages` run id. Never force-push
-  `main`.
+  `main`. Exception (user rule 2026-10-29, `babysit` skill): a pull request Claude opened and babysits is shipped
+  on its branch (`ship-adr`) and merged once green, without asking again.
 - Ship commit message: `Ship ADR-NNN: <short title> — mark implemented`.

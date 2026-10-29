@@ -175,7 +175,7 @@ describe('gap marks on the device (ADR-101, Dexie v9)', () => {
     const Fresh = db.constructor as new (n: string) => typeof db;
     const nw = new Fresh(name);
     await nw.open();
-    expect(nw.verno).toBe(9);
+    expect(nw.verno).toBe(11);
     expect(await nw.decors.get('x')).toBeDefined();
     expect(await nw.models.get('m')).toBeDefined();
     expect(await nw.gapMarks.count()).toBe(0);

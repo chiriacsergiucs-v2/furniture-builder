@@ -5,6 +5,8 @@
  * warning. Pipes and outlets (ADR-072) are zones on a wall: a back, plinth or worktop over one, or an outlet hidden
  * behind a piece, is a warning. Optional on a project: absent = no room checks, as before.
  */
+import { footprintOf } from './geometry';
+import { MAX_TILE } from './surface';
 import type { Box, Diagnostic, Mm } from './types';
 
 export type Pt = [Mm, Mm];
@@ -47,7 +49,66 @@ export interface Room {
   features: RoomFeature[];
   /** The ready shape and sizes it was made from; absent once walls are drawn or edited one by one. */
   shape?: { kind: RoomShape; sizes: ShapeSizes };
+  /** Wall backgrounds (ADR-145, project schemaVersion 14), at most one per wall. Absent = the plain see-through grey. */
+  walls?: WallFinish[];
 }
+
+/**
+ * A wall's background (ADR-145): a colour, or a picture from this device (stored like board pictures, ADR-048). With a
+ * picture, `colour` is its average colour, shown on the wall around the picture.
+ */
+export interface WallFinish {
+  /** Index of the wall (outline[i] → outline[i+1]), as for features. */
+  wall: number;
+  colour: string;
+  image?: WallImage;
+}
+/**
+ * A wall picture (ADR-146): it covers one rectangle of its wall once, `fit`, or the whole wall when absent. Seen from
+ * inside the room, `x` runs from the wall's left end and `y` up from the floor (`src/core/wallPicture.ts`).
+ */
+export interface WallImage {
+  id: string;
+  name: string;
+  fit?: WallRect;
+  /**
+   * The wall's corners in the photo (bottom-left, bottom-right, top-right, top-left), in ten-thousandths of the
+   * photo's width and height from its top-left corner: that part of the photo, straightened, fills `fit`.
+   */
+  straighten?: [Pt, Pt, Pt, Pt];
+  /** The repeat size of ADR-145, kept as read from older projects; no longer used (ADR-146: pictures do not repeat). */
+  tileWidth?: Mm;
+  tileHeight?: Mm;
+}
+/** A rectangle on a wall in mm: `x` from the wall's left end seen from inside the room, `y` up from the floor. */
+export interface WallRect {
+  x: Mm;
+  y: Mm;
+  w: Mm;
+  h: Mm;
+}
+
+/** The finish of wall `i`, if it has one. */
+export const wallFinish = (r: Room, i: number): WallFinish | undefined =>
+  r.walls?.find((f) => f.wall === i);
+
+/** The room with wall `i` set to `f` (undefined = back to plain); finishes of walls the outline no longer has go. */
+export function setWallFinish(r: Room, i: number, f: Omit<WallFinish, 'wall'> | undefined): Room {
+  const rest = (r.walls ?? []).filter((x) => x.wall !== i && x.wall < r.outline.length);
+  const walls = f ? [...rest, { ...f, wall: i }].sort((a, b) => a.wall - b.wall) : rest;
+  const { walls: _w, ...base } = r;
+  void _w;
+  return walls.length ? { ...base, walls } : base;
+}
+
+/** Finishes kept for a new outline: only walls it still has (a redrawn room, ADR-145). */
+export function keepWallFinishes(walls: WallFinish[] | undefined, outline: Pt[]) {
+  const kept = walls?.filter((f) => f.wall < outline.length);
+  return kept?.length ? { walls: kept } : {};
+}
+
+const HEX = /^#[0-9a-f]{6}$/i;
+const isTile = (v: unknown) => isInt(v, 1) && (v as number) <= MAX_TILE;
 
 export type RoomShape = 'rectangle' | 'l-shape' | 'u-shape' | 'alcove';
 /** Shape sizes: width and depth of the room, then the cut-out (L), notch (U) or alcove: its width, depth and offset. */
@@ -155,6 +216,31 @@ export function rectInside(outline: Pt[], x0: number, z0: number, x1: number, z1
   return true;
 }
 
+/**
+ * A box's floor outline lies inside the room (ADR-121): a turned box by its four corners, and no corner of the walls
+ * strictly inside it (walls are straight along x or z, so that is the only way one can pass through it).
+ */
+export function boxInside(outline: Pt[], b: Box): boolean {
+  if (!b.yaw) return rectInside(outline, b.x, b.z, b.x + b.w, b.z + b.d);
+  const pts = footprintOf(b);
+  if (!pts.every(([x, z]) => inside(outline, x, z))) return false;
+  return !outline.some(([x, z]) => strictlyInConvex(pts, x, z));
+}
+
+function strictlyInConvex(poly: [number, number][], x: number, z: number): boolean {
+  let sign = 0;
+  for (let i = 0; i < poly.length; i++) {
+    const [ax, az] = poly[i],
+      [bx, bz] = poly[(i + 1) % poly.length];
+    const c = (bx - ax) * (z - az) - (bz - az) * (x - ax);
+    if (Math.abs(c) < 1e-6) return false;
+    const s = Math.sign(c);
+    if (sign && s !== sign) return false;
+    sign = s;
+  }
+  return true;
+}
+
 /** Problems with the outline itself; room checks are skipped while there are any (ADR-008). */
 export function outlineIssues(outline: Pt[]): string[] {
   const n = outline.length;
@@ -193,6 +279,13 @@ function segmentsMeet(a: Pt, b: Pt, c: Pt, d: Pt) {
 }
 
 /** Unit direction of a wall and the normal pointing into the room. */
+/** The way into the room from wall `i`, as a unit step in x and z. */
+export function wallInward(r: Room, i: number): Pt {
+  const { nx, nz } = frame(r, i);
+  // + 0 turns −0 into 0.
+  return [nx + 0, nz + 0];
+}
+
 function frame(r: Room, i: number) {
   const [a, b] = wallEnds(r, i);
   const dx = Math.sign(b[0] - a[0]),
@@ -261,6 +354,8 @@ export function roomFrontView(r: Room): {
   x0: Mm;
   x1: Mm;
   height: Mm;
+  /** The back walls along x, for their backgrounds (ADR-145). */
+  walls: { wall: number; x: Mm; w: Mm }[];
   features: { id: string; kind: RoomFeature['kind']; label: string; x: Mm; w: Mm; y: Mm; h: Mm }[];
 } | null {
   if (outlineIssues(r.outline).length) return null;
@@ -279,7 +374,11 @@ export function roomFrontView(r: Room): {
       const y = f.kind === 'door' ? 0 : f.sill;
       return { id: f.id, kind: f.kind, label: f.label, x: b.x, w: b.w, y, h: f.height };
     });
-  return { x0: Math.min(...xs), x1: Math.max(...xs), height: r.height, features };
+  const walls = back.map((i) => {
+    const [a, b] = wallEnds(r, i);
+    return { wall: i, x: Math.min(a[0], b[0]), w: Math.abs(b[0] - a[0]) };
+  });
+  return { x0: Math.min(...xs), x1: Math.max(...xs), height: r.height, walls, features };
 }
 
 export const NEAR_WALL = 50;
@@ -302,6 +401,8 @@ export function roomChecks(
     id: string;
     name: string;
     bounds: Box;
+    /** The piece as one box, turned when typed at an angle (ADR-121); absent = `bounds`. */
+    outline?: Box;
     hitsPanels: (b: Box) => boolean;
     /** The back, plinth or worktop panel (its role) that enters a box, or null (ADR-072). */
     covers?: (b: Box) => string | null;
@@ -354,7 +455,7 @@ export function roomChecks(
   const clearanceIssues: Diagnostic[] = [];
   for (const pc of pieces) {
     const b = pc.bounds;
-    if (!rectInside(room.outline, b.x, b.z, b.x + b.w, b.z + b.d)) {
+    if (!boxInside(room.outline, pc.outline ?? b)) {
       // ADR-071: how far it has to move to stand inside (the shortest move along the floor), when it fits at all.
       const way = movesInside(room.outline, b)[0];
       const amount = way ? Math.abs(way.dx) + Math.abs(way.dz) : undefined;
@@ -409,7 +510,7 @@ export function roomChecks(
     // Opening clearances that reach through a wall (ADR-057).
     for (const c of pc.clearances) {
       const cb = c.box;
-      if (!rectInside(room.outline, cb.x, cb.z, cb.x + cb.w, cb.z + cb.d))
+      if (!boxInside(room.outline, cb))
         clearanceIssues.push({
           severity: 'warning',
           code: 'opening-blocked',
@@ -559,6 +660,37 @@ const isObj = (v: unknown): v is Record<string, unknown> =>
 const isInt = (v: unknown, min = -1e7) =>
   typeof v === 'number' && Number.isSafeInteger(v) && v >= min && v <= 1e7;
 
+/** A fitted picture's rectangle (ADR-146): whole mm, at least 1 mm, within `MAX_TILE` of the wall. */
+const isWallRect = (v: unknown) =>
+  isObj(v) &&
+  isInt(v.x, -MAX_TILE) &&
+  isInt(v.y, -MAX_TILE) &&
+  isInt(v.w, 1) &&
+  isInt(v.h, 1) &&
+  [v.x, v.y, v.w, v.h].every((n) => (n as number) <= MAX_TILE);
+
+/** Four photo corners (ADR-146) in 0–10000 that make a convex quadrilateral: none crossed, no three in a line. */
+export function isQuad(v: unknown): boolean {
+  if (
+    !Array.isArray(v) ||
+    v.length !== 4 ||
+    !v.every(
+      (p) =>
+        Array.isArray(p) &&
+        p.length === 2 &&
+        p.every((n) => isInt(n, 0) && (n as number) <= 10_000),
+    )
+  )
+    return false;
+  const q = v as Pt[];
+  const turns = q.map((a, k) => {
+    const b = q[(k + 1) % 4],
+      c = q[(k + 2) % 4];
+    return Math.sign((b[0] - a[0]) * (c[1] - b[1]) - (b[1] - a[1]) * (c[0] - b[0]));
+  });
+  return turns[0] !== 0 && turns.every((t) => t === turns[0]);
+}
+
 export function validateRoom(r: unknown): string[] {
   if (!isObj(r)) return ['Invalid room'];
   const errs: string[] = [];
@@ -600,6 +732,37 @@ export function validateRoom(r: unknown): string[] {
     )
   )
     errs.push('Invalid room shape');
+  if (r.walls !== undefined) {
+    const seen = new Set<number>();
+    if (!Array.isArray(r.walls)) errs.push('Invalid wall backgrounds');
+    else
+      for (const f of r.walls) {
+        const img = isObj(f) ? f.image : undefined;
+        if (
+          !isObj(f) ||
+          !isInt(f.wall, 0) ||
+          seen.has(f.wall as number) ||
+          (Array.isArray(r.outline) && (f.wall as number) >= r.outline.length) ||
+          typeof f.colour !== 'string' ||
+          !HEX.test(f.colour) ||
+          (img !== undefined &&
+            !(
+              isObj(img) &&
+              typeof img.id === 'string' &&
+              !!img.id &&
+              img.id.length <= 200 &&
+              typeof img.name === 'string' &&
+              img.name.length <= 500 &&
+              (img.tileWidth === undefined || isTile(img.tileWidth)) &&
+              (img.tileHeight === undefined || isTile(img.tileHeight)) &&
+              (img.fit === undefined || isWallRect(img.fit)) &&
+              (img.straighten === undefined || isQuad(img.straighten))
+            ))
+        )
+          errs.push('Invalid wall background');
+        else seen.add(f.wall as number);
+      }
+  }
   return errs;
 }
 
@@ -607,9 +770,15 @@ export function validateRoom(r: unknown): string[] {
  * Walls for the 3D view (ADR-058): thin boxes just outside the outline, full room height, with door and window
  * openings left as gaps; obstacles as their own boxes. Display only.
  */
-export function roomDisplayBoxes(r: Room, thick = 20): { walls: Box[]; obstacles: Box[] } {
-  if (outlineIssues(r.outline).length) return { walls: [], obstacles: [] };
+export function roomDisplayBoxes(
+  r: Room,
+  thick = 20,
+): { walls: Box[]; wallOf: number[]; inward: Pt[]; obstacles: Box[] } {
+  if (outlineIssues(r.outline).length) return { walls: [], wallOf: [], inward: [], obstacles: [] };
   const walls: Box[] = [];
+  /** The wall each box belongs to and the way into the room from it (ADR-145: its background, faced inward). */
+  const wallOf: number[] = [];
+  const inward: Pt[] = [];
   for (let i = 0; i < r.outline.length; i++) {
     const len = wallLength(r, i);
     const open = r.features
@@ -624,7 +793,12 @@ export function roomDisplayBoxes(r: Room, thick = 20): { walls: Box[]; obstacles
       .sort((p, q) => p.a - q.a);
     let at = 0;
     const seg = (a: number, b: number, y0: number, y1: number) => {
-      if (b > a && y1 > y0) walls.push(wallBox(r, i, a, b - a, -thick, y0, y1 - y0));
+      if (b > a && y1 > y0) {
+        walls.push(wallBox(r, i, a, b - a, -thick, y0, y1 - y0));
+        wallOf.push(i);
+        const { nx, nz } = frame(r, i);
+        inward.push([nx, nz]);
+      }
     };
     for (const o of open) {
       seg(at, o.a, 0, r.height);
@@ -638,5 +812,5 @@ export function roomDisplayBoxes(r: Room, thick = 20): { walls: Box[]; obstacles
     .filter((f) => f.kind === 'obstacle')
     .map((f) => featureBox(r, f))
     .filter((b): b is Box => !!b);
-  return { walls, obstacles };
+  return { walls, wallOf, inward, obstacles };
 }

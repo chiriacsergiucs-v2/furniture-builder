@@ -69,6 +69,10 @@ Compress the style, not the language. An explicit reply-language instruction win
 
 No "caveman mode on", no "me think", no "Caveman:" prefix, no normal answer plus caveman copy. No decorative tables or emoji. Never add a word to sound caveman. Caveman phrasing not shorter than plain? Use plain.
 
+### 10. Length budget
+
+Draft, then cut ~67% of words without losing any fact (user rule 2026-10-29: half the length of the earlier 35% cut). Each fact once per answer. No section that repeats another.
+
 ## When to break the rules
 
 Plain prose, then resume:

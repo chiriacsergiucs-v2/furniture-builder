@@ -8,14 +8,25 @@
 import { it, expect } from 'vitest';
 import { buildModel } from '../src/core/build';
 import { INTERNAL_DRAWER_SETBACK } from '../src/core/cabinet';
-import { validateDesign, defaultDrawers, findSpace, cornerDefaults } from '../src/core/design';
+import {
+  validateDesign,
+  defaultDrawers,
+  findSpace,
+  cornerDefaults,
+  upgradeDesign,
+} from '../src/core/design';
 import { explode } from '../src/core/explode';
-import { contains, cutDimensions } from '../src/core/geometry';
+import { contains, cutDimensions, enclosing, footprintOf, overlaps } from '../src/core/geometry';
 import { cutlist } from '../src/core/cutlist';
 import { bandFor } from '../src/core/materials';
 import { frameDefaults, solidMaterials } from '../src/core/design';
 import { aabbOf, panelsOverlap, shapeProblems } from '../src/core/shape';
+import { catalogFamilies, insertable, insertVariant } from '../src/core/catalog';
+import { carryEdits, resolveItem, settingsDiff, SIZE_SKIP, syncRef } from '../src/core/ownEdits';
+import { makeItem, newProject, type ProjectSettings } from '../src/core/project';
+import { withSettings } from '../src/core/projectSettings';
 import type {
+  Handle,
   EdgeBand,
   Design,
   Space,
@@ -673,4 +684,96 @@ it(
     ).toEqual({});
   },
   FUZZ_TIMEOUT,
+);
+
+it(
+  'random turned boxes: exact overlap agrees with the enclosing test and with touching (seeded fuzz, ADR-121)',
+  () => {
+    const N = Number(process.env.FUZZ_N ?? 3000);
+    const probs: string[] = [];
+    for (let i = 0; i < N && probs.length < 5; i++) {
+      const w = ri(50, 1200),
+        d = ri(50, 800),
+        h = ri(50, 2000);
+      const yaw = { deg: ri(1, 89), cx: ri(0, 2000) + 0.5 * ri(0, 1), cz: ri(0, 2000) };
+      const a = { x: ri(0, 1500), y: 0, z: ri(0, 1500), w, h, d, yaw };
+      // A second box in the same turned frame: beside a (touching), or 1 mm into it.
+      const into = rnd() < 0.5;
+      const b = { ...a, x: a.x + w - (into ? 1 : 0), w: ri(50, 900) };
+      if (overlaps(a, b) !== into) probs.push(`frame ${JSON.stringify({ a, b, into })}`);
+      if (overlaps(a, b) !== overlaps(b, a)) probs.push(`symmetry ${JSON.stringify({ a, b })}`);
+      // Any box: a true overlap implies the enclosing boxes overlap; the outline lies inside the enclosing box.
+      const c = {
+        x: ri(-500, 2500),
+        y: ri(-100, 100),
+        z: ri(-500, 2500),
+        w: ri(1, 900),
+        h: ri(1, 900),
+        d: ri(1, 900),
+        ...(rnd() < 0.5 ? { yaw: { deg: ri(1, 89), cx: ri(0, 2000), cz: ri(0, 2000) } } : {}),
+      };
+      if (overlaps(a, c) && !overlaps(enclosing(a), enclosing(c)))
+        probs.push(`enclosing ${JSON.stringify({ a, c })}`);
+      const e = enclosing(a);
+      if (
+        !footprintOf(a).every(
+          ([x, z]) =>
+            x >= e.x - 1e-6 && x <= e.x + e.w + 1e-6 && z >= e.z - 1e-6 && z <= e.z + e.d + 1e-6,
+        )
+      )
+        probs.push(`outline ${JSON.stringify(a)}`);
+    }
+    expect(probs).toEqual([]);
+  },
+  FUZZ_TIMEOUT,
+);
+
+it(
+  'template references rebuild the same piece; carried edits never make a design invalid (seeded fuzz, ADR-124)',
+  () => {
+    const N = Math.ceil(Number(process.env.FUZZ_N ?? 3000) / 10);
+    const variants = catalogFamilies.flatMap((f) =>
+      f.variants.filter(insertable).map((v) => ({ f, v })),
+    );
+    const handles: (Handle | null)[] = [{ kind: 'bar' }, { kind: 'knob' }, { kind: 'push' }, null];
+    const boards = [
+      { id: 'b1', name: 'Fuzz oak', thickness: 19, grain: true, color: '#b08850' },
+      { id: 'b2', name: 'Fuzz white', thickness: 16, grain: false, color: '#ffffff' },
+    ] as Material[];
+    const probs: string[] = [];
+    for (let i = 0; i < N; i++) {
+      const { f, v } = pick(variants);
+      const fresh = insertVariant(f, v)!;
+      const settings: ProjectSettings = {};
+      if (rnd() < 0.5) settings.handle = pick(handles);
+      if (rnd() < 0.4) settings.front = pick(boards);
+      if (rnd() < 0.4) settings.body = pick(boards);
+      if (rnd() < 0.3) settings.back = { ...pick(boards), thickness: 3 };
+      if (rnd() < 0.3) settings.frontStyle = pick(['overlay', 'half', 'inset'] as const);
+      if (rnd() < 0.3) settings.plinthHeight = ri(0, 300);
+      let design = withSettings(fresh, settings);
+      const p = design.product;
+      if (rnd() < 0.4 && 'width' in p.params)
+        design = {
+          ...design,
+          product: { ...p, params: { ...p.params, width: p.params.width + ri(-100, 100) } },
+        } as Design;
+      const item = syncRef({ ...makeItem(newProject(), fresh), design }, catalogFamilies);
+      try {
+        const resolved = resolveItem(item, catalogFamilies);
+        const left = Object.keys(settingsDiff(upgradeDesign(design), resolved));
+        if (left.length) probs.push(`ref-differs ${f.id}/${v.id} ${left.join(',')}`);
+        // Carried onto another catalog item: never a new validation problem (G-160).
+        const other = pick(variants);
+        const target = insertVariant(other.f, other.v)!;
+        const carried = carryEdits(target, item.ref!.overrides, SIZE_SKIP).design;
+        if (!validateDesign(target).length && validateDesign(carried).length)
+          probs.push(`carry-invalid ${f.id}/${v.id} → ${other.f.id}/${other.v.id}`);
+      } catch (e) {
+        probs.push(`throws ${f.id}/${v.id} ${(e as Error).message}`);
+      }
+    }
+    expect(probs.slice(0, 5)).toEqual([]);
+  },
+  FUZZ_TIMEOUT * 3,
 );

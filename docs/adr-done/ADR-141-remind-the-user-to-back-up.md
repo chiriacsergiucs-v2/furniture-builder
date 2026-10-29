@@ -1,0 +1,59 @@
+# ADR-141: Remind the user to back up
+
+- Status: Implemented
+- Date: 2026-10-28
+- Implemented: 2026-10-28 (2026-10-28 (light acceptance; find-it pending (ADR-066)))
+- Depends on: ADR-133
+- Design: docs/ui-design.md (Toast, Settings dialog)
+- Backlog: N142
+- Acceptance: light
+- Answers: 2026-10-28, the user answered every open question (below)
+- Proposed by: Claude, not requested (2026-10-28 task: "propose further architecture and UX ADRs")
+
+## Context
+
+Proposed by Claude, not requested. A folder backup (ADR-133) helps only if it runs. Where automatic backup is not
+possible (browsers without folder access, or permission not granted again after a restart), the user must act.
+
+## Decision
+
+- When the last backup is older than the chosen interval and something changed since, a `.toast` reads "Last
+  backup: <n> days ago." with **Back up now** and **Later**.
+- Settings › Saved data holds the interval, including **Off**.
+
+**Answers (user, 2026-10-28):**
+
+- The interval is a Settings choice, with **Off**, starting at **30 days** (G-262).
+
+## Alternatives considered
+
+- **Automatic backup only** — impossible on browsers without folder access.
+- **Email reminders** — needs an account and a server (ADR-126).
+
+## Scope
+
+- In scope: the reminder rule, the setting, tests.
+- Covered elsewhere: backups themselves (ADR-133).
+
+## Consequences
+
+- Positive: backups stay recent without effort.
+- Negative / risks: an interval set too short annoys.
+
+## Done when
+
+Light acceptance (user 2026-10-28: "update all adrs te be light", ADR-066): find-it items wait for a
+catch-up run.
+
+- [x] The rule shows the toast only when the interval passed and something changed (unit test with fixed dates).
+- [ ] jsdom find-it at 390 and 1280 px: "Last backup:", "Back up now", the interval setting (light — catch-up).
+
+## Implementation (2026-10-28)
+
+`BackupReminder` toast "Last backup: n days ago." with Back up now and Later (1 day); Settings › Saved data ›
+Remind me to back up: 7, 14, 30 (start, G-262), 90 days or Off. Tests: `tests/backup.test.ts`,
+`tests/saved-data.test.tsx`.
+
+## Open questions
+
+- None open. Answered 2026-10-28, one by one: G-262 a Settings choice with Off, starting at 30 days.
