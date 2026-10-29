@@ -5,7 +5,7 @@ import { SIZE_LOCKED_HINT } from '../core/sizeLock';
 import { MmField } from './controls';
 
 /**
- * Width, height (ADR-146) and depth of the whole piece, shown where the whole piece is selected (ADR-106): the Compose panel, the
+ * Width, height (ADR-148) and depth of the whole piece, shown where the whole piece is selected (ADR-106): the Compose panel, the
  * project's Selected piece card and the quick-count card. Nothing for a piece without them (a bed, loose panels).
  */
 export function PieceSize({

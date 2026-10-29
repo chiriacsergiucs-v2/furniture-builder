@@ -183,7 +183,7 @@ interface State {
   /** Width or depth of a project piece, from its Selected piece card; one project undo step (ADR-106). */
   resizeItem: (id: string, key: SizeField['key'], value: Mm) => void;
   /**
-   * The group's width (extent along the wall, shared by `split`), height or depth (every piece) (ADR-146); one project
+   * The group's width (extent along the wall, shared by `split`), height or depth (every piece) (ADR-148); one project
    * undo step. Returns what to tell the user: why nothing changed, or the pieces that kept their size; '' otherwise.
    */
   resizeGroup: (groupId: string, key: SizeField['key'], value: Mm, split: WidthSplit) => string;
@@ -714,7 +714,7 @@ export const useDesign = create<State>((rawSet, get) => {
       const p = get().project;
       if (!p) return;
       const next = { ...p, items: p.items.map((i) => (i.id === id ? { ...i, ...patch } : i)) };
-      // A grouped piece moved from its fields takes its group along (ADR-146).
+      // A grouped piece moved from its fields takes its group along (ADR-148).
       const res = 'position' in patch || 'placement' in patch ? carryGroups(p, next, [id]) : null;
       if (res?.reason) return set({ notice: res.reason });
       commitProject(res?.project ?? next);
@@ -722,7 +722,7 @@ export const useDesign = create<State>((rawSet, get) => {
     moveItemBy: (id, dxMm, dzMm, step) => {
       const p = get().project;
       if (!p) return null;
-      // A grouped piece moves with its whole group (ADR-146).
+      // A grouped piece moves with its whole group (ADR-148).
       const group = withGroups(p, [id]);
       const res =
         group.length > 1 ? moveItems(p, group, dxMm, dzMm, step) : moveBy(p, id, dxMm, dzMm, step);
@@ -849,7 +849,7 @@ export const useDesign = create<State>((rawSet, get) => {
     turnItem: (id, dir) => {
       const p = get().project;
       if (!p) return null;
-      // A grouped piece turns with its whole group, about the group's centre (ADR-146).
+      // A grouped piece turns with its whole group, about the group's centre (ADR-148).
       const group = withGroups(p, [id]);
       const res = group.length > 1 ? turnSelection(p, group, dir) : tryTurn(p, id, dir);
       if (res.reason) {
@@ -874,7 +874,7 @@ export const useDesign = create<State>((rawSet, get) => {
     mirrorItem: (id) => {
       const p = get().project;
       if (!p) return null;
-      // A grouped piece mirrors with its whole group (ADR-146).
+      // A grouped piece mirrors with its whole group (ADR-148).
       const group = withGroups(p, [id]);
       if (group.length > 1) {
         const all = mirrorItems(p, group);
@@ -978,7 +978,7 @@ export const useDesign = create<State>((rawSet, get) => {
       if (!p) return '';
       const ids = get().selectedItemIds;
       const res = alignItems(p, ids, how);
-      // Grouped pieces take their groups along (ADR-146).
+      // Grouped pieces take their groups along (ADR-148).
       const carried = carryGroups(p, res.project, ids);
       if (carried.reason) return carried.reason;
       if (carried.project !== p && carried.project.items.some((it, i) => it !== p.items[i]))

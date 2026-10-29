@@ -1,13 +1,13 @@
-# ADR-146: Size a group as a whole and keep its pieces moving together
+# ADR-148: Size a group as a whole and keep its pieces moving together
 
 - Status: Pending
 - Date: 2026-10-29
 - Depends on: ADR-097, ADR-106, ADR-122
 - Design: docs/ui-design.md (Plan view, selection card)
-- Backlog: N147
+- Backlog: N149
 - Agreed: 2026-10-29 answers "Overall group size", "Add both proportionally and equally options", "Set on every
   piece", "Others absorb it", "Always together", "Yes, edit only", "Groups and single pieces", "New ADR + build"; approved
-  2026-10-29 "Approve, build it", G-283 "Refuse (as in ADR)", G-284 "Yes, move group", G-285 "Mirror the group"
+  2026-10-29 "Approve, build it", G-290 "Refuse (as in ADR)", G-291 "Yes, move group", G-292 "Mirror the group"
 
 ## Context
 
@@ -40,7 +40,7 @@ piece no longer moves on its own. No document change: groups and sizes are alrea
    400–1200, corner 300–2500, frame 200–1500, panel 50–3000; none for a bed or loose panels), so the ADR-106 card
    shows Width · Height · Depth.
 3. **Always together.** A piece in a group never moves on its own: dragging it (plan and 3D Move mode), arrow keys,
-   the position fields, the gap tool, the 3D wall-height drag (G-284), turning, mirroring (G-285), align and
+   the position fields, the gap tool, the 3D wall-height drag (G-291), turning, mirroring (G-292), align and
    distribute move the whole group by the same whole-mm offset (`carryGroups`, `src/core/groupMove.ts`), or turn or
    mirror it about the group's centre. Up or down, wall units and free pieces follow; a member standing on the floor
    refuses the move ("… stands on the floor; the pieces of its group move up and down together."). A placement-locked
@@ -51,14 +51,14 @@ piece no longer moves on its own. No document change: groups and sizes are alrea
 
 - **Same size on every piece** — not what the user picked ("Overall group size").
 - **A per-group lock switch** — the user picked "Always together": no switch and no schema change.
-- **Scale positions for non-column groups** — breaks touching pieces with rounding; refused instead (G-283).
+- **Scale positions for non-column groups** — breaks touching pieces with rounding; refused instead (G-290).
 
 ## Scope
 
 - In scope: group Width / Height / Depth with the split switch, single-piece Height, groups moving as one, also up
-  and down and when mirrored (G-284, G-285).
-- Out of scope: Width for groups not in columns, refused (G-283, user answer); repairs and Mirror the run moving a
-  grouped piece alone (G-286).
+  and down and when mirrored (G-291, G-292).
+- Out of scope: Width for groups not in columns, refused (G-290, user answer); repairs and Mirror the run moving a
+  grouped piece alone (G-293).
 
 ## Consequences
 

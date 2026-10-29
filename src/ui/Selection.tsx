@@ -159,7 +159,7 @@ export function SelectionCard() {
 }
 
 /**
- * The size of a whole group (ADR-146): Width along the wall, shared by the columns Proportionally or Equally; Height
+ * The size of a whole group (ADR-148): Width along the wall, shared by the columns Proportionally or Equally; Height
  * and Depth set on every piece. Each change is one undo step; why nothing changed, or which pieces kept their size,
  * goes to the card's message.
  */

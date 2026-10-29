@@ -1,5 +1,5 @@
 /**
- * The size of a group as a whole (ADR-146). Width is the group's extent along the wall: the pieces stand in columns
+ * The size of a group as a whole (ADR-148). Width is the group's extent along the wall: the pieces stand in columns
  * (two pieces cover the same span along the wall or none of it) and the change is shared by the columns that can
  * change, Proportionally to their widths or Equally; leftover whole mm go one each to the leftmost columns (ADR-003).
  * Columns to the right shift by the growth on their left, so gaps stay and touching pieces stay touching. Height and

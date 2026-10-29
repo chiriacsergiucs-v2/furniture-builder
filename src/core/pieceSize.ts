@@ -1,6 +1,6 @@
 import type { Mm, Product } from './types';
 
-/** One outside size of a whole piece that can be changed from its selection (ADR-106; height ADR-146). */
+/** One outside size of a whole piece that can be changed from its selection (ADR-106; height ADR-148). */
 export interface SizeField {
   key: 'width' | 'height' | 'depth';
   label: string;

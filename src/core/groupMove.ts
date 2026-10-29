@@ -1,5 +1,5 @@
 /**
- * Grouped pieces move together (ADR-146, user answer "Always together"): a piece in a group (ADR-097) never moves on
+ * Grouped pieces move together (ADR-148, user answer "Always together"): a piece in a group (ADR-097) never moves on
  * its own. A change that moves one or more grouped pieces is carried to the whole group: every member moves by the
  * offset of the first member that moved, along the wall, in depth and up or down. A member that cannot follow — it is
  * locked (ADR-095), or stands on the floor and would have to go up or down — refuses the whole change with the reason
