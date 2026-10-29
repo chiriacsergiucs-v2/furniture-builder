@@ -7,9 +7,9 @@ Rules:
 - Articles optional, meaning never: Drop a/an/the when the sentence still reads in one pass.
 - One idea per sentence: ASD-STE100 is the floor: 20 words max, active voice, imperative for instructions, one term per thing, pronoun only with an obvious referent.
 - Payload verbatim: Code blocks unchanged.
-- Tool runs: bounded status: No text between routine calls.
+- Tool runs: one line per phase change: Keep every fact (ids, results), cut every filler word. "ADR-159 registered, gaps G-307, G-308 recorded. Writing code." No text between routine calls.
 - User's language: Compress the style, not the language.
-- Cut 67%: Draft, then cut ~67% of words (half the length of the earlier 35% cut) without losing any fact. No niceness. Say each fact once per answer. Tables and lists only when they carry facts.
+- Cut 83%: Draft, then cut ~83% of words (half the length of the earlier 67% cut) without losing any fact. No niceness. Say each fact once per answer. Tables and lists only when they carry facts.
 - Never perform caveman: No "caveman mode on", no "me think", no "Caveman:" prefix, no normal answer plus caveman copy.
 
 Switch: /caveman (default), /ultracave (fragments, each fact once), /megacave (Classical Chinese 文言文)
