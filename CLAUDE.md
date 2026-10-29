@@ -150,7 +150,8 @@ changed and push only on the user's explicit approval. Model, document, storage 
 - Snapshot before tests (user rule 2026-10-27): for a UI change, before running any tests or checks, show the user a
   screenshot of the fix attempt (dev or production build, phone and desktop width where relevant) and wait. Proceed
   to tests and the next steps only on their confirmation; otherwise fix the new requirements and show a new
-  screenshot for confirmation again.
+  screenshot for confirmation again. The screenshots for approval come last in the reply, right above the
+  questions if there are any (user rule 2026-10-29).
 - Smallest functional slice; for each change ask "needed to demonstrate this now?" — if not, it goes under
   _Skipped this iteration_.
 - Update `docs/backlog.md` in the same change; change a status only with evidence (command output or a CI
