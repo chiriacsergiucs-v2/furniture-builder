@@ -3,6 +3,7 @@
  * layout, or m² / metres), edge banding, scheduled hardware, run parts — plus what is still to choose before buying.
  * Screws, dowels and cams are counted only as joints of the model, as guidance; the fastener is the user's (ADR-074).
  */
+import { t } from './i18n';
 import { bandKey, rowBandMetres, type CutRow } from './cutlist';
 import { bandText } from './materials';
 import type { RunPart } from './project';
@@ -29,8 +30,9 @@ export interface ShopLine {
   worktop?: boolean;
 }
 
-export const NOT_COUNTED =
-  'Screws, dowels and cams are counted only as joints, as guidance; the fastener is yours (Materials › Fasteners). Glue is not counted.';
+export const NOT_COUNTED = t(
+  'Screws, dowels and cams are counted only as joints, as guidance; the fastener is yours (Materials › Fasteners). Glue is not counted.',
+);
 
 /** Checks that leave a purchase or a safety value to the user (rules registry, ADR-035). */
 const CHOOSE_CODES = new Set(['hardware-to-choose', 'anti-tip', 'safety-not-checked']);
@@ -73,17 +75,19 @@ function bandingLines(rows: CutRow[]): ShopLine[] {
       label: g.label,
       quantity: r2(g.metres),
       unit: 'm',
-      detail: `for ${g.boards.join(', ')}${g.extra ? ', with the trim allowance per edge' : ''}`,
+      detail: g.extra
+        ? t('for {boards}, with the trim allowance per edge', { boards: g.boards.join(', ') })
+        : t('for {boards}', { boards: g.boards.join(', ') }),
       priceKey: `band:${g.label}`,
     });
   // Not priced: a band that is not named cannot be bought yet, like other hardware still to choose.
   for (const u of unnamed.values())
     out.push({
       section: 'choose',
-      label: `Edge band for ${u.name}`,
+      label: t('Edge band for {name}', { name: u.name }),
       quantity: r2(u.metres),
       unit: 'm',
-      detail: 'name the band (type, thickness, width) on the board before buying',
+      detail: t('name the band (type, thickness, width) on the board before buying'),
     });
   return out;
 }
@@ -123,7 +127,7 @@ export function shoppingList(input: {
         label: name,
         quantity: metres,
         unit: 'm',
-        detail: `solid stock, ${list.reduce((n, r) => n + r.quantity, 0)} parts`,
+        detail: t('solid stock, {n} parts', { n: list.reduce((n, r) => n + r.quantity, 0) }),
         priceKey: key,
       });
       continue;
@@ -136,7 +140,14 @@ export function shoppingList(input: {
       label: name,
       quantity: n ?? m2,
       unit: n !== null ? 'sheet' : 'm2',
-      detail: `${list[0].thickness} mm${sheet ? `, sheet ${sheet.length} × ${sheet.width}` : ''}, ${m2} m² of parts`,
+      detail: sheet
+        ? t('{t} mm, sheet {l} × {w}, {m2} m² of parts', {
+            t: list[0].thickness,
+            l: sheet.length,
+            w: sheet.width,
+            m2,
+          })
+        : t('{t} mm, {m2} m² of parts', { t: list[0].thickness, m2 }),
       priceKey: key,
       sheets: n,
       m2,
@@ -153,7 +164,7 @@ export function shoppingList(input: {
         label: h.label,
         quantity: h.quantity,
         unit: 'piece',
-        detail: h.note ?? 'choose the product before buying',
+        detail: h.note ?? t('choose the product before buying'),
       });
     else
       lines.push({
@@ -174,10 +185,10 @@ export function shoppingList(input: {
       section: 'choose',
       label:
         d.code === 'safety-not-checked'
-          ? 'Safety check (yours)'
+          ? t('Safety check (yours)')
           : d.code === 'anti-tip'
-            ? 'Anti-tip fixing'
-            : 'Hardware from a datasheet',
+            ? t('Anti-tip fixing')
+            : t('Hardware from a datasheet'),
       quantity: 1,
       unit: 'piece',
       detail: d.message,
@@ -188,10 +199,14 @@ export function shoppingList(input: {
   for (const sk of input.sinks ?? [])
     lines.push({
       section: 'choose',
-      label: 'Sink (your choice)',
+      label: t('Sink (your choice)'),
       quantity: 1,
       unit: 'piece',
-      detail: `cut-out ${sk.w} × ${sk.d} mm in the worktop over ${sk.over}`,
+      detail: t('cut-out {w} × {d} mm in the worktop over {over}', {
+        w: sk.w,
+        d: sk.d,
+        over: sk.over,
+      }),
     });
   for (const rp of input.runParts ?? []) {
     lines.push({
@@ -199,7 +214,12 @@ export function shoppingList(input: {
       label: rp.label,
       quantity: 1,
       unit: 'piece',
-      detail: `${rp.box.w} × ${rp.box.h} × ${rp.box.d} mm, ${rp.material.name} (counted under Boards)`,
+      detail: t('{w} × {h} × {d} mm, {material} (counted under Boards)', {
+        w: rp.box.w,
+        h: rp.box.h,
+        d: rp.box.d,
+        material: rp.material.name,
+      }),
     });
   }
   return lines;

@@ -4,6 +4,7 @@
  * every following piece and no other. Pieces stay full copies (ADR-022): following is read from their values, so a
  * piece edited on its own simply stops following, and "Follow project" puts the project's value back.
  */
+import { t } from './i18n';
 import { newId } from './design';
 import { roleBoard } from './finish';
 import { materialKey, type Project, type ProjectItem, type ProjectSettings } from './project';
@@ -19,12 +20,12 @@ export const SETTING_KEYS: SettingKey[] = [
   'plinthHeight',
 ];
 export const SETTING_LABEL: Record<SettingKey, string> = {
-  body: 'Carcass board',
-  front: 'Front board',
-  back: 'Back board',
-  handle: 'Handle',
-  frontStyle: 'Front overlay',
-  plinthHeight: 'Plinth height',
+  body: t('Carcass board'),
+  front: t('Front board'),
+  back: t('Back board'),
+  handle: t('Handle'),
+  frontStyle: t('Front overlay'),
+  plinthHeight: t('Plinth height'),
 };
 
 const isObj = (v: unknown): v is Record<string, unknown> =>
@@ -144,7 +145,7 @@ export function settingText(d: Design | null, key: SettingKey, s?: ProjectSettin
             x.id ===
             (key === 'back' ? backBoard(d) : roleBoard(d, key === 'front' ? 'front' : 'body')),
         );
-    return m ? `${m.name} ${m.thickness} mm` : '—';
+    return m ? t('{name} {t} mm', { name: m.name, t: m.thickness }) : '—';
   }
   if (key === 'handle') {
     const h = s
@@ -155,15 +156,19 @@ export function settingText(d: Design | null, key: SettingKey, s?: ProjectSettin
         })();
     if (h === undefined) return '—';
     return h === null
-      ? 'No handle'
-      : `${h.kind === 'push' ? 'Push-to-open' : h.kind === 'bar' ? 'Bar' : 'Knob'} handle`;
+      ? t('No handle')
+      : h.kind === 'push'
+        ? t('Push-to-open handle')
+        : h.kind === 'bar'
+          ? t('Bar handle')
+          : t('Knob handle');
   }
   if (key === 'frontStyle') {
     const f = (s ? v : d && settingOf(d, key)) as FrontStyle | undefined;
-    return f ? { overlay: 'Overlay', half: 'Half overlay', inset: 'Inset' }[f] : '—';
+    return f ? { overlay: t('Overlay'), half: t('Half overlay'), inset: t('Inset') }[f] : '—';
   }
   const mm = s ? v : d && settingOf(d, key);
-  return mm === undefined || mm === null ? '—' : `${String(mm)} mm`;
+  return mm === undefined || mm === null ? '—' : t('{v} mm', { v: String(mm) });
 }
 
 export interface SettingResult {

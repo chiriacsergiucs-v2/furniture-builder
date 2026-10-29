@@ -9,6 +9,7 @@
  * checks (`compatChecks`, run by `buildProjectModel`) for pieces that touch side by side, where every failed rule is a
  * warning that never blocks export (ADR-008). Pure and deterministic.
  */
+import { t, tr } from './i18n';
 import { findFamily, ROOM_LABEL, type CatalogFamily, type FunctionGroup } from './catalog';
 import { isWallHung, type PlacedPiece, type ProjectItem, type RunPart } from './project';
 import type { Box, Diagnostic, Mm, Product } from './types';
@@ -107,7 +108,7 @@ export const COMPAT_RULES: readonly CompatRule[] = [
     text: 'depth match: floor units side by side should be equally deep',
     messages: {
       snap: '{reason}',
-      checks: '{a} and {b} stand side by side with different depths ({reason} mm); {text}.',
+      checks: t('{a} and {b} stand side by side with different depths ({reason} mm); {text}.'),
     },
     repairs: [],
   },
@@ -124,7 +125,7 @@ export const COMPAT_RULES: readonly CompatRule[] = [
     where: ['checks'],
     text: 'height match: base units under one worktop should be equally high',
     messages: {
-      checks: '{a} and {b} are under one worktop with different heights ({reason} mm); {text}.',
+      checks: t('{a} and {b} are under one worktop with different heights ({reason} mm); {text}.'),
     },
     repairs: [],
   },
@@ -139,7 +140,7 @@ export const COMPAT_RULES: readonly CompatRule[] = [
     severity: 'refuse',
     where: ['snap', 'checks'],
     text: 'family rule: pieces join side by side only when their catalog families share a room',
-    messages: { snap: '{reason}; {text}', checks: '{reason}; {text}.' },
+    messages: { snap: t('{reason}; {text}'), checks: t('{reason}; {text}.') },
     namedWhenSnapped: true,
     repairs: [],
   },
@@ -148,10 +149,14 @@ export const COMPAT_RULES: readonly CompatRule[] = [
 export const compatRule = (id: CompatRuleId): CompatRule => COMPAT_RULES.find((r) => r.id === id)!;
 
 const MOUNT_NAME: Record<Mount, string> = {
-  floor: 'floor unit',
-  wall: 'wall unit',
-  above: 'piece placed on another piece',
+  floor: t('floor unit'),
+  wall: t('wall unit'),
+  above: t('piece placed on another piece'),
 };
+
+/** A face of a piece in words, for messages. */
+const faceName = (f: string): string =>
+  (({ side: t('side'), back: t('back'), front: t('front') }) as Record<string, string>)[f] ?? f;
 
 /** Whether the piece stands on the floor, hangs on the wall, or sits on another piece. */
 export function mountOf(item: ProjectItem): Mount {
@@ -182,7 +187,7 @@ export function appliesTo(
   return true;
 }
 
-const rooms = (f: CatalogFamily) => f.rooms.map((r) => ROOM_LABEL[r]).join(', ');
+const rooms = (f: CatalogFamily) => f.rooms.map((r) => tr(ROOM_LABEL[r])).join(', ');
 
 // ---------------------------------------------------------------------------
 // The predicates: each returns null when the rule holds (or does not concern this join), else what it found.
@@ -208,26 +213,34 @@ export interface JoinContext {
 }
 
 const differs = (what: string, a: Mm | undefined, b: Mm | undefined, tol: number) =>
-  a !== undefined && b !== undefined && Math.abs(a - b) > tol ? `${what} ${a} vs ${b}` : null;
+  a !== undefined && b !== undefined && Math.abs(a - b) > tol
+    ? t('{what} {a} vs {b}', { what, a, b })
+    : null;
 
 const PREDICATES: Record<RulePredicate, (rule: CompatRule, c: JoinContext) => string | null> = {
   'sides-only': (_, c) =>
     c.b && !(c.faceA === 'side' && c.faceB === 'side')
-      ? `a ${c.faceA} cannot join a ${c.faceB}; only sides join`
+      ? t('a {a} cannot join a {b}; only sides join', {
+          a: faceName(c.faceA),
+          b: faceName(c.faceB ?? ''),
+        })
       : null,
   'same-mount': (_, c) =>
     c.b && c.mountB && c.mountA !== c.mountB
-      ? `a ${MOUNT_NAME[c.mountA]} cannot join a ${MOUNT_NAME[c.mountB]}`
+      ? t('a {a} cannot join a {b}', { a: MOUNT_NAME[c.mountA], b: MOUNT_NAME[c.mountB] })
       : null,
   'back-to-wall': (_, c) =>
     !c.b && c.faceA !== 'back'
-      ? `only the back of a piece goes against a wall (this is its ${c.faceA}); a side goes against a wall only in a corner`
+      ? t(
+          'only the back of a piece goes against a wall (this is its {face}); a side goes against a wall only in a corner',
+          { face: faceName(c.faceA) },
+        )
       : null,
   'same-depth': (r, c) =>
-    c.b ? differs('depth', c.depthA, c.depthB, r.check.params.tolerance ?? 0) : null,
+    c.b ? differs(t('depth'), c.depthA, c.depthB, r.check.params.tolerance ?? 0) : null,
   'same-height-under-worktop': (r, c) =>
     c.b && c.underOneWorktop
-      ? differs('height', c.heightA, c.heightB, r.check.params.tolerance ?? 0)
+      ? differs(t('height'), c.heightA, c.heightB, r.check.params.tolerance ?? 0)
       : null,
   'shared-room': (_, c) => {
     if (!c.b) return null;
@@ -235,7 +248,14 @@ const PREDICATES: Record<RulePredicate, (rule: CompatRule, c: JoinContext) => st
       fb = familyOf(c.b);
     // A piece with no shipped family: nothing is known about it, so nothing is refused.
     if (!fa || !fb || fa.rooms.some((r) => fb.rooms.includes(r))) return null;
-    return `${c.a.design.name} (${fa.name}: ${rooms(fa)}) and ${c.b.design.name} (${fb.name}: ${rooms(fb)}) share no room`;
+    return t('{a} ({fa}: {ra}) and {b} ({fb}: {rb}) share no room', {
+      a: c.a.design.name,
+      fa: tr(fa.name),
+      ra: rooms(fa),
+      b: c.b.design.name,
+      fb: tr(fb.name),
+      rb: rooms(fb),
+    });
   },
 };
 
@@ -252,7 +272,7 @@ const fill = (tpl: string, rule: CompatRule, c: JoinContext, reason: string) =>
     .replace('{a}', c.a.design.name)
     .replace('{b}', c.b?.design.name ?? '')
     .replace('{reason}', reason)
-    .replace('{text}', rule.text);
+    .replace('{text}', tr(rule.text));
 
 /**
  * Every rule that runs at `stage`, applies to the piece(s) and fails, in table order, with its message. The one

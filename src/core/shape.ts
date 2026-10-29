@@ -3,6 +3,7 @@
  * millimetres that the cut list, nesting and integer checks use. `shape` only says how the blank is placed (tilt) or
  * cut (profile). Floating point appears here only, for drawing and the oriented overlap test; never in sizes.
  */
+import { t, tr } from './i18n';
 import { box, enclosing, inPlaneAxes, overlaps } from './geometry';
 import type { Axis, Box, Panel, PanelShape } from './types';
 
@@ -171,15 +172,21 @@ export function shapeProblems(p: Panel): string[] {
   if (s.kind === 'tilt') {
     const out: string[] = [];
     if (!Number.isInteger(s.angleDeg) || s.angleDeg === 0 || Math.abs(s.angleDeg) > MAX_TILT)
-      out.push(`${p.label}: tilt must be a whole number of degrees from 1 to ${MAX_TILT}.`);
+      out.push(
+        t('{part}: tilt must be a whole number of degrees from 1 to {max}.', {
+          part: tr(p.label),
+          max: MAX_TILT,
+        }),
+      );
     if (!s.pivot.every(Number.isInteger))
-      out.push(`${p.label}: tilt pivot must be whole millimetres.`);
+      out.push(t('{part}: tilt pivot must be whole millimetres.', { part: tr(p.label) }));
     return out;
   }
   const [ua, va] = inPlaneAxes(p.thicknessAxis);
   const W = size(p.box, ua),
     H = size(p.box, va);
-  if (s.points.length < 3) return [`${p.label}: a profile needs at least 3 points.`];
+  if (s.points.length < 3)
+    return [t('{part}: a profile needs at least 3 points.', { part: tr(p.label) })];
   if (
     !s.points.every(
       ([u, v]) =>
@@ -187,9 +194,14 @@ export function shapeProblems(p: Panel): string[] {
     )
   )
     return [
-      `${p.label}: the profile must stay inside its ${W} × ${H} mm blank, in whole millimetres.`,
+      t('{part}: the profile must stay inside its {w} × {h} mm blank, in whole millimetres.', {
+        part: tr(p.label),
+        w: W,
+        h: H,
+      }),
     ];
-  if (Math.abs(area2(s.points)) === 0) return [`${p.label}: the profile has no area.`];
+  if (Math.abs(area2(s.points)) === 0)
+    return [t('{part}: the profile has no area.', { part: tr(p.label) })];
   return [];
 }
 

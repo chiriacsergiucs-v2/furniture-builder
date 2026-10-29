@@ -2,6 +2,7 @@
  * The user's own price list (ADR-062): kept on this device, never fetched or invented. Amounts are whole minor units
  * (bani, cents) so sums are exact. A missing price is listed by name and the total is marked incomplete.
  */
+import { t } from './i18n';
 import type { ShopLine, ShopUnit } from './shopping';
 
 export interface PriceEntry {
@@ -78,18 +79,18 @@ export function parseMoney(s: string): number | null {
 const UNITS: ShopUnit[] = ['sheet', 'm2', 'm', 'piece'];
 
 export function validatePrice(p: unknown): string[] {
-  if (!p || typeof p !== 'object') return ['Invalid price'];
+  if (!p || typeof p !== 'object') return [t('Invalid price')];
   const r = p as Record<string, unknown>;
-  if (typeof r.id !== 'string' || !r.id) return ['Missing price id'];
+  if (typeof r.id !== 'string' || !r.id) return [t('Missing price id')];
   if (r.id === CURRENCY_ID)
-    return typeof r.text === 'string' && !!r.text.trim() ? [] : ['Invalid currency'];
+    return typeof r.text === 'string' && !!r.text.trim() ? [] : [t('Invalid currency')];
   if (
     !UNITS.includes(r.unit as ShopUnit) ||
     typeof r.amount !== 'number' ||
     !Number.isSafeInteger(r.amount) ||
     r.amount < 0
   )
-    return ['Invalid price'];
+    return [t('Invalid price')];
   return [];
 }
 
@@ -172,11 +173,13 @@ export function parsePricesCsv(text: string): { prices: PriceEntry[]; problems: 
       if (kind === CURRENCY_ID) {
         const name = key || pr;
         if (name) prices.push({ id: CURRENCY_ID, unit: 'piece', amount: 0, text: name });
-        else problems.push(`Row ${i + 1}: no currency name.`);
+        else problems.push(t('Row {row}: no currency name.', { row: i + 1 }));
         return;
       }
       if (!(kind in KIND_PREFIX) || !key) {
-        problems.push(`Row ${i + 1}: kind must be board, band, hardware or currency.`);
+        problems.push(
+          t('Row {row}: kind must be board, band, hardware or currency.', { row: i + 1 }),
+        );
         return;
       }
       id = KIND_PREFIX[kind] + key;
@@ -186,19 +189,24 @@ export function parsePricesCsv(text: string): { prices: PriceEntry[]; problems: 
       [id = '', unit = '', price = ''] = cells;
       // The user's fastener list shares the stored table (ADR-074); a price file never overwrites it.
       if (id.startsWith('fastener:')) {
-        problems.push(`Row ${i + 1}: ${id} is not a price.`);
+        problems.push(t('Row {row}: {id} is not a price.', { row: i + 1, id }));
         return;
       }
       if (id === CURRENCY_ID) {
         if (price) prices.push({ id, unit: 'piece', amount: 0, text: price });
-        else problems.push(`Row ${i + 1}: no currency name.`);
+        else problems.push(t('Row {row}: no currency name.', { row: i + 1 }));
         return;
       }
     }
     const amount = parseMoney(price);
     const e = { id, unit: unit as ShopUnit, amount: amount ?? -1 };
     if (amount === null || validatePrice(e).length)
-      problems.push(`Row ${i + 1}: ${validatePrice(e)[0] ?? 'price is not a number'}.`);
+      problems.push(
+        t('Row {row}: {why}.', {
+          row: i + 1,
+          why: validatePrice(e)[0] ?? t('price is not a number'),
+        }),
+      );
     else prices.push(e);
   });
   return { prices, problems };

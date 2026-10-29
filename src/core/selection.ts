@@ -3,6 +3,7 @@
  * Moves and turns are whole millimetres and quarter turns; locked pieces (ADR-095) refuse with the reason; placement
  * rules (ADR-031) apply to each piece. Groups never merge pieces and are not connections.
  */
+import { t } from './i18n';
 import { mirrorSet } from './arrange';
 import { newId } from './design';
 import { union } from './geometry';
@@ -290,5 +291,5 @@ export function mirrorItems(
     project,
     known(project, ids).map((i) => i.id),
   );
-  return r.refused ? { ...r, refused: `Mirror refused: ${r.refused}` } : r;
+  return r.refused ? { ...r, refused: t('Mirror refused: {why}', { why: r.refused }) } : r;
 }

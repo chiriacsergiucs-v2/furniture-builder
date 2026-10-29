@@ -5,6 +5,7 @@
  * ADR-104 adds an optional row of wall cabinets with its own widths over the whole wall, and a top box over each
  * tall cabinet up to the entered height.
  */
+import { t } from './i18n';
 import { buildModel } from './build';
 import {
   KITCHEN_BASE,
@@ -123,12 +124,13 @@ const MAX_BUILDS = 120;
 /** Most pieces in one mix, so a tiny min width or a huge front count cannot freeze the page (reported, not clamped). */
 export const MAX_PIECES = 40;
 
-const KIND_TEXT: Record<PieceKind, string> = {
-  tall: 'tall',
-  shelves: 'open shelves',
-  drawers: 'drawers',
-  door: 'door + shelves',
-};
+const kindText = (k: PieceKind, n: number): string =>
+  ({
+    tall: t('{n} tall', { n }),
+    shelves: t('{n} open shelves', { n }),
+    drawers: t('{n} drawers', { n }),
+    door: t('{n} door + shelves', { n }),
+  })[k];
 const PIECE_NAME: Record<PieceKind, string> = {
   tall: 'Tall cabinet',
   shelves: 'Base, open shelves',
@@ -149,34 +151,39 @@ export function checkWall(input: WallInput): Diagnostic[] {
   const out: Diagnostic[] = [];
   const pos = (v: unknown, label: string) => {
     if (!whole(v) || v <= 0)
-      out.push(err('wall-input', `${label} must be a whole number of mm above 0.`));
+      out.push(err('wall-input', t('{label} must be a whole number of mm above 0.', { label })));
   };
-  pos(input.width, 'Width');
-  pos(input.depth, 'Depth');
-  pos(input.height, 'Height');
-  if (input.tallDepth !== undefined) pos(input.tallDepth, 'Tall depth');
-  if (input.baseHeight !== undefined) pos(input.baseHeight, 'Base height');
-  if (input.wallHeight !== undefined) pos(input.wallHeight, 'Wall cabinet height');
+  pos(input.width, t('Width'));
+  pos(input.depth, t('Depth'));
+  pos(input.height, t('Height'));
+  if (input.tallDepth !== undefined) pos(input.tallDepth, t('Tall depth'));
+  if (input.baseHeight !== undefined) pos(input.baseHeight, t('Base height'));
+  if (input.wallHeight !== undefined) pos(input.wallHeight, t('Wall cabinet height'));
   const min = input.minWidth ?? WALL_DEFAULTS.minWidth,
     max = input.maxWidth ?? WALL_DEFAULTS.maxWidth;
-  pos(min, 'Min piece width');
-  pos(max, 'Max piece width');
+  pos(min, t('Min piece width'));
+  pos(max, t('Max piece width'));
   if (whole(min) && whole(max) && min > max)
-    out.push(err('wall-range', `Min piece width ${min} mm is more than the max, ${max} mm.`));
+    out.push(
+      err(
+        'wall-range',
+        t('Min piece width {min} mm is more than the max, {max} mm.', { min, max }),
+      ),
+    );
   for (const [v, label] of [
-    [input.pieces, 'Number of pieces'],
-    [input.equalFronts, 'Equal fronts'],
+    [input.pieces, t('Number of pieces')],
+    [input.equalFronts, t('Equal fronts')],
   ] as const)
     if (v !== undefined && (!whole(v) || v < 1))
-      out.push(err('wall-input', `${label} must be 1 or more.`));
+      out.push(err('wall-input', t('{label} must be 1 or more.', { label })));
   for (const [v, label] of [
-    [input.tallCount, 'Tall cabinets'],
-    [input.atLeast?.shelves, 'Open shelf bases'],
-    [input.atLeast?.drawers, 'Drawer bases'],
-    [input.atLeast?.door, 'Door bases'],
+    [input.tallCount, t('Tall cabinets')],
+    [input.atLeast?.shelves, t('Open shelf bases')],
+    [input.atLeast?.drawers, t('Drawer bases')],
+    [input.atLeast?.door, t('Door bases')],
   ] as const)
     if (v !== undefined && (!whole(v) || v < 0))
-      out.push(err('wall-input', `${label} must be 0 or more.`));
+      out.push(err('wall-input', t('{label} must be 0 or more.', { label })));
   return out;
 }
 
@@ -577,12 +584,12 @@ function wallPiece(ws: WallSlot, input: WallInput): Design {
 const summaryOf = (slots: Slot[]) => {
   if (slots.some((s) => s.fronts)) {
     const n = slots.reduce((a, s) => a + (s.fronts ?? 0), 0);
-    const t = slots.filter((s) => s.kind === 'tall').length;
-    const b = slots.length - t;
+    const tc = slots.filter((s) => s.kind === 'tall').length;
+    const b = slots.length - tc;
     return [
-      t ? `${t} tall` : '',
-      b ? `${b} base ${b === 1 ? 'carcass' : 'carcasses'}` : '',
-      `${n} equal front widths`,
+      tc ? kindText('tall', tc) : '',
+      b ? t('{n|# base carcass|# base carcasses}', { n: b }) : '',
+      t('{n} equal front widths', { n }),
     ]
       .filter(Boolean)
       .join(', ');
@@ -591,7 +598,7 @@ const summaryOf = (slots: Slot[]) => {
   return order
     .map((k) => [k, slots.filter((s) => s.kind === k).length] as const)
     .filter(([, c]) => c > 0)
-    .map(([k, c]) => `${c} ${KIND_TEXT[k]}`)
+    .map(([k, c]) => kindText(k, c))
     .join(', ');
 };
 
@@ -680,7 +687,12 @@ export function suggestMixes(input: WallInput, limit = MIXES_FIRST): WallFill {
         tallWarn.push({
           severity: 'warning',
           code: 'wall-too-tall',
-          message: `${pc.item.design.name} is ${top} mm tall, ${top - input.height} mm above the ${input.height} mm height.`,
+          message: t('{name} is {top} mm tall, {over} mm above the {h} mm height.', {
+            name: pc.item.design.name,
+            top,
+            over: top - input.height,
+            h: input.height,
+          }),
           itemIds: [pc.item.id],
         });
     }
@@ -689,9 +701,15 @@ export function suggestMixes(input: WallInput, limit = MIXES_FIRST): WallFill {
       slots: c.slots,
       widths: c.slots.map((s) => s.width).join(' · '),
       summary: wall
-        ? `${summaryOf(c.slots)}; wall row: ${wall.filter((x) => x.variant !== 'top-box').length} wall cabinets${
-            wall.some((x) => x.variant === 'top-box') ? ' + top box' : ''
-          }`
+        ? wall.some((x) => x.variant === 'top-box')
+          ? t('{summary}; wall row: {n} wall cabinets + top box', {
+              summary: summaryOf(c.slots),
+              n: wall.filter((x) => x.variant !== 'top-box').length,
+            })
+          : t('{summary}; wall row: {n} wall cabinets', {
+              summary: summaryOf(c.slots),
+              n: wall.filter((x) => x.variant !== 'top-box').length,
+            })
         : summaryOf(c.slots),
       ...(wall ? { wall, wallWidths: wall.map((x) => x.width).join(' · ') } : {}),
       project,
@@ -713,7 +731,9 @@ export function suggestMixes(input: WallInput, limit = MIXES_FIRST): WallFill {
     problems.push(
       info(
         'wall-top-box-small',
-        `The ${gap} mm over the tall cabinets is too small for a top box, so it is left open.`,
+        t('The {gap} mm over the tall cabinets is too small for a top box, so it is left open.', {
+          gap,
+        }),
       ),
     );
   const a = input.atLeast;
@@ -722,7 +742,9 @@ export function suggestMixes(input: WallInput, limit = MIXES_FIRST): WallFill {
     problems.push(
       info(
         'wall-atleast-ignored',
-        'With Equal fronts the insides are left to configure, so the "At least" bases do not apply.',
+        t(
+          'With Equal fronts the insides are left to configure, so the "At least" bases do not apply.',
+        ),
       ),
     );
   const wallH = input.wallHeight ?? WALL_HEIGHT,
@@ -732,19 +754,32 @@ export function suggestMixes(input: WallInput, limit = MIXES_FIRST): WallFill {
     problems.push(
       info(
         'wall-row-low',
-        `Wall cabinets ${wallH} mm high under a ${input.height} mm height would reach ${baseTop - (input.height - wallH)} mm into the base row; lower the wall cabinet height to show a wall row.`,
+        t(
+          'Wall cabinets {wh} mm high under a {h} mm height would reach {over} mm into the base row; lower the wall cabinet height to show a wall row.',
+          {
+            wh: wallH,
+            h: input.height,
+            over: baseTop - (input.height - wallH),
+          },
+        ),
       ),
     );
   else if (row !== 'never' && wallFailed && !mixes.some((m) => m.wall))
     problems.push(
-      info('wall-row-none', `No wall row fits these mixes with pieces ${min}–${max} mm wide.`),
+      info(
+        'wall-row-none',
+        t('No wall row fits these mixes with pieces {min}–{max} mm wide.', { min, max }),
+      ),
     );
   if (!mixes.length) {
     if (input.width < min)
       problems.push(
         info(
           'wall-narrow',
-          `The wall (${input.width} mm) is narrower than the min piece width, ${min} mm.`,
+          t('The wall ({w} mm) is narrower than the min piece width, {min} mm.', {
+            w: input.width,
+            min,
+          }),
         ),
       );
     else if (
@@ -755,28 +790,43 @@ export function suggestMixes(input: WallInput, limit = MIXES_FIRST): WallFill {
       problems.push(
         info(
           'wall-many',
-          `These settings need more than ${MAX_PIECES} pieces; raise the min or max piece width, or lower the counts.`,
+          t(
+            'These settings need more than {max} pieces; raise the min or max piece width, or lower the counts.',
+            { max: MAX_PIECES },
+          ),
         ),
       );
     else if (input.equalFronts !== undefined)
       problems.push(
         info(
           'wall-fronts',
-          `With ${input.equalFronts} equal fronts each front is about ${Math.floor(input.width / input.equalFronts)} mm; no carcass of 1 or 2 fronts is between ${min} and ${max} mm with these settings.`,
+          t(
+            'With {n} equal fronts each front is about {each} mm; no carcass of 1 or 2 fronts is between {min} and {max} mm with these settings.',
+            {
+              n: input.equalFronts,
+              each: Math.floor(input.width / input.equalFronts),
+              min,
+              max,
+            },
+          ),
         ),
       );
     else if (failed)
       problems.push(
         info(
           'wall-errors',
-          `Every mix that fits has a problem in a piece (check the depth and heights).`,
+          t('Every mix that fits has a problem in a piece (check the depth and heights).'),
         ),
       );
     else
       problems.push(
         info(
           'wall-none',
-          `No mix fills ${input.width} mm with pieces ${min}–${max} mm wide and these Refine settings.`,
+          t('No mix fills {w} mm with pieces {min}–{max} mm wide and these Refine settings.', {
+            w: input.width,
+            min,
+            max,
+          }),
         ),
       );
   }

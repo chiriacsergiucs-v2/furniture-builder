@@ -1,3 +1,4 @@
+import { t as tx } from './i18n';
 import type { PartialModel } from './cabinet';
 import { box, equalParts } from './geometry';
 import type { Axis, Box, Face, FrameParams, Material, Mm, Panel, PanelRole } from './types';
@@ -34,7 +35,10 @@ export function buildFrame(
   const panelM = materials.get(p.panelMaterialId),
     solidM = materials.get(p.solidMaterialId);
   if (!panelM || !solidM)
-    return err('material-missing', 'A material used by this frame does not exist in the design.');
+    return err(
+      'material-missing',
+      tx('A material used by this frame does not exist in the design.'),
+    );
   const counters = new Map<string, number>();
   /** A solid member: grain along its longest side, thickness its shortest. */
   const member = (role: PanelRole, label: string, b: Box) => {
@@ -116,24 +120,33 @@ export function buildFrame(
   if (p.kind === 'chair' && p.base === 'bought')
     return boughtBase(p, id, out, err, sheet, tiltFrom, back, rake, panelM);
   if (W < 2 * (li + lw) + 50 || D < 2 * (li + ld) + 50 || topY < 100)
-    return err('frame-too-small', `${W}×${H}×${D} mm is too small for ${lw}×${ld} mm legs.`);
-  if (li < 0) return err('leg-inset', 'Legs cannot be set outside the top.');
+    return err(
+      'frame-too-small',
+      tx('{w}×{h}×{d} mm is too small for {lw}×{ld} mm legs.', { w: W, h: H, d: D, lw, ld }),
+    );
+  if (li < 0) return err('leg-inset', tx('Legs cannot be set outside the top.'));
   if (ah > 0 && (at > Math.min(lw, ld) || at <= 0))
     return err(
       'apron-thickness',
-      `Rails ${at} mm thick must be no thicker than the ${Math.min(lw, ld)} mm legs.`,
+      tx('Rails {at} mm thick must be no thicker than the {leg} mm legs.', {
+        at,
+        leg: Math.min(lw, ld),
+      }),
     );
   if (ah > 0 && ah >= topY - 50)
-    return err('apron-height', `Rails ${ah} mm high leave no room under the top.`);
+    return err('apron-height', tx('Rails {ah} mm high leave no room under the top.', { ah }));
   if (p.top === 'slats' && ah <= 0)
     return err(
       'slats-need-rails',
-      'A slatted top rests on rails: give the rails under the top a height.',
+      tx('A slatted top rests on rails: give the rails under the top a height.'),
     );
   if (back && (seatH <= 200 || seatH >= H - 2 * back.railHeight - BACK_START))
     return err(
       'back-height',
-      `A back needs the seat (${seatH} mm) well below the top of the back (${H} mm).`,
+      tx('A back needs the seat ({seat} mm) well below the top of the back ({h} mm).', {
+        seat: seatH,
+        h: H,
+      }),
     );
 
   const xs = [li, W - li - lw],
@@ -166,7 +179,10 @@ export function buildFrame(
     if (br && br.length > W - 2 * (li + lw) - 100)
       return err(
         'backrest-length',
-        `A ${br.length} mm backrest leaves too little seat on a ${W} mm frame.`,
+        tx('A {len} mm backrest leaves too little seat on a {w} mm frame.', {
+          len: br.length,
+          w: W,
+        }),
       );
     const L = br ? br.length : 0;
     for (const z of spread(z0, span, slats.width, n))
@@ -213,14 +229,17 @@ export function buildFrame(
     if (p.stretcherHeight < 50 || p.stretcherHeight + sh > topY - ah - 20)
       err(
         'stretcher-height',
-        `Stretchers at ${p.stretcherHeight} mm clash with the rails under the top.`,
+        tx('Stretchers at {h} mm clash with the rails under the top.', { h: p.stretcherHeight }),
       );
     else ring('stretcher', 'Stretcher', p.stretcherHeight, sh, p.stretchers);
   }
   if (p.shelf) {
     const y = p.shelf.height - panelM.thickness;
     if (y < 30 || p.shelf.height > topY - ah - 50)
-      err('shelf-height', `A lower shelf at ${p.shelf.height} mm does not fit under the top.`);
+      err(
+        'shelf-height',
+        tx('A lower shelf at {h} mm does not fit under the top.', { h: p.shelf.height }),
+      );
     else {
       sheet(
         'shelf',
@@ -233,8 +252,9 @@ export function buildFrame(
       out.diagnostics.push({
         severity: 'warning',
         code: 'shelf-support',
-        message:
+        message: tx(
           'The lower shelf sits between the legs: fix it with cleats or dowels (not listed).',
+        ),
         nodeId: id,
       });
     }
@@ -254,7 +274,10 @@ export function buildFrame(
       if (a === 0 && fr.length > topY)
         return err(
           'footrest-floor',
-          `A ${fr.length} mm footrest hanging from ${topY} mm reaches the floor.`,
+          tx('A {len} mm footrest hanging from {y} mm reaches the floor.', {
+            len: fr.length,
+            y: topY,
+          }),
         );
       const i0 = out.panels.length;
       sheet('seat', 'Footrest', box(li, topY - fr.length, D, W - 2 * li, fr.length, t), 'z', 'x', [
@@ -309,9 +332,12 @@ export function buildFrame(
   if (p.arms) {
     const top = p.arms.height;
     if (!back)
-      err('arms-need-back', 'Arm rests run back to the back posts: give the frame a back.');
+      err('arms-need-back', tx('Arm rests run back to the back posts: give the frame a back.'));
     else if (top - at < seatH + 100)
-      err('arm-height', `Arm rests at ${top} mm are too close to the ${seatH} mm seat.`);
+      err(
+        'arm-height',
+        tx('Arm rests at {top} mm are too close to the {seat} mm seat.', { top, seat: seatH }),
+      );
     else
       xs.forEach((x, xi) => {
         const side = xi ? 'right' : 'left';
@@ -345,7 +371,11 @@ function boughtBase(
   if (p.width < 250 || p.depth < 250 || seatH < 300)
     return err(
       'frame-too-small',
-      `A ${p.width} × ${p.depth} mm seat at ${seatH} mm is too small for a bought base.`,
+      tx('A {w} × {d} mm seat at {seat} mm is too small for a bought base.', {
+        w: p.width,
+        d: p.depth,
+        seat: seatH,
+      }),
     );
   sheet('seat', 'Seat', box(0, seatH - t, 0, p.width, t, p.depth), 'y', 'x', [
     '-x',
@@ -358,7 +388,10 @@ function boughtBase(
     if (p.height - y0 < 150)
       return err(
         'back-height',
-        `A back needs room above the seat (${seatH} mm) below the top (${p.height} mm).`,
+        tx('A back needs room above the seat ({seat} mm) below the top ({h} mm).', {
+          seat: seatH,
+          h: p.height,
+        }),
       );
     const i0 = out.panels.length;
     sheet('seat', 'Back panel', box(0, y0, 0, p.width, p.height - y0, t), 'z', 'x', [
@@ -386,8 +419,9 @@ function boughtBase(
   out.diagnostics.push({
     severity: 'warning',
     code: 'bought-base',
-    message:
+    message: tx(
       'Seat and back boards on a bought base: the base, gas lift, mechanism and back support are bought and not drawn.',
+    ),
     nodeId: id,
   });
   return out;
@@ -408,7 +442,7 @@ function buildBed(
   panelM: Material,
 ): PartialModel {
   const b = p.bed;
-  if (!b) return err('bed-missing', 'Bed settings are missing.');
+  if (!b) return err('bed-missing', tx('Bed settings are missing.'));
   const pt = panelM.thickness,
     rt = p.apron.thickness,
     st = p.slats.thickness,
@@ -416,7 +450,10 @@ function buildBed(
   const { w: mw, l: ml } = b.mattress;
   const c = b.clearance;
   if (mw < 300 || ml < 600 || c < 0)
-    return err('mattress-size', `A ${mw}×${ml} mm mattress is not a size this bed can take.`);
+    return err(
+      'mattress-size',
+      tx('A {mw}×{ml} mm mattress is not a size this bed can take.', { mw, ml }),
+    );
   const leftT = b.sidePanelHeight > 0 ? pt : rt;
   const W = mw + 2 * c + leftT + rt,
     IL = ml + 2 * c,
@@ -426,10 +463,12 @@ function buildBed(
   if (b.railHeight < MATTRESS_LIP + st + LEDGER_HEIGHT)
     return err(
       'rail-height',
-      `Side rails need at least ${MATTRESS_LIP + st + LEDGER_HEIGHT} mm of height to carry ledgers and slats.`,
+      tx('Side rails need at least {h} mm of height to carry ledgers and slats.', {
+        h: MATTRESS_LIP + st + LEDGER_HEIGHT,
+      }),
     );
   if (railTop - b.railHeight < 50)
-    return err('deck-low', `Deck at ${deck} mm leaves no room under the side rails.`);
+    return err('deck-low', tx('Deck at {deck} mm leaves no room under the side rails.', { deck }));
   const decks = b.tierGap > 0 ? [deck, deck + b.tierGap] : [deck];
   const top = decks[decks.length - 1];
   const tall = b.tierGap > 0 ? top + b.guardHeight : 0;
@@ -441,7 +480,7 @@ function buildBed(
     if (b.sidePanelHeight < railTop)
       return err(
         'side-panel',
-        `The side panel must reach at least the top of the rails (${railTop} mm).`,
+        tx('The side panel must reach at least the top of the rails ({top} mm).', { top: railTop }),
       );
     sheet('gable', 'Side panel', box(0, 0, pt, pt, b.sidePanelHeight, IL), 'x', 'z', ['+y']);
   }
@@ -487,7 +526,10 @@ function buildBed(
         out.diagnostics.push({
           severity: 'warning',
           code: 'guard-low',
-          message: `Guard rails ${b.guardHeight} mm above the top deck are too low to add over the side rails.`,
+          message: tx(
+            'Guard rails {h} mm above the top deck are too low to add over the side rails.',
+            { h: b.guardHeight },
+          ),
           nodeId: out.panels[0]?.nodeId,
         });
         return;

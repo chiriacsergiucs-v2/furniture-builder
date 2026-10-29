@@ -4,6 +4,7 @@
  * each piece's interior (with its own fronts) becomes one part of a left→right split. Everything else must already be
  * the same; otherwise the merge is refused with the reasons, never guessed.
  */
+import { t as tx } from './i18n';
 import { fr, mm, newId, SCHEMA_VERSION } from './design';
 import {
   placeItem,
@@ -48,28 +49,28 @@ function paramDiffs(a: CabinetParams, b: CabinetParams): (keyof CabinetParams)[]
 }
 
 const LABEL: Partial<Record<keyof CabinetParams, string>> = {
-  height: 'height',
-  depth: 'depth',
-  mount: 'stands on / hangs',
-  mountHeight: 'hanging height',
-  bodyMaterialId: 'body board',
-  frontMaterialId: 'front board',
-  backMaterialId: 'back board',
-  top: 'top joint',
-  topKind: 'top kind',
-  bottom: 'bottom joint',
-  back: 'back',
-  backInset: 'back inset',
-  plinthHeight: 'plinth height',
-  plinthSetback: 'plinth setback',
-  frontGap: 'front gap',
-  frontStyle: 'front style',
-  shelfSetback: 'shelf setback',
-  drawers: 'drawer settings',
-  railDepth: 'rail depth',
-  topLayers: 'top layers',
-  shelfClearance: 'shelf clearance',
-  pinRowSetback: 'pin row setback',
+  height: tx('height'),
+  depth: tx('depth'),
+  mount: tx('stands on / hangs'),
+  mountHeight: tx('hanging height'),
+  bodyMaterialId: tx('body board'),
+  frontMaterialId: tx('front board'),
+  backMaterialId: tx('back board'),
+  top: tx('top joint'),
+  topKind: tx('top kind'),
+  bottom: tx('bottom joint'),
+  back: tx('back'),
+  backInset: tx('back inset'),
+  plinthHeight: tx('plinth height'),
+  plinthSetback: tx('plinth setback'),
+  frontGap: tx('front gap'),
+  frontStyle: tx('front style'),
+  shelfSetback: tx('shelf setback'),
+  drawers: tx('drawer settings'),
+  railDepth: tx('rail depth'),
+  topLayers: tx('top layers'),
+  shelfClearance: tx('shelf clearance'),
+  pinRowSetback: tx('pin row setback'),
 };
 
 /** Materials with the same id but a different board in the two pieces. */
@@ -94,31 +95,39 @@ function issuesOf(l: ProjectItem, r: ProjectItem, lb: Box, rb: Box): string[] {
   const pl = l.design.product,
     pr = r.design.product;
   if (pl.kind !== 'cabinet' || pr.kind !== 'cabinet') {
-    out.push('Only two cabinets can be merged (not corners, desks, frames, panels or panel sets).');
+    out.push(
+      tx('Only two cabinets can be merged (not corners, desks, frames, panels or panel sets).'),
+    );
     return out;
   }
-  if (l.rotationY !== r.rotationY) out.push('They are turned differently.');
-  else if (l.angle || r.angle) out.push('One of them is turned at an angle.');
+  if (l.rotationY !== r.rotationY) out.push(tx('They are turned differently.'));
+  else if (l.angle || r.angle) out.push(tx('One of them is turned at an angle.'));
   if (l.quantity !== r.quantity)
-    out.push(`The numbers of copies differ (${l.quantity} and ${r.quantity}).`);
+    out.push(tx('The numbers of copies differ ({a} and {b}).', { a: l.quantity, b: r.quantity }));
   if (!samePlacement(l.placement, r.placement))
-    out.push('They are placed differently (floor, wall or on another piece).');
+    out.push(tx('They are placed differently (floor, wall or on another piece).'));
   const diffs = paramDiffs(pl.params, pr.params);
   if (diffs.length)
-    out.push(`Different ${diffs.map((k) => LABEL[k] ?? k).join(', ')}; make them the same first.`);
+    out.push(
+      tx('Different {list}; make them the same first.', {
+        list: diffs.map((k) => LABEL[k] ?? k).join(', '),
+      }),
+    );
   const a = widthAxis(l.rotationY).axis;
   if (len(lb, a) !== pl.params.width || len(rb, a) !== pr.params.width)
-    out.push('Something sticks out at the sides (the outside width is not the cabinet width).');
+    out.push(tx('Something sticks out at the sides (the outside width is not the cabinet width).'));
   if (lb.y !== rb.y || backPlane(lb, l.rotationY) !== backPlane(rb, r.rotationY))
-    out.push('Their bottoms or backs do not line up.');
+    out.push(tx('Their bottoms or backs do not line up.'));
   const mats = materialConflicts(l.design, r.design);
   if (mats.length)
-    out.push(`Boards with the same name but different settings: ${mats.join(', ')}.`);
+    out.push(
+      tx('Boards with the same name but different settings: {list}.', { list: mats.join(', ') }),
+    );
   if (
     l.design.settings &&
     JSON.stringify(l.design.settings) !== JSON.stringify(r.design.settings ?? l.design.settings)
   )
-    out.push('Their check settings differ.');
+    out.push(tx('Their check settings differ.'));
   return out;
 }
 
@@ -159,12 +168,13 @@ export function mergeItems(
   bId: string,
 ): { project: Project; mergedId: string | null; issues: string[] } {
   const c = mergeCandidates(project, aId).find((x) => x.item.id === bId);
-  if (!c) return { project, mergedId: null, issues: ['The two pieces do not touch side by side.'] };
+  if (!c)
+    return { project, mergedId: null, issues: [tx('The two pieces do not touch side by side.')] };
   if (c.issues.length) return { project, mergedId: null, issues: c.issues };
   const a = project.items.find((i) => i.id === aId)!;
   const [l, r] = c.side === 'right' ? [a, c.item] : [c.item, a];
   if (l.design.product.kind !== 'cabinet' || r.design.product.kind !== 'cabinet')
-    return { project, mergedId: null, issues: ['Only two cabinets can be merged.'] };
+    return { project, mergedId: null, issues: [tx('Only two cabinets can be merged.')] };
   const lp = l.design.product.params,
     rp = r.design.product.params;
   const t = l.design.materials.find((m) => m.id === lp.bodyMaterialId)?.thickness ?? 18;

@@ -5,6 +5,7 @@
  * slides until it touches the first room wall or piece whose outline overlaps its path in plan and in height; there is
  * no distance limit. Nothing is clamped silently: an action that cannot move the piece is disabled with its reason.
  */
+import { t } from './i18n';
 import { carryGroups, withGroups } from './groupMove';
 import {
   carriedBy,
@@ -39,17 +40,35 @@ export type MoveToAction = (typeof MOVE_TO_ACTIONS)[number];
 
 /** Button text and what each action does, for the panel and the 3D toolbar. */
 export const MOVE_TO_LABELS: Record<MoveToAction, { label: string; title: string }> = {
-  wall: { label: 'To wall', title: 'Slide back until it touches the wall or a piece behind it' },
-  left: { label: 'To left piece', title: 'Slide left until it touches the first piece or wall' },
-  right: { label: 'To right piece', title: 'Slide right until it touches the first piece or wall' },
-  corner: { label: 'Into corner', title: 'Back to the wall, then sideways to the nearer side' },
-  centre: { label: 'Centre', title: 'Centre it between what is on its left and right' },
-  ceiling: { label: 'To ceiling', title: 'Raise it until its top touches the ceiling' },
-  down: { label: 'Down', title: 'Lower it onto the piece under it or the floor' },
-  alignTopLeft: { label: 'Align top ←', title: 'Match the top of the piece on its left' },
-  alignTopRight: { label: 'Align top →', title: 'Match the top of the piece on its right' },
-  alignFrontLeft: { label: 'Align front ←', title: 'Match the front of the piece on its left' },
-  alignFrontRight: { label: 'Align front →', title: 'Match the front of the piece on its right' },
+  wall: {
+    label: t('To wall'),
+    title: t('Slide back until it touches the wall or a piece behind it'),
+  },
+  left: {
+    label: t('To left piece'),
+    title: t('Slide left until it touches the first piece or wall'),
+  },
+  right: {
+    label: t('To right piece'),
+    title: t('Slide right until it touches the first piece or wall'),
+  },
+  corner: {
+    label: t('Into corner'),
+    title: t('Back to the wall, then sideways to the nearer side'),
+  },
+  centre: { label: t('Centre'), title: t('Centre it between what is on its left and right') },
+  ceiling: { label: t('To ceiling'), title: t('Raise it until its top touches the ceiling') },
+  down: { label: t('Down'), title: t('Lower it onto the piece under it or the floor') },
+  alignTopLeft: { label: t('Align top ←'), title: t('Match the top of the piece on its left') },
+  alignTopRight: { label: t('Align top →'), title: t('Match the top of the piece on its right') },
+  alignFrontLeft: {
+    label: t('Align front ←'),
+    title: t('Match the front of the piece on its left'),
+  },
+  alignFrontRight: {
+    label: t('Align front →'),
+    title: t('Match the front of the piece on its right'),
+  },
 };
 
 type Dir = 'left' | 'right' | 'back';
@@ -135,7 +154,7 @@ function firstWall(ctx: Ctx, b: Box, way: Way): Hit | null {
     if (!(w.lo < hi(b, ax) && lo(b, ax) < w.hi)) continue;
     const dist = sign > 0 ? w.at - hi(b, axis) : lo(b, axis) - w.at;
     if (dist < 0) continue;
-    if (!best || dist < best.dist) best = { dist, what: `wall ${w.wall + 1}` };
+    if (!best || dist < best.dist) best = { dist, what: t('wall {n}', { n: w.wall + 1 }) };
   }
   return best;
 }
@@ -172,9 +191,9 @@ function withPlacement(it: ProjectItem, placement: Placement | undefined): Proje
 }
 
 const DIR_WORD: Record<Dir, string> = {
-  left: 'on its left',
-  right: 'on its right',
-  back: 'behind it',
+  left: t('on its left'),
+  right: t('on its right'),
+  back: t('behind it'),
 };
 
 /** Plan for one action: the moved item, or why it cannot move. */
@@ -189,7 +208,7 @@ function baseLimit(ctx: Ctx, way: Way): Hit | null {
   const b = ctx.me.bounds,
     o = base.bounds;
   const dist = way.sign > 0 ? hi(o, way.axis) - hi(b, way.axis) : lo(b, way.axis) - lo(o, way.axis);
-  return { dist: Math.max(0, dist), what: `the end of ${base.item.design.name}` };
+  return { dist: Math.max(0, dist), what: t('the end of {name}', { name: base.item.design.name }) };
 }
 
 function placed(ctx: Ctx, id: string): PlacedPiece | undefined {
@@ -207,7 +226,10 @@ function reach(
   const way = WAYS[it.rotationY][dir];
   if (it.placement?.kind === 'above' && (dir === 'back' || way.axis !== 'x'))
     return {
-      reason: `Sits on another piece and follows it ${dir === 'back' ? 'back' : 'that way'}.`,
+      reason:
+        dir === 'back'
+          ? t('Sits on another piece and follows it back.')
+          : t('Sits on another piece and follows it that way.'),
     };
   let hit = firstHit(ctx, b, way);
   // Its group-mates move by the same offset: the first of them to touch something stops them all.
@@ -226,8 +248,8 @@ function reach(
 function slide(ctx: Ctx, dir: Dir, b: Box = ctx.me.bounds): Hit | { reason: string } {
   const r = reach(ctx, dir, b);
   if ('reason' in r) return r;
-  if (!r.hit) return { reason: `Nothing ${DIR_WORD[dir]}.` };
-  if (r.hit.dist === 0) return { reason: `Already touching ${r.hit.what}.` };
+  if (!r.hit) return { reason: t('Nothing {where}.', { where: DIR_WORD[dir] }) };
+  if (r.hit.dist === 0) return { reason: t('Already touching {what}.', { what: r.hit.what }) };
   return r.hit;
 }
 
@@ -242,13 +264,13 @@ function neighbour(ctx: Ctx, dir: 'left' | 'right'): PlacedPiece | null {
 function atHeight(ctx: Ctx, y: Mm): Plan {
   const it = ctx.me.item;
   const pl = it.placement;
-  if (y < 0) return { reason: 'It would go below the floor.' };
-  if (y === it.position.y) return { reason: 'Already at that height.' };
-  if (pl?.kind === 'floor') return { reason: 'Stands on the floor; its height is fixed.' };
+  if (y < 0) return { reason: t('It would go below the floor.') };
+  if (y === it.position.y) return { reason: t('Already at that height.') };
+  if (pl?.kind === 'floor') return { reason: t('Stands on the floor; its height is fixed.') };
   if (pl?.kind === 'wall') return { item: { ...it, placement: { kind: 'wall', height: y } } };
   if (pl?.kind === 'above') {
     const gap = pl.gap + y - it.position.y;
-    if (gap < 0) return { reason: 'It would go into the piece under it.' };
+    if (gap < 0) return { reason: t('It would go into the piece under it.') };
     return { item: { ...it, placement: { ...pl, gap } } };
   }
   return { item: { ...it, position: { ...it.position, y } } };
@@ -260,8 +282,8 @@ function plan(ctx: Ctx, action: MoveToAction): Plan {
   const room = ctx.project.room;
   const turned = !!it.angle;
   if (turned && action !== 'ceiling' && action !== 'down')
-    return { reason: 'Turned freely; only To ceiling and Down work.' };
-  const roomFirst = { reason: 'Draw the room first.' };
+    return { reason: t('Turned freely; only To ceiling and Down work.') };
+  const roomFirst = { reason: t('Draw the room first.') };
   switch (action) {
     case 'wall': {
       if (!room) return roomFirst;
@@ -298,7 +320,7 @@ function plan(ctx: Ctx, action: MoveToAction): Plan {
             ? { dir: 'left' as const, hit: l as Hit }
             : { dir: 'right' as const, hit: r as Hit };
       if (side) next = slid(next, ways[side.dir].axis, ways[side.dir].sign * side.hit.dist);
-      if (next === it) return { reason: 'Already in the corner, or no corner to slide into.' };
+      if (next === it) return { reason: t('Already in the corner, or no corner to slide into.') };
       return { item: next };
     }
     case 'centre': {
@@ -307,28 +329,32 @@ function plan(ctx: Ctx, action: MoveToAction): Plan {
       if (isReason(l)) return l;
       if (isReason(r)) return r;
       if (!l.hit || !r.hit)
-        return { reason: `Nothing on ${l.hit ? 'its right' : 'its left'} to centre between.` };
+        return {
+          reason: l.hit
+            ? t('Nothing on its right to centre between.')
+            : t('Nothing on its left to centre between.'),
+        };
       const dl = l.hit.dist,
         dr = r.hit.dist;
       // Odd millimetres round to the left.
       const toRight = Math.floor((dr - dl) / 2);
-      if (!toRight) return { reason: 'Already centred.' };
+      if (!toRight) return { reason: t('Already centred.') };
       const way = WAYS[it.rotationY].right;
       return { item: slid(it, way.axis, way.sign * toRight) };
     }
     case 'ceiling': {
       if (!room) return roomFirst;
       const y = room.height - b.h;
-      if (y < 0) return { reason: `${b.h - room.height} mm taller than the room.` };
-      if (y === b.y) return { reason: 'Already at the ceiling.' };
+      if (y < 0) return { reason: t('{n} mm taller than the room.', { n: b.h - room.height }) };
+      if (y === b.y) return { reason: t('Already at the ceiling.') };
       // A floor piece becomes wall-hung, and a piece on another piece lifts off (user answers, ADR-147).
       return { item: withPlacement(it, { kind: 'wall', height: y }) };
     }
     case 'down': {
       const pl = it.placement;
-      if (pl?.kind === 'floor') return { reason: 'Already on the floor.' };
+      if (pl?.kind === 'floor') return { reason: t('Already on the floor.') };
       if (pl?.kind === 'above') {
-        if (pl.gap === 0) return { reason: 'Already sits on the piece under it.' };
+        if (pl.gap === 0) return { reason: t('Already sits on the piece under it.') };
         return { item: { ...it, placement: { ...pl, gap: 0 } } };
       }
       const bases = new Set(placementBases(ctx.project, it.id).map((i) => i.id));
@@ -348,27 +374,33 @@ function plan(ctx: Ctx, action: MoveToAction): Plan {
             offsetX: b.x - under.bounds.x,
           }),
         };
-      if (b.y === 0) return { reason: 'Already on the floor.' };
+      if (b.y === 0) return { reason: t('Already on the floor.') };
       return { item: withPlacement(it, { kind: 'floor' }) };
     }
     case 'alignTopLeft':
     case 'alignTopRight': {
       const n = neighbour(ctx, action === 'alignTopLeft' ? 'left' : 'right');
       if (!n)
-        return { reason: `No piece on ${action === 'alignTopLeft' ? 'its left' : 'its right'}.` };
+        return {
+          reason:
+            action === 'alignTopLeft' ? t('No piece on its left.') : t('No piece on its right.'),
+        };
       return atHeight(ctx, hi(n.bounds, 'y') - b.h);
     }
     case 'alignFrontLeft':
     case 'alignFrontRight': {
       const n = neighbour(ctx, action === 'alignFrontLeft' ? 'left' : 'right');
       if (!n)
-        return { reason: `No piece on ${action === 'alignFrontLeft' ? 'its left' : 'its right'}.` };
+        return {
+          reason:
+            action === 'alignFrontLeft' ? t('No piece on its left.') : t('No piece on its right.'),
+        };
       if (it.placement?.kind === 'above')
-        return { reason: 'Sits on another piece; its back stays in line with it.' };
+        return { reason: t('Sits on another piece; its back stays in line with it.') };
       const f = WAYS[it.rotationY].front;
       const mine = f.sign > 0 ? hi(b, f.axis) : lo(b, f.axis);
       const theirs = f.sign > 0 ? hi(n.bounds, f.axis) : lo(n.bounds, f.axis);
-      if (mine === theirs) return { reason: 'Fronts already in line.' };
+      if (mine === theirs) return { reason: t('Fronts already in line.') };
       return { item: slid(it, f.axis, theirs - mine) };
     }
   }
@@ -395,7 +427,7 @@ export function moveToOptions(project: Project, id: string): Record<MoveToAction
   const out = {} as Record<MoveToAction, string | null>;
   for (const a of MOVE_TO_ACTIONS) {
     const r = moveTo(project, id, a);
-    out[a] = r.reason ?? (r.project === project ? 'No piece selected.' : null);
+    out[a] = r.reason ?? (r.project === project ? t('No piece selected.') : null);
   }
   return out;
 }

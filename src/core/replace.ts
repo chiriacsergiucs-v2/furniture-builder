@@ -4,6 +4,7 @@
  * copy carrying the old piece's boards by part role (as finish scope applies them, ADR-055). Run parts and checks
  * follow in the store's commit (ADR-061); nothing stored changes shape (ADR-011).
  */
+import { t, tr } from './i18n';
 import { buildModel } from './build';
 import { insertable, insertVariant, startFamilies } from './catalog';
 import type { CatalogFamily, CatalogVariant } from './catalog/types';
@@ -213,26 +214,28 @@ export function replaceReport(
   if (was && now) {
     const w0 = ownWidth(was.design),
       w1 = ownWidth(now.design);
-    if (w0 !== w1) lines.push(`${now.design.name} ${w0} → ${w1} mm wide`);
+    if (w0 !== w1)
+      lines.push(t('{name} {a} → {b} mm wide', { name: now.design.name, a: w0, b: w1 }));
   }
   const keyOf = (r: { key?: string; id: string }) => r.key ?? r.id;
   const old = new Map((before.runParts ?? []).map((r) => [keyOf(r), r]));
   const kept = new Set((after.runParts ?? []).map(keyOf));
   for (const r of after.runParts ?? []) {
-    if (!old.has(keyOf(r))) lines.push(`${r.label} added`);
+    if (!old.has(keyOf(r))) lines.push(t('{name} added', { name: tr(r.label) }));
     else if (r.changed && JSON.stringify(old.get(keyOf(r))!.box) !== JSON.stringify(r.box))
-      lines.push(`${r.label} ${r.changed}`);
+      lines.push(`${tr(r.label)} ${r.changed}`);
   }
-  for (const [k, r] of old) if (!kept.has(k)) lines.push(`${r.label} removed`);
+  for (const [k, r] of old)
+    if (!kept.has(k)) lines.push(t('{name} removed', { name: tr(r.label) }));
   const problems = afterModel.diagnostics
     .filter((d) => !beforeModel.diagnostics.some((b) => sameProblem(b, d)))
     .sort((a, b) => Number(b.severity === 'error') - Number(a.severity === 'error'));
   if (problems.length)
     lines.push(
-      `${problems.length} problem${problems.length === 1 ? '' : 's'}: ${problems[0].message}`,
+      t('{n|# problem|# problems}: {first}', { n: problems.length, first: problems[0].message }),
     );
   return {
-    text: ['Replaced.', ...lines.map((l) => (/[.!?]$/.test(l) ? l : `${l}.`))].join(' '),
+    text: [t('Replaced.'), ...lines.map((l) => (/[.!?]$/.test(l) ? l : `${l}.`))].join(' '),
     problems,
   };
 }

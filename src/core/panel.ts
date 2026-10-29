@@ -1,3 +1,4 @@
+import { t } from './i18n';
 import type { PartialModel } from './cabinet';
 import { box } from './geometry';
 import type { Material, PanelParams } from './types';
@@ -25,7 +26,7 @@ export function buildPanel(
     out.diagnostics.push({
       severity: 'error',
       code: 'material-missing',
-      message: 'The board for this panel does not exist in the design.',
+      message: t('The board for this panel does not exist in the design.'),
       nodeId: id,
     });
     return out;
@@ -35,7 +36,7 @@ export function buildPanel(
     out.diagnostics.push({
       severity: 'error',
       code: 'panel-too-small',
-      message: `Panel ${w}×${h} mm is too small.`,
+      message: t('Panel {w}×{h} mm is too small.', { w, h }),
       nodeId: id,
     });
     return out;
@@ -70,7 +71,7 @@ export function buildPanel(
         out.diagnostics.push({
           severity: 'warning',
           code: 'handle-fit',
-          message: `${S} mm handle does not fit on the ${w} mm front.`,
+          message: t('{s} mm handle does not fit on the {w} mm front.', { s: S, w }),
           nodeId: id,
         });
       else

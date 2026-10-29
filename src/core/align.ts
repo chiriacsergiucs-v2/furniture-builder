@@ -7,6 +7,7 @@
  * the first piece's top or underside by changing how high they hang; a piece standing on the floor stays and the result
  * says why (user answer 2026-10-27 "Accept default": skip floor pieces, never resize them).
  */
+import { t } from './i18n';
 import { groupOf, movedTo } from './selection';
 import {
   moveBlocked,
@@ -86,7 +87,9 @@ function liftEach(project: Project, moves: Map<string, number>) {
     const name = pieceName(project, id);
     if (pl?.kind === 'floor') {
       skipped.push(
-        `${name} stands on the floor; Top and Bottom move wall units and stacked pieces.`,
+        t('{name} stands on the floor; Top and Bottom move wall units and stacked pieces.', {
+          name,
+        }),
       );
       continue;
     }
@@ -96,12 +99,13 @@ function liftEach(project: Project, moves: Map<string, number>) {
       continue;
     }
     if (pl?.kind === 'wall') {
-      if (pl.height + dy < 0) skipped.push(`${name} would go below the floor.`);
+      if (pl.height + dy < 0) skipped.push(t('{name} would go below the floor.', { name }));
       else go.set(id, { ...it, placement: { kind: 'wall', height: pl.height + dy } });
     } else if (pl?.kind === 'above') {
-      if (pl.gap + dy < 0) skipped.push(`${name} would sink into the piece under it.`);
+      if (pl.gap + dy < 0) skipped.push(t('{name} would sink into the piece under it.', { name }));
       else go.set(id, { ...it, placement: { ...pl, gap: pl.gap + dy } });
-    } else if (it.position.y + dy < 0) skipped.push(`${name} would go below the floor.`);
+    } else if (it.position.y + dy < 0)
+      skipped.push(t('{name} would go below the floor.', { name }));
     else go.set(id, { ...it, position: { ...it.position, y: it.position.y + dy } });
     if (go.has(id)) moved.set(id, want);
   }
@@ -151,7 +155,15 @@ export function alignItems(project: Project, ids: readonly string[], how: AlignH
   const stays = (moves: boolean[]) =>
     moves.some(Boolean)
       ? [
-          `${sameGroup.map((id) => pieceName(project, id)).join(', ')} ${sameGroup.length > 1 ? 'are' : 'is'} in the same group as ${pieceName(project, known[0])}; ungroup to align ${sameGroup.length > 1 ? 'them' : 'it'}.`,
+          sameGroup.length > 1
+            ? t('{names} are in the same group as {ref}; ungroup to align them.', {
+                names: sameGroup.map((id) => pieceName(project, id)).join(', '),
+                ref: pieceName(project, known[0]),
+              })
+            : t('{names} is in the same group as {ref}; ungroup to align it.', {
+                names: sameGroup.map((id) => pieceName(project, id)).join(', '),
+                ref: pieceName(project, known[0]),
+              }),
         ]
       : [];
   if (how === 'top' || how === 'bottom') {
@@ -222,8 +234,9 @@ export function distributeItems(project: Project, ids: readonly string[]): Arran
     return {
       project,
       skipped: [],
-      refused:
+      refused: t(
         'Distribute needs three or more pieces or groups; the pieces of a group move together, so ungroup them to space them.',
+      ),
     };
   const box = new Map(blocks);
   const lead = blocks.map(([id]) => id);
@@ -232,8 +245,9 @@ export function distributeItems(project: Project, ids: readonly string[]): Arran
     return {
       project,
       skipped: [],
-      refused:
+      refused: t(
         'Distribute works on pieces in one row along the wall; select the base units or the wall units, not both.',
+      ),
     };
   const order = [...lead].sort(
     (a, b) => box.get(a)!.x - box.get(b)!.x || lead.indexOf(a) - lead.indexOf(b),
@@ -266,4 +280,4 @@ export function distributeItems(project: Project, ids: readonly string[]): Arran
 
 /** What the UI says about an align or distribute that left pieces where they were (ADR-095), or ''. */
 export const skippedText = (r: Pick<ArrangeResult, 'skipped' | 'refused'>): string =>
-  r.refused ?? (r.skipped.length ? `Not moved: ${r.skipped.join(' ')}` : '');
+  r.refused ?? (r.skipped.length ? t('Not moved: {list}', { list: r.skipped.join(' ') }) : '');

@@ -1,3 +1,4 @@
+import { t } from './i18n';
 import type {
   EdgeBand,
   EdgeBandKind,
@@ -17,13 +18,13 @@ export const MAKERS: { value: MaterialMaker; label: string }[] = [
   { value: 'kastamonu', label: 'Kastamonu' },
   { value: 'fundermax', label: 'Fundermax' },
   { value: 'kronospan', label: 'Kronospan' },
-  { value: 'other', label: 'Other' },
+  { value: 'other', label: t('Other') },
 ];
 export const KINDS: { value: MaterialKind; label: string }[] = [
   { value: 'pal', label: 'PAL' },
   { value: 'mdf', label: 'MDF' },
-  { value: 'worktop', label: 'Kitchen worktop' },
-  { value: 'other', label: 'Other' },
+  { value: 'worktop', label: t('Kitchen worktop') },
+  { value: 'other', label: t('Other') },
 ];
 export const makerName = (v: MaterialMaker | undefined) => MAKERS.find((m) => m.value === v)?.label;
 export const kindName = (v: MaterialKind | undefined) => KINDS.find((k) => k.value === v)?.label;
@@ -38,8 +39,8 @@ export function materialLabel(m: Pick<Material, 'name' | 'maker' | 'kind'>): str
 export function materialLabelProblems(m: Record<string, unknown>): string[] {
   const errs: string[] = [];
   if (m.maker !== undefined && !MAKERS.some((x) => x.value === m.maker))
-    errs.push('unknown manufacturer');
-  if (m.kind !== undefined && !KINDS.some((x) => x.value === m.kind)) errs.push('unknown type');
+    errs.push(t('unknown manufacturer'));
+  if (m.kind !== undefined && !KINDS.some((x) => x.value === m.kind)) errs.push(t('unknown type'));
   if (m.decor !== undefined) {
     const d = m.decor as Record<string, unknown> | null;
     if (
@@ -49,7 +50,7 @@ export function materialLabelProblems(m: Record<string, unknown>): string[] {
       !d.code ||
       typeof d.list !== 'string'
     )
-      errs.push('invalid decor link');
+      errs.push(t('invalid decor link'));
   }
   return errs;
 }
@@ -62,9 +63,9 @@ export const BAND_KINDS: { value: EdgeBandKind; label: string }[] = [
   { value: 'abs', label: 'ABS' },
   { value: 'pvc', label: 'PVC' },
   { value: 'pp', label: 'PP' },
-  { value: 'melamine', label: 'Melamine' },
-  { value: 'veneer', label: 'Veneer' },
-  { value: 'other', label: 'Other' },
+  { value: 'melamine', label: t('Melamine') },
+  { value: 'veneer', label: t('Veneer') },
+  { value: 'other', label: t('Other') },
 ];
 /** Common supplier thicknesses in tenths of a mm (0.4 · 0.8 · 1 · 2 · 3 mm): choices only, never a default. */
 export const COMMON_BAND_THICKNESS = [4, 8, 10, 20, 30];
@@ -100,19 +101,19 @@ export const bandFor = (m: Pick<Material, 'band' | 'frontBand'>, role: PanelRole
 
 /** Problems with one band spec (design validation); empty when valid. */
 export function bandProblems(b: unknown): string[] {
-  if (!b || typeof b !== 'object' || Array.isArray(b)) return ['not a band spec'];
+  if (!b || typeof b !== 'object' || Array.isArray(b)) return [t('not a band spec')];
   const o = b as Record<string, unknown>;
   const whole = (v: unknown, lo: number, hi: number) =>
     typeof v === 'number' && Number.isSafeInteger(v) && v >= lo && v <= hi;
   const errs: string[] = [];
-  if (!BAND_KINDS.some((k) => k.value === o.kind)) errs.push('unknown band type');
+  if (!BAND_KINDS.some((k) => k.value === o.kind)) errs.push(t('unknown band type'));
   if (!whole(o.thickness, 1, BAND_MAX_THICKNESS))
-    errs.push('band thickness must be 0.1 to 10 mm, in tenths');
-  if (!whole(o.width, 1, BAND_MAX_WIDTH)) errs.push('band width must be whole mm from 1 to 100');
+    errs.push(t('band thickness must be 0.1 to 10 mm, in tenths'));
+  if (!whole(o.width, 1, BAND_MAX_WIDTH)) errs.push(t('band width must be whole mm from 1 to 100'));
   if (o.code !== undefined && (typeof o.code !== 'string' || o.code.length > BAND_MAX_CODE))
-    errs.push('band code must be text up to 60 characters');
+    errs.push(t('band code must be text up to 60 characters'));
   if (o.allowance !== undefined && !whole(o.allowance, 0, BAND_MAX_ALLOWANCE))
-    errs.push('band allowance must be whole mm from 0 to 100');
+    errs.push(t('band allowance must be whole mm from 0 to 100'));
   return errs;
 }
 
@@ -216,7 +217,7 @@ export function parseDecorList(
     .replace(/^\uFEFF/, '')
     .split(/\r?\n/)
     .filter((l) => l.trim());
-  if (!lines.length) return { decors: [], problems: ['The file is empty.'] };
+  if (!lines.length) return { decors: [], problems: [t('The file is empty.')] };
   const sep = (lines[0].match(/;/g)?.length ?? 0) > (lines[0].match(/,/g)?.length ?? 0) ? ';' : ',';
   const head = splitLine(lines[0], sep).map((h) => HEADERS[norm(h)]);
   const missing = ['maker', 'kind', 'code', 'name', 'thickness', 'color'].filter(
@@ -226,7 +227,12 @@ export function parseDecorList(
     return {
       decors: [],
       problems: [
-        `The first row must name the columns ${DECOR_COLUMNS}; missing: ${missing.map((k) => (k === 'maker' ? 'manufacturer' : k === 'kind' ? 'type' : k)).join(', ')}.`,
+        t('The first row must name the columns {cols}; missing: {missing}.', {
+          cols: DECOR_COLUMNS,
+          missing: missing
+            .map((k) => (k === 'maker' ? 'manufacturer' : k === 'kind' ? 'type' : k))
+            .join(', '),
+        }),
       ],
     };
   const decors: Decor[] = [],
@@ -243,25 +249,30 @@ export function parseDecorList(
     const thickness = Number(get('thickness').replace(',', '.'));
     const kind = KIND_WORDS[norm(get('kind'))] ?? 'other';
     const why = !makerText
-      ? 'no manufacturer'
+      ? t('no manufacturer')
       : !code
-        ? 'no code'
+        ? t('no code')
         : !name
-          ? 'no name'
+          ? t('no name')
           : !(Number.isSafeInteger(thickness) && thickness >= 1 && thickness <= 200)
-            ? `thickness "${get('thickness')}" is not whole mm from 1 to 200`
+            ? t('thickness "{v}" is not whole mm from 1 to 200', { v: get('thickness') })
             : !/^#[0-9a-fA-F]{6}$/.test(color)
-              ? `color "${color}" is not #rrggbb`
+              ? t('color "{v}" is not #rrggbb', { v: color })
               : null;
     if (why) {
-      problems.push(`Row ${row}: ${why}.`);
+      problems.push(t('Row {row}: {why}.', { row, why }));
       return;
     }
     const maker = MAKER_WORDS[norm(makerText)] ?? 'other';
     const id = `${norm(makerText)}:${code}:${thickness}`;
     if (seen.has(id)) {
       problems.push(
-        `Row ${row}: ${makerText} ${code} ${thickness} mm is listed twice; the first is kept.`,
+        t('Row {row}: {maker} {code} {mm} mm is listed twice; the first is kept.', {
+          row,
+          maker: makerText,
+          code,
+          mm: thickness,
+        }),
       );
       return;
     }
@@ -278,7 +289,8 @@ export function parseDecorList(
       list,
     });
   });
-  if (!decors.length && !problems.length) problems.push('The file has a header row but no decors.');
+  if (!decors.length && !problems.length)
+    problems.push(t('The file has a header row but no decors.'));
   return { decors, problems };
 }
 

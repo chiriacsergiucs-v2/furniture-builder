@@ -5,6 +5,7 @@
  * that rectangle. Pure: the viewer turns a pointer into a ray, this module turns it into a wall point and a dragged
  * rectangle (whole mm, edges snapping to the wall ends, floor and ceiling as pieces snap to walls, ADR-070).
  */
+import { t } from './i18n';
 import { MAX_REACH, type Ray } from './drag3d';
 import {
   wallEnds,
@@ -36,7 +37,7 @@ export const pictureRect = (r: Room, i: number, img: WallImage): WallRect =>
 
 /** "From left 0 · From floor 0 · W 3000 × H 2500 mm" */
 export const rectLabel = (f: WallRect) =>
-  `From left ${f.x} · From floor ${f.y} · W ${f.w} × H ${f.h} mm`;
+  t('From left {x} · From floor {y} · W {w} × H {h} mm', { x: f.x, y: f.y, w: f.w, h: f.h });
 
 /**
  * Wall `i` seen from inside the room: its left end on the plan, the unit step to the right along it and the unit

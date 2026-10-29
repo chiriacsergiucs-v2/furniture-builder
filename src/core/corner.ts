@@ -1,3 +1,4 @@
+import { t as tx } from './i18n';
 import { buildCabinet, hingeBand, hingeCount, type PartialModel } from './cabinet';
 import { box, equalParts } from './geometry';
 import type {
@@ -137,7 +138,7 @@ function buildDiagonal(
   if (!backM)
     return err(
       'material-missing',
-      'A material used by this corner cabinet does not exist in the design.',
+      tx('A material used by this corner cabinet does not exist in the design.'),
     );
   const W = p.width,
     D = p.depth,
@@ -151,17 +152,25 @@ function buildDiagonal(
   if (s.kind !== 'shelves')
     return err(
       'diagonal-interior',
-      'A diagonal corner holds shelves only; set its inside to shelves.',
+      tx('A diagonal corner holds shelves only; set its inside to shelves.'),
     );
   if (W - D < 300)
     return err(
       'corner-size',
-      `The diagonal needs the width (${W} mm) at least 300 mm more than the depth (${D} mm).`,
+      tx('The diagonal needs the width ({w} mm) at least 300 mm more than the depth ({d} mm).', {
+        w: W,
+        d: D,
+      }),
     );
   if (D < 3 * t + 100 || H - ph < 4 * t)
     return err(
       'corner-size',
-      `A ${W} × ${H} × ${D} mm diagonal corner is too small for ${t} mm panels.`,
+      tx('A {w} × {h} × {d} mm diagonal corner is too small for {t} mm panels.', {
+        w: W,
+        h: H,
+        d: D,
+        t,
+      }),
     );
   const local: PartialModel = { panels: [], spaces: [], hardware: [], diagnostics: [] };
   const add = (
@@ -241,7 +250,10 @@ function buildDiagonal(
   if (tt > t) board('top/1', 'top', 'Top', H - tt);
   const room = H - ph - t - tt - s.count * t;
   if (s.count < 0 || room < (s.count + 1) * 20)
-    return err('shelves-crowded', `${s.count} shelves do not fit in ${H - ph - t - tt} mm.`);
+    return err(
+      'shelves-crowded',
+      tx('{n} shelves do not fit in {h} mm.', { n: s.count, h: H - ph - t - tt }),
+    );
   let y = ph + t;
   for (const [i, gap] of equalParts(room, s.count + 1)
     .slice(0, -1)
@@ -281,7 +293,8 @@ function buildDiagonal(
       n = doors.count,
       dh = H - ph - 2 * r;
     const leaf = Math.floor((span - 2 * r - (n - 1) * g) / n);
-    if (leaf < 100 || dh < 100) return err('door-small', `Door ${leaf}×${dh} mm is too small.`);
+    if (leaf < 100 || dh < 100)
+      return err('door-small', tx('Door {w}×{h} mm is too small.', { w: leaf, h: dh }));
     for (let i = 0; i < n; i++) {
       const [dx, dz] = along(r + i * (leaf + g), 1);
       add(
@@ -303,7 +316,7 @@ function buildDiagonal(
       quantity: n * hingeCount(dh),
       note: `${hingeCount(dh)} per door (typical for ${hingeBand(dh)}); choose the hinge maker's 45° corner hinge or angled plate`,
     });
-  } else if (doors) return err('diagonal-front', 'A diagonal corner takes one door or a pair.');
+  } else if (doors) return err('diagonal-front', tx('A diagonal corner takes one door or a pair.'));
   if (s.count)
     local.hardware.push({
       nodeId: s.id,
@@ -368,7 +381,10 @@ export function buildCorner(
   const body = materials.get(p.bodyMaterialId),
     front = materials.get(p.frontMaterialId);
   if (!body || !front) {
-    err('material-missing', 'A material used by this corner cabinet does not exist in the design.');
+    err(
+      'material-missing',
+      tx('A material used by this corner cabinet does not exist in the design.'),
+    );
     return out;
   }
   if (p.variant === 'diagonal') return buildDiagonal(p, id, materials, out);
@@ -383,14 +399,20 @@ export function buildCorner(
     if (p.blindWidth < 3 * t || usable < 3 * t) {
       err(
         'corner-size',
-        `Blind section ${p.blindWidth} mm and usable section ${usable} mm must each be at least ${3 * t} mm.`,
+        tx(
+          'Blind section {blind} mm and usable section {usable} mm must each be at least {min} mm.',
+          { blind: p.blindWidth, usable, min: 3 * t },
+        ),
       );
       return out;
     }
     if (p.blindWidth < D + 50)
       warn(
         'blind-clearance',
-        `Blind section is ${p.blindWidth} mm; about the neighbouring cabinet's depth + 50 mm (${D + 50} mm) keeps its door and handle clear of this door.`,
+        tx(
+          "Blind section is {blind} mm; about the neighbouring cabinet's depth + 50 mm ({d} mm) keeps its door and handle clear of this door.",
+          { blind: p.blindWidth, d: D + 50 },
+        ),
       );
     // Drawn with the blind section on the left, mirrored for the right.
     const blind = buildCabinet(
@@ -426,7 +448,10 @@ export function buildCorner(
   // L-shape, corner on the left: wing A along the back wall, wing B along the left wall.
   const wb = p.wingWidth - D;
   if (p.width < D + 3 * t + 100 || wb < 3 * t + 100) {
-    err('corner-size', `Each wing must reach at least ${3 * t + 100} mm past the corner.`);
+    err(
+      'corner-size',
+      tx('Each wing must reach at least {min} mm past the corner.', { min: 3 * t + 100 }),
+    );
     return out;
   }
   const doorStart = D + tf + g; // A's door begins clear of B's door leaf

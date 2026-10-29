@@ -6,6 +6,7 @@
  * the board itself (name, thickness, grain, picture, banding), so two copies of one template compare equal. A path
  * that the other design does not have, or that would make it invalid, is not carried; the caller lists it.
  */
+import { t as tx } from './i18n';
 import { buildModel } from './build';
 import { insertable, insertVariant } from './catalog';
 import type { CatalogFamily } from './catalog/types';
@@ -243,12 +244,12 @@ export function carryEdits(
     }
     const next = setPath(d, path, value);
     if (!next) {
-      notKept.push(`${editLabel(path)} — the new piece has no such setting`);
+      notKept.push(tx('{edit} — the new piece has no such setting', { edit: editLabel(path) }));
       continue;
     }
     const e = checked ? errorCount(next) : 0;
     if (e > errors) {
-      notKept.push(`${editLabel(path)} — it does not fit the new piece`);
+      notKept.push(tx('{edit} — it does not fit the new piece', { edit: editLabel(path) }));
       continue;
     }
     d = next;
@@ -265,8 +266,8 @@ export function carryEdits(
 /** "Kept: handle kind. Not kept: width — …." — the result's line; empty when there were no edits. */
 export function carryText(r: Pick<CarryResult, 'kept' | 'notKept'>): string {
   const out: string[] = [];
-  if (r.kept.length) out.push(`Kept: ${r.kept.join(', ')}.`);
-  if (r.notKept.length) out.push(`Not kept: ${r.notKept.join('; ')}.`);
+  if (r.kept.length) out.push(tx('Kept: {list}.', { list: r.kept.join(', ') }));
+  if (r.notKept.length) out.push(tx('Not kept: {list}.', { list: r.notKept.join('; ') }));
   return out.join(' ');
 }
 

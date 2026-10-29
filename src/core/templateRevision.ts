@@ -8,6 +8,7 @@
  * `catalogVersion`. A device edit that is deleted again falls back to the shipped version: pieces taken from the edit
  * then count as up to date (their revision is not lower).
  */
+import { t } from './i18n';
 import type { CatalogFamily } from './catalog/types';
 import { localRevision, type LocalTemplate } from './catalog/local';
 import type { Design } from './types';
@@ -57,7 +58,7 @@ export function templateStatus(
 
 /** "2 pieces have a newer template" (ADR-096); empty for none. */
 export const newerText = (n: number): string =>
-  n ? `${n} ${n === 1 ? 'piece has' : 'pieces have'} a newer template` : '';
+  n ? t('{n|# piece has|# pieces have} a newer template', { n }) : '';
 
 /** How many of these pieces have a newer template (the project panel's count). */
 export const newerCount = (

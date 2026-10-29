@@ -1,3 +1,4 @@
+import { t } from './i18n';
 import { inPlaneAxes } from './geometry';
 import type { Axis, BoardFinish, Face, MaterialImage, Mm, Panel } from './types';
 
@@ -16,9 +17,9 @@ export const MAX_TILE: Mm = 10_000;
 
 /** Board finishes (ADR-067), in the order the Materials dialog shows them. */
 export const FINISHES: { value: BoardFinish; label: string }[] = [
-  { value: 'matte', label: 'Matte' },
-  { value: 'satin', label: 'Satin' },
-  { value: 'gloss', label: 'Gloss' },
+  { value: 'matte', label: t('Matte') },
+  { value: 'satin', label: t('Satin') },
+  { value: 'gloss', label: t('Gloss') },
 ];
 export const isFinish = (v: unknown): v is BoardFinish => FINISHES.some((f) => f.value === v);
 
@@ -48,10 +49,13 @@ export function imageFileProblem(file: {
   size: number;
 }): string | null {
   if (!(IMAGE_TYPES as readonly string[]).includes(file.type))
-    return `${file.name || 'This file'} is not a PNG, JPEG or WebP picture.`;
-  if (file.size <= 0) return `${file.name || 'This file'} is empty.`;
+    return t('{name} is not a PNG, JPEG or WebP picture.', { name: file.name || t('This file') });
+  if (file.size <= 0) return t('{name} is empty.', { name: file.name || t('This file') });
   if (file.size > MAX_IMAGE_BYTES)
-    return `${file.name} is larger than ${MAX_IMAGE_BYTES / 1024 / 1024} MB.`;
+    return t('{name} is larger than {mb} MB.', {
+      name: file.name,
+      mb: MAX_IMAGE_BYTES / 1024 / 1024,
+    });
   return null;
 }
 
@@ -75,15 +79,16 @@ const isTile = (v: unknown) =>
 
 /** Problems with a stored picture reference (design validation). */
 export function materialImageProblems(img: unknown): string[] {
-  if (!img || typeof img !== 'object' || Array.isArray(img)) return ['picture must be an object'];
+  if (!img || typeof img !== 'object' || Array.isArray(img))
+    return [t('picture must be an object')];
   const i = img as Record<string, unknown>;
   const errs: string[] = [];
-  if (typeof i.id !== 'string' || !i.id || i.id.length > 200) errs.push('picture id missing');
-  if (typeof i.name !== 'string' || i.name.length > 500) errs.push('picture name missing');
+  if (typeof i.id !== 'string' || !i.id || i.id.length > 200) errs.push(t('picture id missing'));
+  if (typeof i.name !== 'string' || i.name.length > 500) errs.push(t('picture name missing'));
   if (!isTile(i.tileLength) || !isTile(i.tileWidth))
-    errs.push(`picture size must be whole mm from 1 to ${MAX_TILE}`);
+    errs.push(t('picture size must be whole mm from 1 to {max}', { max: MAX_TILE }));
   if (i.turn !== undefined && typeof i.turn !== 'boolean')
-    errs.push('picture turn must be true or false');
+    errs.push(t('picture turn must be true or false'));
   return errs;
 }
 
@@ -181,28 +186,28 @@ export interface PictureFile {
 }
 
 export function pictureFileProblems(x: unknown): string[] {
-  if (!x || typeof x !== 'object' || Array.isArray(x)) return ['picture must be an object'];
+  if (!x || typeof x !== 'object' || Array.isArray(x)) return [t('picture must be an object')];
   const p = x as Record<string, unknown>;
   const errs: string[] = [];
   if (typeof p.id !== 'string' || !/^[A-Za-z0-9_-]{1,200}$/.test(p.id))
-    errs.push('picture id missing');
-  if (typeof p.name !== 'string' || p.name.length > 500) errs.push('picture name missing');
+    errs.push(t('picture id missing'));
+  if (typeof p.name !== 'string' || p.name.length > 500) errs.push(t('picture name missing'));
   if (typeof p.type !== 'string' || !(IMAGE_TYPES as readonly string[]).includes(p.type))
-    errs.push('picture type must be PNG, JPEG or WebP');
+    errs.push(t('picture type must be PNG, JPEG or WebP'));
   for (const k of ['width', 'height'])
     if (!(
       Number.isSafeInteger(p[k]) &&
       (p[k] as number) >= 1 &&
       (p[k] as number) <= MAX_TEXTURE_PX
     ))
-      errs.push(`picture ${k} must be 1 to ${MAX_TEXTURE_PX} px`);
+      errs.push(t('picture {k} must be 1 to {max} px', { k, max: MAX_TEXTURE_PX }));
   if (
     typeof p.data !== 'string' ||
     !p.data ||
     p.data.length > MAX_IMAGE_BYTES * 2 ||
     !/^[A-Za-z0-9+/]+=*$/.test(p.data)
   )
-    errs.push('picture data must be base64');
+    errs.push(t('picture data must be base64'));
   return errs;
 }
 

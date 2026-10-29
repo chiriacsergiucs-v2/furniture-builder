@@ -1,3 +1,4 @@
+import { t as tx, tr } from './i18n';
 import { box, distribute, equalParts } from './geometry';
 import type {
   Box,
@@ -14,6 +15,21 @@ import type {
   Space,
   SpaceOpening,
 } from './types';
+
+/** An appliance kind in words, for messages. */
+function applianceName(
+  k: 'oven' | 'microwave' | 'fridge' | 'dishwasher' | 'hob' | 'other',
+): string {
+  const names = {
+    oven: tx('oven'),
+    microwave: tx('microwave'),
+    fridge: tx('fridge'),
+    dishwasher: tx('dishwasher'),
+    hob: tx('hob'),
+    other: tx('other'),
+  };
+  return names[k];
+}
 
 /**
  * Where fronts covering a space may extend, with gaps already applied.
@@ -118,7 +134,7 @@ export function buildCabinet(
   if (!body || !front || !backM || !boxM || !bottomM) {
     err(
       'material-missing',
-      'A material used by this cabinet does not exist in the design.',
+      tx('A material used by this cabinet does not exist in the design.'),
       opts.productNodeId,
     );
     return out;
@@ -187,7 +203,11 @@ export function buildCabinet(
       out.diagnostics.push({
         severity: 'warning',
         code: 'handle-fit',
-        message: `${S} mm handle does not fit on ${panel.label.toLowerCase()} (${along} mm).`,
+        message: tx('{s} mm handle does not fit on {part} ({along} mm).', {
+          s: S,
+          part: tr(panel.label).toLowerCase(),
+          along,
+        }),
         nodeId: mapNode(nodeId),
       });
       return;
@@ -230,11 +250,15 @@ export function buildCabinet(
   const pid = opts.productNodeId;
 
   if (W < 3 * t || H < ph + 3 * t || D < 3 * t + bt) {
-    err('carcass-too-small', `Cabinet ${W}×${H}×${D} mm is too small for ${t} mm panels.`, pid);
+    err(
+      'carcass-too-small',
+      tx('Cabinet {w}×{h}×{d} mm is too small for {t} mm panels.', { w: W, h: H, d: D, t }),
+      pid,
+    );
     return out;
   }
   if (ph > 0 && (p.plinthSetback < 0 || p.plinthSetback > D - 2 * t - bt)) {
-    err('plinth-setback', 'Plinth setback must be between 0 and the carcass depth.', pid);
+    err('plinth-setback', tx('Plinth setback must be between 0 and the carcass depth.'), pid);
   }
 
   // ---- carcass -------------------------------------------------------------
@@ -249,7 +273,7 @@ export function buildCabinet(
   if (p.topLayers === 2 && p.topKind === 'rails')
     warn(
       'top-layers-rails',
-      'A doubled top applies to a full top panel; the two top rails stay single.',
+      tx('A doubled top applies to a full top panel; the two top rails stay single.'),
       opts.productNodeId,
     );
   const tt = doubled ? 2 * t : t;
@@ -278,7 +302,11 @@ export function buildCabinet(
     const x0 = p.top === 'over' ? 0 : L,
       w = p.top === 'over' ? W : span;
     if (rd < 30 || 2 * rd > Dc)
-      err('rail-depth', `Top rails ${rd} mm deep do not fit a ${Dc} mm deep carcass.`, pid);
+      err(
+        'rail-depth',
+        tx('Top rails {rd} mm deep do not fit a {d} mm deep carcass.', { rd, d: Dc }),
+        pid,
+      );
     else {
       add(pid, 'rail', 'Top rail back', body.id, box(x0, H - t, z0, w, t, rd), 'y', 'x', [], 0);
       add(
@@ -325,7 +353,9 @@ export function buildCabinet(
     if (!wall)
       warn(
         'no-bottom',
-        'A floor cabinet without a bottom has nothing to stand its contents on; this is meant for units over a cooker hood.',
+        tx(
+          'A floor cabinet without a bottom has nothing to stand its contents on; this is meant for units over a cooker hood.',
+        ),
         pid,
       );
   } else if (under)
@@ -348,7 +378,7 @@ export function buildCabinet(
     add(pid, 'back', 'Back', backM.id, box(0, ph, 0, W, H - ph, bt), 'z', 'y', []);
   } else if (p.back === 'inset') {
     if (p.backInset < 0 || p.backInset + bt > D - 2 * t)
-      err('back-inset', 'Back inset does not fit in the carcass depth.', pid);
+      err('back-inset', tx('Back inset does not fit in the carcass depth.'), pid);
     add(
       pid,
       'back',
@@ -380,7 +410,9 @@ export function buildCabinet(
     if (p.back !== 'inset' || p.backInset < 15)
       warn(
         'wall-back',
-        'Hanging brackets usually need the back set in about 15–20 mm; check the bracket datasheet.',
+        tx(
+          'Hanging brackets usually need the back set in about 15–20 mm; check the bracket datasheet.',
+        ),
         pid,
       );
   }
@@ -460,13 +492,17 @@ export function buildCabinet(
       });
     }
     if (op.w <= 0 || op.h <= 0 || op.d <= 0) {
-      err('space-too-small', 'This space has no room left inside it.', s.id);
+      err('space-too-small', tx('This space has no room left inside it.'), s.id);
       return;
     }
     // Any front (hinged doors, sliding doors, a flap) closes the space; drawers inside become internal.
     const hasDoors = !!s.front;
     if (hasDoors && c.behindDoors)
-      err('doors-behind-doors', 'Doors are placed inside a space that already has doors.', s.id);
+      err(
+        'doors-behind-doors',
+        tx('Doors are placed inside a space that already has doors.'),
+        s.id,
+      );
 
     if (s.front?.kind === 'sliding') {
       const sf = s.front;
@@ -477,19 +513,21 @@ export function buildCabinet(
       if (inset)
         warn(
           'sliding-inset',
-          'Sliding doors run in front of the carcass; the inset front style does not apply to them.',
+          tx(
+            'Sliding doors run in front of the carcass; the inset front style does not apply to them.',
+          ),
           s.id,
         );
       if (track < 2 * tf + SLIDING_PLANE_GAP)
         err(
           'sliding-track',
-          `A ${track} mm track is too shallow for two ${tf} mm door planes.`,
+          tx('A {track} mm track is too shallow for two {tf} mm door planes.', { track, tf }),
           s.id,
         );
       if (ov < 0 || ov * 2 >= (f.x1 - f.x0) / n)
         err(
           'sliding-overlap',
-          `Overlap ${ov} mm does not suit ${n} doors on ${f.x1 - f.x0} mm.`,
+          tx('Overlap {ov} mm does not suit {n} doors on {w} mm.', { ov, n, w: f.x1 - f.x0 }),
           s.id,
         );
       else {
@@ -509,7 +547,8 @@ export function buildCabinet(
             i,
           );
           placeHandle(s.handle, 'door', w, h, i % 2 === 0 ? 'right' : 'left', s.id);
-          if (w < 100 || h < 100) err('door-small', `Door ${w}×${h} mm is too small.`, s.id);
+          if (w < 100 || h < 100)
+            err('door-small', tx('Door {w}×{h} mm is too small.', { w, h }), s.id);
           x += w - ov;
         });
         hw({
@@ -538,7 +577,8 @@ export function buildCabinet(
         ['-x', '+x', '-y', '+y'],
       );
       placeHandle(s.handle, 'drawer', w, h, null, s.id);
-      if (w < 100 || h < 100) err('door-small', `Flap ${w}×${h} mm is too small.`, s.id);
+      if (w < 100 || h < 100)
+        err('door-small', tx('Flap {w}×{h} mm is too small.', { w, h }), s.id);
       hw({
         nodeId: s.id,
         kind: 'flap-stay',
@@ -553,7 +593,15 @@ export function buildCabinet(
       if (!fl.fitting)
         warn(
           'flap-fitting',
-          `Choose the ${fl.direction === 'up' ? 'lift-up system' : 'flap stay'} for this ${w}×${h} mm front from its datasheet and name it here.`,
+          fl.direction === 'up'
+            ? tx(
+                'Choose the lift-up system for this {w}×{h} mm front from its datasheet and name it here.',
+                { w, h },
+              )
+            : tx(
+                'Choose the flap stay for this {w}×{h} mm front from its datasheet and name it here.',
+                { w, h },
+              ),
           s.id,
         );
       handleHw(s.id, s.handle, 1);
@@ -586,7 +634,8 @@ export function buildCabinet(
           i,
         );
         placeHandle(s.handle, 'door', w, h, openEdge, s.id);
-        if (w < 100 || h < 100) err('door-small', `Door ${w}×${h} mm is too small.`, s.id);
+        if (w < 100 || h < 100)
+          err('door-small', tx('Door {w}×{h} mm is too small.', { w, h }), s.id);
         x += w + g;
       });
       const dh = f.y1 - f.y0;
@@ -603,7 +652,7 @@ export function buildCabinet(
     const innerOpening =
       hasDoors && inset && s.front?.kind !== 'sliding' ? { ...op, d: op.d - tf } : op;
     if (innerOpening.d <= 0) {
-      err('space-too-small', 'No depth left behind the inset doors.', s.id);
+      err('space-too-small', tx('No depth left behind the inset doors.'), s.id);
       return;
     }
     const inner: Ctx = { ...c, opening: innerOpening, behindDoors: c.behindDoors || hasDoors };
@@ -616,7 +665,15 @@ export function buildCabinet(
         if (a.w > ip.w || a.h > ip.h || a.d > ip.d)
           err(
             'appliance-fit',
-            `The ${a.kind} niche ${a.w}×${a.h}×${a.d} mm does not fit in ${ip.w}×${ip.h}×${ip.d} mm.`,
+            tx('The {kind} niche {w}×{h}×{d} mm does not fit in {iw}×{ih}×{id} mm.', {
+              kind: applianceName(a.kind),
+              w: a.w,
+              h: a.h,
+              d: a.d,
+              iw: ip.w,
+              ih: ip.h,
+              id: ip.d,
+            }),
             s.id,
           );
         hw({
@@ -631,24 +688,24 @@ export function buildCabinet(
       case 'shelves': {
         const n = s.count;
         if (n < 0 || !Number.isInteger(n) || n > 50) {
-          err('shelf-count', 'Shelf count must be a whole number from 0 to 50.', s.id);
+          err('shelf-count', tx('Shelf count must be a whole number from 0 to 50.'), s.id);
           return;
         }
         if (n === 0) return;
         const gapTotal = ip.h - n * t;
         if (gapTotal < (n + 1) * 20) {
-          err('shelves-crowded', `${n} shelves do not fit in ${ip.h} mm.`, s.id);
+          err('shelves-crowded', tx('{n} shelves do not fit in {h} mm.', { n, h: ip.h }), s.id);
           return;
         }
         const gaps = equalParts(gapTotal, n + 1);
         const sd = ip.d - p.shelfSetback;
         if (sd < 50) {
-          err('shelf-shallow', 'Shelves would be shallower than 50 mm.', s.id);
+          err('shelf-shallow', tx('Shelves would be shallower than 50 mm.'), s.id);
           return;
         }
         const clear = s.adjustable ? (p.shelfClearance ?? DEFAULT_SHELF_CLEARANCE) : 0;
         if (s.adjustable && ip.w - 2 * clear < 50) {
-          err('shelf-narrow', 'Adjustable shelves would be narrower than 50 mm.', s.id);
+          err('shelf-narrow', tx('Adjustable shelves would be narrower than 50 mm.'), s.id);
           return;
         }
         let y = ip.y;
@@ -681,7 +738,7 @@ export function buildCabinet(
       }
       case 'hanging': {
         if (s.railDrop < 0 || s.railDrop >= ip.h) {
-          err('rail-drop', 'Rail position is outside the space.', s.id);
+          err('rail-drop', tx('Rail position is outside the space.'), s.id);
           return;
         }
         hw({
@@ -693,17 +750,22 @@ export function buildCabinet(
           note: 'cut to opening width',
         });
         hw({ nodeId: s.id, kind: 'rail-support', label: 'Rail support', quantity: 2 });
-        if (ip.h < 800) warn('hanging-short', `Only ${ip.h} mm of height for hanging.`, s.id);
+        if (ip.h < 800)
+          warn('hanging-short', tx('Only {h} mm of height for hanging.', { h: ip.h }), s.id);
         return;
       }
       case 'drawers': {
         const n = s.count;
         if (n < 1 || !Number.isInteger(n) || n > 20) {
-          err('drawer-count', 'Drawer count must be a whole number from 1 to 20.', s.id);
+          err('drawer-count', tx('Drawer count must be a whole number from 1 to 20.'), s.id);
           return;
         }
         if (n * 60 > ip.h) {
-          err('drawer-low', `${n} drawers do not fit in ${ip.h} mm of height.`, s.id);
+          err(
+            'drawer-low',
+            tx('{n} drawers do not fit in {h} mm of height.', { n, h: ip.h }),
+            s.id,
+          );
           return;
         }
         const ds = p.drawers;
@@ -722,7 +784,10 @@ export function buildCabinet(
         if (runner === undefined) {
           err(
             'runner-fit',
-            `No runner length fits ${maxRunner} mm of depth (available: ${ds.runnerLengths.join(', ')}).`,
+            tx('No runner length fits {max} mm of depth (available: {list}).', {
+              max: maxRunner,
+              list: ds.runnerLengths.join(', '),
+            }),
             s.id,
           );
           return;
@@ -731,21 +796,25 @@ export function buildCabinet(
         const tb = boxM.thickness,
           tbot = bottomM.thickness;
         if (bw < 2 * tb + 50) {
-          err('drawer-narrow', `Drawer box would be only ${bw} mm wide.`, s.id);
+          err('drawer-narrow', tx('Drawer box would be only {bw} mm wide.', { bw }), s.id);
           return;
         }
         // fronts: split the front zone top→bottom
         const fz = zoneOf(c);
         const custom = s.heights && s.heights.length === n ? s.heights : undefined;
         if (s.heights && !custom) {
-          err('drawer-heights', `Give one height per drawer (${n}).`, s.id);
+          err('drawer-heights', tx('Give one height per drawer ({n}).', { n }), s.id);
           return;
         }
         const frontRoom = fz.y1 - fz.y0 - (n - 1) * g;
         const frontHeights =
           custom && !internal ? distribute(frontRoom, custom) : equalParts(frontRoom, n);
         if (!frontHeights || frontHeights.some((v) => v <= 0)) {
-          err('drawer-heights', `Drawer heights do not fit in ${frontRoom} mm of front.`, s.id);
+          err(
+            'drawer-heights',
+            tx('Drawer heights do not fit in {room} mm of front.', { room: frontRoom }),
+            s.id,
+          );
           return;
         }
         let slots: Mm[];
@@ -753,7 +822,7 @@ export function buildCabinet(
         else if (internal) {
           const sl = distribute(ip.h, custom);
           if (!sl || sl.some((v) => v <= 0)) {
-            err('drawer-heights', `Drawer heights do not fit in ${ip.h} mm.`, s.id);
+            err('drawer-heights', tx('Drawer heights do not fit in {h} mm.', { h: ip.h }), s.id);
             return;
           }
           slots = sl;
@@ -776,7 +845,10 @@ export function buildCabinet(
           if (asked !== room)
             warn(
               'drawer-heights-resized',
-              `Drawer heights add up to ${asked} mm but there is ${room} mm; the bottom drawer was adjusted. Make one drawer "Share" to absorb the difference.`,
+              tx(
+                'Drawer heights add up to {asked} mm but there is {room} mm; the bottom drawer was adjusted. Make one drawer "Share" to absorb the difference.',
+                { asked, room },
+              ),
               s.id,
             );
         }
@@ -788,13 +860,17 @@ export function buildCabinet(
         if (s.fixedTop && internal)
           warn(
             'fixed-front-internal',
-            'A fixed front needs a drawer front of its own; drawers behind doors have none, so the setting is ignored.',
+            tx(
+              'A fixed front needs a drawer front of its own; drawers behind doors have none, so the setting is ignored.',
+            ),
             s.id,
           );
         if (fixed && s.uCut)
           warn(
             'fixed-front-ucut',
-            'The top drawer is a fixed front, so it has no box to cut around the trap; the U-cut is ignored.',
+            tx(
+              'The top drawer is a fixed front, so it has no box to cut around the trap; the U-cut is ignored.',
+            ),
             s.id,
           );
         for (let i = 0; i < n; i++) {
@@ -819,7 +895,11 @@ export function buildCabinet(
           }
           const bh = sh - ds.verticalClearance;
           if (bh < 60) {
-            err('drawer-low', `Drawer ${i + 1} box would be only ${bh} mm high.`, s.id);
+            err(
+              'drawer-low',
+              tx('Drawer {i} box would be only {bh} mm high.', { i: i + 1, bh }),
+              s.id,
+            );
             return;
           }
           const by = slotBottom + lo(ds.verticalClearance);
@@ -877,7 +957,12 @@ export function buildCabinet(
             ) {
               err(
                 'u-cut',
-                `A ${u.width} × ${u.depth} mm notch does not fit a ${bw} × ${runner} mm drawer box.`,
+                tx('A {w} × {d} mm notch does not fit a {bw} × {runner} mm drawer box.', {
+                  w: u.width,
+                  d: u.depth,
+                  bw,
+                  runner,
+                }),
                 s.id,
               );
               return;
@@ -952,7 +1037,10 @@ export function buildCabinet(
             );
             warn(
               'u-cut-trap',
-              `Drawer 1 is cut around the trap (${u.width} × ${u.depth} mm notch at the back): check the trap and pipes before cutting.`,
+              tx(
+                'Drawer 1 is cut around the trap ({w} × {d} mm notch at the back): check the trap and pipes before cutting.',
+                { w: u.width, d: u.depth },
+              ),
               s.id,
             );
           } else
@@ -1020,7 +1108,7 @@ export function buildCabinet(
         if (internal)
           warn(
             'internal-drawers',
-            'Drawers behind doors: check hinge and door clearance against the drawer boxes.',
+            tx('Drawers behind doors: check hinge and door clearance against the drawer boxes.'),
             s.id,
           );
         return;
@@ -1028,13 +1116,13 @@ export function buildCabinet(
       case 'split': {
         const k = s.children.length;
         if (k < 2 || s.sizes.length !== k) {
-          err('split-shape', 'A split needs at least two parts with one size each.', s.id);
+          err('split-shape', tx('A split needs at least two parts with one size each.'), s.id);
           return;
         }
         const along = s.axis === 'x' ? ip.w : ip.h;
         const parts = distribute(along - (k - 1) * t, s.sizes);
         if (!parts || parts.some((v) => v <= 0)) {
-          err('split-fit', `Fixed sizes do not fit in ${along} mm.`, s.id);
+          err('split-fit', tx('Fixed sizes do not fit in {along} mm.', { along }), s.id);
           return;
         }
         if (s.sizes.every((z) => z.mode === 'mm')) {
@@ -1043,7 +1131,10 @@ export function buildCabinet(
           if (asked !== room)
             warn(
               'split-resized',
-              `Fixed sizes add up to ${asked} mm but there is ${room} mm; the last part was adjusted to ${parts[k - 1]} mm. Make one part "Share" to absorb the difference.`,
+              tx(
+                'Fixed sizes add up to {asked} mm but there is {room} mm; the last part was adjusted to {last} mm. Make one part "Share" to absorb the difference.',
+                { asked, room, last: parts[k - 1] },
+              ),
               s.id,
             );
         }
@@ -1160,7 +1251,7 @@ function addPinRows(
         diags.push({
           severity: 'warning',
           code: 'pin-rows-no-panel',
-          message: 'No side panel found for shelf pins on one side of an adjustable space.',
+          message: tx('No side panel found for shelf pins on one side of an adjustable space.'),
           nodeId: spaceId,
         });
         continue;
@@ -1169,7 +1260,10 @@ function addPinRows(
         diags.push({
           severity: 'warning',
           code: 'pin-rows-shallow',
-          message: `Shelves ${shelfDepth} mm deep are too shallow for two pin rows ${setback} mm from their edges.`,
+          message: tx(
+            'Shelves {d} mm deep are too shallow for two pin rows {s} mm from their edges.',
+            { d: shelfDepth, s: setback },
+          ),
           nodeId: spaceId,
         });
         continue;
@@ -1189,7 +1283,10 @@ function addPinRows(
         diags.push({
           severity: 'error',
           code: 'pin-rows-short',
-          message: `This space is ${op.h} mm high: no room for shelf-pin holes ${2 * PIN_PITCH} mm clear of its top and bottom on one side. Make the shelves fixed or the space taller.`,
+          message: tx(
+            'This space is {h} mm high: no room for shelf-pin holes {c} mm clear of its top and bottom on one side. Make the shelves fixed or the space taller.',
+            { h: op.h, c: 2 * PIN_PITCH },
+          ),
           nodeId: spaceId,
         });
         continue;
