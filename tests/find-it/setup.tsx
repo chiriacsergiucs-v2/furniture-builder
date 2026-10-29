@@ -74,6 +74,8 @@ export async function renderApp(width: number) {
   globalThis.indexedDB = new IDBFactory();
   window.history.replaceState(null, '', '/');
   vi.resetModules();
+  // The languages stored on the device (ADR-153, ADR-157), read before the app's modules, as main.tsx does.
+  await import('../../src/langInit');
   const { App } = await import('../../src/ui/App');
   const user = userEvent.setup();
   return { user, ...render(<App />) };

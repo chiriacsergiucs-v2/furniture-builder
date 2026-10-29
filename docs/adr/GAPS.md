@@ -2530,3 +2530,48 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: The align is bugged because when I select a piece and I press align left, it moves to the right.
 - Questions: Should Distribute evenly treat a group as one block, like Align?
 - Suggested pick: Group = one block, the same as the Align answer of 2026-10-29.
+
+### G-301: Third UI language
+
+- Status: Open
+- Origin: ADR-153 (out of scope)
+- Missing: A third UI language (Romanian or other)
+- Request: add support for Russian language, have it toggle, also translate all the existing content ...
+- Questions: Add a Romanian UI too?
+- Suggested pick: Not asked; leave until requested
+
+### G-302: Lint for untranslated text
+
+- Status: Open
+- Origin: ADR-153 (out of scope)
+- Missing: A lint rule that flags English text written outside t()
+- Request: add a implementation rule/constraint to also add translation on any text added/modified/deleted
+- Questions: Add the hardcoded-string lint?
+- Suggested pick: User chose CLAUDE.md + type check only (2026-10-29)
+
+### G-303: Gaps page not translated
+
+- Status: Open
+- Origin: ADR-154 (out of scope)
+- Missing: The Gaps page (labels and entries) stays English
+- Request: add support for Russian language, have it toggle, also translate all the existing content ...
+- Questions: Translate the Gaps page?
+- Suggested pick: User 2026-10-29: Ignore gaps
+
+### G-304: User-typed names not translated
+
+- Status: Open
+- Origin: ADR-155 (out of scope)
+- Missing: Names the user typed (pieces, projects, boards) are not translated
+- Request: add support for Russian language, have it toggle, also translate all the existing content ...
+- Questions: Translate user-typed names?
+- Suggested pick: No: they are the user's own text
+
+### G-305: Written guides
+
+- Status: Open
+- Origin: ADR-158 (out of scope)
+- Missing: Written guides on the Information and guides page
+- Request: add a page where you list all the features that the app currently supports
+- Questions: Which guides should the page hold?
+- Suggested pick: Ask the user when guides are wanted

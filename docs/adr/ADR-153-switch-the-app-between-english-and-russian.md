@@ -51,7 +51,8 @@ The CLAUDE.md line "the app UI is in English" (ADR-020) becomes "English by defa
 ## Scope
 
 - In scope: the module, the toggle, the reload, the font, the CLAUDE.md rule, tests of `t`.
-- Out of scope: a third UI language (not asked); a hardcoded-string lint (the user chose type check only).
+- Out of scope: a third UI language (not asked, G-301); a hardcoded-string lint (the user chose type check only,
+  G-302).
 
 ## Consequences
 

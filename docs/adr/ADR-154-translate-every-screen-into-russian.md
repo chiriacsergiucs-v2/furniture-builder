@@ -28,7 +28,8 @@ Russian "I translate, no review".
 ## Scope
 
 - In scope: all of `src/ui` and `src/viewer`.
-- Out of scope: built-in data (ADR-155), problem messages (ADR-156), print and CSV (ADR-157).
+- Elsewhere: built-in data (ADR-155), problem messages (ADR-156), print and CSV (ADR-157).
+- Out of scope: the Gaps page (user 2026-10-29: "Ignore gaps", G-303).
 
 ## Consequences
 

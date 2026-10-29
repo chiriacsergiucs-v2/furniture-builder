@@ -28,7 +28,7 @@ of Feature Research and 8k words of catalog and wizard text) is translated too: 
 ## Scope
 
 - In scope: catalog, templates, samples, wizard, research data.
-- Out of scope: names the user typed.
+- Out of scope: names the user typed (G-304).
 
 ## Consequences
 

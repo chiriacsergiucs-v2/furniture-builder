@@ -9,6 +9,9 @@ import {
 } from '../../core/i18n/print';
 import { LANG_KEY, PRINT_LANG_KEY } from '../../langInit';
 
+/** The page reload, replaceable in tests (jsdom cannot reload). */
+export const page = { reload: () => location.reload() };
+
 /** Save the UI language and reload in it (ADR-153: the user chose a reload; designs are autosaved). */
 export function switchLang(l: Lang): void {
   if (l === getLang()) return;
@@ -17,7 +20,7 @@ export function switchLang(l: Lang): void {
   } catch {
     // Storage blocked: the reload stays in the old language.
   }
-  location.reload();
+  page.reload();
 }
 
 /** Keep the print language (ADR-157); sheets and the CSV are made when asked, so no reload. */

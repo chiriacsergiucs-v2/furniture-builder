@@ -31,7 +31,7 @@ guides page".
 ## Scope
 
 - In scope: the page, the link, the tree data.
-- Out of scope: written guides (the page is ready for them; not asked yet).
+- Out of scope: written guides (the page is ready for them; not asked yet, G-305).
 
 ## Consequences
 
