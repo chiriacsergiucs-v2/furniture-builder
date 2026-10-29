@@ -5,6 +5,8 @@
  * one is a message. The caller validates the document before it is stored and gives it a new id (ADR-011).
  */
 
+import { t } from './i18n';
+
 /** Codes start with this, so a pasted text is recognised (and a later format can take another prefix). */
 export const CODE_PREFIX = 'FB1-';
 /** The link form: `<app address>#open=<code>`. */
@@ -71,16 +73,16 @@ export type Decoded = { ok: true; doc: unknown } | { ok: false; error: string };
 /** The document in a code or link; a message when it is not one or is damaged. */
 export async function decodeCode(text: string): Promise<Decoded> {
   const code = codeIn(text);
-  if (!code) return { ok: false, error: 'That is not a design code. Codes start with FB1-.' };
+  if (!code) return { ok: false, error: t('That is not a design code. Codes start with FB1-.') };
   const bytes = fromBase64Url(code.slice(CODE_PREFIX.length));
   if (!bytes || !bytes.length)
-    return { ok: false, error: 'That code is damaged: copy it again in full.' };
+    return { ok: false, error: t('That code is damaged: copy it again in full.') };
   try {
     const json = new TextDecoder().decode(
       await pipe(bytes, new DecompressionStream('deflate-raw')),
     );
     return { ok: true, doc: JSON.parse(json) as unknown };
   } catch {
-    return { ok: false, error: 'That code is damaged: copy it again in full.' };
+    return { ok: false, error: t('That code is damaged: copy it again in full.') };
   }
 }

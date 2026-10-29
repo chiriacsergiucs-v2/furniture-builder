@@ -4,6 +4,7 @@
  * length, spacing or load (ADR-010). What the user fixes each joint type with, and how many per joint, is the
  * user's own fastener list, saved on this device. Every line is labelled guidance.
  */
+import { t } from './i18n';
 import { buildModel } from './build';
 import type { RunPart } from './project';
 import type { ShopLine } from './shopping';
@@ -29,51 +30,53 @@ export interface JointInfo {
 export const JOINTS: JointInfo[] = [
   {
     id: 'carcass-joint',
-    title: 'Carcass joint',
-    line: 'Joint fixings',
+    title: t('Carcass joint'),
+    line: t('Joint fixings'),
     one: 'joint',
     many: 'joints',
-    how: 'each place two carcass boards meet: sides, top, bottom, dividers, fixed shelves, rails',
+    how: t(
+      'each place two carcass boards meet: sides, top, bottom, dividers, fixed shelves, rails',
+    ),
   },
   {
     id: 'shelf-pin',
-    title: 'Shelf pin',
-    line: 'Shelf pins',
+    title: t('Shelf pin'),
+    line: t('Shelf pins'),
     one: 'pin',
     many: 'pins',
-    how: 'the shelf pins and supports in the hardware schedule',
+    how: t('the shelf pins and supports in the hardware schedule'),
   },
   {
     id: 'back-fixing',
-    title: 'Back fixing',
-    line: 'Back fixings',
+    title: t('Back fixing'),
+    line: t('Back fixings'),
     one: 'back',
     many: 'backs',
-    how: 'each back panel, fixed round its perimeter',
+    how: t('each back panel, fixed round its perimeter'),
   },
   {
     id: 'hanging-point',
-    title: 'Hanging point',
-    line: 'Hanging point fixings',
+    title: t('Hanging point'),
+    line: t('Hanging point fixings'),
     one: 'bracket',
     many: 'brackets',
-    how: 'each hanging bracket of a wall-hung piece',
+    how: t('each hanging bracket of a wall-hung piece'),
   },
   {
     id: 'worktop-fixing',
-    title: 'Worktop fixing',
-    line: 'Worktop fixings',
+    title: t('Worktop fixing'),
+    line: t('Worktop fixings'),
     one: 'worktop',
     many: 'worktops',
-    how: 'each worktop, run or desk top',
+    how: t('each worktop, run or desk top'),
   },
   {
     id: 'foot',
-    title: 'Foot',
-    line: 'Feet',
+    title: t('Foot'),
+    line: t('Feet'),
     one: 'piece on a plinth',
     many: 'pieces on a plinth',
-    how: 'each piece standing on a plinth',
+    how: t('each piece standing on a plinth'),
   },
 ];
 export const JOINT_BY_ID = new Map(JOINTS.map((j) => [j.id, j]));
@@ -246,8 +249,16 @@ export function projectFastenerCounts(project: {
   ]);
 }
 
-export const plural = (n: number, j: JointInfo) => `${n} ${n === 1 ? j.one : j.many}`;
-export const GUIDANCE = 'Guidance: counted from the model';
+const COUNTED: Record<JointType, (n: number) => string> = {
+  'carcass-joint': (n) => t('{n|# joint|# joints}', { n }),
+  'shelf-pin': (n) => t('{n|# pin|# pins}', { n }),
+  'back-fixing': (n) => t('{n|# back|# backs}', { n }),
+  'hanging-point': (n) => t('{n|# bracket|# brackets}', { n }),
+  'worktop-fixing': (n) => t('{n|# worktop|# worktops}', { n }),
+  foot: (n) => t('{n|# piece on a plinth|# pieces on a plinth}', { n }),
+};
+export const plural = (n: number, j: JointInfo) => COUNTED[j.id](n);
+export const GUIDANCE = t('Guidance: counted from the model');
 
 /** A choice the app can use: a joint type it knows, a name, a whole count per joint ≥ 1. */
 export function validFastenerChoice(c: unknown): c is FastenerChoice {
@@ -284,18 +295,25 @@ export function fastenerShopLines(
     const pick = chosen.get(c.joint);
     const len =
       c.joint === 'back-fixing'
-        ? `, ${(c.lengthMm / 1000).toFixed(2)} m of back edge`
+        ? t(', {m} m of back edge', { m: (c.lengthMm / 1000).toFixed(2) })
         : c.joint === 'worktop-fixing'
-          ? `, ${(c.lengthMm / 1000).toFixed(2)} m of worktop`
+          ? t(', {m} m of worktop', { m: (c.lengthMm / 1000).toFixed(2) })
           : '';
     if (!pick) {
       if (c.joint === 'shelf-pin') continue;
       choose.push({
         section: 'choose',
-        label: `${j.line}: ${plural(c.count, j)} — choose your fastener`,
+        label: t('{line}: {count} — choose your fastener', {
+          line: j.line,
+          count: plural(c.count, j),
+        }),
         quantity: c.count,
         unit: 'piece',
-        detail: `${GUIDANCE} (${j.how}${len}). Name yours under Materials › Fasteners.`,
+        detail: t('{guidance} ({how}{len}). Name yours under Materials › Fasteners.', {
+          guidance: GUIDANCE,
+          how: j.how,
+          len,
+        }),
       });
       continue;
     }

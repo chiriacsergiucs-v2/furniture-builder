@@ -3,6 +3,7 @@
  * of the project document at one moment, saved on the device in its own table (Dexie v10). Versions are kept until
  * the user deletes them (G-156): nothing removes them automatically, and restoring never rewrites one.
  */
+import { t } from './i18n';
 import { newId } from './design';
 import { validateProject, type Project } from './project';
 
@@ -18,9 +19,9 @@ export interface ProjectVersion {
 }
 
 export const VERSION_KIND_TEXT: Record<VersionKind, string> = {
-  session: 'When opened',
-  manual: 'Saved by you',
-  'before-restore': 'Before a restore',
+  session: t('When opened'),
+  manual: t('Saved by you'),
+  'before-restore': t('Before a restore'),
 };
 
 export function makeVersion(project: Project, kind: VersionKind, now = new Date()): ProjectVersion {
@@ -35,18 +36,18 @@ export function makeVersion(project: Project, kind: VersionKind, now = new Date(
 
 /** Problems of a version read from storage; never throws (ADR-008). Empty = usable. */
 export function validateVersion(v: unknown): string[] {
-  if (!v || typeof v !== 'object') return ['Version must be an object'];
+  if (!v || typeof v !== 'object') return [t('Version must be an object')];
   const r = v as Record<string, unknown>;
   const errs: string[] = [];
-  if (typeof r.id !== 'string' || !r.id) errs.push('Missing version id');
-  if (typeof r.projectId !== 'string' || !r.projectId) errs.push('Missing project id');
+  if (typeof r.id !== 'string' || !r.id) errs.push(t('Missing version id'));
+  if (typeof r.projectId !== 'string' || !r.projectId) errs.push(t('Missing project id'));
   if (typeof r.savedAt !== 'string' || Number.isNaN(Date.parse(r.savedAt)))
-    errs.push('Missing saved time');
+    errs.push(t('Missing saved time'));
   if (!['session', 'manual', 'before-restore'].includes(r.kind as string))
-    errs.push('Unknown version kind');
+    errs.push(t('Unknown version kind'));
   errs.push(...validateProject(r.project));
   if (!errs.length && (r.project as Project).id !== r.projectId)
-    errs.push('The version belongs to another project');
+    errs.push(t('The version belongs to another project'));
   return errs;
 }
 

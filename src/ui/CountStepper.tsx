@@ -1,5 +1,6 @@
 import { forwardRef, useMemo, useState, type CSSProperties } from 'react';
 import { countRows, countSubject, type CountKey } from '../core/counts';
+import { t, tr } from '../core/i18n';
 import { useDesign } from '../store/designStore';
 import { Icon } from './icons';
 import { selectionLabel } from './Inspector';
@@ -16,9 +17,9 @@ function storedFolded() {
 
 // Short visible labels for the compact card over the drawing (ADR-112); accessible names keep the full words.
 const SHORT: Partial<Record<CountKey, string>> = {
-  vdiv: 'V. dividers',
-  hdiv: 'H. dividers',
-  sliding: 'Sliding',
+  vdiv: t('V. dividers'),
+  hdiv: t('H. dividers'),
+  sliding: t('Sliding'),
 };
 
 /**
@@ -58,7 +59,7 @@ export const CountStepper = forwardRef<
       ref={ref}
       className={`count-stepper ${compact ? 'compact' : ''} ${foldable ? 'foldable' : ''} ${foldable && folded ? 'folded' : ''} ${className ?? ''}`}
       role="group"
-      aria-label="Quick counts"
+      aria-label={t('Quick counts')}
       style={style}
       // Taps here must not reach the drawing or the 3D canvas underneath (they would change the selection).
       onClick={(e) => e.stopPropagation()}
@@ -66,29 +67,29 @@ export const CountStepper = forwardRef<
     >
       {foldable && (
         <button type="button" className="cs-fold" aria-expanded={!folded} onClick={toggle}>
-          Quick counts
+          {t('Quick counts')}
           <Icon name={folded ? 'chevron-down' : 'chevron-up'} className="sm" />
         </button>
       )}
       {title && !compact && <span className="cs-title">{title}</span>}
       {rows.map((r) => (
         <div key={r.key} className="cs-row">
-          <span className="cs-label">{(compact && SHORT[r.key]) || r.label}</span>
+          <span className="cs-label">{(compact && SHORT[r.key]) || tr(r.label)}</span>
           <span className="cs-counter">
             <button
               type="button"
-              aria-label={`Fewer ${r.label.toLowerCase()}`}
+              aria-label={t('Fewer {what}', { what: tr(r.label).toLowerCase() })}
               disabled={r.value <= r.min}
               onClick={() => step(r.key, -1)}
             >
               −
             </button>
-            <output aria-live="polite" aria-label={r.label}>
+            <output aria-live="polite" aria-label={tr(r.label)}>
               {r.value}
             </output>
             <button
               type="button"
-              aria-label={`More ${r.label.toLowerCase()}`}
+              aria-label={t('More {what}', { what: tr(r.label).toLowerCase() })}
               disabled={r.value >= r.max}
               onClick={() => step(r.key, 1)}
             >

@@ -7,6 +7,7 @@
 import { useId, useMemo, useState } from 'react';
 import { newId } from '../core/design';
 import { projectBoards, roleBoard } from '../core/finish';
+import { t } from '../core/i18n';
 import {
   BAR_SPACINGS,
   materialKey,
@@ -25,9 +26,9 @@ import { MmField, Segmented, Select, Toggle } from './controls';
 import { Icon } from './icons';
 
 const TRIMS: { value: TrimKind; label: string }[] = [
-  { value: 'crown', label: 'Crown' },
-  { value: 'pelmet', label: 'Pelmet' },
-  { value: 'ceiling-filler', label: 'Ceiling filler' },
+  { value: 'crown', label: t('Crown') },
+  { value: 'pelmet', label: t('Pelmet') },
+  { value: 'ceiling-filler', label: t('Ceiling filler') },
 ];
 
 /** Ticked ids in left → right order, and whether they sit next to each other in one of `rows`. */
@@ -67,12 +68,12 @@ export function WorktopOverhang({ part }: { part: RunPart }) {
         aria-expanded={open}
         onClick={() => setOpen(!open)}
       >
-        Overhang: {front} mm front, {side} mm sides
+        {t('Overhang: {front} mm front, {side} mm sides', { front, side })}
       </button>
       {open && (
         <div className="run-ask">
           <MmField
-            label="Front overhang"
+            label={t('Front overhang')}
             value={front}
             min={0}
             max={1000}
@@ -80,13 +81,13 @@ export function WorktopOverhang({ part }: { part: RunPart }) {
             onChange={(v) => set({ front: v })}
           />
           <MmField
-            label="Side overhang"
+            label={t('Side overhang')}
             value={side}
             min={0}
             max={1000}
             step={5}
             onChange={(v) => set({ side: v })}
-            hint="Past each end of the worktop"
+            hint={t('Past each end of the worktop')}
           />
         </div>
       )}
@@ -154,7 +155,7 @@ export function AskRunParts() {
   };
   const pieceList = (groups: string[][]) => (
     <fieldset className="run-pick">
-      <legend>Pieces (side by side)</legend>
+      <legend>{t('Pieces (side by side)')}</legend>
       {groups.flat().map((id) => (
         <Toggle
           key={id}
@@ -172,7 +173,7 @@ export function AskRunParts() {
         <div key={f.key} className="run-failed" role="alert">
           <span>{f.message}</span>
           <button type="button" className="btn ghost sm" onClick={() => removeRunRequest(f.key)}>
-            Remove request
+            {t('Remove request')}
           </button>
         </div>
       ))}
@@ -184,7 +185,7 @@ export function AskRunParts() {
           onClick={() => show('worktop')}
         >
           <Icon name="plus" className="sm" />
-          Add worktop over…
+          {t('Add worktop over…')}
         </button>
         <button
           type="button"
@@ -193,16 +194,16 @@ export function AskRunParts() {
           onClick={() => show('trim')}
         >
           <Icon name="plus" className="sm" />
-          Add trim…
+          {t('Add trim…')}
         </button>
       </div>
       {open === 'worktop' && (
-        <div className="run-ask" aria-label="Add worktop over chosen pieces" role="group">
+        <div className="run-ask" aria-label={t('Add worktop over chosen pieces')} role="group">
           {cand.runs.length ? (
             <>
               {pieceList(cand.runs)}
               <MmField
-                label="Front overhang"
+                label={t('Front overhang')}
                 value={front}
                 min={0}
                 max={1000}
@@ -210,38 +211,38 @@ export function AskRunParts() {
                 onChange={setFront}
               />
               <MmField
-                label="Side overhang"
+                label={t('Side overhang')}
                 value={side}
                 min={0}
                 max={1000}
                 step={5}
                 onChange={setSide}
-                hint="Past each end of the worktop"
+                hint={t('Past each end of the worktop')}
               />
               {ticked.size > 0 && !choice.adjacent && (
-                <p className="field-error">Tick base units next to each other in one run.</p>
+                <p className="field-error">{t('Tick base units next to each other in one run.')}</p>
               )}
               <button type="button" className="btn primary" disabled={!ready} onClick={add}>
-                Add worktop
+                {t('Add worktop')}
               </button>
             </>
           ) : (
-            <p className="hint">No base units on the floor facing the room yet.</p>
+            <p className="hint">{t('No base units on the floor facing the room yet.')}</p>
           )}
         </div>
       )}
       {open === 'trim' && (
-        <div className="run-ask" aria-label="Add a trim" role="group">
+        <div className="run-ask" aria-label={t('Add a trim')} role="group">
           {cand.trims.length ? (
             <>
-              <Segmented label="Trim" value={kind} options={TRIMS} onChange={setKind} />
+              <Segmented label={t('Trim')} value={kind} options={TRIMS} onChange={setKind} />
               {pieceList(cand.trims)}
               <Select
-                label="Board"
+                label={t('Board')}
                 value={board ? materialKey(board) : ''}
                 options={boards.map((b) => ({
                   value: materialKey(b),
-                  label: `${b.name}, ${b.thickness} mm`,
+                  label: t('{name}, {thickness} mm', { name: b.name, thickness: b.thickness }),
                 }))}
                 onChange={setBoardKey}
               />
@@ -250,19 +251,21 @@ export function AskRunParts() {
               ) : (
                 <p className="hint">
                   {project.room
-                    ? `From the top of the units up to the room height (${project.room.height} mm).`
-                    : 'Needs the room height: set the room first (Room).'}
+                    ? t('From the top of the units up to the room height ({height} mm).', {
+                        height: project.room.height,
+                      })
+                    : t('Needs the room height: set the room first (Room).')}
                 </p>
               )}
               {ticked.size > 0 && !choice.adjacent && (
-                <p className="field-error">Tick units next to each other.</p>
+                <p className="field-error">{t('Tick units next to each other.')}</p>
               )}
               <button type="button" className="btn primary" disabled={!ready} onClick={add}>
-                Add trim
+                {t('Add trim')}
               </button>
             </>
           ) : (
-            <p className="hint">No wall or tall units facing the room yet.</p>
+            <p className="hint">{t('No wall or tall units facing the room yet.')}</p>
           )}
         </div>
       )}
@@ -283,21 +286,21 @@ function HeightField({
   const showErr = value.trim() !== '' && !valid;
   return (
     <div className="field">
-      <label htmlFor="trim-height">Trim height</label>
+      <label htmlFor="trim-height">{t('Trim height')}</label>
       <div className={`mm ${showErr ? 'invalid' : ''}`}>
         <input
           id="trim-height"
           inputMode="numeric"
           value={value}
-          placeholder="mm"
+          placeholder={t('mm')}
           aria-invalid={showErr}
           aria-describedby="trim-height-hint"
           onChange={(e) => onChange(e.target.value.replace(/[^\d]/g, ''))}
         />
-        <span className="unit">mm</span>
+        <span className="unit">{t('mm')}</span>
       </div>
       <p className={showErr ? 'field-error' : 'hint'} id="trim-height-hint">
-        {showErr ? 'Whole number from 1 to 3000.' : 'Enter the height; there is no default.'}
+        {showErr ? t('Whole number from 1 to 3000.') : t('Enter the height; there is no default.')}
       </p>
     </div>
   );
@@ -325,15 +328,15 @@ function TypedMm({
           id={id}
           inputMode="numeric"
           value={value}
-          placeholder="mm"
+          placeholder={t('mm')}
           aria-invalid={showErr}
           aria-describedby={`${id}-hint`}
           onChange={(e) => onChange(e.target.value.replace(/[^\d]/g, ''))}
         />
-        <span className="unit">mm</span>
+        <span className="unit">{t('mm')}</span>
       </div>
       <p className={showErr ? 'field-error' : 'hint'} id={`${id}-hint`}>
-        {showErr ? 'Whole number from 1 to 3000.' : hint}
+        {showErr ? t('Whole number from 1 to 3000.') : hint}
       </p>
     </div>
   );
@@ -346,17 +349,17 @@ const typed = (v: string): number | null => {
 };
 
 const HANDLE_KINDS: { value: Handle['kind']; label: string }[] = [
-  { value: 'bar', label: 'Bar' },
-  { value: 'knob', label: 'Knob' },
-  { value: 'push', label: 'Push to open' },
+  { value: 'bar', label: t('Bar') },
+  { value: 'knob', label: t('Knob') },
+  { value: 'push', label: t('Push to open') },
 ];
 
 const handleText = (h: RunHandle['handle']) =>
   h.kind === 'bar'
-    ? `Bar, ${h.holeSpacing ?? 128} mm centres`
+    ? t('Bar, {n} mm centres', { n: h.holeSpacing ?? 128 })
     : h.kind === 'knob'
-      ? 'Knob'
-      : 'Push to open';
+      ? t('Knob')
+      : t('Push to open');
 
 /**
  * Handles for a run and sinks over base units (ADR-125): one handle on every front of a run, on a line at a height
@@ -423,26 +426,26 @@ export function RunHandlesAndSinks() {
             return (
               <li key={rh.id}>
                 <span>
-                  <strong>Handles for this run</strong>{' '}
+                  <strong>{t('Handles for this run')}</strong>{' '}
                   <span className="sub">
                     {handleText(rh.handle)} ·{' '}
                     {rh.height === undefined
-                      ? 'top of fronts'
-                      : `line ${rh.height} mm above the floor`}{' '}
-                    · {names || 'no run now'}
+                      ? t('top of fronts')
+                      : t('line {n} mm above the floor', { n: rh.height })}{' '}
+                    · {names || t('no run now')}
                   </span>
                 </span>
                 <button
                   type="button"
                   className="btn icon ghost sm"
-                  aria-label={`Remove handles for the run of ${names}`}
+                  aria-label={t('Remove handles for the run of {names}', { names })}
                   onClick={() => removeRunHandle(rh.id)}
                 >
                   <Icon name="trash" />
                 </button>
                 {members.length > 0 && (
                   <fieldset className="run-pick">
-                    <legend>Keeps its own handles</legend>
+                    <legend>{t('Keeps its own handles')}</legend>
                     {members.map((id) => (
                       <Toggle
                         key={id}
@@ -459,15 +462,13 @@ export function RunHandlesAndSinks() {
           {sinks.map((sk) => (
             <li key={sk.id}>
               <span>
-                <strong>Sink over {name(sk.baseId)}</strong>{' '}
-                <span className="num">
-                  cut-out {sk.w} × {sk.d}
-                </span>
+                <strong>{t('Sink over {name}', { name: name(sk.baseId) })}</strong>{' '}
+                <span className="num">{t('cut-out {w} × {d}', { w: sk.w, d: sk.d })}</span>
               </span>
               <button
                 type="button"
                 className="btn icon ghost sm"
-                aria-label={`Remove the sink over ${name(sk.baseId)}`}
+                aria-label={t('Remove the sink over {name}', { name: name(sk.baseId) })}
                 onClick={() => removeSink(sk.id)}
               >
                 <Icon name="trash" />
@@ -484,7 +485,7 @@ export function RunHandlesAndSinks() {
           onClick={() => setOpen(open === 'handles' ? null : 'handles')}
         >
           <Icon name="plus" className="sm" />
-          Handles for this run…
+          {t('Handles for this run…')}
         </button>
         <button
           type="button"
@@ -493,16 +494,16 @@ export function RunHandlesAndSinks() {
           onClick={() => setOpen(open === 'sink' ? null : 'sink')}
         >
           <Icon name="plus" className="sm" />
-          Add sink…
+          {t('Add sink…')}
         </button>
       </div>
       {open === 'handles' && (
-        <div className="run-ask" aria-label="Handles for this run" role="group">
+        <div className="run-ask" aria-label={t('Handles for this run')} role="group">
           {run ? (
             <>
               {runs.length > 1 ? (
                 <Select
-                  label="Run"
+                  label={t('Run')}
                   value={String(runs.indexOf(run))}
                   options={runs.map((r, i) => ({
                     value: String(i),
@@ -511,34 +512,44 @@ export function RunHandlesAndSinks() {
                   onChange={setRunIdx}
                 />
               ) : (
-                <p className="hint">Run: {run.map(name).join(' + ')}</p>
+                <p className="hint">{t('Run: {names}', { names: run.map(name).join(' + ') })}</p>
               )}
-              <Segmented label="Handle" value={kind} options={HANDLE_KINDS} onChange={setKind} />
+              <Segmented
+                label={t('Handle')}
+                value={kind}
+                options={HANDLE_KINDS}
+                onChange={setKind}
+              />
               {kind === 'bar' && (
                 <Select
-                  label="Hole centres"
+                  label={t('Hole centres')}
                   value={spacing}
-                  options={BAR_SPACINGS.map((v) => ({ value: String(v), label: `${v} mm` }))}
+                  options={BAR_SPACINGS.map((v) => ({
+                    value: String(v),
+                    label: t('{n} mm', { n: v }),
+                  }))}
                   onChange={setSpacing}
                 />
               )}
               {kind !== 'push' && (
                 <Segmented<'height' | 'top'>
-                  label="Handle line"
+                  label={t('Handle line')}
                   value={line}
                   options={[
-                    { value: 'height', label: 'Height' },
-                    { value: 'top', label: 'Top of fronts' },
+                    { value: 'height', label: t('Height') },
+                    { value: 'top', label: t('Top of fronts') },
                   ]}
                   onChange={setLine}
                 />
               )}
               {byHeight && (
                 <TypedMm
-                  label="Line height above the floor"
+                  label={t('Line height above the floor')}
                   value={height}
                   onChange={setHeight}
-                  hint="Enter the height; there is no default. A front the line does not cross gets the handle near its top."
+                  hint={t(
+                    'Enter the height; there is no default. A front the line does not cross gets the handle near its top.',
+                  )}
                 />
               )}
               <button
@@ -547,35 +558,35 @@ export function RunHandlesAndSinks() {
                 disabled={!handlesReady}
                 onClick={addHandles}
               >
-                Add handles
+                {t('Add handles')}
               </button>
             </>
           ) : (
-            <p className="hint">No base units on the floor facing the room yet.</p>
+            <p className="hint">{t('No base units on the floor facing the room yet.')}</p>
           )}
         </div>
       )}
       {open === 'sink' && (
-        <div className="run-ask" aria-label="Sink over a base unit" role="group">
+        <div className="run-ask" aria-label={t('Sink over a base unit')} role="group">
           {base ? (
             <>
               <Select
-                label="Sink over"
+                label={t('Sink over')}
                 value={base}
                 options={bases.map((id) => ({ value: id, label: name(id) }))}
                 onChange={setBaseId}
               />
               <TypedMm
-                label="Cut-out width"
+                label={t('Cut-out width')}
                 value={w}
                 onChange={setW}
-                hint="From the sink's installation drawing; there is no default."
+                hint={t("From the sink's installation drawing; there is no default.")}
               />
               <TypedMm
-                label="Cut-out depth"
+                label={t('Cut-out depth')}
                 value={d}
                 onChange={setD}
-                hint="From the sink's installation drawing; there is no default."
+                hint={t("From the sink's installation drawing; there is no default.")}
               />
               <button
                 type="button"
@@ -583,11 +594,11 @@ export function RunHandlesAndSinks() {
                 disabled={sinkW === null || sinkD === null}
                 onClick={addSink}
               >
-                Add sink
+                {t('Add sink')}
               </button>
             </>
           ) : (
-            <p className="hint">No base units on the floor facing the room yet.</p>
+            <p className="hint">{t('No base units on the floor facing the room yet.')}</p>
           )}
         </div>
       )}

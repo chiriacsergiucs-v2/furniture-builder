@@ -1,8 +1,9 @@
 /**
  * The review pack (ADR-121): one package to hand a project to a professional for review, built only from the project
- * and its `buildProjectModel()` (ADR-004). The printed summary and the parts CSV are in Romanian (ADR-020); the
- * problems keep the app's own words. Pure: the caller saves or shares the bytes; the app sends nothing (ADR-002).
+ * and its `buildProjectModel()` (ADR-004). The printed summary and the parts CSV are in the print language (Romanian
+ * by default, ADR-020, ADR-157); the problems keep the app's own words. Pure: the caller saves or shares the bytes; the app sends nothing (ADR-002).
  */
+import { getPrintLang, pt } from './i18n/print';
 import { snapshotSvg } from './snapshot';
 import { cutlistCsvRo } from './ro';
 import { projectCutlist, rotationOf, type Project, type ProjectModel } from './project';
@@ -56,7 +57,7 @@ export function planSvg(pm: ProjectModel, project: Project): string {
     );
   }
   out.push(
-    `<text x="${f1(x0)}" y="${f1(z1 + pad * 0.7)}" font-size="${f1(fs)}" font-family="sans-serif">${Math.round(x1 - x0)} × ${Math.round(z1 - z0)} mm, văzut de sus; linia portocalie = fața</text>`,
+    `<text x="${f1(x0)}" y="${f1(z1 + pad * 0.7)}" font-size="${f1(fs)}" font-family="sans-serif">${pt('{w} × {d} mm, văzut de sus; linia portocalie = fața', { w: Math.round(x1 - x0), d: Math.round(z1 - z0) })}</text>`,
   );
   const vb = [x0 - pad, z0 - pad, x1 - x0 + 2 * pad, z1 - z0 + 2 * pad].map(f1).join(' ');
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}" width="1000" height="${Math.round((1000 * (z1 - z0 + 2 * pad)) / (x1 - x0 + 2 * pad))}">${out.join('')}</svg>\n`;
@@ -73,18 +74,18 @@ export function summaryHtml(pm: ProjectModel, project: Project, date: string): s
     .join('');
   const problems = pm.diagnostics;
   const list = problems.length
-    ? `<ul>${problems.map((d) => `<li><b>${d.severity === 'error' ? 'Eroare' : 'Atenție'}:</b> ${esc(d.message)}</li>`).join('')}</ul>`
-    : '<p>Aplicația nu a găsit probleme.</p>';
+    ? `<ul>${problems.map((d) => `<li><b>${d.severity === 'error' ? pt('Eroare') : pt('Atenție')}:</b> ${esc(d.message)}</li>`).join('')}</ul>`
+    : `<p>${pt('Aplicația nu a găsit probleme.')}</p>`;
   const b = pm.model.bounds;
-  return `<!doctype html><html lang="ro"><head><meta charset="utf-8"><title>${esc(project.name)} — de verificat</title>
+  return `<!doctype html><html lang="${getPrintLang()}"><head><meta charset="utf-8"><title>${esc(project.name)} — ${pt('de verificat')}</title>
 <style>body{font-family:sans-serif;margin:24px;color:#22272a}table{border-collapse:collapse;width:100%}th,td{border:1px solid #999;padding:4px 6px;text-align:left}td.n{text-align:right;font-variant-numeric:tabular-nums}h1{font-size:20px}h2{font-size:16px;margin-top:20px}@media print{body{margin:0}}</style></head>
 <body><h1>${esc(project.name)}</h1>
-<p>Proiect de verificat · ${esc(date)} · gabarit ${b.w} × ${b.h} × ${b.d} mm · ${pm.pieces.length} piese</p>
-<p>Dimensiuni în mm. Poziția este colțul din stânga-spate-jos al piesei (x de la stânga, y de la podea, z de la peretele din spate). Rotirea este în grade, în jurul centrului piesei.</p>
-<h2>Piese</h2>
-<table><thead><tr><th>Piesă</th><th>Buc.</th><th>Lățime × înălțime × adâncime</th><th>Poziție x / y / z</th><th>Rotire</th></tr></thead><tbody>${rows}</tbody></table>
-<h2>Probleme găsite de aplicație</h2>${list}
-<h2>Fișiere</h2><p>Lista de piese (CSV), planul văzut de sus și vederea 3D (SVG), fișierul proiectului (JSON, se deschide în aplicație).</p>
+<p>${pt('Proiect de verificat')} · ${esc(date)} · ${pt('gabarit {w} × {h} × {d} mm', { w: b.w, h: b.h, d: b.d })} · ${pt('{n} piese', { n: pm.pieces.length })}</p>
+<p>${pt('Dimensiuni în mm. Poziția este colțul din stânga-spate-jos al piesei (x de la stânga, y de la podea, z de la peretele din spate). Rotirea este în grade, în jurul centrului piesei.')}</p>
+<h2>${pt('Piese')}</h2>
+<table><thead><tr><th>${pt('Piesă')}</th><th>${pt('Buc.')}</th><th>${pt('Lățime × înălțime × adâncime')}</th><th>${pt('Poziție x / y / z')}</th><th>${pt('Rotire')}</th></tr></thead><tbody>${rows}</tbody></table>
+<h2>${pt('Probleme găsite de aplicație')}</h2>${list}
+<h2>${pt('Fișiere')}</h2><p>${pt('Lista de piese (CSV), planul văzut de sus și vederea 3D (SVG), fișierul proiectului (JSON, se deschide în aplicație).')}</p>
 </body></html>
 `;
 }
@@ -102,12 +103,12 @@ export function reviewPackFiles(
 ): PackFile[] {
   return [
     {
-      name: `${base}-rezumat.html`,
+      name: `${base}-${pt('rezumat')}.html`,
       text: summaryHtml(pm, project, date),
       what: 'Summary to print',
     },
     {
-      name: `${base}-piese.csv`,
+      name: `${base}-${pt('piese')}.csv`,
       text: cutlistCsvRo(projectCutlist(project)),
       what: 'Parts list (CSV)',
     },
@@ -117,7 +118,11 @@ export function reviewPackFiles(
       text: snapshotSvg(pm.model, pm.materials, 900),
       what: '3D view (SVG)',
     },
-    { name: `${base}-proiect.json`, text: projectJson, what: 'Project file (opens in this app)' },
+    {
+      name: `${base}-${pt('proiect')}.json`,
+      text: projectJson,
+      what: 'Project file (opens in this app)',
+    },
   ];
 }
 

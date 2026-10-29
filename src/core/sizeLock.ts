@@ -4,12 +4,13 @@
  * would resize it — an edit, a linked copy's change (ADR-111), Replace (ADR-098) — is refused with the piece's name.
  * Its boards, insides and place can still change. Pure; sizes come from the built model (ADR-004).
  */
+import { t } from './i18n';
 import { buildModel } from './build';
 import { pieceName, type Project, type ProjectItem } from './project';
 import type { Design } from './types';
 
 /** The hint shown where a size-locked piece's size would be changed. */
-export const SIZE_LOCKED_HINT = 'Size locked — unlock to change';
+export const SIZE_LOCKED_HINT = t('Size locked — unlock to change');
 
 export const isSizeLocked = (item: Pick<ProjectItem, 'sizeLocked'> | undefined): boolean =>
   !!item?.sizeLocked;
@@ -42,7 +43,9 @@ export function sameSize(a: Design, b: Design): boolean {
 export function resizeBlocked(project: Project, id: string, next: Design): string | null {
   const it = project.items.find((i) => i.id === id);
   if (!it || !isSizeLocked(it) || sameSize(it.design, next)) return null;
-  return `${pieceName(project, id)} has its size locked — unlock its size to change it.`;
+  return t('{name} has its size locked — unlock its size to change it.', {
+    name: pieceName(project, id),
+  });
 }
 
 /**

@@ -5,6 +5,7 @@
  */
 import { defaultMaterials, fr, mm, newId } from '../design';
 import { FUNCTION_LABEL, FUNCTIONS } from '../catalog/types';
+import { t, type Key } from '../i18n';
 import type {
   CabinetParams,
   Design,
@@ -147,24 +148,25 @@ export const contentUses = (kind: string) =>
 const BOARD_OPTIONS: Option[] = defaultMaterials()
   .filter((m) => m.thickness >= 16)
   .map((m) => ({ value: m.id, label: `${m.name} (${m.thickness} mm)` }));
-const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
-
 function contentText(c: Compartment): string {
   switch (c.kind) {
     case 'open':
-      return 'open';
+      return t('open');
     case 'drawers':
-      return plural(c.drawers, 'drawer');
+      return t('{n|# drawer|# drawers}', { n: c.drawers });
     case 'hanging':
-      return 'hanging rail';
+      return t('hanging rail');
     case 'shelves-drawers':
-      return `${plural(c.shelves, 'shelf', 'shelves')} over ${plural(c.drawers, 'drawer')}`;
+      return t('{s|# shelf|# shelves} over {d|# drawer|# drawers}', {
+        s: c.shelves,
+        d: c.drawers,
+      });
     default:
-      return c.shelves ? plural(c.shelves, 'shelf', 'shelves') : 'open';
+      return c.shelves ? t('{n|# shelf|# shelves}', { n: c.shelves }) : t('open');
   }
 }
 
-const FRONT_TEXT: Record<string, string> = {
+const FRONT_TEXT: Record<string, Key> = {
   none: 'no doors',
   single: 'one door',
   pair: 'pair of doors',
@@ -231,7 +233,8 @@ export const STEPS: StepDef[] = [
         ...(category ? { catalog: { ...d.catalog, category } } : {}),
       };
     },
-    summary: (a) => `${num(a, 'width')} × ${num(a, 'height')} × ${num(a, 'depth')} mm`,
+    summary: (a) =>
+      t('{w} × {h} × {d} mm', { w: num(a, 'width'), h: num(a, 'height'), d: num(a, 'depth') }),
   },
   {
     id: TYPE,
@@ -297,10 +300,8 @@ export const STEPS: StepDef[] = [
       }),
     summary: (a) => {
       const n = compartmentCount(a) - 1;
-      return (
-        (n ? plural(n, 'divider') : 'no dividers') +
-        (n && str(a, 'spacing') === 'custom' ? ' (custom widths)' : '')
-      );
+      const text = n ? t('{n|# divider|# dividers}', { n }) : t('no dividers');
+      return n && str(a, 'spacing') === 'custom' ? t('{text} (custom widths)', { text }) : text;
     },
   },
   {
@@ -327,8 +328,12 @@ export const STEPS: StepDef[] = [
         };
       }),
     summary: (a) => {
-      const t = compartmentsOf(a).map(contentText);
-      return t.every((x) => x === t[0]) ? (t.length > 1 ? `${t[0]} each` : t[0]) : t.join(' | ');
+      const texts = compartmentsOf(a).map(contentText);
+      return texts.every((x) => x === texts[0])
+        ? texts.length > 1
+          ? t('{text} each', { text: texts[0] })
+          : texts[0]
+        : texts.join(' | ');
     },
   },
   {
@@ -389,11 +394,12 @@ export const STEPS: StepDef[] = [
       }),
     summary: (a) => {
       const f = str(a, 'fronts', 'none');
-      if (f !== 'per') return FRONT_TEXT[f] ?? '';
+      const text = (v: string) => (FRONT_TEXT[v] ? t(FRONT_TEXT[v]) : '');
+      if (f !== 'per') return text(f);
       const per = listOf<string>(a, 'frontsPer', 'none');
-      if (per.length === 1) return FRONT_TEXT[per[0]] ?? '';
+      if (per.length === 1) return text(per[0]);
       const n = per.filter((x) => x !== 'none').length;
-      return n ? `doors on ${plural(n, 'compartment')}` : 'no doors';
+      return n ? t('doors on {n|# compartment|# compartments}', { n }) : t('no doors');
     },
   },
   {
@@ -434,8 +440,9 @@ export const STEPS: StepDef[] = [
         };
       }),
     summary: (a) =>
-      ({ plinth: 'on a plinth', none: 'no plinth', wall: 'wall-hung' })[str(a, 'base', 'plinth')] ??
-      '',
+      ({ plinth: t('on a plinth'), none: t('no plinth'), wall: t('wall-hung') })[
+        str(a, 'base', 'plinth')
+      ] ?? '',
   },
   {
     id: 'carcass',
@@ -457,7 +464,7 @@ export const STEPS: StepDef[] = [
     apply: (a, d) =>
       onCabinet(d, (p) => ({ ...p, back: str(a, 'back', 'applied') as CabinetParams['back'] })),
     summary: (a) =>
-      ({ applied: 'back panel', inset: 'set-in back', none: 'open back' })[
+      ({ applied: t('back panel'), inset: t('set-in back'), none: t('open back') })[
         str(a, 'back', 'applied')
       ] ?? '',
   },
@@ -516,10 +523,10 @@ export const STEPS: StepDef[] = [
       })),
     summary: (a) =>
       [
-        str(a, 'top') === 'slats' ? 'slatted top' : 'panel top',
-        { box: 'box stretchers', h: 'H stretchers' }[str(a, 'stretchers')] ?? '',
-        str(a, 'lowerShelf') === 'yes' ? 'lower shelf' : '',
-        `${num(a, 'legSize')} mm legs`,
+        str(a, 'top') === 'slats' ? t('slatted top') : t('panel top'),
+        { box: t('box stretchers'), h: t('H stretchers') }[str(a, 'stretchers')] ?? '',
+        str(a, 'lowerShelf') === 'yes' ? t('lower shelf') : '',
+        t('{n} mm legs', { n: num(a, 'legSize') }),
       ]
         .filter(Boolean)
         .join(' · '),
@@ -579,13 +586,15 @@ export const STEPS: StepDef[] = [
     summary: (a) => {
       const s = str(a, 'support');
       const ped = {
-        'pedestal-left': 'pedestal left',
-        'pedestal-right': 'pedestal right',
-        'two-pedestals': 'two pedestals',
+        'pedestal-left': t('pedestal left'),
+        'pedestal-right': t('pedestal right'),
+        'two-pedestals': t('two pedestals'),
       }[s];
       return [
-        ped ? `${ped}, ${plural(num(a, 'pedestalDrawers'), 'drawer')} each` : 'two gables',
-        str(a, 'modesty') === 'yes' ? 'modesty panel' : '',
+        ped
+          ? t('{ped}, {n|# drawer|# drawers} each', { ped, n: num(a, 'pedestalDrawers') })
+          : t('two gables'),
+        str(a, 'modesty') === 'yes' ? t('modesty panel') : '',
       ]
         .filter(Boolean)
         .join(' · ');
@@ -632,9 +641,11 @@ export const STEPS: StepDef[] = [
       ),
     summary: (a) =>
       [
-        `${num(a, 'mattressWidth')} × ${num(a, 'mattressLength')} mattress`,
-        `slats at ${num(a, 'deckHeight')} mm`,
-        str(a, 'footboard') === 'yes' ? `footboard ${num(a, 'footboardHeight')} mm` : 'low foot',
+        t('{w} × {l} mattress', { w: num(a, 'mattressWidth'), l: num(a, 'mattressLength') }),
+        t('slats at {n} mm', { n: num(a, 'deckHeight') }),
+        str(a, 'footboard') === 'yes'
+          ? t('footboard {n} mm', { n: num(a, 'footboardHeight') })
+          : t('low foot'),
       ].join(' · '),
   },
   {

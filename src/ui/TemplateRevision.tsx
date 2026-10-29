@@ -15,6 +15,8 @@ import { useCatalog, useLocalTemplates } from './Catalog';
 import { askConfirm } from './Confirm';
 import { Icon } from './icons';
 import { useUi } from './shell/uiStore';
+import { t, tr } from '../core/i18n';
+import { tNode } from './i18n';
 
 /**
  * The template status of a piece or saved design against the catalog and this device's templates (ADR-096); null until
@@ -33,7 +35,10 @@ export function useTemplateStatus(item: {
 
 /** "Template updated (revision 3 → 4)" — the notice text (ADR-096). */
 export const updatedText = (s: { revision: number; latest: number }) =>
-  `Template updated (revision ${s.revision} → ${s.latest})`;
+  t('Template updated (revision {revision} → {latest})', {
+    revision: s.revision,
+    latest: s.latest,
+  });
 
 /** The variant a piece was taken from, in the catalog as this device shows it; null when it cannot be built. */
 function originVariant(families: ViewFamily[], d: Design) {
@@ -55,25 +60,31 @@ export function TemplateNotice({ item }: { item: ProjectItem }) {
   if (status.kind === 'own')
     return (
       <p className="hint template-line">
-        <Icon name="pencil" className="sm" /> Your own design
+        <Icon name="pencil" className="sm" /> {t('Your own design')}
       </p>
     );
   const from = (
     <>
-      From <em>{status.name}</em>, revision {status.revision}
+      {tNode('From {name}, revision {revision}', {
+        name: <em>{tr(status.name)}</em>,
+        revision: String(status.revision),
+      })}
     </>
   );
   if (status.kind === 'gone')
     return (
       <p className="hint template-line">
-        <Icon name="catalog" className="sm" /> {from} (the template is no longer in the catalog)
+        <Icon name="catalog" className="sm" /> {from}{' '}
+        {t('(the template is no longer in the catalog)')}
       </p>
     );
   if (status.kind === 'current')
     return (
       <p className="hint template-line">
         <Icon name="catalog" className="sm" /> {from}
-        {status.kept ? ` (kept; the template is at revision ${status.latest})` : ''}
+        {status.kept
+          ? ` ${t('(kept; the template is at revision {latest})', { latest: status.latest })}`
+          : ''}
       </p>
     );
   const source = originVariant(families, item.design);
@@ -83,8 +94,11 @@ export function TemplateNotice({ item }: { item: ProjectItem }) {
     if (
       designEdited(item.design) &&
       !(await askConfirm(
-        `“${item.design.name}” was edited after it was added. Its own changes go onto revision ${status.latest} where it has the same setting; the result lists what was kept and what was not. Position, turn, quantity, placement, zones and boards stay.`,
-        { confirmLabel: 'Replace' },
+        t(
+          '“{name}” was edited after it was added. Its own changes go onto revision {latest} where it has the same setting; the result lists what was kept and what was not. Position, turn, quantity, placement, zones and boards stay.',
+          { name: item.design.name, latest: status.latest },
+        ),
+        { confirmLabel: t('Replace') },
       ))
     )
       return;
@@ -100,21 +114,26 @@ export function TemplateNotice({ item }: { item: ProjectItem }) {
     <div className="alert info template-notice" role="status">
       <Icon name="info" className="sm" />
       <span>
-        <strong>{updatedText(status)}</strong>. {from}; nothing changes unless you choose.
+        {tNode('{updated}. {from}; nothing changes unless you choose.', {
+          updated: <strong>{updatedText(status)}</strong>,
+          from,
+        })}
       </span>
       <div className="split-actions">
         <button type="button" className="btn sm" onClick={() => keep(item.id, status.latest)}>
-          Keep mine
+          {t('Keep mine')}
         </button>
         {source && (
           <button type="button" className="btn sm" onClick={() => void replace()}>
-            Replace with the new revision
+            {t('Replace with the new revision')}
           </button>
         )}
       </div>
       {!source && (
         <p className="hint">
-          The item it was taken from is no longer in the template; use Replace… to choose another.
+          {t(
+            'The item it was taken from is no longer in the template; use Replace… to choose another.',
+          )}
         </p>
       )}
     </div>
@@ -131,7 +150,8 @@ export function NewerTemplates({ items }: { items: ProjectItem[] }) {
   if (!n) return null;
   return (
     <p className="hint template-count" role="status">
-      <Icon name="info" className="sm" /> {newerText(n)}. Select one to keep it or replace it.
+      <Icon name="info" className="sm" /> {newerText(n)}.{' '}
+      {t('Select one to keep it or replace it.')}
     </p>
   );
 }

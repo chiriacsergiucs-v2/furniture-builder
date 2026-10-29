@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import type { RemoteRecord } from '../core/account';
+import { t, type Key } from '../core/i18n';
 import { STATE_LABEL, TABLE_OF, type LocalTable } from '../core/sync';
 import {
   continueWithGoogle,
@@ -22,6 +23,7 @@ import {
 } from '../store/accountStore';
 import { useDesign } from '../store/designStore';
 import { Dialog } from './Dialogs';
+import { tNode } from './i18n';
 import { Icon } from './icons';
 
 /** Offline: sign-in buttons are disabled with this line (ADR-136). */
@@ -54,8 +56,8 @@ export function AccountButton() {
     <button
       type="button"
       className={`btn icon account-btn${user ? ' signed-in' : ''}`}
-      aria-label="Account"
-      title={user ? `Signed in as ${user.email}` : 'Sign in'}
+      aria-label={t('Account')}
+      title={user ? t('Signed in as {email}', { email: user.email }) : t('Sign in')}
       onClick={() => setDialog(user ? 'account' : 'sign-in')}
     >
       {user ? (
@@ -74,18 +76,20 @@ export function SyncStatus() {
   const setDialog = useAccount((s) => s.setDialog);
   if (!user) return null;
   const text = !sync
-    ? 'Your account'
+    ? t('Your account')
     : sync.state === 'syncing'
-      ? 'Uploading…'
+      ? t('Uploading…')
       : sync.state === 'offline'
-        ? `Waiting for a connection${sync.waiting ? ` (${sync.waiting})` : ''}`
+        ? sync.waiting
+          ? t('Waiting for a connection ({n})', { n: sync.waiting })
+          : t('Waiting for a connection')
         : sync.state === 'error'
-          ? 'Upload failed — Retry'
+          ? t('Upload failed — Retry')
           : sync.conflicts.length
-            ? `Kept both: ${sync.conflicts.length}`
+            ? t('Kept both: {n}', { n: sync.conflicts.length })
             : sync.waiting
-              ? `Waiting to upload (${sync.waiting})`
-              : 'In your account';
+              ? t('Waiting to upload ({n})', { n: sync.waiting })
+              : t('In your account');
   const tone =
     sync?.state === 'error'
       ? 'failed'
@@ -134,23 +138,27 @@ export function AccountRowActions({
   if (!user) return null;
   return (
     <details className="menu row-menu account-row">
-      <summary className="btn sm icon" aria-label={`Account actions for ${name}`} title="Account">
+      <summary
+        className="btn sm icon"
+        aria-label={t('Account actions for {name}', { name })}
+        title={t('Account')}
+      >
         <Icon name="cloud" className="sm" />
       </summary>
       <div className="menu-items">
         <button type="button" onClick={() => set({ shareFor: { table, id, name } })}>
           <Icon name="link" />
-          Share link
+          {t('Share link')}
         </button>
         {state === 'device-only' ? (
           <button type="button" onClick={() => void setDeviceOnly(table, id, false)}>
             <Icon name="cloud" />
-            Save to account
+            {t('Save to account')}
           </button>
         ) : (
           <button type="button" onClick={() => void setDeviceOnly(table, id, true)}>
             <Icon name="hdd" />
-            Keep on this device only <small>removes it from your account</small>
+            {t('Keep on this device only')} <small>{t('removes it from your account')}</small>
           </button>
         )}
       </div>
@@ -178,12 +186,12 @@ export function InYourAccount({ onOpened }: { onOpened: () => void }) {
         useDesign.getState().load(d, { fromStorage: true });
         onOpened();
       }
-    } else setMsg(`“${r.name}” is now in Catalog › Templates on this device.`);
+    } else setMsg(t('“{name}” is now in Catalog › Templates on this device.', { name: r.name }));
   };
   return (
     <section className="home-section" aria-labelledby="home-account">
       <div className="home-section-head">
-        <h2 id="home-account">In your account</h2>
+        <h2 id="home-account">{t('In your account')}</h2>
       </div>
       {msg && (
         <p className="alert info" role="status">
@@ -200,7 +208,8 @@ export function InYourAccount({ onOpened }: { onOpened: () => void }) {
               <span>
                 <strong>{r.name}</strong>
                 <span className="sub">
-                  {r.kind === 'template' ? 'Template' : 'Piece'} · not on this device · Open
+                  {r.kind === 'template' ? t('Template') : t('Piece')} · {t('not on this device')} ·{' '}
+                  {t('Open')}
                 </span>
               </span>
             </button>
@@ -220,7 +229,7 @@ function Field({
   hint,
   error,
 }: {
-  label: string;
+  label: Key;
   type: string;
   value: string;
   onChange: (v: string) => void;
@@ -231,7 +240,7 @@ function Field({
   const id = `acct-${label.toLowerCase().replace(/\W+/g, '-')}`;
   return (
     <div className="field">
-      <label htmlFor={id}>{label}</label>
+      <label htmlFor={id}>{t(label)}</label>
       <input
         id={id}
         className="input"
@@ -251,8 +260,9 @@ function Field({
   );
 }
 
-const PASSWORD_HINT =
-  'The sign-in service sets the minimum length and says if a password is too short.';
+const PASSWORD_HINT = t(
+  'The sign-in service sets the minimum length and says if a password is too short.',
+);
 
 /** The account dialog and every state of ADR-136. Each state starts with empty password fields. */
 export function AccountDialog() {
@@ -277,7 +287,7 @@ function AccountDialogState({ dialog }: { dialog: NonNullable<Dialogs> }) {
   const offline = !isOnline && (
     <p className="alert info" role="status">
       <Icon name="info" className="sm" />
-      <span>You are offline. Your designs still work on this device.</span>
+      <span>{t('You are offline. Your designs still work on this device.')}</span>
     </p>
   );
   const err = error && (
@@ -292,14 +302,14 @@ function AccountDialogState({ dialog }: { dialog: NonNullable<Dialogs> }) {
   };
   const privacyLink = (
     <button type="button" className="btn link" onClick={() => setDialog('privacy')}>
-      Privacy notice
+      {t('Privacy notice')}
     </button>
   );
   let title: string;
   let body: ReactNode;
   if (dialog === 'sign-in' || dialog === 'create') {
     const creating = dialog === 'create';
-    title = creating ? 'Create account' : 'Sign in';
+    title = creating ? t('Create account') : t('Sign in');
     body = (
       <form
         className="account-form"
@@ -308,8 +318,9 @@ function AccountDialogState({ dialog }: { dialog: NonNullable<Dialogs> }) {
         )}
       >
         <p>
-          Sign in to save your pieces and templates to your account. Everything still works on this
-          device without an account.
+          {t(
+            'Sign in to save your pieces and templates to your account. Everything still works on this device without an account.',
+          )}
         </p>
         {offline}
         <button
@@ -318,10 +329,10 @@ function AccountDialogState({ dialog }: { dialog: NonNullable<Dialogs> }) {
           disabled={busy || !isOnline}
           onClick={() => void continueWithGoogle()}
         >
-          Continue with Google
+          {t('Continue with Google')}
         </button>
         <p className="or" aria-hidden="true">
-          or
+          {t('or')}
         </p>
         <Field
           label="Email"
@@ -346,15 +357,15 @@ function AccountDialogState({ dialog }: { dialog: NonNullable<Dialogs> }) {
           className={`btn primary block${busy ? ' loading' : ''}`}
           disabled={busy || !isOnline || !email.trim() || !password}
         >
-          {creating ? 'Create account' : 'Sign in'}
+          {creating ? t('Create account') : t('Sign in')}
         </button>
         <p className="hint">
-          Your sign-in is kept on this device so the app opens signed in, offline too.
+          {t('Your sign-in is kept on this device so the app opens signed in, offline too.')}
         </p>
         <div className="account-links">
           {!creating && (
             <button type="button" className="btn link" onClick={() => setDialog('forgot')}>
-              Forgot password?
+              {t('Forgot password?')}
             </button>
           )}
           <button
@@ -362,17 +373,17 @@ function AccountDialogState({ dialog }: { dialog: NonNullable<Dialogs> }) {
             className="btn link"
             onClick={() => setDialog(creating ? 'sign-in' : 'create')}
           >
-            {creating ? 'I have an account' : 'Create account'}
+            {creating ? t('I have an account') : t('Create account')}
           </button>
           {privacyLink}
         </div>
       </form>
     );
   } else if (dialog === 'forgot') {
-    title = 'Forgot password';
+    title = t('Forgot password');
     body = (
       <form className="account-form" onSubmit={submit(() => void sendReset(email.trim()))}>
-        <p>We will send a link to reset your password.</p>
+        <p>{t('We will send a link to reset your password.')}</p>
         {offline}
         <Field
           label="Email"
@@ -388,27 +399,29 @@ function AccountDialogState({ dialog }: { dialog: NonNullable<Dialogs> }) {
           className={`btn primary block${busy ? ' loading' : ''}`}
           disabled={busy || !isOnline || !email.trim()}
         >
-          Send reset link
+          {t('Send reset link')}
         </button>
         <div className="account-links">
           <button type="button" className="btn link" onClick={() => setDialog('sign-in')}>
-            Back to sign in
+            {t('Back to sign in')}
           </button>
         </div>
       </form>
     );
   } else if (dialog === 'forgot-sent') {
-    title = 'Check your inbox';
+    title = t('Check your inbox');
     body = (
       <div className="account-form">
-        <p role="status">If an account exists for {email}, we sent a link. Check your inbox.</p>
+        <p role="status">
+          {t('If an account exists for {email}, we sent a link. Check your inbox.', { email })}
+        </p>
         <button type="button" className="btn block" onClick={() => setDialog('sign-in')}>
-          Back to sign in
+          {t('Back to sign in')}
         </button>
       </div>
     );
   } else if (dialog === 'reset') {
-    title = 'Reset password';
+    title = t('Reset password');
     body = (
       <form
         className="account-form"
@@ -439,39 +452,40 @@ function AccountDialogState({ dialog }: { dialog: NonNullable<Dialogs> }) {
         />
         {mismatch && (
           <p className="alert error" role="alert">
-            The two passwords are not the same.
+            {t('The two passwords are not the same.')}
           </p>
         )}
         {err}
-        {error && /expired/i.test(error) && (
-          <button type="button" className="btn block" onClick={() => setDialog('forgot')}>
-            Send a new link
-          </button>
-        )}
+        {error &&
+          (/expired/i.test(error) || error === t('This link has expired. Ask for a new one.')) && (
+            <button type="button" className="btn block" onClick={() => setDialog('forgot')}>
+              {t('Send a new link')}
+            </button>
+          )}
         <button
           type="submit"
           className={`btn primary block${busy ? ' loading' : ''}`}
           disabled={busy || !password || !confirm}
         >
-          Save new password
+          {t('Save new password')}
         </button>
       </form>
     );
   } else if (dialog === 'account' && user) {
-    title = 'Account';
+    title = t('Account');
     body = <AccountPanel />;
   } else if (dialog === 'sign-out' && user) {
-    title = 'Sign out';
+    title = t('Sign out');
     body = (
       <div className="account-form">
-        <p>Sign out of {user.email}? Your designs stay on this device.</p>
+        <p>{t('Sign out of {email}? Your designs stay on this device.', { email: user.email })}</p>
         <button
           type="button"
           className={`btn outline block${busy ? ' loading' : ''}`}
           disabled={busy}
           onClick={() => void signOut(false)}
         >
-          Sign out
+          {t('Sign out')}
         </button>
         <button
           type="button"
@@ -479,20 +493,21 @@ function AccountDialogState({ dialog }: { dialog: NonNullable<Dialogs> }) {
           disabled={busy}
           onClick={() => void signOut(true)}
         >
-          Sign out and remove this account’s copies from this device
+          {t('Sign out and remove this account’s copies from this device')}
         </button>
         <button type="button" className="btn ghost block" onClick={() => setDialog('account')}>
-          Cancel
+          {t('Cancel')}
         </button>
       </div>
     );
   } else if (dialog === 'delete' && user) {
-    title = 'Delete my account';
+    title = t('Delete my account');
     body = (
       <form className="account-form" onSubmit={submit(() => void deleteMyAccount())}>
         <p>
-          This deletes your account, every item saved in it and every share link, at once. It cannot
-          be undone. Your designs on this device stay. Type your email to confirm.
+          {t(
+            'This deletes your account, every item saved in it and every share link, at once. It cannot be undone. Your designs on this device stay. Type your email to confirm.',
+          )}
         </p>
         <Field
           label="Your email"
@@ -507,15 +522,15 @@ function AccountDialogState({ dialog }: { dialog: NonNullable<Dialogs> }) {
           className={`btn danger block${busy ? ' loading' : ''}`}
           disabled={busy || !isOnline || typed.trim() !== user.email}
         >
-          Delete my account
+          {t('Delete my account')}
         </button>
         <button type="button" className="btn ghost block" onClick={() => setDialog('account')}>
-          Cancel
+          {t('Cancel')}
         </button>
       </form>
     );
   } else if (dialog === 'privacy') {
-    title = 'Privacy notice';
+    title = t('Privacy notice');
     body = <PrivacyNotice />;
   } else return null;
   return (
@@ -523,7 +538,7 @@ function AccountDialogState({ dialog }: { dialog: NonNullable<Dialogs> }) {
       <div className="account-dialog">{body}</div>
       {known.length > 0 && (dialog === 'sign-in' || dialog === 'create') && (
         <div className="account-known">
-          <p className="hint">Used on this device:</p>
+          <p className="hint">{t('Used on this device:')}</p>
           {known.map((k) => (
             <span key={k.user.id} className="account-known-row">
               <button type="button" className="btn sm" onClick={() => setEmail(k.user.email)}>
@@ -532,7 +547,7 @@ function AccountDialogState({ dialog }: { dialog: NonNullable<Dialogs> }) {
               <button
                 type="button"
                 className="btn sm ghost"
-                aria-label={`Forget ${k.user.email} on this device`}
+                aria-label={t('Forget {email} on this device', { email: k.user.email })}
                 onClick={() => forgetAccount(k.user.id)}
               >
                 <Icon name="x" className="sm" />
@@ -569,29 +584,31 @@ function AccountPanel() {
           {user.name && <strong>{user.name}</strong>}
           <span className="sub">{user.email}</span>
           <span className="sub">
-            {user.provider === 'google' ? 'Signed in with Google' : 'Signed in with email'}
+            {user.provider === 'google' ? t('Signed in with Google') : t('Signed in with email')}
           </span>
         </span>
       </p>
       {sync && (
         <p className="hint" role="status">
           {sync.state === 'offline'
-            ? 'Offline: changes wait on this device and upload when you are back online.'
+            ? t('Offline: changes wait on this device and upload when you are back online.')
             : sync.waiting
-              ? `${sync.waiting} waiting to upload.`
-              : 'Everything is in your account.'}
+              ? t('{n} waiting to upload.', { n: sync.waiting })
+              : t('Everything is in your account.')}
           {sync.conflicts.length > 0 &&
-            ` Changed on two devices, both kept: ${sync.conflicts.join(', ')}.`}
+            t(' Changed on two devices, both kept: {names}.', {
+              names: sync.conflicts.join(', '),
+            })}
         </p>
       )}
       <button type="button" className="btn" disabled={busy} onClick={() => void syncNow()}>
         <Icon name="refresh" className="sm" />
-        Sync now
+        {t('Sync now')}
       </button>
       <SharedLinks />
       {others.length > 0 && (
         <div className="account-switch">
-          <p className="hint">Other accounts on this device</p>
+          <p className="hint">{t('Other accounts on this device')}</p>
           {others.map((k) => (
             <button
               key={k.user.id}
@@ -599,14 +616,14 @@ function AccountPanel() {
               className="btn sm"
               onClick={() => void switchTo(k.user.email)}
             >
-              Switch to {k.user.email}
+              {t('Switch to {email}', { email: k.user.email })}
             </button>
           ))}
         </div>
       )}
       <button type="button" className="btn" onClick={() => void switchTo('')}>
         <Icon name="plus" className="sm" />
-        Add another account
+        {t('Add another account')}
       </button>
       {error && (
         <p className="alert error" role="alert">
@@ -616,17 +633,17 @@ function AccountPanel() {
       <div className="btn-row">
         <button type="button" className="btn" disabled={busy} onClick={() => void exportMyData()}>
           <Icon name="download" className="sm" />
-          Export my data
+          {t('Export my data')}
         </button>
         <button type="button" className="btn danger" onClick={() => setDialog('delete')}>
-          Delete my account
+          {t('Delete my account')}
         </button>
       </div>
       <button type="button" className="btn outline block" onClick={() => setDialog('sign-out')}>
-        Sign out
+        {t('Sign out')}
       </button>
       <button type="button" className="btn link" onClick={() => setDialog('privacy')}>
-        Privacy notice
+        {t('Privacy notice')}
       </button>
     </div>
   );
@@ -654,11 +671,11 @@ function SharedLinks() {
   if (!live.length) return null;
   return (
     <div className="shared-links">
-      <p className="hint">Shared links</p>
+      <p className="hint">{t('Shared links')}</p>
       <ul className="plain">
         {live.map((s) => (
           <li key={s.id}>
-            <span>{s.name || 'Item'}</span>
+            <span>{s.name || t('Item')}</span>
             <button
               type="button"
               className="btn sm"
@@ -667,7 +684,7 @@ function SharedLinks() {
                 setRound((n) => n + 1);
               }}
             >
-              Stop sharing
+              {t('Stop sharing')}
             </button>
           </li>
         ))}
@@ -677,7 +694,7 @@ function SharedLinks() {
 }
 
 /**
- * The privacy notice (ADR-130), in English (G-231). Engineering guidance, not legal advice; not reviewed by a lawyer
+ * The privacy notice (ADR-130), in English (G-231) or Russian (ADR-153). Engineering guidance, not legal advice; not reviewed by a lawyer
  * (G-233, the user's decision).
  */
 export function PrivacyNotice() {
@@ -686,52 +703,61 @@ export function PrivacyNotice() {
   return (
     <div className="privacy">
       <p>
-        Furniture Builder works on this device without an account and then sends nothing anywhere.
-        This notice is about the optional account.
+        {t(
+          'Furniture Builder works on this device without an account and then sends nothing anywhere. This notice is about the optional account.',
+        )}
       </p>
-      <h3>Who is responsible</h3>
+      <h3>{t('Who is responsible')}</h3>
       <p>
-        The app’s owner, a private person. Contact:{' '}
-        <a href="mailto:Beliserii@gmail.com">Beliserii@gmail.com</a>.
+        {tNode('The app’s owner, a private person. Contact: {email}.', {
+          email: <a href="mailto:Beliserii@gmail.com">Beliserii@gmail.com</a>,
+        })}
       </p>
-      <h3>What is stored, and why</h3>
+      <h3>{t('What is stored, and why')}</h3>
       <ul>
-        <li>Your email address, and your name if you sign in with Google: to sign you in.</li>
         <li>
-          The pieces and templates you save to your account, and the board pictures they use: to
-          keep them for you and open them on your other devices.
+          {t('Your email address, and your name if you sign in with Google: to sign you in.')}
         </li>
-        <li>The share links you make: so people with a link can open a copy of that item.</li>
+        <li>
+          {t(
+            'The pieces and templates you save to your account, and the board pictures they use: to keep them for you and open them on your other devices.',
+          )}
+        </li>
+        <li>
+          {t('The share links you make: so people with a link can open a copy of that item.')}
+        </li>
       </ul>
-      <p>No tracking, analytics or advertising. Nothing is sold or shared for marketing.</p>
-      <h3>Where</h3>
+      <p>{t('No tracking, analytics or advertising. Nothing is sold or shared for marketing.')}</p>
+      <h3>{t('Where')}</h3>
       <p>
-        With Supabase, the app’s database and sign-in service, in a data centre in the European
-        Union. Google signs you in when you choose Continue with Google.
+        {t(
+          'With Supabase, the app’s database and sign-in service, in a data centre in the European Union. Google signs you in when you choose Continue with Google.',
+        )}
       </p>
-      <h3>On this device</h3>
+      <h3>{t('On this device')}</h3>
       <p>
-        Your sign-in is kept in this browser’s storage so the app opens signed in, offline too. It
-        is strictly needed for the account you asked for; nothing else is stored for the account.
+        {t(
+          'Your sign-in is kept in this browser’s storage so the app opens signed in, offline too. It is strictly needed for the account you asked for; nothing else is stored for the account.',
+        )}
       </p>
-      <h3>How long</h3>
+      <h3>{t('How long')}</h3>
       <p>
-        Until you delete it. An item you delete stays in your account’s Trash for 7 days. Delete my
-        account removes your account, every item in it and every share link at once; the service’s
-        own backups age out on its schedule.
+        {t(
+          'Until you delete it. An item you delete stays in your account’s Trash for 7 days. Delete my account removes your account, every item in it and every share link at once; the service’s own backups age out on its schedule.',
+        )}
       </p>
-      <h3>Your rights</h3>
+      <h3>{t('Your rights')}</h3>
       <p>
-        You can see and download your data (Export my data), correct it, and delete it (Delete my
-        account), or write to the contact above. You can also complain to the Romanian data
-        protection authority (ANSPDCP).
+        {t(
+          'You can see and download your data (Export my data), correct it, and delete it (Delete my account), or write to the contact above. You can also complain to the Romanian data protection authority (ANSPDCP).',
+        )}
       </p>
       <button
         type="button"
         className="btn block"
         onClick={() => setDialog(user ? 'account' : 'sign-in')}
       >
-        Back
+        {t('Back')}
       </button>
     </div>
   );

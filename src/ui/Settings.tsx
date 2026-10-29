@@ -1,3 +1,4 @@
+import { t } from '../core/i18n';
 import { useDesign } from '../store/designStore';
 import { InfoTip } from './controls';
 import { Dialog, MaterialsPanel } from './Dialogs';
@@ -26,18 +27,18 @@ export function SettingsDialog({ onWizard }: { onWizard: () => void }) {
     <Dialog
       open={open}
       onClose={close}
-      title={`Settings: ${name}`}
+      title={t('Settings: {name}', { name })}
       info={
         inProject ? (
-          <InfoTip label="About project settings" align="start">
-            These apply to every piece in {name}.
+          <InfoTip label={t('About project settings')} align="start">
+            {t('These apply to every piece in {name}.', { name })}
           </InfoTip>
         ) : undefined
       }
       wide
       footer={
         <button type="button" className="btn primary" onClick={close}>
-          Done
+          {t('Done')}
         </button>
       }
     >
@@ -45,7 +46,7 @@ export function SettingsDialog({ onWizard }: { onWizard: () => void }) {
         <div className="settings-body">
           {wizard && (
             <div className="wz-reopen">
-              <span className="hint">Made with the New-piece wizard.</span>
+              <span className="hint">{t('Made with the New-piece wizard.')}</span>
               <button
                 type="button"
                 className="btn sm"
@@ -55,7 +56,7 @@ export function SettingsDialog({ onWizard }: { onWizard: () => void }) {
                 }}
               >
                 <Icon name="pencil" className="sm" />
-                Open in wizard
+                {t('Open in wizard')}
               </button>
             </div>
           )}
@@ -91,11 +92,11 @@ export function PieceSettingsDialog({ open, onClose }: { open: boolean; onClose:
     <Dialog
       open={open}
       onClose={onClose}
-      title={`Size, boards and construction: ${name}`}
+      title={t('Size, boards and construction: {name}', { name })}
       wide
       footer={
         <button type="button" className="btn primary" onClick={onClose}>
-          Done
+          {t('Done')}
         </button>
       }
     >

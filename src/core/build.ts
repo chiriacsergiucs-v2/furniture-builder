@@ -1,3 +1,4 @@
+import { t as tx, tr } from './i18n';
 import { buildCabinet, slidingTrackDepth } from './cabinet';
 import { buildCorner } from './corner';
 import { buildDesk } from './desk';
@@ -43,7 +44,15 @@ export function buildModel(design: Design): FurnitureModel {
     diagnostics.push({
       severity: 'warning',
       code: 'part-board-lost',
-      message: `${lost.length === 1 ? 'A part' : `${lost.length} parts`} with ${lost.length === 1 ? 'its' : 'their'} own board no longer ${lost.length === 1 ? 'exists' : 'exist'} (the piece changed); the board choice is not used. Clear it under Part boards.`,
+      message:
+        lost.length === 1
+          ? tx(
+              'A part with its own board no longer exists (the piece changed); the board choice is not used. Clear it under Part boards.',
+            )
+          : tx(
+              '{n} parts with their own board no longer exist (the piece changed); the board choice is not used. Clear it under Part boards.',
+              { n: lost.length },
+            ),
     });
 
   // Integer millimetres and positive size, always.
@@ -53,7 +62,7 @@ export function buildModel(design: Design): FurnitureModel {
       diagnostics.push({
         severity: 'error',
         code: 'non-integer',
-        message: `${p.label} has a non-integer dimension.`,
+        message: tx('{part} has a non-integer dimension.', { part: tr(p.label) }),
         nodeId: p.nodeId,
         panelIds: [p.id],
       });
@@ -64,7 +73,11 @@ export function buildModel(design: Design): FurnitureModel {
       diagnostics.push({
         severity: 'error',
         code: 'zero-size',
-        message: `${p.label} has no size (${c.length}×${c.width} mm).`,
+        message: tx('{part} has no size ({l}×{w} mm).', {
+          part: tr(p.label),
+          l: c.length,
+          w: c.width,
+        }),
         nodeId: p.nodeId,
         panelIds: [p.id],
       });
@@ -72,7 +85,7 @@ export function buildModel(design: Design): FurnitureModel {
       diagnostics.push({
         severity: 'warning',
         code: 'narrow-part',
-        message: `${p.label} is only ${c.width} mm wide.`,
+        message: tx('{part} is only {w} mm wide.', { part: tr(p.label), w: c.width }),
         nodeId: p.nodeId,
         panelIds: [p.id],
       });
@@ -91,7 +104,11 @@ export function buildModel(design: Design): FurnitureModel {
       diagnostics.push({
         severity: 'error',
         code: 'thickness',
-        message: `${p.label} thickness ${c.thickness} mm does not match ${m.name}.`,
+        message: tx('{part} thickness {t} mm does not match {board}.', {
+          part: tr(p.label),
+          t: c.thickness,
+          board: m.name,
+        }),
         nodeId: p.nodeId,
         panelIds: [p.id],
       });
@@ -105,7 +122,10 @@ export function buildModel(design: Design): FurnitureModel {
         diagnostics.push({
           severity: 'error',
           code: 'overlap',
-          message: `${panels[i].label} and ${panels[j].label} occupy the same space.`,
+          message: tx('{a} and {b} occupy the same space.', {
+            a: tr(panels[i].label),
+            b: tr(panels[j].label),
+          }),
           nodeId: panels[j].nodeId,
           panelIds: [panels[i].id, panels[j].id],
         });
@@ -132,7 +152,12 @@ export function buildModel(design: Design): FurnitureModel {
         diagnostics.push({
           severity: 'error',
           code: 'outside',
-          message: `${p.label} sticks out of the ${W}×${H}×${D} mm cabinet.`,
+          message: tx('{part} sticks out of the {w}×{h}×{d} mm cabinet.', {
+            part: tr(p.label),
+            w: W,
+            h: H,
+            d: D,
+          }),
           nodeId: p.nodeId,
           panelIds: [p.id],
         });
@@ -161,7 +186,11 @@ export function buildModel(design: Design): FurnitureModel {
       code: 'band-narrow',
       nodeId: list[0].nodeId,
       panelIds: list.map((x) => x.id),
-      message: `Edge band ${bandText(band)} on ${m.name} is narrower than the ${t} mm board.`,
+      message: tx('Edge band {band} on {board} is narrower than the {t} mm board.', {
+        band: bandText(band),
+        board: m.name,
+        t,
+      }),
     });
 
   // A board labelled kitchen worktop on other parts: guidance only, the user may mean it (ADR-049).
@@ -174,7 +203,16 @@ export function buildModel(design: Design): FurnitureModel {
         code: 'worktop-board',
         nodeId: others[0].nodeId,
         panelIds: others.map((p) => p.id),
-        message: `${m.name} is labelled kitchen worktop but is used for ${others.length === 1 ? others[0].label : `${others.length} parts that are not worktops`} (guidance).`,
+        message:
+          others.length === 1
+            ? tx('{board} is labelled kitchen worktop but is used for {part} (guidance).', {
+                board: m.name,
+                part: tr(others[0].label),
+              })
+            : tx(
+                '{board} is labelled kitchen worktop but is used for {n} parts that are not worktops (guidance).',
+                { board: m.name, n: others.length },
+              ),
       });
     }
   }

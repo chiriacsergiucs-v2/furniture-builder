@@ -17,6 +17,7 @@ import { Dialog } from './Dialogs';
 import { Icon } from './icons';
 import { useProblem } from './problemStore';
 import { useUi } from './shell/uiStore';
+import { t, tr } from '../core/i18n';
 
 /**
  * "Replace…" on the selected piece (ADR-098): the catalog items that stand the same way and have the same width;
@@ -29,7 +30,7 @@ export function ReplaceButton({ item }: { item: ProjectItem }) {
     <>
       <button type="button" className="btn outline" onClick={() => setOpen(true)}>
         <Icon name="catalog" className="sm" />
-        Replace…
+        {t('Replace…')}
       </button>
       {open && <ReplaceDialog item={item} onClose={() => setOpen(false)} />}
     </>
@@ -48,12 +49,15 @@ function ReplaceDialog({ item, onClose }: { item: ProjectItem; onClose: () => vo
   const shown = others ? options : same;
   const pick = async (o: ReplaceOption<ViewFamily>) => {
     onClose();
-    const name = `${o.family.name}: ${o.variant.name}`;
+    const name = `${tr(o.family.name)}: ${tr(o.variant.name)}`;
     if (
       designEdited(item.design, families) &&
       !(await askConfirm(
-        `“${item.design.name}” was edited after it was added. Its own changes go onto ${name} where it has the same setting; the result lists what was kept and what was not. Position, turn, quantity, placement, zones and boards stay.`,
-        { confirmLabel: 'Replace' },
+        t(
+          '“{name}” was edited after it was added. Its own changes go onto {target} where it has the same setting; the result lists what was kept and what was not. Position, turn, quantity, placement, zones and boards stay.',
+          { name: item.design.name, target: name },
+        ),
+        { confirmLabel: t('Replace') },
       ))
     )
       return;
@@ -71,29 +75,34 @@ function ReplaceDialog({ item, onClose }: { item: ProjectItem; onClose: () => vo
     <Dialog
       open
       onClose={onClose}
-      title={`Replace ${item.design.name}`}
+      title={t('Replace {name}', { name: item.design.name })}
       info={
-        <InfoTip label="About replacing a piece" align="start">
-          The piece keeps its place, turn, quantity, placement, zones and boards; undo puts it back.
+        <InfoTip label={t('About replacing a piece')} align="start">
+          {t(
+            'The piece keeps its place, turn, quantity, placement, zones and boards; undo puts it back.',
+          )}
         </InfoTip>
       }
     >
       <p className="hint">
-        Items that stand the same way
-        {others ? '' : ` and are ${width} mm wide`}.
+        {others
+          ? t('Items that stand the same way.')
+          : t('Items that stand the same way and are {width} mm wide.', { width })}
       </p>
-      {!stacked && <Toggle label="Show other widths" checked={others} onChange={setOthers} />}
+      {!stacked && <Toggle label={t('Show other widths')} checked={others} onChange={setOthers} />}
       {shown.length === 0 ? (
         <p className="empty center">
           <Icon name="info" />
           {others
-            ? 'No catalog item stands the same way.'
+            ? t('No catalog item stands the same way.')
             : stacked
-              ? 'No catalog item has the same width.'
-              : 'No catalog item has the same width. Switch on “Show other widths” to see the rest.'}
+              ? t('No catalog item has the same width.')
+              : t(
+                  'No catalog item has the same width. Switch on “Show other widths” to see the rest.',
+                )}
         </p>
       ) : (
-        <ul className="template-list replace-list" aria-label="Alternatives">
+        <ul className="template-list replace-list" aria-label={t('Alternatives')}>
           {shown.map((o) => (
             <li key={`${o.family.id}:${o.variant.id}`}>
               <button type="button" className="row-btn" onClick={() => void pick(o)}>
@@ -107,12 +116,12 @@ function ReplaceDialog({ item, onClose }: { item: ProjectItem; onClose: () => vo
                 />
                 <span>
                   <strong>
-                    {o.family.name}: {o.variant.name}
+                    {tr(o.family.name)}: {tr(o.variant.name)}
                   </strong>
                   <span className="sub num">
-                    {o.w} × {o.h} × {o.d} mm
+                    {t('{w} × {h} × {d} mm', { w: o.w, h: o.h, d: o.d })}
                   </span>
-                  {!o.sameWidth && <span className="sub">Neighbours may need moving.</span>}
+                  {!o.sameWidth && <span className="sub">{t('Neighbours may need moving.')}</span>}
                 </span>
                 <Icon name="chevron-right" className="chev sm" />
               </button>

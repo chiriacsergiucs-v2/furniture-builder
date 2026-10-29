@@ -11,6 +11,7 @@ import {
   type ItemZones,
   type ServiceSide,
 } from '../core/envelopes';
+import { t, tr } from '../core/i18n';
 import { isWallHung, type ProjectItem } from '../core/project';
 import { useDesign } from '../store/designStore';
 import { GuidanceTip, Segmented, Toggle } from './controls';
@@ -35,12 +36,12 @@ function OptionalMm({
     setSeen(shown);
     setText(shown);
   }
-  const t = text.trim();
-  const n = Number(t);
-  const valid = t === '' || (Number.isInteger(n) && n >= 1 && n <= MAX_ZONE_DEPTH);
+  const typed = text.trim();
+  const n = Number(typed);
+  const valid = typed === '' || (Number.isInteger(n) && n >= 1 && n <= MAX_ZONE_DEPTH);
   const commit = () => {
     if (!valid) return;
-    const next = t === '' ? undefined : n;
+    const next = typed === '' ? undefined : n;
     if (next !== value) onChange(next);
   };
   return (
@@ -51,7 +52,7 @@ function OptionalMm({
           id={id}
           inputMode="numeric"
           value={text}
-          placeholder="not set"
+          placeholder={t('not set')}
           aria-invalid={!valid}
           aria-describedby={`${id}-help`}
           onChange={(e) => setText(e.target.value.replace(/[^\d-]/g, ''))}
@@ -62,7 +63,7 @@ function OptionalMm({
             if (e.key === 'Escape') setText(shown);
           }}
         />
-        <span className="unit">mm</span>
+        <span className="unit">{t('mm')}</span>
       </div>
       {valid ? (
         <p className="hint" id={`${id}-help`}>
@@ -70,7 +71,9 @@ function OptionalMm({
         </p>
       ) : (
         <p className="field-error" id={`${id}-help`}>
-          Whole number from 1 to {MAX_ZONE_DEPTH}, or leave it empty for none. Not saved yet.
+          {t('Whole number from 1 to {max}, or leave it empty for none. Not saved yet.', {
+            max: MAX_ZONE_DEPTH,
+          })}
         </p>
       )}
     </div>
@@ -94,24 +97,26 @@ export function ClearanceFields({ item }: { item: ProjectItem }) {
   const side: ServiceSide | 'none' = z.service?.side ?? 'none';
   const standsUp = !isWallHung(item.design) && item.placement?.kind !== 'above';
   return (
-    <div className="zone-fields" role="group" aria-label="Clearance zones">
+    <div className="zone-fields" role="group" aria-label={t('Clearance zones')}>
       {kneeSpan(item.design) && (
         <OptionalMm
-          label="Chair space depth"
+          label={t('Chair space depth')}
           value={z.chairDepth}
           onChange={(v) => set({ chairDepth: v })}
-          hint="Free space in front of the knee space for the chair and the person. No default: enter the depth you plan for."
+          hint={t(
+            'Free space in front of the knee space for the chair and the person. No default: enter the depth you plan for.',
+          )}
         />
       )}
       <Segmented<ServiceSide | 'none'>
-        label="Service zone"
+        label={t('Service zone')}
         value={side}
         options={[
-          { value: 'none', label: 'None' },
-          { value: 'front', label: 'Front' },
-          { value: 'back', label: 'Back' },
-          { value: 'left', label: 'Left' },
-          { value: 'right', label: 'Right' },
+          { value: 'none', label: t('None') },
+          { value: 'front', label: t('Front@@side') },
+          { value: 'back', label: t('Back@@side') },
+          { value: 'left', label: t('Left') },
+          { value: 'right', label: t('Right') },
         ]}
         onChange={(v) =>
           set({ service: v === 'none' ? undefined : { side: v, depth: z.service?.depth } })
@@ -119,21 +124,24 @@ export function ClearanceFields({ item }: { item: ProjectItem }) {
       />
       {z.service && (
         <OptionalMm
-          label="Service zone depth"
+          label={t('Service zone depth')}
           value={z.service.depth}
           onChange={(v) => set({ service: { side: z.service!.side, depth: v } })}
-          hint="Space kept free on that side, for example behind an appliance. No default: enter the size the appliance needs."
+          hint={t(
+            'Space kept free on that side, for example behind an appliance. No default: enter the size the appliance needs.',
+          )}
         />
       )}
       {standsUp && (
         <Toggle
-          label="Assembled lying down"
+          label={t('Assembled lying down')}
           checked={!!z.lyingDown}
           onChange={(v) => set({ lyingDown: v })}
           info={
-            <GuidanceTip topic="standing a piece up">
-              A piece tipped up from lying on its back sweeps its side diagonal. When it is
-              assembled lying down, no room to stand it up is an error; otherwise a warning.
+            <GuidanceTip topic={t('standing a piece up')}>
+              {t(
+                'A piece tipped up from lying on its back sweeps its side diagonal. When it is assembled lying down, no room to stand it up is an error; otherwise a warning.',
+              )}
             </GuidanceTip>
           }
         />
@@ -143,29 +151,29 @@ export function ClearanceFields({ item }: { item: ProjectItem }) {
 }
 
 const KIND_NAME: Record<ClearanceZone['kind'], string> = {
-  body: 'Body',
-  door: 'Door swing',
-  drawer: 'Drawer travel',
-  flap: 'Flap',
-  chair: 'Chair space',
-  service: 'Service zone',
+  body: t('Body'),
+  door: t('Door swing'),
+  drawer: t('Drawer travel'),
+  flap: t('Flap'),
+  chair: t('Chair space'),
+  service: t('Service zone'),
 };
 const SEVERITY_NAME: Record<ClearanceZone['severity'], string> = {
-  none: 'no problem',
-  warning: 'warning',
-  error: 'error',
+  none: t('no problem'),
+  warning: t('warning'),
+  error: t('error'),
 };
 
 /** The Clearances toggle and legend, in the plan's own tool row ("Clear." on screen, ADR-112). */
 export function ZoneToolbar({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
   return (
     <>
-      <Toggle label="Clear." name="Clearances" checked={on} onChange={onChange} />
+      <Toggle label={t('Clear.')} name={t('Clearances')} checked={on} onChange={onChange} />
       {on && (
-        <p className="zone-legend" aria-label="Clearance legend">
-          <span className="key none">No problem</span>
-          <span className="key warning">Warning</span>
-          <span className="key error">Error</span>
+        <p className="zone-legend" aria-label={t('Clearance legend')}>
+          <span className="key none">{t('No problem')}</span>
+          <span className="key warning">{t('Warning')}</span>
+          <span className="key error">{t('Error')}</span>
         </p>
       )}
     </>
@@ -177,7 +185,7 @@ export function ZoneOverlay({ zones, fs }: { zones: ClearanceZone[]; fs: number 
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '');
   const step = fs * 0.7;
   return (
-    <g className="zones" aria-label="Clearance zones">
+    <g className="zones" aria-label={t('Clearance zones')}>
       <defs>
         {(['none', 'warning', 'error'] as const).map((s) => (
           <pattern
@@ -213,7 +221,9 @@ export function ZoneOverlay({ zones, fs }: { zones: ClearanceZone[]; fs: number 
             }
           >
             <title>
-              {z.label.startsWith(KIND_NAME[z.kind]) ? z.label : `${KIND_NAME[z.kind]}: ${z.label}`}
+              {tr(z.label).startsWith(KIND_NAME[z.kind])
+                ? tr(z.label)
+                : `${KIND_NAME[z.kind]}: ${tr(z.label)}`}
               , {SEVERITY_NAME[z.severity]}
             </title>
           </rect>

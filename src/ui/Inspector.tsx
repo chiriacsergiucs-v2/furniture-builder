@@ -19,6 +19,7 @@ import {
   unsplit,
   usesPedestal,
 } from '../core/design';
+import { t, tr } from '../core/i18n';
 import { materialLabel } from '../core/materials';
 import type { Selection } from '../core/selectPath';
 import type {
@@ -56,6 +57,7 @@ import { CountStepper } from './CountStepper';
 import { PieceSize } from './PieceSize';
 import { askConfirm } from './Confirm';
 import { useUi } from './shell/uiStore';
+import { tNode } from './i18n';
 import {
   ApplianceEditor,
   ChecksGroup,
@@ -68,11 +70,11 @@ import {
 } from './Editors';
 
 const KIND_LABEL: Record<SpaceKind, string> = {
-  empty: 'Empty',
-  shelves: 'Shelves',
-  drawers: 'Drawers',
-  hanging: 'Hanging',
-  split: 'Divided',
+  empty: t('Empty'),
+  shelves: t('Shelves'),
+  drawers: t('Drawers'),
+  hanging: t('Hanging'),
+  split: t('Divided'),
 };
 
 /**
@@ -130,7 +132,8 @@ function SizeLockNote() {
   if (!locked) return null;
   return (
     <p className="alert info size-lock-note" role="status">
-      {SIZE_LOCKED_HINT}. {notice ?? 'Edits that change its width, height or depth are refused.'}
+      {tr(SIZE_LOCKED_HINT)}.{' '}
+      {notice ?? t('Edits that change its width, height or depth are refused.')}
     </p>
   );
 }
@@ -156,9 +159,9 @@ export function InsideEditor() {
   return (
     <>
       <p className="hint">
-        Selected: {WHOLE[prod.kind]}.{' '}
-        <InfoTip label="About picking a space" align="start">
-          Tap the piece again to pick a space inside it; each tap goes one level smaller.
+        {t('Selected: {name}.', { name: WHOLE[prod.kind] })}{' '}
+        <InfoTip label={t('About picking a space')} align="start">
+          {t('Tap the piece again to pick a space inside it; each tap goes one level smaller.')}
         </InfoTip>
       </p>
       <CountStepper />
@@ -182,19 +185,21 @@ function ComposeStart() {
     <div className="inspector compose-start">
       <header className="insp-head">
         <div className="info-row">
-          <h2>Compose</h2>
+          <h2>{t('Compose')}</h2>
           {roots.length > 0 && (
-            <InfoTip label="About compose" align="start">
-              Tap the drawing: the first tap selects the whole piece, each further tap at the same
-              spot one space smaller. Fill a space with shelves, drawers or hanging, add doors, or
-              divide it.
+            <InfoTip label={t('About compose')} align="start">
+              {t(
+                'Tap the drawing: the first tap selects the whole piece, each further tap at the same spot one space smaller. Fill a space with shelves, drawers or hanging, add doors, or divide it.',
+              )}
             </InfoTip>
           )}
         </div>
-        {whole && <p className="selected-whole">Selected: {WHOLE[prod.kind]}</p>}
+        {whole && (
+          <p className="selected-whole">{t('Selected: {name}', { name: WHOLE[prod.kind] })}</p>
+        )}
         {!roots.length && (
           <p className="hint">
-            This piece has no spaces to fill. Its sizes and boards are under Settings.
+            {t('This piece has no spaces to fill. Its sizes and boards are under Settings.')}
           </p>
         )}
       </header>
@@ -205,7 +210,7 @@ function ComposeStart() {
             <Icon name="grid" />
           </span>
           <span>
-            <strong>Edit the {r.label.toLowerCase()}</strong>
+            <strong>{t('Edit the {name}', { name: tr(r.label).toLowerCase() })}</strong>
             <span className="sub">{insideSummary([r.root])}</span>
           </span>
           <Icon name="chevron-right" className="chev sm" />
@@ -214,7 +219,7 @@ function ComposeStart() {
       {!roots.length && (
         <button type="button" className="btn outline" onClick={() => setSettingsOpen(true)}>
           <Icon name="sliders" className="sm" />
-          Open Settings
+          {t('Open Settings')}
         </button>
       )}
     </div>
@@ -227,20 +232,20 @@ export function selectionLabel(prod: Parameters<typeof findInProduct>[0], id: Se
   const found = id ? findInProduct(prod, id) : undefined;
   if (!found) return null;
   return found.space.id === found.root.id
-    ? found.label
+    ? tr(found.label)
     : found.space.kind === 'split'
-      ? 'Divided space'
+      ? t('Divided space')
       : KIND_LABEL[found.space.kind];
 }
 
 const WHOLE = {
-  cabinet: 'Whole cabinet',
-  desk: 'Whole desk',
-  corner: 'Whole corner unit',
-  panel: 'Whole panel',
-  frame: 'Whole frame',
-  panels: 'Whole panel set',
-} as const;
+  cabinet: t('Whole cabinet'),
+  desk: t('Whole desk'),
+  corner: t('Whole corner unit'),
+  panel: t('Whole panel'),
+  frame: t('Whole frame'),
+  panels: t('Whole panel set'),
+};
 
 function matOptions(materials: Material[], filter?: (m: Material) => boolean) {
   return materials
@@ -248,7 +253,7 @@ function matOptions(materials: Material[], filter?: (m: Material) => boolean) {
     .map((m) => ({ value: m.id, label: materialLabel(m) }));
 }
 const matName = (materials: Material[], id: string) =>
-  materials.find((m) => m.id === id)?.name ?? '—';
+  tr(materials.find((m) => m.id === id)?.name ?? '—');
 
 /** One line about what a space tree holds, for the steps rail: "4 drawers", "2 shelves, 1 door", "Empty". */
 function insideSummary(roots: Space[]): string {
@@ -269,19 +274,19 @@ function insideSummary(roots: Space[]): string {
   };
   roots.forEach(walk);
   const parts: string[] = [];
-  if (drawers) parts.push(`${drawers} ${drawers === 1 ? 'drawer' : 'drawers'}`);
-  if (shelves) parts.push(`${shelves} ${shelves === 1 ? 'shelf' : 'shelves'}`);
-  if (hanging) parts.push('hanging');
-  if (doors) parts.push(`${doors} ${doors === 1 ? 'door' : 'doors'}`);
-  if (!parts.length) return 'Empty';
-  if (empty) parts.push('empty space');
+  if (drawers) parts.push(t('{n|# drawer|# drawers}', { n: drawers }));
+  if (shelves) parts.push(t('{n|# shelf|# shelves}', { n: shelves }));
+  if (hanging) parts.push(t('hanging'));
+  if (doors) parts.push(t('{n|# door|# doors}', { n: doors }));
+  if (!parts.length) return t('Empty');
+  if (empty) parts.push(t('empty space'));
   return parts.join(', ');
 }
 
 const FRONT_LABEL: Record<FrontStyle, string> = {
-  overlay: 'Overlay',
-  half: 'Half overlay',
-  inset: 'Inset',
+  overlay: t('Overlay'),
+  half: t('Half overlay'),
+  inset: t('Inset'),
 };
 
 /**
@@ -297,13 +302,13 @@ function EditorRail({ steps, inside }: { steps: Step[]; inside?: () => void }) {
   const warnings = diags.length - errors;
   const cut: Step = {
     id: 'cut',
-    label: 'Cut',
+    label: t('Cut'),
     done: !errors,
     meta: errors
-      ? `${errors} ${errors === 1 ? 'problem' : 'problems'}`
+      ? t('{n|# problem|# problems}', { n: errors })
       : warnings
-        ? `${warnings} to check`
-        : 'Ready',
+        ? t('{n} to check', { n: warnings })
+        : t('Ready'),
     tone: errors ? 'error' : warnings ? 'warn' : 'ok',
   };
   const go = (id: string) => {
@@ -322,7 +327,7 @@ function EditorRail({ steps, inside }: { steps: Step[]; inside?: () => void }) {
   };
   return (
     <div className="rail">
-      <Steps label="Stages of this piece" steps={[...steps, cut]} onSelect={go} />
+      <Steps label={t('Stages of this piece')} steps={[...steps, cut]} onSelect={go} />
     </div>
   );
 }
@@ -346,7 +351,7 @@ function Crumbs({
     cur = parentOf(root, cur.id);
   }
   return (
-    <nav className="crumbs" aria-label="Where this space sits">
+    <nav className="crumbs" aria-label={t('Where this space sits')}>
       <button type="button" onClick={() => select(null)}>
         {wholeLabel}
       </button>
@@ -393,11 +398,14 @@ function SpaceEditor({
     <div className="inspector">
       <Crumbs root={root} id={space.id} rootLabel={rootLabel} wholeLabel={wholeLabel} />
       <header className="insp-head">
-        <h2>{space.kind === 'split' ? 'Divided space' : `${KIND_LABEL[space.kind]}`}</h2>
+        <h2>{space.kind === 'split' ? t('Divided space') : `${KIND_LABEL[space.kind]}`}</h2>
         {opening && (
           <p className="measure">
-            <span>{opening.box.w}</span> wide × <span>{opening.box.h}</span> high ×{' '}
-            <span>{opening.box.d}</span> deep inside
+            {tNode('{w} wide × {h} high × {d} deep inside', {
+              w: <span>{opening.box.w}</span>,
+              h: <span>{opening.box.h}</span>,
+              d: <span>{opening.box.d}</span>,
+            })}
           </p>
         )}
       </header>
@@ -410,20 +418,20 @@ function SpaceEditor({
                 name={d.severity === 'error' ? 'alert-circle' : 'alert-triangle'}
                 className="sm"
               />
-              <span>{d.message}</span>
+              <span>{tr(d.message)}</span>
             </li>
           ))}
         </ul>
       )}
 
       {space.kind === 'split' ? (
-        <Section title="Division">
+        <Section title={t('Division')}>
           <SplitEditor space={space} onChange={set} onSelect={select} />
         </Section>
       ) : (
-        <Section title="Contents">
+        <Section title={t('Contents')}>
           <Segmented<SpaceKind>
-            label="What goes here"
+            label={t('What goes here')}
             value={space.kind}
             options={(['empty', 'shelves', 'drawers', 'hanging'] as const).map((k) => ({
               value: k,
@@ -433,7 +441,7 @@ function SpaceEditor({
           />
           {space.kind === 'shelves' && (
             <Counter
-              label="Shelves"
+              label={t('Shelves')}
               value={space.count}
               min={0}
               max={12}
@@ -442,14 +450,14 @@ function SpaceEditor({
           )}
           {space.kind === 'shelves' && space.count > 0 && (
             <Toggle
-              label="Adjustable, on shelf pins"
+              label={t('Adjustable, on shelf pins')}
               checked={!!space.adjustable}
               onChange={(v) => set((s) => ({ ...s, adjustable: v }) as Space)}
             />
           )}
           {space.kind === 'drawers' && (
             <Counter
-              label="Drawers"
+              label={t('Drawers')}
               value={space.count}
               min={1}
               max={10}
@@ -461,7 +469,7 @@ function SpaceEditor({
           )}
           {space.kind === 'drawers' && !space.front && (
             <Toggle
-              label="Top drawer is a fixed front (sink false front)"
+              label={t('Top drawer is a fixed front (sink false front)')}
               checked={!!space.fixedTop}
               onChange={(v) =>
                 set((s) => (s.kind === 'drawers' ? { ...s, fixedTop: v || undefined } : s))
@@ -470,7 +478,7 @@ function SpaceEditor({
           )}
           {space.kind === 'drawers' && (
             <Toggle
-              label="Top drawer cut around a sink trap"
+              label={t('Top drawer cut around a sink trap')}
               checked={!!space.uCut}
               onChange={(v) =>
                 set((s) =>
@@ -482,7 +490,7 @@ function SpaceEditor({
           {space.kind === 'drawers' && space.uCut && (
             <div className="dims2">
               <MmField
-                label="Notch width"
+                label={t('Notch width')}
                 value={space.uCut.width}
                 min={50}
                 max={1000}
@@ -493,7 +501,7 @@ function SpaceEditor({
                 }
               />
               <MmField
-                label="Notch depth"
+                label={t('Notch depth')}
                 value={space.uCut.depth}
                 min={50}
                 max={800}
@@ -502,13 +510,13 @@ function SpaceEditor({
                     s.kind === 'drawers' && s.uCut ? { ...s, uCut: { ...s.uCut, depth: v } } : s,
                   )
                 }
-                hint="Measure your trap and pipes"
+                hint={t('Measure your trap and pipes')}
               />
             </div>
           )}
           {space.kind === 'hanging' && (
             <MmField
-              label="Rail below top"
+              label={t('Rail below top')}
               value={space.railDrop}
               min={0}
               max={500}
@@ -521,64 +529,65 @@ function SpaceEditor({
       )}
 
       <Section
-        title="Doors and handles"
+        title={t('Doors and handles')}
         info={
           space.kind === 'drawers' &&
           space.front && (
-            <InfoTip label="About drawers behind doors" align="start">
-              Drawers behind doors are built as internal drawers without their own fronts.
+            <InfoTip label={t('About drawers behind doors')} align="start">
+              {t('Drawers behind doors are built as internal drawers without their own fronts.')}
             </InfoTip>
           )
         }
       >
         {behindDoors && !space.front && !space.handle ? (
           <p className="hint">
-            This space is inside the doors of the space around it. Doors and handles go on the
-            outside only.
+            {t(
+              'This space is inside the doors of the space around it. Doors and handles go on the outside only.',
+            )}
           </p>
         ) : (
           <>
             {behindDoors && (
               <p className="hint">
-                This space is inside other doors. Set its front and handles to None.
+                {t('This space is inside other doors. Set its front and handles to None.')}
               </p>
             )}
             <FrontEditor space={space} onChange={set} />
             {space.front || space.handle || (space.kind === 'drawers' && !behindDoors) ? (
               <HandleEditor space={space} onChange={set} />
             ) : (
-              <p className="hint">Handles appear once there are doors or drawers.</p>
+              <p className="hint">{t('Handles appear once there are doors or drawers.')}</p>
             )}
           </>
         )}
       </Section>
 
       {space.kind !== 'split' && (
-        <Section title="Divide this space">
+        <Section title={t('Divide this space')}>
           <div className="split-actions">
             <button
               type="button"
               className="btn outline"
               onClick={() => set((s) => splitSpace(s, 'x', 2))}
             >
-              Side by side
+              {t('Side by side')}
             </button>
             <button
               type="button"
               className="btn outline"
               onClick={() => set((s) => splitSpace(s, 'y', 2))}
             >
-              Stacked
+              {t('Stacked')}
             </button>
           </div>
         </Section>
       )}
-      <Section title="Layouts">
+      <Section title={t('Layouts')}>
         <LayoutPicker space={space} onChange={set} />
       </Section>
       {parent && (
         <button type="button" className="link" onClick={() => select(parent.id)}>
-          Select the divided space around this one
+          {t('Select the divided space around this one')}
         </button>
       )}
     </div>
@@ -604,13 +613,13 @@ function HandleEditor({
   return (
     <>
       <Segmented<'none' | Handle['kind']>
-        label={space.front ? 'Handles on the doors' : 'Handles on the drawers'}
+        label={space.front ? t('Handles on the doors') : t('Handles on the drawers')}
         value={kind}
         options={[
-          { value: 'none', label: 'None' },
-          { value: 'bar', label: 'Bar' },
-          { value: 'knob', label: 'Knob' },
-          { value: 'push', label: 'Push to open' },
+          { value: 'none', label: t('None') },
+          { value: 'bar', label: t('Bar') },
+          { value: 'knob', label: t('Knob') },
+          { value: 'push', label: t('Push to open') },
         ]}
         onChange={(v) => setH(v === 'none' ? null : { kind: v })}
       />
@@ -618,19 +627,22 @@ function HandleEditor({
         <div className="dims2">
           {h.kind === 'bar' && (
             <Select
-              label="Hole centres"
+              label={t('Hole centres')}
               value={String(h.holeSpacing ?? 128)}
-              options={BAR_SPACINGS.map((v) => ({ value: String(v), label: `${v} mm` }))}
+              options={BAR_SPACINGS.map((v) => ({
+                value: String(v),
+                label: t('{n} mm', { n: v }),
+              }))}
               onChange={(v) => setH({ holeSpacing: Number(v) })}
             />
           )}
           <Select<'top' | 'centre' | 'bottom'>
-            label="Position"
+            label={t('Position')}
             value={h.position ?? (space.front ? 'centre' : 'top')}
             options={[
-              { value: 'top', label: 'Near the top' },
-              { value: 'centre', label: 'Middle' },
-              { value: 'bottom', label: 'Near the bottom' },
+              { value: 'top', label: t('Near the top') },
+              { value: 'centre', label: t('Middle') },
+              { value: 'bottom', label: t('Near the bottom') },
             ]}
             onChange={(v) => setH({ position: v })}
           />
@@ -664,19 +676,20 @@ function DrawerHeights({
   return (
     <>
       <Segmented<'equal' | 'custom'>
-        label="Drawer heights"
+        label={t('Drawer heights')}
         info={
           custom && (
-            <InfoTip label="About drawer heights" align="start">
-              Top to bottom. Heights are front heights; a share splits whatever the fixed drawers
-              leave.
+            <InfoTip label={t('About drawer heights')} align="start">
+              {t(
+                'Top to bottom. Heights are front heights; a share splits whatever the fixed drawers leave.',
+              )}
             </InfoTip>
           )
         }
         value={custom ? 'custom' : 'equal'}
         options={[
-          { value: 'equal', label: 'Equal' },
-          { value: 'custom', label: 'Choose' },
+          { value: 'equal', label: t('Equal') },
+          { value: 'custom', label: t('Choose') },
         ]}
         onChange={(v) =>
           onChange((s) => {
@@ -694,9 +707,9 @@ function DrawerHeights({
         <ul className="parts-sizes">
           {heights.map((z, i) => (
             <li key={i}>
-              <span className="part-name static">Drawer {i + 1}</span>
+              <span className="part-name static">{t('Drawer {n}', { n: i + 1 })}</span>
               <select
-                aria-label={`Drawer ${i + 1} sizing`}
+                aria-label={t('Drawer {n} sizing', { n: i + 1 })}
                 value={z.mode}
                 onChange={(e) =>
                   setH(
@@ -707,12 +720,14 @@ function DrawerHeights({
                   )
                 }
               >
-                <option value="fr">Share</option>
-                <option value="mm">Fixed</option>
+                <option value="fr">{t('Share')}</option>
+                <option value="mm">{t('Fixed')}</option>
               </select>
               <input
                 aria-label={
-                  z.mode === 'mm' ? `Drawer ${i + 1} front height in mm` : `Drawer ${i + 1} share`
+                  z.mode === 'mm'
+                    ? t('Drawer {n} front height in mm', { n: i + 1 })
+                    : t('Drawer {n} share', { n: i + 1 })
                 }
                 inputMode={z.mode === 'mm' ? 'numeric' : 'decimal'}
                 defaultValue={z.value}
@@ -723,7 +738,9 @@ function DrawerHeights({
                     setH(i, { mode: z.mode, value: v } as SplitSize);
                 }}
               />
-              <span className="result">{fronts[i] ? `${fronts[i].box.h} mm` : '—'}</span>
+              <span className="result">
+                {fronts[i] ? t('{n} mm', { n: fronts[i].box.h }) : '—'}
+              </span>
             </li>
           ))}
         </ul>
@@ -765,39 +782,41 @@ function SplitEditor({
       }
       return { ...s, children: s.children.slice(0, k), sizes: s.sizes.slice(0, k) };
     });
-  const word = space.axis === 'x' ? 'Width' : 'Height';
-  const names =
-    space.axis === 'x'
-      ? (i: number) =>
-          n === 2
-            ? ['Left', 'Right'][i]
-            : i === 0
-              ? 'Left'
-              : i === n - 1
-                ? 'Right'
-                : `Middle ${n > 3 ? i : ''}`.trim()
-      : (i: number) =>
-          n === 2
-            ? ['Top', 'Bottom'][i]
-            : i === 0
-              ? 'Top'
-              : i === n - 1
-                ? 'Bottom'
-                : `Middle ${n > 3 ? i : ''}`.trim();
+  const across = space.axis === 'x';
+  const middle = (i: number) => (n > 3 ? t('Middle {n}', { n: i }) : t('Middle'));
+  const names = across
+    ? (i: number) =>
+        n === 2
+          ? [t('Left'), t('Right')][i]
+          : i === 0
+            ? t('Left')
+            : i === n - 1
+              ? t('Right')
+              : middle(i)
+    : (i: number) =>
+        n === 2
+          ? [t('Top'), t('Bottom')][i]
+          : i === 0
+            ? t('Top')
+            : i === n - 1
+              ? t('Bottom')
+              : middle(i);
   return (
     <>
       <Segmented<'x' | 'y'>
-        label="Direction"
+        label={t('Direction')}
         value={space.axis}
         options={[
-          { value: 'x', label: 'Side by side' },
-          { value: 'y', label: 'Stacked' },
+          { value: 'x', label: t('Side by side') },
+          { value: 'y', label: t('Stacked') },
         ]}
         onChange={(a) => onChange((s) => (s.kind === 'split' ? { ...s, axis: a } : s))}
       />
-      <Counter label="Parts" value={n} min={2} max={8} onChange={setCount} />
+      <Counter label={t('Parts@@split')} value={n} min={2} max={8} onChange={setCount} />
       <div className="field">
-        <span className="field-label">{word} of each part</span>
+        <span className="field-label">
+          {across ? t('Width of each part') : t('Height of each part')}
+        </span>
         <ul className="parts-sizes">
           {space.children.map((c, i) => {
             const z = space.sizes[i];
@@ -808,7 +827,7 @@ function SplitEditor({
                   {names(i)}
                 </button>
                 <select
-                  aria-label={`${names(i)} sizing`}
+                  aria-label={t('{name} sizing', { name: names(i) })}
                   value={z.mode}
                   onChange={(e) =>
                     setSize(
@@ -822,12 +841,16 @@ function SplitEditor({
                     )
                   }
                 >
-                  <option value="fr">Share</option>
-                  <option value="mm">Fixed</option>
+                  <option value="fr">{t('Share')}</option>
+                  <option value="mm">{t('Fixed')}</option>
                 </select>
                 {z.mode === 'mm' ? (
                   <input
-                    aria-label={`${names(i)} ${word.toLowerCase()} in mm`}
+                    aria-label={
+                      across
+                        ? t('{name} width in mm', { name: names(i) })
+                        : t('{name} height in mm', { name: names(i) })
+                    }
                     inputMode="numeric"
                     defaultValue={z.value}
                     key={`${c.id}-${z.value}`}
@@ -838,7 +861,7 @@ function SplitEditor({
                   />
                 ) : (
                   <input
-                    aria-label={`${names(i)} share`}
+                    aria-label={t('{name} share', { name: names(i) })}
                     inputMode="decimal"
                     defaultValue={z.value}
                     key={`${c.id}-${z.value}`}
@@ -849,7 +872,7 @@ function SplitEditor({
                   />
                 )}
                 <span className="result">
-                  {actual ? `${space.axis === 'x' ? actual.w : actual.h} mm` : '—'}
+                  {actual ? t('{n} mm', { n: space.axis === 'x' ? actual.w : actual.h }) : '—'}
                 </span>
               </li>
             );
@@ -857,7 +880,7 @@ function SplitEditor({
         </ul>
       </div>
       <button type="button" className="danger-link" onClick={() => onChange(unsplit)}>
-        Remove dividers
+        {t('Remove dividers')}
       </button>
     </>
   );
@@ -870,46 +893,46 @@ function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material
   const thinMats = matOptions(materials);
   const inside = insideSummary([p.interior]);
   const steps: Step[] = [
-    { id: 'size', label: 'Size', meta: `${p.width}×${p.height}×${p.depth}`, done: true },
+    { id: 'size', label: t('Size'), meta: `${p.width}×${p.height}×${p.depth}`, done: true },
     {
       id: 'inside',
-      label: 'Inside',
+      label: t('Inside'),
       meta: inside,
-      done: inside !== 'Empty',
-      tone: inside === 'Empty' ? 'warn' : undefined,
+      done: inside !== t('Empty'),
+      tone: inside === t('Empty') ? 'warn' : undefined,
     },
-    { id: 'build', label: 'Build', meta: FRONT_LABEL[p.frontStyle ?? 'overlay'], done: true },
-    { id: 'materials', label: 'Boards', meta: matName(materials, p.bodyMaterialId), done: true },
+    { id: 'build', label: t('Build'), meta: FRONT_LABEL[p.frontStyle ?? 'overlay'], done: true },
+    { id: 'materials', label: t('Boards'), meta: matName(materials, p.bodyMaterialId), done: true },
   ];
   return (
     <div className="inspector">
       <EditorRail steps={steps} inside={() => select(p.interior.id)} />
       <header className="insp-head">
         <div className="info-row">
-          <h3>Whole cabinet</h3>
-          <InfoTip label="About the whole cabinet" align="start">
-            Sizes, construction and boards. Fill or divide the spaces under Compose.
+          <h3>{t('Whole cabinet')}</h3>
+          <InfoTip label={t('About the whole cabinet')} align="start">
+            {t('Sizes, construction and boards. Fill or divide the spaces under Compose.')}
           </InfoTip>
         </div>
       </header>
       <PieceInfo />
       <div className="dims3">
         <MmField
-          label="Width"
+          label={t('Width')}
           value={p.width}
           min={100}
           max={4000}
           onChange={(v) => set({ width: v })}
         />
         <MmField
-          label="Height"
+          label={t('Height')}
           value={p.height}
           min={100}
           max={3000}
           onChange={(v) => set({ height: v })}
         />
         <MmField
-          label="Depth"
+          label={t('Depth')}
           value={p.depth}
           min={100}
           max={1200}
@@ -917,15 +940,15 @@ function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material
         />
       </div>
       <button type="button" className="link" onClick={() => select(p.interior.id)}>
-        Edit the interior
+        {t('Edit the interior')}
       </button>
       <BaysGroup interior={p.interior} onChange={(interior) => set({ interior })} />
       <Segmented<'floor' | 'wall'>
-        label="Stands on"
+        label={t('Stands on')}
         value={p.mount ?? 'floor'}
         options={[
-          { value: 'floor', label: 'The floor' },
-          { value: 'wall', label: 'Wall brackets' },
+          { value: 'floor', label: t('The floor') },
+          { value: 'wall', label: t('Wall brackets') },
         ]}
         onChange={(v) =>
           set(v === 'wall' ? { mount: v, mountHeight: p.mountHeight ?? 1450 } : { mount: v })
@@ -933,78 +956,82 @@ function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material
       />
       {p.mount === 'wall' && (
         <MmField
-          label="Underside above the floor"
+          label={t('Underside above the floor')}
           value={p.mountHeight ?? 1450}
           min={0}
           max={2500}
           onChange={(v) => set({ mountHeight: v })}
-          hint="Position only; brackets and a rail are added to the hardware list."
+          hint={t('Position only; brackets and a rail are added to the hardware list.')}
         />
       )}
-      <Group title="Construction" id="g-build">
+      <Group title={t('Construction')} id="g-build">
         <Segmented
-          label="Top"
+          label={t('Top@@panel')}
           value={p.top}
           options={[
-            { value: 'over', label: 'On the sides' },
-            { value: 'between', label: 'Between sides' },
+            { value: 'over', label: t('On the sides') },
+            { value: 'between', label: t('Between sides') },
           ]}
           onChange={(v) => set({ top: v })}
         />
         <Segmented<'panel' | 'rails'>
-          label="Top made of"
+          label={t('Top made of')}
           value={p.topKind ?? 'panel'}
           options={[
-            { value: 'panel', label: 'A full panel' },
-            { value: 'rails', label: 'Two rails' },
+            { value: 'panel', label: t('A full panel') },
+            { value: 'rails', label: t('Two rails') },
           ]}
           onChange={(v) => set({ topKind: v })}
         />
         {p.topKind !== 'rails' && (
           <Segmented<1 | 2>
-            label="Top layers"
+            label={t('Top layers')}
             value={p.topLayers ?? 1}
             options={[
-              { value: 1, label: 'Single' },
-              { value: 2, label: 'Doubled', title: 'Two panels glued, the second under the top' },
+              { value: 1, label: t('Single') },
+              {
+                value: 2,
+                label: t('Doubled'),
+                title: t('Two panels glued, the second under the top'),
+              },
             ]}
             onChange={(v) => set({ topLayers: v })}
           />
         )}
         {p.topKind === 'rails' && (
           <MmField
-            label="Rail depth"
+            label={t('Rail depth')}
             value={p.railDepth ?? 100}
             min={30}
             max={300}
             step={5}
             onChange={(v) => set({ railDepth: v })}
-            hint="Under a worktop or a sink."
+            hint={t('Under a worktop or a sink.')}
           />
         )}
         <Segmented<'between' | 'under' | 'none'>
-          label="Bottom"
+          label={t('Bottom')}
           value={p.bottom ?? 'between'}
           options={[
-            { value: 'between', label: 'Between sides' },
-            { value: 'under', label: 'Under the sides' },
-            { value: 'none', label: 'None' },
+            { value: 'between', label: t('Between sides') },
+            { value: 'under', label: t('Under the sides') },
+            { value: 'none', label: t('None') },
           ]}
           onChange={(v) => set({ bottom: v })}
         />
         <Segmented
-          label="Back"
+          label={t('Back@@panel')}
           value={p.back}
           options={[
-            { value: 'applied', label: 'Nailed on' },
-            { value: 'inset', label: 'Set in' },
-            { value: 'none', label: 'None' },
+            { value: 'applied', label: t('Nailed on') },
+            { value: 'inset', label: t('Set in') },
+            { value: 'none', label: t('None') },
           ]}
           onChange={(v) => set({ back: v })}
         />
         {p.back === 'inset' && (
           <MmField
-            label="Back set in from rear"
+            label={t('Back set in from rear')}
             value={p.backInset}
             min={0}
             max={100}
@@ -1014,17 +1041,17 @@ function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material
         )}
         {p.mount !== 'wall' && (
           <MmField
-            label="Plinth height"
+            label={t('Plinth height')}
             value={p.plinthHeight}
             min={0}
             max={250}
             onChange={(v) => set({ plinthHeight: v })}
-            hint="0 for no plinth"
+            hint={t('0 for no plinth')}
           />
         )}
         {p.mount !== 'wall' && p.plinthHeight > 0 && (
           <MmField
-            label="Plinth set back"
+            label={t('Plinth set back')}
             value={p.plinthSetback}
             min={0}
             max={200}
@@ -1033,18 +1060,20 @@ function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material
           />
         )}
         <Segmented<FrontStyle>
-          label="Doors and drawer fronts"
+          label={t('Doors and drawer fronts')}
           value={p.frontStyle ?? 'overlay'}
           options={[
-            { value: 'overlay', label: 'Overlay' },
-            { value: 'half', label: 'Half overlay' },
-            { value: 'inset', label: 'Inset' },
+            { value: 'overlay', label: t('Overlay') },
+            { value: 'half', label: t('Half overlay') },
+            { value: 'inset', label: t('Inset') },
           ]}
           onChange={(v) => set({ frontStyle: v })}
         />
         <MmField
           label={
-            (p.frontStyle ?? 'overlay') === 'inset' ? 'Gap around fronts' : 'Gap between fronts'
+            (p.frontStyle ?? 'overlay') === 'inset'
+              ? t('Gap around fronts')
+              : t('Gap between fronts')
           }
           value={p.frontGap}
           min={0}
@@ -1053,7 +1082,7 @@ function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material
           onChange={(v) => set({ frontGap: v })}
         />
         <MmField
-          label="Shelf set back"
+          label={t('Shelf set back')}
           value={p.shelfSetback}
           min={0}
           max={100}
@@ -1062,7 +1091,7 @@ function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material
         />
         <div className="dims2">
           <MmField
-            label="Adjustable shelf gap, each side"
+            label={t('Adjustable shelf gap, each side')}
             value={p.shelfClearance ?? 1}
             min={0}
             max={5}
@@ -1070,7 +1099,7 @@ function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material
             onChange={(v) => set({ shelfClearance: v })}
           />
           <MmField
-            label="Pin rows from edges"
+            label={t('Pin rows from edges')}
             value={p.pinRowSetback ?? 37}
             min={20}
             max={100}
@@ -1079,21 +1108,21 @@ function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material
           />
         </div>
       </Group>
-      <Group title="Materials" id="g-materials">
+      <Group title={t('Materials')} id="g-materials">
         <Select
-          label="Body"
+          label={t('Body')}
           value={p.bodyMaterialId}
           options={panelMats}
           onChange={(v) => set({ bodyMaterialId: v })}
         />
         <Select
-          label="Fronts"
+          label={t('Fronts')}
           value={p.frontMaterialId}
           options={panelMats}
           onChange={(v) => set({ frontMaterialId: v })}
         />
         <Select
-          label="Back"
+          label={t('Back@@panel')}
           value={p.backMaterialId}
           options={thinMats}
           onChange={(v) => set({ backMaterialId: v })}
@@ -1120,18 +1149,18 @@ function DrawerSettingsGroup({
   onChange: (v: CabinetParams['drawers']) => void;
 }) {
   return (
-    <Group title="Drawers and runners" defaultOpen={false} id="g-drawers">
+    <Group title={t('Drawers and runners')} defaultOpen={false} id="g-drawers">
       <MmField
-        label="Runner clearance each side"
+        label={t('Runner clearance each side')}
         value={d.sideClearance}
         min={0}
         max={40}
         step={1}
         onChange={(v) => onChange({ ...d, sideClearance: v })}
-        hint="Check your runner's datasheet; 12.5–13 mm is common for side-mount runners."
+        hint={t("Check your runner's datasheet; 12.5–13 mm is common for side-mount runners.")}
       />
       <MmField
-        label="Height clearance"
+        label={t('Height clearance')}
         value={d.verticalClearance}
         min={0}
         max={100}
@@ -1139,7 +1168,7 @@ function DrawerSettingsGroup({
         onChange={(v) => onChange({ ...d, verticalClearance: v })}
       />
       <MmField
-        label="Space behind runner"
+        label={t('Space behind runner')}
         value={d.rearClearance}
         min={0}
         max={100}
@@ -1147,22 +1176,22 @@ function DrawerSettingsGroup({
         onChange={(v) => onChange({ ...d, rearClearance: v })}
       />
       <Select
-        label="Drawer box"
+        label={t('Drawer box')}
         value={d.boxMaterialId}
         options={matOptions(materials, (m) => m.thickness >= 10)}
         onChange={(v) => onChange({ ...d, boxMaterialId: v })}
       />
       <Select
-        label="Drawer bottom"
+        label={t('Drawer bottom')}
         value={d.bottomMaterialId}
         options={matOptions(materials)}
         onChange={(v) => onChange({ ...d, bottomMaterialId: v })}
       />
       <div className="field">
         <div className="label-row">
-          <label htmlFor="runner-lengths">Runner lengths you can buy</label>
-          <InfoTip label="About runner lengths" align="start">
-            The longest one that fits the depth is chosen.
+          <label htmlFor="runner-lengths">{t('Runner lengths you can buy')}</label>
+          <InfoTip label={t('About runner lengths')} align="start">
+            {t('The longest one that fits the depth is chosen.')}
           </InfoTip>
         </div>
         <input
@@ -1190,45 +1219,49 @@ function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[]
     diagonal = p.variant === 'diagonal';
   const inside = insideSummary(blind || diagonal ? [p.interior] : [p.interior, p.wingInterior]);
   const steps: Step[] = [
-    { id: 'size', label: 'Size', meta: `${p.width}×${p.height}×${p.depth}`, done: true },
+    { id: 'size', label: t('Size'), meta: `${p.width}×${p.height}×${p.depth}`, done: true },
     {
       id: 'inside',
-      label: 'Inside',
+      label: t('Inside'),
       meta: inside,
-      done: inside !== 'Empty',
-      tone: inside === 'Empty' ? 'warn' : undefined,
+      done: inside !== t('Empty'),
+      tone: inside === t('Empty') ? 'warn' : undefined,
     },
     {
       id: 'build',
-      label: 'Build',
-      meta: blind ? 'Blind corner' : diagonal ? 'Diagonal' : 'L-shaped',
+      label: t('Build'),
+      meta: blind ? t('Blind corner') : diagonal ? t('Diagonal') : t('L-shaped'),
       done: true,
     },
-    { id: 'materials', label: 'Boards', meta: matName(materials, p.bodyMaterialId), done: true },
+    { id: 'materials', label: t('Boards'), meta: matName(materials, p.bodyMaterialId), done: true },
   ];
   return (
     <div className="inspector">
       <EditorRail steps={steps} inside={() => select(p.interior.id)} />
       <header className="insp-head">
         <div className="info-row">
-          <h3>Corner unit</h3>
-          <InfoTip label="About the corner unit" align="start">
+          <h3>{t('Corner unit')}</h3>
+          <InfoTip label={t('About the corner unit')} align="start">
             {blind
-              ? 'A blind section the neighbouring cabinet covers, joined to a normal cabinet.'
+              ? t('A blind section the neighbouring cabinet covers, joined to a normal cabinet.')
               : diagonal
-                ? 'Five-sided: the same width along both walls, a return at each end and the door across the diagonal at 45°. Bottom, top and shelves are cut to a template.'
-                : 'Two wings open to each other at the corner, with a folding door pair. The front view shows the back-wall wing.'}
+                ? t(
+                    'Five-sided: the same width along both walls, a return at each end and the door across the diagonal at 45°. Bottom, top and shelves are cut to a template.',
+                  )
+                : t(
+                    'Two wings open to each other at the corner, with a folding door pair. The front view shows the back-wall wing.',
+                  )}
           </InfoTip>
         </div>
       </header>
       <PieceInfo />
       <Segmented<CornerParams['variant']>
-        label="Type"
+        label={t('Type')}
         value={p.variant}
         options={[
-          { value: 'blind', label: 'Blind corner' },
-          { value: 'l-shape', label: 'L-shaped' },
-          { value: 'diagonal', label: 'Diagonal' },
+          { value: 'blind', label: t('Blind corner') },
+          { value: 'l-shape', label: t('L-shaped') },
+          { value: 'diagonal', label: t('Diagonal') },
         ]}
         onChange={(v) =>
           set(
@@ -1247,31 +1280,31 @@ function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[]
         }
       />
       <Segmented<'left' | 'right'>
-        label="Corner on the"
+        label={t('Corner on the')}
         value={p.side}
         options={[
-          { value: 'left', label: 'Left' },
-          { value: 'right', label: 'Right' },
+          { value: 'left', label: t('Left') },
+          { value: 'right', label: t('Right') },
         ]}
         onChange={(v) => set({ side: v })}
       />
       <div className="dims3">
         <MmField
-          label={blind ? 'Width' : diagonal ? 'Along each wall' : 'Back wing'}
+          label={blind ? t('Width') : diagonal ? t('Along each wall') : t('Back wing')}
           value={p.width}
           min={300}
           max={3000}
           onChange={(v) => set({ width: v })}
         />
         <MmField
-          label="Height"
+          label={t('Height')}
           value={p.height}
           min={300}
           max={2500}
           onChange={(v) => set({ height: v })}
         />
         <MmField
-          label="Depth"
+          label={t('Depth')}
           value={p.depth}
           min={200}
           max={900}
@@ -1280,16 +1313,18 @@ function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[]
       </div>
       {diagonal ? null : blind ? (
         <MmField
-          label="Blind section"
+          label={t('Blind section')}
           value={p.blindWidth}
           min={100}
           max={1500}
           onChange={(v) => set({ blindWidth: v })}
-          hint={`About the neighbour's depth + 50 mm (${p.depth + 50}) keeps doors and handles clear.`}
+          hint={t("About the neighbour's depth + 50 mm ({n}) keeps doors and handles clear.", {
+            n: p.depth + 50,
+          })}
         />
       ) : (
         <MmField
-          label="Side wing (incl. corner)"
+          label={t('Side wing (incl. corner)')}
           value={p.wingWidth}
           min={300}
           max={3000}
@@ -1297,61 +1332,65 @@ function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[]
         />
       )}
       <div className="field">
-        <span className="field-label">Inside</span>
+        <span className="field-label">{t('Inside')}</span>
         <div className="split-actions">
           <button type="button" className="btn outline" onClick={() => select(p.interior.id)}>
             {blind
-              ? 'Edit usable section'
+              ? t('Edit usable section')
               : diagonal
-                ? 'Edit shelves and doors'
-                : 'Edit back-wall wing'}
+                ? t('Edit shelves and doors')
+                : t('Edit back-wall wing')}
           </button>
           {!blind && !diagonal && (
             <button type="button" className="btn outline" onClick={() => select(p.wingInterior.id)}>
-              Edit side-wall wing
+              {t('Edit side-wall wing')}
             </button>
           )}
         </div>
       </div>
-      <Group title="Construction" id="g-build">
+      <Group title={t('Construction')} id="g-build">
         <Segmented
-          label="Top"
+          label={t('Top@@panel')}
           value={p.top}
           options={[
-            { value: 'over', label: 'On the sides' },
-            { value: 'between', label: 'Between sides' },
+            { value: 'over', label: t('On the sides') },
+            { value: 'between', label: t('Between sides') },
           ]}
           onChange={(v) => set({ top: v })}
         />
         <Segmented<1 | 2>
-          label="Top layers"
+          label={t('Top layers')}
           value={p.topLayers ?? 1}
           options={[
-            { value: 1, label: 'Single' },
-            { value: 2, label: 'Doubled', title: 'Two panels glued, the second under the top' },
+            { value: 1, label: t('Single') },
+            {
+              value: 2,
+              label: t('Doubled'),
+              title: t('Two panels glued, the second under the top'),
+            },
           ]}
           onChange={(v) => set({ topLayers: v })}
         />
         <Segmented
-          label="Back"
+          label={t('Back@@panel')}
           value={p.back}
           options={[
-            { value: 'applied', label: 'Nailed on' },
-            { value: 'inset', label: 'Set in' },
-            { value: 'none', label: 'None' },
+            { value: 'applied', label: t('Nailed on') },
+            { value: 'inset', label: t('Set in') },
+            { value: 'none', label: t('None') },
           ]}
           onChange={(v) => set({ back: v })}
         />
         <MmField
-          label="Plinth height"
+          label={t('Plinth height')}
           value={p.plinthHeight}
           min={0}
           max={250}
           onChange={(v) => set({ plinthHeight: v })}
-          hint="0 for no plinth"
+          hint={t('0 for no plinth')}
         />
         <MmField
-          label="Gap between fronts"
+          label={t('Gap between fronts')}
           value={p.frontGap}
           min={0}
           max={10}
@@ -1359,21 +1398,21 @@ function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[]
           onChange={(v) => set({ frontGap: v })}
         />
       </Group>
-      <Group title="Materials" id="g-materials">
+      <Group title={t('Materials')} id="g-materials">
         <Select
-          label="Body"
+          label={t('Body')}
           value={p.bodyMaterialId}
           options={panelMats}
           onChange={(v) => set({ bodyMaterialId: v })}
         />
         <Select
-          label="Fronts"
+          label={t('Fronts')}
           value={p.frontMaterialId}
           options={panelMats}
           onChange={(v) => set({ frontMaterialId: v })}
         />
         <Select
-          label="Back"
+          label={t('Back@@panel')}
           value={p.backMaterialId}
           options={matOptions(materials)}
           onChange={(v) => set({ backMaterialId: v })}
@@ -1392,8 +1431,8 @@ function PanelSetEditor({ p, materials }: { p: PanelSetParams; materials: Materi
   const steps: Step[] = [
     {
       id: 'size',
-      label: 'Panels',
-      meta: `${count} ${count === 1 ? 'part' : 'parts'}`,
+      label: t('Panels'),
+      meta: t('{n|# part|# parts}', { n: count }),
       done: count > 0,
       tone: count ? undefined : 'error',
     },
@@ -1419,10 +1458,11 @@ function PanelSetEditor({ p, materials }: { p: PanelSetParams; materials: Materi
       <EditorRail steps={steps} />
       <header className="insp-head">
         <div className="info-row">
-          <h3>Loose panels</h3>
-          <InfoTip label="About loose panels" align="start">
-            Parts known by their cut sizes. They go to the cut list and sheets. Parts with a known
-            place are built where they sit; the rest lie in a pile beside them.
+          <h3>{t('Loose panels')}</h3>
+          <InfoTip label={t('About loose panels')} align="start">
+            {t(
+              'Parts known by their cut sizes. They go to the cut list and sheets. Parts with a known place are built where they sit; the rest lie in a pile beside them.',
+            )}
           </InfoTip>
         </div>
         {p.note && <p className="hint">{p.note}</p>}
@@ -1430,11 +1470,11 @@ function PanelSetEditor({ p, materials }: { p: PanelSetParams; materials: Materi
       {p.panels.map((lp) => (
         <Group
           key={lp.id}
-          title={`${lp.name || 'Panel'} — ${lp.length} × ${lp.width}${lp.quantity > 1 ? ` ×${lp.quantity}` : ''}`}
+          title={`${lp.name || t('Panel')} — ${lp.length} × ${lp.width}${lp.quantity > 1 ? ` ×${lp.quantity}` : ''}`}
           defaultOpen={false}
         >
           <div className="field">
-            <label htmlFor={`name-${lp.id}`}>Name</label>
+            <label htmlFor={`name-${lp.id}`}>{t('Name')}</label>
             <input
               id={`name-${lp.id}`}
               className="mat-name"
@@ -1449,7 +1489,7 @@ function PanelSetEditor({ p, materials }: { p: PanelSetParams; materials: Materi
           </div>
           <div className="dims3">
             <MmField
-              label="Length"
+              label={t('Length')}
               value={lp.length}
               min={1}
               max={5000}
@@ -1457,7 +1497,7 @@ function PanelSetEditor({ p, materials }: { p: PanelSetParams; materials: Materi
               onChange={(v) => change(lp.id, { length: v })}
             />
             <MmField
-              label="Width"
+              label={t('Width')}
               value={lp.width}
               min={1}
               max={3000}
@@ -1465,7 +1505,7 @@ function PanelSetEditor({ p, materials }: { p: PanelSetParams; materials: Materi
               onChange={(v) => change(lp.id, { width: v })}
             />
             <Counter
-              label="Quantity"
+              label={t('Quantity')}
               value={lp.quantity}
               min={1}
               max={MAX_LOOSE}
@@ -1473,13 +1513,13 @@ function PanelSetEditor({ p, materials }: { p: PanelSetParams; materials: Materi
             />
           </div>
           <Select
-            label="Board"
+            label={t('Board')}
             value={lp.materialId}
             options={matOptions(materials)}
             onChange={(v) => change(lp.id, { materialId: v })}
           />
           <Toggle
-            label="Placed in the assembly"
+            label={t('Placed in the assembly')}
             checked={!!lp.place}
             onChange={(on) =>
               change(
@@ -1493,14 +1533,14 @@ function PanelSetEditor({ p, materials }: { p: PanelSetParams; materials: Materi
           {lp.place && (
             <>
               <Select
-                label="Lies"
+                label={t('Lies')}
                 value={lp.place.lie}
                 options={LIE_OPTIONS}
                 onChange={(v) => change(lp.id, { place: { ...lp.place!, lie: v } })}
               />
               <div className="dims3">
                 <MmField
-                  label="x (from left)"
+                  label={t('x (from left)')}
                   value={lp.place.x}
                   min={0}
                   max={20000}
@@ -1508,7 +1548,7 @@ function PanelSetEditor({ p, materials }: { p: PanelSetParams; materials: Materi
                   onChange={(v) => change(lp.id, { place: { ...lp.place!, x: v } })}
                 />
                 <MmField
-                  label="y (from floor)"
+                  label={t('y (from floor)')}
                   value={lp.place.y}
                   min={0}
                   max={20000}
@@ -1516,7 +1556,7 @@ function PanelSetEditor({ p, materials }: { p: PanelSetParams; materials: Materi
                   onChange={(v) => change(lp.id, { place: { ...lp.place!, y: v } })}
                 />
                 <MmField
-                  label="z (from back)"
+                  label={t('z (from back)')}
                   value={lp.place.z}
                   min={0}
                   max={20000}
@@ -1537,7 +1577,7 @@ function PanelSetEditor({ p, materials }: { p: PanelSetParams; materials: Materi
               })
             }
           >
-            Remove panel
+            {t('Remove panel')}
           </button>
         </Group>
       ))}
@@ -1547,7 +1587,7 @@ function PanelSetEditor({ p, materials }: { p: PanelSetParams; materials: Materi
         disabled={p.panels.length >= MAX_LOOSE}
         onClick={add}
       >
-        Add panel
+        {t('Add panel')}
       </button>
       <JointsEditor p={p} />
     </div>
@@ -1555,12 +1595,12 @@ function PanelSetEditor({ p, materials }: { p: PanelSetParams; materials: Materi
 }
 
 const LIE_OPTIONS: { value: PanelLie; label: string }[] = [
-  { value: 'flat-x', label: 'Flat, length left to right' },
-  { value: 'flat-z', label: 'Flat, length front to back' },
-  { value: 'edge-x', label: 'On edge, length left to right' },
-  { value: 'edge-z', label: 'On edge, length front to back' },
-  { value: 'up-x', label: 'Upright, facing the front' },
-  { value: 'up-z', label: 'Upright, facing the side' },
+  { value: 'flat-x', label: t('Flat, length left to right') },
+  { value: 'flat-z', label: t('Flat, length front to back') },
+  { value: 'edge-x', label: t('On edge, length left to right') },
+  { value: 'edge-z', label: t('On edge, length front to back') },
+  { value: 'up-x', label: t('Upright, facing the front') },
+  { value: 'up-z', label: t('Upright, facing the side') },
 ];
 
 /** Screwed joints between placed panels (ADR-041 amendment); screws are the user's choice. */
@@ -1575,10 +1615,10 @@ function JointsEditor({ p }: { p: PanelSetParams }) {
   const opts = placed.map((lp) => ({ value: lp.id, label: lp.name }));
   return (
     <Section
-      title="Screwed joints"
+      title={t('Screwed joints')}
       info={
-        <GuidanceTip topic="screwed joints">
-          Screw type, length and count are your choice for the board (guidance only).
+        <GuidanceTip topic={t('screwed joints')}>
+          {t('Screw type, length and count are your choice for the board (guidance only).')}
         </GuidanceTip>
       }
     >
@@ -1592,18 +1632,23 @@ function JointsEditor({ p }: { p: PanelSetParams }) {
                 className="btn sm ghost"
                 onClick={() => set({ joints: joints.filter((_, k) => k !== i) })}
               >
-                Remove
+                {t('Remove')}
               </button>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="hint">No joints yet.</p>
+        <p className="hint">{t('No joints yet.')}</p>
       )}
       <div className="dims2">
-        <Select label="Panel" value={a || opts[0]?.value || ''} options={opts} onChange={setA} />
         <Select
-          label="Screwed to"
+          label={t('Panel')}
+          value={a || opts[0]?.value || ''}
+          options={opts}
+          onChange={setA}
+        />
+        <Select
+          label={t('Screwed to')}
           value={b || opts[1]?.value || ''}
           options={opts}
           onChange={setB}
@@ -1619,17 +1664,17 @@ function JointsEditor({ p }: { p: PanelSetParams }) {
           })
         }
       >
-        Add screwed joint
+        {t('Add screwed joint')}
       </button>
     </Section>
   );
 }
 
 const SUPPORT_LABEL: Record<DeskSupport, string> = {
-  gables: 'On panels',
-  'pedestal-left': 'Unit left',
-  'pedestal-right': 'Unit right',
-  'two-pedestals': 'Two units',
+  gables: t('On panels'),
+  'pedestal-left': t('Unit left'),
+  'pedestal-right': t('Unit right'),
+  'two-pedestals': t('Two units'),
 };
 
 function DeskEditor({
@@ -1647,16 +1692,18 @@ function DeskEditor({
   const ped = p.support !== 'gables';
   const sides = (['left', 'right'] as const).filter((sd) => usesPedestal(p, sd));
   const steps: Step[] = [
-    { id: 'size', label: 'Size', meta: `${p.width}×${p.height}×${p.depth}`, done: true },
+    { id: 'size', label: t('Size'), meta: `${p.width}×${p.height}×${p.depth}`, done: true },
     {
       id: 'inside',
-      label: 'Units',
-      meta: ped ? insideSummary(sides.map((sd) => pedestalRoot(p, sd, deskId))) : 'No drawer units',
+      label: t('Units'),
+      meta: ped
+        ? insideSummary(sides.map((sd) => pedestalRoot(p, sd, deskId)))
+        : t('No drawer units'),
       done: true,
       disabled: !ped,
     },
-    { id: 'build', label: 'Build', meta: SUPPORT_LABEL[p.support], done: true },
-    { id: 'materials', label: 'Boards', meta: matName(materials, p.topMaterialId), done: true },
+    { id: 'build', label: t('Build'), meta: SUPPORT_LABEL[p.support], done: true },
+    { id: 'materials', label: t('Boards'), meta: matName(materials, p.topMaterialId), done: true },
   ];
   return (
     <div className="inspector">
@@ -1667,26 +1714,26 @@ function DeskEditor({
         }}
       />
       <header className="insp-head">
-        <h3>Desk</h3>
+        <h3>{t('Desk')}</h3>
       </header>
       <PieceInfo />
       <div className="dims3">
         <MmField
-          label="Width"
+          label={t('Width')}
           value={p.width}
           min={400}
           max={3000}
           onChange={(v) => set({ width: v })}
         />
         <MmField
-          label="Height"
+          label={t('Height')}
           value={p.height}
           min={400}
           max={1200}
           onChange={(v) => set({ height: v })}
         />
         <MmField
-          label="Depth"
+          label={t('Depth')}
           value={p.depth}
           min={300}
           max={1200}
@@ -1694,20 +1741,20 @@ function DeskEditor({
         />
       </div>
       <Segmented<DeskSupport>
-        label="Supports"
+        label={t('Supports')}
         value={p.support}
         onChange={(v) => set({ support: v })}
         options={[
-          { value: 'gables', label: 'Panels' },
-          { value: 'pedestal-left', label: 'Drawers left' },
-          { value: 'pedestal-right', label: 'Drawers right' },
-          { value: 'two-pedestals', label: 'Both' },
+          { value: 'gables', label: t('Panels') },
+          { value: 'pedestal-left', label: t('Drawers left') },
+          { value: 'pedestal-right', label: t('Drawers right') },
+          { value: 'two-pedestals', label: t('Both') },
         ]}
       />
       {ped && (
         <div className="dims2">
           <MmField
-            label="Drawer unit width"
+            label={t('Drawer unit width')}
             value={p.pedestal.width}
             min={250}
             max={900}
@@ -1718,9 +1765,9 @@ function DeskEditor({
       {ped && (
         <div className="field">
           <div className="label-row">
-            <span className="field-label">Inside the drawer units</span>
-            <InfoTip label="About the drawer units" align="start">
-              Or tap a drawer unit in the front view. Each unit is laid out on its own.
+            <span className="field-label">{t('Inside the drawer units')}</span>
+            <InfoTip label={t('About the drawer units')} align="start">
+              {t('Or tap a drawer unit in the front view. Each unit is laid out on its own.')}
             </InfoTip>
           </div>
           <div className="split-actions">
@@ -1731,15 +1778,15 @@ function DeskEditor({
                 className="btn outline"
                 onClick={() => select(pedestalRoot(p, sd, deskId).id)}
               >
-                {sd === 'left' ? 'Edit left unit' : 'Edit right unit'}
+                {sd === 'left' ? t('Edit left unit') : t('Edit right unit')}
               </button>
             ))}
           </div>
         </div>
       )}
-      <Group title="Construction" id="g-build">
+      <Group title={t('Construction')} id="g-build">
         <MmField
-          label="Top overhang at the front"
+          label={t('Top overhang at the front')}
           value={p.frontOverhang}
           min={0}
           max={300}
@@ -1747,21 +1794,21 @@ function DeskEditor({
           onChange={(v) => set({ frontOverhang: v })}
         />
         <Toggle
-          label="Modesty panel at the back"
+          label={t('Modesty panel at the back')}
           checked={p.modesty.enabled}
           onChange={(v) => set({ modesty: { ...p.modesty, enabled: v } })}
         />
         {p.modesty.enabled && (
           <div className="dims2">
             <MmField
-              label="Panel height"
+              label={t('Panel height')}
               value={p.modesty.height}
               min={50}
               max={800}
               onChange={(v) => set({ modesty: { ...p.modesty, height: v } })}
             />
             <MmField
-              label="Set in from rear"
+              label={t('Set in from rear')}
               value={p.modesty.setback}
               min={0}
               max={400}
@@ -1770,22 +1817,22 @@ function DeskEditor({
           </div>
         )}
       </Group>
-      <Group title="Materials" id="g-materials">
+      <Group title={t('Materials')} id="g-materials">
         <Select
-          label="Worktop"
+          label={t('Worktop')}
           value={p.topMaterialId}
           options={panelMats}
           onChange={(v) => set({ topMaterialId: v })}
         />
         <Select
-          label="Supports"
+          label={t('Supports')}
           value={p.bodyMaterialId}
           options={panelMats}
           onChange={(v) => set({ bodyMaterialId: v })}
         />
         {ped && (
           <Select
-            label="Drawer fronts"
+            label={t('Drawer fronts')}
             value={p.frontMaterialId}
             options={panelMats}
             onChange={(v) => set({ frontMaterialId: v })}
@@ -1812,27 +1859,27 @@ function BaysGroup({ interior, onChange }: { interior: Space; onChange: (s: Spac
   const apply = async (patch: Partial<typeof cur>) => {
     if (
       !layout &&
-      !(await askConfirm('The inside has its own layout. Replace it with equal bays?', {
-        confirmLabel: 'Replace',
+      !(await askConfirm(t('The inside has its own layout. Replace it with equal bays?'), {
+        confirmLabel: t('Replace'),
       }))
     )
       return;
     onChange(makeBays({ ...cur, ...patch }, interior));
   };
   return (
-    <Group title="Bays and shelves" id="g-bays">
+    <Group title={t('Bays and shelves')} id="g-bays">
       {!layout && (
         <p className="hint">
-          The inside is laid out space by space. Changing these replaces it with equal bays.
+          {t('The inside is laid out space by space. Changing these replaces it with equal bays.')}
         </p>
       )}
       <Counter
-        label="Bays (divided by uprights)"
+        label={t('Bays (divided by uprights)')}
         info={
           layout &&
           layout.bays > 1 && (
-            <InfoTip label="About bays" align="start">
-              Tap a bay in the front view to give it its own width, shelves or drawers.
+            <InfoTip label={t('About bays')} align="start">
+              {t('Tap a bay in the front view to give it its own width, shelves or drawers.')}
             </InfoTip>
           )
         }
@@ -1842,19 +1889,19 @@ function BaysGroup({ interior, onChange }: { interior: Space; onChange: (s: Spac
         onChange={(v) => apply({ bays: v })}
       />
       <Counter
-        label="Shelves in each bay"
+        label={t('Shelves in each bay')}
         value={cur.shelves}
         min={0}
         max={12}
         onChange={(v) => apply({ shelves: v })}
       />
       <Segmented<0 | 1 | 2>
-        label="Doors on each bay"
+        label={t('Doors on each bay')}
         value={cur.doors}
         options={[
-          { value: 0, label: 'None' },
-          { value: 1, label: 'One' },
-          { value: 2, label: 'Pair' },
+          { value: 0, label: t('None') },
+          { value: 1, label: t('One') },
+          { value: 2, label: t('Pair') },
         ]}
         onChange={(v) => apply({ doors: v })}
       />

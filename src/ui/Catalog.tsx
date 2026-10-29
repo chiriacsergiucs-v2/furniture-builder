@@ -46,6 +46,8 @@ import { useTemplates } from '../store/templatesStore';
 import { ProjectTemplateList } from './ProjectTemplates';
 import { askConfirm, askText } from './Confirm';
 import { InfoTip } from './controls';
+import { t, tr } from '../core/i18n';
+import { tNode } from './i18n';
 import { Icon } from './icons';
 import { AccountBadge, AccountRowActions } from './Account';
 import { familyGlyph, templateGlyph } from './Templates';
@@ -113,12 +115,12 @@ export function groupFamilies(families: ViewFamily[], by: Grouping): Group[] {
   if (by === 'type')
     return FUNCTIONS.map((fn) => ({
       key: fn,
-      label: FUNCTION_LABEL[fn],
+      label: tr(FUNCTION_LABEL[fn]),
       items: families.filter((f) => f.function === fn).map((family) => ({ family })),
     })).filter((g) => g.items.length);
   const groups: Group[] = ROOMS.map((r) => ({
     key: r,
-    label: ROOM_LABEL[r],
+    label: tr(ROOM_LABEL[r]),
     items: families
       .filter((f) => f.rooms.includes(r))
       .map((family) => ({ family, also: family.rooms[0] !== r }))
@@ -144,26 +146,26 @@ function GroupToggle({
   short?: boolean;
 }) {
   return (
-    <div className="segmented small" role="radiogroup" aria-label="Group by">
+    <div className="segmented small" role="radiogroup" aria-label={t('Group by')}>
       <button
         type="button"
         role="radio"
         aria-checked={value === 'room'}
-        aria-label={short ? 'By room' : undefined}
+        aria-label={short ? t('By room') : undefined}
         className={value === 'room' ? 'on' : ''}
         onClick={() => onChange('room')}
       >
-        {short ? 'Room' : 'By room'}
+        {short ? t('Room') : t('By room')}
       </button>
       <button
         type="button"
         role="radio"
         aria-checked={value === 'type'}
-        aria-label={short ? 'By type' : undefined}
+        aria-label={short ? t('By type') : undefined}
         className={value === 'type' ? 'on' : ''}
         onClick={() => onChange('type')}
       >
-        {short ? 'Type' : 'By type'}
+        {short ? t('Type') : t('By type')}
       </button>
     </div>
   );
@@ -172,13 +174,20 @@ function GroupToggle({
 const now = () => new Date().toISOString();
 const waitsFor = (requires: CatalogVariant['requires']) =>
   missingCapabilities({ requires })
-    .map((c) => CAPABILITY_WAITS[c] ?? c)
+    .map((c) => (CAPABILITY_WAITS[c] ? tr(CAPABILITY_WAITS[c]) : c))
     .join('; ');
 const matches = (f: ViewFamily, v: CatalogVariant, q: string) =>
   !q ||
-  [f.name, f.nameRo, ...f.aliases, v.name, VARIANT_RO[v.id] ?? ''].some((s) =>
-    s.toLowerCase().includes(q),
-  );
+  [
+    f.name,
+    f.nameRo,
+    ...f.aliases,
+    v.name,
+    VARIANT_RO[v.id] ?? '',
+    tr(f.name),
+    tr(v.name),
+    ...f.aliases.map((a) => tr(a)),
+  ].some((s) => s.toLowerCase().includes(q));
 
 /** The catalog's own actions; on a phone they fold under one button so the list starts higher up. */
 function CatalogActions({ phone, children }: { phone: boolean; children: ReactNode }) {
@@ -186,7 +195,7 @@ function CatalogActions({ phone, children }: { phone: boolean; children: ReactNo
   return (
     <details className="catalog-more">
       <summary>
-        More catalog actions
+        {t('More catalog actions')}
         <Icon name="chevron-down" className="sm" />
       </summary>
       <div className="catalog-actions">{children}</div>
@@ -224,13 +233,13 @@ export function StartFrom({
     <div className="start-from">
       <div className="start-head">
         <h3>
-          Start from <span className="count">{total} ready items</span>
+          {t('Start from')} <span className="count">{t('{n} ready items', { n: total })}</span>
         </h3>
         <GroupToggle value={grouping} onChange={setGrouping} />
         {onBrowse && (
           <button type="button" className="btn sm" onClick={onBrowse}>
             <Icon name="catalog" className="sm" />
-            Open the Catalog
+            {t('Open the Catalog')}
           </button>
         )}
       </div>
@@ -238,8 +247,8 @@ export function StartFrom({
         <Icon name="search" className="sm" />
         <input
           type="search"
-          placeholder="Search, e.g. wardrobe, dulap, bed"
-          aria-label="Search the items"
+          placeholder={t('Search, e.g. wardrobe, dulap, bed')}
+          aria-label={t('Search the items')}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
@@ -269,9 +278,9 @@ export function StartFrom({
                     <ItemPicture f={f} v={v} className="thumb" width={64} height={44} alt="" />
                     <span>
                       <strong>
-                        {f.name}: {v.name}
+                        {tr(f.name)}: {tr(v.name)}
                       </strong>
-                      <span className="sub">{v.summary}</span>
+                      <span className="sub">{tr(v.summary)}</span>
                       {/* The Romanian name on its own line, not inside the English text (ADR-120). */}
                       {VARIANT_RO[v.id] && (
                         <span className="sub ro-line" lang="ro">
@@ -348,24 +357,24 @@ export function CatalogPage({
   const all = families.flatMap((f) => f.variants);
   const ready = all.filter(insertable).length;
   const sources = (
-    <div className="segmented small" role="tablist" aria-label="Source">
+    <div className="segmented small" role="tablist" aria-label={t('Source')}>
       {(['templates', 'saved', 'brands'] as const).map((s) => (
         <button
           key={s}
           type="button"
           role="tab"
           aria-selected={source === s}
-          aria-label={phone && s === 'saved' ? 'Saved on this device' : undefined}
+          aria-label={phone && s === 'saved' ? t('Saved on this device') : undefined}
           className={source === s ? 'on' : ''}
           onClick={() => setSource(s)}
         >
           {s === 'templates'
-            ? 'Templates'
+            ? t('Templates')
             : s === 'saved'
               ? phone
-                ? 'Saved'
-                : 'Saved on this device'
-              : 'Brands'}
+                ? t('Saved')
+                : t('Saved on this device')
+              : t('Brands')}
         </button>
       ))}
     </div>
@@ -375,8 +384,8 @@ export function CatalogPage({
       <Icon name="search" className="sm" />
       <input
         type="search"
-        placeholder="Search, e.g. wardrobe, dulap, bed"
-        aria-label="Search the catalog"
+        placeholder={t('Search, e.g. wardrobe, dulap, bed')}
+        aria-label={t('Search the catalog')}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
       />
@@ -384,7 +393,7 @@ export function CatalogPage({
   );
   const startEdit = (f: ViewFamily) => {
     const local = f.localId
-      ? useTemplates.getState().locals.find((t) => t.id === f.localId)
+      ? useTemplates.getState().locals.find((x) => x.id === f.localId)
       : undefined;
     setEditing(
       local ? structuredClone(local) : shadowOf(catalogFamilies.find((x) => x.id === f.id)!),
@@ -419,50 +428,53 @@ export function CatalogPage({
       const list = Array.isArray(data.templates) ? data.templates : [];
       let ok = 0,
         bad = 0;
-      for (const t of list) {
-        if (validateLocalTemplate(t).length) {
+      for (const tpl of list) {
+        if (validateLocalTemplate(tpl).length) {
           bad++;
           continue;
         }
-        await useTemplates.getState().save(t as LocalTemplate);
+        await useTemplates.getState().save(tpl as LocalTemplate);
         ok++;
       }
       setMsg(
-        `${ok} ${ok === 1 ? 'template' : 'templates'} imported${bad ? `, ${bad} skipped (not valid)` : ''}.`,
+        `${t('{n|# template|# templates} imported', { n: ok })}${bad ? t(', {n} skipped (not valid)', { n: bad }) : ''}.`,
       );
     } catch {
-      setMsg('That file could not be read as a templates file.');
+      setMsg(t('That file could not be read as a templates file.'));
     }
   };
   return (
-    <main className="catalog-page" aria-label="Catalog">
+    <main className="catalog-page" aria-label={t('Catalog')}>
       <header className="catalog-head">
         <div>
           <div className="info-row">
-            <h1>Catalog</h1>
-            <InfoTip label="About the catalog" align="start">
+            <h1>{t('Catalog')}</h1>
+            <InfoTip label={t('About the catalog')} align="start">
               {toProject
-                ? 'Pick one to add it to the open project.'
-                : 'Pick one to open your own copy in the editor.'}
+                ? t('Pick one to add it to the open project.')
+                : t('Pick one to open your own copy in the editor.')}
             </InfoTip>
           </div>
           <p className="hint">
-            <strong className="num">{all.length} items</strong> in {families.length} families ·{' '}
-            {ready} open right away.
+            {tNode('{items} in {families} · {ready} open right away.', {
+              items: <strong className="num">{t('{n} items', { n: all.length })}</strong>,
+              families: t('{n} families', { n: families.length }),
+              ready: String(ready),
+            })}
           </p>
         </div>
         <div className="split-actions">
           {onNewPiece && (
             <button type="button" className="btn primary" onClick={onNewPiece}>
               <Icon name="plus" className="sm" />
-              New piece
+              {t('New piece')}
             </button>
           )}
           {/* Only when there is a design to go back to (ADR-120). */}
           {designOpen && (
             <button type="button" className="btn outline" onClick={onDone}>
               <Icon name="chevron-left" className="sm" />
-              Back to the editor
+              {t('Back to the editor')}
             </button>
           )}
         </div>
@@ -485,18 +497,22 @@ export function CatalogPage({
                 checked={safety}
                 onChange={(e) => toggleSafety(e.target.checked)}
               />
-              <span>I check safety-regulated items myself</span>
+              <span>{t('I check safety-regulated items myself')}</span>
             </label>
-            <InfoTip label="About safety-regulated items" align="start">
-              Safety-regulated items (bunk bed, cradle): you check them against the standards
-              yourself.
+            <InfoTip label={t('About safety-regulated items')} align="start">
+              {t(
+                'Safety-regulated items (bunk bed, cradle): you check them against the standards yourself.',
+              )}
             </InfoTip>
           </span>
           <SaveAsTemplate />
           <details className="menu catalog-files">
-            <summary aria-label="Template files" title="Export or import your own templates">
+            <summary
+              aria-label={t('Template files')}
+              title={t('Export or import your own templates')}
+            >
               <Icon name="more" className="sm" />
-              <span>Template files</span>
+              <span>{t('Template files')}</span>
             </summary>
             <div className="menu-items">
               <button
@@ -505,15 +521,15 @@ export function CatalogPage({
                 disabled={!useTemplates.getState().locals.length}
               >
                 <Icon name="download" />
-                Export my templates
+                {t('Export my templates')}
               </button>
               <label className="menu-file">
                 <Icon name="upload" />
-                Import templates
+                {t('Import templates')}
                 <input
                   type="file"
                   accept="application/json,.json"
-                  aria-label="Import templates"
+                  aria-label={t('Import templates')}
                   onChange={(e) => {
                     const f = e.target.files?.[0];
                     if (f) void importLocal(f);
@@ -539,8 +555,8 @@ export function CatalogPage({
             setEditing(null);
             if (m) setMsg(m);
           }}
-          onEditDesign={(t, vid) => {
-            useDesign.getState().editTemplateVariant(t, vid);
+          onEditDesign={(tpl, vid) => {
+            useDesign.getState().editTemplateVariant(tpl, vid);
             onDone();
           }}
         />
@@ -550,10 +566,10 @@ export function CatalogPage({
         (groups.length === 0 ? (
           <p className="empty center">
             <Icon name="search" />
-            Nothing matches “{query}”.
+            {t('Nothing matches “{query}”.', { query })}
           </p>
         ) : (
-          <nav className="group-index" aria-label="Jump to a group">
+          <nav className="group-index" aria-label={t('Jump to a group')}>
             {groups.map((g) => (
               <a
                 key={g.key}
@@ -573,7 +589,7 @@ export function CatalogPage({
         groups.map((g) => (
           <section key={g.key} id={`cat-${g.key}`} className="catalog-group" aria-label={g.label}>
             <h2 className="group-head">
-              {g.label} <span className="count">{itemCount(g)} items</span>
+              {g.label} <span className="count">{t('{n} items', { n: itemCount(g) })}</span>
             </h2>
             {g.items.map(({ family, also }) => (
               <FamilyBlock
@@ -598,8 +614,9 @@ export function CatalogPage({
         (brandEntries.length === 0 ? (
           <p className="empty center">
             <Icon name="catalog" />
-            No brand products yet. The weekly catalog feed (Mondays, IKEA first) adds them once it
-            can reach the manufacturers' sites.
+            {t(
+              "No brand products yet. The weekly catalog feed (Mondays, IKEA first) adds them once it can reach the manufacturers' sites.",
+            )}
           </p>
         ) : (
           <ul className="template-list template-grid">
@@ -615,10 +632,10 @@ export function CatalogPage({
                   </span>
                   <span>
                     <strong>
-                      {e.design.catalog!.brand} {e.design.catalog!.productName ?? e.design.name}
+                      {e.design.catalog!.brand} {e.design.catalog!.productName ?? tr(e.design.name)}
                     </strong>
                     <span className="sub">
-                      {e.design.catalog!.category ?? ''}
+                      {e.design.catalog!.category ? tr(e.design.catalog!.category) : ''}
                       {e.design.catalog!.articleNumber
                         ? ` · ${e.design.catalog!.articleNumber}`
                         : ''}
@@ -679,16 +696,20 @@ export function ItemPicture({
 }
 
 const SUPPORT_TEXT = {
-  ready: 'Ready',
-  'needs-construction': 'Needs construction',
-  safety: 'Safety-regulated',
-  reference: 'Reference',
-} as const;
+  ready: t('Ready'),
+  'needs-construction': t('Needs construction'),
+  safety: t('Safety-regulated'),
+  reference: t('Reference'),
+};
 
 /** "1600 × 450 × 438 mm · 9 parts · 2 to check": an item's size, parts and checks in one line. */
 const factsLine = (fx: NonNullable<ReturnType<typeof itemFacts>>) =>
-  `${fx.w} × ${fx.h} × ${fx.d} mm · ${fx.parts} parts${
-    fx.errors ? ` · ${fx.errors} problems` : fx.warnings ? ` · ${fx.warnings} to check` : ''
+  `${t('{w} × {h} × {d} mm', { w: fx.w, h: fx.h, d: fx.d })} · ${t('{n} parts', { n: fx.parts })}${
+    fx.errors
+      ? ` · ${t('{n} problems', { n: fx.errors })}`
+      : fx.warnings
+        ? ` · ${t('{n} to check', { n: fx.warnings })}`
+        : ''
   }`;
 
 /** The lines of a compact item card that end in an ellipsis when they do not fit (ADR-118). */
@@ -743,15 +764,15 @@ function ItemCard({
           className="snap"
           width={96}
           height={60}
-          alt={`${f.name}: ${v.name}, 3D view`}
+          alt={t('{name}, 3D view', { name: `${tr(f.name)}: ${tr(v.name)}` })}
         />
       )}
       <div className="item-text">
         <span className="item-name" id={nameId}>
-          <strong>{v.name}</strong>
+          <strong>{tr(v.name)}</strong>
         </span>
         <span className="summary-row">
-          <span className="sub summary">{v.summary}</span>
+          <span className="sub summary">{tr(v.summary)}</span>
           {(cut || open) && (
             <button
               type="button"
@@ -760,21 +781,21 @@ function ItemCard({
               aria-describedby={nameId}
               onClick={() => setOpen(!open)}
             >
-              {open ? 'Less' : 'More'}
+              {open ? t('Less') : t('More')}
             </button>
           )}
         </span>
         <span className="item-meta">
-          {isDefault && <span className="tag subtle">default</span>}
+          {isDefault && <span className="tag subtle">{t('default')}</span>}
           <span
             className={`kind ${v.kind}`}
             title={
               v.kind === 'interior'
-                ? 'Interior-only: built on an existing product'
-                : 'Needed new construction'
+                ? t('Interior-only: built on an existing product')
+                : t('Needed new construction')
             }
           >
-            {v.kind === 'interior' ? 'Interior only' : 'New construction'}
+            {v.kind === 'interior' ? t('Interior only') : t('New construction')}
           </span>
           {facts && <span className="num">{factsLine(facts)}</span>}
         </span>
@@ -784,10 +805,12 @@ function ItemCard({
             RO: {VARIANT_RO[v.id]}
           </span>
         )}
-        {v.hardware && <span className="sub">You choose: {v.hardware}</span>}
+        {v.hardware && (
+          <span className="sub">{t('You choose: {hardware}', { hardware: tr(v.hardware) })}</span>
+        )}
         {!ok && (
           <span className="sub waits-why">
-            Not available yet: {waitsFor(v.requires) || 'no design'}
+            {t('Not available yet: {why}', { why: waitsFor(v.requires) || t('no design') })}
           </span>
         )}
       </div>
@@ -800,7 +823,7 @@ function ItemCard({
           if (d) onTake(d);
         }}
       >
-        {toProject ? 'Add' : 'Open'}
+        {toProject ? t('Add') : t('Open')}
       </button>
     </li>
   );
@@ -831,29 +854,33 @@ function FamilyBlock({
   const [about, setAbout] = useState(false);
   const aboutId = useId();
   const aliases = f.aliases.length > 0 && (
-    <span className="aliases">also called {f.aliases.join(', ')}</span>
+    <span className="aliases">
+      {t('also called {names}', { names: f.aliases.map((a) => tr(a)).join(', ') })}
+    </span>
   );
   return (
-    <article className={`family support-${f.support}`} aria-label={f.name}>
+    <article className={`family support-${f.support}`} aria-label={tr(f.name)}>
       <header className="family-head">
         <span className="glyph">
           <Icon name={familyGlyph(f)} />
         </span>
         <div>
           <h3>
-            {f.name} <span className="ro">{f.nameRo}</span>
+            {tr(f.name)} <span className="ro">{f.nameRo}</span>
           </h3>
           <p className="chips">
             <span className={`chip ${f.support}`}>{SUPPORT_TEXT[f.support]}</span>
-            <span className="chip">{FUNCTION_LABEL[f.function as FunctionGroup]}</span>
+            <span className="chip">{tr(FUNCTION_LABEL[f.function as FunctionGroup])}</span>
             {f.localId && (
               <span className="chip edited">
-                {f.own ? 'Your template' : 'Edited on this device'}
+                {f.own ? t('Your template') : t('Edited on this device')}
               </span>
             )}
             {f.localId && <AccountBadge table="templates" id={f.localId} />}
             {also && (
-              <span className="chip subtle">main room: {ROOM_LABEL[f.rooms[0] as Room]}</span>
+              <span className="chip subtle">
+                {t('main room: {room}', { room: tr(ROOM_LABEL[f.rooms[0] as Room]) })}
+              </span>
             )}
           </p>
         </div>
@@ -866,12 +893,12 @@ function FamilyBlock({
             aria-controls={aboutId}
             onClick={() => setAbout(!about)}
           >
-            About this family
+            {t('About this family')}
             <Icon name="chevron-down" className="sm" />
           </button>
           <button type="button" className="btn sm" onClick={onEdit}>
             <Icon name="pencil" className="sm" />
-            Edit template
+            {t('Edit template')}
           </button>
         </div>
       </header>
@@ -881,20 +908,20 @@ function FamilyBlock({
             <p className="chips">
               {f.rooms.map((r) => (
                 <span key={r} className="chip subtle">
-                  {ROOM_LABEL[r as Room]}
+                  {tr(ROOM_LABEL[r as Room])}
                 </span>
               ))}
               {aliases}
             </p>
           )}
           <p className="structure">
-            <strong>Default structure:</strong> {f.structure}
+            <strong>{t('Default structure:')}</strong> {tr(f.structure)}
           </p>
           <div className="configs">
-            <strong>Configurations:</strong>
+            <strong>{t('Configurations:')}</strong>
             <ul>
               {f.configurations.map((c) => (
-                <li key={c}>{c}</li>
+                <li key={c}>{tr(c)}</li>
               ))}
             </ul>
           </div>
@@ -921,14 +948,17 @@ function FamilyBlock({
           onClick={async () => {
             if (
               await askConfirm(
-                `Reset “${f.name}” to the shipped template? Your edits to it on this device are removed.`,
-                { confirmLabel: 'Reset', danger: true },
+                t(
+                  'Reset “{name}” to the shipped template? Your edits to it on this device are removed.',
+                  { name: tr(f.name) },
+                ),
+                { confirmLabel: t('Reset'), danger: true },
               )
             )
               void remove(f.localId!);
           }}
         >
-          Reset to shipped
+          {t('Reset to shipped')}
         </button>
       )}
       {f.own && (
@@ -937,15 +967,15 @@ function FamilyBlock({
           className="danger-link"
           onClick={async () => {
             if (
-              await askConfirm(`Delete your template “${f.name}”?`, {
-                confirmLabel: 'Delete',
+              await askConfirm(t('Delete your template “{name}”?', { name: f.name }), {
+                confirmLabel: t('Delete'),
                 danger: true,
               })
             )
               void remove(f.localId!);
           }}
         >
-          Delete template
+          {t('Delete template')}
         </button>
       )}
     </article>
@@ -961,33 +991,39 @@ function ShippedUpdated({ f }: { f: ViewFamily }) {
     <p className="alert info">
       <Icon name="info" className="sm" />
       <span>
-        The shipped template was updated (revision {shipped.catalogVersion}). Shipped:{' '}
-        {shipped.variants.length} variants; yours: {f.variants.length}.
+        {t(
+          'The shipped template was updated (revision {rev}). Shipped: {shipped} variants; yours: {yours}.',
+          {
+            rev: shipped.catalogVersion,
+            shipped: shipped.variants.length,
+            yours: f.variants.length,
+          },
+        )}
       </span>
       <button
         type="button"
         className="btn sm"
         onClick={() => {
-          const t = useTemplates.getState().locals.find((x) => x.id === f.localId);
-          if (t) void save({ ...t, basedOn: shipped.catalogVersion, updatedAt: now() });
+          const mine = useTemplates.getState().locals.find((x) => x.id === f.localId);
+          if (mine) void save({ ...mine, basedOn: shipped.catalogVersion, updatedAt: now() });
         }}
       >
-        Keep mine
+        {t('Keep mine')}
       </button>
       <button
         type="button"
         className="btn sm"
         onClick={async () => {
           if (
-            await askConfirm('Replace your edits with the shipped template?', {
-              confirmLabel: 'Use shipped',
+            await askConfirm(t('Replace your edits with the shipped template?'), {
+              confirmLabel: t('Use shipped'),
               danger: true,
             })
           )
             void remove(f.localId!);
         }}
       >
-        Use shipped
+        {t('Use shipped')}
       </button>
     </p>
   );
@@ -1006,14 +1042,14 @@ function SaveAsTemplate() {
       className="btn sm"
       disabled={done}
       onClick={async () => {
-        const name = (await askText('Name of the new template', design.name))?.trim();
+        const name = (await askText(t('Name of the new template'), design.name))?.trim();
         if (!name) return;
         void save(templateFromDesign(design, { name, function: 'storage', rooms: ['other'] })).then(
           () => setDone(true),
         );
       }}
     >
-      {done ? 'Saved as a template' : 'Save this piece as a template'}
+      {done ? t('Saved as a template') : t('Save this piece as a template')}
     </button>
   );
 }
@@ -1025,12 +1061,12 @@ function SavedList({ onTake }: { onTake: (d: Design) => void }) {
       .then(setRows)
       .catch(() => setRows([]));
   }, []);
-  if (!rows) return <p className="loading">Loading…</p>;
+  if (!rows) return <p className="loading">{t('Loading…')}</p>;
   if (!rows.length)
     return (
       <p className="empty center">
         <Icon name="folder" />
-        Nothing saved on this device yet.
+        {t('Nothing saved on this device yet.')}
       </p>
     );
   return (
@@ -1045,8 +1081,8 @@ function SavedList({ onTake }: { onTake: (d: Design) => void }) {
               <strong>{r.name}</strong>
               <span className="sub">
                 {r.design.catalog?.origin
-                  ? `Based on ${r.design.catalog.origin.productName}`
-                  : 'Your design'}
+                  ? t('Based on {name}', { name: tr(r.design.catalog.origin.productName) })
+                  : t('Your design')}
               </span>
             </span>
             <Icon name="chevron-right" className="chev sm" />
@@ -1067,10 +1103,10 @@ function TemplateEditor({
   onDone: (msg?: string) => void;
   onEditDesign: (t: LocalTemplate, variantId: string) => void;
 }) {
-  const [t, setT] = useState(initial);
+  const [tpl, setT] = useState(initial);
   const save = useTemplates((s) => s.save);
-  const f = t.family;
-  const setF = (patch: Partial<typeof f>) => setT({ ...t, family: { ...f, ...patch } });
+  const f = tpl.family;
+  const setF = (patch: Partial<typeof f>) => setT({ ...tpl, family: { ...f, ...patch } });
   const setV = (i: number, patch: Partial<(typeof f.variants)[number]>) =>
     setF({ variants: f.variants.map((v, j) => (j === i ? { ...v, ...patch } : v)) });
   const move = (i: number, d: -1 | 1) => {
@@ -1080,29 +1116,29 @@ function TemplateEditor({
     [vs[i], vs[j]] = [vs[j], vs[i]];
     setF({ variants: vs });
   };
-  const errs = validateLocalTemplate({ ...t, updatedAt: now() });
-  const commit = async (next = t) => {
+  const errs = validateLocalTemplate({ ...tpl, updatedAt: now() });
+  const commit = async (next = tpl) => {
     const stamped = { ...next, revision: next.revision + 1, updatedAt: now() };
     await save(stamped);
     return stamped;
   };
   return (
-    <section className="template-editor" aria-label={`Edit template ${f.name}`}>
+    <section className="template-editor" aria-label={t('Edit template {name}', { name: f.name })}>
       <div className="card-title">
         <span className="info-row">
-          <span>Edit template</span>
-          <InfoTip label="About editing a template" align="start">
-            Saved on this device only; the shipped template never changes.
+          <span>{t('Edit template')}</span>
+          <InfoTip label={t('About editing a template')} align="start">
+            {t('Saved on this device only; the shipped template never changes.')}
           </InfoTip>
         </span>
       </div>
       <div className="dims2">
         <div className="field">
-          <label htmlFor="te-name">Name</label>
+          <label htmlFor="te-name">{t('Name')}</label>
           <input id="te-name" value={f.name} onChange={(e) => setF({ name: e.target.value })} />
         </div>
         <div className="field">
-          <label htmlFor="te-aliases">Other names (comma-separated)</label>
+          <label htmlFor="te-aliases">{t('Other names (comma-separated)')}</label>
           <input
             id="te-aliases"
             value={f.aliases.join(', ')}
@@ -1118,7 +1154,7 @@ function TemplateEditor({
         </div>
       </div>
       <div className="field">
-        <label htmlFor="te-fn">Type</label>
+        <label htmlFor="te-fn">{t('Type')}</label>
         <select
           id="te-fn"
           value={f.function}
@@ -1126,13 +1162,13 @@ function TemplateEditor({
         >
           {FUNCTIONS.map((fn) => (
             <option key={fn} value={fn}>
-              {FUNCTION_LABEL[fn]}
+              {tr(FUNCTION_LABEL[fn])}
             </option>
           ))}
         </select>
       </div>
       <fieldset className="field rooms">
-        <legend>Rooms (the first ticked is the main one)</legend>
+        <legend>{t('Rooms (the first ticked is the main one)')}</legend>
         {ROOMS.map((r) => (
           <label key={r} className="toggle small">
             <input
@@ -1142,12 +1178,12 @@ function TemplateEditor({
                 setF({ rooms: e.target.checked ? [...f.rooms, r] : f.rooms.filter((x) => x !== r) })
               }
             />
-            <span>{ROOM_LABEL[r]}</span>
+            <span>{tr(ROOM_LABEL[r])}</span>
           </label>
         ))}
       </fieldset>
       <div className="field">
-        <label htmlFor="te-structure">Default structure</label>
+        <label htmlFor="te-structure">{t('Default structure')}</label>
         <textarea
           id="te-structure"
           rows={2}
@@ -1156,7 +1192,7 @@ function TemplateEditor({
         />
       </div>
       <div className="field">
-        <label htmlFor="te-config">What can be changed (one per line)</label>
+        <label htmlFor="te-config">{t('What can be changed (one per line)')}</label>
         <textarea
           id="te-config"
           rows={3}
@@ -1172,17 +1208,17 @@ function TemplateEditor({
         />
       </div>
       <div className="field">
-        <span className="field-label">Variants (1–5; the first is the default)</span>
+        <span className="field-label">{t('Variants (1–5; the first is the default)')}</span>
         <ul className="variant-edit">
           {f.variants.map((v, i) => (
             <li key={v.id}>
               <input
-                aria-label="Variant name"
+                aria-label={t('Variant name')}
                 value={v.name}
                 onChange={(e) => setV(i, { name: e.target.value })}
               />
               <input
-                aria-label="Variant summary"
+                aria-label={t('Variant summary')}
                 value={v.summary}
                 onChange={(e) => setV(i, { summary: e.target.value })}
               />
@@ -1190,7 +1226,7 @@ function TemplateEditor({
                 <button
                   type="button"
                   className="btn icon ghost sm"
-                  aria-label="Move up"
+                  aria-label={t('Move up')}
                   disabled={i === 0}
                   onClick={() => move(i, -1)}
                 >
@@ -1199,7 +1235,7 @@ function TemplateEditor({
                 <button
                   type="button"
                   className="btn icon ghost sm"
-                  aria-label="Move down"
+                  aria-label={t('Move down')}
                   disabled={i === f.variants.length - 1}
                   onClick={() => move(i, 1)}
                 >
@@ -1211,7 +1247,7 @@ function TemplateEditor({
                   disabled={!v.design}
                   onClick={async () => onEditDesign(await commit(), v.id)}
                 >
-                  Edit design
+                  {t('Edit design')}
                 </button>
                 <button
                   type="button"
@@ -1224,19 +1260,19 @@ function TemplateEditor({
                         {
                           ...structuredClone(v),
                           id: `${v.id}-copy-${Date.now().toString(36)}`,
-                          name: `${v.name} (copy)`,
+                          name: t('{name} (copy)', { name: v.name }),
                         },
                       ],
                     })
                   }
                 >
                   <Icon name="copy" className="sm" />
-                  Duplicate
+                  {t('Duplicate')}
                 </button>
                 <button
                   type="button"
                   className="btn icon sm danger"
-                  aria-label="Remove variant"
+                  aria-label={t('Remove variant')}
                   disabled={f.variants.length <= 1}
                   onClick={() => setF({ variants: f.variants.filter((_, j) => j !== i) })}
                 >
@@ -1260,13 +1296,13 @@ function TemplateEditor({
           disabled={errs.length > 0}
           onClick={async () => {
             await commit();
-            onDone(`Template “${f.name}” saved on this device.`);
+            onDone(t('Template “{name}” saved on this device.', { name: f.name }));
           }}
         >
-          Save template
+          {t('Save template')}
         </button>
         <button type="button" className="btn outline" onClick={() => onDone()}>
-          Cancel
+          {t('Cancel')}
         </button>
       </div>
     </section>

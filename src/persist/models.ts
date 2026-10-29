@@ -4,6 +4,7 @@
  * any parser, nothing is executed, nothing is requested from the network, and every problem comes back as a message.
  */
 import { newId } from '../core/design';
+import { t } from '../core/i18n';
 import {
   checkGltf,
   MODEL_LIMITS,
@@ -25,13 +26,17 @@ export async function importModelFile(file: File): Promise<ModelImport> {
   // Refuse an oversize file before reading it into memory.
   if (file.size > MODEL_LIMITS.bytes)
     return no(
-      `${file.name} is ${(file.size / 1024 / 1024).toFixed(1)} MB; the limit is ${MODEL_LIMITS.bytes / 1024 / 1024} MB.`,
+      t('{name} is {size} MB; the limit is {limit} MB.', {
+        name: file.name,
+        size: (file.size / 1024 / 1024).toFixed(1),
+        limit: MODEL_LIMITS.bytes / 1024 / 1024,
+      }),
     );
   let bytes: Uint8Array;
   try {
     bytes = new Uint8Array(await file.arrayBuffer());
   } catch {
-    return no(`${file.name} could not be read.`);
+    return no(t('{name} could not be read.', { name: file.name }));
   }
   const check = checkGltf(file.name, bytes);
   if (!check.ok) return check;
@@ -39,7 +44,7 @@ export async function importModelFile(file: File): Promise<ModelImport> {
   try {
     g = await reader();
   } catch {
-    return no('The 3D reader could not be loaded; reload the app and try again.');
+    return no(t('The 3D reader could not be loaded; reload the app and try again.'));
   }
   // One copy only: the parser reads it without keeping or changing it, and the same bytes are stored.
   const buffer = bytes.buffer as ArrayBuffer;
@@ -52,15 +57,19 @@ export async function importModelFile(file: File): Promise<ModelImport> {
       !(m.size.x > 0 || m.size.y > 0 || m.size.z > 0) ||
       ![m.size.x, m.size.y, m.size.z].every(Number.isFinite)
     )
-      return no(`${file.name} has no size to show.`);
+      return no(t('{name} has no size to show.', { name: file.name }));
     if (m.triangles > MODEL_LIMITS.triangles)
       return no(
-        `${file.name} has ${m.triangles.toLocaleString('en')} triangles; the limit is ${MODEL_LIMITS.triangles.toLocaleString('en')}.`,
+        t('{name} has {n} triangles; the limit is {limit}.', {
+          name: file.name,
+          n: m.triangles.toLocaleString('en'),
+          limit: MODEL_LIMITS.triangles.toLocaleString('en'),
+        }),
       );
     size = sizeFromMetres(m.size.x, m.size.y, m.size.z);
     thumb = await g.thumbnail(scene);
   } catch {
-    return no(`${file.name} could not be read as a 3D model.`);
+    return no(t('{name} could not be read as a 3D model.', { name: file.name }));
   }
   const model: StoredModel = {
     id: `mdl-${newId()}${newId()}`,
@@ -75,7 +84,7 @@ export async function importModelFile(file: File): Promise<ModelImport> {
   try {
     await saveModel(model);
   } catch {
-    return no(`${file.name} could not be saved on this device.`);
+    return no(t('{name} could not be saved on this device.', { name: file.name }));
   }
   return { ok: true, model };
 }
@@ -185,9 +194,9 @@ export async function takeModels(
   const problems: string[] = [];
   const ids = new Map<string, string>();
   if (!Array.isArray(models3d))
-    return { data: rest, problems: ['The 3D models in the file could not be read.'] };
+    return { data: rest, problems: [t('The 3D models in the file could not be read.')] };
   for (const f of models3d as Partial<ModelFile>[]) {
-    const label = typeof f?.name === 'string' ? f.name.slice(0, 80) : 'a 3D model';
+    const label = typeof f?.name === 'string' ? f.name.slice(0, 80) : t('a 3D model');
     if (
       !f ||
       typeof f.id !== 'string' ||
@@ -196,14 +205,14 @@ export async function takeModels(
       typeof f.data !== 'string' ||
       !isSize(f.size)
     ) {
-      problems.push(`${label} was skipped: it is not a valid 3D model entry.`);
+      problems.push(t('{name} was skipped: it is not a valid 3D model entry.', { name: label }));
       continue;
     }
     try {
       const bytes = base64ToBytes(f.data);
       const check = checkGltf(`${f.name}.${f.format}`, new Uint8Array(bytes));
       if (!check.ok) {
-        problems.push(`${label} was skipped: ${check.problem}`);
+        problems.push(t('{name} was skipped: {problem}', { name: label, problem: check.problem }));
         continue;
       }
       const same = await sameModel(check.name, bytes, database);
@@ -233,7 +242,7 @@ export async function takeModels(
       );
       ids.set(f.id, id);
     } catch {
-      problems.push(`${label} could not be saved on this device.`);
+      problems.push(t('{name} could not be saved on this device.', { name: label }));
     }
   }
   const items = (rest as { models?: unknown }).models;

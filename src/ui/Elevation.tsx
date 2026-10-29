@@ -1,5 +1,6 @@
 import { useId, useLayoutEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
 import { productRoots } from '../core/design';
+import { t } from '../core/i18n';
 import { inSelection, selectionBox } from '../core/selectPath';
 import { faceMapping } from '../core/surface';
 import { imageKey, useImageUrls } from '../persist/images';
@@ -25,13 +26,13 @@ const DRAWER_BOX = new Set<Panel['role']>([
 function describe(s: SpaceOpening, count?: number): string {
   switch (s.kind) {
     case 'empty':
-      return 'Empty';
+      return t('Empty');
     case 'shelves':
-      return count === 1 ? '1 shelf' : `${count ?? 0} shelves`;
+      return t('{n|# shelf|# shelves}', { n: count ?? 0 });
     case 'drawers':
-      return count === 1 ? '1 drawer' : `${count ?? 0} drawers`;
+      return t('{n|# drawer|# drawers}', { n: count ?? 0 });
     case 'hanging':
-      return 'Hanging';
+      return t('Hanging');
     case 'split':
       return '';
   }
@@ -101,7 +102,7 @@ export function Elevation() {
   useLayoutEffect(() => {
     const fig = figRef.current;
     if (!fig || typeof ResizeObserver === 'undefined') return;
-    const ro = new ResizeObserver(() => setTick((t) => t + 1));
+    const ro = new ResizeObserver(() => setTick((n) => n + 1));
     ro.observe(fig);
     return () => ro.disconnect();
   }, []);
@@ -129,7 +130,11 @@ export function Elevation() {
   const leaves = model.spaces.filter((s) => s.leaf && s.view !== 'side');
 
   return (
-    <figure ref={figRef} className="elevation" aria-label="Front view. Select a space to edit it.">
+    <figure
+      ref={figRef}
+      className="elevation"
+      aria-label={t('Front view. Select a space to edit it.')}
+    >
       <svg viewBox={vb} preserveAspectRatio="xMidYMid meet" role="group" onClick={onTap}>
         <defs>
           {design.materials.flatMap((m) => {
@@ -161,7 +166,11 @@ export function Elevation() {
             role="button"
             tabIndex={0}
             aria-pressed={s.nodeId === selectedId}
-            aria-label={`${describe(s, counts.get(s.nodeId))} space, ${s.box.w} by ${s.box.h} mm`}
+            aria-label={t('{what} space, {w} by {h} mm', {
+              what: describe(s, counts.get(s.nodeId)),
+              w: s.box.w,
+              h: s.box.h,
+            })}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();

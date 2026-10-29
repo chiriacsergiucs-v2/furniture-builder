@@ -1,9 +1,31 @@
 import { useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
+import { t } from '../core/i18n';
 import { isQuad, type Pt } from '../core/room';
 import { DEFAULT_CORNERS, PHOTO_UNITS } from '../core/wallPicture';
 import { Dialog } from './Dialogs';
 
-const CORNERS = ['Bottom-left', 'Bottom-right', 'Top-right', 'Top-left'] as const;
+const CORNERS = [
+  {
+    id: 'Bottom-left',
+    label: t('Bottom-left corner of the wall'),
+    title: t('Bottom-left corner of the wall: drag, or use the arrow keys'),
+  },
+  {
+    id: 'Bottom-right',
+    label: t('Bottom-right corner of the wall'),
+    title: t('Bottom-right corner of the wall: drag, or use the arrow keys'),
+  },
+  {
+    id: 'Top-right',
+    label: t('Top-right corner of the wall'),
+    title: t('Top-right corner of the wall: drag, or use the arrow keys'),
+  },
+  {
+    id: 'Top-left',
+    label: t('Top-left corner of the wall'),
+    title: t('Top-left corner of the wall: drag, or use the arrow keys'),
+  },
+] as const;
 /** Arrow keys move a handle this far (ten-thousandths of the photo); with Shift ten times as far. */
 const KEY_STEP = 20;
 
@@ -74,26 +96,27 @@ export function StraightenPhoto({
       open
       wide
       onClose={onClose}
-      title={`Straighten the photo on ${wallName}`}
+      title={t('Straighten the photo on {wall}', { wall: wallName })}
       footer={
         <>
           {corners && (
             <button type="button" className="btn outline" onClick={() => onApply(undefined)}>
-              Reset
+              {t('Reset')}
             </button>
           )}
           <button type="button" className="btn ghost" onClick={onClose}>
-            Cancel
+            {t('Cancel')}
           </button>
           <button type="button" className="btn primary" disabled={!ok} onClick={() => onApply(q)}>
-            Apply
+            {t('Apply')}
           </button>
         </>
       }
     >
       <p className="hint">
-        Drag the four handles onto the corners of the wall in the photo. The part inside is
-        straightened to fill the wall picture.
+        {t(
+          'Drag the four handles onto the corners of the wall in the photo. The part inside is straightened to fill the wall picture.',
+        )}
       </p>
       <div
         className="straighten-photo"
@@ -102,7 +125,7 @@ export function StraightenPhoto({
       >
         <img
           src={url}
-          alt={`Photo on ${wallName}`}
+          alt={t('Photo on {wall}', { wall: wallName })}
           draggable={false}
           onLoad={(e) => {
             const { naturalWidth: w, naturalHeight: h } = e.currentTarget;
@@ -118,12 +141,12 @@ export function StraightenPhoto({
         </svg>
         {q.map((p, k) => (
           <button
-            key={CORNERS[k]}
+            key={CORNERS[k].id}
             type="button"
             className="model-handle straighten-handle"
             style={{ left: pct(p[0]), top: pct(p[1]) }}
-            aria-label={`${CORNERS[k]} corner of the wall`}
-            title={`${CORNERS[k]} corner of the wall: drag, or use the arrow keys`}
+            aria-label={CORNERS[k].label}
+            title={CORNERS[k].title}
             onPointerDown={drag(k)}
             onKeyDown={nudge(k)}
           >
@@ -133,7 +156,7 @@ export function StraightenPhoto({
       </div>
       {!ok && (
         <p className="alert error" role="alert">
-          The corners cross or lie in a line. Put them on the wall's four corners in order.
+          {t("The corners cross or lie in a line. Put them on the wall's four corners in order.")}
         </p>
       )}
     </Dialog>

@@ -5,6 +5,7 @@
  * are the combinations counted on the pieces of their saved projects. Taste, not physical facts: shown as
  * suggestions. Pure.
  */
+import { t } from './i18n';
 import { defaultMaterials, mapProductSpace, productRoots } from './design';
 import { applyFinish, finishTargets, roleBoard, type FinishScope } from './finish';
 import { materialKey, type Project } from './project';
@@ -167,6 +168,6 @@ export function applyStyle(
     applied: targets.filter((i) => changed.has(i.id)).map((i) => i.design.name),
     skipped: targets
       .filter((i) => !changed.has(i.id))
-      .map((i) => `${i.design.name} has no fronts or carcass`),
+      .map((i) => t('{name} has no fronts or carcass', { name: i.design.name })),
   };
 }

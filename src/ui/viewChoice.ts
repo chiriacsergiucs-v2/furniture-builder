@@ -1,7 +1,9 @@
+import { t } from '../core/i18n';
+
 /** What the stage shows (ADR-081): the 2D drawing, the 3D view, or both side by side. */
 export type StageView = 'front' | '3d' | 'both';
 
-export const NO_3D_REASON = '3D preview is not available in this browser';
+export const NO_3D_REASON = t('3D preview is not available in this browser');
 
 export interface ViewOption {
   id: StageView;
@@ -20,7 +22,7 @@ export function viewOptions(has3d: boolean): ViewOption[] {
   return [
     { id: 'front', label: '2D', disabled: false },
     { id: '3d', label: '3D', disabled: !has3d, ...no3d },
-    { id: 'both', label: 'Both', disabled: !has3d, ...no3d },
+    { id: 'both', label: t('Both@@view'), disabled: !has3d, ...no3d },
   ];
 }
 

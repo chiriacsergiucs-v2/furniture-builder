@@ -4,6 +4,7 @@
  * are warnings, except a piece marked "assembled lying down" that cannot be tipped up under the ceiling (an error).
  * The chair depth and the service zone size come from the user (ADR-010): nothing here has a default.
  */
+import { t, tr } from './i18n';
 import { buildModel } from './build';
 import { overlaps, union } from './geometry';
 import { rectInside, type Room } from './room';
@@ -66,7 +67,7 @@ export function envelopesOf(
     const p = design.product.params;
     out.push({
       kind: 'chair',
-      label: 'Chair space',
+      label: t('Chair space'),
       need: chair,
       box: { x: knee.x0, y: 0, z: b.z + b.d, w: knee.x1 - knee.x0, h: p.height, d: chair },
     });
@@ -76,7 +77,7 @@ export function envelopesOf(
     if (diag > b.h)
       out.push({
         kind: 'installation',
-        label: 'Installation space',
+        label: t('Installation space'),
         need: diag,
         box: { x: b.x, y: b.y + b.h, z: b.z, w: b.w, h: diag - b.h, d: b.d },
       });
@@ -92,7 +93,14 @@ export function envelopesOf(
           : sv.side === 'left'
             ? { ...b, x: b.x - s, w: s }
             : { ...b, x: b.x + b.w, w: s };
-    out.push({ kind: 'service', label: `Service zone (${sv.side})`, need: s, box });
+    out.push({
+      kind: 'service',
+      label: t('Service zone ({side})', {
+        side: { front: t('front'), back: t('back'), left: t('left'), right: t('right') }[sv.side],
+      }),
+      need: s,
+      box,
+    });
   }
   return out;
 }
@@ -143,23 +151,27 @@ export function envelopeChecks(
           )
           .map((o) => o.name),
         // A worktop or filler is fitted after the pieces are stood up, so it does not block installing them.
-        ...(install ? [] : runPanels.filter((q) => overlapsBox(q, e.box)).map((q) => q.label)),
-        ...obstacles.filter((o) => overlaps(o.box, e.box)).map((o) => o.label),
+        ...(install ? [] : runPanels.filter((q) => overlapsBox(q, e.box)).map((q) => tr(q.label))),
+        ...obstacles.filter((o) => overlaps(o.box, e.box)).map((o) => tr(o.label)),
       ];
       const what = install
-        ? `${pc.name} needs ${e.need - pc.bounds.h} mm free above it to be tipped up from lying on its back (its diagonal is ${e.need} mm, its height ${pc.bounds.h} mm)`
-        : `${e.label} of ${pc.name} (${e.need} mm)`;
+        ? t(
+            '{name} needs {free} mm free above it to be tipped up from lying on its back (its diagonal is {diag} mm, its height {h} mm)',
+            { name: pc.name, free: e.need - pc.bounds.h, diag: e.need, h: pc.bounds.h },
+          )
+        : t('{zone} of {name} ({need} mm)', { zone: e.label, name: pc.name, need: e.need });
       const code =
         e.kind === 'chair'
           ? 'chair-space-blocked'
           : e.kind === 'service'
             ? 'service-zone-blocked'
             : 'installation-blocked';
-      if (hits.length) flag('warning', code, `${what}: ${hits[0]} is in the way.`);
+      if (hits.length)
+        flag('warning', code, t('{what}: {hit} is in the way.', { what, hit: hits[0] }));
       if (room && !install) {
         const b = e.box;
         if (!rectInside(room.outline, b.x, b.z, b.x + b.w, b.z + b.d))
-          flag('warning', code, `${what}: it runs into a wall.`);
+          flag('warning', code, t('{what}: it runs into a wall.', { what }));
       }
       if (room && install && e.box.y + e.box.h > room.height) {
         const over = e.box.y + e.box.h - room.height;
@@ -167,13 +179,19 @@ export function envelopeChecks(
           flag(
             'error',
             'installation-height',
-            `${pc.name} is assembled lying down but cannot be stood up: it needs ${e.box.y + e.box.h} mm of height (its diagonal), ${over} mm more than the room's ${room.height} mm. Assemble it standing or make it lower.`,
+            t(
+              "{name} is assembled lying down but cannot be stood up: it needs {need} mm of height (its diagonal), {over} mm more than the room's {room} mm. Assemble it standing or make it lower.",
+              { name: pc.name, need: e.box.y + e.box.h, over, room: room.height },
+            ),
           );
         else
           flag(
             'warning',
             'installation-height',
-            `${pc.name} cannot be tipped up from lying on its back: it needs ${e.box.y + e.box.h} mm of height (its diagonal), ${over} mm more than the room's ${room.height} mm. Assemble it standing up in place.`,
+            t(
+              "{name} cannot be tipped up from lying on its back: it needs {need} mm of height (its diagonal), {over} mm more than the room's {room} mm. Assemble it standing up in place.",
+              { name: pc.name, need: e.box.y + e.box.h, over, room: room.height },
+            ),
           );
       }
       severity.set(e, worst);

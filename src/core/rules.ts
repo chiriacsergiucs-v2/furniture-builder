@@ -3,6 +3,7 @@
  * design, whether it came from the catalog or was built by hand. Thresholds are typical values the user can change
  * (`design.settings.rules`); every rule is a warning or a hardware reminder, never an error.
  */
+import { t, tr } from './i18n';
 import type {
   Design,
   Diagnostic,
@@ -79,7 +80,10 @@ export const rules: Rule[] = [
           out.diagnostics.push(
             warn(
               'shelf-span',
-              `Shelf span ${span} mm is long for ${m.thickness} mm ${m.name} and may sag (typical limit ${limit} mm — confirm for your board and load).`,
+              t(
+                'Shelf span {span} mm is long for {t} mm {name} and may sag (typical limit {limit} mm — confirm for your board and load).',
+                { span, t: m.thickness, name: m.name, limit },
+              ),
               p.nodeId,
               [p.id],
             ),
@@ -101,7 +105,10 @@ export const rules: Rule[] = [
           out.diagnostics.push(
             warn(
               'door-wide',
-              `Door ${w} mm wide; over ~${s.doorMaxWidth} mm (typical) consider two doors.`,
+              t('Door {w} mm wide; over ~{max} mm (typical) consider two doors.', {
+                w,
+                max: s.doorMaxWidth,
+              }),
               p.nodeId,
               [p.id],
             ),
@@ -122,7 +129,10 @@ export const rules: Rule[] = [
           out.diagnostics.push(
             warn(
               'hanging-shallow',
-              `Opening depth ${depth} mm; hangers usually need about ${s.hangerDepth} mm (typical).`,
+              t('Opening depth {depth} mm; hangers usually need about {need} mm (typical).', {
+                depth,
+                need: s.hangerDepth,
+              }),
               sp.nodeId,
             ),
           );
@@ -161,7 +171,10 @@ export const rules: Rule[] = [
         out.diagnostics.push(
           warn(
             'tilt-up',
-            `Assembled lying down, the piece needs ${diag} mm to stand up, but the room is ${s.roomHeight} mm high. Build it in place or split it.`,
+            t(
+              'Assembled lying down, the piece needs {diag} mm to stand up, but the room is {room} mm high. Build it in place or split it.',
+              { diag, room: s.roomHeight },
+            ),
             d.product.id,
           ),
         );
@@ -178,7 +191,10 @@ export const rules: Rule[] = [
         out.diagnostics.push(
           warn(
             'hardware-to-choose',
-            `Choose the ${what} from the maker's datasheet and check its fitting sizes against this piece.`,
+            t(
+              "Choose the {what} from the maker's datasheet and check its fitting sizes against this piece.",
+              { what: tr(what) },
+            ),
             d.product.id,
           ),
         );
@@ -197,7 +213,10 @@ export const rules: Rule[] = [
         out.diagnostics.push(
           warn(
             'slat-gap',
-            `Slat gap ${f.slats.gap} mm; mattress and seat makers usually ask for 70 mm or less (check yours).`,
+            t(
+              'Slat gap {gap} mm; mattress and seat makers usually ask for 70 mm or less (check yours).',
+              { gap: f.slats.gap },
+            ),
             p.id,
           ),
         );
@@ -206,7 +225,9 @@ export const rules: Rule[] = [
           out.diagnostics.push(
             warn(
               'safety-not-checked',
-              'Bunk beds are covered by safety standards (EN 747 and others). Mobila does not check guard rails, openings or ladder against them; this is not a compliance check.',
+              t(
+                'Bunk beds are covered by safety standards (EN 747 and others). Mobila does not check guard rails, openings or ladder against them; this is not a compliance check.',
+              ),
               p.id,
             ),
           );
@@ -214,7 +235,9 @@ export const rules: Rule[] = [
           out.diagnostics.push(
             warn(
               'safety-not-checked',
-              'Cots and cradles are covered by safety standards (EN 716 and others). Mobila does not check bar spacing or side height; this is not a compliance check.',
+              t(
+                'Cots and cradles are covered by safety standards (EN 716 and others). Mobila does not check bar spacing or side height; this is not a compliance check.',
+              ),
               p.id,
             ),
           );
@@ -227,7 +250,10 @@ export const rules: Rule[] = [
           out.diagnostics.push(
             warn(
               'frame-span',
-              `Rails span ${span} mm between legs; long tables usually get a centre leg or rail (typical).`,
+              t(
+                'Rails span {span} mm between legs; long tables usually get a centre leg or rail (typical).',
+                { span },
+              ),
               p.id,
             ),
           );

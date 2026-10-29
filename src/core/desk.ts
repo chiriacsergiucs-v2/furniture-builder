@@ -1,3 +1,4 @@
+import { t as tx } from './i18n';
 import { buildCabinet, type PartialModel } from './cabinet';
 import { pedestalRoot } from './design';
 import { box } from './geometry';
@@ -46,7 +47,7 @@ export function buildDesk(
   const top = materials.get(p.topMaterialId),
     body = materials.get(p.bodyMaterialId);
   if (!top || !body) {
-    err('material-missing', 'A material used by this desk does not exist in the design.');
+    err('material-missing', tx('A material used by this desk does not exist in the design.'));
     return out;
   }
 
@@ -56,10 +57,10 @@ export function buildDesk(
   const Hu = H - tt,
     Ds = D - p.frontOverhang;
   if (Hu < 300 || Ds < 200 || W < 400) {
-    err('desk-too-small', `Desk ${W}×${D}×${H} mm is too small.`);
+    err('desk-too-small', tx('Desk {w}×{d}×{h} mm is too small.', { w: W, d: D, h: H }));
     return out;
   }
-  if (p.frontOverhang < 0) err('overhang', 'Front overhang cannot be negative.');
+  if (p.frontOverhang < 0) err('overhang', tx('Front overhang cannot be negative.'));
 
   const panel = (
     id: string,
@@ -127,30 +128,36 @@ export function buildDesk(
     rx = W - (rightPed ? pw : t);
   const knee = rx - lx;
   if (knee <= 0) {
-    err('no-knee-space', 'Supports leave no space between them.');
+    err('no-knee-space', tx('Supports leave no space between them.'));
     return out;
   }
   if (knee < 450) {
-    err('knee-narrow', `Knee space is only ${knee} mm wide; you cannot sit at it.`);
+    err('knee-narrow', tx('Knee space is only {knee} mm wide; you cannot sit at it.', { knee }));
     return out;
   }
   if (knee < 600)
-    warn('knee-narrow', `Knee space is ${knee} mm wide; about 600 mm or more is usual.`);
+    warn(
+      'knee-narrow',
+      tx('Knee space is {knee} mm wide; about 600 mm or more is usual.', { knee }),
+    );
   const fm = materials.get(p.frontMaterialId);
   if ((leftPed || rightPed) && fm && p.frontOverhang < fm.thickness) {
     warn(
       'fronts-proud',
-      `Drawer fronts stick out ${fm.thickness - p.frontOverhang} mm past the worktop edge; set the overhang to at least ${fm.thickness} mm.`,
+      tx(
+        'Drawer fronts stick out {out} mm past the worktop edge; set the overhang to at least {min} mm.',
+        { out: fm.thickness - p.frontOverhang, min: fm.thickness },
+      ),
     );
   }
-  if (Hu < 600) warn('desk-low', `Clear height under the worktop is ${Hu} mm.`);
+  if (Hu < 600) warn('desk-low', tx('Clear height under the worktop is {h} mm.', { h: Hu }));
 
   if (p.modesty.enabled) {
     const mh = p.modesty.height;
     if (mh <= 0 || mh > Hu)
-      err('modesty-height', 'Modesty panel height must be between 1 mm and the clear height.');
+      err('modesty-height', tx('Modesty panel height must be between 1 mm and the clear height.'));
     else if (p.modesty.setback < 0 || p.modesty.setback + t > Ds)
-      err('modesty-setback', 'Modesty panel setback is outside the desk depth.');
+      err('modesty-setback', tx('Modesty panel setback is outside the desk depth.'));
     else
       panel(
         'modesty',

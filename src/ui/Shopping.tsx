@@ -19,6 +19,7 @@ import {
   type ShopSection,
   type ShopUnit,
 } from '../core/shopping';
+import { t, tr } from '../core/i18n';
 import { sinkList } from '../core/project';
 import { listPrices, savePrice, savePrices } from '../persist/db';
 import { useDesign } from '../store/designStore';
@@ -35,12 +36,25 @@ const SECTIONS: { id: ShopSection; title: string }[] = [
   { id: 'run', title: 'Run parts' },
   { id: 'choose', title: 'To choose before buying' },
 ];
-const UNIT: Record<ShopUnit, string> = { sheet: 'sheets', m2: 'm²', m: 'm', piece: 'pcs' };
+/** The section titles, on screen and on the printed list (both in the app's language, ADR-154). */
+const SECTION_TITLE: Record<ShopSection, string> = {
+  boards: t('Boards'),
+  banding: t('Edge banding'),
+  hardware: t('Hardware'),
+  run: t('Run parts'),
+  choose: t('To choose before buying'),
+};
+const UNIT_SHOWN: Record<ShopUnit, string> = {
+  sheet: t('sheets'),
+  m2: t('m²'),
+  m: t('m'),
+  piece: t('pcs'),
+};
 const PER: Record<ShopUnit, string> = {
-  sheet: 'per sheet',
-  m2: 'per m²',
-  m: 'per m',
-  piece: 'per piece',
+  sheet: t('per sheet'),
+  m2: t('per m²'),
+  m: t('per m'),
+  piece: t('per piece'),
 };
 
 function save(name: string, text: string, type: string) {
@@ -69,7 +83,7 @@ export function ShoppingList() {
   useEffect(() => {
     listPrices()
       .then(setPrices)
-      .catch(() => setMsg('Prices could not be read from this browser.'));
+      .catch(() => setMsg(t('Prices could not be read from this browser.')));
   }, []);
   const sheets = useMemo(
     () =>
@@ -97,18 +111,33 @@ export function ShoppingList() {
   const est = useMemo(() => estimate(lines, prices), [lines, prices]);
   const setPrice = (e: PriceEntry) => {
     setPrices((ps) => [...ps.filter((p) => p.id !== e.id), e]);
-    void savePrice(e).catch(() => setMsg('The price could not be saved on this device.'));
+    void savePrice(e).catch(() => setMsg(t('The price could not be saved on this device.')));
   };
   const importCsv = async (f: File) => {
     const r = parsePricesCsv(await f.text());
     if (!r.prices.length) {
-      setMsg(`No prices imported. ${r.problems.slice(0, 3).join(' ')}`);
+      setMsg(
+        `${t('No prices imported.')} ${r.problems
+          .slice(0, 3)
+          .map((p) => tr(p))
+          .join(' ')}`,
+      );
       return;
     }
     await savePrices(r.prices);
     setPrices(await listPrices());
     setMsg(
-      `${r.prices.length} prices imported${r.problems.length ? `, ${r.problems.length} rows skipped: ${r.problems.slice(0, 3).join(' ')}` : ''}.`,
+      `${t('{n} prices imported', { n: r.prices.length })}${
+        r.problems.length
+          ? t(', {n} rows skipped: {list}', {
+              n: r.problems.length,
+              list: r.problems
+                .slice(0, 3)
+                .map((p) => tr(p))
+                .join(' '),
+            })
+          : ''
+      }.`,
     );
   };
   const printList = () => {
@@ -117,16 +146,24 @@ export function ShoppingList() {
     const rowsHtml = SECTIONS.map((s) => {
       const ls = lines.filter((l) => l.section === s.id);
       return ls.length
-        ? `<h2>${s.title}</h2><table><tr><th>Qty</th><th>Item</th><th>Details</th><th>Price</th></tr>${ls
+        ? `<h2>${esc(SECTION_TITLE[s.id])}</h2><table><tr><th>${esc(t('Qty'))}</th><th>${esc(t('Item'))}</th><th>${esc(t('Details'))}</th><th>${esc(t('Price'))}</th></tr>${ls
             .map((l) => {
               const p = linePrice(l, map);
-              return `<tr><td>${l.quantity} ${UNIT[l.unit]}</td><td>${esc(l.label)}</td><td>${esc(l.detail)}</td><td>${p === null ? '' : `${formatMoney(p)} ${esc(currency)}`}</td></tr>`;
+              return `<tr><td>${l.quantity} ${UNIT_SHOWN[l.unit]}</td><td>${esc(tr(l.label))}</td><td>${esc(tr(l.detail))}</td><td>${p === null ? '' : `${formatMoney(p)} ${esc(currency)}`}</td></tr>`;
             })
             .join('')}</table>`
         : '';
     }).join('');
+    const title = esc(t('Shopping list — {name}', { name: view.title }));
+    const estimate = esc(
+      t('Estimate: {total} {currency}', { total: formatMoney(est.total), currency }) +
+        (est.missing.length
+          ? t(' — {n|# price missing|# prices missing}', { n: est.missing.length })
+          : '') +
+        t(' (your prices)'),
+    );
     w.document.write(
-      `<!doctype html><meta charset="utf-8"><title>Shopping list — ${esc(view.title)}</title><style>body{font:12px sans-serif;margin:16px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #999;padding:3px 6px;text-align:left}h2{font-size:14px;margin:14px 0 4px}</style><h1>Shopping list — ${esc(view.title)}</h1>${rowsHtml}<p>${esc(NOT_COUNTED)}</p><p>Estimate: ${formatMoney(est.total)} ${esc(currency)}${est.missing.length ? ` — ${est.missing.length} prices missing` : ''} (your prices)</p>`,
+      `<!doctype html><meta charset="utf-8"><title>${title}</title><style>body{font:12px sans-serif;margin:16px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #999;padding:3px 6px;text-align:left}h2{font-size:14px;margin:14px 0 4px}</style><h1>${title}</h1>${rowsHtml}<p>${esc(NOT_COUNTED)}</p><p>${estimate}</p>`,
     );
     w.document.close();
     w.focus();
@@ -134,36 +171,36 @@ export function ShoppingList() {
   };
   const blocked = view.diagnostics.some((d) => d.severity === 'error');
   // ADR-008: errors block every export, like Parts CSV and Print cutting sheet.
-  const blockedTitle = blocked ? 'Fix the problems listed under Checks first' : undefined;
+  const blockedTitle = blocked ? t('Fix the problems listed under Checks first') : undefined;
   return (
     <div className="shopping">
       {blocked && (
         <p className="alert error blocked">
           <Icon name="alert-circle" className="sm" />
           <span>
-            Fix the problems under Checks first; sheets are counted only for a valid design. Boards
-            are shown in m² until then.
+            {t(
+              'Fix the problems under Checks first; sheets are counted only for a valid design. Boards are shown in m² until then.',
+            )}
           </span>
         </p>
       )}
       <div className="info-row">
         <p className="estimate" role="status">
           <strong>
-            Estimate: {formatMoney(est.total)} {currency}
+            {t('Estimate: {amount} {currency}', { amount: formatMoney(est.total), currency })}
           </strong>
           {est.missing.length ? (
             <span className="warn">
               {' '}
-              — {est.missing.length} {est.missing.length === 1 ? 'price' : 'prices'} missing
-              (incomplete)
+              {t('— {n|# price|# prices} missing (incomplete)', { n: est.missing.length })}
             </span>
           ) : est.priced ? (
-            <span> — every line priced</span>
+            <span>{t(' — every line priced')}</span>
           ) : null}
         </p>
-        <InfoTip label="About the estimate">Your prices, saved on this device.</InfoTip>
-        <GuidanceTip topic="what is not counted" align="end">
-          {NOT_COUNTED}
+        <InfoTip label={t('About the estimate')}>{t('Your prices, saved on this device.')}</InfoTip>
+        <GuidanceTip topic={t('what is not counted')} align="end">
+          {tr(NOT_COUNTED)}
         </GuidanceTip>
       </div>
       <div className="split-actions">
@@ -174,13 +211,13 @@ export function ShoppingList() {
           onClick={() => setEditing((v) => !v)}
         >
           <Icon name="pencil" className="sm" />
-          {editing ? 'Done with prices' : 'Prices'}
+          {editing ? t('Done with prices') : t('Prices')}
         </button>
         <button
           type="button"
           className="btn sm"
           disabled={blocked}
-          title={blockedTitle ?? 'Download the shopping list as CSV'}
+          title={blockedTitle ?? t('Download the shopping list as CSV')}
           onClick={() =>
             save(
               `${view.title}-shopping.csv`,
@@ -190,28 +227,28 @@ export function ShoppingList() {
           }
         >
           <Icon name="download" className="sm" />
-          Shopping list CSV
+          {t('Shopping list CSV')}
         </button>
         <button
           type="button"
           className="btn sm"
           disabled={blocked}
-          title={blockedTitle ?? 'Print the shopping list or save it as PDF'}
+          title={blockedTitle ?? t('Print the shopping list or save it as PDF')}
           onClick={printList}
         >
           <Icon name="printer" className="sm" />
-          Print shopping list
+          {t('Print shopping list')}
         </button>
       </div>
       {editing && (
         <div className="price-tools">
           <label className="field">
-            <span>Currency</span>
+            <span>{t('Currency')}</span>
             <input
               defaultValue={currency}
               onBlur={(e) => {
-                const t = e.target.value.trim();
-                if (t) setPrice({ id: CURRENCY_ID, unit: 'piece', amount: 0, text: t });
+                const v = e.target.value.trim();
+                if (v) setPrice({ id: CURRENCY_ID, unit: 'piece', amount: 0, text: v });
               }}
             />
           </label>
@@ -222,11 +259,11 @@ export function ShoppingList() {
             disabled={!prices.length}
           >
             <Icon name="download" className="sm" />
-            Export prices
+            {t('Export prices')}
           </button>
           <label className="btn sm file-btn">
             <Icon name="upload" className="sm" />
-            Import prices
+            {t('Import prices')}
             <input
               type="file"
               accept=".csv,text/csv,text/plain"
@@ -248,15 +285,15 @@ export function ShoppingList() {
         const ls = lines.filter((l) => l.section === s.id);
         if (!ls.length) return null;
         return (
-          <section key={s.id} aria-label={s.title}>
-            <h3 className="list-head">{s.title}</h3>
+          <section key={s.id} aria-label={SECTION_TITLE[s.id]}>
+            <h3 className="list-head">{SECTION_TITLE[s.id]}</h3>
             <table className="cut shop">
               <thead>
                 <tr>
-                  <th scope="col">Qty</th>
-                  <th scope="col">Item</th>
-                  <th scope="col">Details</th>
-                  {s.id !== 'run' && s.id !== 'choose' && <th scope="col">Price</th>}
+                  <th scope="col">{t('Qty')}</th>
+                  <th scope="col">{t('Item')}</th>
+                  <th scope="col">{t('Details')}</th>
+                  {s.id !== 'run' && s.id !== 'choose' && <th scope="col">{t('Price')}</th>}
                 </tr>
               </thead>
               <tbody>
@@ -302,16 +339,16 @@ function Line({
     <tr>
       <td className="num">
         {l.unit === 'sheet' || l.unit === 'piece' ? l.quantity : l.quantity.toFixed(2)}{' '}
-        {UNIT[l.unit]}
+        {UNIT_SHOWN[l.unit]}
       </td>
-      <td>{l.label}</td>
-      <td className="note">{l.detail}</td>
+      <td>{tr(l.label)}</td>
+      <td className="note">{tr(l.detail)}</td>
       {priced && (
         <td className="num">
           {editing && l.priceKey ? (
             <span className="price-edit">
               <input
-                aria-label={`Price of ${l.label}`}
+                aria-label={t('Price of {item}', { item: tr(l.label) })}
                 inputMode="decimal"
                 defaultValue={e && e.unit === unit ? (e.amount / 100).toFixed(2) : ''}
                 className={bad ? 'bad' : undefined}
@@ -323,13 +360,13 @@ function Line({
               />
               {units.length > 1 ? (
                 <select
-                  aria-label={`Price unit of ${l.label}`}
+                  aria-label={t('Price unit of {item}', { item: tr(l.label) })}
                   value={unit}
                   onChange={(ev) => setUnit(ev.target.value as ShopUnit)}
                 >
                   {units.map((u) => (
                     <option key={u} value={u}>
-                      {u === 'piece' && l.worktop ? 'per worktop board' : PER[u]}
+                      {u === 'piece' && l.worktop ? t('per worktop board') : PER[u]}
                     </option>
                   ))}
                 </select>
@@ -343,8 +380,8 @@ function Line({
               e &&
               (e.unit === 'sheet' || (e.unit === 'piece' && l.worktop)) &&
               l.sheets == null
-                ? 'sheets not laid out'
-                : 'price missing'}
+                ? t('sheets not laid out')
+                : t('price missing')}
             </span>
           ) : (
             `${formatMoney(p)} ${currency}`

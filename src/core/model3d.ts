@@ -4,6 +4,7 @@
  * room and the checks on that box. Model items are never cut, priced, bought or nested: they live in
  * `Project.models`, apart from the pieces, so nothing that reads `Project.items` can reach them.
  */
+import { t } from './i18n';
 import { overlaps } from './geometry';
 import type { Box, Diagnostic, Mm } from './types';
 
@@ -138,10 +139,10 @@ const GLB_MAGIC = 0x46546c67; // 'glTF'
 const JSON_CHUNK = 0x4e4f534a; // 'JSON'
 /** Extensions that need a decoder fetched from elsewhere: refused, so nothing is ever downloaded (ADR-002). */
 const NEEDS_DECODER: Record<string, string> = {
-  KHR_draco_mesh_compression: 'Draco compression',
-  EXT_meshopt_compression: 'meshopt compression',
-  KHR_meshopt_compression: 'meshopt compression',
-  KHR_texture_basisu: 'Basis Universal textures',
+  KHR_draco_mesh_compression: t('Draco compression'),
+  EXT_meshopt_compression: t('meshopt compression'),
+  KHR_meshopt_compression: t('meshopt compression'),
+  KHR_texture_basisu: t('Basis Universal textures'),
 };
 
 const isObj = (v: unknown): v is Record<string, unknown> =>
@@ -194,42 +195,62 @@ export function checkGltf(
 ): GltfCheck {
   const name = modelName(fileName);
   const no = (problem: string): GltfCheck => ({ ok: false, problem });
-  if (!bytes.byteLength) return no(`${fileName} is empty.`);
+  if (!bytes.byteLength) return no(t('{file} is empty.', { file: fileName }));
   if (bytes.byteLength > limits.bytes)
-    return no(`${fileName} is ${MB(bytes.byteLength)}; the limit is ${MB(limits.bytes)}.`);
+    return no(
+      t('{file} is {size}; the limit is {limit}.', {
+        file: fileName,
+        size: MB(bytes.byteLength),
+        limit: MB(limits.bytes),
+      }),
+    );
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   const glb = bytes.byteLength >= 12 && view.getUint32(0, true) === GLB_MAGIC;
   let json: unknown;
   try {
     if (glb) {
-      if (view.getUint32(4, true) !== 2) return no(`${fileName} is not a glTF 2.0 file.`);
+      if (view.getUint32(4, true) !== 2)
+        return no(t('{file} is not a glTF 2.0 file.', { file: fileName }));
       if (bytes.byteLength < 20 || view.getUint32(16, true) !== JSON_CHUNK)
-        return no(`${fileName} could not be read as a 3D model.`);
+        return no(t('{file} could not be read as a 3D model.', { file: fileName }));
       const len = view.getUint32(12, true);
-      if (20 + len > bytes.byteLength) return no(`${fileName} is cut short.`);
+      if (20 + len > bytes.byteLength) return no(t('{file} is cut short.', { file: fileName }));
       json = JSON.parse(new TextDecoder().decode(bytes.subarray(20, 20 + len)));
     } else {
       if (!/\.gltf$/i.test(fileName) && !/\.glb$/i.test(fileName))
-        return no(`${fileName} is not a .glb or .gltf file.`);
+        return no(t('{file} is not a .glb or .gltf file.', { file: fileName }));
       json = JSON.parse(new TextDecoder().decode(bytes));
     }
   } catch {
-    return no(`${fileName} could not be read as a 3D model.`);
+    return no(t('{file} could not be read as a 3D model.', { file: fileName }));
   }
   if (!isObj(json) || !isObj(json.asset) || !/^2\./.test(String(json.asset.version)))
-    return no(`${fileName} is not a glTF 2.0 file.`);
+    return no(t('{file} is not a glTF 2.0 file.', { file: fileName }));
   const outside = externalUris(json);
   if (outside.length)
     return no(
-      `${fileName} uses files outside it (${outside.slice(0, 2).join(', ')}); export it as one .glb or a .gltf with embedded data.`,
+      t(
+        '{file} uses files outside it ({list}); export it as one .glb or a .gltf with embedded data.',
+        {
+          file: fileName,
+          list: outside.slice(0, 2).join(', '),
+        },
+      ),
     );
   if (!glb && arr(json.buffers).some((b) => isObj(b) && b.uri === undefined))
-    return no(`${fileName} has a buffer with no data; export it as one .glb file.`);
+    return no(
+      t('{file} has a buffer with no data; export it as one .glb file.', { file: fileName }),
+    );
   const needs = arr(json.extensionsRequired).flatMap((e) =>
     typeof e === 'string' && NEEDS_DECODER[e] ? [NEEDS_DECODER[e]] : [],
   );
   if (needs.length)
-    return no(`${fileName} uses ${needs[0]}, which this app cannot read; export it without.`);
+    return no(
+      t('{file} uses {what}, which this app cannot read; export it without.', {
+        file: fileName,
+        what: needs[0],
+      }),
+    );
   // A declared count the file cannot back (a sparse accessor, say) would make the parser allocate it all: refuse
   // anything far past what the triangle limit needs, so a crafted file cannot exhaust the tab's memory.
   const elements = arr(json.accessors).reduce<number>(
@@ -237,13 +258,19 @@ export function checkGltf(
     0,
   );
   if (elements > limits.triangles * 40)
-    return no(`${fileName} declares more data than a model within the limits needs.`);
+    return no(
+      t('{file} declares more data than a model within the limits needs.', { file: fileName }),
+    );
   const triangles = countTriangles(json);
   if (triangles > limits.triangles)
     return no(
-      `${fileName} has ${triangles.toLocaleString('en')} triangles; the limit is ${limits.triangles.toLocaleString('en')}.`,
+      t('{file} has {n} triangles; the limit is {limit}.', {
+        file: fileName,
+        n: triangles.toLocaleString('en'),
+        limit: limits.triangles.toLocaleString('en'),
+      }),
     );
-  if (!arr(json.meshes).length) return no(`${fileName} has no shapes to show.`);
+  if (!arr(json.meshes).length) return no(t('{file} has no shapes to show.', { file: fileName }));
   return { ok: true, format: glb ? 'glb' : 'gltf', triangles, name };
 }
 
@@ -256,7 +283,7 @@ const isInt = (v: unknown, min = -1e7) =>
 
 /** Problems with a project's `models` list; `ids` are the piece ids already taken (ids are unique across both). */
 export function validateModelItems(list: unknown, ids: Set<string>): string[] {
-  if (!Array.isArray(list)) return ['Invalid 3D models'];
+  if (!Array.isArray(list)) return [t('Invalid 3D models')];
   const errs: string[] = [];
   for (const m of list) {
     const ok =
@@ -277,7 +304,7 @@ export function validateModelItems(list: unknown, ids: Set<string>): string[] {
       [0, 90, 180, 270].includes(m.rotationY as number) &&
       (m.front === undefined || (m.front as string) in FRONT_TURN);
     if (!ok) {
-      errs.push('Invalid 3D model item');
+      errs.push(t('Invalid 3D model item'));
       continue;
     }
     ids.add(m.id as string);
@@ -301,7 +328,7 @@ export function modelChecks(
       out.push({
         severity: 'error',
         code: 'model-overlap',
-        message: `${m.name} (3D model) and ${hit.name} overlap in the room.`,
+        message: t('{a} (3D model) and {b} overlap in the room.', { a: m.name, b: hit.name }),
         nodeId: m.id,
       });
     for (let j = 0; j < i; j++)
@@ -309,7 +336,10 @@ export function modelChecks(
         out.push({
           severity: 'error',
           code: 'model-overlap',
-          message: `${models[j].name} and ${m.name} (3D models) overlap in the room.`,
+          message: t('{a} and {b} (3D models) overlap in the room.', {
+            a: models[j].name,
+            b: m.name,
+          }),
           nodeId: m.id,
         });
   });

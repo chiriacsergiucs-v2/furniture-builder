@@ -8,6 +8,7 @@ import {
   saveResearchBundle,
   saveResearchMarks,
 } from '../persist/db';
+import { t } from '../core/i18n';
 
 export type MarkPatch = Partial<Omit<ResearchMark, 'id' | 'createdAt' | 'updatedAt'>>;
 
@@ -61,8 +62,9 @@ export const useResearch = create<ResearchState>((set, get) => ({
     } catch {
       set({
         loaded: true,
-        error:
+        error: t(
           'Browser storage is unavailable: the shipped research is shown, but decisions and imports will not be kept.',
+        ),
       });
     }
   },
@@ -82,7 +84,7 @@ export const useResearch = create<ResearchState>((set, get) => ({
     try {
       await saveResearchMarks(next);
     } catch {
-      set({ error: 'Your decision could not be saved on this device.' });
+      set({ error: t('Your decision could not be saved on this device.') });
     }
   },
 }));

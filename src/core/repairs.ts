@@ -3,6 +3,7 @@
  * offered when, built again, its diagnostic is gone and no other error has appeared. Nothing here applies a repair:
  * the user previews one and applies it (one undo step). No diagnostic is hidden or softened (ADR-008).
  */
+import { t as tx } from './i18n';
 import { overlapsBox } from './shape';
 import {
   buildProjectModel,
@@ -99,11 +100,11 @@ type Candidate = Omit<Repair, 'project' | 'preview' | 'id'> & { project: Project
 const side = (axis: 'x' | 'z', s: number) =>
   axis === 'x'
     ? s > 0
-      ? 'to the right'
-      : 'to the left'
+      ? tx('to the right')
+      : tx('to the left')
     : s > 0
-      ? 'away from the back wall'
-      : 'towards the back wall';
+      ? tx('away from the back wall')
+      : tx('towards the back wall');
 
 export { pieceName };
 
@@ -117,7 +118,11 @@ function moveCandidate(
   const next = moveItem(project, pc.item.id, axis === 'x' ? s : 0, axis === 'z' ? s : 0);
   return next
     ? {
-        label: `Move ${pieceName(project, pc.item.id)} ${Math.abs(s)} mm ${side(axis, s)}`,
+        label: tx('Move {name} {mm} mm {side}', {
+          name: pieceName(project, pc.item.id),
+          mm: Math.abs(s),
+          side: side(axis, s),
+        }),
         distance: Math.abs(s),
         project: next,
       }
@@ -129,7 +134,16 @@ function hangCandidate(project: Project, pc: PlacedPiece, dy: Mm): Candidate | n
   const next = rehang(project, pc.item.id, dy);
   return next
     ? {
-        label: `Hang ${pieceName(project, pc.item.id)} ${Math.abs(dy)} mm ${dy > 0 ? 'higher' : 'lower'}`,
+        label:
+          dy > 0
+            ? tx('Hang {name} {mm} mm higher', {
+                name: pieceName(project, pc.item.id),
+                mm: Math.abs(dy),
+              })
+            : tx('Hang {name} {mm} mm lower', {
+                name: pieceName(project, pc.item.id),
+                mm: Math.abs(dy),
+              }),
         distance: Math.abs(dy),
         project: next,
       }
@@ -195,7 +209,11 @@ function fillerCandidate(
   const moved = moveItem(project, pc.item.id, along === 'x' ? s : 0, along === 'z' ? s : 0);
   if (!moved) return null;
   return {
-    label: `Move ${pieceName(project, pc.item.id)} ${w} mm ${side(along, s)} and add a ${w} mm filler`,
+    label: tx('Move {name} {mm} mm {side} and add a {mm} mm filler', {
+      name: pieceName(project, pc.item.id),
+      mm: w,
+      side: side(along, s),
+    }),
     distance: w,
     project: {
       ...moved,
@@ -259,13 +277,17 @@ function candidates(project: Project, pm: ProjectModel, d: Diagnostic): Candidat
     if (b.y + b.h > room.height) out.push(hangCandidate(project, pc, room.height - (b.y + b.h)));
     for (const m of movesInside(room.outline, b).slice(0, 6)) {
       const parts = [
-        m.dx ? `${Math.abs(m.dx)} mm ${side('x', m.dx)}` : '',
-        m.dz ? `${Math.abs(m.dz)} mm ${side('z', m.dz)}` : '',
+        m.dx ? tx('{mm} mm {side}', { mm: Math.abs(m.dx), side: side('x', m.dx) }) : '',
+        m.dz ? tx('{mm} mm {side}', { mm: Math.abs(m.dz), side: side('z', m.dz) }) : '',
       ].filter(Boolean);
       const next = pc.item.locked ? null : moveItem(project, pc.item.id, m.dx, m.dz);
       if (next)
         out.push({
-          label: `Move ${pieceName(project, pc.item.id)} ${parts.join(' and ')}, inside the room`,
+          label: tx('Move {name} {moves}, inside the room', {
+            name: pieceName(project, pc.item.id),
+            moves:
+              parts.length === 2 ? tx('{a} and {b}', { a: parts[0], b: parts[1] }) : parts.join(''),
+          }),
           distance: Math.abs(m.dx) + Math.abs(m.dz),
           project: next,
         });

@@ -5,6 +5,7 @@
 import { buildModel } from '../build';
 import { newId, validateDesign } from '../design';
 import type { Design, FurnitureModel, Severity, WizardAnswers } from '../types';
+import { t as tt, tr } from '../i18n';
 import { CONSTRUCTION_TYPES, typeById } from './registry';
 import {
   BASICS,
@@ -87,36 +88,50 @@ export function fieldProblems(a: Answers): Problem[] {
       const { min, max } = fieldRange(f, a);
       const bad = (message: string) =>
         out.push({ severity: 'error', code: 'field', message, step: s.id, field: f.id });
-      const unit = f.unit === 'mm' ? ' mm' : '';
+      const unit = f.unit === 'mm' ? tt(' mm') : '';
+      const label = tr(f.label);
       const opts = fieldOptions(f, a).map((o) => o.value);
       if (f.kind === 'text' && !(typeof v === 'string' && v.trim() && v.length <= 200))
-        bad(`${f.label}: give a name (up to 200 characters).`);
+        bad(tt('{label}: give a name (up to 200 characters).', { label }));
       if (f.kind === 'int' && !whole(v, min, max))
-        bad(`${f.label} must be a whole number from ${min} to ${max}${unit}.`);
+        bad(
+          tt('{label} must be a whole number from {min} to {max}{unit}.', {
+            label,
+            min,
+            max,
+            unit,
+          }),
+        );
       if (f.kind === 'choice' && !opts.includes(String(v ?? '')))
         bad(
           f.id === 'type'
-            ? 'Choose a construction type.'
-            : `${f.label}: choose one of the options.`,
+            ? tt('Choose a construction type.')
+            : tt('{label}: choose one of the options.', { label }),
         );
       if (
         f.kind === 'perCompartmentMm' &&
         !listOf<number>(r, f.id, 0).every((w) => whole(w, min, max))
       )
-        bad(`${f.label}: whole numbers from ${min} to ${max}${unit}.`);
+        bad(tt('{label}: whole numbers from {min} to {max}{unit}.', { label, min, max, unit }));
       if (
         f.kind === 'perCompartment' &&
         !listOf<string>(r, f.id, opts[0] ?? '').every((x) => opts.includes(x))
       )
-        bad(`${f.label}: choose one of the options.`);
+        bad(tt('{label}: choose one of the options.', { label }));
       if (f.kind === 'compartments') {
         compartmentsOf(r).forEach((c, i) => {
           const uses = contentUses(c.kind);
-          if (!opts.includes(c.kind)) bad(`Compartment ${i + 1}: choose what it holds.`);
+          if (!opts.includes(c.kind))
+            bad(tt('Compartment {n}: choose what it holds.', { n: i + 1 }));
           if (uses.includes('shelves') && !whole(c.shelves, 0, max))
-            bad(`Compartment ${i + 1}: shelves must be a whole number from 0 to ${max}.`);
+            bad(
+              tt('Compartment {n}: shelves must be a whole number from 0 to {max}.', {
+                n: i + 1,
+                max,
+              }),
+            );
           if (uses.includes('drawers') && !whole(c.drawers, 1, 10))
-            bad(`Compartment ${i + 1}: drawers must be a whole number from 1 to 10.`);
+            bad(tt('Compartment {n}: drawers must be a whole number from 1 to 10.', { n: i + 1 }));
         });
       }
     }
@@ -164,7 +179,9 @@ export function check(a: Answers): Check {
     problems.push({
       severity: 'error',
       code: 'build-failed',
-      message: `These answers cannot be built (${e instanceof Error ? e.message : 'unknown problem'}).`,
+      message: tt('These answers cannot be built ({reason}).', {
+        reason: e instanceof Error ? e.message : tt('unknown problem'),
+      }),
     });
     model = null;
   }

@@ -9,6 +9,7 @@ import {
   type SettingKey,
 } from '../core/projectSettings';
 import type { FrontStyle, Handle, Material } from '../core/types';
+import { t, tr } from '../core/i18n';
 import { useDesign } from '../store/designStore';
 import { InfoTip, MmField, Select, Toggle } from './controls';
 import { Icon } from './icons';
@@ -42,24 +43,32 @@ export function ProjectSettingsPanel() {
     if (refused) return setMsg(refused);
     setMsg(
       value === undefined
-        ? `${SETTING_LABEL[key]}: not set. Pieces keep what they have.`
-        : `${SETTING_LABEL[key]}: ${applied.length ? `applied to ${applied.length} piece${applied.length === 1 ? '' : 's'}` : 'no piece follows it'}.`,
+        ? t('{setting}: not set. Pieces keep what they have.', { setting: SETTING_LABEL[key] })
+        : applied.length
+          ? t('{setting}: applied to {n|# piece|# pieces}.', {
+              setting: SETTING_LABEL[key],
+              n: applied.length,
+            })
+          : t('{setting}: no piece follows it.', { setting: SETTING_LABEL[key] }),
     );
   };
   const boardSelect = (key: 'body' | 'front' | 'back') => {
     const cur = s[key];
     const options = boards.map((m) => ({
       value: boardId(m),
-      label: `${m.name} ${m.thickness} mm`,
+      label: t('{name} {n} mm', { name: tr(m.name), n: m.thickness }),
     }));
     if (cur && !options.some((o) => o.value === boardId(cur)))
-      options.unshift({ value: boardId(cur), label: `${cur.name} ${cur.thickness} mm` });
+      options.unshift({
+        value: boardId(cur),
+        label: t('{name} {n} mm', { name: tr(cur.name), n: cur.thickness }),
+      });
     return (
       <Select
         key={key}
         label={SETTING_LABEL[key]}
         value={boardId(cur)}
-        options={[{ value: NOT_SET, label: 'Not set' }, ...options]}
+        options={[{ value: NOT_SET, label: t('Not set') }, ...options]}
         onChange={(v) =>
           apply(key, v === NOT_SET ? undefined : (boards.find((m) => boardId(m) === v) ?? cur))
         }
@@ -69,10 +78,11 @@ export function ProjectSettingsPanel() {
   return (
     <section className="project-settings section" aria-labelledby="project-settings-head">
       <div className="info-row">
-        <h3 id="project-settings-head">Project settings</h3>
-        <InfoTip label="About project settings" align="start">
-          Every piece follows these while its own value is the project&apos;s. A piece changed on
-          its own keeps its value; its card offers Follow project.
+        <h3 id="project-settings-head">{t('Project settings')}</h3>
+        <InfoTip label={t('About project settings')} align="start">
+          {t(
+            "Every piece follows these while its own value is the project's. A piece changed on its own keeps its value; its card offers Follow project.",
+          )}
         </InfoTip>
       </div>
       {boardSelect('body')}
@@ -82,11 +92,11 @@ export function ProjectSettingsPanel() {
         label={SETTING_LABEL.handle}
         value={handleValue(s.handle)}
         options={[
-          { value: NOT_SET, label: 'Not set' },
-          { value: 'bar', label: 'Bar handle' },
-          { value: 'knob', label: 'Knob handle' },
-          { value: 'push', label: 'Push-to-open' },
-          { value: 'none', label: 'No handle' },
+          { value: NOT_SET, label: t('Not set') },
+          { value: 'bar', label: t('Bar handle') },
+          { value: 'knob', label: t('Knob handle') },
+          { value: 'push', label: t('Push-to-open') },
+          { value: 'none', label: t('No handle') },
         ]}
         onChange={(v) => apply('handle', v === NOT_SET ? undefined : HANDLES[v])}
       />
@@ -94,15 +104,15 @@ export function ProjectSettingsPanel() {
         label={SETTING_LABEL.frontStyle}
         value={s.frontStyle ?? NOT_SET}
         options={[
-          { value: NOT_SET, label: 'Not set' },
-          { value: 'overlay', label: 'Overlay' },
-          { value: 'half', label: 'Half overlay' },
-          { value: 'inset', label: 'Inset' },
+          { value: NOT_SET, label: t('Not set') },
+          { value: 'overlay', label: t('Overlay') },
+          { value: 'half', label: t('Half overlay') },
+          { value: 'inset', label: t('Inset') },
         ]}
         onChange={(v) => apply('frontStyle', v === NOT_SET ? undefined : v)}
       />
       <Toggle
-        label="Same plinth height for every piece"
+        label={t('Same plinth height for every piece')}
         checked={s.plinthHeight !== undefined}
         onChange={(on) => apply('plinthHeight', on ? 100 : undefined)}
       />
@@ -134,7 +144,7 @@ export function PieceProjectSettings({ item }: { item: ProjectItem }) {
   if (!rows.length)
     return (
       <p className="hint">
-        No project settings apply to this piece. Set them in Settings › Project settings.
+        {t('No project settings apply to this piece. Set them in Settings › Project settings.')}
       </p>
     );
   return (
@@ -145,15 +155,15 @@ export function PieceProjectSettings({ item }: { item: ProjectItem }) {
             <strong>{SETTING_LABEL[key]}:</strong>{' '}
             {state === 'follows' ? (
               <>
-                <Icon name="check" className="sm" /> Follows project
+                <Icon name="check" className="sm" /> {t('Follows project')}
               </>
             ) : (
-              `Own: ${settingText(item.design, key)}`
+              t('Own: {value}', { value: settingText(item.design, key) })
             )}
           </span>
           {state === 'own' && (
             <button type="button" className="btn sm outline" onClick={() => follow(item.id, key)}>
-              Follow project
+              {t('Follow project')}
             </button>
           )}
         </li>

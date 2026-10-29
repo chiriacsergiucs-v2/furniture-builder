@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { t } from '../core/i18n';
 import { InfoTip } from './controls';
 import { Icon } from './icons';
 import { AddPieceList } from './Project';
@@ -33,7 +34,7 @@ export function PieceList({
       open
       tabIndex={-1}
       className={`piece-list ${dragging ? 'folded' : ''}`}
-      aria-label="Add a piece"
+      aria-label={t('Add a piece')}
       onKeyDown={(e) => {
         // Esc inside the list closes it; Esc during a drag only drops the drag (handled first, ADR-094).
         if (e.key === 'Escape' && !pieceDragActive() && !e.defaultPrevented) {
@@ -44,16 +45,18 @@ export function PieceList({
     >
       <header>
         <div className="info-row">
-          <h2>Add a piece</h2>
-          <InfoTip label="About adding a piece" align="start">
-            Drag an item onto the plan (on a phone, hold it first), or tap it and then tap the plan.
+          <h2>{t('Add a piece')}</h2>
+          <InfoTip label={t('About adding a piece')} align="start">
+            {t(
+              'Drag an item onto the plan (on a phone, hold it first), or tap it and then tap the plan.',
+            )}
           </InfoTip>
         </div>
         <button
           type="button"
           className="btn icon ghost sm close"
           onClick={() => setOpen(false)}
-          aria-label="Close"
+          aria-label={t('Close')}
         >
           <Icon name="x" />
         </button>

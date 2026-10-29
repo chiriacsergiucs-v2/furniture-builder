@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { t, tr } from '../core/i18n';
 import { MOVE_TO_ACTIONS, MOVE_TO_LABELS, moveToOptions, type MoveToAction } from '../core/moveTo';
 import { useDesign } from '../store/designStore';
 
@@ -16,10 +17,10 @@ export function MoveToButtons({ id, className = '' }: { id: string; className?: 
   const tap = (a: MoveToAction) => {
     const off = options[a];
     const text = off ?? moveItemTo(id, a);
-    setMsg(text ? { id, text: `${MOVE_TO_LABELS[a].label}: ${text}` } : null);
+    setMsg(text ? { id, text: `${tr(MOVE_TO_LABELS[a].label)}: ${tr(text)}` } : null);
   };
   return (
-    <div className={`move-to ${className}`} role="group" aria-label="Move to">
+    <div className={`move-to ${className}`} role="group" aria-label={t('Move to')}>
       <div className="move-to-buttons">
         {MOVE_TO_ACTIONS.map((a) => {
           const off = options[a];
@@ -29,10 +30,10 @@ export function MoveToButtons({ id, className = '' }: { id: string; className?: 
               type="button"
               className="btn sm outline"
               aria-disabled={off ? true : undefined}
-              title={off ?? MOVE_TO_LABELS[a].title}
+              title={off ? tr(off) : tr(MOVE_TO_LABELS[a].title)}
               onClick={() => tap(a)}
             >
-              {MOVE_TO_LABELS[a].label}
+              {tr(MOVE_TO_LABELS[a].label)}
             </button>
           );
         })}

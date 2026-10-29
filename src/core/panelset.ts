@@ -1,3 +1,4 @@
+import { t } from './i18n';
 import type { PartialModel } from './cabinet';
 import { box } from './geometry';
 import type { Box, LoosePanel, Material, Panel, PanelLie, PanelSetParams } from './types';
@@ -51,7 +52,7 @@ export function buildPanelSet(
     out.diagnostics.push({
       severity: 'error',
       code: 'no-panels',
-      message: 'This panel set has no panels.',
+      message: t('This panel set has no panels.'),
       nodeId: id,
     });
     return out;
@@ -64,7 +65,7 @@ export function buildPanelSet(
       out.diagnostics.push({
         severity: 'error',
         code: 'material-missing',
-        message: `${lp.name} uses a board that does not exist in the design.`,
+        message: t('{name} uses a board that does not exist in the design.', { name: lp.name }),
         nodeId: id,
       });
       continue;
@@ -97,7 +98,7 @@ export function buildPanelSet(
       out.diagnostics.push({
         severity: 'error',
         code: 'material-missing',
-        message: `${lp.name} uses a board that does not exist in the design.`,
+        message: t('{name} uses a board that does not exist in the design.', { name: lp.name }),
         nodeId: id,
       });
       continue;
@@ -125,7 +126,7 @@ export function buildPanelSet(
       out.diagnostics.push({
         severity: 'error',
         code: 'joint-unplaced',
-        message: 'A screwed joint names a panel that is missing or not placed.',
+        message: t('A screwed joint names a panel that is missing or not placed.'),
         nodeId: id,
       });
       continue;
@@ -143,8 +144,13 @@ export function buildPanelSet(
       severity: 'warning',
       code: 'not-assembled',
       message: placed.length
-        ? `${loose.reduce((n, lp) => n + lp.quantity, 0)} parts have no known place and are shown in a pile beside the assembly. Edge banding is not set.`
-        : 'Loose panels, shown in one pile: how they go together is not in the design. Edge banding is not set.',
+        ? t(
+            '{n} parts have no known place and are shown in a pile beside the assembly. Edge banding is not set.',
+            { n: loose.reduce((n, lp) => n + lp.quantity, 0) },
+          )
+        : t(
+            'Loose panels, shown in one pile: how they go together is not in the design. Edge banding is not set.',
+          ),
       nodeId: id,
     });
   }
@@ -152,8 +158,9 @@ export function buildPanelSet(
     out.diagnostics.push({
       severity: 'warning',
       code: 'screws-choose',
-      message:
+      message: t(
         'Screwed joints: choose the screw type, length and number for the board (guidance, not listed).',
+      ),
       nodeId: id,
     });
   return out;

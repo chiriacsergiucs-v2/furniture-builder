@@ -2,6 +2,7 @@
  * Finish scope (ADR-055): put one board on the fronts or the carcass of this piece, this run or the whole project.
  * A one-time change: every piece stays its own copy (ADR-022) and can be changed again on its own.
  */
+import { t } from './i18n';
 import { newId } from './design';
 import { materialKey, runOf, type Project, type ProjectItem } from './project';
 import type { Design, Material } from './types';
@@ -105,7 +106,11 @@ export function applyFinish(
   const items = project.items.map((it) => {
     if (!targets.has(it.id)) return it;
     if (roleBoard(it.design, role) === null) {
-      skipped.push(`${it.design.name} has no ${role === 'front' ? 'fronts' : 'carcass'}`);
+      skipped.push(
+        role === 'front'
+          ? t('{name} has no fronts', { name: it.design.name })
+          : t('{name} has no carcass', { name: it.design.name }),
+      );
       return it;
     }
     applied.push(it.design.name);

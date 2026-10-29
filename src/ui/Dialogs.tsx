@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { kerfOf, newId, sheetOf } from '../core/design';
-import type { Material, MaterialKind, MaterialMaker } from '../core/types';
+import type { BoardFinish, Material, MaterialKind, MaterialMaker } from '../core/types';
+import { t } from '../core/i18n';
 import {
   DECOR_COLUMNS,
   decorPatch,
@@ -19,6 +20,21 @@ import { StartFrom } from './Catalog';
 import { askConfirm } from './Confirm';
 import { importImage, useImageUrls } from '../persist/images';
 import { FINISHES, MAX_TILE } from '../core/surface';
+
+const FINISH_LABEL: Record<BoardFinish, string> = {
+  matte: t('Matte'),
+  satin: t('Satin'),
+  gloss: t('Gloss'),
+};
+const KIND_LABEL: Record<MaterialKind, string> = {
+  pal: t('PAL'),
+  mdf: t('MDF'),
+  worktop: t('Kitchen worktop'),
+  other: t('Other'),
+};
+const FINISH_OPTIONS = FINISHES.map((f) => ({ ...f, label: FINISH_LABEL[f.value] }));
+const MAKER_OPTIONS = MAKERS.map((m) => (m.value === 'other' ? { ...m, label: t('Other') } : m));
+const KIND_OPTIONS = KINDS.map((k) => ({ ...k, label: KIND_LABEL[k.value] }));
 
 /** Modal shell: header (title + close), scrolling body, optional footer for actions. Esc and backdrop close it. */
 export function Dialog({
@@ -69,7 +85,7 @@ export function Dialog({
           type="button"
           className="btn icon ghost sm close"
           onClick={onClose}
-          aria-label="Close"
+          aria-label={t('Close')}
         >
           <Icon name="x" />
         </button>
@@ -105,10 +121,10 @@ export function NewDialog({
     <Dialog
       open={open}
       onClose={onClose}
-      title="Start something new"
+      title={t('Start something new')}
       info={
-        <InfoTip label="About starting something new" align="start">
-          What you have open now is already saved on this device.
+        <InfoTip label={t('About starting something new')} align="start">
+          {t('What you have open now is already saved on this device.')}
         </InfoTip>
       }
     >
@@ -118,10 +134,11 @@ export function NewDialog({
             <Icon name="plus" />
           </span>
           <span>
-            <strong>New piece, step by step</strong>
+            <strong>{t('New piece, step by step')}</strong>
             <span className="sub">
-              Size, type, then only the questions that apply (dividers, shelves, drawers, doors,
-              base), with suggested combinations. Saved to the Catalog.
+              {t(
+                'Size, type, then only the questions that apply (dividers, shelves, drawers, doors, base), with suggested combinations. Saved to the Catalog.',
+              )}
             </span>
           </span>
           <Icon name="chevron-right" className="chev sm" />
@@ -141,10 +158,11 @@ export function NewDialog({
           <Icon name="project" />
         </span>
         <span>
-          <strong>Project with several pieces</strong>
+          <strong>{t('Project with several pieces')}</strong>
           <span className="sub">
-            A kitchen, a bedroom or a room: place pieces, then get one parts list and one set of
-            sheets.
+            {t(
+              'A kitchen, a bedroom or a room: place pieces, then get one parts list and one set of sheets.',
+            )}
           </span>
         </span>
         <Icon name="chevron-right" className="chev sm" />
@@ -155,10 +173,11 @@ export function NewDialog({
             <Icon name="project" />
           </span>
           <span>
-            <strong>Fill a wall</strong>
+            <strong>{t('Fill a wall')}</strong>
             <span className="sub">
-              Enter a wall's width, depth and height; get suggested mixes of tall and base cabinets
-              that fill it exactly, then refine them.
+              {t(
+                "Enter a wall's width, depth and height; get suggested mixes of tall and base cabinets that fill it exactly, then refine them.",
+              )}
             </span>
           </span>
           <Icon name="chevron-right" className="chev sm" />
@@ -202,31 +221,39 @@ export function MaterialsPanel() {
     try {
       text = await f.text();
     } catch {
-      setDecorMsg({ ok: false, text: `${f.name} could not be read.` });
+      setDecorMsg({ ok: false, text: t('{file} could not be read.', { file: f.name }) });
       return;
     }
     const r = parseDecorList(text, f.name);
     if (!r.decors.length) {
-      setDecorMsg({ ok: false, text: `No decors imported. ${r.problems.slice(0, 4).join(' ')}` });
+      setDecorMsg({
+        ok: false,
+        text: t('No decors imported. {problems}', { problems: r.problems.slice(0, 4).join(' ') }),
+      });
       return;
     }
     try {
       await replaceDecors(r.decors);
     } catch {
-      setDecorMsg({ ok: false, text: 'The decor list could not be saved on this device.' });
+      setDecorMsg({ ok: false, text: t('The decor list could not be saved on this device.') });
       return;
     }
     setDecors(r.decors);
     setDecorMsg({
       ok: r.problems.length === 0,
-      text: `${r.decors.length} decor${r.decors.length === 1 ? '' : 's'} imported from ${f.name}.${r.problems.length ? ` ${r.problems.length} row${r.problems.length === 1 ? '' : 's'} skipped: ${r.problems.slice(0, 4).join(' ')}` : ''}`,
+      text: `${t('{n|# decor|# decors} imported from {file}.', { n: r.decors.length, file: f.name })}${r.problems.length ? ` ${t('{n|# row|# rows} skipped: {problems}', { n: r.problems.length, problems: r.problems.slice(0, 4).join(' ') })}` : ''}`,
     });
   };
   const decorOptions = [
-    { value: '', label: 'Not from the list' },
+    { value: '', label: t('Not from the list') },
     ...decors.map((d) => ({
       value: d.id,
-      label: `${d.makerText} ${d.code} ${d.name}, ${d.thickness} mm`,
+      label: t('{maker} {code} {name}, {n} mm', {
+        maker: d.makerText,
+        code: d.code,
+        name: d.name,
+        n: d.thickness,
+      }),
     })),
   ];
   const decorOf = (m: Material) =>
@@ -239,48 +266,55 @@ export function MaterialsPanel() {
     )?.id ?? '';
   return (
     <Group
-      title="Boards, sheets and saw cut"
+      title={t('Boards, sheets and saw cut')}
       id="g-boards"
       defaultOpen={false}
       info={
-        <InfoTip label="About boards and sheets">
-          Changing a thickness rebuilds every part made from that board. Colours and pictures only
-          change how the board looks on screen.
+        <InfoTip label={t('About boards and sheets')}>
+          {t(
+            'Changing a thickness rebuilds every part made from that board. Colours and pictures only change how the board looks on screen.',
+          )}
         </InfoTip>
       }
     >
       <MmField
-        label="Saw cut (kerf)"
+        label={t('Saw cut (kerf)')}
         value={kerf}
         min={0}
         max={20}
         step={1}
         onChange={setKerf}
         info={
-          <InfoTip label="About the saw cut" align="start">
-            Material lost in every cut. Sheet length runs along the grain.
+          <InfoTip label={t('About the saw cut')} align="start">
+            {t('Material lost in every cut. Sheet length runs along the grain.')}
           </InfoTip>
         }
       />
       <div className="decor-list">
         <p className="hint">
           {decors.length
-            ? `Decor list: ${decors[0].list}, ${decors.length} decor${decors.length === 1 ? '' : 's'}.`
-            : 'Decor list: none.'}{' '}
-          <InfoTip label="About the decor list" align="start">
+            ? t('Decor list: {list}, {n|# decor|# decors}.', {
+                list: decors[0].list,
+                n: decors.length,
+              })
+            : t('Decor list: none.')}{' '}
+          <InfoTip label={t('About the decor list')} align="start">
             {decors.length
-              ? 'Choose one on any board below.'
-              : `Import your own CSV with the columns ${DECOR_COLUMNS} (whole mm, #rrggbb) to choose decors on the boards.`}
+              ? t('Choose one on any board below.')
+              : t(
+                  'Import your own CSV with the columns {columns} (whole mm, #rrggbb) to choose decors on the boards.',
+                  { columns: DECOR_COLUMNS },
+                )}
           </InfoTip>
         </p>
         <div className="mat-picture-row">
           <label className="btn sm outline file-btn">
             <Icon name="upload" className="sm" />
-            Import decor list (CSV)
+            {t('Import decor list (CSV)')}
             <input
               type="file"
               accept=".csv,text/csv,text/plain"
-              aria-label="Import decor list (CSV)"
+              aria-label={t('Import decor list (CSV)')}
               onChange={(e) => {
                 const f = e.target.files?.[0];
                 if (f) void importDecors(f);
@@ -295,8 +329,10 @@ export function MaterialsPanel() {
               onClick={async () => {
                 if (
                   !(await askConfirm(
-                    'Remove the decor list from this device? Boards keep their names, colours and labels.',
-                    { confirmLabel: 'Remove list', danger: true },
+                    t(
+                      'Remove the decor list from this device? Boards keep their names, colours and labels.',
+                    ),
+                    { confirmLabel: t('Remove list'), danger: true },
                   ))
                 )
                   return;
@@ -305,7 +341,7 @@ export function MaterialsPanel() {
                 setDecorMsg(null);
               }}
             >
-              Remove decor list
+              {t('Remove decor list')}
             </button>
           )}
         </div>
@@ -324,19 +360,19 @@ export function MaterialsPanel() {
           <li key={m.id}>
             <input
               type="color"
-              aria-label={`${m.name} colour`}
+              aria-label={t('{name} colour', { name: m.name })}
               value={m.color}
               onChange={(e) => update(m.id, { color: e.target.value })}
             />
             <input
               className="mat-name"
-              aria-label="Name"
+              aria-label={t('Name')}
               defaultValue={m.name}
               key={m.name}
               onBlur={(e) => e.target.value.trim() && update(m.id, { name: e.target.value.trim() })}
             />
             <MmField
-              label="Thickness"
+              label={t('Thickness')}
               value={m.thickness}
               min={1}
               max={60}
@@ -344,36 +380,36 @@ export function MaterialsPanel() {
               onChange={(v) => update(m.id, { thickness: v })}
             />
             <Toggle
-              label="Has grain"
+              label={t('Has grain')}
               checked={m.grain}
               onChange={(v) => update(m.id, { grain: v })}
             />
             <Segmented
-              label="Finish"
+              label={t('Finish')}
               value={m.finish ?? 'matte'}
-              options={FINISHES}
+              options={FINISH_OPTIONS}
               onChange={(v) => update(m.id, { finish: v })}
             />
             <div className="sheet-fields">
               <Select
-                label="Manufacturer"
+                label={t('Manufacturer')}
                 value={m.maker ?? ''}
-                options={[{ value: '', label: 'Not set' }, ...MAKERS]}
+                options={[{ value: '', label: t('Not set') }, ...MAKER_OPTIONS]}
                 onChange={(v) =>
                   update(m.id, { maker: (v || undefined) as MaterialMaker | undefined })
                 }
               />
               <Select
-                label="Type"
+                label={t('Type')}
                 value={m.kind ?? ''}
-                options={[{ value: '', label: 'Not set' }, ...KINDS]}
+                options={[{ value: '', label: t('Not set') }, ...KIND_OPTIONS]}
                 onChange={(v) =>
                   update(m.id, { kind: (v || undefined) as MaterialKind | undefined })
                 }
               />
               {decors.length > 0 && (
                 <Select
-                  label="Decor from your list"
+                  label={t('Decor from your list')}
                   value={decorOf(m)}
                   options={decorOptions}
                   onChange={(v) => {
@@ -385,21 +421,21 @@ export function MaterialsPanel() {
             </div>
             <div className="sheet-fields">
               <MmField
-                label="Sheet length"
+                label={t('Sheet length')}
                 value={sheetOf(m).length}
                 min={300}
                 max={6000}
                 onChange={(v) => update(m.id, { sheet: { ...sheetOf(m), length: v } })}
               />
               <MmField
-                label="Sheet width"
+                label={t('Sheet width')}
                 value={sheetOf(m).width}
                 min={300}
                 max={3000}
                 onChange={(v) => update(m.id, { sheet: { ...sheetOf(m), width: v } })}
               />
               <MmField
-                label="Trim each edge"
+                label={t('Trim each edge')}
                 value={sheetOf(m).trim}
                 min={0}
                 max={50}
@@ -407,13 +443,13 @@ export function MaterialsPanel() {
                 onChange={(v) => update(m.id, { sheet: { ...sheetOf(m), trim: v } })}
               />
               <MmField
-                label="Sheets in stock"
+                label={t('Sheets in stock')}
                 unit=""
                 value={sheetOf(m).count ?? 0}
                 min={0}
                 max={999}
                 step={1}
-                hint="0 = buy as needed"
+                hint={t('0 = buy as needed')}
                 onChange={(v) =>
                   update(m.id, { sheet: { ...sheetOf(m), count: v === 0 ? null : v } })
                 }
@@ -431,7 +467,7 @@ export function MaterialsPanel() {
                 }}
               >
                 <Icon name="trash" className="sm" />
-                Remove board
+                {t('Remove board')}
               </button>
               {why?.id === m.id && (
                 <p className="alert error" role="alert">
@@ -447,11 +483,11 @@ export function MaterialsPanel() {
         type="button"
         className="btn outline"
         onClick={() =>
-          add({ id: newId(), name: 'New board', thickness: 18, grain: false, color: '#d8d4cc' })
+          add({ id: newId(), name: t('New board'), thickness: 18, grain: false, color: '#d8d4cc' })
         }
       >
         <Icon name="plus" />
-        Add a material
+        {t('Add a material')}
       </button>
     </Group>
   );
@@ -475,7 +511,7 @@ function MaterialPicture({ m }: { m: Material }) {
     setBusy(false);
     if (!r.ok) {
       setProblem(
-        `${r.problem} The board keeps its ${m.image ? 'current picture' : 'plain colour'}.`,
+        `${r.problem} ${m.image ? t('The board keeps its current picture.') : t('The board keeps its plain colour.')}`,
       );
       return;
     }
@@ -486,16 +522,20 @@ function MaterialPicture({ m }: { m: Material }) {
     <div className="mat-picture">
       <div className="mat-picture-row">
         {img && url && url !== 'missing' && (
-          <img className="mat-thumb" src={url} alt={`Picture of ${m.name}`} />
+          <img className="mat-thumb" src={url} alt={t('Picture of {name}', { name: m.name })} />
         )}
         <label className={`btn sm outline file-btn${busy ? ' disabled' : ''}`}>
           <Icon name="upload" className="sm" />
-          {busy ? 'Preparing picture…' : img ? 'Replace picture' : 'Add a picture'}
+          {busy ? t('Preparing picture…') : img ? t('Replace picture') : t('Add a picture')}
           <input
             type="file"
             accept="image/png,image/jpeg,image/webp"
             disabled={busy}
-            aria-label={`${img ? 'Replace' : 'Add a'} picture for ${m.name}`}
+            aria-label={
+              img
+                ? t('Replace picture for {name}', { name: m.name })
+                : t('Add a picture for {name}', { name: m.name })
+            }
             onChange={(e) => {
               void pick(e.target.files?.[0]);
               e.target.value = '';
@@ -508,7 +548,7 @@ function MaterialPicture({ m }: { m: Material }) {
             className="btn sm ghost"
             onClick={() => update(m.id, { image: undefined })}
           >
-            Remove picture
+            {t('Remove picture')}
           </button>
         )}
         {img && <span className="hint">{img.name}</span>}
@@ -517,8 +557,10 @@ function MaterialPicture({ m }: { m: Material }) {
         <p className="alert error" role="alert">
           <Icon name="alert-circle" className="sm" />
           <span>
-            The picture {img.name} is not on this device. The plain colour is shown; add the picture
-            again to see it.
+            {t(
+              'The picture {name} is not on this device. The plain colour is shown; add the picture again to see it.',
+              { name: img.name },
+            )}
           </span>
         </p>
       )}
@@ -531,21 +573,21 @@ function MaterialPicture({ m }: { m: Material }) {
       {img && (
         <div className="sheet-fields">
           <MmField
-            label="One picture covers, along the grain"
+            label={t('One picture covers, along the grain')}
             value={img.tileLength}
             min={1}
             max={MAX_TILE}
             onChange={(v) => update(m.id, { image: { ...img, tileLength: v } })}
           />
           <MmField
-            label="One picture covers, across"
+            label={t('One picture covers, across')}
             value={img.tileWidth}
             min={1}
             max={MAX_TILE}
             onChange={(v) => update(m.id, { image: { ...img, tileWidth: v } })}
           />
           <Toggle
-            label="Turn picture 90°"
+            label={t('Turn picture 90°')}
             checked={!!img.turn}
             onChange={(v) => update(m.id, { image: { ...img, turn: v } })}
           />

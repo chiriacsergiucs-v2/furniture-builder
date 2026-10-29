@@ -7,6 +7,7 @@
  * family rule refuse a candidate; depth and height differences are allowed but named. Into an inside corner: the back
  * against one wall and a side against the other. A turned piece's faces are turned with it.
  */
+import { t } from './i18n';
 import { evaluate, mountOf, type Mount } from './compat';
 import {
   DRAG_STEP,
@@ -243,7 +244,7 @@ const overlap = (a: { lo: number; hi: number }, b: { lo: number; hi: number }) =
 const distOf = (m: Move) => Math.abs(m.x ?? 0) + Math.abs(m.z ?? 0);
 const cmp = (a: { dist: number; kind: Cand['kind']; key: string }, b: typeof a) =>
   a.dist - b.dist || RANK[a.kind] - RANK[b.kind] || (a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
-const wallName = (w: number) => (w < 0 ? 'the back wall' : `wall ${w + 1}`);
+const wallName = (w: number) => (w < 0 ? t('the back wall') : t('wall {n}', { n: w + 1 }));
 
 /**
  * Where a dragged piece lands with snapping on (ADR-070). `dx` / `dz` is the pointer's move in plan mm, as for
@@ -293,7 +294,14 @@ export function snapDrag(
     target: string,
     why: string,
     named = false,
-  ) => rejected.push({ dist, key, kind, text: `Won’t snap to ${target}: ${why}.`, named });
+  ) =>
+    rejected.push({
+      dist,
+      key,
+      kind,
+      text: t('Won’t snap to {target}: {why}.', { target, why }),
+      named,
+    });
   const itemById = new Map(others.map((pc) => [pc.item.id, pc.item]));
 
   for (const f of faces) {
@@ -323,8 +331,8 @@ export function snapDrag(
       // Depth and height differences are allowed but named (ADR-070); failed `warning` rules are named too.
       const notes = [
         ...new Set([
-          ...(f.depth !== n.depth ? [`depth ${f.depth} vs ${n.depth}`] : []),
-          ...(f.height !== n.height ? [`height ${f.height} vs ${n.height}`] : []),
+          ...(f.depth !== n.depth ? [t('depth {a} vs {b}', { a: f.depth, b: n.depth })] : []),
+          ...(f.height !== n.height ? [t('height {a} vs {b}', { a: f.height, b: n.height })] : []),
           ...found.map((x) => x.message),
         ]),
       ];
@@ -334,7 +342,7 @@ export function snapDrag(
         move,
         dist: Math.abs(d),
         key,
-        label: `Joins ${n.name}`,
+        label: t('Joins {name}', { name: n.name }),
         notes,
         face: n,
       });
@@ -357,7 +365,7 @@ export function snapDrag(
         move,
         dist: Math.abs(d),
         key,
-        label: `Against ${wallName(w.wall)}`,
+        label: t('Against {wall}', { wall: wallName(w.wall) }),
         notes: [],
         walls: [w.wall],
       });
@@ -381,7 +389,7 @@ export function snapDrag(
       move,
       dist: distOf(move),
       key: `corner:${String(c.walls[0]).padStart(4, '0')}`,
-      label: `Into the corner of walls ${c.walls[0] + 1} and ${c.walls[1] + 1}`,
+      label: t('Into the corner of walls {a} and {b}', { a: c.walls[0] + 1, b: c.walls[1] + 1 }),
       notes: [],
       walls: c.walls,
     });
@@ -404,7 +412,7 @@ export function snapDrag(
       move: { x: d },
       dist: Math.abs(d),
       key: `centre:${n.item.id}`,
-      label: `Centre to centre with ${n.item.design.name}`,
+      label: t('Centre to centre with {name}', { name: n.item.design.name }),
       notes: [],
     });
   }
@@ -423,7 +431,7 @@ export function snapDrag(
       position: free,
       box: at(),
       snap: null,
-      hint: near ? near.text : `Nothing to snap to within ${range} mm.`,
+      hint: near ? near.text : t('Nothing to snap to within {range} mm.', { range }),
       refused,
     };
   }

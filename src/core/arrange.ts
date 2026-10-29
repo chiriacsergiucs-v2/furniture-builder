@@ -3,6 +3,7 @@
  * nothing stored changes shape, every result is whole millimetres and quarter turns, and overlaps that result are left
  * to the usual diagnostics (ADR-008).
  */
+import { t } from './i18n';
 import { newId } from './design';
 import { overlaps } from './geometry';
 import {
@@ -68,7 +69,7 @@ export function mirrorSpace(s: Space): Space {
 export type MirrorResult =
   { ok: true; design: Design } | { ok: false; design: Design; reason: string };
 
-export const NOTHING_TO_MIRROR = 'Nothing to mirror in this piece';
+export const NOTHING_TO_MIRROR = t('Nothing to mirror in this piece');
 
 /**
  * Swap left and right inside one piece (ADR-069): hinges, pedestal sides, corner side, the order of side-by-side
@@ -129,9 +130,9 @@ export function mirrorDesign(d: Design): MirrorResult {
       const p = prod.params;
       // Built only at the left end today; mirroring them needs a stored side (left open in ADR-069).
       if (p.kind === 'bench' && p.backrest)
-        return same('The lounger backrest is always at the left end; it cannot be mirrored yet');
+        return same(t('The lounger backrest is always at the left end; it cannot be mirrored yet'));
       if (p.kind === 'bed' && p.bed && p.bed.sidePanelHeight > 0)
-        return same('The daybed side panel is always on the left; it cannot be mirrored yet');
+        return same(t('The daybed side panel is always on the left; it cannot be mirrored yet'));
       return same(NOTHING_TO_MIRROR);
     }
     case 'panel':
@@ -229,7 +230,7 @@ export function setItemRotation(project: Project, id: string, deg: number): Move
   const it = project.items.find((i) => i.id === id);
   if (!it) return { project };
   const split = splitRotation(deg);
-  if (!split) return { project, reason: 'Rotation must be whole degrees from 0 to 359.' };
+  if (!split) return { project, reason: t('Rotation must be whole degrees from 0 to 359.') };
   if (split.rotationY === it.rotationY && (split.angle ?? 0) === (it.angle ?? 0))
     return { project };
   const reason = moveBlocked(project, [id]);
@@ -318,7 +319,7 @@ export function mirrorRun(
   const run = touchingRun(project, id);
   if (!run.length) return { project, reasons: [] };
   const r = mirrorSet(project, run);
-  return r.refused ? { ...r, refused: `Mirror the run refused: ${r.refused}` } : r;
+  return r.refused ? { ...r, refused: t('Mirror the run refused: {why}', { why: r.refused }) } : r;
 }
 
 /**

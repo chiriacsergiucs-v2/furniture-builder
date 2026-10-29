@@ -1,3 +1,4 @@
+import { t } from './i18n';
 import type { Mm, Product } from './types';
 
 /** One outside size of a whole piece that can be changed from its selection (ADR-106; height ADR-148). */
@@ -25,37 +26,38 @@ export function sizeFields(product: Product): SizeField[] {
   switch (product.kind) {
     case 'cabinet':
       return [
-        f('width', 'Width', product.params.width, 100, 4000),
-        f('height', 'Height', product.params.height, 100, 3000),
-        f('depth', 'Depth', product.params.depth, 100, 1200),
+        f('width', t('Width'), product.params.width, 100, 4000),
+        f('height', t('Height'), product.params.height, 100, 3000),
+        f('depth', t('Depth'), product.params.depth, 100, 1200),
       ];
     case 'desk':
       return [
-        f('width', 'Width', product.params.width, 400, 3000),
-        f('height', 'Height', product.params.height, 400, 1200),
-        f('depth', 'Depth', product.params.depth, 300, 1200),
+        f('width', t('Width'), product.params.width, 400, 3000),
+        f('height', t('Height'), product.params.height, 400, 1200),
+        f('depth', t('Depth'), product.params.depth, 300, 1200),
       ];
     case 'corner': {
       const v = product.params.variant;
-      const label = v === 'blind' ? 'Width' : v === 'diagonal' ? 'Along each wall' : 'Back wing';
+      const label =
+        v === 'blind' ? t('Width') : v === 'diagonal' ? t('Along each wall') : t('Back wing');
       return [
         f('width', label, product.params.width, 300, 3000),
-        f('height', 'Height', product.params.height, 300, 2500),
-        f('depth', 'Depth', product.params.depth, 200, 900),
+        f('height', t('Height'), product.params.height, 300, 2500),
+        f('depth', t('Depth'), product.params.depth, 200, 900),
       ];
     }
     case 'frame':
       return product.params.kind === 'bed'
         ? []
         : [
-            f('width', 'Width', product.params.width, 200, 4000),
-            f('height', 'Height', product.params.height, 200, 1500),
-            f('depth', 'Depth', product.params.depth, 200, 2000),
+            f('width', t('Width'), product.params.width, 200, 4000),
+            f('height', t('Height'), product.params.height, 200, 1500),
+            f('depth', t('Depth'), product.params.depth, 200, 2000),
           ];
     case 'panel':
       return [
-        f('width', 'Width', product.params.width, 20, 3000),
-        f('height', 'Height', product.params.height, 50, 3000),
+        f('width', t('Width'), product.params.width, 20, 3000),
+        f('height', t('Height'), product.params.height, 50, 3000),
       ];
     case 'panels':
       return [];

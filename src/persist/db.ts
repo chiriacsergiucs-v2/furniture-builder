@@ -15,6 +15,7 @@ import { validateVersion, type ProjectVersion } from '../core/projectVersion';
 import { BACKUP_TABLES, keyOf } from '../core/backup';
 import { emitSavedChange } from './events';
 import type { AccountLink } from '../core/sync';
+import { t } from '../core/i18n';
 
 /** A device setting kept in IndexedDB (ADR-133): values that localStorage cannot hold, like a folder handle. */
 export interface SettingRow {
@@ -445,8 +446,8 @@ export async function deleteModelIfUnused(
   return database.transaction('rw', database.models, database.projects, async () => {
     const usedBy = (await database.projects.toArray())
       .filter((r) => JSON.stringify(r).includes(`"${id}"`))
-      .map((r) => (typeof r.name === 'string' ? r.name : 'a saved project'));
-    if (new Set(keep).has(id)) usedBy.unshift('the open project');
+      .map((r) => (typeof r.name === 'string' ? r.name : t('a saved project')));
+    if (new Set(keep).has(id)) usedBy.unshift(t('the open project'));
     if (usedBy.length) return { deleted: false, usedBy };
     await database.models.delete(id);
     return { deleted: true, usedBy };

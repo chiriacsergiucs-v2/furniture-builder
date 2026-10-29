@@ -7,6 +7,7 @@ import { useCatalog } from './Catalog';
 import { Select } from './controls';
 import { Dialog } from './Dialogs';
 import { Icon } from './icons';
+import { t, tr } from '../core/i18n';
 
 /**
  * "Save to catalog" on the selected project piece (ADR-107): name, room and type, then a new template on this device
@@ -18,9 +19,9 @@ export function SaveToCatalog({ item, onSaved }: { item: ProjectItem; onSaved: (
     <>
       <button type="button" className="btn outline" onClick={() => setOpen(true)}>
         <Icon name="catalog" className="sm" />
-        Save to catalog
+        {t('Save to catalog')}
       </button>
-      <Dialog open={open} onClose={() => setOpen(false)} title="Save to catalog">
+      <Dialog open={open} onClose={() => setOpen(false)} title={t('Save to catalog')}>
         {open && (
           <SaveForm
             item={item}
@@ -40,7 +41,7 @@ export function SaveToCatalog({ item, onSaved }: { item: ProjectItem; onSaved: (
 export function SavedToCatalog() {
   return (
     <p className="hint saved-line" role="status">
-      Saved to the catalog. <a href="#catalog">Open in Catalog</a>
+      {t('Saved to the catalog.')} <a href="#catalog">{t('Open in Catalog')}</a>
     </p>
   );
 }
@@ -77,11 +78,12 @@ function SaveForm({
       }}
     >
       <p className="hint">
-        A new template on this device, in Catalog › Templates and in Add a piece. This piece stays
-        linked to it.
+        {t(
+          'A new template on this device, in Catalog › Templates and in Add a piece. This piece stays linked to it.',
+        )}
       </p>
       <div className="field">
-        <label htmlFor="stc-name">Name</label>
+        <label htmlFor="stc-name">{t('Name')}</label>
         <input
           id="stc-name"
           value={name}
@@ -90,15 +92,15 @@ function SaveForm({
         />
       </div>
       <Select<Room>
-        label="Room"
+        label={t('Room')}
         value={room}
-        options={ROOMS.map((r) => ({ value: r, label: ROOM_LABEL[r] }))}
+        options={ROOMS.map((r) => ({ value: r, label: tr(ROOM_LABEL[r]) }))}
         onChange={setRoom}
       />
       <Select<FunctionGroup>
-        label="Type"
+        label={t('Type')}
         value={fn}
-        options={FUNCTIONS.map((f) => ({ value: f, label: FUNCTION_LABEL[f] }))}
+        options={FUNCTIONS.map((f) => ({ value: f, label: tr(FUNCTION_LABEL[f]) }))}
         onChange={setFn}
       />
       {error && (
@@ -108,10 +110,10 @@ function SaveForm({
       )}
       <div className="split-actions">
         <button type="button" className="btn ghost" onClick={onCancel}>
-          Cancel
+          {t('Cancel')}
         </button>
         <button type="submit" className="btn primary" disabled={!name.trim() || busy}>
-          Save
+          {t('Save')}
         </button>
       </div>
     </form>

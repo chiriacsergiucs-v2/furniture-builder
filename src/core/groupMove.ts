@@ -5,6 +5,7 @@
  * locked (ADR-095), or stands on the floor and would have to go up or down — refuses the whole change with the reason
  * (ADR-008). Pure; positions come from the placements (ADR-031).
  */
+import { t } from './i18n';
 import { groupOf, movedTo } from './selection';
 import {
   moveBlocked,
@@ -32,7 +33,10 @@ function follow(project: Project, it: ProjectItem, d: Offset): ProjectItem | str
     const pl = it.placement;
     const name = pieceName(project, it.id);
     const below = (y: number) =>
-      `${name} would go below the floor (${y} mm); the pieces of its group move together.`;
+      t('{name} would go below the floor ({y} mm); the pieces of its group move together.', {
+        name,
+        y,
+      });
     if (pl?.kind === 'wall') {
       if (pl.height + d.dy < 0) return below(pl.height + d.dy);
       next = { ...next, placement: { ...pl, height: pl.height + d.dy } };
@@ -40,7 +44,9 @@ function follow(project: Project, it: ProjectItem, d: Offset): ProjectItem | str
       if (pl.gap + d.dy < 0) return below(pl.gap + d.dy);
       next = { ...next, placement: { ...pl, gap: pl.gap + d.dy } };
     } else if (pl?.kind === 'floor')
-      return `${name} stands on the floor; the pieces of its group move up and down together.`;
+      return t('{name} stands on the floor; the pieces of its group move up and down together.', {
+        name,
+      });
     else {
       if (it.position.y + d.dy < 0) return below(it.position.y + d.dy);
       next = { ...next, position: { ...next.position, y: it.position.y + d.dy } };
@@ -105,7 +111,9 @@ export function carryGroups(
     if (still)
       return {
         project: before,
-        reason: `${pieceName(before, still)} cannot move with its group; ungroup it to move it alone.`,
+        reason: t('{name} cannot move with its group; ungroup it to move it alone.', {
+          name: pieceName(before, still),
+        }),
       };
   }
   return { project: cur };

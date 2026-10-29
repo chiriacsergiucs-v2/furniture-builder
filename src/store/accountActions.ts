@@ -1,4 +1,5 @@
 import type { AccountUser, AuthResult } from '../core/account';
+import { t } from '../core/i18n';
 import type { LocalTable } from '../core/sync';
 import { online, rememberAccount, useAccount } from './accountStore';
 
@@ -45,7 +46,7 @@ export async function initAccount(): Promise<void> {
     if (typeof location !== 'undefined' && location.hash === '#reset-password')
       st().setDialog('reset');
     if (typeof location !== 'undefined' && /[?&]error_description=/.test(location.search))
-      st().set({ dialog: 'sign-in', error: 'Google sign-in did not finish. Try again.' });
+      st().set({ dialog: 'sign-in', error: t('Google sign-in did not finish. Try again.') });
     if (typeof history !== 'undefined' && authParams())
       history.replaceState(null, '', `${location.pathname}#projects`);
   } catch {
@@ -60,7 +61,7 @@ async function run(f: () => Promise<AuthResult | { ok: true } | { ok: false; err
     if (!r.ok) st().set({ error: r.error });
     return r;
   } catch (e) {
-    const error = (e as Error).message || 'Check your connection and try again.';
+    const error = (e as Error).message || t('Check your connection and try again.');
     st().set({ error });
     return { ok: false as const, error };
   } finally {

@@ -51,8 +51,9 @@
   --on-material: #22272a;
   --on-material-2: #5a625e; /* text drawn on material-coloured fills */
   /* Type */
-  --font: 'Barlow', system-ui, sans-serif;
-  --num: 'Barlow Semi Condensed', 'Barlow', system-ui, sans-serif;
+  --font: 'Barlow', 'Fira Sans', system-ui, sans-serif;
+  --num:
+    'Barlow Semi Condensed', 'Barlow', 'Fira Sans Condensed', 'Fira Sans', system-ui, sans-serif;
   --fs-xs: 0.8125rem; /* 13 px: hints, captions, table heads */
   --fs-sm: 0.875rem; /* 14 px: labels, secondary rows */
   --fs-md: 0.9375rem; /* 15 px: body */
@@ -3137,7 +3138,8 @@ table.buy {
    line) whose cut lines "More" shows in full, in place. */
 .catalog-switches {
   display: flex;
-  flex-wrap: nowrap;
+  /* Wraps when the words are longer (Russian, ADR-154): no horizontal scroll at 390 px. */
+  flex-wrap: wrap;
   gap: var(--s-2);
   align-items: center;
   justify-content: space-between;
@@ -4663,6 +4665,23 @@ button.tile:hover {
 }
 .menu-items > [role='group'] {
   display: grid;
+}
+/* The language switches (ADR-153, ADR-157): one row of choices, the chosen one filled. */
+.menu-items > .menu-choice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1);
+  padding: 0 var(--s-2) var(--s-1);
+}
+.menu-items .menu-choice button {
+  display: inline-block;
+  border: 1px solid var(--line);
+  padding: var(--s-1) var(--s-2);
+}
+.menu-items .menu-choice button[aria-pressed='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
 }
 .menu-sep {
   height: 1px;
@@ -6493,4 +6512,32 @@ ul.plain {
 .privacy p,
 .privacy ul {
   margin: 0 0 var(--s-2);
+}
+
+/* Information and guides (ADR-158): the feature tree. */
+.info-page section > .info-domain {
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: var(--s-2) var(--s-3);
+  margin-bottom: var(--s-2);
+  background: var(--surface);
+}
+.info-domain .info-domain {
+  margin: var(--s-2) 0 0 var(--s-3);
+}
+.info-domain > summary {
+  font-weight: 600;
+  cursor: pointer;
+}
+.info-domain .count {
+  color: var(--ink-2);
+  font-weight: 400;
+  font-size: var(--fs-xs);
+}
+.info-domain ul {
+  margin: var(--s-2) 0 0;
+  padding-left: var(--s-4);
+}
+.info-domain li {
+  margin-bottom: var(--s-1);
 }

@@ -1,4 +1,5 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { t } from '../core/i18n';
 import { Icon } from './icons';
 
 /** Whole-millimetre input. Commits on blur or Enter so typing "1" on the way to "1200" never rebuilds a 1 mm cabinet. */
@@ -9,7 +10,7 @@ export function MmField({
   min = 0,
   max = 10000,
   step = 10,
-  unit = 'mm',
+  unit = t('mm'),
   hint,
   info,
   disabled = false,
@@ -49,7 +50,7 @@ export function MmField({
         <button
           type="button"
           className="step"
-          aria-label={`Decrease ${label}`}
+          aria-label={t('Decrease {label}', { label })}
           disabled={disabled}
           onClick={() => bump(-step)}
         >
@@ -74,7 +75,7 @@ export function MmField({
         <button
           type="button"
           className="step"
-          aria-label={`Increase ${label}`}
+          aria-label={t('Increase {label}', { label })}
           disabled={disabled}
           onClick={() => bump(step)}
         >
@@ -83,7 +84,7 @@ export function MmField({
       </div>
       {!valid && (
         <p className="field-error" id={`${id}-err`}>
-          Whole number from {min} to {max}.
+          {t('Whole number from {min} to {max}.', { min, max })}
         </p>
       )}
       {valid && hint && <p className="hint">{hint}</p>}
@@ -209,7 +210,7 @@ export function Counter({
       <div className="counter">
         <button
           type="button"
-          aria-label={`Fewer ${label.toLowerCase()}`}
+          aria-label={t('Fewer {label}', { label: label.toLowerCase() })}
           disabled={value <= min}
           onClick={() => onChange(value - 1)}
         >
@@ -218,7 +219,7 @@ export function Counter({
         <output aria-live="polite">{value}</output>
         <button
           type="button"
-          aria-label={`More ${label.toLowerCase()}`}
+          aria-label={t('More {label}', { label: label.toLowerCase() })}
           disabled={value >= max}
           onClick={() => onChange(value + 1)}
         >
@@ -487,8 +488,8 @@ export function GuidanceTip({
   align?: 'start' | 'end';
 }) {
   return (
-    <InfoTip label={`Guidance: ${topic}`} align={align}>
-      <span className="info-lead">Guidance</span>
+    <InfoTip label={t('Guidance: {topic}', { topic })} align={align}>
+      <span className="info-lead">{t('Guidance')}</span>
       {children}
     </InfoTip>
   );

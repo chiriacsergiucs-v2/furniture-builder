@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { t } from '../core/i18n';
 import type { RenderJob } from '../viewer/pathtrace';
 import { Segmented } from './controls';
 import { Dialog } from './Dialogs';
@@ -62,7 +63,7 @@ export function RenderDialog({
       });
       job.current = j;
       j.canvas.className = 'render-canvas';
-      j.canvas.setAttribute('aria-label', 'Rendered picture');
+      j.canvas.setAttribute('aria-label', t('Rendered picture'));
       holder.current?.replaceChildren(j.canvas);
       const png = await j.done;
       if (job.current !== j) return;
@@ -95,7 +96,7 @@ export function RenderDialog({
             setState({ kind: 'idle' });
           }}
         >
-          Cancel
+          {t('Cancel')}
         </button>
       ) : (
         <button
@@ -103,51 +104,52 @@ export function RenderDialog({
           className={state.kind === 'done' ? 'btn outline' : 'btn solid'}
           onClick={start}
         >
-          {state.kind === 'done' ? 'Render again' : 'Start'}
+          {state.kind === 'done' ? t('Render again') : t('Start')}
         </button>
       )}
       {state.kind === 'done' && (
         <button type="button" className="btn solid" onClick={() => save(state.png)}>
           <Icon name="download" className="sm" />
-          Save PNG
+          {t('Save PNG')}
         </button>
       )}
     </>
   );
 
   return (
-    <Dialog open={open} onClose={close} title="Render a picture" footer={footer} wide>
+    <Dialog open={open} onClose={close} title={t('Render a picture')} footer={footer} wide>
       {!supported ? (
         <p className="alert error" role="alert">
           <Icon name="alert-circle" className="sm" />
-          <span>Rendering needs WebGL 2 on this device</span>
+          <span>{t('Rendering needs WebGL 2 on this device')}</span>
         </p>
       ) : (
         <>
           <Segmented
-            label="Size"
+            label={t('Size')}
             value={size}
             options={RENDER_SIZES.map((s) => ({ value: s.value, label: s.label }))}
             onChange={(v) => !busy && setSize(v)}
           />
           <p className="hint">
-            Renders what the 3D view shows, with realistic light. Best on a laptop; a phone may be
-            slow. The picture stays on this device.
+            {t(
+              'Renders what the 3D view shows, with realistic light. Best on a laptop; a phone may be slow. The picture stays on this device.',
+            )}
           </p>
           {busy && (
             <p className="status saving" role="status">
-              Rendering… {state.n} / {RENDER_SAMPLES} samples
+              {t('Rendering… {n} / {total} samples', { n: state.n, total: RENDER_SAMPLES })}
             </p>
           )}
           {state.kind === 'done' && (
             <p className="status saved" role="status">
-              Done: {RENDER_SAMPLES} samples
+              {t('Done: {n} samples', { n: RENDER_SAMPLES })}
             </p>
           )}
           {state.kind === 'failed' && (
             <p className="alert error" role="alert">
               <Icon name="alert-circle" className="sm" />
-              <span>Could not render: {state.message}</span>
+              <span>{t('Could not render: {message}', { message: state.message })}</span>
             </p>
           )}
           <div className="render-frame" ref={holder} />

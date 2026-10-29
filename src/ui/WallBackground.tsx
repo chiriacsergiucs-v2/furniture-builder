@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { t } from '../core/i18n';
 import { setWallFinish, wallFinish, type Room } from '../core/room';
 import { pictureRect, rectLabel } from '../core/wallPicture';
 import { importImage, useImageUrls } from '../persist/images';
@@ -32,7 +33,7 @@ export function WallBackground({
   // Picture chosen but none added yet: the wall keeps what it had until a picture arrives.
   const [wantPicture, setWantPicture] = useState(false);
   const [straightening, setStraightening] = useState(false);
-  const name = `Wall ${wall + 1}`;
+  const name = t('Wall {n}', { n: wall + 1 });
   const kind = img || wantPicture ? 'picture' : f ? 'colour' : 'none';
   const set = (next: Parameters<typeof setWallFinish>[2]) =>
     setRoom(setWallFinish(room, wall, next));
@@ -43,7 +44,7 @@ export function WallBackground({
     const r = await importImage(file);
     setBusy(false);
     if (!r.ok) {
-      setProblem(`${r.problem} ${name} keeps its current background.`);
+      setProblem(`${r.problem} ${t('{name} keeps its current background.', { name })}`);
       return;
     }
     // A new picture covers the whole wall (ADR-146, G-284).
@@ -52,12 +53,12 @@ export function WallBackground({
   return (
     <div className="wall-bg">
       <Select
-        label={`${name} background`}
+        label={t('{name} background', { name })}
         value={kind}
         options={[
-          { value: 'none', label: 'None' },
-          { value: 'colour', label: 'Colour' },
-          { value: 'picture', label: 'Picture' },
+          { value: 'none', label: t('None') },
+          { value: 'colour', label: t('Colour') },
+          { value: 'picture', label: t('Picture') },
         ]}
         onChange={(v) => {
           setProblem(null);
@@ -68,10 +69,10 @@ export function WallBackground({
       />
       {kind === 'colour' && (
         <label className="wall-colour">
-          <span>Colour</span>
+          <span>{t('Colour')}</span>
           <input
             type="color"
-            aria-label={`${name} colour`}
+            aria-label={t('{name} colour', { name })}
             value={f!.colour}
             onChange={(e) => set({ colour: e.target.value })}
           />
@@ -80,16 +81,20 @@ export function WallBackground({
       {kind === 'picture' && (
         <div className="mat-picture-row">
           {img && url && url !== 'missing' && (
-            <img className="mat-thumb" src={url} alt={`Picture on ${name}`} />
+            <img className="mat-thumb" src={url} alt={t('Picture on {name}', { name })} />
           )}
           <label className={`btn sm outline file-btn${busy ? ' disabled' : ''}`}>
             <Icon name="upload" className="sm" />
-            {busy ? 'Preparing picture…' : img ? 'Replace picture' : 'Add a picture'}
+            {busy ? t('Preparing picture…') : img ? t('Replace picture') : t('Add a picture')}
             <input
               type="file"
               accept="image/png,image/jpeg,image/webp"
               disabled={busy}
-              aria-label={`${img ? 'Replace' : 'Add a'} picture for ${name}`}
+              aria-label={
+                img
+                  ? t('Replace picture for {name}', { name })
+                  : t('Add a picture for {name}', { name })
+              }
               onChange={(e) => {
                 void pick(e.target.files?.[0]);
                 e.target.value = '';
@@ -103,8 +108,10 @@ export function WallBackground({
         <p className="alert error" role="alert">
           <Icon name="alert-circle" className="sm" />
           <span>
-            The picture {img.name} is not on this device. Its average colour is shown; add the
-            picture again to see it.
+            {t(
+              'The picture {file} is not on this device. Its average colour is shown; add the picture again to see it.',
+              { file: img.name },
+            )}
           </span>
         </p>
       )}
@@ -117,34 +124,36 @@ export function WallBackground({
       {img && (
         <div className="wall-picture-fit">
           <p className="hint" role="status">
-            Covers: {rectLabel(pictureRect(room, wall, img))}
-            {img.straighten ? ' · straightened' : ''}
+            {t('Covers: {rect}', { rect: rectLabel(pictureRect(room, wall, img)) })}
+            {img.straighten ? t(' · straightened') : ''}
           </p>
           <div className="row-actions">
             <button
               type="button"
               className="btn sm outline"
               disabled={!img.fit}
-              title="Make the picture cover the whole wall"
+              title={t('Make the picture cover the whole wall')}
               onClick={() => {
                 const { fit: _f, ...rest } = img;
                 void _f;
                 set({ colour: f!.colour, image: rest });
               }}
             >
-              Fill wall
+              {t('Fill wall')}
             </button>
             <button
               type="button"
               className="btn sm outline"
               disabled={!url || url === 'missing'}
-              aria-label={`Straighten photo on ${name}`}
+              aria-label={t('Straighten photo on {name}', { name })}
               onClick={() => setStraightening(true)}
             >
-              Straighten photo
+              {t('Straighten photo')}
             </button>
           </div>
-          <p className="hint">Move and stretch it on the wall in 3D with Adjust wall picture.</p>
+          <p className="hint">
+            {t('Move and stretch it on the wall in 3D with Adjust wall picture.')}
+          </p>
         </div>
       )}
       {straightening && img && url && url !== 'missing' && (

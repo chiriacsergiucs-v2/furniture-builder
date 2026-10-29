@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { t } from '../core/i18n';
 import { codeLink, decodeCode, encodeCode, LINK_KEY } from '../core/shareCode';
 import { useDesign } from '../store/designStore';
 import { askConfirm } from './Confirm';
@@ -38,34 +39,35 @@ export function CopyCodeDialog({ onClose }: { onClose: () => void }) {
     <Dialog
       open
       onClose={onClose}
-      title={`Code for ${doc.name}`}
+      title={t('Code for {name}', { name: doc.name })}
       info={
-        <InfoTip label="About design codes" align="start">
-          Paste the code in Open from code on another device, or open the link there. Pictures and
-          3D models stay on this device; a project file carries them.
+        <InfoTip label={t('About design codes')} align="start">
+          {t(
+            'Paste the code in Open from code on another device, or open the link there. Pictures and 3D models stay on this device; a project file carries them.',
+          )}
         </InfoTip>
       }
       footer={
         <button type="button" className="btn solid" onClick={onClose}>
-          Done
+          {t('Done')}
         </button>
       }
     >
       {code === null ? (
-        <p className="loading">Making the code…</p>
+        <p className="loading">{t('Making the code…')}</p>
       ) : code === '' ? (
         <p className="alert error" role="alert">
           <Icon name="alert-circle" className="sm" />
-          <span>This browser cannot make codes.</span>
+          <span>{t('This browser cannot make codes.')}</span>
         </p>
       ) : (
         <div className="share-code">
           <label className="field">
-            <span className="field-label">Code</span>
+            <span className="field-label">{t('Code')}</span>
             <textarea readOnly rows={4} value={code} onFocus={(e) => e.target.select()} />
           </label>
           <label className="field">
-            <span className="field-label">Link</span>
+            <span className="field-label">{t('Link')}</span>
             <textarea readOnly rows={3} value={link} onFocus={(e) => e.target.select()} />
           </label>
           <div className="split-actions">
@@ -74,22 +76,22 @@ export function CopyCodeDialog({ onClose }: { onClose: () => void }) {
               className="btn outline"
               onClick={() => {
                 void copy(code);
-                setCopied('Code copied.');
+                setCopied(t('Code copied.'));
               }}
             >
               <Icon name="copy" className="sm" />
-              Copy code
+              {t('Copy code')}
             </button>
             <button
               type="button"
               className="btn outline"
               onClick={() => {
                 void copy(link);
-                setCopied('Link copied.');
+                setCopied(t('Link copied.'));
               }}
             >
               <Icon name="copy" className="sm" />
-              Copy link
+              {t('Copy link')}
             </button>
           </div>
           {copied && (
@@ -133,7 +135,7 @@ export function OpenFromCode({
       onOpened();
       return;
     }
-    setError(r.message?.text ?? 'That code could not be opened.');
+    setError(r.message?.text ?? t('That code could not be opened.'));
   };
   return (
     <>
@@ -146,22 +148,24 @@ export function OpenFromCode({
         }}
       >
         <Icon name="download" />
-        Open from code
+        {t('Open from code')}
       </button>
       {open && (
         <Dialog
           open
           onClose={() => setOpen(false)}
-          title="Open a code"
+          title={t('Open a code')}
           info={
-            <InfoTip label="About opening a code" align="start">
-              A code made with Copy code on any device. It opens as a new copy saved on this device.
+            <InfoTip label={t('About opening a code')} align="start">
+              {t(
+                'A code made with Copy code on any device. It opens as a new copy saved on this device.',
+              )}
             </InfoTip>
           }
           footer={
             <>
               <button type="button" className="btn ghost" onClick={() => setOpen(false)}>
-                Cancel
+                {t('Cancel')}
               </button>
               <button
                 type="button"
@@ -169,13 +173,13 @@ export function OpenFromCode({
                 disabled={!text.trim() || busy}
                 onClick={() => void submit()}
               >
-                Open
+                {t('Open')}
               </button>
             </>
           }
         >
           <label className="field share-code">
-            <span className="field-label">Code or link</span>
+            <span className="field-label">{t('Code or link')}</span>
             <textarea
               rows={5}
               value={text}
@@ -213,8 +217,8 @@ export function useOpenLink(
     void (async () => {
       if (
         !(await askConfirm(
-          'Open the design from this link? It is saved on this device as a new copy.',
-          { confirmLabel: 'Open' },
+          t('Open the design from this link? It is saved on this device as a new copy.'),
+          { confirmLabel: t('Open') },
         ))
       )
         return;

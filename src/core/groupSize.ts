@@ -7,6 +7,7 @@
  * (`sizeFields`), or for width turned off the wall's direction — keeps its size and is named. Problems refuse the
  * change with the reason, never a clamp (ADR-008). Pure.
  */
+import { t } from './i18n';
 import { resizeProduct, sizeFields, type SizeField } from './pieceSize';
 import {
   pieceName,
@@ -38,9 +39,9 @@ export interface GroupResizeResult {
 }
 
 const LABEL: Record<SizeField['key'], string> = {
-  width: 'Width',
-  height: 'Height',
-  depth: 'Depth',
+  width: t('Width'),
+  height: t('Height'),
+  depth: t('Depth'),
 };
 
 const field = (it: ProjectItem, key: SizeField['key']) =>
@@ -74,7 +75,7 @@ export function groupSizeFields(project: Project, ids: readonly string[]): Group
   const left = Math.min(...boxes.map((b) => b.x));
   const right = Math.max(...boxes.map((b) => b.x + b.w));
   const out: GroupSizeField[] = [
-    { key: 'width', label: 'Width', value: right - left, differs: false },
+    { key: 'width', label: t('Width'), value: right - left, differs: false },
   ];
   for (const key of ['height', 'depth'] as const) {
     const values = placed.flatMap((it) => field(it, key)?.value ?? []);
@@ -102,7 +103,13 @@ function share(total: number, weights: number[]): number[] {
 const outside = (project: Project, it: ProjectItem, key: SizeField['key'], v: number) => {
   const f = field(it, key)!;
   return v < f.min || v > f.max
-    ? `${pieceName(project, it.id)} would be ${v} mm ${f.label.toLowerCase()}; it takes ${f.min}–${f.max} mm.`
+    ? t('{name} would be {v} mm {what}; it takes {min}–{max} mm.', {
+        name: pieceName(project, it.id),
+        v,
+        what: f.label.toLowerCase(),
+        min: f.min,
+        max: f.max,
+      })
     : null;
 };
 
@@ -125,12 +132,19 @@ export function resizeGroup(
   });
   if (items.length < 2) return none();
   if (!Number.isInteger(value) || value <= 0)
-    return none(`The group's ${LABEL[key].toLowerCase()} must be a whole number of mm above 0.`);
+    return none(
+      t("The group's {what} must be a whole number of mm above 0.", {
+        what: LABEL[key].toLowerCase(),
+      }),
+    );
   const kept = items.filter((it) => fixed(it, key)).map((it) => pieceName(project, it.id));
   if (key !== 'width') {
     const change = items.filter((it) => !fixed(it, key));
     if (!change.length)
-      return none(`No piece in the group can change its ${LABEL[key].toLowerCase()}.`, kept);
+      return none(
+        t('No piece in the group can change its {what}.', { what: LABEL[key].toLowerCase() }),
+        kept,
+      );
     for (const it of change) {
       const why = outside(project, it, key, value);
       if (why) return none(why, kept);
@@ -155,14 +169,16 @@ export function resizeGroup(
   for (let i = 1; i < cols.length; i++)
     if (cols[i].x < cols[i - 1].x + cols[i - 1].w)
       return none(
-        'Width needs the pieces side by side in columns: each piece covers the same span along the wall as the pieces over or under it, or none of it.',
+        t(
+          'Width needs the pieces side by side in columns: each piece covers the same span along the wall as the pieces over or under it, or none of it.',
+        ),
       );
   const extent = cols[cols.length - 1].x + cols[cols.length - 1].w - cols[0].x;
   const delta = value - extent;
   if (!delta) return none(undefined, kept);
   const byId = new Map(items.map((it) => [it.id, it]));
   const free = cols.filter((c) => c.ids.every((id) => !fixed(byId.get(id)!, 'width')));
-  if (!free.length) return none('No piece in the group can change its width.', kept);
+  if (!free.length) return none(t('No piece in the group can change its width.'), kept);
   const parts = share(
     delta,
     free.map((c) => (split === 'equal' ? 1 : c.w)),
@@ -190,7 +206,10 @@ export function resizeGroup(
       it.locked &&
       !(it.placement?.kind === 'above' && change.has(it.placement.baseId))
     )
-      return none(`${pieceName(project, id)} is locked — unlock it to resize its group.`, keptW);
+      return none(
+        t('{name} is locked — unlock it to resize its group.', { name: pieceName(project, id) }),
+        keptW,
+      );
   }
   const next = project.items.map((it): ProjectItem => {
     const c = change.get(it.id);

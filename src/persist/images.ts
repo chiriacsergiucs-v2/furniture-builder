@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { newId } from '../core/design';
+import { t } from '../core/i18n';
 import {
   base64ToBytes,
   bytesToBase64,
@@ -29,7 +30,7 @@ export async function importImage(file: File): Promise<ImportResult> {
   try {
     bitmap = await createImageBitmap(file);
   } catch {
-    return { ok: false, problem: `${file.name} could not be read as a picture.` };
+    return { ok: false, problem: t('{name} could not be read as a picture.', { name: file.name }) };
   }
   try {
     const { w, h } = fitWithin(bitmap.width, bitmap.height);
@@ -37,7 +38,7 @@ export async function importImage(file: File): Promise<ImportResult> {
     canvas.width = w;
     canvas.height = h;
     const ctx = canvas.getContext('2d');
-    if (!ctx) return { ok: false, problem: 'This browser cannot prepare pictures.' };
+    if (!ctx) return { ok: false, problem: t('This browser cannot prepare pictures.') };
     ctx.drawImage(bitmap, 0, 0, w, h);
     // Average colour: the plain colour used where pictures are not drawn (cut sheets, catalog pictures).
     const one = document.createElement('canvas');
@@ -48,7 +49,8 @@ export async function importImage(file: File): Promise<ImportResult> {
     const px = c1?.getImageData(0, 0, 1, 1).data;
     const color = px ? `#${hex(px[0])}${hex(px[1])}${hex(px[2])}` : '#cccccc';
     const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/jpeg', 0.9));
-    if (!blob) return { ok: false, problem: `${file.name} could not be prepared.` };
+    if (!blob)
+      return { ok: false, problem: t('{name} could not be prepared.', { name: file.name }) };
     const id = `img-${newId()}${newId()}`;
     await saveImage({
       id,
@@ -61,7 +63,10 @@ export async function importImage(file: File): Promise<ImportResult> {
     });
     return { ok: true, image: { id, name: file.name, ...defaultTile(w, h) }, color };
   } catch {
-    return { ok: false, problem: `${file.name} could not be saved on this device.` };
+    return {
+      ok: false,
+      problem: t('{name} could not be saved on this device.', { name: file.name }),
+    };
   } finally {
     bitmap.close();
   }
@@ -169,11 +174,11 @@ export async function takePictures(
   const { pictures, ...rest } = data as Record<string, unknown>;
   const problems: string[] = [];
   if (!Array.isArray(pictures))
-    return { data: rest, problems: ['The pictures in the file could not be read.'] };
+    return { data: rest, problems: [t('The pictures in the file could not be read.')] };
   for (const p of pictures) {
     const errs = pictureFileProblems(p);
     if (errs.length) {
-      problems.push(`A picture was skipped: ${errs.join(', ')}.`);
+      problems.push(t('A picture was skipped: {problems}.', { problems: errs.join(', ') }));
       continue;
     }
     const f = p as PictureFile;
@@ -192,7 +197,7 @@ export async function takePictures(
         database,
       );
     } catch {
-      problems.push(`The picture ${f.name} could not be saved on this device.`);
+      problems.push(t('The picture {name} could not be saved on this device.', { name: f.name }));
     }
   }
   return { data: rest, problems };

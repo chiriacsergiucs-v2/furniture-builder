@@ -4,11 +4,12 @@
  * into millimetres along the vertical axis; this module turns that into the piece's new hanging height, whole mm. Below
  * the floor is refused with the reason, never clamped (ADR-008); a locked piece stays (ADR-095).
  */
+import { t } from './i18n';
 import { moveBlocked, pieceName, type Project, type MoveResult } from './project';
 import type { Mm } from './types';
 
 /** The label shown while the height is dragged: "From floor 1450 mm". */
-export const heightLabel = (height: number) => `From floor ${height} mm`;
+export const heightLabel = (height: number) => t('From floor {h} mm', { h: height });
 
 /** Whether a piece's height can be dragged: it hangs on the wall. */
 export const heightDraggable = (project: Project, id: string): boolean =>
@@ -29,12 +30,18 @@ export function setWallHeight(project: Project, id: string, height: number): Mov
   if (it.placement?.kind !== 'wall')
     return {
       project,
-      reason: `${pieceName(project, id)} is not hung on the wall; only wall units change height here.`,
+      reason: t('{name} is not hung on the wall; only wall units change height here.', {
+        name: pieceName(project, id),
+      }),
     };
   if (!Number.isInteger(height) || height < 0)
     return {
       project,
-      reason: `${pieceName(project, id)} would go below the floor (${height} mm); it stays at ${it.placement.height} mm.`,
+      reason: t('{name} would go below the floor ({h} mm); it stays at {at} mm.', {
+        name: pieceName(project, id),
+        h: height,
+        at: it.placement.height,
+      }),
     };
   if (height === it.placement.height) return { project };
   const reason = moveBlocked(project, [id]);

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { groupSizeFields, type WidthSplit } from '../core/groupSize';
+import { t, tr } from '../core/i18n';
 import { pieceName, type Project } from '../core/project';
 import { groupOf, sameIds, type Group } from '../core/selection';
 import { useDesign } from '../store/designStore';
@@ -34,17 +35,20 @@ export function SelectionCard() {
   return (
     <section
       className="selection-card section"
-      aria-label={`${ids.length} pieces selected${isGroup ? `: ${g!.name}` : ''}`}
+      aria-label={`${t('{n} pieces selected', { n: ids.length })}${isGroup ? `: ${g!.name}` : ''}`}
     >
       <div className="card-title">
         <span className="info-row">
-          <span>{isGroup ? g!.name : 'Selected pieces'}</span>
-          <InfoTip label="About the selected pieces" align="start">
-            These act on all {ids.length}; drag any of them on the plan to move them together.
-            {isGroup && ' The pieces of a group always move together; ungroup to move one alone.'}
+          <span>{isGroup ? g!.name : t('Selected pieces')}</span>
+          <InfoTip label={t('About the selected pieces')} align="start">
+            {t('These act on all {n}; drag any of them on the plan to move them together.', {
+              n: ids.length,
+            })}
+            {isGroup &&
+              t(' The pieces of a group always move together; ungroup to move one alone.')}
           </InfoTip>
         </span>
-        <span className="chip">{ids.length} pieces</span>
+        <span className="chip">{t('{n} pieces', { n: ids.length })}</span>
       </div>
       <div className="arrange-actions">
         <button
@@ -55,42 +59,42 @@ export function SelectionCard() {
             dup();
           }}
         >
-          Duplicate
+          {t('Duplicate')}
         </button>
         <button
           type="button"
           className="btn outline sm"
-          aria-label="Turn the selection 90° anticlockwise about its centre"
+          aria-label={t('Turn the selection 90° anticlockwise about its centre')}
           onClick={() => say(turn(1))}
         >
-          Turn 90° ↺
+          {t('Turn 90° ↺')}
         </button>
         <button
           type="button"
           className="btn outline sm"
-          aria-label="Turn the selection 90° clockwise about its centre"
+          aria-label={t('Turn the selection 90° clockwise about its centre')}
           onClick={() => say(turn(-1))}
         >
-          Turn 90° ↻
+          {t('Turn 90° ↻')}
         </button>
         {/* Mirror left–right about the selection's centre (ADR-121); one undo step. */}
         {pieceIds.length >= 2 && (
           <button
             type="button"
             className="btn outline sm"
-            aria-label="Mirror the selection left to right"
+            aria-label={t('Mirror the selection left to right')}
             onClick={() => say(mirror() || null)}
           >
-            Mirror
+            {t('Mirror')}
           </button>
         )}
         {isGroup ? (
           <button type="button" className="btn outline sm" onClick={() => ungroup(g!.id)}>
-            Ungroup
+            {t('Ungroup')}
           </button>
         ) : (
           <button type="button" className="btn outline sm" onClick={() => group()}>
-            Group
+            {t('Group')}
           </button>
         )}
         <button
@@ -98,40 +102,46 @@ export function SelectionCard() {
           className="btn outline sm danger"
           onClick={async () => {
             if (
-              await askConfirm(`Delete these ${ids.length} pieces from this project?`, {
-                confirmLabel: 'Delete',
+              await askConfirm(t('Delete these {n} pieces from this project?', { n: ids.length }), {
+                confirmLabel: t('Delete'),
                 danger: true,
               })
             )
               del();
           }}
         >
-          Delete
+          {t('Delete')}
         </button>
         <button type="button" className="btn ghost sm" onClick={() => clear(null)}>
-          Clear selection
+          {t('Clear selection')}
         </button>
       </div>
       {/* Align to the first selected piece and distribute along the wall (ADR-099); each is one undo step. */}
       {pieceIds.length >= 2 && (
-        <div className="align-actions" role="group" aria-label="Align to the first selected piece">
-          <span className="hint">Align to {pieceName(project, pieceIds[0])}:</span>
+        <div
+          className="align-actions"
+          role="group"
+          aria-label={t('Align to the first selected piece')}
+        >
+          <span className="hint">
+            {t('Align to {name}:', { name: tr(pieceName(project, pieceIds[0])) })}
+          </span>
           {(
             [
-              ['left', 'Left'],
-              ['centre', 'Centre'],
-              ['right', 'Right'],
-              ['back', 'Back'],
-              ['front', 'Front'],
-              ['top', 'Top'],
-              ['bottom', 'Bottom'],
+              ['left', t('Left'), t('Align left')],
+              ['centre', t('Centre'), t('Align centre')],
+              ['right', t('Right'), t('Align right')],
+              ['back', t('Back@@side'), t('Align back')],
+              ['front', t('Front@@side'), t('Align front')],
+              ['top', t('Top@@side'), t('Align top')],
+              ['bottom', t('Bottom'), t('Align bottom')],
             ] as const
-          ).map(([how, label]) => (
+          ).map(([how, label, name]) => (
             <button
               key={how}
               type="button"
               className="btn outline sm"
-              aria-label={`Align ${label.toLowerCase()}`}
+              aria-label={name}
               onClick={() => say(align(how) || null)}
             >
               {label}
@@ -143,7 +153,7 @@ export function SelectionCard() {
               className="btn outline sm"
               onClick={() => say(distribute() || null)}
             >
-              Distribute evenly
+              {t('Distribute evenly')}
             </button>
           )}
         </div>
@@ -176,31 +186,31 @@ function GroupSize({
   const [split, setSplit] = useState<WidthSplit>('proportional');
   const fields = useMemo(() => groupSizeFields(project, group.itemIds), [project, group.itemIds]);
   return (
-    <div className="group-size" role="group" aria-label="Size of the group">
-      <span className="field-label">Size of the group</span>
+    <div className="group-size" role="group" aria-label={t('Size of the group')}>
+      <span className="field-label">{t('Size of the group')}</span>
       <div className={fields.length === 3 ? 'dims3' : 'dims2'}>
         {fields.map((f) => (
           <MmField
             key={f.key}
-            label={f.label}
+            label={tr(f.label)}
             value={f.value}
             min={1}
             max={20000}
-            hint={f.differs ? 'Pieces differ' : undefined}
+            hint={f.differs ? t('Pieces differ') : undefined}
             onChange={(v) => say(resize(group.id, f.key, v, split) || null)}
           />
         ))}
       </div>
       <Segmented<WidthSplit>
-        label="Split width"
+        label={t('Split width')}
         value={split}
         options={[
           {
             value: 'proportional',
-            label: 'Proportionally',
-            title: 'Each column by its share of the width',
+            label: t('Proportionally'),
+            title: t('Each column by its share of the width'),
           },
-          { value: 'equal', label: 'Equally', title: 'The same for each column' },
+          { value: 'equal', label: t('Equally'), title: t('The same for each column') },
         ]}
         onChange={setSplit}
       />
@@ -216,9 +226,9 @@ export function GroupList() {
   const ungroup = useDesign((s) => s.ungroup);
   if (!groups?.length) return null;
   return (
-    <section className="groups section" aria-label="Groups">
+    <section className="groups section" aria-label={t('Groups')}>
       <div className="card-title">
-        <span>Groups</span>
+        <span>{t('Groups')}</span>
       </div>
       <ul className="pieces">
         {groups.map((g) => {
@@ -233,19 +243,17 @@ export function GroupList() {
               >
                 <span>
                   <strong>{g.name}</strong>
-                  <span className="sub">
-                    {g.itemIds.length} {g.itemIds.length === 1 ? 'piece' : 'pieces'}
-                  </span>
+                  <span className="sub">{t('{n|# piece|# pieces}', { n: g.itemIds.length })}</span>
                 </span>
                 <Icon name="chevron-right" className="chev sm" />
               </button>
               <button
                 type="button"
                 className="btn sm ghost"
-                aria-label={`Ungroup ${g.name}`}
+                aria-label={t('Ungroup {name}', { name: g.name })}
                 onClick={() => ungroup(g.id)}
               >
-                Ungroup
+                {t('Ungroup')}
               </button>
             </li>
           );

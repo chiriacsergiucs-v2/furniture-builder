@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react';
+import { t } from '../core/i18n';
 import { Icon } from './icons';
 
 /**
@@ -31,10 +32,10 @@ export function ViewOptions({ menu, children }: { menu: boolean; children: React
   return (
     <details className="menu view-options" ref={ref}>
       <summary>
-        Options
+        {t('Options')}
         <Icon name="chevron-down" className="sm" />
       </summary>
-      <div className="view-options-panel" role="group" aria-label="View options">
+      <div className="view-options-panel" role="group" aria-label={t('View options')}>
         {children}
       </div>
     </details>

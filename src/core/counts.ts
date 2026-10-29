@@ -2,6 +2,7 @@
  * Quick counts for the selected space (ADR-084): which counts apply to it, and one step up or down.
  * Pure: the stepper over the drawing and the 3D view only renders these rows and applies `stepCount`.
  */
+import { t } from './i18n';
 import { findInProduct, fr, makeSpace, productRoots, setDrawerCount, splitSpace } from './design';
 import type { Selection } from './selectPath';
 import type { Product, Space } from './types';
@@ -24,8 +25,8 @@ const MAX_SHELVES = 12;
 const MAX_DRAWERS = 10;
 
 const DIV: Record<'x' | 'y', { key: CountKey; label: string }> = {
-  x: { key: 'vdiv', label: 'Vertical dividers' },
-  y: { key: 'hdiv', label: 'Horizontal dividers' },
+  x: { key: 'vdiv', label: t('Vertical dividers') },
+  y: { key: 'hdiv', label: t('Horizontal dividers') },
 };
 
 /**
@@ -57,7 +58,7 @@ export function countRows(prod: Product, id: string): CountRow[] {
   if (s.kind === 'shelves')
     rows.push({
       key: 'shelves',
-      label: 'Shelves',
+      label: t('Shelves'),
       value: s.count,
       min: 0,
       max: MAX_SHELVES,
@@ -66,18 +67,25 @@ export function countRows(prod: Product, id: string): CountRow[] {
   if (s.kind === 'drawers')
     rows.push({
       key: 'drawers',
-      label: 'Drawers',
+      label: t('Drawers'),
       value: s.count,
       min: 1,
       max: MAX_DRAWERS,
       target: s.id,
     });
   if (s.front?.kind === 'doors')
-    rows.push({ key: 'doors', label: 'Doors', value: s.front.count, min: 1, max: 2, target: s.id });
+    rows.push({
+      key: 'doors',
+      label: t('Doors'),
+      value: s.front.count,
+      min: 1,
+      max: 2,
+      target: s.id,
+    });
   if (s.front?.kind === 'sliding')
     rows.push({
       key: 'sliding',
-      label: 'Sliding doors',
+      label: t('Sliding doors'),
       value: s.front.count,
       min: 2,
       max: 4,
