@@ -68,10 +68,10 @@ piece no longer moves on its own. No document change: groups and sizes are alrea
 
 ## Done when
 
-- [ ] `resizeGroup` width, both splits: shares, leftover mm, shifted columns, kept gaps (unit tests)
-- [ ] Fixed pieces kept and named; limits, no-change and locked-shift refusals (unit tests)
-- [ ] Height and depth set on every piece with placement kept; one undo step (unit tests)
-- [ ] `sizeFields` returns Height with the Settings limits; bed and loose panels none (unit test)
-- [ ] Dragging, arrow keys, X field, turn, align and distribute of one grouped piece move the whole group (unit tests)
-- [ ] Find-it (jsdom, 390 and 1280 px): select a group, find "Size of the group", "Split width", change Width; a
+- [x] `resizeGroup` width, both splits: shares, leftover mm, shifted columns, kept gaps (unit tests)
+- [x] Fixed pieces kept and named; limits, no-change and locked-shift refusals (unit tests)
+- [x] Height and depth set on every piece with placement kept; one undo step (unit tests)
+- [x] `sizeFields` returns Height with the Settings limits; bed and loose panels none (unit test)
+- [x] Dragging, arrow keys, X field, turn, align and distribute of one grouped piece move the whole group (unit tests)
+- [x] Find-it (jsdom, 390 and 1280 px): select a group, find "Size of the group", "Split width", change Width; a
       single piece shows "Height"
