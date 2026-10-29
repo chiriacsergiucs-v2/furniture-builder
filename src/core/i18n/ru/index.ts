@@ -6,6 +6,7 @@ import { ru_account } from './account';
 import { ru_base } from './base';
 import { ru_catalog } from './catalog';
 import { ru_core } from './core';
+import { ru_core2 } from './core2';
 import { data_catalog } from './data-catalog';
 import { data_parts } from './data-parts';
 import { data_research1 } from './data-research1';
@@ -30,6 +31,7 @@ export const ru = {
   ...ru_editors,
   ...ru_account,
   ...ru_core,
+  ...ru_core2,
   ...ru_info,
 };
 
