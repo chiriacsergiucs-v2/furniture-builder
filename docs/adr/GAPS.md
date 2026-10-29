@@ -2418,9 +2418,10 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-289: Part boards find-it test
 
-- Status: Open
+- Status: Done (PR #132)
 - Origin: N148 (PR #132, light acceptance)
 - Missing: jsdom find-it test for Settings → Part boards: pick a board for one part, see it in the Parts list, the lost-part warning and Clear
 - Request: Ff any piece of the item can have own material changed.
 - Questions: Write the jsdom find-it now in PR #132, or wait for 'catch up acceptance'?
 - Suggested pick: Write it now in PR #132 (closest to the request: proves the feature is reachable). Estimate +15 % work, +10 % value (evidence, not new behaviour).
+- Note: User 2026-10-29: "2 write". Built: `tests/find-it/part-boards.test.tsx` (390 and 1280 px), passes locally.
