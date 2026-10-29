@@ -7,7 +7,7 @@
  * the first piece's top or underside by changing how high they hang; a piece standing on the floor stays and the result
  * says why (user answer 2026-10-27 "Accept default": skip floor pieces, never resize them).
  */
-import { movedTo } from './selection';
+import { groupOf, movedTo } from './selection';
 import {
   moveBlocked,
   pieceName,
@@ -112,19 +112,62 @@ function liftEach(project: Project, moves: Map<string, number>) {
 const boundsOf = (project: Project) =>
   new Map(resolvePlacements(project).items.map((i) => [i.id, placedBounds(i)]));
 
+/** The outer box of `boxes` (whole mm). */
+const unionOf = (boxes: Box[]): Box => {
+  const x = Math.min(...boxes.map((b) => b.x)),
+    y = Math.min(...boxes.map((b) => b.y)),
+    z = Math.min(...boxes.map((b) => b.z));
+  return {
+    x,
+    y,
+    z,
+    w: Math.max(...boxes.map((b) => b.x + b.w)) - x,
+    h: Math.max(...boxes.map((b) => b.y + b.h)) - y,
+    d: Math.max(...boxes.map((b) => b.z + b.d)) - z,
+  };
+};
+
 /**
  * Align the selected pieces to the first one (ADR-099): its left edge, centre line or right edge along the wall, or its
  * back or front in depth, or its top or underside in height (ADR-122). A centre that falls on a half mm rounds down
- * (whole mm). Fewer than two known pieces: the same project.
+ * (whole mm). Grouped pieces move together (ADR-148), so a group aligns as one block by its outer box, moved through
+ * its first selected member (the store carries the rest); a piece in the first piece's own group stays, named in
+ * `skipped` when it would have moved (user answer 2026-10-29 "Group = one block"). Fewer than two known pieces: the
+ * same project.
  */
 export function alignItems(project: Project, ids: readonly string[], how: AlignHow): ArrangeResult {
   const bounds = boundsOf(project);
   const known = ids.filter((id) => bounds.has(id));
   if (known.length < 2) return { project, skipped: [] };
   const ref = bounds.get(known[0])!;
+  const refGroup = groupOf(project, known[0]);
+  // One entry per piece, or per group through its first selected member, with the box that aligns.
+  const units: [string, Box][] = [];
+  const seen = new Set<string>();
+  const sameGroup: string[] = [];
+  for (const id of known.slice(1)) {
+    const g = groupOf(project, id);
+    if (!g) units.push([id, bounds.get(id)!]);
+    else if (g === refGroup) sameGroup.push(id);
+    else if (!seen.has(g.id)) {
+      seen.add(g.id);
+      const boxes = g.itemIds.flatMap((m) => (bounds.has(m) ? [bounds.get(m)!] : []));
+      units.push([id, unionOf(boxes)]);
+    }
+  }
+  const stays = (moves: boolean[]) =>
+    moves.some(Boolean)
+      ? [
+          `${sameGroup.map((id) => pieceName(project, id)).join(', ')} ${sameGroup.length > 1 ? 'are' : 'is'} in the same group as ${pieceName(project, known[0])}; ungroup to align ${sameGroup.length > 1 ? 'them' : 'it'}.`,
+        ]
+      : [];
   if (how === 'top' || how === 'bottom') {
     const dy = (b: Box) => (how === 'top' ? ref.y + ref.h - (b.y + b.h) : ref.y - b.y);
-    return liftEach(project, new Map(known.slice(1).map((id) => [id, dy(bounds.get(id)!)])));
+    const res = liftEach(project, new Map(units.map(([id, b]) => [id, dy(b)])));
+    return {
+      ...res,
+      skipped: [...stays(sameGroup.map((id) => !!dy(bounds.get(id)!))), ...res.skipped],
+    };
   }
   const target = (b: Box): { dx: number; dz: number } => {
     switch (how) {
@@ -142,8 +185,12 @@ export function alignItems(project: Project, ids: readonly string[], how: AlignH
         return { dx: 0, dz: 0 };
     }
   };
-  const moves = new Map(known.slice(1).map((id) => [id, target(bounds.get(id)!)]));
-  return shiftEach(project, moves);
+  const res = shiftEach(project, new Map(units.map(([id, b]) => [id, target(b)])));
+  const off = sameGroup.map((id) => {
+    const m = target(bounds.get(id)!);
+    return !!(m.dx || m.dz);
+  });
+  return { ...res, skipped: [...stays(off), ...res.skipped] };
 }
 
 /**

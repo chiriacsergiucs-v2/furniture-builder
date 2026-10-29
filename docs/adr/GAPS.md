@@ -2521,3 +2521,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Write the jsdom find-it now in PR #132, or wait for 'catch up acceptance'?
 - Suggested pick: Write it now in PR #132 (closest to the request: proves the feature is reachable). Estimate +15 % work, +10 % value (evidence, not new behaviour).
 - Note: User 2026-10-29: "2 write". Built: `tests/find-it/part-boards.test.tsx` (390 and 1280 px), passes locally.
+
+### G-300: Distribute evenly with grouped pieces
+
+- Status: Open
+- Origin: Bug fix 2026-10-29 (align with groups, N154)
+- Missing: Distribute evenly still moves each selected piece on its own; when several selected pieces share a group, the group is carried by the first member's offset, so the gaps may not come out equal. Not checked.
+- Request: The align is bugged because when I select a piece and I press align left, it moves to the right.
+- Questions: Should Distribute evenly treat a group as one block, like Align?
+- Suggested pick: Group = one block, the same as the Align answer of 2026-10-29.

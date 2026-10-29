@@ -187,6 +187,33 @@ describe('grouped pieces move together (ADR-148)', () => {
     expect(after[0].z).toBe(before[2].z);
     expect(after[1].z).toBe(before[2].z);
   });
+  it('align: a group aligns as one block; the first piece’s own group stays and says why', () => {
+    // Base 600 at 0, chest 800 at 600, wardrobe at 1400; the first two grouped.
+    let p = newProject('Align groups');
+    for (const id of ['base-door', 'chest', 'wardrobe'])
+      p = { ...p, items: [...p.items, makeItem(p, t(id))] };
+    p = resolvePlacements(p);
+    const [a, b, c] = ids(p);
+    const whole = groupItems(p, [a, b, c]).project;
+    st().openProject(whole);
+    // All three in one group, the rightmost first: Align left must not slide the group right.
+    st().selectItems([c, a, b]);
+    expect(st().alignSelection('left')).toMatch(/same group as .*; ungroup to align them\./);
+    expect(boxes(st().project!).map((x) => x.x)).toEqual(boxes(whole).map((x) => x.x));
+    // A group aligns by its outer box to a piece outside it, its members moving together.
+    const two = groupItems(p, [a, b]).project;
+    const before = boxes(two);
+    st().openProject(two);
+    st().selectItems([c, b]);
+    expect(st().alignSelection('right')).toBe('');
+    const after = boxes(st().project!);
+    expect(after[1].x + after[1].w).toBe(before[2].x + before[2].w);
+    expect(after[0].x - before[0].x).toBe(after[1].x - before[1].x);
+    st().openProject(two);
+    st().selectItems([c, b]);
+    st().alignSelection('left');
+    expect(boxes(st().project!)[0].x).toBe(before[2].x);
+  });
   it('up and down: wall units follow; a floor piece refuses with the reason', () => {
     let p = newProject('Wall');
     for (const id of ['wall-cabinet', 'wall-cabinet'])
