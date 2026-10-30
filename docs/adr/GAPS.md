@@ -2677,3 +2677,57 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: You didnt use the image i provided to render
 - Questions: Are the seller's pictures good board textures (whole panel photo vs decor swatch)?
 - Suggested pick: Check a few boards in 3D after the first download; adjust the tile size if needed (estimate: effort 5 %)
+
+### G-317: Run-part boards in the Material dialog
+
+- Status: Open
+- Origin: ADR-163
+- Missing: The worktop, filler and cover boards of a run are not offered in the Material dialog; they keep their own select under Run parts.
+- Request: Adjusting the material used MUST be always available.
+- Questions: Should run-part boards join the Material dialog as a Worktop / Fillers role with scope Group?
+- Suggested pick: Add them as roles in a later ADR (closest to 'always available').
+
+### G-318: Edge band per role in the Material dialog
+
+- Status: Open
+- Origin: ADR-163
+- Missing: The Material dialog changes boards only; the edge band of a role stays the board's band (ADR-077).
+- Request: Not only piece/carcass, but any other combination or piece separately.
+- Questions: Should a role also take an edge-band choice?
+- Suggested pick: Add an edge-band select per role in a later ADR.
+
+### G-319: App-wide Materials list
+
+- Status: Open
+- Origin: ADR-164
+- Missing: No app-wide Materials list on the device; board choices come from the project's boards and the decor list.
+- Request: The pal chosen at the beginning should be the same one from the Materials section.
+- Questions: Should the device keep one Materials list every project draws from (new Dexie table)?
+- Suggested pick: Keep project boards + decor list (the user's pick); an app-wide list only on request.
+
+### G-320: Common panel across a gap
+
+- Status: Open
+- Origin: ADR-165
+- Missing: A common top or bottom needs touching items; a gap between items is not bridged.
+- Request: Add the possibility to have a common bottom or top between multiple items.
+- Questions: Should one panel bridge a gap between items?
+- Suggested pick: Touching items only (the user's pick).
+
+### G-321: Shared side between neighbours
+
+- Status: Open
+- Origin: ADR-165
+- Missing: Items under a common top or bottom keep their own two sides; no shared side between neighbours.
+- Request: Add the possibility to have a common bottom or top between multiple items.
+- Questions: Should neighbours also share one side panel?
+- Suggested pick: Own sides (the user's pick); a shared side in a later ADR.
+
+### G-322: Common panel on corner cabinets and desks
+
+- Status: Open
+- Origin: ADR-165
+- Missing: Only cabinets join a common top or bottom; corner cabinets, desks and frames are refused with the reason.
+- Request: Add the possibility to have a common bottom or top between multiple items.
+- Questions: Should corner cabinets and desks join a common panel?
+- Suggested pick: Cabinets first; corners and desks in a later ADR.
