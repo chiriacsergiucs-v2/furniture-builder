@@ -1,7 +1,13 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { t } from '../core/i18n';
 import { formatMoney } from '../core/prices';
-import { hostedPicture, loadSellerCatalogs, type Offer, type SellerCatalog } from '../core/sellers';
+import {
+  hostedPicture,
+  loadSellerCatalogs,
+  thumbUrl,
+  type Offer,
+  type SellerCatalog,
+} from '../core/sellers';
 import type { SellerProduct } from '../core/sellers/types';
 import { Dialog } from './Dialogs';
 import { Toggle } from './controls';
@@ -147,9 +153,9 @@ export function ProductPicker({
                 <AppPicture src={import.meta.env.BASE_URL + hostedPicture(o)} />
               ) : (
                 pictures &&
-                o.p.i && (
+                thumbUrl(o) && (
                   <Suspense fallback={null}>
-                    <SellerPicture src={o.seller.imageBase + o.p.i} alt="" />
+                    <SellerPicture src={thumbUrl(o)!} alt="" />
                   </Suspense>
                 )
               )}

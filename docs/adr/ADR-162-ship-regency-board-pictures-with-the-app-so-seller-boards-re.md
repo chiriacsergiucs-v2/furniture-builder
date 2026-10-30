@@ -18,13 +18,18 @@ repository instead of fetching them from the seller.
 
 ## Decision
 
-- **Download script** `tools/sellers/regency-pictures.mjs`: for every board and worktop of
-  `src/core/sellers/regency.json` with a picture, downloads it once to `public/sellers/regency/<id>.<ext>`. Pictures
-  already there are skipped. It marks each product whose file exists with `h: 1` in `regency.json`. Only https URLs
-  on the seller's own picture base are fetched, a few at a time.
-- **Workflow** `.github/workflows/seller-pictures.yml`, started by hand (`workflow_dispatch`): runs the script and
-  opens a pull request with the pictures. Nothing is pushed to `main` directly. The repository grows by the pictures'
-  size (estimated 30–60 MB).
+- **Thumbnails in the catalog.** The user's thumbnail file (product id → link) is read by the converter
+  (`tools/sellers/regency.mjs`, third argument): the catalog gains `thumbBase`; a product whose thumbnail is on another
+  path keeps it as `ti` ('' = none). For the Regency export of 2026-10-29 every thumbnail has the picture's path, so
+  only `thumbBase` is added. Product lists show the thumbnail instead of the full picture.
+- **Download script** `tools/sellers/regency-pictures.ts`: `download` fetches the thumbnail of every board and
+  worktop not yet in `public/sellers/regency/` into a separate folder; `mark` sets `h: 1` on each product whose file
+  exists. Only https URLs on the thumbnail base are fetched, a few at a time.
+- **Workflow** `.github/workflows/seller-pictures.yml`, started by hand (`workflow_dispatch`): downloads, keeps the
+  bottom-left 68 % of each new picture (the seller's "SLIMLINE" badge sits in the top-right corner), resizes it to at
+  most 512 px, files it as `<id>.<ext>`, marks the catalog and pushes a branch; it opens the pull request when Actions
+  may, otherwise Claude opens it. Nothing is pushed to `main` directly. The first run, on full pictures without crop,
+  came to 301 MB for 1 454 files; cropped and resized, a 16-picture sample shrank to about 17 %.
 - **Board pick:** a product with `h` takes the app's own copy (same origin, no seller request). It is saved as the
   board's picture and its average colour becomes the board's colour (ADR-048), so 3D and the front view show the
   decor. A product without `h` falls back to the seller's site, as in ADR-161.
@@ -61,7 +66,8 @@ repository instead of fetching them from the seller.
 ## Implementation notes
 
 `tools/sellers/regency-pictures.ts` (run with Node's type stripping), `.github/workflows/seller-pictures.yml`,
-`hostedBase` and `h` in `src/core/sellers/types.ts`, `hostedPicture` and `pictureExt` in `src/core/sellers/index.ts`,
+`hostedBase`, `thumbBase`, `ti` and `h` in `src/core/sellers/types.ts`, `hostedPicture`, `thumbUrl` and `pictureExt` in
+`src/core/sellers/index.ts`,
 same-origin download in `src/online/sellerPictureFile.ts`, `AppPicture` in `src/ui/ProductPicker.tsx`. Tests:
 `tests/seller-pictures.test.ts`, `tests/find-it/seller-pictures.test.tsx`. The pictures arrive in a separate pull
 request opened by the workflow; until then every board falls back to the seller's site (ADR-161).
@@ -72,3 +78,6 @@ request opened by the workflow; until then every board falls back to the seller'
 2. Where are they kept? — **Committed to the repository**, by a workflow started by hand.
 3. Lists use the app's copy? — **Yes, for boards.**
 4. Acceptance? — **jsdom find-it.**
+5. The full pictures came to 301 MB, some with a badge — **crop to the bottom-left 68 % and resize to 512 px.**
+6. "Images also have a thumbnail value … also add to the dataset. Update workflow to fetch the thumbnail for
+   rendering" — **`thumbBase`/`ti` in the catalog; the workflow downloads thumbnails.**
