@@ -578,6 +578,17 @@ export const FEATURES: FeatureDomain[] = [
       { name: 'Version history', adrs: ['ADR-123'] },
       { name: 'Save as a project template', adrs: ['ADR-060'] },
       {
+        name: 'Project variables and formulas',
+        detail: 'Bind a size, a division or a position to a named value; change it once.',
+        adrs: ['ADR-163'],
+      },
+      {
+        name: 'Value sets',
+        detail:
+          'Duplicate every bound piece with other values, with the room; save a set as a project.',
+        adrs: ['ADR-164'],
+      },
+      {
         name: 'Side panel ordered by use',
         detail:
           'Add a piece at the top, previous and next piece, one toolbar, a More actions menu and Delete to remove.',

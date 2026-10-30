@@ -25,6 +25,17 @@ import {
   validateRoom,
   type Room,
 } from './room';
+import { setRooms, type VariableSet } from './setRoom';
+import {
+  variableDiagnostics,
+  type Binding,
+  type ProjectVariable,
+  isBindTarget,
+  MAX_EXPR,
+  MAX_VARIABLE_NAME,
+  MAX_VARIABLES,
+  nameProblem,
+} from './variables';
 import { bandKey, cutlist, hardwareSummary, type CutRow } from './cutlist';
 import { bandFor, bandProblems, bandText } from './materials';
 import { DEFAULT_KERF, newId, sheetOf, upgradeDesign, validateDesign } from './design';
@@ -124,6 +135,16 @@ export interface ProjectItem {
    * Saved from project schemaVersion 12.
    */
   ref?: { overrides: Record<string, unknown> };
+  /**
+   * Bindings (ADR-163): sizes and positions that follow a project variable or a formula, evaluated on every commit
+   * (`src/core/variables.ts`). Absent = none. Saved from project schemaVersion 16.
+   */
+  bindings?: Binding[];
+  /**
+   * The value set this piece is a duplicate for (ADR-164): `of` is the set-1 piece it copies. Absent = set 1.
+   * Saved from project schemaVersion 16.
+   */
+  set?: { id: string; of: string };
 }
 
 /**
@@ -222,9 +243,10 @@ export interface RunSink {
  * (ADR-095); 7 = a kept template revision on items (ADR-096); 8 = groups of pieces
  * (ADR-097); 9 = linked copies (ADR-111); 10 = pieces typed at an angle (ADR-121); 11 = size-locked pieces
  * (ADR-122); 12 = template references and project-wide settings (ADR-124); 13 = run handles and sinks (ADR-125);
- * 14 = wall backgrounds (ADR-145); 15 = fitted and straightened wall pictures (ADR-146).
+ * 14 = wall backgrounds (ADR-145); 15 = fitted and straightened wall pictures (ADR-146); 16 = variables, bindings
+ * and value sets (ADR-163, ADR-164).
  */
-export const PROJECT_SCHEMA = 15 as const;
+export const PROJECT_SCHEMA = 16 as const;
 export const PROJECT_SCHEMAS: readonly number[] = [
   1,
   2,
@@ -240,10 +262,11 @@ export const PROJECT_SCHEMAS: readonly number[] = [
   12,
   13,
   14,
+  15,
   PROJECT_SCHEMA,
 ];
 export type ProjectSchemaVersion =
-  1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | typeof PROJECT_SCHEMA;
+  1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | typeof PROJECT_SCHEMA;
 const RUN_REQUESTS_SINCE = 4;
 const MODELS_SINCE = 5;
 const LOCKS_SINCE = 6;
@@ -256,6 +279,7 @@ const REFS_SINCE = 12;
 const RUN_EXTRAS_SINCE = 13;
 const WALLS_SINCE = 14;
 const FITTED_WALLS_SINCE = 15;
+const VARIABLES_SINCE = 16;
 
 export interface Project {
   schemaVersion: ProjectSchemaVersion;
@@ -288,6 +312,10 @@ export interface Project {
   runHandles?: RunHandle[];
   /** Sinks over base units: worktop cut-outs (ADR-125, schemaVersion 13). Absent = none. */
   sinks?: RunSink[];
+  /** Project variables (ADR-163, schemaVersion 16): named numbers or formulas pieces are bound to. Absent = none. */
+  variables?: ProjectVariable[];
+  /** Value sets (ADR-164, schemaVersion 16): more sets of values for the variables, each with its duplicates. */
+  variableSets?: VariableSet[];
 }
 
 /**
@@ -963,7 +991,8 @@ export function buildProjectModel(input: Project): ProjectModel {
   const panels: Panel[] = [];
   const piecePanels: Panel[][] = [];
   const hardware: HardwareItem[] = [];
-  const diagnostics: Diagnostic[] = placementIssues(project);
+  // Variables and bindings with problems (ADR-163, ADR-008), checked apart from the generators.
+  const diagnostics: Diagnostic[] = [...placementIssues(project), ...variableDiagnostics(project)];
   for (const pc of pieces) {
     const mats = new Map(pc.item.design.materials.map((m) => [m.id, m]));
     for (const m of pc.item.design.materials) {
@@ -1157,8 +1186,28 @@ export function buildProjectModel(input: Project): ProjectModel {
     hitsPanels: (b: Box) => overlaps(m.box, b),
     clearances: [],
   }));
-  // The room (ADR-058): walls, obstacles, door swings and windows; obstacles also block openings (ADR-057).
-  const rc = project.room ? roomChecks(project.room, [...checked, ...asPieces]) : null;
+  // The room (ADR-058): walls, obstacles, door swings and windows; obstacles also block openings (ADR-057). A value
+  // set's pieces are checked against the room at the set's origin (ADR-164).
+  const setOf = new Map(project.items.map((i) => [i.id, i.set?.id ?? '']));
+  const rooms = project.room
+    ? [
+        { id: '', room: project.room },
+        ...setRooms(project).map((sr) => ({ id: sr.set.id, room: sr.room })),
+      ]
+    : [];
+  const rcs = rooms.map(({ id, room }) =>
+    roomChecks(room, [
+      ...checked.filter((c) => (setOf.get(c.id) ?? '') === id),
+      ...(id === '' ? asPieces : []),
+    ]),
+  );
+  const rc = rcs.length
+    ? {
+        diagnostics: rcs.flatMap((r) => r.diagnostics),
+        clearanceIssues: rcs.flatMap((r) => r.clearanceIssues),
+        obstacles: rcs.flatMap((r) => r.obstacles),
+      }
+    : null;
   if (rc) diagnostics.push(...rc.diagnostics, ...rc.clearanceIssues);
   // Run worktops and plinths over a pipe or outlet (ADR-072).
   if (project.room && !outlineIssues(project.room.outline).length)
@@ -2323,6 +2372,67 @@ function validateSettings(s: unknown): string[] {
   return errs;
 }
 
+/** Variables and value sets (ADR-163, ADR-164). */
+function validateVariables(p: Record<string, unknown>): string[] {
+  const errs: string[] = [];
+  const vars: ProjectVariable[] = [];
+  if (p.variables !== undefined) {
+    if (!Array.isArray(p.variables) || p.variables.length > MAX_VARIABLES)
+      return [t('Invalid variables')];
+    if ((p.schemaVersion as number) < VARIABLES_SINCE)
+      errs.push(t('Variables need project schemaVersion {v}', { v: VARIABLES_SINCE }));
+    for (const v of p.variables) {
+      if (
+        !isObj(v) ||
+        typeof v.id !== 'string' ||
+        !v.id ||
+        typeof v.name !== 'string' ||
+        v.name.length > MAX_VARIABLE_NAME ||
+        typeof v.expr !== 'string' ||
+        v.expr.length > MAX_EXPR ||
+        nameProblem(v.name, vars) !== null ||
+        vars.some((x) => x.id === v.id)
+      ) {
+        errs.push(t('Invalid variable'));
+        continue;
+      }
+      vars.push({ id: v.id, name: v.name, expr: v.expr });
+    }
+  }
+  if (p.variableSets !== undefined) {
+    if (!Array.isArray(p.variableSets) || p.variableSets.length > MAX_VARIABLES)
+      return [...errs, t('Invalid value sets')];
+    if ((p.schemaVersion as number) < VARIABLES_SINCE)
+      errs.push(t('Value sets need project schemaVersion {v}', { v: VARIABLES_SINCE }));
+    const ids = new Set<string>();
+    for (const s of p.variableSets) {
+      if (
+        !isObj(s) ||
+        typeof s.id !== 'string' ||
+        !s.id ||
+        ids.has(s.id) ||
+        typeof s.name !== 'string' ||
+        !s.name ||
+        s.name.length > MAX_VARIABLE_NAME ||
+        !isObj(s.values) ||
+        !Object.values(s.values).every((x) => typeof x === 'string' && x.length <= MAX_EXPR) ||
+        !isObj(s.origin) ||
+        !isInt(s.origin.x) ||
+        !isInt(s.origin.z)
+      ) {
+        errs.push(t('Invalid value set'));
+        continue;
+      }
+      ids.add(s.id);
+    }
+    if (Array.isArray(p.items))
+      for (const it of p.items)
+        if (isObj(it) && isObj(it.set) && typeof it.set.id === 'string' && !ids.has(it.set.id))
+          errs.push(t('Item {id}: unknown value set', { id: String(it.id) }));
+  }
+  return errs;
+}
+
 export function validateProject(p: unknown): string[] {
   if (!isObj(p)) return [t('Project must be an object')];
   const errs: string[] = [];
@@ -2407,9 +2517,32 @@ export function validateProject(p: unknown): string[] {
       else if ((p.schemaVersion as number) < REFS_SINCE)
         errs.push(t('Template references need project schemaVersion {v}', { v: REFS_SINCE }));
     }
+    if (it.bindings !== undefined) {
+      if (
+        !Array.isArray(it.bindings) ||
+        !it.bindings.every(
+          (b) =>
+            isObj(b) &&
+            isBindTarget(b.target) &&
+            typeof b.expr === 'string' &&
+            b.expr.length <= MAX_EXPR,
+        ) ||
+        new Set(it.bindings.map((b) => (isObj(b) ? b.target : ''))).size !== it.bindings.length
+      )
+        errs.push(t('Invalid item bindings'));
+      else if ((p.schemaVersion as number) < VARIABLES_SINCE)
+        errs.push(t('Bindings need project schemaVersion {v}', { v: VARIABLES_SINCE }));
+    }
+    if (it.set !== undefined) {
+      if (!isObj(it.set) || typeof it.set.id !== 'string' || typeof it.set.of !== 'string')
+        errs.push(t('Invalid item value set'));
+      else if ((p.schemaVersion as number) < VARIABLES_SINCE)
+        errs.push(t('Value sets need project schemaVersion {v}', { v: VARIABLES_SINCE }));
+    }
     const de = validateDesign(it.design);
     if (de.length) errs.push(t('Item {id}: {problem}', { id: String(it.id), problem: de[0] }));
   }
+  errs.push(...validateVariables(p));
   if (p.runParts !== undefined) {
     if (!Array.isArray(p.runParts)) errs.push(t('Invalid run parts'));
     else

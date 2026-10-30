@@ -86,7 +86,7 @@ bound values are the one part a link does not copy (below).
       (`tests/project-doc.test.ts`)
 - [ ] Fuzz: 3,000 seeded projects with random variables and bindings build with no throw
 - [ ] Find-it `tests/find-it/variables.test.tsx` (390 and 1280 px): **Variables** → **Add variable** → `bottom
-  height` `400` → selected piece → **ƒ** by Height → pick it → field reads `bottom height = 400`; change to 450
+height` `400` → selected piece → **ƒ** by Height → pick it → field reads `bottom height = 400`; change to 450
       → the piece is 450 high; **Delete** asks and unbinds
 
 ## Open questions

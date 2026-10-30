@@ -118,6 +118,8 @@ import { SavedToCatalog, SaveToCatalogDialog } from './SaveToCatalog';
 import { NewerTemplates, TemplateNotice } from './TemplateRevision';
 import { GroupList, SelectionCard } from './Selection';
 import { PieceProjectSettings, ProjectSettingsPanel } from './ProjectSettings';
+import { BindButton, bindingHint, VariablesPanel } from './Variables';
+import { setRooms } from '../core/setRoom';
 import { ProjectHistory, StyleSuggestions } from './History';
 
 const FRONT_SIDE: Record<QuarterTurn, string> = {
@@ -220,6 +222,7 @@ export function ProjectPanel({
       <div className="inspector">
         <RunParts />
         <ProjectSettingsPanel />
+        <VariablesPanel />
         <MmField
           label={t('Saw cut (kerf) for this project')}
           value={project.cutting?.kerf ?? 4}
@@ -385,6 +388,7 @@ export function ProjectPanel({
             </p>
           )}
           <TemplateNotice item={item} />
+          <SetNote item={item} />
           <LinkedCopies item={item} />
           {!(drillId === item.id && insideSelected) && (
             <PieceSize
@@ -393,6 +397,10 @@ export function ProjectPanel({
               product={item.design.product}
               onChange={(k, v) => resizeItem(item.id, k, v)}
               locked={isSizeLocked(item)}
+              bind={(k) => ({
+                button: <BindButton itemId={item.id} target={k} />,
+                hint: bindingHint(project, item, k),
+              })}
             />
           )}
           <button type="button" className="btn solid block" onClick={() => edit(item.id)}>
@@ -888,6 +896,22 @@ function FinishFields({ item }: { item: ProjectItem }) {
   );
 }
 
+/** A value set's duplicate (ADR-164): which set, and which set-1 piece it copies. */
+function SetNote({ item }: { item: ProjectItem }) {
+  const project = useDesign((s) => s.project)!;
+  if (!item.set) return null;
+  const set = project.variableSets?.find((s) => s.id === item.set!.id);
+  const of = project.items.find((i) => i.id === item.set!.of);
+  return (
+    <p className="hint set-note" role="note">
+      {t('{set} of {name}', {
+        set: set?.name ?? t('Set'),
+        name: tr(of?.design.name ?? item.design.name),
+      })}
+    </p>
+  );
+}
+
 /**
  * Linked copies (ADR-111): how many copies share this piece's design, and whether a change reaches all of them.
  */
@@ -1063,22 +1087,34 @@ function PlacementFields({ item }: { item: ProjectItem }) {
     else if (bases.length)
       update(item.id, { placement: { kind: 'above', baseId: bases[0].id, gap: 0, offsetX: 0 } });
   };
+  // A bound axis follows its variable (ADR-163): the field is off and says what it follows.
+  const hint = (target: string) => bindingHint(project, item, target);
   const xz = (
     <div className="dims2">
-      <MmField
-        label={t('From left')}
-        value={pos.x}
-        min={-20000}
-        max={20000}
-        onChange={(v) => update(item.id, { position: { ...pos, x: v } })}
-      />
-      <MmField
-        label={t('From back')}
-        value={pos.z}
-        min={-20000}
-        max={20000}
-        onChange={(v) => update(item.id, { position: { ...pos, z: v } })}
-      />
+      <div className="bindable">
+        <MmField
+          label={t('From left')}
+          value={pos.x}
+          min={-20000}
+          max={20000}
+          onChange={(v) => update(item.id, { position: { ...pos, x: v } })}
+          disabled={!!hint('x')}
+          hint={hint('x')}
+        />
+        <BindButton itemId={item.id} target="x" />
+      </div>
+      <div className="bindable">
+        <MmField
+          label={t('From back')}
+          value={pos.z}
+          min={-20000}
+          max={20000}
+          onChange={(v) => update(item.id, { position: { ...pos, z: v } })}
+          disabled={!!hint('z')}
+          hint={hint('z')}
+        />
+        <BindButton itemId={item.id} target="z" />
+      </div>
     </div>
   );
   return (
@@ -1106,13 +1142,18 @@ function PlacementFields({ item }: { item: ProjectItem }) {
       {kind === 'wall' && pl?.kind === 'wall' && (
         <>
           {xz}
-          <MmField
-            label={t('Underside above the floor')}
-            value={pl.height}
-            min={0}
-            max={3000}
-            onChange={(v) => update(item.id, { placement: { ...pl, height: v } })}
-          />
+          <div className="bindable">
+            <MmField
+              label={t('Underside above the floor')}
+              value={pl.height}
+              min={0}
+              max={3000}
+              onChange={(v) => update(item.id, { placement: { ...pl, height: v } })}
+              disabled={!!hint('mountHeight')}
+              hint={hint('mountHeight')}
+            />
+            <BindButton itemId={item.id} target="mountHeight" />
+          </div>
         </>
       )}
       {kind === 'above' && pl?.kind === 'above' && (
@@ -1149,27 +1190,42 @@ function PlacementFields({ item }: { item: ProjectItem }) {
       )}
       {kind === 'free' && (
         <div className="dims3">
-          <MmField
-            label={t('From left')}
-            value={pos.x}
-            min={-20000}
-            max={20000}
-            onChange={(v) => update(item.id, { position: { ...pos, x: v } })}
-          />
-          <MmField
-            label={t('From back')}
-            value={pos.z}
-            min={-20000}
-            max={20000}
-            onChange={(v) => update(item.id, { position: { ...pos, z: v } })}
-          />
-          <MmField
-            label={t('Above floor')}
-            value={pos.y}
-            min={0}
-            max={3000}
-            onChange={(v) => update(item.id, { position: { ...pos, y: v } })}
-          />
+          <div className="bindable">
+            <MmField
+              label={t('From left')}
+              value={pos.x}
+              min={-20000}
+              max={20000}
+              onChange={(v) => update(item.id, { position: { ...pos, x: v } })}
+              disabled={!!hint('x')}
+              hint={hint('x')}
+            />
+            <BindButton itemId={item.id} target="x" />
+          </div>
+          <div className="bindable">
+            <MmField
+              label={t('From back')}
+              value={pos.z}
+              min={-20000}
+              max={20000}
+              onChange={(v) => update(item.id, { position: { ...pos, z: v } })}
+              disabled={!!hint('z')}
+              hint={hint('z')}
+            />
+            <BindButton itemId={item.id} target="z" />
+          </div>
+          <div className="bindable">
+            <MmField
+              label={t('Above floor')}
+              value={pos.y}
+              min={0}
+              max={3000}
+              onChange={(v) => update(item.id, { position: { ...pos, y: v } })}
+              disabled={!!hint('y')}
+              hint={hint('y')}
+            />
+            <BindButton itemId={item.id} target="y" />
+          </div>
         </div>
       )}
     </>
@@ -1468,7 +1524,12 @@ function RoomPlan({
     });
     return () => registerPlanHit(null);
   }, []);
-  const pts = [...(room?.outline ?? []), ...(drawing ?? [])];
+  // The value sets' room copies are framed too (ADR-164).
+  const pts = [
+    ...(room?.outline ?? []),
+    ...(drawing ?? []),
+    ...(project ? setRooms(project).flatMap((sr) => sr.room.outline) : []),
+  ];
   // With Clearances on, the view also frames the zones (chair or service space beyond the pieces); models always.
   const framed = [
     ...(showZones ? pm.zones.map((z) => z.box) : pm.pieces.map((p) => p.bounds)),
@@ -1612,7 +1673,16 @@ function RoomPlan({
         }
       >
         {room ? (
-          <RoomOutline room={room} fs={fs} />
+          <>
+            <RoomOutline room={room} fs={fs} />
+            {/* A value set's room copy at its origin (ADR-164). */}
+            {project &&
+              setRooms(project).map((sr) => (
+                <g key={sr.set.id} className="set-room" aria-label={sr.set.name}>
+                  <RoomOutline room={sr.room} fs={fs} />
+                </g>
+              ))}
+          </>
         ) : (
           <>
             <line className="wall" x1={x0 - pad} y1={0} x2={x1 + pad} y2={0} />

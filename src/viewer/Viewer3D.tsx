@@ -78,6 +78,7 @@ import { imageKey, useImageUrls } from '../persist/images';
 import { loadModelScene, type ModelScene } from '../persist/models';
 import { modelBox, modelYaw, type ModelItem } from '../core/model3d';
 import { useDesign } from '../store/designStore';
+import { setRooms } from '../core/setRoom';
 import { useView, ViewOverride } from '../ui/useView';
 import { PHONE, useMediaQuery } from '../ui/useMediaQuery';
 import { useTheme } from '../ui/useTheme';
@@ -378,7 +379,10 @@ export default function Viewer3D() {
           <CountsAnchor place={placeCard} inProject={view.mode === 'project'} />
         )}
         {view.mode === 'project' && !exploded && !isolating && (
-          <RoomWalls adjusting={adjusting} snapOn={snapOn} />
+          <>
+            <RoomWalls adjusting={adjusting} snapOn={snapOn} />
+            <SetRoomWalls />
+          </>
         )}
         {view.mode === 'project' && !exploded && !isolating && (
           <ModelItems plain={rendering} moving={moving} />
@@ -1080,8 +1084,18 @@ function LockAnchors({
  * with its picture covering one rectangle of the wall once, straightened when asked, its average colour around it
  * (ADR-146). With Adjust wall picture on, a wall with a picture is chosen by a tap and its picture dragged.
  */
-function RoomWalls({ adjusting, snapOn }: { adjusting: boolean; snapOn: boolean }) {
-  const room = useDesign((s) => s.project?.room);
+function RoomWalls({
+  adjusting,
+  snapOn,
+  room: given,
+}: {
+  adjusting: boolean;
+  snapOn: boolean;
+  /** A value set's room copy (ADR-164) instead of the project's room. */
+  room?: Room;
+}) {
+  const own = useDesign((s) => s.project?.room);
+  const room = given ?? own;
   const solid = useSolidWalls();
   const boxes = useMemo(() => (room ? roomDisplayBoxes(room) : null), [room]);
   const textures = useTextures(useWallPictureUrls(room?.walls ?? NO_WALLS), false);
@@ -1282,6 +1296,19 @@ function PictureHandles({
             {hd.glyph}
           </button>
         </Html>
+      ))}
+    </>
+  );
+}
+
+/** The room copies of the value sets (ADR-164), drawn at their origins; pictures are not adjusted there. */
+function SetRoomWalls() {
+  const project = useDesign((s) => s.project);
+  const rooms = useMemo(() => (project ? setRooms(project) : []), [project]);
+  return (
+    <>
+      {rooms.map((sr) => (
+        <RoomWalls key={sr.set.id} adjusting={false} snapOn={false} room={sr.room} />
       ))}
     </>
   );
