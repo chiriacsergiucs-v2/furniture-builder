@@ -1,4 +1,4 @@
-// ADR-163: project variables, formulas and bindings.
+// ADR-166: project variables, formulas and bindings.
 import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { templates } from '../src/core/design';
@@ -45,7 +45,7 @@ function three(): { p: Project; ids: string[] } {
   return { p, ids };
 }
 
-describe('formulas (ADR-163)', () => {
+describe('formulas (ADR-166)', () => {
   const scope = new Map([
     ['bottom height', 400],
     ['total', 2000],
@@ -88,7 +88,7 @@ describe('formulas (ADR-163)', () => {
   });
 });
 
-describe('bindings on a project (ADR-163)', () => {
+describe('bindings on a project (ADR-166)', () => {
   it('bound heights follow the variable; a change reaches every bound piece', () => {
     const { p, ids } = three();
     const a = addVariable(p, 'bottom height', '400');
@@ -204,7 +204,7 @@ describe('bindings on a project (ADR-163)', () => {
   });
 });
 
-describe('store (ADR-163)', () => {
+describe('store (ADR-166)', () => {
   beforeEach(() => st().openProject(three().p));
   it('addVariable, bindTarget and updateVariable are each one undo step; the piece follows', () => {
     const id = st().project!.items[0].id;
@@ -223,7 +223,7 @@ describe('store (ADR-163)', () => {
   });
 });
 
-describe('seeded fuzz: random variables and bindings build with no throw (ADR-163)', () => {
+describe('seeded fuzz: random variables and bindings build with no throw (ADR-166)', () => {
   it('3,000 projects', () => {
     let seed = 7;
     const rnd = () => {

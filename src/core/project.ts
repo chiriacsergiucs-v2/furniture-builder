@@ -136,12 +136,12 @@ export interface ProjectItem {
    */
   ref?: { overrides: Record<string, unknown> };
   /**
-   * Bindings (ADR-163): sizes and positions that follow a project variable or a formula, evaluated on every commit
+   * Bindings (ADR-166): sizes and positions that follow a project variable or a formula, evaluated on every commit
    * (`src/core/variables.ts`). Absent = none. Saved from project schemaVersion 16.
    */
   bindings?: Binding[];
   /**
-   * The value set this piece is a duplicate for (ADR-164): `of` is the set-1 piece it copies. Absent = set 1.
+   * The value set this piece is a duplicate for (ADR-167): `of` is the set-1 piece it copies. Absent = set 1.
    * Saved from project schemaVersion 16.
    */
   set?: { id: string; of: string };
@@ -244,7 +244,7 @@ export interface RunSink {
  * (ADR-097); 9 = linked copies (ADR-111); 10 = pieces typed at an angle (ADR-121); 11 = size-locked pieces
  * (ADR-122); 12 = template references and project-wide settings (ADR-124); 13 = run handles and sinks (ADR-125);
  * 14 = wall backgrounds (ADR-145); 15 = fitted and straightened wall pictures (ADR-146); 16 = variables, bindings
- * and value sets (ADR-163, ADR-164).
+ * and value sets (ADR-166, ADR-167).
  */
 export const PROJECT_SCHEMA = 16 as const;
 export const PROJECT_SCHEMAS: readonly number[] = [
@@ -312,9 +312,9 @@ export interface Project {
   runHandles?: RunHandle[];
   /** Sinks over base units: worktop cut-outs (ADR-125, schemaVersion 13). Absent = none. */
   sinks?: RunSink[];
-  /** Project variables (ADR-163, schemaVersion 16): named numbers or formulas pieces are bound to. Absent = none. */
+  /** Project variables (ADR-166, schemaVersion 16): named numbers or formulas pieces are bound to. Absent = none. */
   variables?: ProjectVariable[];
-  /** Value sets (ADR-164, schemaVersion 16): more sets of values for the variables, each with its duplicates. */
+  /** Value sets (ADR-167, schemaVersion 16): more sets of values for the variables, each with its duplicates. */
   variableSets?: VariableSet[];
 }
 
@@ -991,7 +991,7 @@ export function buildProjectModel(input: Project): ProjectModel {
   const panels: Panel[] = [];
   const piecePanels: Panel[][] = [];
   const hardware: HardwareItem[] = [];
-  // Variables and bindings with problems (ADR-163, ADR-008), checked apart from the generators.
+  // Variables and bindings with problems (ADR-166, ADR-008), checked apart from the generators.
   const diagnostics: Diagnostic[] = [...placementIssues(project), ...variableDiagnostics(project)];
   for (const pc of pieces) {
     const mats = new Map(pc.item.design.materials.map((m) => [m.id, m]));
@@ -1187,7 +1187,7 @@ export function buildProjectModel(input: Project): ProjectModel {
     clearances: [],
   }));
   // The room (ADR-058): walls, obstacles, door swings and windows; obstacles also block openings (ADR-057). A value
-  // set's pieces are checked against the room at the set's origin (ADR-164).
+  // set's pieces are checked against the room at the set's origin (ADR-167).
   const setOf = new Map(project.items.map((i) => [i.id, i.set?.id ?? '']));
   const rooms = project.room
     ? [
@@ -2372,7 +2372,7 @@ function validateSettings(s: unknown): string[] {
   return errs;
 }
 
-/** Variables and value sets (ADR-163, ADR-164). */
+/** Variables and value sets (ADR-166, ADR-167). */
 function validateVariables(p: Record<string, unknown>): string[] {
   const errs: string[] = [];
   const vars: ProjectVariable[] = [];

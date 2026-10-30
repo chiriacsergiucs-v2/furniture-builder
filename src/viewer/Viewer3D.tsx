@@ -1091,7 +1091,7 @@ function RoomWalls({
 }: {
   adjusting: boolean;
   snapOn: boolean;
-  /** A value set's room copy (ADR-164) instead of the project's room. */
+  /** A value set's room copy (ADR-167) instead of the project's room. */
   room?: Room;
 }) {
   const own = useDesign((s) => s.project?.room);
@@ -1301,7 +1301,7 @@ function PictureHandles({
   );
 }
 
-/** The room copies of the value sets (ADR-164), drawn at their origins; pictures are not adjusted there. */
+/** The room copies of the value sets (ADR-167), drawn at their origins; pictures are not adjusted there. */
 function SetRoomWalls() {
   const project = useDesign((s) => s.project);
   const rooms = useMemo(() => (project ? setRooms(project) : []), [project]);

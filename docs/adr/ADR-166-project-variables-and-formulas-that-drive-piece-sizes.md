@@ -1,10 +1,10 @@
-# ADR-163: Project variables and formulas that drive piece sizes
+# ADR-166: Project variables and formulas that drive piece sizes
 
 - Status: Pending
 - Date: 2026-10-30
 - Depends on: ADR-124
 - Design: docs/ui-design.md (Configure, selected-piece card)
-- Backlog: N165
+- Backlog: N168
 - Agreed: 2026-10-30 (every question answered in the interactive questions; the answers are quoted below)
 
 ## Context
@@ -54,7 +54,7 @@ bound values are the one part a link does not copy (below).
    other axes move. A linked copy (ADR-111) shares the design but keeps its own bindings and bound values: linked
    propagation skips every bound target. A size lock (ADR-122) on a bound size is reported as a diagnostic and the
    variable wins. Project templates (ADR-060) keep variables and bindings; a design saved to the catalog drops its
-   bindings (G-317).
+   bindings (G-323).
 
 ## Alternatives considered
 
@@ -68,7 +68,7 @@ bound values are the one part a link does not copy (below).
 
 - In scope: core (`variables.ts`, validation, migration to `schemaVersion` 16), store action, Variables page, ƒ
   button, diagnostics, tests, fuzz on evaluated designs, jsdom find-it.
-- Out of scope: variables outside projects (G-317); formula functions (G-318); bindings on run parts (G-319).
+- Out of scope: variables outside projects (G-323); formula functions (G-324); bindings on run parts (G-325).
 
 ## Consequences
 

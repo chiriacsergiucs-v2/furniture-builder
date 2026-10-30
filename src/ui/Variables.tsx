@@ -20,7 +20,7 @@ import { Group, InfoTip, MmField } from './controls';
 import { Icon } from './icons';
 import { useUi } from './shell/uiStore';
 
-/** `bottom height = 400`: what a bound field shows instead of being edited (ADR-163). */
+/** `bottom height = 400`: what a bound field shows instead of being edited (ADR-166). */
 export function bindingHint(
   project: Project,
   item: ProjectItem,
@@ -35,7 +35,7 @@ export function bindingHint(
 }
 
 /**
- * The ƒ button beside a bindable size (ADR-163): a sheet to pick a variable or type a formula, or to unbind.
+ * The ƒ button beside a bindable size (ADR-166): a sheet to pick a variable or type a formula, or to unbind.
  */
 export function BindButton({ itemId, target }: { itemId: string; target: string }) {
   const project = useDesign((s) => s.project);
@@ -45,7 +45,7 @@ export function BindButton({ itemId, target }: { itemId: string; target: string 
   const item = project?.items.find((i) => i.id === itemId);
   if (!project || !item) return null;
   const current = bindingOf(item, target);
-  // A value set's duplicate takes its bindings from its original (ADR-164).
+  // A value set's duplicate takes its bindings from its original (ADR-167).
   const copy = !!item.set;
   const vars = project.variables ?? [];
   const label = targetLabel(target);
@@ -159,7 +159,7 @@ export function BindButton({ itemId, target }: { itemId: string; target: string 
   );
 }
 
-/** Variables and value sets in Configure (ADR-163, ADR-164). */
+/** Variables and value sets in Configure (ADR-166, ADR-167). */
 export function VariablesPanel() {
   const project = useDesign((s) => s.project)!;
   const add = useDesign((s) => s.addVariable);
@@ -295,7 +295,7 @@ export function VariablesPanel() {
   );
 }
 
-/** Value sets (ADR-164): set 1 is the variables above; each other set has its values, origin and duplicates. */
+/** Value sets (ADR-167): set 1 is the variables above; each other set has its values, origin and duplicates. */
 function ValueSets({ project }: { project: Project }) {
   const addSet = useDesign((s) => s.addVariableSet);
   const updateSet = useDesign((s) => s.updateVariableSet);
@@ -472,7 +472,7 @@ function SetCard({
   );
 }
 
-/** "Saved as …" with Open (ADR-164): the user stays in the current project. */
+/** "Saved as …" with Open (ADR-167): the user stays in the current project. */
 function SavedNote({
   name,
   project,

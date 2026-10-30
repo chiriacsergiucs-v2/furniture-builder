@@ -1,4 +1,4 @@
-// Find-it acceptance for value sets (CLAUDE.md R3, backlog N166, ADR-164; Acceptance: browser), against a
+// Find-it acceptance for value sets (CLAUDE.md R3, backlog N169, ADR-167; Acceptance: browser), against a
 // production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/variables/find-it.mjs http://localhost:4173/furniture-builder/ <out dir>
 // From the bare app, by visible text, at 1280 and 390 px: a project with two base cabinets in a 3000-wide room; a

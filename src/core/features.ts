@@ -580,13 +580,13 @@ export const FEATURES: FeatureDomain[] = [
       {
         name: 'Project variables and formulas',
         detail: 'Bind a size, a division or a position to a named value; change it once.',
-        adrs: ['ADR-163'],
+        adrs: ['ADR-166'],
       },
       {
         name: 'Value sets',
         detail:
           'Duplicate every bound piece with other values, with the room; save a set as a project.',
-        adrs: ['ADR-164'],
+        adrs: ['ADR-167'],
       },
       {
         name: 'Side panel ordered by use',

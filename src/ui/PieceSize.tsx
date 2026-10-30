@@ -22,9 +22,9 @@ export function PieceSize({
   className?: string;
   /** The piece's size is locked (ADR-122): the fields are off and say why. */
   locked?: boolean;
-  /** Why the fields are off, instead of the size-lock text (a value set's duplicate, ADR-164). */
+  /** Why the fields are off, instead of the size-lock text (a value set's duplicate, ADR-167). */
   lockedHint?: string;
-  /** In a project (ADR-163): the ƒ button for a field and, when bound, what it follows (the field is then off). */
+  /** In a project (ADR-166): the ƒ button for a field and, when bound, what it follows (the field is then off). */
   bind?: (key: SizeField['key']) => { button: ReactNode; hint?: string };
 }) {
   const fields = useMemo(() => sizeFields(product), [product]);

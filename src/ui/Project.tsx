@@ -903,7 +903,7 @@ function FinishFields({ item }: { item: ProjectItem }) {
   );
 }
 
-/** A value set's duplicate (ADR-164): which set, and which set-1 piece it copies. */
+/** A value set's duplicate (ADR-167): which set, and which set-1 piece it copies. */
 function SetNote({ item }: { item: ProjectItem }) {
   const project = useDesign((s) => s.project)!;
   const select = useDesign((s) => s.selectItem);
@@ -1105,7 +1105,7 @@ function PlacementFields({ item }: { item: ProjectItem }) {
     else if (bases.length)
       update(item.id, { placement: { kind: 'above', baseId: bases[0].id, gap: 0, offsetX: 0 } });
   };
-  // A bound axis follows its variable (ADR-163): the field is off and says what it follows.
+  // A bound axis follows its variable (ADR-166): the field is off and says what it follows.
   const hint = (target: string) => bindingHint(project, item, target);
   const xz = (
     <div className="dims2">
@@ -1530,7 +1530,7 @@ function RoomPlan({
     });
     return () => registerPlanHit(null);
   }, []);
-  // The value sets' room copies are framed too (ADR-164).
+  // The value sets' room copies are framed too (ADR-167).
   const pts = [
     ...(room?.outline ?? []),
     ...(drawing ?? []),
@@ -1682,7 +1682,7 @@ function RoomPlan({
         {room ? (
           <>
             <RoomOutline room={room} fs={fs} />
-            {/* A value set's room copy at its origin (ADR-164). */}
+            {/* A value set's room copy at its origin (ADR-167). */}
             {project &&
               setRooms(project).map((sr) => (
                 <g key={sr.set.id} className="set-room" aria-label={sr.set.name}>
@@ -2005,7 +2005,7 @@ function LockBadge({ x, y, size }: { x: number; y: number; size: number }) {
   );
 }
 
-/** A value set's name over its pieces on the plan (ADR-164). */
+/** A value set's name over its pieces on the plan (ADR-167). */
 function SetTags({ project, pm, fs }: { project: Project; pm: ProjectModel; fs: number }) {
   const sets = project.variableSets ?? [];
   if (!sets.length) return null;

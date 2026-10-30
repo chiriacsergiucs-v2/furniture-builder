@@ -1,4 +1,4 @@
-// ADR-164: value sets, their duplicates, the room per set and save a set as a separate project.
+// ADR-167: value sets, their duplicates, the room per set and save a set as a separate project.
 import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { templates } from '../src/core/design';
@@ -82,7 +82,7 @@ function bound(): { p: Project; ids: string[]; varId: string } {
 }
 const sync = (p: Project) => applyBindings(syncSets(p));
 
-describe('value sets (ADR-164)', () => {
+describe('value sets (ADR-167)', () => {
   it('an empty set draws nothing; a complete set duplicates the members at the set origin with its values', () => {
     const { p, ids, varId } = bound();
     const added = addSet(p);
@@ -92,7 +92,7 @@ describe('value sets (ADR-164)', () => {
     expect(next.variableSets![0].origin).toEqual({ x: 3500, z: 0 });
     next = sync(updateSet(next, added.id, { values: { [varId]: '450' } }));
     const dups = next.items.filter((i) => i.set?.id === added.id);
-    // The bound base and the wall cabinet above it (G-321), not the second base.
+    // The bound base and the wall cabinet above it (G-327), not the second base.
     expect(dups.map((d) => d.set!.of).sort()).toEqual([ids[0], ids[2]].sort());
     const base = dups.find((d) => d.set!.of === ids[0])!;
     const above = dups.find((d) => d.set!.of === ids[2])!;
@@ -210,7 +210,7 @@ describe('value sets (ADR-164)', () => {
   });
 });
 
-describe('store (ADR-164)', () => {
+describe('store (ADR-167)', () => {
   beforeEach(() => st().openProject(bound().p));
   it('addVariableSet, updateVariableSet and removeVariableSet are one undo step each', async () => {
     const varId = st().project!.variables![0].id;
@@ -243,7 +243,7 @@ describe('store (ADR-164)', () => {
   });
 });
 
-describe('seeded fuzz: random sets build with no throw (ADR-164)', () => {
+describe('seeded fuzz: random sets build with no throw (ADR-167)', () => {
   it('projects with sets', () => {
     let seed = 11;
     const rnd = () => {

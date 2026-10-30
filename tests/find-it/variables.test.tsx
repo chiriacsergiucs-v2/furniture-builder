@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-// Find-it for ADR-163 (N165) in jsdom (ADR-108): project variables and bindings — from the bare app, by role and
-// visible text, at desktop and phone widths. ADR-164's sets, rooms and 3D are checked by the browser script
+// Find-it for ADR-166 (N168) in jsdom (ADR-108): project variables and bindings — from the bare app, by role and
+// visible text, at desktop and phone widths. ADR-167's sets, rooms and 3D are checked by the browser script
 // `tools/variables/find-it.mjs` (Acceptance: browser).
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
@@ -22,7 +22,7 @@ async function projectWithTwoPieces(user: User) {
   }
 }
 
-describe.each(WIDTHS)('ADR-163 at %ipx (find-it)', (width) => {
+describe.each(WIDTHS)('ADR-166 at %ipx (find-it)', (width) => {
   it('Settings › Variables › Add variable; ƒ by Height binds it; 450 follows; Delete asks and unbinds', async () => {
     const { user } = await renderApp(width);
     await projectWithTwoPieces(user);

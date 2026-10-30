@@ -304,13 +304,13 @@ interface State {
   setProjectSetting: (key: SettingKey, value: ProjectSettings[SettingKey] | undefined) => string[];
   /** The piece takes the project's value of the setting again (ADR-124). One undo step. */
   followProject: (id: string, key: SettingKey) => void;
-  /** Project variables (ADR-163); each is one undo step. Deleting unbinds the pieces that used it. */
+  /** Project variables (ADR-166); each is one undo step. Deleting unbinds the pieces that used it. */
   addVariable: (name: string, expr: string) => string;
   updateVariable: (id: string, patch: { name?: string; expr?: string }) => void;
   deleteVariable: (id: string) => void;
-  /** Bind (or with null unbind) a piece's size, division or position to a variable or formula (ADR-163). */
+  /** Bind (or with null unbind) a piece's size, division or position to a variable or formula (ADR-166). */
   bindTarget: (itemId: string, target: string, expr: string | null) => void;
-  /** Value sets (ADR-164); each is one undo step. Removing a set removes its pieces. */
+  /** Value sets (ADR-167); each is one undo step. Removing a set removes its pieces. */
   addVariableSet: () => string;
   updateVariableSet: (
     id: string,
@@ -541,7 +541,7 @@ export const useDesign = create<State>((rawSet, get) => {
       syncDrill();
       return locked;
     }
-    // Bindings take their variables' values and value sets keep their duplicates (ADR-163, ADR-164); a bound field
+    // Bindings take their variables' values and value sets keep their duplicates (ADR-166, ADR-167); a bound field
     // the change tried to move is held and the reason shown.
     // Sets first, so a fresh duplicate takes its set's values in the same step.
     const bound = applyBindings(syncSets(linked));
@@ -1021,7 +1021,7 @@ export const useDesign = create<State>((rawSet, get) => {
       if (id && id === selectedItemId && id === drillItemId && selectedItemIds.length === 1) return;
       set({ selectedItemId: id, notice: null });
       const item = id ? project?.items.find((i) => i.id === id) : undefined;
-      // A value set's duplicate is edited through its original (ADR-164): nothing inside it is loaded.
+      // A value set's duplicate is edited through its original (ADR-167): nothing inside it is loaded.
       if (item && !item.set && !get().editingItemId) loadDrill(item, null);
       else set({ drillItemId: null });
     },

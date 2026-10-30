@@ -1,5 +1,5 @@
 /**
- * Project variables (ADR-163): named numbers or formulas (`bottom height = 400`, `top = total − bottom height`) that
+ * Project variables (ADR-166): named numbers or formulas (`bottom height = 400`, `top = total − bottom height`) that
  * drive piece sizes, inner division sizes and positions through bindings. A binding names a target on a project item
  * and a formula; the store evaluates every binding on each commit (`applyBindings`) and writes the number into the
  * design or the position, so every view, check, cut list and export reads plain numbers (ADR-004) and old readers
@@ -229,7 +229,7 @@ export interface Evaluated {
 }
 
 /**
- * Evaluate every variable: set 1 with `values` absent, or a value set (ADR-164) whose `values` replace the
+ * Evaluate every variable: set 1 with `values` absent, or a value set (ADR-167) whose `values` replace the
  * variables' own formulas by id (an absent or empty value is a problem). Cycles are reported on every variable in
  * them.
  */
@@ -477,7 +477,7 @@ export function writeTarget(item: ProjectItem, target: string, value: Mm): Proje
 // Bindings on a project
 // ---------------------------------------------------------------------------
 
-/** The variable values an item's bindings are evaluated with: its value set's (ADR-164), or set 1's. */
+/** The variable values an item's bindings are evaluated with: its value set's (ADR-167), or set 1's. */
 export function scopeFor(project: Project, item: Pick<ProjectItem, 'set'>): Map<string, number> {
   const vars = project.variables ?? [];
   const vs = item.set ? project.variableSets?.find((s) => s.id === item.set!.id) : undefined;
@@ -742,7 +742,7 @@ export function deleteVariable(project: Project, id: string): Project {
 }
 
 /**
- * Why the last change left a bound field where it was (ADR-163: a bound position axis does not move in Move mode or
+ * Why the last change left a bound field where it was (ADR-166: a bound position axis does not move in Move mode or
  * Move to): the first bound target whose value `tried` changed but `applied` holds, or null.
  */
 export function heldByBinding(

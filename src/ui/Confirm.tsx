@@ -10,7 +10,7 @@ import { Icon } from './icons';
 interface Ask {
   message: string;
   confirmLabel: string;
-  /** The other answer's label when it is a choice, not a cancel ("Keep" / "Remove", ADR-164). */
+  /** The other answer's label when it is a choice, not a cancel ("Keep" / "Remove", ADR-167). */
   cancelLabel?: string;
   danger: boolean;
   input?: string;

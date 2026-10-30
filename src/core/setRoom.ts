@@ -1,5 +1,5 @@
 /**
- * The room of a value set (ADR-164): the project's one room translated to the set's origin, drawn and checked there,
+ * The room of a value set (ADR-167): the project's one room translated to the set's origin, drawn and checked there,
  * never stored twice (ADR-011). Kept apart from `sets.ts` so `project.ts` can use it without a cycle.
  */
 import type { Room } from './room';

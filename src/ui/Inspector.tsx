@@ -761,7 +761,7 @@ function SplitEditor({
   onSelect: (id: string) => void;
 }) {
   const openings = useDesign((s) => s.model.spaces);
-  // In a project (ADR-163): a fixed size can follow a variable; the ƒ button binds it.
+  // In a project (ADR-166): a fixed size can follow a variable; the ƒ button binds it.
   const project = useDesign((s) => s.project);
   const drillId = useDesign((s) => s.drillItemId);
   const drilled = project?.items.find((i) => i.id === drillId);

@@ -1,4 +1,4 @@
-/** Russian text for project variables and value sets (ADR-163, ADR-164). Key: the English text; value: the Russian text. */
+/** Russian text for project variables and value sets (ADR-166, ADR-167). Key: the English text; value: the Russian text. */
 export const ru_variables = {
   // features
   'Project variables and formulas': 'Переменные и формулы проекта',

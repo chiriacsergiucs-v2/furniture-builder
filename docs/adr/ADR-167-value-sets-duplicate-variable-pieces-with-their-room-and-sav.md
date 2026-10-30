@@ -1,10 +1,10 @@
-# ADR-164: Value sets duplicate variable pieces with their room and save a set as a separate project
+# ADR-167: Value sets duplicate variable pieces with their room and save a set as a separate project
 
 - Status: Pending
 - Date: 2026-10-30
-- Depends on: ADR-111, ADR-163
+- Depends on: ADR-111, ADR-166
 - Design: docs/ui-design.md (Configure, plan, 3D view)
-- Backlog: N166
+- Backlog: N169
 - Acceptance: browser
 - Agreed: 2026-10-30 (every question answered in the interactive questions; the answers are quoted below)
 
@@ -28,7 +28,7 @@ new set starts **empty and is drawn only when complete**; with a room the set ge
 becoming set 1**; afterwards the user **stays in the current project**.
 
 **Change control.** Project document (ADR-011): `Project.variableSets`, `ProjectItem.set`, `schemaVersion` 16
-(shared with ADR-163). The room (ADR-058) stays one stored room; a set's room is that room translated to the set's
+(shared with ADR-166). The room (ADR-058) stays one stored room; a set's room is that room translated to the set's
 origin, drawn and checked there, never stored twice. Linked copies
 ([ADR-111](../adr-done/ADR-111-linked-copies-of-a-piece-in-a-project.md)) carry the design
 between a piece and its set duplicates.
@@ -40,9 +40,9 @@ between a piece and its set duplicates.
    `origin` = `(W + 500) × (N − 1)` on x, 0 on z, where W is the room's outline width, or the x extent of the set-1
    pieces without a room; the origin is editable on the set's card (**Set origin**), which moves the whole set.
 2. **Complete sets draw.** A set is complete when every variable has a value that evaluates (formulas as in
-   ADR-163). The store (`syncSets`, on every commit) keeps, for each complete set, one duplicate of every member
+   ADR-166). The store (`syncSets`, on every commit) keeps, for each complete set, one duplicate of every member
    piece: a bound piece, every piece placed on or above one (ADR-031, through a chain) and every piece grouped with
-   one (ADR-097) — the critique answer that closes G-321. `ProjectItem.set = { id, of: originalId }`; the
+   one (ADR-097) — the critique answer that closes G-327. `ProjectItem.set = { id, of: originalId }`; the
    duplicate's design, bindings and template reference are copied from the original on every commit (one way: an
    edit of the duplicate is overwritten; its card says "Edit the set-1 piece"), bound values evaluated with the
    set's values, position = the original's + the set origin at creation (then its own: Move mode moves it). Groups
@@ -52,7 +52,7 @@ between a piece and its set duplicates.
 3. **Room per set.** With a room, each complete set draws the room (walls, doors, windows, obstacles, wall
    finishes) translated to its origin in the plan and in 3D, and the room checks (ADR-057, ADR-058) of a set's
    pieces run against that translated room. Run parts for a set's pieces come from the automatic refresh
-   (ADR-061); user run requests are not copied (G-320).
+   (ADR-061); user run requests are not copied (G-326).
 4. **Save as separate project.** On a complete set's card. The new project: name `<project> — <set name>`, new ids
    (ADR-011), every piece not in a set plus the set's duplicates placed at their originals' positions (origin
    removed), `variables` with the set's values as their `expr`, no sets, the room, project settings, groups and run
@@ -76,7 +76,7 @@ between a piece and its set duplicates.
 
 - In scope: core (`sets.ts`, validation, migration), store actions, Variables page set cards, plan and 3D room
   per set, save as separate project with the keep/remove question, tests, fuzz, browser find-it (3D and plan).
-- Out of scope: run requests, run handles and sinks per set (G-320). G-321 (pieces on or grouped with a bound
+- Out of scope: run requests, run handles and sinks per set (G-326). G-327 (pieces on or grouped with a bound
   piece) was pulled in by the critique answer of 2026-10-30.
 
 ## Consequences

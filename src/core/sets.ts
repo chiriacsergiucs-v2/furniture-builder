@@ -1,5 +1,5 @@
 /**
- * Value sets (ADR-164): a second, third… set of values for the project's variables (ADR-163). Set 1 is the variables
+ * Value sets (ADR-167): a second, third… set of values for the project's variables (ADR-166). Set 1 is the variables
  * themselves. A complete set (every variable has a value that evaluates) has one duplicate of every bound piece,
  * linked to its original (ADR-111) so design edits reach it, bound values evaluated with the set's values, placed at
  * the set's origin. With a room, the set draws the room translated to its origin and its pieces are checked against
@@ -143,7 +143,7 @@ const content = (d: Design): string => {
 };
 
 /**
- * The set-1 pieces a set duplicates (ADR-164, G-321 closed): every bound piece, every piece placed on or above one
+ * The set-1 pieces a set duplicates (ADR-167, G-327 closed): every bound piece, every piece placed on or above one
  * of them (ADR-031, through a chain) and every piece grouped with one of them (ADR-097).
  */
 export function setMembers(project: Project): Set<string> {
@@ -164,7 +164,7 @@ export function setMembers(project: Project): Set<string> {
 
 /**
  * Keep every complete set's duplicates in step with set 1: one duplicate per member piece (`setMembers`), its
- * design, bindings and template reference the original's (one way, ADR-164: a duplicate is edited through its
+ * design, bindings and template reference the original's (one way, ADR-167: a duplicate is edited through its
  * original); a duplicate whose original is gone or left the members goes. An incomplete set keeps what it has.
  * The same project when nothing changes; every commit applies it.
  */
@@ -256,7 +256,7 @@ export function syncSets(project: Project): Project {
 }
 
 /**
- * The whole project at a set's values as its own project (ADR-164): every piece not in a set plus the set's
+ * The whole project at a set's values as its own project (ADR-167): every piece not in a set plus the set's
  * duplicates at their originals' positions, the set's values as set 1, no sets, the room, settings, groups and run
  * requests pruned to the surviving pieces. New ids (ADR-011). Null for an unknown or incomplete set.
  */

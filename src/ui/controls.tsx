@@ -28,7 +28,7 @@ export function MmField({
   info?: ReactNode;
   /** Shown but not changeable (a size-locked piece, ADR-122). */
   disabled?: boolean;
-  /** A control after the field, inside its box (the ƒ bind button, ADR-163). */
+  /** A control after the field, inside its box (the ƒ bind button, ADR-166). */
   trailing?: ReactNode;
 }) {
   const id = useId();
