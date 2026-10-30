@@ -1,7 +1,8 @@
 # ADR-166: Project variables and formulas that drive piece sizes
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-30
+- Implemented: 2026-10-30
 - Depends on: ADR-124
 - Design: docs/ui-design.md (Configure, selected-piece card)
 - Backlog: N168

@@ -1,7 +1,8 @@
 # ADR-167: Value sets duplicate variable pieces with their room and save a set as a separate project
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-30
+- Implemented: 2026-10-30
 - Depends on: ADR-111, ADR-166
 - Design: docs/ui-design.md (Configure, plan, 3D view)
 - Backlog: N169
