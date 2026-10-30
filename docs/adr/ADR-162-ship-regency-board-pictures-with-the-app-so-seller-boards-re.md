@@ -71,7 +71,8 @@ repository instead of fetching them from the seller.
 `src/core/sellers/index.ts`,
 same-origin download in `src/online/sellerPictureFile.ts`, `AppPicture` in `src/ui/ProductPicker.tsx`. Tests:
 `tests/seller-pictures.test.ts`, `tests/find-it/seller-pictures.test.tsx`. The pictures arrive in a separate pull
-request opened by the workflow; until then every board falls back to the seller's site (ADR-161).
+request opened by the workflow; until then every board falls back to the seller's site (ADR-161). Run 41029644448
+shipped 1 453 pictures (63 MB, 512 × 512); one unreadable download was dropped (pull request #148).
 
 ## Answers (user, 2026-10-30)
 
