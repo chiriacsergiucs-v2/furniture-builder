@@ -148,6 +148,8 @@ export function ProjectPanel({
   const select = useDesign((s) => s.selectItem);
   const toggleItem = useDesign((s) => s.toggleItem);
   const selectedIds = useDesign((s) => s.selectedItemIds);
+  const multi = useDesign((s) => s.multiSelect);
+  const setMulti = useDesign((s) => s.setMultiSelect);
   const update = useDesign((s) => s.updateItem);
   const setRotation = useDesign((s) => s.setRotation);
   const remove = useDesign((s) => s.removeItem);
@@ -245,9 +247,13 @@ export function ProjectPanel({
         </div>
       </header>
       {project.items.length > 0 && (
-        <h3 className="list-head" id="pieces-head">
-          {t('Pieces')}
-        </h3>
+        <div className="list-head-row">
+          <h3 className="list-head" id="pieces-head">
+            {t('Pieces')}
+          </h3>
+          {/* The views' Select (ADR-097), shared: a tap on a row adds or removes the piece (ADR-159). */}
+          <Toggle label={t('Select')} checked={multi} onChange={setMulti} />
+        </div>
       )}
       {project.items.length === 0 ? (
         <p className="empty center">
@@ -265,7 +271,7 @@ export function ProjectPanel({
                   className={`row-btn ${selectedIds.includes(i.id) ? 'on' : ''}`}
                   aria-pressed={selectedIds.includes(i.id)}
                   onClick={(e) =>
-                    e.shiftKey || e.ctrlKey || e.metaKey ? toggleItem(i.id) : select(i.id)
+                    multi || e.shiftKey || e.ctrlKey || e.metaKey ? toggleItem(i.id) : select(i.id)
                   }
                 >
                   <span>
@@ -1849,9 +1855,15 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
   const selectedId = useDesign((s) => s.selectedItemId);
   const select = useDesign((s) => s.selectItem);
   const tapItem = useDesign((s) => s.tapItem);
+  // Several selected pieces (ADR-159): Select on, or Shift/Ctrl/Cmd, adds or removes the whole piece.
+  const selectedIds = useDesign((s) => s.selectedItemIds);
+  const multi = useDesign((s) => s.multiSelect);
+  const setMulti = useDesign((s) => s.setMultiSelect);
+  const toggleItem = useDesign((s) => s.toggleItem);
   // A tap on the selected piece opens it with the space under the tap selected (ADR-083). Seen from the front, a
   // piece turned a quarter shows its side, so it opens with the whole piece selected.
   const tapFront = (e: MouseEvent<SVGRectElement>, item: ProjectItem) => {
+    if (multi || e.shiftKey || e.ctrlKey || e.metaKey) return toggleItem(item.id);
     const m = e.currentTarget.ownerSVGElement?.getScreenCTM();
     if (!m || item.rotationY % 180 !== 0) return tapItem(item.id);
     const pt = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse());
@@ -1941,10 +1953,14 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
   }, [at?.x, at?.y, at?.w, at?.h, tick, pm]);
   return (
     <figure
-      className="plan"
+      className="plan with-tools"
       ref={figRef}
       aria-label={t('Room seen from the front. Select a piece.')}
     >
+      <div className="plan-tools">
+        {/* The plan's Select (ADR-097), shared: taps add and remove pieces (ADR-159). */}
+        <Toggle label={t('Select')} checked={multi} onChange={setMulti} />
+      </div>
       <InfoTip label={t('About the front view')}>
         {t('Seen from the front. Sizes in mm: overall in yellow, the selected piece in green.')}
         {rv &&
@@ -2009,7 +2025,7 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
         {structure.map(({ p, pc }) => (
           <polygon
             key={p.id}
-            className={`el-panel ${pc.item.id === selectedId && !space ? 'hl' : ''}${fade(p.box)}`}
+            className={`el-panel ${selectedIds.includes(pc.item.id) && !space ? 'hl' : ''}${fade(p.box)}`}
             points={outlinePoints(p)}
             style={{ fill: colors.get(`${pc.item.id}:${p.materialId}`) }}
           />
@@ -2028,7 +2044,7 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
             height={pc.bounds.h}
             role="button"
             tabIndex={0}
-            aria-pressed={pc.item.id === selectedId}
+            aria-pressed={selectedIds.includes(pc.item.id)}
             aria-label={t('{name}, {w} wide, {h} high', {
               name: tr(pc.item.design.name),
               w: pc.bounds.w,

@@ -221,6 +221,11 @@ export const FEATURES: FeatureDomain[] = [
         detail: 'Shift- or Ctrl-click, Select on a phone, or Ctrl+A.',
         adrs: ['ADR-097'],
       },
+      {
+        name: 'Select several pieces in the front view, 3D and the piece list',
+        detail: 'One Select switch shared by every view.',
+        adrs: ['ADR-159'],
+      },
       { name: 'Selection box on the plan', adrs: ['ADR-097'] },
       { name: 'Cycle through overlapping pieces', adrs: ['ADR-097'] },
       {

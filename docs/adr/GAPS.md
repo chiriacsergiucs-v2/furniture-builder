@@ -2584,3 +2584,21 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: add support for Russian language ... also translate all the existing content
 - Questions: Should the English CSV use commas, as English Excel expects?
 - Suggested pick: Ask the user; semicolons stay until answered
+
+### G-307: Plan layer filter (All / Floor / Wall) for stacked pieces
+
+- Status: Open
+- Origin: ADR-159
+- Missing: A layer filter on the plan so taps and box select reach only floor or only wall pieces where they overlap.
+- Request: The select is broken, wall and floor items are overlapping, correct select impossible (picked 'Layer filter', then 'Keep plan as is', 2026-10-29)
+- Questions: Build a plan layer filter at all, now that the front view, 3D and the piece list select several pieces?
+- Suggested pick: None suggested: the user's latest answer keeps the plan as is.
+
+### G-308: Selection box in the front view and the 3D view
+
+- Status: Open
+- Origin: ADR-159
+- Missing: Dragging on empty space in the room front view or the 3D view does not draw a selection box; only taps (Select on, or Shift/Ctrl-click) add pieces there.
+- Request: Add the select to 3d, so i can click on them to multiselect
+- Questions: Should the front view and 3D also get a drag-to-box selection?
+- Suggested pick: Front view only (3D drags orbit the camera); closest to the plan's existing box.
