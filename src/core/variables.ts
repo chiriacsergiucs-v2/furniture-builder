@@ -377,6 +377,37 @@ export function readTarget(item: ProjectItem, target: string): number | undefine
   return undefined;
 }
 
+/** The whole-mm range a target accepts (the same limits as its field); null when the piece has no such part. */
+export function targetRange(item: ProjectItem, target: string): { min: Mm; max: Mm } | null {
+  const s = splitTarget(target);
+  if (s) return hasTarget(item, target) ? { min: 1, max: 10000 } : null;
+  switch (target) {
+    case 'width':
+    case 'height':
+    case 'depth': {
+      const f = sizeFields(item.design.product).find((x) => x.key === target);
+      return f ? { min: f.min, max: f.max } : null;
+    }
+    case 'mountHeight':
+      return hasTarget(item, target) ? { min: 0, max: 3000 } : null;
+    case 'y':
+      return { min: 0, max: 3000 };
+    case 'x':
+    case 'z':
+      return { min: -20000, max: 20000 };
+  }
+  return null;
+}
+
+/** Why a value cannot go into a target, or null: outside the field's range (ADR-008: never clamped silently). */
+export function rangeProblem(item: ProjectItem, target: string, value: Mm): string | null {
+  const r = targetRange(item, target);
+  if (!r) return null;
+  if (value < r.min || value > r.max)
+    return t('{n} mm is outside {min}–{max} mm.', { n: value, min: r.min, max: r.max });
+  return null;
+}
+
 /** Whether the piece has the part a target names (so it can be bound). */
 export function hasTarget(item: ProjectItem, target: string): boolean {
   const s = splitTarget(target);
@@ -472,7 +503,7 @@ export function applyBindings(project: Project): Project {
     let next = item;
     for (const b of item.bindings) {
       const e = evaluateBinding(b.expr, scopeOf(item));
-      if (e.value === undefined) continue;
+      if (e.value === undefined || rangeProblem(next, b.target, e.value)) continue;
       next = writeTarget(next, b.target, e.value);
     }
     if (next !== item) changed = true;
@@ -535,6 +566,18 @@ export function variableDiagnostics(project: Project): Diagnostic[] {
             name: item.design.name,
             field: targetLabel(b.target),
             problem: e.problem,
+          }),
+          nodeId: item.id,
+        });
+      else if (e.value !== undefined && rangeProblem(item, b.target, e.value))
+        out.push({
+          severity: 'error',
+          code: 'binding-range',
+          message: t('{name}, {field}: {problem} The field keeps {n} mm.', {
+            name: item.design.name,
+            field: targetLabel(b.target),
+            problem: rangeProblem(item, b.target, e.value)!,
+            n: readTarget(item, b.target) ?? 0,
           }),
           nodeId: item.id,
         });

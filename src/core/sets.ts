@@ -15,7 +15,7 @@ import {
   type Project,
   type ProjectItem,
 } from './project';
-import { evaluateVariables } from './variables';
+import { evaluateVariables, readTarget, writeTarget } from './variables';
 import type { Design } from './types';
 import type { VariableSet } from './setRoom';
 
@@ -116,6 +116,7 @@ function duplicateFor(src: ProjectItem, set: VariableSet): ProjectItem {
     ...rest,
     id: newId(),
     design: { ...rest.design, id: newId() },
+    ...(src.bindings ? { bindings: src.bindings } : {}),
     set: { id: set.id, of: src.id },
     position: {
       ...src.position,
@@ -185,12 +186,21 @@ export function syncSets(project: Project): Project {
         changed = true;
         continue;
       }
-      const sameDesign = content(d.design) === content(src.design);
+      // The original's design with the duplicate's own bound values: what the duplicate should hold.
+      let want = { ...d, design: designFor(src.design, d.design.id) };
+      for (const b of src.bindings ?? []) {
+        const v = readTarget(d, b.target);
+        if (v !== undefined) want = writeTarget(want, b.target, v);
+      }
+      const sameDesign = content(d.design) === content(want.design);
       const sameRef = JSON.stringify(d.ref ?? null) === JSON.stringify(src.ref ?? null);
-      if (!sameDesign || d.bindings !== src.bindings || !sameRef) {
+      const sameBindings =
+        d.bindings === src.bindings ||
+        JSON.stringify(d.bindings ?? null) === JSON.stringify(src.bindings ?? null);
+      if (!sameDesign || !sameBindings || !sameRef) {
         items[n] = {
           ...d,
-          design: sameDesign ? d.design : designFor(src.design, d.design.id),
+          design: sameDesign ? d.design : want.design,
           ...(src.bindings ? { bindings: src.bindings } : {}),
           ...(src.ref ? { ref: structuredClone(src.ref) } : {}),
         };
@@ -211,8 +221,11 @@ export function syncSets(project: Project): Project {
   // A duplicate placed on a piece follows that piece's duplicate in its set, or stands free at its position.
   const dupOf = new Map<string, string>();
   for (const i of items) if (i.set) dupOf.set(`${i.set.id}:${i.set.of}`, i.id);
+  const setOf = new Map(items.map((i) => [i.id, i.set?.id]));
   const placed = items.map((i) => {
     if (!i.set || i.placement?.kind !== 'above') return i;
+    // Already on its set's own copy of the base.
+    if (setOf.get(i.placement.baseId) === i.set.id) return i;
     const base = dupOf.get(`${i.set.id}:${i.placement.baseId}`);
     if (base)
       return i.placement.baseId === base

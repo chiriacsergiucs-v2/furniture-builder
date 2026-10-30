@@ -10,6 +10,8 @@ import { Icon } from './icons';
 interface Ask {
   message: string;
   confirmLabel: string;
+  /** The other answer's label when it is a choice, not a cancel ("Keep" / "Remove", ADR-164). */
+  cancelLabel?: string;
   danger: boolean;
   input?: string;
   resolve: (v: string | boolean | null) => void;
@@ -18,13 +20,14 @@ const useAsk = create<{ ask: Ask | null }>(() => ({ ask: null }));
 
 export const askConfirm = (
   message: string,
-  opts: { confirmLabel?: string; danger?: boolean } = {},
+  opts: { confirmLabel?: string; cancelLabel?: string; danger?: boolean } = {},
 ): Promise<boolean> =>
   new Promise((resolve) =>
     useAsk.setState({
       ask: {
         message,
         confirmLabel: opts.confirmLabel ?? t('OK'),
+        cancelLabel: opts.cancelLabel,
         danger: !!opts.danger,
         resolve: (v) => resolve(v === true),
       },
@@ -107,7 +110,7 @@ export function ConfirmHost() {
               className="btn outline"
               onClick={() => done(ask.input !== undefined ? null : false)}
             >
-              {t('Cancel')}
+              {ask.cancelLabel ?? t('Cancel')}
             </button>
             <button
               type="submit"

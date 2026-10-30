@@ -126,4 +126,7 @@ export const ru_variables = {
   'All variables and value sets…': 'Все переменные и наборы значений…',
   'A copy of the set-1 piece: change the size there.':
     'Копия изделия набора 1: меняйте размер там.',
+  '{n} mm is outside {min}–{max} mm.': '{n} мм вне диапазона {min}–{max} мм.',
+  '{name}, {field}: {problem} The field keeps {n} mm.':
+    '{name}, {field}: {problem} Поле сохраняет {n} мм.',
 } satisfies Record<string, string>;

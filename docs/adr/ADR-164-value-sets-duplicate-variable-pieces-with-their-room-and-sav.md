@@ -88,16 +88,16 @@ between a piece and its set duplicates.
 
 ## Done when
 
-- [ ] Add set, fill values → one duplicate per bound piece, linked, at the right position, bound values from the set;
+- [x] Add set, fill values → one duplicate per bound piece, linked, at the right position, bound values from the set;
       an incomplete set has none (`tests/sets.test.ts`)
-- [ ] A design edit on an original reaches its duplicate, an edit of the duplicate is overwritten; a bound value is
+- [x] A design edit on an original reaches its duplicate, an edit of the duplicate is overwritten; a bound value is
       not copied; unbinding removes duplicates; a piece on a bound piece and a grouped piece duplicate too (tests)
-- [ ] With a room, the set's pieces are checked against the room translated to the set origin; the plan and 3D
+- [x] With a room, the set's pieces are checked against the room translated to the set origin; the plan and 3D
       model list one room box per complete set (tests)
-- [ ] Save as separate project: new ids, pieces at the originals' positions, the set's values as set 1, room and
+- [x] Save as separate project: new ids, pieces at the originals' positions, the set's values as set 1, room and
       settings kept, run parts pruned; Remove deletes the set in one undo step (tests)
-- [ ] Project `schemaVersion` 16 with sets validates; fuzz 3,000 seeded projects with sets build with no throw
-- [ ] Browser find-it `tools/variables/find-it.mjs` on the production build (1280 and 390 px): a base cabinet
+- [x] Project `schemaVersion` 16 with sets validates; fuzz 3,000 seeded projects with sets build with no throw
+- [x] Browser find-it `tools/variables/find-it.mjs` on the production build (1280 and 390 px): a base cabinet
       bound to `bottom height` in a 3000-wide room → **Add set** → value 450 → a second cabinet and a second room
       outline to the right in the plan and 3D → **Save as separate project** → **Remove** → one cabinet left; the
       new project opens from Projects with the cabinet 450 high; no horizontal scroll at 390 px

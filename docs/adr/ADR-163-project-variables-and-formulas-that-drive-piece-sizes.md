@@ -79,17 +79,17 @@ bound values are the one part a link does not copy (below).
 
 ## Done when
 
-- [ ] `bottom height = 400` → three pieces bound on `height` are 400 high; set to 450 → all three are 450, one undo
+- [x] `bottom height = 400` → three pieces bound on `height` are 400 high; set to 450 → all three are 450, one undo
       step (`tests/variables.test.ts`)
-- [ ] Formula `bottom height + 18` and `1000 / 3` → 333 with the unrounded value reported; unknown name, cycle and
+- [x] Formula `bottom height + 18` and `1000 / 3` → 333 with the unrounded value reported; unknown name, cycle and
       `/ 0` give diagnostics, the bound size keeps its number, export is blocked (tests)
-- [ ] A bound split size, mount height and position follow the variable; a bound axis does not move in Move to or
+- [x] A bound split size, mount height and position follow the variable; a bound axis does not move in Move to or
       Move mode (tests)
-- [ ] Deleting a used variable lists its pieces and unbinds them; rename follows into formulas and bindings (tests)
-- [ ] Project `schemaVersion` 16 validates, a 15 file loads, a linked copy keeps its own bound values
+- [x] Deleting a used variable lists its pieces and unbinds them; rename follows into formulas and bindings (tests)
+- [x] Project `schemaVersion` 16 validates, a 15 file loads, a linked copy keeps its own bound values
       (`tests/project-doc.test.ts`)
-- [ ] Fuzz: 3,000 seeded projects with random variables and bindings build with no throw
-- [ ] Find-it `tests/find-it/variables.test.tsx` (390 and 1280 px): **Variables** → **Add variable** → `bottom
+- [x] Fuzz: 3,000 seeded projects with random variables and bindings build with no throw
+- [x] Find-it `tests/find-it/variables.test.tsx` (390 and 1280 px): **Variables** → **Add variable** → `bottom
 height` `400` → selected piece → **ƒ** by Height → pick it → field reads `bottom height = 400`; change to 450
       → the piece is 450 high; **Delete** asks and unbinds
 

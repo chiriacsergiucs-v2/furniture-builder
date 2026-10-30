@@ -310,7 +310,7 @@ function ValueSets({ project }: { project: Project }) {
     setSaved({ name: p.name, project: p });
     const keep = await askConfirm(
       t('Saved as “{name}”. Keep {set} in this project?', { name: p.name, set: set.name }),
-      { confirmLabel: t('Keep') },
+      { confirmLabel: t('Keep'), cancelLabel: t('Remove') },
     );
     if (!keep) removeSet(set.id);
   };

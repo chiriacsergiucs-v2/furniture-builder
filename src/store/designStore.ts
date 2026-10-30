@@ -543,7 +543,8 @@ export const useDesign = create<State>((rawSet, get) => {
     }
     // Bindings take their variables' values and value sets keep their duplicates (ADR-163, ADR-164); a bound field
     // the change tried to move is held and the reason shown.
-    const bound = syncSets(applyBindings(linked));
+    // Sets first, so a fresh duplicate takes its set's values in the same step.
+    const bound = applyBindings(syncSets(linked));
     const held = heldByBinding(get().project, linked, bound);
     const stamped = {
       ...refreshRunParts(resolvePlacements(pruneRunExtras(pruneGroups(bound)))),
