@@ -27,6 +27,7 @@ import {
   rotationOf,
   type Placement,
   type ProjectItem,
+  type Project,
   type ProjectModel,
   type QuarterTurn,
 } from '../core/project';
@@ -108,6 +109,8 @@ import { SavedToCatalog, SaveToCatalogDialog } from './SaveToCatalog';
 import { NewerTemplates, TemplateNotice } from './TemplateRevision';
 import { GroupList, SelectionCard } from './Selection';
 import { PieceProjectSettings, ProjectSettingsPanel } from './ProjectSettings';
+import { BindButton, bindingHint, VariablesPanel, VariablesStrip } from './Variables';
+import { setRooms } from '../core/setRoom';
 import { ProjectHistory } from './History';
 
 const FRONT_SIDE: Record<QuarterTurn, string> = {
@@ -210,6 +213,7 @@ export function ProjectPanel({
       <div className="inspector">
         <RunParts />
         <ProjectSettingsPanel />
+        <VariablesPanel />
         <MmField
           label={t('Saw cut (kerf) for this project')}
           value={project.cutting?.kerf ?? 4}
@@ -375,6 +379,7 @@ export function ProjectPanel({
             </p>
           )}
           <TemplateNotice item={item} />
+          <SetNote item={item} />
           <LinkedCopies item={item} />
           {!(drillId === item.id && insideSelected) && (
             <PieceSize
@@ -382,13 +387,22 @@ export function ProjectPanel({
               key={`size-${item.id}`}
               product={item.design.product}
               onChange={(k, v) => resizeItem(item.id, k, v)}
-              locked={isSizeLocked(item)}
+              locked={isSizeLocked(item) || !!item.set}
+              lockedHint={
+                item.set ? t('A copy of the set-1 piece: change the size there.') : undefined
+              }
+              bind={(k) => ({
+                button: <BindButton itemId={item.id} target={k} />,
+                hint: bindingHint(project, item, k),
+              })}
             />
           )}
-          <button type="button" className="btn solid block" onClick={() => edit(item.id)}>
-            <Icon name="pencil" className="sm" />
-            {t('Edit this piece')}
-          </button>
+          {!item.set && (
+            <button type="button" className="btn solid block" onClick={() => edit(item.id)}>
+              <Icon name="pencil" className="sm" />
+              {t('Edit this piece')}
+            </button>
+          )}
           <ArrangeFields key={item.id} item={item} />
           {libMsg && (
             <p className="hint" role="status">
@@ -492,6 +506,7 @@ export function ProjectPanel({
       <NewerTemplates items={project.items} />
       <GroupList />
       <ModelList pm={pm} />
+      <VariablesStrip />
       <RoomSection />
       <ProjectHistory />
     </div>
@@ -751,6 +766,33 @@ function GroupErrors({ messages }: { messages: string[] }) {
   ));
 }
 
+/** A value set's duplicate (ADR-167): which set, and which set-1 piece it copies. */
+function SetNote({ item }: { item: ProjectItem }) {
+  const project = useDesign((s) => s.project)!;
+  const select = useDesign((s) => s.selectItem);
+  if (!item.set) return null;
+  const set = project.variableSets?.find((s) => s.id === item.set!.id);
+  const of = project.items.find((i) => i.id === item.set!.of);
+  return (
+    <p className="hint set-note" role="note">
+      {t('{set} of {name}', {
+        set: set?.name ?? t('Set'),
+        name: tr(of?.design.name ?? item.design.name),
+      })}
+      {'. '}
+      {t('Edit the set-1 piece; this copy follows it.')}
+      {of && (
+        <>
+          {' '}
+          <button type="button" className="btn sm outline" onClick={() => select(of.id)}>
+            {t('Go to it')}
+          </button>
+        </>
+      )}
+    </p>
+  );
+}
+
 /**
  * Linked copies (ADR-111): how many copies share this piece's design, and whether a change reaches all of them.
  */
@@ -926,6 +968,8 @@ function PlacementFields({ item }: { item: ProjectItem }) {
     else if (bases.length)
       update(item.id, { placement: { kind: 'above', baseId: bases[0].id, gap: 0, offsetX: 0 } });
   };
+  // A bound axis follows its variable (ADR-166): the field is off and says what it follows.
+  const hint = (target: string) => bindingHint(project, item, target);
   const xz = (
     <div className="dims2">
       <MmField
@@ -934,6 +978,9 @@ function PlacementFields({ item }: { item: ProjectItem }) {
         min={-20000}
         max={20000}
         onChange={(v) => update(item.id, { position: { ...pos, x: v } })}
+        disabled={!!hint('x')}
+        hint={hint('x')}
+        trailing={<BindButton itemId={item.id} target="x" />}
       />
       <MmField
         label={t('From back')}
@@ -941,6 +988,9 @@ function PlacementFields({ item }: { item: ProjectItem }) {
         min={-20000}
         max={20000}
         onChange={(v) => update(item.id, { position: { ...pos, z: v } })}
+        disabled={!!hint('z')}
+        hint={hint('z')}
+        trailing={<BindButton itemId={item.id} target="z" />}
       />
     </div>
   );
@@ -975,6 +1025,9 @@ function PlacementFields({ item }: { item: ProjectItem }) {
             min={0}
             max={3000}
             onChange={(v) => update(item.id, { placement: { ...pl, height: v } })}
+            disabled={!!hint('mountHeight')}
+            hint={hint('mountHeight')}
+            trailing={<BindButton itemId={item.id} target="mountHeight" />}
           />
         </>
       )}
@@ -1018,6 +1071,9 @@ function PlacementFields({ item }: { item: ProjectItem }) {
             min={-20000}
             max={20000}
             onChange={(v) => update(item.id, { position: { ...pos, x: v } })}
+            disabled={!!hint('x')}
+            hint={hint('x')}
+            trailing={<BindButton itemId={item.id} target="x" />}
           />
           <MmField
             label={t('From back')}
@@ -1025,6 +1081,9 @@ function PlacementFields({ item }: { item: ProjectItem }) {
             min={-20000}
             max={20000}
             onChange={(v) => update(item.id, { position: { ...pos, z: v } })}
+            disabled={!!hint('z')}
+            hint={hint('z')}
+            trailing={<BindButton itemId={item.id} target="z" />}
           />
           <MmField
             label={t('Above floor')}
@@ -1032,6 +1091,9 @@ function PlacementFields({ item }: { item: ProjectItem }) {
             min={0}
             max={3000}
             onChange={(v) => update(item.id, { position: { ...pos, y: v } })}
+            disabled={!!hint('y')}
+            hint={hint('y')}
+            trailing={<BindButton itemId={item.id} target="y" />}
           />
         </div>
       )}
@@ -1331,7 +1393,12 @@ function RoomPlan({
     });
     return () => registerPlanHit(null);
   }, []);
-  const pts = [...(room?.outline ?? []), ...(drawing ?? [])];
+  // The value sets' room copies are framed too (ADR-167).
+  const pts = [
+    ...(room?.outline ?? []),
+    ...(drawing ?? []),
+    ...(project ? setRooms(project).flatMap((sr) => sr.room.outline) : []),
+  ];
   // With Clearances on, the view also frames the zones (chair or service space beyond the pieces); models always.
   const framed = [
     ...(showZones ? pm.zones.map((z) => z.box) : pm.pieces.map((p) => p.bounds)),
@@ -1474,8 +1541,18 @@ function RoomPlan({
             : undefined
         }
       >
+        {project && <SetTags project={project} pm={pm} fs={fs} />}
         {room ? (
-          <RoomOutline room={room} fs={fs} />
+          <>
+            <RoomOutline room={room} fs={fs} />
+            {/* A value set's room copy at its origin (ADR-167). */}
+            {project &&
+              setRooms(project).map((sr) => (
+                <g key={sr.set.id} className="set-room" aria-label={sr.set.name}>
+                  <RoomOutline room={sr.room} fs={fs} />
+                </g>
+              ))}
+          </>
         ) : (
           <>
             <line className="wall" x1={x0 - pad} y1={0} x2={x1 + pad} y2={0} />
@@ -1788,6 +1865,33 @@ function LockBadge({ x, y, size }: { x: number; y: number; size: number }) {
     >
       {t('Locked')}
     </text>
+  );
+}
+
+/** A value set's name over its pieces on the plan (ADR-167). */
+function SetTags({ project, pm, fs }: { project: Project; pm: ProjectModel; fs: number }) {
+  const sets = project.variableSets ?? [];
+  if (!sets.length) return null;
+  const rooms = new Map(setRooms(project).map((sr) => [sr.set.id, sr.room]));
+  return (
+    <>
+      {sets.map((set) => {
+        const pcs = pm.pieces.filter((pc) => pc.item.set?.id === set.id);
+        const room = rooms.get(set.id);
+        if (!pcs.length && !room) return null;
+        const x = room
+          ? Math.min(...room.outline.map((p) => p[0]))
+          : Math.min(...pcs.map((pc) => pc.bounds.x));
+        const z = room
+          ? Math.min(...room.outline.map((p) => p[1]))
+          : Math.min(...pcs.map((pc) => pc.bounds.z));
+        return (
+          <text key={set.id} className="set-tag" x={x} y={z - fs * 0.6} fontSize={fs * 1.1}>
+            {set.name}
+          </text>
+        );
+      })}
+    </>
   );
 }
 

@@ -117,6 +117,15 @@ import type {
 } from '../core/types';
 import type { LocalTemplate } from '../core/catalog/local';
 import { t } from '../core/i18n';
+import { addSet, removeSet, updateSet, syncSets, type VariableSet } from '../core/sets';
+import {
+  addVariable,
+  applyBindings,
+  deleteVariable,
+  heldByBinding,
+  setBinding,
+  updateVariable,
+} from '../core/variables';
 
 /** A space selection that no longer exists in the design falls back to the whole piece. */
 const keepSelection = (d: Design, sel: Selection): Selection =>
@@ -305,6 +314,19 @@ interface State {
   setProjectSetting: (key: SettingKey, value: ProjectSettings[SettingKey] | undefined) => string[];
   /** The piece takes the project's value of the setting again (ADR-124). One undo step. */
   followProject: (id: string, key: SettingKey) => void;
+  /** Project variables (ADR-166); each is one undo step. Deleting unbinds the pieces that used it. */
+  addVariable: (name: string, expr: string) => string;
+  updateVariable: (id: string, patch: { name?: string; expr?: string }) => void;
+  deleteVariable: (id: string) => void;
+  /** Bind (or with null unbind) a piece's size, division or position to a variable or formula (ADR-166). */
+  bindTarget: (itemId: string, target: string, expr: string | null) => void;
+  /** Value sets (ADR-167); each is one undo step. Removing a set removes its pieces. */
+  addVariableSet: () => string;
+  updateVariableSet: (
+    id: string,
+    patch: Partial<Pick<VariableSet, 'name' | 'values' | 'origin'>>,
+  ) => void;
+  removeVariableSet: (id: string) => void;
   /** Returns why it did not turn (a locked piece, ADR-095), or null. */
   turnItem: (id: string, dir: 1 | -1) => string | null;
   /**
@@ -542,8 +564,13 @@ export const useDesign = create<State>((rawSet, get) => {
       syncDrill();
       return locked;
     }
+    // Bindings take their variables' values and value sets keep their duplicates (ADR-166, ADR-167); a bound field
+    // the change tried to move is held and the reason shown.
+    // Sets first, so a fresh duplicate takes its set's values in the same step.
+    const bound = applyBindings(syncSets(linked));
+    const held = heldByBinding(get().project, linked, bound);
     const stamped = {
-      ...refreshRunParts(resolvePlacements(pruneRunExtras(pruneGroups(linked)))),
+      ...refreshRunParts(resolvePlacements(pruneRunExtras(pruneGroups(bound)))),
       schemaVersion: PROJECT_SCHEMA, // an edited project is saved in the current shape (ADR-011, ADR-073)
       updatedAt: new Date().toISOString(),
     };
@@ -554,7 +581,7 @@ export const useDesign = create<State>((rawSet, get) => {
       project: stamped,
       projectModel: buildProjectModel(stamped),
       projectDirtyAt: Date.now(),
-      notice: null,
+      notice: held,
       ...(prev && !amend
         ? {
             projectPast: [...get().projectPast, prev].slice(-HISTORY),
@@ -891,6 +918,52 @@ export const useDesign = create<State>((rawSet, get) => {
         return [];
       return res.applied;
     },
+    addVariable: (name, expr) => {
+      const p = get().project;
+      if (!p) return '';
+      const res = addVariable(p, name, expr);
+      commitProject(res.project, t('Add variable {name}', { name: name.trim() }));
+      return res.id;
+    },
+    updateVariable: (id, patch) => {
+      const p = get().project;
+      if (!p) return;
+      const next = updateVariable(p, id, patch);
+      if (next !== p) commitProject(next, t('Change variable'));
+    },
+    deleteVariable: (id) => {
+      const p = get().project;
+      if (!p) return;
+      const next = deleteVariable(p, id);
+      if (next !== p) commitProject(next, t('Delete variable'));
+    },
+    bindTarget: (itemId, target, expr) => {
+      const p = get().project;
+      if (!p) return;
+      commitProject(
+        setBinding(p, itemId, target, expr),
+        expr === null ? t('Unbind') : t('Bind to variable'),
+      );
+    },
+    addVariableSet: () => {
+      const p = get().project;
+      if (!p) return '';
+      const res = addSet(p);
+      commitProject(res.project, t('Add value set'));
+      return res.id;
+    },
+    updateVariableSet: (id, patch) => {
+      const p = get().project;
+      if (!p) return;
+      const next = updateSet(p, id, patch);
+      if (next !== p) commitProject(next, t('Change value set'));
+    },
+    removeVariableSet: (id) => {
+      const p = get().project;
+      if (!p) return;
+      const next = removeSet(p, id);
+      if (next !== p) commitProject(next, t('Remove value set'));
+    },
     followProject: (id, key) => {
       const p = get().project;
       if (!p) return;
@@ -971,7 +1044,8 @@ export const useDesign = create<State>((rawSet, get) => {
       if (id && id === selectedItemId && id === drillItemId && selectedItemIds.length === 1) return;
       set({ selectedItemId: id, notice: null });
       const item = id ? project?.items.find((i) => i.id === id) : undefined;
-      if (item && !get().editingItemId) loadDrill(item, null);
+      // A value set's duplicate is edited through its original (ADR-167): nothing inside it is loaded.
+      if (item && !item.set && !get().editingItemId) loadDrill(item, null);
       else set({ drillItemId: null });
     },
     toggleItem: (id) => {
