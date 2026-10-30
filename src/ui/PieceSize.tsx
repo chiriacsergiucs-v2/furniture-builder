@@ -14,6 +14,7 @@ export function PieceSize({
   onChange,
   className,
   locked = false,
+  lockedHint,
   bind,
 }: {
   product: Product;
@@ -21,6 +22,8 @@ export function PieceSize({
   className?: string;
   /** The piece's size is locked (ADR-122): the fields are off and say why. */
   locked?: boolean;
+  /** Why the fields are off, instead of the size-lock text (a value set's duplicate, ADR-164). */
+  lockedHint?: string;
   /** In a project (ADR-163): the ƒ button for a field and, when bound, what it follows (the field is then off). */
   bind?: (key: SizeField['key']) => { button: ReactNode; hint?: string };
 }) {
@@ -35,23 +38,22 @@ export function PieceSize({
       {fields.map((f) => {
         const b = bind?.(f.key);
         return (
-          <div key={f.key} className="bindable">
-            <MmField
-              label={tr(f.label)}
-              value={f.value}
-              min={f.min}
-              max={f.max}
-              onChange={(v) => onChange(f.key, v)}
-              disabled={locked || !!b?.hint}
-              hint={b?.hint}
-            />
-            {b?.button}
-          </div>
+          <MmField
+            key={f.key}
+            label={tr(f.label)}
+            value={f.value}
+            min={f.min}
+            max={f.max}
+            onChange={(v) => onChange(f.key, v)}
+            disabled={locked || !!b?.hint}
+            hint={b?.hint}
+            trailing={b?.button}
+          />
         );
       })}
       {locked && (
         <p className="hint size-lock-hint" role="note">
-          {tr(SIZE_LOCKED_HINT)}
+          {lockedHint ?? tr(SIZE_LOCKED_HINT)}
         </p>
       )}
     </div>

@@ -115,4 +115,15 @@ export const ru_variables = {
   'The set draws its pieces and can be saved once every value is set.':
     'Набор показывает изделия и может быть сохранён, когда заданы все значения.',
   'Saved as “{name}”.': 'Сохранено как «{name}».',
+  '{set} is incomplete; its pieces keep their last values.':
+    '{set} не завершён; его изделия сохраняют последние значения.',
+  '{name}: Above floor follows “{expr}” but the piece stands on the floor or on a piece; set Placed to Anywhere or Wall.':
+    '{name}: «Над полом» следует «{expr}», но изделие стоит на полу или на другом изделии; выберите «Где угодно» или «Стена».',
+  'Edit the set-1 piece; this copy follows it.':
+    'Редактируйте изделие набора 1; эта копия следует ему.',
+  'Go to it': 'Перейти к нему',
+  'Select them': 'Выбрать их',
+  'All variables and value sets…': 'Все переменные и наборы значений…',
+  'A copy of the set-1 piece: change the size there.':
+    'Копия изделия набора 1: меняйте размер там.',
 } satisfies Record<string, string>;

@@ -223,6 +223,8 @@ export interface Evaluated {
   value?: Mm;
   /** The unrounded result, when it differs from `value`. */
   raw?: number;
+  /** The unrounded result, always; formulas over this variable take it so a chain is rounded once. */
+  exact?: number;
   problem?: string;
 }
 
@@ -256,7 +258,7 @@ export function evaluateVariables(
         problem ??= r.problem?.includes('circle')
           ? t('“{name}” refers to itself in a circle.', { name: v.name })
           : t('“{name}” depends on “{dep}”, which has a problem.', { name: v.name, dep: dep.name });
-      } else scope.set(n, r.value);
+      } else scope.set(n, r.exact ?? r.value);
     }
     visiting.delete(v.id);
     let res: Evaluated;
@@ -265,8 +267,9 @@ export function evaluateVariables(
       const e = evaluateExpr(exprOf(v), scope);
       if ('problem' in e) res = { problem: e.problem };
       else {
+        // Rounded once, at the end of a chain: a formula over this variable takes the unrounded value (`exact`).
         const value = Math.round(e.raw);
-        res = value === e.raw ? { value } : { value, raw: e.raw };
+        res = value === e.raw ? { value, exact: e.raw } : { value, raw: e.raw, exact: e.raw };
       }
     }
     out.set(v.id, res);
@@ -285,7 +288,7 @@ export function variableScope(
   const scope = new Map<string, number>();
   for (const v of vars) {
     const r = ev.get(v.id);
-    if (r?.value !== undefined) scope.set(v.name, r.value);
+    if (r?.value !== undefined) scope.set(v.name, r.exact ?? r.value);
   }
   return scope;
 }
@@ -503,6 +506,17 @@ export function variableDiagnostics(project: Project): Diagnostic[] {
     }
   };
   report(null);
+  for (const s of project.variableSets ?? []) {
+    if (!project.items.some((i) => i.set?.id === s.id)) continue;
+    const ev = evaluateVariables(vars, s.values);
+    if (vars.some((v) => ev.get(v.id)?.value === undefined))
+      out.push({
+        severity: 'warning',
+        code: 'set-incomplete',
+        message: t('{set} is incomplete; its pieces keep their last values.', { set: s.name }),
+        nodeId: `set:${s.id}`,
+      });
+  }
   for (const s of project.variableSets ?? [])
     if (project.items.some((i) => i.set?.id === s.id)) report(s.name, s.values);
   const scopes = new Map<string, Map<string, number>>();
@@ -522,6 +536,16 @@ export function variableDiagnostics(project: Project): Diagnostic[] {
             field: targetLabel(b.target),
             problem: e.problem,
           }),
+          nodeId: item.id,
+        });
+      else if (b.target === 'y' && item.placement && item.placement.kind !== 'wall')
+        out.push({
+          severity: 'error',
+          code: 'binding-floor',
+          message: t(
+            '{name}: Above floor follows “{expr}” but the piece stands on the floor or on a piece; set Placed to Anywhere or Wall.',
+            { name: item.design.name, expr: b.expr },
+          ),
           nodeId: item.id,
         });
       else if (!hasTarget(item, b.target))
@@ -581,16 +605,19 @@ export function setBinding(
 export function variableUsers(
   project: Project,
   id: string,
-): { items: ProjectItem[]; vars: ProjectVariable[] } {
+): { items: ProjectItem[]; vars: ProjectVariable[]; sets: string[] } {
   const vars = project.variables ?? [];
   const v = vars.find((x) => x.id === id);
-  if (!v) return { items: [], vars: [] };
+  if (!v) return { items: [], vars: [], sets: [] };
   const names = vars.map((x) => x.name);
   const refers = (expr: string) =>
     namesIn(expr, names).some((n) => n.toLowerCase() === v.name.toLowerCase());
   return {
     items: project.items.filter((i) => i.bindings?.some((b) => refers(b.expr))),
     vars: vars.filter((x) => x.id !== id && refers(x.expr)),
+    sets: (project.variableSets ?? [])
+      .filter((s) => Object.entries(s.values).some(([k, e]) => k !== id && refers(e)))
+      .map((s) => s.name),
   };
 }
 

@@ -31,6 +31,7 @@ import {
   runOf,
   type Placement,
   type ProjectItem,
+  type Project,
   type ProjectModel,
   type QuarterTurn,
 } from '../core/project';
@@ -118,7 +119,7 @@ import { SavedToCatalog, SaveToCatalogDialog } from './SaveToCatalog';
 import { NewerTemplates, TemplateNotice } from './TemplateRevision';
 import { GroupList, SelectionCard } from './Selection';
 import { PieceProjectSettings, ProjectSettingsPanel } from './ProjectSettings';
-import { BindButton, bindingHint, VariablesPanel } from './Variables';
+import { BindButton, bindingHint, VariablesPanel, VariablesStrip } from './Variables';
 import { setRooms } from '../core/setRoom';
 import { ProjectHistory, StyleSuggestions } from './History';
 
@@ -396,17 +397,22 @@ export function ProjectPanel({
               key={`size-${item.id}`}
               product={item.design.product}
               onChange={(k, v) => resizeItem(item.id, k, v)}
-              locked={isSizeLocked(item)}
+              locked={isSizeLocked(item) || !!item.set}
+              lockedHint={
+                item.set ? t('A copy of the set-1 piece: change the size there.') : undefined
+              }
               bind={(k) => ({
                 button: <BindButton itemId={item.id} target={k} />,
                 hint: bindingHint(project, item, k),
               })}
             />
           )}
-          <button type="button" className="btn solid block" onClick={() => edit(item.id)}>
-            <Icon name="pencil" className="sm" />
-            {t('Edit this piece')}
-          </button>
+          {!item.set && (
+            <button type="button" className="btn solid block" onClick={() => edit(item.id)}>
+              <Icon name="pencil" className="sm" />
+              {t('Edit this piece')}
+            </button>
+          )}
           <ArrangeFields key={item.id} item={item} />
           {libMsg && (
             <p className="hint" role="status">
@@ -513,6 +519,7 @@ export function ProjectPanel({
       <NewerTemplates items={project.items} />
       <GroupList />
       <ModelList pm={pm} />
+      <VariablesStrip />
       <RoomSection />
       <ProjectHistory />
     </div>
@@ -899,6 +906,7 @@ function FinishFields({ item }: { item: ProjectItem }) {
 /** A value set's duplicate (ADR-164): which set, and which set-1 piece it copies. */
 function SetNote({ item }: { item: ProjectItem }) {
   const project = useDesign((s) => s.project)!;
+  const select = useDesign((s) => s.selectItem);
   if (!item.set) return null;
   const set = project.variableSets?.find((s) => s.id === item.set!.id);
   const of = project.items.find((i) => i.id === item.set!.of);
@@ -908,6 +916,16 @@ function SetNote({ item }: { item: ProjectItem }) {
         set: set?.name ?? t('Set'),
         name: tr(of?.design.name ?? item.design.name),
       })}
+      {'. '}
+      {t('Edit the set-1 piece; this copy follows it.')}
+      {of && (
+        <>
+          {' '}
+          <button type="button" className="btn sm outline" onClick={() => select(of.id)}>
+            {t('Go to it')}
+          </button>
+        </>
+      )}
     </p>
   );
 }
@@ -1091,30 +1109,26 @@ function PlacementFields({ item }: { item: ProjectItem }) {
   const hint = (target: string) => bindingHint(project, item, target);
   const xz = (
     <div className="dims2">
-      <div className="bindable">
-        <MmField
-          label={t('From left')}
-          value={pos.x}
-          min={-20000}
-          max={20000}
-          onChange={(v) => update(item.id, { position: { ...pos, x: v } })}
-          disabled={!!hint('x')}
-          hint={hint('x')}
-        />
-        <BindButton itemId={item.id} target="x" />
-      </div>
-      <div className="bindable">
-        <MmField
-          label={t('From back')}
-          value={pos.z}
-          min={-20000}
-          max={20000}
-          onChange={(v) => update(item.id, { position: { ...pos, z: v } })}
-          disabled={!!hint('z')}
-          hint={hint('z')}
-        />
-        <BindButton itemId={item.id} target="z" />
-      </div>
+      <MmField
+        label={t('From left')}
+        value={pos.x}
+        min={-20000}
+        max={20000}
+        onChange={(v) => update(item.id, { position: { ...pos, x: v } })}
+        disabled={!!hint('x')}
+        hint={hint('x')}
+        trailing={<BindButton itemId={item.id} target="x" />}
+      />
+      <MmField
+        label={t('From back')}
+        value={pos.z}
+        min={-20000}
+        max={20000}
+        onChange={(v) => update(item.id, { position: { ...pos, z: v } })}
+        disabled={!!hint('z')}
+        hint={hint('z')}
+        trailing={<BindButton itemId={item.id} target="z" />}
+      />
     </div>
   );
   return (
@@ -1142,18 +1156,16 @@ function PlacementFields({ item }: { item: ProjectItem }) {
       {kind === 'wall' && pl?.kind === 'wall' && (
         <>
           {xz}
-          <div className="bindable">
-            <MmField
-              label={t('Underside above the floor')}
-              value={pl.height}
-              min={0}
-              max={3000}
-              onChange={(v) => update(item.id, { placement: { ...pl, height: v } })}
-              disabled={!!hint('mountHeight')}
-              hint={hint('mountHeight')}
-            />
-            <BindButton itemId={item.id} target="mountHeight" />
-          </div>
+          <MmField
+            label={t('Underside above the floor')}
+            value={pl.height}
+            min={0}
+            max={3000}
+            onChange={(v) => update(item.id, { placement: { ...pl, height: v } })}
+            disabled={!!hint('mountHeight')}
+            hint={hint('mountHeight')}
+            trailing={<BindButton itemId={item.id} target="mountHeight" />}
+          />
         </>
       )}
       {kind === 'above' && pl?.kind === 'above' && (
@@ -1190,42 +1202,36 @@ function PlacementFields({ item }: { item: ProjectItem }) {
       )}
       {kind === 'free' && (
         <div className="dims3">
-          <div className="bindable">
-            <MmField
-              label={t('From left')}
-              value={pos.x}
-              min={-20000}
-              max={20000}
-              onChange={(v) => update(item.id, { position: { ...pos, x: v } })}
-              disabled={!!hint('x')}
-              hint={hint('x')}
-            />
-            <BindButton itemId={item.id} target="x" />
-          </div>
-          <div className="bindable">
-            <MmField
-              label={t('From back')}
-              value={pos.z}
-              min={-20000}
-              max={20000}
-              onChange={(v) => update(item.id, { position: { ...pos, z: v } })}
-              disabled={!!hint('z')}
-              hint={hint('z')}
-            />
-            <BindButton itemId={item.id} target="z" />
-          </div>
-          <div className="bindable">
-            <MmField
-              label={t('Above floor')}
-              value={pos.y}
-              min={0}
-              max={3000}
-              onChange={(v) => update(item.id, { position: { ...pos, y: v } })}
-              disabled={!!hint('y')}
-              hint={hint('y')}
-            />
-            <BindButton itemId={item.id} target="y" />
-          </div>
+          <MmField
+            label={t('From left')}
+            value={pos.x}
+            min={-20000}
+            max={20000}
+            onChange={(v) => update(item.id, { position: { ...pos, x: v } })}
+            disabled={!!hint('x')}
+            hint={hint('x')}
+            trailing={<BindButton itemId={item.id} target="x" />}
+          />
+          <MmField
+            label={t('From back')}
+            value={pos.z}
+            min={-20000}
+            max={20000}
+            onChange={(v) => update(item.id, { position: { ...pos, z: v } })}
+            disabled={!!hint('z')}
+            hint={hint('z')}
+            trailing={<BindButton itemId={item.id} target="z" />}
+          />
+          <MmField
+            label={t('Above floor')}
+            value={pos.y}
+            min={0}
+            max={3000}
+            onChange={(v) => update(item.id, { position: { ...pos, y: v } })}
+            disabled={!!hint('y')}
+            hint={hint('y')}
+            trailing={<BindButton itemId={item.id} target="y" />}
+          />
         </div>
       )}
     </>
@@ -1672,6 +1678,7 @@ function RoomPlan({
             : undefined
         }
       >
+        {project && <SetTags project={project} pm={pm} fs={fs} />}
         {room ? (
           <>
             <RoomOutline room={room} fs={fs} />
@@ -1995,6 +2002,33 @@ function LockBadge({ x, y, size }: { x: number; y: number; size: number }) {
     >
       {t('Locked')}
     </text>
+  );
+}
+
+/** A value set's name over its pieces on the plan (ADR-164). */
+function SetTags({ project, pm, fs }: { project: Project; pm: ProjectModel; fs: number }) {
+  const sets = project.variableSets ?? [];
+  if (!sets.length) return null;
+  const rooms = new Map(setRooms(project).map((sr) => [sr.set.id, sr.room]));
+  return (
+    <>
+      {sets.map((set) => {
+        const pcs = pm.pieces.filter((pc) => pc.item.set?.id === set.id);
+        const room = rooms.get(set.id);
+        if (!pcs.length && !room) return null;
+        const x = room
+          ? Math.min(...room.outline.map((p) => p[0]))
+          : Math.min(...pcs.map((pc) => pc.bounds.x));
+        const z = room
+          ? Math.min(...room.outline.map((p) => p[1]))
+          : Math.min(...pcs.map((pc) => pc.bounds.z));
+        return (
+          <text key={set.id} className="set-tag" x={x} y={z - fs * 0.6} fontSize={fs * 1.1}>
+            {set.name}
+          </text>
+        );
+      })}
+    </>
   );
 }
 

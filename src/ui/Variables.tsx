@@ -16,8 +16,9 @@ import { saveProject } from '../persist/db';
 import { useDesign } from '../store/designStore';
 import { askConfirm } from './Confirm';
 import { Dialog } from './Dialogs';
-import { InfoTip, MmField } from './controls';
+import { Group, InfoTip, MmField } from './controls';
 import { Icon } from './icons';
+import { useUi } from './shell/uiStore';
 
 /** `bottom height = 400`: what a bound field shows instead of being edited (ADR-163). */
 export function bindingHint(
@@ -44,6 +45,8 @@ export function BindButton({ itemId, target }: { itemId: string; target: string 
   const item = project?.items.find((i) => i.id === itemId);
   if (!project || !item) return null;
   const current = bindingOf(item, target);
+  // A value set's duplicate takes its bindings from its original (ADR-164).
+  const copy = !!item.set;
   const vars = project.variables ?? [];
   const label = targetLabel(target);
   const scope = scopeFor(project, item);
@@ -58,6 +61,7 @@ export function BindButton({ itemId, target }: { itemId: string; target: string 
         type="button"
         className={`btn icon sm bind ${current ? 'on' : 'ghost'}`}
         onClick={start}
+        disabled={copy}
         aria-label={
           current
             ? t('{field} follows a variable; change or unbind', { field: label })
@@ -178,7 +182,11 @@ export function VariablesPanel() {
   const del = async (id: string) => {
     const v = vars.find((x) => x.id === id)!;
     const users = variableUsers(project, id);
-    const names = [...users.items.map((i) => tr(i.design.name)), ...users.vars.map((x) => x.name)];
+    const names = [
+      ...users.items.map((i) => tr(i.design.name)),
+      ...users.vars.map((x) => x.name),
+      ...users.sets,
+    ];
     const message = names.length
       ? t('Delete “{name}”? {list} use it; they keep their current numbers.', {
           name: v.name,
@@ -353,7 +361,9 @@ function SetCard({
   const progress = setProgress(project, set);
   const complete = setComplete(project, set);
   const ev = evaluateVariables(vars, set.values);
-  const count = project.items.filter((i) => i.set?.id === set.id).length;
+  const dups = project.items.filter((i) => i.set?.id === set.id);
+  const count = dups.length;
+  const selectItems = useDesign((s) => s.selectItems);
   const remove = async () => {
     if (
       await askConfirm(
@@ -427,6 +437,18 @@ function SetCard({
           onChange={(z) => onChange({ origin: { ...set.origin, z } })}
         />
       </div>
+      {count > 0 && (
+        <p className="hint">
+          {dups.map((i) => tr(i.design.name)).join(', ')}{' '}
+          <button
+            type="button"
+            className="btn sm outline"
+            onClick={() => selectItems(dups.map((i) => i.id))}
+          >
+            {t('Select them')}
+          </button>
+        </p>
+      )}
       <div className="row">
         <button
           type="button"
@@ -461,10 +483,18 @@ function SavedNote({
   onClose: () => void;
 }) {
   const open = useDesign((s) => s.openProject);
+  const closeSettings = useUi((s) => s.setSettingsOpen);
   return (
     <p className="alert info" role="status">
       {t('Saved as “{name}”.', { name })}{' '}
-      <button type="button" className="btn sm outline" onClick={() => open(project)}>
+      <button
+        type="button"
+        className="btn sm outline"
+        onClick={() => {
+          open(project);
+          closeSettings(false);
+        }}
+      >
         {t('Open')}
       </button>{' '}
       <button
@@ -476,5 +506,53 @@ function SavedNote({
         <Icon name="x" />
       </button>
     </p>
+  );
+}
+
+/**
+ * The variables on the Compose side panel: name = value, editable in place, so the pieces move as you type. The
+ * full panel, with the value sets, is in Settings.
+ */
+export function VariablesStrip() {
+  const project = useDesign((s) => s.project)!;
+  const update = useDesign((s) => s.updateVariable);
+  const openSettings = useUi((s) => s.setSettingsOpen);
+  const vars = project.variables ?? [];
+  if (!vars.length) return null;
+  const ev = evaluateVariables(vars);
+  return (
+    <section className="section variables-strip" aria-label={t('Variables')}>
+      <Group title={t('Variables')} defaultOpen>
+        <ul className="variable-list" role="list">
+          {vars.map((v) => {
+            const r = ev.get(v.id)!;
+            return (
+              <li key={v.id} className="variable-row strip">
+                <span className="name">{v.name}</span>
+                <input
+                  aria-label={t('Value of {name}', { name: v.name })}
+                  defaultValue={v.expr}
+                  key={`${v.id}-${v.expr}`}
+                  inputMode="decimal"
+                  onBlur={(e) => {
+                    const x = e.target.value.trim();
+                    if (x !== v.expr) update(v.id, { expr: x });
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                  }}
+                />
+                <span className={`result ${r.value === undefined ? 'error' : ''}`}>
+                  {evaluatedText(r)}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+        <button type="button" className="btn sm ghost" onClick={() => openSettings(true)}>
+          {t('All variables and value sets…')}
+        </button>
+      </Group>
+    </section>
   );
 }

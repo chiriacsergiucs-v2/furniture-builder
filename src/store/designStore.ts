@@ -1020,7 +1020,8 @@ export const useDesign = create<State>((rawSet, get) => {
       if (id && id === selectedItemId && id === drillItemId && selectedItemIds.length === 1) return;
       set({ selectedItemId: id, notice: null });
       const item = id ? project?.items.find((i) => i.id === id) : undefined;
-      if (item && !get().editingItemId) loadDrill(item, null);
+      // A value set's duplicate is edited through its original (ADR-164): nothing inside it is loaded.
+      if (item && !item.set && !get().editingItemId) loadDrill(item, null);
       else set({ drillItemId: null });
     },
     toggleItem: (id) => {

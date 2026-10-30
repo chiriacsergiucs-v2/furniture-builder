@@ -6802,21 +6802,23 @@ ul.plain {
 }
 
 /* Variables and bindings (ADR-163) and value sets (ADR-164) */
-.bindable {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--s-1);
-  align-items: start;
+.mm.with-trailing {
+  grid-template-columns: 32px 1fr auto 32px 28px;
+}
+.mm .btn.bind {
+  font-style: italic;
+  font-weight: 600;
+  min-height: 0;
+  height: 100%;
+  border: 0;
+  border-left: 1px solid var(--line);
+  border-radius: 0;
+  padding: 0;
 }
 .piece-size,
 .dims2,
 .dims3 {
   align-items: start;
-}
-.bindable .btn.bind {
-  margin-bottom: var(--s-1);
-  font-style: italic;
-  font-weight: 600;
 }
 .btn.bind.on {
   background: var(--accent);
@@ -6903,4 +6905,11 @@ ul.plain {
 .set-room .room-floor,
 .set-room .wall {
   opacity: 0.7;
+}
+.variable-row.strip {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+}
+.set-tag {
+  fill: var(--ink-2);
+  font-weight: 600;
 }

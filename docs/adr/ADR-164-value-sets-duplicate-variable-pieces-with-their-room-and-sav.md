@@ -20,7 +20,8 @@ upon duplication." Then: "if the project has a room, the room should also be dup
 position as in original."
 
 Answers (2026-10-30): **any number** of sets; duplicates are **real pieces beside the originals**, both in the room
-and in the cut list; a duplicate **stays linked** to its original (design edits follow, only bound values differ); a
+and in the cut list; a duplicate **follows its original one way** (critique answer: set 1 → sets; design edits
+follow, only bound values and position differ; the duplicate's card says to edit the set-1 piece); a
 new set starts **empty and is drawn only when complete**; with a room the set gets a **room copy beside** the first
 (room width + 500 mm) and its pieces keep their **positions relative to that room**; without a room the set is
 **shifted right** of set 1 by its width + 500 mm; the new project is the **whole project at set-N values, set N
@@ -39,12 +40,15 @@ between a piece and its set duplicates.
    `origin` = `(W + 500) × (N − 1)` on x, 0 on z, where W is the room's outline width, or the x extent of the set-1
    pieces without a room; the origin is editable on the set's card (**Set origin**), which moves the whole set.
 2. **Complete sets draw.** A set is complete when every variable has a value that evaluates (formulas as in
-   ADR-163). The store (`syncSets`, on every commit) keeps, for each complete set, one duplicate of every piece
-   that has a binding: `ProjectItem.set = { id, of: originalId }`, linked to the original (`linkId`), bound values
-   evaluated with the set's values, position = the original's + the set origin at creation (then its own: Move
-   mode moves it). An incomplete set shows "2 of 4 values set" and has no duplicates; a set that becomes incomplete
-   keeps its duplicates at their last values with a warning. A piece that loses its last binding loses its
-   duplicates; a piece that gains one gets them (one undo step with the change).
+   ADR-163). The store (`syncSets`, on every commit) keeps, for each complete set, one duplicate of every member
+   piece: a bound piece, every piece placed on or above one (ADR-031, through a chain) and every piece grouped with
+   one (ADR-097) — the critique answer that closes G-321. `ProjectItem.set = { id, of: originalId }`; the
+   duplicate's design, bindings and template reference are copied from the original on every commit (one way: an
+   edit of the duplicate is overwritten; its card says "Edit the set-1 piece"), bound values evaluated with the
+   set's values, position = the original's + the set origin at creation (then its own: Move mode moves it). Groups
+   are mirrored per set. An incomplete set shows "2 of 4 values set" and has no duplicates; a set that becomes
+   incomplete keeps its duplicates at their last values with a warning diagnostic. A piece that leaves the members
+   loses its duplicates; one that joins gets them (one undo step with the change).
 3. **Room per set.** With a room, each complete set draws the room (walls, doors, windows, obstacles, wall
    finishes) translated to its origin in the plan and in 3D, and the room checks (ADR-057, ADR-058) of a set's
    pieces run against that translated room. Run parts for a set's pieces come from the automatic refresh
@@ -56,21 +60,24 @@ between a piece and its set duplicates.
    _Set 2_ in this project?" with **Keep** and **Remove**; Remove deletes the set and its duplicates, one undo
    step. The user stays in the current project; the message "Saved as “…”" has **Open**.
 5. **Where it shows.** Configure → **Variables** → _Value sets_: set cards (name, values, "4 of 4 values set",
-   **Set origin**, **Save as separate project**, **Remove set**). Piece list and selected-piece card: "Set 2 of
-   _Base left_". Cut list and hardware count every duplicate as a piece.
+   the duplicates' names with **Select them**, **Set origin**, **Save as separate project**, **Remove set**). The
+   selected-piece card: "Set 2 of _Base left_ — edit the set-1 piece" with **Go to it**. The plan tags each set
+   with its name. **Open** on the saved note closes Settings (critique answer). Cut list and hardware count every
+   duplicate as a piece.
 
 ## Alternatives considered
 
 - **Switch between sets (one shown at a time)** — the user chose both visible, side by side.
 - **Store a room copy per set** — generated geometry in the document (ADR-011); one room translated is enough.
-- **Independent copies (not linked)** — the user chose linked: a design edit reaches every set.
+- **Linked copies both ways (ADR-111)** — an edit of a set-2 duplicate would change set 1 unnoticed; the user chose
+  one way (critique answer 2026-10-30).
 
 ## Scope
 
 - In scope: core (`sets.ts`, validation, migration), store actions, Variables page set cards, plan and 3D room
   per set, save as separate project with the keep/remove question, tests, fuzz, browser find-it (3D and plan).
-- Out of scope: run requests, run handles and sinks per set (G-320); unbound pieces placed on or grouped with a
-  bound piece (G-321).
+- Out of scope: run requests, run handles and sinks per set (G-320). G-321 (pieces on or grouped with a bound
+  piece) was pulled in by the critique answer of 2026-10-30.
 
 ## Consequences
 
@@ -83,7 +90,8 @@ between a piece and its set duplicates.
 
 - [ ] Add set, fill values → one duplicate per bound piece, linked, at the right position, bound values from the set;
       an incomplete set has none (`tests/sets.test.ts`)
-- [ ] A design edit on an original reaches its duplicate; a bound value does not; unbinding removes duplicates (tests)
+- [ ] A design edit on an original reaches its duplicate, an edit of the duplicate is overwritten; a bound value is
+      not copied; unbinding removes duplicates; a piece on a bound piece and a grouped piece duplicate too (tests)
 - [ ] With a room, the set's pieces are checked against the room translated to the set origin; the plan and 3D
       model list one room box per complete set (tests)
 - [ ] Save as separate project: new ids, pieces at the originals' positions, the set's values as set 1, room and

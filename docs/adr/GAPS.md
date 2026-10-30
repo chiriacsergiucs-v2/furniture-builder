@@ -2716,7 +2716,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-321: Unbound pieces stay out of a set
 
-- Status: Open
+- Status: ADR-164
 - Origin: ADR-164, 2026-10-30; agent scoped it out
 - Missing: Only pieces with a binding (and their linked copies) are duplicated into a set; a piece without bindings is not in the set and is only shown once, in set 1.
 - Request: "it would duplicate the existing pieces that use that variable, but with the new values".

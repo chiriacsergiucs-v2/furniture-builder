@@ -16,6 +16,7 @@ import {
   type ProjectItem,
 } from './project';
 import { evaluateVariables } from './variables';
+import type { Design } from './types';
 import type { VariableSet } from './setRoom';
 
 export { roomAt, setRooms, type VariableSet } from './setRoom';
@@ -105,16 +106,16 @@ export function removeSet(project: Project, id: string): Project {
   );
 }
 
-/** A duplicate of `src` for `set`: new ids, linked to the original, placed at the set's origin. */
-function duplicateFor(src: ProjectItem, set: VariableSet, linkId: string): ProjectItem {
-  const { locked: _l, sizeLocked: _s, ...rest } = structuredClone(src);
+/** A duplicate of `src` for `set`: new ids, the original's design, placed at the set's origin. */
+function duplicateFor(src: ProjectItem, set: VariableSet): ProjectItem {
+  const { locked: _l, sizeLocked: _s, linkId: _k, ...rest } = structuredClone(src);
   void _l;
   void _s;
+  void _k;
   return {
     ...rest,
     id: newId(),
     design: { ...rest.design, id: newId() },
-    linkId,
     set: { id: set.id, of: src.id },
     position: {
       ...src.position,
@@ -124,10 +125,47 @@ function duplicateFor(src: ProjectItem, set: VariableSet, linkId: string): Proje
   };
 }
 
+/** `design` as the copy carries it: the same but for the copy's own id. */
+const designFor = (src: Design, own: string): Design => ({ ...src, id: own });
+
+/** Design content without its id, for "did the original change" (cached per design object). */
+const contentCache = new WeakMap<Design, string>();
+const content = (d: Design): string => {
+  let c = contentCache.get(d);
+  if (c === undefined) {
+    const { id: _id, ...rest } = d;
+    void _id;
+    c = JSON.stringify(rest);
+    contentCache.set(d, c);
+  }
+  return c;
+};
+
 /**
- * Keep every complete set's duplicates in step with the bound pieces of set 1: one duplicate per bound piece,
- * linked to it, its bindings the original's; a duplicate whose original is gone or unbound goes. An incomplete set
- * keeps what it has. The same project when nothing changes; every commit applies it.
+ * The set-1 pieces a set duplicates (ADR-164, G-321 closed): every bound piece, every piece placed on or above one
+ * of them (ADR-031, through a chain) and every piece grouped with one of them (ADR-097).
+ */
+export function setMembers(project: Project): Set<string> {
+  const base = project.items.filter((i) => !i.set);
+  const out = new Set(base.filter((i) => i.bindings?.length).map((i) => i.id));
+  if (!out.size) return out;
+  for (;;) {
+    const before = out.size;
+    for (const i of base) {
+      if (out.has(i.id)) continue;
+      if (i.placement?.kind === 'above' && out.has(i.placement.baseId)) out.add(i.id);
+    }
+    for (const g of project.groups ?? [])
+      if (g.itemIds.some((x) => out.has(x))) g.itemIds.forEach((x) => out.add(x));
+    if (out.size === before) return out;
+  }
+}
+
+/**
+ * Keep every complete set's duplicates in step with set 1: one duplicate per member piece (`setMembers`), its
+ * design, bindings and template reference the original's (one way, ADR-164: a duplicate is edited through its
+ * original); a duplicate whose original is gone or left the members goes. An incomplete set keeps what it has.
+ * The same project when nothing changes; every commit applies it.
  */
 export function syncSets(project: Project): Project {
   const sets = project.variableSets ?? [];
@@ -135,45 +173,37 @@ export function syncSets(project: Project): Project {
   const items = [...project.items];
   let changed = false;
   const byId = new Map(items.map((i) => [i.id, i]));
-  const bound = (i: ProjectItem | undefined) => !!i && !i.set && !!i.bindings?.length;
-  // Links of the originals: a bound piece gets a link so its duplicates share its design (ADR-111).
-  const linkOf = new Map<string, string>();
-  const ensureLink = (src: ProjectItem): string => {
-    const have = linkOf.get(src.id) ?? src.linkId;
-    if (have) {
-      linkOf.set(src.id, have);
-      return have;
-    }
-    const linkId = newId();
-    linkOf.set(src.id, linkId);
-    const at = items.findIndex((i) => i.id === src.id);
-    items[at] = { ...items[at], linkId };
-    changed = true;
-    return linkId;
-  };
+  const members = setMembers(project);
   for (const set of sets) {
     const complete = setComplete(project, set);
-    // Duplicates whose original is gone or no longer bound leave; the rest follow their original's bindings.
     for (let n = items.length - 1; n >= 0; n--) {
       const d = items[n];
       if (d.set?.id !== set.id) continue;
       const src = byId.get(d.set.of);
-      if (!bound(src)) {
+      if (!src || !members.has(src.id)) {
         items.splice(n, 1);
         changed = true;
         continue;
       }
-      const link = ensureLink(src!);
-      if (d.bindings !== src!.bindings || d.linkId !== link) {
-        items[n] = { ...d, bindings: src!.bindings, linkId: link };
+      const sameDesign = content(d.design) === content(src.design);
+      const sameRef = JSON.stringify(d.ref ?? null) === JSON.stringify(src.ref ?? null);
+      if (!sameDesign || d.bindings !== src.bindings || !sameRef) {
+        items[n] = {
+          ...d,
+          design: sameDesign ? d.design : designFor(src.design, d.design.id),
+          ...(src.bindings ? { bindings: src.bindings } : {}),
+          ...(src.ref ? { ref: structuredClone(src.ref) } : {}),
+        };
+        if (!src.bindings) delete items[n].bindings;
+        if (!src.ref) delete items[n].ref;
         changed = true;
       }
     }
     if (!complete) continue;
     const have = new Set(items.filter((i) => i.set?.id === set.id).map((i) => i.set!.of));
     for (const src of project.items) {
-      if (!bound(src) || have.has(src.id)) continue;
-      items.push(duplicateFor(byId.get(src.id) ?? src, set, ensureLink(src)));
+      if (src.set || !members.has(src.id) || have.has(src.id)) continue;
+      items.push(duplicateFor(src, set));
       changed = true;
     }
   }
@@ -192,7 +222,24 @@ export function syncSets(project: Project): Project {
     void _p;
     return free;
   });
-  return { ...project, items: placed };
+  // A duplicate grouped with its original's group mates is grouped with their duplicates (ADR-097).
+  const groups = project.groups?.length
+    ? [
+        ...project.groups,
+        ...sets.flatMap((set) =>
+          project
+            .groups!.map((g) => ({
+              id: `${g.id}:${set.id}`,
+              name: g.name,
+              itemIds: g.itemIds
+                .map((x) => dupOf.get(`${set.id}:${x}`))
+                .filter((x): x is string => !!x),
+            }))
+            .filter((g) => g.itemIds.length >= 2 && !project.groups!.some((o) => o.id === g.id)),
+        ),
+      ]
+    : project.groups;
+  return { ...project, items: placed, ...(groups ? { groups } : {}) };
 }
 
 /**
@@ -233,7 +280,6 @@ export function projectFromSet(project: Project, setId: string, now = new Date()
       design: { ...rest.design, id: newId() },
       position: { ...from.position },
       ...(placement ? { placement } : {}),
-      ...(rest.linkId ? { linkId: `${rest.linkId}` } : {}),
     };
   });
   const ids = new Set(items.map((i) => i.id));

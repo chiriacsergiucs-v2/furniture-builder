@@ -41,8 +41,12 @@ bound values are the one part a link does not copy (below).
    unchanged (ADR-004) and old readers read the last value. A binding on a split size sets its mode to `mm`.
 3. **Binding UI.** A **ƒ** button beside every bindable size in the selected-piece card (Size; Position; Mount
    height; the split sizes of the inspector in a project): a sheet with the variables to pick from, a formula field,
-   and **Unbind**. A bound field is read-only and shows `bottom height = 400` (or `= 333 mm` from a formula).
-4. **Variables page.** Configure → **Variables**: a list (name, value or formula, `→ 333 mm` when rounded, the
+   and **Unbind**; the ƒ sits inside the field's box. A bound field is read-only and shows `bottom height = 400`
+   (or `= 333 mm` from a formula). A chain of formulas is rounded once, at the end (each variable shows its own
+   rounded value). A `y` binding on a piece placed on the floor or on a piece is an error diagnostic (the
+   placement would undo it).
+4. **Variables page.** Configure → **Variables** (and, critique answer 2026-10-30, a **Variables** fold on the
+   Compose side panel with name = value editable in place, plus "All variables and value sets…"): a list (name, value or formula, `→ 333 mm` when rounded, the
    problem when any, "used by 3 pieces"), **Add variable**, rename, **Delete**. Deleting a used variable asks,
    listing the pieces; on yes those bindings are removed and the pieces keep their numbers. A rename follows into
    every formula and binding.

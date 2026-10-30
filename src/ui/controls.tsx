@@ -14,6 +14,7 @@ export function MmField({
   hint,
   info,
   disabled = false,
+  trailing,
 }: {
   label: string;
   value: number;
@@ -27,6 +28,8 @@ export function MmField({
   info?: ReactNode;
   /** Shown but not changeable (a size-locked piece, ADR-122). */
   disabled?: boolean;
+  /** A control after the field, inside its box (the ƒ bind button, ADR-163). */
+  trailing?: ReactNode;
 }) {
   const id = useId();
   const [text, setText] = useState(String(value));
@@ -46,7 +49,7 @@ export function MmField({
   return (
     <div className="field">
       {withInfo(<label htmlFor={id}>{label}</label>, info)}
-      <div className={`mm ${valid ? '' : 'invalid'}`}>
+      <div className={`mm ${valid ? '' : 'invalid'} ${trailing ? 'with-trailing' : ''}`}>
         <button
           type="button"
           className="step"
@@ -81,6 +84,7 @@ export function MmField({
         >
           +
         </button>
+        {trailing}
       </div>
       {!valid && (
         <p className="field-error" id={`${id}-err`}>
