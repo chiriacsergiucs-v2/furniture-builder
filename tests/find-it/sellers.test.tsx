@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// Find-it for seller products (N162, ADR-160), in jsdom (ADR-108): a board, its edge band and a hardware line take a
+// Find-it for seller products (N163, ADR-161), in jsdom (ADR-108): a board, its edge band and a hardware line take a
 // seller product, and the estimate counts seller prices. No request leaves the test: the seller picture download fails.
 import { screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -7,7 +7,7 @@ import { PHONE_WIDTH, renderApp, WIDTHS } from './setup';
 
 afterEach(() => vi.unstubAllGlobals());
 
-describe.each(WIDTHS)('seller products at %ipx (find-it, ADR-160)', (width) => {
+describe.each(WIDTHS)('seller products at %ipx (find-it, ADR-161)', (width) => {
   it('bare app → Chest of drawers → board, band and runner from a seller → seller prices', async () => {
     vi.stubGlobal(
       'fetch',

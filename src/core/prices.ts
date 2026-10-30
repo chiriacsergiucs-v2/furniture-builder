@@ -31,11 +31,11 @@ export function unitsFor(l: ShopLine): ShopUnit[] {
   return [l.unit];
 }
 
-/** A linked product's price from the bundled seller catalogs (ADR-160); null when it is not in them. */
+/** A linked product's price from the bundled seller catalogs (ADR-161); null when it is not in them. */
 export type SellerLookup = (r: ProductRef) => SellerPrice | null;
 
 /**
- * The seller's price of a line (ADR-160), when its unit fits: a board per piece is per sheet (or per worktop board),
+ * The seller's price of a line (ADR-161), when its unit fits: a board per piece is per sheet (or per worktop board),
  * per m² by area; bands and solid stock per metre; hardware per piece × seller units per item. Packs, sets and other
  * units are not converted (null).
  */
@@ -66,7 +66,7 @@ export function priceSource(
 
 /**
  * Price of one line in minor units, or null when there is no usable price (or sheets are not laid out yet). The
- * user's own price wins; a linked seller product's price is used otherwise (ADR-160).
+ * user's own price wins; a linked seller product's price is used otherwise (ADR-161).
  */
 export function linePrice(
   l: ShopLine,
@@ -93,7 +93,7 @@ export interface Estimate {
   total: number;
   missing: string[];
   priced: number;
-  /** Lines priced by a seller (ADR-160), and the sellers with their export dates. */
+  /** Lines priced by a seller (ADR-161), and the sellers with their export dates. */
   fromSeller: number;
   sellers: string[];
 }

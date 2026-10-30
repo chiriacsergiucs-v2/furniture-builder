@@ -37,7 +37,7 @@ export function defaultSheetFor(m: Pick<Material, 'id' | 'name'>): NonNullable<M
 export const sheetOf = (m: Material) => m.sheet ?? defaultSheetFor(m);
 export const kerfOf = (d: Design) => d.cutting?.kerf ?? DEFAULT_KERF;
 
-/** The document shape this app writes: 5 adds seller products (ADR-160); 1 to 4 still load. */
+/** The document shape this app writes: 5 adds seller products (ADR-161); 1 to 4 still load. */
 export const SCHEMA_VERSION = 5;
 
 /**
@@ -771,7 +771,7 @@ function validatePartMaterials(pm: unknown, version: unknown, mids: Set<string>,
 export const validPer = (v: unknown): v is number =>
   typeof v === 'number' && v > 0 && v <= 1000 && Math.abs(v * 1000 - Math.round(v * 1000)) < 1e-9;
 
-/** ADR-160: seller products on hardware lines and added items (schemaVersion 5); checked when present, never throws. */
+/** ADR-161: seller products on hardware lines and added items (schemaVersion 5); checked when present, never throws. */
 function validateSellerChoices(d: Record<string, unknown>, errs: string[]) {
   const hp = d.hardwareProducts,
     items = d.sellerItems;

@@ -22,7 +22,7 @@ function Linked({ product, onUnlink }: { product?: ProductRef; onUnlink: () => v
 }
 
 /**
- * ADR-160: take a board from a seller. Boards and worktops of the board's thickness come first; the pick sets the
+ * ADR-161: take a board from a seller. Boards and worktops of the board's thickness come first; the pick sets the
  * name, thickness, sheet size and labels the seller states, then the seller's picture becomes the board's picture
  * (colour = its average) when the seller's site allows the download; otherwise the look stays and the user is told.
  */
@@ -85,7 +85,7 @@ export function BoardProduct({ m }: { m: Material }) {
   );
 }
 
-/** ADR-160: take a board's edge band (or its front band) from a seller; bands at least as wide as the board. */
+/** ADR-161: take a board's edge band (or its front band) from a seller; bands at least as wide as the board. */
 export function BandProduct({ m, front }: { m: Material; front?: boolean }) {
   const update = useDesign((s) => s.updateMaterial);
   const [open, setOpen] = useState(false);

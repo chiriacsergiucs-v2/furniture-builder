@@ -7,7 +7,7 @@ import { Dialog } from './Dialogs';
 import { Toggle } from './controls';
 import { Icon } from './icons';
 
-// Seller pictures come from the seller's site: shown by default, the user's exception to ADR-126 (ADR-160); off when
+// Seller pictures come from the seller's site: shown by default, the user's exception to ADR-126 (ADR-161); off when
 // switched off on this device.
 const SellerPicture = lazy(() => import('../online/SellerPicture'));
 const PICTURES_KEY = 'fb.sellerPictures';
@@ -36,7 +36,7 @@ function readPictures(): boolean {
   }
 }
 
-/** The bundled seller catalogs, loaded on first use (a lazy chunk, ADR-160). */
+/** The bundled seller catalogs, loaded on first use (a lazy chunk, ADR-161). */
 export function useSellerCatalogs(enabled = true): SellerCatalog[] | null | 'error' {
   const [cats, setCats] = useState<SellerCatalog[] | null | 'error'>(null);
   useEffect(() => {
@@ -62,7 +62,7 @@ export function sizesText(p: SellerProduct): string {
 }
 
 /**
- * Seller products to pick from (ADR-160): the best matches first, a search over every product, the price as the
+ * Seller products to pick from (ADR-161): the best matches first, a search over every product, the price as the
  * seller states it with the export date, and a link to the seller's page. Nothing changes until "Use this".
  */
 export function ProductPicker({

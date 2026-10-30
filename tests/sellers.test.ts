@@ -1,4 +1,4 @@
-// ADR-160: bundled seller catalogs, matching products to boards, bands and hardware, links in the design, and
+// ADR-161: bundled seller catalogs, matching products to boards, bands and hardware, links in the design, and
 // seller prices in the estimate.
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
@@ -174,7 +174,7 @@ describe('bundled Regency catalog (converter output)', () => {
   });
 });
 
-describe('matching (ADR-160)', () => {
+describe('matching (ADR-161)', () => {
   it('boards: the board thickness first, in stock before out of stock', () => {
     const ids = boardOffers(CATS, white).map((o) => o.p.id);
     expect(ids).toEqual(['b18', 'b18out', 'b16']);
@@ -244,7 +244,7 @@ const shop = (d: Design): ShopLine[] => {
 const lookup = sellerPriceLookup(productIndex(CATS));
 const offer = (id: string) => ({ seller: CATS[0], p: CATS[0].products.find((p) => p.id === id)! });
 
-describe('design links (ADR-160)', () => {
+describe('design links (ADR-161)', () => {
   it('validate, survive JSON, and need schemaVersion 5; older versions still load', () => {
     expect(SCHEMA_VERSION).toBe(5);
     let d = chest();
@@ -299,7 +299,7 @@ describe('design links (ADR-160)', () => {
   });
 });
 
-describe('seller prices in the estimate (ADR-160)', () => {
+describe('seller prices in the estimate (ADR-161)', () => {
   const linked = () => {
     let d = chest();
     const runner = shop(d).find((l) => l.hardwareKind === 'drawer-runner-pair')!;

@@ -67,7 +67,7 @@ export function Dialog({
     <dialog
       ref={ref}
       className={`dialog ${wide ? 'wide' : ''}`}
-      // A dialog opened from inside this one (a product picker, ADR-160) closes only itself.
+      // A dialog opened from inside this one (a product picker, ADR-161) closes only itself.
       onClose={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}

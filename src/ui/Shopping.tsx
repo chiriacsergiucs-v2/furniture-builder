@@ -124,7 +124,7 @@ export function ShoppingList() {
       }),
     [view, sheets, runParts, sinks, fastenerCounts, fastenerChoices],
   );
-  // Seller prices (ADR-160): the bundled catalogs load only when a line links a seller product.
+  // Seller prices (ADR-161): the bundled catalogs load only when a line links a seller product.
   const cats = useSellerCatalogs(lines.some((l) => l.product));
   const seller = useMemo<SellerLookup | undefined>(
     () => (cats && cats !== 'error' ? sellerPriceLookup(productIndex(cats)) : undefined),
@@ -477,7 +477,7 @@ function Line({
 }
 
 /**
- * ADR-160: the seller product of a hardware line (the line's kind first) with the seller units bought per item, or
+ * ADR-161: the seller product of a hardware line (the line's kind first) with the seller units bought per item, or
  * an added item's quantity. Boards and bands are linked under Materials.
  */
 function LineProduct({ l, projectView }: { l: ShopLine; projectView: boolean }) {

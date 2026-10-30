@@ -57,7 +57,7 @@ export function materialLabelProblems(m: Record<string, unknown>): string[] {
   return errs;
 }
 
-/** ADR-160: a link to a seller product is ids and a name, nothing else is trusted from the file. */
+/** ADR-161: a link to a seller product is ids and a name, nothing else is trusted from the file. */
 export function productRefProblems(v: unknown): string[] {
   if (!v || typeof v !== 'object' || Array.isArray(v)) return [t('invalid seller product')];
   const o = v as Record<string, unknown>;

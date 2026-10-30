@@ -1,5 +1,5 @@
 /**
- * The user's seller choices in a design (ADR-160): products for hardware lines and items added to the shopping list.
+ * The user's seller choices in a design (ADR-161): products for hardware lines and items added to the shopping list.
  * Pure updates of the design document; a project's choices are gathered from its pieces.
  */
 import { SCHEMA_VERSION } from '../design';
@@ -68,7 +68,7 @@ export function projectSellerChoices(p: Project): {
   return { hardwareProducts, sellerItems: [...items.values()] };
 }
 
-/** Links a hardware line's product in every piece of a project (ADR-160): the project's line covers them all. */
+/** Links a hardware line's product in every piece of a project (ADR-161): the project's line covers them all. */
 export const projectWithHardwareProduct = (
   p: Project,
   key: string,

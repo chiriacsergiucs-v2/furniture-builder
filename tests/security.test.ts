@@ -25,7 +25,7 @@ const SECRET =
 describe('content security policy (ADR-131)', () => {
   it('allows only the app itself and the seller picture origins without a backend', () => {
     const p = contentSecurityPolicy(undefined);
-    // ADR-160: seller pictures are shown on product lists and downloaded once when picked for a board.
+    // ADR-161: seller pictures are shown on product lists and downloaded once when picked for a board.
     expect(p).toContain("connect-src 'self' https://regencycompany.ro;");
     expect(p).toContain("img-src 'self' data: blob: https://regencycompany.ro;");
     expect(p).toContain("script-src 'self';");
@@ -41,7 +41,7 @@ describe('content security policy (ADR-131)', () => {
     );
     expect(backendOrigin('nope')).toBeNull();
   });
-  it('seller pictures load only from the seller origins, over https (ADR-160)', () => {
+  it('seller pictures load only from the seller origins, over https (ADR-161)', () => {
     expect(SELLER_IMAGE_ORIGINS).toEqual(['https://regencycompany.ro']);
     expect(sellerImageAllowed('https://regencycompany.ro/media/x.jpg')).toBe(true);
     expect(sellerImageAllowed('http://regencycompany.ro/media/x.jpg')).toBe(false);

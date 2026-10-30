@@ -1,4 +1,4 @@
-/** Russian text for seller product catalogs (ADR-160). Key: the English text; value: the Russian text. */
+/** Russian text for seller product catalogs (ADR-161). Key: the English text; value: the Russian text. */
 export const ru_sellers = {
   'Seller products need schemaVersion 5': 'Товарам продавца нужна schemaVersion 5',
   'Invalid hardware products': 'Неверные товары фурнитуры',

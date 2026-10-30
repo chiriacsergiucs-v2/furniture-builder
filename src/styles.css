@@ -6548,7 +6548,7 @@ ul.plain {
 .info-domain li {
   margin-bottom: var(--s-1);
 }
-/* Seller products (ADR-160): picker list, board and band rows, hardware lines. */
+/* Seller products (ADR-161): picker list, board and band rows, hardware lines. */
 .materials .seller-row {
   grid-column: 1 / -1;
   display: flex;

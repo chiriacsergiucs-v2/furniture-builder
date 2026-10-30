@@ -62,12 +62,12 @@ export interface Material {
   band?: EdgeBand;
   /** A different band for doors and drawer fronts made of this board (ADR-077); absent = they use `band`. */
   frontBand?: EdgeBand;
-  /** The seller's product this board was taken from (ADR-160, schemaVersion 5), for its price and page. */
+  /** The seller's product this board was taken from (ADR-161, schemaVersion 5), for its price and page. */
   product?: ProductRef;
 }
 
 /**
- * ADR-160. A product of a bundled seller catalog (`src/core/sellers`): the seller's id, the product's id there, and
+ * ADR-161. A product of a bundled seller catalog (`src/core/sellers`): the seller's id, the product's id there, and
  * its name when it was picked, shown when the product is no longer in the catalog.
  */
 export interface ProductRef {
@@ -76,12 +76,12 @@ export interface ProductRef {
   name: string;
 }
 
-/** ADR-160. The seller's product for a hardware line: `per` seller units are bought for each scheduled item. */
+/** ADR-161. The seller's product for a hardware line: `per` seller units are bought for each scheduled item. */
 export interface HardwareProduct extends ProductRef {
   per: number;
 }
 
-/** ADR-160. A seller product the user added to a piece's shopping list, with how many to buy. */
+/** ADR-161. A seller product the user added to a piece's shopping list, with how many to buy. */
 export interface SellerItem extends ProductRef {
   quantity: number;
 }
@@ -100,7 +100,7 @@ export interface EdgeBand {
   code?: string;
   /** Extra length per banded edge for trimming on the edgebander, counted in the metres to buy. Absent = 0. */
   allowance?: Mm;
-  /** The seller's product this band was taken from (ADR-160, schemaVersion 5). */
+  /** The seller's product this band was taken from (ADR-161, schemaVersion 5). */
   product?: ProductRef;
 }
 
@@ -674,7 +674,7 @@ export interface RuleSettings {
 export interface Design {
   /**
    * 2 adds stock sheets and cutting settings (ADR-019); 3 adds edge band specs on boards (ADR-077); 4 adds a
-   * board per part (`partMaterials`); 5 adds seller products (ADR-160). Older files are upgraded in memory on load.
+   * board per part (`partMaterials`); 5 adds seller products (ADR-161). Older files are upgraded in memory on load.
    */
   schemaVersion: 1 | 2 | 3 | 4 | 5;
   id: string;
@@ -696,9 +696,9 @@ export interface Design {
   partMaterials?: Record<string, string>;
   /** Answers of the New-piece wizard that made this piece, so it can be reopened there (ADR-046). Never geometry. */
   wizard?: { answers: WizardAnswers };
-  /** Seller products chosen for hardware lines, by shopping-list line key `hw:<label>[, <size> mm]` (ADR-160). */
+  /** Seller products chosen for hardware lines, by shopping-list line key `hw:<label>[, <size> mm]` (ADR-161). */
   hardwareProducts?: Record<string, HardwareProduct>;
-  /** Seller products added to this piece's shopping list (ADR-160). */
+  /** Seller products added to this piece's shopping list (ADR-161). */
   sellerItems?: SellerItem[];
 }
 

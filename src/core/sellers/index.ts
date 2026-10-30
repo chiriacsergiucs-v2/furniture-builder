@@ -1,5 +1,5 @@
 /**
- * Seller product catalogs (ADR-160): bundled snapshots of sellers' products, loaded as a lazy chunk the first time
+ * Seller product catalogs (ADR-161): bundled snapshots of sellers' products, loaded as a lazy chunk the first time
  * they are needed, then matched to the boards, edge bands and hardware of a design. The user always picks; a pick
  * copies only values the seller states (ADR-010). Pure: no DOM, no storage, no request.
  */

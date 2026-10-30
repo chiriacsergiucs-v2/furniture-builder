@@ -182,11 +182,11 @@ interface State {
 
   load: (d: Design, opts?: { fromStorage?: boolean }) => void;
   setKerf: (kerf: number) => void;
-  /** ADR-160: a seller product for a hardware line (undefined removes it); in a project view, in every piece. */
+  /** ADR-161: a seller product for a hardware line (undefined removes it); in a project view, in every piece. */
   setHardwareProduct: (key: string, hp: HardwareProduct | undefined) => void;
-  /** ADR-160: a seller product added to the open piece's shopping list. */
+  /** ADR-161: a seller product added to the open piece's shopping list. */
   addSellerItem: (it: SellerItem) => void;
-  /** ADR-160: an added item's quantity; 0 removes it. */
+  /** ADR-161: an added item's quantity; 0 removes it. */
   setSellerItemQuantity: (index: number, quantity: number) => void;
   rename: (name: string) => void;
   updateCabinet: (patch: Partial<CabinetParams>) => void;

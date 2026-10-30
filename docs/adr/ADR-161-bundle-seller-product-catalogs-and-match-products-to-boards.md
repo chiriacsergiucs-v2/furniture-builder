@@ -1,11 +1,11 @@
-# ADR-160: Bundle seller product catalogs and match products to boards, edge bands and hardware
+# ADR-161: Bundle seller product catalogs and match products to boards, edge bands and hardware
 
 - Status: Pending
 - Date: 2026-10-30
 - Decided by: user, 2026-10-30 (answers below)
 - Depends on: ADR-049, ADR-062, ADR-077
 - Design: docs/ui-design.md (Materials, Output › Shopping list)
-- Backlog: N162
+- Backlog: N163
 
 ## Context
 
@@ -61,7 +61,7 @@ is an offline snapshot, not a feed.
 ## Scope
 
 - In scope: the catalog shape, the Regency converter and data, the pickers, links, seller prices, opt-in pictures.
-- Out of scope: data refresh (G-309), project-level extra items (G-310), fasteners and run parts (G-311), live
+- Out of scope: data refresh (G-312), project-level extra items (G-313), fasteners and run parts (G-314), live
   feeds and ordering (ADR-063).
 
 ## Consequences

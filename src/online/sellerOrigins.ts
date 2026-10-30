@@ -1,5 +1,5 @@
 /**
- * Seller sites pictures may load from (ADR-160): only after the user switches seller pictures on, and only from
+ * Seller sites pictures may load from (ADR-161): only after the user switches seller pictures on, and only from
  * these origins. Kept free of build values so the CSP (`csp.ts`) can list them too.
  */
 export const SELLER_IMAGE_ORIGINS = ['https://regencycompany.ro'];

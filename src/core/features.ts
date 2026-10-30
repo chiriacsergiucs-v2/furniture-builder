@@ -350,7 +350,7 @@ export const FEATURES: FeatureDomain[] = [
         name: 'Boards and edge bands from a seller',
         detail:
           'Bundled seller products (Regency first): same thickness and decor first, you pick.',
-        adrs: ['ADR-160'],
+        adrs: ['ADR-161'],
       },
       { name: 'A picture from your device on a board', adrs: ['ADR-048'] },
       { name: 'Matte, satin or gloss finish', adrs: ['ADR-067'] },
@@ -516,7 +516,7 @@ export const FEATURES: FeatureDomain[] = [
           {
             name: 'Seller products for hardware and seller prices',
             detail: 'Your own price wins; otherwise the seller price, with its date.',
-            adrs: ['ADR-160'],
+            adrs: ['ADR-161'],
           },
         ],
       },

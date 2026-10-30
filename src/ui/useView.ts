@@ -29,7 +29,7 @@ export interface ViewData {
   diagnostics: Diagnostic[];
   kerf: number;
   jobs: () => NestJob[];
-  /** Seller products chosen for hardware lines and added items (ADR-160); a project gathers its pieces'. */
+  /** Seller products chosen for hardware lines and added items (ADR-161); a project gathers its pieces'. */
   hardwareProducts?: Record<string, HardwareProduct>;
   sellerItems?: SellerItem[];
 }

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * ADR-160: converts the Regency Company product export (JSON, schema_version 3.0) into the seller-agnostic catalog
+ * ADR-161: converts the Regency Company product export (JSON, schema_version 3.0) into the seller-agnostic catalog
  * the app bundles (`src/core/sellers/regency.json`). Each further seller gets its own converter writing the same
  * shape (`SellerCatalog` in `src/core/sellers/types.ts`). Only the seller's own values are kept; nothing is guessed:
  * a size the export does not state is left out.

@@ -35,9 +35,9 @@ export interface ShopLine {
   m2?: number;
   /** Boards: a worktop board (kind kitchen worktop, or named like "Worktop"), so it can be priced per piece. */
   worktop?: boolean;
-  /** The seller product linked to this line (ADR-160): the board's, the band's, the hardware line's or an added item. */
+  /** The seller product linked to this line (ADR-161): the board's, the band's, the hardware line's or an added item. */
   product?: ProductRef;
-  /** Hardware: seller units bought per scheduled item (ADR-160). Absent = 1. */
+  /** Hardware: seller units bought per scheduled item (ADR-161). Absent = 1. */
   per?: number;
   /** Hardware lines: the key a seller product is saved under (`Design.hardwareProducts`). */
   productKey?: string;
@@ -123,7 +123,7 @@ export function shoppingList(input: {
   diagnostics?: Diagnostic[];
   /** Fastener counts from the model and the user's fastener list (ADR-074). */
   fasteners?: { counts: FastenerCount[]; choices: FastenerChoice[] };
-  /** Seller products chosen for hardware lines and added by the user (ADR-160). */
+  /** Seller products chosen for hardware lines and added by the user (ADR-161). */
   hardwareProducts?: Record<string, HardwareProduct>;
   sellerItems?: SellerItem[];
 }): ShopLine[] {
@@ -193,7 +193,7 @@ export function shoppingList(input: {
         ? { product: { seller: link.seller, id: link.id, name: link.name }, per: link.per }
         : {}),
     };
-    // A product still to choose moves to Hardware once the user links a seller product to it (ADR-160).
+    // A product still to choose moves to Hardware once the user links a seller product to it (ADR-161).
     if (TO_CHOOSE.has(h.kind) && !link)
       lines.push({
         section: 'choose',

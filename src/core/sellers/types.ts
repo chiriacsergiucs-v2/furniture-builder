@@ -1,5 +1,5 @@
 /**
- * ADR-160: the seller-agnostic product catalog the app bundles. Each seller's export is converted to this shape by
+ * ADR-161: the seller-agnostic product catalog the app bundles. Each seller's export is converted to this shape by
  * its own script (`tools/sellers/<seller>.mjs`); only values the seller states are kept (ADR-010). Short keys keep
  * the bundled file small.
  */
