@@ -1,7 +1,8 @@
 # ADR-162: Ship Regency board pictures with the app so seller boards render their decor
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-30
+- Implemented: 2026-10-30 (Merged via PR #148)
 - Decided by: user, 2026-10-30 (answers below)
 - Depends on: ADR-161
 - Design: docs/ui-design.md (Materials)
@@ -62,7 +63,7 @@ repository instead of fetching them from the seller.
 - [x] A board with `h` takes the app's copy as its picture and colour; one without falls back to the seller
       (`tests/find-it/seller-pictures.test.tsx`, 390 and 1280 px)
 - [x] Board lists show the app's copy without a seller request (find-it)
-- [ ] All CI checks pass
+- [x] All CI checks pass (CI run 41031250596 on pull request #148)
 
 ## Implementation notes
 
