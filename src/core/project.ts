@@ -37,6 +37,7 @@ import {
   union,
   yawPoint,
 } from './geometry';
+import { commonBuilds, commonDesign, commonPanels, pruneCommon, type CommonBuild } from './common';
 import { aabbOf, overlapsBox, panelsOverlap, turnShape } from './shape';
 import { modelBox, modelChecks, validateModelItems, type ModelItem } from './model3d';
 import type { SheetSettings } from './nesting';
@@ -139,6 +140,13 @@ export interface ProjectSettings {
   plinthHeight?: Mm;
 }
 
+/** One top or bottom panel shared by items standing side by side (ADR-165, schemaVersion 16). */
+export interface CommonPanel {
+  id: string;
+  kind: 'top' | 'bottom';
+  itemIds: string[];
+}
+
 /**
  * A part that belongs to a run of pieces rather than to any one of them (ADR-036): the worktop over a run of base
  * units, a filler in a gap between two of them, a cover panel on an exposed end. Stored with its room position and
@@ -222,9 +230,10 @@ export interface RunSink {
  * (ADR-095); 7 = a kept template revision on items (ADR-096); 8 = groups of pieces
  * (ADR-097); 9 = linked copies (ADR-111); 10 = pieces typed at an angle (ADR-121); 11 = size-locked pieces
  * (ADR-122); 12 = template references and project-wide settings (ADR-124); 13 = run handles and sinks (ADR-125);
- * 14 = wall backgrounds (ADR-145); 15 = fitted and straightened wall pictures (ADR-146).
+ * 14 = wall backgrounds (ADR-145); 15 = fitted and straightened wall pictures (ADR-146); 16 = common tops and
+ * bottoms (ADR-165).
  */
-export const PROJECT_SCHEMA = 15 as const;
+export const PROJECT_SCHEMA = 16 as const;
 export const PROJECT_SCHEMAS: readonly number[] = [
   1,
   2,
@@ -240,10 +249,11 @@ export const PROJECT_SCHEMAS: readonly number[] = [
   12,
   13,
   14,
+  15,
   PROJECT_SCHEMA,
 ];
 export type ProjectSchemaVersion =
-  1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | typeof PROJECT_SCHEMA;
+  1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | typeof PROJECT_SCHEMA;
 const RUN_REQUESTS_SINCE = 4;
 const MODELS_SINCE = 5;
 const LOCKS_SINCE = 6;
@@ -256,6 +266,7 @@ const REFS_SINCE = 12;
 const RUN_EXTRAS_SINCE = 13;
 const WALLS_SINCE = 14;
 const FITTED_WALLS_SINCE = 15;
+const COMMON_SINCE = 16;
 
 export interface Project {
   schemaVersion: ProjectSchemaVersion;
@@ -288,6 +299,8 @@ export interface Project {
   runHandles?: RunHandle[];
   /** Sinks over base units: worktop cut-outs (ADR-125, schemaVersion 13). Absent = none. */
   sinks?: RunSink[];
+  /** Common tops and bottoms across items (ADR-165, schemaVersion 16). Absent = none. */
+  common?: CommonPanel[];
 }
 
 /**
@@ -651,7 +664,7 @@ export function removeProjectItem(project: Project, id: string): Project {
   const runRequests = project.runRequests
     ?.map((r) => ({ ...r, from: r.from.filter((x) => x !== id) }))
     .filter((r) => r.from.length);
-  return pruneGroups({ ...project, items, ...(runRequests ? { runRequests } : {}) });
+  return pruneCommon(pruneGroups({ ...project, items, ...(runRequests ? { runRequests } : {}) }));
 }
 
 /** Placement problems: a missing base, a piece resting on itself, a piece in the air that is not built to hang. */
@@ -752,6 +765,8 @@ export interface PlacedPiece {
   facing: { axis: 'x' | 'z'; sign: 1 | -1 };
   /** Chair, installation and service envelopes in room coordinates (ADR-073). */
   envelopes: Envelope[];
+  /** Its own tops (bottoms) a common top (bottom) replaces (ADR-165), in room coordinates; absent = none. */
+  removed?: Panel[];
   /** The whole piece as one box, turned when the piece is typed at an angle (ADR-121); `bounds` encloses it. */
   outline: Box;
   /** Its floor outline: four corners (x, z) in order, turned with the piece (ADR-121). */
@@ -828,20 +843,30 @@ const withYaw = (item: ProjectItem, rb: Pick<Box, 'w' | 'd'>, b: Box): Box => {
   return yaw ? { ...b, yaw } : b;
 };
 
-export function placeItem(item: ProjectItem, opts?: { noPlinth?: boolean }): PlacedPiece {
-  const built = buildModel(item.design);
-  // A run plinth replaces the piece's own plinth (ADR-054).
-  const model = opts?.noPlinth
-    ? { ...built, panels: built.panels.filter((p) => p.role !== 'plinth') }
+export function placeItem(
+  item: ProjectItem,
+  opts?: { noPlinth?: boolean; common?: CommonBuild },
+): PlacedPiece {
+  const c = opts?.common;
+  // In a common top or bottom (ADR-165) the piece is built with its top over (bottom under) the sides.
+  const built = buildModel(c ? commonDesign(item.design, c) : item.design);
+  // A run plinth replaces the piece's own plinth (ADR-054); a common top or bottom replaces its own (ADR-165).
+  const leaves = (p: Panel) =>
+    (!!opts?.noPlinth && p.role === 'plinth') ||
+    (!!c?.top && p.role === 'top') ||
+    (!!c?.bottom && p.role === 'bottom');
+  const model = built.panels.some(leaves)
+    ? { ...built, panels: built.panels.filter((p) => !leaves(p)) }
     : built;
   const r = item.rotationY;
-  const rotated = model.panels.map((p) => rotateBox(p.box, r));
+  const left = model === built ? [] : built.panels.filter((p) => leaves(p) && p.role !== 'plinth');
+  const rotated = [...model.panels, ...left].map((p) => rotateBox(p.box, r));
   // The piece is placed by its full outline, so leaving the plinth out does not move it.
   const rb = union(built.panels.map((p) => rotateBox(aabbOf(p), r)));
   const dx = item.position.x - rb.x,
     dy = item.position.y - rb.y,
     dz = item.position.z - rb.z;
-  const panels = model.panels.map((p, i): Panel => ({
+  const all = [...model.panels, ...left].map((p, i): Panel => ({
     ...p,
     id: `${item.id}:${p.id}`,
     nodeId: `${item.id}:${p.nodeId}`,
@@ -868,6 +893,7 @@ export function placeItem(item: ProjectItem, opts?: { noPlinth?: boolean }): Pla
         }
       : {}),
   }));
+  const panels = all.slice(0, model.panels.length);
   const full = { x: rb.x + dx, y: rb.y + dy, z: rb.z + dz, w: rb.w, h: rb.h, d: rb.d };
   const clearances = localClearances(model).map((c) => {
     const rc = rotateBox(c.box, r);
@@ -900,6 +926,7 @@ export function placeItem(item: ProjectItem, opts?: { noPlinth?: boolean }): Pla
     outline,
     footprint: corners,
     front: [...corners[f1], ...corners[f2]] as [number, number, number, number],
+    ...(left.length ? { removed: all.slice(model.panels.length) } : {}),
   };
 }
 
@@ -958,12 +985,16 @@ export function buildProjectModel(input: Project): ProjectModel {
   // Run handles reach the pieces' fronts when built (ADR-125).
   const project = applyRunHandles(resolvePlacements(input));
   const covered = plinthCovered(project);
-  const pieces = project.items.map((i) => placeItem(i, { noPlinth: covered.has(i.id) }));
+  // Common tops and bottoms (ADR-165): how each member is built, and the links that no longer fit.
+  const common = commonBuilds(project);
+  const pieces = project.items.map((i) =>
+    placeItem(i, { noPlinth: covered.has(i.id), common: common.builds.get(i.id) }),
+  );
   const materials = new Map<string, Material>();
   const panels: Panel[] = [];
   const piecePanels: Panel[][] = [];
   const hardware: HardwareItem[] = [];
-  const diagnostics: Diagnostic[] = placementIssues(project);
+  const diagnostics: Diagnostic[] = [...placementIssues(project), ...common.diagnostics];
   for (const pc of pieces) {
     const mats = new Map(pc.item.design.materials.map((m) => [m.id, m]));
     for (const m of pc.item.design.materials) {
@@ -1015,6 +1046,20 @@ export function buildProjectModel(input: Project): ProjectModel {
         }),
         nodeId: pc.item.id,
       });
+  }
+  // One panel per common top or bottom, on the leftmost member's board (ADR-165).
+  const byItem = new Map(pieces.map((pc) => [pc.item.id, pc]));
+  for (const cp of commonPanels(
+    project,
+    common.plans,
+    new Map(pieces.filter((pc) => pc.removed).map((pc) => [pc.item.id, pc.removed!])),
+    (itemId, materialId) => {
+      const m = byItem.get(itemId)?.item.design.materials.find((x) => x.id === materialId);
+      return m ? materialKey(m) : materialId;
+    },
+  )) {
+    panels.push(cp);
+    piecePanels.push([cp]);
   }
   // Pieces may touch but not occupy the same space (bounding boxes first, then panels).
   const overlapping = new Set<string>();
@@ -2187,10 +2232,32 @@ export function projectCutlist(input: Project): CutRow[] {
     }
   }
   const covered = plinthCovered(project);
+  // Common tops and bottoms (ADR-165): members leave their own out, and each common panel is one row of its own.
+  const common = commonBuilds(project);
+  if (common.plans.size) {
+    const pm = buildProjectModel(input);
+    const model: FurnitureModel = {
+      panels: pm.model.panels.filter((p) => p.id.startsWith('common:')),
+      spaces: [],
+      hardware: [],
+      diagnostics: [],
+      bounds: { x: 0, y: 0, z: 0, w: 0, h: 0, d: 0 },
+    };
+    for (const r of cutlist(model, pm.materials))
+      rows.set(
+        ['common', r.materialId, r.length, r.width, r.edgesL, r.edgesW, bandKey(r.band)].join('|'),
+        r,
+      );
+  }
   for (const item of project.items) {
-    const built = buildModel(item.design);
-    const model = covered.has(item.id)
-      ? { ...built, panels: built.panels.filter((p) => p.role !== 'plinth') }
+    const c = common.builds.get(item.id);
+    const built = buildModel(c ? commonDesign(item.design, c) : item.design);
+    const leaves = (p: Panel) =>
+      (covered.has(item.id) && p.role === 'plinth') ||
+      (!!c?.top && p.role === 'top') ||
+      (!!c?.bottom && p.role === 'bottom');
+    const model = built.panels.some(leaves)
+      ? { ...built, panels: built.panels.filter((p) => !leaves(p)) }
       : built;
     for (const r of cutlist(model, item.design.materials)) {
       const mat = item.design.materials.find((m) => m.id === r.materialId)!;
@@ -2537,6 +2604,34 @@ export function validateProject(p: unknown): string[] {
         }
         groupIds.add(g.id);
         for (const x of g.itemIds) grouped.add(x as string);
+      }
+  }
+  if (p.common !== undefined) {
+    if ((p.schemaVersion as number) < COMMON_SINCE)
+      errs.push(t('Common tops and bottoms need project schemaVersion {v}', { v: COMMON_SINCE }));
+    const seen = new Set<string>();
+    const inKind = { top: new Set<string>(), bottom: new Set<string>() };
+    if (!Array.isArray(p.common)) errs.push(t('Invalid common tops and bottoms'));
+    else
+      for (const c of p.common) {
+        if (
+          !isObj(c) ||
+          typeof c.id !== 'string' ||
+          !c.id ||
+          seen.has(c.id) ||
+          (c.kind !== 'top' && c.kind !== 'bottom') ||
+          !Array.isArray(c.itemIds) ||
+          c.itemIds.length < 2 ||
+          !c.itemIds.every(
+            (x) =>
+              typeof x === 'string' && ids.has(x) && !inKind[c.kind as 'top' | 'bottom'].has(x),
+          )
+        ) {
+          errs.push(t('Invalid common top or bottom'));
+          continue;
+        }
+        seen.add(c.id);
+        for (const x of c.itemIds) inKind[c.kind as 'top' | 'bottom'].add(x as string);
       }
   }
   if (p.settings !== undefined) {

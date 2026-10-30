@@ -10,6 +10,7 @@ import {
   findInProduct,
   productRoots,
   mapProductSpace,
+  newId,
   SCHEMA_VERSION,
   templates,
   upgradeDesign,
@@ -29,6 +30,7 @@ import {
   type MaterialRole,
   type MaterialScope,
 } from '../core/finish';
+import { commonPanelCheck, pruneCommon } from '../core/common';
 import { mergeItems } from '../core/merge';
 import { describeChange } from '../core/history';
 import { insertTemplate } from '../core/insertTemplate';
@@ -413,6 +415,11 @@ interface State {
     scope: MaterialScope,
     panelId?: string,
   ) => { applied: string[]; skipped: string[] };
+  /**
+   * A common top or bottom (ADR-165) over the selected items: on links them (replacing a common panel of the same
+   * kind any of them is in), off removes the one they are in. Returns why it was refused, or ''. One undo step.
+   */
+  setCommon: (kind: 'top' | 'bottom', on: boolean) => string;
   /** Forget a part's own board (ADR-151) on a project item (`id`) or the open piece (null). */
   clearPartBoard: (id: string | null, panelId: string) => void;
   /** Put the piece being placed with its left-back corner at a plan point (whole mm, x and z ≥ 0), or stop placing (ADR-056). */
@@ -546,7 +553,7 @@ export const useDesign = create<State>((rawSet, get) => {
       return locked;
     }
     const stamped = {
-      ...refreshRunParts(resolvePlacements(pruneRunExtras(pruneGroups(linked)))),
+      ...refreshRunParts(resolvePlacements(pruneRunExtras(pruneCommon(pruneGroups(linked))))),
       schemaVersion: PROJECT_SCHEMA, // an edited project is saved in the current shape (ADR-011, ADR-073)
       updatedAt: new Date().toISOString(),
     };
@@ -1338,6 +1345,27 @@ export const useDesign = create<State>((rawSet, get) => {
       const r = applyMaterial(p, id, roles, board, scope, get().selectedItemIds);
       if (r.applied.length) commitProject(r.project, t('Apply material'));
       return { applied: r.applied, skipped: r.skipped };
+    },
+    setCommon: (kind, on) => {
+      const p = get().project;
+      const ids = get().selectedItemIds.filter((id) => p?.items.some((i) => i.id === id));
+      if (!p || ids.length < 2) return t('Select two or more items standing side by side.');
+      const others = (p.common ?? []).filter(
+        (c) => c.kind !== kind || !c.itemIds.some((x) => ids.includes(x)),
+      );
+      let common = others;
+      if (on) {
+        const plan = commonPanelCheck(p, ids, kind);
+        if (plan.reason) return plan.reason;
+        common = [...others, { id: newId(), kind, itemIds: plan.ids }];
+      }
+      const { common: _was, ...rest } = p;
+      void _was;
+      commitProject(
+        common.length ? { ...rest, common } : rest,
+        kind === 'top' ? t('Common top') : t('Common bottom'),
+      );
+      return '';
     },
     clearPartBoard: (id, panelId) => {
       const p = get().project;

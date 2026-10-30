@@ -63,16 +63,26 @@ Change control: a new project field (ADR-011): project schemaVersion **16**; old
 
 ## Done when
 
-- [ ] Two touching 800 mm cabinets with a common top build one `top` panel 1600 mm wide and no item tops; no
+- [x] Two touching 800 mm cabinets with a common top build one `top` panel 1600 mm wide and no item tops; no
       overlaps; a common bottom likewise (`tests/common-panel.test.ts`).
-- [ ] A member with `top: 'between'` is built over the sides while linked; a doubled-top mix gives
+- [x] A member with `top: 'between'` is built over the sides while linked; a doubled-top mix gives
       `common-top-layers`; moving a member gives `common-panel-broken` and both own tops (`tests/common-panel.test.ts`).
-- [ ] `commonPanelCheck` refuses different heights, depths, plinths, a gap, a turned item and a desk with the reason
+- [x] `commonPanelCheck` refuses different heights, depths, plinths, a gap, a turned item and a desk with the reason
       (`tests/common-panel.test.ts`).
-- [ ] A version-15 project with `common` is invalid; a version-16 one loads; `pruneCommon` drops a 1-item list
+- [x] A version-15 project with `common` is invalid; a version-16 one loads; `pruneCommon` drops a 1-item list
       (`tests/common-panel.test.ts`).
-- [ ] Find-it `tests/find-it/common-panel.test.tsx` at 390 and 1280 px: two cabinets selected → "Common top" →
+- [x] Find-it `tests/find-it/common-panel.test.tsx` at 390 and 1280 px: two cabinets selected → "Common top" →
       parts list shows "Common top" once; a wardrobe selected with them → the toggle is disabled with the reason.
+
+## Implementation notes
+
+`src/core/common.ts` (`commonPanelCheck`, `commonBuilds`, `commonPanels`, `commonDesign`, `pruneCommon`);
+`Project.common` and project schemaVersion 16 with validation in `src/core/project.ts`; `placeItem` builds members
+over/under and keeps their replaced panels (`removed`); `buildProjectModel` and `projectCutlist` add one panel per
+layer. An item counted more than once (quantity above 1) is refused too: one common panel cannot cover copies. Store
+`setCommon`; toggles **Common top** / **Common bottom** in the selected-pieces card (`src/ui/Selection.tsx`); Romanian
+and Russian print names. Tests: `tests/common-panel.test.ts`, `tests/find-it/common-panel.test.tsx`; deep fuzz
+(`FUZZ_N=30000`) passes.
 
 ## Open questions
 
