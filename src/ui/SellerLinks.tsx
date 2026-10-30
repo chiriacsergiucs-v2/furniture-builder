@@ -1,6 +1,13 @@
 import { useCallback, useState } from 'react';
 import { t, tr } from '../core/i18n';
-import { bandFromOffer, bandOffers, boardOffers, boardPatch, type Offer } from '../core/sellers';
+import {
+  bandFromOffer,
+  bandOffers,
+  boardOffers,
+  boardPatch,
+  hostedPicture,
+  type Offer,
+} from '../core/sellers';
 import type { SellerCatalog } from '../core/sellers';
 import type { Material, ProductRef } from '../core/types';
 import { importImage } from '../persist/images';
@@ -22,7 +29,7 @@ function Linked({ product, onUnlink }: { product?: ProductRef; onUnlink: () => v
 }
 
 /**
- * ADR-161: take a board from a seller. Boards and worktops of the board's thickness come first; the pick sets the
+ * ADR-161, ADR-162: take a board from a seller. Boards and worktops of the board's thickness come first; the pick sets the
  * name, thickness, sheet size and labels the seller states, then the seller's picture becomes the board's picture
  * (colour = its average) when the seller's site allows the download; otherwise the look stays and the user is told.
  */
@@ -38,8 +45,13 @@ export function BoardProduct({ m }: { m: Material }) {
         text: t('The seller has no picture of this product; the board keeps its look.'),
       });
     setStatus({ busy: true, text: t('Loading the seller’s picture…') });
+    // The app's own copy when it ships one (ADR-162), else the seller's site (ADR-161).
+    const hosted = hostedPicture(o);
     const { fetchSellerPicture } = await import('../online/sellerPictureFile');
-    const file = await fetchSellerPicture(o.seller.imageBase + o.p.i, `${o.p.code ?? o.p.id}.jpg`);
+    const file = await fetchSellerPicture(
+      hosted ? import.meta.env.BASE_URL + hosted : o.seller.imageBase + o.p.i,
+      `${o.p.code ?? o.p.id}.jpg`,
+    );
     const r = file ? await importImage(file) : null;
     if (!r?.ok) {
       setStatus({

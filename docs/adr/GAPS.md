@@ -2659,3 +2659,21 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Match products to parts in app
 - Questions: Match fasteners and run parts to seller products too?
 - Suggested pick: Yes: a product button on fastener lines and on run parts (estimate: effort +25 %, value +10 %)
+
+### G-315: Band and hardware pictures not shipped
+
+- Status: Open
+- Origin: ADR-162, 2026-10-30; agent scoped it out
+- Missing: Only board and worktop pictures ship with the app. Edge band and hardware pictures still load from regencycompany.ro (lists only, never in 3D).
+- Request: You didnt use the image i provided to render
+- Questions: Ship band and hardware pictures too?
+- Suggested pick: Only if bands get a 3D look of their own (estimate: effort +15 %, value +5 %)
+
+### G-316: Seller pictures not seen before shipping
+
+- Status: Open
+- Origin: ADR-162, 2026-10-30; agent scoped it out
+- Missing: The pictures are downloaded by a workflow on GitHub (this session cannot reach regencycompany.ro); their real size and look were not checked before shipping the workflow.
+- Request: You didnt use the image i provided to render
+- Questions: Are the seller's pictures good board textures (whole panel photo vs decor swatch)?
+- Suggested pick: Check a few boards in 3D after the first download; adjust the tile size if needed (estimate: effort 5 %)

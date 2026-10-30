@@ -1,0 +1,43 @@
+# ADR-162: downloads the pictures of Regency boards and worktops into public/sellers/regency/ and opens a pull request
+# with them. Started by hand (Actions › Seller pictures › Run workflow); nothing is pushed to main directly.
+name: Seller pictures
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  pictures:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/setup@v3
+        with:
+          runtime: node@24
+          cache: true
+          require-lockfile: true
+
+      - run: node tools/sellers/regency-pictures.ts
+
+      - name: Open a pull request with the pictures
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet && [ -z "$(git ls-files --others --exclude-standard public/sellers)" ]; then
+            echo "No new pictures."
+            exit 0
+          fi
+          branch="seller-pictures-${{ github.run_id }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add public/sellers src/core/sellers/regency.json
+          git commit -m "ADR-162: Regency board pictures ($(ls public/sellers/regency | wc -l) files)"
+          git push -u origin "$branch"
+          gh pr create --base main --head "$branch" \
+            --title "ADR-162: Regency board pictures" \
+            --body "Board and worktop pictures downloaded by the Seller pictures workflow (run ${{ github.run_id }}), and \`h: 1\` marked in \`src/core/sellers/regency.json\` for each picture saved."

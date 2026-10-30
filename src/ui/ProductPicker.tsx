@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { t } from '../core/i18n';
 import { formatMoney } from '../core/prices';
-import { loadSellerCatalogs, type Offer, type SellerCatalog } from '../core/sellers';
+import { hostedPicture, loadSellerCatalogs, type Offer, type SellerCatalog } from '../core/sellers';
 import type { SellerProduct } from '../core/sellers/types';
 import { Dialog } from './Dialogs';
 import { Toggle } from './controls';
@@ -27,6 +27,23 @@ const STOCK: Record<SellerProduct['s'], string> = {
   online: t('Online only'),
   other: '',
 };
+
+/** A board picture the app ships itself (ADR-162): no seller request; hidden when it cannot be shown (offline). */
+function AppPicture({ src }: { src: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return null;
+  return (
+    <img
+      className="seller-pic"
+      src={src}
+      alt=""
+      width={72}
+      height={72}
+      loading="lazy"
+      onError={() => setFailed(true)}
+    />
+  );
+}
 
 function readPictures(): boolean {
   try {
@@ -126,10 +143,15 @@ export function ProductPicker({
         <ul className="products" aria-label={t('Seller products')}>
           {list.map((o) => (
             <li key={`${o.seller.id}:${o.p.id}`}>
-              {pictures && o.p.i && (
-                <Suspense fallback={null}>
-                  <SellerPicture src={o.seller.imageBase + o.p.i} alt="" />
-                </Suspense>
+              {hostedPicture(o) ? (
+                <AppPicture src={import.meta.env.BASE_URL + hostedPicture(o)} />
+              ) : (
+                pictures &&
+                o.p.i && (
+                  <Suspense fallback={null}>
+                    <SellerPicture src={o.seller.imageBase + o.p.i} alt="" />
+                  </Suspense>
+                )
               )}
               <div className="product-text">
                 <strong>{o.p.n}</strong>
