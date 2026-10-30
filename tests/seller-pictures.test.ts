@@ -1,15 +1,23 @@
 // ADR-162: the script that downloads Regency board pictures for the app to ship.
-import { mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import {
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  renameSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { pictureExt as appExt } from '../src/core/sellers';
+import { pictureExt as appExt, thumbUrl, type SellerCatalog } from '../src/core/sellers';
 import {
   download,
   markHosted,
+  downloadNew,
+  mark,
   pictureExt,
   picturePlan,
-  run,
 } from '../tools/sellers/regency-pictures';
 
 const catalog = () => ({
@@ -70,23 +78,55 @@ describe('Regency board pictures (ADR-162)', () => {
     expect(r.failed).toEqual(['https://shop.example/b.jpg']);
     expect(readdirSync(dir)).toEqual(['a.jpg']);
   });
-  it('runs end to end: downloads, then marks the catalog; a second run fetches nothing', async () => {
+  it('downloads full pictures even when the catalog has thumbnails; lists use the thumbnails', () => {
+    const c = {
+      ...catalog(),
+      thumbBase: 'https://shop.example/media/thumbs/',
+      products: [
+        { id: '1', k: 'board', i: 'a/one.jpg' },
+        { id: '3', k: 'board', i: 'c/three.jpg', ti: '' },
+      ],
+    };
+    expect(picturePlan(c, new Set()).map((x) => x.url)).toEqual([
+      'https://shop.example/media/cache/a/one.jpg',
+      'https://shop.example/media/cache/c/three.jpg',
+    ]);
+    const seller = {
+      ...c,
+      id: 's',
+      name: 'S',
+      origin: 'https://shop.example',
+    } as unknown as SellerCatalog;
+    const p = (i: number) => c.products[i] as unknown as SellerCatalog['products'][number];
+    expect(thumbUrl({ seller, p: p(0) })).toBe('https://shop.example/media/thumbs/a/one.jpg');
+    expect(thumbUrl({ seller, p: p(1) })).toBeNull();
+    expect(thumbUrl({ seller: { ...seller, thumbBase: undefined }, p: p(0) })).toBe(
+      'https://shop.example/media/cache/a/one.jpg',
+    );
+  });
+  it('downloads new pictures to a separate folder, then marks the catalog; a second run fetches nothing', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'pics-'));
     const path = join(dir, 'catalog.json');
     writeFileSync(path, JSON.stringify(catalog()));
     const seen: string[] = [];
-    await run(path, join(dir, 'out'), okFetch(seen));
+    await downloadNew(path, join(dir, 'new'), join(dir, 'out'), okFetch(seen));
     expect(seen.sort()).toEqual([
       'https://shop.example/media/cache/a/one.jpg',
       'https://shop.example/media/cache/b/two.PNG',
     ]);
+    expect(readdirSync(join(dir, 'new')).sort()).toEqual(['1.jpg', '2.png']);
+    // The workflow crops and moves them; here they are moved as they are.
+    mkdirSync(join(dir, 'out'));
+    for (const f of readdirSync(join(dir, 'new')))
+      renameSync(join(dir, 'new', f), join(dir, 'out', f));
+    mark(path, join(dir, 'out'));
     const c = JSON.parse(readFileSync(path, 'utf8'));
     expect(c.products.filter((p: { h?: number }) => p.h).map((p: { id: string }) => p.id)).toEqual([
       '1',
       '2',
     ]);
     seen.length = 0;
-    await run(path, join(dir, 'out'), okFetch(seen));
+    await downloadNew(path, join(dir, 'new'), join(dir, 'out'), okFetch(seen));
     expect(seen).toEqual([]);
   });
 });

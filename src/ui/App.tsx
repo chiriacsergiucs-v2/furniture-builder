@@ -15,6 +15,7 @@ import type { Design } from '../core/types';
 import { t, tr } from '../core/i18n';
 import { NewDialog } from './Dialogs';
 import { SettingsDialog } from './Settings';
+import { MaterialDialog } from './MaterialDialog';
 import { WizardDialog } from './Wizard';
 import { WallFillDialog } from './WallFill';
 import { CatalogPage } from './Catalog';
@@ -192,6 +193,7 @@ export function App() {
   const notice = useUi((s) => s.notice);
   const setNotice = useUi((s) => s.setNotice);
   const setSettingsOpen = useUi((s) => s.setSettingsOpen);
+  const setMaterialOpen = useUi((s) => s.setMaterialOpen);
   const phone = useMediaQuery('(max-width: 760px)');
   const wide = useMediaQuery('(min-width: 1500px)');
   const [has3d] = useState(webglAvailable);
@@ -648,6 +650,17 @@ export function App() {
                 >
                   <Icon name="sliders" />
                 </button>
+                <button
+                  type="button"
+                  className="btn icon"
+                  onClick={() => setMaterialOpen(true)}
+                  aria-label={t('Material')}
+                  title={t(
+                    'Material: put a board on parts of this item, a group or the whole project',
+                  )}
+                >
+                  <Icon name="swatch" />
+                </button>
               </>
             )}
             <AccountButton />
@@ -903,6 +916,7 @@ export function App() {
           }}
         />
         <SettingsDialog onWizard={() => openWizard(design)} />
+        <MaterialDialog />
         <SavedDataDialog />
         <AccountDialog />
         <ShareLinkDialog />

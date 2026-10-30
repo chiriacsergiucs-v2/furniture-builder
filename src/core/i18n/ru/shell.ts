@@ -147,7 +147,6 @@ export const ru_shell = {
   '{setting}: applied to {n|# piece|# pieces}.':
     '{setting}: применено к {n|# изделию|# изделиям|# изделиям}.',
   '{setting}: no piece follows it.': '{setting}: ни одно изделие не следует этому значению.',
-  '{name} {n} mm': '{name} {n} мм',
   'Not set': 'Не задано',
   "Every piece follows these while its own value is the project's. A piece changed on its own keeps its value; its card offers Follow project.":
     'Каждое изделие следует этим значениям, пока его собственное значение совпадает с проектным. Изделие, изменённое отдельно, сохраняет своё значение; в его карточке есть «Следовать проекту».',

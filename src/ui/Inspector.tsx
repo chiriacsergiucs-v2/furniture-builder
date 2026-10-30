@@ -20,7 +20,7 @@ import {
   usesPedestal,
 } from '../core/design';
 import { t, tr } from '../core/i18n';
-import { materialLabel } from '../core/materials';
+import { boardLabel } from '../core/boards';
 import type { Selection } from '../core/selectPath';
 import type {
   CabinetParams,
@@ -62,7 +62,6 @@ import { tNode } from './i18n';
 import {
   ApplianceEditor,
   ChecksGroup,
-  PartBoardsGroup,
   FrameEditor,
   FrontEditor,
   LayoutPicker,
@@ -107,7 +106,7 @@ export function Inspector({ mode }: { mode: 'compose' | 'configure' }) {
     ) : prod.kind === 'panel' ? (
       <PanelEditor p={prod.params} materials={design.materials} />
     ) : prod.kind === 'frame' ? (
-      <FrameEditor p={prod.params} materials={design.materials} />
+      <FrameEditor p={prod.params} />
     ) : prod.kind === 'panels' ? (
       <PanelSetEditor p={prod.params} materials={design.materials} />
     ) : (
@@ -251,7 +250,7 @@ const WHOLE = {
 function matOptions(materials: Material[], filter?: (m: Material) => boolean) {
   return materials
     .filter(filter ?? (() => true))
-    .map((m) => ({ value: m.id, label: materialLabel(m) }));
+    .map((m) => ({ value: m.id, label: boardLabel(m) }));
 }
 const matName = (materials: Material[], id: string) =>
   tr(materials.find((m) => m.id === id)?.name ?? '—');
@@ -900,8 +899,6 @@ function SplitEditor({
 function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material[] }) {
   const set = useDesign((s) => s.updateCabinet);
   const select = useDesign((s) => s.select);
-  const panelMats = matOptions(materials, (m) => m.thickness >= 12);
-  const thinMats = matOptions(materials);
   const inside = insideSummary([p.interior]);
   const steps: Step[] = [
     { id: 'size', label: t('Size'), meta: `${p.width}×${p.height}×${p.depth}`, done: true },
@@ -1119,32 +1116,7 @@ function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material
           />
         </div>
       </Group>
-      <Group title={t('Materials')} id="g-materials">
-        <Select
-          label={t('Body')}
-          value={p.bodyMaterialId}
-          options={panelMats}
-          onChange={(v) => set({ bodyMaterialId: v })}
-        />
-        <Select
-          label={t('Fronts')}
-          value={p.frontMaterialId}
-          options={panelMats}
-          onChange={(v) => set({ frontMaterialId: v })}
-        />
-        <Select
-          label={t('Back@@panel')}
-          value={p.backMaterialId}
-          options={thinMats}
-          onChange={(v) => set({ backMaterialId: v })}
-        />
-      </Group>
-      <DrawerSettingsGroup
-        value={p.drawers}
-        materials={materials}
-        onChange={(d) => set({ drawers: d })}
-      />
-      <PartBoardsGroup />
+      <DrawerSettingsGroup value={p.drawers} onChange={(d) => set({ drawers: d })} />
       <ChecksGroup />
     </div>
   );
@@ -1152,11 +1124,9 @@ function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material
 
 function DrawerSettingsGroup({
   value: d,
-  materials,
   onChange,
 }: {
   value: CabinetParams['drawers'];
-  materials: Material[];
   onChange: (v: CabinetParams['drawers']) => void;
 }) {
   return (
@@ -1186,18 +1156,6 @@ function DrawerSettingsGroup({
         step={1}
         onChange={(v) => onChange({ ...d, rearClearance: v })}
       />
-      <Select
-        label={t('Drawer box')}
-        value={d.boxMaterialId}
-        options={matOptions(materials, (m) => m.thickness >= 10)}
-        onChange={(v) => onChange({ ...d, boxMaterialId: v })}
-      />
-      <Select
-        label={t('Drawer bottom')}
-        value={d.bottomMaterialId}
-        options={matOptions(materials)}
-        onChange={(v) => onChange({ ...d, bottomMaterialId: v })}
-      />
       <div className="field">
         <div className="label-row">
           <label htmlFor="runner-lengths">{t('Runner lengths you can buy')}</label>
@@ -1225,7 +1183,6 @@ function DrawerSettingsGroup({
 function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[] }) {
   const set = useDesign((s) => s.updateCorner);
   const select = useDesign((s) => s.select);
-  const panelMats = matOptions(materials, (m) => m.thickness >= 12);
   const blind = p.variant === 'blind',
     diagonal = p.variant === 'diagonal';
   const inside = insideSummary(blind || diagonal ? [p.interior] : [p.interior, p.wingInterior]);
@@ -1409,27 +1366,6 @@ function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[]
           onChange={(v) => set({ frontGap: v })}
         />
       </Group>
-      <Group title={t('Materials')} id="g-materials">
-        <Select
-          label={t('Body')}
-          value={p.bodyMaterialId}
-          options={panelMats}
-          onChange={(v) => set({ bodyMaterialId: v })}
-        />
-        <Select
-          label={t('Fronts')}
-          value={p.frontMaterialId}
-          options={panelMats}
-          onChange={(v) => set({ frontMaterialId: v })}
-        />
-        <Select
-          label={t('Back@@panel')}
-          value={p.backMaterialId}
-          options={matOptions(materials)}
-          onChange={(v) => set({ backMaterialId: v })}
-        />
-      </Group>
-      <PartBoardsGroup />
       <ChecksGroup />
     </div>
   );
@@ -1699,7 +1635,6 @@ function DeskEditor({
 }) {
   const select = useDesign((s) => s.select);
   const set = useDesign((s) => s.updateDesk);
-  const panelMats = matOptions(materials, (m) => m.thickness >= 12);
   const ped = p.support !== 'gables';
   const sides = (['left', 'right'] as const).filter((sd) => usesPedestal(p, sd));
   const steps: Step[] = [
@@ -1828,36 +1763,7 @@ function DeskEditor({
           </div>
         )}
       </Group>
-      <Group title={t('Materials')} id="g-materials">
-        <Select
-          label={t('Worktop')}
-          value={p.topMaterialId}
-          options={panelMats}
-          onChange={(v) => set({ topMaterialId: v })}
-        />
-        <Select
-          label={t('Supports')}
-          value={p.bodyMaterialId}
-          options={panelMats}
-          onChange={(v) => set({ bodyMaterialId: v })}
-        />
-        {ped && (
-          <Select
-            label={t('Drawer fronts')}
-            value={p.frontMaterialId}
-            options={panelMats}
-            onChange={(v) => set({ frontMaterialId: v })}
-          />
-        )}
-      </Group>
-      {ped && (
-        <DrawerSettingsGroup
-          value={p.drawers}
-          materials={materials}
-          onChange={(d) => set({ drawers: d })}
-        />
-      )}
-      <PartBoardsGroup />
+      {ped && <DrawerSettingsGroup value={p.drawers} onChange={(d) => set({ drawers: d })} />}
       <ChecksGroup />
     </div>
   );

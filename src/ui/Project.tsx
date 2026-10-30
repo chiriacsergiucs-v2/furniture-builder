@@ -12,8 +12,6 @@ import {
   type MouseEvent,
 } from 'react';
 import { boxIn, cardCorner, CountStepper } from './CountStepper';
-import { projectBoards, roleBoard, type FinishRole, type FinishScope } from '../core/finish';
-import { decorPatch, type Decor } from '../core/materials';
 import { touchingRun } from '../core/arrange';
 import { linkCount } from '../core/linked';
 import { mergeCandidates } from '../core/merge';
@@ -23,12 +21,10 @@ import {
   leftNeighbour,
   LOCKED_HINT,
   moveBlocked,
-  materialKey,
   pieceBoxToRoom,
   placementBases,
   planRuns,
   rotationOf,
-  runOf,
   type Placement,
   type ProjectItem,
   type Project,
@@ -38,14 +34,8 @@ import {
 import { dropTarget, SNAP_RANGE } from '../core/snap';
 import { groupOf, itemsAt, itemsInBox, nextUnder } from '../core/selection';
 import { inSelection, selectionBox } from '../core/selectPath';
-import type { Box, Design, Diagnostic, Material, Panel } from '../core/types';
-import {
-  listDecors,
-  listDesigns,
-  listProjectTemplates,
-  loadDesign,
-  type StoredDesign,
-} from '../persist/db';
+import type { Box, Design, Diagnostic, Panel } from '../core/types';
+import { listDesigns, listProjectTemplates, loadDesign, type StoredDesign } from '../persist/db';
 import type { ProjectTemplate } from '../core/projectTemplate';
 import { useDesign } from '../store/designStore';
 import { Group, InfoTip, MmField, Segmented, Select, Toggle } from './controls';
@@ -121,7 +111,7 @@ import { GroupList, SelectionCard } from './Selection';
 import { PieceProjectSettings, ProjectSettingsPanel } from './ProjectSettings';
 import { BindButton, bindingHint, VariablesPanel, VariablesStrip } from './Variables';
 import { setRooms } from '../core/setRoom';
-import { ProjectHistory, StyleSuggestions } from './History';
+import { ProjectHistory } from './History';
 
 const FRONT_SIDE: Record<QuarterTurn, string> = {
   0: t('front faces you'),
@@ -493,9 +483,6 @@ export function ProjectPanel({
               </p>
             )}
           </Group>
-          <Group title={t('Finish')} defaultOpen={false}>
-            <FinishFields item={item} />
-          </Group>
           {project.settings && (
             <Group title={t('Project settings')} defaultOpen={false}>
               <PieceProjectSettings item={item} />
@@ -777,130 +764,6 @@ function GroupErrors({ messages }: { messages: string[] }) {
       {m}
     </p>
   ));
-}
-
-/** Finish scope (ADR-055): one board on the fronts or the carcass of this piece, its run or the whole project. */
-function FinishFields({ item }: { item: ProjectItem }) {
-  const project = useDesign((s) => s.project)!;
-  const apply = useDesign((s) => s.applyFinish);
-  const [role, setRole] = useState<FinishRole>('front');
-  const [chosenScope, setScope] = useState<FinishScope>('piece');
-  const selectedCount = useDesign((s) => s.selectedItemIds.length);
-  // "Selected pieces" goes when the selection is one piece again: the scope falls back to this piece.
-  const scope = chosenScope === 'selection' && selectedCount < 2 ? 'piece' : chosenScope;
-  const [boardKey, setBoardKey] = useState('');
-  const [msg, setMsg] = useState<string | null>(null);
-  const [decors, setDecors] = useState<Decor[]>([]);
-  useEffect(() => {
-    listDecors()
-      .then(setDecors)
-      .catch(() => setDecors([]));
-  }, []);
-  const boards = useMemo(() => projectBoards(project), [project]);
-  const run = useMemo(() => runOf(project, item.id), [project, item.id]);
-  const currentId = roleBoard(item.design, role);
-  const current = item.design.materials.find((m) => m.id === currentId);
-  const options = [
-    ...boards.map((m) => ({
-      value: materialKey(m),
-      label: t('{name}, {thickness} mm', { name: tr(m.name), thickness: m.thickness }),
-    })),
-    ...decors.map((d) => ({
-      value: `decor:${d.id}`,
-      label: t('{name}, {thickness} mm (your list)', {
-        name: `${d.makerText} ${d.code} ${d.name}`,
-        thickness: d.thickness,
-      }),
-    })),
-  ];
-  const chosen = boardKey || (current ? materialKey(current) : (options[0]?.value ?? ''));
-  const boardOf = (k: string): Material | null => {
-    if (k.startsWith('decor:')) {
-      const d = decors.find((x) => `decor:${x.id}` === k);
-      return d
-        ? ({
-            id: 'decor',
-            grain: current?.grain ?? false,
-            ...(current?.sheet ? { sheet: current.sheet } : {}),
-            ...decorPatch(d),
-          } as Material)
-        : null;
-    }
-    return boards.find((m) => materialKey(m) === k) ?? null;
-  };
-  const go = () => {
-    const b = boardOf(chosen);
-    if (!b) return;
-    const r = apply(item.id, role, b, scope);
-    setMsg(
-      r.applied.length
-        ? `${t('Applied to {n|# piece|# pieces}', { n: r.applied.length })}${r.skipped.length ? t(', {n} skipped: {list}', { n: r.skipped.length, list: r.skipped.join('; ') }) : ''}.`
-        : t('Nothing changed: {why}.', { why: r.skipped.join('; ') || t('no piece reached') }),
-    );
-  };
-  return (
-    <div className="finish-fields">
-      <Segmented<FinishRole>
-        label={t('Parts')}
-        value={role}
-        options={[
-          { value: 'front', label: t('Fronts') },
-          { value: 'body', label: t('Carcass') },
-        ]}
-        onChange={(v) => {
-          setRole(v);
-          setBoardKey('');
-          setMsg(null);
-        }}
-      />
-      {currentId === null ? (
-        <p className="hint">
-          {role === 'front'
-            ? t('This piece has no fronts; “Whole project” still reaches the others.')
-            : t('This piece has no carcass; “Whole project” still reaches the others.')}
-        </p>
-      ) : null}
-      <Select
-        label={t('Board')}
-        value={chosen}
-        options={options}
-        onChange={(v) => {
-          setBoardKey(v);
-          setMsg(null);
-        }}
-      />
-      <Segmented<FinishScope>
-        label={t('Apply to')}
-        value={scope}
-        onChange={(v) => {
-          setScope(v);
-          setMsg(null);
-        }}
-        options={[
-          { value: 'piece', label: t('This piece') },
-          ...(run && run.length > 1 ? [{ value: 'run' as const, label: t('This run') }] : []),
-          ...(selectedCount > 1
-            ? [
-                {
-                  value: 'selection' as const,
-                  label: t('Selected pieces ({n})', { n: selectedCount }),
-                },
-              ]
-            : []),
-          { value: 'project', label: t('Whole project') },
-        ]}
-      />
-      <button type="button" className="btn outline" onClick={go} disabled={!options.length}>
-        {t('Apply finish')}
-      </button>
-      {msg && (
-        <p className="hint" role="status">
-          {msg}
-        </p>
-      )}
-      <StyleSuggestions itemId={item.id} scope={scope} />
-    </div>
-  );
 }
 
 /** A value set's duplicate (ADR-167): which set, and which set-1 piece it copies. */

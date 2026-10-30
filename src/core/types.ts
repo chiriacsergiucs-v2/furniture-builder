@@ -132,6 +132,9 @@ export interface StockSheet {
   count: number | null;
 }
 
+/** The part roles that can take a board of their own apart from their group (ADR-163). */
+export type RoleBoardRole = 'top' | 'bottom' | 'side' | 'shelf' | 'divider';
+
 export type PanelRole =
   | 'side'
   | 'top'
@@ -674,9 +677,10 @@ export interface RuleSettings {
 export interface Design {
   /**
    * 2 adds stock sheets and cutting settings (ADR-019); 3 adds edge band specs on boards (ADR-077); 4 adds a
-   * board per part (`partMaterials`); 5 adds seller products (ADR-161). Older files are upgraded in memory on load.
+   * board per part (`partMaterials`); 5 adds seller products (ADR-161); 6 adds a board per part role
+   * (`roleMaterials`, ADR-163). Older files are upgraded in memory on load.
    */
-  schemaVersion: 1 | 2 | 3 | 4 | 5;
+  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6;
   id: string;
   name: string;
   createdAt: string;
@@ -694,6 +698,11 @@ export interface Design {
    * longer builds is kept and warned about, never dropped silently. Absent = every part uses its group's board.
    */
   partMaterials?: Record<string, string>;
+  /**
+   * A board for every part of one role instead of its group's board (schemaVersion 6, ADR-163): tops, bottoms,
+   * sides, shelves or dividers. A part's own board (`partMaterials`) wins over it. Absent = the group's board.
+   */
+  roleMaterials?: Partial<Record<RoleBoardRole, string>>;
   /** Answers of the New-piece wizard that made this piece, so it can be reopened there (ADR-046). Never geometry. */
   wizard?: { answers: WizardAnswers };
   /** Seller products chosen for hardware lines, by shopping-list line key `hw:<label>[, <size> mm]` (ADR-161). */
