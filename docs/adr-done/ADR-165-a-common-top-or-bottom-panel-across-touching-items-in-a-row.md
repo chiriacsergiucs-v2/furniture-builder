@@ -1,7 +1,8 @@
 # ADR-165: A common top or bottom panel across touching items in a row
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-30
+- Implemented: 2026-10-30 (CI run 41093818766 green on PR #150)
 - Depends on: ADR-105, ADR-163
 - Design: docs/ui-design.md (§4 Screens: project selected-items card)
 - Backlog: N167

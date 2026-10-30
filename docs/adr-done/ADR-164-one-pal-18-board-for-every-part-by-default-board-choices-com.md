@@ -1,7 +1,8 @@
 # ADR-164: One PAL 18 board for every part by default; board choices come from the project's boards
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-30
+- Implemented: 2026-10-30 (CI run 41093818766 green on PR #150)
 - Depends on: ADR-049, ADR-163
 - Design: docs/ui-design.md (§4 Screens: New piece wizard, Material sheet)
 - Backlog: N166
