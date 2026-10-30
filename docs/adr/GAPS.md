@@ -2677,3 +2677,48 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: You didnt use the image i provided to render
 - Questions: Are the seller's pictures good board textures (whole panel photo vs decor swatch)?
 - Suggested pick: Check a few boards in 3D after the first download; adjust the tile size if needed (estimate: effort 5 %)
+
+### G-317: Variables outside projects
+
+- Status: Open
+- Origin: ADR-163, 2026-10-30; agent scoped it out
+- Missing: Variables and bindings live in a project only; the stand-alone design editor (Files → a design) has no variables, and a project template (ADR-060) saved from a project keeps its variables but a design saved to the catalog loses its bindings.
+- Request: Not a quote: the user asked for variables "within the project".
+- Questions: Should a saved design or the catalog carry bindings as parameters?
+- Suggested pick: Keep bindings in project templates only (built); add variables to catalog designs as a later ADR (estimate: effort +40%, value +15%).
+
+### G-318: Formula functions
+
+- Status: Open
+- Origin: ADR-163, 2026-10-30; agent scoped it out
+- Missing: Formulas know only + − × ÷ and parentheses: no min, max, round, floor or conditions.
+- Request: Formulas too (user answer 2026-10-30).
+- Questions: Which functions are needed: min/max, round to a sheet thickness, if?
+- Suggested pick: Add min, max, floor, ceil and round when a real project needs one (estimate: effort +10%, value +10%).
+
+### G-319: Variables on run parts
+
+- Status: Open
+- Origin: ADR-163, 2026-10-30; agent scoped it out
+- Missing: Run parts, worktops, run handles and sinks (ADR-036, ADR-075, ADR-125) cannot be bound to a variable; they follow the pieces they are derived from.
+- Request: Not a quote: the user named pieces only.
+- Questions: Should a run request (a worktop length or overhang) take a formula?
+- Suggested pick: Bind run-request sizes the same way as piece sizes (estimate: effort +15%, value +10%).
+
+### G-320: Run requests not duplicated per set
+
+- Status: Open
+- Origin: ADR-164, 2026-10-30; agent scoped it out
+- Missing: Run parts over set-N duplicates come only from the automatic refresh (ADR-061); a user run request (ADR-075) on set-1 pieces is not copied to the set.
+- Request: Not a quote: the user asked for the pieces and the room to be duplicated.
+- Questions: Copy run requests, run handles and sinks to each set?
+- Suggested pick: Copy them with the pieces, keyed by the duplicate ids (estimate: effort +20%, value +15%).
+
+### G-321: Unbound pieces stay out of a set
+
+- Status: Open
+- Origin: ADR-164, 2026-10-30; agent scoped it out
+- Missing: Only pieces with a binding (and their linked copies) are duplicated into a set; a piece without bindings is not in the set and is only shown once, in set 1.
+- Request: "it would duplicate the existing pieces that use that variable, but with the new values".
+- Questions: Should pieces placed on a bound piece (ADR-031) or grouped with one (ADR-097) follow it into the set?
+- Suggested pick: Duplicate a piece whose base is a bound piece too (estimate: effort +15%, value +15%).
