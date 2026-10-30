@@ -1,7 +1,8 @@
 # ADR-159: Select several pieces in the front view, the 3D view and the piece list
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-29
+- Implemented: 2026-10-30
 - Depends on: ADR-097
 - Design: docs/ui-design.md (Plan view, 3D view)
 - Backlog: N161
