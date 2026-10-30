@@ -58,6 +58,7 @@ import {
 import { Icon } from './icons';
 import { CountStepper } from './CountStepper';
 import { PieceSize } from './PieceSize';
+import { BindButton, bindingHint } from './Variables';
 import { askConfirm } from './Confirm';
 import { useUi } from './shell/uiStore';
 import { tNode } from './i18n';
@@ -757,6 +758,12 @@ function SplitEditor({
   onSelect: (id: string) => void;
 }) {
   const openings = useDesign((s) => s.model.spaces);
+  // In a project (ADR-166): a fixed size can follow a variable; the ƒ button binds it.
+  const project = useDesign((s) => s.project);
+  const drillId = useDesign((s) => s.drillItemId);
+  const drilled = project?.items.find((i) => i.id === drillId);
+  const bound = (childId: string, i: number) =>
+    project && drilled ? bindingHint(project, drilled, `split:${childId}:${i}`) : undefined;
   const setSize = (i: number, size: SplitSize) =>
     onChange((s) =>
       s.kind === 'split' ? { ...s, sizes: s.sizes.map((z, j) => (j === i ? size : z)) } : s,
@@ -852,6 +859,8 @@ function SplitEditor({
                     inputMode="numeric"
                     defaultValue={z.value}
                     key={`${c.id}-${z.value}`}
+                    disabled={!!bound(c.id, i)}
+                    title={bound(c.id, i)}
                     onBlur={(e) => {
                       const v = Number(e.target.value);
                       if (Number.isInteger(v) && v > 0) setSize(i, { mode: 'mm', value: v });
@@ -872,6 +881,7 @@ function SplitEditor({
                 <span className="result">
                   {actual ? t('{n} mm', { n: space.axis === 'x' ? actual.w : actual.h }) : '—'}
                 </span>
+                {drilled && <BindButton itemId={drilled.id} target={`split:${c.id}:${i}`} />}
               </li>
             );
           })}

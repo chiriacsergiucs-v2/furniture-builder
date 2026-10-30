@@ -134,14 +134,14 @@ describe('common top or bottom (ADR-165)', () => {
     ).toMatch(/more than once/);
   });
 
-  it('a version-15 project with common panels is invalid; 16 loads; pruneCommon drops a list left with one', () => {
+  it('a version-16 project with common panels is invalid; 17 loads; pruneCommon drops a list left with one', () => {
     const p = linked(pair());
-    expect(PROJECT_SCHEMA).toBe(16);
+    expect(PROJECT_SCHEMA).toBe(17);
     expect(validateProject(JSON.parse(JSON.stringify(p)))).toEqual([]);
-    expect(validateProject({ ...p, schemaVersion: 15 })).toContain(
-      'Common tops and bottoms need project schemaVersion 16',
+    expect(validateProject({ ...p, schemaVersion: 16 })).toContain(
+      'Common tops and bottoms need project schemaVersion 17',
     );
-    expect(validateProject({ ...pair(), schemaVersion: 15 })).toEqual([]);
+    expect(validateProject({ ...pair(), schemaVersion: 16 })).toEqual([]);
     expect(
       validateProject({ ...p, common: [{ id: 'x', kind: 'side', itemIds: p.common![0].itemIds }] }),
     ).toContain('Invalid common top or bottom');

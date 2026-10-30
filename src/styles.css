@@ -6809,3 +6809,116 @@ ul.plain {
   width: 100%;
   min-width: 0;
 }
+
+/* Variables and bindings (ADR-166) and value sets (ADR-167) */
+.mm.with-trailing {
+  grid-template-columns: 32px 1fr auto 32px 28px;
+}
+.mm .btn.bind {
+  font-style: italic;
+  font-weight: 600;
+  min-height: 0;
+  height: 100%;
+  border: 0;
+  border-left: 1px solid var(--line);
+  border-radius: 0;
+  padding: 0;
+}
+.piece-size,
+.dims2,
+.dims3 {
+  align-items: start;
+}
+.btn.bind.on {
+  background: var(--accent);
+  color: var(--on-accent, #fff);
+}
+.variables {
+  display: grid;
+  gap: var(--s-3);
+}
+.variables h3,
+.variables h4 {
+  margin: 0;
+}
+.variable-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s-2);
+}
+.variable-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) auto auto;
+  gap: var(--s-1) var(--s-2);
+  align-items: center;
+}
+.variable-row input {
+  min-width: 0;
+  width: 100%;
+}
+.variable-row .result {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.variable-row .result.error {
+  color: var(--error);
+}
+.variable-row .hint {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+.variable-add {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--s-2);
+  align-items: end;
+}
+.variable-add .btn {
+  grid-column: 1 / -1;
+}
+.variable-pick {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1);
+}
+.value-sets {
+  display: grid;
+  gap: var(--s-2);
+}
+.set-card {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+}
+.set-head {
+  display: flex;
+  gap: var(--s-2);
+  align-items: center;
+}
+.set-head input {
+  flex: 1;
+  min-width: 0;
+}
+.set-card .row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+.set-room .room-floor,
+.set-room .wall {
+  opacity: 0.7;
+}
+.variable-row.strip {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+}
+.set-tag {
+  fill: var(--ink-2);
+  font-weight: 600;
+}
