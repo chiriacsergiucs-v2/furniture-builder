@@ -5,13 +5,16 @@
  * shape (`SellerCatalog` in `src/core/sellers/types.ts`). Only the seller's own values are kept; nothing is guessed:
  * a size the export does not state is left out.
  *
- *   node tools/sellers/regency.mjs <export.json> [src/core/sellers/regency.json]
+ *   node tools/sellers/regency.mjs <export.json> [src/core/sellers/regency.json] [thumbnails.json]
+ *
+ * thumbnails.json (ADR-162, optional): the seller's thumbnail link per product id. The thumbnails live under one cache
+ * folder (`thumbBase`) with the same path as the picture; a thumbnail on another path is kept as `ti` ('' = none).
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 
-const [src, out = 'src/core/sellers/regency.json'] = process.argv.slice(2);
+const [src, out = 'src/core/sellers/regency.json', thumbsPath] = process.argv.slice(2);
 if (!src) {
-  console.error('usage: node tools/sellers/regency.mjs <export.json> [out.json]');
+  console.error('usage: node tools/sellers/regency.mjs <export.json> [out.json] [thumbnails.json]');
   process.exit(1);
 }
 const data = JSON.parse(readFileSync(src, 'utf8'));
@@ -74,6 +77,9 @@ const whole = (v) => (v !== undefined && Number.isInteger(v) ? v : undefined);
 
 const IMG =
   'https://regencycompany.ro/media/catalog/product/cache/11d468b3a483182c4cfa53921f4334ce/';
+const THUMB =
+  'https://regencycompany.ro/media/catalog/product/cache/6cfb8bf111a554b9d0e1ad8c3a66618f/';
+const thumbs = thumbsPath ? JSON.parse(readFileSync(thumbsPath, 'utf8')) : null;
 const ORIGIN = 'https://regencycompany.ro';
 const seen = new Set();
 const products = [];
@@ -105,6 +111,10 @@ for (const p of data.products) {
     .join(' · ');
   if (p.link.startsWith(ORIGIN)) o.a = p.link.slice(ORIGIN.length);
   if (p.image.startsWith(IMG)) o.i = p.image.slice(IMG.length);
+  // The thumbnail (ADR-162): the picture's path under THUMB unless the file says otherwise; '' for none.
+  const th = thumbs?.[p.id];
+  const tp = typeof th === 'string' && th.startsWith(THUMB) ? th.slice(THUMB.length) : '';
+  if (thumbs && tp !== (o.i ?? '')) o.ti = tp;
   if (p.extracted_at_utc > extracted) extracted = p.extracted_at_utc;
   products.push(o);
 }
@@ -113,6 +123,7 @@ const catalog = {
   name: 'Regency Company',
   origin: ORIGIN,
   imageBase: IMG,
+  ...(thumbs ? { thumbBase: THUMB } : {}),
   currency: 'RON',
   priceNote: 'VAT included',
   extracted: extracted.slice(0, 10),

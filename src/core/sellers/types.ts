@@ -52,6 +52,8 @@ export interface SellerProduct {
   /** Page path on `origin`, and picture path on `imageBase`. */
   a?: string;
   i?: string;
+  /** Thumbnail path on `thumbBase` when it differs from `i`; '' = no thumbnail (ADR-162). */
+  ti?: string;
   /** 1 when the app ships its own copy of the picture (boards and worktops, ADR-162), under `hostedBase`. */
   h?: 1;
 }
@@ -63,6 +65,8 @@ export interface SellerCatalog {
   origin: string;
   /** Pictures load from here only when the user switches seller pictures on (ADR-126). */
   imageBase: string;
+  /** The seller's smaller thumbnails, same paths as the pictures unless `ti` says otherwise (ADR-162). */
+  thumbBase?: string;
   /** The app's own copies of board pictures, relative to the app's base path (ADR-162): `<id><ext>`. */
   hostedBase?: string;
   currency: string;

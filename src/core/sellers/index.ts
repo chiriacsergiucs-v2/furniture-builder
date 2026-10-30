@@ -55,6 +55,14 @@ export const hostedPicture = (o: Offer): string | null =>
     ? `${o.seller.hostedBase}${o.p.id}${pictureExt(o.p.i)}`
     : null;
 
+/** The seller's thumbnail of a product (smaller; for lists), else its picture, or null when it has none. */
+export function thumbUrl(o: Offer): string | null {
+  const { seller, p } = o;
+  if (!seller.thumbBase) return p.i ? seller.imageBase + p.i : null;
+  const path = p.ti ?? p.i;
+  return path ? seller.thumbBase + path : null;
+}
+
 export const refOf = (o: Offer): ProductRef => ({ seller: o.seller.id, id: o.p.id, name: o.p.n });
 export const refKey = (r: Pick<ProductRef, 'seller' | 'id'>) => `${r.seller}:${r.id}`;
 
