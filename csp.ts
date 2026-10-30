@@ -26,7 +26,8 @@ export function contentSecurityPolicy(backendUrl?: string): string {
     // Seller pictures, loaded only after the user switches them on (ADR-160).
     `img-src 'self' data: blob: ${SELLER_IMAGE_ORIGINS.join(' ')}`,
     "font-src 'self' data:",
-    `connect-src 'self'${api ? ` ${api}` : ''}`,
+    // Seller pictures are downloaded once when picked for a board (ADR-160).
+    `connect-src 'self'${api ? ` ${api}` : ''} ${SELLER_IMAGE_ORIGINS.join(' ')}`,
     "worker-src 'self' blob:",
     "manifest-src 'self'",
     "object-src 'none'",

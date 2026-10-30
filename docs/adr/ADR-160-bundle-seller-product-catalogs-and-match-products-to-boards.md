@@ -29,7 +29,10 @@ is an offline snapshot, not a feed.
   export states are kept (ADR-010). All 7 495 products are bundled, as a lazy chunk loaded when a picker opens.
 - **Suggest, the user picks.** Nothing changes without a tap.
   - Board (Materials → **Product from a seller**): boards and worktops, same thickness first. Picking sets name,
-    thickness, sheet size, manufacturer and type labels and `product`; grain, colour and picture stay.
+    thickness, sheet size, manufacturer and type labels and `product`; then the seller's picture is downloaded once
+    (`src/online/sellerPictureFile.ts`, CSP `connect-src`) and saved as the board's picture (ADR-048), colour = its
+    average, so the 3D view shows the decor. If the seller's site blocks it (CORS) or the app is offline, the board
+    keeps its look and says so. Grain stays.
   - Edge band (Materials → _Edge band_ → **Band from a seller**): bands at least as wide as the board, same decor
     code first. Picking sets type, thickness, width, code and `product`; the allowance stays.
   - Hardware (Shopping list → **Product** on each hardware line, also lines still to choose): products of the
@@ -87,3 +90,4 @@ is an offline snapshot, not a feed.
 6. Hardware link saved where? — **In the design.**
 7. Acceptance? — **jsdom find-it.**
 8. Hardware price count? — **1 seller unit per item, editable.**
+9. 3D look of a seller board? — **The seller's picture as the board's decor** ("3d rendering gets it right?").

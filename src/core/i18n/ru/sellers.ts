@@ -15,8 +15,13 @@ export const ru_sellers = {
   'Band from a seller': 'Кромка от продавца',
   'Bands at least {n} mm wide, the same decor code first. The pick sets type, thickness, width and code.':
     'Кромки шириной не меньше {n} мм, сначала с тем же кодом декора. Выбор задаёт тип, толщину, ширину и код.',
-  'Boards and worktops, {n} mm first. The pick sets the name, thickness, sheet size and labels; grain, colour and picture stay.':
-    'Плиты и столешницы, сначала {n} мм. Выбор задаёт название, толщину, размер листа и метки; текстура, цвет и картинка остаются.',
+  'Boards and worktops, {n} mm first. The pick sets the name, thickness, sheet size, labels and the seller’s picture as the board’s look; grain stays.':
+    'Плиты и столешницы, сначала {n} мм. Выбор задаёт название, толщину, размер листа, метки и картинку продавца как вид плиты; направление текстуры остаётся.',
+  'The seller has no picture of this product; the board keeps its look.':
+    'У продавца нет картинки этого товара; плита сохраняет свой вид.',
+  'Loading the seller’s picture…': 'Загрузка картинки продавца…',
+  'The seller’s picture could not be used (offline, or the seller’s site does not allow it); the board keeps its look.':
+    'Картинку продавца не удалось использовать (нет сети или сайт продавца не разрешает); плита сохраняет свой вид.',
   'Edge band from a seller for {name}': 'Кромка от продавца для {name}',
   'Front band from a seller': 'Кромка фасадов от продавца',
   'In stock': 'В наличии',

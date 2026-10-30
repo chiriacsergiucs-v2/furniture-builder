@@ -3,6 +3,7 @@ import { t, tr } from '../core/i18n';
 import { bandFromOffer, bandOffers, boardOffers, boardPatch, type Offer } from '../core/sellers';
 import type { SellerCatalog } from '../core/sellers';
 import type { Material, ProductRef } from '../core/types';
+import { importImage } from '../persist/images';
 import { useDesign } from '../store/designStore';
 import { ProductPicker } from './ProductPicker';
 import { Icon } from './icons';
@@ -22,12 +23,36 @@ function Linked({ product, onUnlink }: { product?: ProductRef; onUnlink: () => v
 
 /**
  * ADR-160: take a board from a seller. Boards and worktops of the board's thickness come first; the pick sets the
- * name, thickness, sheet size and labels the seller states. Grain, colour and picture stay.
+ * name, thickness, sheet size and labels the seller states, then the seller's picture becomes the board's picture
+ * (colour = its average) when the seller's site allows the download; otherwise the look stays and the user is told.
  */
 export function BoardProduct({ m }: { m: Material }) {
   const update = useDesign((s) => s.updateMaterial);
   const [open, setOpen] = useState(false);
+  const [status, setStatus] = useState<{ busy: boolean; text: string } | null>(null);
   const offers = useCallback((cats: SellerCatalog[], q: string) => boardOffers(cats, m, q), [m]);
+  const takePicture = async (o: Offer) => {
+    if (!o.p.i)
+      return setStatus({
+        busy: false,
+        text: t('The seller has no picture of this product; the board keeps its look.'),
+      });
+    setStatus({ busy: true, text: t('Loading the seller’s picture…') });
+    const { fetchSellerPicture } = await import('../online/sellerPictureFile');
+    const file = await fetchSellerPicture(o.seller.imageBase + o.p.i, `${o.p.code ?? o.p.id}.jpg`);
+    const r = file ? await importImage(file) : null;
+    if (!r?.ok) {
+      setStatus({
+        busy: false,
+        text: t(
+          'The seller’s picture could not be used (offline, or the seller’s site does not allow it); the board keeps its look.',
+        ),
+      });
+      return;
+    }
+    update(m.id, { color: r.color, image: r.image });
+    setStatus(null);
+  };
   return (
     <div className="seller-row">
       <button type="button" className="btn sm outline" onClick={() => setOpen(true)}>
@@ -35,11 +60,17 @@ export function BoardProduct({ m }: { m: Material }) {
         {t('Product from a seller')}
       </button>
       <Linked product={m.product} onUnlink={() => update(m.id, { product: undefined })} />
+      {status && (
+        <p className={status.busy ? 'hint' : 'alert info'} role="status">
+          {!status.busy && <Icon name="info" className="sm" />}
+          <span>{status.text}</span>
+        </p>
+      )}
       <ProductPicker
         open={open}
         title={t('Product from a seller for {name}', { name: tr(m.name) })}
         hint={t(
-          'Boards and worktops, {n} mm first. The pick sets the name, thickness, sheet size and labels; grain, colour and picture stay.',
+          'Boards and worktops, {n} mm first. The pick sets the name, thickness, sheet size, labels and the seller’s picture as the board’s look; grain stays.',
           { n: m.thickness },
         )}
         offers={offers}
@@ -47,6 +78,7 @@ export function BoardProduct({ m }: { m: Material }) {
         onPick={(o: Offer) => {
           update(m.id, boardPatch(o, m));
           setOpen(false);
+          void takePicture(o);
         }}
       />
     </div>
