@@ -43,9 +43,11 @@ is an offline snapshot, not a feed.
   line (sheet board: per piece = per sheet; m² ; band per m; hardware per piece × per). Pack and set prices, and a
   product no longer in the catalog, stay _price missing_. Lines priced by a seller say so; the estimate names the
   seller and the export date.
-- **Pictures, opt-in.** The picker has **Show seller pictures (online)**, off by default and remembered on this
-  device. Only when on, pictures load from the seller's origin (listed in `src/online/origins.ts`, allowed by the CSP
-  `img-src`), through a lazily imported `src/online` component (ADR-126). A **seller page** link opens only on a tap.
+- **Pictures, on by default** (user, 2026-10-30, an exception to ADR-126's "no request until the user opts in"). Every
+  product list shows the seller's picture; **Show seller pictures (online)** switches them off, remembered on this
+  device. Pictures load only from the seller origins in `src/online/sellerOrigins.ts` (also in the CSP `img-src`),
+  through a lazily imported `src/online` component; offline they are simply missing. A **seller page** link opens
+  only on a tap.
 
 ## Alternatives considered
 
@@ -81,7 +83,7 @@ is an offline snapshot, not a feed.
 2. Match how? — **Suggest, user picks.**
 3. Seller prices in the estimate? — **Yes, own price wins.**
 4. Which categories? — **All, match what fits.**
-5. Pictures? — **Load pictures, opt-in.**
+5. Pictures? — **Load pictures, opt-in**; changed the same day to **on by default** ("Images on product listings").
 6. Hardware link saved where? — **In the design.**
 7. Acceptance? — **jsdom find-it.**
 8. Hardware price count? — **1 seller unit per item, editable.**

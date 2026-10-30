@@ -7,7 +7,8 @@ import { Dialog } from './Dialogs';
 import { Toggle } from './controls';
 import { Icon } from './icons';
 
-// Seller pictures come from the seller's site: only after the user switches them on (ADR-126, ADR-160).
+// Seller pictures come from the seller's site: shown by default, the user's exception to ADR-126 (ADR-160); off when
+// switched off on this device.
 const SellerPicture = lazy(() => import('../online/SellerPicture'));
 const PICTURES_KEY = 'fb.sellerPictures';
 
@@ -29,9 +30,9 @@ const STOCK: Record<SellerProduct['s'], string> = {
 
 function readPictures(): boolean {
   try {
-    return localStorage.getItem(PICTURES_KEY) === 'on';
+    return localStorage.getItem(PICTURES_KEY) !== 'off';
   } catch {
-    return false;
+    return true;
   }
 }
 
