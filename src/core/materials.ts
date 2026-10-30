@@ -52,7 +52,19 @@ export function materialLabelProblems(m: Record<string, unknown>): string[] {
     )
       errs.push(t('invalid decor link'));
   }
+  if (m.product !== undefined && productRefProblems(m.product).length)
+    errs.push(t('invalid seller product'));
   return errs;
+}
+
+/** ADR-161: a link to a seller product is ids and a name, nothing else is trusted from the file. */
+export function productRefProblems(v: unknown): string[] {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return [t('invalid seller product')];
+  const o = v as Record<string, unknown>;
+  const str = (x: unknown, max: number) => typeof x === 'string' && x.length > 0 && x.length <= max;
+  return str(o.seller, 60) && str(o.id, 60) && str(o.name, 300)
+    ? []
+    : [t('invalid seller product')];
 }
 
 // ---------------------------------------------------------------------------
@@ -114,6 +126,7 @@ export function bandProblems(b: unknown): string[] {
     errs.push(t('band code must be text up to 60 characters'));
   if (o.allowance !== undefined && !whole(o.allowance, 0, BAND_MAX_ALLOWANCE))
     errs.push(t('band allowance must be whole mm from 0 to 100'));
+  if (o.product !== undefined) errs.push(...productRefProblems(o.product));
   return errs;
 }
 

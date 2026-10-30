@@ -13,6 +13,7 @@ import { t, tr } from '../core/i18n';
 import type { EdgeBand, EdgeBandKind, Material } from '../core/types';
 import { useDesign } from '../store/designStore';
 import { Segmented, Select, Toggle } from './controls';
+import { BandProduct } from './SellerLinks';
 
 /**
  * ADR-077: the edge band on a board, named by the user from the supplier's datasheet. Nothing is filled in: the
@@ -41,6 +42,7 @@ export function BoardBand({ m }: { m: Material }) {
           "Not named: the shopping list puts this board's banding under To choose before buying.",
         )}
       />
+      <BandProduct m={m} />
       <Toggle
         label={t('Fronts banded differently')}
         checked={front}
@@ -59,6 +61,7 @@ export function BoardBand({ m }: { m: Material }) {
           )}
         />
       )}
+      {front && <BandProduct m={m} front />}
     </div>
   );
 }

@@ -16,6 +16,7 @@ import { useDesign } from '../store/designStore';
 import { Group, InfoTip, MmField, Segmented, Select, Toggle } from './controls';
 import { Icon } from './icons';
 import { BoardBand } from './BoardBand';
+import { BoardProduct } from './SellerLinks';
 import { StartFrom } from './Catalog';
 import { askConfirm } from './Confirm';
 import { importImage, useImageUrls } from '../persist/images';
@@ -66,7 +67,10 @@ export function Dialog({
     <dialog
       ref={ref}
       className={`dialog ${wide ? 'wide' : ''}`}
-      onClose={onClose}
+      // A dialog opened from inside this one (a product picker, ADR-161) closes only itself.
+      onClose={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
       onClick={(e) => {
         if (e.target === ref.current) onClose();
       }}
@@ -390,6 +394,7 @@ export function MaterialsPanel() {
               options={FINISH_OPTIONS}
               onChange={(v) => update(m.id, { finish: v })}
             />
+            <BoardProduct m={m} />
             <div className="sheet-fields">
               <Select
                 label={t('Manufacturer')}

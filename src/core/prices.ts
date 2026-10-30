@@ -4,6 +4,8 @@
  */
 import { t } from './i18n';
 import type { ShopLine, ShopUnit } from './shopping';
+import type { SellerPrice } from './sellers';
+import type { ProductRef } from './types';
 
 export interface PriceEntry {
   /** `board:…`, `band:…`, `hw:…`, or `currency`. */
@@ -29,8 +31,52 @@ export function unitsFor(l: ShopLine): ShopUnit[] {
   return [l.unit];
 }
 
-/** Price of one line in minor units, or null when there is no usable price (or sheets are not laid out yet). */
-export function linePrice(l: ShopLine, prices: Map<string, PriceEntry>): number | null {
+/** A linked product's price from the bundled seller catalogs (ADR-161); null when it is not in them. */
+export type SellerLookup = (r: ProductRef) => SellerPrice | null;
+
+/**
+ * The seller's price of a line (ADR-161), when its unit fits: a board per piece is per sheet (or per worktop board),
+ * per m² by area; bands and solid stock per metre; hardware per piece × seller units per item. Packs, sets and other
+ * units are not converted (null).
+ */
+export function sellerLinePrice(l: ShopLine, seller?: SellerLookup): number | null {
+  if (!l.product || !seller) return null;
+  const sp = seller(l.product);
+  if (!sp) return null;
+  if (l.section === 'boards' && l.unit !== 'm') {
+    if (sp.unit === 'piece')
+      return l.sheets === null || l.sheets === undefined ? null : Math.round(l.sheets * sp.amount);
+    return sp.unit === 'm2' ? Math.round((l.m2 ?? 0) * sp.amount) : null;
+  }
+  if (l.unit === 'm') return sp.unit === 'm' ? Math.round(l.quantity * sp.amount) : null;
+  if (l.unit === 'piece' && sp.unit === 'piece')
+    return Math.round(l.quantity * (l.per ?? 1) * sp.amount);
+  return null;
+}
+
+/** Whose price a line uses: the user's own (ADR-062) first, then the linked seller product's. */
+export function priceSource(
+  l: ShopLine,
+  prices: Map<string, PriceEntry>,
+  seller?: SellerLookup,
+): 'own' | 'seller' | null {
+  if (ownLinePrice(l, prices) !== null) return 'own';
+  return sellerLinePrice(l, seller) !== null ? 'seller' : null;
+}
+
+/**
+ * Price of one line in minor units, or null when there is no usable price (or sheets are not laid out yet). The
+ * user's own price wins; a linked seller product's price is used otherwise (ADR-161).
+ */
+export function linePrice(
+  l: ShopLine,
+  prices: Map<string, PriceEntry>,
+  seller?: SellerLookup,
+): number | null {
+  return ownLinePrice(l, prices) ?? sellerLinePrice(l, seller);
+}
+
+function ownLinePrice(l: ShopLine, prices: Map<string, PriceEntry>): number | null {
   if (!l.priceKey) return null;
   const e = prices.get(l.priceKey);
   if (!e || !unitsFor(l).includes(e.unit)) return null;
@@ -47,23 +93,34 @@ export interface Estimate {
   total: number;
   missing: string[];
   priced: number;
+  /** Lines priced by a seller (ADR-161), and the sellers with their export dates. */
+  fromSeller: number;
+  sellers: string[];
 }
 
-export function estimate(lines: ShopLine[], prices: PriceEntry[]): Estimate {
+export function estimate(lines: ShopLine[], prices: PriceEntry[], seller?: SellerLookup): Estimate {
   const map = new Map(prices.map((p) => [p.id, p]));
   let total = 0,
-    priced = 0;
+    priced = 0,
+    fromSeller = 0;
   const missing: string[] = [];
+  const sellers = new Set<string>();
   for (const l of lines) {
     if (!l.priceKey) continue;
-    const p = linePrice(l, map);
+    const own = ownLinePrice(l, map);
+    const p = own ?? sellerLinePrice(l, seller);
     if (p === null) missing.push(l.label);
     else {
       total += p;
       priced++;
+      if (own === null) {
+        fromSeller++;
+        const sp = seller!(l.product!)!;
+        sellers.add(`${sp.seller}, ${sp.date}`);
+      }
     }
   }
-  return { total, missing, priced };
+  return { total, missing, priced, fromSeller, sellers: [...sellers] };
 }
 
 /** "4812,50" style: two decimals, Romanian separators. */

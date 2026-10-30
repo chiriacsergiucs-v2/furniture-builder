@@ -2632,3 +2632,30 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: When and where should the typed angle come back (a link under Position, the More menu)?
 - Suggested pick: A small 'Exact angle…' link under Position, as in the critique.
 - Answer (user, 2026-10-30): "Keep hidden"; stays open until the user wants it back.
+
+### G-312: Seller catalogs are a bundled snapshot
+
+- Status: Open
+- Origin: ADR-161, 2026-10-30; agent scoped it out
+- Missing: Seller prices and stock are a snapshot bundled in the app build (Regency export of 2026-10-29). Nothing updates them; a newer seller file needs a new release (re-run tools/sellers/<seller>.mjs). Live feeds stay ADR-063 (Deferred).
+- Request: Import these as products for materials, keep it regency agnostic, more sellers will follow
+- Questions: Refresh seller data how often, and by whom?
+- Suggested pick: Re-run the converter on each new export the user provides and release (estimate: effort 5 %, value: prices stay current)
+
+### G-313: Extra seller items only per piece
+
+- Status: Open
+- Origin: ADR-161, 2026-10-30; agent scoped it out
+- Missing: In a project view, a seller product cannot be added as an extra item; open a piece to add it there. Hardware links chosen in the project view are written to every piece that has that hardware line.
+- Request: Match products to parts in app
+- Questions: Should a project hold its own extra seller items?
+- Suggested pick: Add project-level extra items (estimate: effort +20 %, value +10 %)
+
+### G-314: Fasteners and run parts not matched
+
+- Status: Open
+- Origin: ADR-161, 2026-10-30; agent scoped it out
+- Missing: Screws, dowels, cams (fasteners, ADR-074) and run parts (plinths, fillers, cornices) are not matched to seller products.
+- Request: Match products to parts in app
+- Questions: Match fasteners and run parts to seller products too?
+- Suggested pick: Yes: a product button on fastener lines and on run parts (estimate: effort +25 %, value +10 %)

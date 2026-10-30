@@ -6719,3 +6719,84 @@ ul.plain {
 .info-domain li {
   margin-bottom: var(--s-1);
 }
+/* Seller products (ADR-161): picker list, board and band rows, hardware lines. */
+.materials .seller-row {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  align-items: center;
+  min-width: 0;
+}
+.seller-linked {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.product-picker {
+  display: grid;
+  gap: var(--s-2);
+  min-width: 0;
+}
+.product-picker .products {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s-2);
+}
+.product-picker .products li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  align-items: center;
+  padding: var(--s-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  min-width: 0;
+}
+.product-picker .product-text {
+  display: grid;
+  gap: var(--s-1);
+  flex: 1 1 14em;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.product-picker .product-actions {
+  display: flex;
+  gap: var(--s-1);
+  flex-wrap: wrap;
+}
+.product-picker .seller-pic {
+  object-fit: contain;
+  background: var(--surface);
+}
+.shopping .seller-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1);
+  align-items: center;
+  margin-top: var(--s-1);
+}
+.shopping .seller-line input {
+  width: 5em;
+}
+.shopping .seller-line input.bad {
+  border-color: var(--error);
+}
+.shopping .seller-line .field.inline {
+  display: inline-flex;
+  gap: var(--s-1);
+  align-items: center;
+}
+.shopping table.shop tr.has-seller td {
+  border-bottom: none;
+}
+.shopping table.shop tr.seller-row td {
+  padding-top: 0;
+  white-space: normal;
+}
+.product-picker input[type='search'] {
+  width: 100%;
+  min-width: 0;
+}

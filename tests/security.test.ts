@@ -2,6 +2,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { backendOrigin, contentSecurityPolicy } from '../csp';
+import { SELLER_IMAGE_ORIGINS, sellerImageAllowed } from '../src/online/sellerOrigins';
 
 // ADR-131: the content security policy, no secret key in the app, and a service worker that never caches online
 // responses.
@@ -22,19 +23,31 @@ const SECRET =
   /service_role|sb_secret_[A-Za-z0-9]|SUPABASE_SERVICE|eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]*c2VydmljZV9yb2xl/;
 
 describe('content security policy (ADR-131)', () => {
-  it('allows only the app itself without a backend', () => {
+  it('allows only the app itself and the seller picture origins without a backend', () => {
     const p = contentSecurityPolicy(undefined);
-    expect(p).toContain("connect-src 'self';");
+    // ADR-161: seller pictures are shown on product lists and downloaded once when picked for a board.
+    expect(p).toContain("connect-src 'self' https://regencycompany.ro;");
+    expect(p).toContain("img-src 'self' data: blob: https://regencycompany.ro;");
     expect(p).toContain("script-src 'self';");
     expect(p).toContain("object-src 'none'");
-    expect(p).not.toMatch(/https?:\/\//);
+    expect(p.match(/https?:\/\/[^\s;]+/g)).toEqual(SELLER_IMAGE_ORIGINS.flatMap((o) => [o, o]));
   });
   it('adds only the backend origin, https only', () => {
     expect(contentSecurityPolicy('https://abc.supabase.co/rest/v1')).toContain(
-      "connect-src 'self' https://abc.supabase.co;",
+      "connect-src 'self' https://abc.supabase.co https://regencycompany.ro;",
     );
-    expect(contentSecurityPolicy('http://abc.supabase.co')).toContain("connect-src 'self';");
+    expect(contentSecurityPolicy('http://abc.supabase.co')).toContain(
+      "connect-src 'self' https://regencycompany.ro;",
+    );
     expect(backendOrigin('nope')).toBeNull();
+  });
+  it('seller pictures load only from the seller origins, over https (ADR-161)', () => {
+    expect(SELLER_IMAGE_ORIGINS).toEqual(['https://regencycompany.ro']);
+    expect(sellerImageAllowed('https://regencycompany.ro/media/x.jpg')).toBe(true);
+    expect(sellerImageAllowed('http://regencycompany.ro/media/x.jpg')).toBe(false);
+    expect(sellerImageAllowed('https://evil.example/x.jpg')).toBe(false);
+    expect(sellerImageAllowed('https://regencycompany.ro.evil.example/x.jpg')).toBe(false);
+    expect(sellerImageAllowed('not a url')).toBe(false);
   });
   it('the built page carries it, first in <head>, when a build exists', () => {
     const html = join(ROOT, 'dist/index.html');

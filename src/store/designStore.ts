@@ -1,6 +1,12 @@
 import { create } from 'zustand';
 import { buildModel } from '../core/build';
 import {
+  projectWithHardwareProduct,
+  withHardwareProduct,
+  withSellerItem,
+  withSellerItemQuantity,
+} from '../core/sellers/choices';
+import {
   findInProduct,
   productRoots,
   mapProductSpace,
@@ -91,10 +97,12 @@ import type {
   Design,
   FrameParams,
   FurnitureModel,
+  HardwareProduct,
   Material,
   Mm,
   PanelParams,
   PanelSetParams,
+  SellerItem,
   Space,
 } from '../core/types';
 import type { LocalTemplate } from '../core/catalog/local';
@@ -174,6 +182,12 @@ interface State {
 
   load: (d: Design, opts?: { fromStorage?: boolean }) => void;
   setKerf: (kerf: number) => void;
+  /** ADR-161: a seller product for a hardware line (undefined removes it); in a project view, in every piece. */
+  setHardwareProduct: (key: string, hp: HardwareProduct | undefined) => void;
+  /** ADR-161: a seller product added to the open piece's shopping list. */
+  addSellerItem: (it: SellerItem) => void;
+  /** ADR-161: an added item's quantity; 0 removes it. */
+  setSellerItemQuantity: (index: number, quantity: number) => void;
   rename: (name: string) => void;
   updateCabinet: (patch: Partial<CabinetParams>) => void;
   updateDesk: (patch: Partial<DeskParams>) => void;
@@ -1334,6 +1348,14 @@ export const useDesign = create<State>((rawSet, get) => {
       const d = get().design;
       commit({ ...d, cutting: { ...d.cutting, kerf } });
     },
+    setHardwareProduct: (key, hp) => {
+      const { project, editingItemId } = get();
+      if (project && !editingItemId) commitProject(projectWithHardwareProduct(project, key, hp));
+      else commit(withHardwareProduct(get().design, key, hp));
+    },
+    addSellerItem: (it) => commit(withSellerItem(get().design, it)),
+    setSellerItemQuantity: (index, quantity) =>
+      commit(withSellerItemQuantity(get().design, index, quantity)),
     rename: (name) => commit({ ...get().design, name }),
     setPartMaterial: (panelId, materialId) => {
       const d = get().design;

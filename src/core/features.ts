@@ -350,6 +350,12 @@ export const FEATURES: FeatureDomain[] = [
       { name: 'Solid timber stock', adrs: ['ADR-038'] },
       { name: 'Manufacturer and type labels', adrs: ['ADR-049'] },
       { name: 'Import your own decor list (CSV)', adrs: ['ADR-049'] },
+      {
+        name: 'Boards and edge bands from a seller',
+        detail:
+          'Bundled seller products (Regency first): same thickness and decor first, you pick.',
+        adrs: ['ADR-161'],
+      },
       { name: 'A picture from your device on a board', adrs: ['ADR-048'] },
       { name: 'Matte, satin or gloss finish', adrs: ['ADR-067'] },
       {
@@ -511,6 +517,11 @@ export const FEATURES: FeatureDomain[] = [
           },
           { name: 'Shopping list CSV', adrs: ['ADR-064'] },
           { name: 'Cost estimate from your price list', adrs: ['ADR-062'] },
+          {
+            name: 'Seller products for hardware and seller prices',
+            detail: 'Your own price wins; otherwise the seller price, with its date.',
+            adrs: ['ADR-161'],
+          },
         ],
       },
       {

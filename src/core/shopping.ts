@@ -10,7 +10,14 @@ import type { RunPart } from './project';
 import { fastenerShopLines, type FastenerChoice, type FastenerCount } from './fasteners';
 import { csvCell } from './prices';
 import { materialKey } from './project';
-import type { Diagnostic, HardwareItem, Material } from './types';
+import type {
+  Diagnostic,
+  HardwareItem,
+  HardwareProduct,
+  Material,
+  ProductRef,
+  SellerItem,
+} from './types';
 
 export type ShopSection = 'boards' | 'banding' | 'hardware' | 'run' | 'choose';
 export type ShopUnit = 'sheet' | 'm2' | 'm' | 'piece';
@@ -28,6 +35,17 @@ export interface ShopLine {
   m2?: number;
   /** Boards: a worktop board (kind kitchen worktop, or named like "Worktop"), so it can be priced per piece. */
   worktop?: boolean;
+  /** The seller product linked to this line (ADR-161): the board's, the band's, the hardware line's or an added item. */
+  product?: ProductRef;
+  /** Hardware: seller units bought per scheduled item (ADR-161). Absent = 1. */
+  per?: number;
+  /** Hardware lines: the key a seller product is saved under (`Design.hardwareProducts`). */
+  productKey?: string;
+  /** Hardware lines: what the schedule calls it, to suggest products of the same kind first. */
+  hardwareKind?: HardwareItem['kind'];
+  sizeMm?: number;
+  /** Added seller items: their place in `Design.sellerItems`, for changing or removing them. */
+  itemIndex?: number;
 }
 
 export const NOT_COUNTED = t(
@@ -49,7 +67,7 @@ const r2 = (v: number) => Math.round(v * 100) / 100;
 function bandingLines(rows: CutRow[]): ShopLine[] {
   const named = new Map<
     string,
-    { label: string; metres: number; boards: string[]; extra: boolean }
+    { label: string; metres: number; boards: string[]; extra: boolean; product?: ProductRef }
   >();
   const unnamed = new Map<string, { name: string; metres: number }>();
   for (const r of rows) {
@@ -66,6 +84,7 @@ function bandingLines(rows: CutRow[]): ShopLine[] {
     g.metres += metres;
     if (!g.boards.includes(r.materialName)) g.boards.push(r.materialName);
     if (r.band.allowance) g.extra = true;
+    g.product ??= r.band.product;
     named.set(k, g);
   }
   const out: ShopLine[] = [];
@@ -79,6 +98,7 @@ function bandingLines(rows: CutRow[]): ShopLine[] {
         ? t('for {boards}, with the trim allowance per edge', { boards: g.boards.join(', ') })
         : t('for {boards}', { boards: g.boards.join(', ') }),
       priceKey: `band:${g.label}`,
+      ...(g.product ? { product: g.product } : {}),
     });
   // Not priced: a band that is not named cannot be bought yet, like other hardware still to choose.
   for (const u of unnamed.values())
@@ -103,6 +123,9 @@ export function shoppingList(input: {
   diagnostics?: Diagnostic[];
   /** Fastener counts from the model and the user's fastener list (ADR-074). */
   fasteners?: { counts: FastenerCount[]; choices: FastenerChoice[] };
+  /** Seller products chosen for hardware lines and added by the user (ADR-161). */
+  hardwareProducts?: Record<string, HardwareProduct>;
+  sellerItems?: SellerItem[];
 }): ShopLine[] {
   const { rows, materials, sheets } = input;
   const fast = input.fasteners
@@ -129,6 +152,7 @@ export function shoppingList(input: {
         unit: 'm',
         detail: t('solid stock, {n} parts', { n: list.reduce((n, r) => n + r.quantity, 0) }),
         priceKey: key,
+        ...(m?.product ? { product: m.product } : {}),
       });
       continue;
     }
@@ -152,19 +176,32 @@ export function shoppingList(input: {
       sheets: n,
       m2,
       ...(m?.kind === 'worktop' || /worktop/i.test(name) ? { worktop: true } : {}),
+      ...(m?.product ? { product: m.product } : {}),
     });
   }
   const banding = bandingLines(rows);
   lines.push(...banding.filter((l) => l.section === 'banding'));
   for (const h of hardware) {
     const size = h.sizeMm ? `, ${h.sizeMm} mm` : '';
-    if (TO_CHOOSE.has(h.kind))
+    const productKey = `hw:${h.label}${size}`;
+    const link = input.hardwareProducts?.[productKey];
+    const seller: Partial<ShopLine> = {
+      productKey,
+      hardwareKind: h.kind,
+      ...(h.sizeMm ? { sizeMm: h.sizeMm } : {}),
+      ...(link
+        ? { product: { seller: link.seller, id: link.id, name: link.name }, per: link.per }
+        : {}),
+    };
+    // A product still to choose moves to Hardware once the user links a seller product to it (ADR-161).
+    if (TO_CHOOSE.has(h.kind) && !link)
       lines.push({
         section: 'choose',
         label: h.label,
         quantity: h.quantity,
         unit: 'piece',
         detail: h.note ?? t('choose the product before buying'),
+        ...seller,
       });
     else
       lines.push({
@@ -173,9 +210,22 @@ export function shoppingList(input: {
         quantity: h.quantity,
         unit: 'piece',
         detail: h.note ?? '',
-        priceKey: `hw:${h.label}${size}`,
+        priceKey: productKey,
+        ...seller,
       });
   }
+  (input.sellerItems ?? []).forEach((it, i) =>
+    lines.push({
+      section: 'hardware',
+      label: it.name,
+      quantity: it.quantity,
+      unit: 'piece',
+      detail: t('added from a seller'),
+      priceKey: `item:${it.seller}:${it.id}`,
+      product: { seller: it.seller, id: it.id, name: it.name },
+      itemIndex: i,
+    }),
+  );
   if (fast) lines.push(...fast.lines);
   const seen = new Set<string>();
   for (const d of input.diagnostics ?? []) {

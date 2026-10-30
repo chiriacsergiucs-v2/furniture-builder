@@ -190,6 +190,12 @@ export const ru_info = {
   'A picture from your device on a board': 'Картинка с вашего устройства на материале',
   'Matte, satin or gloss finish': 'Матовая, полуматовая или глянцевая поверхность',
   'Edge band per board': 'Кромка для каждого материала',
+  'Boards and edge bands from a seller': 'Плиты и кромки от продавца',
+  'Bundled seller products (Regency first): same thickness and decor first, you pick.':
+    'Встроенные товары продавцов (сначала Regency): сначала та же толщина и декор, выбираете вы.',
+  'Seller products for hardware and seller prices': 'Товары продавца для фурнитуры и цены продавца',
+  'Your own price wins; otherwise the seller price, with its date.':
+    'Ваша цена важнее; иначе цена продавца с датой.',
   'Type, thickness, width and code, on the cut list and shopping list.':
     'Тип, толщина, ширина и код, в списке деталей и в списке покупок.',
   'Own board for any single part': 'Свой материал для любой отдельной детали',
