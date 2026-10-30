@@ -40,7 +40,7 @@ import { RenderDialog } from './RenderDialog';
 import { MoreMenu } from './shell/MoreMenu';
 import { ProjectsPage } from './shell/ProjectsPage';
 import { useMediaQuery } from './useMediaQuery';
-import { MODE_LABEL, MODES, useUi } from './shell/uiStore';
+import { MODE_LABEL, MODES, takeKeepSheetClosed, useUi } from './shell/uiStore';
 import { ViewOptions } from './ViewOptions';
 import { BackupReminder, SavedDataDialog, startChangeClock } from './SavedData';
 import { startAutoBackup } from '../persist/backup';
@@ -244,7 +244,8 @@ export function App() {
   }
   if (selKey !== lastSel) {
     setLastSel(selKey);
-    if (selKey && !tapMode && inProject) setSheetOpen(true);
+    const keepClosed = takeKeepSheetClosed();
+    if (selKey && !tapMode && inProject && !keepClosed) setSheetOpen(true);
   }
   // A project check tapped under Checks (ADR-071) is shown on the plan: the drawing comes forward, the sheet steps aside.
   const problemTap = useProblem((s) => s.tapped);
@@ -399,7 +400,8 @@ export function App() {
           item &&
           st.selectedItemIds.length === 1 &&
           !st.editingItemId &&
-          !st.drillItemId &&
+          // A space inside the piece is picked (ADR-106): Delete is not for the whole piece then.
+          typeof st.selectedId !== 'string' &&
           !t.closest('dialog, [contenteditable="true"]') &&
           !document.querySelector('dialog[open]')
         ) {
@@ -435,7 +437,8 @@ export function App() {
         e.preventDefault();
         redo();
       }
-      if (e.key === 'Escape') {
+      // Esc in an open dialog closes the dialog only, not the selection too (ADR-160).
+      if (e.key === 'Escape' && !document.querySelector('dialog[open]')) {
         const st = useDesign.getState();
         if (st.project && !st.editingItemId) st.selectItem(null);
         else st.select(null);

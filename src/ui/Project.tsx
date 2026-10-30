@@ -61,6 +61,7 @@ import {
 } from './planDrag';
 import { useSnap } from './useSnap';
 import { MoveToButtons } from './MoveTo';
+import { keepSheetClosedOnce } from './shell/uiStore';
 import { CompatRules } from './CompatRules';
 import {
   consumeDragClick,
@@ -552,7 +553,10 @@ export function PeekActions({ onAdd }: { onAdd: () => void }) {
         type="button"
         className="btn icon outline sm"
         aria-label={t('Duplicate {name}', { name })}
-        onClick={() => duplicate(item.id)}
+        onClick={() => {
+          keepSheetClosedOnce();
+          duplicate(item.id);
+        }}
       >
         <Icon name="copy" className="sm" />
       </button>
@@ -618,8 +622,12 @@ function PieceMenu({
     const away = (e: PointerEvent) => {
       if (!ref.current?.contains(e.target as Node)) setOpen(false);
     };
-    const esc = (e: { key: string }) => {
-      if (e.key === 'Escape') setOpen(false);
+    const esc = (e: { key: string; stopPropagation: () => void }) => {
+      // Esc closes the menu only; the piece stays selected.
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        setOpen(false);
+      }
     };
     document.addEventListener('pointerdown', away);
     document.addEventListener('keydown', esc);

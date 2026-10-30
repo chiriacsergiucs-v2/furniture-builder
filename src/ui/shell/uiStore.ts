@@ -62,3 +62,17 @@ export const useUi = create<Ui>((set) => ({
   savedDataOpen: false,
   setSavedDataOpen: (savedDataOpen) => set({ savedDataOpen }),
 }));
+
+/**
+ * Set by the phone sheet's peek row actions (ADR-160): the selection they make (a duplicate) leaves the sheet closed.
+ * Not reactive: taken (read and cleared) once by the editor when the selection changes.
+ */
+let keepSheetClosed = false;
+export const keepSheetClosedOnce = () => {
+  keepSheetClosed = true;
+};
+export const takeKeepSheetClosed = () => {
+  const v = keepSheetClosed;
+  keepSheetClosed = false;
+  return v;
+};

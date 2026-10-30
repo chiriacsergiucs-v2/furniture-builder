@@ -3,7 +3,7 @@
 // touches the 3D view or Move mode, uses `- Acceptance: browser` (`tools/<area>/find-it.mjs`) instead.
 import 'fake-indexeddb/auto';
 import { IDBFactory } from 'fake-indexeddb';
-import { cleanup, render } from '@testing-library/react';
+import { cleanup, render, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, vi } from 'vitest';
 
@@ -79,4 +79,17 @@ export async function renderApp(width: number) {
   const { App } = await import('../../src/ui/App');
   const user = userEvent.setup();
   return { user, ...render(<App />) };
+}
+
+/**
+ * The project's Pieces list (ADR-160): while one piece is selected it gives way to "All pieces (N)", which is tapped
+ * here to bring it back (that clears the selection).
+ */
+export async function piecesList(
+  user: ReturnType<typeof userEvent.setup>,
+  panel: HTMLElement,
+): Promise<HTMLElement> {
+  const all = within(panel).queryByRole('button', { name: /^All pieces \(\d+\)$/ });
+  if (all) await user.click(all);
+  return within(panel).getByRole('list', { name: 'Pieces' });
 }

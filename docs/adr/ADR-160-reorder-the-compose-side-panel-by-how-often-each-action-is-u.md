@@ -14,7 +14,8 @@ of configuring a whole room (8–10 pieces). The most used actions sat lowest: "
 closed, Duplicate and Turn under twelve equal-weight buttons, a 1100 px tall Room once set. The user, in their
 words: "Agree with all, implement, fix, remove the how many completely, there already is rotation in toolbar, no
 more need for the 4 buttons, also remove the rotation degree input, hidden for now". On the saved quantities the
-user picked "Keep, no control".
+user picked "Keep, no control". On the skipped parts (2026-10-30): the single-piece panel "Flatten + order",
+Build & Preview "Same as Compose", the rotation field "Keep hidden".
 
 This changes [ADR-117](../adr-done/ADR-117-put-the-pieces-list-first-and-fold-the-selected-piece-s-sect.md)
 ("Position, Clearance, Finish and Merge each become a closed Group") and hides the "Rotation (°)" field of
@@ -47,6 +48,8 @@ document change.
 8. **History (S9)** title shows the number of saved versions: "History · N versions".
 9. **Phone sheet (S10).** With one piece selected, the peek row carries Edit this piece, Duplicate and Turn ↻
    beside the name, usable with the sheet closed; with none selected it carries "Add a piece".
+10. **Single piece (G-309).** A space of a piece outside a project: no section frames, "Divide this space" right
+    under the title, Contents and Doors and handles open, "Layouts" a closed fold.
 
 ## Alternatives considered
 
@@ -56,9 +59,10 @@ document change.
 
 ## Scope
 
-- In scope: the project Compose panel at desktop and phone widths, and the phone peek row.
-- Out of scope: the single-piece Inspector outside a project (G-309); what Build & Preview shows in the side
-  panel (G-310); bringing back the Rotation (°) field (G-311).
+- In scope: the project Compose panel at desktop and phone widths, the phone peek row, and the space editor of a
+  single piece (G-309).
+- Out of scope: a different side panel in Build & Preview (G-310, the user keeps it the same); bringing back the
+  Rotation (°) field (G-311).
 
 ## Consequences
 
@@ -72,10 +76,11 @@ document change.
 
 - [ ] At 1280 px with one piece selected, "Add a piece", the toolbar (Duplicate, Linked, Turn ↺, Turn ↻, Mirror)
       and an open Position group are in the first 900 px of the panel (browser find-it).
-- [ ] "How many", "Rotation (°)" and the 0°/90°/180°/270° buttons are absent from the panel (find-it).
+- [ ] "How many", "Rotation (°)" and the 0°/90°/180°/270° buttons are absent; Move to shows only working
+      actions plus "N more are off" with reasons (find-it).
 - [ ] "More actions" lists Replace…, Save to catalog, Lock size and Remove from project; each works (find-it).
 - [ ] "‹ All pieces (N)" and next / previous switch the selected piece; "All pieces" shows the list (find-it).
-- [ ] Move to shows only working actions plus "N more are off" with reasons (find-it).
 - [ ] With a room set, the Room group is closed and its summary names shape and sizes (find-it).
 - [ ] At 390 px the peek row's Duplicate adds a piece with the sheet closed; no horizontal scroll (browser find-it).
+- [ ] A space of a single piece shows "Divide this space" before "Contents" and a closed "Layouts" fold (find-it).
 - [ ] lint, format:check, typecheck, test, build and docs:check pass.
