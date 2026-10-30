@@ -24,7 +24,7 @@ import { InfoPage } from './Info';
 import { ConfirmHost } from './Confirm';
 import { catalogFamilies } from '../core/catalog';
 import { useTemplates } from '../store/templatesStore';
-import { PlanView, ProjectPanel } from './Project';
+import { askRemove, PeekActions, PlanView, ProjectPanel } from './Project';
 import { PieceList } from './PieceList';
 import { usePieceList } from './pieceDrag';
 import { useView } from './useView';
@@ -390,6 +390,23 @@ export function App() {
         if (e.shiftKey) redo();
         else undo();
       }
+      // Delete or Backspace asks to remove the one piece selected in a project (ADR-160); not inside a piece or a dialog.
+      if ((e.key === 'Delete' || e.key === 'Backspace') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        const st = useDesign.getState();
+        const item = st.project?.items.find((i) => i.id === st.selectedItemId);
+        if (
+          page === 'editor' &&
+          item &&
+          st.selectedItemIds.length === 1 &&
+          !st.editingItemId &&
+          !st.drillItemId &&
+          !t.closest('dialog, [contenteditable="true"]') &&
+          !document.querySelector('dialog[open]')
+        ) {
+          e.preventDefault();
+          void askRemove(item, st.removeItem);
+        }
+      }
       // Ctrl/Cmd+D duplicates the piece selected in a project (ADR-069).
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
         const st = useDesign.getState();
@@ -711,15 +728,18 @@ export function App() {
           hidden={page !== 'editor'}
         >
           <aside className="side" aria-label={t('Compose')}>
-            <button
-              type="button"
-              className="sheet-peek"
-              aria-expanded={sheetOpen}
-              onClick={() => setSheetOpen((o) => !o)}
-            >
-              <span>{peek}</span>
-              <Icon name={sheetOpen ? 'chevron-down' : 'chevron-up'} className="sm" />
-            </button>
+            <div className="sheet-peek-row">
+              <button
+                type="button"
+                className="sheet-peek"
+                aria-expanded={sheetOpen}
+                onClick={() => setSheetOpen((o) => !o)}
+              >
+                <span>{peek}</span>
+                <Icon name={sheetOpen ? 'chevron-down' : 'chevron-up'} className="sm" />
+              </button>
+              {phone && inProject && <PeekActions onAdd={openPieces} />}
+            </div>
             <div className="side-body">
               {inProject ? (
                 <ProjectPanel mode="compose" onAdd={openPieces} />

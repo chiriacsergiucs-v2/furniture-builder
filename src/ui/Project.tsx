@@ -47,7 +47,7 @@ import {
 } from '../persist/db';
 import type { ProjectTemplate } from '../core/projectTemplate';
 import { useDesign } from '../store/designStore';
-import { Counter, Group, InfoTip, MmField, Segmented, Select, Toggle } from './controls';
+import { Group, InfoTip, MmField, Segmented, Select, Toggle } from './controls';
 import { WallBackground } from './WallBackground';
 import { pictureRect } from '../core/wallPicture';
 import { pictureKey, useWallPictureUrls } from './wallPictures';
@@ -112,8 +112,8 @@ import {
   type FocusedProblem,
 } from './ProblemBanner';
 import { useProblem } from './problemStore';
-import { ReplaceButton } from './Replace';
-import { SavedToCatalog, SaveToCatalog } from './SaveToCatalog';
+import { ReplaceDialog } from './Replace';
+import { SavedToCatalog, SaveToCatalogDialog } from './SaveToCatalog';
 import { NewerTemplates, TemplateNotice } from './TemplateRevision';
 import { GroupList, SelectionCard } from './Selection';
 import { PieceProjectSettings, ProjectSettingsPanel } from './ProjectSettings';
@@ -152,12 +152,10 @@ export function ProjectPanel({
   const setMulti = useDesign((s) => s.setMultiSelect);
   const update = useDesign((s) => s.updateItem);
   const setRotation = useDesign((s) => s.setRotation);
-  const remove = useDesign((s) => s.removeItem);
   const edit = useDesign((s) => s.editItem);
   const updateProject = useDesign((s) => s.updateProject);
   const setGap = useDesign((s) => s.setGap);
   const setLocked = useDesign((s) => s.setLocked);
-  const setSizeLocked = useDesign((s) => s.setSizeLocked);
   const resizeItem = useDesign((s) => s.resizeItem);
   // A space, shelf or side inside the drilled piece is selected: its size is not the piece's (ADR-106).
   const insideSelected = useDesign(
@@ -234,6 +232,12 @@ export function ProjectPanel({
       </div>
     );
 
+  const single = !!item && selectedIds.length === 1 && !multi;
+  const at = item ? project.items.indexOf(item) : -1;
+  const step = (by: 1 | -1) => {
+    const n = project.items.length;
+    if (at >= 0 && n > 1) select(project.items[(at + by + n) % n].id);
+  };
   return (
     <div className="inspector">
       <header className="insp-head">
@@ -246,20 +250,56 @@ export function ProjectPanel({
           </InfoTip>
         </div>
       </header>
-      {project.items.length > 0 && (
-        <div className="list-head-row">
-          <h3 className="list-head" id="pieces-head">
-            {t('Pieces')}
-          </h3>
-          {/* The views' Select (ADR-097), shared: a tap on a row adds or removes the piece (ADR-159). */}
+      <div className="list-head-row">
+        <h3 className="list-head" id="pieces-head">
+          {t('Pieces')}
+        </h3>
+        {/* The views' Select (ADR-097), shared: a tap on a row adds or removes the piece (ADR-159). */}
+        {project.items.length > 0 && (
           <Toggle label={t('Select')} checked={multi} onChange={setMulti} />
-        </div>
-      )}
+        )}
+        {/* The most used action of a room's day sits at the top of the panel (ADR-160). */}
+        <button type="button" className="btn sm primary add-piece" onClick={onAdd}>
+          <Icon name="plus" className="sm" />
+          {t('Add a piece')}
+        </button>
+      </div>
       {project.items.length === 0 ? (
         <p className="empty center">
           <Icon name="project" />
           {t('No pieces yet. Add a cabinet, a corner unit or a desk to start.')}
         </p>
+      ) : single ? (
+        // One piece selected: its editor replaces the list, which comes back from "All pieces" (ADR-160).
+        <nav className="piece-nav" aria-label={t('Pieces')}>
+          <button type="button" className="btn ghost sm" onClick={() => select(null)}>
+            <Icon name="chevron-left" className="sm" />
+            {t('All pieces ({n})', { n: project.items.length })}
+          </button>
+          <span className="piece-nav-step">
+            <button
+              type="button"
+              className="btn icon outline sm"
+              aria-label={t('Previous piece')}
+              disabled={project.items.length < 2}
+              onClick={() => step(-1)}
+            >
+              <Icon name="chevron-left" className="sm" />
+            </button>
+            <span className="num">
+              {at + 1} / {project.items.length}
+            </span>
+            <button
+              type="button"
+              className="btn icon outline sm"
+              aria-label={t('Next piece')}
+              disabled={project.items.length < 2}
+              onClick={() => step(1)}
+            >
+              <Icon name="chevron-right" className="sm" />
+            </button>
+          </span>
+        </nav>
       ) : (
         <ul className="pieces" aria-labelledby="pieces-head">
           {project.items.map((i) => {
@@ -274,18 +314,15 @@ export function ProjectPanel({
                     multi || e.shiftKey || e.ctrlKey || e.metaKey ? toggleItem(i.id) : select(i.id)
                   }
                 >
-                  <span>
-                    <strong>
-                      {i.quantity > 1 ? `${i.quantity} × ` : ''}
-                      {tr(i.design.name)}
-                    </strong>
-                    {b && (
-                      <span className="sub num">
-                        {t('{w} × {h} × {d} mm', { w: b.w, h: b.h, d: b.d })}
-                      </span>
-                    )}
-                  </span>
-                  <Icon name="chevron-right" className="chev sm" />
+                  <strong>
+                    {i.quantity > 1 ? `${i.quantity} × ` : ''}
+                    {tr(i.design.name)}
+                  </strong>
+                  {b && (
+                    <span className="sub num">
+                      {t('{w} × {h} × {d} mm', { w: b.w, h: b.h, d: b.d })}
+                    </span>
+                  )}
                 </button>
               </li>
             );
@@ -295,27 +332,57 @@ export function ProjectPanel({
       <SelectionCard />
       {item && (
         <section
-          className="piece-edit section"
+          className="piece-edit"
           aria-label={t('Selected piece: {name}', { name: tr(item.design.name) })}
         >
-          <div className="card-title">
-            <span>{t('Selected piece')}</span>
+          <div className="piece-title">
+            <h3>
+              {item.quantity > 1 ? `${item.quantity} × ` : ''}
+              {tr(item.design.name)}
+              {isLocked(item) && (
+                <span className="chip lock-chip">
+                  <Icon name="lock" className="sm" />
+                  {t('Locked')}
+                </span>
+              )}
+              {isSizeLocked(item) && (
+                <span className="chip lock-chip">
+                  <Icon name="lock" className="sm" />
+                  {t('Size locked')}
+                </span>
+              )}
+            </h3>
+            {/* Lock keeps the piece where it is (ADR-095); its size and boards stay editable. */}
+            <button
+              type="button"
+              className="btn icon outline sm"
+              aria-pressed={isLocked(item)}
+              aria-label={isLocked(item) ? t('Unlock') : t('Lock')}
+              title={
+                isLocked(item)
+                  ? t('Let the piece be moved and turned again')
+                  : t('Keep the piece where it is: nothing moves or turns it')
+              }
+              onClick={() => setLocked(item.id, !isLocked(item))}
+            >
+              <Icon name="lock" className="sm" />
+            </button>
+            <PieceMenu
+              key={item.id}
+              item={item}
+              onSaved={() => setSavedId(item.id)}
+              onUpdate={item.libraryId ? updateFromLibrary : undefined}
+            />
           </div>
-          <h3>
-            {tr(item.design.name)}
-            {isLocked(item) && (
-              <span className="chip lock-chip">
-                <Icon name="lock" className="sm" />
-                {t('Locked')}
-              </span>
-            )}
-            {isSizeLocked(item) && (
-              <span className="chip lock-chip">
-                <Icon name="lock" className="sm" />
-                {t('Size locked')}
-              </span>
-            )}
-          </h3>
+          {piece && (
+            <p className="hint num piece-floor">
+              {t('{w} × {d} mm of floor, {h} mm high', {
+                w: piece.bounds.w,
+                d: piece.bounds.d,
+                h: piece.bounds.h,
+              })}
+            </p>
+          )}
           <TemplateNotice item={item} />
           <LinkedCopies item={item} />
           {!(drillId === item.id && insideSelected) && (
@@ -327,49 +394,11 @@ export function ProjectPanel({
               locked={isSizeLocked(item)}
             />
           )}
-          <div className="split-actions">
-            <button type="button" className="btn solid" onClick={() => edit(item.id)}>
-              <Icon name="pencil" className="sm" />
-              {t('Edit this piece')}
-            </button>
-            <ReplaceButton key={item.id} item={item} />
-            <SaveToCatalog item={item} onSaved={() => setSavedId(item.id)} />
-            {item.libraryId && (
-              <button type="button" className="btn outline" onClick={updateFromLibrary}>
-                {t('Update from saved piece')}
-              </button>
-            )}
-            {/* Lock keeps the piece where it is (ADR-095); its size and boards stay editable. */}
-            <button
-              type="button"
-              className="btn outline"
-              aria-pressed={isLocked(item)}
-              title={
-                isLocked(item)
-                  ? t('Let the piece be moved and turned again')
-                  : t('Keep the piece where it is: nothing moves or turns it')
-              }
-              onClick={() => setLocked(item.id, !isLocked(item))}
-            >
-              <Icon name="lock" className="sm" />
-              {isLocked(item) ? t('Unlock') : t('Lock')}
-            </button>
-            {/* Lock size keeps its width, height and depth (ADR-122); separate from Lock (placement). */}
-            <button
-              type="button"
-              className="btn outline"
-              aria-pressed={isSizeLocked(item)}
-              title={
-                isSizeLocked(item)
-                  ? t('Let the piece be resized again')
-                  : t('Keep its width, height and depth: nothing resizes it')
-              }
-              onClick={() => setSizeLocked(item.id, !isSizeLocked(item))}
-            >
-              <Icon name="lock" className="sm" />
-              {isSizeLocked(item) ? t('Unlock size') : t('Lock size')}
-            </button>
-          </div>
+          <button type="button" className="btn solid block" onClick={() => edit(item.id)}>
+            <Icon name="pencil" className="sm" />
+            {t('Edit this piece')}
+          </button>
+          <ArrangeFields key={item.id} item={item} />
           {libMsg && (
             <p className="hint" role="status">
               {libMsg}
@@ -389,26 +418,10 @@ export function ProjectPanel({
               <PieceSettingsDialog open={pieceSettings} onClose={() => setPieceSettings(false)} />
             </section>
           )}
-          <Counter
-            label={t('How many')}
-            value={item.quantity}
-            min={1}
-            max={99}
-            onChange={(v) => update(item.id, { quantity: v })}
-            info={
-              <InfoTip label={t('About how many')} align="start">
-                {t('Copies are added to parts, sheets and hardware; one is shown in the room.')}
-              </InfoTip>
-            }
-          />
-          <ArrangeFields key={item.id} item={item} />
-          <Group
-            title={t('Position')}
-            defaultOpen={false}
-            openOn={openKey(item.id, positionErrors)}
-          >
+          {/* The most used group opens with the piece (ADR-160); the toolbar turns it. */}
+          <Group title={t('Position')} openOn={openKey(item.id, positionErrors)}>
             <GroupErrors messages={positionErrors} />
-            {blocked ? (
+            {blocked && (
               <p className="hint" role="note">
                 {isLocked(item) ? `${LOCKED_HINT}.` : blocked}{' '}
                 {t(
@@ -416,22 +429,9 @@ export function ProjectPanel({
                   { x: item.position.x, z: item.position.z, side: FRONT_SIDE[item.rotationY] },
                 )}
               </p>
-            ) : (
-              <Segmented<QuarterTurn>
-                // Where the front faces joins the label instead of a lone line under it (ADR-120).
-                label={t('Turn · {side}', { side: FRONT_SIDE[item.rotationY] })}
-                value={item.rotationY}
-                options={[
-                  { value: 0, label: '0°' },
-                  { value: 90, label: '90°' },
-                  { value: 180, label: '180°' },
-                  { value: 270, label: '270°' },
-                ]}
-                onChange={(v) => update(item.id, { rotationY: v })}
-              />
             )}
-            {/* Any whole degree, about the piece's centre (ADR-121); checks use the turned piece. */}
-            {!blocked && (
+            {/* Any whole degree, about the piece's centre (ADR-121); hidden for now (ADR-160, G-311). */}
+            {TYPED_ROTATION && !blocked && (
               <MmField
                 label={t('Rotation (°)')}
                 unit="°"
@@ -451,7 +451,7 @@ export function ProjectPanel({
             )}
             {!blocked && <PlacementFields item={item} />}
             {/* One-tap Move to: walls, ceiling, floor and neighbours, from the piece's own front (ADR-147). */}
-            <MoveToButtons key={`move-to-${item.id}`} id={item.id} />
+            <MoveToButtons key={`move-to-${item.id}`} id={item.id} onlyWorking />
             {item.placement?.kind === 'above' || blocked ? null : left ? (
               <>
                 <MmField
@@ -478,14 +478,6 @@ export function ProjectPanel({
               </p>
             )}
           </Group>
-          <Group
-            title={t('Clearance')}
-            defaultOpen={false}
-            openOn={openKey(item.id, clearanceErrors)}
-          >
-            <GroupErrors messages={clearanceErrors} />
-            <ClearanceFields item={item} />
-          </Group>
           <Group title={t('Finish')} defaultOpen={false}>
             <FinishFields item={item} />
           </Group>
@@ -494,48 +486,232 @@ export function ProjectPanel({
               <PieceProjectSettings item={item} />
             </Group>
           )}
-          <Group title={t('Merge')} defaultOpen={false}>
+          {/* Rarely used: clearance and merge share one fold; a clearance error opens it (ADR-160, ADR-008). */}
+          <Group
+            title={t('More: clearance, merge')}
+            defaultOpen={false}
+            openOn={openKey(item.id, clearanceErrors)}
+          >
+            <h4 className="list-head">{t('Clearance')}</h4>
+            <GroupErrors messages={clearanceErrors} />
+            <ClearanceFields item={item} />
+            <h4 className="list-head">{t('Merge')}</h4>
             <MergeFields item={item} />
           </Group>
-          {piece && (
-            <p className="hint">
-              {t('Takes {w} × {d} mm of floor, {h} mm high.', {
-                w: piece.bounds.w,
-                d: piece.bounds.d,
-                h: piece.bounds.h,
-              })}
-            </p>
-          )}
-          <button
-            type="button"
-            className="danger-link"
-            onClick={async () => {
-              if (
-                await askConfirm(
-                  t('Remove “{name}” from this project?', { name: tr(item.design.name) }),
-                  {
-                    confirmLabel: t('Remove'),
-                    danger: true,
-                  },
-                )
-              )
-                remove(item.id);
-            }}
-          >
-            {t('Remove from project')}
-          </button>
         </section>
       )}
       {model3d && <ModelFields item={model3d} />}
       <NewerTemplates items={project.items} />
       <GroupList />
       <ModelList pm={pm} />
-      <button type="button" className="btn outline block" onClick={onAdd}>
-        <Icon name="plus" />
-        {t('Add a piece')}
-      </button>
       <RoomSection />
       <ProjectHistory />
+    </div>
+  );
+}
+
+/**
+ * The phone sheet's peek row actions (ADR-160): with one piece selected, edit, duplicate and turn it with the sheet
+ * closed; with none, add a piece.
+ */
+export function PeekActions({ onAdd }: { onAdd: () => void }) {
+  const project = useDesign((s) => s.project);
+  const selectedId = useDesign((s) => s.selectedItemId);
+  const count = useDesign((s) => s.selectedItemIds.length);
+  const edit = useDesign((s) => s.editItem);
+  const duplicate = useDesign((s) => s.duplicateItem);
+  const turn = useDesign((s) => s.turnItem);
+  const item = project?.items.find((i) => i.id === selectedId);
+  if (!project || count > 1) return null;
+  if (!item)
+    return (
+      <span className="peek-actions">
+        <button
+          type="button"
+          className="btn sm primary"
+          aria-label={t('Add a piece to the project')}
+          onClick={onAdd}
+        >
+          <Icon name="plus" className="sm" />
+          {t('Add')}
+        </button>
+      </span>
+    );
+  const name = tr(item.design.name);
+  return (
+    <span className="peek-actions">
+      <button
+        type="button"
+        className="btn icon outline sm"
+        aria-label={t('Edit {name}', { name })}
+        onClick={() => edit(item.id)}
+      >
+        <Icon name="pencil" className="sm" />
+      </button>
+      <button
+        type="button"
+        className="btn icon outline sm"
+        aria-label={t('Duplicate {name}', { name })}
+        onClick={() => duplicate(item.id)}
+      >
+        <Icon name="copy" className="sm" />
+      </button>
+      <button
+        type="button"
+        className="btn icon outline sm"
+        aria-label={t('Turn {name} 90° clockwise', { name })}
+        onClick={() => turn(item.id, -1)}
+      >
+        <Icon name="turn-right" className="sm" />
+      </button>
+    </span>
+  );
+}
+
+/** The typed rotation field (ADR-121) is hidden from the card for now (ADR-160, G-311). */
+const TYPED_ROTATION = false;
+
+/** Asks, then removes a project piece; from More actions and the Delete key (ADR-160). */
+export async function askRemove(item: ProjectItem, remove: (id: string) => void) {
+  if (
+    await askConfirm(t('Remove “{name}” from this project?', { name: tr(item.design.name) }), {
+      confirmLabel: t('Remove'),
+      danger: true,
+    })
+  )
+    remove(item.id);
+}
+
+/**
+ * The selected piece's rarely used actions behind ⋯ (ADR-160): Replace…, Save to catalog, Update from saved piece,
+ * Lock size, Mirror the run and Remove from project. The dialogs live outside the menu, so closing it keeps them.
+ */
+function PieceMenu({
+  item,
+  onSaved,
+  onUpdate,
+}: {
+  item: ProjectItem;
+  onSaved: () => void;
+  onUpdate?: () => void;
+}) {
+  const project = useDesign((s) => s.project)!;
+  const pm = useDesign((s) => s.projectModel);
+  const remove = useDesign((s) => s.removeItem);
+  const setSizeLocked = useDesign((s) => s.setSizeLocked);
+  const mirrorRun = useDesign((s) => s.mirrorRun);
+  const [open, setOpen] = useState(false);
+  const [dialog, setDialog] = useState<'replace' | 'save' | null>(null);
+  const [msg, setMsg] = useState<string | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
+  const run = useMemo(
+    () =>
+      touchingRun(
+        project,
+        item.id,
+        pm ? new Map(pm.pieces.map((pc) => [pc.item.id, pc.bounds])) : undefined,
+      ),
+    [project, pm, item.id],
+  );
+  useEffect(() => {
+    if (!open) return;
+    const away = (e: PointerEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const esc = (e: { key: string }) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('pointerdown', away);
+    document.addEventListener('keydown', esc);
+    return () => {
+      document.removeEventListener('pointerdown', away);
+      document.removeEventListener('keydown', esc);
+    };
+  }, [open]);
+  const pick = (f: () => void) => () => {
+    setOpen(false);
+    setMsg(null);
+    f();
+  };
+  return (
+    <div className="piece-menu-wrap" ref={ref}>
+      <button
+        type="button"
+        className="btn icon outline sm"
+        aria-label={t('More actions')}
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <Icon name="more" className="sm" />
+      </button>
+      {open && (
+        <div className="piece-menu" role="group" aria-label={t('More actions')}>
+          <button type="button" onClick={pick(() => setDialog('replace'))}>
+            <Icon name="catalog" className="sm" />
+            {t('Replace…')}
+          </button>
+          <button type="button" onClick={pick(() => setDialog('save'))}>
+            <Icon name="catalog" className="sm" />
+            {t('Save to catalog')}
+          </button>
+          {onUpdate && (
+            <button type="button" onClick={pick(onUpdate)}>
+              <Icon name="refresh" className="sm" />
+              {t('Update from saved piece')}
+            </button>
+          )}
+          {/* Lock size keeps its width, height and depth (ADR-122); separate from Lock (placement). */}
+          <button
+            type="button"
+            aria-pressed={isSizeLocked(item)}
+            title={
+              isSizeLocked(item)
+                ? t('Let the piece be resized again')
+                : t('Keep its width, height and depth: nothing resizes it')
+            }
+            onClick={pick(() => setSizeLocked(item.id, !isSizeLocked(item)))}
+          >
+            <Icon name="lock" className="sm" />
+            {isSizeLocked(item) ? t('Unlock size') : t('Lock size')}
+          </button>
+          {run.length > 1 && (
+            <button
+              type="button"
+              onClick={pick(() => {
+                const res = mirrorRun(item.id);
+                setMsg(
+                  res.refused ??
+                    (res.reasons.length
+                      ? t('Moved, nothing to mirror inside: {reasons}.', {
+                          reasons: res.reasons.join('; '),
+                        })
+                      : null),
+                );
+              })}
+            >
+              <Icon name="mirror" className="sm" />
+              {t('Mirror the run ({n} pieces)', { n: run.length })}
+            </button>
+          )}
+          <hr />
+          <button type="button" className="danger" onClick={pick(() => askRemove(item, remove))}>
+            <Icon name="trash" className="sm" />
+            {t('Remove from project')}
+          </button>
+        </div>
+      )}
+      {msg && (
+        <p className="hint piece-menu-msg" role="status">
+          {msg}
+        </p>
+      )}
+      {dialog === 'replace' && <ReplaceDialog item={item} onClose={() => setDialog(null)} />}
+      <SaveToCatalogDialog
+        item={item}
+        open={dialog === 'save'}
+        onClose={() => setDialog(null)}
+        onSaved={onSaved}
+      />
     </div>
   );
 }
@@ -727,93 +903,68 @@ function LinkedCopies({ item }: { item: ProjectItem }) {
 }
 
 /**
- * Duplicate, turn about the centre and mirror the selected piece or its run (ADR-069); each is one undo step. Keys:
- * Ctrl/Cmd+D duplicates, R / Shift+R turn the piece focused on the plan.
+ * Duplicate, turn about the centre and mirror the selected piece (ADR-069), as one toolbar of icons with short labels
+ * (ADR-160); Mirror the run is in More actions. Each is one undo step. Keys: Ctrl/Cmd+D duplicates, R / Shift+R turn
+ * the piece focused on the plan.
  */
 function ArrangeFields({ item }: { item: ProjectItem }) {
-  const project = useDesign((s) => s.project)!;
   const duplicate = useDesign((s) => s.duplicateItem);
   const addLinked = useDesign((s) => s.addLinkedCopy);
   const turn = useDesign((s) => s.turnItem);
   const mirror = useDesign((s) => s.mirrorItem);
-  const mirrorRun = useDesign((s) => s.mirrorRun);
   const [msg, setMsg] = useState<string | null>(null);
-  const pm = useDesign((s) => s.projectModel);
-  // The placed bounds the project model already holds, so the run needs no second build.
-  const run = useMemo(
-    () =>
-      touchingRun(
-        project,
-        item.id,
-        pm ? new Map(pm.pieces.map((pc) => [pc.item.id, pc.bounds])) : undefined,
-      ),
-    [project, pm, item.id],
-  );
   return (
     <div className="arrange" role="group" aria-label={t('Arrange this piece')}>
-      <div className="arrange-actions">
+      <div className="arrange-tools">
         <button
           type="button"
-          className="btn outline sm"
+          className="btn outline"
           title={t('Duplicate (Ctrl+D)')}
           onClick={() => {
             setMsg(null);
             duplicate(item.id);
           }}
         >
-          {t('Duplicate')}
+          <Icon name="copy" className="sm" />
+          <span>{t('Duplicate')}</span>
         </button>
         <button
           type="button"
-          className="btn outline sm"
+          className="btn outline"
+          aria-label={t('Add a linked copy')}
           title={t('A copy that changes with this piece')}
           onClick={() => {
             setMsg(null);
             addLinked(item.id);
           }}
         >
-          {t('Add a linked copy')}
+          <Icon name="link" className="sm" />
+          <span>{t('Linked')}</span>
         </button>
         <button
           type="button"
-          className="btn outline sm"
+          className="btn outline"
           aria-label={t('Turn 90° anticlockwise about its centre')}
           title={t('Turn about its centre (R)')}
           onClick={() => setMsg(turn(item.id, 1))}
         >
-          {t('Turn 90° ↺')}
+          <Icon name="turn-left" className="sm" />
+          <span>{t('Turn ↺')}</span>
         </button>
         <button
           type="button"
-          className="btn outline sm"
+          className="btn outline"
           aria-label={t('Turn 90° clockwise about its centre')}
           title={t('Turn about its centre (Shift+R)')}
           onClick={() => setMsg(turn(item.id, -1))}
         >
-          {t('Turn 90° ↻')}
+          <Icon name="turn-right" className="sm" />
+          <span>{t('Turn ↻')}</span>
         </button>
-        <button type="button" className="btn outline sm" onClick={() => setMsg(mirror(item.id))}>
-          {t('Mirror')}
+        <button type="button" className="btn outline" onClick={() => setMsg(mirror(item.id))}>
+          <Icon name="mirror" className="sm" />
+          <span>{t('Mirror')}</span>
         </button>
-        {run.length > 1 && (
-          <button
-            type="button"
-            className="btn outline sm"
-            onClick={() => {
-              const res = mirrorRun(item.id);
-              setMsg(
-                res.refused ??
-                  (res.reasons.length
-                    ? t('Moved, nothing to mirror inside: {reasons}.', {
-                        reasons: res.reasons.join('; '),
-                      })
-                    : null),
-              );
-            }}
-          >
-            {t('Mirror the run ({n} pieces)', { n: run.length })}
-          </button>
-        )}
       </div>
       {msg && (
         <p className="hint" role="status">
@@ -2496,259 +2647,308 @@ function RoomSection() {
     });
   return (
     <section className="section room" aria-label={t('Room')}>
-      <div className="card-title">
-        <span>{t('Room')}</span>
-      </div>
       {!room ? (
+        // Not set: one hint and the two ways in (ADR-160); the shape is chosen once the room exists.
         <>
+          <div className="card-title">
+            <span>{t('Room')}</span>
+          </div>
           <p className="hint">
             {t(
               'Add the room to check the pieces against its walls, doors, windows, obstacles, pipes and outlets.',
             )}
           </p>
-          <Segmented<RoomShape>
-            label={t('Shape')}
-            value={shape}
-            options={SHAPES}
-            onChange={setShape}
-          />
-          <button type="button" className="btn outline block" onClick={() => make(shape, sizes)}>
-            <Icon name="plus" className="sm" />
-            {t('Add the room')}
-          </button>
-          <button type="button" className="btn ghost block" onClick={startDraw}>
-            <Icon name="pencil" className="sm" />
-            {t('Draw the room')}
-          </button>
+          <div className="split-actions">
+            <button type="button" className="btn outline" onClick={() => make(shape, sizes)}>
+              <Icon name="plus" className="sm" />
+              {t('Add the room')}
+            </button>
+            <button type="button" className="btn ghost" onClick={startDraw}>
+              <Icon name="pencil" className="sm" />
+              {t('Draw the room')}
+            </button>
+          </div>
         </>
       ) : (
         <>
-          {room.shape ? (
-            <>
-              <Segmented<RoomShape>
-                label={t('Shape')}
-                value={shape}
-                options={SHAPES}
-                onChange={(v) => {
-                  setShape(v);
-                  make(v, shown);
-                }}
-              />
-              <div className="room-sizes">
-                <MmField
-                  label={t('Room width')}
-                  value={shown.width}
-                  min={500}
-                  max={30000}
-                  onChange={(v) => setSize('width', v)}
-                />
-                <MmField
-                  label={t('Room depth')}
-                  value={shown.depth}
-                  min={500}
-                  max={30000}
-                  onChange={(v) => setSize('depth', v)}
-                />
-                {shape !== 'rectangle' && (
-                  <>
+          {/* Set once, edited rarely: a closed fold whose summary names the room (ADR-160). Wall warnings stay
+              outside it. */}
+          <details className="group room-fold">
+            <summary>
+              <span className="room-sum">
+                <span className="card-title">
+                  <span>{t('Room')}</span>
+                </span>
+                <strong className="num">
+                  {room.shape
+                    ? t('{shape} · {w} × {d} × {h} mm', {
+                        shape: SHAPES.find((x) => x.value === room.shape!.kind)?.label ?? '',
+                        w: room.shape.sizes.width,
+                        d: room.shape.sizes.depth,
+                        h: room.height,
+                      })
+                    : t('Drawn wall by wall · {h} mm high', { h: room.height })}
+                </strong>
+                <span className="hint">
+                  {t('{w|# wall|# walls} · {n|# item|# items}', {
+                    w: room.outline.length,
+                    n: room.features.length,
+                  })}
+                </span>
+              </span>
+              <Icon name="chevron-down" className="chev" />
+            </summary>
+            <div className="group-body">
+              {room.shape ? (
+                <>
+                  <Segmented<RoomShape>
+                    label={t('Shape')}
+                    value={shape}
+                    options={SHAPES}
+                    onChange={(v) => {
+                      setShape(v);
+                      make(v, shown);
+                    }}
+                  />
+                  <div className="room-sizes">
                     <MmField
-                      label={
-                        shape === 'alcove'
-                          ? t('Alcove width')
-                          : shape === 'u-shape'
-                            ? t('Notch width')
-                            : t('Cut-out width')
-                      }
-                      value={shown.cutWidth}
-                      min={100}
-                      max={20000}
-                      onChange={(v) => setSize('cutWidth', v)}
+                      label={t('Room width')}
+                      value={shown.width}
+                      min={500}
+                      max={30000}
+                      onChange={(v) => setSize('width', v)}
                     />
                     <MmField
-                      label={
-                        shape === 'alcove'
-                          ? t('Alcove depth')
-                          : shape === 'u-shape'
-                            ? t('Notch depth')
-                            : t('Cut-out depth')
-                      }
-                      value={shown.cutDepth}
-                      min={100}
-                      max={20000}
-                      onChange={(v) => setSize('cutDepth', v)}
+                      label={t('Room depth')}
+                      value={shown.depth}
+                      min={500}
+                      max={30000}
+                      onChange={(v) => setSize('depth', v)}
                     />
-                    {shape !== 'l-shape' && (
-                      <MmField
-                        label={
-                          shape === 'alcove' ? t('Alcove from the left') : t('Notch from the left')
-                        }
-                        value={shown.offset}
-                        min={0}
-                        max={20000}
-                        onChange={(v) => setSize('offset', v)}
-                      />
+                    {shape !== 'rectangle' && (
+                      <>
+                        <MmField
+                          label={
+                            shape === 'alcove'
+                              ? t('Alcove width')
+                              : shape === 'u-shape'
+                                ? t('Notch width')
+                                : t('Cut-out width')
+                          }
+                          value={shown.cutWidth}
+                          min={100}
+                          max={20000}
+                          onChange={(v) => setSize('cutWidth', v)}
+                        />
+                        <MmField
+                          label={
+                            shape === 'alcove'
+                              ? t('Alcove depth')
+                              : shape === 'u-shape'
+                                ? t('Notch depth')
+                                : t('Cut-out depth')
+                          }
+                          value={shown.cutDepth}
+                          min={100}
+                          max={20000}
+                          onChange={(v) => setSize('cutDepth', v)}
+                        />
+                        {shape !== 'l-shape' && (
+                          <MmField
+                            label={
+                              shape === 'alcove'
+                                ? t('Alcove from the left')
+                                : t('Notch from the left')
+                            }
+                            value={shown.offset}
+                            min={0}
+                            max={20000}
+                            onChange={(v) => setSize('offset', v)}
+                          />
+                        )}
+                      </>
                     )}
-                  </>
-                )}
-              </div>
-            </>
-          ) : (
-            <p className="hint">
-              {t('Drawn or edited wall by wall.')}{' '}
-              <button type="button" className="link" onClick={() => make(shapeChoice, sizes)}>
-                {t('Use a ready shape instead')}
+                  </div>
+                </>
+              ) : (
+                <p className="hint">
+                  {t('Drawn or edited wall by wall.')}{' '}
+                  <button type="button" className="link" onClick={() => make(shapeChoice, sizes)}>
+                    {t('Use a ready shape instead')}
+                  </button>
+                </p>
+              )}
+              <MmField
+                label={t('Room height')}
+                value={room.height}
+                min={1000}
+                max={10000}
+                onChange={(v) => setRoom({ ...room, height: v })}
+                hint={t('Measure your ceiling')}
+              />
+              <h4 className="list-head">{t('Walls')}</h4>
+              <ul className="wall-list">
+                {walls.map((i) => (
+                  <li key={i}>
+                    <MmField
+                      label={t('Wall {n}', { n: i + 1 })}
+                      value={wallLength(room, i)}
+                      min={100}
+                      max={30000}
+                      onChange={(v) => setRoom(setWallLength(room, i, v))}
+                    />
+                    <WallBackground room={room} wall={i} setRoom={setRoom} />
+                  </li>
+                ))}
+              </ul>
+              <button type="button" className="btn ghost" onClick={startDraw}>
+                <Icon name="pencil" className="sm" />
+                {t('Draw the room again')}
               </button>
-            </p>
-          )}
-          <MmField
-            label={t('Room height')}
-            value={room.height}
-            min={1000}
-            max={10000}
-            onChange={(v) => setRoom({ ...room, height: v })}
-            hint={t('Measure your ceiling')}
-          />
-          <h4 className="list-head">{t('Walls')}</h4>
-          <ul className="wall-list">
-            {walls.map((i) => (
-              <li key={i}>
-                <MmField
-                  label={t('Wall {n}', { n: i + 1 })}
-                  value={wallLength(room, i)}
-                  min={100}
-                  max={30000}
-                  onChange={(v) => setRoom(setWallLength(room, i, v))}
-                />
-                <WallBackground room={room} wall={i} setRoom={setRoom} />
-              </li>
-            ))}
-          </ul>
+              <h4 className="list-head">{t('Doors, windows, obstacles, pipes and outlets')}</h4>
+              {room.features.length === 0 && <p className="hint">{t('None yet.')}</p>}
+              {room.features.map((f) => (
+                <fieldset key={f.id} className="room-feature" aria-label={tr(f.label)}>
+                  <legend>{tr(f.label)}</legend>
+                  <Select
+                    label={t('On')}
+                    value={f.wall === null ? 'floor' : String(f.wall)}
+                    options={[
+                      ...walls.map((i) => ({
+                        value: String(i),
+                        label: t('Wall {n}', { n: i + 1 }),
+                      })),
+                      ...(f.kind === 'obstacle'
+                        ? [{ value: 'floor', label: t('Free-standing') }]
+                        : []),
+                    ]}
+                    onChange={(v) =>
+                      setFeature(
+                        f.id,
+                        v === 'floor' ? { wall: null, x: 0, z: 0 } : { wall: Number(v) },
+                      )
+                    }
+                  />
+                  {f.wall === null ? (
+                    <>
+                      <MmField
+                        label={t('From left')}
+                        value={f.x ?? 0}
+                        min={-30000}
+                        max={30000}
+                        onChange={(v) => setFeature(f.id, { x: v })}
+                      />
+                      <MmField
+                        label={t('From back')}
+                        value={f.z ?? 0}
+                        min={-30000}
+                        max={30000}
+                        onChange={(v) => setFeature(f.id, { z: v })}
+                      />
+                    </>
+                  ) : (
+                    <MmField
+                      label={t("From the wall's start")}
+                      value={f.from}
+                      min={0}
+                      max={30000}
+                      onChange={(v) => setFeature(f.id, { from: v })}
+                    />
+                  )}
+                  <MmField
+                    label={t('Width')}
+                    value={f.width}
+                    min={10}
+                    max={30000}
+                    onChange={(v) => setFeature(f.id, { width: v })}
+                  />
+                  {f.kind !== 'door' && (
+                    <MmField
+                      label={f.kind === 'window' ? t('Sill height') : t('Bottom above floor')}
+                      value={f.sill}
+                      min={0}
+                      max={10000}
+                      onChange={(v) => setFeature(f.id, { sill: v })}
+                    />
+                  )}
+                  <MmField
+                    label={t('Height')}
+                    value={f.height}
+                    min={10}
+                    max={10000}
+                    onChange={(v) => setFeature(f.id, { height: v })}
+                  />
+                  {f.kind === 'obstacle' && (
+                    <MmField
+                      label={t('Comes out')}
+                      value={f.depth}
+                      min={1}
+                      max={30000}
+                      onChange={(v) => setFeature(f.id, { depth: v })}
+                    />
+                  )}
+                  <button
+                    type="button"
+                    className="danger-link"
+                    onClick={() =>
+                      setRoom({ ...room, features: room.features.filter((x) => x.id !== f.id) })
+                    }
+                  >
+                    {REMOVE_FEATURE[f.kind]}
+                  </button>
+                </fieldset>
+              ))}
+              <div className="split-actions">
+                <button type="button" className="btn outline sm" onClick={() => addFeature('door')}>
+                  {t('Add door')}
+                </button>
+                <button
+                  type="button"
+                  className="btn outline sm"
+                  onClick={() => addFeature('window')}
+                >
+                  {t('Add window')}
+                </button>
+                <button
+                  type="button"
+                  className="btn outline sm"
+                  onClick={() => addFeature('obstacle')}
+                >
+                  {t('Add obstacle')}
+                </button>
+                <button type="button" className="btn outline sm" onClick={() => addFeature('pipe')}>
+                  {t('Add pipe')}
+                </button>
+                <button
+                  type="button"
+                  className="btn outline sm"
+                  onClick={() => addFeature('outlet')}
+                >
+                  {t('Add outlet')}
+                </button>
+              </div>
+              <button
+                type="button"
+                className="danger-link"
+                onClick={async () => {
+                  if (
+                    await askConfirm(t('Remove the room? The pieces stay.'), {
+                      confirmLabel: t('Remove'),
+                      danger: true,
+                    })
+                  )
+                    setRoom(undefined);
+                }}
+              >
+                {t('Remove the room')}
+              </button>
+            </div>
+          </details>
           {issues.map((m) => (
             <p key={m} className="hint warn">
               {m}
             </p>
           ))}
-          <button type="button" className="btn ghost" onClick={startDraw}>
-            <Icon name="pencil" className="sm" />
-            {t('Draw the room again')}
-          </button>
-          <h4 className="list-head">{t('Doors, windows, obstacles, pipes and outlets')}</h4>
-          {room.features.length === 0 && <p className="hint">{t('None yet.')}</p>}
-          {room.features.map((f) => (
-            <fieldset key={f.id} className="room-feature" aria-label={tr(f.label)}>
-              <legend>{tr(f.label)}</legend>
-              <Select
-                label={t('On')}
-                value={f.wall === null ? 'floor' : String(f.wall)}
-                options={[
-                  ...walls.map((i) => ({ value: String(i), label: t('Wall {n}', { n: i + 1 }) })),
-                  ...(f.kind === 'obstacle' ? [{ value: 'floor', label: t('Free-standing') }] : []),
-                ]}
-                onChange={(v) =>
-                  setFeature(f.id, v === 'floor' ? { wall: null, x: 0, z: 0 } : { wall: Number(v) })
-                }
-              />
-              {f.wall === null ? (
-                <>
-                  <MmField
-                    label={t('From left')}
-                    value={f.x ?? 0}
-                    min={-30000}
-                    max={30000}
-                    onChange={(v) => setFeature(f.id, { x: v })}
-                  />
-                  <MmField
-                    label={t('From back')}
-                    value={f.z ?? 0}
-                    min={-30000}
-                    max={30000}
-                    onChange={(v) => setFeature(f.id, { z: v })}
-                  />
-                </>
-              ) : (
-                <MmField
-                  label={t("From the wall's start")}
-                  value={f.from}
-                  min={0}
-                  max={30000}
-                  onChange={(v) => setFeature(f.id, { from: v })}
-                />
-              )}
-              <MmField
-                label={t('Width')}
-                value={f.width}
-                min={10}
-                max={30000}
-                onChange={(v) => setFeature(f.id, { width: v })}
-              />
-              {f.kind !== 'door' && (
-                <MmField
-                  label={f.kind === 'window' ? t('Sill height') : t('Bottom above floor')}
-                  value={f.sill}
-                  min={0}
-                  max={10000}
-                  onChange={(v) => setFeature(f.id, { sill: v })}
-                />
-              )}
-              <MmField
-                label={t('Height')}
-                value={f.height}
-                min={10}
-                max={10000}
-                onChange={(v) => setFeature(f.id, { height: v })}
-              />
-              {f.kind === 'obstacle' && (
-                <MmField
-                  label={t('Comes out')}
-                  value={f.depth}
-                  min={1}
-                  max={30000}
-                  onChange={(v) => setFeature(f.id, { depth: v })}
-                />
-              )}
-              <button
-                type="button"
-                className="danger-link"
-                onClick={() =>
-                  setRoom({ ...room, features: room.features.filter((x) => x.id !== f.id) })
-                }
-              >
-                {REMOVE_FEATURE[f.kind]}
-              </button>
-            </fieldset>
-          ))}
-          <div className="split-actions">
-            <button type="button" className="btn outline sm" onClick={() => addFeature('door')}>
-              {t('Add door')}
-            </button>
-            <button type="button" className="btn outline sm" onClick={() => addFeature('window')}>
-              {t('Add window')}
-            </button>
-            <button type="button" className="btn outline sm" onClick={() => addFeature('obstacle')}>
-              {t('Add obstacle')}
-            </button>
-            <button type="button" className="btn outline sm" onClick={() => addFeature('pipe')}>
-              {t('Add pipe')}
-            </button>
-            <button type="button" className="btn outline sm" onClick={() => addFeature('outlet')}>
-              {t('Add outlet')}
-            </button>
-          </div>
-          <button
-            type="button"
-            className="danger-link"
-            onClick={async () => {
-              if (
-                await askConfirm(t('Remove the room? The pieces stay.'), {
-                  confirmLabel: t('Remove'),
-                  danger: true,
-                })
-              )
-                setRoom(undefined);
-            }}
-          >
-            {t('Remove the room')}
-          </button>
         </>
       )}
     </section>

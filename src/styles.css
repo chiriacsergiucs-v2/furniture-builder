@@ -2020,12 +2020,151 @@ td.note {
   display: grid;
   gap: var(--s-1);
 }
+/* One line per piece: name left, size right (ADR-160). */
 .pieces .row-btn {
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto;
+  min-height: 36px;
+  padding: var(--s-1) var(--s-3);
 }
+.pieces .row-btn strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pieces .row-btn span.sub {
+  white-space: nowrap;
+}
+.list-head-row .list-head {
+  flex: 1;
+}
+/* One piece selected: back to the list, and previous / next in project order (ADR-160). */
+.piece-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+}
+.piece-nav > .btn {
+  padding-inline: var(--s-1);
+}
+.piece-nav-step {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: var(--fs-sm);
+  color: var(--ink-2);
+}
+/* The selected piece: no frame of its own inside the panel (ADR-160). */
 .piece-edit {
   display: grid;
   gap: var(--s-3);
+}
+.piece-title {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+.piece-title h3 {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+.piece-floor,
+.piece-edit .template-line {
+  margin: calc(-1 * var(--s-2)) 0 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.piece-edit .group-body > .list-head {
+  margin-top: var(--s-1);
+}
+/* Duplicate, Linked, Turn ↺, Turn ↻, Mirror: one row of icons with short labels (ADR-160). */
+.arrange-tools {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--s-1);
+}
+.arrange-tools .btn {
+  flex-direction: column;
+  gap: 2px;
+  min-height: 52px;
+  padding: var(--s-1) 2px;
+  font-size: var(--fs-xs);
+  white-space: nowrap;
+}
+.arrange-tools .btn > span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* More actions (⋯): the rarely used actions of the selected piece (ADR-160). */
+.piece-menu-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.piece-menu {
+  position: absolute;
+  top: calc(100% + var(--s-1));
+  right: 0;
+  z-index: 20;
+  display: grid;
+  min-width: 240px;
+  padding: var(--s-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-3);
+}
+.piece-menu > button {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: var(--control-h);
+  padding: 0 var(--s-3);
+  border: 0;
+  border-radius: var(--r-sm);
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+}
+.piece-menu > button:hover,
+.piece-menu > button:focus-visible {
+  background: var(--surface-2);
+}
+.piece-menu > button[aria-pressed='true'] {
+  color: var(--primary);
+}
+.piece-menu > button.danger {
+  color: var(--error);
+}
+.piece-menu > hr {
+  width: 100%;
+  margin: var(--s-1) 0;
+  border: 0;
+  border-top: 1px solid var(--line-2);
+}
+.piece-menu-msg {
+  position: absolute;
+  top: calc(100% + var(--s-1));
+  right: 0;
+  width: 240px;
+}
+/* Room: set once, then a fold whose summary names it (ADR-160). */
+.room-fold {
+  border-top: 0;
+  padding-top: 0;
+}
+.room-sum {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.room-sum .hint {
+  margin: 0;
+  font-weight: 400;
 }
 .merge-fields {
   display: grid;
@@ -4780,7 +4919,7 @@ button.tile:hover {
 .modes .segmented button.on .badge {
   box-shadow: 0 0 0 1px var(--on-primary);
 }
-.sheet-peek {
+.sheet-peek-row {
   display: none;
 }
 .out-actions {
@@ -4922,18 +5061,35 @@ button.tile:hover {
     gap: var(--s-1) var(--s-2);
     padding: var(--s-1) var(--s-3);
   }
-  .work.mode-compose .sheet-peek {
+  /* The peek row: the sheet's toggle and, beside it, the selected piece's quickest actions (ADR-160). */
+  .work.mode-compose .sheet-peek-row {
     display: flex;
     flex: none;
+    align-items: center;
+    gap: var(--s-1);
+    padding-right: var(--s-3);
+    background: var(--surface);
+    border-bottom: 1px solid var(--line-2);
+  }
+  /* The top bar already names the project: the sheet starts at its pieces (ADR-160). */
+  .work.mode-compose .side .insp-head {
+    display: none;
+  }
+  .work.mode-compose .peek-actions {
+    display: inline-flex;
+    gap: var(--s-1);
+  }
+  .work.mode-compose .sheet-peek {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
     justify-content: space-between;
     align-items: center;
     gap: var(--s-2);
-    width: 100%;
     min-height: 56px;
     padding: 0 var(--s-4);
     background: var(--surface);
     border: 0;
-    border-bottom: 1px solid var(--line-2);
     color: var(--ink);
     font: inherit;
     font-weight: 600;
@@ -5858,6 +6014,18 @@ p > .info-tip {
 .move-to .btn[aria-disabled='true'] {
   opacity: 0.5;
 }
+/* The actions that cannot move the piece now, with their reasons, folded under the working ones (ADR-160). */
+.move-to-off > summary {
+  cursor: pointer;
+  font-size: var(--fs-sm);
+  color: var(--ink-2);
+}
+.move-to-off ul {
+  margin: var(--s-1) 0 0;
+  padding-left: var(--s-5);
+  font-size: var(--fs-sm);
+  color: var(--ink-2);
+}
 .three-tools .three-move-to {
   flex: 1 1 100%;
 }
@@ -6183,11 +6351,6 @@ p > .info-tip {
 }
 .piece-list:focus {
   outline: none;
-}
-
-/* The selected-piece card's actions (Edit, Replace…, Update, Lock) wrap instead of widening the panel (ADR-095). */
-.piece-edit > .split-actions {
-  flex-wrap: wrap;
 }
 
 /* Several selected pieces and groups (ADR-097). */

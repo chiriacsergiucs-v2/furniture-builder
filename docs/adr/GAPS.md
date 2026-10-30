@@ -2602,3 +2602,30 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Add the select to 3d, so i can click on them to multiselect
 - Questions: Should the front view and 3D also get a drag-to-box selection?
 - Suggested pick: Front view only (3D drags orbit the camera); closest to the plan's existing box.
+
+### G-309: Single-piece Inspector not reordered
+
+- Status: Open
+- Origin: ADR-160 (side panel critique, 2026-10-30)
+- Missing: The side panel of a single piece outside a project (Inspector) keeps its old order; ADR-160 reorders only the project panel.
+- Request: Agree with all, implement, fix, remove the how many completely, there already is rotation in toolbar, no more need for the 4 buttons, also remove the rotation degree input, hidden for now
+- Questions: Should the single-piece Inspector get the same treatment (action toolbar, More menu, open first group)?
+- Suggested pick: Yes, in a follow-up ADR; it is the same panel when no project is open.
+
+### G-310: Build & Preview side panel content undecided
+
+- Status: Open
+- Origin: ADR-160 (side panel critique, 2026-10-30)
+- Missing: In Build & Preview the side panel shows the same Compose panel; the critique asked whether that is intended and the user did not answer.
+- Request: Agree with all, implement, fix, remove the how many completely, there already is rotation in toolbar, no more need for the 4 buttons, also remove the rotation degree input, hidden for now
+- Questions: Should Build & Preview show a different side panel (for example finishes and checks only)?
+- Suggested pick: Keep the same panel until the user says what Build & Preview should show.
+
+### G-311: Rotation (°) field hidden
+
+- Status: Open
+- Origin: ADR-160 (side panel critique, 2026-10-30)
+- Missing: The typed rotation field (ADR-121) is hidden from the selected-piece card; angles other than quarter turns cannot be typed.
+- Request: Agree with all, implement, fix, remove the how many completely, there already is rotation in toolbar, no more need for the 4 buttons, also remove the rotation degree input, hidden for now
+- Questions: When and where should the typed angle come back (a link under Position, the More menu)?
+- Suggested pick: A small 'Exact angle…' link under Position, as in the critique.

@@ -42,7 +42,12 @@ export function ProjectHistory() {
   const again = () => setReload((n) => n + 1);
   return (
     <Group
-      title={t('History')}
+      // The kept versions are counted in the title, so the folded row says what is inside (ADR-160).
+      title={
+        versions.length
+          ? t('History · {n|# version|# versions}', { n: versions.length })
+          : t('History')
+      }
       defaultOpen={false}
       info={
         <InfoTip label={t('About the history')} align="start">
