@@ -1176,6 +1176,16 @@ function DrawerSettingsGroup({
         step={1}
         onChange={(v) => onChange({ ...d, rearClearance: v })}
       />
+      <Toggle
+        label={t('Box has an inner front')}
+        checked={d.innerFront !== false}
+        onChange={(v) => onChange({ ...d, innerFront: v ? undefined : false })}
+        info={
+          <InfoTip label={t('About the inner front')} align="start">
+            {t('Off: the drawer front closes the box, as on many flat-pack drawers.')}
+          </InfoTip>
+        }
+      />
       <Select
         label={t('Drawer box')}
         value={d.boxMaterialId}

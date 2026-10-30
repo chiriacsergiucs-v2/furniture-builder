@@ -161,6 +161,7 @@ export const ru_info = {
   Drawers: 'Ящики',
   'Drawer boxes with runner choice and clearances':
     'Короба ящиков с выбором направляющих и зазорами',
+  'Drawer boxes without an inner front': 'Короба ящиков без внутренней передней стенки',
   'Kitchen runs': 'Кухонные ряды',
   'Run parts: worktop, plinth, fillers and covers':
     'Детали ряда: столешница, цоколь, доборы и накладки',

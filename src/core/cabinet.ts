@@ -873,6 +873,12 @@ export function buildCabinet(
             ),
             s.id,
           );
+        if (ds.innerFront === false && internal)
+          warn(
+            'inner-front-internal',
+            tx('Drawers behind doors have no front of their own, so they keep their inner front.'),
+            s.id,
+          );
         for (let i = 0; i < n; i++) {
           const sh = slots[i];
           const slotBottom = slotTop - sh;
@@ -1055,17 +1061,19 @@ export function buildCabinet(
               ['+y'],
               i,
             );
-          add(
-            s.id,
-            'drawer-inner-front',
-            `Drawer ${k} inner front`,
-            boxM.id,
-            box(bx + tb, py, boxFront - tb, bw - 2 * tb, ph2, tb),
-            'z',
-            'x',
-            ['+y'],
-            i,
-          );
+          // ADR-166: with `innerFront: false` the drawer front closes the box; drawers behind doors keep theirs.
+          if (ds.innerFront !== false || internal)
+            add(
+              s.id,
+              'drawer-inner-front',
+              `Drawer ${k} inner front`,
+              boxM.id,
+              box(bx + tb, py, boxFront - tb, bw - 2 * tb, ph2, tb),
+              'z',
+              'x',
+              ['+y'],
+              i,
+            );
           if (!internal) {
             const fh = frontHeights[i];
             add(

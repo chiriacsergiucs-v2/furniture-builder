@@ -305,6 +305,7 @@ export const FEATURES: FeatureDomain[] = [
         name: 'Drawers',
         features: [
           { name: 'Drawer boxes with runner choice and clearances', adrs: ['ADR-005', 'ADR-010'] },
+          { name: 'Drawer boxes without an inner front', adrs: ['ADR-166'] },
         ],
       },
       {

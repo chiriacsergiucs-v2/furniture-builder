@@ -158,6 +158,10 @@ export const ru_inspector = {
     'Сверьтесь с паспортом направляющих; для боковых обычно 12,5–13 мм.',
   'Height clearance': 'Зазор по высоте',
   'Space behind runner': 'Место за направляющей',
+  'About the inner front': 'О внутренней передней стенке',
+  'Box has an inner front': 'У короба есть внутренняя передняя стенка',
+  'Off: the drawer front closes the box, as on many flat-pack drawers.':
+    'Выкл.: фасад ящика закрывает короб, как у многих мебельных ящиков из плит.',
   'Drawer box': 'Короб ящика',
   'Drawer bottom': 'Дно ящика',
   'Runner lengths you can buy': 'Доступные длины направляющих',

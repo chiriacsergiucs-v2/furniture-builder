@@ -1139,6 +1139,8 @@ export function validateDesign(d: unknown): string[] {
     ints(['sideClearance', 'verticalClearance', 'rearClearance'], dr);
     matRef('boxMaterialId', dr);
     matRef('bottomMaterialId', dr);
+    if (dr.innerFront !== undefined && typeof dr.innerFront !== 'boolean')
+      errs.push(t('Invalid drawer settings'));
   }
   if (p.kind === 'cabinet') {
     ints(

@@ -406,6 +406,8 @@ export interface DrawerSettings {
   runnerLengths: Mm[];
   boxMaterialId: string;
   bottomMaterialId: string;
+  /** `false`: the drawer front closes the box, no inner front; drawers behind doors keep theirs (ADR-166). Absent = true. */
+  innerFront?: boolean;
 }
 
 export interface CabinetParams {
