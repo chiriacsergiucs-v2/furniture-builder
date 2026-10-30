@@ -171,6 +171,7 @@ export function Toggle({
   onChange,
   info,
   name,
+  disabled,
 }: {
   label: string;
   checked: boolean;
@@ -178,6 +179,7 @@ export function Toggle({
   info?: ReactNode;
   /** The accessible name when the visible label is shortened (ADR-112). */
   name?: string;
+  disabled?: boolean;
 }) {
   return withInfo(
     <label className="toggle">
@@ -185,6 +187,7 @@ export function Toggle({
         type="checkbox"
         aria-label={name}
         checked={checked}
+        disabled={disabled}
         onChange={(e) => onChange(e.target.checked)}
       />
       <span>{label}</span>

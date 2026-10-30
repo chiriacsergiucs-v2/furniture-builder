@@ -67,8 +67,9 @@ A pull request with no ADR (docs or rules only) skips step 1.
 
 ## Quiet periods
 
-While the pull request only waits on CI or reviewers, keep one safety-net check-in: about 50
-minutes after the last activity, then about every 4 hours. If nothing changed, re-arm silently.
+While the pull request only waits on CI or reviewers, keep one safety-net check-in: 5 minutes
+after the last activity (the pull request opened or a push started CI; user rule 2026-10-30, "5 minutes after
+start, not 1h"), then about every 4 hours. If nothing changed, re-arm silently.
 Stop after 3 check-ins in a row with nothing new, or when the pull request is merged or closed,
 and say once that check-ins stopped.
 

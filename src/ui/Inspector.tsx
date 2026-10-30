@@ -1,5 +1,5 @@
 import { isSizeLocked, SIZE_LOCKED_HINT } from '../core/sizeLock';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   bayLayoutOf,
   changeKind,
@@ -20,7 +20,10 @@ import {
   usesPedestal,
 } from '../core/design';
 import { t, tr } from '../core/i18n';
-import { boardLabel } from '../core/boards';
+import { boardChoices } from '../core/boards';
+import type { Decor } from '../core/materials';
+import { materialKey } from '../core/project';
+import { listDecors } from '../persist/db';
 import type { Selection } from '../core/selectPath';
 import type {
   CabinetParams,
@@ -247,11 +250,6 @@ const WHOLE = {
   panels: t('Whole panel set'),
 };
 
-function matOptions(materials: Material[], filter?: (m: Material) => boolean) {
-  return materials
-    .filter(filter ?? (() => true))
-    .map((m) => ({ value: m.id, label: boardLabel(m) }));
-}
 const matName = (materials: Material[], id: string) =>
   tr(materials.find((m) => m.id === id)?.name ?? '—');
 
@@ -1374,6 +1372,24 @@ function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[]
 /** Panel set (ADR-041): a list of cut sizes. No assembly, so no inside and no construction choices. */
 function PanelSetEditor({ p, materials }: { p: PanelSetParams; materials: Material[] }) {
   const set = useDesign((s) => s.updatePanelSet);
+  const setBoard = useDesign((s) => s.setLoosePanelBoard);
+  // Each part's board: the project's (or this piece's) boards, then the decor list (ADR-164).
+  const project = useDesign((s) => s.project);
+  const design = useDesign((s) => s.design);
+  const [decors, setDecors] = useState<Decor[]>([]);
+  useEffect(() => {
+    listDecors()
+      .then(setDecors)
+      .catch(() => setDecors([]));
+  }, []);
+  const choices = useMemo(
+    () => boardChoices(project, design, decors).filter((c) => c.board.stock !== 'solid'),
+    [project, design, decors],
+  );
+  const keyOf = (id: string) => {
+    const m = materials.find((x) => x.id === id);
+    return m ? materialKey(m) : '';
+  };
   const count = p.panels.reduce((n, lp) => n + lp.quantity, 0);
   const steps: Step[] = [
     {
@@ -1461,9 +1477,12 @@ function PanelSetEditor({ p, materials }: { p: PanelSetParams; materials: Materi
           </div>
           <Select
             label={t('Board')}
-            value={lp.materialId}
-            options={matOptions(materials)}
-            onChange={(v) => change(lp.id, { materialId: v })}
+            value={keyOf(lp.materialId)}
+            options={choices.map((c) => ({ value: c.key, label: c.label }))}
+            onChange={(v) => {
+              const c = choices.find((x) => x.key === v);
+              if (c) setBoard(lp.id, c.board);
+            }}
           />
           <Toggle
             label={t('Placed in the assembly')}

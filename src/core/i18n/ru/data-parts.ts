@@ -48,6 +48,8 @@ const FIXED: Record<string, string> = {
   'Dishwasher front': 'Фасад посудомоечной машины',
   'Fridge door front': 'Фасад дверцы холодильника',
   'Cover panel': 'Торцевая панель',
+  'Common top': 'Общая крышка',
+  'Common bottom': 'Общее дно',
   'Cover panel left': 'Торцевая панель слева',
   'Cover panel right': 'Торцевая панель справа',
   Filler: 'Доборная планка',

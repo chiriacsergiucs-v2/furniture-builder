@@ -15,6 +15,9 @@ import {
   compartmentsOf,
   contentUses,
   listOf,
+  boardDefault,
+  boardOptions,
+  boardsVersion,
   stepById,
   str,
 } from './steps';
@@ -33,6 +36,8 @@ const FIELD_DEFAULTS: Answers = Object.fromEntries(
 /** Every answer the wizard works with: field defaults, then the type's defaults, then what the user gave. */
 export const resolve = (a: Answers): Answers => ({
   ...FIELD_DEFAULTS,
+  // The board defaults to the project's carcass board (ADR-164).
+  board: boardDefault(),
   ...(typeOf(a)?.defaults ?? {}),
   ...a,
 });
@@ -58,6 +63,7 @@ export const visibleFields = (step: StepDef, a: Answers): FieldDef[] => {
 export function fieldOptions(f: FieldDef, a: Answers): Option[] {
   if (f.id === 'type')
     return CONSTRUCTION_TYPES.map((t) => ({ value: t.id, label: t.label, help: t.description }));
+  if (f.id === 'board') return boardOptions(str(a, 'board'));
   const allowed = typeOf(a)?.options?.[f.id];
   return (f.options ?? []).filter((o) => !allowed || allowed.includes(o.value));
 }
@@ -160,7 +166,8 @@ const MEMO_SIZE = 64;
 
 /** Field problems, design validation and every buildModel() diagnostic. Never throws. Memoised by answers. */
 export function check(a: Answers): Check {
-  const key = JSON.stringify(resolve(a));
+  // The offered boards are part of what the answers mean (ADR-164).
+  const key = `${boardsVersion()}|${JSON.stringify(resolve(a))}`;
   const hit = memo.get(key);
   if (hit) return hit;
   const problems = fieldProblems(a);

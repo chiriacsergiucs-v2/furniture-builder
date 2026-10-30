@@ -1,7 +1,8 @@
 # ADR-165: A common top or bottom panel across touching items in a row
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-30
+- Implemented: 2026-10-30 (CI run 41093818766 green on PR #150)
 - Depends on: ADR-105, ADR-163
 - Design: docs/ui-design.md (§4 Screens: project selected-items card)
 - Backlog: N167
@@ -17,12 +18,12 @@ or Part); with doubled tops (ADR-105) it is **doubled when every item has a doub
 warning**; items whose top is between the sides (or bottom between the sides) are **built over/under while the
 common panel is on**, their own setting kept.
 
-Change control: a new project field (ADR-011): project schemaVersion **16**; older files load unchanged.
+Change control: a new project field (ADR-011): project schemaVersion **17** (16 is ADR-166); older files load unchanged.
 `placeItem`'s `noPlinth` (ADR-054: a run plinth replaces the pieces' plinths) is the pattern followed.
 
 ## Decision
 
-- **`Project.common?: { id: string; kind: 'top' | 'bottom'; itemIds: string[] }[]`** (schemaVersion 16).
+- **`Project.common?: { id: string; kind: 'top' | 'bottom'; itemIds: string[] }[]`** (schemaVersion 17; 16 went to ADR-166 variables while this was built).
   Validation: 2+ ids of this project, an item in at most one common top and one common bottom; the field in a file
   older than 16 is invalid. A removed item leaves its list; a list with fewer than 2 items is dropped (`pruneCommon`).
 - **`commonPanelCheck(project, itemIds, kind)`** → `null` or the reason: every item a cabinet; same quarter turn,
@@ -63,16 +64,26 @@ Change control: a new project field (ADR-011): project schemaVersion **16**; old
 
 ## Done when
 
-- [ ] Two touching 800 mm cabinets with a common top build one `top` panel 1600 mm wide and no item tops; no
+- [x] Two touching 800 mm cabinets with a common top build one `top` panel 1600 mm wide and no item tops; no
       overlaps; a common bottom likewise (`tests/common-panel.test.ts`).
-- [ ] A member with `top: 'between'` is built over the sides while linked; a doubled-top mix gives
+- [x] A member with `top: 'between'` is built over the sides while linked; a doubled-top mix gives
       `common-top-layers`; moving a member gives `common-panel-broken` and both own tops (`tests/common-panel.test.ts`).
-- [ ] `commonPanelCheck` refuses different heights, depths, plinths, a gap, a turned item and a desk with the reason
+- [x] `commonPanelCheck` refuses different heights, depths, plinths, a gap, a turned item and a desk with the reason
       (`tests/common-panel.test.ts`).
-- [ ] A version-15 project with `common` is invalid; a version-16 one loads; `pruneCommon` drops a 1-item list
+- [x] A version-16 project with `common` is invalid; a version-17 one loads; `pruneCommon` drops a 1-item list
       (`tests/common-panel.test.ts`).
-- [ ] Find-it `tests/find-it/common-panel.test.tsx` at 390 and 1280 px: two cabinets selected → "Common top" →
+- [x] Find-it `tests/find-it/common-panel.test.tsx` at 390 and 1280 px: two cabinets selected → "Common top" →
       parts list shows "Common top" once; a wardrobe selected with them → the toggle is disabled with the reason.
+
+## Implementation notes
+
+`src/core/common.ts` (`commonPanelCheck`, `commonBuilds`, `commonPanels`, `commonDesign`, `pruneCommon`);
+`Project.common` and project schemaVersion 17 with validation in `src/core/project.ts`; `placeItem` builds members
+over/under and keeps their replaced panels (`removed`); `buildProjectModel` and `projectCutlist` add one panel per
+layer. An item counted more than once (quantity above 1) is refused too: one common panel cannot cover copies. Store
+`setCommon`; toggles **Common top** / **Common bottom** in the selected-pieces card (`src/ui/Selection.tsx`); Romanian
+and Russian print names. Tests: `tests/common-panel.test.ts`, `tests/find-it/common-panel.test.tsx`; deep fuzz
+(`FUZZ_N=30000`) passes.
 
 ## Open questions
 

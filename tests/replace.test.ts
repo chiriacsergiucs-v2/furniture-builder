@@ -130,7 +130,15 @@ describe('replaceItem (ADR-098)', () => {
           : old.product,
     };
     const p = { ...p0, items: [{ ...p0.items[0], design: withOak }] };
-    const fresh = drawers3();
+    // Its own fronts on a board no other part uses (every part is PAL 18 by default, ADR-164).
+    const d3 = drawers3();
+    const fresh: Design =
+      d3.product.kind === 'cabinet'
+        ? {
+            ...d3,
+            product: { ...d3.product, params: { ...d3.product.params, frontMaterialId: 'mdf18' } },
+          }
+        : d3;
     const freshFront = board(fresh, 'front');
     const got = replaceItem(p, p.items[0].id, fresh).items[0].design;
     // The copy's own front board is no longer used by any part: it goes; the oak board is there once.

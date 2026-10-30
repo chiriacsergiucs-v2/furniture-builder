@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
 import { groupSizeFields, type WidthSplit } from '../core/groupSize';
 import { t, tr } from '../core/i18n';
+import { commonPanelCheck } from '../core/common';
 import { pieceName, type Project } from '../core/project';
 import { groupOf, sameIds, type Group } from '../core/selection';
 import { useDesign } from '../store/designStore';
 import { askConfirm } from './Confirm';
-import { InfoTip, MmField, Segmented } from './controls';
+import { InfoTip, MmField, Segmented, Toggle } from './controls';
 import { Icon } from './icons';
 
 /**
@@ -24,6 +25,7 @@ export function SelectionCard() {
   const clear = useDesign((s) => s.selectItem);
   const align = useDesign((s) => s.alignSelection);
   const distribute = useDesign((s) => s.distributeSelection);
+  const setCommon = useDesign((s) => s.setCommon);
   const [msg, setMsg] = useState<{ for: string; text: string | null }>({ for: '', text: null });
   if (!project || ids.length < 2) return null;
   const key = ids.join(',');
@@ -158,6 +160,7 @@ export function SelectionCard() {
           )}
         </div>
       )}
+      <CommonToggles project={project} ids={pieceIds} setCommon={setCommon} say={say} />
       {isGroup && <GroupSize project={project} group={g!} say={say} />}
       {msg.for === key && msg.text && (
         <p className="hint" role="status">
@@ -165,6 +168,61 @@ export function SelectionCard() {
         </p>
       )}
     </section>
+  );
+}
+
+/**
+ * One top or bottom panel across the selected items (ADR-165): on when they are all in the same common panel of
+ * that kind; disabled with the reason when they cannot share one.
+ */
+function CommonToggles({
+  project,
+  ids,
+  setCommon,
+  say,
+}: {
+  project: Project;
+  ids: string[];
+  setCommon: (kind: 'top' | 'bottom', on: boolean) => string;
+  say: (text: string | null) => void;
+}) {
+  const plans = useMemo(
+    () => ({
+      top: commonPanelCheck(project, ids, 'top').reason,
+      bottom: commonPanelCheck(project, ids, 'bottom').reason,
+    }),
+    [project, ids],
+  );
+  const isOn = (kind: 'top' | 'bottom') =>
+    (project.common ?? []).some((c) => c.kind === kind && ids.every((x) => c.itemIds.includes(x)));
+  return (
+    <div className="common-panels" role="group" aria-label={t('Common top and bottom')}>
+      {(['top', 'bottom'] as const).map((kind) => {
+        const on = isOn(kind);
+        const why = on ? null : plans[kind];
+        return (
+          <div key={kind}>
+            <Toggle
+              label={kind === 'top' ? t('Common top') : t('Common bottom')}
+              checked={on}
+              disabled={!!why}
+              onChange={(v) => say(setCommon(kind, v) || null)}
+              info={
+                <InfoTip
+                  label={kind === 'top' ? t('About the common top') : t('About the common bottom')}
+                  align="start"
+                >
+                  {kind === 'top'
+                    ? t('One top panel across these items; each keeps its own sides.')
+                    : t('One bottom panel across these items; each keeps its own sides.')}
+                </InfoTip>
+              }
+            />
+            {why && <p className="hint">{why}</p>}
+          </div>
+        );
+      })}
+    </div>
   );
 }
 

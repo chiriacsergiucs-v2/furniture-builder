@@ -229,6 +229,14 @@ described above. Audit and wireframes are in `docs/research/2026-10-24-ui-redesi
   thickness mm", no maker or type suffix), the yellow **Apply material**, a status line ("Applied to 2 items") and
   **Suggest a style** in a project. The Finish group, Project settings' board selects and Settings' Materials,
   Part boards and drawer board selects are gone.
+- _Board choices (ADR-164)._ Every board select (Material, the New-piece wizard's **Board**, a panel set's
+  **Board**) lists the project's boards (or the piece's), then the decor list as "maker code name, thickness mm (your
+  list)"; the built-in boards only when there is nothing else. The wizard's Board starts on the project's carcass
+  board and its help says every part takes it.
+- _Common top and bottom (ADR-165)._ With two or more pieces selected, the selected-pieces card shows a group
+  **Common top and bottom** with the toggles **Common top** and **Common bottom** (each with an info tip). A toggle
+  that cannot be switched on is disabled with its reason below it ("Wardrobe is not the same height or floor
+  level."). The Parts list shows **Common top** / **Common bottom** as one row of its own.
 
 ## 5. Rollout
 

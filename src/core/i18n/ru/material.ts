@@ -54,4 +54,38 @@ export const ru_material = {
   'Material in the header bar: a board on one part, the item, the group or the whole project, on any part roles.':
     'Кнопка «Материал» в шапке: плита на одну деталь, изделие, группу или весь проект, для любых ролей деталей.',
   'Clear part board': 'Сбросить плиту детали',
+  'One PAL 18 board for every part by default': 'Одна плита ЛДСП 18 на все детали по умолчанию',
+  "New pieces start on one board; the wizard offers the project's boards and your decor list.":
+    'Новые изделия начинаются с одной плиты; мастер предлагает плиты проекта и ваш список декоров.',
+  'Select two or more items standing side by side.': 'Выберите два и более изделий, стоящих рядом.',
+  'An item of this common panel was removed.': 'Изделие этой общей панели удалено.',
+  '{name} is not a cabinet.': '{name} — не шкаф.',
+  'The items are not turned the same way.': 'Изделия повёрнуты по-разному.',
+  '{name} is not the same height or floor level.':
+    '{name} другой высоты или стоит на другом уровне.',
+  '{name} is not the same depth or not in line.': '{name} другой глубины или не на одной линии.',
+  '{name} has another plinth height.': 'У {name} другая высота цоколя.',
+  '{name} has another back.': 'У {name} другая задняя стенка.',
+  '{a} and {b} do not touch.': '{a} и {b} не касаются друг друга.',
+  'The common {kind} is not built: {reason} The items keep their own.':
+    'Общая панель ({kind}) не построена: {reason} Изделия сохраняют свои.',
+  'Some items under the common top have a doubled top and some do not; the common top is single.':
+    'Под общей крышкой у части изделий двойная крышка, у части — нет; общая крышка одинарная.',
+  'Common tops and bottoms need project schemaVersion {v}':
+    'Общие крышки и днища требуют schemaVersion проекта {v}',
+  'Invalid common tops and bottoms': 'Недопустимые общие крышки и днища',
+  'Invalid common top or bottom': 'Недопустимая общая крышка или дно',
+  'Common top': 'Общая крышка',
+  'Common bottom': 'Общее дно',
+  'Common top and bottom': 'Общая крышка и дно',
+  'About the common top': 'Об общей крышке',
+  'About the common bottom': 'Об общем дне',
+  'One top panel across these items; each keeps its own sides.':
+    'Одна крышка на все эти изделия; у каждого остаются свои боковины.',
+  'One bottom panel across these items; each keeps its own sides.':
+    'Одно дно на все эти изделия; у каждого остаются свои боковины.',
+  '{name} is counted more than once.': '{name} учтено больше одного раза.',
+  'A common top or bottom across items': 'Общая крышка или дно для нескольких изделий',
+  'Select items standing side by side: Common top or Common bottom makes one panel across them.':
+    'Выберите изделия, стоящие рядом: «Общая крышка» или «Общее дно» делает одну панель на все.',
 } as const;
