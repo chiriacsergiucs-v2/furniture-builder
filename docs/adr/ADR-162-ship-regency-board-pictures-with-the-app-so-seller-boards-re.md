@@ -54,7 +54,7 @@ repository instead of fetching them from the seller.
 - [x] The script fetches only boards and worktops on the seller's picture base, skips files already there and marks `h`
       (`tests/seller-pictures.test.ts`)
 - [x] A board with `h` takes the app's copy as its picture and colour; one without falls back to the seller
-      (`tests/find-it/sellers.test.tsx`, 390 and 1280 px)
+      (`tests/find-it/seller-pictures.test.tsx`, 390 and 1280 px)
 - [x] Board lists show the app's copy without a seller request (find-it)
 - [ ] All CI checks pass
 
