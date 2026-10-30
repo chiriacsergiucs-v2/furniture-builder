@@ -1,7 +1,8 @@
 /**
- * ADR-162: downloads the thumbnails of Regency boards and worktops once, so a picked seller board can use the app's
- * own copy for its decor (3D, front view) whatever the seller's site allows. The thumbnail (`thumbBase`) is used when
- * the catalog has one, else the picture (`imageBase`). Only https URLs on that base are fetched, a few at a time.
+ * ADR-162: downloads the full pictures of Regency boards and worktops once, so a picked seller board can use the app's
+ * own copy for its decor (3D, front view) whatever the seller's site allows. The full picture (`imageBase`) is used:
+ * the seller's thumbnails (`thumbBase`, about 95 px) are too small for a board's decor and serve the lists only.
+ * Only https URLs on the picture base are fetched, a few at a time.
  * Pictures already in the app's folder are skipped. The workflow (`.github/workflows/seller-pictures.yml`) crops and
  * resizes the new files, moves them into `public/sellers/regency/<id>.<ext>`, then marks them:
  *
@@ -15,13 +16,10 @@ interface Product {
   id: string;
   k: string;
   i?: string;
-  /** Thumbnail path on `thumbBase` when it differs from `i`; '' = none. */
-  ti?: string;
   h?: 1;
 }
 interface Catalog {
   imageBase: string;
-  thumbBase?: string;
   hostedBase?: string;
   products: Product[];
 }
@@ -36,21 +34,19 @@ export function pictureExt(path: string): string {
 }
 
 /**
- * The pictures still to download: boards and worktops with a thumbnail (or, without `thumbBase`, a picture) on the
- * catalog's https base. The file is named after the picture's extension, as the app looks it up.
+ * The pictures still to download: boards and worktops with a picture on the catalog's https picture base. The file is
+ * named after the picture's extension, as the app looks it up.
  */
 export function picturePlan(
   catalog: Catalog,
   have: Set<string>,
 ): { id: string; url: string; file: string }[] {
-  const from = catalog.thumbBase ?? catalog.imageBase;
-  if (!from.startsWith('https://')) return [];
-  const base = new URL(from);
+  if (!catalog.imageBase.startsWith('https://')) return [];
+  const base = new URL(catalog.imageBase);
   const out: { id: string; url: string; file: string }[] = [];
   for (const p of catalog.products) {
-    const path = catalog.thumbBase ? (p.ti ?? p.i) : p.i;
-    if (!BOARD_KINDS.has(p.k) || !p.i || !path || !/^[\w.-]+$/.test(p.id)) continue;
-    const url = new URL(path, from);
+    if (!BOARD_KINDS.has(p.k) || !p.i || !/^[\w.-]+$/.test(p.id)) continue;
+    const url = new URL(p.i, catalog.imageBase);
     if (url.origin !== base.origin || !url.pathname.startsWith(base.pathname)) continue;
     const file = `${p.id}${pictureExt(p.i)}`;
     if (!have.has(file)) out.push({ id: p.id, url: url.href, file });

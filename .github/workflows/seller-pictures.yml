@@ -1,4 +1,4 @@
-# ADR-162: downloads the thumbnails of Regency boards and worktops into public/sellers/regency/ (cropped, at most
+# ADR-162: downloads the full pictures of Regency boards and worktops into public/sellers/regency/ (cropped, at most
 # 512 px) and pushes a branch with them, opening a pull request when Actions may. Started by hand
 # (Actions › Seller pictures › Run workflow); nothing is pushed to main directly.
 name: Seller pictures
@@ -22,7 +22,7 @@ jobs:
           cache: true
           require-lockfile: true
 
-      # Thumbnails of boards and worktops not yet in the app (ADR-162).
+      # Full pictures of boards and worktops not yet in the app (ADR-162); the seller's thumbnails are too small.
       - run: node tools/sellers/regency-pictures.ts download src/core/sellers/regency.json .pictures-new public/sellers/regency
 
       # Keep the bottom-left 68 % (drops the seller's badge in the top-right corner), at most 512 px, then file them.
