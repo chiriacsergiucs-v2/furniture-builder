@@ -78,21 +78,19 @@ describe('Regency board pictures (ADR-162)', () => {
     expect(r.failed).toEqual(['https://shop.example/b.jpg']);
     expect(readdirSync(dir)).toEqual(['a.jpg']);
   });
-  it('takes the thumbnail when the catalog has thumbBase, on that base only', () => {
+  it('downloads full pictures even when the catalog has thumbnails; lists use the thumbnails', () => {
     const c = {
       ...catalog(),
       thumbBase: 'https://shop.example/media/thumbs/',
       products: [
         { id: '1', k: 'board', i: 'a/one.jpg' },
-        { id: '2', k: 'board', i: 'b/two.jpg', ti: 'b/two-small.jpg' },
         { id: '3', k: 'board', i: 'c/three.jpg', ti: '' },
       ],
     };
-    expect(picturePlan(c, new Set())).toEqual([
-      { id: '1', url: 'https://shop.example/media/thumbs/a/one.jpg', file: '1.jpg' },
-      { id: '2', url: 'https://shop.example/media/thumbs/b/two-small.jpg', file: '2.jpg' },
+    expect(picturePlan(c, new Set()).map((x) => x.url)).toEqual([
+      'https://shop.example/media/cache/a/one.jpg',
+      'https://shop.example/media/cache/c/three.jpg',
     ]);
-    // The app's lists use the same thumbnail rule.
     const seller = {
       ...c,
       id: 's',
@@ -101,7 +99,7 @@ describe('Regency board pictures (ADR-162)', () => {
     } as unknown as SellerCatalog;
     const p = (i: number) => c.products[i] as unknown as SellerCatalog['products'][number];
     expect(thumbUrl({ seller, p: p(0) })).toBe('https://shop.example/media/thumbs/a/one.jpg');
-    expect(thumbUrl({ seller, p: p(2) })).toBeNull();
+    expect(thumbUrl({ seller, p: p(1) })).toBeNull();
     expect(thumbUrl({ seller: { ...seller, thumbBase: undefined }, p: p(0) })).toBe(
       'https://shop.example/media/cache/a/one.jpg',
     );

@@ -22,9 +22,10 @@ repository instead of fetching them from the seller.
   (`tools/sellers/regency.mjs`, third argument): the catalog gains `thumbBase`; a product whose thumbnail is on another
   path keeps it as `ti` ('' = none). For the Regency export of 2026-10-29 every thumbnail has the picture's path, so
   only `thumbBase` is added. Product lists show the thumbnail instead of the full picture.
-- **Download script** `tools/sellers/regency-pictures.ts`: `download` fetches the thumbnail of every board and
-  worktop not yet in `public/sellers/regency/` into a separate folder; `mark` sets `h: 1` on each product whose file
-  exists. Only https URLs on the thumbnail base are fetched, a few at a time.
+- **Download script** `tools/sellers/regency-pictures.ts`: `download` fetches the full picture of every board and
+  worktop not yet in `public/sellers/regency/` into a separate folder (the thumbnails, about 95 px, were too small for
+  a board's decor: 65 px after the crop); `mark` sets `h: 1` on each product whose file
+  exists. Only https URLs on the picture base are fetched, a few at a time.
 - **Workflow** `.github/workflows/seller-pictures.yml`, started by hand (`workflow_dispatch`): downloads, keeps the
   bottom-left 68 % of each new picture (the seller's "SLIMLINE" badge sits in the top-right corner), resizes it to at
   most 512 px, files it as `<id>.<ext>`, marks the catalog and pushes a branch; it opens the pull request when Actions
@@ -81,3 +82,5 @@ request opened by the workflow; until then every board falls back to the seller'
 5. The full pictures came to 301 MB, some with a badge — **crop to the bottom-left 68 % and resize to 512 px.**
 6. "Images also have a thumbnail value … also add to the dataset. Update workflow to fetch the thumbnail for
    rendering" — **`thumbBase`/`ti` in the catalog; the workflow downloads thumbnails.**
+7. The thumbnails came to 65 × 65 px after the crop (1.3 MB, blurry in 3D) — **full pictures, cropped, 512 px**;
+   lists keep the thumbnails.
