@@ -22,22 +22,9 @@ import { t, tr } from '../core/i18n';
 /**
  * "Replace…" on the selected piece (ADR-098): the catalog items that stand the same way and have the same width;
  * "Show other widths" adds the rest. Picking one puts a fresh copy in the piece's place in one undo step and says
- * what changed; a new problem opens with its repairs (ADR-071).
+ * what changed; a new problem opens with its repairs (ADR-071). Opened from the piece's More actions menu (ADR-160).
  */
-export function ReplaceButton({ item }: { item: ProjectItem }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <>
-      <button type="button" className="btn outline" onClick={() => setOpen(true)}>
-        <Icon name="catalog" className="sm" />
-        {t('Replace…')}
-      </button>
-      {open && <ReplaceDialog item={item} onClose={() => setOpen(false)} />}
-    </>
-  );
-}
-
-function ReplaceDialog({ item, onClose }: { item: ProjectItem; onClose: () => void }) {
+export function ReplaceDialog({ item, onClose }: { item: ProjectItem; onClose: () => void }) {
   const families = useCatalog();
   const width = useMemo(() => ownWidth(item.design), [item.design]);
   // A stacked piece gets same-width items only, so it has no "Show other widths" switch (G-102).

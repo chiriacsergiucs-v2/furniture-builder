@@ -6,34 +6,36 @@ import { saveItemToCatalog } from '../store/saveToCatalog';
 import { useCatalog } from './Catalog';
 import { Select } from './controls';
 import { Dialog } from './Dialogs';
-import { Icon } from './icons';
 import { t, tr } from '../core/i18n';
 
 /**
  * "Save to catalog" on the selected project piece (ADR-107): name, room and type, then a new template on this device
- * that the piece stays linked to. The confirmation links to the Catalog.
+ * that the piece stays linked to. The confirmation links to the Catalog. Opened from More actions (ADR-160).
  */
-export function SaveToCatalog({ item, onSaved }: { item: ProjectItem; onSaved: () => void }) {
-  const [open, setOpen] = useState(false);
+export function SaveToCatalogDialog({
+  item,
+  open,
+  onClose,
+  onSaved,
+}: {
+  item: ProjectItem;
+  open: boolean;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
   return (
-    <>
-      <button type="button" className="btn outline" onClick={() => setOpen(true)}>
-        <Icon name="catalog" className="sm" />
-        {t('Save to catalog')}
-      </button>
-      <Dialog open={open} onClose={() => setOpen(false)} title={t('Save to catalog')}>
-        {open && (
-          <SaveForm
-            item={item}
-            onCancel={() => setOpen(false)}
-            onSaved={() => {
-              setOpen(false);
-              onSaved();
-            }}
-          />
-        )}
-      </Dialog>
-    </>
+    <Dialog open={open} onClose={onClose} title={t('Save to catalog')}>
+      {open && (
+        <SaveForm
+          item={item}
+          onCancel={onClose}
+          onSaved={() => {
+            onClose();
+            onSaved();
+          }}
+        />
+      )}
+    </Dialog>
   );
 }
 
