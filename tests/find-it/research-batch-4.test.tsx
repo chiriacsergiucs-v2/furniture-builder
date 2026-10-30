@@ -45,6 +45,7 @@ describe.each(WIDTHS)('ADR-124 at %ipx (find-it)', (width) => {
     await user.click(within(card).getByText('Project settings'));
     expect(within(card).getByText(/Follows project/)).toBeTruthy();
 
+    await user.click(within(card).getByRole('button', { name: 'More actions' }));
     await user.click(within(card).getByRole('button', { name: 'Replace…' }));
     const rep = await screen.findByRole('dialog', { name: /^Replace / });
     await user.click(within(rep).getAllByRole('button', { name: /Base cabinet, drawers/ })[0]);

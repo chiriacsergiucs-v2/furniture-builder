@@ -3,7 +3,7 @@
 // N119 (ADR-120), in jsdom (ADR-108): from the bare app, by role and visible text, at 1280 and 390 px.
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { PHONE_WIDTH, renderApp, WIDTHS } from './setup';
+import { PHONE_WIDTH, piecesList, renderApp, WIDTHS } from './setup';
 
 describe.each(WIDTHS)('editor catch-up at %ipx (find-it, N75, N110, N119)', (width) => {
   it('modes, info buttons, Settings, linked copies, turn, plan checkboxes, Projects row, Back to the editor', async () => {
@@ -45,14 +45,12 @@ describe.each(WIDTHS)('editor catch-up at %ipx (find-it, N75, N110, N119)', (wid
     if (phone) await user.click(within(plan).getByText('Options'));
     expect(screen.getByRole('checkbox', { name: 'Snap' })).toBeTruthy();
 
-    // N119: the turn label says where the front faces; N110: a linked copy.
-    const list = within(panel).getByRole('list', { name: 'Pieces' });
-    await user.click(within(list).getAllByRole('button')[0]);
+    // N110: a linked copy. (N119's "Turn · front faces you" buttons went with ADR-160: the toolbar turns.)
+    await user.click(within(await piecesList(user, panel)).getAllByRole('button')[0]);
     const card = within(panel).getByRole('region', { name: /^Selected piece: / });
-    await user.click(within(card).getByText('Position', { selector: 'summary' }));
-    expect(within(card).getByText('Turn · front faces you')).toBeTruthy();
+    expect(within(card).queryByText('Turn · front faces you')).toBeNull();
     await user.click(within(card).getByRole('button', { name: 'Add a linked copy' }));
-    await user.click(within(list).getAllByRole('button')[0]);
+    await user.click(within(await piecesList(user, panel)).getAllByRole('button')[0]);
     const card2 = within(panel).getByRole('region', { name: /^Selected piece: / });
     expect(await within(card2).findByText('Linked: 2 copies')).toBeTruthy();
     expect(within(card2).getByRole('checkbox', { name: 'Change all copies' })).toBeTruthy();

@@ -24,6 +24,8 @@ describe.each(WIDTHS)('save a project piece to the catalog at %ipx (find-it, ADR
     const list = await screen.findByRole('dialog', { name: 'Add a piece' });
     await user.click(within(list).getAllByRole('button', { name: /Base cabinet/ })[0]);
 
+    // Save to catalog is in the selected piece's More actions (ADR-160).
+    await user.click(await screen.findByRole('button', { name: 'More actions' }));
     await user.click(await screen.findByRole('button', { name: 'Save to catalog' }));
     const dlg = await screen.findByRole('dialog', { name: 'Save to catalog' });
     const name = within(dlg).getByLabelText('Name');
@@ -60,9 +62,9 @@ describe.each(WIDTHS)('save a project piece to the catalog at %ipx (find-it, ADR
     const name = card.getAttribute('aria-label')!.replace('Selected piece: ', '');
     expect(within(side).getByRole('heading', { name: 'Project' })).toBeTruthy();
     expect(within(side).queryByText(/No pieces yet/)).toBeNull();
-    expect(
-      within(side).getAllByRole('button', { pressed: true, name: new RegExp(name) }).length,
-    ).toBe(1);
+    // One piece, selected: its card is shown in place of the list (ADR-160).
+    expect(within(card).getByRole('heading', { name: new RegExp(name) })).toBeTruthy();
+    expect(within(side).getByRole('button', { name: 'All pieces (1)' })).toBeTruthy();
     const { listDesigns } = await import('../../src/persist/db');
     expect((await listDesigns()).map((r) => r.name)).toContain(name);
   });

@@ -4,7 +4,7 @@
 // under "Project templates" in Add a piece, placed by a tap.
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { renderApp, WIDTHS } from './setup';
+import { piecesList, renderApp, WIDTHS } from './setup';
 
 describe.each(WIDTHS)('history, templates and styles at %ipx (find-it, ADR-123)', (width) => {
   it('bare app → project → Undo Move, Edit history, versions, a style, a project template', async () => {
@@ -29,10 +29,9 @@ describe.each(WIDTHS)('history, templates and styles at %ipx (find-it, ADR-123)'
     if (placeRight) await user.click(placeRight);
 
     // Move the piece: Undo names the step.
-    const list = within(panel).getByRole('list', { name: 'Pieces' });
-    await user.click(within(list).getAllByRole('button')[0]);
+    await user.click(within(await piecesList(user, panel)).getAllByRole('button')[0]);
     const card = within(panel).getByRole('region', { name: /^Selected piece: / });
-    await user.click(within(card).getByText('Position', { selector: 'summary' }));
+    // Position opens with the piece (ADR-160).
     const fromLeft = within(card).getByLabelText('From left', { exact: true });
     await user.clear(fromLeft);
     await user.type(fromLeft, '300{Enter}');
@@ -48,7 +47,10 @@ describe.each(WIDTHS)('history, templates and styles at %ipx (find-it, ADR-123)'
     await waitFor(() => expect(undo.getAttribute('title')).toMatch(/^Undo Apply style All oak/));
 
     // History: Edit history lists the steps; Save a version, then Restore it.
-    await user.click(within(panel).getByText('History', { selector: 'summary' }));
+    // The title counts the kept versions (ADR-160): "History" or "History · N versions".
+    await user.click(
+      within(panel).getByText(/^History( · \d+ versions?)?$/, { selector: 'summary' }),
+    );
     await user.click(within(panel).getByRole('button', { name: 'Edit history' }));
     dlg = await screen.findByRole('dialog', { name: 'Edit history' });
     expect(within(dlg).getByRole('button', { name: /^Move / })).toBeTruthy();
@@ -82,6 +84,6 @@ describe.each(WIDTHS)('history, templates and styles at %ipx (find-it, ADR-123)'
     );
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(await screen.findByText(/Tap the plan to place/)).toBeTruthy();
-    expect(within(panel).getByRole('list', { name: 'Pieces' }).children).toHaveLength(2);
+    expect((await piecesList(user, panel)).children).toHaveLength(2);
   });
 });

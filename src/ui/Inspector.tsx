@@ -394,8 +394,9 @@ function SpaceEditor({
   // Doors and handles go on the outside only: a space inside other doors gets none (N109).
   const behindDoors = insideDoors(root, space.id);
 
+  // The same order rule as the project panel (ADR-160): no card frames, Divide right under the title, Layouts folded.
   return (
-    <div className="inspector">
+    <div className="inspector space-editor">
       <Crumbs root={root} id={space.id} rootLabel={rootLabel} wholeLabel={wholeLabel} />
       <header className="insp-head">
         <h2>{space.kind === 'split' ? t('Divided space') : `${KIND_LABEL[space.kind]}`}</h2>
@@ -424,6 +425,26 @@ function SpaceEditor({
         </ul>
       )}
 
+      {space.kind !== 'split' && (
+        <Section title={t('Divide this space')}>
+          <div className="split-actions">
+            <button
+              type="button"
+              className="btn outline"
+              onClick={() => set((s) => splitSpace(s, 'x', 2))}
+            >
+              {t('Side by side')}
+            </button>
+            <button
+              type="button"
+              className="btn outline"
+              onClick={() => set((s) => splitSpace(s, 'y', 2))}
+            >
+              {t('Stacked')}
+            </button>
+          </div>
+        </Section>
+      )}
       {space.kind === 'split' ? (
         <Section title={t('Division')}>
           <SplitEditor space={space} onChange={set} onSelect={select} />
@@ -562,29 +583,9 @@ function SpaceEditor({
         )}
       </Section>
 
-      {space.kind !== 'split' && (
-        <Section title={t('Divide this space')}>
-          <div className="split-actions">
-            <button
-              type="button"
-              className="btn outline"
-              onClick={() => set((s) => splitSpace(s, 'x', 2))}
-            >
-              {t('Side by side')}
-            </button>
-            <button
-              type="button"
-              className="btn outline"
-              onClick={() => set((s) => splitSpace(s, 'y', 2))}
-            >
-              {t('Stacked')}
-            </button>
-          </div>
-        </Section>
-      )}
-      <Section title={t('Layouts')}>
+      <Group title={t('Layouts')} defaultOpen={false}>
         <LayoutPicker space={space} onChange={set} />
-      </Section>
+      </Group>
       {parent && (
         <button type="button" className="link" onClick={() => select(parent.id)}>
           {t('Select the divided space around this one')}

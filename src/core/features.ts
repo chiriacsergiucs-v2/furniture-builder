@@ -163,7 +163,11 @@ export const FEATURES: FeatureDomain[] = [
         adrs: ['ADR-022'],
       },
       { name: 'Turn 90° about the centre', adrs: ['ADR-069'] },
-      { name: 'Turn by any whole degree', adrs: ['ADR-121'] },
+      {
+        name: 'Turn by any whole degree',
+        detail: 'The typed angle is hidden from the side panel for now.',
+        adrs: ['ADR-121', 'ADR-160'],
+      },
       {
         name: 'Move to a wall, corner, ceiling, floor or neighbour',
         detail: 'One tap slides the piece until it touches a wall or another piece.',
@@ -567,6 +571,17 @@ export const FEATURES: FeatureDomain[] = [
       { name: 'Edit history', adrs: ['ADR-123'] },
       { name: 'Version history', adrs: ['ADR-123'] },
       { name: 'Save as a project template', adrs: ['ADR-060'] },
+      {
+        name: 'Side panel ordered by use',
+        detail:
+          'Add a piece at the top, previous and next piece, one toolbar, a More actions menu and Delete to remove.',
+        adrs: ['ADR-160'],
+      },
+      {
+        name: 'Quick actions on the phone sheet',
+        detail: 'Edit, duplicate and turn the selected piece with the sheet closed.',
+        adrs: ['ADR-160'],
+      },
     ],
   },
   {

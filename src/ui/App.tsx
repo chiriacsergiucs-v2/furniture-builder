@@ -24,7 +24,7 @@ import { InfoPage } from './Info';
 import { ConfirmHost } from './Confirm';
 import { catalogFamilies } from '../core/catalog';
 import { useTemplates } from '../store/templatesStore';
-import { PlanView, ProjectPanel } from './Project';
+import { askRemove, PeekActions, PlanView, ProjectPanel } from './Project';
 import { PieceList } from './PieceList';
 import { usePieceList } from './pieceDrag';
 import { useView } from './useView';
@@ -40,7 +40,7 @@ import { RenderDialog } from './RenderDialog';
 import { MoreMenu } from './shell/MoreMenu';
 import { ProjectsPage } from './shell/ProjectsPage';
 import { useMediaQuery } from './useMediaQuery';
-import { MODE_LABEL, MODES, useUi } from './shell/uiStore';
+import { MODE_LABEL, MODES, takeKeepSheetClosed, useUi } from './shell/uiStore';
 import { ViewOptions } from './ViewOptions';
 import { BackupReminder, SavedDataDialog, startChangeClock } from './SavedData';
 import { startAutoBackup } from '../persist/backup';
@@ -244,7 +244,8 @@ export function App() {
   }
   if (selKey !== lastSel) {
     setLastSel(selKey);
-    if (selKey && !tapMode && inProject) setSheetOpen(true);
+    const keepClosed = takeKeepSheetClosed();
+    if (selKey && !tapMode && inProject && !keepClosed) setSheetOpen(true);
   }
   // A project check tapped under Checks (ADR-071) is shown on the plan: the drawing comes forward, the sheet steps aside.
   const problemTap = useProblem((s) => s.tapped);
@@ -390,6 +391,24 @@ export function App() {
         if (e.shiftKey) redo();
         else undo();
       }
+      // Delete or Backspace asks to remove the one piece selected in a project (ADR-160); not inside a piece or a dialog.
+      if ((e.key === 'Delete' || e.key === 'Backspace') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        const st = useDesign.getState();
+        const item = st.project?.items.find((i) => i.id === st.selectedItemId);
+        if (
+          page === 'editor' &&
+          item &&
+          st.selectedItemIds.length === 1 &&
+          !st.editingItemId &&
+          // A space inside the piece is picked (ADR-106): Delete is not for the whole piece then.
+          typeof st.selectedId !== 'string' &&
+          !t.closest('dialog, [contenteditable="true"]') &&
+          !document.querySelector('dialog[open]')
+        ) {
+          e.preventDefault();
+          void askRemove(item, st.removeItem);
+        }
+      }
       // Ctrl/Cmd+D duplicates the piece selected in a project (ADR-069).
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
         const st = useDesign.getState();
@@ -418,7 +437,8 @@ export function App() {
         e.preventDefault();
         redo();
       }
-      if (e.key === 'Escape') {
+      // Esc in an open dialog closes the dialog only, not the selection too (ADR-160).
+      if (e.key === 'Escape' && !document.querySelector('dialog[open]')) {
         const st = useDesign.getState();
         if (st.project && !st.editingItemId) st.selectItem(null);
         else st.select(null);
@@ -711,15 +731,18 @@ export function App() {
           hidden={page !== 'editor'}
         >
           <aside className="side" aria-label={t('Compose')}>
-            <button
-              type="button"
-              className="sheet-peek"
-              aria-expanded={sheetOpen}
-              onClick={() => setSheetOpen((o) => !o)}
-            >
-              <span>{peek}</span>
-              <Icon name={sheetOpen ? 'chevron-down' : 'chevron-up'} className="sm" />
-            </button>
+            <div className="sheet-peek-row">
+              <button
+                type="button"
+                className="sheet-peek"
+                aria-expanded={sheetOpen}
+                onClick={() => setSheetOpen((o) => !o)}
+              >
+                <span>{peek}</span>
+                <Icon name={sheetOpen ? 'chevron-down' : 'chevron-up'} className="sm" />
+              </button>
+              {phone && inProject && <PeekActions onAdd={openPieces} />}
+            </div>
             <div className="side-body">
               {inProject ? (
                 <ProjectPanel mode="compose" onAdd={openPieces} />

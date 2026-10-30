@@ -4,7 +4,7 @@
 // a new width is shared Equally; a single piece shows Height beside Width and Depth.
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { renderApp, WIDTHS } from './setup';
+import { piecesList, renderApp, WIDTHS } from './setup';
 
 describe.each(WIDTHS)('group size at %ipx (find-it, ADR-148)', (width) => {
   it('bare app → new project → two pieces → Group → Size of the group → Width Equally', async () => {
@@ -29,13 +29,13 @@ describe.each(WIDTHS)('group size at %ipx (find-it, ADR-148)', (width) => {
     await addPiece();
     await addPiece();
 
-    // Select both (Shift adds a piece, ADR-097) and group them.
-    const list = within(panel).getByRole('list', { name: 'Pieces' });
+    // Select both (Select on: a tap adds a piece, ADR-159) and group them. With Select on the list stays (ADR-160).
+    const list = await piecesList(user, panel);
     const rows = () => within(list).getAllByRole('button');
+    const selectMode = within(panel).getByRole('checkbox', { name: 'Select' });
+    await user.click(selectMode);
     await user.click(rows()[0]);
-    await user.keyboard('{Shift>}');
     await user.click(rows()[1]);
-    await user.keyboard('{/Shift}');
     await user.click(await within(panel).findByRole('button', { name: 'Group' }));
 
     const size = await within(panel).findByRole('group', { name: 'Size of the group' });
@@ -52,7 +52,8 @@ describe.each(WIDTHS)('group size at %ipx (find-it, ADR-148)', (width) => {
     const each = (before + 200) / 2;
     await waitFor(() => expect(within(list).getAllByText(new RegExp(`^${each} ×`)).length).toBe(2));
 
-    // A single piece (second tap) shows Height next to Width and Depth.
+    // A single piece (Select off, second tap) shows Height next to Width and Depth.
+    await user.click(selectMode);
     await user.click(rows()[0]);
     const piece = await within(panel).findByRole('group', { name: 'Size of the whole piece' });
     for (const f of ['Width', 'Height', 'Depth'])

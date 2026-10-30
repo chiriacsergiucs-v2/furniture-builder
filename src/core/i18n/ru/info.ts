@@ -358,4 +358,13 @@ export const ru_info = {
   'Gaps page': 'Страница пробелов',
   'Info buttons': 'Информационные кнопки',
   'Light and dark themes': 'Светлая и тёмная темы',
+  // ADR-160
+  'The typed angle is hidden from the side panel for now.':
+    'Ввод угла числом пока скрыт в боковой панели.',
+  'Side panel ordered by use': 'Боковая панель по частоте использования',
+  'Add a piece at the top, previous and next piece, one toolbar, a More actions menu and Delete to remove.':
+    'Добавление изделия сверху, предыдущее и следующее изделие, одна панель действий, меню «Другие действия» и Delete для удаления.',
+  'Quick actions on the phone sheet': 'Быстрые действия на панели телефона',
+  'Edit, duplicate and turn the selected piece with the sheet closed.':
+    'Изменить, дублировать и повернуть выбранное изделие при закрытой панели.',
 } satisfies Record<string, string>;
