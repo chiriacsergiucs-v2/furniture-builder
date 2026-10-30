@@ -1,7 +1,8 @@
 # ADR-160: Reorder the Compose side panel by how often each action is used
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-30
+- Implemented: 2026-10-30 (PR #140, CI verify run 40989459081)
 - Depends on: ADR-117, ADR-147, ADR-159
 - Design: docs/ui-design.md (§4 Screens, whole-piece inspector); critique with before/after screenshots in the session log
 - Backlog: N162
@@ -74,13 +75,13 @@ document change.
 
 ## Done when
 
-- [ ] At 1280 px with one piece selected, "Add a piece", the toolbar (Duplicate, Linked, Turn ↺, Turn ↻, Mirror)
+- [x] At 1280 px with one piece selected, "Add a piece", the toolbar (Duplicate, Linked, Turn ↺, Turn ↻, Mirror)
       and an open Position group are in the first 900 px of the panel (browser find-it).
-- [ ] "How many", "Rotation (°)" and the 0°/90°/180°/270° buttons are absent; Move to shows only working
+- [x] "How many", "Rotation (°)" and the 0°/90°/180°/270° buttons are absent; Move to shows only working
       actions plus "N more are off" with reasons (find-it).
-- [ ] "More actions" lists Replace…, Save to catalog, Lock size and Remove from project; each works (find-it).
-- [ ] "‹ All pieces (N)" and next / previous switch the selected piece; "All pieces" shows the list (find-it).
-- [ ] With a room set, the Room group is closed and its summary names shape and sizes (find-it).
-- [ ] At 390 px the peek row's Duplicate adds a piece with the sheet closed; no horizontal scroll (browser find-it).
-- [ ] A space of a single piece shows "Divide this space" before "Contents" and a closed "Layouts" fold (find-it).
-- [ ] lint, format:check, typecheck, test, build and docs:check pass.
+- [x] "More actions" lists Replace…, Save to catalog, Lock size and Remove from project; each works (find-it).
+- [x] "‹ All pieces (N)" and next / previous switch the selected piece; "All pieces" shows the list (find-it).
+- [x] With a room set, the Room group is closed and its summary names shape and sizes (find-it).
+- [x] At 390 px the peek row's Duplicate adds a piece with the sheet closed; no horizontal scroll (browser find-it).
+- [x] A space of a single piece shows "Divide this space" before "Contents" and a closed "Layouts" fold (find-it).
+- [x] lint, format:check, typecheck, test, build and docs:check pass.

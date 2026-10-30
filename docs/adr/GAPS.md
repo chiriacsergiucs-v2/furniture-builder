@@ -2605,7 +2605,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-309: Single-piece Inspector not reordered
 
-- Status: ADR-160
+- Status: Done (ADR-160)
 - Origin: ADR-160 (side panel critique, 2026-10-30)
 - Missing: The side panel of a single piece outside a project (Inspector) keeps its old order; ADR-160 reorders only the project panel.
 - Request: Agree with all, implement, fix, remove the how many completely, there already is rotation in toolbar, no more need for the 4 buttons, also remove the rotation degree input, hidden for now
