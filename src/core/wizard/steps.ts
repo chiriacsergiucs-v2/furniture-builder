@@ -3,14 +3,17 @@
  * writes its answers into model input (`apply`) and gives the short text used on cards (`summary`). Construction
  * types pick the steps they use; nothing here depends on a particular type.
  */
-import { defaultMaterials, fr, mm, newId } from '../design';
+import { defaultMaterials, defaultSheetFor, fr, mm, newId } from '../design';
 import { FUNCTION_LABEL, FUNCTIONS } from '../catalog/types';
+import { materialKey } from '../project';
 import { t, type Key } from '../i18n';
 import type {
   CabinetParams,
   Design,
   DeskParams,
+  DrawerSettings,
   FrameParams,
+  Material,
   Product,
   Space,
   SplitSize,
@@ -124,12 +127,104 @@ const doors = (v: string) =>
       ? { kind: 'doors' as const, count: 2 as const }
       : null;
 
-/** The board answer goes to each root's main board. */
-const BOARD_KEYS: Partial<Record<Kind, string[]>> = {
-  cabinet: ['bodyMaterialId'],
-  frame: ['panelMaterialId'],
-  desk: ['topMaterialId'],
-};
+// ---------------------------------------------------------------------------
+// Board (ADR-164): one board for every part, chosen from the project's boards and the decor list
+// ---------------------------------------------------------------------------
+
+/** A board the wizard offers: `value` is a built-in board's id, else the board's `materialKey` or `decor:<id>`. */
+export interface WizardBoard {
+  value: string;
+  label: string;
+  board: Material;
+}
+
+const BUILT_IN: WizardBoard[] = defaultMaterials()
+  .filter((m) => m.thickness >= 16)
+  .map((m) => ({ value: m.id, label: `${m.name} (${m.thickness} mm)`, board: m }));
+
+let offered: WizardBoard[] | null = null;
+let offeredDefault = 'pal18';
+let offeredVersion = 0;
+
+/**
+ * The boards the wizard offers and its default, set by the screen that opens it (ADR-164): the project's boards (or
+ * the piece's), then the user's decor list. `null` = the built-in boards (nothing else to offer). A board the same as
+ * a built-in one keeps the built-in id, so stored answers stay valid.
+ */
+export function setWizardBoards(
+  choices: readonly { key: string; label: string; board: Material }[] | null,
+  def?: Material,
+): void {
+  const same = (m: Material) => BUILT_IN.find((b) => materialKey(b.board) === materialKey(m));
+  offered = choices?.length
+    ? choices.map((c) => ({ value: same(c.board)?.value ?? c.key, label: c.label, board: c.board }))
+    : null;
+  const d = def && (offered ?? BUILT_IN).find((b) => materialKey(b.board) === materialKey(def));
+  offeredDefault = d?.value ?? 'pal18';
+  offeredVersion++;
+}
+/** Changes whenever the offered boards change; part of the wizard's memo key. */
+export const boardsVersion = () => offeredVersion;
+export const boardDefault = () => offeredDefault;
+
+/** The board options: the offered boards, plus a stored built-in answer that is not among them. */
+export function boardOptions(current?: string): Option[] {
+  const list = offered ?? BUILT_IN;
+  const extra = BUILT_IN.find((b) => b.value === current && !list.some((x) => x.value === current));
+  return [...list, ...(extra ? [extra] : [])].map(({ value, label }) => ({ value, label }));
+}
+
+const boardFor = (value: string) =>
+  [...(offered ?? []), ...BUILT_IN].find((b) => b.value === value)?.board;
+
+/** The design with `value`'s board on every board of the piece: carcass, fronts, back, drawers, desk top, panels. */
+function putBoard(d: Design, value: string): Design {
+  const m = boardFor(value);
+  if (!m) return d;
+  const have = d.materials.find((x) => materialKey(x) === materialKey(m));
+  // A fixed id keeps the built design the same for the same answers (reopening compares it, ADR-046).
+  const id =
+    have?.id ??
+    (d.materials.some((x) => x.id === 'board') ? `board-${d.materials.length}` : 'board');
+  const materials = have
+    ? d.materials
+    : [...d.materials, { ...m, id, sheet: m.sheet ?? defaultSheetFor({ id, name: m.name }) }];
+  const p = d.product;
+  const drawers = (x: DrawerSettings) => ({
+    ...x,
+    boxMaterialId: id,
+    bottomMaterialId: id,
+  });
+  const product: Product =
+    p.kind === 'cabinet' || p.kind === 'corner'
+      ? ({
+          ...p,
+          params: {
+            ...p.params,
+            bodyMaterialId: id,
+            frontMaterialId: id,
+            backMaterialId: id,
+            drawers: drawers(p.params.drawers),
+          },
+        } as Product)
+      : p.kind === 'desk'
+        ? {
+            ...p,
+            params: {
+              ...p.params,
+              topMaterialId: id,
+              bodyMaterialId: id,
+              frontMaterialId: id,
+              drawers: drawers(p.params.drawers),
+            },
+          }
+        : p.kind === 'frame'
+          ? { ...p, params: { ...p.params, panelMaterialId: id } }
+          : p.kind === 'panel'
+            ? { ...p, params: { ...p.params, materialId: id } }
+            : p;
+  return { ...d, materials, product };
+}
 
 // ---------------------------------------------------------------------------
 // Options and labels
@@ -145,9 +240,6 @@ export const CONTENT_KINDS: (Option & { uses: ('shelves' | 'drawers')[] })[] = [
 export const contentUses = (kind: string) =>
   CONTENT_KINDS.find((k) => k.value === kind)?.uses ?? [];
 
-const BOARD_OPTIONS: Option[] = defaultMaterials()
-  .filter((m) => m.thickness >= 16)
-  .map((m) => ({ value: m.id, label: `${m.name} (${m.thickness} mm)` }));
 function contentText(c: Compartment): string {
   switch (c.kind) {
     case 'open':
@@ -212,18 +304,16 @@ export const STEPS: StepDef[] = [
         label: 'Board',
         kind: 'choice',
         default: 'pal18',
-        options: BOARD_OPTIONS,
-        help: 'Panel thickness comes from the board.',
+        help: 'Panel thickness comes from the board. Every part takes this board; change any of them later under Material.',
       },
     ],
     apply: (a, d) => {
-      const keys = BOARD_KEYS[d.product.kind] ?? [];
+      d = putBoard(d, str(a, 'board'));
       const params = {
         ...d.product.params,
         width: num(a, 'width'),
         height: num(a, 'height'),
         depth: num(a, 'depth'),
-        ...Object.fromEntries(keys.map((k) => [k, str(a, 'board')])),
       };
       const category = FUNCTION_LABEL[str(a, 'category') as keyof typeof FUNCTION_LABEL];
       return {

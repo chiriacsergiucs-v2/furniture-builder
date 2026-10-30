@@ -22,6 +22,7 @@ import {
   applyMaterial,
   putPartBoard,
   putRoleBoards,
+  withBoard,
   roleName,
   type FinishRole,
   type FinishScope,
@@ -203,6 +204,8 @@ interface State {
   updateDesk: (patch: Partial<DeskParams>) => void;
   updateCorner: (patch: Partial<CornerParams>) => void;
   updatePanelSet: (patch: Partial<PanelSetParams>) => void;
+  /** A board for one loose part of a panel set, copied into the piece when it is not there yet (ADR-164). */
+  setLoosePanelBoard: (panelId: string, board: Material) => void;
   /** A board for one part instead of its group's board; null goes back to the group's board. */
   setPartMaterial: (panelId: string, materialId: string | null) => void;
   updatePanel: (patch: Partial<PanelParams>) => void;
@@ -1460,6 +1463,16 @@ export const useDesign = create<State>((rawSet, get) => {
       const d = get().design;
       if (d.product.kind !== 'panels') return;
       commit({ ...d, product: { ...d.product, params: { ...d.product.params, ...patch } } });
+    },
+    setLoosePanelBoard: (panelId, board) => {
+      const d0 = get().design;
+      if (d0.product.kind !== 'panels') return;
+      const { design: d, id } = withBoard(d0, board);
+      if (d.product.kind !== 'panels') return;
+      const panels = d.product.params.panels.map((lp) =>
+        lp.id === panelId ? { ...lp, materialId: id } : lp,
+      );
+      commit({ ...d, product: { ...d.product, params: { ...d.product.params, panels } } });
     },
     updatePanel: (patch) => {
       const d = get().design;

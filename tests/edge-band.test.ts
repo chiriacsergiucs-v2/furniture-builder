@@ -16,7 +16,13 @@ import { shoppingList } from '../src/core/shopping';
 import type { Design, EdgeBand, Material } from '../src/core/types';
 import { loadDesign, saveDesign } from '../src/persist/db';
 
-const chest = () => templates.find((t) => t.id === 'chest')!.create();
+/** A chest with its fronts on another board than its carcass (every part is PAL 18 by default, ADR-164). */
+const chest = (): Design => {
+  const d = templates.find((t) => t.id === 'chest')!.create();
+  return d.product.kind === 'cabinet'
+    ? { ...d, product: { ...d.product, params: { ...d.product.params, frontMaterialId: 'mdf18' } } }
+    : d;
+};
 const patch = (d: Design, id: string, p: Partial<Material>): Design => ({
   ...d,
   materials: d.materials.map((m) => (m.id === id ? { ...m, ...p } : m)),

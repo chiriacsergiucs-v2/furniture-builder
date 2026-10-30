@@ -70,8 +70,9 @@ export const defaultDrawers = (): DrawerSettings => ({
   verticalClearance: 30,
   rearClearance: 10,
   runnerLengths: [250, 300, 350, 400, 450, 500, 550, 600],
-  boxMaterialId: 'pal16',
-  bottomMaterialId: 'hdf3',
+  // One PAL 18 for every part by default (ADR-164); the Material dialog changes any role.
+  boxMaterialId: 'pal18',
+  bottomMaterialId: 'pal18',
 });
 
 export function makeSpace(kind: SpaceKind, id = newId()): Space {
@@ -102,8 +103,8 @@ export const cabinetDefaults = (interior: Space): CabinetParams => ({
   height: 900,
   depth: 450,
   bodyMaterialId: 'pal18',
-  frontMaterialId: 'mdf18',
-  backMaterialId: 'hdf3',
+  frontMaterialId: 'pal18',
+  backMaterialId: 'pal18',
   top: 'over',
   back: 'applied',
   backInset: 15,
@@ -126,8 +127,8 @@ export const cornerDefaults = (variant: CornerParams['variant']): CornerParams =
   height: 720,
   depth: 560,
   bodyMaterialId: 'pal18',
-  frontMaterialId: 'mdf18',
-  backMaterialId: 'hdf3',
+  frontMaterialId: 'pal18',
+  backMaterialId: 'pal18',
   top: 'over',
   back: 'applied',
   backInset: 15,
@@ -154,7 +155,7 @@ export const deskDefaults = (): DeskParams => ({
   width: 1400,
   depth: 700,
   height: 750,
-  topMaterialId: 'pal18oak',
+  topMaterialId: 'pal18',
   bodyMaterialId: 'pal18',
   frontOverhang: 30,
   support: 'pedestal-left',
@@ -166,7 +167,7 @@ export const deskDefaults = (): DeskParams => ({
   },
   modesty: { enabled: true, height: 350, setback: 120 },
   drawers: defaultDrawers(),
-  frontMaterialId: 'mdf18',
+  frontMaterialId: 'pal18',
   frontGap: 3,
 });
 
@@ -207,7 +208,7 @@ export const frameDefaults = (kind: FrameKind): FrameParams => {
     width: 1600,
     depth: 900,
     height: 750,
-    panelMaterialId: 'pal18oak',
+    panelMaterialId: 'pal18',
     solidMaterialId: 'beech',
     top: 'panel',
     leg: { w: 60, d: 60 },
@@ -263,7 +264,7 @@ export const frameDefaults = (kind: FrameKind): FrameParams => {
       return {
         ...base,
         height: 1000,
-        panelMaterialId: 'pal18oak',
+        panelMaterialId: 'pal18',
         solidMaterialId: 'pine',
         apron: { height: 0, thickness: 25 },
         leg: { w: 45, d: 45 },
@@ -287,7 +288,7 @@ export const panelDefaults = (purpose: PanelParams['purpose']): PanelParams => (
   purpose,
   width: purpose === 'filler' ? 50 : purpose === 'cover' ? 580 : 597,
   height: purpose === 'fridge' ? 1200 : purpose === 'cover' ? 870 : 717,
-  materialId: 'mdf18',
+  materialId: 'pal18',
   handle:
     purpose === 'dishwasher' || purpose === 'fridge'
       ? { kind: 'bar', holeSpacing: 128, position: 'top' }
@@ -358,7 +359,7 @@ export const templates: Template[] = [
     create: () =>
       cabinet(
         'Sideboard',
-        { width: 1600, height: 800, bodyMaterialId: 'pal18oak' },
+        { width: 1600, height: 800 },
         {
           id: newId(),
           kind: 'split',

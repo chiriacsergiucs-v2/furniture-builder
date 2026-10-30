@@ -2,7 +2,10 @@
  * New-piece wizard (ADR-044, ADR-045, ADR-046). Renders whatever the step library and the construction-type
  * registry declare: fields by kind, cards from the type's generators. No branch here knows a construction type.
  */
-import { useDeferredValue, useId, useMemo, useState } from 'react';
+import { useDeferredValue, useEffect, useId, useMemo, useState } from 'react';
+import { boardChoices } from '../core/boards';
+import { roleBoard } from '../core/finish';
+import type { Decor } from '../core/materials';
 import { cutlist } from '../core/cutlist';
 import { snapshotSvg } from '../core/snapshot';
 import type { Design, FurnitureModel, Material } from '../core/types';
@@ -22,11 +25,17 @@ import {
   visibleSteps,
   type Problem,
 } from '../core/wizard/engine';
-import { compartmentsOf, contentUses, listOf } from '../core/wizard/steps';
+import {
+  boardsVersion,
+  compartmentsOf,
+  contentUses,
+  listOf,
+  setWizardBoards,
+} from '../core/wizard/steps';
 import { CARDS_FIRST, generatorAt, suggestions, type Suggestion } from '../core/wizard/suggest';
 import type { Answers, AnswerValue, Compartment, FieldDef } from '../core/wizard/types';
 import { t, tr } from '../core/i18n';
-import { saveDesign } from '../persist/db';
+import { listDecors, saveDesign } from '../persist/db';
 import { useDesign } from '../store/designStore';
 import { Counter, InfoTip, Segmented, Select, Steps } from './controls';
 import { Dialog } from './Dialogs';
@@ -440,6 +449,23 @@ function Wizard({
 }) {
   const load = useDesign((s) => s.load);
   const addPiece = useDesign((s) => s.addPiece);
+  // The Board choice offers the project's boards, then the decor list; it starts on the project's carcass board (ADR-164).
+  const project = useDesign((s) => s.project);
+  const [decors, setDecors] = useState<Decor[]>([]);
+  useEffect(() => {
+    listDecors()
+      .then(setDecors)
+      .catch(() => setDecors([]));
+  }, []);
+  useMemo(() => {
+    const first = project?.items[0]?.design;
+    const carcass = first?.materials.find((m) => m.id === roleBoard(first, 'body'));
+    setWizardBoards(
+      project || decors.length ? boardChoices(project, null, decors) : null,
+      project?.settings?.body ?? carcass,
+    );
+    return boardsVersion();
+  }, [project, decors]);
   const [a, setA] = useState<Answers>(() => (from && storedAnswers(from)) || {});
   const [stepId, setStepId] = useState<string>(TYPE);
   const [done, setDone] = useState<Set<string>>(

@@ -61,14 +61,24 @@ Change control: defaults only; no implemented ADR fixed the front, back or drawe
 
 ## Done when
 
-- [ ] A new cabinet, corner, desk and drawer use `pal18` for every board key; the samples and catalog snapshots
+- [x] A new cabinet, corner, desk and drawer use `pal18` for every board key; the samples and catalog snapshots
       build without new diagnostics (`tests/defaults.test.ts`, existing template tests).
-- [ ] `boardChoices` lists project boards then decors, built-ins only when empty (`tests/defaults.test.ts`).
-- [ ] The wizard's board answer sets every board key and defaults to the project's carcass board
+- [x] `boardChoices` lists project boards then decors, built-ins only when empty (`tests/defaults.test.ts`).
+- [x] The wizard's board answer sets every board key and defaults to the project's carcass board
       (`tests/defaults.test.ts`).
-- [ ] Find-it `tests/find-it/board-choices.test.tsx` at 390 and 1280 px: in a project whose carcass is "PAL 18
+- [x] Find-it `tests/find-it/board-choices.test.tsx` at 390 and 1280 px: in a project whose carcass is "PAL 18
       oak", New piece → Board shows "PAL 18 oak" selected and the decor list entries; the new piece's parts list shows
       the fronts and back on PAL 18 oak.
+
+## Implementation notes
+
+Defaults in `src/core/design.ts` (cabinet, corner, desk, drawers, frame panels, panels; the sideboard template no
+longer overrides its carcass with oak). `src/core/boards.ts` (`boardChoices`). Wizard: `setWizardBoards`,
+`boardOptions`, `putBoard` in `src/core/wizard/steps.ts` (a board equal to a built-in keeps the built-in id, so stored
+answers stay valid; a stored built-in answer stays offered); the engine's memo key includes the offered boards.
+Panel sets: `setLoosePanelBoard`. Tests: `tests/defaults.test.ts`, `tests/find-it/board-choices.test.tsx`; tests that
+needed two different boards now set them (`edge-band`, `replace`, `constructions`); 18 mm back sizes in `core` and
+`shapes`. Samples and catalog snapshots regenerated.
 
 ## Open questions
 

@@ -352,6 +352,12 @@ export const FEATURES: FeatureDomain[] = [
           'Material in the header bar: a board on one part, the item, the group or the whole project, on any part roles.',
         adrs: ['ADR-163'],
       },
+      {
+        name: 'One PAL 18 board for every part by default',
+        detail:
+          "New pieces start on one board; the wizard offers the project's boards and your decor list.",
+        adrs: ['ADR-164'],
+      },
       { name: 'Stock sheets, trim and kerf', adrs: ['ADR-019'] },
       { name: 'Solid timber stock', adrs: ['ADR-038'] },
       { name: 'Manufacturer and type labels', adrs: ['ADR-049'] },

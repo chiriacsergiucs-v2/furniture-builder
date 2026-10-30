@@ -54,4 +54,7 @@ export const ru_material = {
   'Material in the header bar: a board on one part, the item, the group or the whole project, on any part roles.':
     'Кнопка «Материал» в шапке: плита на одну деталь, изделие, группу или весь проект, для любых ролей деталей.',
   'Clear part board': 'Сбросить плиту детали',
+  'One PAL 18 board for every part by default': 'Одна плита ЛДСП 18 на все детали по умолчанию',
+  "New pieces start on one board; the wizard offers the project's boards and your decor list.":
+    'Новые изделия начинаются с одной плиты; мастер предлагает плиты проекта и ваш список декоров.',
 } as const;
