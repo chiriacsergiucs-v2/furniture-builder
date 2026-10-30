@@ -17,7 +17,17 @@ import {
 } from '../core/design';
 import { duplicateItem, mirrorItem, mirrorRun, setItemRotation, tryTurn } from '../core/arrange';
 import { floorDrop, type FloorPoint } from '../core/drag3d';
-import { applyFinish, type FinishRole, type FinishScope } from '../core/finish';
+import {
+  applyFinish,
+  applyMaterial,
+  putPartBoard,
+  putRoleBoards,
+  roleName,
+  type FinishRole,
+  type FinishScope,
+  type MaterialRole,
+  type MaterialScope,
+} from '../core/finish';
 import { mergeItems } from '../core/merge';
 import { describeChange } from '../core/history';
 import { insertTemplate } from '../core/insertTemplate';
@@ -389,6 +399,19 @@ interface State {
     board: Material,
     scope: FinishScope,
   ) => { applied: string[]; skipped: string[] };
+  /**
+   * One Material control (ADR-163): `board` on `roles` of the selected item, its group or the whole project (a
+   * project), or of the open piece (`id` null); scope Part puts it on one generated part. One undo step.
+   */
+  applyMaterial: (
+    id: string | null,
+    roles: readonly MaterialRole[],
+    board: Material,
+    scope: MaterialScope,
+    panelId?: string,
+  ) => { applied: string[]; skipped: string[] };
+  /** Forget a part's own board (ADR-151) on a project item (`id`) or the open piece (null). */
+  clearPartBoard: (id: string | null, panelId: string) => void;
   /** Put the piece being placed with its left-back corner at a plan point (whole mm, x and z ≥ 0), or stop placing (ADR-056). */
   placeAt: (x: number, z: number) => void;
   stopPlacing: () => void;
@@ -1275,6 +1298,56 @@ export const useDesign = create<State>((rawSet, get) => {
       const p = get().project;
       if (!p) return;
       commitProject({ ...p, runSettings: { scribe: 0, auto: false, ...p.runSettings, ...patch } });
+    },
+    applyMaterial: (id, roles, board, scope, panelId) => {
+      const p = get().project;
+      if (!id || !p || get().editingItemId === id) {
+        // The open piece: one part, or every role it has parts for.
+        const d = get().design;
+        if (scope === 'part') {
+          if (!panelId) return { applied: [], skipped: [] };
+          commit(putPartBoard(d, panelId, board));
+          return { applied: [panelId], skipped: [] };
+        }
+        const r = putRoleBoards(d, roles, board);
+        if (r.applied.length) commit(r.design);
+        return {
+          applied: r.applied.length ? [d.name] : [],
+          skipped: r.skipped.map(roleName),
+        };
+      }
+      if (scope === 'part') {
+        const it = p.items.find((i) => i.id === id);
+        if (!it || !panelId) return { applied: [], skipped: [] };
+        // Project part ids are `${item.id}:${panel.id}`; the piece stores the panel's own id.
+        const own = panelId.startsWith(`${id}:`) ? panelId.slice(id.length + 1) : panelId;
+        commitProject(
+          {
+            ...p,
+            items: p.items.map((i) =>
+              i.id === id ? { ...i, design: putPartBoard(i.design, own, board) } : i,
+            ),
+          },
+          t('Apply material'),
+        );
+        return { applied: [own], skipped: [] };
+      }
+      const r = applyMaterial(p, id, roles, board, scope, get().selectedItemIds);
+      if (r.applied.length) commitProject(r.project, t('Apply material'));
+      return { applied: r.applied, skipped: r.skipped };
+    },
+    clearPartBoard: (id, panelId) => {
+      const p = get().project;
+      if (!id || !p || get().editingItemId === id) return get().setPartMaterial(panelId, null);
+      const drop = (d: Design): Design => {
+        const next = { ...d.partMaterials };
+        delete next[panelId];
+        return { ...d, partMaterials: Object.keys(next).length ? next : undefined };
+      };
+      commitProject(
+        { ...p, items: p.items.map((i) => (i.id === id ? { ...i, design: drop(i.design) } : i)) },
+        t('Clear part board'),
+      );
     },
     applyFinish: (id, role, board, scope) => {
       const p = get().project;

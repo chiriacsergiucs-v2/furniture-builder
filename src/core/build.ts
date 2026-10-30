@@ -33,11 +33,20 @@ export function buildModel(design: Design): FurnitureModel {
               ? buildPanelSet(prod.params, prod.id, materials)
               : buildDesk(prod.params, prod.id, materials);
   const diagnostics: Diagnostic[] = [...partial.diagnostics];
-  // A board chosen for one part replaces its group's board; the checks below judge the result (thickness, band).
+  // A board chosen for a part role (ADR-163) or for one part (ADR-151) replaces its group's board, the part's own
+  // winning; the checks below judge the result (thickness, band).
   const own = design.partMaterials ?? {};
-  const panels = partial.panels.map((p) =>
-    own[p.id] && materials.has(own[p.id]) ? { ...p, materialId: own[p.id] } : p,
-  );
+  const byRole = design.roleMaterials ?? {};
+  const panels = partial.panels.map((p) => {
+    const roleId = byRole[p.role as keyof typeof byRole];
+    const id =
+      own[p.id] && materials.has(own[p.id])
+        ? own[p.id]
+        : roleId && materials.has(roleId)
+          ? roleId
+          : null;
+    return id ? { ...p, materialId: id } : p;
+  });
   const built = new Set(panels.map((p) => p.id));
   const lost = Object.keys(own).filter((id) => !built.has(id));
   if (lost.length)
@@ -47,10 +56,10 @@ export function buildModel(design: Design): FurnitureModel {
       message:
         lost.length === 1
           ? tx(
-              'A part with its own board no longer exists (the piece changed); the board choice is not used. Clear it under Part boards.',
+              'A part with its own board no longer exists (the piece changed); the board choice is not used. Clear it under Material → Part.',
             )
           : tx(
-              '{n} parts with their own board no longer exist (the piece changed); the board choice is not used. Clear it under Part boards.',
+              '{n} parts with their own board no longer exist (the piece changed); the board choice is not used. Clear it under Material → Part.',
               { n: lost.length },
             ),
     });

@@ -346,6 +346,12 @@ export const FEATURES: FeatureDomain[] = [
     name: 'Boards and edges',
     features: [
       { name: 'Boards: name, thickness, grain and colour', adrs: ['ADR-019', 'ADR-079'] },
+      {
+        name: 'One Material control everywhere',
+        detail:
+          'Material in the header bar: a board on one part, the item, the group or the whole project, on any part roles.',
+        adrs: ['ADR-163'],
+      },
       { name: 'Stock sheets, trim and kerf', adrs: ['ADR-019'] },
       { name: 'Solid timber stock', adrs: ['ADR-038'] },
       { name: 'Manufacturer and type labels', adrs: ['ADR-049'] },

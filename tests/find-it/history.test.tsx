@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 // Find-it for ADR-123 (N124), in jsdom (ADR-108): from the bare app, a project shows the named undo step on Undo,
-// Edit history, Save a version and Restore under History, Suggest a style under Finish, and a saved project template
+// Edit history, Save a version and Restore under History, Suggest a style in the Material dialog (ADR-163), and a
+// saved project template
 // under "Project templates" in Add a piece, placed by a tap.
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
@@ -38,13 +39,15 @@ describe.each(WIDTHS)('history, templates and styles at %ipx (find-it, ADR-123)'
     const undo = screen.getByRole('button', { name: 'Undo' });
     await waitFor(() => expect(undo.getAttribute('title')).toMatch(/^Undo Move /));
 
-    // A style through finish scope.
-    await user.click(within(card).getByText('Finish', { selector: 'summary' }));
-    await user.click(within(card).getByRole('button', { name: 'Suggest a style' }));
-    const styles = within(card).getByRole('region', { name: 'Suggested styles' });
+    // A style through the Material dialog (ADR-163).
+    await user.click(screen.getByRole('button', { name: 'Material' }));
+    dlg = await screen.findByRole('dialog', { name: 'Material' });
+    await user.click(within(dlg).getByRole('button', { name: 'Suggest a style' }));
+    const styles = within(dlg).getByRole('region', { name: 'Suggested styles' });
     await user.click(within(styles).getByRole('button', { name: 'Apply All oak' }));
     expect(within(styles).getByRole('status').textContent).toMatch(/All oak applied to 1 piece/);
     await waitFor(() => expect(undo.getAttribute('title')).toMatch(/^Undo Apply style All oak/));
+    await user.click(within(dlg).getByRole('button', { name: 'Close' }));
 
     // History: Edit history lists the steps; Save a version, then Restore it.
     // The title counts the kept versions (ADR-160): "History" or "History · N versions".

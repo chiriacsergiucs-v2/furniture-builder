@@ -541,10 +541,10 @@ export const ru_core2 = {
     'Строка {row}: kind должен быть board, band, hardware или currency.',
   'Row {row}: {id} is not a price.': 'Строка {row}: {id} — не цена.',
   'price is not a number': 'цена — не число',
-  'A part with its own board no longer exists (the piece changed); the board choice is not used. Clear it under Part boards.':
-    'Деталь со своей плитой больше не существует (изделие изменилось); выбор плиты не используется. Сбросьте его в разделе «Плиты деталей».',
-  '{n} parts with their own board no longer exist (the piece changed); the board choice is not used. Clear it under Part boards.':
-    'Детали со своей плитой ({n} шт.) больше не существуют (изделие изменилось); выбор плиты не используется. Сбросьте его в разделе «Плиты деталей».',
+  'A part with its own board no longer exists (the piece changed); the board choice is not used. Clear it under Material → Part.':
+    'Деталь со своей плитой больше не существует (изделие изменилось); выбор плиты не используется. Сбросьте его в окне «Материал» → «Деталь».',
+  '{n} parts with their own board no longer exist (the piece changed); the board choice is not used. Clear it under Material → Part.':
+    'Детали со своей плитой ({n} шт.) больше не существуют (изделие изменилось); выбор плиты не используется. Сбросьте его в окне «Материал» → «Деталь».',
   '{part} has a non-integer dimension.': '«{part}»: размер не целый.',
   '{part} has no size ({l}×{w} mm).': '«{part}»: нет размера ({l}×{w} мм).',
   '{part} is only {w} mm wide.': '«{part}» шириной всего {w} мм.',

@@ -47,11 +47,6 @@ export const ru_editors = {
   source: 'источник',
   'To choose from a datasheet: {list}.': 'Выбрать по паспорту: {list}.',
   Chosen: 'Выбрано',
-  'Same as its group': 'Как у группы',
-  'Part boards': 'Плиты деталей',
-  'About part boards': 'О плитах деталей',
-  'Give any single part its own board. A board of another thickness is flagged under Checks.':
-    'Задайте любой детали собственную плиту. Плита другой толщины отмечается в разделе «Проверки».',
   '{id} no longer exists; its board is not used.':
     '{id} больше не существует; её плита не используется.',
   Clear: 'Очистить',
@@ -153,9 +148,6 @@ export const ru_editors = {
   'Slat width': 'Ширина ламели',
   'Slat thickness': 'Толщина ламели',
   'Slat gap': 'Зазор между ламелями',
-  Materials: 'Материалы',
-  'Solid timber': 'Массив',
-  'Boards (top, seat, ends)': 'Плиты (крышка, сиденье, торцы)',
   Empty: 'Пусто',
   '{n|# shelf|# shelves}': '{n|# полка|# полки|# полок}',
   '{n|# drawer|# drawers}': '{n|# ящик|# ящика|# ящиков}',

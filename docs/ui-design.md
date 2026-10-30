@@ -219,6 +219,16 @@ described above. Audit and wireframes are in `docs/research/2026-10-24-ui-redesi
   **Acknowledge** and **Make ADR** (pressed state, tap again to clear) and **Your note** for Open and ADR gaps.
   Copy decisions shows the text in **Decisions to paste to Claude** and copies it when the browser allows. At
   ≤ 520 px the field list stacks label over value.
+- _Material sheet (ADR-163)._ A **Material** icon button sits in the header bar tools next to Settings on the
+  editor page (a piece, a project, Build & Preview). It opens the **Material** dialog (phone: full-width sheet):
+  **Apply to** as a radio row **Part · Item · Group · Whole project** (Group and Whole project only in a project;
+  Group disabled with its reason when the piece is in no run and fewer than two are selected), then **Parts** as
+  checkable chips (**Fronts, Carcass, Top, Bottom, Sides, Shelves, Dividers, Back, Drawer boxes, Drawer bottoms,
+  Worktop**, only the ones the reached pieces have) or, for Part, a **Part** select naming each part with its
+  board ("Left side — PAL 18 white, 18 mm"), **Board** (the project's boards then the decor list, "name,
+  thickness mm", no maker or type suffix), the yellow **Apply material**, a status line ("Applied to 2 items") and
+  **Suggest a style** in a project. The Finish group, Project settings' board selects and Settings' Materials,
+  Part boards and drawer board selects are gone.
 
 ## 5. Rollout
 

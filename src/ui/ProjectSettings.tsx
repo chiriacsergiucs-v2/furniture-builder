@@ -1,5 +1,4 @@
-import { useMemo, useState } from 'react';
-import { projectBoards } from '../core/finish';
+import { useState } from 'react';
 import type { ProjectItem } from '../core/project';
 import {
   follows,
@@ -8,8 +7,8 @@ import {
   settingText,
   type SettingKey,
 } from '../core/projectSettings';
-import type { FrontStyle, Handle, Material } from '../core/types';
-import { t, tr } from '../core/i18n';
+import type { FrontStyle, Handle } from '../core/types';
+import { t } from '../core/i18n';
 import { useDesign } from '../store/designStore';
 import { InfoTip, MmField, Select, Toggle } from './controls';
 import { Icon } from './icons';
@@ -23,7 +22,6 @@ const HANDLES: Record<string, Handle | null> = {
 };
 const handleValue = (h: Handle | null | undefined) =>
   h === undefined ? NOT_SET : h === null ? 'none' : h.kind;
-const boardId = (m: Material | undefined) => (m ? `${m.name}|${m.thickness}|${m.grain}` : NOT_SET);
 
 /**
  * Project settings in Configure (ADR-124): boards, handle, front overlay and plinth height every piece follows while
@@ -34,7 +32,6 @@ export function ProjectSettingsPanel() {
   const project = useDesign((s) => s.project)!;
   const set = useDesign((s) => s.setProjectSetting);
   const [msg, setMsg] = useState<string | null>(null);
-  const boards = useMemo(() => projectBoards(project), [project]);
   const s = project.settings ?? {};
   const apply = (key: SettingKey, value: Parameters<typeof set>[1]) => {
     const applied = set(key, value);
@@ -52,29 +49,6 @@ export function ProjectSettingsPanel() {
           : t('{setting}: no piece follows it.', { setting: SETTING_LABEL[key] }),
     );
   };
-  const boardSelect = (key: 'body' | 'front' | 'back') => {
-    const cur = s[key];
-    const options = boards.map((m) => ({
-      value: boardId(m),
-      label: t('{name} {n} mm', { name: tr(m.name), n: m.thickness }),
-    }));
-    if (cur && !options.some((o) => o.value === boardId(cur)))
-      options.unshift({
-        value: boardId(cur),
-        label: t('{name} {n} mm', { name: tr(cur.name), n: cur.thickness }),
-      });
-    return (
-      <Select
-        key={key}
-        label={SETTING_LABEL[key]}
-        value={boardId(cur)}
-        options={[{ value: NOT_SET, label: t('Not set') }, ...options]}
-        onChange={(v) =>
-          apply(key, v === NOT_SET ? undefined : (boards.find((m) => boardId(m) === v) ?? cur))
-        }
-      />
-    );
-  };
   return (
     <section className="project-settings section" aria-labelledby="project-settings-head">
       <div className="info-row">
@@ -85,9 +59,6 @@ export function ProjectSettingsPanel() {
           )}
         </InfoTip>
       </div>
-      {boardSelect('body')}
-      {boardSelect('front')}
-      {boardSelect('back')}
       <Select
         label={SETTING_LABEL.handle}
         value={handleValue(s.handle)}
