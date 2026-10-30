@@ -1,7 +1,8 @@
 # ADR-163: One Material control everywhere: part, item, group or project scope on any part roles
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-30
+- Implemented: 2026-10-30 (CI run 41075671932 green on PR #149)
 - Depends on: ADR-055, ADR-124, ADR-151
 - Design: docs/ui-design.md (§4 Screens: editor header bar, Material sheet)
 - Backlog: N165
