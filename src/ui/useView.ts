@@ -4,7 +4,16 @@ import { kerfOf } from '../core/design';
 import { nestingJobs } from '../core/nesting/fromDesign';
 import type { NestJob } from '../core/nesting/types';
 import { projectCutlist, projectHardware, projectNestingJobs } from '../core/project';
-import type { Diagnostic, FurnitureModel, HardwareItem, Material, Panel } from '../core/types';
+import { projectSellerChoices } from '../core/sellers/choices';
+import type {
+  Diagnostic,
+  FurnitureModel,
+  HardwareItem,
+  HardwareProduct,
+  Material,
+  Panel,
+  SellerItem,
+} from '../core/types';
 import { useDesign } from '../store/designStore';
 
 /** What the result panels, 3D and printout show: the piece being edited, or the whole open project. */
@@ -20,6 +29,9 @@ export interface ViewData {
   diagnostics: Diagnostic[];
   kerf: number;
   jobs: () => NestJob[];
+  /** Seller products chosen for hardware lines and added items (ADR-160); a project gathers its pieces'. */
+  hardwareProducts?: Record<string, HardwareProduct>;
+  sellerItems?: SellerItem[];
 }
 
 /**
@@ -49,6 +61,7 @@ export function useView(): ViewData {
         diagnostics: projectModel.diagnostics,
         kerf: project.cutting?.kerf ?? 4,
         jobs: () => projectNestingJobs(project, rows, projectModel.materials),
+        ...projectSellerChoices(project),
       };
     }
     return {
@@ -62,6 +75,8 @@ export function useView(): ViewData {
       diagnostics: model.diagnostics,
       kerf: kerfOf(design),
       jobs: () => nestingJobs(design, model).jobs,
+      hardwareProducts: design.hardwareProducts,
+      sellerItems: design.sellerItems,
     };
   }, [design, model, project, projectModel, editing]);
   return override ?? own;

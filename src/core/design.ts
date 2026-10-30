@@ -14,7 +14,7 @@ import type {
   SplitSize,
 } from './types';
 import { isFinish, materialImageProblems } from './surface';
-import { bandProblems, materialLabelProblems } from './materials';
+import { bandProblems, materialLabelProblems, productRefProblems } from './materials';
 import { t } from './i18n';
 
 export type PedestalSide = 'left' | 'right';
@@ -37,12 +37,12 @@ export function defaultSheetFor(m: Pick<Material, 'id' | 'name'>): NonNullable<M
 export const sheetOf = (m: Material) => m.sheet ?? defaultSheetFor(m);
 export const kerfOf = (d: Design) => d.cutting?.kerf ?? DEFAULT_KERF;
 
-/** The document shape this app writes: 4 adds a board per part (`partMaterials`); 1 to 3 still load. */
-export const SCHEMA_VERSION = 4;
+/** The document shape this app writes: 5 adds seller products (ADR-160); 1 to 4 still load. */
+export const SCHEMA_VERSION = 5;
 
 /**
- * Older versions → 4 in memory: version 1 gets stock sheets and cutting settings; 2 → 3 → 4 add only optional fields
- * (band specs, part boards), so nothing else changes. Returns the same object when already current.
+ * Older versions → 5 in memory: version 1 gets stock sheets and cutting settings; 2 → 3 → 4 → 5 add only optional
+ * fields (band specs, part boards, seller products), so nothing else changes. Returns the same object when already current.
  */
 export function upgradeDesign(d: Design): Design {
   if (d.schemaVersion === SCHEMA_VERSION && d.cutting && d.materials.every((m) => m.sheet))
@@ -767,6 +767,37 @@ function validatePartMaterials(pm: unknown, version: unknown, mids: Set<string>,
       errs.push(t('Part board for {k} refers to an unknown material', { k }));
 }
 
+/** Seller units bought per scheduled item: more than 0, at most 1000, at most 3 decimals. */
+export const validPer = (v: unknown): v is number =>
+  typeof v === 'number' && v > 0 && v <= 1000 && Math.abs(v * 1000 - Math.round(v * 1000)) < 1e-9;
+
+/** ADR-160: seller products on hardware lines and added items (schemaVersion 5); checked when present, never throws. */
+function validateSellerChoices(d: Record<string, unknown>, errs: string[]) {
+  const hp = d.hardwareProducts,
+    items = d.sellerItems;
+  if (hp === undefined && items === undefined) return;
+  if ((d.schemaVersion as number) < 5) errs.push(t('Seller products need schemaVersion 5'));
+  if (hp !== undefined) {
+    if (!isObj(hp) || Object.keys(hp).length > 500) errs.push(t('Invalid hardware products'));
+    else
+      for (const [k, v] of Object.entries(hp))
+        if (
+          !k ||
+          k.length > 300 ||
+          productRefProblems(v).length ||
+          !validPer((v as { per?: unknown }).per)
+        )
+          errs.push(t('Invalid hardware product for {k}', { k }));
+  }
+  if (items !== undefined) {
+    if (!Array.isArray(items) || items.length > 500) errs.push(t('Invalid seller items'));
+    else
+      for (const v of items)
+        if (productRefProblems(v).length || !isInt(v.quantity, 1) || v.quantity > 9999)
+          errs.push(t('Invalid seller item'));
+  }
+}
+
 /** ADR-028: optional catalog metadata; checked when present, never throws. */
 function validateCatalog(c: unknown, errs: string[]) {
   if (c === undefined) return;
@@ -932,7 +963,8 @@ function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0)
 export function validateDesign(d: unknown): string[] {
   const errs: string[] = [];
   if (!isObj(d)) return [t('Design must be an object')];
-  if (![1, 2, 3, 4].includes(d.schemaVersion as number)) errs.push(t('Unsupported schemaVersion'));
+  if (![1, 2, 3, 4, 5].includes(d.schemaVersion as number))
+    errs.push(t('Unsupported schemaVersion'));
   if (
     d.cutting !== undefined &&
     !(isObj(d.cutting) && isInt(d.cutting.kerf) && (d.cutting.kerf as number) <= 20)
@@ -1026,6 +1058,7 @@ export function validateDesign(d: unknown): string[] {
   };
   validatePartMaterials(d.partMaterials, d.schemaVersion, mids, errs);
   validateCatalog(d.catalog, errs);
+  validateSellerChoices(d, errs);
   validateRules(d.settings, errs);
   validateWizard(d.wizard, errs);
   if (p.kind === 'panels') {
