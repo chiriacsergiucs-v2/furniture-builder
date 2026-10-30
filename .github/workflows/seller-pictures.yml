@@ -31,8 +31,12 @@ jobs:
           mkdir -p public/sellers/regency
           command -v mogrify >/dev/null || { sudo apt-get update -q && sudo apt-get install -y -q imagemagick; }
           if [ -d .pictures-new ] && [ -n "$(ls -A .pictures-new)" ]; then
-            mogrify -gravity SouthWest -crop 68%x68%+0+0 +repage -resize '512x512>' -quality 82 -strip .pictures-new/*
-            mv .pictures-new/* public/sellers/regency/
+            # One picture at a time: a broken download is dropped (its board falls back to the seller's site).
+            for f in .pictures-new/*; do
+              mogrify -gravity SouthWest -crop 68%x68%+0+0 +repage -resize '512x512>' -quality 82 -strip "$f" \
+                || { echo "::warning::Dropped $(basename "$f"): not a readable picture"; rm -f "$f"; }
+            done
+            mv .pictures-new/* public/sellers/regency/ 2>/dev/null || true
           fi
 
       - run: node tools/sellers/regency-pictures.ts mark src/core/sellers/regency.json public/sellers/regency
