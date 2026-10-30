@@ -1,13 +1,13 @@
 // @vitest-environment jsdom
 // Find-it for the project panel's order and the selected piece's sections (ADR-117, reordered by ADR-160), in jsdom
 // (ADR-108): Add a piece in the Pieces header; one selected piece replaces the list with All pieces and previous /
-// next; no How many, typed rotation or quarter-turn buttons; the toolbar and More actions; Position open, Finish and
-// More closed; Move to lists only working actions; a group holding an error opens itself (ADR-008).
+// next; no How many, typed rotation or quarter-turn buttons; the toolbar and More actions; Position open, More
+// closed, no Finish group (ADR-163); Move to lists only working actions; a group holding an error opens itself (ADR-008).
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { renderApp, WIDTHS } from './setup';
 
-const GROUPS = ['Finish', 'More: clearance, merge'] as const;
+const GROUPS = ['More: clearance, merge'] as const;
 
 describe.each(WIDTHS)('selected piece card at %ipx (find-it, ADR-117, ADR-160)', (width) => {
   it('bare app → new project → two pieces → list first, folded groups, an error opens Position', async () => {
@@ -65,15 +65,15 @@ describe.each(WIDTHS)('selected piece card at %ipx (find-it, ADR-117, ADR-160)',
     await user.click(within(card).getByRole('button', { name: 'More actions' }));
     expect(within(card).queryByRole('group', { name: 'More actions' })).toBeNull();
 
-    // 3. Width and Depth are open; Position opens with the piece; Finish and More are closed and open on a tap.
+    // 3. Width and Depth are open; Position opens with the piece; More is closed and opens on a tap; no Finish group.
     const folded = (el: Element) => el.closest('details:not([open])') !== null;
     for (const f of ['Width', 'Depth'])
       expect(folded(within(card).getByLabelText(f, { exact: true }))).toBe(false);
     const summary = (t: string) => within(card).getByText(t, { selector: 'summary' });
     const details = (t: string) => summary(t).closest('details')!;
     expect(details('Position').open).toBe(true);
+    expect(within(card).queryByText('Finish', { selector: 'summary' })).toBeNull();
     const fields: Record<(typeof GROUPS)[number], () => HTMLElement> = {
-      Finish: () => within(details('Finish')).getByRole('button', { name: 'Apply finish' }),
       'More: clearance, merge': () =>
         within(details('More: clearance, merge')).getByRole('button', { name: /^Merge with / }),
     };

@@ -149,7 +149,6 @@ export const ru_inspector = {
   'Shelf set back': 'Отступ полок',
   'Adjustable shelf gap, each side': 'Зазор регулируемой полки с каждой стороны',
   'Pin rows from edges': 'Ряды отверстий от кромок',
-  Materials: 'Материалы',
   Body: 'Корпус',
   Fronts: 'Фасады',
   'Drawers and runners': 'Ящики и направляющие',
@@ -158,7 +157,6 @@ export const ru_inspector = {
     'Сверьтесь с паспортом направляющих; для боковых обычно 12,5–13 мм.',
   'Height clearance': 'Зазор по высоте',
   'Space behind runner': 'Место за направляющей',
-  'Drawer box': 'Короб ящика',
   'Drawer bottom': 'Дно ящика',
   'Runner lengths you can buy': 'Доступные длины направляющих',
   'About runner lengths': 'О длинах направляющих',
@@ -242,7 +240,6 @@ export const ru_inspector = {
   'Panel height': 'Высота панели',
   'Set in from rear': 'Отступ от тыла',
   Worktop: 'Столешница',
-  'Drawer fronts': 'Фасады ящиков',
   'The inside has its own layout. Replace it with equal bays?':
     'У внутреннего пространства своя компоновка. Заменить её равными секциями?',
   Replace: 'Заменить',

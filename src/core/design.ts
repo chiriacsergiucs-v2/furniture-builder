@@ -37,12 +37,12 @@ export function defaultSheetFor(m: Pick<Material, 'id' | 'name'>): NonNullable<M
 export const sheetOf = (m: Material) => m.sheet ?? defaultSheetFor(m);
 export const kerfOf = (d: Design) => d.cutting?.kerf ?? DEFAULT_KERF;
 
-/** The document shape this app writes: 5 adds seller products (ADR-161); 1 to 4 still load. */
-export const SCHEMA_VERSION = 5;
+/** The document shape this app writes: 6 adds role boards (ADR-163); 1 to 5 still load. */
+export const SCHEMA_VERSION = 6;
 
 /**
- * Older versions → 5 in memory: version 1 gets stock sheets and cutting settings; 2 → 3 → 4 → 5 add only optional
- * fields (band specs, part boards, seller products), so nothing else changes. Returns the same object when already current.
+ * Older versions → 6 in memory: version 1 gets stock sheets and cutting settings; 2 → 3 → 4 → 5 → 6 add only
+ * optional fields (band specs, part boards, seller products, role boards), so nothing else changes. Returns the same object when already current.
  */
 export function upgradeDesign(d: Design): Design {
   if (d.schemaVersion === SCHEMA_VERSION && d.cutting && d.materials.every((m) => m.sheet))
@@ -767,6 +767,17 @@ function validatePartMaterials(pm: unknown, version: unknown, mids: Set<string>,
       errs.push(t('Part board for {k} refers to an unknown material', { k }));
 }
 
+const ROLE_BOARD_ROLES: readonly string[] = ['top', 'bottom', 'side', 'shelf', 'divider'];
+/** A board per part role (schemaVersion 6, ADR-163): role → a material of the piece; checked when present, never throws. */
+function validateRoleMaterials(rm: unknown, version: unknown, mids: Set<string>, errs: string[]) {
+  if (rm === undefined) return;
+  if (!isObj(rm)) return void errs.push(t('Invalid role boards'));
+  if ((version as number) < 6) errs.push(t('Role boards need schemaVersion 6'));
+  for (const [k, v] of Object.entries(rm))
+    if (!ROLE_BOARD_ROLES.includes(k) || !mids.has(v as string))
+      errs.push(t('Role board for {k} refers to an unknown role or material', { k }));
+}
+
 /** Seller units bought per scheduled item: more than 0, at most 1000, at most 3 decimals. */
 export const validPer = (v: unknown): v is number =>
   typeof v === 'number' && v > 0 && v <= 1000 && Math.abs(v * 1000 - Math.round(v * 1000)) < 1e-9;
@@ -963,7 +974,7 @@ function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0)
 export function validateDesign(d: unknown): string[] {
   const errs: string[] = [];
   if (!isObj(d)) return [t('Design must be an object')];
-  if (![1, 2, 3, 4, 5].includes(d.schemaVersion as number))
+  if (![1, 2, 3, 4, 5, 6].includes(d.schemaVersion as number))
     errs.push(t('Unsupported schemaVersion'));
   if (
     d.cutting !== undefined &&
@@ -1057,6 +1068,7 @@ export function validateDesign(d: unknown): string[] {
     if (!mids.has(obj[k] as string)) errs.push(t('{k} refers to an unknown material', { k }));
   };
   validatePartMaterials(d.partMaterials, d.schemaVersion, mids, errs);
+  validateRoleMaterials(d.roleMaterials, d.schemaVersion, mids, errs);
   validateCatalog(d.catalog, errs);
   validateSellerChoices(d, errs);
   validateRules(d.settings, errs);

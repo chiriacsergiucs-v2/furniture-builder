@@ -37,6 +37,9 @@ interface Ui {
   /** The Settings dialog (ADR-080) is open for what is open in the editor. */
   settingsOpen: boolean;
   setSettingsOpen: (v: boolean) => void;
+  /** The Material dialog (ADR-163) is open. */
+  materialOpen: boolean;
+  setMaterialOpen: (v: boolean) => void;
   /** The Saved data dialog (ADR-133): persistent storage, folder backup and restore for this device. */
   savedDataOpen: boolean;
   setSavedDataOpen: (v: boolean) => void;
@@ -59,6 +62,8 @@ export const useUi = create<Ui>((set) => ({
   setNotice: (notice) => set({ notice }),
   settingsOpen: false,
   setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
+  materialOpen: false,
+  setMaterialOpen: (materialOpen) => set({ materialOpen }),
   savedDataOpen: false,
   setSavedDataOpen: (savedDataOpen) => set({ savedDataOpen }),
 }));

@@ -702,6 +702,15 @@ select {
   outline-offset: -2px;
   outline-color: var(--accent);
 }
+/* Checkable chips (ADR-163): a pressed chip looks like a chosen segment. */
+.segmented.multi button[aria-pressed='true'] {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+.material-fields {
+  display: grid;
+  gap: var(--s-3);
+}
 .segmented.small button {
   min-height: calc(var(--control-h-sm) - 2 * var(--s-1) - 2px);
   padding: 0 var(--s-3);

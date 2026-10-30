@@ -246,7 +246,7 @@ const offer = (id: string) => ({ seller: CATS[0], p: CATS[0].products.find((p) =
 
 describe('design links (ADR-161)', () => {
   it('validate, survive JSON, and need schemaVersion 5; older versions still load', () => {
-    expect(SCHEMA_VERSION).toBe(5);
+    expect(SCHEMA_VERSION).toBe(6);
     let d = chest();
     const runner = shop(d).find((l) => l.hardwareKind === 'drawer-runner-pair')!;
     d = withHardwareProduct(d, runner.productKey!, { ...refOf(offer('r400')), per: 2 });

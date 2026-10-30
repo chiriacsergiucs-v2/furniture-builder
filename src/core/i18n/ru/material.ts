@@ -1,0 +1,57 @@
+/** Russian text for the Material dialog and role boards (ADR-163). Key: the English text; value: the Russian text. */
+export const ru_material = {
+  'Invalid role boards': 'Недопустимые плиты по ролям',
+  'Role boards need schemaVersion 6': 'Плиты по ролям требуют schemaVersion 6',
+  'Role board for {k} refers to an unknown role or material':
+    'Плита по роли {k} ссылается на неизвестную роль или материал',
+  'not in a run': 'не в ряду',
+  '{name} has no {parts}': 'У {name} нет: {parts}',
+  fronts: 'фасадов',
+  carcass: 'корпуса',
+  'top@@role': 'крышки',
+  'bottom@@role': 'дна',
+  sides: 'боковин',
+  'shelves@@role': 'полок',
+  dividers: 'перегородок',
+  'back@@role': 'задней стенки',
+  'drawer boxes': 'коробов ящиков',
+  'drawer bottoms': 'днищ ящиков',
+  worktop: 'столешницы',
+  Material: 'Материал',
+  'Material: put a board on parts of this item, a group or the whole project':
+    'Материал: назначить плиту деталям этого изделия, группы или всего проекта',
+  'About the material': 'О материале',
+  'Pick the parts, the board and how far it reaches. Every piece stays its own copy; change it again any time.':
+    'Выберите детали, плиту и охват. Каждое изделие остаётся своей копией; меняйте снова в любое время.',
+  'Part@@scope': 'Деталь',
+  'Item@@scope': 'Изделие',
+  'Group@@scope': 'Группа',
+  'Group: the selected items, or the run this item stands in':
+    'Группа: выбранные изделия или ряд, в котором стоит это изделие',
+  'Not in a run; select two or more items for a group':
+    'Не в ряду; для группы выберите два и более изделий',
+  'Parts@@material': 'Детали',
+  'Fronts@@role': 'Фасады',
+  'Carcass@@role': 'Корпус',
+  'Top@@role': 'Крышка',
+  'Bottom@@role': 'Дно',
+  Sides: 'Боковины',
+  'Shelves@@role': 'Полки',
+  'Dividers@@role': 'Перегородки',
+  'Back@@role': 'Задняя стенка',
+  'Drawer boxes': 'Короба ящиков',
+  'Drawer bottoms': 'Днища ящиков',
+  'Worktop@@role': 'Столешница',
+  'Pick at least one part.': 'Выберите хотя бы одну деталь.',
+  'No item is selected.': 'Изделие не выбрано.',
+  'Applied to {n|# item|# items}': 'Применено к {n|# изделию|# изделиям|# изделиям}',
+  '{part}: board set.': '{part}: плита назначена.',
+  'Apply material': 'Применить материал',
+  'About the part': 'О детали',
+  'The part is shown with the board it uses now.':
+    'Деталь показана с плитой, которую использует сейчас.',
+  'One Material control everywhere': 'Один элемент «Материал» везде',
+  'Material in the header bar: a board on one part, the item, the group or the whole project, on any part roles.':
+    'Кнопка «Материал» в шапке: плита на одну деталь, изделие, группу или весь проект, для любых ролей деталей.',
+  'Clear part board': 'Сбросить плиту детали',
+} as const;
