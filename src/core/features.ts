@@ -348,7 +348,8 @@ export const FEATURES: FeatureDomain[] = [
       { name: 'Import your own decor list (CSV)', adrs: ['ADR-049'] },
       {
         name: 'Boards and edge bands from a seller',
-        detail: 'Bundled seller products (Regency first): same thickness and decor first, you pick.',
+        detail:
+          'Bundled seller products (Regency first): same thickness and decor first, you pick.',
         adrs: ['ADR-160'],
       },
       { name: 'A picture from your device on a board', adrs: ['ADR-048'] },

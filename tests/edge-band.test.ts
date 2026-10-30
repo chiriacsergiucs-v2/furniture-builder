@@ -83,21 +83,21 @@ describe('edge band specs on boards (ADR-077)', () => {
       frontBand: ABS2,
     });
     expect(d.schemaVersion).toBe(SCHEMA_VERSION);
-    expect(SCHEMA_VERSION).toBe(4);
+    expect(SCHEMA_VERSION).toBe(5);
     const file = JSON.parse(JSON.stringify(d)) as Design;
     expect(validateDesign(file)).toEqual([]);
     expect(file).toEqual(d);
     await saveDesign(d);
     expect(await loadDesign(d.id)).toEqual(d);
-    // Version 2 (and 1, in core.test.ts) still validate and upgrade to 4 with the same parts.
+    // Version 2 (and 1, in core.test.ts) still validate and upgrade to the current version with the same parts.
     const v2 = { ...chest(), schemaVersion: 2 as const };
     expect(validateDesign(v2)).toEqual([]);
     const up = upgradeDesign(v2);
-    expect(up.schemaVersion).toBe(4);
+    expect(up.schemaVersion).toBe(SCHEMA_VERSION);
     expect(up.materials).toEqual(v2.materials);
     expect(buildModel(up).panels).toEqual(buildModel(v2).panels);
     expect(upgradeDesign(up)).toBe(up);
-    expect(validateDesign({ ...chest(), schemaVersion: 5 }).join()).toMatch(/schemaVersion/);
+    expect(validateDesign({ ...chest(), schemaVersion: 6 }).join()).toMatch(/schemaVersion/);
   });
 
   it('never change cut sizes (ADR-009): only the band is named', () => {

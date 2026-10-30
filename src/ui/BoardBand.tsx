@@ -61,9 +61,7 @@ export function BoardBand({ m }: { m: Material }) {
           )}
         />
       )}
-      {front && (
-        <BandProduct m={m} front />
-      )}
+      {front && <BandProduct m={m} front />}
     </div>
   );
 }

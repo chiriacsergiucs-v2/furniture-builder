@@ -72,7 +72,8 @@ const mm = (v) => {
 };
 const whole = (v) => (v !== undefined && Number.isInteger(v) ? v : undefined);
 
-const IMG = 'https://regencycompany.ro/media/catalog/product/cache/11d468b3a483182c4cfa53921f4334ce/';
+const IMG =
+  'https://regencycompany.ro/media/catalog/product/cache/11d468b3a483182c4cfa53921f4334ce/';
 const ORIGIN = 'https://regencycompany.ro';
 const seen = new Set();
 const products = [];
