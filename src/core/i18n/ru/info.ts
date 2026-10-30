@@ -191,6 +191,9 @@ export const ru_info = {
   'Matte, satin or gloss finish': 'Матовая, полуматовая или глянцевая поверхность',
   'Edge band per board': 'Кромка для каждого материала',
   'Boards and edge bands from a seller': 'Плиты и кромки от продавца',
+  'Seller board pictures shipped with the app': 'Картинки плит продавца встроены в приложение',
+  'A seller board shows its decor in 3D and the front view, without asking the seller’s site.':
+    'Плита продавца показывает свой декор в 3D и на виде спереди, без запроса к сайту продавца.',
   'Bundled seller products (Regency first): same thickness and decor first, you pick.':
     'Встроенные товары продавцов (сначала Regency): сначала та же толщина и декор, выбираете вы.',
   'Seller products for hardware and seller prices': 'Товары продавца для фурнитуры и цены продавца',

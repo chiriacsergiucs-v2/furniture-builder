@@ -52,6 +52,8 @@ export interface SellerProduct {
   /** Page path on `origin`, and picture path on `imageBase`. */
   a?: string;
   i?: string;
+  /** 1 when the app ships its own copy of the picture (boards and worktops, ADR-162), under `hostedBase`. */
+  h?: 1;
 }
 
 export interface SellerCatalog {
@@ -61,6 +63,8 @@ export interface SellerCatalog {
   origin: string;
   /** Pictures load from here only when the user switches seller pictures on (ADR-126). */
   imageBase: string;
+  /** The app's own copies of board pictures, relative to the app's base path (ADR-162): `<id><ext>`. */
+  hostedBase?: string;
   currency: string;
   priceNote: string;
   /** Date of the seller's export, YYYY-MM-DD. */

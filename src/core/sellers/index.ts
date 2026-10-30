@@ -43,6 +43,18 @@ export interface Offer {
   p: SellerProduct;
 }
 
+/** The picture's extension from its path (".jpg"); the same rule as `tools/sellers/regency-pictures.ts`. */
+export function pictureExt(path: string): string {
+  const m = /\.(jpe?g|png|webp)$/i.exec(path);
+  return m ? `.${m[1].toLowerCase()}` : '.jpg';
+}
+
+/** The app's own copy of a product's picture, relative to the app's base path, or null when it ships none (ADR-162). */
+export const hostedPicture = (o: Offer): string | null =>
+  o.p.h && o.p.i && o.seller.hostedBase
+    ? `${o.seller.hostedBase}${o.p.id}${pictureExt(o.p.i)}`
+    : null;
+
 export const refOf = (o: Offer): ProductRef => ({ seller: o.seller.id, id: o.p.id, name: o.p.n });
 export const refKey = (r: Pick<ProductRef, 'seller' | 'id'>) => `${r.seller}:${r.id}`;
 

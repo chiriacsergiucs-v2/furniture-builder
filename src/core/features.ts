@@ -356,6 +356,12 @@ export const FEATURES: FeatureDomain[] = [
           'Bundled seller products (Regency first): same thickness and decor first, you pick.',
         adrs: ['ADR-161'],
       },
+      {
+        name: 'Seller board pictures shipped with the app',
+        detail:
+          'A seller board shows its decor in 3D and the front view, without asking the seller’s site.',
+        adrs: ['ADR-162'],
+      },
       { name: 'A picture from your device on a board', adrs: ['ADR-048'] },
       { name: 'Matte, satin or gloss finish', adrs: ['ADR-067'] },
       {
