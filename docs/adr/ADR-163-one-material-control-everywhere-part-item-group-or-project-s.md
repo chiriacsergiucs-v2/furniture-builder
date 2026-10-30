@@ -75,15 +75,23 @@ this panel; their core functions stay.
 
 ## Done when
 
-- [ ] `roleMaterials` swaps the board of every part of that role; `partMaterials` wins over it; another thickness
+- [x] `roleMaterials` swaps the board of every part of that role; `partMaterials` wins over it; another thickness
       gives the `thickness` error; a version-5 file with the field is invalid (`tests/role-boards.test.ts`).
-- [ ] `applyMaterial` with scope Item/Group/Project and roles Top + Shelves changes only those parts; Carcass clears
+- [x] `applyMaterial` with scope Item/Group/Project and roles Top + Shelves changes only those parts; Carcass clears
       the role entries; Project scope writes `project.settings`; one undo step (`tests/role-boards.test.ts`).
-- [ ] Group = the selection when 2+ selected, else the run (`tests/role-boards.test.ts`).
-- [ ] Browser find-it `tools/material/find-it.mjs` at 390 and 1280 px: bare app → "Material" → scope buttons
+- [x] Group = the selection when 2+ selected, else the run (`tests/role-boards.test.ts`).
+- [x] Browser find-it `tools/material/find-it.mjs` at 390 and 1280 px: bare app → "Material" → scope buttons
       Part / Item / Group / Project → chips → Board → "Apply" → "Applied to …"; no Finish group, no Carcass board
       select in Project settings, no Materials group in Settings; board labels without "· maker, type"; no
       horizontal scroll.
+
+## Implementation notes
+
+`src/core/finish.ts` (`applyMaterial`, `putRoleBoards`, `putPartBoard`, `materialTargets`, `itemRoles`),
+`src/core/boards.ts` (`boardChoices`, `boardLabel`), `Design.roleMaterials` (`src/core/types.ts`, validated in
+`src/core/design.ts`, swapped in `src/core/build.ts`), store `applyMaterial` and `clearPartBoard`,
+`src/ui/MaterialDialog.tsx`. Tests: `tests/role-boards.test.ts`, `tests/find-it/part-boards.test.tsx`; browser
+find-it `tools/material/find-it.mjs` 30/30 at 1280 and 390 px on the production build.
 
 ## Open questions
 
