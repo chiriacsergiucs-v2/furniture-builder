@@ -1,20 +1,26 @@
 import { useEffect, useMemo, useState } from 'react';
-import { boardChoices } from '../core/boards';
+import { boardChoices, projectBands } from '../core/boards';
+import { bandKey } from '../core/cutlist';
 import { buildModel } from '../core/build';
 import {
   itemRoles,
   materialTargets,
+  runPartsOf,
+  runRoleOf,
+  RUN_ROLES,
   type FinishScope,
   type MaterialRole,
   type MaterialScope,
+  type RunRole,
 } from '../core/finish';
 import { t, tr } from '../core/i18n';
-import type { Decor } from '../core/materials';
+import { BAND_KINDS, bandProblems, bandText, parseTenths, type Decor } from '../core/materials';
+import { bandFromOffer, bandOffers, loadSellerCatalogs, type SellerCatalog } from '../core/sellers';
 import { materialKey, runOf } from '../core/project';
-import type { Design, Material } from '../core/types';
+import type { Design, EdgeBand, EdgeBandKind, Material } from '../core/types';
 import { listDecors } from '../persist/db';
 import { useDesign } from '../store/designStore';
-import { InfoTip, Select } from './controls';
+import { InfoTip, MmField, Select } from './controls';
 import { Dialog } from './Dialogs';
 import { StyleSuggestions } from './History';
 import { useUi } from './shell/uiStore';
@@ -32,6 +38,14 @@ const ROLE_LABEL: Record<MaterialRole, () => string> = {
   'drawer-bottom': () => t('Drawer bottoms'),
   worktop: () => t('Worktop@@role'),
 };
+const RUN_LABEL: Record<RunRole, () => string> = {
+  'run-worktop': () => t('Run worktop'),
+  'run-filler': () => t('Fillers and covers'),
+  'run-plinth': () => t('Run plinth'),
+  'run-trim': () => t('Trims@@role'),
+};
+const KEEP = '';
+const OWN = 'own';
 const ROLE_ORDER: MaterialRole[] = [
   'front',
   'body',
@@ -105,7 +119,7 @@ function MaterialFields() {
   const target: Design | null = inProject ? (item?.design ?? null) : design;
 
   const [scope, setScope] = useState<MaterialScope>('item');
-  const [roles, setRoles] = useState<MaterialRole[]>([]);
+  const [roles, setRoles] = useState<(MaterialRole | RunRole)[]>([]);
   // The part selected in the parts list or 3D view is preset when the dialog opens (project ids carry the item id).
   const [partId, setPartId] = useState(() => {
     const h = highlight[0] ?? '';
@@ -118,6 +132,29 @@ function MaterialFields() {
     listDecors()
       .then(setDecors)
       .catch(() => setDecors([]));
+  }, []);
+  // Edge band (ADR-168): keep the board's, a band of the project, a seller's, or your own.
+  const [bandChoice, setBandChoice] = useState(KEEP);
+  const [own, setOwn] = useState<{
+    kind: EdgeBandKind;
+    thickness: string;
+    width: number;
+    code: string;
+  }>({
+    kind: 'abs',
+    thickness: '',
+    width: 22,
+    code: '',
+  });
+  const [cats, setCats] = useState<SellerCatalog[]>([]);
+  useEffect(() => {
+    let live = true;
+    loadSellerCatalogs()
+      .then((c) => live && setCats(c))
+      .catch(() => live && setCats([]));
+    return () => {
+      live = false;
+    };
   }, []);
 
   const run = useMemo(
@@ -132,19 +169,48 @@ function MaterialFields() {
       return (materialTargets(project, itemId, 'group', selectedIds) ?? []).map((i) => i.design);
     return target ? [target] : [];
   }, [inProject, project, scope, itemId, selectedIds, target]);
+  // Run parts made from a reached item (ADR-168).
+  const reachedRuns = useMemo(() => {
+    if (!inProject) return [];
+    const ids =
+      scope === 'project'
+        ? project.items.map((i) => i.id)
+        : scope === 'group' && itemId
+          ? (materialTargets(project, itemId, 'group', selectedIds) ?? []).map((i) => i.id)
+          : itemId
+            ? [itemId]
+            : [];
+    return runPartsOf(project, new Set(ids));
+  }, [inProject, project, scope, itemId, selectedIds]);
   const available = useMemo(() => {
-    const set = new Set<MaterialRole>();
+    const set = new Set<MaterialRole | RunRole>();
     for (const d of targets) for (const r of itemRoles(d)) set.add(r);
-    return ROLE_ORDER.filter((r) => set.has(r));
-  }, [targets]);
-  const parts = useMemo(() => (target ? partRows(target) : []), [target]);
+    for (const rp of reachedRuns) set.add(runRoleOf(rp));
+    return [...ROLE_ORDER, ...RUN_ROLES].filter((r) => set.has(r));
+  }, [targets, reachedRuns]);
+  const parts = useMemo(() => {
+    const own = target ? partRows(target) : [];
+    if (!inProject || !itemId) return own;
+    // The item's run parts follow its own parts in the Part list.
+    const runs = runPartsOf(project, new Set([itemId])).map((rp) => ({
+      id: `run:${rp.id}`,
+      label: `${t('Run: {part}', { part: tr(rp.label) })} — ${tr(rp.material.name)}, ${rp.material.thickness} mm`,
+      materialId: '',
+      material: rp.material,
+    }));
+    return [...own, ...runs];
+  }, [target, inProject, project, itemId]);
   const part = parts.find((p) => p.id === partId) ?? parts[0];
   // Part boards whose part the piece no longer builds (ADR-151): kept and warned about until cleared here.
   const lost = useMemo(
     () => Object.keys(target?.partMaterials ?? {}).filter((id) => !parts.some((p) => p.id === id)),
     [target, parts],
   );
-  const current = part ? target?.materials.find((m) => m.id === part.materialId) : undefined;
+  const current = part
+    ? 'material' in part
+      ? (part.material as Material)
+      : target?.materials.find((m) => m.id === part.materialId)
+    : undefined;
   const choices = useMemo(
     () => boardChoices(inProject ? project : null, target, decors, current),
     [inProject, project, target, decors, current],
@@ -156,14 +222,60 @@ function MaterialFields() {
         ? materialKey(current)
         : (choices[0]?.key ?? '');
   const chosen = choices.find((c) => c.key === chosenKey);
+  const bands = useMemo(
+    () => projectBands(inProject ? project : null, target),
+    [inProject, project, target],
+  );
+  const sellerBands = useMemo(
+    () =>
+      chosen
+        ? bandOffers(cats, chosen.board)
+            .slice(0, 20)
+            .flatMap((o) => {
+              const b = bandFromOffer(o);
+              return b ? [{ b, name: o.p.n }] : [];
+            })
+        : [],
+    [cats, chosen],
+  );
+  const ownBand: EdgeBand | null = (() => {
+    const th = parseTenths(own.thickness);
+    if (th === null) return null;
+    const b: EdgeBand = {
+      kind: own.kind,
+      thickness: th,
+      width: own.width,
+      ...(own.code.trim() ? { code: own.code.trim() } : {}),
+    };
+    return bandProblems(b).length ? null : b;
+  })();
+  const band: EdgeBand | undefined | null =
+    bandChoice === KEEP
+      ? undefined
+      : bandChoice === OWN
+        ? ownBand
+        : bandChoice.startsWith('seller:')
+          ? sellerBands[Number(bandChoice.slice(7))]?.b
+          : bands.find((b) => `band:${bandKey(b)}` === bandChoice);
   const needsItem = scope !== 'project' && inProject && !item;
   const canApply =
-    !!chosen && !needsItem && (scope === 'part' ? !!part : roles.length > 0) && targets.length > 0;
+    !!chosen &&
+    band !== null &&
+    !needsItem &&
+    (scope === 'part' ? !!part : roles.length > 0) &&
+    (targets.length > 0 || reachedRuns.length > 0);
 
   const go = () => {
     if (!chosen) return;
     const id = inProject ? (itemId ?? project.items[0]?.id ?? null) : null;
-    const r = apply(id, roles, chosen.board, scope, scope === 'part' ? part?.id : undefined);
+    const r = apply(
+      id,
+      roles,
+      chosen.board,
+      scope,
+      scope === 'part' ? part?.id : undefined,
+      band ?? undefined,
+    );
     setMsg(
       scope === 'part'
         ? r.applied.length
@@ -174,7 +286,7 @@ function MaterialFields() {
           : t('Nothing changed: {why}.', { why: r.skipped.join('; ') || t('no piece reached') }),
     );
   };
-  const toggleRole = (r: MaterialRole) =>
+  const toggleRole = (r: MaterialRole | RunRole) =>
     setRoles((rs) => (rs.includes(r) ? rs.filter((x) => x !== r) : [...rs, r]));
   const scopes: { value: MaterialScope; label: string; disabled?: boolean; title?: string }[] = [
     { value: 'part', label: t('Part@@scope') },
@@ -277,7 +389,7 @@ function MaterialFields() {
                   setMsg(null);
                 }}
               >
-                {ROLE_LABEL[r]()}
+                {r in RUN_LABEL ? RUN_LABEL[r as RunRole]() : ROLE_LABEL[r as MaterialRole]()}
               </button>
             ))}
           </div>
@@ -293,6 +405,64 @@ function MaterialFields() {
           setMsg(null);
         }}
       />
+      <Select
+        label={t('Edge band')}
+        value={bandChoice}
+        options={[
+          { value: KEEP, label: t("Keep the board's band") },
+          ...bands.map((b) => ({ value: `band:${bandKey(b)}`, label: bandText(b) })),
+          ...sellerBands.map((s, i) => ({
+            value: `seller:${i}`,
+            label: t('{band} (seller: {name})', { band: bandText(s.b), name: s.name }),
+          })),
+          { value: OWN, label: t('Your own band…') },
+        ]}
+        onChange={(v) => {
+          setBandChoice(v);
+          setMsg(null);
+        }}
+      />
+      {bandChoice === OWN && (
+        <div className="own-band" role="group" aria-label={t('Your own band')}>
+          <Select<EdgeBandKind>
+            label={t('Band type')}
+            value={own.kind}
+            options={BAND_KINDS.map((k) => ({ value: k.value, label: k.label }))}
+            onChange={(v) => setOwn((o) => ({ ...o, kind: v }))}
+          />
+          <div className="field">
+            <label htmlFor="own-band-th">{t('Band thickness (mm)')}</label>
+            <input
+              id="own-band-th"
+              inputMode="decimal"
+              value={own.thickness}
+              placeholder="0.8"
+              onChange={(e) => setOwn((o) => ({ ...o, thickness: e.target.value }))}
+            />
+          </div>
+          <MmField
+            label={t('Band width')}
+            value={own.width}
+            min={1}
+            max={100}
+            step={1}
+            onChange={(v) => setOwn((o) => ({ ...o, width: v }))}
+          />
+          <div className="field">
+            <label htmlFor="own-band-code">{t('Band code')}</label>
+            <input
+              id="own-band-code"
+              value={own.code}
+              onChange={(e) => setOwn((o) => ({ ...o, code: e.target.value }))}
+            />
+          </div>
+          {!ownBand && (
+            <p className="hint">
+              {t('Give a thickness in tenths of a mm (for example 0.8) and a width.')}
+            </p>
+          )}
+        </div>
+      )}
       <button type="button" className="btn primary" onClick={go} disabled={!canApply}>
         {t('Apply material')}
       </button>

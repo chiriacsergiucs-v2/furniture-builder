@@ -23,6 +23,9 @@ import {
   applyMaterial,
   putPartBoard,
   putRoleBoards,
+  putRunBoard,
+  RUN_ROLES,
+  type RunRole,
   withBoard,
   roleName,
   type FinishRole,
@@ -111,6 +114,7 @@ import type {
   FrameParams,
   FurnitureModel,
   HardwareProduct,
+  EdgeBand,
   Material,
   Mm,
   PanelParams,
@@ -432,10 +436,12 @@ interface State {
    */
   applyMaterial: (
     id: string | null,
-    roles: readonly MaterialRole[],
+    roles: readonly (MaterialRole | RunRole)[],
     board: Material,
     scope: MaterialScope,
     panelId?: string,
+    /** An edge band for those parts (ADR-168); undefined keeps the board's band. */
+    band?: EdgeBand,
   ) => { applied: string[]; skipped: string[] };
   /**
    * A common top or bottom (ADR-165) over the selected items: on links them (replacing a common panel of the same
@@ -1383,17 +1389,18 @@ export const useDesign = create<State>((rawSet, get) => {
       if (!p) return;
       commitProject({ ...p, runSettings: { scribe: 0, auto: false, ...p.runSettings, ...patch } });
     },
-    applyMaterial: (id, roles, board, scope, panelId) => {
+    applyMaterial: (id, allRoles, board, scope, panelId, band) => {
       const p = get().project;
+      const roles = allRoles.filter((r): r is MaterialRole => !RUN_ROLES.includes(r as RunRole));
       if (!id || !p || get().editingItemId === id) {
         // The open piece: one part, or every role it has parts for.
         const d = get().design;
         if (scope === 'part') {
           if (!panelId) return { applied: [], skipped: [] };
-          commit(putPartBoard(d, panelId, board));
+          commit(putPartBoard(d, panelId, board, band));
           return { applied: [panelId], skipped: [] };
         }
-        const r = putRoleBoards(d, roles, board);
+        const r = putRoleBoards(d, roles, board, band);
         if (r.applied.length) commit(r.design);
         return {
           applied: r.applied.length ? [d.name] : [],
@@ -1403,20 +1410,26 @@ export const useDesign = create<State>((rawSet, get) => {
       if (scope === 'part') {
         const it = p.items.find((i) => i.id === id);
         if (!it || !panelId) return { applied: [], skipped: [] };
+        // A run part (ADR-168): its own board copy.
+        const rp = (p.runParts ?? []).find((x) => `run:${x.id}` === panelId);
+        if (rp) {
+          commitProject(putRunBoard(p, [rp], board, band), t('Apply material'));
+          return { applied: [rp.label], skipped: [] };
+        }
         // Project part ids are `${item.id}:${panel.id}`; the piece stores the panel's own id.
         const own = panelId.startsWith(`${id}:`) ? panelId.slice(id.length + 1) : panelId;
         commitProject(
           {
             ...p,
             items: p.items.map((i) =>
-              i.id === id ? { ...i, design: putPartBoard(i.design, own, board) } : i,
+              i.id === id ? { ...i, design: putPartBoard(i.design, own, board, band) } : i,
             ),
           },
           t('Apply material'),
         );
         return { applied: [own], skipped: [] };
       }
-      const r = applyMaterial(p, id, roles, board, scope, get().selectedItemIds);
+      const r = applyMaterial(p, id, allRoles, board, scope, get().selectedItemIds, band);
       if (r.applied.length) commitProject(r.project, t('Apply material'));
       return { applied: r.applied, skipped: r.skipped };
     },
@@ -1447,7 +1460,13 @@ export const useDesign = create<State>((rawSet, get) => {
       const drop = (d: Design): Design => {
         const next = { ...d.partMaterials };
         delete next[panelId];
-        return { ...d, partMaterials: Object.keys(next).length ? next : undefined };
+        const bands = { ...d.partBands };
+        delete bands[panelId];
+        return {
+          ...d,
+          partMaterials: Object.keys(next).length ? next : undefined,
+          partBands: Object.keys(bands).length ? bands : undefined,
+        };
       };
       commitProject(
         { ...p, items: p.items.map((i) => (i.id === id ? { ...i, design: drop(i.design) } : i)) },
@@ -1540,10 +1559,14 @@ export const useDesign = create<State>((rawSet, get) => {
       const next = { ...d.partMaterials };
       if (materialId) next[panelId] = materialId;
       else delete next[panelId];
+      // Clearing a part also clears its own band (ADR-168).
+      const bands = { ...d.partBands };
+      if (!materialId) delete bands[panelId];
       commit({
         ...d,
         schemaVersion: SCHEMA_VERSION,
         partMaterials: Object.keys(next).length ? next : undefined,
+        partBands: Object.keys(bands).length ? bands : undefined,
       });
     },
     updateCabinet: (patch) => {

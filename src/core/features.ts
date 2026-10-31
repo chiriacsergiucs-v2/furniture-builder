@@ -364,6 +364,12 @@ export const FEATURES: FeatureDomain[] = [
           'Select items standing side by side: Common top or Common bottom makes one panel across them.',
         adrs: ['ADR-165'],
       },
+      {
+        name: 'Run parts and edge bands in the Material dialog',
+        detail:
+          'Worktop, fillers, plinth and trims of a run; an edge band per part role or per part.',
+        adrs: ['ADR-168'],
+      },
       { name: 'Stock sheets, trim and kerf', adrs: ['ADR-019'] },
       { name: 'Solid timber stock', adrs: ['ADR-038'] },
       { name: 'Manufacturer and type labels', adrs: ['ADR-049'] },

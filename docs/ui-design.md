@@ -237,6 +237,10 @@ described above. Audit and wireframes are in `docs/research/2026-10-24-ui-redesi
   **Common top and bottom** with the toggles **Common top** and **Common bottom** (each with an info tip). A toggle
   that cannot be switched on is disabled with its reason below it ("Wardrobe is not the same height or floor
   level."). The Parts list shows **Common top** / **Common bottom** as one row of its own.
+- _Material: run parts and bands (ADR-168)._ In a project the Parts chips add **Run worktop, Fillers and covers, Run
+  plinth, Trims** when a reached item has them; the Part select lists the item's run parts ("Run: Worktop — board").
+  Under Board, **Edge band**: Keep the board's band · the project's bands · seller bands for the board · **Your own
+  band…** (Band type, Band thickness (mm), Band width, Band code).
 
 ## 5. Rollout
 

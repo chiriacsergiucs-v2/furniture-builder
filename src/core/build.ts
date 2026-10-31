@@ -1,3 +1,4 @@
+import { rolesOf } from './roles';
 import { t as tx, tr } from './i18n';
 import { buildCabinet, slidingTrackDepth } from './cabinet';
 import { buildCorner } from './corner';
@@ -47,7 +48,30 @@ export function buildModel(design: Design): FurnitureModel {
           : null;
     return id ? { ...p, materialId: id } : p;
   });
+  // An edge band chosen for one part or its role (ADR-168): the part's own, then its role's, then its board's.
+  const ownBand = design.partBands ?? {};
+  const roleBand = design.roleBands ?? {};
+  if (Object.keys(ownBand).length || Object.keys(roleBand).length)
+    for (let i = 0; i < panels.length; i++) {
+      const p = panels[i];
+      const band =
+        ownBand[p.id] ??
+        rolesOf(p.role)
+          .map((r) => roleBand[r])
+          .find(Boolean);
+      if (band) panels[i] = { ...p, band };
+    }
   const built = new Set(panels.map((p) => p.id));
+  const lostBands = Object.keys(ownBand).filter((id) => !built.has(id));
+  if (lostBands.length)
+    diagnostics.push({
+      severity: 'warning',
+      code: 'part-band-lost',
+      message: tx(
+        '{n|A part|# parts} with its own edge band no longer {n|exists|exist} (the piece changed); the band is not used. Clear it under Material → Part.',
+        { n: lostBands.length },
+      ),
+    });
   const lost = Object.keys(own).filter((id) => !built.has(id));
   if (lost.length)
     diagnostics.push({
@@ -180,7 +204,7 @@ export function buildModel(design: Design): FurnitureModel {
   for (const p of panels) {
     if (!p.banded.length) continue;
     const m = materials.get(p.materialId);
-    const band = m && bandFor(m, p.role);
+    const band = m && (p.band ?? bandFor(m, p.role));
     if (!m || !band) continue;
     const t = cutDimensions(p, m.grain).thickness;
     if (band.width >= t) continue;

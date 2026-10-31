@@ -200,6 +200,8 @@ export interface Panel {
   handleHoles?: { at: [Mm, Mm][]; diameter: Mm };
   /** Shaped part (ADR-040): `box` stays the whole-mm cut blank; absent = a plain box. */
   shape?: PanelShape;
+  /** The edge band chosen for this part or its role (ADR-168); absent = its board's band. */
+  band?: EdgeBand;
 }
 
 /**
@@ -678,9 +680,10 @@ export interface Design {
   /**
    * 2 adds stock sheets and cutting settings (ADR-019); 3 adds edge band specs on boards (ADR-077); 4 adds a
    * board per part (`partMaterials`); 5 adds seller products (ADR-161); 6 adds a board per part role
-   * (`roleMaterials`, ADR-163). Older files are upgraded in memory on load.
+   * (`roleMaterials`, ADR-163); 7 adds an edge band per part role and per part (`roleBands`, `partBands`, ADR-168).
+   * Older files are upgraded in memory on load.
    */
-  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6;
+  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7;
   id: string;
   name: string;
   createdAt: string;
@@ -703,6 +706,13 @@ export interface Design {
    * sides, shelves or dividers. A part's own board (`partMaterials`) wins over it. Absent = the group's board.
    */
   roleMaterials?: Partial<Record<RoleBoardRole, string>>;
+  /**
+   * An edge band for every part of a role instead of its board's band (schemaVersion 7, ADR-168), keyed by the
+   * Material dialog's roles (`src/core/roles.ts`): a role's own entry wins over `body`. Absent = the board's band.
+   */
+  roleBands?: Partial<Record<string, EdgeBand>>;
+  /** An edge band for one part (schemaVersion 7, ADR-168): panel id → band; wins over `roleBands`. Kept when lost. */
+  partBands?: Record<string, EdgeBand>;
   /** Answers of the New-piece wizard that made this piece, so it can be reopened there (ADR-046). Never geometry. */
   wizard?: { answers: WizardAnswers };
   /** Seller products chosen for hardware lines, by shopping-list line key `hw:<label>[, <size> mm]` (ADR-161). */

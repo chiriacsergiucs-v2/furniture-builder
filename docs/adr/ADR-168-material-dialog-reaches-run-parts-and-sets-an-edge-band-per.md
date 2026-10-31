@@ -59,13 +59,22 @@ EdgeBand>`. `buildModel` keeps each panel's board; the band used for a panel is 
 
 ## Done when
 
-- [ ] `roleBands` and `partBands` give the band used in the cut list, `band-narrow` and shopping, part › role ›
+- [x] `roleBands` and `partBands` give the band used in the cut list, `band-narrow` and shopping, part › role ›
       board; a lost part warns; v6 files with the fields are invalid (`tests/role-bands.test.ts`).
-- [ ] `applyMaterial` with Run worktop on Item reaches the worktop made from it; Trims change the request's board too
+- [x] `applyMaterial` with Run worktop on Item reaches the worktop made from it; Trims change the request's board too
       and survive a refresh (`tests/role-bands.test.ts`).
-- [ ] Browser find-it `tools/material/find-it-bands.mjs` at 390 and 1280 px: a project with a run worktop → Material →
+- [x] Browser find-it `tools/material/find-it-bands.mjs` at 390 and 1280 px: a project with a run worktop → Material →
       Run worktop chip → board → Apply → the worktop row in Parts uses it; Edge band → Your own band… → 2 mm → Apply →
       the Fronts' band shows "2 mm" in Parts; no horizontal scroll.
+
+## Implementation notes
+
+`src/core/roles.ts` (roles and `rolesOf`), `Design.roleBands` / `partBands` (design schemaVersion 7, `validateBands`),
+`Panel.band` set in `buildModel` and read by the cut list and `band-narrow`; `putRoleBoards` / `putPartBoard` take a
+band; `RunRole`, `runPartsOf`, `putRunBoard` (a trim's request board too) in `src/core/finish.ts`; `projectBands` in
+`src/core/boards.ts`; the Material dialog's run chips, run parts in the Part list and the Edge band select (Keep the
+board's band, project bands, seller bands, Your own band…). Tests: `tests/role-bands.test.ts`; browser find-it
+`tools/material/find-it-bands.mjs` 16/16 at 1280 and 390 px.
 
 ## Open questions
 

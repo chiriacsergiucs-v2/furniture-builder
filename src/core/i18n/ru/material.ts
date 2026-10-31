@@ -88,4 +88,31 @@ export const ru_material = {
   'A common top or bottom across items': 'Общая крышка или дно для нескольких изделий',
   'Select items standing side by side: Common top or Common bottom makes one panel across them.':
     'Выберите изделия, стоящие рядом: «Общая крышка» или «Общее дно» делает одну панель на все.',
+  '{n|A part|# parts} with its own edge band no longer {n|exists|exist} (the piece changed); the band is not used. Clear it under Material → Part.':
+    '{n|Деталь|# детали|# деталей} со своей кромкой больше не {n|существует|существуют|существуют} (изделие изменилось); кромка не используется. Сбросьте её в окне «Материал» → «Деталь».',
+  'Role and part bands need schemaVersion 7': 'Кромки по ролям и деталям требуют schemaVersion 7',
+  'Invalid role bands': 'Недопустимые кромки по ролям',
+  'Invalid band for {k}': 'Недопустимая кромка для {k}',
+  'Invalid part bands': 'Недопустимые кромки деталей',
+  'run worktop': 'столешницы ряда',
+  'fillers and covers': 'доборов и торцевых панелей',
+  'run plinth': 'цоколя ряда',
+  trims: 'планок',
+  'no {parts}': 'нет {parts}',
+  'Band code': 'Код кромки',
+  'Band width': 'Ширина кромки',
+  'Fillers and covers': 'Доборы и торцевые панели',
+  'Give a thickness in tenths of a mm (for example 0.8) and a width.':
+    'Укажите толщину с точностью до десятых мм (например, 0.8) и ширину.',
+  "Keep the board's band": 'Оставить кромку плиты',
+  'Run plinth': 'Цоколь ряда',
+  'Run worktop': 'Столешница ряда',
+  'Run: {part}': 'Ряд: {part}',
+  'Trims@@role': 'Планки',
+  'Your own band': 'Своя кромка',
+  'Your own band…': 'Своя кромка…',
+  '{band} (seller: {name})': '{band} (продавец: {name})',
+  'Run parts and edge bands in the Material dialog': 'Детали ряда и кромки в окне «Материал»',
+  'Worktop, fillers, plinth and trims of a run; an edge band per part role or per part.':
+    'Столешница, доборы, цоколь и планки ряда; кромка по роли детали или для одной детали.',
 } as const;
