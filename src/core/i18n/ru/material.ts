@@ -59,7 +59,6 @@ export const ru_material = {
     'Новые изделия начинаются с одной плиты; мастер предлагает плиты проекта и ваш список декоров.',
   'Select two or more items standing side by side.': 'Выберите два и более изделий, стоящих рядом.',
   'An item of this common panel was removed.': 'Изделие этой общей панели удалено.',
-  '{name} is not a cabinet.': '{name} — не шкаф.',
   'The items are not turned the same way.': 'Изделия повёрнуты по-разному.',
   '{name} is not the same height or floor level.':
     '{name} другой высоты или стоит на другом уровне.',
@@ -77,7 +76,6 @@ export const ru_material = {
   'Invalid common top or bottom': 'Недопустимая общая крышка или дно',
   'Common top': 'Общая крышка',
   'Common bottom': 'Общее дно',
-  'Common top and bottom': 'Общая крышка и дно',
   'About the common top': 'Об общей крышке',
   'About the common bottom': 'Об общем дне',
   'One top panel across these items; each keeps its own sides.':
@@ -88,4 +86,60 @@ export const ru_material = {
   'A common top or bottom across items': 'Общая крышка или дно для нескольких изделий',
   'Select items standing side by side: Common top or Common bottom makes one panel across them.':
     'Выберите изделия, стоящие рядом: «Общая крышка» или «Общее дно» делает одну панель на все.',
+  '{n|A part|# parts} with its own edge band no longer {n|exists|exist} (the piece changed); the band is not used. Clear it under Material → Part.':
+    '{n|Деталь|# детали|# деталей} со своей кромкой больше не {n|существует|существуют|существуют} (изделие изменилось); кромка не используется. Сбросьте её в окне «Материал» → «Деталь».',
+  'Role and part bands need schemaVersion 7': 'Кромки по ролям и деталям требуют schemaVersion 7',
+  'Invalid role bands': 'Недопустимые кромки по ролям',
+  'Invalid band for {k}': 'Недопустимая кромка для {k}',
+  'Invalid part bands': 'Недопустимые кромки деталей',
+  'run worktop': 'столешницы ряда',
+  'fillers and covers': 'доборов и торцевых панелей',
+  'run plinth': 'цоколя ряда',
+  trims: 'планок',
+  'no {parts}': 'нет {parts}',
+  'Band code': 'Код кромки',
+  'Band width': 'Ширина кромки',
+  'Fillers and covers': 'Доборы и торцевые панели',
+  'Give a thickness in tenths of a mm (for example 0.8) and a width.':
+    'Укажите толщину с точностью до десятых мм (например, 0.8) и ширину.',
+  "Keep the board's band": 'Оставить кромку плиты',
+  'Run plinth': 'Цоколь ряда',
+  'Run worktop': 'Столешница ряда',
+  'Run: {part}': 'Ряд: {part}',
+  'Trims@@role': 'Планки',
+  'Your own band': 'Своя кромка',
+  'Your own band…': 'Своя кромка…',
+  '{band} (seller: {name})': '{band} (продавец: {name})',
+  'Run parts and edge bands in the Material dialog': 'Детали ряда и кромки в окне «Материал»',
+  'Worktop, fillers, plinth and trims of a run; an edge band per part role or per part.':
+    'Столешница, доборы, цоколь и планки ряда; кромка по роли детали или для одной детали.',
+  'The common {kind} spans a {n} mm gap with nothing under it.':
+    'Общая панель ({kind}) перекрывает проём {n} мм, под которым ничего нет.',
+  'The {part} of {name} is another thickness.': 'У {name} другая толщина ({part}).',
+  'These items do not make one top without holes.':
+    'Эти изделия не образуют одну панель без отверстий.',
+  '{name} does not touch the others and is not in line with them.':
+    '{name} не касается остальных и не стоит с ними в линию.',
+  '{name} has no bottom.': 'У {name} нет дна.',
+  '{name} has no {part}.': 'У {name} нет: {part}.',
+  '{name} is not a cabinet, corner unit or desk.': '{name} — не шкаф, не угловой модуль и не стол.',
+  'Common top across gaps, corner units and desks':
+    'Общая крышка через проёмы, угловые модули и столы',
+  'One top over a gap, round an L or diagonal corner (cut to template) and over a desk.':
+    'Одна крышка над проёмом, вокруг L-образного или диагонального угла (по шаблону) и над столом.',
+  'An item of these shared sides was removed.': 'Изделие с общими боковинами удалено.',
+  'Invalid shared sides': 'Недопустимые общие боковины',
+  'Shared sides need project schemaVersion {v}': 'Общие боковины требуют schemaVersion проекта {v}',
+  'The shared sides are not built: {reason} The items keep both their sides.':
+    'Общие боковины не построены: {reason} Изделия сохраняют обе свои боковины.',
+  '{name} has sides of another thickness.': 'У {name} боковины другой толщины.',
+  '{name} is not a cabinet.': '{name} — не шкаф.',
+  'Shared sides': 'Общие боковины',
+  'About shared sides': 'Об общих боковинах',
+  'Neighbours share one side panel: the left item leaves out its right side; sizes and places stay, fronts meet over the middle.':
+    'Соседи делят одну боковину: левое изделие обходится без правой боковины; размеры и места не меняются, фасады сходятся над её серединой.',
+  'Common top, bottom and sides': 'Общие крышка, дно и боковины',
+  'Neighbours share one side panel': 'Соседи делят одну боковину',
+  'Select cabinets side by side: Shared sides leaves one side per joint; fronts meet over its middle.':
+    'Выберите шкафы, стоящие рядом: «Общие боковины» оставляет одну боковину на стык; фасады сходятся над её серединой.',
 } as const;

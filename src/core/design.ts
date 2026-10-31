@@ -15,6 +15,7 @@ import type {
 } from './types';
 import { isFinish, materialImageProblems } from './surface';
 import { bandProblems, materialLabelProblems, productRefProblems } from './materials';
+import { MATERIAL_ROLES } from './roles';
 import { t } from './i18n';
 
 export type PedestalSide = 'left' | 'right';
@@ -37,12 +38,12 @@ export function defaultSheetFor(m: Pick<Material, 'id' | 'name'>): NonNullable<M
 export const sheetOf = (m: Material) => m.sheet ?? defaultSheetFor(m);
 export const kerfOf = (d: Design) => d.cutting?.kerf ?? DEFAULT_KERF;
 
-/** The document shape this app writes: 6 adds role boards (ADR-163); 1 to 5 still load. */
-export const SCHEMA_VERSION = 6;
+/** The document shape this app writes: 7 adds role and part bands (ADR-168); 1 to 6 still load. */
+export const SCHEMA_VERSION = 7;
 
 /**
- * Older versions → 6 in memory: version 1 gets stock sheets and cutting settings; 2 → 3 → 4 → 5 → 6 add only
- * optional fields (band specs, part boards, seller products, role boards), so nothing else changes. Returns the same object when already current.
+ * Older versions → 7 in memory: version 1 gets stock sheets and cutting settings; 2 → 3 → 4 → 5 → 6 → 7 add only
+ * optional fields (band specs, part boards, seller products, role boards, role and part bands), so nothing else changes. Returns the same object when already current.
  */
 export function upgradeDesign(d: Design): Design {
   if (d.schemaVersion === SCHEMA_VERSION && d.cutting && d.materials.every((m) => m.sheet))
@@ -779,6 +780,27 @@ function validateRoleMaterials(rm: unknown, version: unknown, mids: Set<string>,
       errs.push(t('Role board for {k} refers to an unknown role or material', { k }));
 }
 
+/** Edge bands per role and per part (schemaVersion 7, ADR-168); checked when present, never throws. */
+function validateBands(d: Record<string, unknown>, errs: string[]) {
+  const rb = d.roleBands,
+    pb = d.partBands;
+  if (rb === undefined && pb === undefined) return;
+  if ((d.schemaVersion as number) < 7) errs.push(t('Role and part bands need schemaVersion 7'));
+  if (rb !== undefined) {
+    if (!isObj(rb)) errs.push(t('Invalid role bands'));
+    else
+      for (const [k, v] of Object.entries(rb))
+        if (!(MATERIAL_ROLES as readonly string[]).includes(k) || bandProblems(v).length)
+          errs.push(t('Invalid band for {k}', { k }));
+  }
+  if (pb !== undefined) {
+    if (!isObj(pb) || Object.keys(pb).length > 2000) errs.push(t('Invalid part bands'));
+    else
+      for (const [k, v] of Object.entries(pb))
+        if (!k || bandProblems(v).length) errs.push(t('Invalid band for {k}', { k }));
+  }
+}
+
 /** Seller units bought per scheduled item: more than 0, at most 1000, at most 3 decimals. */
 export const validPer = (v: unknown): v is number =>
   typeof v === 'number' && v > 0 && v <= 1000 && Math.abs(v * 1000 - Math.round(v * 1000)) < 1e-9;
@@ -975,7 +997,7 @@ function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0)
 export function validateDesign(d: unknown): string[] {
   const errs: string[] = [];
   if (!isObj(d)) return [t('Design must be an object')];
-  if (![1, 2, 3, 4, 5, 6].includes(d.schemaVersion as number))
+  if (![1, 2, 3, 4, 5, 6, 7].includes(d.schemaVersion as number))
     errs.push(t('Unsupported schemaVersion'));
   if (
     d.cutting !== undefined &&
@@ -1070,6 +1092,7 @@ export function validateDesign(d: unknown): string[] {
   };
   validatePartMaterials(d.partMaterials, d.schemaVersion, mids, errs);
   validateRoleMaterials(d.roleMaterials, d.schemaVersion, mids, errs);
+  validateBands(d, errs);
   validateCatalog(d.catalog, errs);
   validateSellerChoices(d, errs);
   validateRules(d.settings, errs);

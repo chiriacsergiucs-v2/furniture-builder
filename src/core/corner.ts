@@ -35,7 +35,10 @@ function carcass(
     bodyMaterialId: p.bodyMaterialId,
     frontMaterialId: p.frontMaterialId,
     backMaterialId: p.backMaterialId,
-    top: p.top,
+    // In a common top or bottom (ADR-169) the carcass is built with its top over (bottom under) the sides.
+    top: p.join?.top ? 'over' : p.top,
+    ...(p.join?.top ? { topKind: 'panel' as const } : {}),
+    ...(p.join?.bottom ? { bottom: 'under' as const } : {}),
     ...(p.topLayers === 2 ? { topLayers: 2 as const } : {}),
     back: p.back,
     backInset: p.backInset,
@@ -209,12 +212,16 @@ function buildDiagonal(
       [],
     );
   }
+  // In a common top or bottom (ADR-169) the returns stop under the top (stand on the bottom), which covers them.
+  const tt0 = p.topLayers === 2 ? 2 * t : t;
+  const retY = p.join?.bottom ? ph + t : ph;
+  const retH = (p.join?.top ? H - tt0 : H) - retY;
   add(
     'side-r',
     'side',
     'Side return right',
     body.id,
-    box(W - t, ph, bt, t, H - ph, D - bt),
+    box(W - t, retY, bt, t, retH, D - bt),
     'x',
     'y',
     ['+z'],
@@ -224,7 +231,7 @@ function buildDiagonal(
     'side',
     'Side return left',
     body.id,
-    box(bt, ph, W - t, D - bt, H - ph, t),
+    box(bt, retY, W - t, D - bt, retH, t),
     'z',
     'y',
     ['+x'],
@@ -238,16 +245,32 @@ function buildDiagonal(
     [D - bt, Wb],
     [0, Wb],
   ];
-  const board = (key: string, role: Panel['role'], label: string, y: number) =>
-    add(key, role, label, body.id, box(bt, y, bt, Wb, t, Wb), 'y', 'x', ['+x', '+z'], {
-      kind: 'profile',
-      points: pent,
-    });
-  board('bottom', 'bottom', 'Bottom', ph);
-  board('top', 'top', 'Top', H - t);
+  // Over (under) the returns: the same five sides, out to the returns' outer faces.
+  const Wo = W - bt;
+  const pentOver: [number, number][] = [
+    [0, 0],
+    [Wo, 0],
+    [Wo, D - bt],
+    [D - bt, Wo],
+    [0, Wo],
+  ];
+  const board = (key: string, role: Panel['role'], label: string, y: number, over = false) =>
+    add(
+      key,
+      role,
+      label,
+      body.id,
+      over ? box(bt, y, bt, Wo, t, Wo) : box(bt, y, bt, Wb, t, Wb),
+      'y',
+      'x',
+      ['+x', '+z'],
+      { kind: 'profile', points: over ? pentOver : pent },
+    );
+  board('bottom', 'bottom', 'Bottom', ph, !!p.join?.bottom);
+  board('top', 'top', 'Top', H - t, !!p.join?.top);
   // A doubled top (ADR-105): a second board under the first; the outer height stays.
-  const tt = p.topLayers === 2 ? 2 * t : t;
-  if (tt > t) board('top/1', 'top', 'Top', H - tt);
+  const tt = tt0;
+  if (tt > t) board('top/1', 'top', 'Top', H - tt, !!p.join?.top);
   const room = H - ph - t - tt - s.count * t;
   if (s.count < 0 || room < (s.count + 1) * 20)
     return err(

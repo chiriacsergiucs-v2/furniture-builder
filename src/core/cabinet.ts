@@ -70,6 +70,8 @@ export interface PartialModel {
   spaces: SpaceOpening[];
   hardware: HardwareItem[];
   diagnostics: Diagnostic[];
+  /** Shelf-pin rows for a neighbour's shared side (ADR-170). */
+  sharedPins?: PinRows[];
 }
 
 /** 32 mm system (ADR-023). */
@@ -279,12 +281,14 @@ export function buildCabinet(
   const tt = doubled ? 2 * t : t;
   const sideH = (p.top === 'over' ? H - tt : H) - sideY;
   // Inner span between the sides; an omitted side lets everything run to that edge.
-  const L = opts.omitSide === 'left' ? 0 : t,
-    R = opts.omitSide === 'right' ? 0 : t;
+  // A shared side (ADR-170): the right side is left out like an L-corner's, the neighbour's left side serves.
+  const omitSide = opts.omitSide ?? (p.shared?.right ? 'right' : undefined);
+  const L = omitSide === 'left' ? 0 : t,
+    R = omitSide === 'right' ? 0 : t;
   const span = W - L - R;
-  if (opts.omitSide !== 'left')
+  if (omitSide !== 'left')
     add(pid, 'side', 'Left side', body.id, box(0, sideY, z0, t, sideH, Dc), 'x', 'y', ['+z'], 0);
-  if (opts.omitSide !== 'right')
+  if (omitSide !== 'right')
     add(
       pid,
       'side',
@@ -422,7 +426,7 @@ export function buildCabinet(
   const inset = style === 'inset';
   const r = lo(g);
   // Overlay covers the outer panels; half overlay stops half a gap short of their centre lines (as at dividers).
-  const baseFront: FrontZone =
+  const ownFront: FrontZone =
     style === 'half'
       ? {
           x0: lo(t) + hi(g),
@@ -431,6 +435,12 @@ export function buildCabinet(
           y1: H - tt + lo(t) - lo(g),
         }
       : { x0: r, x1: W - r, y0: ph + r, y1: H - r };
+  // Over a shared side (ADR-170) both fronts meet over its middle, half a gap short each, as at a divider.
+  const baseFront: FrontZone = {
+    ...ownFront,
+    ...(p.shared?.left ? { x0: lo(t) + hi(g) } : {}),
+    ...(p.shared?.right ? { x1: W + lo(t) - lo(g) } : {}),
+  };
   const rootFront: FrontZone = {
     ...baseFront,
     x0: baseFront.x0 + (opts.frontTrim?.left ?? 0),
@@ -1205,6 +1215,21 @@ export function buildCabinet(
     }
   };
   visit(p.interior, root);
+  // The neighbour's shared side, for the shelf-pin rows this cabinet needs on it (ADR-170); not a part of this one.
+  const virtual: Panel | null = p.shared?.right
+    ? {
+        id: `${prefix}${pid}/shared-side`,
+        nodeId: pid,
+        role: 'side',
+        label: 'Shared side',
+        materialId: body.id,
+        box: box(W, sideY, z0, t, sideH, Dc),
+        thicknessAxis: 'x',
+        grainAxis: 'y',
+        banded: [],
+      }
+    : null;
+  if (virtual) out.panels.push(virtual);
   addPinRows(
     out.panels,
     adjustable.map((a) => ({
@@ -1214,6 +1239,10 @@ export function buildCabinet(
     p.pinRowSetback ?? DEFAULT_PIN_ROW_SETBACK,
     out.diagnostics,
   );
+  if (virtual) {
+    out.panels = out.panels.filter((x) => x !== virtual);
+    if (virtual.pinRows?.length) out.sharedPins = virtual.pinRows;
+  }
   return out;
 }
 

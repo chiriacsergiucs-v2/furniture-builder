@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { groupSizeFields, type WidthSplit } from '../core/groupSize';
 import { t, tr } from '../core/i18n';
 import { commonPanelCheck } from '../core/common';
+import { sharedSideCheck } from '../core/shared';
 import { pieceName, type Project } from '../core/project';
 import { groupOf, sameIds, type Group } from '../core/selection';
 import { useDesign } from '../store/designStore';
@@ -26,6 +27,7 @@ export function SelectionCard() {
   const align = useDesign((s) => s.alignSelection);
   const distribute = useDesign((s) => s.distributeSelection);
   const setCommon = useDesign((s) => s.setCommon);
+  const setShared = useDesign((s) => s.setShared);
   const [msg, setMsg] = useState<{ for: string; text: string | null }>({ for: '', text: null });
   if (!project || ids.length < 2) return null;
   const key = ids.join(',');
@@ -160,7 +162,13 @@ export function SelectionCard() {
           )}
         </div>
       )}
-      <CommonToggles project={project} ids={pieceIds} setCommon={setCommon} say={say} />
+      <CommonToggles
+        project={project}
+        ids={pieceIds}
+        setCommon={setCommon}
+        setShared={setShared}
+        say={say}
+      />
       {isGroup && <GroupSize project={project} group={g!} say={say} />}
       {msg.for === key && msg.text && (
         <p className="hint" role="status">
@@ -179,13 +187,17 @@ function CommonToggles({
   project,
   ids,
   setCommon,
+  setShared,
   say,
 }: {
   project: Project;
   ids: string[];
   setCommon: (kind: 'top' | 'bottom', on: boolean) => string;
+  setShared: (on: boolean) => string;
   say: (text: string | null) => void;
 }) {
+  const sharedWhy = useMemo(() => sharedSideCheck(project, ids).reason, [project, ids]);
+  const sharedOn = (project.sharedSides ?? []).some((c) => ids.every((x) => c.itemIds.includes(x)));
   const plans = useMemo(
     () => ({
       top: commonPanelCheck(project, ids, 'top').reason,
@@ -196,7 +208,7 @@ function CommonToggles({
   const isOn = (kind: 'top' | 'bottom') =>
     (project.common ?? []).some((c) => c.kind === kind && ids.every((x) => c.itemIds.includes(x)));
   return (
-    <div className="common-panels" role="group" aria-label={t('Common top and bottom')}>
+    <div className="common-panels" role="group" aria-label={t('Common top, bottom and sides')}>
       {(['top', 'bottom'] as const).map((kind) => {
         const on = isOn(kind);
         const why = on ? null : plans[kind];
@@ -222,6 +234,22 @@ function CommonToggles({
           </div>
         );
       })}
+      <div>
+        <Toggle
+          label={t('Shared sides')}
+          checked={sharedOn}
+          disabled={!sharedOn && !!sharedWhy}
+          onChange={(v) => say(setShared(v) || null)}
+          info={
+            <InfoTip label={t('About shared sides')} align="start">
+              {t(
+                'Neighbours share one side panel: the left item leaves out its right side; sizes and places stay, fronts meet over the middle.',
+              )}
+            </InfoTip>
+          }
+        />
+        {!sharedOn && sharedWhy && <p className="hint">{sharedWhy}</p>}
+      </div>
     </div>
   );
 }

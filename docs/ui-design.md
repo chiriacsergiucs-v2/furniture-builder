@@ -234,9 +234,18 @@ described above. Audit and wireframes are in `docs/research/2026-10-24-ui-redesi
   list)"; the built-in boards only when there is nothing else. The wizard's Board starts on the project's carcass
   board and its help says every part takes it.
 - _Common top and bottom (ADR-165)._ With two or more pieces selected, the selected-pieces card shows a group
-  **Common top and bottom** with the toggles **Common top** and **Common bottom** (each with an info tip). A toggle
+  **Common top, bottom and sides** (ADR-170 renamed it from "Common top and bottom") with the toggles **Common top** and **Common bottom** (each with an info tip). A toggle
   that cannot be switched on is disabled with its reason below it ("Wardrobe is not the same height or floor
   level."). The Parts list shows **Common top** / **Common bottom** as one row of its own.
+- _Material: run parts and bands (ADR-168)._ In a project the Parts chips add **Run worktop, Fillers and covers, Run
+  plinth, Trims** when a reached item has them; the Part select lists the item's run parts ("Run: Worktop — board").
+  Under Board, **Edge band**: Keep the board's band · the project's bands · seller bands for the board · **Your own
+  band…** (Band type, Band thickness (mm), Band width, Band code).
+- _Common top across gaps, corners, desks (ADR-169)._ The same **Common top / Common bottom** toggles now take a
+  corner unit or a desk and pieces in line with a gap; a bridged gap gives the warning "The common top spans a 600 mm
+  gap with nothing under it."; a shaped common top shows "cut to template" in the Parts list.
+- _Shared sides (ADR-170)._ The same group has a third toggle **Shared sides** (info tip; disabled with its reason).
+  On, the Parts list counts one side less per joint; fronts meet over the middle of the shared side.
 
 ## 5. Rollout
 

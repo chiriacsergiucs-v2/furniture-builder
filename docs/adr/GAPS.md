@@ -2680,7 +2680,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-317: Run-part boards in the Material dialog
 
-- Status: Open
+- Status: ADR-168
 - Origin: ADR-163
 - Missing: The worktop, filler and cover boards of a run are not offered in the Material dialog; they keep their own select under Run parts.
 - Request: Adjusting the material used MUST be always available.
@@ -2689,7 +2689,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-318: Edge band per role in the Material dialog
 
-- Status: Open
+- Status: ADR-168
 - Origin: ADR-163
 - Missing: The Material dialog changes boards only; the edge band of a role stays the board's band (ADR-077).
 - Request: Not only piece/carcass, but any other combination or piece separately.
@@ -2707,7 +2707,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-320: Common panel across a gap
 
-- Status: Open
+- Status: ADR-169
 - Origin: ADR-165
 - Missing: A common top or bottom needs touching items; a gap between items is not bridged.
 - Request: Add the possibility to have a common bottom or top between multiple items.
@@ -2716,7 +2716,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-321: Shared side between neighbours
 
-- Status: Open
+- Status: ADR-170
 - Origin: ADR-165
 - Missing: Items under a common top or bottom keep their own two sides; no shared side between neighbours.
 - Request: Add the possibility to have a common bottom or top between multiple items.
@@ -2725,7 +2725,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-322: Common panel on corner cabinets and desks
 
-- Status: Open
+- Status: ADR-169
 - Origin: ADR-165
 - Missing: Only cabinets join a common top or bottom; corner cabinets, desks and frames are refused with the reason.
 - Request: Add the possibility to have a common bottom or top between multiple items.
@@ -2776,3 +2776,21 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: "it would duplicate the existing pieces that use that variable, but with the new values".
 - Questions: Should pieces placed on a bound piece (ADR-031) or grouped with one (ADR-097) follow it into the set?
 - Suggested pick: Duplicate a piece whose base is a bound piece too (estimate: effort +15%, value +15%).
+
+### G-328: Shared side with corner units and desks
+
+- Status: Open
+- Origin: ADR-170
+- Missing: Corner units and desks keep both sides; only two cabinets can share a side.
+- Request: Add the possibility to have a common bottom or top between multiple items.
+- Questions: Should a blind corner's straight side or a desk gable be shared with a neighbouring cabinet?
+- Suggested pick: Cabinets only (the user's pick); corners and desks in a later ADR.
+
+### G-329: Shared side with inset and sliding fronts
+
+- Status: Open
+- Origin: ADR-170
+- Missing: At a shared side, inset fronts and sliding doors keep their own rule (no half overlay).
+- Request: Add the possibility to have a common bottom or top between multiple items.
+- Questions: Should sliding doors or inset fronts change at a shared side?
+- Suggested pick: Keep their rule: an inset front never covers a side; a sliding door runs in its own track.
