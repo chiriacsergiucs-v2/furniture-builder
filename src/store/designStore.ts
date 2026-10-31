@@ -34,6 +34,7 @@ import {
   type MaterialScope,
 } from '../core/finish';
 import { commonPanelCheck, pruneCommon } from '../core/common';
+import { pruneShared, sharedSideCheck } from '../core/shared';
 import { mergeItems } from '../core/merge';
 import { describeChange } from '../core/history';
 import { insertTemplate } from '../core/insertTemplate';
@@ -448,6 +449,8 @@ interface State {
    * kind any of them is in), off removes the one they are in. Returns why it was refused, or ''. One undo step.
    */
   setCommon: (kind: 'top' | 'bottom', on: boolean) => string;
+  /** Shared sides (ADR-170) for the selected cabinets: on links them, off removes the link they are in. Returns why it was refused, or ''. */
+  setShared: (on: boolean) => string;
   /** Forget a part's own board (ADR-151) on a project item (`id`) or the open piece (null). */
   clearPartBoard: (id: string | null, panelId: string) => void;
   /** Put the piece being placed with its left-back corner at a plan point (whole mm, x and z ≥ 0), or stop placing (ADR-056). */
@@ -586,7 +589,9 @@ export const useDesign = create<State>((rawSet, get) => {
     const bound = applyBindings(syncSets(linked));
     const held = heldByBinding(get().project, linked, bound);
     const stamped = {
-      ...refreshRunParts(resolvePlacements(pruneRunExtras(pruneCommon(pruneGroups(bound))))),
+      ...refreshRunParts(
+        resolvePlacements(pruneRunExtras(pruneShared(pruneCommon(pruneGroups(bound))))),
+      ),
       schemaVersion: PROJECT_SCHEMA, // an edited project is saved in the current shape (ADR-011, ADR-073)
       updatedAt: new Date().toISOString(),
     };
@@ -1452,6 +1457,22 @@ export const useDesign = create<State>((rawSet, get) => {
         common.length ? { ...rest, common } : rest,
         kind === 'top' ? t('Common top') : t('Common bottom'),
       );
+      return '';
+    },
+    setShared: (on) => {
+      const p = get().project;
+      const ids = get().selectedItemIds.filter((id) => p?.items.some((i) => i.id === id));
+      if (!p || ids.length < 2) return t('Select two or more items standing side by side.');
+      const others = (p.sharedSides ?? []).filter((c) => !c.itemIds.some((x) => ids.includes(x)));
+      let sharedSides = others;
+      if (on) {
+        const plan = sharedSideCheck(p, ids);
+        if (plan.reason) return plan.reason;
+        sharedSides = [...others, { id: newId(), itemIds: plan.ids }];
+      }
+      const { sharedSides: _was, ...rest } = p;
+      void _was;
+      commitProject(sharedSides.length ? { ...rest, sharedSides } : rest, t('Shared sides'));
       return '';
     },
     clearPartBoard: (id, panelId) => {

@@ -40,7 +40,7 @@ describe.each(WIDTHS)('common top over a corner at %ipx (find-it, ADR-169)', (wi
     for (const r of rows) if (r.getAttribute('aria-pressed') !== 'true') await user.click(r);
     const card = within(side).getByRole('region', { name: /^3 pieces selected/ });
     const top = within(
-      within(card).getByRole('group', { name: 'Common top and bottom' }),
+      within(card).getByRole('group', { name: 'Common top, bottom and sides' }),
     ).getByRole('checkbox', { name: 'Common top' });
     expect((top as HTMLInputElement).disabled).toBe(false);
     await user.click(top);

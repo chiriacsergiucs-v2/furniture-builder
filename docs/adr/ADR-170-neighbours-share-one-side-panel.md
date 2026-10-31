@@ -55,14 +55,24 @@ Change control: a project field (ADR-011): `Project.sharedSides`, project schema
 
 ## Done when
 
-- [ ] Two linked 600 mm cabinets: 3 sides, not 4; the outlines and places are unchanged; no overlaps; the left
+- [x] Two linked 600 mm cabinets: 3 sides, not 4; the outlines and places are unchanged; no overlaps; the left
       inside is one thickness wider (`tests/shared-sides.test.ts`).
-- [ ] Fronts meet over the middle of the shared side with the front gap; full-overlay fronts elsewhere unchanged
+- [x] Fronts meet over the middle of the shared side with the front gap; full-overlay fronts elsewhere unchanged
       (`tests/shared-sides.test.ts`).
-- [ ] The shared side has pin rows on both faces when both have adjustable shelves (`tests/shared-sides.test.ts`).
-- [ ] Refusals and `shared-side-broken`; a v17 project with the field is invalid (`tests/shared-sides.test.ts`).
-- [ ] Find-it `tests/find-it/shared-sides.test.tsx` at 390 and 1280 px: two cabinets selected → Shared sides → Parts
+- [x] The shared side has pin rows on both faces when both have adjustable shelves (`tests/shared-sides.test.ts`).
+- [x] Refusals and `shared-side-broken`; a v17 project with the field is invalid (`tests/shared-sides.test.ts`).
+- [x] Find-it `tests/find-it/shared-sides.test.tsx` at 390 and 1280 px: two cabinets selected → Shared sides → Parts
       shows 3 sides; a wardrobe in the selection disables it with the reason.
+
+## Implementation notes
+
+`src/core/shared.ts` (`sharedSideCheck`, `sharedBuilds`, `sharedDesign`, `withSharedPins`, `pruneShared`);
+`CabinetParams.shared` (in memory only) makes `buildCabinet` leave out the right side, move the front edges to the
+shared side's middle (overlay and half overlay; inset fronts already stop at the opening) and record the pin rows the
+neighbour's side needs (`FurnitureModel.sharedPins`), which the right member's left side gets on its `-x` face. The
+left member's front reaches over half the shared side, so its own envelope allows that (`outside` check). Project
+schemaVersion 18; store `setShared`; the third toggle **Shared sides**. Tests: `tests/shared-sides.test.ts`,
+`tests/find-it/shared-sides.test.tsx`.
 
 ## Open questions
 

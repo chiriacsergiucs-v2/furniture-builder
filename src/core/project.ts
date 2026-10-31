@@ -57,6 +57,13 @@ import {
   type CommonBuild,
 } from './common';
 import { bounds2 } from './outline';
+import {
+  pruneShared,
+  sharedBuilds,
+  sharedDesign,
+  withSharedPins,
+  type SharedBuild,
+} from './shared';
 import { aabbOf, overlapsBox, panelsOverlap, turnShape } from './shape';
 import { modelBox, modelChecks, validateModelItems, type ModelItem } from './model3d';
 import type { SheetSettings } from './nesting';
@@ -76,6 +83,7 @@ import type {
   Material,
   Mm,
   Panel,
+  PinRows,
   Space,
   Yaw,
 } from './types';
@@ -169,6 +177,12 @@ export interface ProjectSettings {
   plinthHeight?: Mm;
 }
 
+/** Cabinets standing side by side that share their sides, left to right (ADR-170, schemaVersion 18). */
+export interface SharedSides {
+  id: string;
+  itemIds: string[];
+}
+
 /** One top or bottom panel shared by items standing side by side (ADR-165, schemaVersion 17). */
 export interface CommonPanel {
   id: string;
@@ -260,9 +274,9 @@ export interface RunSink {
  * (ADR-097); 9 = linked copies (ADR-111); 10 = pieces typed at an angle (ADR-121); 11 = size-locked pieces
  * (ADR-122); 12 = template references and project-wide settings (ADR-124); 13 = run handles and sinks (ADR-125);
  * 14 = wall backgrounds (ADR-145); 15 = fitted and straightened wall pictures (ADR-146); 16 = variables, bindings
- * and value sets (ADR-166, ADR-167); 17 = common tops and bottoms (ADR-165).
+ * and value sets (ADR-166, ADR-167); 17 = common tops and bottoms (ADR-165); 18 = shared sides (ADR-170).
  */
-export const PROJECT_SCHEMA = 17 as const;
+export const PROJECT_SCHEMA = 18 as const;
 export const PROJECT_SCHEMAS: readonly number[] = [
   1,
   2,
@@ -280,10 +294,11 @@ export const PROJECT_SCHEMAS: readonly number[] = [
   14,
   15,
   16,
+  17,
   PROJECT_SCHEMA,
 ];
 export type ProjectSchemaVersion =
-  1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | typeof PROJECT_SCHEMA;
+  1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | typeof PROJECT_SCHEMA;
 const RUN_REQUESTS_SINCE = 4;
 const MODELS_SINCE = 5;
 const LOCKS_SINCE = 6;
@@ -298,6 +313,7 @@ const WALLS_SINCE = 14;
 const FITTED_WALLS_SINCE = 15;
 const VARIABLES_SINCE = 16;
 const COMMON_SINCE = 17;
+const SHARED_SINCE = 18;
 
 export interface Project {
   schemaVersion: ProjectSchemaVersion;
@@ -336,6 +352,8 @@ export interface Project {
   variableSets?: VariableSet[];
   /** Common tops and bottoms across items (ADR-165, schemaVersion 17). Absent = none. */
   common?: CommonPanel[];
+  /** Neighbours sharing one side panel (ADR-170, schemaVersion 18). Absent = none. */
+  sharedSides?: SharedSides[];
 }
 
 /**
@@ -699,7 +717,9 @@ export function removeProjectItem(project: Project, id: string): Project {
   const runRequests = project.runRequests
     ?.map((r) => ({ ...r, from: r.from.filter((x) => x !== id) }))
     .filter((r) => r.from.length);
-  return pruneCommon(pruneGroups({ ...project, items, ...(runRequests ? { runRequests } : {}) }));
+  return pruneShared(
+    pruneCommon(pruneGroups({ ...project, items, ...(runRequests ? { runRequests } : {}) })),
+  );
 }
 
 /** Placement problems: a missing base, a piece resting on itself, a piece in the air that is not built to hang. */
@@ -880,11 +900,17 @@ const withYaw = (item: ProjectItem, rb: Pick<Box, 'w' | 'd'>, b: Box): Box => {
 
 export function placeItem(
   item: ProjectItem,
-  opts?: { noPlinth?: boolean; common?: CommonBuild },
+  opts?: { noPlinth?: boolean; common?: CommonBuild; shared?: SharedBuild; sharedPins?: PinRows[] },
 ): PlacedPiece {
   const c = opts?.common;
-  // In a common top or bottom (ADR-165) the piece is built with its top over (bottom under) the sides.
-  const built = buildModel(c ? commonDesign(item.design, c) : item.design);
+  // In a common top or bottom (ADR-165) the piece is built with its top over (bottom under) the sides; sharing a
+  // side (ADR-170) it leaves its right side out and its left side carries the neighbour's pin rows.
+  const raw = buildModel(
+    sharedDesign(c ? commonDesign(item.design, c) : item.design, opts?.shared),
+  );
+  const built = opts?.sharedPins?.length
+    ? { ...raw, panels: withSharedPins(raw.panels, opts.sharedPins) }
+    : raw;
   // A run plinth replaces the piece's own plinth (ADR-054); a common top or bottom replaces its own (ADR-165).
   const leaves = (p: Panel) =>
     (!!opts?.noPlinth && p.role === 'plinth') ||
@@ -1020,10 +1046,17 @@ export function buildProjectModel(input: Project): ProjectModel {
   // Run handles reach the pieces' fronts when built (ADR-125).
   const project = applyRunHandles(resolvePlacements(input));
   const covered = plinthCovered(project);
-  // Common tops and bottoms (ADR-165): how each member is built, and the links that no longer fit.
+  // Common tops and bottoms (ADR-165) and shared sides (ADR-170): how each member is built, and the links that no
+  // longer fit.
   const common = commonBuilds(project);
+  const shared = sharedBuilds(project);
   const pieces = project.items.map((i) =>
-    placeItem(i, { noPlinth: covered.has(i.id), common: common.builds.get(i.id) }),
+    placeItem(i, {
+      noPlinth: covered.has(i.id),
+      common: common.builds.get(i.id),
+      shared: shared.builds.get(i.id),
+      sharedPins: shared.pins.get(i.id),
+    }),
   );
   const materials = new Map<string, Material>();
   const panels: Panel[] = [];
@@ -1035,6 +1068,7 @@ export function buildProjectModel(input: Project): ProjectModel {
     ...placementIssues(project),
     ...variableDiagnostics(project),
     ...common.diagnostics,
+    ...shared.diagnostics,
   ];
   for (const pc of pieces) {
     const mats = new Map(pc.item.design.materials.map((m) => [m.id, m]));
@@ -2317,6 +2351,7 @@ export function projectCutlist(input: Project): CutRow[] {
   const covered = plinthCovered(project);
   // Common tops and bottoms (ADR-165): members leave their own out, and each common panel is one row of its own.
   const common = commonBuilds(project);
+  const shared = sharedBuilds(project);
   if (common.plans.size) {
     const pm = buildProjectModel(input);
     const model: FurnitureModel = {
@@ -2334,7 +2369,11 @@ export function projectCutlist(input: Project): CutRow[] {
   }
   for (const item of project.items) {
     const c = common.builds.get(item.id);
-    const built = buildModel(c ? commonDesign(item.design, c) : item.design);
+    const raw = buildModel(
+      sharedDesign(c ? commonDesign(item.design, c) : item.design, shared.builds.get(item.id)),
+    );
+    const pins = shared.pins.get(item.id);
+    const built = pins ? { ...raw, panels: withSharedPins(raw.panels, pins) } : raw;
     const leaves = (p: Panel) =>
       (covered.has(item.id) && p.role === 'plinth') ||
       (!!c?.top && p.role === commonTopRole(item.design)) ||
@@ -2799,6 +2838,30 @@ export function validateProject(p: unknown): string[] {
         }
         seen.add(c.id);
         for (const x of c.itemIds) inKind[c.kind as 'top' | 'bottom'].add(x as string);
+      }
+  }
+  if (p.sharedSides !== undefined) {
+    if ((p.schemaVersion as number) < SHARED_SINCE)
+      errs.push(t('Shared sides need project schemaVersion {v}', { v: SHARED_SINCE }));
+    const seen = new Set<string>();
+    const sharing = new Set<string>();
+    if (!Array.isArray(p.sharedSides)) errs.push(t('Invalid shared sides'));
+    else
+      for (const c of p.sharedSides) {
+        if (
+          !isObj(c) ||
+          typeof c.id !== 'string' ||
+          !c.id ||
+          seen.has(c.id) ||
+          !Array.isArray(c.itemIds) ||
+          c.itemIds.length < 2 ||
+          !c.itemIds.every((x) => typeof x === 'string' && ids.has(x) && !sharing.has(x))
+        ) {
+          errs.push(t('Invalid shared sides'));
+          continue;
+        }
+        seen.add(c.id);
+        for (const x of c.itemIds) sharing.add(x as string);
       }
   }
   if (p.settings !== undefined) {

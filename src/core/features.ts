@@ -376,6 +376,12 @@ export const FEATURES: FeatureDomain[] = [
           'One top over a gap, round an L or diagonal corner (cut to template) and over a desk.',
         adrs: ['ADR-169'],
       },
+      {
+        name: 'Neighbours share one side panel',
+        detail:
+          'Select cabinets side by side: Shared sides leaves one side per joint; fronts meet over its middle.',
+        adrs: ['ADR-170'],
+      },
       { name: 'Stock sheets, trim and kerf', adrs: ['ADR-019'] },
       { name: 'Solid timber stock', adrs: ['ADR-038'] },
       { name: 'Manufacturer and type labels', adrs: ['ADR-049'] },

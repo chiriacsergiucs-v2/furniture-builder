@@ -171,12 +171,15 @@ export function buildModel(design: Design): FurnitureModel {
     const { width: W, height: H, depth: D } = prod.params;
     const env = box(0, 0, 0, W, H, D);
     const front = materials.get(prod.params.frontMaterialId);
-    // Sliding doors run on a track in front of the carcass (ADR-037).
+    // Sliding doors run on a track in front of the carcass (ADR-037). Fronts over a shared side reach over half of
+    // the neighbour's side (ADR-170).
+    const body = materials.get(prod.params.bodyMaterialId);
+    const over = prod.params.shared?.right ? Math.floor((body?.thickness ?? 0) / 2) : 0;
     const frontEnv = box(
       0,
       0,
       0,
-      W,
+      W + over,
       H,
       D + Math.max(front?.thickness ?? 0, slidingTrackDepth(prod.params.interior)),
     );
@@ -256,6 +259,7 @@ export function buildModel(design: Design): FurnitureModel {
     hardware: partial.hardware,
     diagnostics,
     bounds: union(panels.map(aabbOf)),
+    ...(partial.sharedPins ? { sharedPins: partial.sharedPins } : {}),
   };
   // Construction guidance (ADR-035): labelled warnings and reminders, after the independent checks above.
   const ruled = runRules(design, model, materials);

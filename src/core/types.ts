@@ -291,6 +291,11 @@ export interface FurnitureModel {
   diagnostics: Diagnostic[];
   /** Overall bounding box including fronts. */
   bounds: Box;
+  /**
+   * Shelf-pin rows this cabinet needs on the neighbour's side it shares (ADR-170), measured as on that side: face
+   * `-x`, rows from its rear edge, holes from its bottom edge. Absent = none.
+   */
+  sharedPins?: PinRows[];
 }
 
 // ---------------------------------------------------------------------------
@@ -427,6 +432,11 @@ export interface CabinetParams {
   top: 'over' | 'between';
   /** 'rails': two rails between the sides instead of a full top, e.g. under a worktop or over a sink (ADR-036). */
   topKind?: 'panel' | 'rails';
+  /**
+   * Set only while the cabinet shares a side with a neighbour (ADR-170), never saved. `right`: its right side is left
+   * out (the neighbour's left side serves); `left`: its left side is shared. Fronts meet over the shared side's middle.
+   */
+  shared?: { left?: boolean; right?: boolean };
   /** Depth of each top rail (default 100). */
   railDepth?: Mm;
   /** 2: two body panels glued as the top, the second under the first; outer height unchanged (ADR-105). Absent = 1. */

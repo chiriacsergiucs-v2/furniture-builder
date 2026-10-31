@@ -76,7 +76,6 @@ export const ru_material = {
   'Invalid common top or bottom': 'Недопустимая общая крышка или дно',
   'Common top': 'Общая крышка',
   'Common bottom': 'Общее дно',
-  'Common top and bottom': 'Общая крышка и дно',
   'About the common top': 'Об общей крышке',
   'About the common bottom': 'Об общем дне',
   'One top panel across these items; each keeps its own sides.':
@@ -128,4 +127,19 @@ export const ru_material = {
     'Общая крышка через проёмы, угловые модули и столы',
   'One top over a gap, round an L or diagonal corner (cut to template) and over a desk.':
     'Одна крышка над проёмом, вокруг L-образного или диагонального угла (по шаблону) и над столом.',
+  'An item of these shared sides was removed.': 'Изделие с общими боковинами удалено.',
+  'Invalid shared sides': 'Недопустимые общие боковины',
+  'Shared sides need project schemaVersion {v}': 'Общие боковины требуют schemaVersion проекта {v}',
+  'The shared sides are not built: {reason} The items keep both their sides.':
+    'Общие боковины не построены: {reason} Изделия сохраняют обе свои боковины.',
+  '{name} has sides of another thickness.': 'У {name} боковины другой толщины.',
+  '{name} is not a cabinet.': '{name} — не шкаф.',
+  'Shared sides': 'Общие боковины',
+  'About shared sides': 'Об общих боковинах',
+  'Neighbours share one side panel: the left item leaves out its right side; sizes and places stay, fronts meet over the middle.':
+    'Соседи делят одну боковину: левое изделие обходится без правой боковины; размеры и места не меняются, фасады сходятся над её серединой.',
+  'Common top, bottom and sides': 'Общие крышка, дно и боковины',
+  'Neighbours share one side panel': 'Соседи делят одну боковину',
+  'Select cabinets side by side: Shared sides leaves one side per joint; fronts meet over its middle.':
+    'Выберите шкафы, стоящие рядом: «Общие боковины» оставляет одну боковину на стык; фасады сходятся над её серединой.',
 } as const;
