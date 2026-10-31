@@ -58,15 +58,25 @@ hold widens. ADR-165's "touching" rule is replaced by this ADR.
 
 ## Done when
 
-- [ ] Two cabinets 600 mm apart get one top 600 + 600 + gap wide and the `common-gap` warning (`tests/common-shapes.test.ts`).
-- [ ] A blind corner with a cabinet on its wing: one plain top; an L corner with a cabinet on each wing: one profile
+- [x] Two cabinets 600 mm apart get one top 600 + 600 + gap wide and the `common-gap` warning (`tests/common-shapes.test.ts`).
+- [x] A blind corner with a cabinet on its wing: one plain top; an L corner with a cabinet on each wing: one profile
       top whose outline covers both wings, no overlaps (`tests/common-shapes.test.ts`).
-- [ ] A diagonal corner with a cabinet: the corner's returns end under the common top; one profile part
+- [x] A diagonal corner with a cabinet: the corner's returns end under the common top; one profile part
       (`tests/common-shapes.test.ts`).
-- [ ] A desk beside a cabinet of the same height: the desk's worktop is left out and one top covers both; Common bottom
+- [x] A desk beside a cabinet of the same height: the desk's worktop is left out and one top covers both; Common bottom
       on the desk is refused with "has no bottom" (`tests/common-shapes.test.ts`).
-- [ ] Find-it `tests/find-it/common-shapes.test.tsx` at 390 and 1280 px: an L corner and two cabinets selected → Common
+- [x] Find-it `tests/find-it/common-shapes.test.tsx` at 390 and 1280 px: an L corner and two cabinets selected → Common
       top → Parts shows "Common top" with "cut to template".
+
+## Implementation notes
+
+`src/core/outline.ts` (plan outlines: `footprint`, `sharedLength`, `unionOutline`); `commonPanelCheck` in
+`src/core/common.ts` builds each member as while linked and links members that touch along a full side (a desk's own
+side may run past) or stand in line across a gap; `layersOf` groups a member's tops by height (a blind or L corner
+has one per carcass); `CornerParams.join` (in memory only) builds corner carcasses over/under and the diagonal's
+returns under the top; a desk gives up only its worktop. Doors are checked against the top's convex pieces (the
+members' former tops and the gaps), not its concave outline. Tests: `tests/common-shapes.test.ts`, the ADR-165 tests
+updated to the new gap rule, `tests/find-it/common-shapes.test.tsx`; deep fuzz passes.
 
 ## Open questions
 

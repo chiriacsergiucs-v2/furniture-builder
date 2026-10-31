@@ -370,6 +370,12 @@ export const FEATURES: FeatureDomain[] = [
           'Worktop, fillers, plinth and trims of a run; an edge band per part role or per part.',
         adrs: ['ADR-168'],
       },
+      {
+        name: 'Common top across gaps, corner units and desks',
+        detail:
+          'One top over a gap, round an L or diagonal corner (cut to template) and over a desk.',
+        adrs: ['ADR-169'],
+      },
       { name: 'Stock sheets, trim and kerf', adrs: ['ADR-019'] },
       { name: 'Solid timber stock', adrs: ['ADR-038'] },
       { name: 'Manufacturer and type labels', adrs: ['ADR-049'] },

@@ -48,7 +48,15 @@ import {
   union,
   yawPoint,
 } from './geometry';
-import { commonBuilds, commonDesign, commonPanels, pruneCommon, type CommonBuild } from './common';
+import {
+  commonBuilds,
+  commonDesign,
+  commonPanels,
+  commonTopRole,
+  pruneCommon,
+  type CommonBuild,
+} from './common';
+import { bounds2 } from './outline';
 import { aabbOf, overlapsBox, panelsOverlap, turnShape } from './shape';
 import { modelBox, modelChecks, validateModelItems, type ModelItem } from './model3d';
 import type { SheetSettings } from './nesting';
@@ -880,7 +888,7 @@ export function placeItem(
   // A run plinth replaces the piece's own plinth (ADR-054); a common top or bottom replaces its own (ADR-165).
   const leaves = (p: Panel) =>
     (!!opts?.noPlinth && p.role === 'plinth') ||
-    (!!c?.top && p.role === 'top') ||
+    (!!c?.top && p.role === commonTopRole(item.design)) ||
     (!!c?.bottom && p.role === 'bottom');
   const model = built.panels.some(leaves)
     ? { ...built, panels: built.panels.filter((p) => !leaves(p)) }
@@ -1274,7 +1282,29 @@ export function buildProjectModel(input: Project): ProjectModel {
     ...(rc?.obstacles ?? []),
     ...models.map((m) => ({ label: m.item.name, box: m.box })),
   ];
-  const blocked = openingChecks(pieces, panels, diagnostics, obstacles);
+  // A shaped common top can be concave (an L, ADR-169); doors are checked against its convex pieces instead: the
+  // members' own former tops and the gaps it bridges.
+  const commonPieces: Panel[] = [
+    ...pieces.flatMap((pc) => pc.removed ?? []),
+    ...[...common.plans.entries()].flatMap(([id, plan]) =>
+      plan.gaps.map((g, i) => {
+        const top = panels.find((q) => q.id === `common:${id}`);
+        const b = bounds2(g.rect);
+        return {
+          ...top!,
+          id: `common:${id}/gap/${i}`,
+          shape: undefined,
+          box: { x: b.x, y: top!.box.y, z: b.z, w: b.w, h: top!.box.h, d: b.d },
+        };
+      }),
+    ),
+  ];
+  const blocked = openingChecks(
+    pieces,
+    [...panels.filter((q) => !q.id.startsWith('common:')), ...commonPieces],
+    diagnostics,
+    obstacles,
+  );
   const zones = clearanceZones(
     project,
     pieces,
@@ -2307,7 +2337,7 @@ export function projectCutlist(input: Project): CutRow[] {
     const built = buildModel(c ? commonDesign(item.design, c) : item.design);
     const leaves = (p: Panel) =>
       (covered.has(item.id) && p.role === 'plinth') ||
-      (!!c?.top && p.role === 'top') ||
+      (!!c?.top && p.role === commonTopRole(item.design)) ||
       (!!c?.bottom && p.role === 'bottom');
     const model = built.panels.some(leaves)
       ? { ...built, panels: built.panels.filter((p) => !leaves(p)) }

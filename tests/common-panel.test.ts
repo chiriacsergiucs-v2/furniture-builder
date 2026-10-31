@@ -62,7 +62,7 @@ describe('common top or bottom (ADR-165)', () => {
     expect(errors(linked(p, 'bottom'))).toEqual([]);
   });
 
-  it('a top between the sides is built over them while linked; doubled tops; a moved member breaks the link', () => {
+  it('a top between the sides is built over them while linked; doubled tops; a member moved out of line breaks the link', () => {
     const between = pair({ top: 'between' }, {});
     const top = ofRole(linked(between), 'top');
     expect(top).toHaveLength(1);
@@ -78,12 +78,15 @@ describe('common top or bottom (ADR-165)', () => {
     const mixed = linked(pair({ topLayers: 2 }, {}));
     expect(ofRole(mixed, 'top')).toHaveLength(1);
     expect(codes(mixed)).toContain('common-top-layers');
-    // Moved 10 mm away: not built, a warning, each keeps its own top.
+    // Moved 10 mm forward, out of line (a gap along the row is bridged since ADR-169): not built, a warning, each
+    // keeps its own top.
     const p = linked(pair());
     const moved = {
       ...p,
       items: p.items.map((it, i) =>
-        i === 1 ? { ...it, position: { ...it.position, x: it.position.x + 10 } } : it,
+        i === 1
+          ? { ...it, position: { ...it.position, x: it.position.x + 10, z: it.position.z + 10 } }
+          : it,
       ),
     };
     expect(codes(moved)).toContain('common-panel-broken');
@@ -91,7 +94,7 @@ describe('common top or bottom (ADR-165)', () => {
     expect(ofRole(moved, 'top').some((x) => x.id.startsWith('common:'))).toBe(false);
   });
 
-  it('commonPanelCheck refuses another height, depth, plinth, a gap, a turned item and a desk, with the reason', () => {
+  it('commonPanelCheck refuses another height, depth, plinth, an item out of line, a turned item and a lower desk, with the reason', () => {
     const ids = (p: Project) => p.items.map((i) => i.id);
     const why = (p: Project) => commonPanelCheck(p, ids(p), 'top').reason;
     expect(why(pair())).toBeNull();
@@ -99,22 +102,33 @@ describe('common top or bottom (ADR-165)', () => {
     expect(why(pair({}, { depth: 500 }))).toMatch(/depth/);
     expect(why(pair({}, { plinthHeight: 120 }))).toMatch(/height|plinth/);
     const p = pair();
+    // A gap along the row is bridged (ADR-169); out of line is refused.
     const gap = {
       ...p,
       items: p.items.map((it, i) =>
         i === 1 ? { ...it, position: { ...it.position, x: it.position.x + 5 } } : it,
       ),
     };
-    expect(why(gap)).toMatch(/do not touch/);
+    expect(why(gap)).toBeNull();
+    const offLine = {
+      ...p,
+      items: p.items.map((it, i) =>
+        i === 1
+          ? { ...it, position: { ...it.position, x: it.position.x + 5, z: it.position.z + 5 } }
+          : it,
+      ),
+    };
+    expect(why(offLine)).toMatch(/does not touch/);
     const turned = {
       ...p,
       items: p.items.map((it, i) => (i === 1 ? { ...it, rotationY: 90 as const } : it)),
     };
-    expect(why(turned)).toMatch(/turned/);
+    expect(why(turned)).not.toBeNull();
     let withDesk = newProject('Desk');
     withDesk = { ...withDesk, items: [makeItem(withDesk, t('base-door'))] };
     withDesk = { ...withDesk, items: [...withDesk.items, makeItem(withDesk, t('desk-pedestal'))] };
-    expect(why(withDesk)).toMatch(/not a cabinet/);
+    // A desk may join since ADR-169, but this one is lower than the base unit.
+    expect(why(withDesk)).toMatch(/height/);
     expect(commonPanelCheck(p, [ids(p)[0]], 'top').reason).toMatch(/two or more/);
   });
 

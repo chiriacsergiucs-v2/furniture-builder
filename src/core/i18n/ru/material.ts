@@ -59,7 +59,6 @@ export const ru_material = {
     'Новые изделия начинаются с одной плиты; мастер предлагает плиты проекта и ваш список декоров.',
   'Select two or more items standing side by side.': 'Выберите два и более изделий, стоящих рядом.',
   'An item of this common panel was removed.': 'Изделие этой общей панели удалено.',
-  '{name} is not a cabinet.': '{name} — не шкаф.',
   'The items are not turned the same way.': 'Изделия повёрнуты по-разному.',
   '{name} is not the same height or floor level.':
     '{name} другой высоты или стоит на другом уровне.',
@@ -115,4 +114,18 @@ export const ru_material = {
   'Run parts and edge bands in the Material dialog': 'Детали ряда и кромки в окне «Материал»',
   'Worktop, fillers, plinth and trims of a run; an edge band per part role or per part.':
     'Столешница, доборы, цоколь и планки ряда; кромка по роли детали или для одной детали.',
+  'The common {kind} spans a {n} mm gap with nothing under it.':
+    'Общая панель ({kind}) перекрывает проём {n} мм, под которым ничего нет.',
+  'The {part} of {name} is another thickness.': 'У {name} другая толщина ({part}).',
+  'These items do not make one top without holes.':
+    'Эти изделия не образуют одну панель без отверстий.',
+  '{name} does not touch the others and is not in line with them.':
+    '{name} не касается остальных и не стоит с ними в линию.',
+  '{name} has no bottom.': 'У {name} нет дна.',
+  '{name} has no {part}.': 'У {name} нет: {part}.',
+  '{name} is not a cabinet, corner unit or desk.': '{name} — не шкаф, не угловой модуль и не стол.',
+  'Common top across gaps, corner units and desks':
+    'Общая крышка через проёмы, угловые модули и столы',
+  'One top over a gap, round an L or diagonal corner (cut to template) and over a desk.':
+    'Одна крышка над проёмом, вокруг L-образного или диагонального угла (по шаблону) и над столом.',
 } as const;

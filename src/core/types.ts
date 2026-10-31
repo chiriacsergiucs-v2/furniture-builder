@@ -492,6 +492,11 @@ export interface CornerParams {
   top: 'over' | 'between';
   /** 2: a doubled top, as on a cabinet (ADR-105). Absent = 1. */
   topLayers?: 1 | 2;
+  /**
+   * Set only while the unit is in a common top or bottom (ADR-169), never saved: its top over (bottom under) the
+   * sides or returns, so the common panel covers them.
+   */
+  join?: { top?: boolean; bottom?: boolean };
   back: 'none' | 'applied' | 'inset';
   backInset: Mm;
   plinthHeight: Mm;

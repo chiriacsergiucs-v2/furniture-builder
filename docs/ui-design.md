@@ -241,6 +241,9 @@ described above. Audit and wireframes are in `docs/research/2026-10-24-ui-redesi
   plinth, Trims** when a reached item has them; the Part select lists the item's run parts ("Run: Worktop — board").
   Under Board, **Edge band**: Keep the board's band · the project's bands · seller bands for the board · **Your own
   band…** (Band type, Band thickness (mm), Band width, Band code).
+- _Common top across gaps, corners, desks (ADR-169)._ The same **Common top / Common bottom** toggles now take a
+  corner unit or a desk and pieces in line with a gap; a bridged gap gives the warning "The common top spans a 600 mm
+  gap with nothing under it."; a shaped common top shows "cut to template" in the Parts list.
 
 ## 5. Rollout
 

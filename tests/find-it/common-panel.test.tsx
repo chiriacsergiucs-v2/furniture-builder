@@ -67,8 +67,9 @@ describe.each(WIDTHS)('common top at %ipx (find-it, ADR-165)', (width) => {
     expect((top3 as HTMLInputElement).checked).toBe(false);
     expect((top3 as HTMLInputElement).disabled).toBe(true);
     expect(
-      within(card3).getAllByText(/not the same height|not the same depth|do not touch|turned/)
-        .length,
+      within(card3).getAllByText(
+        /^Wardrobe (has another plinth height|is not the same height|is not the same depth|does not touch)/,
+      ).length,
     ).toBeGreaterThan(0);
   });
 });
