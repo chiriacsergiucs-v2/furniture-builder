@@ -923,7 +923,9 @@ export function placeItem(
   const left = model === built ? [] : built.panels.filter((p) => leaves(p) && p.role !== 'plinth');
   const rotated = [...model.panels, ...left].map((p) => rotateBox(p.box, r));
   // The piece is placed by its full outline, so leaving the plinth out does not move it.
-  const rb = union(built.panels.map((p) => rotateBox(aabbOf(p), r)));
+  // Sharing a side (ADR-170) a front reaches over half the neighbour's side; the piece keeps its own outline.
+  const own = opts?.shared?.right ? buildModel(item.design).panels : built.panels;
+  const rb = union(own.map((p) => rotateBox(aabbOf(p), r)));
   const dx = item.position.x - rb.x,
     dy = item.position.y - rb.y,
     dz = item.position.z - rb.z;
@@ -980,7 +982,8 @@ export function placeItem(
     item,
     model,
     panels,
-    bounds: model === built ? union(panels.map(aabbOf)) : enclosing(outline),
+    bounds:
+      model === built && !opts?.shared?.right ? union(panels.map(aabbOf)) : enclosing(outline),
     clearances,
     facing,
     envelopes,

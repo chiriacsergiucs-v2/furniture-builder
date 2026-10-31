@@ -45,6 +45,10 @@ describe('shared sides (ADR-170)', () => {
     expect(sides(q)).toHaveLength(3);
     expect(of(q, A.id, 'side').map((x) => x.label)).toEqual(['Left side']);
     expect(q.items.map((i) => i.position)).toEqual(p.items.map((i) => i.position));
+    // Outside sizes stay: the left item's outline is its own, though its door reaches over the shared side.
+    expect(buildProjectModel(q).pieces.map((pc) => pc.bounds)).toEqual(
+      buildProjectModel(p).pieces.map((pc) => pc.bounds),
+    );
     // The carcass boxes (tops) stay where they were.
     expect(of(q, A.id, 'top')[0].box).toEqual(of(p, A.id, 'top')[0].box);
     expect(of(q, B.id, 'top')[0].box).toEqual(of(p, B.id, 'top')[0].box);
