@@ -18,6 +18,7 @@ import {
   type MoveResult,
   type Project,
   type ProjectItem,
+  turnBlocked,
 } from './project';
 import type { Box } from './types';
 
@@ -127,7 +128,7 @@ export function turnSelection(
   const picked = known(project, ids).map((i) => i.id);
   if (!picked.length) return { project };
   const all = [...picked, ...carriedBy(project, picked).map((i) => i.id)];
-  const reason = moveBlocked(project, all);
+  const reason = moveBlocked(project, all) ?? turnBlocked(project, all);
   if (reason) return { project, reason };
   const placed = resolvePlacements(project);
   const bounds = new Map(placed.items.map((i) => [i.id, placedBounds(i)]));
@@ -287,9 +288,10 @@ export function mirrorItems(
   project: Project,
   ids: readonly string[],
 ): { project: Project; reasons: string[]; refused?: string } {
-  const r = mirrorSet(
-    project,
-    known(project, ids).map((i) => i.id),
-  );
+  const picked = known(project, ids).map((i) => i.id);
+  const turnLock = turnBlocked(project, picked);
+  if (turnLock)
+    return { project, reasons: [], refused: t('Mirror refused: {why}', { why: turnLock }) };
+  const r = mirrorSet(project, picked);
   return r.refused ? { ...r, refused: t('Mirror refused: {why}', { why: r.refused }) } : r;
 }

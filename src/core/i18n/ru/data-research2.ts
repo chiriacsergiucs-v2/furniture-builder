@@ -344,10 +344,8 @@ export const data_research2: Record<string, string> = {
   'Medium; precision feedback supports it': 'Средняя; её поддерживают отзывы о точности',
   'Intelligent compatibility and automatic adjustments (phase 2)':
     'Умная совместимость и автоматические подстройки (этап 2)',
-  'N93 (ADR-095): Lock a piece; drags, turns, the gap tool and repairs leave it alone; N123 (ADR-122): Lock size.':
-    'N93 (ADR-095): «Заблокировать» изделие; перетаскивания, повороты, инструмент зазоров и исправления его не трогают; N123 (ADR-122): блокировка размера.',
-  'locks on single named parameters (rotation only, a width only); Lock size locks all three sizes together':
-    'блокировки отдельных именованных параметров (только поворот, только ширина); блокировка размера блокирует все три размера вместе',
+  'N93 (ADR-095): Lock a piece; drags, turns, the gap tool and repairs leave it alone; N123 (ADR-122): Lock size; N174 (ADR-171): Lock turn and each size one by one; locks outrank variables, Replace, linked copies and project settings.':
+    'N93 (ADR-095): «Заблокировать» изделие; перетаскивания, повороты, инструмент зазоров и исправления его не трогают; N123 (ADR-122): блокировка размера; N174 (ADR-171): блокировка поворота и каждого размера по отдельности; блокировки важнее переменных, замены, связанных копий и настроек проекта.',
   'Local dependency update on parameter change':
     'Локальное обновление зависимостей при изменении параметра',
   'parameter change → connector frames recalculated → connected constraints re-solved → collisions/clearances rechecked → derived countertop/fillers regenerated → BOM refreshed.':

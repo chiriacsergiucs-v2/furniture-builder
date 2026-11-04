@@ -262,4 +262,39 @@ export const ru_project = {
     'Тяните, чтобы повернуть на любой градус; Shift шагает по 15°. Изделия под углом не входят в ряды и не примагничиваются боком.',
   'Kept the project’s {names}; the inserted pieces follow it.':
     'Сохранена переменная проекта {names}; вставленные изделия следуют ей.',
+  // Turn and per-size locks (ADR-171).
+  'Invalid item turn lock': 'Недопустимая блокировка поворота изделия',
+  'Invalid item size locks': 'Недопустимые блокировки размеров изделия',
+  'Turn and size locks need project schemaVersion {v}':
+    'Для блокировок поворота и размеров нужна версия схемы проекта {v}',
+  'Turn locked — unlock to turn': 'Поворот закреплён — снимите, чтобы повернуть',
+  '{name} has its turn locked — unlock it to turn it.':
+    '{name}: поворот закреплён — снимите блокировку, чтобы повернуть.',
+  '{name} has its {axes} locked — unlock it to change it.':
+    '{name}: закреплены {axes} — снимите блокировку, чтобы изменить.',
+  width: 'ширина',
+  height: 'высота',
+  depth: 'глубина',
+  '{list} and {last}': '{list} и {last}',
+  '{axes} locked — unlock to change': 'Закреплено: {axes} — снимите, чтобы изменить',
+  'Lock turn: {what}': 'Закрепить поворот: {what}',
+  'Unlock turn: {what}': 'Снять блокировку поворота: {what}',
+  'Lock size: {what}': 'Закрепить размер: {what}',
+  'Unlock size: {what}': 'Снять блокировку размера: {what}',
+  'Let the piece be turned again': 'Снова разрешить поворот изделия',
+  'Keep its turn: nothing turns or mirrors it; it still moves':
+    'Сохранять поворот: ничто не поворачивает и не отражает его; перемещать можно',
+  'Unlock turn': 'Снять блокировку поворота',
+  'Lock turn': 'Закрепить поворот',
+  'Unlock {axis}': 'Снять блокировку: {axis}',
+  'Lock {axis}': 'Закрепить: {axis}',
+  'Let this size change again': 'Снова разрешить менять этот размер',
+  'Keep this one size; the other two still change':
+    'Сохранять только этот размер; два других меняются',
+  'place@@lock': 'место',
+  'turn@@lock': 'поворот',
+  'size@@lock': 'размер',
+  'Locked: {what}': 'Закреплено: {what}',
+  '{name}: {field} keeps its value — it follows “{expr}”, but that size is locked.':
+    '{name}: {field} сохраняет значение — поле следует «{expr}», но этот размер закреплён.',
 } satisfies Record<string, string>;

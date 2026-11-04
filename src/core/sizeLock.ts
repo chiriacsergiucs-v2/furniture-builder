@@ -6,7 +6,7 @@
  */
 import { t } from './i18n';
 import { buildModel } from './build';
-import { pieceName, type Project, type ProjectItem } from './project';
+import { pieceName, SIZE_AXES, type Project, type ProjectItem, type SizeAxis } from './project';
 import type { Design } from './types';
 
 /** The hint shown where a size-locked piece's size would be changed. */
@@ -14,6 +14,49 @@ export const SIZE_LOCKED_HINT = t('Size locked — unlock to change');
 
 export const isSizeLocked = (item: Pick<ProjectItem, 'sizeLocked'> | undefined): boolean =>
   !!item?.sizeLocked;
+
+/** The outside sizes a piece keeps (ADR-122, ADR-171): all three when size-locked, else the ones locked one by one. */
+export function lockedAxes(
+  item: Pick<ProjectItem, 'sizeLocked' | 'sizeLocks'> | undefined,
+): SizeAxis[] {
+  if (!item) return [];
+  if (item.sizeLocked) return [...SIZE_AXES];
+  return item.sizeLocks ? [...item.sizeLocks] : [];
+}
+export const isAxisLocked = (
+  item: Pick<ProjectItem, 'sizeLocked' | 'sizeLocks'> | undefined,
+  axis: SizeAxis,
+): boolean => lockedAxes(item).includes(axis);
+
+/** Lock or unlock one outside size (ADR-171); the list is absent when empty. The same project when nothing changes. */
+export function setAxisLocked(project: Project, id: string, axis: SizeAxis, on: boolean): Project {
+  const it = project.items.find((i) => i.id === id);
+  if (!it) return project;
+  const have = it.sizeLocks ?? [];
+  if (have.includes(axis) === on) return project;
+  const list = on
+    ? SIZE_AXES.filter((a) => a === axis || have.includes(a))
+    : have.filter((a) => a !== axis);
+  const { sizeLocks: _s, ...rest } = it;
+  void _s;
+  const next: ProjectItem = list.length ? { ...rest, sizeLocks: list } : rest;
+  return { ...project, items: project.items.map((i) => (i.id === id ? next : i)) };
+}
+
+const AXIS_LABEL: Record<SizeAxis, string> = {
+  width: t('width'),
+  height: t('height'),
+  depth: t('depth'),
+};
+/** "width", "width and depth", "width, height and depth". */
+export function axesText(axes: readonly SizeAxis[]): string {
+  const names = axes.map((a) => AXIS_LABEL[a]);
+  if (names.length <= 1) return names[0] ?? '';
+  return t('{list} and {last}', {
+    list: names.slice(0, -1).join(', '),
+    last: names[names.length - 1],
+  });
+}
 
 /** Lock or unlock a piece's size; the flag is absent when unlocked. The same project when nothing changes. */
 export function setSizeLocked(project: Project, id: string, on: boolean): Project {
@@ -31,20 +74,30 @@ export function outerSize(design: Design): { w: number; h: number; d: number } {
   return { w: b.w, h: b.h, d: b.d };
 }
 
-/** Whether two designs have the same outside size. */
-export function sameSize(a: Design, b: Design): boolean {
-  if (a === b) return true;
+/** Whether two designs have the same outside size, on `axes` (default all three). */
+export function sameSize(a: Design, b: Design, axes: readonly SizeAxis[] = SIZE_AXES): boolean {
+  if (a === b || !axes.length) return true;
   const x = outerSize(a),
     y = outerSize(b);
-  return x.w === y.w && x.h === y.h && x.d === y.d;
+  return (
+    (!axes.includes('width') || x.w === y.w) &&
+    (!axes.includes('height') || x.h === y.h) &&
+    (!axes.includes('depth') || x.d === y.d)
+  );
 }
 
 /** Why a size-locked piece may not take `next` as its design, or null. */
 export function resizeBlocked(project: Project, id: string, next: Design): string | null {
   const it = project.items.find((i) => i.id === id);
-  if (!it || !isSizeLocked(it) || sameSize(it.design, next)) return null;
-  return t('{name} has its size locked — unlock its size to change it.', {
+  const axes = lockedAxes(it);
+  if (!it || !axes.length || sameSize(it.design, next, axes)) return null;
+  if (isSizeLocked(it))
+    return t('{name} has its size locked — unlock its size to change it.', {
+      name: pieceName(project, id),
+    });
+  return t('{name} has its {axes} locked — unlock it to change it.', {
     name: pieceName(project, id),
+    axes: axesText(axes),
   });
 }
 
@@ -57,8 +110,9 @@ export function sizeLockBlocked(before: Project | null, after: Project): string 
   const was = new Map(before.items.map((i) => [i.id, i]));
   for (const it of after.items) {
     const old = was.get(it.id);
-    if (!old || !isSizeLocked(old) || old.design === it.design) continue;
-    if (!sameSize(old.design, it.design)) return resizeBlocked(before, it.id, it.design);
+    const axes = lockedAxes(old);
+    if (!old || !axes.length || old.design === it.design) continue;
+    if (!sameSize(old.design, it.design, axes)) return resizeBlocked(before, it.id, it.design);
   }
   return null;
 }

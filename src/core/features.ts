@@ -190,9 +190,10 @@ export const FEATURES: FeatureDomain[] = [
         adrs: ['ADR-031'],
       },
       {
-        name: 'Lock a piece in place',
-        detail: 'Drags, automatic moves and repairs leave it alone.',
-        adrs: ['ADR-095'],
+        name: 'Lock a piece in place, its turn, or each of its sizes',
+        detail:
+          'Lock keeps it where it is; Lock turn, Lock width, Lock height, Lock depth and Lock size (all three) in More actions. A locked value outranks variables, Replace, linked copies and project settings.',
+        adrs: ['ADR-095', 'ADR-122', 'ADR-171'],
       },
     ],
   },

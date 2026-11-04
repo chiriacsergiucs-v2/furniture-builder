@@ -36,6 +36,22 @@ export function describeChange(prev: Project, next: Project): string {
         return t('Turn {what}', { what: what(changed) });
       if (only((a, b) => !!a.locked !== !!b.locked))
         return t(changed[0].locked ? 'Lock {what}' : 'Unlock {what}', { what: what(changed) });
+      // Turn and size locks (ADR-122, ADR-171).
+      if (only((a, b) => !!a.turnLocked !== !!b.turnLocked))
+        return t(changed[0].turnLocked ? 'Lock turn: {what}' : 'Unlock turn: {what}', {
+          what: what(changed),
+        });
+      if (
+        only(
+          (a, b) =>
+            !!a.sizeLocked !== !!b.sizeLocked ||
+            (a.sizeLocks ?? []).join() !== (b.sizeLocks ?? []).join(),
+        )
+      ) {
+        const c = changed[0];
+        const more = !!c.sizeLocked || (c.sizeLocks?.length ?? 0) > (was(c).sizeLocks?.length ?? 0);
+        return t(more ? 'Lock size: {what}' : 'Unlock size: {what}', { what: what(changed) });
+      }
       if (only((a, b) => a.quantity !== b.quantity && samePos(a, b)))
         return t('Change how many: {what}', { what: what(changed) });
       if (

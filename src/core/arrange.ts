@@ -11,6 +11,8 @@ import {
   LOCKED_HINT,
   mirroredRotation,
   moveBlocked,
+  turnBlocked,
+  TURN_LOCKED_HINT,
   pieceName,
   placedBounds,
   placedOutline,
@@ -211,7 +213,7 @@ export function turnAboutCentre(project: Project, id: string, dir: 1 | -1 = 1): 
 export function tryTurn(project: Project, id: string, dir: 1 | -1 = 1): MoveResult {
   const it = project.items.find((i) => i.id === id);
   if (!it) return { project };
-  const reason = moveBlocked(project, [id]);
+  const reason = moveBlocked(project, [id]) ?? turnBlocked(project, [id]);
   if (reason) return { project, reason };
   // The quarter-turned outline, not the box around an angled piece (ADR-121): the extra angle turns with it.
   const b = outlinesOf(project).get(id)!;
@@ -233,7 +235,7 @@ export function setItemRotation(project: Project, id: string, deg: number): Move
   if (!split) return { project, reason: t('Rotation must be whole degrees from 0 to 359.') };
   if (split.rotationY === it.rotationY && (split.angle ?? 0) === (it.angle ?? 0))
     return { project };
-  const reason = moveBlocked(project, [id]);
+  const reason = moveBlocked(project, [id]) ?? turnBlocked(project, [id]);
   if (reason) return { project, reason };
   let next = project;
   // Quarter turns first, the short way round, each keeping the centre.
@@ -261,6 +263,8 @@ export function mirrorItem(project: Project, id: string): MoveResult {
   const it = project.items.find((i) => i.id === id);
   if (!it) return { project };
   if (it.locked) return { project, reason: `${LOCKED_HINT}: ${pieceName(project, id)}.` };
+  // Mirroring turns the piece's hinges and handles round (ADR-171): a locked turn refuses it.
+  if (it.turnLocked) return { project, reason: `${TURN_LOCKED_HINT}: ${pieceName(project, id)}.` };
   const m = mirrorDesign(it.design);
   if (!m.ok) return { project, reason: m.reason };
   return {

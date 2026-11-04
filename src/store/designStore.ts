@@ -74,7 +74,7 @@ import { drill, type Selection } from '../core/selectPath';
 import { resizeProduct, type SizeField } from '../core/pieceSize';
 import { carryGroups, withGroups } from '../core/groupMove';
 import { resizeGroup, type WidthSplit } from '../core/groupSize';
-import { resizeBlocked, setSizeLocked, sizeLockBlocked } from '../core/sizeLock';
+import { resizeBlocked, setAxisLocked, setSizeLocked, sizeLockBlocked } from '../core/sizeLock';
 import { setWallHeight } from '../core/height';
 import { moveTo, type MoveToAction } from '../core/moveTo';
 import {
@@ -111,6 +111,8 @@ import {
   type RunRequest,
   type RunSettings,
   type RunSink,
+  setTurnLocked,
+  type SizeAxis,
 } from '../core/project';
 import type {
   CabinetParams,
@@ -322,6 +324,9 @@ interface State {
   setLocked: (id: string, on: boolean) => void;
   /** Lock or unlock a piece's size (ADR-122); one undo step. */
   setSizeLocked: (id: string, on: boolean) => void;
+  /** Lock or unlock the piece's turn, or one of its outside sizes (ADR-171). One undo step each. */
+  setTurnLocked: (id: string, on: boolean) => void;
+  setAxisLocked: (id: string, axis: SizeAxis, on: boolean) => void;
   /** Hang a wall unit at a new height, e.g. dragged in 3D (ADR-122); one undo step. Returns why not, or null. */
   setItemHeight: (id: string, height: number) => string | null;
   /** "Keep mine" (ADR-096): hide the newer-template notice for this revision; one undo step. */
@@ -898,6 +903,18 @@ export const useDesign = create<State>((rawSet, get) => {
       const p = get().project;
       if (!p) return;
       const next = setSizeLocked(p, id, on);
+      if (next !== p) commitProject(next);
+    },
+    setTurnLocked: (id, on) => {
+      const p = get().project;
+      if (!p) return;
+      const next = setTurnLocked(p, id, on);
+      if (next !== p) commitProject(next);
+    },
+    setAxisLocked: (id, axis, on) => {
+      const p = get().project;
+      if (!p) return;
+      const next = setAxisLocked(p, id, axis, on);
       if (next !== p) commitProject(next);
     },
     setItemHeight: (id, height) => {

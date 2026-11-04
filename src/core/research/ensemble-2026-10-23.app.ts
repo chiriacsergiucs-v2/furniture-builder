@@ -85,9 +85,8 @@ export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
     'connections between pieces beyond stacking, stored as a graph',
   ],
   'locks-overrides': [
-    'in-progress',
-    'N93 (ADR-095): Lock a piece; drags, turns, the gap tool and repairs leave it alone; N123 (ADR-122): Lock size.',
-    'locks on single named parameters (rotation only, a width only); Lock size locks all three sizes together',
+    'verified',
+    'N93 (ADR-095): Lock a piece; drags, turns, the gap tool and repairs leave it alone; N123 (ADR-122): Lock size; N174 (ADR-171): Lock turn and each size one by one; locks outrank variables, Replace, linked copies and project settings.',
   ],
   'no-silent-moves': [
     'in-progress',

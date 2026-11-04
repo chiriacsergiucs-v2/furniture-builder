@@ -1,4 +1,4 @@
-import { isSizeLocked } from '../core/sizeLock';
+import { isSizeLocked, lockedAxes } from '../core/sizeLock';
 import { t, tr } from '../core/i18n';
 import { tNode } from './i18n';
 import {
@@ -32,6 +32,8 @@ import {
   type Project,
   type ProjectModel,
   type QuarterTurn,
+  isTurnLocked,
+  SIZE_AXES,
 } from '../core/project';
 import { dropTarget, SNAP_RANGE } from '../core/snap';
 import { groupOf, itemsAt, itemsInBox, nextUnder } from '../core/selection';
@@ -346,18 +348,7 @@ export function ProjectPanel({
             <h3>
               {item.quantity > 1 ? `${item.quantity} × ` : ''}
               {tr(item.design.name)}
-              {isLocked(item) && (
-                <span className="chip lock-chip">
-                  <Icon name="lock" className="sm" />
-                  {t('Locked')}
-                </span>
-              )}
-              {isSizeLocked(item) && (
-                <span className="chip lock-chip">
-                  <Icon name="lock" className="sm" />
-                  {t('Size locked')}
-                </span>
-              )}
+              <LockChip item={item} />
             </h3>
             {/* Lock keeps the piece where it is (ADR-095); its size and boards stay editable. */}
             <button
@@ -400,6 +391,7 @@ export function ProjectPanel({
               product={item.design.product}
               onChange={(k, v) => resizeItem(item.id, k, v)}
               locked={isSizeLocked(item) || !!item.set}
+              lockedKeys={lockedAxes(item)}
               lockedHint={
                 item.set ? t('A copy of the set-1 piece: change the size there.') : undefined
               }
@@ -662,6 +654,27 @@ function TurnHandle({
   );
 }
 
+/** One chip naming what is locked on the piece (ADR-095, ADR-122, ADR-171): "Locked: place, turn, width". */
+function LockChip({ item }: { item: ProjectItem }) {
+  const what: string[] = [];
+  if (isLocked(item)) what.push(t('place@@lock'));
+  if (isTurnLocked(item)) what.push(t('turn@@lock'));
+  if (isSizeLocked(item)) what.push(t('size@@lock'));
+  else
+    what.push(
+      ...lockedAxes(item).map(
+        (a) => ({ width: t('width'), height: t('height'), depth: t('depth') })[a],
+      ),
+    );
+  if (!what.length) return null;
+  return (
+    <span className="chip lock-chip">
+      <Icon name="lock" className="sm" />
+      {t('Locked: {what}', { what: what.join(', ') })}
+    </span>
+  );
+}
+
 /** The pieces this one is connected to (ADR-168), under Position. */
 function ConnectedTo({ project, id }: { project: Project; id: string }) {
   const names = connectedTo(project, id).map((x) => tr(pieceName(project, x)));
@@ -742,6 +755,8 @@ function PieceMenu({
   const pm = useDesign((s) => s.projectModel);
   const remove = useDesign((s) => s.removeItem);
   const setSizeLocked = useDesign((s) => s.setSizeLocked);
+  const setTurnLocked = useDesign((s) => s.setTurnLocked);
+  const setAxisLocked = useDesign((s) => s.setAxisLocked);
   const mirrorRun = useDesign((s) => s.mirrorRun);
   const [open, setOpen] = useState(false);
   const [dialog, setDialog] = useState<'replace' | 'save' | null>(null);
@@ -821,6 +836,44 @@ function PieceMenu({
             <Icon name="lock" className="sm" />
             {isSizeLocked(item) ? t('Unlock size') : t('Lock size')}
           </button>
+          {/* Turn and single sizes, one by one (ADR-171). */}
+          <button
+            type="button"
+            aria-pressed={isTurnLocked(item)}
+            title={
+              isTurnLocked(item)
+                ? t('Let the piece be turned again')
+                : t('Keep its turn: nothing turns or mirrors it; it still moves')
+            }
+            onClick={pick(() => setTurnLocked(item.id, !isTurnLocked(item)))}
+          >
+            <Icon name="lock" className="sm" />
+            {isTurnLocked(item) ? t('Unlock turn') : t('Lock turn')}
+          </button>
+          {!isSizeLocked(item) &&
+            SIZE_AXES.map((axis) => {
+              const on = (item.sizeLocks ?? []).includes(axis);
+              const label = { width: t('Width'), height: t('Height'), depth: t('Depth') }[axis];
+              return (
+                <button
+                  key={axis}
+                  type="button"
+                  aria-pressed={on}
+                  aria-label={
+                    on ? t('Unlock {axis}', { axis: label }) : t('Lock {axis}', { axis: label })
+                  }
+                  title={
+                    on
+                      ? t('Let this size change again')
+                      : t('Keep this one size; the other two still change')
+                  }
+                  onClick={pick(() => setAxisLocked(item.id, axis, !on))}
+                >
+                  <Icon name="lock" className="sm" />
+                  {on ? t('Unlock {axis}', { axis: label }) : t('Lock {axis}', { axis: label })}
+                </button>
+              );
+            })}
           {run.length > 1 && (
             <button
               type="button"
@@ -1574,7 +1627,9 @@ function RoomPlan({
   /** The one selected, unlocked piece whose turn handle is shown (ADR-169). */
   const turnPc =
     !tapping && selectedIds.length === 1
-      ? pm.pieces.find((x) => x.item.id === selectedIds[0] && !isLocked(x.item))
+      ? pm.pieces.find(
+          (x) => x.item.id === selectedIds[0] && !isLocked(x.item) && !isTurnLocked(x.item),
+        )
       : undefined;
   const frontLine = (b: { x: number; z: number; w: number; d: number }, r: QuarterTurn) =>
     r === 0
@@ -1926,7 +1981,10 @@ function RoomPlan({
                 {pc.item.quantity > 1 ? `${pc.item.quantity}× ` : ''}
                 {tr(pc.item.design.name)}
               </text>
-              {locked && <LockBadge x={b.x} y={b.z} size={size} />}
+              {/* The badge shows for any lock: place, turn or a size (ADR-095, ADR-171). */}
+              {(locked || isTurnLocked(pc.item) || lockedAxes(pc.item).length > 0) && (
+                <LockBadge x={b.x} y={b.z} size={size} />
+              )}
             </g>
           );
         })}
@@ -2397,7 +2455,9 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
           />
         ))}
         {pm.pieces
-          .filter((pc) => isLocked(pc.item))
+          .filter(
+            (pc) => isLocked(pc.item) || isTurnLocked(pc.item) || lockedAxes(pc.item).length > 0,
+          )
           .map((pc) => (
             <LockBadge
               key={`lock-${pc.item.id}`}

@@ -165,7 +165,7 @@ describe('the broken warning (ADR-168, ADR-008)', () => {
 
 describe('validation and schema (ADR-168, ADR-011)', () => {
   it('schemaVersion 18 validates pairs; older projects load unchanged; bad pairs are refused', () => {
-    expect(PROJECT_SCHEMA).toBe(18);
+    expect(PROJECT_SCHEMA).toBe(19);
     const p = row('base-door', 'base-door');
     const [a, b] = ids(p);
     const old = { ...p, schemaVersion: 17 as const };
