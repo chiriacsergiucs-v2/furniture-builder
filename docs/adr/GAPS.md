@@ -1523,3 +1523,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: “ship ADR-168” (user 2026-11-04)
 - Questions: Add a 3D Move mode drag to tools/connections/find-it.mjs (as tools/move-3d/find-it.mjs does)?
 - Suggested pick: Extend the script with one 3D drag of a connected piece and an Alt drag (estimate: effort +10%, value +5%).
+
+### G-347: accounts find-it at 390 px is timing-sensitive under the full suite
+
+- Status: Open
+- Origin: N171/N172 full test runs, 2026-11-04; agent
+- Missing: tests/find-it/accounts.test.tsx at 390 px fails under the full local suite (the 'In your account' badge is not found in time) in two of three full runs on 2026-11-04, while it passes when run alone and in CI.
+- Request: Not a quote: the suite is the source of truth (CLAUDE.md)
+- Questions: Raise the badge's waitFor timeout, or split the long find-it into two tests?
+- Suggested pick: Wrap the badge lookup in findByText with a longer timeout at 390 px (estimate: effort +2%, value +5%).
