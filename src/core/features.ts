@@ -49,7 +49,12 @@ export const FEATURES: FeatureDomain[] = [
         detail: 'Several pieces placed in one room.',
         adrs: ['ADR-022', 'ADR-078'],
       },
-      { name: 'Create a project from a project template', adrs: ['ADR-060'] },
+      {
+        name: 'Create a project from a project template',
+        detail:
+          'Copies of the pieces with their positions, run-part recipe, connections, variables and bindings; pieces inserted into a project take its settings.',
+        adrs: ['ADR-060', 'ADR-123', 'ADR-170'],
+      },
       {
         name: 'Fill a wall',
         detail:

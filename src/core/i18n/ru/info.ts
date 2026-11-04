@@ -378,4 +378,6 @@ export const ru_info = {
   'Turn to any whole degree with a handle': 'Поворот на любой целый градус ручкой',
   'Drag the round handle in front of the selected piece; it snaps to quarter turns, Shift steps by 15°, [ and ] turn by 1°.':
     'Перетащите круглую ручку перед выбранным изделием; она примагничивается к четвертям оборота, Shift шагает по 15°, [ и ] поворачивают на 1°.',
+  'Copies of the pieces with their positions, run-part recipe, connections, variables and bindings; pieces inserted into a project take its settings.':
+    'Копии изделий с их положениями, рецептом частей ряда, соединениями, переменными и привязками; изделия, вставленные в проект, принимают его настройки.',
 } satisfies Record<string, string>;

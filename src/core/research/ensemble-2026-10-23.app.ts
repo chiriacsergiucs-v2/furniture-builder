@@ -24,9 +24,8 @@ export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
     'shared supports, sinks and handles as generated parts',
   ],
   'ensemble-templates': [
-    'in-progress',
-    'N55 (ADR-060): save a project as a reusable project template.',
-    'templates keep copies, not item references, connections or generated-part recipes',
+    'verified',
+    'N55 (ADR-060): save a project as a reusable project template; N124 (ADR-123): insert one into a project; N173 (ADR-170): a template keeps the run-part recipe, connections, variables and bindings. Copies by choice (ADR-060), not item references.',
   ],
   'live-price': [
     'in-progress',

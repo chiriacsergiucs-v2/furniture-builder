@@ -35,6 +35,7 @@ import {
 } from '../core/project';
 import { dropTarget, SNAP_RANGE } from '../core/snap';
 import { groupOf, itemsAt, itemsInBox, nextUnder } from '../core/selection';
+import { keptVariables } from '../core/insertTemplate';
 import { connectedTo, connectionCheck } from '../core/connections';
 import { inSelection, selectionBox } from '../core/selectPath';
 import type { Box, Design, Diagnostic, Panel } from '../core/types';
@@ -63,7 +64,7 @@ import {
 } from './planDrag';
 import { useSnap } from './useSnap';
 import { MoveToButtons } from './MoveTo';
-import { keepSheetClosedOnce } from './shell/uiStore';
+import { keepSheetClosedOnce, useUi } from './shell/uiStore';
 import { CompatRules } from './CompatRules';
 import {
   consumeDragClick,
@@ -2491,6 +2492,7 @@ export function AddPieceList({
   }, []);
   // Saved project templates go in as a block of pieces (ADR-123, research "paste ensemble").
   const insertTemplate = useDesign((s) => s.insertTemplate);
+  const project = useDesign((s) => s.project);
   const [projectTemplates, setProjectTemplates] = useState<ProjectTemplate[]>([]);
   useEffect(() => {
     listProjectTemplates()
@@ -2578,7 +2580,17 @@ export function AddPieceList({
                   type="button"
                   className="row-btn"
                   onClick={() => {
-                    if (insertTemplate(tpl).length) onDone();
+                    // A variable the project already has keeps its value; the inserted pieces follow it (ADR-170).
+                    const kept = project ? keptVariables(project, tpl) : [];
+                    if (!insertTemplate(tpl).length) return;
+                    if (kept.length)
+                      useUi.getState().setNotice({
+                        ok: true,
+                        text: t('Kept the project’s {names}; the inserted pieces follow it.', {
+                          names: kept.map((n) => `“${n}”`).join(', '),
+                        }),
+                      });
+                    onDone();
                   }}
                 >
                   <span className="glyph">

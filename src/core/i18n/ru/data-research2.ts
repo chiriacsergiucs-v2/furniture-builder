@@ -660,10 +660,8 @@ export const data_research2: Record<string, string> = {
   Templates: 'Шаблоны',
   'Medium-high; reusable component/configuration patterns':
     'Средняя–высокая; шаблоны многократно используемых компонентов/конфигураций',
-  'N55 (ADR-060): save a project as a reusable project template.':
-    'N55 (ADR-060): сохранить проект как многократно используемый шаблон проекта.',
-  'templates keep copies, not item references, connections or generated-part recipes':
-    'шаблоны хранят копии, а не ссылки на изделия, соединения или рецепты генерируемых деталей',
+  'N55 (ADR-060): save a project as a reusable project template; N124 (ADR-123): insert one into a project; N173 (ADR-170): a template keeps the run-part recipe, connections, variables and bindings. Copies by choice (ADR-060), not item references.':
+    'N55 (ADR-060): сохранить проект как многократно используемый шаблон проекта; N124 (ADR-123): вставка шаблона в проект; N173 (ADR-170): шаблон хранит рецепт частей ряда, соединения, переменные и привязки. Копии по решению (ADR-060), а не ссылки на изделия.',
   'Dual priorities: price P1/P2, sheet optimisation and CAD/CNC export P2/P3':
     'Двойные приоритеты: цена P1/P2, оптимизация листов и экспорт CAD/ЧПУ P2/P3',
   'The paper keeps two priority bands for these rows; live price complexity is "Medium if data exists".':

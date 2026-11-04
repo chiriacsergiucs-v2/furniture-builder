@@ -260,4 +260,6 @@ export const ru_project = {
   '{deg}°': '{deg}°',
   'Drag to turn to any degree; Shift steps by 15°. Pieces at an angle do not join runs or snap side by side.':
     'Тяните, чтобы повернуть на любой градус; Shift шагает по 15°. Изделия под углом не входят в ряды и не примагничиваются боком.',
+  'Kept the project’s {names}; the inserted pieces follow it.':
+    'Сохранена переменная проекта {names}; вставленные изделия следуют ей.',
 } satisfies Record<string, string>;
