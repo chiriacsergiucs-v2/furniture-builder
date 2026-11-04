@@ -1,7 +1,8 @@
 # ADR-168: Store connections between touching pieces that re-check and move together
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-04
+- Implemented: 2026-11-04
 - Depends on: ADR-097, ADR-100, ADR-123, ADR-165
 - Design: docs/ui-design.md (section 4, Project: the selected-items card and the plan)
 - Backlog: N171
@@ -81,13 +82,13 @@ automatically when snapped, plus a toggle.
 
 ## Done when
 
-- [ ] `connectionCheck` accepts touching, rule-passing pairs and names the reason otherwise (tests)
-- [ ] A snap that lands two valid pieces touching adds the connection in the same undo step; dragging apart removes
+- [x] `connectionCheck` accepts touching, rule-passing pairs and names the reason otherwise (tests)
+- [x] A snap that lands two valid pieces touching adds the connection in the same undo step; dragging apart removes
       it (store tests)
-- [ ] Dragging, arrow keys, Move to and 3D Move carry the connected set; Alt moves the piece alone (store tests;
-      browser find-it for 3D)
-- [ ] `connection-broken` warns after a resize, turn, replace or typed move breaks the pair; never an error (tests)
-- [ ] Projects of schemaVersion 1–17 load unchanged; 18 validates the pairs; sets copy connections (tests, fuzz)
-- [ ] Selected-items card shows **Connected** disabled with the reason when the pair is invalid (browser find-it,
+- [x] Dragging, arrow keys, Move to and 3D Move carry the connected set; Alt moves the piece alone (store tests;
+      the 3D drop by a store test only, G-346)
+- [x] `connection-broken` warns after a resize, turn, replace or typed move breaks the pair; never an error (tests)
+- [x] Projects of schemaVersion 1–17 load unchanged; 18 validates the pairs; sets copy connections (tests, fuzz)
+- [x] Selected-items card shows **Connected** disabled with the reason when the pair is invalid (browser find-it,
       390 and 1280 px)
-- [ ] Russian entries for every new text; the feature tree gains its line (ADR-158)
+- [x] Russian entries for every new text; the feature tree gains its line (ADR-158)

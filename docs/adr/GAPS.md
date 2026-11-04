@@ -483,15 +483,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Drop into 3D too, once ADR-093 exists?
 - Suggested pick: Drop onto the 3D floor plane with ADR-093's projection (about +30 % of ADR-094's work, +15 % value; estimates).
 
-### G-091: Persistent connections between pieces
-
-- Status: ADR-168
-- Origin: ADR-100 (2026-10-26, Claude: not asked for)
-- Missing: Persistent connections between pieces (research: connection hierarchy / assembly graph); rules apply while snapping and in checks only.
-- Request: "New adr 3" (2026-10-26)
-- Questions: Store connections so rules hold after placing?
-- Suggested pick: Store connections as a graph (about 40 points; makes the engine 'prevent invalid connections' as the research states).
-
 ### G-092: User-written compatibility rules
 
 - Status: Open
@@ -1523,3 +1514,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: “Ordered step list + 3D highlight” (user 2026-11-04)
 - Questions: Add a project order: pieces along the wall, then run parts?
 - Suggested pick: A project section before the pieces: corner first, then along each wall, run parts last (estimate: effort +20%, value +15%).
+
+### G-346: Connections in 3D Move mode not checked in a browser
+
+- Status: Open
+- Origin: ADR-168, 2026-11-04; agent, at ship time
+- Missing: Moving a connected piece in 3D Move mode (dropItemAt) is covered by a store test only; it was not checked in a browser (the browser find-it drags on the plan).
+- Request: “ship ADR-168” (user 2026-11-04)
+- Questions: Add a 3D Move mode drag to tools/connections/find-it.mjs (as tools/move-3d/find-it.mjs does)?
+- Suggested pick: Extend the script with one 3D drag of a connected piece and an Alt drag (estimate: effort +10%, value +5%).

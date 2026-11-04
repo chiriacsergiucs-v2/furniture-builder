@@ -432,6 +432,15 @@ highest id in either file.
 - Questions: Distribute along the depth too?
 - Suggested pick: Along the wall only (pieces stand against walls; depth distribution is rare).
 
+### G-091: Persistent connections between pieces
+
+- Status: Done (ADR-168)
+- Origin: ADR-100 (2026-10-26, Claude: not asked for)
+- Missing: Persistent connections between pieces (research: connection hierarchy / assembly graph); rules apply while snapping and in checks only.
+- Request: "New adr 3" (2026-10-26)
+- Questions: Store connections so rules hold after placing?
+- Suggested pick: Store connections as a graph (about 40 points; makes the engine 'prevent invalid connections' as the research states).
+
 ### G-093: Tolerance for depth and height differences
 
 - Status: Done (ADR-100)
