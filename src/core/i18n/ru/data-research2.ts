@@ -240,10 +240,8 @@ export const data_research2: Record<string, string> = {
   'After connection, either item can still be selected on its own and shows its existing parametric controls; selecting the ensemble/group exposes common operations.':
     'После соединения любое изделие по-прежнему можно выбрать отдельно, и оно показывает свои параметрические настройки; выбор ансамбля/группы открывает общие операции.',
   Selection: 'Выделение',
-  'N84 (ADR-088), N95 (ADR-097): each project piece stays selectable with its own controls; a grouped piece is reached by a second tap.':
-    'N84 (ADR-088), N95 (ADR-097): каждое изделие проекта остаётся выбираемым со своими настройками; изделие в группе выбирается вторым касанием.',
-  'connections between pieces, which the feature is about':
-    'соединения между изделиями, ради которых эта функция и нужна',
+  'N84 (ADR-088), N95 (ADR-097): each project piece stays selectable with its own controls; a grouped piece is reached by a second tap; N171 (ADR-168): a connected piece is selected and edited on its own, and moved alone with Alt.':
+    'N84 (ADR-088), N95 (ADR-097): каждое изделие проекта остаётся выбираемым со своими настройками; изделие в группе выбирается вторым касанием; N171 (ADR-168): соединённое изделие выбирается и правится само по себе, а с Alt двигается отдельно.',
   'MVP table: "Selection/groups" (select one item).':
     'Таблица MVP: «Выделение/группы» (выбор одного изделия).',
   'Judgement: reusable/configurable objects are most appreciated (line 65) and multi-select/groups is rated High (rank 8).':
@@ -399,10 +397,8 @@ export const data_research2: Record<string, string> = {
     'Высокая; сложные редакторы постоянно дорабатывают семантику отмены',
   'Add, delete, move, rotate, snap, unsnap, parameter change and group operations can be reverted. Compound operations undo atomically.':
     'Добавление, удаление, перемещение, поворот, привязку, отсоединение, изменение параметра и операции с группами можно отменить. Составные операции отменяются атомарно.',
-  'N46 (ADR-051): undo/redo for project changes, one step per drag (N60); N124 (ADR-123): named steps, compound actions as one step, Edit history.':
-    'N46 (ADR-051): отмена/повтор для изменений проекта, один шаг на перетаскивание (N60); N124 (ADR-123): именованные шаги, составные действия как один шаг, история правок.',
-  'undo of snap and unsnap (connections are not built)':
-    'отмена привязки и отсоединения (соединения не реализованы)',
+  'N46 (ADR-051): undo/redo for project changes, one step per drag (N60); N124 (ADR-123): named steps, compound actions as one step, Edit history; N171 (ADR-168): a snap connects pieces and a drag apart disconnects them, each one undo step.':
+    'N46 (ADR-051): отмена/повтор для изменений проекта, один шаг на перетаскивание (N60); N124 (ADR-123): именованные шаги, составные действия как один шаг, история правок; N171 (ADR-168): примагничивание соединяет изделия, а перетаскивание врозь разъединяет их, каждое — один шаг отмены.',
   'Command/transaction log': 'Журнал команд/транзакций',
   'Undo/redo implemented as a command/transaction log.':
     'Отмена/повтор реализованы как журнал команд/транзакций.',
@@ -423,8 +419,8 @@ export const data_research2: Record<string, string> = {
     'Высокая; раздражение от потери версий задокументировано',
   'Saving and reopening restores template versions, parameter overrides, transformations, groups and connections.':
     'Сохранение и повторное открытие восстанавливает версии шаблонов, переопределения параметров, преобразования, группы и соединения.',
-  'N48, F14: projects saved and reopened with every piece and position; N94: template revisions kept per piece.':
-    'N48, F14: проекты сохраняются и открываются со всеми изделиями и положениями; N94: ревизии шаблонов хранятся для каждого изделия.',
+  'N48, F14: projects saved and reopened with every piece and position; N94: template revisions kept per piece; N171 (ADR-168): connections saved with the project (schemaVersion 18).':
+    'N48, F14: проекты сохраняются и открываются со всеми изделиями и положениями; N94: ревизии шаблонов хранятся для каждого изделия; N171 (ADR-168): соединения сохраняются вместе с проектом (schemaVersion 18).',
   'Generated shared components (ensemble-derived parts)':
     'Генерируемые общие компоненты (детали, производные от ансамбля)',
   'Countertops, worktops, plinths/toe-kicks, fillers, end panels, crown moulding and shared structural elements derive from the modules they span instead of behaving like manually placed products. They remember their source instances and generator version and regenerate on change, keeping permitted user overrides.':

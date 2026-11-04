@@ -252,7 +252,35 @@ export function syncSets(project: Project): Project {
         ),
       ]
     : project.groups;
-  return { ...project, items: placed, ...(groups ? { groups } : {}) };
+  // A duplicate connected like its original: the set-1 connection is copied to each set's duplicates (ADR-168).
+  const connections = project.connections?.length
+    ? [
+        ...project.connections,
+        ...sets.flatMap((set) =>
+          project
+            .connections!.map((c) => ({
+              id: `${c.id}:${set.id}`,
+              itemIds: c.itemIds.map((x) => dupOf.get(`${set.id}:${x}`)) as [string, string],
+            }))
+            .filter(
+              (c) =>
+                c.itemIds[0] &&
+                c.itemIds[1] &&
+                !project.connections!.some(
+                  (o) =>
+                    o.id === c.id ||
+                    (o.itemIds.includes(c.itemIds[0]) && o.itemIds.includes(c.itemIds[1])),
+                ),
+            ),
+        ),
+      ]
+    : project.connections;
+  return {
+    ...project,
+    items: placed,
+    ...(groups ? { groups } : {}),
+    ...(connections ? { connections } : {}),
+  };
 }
 
 /**
@@ -321,6 +349,13 @@ export function projectFromSet(project: Project, setId: string, now = new Date()
     variables,
     ...(project.groups
       ? { groups: project.groups.map((g) => ({ ...g, id: newId(), itemIds: keep(g.itemIds) })) }
+      : {}),
+    ...(project.connections
+      ? {
+          connections: project.connections
+            .map((c) => ({ id: newId(), itemIds: keep(c.itemIds) as [string, string] }))
+            .filter((c) => c.itemIds.length === 2),
+        }
       : {}),
     ...(project.runRequests
       ? {

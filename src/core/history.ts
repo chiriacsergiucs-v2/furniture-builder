@@ -42,6 +42,10 @@ export function describeChange(prev: Project, next: Project): string {
     }
     return t('Edit {what}', { what: what(designs.length ? designs : changed) });
   }
+  if ((prev.connections ?? []).length !== (next.connections ?? []).length)
+    return (next.connections ?? []).length > (prev.connections ?? []).length
+      ? t('Connect')
+      : t('Disconnect');
   if ((prev.groups ?? []).length !== (next.groups ?? []).length)
     return (next.groups ?? []).length > (prev.groups ?? []).length
       ? t('Group pieces')

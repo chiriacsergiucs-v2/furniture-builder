@@ -11,13 +11,12 @@ import type { Implementation } from './types';
 
 type Status = [status: Implementation, evidence: string, missing?: string];
 
-export const APP_CHECKED = '2026-10-29';
+export const APP_CHECKED = '2026-11-04';
 
 export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
   'transactional-undo': [
-    'in-progress',
-    'N46 (ADR-051): undo/redo for project changes, one step per drag (N60); N124 (ADR-123): named steps, compound actions as one step, Edit history.',
-    'undo of snap and unsnap (connections are not built)',
+    'verified',
+    'N46 (ADR-051): undo/redo for project changes, one step per drag (N60); N124 (ADR-123): named steps, compound actions as one step, Edit history; N171 (ADR-168): a snap connects pieces and a drag apart disconnects them, each one undo step.',
   ],
   'generated-parts': [
     'in-progress',
@@ -35,9 +34,8 @@ export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
     'live supplier prices (N58, ADR-063 deferred)',
   ],
   'independent-selection': [
-    'in-progress',
-    'N84 (ADR-088), N95 (ADR-097): each project piece stays selectable with its own controls; a grouped piece is reached by a second tap.',
-    'connections between pieces, which the feature is about',
+    'verified',
+    'N84 (ADR-088), N95 (ADR-097): each project piece stays selectable with its own controls; a grouped piece is reached by a second tap; N171 (ADR-168): a connected piece is selected and edited on its own, and moved alone with Alt.',
   ],
   'semantic-connectors': [
     'in-progress',
@@ -65,9 +63,8 @@ export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
     'connections',
   ],
   'versioned-save': [
-    'in-progress',
-    'N48, F14: projects saved and reopened with every piece and position; N94: template revisions kept per piece.',
-    'connections',
+    'verified',
+    'N48, F14: projects saved and reopened with every piece and position; N94: template revisions kept per piece; N171 (ADR-168): connections saved with the project (schemaVersion 18).',
   ],
   'propagation-pipeline': [
     'in-progress',

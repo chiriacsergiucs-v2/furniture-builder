@@ -54,7 +54,7 @@ const close = (a: number[] | null, b: number[]) => {
 describe('fitted and straightened wall pictures (ADR-146)', () => {
   it('validate, need version 15, and older versions still load; old repeating pictures fill their wall', () => {
     const p = fitted();
-    expect(PROJECT_SCHEMA).toBe(17);
+    expect(PROJECT_SCHEMA).toBe(18);
     expect(validateProject(JSON.parse(JSON.stringify(p)))).toEqual([]);
     expect(validateProject({ ...p, schemaVersion: 14 })).toContain(
       'Fitted wall pictures need project schemaVersion 15',

@@ -49,6 +49,7 @@ import {
   yawPoint,
 } from './geometry';
 import { commonBuilds, commonDesign, commonPanels, pruneCommon, type CommonBuild } from './common';
+import { connectionDiagnostics, pruneConnections, type Connection } from './connections';
 import { aabbOf, overlapsBox, panelsOverlap, turnShape } from './shape';
 import { modelBox, modelChecks, validateModelItems, type ModelItem } from './model3d';
 import type { SheetSettings } from './nesting';
@@ -252,9 +253,10 @@ export interface RunSink {
  * (ADR-097); 9 = linked copies (ADR-111); 10 = pieces typed at an angle (ADR-121); 11 = size-locked pieces
  * (ADR-122); 12 = template references and project-wide settings (ADR-124); 13 = run handles and sinks (ADR-125);
  * 14 = wall backgrounds (ADR-145); 15 = fitted and straightened wall pictures (ADR-146); 16 = variables, bindings
- * and value sets (ADR-166, ADR-167); 17 = common tops and bottoms (ADR-165).
+ * and value sets (ADR-166, ADR-167); 17 = common tops and bottoms (ADR-165); 18 = connections between pieces
+ * (ADR-168).
  */
-export const PROJECT_SCHEMA = 17 as const;
+export const PROJECT_SCHEMA = 18 as const;
 export const PROJECT_SCHEMAS: readonly number[] = [
   1,
   2,
@@ -272,10 +274,11 @@ export const PROJECT_SCHEMAS: readonly number[] = [
   14,
   15,
   16,
+  17,
   PROJECT_SCHEMA,
 ];
 export type ProjectSchemaVersion =
-  1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | typeof PROJECT_SCHEMA;
+  1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | typeof PROJECT_SCHEMA;
 const RUN_REQUESTS_SINCE = 4;
 const MODELS_SINCE = 5;
 const LOCKS_SINCE = 6;
@@ -290,6 +293,7 @@ const WALLS_SINCE = 14;
 const FITTED_WALLS_SINCE = 15;
 const VARIABLES_SINCE = 16;
 const COMMON_SINCE = 17;
+const CONNECTIONS_SINCE = 18;
 
 export interface Project {
   schemaVersion: ProjectSchemaVersion;
@@ -328,6 +332,8 @@ export interface Project {
   variableSets?: VariableSet[];
   /** Common tops and bottoms across items (ADR-165, schemaVersion 17). Absent = none. */
   common?: CommonPanel[];
+  /** Connections between touching pieces (ADR-168, schemaVersion 18): they move together and are re-checked. */
+  connections?: Connection[];
 }
 
 /**
@@ -691,7 +697,9 @@ export function removeProjectItem(project: Project, id: string): Project {
   const runRequests = project.runRequests
     ?.map((r) => ({ ...r, from: r.from.filter((x) => x !== id) }))
     .filter((r) => r.from.length);
-  return pruneCommon(pruneGroups({ ...project, items, ...(runRequests ? { runRequests } : {}) }));
+  return pruneConnections(
+    pruneCommon(pruneGroups({ ...project, items, ...(runRequests ? { runRequests } : {}) })),
+  );
 }
 
 /** Placement problems: a missing base, a piece resting on itself, a piece in the air that is not built to hang. */
@@ -1022,11 +1030,12 @@ export function buildProjectModel(input: Project): ProjectModel {
   const piecePanels: Panel[][] = [];
   const hardware: HardwareItem[] = [];
   // Variables and bindings with problems (ADR-166, ADR-008), checked apart from the generators; common tops and
-  // bottoms that are not built (ADR-165).
+  // bottoms that are not built (ADR-165); connections that no longer hold (ADR-168).
   const diagnostics: Diagnostic[] = [
     ...placementIssues(project),
     ...variableDiagnostics(project),
     ...common.diagnostics,
+    ...connectionDiagnostics(project, pieces),
   ];
   for (const pc of pieces) {
     const mats = new Map(pc.item.design.materials.map((m) => [m.id, m]));
@@ -2769,6 +2778,36 @@ export function validateProject(p: unknown): string[] {
         }
         seen.add(c.id);
         for (const x of c.itemIds) inKind[c.kind as 'top' | 'bottom'].add(x as string);
+      }
+  }
+  if (p.connections !== undefined) {
+    if ((p.schemaVersion as number) < CONNECTIONS_SINCE)
+      errs.push(t('Connections need project schemaVersion {v}', { v: CONNECTIONS_SINCE }));
+    const seen = new Set<string>();
+    const pairs = new Set<string>();
+    if (!Array.isArray(p.connections)) errs.push(t('Invalid connections'));
+    else
+      for (const c of p.connections) {
+        const pair = isObj(c) && Array.isArray(c.itemIds) ? (c.itemIds as unknown[]) : null;
+        const key =
+          pair && pair.length === 2 && pair.every((x) => typeof x === 'string')
+            ? [...(pair as string[])].sort().join('|')
+            : '';
+        if (
+          !isObj(c) ||
+          typeof c.id !== 'string' ||
+          !c.id ||
+          seen.has(c.id) ||
+          !key ||
+          pair![0] === pair![1] ||
+          !pair!.every((x) => ids.has(x as string)) ||
+          pairs.has(key)
+        ) {
+          errs.push(t('Invalid connection'));
+          continue;
+        }
+        seen.add(c.id);
+        pairs.add(key);
       }
   }
   if (p.settings !== undefined) {

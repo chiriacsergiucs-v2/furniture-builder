@@ -88,4 +88,25 @@ export const ru_material = {
   'A common top or bottom across items': 'Общая крышка или дно для нескольких изделий',
   'Select items standing side by side: Common top or Common bottom makes one panel across them.':
     'Выберите изделия, стоящие рядом: «Общая крышка» или «Общее дно» делает одну панель на все.',
+  // Connections between pieces (ADR-168).
+  'A piece cannot be connected to itself.': 'Изделие нельзя соединить с самим собой.',
+  'A connected piece was removed.': 'Соединённое изделие удалено.',
+  '{a} and {b} do not stand side by side.': '{a} и {b} не стоят вплотную рядом.',
+  '{a} and {b} are connected but no longer joined: {reason}':
+    '{a} и {b} соединены, но больше не стыкуются: {reason}',
+  'Connections need project schemaVersion {v}': 'Для соединений нужна версия схемы проекта {v}',
+  'Invalid connections': 'Недопустимые соединения',
+  'Invalid connection': 'Недопустимое соединение',
+  'Select exactly two pieces standing side by side.':
+    'Выберите ровно два изделия, стоящих вплотную рядом.',
+  Connect: 'Соединить',
+  Disconnect: 'Разъединить',
+  Connected: 'Соединены',
+  'About connections': 'О соединениях',
+  'Connected pieces move together; a snap connects them, Alt while dragging moves one alone. A pair that no longer touches is warned about.':
+    'Соединённые изделия перемещаются вместе; примагничивание соединяет их, Alt при перетаскивании двигает одно. О паре, которая больше не касается, выводится предупреждение.',
+  'Connected to {names}': 'Соединено с: {names}',
+  'Connected pieces': 'Соединённые изделия',
+  'A snap joins two touching pieces; they move together and a pair that no longer touches is warned about.':
+    'Примагничивание соединяет два соприкасающихся изделия; они перемещаются вместе, а о паре, которая больше не касается, выводится предупреждение.',
 } as const;

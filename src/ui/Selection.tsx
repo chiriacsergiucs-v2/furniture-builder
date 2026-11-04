@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { groupSizeFields, type WidthSplit } from '../core/groupSize';
 import { t, tr } from '../core/i18n';
 import { commonPanelCheck } from '../core/common';
+import { connectionCheck, isConnected } from '../core/connections';
 import { pieceName, type Project } from '../core/project';
 import { groupOf, sameIds, type Group } from '../core/selection';
 import { useDesign } from '../store/designStore';
@@ -26,6 +27,7 @@ export function SelectionCard() {
   const align = useDesign((s) => s.alignSelection);
   const distribute = useDesign((s) => s.distributeSelection);
   const setCommon = useDesign((s) => s.setCommon);
+  const setConnected = useDesign((s) => s.setConnected);
   const [msg, setMsg] = useState<{ for: string; text: string | null }>({ for: '', text: null });
   if (!project || ids.length < 2) return null;
   const key = ids.join(',');
@@ -161,6 +163,9 @@ export function SelectionCard() {
         </div>
       )}
       <CommonToggles project={project} ids={pieceIds} setCommon={setCommon} say={say} />
+      {pieceIds.length === 2 && (
+        <ConnectToggle project={project} ids={pieceIds} setConnected={setConnected} say={say} />
+      )}
       {isGroup && <GroupSize project={project} group={g!} say={say} />}
       {msg.for === key && msg.text && (
         <p className="hint" role="status">
@@ -168,6 +173,46 @@ export function SelectionCard() {
         </p>
       )}
     </section>
+  );
+}
+
+/**
+ * The two selected pieces connected (ADR-168): on when a connection between them is stored; disabled with the
+ * reason when they cannot be connected.
+ */
+function ConnectToggle({
+  project,
+  ids,
+  setConnected,
+  say,
+}: {
+  project: Project;
+  ids: string[];
+  setConnected: (on: boolean) => string;
+  say: (text: string | null) => void;
+}) {
+  const on = isConnected(project, ids[0], ids[1]);
+  const why = useMemo(
+    () => (on ? null : connectionCheck(project, ids[0], ids[1]).reason),
+    [project, ids, on],
+  );
+  return (
+    <div className="connect-toggle">
+      <Toggle
+        label={t('Connected')}
+        checked={on}
+        disabled={!!why}
+        onChange={(v) => say(setConnected(v) || null)}
+        info={
+          <InfoTip label={t('About connections')} align="start">
+            {t(
+              'Connected pieces move together; a snap connects them, Alt while dragging moves one alone. A pair that no longer touches is warned about.',
+            )}
+          </InfoTip>
+        }
+      />
+      {why && <p className="hint">{why}</p>}
+    </div>
   );
 }
 

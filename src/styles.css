@@ -2306,6 +2306,14 @@ td.note {
   stroke-width: 5;
   vector-effect: non-scaling-stroke;
 }
+/* A tick across the seam of two connected pieces (ADR-168). */
+.plan-connections line {
+  stroke: var(--primary);
+  stroke-width: 3;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
 .plan-piece text {
   fill: var(--ink);
   font-family: var(--font);
