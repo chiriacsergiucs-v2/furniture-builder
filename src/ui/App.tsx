@@ -439,8 +439,9 @@ export function App() {
         e.preventDefault();
         redo();
       }
-      // Esc in an open dialog closes the dialog only, not the selection too (ADR-160).
-      if (e.key === 'Escape' && !document.querySelector('dialog[open]')) {
+      // Esc in an open dialog closes the dialog only, not the selection too (ADR-160); Esc that cancels a drag or a
+      // turn on the plan (ADR-065, ADR-169) is taken there first and leaves the selection alone.
+      if (e.key === 'Escape' && !e.defaultPrevented && !document.querySelector('dialog[open]')) {
         const st = useDesign.getState();
         if (st.project && !st.editingItemId) st.selectItem(null);
         else st.select(null);

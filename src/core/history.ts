@@ -31,13 +31,21 @@ export function describeChange(prev: Project, next: Project): string {
       changed.every((i) => test(was(i), i));
     const designs = changed.filter((i) => was(i).design !== i.design);
     if (!designs.length) {
-      if (only((a, b) => a.rotationY !== b.rotationY))
+      // A quarter turn, or any whole degree with the handle or the keys (ADR-121, ADR-169).
+      if (only((a, b) => a.rotationY !== b.rotationY || (a.angle ?? 0) !== (b.angle ?? 0)))
         return t('Turn {what}', { what: what(changed) });
       if (only((a, b) => !!a.locked !== !!b.locked))
         return t(changed[0].locked ? 'Lock {what}' : 'Unlock {what}', { what: what(changed) });
       if (only((a, b) => a.quantity !== b.quantity && samePos(a, b)))
         return t('Change how many: {what}', { what: what(changed) });
-      if (only((a, b) => a.rotationY === b.rotationY && a.quantity === b.quantity))
+      if (
+        only(
+          (a, b) =>
+            a.rotationY === b.rotationY &&
+            (a.angle ?? 0) === (b.angle ?? 0) &&
+            a.quantity === b.quantity,
+        )
+      )
         return t('Move {what}', { what: what(changed) });
     }
     return t('Edit {what}', { what: what(designs.length ? designs : changed) });

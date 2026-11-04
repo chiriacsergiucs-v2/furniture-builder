@@ -168,10 +168,10 @@ export const FEATURES: FeatureDomain[] = [
         adrs: ['ADR-069', 'ADR-160'],
       },
       {
-        name: 'Pieces at any whole-degree angle',
+        name: 'Turn to any whole degree with a handle',
         detail:
-          'A turned piece from a file is drawn and checked turned; typing an angle is hidden for now.',
-        adrs: ['ADR-121', 'ADR-160'],
+          'Drag the round handle in front of the selected piece; it snaps to quarter turns, Shift steps by 15°, [ and ] turn by 1°.',
+        adrs: ['ADR-121', 'ADR-160', 'ADR-169'],
       },
       {
         name: 'Move to a wall, corner, ceiling, floor or neighbour',

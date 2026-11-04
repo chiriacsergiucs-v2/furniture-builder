@@ -47,6 +47,14 @@ import { pictureRect } from '../core/wallPicture';
 import { pictureKey, useWallPictureUrls } from './wallPictures';
 import {
   arrowMove,
+  bracketTurn,
+  cancelPress,
+  cancelTurn,
+  moveTurn,
+  pressTurn,
+  releaseTurn,
+  turnedFootprint,
+  type TurnGesture,
   movePointer,
   pressPiece,
   releasePointer,
@@ -580,6 +588,78 @@ export function PeekActions({ onAdd }: { onAdd: () => void }) {
 
 /** The typed rotation field (ADR-121) is hidden from the card for now (ADR-160, G-311). */
 const TYPED_ROTATION = false;
+
+/**
+ * The round turn handle on a stem from the selected piece's front (ADR-169): dragging it turns the piece about its
+ * centre to any whole degree (snapping to quarter turns, Shift steps by 15°), with the turned outline and the angle
+ * shown while dragging. A 44 px touch target around a small visible knob.
+ */
+function TurnHandle({
+  pc,
+  fs,
+  turn,
+  onPress,
+  onMove,
+  onRelease,
+  onCancel,
+}: {
+  pc: PlacedPiece;
+  fs: number;
+  turn: TurnGesture | null;
+  onPress: (e: React.PointerEvent<SVGGElement>) => void;
+  onMove: (e: React.PointerEvent<SVGGElement>) => void;
+  onRelease: (e: React.PointerEvent<SVGGElement>) => void;
+  onCancel: () => void;
+}) {
+  const b = pc.bounds;
+  const cx = b.x + b.w / 2,
+    cz = b.z + b.d / 2;
+  const [fx1, fz1, fx2, fz2] = pc.front;
+  const mx = (fx1 + fx2) / 2,
+    mz = (fz1 + fz2) / 2;
+  const len = Math.hypot(mx - cx, mz - cz) || 1;
+  const ux = (mx - cx) / len,
+    uz = (mz - cz) / len;
+  const stem = fs * 2.8;
+  const hx = mx + ux * stem,
+    hz = mz + uz * stem;
+  const current = rotationOf(pc.item);
+  const ghost =
+    turn && !turn.cancelled ? turnedFootprint(pc.footprint, cx, cz, turn.angle - current) : null;
+  return (
+    <g className={`turn-handle ${turn ? 'turning' : ''}`}>
+      {ghost && <polygon className="turn-ghost" points={ghost.map((p) => p.join(',')).join(' ')} />}
+      <line className="turn-stem" x1={mx} y1={mz} x2={hx} y2={hz} />
+      <g
+        role="slider"
+        tabIndex={-1}
+        aria-label={t('Turn {name}', { name: tr(pc.item.design.name) })}
+        aria-valuenow={turn?.angle ?? current}
+        aria-valuemin={0}
+        aria-valuemax={359}
+        aria-valuetext={t('{deg}°', { deg: turn?.angle ?? current })}
+        onPointerDown={onPress}
+        onPointerMove={onMove}
+        onPointerUp={onRelease}
+        onPointerCancel={onCancel}
+      >
+        <title>
+          {t(
+            'Drag to turn to any degree; Shift steps by 15°. Pieces at an angle do not join runs or snap side by side.',
+          )}
+        </title>
+        {/* About 44 px round the knob on a phone (fs is about a 40th of the drawing's width). */}
+        <circle className="turn-hit" cx={hx} cy={hz} r={fs * 3.4} />
+        <circle className="turn-knob" cx={hx} cy={hz} r={fs * 1.1} />
+      </g>
+      {turn && !turn.cancelled && (
+        <text className="turn-label" x={hx + fs * 1.6} y={hz - fs * 1.6} fontSize={fs * 1.2}>
+          {t('{deg}°', { deg: turn.angle })}
+        </text>
+      )}
+    </g>
+  );
+}
 
 /** The pieces this one is connected to (ADR-168), under Position. */
 function ConnectedTo({ project, id }: { project: Project; id: string }) {
@@ -1346,6 +1426,7 @@ function RoomPlan({
   const moveItemBy = useDesign((s) => s.moveItemBy);
   const [showZones, setShowZones] = useState(false);
   const turnItem = useDesign((s) => s.turnItem);
+  const setRotation = useDesign((s) => s.setRotation);
   /** Why the last move did nothing (a locked piece, ADR-095). */
   const notice = useDesign((s) => s.notice);
   /** The press or drag in progress (ADR-065); the ref keeps pointer handlers in step between renders. */
@@ -1364,12 +1445,27 @@ function RoomPlan({
     setDragState(g);
   };
   const dragging = !!drag;
+  /** The turn handle being dragged (ADR-169); the ref keeps pointer handlers in step between renders. */
+  const [turn, setTurnState] = useState<TurnGesture | null>(null);
+  const turnRef = useRef<TurnGesture | null>(null);
+  const setTurn = (g: TurnGesture | null) => {
+    turnRef.current = g;
+    setTurnState(g);
+  };
+  const turning = !!turn;
   useEffect(() => {
-    if (!dragging) return;
+    if (!dragging && !turning) return;
     const onEsc = (e: globalThis.KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
+        // The click that follows the release must not select or open the piece (ADR-169, G-018).
+        if (cancelPress(dragRef.current ?? turnRef.current)) {
+          justTapped.current = true;
+          window.setTimeout(() => (justTapped.current = false), 400);
+        }
         setDrag(null);
+        // A cancelled turn stays until the pointer is released, so the release stays the handle's own.
+        setTurn(cancelTurn(turnRef.current));
       }
     };
     const onAlt = (e: globalThis.KeyboardEvent) => {
@@ -1378,22 +1474,23 @@ function RoomPlan({
         setAlt(e.type === 'keydown');
       }
     };
-    window.addEventListener('keydown', onEsc);
+    // In the capture phase, so the app's own Esc (clear the selection, ADR-160) sees it taken first.
+    window.addEventListener('keydown', onEsc, true);
     window.addEventListener('keydown', onAlt);
     window.addEventListener('keyup', onAlt);
     return () => {
-      window.removeEventListener('keydown', onEsc);
+      window.removeEventListener('keydown', onEsc, true);
       window.removeEventListener('keydown', onAlt);
       window.removeEventListener('keyup', onAlt);
     };
-  }, [dragging]);
+  }, [dragging, turning]);
   // Chrome ignores `touch-action` on SVG shapes, so a touch drag on a piece would start a page scroll and cancel the
   // pointer. While a piece is pressed, touchmove is prevented (non-passive) so the drag keeps the pointer.
   useEffect(() => {
     const svg = svgRef.current;
     if (!svg) return;
     const onMove = (e: TouchEvent) => {
-      if (dragRef.current || boxRef.current) e.preventDefault();
+      if (dragRef.current || boxRef.current || turnRef.current) e.preventDefault();
     };
     svg.addEventListener('touchmove', onMove, { passive: false });
     return () => svg.removeEventListener('touchmove', onMove);
@@ -1473,6 +1570,11 @@ function RoomPlan({
   const sel =
     pm.pieces.find((p) => p.item.id === selectedId)?.bounds ??
     pm.models.find((m) => m.item.id === selectedId)?.box;
+  /** The one selected, unlocked piece whose turn handle is shown (ADR-169). */
+  const turnPc =
+    !tapping && selectedIds.length === 1
+      ? pm.pieces.find((x) => x.item.id === selectedIds[0] && !isLocked(x.item))
+      : undefined;
   const frontLine = (b: { x: number; z: number; w: number; d: number }, r: QuarterTurn) =>
     r === 0
       ? [b.x, b.z + b.d, b.x + b.w, b.z + b.d]
@@ -1513,7 +1615,7 @@ function RoomPlan({
             : t('Pieces go exactly where dropped.')}
         </span>
         {t(
-          "Seen from above. The yellow edge is each piece's front; dashed pieces hang on the wall; red dashes show where a selected piece's doors or drawers cannot open. Drag a piece, or use the arrow keys on it, to move it; Esc cancels a drag. R turns the focused piece about its centre. Shift- or Ctrl-click adds pieces to the selection (Select on a phone); drag on empty plan to draw a box; tap a spot again to reach a piece under another; Ctrl+A selects all. A grouped piece selects its group first, then itself. With Snap on, a dropped piece joins a wall, an inside corner or a neighbour’s side within {range} mm; arrow keys never snap.",
+          "Seen from above. The yellow edge is each piece's front; dashed pieces hang on the wall; red dashes show where a selected piece's doors or drawers cannot open. Drag a piece, or use the arrow keys on it, to move it; Esc cancels a drag. R turns the focused piece about its centre. Shift- or Ctrl-click adds pieces to the selection (Select on a phone); drag on empty plan to draw a box; tap a spot again to reach a piece under another; Ctrl+A selects all. Drag the round handle in front of the selected piece to turn it to any degree ([ and ] turn by 1°). A grouped piece selects its group first, then itself. With Snap on, a dropped piece joins a wall, an inside corner or a neighbour’s side within {range} mm; arrow keys never snap.",
           { range: SNAP_RANGE },
         )}
       </InfoTip>
@@ -1682,6 +1784,14 @@ function RoomPlan({
                   if (e.repeat) return;
                   select(pc.item.id);
                   turnItem(pc.item.id, e.shiftKey ? -1 : 1);
+                  return;
+                }
+                // [ and ] turn the focused piece by 1°, with Shift by 15° (ADR-169).
+                const deg = tapping ? null : bracketTurn(e.key, e.shiftKey);
+                if (deg !== null && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                  e.preventDefault();
+                  select(pc.item.id);
+                  setRotation(pc.item.id, (((rotationOf(pc.item) + deg) % 360) + 360) % 360);
                   return;
                 }
                 const m = tapping ? null : arrowMove(e.key, e.shiftKey);
@@ -1910,6 +2020,47 @@ function RoomPlan({
             width={space.w}
             height={space.d}
             aria-label={t('Selected space inside the piece')}
+          />
+        )}
+        {/* The turn handle of the one selected piece (ADR-169); last in the drawing, so nothing covers its knob. */}
+        {turnPc && (
+          <TurnHandle
+            pc={turnPc}
+            fs={fs}
+            turn={turn?.id === turnPc.item.id ? turn : null}
+            onPress={(e) => {
+              if (e.pointerType === 'mouse' && e.button !== 0) return;
+              if (dragRef.current || turnRef.current) return;
+              e.stopPropagation();
+              const b = turnPc.bounds;
+              const g = pressTurn(
+                turnPc.item.id,
+                { x: b.x + b.w / 2, z: b.z + b.d / 2 },
+                rotationOf(turnPc.item),
+                at(e),
+              );
+              if (!g) return;
+              e.currentTarget.setPointerCapture?.(e.pointerId);
+              justTapped.current = false;
+              setTurn(g);
+            }}
+            onMove={(e) => {
+              const g = turnRef.current;
+              if (!g) return;
+              const next = moveTurn(g, at(e), e.shiftKey);
+              if (next !== g) setTurn(next);
+            }}
+            onRelease={(e) => {
+              const g = turnRef.current;
+              if (!g || e.pointerId !== g.pointerId) return;
+              e.stopPropagation();
+              const deg = releaseTurn(g, e.pointerId);
+              setTurn(null);
+              justTapped.current = true;
+              window.setTimeout(() => (justTapped.current = false), 400);
+              if (deg !== null) setRotation(turnPc.item.id, deg);
+            }}
+            onCancel={() => setTurn(null)}
           />
         )}
       </svg>

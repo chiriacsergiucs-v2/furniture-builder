@@ -364,9 +364,6 @@ export const ru_info = {
     'Ручка, накладка фасадов и высота цоколя, которым следуют изделия; «Материал» с областью «Проект» задаёт плиты корпуса, фасадов и задней стенки.',
   'Turn ↺ and ↻ in the toolbar, or R and Shift+R.':
     'Поворот ↺ и ↻ на панели инструментов или клавишами R и Shift+R.',
-  'Pieces at any whole-degree angle': 'Изделия под любым целым углом',
-  'A turned piece from a file is drawn and checked turned; typing an angle is hidden for now.':
-    'Повёрнутое изделие из файла рисуется и проверяется повёрнутым; ввод угла пока скрыт.',
   "One tap slides it to a wall, corner or neighbour, up to the ceiling or down, centres it, or matches a neighbour's top or front.":
     'Одно касание сдвигает его к стене, в угол или к соседу, вверх до потолка или вниз, ставит по центру или выравнивает по верху или фасаду соседа.',
   'Groups align and distribute as one block': 'Группы выравниваются и распределяются как один блок',
@@ -378,4 +375,7 @@ export const ru_info = {
   'Results tabs under the views': 'Вкладки результатов под видами',
   'Parts, Sheets, Hardware, Shopping list and Checks with counts; on a phone they stay folded until you tap a tab.':
     'Детали, Листы, Фурнитура, Список покупок и Проверки со счётчиками; на телефоне они свёрнуты, пока не нажать вкладку.',
+  'Turn to any whole degree with a handle': 'Поворот на любой целый градус ручкой',
+  'Drag the round handle in front of the selected piece; it snaps to quarter turns, Shift steps by 15°, [ and ] turn by 1°.':
+    'Перетащите круглую ручку перед выбранным изделием; она примагничивается к четвертям оборота, Shift шагает по 15°, [ и ] поворачивают на 1°.',
 } satisfies Record<string, string>;
