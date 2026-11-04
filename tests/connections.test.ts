@@ -1,0 +1,287 @@
+// ADR-168: stored connections between touching pieces — check, automatic connect on snap, disconnect when parted,
+// move together, the broken warning, validation and sets.
+import 'fake-indexeddb/auto';
+import { beforeEach, describe, expect, it } from 'vitest';
+import {
+  carryUnits,
+  connect,
+  connectedTo,
+  connectionCheck,
+  disconnect,
+  isConnected,
+  movingSet,
+  pruneConnections,
+  settleConnections,
+} from '../src/core/connections';
+import { templates } from '../src/core/design';
+import { describeChange } from '../src/core/history';
+import {
+  buildProjectModel,
+  makeItem,
+  moveBy,
+  newProject,
+  PROJECT_SCHEMA,
+  removeProjectItem,
+  validateProject,
+  type Project,
+} from '../src/core/project';
+import { moveItems } from '../src/core/selection';
+import { addSet, syncSets, updateSet } from '../src/core/sets';
+import { addVariable, applyBindings, setBinding } from '../src/core/variables';
+import { useDesign } from '../src/store/designStore';
+
+const t = (id: string) => templates.find((x) => x.id === id)!.create();
+/** Pieces placed one after the other, each at the previous one's right edge (`makeItem`). */
+function row(...ids: string[]): Project {
+  let p = newProject('Connections');
+  for (const id of ids) p = { ...p, items: [...p.items, makeItem(p, t(id))] };
+  return p;
+}
+const ids = (p: Project) => p.items.map((i) => i.id);
+const pos = (p: Project, id: string) => p.items.find((i) => i.id === id)!.position;
+const codes = (p: Project) => buildProjectModel(p).diagnostics.map((d) => d.code);
+const errors = (p: Project) =>
+  buildProjectModel(p).diagnostics.filter((d) => d.severity === 'error');
+const st = () => useDesign.getState();
+
+describe('connectionCheck (ADR-168)', () => {
+  it('accepts two base units standing side by side and names the reason otherwise', () => {
+    const p = row('base-door', 'base-door');
+    const [a, b] = ids(p);
+    expect(connectionCheck(p, a, b).reason).toBeNull();
+    expect(connectionCheck(p, a, a).reason).toMatch(/itself/);
+    expect(connectionCheck(p, a, 'nope').reason).toMatch(/removed/);
+    const apart = moveBy(p, b, 100, 0, 1).project;
+    expect(connectionCheck(apart, a, b).reason).toMatch(/side by side/);
+  });
+  it('a refusing compatibility rule (ADR-100) refuses the pair: a wall unit beside a base unit', () => {
+    const p = row('base-door', 'wall-cabinet');
+    const [a, b] = ids(p);
+    // Put the wall unit on the floor next to the base so the boxes touch; the rule still refuses the join.
+    const floored: Project = {
+      ...p,
+      items: p.items.map((i) =>
+        i.id === b ? { ...i, position: { ...i.position, y: 0 }, placement: undefined } : i,
+      ),
+    };
+    const r = connectionCheck(floored, a, b).reason;
+    expect(r).not.toBeNull();
+  });
+});
+
+describe('connect, disconnect, prune and settle (ADR-168)', () => {
+  it('connect is idempotent; disconnect removes; a removed piece prunes its connection', () => {
+    const p = row('base-door', 'base-door', 'base-door');
+    const [a, b, c] = ids(p);
+    const one = connect(p, a, b);
+    expect(connect(one, b, a)).toBe(one);
+    expect(one.connections).toHaveLength(1);
+    expect(isConnected(one, b, a)).toBe(true);
+    expect(connectedTo(one, a)).toEqual([b]);
+    expect(disconnect(one, a, b).connections).toBeUndefined();
+    expect(disconnect(one, a, c)).toBe(one);
+    expect(removeProjectItem(one, b).connections).toBeUndefined();
+    expect(pruneConnections(one)).toBe(one);
+    const stale: Project = {
+      ...one,
+      connections: [...one.connections!, { id: 'x', itemIds: [a, 'gone'] }],
+    };
+    expect(pruneConnections(stale).connections).toHaveLength(1);
+    expect(validateProject(one)).toEqual([]);
+  });
+  it('a snapped drop connects valid touching neighbours; a drop that parts them disconnects; unsnapped adds none', () => {
+    const p = row('base-door', 'base-door', 'base-door');
+    const [a, b, c] = ids(p);
+    const snapped = settleConnections(p, [b], true);
+    expect(isConnected(snapped, a, b)).toBe(true);
+    expect(isConnected(snapped, b, c)).toBe(true);
+    expect(isConnected(snapped, a, c)).toBe(false);
+    expect(settleConnections(p, [b], false)).toBe(p);
+    // Dragging c away alone: its connection goes, a–b stays.
+    const apart = moveBy(snapped, c, 200, 0, 1).project;
+    const settled = settleConnections(apart, [c], false);
+    expect(isConnected(settled, b, c)).toBe(false);
+    expect(isConnected(settled, a, b)).toBe(true);
+    expect(settleConnections(settled, [c], false)).toBe(settled);
+  });
+});
+
+describe('connected pieces move together (ADR-168)', () => {
+  it('movingSet reaches through connections and groups; carryUnits carries the neighbour', () => {
+    const base = row('base-door', 'base-door', 'base-door');
+    const [a, b, c] = ids(base);
+    const joined = connect(connect(base, a, b), b, c);
+    expect(movingSet(joined, [a])).toEqual([a, b, c]);
+    expect(movingSet(joined, [a], false)).toEqual([a]);
+    const moved = moveItems(joined, movingSet(joined, [a]), 50, 0).project;
+    expect(pos(moved, c).x - pos(joined, c).x).toBe(50);
+    // A change that moved only `a` (typed) is carried to b and c by carryUnits.
+    const typed = moveBy(joined, a, 30, 0, 1).project;
+    const carried = carryUnits(joined, typed, [a]);
+    expect(carried.reason).toBeUndefined();
+    expect(pos(carried.project, b).x - pos(joined, b).x).toBe(30);
+    expect(carried.project.groups).toBeUndefined();
+    // Every connection still holds after the move: no warning.
+    expect(codes(carried.project)).not.toContain('connection-broken');
+  });
+});
+
+describe('the broken warning (ADR-168, ADR-008)', () => {
+  it('a resized or parted pair warns, never errors; touching again clears it', () => {
+    const base = row('base-door', 'base-door');
+    const [a, b] = ids(base);
+    const p = connect(base, a, b);
+    expect(codes(p)).not.toContain('connection-broken');
+    const parted = moveBy(p, b, 100, 0, 1).project;
+    expect(codes(parted)).toContain('connection-broken');
+    expect(errors(parted)).toEqual([]);
+    const back = moveBy(parted, b, -100, 0, 1).project;
+    expect(codes(back)).not.toContain('connection-broken');
+    const wider = {
+      ...p,
+      items: p.items.map((i) =>
+        i.id === a && i.design.product.kind === 'cabinet'
+          ? {
+              ...i,
+              design: {
+                ...i.design,
+                product: {
+                  ...i.design.product,
+                  params: { ...i.design.product.params, width: i.design.product.params.width - 10 },
+                },
+              },
+            }
+          : i,
+      ),
+    } as Project;
+    expect(codes(wider)).toContain('connection-broken');
+  });
+});
+
+describe('validation and schema (ADR-168, ADR-011)', () => {
+  it('schemaVersion 18 validates pairs; older projects load unchanged; bad pairs are refused', () => {
+    expect(PROJECT_SCHEMA).toBe(18);
+    const p = row('base-door', 'base-door');
+    const [a, b] = ids(p);
+    const old = { ...p, schemaVersion: 17 as const };
+    expect(validateProject(old)).toEqual([]);
+    expect(validateProject({ ...old, connections: [{ id: 'c', itemIds: [a, b] }] })).not.toEqual(
+      [],
+    );
+    const ok = connect(p, a, b);
+    expect(validateProject(ok)).toEqual([]);
+    const bad = (connections: unknown) => validateProject({ ...p, connections } as Project);
+    expect(bad([{ id: 'c', itemIds: [a, a] }])).toContain('Invalid connection');
+    expect(bad([{ id: 'c', itemIds: [a, 'x'] }])).toContain('Invalid connection');
+    expect(bad([{ id: 'c', itemIds: [a] }])).toContain('Invalid connection');
+    expect(
+      bad([
+        { id: 'c', itemIds: [a, b] },
+        { id: 'd', itemIds: [b, a] },
+      ]),
+    ).toContain('Invalid connection');
+    expect(bad('no')).toContain('Invalid connections');
+  });
+});
+
+describe('value sets copy connections (ADR-168, ADR-167)', () => {
+  it('a set-1 connection is copied to each set as a connection between the duplicates', () => {
+    let p = row('base-door', 'base-door');
+    const [a, b] = ids(p);
+    const v = addVariable(p, 'h', '720');
+    p = v.project;
+    p = setBinding(p, a, 'height', 'h');
+    p = setBinding(p, b, 'height', 'h');
+    p = applyBindings(connect(p, a, b));
+    const s = addSet(p);
+    p = syncSets(updateSet(s.project, s.id, { values: { [v.id]: '600' } }));
+    expect(validateProject(p)).toEqual([]);
+    const dups = p.items.filter((i) => i.set);
+    expect(dups).toHaveLength(2);
+    expect(isConnected(p, dups[0].id, dups[1].id)).toBe(true);
+    expect(p.connections).toHaveLength(2);
+    expect(syncSets(p)).toBe(p);
+    expect(codes(p)).not.toContain('connection-broken');
+  });
+});
+
+describe('store (ADR-168)', () => {
+  beforeEach(() => st().openProject(row('base-door', 'base-door', 'base-door')));
+  it('a snapped drop connects as part of the move step; Alt moves alone; undo names', () => {
+    const [a, b, c] = ids(st().project!);
+    st().moveItemBy(b, 0, 0, 1, { snapped: true });
+    // No move happened: nothing to settle in a step that did not commit.
+    expect(st().project!.connections).toBeUndefined();
+    st().moveItemBy(c, 10, 0, 1, { snapped: true });
+    st().moveItemBy(c, -10, 0, 1, { snapped: true });
+    expect(isConnected(st().project!, b, c)).toBe(true);
+    expect(st().projectPastNames.at(-1)).toMatch(/^Move/);
+    // Alone: a moves without b; a connected neighbour moves along otherwise.
+    st().selectItems([a, b]);
+    st().setConnected(true);
+    expect(st().projectPastNames.at(-1)).toBe('Connect');
+    const before = st().project!;
+    st().moveItemBy(a, -100, 0, 1, { alone: true });
+    expect(pos(st().project!, b)).toEqual(pos(before, b));
+    expect(isConnected(st().project!, a, b)).toBe(false);
+    st().undoProject();
+    st().moveItemBy(a, -100, 0, 1);
+    expect(pos(st().project!, b).x - pos(before, b).x).toBe(-100);
+    expect(pos(st().project!, c).x - pos(before, c).x).toBe(-100);
+    expect(isConnected(st().project!, a, b)).toBe(true);
+    st().selectItems([a, b]);
+    st().setConnected(false);
+    expect(st().projectPastNames.at(-1)).toBe('Disconnect');
+    expect(isConnected(st().project!, a, b)).toBe(false);
+    expect(describeChange(before, disconnect(before, a, b))).toBe('Disconnect');
+  });
+  it('setConnected refuses pairs that are not side by side with the reason; Move to a neighbour connects', () => {
+    const [a, , c] = ids(st().project!);
+    st().selectItems([a, c]);
+    expect(st().setConnected(true)).toMatch(/side by side/);
+    expect(st().project!.connections).toBeUndefined();
+    st().moveItemBy(c, 300, 0, 1);
+    st().moveItemTo(c, 'left');
+    const p = st().project!;
+    const b = ids(p)[1];
+    expect(isConnected(p, b, c)).toBe(true);
+    expect(st().setConnected(true)).toMatch(/exactly two|side by side/);
+  });
+});
+
+describe('seeded fuzz: random connections never throw (ADR-168)', () => {
+  it('settle, prune and build hold their invariants', () => {
+    let seed = 7;
+    const rnd = () => {
+      seed = (seed * 1664525 + 1013904223) % 4294967296;
+      return seed / 4294967296;
+    };
+    const N = Math.ceil(Number(process.env.FUZZ_N ?? 3000) / 20);
+    const kinds = ['base-door', 'base-door', 'wall-cabinet', 'base-door'];
+    for (let n = 0; n < N; n++) {
+      let p = row(
+        ...Array.from(
+          { length: 2 + Math.floor(rnd() * 3) },
+          () => kinds[Math.floor(rnd() * kinds.length)],
+        ),
+      );
+      const all = ids(p);
+      for (let k = 0; k < 3; k++) {
+        const a = all[Math.floor(rnd() * all.length)],
+          b = all[Math.floor(rnd() * all.length)];
+        if (rnd() < 0.5 && connectionCheck(p, a, b).reason === null) p = connect(p, a, b);
+        const id = all[Math.floor(rnd() * all.length)];
+        p = moveBy(p, id, Math.floor(rnd() * 200) - 100, 0, 1).project;
+        p = settleConnections(p, [id], rnd() < 0.5);
+      }
+      expect(validateProject(p)).toEqual([]);
+      expect(pruneConnections(p)).toBe(p);
+      // Every stored pair is two different pieces of the project, once.
+      const keys = (p.connections ?? []).map((c) => [...c.itemIds].sort().join('|'));
+      expect(new Set(keys).size).toBe(keys.length);
+      buildProjectModel(p);
+      const moved = moveItems(p, movingSet(p, [all[0]]), 40, 0).project;
+      buildProjectModel(moved);
+    }
+  });
+});

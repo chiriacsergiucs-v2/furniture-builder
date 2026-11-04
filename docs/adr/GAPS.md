@@ -1433,3 +1433,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Not a quote: the user asked for variables “within the project”
 - Questions: Should a catalog design carry bindings as parameters?
 - Suggested pick: A later ADR adds variables to catalog designs (estimate: effort +40%, value +15%).
+
+### G-336: Verified research rows not yet deleted from the data
+
+- Status: Open
+- Origin: ADR-168, 2026-11-04; agent scoped it out
+- Missing: The three research rows ADR-168 completes (Transactional undo/redo, Versioned save/reload, Connected items stay independently selectable) are marked Verified in the research data but stay listed; ADR-149 and ADR-152 deleted built features from the data in their own ADRs.
+- Request: “Validate all High demand features … create adrs” (user 2026-11-04)
+- Questions: Delete the three rows from the research data as ADR-152 did?
+- Suggested pick: A small deletion ADR after ADR-168 to ADR-170 ship, covering all four High-demand rows at once (estimate: effort +5%, value +5%).

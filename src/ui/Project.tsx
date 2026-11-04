@@ -25,7 +25,9 @@ import {
   placementBases,
   planRuns,
   rotationOf,
+  pieceName,
   type Placement,
+  type PlacedPiece,
   type ProjectItem,
   type Project,
   type ProjectModel,
@@ -33,6 +35,7 @@ import {
 } from '../core/project';
 import { dropTarget, SNAP_RANGE } from '../core/snap';
 import { groupOf, itemsAt, itemsInBox, nextUnder } from '../core/selection';
+import { connectedTo, connectionCheck } from '../core/connections';
 import { inSelection, selectionBox } from '../core/selectPath';
 import type { Box, Design, Diagnostic, Panel } from '../core/types';
 import { listDesigns, listProjectTemplates, loadDesign, type StoredDesign } from '../persist/db';
@@ -426,6 +429,7 @@ export function ProjectPanel({
           {/* The most used group opens with the piece (ADR-160); the toolbar turns it. */}
           <Group title={t('Position')} openOn={openKey(item.id, positionErrors)}>
             <GroupErrors messages={positionErrors} />
+            <ConnectedTo project={project} id={item.id} />
             {blocked && (
               <p className="hint" role="note">
                 {isLocked(item) ? `${LOCKED_HINT}.` : blocked}{' '}
@@ -576,6 +580,58 @@ export function PeekActions({ onAdd }: { onAdd: () => void }) {
 
 /** The typed rotation field (ADR-121) is hidden from the card for now (ADR-160, G-311). */
 const TYPED_ROTATION = false;
+
+/** The pieces this one is connected to (ADR-168), under Position. */
+function ConnectedTo({ project, id }: { project: Project; id: string }) {
+  const names = connectedTo(project, id).map((x) => tr(pieceName(project, x)));
+  if (!names.length) return null;
+  return (
+    <p className="hint connected-to" role="note">
+      {t('Connected to {names}', { names: names.join(', ') })}
+    </p>
+  );
+}
+
+/**
+ * A short tick across the seam of every connection that still holds (ADR-168), on the plan. A broken one has its
+ * warning in the checks instead.
+ */
+function ConnectionTicks({
+  project,
+  pieces,
+  fs,
+}: {
+  project: Project;
+  pieces: PlacedPiece[];
+  fs: number;
+}) {
+  if (!project.connections?.length) return null;
+  const byId = new Map(pieces.map((pc) => [pc.item.id, pc]));
+  const half = fs * 0.6;
+  const ticks = project.connections.flatMap((c) => {
+    const a = byId.get(c.itemIds[0]),
+      b = byId.get(c.itemIds[1]);
+    if (!a || !b || connectionCheck(project, c.itemIds[0], c.itemIds[1], pieces).reason) return [];
+    const A = a.bounds,
+      B = b.bounds;
+    // The seam: a shared x edge (side by side along x) or a shared z edge.
+    if (A.x + A.w === B.x || B.x + B.w === A.x) {
+      const x = A.x + A.w === B.x ? B.x : A.x;
+      const zm = (Math.max(A.z, B.z) + Math.min(A.z + A.d, B.z + B.d)) / 2;
+      return [{ key: c.id, x1: x - half, y1: zm, x2: x + half, y2: zm }];
+    }
+    const z = A.z + A.d === B.z ? B.z : A.z;
+    const xm = (Math.max(A.x, B.x) + Math.min(A.x + A.w, B.x + B.w)) / 2;
+    return [{ key: c.id, x1: xm, y1: z - half, x2: xm, y2: z + half }];
+  });
+  return (
+    <g className="plan-connections" aria-hidden="true">
+      {ticks.map((l) => (
+        <line key={l.key} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} />
+      ))}
+    </g>
+  );
+}
 
 /** Asks, then removes a project piece; from More actions and the Delete key (ADR-160). */
 export async function askRemove(item: ProjectItem, remove: (id: string) => void) {
@@ -1699,12 +1755,16 @@ function RoomPlan({
                     snapping && project
                       ? dropTarget(project, others, end.id, end.dx, end.dz, true)
                       : null;
+                  // Alt moves the pieces without their connected neighbours (ADR-168).
+                  const opts = { snapped: !!t?.snap, alone: e.altKey };
                   if (t?.snap)
                     moveSelectionBy(
                       t.position.x - pc.item.position.x,
                       t.position.z - pc.item.position.z,
+                      undefined,
+                      opts,
                     );
-                  else moveSelectionBy(end.dx, end.dz, DRAG_STEP);
+                  else moveSelectionBy(end.dx, end.dz, DRAG_STEP, opts);
                   return;
                 }
                 select(end.id);
@@ -1712,14 +1772,17 @@ function RoomPlan({
                   snapping && project
                     ? dropTarget(project, pm.pieces, end.id, end.dx, end.dz, true)
                     : null;
-                // Snap off or Alt held: exactly the ADR-065 drop. Snapped: whole mm, one undo step.
-                if (!t?.snap) moveItemBy(end.id, end.dx, end.dz);
+                // Snap off or Alt held: exactly the ADR-065 drop. Snapped: whole mm, one undo step. A snapped
+                // drop connects the piece to a valid neighbour; Alt moves it without its connected ones (ADR-168).
+                const opts = { snapped: !!t?.snap, alone: e.altKey };
+                if (!t?.snap) moveItemBy(end.id, end.dx, end.dz, undefined, opts);
                 else
                   moveItemBy(
                     end.id,
                     t.position.x - pc.item.position.x,
                     t.position.z - pc.item.position.z,
                     1,
+                    opts,
                   );
               }}
               onPointerCancel={() => setDrag(null)}
@@ -1767,6 +1830,7 @@ function RoomPlan({
           />
         )}
         {showZones && <ZoneOverlay zones={pm.zones} fs={fs} />}
+        {project && <ConnectionTicks project={project} pieces={pm.pieces} fs={fs} />}
         <PlanModels pm={pm} fs={fs} tapping={tapping} />
         {pm.blocked
           .filter((c) => c.itemId === selectedId)

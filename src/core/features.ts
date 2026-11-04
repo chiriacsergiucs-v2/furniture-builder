@@ -201,6 +201,12 @@ export const FEATURES: FeatureDomain[] = [
       },
       { name: 'Snap centre to centre', adrs: ['ADR-099'] },
       {
+        name: 'Connected pieces',
+        detail:
+          'A snap joins two touching pieces; they move together and a pair that no longer touches is warned about.',
+        adrs: ['ADR-168'],
+      },
+      {
         name: 'Compatibility rules',
         detail: 'Checked when snapping and in the project checks.',
         adrs: ['ADR-100'],
