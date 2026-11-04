@@ -28,9 +28,8 @@ export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
     'N55 (ADR-060): save a project as a reusable project template; N124 (ADR-123): insert one into a project; N173 (ADR-170): a template keeps the run-part recipe, connections, variables and bindings. Copies by choice (ADR-060), not item references.',
   ],
   'live-price': [
-    'in-progress',
-    "N57 (ADR-062): estimate from the user's own price list.",
-    'live supplier prices (N58, ADR-063 deferred)',
+    'verified',
+    "N57 (ADR-062): estimate from the user's own price list; N162 (ADR-161): the bundled seller's prices with their date; N175 (ADR-172): a running estimate in the editor and a Seller prices workflow that converts a new export. No live supplier feed (ADR-063 Deferred).",
   ],
   'independent-selection': [
     'verified',

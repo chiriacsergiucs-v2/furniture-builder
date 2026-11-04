@@ -4832,6 +4832,41 @@ button.tile:hover {
 .bar .path .btn {
   flex: none;
 }
+/* The running cost estimate (ADR-172): a pill that opens the Shopping list. */
+.estimate-chip {
+  flex: none;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  line-height: 1;
+  padding: var(--s-1) var(--s-3);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.estimate-chip.partial {
+  border-color: var(--warn);
+}
+.estimate-chip.none {
+  color: var(--ink-2);
+  font-weight: 500;
+}
+.estimate-chip:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+}
+.modes {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+.modes .segmented {
+  flex: 1 1 auto;
+  min-width: 0;
+}
 .bar-tools {
   margin-left: auto;
   display: flex;

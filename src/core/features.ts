@@ -567,6 +567,12 @@ export const FEATURES: FeatureDomain[] = [
         name: 'Shopping and costs',
         features: [
           {
+            name: 'Running cost estimate',
+            detail:
+              'A chip in the editor header with the estimate of what is shown, updated on every change; tap it to open the Shopping list.',
+            adrs: ['ADR-172'],
+          },
+          {
             name: 'Shopping list',
             detail: 'Boards, banding, hardware, run parts and what is still to choose.',
             adrs: ['ADR-064'],

@@ -468,10 +468,8 @@ export const data_research2: Record<string, string> = {
   'Medium if data exists': 'Средняя, если есть данные',
   'Manufacturing and advanced configuration (phase 3)':
     'Производство и расширенная настройка (этап 3)',
-  "N57 (ADR-062): estimate from the user's own price list.":
-    'N57 (ADR-062): оценка по собственному прайс-листу пользователя.',
-  'live supplier prices (N58, ADR-063 deferred)':
-    'актуальные цены поставщиков (N58, ADR-063 отложен)',
+  "N57 (ADR-062): estimate from the user's own price list; N162 (ADR-161): the bundled seller's prices with their date; N175 (ADR-172): a running estimate in the editor and a Seller prices workflow that converts a new export. No live supplier feed (ADR-063 Deferred).":
+    'N57 (ADR-062): оценка по собственному прайс-листу пользователя; N162 (ADR-161): цены встроенного продавца с их датой; N175 (ADR-172): текущая оценка в редакторе и рабочий процесс «Цены продавца», преобразующий новый экспорт. Живой канал поставщика не построен (ADR-063 отложен).',
   'Quotations / quoting': 'Коммерческие предложения',
   'Turn a configuration into a quotation (Homestyler quotations, Cyncly quoting); the same configuration can feed pricing, quotations, BOMs and manufacturing.':
     'Превращать конфигурацию в коммерческое предложение (предложения Homestyler, расчёт предложений Cyncly); одна и та же конфигурация может питать цены, предложения, спецификации и производство.',
