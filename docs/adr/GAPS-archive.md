@@ -37,6 +37,17 @@ highest id in either file.
 - Suggested pick: Option 2 reuses the same pointer code: hold a catalog card and drop it on the plan, with the snap preview from ADR-070. (estimate: effort +25%, value +20%)
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): dragging a catalog item onto the plan adds the piece (src/ui/pieceDrag.ts, src/ui/Project.tsx:1374).
 
+### G-018: Turn by dragging; Esc selection bug
+
+- Status: Done (ADR-169)
+- Origin: ADR-065, 2026-10-24 18:55 UTC; agent scoped it out
+- Missing: No turning by dragging (no turn handle on the plan). After Esc cancels a plan drag, the following click likely still selects the piece (Esc at Project.tsx:1313-1317 does not suppress the click at Project.tsx:1604-1612); not reproduced.
+- Request: Drag and drop on the plan (context, not a quote)
+- Questions: A 90-degree turn handle on the selected piece?
+- Suggested pick: A turn handle on the selected piece that steps 90° (ADR-003 keeps whole angles). Fix the Esc bug. (estimate: effort +10%, value +10%)
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): partly resolved. ADR-069 added Turn 90° buttons and R / Shift+R. No turn handle on the plan. The Esc bug is most likely still there: the piece's onClick still calls select() (src/ui/Project.tsx:1011); not reproduced.
+- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+
 ### G-019: Textures in Realistic mode
 
 - Status: Done (3a9dafe)
@@ -753,6 +764,16 @@ highest id in either file.
 - Questions: When both are merged: should a size-locked piece refuse project settings that change its size (plinth height) and Replace?
 - Suggested pick: Refuse and name the piece, as ADR-122 says for Fill-a-wall, Replace and linked edits
 
+### G-203: Wizard and template pieces and the project settings
+
+- Status: Done (ADR-170)
+- Origin: ADR-124 (found while building)
+- Missing: Pieces inserted from a project template (insertTemplate) do not take the project settings; pieces from the wizard's "Add to project" already do (they go through addPiece, designStore.ts:779).
+- Request: Accept default, /batch all ready
+- Questions: Should they take the project settings like Add a piece?
+- Suggested pick: They take them, like Add a piece (estimate +5 % work)
+- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+
 ### G-213: Paid backend allowed
 
 - Status: Done (ADR-126)
@@ -1468,6 +1489,16 @@ highest id in either file.
 - Questions: Should the single-piece Inspector get the same treatment (action toolbar, More menu, open first group)?
 - Suggested pick: Yes, in a follow-up ADR; it is the same panel when no project is open.
 - Answer (user, 2026-10-30): "Flatten + order"; built in ADR-160.
+
+### G-323: Variables outside projects
+
+- Status: Done (ADR-170)
+- Origin: ADR-166, 2026-10-30; agent scoped it out
+- Missing: Variables and bindings live in a project only: the stand-alone design editor has none, a design saved to the catalog loses its bindings, and a project template (ADR-060, templateFromProject) also drops both the variables and the bindings, although ADR-166 says it keeps them.
+- Request: Not a quote: the user asked for variables "within the project".
+- Questions: Should a saved design or the catalog carry bindings as parameters?
+- Suggested pick: Keep bindings in project templates only (built); add variables to catalog designs as a later ADR (estimate: effort +40%, value +15%).
+- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
 
 ### G-327: Unbound pieces stay out of a set
 
