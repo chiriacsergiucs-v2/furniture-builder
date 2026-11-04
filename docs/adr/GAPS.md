@@ -634,7 +634,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-113: Fill a wall: corner and L walls
 
-- Status: Open
+- Status: ADR-173
 - Origin: ADR-103, 2026-10-27; Claude scoped it out
 - Missing: Fill a wall works on one straight wall only; corner and L-shaped walls are not filled.
 - Request: a reverse furniture building, total width, to the mix of furniture pieces that fill that space (context: corners not mentioned)
@@ -643,7 +643,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-114: Fill a wall: room openings shape the mix
 
-- Status: Open
+- Status: ADR-173
 - Origin: ADR-103, 2026-10-27; Claude scoped it out
 - Missing: Room windows, doors, pipes and outlets do not shape the suggested mixes; they are checked only after the project is made.
 - Request: a reverse furniture building, total width, to the mix of furniture pieces that fill that space (context: room openings not mentioned)
@@ -906,7 +906,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-180: Lock parameters other than size
 
-- Status: Open
+- Status: ADR-171
 - Origin: ADR-122 (found while building)
 - Missing: Lock size covers width, height and depth only; boards, construction and insides of a size-locked piece stay editable (the research's locked parameters, G-081, beyond size)
 - Request: Accept default
@@ -1442,3 +1442,84 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: “Validate all High demand features … create adrs” (user 2026-11-04)
 - Questions: Delete the three rows from the research data as ADR-152 did?
 - Suggested pick: A small deletion ADR after ADR-168 to ADR-170 ship, covering all four High-demand rows at once (estimate: effort +5%, value +5%).
+
+### G-337: Locks on boards, construction and insides
+
+- Status: Open
+- Origin: ADR-171, 2026-11-04; agent scoped it out
+- Missing: Boards, construction and insides of a piece cannot be locked (the rest of G-180).
+- Request: “Separate locks per parameter” (user 2026-11-04)
+- Questions: Lock boards, construction or insides too, one by one or together?
+- Suggested pick: Lock boards and construction as two more toggles once asked (estimate: effort +25%, value +10%).
+
+### G-338: Snap ranking ignores locks
+
+- Status: Open
+- Origin: ADR-171, 2026-11-04; agent scoped it out
+- Missing: Snap ranking does not prefer locked neighbours (research: 'snap ranking considers user locks').
+- Request: “Separate locks per parameter” (user 2026-11-04)
+- Questions: Rank a locked neighbour's side above an unlocked one when both are in range?
+- Suggested pick: A tie-break in ADR-070's ranking: locked first (estimate: effort +5%, value +5%).
+
+### G-339: No per-row price column
+
+- Status: Open
+- Origin: ADR-172, 2026-11-04; agent scoped it out
+- Missing: No price per row in the Parts table; only the running total and the Shopping list.
+- Request: “Running estimate + scheduled seller price refresh” (user 2026-11-04)
+- Questions: Add a price column to Parts?
+- Suggested pick: A price column on the Shopping list rows only, where the prices live (estimate: effort +10%, value +10%).
+
+### G-340: No price change report between exports
+
+- Status: Open
+- Origin: ADR-172, 2026-11-04; agent scoped it out
+- Missing: A refreshed seller export replaces prices silently: no report of what changed between two exports.
+- Request: “You upload a new export; the workflow converts it” (user 2026-11-04)
+- Questions: Should the pull request list changed prices and dropped products?
+- Suggested pick: The workflow writes a short change summary into the pull request body (estimate: effort +10%, value +15%).
+
+### G-341: No budget or style filters on room mixes
+
+- Status: Open
+- Origin: ADR-173, 2026-11-04; agent scoped it out
+- Missing: The research children Budget and style filters and Layout optimisation are not built; mixes are ranked by ADR-103's rules only.
+- Request: “Fill the room” (user 2026-11-04)
+- Questions: Filter mixes by a budget (ADR-172 estimate) or a style (ADR-123)?
+- Suggested pick: A budget ceiling and a style pick on Refine, after ADR-172 (estimate: effort +30%, value +20%).
+
+### G-342: No islands or peninsulas in room mixes
+
+- Status: Open
+- Origin: ADR-173, 2026-11-04; agent scoped it out
+- Missing: Islands and peninsulas are not suggested; only pieces along walls.
+- Request: “Fill the room” (user 2026-11-04)
+- Questions: Suggest an island when the room is wide enough?
+- Suggested pick: An island option on Refine with the clearance rules of ADR-073 (estimate: effort +40%, value +15%).
+
+### G-343: No per-step pictures in the assembly print
+
+- Status: Open
+- Origin: ADR-174, 2026-11-04; agent scoped it out
+- Missing: The printed assembly sheet shows the front view with the step's parts marked, not a picture per step from the 3D view.
+- Request: “Ordered step list + 3D highlight” (user 2026-11-04)
+- Questions: Render one exploded picture per step into the print?
+- Suggested pick: Use ADR-121's on-demand render per step once asked (estimate: effort +40%, value +20%).
+
+### G-344: Assembly steps are not editable
+
+- Status: Open
+- Origin: ADR-174, 2026-11-04; agent scoped it out
+- Missing: The assembly sequence cannot be edited: steps cannot be reordered, merged or renamed.
+- Request: “Ordered step list + 3D highlight” (user 2026-11-04)
+- Questions: Let the user reorder or rename steps, saved with the design?
+- Suggested pick: An editable order saved on the design, with a reset (estimate: effort +35%, value +20%).
+
+### G-345: No project-level assembly order
+
+- Status: Open
+- Origin: ADR-174, 2026-11-04; agent scoped it out
+- Missing: Steps are per piece; no project-level order (which piece first, run parts, worktops, common panels).
+- Request: “Ordered step list + 3D highlight” (user 2026-11-04)
+- Questions: Add a project order: pieces along the wall, then run parts?
+- Suggested pick: A project section before the pieces: corner first, then along each wall, run parts last (estimate: effort +20%, value +15%).
