@@ -19,7 +19,8 @@ async function addPiece(user: User, panel: HTMLElement) {
   if (place) await user.click(place);
 }
 const chip = () => screen.getByRole('button', { name: /^(Estimate: |No prices yet)/ });
-const amountOf = (text: string) => /Estimate: ([\d\s\u00a0.,]+) lei/.exec(text)?.[1]?.replace(/\s/g, '');
+const amountOf = (text: string) =>
+  /Estimate: ([\d\s\u00a0.,]+) lei/.exec(text)?.[1]?.replace(/\s/g, '');
 
 describe.each(WIDTHS)('running estimate at %ipx (find-it, ADR-172)', (width) => {
   it('new project → "No prices yet"; a price on the Shopping list → the chip shows the list\'s estimate; tap opens it', async () => {

@@ -69,9 +69,8 @@ export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
     'connector frames and constraints (no connectors yet)',
   ],
   'deterministic-alternatives': [
-    'in-progress',
-    'N34 (ADR-045): suggested combinations kept only when buildModel() has no errors — per piece; N101, N102 (ADR-103, ADR-104): four suggested mixes for one wall run.',
-    'alternative layouts of a whole project',
+    'verified',
+    'N34 (ADR-045): suggested combinations kept only when buildModel() has no errors — per piece; N101, N102 (ADR-103, ADR-104): four suggested mixes for one wall run; N176 (ADR-173): four whole-room mixes over every wall of a drawn room, each checked as a project.',
   ],
   'automated-fixes': [
     'in-progress',

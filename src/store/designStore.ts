@@ -480,6 +480,8 @@ interface State {
    * kind any of them is in), off removes the one they are in. Returns why it was refused, or ''. One undo step.
    */
   setCommon: (kind: 'top' | 'bottom', on: boolean) => string;
+  /** Add a room mix's pieces to the open project (ADR-173): one undo step, the pieces selected. Their ids. */
+  fillRoom: (mix: Project) => string[];
   /** Connect or disconnect the two selected pieces (ADR-168); the reason when it cannot be done, else ''. */
   setConnected: (on: boolean) => string;
   /** Forget a part's own board (ADR-151) on a project item (`id`) or the open piece (null). */
@@ -1503,6 +1505,14 @@ export const useDesign = create<State>((rawSet, get) => {
         kind === 'top' ? t('Common top') : t('Common bottom'),
       );
       return '';
+    },
+    fillRoom: (mix) => {
+      const p = get().project;
+      if (!p || !mix.items.length) return [];
+      commitProject({ ...p, items: [...p.items, ...mix.items] }, t('Fill the room'));
+      const ids = mix.items.map((i) => i.id);
+      get().selectItems(ids);
+      return ids;
     },
     setConnected: (on) => {
       const p = get().project;

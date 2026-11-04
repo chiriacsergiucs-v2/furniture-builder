@@ -297,4 +297,19 @@ export const ru_project = {
   'Locked: {what}': 'Закреплено: {what}',
   '{name}: {field} keeps its value — it follows “{expr}”, but that size is locked.':
     '{name}: {field} сохраняет значение — поле следует «{expr}», но этот размер закреплён.',
+  // Fill the room (ADR-173).
+  'The room needs at least three walls.': 'У комнаты должно быть не меньше трёх стен.',
+  'Tick at least one wall to fill.': 'Отметьте хотя бы одну стену для заполнения.',
+  'A ticked wall is not a wall of this room.': 'Отмеченная стена не является стеной этой комнаты.',
+  'Wall {n} has no stretch of {min} mm or more to fill.':
+    'На стене {n} нет участка длиной от {min} мм для заполнения.',
+  'Nothing fits: every wall is too short or blocked.':
+    'Ничего не помещается: все стены слишком короткие или заняты.',
+  'No mix fits the {w} mm stretch of wall {n} within the width range.':
+    'Ни один набор не помещается на участок {w} мм стены {n} в заданном диапазоне ширин.',
+  'wall {n}: {s}': 'стена {n}: {s}',
+  'Every mix tried had a problem in the room ({n} tried); change the walls or the width range.':
+    'У каждого проверенного набора была проблема в комнате (проверено {n}); измените стены или диапазон ширин.',
+  'No mix could be built.': 'Не удалось построить ни одного набора.',
+  'Room {w} × {d}': 'Комната {w} × {d}',
 } satisfies Record<string, string>;

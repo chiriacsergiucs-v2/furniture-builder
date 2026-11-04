@@ -2349,6 +2349,20 @@ td.note {
   stroke-width: 4;
   pointer-events: none;
 }
+/* Fill the room (ADR-173): the walls to tick. */
+.wf-walls {
+  list-style: none;
+  margin: var(--s-3) 0 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s-2);
+}
+.wf-walls label {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 44px;
+}
 /* A tick across the seam of two connected pieces (ADR-168). */
 .plan-connections line {
   stroke: var(--primary);

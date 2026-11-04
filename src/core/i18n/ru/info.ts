@@ -384,4 +384,7 @@ export const ru_info = {
   'Running cost estimate': 'Текущая оценка стоимости',
   'A chip in the editor header with the estimate of what is shown, updated on every change; tap it to open the Shopping list.':
     'Значок в шапке редактора с оценкой того, что показано, обновляется при каждом изменении; нажмите, чтобы открыть список покупок.',
+  'Fill the room': 'Заполнить комнату',
+  'Pick a room shape or use the project’s room: suggested mixes for every ticked wall at once, doors and windows kept free, a corner cabinet at each inside corner; each mix checked as a project.':
+    'Выберите форму комнаты или возьмите комнату проекта: наборы сразу для всех отмеченных стен, двери и окна остаются свободными, угловой шкаф в каждом внутреннем углу; каждый набор проверен как проект.',
 } satisfies Record<string, string>;

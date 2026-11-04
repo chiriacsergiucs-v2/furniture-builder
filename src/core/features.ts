@@ -62,6 +62,12 @@ export const FEATURES: FeatureDomain[] = [
         adrs: ['ADR-103', 'ADR-104'],
       },
       { name: 'Make a new piece inside a project', adrs: ['ADR-107'] },
+      {
+        name: 'Fill the room',
+        detail:
+          'Pick a room shape or use the project’s room: suggested mixes for every ticked wall at once, doors and windows kept free, a corner cabinet at each inside corner; each mix checked as a project.',
+        adrs: ['ADR-173'],
+      },
     ],
   },
   {

@@ -569,9 +569,8 @@ export const data_research2: Record<string, string> = {
     'Детерминированно генерировать альтернативные допустимые компоновки; с этого начинается этап четыре, ещё до ИИ.',
   'Deterministic layout': 'Детерминированная компоновка',
   'Smart layout and AI assistance (phase 4)': 'Умная компоновка и помощь ИИ (этап 4)',
-  'N34 (ADR-045): suggested combinations kept only when buildModel() has no errors — per piece; N101, N102 (ADR-103, ADR-104): four suggested mixes for one wall run.':
-    'N34 (ADR-045): предложенные сочетания остаются, только если в buildModel() нет ошибок, — для каждого изделия; N101, N102 (ADR-103, ADR-104): четыре предложенных набора для одного ряда у стены.',
-  'alternative layouts of a whole project': 'альтернативные компоновки целого проекта',
+  'N34 (ADR-045): suggested combinations kept only when buildModel() has no errors — per piece; N101, N102 (ADR-103, ADR-104): four suggested mixes for one wall run; N176 (ADR-173): four whole-room mixes over every wall of a drawn room, each checked as a project.':
+    'N34 (ADR-045): предложенные сочетания остаются, только если в buildModel() нет ошибок, — для каждого изделия; N101, N102 (ADR-103, ADR-104): четыре предложенных набора для одного ряда у стены; N176 (ADR-173): четыре набора на всю комнату по каждой стене начерченной комнаты, каждый проверен как проект.',
   'Budget and style filters': 'Фильтры по бюджету и стилю',
   'Filter generated layouts by budget and style (phase four), e.g. "keep it under €2,500".':
     'Фильтровать сгенерированные компоновки по бюджету и стилю (этап четыре), например «уложиться в 2 500 €».',

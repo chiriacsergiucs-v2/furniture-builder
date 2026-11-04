@@ -194,7 +194,7 @@ export function exactSplit(total: Mm, n: number): Mm[] {
   return Array.from({ length: n }, (_, i) => q + (i < r ? 1 : 0));
 }
 
-interface Candidate {
+export interface Candidate {
   slots: Slot[];
   score: number[];
   /** Same widths and kinds counted: one card per signature. */
@@ -281,7 +281,8 @@ function scoreOf(slots: Slot[], nominal: Mm[], exact: boolean): number[] {
   ];
 }
 
-function candidates(input: WallInput): Candidate[] {
+/** Every way to fill `input.width` within the refine answers, unranked; `suggestMixes` ranks and builds them. */
+export function candidates(input: WallInput): Candidate[] {
   const W = input.width,
     min = input.minWidth ?? WALL_DEFAULTS.minWidth,
     max = input.maxWidth ?? WALL_DEFAULTS.maxWidth;
@@ -426,7 +427,7 @@ function interiors(kind: PieceKind): Space[] {
 /** Warnings an interior change can avoid: a sagging shelf or a door wider than the guidance (ADR-035). */
 const AVOID = new Set(['shelf-span', 'door-wide']);
 
-function piece(slot: Slot, input: WallInput): Design {
+export function piece(slot: Slot, input: WallInput): Design {
   const isTall = slot.kind === 'tall';
   const size = {
     width: slot.width,
@@ -531,7 +532,7 @@ const renew = (s: Space): Space =>
     : { ...s, id: newId() };
 
 /** A wall-row piece: the catalog variant resized, tried with one door, two doors, then two bays (sag, ADR-103). */
-function wallPiece(ws: WallSlot, input: WallInput): Design {
+export function wallPiece(ws: WallSlot, input: WallInput): Design {
   if (ws.variant === 'top-box') {
     const size = {
       width: ws.width,
@@ -833,7 +834,7 @@ export function suggestMixes(input: WallInput, limit = MIXES_FIRST): WallFill {
   return { mixes, problems };
 }
 
-function cmp(a: number[], b: number[]): number {
+export function cmp(a: number[], b: number[]): number {
   for (let i = 0; i < Math.max(a.length, b.length); i++) {
     const d = (a[i] ?? 0) - (b[i] ?? 0);
     if (d) return d;

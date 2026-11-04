@@ -1501,3 +1501,30 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Not a quote: the suite is the source of truth (CLAUDE.md)
 - Questions: Raise the badge's waitFor timeout, or split the long find-it into two tests?
 - Suggested pick: Wrap the badge lookup in findByText with a longer timeout at 390 px (estimate: effort +2%, value +5%).
+
+### G-348: Fill the room: openings only through a project's room
+
+- Status: Open
+- Origin: ADR-173, 2026-11-04; agent scoped it out
+- Missing: Fill the room from the New dialog takes a ready shape and sizes only; doors and windows come only through a project's own room (Project ⋯ → Fill the room…).
+- Request: “Fill the room” (user 2026-11-04)
+- Questions: Add doors and windows to the Room step of the dialog?
+- Suggested pick: Reuse the room editor's feature list in the dialog (estimate: effort +25%, value +15%).
+
+### G-349: Fill the room: wall row leaves out whole cabinets at a window
+
+- Status: Open
+- Origin: ADR-173, 2026-11-04; agent scoped it out
+- Missing: A wall cabinet that would overlap a window is left out whole; the row does not stop exactly at the window's edge, so a gap wider than the window can stay open.
+- Request: “Fill the room” (user 2026-11-04)
+- Questions: Split the wall row at the window so cabinets reach its edges?
+- Suggested pick: Fill the stretches beside the window as their own wall rows (estimate: effort +15%, value +10%).
+
+### G-350: Fill the room: no wall corner cabinet
+
+- Status: Open
+- Origin: ADR-173, 2026-11-04; agent scoped it out
+- Missing: No wall corner cabinet at an inside corner: the wall rows start after the corner cabinet's depth and leave the corner above it empty.
+- Request: “Fill the room” (user 2026-11-04)
+- Questions: Place a wall corner cabinet (corner-blind-wall) in the corner?
+- Suggested pick: Add the catalog's wall corner cabinet over each corner cabinet (estimate: effort +20%, value +15%).

@@ -20,6 +20,7 @@ import { SettingsDialog } from './Settings';
 import { MaterialDialog } from './MaterialDialog';
 import { WizardDialog } from './Wizard';
 import { WallFillDialog } from './WallFill';
+import { RoomFillDialog } from './RoomFill';
 import { CatalogPage } from './Catalog';
 import { ResearchPage } from './Research';
 import { GapsPage } from './Gaps';
@@ -186,7 +187,9 @@ export function App() {
   // The step each would undo or redo, named (ADR-123).
   const undoName = useDesign((s) => s.projectPastNames[s.projectPastNames.length - 1]),
     redoName = useDesign((s) => s.projectFutureNames[0]);
-  const [dialog, setDialog] = useState<null | 'new' | 'wizard' | 'render' | 'wallfill'>(null);
+  const [dialog, setDialog] = useState<
+    null | 'new' | 'wizard' | 'render' | 'wallfill' | 'roomfill'
+  >(null);
   const look = useLook();
   const openCatalog = () => {
     setDialog(null);
@@ -937,11 +940,17 @@ export function App() {
           onBrowse={openCatalog}
           onWizard={() => openWizard(null)}
           onFillWall={() => setDialog('wallfill')}
+          onFillRoom={() => setDialog('roomfill')}
           onOpened={() => setPage('editor')}
         />
         <WallFillDialog
           open={dialog === 'wallfill'}
           onClose={() => setDialog((d) => (d === 'wallfill' ? null : d))}
+          onOpened={() => setPage('editor')}
+        />
+        <RoomFillDialog
+          open={dialog === 'roomfill'}
+          onClose={() => setDialog((d) => (d === 'roomfill' ? null : d))}
           onOpened={() => setPage('editor')}
         />
         <WizardDialog
