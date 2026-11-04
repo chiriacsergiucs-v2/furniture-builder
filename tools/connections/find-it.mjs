@@ -199,6 +199,32 @@ for (const width of [1440, 390]) {
   const xAway = await leftOf(third);
   check(width, 'the third dragged away by about 400 mm', xAway - edge2 >= 300, `${xAway}`);
   check(width, 'still one tick while apart', (await ticks.count()) === 1);
+  // The first and the third do not touch: the toggle is off, disabled, with the reason.
+  await selectRows(0, 2);
+  const apartCard = side.getByRole('region', { name: /^2 pieces selected/ });
+  const apartToggle = apartCard.getByRole('checkbox', { name: 'Connected' });
+  check(
+    width,
+    'for two pieces apart the Connected toggle is off and disabled',
+    !(await apartToggle.isChecked()) && (await apartToggle.isDisabled()),
+  );
+  const why =
+    (await apartCard
+      .getByText(/do not stand side by side/)
+      .first()
+      .textContent()
+      .catch(() => '')) ?? '';
+  check(
+    width,
+    'the card says why: "… do not stand side by side."',
+    /do not stand side by side/.test(why),
+    why,
+  );
+  await shot('apart-reason');
+  await selectOff();
+  // Back to one selected piece (the third), so the next drag moves it alone.
+  await click(side.getByRole('list', { name: 'Pieces' }).getByRole('button').nth(2));
+  await showPlan();
   await drag(third, edge2 + 30 - xAway, 'snap-back');
   check(
     width,

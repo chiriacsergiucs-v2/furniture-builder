@@ -235,6 +235,22 @@ describe('store (ADR-168)', () => {
     expect(isConnected(st().project!, a, b)).toBe(false);
     expect(describeChange(before, disconnect(before, a, b))).toBe('Disconnect');
   });
+  it('a 3D Move drop goes through the same path: snapped connects, Alt alone parts (ADR-093, ADR-168)', () => {
+    const [a, b, c] = ids(st().project!);
+    // Moved 300 mm away, then dragged back to 10 mm short: the snap puts it against b and connects.
+    st().moveItemBy(c, 300, 0, 1);
+    const from = { x: pos(st().project!, c).x, z: pos(st().project!, c).z };
+    expect(st().dropItemAt(c, from, { x: from.x - 290, z: from.z }, true)).toBeNull();
+    expect(pos(st().project!, c).x).toBe(from.x - 300);
+    expect(isConnected(st().project!, b, c)).toBe(true);
+    expect(isConnected(st().project!, a, c)).toBe(false);
+    // Alt (alone) and far: b stays, the pair parts.
+    const before = st().project!;
+    const at = { x: pos(before, c).x, z: pos(before, c).z };
+    expect(st().dropItemAt(c, at, { x: at.x + 500, z: at.z }, false, true)).toBeNull();
+    expect(pos(st().project!, b)).toEqual(pos(before, b));
+    expect(isConnected(st().project!, b, c)).toBe(false);
+  });
   it('setConnected refuses pairs that are not side by side with the reason; Move to a neighbour connects', () => {
     const [a, , c] = ids(st().project!);
     st().selectItems([a, c]);
