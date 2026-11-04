@@ -27,6 +27,7 @@ import {
 } from '../src/core/project';
 import { moveItems } from '../src/core/selection';
 import { addSet, syncSets, updateSet } from '../src/core/sets';
+import { tryTurn } from '../src/core/arrange';
 import { addVariable, applyBindings, setBinding } from '../src/core/variables';
 import { useDesign } from '../src/store/designStore';
 
@@ -155,6 +156,10 @@ describe('the broken warning (ADR-168, ADR-008)', () => {
       ),
     } as Project;
     expect(codes(wider)).toContain('connection-broken');
+    // A quarter turn of one member parts the pair too (the other keeps its place).
+    const turned = tryTurn(p, a, 1).project;
+    expect(codes(turned)).toContain('connection-broken');
+    expect(errors(turned)).toEqual([]);
   });
 });
 
@@ -250,6 +255,35 @@ describe('store (ADR-168)', () => {
     expect(st().dropItemAt(c, at, { x: at.x + 500, z: at.z }, false, true)).toBeNull();
     expect(pos(st().project!, b)).toEqual(pos(before, b));
     expect(isConnected(st().project!, b, c)).toBe(false);
+  });
+  it('a typed move parts a pair and warns; the record stays until disconnected (ADR-168)', () => {
+    const [a, b, c] = ids(st().project!);
+    st().moveItemBy(c, 300, 0, 1);
+    st().selectItems([a, b]);
+    expect(st().setConnected(true)).toBe('');
+    st().updateItem(b, {
+      position: { ...pos(st().project!, b), x: pos(st().project!, b).x + 100 },
+    });
+    expect(isConnected(st().project!, a, b)).toBe(true);
+    expect(st().projectModel!.diagnostics.map((d) => d.code)).toContain('connection-broken');
+    expect(st().projectModel!.diagnostics.filter((d) => d.severity === 'error')).toEqual([]);
+    st().selectItems([a, b]);
+    expect(st().setConnected(false)).toBe('');
+    expect(st().projectModel!.diagnostics.map((d) => d.code)).not.toContain('connection-broken');
+  });
+  it('Move to carries the connected neighbours and connects at the landing (ADR-147, ADR-168)', () => {
+    const [a, b, c] = ids(st().project!);
+    st().selectItems([a, b]);
+    expect(st().setConnected(true)).toBe('');
+    st().moveItemBy(c, 300, 0, 1);
+    const before = st().project!;
+    expect(st().moveItemTo(b, 'right')).toBeNull();
+    const p = st().project!;
+    const d = pos(p, b).x - pos(before, b).x;
+    expect(d).toBe(300);
+    expect(pos(p, a).x - pos(before, a).x).toBe(300);
+    expect(isConnected(p, a, b)).toBe(true);
+    expect(isConnected(p, b, c)).toBe(true);
   });
   it('setConnected refuses pairs that are not side by side with the reason; Move to a neighbour connects', () => {
     const [a, , c] = ids(st().project!);
