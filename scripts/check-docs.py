@@ -6,7 +6,7 @@
 - every ADR id, ADR link and backlog id used in the repository exists;
 - "- Acceptance:" is light, full or browser (ADR-066, ADR-108); a light ADR keeps the find-it marker on its backlog
   rows until they are Done (ADR-066);
-- docs/adr/GAPS.md is well formed, every G id used exists, and an ADR from ADR-082 on cites a gap for each
+- docs/adr/GAPS.md and GAPS-archive.md (Done gaps only) are well formed, every G id used exists in one of them, and an ADR from ADR-082 on cites a gap for each
   out-of-scope line and open question (ADR-082).
 
 Run: npm run docs:check  (python3 -I scripts/check-docs.py)"""
@@ -115,7 +115,9 @@ import gaps  # noqa: E402
 
 ledger = (REPO / "docs/adr/GAPS.md").read_text()
 errors += [f"docs/adr/GAPS.md: {e}" for e in gaps.problems(ledger, {n: s for n, (_, s) in adrs.items()})]
-gap_ids = gaps.ids(ledger)
+archived = gaps.ARCHIVE.read_text() if gaps.ARCHIVE.exists() else ""
+errors += [f"docs/adr/GAPS-archive.md: {e}" for e in gaps.archive_problems(archived, ledger)]
+gap_ids = gaps.ids(ledger) | gaps.ids(archived)
 for num, (path, _) in adrs.items():
     if int(num) < 82:
         continue

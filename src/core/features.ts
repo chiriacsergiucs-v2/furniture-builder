@@ -162,15 +162,21 @@ export const FEATURES: FeatureDomain[] = [
         detail: 'From the left, from the back and the gap to the piece on the left.',
         adrs: ['ADR-022'],
       },
-      { name: 'Turn 90° about the centre', adrs: ['ADR-069'] },
       {
-        name: 'Turn by any whole degree',
-        detail: 'The typed angle is hidden from the side panel for now.',
+        name: 'Turn 90° about the centre',
+        detail: 'Turn ↺ and ↻ in the toolbar, or R and Shift+R.',
+        adrs: ['ADR-069', 'ADR-160'],
+      },
+      {
+        name: 'Pieces at any whole-degree angle',
+        detail:
+          'A turned piece from a file is drawn and checked turned; typing an angle is hidden for now.',
         adrs: ['ADR-121', 'ADR-160'],
       },
       {
         name: 'Move to a wall, corner, ceiling, floor or neighbour',
-        detail: 'One tap slides the piece until it touches a wall or another piece.',
+        detail:
+          "One tap slides it to a wall, corner or neighbour, up to the ceiling or down, centres it, or matches a neighbour's top or front.",
         adrs: ['ADR-147'],
       },
       {
@@ -202,7 +208,7 @@ export const FEATURES: FeatureDomain[] = [
       { name: 'Align left, centre, right, back and front', adrs: ['ADR-099'] },
       { name: 'Align tops and bottoms', adrs: ['ADR-122'] },
       { name: 'Distribute evenly', adrs: ['ADR-099'] },
-      { name: 'Groups align as one block', adrs: ['ADR-099', 'ADR-148', 'N154'] },
+      { name: 'Groups align and distribute as one block', adrs: ['ADR-099', 'ADR-148', 'N154'] },
       { name: 'Duplicate a piece', adrs: ['ADR-069'] },
       {
         name: 'Mirror a piece',
@@ -242,7 +248,10 @@ export const FEATURES: FeatureDomain[] = [
   {
     name: 'Sizing',
     features: [
-      { name: 'Size of the whole piece where it is selected', adrs: ['ADR-106'] },
+      {
+        name: 'Width, height and depth of the whole piece where it is selected',
+        adrs: ['ADR-106', 'ADR-148'],
+      },
       { name: 'Size, boards and construction of a project piece', adrs: ['ADR-090'] },
       {
         name: 'Lock size',
@@ -350,7 +359,7 @@ export const FEATURES: FeatureDomain[] = [
         name: 'One Material control everywhere',
         detail:
           'Material in the header bar: a board on one part, the item, the group or the whole project, on any part roles.',
-        adrs: ['ADR-163'],
+        adrs: ['ADR-055', 'ADR-163'],
       },
       {
         name: 'One PAL 18 board for every part by default',
@@ -387,21 +396,21 @@ export const FEATURES: FeatureDomain[] = [
         detail: 'Type, thickness, width and code, on the cut list and shopping list.',
         adrs: ['ADR-077'],
       },
-      { name: 'Own board for any single part', adrs: ['ADR-151'] },
       {
-        name: 'Apply a board to a piece, a run, a selection or the project',
-        adrs: ['ADR-055', 'ADR-097'],
+        name: 'Own board for any single part',
+        detail: 'In Material, scope Part; a part the piece no longer builds is listed to clear.',
+        adrs: ['ADR-151', 'ADR-163'],
       },
       {
         name: 'Style suggestions',
-        detail: 'Board and handle combinations, labelled as suggestions.',
-        adrs: ['ADR-123'],
+        detail: 'In the Material dialog: board and handle combinations, labelled as suggestions.',
+        adrs: ['ADR-123', 'ADR-163'],
       },
       {
         name: 'Project-wide settings',
         detail:
-          'Carcass, front and back boards, handle, overlay and plinth height that pieces follow.',
-        adrs: ['ADR-124'],
+          'Handle, front overlay and plinth height that pieces follow; Material with scope Project sets the carcass, front and back boards.',
+        adrs: ['ADR-124', 'ADR-163'],
       },
     ],
   },
@@ -513,6 +522,17 @@ export const FEATURES: FeatureDomain[] = [
     name: 'Output',
     children: [
       {
+        name: 'Results',
+        features: [
+          {
+            name: 'Results tabs under the views',
+            detail:
+              'Parts, Sheets, Hardware, Shopping list and Checks with counts; on a phone they stay folded until you tap a tab.',
+            adrs: ['ADR-079', 'ADR-091'],
+          },
+        ],
+      },
+      {
         name: 'Cut list',
         features: [
           { name: 'Cut list with finished sizes and edge-band marks', adrs: ['ADR-009'] },
@@ -610,7 +630,7 @@ export const FEATURES: FeatureDomain[] = [
         name: 'Side panel ordered by use',
         detail:
           'Add a piece at the top, previous and next piece, one toolbar, a More actions menu and Delete to remove.',
-        adrs: ['ADR-160'],
+        adrs: ['ADR-117', 'ADR-160'],
       },
       {
         name: 'Quick actions on the phone sheet',
@@ -649,7 +669,11 @@ export const FEATURES: FeatureDomain[] = [
       },
       { name: 'Design codes and links', adrs: ['ADR-124'] },
       { name: 'Keep saved data persistent', adrs: ['ADR-133'] },
-      { name: 'Back up to a folder', adrs: ['ADR-133'] },
+      {
+        name: 'Back up to a folder or a .zip, and restore',
+        detail: 'Restoring adds new copies; nothing saved is overwritten or deleted.',
+        adrs: ['ADR-133'],
+      },
       { name: 'Backup reminder', adrs: ['ADR-141'] },
       { name: 'Only-on-this-device notice', adrs: ['ADR-140'] },
       { name: 'Clean up unused pictures', adrs: ['ADR-048', 'ADR-078'] },
@@ -684,7 +708,11 @@ export const FEATURES: FeatureDomain[] = [
     name: 'Information',
     features: [
       { name: 'Information and guides page', adrs: ['ADR-158'] },
-      { name: 'Feature Research', adrs: ['ADR-043', 'ADR-092', 'ADR-110'] },
+      {
+        name: 'Feature Research',
+        detail: 'Research features still left to build, and competitors.',
+        adrs: ['ADR-043', 'ADR-092', 'ADR-110', 'ADR-149'],
+      },
       { name: 'Gaps page', adrs: ['ADR-101'] },
       { name: 'Info buttons', adrs: ['ADR-080', 'ADR-113'] },
       { name: 'Light and dark themes', adrs: ['ADR-030'] },

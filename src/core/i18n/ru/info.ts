@@ -80,11 +80,8 @@ export const ru_info = {
   'From the left, from the back and the gap to the piece on the left.':
     'От левой стены, от задней стены и зазор до изделия слева.',
   'Turn 90° about the centre': 'Повернуть на 90° вокруг центра',
-  'Turn by any whole degree': 'Повернуть на любой целый угол',
   'Move to a wall, corner, ceiling, floor or neighbour':
     'Переместить к стене, в угол, к потолку, на пол или к соседу',
-  'One tap slides the piece until it touches a wall or another piece.':
-    'Одно касание сдвигает изделие, пока оно не коснётся стены или другого изделия.',
   'Place on the floor, on the wall or on another piece':
     'Поставить на пол, на стену или на другое изделие',
   'A piece on another piece follows it.': 'Изделие на другом изделии следует за ним.',
@@ -103,7 +100,6 @@ export const ru_info = {
     'Выровнять по левому краю, центру, правому краю, задней и передней стороне',
   'Align tops and bottoms': 'Выровнять по верху и низу',
   'Distribute evenly': 'Распределить равномерно',
-  'Groups align as one block': 'Группы выравниваются как один блок',
   'Duplicate a piece': 'Дублировать изделие',
   'Mirror a piece': 'Отразить изделие зеркально',
   'Swaps left and right inside the piece: hinges, pedestals and handles.':
@@ -124,7 +120,6 @@ export const ru_info = {
   'Keep pieces as named groups': 'Сохранять изделия как именованные группы',
   'Grouped pieces move together.': 'Изделия группы перемещаются вместе.',
   Sizing: 'Размеры',
-  'Size of the whole piece where it is selected': 'Размер всего изделия там, где оно выбрано',
   'Size, boards and construction of a project piece':
     'Размер, материалы и конструкция изделия проекта',
   'Lock size': 'Закрепить размер',
@@ -202,14 +197,8 @@ export const ru_info = {
   'Type, thickness, width and code, on the cut list and shopping list.':
     'Тип, толщина, ширина и код, в списке деталей и в списке покупок.',
   'Own board for any single part': 'Свой материал для любой отдельной детали',
-  'Apply a board to a piece, a run, a selection or the project':
-    'Применить материал к изделию, ряду, выделенному или всему проекту',
   'Style suggestions': 'Предложения стилей',
-  'Board and handle combinations, labelled as suggestions.':
-    'Сочетания материалов и ручек, помеченные как предложения.',
   'Project-wide settings': 'Общие настройки проекта',
-  'Carcass, front and back boards, handle, overlay and plinth height that pieces follow.':
-    'Материалы корпуса, фасадов и задней стенки, ручка, тип наложения и высота цоколя, которым следуют изделия.',
   Hardware: 'Фурнитура',
   'Hardware schedule': 'Список фурнитуры',
   'Hinges, runners, rails and brackets, with typical values labelled as guidance.':
@@ -333,7 +322,6 @@ export const ru_info = {
     'Изделия и проекты, с их картинками и 3D-моделями.',
   'Design codes and links': 'Коды и ссылки проектов',
   'Keep saved data persistent': 'Постоянное хранение данных',
-  'Back up to a folder': 'Резервная копия в папку',
   'Backup reminder': 'Напоминание о резервной копии',
   'Only-on-this-device notice': 'Уведомление «только на этом устройстве»',
   'Clean up unused pictures': 'Удалить неиспользуемые картинки',
@@ -362,12 +350,32 @@ export const ru_info = {
   'Info buttons': 'Информационные кнопки',
   'Light and dark themes': 'Светлая и тёмная темы',
   // ADR-160
-  'The typed angle is hidden from the side panel for now.':
-    'Ввод угла числом пока скрыт в боковой панели.',
   'Side panel ordered by use': 'Боковая панель по частоте использования',
   'Add a piece at the top, previous and next piece, one toolbar, a More actions menu and Delete to remove.':
     'Добавление изделия сверху, предыдущее и следующее изделие, одна панель действий, меню «Другие действия» и Delete для удаления.',
   'Quick actions on the phone sheet': 'Быстрые действия на панели телефона',
   'Edit, duplicate and turn the selected piece with the sheet closed.':
     'Изменить, дублировать и повернуть выбранное изделие при закрытой панели.',
+  'In Material, scope Part; a part the piece no longer builds is listed to clear.':
+    'В «Материале», область «Деталь»; деталь, которую изделие больше не строит, показывается для очистки.',
+  'In the Material dialog: board and handle combinations, labelled as suggestions.':
+    'В окне «Материал»: сочетания плит и ручек, помеченные как предложения.',
+  'Handle, front overlay and plinth height that pieces follow; Material with scope Project sets the carcass, front and back boards.':
+    'Ручка, накладка фасадов и высота цоколя, которым следуют изделия; «Материал» с областью «Проект» задаёт плиты корпуса, фасадов и задней стенки.',
+  'Turn ↺ and ↻ in the toolbar, or R and Shift+R.':
+    'Поворот ↺ и ↻ на панели инструментов или клавишами R и Shift+R.',
+  'Pieces at any whole-degree angle': 'Изделия под любым целым углом',
+  'A turned piece from a file is drawn and checked turned; typing an angle is hidden for now.':
+    'Повёрнутое изделие из файла рисуется и проверяется повёрнутым; ввод угла пока скрыт.',
+  "One tap slides it to a wall, corner or neighbour, up to the ceiling or down, centres it, or matches a neighbour's top or front.":
+    'Одно касание сдвигает его к стене, в угол или к соседу, вверх до потолка или вниз, ставит по центру или выравнивает по верху или фасаду соседа.',
+  'Groups align and distribute as one block': 'Группы выравниваются и распределяются как один блок',
+  'Width, height and depth of the whole piece where it is selected':
+    'Ширина, высота и глубина всего изделия там, где оно выбрано',
+  'Back up to a folder or a .zip, and restore': 'Резервная копия в папку или .zip и восстановление',
+  'Research features still left to build, and competitors.':
+    'Исследованные функции, которые ещё предстоит сделать, и конкуренты.',
+  'Results tabs under the views': 'Вкладки результатов под видами',
+  'Parts, Sheets, Hardware, Shopping list and Checks with counts; on a phone they stay folded until you tap a tab.':
+    'Детали, Листы, Фурнитура, Список покупок и Проверки со счётчиками; на телефоне они свёрнуты, пока не нажать вкладку.',
 } satisfies Record<string, string>;
