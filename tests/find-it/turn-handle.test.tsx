@@ -36,6 +36,20 @@ describe.each(WIDTHS)('turn handle at %ipx (find-it, ADR-169)', (width) => {
     await waitFor(() => expect(handle()).toBeTruthy());
     expect(handle()!.getAttribute('aria-valuenow')).toBe('0');
 
+    // ] and [ turn the focused piece by 1°; Shift+] by 15°.
+    const piece = within(plan).getByRole('button', { name: /^Base cabinet/ });
+    piece.focus();
+    await user.keyboard(']');
+    await waitFor(() => expect(handle()!.getAttribute('aria-valuenow')).toBe('1'));
+    piece.focus();
+    await user.keyboard('[[');
+    await waitFor(() => expect(handle()!.getAttribute('aria-valuenow')).toBe('0'));
+    piece.focus();
+    await user.keyboard('{Shift>}]{/Shift}');
+    await waitFor(() => expect(handle()!.getAttribute('aria-valuenow')).toBe('15'));
+    await user.click(screen.getByRole('button', { name: 'Undo' }));
+    await waitFor(() => expect(handle()!.getAttribute('aria-valuenow')).toBe('0'));
+
     // Locked: no handle. Unlocked again: back.
     const card = await screen.findByRole('region', { name: /^Selected piece: / });
     await user.click(within(card).getByRole('button', { name: 'Lock' }));
