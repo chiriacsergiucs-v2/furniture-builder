@@ -21,6 +21,7 @@ import { MaterialDialog } from './MaterialDialog';
 import { WizardDialog } from './Wizard';
 import { WallFillDialog } from './WallFill';
 import { RoomFillDialog } from './RoomFill';
+import { PrintAssembly } from './Assembly';
 import { CatalogPage } from './Catalog';
 import { ResearchPage } from './Research';
 import { GapsPage } from './Gaps';
@@ -228,6 +229,7 @@ export function App() {
   const mode = useUi((s) => s.mode);
   const setMode = useUi((s) => s.setMode);
   const printing = useUi((s) => s.printing);
+  const printMode = useUi((s) => s.printMode);
   const setPrinting = useUi((s) => s.setPrinting);
   const notice = useUi((s) => s.notice);
   const setNotice = useUi((s) => s.setNotice);
@@ -977,7 +979,7 @@ export function App() {
         />
       </div>
       <ConfirmHost />
-      {printing && <PrintSheet />}
+      {printing && (printMode === 'assembly' ? <PrintAssembly /> : <PrintSheet />)}
     </>
   );
 }

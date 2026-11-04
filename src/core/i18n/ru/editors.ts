@@ -480,4 +480,26 @@ export const ru_editors = {
   'Hide styles': 'Скрыть стили',
   'The sheet layout could not run in this browser.':
     'Раскладка листов не может работать в этом браузере.',
+  // Assembly steps (ADR-174).
+  Assembly: 'Сборка',
+  'Print assembly steps': 'Печать шагов сборки',
+  'Show every part again': 'Снова показать все детали',
+  'assembly order': 'порядок сборки',
+  'The order comes from where the parts sit: what the others stand on first, then what they carry. No screw, dowel or drilling is named; your own fastener list is quoted per joint type when you set one.':
+    'Порядок следует из положения деталей: сначала то, на чём стоят остальные, затем то, что они несут. Ни шурупы, ни шканты, ни присадка не называются; ваш список крепежа приводится по типу соединения, если задан.',
+  "Guidance: order from the parts' positions; your joints, fasteners and drilling decide.":
+    'Рекомендация: порядок следует из положения деталей; соединения, крепёж и присадка — ваш выбор.',
+  'Assembly: {name}': 'Сборка: {name}',
+  'Show step': 'Показать шаг',
+  '{n|# carcass joint|# carcass joints}':
+    '{n|# соединение корпуса|# соединения корпуса|# соединений корпуса}',
+  ' — your fastener: {name}, {per} per joint': ' — ваш крепёж: {name}, {per} на соединение',
+  'Sides to the bottom': 'Боковины на дно',
+  'Fixed dividers and shelves': 'Перегородки и неподвижные полки',
+  'Adjustable shelves': 'Переставные полки',
+  'Hanging and fixing': 'Навес и крепление',
+  'Loose parts': 'Свободные детали',
+  Also: 'Также',
+  Plinth: 'Цоколь',
+  Handles: 'Ручки',
 } satisfies Record<string, string>;

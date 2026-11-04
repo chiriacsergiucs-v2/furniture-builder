@@ -23,6 +23,10 @@ export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
     'N26, N49, N56, N70: run parts derived from the pieces they span.',
     'shared supports, sinks and handles as generated parts',
   ],
+  'assembly-sequence': [
+    'verified',
+    'N177 (ADR-174): an ordered step list per piece from the parts’ positions, with joint counts and hardware per step, lit in the exploded 3D view and printable; order from geometry as labelled guidance, no joint or fastener knowledge (ADR-010).',
+  ],
   'ensemble-templates': [
     'verified',
     'N55 (ADR-060): save a project as a reusable project template; N124 (ADR-123): insert one into a project; N173 (ADR-170): a template keeps the run-part recipe, connections, variables and bindings. Copies by choice (ADR-060), not item references.',

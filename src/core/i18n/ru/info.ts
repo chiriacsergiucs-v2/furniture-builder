@@ -387,4 +387,7 @@ export const ru_info = {
   'Fill the room': 'Заполнить комнату',
   'Pick a room shape or use the project’s room: suggested mixes for every ticked wall at once, doors and windows kept free, a corner cabinet at each inside corner; each mix checked as a project.':
     'Выберите форму комнаты или возьмите комнату проекта: наборы сразу для всех отмеченных стен, двери и окна остаются свободными, угловой шкаф в каждом внутреннем углу; каждый набор проверен как проект.',
+  'Assembly steps': 'Шаги сборки',
+  'An ordered step list per piece from the parts’ positions, with the joints and hardware of each step, labelled guidance; Show step lights the parts in 3D; printable.':
+    'Упорядоченный список шагов по каждому изделию из положения деталей, с соединениями и фурнитурой каждого шага, как рекомендация; «Показать шаг» подсвечивает детали в 3D; печатается.',
 } satisfies Record<string, string>;

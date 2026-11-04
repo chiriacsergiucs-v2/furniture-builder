@@ -146,7 +146,7 @@ import {
 const keepSelection = (d: Design, sel: Selection): Selection =>
   sel && !findInProduct(d.product, sel) ? null : sel;
 
-export type Tab = 'parts' | 'sheets' | 'hardware' | 'shopping' | 'checks';
+export type Tab = 'parts' | 'sheets' | 'hardware' | 'assembly' | 'shopping' | 'checks';
 
 /** How a move was made (ADR-168): `snapped` = the drop snapped; `alone` = Alt held, so connected pieces stay. */
 export interface MoveOpts {
@@ -165,6 +165,9 @@ interface State {
   /** 3D preview with the panels pushed apart (display only). */
   exploded: boolean;
   tab: Tab;
+  /** Panel ids lit in the 3D view by an assembly step (ADR-174); null = every part as usual. Viewer-only. */
+  litPanelIds: string[] | null;
+  setLit: (ids: string[] | null) => void;
   /** Phones: the results panel under the views is open (ADR-091). UI state only; a reload starts collapsed. */
   resultsOpen: boolean;
   past: Design[];
@@ -1791,6 +1794,8 @@ export const useDesign = create<State>((rawSet, get) => {
     setHighlight: (ids) => set({ highlight: ids }),
     setShowFronts: (v) => set({ showFronts: v }),
     setExploded: (v) => set({ exploded: v }),
+    litPanelIds: null,
+    setLit: (ids) => set({ litPanelIds: ids }),
     setTab: (t) => set({ tab: t, resultsOpen: true }),
     toggleTab: (t) =>
       set((s) =>

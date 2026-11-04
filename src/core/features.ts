@@ -548,6 +548,12 @@ export const FEATURES: FeatureDomain[] = [
               'Parts, Sheets, Hardware, Shopping list and Checks with counts; on a phone they stay folded until you tap a tab.',
             adrs: ['ADR-079', 'ADR-091'],
           },
+          {
+            name: 'Assembly steps',
+            detail:
+              'An ordered step list per piece from the parts’ positions, with the joints and hardware of each step, labelled guidance; Show step lights the parts in 3D; printable.',
+            adrs: ['ADR-174'],
+          },
         ],
       },
       {

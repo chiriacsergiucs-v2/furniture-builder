@@ -655,6 +655,8 @@ export const data_research2: Record<string, string> = {
   Templates: 'Шаблоны',
   'Medium-high; reusable component/configuration patterns':
     'Средняя–высокая; шаблоны многократно используемых компонентов/конфигураций',
+  'N177 (ADR-174): an ordered step list per piece from the parts’ positions, with joint counts and hardware per step, lit in the exploded 3D view and printable; order from geometry as labelled guidance, no joint or fastener knowledge (ADR-010).':
+    'N177 (ADR-174): упорядоченный список шагов по каждому изделию из положения деталей, с числом соединений и фурнитурой на шаг, подсвечивается в разнесённом 3D-виде и печатается; порядок из геометрии как рекомендация, без знаний о соединениях и крепеже (ADR-010).',
   'N55 (ADR-060): save a project as a reusable project template; N124 (ADR-123): insert one into a project; N173 (ADR-170): a template keeps the run-part recipe, connections, variables and bindings. Copies by choice (ADR-060), not item references.':
     'N55 (ADR-060): сохранить проект как многократно используемый шаблон проекта; N124 (ADR-123): вставка шаблона в проект; N173 (ADR-170): шаблон хранит рецепт частей ряда, соединения, переменные и привязки. Копии по решению (ADR-060), а не ссылки на изделия.',
   'Dual priorities: price P1/P2, sheet optimisation and CAD/CNC export P2/P3':
