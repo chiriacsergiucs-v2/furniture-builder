@@ -86,3 +86,116 @@ export function arrowMove(key: string, shift: boolean): { dx: number; dz: number
       return null;
   }
 }
+
+// ── Turning with the handle (ADR-169) ───────────────────────────────────────────────────────────────────────────
+
+/** Degrees the pointer stays within of a quarter turn to snap to it; Shift steps instead. */
+export const TURN_SNAP_DEG = 5;
+export const TURN_SHIFT_STEP = 15;
+
+export interface TurnGesture {
+  id: string;
+  pointerId: number;
+  /** The piece's centre on the plan, mm. */
+  cx: number;
+  cz: number;
+  /** The piece's whole turn at press, 0–359. */
+  start: number;
+  /** The pointer's angle about the centre at press, degrees (counter-clockwise positive, as the piece turns). */
+  from: number;
+  /** The turn the piece would take now, 0–359 whole degrees. */
+  angle: number;
+  /** True once the pointer moved: a tap on the handle turns nothing. */
+  moved: boolean;
+  /** Esc was pressed: the piece keeps its angle and the release turns nothing (the gesture ends on release). */
+  cancelled?: boolean;
+}
+
+/** The pointer's angle about the centre, degrees 0–360, counter-clockwise positive (the plan draws z downward). */
+export function pointerDeg(cx: number, cz: number, x: number, z: number): number {
+  const d = (Math.atan2(-(z - cz), x - cx) * 180) / Math.PI;
+  return ((d % 360) + 360) % 360;
+}
+
+/**
+ * The turn for a pointer at `now` degrees from a press at `from`, starting from `start`: whole degrees 0–359; within
+ * `TURN_SNAP_DEG` of a quarter turn it snaps to it; with Shift it steps by `TURN_SHIFT_STEP`.
+ */
+export function turnAngle(start: number, from: number, now: number, shift: boolean): number {
+  const raw = (((start + (now - from)) % 360) + 360) % 360;
+  if (shift) return (Math.round(raw / TURN_SHIFT_STEP) * TURN_SHIFT_STEP) % 360;
+  const q = Math.round(raw / 90) * 90;
+  const off = Math.abs(raw - q);
+  if (Math.min(off, 360 - off) <= TURN_SNAP_DEG) return q % 360;
+  return Math.round(raw) % 360;
+}
+
+/** The handle is pressed. A press the plan cannot map starts nothing. */
+export function pressTurn(
+  id: string,
+  centre: { x: number; z: number },
+  start: number,
+  p: PointerAt,
+): TurnGesture | null {
+  if (!p.room) return null;
+  return {
+    id,
+    pointerId: p.pointerId,
+    cx: centre.x,
+    cz: centre.z,
+    start,
+    from: pointerDeg(centre.x, centre.z, p.room.x, p.room.z),
+    angle: start,
+    moved: false,
+  };
+}
+
+/** The pressing pointer moves; other pointers are ignored. */
+export function moveTurn(g: TurnGesture | null, p: PointerAt, shift: boolean): TurnGesture | null {
+  if (!g || g.cancelled || p.pointerId !== g.pointerId || !p.room) return g;
+  const angle = turnAngle(g.start, g.from, pointerDeg(g.cx, g.cz, p.room.x, p.room.z), shift);
+  return angle === g.angle && g.moved ? g : { ...g, angle, moved: true };
+}
+
+/** The pointer is released: the angle to set, or null when nothing changed. */
+export function releaseTurn(g: TurnGesture | null, pointerId: number): number | null {
+  if (!g || g.cancelled || pointerId !== g.pointerId || !g.moved || g.angle === g.start)
+    return null;
+  return g.angle;
+}
+
+/** Esc during a turn: back to the angle at press; the gesture stays until the pointer is released. */
+export function cancelTurn(g: TurnGesture | null): TurnGesture | null {
+  return g ? { ...g, angle: g.start, cancelled: true } : null;
+}
+
+/**
+ * Esc during a press (ADR-065) or a turn (ADR-169): the gesture is dropped, and the click the browser fires when the
+ * pointer is released must not select or open the piece. True when there was a gesture to cancel.
+ */
+export function cancelPress(g: DragGesture | TurnGesture | null): boolean {
+  return !!g;
+}
+
+/** The [ and ] keys turn the focused piece by 1°, with Shift by 15° (ADR-169). Null for any other key. */
+export function bracketTurn(key: string, shift: boolean): number | null {
+  const d = shift ? TURN_SHIFT_STEP : 1;
+  return key === ']' ? d : key === '[' ? -d : null;
+}
+
+/** The footprint corners turned by `deg` (counter-clockwise, as the piece turns) about the centre, whole mm. */
+export function turnedFootprint(
+  corners: readonly (readonly [number, number])[],
+  cx: number,
+  cz: number,
+  deg: number,
+): [number, number][] {
+  const r = (deg * Math.PI) / 180;
+  const c = Math.cos(r),
+    s = Math.sin(r);
+  return corners.map(([x, z]) => {
+    const dx = x - cx,
+      dz = z - cz;
+    return [Math.round(cx + dx * c + dz * s), Math.round(cz - dx * s + dz * c)];
+  });
+}

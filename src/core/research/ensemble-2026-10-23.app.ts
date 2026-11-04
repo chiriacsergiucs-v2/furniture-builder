@@ -24,9 +24,8 @@ export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
     'shared supports, sinks and handles as generated parts',
   ],
   'ensemble-templates': [
-    'in-progress',
-    'N55 (ADR-060): save a project as a reusable project template.',
-    'templates keep copies, not item references, connections or generated-part recipes',
+    'verified',
+    'N55 (ADR-060): save a project as a reusable project template; N124 (ADR-123): insert one into a project; N173 (ADR-170): a template keeps the run-part recipe, connections, variables and bindings. Copies by choice (ADR-060), not item references.',
   ],
   'live-price': [
     'in-progress',
@@ -48,9 +47,8 @@ export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
     'DXF, STEP and CNC output',
   ],
   'direct-manipulation': [
-    'in-progress',
-    'N60, N64: drag and turn pieces on the plan; N91 (ADR-093): move and turn them in the 3D view; N123 (ADR-122): drag a wall unit’s height in 3D.',
-    'rotating by dragging (any angle can be typed, N122 / ADR-121)',
+    'verified',
+    'N60, N64: drag and turn pieces on the plan; N91 (ADR-093): move and turn them in the 3D view; N123 (ADR-122): drag a wall unit’s height in 3D; N172 (ADR-169): turn to any whole degree by dragging the handle on the plan.',
   ],
   'composition-layer': [
     'in-progress',

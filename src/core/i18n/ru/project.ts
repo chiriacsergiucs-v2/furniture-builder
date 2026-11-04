@@ -136,8 +136,8 @@ export const ru_project = {
   'Snaps within {range} mm to walls and neighbours; hold Alt to place freely.':
     'Привязка в пределах {range} мм к стенам и соседям; удерживайте Alt, чтобы ставить свободно.',
   'Pieces go exactly where dropped.': 'Изделия встают точно туда, куда их отпустили.',
-  "Seen from above. The yellow edge is each piece's front; dashed pieces hang on the wall; red dashes show where a selected piece's doors or drawers cannot open. Drag a piece, or use the arrow keys on it, to move it; Esc cancels a drag. R turns the focused piece about its centre. Shift- or Ctrl-click adds pieces to the selection (Select on a phone); drag on empty plan to draw a box; tap a spot again to reach a piece under another; Ctrl+A selects all. A grouped piece selects its group first, then itself. With Snap on, a dropped piece joins a wall, an inside corner or a neighbour’s side within {range} mm; arrow keys never snap.":
-    'Вид сверху. Жёлтая кромка — фасад каждого изделия; пунктирные изделия висят на стене; красный пунктир показывает, где дверцы или ящики выбранного изделия не могут открыться. Перетащите изделие или используйте стрелки, чтобы его переместить; Esc отменяет перетаскивание. R поворачивает изделие в фокусе вокруг центра. Shift- или Ctrl-щелчок добавляет изделия к выбору (на телефоне — «Выбор»); протяните по пустому плану, чтобы выделить рамкой; нажмите на то же место ещё раз, чтобы выбрать изделие под другим; Ctrl+A выбирает всё. Изделие в группе сначала выбирает свою группу, затем себя. С включённой привязкой отпущенное изделие примыкает к стене, внутреннему углу или боковине соседа в пределах {range} мм; стрелки никогда не привязывают.',
+  "Seen from above. The yellow edge is each piece's front; dashed pieces hang on the wall; red dashes show where a selected piece's doors or drawers cannot open. Drag a piece, or use the arrow keys on it, to move it; Esc cancels a drag. R turns the focused piece about its centre. Shift- or Ctrl-click adds pieces to the selection (Select on a phone); drag on empty plan to draw a box; tap a spot again to reach a piece under another; Ctrl+A selects all. Drag the round handle in front of the selected piece to turn it to any degree ([ and ] turn by 1°). A grouped piece selects its group first, then itself. With Snap on, a dropped piece joins a wall, an inside corner or a neighbour’s side within {range} mm; arrow keys never snap.":
+    'Вид сверху. Жёлтая кромка — фасад каждого изделия; пунктирные изделия висят на стене; красный пунктир показывает, где дверцы или ящики выбранного изделия не могут открыться. Перетащите изделие или используйте стрелки, чтобы его переместить; Esc отменяет перетаскивание. R поворачивает изделие в фокусе вокруг центра. Shift- или Ctrl-щелчок добавляет изделия к выбору (на телефоне — «Выбор»); протяните по пустому плану, чтобы выделить рамкой; нажмите на то же место ещё раз, чтобы выбрать изделие под другим; Ctrl+A выбирает всё. Перетащите круглую ручку перед выбранным изделием, чтобы повернуть его на любой градус ([ и ] поворачивают на 1°). Изделие в группе сначала выбирает свою группу, затем себя. С включённой привязкой отпущенное изделие примыкает к стене, внутреннему углу или боковине соседа в пределах {range} мм; стрелки никогда не привязывают.',
   'Snaps: {list}': 'Привязка: {list}',
   'Alt held: placing freely.': 'Alt зажат: свободное размещение.',
   'Snap is off.': 'Привязка выключена.',
@@ -255,4 +255,11 @@ export const ru_project = {
     '{w|# стена|# стены|# стен} · {n|# элемент|# элемента|# элементов}',
   'History · {n|# version|# versions}': 'История · {n|# версия|# версии|# версий}',
   '{n|# more is off|# more are off}': 'Ещё {n|# недоступно|# недоступны|# недоступно}',
+  // The turn handle (ADR-169).
+  'Turn {name}': 'Повернуть {name}',
+  '{deg}°': '{deg}°',
+  'Drag to turn to any degree; Shift steps by 15°. Pieces at an angle do not join runs or snap side by side.':
+    'Тяните, чтобы повернуть на любой градус; Shift шагает по 15°. Изделия под углом не входят в ряды и не примагничиваются боком.',
+  'Kept the project’s {names}; the inserted pieces follow it.':
+    'Сохранена переменная проекта {names}; вставленные изделия следуют ей.',
 } satisfies Record<string, string>;

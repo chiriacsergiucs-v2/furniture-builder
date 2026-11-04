@@ -311,10 +311,8 @@ export const data_research2: Record<string, string> = {
     'Это приложение размещает изделия проекта в целых мм с поворотами на четверть оборота только вокруг вертикальной оси (ADR-022).',
   'User can move and rotate instances in 2D/3D and enter exact numeric transforms.':
     'Пользователь может перемещать и поворачивать экземпляры в 2D/3D и вводить точные числовые преобразования.',
-  'N60, N64: drag and turn pieces on the plan; N91 (ADR-093): move and turn them in the 3D view; N123 (ADR-122): drag a wall unit’s height in 3D.':
-    'N60, N64: перетаскивание и поворот изделий на плане; N91 (ADR-093): перемещение и поворот в 3D-виде; N123 (ADR-122): перетаскивание высоты навесного модуля в 3D.',
-  'rotating by dragging (any angle can be typed, N122 / ADR-121)':
-    'поворот перетаскиванием (любой угол можно ввести, N122 / ADR-121)',
+  'N60, N64: drag and turn pieces on the plan; N91 (ADR-093): move and turn them in the 3D view; N123 (ADR-122): drag a wall unit’s height in 3D; N172 (ADR-169): turn to any whole degree by dragging the handle on the plan.':
+    'N60, N64: перетаскивание и поворот изделий на плане; N91 (ADR-093): перемещение и поворот в 3D-виде; N123 (ADR-122): перетаскивание высоты навесного модуля в 3D; N172 (ADR-169): поворот на любой целый градус перетаскиванием ручки на плане.',
   'MVP table: "Direct manipulation".': 'Таблица MVP: «Прямое управление».',
   'Praise: SketchUp is valued for direct modelling (line 43); rapid placement is most appreciated (line 65).':
     'Похвала: SketchUp ценят за прямое моделирование (строка 43); быстрое размещение ценится больше всего (строка 65).',
@@ -662,10 +660,8 @@ export const data_research2: Record<string, string> = {
   Templates: 'Шаблоны',
   'Medium-high; reusable component/configuration patterns':
     'Средняя–высокая; шаблоны многократно используемых компонентов/конфигураций',
-  'N55 (ADR-060): save a project as a reusable project template.':
-    'N55 (ADR-060): сохранить проект как многократно используемый шаблон проекта.',
-  'templates keep copies, not item references, connections or generated-part recipes':
-    'шаблоны хранят копии, а не ссылки на изделия, соединения или рецепты генерируемых деталей',
+  'N55 (ADR-060): save a project as a reusable project template; N124 (ADR-123): insert one into a project; N173 (ADR-170): a template keeps the run-part recipe, connections, variables and bindings. Copies by choice (ADR-060), not item references.':
+    'N55 (ADR-060): сохранить проект как многократно используемый шаблон проекта; N124 (ADR-123): вставка шаблона в проект; N173 (ADR-170): шаблон хранит рецепт частей ряда, соединения, переменные и привязки. Копии по решению (ADR-060), а не ссылки на изделия.',
   'Dual priorities: price P1/P2, sheet optimisation and CAD/CNC export P2/P3':
     'Двойные приоритеты: цена P1/P2, оптимизация листов и экспорт CAD/ЧПУ P2/P3',
   'The paper keeps two priority bands for these rows; live price complexity is "Medium if data exists".':

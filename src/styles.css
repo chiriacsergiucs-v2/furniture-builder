@@ -2306,6 +2306,49 @@ td.note {
   stroke-width: 5;
   vector-effect: non-scaling-stroke;
 }
+/* The turn handle of the selected piece (ADR-169): a knob on a stem from the front; the turned outline while dragging. */
+.turn-handle {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.turn-handle .turn-stem {
+  stroke: var(--primary);
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+.turn-handle .turn-hit {
+  fill: transparent;
+  cursor: grab;
+}
+.turn-handle.turning .turn-hit {
+  cursor: grabbing;
+}
+.turn-handle .turn-knob {
+  fill: var(--surface);
+  stroke: var(--primary);
+  stroke-width: 2.4;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+.turn-handle .turn-ghost {
+  fill: var(--primary-soft);
+  fill-opacity: 0.5;
+  stroke: var(--primary);
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+.turn-handle .turn-label {
+  fill: var(--ink);
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: var(--surface);
+  stroke-width: 4;
+  pointer-events: none;
+}
 /* A tick across the seam of two connected pieces (ADR-168). */
 .plan-connections line {
   stroke: var(--primary);
