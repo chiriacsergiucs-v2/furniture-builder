@@ -169,7 +169,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-018: Turn by dragging; Esc selection bug
 
-- Status: Open
+- Status: ADR-169
 - Origin: ADR-065, 2026-10-24 18:55 UTC; agent scoped it out
 - Missing: No turning by dragging (no turn handle on the plan). After Esc cancels a plan drag, the following click likely still selects the piece (Esc at Project.tsx:1313-1317 does not suppress the click at Project.tsx:1604-1612); not reproduced.
 - Request: Drag and drop on the plan (context, not a quote)
@@ -485,7 +485,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-091: Persistent connections between pieces
 
-- Status: Open
+- Status: ADR-168
 - Origin: ADR-100 (2026-10-26, Claude: not asked for)
 - Missing: Persistent connections between pieces (research: connection hierarchy / assembly graph); rules apply while snapping and in checks only.
 - Request: "New adr 3" (2026-10-26)
@@ -951,7 +951,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-203: Wizard and template pieces and the project settings
 
-- Status: Open
+- Status: ADR-170
 - Origin: ADR-124 (found while building)
 - Missing: Pieces inserted from a project template (insertTemplate) do not take the project settings; pieces from the wizard's "Add to project" already do (they go through addPiece, designStore.ts:779).
 - Request: Accept default, /batch all ready
@@ -1326,7 +1326,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-323: Variables outside projects
 
-- Status: Open
+- Status: ADR-170
 - Origin: ADR-166, 2026-10-30; agent scoped it out
 - Missing: Variables and bindings live in a project only: the stand-alone design editor has none, a design saved to the catalog loses its bindings, and a project template (ADR-060, templateFromProject) also drops both the variables and the bindings, although ADR-166 says it keeps them.
 - Request: Not a quote: the user asked for variables "within the project".
@@ -1370,3 +1370,66 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: “Sync features and gaps with latest changes, remove implemented, validate still listed, remove obsolete”
 - Questions: Add the longer details to these seven lines?
 - Suggested pick: Add them with their Russian entries (estimate: effort +10%, value +5%).
+
+### G-329: Typed connectors and assembly graph
+
+- Status: Open
+- Origin: ADR-168, 2026-11-04; agent scoped it out
+- Missing: Connector types and a typed assembly graph (research model): connections are untyped pairs of side-by-side pieces.
+- Request: “Validate all High demand features … create adrs” (user 2026-11-04); the research row names a connection hierarchy
+- Questions: Add connector types (side, top, back) with their own rules?
+- Suggested pick: Not yet; untyped pairs cover undo, save and templates. Typed connectors when a rule needs them (estimate: effort +50%, value +15%).
+
+### G-330: Connections shown only on the plan
+
+- Status: Open
+- Origin: ADR-168, 2026-11-04; agent scoped it out
+- Missing: Connections are shown on the plan (a tick on the shared edge) and on the card only; the front view and the 3D view do not highlight them.
+- Request: Not a quote: the user chose record, re-check and move together
+- Questions: Show connections in the front view and 3D?
+- Suggested pick: A matching tick in the front view and a thin line in 3D (estimate: effort +15%, value +10%).
+
+### G-331: No stacked or cross-level connections
+
+- Status: Open
+- Origin: ADR-168, 2026-11-04; agent scoped it out
+- Missing: Only side-by-side touching pieces on one floor level connect; a wall unit over a base unit, stacked pieces or pieces across floor levels do not.
+- Request: Not a quote: the user chose record, re-check and move together
+- Questions: Connect stacked pieces (wall unit over base) too?
+- Suggested pick: Add a 'stacked' connection kind once typed connectors exist (G-329) (estimate: effort +30%, value +20%).
+
+### G-332: No turn gizmo in 3D
+
+- Status: Open
+- Origin: ADR-169, 2026-11-04; agent scoped it out
+- Missing: Turning by dragging exists on the plan only; 3D Move mode turns by quarter-turn buttons (ADR-093).
+- Request: “Free-angle turn handle” (user 2026-11-04)
+- Questions: A turn gizmo in 3D Move mode too?
+- Suggested pick: A ring gizmo in 3D with the same snap rules (estimate: effort +60%, value +20%).
+
+### G-333: Templates store whole copies, not deltas
+
+- Status: Open
+- Origin: ADR-170, 2026-11-04; agent scoped it out
+- Missing: A template stores a full copy of each piece, not only the parameters that differ from a catalog item (research: existing-template instancing).
+- Request: “Keep copies; add connections, variables, bindings, project settings” (user 2026-11-04)
+- Questions: Store only the differing parameters?
+- Suggested pick: Not while templates keep copies (ADR-060); revisit with G-334 (estimate: effort +80%, value +10%).
+
+### G-334: Templates keep copies, not references
+
+- Status: Open
+- Origin: ADR-170, 2026-11-04; user decision
+- Missing: Templates do not reference catalog items (ADR-060 chose copies; the research asks for references).
+- Request: “Keep copies; add connections, variables, bindings, project settings” (user 2026-11-04)
+- Questions: None; the user chose copies.
+- Suggested pick: Keep copies (chosen). References would need a new ADR replacing ADR-060 (estimate: effort +150%, value +30%).
+
+### G-335: Variables in catalog designs and the stand-alone editor
+
+- Status: Open
+- Origin: ADR-170, 2026-11-04; agent scoped it out
+- Missing: Variables and bindings live in projects and project templates only; the stand-alone design editor and catalog designs have none (the rest of G-323).
+- Request: Not a quote: the user asked for variables “within the project”
+- Questions: Should a catalog design carry bindings as parameters?
+- Suggested pick: A later ADR adds variables to catalog designs (estimate: effort +40%, value +15%).
