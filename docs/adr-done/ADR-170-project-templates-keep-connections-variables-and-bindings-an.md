@@ -1,7 +1,8 @@
 # ADR-170: Project templates keep connections, variables and bindings and take the project settings
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-04
+- Implemented: 2026-11-04
 - Depends on: ADR-060, ADR-123, ADR-124, ADR-166, ADR-168
 - Design: n/a
 - Backlog: N173
@@ -64,11 +65,11 @@ piece does (G-203). User (2026-11-04): keep copies; add connections, variables, 
 
 ## Done when
 
-- [ ] `templateFromProject` keeps variables, bindings and connections; version-1 templates still validate and load
+- [x] `templateFromProject` keeps variables, bindings and connections; version-1 templates still validate and load
       (tests)
-- [ ] Create from and Insert a template remap bindings and connections to the new ids; a clashing variable name
+- [x] Create from and Insert a template remap bindings and connections to the new ids; a clashing variable name
       keeps the project's variable and notices once (tests)
-- [ ] Inserted pieces take the project's handle, overlay and plinth unless bound (tests; G-203 closes)
-- [ ] A template saved without variables or connections stays schemaVersion 1 (tests)
-- [ ] Russian entries for every new text; the feature tree line "Create a project from a project template" is
+- [x] Inserted pieces take the project's handle, overlay and plinth unless bound (tests; G-203 closes)
+- [x] A template saved without variables or connections stays schemaVersion 1 (tests)
+- [x] Russian entries for every new text; the feature tree line "Create a project from a project template" is
       updated (jsdom find-it, 390 and 1280 px)

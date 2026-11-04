@@ -1,7 +1,8 @@
 # ADR-169: Turn a piece to any whole degree with a handle on the plan
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-04
+- Implemented: 2026-11-04
 - Depends on: ADR-065, ADR-121, ADR-160
 - Design: docs/ui-design.md (section 4, Project: the plan)
 - Backlog: N172
@@ -63,11 +64,11 @@ G-018 asks for a turn handle on the plan. User (2026-11-04): a free-angle turn h
 
 ## Done when
 
-- [ ] A drag of the handle from 0° to pointer angle 37° stores `rotationY` 0, `angle` 37; from 88° it snaps to 90°
+- [x] A drag of the handle from 0° to pointer angle 37° stores `rotationY` 0, `angle` 37; from 88° it snaps to 90°
       (planDrag tests)
-- [ ] Shift steps by 15°; [ and ] turn by 1° and Shift by 15°; the piece turns about its centre in whole mm (tests)
-- [ ] One undo step per drag named "Turn <piece>"; Esc restores the angle and the following click does not select
+- [x] Shift steps by 15°; [ and ] turn by 1° and Shift by 15°; the piece turns about its centre in whole mm (tests)
+- [x] One undo step per drag named "Turn <piece>"; Esc restores the angle and the following click does not select
       (tests)
-- [ ] The handle is absent on a locked piece, a display-only model and with 2+ selected (tests)
-- [ ] The handle and the angle label are visible on the plan at 390 and 1280 px (browser find-it)
-- [ ] Russian entries for every new text; the feature tree line "Pieces at any whole-degree angle" is updated
+- [x] The handle is absent on a locked piece, a display-only model and with 2+ selected (tests)
+- [x] The handle and the angle label are visible on the plan at 390 and 1280 px (browser find-it)
+- [x] Russian entries for every new text; the feature tree line "Pieces at any whole-degree angle" is updated

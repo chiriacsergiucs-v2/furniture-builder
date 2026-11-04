@@ -167,17 +167,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): partly resolved. tools/editor-modes/find-it.mjs:202-216 checks CSV and Print are disabled on an error and tools/edge-band/find-it.mjs:218-221 checks CSV is blocked (both pass per N88). Not checked: the message saying why (src/ui/Output.tsx:139), and that the Shopping list CSV and Print are blocked.
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
 
-### G-018: Turn by dragging; Esc selection bug
-
-- Status: ADR-169
-- Origin: ADR-065, 2026-10-24 18:55 UTC; agent scoped it out
-- Missing: No turning by dragging (no turn handle on the plan). After Esc cancels a plan drag, the following click likely still selects the piece (Esc at Project.tsx:1313-1317 does not suppress the click at Project.tsx:1604-1612); not reproduced.
-- Request: Drag and drop on the plan (context, not a quote)
-- Questions: A 90-degree turn handle on the selected piece?
-- Suggested pick: A turn handle on the selected piece that steps 90° (ADR-003 keeps whole angles). Fix the Esc bug. (estimate: effort +10%, value +10%)
-- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): partly resolved. ADR-069 added Turn 90° buttons and R / Shift+R. No turn handle on the plan. The Esc bug is most likely still there: the piece's onClick still calls select() (src/ui/Project.tsx:1011); not reproduced.
-- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
-
 ### G-020: Appliances, sinks, edge profiles, client sheet
 
 - Status: Open
@@ -940,16 +929,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Carry size too (neighbours may then overlap; those become diagnostics), or keep the catalog item's size?
 - Suggested pick: Carry size too (closest to the pick; estimate +10 % work, +15 % of value)
 
-### G-203: Wizard and template pieces and the project settings
-
-- Status: ADR-170
-- Origin: ADR-124 (found while building)
-- Missing: Pieces inserted from a project template (insertTemplate) do not take the project settings; pieces from the wizard's "Add to project" already do (they go through addPiece, designStore.ts:779).
-- Request: Accept default, /batch all ready
-- Questions: Should they take the project settings like Add a piece?
-- Suggested pick: They take them, like Add a piece (estimate +5 % work)
-- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
-
 ### G-210: Project templates drop run handles and sinks
 
 - Status: Open
@@ -1314,16 +1293,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Add the possibility to have a common bottom or top between multiple items.
 - Questions: Should corner cabinets and desks join a common panel?
 - Suggested pick: Cabinets first; corners and desks in a later ADR.
-
-### G-323: Variables outside projects
-
-- Status: ADR-170
-- Origin: ADR-166, 2026-10-30; agent scoped it out
-- Missing: Variables and bindings live in a project only: the stand-alone design editor has none, a design saved to the catalog loses its bindings, and a project template (ADR-060, templateFromProject) also drops both the variables and the bindings, although ADR-166 says it keeps them.
-- Request: Not a quote: the user asked for variables "within the project".
-- Questions: Should a saved design or the catalog carry bindings as parameters?
-- Suggested pick: Keep bindings in project templates only (built); add variables to catalog designs as a later ADR (estimate: effort +40%, value +15%).
-- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
 
 ### G-324: Formula functions
 
