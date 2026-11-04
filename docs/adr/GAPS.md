@@ -1361,3 +1361,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Copy run requests, run handles and sinks to each set?
 - Suggested pick: Copy them with the pieces, keyed by the duplicate ids (estimate: effort +20%, value +15%).
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+
+### G-328: Feature tree details left short
+
+- Status: Open
+- Origin: N170 (ff), 2026-11-04; agent left them out
+- Missing: Seven feature-tree lines keep correct but incomplete details: Drag a piece on the plan (arrow keys), Wall colour or picture (where it shows, Solid walls), 2D, 3D or both (one switch in both modes), Share links, Save pieces and templates to your account, Boards and edge bands from a seller (seller pictures load online), Seller products for hardware (Add seller product).
+- Request: “Sync features and gaps with latest changes, remove implemented, validate still listed, remove obsolete”
+- Questions: Add the longer details to these seven lines?
+- Suggested pick: Add them with their Russian entries (estimate: effort +10%, value +5%).
