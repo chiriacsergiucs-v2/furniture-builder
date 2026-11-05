@@ -2204,7 +2204,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-369: Drop the duplicate push-to-main CI run
 
-- Status: Open
+- Status: ADR-198
 - Origin: ADR-197 CI analysis 2026-11-05
 - Missing: Suggestion D: once deploy waits on CI (ADR-197), the push-to-main CI run re-verifies a tree that was already green on its pull request. The main run is kept.
 - Request: Suggest improvements. Triggering less often the ci optimisations? Tests running by domain of change? Do all parts of the app need tests? Gaps/features/docs/unnecessary overcovering tests? (the user chose "all of these 4 + Suggestions A(all) and B(all)"; this suggestion was left out)
@@ -2234,7 +2234,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-371: Cheaper find-it runs (stopped before it was built)
 
-- Status: Open
+- Status: ADR-198
 - Origin: ADR-197 CI analysis 2026-11-05
 - Missing: Find-it files take 192 of the 217 s of test CPU. Not measured or applied: userEvent.setup({ delay: null }), find-it as its own vitest project with jsdom and isolate: false, a cheaper module reset; each keeps the bare-app start (ADR-108). The user stopped the ADR before it was built.
 - Request: "all of these 4 + Suggestions A(all) and B(all)" (item 3: cheaper find-it mounts); then "Stop 193" (the cheaper find-it ADR, never registered)
