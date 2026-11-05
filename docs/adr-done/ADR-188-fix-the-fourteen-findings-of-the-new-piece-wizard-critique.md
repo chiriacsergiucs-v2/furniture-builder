@@ -1,11 +1,11 @@
-# ADR-187: Fix the fourteen findings of the New-piece wizard critique
+# ADR-188: Fix the fourteen findings of the New-piece wizard critique
 
 - Status: Implemented
 - Date: 2026-11-05
 - Implemented: 2026-11-05 (Built and verified 2026-11-05; screenshots approved by the user)
 - Depends on: ADR-044, ADR-045, ADR-046
 - Design: docs/ui-design.md (New-piece wizard)
-- Backlog: N191
+- Backlog: N193
 
 ## Context
 

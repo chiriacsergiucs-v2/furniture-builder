@@ -448,7 +448,7 @@ export const STEPS: StepDef[] = [
         id: 'frontsPer',
         label: 'Doors on compartment',
         kind: 'perCompartment',
-        // By hand as by the cards (ADR-187): one door on every compartment without drawers.
+        // By hand as by the cards (ADR-188): one door on every compartment without drawers.
         fill: (a) =>
           compartmentsOf(a).map((c) =>
             contentUses(c.kind).includes('drawers') ? 'none' : 'single',

@@ -511,7 +511,7 @@ describe('N35: answers kept with the piece, reopened in the wizard (ADR-046)', (
   });
 });
 
-describe('ADR-187: the wizard critique fixes in the engine', () => {
+describe('ADR-188: the wizard critique fixes in the engine', () => {
   it('a type change keeps only the Size answers the new type can use (2)', () => {
     const cab: Answers = {
       type: 'cabinet',

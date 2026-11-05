@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// Find-it for the New-piece wizard (ADR-044–046, ADR-187), in jsdom (ADR-108): from the bare app, Catalog → New
+// Find-it for the New-piece wizard (ADR-044–046, ADR-188), in jsdom (ADR-108): from the bare app, Catalog → New
 // piece → a type → a size → Review → Create piece, plus the critique fixes: the untouched Type step hints, a size
 // typo is one problem, a type change drops the old type's answers, Review lists the answers with Edit, the footer
 // reads "Use defaults", and closing with changed answers asks first.
@@ -7,7 +7,7 @@ import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { renderApp, WIDTHS } from './setup';
 
-describe.each(WIDTHS)('New-piece wizard at %ipx (find-it, ADR-187)', (width) => {
+describe.each(WIDTHS)('New-piece wizard at %ipx (find-it, ADR-188)', (width) => {
   it('Catalog → New piece → Cabinet → Size → Review → Create piece; the critique fixes', async () => {
     const { user } = await renderApp(width);
     await user.click(await screen.findByRole('link', { name: /Catalog/ }));

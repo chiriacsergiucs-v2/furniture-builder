@@ -56,7 +56,7 @@ export function Dialog({
   wide?: boolean;
   /** An `InfoTip` beside the title (ADR-113); Esc while it is open closes only the tip. */
   info?: ReactNode;
-  /** `false`: a click on the backdrop does not close the dialog (the wizard, ADR-187). */
+  /** `false`: a click on the backdrop does not close the dialog (the wizard, ADR-188). */
   backdropClose?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -74,7 +74,7 @@ export function Dialog({
       onClose={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
-      // Esc asks the owner to close (`open` → false), so a close guard (ADR-187) sees it like the × button.
+      // Esc asks the owner to close (`open` → false), so a close guard (ADR-188) sees it like the × button.
       onCancel={(e) => {
         e.preventDefault();
         if (e.target === e.currentTarget) onClose();

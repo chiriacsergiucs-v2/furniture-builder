@@ -44,7 +44,7 @@ export interface FieldDef {
   max?: number;
   /** Used when the type's defaults do not give one. */
   default?: AnswerValue;
-  /** The value while the answer is missing, from the other resolved answers (ADR-187). */
+  /** The value while the answer is missing, from the other resolved answers (ADR-188). */
   fill?: (a: Answers) => AnswerValue;
   help?: string;
   options?: Option[];
