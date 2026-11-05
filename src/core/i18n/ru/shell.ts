@@ -126,6 +126,7 @@ export const ru_shell = {
   'Repairs — the dashed outline on the plan shows the chosen one':
     'Исправления — пунктирный контур на плане показывает выбранное',
   ' · smallest move': ' · наименьшее перемещение',
+  'Refused: {reason}': 'Отклонено: {reason}',
   'No repair clears this without causing another problem. Move or change the pieces yourself.':
     'Ни одно исправление не устраняет это, не создавая другой проблемы. Переместите или измените изделия сами.',
   Apply: 'Применить',

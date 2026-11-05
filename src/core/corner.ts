@@ -23,6 +23,9 @@ import type {
 
 const lo = (n: number) => Math.floor(n / 2);
 
+/** A hung corner (ADR-177) has no plinth; its stored plinth height is kept for when it stands again. */
+const plinthOf = (p: CornerParams) => (p.mount === 'wall' ? 0 : p.plinthHeight);
+
 function carcass(
   p: CornerParams,
   width: number,
@@ -39,7 +42,7 @@ function carcass(
     ...(p.topLayers === 2 ? { topLayers: 2 as const } : {}),
     back: p.back,
     backInset: p.backInset,
-    plinthHeight: p.plinthHeight,
+    plinthHeight: plinthOf(p),
     plinthSetback: p.plinthSetback,
     frontGap: p.frontGap,
     shelfSetback: p.shelfSetback,
@@ -145,7 +148,7 @@ function buildDiagonal(
     H = p.height,
     t = body.thickness,
     tf = front.thickness,
-    ph = p.plinthHeight,
+    ph = plinthOf(p),
     g = p.frontGap;
   const bt = p.back === 'none' ? 0 : backM.thickness;
   const s = p.interior;
@@ -368,7 +371,28 @@ function mirrorDiagonal(m: PartialModel, W: number): PartialModel {
   return mm;
 }
 
+/**
+ * A hung corner (ADR-177): no brackets or rail are scheduled — the user chooses them for the unit (ADR-010), so one
+ * line asks for them, with no count or size of its own (quantity 1 is the line, as for other user-chosen fittings).
+ */
 export function buildCorner(
+  p: CornerParams,
+  id: string,
+  materials: Map<string, Material>,
+): PartialModel {
+  const out = buildCornerUnit(p, id, materials);
+  if (p.mount === 'wall')
+    out.hardware.push({
+      nodeId: id,
+      kind: 'wall-hanging',
+      label: 'Wall hanging brackets: choose for this corner unit',
+      quantity: 1,
+      note: 'user-specified: choose the brackets, how many and where, from the bracket datasheet and the wall type',
+    });
+  return out;
+}
+
+function buildCornerUnit(
   p: CornerParams,
   id: string,
   materials: Map<string, Material>,
@@ -429,7 +453,7 @@ export function buildCorner(
     merge(local, blind);
     merge(local, main);
     // Fixed blind panel in front of the blind section, one gap from the usable section's door.
-    const ph = p.plinthHeight;
+    const ph = plinthOf(p);
     local.panels.push({
       id: `${id}/blind-panel`,
       nodeId: id,
@@ -466,7 +490,7 @@ export function buildCorner(
     omitSide: 'right',
   });
   // Wing B's plinth runs on past the corner edge until it butts against the front face of wing A's plinth (no notch).
-  if (p.plinthHeight > 0)
+  if (plinthOf(p) > 0)
     for (const x of bLocal.panels)
       if (x.role === 'plinth') x.box = { ...x.box, w: x.box.w + p.plinthSetback };
   const b: PartialModel = {

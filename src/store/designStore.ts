@@ -1647,7 +1647,13 @@ export const useDesign = create<State>((rawSet, get) => {
     updateCorner: (patch) => {
       const d = get().design;
       if (d.product.kind !== 'corner') return;
-      commit({ ...d, product: { ...d.product, params: { ...d.product.params, ...patch } } });
+      // A corner's mount is a schemaVersion 7 field (ADR-177).
+      const mounted = 'mount' in patch || 'mountHeight' in patch;
+      commit({
+        ...d,
+        schemaVersion: mounted ? SCHEMA_VERSION : d.schemaVersion,
+        product: { ...d.product, params: { ...d.product.params, ...patch } },
+      });
     },
     updatePanelSet: (patch) => {
       const d = get().design;

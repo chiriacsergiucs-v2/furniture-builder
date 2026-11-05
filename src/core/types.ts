@@ -231,6 +231,8 @@ export type HardwareKind =
   | 'push-latch'
   | 'wall-bracket'
   | 'wall-rail'
+  /** ADR-177: a hung corner unit's hanging brackets, chosen by the user (no count or size scheduled). */
+  | 'wall-hanging'
   | 'corner-hinge'
   /** ADR-035 anti-tip fixing, ADR-036 appliance and front fixing, ADR-037 sliding track and flap stay, ADR-038/039 purchased items. */
   | 'wall-fixing'
@@ -484,6 +486,13 @@ export interface CornerParams {
   blindWidth: Mm;
   height: Mm;
   depth: Mm;
+  /**
+   * 'wall': hung on the wall (ADR-177, schemaVersion 7): no plinth, and one hardware line asking the user to choose
+   * the hanging brackets (none are scheduled automatically). Absent = floor.
+   */
+  mount?: 'floor' | 'wall';
+  /** Height of the unit's underside above the floor when wall-mounted (position only). */
+  mountHeight?: Mm;
   bodyMaterialId: string;
   frontMaterialId: string;
   backMaterialId: string;
@@ -680,7 +689,7 @@ export interface Design {
    * board per part (`partMaterials`); 5 adds seller products (ADR-161); 6 adds a board per part role
    * (`roleMaterials`, ADR-163). Older files are upgraded in memory on load.
    */
-  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6;
+  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7;
   id: string;
   name: string;
   createdAt: string;

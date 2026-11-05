@@ -4,7 +4,9 @@
 // Starts from the bare app at each width and finds everything by visible text: three base cabinets in a project;
 // Select two → "Connected" toggle → a tick on the plan and "Connected to …" on the card; a snapped drag connects
 // the third; dragging one moves the connected ones along (Alt moves it alone, desktop); a resized member →
-// Checks warns "connected but no longer joined"; the toggle disconnects. Not part of `pnpm test`.
+// Checks warns "connected but no longer joined"; the toggle disconnects. ADR-179: the room front view shows the
+// tick too, and Build & Preview › 3D draws a seam line (counted in `document.body.dataset.seams`) that is gone while
+// exploded and after Disconnect. Not part of `pnpm test`.
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
 
@@ -175,6 +177,66 @@ for (const width of [1440, 390]) {
     (await ticks.count()) === 1,
     `${await ticks.count()}`,
   );
+  // ADR-179: the same tick in the room front view, and a seam line in 3D that Disconnect takes away.
+  const front = page.getByRole('figure', { name: /^Room seen from the front/ });
+  const frontTicks = front.locator('.front-connections line');
+  await front.scrollIntoViewIfNeeded().catch(() => {});
+  check(
+    width,
+    'one tick across the seam in the room front view',
+    (await frontTicks.count()) === 1,
+    `${await frontTicks.count()}`,
+  );
+  await shot('front-tick');
+  const seams = () => page.evaluate(() => document.body.dataset.seams ?? null);
+  const waitSeams = async (want) => {
+    for (let i = 0; i < 40; i++) {
+      if ((await seams()) === want) return want;
+      await page.waitForTimeout(250);
+    }
+    return seams();
+  };
+  const compose = page.getByRole('radio', { name: 'Compose' });
+  const show3d = async () => {
+    await sheet(false);
+    await click(page.getByRole('radio', { name: /Build & Preview/ }));
+    const r = page.getByRole('radio', { name: '3D', exact: true });
+    if (await r.isVisible().catch(() => false)) await click(r);
+    await page.locator('canvas').first().waitFor({ state: 'visible', timeout: 30000 });
+  };
+  await show3d();
+  check(width, 'Build & Preview › 3D draws one seam line', (await waitSeams('1')) === '1');
+  await page.waitForTimeout(1500);
+  await shot('3d-seam');
+  const exploded = page.getByRole('checkbox', { name: 'Exploded 3D' });
+  if (await exploded.isVisible().catch(() => false)) {
+    await click(exploded);
+    check(width, 'no seam line while exploded', (await waitSeams(null)) === null);
+    await click(exploded);
+    check(width, 'the seam line is back after Exploded 3D off', (await waitSeams('1')) === '1');
+  }
+  if (await compose.isVisible().catch(() => false)) await click(compose);
+  await selectRows(0, 1);
+  const pairCard = side.getByRole('region', { name: /^2 pieces selected/ });
+  await click(pairCard.getByRole('checkbox', { name: 'Connected' }));
+  await page.waitForTimeout(200);
+  await selectOff();
+  await show3d();
+  check(width, 'no seam line in 3D after Disconnect', (await waitSeams('0')) === '0');
+  await shot('3d-disconnected');
+  // Connect them again for the steps below.
+  if (await compose.isVisible().catch(() => false)) await click(compose);
+  await selectRows(0, 1);
+  await click(
+    side
+      .getByRole('region', { name: /^2 pieces selected/ })
+      .getByRole('checkbox', { name: 'Connected' }),
+  );
+  await page.waitForTimeout(200);
+  await selectOff();
+  await showPlan();
+  check(width, 'connected again: one tick on the plan', (await ticks.count()) === 1);
+
   await sheet(true);
   const all = side.getByRole('button', { name: /^All pieces \(\d+\)$/ });
   if (await all.isVisible().catch(() => false)) await click(all);
@@ -305,7 +367,6 @@ for (const width of [1440, 390]) {
   check(width, 'no sideways scroll (Checks)', await noSideScroll());
 
   // 7. Back in Compose, the toggle disconnects the pair.
-  const compose = page.getByRole('radio', { name: 'Compose' });
   if (await compose.isVisible().catch(() => false)) await click(compose);
   await selectRows(0, 1);
   const card2 = side.getByRole('region', { name: /^2 pieces selected/ });

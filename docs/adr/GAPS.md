@@ -1057,15 +1057,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: Scale positions around the left edge, rounding shared edges once (closer to the request; estimate effort +25 %, value +10 %)
 - Answer: 2026-10-29 (user) "Refuse (as in ADR)"; ADR-148 refuses with the reason
 
-### G-293: Repairs and Mirror the run move a grouped piece alone
-
-- Status: Open
-- Origin: ADR-148, 2026-10-29; scope (Claude)
-- Missing: Automatic repairs from the problem banner and Mirror the run can still move one grouped piece without its group.
-- Request: add the possibility to set the width, height and depth of grouped items, add the possibility to block group items from being moved separately.
-- Questions: Should repairs and Mirror the run also carry or refuse grouped pieces?
-- Suggested pick: Carry the whole group, refusing a repair the group cannot follow (closer to the request; estimate effort +10 %)
-
 ### G-294: Move to for several selected pieces
 
 - Status: Open
@@ -1147,16 +1138,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Should the front view and 3D also get a drag-to-box selection?
 - Suggested pick: Front view only (3D drags orbit the camera); closest to the plan's existing box.
 
-### G-310: Build & Preview side panel content undecided
-
-- Status: Acknowledged (2026-10-30)
-- Origin: ADR-160 (side panel critique, 2026-10-30)
-- Missing: In Build & Preview the side panel shows the same Compose panel; the critique asked whether that is intended and the user did not answer.
-- Request: Agree with all, implement, fix, remove the how many completely, there already is rotation in toolbar, no more need for the 4 buttons, also remove the rotation degree input, hidden for now
-- Questions: Should Build & Preview show a different side panel (for example finishes and checks only)?
-- Suggested pick: Keep the same panel until the user says what Build & Preview should show.
-- Answer (user, 2026-10-30): "Same as Compose".
-
 ### G-311: Rotation (°) field hidden
 
 - Status: Open
@@ -1171,10 +1152,11 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 - Status: Open
 - Origin: ADR-161, 2026-10-30; agent scoped it out
-- Missing: Seller prices and stock are a snapshot bundled in the app build (Regency export of 2026-10-29). Nothing updates them; a newer seller file needs a new release (re-run tools/sellers/<seller>.mjs). Live feeds stay ADR-063 (Deferred).
+- Missing: Seller prices and stock are a snapshot bundled in the app build (Regency export of 2026-10-29). The app never updates them itself; ADR-172 added a hand-started workflow (.github/workflows/seller-prices.yml) that takes an export URL and opens a pull request, and a newer file still needs a release. Nothing runs on a schedule. Live feeds stay ADR-063 (Deferred).
 - Request: Import these as products for materials, keep it regency agnostic, more sellers will follow
 - Questions: Refresh seller data how often, and by whom?
 - Suggested pick: Re-run the converter on each new export the user provides and release (estimate: effort 5 %, value: prices stay current)
+- Note: Re-checked 2026-11-05 on main 0c26d0b (code read, no browser): Missing text updated to the current code.
 
 ### G-313: Extra seller items only per piece
 
@@ -1285,16 +1267,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Should a run request (a worktop length or overhang) take a formula?
 - Suggested pick: Bind run-request sizes the same way as piece sizes (estimate: effort +15%, value +10%).
 
-### G-326: Run requests not duplicated per set
-
-- Status: Open
-- Origin: ADR-167, 2026-10-30; agent scoped it out
-- Missing: Run requests, run handles and sinks on set-1 pieces are not copied to the set-N duplicates inside the project (syncSets); only "save a set as a separate project" (projectFromSet) carries them over.
-- Request: Not a quote: the user asked for the pieces and the room to be duplicated.
-- Questions: Copy run requests, run handles and sinks to each set?
-- Suggested pick: Copy them with the pieces, keyed by the duplicate ids (estimate: effort +20%, value +15%).
-- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
-
 ### G-328: Feature tree details left short
 
 - Status: Open
@@ -1312,15 +1284,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: “Validate all High demand features … create adrs” (user 2026-11-04); the research row names a connection hierarchy
 - Questions: Add connector types (side, top, back) with their own rules?
 - Suggested pick: Not yet; untyped pairs cover undo, save and templates. Typed connectors when a rule needs them (estimate: effort +50%, value +15%).
-
-### G-330: Connections shown only on the plan
-
-- Status: Open
-- Origin: ADR-168, 2026-11-04; agent scoped it out
-- Missing: Connections are shown on the plan (a tick on the shared edge) and on the card only; the front view and the 3D view do not highlight them.
-- Request: Not a quote: the user chose record, re-check and move together
-- Questions: Show connections in the front view and 3D?
-- Suggested pick: A matching tick in the front view and a thin line in 3D (estimate: effort +15%, value +10%).
 
 ### G-331: No stacked or cross-level connections
 
@@ -1434,10 +1397,11 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 - Status: Open
 - Origin: ADR-174, 2026-11-04; agent scoped it out
-- Missing: The printed assembly sheet shows the front view with the step's parts marked, not a picture per step from the 3D view.
+- Missing: The printed assembly sheet shows one front view of the piece and a table of steps (src/ui/Assembly.tsx:218-261); no step has a picture or marked parts.
 - Request: “Ordered step list + 3D highlight” (user 2026-11-04)
 - Questions: Render one exploded picture per step into the print?
 - Suggested pick: Use ADR-121's on-demand render per step once asked (estimate: effort +40%, value +20%).
+- Note: Re-checked 2026-11-05 on main 0c26d0b (code read, no browser): Missing text updated to the current code.
 
 ### G-344: Assembly steps are not editable
 
@@ -1447,15 +1411,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: “Ordered step list + 3D highlight” (user 2026-11-04)
 - Questions: Let the user reorder or rename steps, saved with the design?
 - Suggested pick: An editable order saved on the design, with a reset (estimate: effort +35%, value +20%).
-
-### G-345: No project-level assembly order
-
-- Status: Open
-- Origin: ADR-174, 2026-11-04; agent scoped it out
-- Missing: Steps are per piece; no project-level order (which piece first, run parts, worktops, common panels).
-- Request: “Ordered step list + 3D highlight” (user 2026-11-04)
-- Questions: Add a project order: pieces along the wall, then run parts?
-- Suggested pick: A project section before the pieces: corner first, then along each wall, run parts last (estimate: effort +20%, value +15%).
 
 ### G-346: Connections in 3D Move mode not checked in a browser
 
@@ -1484,20 +1439,11 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Add doors and windows to the Room step of the dialog?
 - Suggested pick: Reuse the room editor's feature list in the dialog (estimate: effort +25%, value +15%).
 
-### G-349: Fill the room: wall row leaves out whole cabinets at a window
+### G-351: move-3d find-it fails on main at 1440 px
 
 - Status: Open
-- Origin: ADR-173, 2026-11-04; agent scoped it out
-- Missing: A wall cabinet that would overlap a window is left out whole; the row does not stop exactly at the window's edge, so a gap wider than the window can stay open.
-- Request: “Fill the room” (user 2026-11-04)
-- Questions: Split the wall row at the window so cabinets reach its edges?
-- Suggested pick: Fill the stretches beside the window as their own wall rows (estimate: effort +15%, value +10%).
-
-### G-350: Fill the room: no wall corner cabinet
-
-- Status: Open
-- Origin: ADR-173, 2026-11-04; agent scoped it out
-- Missing: No wall corner cabinet at an inside corner: the wall rows start after the corner cabinet's depth and leave the corner above it empty.
-- Request: “Fill the room” (user 2026-11-04)
-- Questions: Place a wall corner cabinet (corner-blind-wall) in the corner?
-- Suggested pick: Add the catalog's wall corner cabinet over each corner cabinet (estimate: effort +20%, value +15%).
+- Origin: ADR-179 build, 2026-11-05; found by the agent
+- Missing: tools/move-3d/find-it.mjs fails at 1440 px on the production build of main 0c26d0b and of this branch: 'Turn 90° ↺ turned the piece' reads an empty rotation, then the 3D canvas wait times out (20 s).
+- Request: Not a quote: found while running the browser find-it scripts for ADR-179.
+- Questions: Fix the script's turn check and 3D wait, or the app if the turn really fails?
+- Suggested pick: Debug it on main first (debug skill); fix the cause (estimate: effort +5%, value +5%).

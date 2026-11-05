@@ -55,6 +55,10 @@ export const PRINT_RU = {
     'по одному в верхних задних углах (сверьтесь с техпаспортом и типом стены)',
   'Șină de perete pentru agățători': 'Монтажная шина для навесов',
   'tăiată la lățimea corpului': 'отрезать по ширине корпуса',
+  'Agățători de perete pentru corpul de colț: la alegerea dvs.':
+    'Навесы для углового модуля: на ваш выбор',
+  'alegeți agățătorile, câte și unde, după fișa tehnică și tipul peretelui':
+    'подберите навесы, их количество и места по техпаспорту и типу стены',
   'Set balama de colț (leagă cele două uși)': 'Комплект угловой петли (соединяет две дверцы)',
   'verificați setul și balamalele înlocuite în fișa tehnică':
     'сверьте комплект и заменяемые петли с техпаспортом',
@@ -156,6 +160,14 @@ export const PRINT_RU = {
   'Prindere și fixare': 'Навес и крепление',
   'Piese libere': 'Свободные детали',
   'De asemenea': 'Также',
+  // Project order on the assembly sheet (ADR-178)
+  'Ordinea în proiect': 'Порядок в проекте',
+  'Corpuri de colț': 'Угловые шкафы',
+  'Corpuri de jos': 'Нижние изделия',
+  'Corpuri suspendate': 'Навесные изделия',
+  'Piese de rând': 'Детали ряда',
+  'Decupaj chiuvetă {w} × {d} mm': 'Вырез под мойку {w} × {d} мм',
+  'peretele {n}': 'стена {n}',
 } satisfies Record<string, string>;
 
 export const PRINT_EN: Record<keyof typeof PRINT_RU, string> = {
@@ -207,6 +219,10 @@ export const PRINT_EN: Record<keyof typeof PRINT_RU, string> = {
     'one in each top back corner (check the data sheet and the wall type)',
   'Șină de perete pentru agățători': 'Wall rail for hanging brackets',
   'tăiată la lățimea corpului': 'cut to the cabinet width',
+  'Agățători de perete pentru corpul de colț: la alegerea dvs.':
+    'Wall hanging brackets: choose for this corner unit',
+  'alegeți agățătorile, câte și unde, după fișa tehnică și tipul peretelui':
+    'choose the brackets, how many and where, from the bracket datasheet and the wall type',
   'Set balama de colț (leagă cele două uși)': 'Corner hinge set (joins the two doors)',
   'verificați setul și balamalele înlocuite în fișa tehnică':
     'check the set and the hinges it replaces in the data sheet',
@@ -304,4 +320,11 @@ export const PRINT_EN: Record<keyof typeof PRINT_RU, string> = {
   'Prindere și fixare': 'Hanging and fixing',
   'Piese libere': 'Loose parts',
   'De asemenea': 'Also',
+  'Ordinea în proiect': 'Project order',
+  'Corpuri de colț': 'Corner cabinets',
+  'Corpuri de jos': 'Base pieces',
+  'Corpuri suspendate': 'Wall pieces',
+  'Piese de rând': 'Run parts',
+  'Decupaj chiuvetă {w} × {d} mm': 'Sink cut-out {w} × {d} mm',
+  'peretele {n}': 'wall {n}',
 };

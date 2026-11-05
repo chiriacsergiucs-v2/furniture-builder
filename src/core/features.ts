@@ -215,8 +215,8 @@ export const FEATURES: FeatureDomain[] = [
       {
         name: 'Connected pieces',
         detail:
-          'A snap joins two touching pieces; they move together and a pair that no longer touches is warned about.',
-        adrs: ['ADR-168'],
+          'A snap joins two touching pieces; they move together, the seam is marked on the plan, the front view and in 3D, and a pair that no longer touches is warned about.',
+        adrs: ['ADR-168', 'ADR-179'],
       },
       {
         name: 'Compatibility rules',
@@ -306,8 +306,9 @@ export const FEATURES: FeatureDomain[] = [
           { name: 'Wall cabinets', adrs: ['ADR-025'] },
           {
             name: 'Corner cabinets',
-            detail: 'Blind, L-shaped and diagonal corners.',
-            adrs: ['ADR-025', 'ADR-040'],
+            detail:
+              'Blind, L-shaped and diagonal corners, on the floor or hung on the wall (you choose the brackets).',
+            adrs: ['ADR-025', 'ADR-040', 'ADR-177'],
           },
           { name: 'Tall cabinets', adrs: ['ADR-036'] },
         ],
@@ -489,7 +490,12 @@ export const FEATURES: FeatureDomain[] = [
         detail: 'Tapping a check selects the pieces and shows where it is.',
         adrs: ['ADR-071'],
       },
-      { name: 'Previewed repairs', adrs: ['ADR-071'] },
+      {
+        name: 'Previewed repairs',
+        detail:
+          'A repair moves the whole group; one the group cannot follow is shown refused, with the reason.',
+        adrs: ['ADR-071', 'ADR-176'],
+      },
     ],
   },
   {
@@ -553,6 +559,12 @@ export const FEATURES: FeatureDomain[] = [
             detail:
               'An ordered step list per piece from the parts’ positions, with the joints and hardware of each step, labelled guidance; Show step lights the parts in 3D; printable.',
             adrs: ['ADR-174'],
+          },
+          {
+            name: 'Project assembly order',
+            detail:
+              'A project’s Assembly tab and printed sheet open with the order of its pieces: corner cabinets, base pieces wall by wall from the corner, wall pieces, then run parts; labelled guidance.',
+            adrs: ['ADR-178'],
           },
         ],
       },

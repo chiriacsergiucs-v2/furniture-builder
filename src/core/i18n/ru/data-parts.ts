@@ -131,6 +131,9 @@ const FIXED: Record<string, string> = {
     'по одному в каждом верхнем заднем углу (сверьте с техпаспортом навеса и типом стены)',
   'Wall rail for hanging brackets': 'Монтажная шина для навесов',
   'cut to cabinet width': 'отрезать по ширине шкафа',
+  'Wall hanging brackets: choose for this corner unit': 'Навесы для углового модуля: на ваш выбор',
+  'user-specified: choose the brackets, how many and where, from the bracket datasheet and the wall type':
+    'на ваш выбор: подберите навесы, их количество и места по техпаспорту и типу стены',
   'Push latch (push-to-open)': 'Толкатель (push-to-open)',
   'use hinges without self-closing spring for doors (check the latch datasheet)':
     'для дверец используйте петли без пружины доводки (сверьте с техпаспортом толкателя)',

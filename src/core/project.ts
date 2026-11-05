@@ -426,7 +426,7 @@ export function makeItem(project: Project, design: Design, libraryId?: string): 
   const d = upgradeDesign(design);
   const wall = isWallHung(d);
   const y = wall
-    ? d.product.kind === 'cabinet'
+    ? d.product.kind === 'cabinet' || d.product.kind === 'corner'
       ? (d.product.params.mountHeight ?? 1450)
       : 1450
     : 0;
@@ -444,9 +444,10 @@ export function makeItem(project: Project, design: Design, libraryId?: string): 
   };
 }
 
-/** The piece is built to hang on the wall (brackets and rail scheduled). */
+/** The piece is built to hang on the wall: a wall cabinet (brackets and rail scheduled) or a hung corner (ADR-177). */
 export const isWallHung = (d: Design) =>
-  d.product.kind === 'cabinet' && d.product.params.mount === 'wall';
+  (d.product.kind === 'cabinet' || d.product.kind === 'corner') &&
+  d.product.params.mount === 'wall';
 
 // ---------------------------------------------------------------------------
 // Placement: floor, wall, on or above another piece (ADR-031)

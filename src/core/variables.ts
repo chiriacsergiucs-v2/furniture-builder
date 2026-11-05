@@ -365,7 +365,7 @@ export function readTarget(item: ProjectItem, target: string): number | undefine
     case 'mountHeight':
       return item.placement?.kind === 'wall'
         ? item.placement.height
-        : p.kind === 'cabinet'
+        : p.kind === 'cabinet' || p.kind === 'corner'
           ? p.params.mountHeight
           : undefined;
     case 'x':

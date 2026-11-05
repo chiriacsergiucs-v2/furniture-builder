@@ -2,6 +2,7 @@
 export const ru_material = {
   'Invalid role boards': 'Недопустимые плиты по ролям',
   'Role boards need schemaVersion 6': 'Плиты по ролям требуют schemaVersion 6',
+  'Corner mount needs schemaVersion 7': 'Креплению углового модуля нужна schemaVersion 7',
   'Role board for {k} refers to an unknown role or material':
     'Плита по роли {k} ссылается на неизвестную роль или материал',
   'not in a run': 'не в ряду',
@@ -107,6 +108,6 @@ export const ru_material = {
     'Соединённые изделия перемещаются вместе; примагничивание соединяет их, Alt при перетаскивании двигает одно. О паре, которая больше не касается, выводится предупреждение.',
   'Connected to {names}': 'Соединено с: {names}',
   'Connected pieces': 'Соединённые изделия',
-  'A snap joins two touching pieces; they move together and a pair that no longer touches is warned about.':
-    'Примагничивание соединяет два соприкасающихся изделия; они перемещаются вместе, а о паре, которая больше не касается, выводится предупреждение.',
+  'A snap joins two touching pieces; they move together, the seam is marked on the plan, the front view and in 3D, and a pair that no longer touches is warned about.':
+    'Примагничивание соединяет два соприкасающихся изделия; они перемещаются вместе, шов отмечен на плане, на виде спереди и в 3D, а о паре, которая больше не касается, выводится предупреждение.',
 } as const;

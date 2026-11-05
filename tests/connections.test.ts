@@ -7,6 +7,7 @@ import {
   connect,
   connectedTo,
   connectionCheck,
+  connectionSeams,
   disconnect,
   isConnected,
   movingSet,
@@ -160,6 +161,77 @@ describe('the broken warning (ADR-168, ADR-008)', () => {
     const turned = tryTurn(p, a, 1).project;
     expect(codes(turned)).toContain('connection-broken');
     expect(errors(turned)).toEqual([]);
+  });
+});
+
+describe('connectionSeams (ADR-179)', () => {
+  /** The plan tick as ConnectionTicks worked it out in UI code before ADR-179, from the two pieces' bounds. */
+  function oldTick(p: Project, c: { itemIds: [string, string] }, half: number) {
+    const pieces = buildProjectModel(p).pieces;
+    const A = pieces.find((x) => x.item.id === c.itemIds[0])!.bounds;
+    const B = pieces.find((x) => x.item.id === c.itemIds[1])!.bounds;
+    if (A.x + A.w === B.x || B.x + B.w === A.x) {
+      const x = A.x + A.w === B.x ? B.x : A.x;
+      const zm = (Math.max(A.z, B.z) + Math.min(A.z + A.d, B.z + B.d)) / 2;
+      return [x - half, zm, x + half, zm];
+    }
+    const z = A.z + A.d === B.z ? B.z : A.z;
+    const xm = (Math.max(A.x, B.x) + Math.min(A.x + A.w, B.x + B.w)) / 2;
+    return [xm, z - half, xm, z + half];
+  }
+  /** The plan tick drawn from a seam (ConnectionTicks since ADR-179). */
+  function newTick(s: ReturnType<typeof connectionSeams>[number], half: number) {
+    const xm = (s.x1 + s.x2) / 2,
+      zm = (s.z1 + s.z2) / 2;
+    return s.x1 === s.x2 ? [xm - half, zm, xm + half, zm] : [xm, zm - half, xm, zm + half];
+  }
+
+  it('one seam per holding connection, at the shared edge, in integer mm, with its height and front end', () => {
+    const base = row('base-door', 'base-door', 'base-door');
+    const [a, b, c] = ids(base);
+    const p = connect(connect(base, a, b), b, c);
+    const pieces = buildProjectModel(p).pieces;
+    const seams = connectionSeams(p, pieces);
+    expect(seams.map((s) => s.id)).toEqual(p.connections!.map((x) => x.id));
+    const A = pieces.find((x) => x.item.id === a)!.bounds;
+    const B = pieces.find((x) => x.item.id === b)!.bounds;
+    const s = seams[0];
+    expect(s.itemIds).toEqual([a, b]);
+    expect(s.x1).toBe(A.x + A.w);
+    expect(s.x2).toBe(B.x);
+    expect([s.z1, s.z2]).toEqual([Math.max(A.z, B.z), Math.min(A.z + A.d, B.z + B.d)]);
+    expect([s.y1, s.y2]).toEqual([Math.max(A.y, B.y), Math.min(A.y + A.h, B.y + B.h)]);
+    // Against the back wall the front faces +z: the front end is the seam's larger z.
+    expect(s.front).toEqual([s.x1, s.z2]);
+    for (const x of seams)
+      for (const v of [x.x1, x.x2, x.z1, x.z2, x.y1, x.y2, ...x.front])
+        expect(Number.isInteger(v)).toBe(true);
+  });
+  it('a broken connection (parted, or one piece removed from the pieces) has no seam; none without connections', () => {
+    const base = row('base-door', 'base-door');
+    const [a, b] = ids(base);
+    expect(connectionSeams(base, buildProjectModel(base).pieces)).toEqual([]);
+    const p = connect(base, a, b);
+    const parted = moveBy(p, b, 100, 0, 1).project;
+    expect(parted.connections).toHaveLength(1);
+    expect(connectionSeams(parted, buildProjectModel(parted).pieces)).toEqual([]);
+    const pieces = buildProjectModel(p).pieces;
+    expect(connectionSeams(p, pieces.slice(0, 1))).toEqual([]);
+  });
+  it("the plan's ticks are unchanged: a tick from the seam equals the old tick from the bounds", () => {
+    const base = row('base-door', 'base-door', 'base-door');
+    const [a, b, c] = ids(base);
+    let p = connect(connect(base, a, b), b, c);
+    // Different depths and a forward offset still touch side by side.
+    p = moveBy(p, c, 0, 40, 1).project;
+    const pieces = buildProjectModel(p).pieces;
+    const seams = connectionSeams(p, pieces);
+    expect(seams.length).toBeGreaterThan(0);
+    for (const half of [6, 13.5])
+      for (const s of seams) {
+        const conn = p.connections!.find((x) => x.id === s.id)!;
+        expect(newTick(s, half)).toEqual(oldTick(p, conn, half));
+      }
   });
 });
 

@@ -56,7 +56,13 @@ export const NOT_COUNTED = t(
 const CHOOSE_CODES = new Set(['hardware-to-choose', 'anti-tip', 'safety-not-checked']);
 
 /** Hardware the user still has to choose a product for (installation drawing, fittings, fixings). */
-const TO_CHOOSE = new Set(['appliance', 'flap-stay', 'front-fixing', 'sliding-track']);
+const TO_CHOOSE = new Set([
+  'appliance',
+  'flap-stay',
+  'front-fixing',
+  'sliding-track',
+  'wall-hanging',
+]);
 
 const r2 = (v: number) => Math.round(v * 100) / 100;
 

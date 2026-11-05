@@ -24,6 +24,7 @@ import {
   type ProjectItem,
 } from './project';
 import { placedBox } from './panelset';
+import { withGroups } from './groupMove';
 import type { Box, Design, Product, Space } from './types';
 
 // ---------------------------------------------------------------------------
@@ -314,13 +315,15 @@ export function touchingRun(project: Project, id: string, placed?: Map<string, B
 /**
  * Mirror the run `id` is in (ADR-069): every piece's position reflects about the run's centre and each piece is
  * mirrored. Pieces resting on a run piece (and on those, at any depth) are mirrored too and keep their place over
- * their base, reflected. Pieces with nothing to mirror only move; `reasons` lists them.
+ * their base, reflected. Pieces with nothing to mirror only move; `reasons` lists them. Every member of a group with a
+ * piece in the run mirrors with it (ADR-176): the run is widened with its groups first, and a group that cannot mirror
+ * refuses the whole action.
  */
 export function mirrorRun(
   project: Project,
   id: string,
 ): { project: Project; reasons: string[]; refused?: string } {
-  const run = touchingRun(project, id);
+  const run = withGroups(project, touchingRun(project, id));
   if (!run.length) return { project, reasons: [] };
   const r = mirrorSet(project, run);
   return r.refused ? { ...r, refused: t('Mirror the run refused: {why}', { why: r.refused }) } : r;

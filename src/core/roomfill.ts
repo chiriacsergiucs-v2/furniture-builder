@@ -4,7 +4,11 @@
  * wall row off — with a corner cabinet (ADR-025) at every inside corner where two filled walls meet. Every mix is a
  * project with the room, built through `buildProjectModel()` and kept only without errors; ranked by the walls'
  * own ranking, then fewest warnings, then fewest pieces. Deterministic and bounded. Pure.
+ * ADR-177: a wall corner cabinet above each base corner cabinet when the wall row is on (blind → the catalog's wall
+ * blind corner, L and diagonal → its wall L corner), the wall rows meeting it; a window splits a wall row into the
+ * parts beside it, each filled as its own row up to the window edge.
  */
+import { kitchen } from './catalog/kitchen';
 import { cornerDefaults, newId, templates } from './design';
 import { t } from './i18n';
 import {
@@ -24,12 +28,15 @@ import {
   cmp,
   MIXES_FIRST,
   piece,
+  WALL_HEIGHT,
+  WALL_VARIANTS,
   wallPiece,
   wallRowFor,
   checkWall,
   type Candidate,
   type Slot,
   type WallInput,
+  type WallSlot,
 } from './wallfill';
 import type { CornerParams, Design, Diagnostic, Mm } from './types';
 
@@ -51,8 +58,11 @@ export interface Stretch {
   wall: number;
   from: Mm;
   to: Mm;
-  /** Ranges along the wall where the wall row stays off (windows). */
+  /** Ranges along the wall where the wall row stays off (windows), from the stretch's start. */
   noWallRow: [Mm, Mm][];
+  /** It starts right after the corner cabinet at the wall's start / ends right before the one at its end (ADR-177). */
+  fromCorner?: boolean;
+  toCorner?: boolean;
 }
 
 export interface RoomMix {
@@ -161,6 +171,8 @@ export function freeStretches(
         noWallRow: noWallRow
           .map(([a, b]) => [Math.max(a, from) - from, Math.min(b, to) - from] as [Mm, Mm])
           .filter(([a, b]) => b > a),
+        ...(reserve.start > 0 && from === reserve.start ? { fromCorner: true } : {}),
+        ...(reserve.end > 0 && to === end ? { toCorner: true } : {}),
       });
   };
   for (const [a, b] of cuts) {
@@ -217,6 +229,157 @@ function runDepth(input: RoomInput, perWall: WallInput): Mm {
     ),
     input.depth,
   );
+}
+
+/** The catalog's wall corner variant for a base corner kind (ADR-177): blind → wall blind, L and diagonal → wall L. */
+const WALL_CORNER = {
+  blind: 'corner-blind-wall',
+  'l-shape': 'corner-l-wall',
+  diagonal: 'corner-l-wall',
+} as const;
+
+/** The depth of the wall row's cabinets: the deepest wall-cabinet variant the row deals (ADR-104). */
+const wallRowDepth = (): Mm =>
+  Math.max(
+    ...WALL_VARIANTS.map((v) => {
+      const p = v.create!().product;
+      return p.kind === 'cabinet' ? p.params.depth : 0;
+    }),
+  );
+
+/**
+ * The wall corner cabinet above a base corner of this kind (ADR-177): the catalog template at the wall row's height,
+ * as deep as the wall row; its wings (or its blind section) keep the template's length beyond its depth. Null when
+ * the catalog has none.
+ */
+export function wallCornerPiece(
+  kind: Exclude<CornerKind, 'none'>,
+  input: RoomInput,
+): Design | null {
+  const v = kitchen.flatMap((f) => f.variants).find((x) => x.id === WALL_CORNER[kind]);
+  if (!v?.create) return null;
+  const d = v.create();
+  if (d.product.kind !== 'corner') return null;
+  const p = d.product.params;
+  const depth = wallRowDepth();
+  const params: CornerParams = {
+    ...p,
+    depth,
+    height: input.wallHeight ?? WALL_HEIGHT,
+    ...(p.variant === 'blind'
+      ? { blindWidth: depth + (p.blindWidth - p.depth) }
+      : { width: depth + (p.width - p.depth), wingWidth: depth + (p.wingWidth - p.depth) }),
+  };
+  return {
+    ...d,
+    product: { ...d.product, params },
+    // The template's own note: corner units do not get wall brackets automatically (ADR-010, guidance).
+    ...(v.hardware ? { catalog: { ...d.catalog, hardwareToChoose: v.hardware } } : {}),
+  };
+}
+
+/** How much of each wall a wall corner takes: `along` the wall whose end holds it, `across` on the next wall. */
+function wallCornerTake(d: Design): { along: Mm; across: Mm } {
+  const foot = placedBounds({
+    ...makeItem(newProject('c'), d),
+    rotationY: 0,
+    position: { x: 0, y: 0, z: 0 },
+  });
+  // Its width runs along its wall, its depth (an L: its side wing) along the next wall.
+  return { along: foot.w, across: foot.d };
+}
+
+/** Ranges along wall `i` that a wall cabinet stays off: its windows, doors and obstacles. */
+function wallRowStops(room: Room, i: number): [Mm, Mm][] {
+  return room.features
+    .filter(
+      (f) => f.wall === i && (f.kind === 'window' || f.kind === 'door' || f.kind === 'obstacle'),
+    )
+    .map((f) => [f.from, f.from + f.width] as [Mm, Mm])
+    .filter(([a, b]) => b > a);
+}
+
+const overlaps = (stops: [Mm, Mm][], a: Mm, b: Mm) => stops.some(([x, y]) => a < y && x < b);
+
+/** A piece of the wall row's span: plain (over base units or a corner), over the tall slot `tall`, or a hole. */
+interface RowSeg {
+  from: Mm;
+  to: Mm;
+  tall?: number;
+  hole?: boolean;
+}
+
+/**
+ * The wall row over one base stretch (ADR-104, ADR-177): it spans `lo`..`hi` along the wall (the stretch, reaching
+ * a wall corner at either end) minus every stop (window, door, obstacle). Each part between stops is filled with
+ * `wallRowFor` on its own, so the row ends at a window edge; a tall cabinet keeps its top box, one cut by a stop gets
+ * none; a part that cannot be split into wall cabinets stays empty. `from` is along the wall; `over` is the index of
+ * the tall slot in `slots`.
+ */
+export function wallRowParts(
+  slots: Slot[],
+  stretch: { from: Mm; to: Mm },
+  lo: Mm,
+  hi: Mm,
+  stops: [Mm, Mm][],
+  input: WallInput,
+): (WallSlot & { from: Mm })[] {
+  const segs: RowSeg[] = [];
+  if (lo < stretch.from) segs.push({ from: lo, to: stretch.from });
+  let at = stretch.from;
+  slots.forEach((s, k) => {
+    segs.push({ from: at, to: at + s.width, ...(s.kind === 'tall' ? { tall: k } : {}) });
+    at += s.width;
+  });
+  if (hi > stretch.to) segs.push({ from: stretch.to, to: hi });
+  const pieces: RowSeg[] = [];
+  for (const g of segs) {
+    let parts: [Mm, Mm][] = [[Math.max(g.from, lo), Math.min(g.to, hi)]];
+    for (const [a, b] of stops)
+      parts = parts.flatMap(([x, y]): [Mm, Mm][] =>
+        b <= x || a >= y
+          ? [[x, y]]
+          : (
+              [
+                [x, Math.min(a, y)],
+                [Math.max(b, x), y],
+              ] as [Mm, Mm][]
+            ).filter(([p, q]) => q > p),
+      );
+    for (const [x, y] of parts.sort((p, q) => p[0] - q[0])) {
+      if (y <= x) continue;
+      if (g.tall === undefined) pieces.push({ from: x, to: y });
+      else if (x === g.from && y === g.to) pieces.push({ from: x, to: y, tall: g.tall });
+      else pieces.push({ from: x, to: y, hole: true });
+    }
+  }
+  const out: (WallSlot & { from: Mm })[] = [];
+  // Variants dealt left to right over the whole stretch, as one `wallRowFor` call would (ADR-104).
+  let dealt = 0;
+  const fill = (from: Mm, to: Mm) => {
+    for (const ws of wallRowFor([{ kind: 'shelves', width: to - from }], input) ?? [])
+      out.push({
+        ...ws,
+        variant: WALL_VARIANTS[dealt++ % WALL_VARIANTS.length].id,
+        from: from + ws.x,
+      });
+  };
+  // Runs: plain pieces that touch; a tall, a hole or a gap (a stop) ends a run.
+  let run: [Mm, Mm] | null = null;
+  for (const pc of pieces) {
+    const plain = pc.tall === undefined && !pc.hole;
+    if (plain && run && pc.from === run[1]) {
+      run[1] = pc.to;
+      continue;
+    }
+    if (run) fill(run[0], run[1]);
+    run = plain ? [pc.from, pc.to] : null;
+    if (pc.tall !== undefined)
+      for (const ws of wallRowFor([{ kind: 'tall', width: pc.to - pc.from }], input) ?? [])
+        out.push({ ...ws, over: pc.tall, from: pc.from });
+  }
+  if (run) fill(run[0], run[1]);
+  return out;
 }
 
 interface Placed {
@@ -436,6 +599,40 @@ export function roomProject(
   p.room = structuredClone(room);
   const placed: Placed[] = [];
   const height = perWall.height;
+  const n = room.outline.length;
+  const rowOn = (input.wallRow ?? 'always') !== 'never';
+  const mount = height - (input.wallHeight ?? WALL_HEIGHT);
+  // Wall corner cabinets above the base corners when the wall row is on (ADR-177).
+  const wallCorner = rowOn && corner !== 'none' ? wallCornerPiece(corner, input) : null;
+  const wtake = wallCorner ? wallCornerTake(wallCorner) : { along: 0, across: 0 };
+  const wallCorners = new Set<number>();
+  if (wallCorner && corner !== 'none') {
+    const baseTop = placedBounds({
+      ...makeItem(newProject('c'), cornerPiece(corner, input)),
+      position: { x: 0, y: 0, z: 0 },
+    }).h;
+    // It hangs above the base corner, on both walls clear of windows, doors and obstacles, within the walls.
+    const fits = (i: number) => {
+      const j = (i + 1) % n,
+        len = wallLength(room, i);
+      return (
+        mount >= baseTop &&
+        wtake.along <= len &&
+        wtake.across <= wallLength(room, j) &&
+        !overlaps(wallRowStops(room, i), len - wtake.along, len) &&
+        !overlaps(wallRowStops(room, j), 0, wtake.across)
+      );
+    };
+    const ok = new Set(corners.filter(fits));
+    // Two wall corners on one wall must not overlap each other.
+    for (const i of ok) {
+      const prev = (i - 1 + n) % n,
+        next = (i + 1) % n;
+      if (ok.has(prev) && wtake.across + wtake.along > wallLength(room, i)) continue;
+      if (ok.has(next) && wtake.across + wtake.along > wallLength(room, next)) continue;
+      wallCorners.add(i);
+    }
+  }
   for (let k = 0; k < stretches.length; k++) {
     const s = stretches[k];
     const c = picks[k];
@@ -456,17 +653,20 @@ export function roomProject(
       });
       at += slot.width;
     }
-    const row = (input.wallRow ?? 'always') === 'never' ? null : wallRowFor(c.slots, widthInput);
-    for (const ws of row ?? []) {
-      // A wall cabinet over a window stays off (ADR-173); a top box stands on its tall cabinet.
-      const a = ws.x,
-        b = ws.x + ws.width;
-      if (s.noWallRow.some(([x0, x1]) => a < x1 && x0 < b)) continue;
+    // The wall row reaches a wall corner at either end and stops at each window edge (ADR-177).
+    const len = wallLength(room, s.wall);
+    const lo = s.fromCorner && wallCorners.has((s.wall - 1 + n) % n) ? wtake.across : s.from;
+    const hi = s.toCorner && wallCorners.has(s.wall) ? len - wtake.along : s.to;
+    const row = rowOn
+      ? wallRowParts(c.slots, s, lo, hi, wallRowStops(room, s.wall), widthInput)
+      : [];
+    for (const ws of row) {
+      // A top box stands on its tall cabinet.
       const d = wallPiece(ws, widthInput);
       placed.push({
         design: d,
         wall: s.wall,
-        from: s.from + ws.x,
+        from: ws.from,
         width: ws.width,
         depth: wallDepth(d),
         hung: ws.variant !== 'top-box',
@@ -512,6 +712,33 @@ export function roomProject(
       const across = rotationY % 180 === 0 ? foot.d : foot.w;
       const box = wallBox(room, i, len - along, along, across, 0, 1);
       items.push({ ...made, rotationY, position: { x: box.x, y: 0, z: box.z } });
+    }
+  // Wall corner cabinets, hung with their tops at the wall row's height (ADR-177).
+  if (corner !== 'none')
+    for (const i of corners) {
+      const d = wallCorners.has(i) ? wallCornerPiece(corner, input) : null;
+      if (d?.product.kind !== 'corner') continue;
+      const design: Design = {
+        ...d,
+        // Hung by its template (ADR-177): its underside at the wall row's.
+        product: {
+          ...d.product,
+          params: { ...d.product.params, side: cornerSide(room, i), mountHeight: mount },
+        },
+      };
+      const made = makeItem(p, design);
+      const len = wallLength(room, i);
+      const rotationY = turnFor(wallInward(room, i));
+      const foot = placedBounds({ ...made, rotationY, position: { x: 0, y: 0, z: 0 } });
+      const along = rotationY % 180 === 0 ? foot.w : foot.d;
+      const across = rotationY % 180 === 0 ? foot.d : foot.w;
+      const box = wallBox(room, i, len - along, along, across, 0, 1);
+      items.push({
+        ...made,
+        rotationY,
+        position: { x: box.x, y: mount, z: box.z },
+        placement: { kind: 'wall', height: mount },
+      });
     }
   p.items = items;
   void height;
