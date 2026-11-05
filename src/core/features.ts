@@ -602,6 +602,12 @@ export const FEATURES: FeatureDomain[] = [
             adrs: ['ADR-064'],
           },
           { name: 'Shopping list CSV', adrs: ['ADR-064'] },
+          {
+            name: 'Unit price on each Shopping list row',
+            detail:
+              'Under each line total, the unit price it comes from (your price or the seller’s); “—” when a row has no price. Also a column on the printed list and in the CSV.',
+            adrs: ['ADR-181'],
+          },
           { name: 'Cost estimate from your price list', adrs: ['ADR-062'] },
           {
             name: 'Seller products for hardware and seller prices',
