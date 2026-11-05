@@ -42,6 +42,7 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { connectionSeams } from '../core/connections';
 import { explode } from '../core/explode';
 import { t } from '../core/i18n';
 import { hitToMm, inSelection, selectionBox } from '../core/selectPath';
@@ -203,6 +204,13 @@ export default function Viewer3D() {
     void theme;
     return (
       getComputedStyle(document.documentElement).getPropertyValue('--stage-3d').trim() || '#e7eae7'
+    );
+  }, [theme]);
+  // Connection seams (ADR-179) in the primary colour, the plan's tick colour.
+  const primary = useMemo(() => {
+    void theme;
+    return (
+      getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || SELECT
     );
   }, [theme]);
   const designId = `${preview ? `preview:${view.title}` : view.mode === 'project' ? 'project' : `design:${useDesign.getState().design.id}`}:${exploded ? 'exploded' : 'built'}`;
@@ -386,6 +394,9 @@ export default function Viewer3D() {
         )}
         {view.mode === 'project' && !exploded && !isolating && (
           <ModelItems plain={rendering} moving={moving} />
+        )}
+        {view.mode === 'project' && !exploded && !rendering && !preview && (
+          <SeamLines color={primary} only={isolating ? selectedIds : undefined} />
         )}
         {moving && turnId && <HeightHandle id={turnId} />}
         {sectionOn && <SectionClip axis={section.axis} at={cut!} />}
@@ -645,6 +656,53 @@ function SelectionOutline({ box }: { box: Box }) {
       // Drawn last, after the transparent (faded) panels, so nothing covers it.
       transparent
       renderOrder={10}
+      raycast={() => null}
+    />
+  );
+}
+
+/**
+ * A thin vertical line along the seam of every connection that still holds (ADR-179), at the pieces' front face,
+ * from `connectionSeams`; display only, never picked (ADR-014). Not drawn while exploded or rendering. While
+ * isolating (`only`), only seams between two shown pieces. `document.body.dataset.seams` holds the number drawn
+ * (for the find-it script, as `data-lit`).
+ */
+function SeamLines({ color, only }: { color: string; only?: readonly string[] }) {
+  const project = useDesign((s) => s.project);
+  const pieces = useDesign((s) => s.projectModel?.pieces);
+  const seams = useMemo(() => {
+    if (!project || !pieces) return [];
+    const all = connectionSeams(project, pieces);
+    return only ? all.filter((c) => c.itemIds.every((id) => only.includes(id))) : all;
+  }, [project, pieces, only]);
+  useEffect(() => {
+    document.body.dataset.seams = String(seams.length);
+    return () => {
+      delete document.body.dataset.seams;
+    };
+  }, [seams.length]);
+  const points = useMemo(() => {
+    // A few mm in front of the face, so the line does not hide in the door edges.
+    const o = 2;
+    return seams.flatMap((c) => {
+      const [x, z] = c.front;
+      const dx = c.x1 === c.x2 ? 0 : x === c.x2 ? o : -o;
+      const dz = c.x1 === c.x2 ? (z === c.z2 ? o : -o) : 0;
+      return [
+        [(x + dx) * S, c.y1 * S, (z + dz) * S] as [number, number, number],
+        [(x + dx) * S, c.y2 * S, (z + dz) * S] as [number, number, number],
+      ];
+    });
+  }, [seams]);
+  if (!points.length) return null;
+  return (
+    <Line
+      // drei's segment line does not pick up changed points.
+      key={points.flat().join(',')}
+      points={points}
+      segments
+      color={color}
+      lineWidth={2}
       raycast={() => null}
     />
   );

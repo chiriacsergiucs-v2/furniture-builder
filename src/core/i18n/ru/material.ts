@@ -107,6 +107,6 @@ export const ru_material = {
     'Соединённые изделия перемещаются вместе; примагничивание соединяет их, Alt при перетаскивании двигает одно. О паре, которая больше не касается, выводится предупреждение.',
   'Connected to {names}': 'Соединено с: {names}',
   'Connected pieces': 'Соединённые изделия',
-  'A snap joins two touching pieces; they move together and a pair that no longer touches is warned about.':
-    'Примагничивание соединяет два соприкасающихся изделия; они перемещаются вместе, а о паре, которая больше не касается, выводится предупреждение.',
+  'A snap joins two touching pieces; they move together, the seam is marked on the plan, the front view and in 3D, and a pair that no longer touches is warned about.':
+    'Примагничивание соединяет два соприкасающихся изделия; они перемещаются вместе, шов отмечен на плане, на виде спереди и в 3D, а о паре, которая больше не касается, выводится предупреждение.',
 } as const;
