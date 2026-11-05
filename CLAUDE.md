@@ -143,7 +143,8 @@ changed and push only on the user's explicit approval. Model, document, storage 
 - **R2 No avoidance:** never drop or relabel a requirement ("reference", "waits", "gap", "deferred") to skip
   building it; ask instead.
 - **R3 Find-it test:** UI acceptance starts from the bare app and finds features by role and visible text at
-  phone and desktop widths. Default find-it mode: **jsdom** (ADR-108) — `tests/find-it/<area>.test.tsx` with the
+  phone and desktop widths. Default find-it mode (toggle `find-it-jsdom-default`; while it is off the default is the
+  browser script): **jsdom** (ADR-108) — `tests/find-it/<area>.test.tsx` with the
   `tests/find-it/setup.tsx` helper (390 and 1280 px), run by `pnpm test` and CI. An ADR that changes layout or CSS,
   or touches the 3D view or Move mode, sets `- Acceptance: browser`: `tools/<area>/find-it.mjs` against the
   production build in Chromium (the rule before ADR-108). To revert every ADR to the browser script, change the
@@ -160,9 +161,11 @@ on snapshot-before-tests"); the change updates this table with the date and the 
 skipped everywhere it is referenced (this file and the skills); the rule text stays where it is, so turning it back
 on restores it unchanged.
 
-| Toggle                  | Rule                                                                | State | Changed                                                                                                               |
-| ----------------------- | ------------------------------------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------- |
-| `snapshot-before-tests` | Process › Snapshot before tests: screenshots approved before checks | off   | 2026-11-05, user: "set screenshots validation rule as inactive until further notice with possibility to turn back on" |
+| Toggle                  | Rule                                                                                  | State | Changed                                                                                                               |
+| ----------------------- | ------------------------------------------------------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------- |
+| `snapshot-before-tests` | Process › Snapshot before tests: screenshots approved before checks                   | off   | 2026-11-05, user: "set screenshots validation rule as inactive until further notice with possibility to turn back on" |
+| `find-it-jsdom-default` | Delivery › R3: find-it tests default to jsdom; off = the browser script for every ADR | on    | 2026-11-05, user: "Do 2 and 3" (listed, state unchanged)                                                              |
+| `auto-open-pr`          | Git › Open the pull request automatically once an implementation is done and pushed   | on    | 2026-11-05, user: "Do 2 and 3" (listed, state unchanged)                                                              |
 
 ## Process (standing user rules)
 
@@ -201,7 +204,8 @@ on restores it unchanged.
 - Only modify `chiriacsergiucs-v2/furniture-builder`.
 - Branch per ADR: `adr-NNN-short-title`; open a pull request for review. An ADR created and approved for building
   in the same run (new and next together, above) shares one branch and one pull request with its implementation.
-- Open the pull request automatically (user rule 2026-10-29): as soon as an implementation is done (its checks pass
+- Open the pull request automatically (user rule 2026-10-29; toggle `auto-open-pr` — while it is off, ask before
+  opening): as soon as an implementation is done (its checks pass
   and it is pushed to its branch), open the pull request without asking, using the repo's template if one exists.
   Not for `ff` (no pull request) or an ADR-only change that is not approved for building. Merging still waits for the
   user's instruction.
