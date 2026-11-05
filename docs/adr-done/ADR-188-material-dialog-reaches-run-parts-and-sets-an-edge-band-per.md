@@ -1,7 +1,8 @@
 # ADR-188: Material dialog reaches run parts and sets an edge band per role
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-31
+- Implemented: 2026-11-05
 - Depends on: ADR-077, ADR-163
 - Design: docs/ui-design.md (§4 Screens: Material sheet)
 - Backlog: N193

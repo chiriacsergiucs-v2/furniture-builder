@@ -1,7 +1,8 @@
 # ADR-190: Neighbours share one side panel
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-10-31
+- Implemented: 2026-11-05
 - Depends on: ADR-165
 - Design: docs/ui-design.md (§4 Screens: project selected-items card)
 - Backlog: N195
