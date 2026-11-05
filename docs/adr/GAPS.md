@@ -1059,7 +1059,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-294: Move to for several selected pieces
 
-- Status: Open
+- Status: ADR-182
 - Origin: ADR-147, 2026-10-29; out of scope
 - Missing: Move to actions move only the selected piece, not a multi-selection
 - Request: add a move action for a piece, snap to closest wall, snap to closest ceiling, snap to closest left piece, snap to closest right piece, and any other snaps you think would be appropriate
@@ -1269,7 +1269,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-328: Feature tree details left short
 
-- Status: Open
+- Status: ADR-183
 - Origin: N170 (ff), 2026-11-04; agent left them out
 - Missing: Seven feature-tree lines keep correct but incomplete details: Drag a piece on the plan (arrow keys), Wall colour or picture (where it shows, Solid walls), 2D, 3D or both (one switch in both modes), Share links, Save pieces and templates to your account, Boards and edge bands from a seller (seller pictures load online), Seller products for hardware (Add seller product).
 - Request: “Sync features and gaps with latest changes, remove implemented, validate still listed, remove obsolete”
@@ -1332,7 +1332,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-336: Verified research rows not yet deleted from the data
 
-- Status: Open
+- Status: ADR-184
 - Origin: ADR-168, 2026-11-04; agent scoped it out
 - Missing: The three research rows ADR-168 completes (Transactional undo/redo, Versioned save/reload, Connected items stay independently selectable) are marked Verified in the research data but stay listed; ADR-149 and ADR-152 deleted built features from the data in their own ADRs.
 - Request: “Validate all High demand features … create adrs” (user 2026-11-04)
@@ -1350,7 +1350,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-338: Snap ranking ignores locks
 
-- Status: Open
+- Status: ADR-180
 - Origin: ADR-171, 2026-11-04; agent scoped it out
 - Missing: Snap ranking does not prefer locked neighbours (research: 'snap ranking considers user locks').
 - Request: “Separate locks per parameter” (user 2026-11-04)
@@ -1359,7 +1359,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-339: No per-row price column
 
-- Status: Open
+- Status: ADR-181
 - Origin: ADR-172, 2026-11-04; agent scoped it out
 - Missing: No price per row in the Parts table; only the running total and the Shopping list.
 - Request: “Running estimate + scheduled seller price refresh” (user 2026-11-04)
