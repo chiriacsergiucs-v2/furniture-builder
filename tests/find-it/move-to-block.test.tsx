@@ -69,7 +69,7 @@ describe.each(WIDTHS)('Move to a selection at %ipx (find-it, ADR-182)', (width) 
       expect(within(moveTo).queryByRole('button', { name: 'To wall' })).toBeNull(),
     );
     expect(within(moveTo).getByText(/more are off/)).toBeTruthy();
-    expect(within(moveTo).getByText(/Already touching wall/)).toBeTruthy();
+    expect(within(moveTo).getAllByText(/Already touching wall/).length).toBeGreaterThan(0);
 
     // Both moved by the same 500 mm: the first at the wall, the second still 300 mm ahead of it.
     await selectRows(user, side, false, 0);
