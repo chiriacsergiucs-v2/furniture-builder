@@ -496,6 +496,27 @@ export const FEATURES: FeatureDomain[] = [
         adrs: ['ADR-165'],
         checked: '2026-11-05',
       },
+      {
+        name: 'Run parts and edge bands in the Material dialog',
+        detail:
+          'Worktop, fillers, plinth and trims of a run; an edge band per part role or per part.',
+        adrs: ['ADR-188'],
+        checked: '2026-11-05',
+      },
+      {
+        name: 'Common top across gaps, corner units and desks',
+        detail:
+          'One top over a gap, round an L or diagonal corner (cut to template) and over a desk.',
+        adrs: ['ADR-189'],
+        checked: '2026-11-05',
+      },
+      {
+        name: 'Neighbours share one side panel',
+        detail:
+          'Select cabinets side by side: Shared sides leaves one side per joint; fronts meet over its middle.',
+        adrs: ['ADR-190'],
+        checked: '2026-11-05',
+      },
       { name: 'Stock sheets, trim and kerf', adrs: ['ADR-019'], checked: '2026-11-05' },
       { name: 'Solid timber stock', adrs: ['ADR-038'], checked: '2026-11-05' },
       { name: 'Manufacturer and type labels', adrs: ['ADR-049'], checked: '2026-11-05' },

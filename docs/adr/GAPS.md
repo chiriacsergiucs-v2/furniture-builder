@@ -1780,51 +1780,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Conflicts: none
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
 
-### G-317: Run-part boards in the Material dialog
-
-- Status: Open
-- Origin: ADR-163
-- Missing: The worktop, filler and cover boards of a run are not offered in the Material dialog; they keep their own select under Run parts.
-- Request: Adjusting the material used MUST be always available.
-- Questions: Should run-part boards join the Material dialog as a Worktop / Fillers role with scope Group?
-- Suggested pick: Add them as roles in a later ADR (closest to 'always available').
-- Work: Medium
-- Impact: Medium
-- Necessity: Medium
-- Issue: Run worktops, fillers and cover boards cannot be changed from the Material dialog; they use a separate select.
-- Fix: Add Worktop and Fillers roles with Group scope to the Material dialog in a later ADR.
-- Conflicts: none
-
-### G-318: Edge band per role in the Material dialog
-
-- Status: Open
-- Origin: ADR-163
-- Missing: The Material dialog changes boards only; the edge band of a role stays the board's band (ADR-077).
-- Request: Not only piece/carcass, but any other combination or piece separately.
-- Questions: Should a role also take an edge-band choice?
-- Suggested pick: Add an edge-band select per role in a later ADR.
-- Work: Medium
-- Impact: Medium
-- Necessity: Low-medium
-- Issue: The Material dialog changes boards only; a role's edge band always follows its board's band.
-- Fix: Add an edge-band select per role in the Material dialog, stored as a per-role band override.
-- Conflicts: none
-
-### G-322: Common panel on corner cabinets and desks
-
-- Status: Open
-- Origin: ADR-165
-- Missing: Only cabinets join a common top or bottom; corner cabinets, desks and frames are refused with the reason.
-- Request: Add the possibility to have a common bottom or top between multiple items.
-- Questions: Should corner cabinets and desks join a common panel?
-- Suggested pick: Cabinets first; corners and desks in a later ADR.
-- Work: Medium
-- Impact: Low-medium
-- Necessity: Low
-- Issue: Only plain cabinets can share a common top or bottom; corner cabinets and desks are refused.
-- Fix: Extend the common-panel check and build to corner cabinets and desks in a later ADR.
-- Conflicts: none
-
 ### G-324: Formula functions
 
 - Status: Open
@@ -2109,4 +2064,34 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Necessity: Medium
 - Issue: Romanian or Russian assembly prints show English catalog piece names like 'Base cabinet, 1 door'.
 - Fix: Translate a piece name on prints while it still equals its catalog template's default name.
+- Conflicts: none
+
+### G-354: Shared side with corner units and desks
+
+- Status: Open
+- Origin: ADR-190
+- Missing: Corner units and desks keep both sides; only two cabinets can share a side.
+- Request: Add the possibility to have a common bottom or top between multiple items.
+- Questions: Should a blind corner's straight side or a desk gable be shared with a neighbouring cabinet?
+- Suggested pick: Cabinets only (the user's pick); corners and desks in a later ADR.
+- Work: Medium-high
+- Impact: Low-medium
+- Necessity: Low
+- Issue: Corner units and desks cannot share a side with a neighbouring cabinet; only two cabinets can.
+- Fix: Let a blind corner's straight side or a desk gable be shared, in a later ADR.
+- Conflicts: none
+
+### G-355: Shared side with inset and sliding fronts
+
+- Status: Open
+- Origin: ADR-190
+- Missing: At a shared side, inset fronts and sliding doors keep their own rule (no half overlay).
+- Request: Add the possibility to have a common bottom or top between multiple items.
+- Questions: Should sliding doors or inset fronts change at a shared side?
+- Suggested pick: Keep their rule: an inset front never covers a side; a sliding door runs in its own track.
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+- Issue: Inset fronts and sliding doors at a shared side keep their own rule, with no half overlay.
+- Fix: Keep as is unless asked; inset fronts never cover a side, sliding doors run in their own track.
 - Conflicts: none
