@@ -1,10 +1,10 @@
-# ADR-199: Fix the project composition design findings
+# ADR-200: Fix the project composition design findings
 
 - Status: Deferred (empty placeholder)
 - Date: 2026-11-05
 - Depends on: ADR-022, ADR-093, ADR-107, ADR-160
 - Design: docs/ui-design.md (Project composition)
-- Backlog: N204
+- Backlog: N205
 
 ## Context
 
@@ -18,7 +18,7 @@ ADR-193 to ADR-196. This one is not ready: it has no findings yet (G-367). The s
 Run in a Claude Code session on this repository, with the production build served (`pnpm build && pnpm exec vite
 preview --port 4173`):
 
-> Critique the design of domain 7, Project composition, and fill ADR-199 with its findings. Scope: the pieces list, Add a piece, room and walls, plan drag and snap, align and distribute, arrange, Move to, group move and size, connections, merge, shared sides and common tops, clearances, compat rules, wall background and photo straightening, project settings, versions and templates. Files: src/ui/Project.tsx (read in parts), PieceList.tsx, MoveTo.tsx, Clearances.tsx, CompatRules.tsx, WallBackground.tsx, StraightenPhoto.tsx, ProjectSettings.tsx, ProjectTemplates.tsx, planDrag.ts, pieceDrag.ts, useSnap.ts, src/core/project.ts, room.ts, setRoom.ts, snap.ts, align.ts, arrange.ts, moveTo.ts, groupMove.ts, groupSize.ts, connections.ts, merge.ts, shared.ts, common.ts, clearance.ts, compat.ts, linked.ts, sets.ts, projectSettings.ts, projectTemplate.ts, projectVersion.ts.
+> Critique the design of domain 7, Project composition, and fill ADR-200 with its findings. Scope: the pieces list, Add a piece, room and walls, plan drag and snap, align and distribute, arrange, Move to, group move and size, connections, merge, shared sides and common tops, clearances, compat rules, wall background and photo straightening, project settings, versions and templates. Files: src/ui/Project.tsx (read in parts), PieceList.tsx, MoveTo.tsx, Clearances.tsx, CompatRules.tsx, WallBackground.tsx, StraightenPhoto.tsx, ProjectSettings.tsx, ProjectTemplates.tsx, planDrag.ts, pieceDrag.ts, useSnap.ts, src/core/project.ts, room.ts, setRoom.ts, snap.ts, align.ts, arrange.ts, moveTo.ts, groupMove.ts, groupSize.ts, connections.ts, merge.ts, shared.ts, common.ts, clearance.ts, compat.ts, linked.ts, sets.ts, projectSettings.ts, projectTemplate.ts, projectVersion.ts.
 > Implemented ADRs to respect: ADR-022, 047, 093, 107, 160, 165, 189, 190 (grep `docs/adr-done` for more). Evidence: read the code; probe with scratch
 > Vitest tests (delete them after); screenshot the production build at 390 × 844 and 1280 × 900. Keep only High
 > (blocks or misleads, loses work, wrong output, hard-rule breach) and Medium (clear friction a user hits in normal use)
