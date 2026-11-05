@@ -30,6 +30,9 @@ on the scale Low, Low-medium, Medium, Medium-high, High (`src/core/research/type
    Necessity (multi-select chips on the five levels, as on the Research page), combined with the status filter and
    search. A Conflicts value other than `none` shows as a marked chip. The page stays English (ADR-154).
 4. New gaps added later carry the fields too (`pnpm gaps add` options).
+5. Built 2026-11-05: Clear filters resets the ratings, the search and the status (back to Open), as on the Research
+   page; rating counts follow the status filter and search; chips run Low to High; the checker accepts Conflicts as
+   `none` or text starting with `ADR-NNN`, refuses an empty Issue or Fix, and does not require the fields.
 
 ## Alternatives considered
 
