@@ -1420,3 +1420,21 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Translate with the print (user 2026-11-05, for the fastener menu name); user-typed names are not translated (G-304).
 - Questions: Translate catalog default piece names on prints when the user has not renamed the piece?
 - Suggested pick: Translate a piece name only while it equals its catalog template's default name (estimate: effort +10%, value +5%).
+
+### G-354: Wizard draft survives closing the dialog
+
+- Status: Open
+- Origin: ADR-187, 2026-11-05; agent scoped it out
+- Missing: The wizard's answers live only while the dialog is open. Confirming before a close (ADR-187) stops accidental loss; a draft that survives closing the dialog (Continue where you left off) is not built.
+- Request: Not asked; the critique of 2026-11-05 noted the loss and the user chose the grouped ADR as proposed (confirm on close).
+- Questions: Should a closed wizard keep its draft for the session, or until the piece is created?
+- Suggested pick: Keep the draft in the store for the session; the Type step offers Continue or Start over. (estimate: effort +8 %, value +10 % over confirm-on-close)
+
+### G-355: Doors choice is a dropdown on desktop
+
+- Status: Open
+- Origin: ADR-187, 2026-11-05; agent scoped it out
+- Missing: The Doors field on a desktop is a dropdown (five options; the segmented control takes four), so sliding and per-compartment doors are hidden behind a click while the cards promote them. Not changed by ADR-187.
+- Request: Not asked; noted during the critique of 2026-11-05 and left out of the fourteen findings.
+- Questions: Allow a five-option segmented control on desktop and wrap it on a phone?
+- Suggested pick: Segmented up to five options at 1280 px, wrapping at 390 px. (estimate: effort +2 %, value +3 %)
