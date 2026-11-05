@@ -7,21 +7,26 @@ import {
   parsePricesCsv,
   priceSource,
   pricesCsv,
+  unitPrice,
   unitsFor,
   type PriceEntry,
   type SellerLookup,
+  type UnitPer,
 } from '../core/prices';
 import { anyOffers, hardwareOffers, refOf, type Offer, type SellerCatalog } from '../core/sellers';
 import { validPer } from '../core/design';
 import { ProductPicker } from './ProductPicker';
 import {
   NOT_COUNTED,
+  shopSectionPrint,
   shoppingCsvRo,
+  unitPricePrint,
   type ShopLine,
   type ShopSection,
   type ShopUnit,
 } from '../core/shopping';
 import { t, tr } from '../core/i18n';
+import { pt } from '../core/i18n/print';
 import { savePrices } from '../persist/db';
 import { useDesign } from '../store/designStore';
 import { usePrices } from './priceStore';
@@ -37,7 +42,7 @@ const SECTIONS: { id: ShopSection; title: string }[] = [
   { id: 'run', title: 'Run parts' },
   { id: 'choose', title: 'To choose before buying' },
 ];
-/** The section titles, on screen and on the printed list (both in the app's language, ADR-154). */
+/** The section titles on screen, in the app's language (ADR-154); the printed list uses the print language (ADR-181). */
 const SECTION_TITLE: Record<ShopSection, string> = {
   boards: t('Boards'),
   banding: t('Edge banding'),
@@ -50,6 +55,14 @@ const UNIT_SHOWN: Record<ShopUnit, string> = {
   m2: t('m²'),
   m: t('m'),
   piece: t('pcs'),
+};
+/** What a unit price is per, under a row's total (ADR-181). */
+const UNIT_ONE: Record<UnitPer, string> = {
+  sheet: t('sheet'),
+  m2: t('m²'),
+  m: t('m'),
+  piece: t('piece'),
+  worktop: t('worktop board'),
 };
 const PER: Record<ShopUnit, string> = {
   sheet: t('per sheet'),
@@ -121,15 +134,16 @@ export function ShoppingList() {
     const rowsHtml = SECTIONS.map((s) => {
       const ls = lines.filter((l) => l.section === s.id);
       return ls.length
-        ? `<h2>${esc(SECTION_TITLE[s.id])}</h2><table><tr><th>${esc(t('Qty'))}</th><th>${esc(t('Item'))}</th><th>${esc(t('Details'))}</th><th>${esc(t('Price'))}</th></tr>${ls
+        ? `<h2>${esc(shopSectionPrint(s.id))}</h2><table><tr><th>${esc(pt('Cantitate'))}</th><th>${esc(pt('Articol'))}</th><th>${esc(pt('Detalii'))}</th><th>${esc(pt('Preț'))}</th><th>${esc(pt('Preț unitar'))}</th></tr>${ls
             .map((l) => {
               const p = linePrice(l, map, seller);
-              return `<tr><td>${l.quantity} ${UNIT_SHOWN[l.unit]}</td><td>${esc(tr(l.label))}</td><td>${esc(tr(l.detail))}</td><td>${p === null ? '' : `${formatMoney(p)} ${esc(currency)}`}</td></tr>`;
+              const u = unitPrice(l, map, seller);
+              return `<tr><td>${l.quantity} ${UNIT_SHOWN[l.unit]}</td><td>${esc(tr(l.label))}</td><td>${esc(tr(l.detail))}</td><td>${p === null ? '' : `${formatMoney(p)} ${esc(currency)}`}</td><td>${u ? esc(unitPricePrint(u, currency)) : ''}</td></tr>`;
             })
             .join('')}</table>`
         : '';
     }).join('');
-    const title = esc(t('Shopping list — {name}', { name: view.title }));
+    const title = esc(pt('Listă de cumpărături — {name}', { name: view.title }));
     const estimate = esc(
       t('Estimate: {total} {currency}', { total: formatMoney(est.total), currency }) +
         (est.missing.length
@@ -214,7 +228,12 @@ export function ShoppingList() {
           onClick={() =>
             save(
               `${view.title}-shopping.csv`,
-              shoppingCsvRo(lines, (l) => linePrice(l, map, seller), currency),
+              shoppingCsvRo(
+                lines,
+                (l) => linePrice(l, map, seller),
+                currency,
+                (l) => unitPrice(l, map, seller),
+              ),
               'text/csv;charset=utf-8',
             )
           }
@@ -354,6 +373,7 @@ function Line({
   const [unit, setUnit] = useState<ShopUnit>(e?.unit && units.includes(e.unit) ? e.unit : units[0]);
   const [bad, setBad] = useState(false);
   const p = linePrice(l, map, seller);
+  const u = unitPrice(l, map, seller);
   const fromSeller = p !== null && priceSource(l, map, seller) === 'seller';
   const priced = l.section !== 'run' && l.section !== 'choose';
   const sellerRow = l.productKey !== undefined || l.itemIndex !== undefined;
@@ -404,12 +424,21 @@ function Line({
                 (e.unit === 'sheet' || (e.unit === 'piece' && l.worktop)) &&
                 l.sheets == null
                   ? t('sheets not laid out')
-                  : t('price missing')}
+                  : '—'}
               </span>
             ) : (
               <>
                 {`${formatMoney(p)} ${currency}`}
                 {fromSeller && <span className="note"> {t('seller price')}</span>}
+                {u && (
+                  <div className="hint unit-price">
+                    {t('{price} {currency} / {unit}', {
+                      price: formatMoney(u.amount),
+                      currency,
+                      unit: UNIT_ONE[u.per],
+                    })}
+                  </div>
+                )}
               </>
             )}
           </td>

@@ -163,7 +163,8 @@ export const FEATURES: FeatureDomain[] = [
     features: [
       {
         name: 'Drag a piece on the plan',
-        detail: 'Whole millimetres in 10 mm steps; Esc cancels.',
+        detail:
+          'Whole millimetres in 10 mm steps; Esc cancels. The arrow keys move a focused piece 10 mm, 100 mm with Shift.',
         adrs: ['ADR-065'],
       },
       { name: 'Move and turn pieces in the 3D view', adrs: ['ADR-093'] },
@@ -187,8 +188,8 @@ export const FEATURES: FeatureDomain[] = [
       {
         name: 'Move to a wall, corner, ceiling, floor or neighbour',
         detail:
-          "One tap slides it to a wall, corner or neighbour, up to the ceiling or down, centres it, or matches a neighbour's top or front.",
-        adrs: ['ADR-147'],
+          "One tap slides it to a wall, corner or neighbour, up to the ceiling or down, centres it, or matches a neighbour's top or front. Several selected pieces move as one block.",
+        adrs: ['ADR-147', 'ADR-182'],
       },
       {
         name: 'Place on the floor, on the wall or on another piece',
@@ -399,7 +400,7 @@ export const FEATURES: FeatureDomain[] = [
       {
         name: 'Boards and edge bands from a seller',
         detail:
-          'Bundled seller products (Regency first): same thickness and decor first, you pick.',
+          'Bundled seller products (Regency first): same thickness and decor first, you pick; pictures not shipped with the app load online from the seller’s site.',
         adrs: ['ADR-161'],
       },
       {
@@ -465,7 +466,12 @@ export const FEATURES: FeatureDomain[] = [
         adrs: ['ADR-059'],
       },
       { name: 'Pipes and outlets', adrs: ['ADR-072'] },
-      { name: 'Wall colour or picture', adrs: ['ADR-145'] },
+      {
+        name: 'Wall colour or picture',
+        detail:
+          'Set per wall under Walls in the room; shown on the walls in 3D and behind the pieces against it in the room front view. Solid walls in 3D makes the walls opaque.',
+        adrs: ['ADR-145'],
+      },
       { name: 'Fit, shift and straighten a wall picture', adrs: ['ADR-146'] },
       {
         name: 'Opening clearances',
@@ -507,7 +513,12 @@ export const FEATURES: FeatureDomain[] = [
           { name: 'Compose and Build & Preview modes', adrs: ['ADR-079', 'ADR-080'] },
           { name: 'Front drawing with sizes', adrs: ['ADR-014'] },
           { name: 'Project plan and room front view with sizes', adrs: ['ADR-022'] },
-          { name: '2D, 3D or both side by side', adrs: ['ADR-081', 'ADR-144'] },
+          {
+            name: '2D, 3D or both side by side',
+            detail:
+              'One View switch in Compose and Build & Preview; the chosen view stays when the mode changes.',
+            adrs: ['ADR-081', 'ADR-144'],
+          },
         ],
       },
       {
@@ -602,10 +613,17 @@ export const FEATURES: FeatureDomain[] = [
             adrs: ['ADR-064'],
           },
           { name: 'Shopping list CSV', adrs: ['ADR-064'] },
+          {
+            name: 'Unit price on each Shopping list row',
+            detail:
+              'Under each line total, the unit price it comes from (your price or the seller’s); “—” when a row has no price. Also a column on the printed list and in the CSV.',
+            adrs: ['ADR-181'],
+          },
           { name: 'Cost estimate from your price list', adrs: ['ADR-062'] },
           {
             name: 'Seller products for hardware and seller prices',
-            detail: 'Your own price wins; otherwise the seller price, with its date.',
+            detail:
+              'Your own price wins; otherwise the seller price, with its date. Add seller product puts any seller product on a piece’s shopping list.',
             adrs: ['ADR-161'],
           },
         ],
@@ -719,7 +737,12 @@ export const FEATURES: FeatureDomain[] = [
       { name: 'Backup reminder', adrs: ['ADR-141'] },
       { name: 'Only-on-this-device notice', adrs: ['ADR-140'] },
       { name: 'Clean up unused pictures', adrs: ['ADR-048', 'ADR-078'] },
-      { name: 'Share links', adrs: ['ADR-132', 'ADR-138'] },
+      {
+        name: 'Share links',
+        detail:
+          'Signed in, a link to a piece or template; anyone with it opens a copy until you stop sharing.',
+        adrs: ['ADR-132', 'ADR-138'],
+      },
       { name: 'Preview a shared item', adrs: ['ADR-143'] },
     ],
   },
@@ -729,7 +752,12 @@ export const FEATURES: FeatureDomain[] = [
       { name: 'Sign in with Google', adrs: ['ADR-135'] },
       { name: 'Email and password, forgot and reset', adrs: ['ADR-136'] },
       { name: 'Stay signed in', adrs: ['ADR-134'] },
-      { name: 'Save pieces and templates to your account', adrs: ['ADR-128', 'ADR-137'] },
+      {
+        name: 'Save pieces and templates to your account',
+        detail:
+          'Signed in, saved pieces and templates upload by themselves; Keep on this device only opts one out, and In your account lists those not on this device.',
+        adrs: ['ADR-128', 'ADR-137'],
+      },
       { name: 'Sync status', adrs: ['ADR-129', 'ADR-139'] },
       { name: 'Conflicts never lose work', adrs: ['ADR-129'] },
       { name: 'Several accounts on one device', adrs: ['ADR-142'] },

@@ -244,6 +244,8 @@ export const ru_editors = {
   'Clear selection': 'Снять выделение',
   'Align to the first selected piece': 'Выровнять по первому выбранному изделию',
   'Align to {name}:': 'Выровнять по «{name}»:',
+  'Move to, as one block, from the front of {name}:':
+    'Переместить единым блоком, по фасаду «{name}»:',
   'Align left': 'Выровнять по левому краю',
   Centre: 'По центру',
   'Align centre': 'Выровнять по центру',
@@ -384,7 +386,10 @@ export const ru_editors = {
   'Price unit of {item}': 'Единица цены: {item}',
   'per worktop board': 'за щит столешницы',
   'sheets not laid out': 'листы не разложены',
-  'price missing': 'нет цены',
+  sheet: 'лист',
+  piece: 'шт.',
+  'worktop board': 'щит столешницы',
+  '{price} {currency} / {unit}': '{price} {currency} / {unit}',
   Parts: 'Детали',
   Sheets: 'Листы',
   Shopping: 'Покупки',
@@ -395,7 +400,6 @@ export const ru_editors = {
   'Download CSV': 'Скачать CSV',
   'Print the cutting sheet (in the print language, A4) or save it as PDF':
     'Распечатать лист раскроя (на языке печати, A4) или сохранить в PDF',
-  'Shopping list — {name}': 'Список покупок — {name}',
   'Estimate: {total} {currency}': 'Оценка: {total} {currency}',
   ' — {n|# price missing|# prices missing}': ' — нет цены: {n}',
   ' (your prices)': ' (ваши цены)',

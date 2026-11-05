@@ -4,9 +4,9 @@ import { MOVE_TO_ACTIONS, MOVE_TO_LABELS, moveToOptions, type MoveToAction } fro
 import { useDesign } from '../store/designStore';
 
 /**
- * The one-tap Move to buttons for a project piece (ADR-147), in the piece panel and over the 3D view in Move mode. An
- * action that cannot move the piece stays tappable but marked off: a tap says why (phones have no hover), and the
- * reason is its title too. Each tap that moves the piece is one undo step. In the side panel (`onlyWorking`, ADR-160)
+ * The one-tap Move to buttons for a project piece (ADR-147), or for several selected pieces moved as one block
+ * (ADR-182, `id` a list), in the side panel and over the 3D view in Move mode. An action that cannot move the piece
+ * stays tappable but marked off: a tap says why (phones have no hover), and the reason is its title too. Each tap that moves the piece is one undo step. In the side panel (`onlyWorking`, ADR-160)
  * only the actions that work now are buttons; the others fold under "N more are off" with their reasons.
  */
 export function MoveToButtons({
@@ -14,7 +14,7 @@ export function MoveToButtons({
   className = '',
   onlyWorking = false,
 }: {
-  id: string;
+  id: string | readonly string[];
   className?: string;
   onlyWorking?: boolean;
 }) {
@@ -22,12 +22,13 @@ export function MoveToButtons({
   const moveItemTo = useDesign((s) => s.moveItemTo);
   const options = useMemo(() => (project ? moveToOptions(project, id) : null), [project, id]);
   const [msg, setMsg] = useState<{ id: string; text: string } | null>(null);
+  const key = typeof id === 'string' ? id : id.join(',');
   if (!options) return null;
   const off = MOVE_TO_ACTIONS.filter((a) => options[a]);
   const tap = (a: MoveToAction) => {
     const off = options[a];
     const text = off ?? moveItemTo(id, a);
-    setMsg(text ? { id, text: `${tr(MOVE_TO_LABELS[a].label)}: ${tr(text)}` } : null);
+    setMsg(text ? { id: key, text: `${tr(MOVE_TO_LABELS[a].label)}: ${tr(text)}` } : null);
   };
   return (
     <div className={`move-to ${className}`} role="group" aria-label={t('Move to')}>
@@ -60,7 +61,7 @@ export function MoveToButtons({
           </ul>
         </details>
       )}
-      {msg?.id === id && (
+      {msg?.id === key && (
         <p className="hint" role="status">
           {msg.text}
         </p>

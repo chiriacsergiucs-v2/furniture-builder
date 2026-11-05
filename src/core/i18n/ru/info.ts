@@ -72,7 +72,8 @@ export const ru_info = {
     'Меняйте его пространства, размеры, материалы и конструкцию, не выходя из проекта.',
   Moving: 'Перемещение',
   'Drag a piece on the plan': 'Перетащить изделие на плане',
-  'Whole millimetres in 10 mm steps; Esc cancels.': 'Целые миллиметры с шагом 10 мм; Esc отменяет.',
+  'Whole millimetres in 10 mm steps; Esc cancels. The arrow keys move a focused piece 10 mm, 100 mm with Shift.':
+    'Целые миллиметры с шагом 10 мм; Esc отменяет. Клавиши со стрелками двигают изделие в фокусе на 10 мм, с Shift на 100 мм.',
   'Move and turn pieces in the 3D view': 'Перемещать и поворачивать изделия в 3D-виде',
   "Change a wall unit's height by dragging in 3D":
     'Менять высоту навесного изделия перетаскиванием в 3D',
@@ -187,11 +188,11 @@ export const ru_info = {
   'Seller board pictures shipped with the app': 'Картинки плит продавца встроены в приложение',
   'A seller board shows its decor in 3D and the front view, without asking the seller’s site.':
     'Плита продавца показывает свой декор в 3D и на виде спереди, без запроса к сайту продавца.',
-  'Bundled seller products (Regency first): same thickness and decor first, you pick.':
-    'Встроенные товары продавцов (сначала Regency): сначала та же толщина и декор, выбираете вы.',
+  'Bundled seller products (Regency first): same thickness and decor first, you pick; pictures not shipped with the app load online from the seller’s site.':
+    'Встроенные товары продавцов (сначала Regency): сначала та же толщина и декор, выбираете вы; картинки, не встроенные в приложение, загружаются онлайн с сайта продавца.',
   'Seller products for hardware and seller prices': 'Товары продавца для фурнитуры и цены продавца',
-  'Your own price wins; otherwise the seller price, with its date.':
-    'Ваша цена важнее; иначе цена продавца с датой.',
+  'Your own price wins; otherwise the seller price, with its date. Add seller product puts any seller product on a piece’s shopping list.':
+    'Ваша цена важнее; иначе цена продавца с датой. «Добавить товар продавца» добавляет любой товар продавца в список покупок изделия.',
   'Type, thickness, width and code, on the cut list and shopping list.':
     'Тип, толщина, ширина и код, в списке деталей и в списке покупок.',
   'Own board for any single part': 'Свой материал для любой отдельной детали',
@@ -215,6 +216,8 @@ export const ru_info = {
     'Прямоугольник, Г, П и ниша; длину каждой стены можно изменить.',
   'Pipes and outlets': 'Трубы и розетки',
   'Wall colour or picture': 'Цвет или картинка на стене',
+  'Set per wall under Walls in the room; shown on the walls in 3D and behind the pieces against it in the room front view. Solid walls in 3D makes the walls opaque.':
+    'Задаётся для каждой стены в разделе «Стены» комнаты; видна на стенах в 3D и за изделиями у этой стены на виде комнаты спереди. «Сплошные стены» в 3D делают стены непрозрачными.',
   'Fit, shift and straighten a wall picture': 'Подогнать, сдвинуть и выпрямить картинку на стене',
   'Opening clearances': 'Зоны открывания',
   'Doors and drawers need free space in front.':
@@ -240,6 +243,8 @@ export const ru_info = {
   'Project plan and room front view with sizes':
     'План проекта и фронтальный вид комнаты с размерами',
   '2D, 3D or both side by side': '2D, 3D или оба рядом',
+  'One View switch in Compose and Build & Preview; the chosen view stays when the mode changes.':
+    'Один переключатель «Вид» в режимах «Компоновка» и «Сборка и просмотр»; выбранный вид сохраняется при смене режима.',
   '3D view': '3D-вид',
   '3D preview, select by click': '3D-просмотр, выбор щелчком',
   'Exploded 3D view': '3D-вид в разнесённом виде',
@@ -326,12 +331,16 @@ export const ru_info = {
   'Only-on-this-device notice': 'Уведомление «только на этом устройстве»',
   'Clean up unused pictures': 'Удалить неиспользуемые картинки',
   'Share links': 'Ссылки для общего доступа',
+  'Signed in, a link to a piece or template; anyone with it opens a copy until you stop sharing.':
+    'После входа — ссылка на изделие или шаблон; любой, у кого она есть, открывает копию, пока вы не закроете доступ.',
   'Preview a shared item': 'Предпросмотр общего элемента',
   Account: 'Аккаунт',
   'Sign in with Google': 'Вход через Google',
   'Email and password, forgot and reset': 'Почта и пароль, восстановление и сброс',
   'Stay signed in': 'Оставаться в системе',
   'Save pieces and templates to your account': 'Сохранять изделия и шаблоны в аккаунте',
+  'Signed in, saved pieces and templates upload by themselves; Keep on this device only opts one out, and In your account lists those not on this device.':
+    'После входа сохранённые изделия и шаблоны загружаются сами; «Хранить только на этом устройстве» исключает одно из них, а «В вашем аккаунте» показывает те, которых нет на этом устройстве.',
   'Sync status': 'Состояние синхронизации',
   'Conflicts never lose work': 'Конфликты не теряют работу',
   'Several accounts on one device': 'Несколько аккаунтов на одном устройстве',
@@ -364,8 +373,8 @@ export const ru_info = {
     'Ручка, накладка фасадов и высота цоколя, которым следуют изделия; «Материал» с областью «Проект» задаёт плиты корпуса, фасадов и задней стенки.',
   'Turn ↺ and ↻ in the toolbar, or R and Shift+R.':
     'Поворот ↺ и ↻ на панели инструментов или клавишами R и Shift+R.',
-  "One tap slides it to a wall, corner or neighbour, up to the ceiling or down, centres it, or matches a neighbour's top or front.":
-    'Одно касание сдвигает его к стене, в угол или к соседу, вверх до потолка или вниз, ставит по центру или выравнивает по верху или фасаду соседа.',
+  "One tap slides it to a wall, corner or neighbour, up to the ceiling or down, centres it, or matches a neighbour's top or front. Several selected pieces move as one block.":
+    'Одно касание сдвигает его к стене, в угол или к соседу, вверх до потолка или вниз, ставит по центру или выравнивает по верху или фасаду соседа. Несколько выбранных изделий перемещаются единым блоком.',
   'Groups align and distribute as one block': 'Группы выравниваются и распределяются как один блок',
   'Width, height and depth of the whole piece where it is selected':
     'Ширина, высота и глубина всего изделия там, где оно выбрано',
@@ -384,6 +393,9 @@ export const ru_info = {
     'Закрепить изделие на месте, его поворот или каждый размер',
   'Lock keeps it where it is; Lock turn, Lock width, Lock height, Lock depth and Lock size (all three) in More actions. A locked value outranks variables, Replace, linked copies and project settings.':
     '«Закрепить» держит его на месте; «Закрепить поворот», «Закрепить ширину», «Закрепить высоту», «Закрепить глубину» и «Закрепить размер» (все три) — в «Ещё действия». Закреплённое значение важнее переменных, замены, связанных копий и настроек проекта.',
+  'Unit price on each Shopping list row': 'Цена за единицу в каждой строке списка покупок',
+  'Under each line total, the unit price it comes from (your price or the seller’s); “—” when a row has no price. Also a column on the printed list and in the CSV.':
+    'Под суммой строки — цена за единицу, из которой она получена (ваша цена или цена продавца); «—», если у строки нет цены. Также столбец в печатном списке и в CSV.',
   'Running cost estimate': 'Текущая оценка стоимости',
   'A chip in the editor header with the estimate of what is shown, updated on every change; tap it to open the Shopping list.':
     'Значок в шапке редактора с оценкой того, что показано, обновляется при каждом изменении; нажмите, чтобы открыть список покупок.',
