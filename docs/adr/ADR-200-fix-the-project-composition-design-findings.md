@@ -1,40 +1,81 @@
 # ADR-200: Fix the project composition design findings
 
-- Status: Deferred (empty placeholder)
-- Date: 2026-11-05
+- Status: Deferred (fix choices need the user's answer; production-browser critique incomplete)
+- Date: 2026-11-06
 - Depends on: ADR-022, ADR-093, ADR-107, ADR-160
 - Design: docs/ui-design.md (Project composition)
 - Backlog: N205
 
 ## Context
 
-Placeholder for domain 7, **Project composition**, of the 2026-11-05 design critique. The user asked: "run a /batch for 1
-through 7 with a critique of design … 1 adr with high and medium issues and fixes per flow", then "Create empty adrs
-for them, not ready, add a note inside them with what prompt need to be run to finish them". Domains 2 to 5 became
-ADR-193 to ADR-196. This one is not ready: it has no findings yet (G-367). The stopped run had screenshots of an empty project, Add a piece, placing, six pieces selected, Position, More, Room and the selection card at 390 and 1280 px; no findings were written.
-
-## Note: the prompt that finishes this ADR
-
-Run in a Claude Code session on this repository, with the production build served (`pnpm build && pnpm exec vite
-preview --port 4173`):
-
-> Critique the design of domain 7, Project composition, and fill ADR-200 with its findings. Scope: the pieces list, Add a piece, room and walls, plan drag and snap, align and distribute, arrange, Move to, group move and size, connections, merge, shared sides and common tops, clearances, compat rules, wall background and photo straightening, project settings, versions and templates. Files: src/ui/Project.tsx (read in parts), PieceList.tsx, MoveTo.tsx, Clearances.tsx, CompatRules.tsx, WallBackground.tsx, StraightenPhoto.tsx, ProjectSettings.tsx, ProjectTemplates.tsx, planDrag.ts, pieceDrag.ts, useSnap.ts, src/core/project.ts, room.ts, setRoom.ts, snap.ts, align.ts, arrange.ts, moveTo.ts, groupMove.ts, groupSize.ts, connections.ts, merge.ts, shared.ts, common.ts, clearance.ts, compat.ts, linked.ts, sets.ts, projectSettings.ts, projectTemplate.ts, projectVersion.ts.
-> Implemented ADRs to respect: ADR-022, 047, 093, 107, 160, 165, 189, 190 (grep `docs/adr-done` for more). Evidence: read the code; probe with scratch
-> Vitest tests (delete them after); screenshot the production build at 390 × 844 and 1280 × 900. Keep only High
-> (blocks or misleads, loses work, wrong output, hard-rule breach) and Medium (clear friction a user hits in normal use)
-> findings, 4 to 10, each with evidence (file:line or what you saw) and ONE fix chosen over 2–3 options. Do not repeat
-> ADR-191 or ADR-193 to ADR-196. Write Context, Decision (numbered findings), Alternatives considered, Scope, Consequences
-> and Done when (≤ 8 items) in this file, ≤ 100 lines; ask every open question at once; record out-of-scope items as
-> gaps; set Status Pending once every question is answered; move G-367's part for this domain into it.
-
-Earlier evidence from the stopped run, if the session still has it:
-`/tmp/claude-0/-home-user-furniture-builder/ab53647a-dfb3-571a-958d-b77425e3749c/scratchpad/batch/d7/` (screenshots and
-probe scripts; scratch space, may be gone).
+The user asked to implement ADRs 198, 199 and 200 using the Claude Flow audit. On main at `f1f7b70`,
+all three were empty placeholders: no findings, Decision or agreed fixes. Original request: "run a /batch
+for 1 through 7 with a critique of design … 1 adr with high and medium issues and fixes per flow".
+This records a code critique and diagnostic evidence; it does not interpret that request as an answer to
+choices absent from the placeholders. ADR-191 and ADR-193 to ADR-196 are excluded. Project-template actions here are distinct from ADR-195 catalog-family editing.
 
 ## Decision
 
-Not written yet; see the note above.
+Not agreed yet. The fixes below remain proposals pending the user's choice under Open questions.
+
+## Proposed findings and fixes
+
+1. **History hides storage failures (High).** `src/ui/History.tsx:32-36` converts failed version reads into
+   an empty list; Save/Restore/Delete at 67-71,98-112,120-136 await writes without catches. Probe: rejected
+   listProjectVersions shows No versions kept yet, no alert. Proposed fix: separate loading/empty/error;
+   catch actions, retain data, show translated errors and guard duplicate pending actions. Alternative:
+   a toast without state still permits false empty lists and duplicate writes.
+2. **Project-template actions can fail silently (High).** `src/ui/ProjectTemplates.tsx:126-129,142-151,
+164-177,184-191`: Use/Create, Rename, Export and Delete await work without catches (source evidence).
+   Proposed fix: operation-specific translated alerts, preserve operation input for retry, refresh only on
+   success and prevent duplicate submissions; keep new ids and save-before-open. Alternative: a global
+   unhandled-rejection message cannot preserve the operation's input or identify its failed action.
+3. **A finishing picture import overwrites newer room edits (High).** `src/ui/WallBackground.tsx:38-51`
+   closes over room before awaiting importImage; `src/ui/Project.tsx:3084` passes the store setter directly.
+   Probe: start upload at height 2500, rerender room height 2800, complete import: setter receives 2500.
+   Proposed fix: apply only the finish to the latest matching project's room, guarding changed/removed wall,
+   newer import and changed background; report a stale completion instead of overwriting. Alternatives:
+   freeze all project edits during import, or reject every room-reference change (including unrelated edits).
+4. **Cancel still creates a project template (Medium).** `ProjectTemplates.tsx:26-42` treats false from
+   Include the room as save without room, but askConfirm's other button says Cancel and Escape returns false.
+   Probe: accepted name and false room answer still saves without room. Proposed fix: one form with name,
+   explicit Include room checkbox, Save and Cancel; Cancel/Escape writes nothing. Alternative: rename Cancel
+   to Without room still leaves Escape creating a template.
+
+## Alternatives considered
+
+The alternatives beside each finding were compared with the proposed fix. They remain unselected until
+the user answers; no alternative or proposal has been written into application code.
+
+## Scope and consequences
+
+Only the four proposed fixes and their regression/find-it coverage, translations and relevant feature entries.
+No new physical specifications, model rules, storage schema or dependency. Keep existing undo semantics and
+validate through the authoritative model. UI behaviour changes only after the user chooses the fixes.
+For ADR-200 the save form changes layout and requires production-browser acceptance.
+
+## Evidence and remaining critique
+
+Ran locally on 2026-11-06: frozen-lockfile install; pnpm build; three project probes passed within an 11/11
+scratch Vitest diagnostic run. Probes assert existing defects, not corrected behaviour; removed after use.
+The shell drag probe is a synthetic event sequence; unhandled project-template writes are source evidence.
+No application code changed. Node 24.22.1, pnpm 11.25.0 (package.json pins pnpm 12.6.0).
+Production screenshots at 390 × 844 and 1280 × 900 were not obtained: Chromium failed to launch/render
+(GPU/font initialization). No browser, visual, 3D or gesture acceptance is claimed. G-367 remains Open.
+Completion prompt: obtain the user's fix choices; capture this domain's production states at both sizes in
+light/dark themes; finish the original critique scope, check physical gestures and ask about additional fixes.
+
+## Open questions
+
+- Choose the four numbered fixes, or identify changes. Proposal: all four, to prevent the demonstrated
+  misleading state, hidden edits or lost work while preserving existing capabilities. Effort/value percentages
+  cannot be determined from current evidence. No proposed option is accepted by default. G-367.
 
 ## Done when
 
-- [ ] The critique has run and this ADR lists its High and Medium findings with one fix each (the prompt above).
+- [ ] User choices and the production-browser critique are complete and recorded.
+- [ ] Version failures show alerts, never false emptiness/success; current data stays intact.
+- [ ] Failed template actions retain retry input and show errors; opening happens only after a successful save.
+- [ ] Picture completion preserves newer room edits and never writes to a stale project/wall/background.
+- [ ] Save-template Cancel/Escape writes nothing; Save respects name and Include room.
+- [ ] Russian copy/feature entries, regression and production acceptance at both widths and CI checks pass.

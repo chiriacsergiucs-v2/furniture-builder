@@ -2182,7 +2182,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 - Status: Open
 - Origin: Design critique batch, 2026-11-05; implementation request 2026-11-06
-- Missing: Agreed fix choices, completed production-browser critiques at 390 × 844 and 1280 × 900, implementation and acceptance for domains 1, 6 and 7. Code findings and proposed fixes now recorded in ADR-198, ADR-199; no application changes. Chromium could not launch/render for the production screenshots.
+- Missing: Agreed fix choices, completed production-browser critiques at 390 × 844 and 1280 × 900, implementation and acceptance for domains 1, 6 and 7. Code findings and proposed fixes now recorded in ADR-198, ADR-199, ADR-200; no application changes. Chromium could not launch/render for the production screenshots.
 - Request: "run a /batch for 1 through 7 with a critique of design … 1 adr … per flow (7 total adrs)"; "For furniture-builder repo, using the audit results of claude flow i asked for. Implement ADR-s 198, 199, 200".
 - Questions: Choose each ADR's four proposed fixes, or identify numbered changes? Production-browser critique remains incomplete.
 - Suggested pick: Choose the proposed fixes after review; finish production-browser evidence, then implement and verify every selected fix. No choice is accepted by default. Effort/value percentages cannot be determined from the current evidence.
