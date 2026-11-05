@@ -264,3 +264,48 @@ describe('snap off or Alt held (ADR-070)', () => {
     void a;
   });
 });
+
+describe('snap ranking prefers a locked neighbour on a tie (ADR-180)', () => {
+  /**
+   * C dragged between A (left) and B (right), off the back wall: C's left side `gap` from A's right side and its right
+   * side `gap + extra` from B's left side. Returns the snapped x and where each neighbour would put C.
+   */
+  function between(lock: 'A' | 'B' | null, extra = 0, gap = 20) {
+    const p = project([
+      { tpl: 'base-door', x: 0, z: 300 },
+      { tpl: 'base-door', x: 3000, z: 300 },
+      { tpl: 'base-door', x: 9000, z: 300 },
+    ]);
+    const w = widthOf(p, 0);
+    const dx = w + gap - 3000;
+    const free = dragPosition(p.items[1], dx, 0).x;
+    const g = free - w;
+    p.items[2] = { ...p.items[2], position: { ...p.items[2].position, x: free + w + g + extra } };
+    if (lock) {
+      const i = lock === 'A' ? 0 : 2;
+      p.items[i] = { ...p.items[i], locked: true };
+    }
+    const r = snapDrag(p, model(p).pieces, p.items[1].id, dx, 0)!;
+    expect(r.snap?.kind).toBe('side');
+    // The same drop on the same project always gives the same snap.
+    expect(snapDrag(p, model(p).pieces, p.items[1].id, dx, 0)).toEqual(r);
+    return { x: r.position.x, toA: w, toB: free + g + extra };
+  }
+  it('two neighbour sides at the same distance: the locked piece’s side wins', () => {
+    const a = between('A');
+    expect(a.x).toBe(a.toA);
+    const b = between('B');
+    expect(b.x).toBe(b.toB);
+    // Neither locked: the tie still goes by kind then id (ids are new each run, so either side).
+    const none = between(null);
+    expect([none.toA, none.toB]).toContain(none.x);
+  });
+  it('a closer unlocked side still wins when the locked side is 1 mm farther', () => {
+    // B locked, 1 mm farther than A: A wins.
+    const r = between('B', 1);
+    expect(r.x).toBe(r.toA);
+    // A locked, B 1 mm closer (A 1 mm farther): B wins.
+    const l = between('A', -1);
+    expect(l.x).toBe(l.toB);
+  });
+});
