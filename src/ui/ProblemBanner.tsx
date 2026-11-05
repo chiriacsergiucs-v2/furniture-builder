@@ -2,9 +2,11 @@
  * Select the problem and offer previewed repairs (ADR-071): the check picked under Checks, shown above the plan
  * with its repairs (computed in the core, smallest move first). The chosen repair is drawn on the plan as a dashed
  * outline; nothing changes until Apply, which is one undo step. The diagnostic itself is never hidden or softened.
+ * A repair the moved piece's group cannot follow is listed disabled with "Refused: {reason}" and cannot be applied
+ * (ADR-176).
  */
 import { useMemo } from 'react';
-import { repairsFor, sameProblem, type Repair } from '../core/repairs';
+import { applicable, repairsFor, sameProblem, type Repair } from '../core/repairs';
 import type { Project } from '../core/project';
 import type { Diagnostic } from '../core/types';
 import { useDesign } from '../store/designStore';
@@ -37,10 +39,13 @@ export function useFocusedProblem(): FocusedProblem | null {
     const d = pm.diagnostics.find((e) => sameProblem(focus, e));
     return d ? { d, repairs: repairsFor(project, pm, d), base: project } : null;
   }, [focus, focusProject, project, pm, busy]);
-  return useMemo(
-    () => (found ? { ...found, chosen: found.repairs[choice] ?? found.repairs[0] ?? null } : null),
-    [found, choice],
-  );
+  return useMemo(() => {
+    if (!found) return null;
+    // Only a repair that applies can be chosen (ADR-176); otherwise the first that does.
+    const picked = found.repairs[choice];
+    const chosen = picked && applicable(picked) ? picked : (found.repairs.find(applicable) ?? null);
+    return { ...found, chosen };
+  }, [found, choice]);
 }
 
 export function ProblemBanner({ problem }: { problem: FocusedProblem }) {
@@ -51,6 +56,8 @@ export function ProblemBanner({ problem }: { problem: FocusedProblem }) {
   const setHighlight = useDesign((s) => s.setHighlight);
   const setNotice = useUi((s) => s.setNotice);
   const apply = (r: Repair) => {
+    // A refused repair is never applied (ADR-176).
+    if (r.refused) return;
     // The repair was worked out on `base`; a project changed since then gets new repairs on the next render instead.
     if (useDesign.getState().project !== problem.base) return;
     updateProject(() => r.project);
@@ -59,6 +66,7 @@ export function ProblemBanner({ problem }: { problem: FocusedProblem }) {
     setNotice({ ok: true, text: t('Applied: {repair}. Undo puts it back.', { repair: r.label }) });
   };
   const error = d.severity === 'error';
+  const first = repairs.find(applicable);
   return (
     <section className={`problem-banner ${d.severity}`} aria-label={t('Problem and repairs')}>
       <p className="problem-msg">
@@ -71,11 +79,23 @@ export function ProblemBanner({ problem }: { problem: FocusedProblem }) {
         <fieldset className="repairs">
           <legend>{t('Repairs — the dashed outline on the plan shows the chosen one')}</legend>
           {repairs.map((r, i) => (
-            <label key={r.id}>
-              <input type="radio" name="repair" checked={r === chosen} onChange={() => choose(i)} />
+            <label key={r.id} className={r.refused ? 'refused' : undefined}>
+              <input
+                type="radio"
+                name="repair"
+                checked={r === chosen}
+                disabled={!!r.refused}
+                aria-describedby={r.refused ? `repair-${r.id}-refused` : undefined}
+                onChange={() => choose(i)}
+              />
               <span>
                 {r.label}
-                {i === 0 ? <span className="hint">{t(' · smallest move')}</span> : null}
+                {r === first ? <span className="hint">{t(' · smallest move')}</span> : null}
+                {r.refused ? (
+                  <span className="hint warn refused-why" id={`repair-${r.id}-refused`}>
+                    {t('Refused: {reason}', { reason: r.refused })}
+                  </span>
+                ) : null}
               </span>
             </label>
           ))}

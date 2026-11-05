@@ -489,7 +489,11 @@ export const FEATURES: FeatureDomain[] = [
         detail: 'Tapping a check selects the pieces and shows where it is.',
         adrs: ['ADR-071'],
       },
-      { name: 'Previewed repairs', adrs: ['ADR-071'] },
+      {
+        name: 'Previewed repairs',
+        detail: 'A repair moves the whole group; one the group cannot follow is shown refused, with the reason.',
+        adrs: ['ADR-071', 'ADR-176'],
+      },
     ],
   },
   {

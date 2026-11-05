@@ -1,8 +1,11 @@
 /**
  * Repairs for project diagnostics (ADR-071). A repair is a description and the project it leads to; it is only
  * offered when, built again, its diagnostic is gone and no other error has appeared. Nothing here applies a repair:
- * the user previews one and applies it (one undo step). No diagnostic is hidden or softened (ADR-008).
+ * the user previews one and applies it (one undo step). No diagnostic is hidden or softened (ADR-008). A repair that
+ * moves a piece carries its whole group and its connected pieces, as a drag does (ADR-176); one they cannot follow
+ * is listed refused, with the reason, and cannot be applied.
  */
+import { carryUnits } from './connections';
 import { t as tx } from './i18n';
 import { overlapsBox } from './shape';
 import {
@@ -26,11 +29,22 @@ export interface Repair {
   label: string;
   /** How far things move, mm: the list is sorted by it, smallest first (the default, ADR-071 open question). */
   distance: Mm;
-  /** The project after the repair, as a commit stores it (placements resolved, run parts refreshed). */
+  /**
+   * The project after the repair, as a commit stores it (placements resolved, run parts refreshed); for a refused
+   * repair, the project as it is (nothing to apply).
+   */
   project: Project;
-  /** Outlines of what moved or was added, room mm, for the preview on the plan. */
+  /** Outlines of what moved or was added, room mm, for the preview on the plan (empty when refused). */
   preview: { id: string; box: Box }[];
+  /**
+   * Why it cannot be applied (ADR-176): the piece's group or a connected piece cannot follow the move. Listed so the
+   * user sees why; applying it does nothing.
+   */
+  refused?: string;
 }
+
+/** A repair that can be applied: not refused (ADR-176). */
+export const applicable = (r: Repair) => !r.refused;
 
 /** At most this many repairs are listed for one problem, smallest first. */
 export const MAX_REPAIRS = 4;
@@ -95,7 +109,12 @@ export function problemPanels(pm: ProjectModel, d: Diagnostic): string[] {
   return [...new Set([...(d.panelIds ?? []), ...(inBox.length ? inBox : own).map((p) => p.id)])];
 }
 
-type Candidate = Omit<Repair, 'project' | 'preview' | 'id'> & { project: Project; added?: string };
+type Candidate = Omit<Repair, 'project' | 'preview' | 'id' | 'refused'> & {
+  project: Project;
+  added?: string;
+  /** The piece the repair moves: its group and connected pieces follow it (ADR-176). */
+  lead: string;
+};
 
 const side = (axis: 'x' | 'z', s: number) =>
   axis === 'x'
@@ -125,6 +144,7 @@ function moveCandidate(
         }),
         distance: Math.abs(s),
         project: next,
+        lead: pc.item.id,
       }
     : null;
 }
@@ -146,6 +166,7 @@ function hangCandidate(project: Project, pc: PlacedPiece, dy: Mm): Candidate | n
               }),
         distance: Math.abs(dy),
         project: next,
+        lead: pc.item.id,
       }
     : null;
 }
@@ -220,6 +241,7 @@ function fillerCandidate(
       runParts: [...(moved.runParts ?? []).filter((r) => r.key !== key), part],
     },
     added: key,
+    lead: pc.item.id,
   };
 }
 
@@ -290,6 +312,7 @@ function candidates(project: Project, pm: ProjectModel, d: Diagnostic): Candidat
           }),
           distance: Math.abs(m.dx) + Math.abs(m.dz),
           project: next,
+          lead: pc.item.id,
         });
     }
   }
@@ -297,9 +320,11 @@ function candidates(project: Project, pm: ProjectModel, d: Diagnostic): Candidat
 }
 
 /**
- * The repairs offered for one diagnostic of `project` (whose model is `pm`), smallest move first. Each one is built
- * again and kept only if its diagnostic is gone and it adds no error; the first `max` that pass are returned.
- * Empty for codes without repairs.
+ * The repairs offered for one diagnostic of `project` (whose model is `pm`), smallest move first. Each move is carried
+ * to the moved piece's group and connected pieces (`carryUnits`, ADR-176); each one is built again and kept only if its
+ * diagnostic is gone and it adds no error; the first `max` that pass are returned. A move its group cannot follow,
+ * which would pass if the piece moved alone, is listed refused with the reason (at most `max` of those too; they do not
+ * take the place of one that applies). Empty for codes without repairs.
  */
 export function repairsFor(
   project: Project,
@@ -317,20 +342,47 @@ export function repairsFor(
   // A locked piece is never moved by a repair (ADR-095): candidates that move it are not made, and one that moves it by
   // moving its base is dropped here.
   const locked = pm.pieces.filter((pc) => pc.item.locked).map((pc) => pc.item.id);
-  for (const c of candidates(project, pm, d).sort((a, b) => a.distance - b.distance)) {
-    if (out.length >= max) break;
-    if (seen.has(c.label)) continue;
-    seen.add(c.label);
-    const next = settle(c.project);
-    if (c.added && !(next.runParts ?? []).some((r) => r.key === c.added)) continue;
+  /** The settled project and its model, when it clears the problem and adds no error; else null. */
+  const passes = (c: Candidate, p: Project) => {
+    const next = settle(p);
+    if (c.added && !(next.runParts ?? []).some((r) => r.key === c.added)) return null;
     const after = buildProjectModel(next);
     if (locked.length) {
       const now = boundsOf(after);
       if (locked.some((id) => JSON.stringify(now.get(id)) !== JSON.stringify(was.get(id))))
-        continue;
+        return null;
     }
-    if (after.diagnostics.some((e) => sameProblem(d, e))) continue;
-    if (after.diagnostics.some((e) => e.severity === 'error' && !before.has(errorKey(e)))) continue;
+    if (after.diagnostics.some((e) => sameProblem(d, e))) return null;
+    if (after.diagnostics.some((e) => e.severity === 'error' && !before.has(errorKey(e))))
+      return null;
+    return { next, after };
+  };
+  let ok = 0,
+    refused = 0;
+  for (const c of candidates(project, pm, d).sort((a, b) => a.distance - b.distance)) {
+    if (ok >= max) break;
+    if (seen.has(c.label)) continue;
+    seen.add(c.label);
+    // The whole group and the connected pieces follow the moved piece (ADR-176).
+    const carried = carryUnits(project, c.project, [c.lead]);
+    if (carried.reason) {
+      // Refused: listed with the reason when the move would have cleared the problem on its own.
+      if (refused >= max || !passes(c, c.project)) continue;
+      refused++;
+      out.push({
+        id: `r${out.length}`,
+        label: c.label,
+        distance: c.distance,
+        project,
+        preview: [],
+        refused: carried.reason,
+      });
+      continue;
+    }
+    const pass = passes(c, carried.project);
+    if (!pass) continue;
+    const { next, after } = pass;
+    ok++;
     const preview: Repair['preview'] = [];
     for (const [id, b] of boundsOf(after)) {
       const o = was.get(id);
