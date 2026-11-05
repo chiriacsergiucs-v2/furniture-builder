@@ -72,7 +72,7 @@ export function settingOf(d: Design, key: SettingKey): unknown {
     case 'frontStyle':
       return p.kind === 'cabinet' ? (p.params.frontStyle ?? 'overlay') : undefined;
     case 'plinthHeight':
-      return (p.kind === 'cabinet' && p.params.mount !== 'wall') || p.kind === 'corner'
+      return (p.kind === 'cabinet' || p.kind === 'corner') && p.params.mount !== 'wall'
         ? p.params.plinthHeight
         : undefined;
   }

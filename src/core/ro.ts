@@ -241,6 +241,11 @@ export function hardwareRo(h: HardwareItem): { item: string; note: string } {
         item: pt('Șină de perete pentru agățători'),
         note: pt('tăiată la lățimea corpului'),
       };
+    case 'wall-hanging':
+      return {
+        item: pt('Agățători de perete pentru corpul de colț: la alegerea dvs.'),
+        note: pt('alegeți agățătorile, câte și unde, după fișa tehnică și tipul peretelui'),
+      };
     case 'corner-hinge':
       return {
         item: pt('Set balama de colț (leagă cele două uși)'),

@@ -37,12 +37,13 @@ export function defaultSheetFor(m: Pick<Material, 'id' | 'name'>): NonNullable<M
 export const sheetOf = (m: Material) => m.sheet ?? defaultSheetFor(m);
 export const kerfOf = (d: Design) => d.cutting?.kerf ?? DEFAULT_KERF;
 
-/** The document shape this app writes: 6 adds role boards (ADR-163); 1 to 5 still load. */
-export const SCHEMA_VERSION = 6;
+/** The document shape this app writes: 7 adds corner mount (ADR-177); 6 added role boards (ADR-163); 1 to 6 still load. */
+export const SCHEMA_VERSION = 7;
 
 /**
- * Older versions → 6 in memory: version 1 gets stock sheets and cutting settings; 2 → 3 → 4 → 5 → 6 add only
- * optional fields (band specs, part boards, seller products, role boards), so nothing else changes. Returns the same object when already current.
+ * Older versions → 7 in memory: version 1 gets stock sheets and cutting settings; 2 → 3 → 4 → 5 → 6 → 7 add only
+ * optional fields (band specs, part boards, seller products, role boards, corner mount), so nothing else changes.
+ * Returns the same object when already current.
  */
 export function upgradeDesign(d: Design): Design {
   if (d.schemaVersion === SCHEMA_VERSION && d.cutting && d.materials.every((m) => m.sheet))
@@ -975,7 +976,7 @@ function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0)
 export function validateDesign(d: unknown): string[] {
   const errs: string[] = [];
   if (!isObj(d)) return [t('Design must be an object')];
-  if (![1, 2, 3, 4, 5, 6].includes(d.schemaVersion as number))
+  if (![1, 2, 3, 4, 5, 6, 7].includes(d.schemaVersion as number))
     errs.push(t('Unsupported schemaVersion'));
   if (
     d.cutting !== undefined &&
@@ -1255,6 +1256,16 @@ export function validateDesign(d: unknown): string[] {
     if (params.top !== 'over' && params.top !== 'between') errs.push(t('Invalid top joint'));
     if (params.topLayers !== undefined && params.topLayers !== 1 && params.topLayers !== 2)
       errs.push(t('topLayers must be 1 or 2'));
+    // ADR-177: a corner stands on the floor or hangs on the wall, as a cabinet does (schemaVersion 7).
+    if (params.mount !== undefined && params.mount !== 'floor' && params.mount !== 'wall')
+      errs.push(t('Invalid mount'));
+    if (params.mountHeight !== undefined && !isInt(params.mountHeight))
+      errs.push(t('mountHeight must be a whole number of mm'));
+    if (
+      (params.mount !== undefined || params.mountHeight !== undefined) &&
+      (d.schemaVersion as number) < 7
+    )
+      errs.push(t('Corner mount needs schemaVersion 7'));
     if (!['none', 'applied', 'inset'].includes(params.back as string)) errs.push(t('Invalid back'));
     const seen = new Set<string>();
     validateSpace(params.interior, errs, seen);

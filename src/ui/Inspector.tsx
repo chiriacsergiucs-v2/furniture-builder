@@ -1325,6 +1325,27 @@ function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[]
           )}
         </div>
       </div>
+      <Segmented<'floor' | 'wall'>
+        label={t('Stands on')}
+        value={p.mount ?? 'floor'}
+        options={[
+          { value: 'floor', label: t('The floor') },
+          { value: 'wall', label: t('Wall brackets') },
+        ]}
+        onChange={(v) =>
+          set(v === 'wall' ? { mount: v, mountHeight: p.mountHeight ?? 1450 } : { mount: v })
+        }
+      />
+      {p.mount === 'wall' && (
+        <MmField
+          label={t('Underside above the floor')}
+          value={p.mountHeight ?? 1450}
+          min={0}
+          max={2500}
+          onChange={(v) => set({ mountHeight: v })}
+          hint={t('Position only; the hardware list asks you to choose the hanging brackets.')}
+        />
+      )}
       <Group title={t('Construction')} id="g-build">
         <Segmented
           label={t('Top@@panel')}
@@ -1358,14 +1379,16 @@ function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[]
           ]}
           onChange={(v) => set({ back: v })}
         />
-        <MmField
-          label={t('Plinth height')}
-          value={p.plinthHeight}
-          min={0}
-          max={250}
-          onChange={(v) => set({ plinthHeight: v })}
-          hint={t('0 for no plinth')}
-        />
+        {p.mount !== 'wall' && (
+          <MmField
+            label={t('Plinth height')}
+            value={p.plinthHeight}
+            min={0}
+            max={250}
+            onChange={(v) => set({ plinthHeight: v })}
+            hint={t('0 for no plinth')}
+          />
+        )}
         <MmField
           label={t('Gap between fronts')}
           value={p.frontGap}

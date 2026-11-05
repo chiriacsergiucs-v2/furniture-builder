@@ -306,8 +306,9 @@ export const FEATURES: FeatureDomain[] = [
           { name: 'Wall cabinets', adrs: ['ADR-025'] },
           {
             name: 'Corner cabinets',
-            detail: 'Blind, L-shaped and diagonal corners.',
-            adrs: ['ADR-025', 'ADR-040'],
+            detail:
+              'Blind, L-shaped and diagonal corners, on the floor or hung on the wall (you choose the brackets).',
+            adrs: ['ADR-025', 'ADR-040', 'ADR-177'],
           },
           { name: 'Tall cabinets', adrs: ['ADR-036'] },
         ],
@@ -491,7 +492,8 @@ export const FEATURES: FeatureDomain[] = [
       },
       {
         name: 'Previewed repairs',
-        detail: 'A repair moves the whole group; one the group cannot follow is shown refused, with the reason.',
+        detail:
+          'A repair moves the whole group; one the group cannot follow is shown refused, with the reason.',
         adrs: ['ADR-071', 'ADR-176'],
       },
     ],

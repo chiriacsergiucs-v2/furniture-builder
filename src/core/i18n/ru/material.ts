@@ -2,6 +2,7 @@
 export const ru_material = {
   'Invalid role boards': 'Недопустимые плиты по ролям',
   'Role boards need schemaVersion 6': 'Плиты по ролям требуют schemaVersion 6',
+  'Corner mount needs schemaVersion 7': 'Креплению углового модуля нужна schemaVersion 7',
   'Role board for {k} refers to an unknown role or material':
     'Плита по роли {k} ссылается на неизвестную роль или материал',
   'not in a run': 'не в ряду',

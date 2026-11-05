@@ -176,7 +176,10 @@ describe('suggestRoomMixes (ADR-173)', () => {
     expect(r.mixes.length).toBeGreaterThan(0);
     const m = r.mixes[0];
     expect(m.corners).toBe(5);
-    expect(m.project.items.filter((i) => i.design.product.kind === 'corner')).toHaveLength(5);
+    // Five floor corner cabinets; ADR-177 hangs a wall corner above each of them.
+    const corners = m.project.items.filter((i) => i.design.product.kind === 'corner');
+    expect(corners.filter((i) => i.placement?.kind !== 'wall')).toHaveLength(5);
+    expect(corners.filter((i) => i.placement?.kind === 'wall')).toHaveLength(5);
     expect(m.model.diagnostics.filter((d) => d.severity === 'error')).toEqual([]);
     const again = suggestRoomMixes(inp);
     expect(again.mixes.map((x) => x.key)).toEqual(r.mixes.map((x) => x.key));
@@ -322,6 +325,23 @@ describe('wall corner cabinets (ADR-177)', () => {
     for (const m of none.mixes) expect(wallCorners(m.project.items)).toEqual([]);
     const never = suggestRoomMixes(input(l, { corner: 'blind', wallRow: 'never' }));
     for (const m of never.mixes) expect(wallCorners(m.project.items)).toEqual([]);
+  });
+  it('the wall corners come out hung (mount wall) with no placement-not-hung warning, for every corner kind', () => {
+    for (const corner of ['blind', 'l-shape', 'diagonal'] as const) {
+      const r = suggestRoomMixes(input(lRoom(), { corner }));
+      expect(r.mixes.length, corner).toBeGreaterThan(0);
+      for (const m of r.mixes) {
+        const wc = wallCorners(m.project.items);
+        expect(wc.length, corner).toBeGreaterThan(0);
+        for (const it of wc) {
+          const p = it.design.product;
+          expect(p.kind === 'corner' && p.params.mount, corner).toBe('wall');
+          expect(p.kind === 'corner' && p.params.mountHeight).toBe(it.position.y);
+        }
+        const all = [...m.model.diagnostics, ...m.warnings].map((d) => d.code);
+        expect(all, corner).not.toContain('placement-not-hung');
+      }
+    }
   });
   it('the wall rows start where the wall corner ends on each wall', () => {
     for (const corner of ['blind', 'l-shape'] as const) {

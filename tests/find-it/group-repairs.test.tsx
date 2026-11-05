@@ -49,9 +49,7 @@ describe.each(WIDTHS)('repairs carry the group at %ipx (find-it, ADR-176)', (wid
     await user.click(rows()[0]);
     let card = await screen.findByRole('region', { name: /^Selected piece: / });
     await user.click(within(card).getByRole('button', { name: 'Lock' }));
-    await waitFor(() =>
-      expect(within(card).getByRole('button', { name: 'Unlock' })).toBeTruthy(),
-    );
+    await waitFor(() => expect(within(card).getByRole('button', { name: 'Unlock' })).toBeTruthy());
 
     // Push the middle one 34 mm into the third (they stand side by side): From left + 34.
     list = await piecesList(user, panel);
@@ -67,12 +65,13 @@ describe.each(WIDTHS)('repairs carry the group at %ipx (find-it, ADR-176)', (wid
     await user.click(screen.getByRole('tab', { name: /^Checks/ }));
     await user.click(await screen.findByRole('button', { name: /overlap by 34 mm/ }));
     const banner = await screen.findByRole('region', { name: 'Problem and repairs' });
-    const why = within(banner).getByText(
+    // Up to four refused repairs are listed (ADR-176, user 2026-11-05), so the reason can show more than once.
+    const why = within(banner).getAllByText(
       /^Refused: Base cabinet.* \(piece 1\) is locked — unlock it to move it\.$/,
     );
-    expect(why).toBeTruthy();
+    expect(why.length).toBeGreaterThan(0);
     const refused = within(banner).getByRole('radio', {
-      name: /^Move Base cabinet.* \(piece 3\) 34 mm to the right.*Refused: /,
+      name: /^Move Base cabinet.* \(piece 3\) 34 mm to the right.*Refused: Base cabinet.* \(piece 1\) is locked/,
     }) as HTMLInputElement;
     expect(refused.disabled).toBe(true);
     expect(refused.checked).toBe(false);

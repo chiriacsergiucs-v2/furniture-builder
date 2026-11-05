@@ -542,6 +542,8 @@ export const kitchen: CatalogFamily[] = [
           corner('Wall blind corner', 'blind', {
             height: 720,
             depth: 320,
+            mount: 'wall',
+            mountHeight: 1450,
             plinthHeight: 0,
             width: 900,
             blindWidth: 370,
@@ -584,6 +586,8 @@ export const kitchen: CatalogFamily[] = [
             wingWidth: 600,
             height: 720,
             depth: 320,
+            mount: 'wall',
+            mountHeight: 1450,
             plinthHeight: 0,
           }),
       },

@@ -138,7 +138,8 @@ export const ru_info = {
   'Cabinet with no bottom': 'Шкаф без дна',
   'Wall cabinets': 'Навесные шкафы',
   'Corner cabinets': 'Угловые шкафы',
-  'Blind, L-shaped and diagonal corners.': 'Глухие, Г-образные и диагональные углы.',
+  'Blind, L-shaped and diagonal corners, on the floor or hung on the wall (you choose the brackets).':
+    'Глухие, Г-образные и диагональные углы, на полу или на стене (навесы выбираете вы).',
   'Tall cabinets': 'Пеналы',
   'Doors and fronts': 'Дверцы и фасады',
   'Hinged doors, one or a pair': 'Распашные дверцы, одна или пара',

@@ -720,7 +720,11 @@ export function roomProject(
       if (d?.product.kind !== 'corner') continue;
       const design: Design = {
         ...d,
-        product: { ...d.product, params: { ...d.product.params, side: cornerSide(room, i) } },
+        // Hung by its template (ADR-177): its underside at the wall row's.
+        product: {
+          ...d.product,
+          params: { ...d.product.params, side: cornerSide(room, i), mountHeight: mount },
+        },
       };
       const made = makeItem(p, design);
       const len = wallLength(room, i);

@@ -193,7 +193,9 @@ describe('replaceOptions (ADR-098: same width; others behind a switch)', () => {
     const p = run([wall600()]);
     const opts = replaceOptions(p.items[0], catalogFamilies);
     expect(opts.length).toBeGreaterThan(0);
-    expect(opts.every((o) => o.family.id === 'wall-cabinet' || o.variant.id === 'media-wall')).toBe(
+    // The wall corners hang too (ADR-177).
+    const hung = ['media-wall', 'corner-blind-wall', 'corner-l-wall'];
+    expect(opts.every((o) => o.family.id === 'wall-cabinet' || hung.includes(o.variant.id))).toBe(
       true,
     );
     const above = {
