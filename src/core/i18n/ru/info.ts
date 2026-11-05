@@ -230,6 +230,8 @@ export const ru_info = {
   'Tapping a check selects the pieces and shows where it is.':
     'Касание проверки выделяет изделия и показывает место.',
   'Previewed repairs': 'Исправления с предпросмотром',
+  'A repair moves the whole group; one the group cannot follow is shown refused, with the reason.':
+    'Исправление перемещает всю группу; исправление, за которым группа не может последовать, показано отклонённым, с причиной.',
   Views: 'Виды',
   Drawings: 'Чертежи',
   'Compose and Build & Preview modes': 'Режимы «Компоновка» и «Сборка и просмотр»',

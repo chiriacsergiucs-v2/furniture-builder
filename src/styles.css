@@ -5365,6 +5365,14 @@ button.tile:hover {
   min-height: 32px;
   cursor: pointer;
 }
+/* A repair the group cannot follow: listed, disabled, with the reason under it (ADR-176). */
+.problem-banner .repairs label.refused {
+  cursor: not-allowed;
+  color: var(--ink-2);
+}
+.problem-banner .repairs .refused-why {
+  display: block;
+}
 .problem-banner .repair-actions {
   display: flex;
   flex-wrap: wrap;
