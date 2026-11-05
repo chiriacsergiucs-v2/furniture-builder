@@ -475,7 +475,10 @@ export const ENSEMBLE_PRIORITIES: Record<string, [priority: string, basis: strin
   ],
   'propagation-pipeline': ['P1', 'Phase 2: "parameter propagation" (line 489).'],
   'no-silent-moves': ['P1', 'Phase 2: governs parameter propagation (line 489).'],
-  'command-log': ['P0', 'Parent: Transactional undo/redo (MVP, P0).'],
+  'command-log': [
+    'P0',
+    'Inherited from Transactional undo/redo (MVP, P0), built and removed (ADR-184).',
+  ],
   'generated-parts': [
     'P1',
     'Phase 2: generated countertops/plinths/fillers/end panels (line 489).',
@@ -617,7 +620,7 @@ export const ENSEMBLE_APPRECIATION: Record<string, [appreciation: string, basis:
   'live-manufacturer-data': ['Unproven', 'Judgement: no user feedback cited.'],
   'budget-style-filters': [
     'High',
-    'Parent: Deterministic generation of alternative valid layouts ("High", rank 26).',
+    'Inherited from Deterministic generation of alternative valid layouts ("High", rank 26), built and removed (ADR-184).',
   ],
   'layout-optimisation': [
     'Unproven',

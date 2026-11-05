@@ -327,7 +327,8 @@ export const data_research2: Record<string, string> = {
   'Command/transaction log': 'Журнал команд/транзакций',
   'Undo/redo implemented as a command/transaction log.':
     'Отмена/повтор реализованы как журнал команд/транзакций.',
-  'Parent: Transactional undo/redo (MVP, P0).': 'Родитель: Транзакционная отмена/повтор (MVP, P0).',
+  'Inherited from Transactional undo/redo (MVP, P0), built and removed (ADR-184).':
+    'Унаследовано от «Транзакционная отмена/повтор» (MVP, P0), реализовано и удалено (ADR-184).',
   "The stack table's answer to atomic undo (ranked #9).":
     'Ответ таблицы стека на атомарную отмену (ранг 9).',
   'Versioned save/reload of entire ensembles': 'Сохранение и загрузка целых ансамблей с версиями',
@@ -577,8 +578,8 @@ export const data_research2: Record<string, string> = {
     'Фильтровать сгенерированные компоновки по бюджету и стилю (этап четыре), например «уложиться в 2 500 €».',
   'Deterministic layout': 'Детерминированная компоновка',
   'Phase 4: "budget/style filters" (line 491).': 'Этап 4: «фильтры по бюджету/стилю» (строка 491).',
-  'Parent: Deterministic generation of alternative valid layouts ("High", rank 26).':
-    'Родитель: Детерминированная генерация альтернативных допустимых компоновок («Высокая», ранг 26).',
+  'Inherited from Deterministic generation of alternative valid layouts ("High", rank 26), built and removed (ADR-184).':
+    'Унаследовано от «Детерминированная генерация альтернативных допустимых компоновок» («Высокая», ранг 26), реализовано и удалено (ADR-184).',
   'Phase-four item; budget filtering needs price data the paper ties to "if data exists".':
     'Пункт этапа четыре; фильтру по бюджету нужны данные о ценах, которые статья связывает с условием «если есть данные».',
   'Layout optimisation': 'Оптимизация компоновки',
