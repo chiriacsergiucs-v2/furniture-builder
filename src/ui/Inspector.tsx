@@ -1,4 +1,4 @@
-import { isSizeLocked, lockedAxes, SIZE_LOCKED_HINT } from '../core/sizeLock';
+import { axesText, isSizeLocked, lockedAxes } from '../core/sizeLock';
 import type { SizeAxis } from '../core/project';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -42,6 +42,8 @@ import type {
   SplitSize,
 } from '../core/types';
 import { useDesign } from '../store/designStore';
+import { DimensionField } from './DimensionField';
+import { SizeShareField } from './SizeShareField';
 import {
   Counter,
   Group,
@@ -128,15 +130,16 @@ export function Inspector({ mode }: { mode: 'compose' | 'configure' }) {
  * A project piece open in the editor with its size locked (ADR-122): says so, and why the last size edit was refused.
  */
 function SizeLockNote() {
-  const locked = useDesign((s) => {
+  const axesKey = useDesign((s) => {
     const id = s.editingItemId ?? s.drillItemId;
-    return isSizeLocked(s.project?.items.find((i) => i.id === id));
+    return lockedAxes(s.project?.items.find((i) => i.id === id)).join(',');
   });
   const notice = useDesign((s) => s.notice);
-  if (!locked) return null;
+  if (!axesKey && !notice) return null;
+  const axes = axesKey.split(',').filter(Boolean) as SizeAxis[];
   return (
     <p className="alert info size-lock-note" role="status">
-      {tr(SIZE_LOCKED_HINT)}.{' '}
+      {axes.length > 0 && <>{t('{axes} locked — unlock to change', { axes: axesText(axes) })}. </>}
       {notice ?? t('Edits that change its width, height or depth are refused.')}
     </p>
   );
@@ -733,20 +736,16 @@ function DrawerHeights({
                 <option value="fr">{t('Share')}</option>
                 <option value="mm">{t('Fixed')}</option>
               </select>
-              <input
-                aria-label={
+              <SizeShareField
+                label={
                   z.mode === 'mm'
                     ? t('Drawer {n} front height in mm', { n: i + 1 })
                     : t('Drawer {n} share', { n: i + 1 })
                 }
-                inputMode={z.mode === 'mm' ? 'numeric' : 'decimal'}
-                defaultValue={z.value}
-                key={`${i}-${z.mode}-${z.value}`}
-                onBlur={(e) => {
-                  const v = Number(e.target.value);
-                  if (z.mode === 'mm' ? Number.isInteger(v) && v > 0 : v > 0 && v < 1000)
-                    setH(i, { mode: z.mode, value: v } as SplitSize);
-                }}
+                mode={z.mode}
+                value={z.value}
+                key={`${i}-${z.mode}`}
+                onChange={(v) => setH(i, { mode: z.mode, value: v } as SplitSize)}
               />
               <span className="result">
                 {fronts[i] ? t('{n} mm', { n: fronts[i].box.h }) : '—'}
@@ -860,35 +859,21 @@ function SplitEditor({
                   <option value="fr">{t('Share')}</option>
                   <option value="mm">{t('Fixed')}</option>
                 </select>
-                {z.mode === 'mm' ? (
-                  <input
-                    aria-label={
-                      across
+                <SizeShareField
+                  label={
+                    z.mode === 'mm'
+                      ? across
                         ? t('{name} width in mm', { name: names(i) })
                         : t('{name} height in mm', { name: names(i) })
-                    }
-                    inputMode="numeric"
-                    defaultValue={z.value}
-                    key={`${c.id}-${z.value}`}
-                    disabled={!!bound(c.id, i)}
-                    title={bound(c.id, i)}
-                    onBlur={(e) => {
-                      const v = Number(e.target.value);
-                      if (Number.isInteger(v) && v > 0) setSize(i, { mode: 'mm', value: v });
-                    }}
-                  />
-                ) : (
-                  <input
-                    aria-label={t('{name} share', { name: names(i) })}
-                    inputMode="decimal"
-                    defaultValue={z.value}
-                    key={`${c.id}-${z.value}`}
-                    onBlur={(e) => {
-                      const v = Number(e.target.value);
-                      if (v > 0 && v < 1000) setSize(i, { mode: 'fr', value: v });
-                    }}
-                  />
-                )}
+                      : t('{name} share', { name: names(i) })
+                  }
+                  mode={z.mode}
+                  value={z.value}
+                  key={`${c.id}-${z.mode}`}
+                  disabled={z.mode === 'mm' && !!bound(c.id, i)}
+                  title={bound(c.id, i)}
+                  onChange={(v) => setSize(i, { mode: z.mode, value: v } as SplitSize)}
+                />
                 <span className="result">
                   {actual ? t('{n} mm', { n: space.axis === 'x' ? actual.w : actual.h }) : '—'}
                 </span>
@@ -934,21 +919,24 @@ function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material
       </header>
       <PieceInfo />
       <div className="dims3">
-        <MmField
+        <DimensionField
+          axis="width"
           label={t('Width')}
           value={p.width}
           min={100}
           max={4000}
           onChange={(v) => set({ width: v })}
         />
-        <MmField
+        <DimensionField
+          axis="height"
           label={t('Height')}
           value={p.height}
           min={100}
           max={3000}
           onChange={(v) => set({ height: v })}
         />
-        <MmField
+        <DimensionField
+          axis="depth"
           label={t('Depth')}
           value={p.depth}
           min={100}
@@ -1276,21 +1264,24 @@ function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[]
         onChange={(v) => set({ side: v })}
       />
       <div className="dims3">
-        <MmField
+        <DimensionField
+          axis="width"
           label={blind ? t('Width') : diagonal ? t('Along each wall') : t('Back wing')}
           value={p.width}
           min={300}
           max={3000}
           onChange={(v) => set({ width: v })}
         />
-        <MmField
+        <DimensionField
+          axis="height"
           label={t('Height')}
           value={p.height}
           min={300}
           max={2500}
           onChange={(v) => set({ height: v })}
         />
-        <MmField
+        <DimensionField
+          axis="depth"
           label={t('Depth')}
           value={p.depth}
           min={200}
@@ -1727,21 +1718,24 @@ function DeskEditor({
       </header>
       <PieceInfo />
       <div className="dims3">
-        <MmField
+        <DimensionField
+          axis="width"
           label={t('Width')}
           value={p.width}
           min={400}
           max={3000}
           onChange={(v) => set({ width: v })}
         />
-        <MmField
+        <DimensionField
+          axis="height"
           label={t('Height')}
           value={p.height}
           min={400}
           max={1200}
           onChange={(v) => set({ height: v })}
         />
-        <MmField
+        <DimensionField
+          axis="depth"
           label={t('Depth')}
           value={p.depth}
           min={300}

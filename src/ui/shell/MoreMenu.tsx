@@ -52,6 +52,8 @@ export function MoreMenu({
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && ref.current?.open) {
+        e.preventDefault();
+        e.stopPropagation();
         close();
         ref.current?.querySelector('summary')?.focus();
       }
@@ -59,10 +61,11 @@ export function MoreMenu({
     const onClick = (e: MouseEvent) => {
       if (ref.current?.open && !ref.current.contains(e.target as Node)) close();
     };
-    window.addEventListener('keydown', onKey);
+    const menu = ref.current;
+    menu?.addEventListener('keydown', onKey);
     document.addEventListener('click', onClick);
     return () => {
-      window.removeEventListener('keydown', onKey);
+      menu?.removeEventListener('keydown', onKey);
       document.removeEventListener('click', onClick);
     };
   }, []);

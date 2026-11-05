@@ -1,5 +1,8 @@
 /** Russian text for inspector (ADR-153). Key: the English text; value: the Russian text. */
 export const ru_inspector = {
+  'Enter a positive whole number of millimetres.': 'Введите положительное целое число миллиметров.',
+  'Enter a finite share greater than 0 and less than 1000.':
+    'Введите конечную долю больше 0 и меньше 1000.',
   Empty: 'Пусто',
   Shelves: 'Полки',
   Drawers: 'Ящики',

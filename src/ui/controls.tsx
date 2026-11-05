@@ -42,8 +42,12 @@ export function MmField({
   const parsed = Number(text);
   const valid = text.trim() !== '' && Number.isInteger(parsed) && parsed >= min && parsed <= max;
   const commit = () => {
-    if (valid && parsed !== value) onChange(parsed);
-    else if (!valid) setText(String(value));
+    if (valid && parsed !== value) {
+      onChange(parsed);
+      // If the parent refuses the edit, display its authoritative value (ADR-199).
+      // An accepted update supplies a new value on the next render, as for an external edit.
+      setText(String(value));
+    } else if (!valid) setText(String(value));
   };
   const bump = (d: number) => onChange(Math.min(max, Math.max(min, value + d)));
   return (

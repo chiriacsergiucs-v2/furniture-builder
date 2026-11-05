@@ -33,6 +33,8 @@ export async function restoreVersion(v: ProjectVersion, database = db): Promise<
   const p = useDesign.getState().project;
   if (!p || p.id !== v.projectId) return false;
   await saveProjectVersion(makeVersion(p, 'before-restore'), database);
+  // An edit or project switch while the backup write was pending must never be overwritten (ADR-200).
+  if (useDesign.getState().project !== p) return false;
   useDesign.getState().restoreProjectTo(restoredProject(p, v));
   return true;
 }

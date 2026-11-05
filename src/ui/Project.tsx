@@ -3081,7 +3081,7 @@ function RoomSection() {
                       max={30000}
                       onChange={(v) => setRoom(setWallLength(room, i, v))}
                     />
-                    <WallBackground room={room} wall={i} setRoom={setRoom} />
+                    <WallBackground room={room} wall={i} projectId={project.id} />
                   </li>
                 ))}
               </ul>

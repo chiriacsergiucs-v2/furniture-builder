@@ -63,8 +63,8 @@ export const FEATURES: FeatureDomain[] = [
         name: 'Create a project from a project template',
         detail:
           'Copies of the pieces with their positions, run-part recipe, connections, variables and bindings; pieces inserted into a project take its settings.',
-        adrs: ['ADR-060', 'ADR-123', 'ADR-170'],
-        checked: '2026-11-05',
+        adrs: ['ADR-060', 'ADR-123', 'ADR-170', 'ADR-200'],
+        checked: '2026-11-06',
       },
       {
         name: 'Fill a wall',
@@ -92,8 +92,8 @@ export const FEATURES: FeatureDomain[] = [
           {
             name: 'Divide a space side by side or stacked',
             detail: 'Fixed millimetre sizes or shares, split exactly in whole millimetres.',
-            adrs: ['ADR-005', 'ADR-003'],
-            checked: '2026-11-05',
+            adrs: ['ADR-005', 'ADR-003', 'ADR-199'],
+            checked: '2026-11-06',
           },
           { name: 'New parts start empty', adrs: ['ADR-089'], checked: '2026-11-05' },
           {
@@ -346,8 +346,8 @@ export const FEATURES: FeatureDomain[] = [
       {
         name: 'Lock size',
         detail: "Nothing changes the piece's width, height or depth until you unlock it.",
-        adrs: ['ADR-122'],
-        checked: '2026-11-05',
+        adrs: ['ADR-122', 'ADR-199'],
+        checked: '2026-11-06',
       },
       {
         name: 'Size a group as a whole',
@@ -393,7 +393,11 @@ export const FEATURES: FeatureDomain[] = [
       {
         name: 'Doors and fronts',
         features: [
-          { name: 'Hinged doors, one or a pair', adrs: ['ADR-006'], checked: '2026-11-05' },
+          {
+            name: 'Hinged doors, one or a pair',
+            adrs: ['ADR-006', 'ADR-199'],
+            checked: '2026-11-06',
+          },
           {
             name: 'Overlay, half-overlay and inset fronts',
             adrs: ['ADR-024'],
@@ -593,7 +597,11 @@ export const FEATURES: FeatureDomain[] = [
   {
     name: 'Room and walls',
     features: [
-      { name: 'Room size, doors, windows and obstacles', adrs: ['ADR-058'], checked: '2026-11-05' },
+      {
+        name: 'Room size, doors, windows and obstacles',
+        adrs: ['ADR-058', 'ADR-200'],
+        checked: '2026-11-06',
+      },
       {
         name: 'Draw the floor plan',
         detail: 'Rectangle, L, U and alcove shapes, every wall length editable.',
@@ -858,12 +866,12 @@ export const FEATURES: FeatureDomain[] = [
       },
       {
         name: 'Undo and redo with named steps',
-        adrs: ['ADR-051', 'ADR-123'],
-        checked: '2026-11-05',
+        adrs: ['ADR-051', 'ADR-123', 'ADR-198'],
+        checked: '2026-11-06',
       },
       { name: 'Edit history', adrs: ['ADR-123'], checked: '2026-11-05' },
-      { name: 'Version history', adrs: ['ADR-123'], checked: '2026-11-05' },
-      { name: 'Save as a project template', adrs: ['ADR-060'], checked: '2026-11-05' },
+      { name: 'Version history', adrs: ['ADR-123', 'ADR-200'], checked: '2026-11-06' },
+      { name: 'Save as a project template', adrs: ['ADR-060', 'ADR-200'], checked: '2026-11-06' },
       {
         name: 'Project variables and formulas',
         detail: 'Bind a size, a division or a position to a named value; change it once.',

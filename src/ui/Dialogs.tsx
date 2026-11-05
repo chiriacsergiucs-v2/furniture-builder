@@ -60,7 +60,17 @@ export function Dialog({
   backdropClose?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const backdropPointer = useRef<number | null>(null);
+  const backdropClick = useRef(false);
+  const onBackdrop = (e: { target: EventTarget; clientX: number; clientY: number }) => {
+    const d = ref.current;
+    if (!d || e.target !== d) return false;
+    const b = d.getBoundingClientRect();
+    return e.clientX < b.left || e.clientX > b.right || e.clientY < b.top || e.clientY > b.bottom;
+  };
   useEffect(() => {
+    backdropPointer.current = null;
+    backdropClick.current = false;
     const d = ref.current;
     if (!d) return;
     if (open && !d.open) d.showModal();
@@ -79,8 +89,22 @@ export function Dialog({
         e.preventDefault();
         if (e.target === e.currentTarget) onClose();
       }}
+      onPointerDownCapture={(e) => {
+        backdropClick.current = false;
+        backdropPointer.current = onBackdrop(e) ? e.pointerId : null;
+      }}
+      onPointerUpCapture={(e) => {
+        backdropClick.current = backdropPointer.current === e.pointerId && onBackdrop(e);
+        backdropPointer.current = null;
+      }}
+      onPointerCancelCapture={() => {
+        backdropPointer.current = null;
+        backdropClick.current = false;
+      }}
       onClick={(e) => {
-        if (backdropClose && e.target === ref.current) onClose();
+        const dismiss = backdropClick.current && onBackdrop(e);
+        backdropClick.current = false;
+        if (backdropClose && dismiss) onClose();
       }}
       aria-label={title}
     >

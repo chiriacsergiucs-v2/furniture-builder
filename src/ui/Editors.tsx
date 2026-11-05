@@ -27,6 +27,7 @@ import {
 } from './controls';
 import { tNode } from './i18n';
 import { Icon } from './icons';
+import { DimensionField } from './DimensionField';
 
 const matOptions = (materials: Material[], filter?: (m: Material) => boolean) =>
   materials.filter(filter ?? (() => true)).map((m) => ({ value: m.id, label: boardLabel(m) }));
@@ -62,9 +63,9 @@ export function FrontEditor({
             k === 'none'
               ? null
               : k === 'doors1'
-                ? { kind: 'doors', count: 1 }
+                ? { ...(f?.kind === 'doors' ? f : {}), kind: 'doors', count: 1 }
                 : k === 'doors2'
-                  ? { kind: 'doors', count: 2 }
+                  ? { ...(f?.kind === 'doors' ? f : {}), kind: 'doors', count: 2 }
                   : k === 'sliding'
                     ? { kind: 'sliding', count: 2 }
                     : { kind: 'flap', count: 1, direction: 'up' },
@@ -436,14 +437,16 @@ export function PanelEditor({ p, materials }: { p: PanelParams; materials: Mater
         onChange={(v) => set({ purpose: v })}
       />
       <div className="dims2">
-        <MmField
+        <DimensionField
+          axis="width"
           label={t('Width')}
           value={p.width}
           min={20}
           max={3000}
           onChange={(v) => set({ width: v })}
         />
-        <MmField
+        <DimensionField
+          axis="height"
           label={t('Height')}
           value={p.height}
           min={50}
@@ -607,21 +610,24 @@ export function FrameEditor({ p }: { p: FrameParams }) {
       ) : (
         <>
           <div className="dims3">
-            <MmField
+            <DimensionField
+              axis="width"
               label={t('Width')}
               value={p.width}
               min={200}
               max={4000}
               onChange={(v) => set({ width: v })}
             />
-            <MmField
+            <DimensionField
+              axis="height"
               label={t('Height')}
               value={p.height}
               min={200}
               max={1500}
               onChange={(v) => set({ height: v })}
             />
-            <MmField
+            <DimensionField
+              axis="depth"
               label={t('Depth')}
               value={p.depth}
               min={200}
