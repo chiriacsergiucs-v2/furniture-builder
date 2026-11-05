@@ -26,6 +26,8 @@ refused, with the reason shown.
 2. Mirror the run widens the run with `withGroups` before `mirrorSet`, so every member of a group touching the run
    mirrors with it. A group that cannot mirror refuses the whole action with the reason (`refused`), as today.
 3. Repairs and the mirror stay one undo step each.
+4. The banner lists up to 4 working repairs and up to 4 refused ones; a move is listed as refused only when it
+   would work for the piece alone (user 2026-11-05: "4 working + 4 refused").
 
 ## Alternatives considered
 

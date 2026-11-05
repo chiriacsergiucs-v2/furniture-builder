@@ -29,6 +29,8 @@ the corner, then wall pieces, then run parts last (plinths, fillers, worktops, c
    steps; ADR-174's guidance line (`ASSEMBLY_GUIDANCE`, ADR-010) sits under it.
 3. The printed assembly sheet starts with the same section, in the print language (`pt()`, ro/ru/en, ADR-157).
 4. A single design (not a project) has no Project order section.
+5. A piece is on a wall when its back is within 50 mm of it and it faces into the room; a piece placed on or above
+   another piece counts as a wall piece (user 2026-11-05: "Keep both").
 
 ## Alternatives considered
 

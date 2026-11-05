@@ -2,7 +2,7 @@
 
 - Status: Pending
 - Date: 2026-11-05
-- Depends on: ADR-173, ADR-025
+- Depends on: ADR-173, ADR-025, ADR-011
 - Design: docs/ui-design.md (section 4, Fill a wall)
 - Backlog: N180
 - Agreed: 2026-11-05 "Fix, then sort by priority to implement, start 5 adrs"; answers "Match; diagonal → wall L" and
@@ -31,6 +31,11 @@ their own wall rows, sized to stop at the window edge.
    as its own wall row with `wallRowFor`, so the row stops at the window edge. A part too narrow for any wall
    cabinet stays empty, as a free stretch does today.
 3. Mixes are still kept only without error diagnostics; deterministic for the same input (ADR-173).
+4. Corner pieces get the cabinets' stands/hangs setting (`CornerParams.mount`, `mountHeight`; absent = floor),
+   offered under Stands on. A hung corner has no plinth and no automatic brackets or rail: one hardware line, "Wall
+   hanging brackets: choose for this corner unit", with no count (ADR-010). The wall corner templates are hung.
+   Design `schemaVersion` 7; versions 1 to 6 still load (ADR-011). User 2026-11-05: "Add wall mount to corners",
+   "Note only, you choose", "Bump to 7".
 
 ## Alternatives considered
 
@@ -55,6 +60,8 @@ their own wall rows, sized to stop at the window edge.
       corner; corner "none" gets none (tests)
 - [ ] A wall with a centred window gets wall cabinets on both sides, none overlapping the window, the nearest within
       one cabinet step of each window edge (tests)
+- [ ] A hung corner has no plinth, no `placement-not-hung` warning and one "choose brackets" line; a v6 design still
+      loads (tests)
 - [ ] Seeded random rooms never throw and never offer an erroring mix; same input, same mixes (tests, fuzz)
 - [ ] Fill the room → a mix with a corner lists a wall corner piece (the wall L or wall blind corner) in its piece list at 390 and
       1280 px (jsdom find-it)

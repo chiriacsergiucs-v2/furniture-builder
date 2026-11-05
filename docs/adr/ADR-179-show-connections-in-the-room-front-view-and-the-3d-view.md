@@ -26,6 +26,9 @@ User, 2026-11-05: **"Front view + 3D"** — a matching tick in the room front vi
 3. 3D view: a thin vertical line along the seam at the front face, drawn by the lazy viewer only; it never edits
    (ADR-014). Hidden while exploded.
 4. A broken connection shows nothing, as on the plan.
+5. Built 2026-11-05: the front tick sits at the middle of the height both pieces share (the same as the shorter
+   piece's mid height when it lies within the taller one); seams facing the front view edge-on (along a side wall)
+   get no tick there; the 3D line is also hidden while rendering, in a shared preview, and for pieces Isolate hides.
 
 ## Alternatives considered
 
