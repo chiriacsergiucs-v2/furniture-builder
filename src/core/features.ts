@@ -187,8 +187,8 @@ export const FEATURES: FeatureDomain[] = [
       {
         name: 'Move to a wall, corner, ceiling, floor or neighbour',
         detail:
-          "One tap slides it to a wall, corner or neighbour, up to the ceiling or down, centres it, or matches a neighbour's top or front.",
-        adrs: ['ADR-147'],
+          "One tap slides it to a wall, corner or neighbour, up to the ceiling or down, centres it, or matches a neighbour's top or front. Several selected pieces move as one block.",
+        adrs: ['ADR-147', 'ADR-182'],
       },
       {
         name: 'Place on the floor, on the wall or on another piece',

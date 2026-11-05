@@ -244,6 +244,8 @@ export const ru_editors = {
   'Clear selection': 'Снять выделение',
   'Align to the first selected piece': 'Выровнять по первому выбранному изделию',
   'Align to {name}:': 'Выровнять по «{name}»:',
+  'Move to, as one block, from the front of {name}:':
+    'Переместить единым блоком, по фасаду «{name}»:',
   'Align left': 'Выровнять по левому краю',
   Centre: 'По центру',
   'Align centre': 'Выровнять по центру',

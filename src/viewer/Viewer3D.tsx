@@ -305,6 +305,12 @@ export default function Viewer3D() {
   );
   const turnItem = useDesign((s) => s.turnItem);
   const [moveToOpen, setMoveToOpen] = useState(false);
+  // Several pieces selected: Move to moves them as one block (ADR-182).
+  const pieceItems = useDesign((s) => s.project?.items);
+  const moveToIds = useMemo(() => {
+    const ids = selectedIds.filter((id) => pieceItems?.some((i) => i.id === id));
+    return ids.length >= 2 ? ids : turnId;
+  }, [selectedIds, pieceItems, turnId]);
   // R / Shift+R turn the selected piece about its centre (ADR-069), as on the Plan; not while typing or in a dialog.
   useEffect(() => {
     if (!turnId || rendering || tapping) return;
@@ -530,7 +536,11 @@ export default function Viewer3D() {
             </button>
           )}
           {moving && turnId && moveToOpen && (
-            <MoveToButtons key={turnId} id={turnId} className="three-move-to" />
+            <MoveToButtons
+              key={typeof moveToIds === 'string' ? moveToIds : moveToIds?.join(',')}
+              id={moveToIds ?? turnId}
+              className="three-move-to"
+            />
           )}
           <button
             type="button"
