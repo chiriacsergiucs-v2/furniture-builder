@@ -16,6 +16,7 @@ import {
   toDesign,
   visibleFields,
   visibleSteps,
+  withType,
 } from '../src/core/wizard/engine';
 import { CONSTRUCTION_TYPES } from '../src/core/wizard/registry';
 import { STEPS, stepById } from '../src/core/wizard/steps';
@@ -507,5 +508,72 @@ describe('N35: answers kept with the piece, reopened in the wizard (ADR-046)', (
     const res = createPiece({ type: 'desk' });
     if (!res.ok) throw new Error('not created');
     expect(validateDesign({ ...res.design, wizard })).toContain('Invalid wizard answers');
+  });
+});
+
+describe('ADR-191: the wizard critique fixes in the engine', () => {
+  it('a type change keeps only the Size answers the new type can use (2)', () => {
+    const cab: Answers = {
+      type: 'cabinet',
+      name: 'Mine',
+      width: 700,
+      height: 400,
+      depth: 300,
+      board: 'pal18',
+      compartments: [{ kind: 'drawers', shelves: 2, drawers: 3 }],
+      fronts: 'pair',
+    };
+    // Cabinet with drawers → Open shelving: no Contents error (drawers are not offered there).
+    const sh = withType(cab, 'shelving');
+    expect(sh).toEqual({
+      type: 'shelving',
+      name: 'Mine',
+      width: 700,
+      height: 400,
+      depth: 300,
+      board: 'pal18',
+    });
+    expect(check(sh).problems.filter((p) => p.step === 'contents')).toEqual([]);
+    // Cabinet height 400 → Bed: the height means the headboard there (labels), so it is dropped for the default.
+    const bed = withType(cab, 'bed');
+    expect(bed).toEqual({ type: 'bed', name: 'Mine', board: 'pal18' });
+    expect(resolve(bed).height).toBe(1000);
+    expect(check(bed).errors).toBe(0);
+    // Cabinet height 400 → Wardrobe: below its 1200 mm floor, so dropped too; width 700 stays.
+    const w = withType(cab, 'wardrobe');
+    expect(w.height).toBeUndefined();
+    expect(w.width).toBe(700);
+    expect(withType({}, 'nope')).toEqual({ type: 'nope' });
+  });
+
+  it('a field error stops the build: one problem, no 0 mm model (3)', () => {
+    const c = check({ type: 'cabinet', width: 'abc' });
+    expect(c.problems.map((p) => p.message)).toEqual([
+      'Width must be a whole number from 200 to 3000 mm.',
+    ]);
+    expect(c.design).toBeNull();
+    expect(c.model).toBeNull();
+    expect(createPiece({ type: 'cabinet', width: 'abc' }).ok).toBe(false);
+  });
+
+  it('per-compartment doors chosen by hand follow the card rule (9)', () => {
+    const r = resolve({
+      type: 'cabinet',
+      dividers: 1,
+      fronts: 'per',
+      compartments: [
+        { kind: 'drawers', shelves: 2, drawers: 3 },
+        { kind: 'shelves', shelves: 2, drawers: 3 },
+      ],
+    });
+    expect(r.frontsPer).toEqual(['none', 'single']);
+    const p = cabinetOf({ ...r });
+    const fronts = leaves(p.interior).map((l) => l.front?.kind ?? null);
+    expect(fronts).toEqual([null, 'doors']);
+    // A list the user or a card set stays as it is.
+    expect(
+      resolve({ type: 'cabinet', dividers: 1, fronts: 'per', frontsPer: ['pair', 'none'] })
+        .frontsPer,
+    ).toEqual(['pair', 'none']);
   });
 });

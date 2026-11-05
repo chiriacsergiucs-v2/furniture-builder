@@ -238,6 +238,11 @@ described above. Audit and wireframes are in `docs/research/2026-10-24-ui-redesi
   **Board**) lists the project's boards (or the piece's), then the decor list as "maker code name, thickness mm (your
   list)"; the built-in boards only when there is nothing else. The wizard's Board starts on the project's carcass
   board and its help says every part takes it.
+- _Wizard critique fixes (ADR-191)._ The footer's defaults button reads **Use defaults** (on Type: **Use <first type>**),
+  no tooltip. The untouched Type step shows **Choose a construction type.** as a hint. Review opens with **Answers**:
+  one row per step ("Label: value") with **Edit**. The side panel lists other steps' problems only; a size typo
+  reads **Fix the marked fields.** Types are radios. A backdrop click never closes the wizard; × and Esc ask
+  **Discard the answers?** when anything changed.
 - _Common top and bottom (ADR-165)._ With two or more pieces selected, the selected-pieces card shows a group
   **Common top, bottom and sides** (ADR-190 renamed it from "Common top and bottom") with the toggles **Common top** and **Common bottom** (each with an info tip). A toggle
   that cannot be switched on is disabled with its reason below it ("Wardrobe is not the same height or floor

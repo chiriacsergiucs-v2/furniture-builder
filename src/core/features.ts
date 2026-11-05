@@ -38,7 +38,7 @@ export const FEATURES: FeatureDomain[] = [
         name: 'New-piece wizard',
         detail:
           "Answer the size, construction and contents questions; only the chosen type's questions are asked.",
-        adrs: ['ADR-044', 'ADR-046'],
+        adrs: ['ADR-044', 'ADR-046', 'ADR-191'],
         checked: '2026-11-05',
       },
       {
