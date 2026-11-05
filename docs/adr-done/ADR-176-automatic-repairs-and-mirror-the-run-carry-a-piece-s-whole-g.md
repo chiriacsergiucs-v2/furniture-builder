@@ -1,7 +1,8 @@
 # ADR-176: Automatic repairs and Mirror the run carry a piece's whole group
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-05
+- Implemented: 2026-11-05
 - Depends on: ADR-148
 - Design: docs/ui-design.md (section 3, problem banner)
 - Backlog: N179
@@ -47,9 +48,9 @@ refused, with the reason shown.
 
 ## Done when
 
-- [ ] A repair on a grouped piece moves every member by the same offset (tests)
-- [ ] A repair the group cannot follow is offered disabled with "Refused:" and its reason; applying is impossible
+- [x] A repair on a grouped piece moves every member by the same offset (tests)
+- [x] A repair the group cannot follow is offered disabled with "Refused:" and its reason; applying is impossible
       (tests)
-- [ ] Mirror the run on a run with a grouped piece mirrors the whole group (tests)
-- [ ] Problem banner → a refused repair shows its reason at 390 and 1280 px (jsdom find-it)
-- [ ] Russian entries for every new text
+- [x] Mirror the run on a run with a grouped piece mirrors the whole group (tests)
+- [x] Problem banner → a refused repair shows its reason at 390 and 1280 px (jsdom find-it)
+- [x] Russian entries for every new text

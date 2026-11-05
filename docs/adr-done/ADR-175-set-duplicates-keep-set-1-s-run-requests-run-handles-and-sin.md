@@ -1,7 +1,8 @@
 # ADR-175: Set duplicates keep set 1's run requests, run handles and sinks in step
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-05
+- Implemented: 2026-11-05
 - Depends on: ADR-167, ADR-036, ADR-075, ADR-125
 - Design: n/a
 - Backlog: N178
@@ -51,9 +52,9 @@ and re-synced on every edit, the same one-way rule as designs (ADR-167: a duplic
 
 ## Done when
 
-- [ ] A project with 2 sets, a worktop and a plinth over set 1 and a sink on a set-1 base: after `syncSets` set 2
+- [x] A project with 2 sets, a worktop and a plinth over set 1 and a sink on a set-1 base: after `syncSets` set 2
       has its own worktop, plinth and sink on its duplicates (tests)
-- [ ] Changing or deleting the set-1 run request changes or deletes the set-2 copy; `syncSets` twice returns the same
+- [x] Changing or deleting the set-1 run request changes or deletes the set-2 copy; `syncSets` twice returns the same
       project (tests)
-- [ ] A run request on non-duplicate pieces is left alone; an incomplete set gets no copies (tests)
-- [ ] The project's cut list counts two worktops (tests)
+- [x] A run request on non-duplicate pieces is left alone; an incomplete set gets no copies (tests)
+- [x] The project's cut list counts two worktops (tests)

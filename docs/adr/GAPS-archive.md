@@ -1449,6 +1449,15 @@ highest id in either file.
 - Suggested pick: Mirror the whole group (closer to the request; estimate effort +5 %)
 - Answer: 2026-10-29 (user) "Mirror the group"; built in ADR-148
 
+### G-293: Repairs and Mirror the run move a grouped piece alone
+
+- Status: Done (ADR-176)
+- Origin: ADR-148, 2026-10-29; scope (Claude)
+- Missing: Automatic repairs from the problem banner and Mirror the run can still move one grouped piece without its group.
+- Request: add the possibility to set the width, height and depth of grouped items, add the possibility to block group items from being moved separately.
+- Questions: Should repairs and Mirror the run also carry or refuse grouped pieces?
+- Suggested pick: Carry the whole group, refusing a repair the group cannot follow (closer to the request; estimate effort +10 %)
+
 ### G-295: Move to for a stacked piece
 
 - Status: Done (ADR-147)
@@ -1537,6 +1546,16 @@ highest id in either file.
 - Suggested pick: Keep bindings in project templates only (built); add variables to catalog designs as a later ADR (estimate: effort +40%, value +15%).
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
 
+### G-326: Run requests not duplicated per set
+
+- Status: Done (ADR-175)
+- Origin: ADR-167, 2026-10-30; agent scoped it out
+- Missing: Run requests, run handles and sinks on set-1 pieces are not copied to the set-N duplicates inside the project (syncSets); only "save a set as a separate project" (projectFromSet) carries them over.
+- Request: Not a quote: the user asked for the pieces and the room to be duplicated.
+- Questions: Copy run requests, run handles and sinks to each set?
+- Suggested pick: Copy them with the pieces, keyed by the duplicate ids (estimate: effort +20%, value +15%).
+- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+
 ### G-327: Unbound pieces stay out of a set
 
 - Status: Done (ADR-167)
@@ -1545,3 +1564,39 @@ highest id in either file.
 - Request: "it would duplicate the existing pieces that use that variable, but with the new values".
 - Questions: Should pieces placed on a bound piece (ADR-031) or grouped with one (ADR-097) follow it into the set?
 - Suggested pick: Duplicate a piece whose base is a bound piece too (estimate: effort +15%, value +15%).
+
+### G-330: Connections shown only on the plan
+
+- Status: Done (ADR-179)
+- Origin: ADR-168, 2026-11-04; agent scoped it out
+- Missing: Connections are shown on the plan (a tick on the shared edge) and on the card only; the front view and the 3D view do not highlight them.
+- Request: Not a quote: the user chose record, re-check and move together
+- Questions: Show connections in the front view and 3D?
+- Suggested pick: A matching tick in the front view and a thin line in 3D (estimate: effort +15%, value +10%).
+
+### G-345: No project-level assembly order
+
+- Status: Done (ADR-178)
+- Origin: ADR-174, 2026-11-04; agent scoped it out
+- Missing: Steps are per piece; no project-level order (which piece first, run parts, worktops, common panels).
+- Request: “Ordered step list + 3D highlight” (user 2026-11-04)
+- Questions: Add a project order: pieces along the wall, then run parts?
+- Suggested pick: A project section before the pieces: corner first, then along each wall, run parts last (estimate: effort +20%, value +15%).
+
+### G-349: Fill the room: wall row leaves out whole cabinets at a window
+
+- Status: Done (ADR-177)
+- Origin: ADR-173, 2026-11-04; agent scoped it out
+- Missing: A wall cabinet that would overlap a window is left out whole; the row does not stop exactly at the window's edge, so a gap wider than the window can stay open.
+- Request: “Fill the room” (user 2026-11-04)
+- Questions: Split the wall row at the window so cabinets reach its edges?
+- Suggested pick: Fill the stretches beside the window as their own wall rows (estimate: effort +15%, value +10%).
+
+### G-350: Fill the room: no wall corner cabinet
+
+- Status: Done (ADR-177)
+- Origin: ADR-173, 2026-11-04; agent scoped it out
+- Missing: No wall corner cabinet at an inside corner: the wall rows start after the corner cabinet's depth and leave the corner above it empty.
+- Request: “Fill the room” (user 2026-11-04)
+- Questions: Place a wall corner cabinet (corner-blind-wall) in the corner?
+- Suggested pick: Add the catalog's wall corner cabinet over each corner cabinet (estimate: effort +20%, value +15%).

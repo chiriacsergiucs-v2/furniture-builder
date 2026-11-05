@@ -1,7 +1,8 @@
 # ADR-177: Fill the room: wall corner cabinets and wall rows beside windows
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-05
+- Implemented: 2026-11-05
 - Depends on: ADR-173, ADR-025, ADR-011
 - Design: docs/ui-design.md (section 4, Fill a wall)
 - Backlog: N180
@@ -56,12 +57,12 @@ their own wall rows, sized to stop at the window edge.
 
 ## Done when
 
-- [ ] An L room with a blind corner gets a wall blind corner above it; an L-shape or diagonal corner gets a wall L
+- [x] An L room with a blind corner gets a wall blind corner above it; an L-shape or diagonal corner gets a wall L
       corner; corner "none" gets none (tests)
-- [ ] A wall with a centred window gets wall cabinets on both sides, none overlapping the window, the nearest within
+- [x] A wall with a centred window gets wall cabinets on both sides, none overlapping the window, the nearest within
       one cabinet step of each window edge (tests)
-- [ ] A hung corner has no plinth, no `placement-not-hung` warning and one "choose brackets" line; a v6 design still
+- [x] A hung corner has no plinth, no `placement-not-hung` warning and one "choose brackets" line; a v6 design still
       loads (tests)
-- [ ] Seeded random rooms never throw and never offer an erroring mix; same input, same mixes (tests, fuzz)
-- [ ] Fill the room → a mix with a corner lists a wall corner piece (the wall L or wall blind corner) in its piece list at 390 and
+- [x] Seeded random rooms never throw and never offer an erroring mix; same input, same mixes (tests, fuzz)
+- [x] Fill the room → a mix with a corner lists a wall corner piece (the wall L or wall blind corner) in its piece list at 390 and
       1280 px (jsdom find-it)

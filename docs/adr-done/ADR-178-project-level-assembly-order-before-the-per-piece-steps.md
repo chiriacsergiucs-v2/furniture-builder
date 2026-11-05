@@ -1,7 +1,8 @@
 # ADR-178: Project-level assembly order before the per-piece steps
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-05
+- Implemented: 2026-11-05
 - Depends on: ADR-174
 - Design: docs/ui-design.md (section 4, results tabs)
 - Backlog: N181
@@ -48,9 +49,9 @@ the corner, then wall pieces, then run parts last (plinths, fillers, worktops, c
 
 ## Done when
 
-- [ ] An L room project: corner first, then each wall's base pieces from the corner, then wall pieces, then run
+- [x] An L room project: corner first, then each wall's base pieces from the corner, then wall pieces, then run
       parts; same input, same order (tests)
-- [ ] A project without a room orders by plan x; a design alone gives no section (tests)
-- [ ] Assembly tab → "Project order" with numbered stages and the guidance line at 390 and 1280 px (jsdom find-it)
-- [ ] The printed sheet starts with the section in ro, ru and en (tests)
-- [ ] Russian entries for every new text; feature tree line "Project assembly order" (ADR-158)
+- [x] A project without a room orders by plan x; a design alone gives no section (tests)
+- [x] Assembly tab → "Project order" with numbered stages and the guidance line at 390 and 1280 px (jsdom find-it)
+- [x] The printed sheet starts with the section in ro, ru and en (tests)
+- [x] Russian entries for every new text; feature tree line "Project assembly order" (ADR-158)

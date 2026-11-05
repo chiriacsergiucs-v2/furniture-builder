@@ -1,7 +1,8 @@
 # ADR-179: Show connections in the room front view and the 3D view
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-05
+- Implemented: 2026-11-05
 - Depends on: ADR-168
 - Design: docs/ui-design.md (section 4, project plan and front view)
 - Backlog: N182
@@ -46,8 +47,8 @@ User, 2026-11-05: **"Front view + 3D"** — a matching tick in the room front vi
 
 ## Done when
 
-- [ ] `connectionSeams` gives one segment per holding connection and none for a broken one; the plan's ticks are
+- [x] `connectionSeams` gives one segment per holding connection and none for a broken one; the plan's ticks are
       unchanged (tests)
-- [ ] Room front view of two connected pieces shows one tick at the seam (jsdom)
-- [ ] Browser find-it (`tools/connections/find-it.mjs`, production build, 390 and 1440 px): front view tick, 3D
+- [x] Room front view of two connected pieces shows one tick at the seam (jsdom)
+- [x] Browser find-it (`tools/connections/find-it.mjs`, production build, 390 and 1440 px): front view tick, 3D
       seam line present, gone after Disconnect, no page errors
