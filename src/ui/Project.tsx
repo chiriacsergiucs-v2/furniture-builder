@@ -38,7 +38,7 @@ import {
 import { dropTarget, SNAP_RANGE } from '../core/snap';
 import { groupOf, itemsAt, itemsInBox, nextUnder } from '../core/selection';
 import { keptVariables } from '../core/insertTemplate';
-import { connectedTo, connectionCheck } from '../core/connections';
+import { connectedTo, connectionSeams } from '../core/connections';
 import { inSelection, selectionBox } from '../core/selectPath';
 import type { Box, Design, Diagnostic, Panel } from '../core/types';
 import { listDesigns, listProjectTemplates, loadDesign, type StoredDesign } from '../persist/db';
@@ -688,7 +688,7 @@ function ConnectedTo({ project, id }: { project: Project; id: string }) {
 
 /**
  * A short tick across the seam of every connection that still holds (ADR-168), on the plan. A broken one has its
- * warning in the checks instead.
+ * warning in the checks instead. The seams come from `connectionSeams` (ADR-179).
  */
 function ConnectionTicks({
   project,
@@ -699,30 +699,50 @@ function ConnectionTicks({
   pieces: PlacedPiece[];
   fs: number;
 }) {
-  if (!project.connections?.length) return null;
-  const byId = new Map(pieces.map((pc) => [pc.item.id, pc]));
+  const seams = useMemo(() => connectionSeams(project, pieces), [project, pieces]);
+  if (!seams.length) return null;
   const half = fs * 0.6;
-  const ticks = project.connections.flatMap((c) => {
-    const a = byId.get(c.itemIds[0]),
-      b = byId.get(c.itemIds[1]);
-    if (!a || !b || connectionCheck(project, c.itemIds[0], c.itemIds[1], pieces).reason) return [];
-    const A = a.bounds,
-      B = b.bounds;
-    // The seam: a shared x edge (side by side along x) or a shared z edge.
-    if (A.x + A.w === B.x || B.x + B.w === A.x) {
-      const x = A.x + A.w === B.x ? B.x : A.x;
-      const zm = (Math.max(A.z, B.z) + Math.min(A.z + A.d, B.z + B.d)) / 2;
-      return [{ key: c.id, x1: x - half, y1: zm, x2: x + half, y2: zm }];
-    }
-    const z = A.z + A.d === B.z ? B.z : A.z;
-    const xm = (Math.max(A.x, B.x) + Math.min(A.x + A.w, B.x + B.w)) / 2;
-    return [{ key: c.id, x1: xm, y1: z - half, x2: xm, y2: z + half }];
-  });
   return (
     <g className="plan-connections" aria-hidden="true">
-      {ticks.map((l) => (
-        <line key={l.key} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} />
-      ))}
+      {seams.map((s) => {
+        // Across the seam at its middle: a seam along z (x1 === x2) gets a tick along x, and the other way round.
+        const xm = (s.x1 + s.x2) / 2,
+          zm = (s.z1 + s.z2) / 2;
+        return s.x1 === s.x2 ? (
+          <line key={s.id} x1={xm - half} y1={zm} x2={xm + half} y2={zm} />
+        ) : (
+          <line key={s.id} x1={xm} y1={zm - half} x2={xm} y2={zm + half} />
+        );
+      })}
+    </g>
+  );
+}
+
+/**
+ * The same tick in the room front view (ADR-179): across every seam seen from the front (pieces side by side along
+ * x), at the middle of the height both pieces stand over. Seams along z face the viewer edge-on and show nothing.
+ */
+function FrontConnectionTicks({
+  project,
+  pieces,
+  fs,
+}: {
+  project: Project;
+  pieces: PlacedPiece[];
+  fs: number;
+}) {
+  const seams = useMemo(
+    () => connectionSeams(project, pieces).filter((s) => s.x1 === s.x2),
+    [project, pieces],
+  );
+  if (!seams.length) return null;
+  const half = fs * 0.6;
+  return (
+    <g className="plan-connections front-connections" aria-hidden="true">
+      {seams.map((s) => {
+        const ym = -(s.y1 + s.y2) / 2;
+        return <line key={s.id} x1={s.x1 - half} y1={ym} x2={s.x1 + half} y2={ym} />;
+      })}
     </g>
   );
 }
@@ -2270,7 +2290,8 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
     tapItem(item.id, { x: Math.round(pt.x), y: Math.round(-pt.y), z: item.position.z });
   };
   const showFronts = useDesign((s) => s.showFronts);
-  const room = useDesign((s) => s.project?.room);
+  const project = useDesign((s) => s.project);
+  const room = project?.room;
   const rv = useMemo(() => (room ? roomFrontView(room) : null), [room]);
   // Back-wall backgrounds (ADR-145): floor to room height behind the pieces against them; a picture covers its
   // rectangle once, straightened when asked, its average colour around it, as in 3D (ADR-146).
@@ -2466,6 +2487,7 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
               size={Math.min(span / 40, pc.bounds.w / 7)}
             />
           ))}
+        {project && <FrontConnectionTicks project={project} pieces={pm.pieces} fs={span / 40} />}
         <FrontModels pm={pm} fs={span / 40} />
         <Dim x1={x0} x2={x1} y={pad * 0.6} fontSize={dfs} label={`${x1 - x0}`} />
         <DimV y1={0} y2={-top} x={x0 - pad * 0.6} fontSize={dfs} label={`${top}`} />

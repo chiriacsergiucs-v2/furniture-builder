@@ -2,7 +2,7 @@
 // Find-it for connections (ADR-168, N171), in jsdom (ADR-108): two base units standing side by side → Select both →
 // Connected → on; one selected says "Connected to …"; a pair that does not touch has the toggle off, disabled, with
 // the reason; Checks warns when a connected pair is parted. The drags are the browser script
-// (tools/connections/find-it.mjs).
+// (tools/connections/find-it.mjs). ADR-179: the room front view shows the same tick at the seam.
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { renderApp, WIDTHS } from './setup';
@@ -76,5 +76,42 @@ describe.each(WIDTHS)('connections at %ipx (find-it, ADR-168)', (width) => {
     await user.tab();
     await user.click(screen.getByRole('tab', { name: /^Checks/ }));
     expect(await screen.findByText(/are connected but no longer joined/)).toBeTruthy();
+  });
+  it('two connected base units → one tick at the seam in the room front view, as on the plan (ADR-179)', async () => {
+    const { user } = await renderApp(width);
+    await user.click(screen.getByLabelText('More'));
+    await user.click(await screen.findByRole('button', { name: /New…/ }));
+    const start = await screen.findByRole('dialog', { name: 'Start something new' });
+    await user.click(within(start).getByRole('button', { name: /Project with several pieces/ }));
+    await user.click(await screen.findByRole('radio', { name: 'Compose' }));
+    const side = screen.getByRole('complementary', { name: 'Compose' });
+    await addPiece(user, side);
+    await addPiece(user, side);
+    const front = screen.getByRole('figure', { name: /^Room seen from the front/ });
+    expect(front.querySelectorAll('.front-connections line')).toHaveLength(0);
+
+    await selectRows(user, side, 0, 1);
+    const card = within(side).getByRole('region', { name: /^2 pieces selected/ });
+    await user.click(within(card).getByRole('checkbox', { name: 'Connected' }));
+
+    const plan = screen.getByRole('figure', { name: /Room plan, seen from above/ });
+    await waitFor(() => expect(plan.querySelectorAll('.plan-connections line')).toHaveLength(1));
+    const ticks = screen
+      .getByRole('figure', { name: /^Room seen from the front/ })
+      .querySelectorAll('.front-connections line');
+    expect(ticks).toHaveLength(1);
+    // Across the seam: horizontal, centred on the first piece's right edge, at the middle of its height.
+    const hits = screen
+      .getByRole('figure', { name: /^Room seen from the front/ })
+      .querySelectorAll('rect.front-hit');
+    const left = hits[0];
+    const edge = Number(left.getAttribute('x')) + Number(left.getAttribute('width'));
+    const top = Number(left.getAttribute('y')),
+      h = Number(left.getAttribute('height'));
+    const [x1, y1, x2, y2] = ['x1', 'y1', 'x2', 'y2'].map((k) => Number(ticks[0].getAttribute(k)));
+    expect(y1).toBe(y2);
+    expect((x1 + x2) / 2).toBeCloseTo(edge, 6);
+    expect(y1).toBeCloseTo(top + h / 2, 6);
+    expect(ticks[0].closest('[aria-hidden="true"]')).not.toBeNull();
   });
 });

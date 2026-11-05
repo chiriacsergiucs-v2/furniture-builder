@@ -215,8 +215,8 @@ export const FEATURES: FeatureDomain[] = [
       {
         name: 'Connected pieces',
         detail:
-          'A snap joins two touching pieces; they move together and a pair that no longer touches is warned about.',
-        adrs: ['ADR-168'],
+          'A snap joins two touching pieces; they move together, the seam is marked on the plan, the front view and in 3D, and a pair that no longer touches is warned about.',
+        adrs: ['ADR-168', 'ADR-179'],
       },
       {
         name: 'Compatibility rules',

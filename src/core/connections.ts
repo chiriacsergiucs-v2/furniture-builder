@@ -180,6 +180,64 @@ export function connectionDiagnostics(
 }
 
 /**
+ * The shared seam of one connection that still holds (ADR-179), in room mm: the edge the two pieces share on the
+ * plan, from (x1, z1) to (x2, z2) along one axis (x1 === x2 for pieces side by side along x), the heights both pieces
+ * stand over (y1 bottom, y2 top) and the seam's end at the pieces' front face.
+ */
+export interface ConnectionSeam {
+  /** The connection's id. */
+  id: string;
+  itemIds: [string, string];
+  x1: number;
+  z1: number;
+  x2: number;
+  z2: number;
+  y1: number;
+  y2: number;
+  /** The seam's end on the plan at the front face of the pieces (x, z). */
+  front: [number, number];
+}
+
+/**
+ * One seam for every connection that still holds (`connectionCheck` without a reason), in connection order; a
+ * broken one has none, its warning is in the checks (ADR-168). The plan, the room front view and the 3D view draw
+ * their marks from these (ADR-004, ADR-179).
+ */
+export function connectionSeams(
+  project: Project,
+  pieces: readonly PlacedPiece[],
+): ConnectionSeam[] {
+  if (!project.connections?.length) return [];
+  const byId = new Map(pieces.map((pc) => [pc.item.id, pc]));
+  return project.connections.flatMap((c) => {
+    const [ia, ib] = c.itemIds;
+    const a = byId.get(ia),
+      b = byId.get(ib);
+    if (!a || !b || connectionCheck(project, ia, ib, pieces).reason) return [];
+    const A = a.bounds,
+      B = b.bounds;
+    const y1 = Math.max(A.y, B.y),
+      y2 = Math.min(A.y + A.h, B.y + B.h);
+    const ahead = a.facing.sign > 0;
+    // The seam: a shared x edge (side by side along x) or a shared z edge.
+    if (A.x + A.w === B.x || B.x + B.w === A.x) {
+      const x = A.x + A.w === B.x ? B.x : A.x;
+      const z1 = Math.max(A.z, B.z),
+        z2 = Math.min(A.z + A.d, B.z + B.d);
+      return [
+        { id: c.id, itemIds: c.itemIds, x1: x, z1, x2: x, z2, y1, y2, front: [x, ahead ? z2 : z1] },
+      ];
+    }
+    const z = A.z + A.d === B.z ? B.z : A.z;
+    const x1 = Math.max(A.x, B.x),
+      x2 = Math.min(A.x + A.w, B.x + B.w);
+    return [
+      { id: c.id, itemIds: c.itemIds, x1, z1: z, x2, z2: z, y1, y2, front: [ahead ? x2 : x1, z] },
+    ];
+  });
+}
+
+/**
  * Every piece that moves with one of `ids`: through its group (ADR-148) and its connections (ADR-168), repeatedly,
  * with `ids` first. Without `connections`, groups only (`withGroups`).
  */
