@@ -48,7 +48,8 @@ drawers):
 ## Scope
 
 - In scope: `assemblySteps`, the Assembly tab, `PrintAssembly`.
-- Out of scope: per-step 3D pictures (G-343); editing steps (G-344).
+- Out of scope: per-step 3D pictures (G-343); editing steps (G-344); lighting the Fit hardware step in 3D (G-352);
+  catalog piece names translated on prints (G-353).
 
 ## Consequences
 
