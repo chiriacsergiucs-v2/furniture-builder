@@ -2186,3 +2186,63 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: "run a /batch for 1 through 7 with a critique of design … 1 adr … per flow (7 total adrs)", then "Add the adrs for the ones finished".
 - Questions: Rerun the critiques for domains 1, 6 and 7?
 - Suggested pick: Rerun the three critiques and add one ADR each, as for domains 2 to 5. (estimate: effort +75 % of the batch, value +43 %)
+
+### G-368: CI runs only the tests related to a core-only change
+
+- Status: Open
+- Origin: ADR-197 CI analysis 2026-11-05
+- Missing: Suggestion C, tests by domain of change: a pull request that touches only src/core still runs the whole suite. vitest --changed origin/main (or a related-files filter) could run only the related tests there. The find-it files all import App, so any src/ui change still runs all 37 of them.
+- Request: Suggest improvements. Triggering less often the ci optimisations? Tests running by domain of change? Do all parts of the app need tests? Gaps/features/docs/unnecessary overcovering tests? (the user chose "all of these 4 + Suggestions A(all) and B(all)"; this suggestion was left out)
+- Questions: Run only the related tests on pull requests and the full suite on main only?
+- Suggested pick: Full suite on main; related tests only on pull requests that touch src/core alone. (estimate: work +15 %, saves about 60 % of the test CPU on those pull requests)
+- Work: Medium
+- Impact: Medium
+- Necessity: Low-medium
+- Issue: A core-only pull request runs all 143 test files.
+- Fix: In the CI test job, use vitest --changed against the base on core-only pull requests; keep the full suite on main.
+- Conflicts: none
+
+### G-369: Drop the duplicate push-to-main CI run
+
+- Status: Open
+- Origin: ADR-197 CI analysis 2026-11-05
+- Missing: Suggestion D: once deploy waits on CI (ADR-197), the push-to-main CI run re-verifies a tree that was already green on its pull request. The main run is kept.
+- Request: Suggest improvements. Triggering less often the ci optimisations? Tests running by domain of change? Do all parts of the app need tests? Gaps/features/docs/unnecessary overcovering tests? (the user chose "all of these 4 + Suggestions A(all) and B(all)"; this suggestion was left out)
+- Questions: Keep the main run (the safety net for ff pushes straight to main), or verify main only through the deploy?
+- Suggested pick: Keep the main run while ff pushes straight to main. (estimate: no extra work; value 0 % until ff stops)
+- Work: Low
+- Impact: Low-medium
+- Necessity: Low
+- Issue: Every merge runs the full checks on the pull request and again on main.
+- Fix: Keep while ff pushes straight to main; revisit if ff stops.
+- Conflicts: ADR-197 deploy waits on the main CI run
+
+### G-370: Review find-it tests that re-test logic through the UI
+
+- Status: Open
+- Origin: ADR-197 CI analysis 2026-11-05
+- Missing: Suggestion E, over-coverage review: find-it/research-batch-4 (10.4 s, 6 tests) asserts research rows through the UI; find-it/connections (13.3 s) and find-it/variables (9.2 s) look like logic re-tested through the UI; tests/rapier-trial.test.ts is permanently skipped.
+- Request: Suggest improvements. Triggering less often the ci optimisations? Tests running by domain of change? Do all parts of the app need tests? Gaps/features/docs/unnecessary overcovering tests? (the user chose "all of these 4 + Suggestions A(all) and B(all)"; this suggestion was left out)
+- Questions: Move the logic assertions to core tests, keep one click path per find-it file, and delete rapier-trial?
+- Suggested pick: Yes. (estimate: work +25 %, about 15 % less find-it CPU)
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low
+- Issue: Some find-it files assert model logic through the UI, which is slow; one test file is always skipped.
+- Fix: Move logic assertions to tests/ core tests, keep one click path per find-it file, delete tests/rapier-trial.test.ts.
+- Conflicts: none
+
+### G-371: Cheaper find-it runs (stopped before it was built)
+
+- Status: Open
+- Origin: ADR-197 CI analysis 2026-11-05
+- Missing: Find-it files take 192 of the 217 s of test CPU. Not measured or applied: userEvent.setup({ delay: null }), find-it as its own vitest project with jsdom and isolate: false, a cheaper module reset; each keeps the bare-app start (ADR-108). The user stopped the ADR before it was built.
+- Request: "all of these 4 + Suggestions A(all) and B(all)" (item 3: cheaper find-it mounts); then "Stop 193" (the cheaper find-it ADR, never registered)
+- Questions: Resume the cheaper find-it runs later?
+- Suggested pick: Resume after ADR-197 lands, measuring first. (estimate: 20-50 % less find-it CPU, unmeasured)
+- Work: Medium
+- Impact: Medium
+- Necessity: Low-medium
+- Issue: Find-it tests dominate test CPU; each mounts the bare app with full module isolation and typed input delays.
+- Fix: Measure each lever, then apply the ones that keep the bare-app start (ADR-108).
+- Conflicts: none

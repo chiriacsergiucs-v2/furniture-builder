@@ -84,7 +84,11 @@ describe.each(WIDTHS)('accounts, backup and share links at %ipx (find-it, N130â€
       () => expect(document.querySelector('.sync-status')?.textContent).toMatch(/In your account/),
       { timeout: 5000 },
     );
-    expect(await screen.findByText('In your account', { selector: '.badge' })).toBeTruthy();
+    // The status above already reads "In your account" before the first sync (idle, nothing waiting); the badge
+    // appears only when that sync finishes, which takes over a second under a loaded test shard (ADR-197).
+    expect(
+      await screen.findByText('In your account', { selector: '.badge' }, { timeout: 5000 }),
+    ).toBeTruthy();
     await waitFor(() =>
       expect(screen.queryByText(/Your designs are only on this device/)).toBeNull(),
     );
