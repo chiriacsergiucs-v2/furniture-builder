@@ -1,7 +1,8 @@
 # ADR-198: Fix the shell and navigation design findings
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-06
+- Implemented: 2026-11-05 (Built in PR #169 (merged 353108e, CI run 42126747931); production find-it re-run on main 2026-11-05)
 - Depends on: ADR-078, ADR-079, ADR-080
 - Design: docs/ui-design.md (Shell and navigation)
 - Backlog: N203

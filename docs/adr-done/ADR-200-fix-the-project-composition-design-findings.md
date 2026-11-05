@@ -1,7 +1,8 @@
 # ADR-200: Fix the project composition design findings
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-06
+- Implemented: 2026-11-05 (Built in PR #169 (merged 353108e, CI run 42126747931); production find-it re-run on main 2026-11-05)
 - Depends on: ADR-022, ADR-093, ADR-107, ADR-160
 - Design: docs/ui-design.md (Project composition)
 - Backlog: N205
