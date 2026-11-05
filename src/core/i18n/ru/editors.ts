@@ -502,4 +502,9 @@ export const ru_editors = {
   Also: 'Также',
   Plinth: 'Цоколь',
   Handles: 'Ручки',
+  // Project assembly order (ADR-178).
+  'Project order': 'Порядок в проекте',
+  'Base pieces': 'Нижние изделия',
+  'Wall pieces': 'Навесные изделия',
+  'Sink cut-out {w} × {d} mm': 'Вырез под мойку {w} × {d} мм',
 } satisfies Record<string, string>;

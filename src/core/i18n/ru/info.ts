@@ -392,4 +392,7 @@ export const ru_info = {
   'Assembly steps': 'Шаги сборки',
   'An ordered step list per piece from the parts’ positions, with the joints and hardware of each step, labelled guidance; Show step lights the parts in 3D; printable.':
     'Упорядоченный список шагов по каждому изделию из положения деталей, с соединениями и фурнитурой каждого шага, как рекомендация; «Показать шаг» подсвечивает детали в 3D; печатается.',
+  'Project assembly order': 'Порядок сборки проекта',
+  'A project’s Assembly tab and printed sheet open with the order of its pieces: corner cabinets, base pieces wall by wall from the corner, wall pieces, then run parts; labelled guidance.':
+    'Вкладка «Сборка» проекта и печатный лист начинаются с порядка его изделий: угловые шкафы, нижние изделия по стенам от угла, навесные изделия, затем детали ряда; как рекомендация.',
 } satisfies Record<string, string>;

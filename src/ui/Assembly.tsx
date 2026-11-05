@@ -1,10 +1,19 @@
 /**
  * The Assembly tab (ADR-174): an ordered step list per piece from `assemblySteps()`, labelled guidance (ADR-010).
  * "Show step" lights the step's parts in the 3D view (viewer-only, as Isolate, ADR-122); ← → move between steps.
- * The printed sheet is `PrintAssembly`, in the print language (ADR-157).
+ * The printed sheet is `PrintAssembly`, in the print language (ADR-157). A project opens with its Project order
+ * (ADR-178, `projectAssemblyOrder()`): which pieces go in first, before the per-piece steps.
  */
 import { useEffect, useMemo, useState } from 'react';
-import { ASSEMBLY_GUIDANCE, assemblySteps, type AssemblyStep } from '../core/assembly';
+import {
+  ASSEMBLY_GUIDANCE,
+  assemblySteps,
+  projectAssemblyOrder,
+  projectOrderPrint,
+  type AssemblyStep,
+  type OrderEntry,
+  type ProjectStage,
+} from '../core/assembly';
 import { t, tr } from '../core/i18n';
 import { getPrintLang, PRINT_DATE_LOCALE, pt } from '../core/i18n/print';
 import type { FurnitureModel } from '../core/types';
@@ -68,8 +77,75 @@ function usePieceSteps(): PieceSteps[] {
   }, [view, pieces, designName]);
 }
 
+/** The project's order of pieces (ADR-178); none for a design alone or while one piece is being edited. */
+function useProjectOrder(): ProjectStage[] {
+  const view = useView();
+  const project = useDesign((s) => (s.editingItemId ? null : s.project));
+  const projectModel = useDesign((s) => (s.editingItemId ? null : s.projectModel));
+  return useMemo(
+    () => (view.mode === 'project' ? projectAssemblyOrder(project, projectModel) : []),
+    [view.mode, project, projectModel],
+  );
+}
+
+/** A line of the Project order on the tab: the piece's name or the part's, with its count and wall. */
+function entryText(e: OrderEntry): string {
+  const name =
+    e.kind === 'sink'
+      ? t('Sink cut-out {w} × {d} mm', { w: e.size![0], d: e.size![1] })
+      : tr(e.name);
+  return e.times > 1 ? `${name} × ${e.times}` : name;
+}
+
+/** The Project order at the start of the printed sheet (ADR-178), in the print language (ADR-157). */
+function PrintProjectOrder({ stages }: { stages: ProjectStage[] }) {
+  const sheet = projectOrderPrint(stages);
+  return (
+    <section className="pr-block">
+      <h2>{sheet.heading}</h2>
+      <ol>
+        {sheet.stages.map((s) => (
+          <li key={s.n}>
+            <strong>{s.title}</strong>: {s.lines.join(', ')}
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+/** The Project order section of the tab (ADR-178): numbered stages, each with its pieces or parts in order. */
+function ProjectOrder({ stages }: { stages: ProjectStage[] }) {
+  return (
+    <section className="assembly-piece assembly-order" aria-label={t('Project order')}>
+      <h3>{t('Project order')}</h3>
+      <ol className="assembly-steps">
+        {stages.map((s) => (
+          <li key={s.id}>
+            <div className="step-head">
+              <span className="step-n">{s.n}</span>
+              <strong>{s.title}</strong>
+            </div>
+            <ol className="step-parts">
+              {s.entries.map((e) => (
+                <li key={e.ids[0]}>
+                  {entryText(e)}
+                  {e.wall !== undefined && (
+                    <span className="hint"> · {t('Wall {n}', { n: e.wall + 1 })}</span>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
 export function Assembly() {
   const pieces = usePieceSteps();
+  const order = useProjectOrder();
   const setLit = useDesign((s) => s.setLit);
   const lit = useDesign((s) => s.litPanelIds);
   const setPrinting = useUi((s) => s.setPrinting);
@@ -121,6 +197,7 @@ export function Assembly() {
           </button>
         )}
       </div>
+      {order.length > 0 && <ProjectOrder stages={order} />}
       <p className="hint guidance" role="note">
         <GuidanceTip topic={t('assembly order')} align="start">
           {t(
@@ -198,6 +275,7 @@ export function Assembly() {
 export function PrintAssembly() {
   const view = useView();
   const pieces = usePieceSteps();
+  const order = useProjectOrder();
   const locale = PRINT_DATE_LOCALE[getPrintLang()];
   const mm = pt('mm');
   return (
@@ -215,6 +293,7 @@ export function PrintAssembly() {
           )}
         </p>
       </header>
+      {order.length > 0 && <PrintProjectOrder stages={order} />}
       {view.mode === 'design' && (
         <section className="pr-block pr-elev">
           <h2>{pt('Vedere frontală')}</h2>

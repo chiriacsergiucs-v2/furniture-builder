@@ -558,6 +558,12 @@ export const FEATURES: FeatureDomain[] = [
               'An ordered step list per piece from the parts’ positions, with the joints and hardware of each step, labelled guidance; Show step lights the parts in 3D; printable.',
             adrs: ['ADR-174'],
           },
+          {
+            name: 'Project assembly order',
+            detail:
+              'A project’s Assembly tab and printed sheet open with the order of its pieces: corner cabinets, base pieces wall by wall from the corner, wall pieces, then run parts; labelled guidance.',
+            adrs: ['ADR-178'],
+          },
         ],
       },
       {
