@@ -153,9 +153,21 @@ changed and push only on the user's explicit approval. Model, document, storage 
   tests (jsdom, or the browser script for layout/CSS or 3D work, on the production build of `main` or the live URL).
 - **R4 Outcome first:** replies open with where to click and whether it is live.
 
+## Toggleable rules
+
+A rule listed here applies only while its state is **on**. The user turns a rule off or back on by name (e.g. "turn
+on snapshot-before-tests"); the change updates this table with the date and the user's words. A rule that is off is
+skipped everywhere it is referenced (this file and the skills); the rule text stays where it is, so turning it back
+on restores it unchanged.
+
+| Toggle                  | Rule                                                                | State | Changed                                                                                                               |
+| ----------------------- | ------------------------------------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------- |
+| `snapshot-before-tests` | Process › Snapshot before tests: screenshots approved before checks | off   | 2026-11-05, user: "set screenshots validation rule as inactive until further notice with possibility to turn back on" |
+
 ## Process (standing user rules)
 
-- Snapshot before tests (user rule 2026-10-27): for a UI change, before running any tests or checks, show the user a
+- Snapshot before tests (user rule 2026-10-27; toggle `snapshot-before-tests`, see _Toggleable rules_ — applies only
+  while that toggle is **on**): for a UI change, before running any tests or checks, show the user a
   screenshot of the fix attempt (dev or production build, phone and desktop width where relevant) and wait. Proceed
   to tests and the next steps only on their confirmation; otherwise fix the new requirements and show a new
   screenshot for confirmation again. The screenshots for approval come last in the reply, right above the

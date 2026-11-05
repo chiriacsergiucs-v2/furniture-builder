@@ -37,9 +37,9 @@ truth; `deploy.yml` publishes `main` to GitHub Pages.
    - Larger asks (several files, model or storage shape, a new decision): ask the user. A changed
      decision gets a new ADR (`new-adr`), never an edit to an implemented one.
    - A finding that would invent a hardware or supplier fact (ADR-010): ask the user.
-4. **Visible change in a push** → the snapshot rule of `CLAUDE.md` still holds: show the
-   screenshots last in the reply, above the questions, and wait for confirmation before the
-   next tests.
+4. **Visible change in a push** → while the `snapshot-before-tests` toggle in `CLAUDE.md` is on,
+   the snapshot rule holds: show the screenshots last in the reply, above the questions, and wait
+   for confirmation before the next tests. While it is off, run the checks without waiting.
 5. **Ledger** → each push that changes behaviour updates the backlog row with the evidence
    that ran (command output or CI run id), and `docs/adr/GAPS.md` for anything not built.
 
