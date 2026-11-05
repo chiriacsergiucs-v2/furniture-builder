@@ -82,11 +82,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 - Status: Open
 - Origin: Research, 2026-10-24 15:42 UTC; agent default, accepted by the user
-- Missing: Compatibility rules are built (ADR-100); stored connections between pieces, semantic connectors, an assembly graph and connector authoring are still not built (see G-091, G-092).
+- Missing: Semantic connectors (typed joint points), an assembly graph beyond side-by-side pairs, and connector authoring are not built (stored side-by-side connections exist: ADR-168, ADR-170, ADR-179; see G-092, G-329).
 - Request: “Verify, then Quick wins, then Medium effort”; later “guided snapping” and “cross-family composition”.
 - Questions: Write one ADR for stored connections between pieces (side by side, on top, in corner, against wall)?
 - Suggested pick: One ADR for stored connections between pieces (side by side, on top, in corner, against wall). Snap, Mirror a run, run parts and Merge would all read them, so pieces move together and the plan explains why. (estimate: effort +60%, value +35%)
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: Re-checked 2026-11-05 on main c4a15bd (code read, no browser): Missing text updated to the current code.
 
 ### G-008: AR, plan review, shared structural elements
 
@@ -102,11 +103,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 - Status: Open
 - Origin: ADR-063, 2026-10-24 15:51 UTC; user decision
-- Missing: A bundled seller catalog with prices exists (ADR-161); supplier price-file import maps, order files, live feeds, stock and ordering are not built (ADR-063 Deferred; ADR-126 now permits opt-in online).
+- Missing: Column maps for other suppliers' price files, order files, live feeds, stock and online ordering are not built (ADR-063 Deferred); the Regency export refresh exists (ADR-172).
 - Request: “Put to pending any that require non-free services”.
 - Questions: Build the offline step (supplier price-file column maps and order files)? Which suppliers first?
 - Suggested pick: An offline middle step that needs no service: a column map for each supplier's own price-list file (Egger, Kronospan, Kastamonu, Fundermax) into the ADR-062 price list, and an order file per supplier from the shopping list. This covers most of the value with no backend. (estimate: effort +25%, value +40% of what live feeds give)
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: Re-checked 2026-11-05 on main c4a15bd (code read, no browser): Missing text updated to the current code.
 
 ### G-010: Worktop joints and corner runs
 
@@ -202,12 +204,13 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 - Status: Open
 - Origin: Research, 2026-10-24 21:28 UTC; agent scoped it out
-- Missing: Fill a wall (ADR-103/104) places a kitchen mix on one wall; there are still no built-in room presets (kitchen / wardrobe / desk) that place several pieces, and a kitchen run plus a desk in one project is unchecked.
+- Missing: No wardrobe or desk room presets that place several pieces, and a kitchen run plus a desk in one project is unchecked; Fill the room fills kitchen walls (ADR-173, ADR-177).
 - Request: The 14 features you selected at 21:28 (context, not a quote)
 - Questions: Check each against the app and write ADRs for what is missing?
 - Suggested pick: Check each against the app with find-it. Write an ADR for whatever is missing (likely: one project mixing a kitchen run with a desk, and room presets that place several pieces at once). (estimate: effort +30%, value +20%)
 - Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): partly resolved; text partly wrong. Cross-family composition was already checked (N48, tools/ensemble/find-it.mjs: base cabinet + wardrobe + daybed). Remaining: built-in room presets that place several pieces; a kitchen run plus a desk in one project not checked.
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: Re-checked 2026-11-05 on main c4a15bd (code read, no browser): Missing text updated to the current code.
 
 ### G-027: Bottom sheet drag, mode bar, old find-it scripts
 
@@ -265,11 +268,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 - Status: Open
 - Origin: ADR-070, 2026-10-25 00:07 UTC; agent scoped it out
-- Missing: Remaining: no snapping in the front view (e.g. worktop or wall-unit lines), and snaps are not stored.
+- Missing: No height snapping in the front view or the 3D height drag (worktop or wall-unit lines); src/core/height.ts dragHeight only rounds. Snapped drops are stored as connections (ADR-168).
 - Request: “Guided snapping”.
 - Questions: Front-view height snaps first (worktop line, wall-unit line)?
 - Suggested pick: Front-view snapping to heights (worktop line, wall-unit line), using the same rules. Stored snaps come from the connections ADR above. Add the hint to find-it. (estimate: effort +30%, value +20%)
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: Re-checked 2026-11-05 on main c4a15bd (code read, no browser): Missing text updated to the current code.
 
 ### G-034: Hinge repair, filler repair, 3D preview
 
@@ -380,11 +384,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 - Status: Open
 - Origin: ADR-069..079, 2026-10-25 10:25 UTC; agent scoped it out
-- Missing: Eleven ADRs were shipped (N64 to N74 Done) with the gaps above still open and their open questions unanswered. Find-it was not re-run after the merge, and nothing was checked on the live site.
+- Missing: The open questions in G-027 and G-030 to G-042 are still unanswered, and nothing was checked on the live site (G-047); find-it was re-run after the merge (N88).
 - Request: “Merge all mergeable, push, list what is left”.
 - Questions: Re-run every find-it on main? Answer the open questions above?
 - Suggested pick: Re-run every find-it script on the production build of main. Answer the open questions above. Then open one follow-up ADR per group of gaps, so the gaps are tracked and not lost behind Done. (estimate: effort +10%, value +15%)
 - Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): partly resolved per N88: every find-it script passed on a local production build after merging main. Remaining: the open questions in G-027 and G-030 to G-042, follow-up ADRs, the live check (G-047).
+- Note: Re-checked 2026-11-05 on main c4a15bd (code read, no browser): Missing text updated to the current code.
 
 ### G-047: Nothing live-verified
 
@@ -427,12 +432,13 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 - Status: Open
 - Origin: ADR-084, 2026-10-25; agent scoped it out
-- Missing: Still unconfirmed: + adds an empty bay at the end (ADR-089) and − removes the last bay (counts.ts:97-109) rather than next to the selection.
+- Missing: stepDividers still adds an empty bay at the end and removes the last bay (src/core/counts.ts:97-108); nothing is added or removed next to the selection.
 - Request: “Divider(horizontal and vertical)/drawer/shelf/all other applicable pleces based on configuration + currentNuber - … Placement: above the selected piece”
 - Questions: Where does + add and - remove: at the end, or next to the selected bay? What goes in a new bay: empty, or a copy of its neighbour?
 - Suggested pick: End, with 2 shelves like the existing Add button (consistent with what the app does today; next-to-selection is estimated +15% effort for +5% value)
 - Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): partly resolved; text out of date. ADR-089 decided a new bay is empty (src/core/counts.ts:89-99), so the 2-shelves default is gone, and ADR-086 changed what + acts on. Still unconfirmed: whether + adds at the end or next to the selection, and what - removes.
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: Re-checked 2026-11-05 on main c4a15bd (code read, no browser): Missing text updated to the current code.
 
 ### G-073: UI critique findings 8, 9 and 12 left as they are
 
@@ -442,16 +448,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Findings 8 + 9: 'Skip 8 and 9'. Finding 12: no request; the names are ADR-033's decision.
 - Questions: Write an ADR for 8 and 9 later? Keep the Romanian names (ADR-033) or show them only in search?
 - Suggested pick: Keep 12 as ADR-033 decided (no change); for 8 and 9, an ADR when you want the editor layout revisited (closest to the critique; est. +40 % work over a small fix, +60 % of 8/9 value)
-
-### G-074: Remember whether the results panel was open across reloads
-
-- Status: Acknowledged (2026-10-26)
-- Origin: ADR-091 out of scope
-- Missing: The results panel always starts collapsed after a reload; its open/closed state and tab are not saved
-- Request: They should be a collapsed view, onclick showing only, so the views with renders are kept as main
-- Questions: Should the app remember an open results panel after a reload?
-- Suggested pick: No: always start collapsed, closest to 'collapsed view, onclick showing only'
-- Answer: User 2026-10-26: "Always collapsed".
 
 ### G-076: Research app records go stale as ADRs ship
 
@@ -514,11 +510,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 - Status: Open
 - Origin: Gap re-check 2026-10-26 (G-042); agent found it
-- Missing: Shopping footer (src/core/shopping.ts:52) and fastener guidance (src/core/fasteners.ts:312), plus their Russian entries (src/core/i18n/ru/core2.ts:334,421), still point to 'Materials › Fasteners'.
+- Missing: Fastener notes point to 'Materials › Fasteners', a screen that no longer exists (the list is under Settings › Fasteners, src/ui/Settings.tsx:70): src/core/shopping.ts:53, src/core/fasteners.ts:319, src/core/assembly.ts:506,524 and the print line, with their Russian and print entries.
 - Request: Hardware and fastener completeness (G-042) (context, not a quote)
 - Questions: None; it is a wording bug. Fix together with the Romanian labels in G-042?
 - Suggested pick: Point both to the current path (Settings › Fasteners, or the piece's Size, boards and construction), and translate them in the Romanian CSV with G-042. (estimate: effort +1%, value +3%)
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: Re-checked 2026-11-05 on main c4a15bd (code read, no browser): Missing text updated to the current code.
 
 ### G-099: Group gaps by origin
 
@@ -757,15 +754,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Should a change also reach the template and copies in other projects?
 - Suggested pick: One project only, as in the current request (0 % extra work).
 
-### G-138: How an info button shows its text
-
-- Status: Acknowledged (2026-10-27)
-- Origin: ADR-113
-- Missing: The way the moved intro text opens is a default the user has not confirmed: tap or click the ⓘ button opens a small popover under it; tap outside, Escape or a second tap closes it
-- Request: Move info text from Project to a tooltip, apply same to other similar UX occurences
-- Questions: Popover on tap (also on hover on desktop), or hover-only tooltip?
-- Suggested pick: Popover on tap and click, Escape closes (closest to the request: a hover-only tooltip cannot open on a phone)
-
 ### G-139: Heading scale for drawings and print sheets
 
 - Status: Acknowledged (2026-10-27)
@@ -797,28 +785,11 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 - Status: Acknowledged (2026-10-27)
 - Origin: ADR-113 (found while building)
-- Missing: Catalog checkbox now 'I check safety-regulated items myself' (examples moved to its info); '(ADR-036)' dropped from a panel intro; shopping hint now 'Your prices, saved on this device.'; the quantity info shows at any quantity; wizard per-field help kept visible
+- Missing: Not approved yet: the catalog checkbox 'I check safety-regulated items myself', '(ADR-036)' dropped from a panel intro, quantity info at any quantity, and wizard help kept visible (the shopping hint was rewritten, ADR-160/161).
 - Request: Move info text from Project to a tooltip, apply same to other similar UX occurences
 - Questions: Approve these three wording changes and the two choices?
 - Suggested pick: Approve (shorter labels fit one row; the ADR number is not user text)
-
-### G-146: Where a cut catalog card's full text shows
-
-- Status: Acknowledged (2026-10-27)
-- Origin: ADR-119
-- Missing: The Catalog has no item detail view (tapping a card opens the item), so G-145's pick needs a place for the full text
-- Request: accept gap picks
-- Questions: A More toggle that expands the card in place, or the text in an info popover?
-- Suggested pick: More toggle in place (closest to the request: the text is on the card, one tap, works on touch and keyboard)
-
-### G-147: Lower-severity critique fixes not agreed
-
-- Status: Acknowledged (2026-10-27)
-- Origin: ADR-120
-- Missing: The nine fixes in ADR-120 are the critique's proposals; none is agreed
-- Request: accept gap picks (G-141: one follow-up ADR for all of them)
-- Questions: Accept the nine fixes as written in ADR-120, or change any?
-- Suggested pick: Accept as written (each is the critique's fix for the item it names)
+- Note: Re-checked 2026-11-05 on main c4a15bd (code read, no browser): Missing text updated to the current code.
 
 ### G-148: ADR ids and Back link left on the Gaps and Research pages; Select lost its tooltip
 
@@ -865,6 +836,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Fix it in this PR or in a separate change?
 - Suggested pick: Fix it in this PR, since this PR touches Viewer3D (estimate +5 % work)
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): no fix found after 0b8fc21; the 3D view fades rather than hides boards (src/viewer/Viewer3D.tsx:1471-1477). Needs a browser run to tell whether it still happens.
+- Note: Re-checked 2026-11-05 on main c4a15bd (code read, no browser): boards now fade (Viewer3D isFaded, opacity 0.28) rather than hide; no fix commit found. Needs a browser check to close.
 
 ### G-181: Move/Section toggle sometimes ignores the first tap after a touch drag or while the 3D view settles
 
@@ -969,11 +941,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 - Status: Open
 - Origin: ADR-127, 2026-10-28; found while building (Claude)
-- Missing: No Supabase project exists yet: the migration is not applied, Google sign-in is not registered, and the repository variables SUPABASE_URL and SUPABASE_ANON_KEY are not set, so the deployed app is built without accounts. Online features are tested with an in-memory backend and the SQL rules on a local PostgreSQL, never against Supabase itself.
+- Missing: Supabase migration not applied, Google sign-in not registered, email settings not set, no live check; the project URL and key are in .github/workflows/deploy.yml:30-31.
 - Request: Task 2026-10-28: “takes Furniture Builder from device-only storage to user accounts”; answers G-217 Supabase, G-219 my personal account
 - Questions: Create the Supabase project and Google client (docs/supabase-setup.md), then let a session test sign-in, sync and share links against it?
 - Suggested pick: Yes: follow docs/supabase-setup.md, then run a live check (estimate 1 hour of your time)
 - Note: 2026-10-28: the user created the project `https://nllwhcxvcbtjfkdhsyse.supabase.co` and gave its publishable key; both are set in `deploy.yml`. Still open: the migration, Google sign-in and the email settings in the dashboard, and a live check.
+- Note: Re-checked 2026-11-05 on main c4a15bd (code read, no browser): Missing text updated to the current code.
 
 ### G-278: Account and share-link limits
 
@@ -1047,16 +1020,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Add a floating Move to bar over the plan?
 - Suggested pick: Not now; the user picked panel + 3D
 
-### G-290: Group width for pieces not in columns
-
-- Status: Open
-- Origin: ADR-148, 2026-10-29; scope (Claude)
-- Missing: A group whose pieces overlap in x without sharing the same span (e.g. a wall unit straddling two base units) refuses a Width change.
-- Request: add the possibility to set the width, height and depth of grouped items, add the possibility to block group items from being moved separately.
-- Questions: Refuse, or scale every position around the left edge (pieces may stop touching by 1 mm)?
-- Suggested pick: Scale positions around the left edge, rounding shared edges once (closer to the request; estimate effort +25 %, value +10 %)
-- Answer: 2026-10-29 (user) "Refuse (as in ADR)"; ADR-148 refuses with the reason
-
 ### G-301: Third UI language
 
 - Status: Open
@@ -1065,33 +1028,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: add support for Russian language, have it toggle, also translate all the existing content ...
 - Questions: Add a Romanian UI too?
 - Suggested pick: Not asked; leave until requested
-
-### G-302: Lint for untranslated text
-
-- Status: Open
-- Origin: ADR-153 (out of scope)
-- Missing: A lint rule that flags English text written outside t()
-- Request: add a implementation rule/constraint to also add translation on any text added/modified/deleted
-- Questions: Add the hardcoded-string lint?
-- Suggested pick: User chose CLAUDE.md + type check only (2026-10-29)
-
-### G-303: Gaps page not translated
-
-- Status: Open
-- Origin: ADR-154 (out of scope)
-- Missing: The Gaps page (labels and entries) stays English
-- Request: add support for Russian language, have it toggle, also translate all the existing content ...
-- Questions: Translate the Gaps page?
-- Suggested pick: User 2026-10-29: Ignore gaps
-
-### G-304: User-typed names not translated
-
-- Status: Open
-- Origin: ADR-155 (out of scope)
-- Missing: Names the user typed (pieces, projects, boards) are not translated
-- Request: add support for Russian language, have it toggle, also translate all the existing content ...
-- Questions: Translate user-typed names?
-- Suggested pick: No: they are the user's own text
 
 ### G-305: Written guides
 
@@ -1110,15 +1046,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: add support for Russian language ... also translate all the existing content
 - Questions: Should the English CSV use commas, as English Excel expects?
 - Suggested pick: Ask the user; semicolons stay until answered
-
-### G-307: Plan layer filter (All / Floor / Wall) for stacked pieces
-
-- Status: Open
-- Origin: ADR-159
-- Missing: A layer filter on the plan so taps and box select reach only floor or only wall pieces where they overlap.
-- Request: The select is broken, wall and floor items are overlapping, correct select impossible (picked 'Layer filter', then 'Keep plan as is', 2026-10-29)
-- Questions: Build a plan layer filter at all, now that the front view, 3D and the piece list select several pieces?
-- Suggested pick: None suggested: the user's latest answer keeps the plan as is.
 
 ### G-308: Selection box in the front view and the 3D view
 
@@ -1204,33 +1131,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Should a role also take an edge-band choice?
 - Suggested pick: Add an edge-band select per role in a later ADR.
 
-### G-319: App-wide Materials list
-
-- Status: Open
-- Origin: ADR-164
-- Missing: No app-wide Materials list on the device; board choices come from the project's boards and the decor list.
-- Request: The pal chosen at the beginning should be the same one from the Materials section.
-- Questions: Should the device keep one Materials list every project draws from (new Dexie table)?
-- Suggested pick: Keep project boards + decor list (the user's pick); an app-wide list only on request.
-
-### G-320: Common panel across a gap
-
-- Status: Open
-- Origin: ADR-165
-- Missing: A common top or bottom needs touching items; a gap between items is not bridged.
-- Request: Add the possibility to have a common bottom or top between multiple items.
-- Questions: Should one panel bridge a gap between items?
-- Suggested pick: Touching items only (the user's pick).
-
-### G-321: Shared side between neighbours
-
-- Status: Open
-- Origin: ADR-165
-- Missing: Items under a common top or bottom keep their own two sides; no shared side between neighbours.
-- Request: Add the possibility to have a common bottom or top between multiple items.
-- Questions: Should neighbours also share one side panel?
-- Suggested pick: Own sides (the user's pick); a shared side in a later ADR.
-
 ### G-322: Common panel on corner cabinets and desks
 
 - Status: Open
@@ -1293,15 +1193,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: “Keep copies; add connections, variables, bindings, project settings” (user 2026-11-04)
 - Questions: Store only the differing parameters?
 - Suggested pick: Not while templates keep copies (ADR-060); revisit with G-334 (estimate: effort +80%, value +10%).
-
-### G-334: Templates keep copies, not references
-
-- Status: Open
-- Origin: ADR-170, 2026-11-04; user decision
-- Missing: Templates do not reference catalog items (ADR-060 chose copies; the research asks for references).
-- Request: “Keep copies; add connections, variables, bindings, project settings” (user 2026-11-04)
-- Questions: None; the user chose copies.
-- Suggested pick: Keep copies (chosen). References would need a new ADR replacing ADR-060 (estimate: effort +150%, value +30%).
 
 ### G-335: Variables in catalog designs and the stand-alone editor
 
