@@ -359,6 +359,8 @@ export const ru_info = {
   'Information and guides page': 'Страница «Информация и руководства»',
   'Feature Research': 'Исследование функций',
   'Gaps page': 'Страница пробелов',
+  'Gaps with rough work, impact and necessity ratings, filters, and an issue and a fix line each.':
+    'Пробелы с примерной оценкой работы, влияния и необходимости, фильтрами и строками проблемы и решения.',
   'Info buttons': 'Информационные кнопки',
   'Light and dark themes': 'Светлая и тёмная темы',
   // ADR-160

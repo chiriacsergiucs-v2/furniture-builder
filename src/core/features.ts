@@ -976,7 +976,13 @@ export const FEATURES: FeatureDomain[] = [
         adrs: ['ADR-043', 'ADR-092', 'ADR-110', 'ADR-149', 'ADR-152', 'ADR-184'],
         checked: '2026-11-05',
       },
-      { name: 'Gaps page', adrs: ['ADR-101'], checked: '2026-11-05' },
+      {
+        name: 'Gaps page',
+        detail:
+          'Gaps with rough work, impact and necessity ratings, filters, and an issue and a fix line each.',
+        adrs: ['ADR-101', 'ADR-187'],
+        checked: '2026-11-05',
+      },
       { name: 'Info buttons', adrs: ['ADR-080', 'ADR-113'], checked: '2026-11-05' },
       { name: 'Light and dark themes', adrs: ['ADR-030'], checked: '2026-11-05' },
     ],
