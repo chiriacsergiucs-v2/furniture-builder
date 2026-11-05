@@ -1,7 +1,8 @@
 # ADR-171: Lock a piece's turn and each of its sizes one by one
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-04
+- Implemented: 2026-11-05
 - Depends on: ADR-095, ADR-122, ADR-148, ADR-166
 - Design: docs/ui-design.md (section 4, Project: the selected-piece card)
 - Backlog: N174
@@ -62,11 +63,11 @@ soft rules so the app never keeps "correcting" an intentional choice. User (2026
 
 ## Done when
 
-- [ ] A turn-locked piece refuses Turn, R, Mirror, the typed angle, the turn handle and a group turn, with the hint;
+- [x] A turn-locked piece refuses Turn, R, Mirror, the typed angle, the turn handle and a group turn, with the hint;
       it still moves and resizes (tests)
-- [ ] A width-locked piece refuses a width change from the editor, a linked copy, Replace, group size and project
+- [x] A width-locked piece refuses a width change from the editor, a linked copy, Replace, group size and project
       settings, and accepts height and depth changes (tests)
-- [ ] A binding on a locked axis is held and named; `sizeLocked: true` still locks all three (tests)
-- [ ] Projects of schemaVersion 1–18 load unchanged; 19 validates the fields (tests)
-- [ ] The lock menu shows the five toggles and the chip names the locks (jsdom find-it, 390 and 1280 px)
-- [ ] Russian entries for every new text; the feature tree line "Lock a piece in place" is extended
+- [x] A binding on a locked axis is held and named; `sizeLocked: true` still locks all three (tests)
+- [x] Projects of schemaVersion 1–18 load unchanged; 19 validates the fields (tests)
+- [x] The lock menu shows the five toggles and the chip names the locks (jsdom find-it, 390 and 1280 px)
+- [x] Russian entries for every new text; the feature tree line "Lock a piece in place" is extended

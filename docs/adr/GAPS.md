@@ -612,24 +612,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: With a mixed selection, distribute each row on its own instead of refusing? Should the join rules also limit centre snapping?
 - Suggested pick: Distribute each row on its own (closest to 'tidy runs in one tap'; about +15 % of ADR-099's work, +10 % value; estimates); keep the join rules for joins only.
 
-### G-113: Fill a wall: corner and L walls
-
-- Status: ADR-173
-- Origin: ADR-103, 2026-10-27; Claude scoped it out
-- Missing: Fill a wall works on one straight wall only; corner and L-shaped walls are not filled.
-- Request: a reverse furniture building, total width, to the mix of furniture pieces that fill that space (context: corners not mentioned)
-- Questions: Should Fill a wall also fill corner or L walls, with a corner cabinet at the joint?
-- Suggested pick: Fill each straight wall with ADR-103, then join two walls with a catalog corner cabinet (ADR-025). (estimate: effort +40%, value +15%)
-
-### G-114: Fill a wall: room openings shape the mix
-
-- Status: ADR-173
-- Origin: ADR-103, 2026-10-27; Claude scoped it out
-- Missing: Room windows, doors, pipes and outlets do not shape the suggested mixes; they are checked only after the project is made.
-- Request: a reverse furniture building, total width, to the mix of furniture pieces that fill that space (context: room openings not mentioned)
-- Questions: Should Fill a wall read the project room (ADR-058) and avoid windows, doors and outlets?
-- Suggested pick: Start Fill a wall from a wall of the project room and skip mixes that clash with its openings, using the existing room checks. (estimate: effort +30%, value +15%)
-
 ### G-116: Fill a wall: carcasses with 3 or more equal fronts
 
 - Status: Open
@@ -883,15 +865,6 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Fix it in this PR or in a separate change?
 - Suggested pick: Fix it in this PR, since this PR touches Viewer3D (estimate +5 % work)
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): no fix found after 0b8fc21; the 3D view fades rather than hides boards (src/viewer/Viewer3D.tsx:1471-1477). Needs a browser run to tell whether it still happens.
-
-### G-180: Lock parameters other than size
-
-- Status: ADR-171
-- Origin: ADR-122 (found while building)
-- Missing: Lock size covers width, height and depth only; boards, construction and insides of a size-locked piece stay editable (the research's locked parameters, G-081, beyond size)
-- Request: Accept default
-- Questions: Should other parameters (boards, construction, insides) be lockable too, and one by one or together?
-- Suggested pick: Leave as is until asked (the user's pick was a separate Lock size)
 
 ### G-181: Move/Section toggle sometimes ignores the first tap after a touch drag or while the 3D view settles
 

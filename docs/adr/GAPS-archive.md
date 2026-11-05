@@ -508,6 +508,24 @@ highest id in either file.
 - Questions: Should the 3D view get resize handles for models?
 - Suggested pick: Typed fields only (the request is to make the sizes editable; handles would be an exception to ADR-014's select-only viewer).
 
+### G-113: Fill a wall: corner and L walls
+
+- Status: Done (ADR-173)
+- Origin: ADR-103, 2026-10-27; Claude scoped it out
+- Missing: Fill a wall works on one straight wall only; corner and L-shaped walls are not filled.
+- Request: a reverse furniture building, total width, to the mix of furniture pieces that fill that space (context: corners not mentioned)
+- Questions: Should Fill a wall also fill corner or L walls, with a corner cabinet at the joint?
+- Suggested pick: Fill each straight wall with ADR-103, then join two walls with a catalog corner cabinet (ADR-025). (estimate: effort +40%, value +15%)
+
+### G-114: Fill a wall: room openings shape the mix
+
+- Status: Done (ADR-173)
+- Origin: ADR-103, 2026-10-27; Claude scoped it out
+- Missing: Room windows, doors, pipes and outlets do not shape the suggested mixes; they are checked only after the project is made.
+- Request: a reverse furniture building, total width, to the mix of furniture pieces that fill that space (context: room openings not mentioned)
+- Questions: Should Fill a wall read the project room (ADR-058) and avoid windows, doors and outlets?
+- Suggested pick: Start Fill a wall from a wall of the project room and skip mixes that clash with its openings, using the existing room checks. (estimate: effort +30%, value +15%)
+
 ### G-115: Fill a wall: when the wall row appears
 
 - Status: Done (ADR-104)
@@ -754,6 +772,15 @@ highest id in either file.
 - Request: Check which features are left in the features reasearch, and that we dont have, for all missing sorted by complexity, low to medium-high (including), create 1 ADR per batch of 4 features
 - Questions: Run a measured trial (decision recorded, nothing shipped unless it wins), or adopt Rapier for the checks now?
 - Suggested pick: Measured trial first (the research says 'evaluate'; a new WASM dependency needs its licence, size and offline behaviour checked)
+
+### G-180: Lock parameters other than size
+
+- Status: Done (ADR-171)
+- Origin: ADR-122 (found while building)
+- Missing: Lock size covers width, height and depth only; boards, construction and insides of a size-locked piece stay editable (the research's locked parameters, G-081, beyond size)
+- Request: Accept default
+- Questions: Should other parameters (boards, construction, insides) be lockable too, and one by one or together?
+- Suggested pick: Leave as is until asked (the user's pick was a separate Lock size)
 
 ### G-200: Project-wide settings and the size lock
 

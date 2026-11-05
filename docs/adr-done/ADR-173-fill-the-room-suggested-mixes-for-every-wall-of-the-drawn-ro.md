@@ -1,7 +1,8 @@
 # ADR-173: Fill the room: suggested mixes for every wall of the drawn room with corner cabinets
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-04
+- Implemented: 2026-11-05
 - Depends on: ADR-025, ADR-058, ADR-100, ADR-103, ADR-104
 - Design: docs/ui-design.md (section 4, Fill a wall)
 - Backlog: N176
@@ -65,12 +66,12 @@ mix (G-114), room presets (G-025). User (2026-11-04): fill the room.
 
 ## Done when
 
-- [ ] A rectangular room with a door and a window gives 4 mixes; no piece overlaps the door or its swing, base
+- [x] A rectangular room with a door and a window gives 4 mixes; no piece overlaps the door or its swing, base
       units run under the window, wall cabinets stop at it (tests)
-- [ ] An L room gets a corner cabinet at the inside corner and both runs start after it; the same input gives the
+- [x] An L room gets a corner cabinet at the inside corner and both runs start after it; the same input gives the
       same mixes twice (tests)
-- [ ] Every offered mix has no error diagnostic; seeded random rooms never throw and never offer an erroring mix
+- [x] Every offered mix has no error diagnostic; seeded random rooms never throw and never offer an erroring mix
       (tests, fuzz)
-- [ ] Fill the room from Projects and from a project's ⋯ menu; Use this mix opens the project with the room
+- [x] Fill the room from Projects and from a project's ⋯ menu; Use this mix opens the project with the room
       (jsdom find-it, 390 and 1280 px)
-- [ ] Russian entries for every new text; the feature tree gains "Fill the room" (ADR-158)
+- [x] Russian entries for every new text; the feature tree gains "Fill the room" (ADR-158)
