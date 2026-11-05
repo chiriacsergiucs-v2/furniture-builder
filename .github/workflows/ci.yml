@@ -9,6 +9,12 @@ on:
 permissions:
   contents: read
 
+# ADR-197: a newer push to a pull request cancels its older run. Runs on main get one group per commit, so none is
+# ever cancelled or replaced while queued: the deploy waits on each of them (deploy.yml).
+concurrency:
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   # A pull request whose latest commit ships an ADR ("Ship ADR-NNN: … — mark implemented") only moves docs and is
   # merged straight away (user rule 2026-10-29); `verify` is skipped for it. Pushes to main always run.
@@ -16,6 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       skip: ${{ steps.msg.outputs.skip }}
+      docs_only: ${{ steps.docs.outputs.docs_only }}
     steps:
       - id: msg
         env:
@@ -30,9 +37,121 @@ jobs:
           fi
           echo "skip=$skip" >> "$GITHUB_OUTPUT"
 
-  verify:
+      # ADR-197: a pull request that touches only these docs runs format:check and docs:check, not lint, typecheck,
+      # tests or the build. The app bundles docs/adr/GAPS.md and docs/research, and tests read docs/catalog.md,
+      # docs/samples and the names in docs/adr, so those (docs/adr-done too) and any deleted or renamed file
+      # ("deleted:" below) always get the full run; so do 300 or more files and an API error. Pushes to main always
+      # get the full run: the deploy builds the whole tree, which may hold commits whose own CI is still running.
+      # scripts/test_ci_docs_only.py runs the matcher below.
+      - id: docs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          REPO: ${{ github.repository }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # BEGIN docs-only matcher
+          docs_only_path() {
+            case "$1" in
+              docs/adr/ADR-*.md | docs/adr/README.md | docs/adr/_template.md | docs/backlog.md | docs/retros/* | \
+                docs/product/* | docs/architecture.md | docs/ui-design.md | CLAUDE.md | .claude/*) return 0 ;;
+              *) return 1 ;;
+            esac
+          }
+          # Reads one changed path per line; prints true only for 1 to 299 paths that are all docs-only.
+          docs_only_list() {
+            local n=0 f
+            while IFS= read -r f; do
+              [ -n "$f" ] || continue
+              n=$((n + 1))
+              if ! docs_only_path "$f"; then
+                echo false
+                return
+              fi
+            done
+            if [ "$n" -gt 0 ] && [ "$n" -lt 300 ]; then echo true; else echo false; fi
+          }
+          # END docs-only matcher
+          docs_only=false
+          if [ "$EVENT" = pull_request ] &&
+            files=$(gh api "repos/$REPO/compare/$BASE...$HEAD" --paginate --jq '.files[] |
+              if .status == "removed" then "deleted:" + .filename
+              else .filename, (.previous_filename // empty | "deleted:" + .) end'); then
+            docs_only=$(printf '%s\n' "$files" | docs_only_list)
+          fi
+          echo "docs_only=$docs_only" | tee -a "$GITHUB_OUTPUT"
+
+  checks:
     needs: ship-check
     if: needs.ship-check.outputs.skip != 'true'
+    runs-on: ubuntu-latest
+    env:
+      DOCS_ONLY: ${{ needs.ship-check.outputs.docs_only }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/setup@v3
+        with:
+          runtime: node@24
+          cache: true
+          require-lockfile: true
+
+      # ESLint and Prettier caches (ADR-197), restored after the install so it cannot remove them: the newest entry
+      # for the same lockfile and configs. Only runs on main save one, so pull requests do not fill the cache store.
+      - uses: actions/cache/restore@v6
+        with:
+          path: |
+            .eslintcache
+            node_modules/.cache/prettier
+          key: lint-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'eslint.config.*', '.prettierrc*') }}-${{ github.sha }}
+          restore-keys: |
+            lint-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'eslint.config.*', '.prettierrc*') }}-
+
+      - if: env.DOCS_ONLY != 'true'
+        run: pnpm lint
+
+      - run: pnpm format:check
+
+      - if: env.DOCS_ONLY != 'true'
+        run: pnpm typecheck
+
+      # ADRs, their index and every ADR / backlog id (ADR-050).
+      - run: pnpm docs:check
+
+      - if: github.event_name == 'push'
+        uses: actions/cache/save@v6
+        with:
+          path: |
+            .eslintcache
+            node_modules/.cache/prettier
+          key: lint-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'eslint.config.*', '.prettierrc*') }}-${{ github.sha }}
+
+  test:
+    needs: ship-check
+    if: needs.ship-check.outputs.skip != 'true' && needs.ship-check.outputs.docs_only != 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/setup@v3
+        with:
+          runtime: node@24
+          cache: true
+          require-lockfile: true
+
+      - run: pnpm test --shard=${{ matrix.shard }}/3
+
+  # Type errors are caught by `pnpm typecheck` in `checks`, so the build here is `vite build` alone (ADR-197).
+  build:
+    needs: ship-check
+    if: needs.ship-check.outputs.skip != 'true' && needs.ship-check.outputs.docs_only != 'true'
     runs-on: ubuntu-latest
 
     steps:
@@ -44,15 +163,23 @@ jobs:
           cache: true
           require-lockfile: true
 
-      - run: pnpm lint
+      - run: pnpm build:ci
 
-      - run: pnpm format:check
+  # The one check that merge rules and the babysit skill wait on (ADR-197): green only when every job above passed,
+  # or, for a docs-only change, when `checks` passed and the tests and build were skipped.
+  verify:
+    needs: [ship-check, checks, test, build]
+    if: always() && needs.ship-check.outputs.skip != 'true'
+    runs-on: ubuntu-latest
 
-      - run: pnpm typecheck
-
-      - run: pnpm test
-
-      - run: pnpm build
-
-      # ADRs, their index and every ADR / backlog id (ADR-050).
-      - run: pnpm docs:check
+    steps:
+      - env:
+          SHIP_CHECK: ${{ needs.ship-check.result }}
+          CHECKS: ${{ needs.checks.result }}
+          TEST: ${{ needs.test.result }}
+          BUILD: ${{ needs.build.result }}
+          DOCS_ONLY: ${{ needs.ship-check.outputs.docs_only }}
+        run: |
+          echo "ship-check=$SHIP_CHECK checks=$CHECKS test=$TEST build=$BUILD docs_only=$DOCS_ONLY"
+          ok() { [ "$1" = success ] || { [ "$DOCS_ONLY" = true ] && [ "$1" = skipped ]; }; }
+          [ "$SHIP_CHECK" = success ] && [ "$CHECKS" = success ] && ok "$TEST" && ok "$BUILD"
