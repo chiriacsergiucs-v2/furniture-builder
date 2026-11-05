@@ -42,6 +42,7 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { connectionSeams } from '../core/connections';
 import { explode } from '../core/explode';
 import { t } from '../core/i18n';
 import { hitToMm, inSelection, selectionBox } from '../core/selectPath';
@@ -78,6 +79,7 @@ import { imageKey, useImageUrls } from '../persist/images';
 import { loadModelScene, type ModelScene } from '../persist/models';
 import { modelBox, modelYaw, type ModelItem } from '../core/model3d';
 import { useDesign } from '../store/designStore';
+import { setRooms } from '../core/setRoom';
 import { useView, ViewOverride } from '../ui/useView';
 import { PHONE, useMediaQuery } from '../ui/useMediaQuery';
 import { useTheme } from '../ui/useTheme';
@@ -204,6 +206,13 @@ export default function Viewer3D() {
       getComputedStyle(document.documentElement).getPropertyValue('--stage-3d').trim() || '#e7eae7'
     );
   }, [theme]);
+  // Connection seams (ADR-179) in the primary colour, the plan's tick colour.
+  const primary = useMemo(() => {
+    void theme;
+    return (
+      getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || SELECT
+    );
+  }, [theme]);
   const designId = `${preview ? `preview:${view.title}` : view.mode === 'project' ? 'project' : `design:${useDesign.getState().design.id}`}:${exploded ? 'exploded' : 'built'}`;
   // Exploded: positions only, for looking; parts, sheets and checks always use the built model.
   // Isolate (ADR-122): only the selected project pieces are shown; the model, checks and exports are unchanged.
@@ -296,6 +305,12 @@ export default function Viewer3D() {
   );
   const turnItem = useDesign((s) => s.turnItem);
   const [moveToOpen, setMoveToOpen] = useState(false);
+  // Several pieces selected: Move to moves them as one block (ADR-182).
+  const pieceItems = useDesign((s) => s.project?.items);
+  const moveToIds = useMemo(() => {
+    const ids = selectedIds.filter((id) => pieceItems?.some((i) => i.id === id));
+    return ids.length >= 2 ? ids : turnId;
+  }, [selectedIds, pieceItems, turnId]);
   // R / Shift+R turn the selected piece about its centre (ADR-069), as on the Plan; not while typing or in a dialog.
   useEffect(() => {
     if (!turnId || rendering || tapping) return;
@@ -378,10 +393,16 @@ export default function Viewer3D() {
           <CountsAnchor place={placeCard} inProject={view.mode === 'project'} />
         )}
         {view.mode === 'project' && !exploded && !isolating && (
-          <RoomWalls adjusting={adjusting} snapOn={snapOn} />
+          <>
+            <RoomWalls adjusting={adjusting} snapOn={snapOn} />
+            <SetRoomWalls />
+          </>
         )}
         {view.mode === 'project' && !exploded && !isolating && (
           <ModelItems plain={rendering} moving={moving} />
+        )}
+        {view.mode === 'project' && !exploded && !rendering && !preview && (
+          <SeamLines color={primary} only={isolating ? selectedIds : undefined} />
         )}
         {moving && turnId && <HeightHandle id={turnId} />}
         {sectionOn && <SectionClip axis={section.axis} at={cut!} />}
@@ -515,7 +536,11 @@ export default function Viewer3D() {
             </button>
           )}
           {moving && turnId && moveToOpen && (
-            <MoveToButtons key={turnId} id={turnId} className="three-move-to" />
+            <MoveToButtons
+              key={typeof moveToIds === 'string' ? moveToIds : moveToIds?.join(',')}
+              id={moveToIds ?? turnId}
+              className="three-move-to"
+            />
           )}
           <button
             type="button"
@@ -641,6 +666,53 @@ function SelectionOutline({ box }: { box: Box }) {
       // Drawn last, after the transparent (faded) panels, so nothing covers it.
       transparent
       renderOrder={10}
+      raycast={() => null}
+    />
+  );
+}
+
+/**
+ * A thin vertical line along the seam of every connection that still holds (ADR-179), at the pieces' front face,
+ * from `connectionSeams`; display only, never picked (ADR-014). Not drawn while exploded or rendering. While
+ * isolating (`only`), only seams between two shown pieces. `document.body.dataset.seams` holds the number drawn
+ * (for the find-it script, as `data-lit`).
+ */
+function SeamLines({ color, only }: { color: string; only?: readonly string[] }) {
+  const project = useDesign((s) => s.project);
+  const pieces = useDesign((s) => s.projectModel?.pieces);
+  const seams = useMemo(() => {
+    if (!project || !pieces) return [];
+    const all = connectionSeams(project, pieces);
+    return only ? all.filter((c) => c.itemIds.every((id) => only.includes(id))) : all;
+  }, [project, pieces, only]);
+  useEffect(() => {
+    document.body.dataset.seams = String(seams.length);
+    return () => {
+      delete document.body.dataset.seams;
+    };
+  }, [seams.length]);
+  const points = useMemo(() => {
+    // A few mm in front of the face, so the line does not hide in the door edges.
+    const o = 2;
+    return seams.flatMap((c) => {
+      const [x, z] = c.front;
+      const dx = c.x1 === c.x2 ? 0 : x === c.x2 ? o : -o;
+      const dz = c.x1 === c.x2 ? (z === c.z2 ? o : -o) : 0;
+      return [
+        [(x + dx) * S, c.y1 * S, (z + dz) * S] as [number, number, number],
+        [(x + dx) * S, c.y2 * S, (z + dz) * S] as [number, number, number],
+      ];
+    });
+  }, [seams]);
+  if (!points.length) return null;
+  return (
+    <Line
+      // drei's segment line does not pick up changed points.
+      key={points.flat().join(',')}
+      points={points}
+      segments
+      color={color}
+      lineWidth={2}
       raycast={() => null}
     />
   );
@@ -1080,8 +1152,18 @@ function LockAnchors({
  * with its picture covering one rectangle of the wall once, straightened when asked, its average colour around it
  * (ADR-146). With Adjust wall picture on, a wall with a picture is chosen by a tap and its picture dragged.
  */
-function RoomWalls({ adjusting, snapOn }: { adjusting: boolean; snapOn: boolean }) {
-  const room = useDesign((s) => s.project?.room);
+function RoomWalls({
+  adjusting,
+  snapOn,
+  room: given,
+}: {
+  adjusting: boolean;
+  snapOn: boolean;
+  /** A value set's room copy (ADR-167) instead of the project's room. */
+  room?: Room;
+}) {
+  const own = useDesign((s) => s.project?.room);
+  const room = given ?? own;
   const solid = useSolidWalls();
   const boxes = useMemo(() => (room ? roomDisplayBoxes(room) : null), [room]);
   const textures = useTextures(useWallPictureUrls(room?.walls ?? NO_WALLS), false);
@@ -1287,6 +1369,19 @@ function PictureHandles({
   );
 }
 
+/** The room copies of the value sets (ADR-167), drawn at their origins; pictures are not adjusted there. */
+function SetRoomWalls() {
+  const project = useDesign((s) => s.project);
+  const rooms = useMemo(() => (project ? setRooms(project) : []), [project]);
+  return (
+    <>
+      {rooms.map((sr) => (
+        <RoomWalls key={sr.set.id} adjusting={false} snapOn={false} room={sr.room} />
+      ))}
+    </>
+  );
+}
+
 /** What Adjust wall picture is doing (ADR-146): the chosen picture's place and size, live while dragging. */
 function PictureNote() {
   const [wall] = useAdjustWall();
@@ -1442,7 +1537,17 @@ function Panels({
   const drag = usePieceDrag(inProject && moving, snapOn);
   const prefix = drillItem ? `${drillItem.id}:` : '';
   const ownId = inProject ? `${prefix}${selectedSpace}` : selectedSpace;
+  // An assembly step lights its parts (ADR-174): the rest goes translucent, as outside a selected space.
+  const litIds = useDesign((s) => s.litPanelIds);
+  const litSet = useMemo(() => (litIds ? new Set(litIds) : null), [litIds]);
+  useEffect(() => {
+    document.body.dataset.lit = String(litIds?.length ?? 0);
+    return () => {
+      delete document.body.dataset.lit;
+    };
+  }, [litIds]);
   const isFaded = (p: Panel) => {
+    if (litSet && !litSet.has(p.id)) return true;
     if (!fadeBox) return false;
     if (!inProject) return !inSelection(fadeBox, (built.get(p.id) ?? p).box);
     const own = p.id.startsWith(prefix) ? local.get(p.id.slice(prefix.length)) : undefined;

@@ -130,7 +130,15 @@ describe('replaceItem (ADR-098)', () => {
           : old.product,
     };
     const p = { ...p0, items: [{ ...p0.items[0], design: withOak }] };
-    const fresh = drawers3();
+    // Its own fronts on a board no other part uses (every part is PAL 18 by default, ADR-164).
+    const d3 = drawers3();
+    const fresh: Design =
+      d3.product.kind === 'cabinet'
+        ? {
+            ...d3,
+            product: { ...d3.product, params: { ...d3.product.params, frontMaterialId: 'mdf18' } },
+          }
+        : d3;
     const freshFront = board(fresh, 'front');
     const got = replaceItem(p, p.items[0].id, fresh).items[0].design;
     // The copy's own front board is no longer used by any part: it goes; the oak board is there once.
@@ -185,7 +193,9 @@ describe('replaceOptions (ADR-098: same width; others behind a switch)', () => {
     const p = run([wall600()]);
     const opts = replaceOptions(p.items[0], catalogFamilies);
     expect(opts.length).toBeGreaterThan(0);
-    expect(opts.every((o) => o.family.id === 'wall-cabinet' || o.variant.id === 'media-wall')).toBe(
+    // The wall corners hang too (ADR-177).
+    const hung = ['media-wall', 'corner-blind-wall', 'corner-l-wall'];
+    expect(opts.every((o) => o.family.id === 'wall-cabinet' || hung.includes(o.variant.id))).toBe(
       true,
     );
     const above = {

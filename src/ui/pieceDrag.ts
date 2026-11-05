@@ -129,7 +129,7 @@ function onUp(e: PointerEvent) {
   // A click event may follow on the item; it must not tap-pick (the flag is read once, or cleared soon).
   window.setTimeout(() => (clickAfterDrag = false), 400);
   if (!t) return;
-  useDesign.getState().addPieceAt(d.design, t.position.x, t.position.z, d.libraryId);
+  useDesign.getState().addPieceAt(d.design, t.position.x, t.position.z, d.libraryId, !!t.snap);
   // On a phone the folded sheet steps aside so the piece is seen; on a desktop the list stays for the next one.
   if (touch) usePieceList.getState().setOpen(false);
 }

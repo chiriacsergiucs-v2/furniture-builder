@@ -15,6 +15,7 @@ import type {
 } from './types';
 import { isFinish, materialImageProblems } from './surface';
 import { bandProblems, materialLabelProblems, productRefProblems } from './materials';
+import { MATERIAL_ROLES } from './roles';
 import { t } from './i18n';
 
 export type PedestalSide = 'left' | 'right';
@@ -37,12 +38,17 @@ export function defaultSheetFor(m: Pick<Material, 'id' | 'name'>): NonNullable<M
 export const sheetOf = (m: Material) => m.sheet ?? defaultSheetFor(m);
 export const kerfOf = (d: Design) => d.cutting?.kerf ?? DEFAULT_KERF;
 
-/** The document shape this app writes: 5 adds seller products (ADR-161); 1 to 4 still load. */
-export const SCHEMA_VERSION = 5;
+/**
+ * The document shape this app writes: 8 adds role and part bands (ADR-188); 7 added corner mount (ADR-177); 6 added
+ * role boards (ADR-163); 1 to 7 still load.
+ */
+export const SCHEMA_VERSION = 8;
 
 /**
- * Older versions → 5 in memory: version 1 gets stock sheets and cutting settings; 2 → 3 → 4 → 5 add only optional
- * fields (band specs, part boards, seller products), so nothing else changes. Returns the same object when already current.
+ * Older versions → 8 in memory: version 1 gets stock sheets and cutting settings; 2 → 3 → 4 → 5 → 6 → 7 → 8 add only
+ * optional fields (band specs, part boards, seller products, role boards, corner mount, role and part bands), so
+ * nothing else changes.
+ * Returns the same object when already current.
  */
 export function upgradeDesign(d: Design): Design {
   if (d.schemaVersion === SCHEMA_VERSION && d.cutting && d.materials.every((m) => m.sheet))
@@ -70,8 +76,9 @@ export const defaultDrawers = (): DrawerSettings => ({
   verticalClearance: 30,
   rearClearance: 10,
   runnerLengths: [250, 300, 350, 400, 450, 500, 550, 600],
-  boxMaterialId: 'pal16',
-  bottomMaterialId: 'hdf3',
+  // One PAL 18 for every part by default (ADR-164); the Material dialog changes any role.
+  boxMaterialId: 'pal18',
+  bottomMaterialId: 'pal18',
 });
 
 export function makeSpace(kind: SpaceKind, id = newId()): Space {
@@ -102,8 +109,8 @@ export const cabinetDefaults = (interior: Space): CabinetParams => ({
   height: 900,
   depth: 450,
   bodyMaterialId: 'pal18',
-  frontMaterialId: 'mdf18',
-  backMaterialId: 'hdf3',
+  frontMaterialId: 'pal18',
+  backMaterialId: 'pal18',
   top: 'over',
   back: 'applied',
   backInset: 15,
@@ -126,8 +133,8 @@ export const cornerDefaults = (variant: CornerParams['variant']): CornerParams =
   height: 720,
   depth: 560,
   bodyMaterialId: 'pal18',
-  frontMaterialId: 'mdf18',
-  backMaterialId: 'hdf3',
+  frontMaterialId: 'pal18',
+  backMaterialId: 'pal18',
   top: 'over',
   back: 'applied',
   backInset: 15,
@@ -154,7 +161,7 @@ export const deskDefaults = (): DeskParams => ({
   width: 1400,
   depth: 700,
   height: 750,
-  topMaterialId: 'pal18oak',
+  topMaterialId: 'pal18',
   bodyMaterialId: 'pal18',
   frontOverhang: 30,
   support: 'pedestal-left',
@@ -166,7 +173,7 @@ export const deskDefaults = (): DeskParams => ({
   },
   modesty: { enabled: true, height: 350, setback: 120 },
   drawers: defaultDrawers(),
-  frontMaterialId: 'mdf18',
+  frontMaterialId: 'pal18',
   frontGap: 3,
 });
 
@@ -207,7 +214,7 @@ export const frameDefaults = (kind: FrameKind): FrameParams => {
     width: 1600,
     depth: 900,
     height: 750,
-    panelMaterialId: 'pal18oak',
+    panelMaterialId: 'pal18',
     solidMaterialId: 'beech',
     top: 'panel',
     leg: { w: 60, d: 60 },
@@ -263,7 +270,7 @@ export const frameDefaults = (kind: FrameKind): FrameParams => {
       return {
         ...base,
         height: 1000,
-        panelMaterialId: 'pal18oak',
+        panelMaterialId: 'pal18',
         solidMaterialId: 'pine',
         apron: { height: 0, thickness: 25 },
         leg: { w: 45, d: 45 },
@@ -287,7 +294,7 @@ export const panelDefaults = (purpose: PanelParams['purpose']): PanelParams => (
   purpose,
   width: purpose === 'filler' ? 50 : purpose === 'cover' ? 580 : 597,
   height: purpose === 'fridge' ? 1200 : purpose === 'cover' ? 870 : 717,
-  materialId: 'mdf18',
+  materialId: 'pal18',
   handle:
     purpose === 'dishwasher' || purpose === 'fridge'
       ? { kind: 'bar', holeSpacing: 128, position: 'top' }
@@ -358,7 +365,7 @@ export const templates: Template[] = [
     create: () =>
       cabinet(
         'Sideboard',
-        { width: 1600, height: 800, bodyMaterialId: 'pal18oak' },
+        { width: 1600, height: 800 },
         {
           id: newId(),
           kind: 'split',
@@ -767,6 +774,38 @@ function validatePartMaterials(pm: unknown, version: unknown, mids: Set<string>,
       errs.push(t('Part board for {k} refers to an unknown material', { k }));
 }
 
+const ROLE_BOARD_ROLES: readonly string[] = ['top', 'bottom', 'side', 'shelf', 'divider'];
+/** A board per part role (schemaVersion 6, ADR-163): role → a material of the piece; checked when present, never throws. */
+function validateRoleMaterials(rm: unknown, version: unknown, mids: Set<string>, errs: string[]) {
+  if (rm === undefined) return;
+  if (!isObj(rm)) return void errs.push(t('Invalid role boards'));
+  if ((version as number) < 6) errs.push(t('Role boards need schemaVersion 6'));
+  for (const [k, v] of Object.entries(rm))
+    if (!ROLE_BOARD_ROLES.includes(k) || !mids.has(v as string))
+      errs.push(t('Role board for {k} refers to an unknown role or material', { k }));
+}
+
+/** Edge bands per role and per part (schemaVersion 8, ADR-188); checked when present, never throws. */
+function validateBands(d: Record<string, unknown>, errs: string[]) {
+  const rb = d.roleBands,
+    pb = d.partBands;
+  if (rb === undefined && pb === undefined) return;
+  if ((d.schemaVersion as number) < 8) errs.push(t('Role and part bands need schemaVersion 8'));
+  if (rb !== undefined) {
+    if (!isObj(rb)) errs.push(t('Invalid role bands'));
+    else
+      for (const [k, v] of Object.entries(rb))
+        if (!(MATERIAL_ROLES as readonly string[]).includes(k) || bandProblems(v).length)
+          errs.push(t('Invalid band for {k}', { k }));
+  }
+  if (pb !== undefined) {
+    if (!isObj(pb) || Object.keys(pb).length > 2000) errs.push(t('Invalid part bands'));
+    else
+      for (const [k, v] of Object.entries(pb))
+        if (!k || bandProblems(v).length) errs.push(t('Invalid band for {k}', { k }));
+  }
+}
+
 /** Seller units bought per scheduled item: more than 0, at most 1000, at most 3 decimals. */
 export const validPer = (v: unknown): v is number =>
   typeof v === 'number' && v > 0 && v <= 1000 && Math.abs(v * 1000 - Math.round(v * 1000)) < 1e-9;
@@ -963,7 +1002,7 @@ function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0)
 export function validateDesign(d: unknown): string[] {
   const errs: string[] = [];
   if (!isObj(d)) return [t('Design must be an object')];
-  if (![1, 2, 3, 4, 5].includes(d.schemaVersion as number))
+  if (![1, 2, 3, 4, 5, 6, 7, 8].includes(d.schemaVersion as number))
     errs.push(t('Unsupported schemaVersion'));
   if (
     d.cutting !== undefined &&
@@ -1057,6 +1096,8 @@ export function validateDesign(d: unknown): string[] {
     if (!mids.has(obj[k] as string)) errs.push(t('{k} refers to an unknown material', { k }));
   };
   validatePartMaterials(d.partMaterials, d.schemaVersion, mids, errs);
+  validateRoleMaterials(d.roleMaterials, d.schemaVersion, mids, errs);
+  validateBands(d, errs);
   validateCatalog(d.catalog, errs);
   validateSellerChoices(d, errs);
   validateRules(d.settings, errs);
@@ -1244,6 +1285,16 @@ export function validateDesign(d: unknown): string[] {
     if (params.top !== 'over' && params.top !== 'between') errs.push(t('Invalid top joint'));
     if (params.topLayers !== undefined && params.topLayers !== 1 && params.topLayers !== 2)
       errs.push(t('topLayers must be 1 or 2'));
+    // ADR-177: a corner stands on the floor or hangs on the wall, as a cabinet does (schemaVersion 7).
+    if (params.mount !== undefined && params.mount !== 'floor' && params.mount !== 'wall')
+      errs.push(t('Invalid mount'));
+    if (params.mountHeight !== undefined && !isInt(params.mountHeight))
+      errs.push(t('mountHeight must be a whole number of mm'));
+    if (
+      (params.mount !== undefined || params.mountHeight !== undefined) &&
+      (d.schemaVersion as number) < 7
+    )
+      errs.push(t('Corner mount needs schemaVersion 7'));
     if (!['none', 'applied', 'inset'].includes(params.back as string)) errs.push(t('Invalid back'));
     const seen = new Set<string>();
     validateSpace(params.interior, errs, seen);

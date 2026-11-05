@@ -147,7 +147,7 @@ describe('chest of drawers', () => {
     const sides = rows.find((r) => r.labels.includes('Left side'))!;
     expect(sides.quantity).toBe(2);
     expect(sides.length).toBe(p.height - 18); // top sits over the sides
-    expect(sides.width).toBe(p.depth - 3); // applied back
+    expect(sides.width).toBe(p.depth - 18); // applied back: PAL 18 by default (ADR-164)
     expect(sides.edgesL).toBe(1); // front edge runs along the length
     expect(sides.edgesW).toBe(0);
     const fronts = rows.find((r) => r.labels.includes('Drawer front'))!;

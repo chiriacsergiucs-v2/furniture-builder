@@ -76,6 +76,40 @@ export function linePrice(
   return ownLinePrice(l, prices) ?? sellerLinePrice(l, seller);
 }
 
+/** What a unit price is per (ADR-181): a line unit, or one worktop board bought. */
+export type UnitPer = ShopUnit | 'worktop';
+
+export interface UnitPrice {
+  /** Whole minor units, as stored: the user's entry or the seller's price, unchanged. */
+  amount: number;
+  per: UnitPer;
+}
+
+/**
+ * The unit price a line's total is worked out from (ADR-181), from the same source as `linePrice`: the user's own
+ * entry, else the linked seller product's price. A board's seller price per piece is per sheet (or per worktop
+ * board). Null when the line has no price.
+ */
+export function unitPrice(
+  l: ShopLine,
+  prices: Map<string, PriceEntry>,
+  seller?: SellerLookup,
+): UnitPrice | null {
+  const board = l.section === 'boards' && l.unit !== 'm';
+  if (ownLinePrice(l, prices) !== null) {
+    const e = prices.get(l.priceKey!)!;
+    return { amount: e.amount, per: board && e.unit === 'piece' ? 'worktop' : e.unit };
+  }
+  if (sellerLinePrice(l, seller) === null) return null;
+  const sp = seller!(l.product!)!;
+  // sellerLinePrice only prices piece, m² and m seller units.
+  const unit = sp.unit as ShopUnit;
+  return {
+    amount: sp.amount,
+    per: board && unit === 'piece' ? (l.worktop ? 'worktop' : 'sheet') : unit,
+  };
+}
+
 function ownLinePrice(l: ShopLine, prices: Map<string, PriceEntry>): number | null {
   if (!l.priceKey) return null;
   const e = prices.get(l.priceKey);

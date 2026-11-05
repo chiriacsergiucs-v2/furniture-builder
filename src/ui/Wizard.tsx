@@ -2,7 +2,10 @@
  * New-piece wizard (ADR-044, ADR-045, ADR-046). Renders whatever the step library and the construction-type
  * registry declare: fields by kind, cards from the type's generators. No branch here knows a construction type.
  */
-import { useDeferredValue, useId, useMemo, useState } from 'react';
+import { useDeferredValue, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { boardChoices } from '../core/boards';
+import { roleBoard } from '../core/finish';
+import type { Decor } from '../core/materials';
 import { cutlist } from '../core/cutlist';
 import { snapshotSvg } from '../core/snapshot';
 import type { Design, FurnitureModel, Material } from '../core/types';
@@ -18,16 +21,26 @@ import {
   nextOpenStep,
   resolve,
   stepsWriting,
+  typeOf,
   visibleFields,
   visibleSteps,
+  withType,
   type Problem,
 } from '../core/wizard/engine';
-import { compartmentsOf, contentUses, listOf } from '../core/wizard/steps';
+import {
+  boardsVersion,
+  compartmentsOf,
+  contentText,
+  contentUses,
+  listOf,
+  setWizardBoards,
+} from '../core/wizard/steps';
 import { CARDS_FIRST, generatorAt, suggestions, type Suggestion } from '../core/wizard/suggest';
 import type { Answers, AnswerValue, Compartment, FieldDef } from '../core/wizard/types';
 import { t, tr } from '../core/i18n';
-import { saveDesign } from '../persist/db';
+import { listDecors, saveDesign } from '../persist/db';
 import { useDesign } from '../store/designStore';
+import { askConfirm } from './Confirm';
 import { Counter, InfoTip, Segmented, Select, Steps } from './controls';
 import { Dialog } from './Dialogs';
 import { Icon } from './icons';
@@ -137,15 +150,17 @@ function FieldInput({
       );
     case 'choice':
       if (opts.some((o) => o.help)) {
+        // One choice of several: radios, so a screen reader says which of how many (ADR-191).
         return (
-          <fieldset className="field wz-options">
+          <fieldset className="field wz-options" role="radiogroup" aria-label={label}>
             <legend>{label}</legend>
             {opts.map((o) => (
               <button
                 key={o.value}
                 type="button"
+                role="radio"
                 className={`row-btn ${v === o.value ? 'on' : ''}`}
-                aria-pressed={v === o.value}
+                aria-checked={v === o.value}
                 onClick={() => set(f.id, o.value)}
               >
                 <span className="glyph">
@@ -215,7 +230,7 @@ function FieldInput({
                 <Counter
                   label={t('Shelves')}
                   value={c.shelves}
-                  min={0}
+                  min={1}
                   max={max}
                   onChange={(n) => put(i, { ...c, shelves: n })}
                 />
@@ -295,6 +310,20 @@ function FieldInput({
       );
     }
   }
+}
+
+/** The side picture, drawn once per built model, not once per keystroke (ADR-191). */
+function PreviewPicture({
+  model,
+  materials,
+  name,
+}: {
+  model: FurnitureModel;
+  materials: Material[];
+  name: string;
+}) {
+  const src = useMemo(() => picture(model, materials, 260), [model, materials]);
+  return <img src={src} alt={t('Preview of {name}', { name })} />;
 }
 
 function ProblemList({ problems, limit }: { problems: Problem[]; limit?: number }) {
@@ -410,12 +439,24 @@ export function WizardDialog({
   from?: Design | null;
   toProject?: boolean;
 }) {
+  // True while the answers differ from a fresh wizard's; × and Esc then ask first (ADR-191). Backdrop clicks never close.
+  const dirtyRef = useRef(false);
+  const close = async () => {
+    if (
+      open &&
+      dirtyRef.current &&
+      !(await askConfirm(t('Discard the answers?'), { confirmLabel: t('Discard'), danger: true }))
+    )
+      return;
+    onClose();
+  };
   return (
     <Dialog
       open={open}
-      onClose={onClose}
+      onClose={() => void close()}
       title={from ? t('Wizard: {name}', { name: from.name }) : t('New piece')}
       wide
+      backdropClose={false}
     >
       {open && (
         <Wizard
@@ -423,23 +464,68 @@ export function WizardDialog({
           onCreated={onCreated}
           from={from ?? null}
           toProject={!!toProject && !from}
+          dirtyRef={dirtyRef}
         />
       )}
     </Dialog>
   );
 }
 
+/** One field's answer as text, for the Review list (ADR-191). */
+function valueText(f: FieldDef, a: Answers, r: Answers): string {
+  const v = r[f.id];
+  const opts = fieldOptions(f, a);
+  const optLabel = (x: unknown) => tr(opts.find((o) => o.value === x)?.label ?? String(x ?? ''));
+  switch (f.kind) {
+    case 'text':
+      return String(v ?? '');
+    case 'int':
+      return f.unit ? `${String(v ?? '')} ${t('mm')}` : String(v ?? '');
+    case 'choice':
+      return optLabel(v);
+    case 'compartments':
+      return compartmentsOf(r).map(contentText).join(' | ');
+    case 'perCompartment':
+      return listOf<string>(r, f.id, opts[0]?.value ?? '')
+        .map(optLabel)
+        .join(' | ');
+    case 'perCompartmentMm':
+      return listOf<number>(r, f.id, 0)
+        .map((n) => `${n} ${t('mm')}`)
+        .join(' | ');
+  }
+}
+
 function Wizard({
   onCreated,
   from,
   toProject,
+  dirtyRef,
 }: {
   onCreated: () => void;
   from: Design | null;
   toProject: boolean;
+  dirtyRef: { current: boolean };
 }) {
   const load = useDesign((s) => s.load);
   const addPiece = useDesign((s) => s.addPiece);
+  // The Board choice offers the project's boards, then the decor list; it starts on the project's carcass board (ADR-164).
+  const project = useDesign((s) => s.project);
+  const [decors, setDecors] = useState<Decor[]>([]);
+  useEffect(() => {
+    listDecors()
+      .then(setDecors)
+      .catch(() => setDecors([]));
+  }, []);
+  useMemo(() => {
+    const first = project?.items[0]?.design;
+    const carcass = first?.materials.find((m) => m.id === roleBoard(first, 'body'));
+    setWizardBoards(
+      project || decors.length ? boardChoices(project, null, decors) : null,
+      project?.settings?.body ?? carcass,
+    );
+    return boardsVersion();
+  }, [project, decors]);
   const [a, setA] = useState<Answers>(() => (from && storedAnswers(from)) || {});
   const [stepId, setStepId] = useState<string>(TYPE);
   const [done, setDone] = useState<Set<string>>(
@@ -457,17 +543,34 @@ function Wizard({
   const fields = visibleFields(step, a);
   const c = check(a);
   const stepProblems = c.problems.filter((p) => p.step === step.id);
-  const set = (id: string, v: AnswerValue) => setA((prev) => ({ ...prev, [id]: v }));
+  const hasError = (id: string) => c.problems.some((p) => p.step === id && p.severity === 'error');
+  // An untouched Type step only hints at the choice; it is an error once the user has left the step (ADR-191).
+  const typeUntouched = step.id === TYPE && !done.has(TYPE);
+  const root = useRef<HTMLDivElement>(null);
+  const dirtyNow = JSON.stringify(resolve(a)) !== JSON.stringify(resolve({}));
+  useEffect(() => {
+    dirtyRef.current = dirtyNow;
+    return () => {
+      dirtyRef.current = false;
+    };
+  }, [dirtyRef, dirtyNow]);
+  /** A new type keeps only the Size answers it can use (ADR-191); the steps start over. */
+  const set = (id: string, v: AnswerValue) => {
+    if (id === 'type') {
+      setA((prev) => withType(prev, String(v)));
+      setDone(new Set());
+    } else setA((prev) => ({ ...prev, [id]: v }));
+  };
   const go = (id: string) => {
     setStepId(id);
-    document.querySelector('.dialog[open] .dialog-body')?.scrollTo({ top: 0 });
+    root.current?.closest('.dialog-body')?.scrollTo({ top: 0 });
   };
   const markDone = (ids: string[]) => setDone((prev) => new Set([...prev, ...ids]));
-  /** Next keeps the answers; Skip puts this step back to the type's defaults (the first type, on the type step). */
+  /** Next keeps the answers; Use defaults puts this step back to the type's defaults (the first type, on the type step). */
   const next = (keep: boolean) => {
     let b = a;
     if (!keep && step.id === TYPE)
-      b = a.type ? a : { ...a, type: fieldOptions(step.fields[0], a)[0]?.value };
+      b = a.type ? a : withType(a, fieldOptions(step.fields[0], a)[0]?.value ?? '');
     else if (!keep)
       b = Object.fromEntries(
         Object.entries(a).filter(([k]) => !step.fields.some((f) => f.id === k)),
@@ -500,8 +603,9 @@ function Wizard({
   const isReview = step.id === REVIEW;
   const rows = isReview && c.model && c.design ? cutlist(c.model, c.design.materials) : [];
   const hasCards = !!generatorAt(a, step.id);
+  const firstType = fieldOptions(steps[0].fields[0], a)[0];
   return (
-    <div className="wizard">
+    <div className="wizard" ref={root}>
       <Steps
         label={t('Wizard steps')}
         current={step.id}
@@ -509,10 +613,9 @@ function Wizard({
         steps={steps.map((s) => ({
           id: s.id,
           label: tr(s.title),
-          done: done.has(s.id),
-          tone: c.problems.some((p) => p.step === s.id && p.severity === 'error')
-            ? 'error'
-            : undefined,
+          // A step with an error is not done, whatever was pressed (ADR-191).
+          done: done.has(s.id) && !hasError(s.id),
+          tone: hasError(s.id) && !(s.id === TYPE && !done.has(TYPE)) ? 'error' : undefined,
         }))}
       />
       <div className="wz-body">
@@ -545,7 +648,12 @@ function Wizard({
           {fields.map((f) => (
             <FieldInput key={f.id} f={f} a={a} r={r} set={set} />
           ))}
-          {stepProblems.length > 0 && <ProblemList problems={stepProblems} />}
+          {stepProblems.length > 0 &&
+            (typeUntouched ? (
+              <p className="hint">{stepProblems[0].message}</p>
+            ) : (
+              <ProblemList problems={stepProblems} />
+            ))}
           {hasCards && (
             <Suggestions
               key={`${step.id}`}
@@ -557,6 +665,35 @@ function Wizard({
           )}
           {isReview && (
             <>
+              <section aria-label={t('Answers')}>
+                <div className="card-title">
+                  <span>{t('Answers')}</span>
+                </div>
+                <ul className="wz-answers">
+                  {steps
+                    .filter((s) => s.id !== REVIEW)
+                    .map((s) => (
+                      <li key={s.id}>
+                        <strong>{tr(s.title)}</strong>
+                        <span>
+                          {s.id === TYPE
+                            ? tr(typeOf(a)?.label ?? '')
+                            : visibleFields(s, a)
+                                .map((f) => `${tr(f.label)}: ${valueText(f, a, r)}`)
+                                .join(' · ')}
+                        </span>
+                        <button
+                          type="button"
+                          className="btn sm"
+                          aria-label={t('Edit {step}', { step: tr(s.title) })}
+                          onClick={() => go(s.id)}
+                        >
+                          {t('Edit')}
+                        </button>
+                      </li>
+                    ))}
+                </ul>
+              </section>
               <section aria-label={t('Parts')}>
                 <div className="card-title">
                   <span>{t('Parts')}</span>
@@ -600,12 +737,11 @@ function Wizard({
         </div>
         <aside className="wz-preview" aria-label={t('Preview')}>
           {c.model && c.design && c.model.panels.length > 0 ? (
-            <img
-              src={picture(c.model, c.design.materials, 260)}
-              alt={t('Preview of {name}', { name: c.design.name })}
-            />
+            <PreviewPicture model={c.model} materials={c.design.materials} name={c.design.name} />
           ) : (
-            <p className="hint">{t('Choose a type to see the piece.')}</p>
+            <p className="hint">
+              {a.type ? t('Fix the marked fields.') : t('Choose a type to see the piece.')}
+            </p>
           )}
           {c.model && (
             <p className="num">
@@ -613,7 +749,10 @@ function Wizard({
               {t('{n} parts', { n: c.model.panels.length })}
             </p>
           )}
-          {!isReview && c.design && <ProblemList problems={c.problems} limit={3} />}
+          {/* Problems of this step already sit under its fields; the panel shows the others (ADR-191). */}
+          {!isReview && c.design && (
+            <ProblemList problems={c.problems.filter((p) => p.step !== step.id)} limit={3} />
+          )}
         </aside>
       </div>
       <div className="wizard-footer">
@@ -628,17 +767,10 @@ function Wizard({
         {/* No Cancel (ADR-118): the dialog's × closes the wizard. */}
         <span className="wz-spacer" />
         {!isReview && (
-          <button
-            type="button"
-            className="btn outline"
-            title={
-              step.id === TYPE
-                ? t('Skip: use the first type')
-                : t('Skip: put this step back to its defaults')
-            }
-            onClick={() => next(false)}
-          >
-            {t('Skip')}
+          <button type="button" className="btn outline" onClick={() => next(false)}>
+            {step.id === TYPE
+              ? t('Use {label}', { label: tr(firstType?.label ?? '') })
+              : t('Use defaults')}
           </button>
         )}
         {!isReview && (

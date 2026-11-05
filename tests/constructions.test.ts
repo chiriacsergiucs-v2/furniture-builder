@@ -60,8 +60,9 @@ describe('kitchen construction flags (ADR-036)', () => {
     noOverlaps(wall);
   });
   it('an appliance niche that does not fit is an error; one that fits is scheduled with its entered size', () => {
+    // A 3 mm back, so the 550 mm deep oven fits the 560 mm unit (the default back is PAL 18, ADR-164).
     const fits = cab(
-      { width: 600, height: 720, depth: 560 },
+      { width: 600, height: 720, depth: 560, backMaterialId: 'hdf3' },
       { id: 'n', kind: 'empty', appliance: { kind: 'oven', w: 560, h: 590, d: 550 } },
     );
     expect(codes(fits)).not.toContain('appliance-fit');

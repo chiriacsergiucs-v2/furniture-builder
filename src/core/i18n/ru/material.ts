@@ -1,0 +1,167 @@
+/** Russian text for the Material dialog and role boards (ADR-163). Key: the English text; value: the Russian text. */
+export const ru_material = {
+  'Invalid role boards': 'Недопустимые плиты по ролям',
+  'Role boards need schemaVersion 6': 'Плиты по ролям требуют schemaVersion 6',
+  'Corner mount needs schemaVersion 7': 'Креплению углового модуля нужна schemaVersion 7',
+  'Role board for {k} refers to an unknown role or material':
+    'Плита по роли {k} ссылается на неизвестную роль или материал',
+  'not in a run': 'не в ряду',
+  '{name} has no {parts}': 'У {name} нет: {parts}',
+  fronts: 'фасадов',
+  carcass: 'корпуса',
+  'top@@role': 'крышки',
+  'bottom@@role': 'дна',
+  sides: 'боковин',
+  'shelves@@role': 'полок',
+  dividers: 'перегородок',
+  'back@@role': 'задней стенки',
+  'drawer boxes': 'коробов ящиков',
+  'drawer bottoms': 'днищ ящиков',
+  worktop: 'столешницы',
+  Material: 'Материал',
+  'Material: put a board on parts of this item, a group or the whole project':
+    'Материал: назначить плиту деталям этого изделия, группы или всего проекта',
+  'About the material': 'О материале',
+  'Pick the parts, the board and how far it reaches. Every piece stays its own copy; change it again any time.':
+    'Выберите детали, плиту и охват. Каждое изделие остаётся своей копией; меняйте снова в любое время.',
+  'Part@@scope': 'Деталь',
+  'Item@@scope': 'Изделие',
+  'Group@@scope': 'Группа',
+  'Group: the selected items, or the run this item stands in':
+    'Группа: выбранные изделия или ряд, в котором стоит это изделие',
+  'Not in a run; select two or more items for a group':
+    'Не в ряду; для группы выберите два и более изделий',
+  'Parts@@material': 'Детали',
+  'Fronts@@role': 'Фасады',
+  'Carcass@@role': 'Корпус',
+  'Top@@role': 'Крышка',
+  'Bottom@@role': 'Дно',
+  Sides: 'Боковины',
+  'Shelves@@role': 'Полки',
+  'Dividers@@role': 'Перегородки',
+  'Back@@role': 'Задняя стенка',
+  'Drawer boxes': 'Короба ящиков',
+  'Drawer bottoms': 'Днища ящиков',
+  'Worktop@@role': 'Столешница',
+  'Pick at least one part.': 'Выберите хотя бы одну деталь.',
+  'No item is selected.': 'Изделие не выбрано.',
+  'Applied to {n|# item|# items}': 'Применено к {n|# изделию|# изделиям|# изделиям}',
+  '{part}: board set.': '{part}: плита назначена.',
+  'Apply material': 'Применить материал',
+  'About the part': 'О детали',
+  'The part is shown with the board it uses now.':
+    'Деталь показана с плитой, которую использует сейчас.',
+  'One Material control everywhere': 'Один элемент «Материал» везде',
+  'Material in the header bar: a board on one part, the item, the group or the whole project, on any part roles.':
+    'Кнопка «Материал» в шапке: плита на одну деталь, изделие, группу или весь проект, для любых ролей деталей.',
+  'Clear part board': 'Сбросить плиту детали',
+  'One PAL 18 board for every part by default': 'Одна плита ЛДСП 18 на все детали по умолчанию',
+  "New pieces start on one board; the wizard offers the project's boards and your decor list.":
+    'Новые изделия начинаются с одной плиты; мастер предлагает плиты проекта и ваш список декоров.',
+  'Select two or more items standing side by side.': 'Выберите два и более изделий, стоящих рядом.',
+  'An item of this common panel was removed.': 'Изделие этой общей панели удалено.',
+  'The items are not turned the same way.': 'Изделия повёрнуты по-разному.',
+  '{name} is not the same height or floor level.':
+    '{name} другой высоты или стоит на другом уровне.',
+  '{name} is not the same depth or not in line.': '{name} другой глубины или не на одной линии.',
+  '{name} has another plinth height.': 'У {name} другая высота цоколя.',
+  '{name} has another back.': 'У {name} другая задняя стенка.',
+  '{a} and {b} do not touch.': '{a} и {b} не касаются друг друга.',
+  'The common {kind} is not built: {reason} The items keep their own.':
+    'Общая панель ({kind}) не построена: {reason} Изделия сохраняют свои.',
+  'Some items under the common top have a doubled top and some do not; the common top is single.':
+    'Под общей крышкой у части изделий двойная крышка, у части — нет; общая крышка одинарная.',
+  'Common tops and bottoms need project schemaVersion {v}':
+    'Общие крышки и днища требуют schemaVersion проекта {v}',
+  'Invalid common tops and bottoms': 'Недопустимые общие крышки и днища',
+  'Invalid common top or bottom': 'Недопустимая общая крышка или дно',
+  'Common top': 'Общая крышка',
+  'Common bottom': 'Общее дно',
+  'About the common top': 'Об общей крышке',
+  'About the common bottom': 'Об общем дне',
+  'One top panel across these items; each keeps its own sides.':
+    'Одна крышка на все эти изделия; у каждого остаются свои боковины.',
+  'One bottom panel across these items; each keeps its own sides.':
+    'Одно дно на все эти изделия; у каждого остаются свои боковины.',
+  '{name} is counted more than once.': '{name} учтено больше одного раза.',
+  'A common top or bottom across items': 'Общая крышка или дно для нескольких изделий',
+  'Select items standing side by side: Common top or Common bottom makes one panel across them.':
+    'Выберите изделия, стоящие рядом: «Общая крышка» или «Общее дно» делает одну панель на все.',
+  '{n|A part|# parts} with its own edge band no longer {n|exists|exist} (the piece changed); the band is not used. Clear it under Material → Part.':
+    '{n|Деталь|# детали|# деталей} со своей кромкой больше не {n|существует|существуют|существуют} (изделие изменилось); кромка не используется. Сбросьте её в окне «Материал» → «Деталь».',
+  'Role and part bands need schemaVersion 8': 'Кромки по ролям и деталям требуют schemaVersion 8',
+  'Invalid role bands': 'Недопустимые кромки по ролям',
+  'Invalid band for {k}': 'Недопустимая кромка для {k}',
+  'Invalid part bands': 'Недопустимые кромки деталей',
+  'run worktop': 'столешницы ряда',
+  'fillers and covers': 'доборов и торцевых панелей',
+  'run plinth': 'цоколя ряда',
+  trims: 'планок',
+  'no {parts}': 'нет {parts}',
+  'Band code': 'Код кромки',
+  'Band width': 'Ширина кромки',
+  'Fillers and covers': 'Доборы и торцевые панели',
+  'Give a thickness in tenths of a mm (for example 0.8) and a width.':
+    'Укажите толщину с точностью до десятых мм (например, 0.8) и ширину.',
+  "Keep the board's band": 'Оставить кромку плиты',
+  'Run plinth': 'Цоколь ряда',
+  'Run worktop': 'Столешница ряда',
+  'Run: {part}': 'Ряд: {part}',
+  'Trims@@role': 'Планки',
+  'Your own band': 'Своя кромка',
+  'Your own band…': 'Своя кромка…',
+  '{band} (seller: {name})': '{band} (продавец: {name})',
+  'Run parts and edge bands in the Material dialog': 'Детали ряда и кромки в окне «Материал»',
+  'Worktop, fillers, plinth and trims of a run; an edge band per part role or per part.':
+    'Столешница, доборы, цоколь и планки ряда; кромка по роли детали или для одной детали.',
+  'The common {kind} spans a {n} mm gap with nothing under it.':
+    'Общая панель ({kind}) перекрывает проём {n} мм, под которым ничего нет.',
+  'The {part} of {name} is another thickness.': 'У {name} другая толщина ({part}).',
+  'These items do not make one top without holes.':
+    'Эти изделия не образуют одну панель без отверстий.',
+  '{name} does not touch the others and is not in line with them.':
+    '{name} не касается остальных и не стоит с ними в линию.',
+  '{name} has no bottom.': 'У {name} нет дна.',
+  '{name} has no {part}.': 'У {name} нет: {part}.',
+  '{name} is not a cabinet, corner unit or desk.': '{name} — не шкаф, не угловой модуль и не стол.',
+  'Common top across gaps, corner units and desks':
+    'Общая крышка через проёмы, угловые модули и столы',
+  'One top over a gap, round an L or diagonal corner (cut to template) and over a desk.':
+    'Одна крышка над проёмом, вокруг L-образного или диагонального угла (по шаблону) и над столом.',
+  'An item of these shared sides was removed.': 'Изделие с общими боковинами удалено.',
+  'Invalid shared sides': 'Недопустимые общие боковины',
+  'Shared sides need project schemaVersion {v}': 'Общие боковины требуют schemaVersion проекта {v}',
+  'The shared sides are not built: {reason} The items keep both their sides.':
+    'Общие боковины не построены: {reason} Изделия сохраняют обе свои боковины.',
+  '{name} has sides of another thickness.': 'У {name} боковины другой толщины.',
+  '{name} is not a cabinet.': '{name} — не шкаф.',
+  'Shared sides': 'Общие боковины',
+  'About shared sides': 'Об общих боковинах',
+  'Neighbours share one side panel: the left item leaves out its right side; sizes and places stay, fronts meet over the middle.':
+    'Соседи делят одну боковину: левое изделие обходится без правой боковины; размеры и места не меняются, фасады сходятся над её серединой.',
+  'Common top, bottom and sides': 'Общие крышка, дно и боковины',
+  'Neighbours share one side panel': 'Соседи делят одну боковину',
+  'Select cabinets side by side: Shared sides leaves one side per joint; fronts meet over its middle.':
+    'Выберите шкафы, стоящие рядом: «Общие боковины» оставляет одну боковину на стык; фасады сходятся над её серединой.',
+  // Connections between pieces (ADR-168).
+  'A piece cannot be connected to itself.': 'Изделие нельзя соединить с самим собой.',
+  'A connected piece was removed.': 'Соединённое изделие удалено.',
+  '{a} and {b} do not stand side by side.': '{a} и {b} не стоят вплотную рядом.',
+  '{a} and {b} are connected but no longer joined: {reason}':
+    '{a} и {b} соединены, но больше не стыкуются: {reason}',
+  'Connections need project schemaVersion {v}': 'Для соединений нужна версия схемы проекта {v}',
+  'Invalid connections': 'Недопустимые соединения',
+  'Invalid connection': 'Недопустимое соединение',
+  'Select exactly two pieces standing side by side.':
+    'Выберите ровно два изделия, стоящих вплотную рядом.',
+  Connect: 'Соединить',
+  Disconnect: 'Разъединить',
+  Connected: 'Соединены',
+  'About connections': 'О соединениях',
+  'Connected pieces move together; a snap connects them, Alt while dragging moves one alone. A pair that no longer touches is warned about.':
+    'Соединённые изделия перемещаются вместе; примагничивание соединяет их, Alt при перетаскивании двигает одно. О паре, которая больше не касается, выводится предупреждение.',
+  'Connected to {names}': 'Соединено с: {names}',
+  'Connected pieces': 'Соединённые изделия',
+  'A snap joins two touching pieces; they move together, the seam is marked on the plan, the front view and in 3D, and a pair that no longer touches is warned about.':
+    'Примагничивание соединяет два соприкасающихся изделия; они перемещаются вместе, шов отмечен на плане, на виде спереди и в 3D, а о паре, которая больше не касается, выводится предупреждение.',
+} as const;

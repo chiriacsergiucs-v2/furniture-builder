@@ -1,16 +1,20 @@
 import { useMemo, useState } from 'react';
 import { groupSizeFields, type WidthSplit } from '../core/groupSize';
 import { t, tr } from '../core/i18n';
+import { commonPanelCheck } from '../core/common';
+import { sharedSideCheck } from '../core/shared';
+import { connectionCheck, isConnected } from '../core/connections';
 import { pieceName, type Project } from '../core/project';
 import { groupOf, sameIds, type Group } from '../core/selection';
 import { useDesign } from '../store/designStore';
 import { askConfirm } from './Confirm';
-import { InfoTip, MmField, Segmented } from './controls';
+import { InfoTip, MmField, Segmented, Toggle } from './controls';
 import { Icon } from './icons';
+import { MoveToButtons } from './MoveTo';
 
 /**
  * Several pieces selected (ADR-097): what acts on the whole selection — Delete, Duplicate, Turn about its centre,
- * Group or Ungroup. Each is one undo step; the main piece's card follows below for what is one piece's.
+ * Group or Ungroup, Align, and Move to as one block (ADR-182). Each is one undo step; the main piece's card follows below for what is one piece's.
  */
 export function SelectionCard() {
   const ids = useDesign((s) => s.selectedItemIds);
@@ -24,11 +28,17 @@ export function SelectionCard() {
   const clear = useDesign((s) => s.selectItem);
   const align = useDesign((s) => s.alignSelection);
   const distribute = useDesign((s) => s.distributeSelection);
+  const setCommon = useDesign((s) => s.setCommon);
+  const setShared = useDesign((s) => s.setShared);
+  const setConnected = useDesign((s) => s.setConnected);
   const [msg, setMsg] = useState<{ for: string; text: string | null }>({ for: '', text: null });
+  // Align, distribute and Move to act on the pieces (3D models are display only, ADR-076), to the first selected one.
+  const pieceIds = useMemo(
+    () => ids.filter((id) => project?.items.some((i) => i.id === id)),
+    [ids, project],
+  );
   if (!project || ids.length < 2) return null;
   const key = ids.join(',');
-  // Align and distribute act on the pieces (3D models are display only, ADR-076), to the first selected piece.
-  const pieceIds = ids.filter((id) => project.items.some((i) => i.id === id));
   const g = groupOf(project, ids[0]);
   const isGroup = !!g && sameIds(g.itemIds, ids);
   const say = (text: string | null) => setMsg({ for: key, text });
@@ -158,6 +168,27 @@ export function SelectionCard() {
           )}
         </div>
       )}
+      {/* Move to as one block (ADR-182): the selection keeps its layout; each tap is one undo step. */}
+      {pieceIds.length >= 2 && (
+        <div className="selection-move-to">
+          <p className="hint">
+            {t('Move to, as one block, from the front of {name}:', {
+              name: tr(pieceName(project, pieceIds[0])),
+            })}
+          </p>
+          <MoveToButtons key={`move-to-${key}`} id={pieceIds} onlyWorking />
+        </div>
+      )}
+      <CommonToggles
+        project={project}
+        ids={pieceIds}
+        setCommon={setCommon}
+        setShared={setShared}
+        say={say}
+      />
+      {pieceIds.length === 2 && (
+        <ConnectToggle project={project} ids={pieceIds} setConnected={setConnected} say={say} />
+      )}
       {isGroup && <GroupSize project={project} group={g!} say={say} />}
       {msg.for === key && msg.text && (
         <p className="hint" role="status">
@@ -165,6 +196,121 @@ export function SelectionCard() {
         </p>
       )}
     </section>
+  );
+}
+
+/**
+ * The two selected pieces connected (ADR-168): on when a connection between them is stored; disabled with the
+ * reason when they cannot be connected.
+ */
+function ConnectToggle({
+  project,
+  ids,
+  setConnected,
+  say,
+}: {
+  project: Project;
+  ids: string[];
+  setConnected: (on: boolean) => string;
+  say: (text: string | null) => void;
+}) {
+  const on = isConnected(project, ids[0], ids[1]);
+  const why = useMemo(
+    () => (on ? null : connectionCheck(project, ids[0], ids[1]).reason),
+    [project, ids, on],
+  );
+  return (
+    <div className="connect-toggle">
+      <Toggle
+        label={t('Connected')}
+        checked={on}
+        disabled={!!why}
+        onChange={(v) => say(setConnected(v) || null)}
+        info={
+          <InfoTip label={t('About connections')} align="start">
+            {t(
+              'Connected pieces move together; a snap connects them, Alt while dragging moves one alone. A pair that no longer touches is warned about.',
+            )}
+          </InfoTip>
+        }
+      />
+      {why && <p className="hint">{why}</p>}
+    </div>
+  );
+}
+
+/**
+ * One top or bottom panel across the selected items (ADR-165): on when they are all in the same common panel of
+ * that kind; disabled with the reason when they cannot share one.
+ */
+function CommonToggles({
+  project,
+  ids,
+  setCommon,
+  setShared,
+  say,
+}: {
+  project: Project;
+  ids: string[];
+  setCommon: (kind: 'top' | 'bottom', on: boolean) => string;
+  setShared: (on: boolean) => string;
+  say: (text: string | null) => void;
+}) {
+  const sharedWhy = useMemo(() => sharedSideCheck(project, ids).reason, [project, ids]);
+  const sharedOn = (project.sharedSides ?? []).some((c) => ids.every((x) => c.itemIds.includes(x)));
+  const plans = useMemo(
+    () => ({
+      top: commonPanelCheck(project, ids, 'top').reason,
+      bottom: commonPanelCheck(project, ids, 'bottom').reason,
+    }),
+    [project, ids],
+  );
+  const isOn = (kind: 'top' | 'bottom') =>
+    (project.common ?? []).some((c) => c.kind === kind && ids.every((x) => c.itemIds.includes(x)));
+  return (
+    <div className="common-panels" role="group" aria-label={t('Common top, bottom and sides')}>
+      {(['top', 'bottom'] as const).map((kind) => {
+        const on = isOn(kind);
+        const why = on ? null : plans[kind];
+        return (
+          <div key={kind}>
+            <Toggle
+              label={kind === 'top' ? t('Common top') : t('Common bottom')}
+              checked={on}
+              disabled={!!why}
+              onChange={(v) => say(setCommon(kind, v) || null)}
+              info={
+                <InfoTip
+                  label={kind === 'top' ? t('About the common top') : t('About the common bottom')}
+                  align="start"
+                >
+                  {kind === 'top'
+                    ? t('One top panel across these items; each keeps its own sides.')
+                    : t('One bottom panel across these items; each keeps its own sides.')}
+                </InfoTip>
+              }
+            />
+            {why && <p className="hint">{why}</p>}
+          </div>
+        );
+      })}
+      <div>
+        <Toggle
+          label={t('Shared sides')}
+          checked={sharedOn}
+          disabled={!sharedOn && !!sharedWhy}
+          onChange={(v) => say(setShared(v) || null)}
+          info={
+            <InfoTip label={t('About shared sides')} align="start">
+              {t(
+                'Neighbours share one side panel: the left item leaves out its right side; sizes and places stay, fronts meet over the middle.',
+              )}
+            </InfoTip>
+          }
+        />
+        {!sharedOn && sharedWhy && <p className="hint">{sharedWhy}</p>}
+      </div>
+    </div>
   );
 }
 

@@ -31,12 +31,18 @@ interface Ui {
   /** The print sheet is on screen and the print dialog is open (ADR-020). */
   printing: boolean;
   setPrinting: (v: boolean) => void;
+  /** What prints: the cutting sheet, or the assembly steps (ADR-174). Back to the sheet after each print. */
+  printMode: 'sheet' | 'assembly';
+  setPrintMode: (printMode: 'sheet' | 'assembly') => void;
   /** A one-line result of an import or export started from a menu, shown until dismissed. */
   notice: { ok: boolean; text: string } | null;
   setNotice: (n: { ok: boolean; text: string } | null) => void;
   /** The Settings dialog (ADR-080) is open for what is open in the editor. */
   settingsOpen: boolean;
   setSettingsOpen: (v: boolean) => void;
+  /** The Material dialog (ADR-163) is open. */
+  materialOpen: boolean;
+  setMaterialOpen: (v: boolean) => void;
   /** The Saved data dialog (ADR-133): persistent storage, folder backup and restore for this device. */
   savedDataOpen: boolean;
   setSavedDataOpen: (v: boolean) => void;
@@ -54,11 +60,15 @@ export const useUi = create<Ui>((set) => ({
     set({ mode });
   },
   printing: false,
-  setPrinting: (printing) => set({ printing }),
+  setPrinting: (printing) => set(printing ? { printing } : { printing, printMode: 'sheet' }),
+  printMode: 'sheet',
+  setPrintMode: (printMode) => set({ printMode }),
   notice: null,
   setNotice: (notice) => set({ notice }),
   settingsOpen: false,
   setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
+  materialOpen: false,
+  setMaterialOpen: (materialOpen) => set({ materialOpen }),
   savedDataOpen: false,
   setSavedDataOpen: (savedDataOpen) => set({ savedDataOpen }),
 }));

@@ -123,6 +123,8 @@ export const ru_inspector = {
   'Underside above the floor': 'Низ над полом',
   'Position only; brackets and a rail are added to the hardware list.':
     'Только положение; кронштейны и шина добавляются в список фурнитуры.',
+  'Position only; the hardware list asks you to choose the hanging brackets.':
+    'Только положение; навесы вы выбираете сами — об этом напомнит список фурнитуры.',
   Construction: 'Конструкция',
   'On the sides': 'На боковинах',
   'Between sides': 'Между боковинами',
@@ -149,7 +151,6 @@ export const ru_inspector = {
   'Shelf set back': 'Отступ полок',
   'Adjustable shelf gap, each side': 'Зазор регулируемой полки с каждой стороны',
   'Pin rows from edges': 'Ряды отверстий от кромок',
-  Materials: 'Материалы',
   Body: 'Корпус',
   Fronts: 'Фасады',
   'Drawers and runners': 'Ящики и направляющие',
@@ -162,7 +163,6 @@ export const ru_inspector = {
   'Box has an inner front': 'У короба есть внутренняя передняя стенка',
   'Off: the drawer front closes the box, as on many flat-pack drawers.':
     'Выкл.: фасад ящика закрывает короб, как у многих мебельных ящиков из плит.',
-  'Drawer box': 'Короб ящика',
   'Drawer bottom': 'Дно ящика',
   'Runner lengths you can buy': 'Доступные длины направляющих',
   'About runner lengths': 'О длинах направляющих',
@@ -246,7 +246,6 @@ export const ru_inspector = {
   'Panel height': 'Высота панели',
   'Set in from rear': 'Отступ от тыла',
   Worktop: 'Столешница',
-  'Drawer fronts': 'Фасады ящиков',
   'The inside has its own layout. Replace it with equal bays?':
     'У внутреннего пространства своя компоновка. Заменить её равными секциями?',
   Replace: 'Заменить',

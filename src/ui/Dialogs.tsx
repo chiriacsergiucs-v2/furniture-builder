@@ -46,6 +46,7 @@ export function Dialog({
   footer,
   wide,
   info,
+  backdropClose = true,
 }: {
   open: boolean;
   onClose: () => void;
@@ -55,6 +56,8 @@ export function Dialog({
   wide?: boolean;
   /** An `InfoTip` beside the title (ADR-113); Esc while it is open closes only the tip. */
   info?: ReactNode;
+  /** `false`: a click on the backdrop does not close the dialog (the wizard, ADR-191). */
+  backdropClose?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
@@ -71,8 +74,13 @@ export function Dialog({
       onClose={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
+      // Esc asks the owner to close (`open` → false), so a close guard (ADR-191) sees it like the × button.
+      onCancel={(e) => {
+        e.preventDefault();
+        if (e.target === e.currentTarget) onClose();
+      }}
       onClick={(e) => {
-        if (e.target === ref.current) onClose();
+        if (backdropClose && e.target === ref.current) onClose();
       }}
       aria-label={title}
     >
@@ -106,6 +114,7 @@ export function NewDialog({
   onBrowse,
   onWizard,
   onFillWall,
+  onFillRoom,
   onOpened,
 }: {
   open: boolean;
@@ -113,6 +122,8 @@ export function NewDialog({
   onBrowse?: () => void;
   onWizard?: () => void;
   onFillWall?: () => void;
+  /** Fill the room (ADR-173): every wall of a drawn room, with corner cabinets. */
+  onFillRoom?: () => void;
   onOpened?: () => void;
 }) {
   const load = useDesign((s) => s.load);
@@ -181,6 +192,22 @@ export function NewDialog({
             <span className="sub">
               {t(
                 "Enter a wall's width, depth and height; get suggested mixes of tall and base cabinets that fill it exactly, then refine them.",
+              )}
+            </span>
+          </span>
+          <Icon name="chevron-right" className="chev sm" />
+        </button>
+      )}
+      {onFillRoom && (
+        <button type="button" className="row-btn" onClick={onFillRoom}>
+          <span className="glyph">
+            <Icon name="project" />
+          </span>
+          <span>
+            <strong>{t('Fill the room')}</strong>
+            <span className="sub">
+              {t(
+                'Pick a room shape; get suggested mixes for every wall at once, with a corner cabinet at each inside corner, then refine them.',
               )}
             </span>
           </span>

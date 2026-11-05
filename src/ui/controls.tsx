@@ -14,6 +14,7 @@ export function MmField({
   hint,
   info,
   disabled = false,
+  trailing,
 }: {
   label: string;
   value: number;
@@ -27,6 +28,8 @@ export function MmField({
   info?: ReactNode;
   /** Shown but not changeable (a size-locked piece, ADR-122). */
   disabled?: boolean;
+  /** A control after the field, inside its box (the ƒ bind button, ADR-166). */
+  trailing?: ReactNode;
 }) {
   const id = useId();
   const [text, setText] = useState(String(value));
@@ -46,7 +49,7 @@ export function MmField({
   return (
     <div className="field">
       {withInfo(<label htmlFor={id}>{label}</label>, info)}
-      <div className={`mm ${valid ? '' : 'invalid'}`}>
+      <div className={`mm ${valid ? '' : 'invalid'} ${trailing ? 'with-trailing' : ''}`}>
         <button
           type="button"
           className="step"
@@ -81,6 +84,7 @@ export function MmField({
         >
           +
         </button>
+        {trailing}
       </div>
       {!valid && (
         <p className="field-error" id={`${id}-err`}>
@@ -167,6 +171,7 @@ export function Toggle({
   onChange,
   info,
   name,
+  disabled,
 }: {
   label: string;
   checked: boolean;
@@ -174,6 +179,7 @@ export function Toggle({
   info?: ReactNode;
   /** The accessible name when the visible label is shortened (ADR-112). */
   name?: string;
+  disabled?: boolean;
 }) {
   return withInfo(
     <label className="toggle">
@@ -181,6 +187,7 @@ export function Toggle({
         type="checkbox"
         aria-label={name}
         checked={checked}
+        disabled={disabled}
         onChange={(e) => onChange(e.target.checked)}
       />
       <span>{label}</span>

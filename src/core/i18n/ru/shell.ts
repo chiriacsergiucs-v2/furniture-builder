@@ -126,6 +126,7 @@ export const ru_shell = {
   'Repairs — the dashed outline on the plan shows the chosen one':
     'Исправления — пунктирный контур на плане показывает выбранное',
   ' · smallest move': ' · наименьшее перемещение',
+  'Refused: {reason}': 'Отклонено: {reason}',
   'No repair clears this without causing another problem. Move or change the pieces yourself.':
     'Ни одно исправление не устраняет это, не создавая другой проблемы. Переместите или измените изделия сами.',
   Apply: 'Применить',
@@ -147,7 +148,6 @@ export const ru_shell = {
   '{setting}: applied to {n|# piece|# pieces}.':
     '{setting}: применено к {n|# изделию|# изделиям|# изделиям}.',
   '{setting}: no piece follows it.': '{setting}: ни одно изделие не следует этому значению.',
-  '{name} {n} mm': '{name} {n} мм',
   'Not set': 'Не задано',
   "Every piece follows these while its own value is the project's. A piece changed on its own keeps its value; its card offers Follow project.":
     'Каждое изделие следует этим значениям, пока его собственное значение совпадает с проектным. Изделие, изменённое отдельно, сохраняет своё значение; в его карточке есть «Следовать проекту».',
@@ -344,14 +344,24 @@ export const ru_shell = {
   'Choose a type to see the piece.': 'Выберите тип, чтобы увидеть изделие.',
   '{n} parts': '{n|# деталь|# детали|# деталей}',
   Back: 'Назад',
-  'Skip: use the first type': 'Пропустить: использовать первый тип',
-  'Skip: put this step back to its defaults':
-    'Пропустить: вернуть этот шаг к значениям по умолчанию',
-  Skip: 'Пропустить',
+  'Use {label}': 'Взять {label}',
+  'Use defaults': 'Взять значения по умолчанию',
+  'Discard the answers?': 'Отбросить ответы?',
+  Discard: 'Отбросить',
+  Answers: 'Ответы',
+  Edit: 'Изменить',
+  'Edit {step}': 'Изменить: {step}',
+  'Fix the marked fields.': 'Исправьте отмеченные поля.',
   Next: 'Далее',
   'Fix the problems listed under Checks first': 'Сначала исправьте проблемы из раздела «Проверки»',
   'Update piece': 'Обновить изделие',
   'Add to project': 'Добавить в проект',
   'Create piece': 'Создать изделие',
   'Apply compartment 1 to all': 'Применить секцию 1 ко всем',
+  // The running estimate chip (ADR-172).
+  '{amount} {currency}': '{amount} {currency}',
+  'No prices yet': 'Цен пока нет',
+  'Estimate: {amount} · {n} missing': 'Оценка: {amount} · не хватает {n}',
+  'Estimate: {amount}': 'Оценка: {amount}',
+  'Open the Shopping list': 'Открыть список покупок',
 } satisfies Record<string, string>;

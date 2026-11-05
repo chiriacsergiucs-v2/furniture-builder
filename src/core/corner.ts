@@ -23,6 +23,9 @@ import type {
 
 const lo = (n: number) => Math.floor(n / 2);
 
+/** A hung corner (ADR-177) has no plinth; its stored plinth height is kept for when it stands again. */
+const plinthOf = (p: CornerParams) => (p.mount === 'wall' ? 0 : p.plinthHeight);
+
 function carcass(
   p: CornerParams,
   width: number,
@@ -35,11 +38,14 @@ function carcass(
     bodyMaterialId: p.bodyMaterialId,
     frontMaterialId: p.frontMaterialId,
     backMaterialId: p.backMaterialId,
-    top: p.top,
+    // In a common top or bottom (ADR-189) the carcass is built with its top over (bottom under) the sides.
+    top: p.join?.top ? 'over' : p.top,
+    ...(p.join?.top ? { topKind: 'panel' as const } : {}),
+    ...(p.join?.bottom ? { bottom: 'under' as const } : {}),
     ...(p.topLayers === 2 ? { topLayers: 2 as const } : {}),
     back: p.back,
     backInset: p.backInset,
-    plinthHeight: p.plinthHeight,
+    plinthHeight: plinthOf(p),
     plinthSetback: p.plinthSetback,
     frontGap: p.frontGap,
     shelfSetback: p.shelfSetback,
@@ -145,7 +151,7 @@ function buildDiagonal(
     H = p.height,
     t = body.thickness,
     tf = front.thickness,
-    ph = p.plinthHeight,
+    ph = plinthOf(p),
     g = p.frontGap;
   const bt = p.back === 'none' ? 0 : backM.thickness;
   const s = p.interior;
@@ -209,12 +215,16 @@ function buildDiagonal(
       [],
     );
   }
+  // In a common top or bottom (ADR-189) the returns stop under the top (stand on the bottom), which covers them.
+  const tt0 = p.topLayers === 2 ? 2 * t : t;
+  const retY = p.join?.bottom ? ph + t : ph;
+  const retH = (p.join?.top ? H - tt0 : H) - retY;
   add(
     'side-r',
     'side',
     'Side return right',
     body.id,
-    box(W - t, ph, bt, t, H - ph, D - bt),
+    box(W - t, retY, bt, t, retH, D - bt),
     'x',
     'y',
     ['+z'],
@@ -224,7 +234,7 @@ function buildDiagonal(
     'side',
     'Side return left',
     body.id,
-    box(bt, ph, W - t, D - bt, H - ph, t),
+    box(bt, retY, W - t, D - bt, retH, t),
     'z',
     'y',
     ['+x'],
@@ -238,16 +248,32 @@ function buildDiagonal(
     [D - bt, Wb],
     [0, Wb],
   ];
-  const board = (key: string, role: Panel['role'], label: string, y: number) =>
-    add(key, role, label, body.id, box(bt, y, bt, Wb, t, Wb), 'y', 'x', ['+x', '+z'], {
-      kind: 'profile',
-      points: pent,
-    });
-  board('bottom', 'bottom', 'Bottom', ph);
-  board('top', 'top', 'Top', H - t);
+  // Over (under) the returns: the same five sides, out to the returns' outer faces.
+  const Wo = W - bt;
+  const pentOver: [number, number][] = [
+    [0, 0],
+    [Wo, 0],
+    [Wo, D - bt],
+    [D - bt, Wo],
+    [0, Wo],
+  ];
+  const board = (key: string, role: Panel['role'], label: string, y: number, over = false) =>
+    add(
+      key,
+      role,
+      label,
+      body.id,
+      over ? box(bt, y, bt, Wo, t, Wo) : box(bt, y, bt, Wb, t, Wb),
+      'y',
+      'x',
+      ['+x', '+z'],
+      { kind: 'profile', points: over ? pentOver : pent },
+    );
+  board('bottom', 'bottom', 'Bottom', ph, !!p.join?.bottom);
+  board('top', 'top', 'Top', H - t, !!p.join?.top);
   // A doubled top (ADR-105): a second board under the first; the outer height stays.
-  const tt = p.topLayers === 2 ? 2 * t : t;
-  if (tt > t) board('top/1', 'top', 'Top', H - tt);
+  const tt = tt0;
+  if (tt > t) board('top/1', 'top', 'Top', H - tt, !!p.join?.top);
   const room = H - ph - t - tt - s.count * t;
   if (s.count < 0 || room < (s.count + 1) * 20)
     return err(
@@ -368,7 +394,28 @@ function mirrorDiagonal(m: PartialModel, W: number): PartialModel {
   return mm;
 }
 
+/**
+ * A hung corner (ADR-177): no brackets or rail are scheduled — the user chooses them for the unit (ADR-010), so one
+ * line asks for them, with no count or size of its own (quantity 1 is the line, as for other user-chosen fittings).
+ */
 export function buildCorner(
+  p: CornerParams,
+  id: string,
+  materials: Map<string, Material>,
+): PartialModel {
+  const out = buildCornerUnit(p, id, materials);
+  if (p.mount === 'wall')
+    out.hardware.push({
+      nodeId: id,
+      kind: 'wall-hanging',
+      label: 'Wall hanging brackets: choose for this corner unit',
+      quantity: 1,
+      note: 'user-specified: choose the brackets, how many and where, from the bracket datasheet and the wall type',
+    });
+  return out;
+}
+
+function buildCornerUnit(
   p: CornerParams,
   id: string,
   materials: Map<string, Material>,
@@ -429,7 +476,7 @@ export function buildCorner(
     merge(local, blind);
     merge(local, main);
     // Fixed blind panel in front of the blind section, one gap from the usable section's door.
-    const ph = p.plinthHeight;
+    const ph = plinthOf(p);
     local.panels.push({
       id: `${id}/blind-panel`,
       nodeId: id,
@@ -466,7 +513,7 @@ export function buildCorner(
     omitSide: 'right',
   });
   // Wing B's plinth runs on past the corner edge until it butts against the front face of wing A's plinth (no notch).
-  if (p.plinthHeight > 0)
+  if (plinthOf(p) > 0)
     for (const x of bLocal.panels)
       if (x.role === 'plinth') x.box = { ...x.box, w: x.box.w + p.plinthSetback };
   const b: PartialModel = {

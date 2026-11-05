@@ -309,10 +309,10 @@ describe('first users of shaped parts (ADR-040)', () => {
     const rows = cutlist(buildModel(d), d.materials).filter((x) =>
       x.drilling.includes('cut to template'),
     );
-    expect(rows.map((x) => [x.length, x.width, x.quantity])).toEqual([[879, 879, 3]]);
+    expect(rows.map((x) => [x.length, x.width, x.quantity])).toEqual([[864, 864, 3]]); // 18 mm applied back (ADR-164)
     const tp = profileTemplates(buildModel(d).panels);
     expect(tp).toHaveLength(1);
-    expect(tp[0]).toMatchObject({ quantity: 3, w: 879, h: 879, cols: 5, rows: 4 });
+    expect(tp[0]).toMatchObject({ quantity: 3, w: 864, h: 864, cols: 5, rows: 4 });
     expect(tp[0].tiles).toHaveLength(20);
   });
 

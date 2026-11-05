@@ -47,11 +47,6 @@ export const ru_editors = {
   source: 'источник',
   'To choose from a datasheet: {list}.': 'Выбрать по паспорту: {list}.',
   Chosen: 'Выбрано',
-  'Same as its group': 'Как у группы',
-  'Part boards': 'Плиты деталей',
-  'About part boards': 'О плитах деталей',
-  'Give any single part its own board. A board of another thickness is flagged under Checks.':
-    'Задайте любой детали собственную плиту. Плита другой толщины отмечается в разделе «Проверки».',
   '{id} no longer exists; its board is not used.':
     '{id} больше не существует; её плита не используется.',
   Clear: 'Очистить',
@@ -153,9 +148,6 @@ export const ru_editors = {
   'Slat width': 'Ширина ламели',
   'Slat thickness': 'Толщина ламели',
   'Slat gap': 'Зазор между ламелями',
-  Materials: 'Материалы',
-  'Solid timber': 'Массив',
-  'Boards (top, seat, ends)': 'Плиты (крышка, сиденье, торцы)',
   Empty: 'Пусто',
   '{n|# shelf|# shelves}': '{n|# полка|# полки|# полок}',
   '{n|# drawer|# drawers}': '{n|# ящик|# ящика|# ящиков}',
@@ -252,6 +244,8 @@ export const ru_editors = {
   'Clear selection': 'Снять выделение',
   'Align to the first selected piece': 'Выровнять по первому выбранному изделию',
   'Align to {name}:': 'Выровнять по «{name}»:',
+  'Move to, as one block, from the front of {name}:':
+    'Переместить единым блоком, по фасаду «{name}»:',
   'Align left': 'Выровнять по левому краю',
   Centre: 'По центру',
   'Align centre': 'Выровнять по центру',
@@ -392,7 +386,10 @@ export const ru_editors = {
   'Price unit of {item}': 'Единица цены: {item}',
   'per worktop board': 'за щит столешницы',
   'sheets not laid out': 'листы не разложены',
-  'price missing': 'нет цены',
+  sheet: 'лист',
+  piece: 'шт.',
+  'worktop board': 'щит столешницы',
+  '{price} {currency} / {unit}': '{price} {currency} / {unit}',
   Parts: 'Детали',
   Sheets: 'Листы',
   Shopping: 'Покупки',
@@ -403,7 +400,6 @@ export const ru_editors = {
   'Download CSV': 'Скачать CSV',
   'Print the cutting sheet (in the print language, A4) or save it as PDF':
     'Распечатать лист раскроя (на языке печати, A4) или сохранить в PDF',
-  'Shopping list — {name}': 'Список покупок — {name}',
   'Estimate: {total} {currency}': 'Оценка: {total} {currency}',
   ' — {n|# price missing|# prices missing}': ' — нет цены: {n}',
   ' (your prices)': ' (ваши цены)',
@@ -488,4 +484,84 @@ export const ru_editors = {
   'Hide styles': 'Скрыть стили',
   'The sheet layout could not run in this browser.':
     'Раскладка листов не может работать в этом браузере.',
+  // Assembly steps (ADR-174).
+  Assembly: 'Сборка',
+  'Print assembly steps': 'Печать шагов сборки',
+  'Show every part again': 'Снова показать все детали',
+  'assembly order': 'порядок сборки',
+  'The order comes from where the parts sit: what the others stand on first, then what they carry. No screw, dowel or drilling is named; your own fastener list is quoted per joint type when you set one.':
+    'Порядок следует из положения деталей: сначала то, на чём стоят остальные, затем то, что они несут. Ни шурупы, ни шканты, ни присадка не называются; ваш список крепежа приводится по типу соединения, если задан.',
+  "Guidance: order from the parts' positions; your joints, fasteners and drilling decide.":
+    'Рекомендация: порядок следует из положения деталей; соединения, крепёж и присадка — ваш выбор.',
+  'Assembly: {name}': 'Сборка: {name}',
+  'Show step': 'Показать шаг',
+  'Sides to the bottom': 'Боковины на дно',
+  // Assembly steps re-check (ADR-185, ADR-186).
+  'Prepare the parts': 'Подготовка деталей',
+  'Fit hardware to the sides': 'Фурнитура на боковины',
+  'Fit drawers and doors, adjust the fronts': 'Установка ящиков и дверей, регулировка фасадов',
+  'Drawer box × {n}': 'Корпус ящика × {n}',
+  'carcass halves': 'корпусные половинки',
+  'drawer halves': 'ящичные половинки',
+  'mounting plates': 'монтажные планки',
+  'cups and arms, on the doors': 'чашки и плечи, на дверцах',
+  'Settings › Fasteners': 'Настройки › Крепёж',
+  '{count} — choose your fastener ({path})': '{count} — выберите крепёж ({path})',
+  '{n|# long edge|# long edges}': '{n|# длинная сторона|# длинные стороны|# длинных сторон}',
+  '{n|# short edge|# short edges}': '{n|# короткая сторона|# короткие стороны|# коротких сторон}',
+  'band {what}': 'кромка: {what}',
+  'Hinge cups to drill: {n} — {hinge}': 'Чашки петель к сверлению: {n} — {hinge}',
+  'Shelf-pin rows to drill: {n|# panel|# panels}':
+    'Ряды под полкодержатели к сверлению: {n|# деталь|# детали|# деталей}',
+  ' ({n|# joint|# joints})': ' ({n|# соединение|# соединения|# соединений})',
+  'band the edges of {n|# part|# parts}': 'оклейте кромкой {n|# деталь|# детали|# деталей}',
+  'drill {n|# hinge cup|# hinge cups}':
+    'просверлите {n|# чашку петли|# чашки петель|# чашек петель}',
+  'drill the shelf-pin rows in {n|# panel|# panels}':
+    'просверлите ряды под полкодержатели в {n|# детали|# деталях|# деталях}',
+  'Before assembly: {what}.': 'До сборки: {what}.',
+  'the carcass halves of the runners ({n|# pair|# pairs})':
+    'корпусные половинки направляющих ({n|# пара|# пары|# пар})',
+  'the hinge mounting plates ({n})': 'монтажные планки петель ({n})',
+  'Fix {what} to the sides while they lie flat.': 'Закрепите {what} на боковинах, пока они лежат.',
+  'Lay the {parts} on a flat surface, inside face up.':
+    'Положите на ровную поверхность внутренней стороной вверх: {parts}.',
+  'Fix the {parts} to the bottom{joints}.': 'Прикрепите к дну: {parts}{joints}.',
+  'Fix the {parts} between the sides{joints}.': 'Закрепите между боковинами: {parts}{joints}.',
+  'Fix the {parts} on top of the sides{joints}.': 'Закрепите сверху на боковинах: {parts}{joints}.',
+  'Check the carcass is square (equal diagonals) before fixing the back.':
+    'Проверьте, что корпус прямоугольный (диагонали равны), прежде чем крепить заднюю стенку.',
+  'Then fix the {parts} to the carcass{joints}.': 'Затем закрепите на корпусе: {parts}{joints}.',
+  'Fix the {parts} under the carcass{joints}.': 'Закрепите под корпусом: {parts}{joints}.',
+  'Set the shelf pins at the heights you want and lay the {parts} on them.':
+    'Вставьте полкодержатели на нужной высоте и положите на них: {parts}.',
+  'Assemble {n|# drawer box|# drawer boxes} and fix the drawer halves of the runners to their sides.':
+    'Соберите {n|# корпус ящика|# корпуса ящиков|# корпусов ящиков} и закрепите на их боковинах ящичные половинки направляющих.',
+  'Assemble {n|# drawer box|# drawer boxes}.':
+    'Соберите {n|# корпус ящика|# корпуса ящиков|# корпусов ящиков}.',
+  'fit the hinges to the doors': 'установите петли на дверцы',
+  'get the doors ready to fit': 'подготовьте дверцы к установке',
+  'fix the fronts to the drawer boxes': 'закрепите фасады на корпусах ящиков',
+  'fix the {parts}': 'закрепите: {parts}',
+  'fit the hardware listed here': 'установите указанную здесь фурнитуру',
+  'Fix the handles to the fronts.': 'Закрепите ручки на фасадах.',
+  'hang the piece on its brackets': 'навесьте изделие на навесы',
+  'hang the doors': 'навесьте дверцы',
+  'slide the drawers in': 'вставьте ящики',
+  'adjust the fronts until the gaps are even': 'отрегулируйте фасады, чтобы зазоры были равными',
+  'Join the parts as your own design decides; no order is claimed.':
+    'Соедините детали так, как решите сами; порядок не предлагается.',
+  'Fit these parts where they belong.': 'Установите эти детали на свои места.',
+  'Fixed dividers and shelves': 'Перегородки и неподвижные полки',
+  'Adjustable shelves': 'Переставные полки',
+  'Hanging and fixing': 'Навес и крепление',
+  'Loose parts': 'Свободные детали',
+  Also: 'Также',
+  Plinth: 'Цоколь',
+  Handles: 'Ручки',
+  // Project assembly order (ADR-178).
+  'Project order': 'Порядок в проекте',
+  'Base pieces': 'Нижние изделия',
+  'Wall pieces': 'Навесные изделия',
+  'Sink cut-out {w} × {d} mm': 'Вырез под мойку {w} × {d} мм',
 } satisfies Record<string, string>;

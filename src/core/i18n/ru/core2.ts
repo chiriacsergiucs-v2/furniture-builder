@@ -260,6 +260,14 @@ export const ru_core2 = {
     'Стоит на другом изделии; его задняя сторона остаётся на одной линии с ним.',
   'Fronts already in line.': 'Фасады уже на одной линии.',
   'No piece selected.': 'Изделие не выбрано.',
+  '{name} stands on the floor; the selected pieces move up and down together.':
+    '«{name}» стоит на полу; выбранные изделия поднимаются и опускаются вместе.',
+  '{name} would go below the floor; the selected pieces move together.':
+    '«{name}» ушло бы ниже пола; выбранные изделия перемещаются вместе.',
+  '{name} would go into the piece under it; the selected pieces move together.':
+    '«{name}» вошло бы в изделие под ним; выбранные изделия перемещаются вместе.',
+  '{name} already sits on the floor or on a piece; the selected pieces move down together.':
+    '«{name}» уже стоит на полу или на изделии; выбранные изделия опускаются вместе.',
   'Nothing to mirror in this piece': 'В этом изделии нечего отражать',
   'The lounger backrest is always at the left end; it cannot be mirrored yet':
     'Спинка шезлонга всегда у левого края; отразить её пока нельзя',
@@ -333,8 +341,8 @@ export const ru_core2 = {
   ', {m} m of back edge': ', {m} м кромки задних стенок',
   ', {m} m of worktop': ', {m} м столешницы',
   '{line}: {count} — choose your fastener': '{line}: {count} — выберите свой крепёж',
-  '{guidance} ({how}{len}). Name yours under Materials › Fasteners.':
-    '{guidance} ({how}{len}). Укажите свой в разделе «Материалы › Крепёж».',
+  '{guidance} ({how}{len}). Name yours under Settings › Fasteners.':
+    '{guidance} ({how}{len}). Укажите свой в разделе «Настройки › Крепёж».',
   'Draco compression': 'сжатие Draco',
   'meshopt compression': 'сжатие meshopt',
   'Basis Universal textures': 'текстуры Basis Universal',
@@ -420,8 +428,8 @@ export const ru_core2 = {
     'Детские кроватки и колыбели подпадают под стандарты безопасности (EN 716 и другие). Mobila не проверяет шаг прутьев и высоту бортов; это не проверка соответствия.',
   'Rails span {span} mm between legs; long tables usually get a centre leg or rail (typical).':
     'Царги перекрывают {span} мм между ножками; длинным столам обычно добавляют среднюю ножку или царгу (типично).',
-  'Screws, dowels and cams are counted only as joints, as guidance; the fastener is yours (Materials › Fasteners). Glue is not counted.':
-    'Шурупы, шканты и эксцентрики считаются только как соединения, для ориентира; крепёж выбираете вы («Материалы › Крепёж»). Клей не считается.',
+  'Screws, dowels and cams are counted only as joints, as guidance; the fastener is yours (Settings › Fasteners). Glue is not counted.':
+    'Шурупы, шканты и эксцентрики считаются только как соединения, для ориентира; крепёж выбираете вы («Настройки › Крепёж»). Клей не считается.',
   'for {boards}, with the trim allowance per edge': 'для {boards}, с припуском на торец',
   'for {boards}': 'для {boards}',
   'Edge band for {name}': 'Кромка для «{name}»',
@@ -543,10 +551,10 @@ export const ru_core2 = {
     'Строка {row}: kind должен быть board, band, hardware или currency.',
   'Row {row}: {id} is not a price.': 'Строка {row}: {id} — не цена.',
   'price is not a number': 'цена — не число',
-  'A part with its own board no longer exists (the piece changed); the board choice is not used. Clear it under Part boards.':
-    'Деталь со своей плитой больше не существует (изделие изменилось); выбор плиты не используется. Сбросьте его в разделе «Плиты деталей».',
-  '{n} parts with their own board no longer exist (the piece changed); the board choice is not used. Clear it under Part boards.':
-    'Детали со своей плитой ({n} шт.) больше не существуют (изделие изменилось); выбор плиты не используется. Сбросьте его в разделе «Плиты деталей».',
+  'A part with its own board no longer exists (the piece changed); the board choice is not used. Clear it under Material → Part.':
+    'Деталь со своей плитой больше не существует (изделие изменилось); выбор плиты не используется. Сбросьте его в окне «Материал» → «Деталь».',
+  '{n} parts with their own board no longer exist (the piece changed); the board choice is not used. Clear it under Material → Part.':
+    'Детали со своей плитой ({n} шт.) больше не существуют (изделие изменилось); выбор плиты не используется. Сбросьте его в окне «Материал» → «Деталь».',
   '{part} has a non-integer dimension.': '«{part}»: размер не целый.',
   '{part} has no size ({l}×{w} mm).': '«{part}»: нет размера ({l}×{w} мм).',
   '{part} is only {w} mm wide.': '«{part}» шириной всего {w} мм.',

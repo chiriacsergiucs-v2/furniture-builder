@@ -1,45 +1,38 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   CURRENCY_ID,
-  DEFAULT_CURRENCY,
-  estimate,
   formatMoney,
   linePrice,
   parseMoney,
   parsePricesCsv,
   priceSource,
   pricesCsv,
+  unitPrice,
   unitsFor,
   type PriceEntry,
   type SellerLookup,
+  type UnitPer,
 } from '../core/prices';
-import {
-  anyOffers,
-  hardwareOffers,
-  productIndex,
-  refOf,
-  sellerPriceLookup,
-  type Offer,
-  type SellerCatalog,
-} from '../core/sellers';
+import { anyOffers, hardwareOffers, refOf, type Offer, type SellerCatalog } from '../core/sellers';
 import { validPer } from '../core/design';
-import { ProductPicker, useSellerCatalogs } from './ProductPicker';
+import { ProductPicker } from './ProductPicker';
 import {
   NOT_COUNTED,
+  shopSectionPrint,
   shoppingCsvRo,
-  shoppingList,
+  unitPricePrint,
   type ShopLine,
   type ShopSection,
   type ShopUnit,
 } from '../core/shopping';
 import { t, tr } from '../core/i18n';
-import { sinkList } from '../core/project';
-import { listPrices, savePrice, savePrices } from '../persist/db';
+import { pt } from '../core/i18n/print';
+import { savePrices } from '../persist/db';
 import { useDesign } from '../store/designStore';
-import { useFastenerChoices, useFastenerCounts } from './Fasteners';
+import { usePrices } from './priceStore';
+import { useEstimate } from './useEstimate';
 import { GuidanceTip, InfoTip } from './controls';
 import { Icon } from './icons';
-import { useNesting } from './useNesting';
 import { useView } from './useView';
 
 const SECTIONS: { id: ShopSection; title: string }[] = [
@@ -49,7 +42,7 @@ const SECTIONS: { id: ShopSection; title: string }[] = [
   { id: 'run', title: 'Run parts' },
   { id: 'choose', title: 'To choose before buying' },
 ];
-/** The section titles, on screen and on the printed list (both in the app's language, ADR-154). */
+/** The section titles on screen, in the app's language (ADR-154); the printed list uses the print language (ADR-181). */
 const SECTION_TITLE: Record<ShopSection, string> = {
   boards: t('Boards'),
   banding: t('Edge banding'),
@@ -62,6 +55,14 @@ const UNIT_SHOWN: Record<ShopUnit, string> = {
   m2: t('m²'),
   m: t('m'),
   piece: t('pcs'),
+};
+/** What a unit price is per, under a row's total (ADR-181). */
+const UNIT_ONE: Record<UnitPer, string> = {
+  sheet: t('sheet'),
+  m2: t('m²'),
+  m: t('m'),
+  piece: t('piece'),
+  worktop: t('worktop board'),
 };
 const PER: Record<ShopUnit, string> = {
   sheet: t('per sheet'),
@@ -82,61 +83,23 @@ function save(name: string, text: string, type: string) {
  */
 export function ShoppingList() {
   const view = useView();
-  const runParts = useDesign((s) =>
-    s.project && !s.editingItemId ? s.project.runParts : undefined,
-  );
   const shownProject = useDesign((s) => (s.project && !s.editingItemId ? s.project : undefined));
-  const sinks = useMemo(() => (shownProject ? sinkList(shownProject) : []), [shownProject]);
-  const n = useNesting(true);
-  const fastenerCounts = useFastenerCounts();
-  const fastenerChoices = useFastenerChoices();
   const projectView = !!shownProject;
   const addSellerItem = useDesign((s) => s.addSellerItem);
   const [adding, setAdding] = useState(false);
-  const [prices, setPrices] = useState<PriceEntry[]>([]);
   const [editing, setEditing] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
-  useEffect(() => {
-    listPrices()
-      .then(setPrices)
-      .catch(() => setMsg(t('Prices could not be read from this browser.')));
-  }, []);
-  const sheets = useMemo(
-    () =>
-      n.status === 'done'
-        ? new Map(n.results.filter((r) => r.valid).map((r) => [r.materialId, r.stats.sheetsUsed]))
-        : null,
-    [n],
-  );
-  const lines = useMemo(
-    () =>
-      shoppingList({
-        rows: view.rows,
-        materials: view.materials,
-        hardware: view.hardware,
-        sheets,
-        runParts,
-        sinks,
-        diagnostics: view.diagnostics,
-        fasteners: { counts: fastenerCounts, choices: fastenerChoices },
-        hardwareProducts: view.hardwareProducts,
-        sellerItems: view.sellerItems,
-      }),
-    [view, sheets, runParts, sinks, fastenerCounts, fastenerChoices],
-  );
-  // Seller prices (ADR-161): the bundled catalogs load only when a line links a seller product.
-  const cats = useSellerCatalogs(lines.some((l) => l.product));
-  const seller = useMemo<SellerLookup | undefined>(
-    () => (cats && cats !== 'error' ? sellerPriceLookup(productIndex(cats)) : undefined),
-    [cats],
-  );
+  // The lines, prices and estimate are the header chip's too (ADR-172): one number everywhere.
+  const { lines, prices, priceState, seller, est, currency } = useEstimate();
+  const reloadPrices = usePrices((s) => s.reload);
+  const storePrice = usePrices((s) => s.setPrice);
+  // A device that refused the price list says so until another message replaces it.
+  const shown =
+    msg ?? (priceState === 'failed' ? t('Prices could not be read from this browser.') : null);
   const map = useMemo(() => new Map(prices.map((p) => [p.id, p])), [prices]);
-  const currency = map.get(CURRENCY_ID)?.text ?? DEFAULT_CURRENCY;
-  const est = useMemo(() => estimate(lines, prices, seller), [lines, prices, seller]);
   const any = useCallback((c: SellerCatalog[], q: string) => anyOffers(c, q), []);
   const setPrice = (e: PriceEntry) => {
-    setPrices((ps) => [...ps.filter((p) => p.id !== e.id), e]);
-    void savePrice(e).catch(() => setMsg(t('The price could not be saved on this device.')));
+    void storePrice(e).catch(() => setMsg(t('The price could not be saved on this device.')));
   };
   const importCsv = async (f: File) => {
     const r = parsePricesCsv(await f.text());
@@ -150,7 +113,7 @@ export function ShoppingList() {
       return;
     }
     await savePrices(r.prices);
-    setPrices(await listPrices());
+    await reloadPrices();
     setMsg(
       `${t('{n} prices imported', { n: r.prices.length })}${
         r.problems.length
@@ -171,15 +134,16 @@ export function ShoppingList() {
     const rowsHtml = SECTIONS.map((s) => {
       const ls = lines.filter((l) => l.section === s.id);
       return ls.length
-        ? `<h2>${esc(SECTION_TITLE[s.id])}</h2><table><tr><th>${esc(t('Qty'))}</th><th>${esc(t('Item'))}</th><th>${esc(t('Details'))}</th><th>${esc(t('Price'))}</th></tr>${ls
+        ? `<h2>${esc(shopSectionPrint(s.id))}</h2><table><tr><th>${esc(pt('Cantitate'))}</th><th>${esc(pt('Articol'))}</th><th>${esc(pt('Detalii'))}</th><th>${esc(pt('Preț'))}</th><th>${esc(pt('Preț unitar'))}</th></tr>${ls
             .map((l) => {
               const p = linePrice(l, map, seller);
-              return `<tr><td>${l.quantity} ${UNIT_SHOWN[l.unit]}</td><td>${esc(tr(l.label))}</td><td>${esc(tr(l.detail))}</td><td>${p === null ? '' : `${formatMoney(p)} ${esc(currency)}`}</td></tr>`;
+              const u = unitPrice(l, map, seller);
+              return `<tr><td>${l.quantity} ${UNIT_SHOWN[l.unit]}</td><td>${esc(tr(l.label))}</td><td>${esc(tr(l.detail))}</td><td>${p === null ? '' : `${formatMoney(p)} ${esc(currency)}`}</td><td>${u ? esc(unitPricePrint(u, currency)) : ''}</td></tr>`;
             })
             .join('')}</table>`
         : '';
     }).join('');
-    const title = esc(t('Shopping list — {name}', { name: view.title }));
+    const title = esc(pt('Listă de cumpărături — {name}', { name: view.title }));
     const estimate = esc(
       t('Estimate: {total} {currency}', { total: formatMoney(est.total), currency }) +
         (est.missing.length
@@ -264,7 +228,12 @@ export function ShoppingList() {
           onClick={() =>
             save(
               `${view.title}-shopping.csv`,
-              shoppingCsvRo(lines, (l) => linePrice(l, map, seller), currency),
+              shoppingCsvRo(
+                lines,
+                (l) => linePrice(l, map, seller),
+                currency,
+                (l) => unitPrice(l, map, seller),
+              ),
               'text/csv;charset=utf-8',
             )
           }
@@ -340,9 +309,9 @@ export function ShoppingList() {
           </label>
         </div>
       )}
-      {msg && (
+      {shown && (
         <p className="hint" role="status">
-          {msg}
+          {shown}
         </p>
       )}
       {SECTIONS.map((s) => {
@@ -404,6 +373,7 @@ function Line({
   const [unit, setUnit] = useState<ShopUnit>(e?.unit && units.includes(e.unit) ? e.unit : units[0]);
   const [bad, setBad] = useState(false);
   const p = linePrice(l, map, seller);
+  const u = unitPrice(l, map, seller);
   const fromSeller = p !== null && priceSource(l, map, seller) === 'seller';
   const priced = l.section !== 'run' && l.section !== 'choose';
   const sellerRow = l.productKey !== undefined || l.itemIndex !== undefined;
@@ -454,12 +424,21 @@ function Line({
                 (e.unit === 'sheet' || (e.unit === 'piece' && l.worktop)) &&
                 l.sheets == null
                   ? t('sheets not laid out')
-                  : t('price missing')}
+                  : '—'}
               </span>
             ) : (
               <>
                 {`${formatMoney(p)} ${currency}`}
                 {fromSeller && <span className="note"> {t('seller price')}</span>}
+                {u && (
+                  <div className="hint unit-price">
+                    {t('{price} {currency} / {unit}', {
+                      price: formatMoney(u.amount),
+                      currency,
+                      unit: UNIT_ONE[u.per],
+                    })}
+                  </div>
+                )}
               </>
             )}
           </td>

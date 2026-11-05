@@ -41,7 +41,8 @@ export const data_wizard: Record<string, string> = {
   Height: 'Высота',
   Depth: 'Глубина',
   Board: 'Плита',
-  'Panel thickness comes from the board.': 'Толщина панелей берётся из плиты.',
+  'Panel thickness comes from the board. Every part takes this board; change any of them later under Material.':
+    'Толщина панелей берётся из плиты. Эта плита идёт на все детали; любую можно сменить позже в окне «Материал».',
   'Construction type': 'Тип конструкции',
   'Vertical dividers': 'Вертикальные перегородки',
   'Compartment widths': 'Ширина секций',

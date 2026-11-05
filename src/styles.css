@@ -702,6 +702,15 @@ select {
   outline-offset: -2px;
   outline-color: var(--accent);
 }
+/* Checkable chips (ADR-163): a pressed chip looks like a chosen segment. */
+.segmented.multi button[aria-pressed='true'] {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+.material-fields {
+  display: grid;
+  gap: var(--s-3);
+}
 .segmented.small button {
   min-height: calc(var(--control-h-sm) - 2 * var(--s-1) - 2px);
   padding: 0 var(--s-3);
@@ -2297,6 +2306,132 @@ td.note {
   stroke-width: 5;
   vector-effect: non-scaling-stroke;
 }
+/* The turn handle of the selected piece (ADR-169): a knob on a stem from the front; the turned outline while dragging. */
+.turn-handle {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.turn-handle .turn-stem {
+  stroke: var(--primary);
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+.turn-handle .turn-hit {
+  fill: transparent;
+  cursor: grab;
+}
+.turn-handle.turning .turn-hit {
+  cursor: grabbing;
+}
+.turn-handle .turn-knob {
+  fill: var(--surface);
+  stroke: var(--primary);
+  stroke-width: 2.4;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+.turn-handle .turn-ghost {
+  fill: var(--primary-soft);
+  fill-opacity: 0.5;
+  stroke: var(--primary);
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+.turn-handle .turn-label {
+  fill: var(--ink);
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: var(--surface);
+  stroke-width: 4;
+  pointer-events: none;
+}
+/* Assembly steps (ADR-174). */
+.assembly .assembly-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s-2);
+}
+.assembly .assembly-steps > li {
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: var(--s-2) var(--s-3);
+}
+.assembly .assembly-steps > li.on {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+.assembly .step-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+.assembly .step-head .btn {
+  margin-left: auto;
+  white-space: nowrap;
+}
+.assembly .step-n {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--surface);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+.assembly .step-parts {
+  margin: var(--s-1) 0 0;
+  padding-left: var(--s-4);
+}
+.assembly .assembly-piece h3 {
+  margin: var(--s-3) 0 var(--s-2);
+}
+/* Assembly steps re-check (ADR-185, ADR-186): the instruction, drawer boxes once × N, the fixings. */
+.assembly .step-do {
+  margin: var(--s-1) 0 0;
+}
+.assembly .step-boxes {
+  list-style: none;
+  padding-left: 0;
+}
+.assembly .step-boxes > li > .step-parts {
+  margin-top: 0;
+}
+.assembly .step-fix {
+  margin: var(--s-1) 0 0;
+  padding-left: var(--s-4);
+}
+/* Fill the room (ADR-173): the walls to tick. */
+.wf-walls {
+  list-style: none;
+  margin: var(--s-3) 0 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s-2);
+}
+.wf-walls label {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 44px;
+}
+/* A tick across the seam of two connected pieces (ADR-168). */
+.plan-connections line {
+  stroke: var(--primary);
+  stroke-width: 3;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
 .plan-piece text {
   fill: var(--ink);
   font-family: var(--font);
@@ -3614,6 +3749,20 @@ table.buy {
   .pr-elev .el-space rect {
     fill: transparent !important;
   }
+  /* One front view per piece on the assembly sheet (ADR-185). */
+  .pr-piece .pr-elev .elevation {
+    height: 60mm;
+  }
+  .pr-piece .pr-table tr {
+    break-inside: avoid;
+  }
+  .pr-do {
+    font-style: italic;
+    margin-top: 1mm;
+  }
+  .pr-box {
+    margin-bottom: 1mm;
+  }
   .pr-table {
     width: 100%;
     border-collapse: collapse;
@@ -4344,6 +4493,25 @@ button.tile:hover {
   padding-left: var(--s-5);
   font-size: var(--fs-sm);
 }
+/* Review › Answers (ADR-191): one row per step — title, the answers, Edit. */
+.wz-answers {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s-1);
+  font-size: var(--fs-sm);
+}
+.wz-answers li {
+  display: grid;
+  grid-template-columns: 6em minmax(0, 1fr) auto;
+  gap: var(--s-2);
+  align-items: center;
+  min-width: 0;
+}
+.wz-answers li > span {
+  overflow-wrap: anywhere;
+}
 .wz-suggest {
   display: grid;
   gap: var(--s-2);
@@ -4771,6 +4939,41 @@ button.tile:hover {
 }
 .bar .path .btn {
   flex: none;
+}
+/* The running cost estimate (ADR-172): a pill that opens the Shopping list. */
+.estimate-chip {
+  flex: none;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  line-height: 1;
+  padding: var(--s-1) var(--s-3);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.estimate-chip.partial {
+  border-color: var(--warn);
+}
+.estimate-chip.none {
+  color: var(--ink-2);
+  font-weight: 500;
+}
+.estimate-chip:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+}
+.modes {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+.modes .segmented {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 .bar-tools {
   margin-left: auto;
@@ -5211,6 +5414,14 @@ button.tile:hover {
   min-height: 32px;
   cursor: pointer;
 }
+/* A repair the group cannot follow: listed, disabled, with the reason under it (ADR-176). */
+.problem-banner .repairs label.refused {
+  cursor: not-allowed;
+  color: var(--ink-2);
+}
+.problem-banner .repairs .refused-why {
+  display: block;
+}
 .problem-banner .repair-actions {
   display: flex;
   flex-wrap: wrap;
@@ -5244,7 +5455,7 @@ button.tile:hover {
   color: var(--ink-2);
 }
 
-/* Materials › Fasteners (ADR-074) ------------------------------------------ */
+/* Settings › Fasteners (ADR-074) -------------------------------------------- */
 .fasteners {
   list-style: none;
   margin: 0;
@@ -6188,8 +6399,43 @@ p > .info-tip {
   cursor: pointer;
   overflow-wrap: anywhere;
 }
-.gaps-page .gap summary .chip {
+.gaps-page .gap summary .gap-title .chip {
   margin-left: var(--s-1);
+}
+/* Rough ratings, Issue and Fix lines and Conflicts (ADR-187). */
+.gaps-filters {
+  display: grid;
+  gap: var(--s-2);
+  justify-items: start;
+}
+.gaps-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1) var(--s-2);
+  align-items: center;
+  min-width: 0;
+}
+.gaps-filter-label {
+  min-width: 5.5em;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.gap-line {
+  display: block;
+  margin-top: var(--s-1);
+  color: var(--ink);
+}
+.gap-line-key {
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.gaps-page .gap-ratings {
+  margin-top: var(--s-1);
+}
+.gaps-page .chip.gap-conflict {
+  border-radius: var(--r-sm);
+  overflow-wrap: anywhere;
 }
 .gaps-page .pairs {
   margin-top: var(--s-2);
@@ -6799,4 +7045,117 @@ ul.plain {
 .product-picker input[type='search'] {
   width: 100%;
   min-width: 0;
+}
+
+/* Variables and bindings (ADR-166) and value sets (ADR-167) */
+.mm.with-trailing {
+  grid-template-columns: 32px 1fr auto 32px 28px;
+}
+.mm .btn.bind {
+  font-style: italic;
+  font-weight: 600;
+  min-height: 0;
+  height: 100%;
+  border: 0;
+  border-left: 1px solid var(--line);
+  border-radius: 0;
+  padding: 0;
+}
+.piece-size,
+.dims2,
+.dims3 {
+  align-items: start;
+}
+.btn.bind.on {
+  background: var(--accent);
+  color: var(--on-accent, #fff);
+}
+.variables {
+  display: grid;
+  gap: var(--s-3);
+}
+.variables h3,
+.variables h4 {
+  margin: 0;
+}
+.variable-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s-2);
+}
+.variable-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) auto auto;
+  gap: var(--s-1) var(--s-2);
+  align-items: center;
+}
+.variable-row input {
+  min-width: 0;
+  width: 100%;
+}
+.variable-row .result {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.variable-row .result.error {
+  color: var(--error);
+}
+.variable-row .hint {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+.variable-add {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--s-2);
+  align-items: end;
+}
+.variable-add .btn {
+  grid-column: 1 / -1;
+}
+.variable-pick {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1);
+}
+.value-sets {
+  display: grid;
+  gap: var(--s-2);
+}
+.set-card {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+}
+.set-head {
+  display: flex;
+  gap: var(--s-2);
+  align-items: center;
+}
+.set-head input {
+  flex: 1;
+  min-width: 0;
+}
+.set-card .row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+.set-room .room-floor,
+.set-room .wall {
+  opacity: 0.7;
+}
+.variable-row.strip {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+}
+.set-tag {
+  fill: var(--ink-2);
+  font-weight: 600;
 }

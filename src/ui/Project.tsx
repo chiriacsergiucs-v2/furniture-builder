@@ -1,4 +1,4 @@
-import { isSizeLocked } from '../core/sizeLock';
+import { isSizeLocked, lockedAxes } from '../core/sizeLock';
 import { t, tr } from '../core/i18n';
 import { tNode } from './i18n';
 import {
@@ -12,8 +12,6 @@ import {
   type MouseEvent,
 } from 'react';
 import { boxIn, cardCorner, CountStepper } from './CountStepper';
-import { projectBoards, roleBoard, type FinishRole, type FinishScope } from '../core/finish';
-import { decorPatch, type Decor } from '../core/materials';
 import { touchingRun } from '../core/arrange';
 import { linkCount } from '../core/linked';
 import { mergeCandidates } from '../core/merge';
@@ -23,28 +21,27 @@ import {
   leftNeighbour,
   LOCKED_HINT,
   moveBlocked,
-  materialKey,
   pieceBoxToRoom,
   placementBases,
   planRuns,
   rotationOf,
-  runOf,
+  pieceName,
   type Placement,
+  type PlacedPiece,
   type ProjectItem,
+  type Project,
   type ProjectModel,
   type QuarterTurn,
+  isTurnLocked,
+  SIZE_AXES,
 } from '../core/project';
 import { dropTarget, SNAP_RANGE } from '../core/snap';
 import { groupOf, itemsAt, itemsInBox, nextUnder } from '../core/selection';
+import { keptVariables } from '../core/insertTemplate';
+import { connectedTo, connectionSeams } from '../core/connections';
 import { inSelection, selectionBox } from '../core/selectPath';
-import type { Box, Design, Diagnostic, Material, Panel } from '../core/types';
-import {
-  listDecors,
-  listDesigns,
-  listProjectTemplates,
-  loadDesign,
-  type StoredDesign,
-} from '../persist/db';
+import type { Box, Design, Diagnostic, Panel } from '../core/types';
+import { listDesigns, listProjectTemplates, loadDesign, type StoredDesign } from '../persist/db';
 import type { ProjectTemplate } from '../core/projectTemplate';
 import { useDesign } from '../store/designStore';
 import { Group, InfoTip, MmField, Segmented, Select, Toggle } from './controls';
@@ -53,6 +50,14 @@ import { pictureRect } from '../core/wallPicture';
 import { pictureKey, useWallPictureUrls } from './wallPictures';
 import {
   arrowMove,
+  bracketTurn,
+  cancelPress,
+  cancelTurn,
+  moveTurn,
+  pressTurn,
+  releaseTurn,
+  turnedFootprint,
+  type TurnGesture,
   movePointer,
   pressPiece,
   releasePointer,
@@ -61,7 +66,7 @@ import {
 } from './planDrag';
 import { useSnap } from './useSnap';
 import { MoveToButtons } from './MoveTo';
-import { keepSheetClosedOnce } from './shell/uiStore';
+import { keepSheetClosedOnce, useUi } from './shell/uiStore';
 import { CompatRules } from './CompatRules';
 import {
   consumeDragClick,
@@ -118,7 +123,9 @@ import { SavedToCatalog, SaveToCatalogDialog } from './SaveToCatalog';
 import { NewerTemplates, TemplateNotice } from './TemplateRevision';
 import { GroupList, SelectionCard } from './Selection';
 import { PieceProjectSettings, ProjectSettingsPanel } from './ProjectSettings';
-import { ProjectHistory, StyleSuggestions } from './History';
+import { BindButton, bindingHint, VariablesPanel, VariablesStrip } from './Variables';
+import { setRooms } from '../core/setRoom';
+import { ProjectHistory } from './History';
 
 const FRONT_SIDE: Record<QuarterTurn, string> = {
   0: t('front faces you'),
@@ -220,6 +227,7 @@ export function ProjectPanel({
       <div className="inspector">
         <RunParts />
         <ProjectSettingsPanel />
+        <VariablesPanel />
         <MmField
           label={t('Saw cut (kerf) for this project')}
           value={project.cutting?.kerf ?? 4}
@@ -340,18 +348,7 @@ export function ProjectPanel({
             <h3>
               {item.quantity > 1 ? `${item.quantity} × ` : ''}
               {tr(item.design.name)}
-              {isLocked(item) && (
-                <span className="chip lock-chip">
-                  <Icon name="lock" className="sm" />
-                  {t('Locked')}
-                </span>
-              )}
-              {isSizeLocked(item) && (
-                <span className="chip lock-chip">
-                  <Icon name="lock" className="sm" />
-                  {t('Size locked')}
-                </span>
-              )}
+              <LockChip item={item} />
             </h3>
             {/* Lock keeps the piece where it is (ADR-095); its size and boards stay editable. */}
             <button
@@ -385,6 +382,7 @@ export function ProjectPanel({
             </p>
           )}
           <TemplateNotice item={item} />
+          <SetNote item={item} />
           <LinkedCopies item={item} />
           {!(drillId === item.id && insideSelected) && (
             <PieceSize
@@ -392,13 +390,23 @@ export function ProjectPanel({
               key={`size-${item.id}`}
               product={item.design.product}
               onChange={(k, v) => resizeItem(item.id, k, v)}
-              locked={isSizeLocked(item)}
+              locked={isSizeLocked(item) || !!item.set}
+              lockedKeys={lockedAxes(item)}
+              lockedHint={
+                item.set ? t('A copy of the set-1 piece: change the size there.') : undefined
+              }
+              bind={(k) => ({
+                button: <BindButton itemId={item.id} target={k} />,
+                hint: bindingHint(project, item, k),
+              })}
             />
           )}
-          <button type="button" className="btn solid block" onClick={() => edit(item.id)}>
-            <Icon name="pencil" className="sm" />
-            {t('Edit this piece')}
-          </button>
+          {!item.set && (
+            <button type="button" className="btn solid block" onClick={() => edit(item.id)}>
+              <Icon name="pencil" className="sm" />
+              {t('Edit this piece')}
+            </button>
+          )}
           <ArrangeFields key={item.id} item={item} />
           {libMsg && (
             <p className="hint" role="status">
@@ -422,6 +430,7 @@ export function ProjectPanel({
           {/* The most used group opens with the piece (ADR-160); the toolbar turns it. */}
           <Group title={t('Position')} openOn={openKey(item.id, positionErrors)}>
             <GroupErrors messages={positionErrors} />
+            <ConnectedTo project={project} id={item.id} />
             {blocked && (
               <p className="hint" role="note">
                 {isLocked(item) ? `${LOCKED_HINT}.` : blocked}{' '}
@@ -479,9 +488,6 @@ export function ProjectPanel({
               </p>
             )}
           </Group>
-          <Group title={t('Finish')} defaultOpen={false}>
-            <FinishFields item={item} />
-          </Group>
           {project.settings && (
             <Group title={t('Project settings')} defaultOpen={false}>
               <PieceProjectSettings item={item} />
@@ -505,6 +511,7 @@ export function ProjectPanel({
       <NewerTemplates items={project.items} />
       <GroupList />
       <ModelList pm={pm} />
+      <VariablesStrip />
       <RoomSection />
       <ProjectHistory />
     </div>
@@ -575,6 +582,171 @@ export function PeekActions({ onAdd }: { onAdd: () => void }) {
 /** The typed rotation field (ADR-121) is hidden from the card for now (ADR-160, G-311). */
 const TYPED_ROTATION = false;
 
+/**
+ * The round turn handle on a stem from the selected piece's front (ADR-169): dragging it turns the piece about its
+ * centre to any whole degree (snapping to quarter turns, Shift steps by 15°), with the turned outline and the angle
+ * shown while dragging. A 44 px touch target around a small visible knob.
+ */
+function TurnHandle({
+  pc,
+  fs,
+  turn,
+  onPress,
+  onMove,
+  onRelease,
+  onCancel,
+}: {
+  pc: PlacedPiece;
+  fs: number;
+  turn: TurnGesture | null;
+  onPress: (e: React.PointerEvent<SVGGElement>) => void;
+  onMove: (e: React.PointerEvent<SVGGElement>) => void;
+  onRelease: (e: React.PointerEvent<SVGGElement>) => void;
+  onCancel: () => void;
+}) {
+  const b = pc.bounds;
+  const cx = b.x + b.w / 2,
+    cz = b.z + b.d / 2;
+  const [fx1, fz1, fx2, fz2] = pc.front;
+  const mx = (fx1 + fx2) / 2,
+    mz = (fz1 + fz2) / 2;
+  const len = Math.hypot(mx - cx, mz - cz) || 1;
+  const ux = (mx - cx) / len,
+    uz = (mz - cz) / len;
+  const stem = fs * 2.8;
+  const hx = mx + ux * stem,
+    hz = mz + uz * stem;
+  const current = rotationOf(pc.item);
+  const ghost =
+    turn && !turn.cancelled ? turnedFootprint(pc.footprint, cx, cz, turn.angle - current) : null;
+  return (
+    <g className={`turn-handle ${turn ? 'turning' : ''}`}>
+      {ghost && <polygon className="turn-ghost" points={ghost.map((p) => p.join(',')).join(' ')} />}
+      <line className="turn-stem" x1={mx} y1={mz} x2={hx} y2={hz} />
+      <g
+        role="slider"
+        tabIndex={-1}
+        aria-label={t('Turn {name}', { name: tr(pc.item.design.name) })}
+        aria-valuenow={turn?.angle ?? current}
+        aria-valuemin={0}
+        aria-valuemax={359}
+        aria-valuetext={t('{deg}°', { deg: turn?.angle ?? current })}
+        onPointerDown={onPress}
+        onPointerMove={onMove}
+        onPointerUp={onRelease}
+        onPointerCancel={onCancel}
+      >
+        <title>
+          {t(
+            'Drag to turn to any degree; Shift steps by 15°. Pieces at an angle do not join runs or snap side by side.',
+          )}
+        </title>
+        {/* About 44 px round the knob on a phone (fs is about a 40th of the drawing's width). */}
+        <circle className="turn-hit" cx={hx} cy={hz} r={fs * 3.4} />
+        <circle className="turn-knob" cx={hx} cy={hz} r={fs * 1.1} />
+      </g>
+      {turn && !turn.cancelled && (
+        <text className="turn-label" x={hx + fs * 1.6} y={hz - fs * 1.6} fontSize={fs * 1.2}>
+          {t('{deg}°', { deg: turn.angle })}
+        </text>
+      )}
+    </g>
+  );
+}
+
+/** One chip naming what is locked on the piece (ADR-095, ADR-122, ADR-171): "Locked: place, turn, width". */
+function LockChip({ item }: { item: ProjectItem }) {
+  const what: string[] = [];
+  if (isLocked(item)) what.push(t('place@@lock'));
+  if (isTurnLocked(item)) what.push(t('turn@@lock'));
+  if (isSizeLocked(item)) what.push(t('size@@lock'));
+  else
+    what.push(
+      ...lockedAxes(item).map(
+        (a) => ({ width: t('width'), height: t('height'), depth: t('depth') })[a],
+      ),
+    );
+  if (!what.length) return null;
+  return (
+    <span className="chip lock-chip">
+      <Icon name="lock" className="sm" />
+      {t('Locked: {what}', { what: what.join(', ') })}
+    </span>
+  );
+}
+
+/** The pieces this one is connected to (ADR-168), under Position. */
+function ConnectedTo({ project, id }: { project: Project; id: string }) {
+  const names = connectedTo(project, id).map((x) => tr(pieceName(project, x)));
+  if (!names.length) return null;
+  return (
+    <p className="hint connected-to" role="note">
+      {t('Connected to {names}', { names: names.join(', ') })}
+    </p>
+  );
+}
+
+/**
+ * A short tick across the seam of every connection that still holds (ADR-168), on the plan. A broken one has its
+ * warning in the checks instead. The seams come from `connectionSeams` (ADR-179).
+ */
+function ConnectionTicks({
+  project,
+  pieces,
+  fs,
+}: {
+  project: Project;
+  pieces: PlacedPiece[];
+  fs: number;
+}) {
+  const seams = useMemo(() => connectionSeams(project, pieces), [project, pieces]);
+  if (!seams.length) return null;
+  const half = fs * 0.6;
+  return (
+    <g className="plan-connections" aria-hidden="true">
+      {seams.map((s) => {
+        // Across the seam at its middle: a seam along z (x1 === x2) gets a tick along x, and the other way round.
+        const xm = (s.x1 + s.x2) / 2,
+          zm = (s.z1 + s.z2) / 2;
+        return s.x1 === s.x2 ? (
+          <line key={s.id} x1={xm - half} y1={zm} x2={xm + half} y2={zm} />
+        ) : (
+          <line key={s.id} x1={xm} y1={zm - half} x2={xm} y2={zm + half} />
+        );
+      })}
+    </g>
+  );
+}
+
+/**
+ * The same tick in the room front view (ADR-179): across every seam seen from the front (pieces side by side along
+ * x), at the middle of the height both pieces stand over. Seams along z face the viewer edge-on and show nothing.
+ */
+function FrontConnectionTicks({
+  project,
+  pieces,
+  fs,
+}: {
+  project: Project;
+  pieces: PlacedPiece[];
+  fs: number;
+}) {
+  const seams = useMemo(
+    () => connectionSeams(project, pieces).filter((s) => s.x1 === s.x2),
+    [project, pieces],
+  );
+  if (!seams.length) return null;
+  const half = fs * 0.6;
+  return (
+    <g className="plan-connections front-connections" aria-hidden="true">
+      {seams.map((s) => {
+        const ym = -(s.y1 + s.y2) / 2;
+        return <line key={s.id} x1={s.x1 - half} y1={ym} x2={s.x1 + half} y2={ym} />;
+      })}
+    </g>
+  );
+}
+
 /** Asks, then removes a project piece; from More actions and the Delete key (ADR-160). */
 export async function askRemove(item: ProjectItem, remove: (id: string) => void) {
   if (
@@ -603,6 +775,8 @@ function PieceMenu({
   const pm = useDesign((s) => s.projectModel);
   const remove = useDesign((s) => s.removeItem);
   const setSizeLocked = useDesign((s) => s.setSizeLocked);
+  const setTurnLocked = useDesign((s) => s.setTurnLocked);
+  const setAxisLocked = useDesign((s) => s.setAxisLocked);
   const mirrorRun = useDesign((s) => s.mirrorRun);
   const [open, setOpen] = useState(false);
   const [dialog, setDialog] = useState<'replace' | 'save' | null>(null);
@@ -682,6 +856,44 @@ function PieceMenu({
             <Icon name="lock" className="sm" />
             {isSizeLocked(item) ? t('Unlock size') : t('Lock size')}
           </button>
+          {/* Turn and single sizes, one by one (ADR-171). */}
+          <button
+            type="button"
+            aria-pressed={isTurnLocked(item)}
+            title={
+              isTurnLocked(item)
+                ? t('Let the piece be turned again')
+                : t('Keep its turn: nothing turns or mirrors it; it still moves')
+            }
+            onClick={pick(() => setTurnLocked(item.id, !isTurnLocked(item)))}
+          >
+            <Icon name="lock" className="sm" />
+            {isTurnLocked(item) ? t('Unlock turn') : t('Lock turn')}
+          </button>
+          {!isSizeLocked(item) &&
+            SIZE_AXES.map((axis) => {
+              const on = (item.sizeLocks ?? []).includes(axis);
+              const label = { width: t('Width'), height: t('Height'), depth: t('Depth') }[axis];
+              return (
+                <button
+                  key={axis}
+                  type="button"
+                  aria-pressed={on}
+                  aria-label={
+                    on ? t('Unlock {axis}', { axis: label }) : t('Lock {axis}', { axis: label })
+                  }
+                  title={
+                    on
+                      ? t('Let this size change again')
+                      : t('Keep this one size; the other two still change')
+                  }
+                  onClick={pick(() => setAxisLocked(item.id, axis, !on))}
+                >
+                  <Icon name="lock" className="sm" />
+                  {on ? t('Unlock {axis}', { axis: label }) : t('Lock {axis}', { axis: label })}
+                </button>
+              );
+            })}
           {run.length > 1 && (
             <button
               type="button"
@@ -764,127 +976,30 @@ function GroupErrors({ messages }: { messages: string[] }) {
   ));
 }
 
-/** Finish scope (ADR-055): one board on the fronts or the carcass of this piece, its run or the whole project. */
-function FinishFields({ item }: { item: ProjectItem }) {
+/** A value set's duplicate (ADR-167): which set, and which set-1 piece it copies. */
+function SetNote({ item }: { item: ProjectItem }) {
   const project = useDesign((s) => s.project)!;
-  const apply = useDesign((s) => s.applyFinish);
-  const [role, setRole] = useState<FinishRole>('front');
-  const [chosenScope, setScope] = useState<FinishScope>('piece');
-  const selectedCount = useDesign((s) => s.selectedItemIds.length);
-  // "Selected pieces" goes when the selection is one piece again: the scope falls back to this piece.
-  const scope = chosenScope === 'selection' && selectedCount < 2 ? 'piece' : chosenScope;
-  const [boardKey, setBoardKey] = useState('');
-  const [msg, setMsg] = useState<string | null>(null);
-  const [decors, setDecors] = useState<Decor[]>([]);
-  useEffect(() => {
-    listDecors()
-      .then(setDecors)
-      .catch(() => setDecors([]));
-  }, []);
-  const boards = useMemo(() => projectBoards(project), [project]);
-  const run = useMemo(() => runOf(project, item.id), [project, item.id]);
-  const currentId = roleBoard(item.design, role);
-  const current = item.design.materials.find((m) => m.id === currentId);
-  const options = [
-    ...boards.map((m) => ({
-      value: materialKey(m),
-      label: t('{name}, {thickness} mm', { name: tr(m.name), thickness: m.thickness }),
-    })),
-    ...decors.map((d) => ({
-      value: `decor:${d.id}`,
-      label: t('{name}, {thickness} mm (your list)', {
-        name: `${d.makerText} ${d.code} ${d.name}`,
-        thickness: d.thickness,
-      }),
-    })),
-  ];
-  const chosen = boardKey || (current ? materialKey(current) : (options[0]?.value ?? ''));
-  const boardOf = (k: string): Material | null => {
-    if (k.startsWith('decor:')) {
-      const d = decors.find((x) => `decor:${x.id}` === k);
-      return d
-        ? ({
-            id: 'decor',
-            grain: current?.grain ?? false,
-            ...(current?.sheet ? { sheet: current.sheet } : {}),
-            ...decorPatch(d),
-          } as Material)
-        : null;
-    }
-    return boards.find((m) => materialKey(m) === k) ?? null;
-  };
-  const go = () => {
-    const b = boardOf(chosen);
-    if (!b) return;
-    const r = apply(item.id, role, b, scope);
-    setMsg(
-      r.applied.length
-        ? `${t('Applied to {n|# piece|# pieces}', { n: r.applied.length })}${r.skipped.length ? t(', {n} skipped: {list}', { n: r.skipped.length, list: r.skipped.join('; ') }) : ''}.`
-        : t('Nothing changed: {why}.', { why: r.skipped.join('; ') || t('no piece reached') }),
-    );
-  };
+  const select = useDesign((s) => s.selectItem);
+  if (!item.set) return null;
+  const set = project.variableSets?.find((s) => s.id === item.set!.id);
+  const of = project.items.find((i) => i.id === item.set!.of);
   return (
-    <div className="finish-fields">
-      <Segmented<FinishRole>
-        label={t('Parts')}
-        value={role}
-        options={[
-          { value: 'front', label: t('Fronts') },
-          { value: 'body', label: t('Carcass') },
-        ]}
-        onChange={(v) => {
-          setRole(v);
-          setBoardKey('');
-          setMsg(null);
-        }}
-      />
-      {currentId === null ? (
-        <p className="hint">
-          {role === 'front'
-            ? t('This piece has no fronts; “Whole project” still reaches the others.')
-            : t('This piece has no carcass; “Whole project” still reaches the others.')}
-        </p>
-      ) : null}
-      <Select
-        label={t('Board')}
-        value={chosen}
-        options={options}
-        onChange={(v) => {
-          setBoardKey(v);
-          setMsg(null);
-        }}
-      />
-      <Segmented<FinishScope>
-        label={t('Apply to')}
-        value={scope}
-        onChange={(v) => {
-          setScope(v);
-          setMsg(null);
-        }}
-        options={[
-          { value: 'piece', label: t('This piece') },
-          ...(run && run.length > 1 ? [{ value: 'run' as const, label: t('This run') }] : []),
-          ...(selectedCount > 1
-            ? [
-                {
-                  value: 'selection' as const,
-                  label: t('Selected pieces ({n})', { n: selectedCount }),
-                },
-              ]
-            : []),
-          { value: 'project', label: t('Whole project') },
-        ]}
-      />
-      <button type="button" className="btn outline" onClick={go} disabled={!options.length}>
-        {t('Apply finish')}
-      </button>
-      {msg && (
-        <p className="hint" role="status">
-          {msg}
-        </p>
+    <p className="hint set-note" role="note">
+      {t('{set} of {name}', {
+        set: set?.name ?? t('Set'),
+        name: tr(of?.design.name ?? item.design.name),
+      })}
+      {'. '}
+      {t('Edit the set-1 piece; this copy follows it.')}
+      {of && (
+        <>
+          {' '}
+          <button type="button" className="btn sm outline" onClick={() => select(of.id)}>
+            {t('Go to it')}
+          </button>
+        </>
       )}
-      <StyleSuggestions itemId={item.id} scope={scope} />
-    </div>
+    </p>
   );
 }
 
@@ -1063,6 +1178,8 @@ function PlacementFields({ item }: { item: ProjectItem }) {
     else if (bases.length)
       update(item.id, { placement: { kind: 'above', baseId: bases[0].id, gap: 0, offsetX: 0 } });
   };
+  // A bound axis follows its variable (ADR-166): the field is off and says what it follows.
+  const hint = (target: string) => bindingHint(project, item, target);
   const xz = (
     <div className="dims2">
       <MmField
@@ -1071,6 +1188,9 @@ function PlacementFields({ item }: { item: ProjectItem }) {
         min={-20000}
         max={20000}
         onChange={(v) => update(item.id, { position: { ...pos, x: v } })}
+        disabled={!!hint('x')}
+        hint={hint('x')}
+        trailing={<BindButton itemId={item.id} target="x" />}
       />
       <MmField
         label={t('From back')}
@@ -1078,6 +1198,9 @@ function PlacementFields({ item }: { item: ProjectItem }) {
         min={-20000}
         max={20000}
         onChange={(v) => update(item.id, { position: { ...pos, z: v } })}
+        disabled={!!hint('z')}
+        hint={hint('z')}
+        trailing={<BindButton itemId={item.id} target="z" />}
       />
     </div>
   );
@@ -1112,6 +1235,9 @@ function PlacementFields({ item }: { item: ProjectItem }) {
             min={0}
             max={3000}
             onChange={(v) => update(item.id, { placement: { ...pl, height: v } })}
+            disabled={!!hint('mountHeight')}
+            hint={hint('mountHeight')}
+            trailing={<BindButton itemId={item.id} target="mountHeight" />}
           />
         </>
       )}
@@ -1155,6 +1281,9 @@ function PlacementFields({ item }: { item: ProjectItem }) {
             min={-20000}
             max={20000}
             onChange={(v) => update(item.id, { position: { ...pos, x: v } })}
+            disabled={!!hint('x')}
+            hint={hint('x')}
+            trailing={<BindButton itemId={item.id} target="x" />}
           />
           <MmField
             label={t('From back')}
@@ -1162,6 +1291,9 @@ function PlacementFields({ item }: { item: ProjectItem }) {
             min={-20000}
             max={20000}
             onChange={(v) => update(item.id, { position: { ...pos, z: v } })}
+            disabled={!!hint('z')}
+            hint={hint('z')}
+            trailing={<BindButton itemId={item.id} target="z" />}
           />
           <MmField
             label={t('Above floor')}
@@ -1169,6 +1301,9 @@ function PlacementFields({ item }: { item: ProjectItem }) {
             min={0}
             max={3000}
             onChange={(v) => update(item.id, { position: { ...pos, y: v } })}
+            disabled={!!hint('y')}
+            hint={hint('y')}
+            trailing={<BindButton itemId={item.id} target="y" />}
           />
         </div>
       )}
@@ -1365,6 +1500,7 @@ function RoomPlan({
   const moveItemBy = useDesign((s) => s.moveItemBy);
   const [showZones, setShowZones] = useState(false);
   const turnItem = useDesign((s) => s.turnItem);
+  const setRotation = useDesign((s) => s.setRotation);
   /** Why the last move did nothing (a locked piece, ADR-095). */
   const notice = useDesign((s) => s.notice);
   /** The press or drag in progress (ADR-065); the ref keeps pointer handlers in step between renders. */
@@ -1383,12 +1519,27 @@ function RoomPlan({
     setDragState(g);
   };
   const dragging = !!drag;
+  /** The turn handle being dragged (ADR-169); the ref keeps pointer handlers in step between renders. */
+  const [turn, setTurnState] = useState<TurnGesture | null>(null);
+  const turnRef = useRef<TurnGesture | null>(null);
+  const setTurn = (g: TurnGesture | null) => {
+    turnRef.current = g;
+    setTurnState(g);
+  };
+  const turning = !!turn;
   useEffect(() => {
-    if (!dragging) return;
+    if (!dragging && !turning) return;
     const onEsc = (e: globalThis.KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
+        // The click that follows the release must not select or open the piece (ADR-169, G-018).
+        if (cancelPress(dragRef.current ?? turnRef.current)) {
+          justTapped.current = true;
+          window.setTimeout(() => (justTapped.current = false), 400);
+        }
         setDrag(null);
+        // A cancelled turn stays until the pointer is released, so the release stays the handle's own.
+        setTurn(cancelTurn(turnRef.current));
       }
     };
     const onAlt = (e: globalThis.KeyboardEvent) => {
@@ -1397,22 +1548,23 @@ function RoomPlan({
         setAlt(e.type === 'keydown');
       }
     };
-    window.addEventListener('keydown', onEsc);
+    // In the capture phase, so the app's own Esc (clear the selection, ADR-160) sees it taken first.
+    window.addEventListener('keydown', onEsc, true);
     window.addEventListener('keydown', onAlt);
     window.addEventListener('keyup', onAlt);
     return () => {
-      window.removeEventListener('keydown', onEsc);
+      window.removeEventListener('keydown', onEsc, true);
       window.removeEventListener('keydown', onAlt);
       window.removeEventListener('keyup', onAlt);
     };
-  }, [dragging]);
+  }, [dragging, turning]);
   // Chrome ignores `touch-action` on SVG shapes, so a touch drag on a piece would start a page scroll and cancel the
   // pointer. While a piece is pressed, touchmove is prevented (non-passive) so the drag keeps the pointer.
   useEffect(() => {
     const svg = svgRef.current;
     if (!svg) return;
     const onMove = (e: TouchEvent) => {
-      if (dragRef.current || boxRef.current) e.preventDefault();
+      if (dragRef.current || boxRef.current || turnRef.current) e.preventDefault();
     };
     svg.addEventListener('touchmove', onMove, { passive: false });
     return () => svg.removeEventListener('touchmove', onMove);
@@ -1468,7 +1620,12 @@ function RoomPlan({
     });
     return () => registerPlanHit(null);
   }, []);
-  const pts = [...(room?.outline ?? []), ...(drawing ?? [])];
+  // The value sets' room copies are framed too (ADR-167).
+  const pts = [
+    ...(room?.outline ?? []),
+    ...(drawing ?? []),
+    ...(project ? setRooms(project).flatMap((sr) => sr.room.outline) : []),
+  ];
   // With Clearances on, the view also frames the zones (chair or service space beyond the pieces); models always.
   const framed = [
     ...(showZones ? pm.zones.map((z) => z.box) : pm.pieces.map((p) => p.bounds)),
@@ -1487,6 +1644,13 @@ function RoomPlan({
   const sel =
     pm.pieces.find((p) => p.item.id === selectedId)?.bounds ??
     pm.models.find((m) => m.item.id === selectedId)?.box;
+  /** The one selected, unlocked piece whose turn handle is shown (ADR-169). */
+  const turnPc =
+    !tapping && selectedIds.length === 1
+      ? pm.pieces.find(
+          (x) => x.item.id === selectedIds[0] && !isLocked(x.item) && !isTurnLocked(x.item),
+        )
+      : undefined;
   const frontLine = (b: { x: number; z: number; w: number; d: number }, r: QuarterTurn) =>
     r === 0
       ? [b.x, b.z + b.d, b.x + b.w, b.z + b.d]
@@ -1527,7 +1691,7 @@ function RoomPlan({
             : t('Pieces go exactly where dropped.')}
         </span>
         {t(
-          "Seen from above. The yellow edge is each piece's front; dashed pieces hang on the wall; red dashes show where a selected piece's doors or drawers cannot open. Drag a piece, or use the arrow keys on it, to move it; Esc cancels a drag. R turns the focused piece about its centre. Shift- or Ctrl-click adds pieces to the selection (Select on a phone); drag on empty plan to draw a box; tap a spot again to reach a piece under another; Ctrl+A selects all. A grouped piece selects its group first, then itself. With Snap on, a dropped piece joins a wall, an inside corner or a neighbour’s side within {range} mm; arrow keys never snap.",
+          "Seen from above. The yellow edge is each piece's front; dashed pieces hang on the wall; red dashes show where a selected piece's doors or drawers cannot open. Drag a piece, or use the arrow keys on it, to move it; Esc cancels a drag. R turns the focused piece about its centre. Shift- or Ctrl-click adds pieces to the selection (Select on a phone); drag on empty plan to draw a box; tap a spot again to reach a piece under another; Ctrl+A selects all. Drag the round handle in front of the selected piece to turn it to any degree ([ and ] turn by 1°). A grouped piece selects its group first, then itself. With Snap on, a dropped piece joins a wall, an inside corner or a neighbour’s side within {range} mm; arrow keys never snap.",
           { range: SNAP_RANGE },
         )}
       </InfoTip>
@@ -1611,8 +1775,18 @@ function RoomPlan({
             : undefined
         }
       >
+        {project && <SetTags project={project} pm={pm} fs={fs} />}
         {room ? (
-          <RoomOutline room={room} fs={fs} />
+          <>
+            <RoomOutline room={room} fs={fs} />
+            {/* A value set's room copy at its origin (ADR-167). */}
+            {project &&
+              setRooms(project).map((sr) => (
+                <g key={sr.set.id} className="set-room" aria-label={sr.set.name}>
+                  <RoomOutline room={sr.room} fs={fs} />
+                </g>
+              ))}
+          </>
         ) : (
           <>
             <line className="wall" x1={x0 - pad} y1={0} x2={x1 + pad} y2={0} />
@@ -1688,6 +1862,14 @@ function RoomPlan({
                   turnItem(pc.item.id, e.shiftKey ? -1 : 1);
                   return;
                 }
+                // [ and ] turn the focused piece by 1°, with Shift by 15° (ADR-169).
+                const deg = tapping ? null : bracketTurn(e.key, e.shiftKey);
+                if (deg !== null && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                  e.preventDefault();
+                  select(pc.item.id);
+                  setRotation(pc.item.id, (((rotationOf(pc.item) + deg) % 360) + 360) % 360);
+                  return;
+                }
                 const m = tapping ? null : arrowMove(e.key, e.shiftKey);
                 if (!m) return onKey(() => select(pc.item.id))(e);
                 e.preventDefault();
@@ -1759,12 +1941,16 @@ function RoomPlan({
                     snapping && project
                       ? dropTarget(project, others, end.id, end.dx, end.dz, true)
                       : null;
+                  // Alt moves the pieces without their connected neighbours (ADR-168).
+                  const opts = { snapped: !!t?.snap, alone: e.altKey };
                   if (t?.snap)
                     moveSelectionBy(
                       t.position.x - pc.item.position.x,
                       t.position.z - pc.item.position.z,
+                      undefined,
+                      opts,
                     );
-                  else moveSelectionBy(end.dx, end.dz, DRAG_STEP);
+                  else moveSelectionBy(end.dx, end.dz, DRAG_STEP, opts);
                   return;
                 }
                 select(end.id);
@@ -1772,14 +1958,17 @@ function RoomPlan({
                   snapping && project
                     ? dropTarget(project, pm.pieces, end.id, end.dx, end.dz, true)
                     : null;
-                // Snap off or Alt held: exactly the ADR-065 drop. Snapped: whole mm, one undo step.
-                if (!t?.snap) moveItemBy(end.id, end.dx, end.dz);
+                // Snap off or Alt held: exactly the ADR-065 drop. Snapped: whole mm, one undo step. A snapped
+                // drop connects the piece to a valid neighbour; Alt moves it without its connected ones (ADR-168).
+                const opts = { snapped: !!t?.snap, alone: e.altKey };
+                if (!t?.snap) moveItemBy(end.id, end.dx, end.dz, undefined, opts);
                 else
                   moveItemBy(
                     end.id,
                     t.position.x - pc.item.position.x,
                     t.position.z - pc.item.position.z,
                     1,
+                    opts,
                   );
               }}
               onPointerCancel={() => setDrag(null)}
@@ -1812,7 +2001,10 @@ function RoomPlan({
                 {pc.item.quantity > 1 ? `${pc.item.quantity}× ` : ''}
                 {tr(pc.item.design.name)}
               </text>
-              {locked && <LockBadge x={b.x} y={b.z} size={size} />}
+              {/* The badge shows for any lock: place, turn or a size (ADR-095, ADR-171). */}
+              {(locked || isTurnLocked(pc.item) || lockedAxes(pc.item).length > 0) && (
+                <LockBadge x={b.x} y={b.z} size={size} />
+              )}
             </g>
           );
         })}
@@ -1827,6 +2019,7 @@ function RoomPlan({
           />
         )}
         {showZones && <ZoneOverlay zones={pm.zones} fs={fs} />}
+        {project && <ConnectionTicks project={project} pieces={pm.pieces} fs={fs} />}
         <PlanModels pm={pm} fs={fs} tapping={tapping} />
         {pm.blocked
           .filter((c) => c.itemId === selectedId)
@@ -1908,6 +2101,47 @@ function RoomPlan({
             aria-label={t('Selected space inside the piece')}
           />
         )}
+        {/* The turn handle of the one selected piece (ADR-169); last in the drawing, so nothing covers its knob. */}
+        {turnPc && (
+          <TurnHandle
+            pc={turnPc}
+            fs={fs}
+            turn={turn?.id === turnPc.item.id ? turn : null}
+            onPress={(e) => {
+              if (e.pointerType === 'mouse' && e.button !== 0) return;
+              if (dragRef.current || turnRef.current) return;
+              e.stopPropagation();
+              const b = turnPc.bounds;
+              const g = pressTurn(
+                turnPc.item.id,
+                { x: b.x + b.w / 2, z: b.z + b.d / 2 },
+                rotationOf(turnPc.item),
+                at(e),
+              );
+              if (!g) return;
+              e.currentTarget.setPointerCapture?.(e.pointerId);
+              justTapped.current = false;
+              setTurn(g);
+            }}
+            onMove={(e) => {
+              const g = turnRef.current;
+              if (!g) return;
+              const next = moveTurn(g, at(e), e.shiftKey);
+              if (next !== g) setTurn(next);
+            }}
+            onRelease={(e) => {
+              const g = turnRef.current;
+              if (!g || e.pointerId !== g.pointerId) return;
+              e.stopPropagation();
+              const deg = releaseTurn(g, e.pointerId);
+              setTurn(null);
+              justTapped.current = true;
+              window.setTimeout(() => (justTapped.current = false), 400);
+              if (deg !== null) setRotation(turnPc.item.id, deg);
+            }}
+            onCancel={() => setTurn(null)}
+          />
+        )}
       </svg>
     </figure>
   );
@@ -1925,6 +2159,33 @@ function LockBadge({ x, y, size }: { x: number; y: number; size: number }) {
     >
       {t('Locked')}
     </text>
+  );
+}
+
+/** A value set's name over its pieces on the plan (ADR-167). */
+function SetTags({ project, pm, fs }: { project: Project; pm: ProjectModel; fs: number }) {
+  const sets = project.variableSets ?? [];
+  if (!sets.length) return null;
+  const rooms = new Map(setRooms(project).map((sr) => [sr.set.id, sr.room]));
+  return (
+    <>
+      {sets.map((set) => {
+        const pcs = pm.pieces.filter((pc) => pc.item.set?.id === set.id);
+        const room = rooms.get(set.id);
+        if (!pcs.length && !room) return null;
+        const x = room
+          ? Math.min(...room.outline.map((p) => p[0]))
+          : Math.min(...pcs.map((pc) => pc.bounds.x));
+        const z = room
+          ? Math.min(...room.outline.map((p) => p[1]))
+          : Math.min(...pcs.map((pc) => pc.bounds.z));
+        return (
+          <text key={set.id} className="set-tag" x={x} y={z - fs * 0.6} fontSize={fs * 1.1}>
+            {set.name}
+          </text>
+        );
+      })}
+    </>
   );
 }
 
@@ -2029,7 +2290,8 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
     tapItem(item.id, { x: Math.round(pt.x), y: Math.round(-pt.y), z: item.position.z });
   };
   const showFronts = useDesign((s) => s.showFronts);
-  const room = useDesign((s) => s.project?.room);
+  const project = useDesign((s) => s.project);
+  const room = project?.room;
   const rv = useMemo(() => (room ? roomFrontView(room) : null), [room]);
   // Back-wall backgrounds (ADR-145): floor to room height behind the pieces against them; a picture covers its
   // rectangle once, straightened when asked, its average colour around it, as in 3D (ADR-146).
@@ -2214,7 +2476,9 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
           />
         ))}
         {pm.pieces
-          .filter((pc) => isLocked(pc.item))
+          .filter(
+            (pc) => isLocked(pc.item) || isTurnLocked(pc.item) || lockedAxes(pc.item).length > 0,
+          )
           .map((pc) => (
             <LockBadge
               key={`lock-${pc.item.id}`}
@@ -2223,6 +2487,7 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
               size={Math.min(span / 40, pc.bounds.w / 7)}
             />
           ))}
+        {project && <FrontConnectionTicks project={project} pieces={pm.pieces} fs={span / 40} />}
         <FrontModels pm={pm} fs={span / 40} />
         <Dim x1={x0} x2={x1} y={pad * 0.6} fontSize={dfs} label={`${x1 - x0}`} />
         <DimV y1={0} y2={-top} x={x0 - pad * 0.6} fontSize={dfs} label={`${top}`} />
@@ -2309,6 +2574,7 @@ export function AddPieceList({
   }, []);
   // Saved project templates go in as a block of pieces (ADR-123, research "paste ensemble").
   const insertTemplate = useDesign((s) => s.insertTemplate);
+  const project = useDesign((s) => s.project);
   const [projectTemplates, setProjectTemplates] = useState<ProjectTemplate[]>([]);
   useEffect(() => {
     listProjectTemplates()
@@ -2396,7 +2662,17 @@ export function AddPieceList({
                   type="button"
                   className="row-btn"
                   onClick={() => {
-                    if (insertTemplate(tpl).length) onDone();
+                    // A variable the project already has keeps its value; the inserted pieces follow it (ADR-170).
+                    const kept = project ? keptVariables(project, tpl) : [];
+                    if (!insertTemplate(tpl).length) return;
+                    if (kept.length)
+                      useUi.getState().setNotice({
+                        ok: true,
+                        text: t('Kept the project’s {names}; the inserted pieces follow it.', {
+                          names: kept.map((n) => `“${n}”`).join(', '),
+                        }),
+                      });
+                    onDone();
                   }}
                 >
                   <span className="glyph">

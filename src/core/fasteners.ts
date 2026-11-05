@@ -159,7 +159,8 @@ const perimeter = (p: Panel): Mm => {
  * Counts for one piece (ADR-074), from its model: carcass joints are pairs of carcass boards that meet edge or face
  * to face; adjustable shelves (with scheduled shelf pins) and frame members are left out of them.
  */
-export function fastenerCounts(model: FurnitureModel): FastenerCount[] {
+/** The pairs of carcass boards that meet edge or face to face (ADR-074); the assembly steps share them (ADR-174). */
+export function carcassJointPairs(model: FurnitureModel): [Panel, Panel][] {
   const pinned = new Set(model.hardware.filter((h) => h.kind === 'shelf-pin').map((h) => h.nodeId));
   // In frame furniture, rails are frame members too (ADR-038), joined by the maker's own joinery.
   const frame = model.panels.some((p) => FRAME.has(p.role));
@@ -170,9 +171,15 @@ export function fastenerCounts(model: FurnitureModel): FastenerCount[] {
       !(p.role === 'shelf' && pinned.has(p.nodeId)) &&
       !p.shape,
   );
-  let joints = 0;
+  const out: [Panel, Panel][] = [];
   for (let i = 0; i < joined.length; i++)
-    for (let j = i + 1; j < joined.length; j++) if (isJoint(joined[i], joined[j])) joints++;
+    for (let j = i + 1; j < joined.length; j++)
+      if (isJoint(joined[i], joined[j])) out.push([joined[i], joined[j]]);
+  return out;
+}
+
+export function fastenerCounts(model: FurnitureModel): FastenerCount[] {
+  const joints = carcassJointPairs(model).length;
   const hw = (kind: string) =>
     model.hardware.reduce((n, h) => n + (h.kind === kind ? h.quantity : 0), 0);
   const backs = model.panels.filter((p) => p.role === 'back');
@@ -309,7 +316,7 @@ export function fastenerShopLines(
         }),
         quantity: c.count,
         unit: 'piece',
-        detail: t('{guidance} ({how}{len}). Name yours under Materials › Fasteners.', {
+        detail: t('{guidance} ({how}{len}). Name yours under Settings › Fasteners.', {
           guidance: GUIDANCE,
           how: j.how,
           len,

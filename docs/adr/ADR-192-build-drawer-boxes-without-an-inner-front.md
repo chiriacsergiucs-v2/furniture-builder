@@ -1,10 +1,10 @@
-# ADR-166: Build drawer boxes without an inner front
+# ADR-192: Build drawer boxes without an inner front
 
 - Status: Pending
-- Date: 2026-10-30
+- Date: 2026-11-05
 - Depends on: none
 - Design: docs/ui-design.md (Inspector, Drawers and runners group)
-- Backlog: N165
+- Backlog: N197
 
 ## Context
 

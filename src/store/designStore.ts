@@ -10,6 +10,7 @@ import {
   findInProduct,
   productRoots,
   mapProductSpace,
+  newId,
   SCHEMA_VERSION,
   templates,
   upgradeDesign,
@@ -17,7 +18,33 @@ import {
 } from '../core/design';
 import { duplicateItem, mirrorItem, mirrorRun, setItemRotation, tryTurn } from '../core/arrange';
 import { floorDrop, type FloorPoint } from '../core/drag3d';
-import { applyFinish, type FinishRole, type FinishScope } from '../core/finish';
+import {
+  applyFinish,
+  applyMaterial,
+  putPartBoard,
+  putRoleBoards,
+  putRunBoard,
+  RUN_ROLES,
+  type RunRole,
+  withBoard,
+  roleName,
+  type FinishRole,
+  type FinishScope,
+  type MaterialRole,
+  type MaterialScope,
+} from '../core/finish';
+import { commonPanelCheck, pruneCommon } from '../core/common';
+import { pruneShared, sharedSideCheck } from '../core/shared';
+import {
+  carryUnits,
+  connect,
+  connectionCheck,
+  disconnect,
+  isConnected,
+  movingSet,
+  pruneConnections,
+  settleConnections,
+} from '../core/connections';
 import { mergeItems } from '../core/merge';
 import { describeChange } from '../core/history';
 import { insertTemplate } from '../core/insertTemplate';
@@ -51,7 +78,7 @@ import { drill, type Selection } from '../core/selectPath';
 import { resizeProduct, type SizeField } from '../core/pieceSize';
 import { carryGroups, withGroups } from '../core/groupMove';
 import { resizeGroup, type WidthSplit } from '../core/groupSize';
-import { resizeBlocked, setSizeLocked, sizeLockBlocked } from '../core/sizeLock';
+import { resizeBlocked, setAxisLocked, setSizeLocked, sizeLockBlocked } from '../core/sizeLock';
 import { setWallHeight } from '../core/height';
 import { moveTo, type MoveToAction } from '../core/moveTo';
 import {
@@ -88,6 +115,8 @@ import {
   type RunRequest,
   type RunSettings,
   type RunSink,
+  setTurnLocked,
+  type SizeAxis,
 } from '../core/project';
 import type {
   CabinetParams,
@@ -98,6 +127,7 @@ import type {
   FrameParams,
   FurnitureModel,
   HardwareProduct,
+  EdgeBand,
   Material,
   Mm,
   PanelParams,
@@ -107,12 +137,27 @@ import type {
 } from '../core/types';
 import type { LocalTemplate } from '../core/catalog/local';
 import { t } from '../core/i18n';
+import { addSet, removeSet, updateSet, syncSets, type VariableSet } from '../core/sets';
+import {
+  addVariable,
+  applyBindings,
+  deleteVariable,
+  heldByBinding,
+  setBinding,
+  updateVariable,
+} from '../core/variables';
 
 /** A space selection that no longer exists in the design falls back to the whole piece. */
 const keepSelection = (d: Design, sel: Selection): Selection =>
   sel && !findInProduct(d.product, sel) ? null : sel;
 
-export type Tab = 'parts' | 'sheets' | 'hardware' | 'shopping' | 'checks';
+export type Tab = 'parts' | 'sheets' | 'hardware' | 'assembly' | 'shopping' | 'checks';
+
+/** How a move was made (ADR-168): `snapped` = the drop snapped; `alone` = Alt held, so connected pieces stay. */
+export interface MoveOpts {
+  snapped?: boolean;
+  alone?: boolean;
+}
 
 interface State {
   design: Design;
@@ -125,6 +170,9 @@ interface State {
   /** 3D preview with the panels pushed apart (display only). */
   exploded: boolean;
   tab: Tab;
+  /** Panel ids lit in the 3D view by an assembly step (ADR-174); null = every part as usual. Viewer-only. */
+  litPanelIds: string[] | null;
+  setLit: (ids: string[] | null) => void;
   /** Phones: the results panel under the views is open (ADR-091). UI state only; a reload starts collapsed. */
   resultsOpen: boolean;
   past: Design[];
@@ -193,6 +241,8 @@ interface State {
   updateDesk: (patch: Partial<DeskParams>) => void;
   updateCorner: (patch: Partial<CornerParams>) => void;
   updatePanelSet: (patch: Partial<PanelSetParams>) => void;
+  /** A board for one loose part of a panel set, copied into the piece when it is not there yet (ADR-164). */
+  setLoosePanelBoard: (panelId: string, board: Material) => void;
   /** A board for one part instead of its group's board; null goes back to the group's board. */
   setPartMaterial: (panelId: string, materialId: string | null) => void;
   updatePanel: (patch: Partial<PanelParams>) => void;
@@ -244,27 +294,50 @@ interface State {
    * Add a copy of a design with its left-back corner at a plan point (ADR-094: dropped from the piece list), whole
    * mm; one undo step. The point is where `dropNewPiece` puts it (snapped or as a tap places it).
    */
-  addPieceAt: (d: Design, x: number, z: number, libraryId?: string) => void;
+  /** `snapped`: the drop snapped against a neighbour, so a valid touching pair is connected (ADR-168). */
+  addPieceAt: (d: Design, x: number, z: number, libraryId?: string, snapped?: boolean) => void;
   updateItem: (id: string, patch: Partial<ProjectItem>) => void;
   /**
    * Move a piece on the plan by a drag or an arrow key (ADR-065): rounded to the step, lifted off a base, one undo
    * step. Nothing happens (no step) when the piece would not move; a locked piece stays and the reason is returned
    * and shown as the plan's notice (ADR-095).
    */
-  moveItemBy: (id: string, dxMm: number, dzMm: number, step?: number) => string | null;
+  /**
+   * Connected pieces move along (ADR-168) unless `alone` (Alt held); a snapped drop connects valid touching pairs
+   * and a drop that parts connected pieces disconnects them.
+   */
+  moveItemBy: (
+    id: string,
+    dxMm: number,
+    dzMm: number,
+    step?: number,
+    opts?: MoveOpts,
+  ) => string | null;
   /**
    * Drop a piece dragged in the 3D view (ADR-093) from room point `from` to `to` on its floor plane: the same drop
    * as a Plan drag (snapping when `snap`), one undo step. A locked piece stays and the reason is returned (ADR-095).
    */
-  dropItemAt: (id: string, from: FloorPoint, to: FloorPoint, snap: boolean) => string | null;
+  dropItemAt: (
+    id: string,
+    from: FloorPoint,
+    to: FloorPoint,
+    snap: boolean,
+    alone?: boolean,
+  ) => string | null;
   /** The gap tool (ADR-022); returns why nothing moved when it would move a locked piece (ADR-095), or null. */
   setGap: (id: string, gap: number, moveRight: boolean) => string | null;
-  /** A one-tap Move to action (ADR-147); one undo step. Returns why nothing moved, or null. */
-  moveItemTo: (id: string, action: MoveToAction) => string | null;
+  /**
+   * A one-tap Move to action (ADR-147) on one piece, or on several selected pieces moved as one block (ADR-182); one
+   * undo step. Returns why nothing moved, or null.
+   */
+  moveItemTo: (id: string | readonly string[], action: MoveToAction) => string | null;
   /** Lock or unlock a piece's placement (ADR-095); one undo step. */
   setLocked: (id: string, on: boolean) => void;
   /** Lock or unlock a piece's size (ADR-122); one undo step. */
   setSizeLocked: (id: string, on: boolean) => void;
+  /** Lock or unlock the piece's turn, or one of its outside sizes (ADR-171). One undo step each. */
+  setTurnLocked: (id: string, on: boolean) => void;
+  setAxisLocked: (id: string, axis: SizeAxis, on: boolean) => void;
   /** Hang a wall unit at a new height, e.g. dragged in 3D (ADR-122); one undo step. Returns why not, or null. */
   setItemHeight: (id: string, height: number) => string | null;
   /** "Keep mine" (ADR-096): hide the newer-template notice for this revision; one undo step. */
@@ -295,6 +368,19 @@ interface State {
   setProjectSetting: (key: SettingKey, value: ProjectSettings[SettingKey] | undefined) => string[];
   /** The piece takes the project's value of the setting again (ADR-124). One undo step. */
   followProject: (id: string, key: SettingKey) => void;
+  /** Project variables (ADR-166); each is one undo step. Deleting unbinds the pieces that used it. */
+  addVariable: (name: string, expr: string) => string;
+  updateVariable: (id: string, patch: { name?: string; expr?: string }) => void;
+  deleteVariable: (id: string) => void;
+  /** Bind (or with null unbind) a piece's size, division or position to a variable or formula (ADR-166). */
+  bindTarget: (itemId: string, target: string, expr: string | null) => void;
+  /** Value sets (ADR-167); each is one undo step. Removing a set removes its pieces. */
+  addVariableSet: () => string;
+  updateVariableSet: (
+    id: string,
+    patch: Partial<Pick<VariableSet, 'name' | 'values' | 'origin'>>,
+  ) => void;
+  removeVariableSet: (id: string) => void;
   /** Returns why it did not turn (a locked piece, ADR-095), or null. */
   turnItem: (id: string, dir: 1 | -1) => string | null;
   /**
@@ -320,7 +406,7 @@ interface State {
    * Move every selected piece by the same offset, rounded to `step` (default 1 mm) (ADR-097); returns why not (a lock),
    * or null. One undo step.
    */
-  moveSelectionBy: (dx: number, dz: number, step?: number) => string | null;
+  moveSelectionBy: (dx: number, dz: number, step?: number, opts?: MoveOpts) => string | null;
   /** Turn the selection a quarter turn about its centre (ADR-097); returns why not, or null. One undo step. */
   turnSelectionBy: (dir: 1 | -1) => string | null;
   /**
@@ -389,6 +475,32 @@ interface State {
     board: Material,
     scope: FinishScope,
   ) => { applied: string[]; skipped: string[] };
+  /**
+   * One Material control (ADR-163): `board` on `roles` of the selected item, its group or the whole project (a
+   * project), or of the open piece (`id` null); scope Part puts it on one generated part. One undo step.
+   */
+  applyMaterial: (
+    id: string | null,
+    roles: readonly (MaterialRole | RunRole)[],
+    board: Material,
+    scope: MaterialScope,
+    panelId?: string,
+    /** An edge band for those parts (ADR-188); undefined keeps the board's band. */
+    band?: EdgeBand,
+  ) => { applied: string[]; skipped: string[] };
+  /**
+   * A common top or bottom (ADR-165) over the selected items: on links them (replacing a common panel of the same
+   * kind any of them is in), off removes the one they are in. Returns why it was refused, or ''. One undo step.
+   */
+  setCommon: (kind: 'top' | 'bottom', on: boolean) => string;
+  /** Shared sides (ADR-190) for the selected cabinets: on links them, off removes the link they are in. Returns why it was refused, or ''. */
+  setShared: (on: boolean) => string;
+  /** Add a room mix's pieces to the open project (ADR-173): one undo step, the pieces selected. Their ids. */
+  fillRoom: (mix: Project) => string[];
+  /** Connect or disconnect the two selected pieces (ADR-168); the reason when it cannot be done, else ''. */
+  setConnected: (on: boolean) => string;
+  /** Forget a part's own board (ADR-151) on a project item (`id`) or the open piece (null). */
+  clearPartBoard: (id: string | null, panelId: string) => void;
   /** Put the piece being placed with its left-back corner at a plan point (whole mm, x and z ≥ 0), or stop placing (ADR-056). */
   placeAt: (x: number, z: number) => void;
   stopPlacing: () => void;
@@ -519,8 +631,17 @@ export const useDesign = create<State>((rawSet, get) => {
       syncDrill();
       return locked;
     }
+    // Bindings take their variables' values and value sets keep their duplicates (ADR-166, ADR-167); a bound field
+    // the change tried to move is held and the reason shown.
+    // Sets first, so a fresh duplicate takes its set's values in the same step.
+    const bound = applyBindings(syncSets(linked));
+    const held = heldByBinding(get().project, linked, bound);
     const stamped = {
-      ...refreshRunParts(resolvePlacements(pruneRunExtras(pruneGroups(linked)))),
+      ...refreshRunParts(
+        resolvePlacements(
+          pruneRunExtras(pruneShared(pruneConnections(pruneCommon(pruneGroups(bound))))),
+        ),
+      ),
       schemaVersion: PROJECT_SCHEMA, // an edited project is saved in the current shape (ADR-011, ADR-073)
       updatedAt: new Date().toISOString(),
     };
@@ -531,7 +652,7 @@ export const useDesign = create<State>((rawSet, get) => {
       project: stamped,
       projectModel: buildProjectModel(stamped),
       projectDirtyAt: Date.now(),
-      notice: null,
+      notice: held,
       ...(prev && !amend
         ? {
             projectPast: [...get().projectPast, prev].slice(-HISTORY),
@@ -720,7 +841,7 @@ export const useDesign = create<State>((rawSet, get) => {
       commitProject({ ...p, items: [...p.items, item] });
       set({ selectedItemId: item.id, placingItemId: item.id });
     },
-    addPieceAt: (d, x, z, libraryId) => {
+    addPieceAt: (d, x, z, libraryId, snapped) => {
       const p = get().project;
       if (!p) return;
       const made = makeItem(p, withSettings(d, p.settings), libraryId);
@@ -728,7 +849,8 @@ export const useDesign = create<State>((rawSet, get) => {
       // a drawn room at x or z below 0.
       const position = { ...made.position, x: Math.round(x) || 0, z: Math.round(z) || 0 };
       const item: ProjectItem = { ...made, position };
-      commitProject({ ...p, items: [...p.items, item] });
+      // A snapped drop against a valid neighbour connects them (ADR-168), in the same step.
+      commitProject(settleConnections({ ...p, items: [...p.items, item] }, [item.id], !!snapped));
       set({ selectedItemId: item.id, placingItemId: null });
     },
     updateItem: (id, patch) => {
@@ -740,28 +862,32 @@ export const useDesign = create<State>((rawSet, get) => {
       if (res?.reason) return set({ notice: res.reason });
       commitProject(res?.project ?? next);
     },
-    moveItemBy: (id, dxMm, dzMm, step) => {
+    moveItemBy: (id, dxMm, dzMm, step, opts) => {
       const p = get().project;
       if (!p) return null;
-      // A grouped piece moves with its whole group (ADR-148).
-      const group = withGroups(p, [id]);
+      // A grouped piece moves with its whole group (ADR-148) and a connected one with its neighbours (ADR-168),
+      // unless Alt was held (`alone`).
+      const unit = movingSet(p, [id], !opts?.alone);
       const res =
-        group.length > 1 ? moveItems(p, group, dxMm, dzMm, step) : moveBy(p, id, dxMm, dzMm, step);
+        unit.length > 1 ? moveItems(p, unit, dxMm, dzMm, step) : moveBy(p, id, dxMm, dzMm, step);
       if (res.reason) {
         set({ notice: res.reason });
         return res.reason;
       }
-      if (res.project !== p) commitProject(res.project);
+      if (res.project !== p) commitProject(settleConnections(res.project, unit, !!opts?.snapped));
       return null;
     },
-    dropItemAt: (id, from, to, snap) => {
+    dropItemAt: (id, from, to, snap, alone) => {
       const p = get().project;
       const it = p?.items.find((i) => i.id === id);
       const pieces = get().projectModel?.pieces;
       if (!p || !it || !pieces) return null;
       const t = floorDrop(p, pieces, id, from, to, snap);
       return t
-        ? get().moveItemBy(id, t.position.x - it.position.x, t.position.z - it.position.z, 1)
+        ? get().moveItemBy(id, t.position.x - it.position.x, t.position.z - it.position.z, 1, {
+            snapped: !!t.snap,
+            alone,
+          })
         : null;
     },
     setGap: (id, gap, moveRight) => {
@@ -775,12 +901,15 @@ export const useDesign = create<State>((rawSet, get) => {
     moveItemTo: (id, action) => {
       const p = get().project;
       if (!p) return null;
-      const res = moveTo(p, id, action);
+      const ids = typeof id === 'string' ? [id] : [...id];
+      const one = moveTo(p, ids, action);
+      // Its group and connected pieces come along (ADR-148, ADR-168); landing against a neighbour connects.
+      const res = one.reason ? one : carryUnits(p, one.project, ids);
       if (res.reason) {
         set({ notice: res.reason });
         return res.reason;
       }
-      if (res.project !== p) commitProject(res.project);
+      if (res.project !== p) commitProject(settleConnections(res.project, movingSet(p, ids), true));
       return null;
     },
     setLocked: (id, on) => {
@@ -793,6 +922,18 @@ export const useDesign = create<State>((rawSet, get) => {
       const p = get().project;
       if (!p) return;
       const next = setSizeLocked(p, id, on);
+      if (next !== p) commitProject(next);
+    },
+    setTurnLocked: (id, on) => {
+      const p = get().project;
+      if (!p) return;
+      const next = setTurnLocked(p, id, on);
+      if (next !== p) commitProject(next);
+    },
+    setAxisLocked: (id, axis, on) => {
+      const p = get().project;
+      if (!p) return;
+      const next = setAxisLocked(p, id, axis, on);
       if (next !== p) commitProject(next);
     },
     setItemHeight: (id, height) => {
@@ -867,6 +1008,52 @@ export const useDesign = create<State>((rawSet, get) => {
       )
         return [];
       return res.applied;
+    },
+    addVariable: (name, expr) => {
+      const p = get().project;
+      if (!p) return '';
+      const res = addVariable(p, name, expr);
+      commitProject(res.project, t('Add variable {name}', { name: name.trim() }));
+      return res.id;
+    },
+    updateVariable: (id, patch) => {
+      const p = get().project;
+      if (!p) return;
+      const next = updateVariable(p, id, patch);
+      if (next !== p) commitProject(next, t('Change variable'));
+    },
+    deleteVariable: (id) => {
+      const p = get().project;
+      if (!p) return;
+      const next = deleteVariable(p, id);
+      if (next !== p) commitProject(next, t('Delete variable'));
+    },
+    bindTarget: (itemId, target, expr) => {
+      const p = get().project;
+      if (!p) return;
+      commitProject(
+        setBinding(p, itemId, target, expr),
+        expr === null ? t('Unbind') : t('Bind to variable'),
+      );
+    },
+    addVariableSet: () => {
+      const p = get().project;
+      if (!p) return '';
+      const res = addSet(p);
+      commitProject(res.project, t('Add value set'));
+      return res.id;
+    },
+    updateVariableSet: (id, patch) => {
+      const p = get().project;
+      if (!p) return;
+      const next = updateSet(p, id, patch);
+      if (next !== p) commitProject(next, t('Change value set'));
+    },
+    removeVariableSet: (id) => {
+      const p = get().project;
+      if (!p) return;
+      const next = removeSet(p, id);
+      if (next !== p) commitProject(next, t('Remove value set'));
     },
     followProject: (id, key) => {
       const p = get().project;
@@ -948,7 +1135,8 @@ export const useDesign = create<State>((rawSet, get) => {
       if (id && id === selectedItemId && id === drillItemId && selectedItemIds.length === 1) return;
       set({ selectedItemId: id, notice: null });
       const item = id ? project?.items.find((i) => i.id === id) : undefined;
-      if (item && !get().editingItemId) loadDrill(item, null);
+      // A value set's duplicate is edited through its original (ADR-167): nothing inside it is loaded.
+      if (item && !item.set && !get().editingItemId) loadDrill(item, null);
       else set({ drillItemId: null });
     },
     toggleItem: (id) => {
@@ -971,15 +1159,16 @@ export const useDesign = create<State>((rawSet, get) => {
     },
     selectAll: () => get().selectItems((get().project?.items ?? []).map((i) => i.id)),
     setMultiSelect: (on) => set({ multiSelect: on }),
-    moveSelectionBy: (dx, dz, step) => {
+    moveSelectionBy: (dx, dz, step, opts) => {
       const p = get().project;
       if (!p) return null;
-      const res = moveItems(p, withGroups(p, get().selectedItemIds), dx, dz, step);
+      const unit = movingSet(p, get().selectedItemIds, !opts?.alone);
+      const res = moveItems(p, unit, dx, dz, step);
       if (res.reason) {
         set({ notice: res.reason });
         return res.reason;
       }
-      if (res.project !== p) commitProject(res.project);
+      if (res.project !== p) commitProject(settleConnections(res.project, unit, !!opts?.snapped));
       return null;
     },
     turnSelectionBy: (dir) => {
@@ -1276,6 +1465,126 @@ export const useDesign = create<State>((rawSet, get) => {
       if (!p) return;
       commitProject({ ...p, runSettings: { scribe: 0, auto: false, ...p.runSettings, ...patch } });
     },
+    applyMaterial: (id, allRoles, board, scope, panelId, band) => {
+      const p = get().project;
+      const roles = allRoles.filter((r): r is MaterialRole => !RUN_ROLES.includes(r as RunRole));
+      if (!id || !p || get().editingItemId === id) {
+        // The open piece: one part, or every role it has parts for.
+        const d = get().design;
+        if (scope === 'part') {
+          if (!panelId) return { applied: [], skipped: [] };
+          commit(putPartBoard(d, panelId, board, band));
+          return { applied: [panelId], skipped: [] };
+        }
+        const r = putRoleBoards(d, roles, board, band);
+        if (r.applied.length) commit(r.design);
+        return {
+          applied: r.applied.length ? [d.name] : [],
+          skipped: r.skipped.map(roleName),
+        };
+      }
+      if (scope === 'part') {
+        const it = p.items.find((i) => i.id === id);
+        if (!it || !panelId) return { applied: [], skipped: [] };
+        // A run part (ADR-188): its own board copy.
+        const rp = (p.runParts ?? []).find((x) => `run:${x.id}` === panelId);
+        if (rp) {
+          commitProject(putRunBoard(p, [rp], board, band), t('Apply material'));
+          return { applied: [rp.label], skipped: [] };
+        }
+        // Project part ids are `${item.id}:${panel.id}`; the piece stores the panel's own id.
+        const own = panelId.startsWith(`${id}:`) ? panelId.slice(id.length + 1) : panelId;
+        commitProject(
+          {
+            ...p,
+            items: p.items.map((i) =>
+              i.id === id ? { ...i, design: putPartBoard(i.design, own, board, band) } : i,
+            ),
+          },
+          t('Apply material'),
+        );
+        return { applied: [own], skipped: [] };
+      }
+      const r = applyMaterial(p, id, allRoles, board, scope, get().selectedItemIds, band);
+      if (r.applied.length) commitProject(r.project, t('Apply material'));
+      return { applied: r.applied, skipped: r.skipped };
+    },
+    setCommon: (kind, on) => {
+      const p = get().project;
+      const ids = get().selectedItemIds.filter((id) => p?.items.some((i) => i.id === id));
+      if (!p || ids.length < 2) return t('Select two or more items standing side by side.');
+      const others = (p.common ?? []).filter(
+        (c) => c.kind !== kind || !c.itemIds.some((x) => ids.includes(x)),
+      );
+      let common = others;
+      if (on) {
+        const plan = commonPanelCheck(p, ids, kind);
+        if (plan.reason) return plan.reason;
+        common = [...others, { id: newId(), kind, itemIds: plan.ids }];
+      }
+      const { common: _was, ...rest } = p;
+      void _was;
+      commitProject(
+        common.length ? { ...rest, common } : rest,
+        kind === 'top' ? t('Common top') : t('Common bottom'),
+      );
+      return '';
+    },
+    setShared: (on) => {
+      const p = get().project;
+      const ids = get().selectedItemIds.filter((id) => p?.items.some((i) => i.id === id));
+      if (!p || ids.length < 2) return t('Select two or more items standing side by side.');
+      const others = (p.sharedSides ?? []).filter((c) => !c.itemIds.some((x) => ids.includes(x)));
+      let sharedSides = others;
+      if (on) {
+        const plan = sharedSideCheck(p, ids);
+        if (plan.reason) return plan.reason;
+        sharedSides = [...others, { id: newId(), itemIds: plan.ids }];
+      }
+      const { sharedSides: _was, ...rest } = p;
+      void _was;
+      commitProject(sharedSides.length ? { ...rest, sharedSides } : rest, t('Shared sides'));
+      return '';
+    },
+    fillRoom: (mix) => {
+      const p = get().project;
+      if (!p || !mix.items.length) return [];
+      commitProject({ ...p, items: [...p.items, ...mix.items] }, t('Fill the room'));
+      const ids = mix.items.map((i) => i.id);
+      get().selectItems(ids);
+      return ids;
+    },
+    setConnected: (on) => {
+      const p = get().project;
+      const ids = get().selectedItemIds.filter((id) => p?.items.some((i) => i.id === id));
+      if (!p || ids.length !== 2) return t('Select exactly two pieces standing side by side.');
+      const [a, b] = ids;
+      if (on) {
+        const { reason } = connectionCheck(p, a, b, get().projectModel?.pieces);
+        if (reason) return reason;
+        if (!isConnected(p, a, b)) commitProject(connect(p, a, b), t('Connect'));
+      } else if (isConnected(p, a, b)) commitProject(disconnect(p, a, b), t('Disconnect'));
+      return '';
+    },
+    clearPartBoard: (id, panelId) => {
+      const p = get().project;
+      if (!id || !p || get().editingItemId === id) return get().setPartMaterial(panelId, null);
+      const drop = (d: Design): Design => {
+        const next = { ...d.partMaterials };
+        delete next[panelId];
+        const bands = { ...d.partBands };
+        delete bands[panelId];
+        return {
+          ...d,
+          partMaterials: Object.keys(next).length ? next : undefined,
+          partBands: Object.keys(bands).length ? bands : undefined,
+        };
+      };
+      commitProject(
+        { ...p, items: p.items.map((i) => (i.id === id ? { ...i, design: drop(i.design) } : i)) },
+        t('Clear part board'),
+      );
+    },
     applyFinish: (id, role, board, scope) => {
       const p = get().project;
       if (!p) return { applied: [], skipped: [] };
@@ -1362,10 +1671,14 @@ export const useDesign = create<State>((rawSet, get) => {
       const next = { ...d.partMaterials };
       if (materialId) next[panelId] = materialId;
       else delete next[panelId];
+      // Clearing a part also clears its own band (ADR-188).
+      const bands = { ...d.partBands };
+      if (!materialId) delete bands[panelId];
       commit({
         ...d,
         schemaVersion: SCHEMA_VERSION,
         partMaterials: Object.keys(next).length ? next : undefined,
+        partBands: Object.keys(bands).length ? bands : undefined,
       });
     },
     updateCabinet: (patch) => {
@@ -1381,12 +1694,28 @@ export const useDesign = create<State>((rawSet, get) => {
     updateCorner: (patch) => {
       const d = get().design;
       if (d.product.kind !== 'corner') return;
-      commit({ ...d, product: { ...d.product, params: { ...d.product.params, ...patch } } });
+      // A corner's mount is a schemaVersion 7 field (ADR-177).
+      const mounted = 'mount' in patch || 'mountHeight' in patch;
+      commit({
+        ...d,
+        schemaVersion: mounted ? SCHEMA_VERSION : d.schemaVersion,
+        product: { ...d.product, params: { ...d.product.params, ...patch } },
+      });
     },
     updatePanelSet: (patch) => {
       const d = get().design;
       if (d.product.kind !== 'panels') return;
       commit({ ...d, product: { ...d.product, params: { ...d.product.params, ...patch } } });
+    },
+    setLoosePanelBoard: (panelId, board) => {
+      const d0 = get().design;
+      if (d0.product.kind !== 'panels') return;
+      const { design: d, id } = withBoard(d0, board);
+      if (d.product.kind !== 'panels') return;
+      const panels = d.product.params.panels.map((lp) =>
+        lp.id === panelId ? { ...lp, materialId: id } : lp,
+      );
+      commit({ ...d, product: { ...d.product, params: { ...d.product.params, panels } } });
     },
     updatePanel: (patch) => {
       const d = get().design;
@@ -1518,6 +1847,8 @@ export const useDesign = create<State>((rawSet, get) => {
     setHighlight: (ids) => set({ highlight: ids }),
     setShowFronts: (v) => set({ showFronts: v }),
     setExploded: (v) => set({ exploded: v }),
+    litPanelIds: null,
+    setLit: (ids) => set({ litPanelIds: ids }),
     setTab: (t) => set({ tab: t, resultsOpen: true }),
     toggleTab: (t) =>
       set((s) =>

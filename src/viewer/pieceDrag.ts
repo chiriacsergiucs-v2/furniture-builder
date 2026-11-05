@@ -188,7 +188,8 @@ export function usePieceDrag(enabled: boolean, snapOn: boolean) {
         if (!g.dragging) return;
         swallow.current = true;
         const snapping = live.current.snapOn && !ev.altKey;
-        useDesign.getState().dropItemAt(g.id, g.from, g.to, snapping);
+        // Alt: the piece moves without its connected neighbours (ADR-168).
+        useDesign.getState().dropItemAt(g.id, g.from, g.to, snapping, ev.altKey);
       };
       const onCancel = (ev: PointerEvent) => {
         const g = gesture.current;

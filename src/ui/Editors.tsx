@@ -4,7 +4,7 @@ import { applyLayout, layoutPresets } from '../core/catalog/presets';
 import { DEFAULT_SLIDING_OVERLAP, DEFAULT_SLIDING_TRACK } from '../core/cabinet';
 import { RULE_DEFAULTS } from '../core/rules';
 import { t, tr } from '../core/i18n';
-import { materialLabel } from '../core/materials';
+import { boardLabel } from '../core/boards';
 import type {
   ApplianceNiche,
   FrameParams,
@@ -29,7 +29,7 @@ import { tNode } from './i18n';
 import { Icon } from './icons';
 
 const matOptions = (materials: Material[], filter?: (m: Material) => boolean) =>
-  materials.filter(filter ?? (() => true)).map((m) => ({ value: m.id, label: materialLabel(m) }));
+  materials.filter(filter ?? (() => true)).map((m) => ({ value: m.id, label: boardLabel(m) }));
 
 type FrontKind = 'none' | 'doors1' | 'doors2' | 'sliding' | 'flap';
 const frontKind = (f: Front | null | undefined): FrontKind =>
@@ -346,61 +346,6 @@ export function PieceInfo() {
   );
 }
 
-/** A board for any single part of the piece, instead of its group's board; lost part ids are listed to clear. */
-export function PartBoardsGroup() {
-  const panels = useDesign((s) => s.model.panels);
-  const materials = useDesign((s) => s.design.materials);
-  const own = useDesign((s) => s.design.partMaterials);
-  const setPart = useDesign((s) => s.setPartMaterial);
-  const rows = useMemo(() => {
-    const seen = new Map<string, number>();
-    return panels.map((p) => {
-      const n = (seen.get(p.label) ?? 0) + 1;
-      seen.set(p.label, n);
-      return { id: p.id, label: n > 1 ? `${tr(p.label)} (${n})` : tr(p.label) };
-    });
-  }, [panels]);
-  const lost = useMemo(
-    () => Object.keys(own ?? {}).filter((id) => !panels.some((p) => p.id === id)),
-    [own, panels],
-  );
-  const options = [{ value: '', label: t('Same as its group') }, ...matOptions(materials)];
-  return (
-    <Group
-      title={t('Part boards')}
-      id="g-part-boards"
-      defaultOpen={false}
-      info={
-        <InfoTip label={t('About part boards')} align="end">
-          {t(
-            'Give any single part its own board. A board of another thickness is flagged under Checks.',
-          )}
-        </InfoTip>
-      }
-    >
-      {rows.map((r) => (
-        <Select
-          key={r.id}
-          label={r.label}
-          value={own?.[r.id] ?? ''}
-          options={options}
-          onChange={(v) => setPart(r.id, v || null)}
-        />
-      ))}
-      {lost.map((id) => (
-        <p key={id} className="alert warning">
-          <span>
-            {t('{id} no longer exists; its board is not used.', { id })}{' '}
-            <button type="button" className="btn outline sm" onClick={() => setPart(id, null)}>
-              {t('Clear')}
-            </button>
-          </span>
-        </p>
-      ))}
-    </Group>
-  );
-}
-
 /** Guidance thresholds (ADR-035): typical defaults the user can change for this piece. */
 export function ChecksGroup() {
   const rules = useDesign((s) => s.design.settings?.rules);
@@ -526,7 +471,6 @@ export function PanelEditor({ p, materials }: { p: PanelParams; materials: Mater
           }
         />
       )}
-      <PartBoardsGroup />
       <ChecksGroup />
     </div>
   );
@@ -556,10 +500,8 @@ const FRAME_LABEL: Record<FrameParams['kind'], string> = {
 };
 
 /** Frames (ADR-038): legs, rails, stretchers, slats; beds by mattress size. */
-export function FrameEditor({ p, materials }: { p: FrameParams; materials: Material[] }) {
+export function FrameEditor({ p }: { p: FrameParams }) {
   const set = useDesign((s) => s.updateFrame);
-  const solid = matOptions(materials, (m) => m.stock === 'solid');
-  const sheets = matOptions(materials, (m) => m.stock !== 'solid' && m.thickness >= 12);
   const b = p.bed;
   return (
     <div className="inspector">
@@ -975,21 +917,6 @@ export function FrameEditor({ p, materials }: { p: FrameParams; materials: Mater
           onChange={(v) => set({ slats: { ...p.slats, gap: v } })}
         />
       </div>
-      <Group title={t('Materials')} id="g-materials">
-        <Select
-          label={t('Solid timber')}
-          value={p.solidMaterialId}
-          options={solid.length ? solid : matOptions(materials)}
-          onChange={(v) => set({ solidMaterialId: v })}
-        />
-        <Select
-          label={t('Boards (top, seat, ends)')}
-          value={p.panelMaterialId}
-          options={sheets}
-          onChange={(v) => set({ panelMaterialId: v })}
-        />
-      </Group>
-      <PartBoardsGroup />
       <ChecksGroup />
     </div>
   );

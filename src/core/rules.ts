@@ -146,7 +146,7 @@ export const rules: Rule[] = [
     check: (d, model) => {
       const out = none();
       const p = d.product;
-      const tall = (p.kind === 'cabinet' && p.params.mount !== 'wall') || p.kind === 'corner';
+      const tall = (p.kind === 'cabinet' || p.kind === 'corner') && p.params.mount !== 'wall';
       if (tall && model.bounds.h > ANTI_TIP_HEIGHT) {
         out.hardware.push({
           nodeId: p.id,

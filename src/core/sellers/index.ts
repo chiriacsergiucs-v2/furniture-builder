@@ -158,6 +158,7 @@ export const HARDWARE_KINDS: Partial<Record<HardwareKind, ProductKind[]>> = {
   'flap-stay': ['flap-stay'],
   'shelf-pin': ['shelf-pin'],
   'wall-bracket': ['wall-bracket'],
+  'wall-hanging': ['wall-bracket'],
 };
 
 const NOT_HARDWARE: ProductKind[] = ['board', 'worktop', 'edge-band'];

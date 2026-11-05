@@ -25,6 +25,17 @@ import {
   validateRoom,
   type Room,
 } from './room';
+import { setRooms, type VariableSet } from './setRoom';
+import {
+  variableDiagnostics,
+  type Binding,
+  type ProjectVariable,
+  isBindTarget,
+  MAX_EXPR,
+  MAX_VARIABLE_NAME,
+  MAX_VARIABLES,
+  nameProblem,
+} from './variables';
 import { bandKey, cutlist, hardwareSummary, type CutRow } from './cutlist';
 import { bandFor, bandProblems, bandText } from './materials';
 import { DEFAULT_KERF, newId, sheetOf, upgradeDesign, validateDesign } from './design';
@@ -37,6 +48,23 @@ import {
   union,
   yawPoint,
 } from './geometry';
+import {
+  commonBuilds,
+  commonDesign,
+  commonPanels,
+  commonTopRole,
+  pruneCommon,
+  type CommonBuild,
+} from './common';
+import { connectionDiagnostics, pruneConnections, type Connection } from './connections';
+import { bounds2 } from './outline';
+import {
+  pruneShared,
+  sharedBuilds,
+  sharedDesign,
+  withSharedPins,
+  type SharedBuild,
+} from './shared';
 import { aabbOf, overlapsBox, panelsOverlap, turnShape } from './shape';
 import { modelBox, modelChecks, validateModelItems, type ModelItem } from './model3d';
 import type { SheetSettings } from './nesting';
@@ -56,6 +84,7 @@ import type {
   Material,
   Mm,
   Panel,
+  PinRows,
   Space,
   Yaw,
 } from './types';
@@ -75,6 +104,10 @@ export type Placement =
   | { kind: 'floor' }
   | { kind: 'wall'; height: Mm }
   | { kind: 'above'; baseId: string; gap: Mm; offsetX: Mm };
+
+/** An outside size a lock can hold (ADR-171). */
+export type SizeAxis = 'width' | 'height' | 'depth';
+export const SIZE_AXES: readonly SizeAxis[] = ['width', 'height', 'depth'];
 
 export interface ProjectItem {
   id: string;
@@ -118,12 +151,32 @@ export interface ProjectItem {
    */
   sizeLocked?: true;
   /**
+   * Turn locked (ADR-171): its quarter turn and angle do not change until it is unlocked; it still moves and resizes.
+   * Absent = not locked. Saved from project schemaVersion 19.
+   */
+  turnLocked?: true;
+  /**
+   * Sizes locked one by one (ADR-171): the listed outside sizes do not change until unlocked; `sizeLocked` stays and
+   * means all three. Absent = none. Saved from project schemaVersion 19.
+   */
+  sizeLocks?: SizeAxis[];
+  /**
    * Template reference (ADR-124): the piece refers to its catalog origin (`design.catalog.origin`: template, variant,
    * revision) and `overrides` are the settings it changed against it (`src/core/ownEdits.ts`), kept up to date while
    * that revision is the catalog's. `design` stays the full copy, the fallback (G-161). Absent = a plain copy.
    * Saved from project schemaVersion 12.
    */
   ref?: { overrides: Record<string, unknown> };
+  /**
+   * Bindings (ADR-166): sizes and positions that follow a project variable or a formula, evaluated on every commit
+   * (`src/core/variables.ts`). Absent = none. Saved from project schemaVersion 16.
+   */
+  bindings?: Binding[];
+  /**
+   * The value set this piece is a duplicate for (ADR-167): `of` is the set-1 piece it copies. Absent = set 1.
+   * Saved from project schemaVersion 16.
+   */
+  set?: { id: string; of: string };
 }
 
 /**
@@ -137,6 +190,19 @@ export interface ProjectSettings {
   handle?: Handle | null;
   frontStyle?: FrontStyle;
   plinthHeight?: Mm;
+}
+
+/** Cabinets standing side by side that share their sides, left to right (ADR-190, schemaVersion 20). */
+export interface SharedSides {
+  id: string;
+  itemIds: string[];
+}
+
+/** One top or bottom panel shared by items standing side by side (ADR-165, schemaVersion 17). */
+export interface CommonPanel {
+  id: string;
+  kind: 'top' | 'bottom';
+  itemIds: string[];
 }
 
 /**
@@ -222,9 +288,11 @@ export interface RunSink {
  * (ADR-095); 7 = a kept template revision on items (ADR-096); 8 = groups of pieces
  * (ADR-097); 9 = linked copies (ADR-111); 10 = pieces typed at an angle (ADR-121); 11 = size-locked pieces
  * (ADR-122); 12 = template references and project-wide settings (ADR-124); 13 = run handles and sinks (ADR-125);
- * 14 = wall backgrounds (ADR-145); 15 = fitted and straightened wall pictures (ADR-146).
+ * 14 = wall backgrounds (ADR-145); 15 = fitted and straightened wall pictures (ADR-146); 16 = variables, bindings
+ * and value sets (ADR-166, ADR-167); 17 = common tops and bottoms (ADR-165); 18 = connections between pieces
+ * (ADR-168); 19 = turn and per-size locks (ADR-171); 20 = shared sides (ADR-190).
  */
-export const PROJECT_SCHEMA = 15 as const;
+export const PROJECT_SCHEMA = 20 as const;
 export const PROJECT_SCHEMAS: readonly number[] = [
   1,
   2,
@@ -240,10 +308,34 @@ export const PROJECT_SCHEMAS: readonly number[] = [
   12,
   13,
   14,
+  15,
+  16,
+  17,
+  18,
+  19,
   PROJECT_SCHEMA,
 ];
 export type ProjectSchemaVersion =
-  1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | typeof PROJECT_SCHEMA;
+  | 1
+  | 2
+  | 3
+  | 4
+  | 5
+  | 6
+  | 7
+  | 8
+  | 9
+  | 10
+  | 11
+  | 12
+  | 13
+  | 14
+  | 15
+  | 16
+  | 17
+  | 18
+  | 19
+  | typeof PROJECT_SCHEMA;
 const RUN_REQUESTS_SINCE = 4;
 const MODELS_SINCE = 5;
 const LOCKS_SINCE = 6;
@@ -256,6 +348,11 @@ const REFS_SINCE = 12;
 const RUN_EXTRAS_SINCE = 13;
 const WALLS_SINCE = 14;
 const FITTED_WALLS_SINCE = 15;
+const VARIABLES_SINCE = 16;
+const COMMON_SINCE = 17;
+const CONNECTIONS_SINCE = 18;
+const PARAM_LOCKS_SINCE = 19;
+const SHARED_SINCE = 20;
 
 export interface Project {
   schemaVersion: ProjectSchemaVersion;
@@ -288,6 +385,16 @@ export interface Project {
   runHandles?: RunHandle[];
   /** Sinks over base units: worktop cut-outs (ADR-125, schemaVersion 13). Absent = none. */
   sinks?: RunSink[];
+  /** Project variables (ADR-166, schemaVersion 16): named numbers or formulas pieces are bound to. Absent = none. */
+  variables?: ProjectVariable[];
+  /** Value sets (ADR-167, schemaVersion 16): more sets of values for the variables, each with its duplicates. */
+  variableSets?: VariableSet[];
+  /** Common tops and bottoms across items (ADR-165, schemaVersion 17). Absent = none. */
+  common?: CommonPanel[];
+  /** Neighbours sharing one side panel (ADR-190, schemaVersion 20). Absent = none. */
+  sharedSides?: SharedSides[];
+  /** Connections between touching pieces (ADR-168, schemaVersion 18): they move together and are re-checked. */
+  connections?: Connection[];
 }
 
 /**
@@ -346,7 +453,7 @@ export function makeItem(project: Project, design: Design, libraryId?: string): 
   const d = upgradeDesign(design);
   const wall = isWallHung(d);
   const y = wall
-    ? d.product.kind === 'cabinet'
+    ? d.product.kind === 'cabinet' || d.product.kind === 'corner'
       ? (d.product.params.mountHeight ?? 1450)
       : 1450
     : 0;
@@ -364,9 +471,10 @@ export function makeItem(project: Project, design: Design, libraryId?: string): 
   };
 }
 
-/** The piece is built to hang on the wall (brackets and rail scheduled). */
+/** The piece is built to hang on the wall: a wall cabinet (brackets and rail scheduled) or a hung corner (ADR-177). */
 export const isWallHung = (d: Design) =>
-  d.product.kind === 'cabinet' && d.product.params.mount === 'wall';
+  (d.product.kind === 'cabinet' || d.product.kind === 'corner') &&
+  d.product.params.mount === 'wall';
 
 // ---------------------------------------------------------------------------
 // Placement: floor, wall, on or above another piece (ADR-031)
@@ -492,6 +600,35 @@ export const isLocked = (item: Pick<ProjectItem, 'locked'> | undefined): boolean
 
 /** The hint shown when a locked piece is dragged, turned or mirrored (ADR-095). */
 export const LOCKED_HINT = t('Locked — unlock to move');
+/** The hint shown where a turn-locked piece would be turned (ADR-171). */
+export const TURN_LOCKED_HINT = t('Turn locked — unlock to turn');
+export const isTurnLocked = (item: Pick<ProjectItem, 'turnLocked'> | undefined): boolean =>
+  !!item?.turnLocked;
+
+/** Lock or unlock a piece's turn (ADR-171); the flag is absent when unlocked. The same project when nothing changes. */
+export function setTurnLocked(project: Project, id: string, on: boolean): Project {
+  const it = project.items.find((i) => i.id === id);
+  if (!it || isTurnLocked(it) === on) return project;
+  const { turnLocked: _l, ...rest } = it;
+  void _l;
+  const next: ProjectItem = on ? { ...rest, turnLocked: true } : rest;
+  return { ...project, items: project.items.map((i) => (i.id === id ? next : i)) };
+}
+
+/**
+ * Why the pieces `ids` may not turn (ADR-171), or null: one of them, or a piece carried by one of them, has its turn
+ * locked. The reason names the piece. A placement lock (ADR-095) is `moveBlocked`'s.
+ */
+export function turnBlocked(project: Project, ids: readonly string[]): string | null {
+  const turning = new Set(ids);
+  const own =
+    project.items.find((it) => turning.has(it.id) && it.turnLocked) ??
+    carriedBy(project, ids, (it) => !!it.turnLocked).find((it) => it.turnLocked);
+  if (!own) return null;
+  return t('{name} has its turn locked — unlock it to turn it.', {
+    name: pieceName(project, own.id),
+  });
+}
 
 /** What a move helper did: the project after it, or the same project and why nothing moved (ADR-095). */
 export interface MoveResult {
@@ -651,7 +788,11 @@ export function removeProjectItem(project: Project, id: string): Project {
   const runRequests = project.runRequests
     ?.map((r) => ({ ...r, from: r.from.filter((x) => x !== id) }))
     .filter((r) => r.from.length);
-  return pruneGroups({ ...project, items, ...(runRequests ? { runRequests } : {}) });
+  return pruneShared(
+    pruneConnections(
+      pruneCommon(pruneGroups({ ...project, items, ...(runRequests ? { runRequests } : {}) })),
+    ),
+  );
 }
 
 /** Placement problems: a missing base, a piece resting on itself, a piece in the air that is not built to hang. */
@@ -752,6 +893,8 @@ export interface PlacedPiece {
   facing: { axis: 'x' | 'z'; sign: 1 | -1 };
   /** Chair, installation and service envelopes in room coordinates (ADR-073). */
   envelopes: Envelope[];
+  /** Its own tops (bottoms) a common top (bottom) replaces (ADR-165), in room coordinates; absent = none. */
+  removed?: Panel[];
   /** The whole piece as one box, turned when the piece is typed at an angle (ADR-121); `bounds` encloses it. */
   outline: Box;
   /** Its floor outline: four corners (x, z) in order, turned with the piece (ADR-121). */
@@ -828,20 +971,38 @@ const withYaw = (item: ProjectItem, rb: Pick<Box, 'w' | 'd'>, b: Box): Box => {
   return yaw ? { ...b, yaw } : b;
 };
 
-export function placeItem(item: ProjectItem, opts?: { noPlinth?: boolean }): PlacedPiece {
-  const built = buildModel(item.design);
-  // A run plinth replaces the piece's own plinth (ADR-054).
-  const model = opts?.noPlinth
-    ? { ...built, panels: built.panels.filter((p) => p.role !== 'plinth') }
+export function placeItem(
+  item: ProjectItem,
+  opts?: { noPlinth?: boolean; common?: CommonBuild; shared?: SharedBuild; sharedPins?: PinRows[] },
+): PlacedPiece {
+  const c = opts?.common;
+  // In a common top or bottom (ADR-165) the piece is built with its top over (bottom under) the sides; sharing a
+  // side (ADR-190) it leaves its right side out and its left side carries the neighbour's pin rows.
+  const raw = buildModel(
+    sharedDesign(c ? commonDesign(item.design, c) : item.design, opts?.shared),
+  );
+  const built = opts?.sharedPins?.length
+    ? { ...raw, panels: withSharedPins(raw.panels, opts.sharedPins) }
+    : raw;
+  // A run plinth replaces the piece's own plinth (ADR-054); a common top or bottom replaces its own (ADR-165).
+  const leaves = (p: Panel) =>
+    (!!opts?.noPlinth && p.role === 'plinth') ||
+    (!!c?.top && p.role === commonTopRole(item.design)) ||
+    (!!c?.bottom && p.role === 'bottom');
+  const model = built.panels.some(leaves)
+    ? { ...built, panels: built.panels.filter((p) => !leaves(p)) }
     : built;
   const r = item.rotationY;
-  const rotated = model.panels.map((p) => rotateBox(p.box, r));
+  const left = model === built ? [] : built.panels.filter((p) => leaves(p) && p.role !== 'plinth');
+  const rotated = [...model.panels, ...left].map((p) => rotateBox(p.box, r));
   // The piece is placed by its full outline, so leaving the plinth out does not move it.
-  const rb = union(built.panels.map((p) => rotateBox(aabbOf(p), r)));
+  // Sharing a side (ADR-190) a front reaches over half the neighbour's side; the piece keeps its own outline.
+  const own = opts?.shared?.right ? buildModel(item.design).panels : built.panels;
+  const rb = union(own.map((p) => rotateBox(aabbOf(p), r)));
   const dx = item.position.x - rb.x,
     dy = item.position.y - rb.y,
     dz = item.position.z - rb.z;
-  const panels = model.panels.map((p, i): Panel => ({
+  const all = [...model.panels, ...left].map((p, i): Panel => ({
     ...p,
     id: `${item.id}:${p.id}`,
     nodeId: `${item.id}:${p.nodeId}`,
@@ -868,6 +1029,7 @@ export function placeItem(item: ProjectItem, opts?: { noPlinth?: boolean }): Pla
         }
       : {}),
   }));
+  const panels = all.slice(0, model.panels.length);
   const full = { x: rb.x + dx, y: rb.y + dy, z: rb.z + dz, w: rb.w, h: rb.h, d: rb.d };
   const clearances = localClearances(model).map((c) => {
     const rc = rotateBox(c.box, r);
@@ -893,13 +1055,15 @@ export function placeItem(item: ProjectItem, opts?: { noPlinth?: boolean }): Pla
     item,
     model,
     panels,
-    bounds: model === built ? union(panels.map(aabbOf)) : enclosing(outline),
+    bounds:
+      model === built && !opts?.shared?.right ? union(panels.map(aabbOf)) : enclosing(outline),
     clearances,
     facing,
     envelopes,
     outline,
     footprint: corners,
     front: [...corners[f1], ...corners[f2]] as [number, number, number, number],
+    ...(left.length ? { removed: all.slice(model.panels.length) } : {}),
   };
 }
 
@@ -958,12 +1122,31 @@ export function buildProjectModel(input: Project): ProjectModel {
   // Run handles reach the pieces' fronts when built (ADR-125).
   const project = applyRunHandles(resolvePlacements(input));
   const covered = plinthCovered(project);
-  const pieces = project.items.map((i) => placeItem(i, { noPlinth: covered.has(i.id) }));
+  // Common tops and bottoms (ADR-165) and shared sides (ADR-190): how each member is built, and the links that no
+  // longer fit.
+  const common = commonBuilds(project);
+  const shared = sharedBuilds(project);
+  const pieces = project.items.map((i) =>
+    placeItem(i, {
+      noPlinth: covered.has(i.id),
+      common: common.builds.get(i.id),
+      shared: shared.builds.get(i.id),
+      sharedPins: shared.pins.get(i.id),
+    }),
+  );
   const materials = new Map<string, Material>();
   const panels: Panel[] = [];
   const piecePanels: Panel[][] = [];
   const hardware: HardwareItem[] = [];
-  const diagnostics: Diagnostic[] = placementIssues(project);
+  // Variables and bindings with problems (ADR-166, ADR-008), checked apart from the generators; common tops and
+  // bottoms that are not built (ADR-165); connections that no longer hold (ADR-168).
+  const diagnostics: Diagnostic[] = [
+    ...placementIssues(project),
+    ...variableDiagnostics(project),
+    ...common.diagnostics,
+    ...shared.diagnostics,
+    ...connectionDiagnostics(project, pieces),
+  ];
   for (const pc of pieces) {
     const mats = new Map(pc.item.design.materials.map((m) => [m.id, m]));
     for (const m of pc.item.design.materials) {
@@ -1015,6 +1198,20 @@ export function buildProjectModel(input: Project): ProjectModel {
         }),
         nodeId: pc.item.id,
       });
+  }
+  // One panel per common top or bottom, on the leftmost member's board (ADR-165).
+  const byItem = new Map(pieces.map((pc) => [pc.item.id, pc]));
+  for (const cp of commonPanels(
+    project,
+    common.plans,
+    new Map(pieces.filter((pc) => pc.removed).map((pc) => [pc.item.id, pc.removed!])),
+    (itemId, materialId) => {
+      const m = byItem.get(itemId)?.item.design.materials.find((x) => x.id === materialId);
+      return m ? materialKey(m) : materialId;
+    },
+  )) {
+    panels.push(cp);
+    piecePanels.push([cp]);
   }
   // Pieces may touch but not occupy the same space (bounding boxes first, then panels).
   const overlapping = new Set<string>();
@@ -1157,8 +1354,28 @@ export function buildProjectModel(input: Project): ProjectModel {
     hitsPanels: (b: Box) => overlaps(m.box, b),
     clearances: [],
   }));
-  // The room (ADR-058): walls, obstacles, door swings and windows; obstacles also block openings (ADR-057).
-  const rc = project.room ? roomChecks(project.room, [...checked, ...asPieces]) : null;
+  // The room (ADR-058): walls, obstacles, door swings and windows; obstacles also block openings (ADR-057). A value
+  // set's pieces are checked against the room at the set's origin (ADR-167).
+  const setOf = new Map(project.items.map((i) => [i.id, i.set?.id ?? '']));
+  const rooms = project.room
+    ? [
+        { id: '', room: project.room },
+        ...setRooms(project).map((sr) => ({ id: sr.set.id, room: sr.room })),
+      ]
+    : [];
+  const rcs = rooms.map(({ id, room }) =>
+    roomChecks(room, [
+      ...checked.filter((c) => (setOf.get(c.id) ?? '') === id),
+      ...(id === '' ? asPieces : []),
+    ]),
+  );
+  const rc = rcs.length
+    ? {
+        diagnostics: rcs.flatMap((r) => r.diagnostics),
+        clearanceIssues: rcs.flatMap((r) => r.clearanceIssues),
+        obstacles: rcs.flatMap((r) => r.obstacles),
+      }
+    : null;
   if (rc) diagnostics.push(...rc.diagnostics, ...rc.clearanceIssues);
   // Run worktops and plinths over a pipe or outlet (ADR-072).
   if (project.room && !outlineIssues(project.room.outline).length)
@@ -1176,7 +1393,29 @@ export function buildProjectModel(input: Project): ProjectModel {
     ...(rc?.obstacles ?? []),
     ...models.map((m) => ({ label: m.item.name, box: m.box })),
   ];
-  const blocked = openingChecks(pieces, panels, diagnostics, obstacles);
+  // A shaped common top can be concave (an L, ADR-189); doors are checked against its convex pieces instead: the
+  // members' own former tops and the gaps it bridges.
+  const commonPieces: Panel[] = [
+    ...pieces.flatMap((pc) => pc.removed ?? []),
+    ...[...common.plans.entries()].flatMap(([id, plan]) =>
+      plan.gaps.map((g, i) => {
+        const top = panels.find((q) => q.id === `common:${id}`);
+        const b = bounds2(g.rect);
+        return {
+          ...top!,
+          id: `common:${id}/gap/${i}`,
+          shape: undefined,
+          box: { x: b.x, y: top!.box.y, z: b.z, w: b.w, h: top!.box.h, d: b.d },
+        };
+      }),
+    ),
+  ];
+  const blocked = openingChecks(
+    pieces,
+    [...panels.filter((q) => !q.id.startsWith('common:')), ...commonPieces],
+    diagnostics,
+    obstacles,
+  );
   const zones = clearanceZones(
     project,
     pieces,
@@ -2187,10 +2426,37 @@ export function projectCutlist(input: Project): CutRow[] {
     }
   }
   const covered = plinthCovered(project);
+  // Common tops and bottoms (ADR-165): members leave their own out, and each common panel is one row of its own.
+  const common = commonBuilds(project);
+  const shared = sharedBuilds(project);
+  if (common.plans.size) {
+    const pm = buildProjectModel(input);
+    const model: FurnitureModel = {
+      panels: pm.model.panels.filter((p) => p.id.startsWith('common:')),
+      spaces: [],
+      hardware: [],
+      diagnostics: [],
+      bounds: { x: 0, y: 0, z: 0, w: 0, h: 0, d: 0 },
+    };
+    for (const r of cutlist(model, pm.materials))
+      rows.set(
+        ['common', r.materialId, r.length, r.width, r.edgesL, r.edgesW, bandKey(r.band)].join('|'),
+        r,
+      );
+  }
   for (const item of project.items) {
-    const built = buildModel(item.design);
-    const model = covered.has(item.id)
-      ? { ...built, panels: built.panels.filter((p) => p.role !== 'plinth') }
+    const c = common.builds.get(item.id);
+    const raw = buildModel(
+      sharedDesign(c ? commonDesign(item.design, c) : item.design, shared.builds.get(item.id)),
+    );
+    const pins = shared.pins.get(item.id);
+    const built = pins ? { ...raw, panels: withSharedPins(raw.panels, pins) } : raw;
+    const leaves = (p: Panel) =>
+      (covered.has(item.id) && p.role === 'plinth') ||
+      (!!c?.top && p.role === commonTopRole(item.design)) ||
+      (!!c?.bottom && p.role === 'bottom');
+    const model = built.panels.some(leaves)
+      ? { ...built, panels: built.panels.filter((p) => !leaves(p)) }
       : built;
     for (const r of cutlist(model, item.design.materials)) {
       const mat = item.design.materials.find((m) => m.id === r.materialId)!;
@@ -2323,6 +2589,67 @@ function validateSettings(s: unknown): string[] {
   return errs;
 }
 
+/** Variables and value sets (ADR-166, ADR-167). */
+function validateVariables(p: Record<string, unknown>): string[] {
+  const errs: string[] = [];
+  const vars: ProjectVariable[] = [];
+  if (p.variables !== undefined) {
+    if (!Array.isArray(p.variables) || p.variables.length > MAX_VARIABLES)
+      return [t('Invalid variables')];
+    if ((p.schemaVersion as number) < VARIABLES_SINCE)
+      errs.push(t('Variables need project schemaVersion {v}', { v: VARIABLES_SINCE }));
+    for (const v of p.variables) {
+      if (
+        !isObj(v) ||
+        typeof v.id !== 'string' ||
+        !v.id ||
+        typeof v.name !== 'string' ||
+        v.name.length > MAX_VARIABLE_NAME ||
+        typeof v.expr !== 'string' ||
+        v.expr.length > MAX_EXPR ||
+        nameProblem(v.name, vars) !== null ||
+        vars.some((x) => x.id === v.id)
+      ) {
+        errs.push(t('Invalid variable'));
+        continue;
+      }
+      vars.push({ id: v.id, name: v.name, expr: v.expr });
+    }
+  }
+  if (p.variableSets !== undefined) {
+    if (!Array.isArray(p.variableSets) || p.variableSets.length > MAX_VARIABLES)
+      return [...errs, t('Invalid value sets')];
+    if ((p.schemaVersion as number) < VARIABLES_SINCE)
+      errs.push(t('Value sets need project schemaVersion {v}', { v: VARIABLES_SINCE }));
+    const ids = new Set<string>();
+    for (const s of p.variableSets) {
+      if (
+        !isObj(s) ||
+        typeof s.id !== 'string' ||
+        !s.id ||
+        ids.has(s.id) ||
+        typeof s.name !== 'string' ||
+        !s.name ||
+        s.name.length > MAX_VARIABLE_NAME ||
+        !isObj(s.values) ||
+        !Object.values(s.values).every((x) => typeof x === 'string' && x.length <= MAX_EXPR) ||
+        !isObj(s.origin) ||
+        !isInt(s.origin.x) ||
+        !isInt(s.origin.z)
+      ) {
+        errs.push(t('Invalid value set'));
+        continue;
+      }
+      ids.add(s.id);
+    }
+    if (Array.isArray(p.items))
+      for (const it of p.items)
+        if (isObj(it) && isObj(it.set) && typeof it.set.id === 'string' && !ids.has(it.set.id))
+          errs.push(t('Item {id}: unknown value set', { id: String(it.id) }));
+  }
+  return errs;
+}
+
 export function validateProject(p: unknown): string[] {
   if (!isObj(p)) return [t('Project must be an object')];
   const errs: string[] = [];
@@ -2397,6 +2724,26 @@ export function validateProject(p: unknown): string[] {
       else if ((p.schemaVersion as number) < LINKS_SINCE)
         errs.push(t('Linked copies need project schemaVersion {v}', { v: LINKS_SINCE }));
     }
+    if (it.turnLocked !== undefined) {
+      if (it.turnLocked !== true) errs.push(t('Invalid item turn lock'));
+      else if ((p.schemaVersion as number) < PARAM_LOCKS_SINCE)
+        errs.push(
+          t('Turn and size locks need project schemaVersion {v}', { v: PARAM_LOCKS_SINCE }),
+        );
+    }
+    if (it.sizeLocks !== undefined) {
+      if (
+        !Array.isArray(it.sizeLocks) ||
+        !it.sizeLocks.length ||
+        !it.sizeLocks.every((a) => (SIZE_AXES as readonly unknown[]).includes(a)) ||
+        new Set(it.sizeLocks).size !== it.sizeLocks.length
+      )
+        errs.push(t('Invalid item size locks'));
+      else if ((p.schemaVersion as number) < PARAM_LOCKS_SINCE)
+        errs.push(
+          t('Turn and size locks need project schemaVersion {v}', { v: PARAM_LOCKS_SINCE }),
+        );
+    }
     if (it.sizeLocked !== undefined) {
       if (it.sizeLocked !== true) errs.push(t('Invalid item size lock'));
       else if ((p.schemaVersion as number) < SIZE_LOCK_SINCE)
@@ -2407,9 +2754,32 @@ export function validateProject(p: unknown): string[] {
       else if ((p.schemaVersion as number) < REFS_SINCE)
         errs.push(t('Template references need project schemaVersion {v}', { v: REFS_SINCE }));
     }
+    if (it.bindings !== undefined) {
+      if (
+        !Array.isArray(it.bindings) ||
+        !it.bindings.every(
+          (b) =>
+            isObj(b) &&
+            isBindTarget(b.target) &&
+            typeof b.expr === 'string' &&
+            b.expr.length <= MAX_EXPR,
+        ) ||
+        new Set(it.bindings.map((b) => (isObj(b) ? b.target : ''))).size !== it.bindings.length
+      )
+        errs.push(t('Invalid item bindings'));
+      else if ((p.schemaVersion as number) < VARIABLES_SINCE)
+        errs.push(t('Bindings need project schemaVersion {v}', { v: VARIABLES_SINCE }));
+    }
+    if (it.set !== undefined) {
+      if (!isObj(it.set) || typeof it.set.id !== 'string' || typeof it.set.of !== 'string')
+        errs.push(t('Invalid item value set'));
+      else if ((p.schemaVersion as number) < VARIABLES_SINCE)
+        errs.push(t('Value sets need project schemaVersion {v}', { v: VARIABLES_SINCE }));
+    }
     const de = validateDesign(it.design);
     if (de.length) errs.push(t('Item {id}: {problem}', { id: String(it.id), problem: de[0] }));
   }
+  errs.push(...validateVariables(p));
   if (p.runParts !== undefined) {
     if (!Array.isArray(p.runParts)) errs.push(t('Invalid run parts'));
     else
@@ -2537,6 +2907,88 @@ export function validateProject(p: unknown): string[] {
         }
         groupIds.add(g.id);
         for (const x of g.itemIds) grouped.add(x as string);
+      }
+  }
+  if (p.common !== undefined) {
+    if ((p.schemaVersion as number) < COMMON_SINCE)
+      errs.push(t('Common tops and bottoms need project schemaVersion {v}', { v: COMMON_SINCE }));
+    const seen = new Set<string>();
+    const inKind = { top: new Set<string>(), bottom: new Set<string>() };
+    if (!Array.isArray(p.common)) errs.push(t('Invalid common tops and bottoms'));
+    else
+      for (const c of p.common) {
+        if (
+          !isObj(c) ||
+          typeof c.id !== 'string' ||
+          !c.id ||
+          seen.has(c.id) ||
+          (c.kind !== 'top' && c.kind !== 'bottom') ||
+          !Array.isArray(c.itemIds) ||
+          c.itemIds.length < 2 ||
+          !c.itemIds.every(
+            (x) =>
+              typeof x === 'string' && ids.has(x) && !inKind[c.kind as 'top' | 'bottom'].has(x),
+          )
+        ) {
+          errs.push(t('Invalid common top or bottom'));
+          continue;
+        }
+        seen.add(c.id);
+        for (const x of c.itemIds) inKind[c.kind as 'top' | 'bottom'].add(x as string);
+      }
+  }
+  if (p.sharedSides !== undefined) {
+    if ((p.schemaVersion as number) < SHARED_SINCE)
+      errs.push(t('Shared sides need project schemaVersion {v}', { v: SHARED_SINCE }));
+    const seen = new Set<string>();
+    const sharing = new Set<string>();
+    if (!Array.isArray(p.sharedSides)) errs.push(t('Invalid shared sides'));
+    else
+      for (const c of p.sharedSides) {
+        if (
+          !isObj(c) ||
+          typeof c.id !== 'string' ||
+          !c.id ||
+          seen.has(c.id) ||
+          !Array.isArray(c.itemIds) ||
+          c.itemIds.length < 2 ||
+          !c.itemIds.every((x) => typeof x === 'string' && ids.has(x) && !sharing.has(x))
+        ) {
+          errs.push(t('Invalid shared sides'));
+          continue;
+        }
+        seen.add(c.id);
+        for (const x of c.itemIds) sharing.add(x as string);
+      }
+  }
+  if (p.connections !== undefined) {
+    if ((p.schemaVersion as number) < CONNECTIONS_SINCE)
+      errs.push(t('Connections need project schemaVersion {v}', { v: CONNECTIONS_SINCE }));
+    const seen = new Set<string>();
+    const pairs = new Set<string>();
+    if (!Array.isArray(p.connections)) errs.push(t('Invalid connections'));
+    else
+      for (const c of p.connections) {
+        const pair = isObj(c) && Array.isArray(c.itemIds) ? (c.itemIds as unknown[]) : null;
+        const key =
+          pair && pair.length === 2 && pair.every((x) => typeof x === 'string')
+            ? [...(pair as string[])].sort().join('|')
+            : '';
+        if (
+          !isObj(c) ||
+          typeof c.id !== 'string' ||
+          !c.id ||
+          seen.has(c.id) ||
+          !key ||
+          pair![0] === pair![1] ||
+          !pair!.every((x) => ids.has(x as string)) ||
+          pairs.has(key)
+        ) {
+          errs.push(t('Invalid connection'));
+          continue;
+        }
+        seen.add(c.id);
+        pairs.add(key);
       }
   }
   if (p.settings !== undefined) {

@@ -102,8 +102,8 @@
                 550,
                 600
               ],
-              "boxMaterialId": "pal16",
-              "bottomMaterialId": "hdf3"
+              "boxMaterialId": "pal18",
+              "bottomMaterialId": "pal18"
             },
             "height": 435,
             "depth": 400,
@@ -238,8 +238,8 @@
                 550,
                 600
               ],
-              "boxMaterialId": "pal16",
-              "bottomMaterialId": "hdf3"
+              "boxMaterialId": "pal18",
+              "bottomMaterialId": "pal18"
             },
             "height": 435,
             "depth": 400,
@@ -374,8 +374,8 @@
                 550,
                 600
               ],
-              "boxMaterialId": "pal16",
-              "bottomMaterialId": "hdf3"
+              "boxMaterialId": "pal18",
+              "bottomMaterialId": "pal18"
             },
             "height": 435,
             "depth": 400,
@@ -510,8 +510,8 @@
                 550,
                 600
               ],
-              "boxMaterialId": "pal16",
-              "bottomMaterialId": "hdf3"
+              "boxMaterialId": "pal18",
+              "bottomMaterialId": "pal18"
             },
             "height": 435,
             "depth": 400,
@@ -651,8 +651,8 @@
                 550,
                 600
               ],
-              "boxMaterialId": "pal16",
-              "bottomMaterialId": "hdf3"
+              "boxMaterialId": "pal18",
+              "bottomMaterialId": "pal18"
             },
             "height": 435,
             "depth": 400,
@@ -792,8 +792,8 @@
                 550,
                 600
               ],
-              "boxMaterialId": "pal16",
-              "bottomMaterialId": "hdf3"
+              "boxMaterialId": "pal18",
+              "bottomMaterialId": "pal18"
             },
             "height": 435,
             "depth": 400,

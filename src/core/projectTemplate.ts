@@ -1,9 +1,12 @@
 /**
  * Project templates (ADR-060): a project saved for reuse. Pieces are kept as copies (ADR-032) with positions
  * relative to the leftmost-back piece (or to the room when the room is included); run parts are kept as a recipe
- * and suggested again when the template is used, so they always fit the pieces.
+ * and suggested again when the template is used, so they always fit the pieces. Since schemaVersion 2 (ADR-170) a
+ * template also keeps the project's variables, each piece's bindings and the connections between pieces (ADR-166,
+ * ADR-168); a template with none of them stays version 1.
  */
 import { newId, validateDesign } from './design';
+import { applyBindings, type Binding, type ProjectVariable } from './variables';
 import {
   planRuns,
   PROJECT_SCHEMA,
@@ -28,11 +31,17 @@ export interface TemplateItem {
   linkId?: string;
   /** Extra whole degrees on top of the quarter turn (ADR-121), 1–89; absent = 0. */
   angle?: number;
+  /** The piece's bindings to the template's variables, by name (ADR-166, ADR-170; schemaVersion 2). */
+  bindings?: Binding[];
 }
+
+/** 1 = ADR-060; 2 = variables, bindings and connections (ADR-170). An older app refuses a version it does not know. */
+export const TEMPLATE_SCHEMA = 2 as const;
+export type TemplateSchemaVersion = 1 | typeof TEMPLATE_SCHEMA;
 
 export interface ProjectTemplate {
   kind: 'project-template';
-  schemaVersion: 1;
+  schemaVersion: TemplateSchemaVersion;
   id: string;
   name: string;
   description: string;
@@ -45,6 +54,10 @@ export interface ProjectTemplate {
    */
   runRecipe?: { settings: RunSettings; removed?: string[] };
   room?: Room;
+  /** The project's variables (ADR-166), every one (schemaVersion 2). */
+  variables?: ProjectVariable[];
+  /** Connections between pieces (ADR-168), over template refs (schemaVersion 2). */
+  connections?: { itemIds: [string, string] }[];
 }
 
 /**
@@ -75,9 +88,15 @@ export function templateFromProject(
   // Template refs are the project's item ids; removed keys of pieces no longer there are dropped.
   const refs = new Map(p.items.map((i) => [i.id, i.id]));
   const removed = remapKeys(p.runPartsRemoved ?? [], refs);
+  const variables = p.variables?.length ? structuredClone(p.variables) : undefined;
+  const connections = p.connections
+    ?.filter((c) => refs.has(c.itemIds[0]) && refs.has(c.itemIds[1]))
+    .map((c) => ({ itemIds: [c.itemIds[0], c.itemIds[1]] as [string, string] }));
+  const bound = p.items.some((i) => i.bindings?.length);
   return {
     kind: 'project-template',
-    schemaVersion: 1,
+    // Variables, bindings or connections need version 2 (ADR-170); without them an older app can still read it.
+    schemaVersion: variables || connections?.length || bound ? TEMPLATE_SCHEMA : 1,
     id: newId(),
     name,
     description: opts.description ?? '',
@@ -92,7 +111,10 @@ export function templateFromProject(
       ...(i.placement ? { placement: structuredClone(i.placement) } : {}),
       ...(i.linkId ? { linkId: i.linkId } : {}),
       ...(i.angle ? { angle: i.angle } : {}),
+      ...(i.bindings?.length ? { bindings: structuredClone(i.bindings) } : {}),
     })),
+    ...(variables ? { variables } : {}),
+    ...(connections?.length ? { connections } : {}),
     ...(p.runParts?.length || p.runSettings
       ? {
           runRecipe: {
@@ -123,11 +145,23 @@ export function projectFromTemplate(t: ProjectTemplate, name = t.name): Project 
       ...(pl ? { placement: pl } : {}),
       ...(i.linkId ? { linkId: i.linkId } : {}),
       ...(i.angle ? { angle: i.angle } : {}),
+      ...(i.bindings?.length ? { bindings: structuredClone(i.bindings) } : {}),
     };
   });
+  const connections = (t.connections ?? [])
+    .filter((c) => ids.has(c.itemIds[0]) && ids.has(c.itemIds[1]))
+    .map((c) => ({
+      id: newId(),
+      itemIds: [ids.get(c.itemIds[0])!, ids.get(c.itemIds[1])!] as [string, string],
+    }));
+  const extended =
+    items.some((i) => i.linkId || i.angle || i.bindings) ||
+    t.variables?.length ||
+    connections.length;
   const base: Project = {
-    // Linked copies and angled pieces need the project version that stores them (ADR-111, ADR-121).
-    schemaVersion: items.some((i) => i.linkId || i.angle) ? PROJECT_SCHEMA : 1,
+    // Linked copies, angled pieces, bindings and connections need the project version that stores them (ADR-111,
+    // ADR-121, ADR-166, ADR-168).
+    schemaVersion: extended ? PROJECT_SCHEMA : 1,
     id: newId(),
     name,
     createdAt: now,
@@ -135,15 +169,19 @@ export function projectFromTemplate(t: ProjectTemplate, name = t.name): Project 
     items,
     cutting: { kerf: 4 },
     ...(t.room ? { room: structuredClone(t.room) } : {}),
+    ...(t.variables?.length ? { variables: structuredClone(t.variables) } : {}),
+    ...(connections.length ? { connections } : {}),
   };
-  if (!t.runRecipe) return base;
+  if (!t.runRecipe) return t.variables?.length ? applyBindings(base) : base;
   const removed = remapKeys(t.runRecipe.removed ?? [], ids);
   const withSettings: Project = {
     ...base,
     runSettings: { ...t.runRecipe.settings },
     ...(removed.length ? { runPartsRemoved: removed } : {}),
   };
-  return { ...withSettings, runParts: planRuns(withSettings).parts };
+  const planned = { ...withSettings, runParts: planRuns(withSettings).parts };
+  // Bound sizes take their variables' values at once (ADR-166).
+  return t.variables?.length ? applyBindings(planned) : planned;
 }
 
 const isObj = (v: unknown): v is Record<string, unknown> =>
@@ -155,7 +193,12 @@ const isInt = (v: unknown, min = -1e7, max = 1e7) =>
 export function validateProjectTemplate(t: unknown): string[] {
   if (!isObj(t)) return ['Template must be an object'];
   const errs: string[] = [];
-  if (t.kind !== 'project-template' || t.schemaVersion !== 1) errs.push('Not a project template');
+  if (
+    t.kind !== 'project-template' ||
+    (t.schemaVersion !== 1 && t.schemaVersion !== TEMPLATE_SCHEMA)
+  )
+    errs.push('Not a project template');
+  const v2 = t.schemaVersion === TEMPLATE_SCHEMA;
   if (typeof t.id !== 'string' || !t.id || typeof t.name !== 'string' || !t.name)
     errs.push('Missing template id or name');
   if (typeof t.description !== 'string') errs.push('Missing description');
@@ -206,6 +249,29 @@ export function validateProjectTemplate(t: unknown): string[] {
       (typeof it.linkId !== 'string' || !it.linkId || it.linkId.length > 100)
     )
       errs.push(`${name}: invalid link`);
+    // Bindings need version 2; their shape and targets are checked on the project the template makes.
+    if (it.bindings !== undefined && (!v2 || !Array.isArray(it.bindings)))
+      errs.push(`${name}: bindings need template schemaVersion ${TEMPLATE_SCHEMA}`);
+  }
+  if (t.variables !== undefined && (!v2 || !Array.isArray(t.variables)))
+    errs.push(`Variables need template schemaVersion ${TEMPLATE_SCHEMA}`);
+  if (t.connections !== undefined) {
+    const pairs = new Set<string>();
+    if (!v2 || !Array.isArray(t.connections))
+      errs.push(`Connections need template schemaVersion ${TEMPLATE_SCHEMA}`);
+    else
+      for (const c of t.connections) {
+        const ids = isObj(c) && Array.isArray(c.itemIds) ? (c.itemIds as unknown[]) : null;
+        const key =
+          ids && ids.length === 2 && ids.every((x) => typeof x === 'string' && refs.has(x))
+            ? [...(ids as string[])].sort().join('|')
+            : '';
+        if (!key || ids![0] === ids![1] || pairs.has(key)) {
+          errs.push('Invalid template connection');
+          continue;
+        }
+        pairs.add(key);
+      }
   }
   const rr = t.runRecipe;
   if (rr !== undefined) {

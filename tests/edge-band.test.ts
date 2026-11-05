@@ -16,7 +16,13 @@ import { shoppingList } from '../src/core/shopping';
 import type { Design, EdgeBand, Material } from '../src/core/types';
 import { loadDesign, saveDesign } from '../src/persist/db';
 
-const chest = () => templates.find((t) => t.id === 'chest')!.create();
+/** A chest with its fronts on another board than its carcass (every part is PAL 18 by default, ADR-164). */
+const chest = (): Design => {
+  const d = templates.find((t) => t.id === 'chest')!.create();
+  return d.product.kind === 'cabinet'
+    ? { ...d, product: { ...d.product, params: { ...d.product.params, frontMaterialId: 'mdf18' } } }
+    : d;
+};
 const patch = (d: Design, id: string, p: Partial<Material>): Design => ({
   ...d,
   materials: d.materials.map((m) => (m.id === id ? { ...m, ...p } : m)),
@@ -83,7 +89,7 @@ describe('edge band specs on boards (ADR-077)', () => {
       frontBand: ABS2,
     });
     expect(d.schemaVersion).toBe(SCHEMA_VERSION);
-    expect(SCHEMA_VERSION).toBe(5);
+    expect(SCHEMA_VERSION).toBe(8);
     const file = JSON.parse(JSON.stringify(d)) as Design;
     expect(validateDesign(file)).toEqual([]);
     expect(file).toEqual(d);
@@ -97,7 +103,7 @@ describe('edge band specs on boards (ADR-077)', () => {
     expect(up.materials).toEqual(v2.materials);
     expect(buildModel(up).panels).toEqual(buildModel(v2).panels);
     expect(upgradeDesign(up)).toBe(up);
-    expect(validateDesign({ ...chest(), schemaVersion: 6 }).join()).toMatch(/schemaVersion/);
+    expect(validateDesign({ ...chest(), schemaVersion: 9 }).join()).toMatch(/schemaVersion/);
   });
 
   it('never change cut sizes (ADR-009): only the band is named', () => {
