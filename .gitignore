@@ -9,3 +9,4 @@ playwright-report
 .claude/settings.local.json
 __pycache__
 .claude/worktrees/
+.eslintcache

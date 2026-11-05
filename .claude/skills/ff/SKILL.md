@@ -19,7 +19,7 @@ and the pull request for that one request. Every hard rule in `CLAUDE.md` (Engin
    - one row in `docs/backlog.md` (next free `N` id), status `Partially done`, the request in the user's words,
      and the gap `find-it pending (light, ADR-066)` naming the visible text a later find-it should look for;
    - a gap in `docs/adr/GAPS.md` (`pnpm gaps add`) for anything asked but not built. No ADR is written.
-5. **Checks:** run only `pnpm typecheck` and `pnpm build` (main deploys on push, so a broken build must not land).
+5. **Checks:** run only `pnpm typecheck` and `pnpm build` (main deploys once CI on main passes, ADR-192; a broken build must not land).
    Run `pnpm format` so CI's format check passes, and `pnpm docs:check` for the bookkeeping. Do not run
    `pnpm test`, lint or any find-it. If typecheck or build fails, fix the cause; never push red.
 6. **Commit** locally with a clear message. Do not push yet.
