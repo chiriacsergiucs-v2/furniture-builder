@@ -181,17 +181,6 @@ export const ENSEMBLE_ASSESSMENTS: Record<string, Row> = {
     'Medium-high',
     'Listed in the MVP undo row; expected wherever snapping exists.',
   ],
-  'independent-selection': [
-    5,
-    4,
-    4,
-    4,
-    3,
-    2,
-    'Medium',
-    'Medium-high',
-    'Keeps item configurability after connection; matches the grouping/selection requests.',
-  ],
   'hard-soft-constraints': [
     5,
     3,
@@ -225,28 +214,6 @@ export const ENSEMBLE_ASSESSMENTS: Record<string, Row> = {
     'Very high',
     'Low-medium',
     'One-line mention; risky without trustworthy rules and the paper warns against uncontrollable automation.',
-  ],
-  'direct-manipulation': [
-    5,
-    5,
-    4,
-    5,
-    2,
-    3,
-    'Medium',
-    'High',
-    'MVP row; move/rotate in 2D/3D is a category norm.',
-  ],
-  'transform-gizmos': [
-    4,
-    3,
-    4,
-    4,
-    2,
-    2,
-    'Medium-high',
-    'Medium',
-    'Baseline control exists; the paper expects furniture-specific handles to need custom UX.',
   ],
   'propagation-pipeline': [
     5,
@@ -394,28 +361,6 @@ export const ENSEMBLE_ASSESSMENTS: Record<string, Row> = {
     'Medium',
     'Professional tools rely on it; needs online data feeds (conflicts with ADR-002 here).',
   ],
-  'budget-style-filters': [
-    2,
-    3,
-    3,
-    2,
-    3,
-    2,
-    'High',
-    'Low-medium',
-    'Phase-four item; budget filtering needs price data the paper ties to "if data exists".',
-  ],
-  'layout-optimisation': [
-    2,
-    2,
-    2,
-    2,
-    3,
-    2,
-    'Very high',
-    'Low',
-    'One word in the phase-four list with no detail.',
-  ],
   'ai-floorplan': [
     2,
     3,
@@ -482,7 +427,6 @@ export const ENSEMBLE_PRIORITIES: Record<string, [priority: string, basis: strin
   'connection-constraints': ['P0', 'Parent: Persistent semantic connections (MVP, P0).'],
   'connection-status': ['P0', 'MVP table: "Compatibility" — invalid pairs clearly reported.'],
   unsnap: ['P0', 'MVP table: "Undo/redo" lists unsnap.'],
-  'independent-selection': ['P0', 'MVP table: "Selection/groups" (select one item).'],
   'hard-soft-constraints': ['P1', 'Phase 2: "rich rule engine" (line 489).'],
   'rapier-queries': [
     'P1',
@@ -491,11 +435,6 @@ export const ENSEMBLE_PRIORITIES: Record<string, [priority: string, basis: strin
   'automated-fixes': [
     'P2',
     'Judgement: very high complexity and needs trustworthy rules; the paper warns against automation users cannot override.',
-  ],
-  'direct-manipulation': ['P0', 'MVP table: "Direct manipulation".'],
-  'transform-gizmos': [
-    'P1',
-    'Judgement: dragging plus numeric entry meet the MVP row; furniture-specific handles "will probably need custom UX" (line 443).',
   ],
   'propagation-pipeline': ['P1', 'Phase 2: "parameter propagation" (line 489).'],
   'no-silent-moves': ['P1', 'Phase 2: governs parameter propagation (line 489).'],
@@ -519,8 +458,6 @@ export const ENSEMBLE_PRIORITIES: Record<string, [priority: string, basis: strin
   ],
   'multi-supplier-catalogue': ['P3', 'Judgement: strategic and data-dependent (line 574).'],
   'live-manufacturer-data': ['P3', 'Judgement: needs supplier data feeds.'],
-  'budget-style-filters': ['P3', 'Phase 4: "budget/style filters" (line 491).'],
-  'layout-optimisation': ['P3', 'Phase 4: "optimisation" (line 491).'],
   'ai-floorplan': ['P3', 'Parent: AI layout generation (P3).'],
   'ai-explains': ['P3', 'Parent: AI layout generation (P3).'],
   'inspiration-images': ['P3', 'Parent: Natural-language ensemble generation (P3).'],
@@ -586,10 +523,6 @@ export const ENSEMBLE_APPRECIATION: Record<string, [appreciation: string, basis:
     'High',
     'Judgement: part of the MVP undo row; Transactional undo/redo is rated High appreciation (rank 9).',
   ],
-  'independent-selection': [
-    'High',
-    'Judgement: reusable/configurable objects are most appreciated (line 65) and multi-select/groups is rated High (rank 8).',
-  ],
   'hard-soft-constraints': [
     'High',
     'Parent: Compatibility-rule engine preventing invalid connections ("High", rank 2).',
@@ -601,14 +534,6 @@ export const ENSEMBLE_APPRECIATION: Record<string, [appreciation: string, basis:
   'automated-fixes': [
     'Unproven',
     'Judgement: no evidence, and the paper warns against automation users cannot override — not inherited from Explainable warnings (High).',
-  ],
-  'direct-manipulation': [
-    'High',
-    'Praise: SketchUp is valued for direct modelling (line 43); rapid placement is most appreciated (line 65).',
-  ],
-  'transform-gizmos': [
-    'Medium',
-    'Judgement: direct modelling is valued (line 43), but nothing is said about handles themselves.',
   ],
   'propagation-pipeline': [
     'High',
@@ -647,14 +572,6 @@ export const ENSEMBLE_APPRECIATION: Record<string, [appreciation: string, basis:
     'Judgement: "value of catalogue accuracy" (line 52) is the researcher\'s reading, not user feedback.',
   ],
   'live-manufacturer-data': ['Unproven', 'Judgement: no user feedback cited.'],
-  'budget-style-filters': [
-    'High',
-    'Parent: Deterministic generation of alternative valid layouts ("High", rank 26).',
-  ],
-  'layout-optimisation': [
-    'Unproven',
-    'Judgement: one word in the phase-4 list — not inherited from Deterministic alternatives (High).',
-  ],
   'ai-floorplan': ['Mixed', 'Parent: AI layout generation ("Mixed", rank 37).'],
   'ai-explains': ['Mixed', 'Parent: AI layout generation ("Mixed", rank 37).'],
   'inspiration-images': [
