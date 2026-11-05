@@ -5436,7 +5436,7 @@ button.tile:hover {
   color: var(--ink-2);
 }
 
-/* Materials › Fasteners (ADR-074) ------------------------------------------ */
+/* Settings › Fasteners (ADR-074) -------------------------------------------- */
 .fasteners {
   list-style: none;
   margin: 0;

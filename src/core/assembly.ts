@@ -503,7 +503,7 @@ const counted = (j: JointType, n: number, w: Words) =>
 
 /**
  * The step's fastener lines (ADR-185): with the user's fastener for the joint type "8 × Confirmat 7 × 50 (4 joints ×
- * 2)"; without one "4 joints — choose your fastener (Materials › Fasteners)". Shelf pins without a chosen fastener
+ * 2)"; without one "4 joints — choose your fastener (Settings › Fasteners)". Shelf pins without a chosen fastener
  * are the scheduled pins already listed under hardware (as on the shopping list, ADR-074), so no line.
  */
 export function fastenerLines(s: AssemblyStep, choices: FastenerChoice[], w: Words): string[] {
@@ -519,9 +519,12 @@ export function fastenerLines(s: AssemblyStep, choices: FastenerChoice[], w: Wor
           ? pt('{count} — alegeți elementul de fixare ({path})', {
               count: what,
               // The menu's name in the print language (user 2026-11-05: a print never mixes languages).
-              path: pt('Materiale › Elemente de fixare'),
+              path: pt('Setări › Elemente de fixare'),
             })
-          : t('{count} — choose your fastener (Materials › Fasteners)', { count: what }),
+          : t('{count} — choose your fastener ({path})', {
+              count: what,
+              path: t('Settings › Fasteners'),
+            }),
       );
   }
   return out;

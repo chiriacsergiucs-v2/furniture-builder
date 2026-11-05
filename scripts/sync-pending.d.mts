@@ -1,0 +1,15 @@
+/** Types for tests; the script itself is plain JavaScript (scripts/sync-pending.mjs). */
+import type { Feature, FeatureDomain } from '../src/core/features';
+
+export const EXEMPT: string[];
+export function implementedDates(repo?: string): Record<string, string>;
+export function featureLines(
+  domains: FeatureDomain[],
+  path?: string[],
+): { path: string; feature: Feature }[];
+export function openGaps(text: string): number;
+export function pending(
+  domains: FeatureDomain[],
+  implemented: Record<string, string>,
+  exempt?: string[],
+): { unchecked: string[]; stale: string[]; unknown: string[]; uncited: string[] };

@@ -339,8 +339,8 @@ export const ru_core2 = {
   ', {m} m of back edge': ', {m} м кромки задних стенок',
   ', {m} m of worktop': ', {m} м столешницы',
   '{line}: {count} — choose your fastener': '{line}: {count} — выберите свой крепёж',
-  '{guidance} ({how}{len}). Name yours under Materials › Fasteners.':
-    '{guidance} ({how}{len}). Укажите свой в разделе «Материалы › Крепёж».',
+  '{guidance} ({how}{len}). Name yours under Settings › Fasteners.':
+    '{guidance} ({how}{len}). Укажите свой в разделе «Настройки › Крепёж».',
   'Draco compression': 'сжатие Draco',
   'meshopt compression': 'сжатие meshopt',
   'Basis Universal textures': 'текстуры Basis Universal',
@@ -426,8 +426,8 @@ export const ru_core2 = {
     'Детские кроватки и колыбели подпадают под стандарты безопасности (EN 716 и другие). Mobila не проверяет шаг прутьев и высоту бортов; это не проверка соответствия.',
   'Rails span {span} mm between legs; long tables usually get a centre leg or rail (typical).':
     'Царги перекрывают {span} мм между ножками; длинным столам обычно добавляют среднюю ножку или царгу (типично).',
-  'Screws, dowels and cams are counted only as joints, as guidance; the fastener is yours (Materials › Fasteners). Glue is not counted.':
-    'Шурупы, шканты и эксцентрики считаются только как соединения, для ориентира; крепёж выбираете вы («Материалы › Крепёж»). Клей не считается.',
+  'Screws, dowels and cams are counted only as joints, as guidance; the fastener is yours (Settings › Fasteners). Glue is not counted.':
+    'Шурупы, шканты и эксцентрики считаются только как соединения, для ориентира; крепёж выбираете вы («Настройки › Крепёж»). Клей не считается.',
   'for {boards}, with the trim allowance per edge': 'для {boards}, с припуском на торец',
   'for {boards}': 'для {boards}',
   'Edge band for {name}': 'Кромка для «{name}»',

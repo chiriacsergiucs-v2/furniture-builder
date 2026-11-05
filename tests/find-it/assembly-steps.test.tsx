@@ -60,7 +60,7 @@ describe.each(WIDTHS)('assembly steps re-check at %ipx (find-it, ADR-185, ADR-18
       within(sides).getByText('Fix the left side and right side to the bottom (2 joints).'),
     ).toBeTruthy();
     expect(
-      within(sides).getByText('2 joints — choose your fastener (Materials › Fasteners)'),
+      within(sides).getByText('2 joints — choose your fastener (Settings › Fasteners)'),
     ).toBeTruthy();
     // The Back step checks the carcass is square.
     expect(within(base).getByText(/Check the carcass is square \(equal diagonals\)/)).toBeTruthy();

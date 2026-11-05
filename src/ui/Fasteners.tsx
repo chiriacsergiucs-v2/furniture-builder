@@ -19,7 +19,7 @@ import { GuidanceTip, Group, InfoTip } from './controls';
 import { Icon } from './icons';
 
 /**
- * The user's fastener list (ADR-074), shared by Materials › Fasteners, the Hardware tab and the Shopping list. It is
+ * The user's fastener list (ADR-074), shared by Settings › Fasteners, the Hardware tab and the Shopping list. It is
  * kept on this device; nothing here is part of a design.
  */
 interface FastenerState {
@@ -93,7 +93,7 @@ export function useFastenerCounts(): FastenerCount[] {
 
 const amount = plural;
 
-/** Materials › Fasteners (ADR-074): what the user fixes each joint type with, and how many per joint. */
+/** Settings › Fasteners (ADR-074): what the user fixes each joint type with, and how many per joint. */
 export function FastenersPanel() {
   const choices = useFastenerChoices();
   const error = useFastenerList((s) => s.error);
