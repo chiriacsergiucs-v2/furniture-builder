@@ -12,7 +12,6 @@ import { evaluate, mountOf, type Mount } from './compat';
 import {
   DRAG_STEP,
   dragPosition,
-  isLocked,
   isWallHung,
   placementBases,
   tapPosition,
@@ -21,6 +20,7 @@ import {
   type ProjectItem,
 } from './project';
 import type { Room } from './room';
+import { hasAnyLock } from './sizeLock';
 import type { Box, Mm } from './types';
 
 /** How close (mm) a connector must be to the dragged footprint to snap (ADR-070 open question: default 60). */
@@ -231,7 +231,7 @@ interface Cand {
   walls?: number[];
   /** A side snap: the neighbour face, which the final footprint must still touch along it. */
   face?: FaceConnector;
-  /** A neighbour candidate whose piece is position-locked (ADR-095); it wins a tie on distance (ADR-180). */
+  /** A neighbour candidate whose piece has any lock (placement, turn or size); it wins a tie on distance (ADR-180). */
   locked?: boolean;
 }
 
@@ -255,8 +255,8 @@ const wallName = (w: number) => (w < 0 ? t('the back wall') : t('wall {n}', { n:
 
 /**
  * Where a dragged piece lands with snapping on (ADR-070). `dx` / `dz` is the pointer's move in plan mm, as for
- * `dragPosition`. Candidates within `range` of the stepped drop are ranked by distance, then a position-locked
- * neighbour before any other candidate (ADR-180), then kind (corner, wall, neighbour side, neighbour centre — ADR-099),
+ * `dragPosition`. Candidates within `range` of the stepped drop are ranked by distance, then a neighbour with any
+ * lock (placement, turn or size) before any other candidate (ADR-180), then kind (corner, wall, neighbour side, neighbour centre — ADR-099),
  * then id; when the best one fixes one axis only, the best candidate on the other axis is added.
  * Pieces resting on the dragged piece follow it and are not neighbours. Never throws; never clamps.
  */
@@ -353,7 +353,7 @@ export function snapDrag(
         label: t('Joins {name}', { name: n.name }),
         notes,
         face: n,
-        locked: isLocked(itemById.get(n.owner)),
+        locked: hasAnyLock(itemById.get(n.owner)),
       });
     }
     for (const w of conn.walls) {
@@ -423,7 +423,7 @@ export function snapDrag(
       key: `centre:${n.item.id}`,
       label: t('Centre to centre with {name}', { name: n.item.design.name }),
       notes: [],
-      locked: isLocked(n.item),
+      locked: hasAnyLock(n.item),
     });
   }
 

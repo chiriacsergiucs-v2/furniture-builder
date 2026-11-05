@@ -6,7 +6,15 @@
  */
 import { t } from './i18n';
 import { buildModel } from './build';
-import { pieceName, SIZE_AXES, type Project, type ProjectItem, type SizeAxis } from './project';
+import {
+  isLocked,
+  isTurnLocked,
+  pieceName,
+  SIZE_AXES,
+  type Project,
+  type ProjectItem,
+  type SizeAxis,
+} from './project';
 import type { Design } from './types';
 
 /** The hint shown where a size-locked piece's size would be changed. */
@@ -23,6 +31,13 @@ export function lockedAxes(
   if (item.sizeLocked) return [...SIZE_AXES];
   return item.sizeLocks ? [...item.sizeLocks] : [];
 }
+/**
+ * The piece has any lock (ADR-180, user 2026-11-05 "Any lock"): placement (ADR-095), turn or size (ADR-122, ADR-171,
+ * all sizes or any one).
+ */
+export const hasAnyLock = (
+  item: Pick<ProjectItem, 'locked' | 'turnLocked' | 'sizeLocked' | 'sizeLocks'> | undefined,
+): boolean => isLocked(item) || isTurnLocked(item) || lockedAxes(item).length > 0;
 export const isAxisLocked = (
   item: Pick<ProjectItem, 'sizeLocked' | 'sizeLocks'> | undefined,
   axis: SizeAxis,
