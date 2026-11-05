@@ -21,6 +21,8 @@ User, 2026-11-05: **delete all 9**.
 1. The 9 Verified features are deleted from the research data the way ADR-149 and ADR-152 did it (feature rows, app
    statuses and any merged-children references), so the research page no longer lists them as left to build.
 2. Rows that are In Progress stay, with their `missing` text.
+3. The 3 unbuilt features merged into deleted ones (transform-gizmos, budget-style-filters, layout-optimisation;
+   G-332, G-341) stay as their own Not started rows, unmerged (user 2026-11-05: "Keep as own rows").
 
 ## Alternatives considered
 

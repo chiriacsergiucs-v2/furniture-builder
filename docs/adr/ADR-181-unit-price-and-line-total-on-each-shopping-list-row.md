@@ -23,6 +23,8 @@ prices already are; "—" when a row has no price.
    hint stays.
 2. The printed list and the CSV gain a Unit price column (`pt()` texts in ro, ru, en).
 3. No new price logic: the unit price is the stored entry's amount and unit.
+4. Every header of the printed Shopping list and of the shopping CSV follows the print language (`pt()`, ro, ru, en;
+   ADR-157), so a print never mixes languages (user 2026-11-05: "All headers via print language").
 
 ## Alternatives considered
 
