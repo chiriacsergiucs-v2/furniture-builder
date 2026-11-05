@@ -1,7 +1,8 @@
 # ADR-187: Fix the fourteen findings of the New-piece wizard critique
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-05
+- Implemented: 2026-11-05 (Built and verified 2026-11-05; screenshots approved by the user)
 - Depends on: ADR-044, ADR-045, ADR-046
 - Design: docs/ui-design.md (New-piece wizard)
 - Backlog: N191
@@ -76,16 +77,16 @@ Every text added or changed gets its Russian entry (ADR-153).
 
 ## Done when
 
-- [ ] Backdrop click keeps the wizard open; × with changed answers shows "Discard the answers?" (find-it, 1 and 14).
-- [ ] Cabinet with drawers → Open shelving gives no Contents error; cabinet height 400 → Bed gives no headboard
+- [x] Backdrop click keeps the wizard open; × with changed answers shows "Discard the answers?" (find-it, 1 and 14).
+- [x] Cabinet with drawers → Open shelving gives no Contents error; cabinet height 400 → Bed gives no headboard
       error and takes the Bed default (tests, 2).
-- [ ] Width "abc" gives exactly one problem and no "too small" diagnostic; preview reads "Fix the marked fields"
+- [x] Width "abc" gives exactly one problem and no "too small" diagnostic; preview reads "Fix the marked fields"
       (tests and find-it, 3).
-- [ ] Footer reads "Use defaults", on Type "Use Cabinet (closed box)" read from the options; no `title` (find-it, 4).
-- [ ] Review lists a summary row with Edit for every visible step; Edit opens that step (find-it, 5).
-- [ ] A done step with an error is not shown done; untouched Type shows the hint, not an error; the preview panel
+- [x] Footer reads "Use defaults", on Type "Use Cabinet (closed box)" read from the options; no `title` (find-it, 4).
+- [x] Review lists a summary row with Edit for every visible step; Edit opens that step (find-it, 5).
+- [x] A done step with an error is not shown done; untouched Type shows the hint, not an error; the preview panel
       omits current-step problems (tests and find-it, 6, 7, 8).
-- [ ] Hand-picked "Per compartment" gives one door on compartments without drawers; shelves counter min 1; type
+- [x] Hand-picked "Per compartment" gives one door on compartments without drawers; shelves counter min 1; type
       options are radios; preview picture memoised; scroll uses the wizard's own body (tests, 9–13).
-- [ ] `tests/find-it/wizard.test.tsx` passes at 390 and 1280 px in `pnpm test`; every new text has its Russian
+- [x] `tests/find-it/wizard.test.tsx` passes at 390 and 1280 px in `pnpm test`; every new text has its Russian
       entry (`pnpm typecheck`).
