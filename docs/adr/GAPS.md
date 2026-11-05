@@ -1493,3 +1493,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: “Fill the room” (user 2026-11-04)
 - Questions: Place a wall corner cabinet (corner-blind-wall) in the corner?
 - Suggested pick: Add the catalog's wall corner cabinet over each corner cabinet (estimate: effort +20%, value +15%).
+
+### G-351: move-3d find-it fails on main at 1440 px
+
+- Status: Open
+- Origin: ADR-179 build, 2026-11-05; found by the agent
+- Missing: tools/move-3d/find-it.mjs fails at 1440 px on the production build of main 0c26d0b and of this branch: 'Turn 90° ↺ turned the piece' reads an empty rotation, then the 3D canvas wait times out (20 s).
+- Request: Not a quote: found while running the browser find-it scripts for ADR-179.
+- Questions: Fix the script's turn check and 3D wait, or the app if the turn really fails?
+- Suggested pick: Debug it on main first (debug skill); fix the cause (estimate: effort +5%, value +5%).
