@@ -9,7 +9,7 @@ on:
 permissions:
   contents: read
 
-# ADR-192: a newer push to a pull request cancels its older run. Runs on main get one group per commit, so none is
+# ADR-197: a newer push to a pull request cancels its older run. Runs on main get one group per commit, so none is
 # ever cancelled or replaced while queued: the deploy waits on each of them (deploy.yml).
 concurrency:
   group: ci-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
@@ -37,7 +37,7 @@ jobs:
           fi
           echo "skip=$skip" >> "$GITHUB_OUTPUT"
 
-      # ADR-192: a pull request that touches only these docs runs format:check and docs:check, not lint, typecheck,
+      # ADR-197: a pull request that touches only these docs runs format:check and docs:check, not lint, typecheck,
       # tests or the build. The app bundles docs/adr/GAPS.md and docs/research, and tests read docs/catalog.md,
       # docs/samples and the names in docs/adr, so those (docs/adr-done too) and any deleted or renamed file
       # ("deleted:" below) always get the full run; so do 300 or more files and an API error. Pushes to main always
@@ -98,7 +98,7 @@ jobs:
           cache: true
           require-lockfile: true
 
-      # ESLint and Prettier caches (ADR-192), restored after the install so it cannot remove them: the newest entry
+      # ESLint and Prettier caches (ADR-197), restored after the install so it cannot remove them: the newest entry
       # for the same lockfile and configs. Only runs on main save one, so pull requests do not fill the cache store.
       - uses: actions/cache/restore@v6
         with:
@@ -148,7 +148,7 @@ jobs:
 
       - run: pnpm test --shard=${{ matrix.shard }}/3
 
-  # Type errors are caught by `pnpm typecheck` in `checks`, so the build here is `vite build` alone (ADR-192).
+  # Type errors are caught by `pnpm typecheck` in `checks`, so the build here is `vite build` alone (ADR-197).
   build:
     needs: ship-check
     if: needs.ship-check.outputs.skip != 'true' && needs.ship-check.outputs.docs_only != 'true'
@@ -165,7 +165,7 @@ jobs:
 
       - run: pnpm build:ci
 
-  # The one check that merge rules and the babysit skill wait on (ADR-192): green only when every job above passed,
+  # The one check that merge rules and the babysit skill wait on (ADR-197): green only when every job above passed,
   # or, for a docs-only change, when `checks` passed and the tests and build were skipped.
   verify:
     needs: [ship-check, checks, test, build]

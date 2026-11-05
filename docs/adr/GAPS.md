@@ -2097,10 +2097,100 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Allow a five-option segmented control on desktop and wrap it on a phone?
 - Suggested pick: Segmented up to five options at 1280 px, wrapping at 390 px. (estimate: effort +2 %, value +3 %)
 
-### G-358: CI runs only the tests related to a core-only change
+### G-358: Start-new rows share one glyph
 
 - Status: Open
-- Origin: ADR-192 CI analysis 2026-11-05
+- Origin: ADR-193, 2026-11-05; design critique, agent scoped it out
+- Missing: The Project, Fill a wall and Fill the room rows of Start something new share one 'project' glyph (Low).
+- Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
+- Questions: Give each row its own glyph?
+- Suggested pick: A wall glyph for Fill a wall and a room-plan glyph for Fill the room. (estimate: effort +1 %, value +1 %)
+
+### G-359: Open in wizard inside a project
+
+- Status: Open
+- Origin: ADR-194, 2026-11-05; design critique, agent scoped it out
+- Missing: Open in wizard is hidden for a wizard-made piece inside a project (Settings hides it there).
+- Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
+- Questions: Offer Open in wizard for a project piece, updating it in place in the project?
+- Suggested pick: Offer it; Update piece replaces the project item's design. (estimate: effort +6 %, value +5 %)
+
+### G-360: Wizard Review rows repeat long labels
+
+- Status: Open
+- Origin: ADR-194, 2026-11-05; design critique, agent scoped it out
+- Missing: Review rows repeat long field labels, e.g. 'Width of each compartment (0 = share the rest): 0 mm'.
+- Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
+- Questions: Give fields a short Review label?
+- Suggested pick: An optional short label per field for Review. (estimate: effort +2 %, value +2 %)
+
+### G-361: Arrow keys on Segmented controls
+
+- Status: Open
+- Origin: ADR-194, 2026-11-05; design critique, agent scoped it out
+- Missing: Segmented controls have no arrow-key movement anywhere in the app.
+- Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
+- Questions: Add roving tabindex and arrow keys to Segmented app-wide?
+- Suggested pick: Yes, in the shared control, one change for every screen. (estimate: effort +3 %, value +3 %)
+
+### G-362: Catalog item counts differ from room chips
+
+- Status: Open
+- Origin: ADR-195, 2026-11-05; design critique, agent scoped it out
+- Missing: The Catalog header says 118 items while the room chips sum to 183, because a family is listed under every room (ADR-032).
+- Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
+- Questions: Say 'in N families, listed under several rooms' or count per room only?
+- Suggested pick: Keep the header; add a hint that a family can sit in several rooms. (estimate: effort +1 %, value +2 %)
+
+### G-363: Imported templates shadow silently
+
+- Status: Open
+- Origin: ADR-195, 2026-11-05; design critique, agent scoped it out
+- Missing: Two imported templates that shadow the same shipped family: the last one wins silently (local.ts:85).
+- Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
+- Questions: Warn on import, or keep both as separate families?
+- Suggested pick: Warn on import and ask which one to keep. (estimate: effort +3 %, value +3 %)
+
+### G-364: Shelf pins in a diagonal corner
+
+- Status: Open
+- Origin: ADR-196, 2026-11-05; design critique, agent scoped it out
+- Missing: Pin rows on five-sided boards: adjustable shelves in a diagonal corner (ADR-196 makes them an error instead).
+- Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
+- Questions: Support pin rows on the diagonal's straight sides?
+- Suggested pick: Keep the error until a diagonal pin layout is decided with you. (estimate: effort +10 %, value +3 %)
+
+### G-365: Handle side on a turned corner wing
+
+- Status: Open
+- Origin: ADR-196, 2026-11-05; design critique, agent scoped it out
+- Missing: Which edge 'left' means for handle holes on a turned wing-B front of an L-corner was not verified.
+- Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
+- Questions: Check handle hole sides on turned wing-B fronts?
+- Suggested pick: A test that builds an L-corner with a left handle and checks the hole side. (estimate: effort +2 %, value +2 %)
+
+### G-366: Hardware notes built from English fragments
+
+- Status: Open
+- Origin: ADR-196, 2026-11-05; design critique, agent scoped it out
+- Missing: Hardware notes are assembled from English fragments (hingeBand), so the Russian schedule mixes languages.
+- Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
+- Questions: Move the notes to whole t() sentences?
+- Suggested pick: Whole sentences per note in t(), with Russian entries. (estimate: effort +4 %, value +3 %)
+
+### G-367: Design critiques of shell, piece editor and project
+
+- Status: Open
+- Origin: Design critique batch, 2026-11-05; user cut it
+- Missing: Design critiques and ADRs for domains 1 (shell and navigation), 6 (piece editor) and 7 (project composition): the critique agents were stopped before they wrote a result.
+- Request: "run a /batch for 1 through 7 with a critique of design … 1 adr … per flow (7 total adrs)", then "Add the adrs for the ones finished".
+- Questions: Rerun the critiques for domains 1, 6 and 7?
+- Suggested pick: Rerun the three critiques and add one ADR each, as for domains 2 to 5. (estimate: effort +75 % of the batch, value +43 %)
+
+### G-368: CI runs only the tests related to a core-only change
+
+- Status: Open
+- Origin: ADR-197 CI analysis 2026-11-05
 - Missing: Suggestion C, tests by domain of change: a pull request that touches only src/core still runs the whole suite. vitest --changed origin/main (or a related-files filter) could run only the related tests there. The find-it files all import App, so any src/ui change still runs all 37 of them.
 - Request: Suggest improvements. Triggering less often the ci optimisations? Tests running by domain of change? Do all parts of the app need tests? Gaps/features/docs/unnecessary overcovering tests? (the user chose "all of these 4 + Suggestions A(all) and B(all)"; this suggestion was left out)
 - Questions: Run only the related tests on pull requests and the full suite on main only?
@@ -2112,11 +2202,11 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Fix: In the CI test job, use vitest --changed against the base on core-only pull requests; keep the full suite on main.
 - Conflicts: none
 
-### G-359: Drop the duplicate push-to-main CI run
+### G-369: Drop the duplicate push-to-main CI run
 
 - Status: Open
-- Origin: ADR-192 CI analysis 2026-11-05
-- Missing: Suggestion D: once deploy waits on CI (ADR-192), the push-to-main CI run re-verifies a tree that was already green on its pull request. The main run is kept.
+- Origin: ADR-197 CI analysis 2026-11-05
+- Missing: Suggestion D: once deploy waits on CI (ADR-197), the push-to-main CI run re-verifies a tree that was already green on its pull request. The main run is kept.
 - Request: Suggest improvements. Triggering less often the ci optimisations? Tests running by domain of change? Do all parts of the app need tests? Gaps/features/docs/unnecessary overcovering tests? (the user chose "all of these 4 + Suggestions A(all) and B(all)"; this suggestion was left out)
 - Questions: Keep the main run (the safety net for ff pushes straight to main), or verify main only through the deploy?
 - Suggested pick: Keep the main run while ff pushes straight to main. (estimate: no extra work; value 0 % until ff stops)
@@ -2125,12 +2215,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Necessity: Low
 - Issue: Every merge runs the full checks on the pull request and again on main.
 - Fix: Keep while ff pushes straight to main; revisit if ff stops.
-- Conflicts: ADR-192 deploy waits on the main CI run
+- Conflicts: ADR-197 deploy waits on the main CI run
 
-### G-360: Review find-it tests that re-test logic through the UI
+### G-370: Review find-it tests that re-test logic through the UI
 
 - Status: Open
-- Origin: ADR-192 CI analysis 2026-11-05
+- Origin: ADR-197 CI analysis 2026-11-05
 - Missing: Suggestion E, over-coverage review: find-it/research-batch-4 (10.4 s, 6 tests) asserts research rows through the UI; find-it/connections (13.3 s) and find-it/variables (9.2 s) look like logic re-tested through the UI; tests/rapier-trial.test.ts is permanently skipped.
 - Request: Suggest improvements. Triggering less often the ci optimisations? Tests running by domain of change? Do all parts of the app need tests? Gaps/features/docs/unnecessary overcovering tests? (the user chose "all of these 4 + Suggestions A(all) and B(all)"; this suggestion was left out)
 - Questions: Move the logic assertions to core tests, keep one click path per find-it file, and delete rapier-trial?
@@ -2142,14 +2232,14 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Fix: Move logic assertions to tests/ core tests, keep one click path per find-it file, delete tests/rapier-trial.test.ts.
 - Conflicts: none
 
-### G-361: Cheaper find-it runs (stopped before it was built)
+### G-371: Cheaper find-it runs (stopped before it was built)
 
 - Status: Open
-- Origin: ADR-192 CI analysis 2026-11-05
+- Origin: ADR-197 CI analysis 2026-11-05
 - Missing: Find-it files take 192 of the 217 s of test CPU. Not measured or applied: userEvent.setup({ delay: null }), find-it as its own vitest project with jsdom and isolate: false, a cheaper module reset; each keeps the bare-app start (ADR-108). The user stopped the ADR before it was built.
 - Request: "all of these 4 + Suggestions A(all) and B(all)" (item 3: cheaper find-it mounts); then "Stop 193" (the cheaper find-it ADR, never registered)
 - Questions: Resume the cheaper find-it runs later?
-- Suggested pick: Resume after ADR-192 lands, measuring first. (estimate: 20-50 % less find-it CPU, unmeasured)
+- Suggested pick: Resume after ADR-197 lands, measuring first. (estimate: 20-50 % less find-it CPU, unmeasured)
 - Work: Medium
 - Impact: Medium
 - Necessity: Low-medium

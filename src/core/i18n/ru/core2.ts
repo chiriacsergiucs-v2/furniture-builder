@@ -61,6 +61,8 @@ export const ru_core2 = {
     'Высоты ящиков в сумме {asked} мм, а места {room} мм; нижний ящик подогнан. Сделайте один ящик «Доля», чтобы он забирал разницу.',
   'A fixed front needs a drawer front of its own; drawers behind doors have none, so the setting is ignored.':
     'Ложному фасаду нужен собственный фасад ящика; у ящиков за дверцами его нет, поэтому настройка не учитывается.',
+  'Drawers behind doors have no front of their own, so they keep their inner front.':
+    'У ящиков за дверцами нет собственного фасада, поэтому внутренняя передняя стенка остаётся.',
   'The top drawer is a fixed front, so it has no box to cut around the trap; the U-cut is ignored.':
     'Верхний ящик — ложный фасад, у него нет короба для выреза под сифон; U-вырез не учитывается.',
   'Drawer {i} box would be only {bh} mm high.':

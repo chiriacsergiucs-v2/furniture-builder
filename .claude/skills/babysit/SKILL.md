@@ -9,7 +9,7 @@ Drives a pull request **Claude opened** to merged (user rules 2026-10-29). For a
 the user only asked to watch, report each event and ask before pushing anything.
 
 Project: **Furniture Builder** — offline PWA. CI (`.github/workflows/ci.yml`) is the source of
-truth; `deploy.yml` publishes `main` to GitHub Pages once CI on main passes (ADR-192).
+truth; `deploy.yml` publishes `main` to GitHub Pages once CI on main passes (ADR-197).
 
 ## Start
 

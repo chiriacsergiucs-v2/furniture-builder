@@ -1,17 +1,17 @@
-# ADR-192: Speed up CI: parallel jobs, test shards, docs-only runs, caches and a deploy that waits on CI
+# ADR-197: Speed up CI: parallel jobs, test shards, docs-only runs, caches and a deploy that waits on CI
 
 - Status: Pending
 - Date: 2026-11-05
 - Depends on: none
 - Design: n/a
-- Backlog: N197
+- Backlog: N202
 
 ## Context
 
 User 2026-11-05: "Suggest improvements. Triggering less often the ci optimisations? Tests running by domain of
 change? Do all parts of the app need tests? Gaps/features/docs/unnecessary overcovering tests?", then, choosing from
 the suggestions: "all of these 4 + Suggestions A(all) and B(all)". This ADR covers the workflows; the
-cheaper find-it runs were a second unit, stopped by the user before it was built (G-361).
+cheaper find-it runs were a second unit, stopped by the user before it was built (G-371).
 
 Baseline, CI run 42105129310 (main, 2026-11-05): 3 min 15 s wall. The one `verify` job took 182 s: setup 7 s,
 checkout 3 s, lint 16 s, format:check 14 s, typecheck 12 s, test 106 s (143 files, 1169 passed, 1 skipped), build
@@ -65,8 +65,8 @@ The user's answers (2026-11-05, interactive), which are the approval:
   reads a docs-only file), the deploy wording in the `ff` and `babysit` skills, and a 5 s wait for the
   account badge in `tests/find-it/accounts.test.tsx` (the status reads "In your account" before the first sync, so
   only the badge marks the sync done; under a test shard it took more than the default 1 s).
-- Out of scope (left out by the user's pick, ADR-082): tests by domain of change (G-358), dropping the push-to-main
-  CI run (G-359), the find-it over-coverage review (G-360); cheaper find-it runs were stopped by the user (G-361).
+- Out of scope (left out by the user's pick, ADR-082): tests by domain of change (G-368), dropping the push-to-main
+  CI run (G-369), the find-it over-coverage review (G-370); cheaper find-it runs were stopped by the user (G-371).
 
 ## Consequences
 

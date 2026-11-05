@@ -85,7 +85,7 @@ describe.each(WIDTHS)('accounts, backup and share links at %ipx (find-it, N130â€
       { timeout: 5000 },
     );
     // The status above already reads "In your account" before the first sync (idle, nothing waiting); the badge
-    // appears only when that sync finishes, which takes over a second under a loaded test shard (ADR-192).
+    // appears only when that sync finishes, which takes over a second under a loaded test shard (ADR-197).
     expect(
       await screen.findByText('In your account', { selector: '.badge' }, { timeout: 5000 }),
     ).toBeTruthy();

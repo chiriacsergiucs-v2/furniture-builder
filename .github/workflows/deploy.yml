@@ -1,5 +1,5 @@
 name: Deploy GitHub Pages
-# ADR-192: deploy only after CI passed on a push to main, so the checks and tests run once per merge (in CI), not
+# ADR-197: deploy only after CI passed on a push to main, so the checks and tests run once per merge (in CI), not
 # again here. A manual run still deploys the current main.
 on:
   workflow_run:

@@ -1,4 +1,4 @@
-"""Tests for the docs-only matcher in .github/workflows/ci.yml (ADR-192). Run by pnpm docs:check.
+"""Tests for the docs-only matcher in .github/workflows/ci.yml (ADR-197). Run by pnpm docs:check.
 
 The matcher is taken verbatim from the workflow (between its BEGIN and END comments) and run with bash, so the
 tested text is the text CI runs.
@@ -31,8 +31,8 @@ class DocsOnlyTest(unittest.TestCase):
         for paths in (
             ["docs/backlog.md"],
             [".claude/skills/x/SKILL.md"],
-            ["docs/adr/ADR-192-x.md"],
-            ["docs/backlog.md", ".claude/skills/x/SKILL.md", "docs/adr/ADR-192-x.md", "docs/adr/README.md"],
+            ["docs/adr/ADR-197-x.md"],
+            ["docs/backlog.md", ".claude/skills/x/SKILL.md", "docs/adr/ADR-197-x.md", "docs/adr/README.md"],
             ["docs/adr/_template.md", "docs/retros/a/b.md", "docs/product/product-context.md"],
             ["docs/architecture.md", "docs/ui-design.md", "CLAUDE.md", ".claude/settings.json"],
         ):
@@ -52,7 +52,7 @@ class DocsOnlyTest(unittest.TestCase):
             [".github/workflows/ci.yml"],
             ["docs/backlog.md", "src/x.ts"],
             ["src/x.ts", "docs/backlog.md"],
-            ["docs/adr/ADR-192-x.txt"],
+            ["docs/adr/ADR-197-x.txt"],
             ["deleted:docs/adr/ADR-191-x.md"],
             ["docs/backlog.md", "deleted:docs/backlog.md"],
             [],
