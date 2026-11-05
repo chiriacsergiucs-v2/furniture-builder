@@ -3,8 +3,13 @@
 
   pnpm gaps list                       open gaps and gaps moved into an ADR
   pnpm gaps add --origin O --missing M --request R --questions Q --pick P "Title"
+                [--work L --impact L --necessity L --issue I --fix F --conflicts "none" | "ADR-NNN: why"]
   pnpm gaps sync                       gaps of Implemented ADRs become Done (ADR-NNN); Done gaps move to the archive
   pnpm gaps archive                    move Done gaps to docs/adr/GAPS-archive.md
+
+Work, Impact and Necessity are rough ratings on SCALE; Issue and Fix are one line each; Conflicts is `none` or the
+implemented ADR(s) the fix would contradict, with why (ADR-187). They are optional, but a rating off the scale is an
+error.
 
 Done gaps live in docs/adr/GAPS-archive.md, so the ledger lists only what is left (user 2026-11-04). Their ids
 stay valid for the ADRs that cite them, and a new gap never reuses one.
@@ -26,6 +31,11 @@ highest id in either file.
 FIELDS = ("Status", "Origin", "Missing", "Request", "Questions", "Suggested pick")
 STATUS = re.compile(r"Open|Acknowledged \(\d{4}-\d{2}-\d{2}\)|ADR-\d{3}|Done \(.+\)")
 HEAD = re.compile(r"^### (G-\d{3}): (.+)$", re.M)
+# The rating scale of the gaps (ADR-187); the same five levels as CONFIDENCE_SCALE in src/core/research/types.ts.
+SCALE = ("Low", "Low-medium", "Medium", "Medium-high", "High")
+RATINGS = ("Work", "Impact", "Necessity")
+EXTRA = RATINGS + ("Issue", "Fix", "Conflicts")
+CONFLICTS = re.compile(r"none|ADR-\d{3}\b.*")
 
 
 def parse(text):
@@ -61,6 +71,14 @@ def problems(text, adrs):
         status = fields.get("Status", "").strip()
         if status and not STATUS.fullmatch(status):
             errors.append(f"{gid}: Status must be Open, Acknowledged (YYYY-MM-DD), ADR-NNN or Done (...), is '{status}'")
+        for key in RATINGS:
+            if key in fields and fields[key].strip() not in SCALE:
+                errors.append(f"{gid}: {key} must be one of {', '.join(SCALE)}, is '{fields[key].strip()}'")
+        for key in ("Issue", "Fix"):
+            if key in fields and not fields[key].strip():
+                errors.append(f"{gid}: '- {key}:' is empty")
+        if "Conflicts" in fields and not CONFLICTS.fullmatch(fields["Conflicts"].strip()):
+            errors.append(f"{gid}: Conflicts must be 'none' or 'ADR-NNN: why', is '{fields['Conflicts'].strip()}'")
         m = re.fullmatch(r"ADR-(\d{3})", status)
         if m and m.group(1) not in adrs:
             errors.append(f"{gid}: moved into unknown ADR-{m.group(1)}")
@@ -108,11 +126,13 @@ def archive(text, archived):
     return join(head, ledger), join(ahead, old), moved
 
 
-def add(text, title, origin, missing, request, questions, pick, taken=()):
+def add(text, title, origin, missing, request, questions, pick, taken=(), extra=None):
+    """Append a new Open gap. `extra` holds the optional ADR-187 fields, e.g. {"Work": "High", "Issue": "..."}."""
     nums = [int(i[2:]) for i in ids(text) | set(taken)]
     gid = f"G-{max(nums, default=0) + 1:03d}"
     entry = (f"### {gid}: {title}\n\n- Status: Open\n- Origin: {origin}\n- Missing: {missing}\n"
              f"- Request: {request}\n- Questions: {questions}\n- Suggested pick: {pick}\n")
+    entry += "".join(f"- {k}: {extra[k]}\n" for k in EXTRA if (extra or {}).get(k))
     return gid, text.rstrip("\n") + "\n\n" + entry
 
 
@@ -139,6 +159,10 @@ def main(argv):
     a.add_argument("title")
     for key in ("origin", "missing", "request", "questions", "pick"):
         a.add_argument(f"--{key}", required=True)
+    for key in RATINGS:
+        a.add_argument(f"--{key.lower()}", choices=SCALE)
+    for key in ("Issue", "Fix", "Conflicts"):
+        a.add_argument(f"--{key.lower()}")
     args = ap.parse_args(argv)
     text = LEDGER.read_text()
     archived = ARCHIVE.read_text() if ARCHIVE.exists() else ""
@@ -148,8 +172,13 @@ def main(argv):
             if st == "Open" or st.startswith("ADR-"):
                 print(f"{g['id']}  {st:<8}  {g['title']}")
     elif args.cmd == "add":
+        extra = {k: getattr(args, k.lower()) for k in EXTRA}
         gid, text = add(text, args.title, args.origin, args.missing, args.request, args.questions, args.pick,
-                        ids(archived))
+                        ids(archived), extra)
+        bad = [e for e in problems(text, adr_statuses()) if e.startswith(gid + ":")]
+        if bad:
+            print("\n".join(bad), file=sys.stderr)
+            return 1
         LEDGER.write_text(text)
         print(gid)
     else:

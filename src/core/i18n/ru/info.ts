@@ -88,8 +88,8 @@ export const ru_info = {
   'A piece on another piece follows it.': 'Изделие на другом изделии следует за ним.',
   'Aligning and arranging': 'Выравнивание и расстановка',
   'Snap to neighbours and walls': 'Привязка к соседям и стенам',
-  'A preview while dragging; the Snap switch or Alt places freely.':
-    'Предпросмотр при перетаскивании; переключатель «Привязка» или Alt ставят свободно.',
+  'A preview while dragging; at equal distance a locked neighbour wins; the Snap box or Alt places freely.':
+    'Предпросмотр при перетаскивании; при равном расстоянии побеждает закреплённый сосед; флажок «Привязка» или Alt ставят свободно.',
   'Snap centre to centre': 'Привязка центр к центру',
   'Compatibility rules': 'Правила совместимости',
   'Checked when snapping and in the project checks.':
@@ -103,6 +103,8 @@ export const ru_info = {
   'Swaps left and right inside the piece: hinges, pedestals and handles.':
     'Меняет местами левое и правое внутри изделия: петли, тумбы и ручки.',
   'Mirror a run or a selection': 'Отразить ряд или выделенное',
+  'Positions reflect about the centre and each piece is mirrored; groups touching the run mirror with it, and a group that cannot mirror refuses with the reason.':
+    'Положения отражаются относительно центра, и каждое изделие отражается зеркально; группы, касающиеся ряда, отражаются вместе с ним, а группа, которая не может отразиться, отказывает с указанием причины.',
   'Linked copies': 'Связанные копии',
   'Change one copy and every linked copy changes.':
     'Измените одну копию — изменятся все связанные.',
@@ -112,7 +114,7 @@ export const ru_info = {
     'Щелчок с Shift или Ctrl, «Выбрать» на телефоне или Ctrl+A.',
   'Select several pieces in the front view, 3D and the piece list':
     'Выделение нескольких изделий на виде спереди, в 3D и в списке изделий',
-  'One Select switch shared by every view.': 'Один переключатель «Выбор» для всех видов.',
+  'One Select box shared by every view.': 'Один флажок «Выбор» для всех видов.',
   'Selection box on the plan': 'Рамка выделения на плане',
   'Cycle through overlapping pieces': 'Перебор перекрывающихся изделий',
   'Keep pieces as named groups': 'Сохранять изделия как именованные группы',
@@ -234,8 +236,8 @@ export const ru_info = {
   'Tapping a check selects the pieces and shows where it is.':
     'Касание проверки выделяет изделия и показывает место.',
   'Previewed repairs': 'Исправления с предпросмотром',
-  'A repair moves the whole group; one the group cannot follow is shown refused, with the reason.':
-    'Исправление перемещает всю группу; исправление, за которым группа не может последовать, показано отклонённым, с причиной.',
+  'A repair moves the whole group and connected pieces together; one they cannot follow is shown refused, with the reason.':
+    'Исправление перемещает всю группу и соединённые изделия вместе; исправление, за которым они не могут последовать, показано отклонённым, с причиной.',
   Views: 'Виды',
   Drawings: 'Чертежи',
   'Compose and Build & Preview modes': 'Режимы «Компоновка» и «Сборка и просмотр»',
@@ -252,7 +254,8 @@ export const ru_info = {
   'Board finishes, room light and soft shadows.':
     'Поверхности материалов, освещение комнаты и мягкие тени.',
   'Render a photo-quality picture': 'Отрисовать фотореалистичное изображение',
-  'Saved as PNG, on a laptop.': 'Сохраняется в PNG, на ноутбуке.',
+  'Saved as PNG; best on a laptop, a phone may be slow.':
+    'Сохраняется в PNG; лучше на ноутбуке, на телефоне может быть медленно.',
   'Section view and Isolate': 'Разрез и изоляция',
   'Draws only when something changes': 'Отрисовка только при изменениях',
   'Imported 3D models': 'Импортированные 3D-модели',
@@ -356,6 +359,8 @@ export const ru_info = {
   'Information and guides page': 'Страница «Информация и руководства»',
   'Feature Research': 'Исследование функций',
   'Gaps page': 'Страница пробелов',
+  'Gaps with rough work, impact and necessity ratings, filters, and an issue and a fix line each.':
+    'Пробелы с примерной оценкой работы, влияния и необходимости, фильтрами и строками проблемы и решения.',
   'Info buttons': 'Информационные кнопки',
   'Light and dark themes': 'Светлая и тёмная темы',
   // ADR-160
@@ -382,8 +387,8 @@ export const ru_info = {
   'Research features still left to build, and competitors.':
     'Исследованные функции, которые ещё предстоит сделать, и конкуренты.',
   'Results tabs under the views': 'Вкладки результатов под видами',
-  'Parts, Sheets, Hardware, Shopping list and Checks with counts; on a phone they stay folded until you tap a tab.':
-    'Детали, Листы, Фурнитура, Список покупок и Проверки со счётчиками; на телефоне они свёрнуты, пока не нажать вкладку.',
+  'Parts, Sheets, Hardware, Assembly, Shopping and Checks; Parts shows the number of parts and Checks the number of problems; on a phone they stay folded until you tap a tab.':
+    'Детали, Листы, Фурнитура, Сборка, Покупки и Проверки; на вкладке «Детали» видно число деталей, на «Проверках» — число проблем; на телефоне они свёрнуты, пока не нажать вкладку.',
   'Turn to any whole degree with a handle': 'Поворот на любой целый градус ручкой',
   'Drag the round handle in front of the selected piece; it snaps to quarter turns, Shift steps by 15°, [ and ] turn by 1°.':
     'Перетащите круглую ручку перед выбранным изделием; она примагничивается к четвертям оборота, Shift шагает по 15°, [ и ] поворачивают на 1°.',
@@ -400,11 +405,11 @@ export const ru_info = {
   'A chip in the editor header with the estimate of what is shown, updated on every change; tap it to open the Shopping list.':
     'Значок в шапке редактора с оценкой того, что показано, обновляется при каждом изменении; нажмите, чтобы открыть список покупок.',
   'Fill the room': 'Заполнить комнату',
-  'Pick a room shape or use the project’s room: suggested mixes for every ticked wall at once, doors and windows kept free, a corner cabinet at each inside corner; each mix checked as a project.':
-    'Выберите форму комнаты или возьмите комнату проекта: наборы сразу для всех отмеченных стен, двери и окна остаются свободными, угловой шкаф в каждом внутреннем углу; каждый набор проверен как проект.',
+  'Pick a room shape or use the project’s room: suggested mixes for every ticked wall at once, doors and windows kept free, a corner cabinet at each inside corner with a wall corner cabinet above it, wall rows split at windows; each mix checked as a project.':
+    'Выберите форму комнаты или возьмите комнату проекта: наборы сразу для всех отмеченных стен, двери и окна остаются свободными, угловой шкаф в каждом внутреннем углу и навесной угловой шкаф над ним, ряды навесных шкафов разделены у окон; каждый набор проверен как проект.',
   'Assembly steps': 'Шаги сборки',
-  'An ordered step list per piece from the parts’ positions, with the joints and hardware of each step, labelled guidance; Show step lights the parts in 3D; printable.':
-    'Упорядоченный список шагов по каждому изделию из положения деталей, с соединениями и фурнитурой каждого шага, как рекомендация; «Показать шаг» подсвечивает детали в 3D; печатается.',
+  'Steps per piece, labelled guidance: prepare the parts, fit hardware to the sides, assemble, then fit drawers and doors. Each step has an instruction, its parts, joints, fasteners and hardware; identical drawers are listed once. Show step lights the parts in 3D; printed with each piece’s front view in the print language.':
+    'Шаги по каждому изделию, как рекомендация: подготовка деталей, фурнитура на боковины, сборка, затем установка ящиков и дверей. У каждого шага есть указание, его детали, соединения, крепёж и фурнитура; одинаковые ящики перечислены один раз. «Показать шаг» подсвечивает детали в 3D; печатается с видом спереди каждого изделия на языке печати.',
   'Project assembly order': 'Порядок сборки проекта',
   'A project’s Assembly tab and printed sheet open with the order of its pieces: corner cabinets, base pieces wall by wall from the corner, wall pieces, then run parts; labelled guidance.':
     'Вкладка «Сборка» проекта и печатный лист начинаются с порядка его изделий: угловые шкафы, нижние изделия по стенам от угла, навесные изделия, затем детали ряда; как рекомендация.',

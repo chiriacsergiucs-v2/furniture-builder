@@ -1,5 +1,5 @@
 """Tests for the gaps ledger and its Stop hook (ADR-082). Run by pnpm docs:check."""
-import json, pathlib, subprocess, sys, tempfile, unittest
+import json, pathlib, subprocess, sys, tempfile, unittest, unittest.mock
 
 import gaps
 import gaps_hook
@@ -40,6 +40,37 @@ class LedgerTest(unittest.TestCase):
         self.assertEqual(gid, "G-002")
         self.assertEqual(gaps.ids(text), {"G-001", "G-002"})
         self.assertEqual(gaps.problems(text, {}), [])
+
+    def test_ratings_issue_fix_and_conflicts_are_optional_and_checked(self):
+        rated = ENTRY.format(status="Open") + (
+            "- Work: Low-medium\n- Impact: High\n- Necessity: Medium\n- Issue: It is missing\n"
+            "- Fix: Build it\n- Conflicts: ADR-014: the viewer never edits\n")
+        self.assertEqual(gaps.problems(rated, {}), [])
+        self.assertEqual(gaps.problems(rated.replace("ADR-014: the viewer never edits", "none"), {}), [])
+        bad = rated.replace("Impact: High", "Impact: Very high").replace("Work: Low-medium", "Work: low")
+        errors = gaps.problems(bad, {})
+        self.assertTrue(any("G-001: Impact must be one of" in e and "'Very high'" in e for e in errors))
+        self.assertTrue(any("G-001: Work must be one of" in e for e in errors))
+        self.assertTrue(any("Conflicts must be" in e for e in
+                            gaps.problems(rated.replace("ADR-014: the viewer never edits", "maybe"), {})))
+        self.assertTrue(any("'- Fix:' is empty" in e for e in
+                            gaps.problems(rated.replace("- Fix: Build it", "- Fix: "), {})))
+
+    def test_add_writes_the_optional_fields(self):
+        extra = {"Work": "Low", "Impact": "High", "Necessity": "Medium-high", "Issue": "i", "Fix": "f",
+                 "Conflicts": "none"}
+        gid, text = gaps.add(ENTRY.format(status="Open"), "Next", "o", "m", "r", "q", "p", (), extra)
+        fields = gaps.parse(text)[1]["fields"]
+        self.assertEqual({k: fields[k] for k in extra}, extra)
+        self.assertEqual(gaps.problems(text, {}), [])
+        _, plain = gaps.add(ENTRY.format(status="Open"), "Next", "o", "m", "r", "q", "p")
+        self.assertNotIn("- Work:", plain)
+
+    def test_add_refuses_a_rating_off_the_scale(self):
+        with self.assertRaises(SystemExit):
+            with unittest.mock.patch("sys.stderr"):
+                gaps.main(["add", "T", "--origin", "o", "--missing", "m", "--request", "r", "--questions", "q",
+                           "--pick", "p", "--impact", "Huge"])
 
     def test_sync_marks_gaps_of_implemented_adrs_done(self):
         text = ENTRY.format(status="ADR-007")

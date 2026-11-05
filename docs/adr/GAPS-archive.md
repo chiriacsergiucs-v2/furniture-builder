@@ -316,6 +316,16 @@ highest id in either file.
 - Suggested pick: Keep them behind Edit this piece; the request was shelves and structure (estimate)
 - Answer: User 2026-10-26: "Go 068" — build it; moved into ADR-090.
 
+### G-074: Remember whether the results panel was open across reloads
+
+- Status: Done (obsolete: user decision 2026-11-05, results tabs stay collapsed, as answered)
+- Origin: ADR-091 out of scope
+- Missing: The results panel always starts collapsed after a reload; its open/closed state and tab are not saved
+- Request: They should be a collapsed view, onclick showing only, so the views with renders are kept as main
+- Questions: Should the app remember an open results panel after a reload?
+- Suggested pick: No: always start collapsed, closest to 'collapsed view, onclick showing only'
+- Answer: User 2026-10-26: "Always collapsed".
+
 ### G-075: Results collapse at desktop width too
 
 - Status: Done (ADR-091)
@@ -461,6 +471,17 @@ highest id in either file.
 - Questions: Allow a tolerance (mm) before warning?
 - Suggested pick: Any difference warns until the user names a tolerance (never invent a physical value, ADR-010).
 
+### G-097: Fastener notes point to a removed screen
+
+- Status: Done (4025b89: the notes name Settings › Fasteners in the app, the print and Russian)
+- Origin: Gap re-check 2026-10-26 (G-042); agent found it
+- Missing: Fastener notes point to 'Materials › Fasteners', a screen that no longer exists (the list is under Settings › Fasteners, src/ui/Settings.tsx:70): src/core/shopping.ts:53, src/core/fasteners.ts:319, src/core/assembly.ts:506,524 and the print line, with their Russian and print entries.
+- Request: Hardware and fastener completeness (G-042) (context, not a quote)
+- Questions: None; it is a wording bug. Fix together with the Romanian labels in G-042?
+- Suggested pick: Point both to the current path (Settings › Fasteners, or the piece's Size, boards and construction), and translate them in the Romanian CSV with G-042. (estimate: effort +1%, value +3%)
+- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: Re-checked 2026-11-05 on main c4a15bd (code read, no browser): Missing text updated to the current code.
+
 ### G-098: ADR-082 still Pending though built
 
 - Status: Done (ec9c7a8)
@@ -593,6 +614,15 @@ highest id in either file.
 - Questions: Should all four plan controls fit one row on a phone (shorter labels or icons), or is the wrap fine?
 - Suggested pick: Keep the wrap (closest to the request: Doors and fronts is in Snap's row); one row would need shorter labels (estimate +20 % work, +5 % of value)
 
+### G-138: How an info button shows its text
+
+- Status: Done (ADR-113; re-checked 2026-11-05 on main c4a15bd, code read)
+- Origin: ADR-113
+- Missing: The way the moved intro text opens is a default the user has not confirmed: tap or click the ⓘ button opens a small popover under it; tap outside, Escape or a second tap closes it
+- Request: Move info text from Project to a tooltip, apply same to other similar UX occurences
+- Questions: Popover on tap (also on hover on desktop), or hover-only tooltip?
+- Suggested pick: Popover on tap and click, Escape closes (closest to the request: a hover-only tooltip cannot open on a phone)
+
 ### G-140: Catalog density on desktop
 
 - Status: Done (ADR-119)
@@ -619,6 +649,24 @@ highest id in either file.
 - Request: Run a critique for listings, headers, text, button sizes, gaps, groupings; answer Catalog density + wizard
 - Questions: Should cut card text expand on tap (or show in the item detail), and are the short labels and Cancel removal fine?
 - Suggested pick: Full text in the item's detail view on tap (closest to the request: compact list, nothing unreachable; estimate +10 % work, +10 % of value)
+
+### G-146: Where a cut catalog card's full text shows
+
+- Status: Done (ADR-119; re-checked 2026-11-05 on main c4a15bd, code read)
+- Origin: ADR-119
+- Missing: The Catalog has no item detail view (tapping a card opens the item), so G-145's pick needs a place for the full text
+- Request: accept gap picks
+- Questions: A More toggle that expands the card in place, or the text in an info popover?
+- Suggested pick: More toggle in place (closest to the request: the text is on the card, one tap, works on touch and keyboard)
+
+### G-147: Lower-severity critique fixes not agreed
+
+- Status: Done (ADR-120; re-checked 2026-11-05 on main c4a15bd, code read)
+- Origin: ADR-120
+- Missing: The nine fixes in ADR-120 are the critique's proposals; none is agreed
+- Request: accept gap picks (G-141: one follow-up ADR for all of them)
+- Questions: Accept the nine fixes as written in ADR-120, or change any?
+- Suggested pick: Accept as written (each is the critique's fix for the item it names)
 
 ### G-149: Typed rotation: exact checks or bounding boxes
 
@@ -1429,6 +1477,16 @@ highest id in either file.
 - Questions: Snap: A: edges snap to the wall ends, floor and ceiling, off with the Snap toggle and Alt (ADR-070); B: no snap. Proportions: C: free stretch, D: kept, E: free, Shift keeps them
 - Suggested pick: A + C — fill one wall exactly needs edges that land on the wall ends; stretch means free. ~+10 % work for A (estimate)
 
+### G-290: Group width for pieces not in columns
+
+- Status: Done (obsolete: user decision 2026-11-05, a Width change is refused with the reason, as answered (ADR-148))
+- Origin: ADR-148, 2026-10-29; scope (Claude)
+- Missing: A group whose pieces overlap in x without sharing the same span (e.g. a wall unit straddling two base units) refuses a Width change.
+- Request: add the possibility to set the width, height and depth of grouped items, add the possibility to block group items from being moved separately.
+- Questions: Refuse, or scale every position around the left edge (pieces may stop touching by 1 mm)?
+- Suggested pick: Scale positions around the left edge, rounding shared edges once (closer to the request; estimate effort +25 %, value +10 %)
+- Answer: 2026-10-29 (user) "Refuse (as in ADR)"; ADR-148 refuses with the reason
+
 ### G-291: Vertical moves of a grouped piece do not carry the group
 
 - Status: Done (ADR-148)
@@ -1525,6 +1583,42 @@ highest id in either file.
 - Questions: Should Distribute evenly treat a group as one block, like Align?
 - Suggested pick: Group = one block, the same as the Align answer of 2026-10-29.
 
+### G-302: Lint for untranslated text
+
+- Status: Done (obsolete: user decision 2026-11-05, no lint rule; CLAUDE.md and the type check only)
+- Origin: ADR-153 (out of scope)
+- Missing: A lint rule that flags English text written outside t()
+- Request: add a implementation rule/constraint to also add translation on any text added/modified/deleted
+- Questions: Add the hardcoded-string lint?
+- Suggested pick: User chose CLAUDE.md + type check only (2026-10-29)
+
+### G-303: Gaps page not translated
+
+- Status: Done (obsolete: user decision 2026-11-05, the Gaps page stays English)
+- Origin: ADR-154 (out of scope)
+- Missing: The Gaps page (labels and entries) stays English
+- Request: add support for Russian language, have it toggle, also translate all the existing content ...
+- Questions: Translate the Gaps page?
+- Suggested pick: User 2026-10-29: Ignore gaps
+
+### G-304: User-typed names not translated
+
+- Status: Done (obsolete: user decision 2026-11-05, user-typed names are not translated)
+- Origin: ADR-155 (out of scope)
+- Missing: Names the user typed (pieces, projects, boards) are not translated
+- Request: add support for Russian language, have it toggle, also translate all the existing content ...
+- Questions: Translate user-typed names?
+- Suggested pick: No: they are the user's own text
+
+### G-307: Plan layer filter (All / Floor / Wall) for stacked pieces
+
+- Status: Done (obsolete: user decision 2026-11-05, the plan keeps no layer filter)
+- Origin: ADR-159
+- Missing: A layer filter on the plan so taps and box select reach only floor or only wall pieces where they overlap.
+- Request: The select is broken, wall and floor items are overlapping, correct select impossible (picked 'Layer filter', then 'Keep plan as is', 2026-10-29)
+- Questions: Build a plan layer filter at all, now that the front view, 3D and the piece list select several pieces?
+- Suggested pick: None suggested: the user's latest answer keeps the plan as is.
+
 ### G-309: Single-piece Inspector not reordered
 
 - Status: Done (ADR-160)
@@ -1544,6 +1638,33 @@ highest id in either file.
 - Questions: Should Build & Preview show a different side panel (for example finishes and checks only)?
 - Suggested pick: Keep the same panel until the user says what Build & Preview should show.
 - Answer (user, 2026-10-30): "Same as Compose".
+
+### G-319: App-wide Materials list
+
+- Status: Done (obsolete: user decision 2026-11-05, no app-wide Materials list; project boards and the decor list)
+- Origin: ADR-164
+- Missing: No app-wide Materials list on the device; board choices come from the project's boards and the decor list.
+- Request: The pal chosen at the beginning should be the same one from the Materials section.
+- Questions: Should the device keep one Materials list every project draws from (new Dexie table)?
+- Suggested pick: Keep project boards + decor list (the user's pick); an app-wide list only on request.
+
+### G-320: Common panel across a gap
+
+- Status: Done (obsolete: user decision 2026-11-05, a common panel joins touching items only)
+- Origin: ADR-165
+- Missing: A common top or bottom needs touching items; a gap between items is not bridged.
+- Request: Add the possibility to have a common bottom or top between multiple items.
+- Questions: Should one panel bridge a gap between items?
+- Suggested pick: Touching items only (the user's pick).
+
+### G-321: Shared side between neighbours
+
+- Status: Done (obsolete: user decision 2026-11-05, items keep their own sides)
+- Origin: ADR-165
+- Missing: Items under a common top or bottom keep their own two sides; no shared side between neighbours.
+- Request: Add the possibility to have a common bottom or top between multiple items.
+- Questions: Should neighbours also share one side panel?
+- Suggested pick: Own sides (the user's pick); a shared side in a later ADR.
 
 ### G-323: Variables outside projects
 
@@ -1591,6 +1712,15 @@ highest id in either file.
 - Request: Not a quote: the user chose record, re-check and move together
 - Questions: Show connections in the front view and 3D?
 - Suggested pick: A matching tick in the front view and a thin line in 3D (estimate: effort +15%, value +10%).
+
+### G-334: Templates keep copies, not references
+
+- Status: Done (obsolete: user decision 2026-11-05, templates keep copies (ADR-060))
+- Origin: ADR-170, 2026-11-04; user decision
+- Missing: Templates do not reference catalog items (ADR-060 chose copies; the research asks for references).
+- Request: “Keep copies; add connections, variables, bindings, project settings” (user 2026-11-04)
+- Questions: None; the user chose copies.
+- Suggested pick: Keep copies (chosen). References would need a new ADR replacing ADR-060 (estimate: effort +150%, value +30%).
 
 ### G-336: Verified research rows not yet deleted from the data
 
