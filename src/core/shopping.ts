@@ -282,14 +282,20 @@ export function shoppingList(input: {
   return lines;
 }
 
-const UNIT_RO: Record<ShopUnit, string> = { sheet: 'plăci', m2: 'm²', m: 'm', piece: 'buc' };
-const SECTION_RO: Record<ShopSection, string> = {
+/** The CSV's units and the section titles of the CSV and the printed list, in the print language (ADR-181). */
+const UNIT_PRINT: Record<ShopUnit, PrintKey> = { sheet: 'plăci', m2: 'm²', m: 'm', piece: 'buc' };
+const SECTION_PRINT: Record<ShopSection, PrintKey> = {
   boards: 'Plăci',
   banding: 'Cant',
   hardware: 'Feronerie',
   run: 'Piese de linie',
   choose: 'De ales înainte de cumpărare',
 };
+
+/** A section title on the printed list and in the CSV, in the print language (ADR-181). */
+export function shopSectionPrint(s: ShopSection): string {
+  return pt(SECTION_PRINT[s]);
+}
 
 /** What a unit price is per, on the printed list and in the CSV (ADR-181), in the print language. */
 const PER_PRINT: Record<UnitPer, PrintKey> = {
@@ -306,8 +312,8 @@ export function unitPricePrint(u: UnitPrice, currency: string): string {
 }
 
 /**
- * Shopping list as Romanian CSV (`;`), like the Parts CSV (ADR-020). With `unitOf`, a Unit price column after the
- * price, its header and unit in the print language (ADR-181): "45,00 / m²".
+ * Shopping list as CSV (`;`), like the Parts CSV (ADR-020): headers, sections and units in the print language,
+ * Romanian by default (ADR-157, ADR-181). With `unitOf`, a Unit price column after the price: "45,00 / m²".
  */
 export function shoppingCsvRo(
   lines: ShopLine[],
@@ -318,22 +324,22 @@ export function shoppingCsvRo(
   const esc = csvCell;
   const money = (minor: number) => (minor / 100).toFixed(2).replace('.', ',');
   const head = [
-    'Secțiune',
-    'Articol',
-    'Cantitate',
-    'UM',
-    'Detalii',
-    ...(priceOf ? [`Preț (${currency})`] : []),
+    pt('Secțiune'),
+    pt('Articol'),
+    pt('Cantitate'),
+    pt('UM'),
+    pt('Detalii'),
+    ...(priceOf ? [`${pt('Preț')} (${currency})`] : []),
     ...(unitOf ? [`${pt('Preț unitar')} (${currency})`] : []),
   ];
   const body = lines.map((l) => {
     const p = priceOf?.(l);
     const u = unitOf?.(l);
     return [
-      SECTION_RO[l.section],
+      shopSectionPrint(l.section),
       l.label,
       String(l.quantity).replace('.', ','),
-      UNIT_RO[l.unit],
+      pt(UNIT_PRINT[l.unit]),
       l.detail,
       ...(priceOf ? [p === null || p === undefined ? '' : money(p)] : []),
       ...(unitOf ? [u ? `${money(u.amount)} ${pt(PER_PRINT[u.per])}` : ''] : []),

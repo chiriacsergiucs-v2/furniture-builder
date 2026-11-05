@@ -18,21 +18,30 @@ const BUILT = [
   'Lock/pin modules and preserve manual overrides',
 ];
 
+/** Restored as their own rows (user 2026-11-05: "Keep as own rows"), by the name the page shows. */
+const RESTORED = [
+  'Transform handles (TransformControls or custom gizmos)',
+  'Budget and style filters',
+  'Layout optimisation',
+];
+
 describe.each(WIDTHS)('ADR-184 at %ipx (find-it)', (width) => {
-  it('⋯ › Feature Research lists no built feature', async () => {
+  it('⋯ › Feature Research lists no built feature and the 3 restored ones', async () => {
     const { user } = await renderApp(width);
     await user.click(screen.getByLabelText('More'));
     await user.click(await screen.findByRole('button', { name: /Feature Research/ }));
     const page = await screen.findByRole('main', { name: 'Feature Research & Catalog' });
     const built = await within(page).findByRole('region', { name: 'Built in this app' });
-    expect(built.textContent).toMatch(/Of the 23 left \(after 17 merged as the same idea\)/);
+    expect(built.textContent).toMatch(/Of the 26 left \(after 17 merged as the same idea\)/);
     expect(built.textContent).toMatch(/10 in progress/);
-    expect(built.textContent).toMatch(/13 not started/);
+    expect(built.textContent).toMatch(/16 not started/);
     expect(built.textContent).not.toMatch(/built by a status you set/);
     expect(
       within(page).getAllByRole('button', { name: 'Local dependency update on parameter change' })
         .length,
     ).toBeGreaterThan(0);
     for (const name of BUILT) expect(within(page).queryAllByRole('button', { name })).toEqual([]);
+    for (const name of RESTORED)
+      expect(within(page).getAllByRole('button', { name }).length).toBeGreaterThan(0);
   });
 });

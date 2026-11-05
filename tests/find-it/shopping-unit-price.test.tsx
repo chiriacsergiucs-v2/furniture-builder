@@ -1,9 +1,11 @@
 // @vitest-environment jsdom
 // Find-it for the unit price on each Shopping list row (ADR-181, N184), in jsdom (ADR-108): a board priced per m²
 // shows "45,00 lei / m²" under its line total, a row without a price shows "—", and the printed list has the
-// Unit price column (print language Romanian by default: "Preț unitar").
+// Unit price column; every header follows More › Print language (Romanian by default: "Preț unitar"; user 2026-11-05:
+// "All headers via print language").
 import { screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { setPrintLang } from '../../src/core/i18n/print';
 import { renderApp, WIDTHS } from './setup';
 
 type User = Awaited<ReturnType<typeof renderApp>>['user'];
@@ -19,10 +21,31 @@ async function addPiece(user: User, panel: HTMLElement) {
   if (place) await user.click(place);
 }
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  vi.restoreAllMocks();
+  setPrintLang('ro');
+});
+
+/** The printed list's headers, per print language: the column headers, then the Boards and Hardware titles. */
+const HEADERS = {
+  ro: ['Cantitate', 'Articol', 'Detalii', 'Preț', 'Preț unitar', 'Plăci', 'Feronerie'],
+  ru: ['Количество', 'Позиция', 'Подробности', 'Цена', 'Цена за единицу', 'Листы', 'Фурнитура'],
+  en: ['Quantity', 'Item', 'Details', 'Price', 'Unit price', 'Boards', 'Hardware'],
+} as const;
+const TITLE = { ro: 'Listă de cumpărături — ', ru: 'Список покупок — ', en: 'Shopping list — ' };
+
+function expectHeaders(html: string, lang: keyof typeof HEADERS) {
+  const [qty, item, details, price, unit, boards, hardware] = HEADERS[lang];
+  expect(html).toContain(
+    `<tr><th>${qty}</th><th>${item}</th><th>${details}</th><th>${price}</th><th>${unit}</th></tr>`,
+  );
+  expect(html).toContain(`<h2>${boards}</h2>`);
+  expect(html).toContain(`<h2>${hardware}</h2>`);
+  expect(html).toContain(`<h1>${TITLE[lang]}`);
+}
 
 describe.each(WIDTHS)('unit price on Shopping list rows at %ipx (find-it, ADR-181)', (width) => {
-  it('a board priced per m² shows its unit price under the total; an unpriced row shows "—"; the print has the column', async () => {
+  it('a board priced per m² shows its unit price under the total; an unpriced row shows "—"; the print has the column and its headers follow the print language', async () => {
     const { user } = await renderApp(width);
     await user.click(await screen.findByRole('button', { name: 'Create a new project' }));
     const create = await screen.findByRole('dialog');
@@ -70,5 +93,21 @@ describe.each(WIDTHS)('unit price on Shopping list rows at %ipx (find-it, ADR-18
     await user.click(within(list).getByRole('button', { name: 'Print shopping list' }));
     expect(html).toContain('<th>Preț unitar</th>');
     expect(html).toContain('45,00 lei / m²');
+    expectHeaders(html, 'ro');
+
+    // More › Print language: every header of the printed list follows it.
+    for (const [lang, name, per] of [
+      ['ru', 'Русский', '45,00 lei / м²'],
+      ['en', 'English', '45,00 lei / m²'],
+    ] as const) {
+      await user.click(screen.getByLabelText(/^More$/));
+      const group = screen.getByRole('group', { name: /Print language/ });
+      await user.click(within(group).getByRole('button', { name }));
+      await user.keyboard('{Escape}');
+      html = '';
+      await user.click(within(list).getByRole('button', { name: 'Print shopping list' }));
+      expectHeaders(html, lang);
+      expect(html).toContain(per);
+    }
   });
 });

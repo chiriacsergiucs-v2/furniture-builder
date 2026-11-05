@@ -10,7 +10,7 @@ import {
 } from '../src/core/research/ensemble-2026-10-23.assessment';
 import { SHIPPED_RESEARCH } from '../src/core/research';
 
-/** The 9 Verified features of ADR-184 and the 3 features merged into them. */
+/** The 9 Verified features of ADR-184. */
 const DELETED = [
   'transactional-undo',
   'assembly-sequence',
@@ -21,10 +21,10 @@ const DELETED = [
   'versioned-save',
   'deterministic-alternatives',
   'locks-overrides',
-  'transform-gizmos',
-  'budget-style-filters',
-  'layout-optimisation',
 ];
+
+/** Merged into deleted rows by ADR-184's first cut; restored as their own rows (user 2026-11-05: "Keep as own rows"). */
+const RESTORED = ['transform-gizmos', 'budget-style-filters', 'layout-optimisation'];
 
 describe('research data without built rows (ADR-184)', () => {
   it('no shipped feature is Verified or Implemented', () => {
@@ -58,6 +58,21 @@ describe('research data without built rows (ADR-184)', () => {
     expect(links.filter((l) => ids.has(l))).toEqual([]);
     expect(b.contradictions.flatMap((c) => c.features ?? []).filter((f) => ids.has(f))).toEqual([]);
     expect(b.contradictions.every((c) => (c.features ?? []).length > 0)).toBe(true);
+  });
+
+  it('the 3 features merged into deleted rows stay as their own top-level, Not started rows', () => {
+    for (const s of RESTORED) {
+      const f = ENSEMBLE_BUNDLE.features.find((x) => x.id === `ens.f.${s}`);
+      expect(f, s).toBeDefined();
+      expect(f?.parent).toBeUndefined();
+      expect(f?.mergedInto).toBeUndefined();
+      expect(f?.app).toBeUndefined();
+      expect(ENSEMBLE_MERGES[s]).toBeUndefined();
+      expect(ENSEMBLE_APP_STATUS[s]).toBeUndefined();
+      expect(ENSEMBLE_ASSESSMENTS[s]).toBeDefined();
+      expect(ENSEMBLE_PRIORITIES[s]).toBeDefined();
+      expect(ENSEMBLE_APPRECIATION[s]).toBeDefined();
+    }
   });
 
   it('In Progress rows stay with what is missing, and the bundle validates', () => {

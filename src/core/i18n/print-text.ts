@@ -175,6 +175,20 @@ export const PRINT_RU = {
   '/ m': '/ м',
   '/ buc': '/ шт.',
   '/ blat': '/ щит столешницы',
+  // Shopping list headers, sections and units (ADR-181: "All headers via print language")
+  'Listă de cumpărături — {name}': 'Список покупок — {name}',
+  Secțiune: 'Раздел',
+  Cantitate: 'Количество',
+  UM: 'Ед. изм.',
+  Detalii: 'Подробности',
+  Preț: 'Цена',
+  Cant: 'Кромка',
+  'Piese de linie': 'Детали ряда',
+  'De ales înainte de cumpărare': 'Выбрать перед покупкой',
+  plăci: 'листы',
+  'm²': 'м²',
+  m: 'м',
+  buc: 'шт.',
 } satisfies Record<string, string>;
 
 export const PRINT_EN: Record<keyof typeof PRINT_RU, string> = {
@@ -340,4 +354,17 @@ export const PRINT_EN: Record<keyof typeof PRINT_RU, string> = {
   '/ m': '/ m',
   '/ buc': '/ piece',
   '/ blat': '/ worktop board',
+  'Listă de cumpărături — {name}': 'Shopping list — {name}',
+  Secțiune: 'Section',
+  Cantitate: 'Quantity',
+  UM: 'Unit',
+  Detalii: 'Details',
+  Preț: 'Price',
+  Cant: 'Edge banding',
+  'Piese de linie': 'Run parts',
+  'De ales înainte de cumpărare': 'To choose before buying',
+  plăci: 'sheets',
+  'm²': 'm²',
+  m: 'm',
+  buc: 'pcs',
 };

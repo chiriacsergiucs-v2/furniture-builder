@@ -400,7 +400,6 @@ export const ru_editors = {
   'Download CSV': 'Скачать CSV',
   'Print the cutting sheet (in the print language, A4) or save it as PDF':
     'Распечатать лист раскроя (на языке печати, A4) или сохранить в PDF',
-  'Shopping list — {name}': 'Список покупок — {name}',
   'Estimate: {total} {currency}': 'Оценка: {total} {currency}',
   ' — {n|# price missing|# prices missing}': ' — нет цены: {n}',
   ' (your prices)': ' (ваши цены)',

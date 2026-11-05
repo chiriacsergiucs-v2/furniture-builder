@@ -18,6 +18,7 @@ import { validPer } from '../core/design';
 import { ProductPicker } from './ProductPicker';
 import {
   NOT_COUNTED,
+  shopSectionPrint,
   shoppingCsvRo,
   unitPricePrint,
   type ShopLine,
@@ -41,7 +42,7 @@ const SECTIONS: { id: ShopSection; title: string }[] = [
   { id: 'run', title: 'Run parts' },
   { id: 'choose', title: 'To choose before buying' },
 ];
-/** The section titles, on screen and on the printed list (both in the app's language, ADR-154). */
+/** The section titles on screen, in the app's language (ADR-154); the printed list uses the print language (ADR-181). */
 const SECTION_TITLE: Record<ShopSection, string> = {
   boards: t('Boards'),
   banding: t('Edge banding'),
@@ -133,7 +134,7 @@ export function ShoppingList() {
     const rowsHtml = SECTIONS.map((s) => {
       const ls = lines.filter((l) => l.section === s.id);
       return ls.length
-        ? `<h2>${esc(SECTION_TITLE[s.id])}</h2><table><tr><th>${esc(t('Qty'))}</th><th>${esc(t('Item'))}</th><th>${esc(t('Details'))}</th><th>${esc(t('Price'))}</th><th>${esc(pt('Preț unitar'))}</th></tr>${ls
+        ? `<h2>${esc(shopSectionPrint(s.id))}</h2><table><tr><th>${esc(pt('Cantitate'))}</th><th>${esc(pt('Articol'))}</th><th>${esc(pt('Detalii'))}</th><th>${esc(pt('Preț'))}</th><th>${esc(pt('Preț unitar'))}</th></tr>${ls
             .map((l) => {
               const p = linePrice(l, map, seller);
               const u = unitPrice(l, map, seller);
@@ -142,7 +143,7 @@ export function ShoppingList() {
             .join('')}</table>`
         : '';
     }).join('');
-    const title = esc(t('Shopping list — {name}', { name: view.title }));
+    const title = esc(pt('Listă de cumpărături — {name}', { name: view.title }));
     const estimate = esc(
       t('Estimate: {total} {currency}', { total: formatMoney(est.total), currency }) +
         (est.missing.length

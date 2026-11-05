@@ -561,4 +561,32 @@ export const data_research2: Record<string, string> = {
   'P2 internal': 'P2, внутренняя',
   'P3 internal': 'P3, внутренняя',
   'Research priority {value}': 'Приоритет исследования {value}',
+  'Transform handles (TransformControls or custom gizmos)':
+    'Манипуляторы преобразования (TransformControls или собственные гизмо)',
+  'Three.js TransformControls as a baseline; furniture-specific constrained gizmos will probably need custom UX.':
+    'TransformControls из Three.js как основа; для мебельных гизмо с ограничениями, вероятно, понадобится собственный UX.',
+  Transforms: 'Преобразования',
+  'Judgement: dragging plus numeric entry meet the MVP row; furniture-specific handles "will probably need custom UX" (line 443).':
+    'Суждение: перетаскивание и числовой ввод закрывают строку MVP; мебельным манипуляторам «вероятно, понадобится собственный UX» (строка 443).',
+  'Judgement: direct modelling is valued (line 43), but nothing is said about handles themselves.':
+    'Суждение: прямое моделирование ценится (строка 43), но о самих манипуляторах ничего не сказано.',
+  'Baseline control exists; the paper expects furniture-specific handles to need custom UX.':
+    'Базовый элемент управления есть; статья ожидает, что мебельным манипуляторам понадобится собственный UX.',
+  'Budget and style filters': 'Фильтры по бюджету и стилю',
+  'Filter generated layouts by budget and style (phase four), e.g. "keep it under €2,500".':
+    'Фильтровать сгенерированные компоновки по бюджету и стилю (этап четыре), например «уложиться в 2 500 €».',
+  'Deterministic layout': 'Детерминированная компоновка',
+  'Phase 4: "budget/style filters" (line 491).': 'Этап 4: «фильтры по бюджету/стилю» (строка 491).',
+  'Parent: Deterministic generation of alternative valid layouts ("High", rank 26).':
+    'Родитель: Детерминированная генерация альтернативных допустимых компоновок («Высокая», ранг 26).',
+  'Phase-four item; budget filtering needs price data the paper ties to "if data exists".':
+    'Пункт этапа четыре; фильтру по бюджету нужны данные о ценах, которые статья связывает с условием «если есть данные».',
+  'Layout optimisation': 'Оптимизация компоновки',
+  'Optimisation of layouts, listed in phase four without further detail.':
+    'Оптимизация компоновок, указанная в этапе четыре без подробностей.',
+  'Phase 4: "optimisation" (line 491).': 'Этап 4: «оптимизация» (строка 491).',
+  'Judgement: one word in the phase-4 list — not inherited from Deterministic alternatives (High).':
+    'Суждение: одно слово в списке этапа 4 — оценка не унаследована от «Детерминированных альтернатив» (высокая).',
+  'One word in the phase-four list with no detail.':
+    'Одно слово в списке этапа четыре без подробностей.',
 };

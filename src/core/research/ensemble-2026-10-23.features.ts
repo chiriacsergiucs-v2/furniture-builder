@@ -359,6 +359,15 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
   }),
 
   // ── Positioning and manipulation ──────────────────────────────────────────────────────────────────────────────
+  F('transform-gizmos', {
+    name: 'Transform handles (TransformControls or custom gizmos)',
+    category: 'positioning',
+    subcategory: 'Transforms',
+    description:
+      'Three.js TransformControls as a baseline; furniture-specific constrained gizmos will probably need custom UX.',
+    findings: ['089', 'stack-03'],
+    tags: ['technology'],
+  }),
 
   // ── Parametric editing in context ─────────────────────────────────────────────────────────────────────────────
   F('propagation-pipeline', {
@@ -549,6 +558,25 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
   }),
 
   // ── Automation and AI ─────────────────────────────────────────────────────────────────────────────────────────
+  F('budget-style-filters', {
+    name: 'Budget and style filters',
+    category: 'ai',
+    subcategory: 'Deterministic layout',
+    description:
+      'Filter generated layouts by budget and style (phase four), e.g. "keep it under €2,500".',
+    findings: ['phase-4', '125', '126'],
+    phase: P4,
+    tags: ['phase-4'],
+  }),
+  F('layout-optimisation', {
+    name: 'Layout optimisation',
+    category: 'ai',
+    subcategory: 'Deterministic layout',
+    description: 'Optimisation of layouts, listed in phase four without further detail.',
+    findings: ['phase-4'],
+    phase: P4,
+    tags: ['detail-unknown'],
+  }),
   F('ai-layout', {
     name: 'AI layout generation',
     category: 'ai',

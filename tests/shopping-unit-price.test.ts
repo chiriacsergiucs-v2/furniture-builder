@@ -1,9 +1,14 @@
 // ADR-181: each priced Shopping list row shows the unit price its total comes from; the CSV and the printed list
-// have a Unit price column in the print language (ro, ru, en).
+// have a Unit price column, and every header in the print language (ro, ru, en).
 import { afterEach, describe, expect, it } from 'vitest';
 import { setPrintLang } from '../src/core/i18n/print';
 import { linePrice, unitPrice, type PriceEntry, type SellerLookup } from '../src/core/prices';
-import { shoppingCsvRo, unitPricePrint, type ShopLine } from '../src/core/shopping';
+import {
+  shopSectionPrint,
+  shoppingCsvRo,
+  unitPricePrint,
+  type ShopLine,
+} from '../src/core/shopping';
 
 const board: ShopLine = {
   section: 'boards',
@@ -87,17 +92,64 @@ describe('Unit price column in the CSV and the print, in ro, ru and en (ADR-181)
       .replace(/^\uFEFF/, '')
       .split('\r\n');
   it.each([
-    ['ro', 'Preț unitar (lei)', '45,00 / m²', '45,00 lei / m²'],
-    ['ru', 'Цена за единицу (lei)', '45,00 / м²', '45,00 lei / м²'],
-    ['en', 'Unit price (lei)', '45,00 / m²', '45,00 lei / m²'],
-  ] as const)('%s', (lang, head, cell, print) => {
+    [
+      'ro',
+      'Secțiune;Articol;Cantitate;UM;Detalii;Preț (lei);Preț unitar (lei)',
+      'Plăci;PAL alb;2;plăci;18 mm;337,50;45,00 / m²',
+      'Feronerie;Hinge;4;buc;;;',
+      '45,00 lei / m²',
+    ],
+    [
+      'ru',
+      'Раздел;Позиция;Количество;Ед. изм.;Подробности;Цена (lei);Цена за единицу (lei)',
+      'Листы;PAL alb;2;листы;18 mm;337,50;45,00 / м²',
+      'Фурнитура;Hinge;4;шт.;;;',
+      '45,00 lei / м²',
+    ],
+    [
+      'en',
+      'Section;Item;Quantity;Unit;Details;Price (lei);Unit price (lei)',
+      'Boards;PAL alb;2;sheets;18 mm;337,50;45,00 / m²',
+      'Hardware;Hinge;4;pcs;;;',
+      '45,00 lei / m²',
+    ],
+  ] as const)('%s', (lang, head, boardRow, hingeRow, print) => {
     setPrintLang(lang);
     const rows = csv();
-    expect(rows[0]).toBe(`Secțiune;Articol;Cantitate;UM;Detalii;Preț (lei);${head}`);
-    expect(rows[1]).toBe(`Plăci;PAL alb;2;plăci;18 mm;337,50;${cell}`);
+    // Every header, section and unit in the print language (user 2026-11-05: "All headers via print language").
+    expect(rows[0]).toBe(head);
+    expect(rows[1]).toBe(boardRow);
     // No price: both cells empty.
-    expect(rows[2]).toBe('Feronerie;Hinge;4;buc;;;');
+    expect(rows[2]).toBe(hingeRow);
     expect(unitPricePrint({ amount: 4500, per: 'm2' }, 'lei')).toBe(print);
+  });
+  it('every section title in each print language', () => {
+    const all = ['boards', 'banding', 'hardware', 'run', 'choose'] as const;
+    const text = (l: 'ro' | 'ru' | 'en') => {
+      setPrintLang(l);
+      return all.map(shopSectionPrint);
+    };
+    expect(text('ro')).toEqual([
+      'Plăci',
+      'Cant',
+      'Feronerie',
+      'Piese de linie',
+      'De ales înainte de cumpărare',
+    ]);
+    expect(text('ru')).toEqual([
+      'Листы',
+      'Кромка',
+      'Фурнитура',
+      'Детали ряда',
+      'Выбрать перед покупкой',
+    ]);
+    expect(text('en')).toEqual([
+      'Boards',
+      'Edge banding',
+      'Hardware',
+      'Run parts',
+      'To choose before buying',
+    ]);
   });
   it('every unit in each print language', () => {
     const per = ['sheet', 'm2', 'm', 'piece', 'worktop'] as const;
