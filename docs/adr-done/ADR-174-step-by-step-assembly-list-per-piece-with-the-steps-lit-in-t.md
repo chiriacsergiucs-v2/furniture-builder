@@ -1,7 +1,8 @@
 # ADR-174: Step-by-step assembly list per piece with the steps lit in the exploded 3D view
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-04
+- Implemented: 2026-11-05
 - Depends on: ADR-010, ADR-074, ADR-122, ADR-157
 - Design: docs/ui-design.md (section 4, Build & Preview results)
 - Backlog: N177
@@ -63,10 +64,10 @@ User (2026-11-04): an ordered step list plus a 3D highlight.
 
 ## Done when
 
-- [ ] For every catalog template, every panel is in exactly one step; bottom before sides before top before back
+- [x] For every catalog template, every panel is in exactly one step; bottom before sides before top before back
       before fronts; drawer boxes before their fronts; adjustable shelves after the carcass (tests)
-- [ ] Joint counts per step sum to ADR-074's counts for the piece; hardware counts match the schedule (tests)
-- [ ] The guidance line is on the tab and on the printed sheet in ro, ru and en (tests)
-- [ ] Assembly tab lists the steps for a piece and per piece in a project; Show step lights the parts in 3D and
+- [x] Joint counts per step sum to ADR-074's counts for the piece; hardware counts match the schedule (tests)
+- [x] The guidance line is on the tab and on the printed sheet in ro, ru and en (tests)
+- [x] Assembly tab lists the steps for a piece and per piece in a project; Show step lights the parts in 3D and
       ← → move (browser find-it, 390 and 1280 px, production build)
-- [ ] Russian and print entries for every new text; the feature tree gains "Assembly steps" (ADR-158)
+- [x] Russian and print entries for every new text; the feature tree gains "Assembly steps" (ADR-158)

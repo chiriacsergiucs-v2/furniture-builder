@@ -1,7 +1,8 @@
 # ADR-172: A running cost estimate in the editor and a seller price refresh from a new export
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-04
+- Implemented: 2026-11-05
 - Depends on: ADR-062, ADR-064, ADR-161, ADR-162
 - Design: docs/ui-design.md (section 4, the editor header)
 - Backlog: N175
@@ -61,9 +62,9 @@ uploads a new export and a workflow converts it.
 
 ## Done when
 
-- [ ] The chip shows "Estimate: N lei", "· M missing" and "No prices yet" from the derived view for a piece and a
+- [x] The chip shows "Estimate: N lei", "· M missing" and "No prices yet" from the derived view for a piece and a
       project; tapping it opens Shopping list (jsdom find-it, 390 and 1280 px)
-- [ ] The chip's value equals the Shopping list's estimate for the same project (test)
-- [ ] `seller-prices.yml` runs the converter on the input URL, keeps picture marks, sets `extracted` from the export
+- [x] The chip's value equals the Shopping list's estimate for the same project (test)
+- [x] `seller-prices.yml` runs the converter on the input URL, keeps picture marks, sets `extracted` from the export
       and opens a pull request (workflow file reviewed; converter tests for the date and a dropped product)
-- [ ] Russian entries for every new text; the feature tree gains "Running cost estimate" (ADR-158)
+- [x] Russian entries for every new text; the feature tree gains "Running cost estimate" (ADR-158)
