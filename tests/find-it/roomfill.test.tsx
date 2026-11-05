@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 // Find-it for Fill the room (ADR-173, N176), in jsdom (ADR-108): More → New… → Fill the room → Room (rectangle)
 // → Walls → Show suggestions → cards → Use this mix → the project opens with its room and pieces; in that project
-// the ⋯ menu offers "Fill the room…", which adds a mix to the project.
+// the ⋯ menu offers "Fill the room…", which adds a mix to the project. ADR-177 (N180): the mix's piece list shows
+// the wall corner (Wall blind corner) above the corner cabinet.
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { renderApp, WIDTHS } from './setup';
@@ -34,10 +35,11 @@ describe.each(WIDTHS)('fill the room at %ipx (find-it, ADR-173)', (width) => {
     if (peek?.getAttribute('aria-expanded') === 'false') await user.click(peek);
     const all = within(panel).queryByRole('button', { name: /^All pieces \(\d+\)$/ });
     if (all) await user.click(all);
-    const before = within(within(panel).getByRole('list', { name: 'Pieces' })).getAllByRole(
-      'button',
-    ).length;
+    const pieces = within(within(panel).getByRole('list', { name: 'Pieces' }));
+    const before = pieces.getAllByRole('button').length;
     expect(before).toBeGreaterThan(2);
+    // ADR-177: the corner of the two walls gets a wall corner above its corner cabinet (blind by default).
+    expect(pieces.getAllByRole('button', { name: /Wall blind corner/ }).length).toBeGreaterThan(0);
     expect(screen.getByRole('figure', { name: /Room plan, seen from above/ })).toBeTruthy();
 
     // In the project: ⋯ → Fill the room… → Walls (the project's room) → suggestions → Add this mix.
