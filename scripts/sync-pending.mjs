@@ -5,7 +5,7 @@
  *
  *   - feature lines with no `checked` date;
  *   - feature lines whose `checked` date is older than the Implemented date of an ADR they cite;
- *   - feature lines citing an id that is not an implemented ADR;
+ *   - feature lines citing an id that is neither an implemented ADR nor one pending in docs/adr;
  *   - implemented ADRs cited by no feature line and not in EXEMPT;
  *   - the number of open gaps in docs/adr/GAPS.md (Done gaps live in GAPS-archive.md and are never re-checked).
  *
@@ -63,6 +63,15 @@ export function implementedDates(repo = REPO) {
   return out;
 }
 
+/** ADRs still pending in docs/adr (built in the open pull request, shipped with it): citing one is not an error. */
+export function pendingAdrs(repo = REPO) {
+  return new Set(
+    readdirSync(join(repo, 'docs/adr'))
+      .map((f) => /^(ADR-\d{3})-.*\.md$/.exec(f)?.[1])
+      .filter(Boolean),
+  );
+}
+
 /** Every feature line of the tree, with its domain path. */
 export function featureLines(domains, path = []) {
   const out = [];
@@ -80,7 +89,7 @@ export function openGaps(text) {
 }
 
 /** What a sync must check: lists of strings, empty when nothing is pending. */
-export function pending(domains, implemented, exempt = EXEMPT) {
+export function pending(domains, implemented, exempt = EXEMPT, inProgress = pendingAdrs()) {
   const unchecked = [];
   const stale = [];
   const unknown = [];
@@ -89,7 +98,8 @@ export function pending(domains, implemented, exempt = EXEMPT) {
     const where = `${path} › ${f.name}`;
     for (const a of f.adrs) {
       cited.add(a);
-      if (!implemented[a]) unknown.push(`${where}: ${a} is not an implemented ADR`);
+      if (!implemented[a] && !inProgress.has(a))
+        unknown.push(`${where}: ${a} is not an implemented or pending ADR`);
     }
     if (!f.checked || !DATE.test(f.checked)) {
       unchecked.push(f.checked ? `${where} (bad date "${f.checked}")` : where);
@@ -113,7 +123,7 @@ async function main() {
   const sections = [
     ['Feature lines with no checked date', p.unchecked],
     ['Feature lines checked before a cited ADR was implemented', p.stale],
-    ['Feature lines citing an id that is not an implemented ADR', p.unknown],
+    ['Feature lines citing an id that is not an implemented or pending ADR', p.unknown],
     ['Implemented ADRs cited by no feature line (not exempt)', p.uncited],
   ];
   let any = false;

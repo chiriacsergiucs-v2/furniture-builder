@@ -57,7 +57,9 @@ describe('sync:pending (feature tree, ADR-158)', () => {
     expect(pending(domains, { 'ADR-002': '2026-10-22' }, []).stale).toEqual([
       'D › b: checked 2026-10-21, ADR-002 2026-10-22',
     ]);
-    expect(p.unknown).toEqual(['D › c: N154 is not an implemented ADR']);
+    expect(p.unknown).toEqual(['D › c: N154 is not an implemented or pending ADR']);
+    // An ADR still pending in docs/adr (shipped with its pull request) is not unknown.
+    expect(pending(domains, {}, [], new Set(['ADR-001', 'ADR-002', 'N154'])).unknown).toEqual([]);
     expect(p.uncited).toEqual(['ADR-003']);
     expect(openGaps('### G-001: x\n\n- Status: Open\n\n### G-002: y\n\n- Status: ADR-175\n')).toBe(
       1,

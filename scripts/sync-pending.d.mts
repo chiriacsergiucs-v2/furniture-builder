@@ -8,8 +8,10 @@ export function featureLines(
   path?: string[],
 ): { path: string; feature: Feature }[];
 export function openGaps(text: string): number;
+export function pendingAdrs(repo?: string): Set<string>;
 export function pending(
   domains: FeatureDomain[],
   implemented: Record<string, string>,
   exempt?: string[],
+  inProgress?: Set<string>,
 ): { unchecked: string[]; stale: string[]; unknown: string[]; uncited: string[] };
