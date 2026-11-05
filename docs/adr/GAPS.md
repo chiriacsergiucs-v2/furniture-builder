@@ -2181,11 +2181,11 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 ### G-367: Design critiques of shell, piece editor and project
 
 - Status: Open
-- Origin: Design critique batch, 2026-11-05; user cut it
-- Missing: Design critiques and ADRs for domains 1 (shell and navigation), 6 (piece editor) and 7 (project composition): the critique agents were stopped before they wrote a result.
-- Request: "run a /batch for 1 through 7 with a critique of design … 1 adr … per flow (7 total adrs)", then "Add the adrs for the ones finished".
-- Questions: Rerun the critiques for domains 1, 6 and 7?
-- Suggested pick: Rerun the three critiques and add one ADR each, as for domains 2 to 5. (estimate: effort +75 % of the batch, value +43 %)
+- Origin: Design critique batch, 2026-11-05; implementation request 2026-11-06
+- Missing: Agreed fix choices, completed production-browser critiques at 390 × 844 and 1280 × 900, implementation and acceptance for domains 1, 6 and 7. Code findings and proposed fixes now recorded in ADR-198; no application changes. Chromium could not launch/render for the production screenshots.
+- Request: "run a /batch for 1 through 7 with a critique of design … 1 adr … per flow (7 total adrs)"; "For furniture-builder repo, using the audit results of claude flow i asked for. Implement ADR-s 198, 199, 200".
+- Questions: Choose each ADR's four proposed fixes, or identify numbered changes? Production-browser critique remains incomplete.
+- Suggested pick: Choose the proposed fixes after review; finish production-browser evidence, then implement and verify every selected fix. No choice is accepted by default. Effort/value percentages cannot be determined from the current evidence.
 
 ### G-368: CI runs only the tests related to a core-only change
 
