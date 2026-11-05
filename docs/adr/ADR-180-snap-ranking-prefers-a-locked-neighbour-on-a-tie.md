@@ -18,8 +18,9 @@ side wins; nothing else changes.
 
 ## Decision
 
-1. The ranking becomes distance, then **locked** (a neighbour candidate whose piece is position-locked, ADR-095, before
-   one whose piece is not), then kind, then id. Walls and corners count as not locked.
+1. The ranking becomes distance, then **locked** (a neighbour candidate whose piece has any lock — position, ADR-095;
+   turn or a size, ADR-171 — before one whose piece has none), then kind, then id. Walls and corners count as not
+   locked. User 2026-11-05: "Any lock".
 2. Only equal distances are affected; a closer unlocked side still wins.
 
 ## Alternatives considered
@@ -37,6 +38,6 @@ side wins; nothing else changes.
 
 ## Done when
 
-- [ ] Two neighbour sides at the same distance: the locked piece's side wins; unlocked first when the locked side is
+- [ ] Two neighbour sides at the same distance: the locked piece's side wins (position, turn or size lock); unlocked first when the locked side is
       1 mm farther (tests)
 - [ ] Existing snap tests and the fuzz stay green (tests, fuzz)
