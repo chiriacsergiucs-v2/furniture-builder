@@ -419,7 +419,7 @@ export const FEATURES: FeatureDomain[] = [
             adrs: ['ADR-005', 'ADR-010'],
             checked: '2026-11-05',
           },
-          { name: 'Drawer boxes without an inner front', adrs: ['ADR-192'] },
+          { name: 'Drawer boxes without an inner front', adrs: ['ADR-192'], checked: '2026-11-05' },
         ],
       },
       {
