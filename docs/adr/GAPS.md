@@ -2096,3 +2096,93 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Not asked; noted during the critique of 2026-11-05 and left out of the fourteen findings.
 - Questions: Allow a five-option segmented control on desktop and wrap it on a phone?
 - Suggested pick: Segmented up to five options at 1280 px, wrapping at 390 px. (estimate: effort +2 %, value +3 %)
+
+### G-358: Start-new rows share one glyph
+
+- Status: Open
+- Origin: ADR-193, 2026-11-05; design critique, agent scoped it out
+- Missing: The Project, Fill a wall and Fill the room rows of Start something new share one 'project' glyph (Low).
+- Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
+- Questions: Give each row its own glyph?
+- Suggested pick: A wall glyph for Fill a wall and a room-plan glyph for Fill the room. (estimate: effort +1 %, value +1 %)
+
+### G-359: Open in wizard inside a project
+
+- Status: Open
+- Origin: ADR-194, 2026-11-05; design critique, agent scoped it out
+- Missing: Open in wizard is hidden for a wizard-made piece inside a project (Settings hides it there).
+- Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
+- Questions: Offer Open in wizard for a project piece, updating it in place in the project?
+- Suggested pick: Offer it; Update piece replaces the project item's design. (estimate: effort +6 %, value +5 %)
+
+### G-360: Wizard Review rows repeat long labels
+
+- Status: Open
+- Origin: ADR-194, 2026-11-05; design critique, agent scoped it out
+- Missing: Review rows repeat long field labels, e.g. 'Width of each compartment (0 = share the rest): 0 mm'.
+- Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
+- Questions: Give fields a short Review label?
+- Suggested pick: An optional short label per field for Review. (estimate: effort +2 %, value +2 %)
+
+### G-361: Arrow keys on Segmented controls
+
+- Status: Open
+- Origin: ADR-194, 2026-11-05; design critique, agent scoped it out
+- Missing: Segmented controls have no arrow-key movement anywhere in the app.
+- Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
+- Questions: Add roving tabindex and arrow keys to Segmented app-wide?
+- Suggested pick: Yes, in the shared control, one change for every screen. (estimate: effort +3 %, value +3 %)
+
+### G-362: Catalog item counts differ from room chips
+
+- Status: Open
+- Origin: ADR-195, 2026-11-05; design critique, agent scoped it out
+- Missing: The Catalog header says 118 items while the room chips sum to 183, because a family is listed under every room (ADR-032).
+- Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
+- Questions: Say 'in N families, listed under several rooms' or count per room only?
+- Suggested pick: Keep the header; add a hint that a family can sit in several rooms. (estimate: effort +1 %, value +2 %)
+
+### G-363: Imported templates shadow silently
+
+- Status: Open
+- Origin: ADR-195, 2026-11-05; design critique, agent scoped it out
+- Missing: Two imported templates that shadow the same shipped family: the last one wins silently (local.ts:85).
+- Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
+- Questions: Warn on import, or keep both as separate families?
+- Suggested pick: Warn on import and ask which one to keep. (estimate: effort +3 %, value +3 %)
+
+### G-364: Shelf pins in a diagonal corner
+
+- Status: Open
+- Origin: ADR-196, 2026-11-05; design critique, agent scoped it out
+- Missing: Pin rows on five-sided boards: adjustable shelves in a diagonal corner (ADR-196 makes them an error instead).
+- Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
+- Questions: Support pin rows on the diagonal's straight sides?
+- Suggested pick: Keep the error until a diagonal pin layout is decided with you. (estimate: effort +10 %, value +3 %)
+
+### G-365: Handle side on a turned corner wing
+
+- Status: Open
+- Origin: ADR-196, 2026-11-05; design critique, agent scoped it out
+- Missing: Which edge 'left' means for handle holes on a turned wing-B front of an L-corner was not verified.
+- Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
+- Questions: Check handle hole sides on turned wing-B fronts?
+- Suggested pick: A test that builds an L-corner with a left handle and checks the hole side. (estimate: effort +2 %, value +2 %)
+
+### G-366: Hardware notes built from English fragments
+
+- Status: Open
+- Origin: ADR-196, 2026-11-05; design critique, agent scoped it out
+- Missing: Hardware notes are assembled from English fragments (hingeBand), so the Russian schedule mixes languages.
+- Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
+- Questions: Move the notes to whole t() sentences?
+- Suggested pick: Whole sentences per note in t(), with Russian entries. (estimate: effort +4 %, value +3 %)
+
+### G-367: Design critiques of shell, piece editor and project
+
+- Status: Open
+- Origin: Design critique batch, 2026-11-05; user cut it
+- Missing: Design critiques and ADRs for domains 1 (shell and navigation), 6 (piece editor) and 7 (project composition): the critique agents were stopped before they wrote a result.
+- Request: "run a /batch for 1 through 7 with a critique of design … 1 adr … per flow (7 total adrs)", then "Add the adrs for the ones finished".
+- Questions: Rerun the critiques for domains 1, 6 and 7?
+- Suggested pick: Rerun the three critiques and add one ADR each, as for domains 2 to 5. (estimate: effort +75 % of the batch, value +43 %)
