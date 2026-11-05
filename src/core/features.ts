@@ -783,7 +783,12 @@ export const FEATURES: FeatureDomain[] = [
         detail: 'Research features still left to build, and competitors.',
         adrs: ['ADR-043', 'ADR-092', 'ADR-110', 'ADR-149'],
       },
-      { name: 'Gaps page', adrs: ['ADR-101'] },
+      {
+        name: 'Gaps page',
+        detail:
+          'Gaps with rough work, impact and necessity ratings, filters, and an issue and a fix line each.',
+        adrs: ['ADR-101', 'ADR-187'],
+      },
       { name: 'Info buttons', adrs: ['ADR-080', 'ADR-113'] },
       { name: 'Light and dark themes', adrs: ['ADR-030'] },
     ],

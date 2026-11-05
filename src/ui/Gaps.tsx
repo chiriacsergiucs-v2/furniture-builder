@@ -4,13 +4,21 @@ import {
   decisionsText,
   filterGaps,
   gapCounts,
+  hasConflict,
   isMarked,
   parseGaps,
+  RATING_KEYS,
+  RATING_LABEL,
+  RATING_SCALE,
+  ratingCounts,
   STATUS_KINDS,
   STATUS_LABEL,
   type Gap,
   type GapMark,
+  type GapRating,
   type GapStatusKind,
+  type RatingFilter,
+  type RatingKey,
 } from '../core/gaps';
 import { listGapMarks, saveGapMark } from '../persist/db';
 import { Icon } from './icons';
@@ -20,17 +28,20 @@ const GAPS = parseGaps(ledger);
 const actionable = (g: Gap) => g.kind === 'open' || g.kind === 'adr';
 /** How long a note waits after the last key before it is written to the device. */
 const NOTE_SAVE_MS = 400;
+const DEFAULT_KINDS: GapStatusKind[] = ['open'];
 
 /**
  * The Gaps page (ADR-101): the gaps ledger (ADR-082) with counts, search, a status filter and every field of each
- * gap. The user marks gaps on this device (Acknowledge, Make ADR, a note) and copies the decisions to paste to
+ * gap, with rough Work, Impact and Necessity filters and each gap's Issue, Fix and Conflicts lines (ADR-187). The
+ * user marks gaps on this device (Acknowledge, Make ADR, a note) and copies the decisions to paste to
  * Claude, who applies them to `docs/adr/GAPS.md`. Nothing here changes the ledger itself (ADR-002).
  */
 export function GapsPage({ onDone }: { onDone: () => void }) {
   const [marks, setMarks] = useState<Record<string, GapMark>>({});
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
-  const [kinds, setKinds] = useState<GapStatusKind[]>(['open']);
+  const [kinds, setKinds] = useState<GapStatusKind[]>(DEFAULT_KINDS);
+  const [ratings, setRatings] = useState<RatingFilter>({});
   const [showDecisions, setShowDecisions] = useState(false);
   // Marks can be changed only once the stored ones were read, so a quick tap never writes over a stored note.
   const [ready, setReady] = useState(false);
@@ -67,7 +78,9 @@ export function GapsPage({ onDone }: { onDone: () => void }) {
   }, []);
 
   const counts = useMemo(() => gapCounts(GAPS), []);
-  const shown = useMemo(() => filterGaps(GAPS, query, kinds), [query, kinds]);
+  // Rating counts follow the status filter and the search, so each level says how many it would show.
+  const levels = useMemo(() => ratingCounts(filterGaps(GAPS, query, kinds)), [query, kinds]);
+  const shown = useMemo(() => filterGaps(GAPS, query, kinds, ratings), [query, kinds, ratings]);
   const decisions = decisionsText(GAPS, marks);
   const markedCount = GAPS.filter((g) => actionable(g) && isMarked(marks[g.id])).length;
 
@@ -90,6 +103,16 @@ export function GapsPage({ onDone }: { onDone: () => void }) {
   };
   const toggleKind = (k: GapStatusKind) =>
     setKinds((ks) => (ks.includes(k) ? ks.filter((x) => x !== k) : [...ks, k]));
+  const toggleRating = (k: RatingKey, l: GapRating) =>
+    setRatings((r) => {
+      const now = r[k] ?? [];
+      return { ...r, [k]: now.includes(l) ? now.filter((x) => x !== l) : [...now, l] };
+    });
+  const clearFilters = () => {
+    setQuery('');
+    setKinds(DEFAULT_KINDS);
+    setRatings({});
+  };
   const copy = () => {
     setShowDecisions(true);
     if (decisions) navigator.clipboard?.writeText(decisions).catch(() => undefined);
@@ -160,6 +183,31 @@ export function GapsPage({ onDone }: { onDone: () => void }) {
           </button>
         </div>
       </div>
+      <section className="gaps-filters" aria-label="Rough ratings">
+        {RATING_KEYS.map((k) => (
+          <div key={k} className="gaps-filter">
+            <span className="gaps-filter-label" id={`gaps-filter-${k}`}>
+              {RATING_LABEL[k]}
+            </span>
+            <div className="chips" role="group" aria-labelledby={`gaps-filter-${k}`}>
+              {RATING_SCALE.map((l) => (
+                <button
+                  key={l}
+                  type="button"
+                  className="chip filter"
+                  aria-pressed={!!ratings[k]?.includes(l)}
+                  onClick={() => toggleRating(k, l)}
+                >
+                  {l} ({levels[k][l]})
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+        <button type="button" className="btn sm ghost" onClick={clearFilters}>
+          Clear filters
+        </button>
+      </section>
       {showDecisions && (
         <section className="gaps-decisions" aria-label="Decisions to paste to Claude">
           <h2>Decisions to paste to Claude</h2>
@@ -209,12 +257,39 @@ function GapRow({
     <li className="family gap">
       <details>
         <summary>
-          <strong>{g.id}</strong> {g.title}{' '}
-          <span className={`chip ${g.kind === 'open' ? '' : 'subtle'}`}>{g.status}</span>
-          {mark?.decision === 'acknowledge' && (
-            <span className="chip edited">You: acknowledge</span>
+          <span className="gap-title">
+            <strong>{g.id}</strong> {g.title}{' '}
+            <span className={`chip ${g.kind === 'open' ? '' : 'subtle'}`}>{g.status}</span>
+            {mark?.decision === 'acknowledge' && (
+              <span className="chip edited">You: acknowledge</span>
+            )}
+            {mark?.decision === 'adr' && <span className="chip edited">You: make ADR</span>}
+          </span>
+          {g.issue && (
+            <span className="gap-line">
+              <span className="gap-line-key">Issue:</span> {g.issue}
+            </span>
           )}
-          {mark?.decision === 'adr' && <span className="chip edited">You: make ADR</span>}
+          {g.fix && (
+            <span className="gap-line">
+              <span className="gap-line-key">Fix:</span> {g.fix}
+            </span>
+          )}
+          {(RATING_KEYS.some((k) => g[k]) || hasConflict(g)) && (
+            <span className="chips gap-ratings">
+              {RATING_KEYS.map(
+                (k) =>
+                  g[k] && (
+                    <span key={k} className="chip subtle">
+                      {RATING_LABEL[k]}: {g[k]}
+                    </span>
+                  ),
+              )}
+              {hasConflict(g) && (
+                <span className="chip safety gap-conflict">Conflicts: {g.conflicts}</span>
+              )}
+            </span>
+          )}
         </summary>
         <dl className="pairs">
           <dt>Status</dt>
@@ -229,6 +304,12 @@ function GapRow({
           <dd>{g.questions}</dd>
           <dt>Suggested pick</dt>
           <dd>{g.pick}</dd>
+          {g.conflicts && (
+            <>
+              <dt>Conflicts</dt>
+              <dd>{g.conflicts}</dd>
+            </>
+          )}
           {g.notes.map((n, i) => (
             <FragmentNote key={i} note={n} />
           ))}

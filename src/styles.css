@@ -6380,8 +6380,43 @@ p > .info-tip {
   cursor: pointer;
   overflow-wrap: anywhere;
 }
-.gaps-page .gap summary .chip {
+.gaps-page .gap summary .gap-title .chip {
   margin-left: var(--s-1);
+}
+/* Rough ratings, Issue and Fix lines and Conflicts (ADR-187). */
+.gaps-filters {
+  display: grid;
+  gap: var(--s-2);
+  justify-items: start;
+}
+.gaps-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1) var(--s-2);
+  align-items: center;
+  min-width: 0;
+}
+.gaps-filter-label {
+  min-width: 5.5em;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.gap-line {
+  display: block;
+  margin-top: var(--s-1);
+  color: var(--ink);
+}
+.gap-line-key {
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.gaps-page .gap-ratings {
+  margin-top: var(--s-1);
+}
+.gaps-page .chip.gap-conflict {
+  border-radius: var(--r-sm);
+  overflow-wrap: anywhere;
 }
 .gaps-page .pairs {
   margin-top: var(--s-2);
