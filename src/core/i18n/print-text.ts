@@ -156,6 +156,14 @@ export const PRINT_RU = {
   'Prindere și fixare': 'Навес и крепление',
   'Piese libere': 'Свободные детали',
   'De asemenea': 'Также',
+  // Project order on the assembly sheet (ADR-178)
+  'Ordinea în proiect': 'Порядок в проекте',
+  'Corpuri de colț': 'Угловые шкафы',
+  'Corpuri de jos': 'Нижние изделия',
+  'Corpuri suspendate': 'Навесные изделия',
+  'Piese de rând': 'Детали ряда',
+  'Decupaj chiuvetă {w} × {d} mm': 'Вырез под мойку {w} × {d} мм',
+  'peretele {n}': 'стена {n}',
 } satisfies Record<string, string>;
 
 export const PRINT_EN: Record<keyof typeof PRINT_RU, string> = {
@@ -304,4 +312,11 @@ export const PRINT_EN: Record<keyof typeof PRINT_RU, string> = {
   'Prindere și fixare': 'Hanging and fixing',
   'Piese libere': 'Loose parts',
   'De asemenea': 'Also',
+  'Ordinea în proiect': 'Project order',
+  'Corpuri de colț': 'Corner cabinets',
+  'Corpuri de jos': 'Base pieces',
+  'Corpuri suspendate': 'Wall pieces',
+  'Piese de rând': 'Run parts',
+  'Decupaj chiuvetă {w} × {d} mm': 'Sink cut-out {w} × {d} mm',
+  'peretele {n}': 'wall {n}',
 };

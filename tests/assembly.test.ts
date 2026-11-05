@@ -1,12 +1,30 @@
 // ADR-174: assembly steps per piece — every panel in exactly one step, the order rules, joint counts summing to
 // ADR-074's, hardware matching the schedule, the guidance line in every print language.
-import { describe, expect, it } from 'vitest';
-import { ASSEMBLY_GUIDANCE, assemblySteps, STEP_ORDER } from '../src/core/assembly';
+// ADR-178: the project-level order — corner cabinets, base pieces wall by wall from the corner, wall pieces, run
+// parts; deterministic; plan x without a room; none for a design alone; the printed section in ro, ru and en.
+import { afterEach, describe, expect, it } from 'vitest';
+import {
+  ASSEMBLY_GUIDANCE,
+  assemblySteps,
+  PROJECT_STAGE_ORDER,
+  projectAssemblyOrder,
+  projectOrderPrint,
+  STEP_ORDER,
+} from '../src/core/assembly';
 import { buildModel } from '../src/core/build';
 import { templates } from '../src/core/design';
 import { fastenerCounts } from '../src/core/fasteners';
+import { setPrintLang } from '../src/core/i18n/print';
 import { PRINT_EN, PRINT_RU } from '../src/core/i18n/print-text';
-import { makeItem, newProject, buildProjectModel } from '../src/core/project';
+import {
+  makeItem,
+  newProject,
+  buildProjectModel,
+  suggestRunParts,
+  type Project,
+} from '../src/core/project';
+import { shapeOutline, type Room } from '../src/core/room';
+import { suggestRoomMixes } from '../src/core/roomfill';
 
 const GUIDANCE_RO =
   'Îndrumare: ordinea rezultă din pozițiile pieselor; îmbinările, elementele de fixare și găurirea sunt alegerea dumneavoastră.';
@@ -80,5 +98,201 @@ describe('assemblySteps (ADR-174)', () => {
     expect(ASSEMBLY_GUIDANCE).toMatch(/^Guidance:/);
     expect(PRINT_RU[GUIDANCE_RO]).toMatch(/^Рекомендация/);
     expect(PRINT_EN[GUIDANCE_RO]).toMatch(/^Guidance:/);
+  });
+});
+
+/** An L room; walls 0 (back, x 0 → 3600) and 1 (right, z 0 → 1500) meet at the inside corner (3600, 0). */
+const lRoom = (): Room => ({
+  height: 2500,
+  outline: shapeOutline('l-shape', {
+    width: 3600,
+    depth: 3000,
+    cutWidth: 1500,
+    cutDepth: 1500,
+    offset: 0,
+  }),
+  features: [],
+});
+
+function lProject(): Project {
+  const fill = suggestRoomMixes({
+    room: lRoom(),
+    depth: 560,
+    minWidth: 400,
+    maxWidth: 1200,
+    walls: [0, 1],
+  });
+  expect(fill.mixes.length).toBeGreaterThan(0);
+  const p = fill.mixes[0].project;
+  return { ...p, runParts: suggestRunParts(p) };
+}
+
+/** A project without a room: A, B (linked to a fourth, also B), C on the floor out of order; a wall cabinet. */
+function plainProject(): Project {
+  let p = newProject('Plain');
+  const base = templates.find((x) => x.id === 'base-door')!;
+  const at = (name: string, x: number, linkId?: string) => {
+    const it = makeItem(p, { ...base.create(), name });
+    p = {
+      ...p,
+      items: [...p.items, { ...it, position: { x, y: 0, z: 0 }, ...(linkId ? { linkId } : {}) }],
+    };
+    return p.items[p.items.length - 1];
+  };
+  at('C', 2000);
+  const a = at('A', 0);
+  at('B', 1000, 'link-b');
+  at('B', 3000, 'link-b');
+  const wall = makeItem(p, {
+    ...templates.find((x) => x.id === 'wall-cabinet')!.create(),
+    name: 'W',
+  });
+  p = { ...p, items: [...p.items, wall] };
+  const m = a.design.materials[0];
+  const part = (id: string, kind: 'plinth' | 'worktop', x: number) => ({
+    id,
+    kind,
+    label: kind === 'plinth' ? 'Plinth' : 'Worktop',
+    reason: 'test',
+    box:
+      kind === 'plinth'
+        ? { x, y: 0, z: 500, w: 600, h: 100, d: 18 }
+        : { x, y: 900, z: 0, w: 600, h: 38, d: 600 },
+    material: { ...m },
+    thicknessAxis: kind === 'plinth' ? ('z' as const) : ('y' as const),
+    grainAxis: 'x' as const,
+    banded: [],
+  });
+  // Given worktop first, then plinths: the order puts plinths first.
+  p = {
+    ...p,
+    runParts: [part('w1', 'worktop', 0), part('p2', 'plinth', 1000), part('p1', 'plinth', 0)],
+    sinks: [{ id: 's1', baseId: a.id, w: 500, d: 400 }],
+  };
+  return p;
+}
+
+describe('projectAssemblyOrder (ADR-178)', () => {
+  afterEach(() => setPrintLang('ro'));
+
+  it('an L room: corner first, then each wall’s base pieces from the corner, then wall pieces, then run parts', () => {
+    const p = lProject();
+    const pm = buildProjectModel(p);
+    const stages = projectAssemblyOrder(p, pm);
+    const ids = stages.map((s) => s.id);
+    expect(ids[0]).toBe('corners');
+    expect(ids).toEqual(PROJECT_STAGE_ORDER.filter((s) => ids.includes(s)));
+    expect(ids).toContain('base');
+    expect(stages.map((s) => s.n)).toEqual(stages.map((_, i) => i + 1));
+    const pc = (id: string) => pm.pieces.find((x) => x.item.id === id)!;
+    // Corner cabinets: every corner piece, and only those.
+    const corners = stages.find((s) => s.id === 'corners')!.entries.flatMap((e) => e.ids);
+    expect(corners.length).toBeGreaterThan(0);
+    expect(corners.every((id) => pc(id).item.design.product.kind === 'corner')).toBe(true);
+    expect(corners).toHaveLength(p.items.filter((i) => i.design.product.kind === 'corner').length);
+    // Every piece once across the piece stages.
+    const pieceIds = stages
+      .filter((s) => s.id !== 'run')
+      .flatMap((s) => s.entries.flatMap((e) => e.ids));
+    expect(new Set(pieceIds).size).toBe(p.items.length);
+    expect(pieceIds).toHaveLength(p.items.length);
+    // Base pieces: on the floor, wall 0 then wall 1, each from the corner at (3600, 0).
+    const base = stages.find((s) => s.id === 'base')!.entries;
+    expect(base.every((e) => e.ids.every((id) => pc(id).bounds.y === 0))).toBe(true);
+    const walls = base.map((e) => e.wall);
+    expect(walls.every((w) => w === 0 || w === 1)).toBe(true);
+    expect([...walls].sort()).toEqual(walls);
+    const w0 = base.filter((e) => e.wall === 0).map((e) => pc(e.ids[0]).bounds);
+    const w1 = base.filter((e) => e.wall === 1).map((e) => pc(e.ids[0]).bounds);
+    expect(w0.length).toBeGreaterThan(0);
+    expect(w1.length).toBeGreaterThan(0);
+    for (let k = 1; k < w0.length; k++)
+      expect(w0[k].x + w0[k].w).toBeLessThan(w0[k - 1].x + w0[k - 1].w);
+    for (let k = 1; k < w1.length; k++) expect(w1[k].z).toBeGreaterThan(w1[k - 1].z);
+    // Wall pieces: none on the floor, the same wall order.
+    const wall = stages.find((s) => s.id === 'wall')?.entries ?? [];
+    expect(wall.every((e) => e.ids.every((id) => pc(id).bounds.y > 0))).toBe(true);
+    const ww = wall.map((e) => e.wall ?? Infinity);
+    expect([...ww].sort((a, b) => a - b)).toEqual(ww);
+    // Run parts last, when there are any.
+    if (p.runParts?.length) {
+      expect(ids[ids.length - 1]).toBe('run');
+      expect(stages[stages.length - 1].entries.reduce((n, e) => n + e.times, 0)).toBe(
+        p.runParts.length,
+      );
+    }
+  });
+
+  it('same input, same order — also with the items listed the other way round', () => {
+    const p = lProject();
+    const a = projectAssemblyOrder(p, buildProjectModel(p));
+    expect(projectAssemblyOrder(p, buildProjectModel(p))).toEqual(a);
+    const q = structuredClone(p);
+    expect(projectAssemblyOrder(q, buildProjectModel(q))).toEqual(a);
+    const r = { ...p, items: [...p.items].reverse() };
+    const flat = (st: typeof a) => st.map((s) => [s.id, s.entries.map((e) => e.ids[0])]);
+    expect(flat(projectAssemblyOrder(r, buildProjectModel(r)))).toEqual(flat(a));
+  });
+
+  it('a project without a room orders by plan x; linked copies once × N; run parts plinths → worktops → sinks', () => {
+    const p = plainProject();
+    const stages = projectAssemblyOrder(p, buildProjectModel(p));
+    expect(stages.map((s) => s.id)).toEqual(['base', 'wall', 'run']);
+    const base = stages[0].entries;
+    expect(base.map((e) => e.name)).toEqual(['A', 'B', 'C']);
+    expect(base.map((e) => e.times)).toEqual([1, 2, 1]);
+    expect(base.every((e) => e.wall === undefined)).toBe(true);
+    expect(stages[1].entries.map((e) => e.name)).toEqual(['W']);
+    const run = stages[2].entries;
+    expect(run.map((e) => [e.kind, e.times])).toEqual([
+      ['plinth', 2],
+      ['worktop', 1],
+      ['sink', 1],
+    ]);
+    expect(run[2].size).toEqual([500, 400]);
+  });
+
+  it('a design alone gives no section', () => {
+    expect(projectAssemblyOrder(null, null)).toEqual([]);
+    expect(projectAssemblyOrder(undefined, undefined)).toEqual([]);
+  });
+
+  it('the printed sheet’s section in ro (default), ru and en', () => {
+    const p = plainProject();
+    const stages = projectAssemblyOrder(p, buildProjectModel(p));
+    setPrintLang('ro');
+    let sheet = projectOrderPrint(stages);
+    expect(sheet.heading).toBe('Ordinea în proiect');
+    expect(sheet.stages.map((s) => s.title)).toEqual([
+      'Corpuri de jos',
+      'Corpuri suspendate',
+      'Piese de rând',
+    ]);
+    expect(sheet.stages[0].lines).toEqual(['A', 'B × 2', 'C']);
+    expect(sheet.stages[2].lines).toEqual(['Plintă × 2', 'Blat', 'Decupaj chiuvetă 500 × 400 mm']);
+    setPrintLang('ru');
+    sheet = projectOrderPrint(stages);
+    expect(sheet.heading).toBe('Порядок в проекте');
+    expect(sheet.stages.map((s) => s.title)).toEqual([
+      'Нижние изделия',
+      'Навесные изделия',
+      'Детали ряда',
+    ]);
+    expect(sheet.stages[2].lines[2]).toBe('Вырез под мойку 500 × 400 мм');
+    setPrintLang('en');
+    sheet = projectOrderPrint(stages);
+    expect(sheet.heading).toBe('Project order');
+    expect(sheet.stages.map((s) => s.title)).toEqual(['Base pieces', 'Wall pieces', 'Run parts']);
+    expect(sheet.stages[2].lines).toEqual(['Plinth × 2', 'Worktop', 'Sink cut-out 500 × 400 mm']);
+    // With a room, each piece line names its wall; the corner stage comes first.
+    const l = lProject();
+    setPrintLang('ro');
+    const ro = projectOrderPrint(projectAssemblyOrder(l, buildProjectModel(l)));
+    expect(ro.stages[0].title).toBe('Corpuri de colț');
+    expect(ro.stages[1].lines.some((x) => x.endsWith('(peretele 1)'))).toBe(true);
+    setPrintLang('en');
+    const en = projectOrderPrint(projectAssemblyOrder(l, buildProjectModel(l)));
+    expect(en.stages[0].title).toBe('Corner cabinets');
+    expect(en.stages[1].lines.some((x) => x.endsWith('(wall 2)'))).toBe(true);
   });
 });
