@@ -238,7 +238,7 @@ described above. Audit and wireframes are in `docs/research/2026-10-24-ui-redesi
   **Board**) lists the project's boards (or the piece's), then the decor list as "maker code name, thickness mm (your
   list)"; the built-in boards only when there is nothing else. The wizard's Board starts on the project's carcass
   board and its help says every part takes it.
-- _Wizard critique fixes (ADR-188)._ The footer's defaults button reads **Use defaults** (on Type: **Use <first type>**),
+- _Wizard critique fixes (ADR-191)._ The footer's defaults button reads **Use defaults** (on Type: **Use <first type>**),
   no tooltip. The untouched Type step shows **Choose a construction type.** as a hint. Review opens with **Answers**:
   one row per step ("Label: value") with **Edit**. The side panel lists other steps' problems only; a size typo
   reads **Fix the marked fields.** Types are radios. A backdrop click never closes the wizard; × and Esc ask

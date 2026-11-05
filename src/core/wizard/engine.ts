@@ -37,7 +37,7 @@ const FILLS = STEPS.flatMap((s) => s.fields.filter((f) => f.fill));
 
 /**
  * Every answer the wizard works with: field defaults, then the type's defaults, then what the user gave; a field's
- * `fill` gives an answer that is still missing (ADR-188).
+ * `fill` gives an answer that is still missing (ADR-191).
  */
 export function resolve(a: Answers): Answers {
   const r: Answers = {
@@ -86,7 +86,7 @@ const whole = (v: unknown, min: number, max: number) =>
   typeof v === 'number' && Number.isInteger(v) && v >= min && v <= max;
 
 /**
- * The answers after a type change (ADR-188): the new type, plus the Size answers that stay inside its range and keep
+ * The answers after a type change (ADR-191): the new type, plus the Size answers that stay inside its range and keep
  * their meaning (not in its `hide` or `labels`). Everything else belonged to the old type and goes.
  */
 export function withType(a: Answers, type: string): Answers {
@@ -201,7 +201,7 @@ const MEMO_SIZE = 64;
 
 /**
  * Field problems, design validation and every buildModel() diagnostic. Never throws. Memoised by answers. A field
- * error stops the build (ADR-188): a typo is one problem, not a 0 mm model with its own diagnostics.
+ * error stops the build (ADR-191): a typo is one problem, not a 0 mm model with its own diagnostics.
  */
 export function check(a: Answers): Check {
   // The offered boards are part of what the answers mean (ADR-164).

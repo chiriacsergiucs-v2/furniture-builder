@@ -150,7 +150,7 @@ function FieldInput({
       );
     case 'choice':
       if (opts.some((o) => o.help)) {
-        // One choice of several: radios, so a screen reader says which of how many (ADR-188).
+        // One choice of several: radios, so a screen reader says which of how many (ADR-191).
         return (
           <fieldset className="field wz-options" role="radiogroup" aria-label={label}>
             <legend>{label}</legend>
@@ -312,7 +312,7 @@ function FieldInput({
   }
 }
 
-/** The side picture, drawn once per built model, not once per keystroke (ADR-188). */
+/** The side picture, drawn once per built model, not once per keystroke (ADR-191). */
 function PreviewPicture({
   model,
   materials,
@@ -439,7 +439,7 @@ export function WizardDialog({
   from?: Design | null;
   toProject?: boolean;
 }) {
-  // True while the answers differ from a fresh wizard's; × and Esc then ask first (ADR-188). Backdrop clicks never close.
+  // True while the answers differ from a fresh wizard's; × and Esc then ask first (ADR-191). Backdrop clicks never close.
   const dirtyRef = useRef(false);
   const close = async () => {
     if (
@@ -471,7 +471,7 @@ export function WizardDialog({
   );
 }
 
-/** One field's answer as text, for the Review list (ADR-188). */
+/** One field's answer as text, for the Review list (ADR-191). */
 function valueText(f: FieldDef, a: Answers, r: Answers): string {
   const v = r[f.id];
   const opts = fieldOptions(f, a);
@@ -544,7 +544,7 @@ function Wizard({
   const c = check(a);
   const stepProblems = c.problems.filter((p) => p.step === step.id);
   const hasError = (id: string) => c.problems.some((p) => p.step === id && p.severity === 'error');
-  // An untouched Type step only hints at the choice; it is an error once the user has left the step (ADR-188).
+  // An untouched Type step only hints at the choice; it is an error once the user has left the step (ADR-191).
   const typeUntouched = step.id === TYPE && !done.has(TYPE);
   const root = useRef<HTMLDivElement>(null);
   const dirtyNow = JSON.stringify(resolve(a)) !== JSON.stringify(resolve({}));
@@ -554,7 +554,7 @@ function Wizard({
       dirtyRef.current = false;
     };
   }, [dirtyRef, dirtyNow]);
-  /** A new type keeps only the Size answers it can use (ADR-188); the steps start over. */
+  /** A new type keeps only the Size answers it can use (ADR-191); the steps start over. */
   const set = (id: string, v: AnswerValue) => {
     if (id === 'type') {
       setA((prev) => withType(prev, String(v)));
@@ -613,7 +613,7 @@ function Wizard({
         steps={steps.map((s) => ({
           id: s.id,
           label: tr(s.title),
-          // A step with an error is not done, whatever was pressed (ADR-188).
+          // A step with an error is not done, whatever was pressed (ADR-191).
           done: done.has(s.id) && !hasError(s.id),
           tone: hasError(s.id) && !(s.id === TYPE && !done.has(TYPE)) ? 'error' : undefined,
         }))}
@@ -749,7 +749,7 @@ function Wizard({
               {t('{n} parts', { n: c.model.panels.length })}
             </p>
           )}
-          {/* Problems of this step already sit under its fields; the panel shows the others (ADR-188). */}
+          {/* Problems of this step already sit under its fields; the panel shows the others (ADR-191). */}
           {!isReview && c.design && (
             <ProblemList problems={c.problems.filter((p) => p.step !== step.id)} limit={3} />
           )}

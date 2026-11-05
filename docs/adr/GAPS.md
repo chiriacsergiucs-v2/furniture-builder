@@ -2111,20 +2111,20 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Fix: Translate a piece name on prints while it still equals its catalog template's default name.
 - Conflicts: none
 
-### G-354: Wizard draft survives closing the dialog
+### G-356: Wizard draft survives closing the dialog
 
 - Status: Open
-- Origin: ADR-188, 2026-11-05; agent scoped it out
-- Missing: The wizard's answers live only while the dialog is open. Confirming before a close (ADR-188) stops accidental loss; a draft that survives closing the dialog (Continue where you left off) is not built.
+- Origin: ADR-191, 2026-11-05; agent scoped it out
+- Missing: The wizard's answers live only while the dialog is open. Confirming before a close (ADR-191) stops accidental loss; a draft that survives closing the dialog (Continue where you left off) is not built.
 - Request: Not asked; the critique of 2026-11-05 noted the loss and the user chose the grouped ADR as proposed (confirm on close).
 - Questions: Should a closed wizard keep its draft for the session, or until the piece is created?
 - Suggested pick: Keep the draft in the store for the session; the Type step offers Continue or Start over. (estimate: effort +8 %, value +10 % over confirm-on-close)
 
-### G-355: Doors choice is a dropdown on desktop
+### G-357: Doors choice is a dropdown on desktop
 
 - Status: Open
-- Origin: ADR-188, 2026-11-05; agent scoped it out
-- Missing: The Doors field on a desktop is a dropdown (five options; the segmented control takes four), so sliding and per-compartment doors are hidden behind a click while the cards promote them. Not changed by ADR-188.
+- Origin: ADR-191, 2026-11-05; agent scoped it out
+- Missing: The Doors field on a desktop is a dropdown (five options; the segmented control takes four), so sliding and per-compartment doors are hidden behind a click while the cards promote them. Not changed by ADR-191.
 - Request: Not asked; noted during the critique of 2026-11-05 and left out of the fourteen findings.
 - Questions: Allow a five-option segmented control on desktop and wrap it on a phone?
 - Suggested pick: Segmented up to five options at 1280 px, wrapping at 390 px. (estimate: effort +2 %, value +3 %)

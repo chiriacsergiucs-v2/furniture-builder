@@ -1,11 +1,11 @@
-# ADR-188: Fix the fourteen findings of the New-piece wizard critique
+# ADR-191: Fix the fourteen findings of the New-piece wizard critique
 
 - Status: Implemented
 - Date: 2026-11-05
 - Implemented: 2026-11-05 (Built and verified 2026-11-05; screenshots approved by the user)
 - Depends on: ADR-044, ADR-045, ADR-046
 - Design: docs/ui-design.md (New-piece wizard)
-- Backlog: N193
+- Backlog: N196
 
 ## Context
 
@@ -55,7 +55,7 @@ Every text added or changed gets its Russian entry (ADR-153).
 
 ## Alternatives considered
 
-- **Keep a draft after closing (1)** — more state, and nothing says a draft should outlive the dialog (G-354).
+- **Keep a draft after closing (1)** — more state, and nothing says a draft should outlive the dialog (G-356).
 - **Drop all answers on a type change (2)** — loses a typed name and sizes needlessly.
 - **Build with the last valid size (3)** — silent substitution, against ADR-008.
 - **Remove Skip (4)** — changes the ADR-044 decision; a label fixes the misreading.
@@ -64,7 +64,7 @@ Every text added or changed gets its Russian entry (ADR-153).
 ## Scope
 
 - In scope: the fourteen fixes above, their tests, the jsdom find-it test, Russian entries.
-- Out of scope: a wizard draft that survives closing (G-354); the Doors dropdown on desktop (G-355); any change to
+- Out of scope: a wizard draft that survives closing (G-356); the Doors dropdown on desktop (G-357); any change to
   steps, types, axes or the design document.
 
 ## Consequences
