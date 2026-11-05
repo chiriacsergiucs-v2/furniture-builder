@@ -1,5 +1,5 @@
 /**
- * Neighbours share one side panel (ADR-170): of two touching cabinets the left one leaves out its right side and the
+ * Neighbours share one side panel (ADR-190): of two touching cabinets the left one leaves out its right side and the
  * right one's left side serves both; outside sizes and places stay. Fronts meet over the middle of the shared side,
  * and the shared side carries shelf-pin rows on both faces. A link that no longer fits is not built and warned about.
  */

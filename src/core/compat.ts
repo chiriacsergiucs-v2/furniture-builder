@@ -328,6 +328,25 @@ export function touchSideBySide(a: PlacedPiece, b: PlacedPiece): boolean {
  * Every rule that runs in checks, for every pair of pieces that touch side by side, in item order. Each failed rule
  * is a warning (never an error: it does not block export) naming both pieces, what differs and the rule.
  */
+/** The side join of two placed pieces as the rules see it (checks and stored connections, ADR-168). */
+export function sideJoin(a: PlacedPiece, b: PlacedPiece, worktops: RunPart[] = []): JoinContext {
+  return {
+    a: a.item,
+    mountA: mountOf(a.item),
+    faceA: 'side',
+    b: b.item,
+    mountB: mountOf(b.item),
+    faceB: 'side',
+    depthA: depthOf(a),
+    depthB: depthOf(b),
+    heightA: a.bounds.h,
+    heightB: b.bounds.h,
+    underOneWorktop: worktops.some(
+      (w) => !!w.from?.includes(a.item.id) && w.from.includes(b.item.id),
+    ),
+  };
+}
+
 export function compatChecks(pieces: PlacedPiece[], runParts: RunPart[] = []): Diagnostic[] {
   const out: Diagnostic[] = [];
   const worktops = runParts.filter((rp) => rp.kind === 'worktop');
@@ -336,21 +355,7 @@ export function compatChecks(pieces: PlacedPiece[], runParts: RunPart[] = []): D
       const a = pieces[i],
         b = pieces[j];
       if (!touchSideBySide(a, b)) continue;
-      const found = evaluate('checks', {
-        a: a.item,
-        mountA: mountOf(a.item),
-        faceA: 'side',
-        b: b.item,
-        mountB: mountOf(b.item),
-        faceB: 'side',
-        depthA: depthOf(a),
-        depthB: depthOf(b),
-        heightA: a.bounds.h,
-        heightB: b.bounds.h,
-        underOneWorktop: worktops.some(
-          (w) => !!w.from?.includes(a.item.id) && w.from.includes(b.item.id),
-        ),
-      });
+      const found = evaluate('checks', sideJoin(a, b, worktops));
       for (const f of found)
         out.push({
           severity: 'warning',

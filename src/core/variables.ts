@@ -9,7 +9,8 @@
  */
 import { t } from './i18n';
 import { mapProductSpace, newId, setProductParams } from './design';
-import type { Project, ProjectItem } from './project';
+import { SIZE_AXES, type Project, type ProjectItem, type SizeAxis } from './project';
+import { isAxisLocked } from './sizeLock';
 import { sizeFields } from './pieceSize';
 import type { Diagnostic, Mm, Product, Space } from './types';
 
@@ -364,7 +365,7 @@ export function readTarget(item: ProjectItem, target: string): number | undefine
     case 'mountHeight':
       return item.placement?.kind === 'wall'
         ? item.placement.height
-        : p.kind === 'cabinet'
+        : p.kind === 'cabinet' || p.kind === 'corner'
           ? p.params.mountHeight
           : undefined;
     case 'x':
@@ -502,6 +503,9 @@ export function applyBindings(project: Project): Project {
     if (!item.bindings?.length) return item;
     let next = item;
     for (const b of item.bindings) {
+      // A locked size keeps its value (ADR-171): the lock outranks the binding; `variableDiagnostics` says so.
+      if (SIZE_AXES.includes(b.target as SizeAxis) && isAxisLocked(item, b.target as SizeAxis))
+        continue;
       const e = evaluateBinding(b.expr, scopeOf(item));
       if (e.value === undefined || rangeProblem(next, b.target, e.value)) continue;
       next = writeTarget(next, b.target, e.value);
@@ -601,15 +605,18 @@ export function variableDiagnostics(project: Project): Diagnostic[] {
           }),
           nodeId: item.id,
         });
-      else if (item.sizeLocked && ['width', 'height', 'depth'].includes(b.target))
+      else if (SIZE_AXES.includes(b.target as SizeAxis) && isAxisLocked(item, b.target as SizeAxis))
         out.push({
           severity: 'warning',
-          code: 'binding-size-lock',
-          message: t('{name}: {field} follows “{expr}” although its size is locked.', {
-            name: item.design.name,
-            field: targetLabel(b.target),
-            expr: b.expr,
-          }),
+          code: 'binding-held',
+          message: t(
+            '{name}: {field} keeps its value — it follows “{expr}”, but that size is locked.',
+            {
+              name: item.design.name,
+              field: targetLabel(b.target),
+              expr: b.expr,
+            },
+          ),
           nodeId: item.id,
         });
     }

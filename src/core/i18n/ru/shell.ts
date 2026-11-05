@@ -126,6 +126,7 @@ export const ru_shell = {
   'Repairs — the dashed outline on the plan shows the chosen one':
     'Исправления — пунктирный контур на плане показывает выбранное',
   ' · smallest move': ' · наименьшее перемещение',
+  'Refused: {reason}': 'Отклонено: {reason}',
   'No repair clears this without causing another problem. Move or change the pieces yourself.':
     'Ни одно исправление не устраняет это, не создавая другой проблемы. Переместите или измените изделия сами.',
   Apply: 'Применить',
@@ -353,4 +354,10 @@ export const ru_shell = {
   'Add to project': 'Добавить в проект',
   'Create piece': 'Создать изделие',
   'Apply compartment 1 to all': 'Применить секцию 1 ко всем',
+  // The running estimate chip (ADR-172).
+  '{amount} {currency}': '{amount} {currency}',
+  'No prices yet': 'Цен пока нет',
+  'Estimate: {amount} · {n} missing': 'Оценка: {amount} · не хватает {n}',
+  'Estimate: {amount}': 'Оценка: {amount}',
+  'Open the Shopping list': 'Открыть список покупок',
 } satisfies Record<string, string>;

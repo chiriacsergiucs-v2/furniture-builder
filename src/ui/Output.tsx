@@ -11,6 +11,7 @@ import { useDesign, type Tab } from '../store/designStore';
 import { Sheets } from './Sheets';
 import { FastenerCounts } from './Fasteners';
 import { ShoppingList } from './Shopping';
+import { Assembly } from './Assembly';
 import { useView } from './useView';
 import { GuidanceTip, InfoTip } from './controls';
 import { Icon } from './icons';
@@ -38,6 +39,7 @@ export function Output() {
     { id: 'parts', label: t('Parts'), badge: parts || undefined, kind: 'neutral' },
     { id: 'sheets', label: t('Sheets') },
     { id: 'hardware', label: t('Hardware') },
+    { id: 'assembly', label: t('Assembly') },
     { id: 'shopping', label: t('Shopping'), name: t('Shopping list') },
     {
       id: 'checks',
@@ -77,6 +79,7 @@ export function Output() {
           {tab === 'parts' && <Parts />}
           {tab === 'sheets' && <Sheets />}
           {tab === 'hardware' && <Hardware />}
+          {tab === 'assembly' && <Assembly />}
           {tab === 'shopping' && <ShoppingList />}
           {tab === 'checks' && <Checks />}
         </div>

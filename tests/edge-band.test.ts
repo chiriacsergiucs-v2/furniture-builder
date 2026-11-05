@@ -89,7 +89,7 @@ describe('edge band specs on boards (ADR-077)', () => {
       frontBand: ABS2,
     });
     expect(d.schemaVersion).toBe(SCHEMA_VERSION);
-    expect(SCHEMA_VERSION).toBe(7);
+    expect(SCHEMA_VERSION).toBe(8);
     const file = JSON.parse(JSON.stringify(d)) as Design;
     expect(validateDesign(file)).toEqual([]);
     expect(file).toEqual(d);

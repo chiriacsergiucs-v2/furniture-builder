@@ -49,7 +49,12 @@ export const FEATURES: FeatureDomain[] = [
         detail: 'Several pieces placed in one room.',
         adrs: ['ADR-022', 'ADR-078'],
       },
-      { name: 'Create a project from a project template', adrs: ['ADR-060'] },
+      {
+        name: 'Create a project from a project template',
+        detail:
+          'Copies of the pieces with their positions, run-part recipe, connections, variables and bindings; pieces inserted into a project take its settings.',
+        adrs: ['ADR-060', 'ADR-123', 'ADR-170'],
+      },
       {
         name: 'Fill a wall',
         detail:
@@ -57,6 +62,12 @@ export const FEATURES: FeatureDomain[] = [
         adrs: ['ADR-103', 'ADR-104'],
       },
       { name: 'Make a new piece inside a project', adrs: ['ADR-107'] },
+      {
+        name: 'Fill the room',
+        detail:
+          'Pick a room shape or use the project’s room: suggested mixes for every ticked wall at once, doors and windows kept free, a corner cabinet at each inside corner; each mix checked as a project.',
+        adrs: ['ADR-173'],
+      },
     ],
   },
   {
@@ -152,7 +163,8 @@ export const FEATURES: FeatureDomain[] = [
     features: [
       {
         name: 'Drag a piece on the plan',
-        detail: 'Whole millimetres in 10 mm steps; Esc cancels.',
+        detail:
+          'Whole millimetres in 10 mm steps; Esc cancels. The arrow keys move a focused piece 10 mm, 100 mm with Shift.',
         adrs: ['ADR-065'],
       },
       { name: 'Move and turn pieces in the 3D view', adrs: ['ADR-093'] },
@@ -162,16 +174,22 @@ export const FEATURES: FeatureDomain[] = [
         detail: 'From the left, from the back and the gap to the piece on the left.',
         adrs: ['ADR-022'],
       },
-      { name: 'Turn 90° about the centre', adrs: ['ADR-069'] },
       {
-        name: 'Turn by any whole degree',
-        detail: 'The typed angle is hidden from the side panel for now.',
-        adrs: ['ADR-121', 'ADR-160'],
+        name: 'Turn 90° about the centre',
+        detail: 'Turn ↺ and ↻ in the toolbar, or R and Shift+R.',
+        adrs: ['ADR-069', 'ADR-160'],
+      },
+      {
+        name: 'Turn to any whole degree with a handle',
+        detail:
+          'Drag the round handle in front of the selected piece; it snaps to quarter turns, Shift steps by 15°, [ and ] turn by 1°.',
+        adrs: ['ADR-121', 'ADR-160', 'ADR-169'],
       },
       {
         name: 'Move to a wall, corner, ceiling, floor or neighbour',
-        detail: 'One tap slides the piece until it touches a wall or another piece.',
-        adrs: ['ADR-147'],
+        detail:
+          "One tap slides it to a wall, corner or neighbour, up to the ceiling or down, centres it, or matches a neighbour's top or front. Several selected pieces move as one block.",
+        adrs: ['ADR-147', 'ADR-182'],
       },
       {
         name: 'Place on the floor, on the wall or on another piece',
@@ -179,9 +197,10 @@ export const FEATURES: FeatureDomain[] = [
         adrs: ['ADR-031'],
       },
       {
-        name: 'Lock a piece in place',
-        detail: 'Drags, automatic moves and repairs leave it alone.',
-        adrs: ['ADR-095'],
+        name: 'Lock a piece in place, its turn, or each of its sizes',
+        detail:
+          'Lock keeps it where it is; Lock turn, Lock width, Lock height, Lock depth and Lock size (all three) in More actions. A locked value outranks variables, Replace, linked copies and project settings.',
+        adrs: ['ADR-095', 'ADR-122', 'ADR-171'],
       },
     ],
   },
@@ -195,6 +214,12 @@ export const FEATURES: FeatureDomain[] = [
       },
       { name: 'Snap centre to centre', adrs: ['ADR-099'] },
       {
+        name: 'Connected pieces',
+        detail:
+          'A snap joins two touching pieces; they move together, the seam is marked on the plan, the front view and in 3D, and a pair that no longer touches is warned about.',
+        adrs: ['ADR-168', 'ADR-179'],
+      },
+      {
         name: 'Compatibility rules',
         detail: 'Checked when snapping and in the project checks.',
         adrs: ['ADR-100'],
@@ -202,7 +227,7 @@ export const FEATURES: FeatureDomain[] = [
       { name: 'Align left, centre, right, back and front', adrs: ['ADR-099'] },
       { name: 'Align tops and bottoms', adrs: ['ADR-122'] },
       { name: 'Distribute evenly', adrs: ['ADR-099'] },
-      { name: 'Groups align as one block', adrs: ['ADR-099', 'ADR-148', 'N154'] },
+      { name: 'Groups align and distribute as one block', adrs: ['ADR-099', 'ADR-148', 'N154'] },
       { name: 'Duplicate a piece', adrs: ['ADR-069'] },
       {
         name: 'Mirror a piece',
@@ -242,7 +267,10 @@ export const FEATURES: FeatureDomain[] = [
   {
     name: 'Sizing',
     features: [
-      { name: 'Size of the whole piece where it is selected', adrs: ['ADR-106'] },
+      {
+        name: 'Width, height and depth of the whole piece where it is selected',
+        adrs: ['ADR-106', 'ADR-148'],
+      },
       { name: 'Size, boards and construction of a project piece', adrs: ['ADR-090'] },
       {
         name: 'Lock size',
@@ -279,8 +307,9 @@ export const FEATURES: FeatureDomain[] = [
           { name: 'Wall cabinets', adrs: ['ADR-025'] },
           {
             name: 'Corner cabinets',
-            detail: 'Blind, L-shaped and diagonal corners.',
-            adrs: ['ADR-025', 'ADR-040'],
+            detail:
+              'Blind, L-shaped and diagonal corners, on the floor or hung on the wall (you choose the brackets).',
+            adrs: ['ADR-025', 'ADR-040', 'ADR-177'],
           },
           { name: 'Tall cabinets', adrs: ['ADR-036'] },
         ],
@@ -350,7 +379,7 @@ export const FEATURES: FeatureDomain[] = [
         name: 'One Material control everywhere',
         detail:
           'Material in the header bar: a board on one part, the item, the group or the whole project, on any part roles.',
-        adrs: ['ADR-163'],
+        adrs: ['ADR-055', 'ADR-163'],
       },
       {
         name: 'One PAL 18 board for every part by default',
@@ -368,19 +397,19 @@ export const FEATURES: FeatureDomain[] = [
         name: 'Run parts and edge bands in the Material dialog',
         detail:
           'Worktop, fillers, plinth and trims of a run; an edge band per part role or per part.',
-        adrs: ['ADR-168'],
+        adrs: ['ADR-188'],
       },
       {
         name: 'Common top across gaps, corner units and desks',
         detail:
           'One top over a gap, round an L or diagonal corner (cut to template) and over a desk.',
-        adrs: ['ADR-169'],
+        adrs: ['ADR-189'],
       },
       {
         name: 'Neighbours share one side panel',
         detail:
           'Select cabinets side by side: Shared sides leaves one side per joint; fronts meet over its middle.',
-        adrs: ['ADR-170'],
+        adrs: ['ADR-190'],
       },
       { name: 'Stock sheets, trim and kerf', adrs: ['ADR-019'] },
       { name: 'Solid timber stock', adrs: ['ADR-038'] },
@@ -389,7 +418,7 @@ export const FEATURES: FeatureDomain[] = [
       {
         name: 'Boards and edge bands from a seller',
         detail:
-          'Bundled seller products (Regency first): same thickness and decor first, you pick.',
+          'Bundled seller products (Regency first): same thickness and decor first, you pick; pictures not shipped with the app load online from the seller’s site.',
         adrs: ['ADR-161'],
       },
       {
@@ -405,21 +434,21 @@ export const FEATURES: FeatureDomain[] = [
         detail: 'Type, thickness, width and code, on the cut list and shopping list.',
         adrs: ['ADR-077'],
       },
-      { name: 'Own board for any single part', adrs: ['ADR-151'] },
       {
-        name: 'Apply a board to a piece, a run, a selection or the project',
-        adrs: ['ADR-055', 'ADR-097'],
+        name: 'Own board for any single part',
+        detail: 'In Material, scope Part; a part the piece no longer builds is listed to clear.',
+        adrs: ['ADR-151', 'ADR-163'],
       },
       {
         name: 'Style suggestions',
-        detail: 'Board and handle combinations, labelled as suggestions.',
-        adrs: ['ADR-123'],
+        detail: 'In the Material dialog: board and handle combinations, labelled as suggestions.',
+        adrs: ['ADR-123', 'ADR-163'],
       },
       {
         name: 'Project-wide settings',
         detail:
-          'Carcass, front and back boards, handle, overlay and plinth height that pieces follow.',
-        adrs: ['ADR-124'],
+          'Handle, front overlay and plinth height that pieces follow; Material with scope Project sets the carcass, front and back boards.',
+        adrs: ['ADR-124', 'ADR-163'],
       },
     ],
   },
@@ -455,7 +484,12 @@ export const FEATURES: FeatureDomain[] = [
         adrs: ['ADR-059'],
       },
       { name: 'Pipes and outlets', adrs: ['ADR-072'] },
-      { name: 'Wall colour or picture', adrs: ['ADR-145'] },
+      {
+        name: 'Wall colour or picture',
+        detail:
+          'Set per wall under Walls in the room; shown on the walls in 3D and behind the pieces against it in the room front view. Solid walls in 3D makes the walls opaque.',
+        adrs: ['ADR-145'],
+      },
       { name: 'Fit, shift and straighten a wall picture', adrs: ['ADR-146'] },
       {
         name: 'Opening clearances',
@@ -480,7 +514,12 @@ export const FEATURES: FeatureDomain[] = [
         detail: 'Tapping a check selects the pieces and shows where it is.',
         adrs: ['ADR-071'],
       },
-      { name: 'Previewed repairs', adrs: ['ADR-071'] },
+      {
+        name: 'Previewed repairs',
+        detail:
+          'A repair moves the whole group; one the group cannot follow is shown refused, with the reason.',
+        adrs: ['ADR-071', 'ADR-176'],
+      },
     ],
   },
   {
@@ -492,7 +531,12 @@ export const FEATURES: FeatureDomain[] = [
           { name: 'Compose and Build & Preview modes', adrs: ['ADR-079', 'ADR-080'] },
           { name: 'Front drawing with sizes', adrs: ['ADR-014'] },
           { name: 'Project plan and room front view with sizes', adrs: ['ADR-022'] },
-          { name: '2D, 3D or both side by side', adrs: ['ADR-081', 'ADR-144'] },
+          {
+            name: '2D, 3D or both side by side',
+            detail:
+              'One View switch in Compose and Build & Preview; the chosen view stays when the mode changes.',
+            adrs: ['ADR-081', 'ADR-144'],
+          },
         ],
       },
       {
@@ -531,6 +575,29 @@ export const FEATURES: FeatureDomain[] = [
     name: 'Output',
     children: [
       {
+        name: 'Results',
+        features: [
+          {
+            name: 'Results tabs under the views',
+            detail:
+              'Parts, Sheets, Hardware, Shopping list and Checks with counts; on a phone they stay folded until you tap a tab.',
+            adrs: ['ADR-079', 'ADR-091'],
+          },
+          {
+            name: 'Assembly steps',
+            detail:
+              'An ordered step list per piece from the parts’ positions, with the joints and hardware of each step, labelled guidance; Show step lights the parts in 3D; printable.',
+            adrs: ['ADR-174'],
+          },
+          {
+            name: 'Project assembly order',
+            detail:
+              'A project’s Assembly tab and printed sheet open with the order of its pieces: corner cabinets, base pieces wall by wall from the corner, wall pieces, then run parts; labelled guidance.',
+            adrs: ['ADR-178'],
+          },
+        ],
+      },
+      {
         name: 'Cut list',
         features: [
           { name: 'Cut list with finished sizes and edge-band marks', adrs: ['ADR-009'] },
@@ -553,15 +620,28 @@ export const FEATURES: FeatureDomain[] = [
         name: 'Shopping and costs',
         features: [
           {
+            name: 'Running cost estimate',
+            detail:
+              'A chip in the editor header with the estimate of what is shown, updated on every change; tap it to open the Shopping list.',
+            adrs: ['ADR-172'],
+          },
+          {
             name: 'Shopping list',
             detail: 'Boards, banding, hardware, run parts and what is still to choose.',
             adrs: ['ADR-064'],
           },
           { name: 'Shopping list CSV', adrs: ['ADR-064'] },
+          {
+            name: 'Unit price on each Shopping list row',
+            detail:
+              'Under each line total, the unit price it comes from (your price or the seller’s); “—” when a row has no price. Also a column on the printed list and in the CSV.',
+            adrs: ['ADR-181'],
+          },
           { name: 'Cost estimate from your price list', adrs: ['ADR-062'] },
           {
             name: 'Seller products for hardware and seller prices',
-            detail: 'Your own price wins; otherwise the seller price, with its date.',
+            detail:
+              'Your own price wins; otherwise the seller price, with its date. Add seller product puts any seller product on a piece’s shopping list.',
             adrs: ['ADR-161'],
           },
         ],
@@ -628,7 +708,7 @@ export const FEATURES: FeatureDomain[] = [
         name: 'Side panel ordered by use',
         detail:
           'Add a piece at the top, previous and next piece, one toolbar, a More actions menu and Delete to remove.',
-        adrs: ['ADR-160'],
+        adrs: ['ADR-117', 'ADR-160'],
       },
       {
         name: 'Quick actions on the phone sheet',
@@ -667,11 +747,20 @@ export const FEATURES: FeatureDomain[] = [
       },
       { name: 'Design codes and links', adrs: ['ADR-124'] },
       { name: 'Keep saved data persistent', adrs: ['ADR-133'] },
-      { name: 'Back up to a folder', adrs: ['ADR-133'] },
+      {
+        name: 'Back up to a folder or a .zip, and restore',
+        detail: 'Restoring adds new copies; nothing saved is overwritten or deleted.',
+        adrs: ['ADR-133'],
+      },
       { name: 'Backup reminder', adrs: ['ADR-141'] },
       { name: 'Only-on-this-device notice', adrs: ['ADR-140'] },
       { name: 'Clean up unused pictures', adrs: ['ADR-048', 'ADR-078'] },
-      { name: 'Share links', adrs: ['ADR-132', 'ADR-138'] },
+      {
+        name: 'Share links',
+        detail:
+          'Signed in, a link to a piece or template; anyone with it opens a copy until you stop sharing.',
+        adrs: ['ADR-132', 'ADR-138'],
+      },
       { name: 'Preview a shared item', adrs: ['ADR-143'] },
     ],
   },
@@ -681,7 +770,12 @@ export const FEATURES: FeatureDomain[] = [
       { name: 'Sign in with Google', adrs: ['ADR-135'] },
       { name: 'Email and password, forgot and reset', adrs: ['ADR-136'] },
       { name: 'Stay signed in', adrs: ['ADR-134'] },
-      { name: 'Save pieces and templates to your account', adrs: ['ADR-128', 'ADR-137'] },
+      {
+        name: 'Save pieces and templates to your account',
+        detail:
+          'Signed in, saved pieces and templates upload by themselves; Keep on this device only opts one out, and In your account lists those not on this device.',
+        adrs: ['ADR-128', 'ADR-137'],
+      },
       { name: 'Sync status', adrs: ['ADR-129', 'ADR-139'] },
       { name: 'Conflicts never lose work', adrs: ['ADR-129'] },
       { name: 'Several accounts on one device', adrs: ['ADR-142'] },
@@ -702,7 +796,11 @@ export const FEATURES: FeatureDomain[] = [
     name: 'Information',
     features: [
       { name: 'Information and guides page', adrs: ['ADR-158'] },
-      { name: 'Feature Research', adrs: ['ADR-043', 'ADR-092', 'ADR-110'] },
+      {
+        name: 'Feature Research',
+        detail: 'Research features still left to build, and competitors.',
+        adrs: ['ADR-043', 'ADR-092', 'ADR-110', 'ADR-149'],
+      },
       { name: 'Gaps page', adrs: ['ADR-101'] },
       { name: 'Info buttons', adrs: ['ADR-080', 'ADR-113'] },
       { name: 'Light and dark themes', adrs: ['ADR-030'] },

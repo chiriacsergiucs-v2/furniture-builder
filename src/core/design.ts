@@ -38,12 +38,17 @@ export function defaultSheetFor(m: Pick<Material, 'id' | 'name'>): NonNullable<M
 export const sheetOf = (m: Material) => m.sheet ?? defaultSheetFor(m);
 export const kerfOf = (d: Design) => d.cutting?.kerf ?? DEFAULT_KERF;
 
-/** The document shape this app writes: 7 adds role and part bands (ADR-168); 1 to 6 still load. */
-export const SCHEMA_VERSION = 7;
+/**
+ * The document shape this app writes: 8 adds role and part bands (ADR-188); 7 added corner mount (ADR-177); 6 added
+ * role boards (ADR-163); 1 to 7 still load.
+ */
+export const SCHEMA_VERSION = 8;
 
 /**
- * Older versions → 7 in memory: version 1 gets stock sheets and cutting settings; 2 → 3 → 4 → 5 → 6 → 7 add only
- * optional fields (band specs, part boards, seller products, role boards, role and part bands), so nothing else changes. Returns the same object when already current.
+ * Older versions → 8 in memory: version 1 gets stock sheets and cutting settings; 2 → 3 → 4 → 5 → 6 → 7 → 8 add only
+ * optional fields (band specs, part boards, seller products, role boards, corner mount, role and part bands), so
+ * nothing else changes.
+ * Returns the same object when already current.
  */
 export function upgradeDesign(d: Design): Design {
   if (d.schemaVersion === SCHEMA_VERSION && d.cutting && d.materials.every((m) => m.sheet))
@@ -780,12 +785,12 @@ function validateRoleMaterials(rm: unknown, version: unknown, mids: Set<string>,
       errs.push(t('Role board for {k} refers to an unknown role or material', { k }));
 }
 
-/** Edge bands per role and per part (schemaVersion 7, ADR-168); checked when present, never throws. */
+/** Edge bands per role and per part (schemaVersion 8, ADR-188); checked when present, never throws. */
 function validateBands(d: Record<string, unknown>, errs: string[]) {
   const rb = d.roleBands,
     pb = d.partBands;
   if (rb === undefined && pb === undefined) return;
-  if ((d.schemaVersion as number) < 7) errs.push(t('Role and part bands need schemaVersion 7'));
+  if ((d.schemaVersion as number) < 8) errs.push(t('Role and part bands need schemaVersion 8'));
   if (rb !== undefined) {
     if (!isObj(rb)) errs.push(t('Invalid role bands'));
     else
@@ -997,7 +1002,7 @@ function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0)
 export function validateDesign(d: unknown): string[] {
   const errs: string[] = [];
   if (!isObj(d)) return [t('Design must be an object')];
-  if (![1, 2, 3, 4, 5, 6, 7].includes(d.schemaVersion as number))
+  if (![1, 2, 3, 4, 5, 6, 7, 8].includes(d.schemaVersion as number))
     errs.push(t('Unsupported schemaVersion'));
   if (
     d.cutting !== undefined &&
@@ -1278,6 +1283,16 @@ export function validateDesign(d: unknown): string[] {
     if (params.top !== 'over' && params.top !== 'between') errs.push(t('Invalid top joint'));
     if (params.topLayers !== undefined && params.topLayers !== 1 && params.topLayers !== 2)
       errs.push(t('topLayers must be 1 or 2'));
+    // ADR-177: a corner stands on the floor or hangs on the wall, as a cabinet does (schemaVersion 7).
+    if (params.mount !== undefined && params.mount !== 'floor' && params.mount !== 'wall')
+      errs.push(t('Invalid mount'));
+    if (params.mountHeight !== undefined && !isInt(params.mountHeight))
+      errs.push(t('mountHeight must be a whole number of mm'));
+    if (
+      (params.mount !== undefined || params.mountHeight !== undefined) &&
+      (d.schemaVersion as number) < 7
+    )
+      errs.push(t('Corner mount needs schemaVersion 7'));
     if (!['none', 'applied', 'inset'].includes(params.back as string)) errs.push(t('Invalid back'));
     const seen = new Set<string>();
     validateSpace(params.interior, errs, seen);

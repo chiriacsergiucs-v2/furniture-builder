@@ -513,7 +513,7 @@ export const kitchen: CatalogFamily[] = [
       'A blind section covered by the neighbouring cabinet, joined to a normal cabinet with a door.',
     configurations: ['Corner on the left or right', 'Blind width', 'Base or wall height'],
     dims: { min: [600, 300, 250], max: [1500, 1000, 700] },
-    catalogVersion: 1,
+    catalogVersion: 2,
     variants: [
       {
         id: 'corner-blind',
@@ -542,6 +542,8 @@ export const kitchen: CatalogFamily[] = [
           corner('Wall blind corner', 'blind', {
             height: 720,
             depth: 320,
+            mount: 'wall',
+            mountHeight: 1450,
             plinthHeight: 0,
             width: 900,
             blindWidth: 370,
@@ -561,7 +563,7 @@ export const kitchen: CatalogFamily[] = [
     structure: 'Two wings open to each other at the corner with a folding door pair.',
     configurations: ['Wing lengths', 'Corner side', 'Base or wall height'],
     dims: { min: [600, 300, 250], max: [1500, 1000, 700] },
-    catalogVersion: 1,
+    catalogVersion: 2,
     variants: [
       {
         id: 'corner-l',
@@ -584,6 +586,8 @@ export const kitchen: CatalogFamily[] = [
             wingWidth: 600,
             height: 720,
             depth: 320,
+            mount: 'wall',
+            mountHeight: 1450,
             plinthHeight: 0,
           }),
       },

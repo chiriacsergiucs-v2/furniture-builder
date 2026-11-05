@@ -16,7 +16,7 @@ import {
   type Project,
   type ProjectItem,
 } from './project';
-import { isSizeLocked } from './sizeLock';
+import { isAxisLocked } from './sizeLock';
 import type { Design, Mm } from './types';
 
 export type WidthSplit = 'proportional' | 'equal';
@@ -49,7 +49,7 @@ const field = (it: ProjectItem, key: SizeField['key']) =>
 
 /** The piece keeps this size: it is size-locked, has no such size, or (width) is turned off the wall's direction. */
 function fixed(it: ProjectItem, key: SizeField['key']): boolean {
-  if (isSizeLocked(it) || !field(it, key)) return true;
+  if (isAxisLocked(it, key) || !field(it, key)) return true;
   return key === 'width' && (it.rotationY === 90 || it.rotationY === 270 || !!it.angle);
 }
 

@@ -200,7 +200,7 @@ export interface Panel {
   handleHoles?: { at: [Mm, Mm][]; diameter: Mm };
   /** Shaped part (ADR-040): `box` stays the whole-mm cut blank; absent = a plain box. */
   shape?: PanelShape;
-  /** The edge band chosen for this part or its role (ADR-168); absent = its board's band. */
+  /** The edge band chosen for this part or its role (ADR-188); absent = its board's band. */
   band?: EdgeBand;
 }
 
@@ -233,6 +233,8 @@ export type HardwareKind =
   | 'push-latch'
   | 'wall-bracket'
   | 'wall-rail'
+  /** ADR-177: a hung corner unit's hanging brackets, chosen by the user (no count or size scheduled). */
+  | 'wall-hanging'
   | 'corner-hinge'
   /** ADR-035 anti-tip fixing, ADR-036 appliance and front fixing, ADR-037 sliding track and flap stay, ADR-038/039 purchased items. */
   | 'wall-fixing'
@@ -292,7 +294,7 @@ export interface FurnitureModel {
   /** Overall bounding box including fronts. */
   bounds: Box;
   /**
-   * Shelf-pin rows this cabinet needs on the neighbour's side it shares (ADR-170), measured as on that side: face
+   * Shelf-pin rows this cabinet needs on the neighbour's side it shares (ADR-190), measured as on that side: face
    * `-x`, rows from its rear edge, holes from its bottom edge. Absent = none.
    */
   sharedPins?: PinRows[];
@@ -433,7 +435,7 @@ export interface CabinetParams {
   /** 'rails': two rails between the sides instead of a full top, e.g. under a worktop or over a sink (ADR-036). */
   topKind?: 'panel' | 'rails';
   /**
-   * Set only while the cabinet shares a side with a neighbour (ADR-170), never saved. `right`: its right side is left
+   * Set only while the cabinet shares a side with a neighbour (ADR-190), never saved. `right`: its right side is left
    * out (the neighbour's left side serves); `left`: its left side is shared. Fronts meet over the shared side's middle.
    */
   shared?: { left?: boolean; right?: boolean };
@@ -496,6 +498,13 @@ export interface CornerParams {
   blindWidth: Mm;
   height: Mm;
   depth: Mm;
+  /**
+   * 'wall': hung on the wall (ADR-177, schemaVersion 7): no plinth, and one hardware line asking the user to choose
+   * the hanging brackets (none are scheduled automatically). Absent = floor.
+   */
+  mount?: 'floor' | 'wall';
+  /** Height of the unit's underside above the floor when wall-mounted (position only). */
+  mountHeight?: Mm;
   bodyMaterialId: string;
   frontMaterialId: string;
   backMaterialId: string;
@@ -503,7 +512,7 @@ export interface CornerParams {
   /** 2: a doubled top, as on a cabinet (ADR-105). Absent = 1. */
   topLayers?: 1 | 2;
   /**
-   * Set only while the unit is in a common top or bottom (ADR-169), never saved: its top over (bottom under) the
+   * Set only while the unit is in a common top or bottom (ADR-189), never saved: its top over (bottom under) the
    * sides or returns, so the common panel covers them.
    */
   join?: { top?: boolean; bottom?: boolean };
@@ -695,10 +704,10 @@ export interface Design {
   /**
    * 2 adds stock sheets and cutting settings (ADR-019); 3 adds edge band specs on boards (ADR-077); 4 adds a
    * board per part (`partMaterials`); 5 adds seller products (ADR-161); 6 adds a board per part role
-   * (`roleMaterials`, ADR-163); 7 adds an edge band per part role and per part (`roleBands`, `partBands`, ADR-168).
-   * Older files are upgraded in memory on load.
+   * (`roleMaterials`, ADR-163); 7 adds a corner's mount (ADR-177); 8 adds an edge band per part role and per part
+   * (`roleBands`, `partBands`, ADR-188). Older files are upgraded in memory on load.
    */
-  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7;
+  schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
   id: string;
   name: string;
   createdAt: string;
@@ -722,11 +731,11 @@ export interface Design {
    */
   roleMaterials?: Partial<Record<RoleBoardRole, string>>;
   /**
-   * An edge band for every part of a role instead of its board's band (schemaVersion 7, ADR-168), keyed by the
+   * An edge band for every part of a role instead of its board's band (schemaVersion 8, ADR-188), keyed by the
    * Material dialog's roles (`src/core/roles.ts`): a role's own entry wins over `body`. Absent = the board's band.
    */
   roleBands?: Partial<Record<string, EdgeBand>>;
-  /** An edge band for one part (schemaVersion 7, ADR-168): panel id → band; wins over `roleBands`. Kept when lost. */
+  /** An edge band for one part (schemaVersion 8, ADR-188): panel id → band; wins over `roleBands`. Kept when lost. */
   partBands?: Record<string, EdgeBand>;
   /** Answers of the New-piece wizard that made this piece, so it can be reopened there (ADR-046). Never geometry. */
   wizard?: { answers: WizardAnswers };

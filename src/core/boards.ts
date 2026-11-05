@@ -60,7 +60,7 @@ function uniqueBoards(materials: readonly Material[]): Material[] {
   return [...out.values()];
 }
 
-/** Every edge band named in a project (or a piece): on boards, roles, parts and run parts, one per spec (ADR-168). */
+/** Every edge band named in a project (or a piece): on boards, roles, parts and run parts, one per spec (ADR-188). */
 export function projectBands(
   project: Project | null | undefined,
   design: Design | null | undefined,

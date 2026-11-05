@@ -250,7 +250,7 @@ function writeRole(
   }
 }
 
-/** The design with `band` on these roles (ADR-168); Carcass clears the side, top and bottom entries it covers. */
+/** The design with `band` on these roles (ADR-188); Carcass clears the side, top and bottom entries it covers. */
 function writeBands(d: Design, roles: readonly MaterialRole[], band: EdgeBand): Design {
   const rb = { ...d.roleBands };
   for (const r of roles) {
@@ -261,7 +261,7 @@ function writeBands(d: Design, roles: readonly MaterialRole[], band: EdgeBand): 
 }
 
 /**
- * `board` (and `band`, when one is chosen, ADR-168) on every role of `roles` the design has parts for; the roles it
+ * `board` (and `band`, when one is chosen, ADR-188) on every role of `roles` the design has parts for; the roles it
  * has none for are returned as skipped.
  */
 export function putRoleBoards(
@@ -295,7 +295,7 @@ export function putRoleBoards(
   };
 }
 
-/** `board` (and `band`, when one is chosen) on one generated part (ADR-151, ADR-168). */
+/** `board` (and `band`, when one is chosen) on one generated part (ADR-151, ADR-188). */
 export function putPartBoard(d: Design, panelId: string, board: Material, band?: EdgeBand): Design {
   const { design, id } = withBoard(d, board);
   return {
@@ -306,7 +306,7 @@ export function putPartBoard(d: Design, panelId: string, board: Material, band?:
   };
 }
 
-/** Run parts the Material dialog reaches (ADR-168): the worktop, fillers and covers, the run plinth, trims. */
+/** Run parts the Material dialog reaches (ADR-188): the worktop, fillers and covers, the run plinth, trims. */
 export type RunRole = 'run-worktop' | 'run-filler' | 'run-plinth' | 'run-trim';
 export const RUN_ROLES: RunRole[] = ['run-worktop', 'run-filler', 'run-plinth', 'run-trim'];
 export const runRoleOf = (rp: RunPart): RunRole =>
@@ -319,7 +319,7 @@ export const runRoleOf = (rp: RunPart): RunRole =>
         : 'run-trim';
 const isRunRole = (r: string): r is RunRole => (RUN_ROLES as string[]).includes(r);
 
-/** The run parts made from any of these items (a run part reached by one of its items, ADR-168). */
+/** The run parts made from any of these items (a run part reached by one of its items, ADR-188). */
 export const runPartsOf = (project: Project, ids: ReadonlySet<string>): RunPart[] =>
   (project.runParts ?? []).filter((rp) => rp.from?.some((x) => ids.has(x)));
 
@@ -394,7 +394,7 @@ export function applyMaterial(
   const runRoles = allRoles.filter(isRunRole);
   const applied: string[] = [],
     skipped: string[] = [];
-  // Run parts made from a reached item (ADR-168).
+  // Run parts made from a reached item (ADR-188).
   const runs = runPartsOf(project, targets).filter((rp) => runRoles.includes(runRoleOf(rp)));
   for (const rp of runs) applied.push(rp.label);
   for (const r of runRoles)

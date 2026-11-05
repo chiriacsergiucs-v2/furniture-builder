@@ -6,6 +6,7 @@
  */
 import { newId } from './design';
 import { placedBounds, type Project, type ProjectItem } from './project';
+import { withSettings } from './projectSettings';
 import { remapRunKey, type ProjectTemplate } from './projectTemplate';
 import type { Mm } from './types';
 
@@ -13,6 +14,8 @@ export interface InsertResult {
   project: Project;
   /** The inserted pieces, in template order. */
   ids: string[];
+  /** Template variables whose name the project already had: the project's are kept and the bindings follow them. */
+  kept: string[];
 }
 
 /** Where a template's block goes when no point is given: right of the project's pieces, against the back. */
@@ -23,13 +26,19 @@ export function insertPoint(project: Project): { x: Mm; z: Mm } {
   return { x: right, z: 0 };
 }
 
+/** The template's variables whose name the project already has (compared without case): the project's are kept. */
+export function keptVariables(project: Project, t: ProjectTemplate): string[] {
+  const have = new Set((project.variables ?? []).map((v) => v.name.toLowerCase()));
+  return (t.variables ?? []).filter((v) => have.has(v.name.toLowerCase())).map((v) => v.name);
+}
+
 /** The project with `t`'s pieces added, the block's left-back corner at `at` (default `insertPoint`). */
 export function insertTemplate(
   project: Project,
   t: ProjectTemplate,
   at: { x: Mm; z: Mm } = insertPoint(project),
 ): InsertResult {
-  if (!t.items.length) return { project, ids: [] };
+  if (!t.items.length) return { project, ids: [], kept: [] };
   // Templates saved with their room keep room positions: the block is moved by its own left-back corner.
   const ox = Math.min(...t.items.map((i) => i.offset.x));
   const oz = Math.min(...t.items.map((i) => i.offset.z));
@@ -48,14 +57,29 @@ export function insertTemplate(
         : i.placement;
     return {
       id: ids.get(i.ref)!,
-      design: { ...structuredClone(i.design), id: newId() },
+      // An inserted piece follows the project's settings, as a piece added from the catalog does (ADR-124, ADR-170).
+      design: withSettings({ ...structuredClone(i.design), id: newId() }, project.settings),
       quantity: i.quantity,
       position: { x: i.offset.x - ox + ax, y: i.offset.y, z: i.offset.z - oz + az },
       rotationY: i.rotationY,
       ...(pl ? { placement: structuredClone(pl) } : {}),
       ...(i.linkId ? { linkId: linkOf(i.linkId) } : {}),
+      ...(i.angle ? { angle: i.angle } : {}),
+      ...(i.bindings?.length ? { bindings: structuredClone(i.bindings) } : {}),
     };
   });
+  // The template's variables join the project; one whose name the project already has keeps the project's (ADR-170).
+  const kept = keptVariables(project, t);
+  const added = (t.variables ?? []).filter((v) => !kept.includes(v.name));
+  const variables = added.length
+    ? [...(project.variables ?? []), ...added.map((v) => ({ ...v, id: newId() }))]
+    : project.variables;
+  const connections = (t.connections ?? [])
+    .filter((c) => ids.has(c.itemIds[0]) && ids.has(c.itemIds[1]))
+    .map((c) => ({
+      id: newId(),
+      itemIds: [ids.get(c.itemIds[0])!, ids.get(c.itemIds[1])!] as [string, string],
+    }));
   const recipe = t.runRecipe;
   const removed = (recipe?.removed ?? [])
     .map((k) => remapRunKey(k, ids))
@@ -67,6 +91,10 @@ export function insertTemplate(
     ...(removed.length
       ? { runPartsRemoved: [...(project.runPartsRemoved ?? []), ...removed] }
       : {}),
+    ...(variables ? { variables } : {}),
+    ...(connections.length
+      ? { connections: [...(project.connections ?? []), ...connections] }
+      : {}),
   };
-  return { project: next, ids: items.map((i) => i.id) };
+  return { project: next, ids: items.map((i) => i.id), kept };
 }

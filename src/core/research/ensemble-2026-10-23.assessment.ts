@@ -181,17 +181,6 @@ export const ENSEMBLE_ASSESSMENTS: Record<string, Row> = {
     'Medium-high',
     'Listed in the MVP undo row; expected wherever snapping exists.',
   ],
-  'independent-selection': [
-    5,
-    4,
-    4,
-    4,
-    3,
-    2,
-    'Medium',
-    'Medium-high',
-    'Keeps item configurability after connection; matches the grouping/selection requests.',
-  ],
   'hard-soft-constraints': [
     5,
     3,
@@ -225,17 +214,6 @@ export const ENSEMBLE_ASSESSMENTS: Record<string, Row> = {
     'Very high',
     'Low-medium',
     'One-line mention; risky without trustworthy rules and the paper warns against uncontrollable automation.',
-  ],
-  'direct-manipulation': [
-    5,
-    5,
-    4,
-    5,
-    2,
-    3,
-    'Medium',
-    'High',
-    'MVP row; move/rotate in 2D/3D is a category norm.',
   ],
   'transform-gizmos': [
     4,
@@ -482,7 +460,6 @@ export const ENSEMBLE_PRIORITIES: Record<string, [priority: string, basis: strin
   'connection-constraints': ['P0', 'Parent: Persistent semantic connections (MVP, P0).'],
   'connection-status': ['P0', 'MVP table: "Compatibility" — invalid pairs clearly reported.'],
   unsnap: ['P0', 'MVP table: "Undo/redo" lists unsnap.'],
-  'independent-selection': ['P0', 'MVP table: "Selection/groups" (select one item).'],
   'hard-soft-constraints': ['P1', 'Phase 2: "rich rule engine" (line 489).'],
   'rapier-queries': [
     'P1',
@@ -492,14 +469,16 @@ export const ENSEMBLE_PRIORITIES: Record<string, [priority: string, basis: strin
     'P2',
     'Judgement: very high complexity and needs trustworthy rules; the paper warns against automation users cannot override.',
   ],
-  'direct-manipulation': ['P0', 'MVP table: "Direct manipulation".'],
   'transform-gizmos': [
     'P1',
     'Judgement: dragging plus numeric entry meet the MVP row; furniture-specific handles "will probably need custom UX" (line 443).',
   ],
   'propagation-pipeline': ['P1', 'Phase 2: "parameter propagation" (line 489).'],
   'no-silent-moves': ['P1', 'Phase 2: governs parameter propagation (line 489).'],
-  'command-log': ['P0', 'Parent: Transactional undo/redo (MVP, P0).'],
+  'command-log': [
+    'P0',
+    'Inherited from Transactional undo/redo (MVP, P0), built and removed (ADR-184).',
+  ],
   'generated-parts': [
     'P1',
     'Phase 2: generated countertops/plinths/fillers/end panels (line 489).',
@@ -586,10 +565,6 @@ export const ENSEMBLE_APPRECIATION: Record<string, [appreciation: string, basis:
     'High',
     'Judgement: part of the MVP undo row; Transactional undo/redo is rated High appreciation (rank 9).',
   ],
-  'independent-selection': [
-    'High',
-    'Judgement: reusable/configurable objects are most appreciated (line 65) and multi-select/groups is rated High (rank 8).',
-  ],
   'hard-soft-constraints': [
     'High',
     'Parent: Compatibility-rule engine preventing invalid connections ("High", rank 2).',
@@ -601,10 +576,6 @@ export const ENSEMBLE_APPRECIATION: Record<string, [appreciation: string, basis:
   'automated-fixes': [
     'Unproven',
     'Judgement: no evidence, and the paper warns against automation users cannot override — not inherited from Explainable warnings (High).',
-  ],
-  'direct-manipulation': [
-    'High',
-    'Praise: SketchUp is valued for direct modelling (line 43); rapid placement is most appreciated (line 65).',
   ],
   'transform-gizmos': [
     'Medium',
@@ -649,7 +620,7 @@ export const ENSEMBLE_APPRECIATION: Record<string, [appreciation: string, basis:
   'live-manufacturer-data': ['Unproven', 'Judgement: no user feedback cited.'],
   'budget-style-filters': [
     'High',
-    'Parent: Deterministic generation of alternative valid layouts ("High", rank 26).',
+    'Inherited from Deterministic generation of alternative valid layouts ("High", rank 26), built and removed (ADR-184).',
   ],
   'layout-optimisation': [
     'Unproven',

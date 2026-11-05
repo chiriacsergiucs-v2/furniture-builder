@@ -1,4 +1,4 @@
-// Neighbours share one side panel (ADR-170).
+// Neighbours share one side panel (ADR-190).
 import { describe, expect, it } from 'vitest';
 import { templates } from '../src/core/design';
 import {
@@ -34,7 +34,7 @@ const codes = (p: Project) => buildProjectModel(p).diagnostics.map((d) => d.code
 const errors = (p: Project) =>
   buildProjectModel(p).diagnostics.filter((d) => d.severity === 'error');
 
-describe('shared sides (ADR-170)', () => {
+describe('shared sides (ADR-190)', () => {
   it('two linked 600 mm cabinets: 3 sides, places and carcasses unchanged, the left inside one thickness wider', () => {
     const p = pair();
     const [A, B] = p.items;
@@ -112,11 +112,19 @@ describe('shared sides (ADR-170)', () => {
     };
     expect(codes(moved)).toContain('shared-side-broken');
     expect(buildProjectModel(moved).model.panels.filter((x) => x.role === 'side')).toHaveLength(4);
-    expect(PROJECT_SCHEMA).toBe(18);
+    expect(PROJECT_SCHEMA).toBe(20);
     expect(validateProject(JSON.parse(JSON.stringify(q)))).toEqual([]);
-    expect(validateProject({ ...q, schemaVersion: 17 })).toContain(
-      'Shared sides need project schemaVersion 18',
+    expect(validateProject({ ...q, schemaVersion: 19 })).toContain(
+      'Shared sides need project schemaVersion 20',
     );
+    // Every older version still loads without the field.
+    for (let v = 1; v <= 19; v++)
+      expect(
+        validateProject({ ...pair(), schemaVersion: v } as never).filter((e) =>
+          e.includes('schemaVersion'),
+        ),
+        String(v),
+      ).toEqual([]);
     expect(pruneShared({ ...q, items: [q.items[0]] }).sharedSides).toBeUndefined();
     expect(pruneShared(q)).toBe(q);
   });

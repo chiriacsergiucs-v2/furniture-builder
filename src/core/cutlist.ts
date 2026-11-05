@@ -68,7 +68,7 @@ export function cutlist(model: FurnitureModel, materials: Material[]): CutRow[] 
     if (!m) continue;
     const c = cutDimensions(p, m.grain);
     const drilling = drillingText(p);
-    // A band chosen for the part or its role wins over the board's (ADR-168).
+    // A band chosen for the part or its role wins over the board's (ADR-188).
     const band = p.band ?? bandFor(m, p.role);
     const bandFront = !p.band && !!m.frontBand && FRONT_BAND_ROLES.has(p.role);
     const key = [

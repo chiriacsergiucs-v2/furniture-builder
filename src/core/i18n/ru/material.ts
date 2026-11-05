@@ -2,6 +2,7 @@
 export const ru_material = {
   'Invalid role boards': 'Недопустимые плиты по ролям',
   'Role boards need schemaVersion 6': 'Плиты по ролям требуют schemaVersion 6',
+  'Corner mount needs schemaVersion 7': 'Креплению углового модуля нужна schemaVersion 7',
   'Role board for {k} refers to an unknown role or material':
     'Плита по роли {k} ссылается на неизвестную роль или материал',
   'not in a run': 'не в ряду',
@@ -88,7 +89,7 @@ export const ru_material = {
     'Выберите изделия, стоящие рядом: «Общая крышка» или «Общее дно» делает одну панель на все.',
   '{n|A part|# parts} with its own edge band no longer {n|exists|exist} (the piece changed); the band is not used. Clear it under Material → Part.':
     '{n|Деталь|# детали|# деталей} со своей кромкой больше не {n|существует|существуют|существуют} (изделие изменилось); кромка не используется. Сбросьте её в окне «Материал» → «Деталь».',
-  'Role and part bands need schemaVersion 7': 'Кромки по ролям и деталям требуют schemaVersion 7',
+  'Role and part bands need schemaVersion 8': 'Кромки по ролям и деталям требуют schemaVersion 8',
   'Invalid role bands': 'Недопустимые кромки по ролям',
   'Invalid band for {k}': 'Недопустимая кромка для {k}',
   'Invalid part bands': 'Недопустимые кромки деталей',
@@ -142,4 +143,25 @@ export const ru_material = {
   'Neighbours share one side panel': 'Соседи делят одну боковину',
   'Select cabinets side by side: Shared sides leaves one side per joint; fronts meet over its middle.':
     'Выберите шкафы, стоящие рядом: «Общие боковины» оставляет одну боковину на стык; фасады сходятся над её серединой.',
+  // Connections between pieces (ADR-168).
+  'A piece cannot be connected to itself.': 'Изделие нельзя соединить с самим собой.',
+  'A connected piece was removed.': 'Соединённое изделие удалено.',
+  '{a} and {b} do not stand side by side.': '{a} и {b} не стоят вплотную рядом.',
+  '{a} and {b} are connected but no longer joined: {reason}':
+    '{a} и {b} соединены, но больше не стыкуются: {reason}',
+  'Connections need project schemaVersion {v}': 'Для соединений нужна версия схемы проекта {v}',
+  'Invalid connections': 'Недопустимые соединения',
+  'Invalid connection': 'Недопустимое соединение',
+  'Select exactly two pieces standing side by side.':
+    'Выберите ровно два изделия, стоящих вплотную рядом.',
+  Connect: 'Соединить',
+  Disconnect: 'Разъединить',
+  Connected: 'Соединены',
+  'About connections': 'О соединениях',
+  'Connected pieces move together; a snap connects them, Alt while dragging moves one alone. A pair that no longer touches is warned about.':
+    'Соединённые изделия перемещаются вместе; примагничивание соединяет их, Alt при перетаскивании двигает одно. О паре, которая больше не касается, выводится предупреждение.',
+  'Connected to {names}': 'Соединено с: {names}',
+  'Connected pieces': 'Соединённые изделия',
+  'A snap joins two touching pieces; they move together, the seam is marked on the plan, the front view and in 3D, and a pair that no longer touches is warned about.':
+    'Примагничивание соединяет два соприкасающихся изделия; они перемещаются вместе, шов отмечен на плане, на виде спереди и в 3D, а о паре, которая больше не касается, выводится предупреждение.',
 } as const;

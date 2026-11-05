@@ -133,7 +133,7 @@ function MaterialFields() {
       .then(setDecors)
       .catch(() => setDecors([]));
   }, []);
-  // Edge band (ADR-168): keep the board's, a band of the project, a seller's, or your own.
+  // Edge band (ADR-188): keep the board's, a band of the project, a seller's, or your own.
   const [bandChoice, setBandChoice] = useState(KEEP);
   const [own, setOwn] = useState<{
     kind: EdgeBandKind;
@@ -169,7 +169,7 @@ function MaterialFields() {
       return (materialTargets(project, itemId, 'group', selectedIds) ?? []).map((i) => i.design);
     return target ? [target] : [];
   }, [inProject, project, scope, itemId, selectedIds, target]);
-  // Run parts made from a reached item (ADR-168).
+  // Run parts made from a reached item (ADR-188).
   const reachedRuns = useMemo(() => {
     if (!inProject) return [];
     const ids =

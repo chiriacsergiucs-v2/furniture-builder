@@ -1,5 +1,5 @@
 /**
- * A common top or bottom across items in a row (ADR-165), across gaps and over corner units and desks (ADR-169): one
+ * A common top or bottom across items in a row (ADR-165), across gaps and over corner units and desks (ADR-189): one
  * panel replaces the members' own tops (or bottoms). While linked, each member is built with its top over the sides (bottom under the sides), its own setting
  * kept; the common panel takes the leftmost member's top (bottom) board. A link that no longer fits is not built and
  * warned about, and the members get their own panels back.
@@ -51,7 +51,7 @@ export function commonDesign(d: Design, c: CommonBuild): Design {
   };
 }
 
-/** The part a common top replaces: a desk's worktop (its pedestals keep their tops), else the top (ADR-169). */
+/** The part a common top replaces: a desk's worktop (its pedestals keep their tops), else the top (ADR-189). */
 export const commonTopRole = (d: Design): Panel['role'] =>
   d.product.kind === 'desk' ? 'worktop' : 'top';
 
@@ -70,7 +70,7 @@ export function layersOf(removed: readonly Panel[], kind: CommonKind): Panel[][]
 const outlineOf = (parts: readonly Panel[]): Pt[] | null =>
   parts.length === 1 ? footprint(parts[0]) : unionOutline(parts.map(footprint));
 
-/** A gap a common panel bridges (ADR-169): its rectangle in plan and its width along the row. */
+/** A gap a common panel bridges (ADR-189): its rectangle in plan and its width along the row. */
 export interface CommonGap {
   rect: Pt[];
   width: number;
@@ -89,8 +89,9 @@ export interface CommonPlan {
 const JOINS = new Set(['cabinet', 'corner', 'desk']);
 const plinthOf = (d: Design): number | null => {
   const p = d.product;
-  if (p.kind === 'cabinet') return p.params.mount === 'wall' ? 0 : p.params.plinthHeight;
-  if (p.kind === 'corner') return p.params.plinthHeight;
+  // A hung cabinet or corner (ADR-177) has no plinth, whatever its stored plinth height.
+  if (p.kind === 'cabinet' || p.kind === 'corner')
+    return p.params.mount === 'wall' ? 0 : p.params.plinthHeight;
   return null;
 };
 const backOf = (d: Design): string | null => {
@@ -104,7 +105,7 @@ const doubled = (d: Design) =>
  * Can these items share one top (bottom)? Cabinets, corner units and desks (a desk has no bottom), each counted once,
  * no extra angle, the same plinth and back; their own tops (bottoms), built as while linked, at the same height and
  * thickness, forming one chain: each touches the next along a full side (a desk's front overhang aside), or stands in
- * line with it, turned the same way and as deep, across a gap the panel bridges (ADR-169). Never throws.
+ * line with it, turned the same way and as deep, across a gap the panel bridges (ADR-189). Never throws.
  */
 export function commonPanelCheck(
   project: Project,

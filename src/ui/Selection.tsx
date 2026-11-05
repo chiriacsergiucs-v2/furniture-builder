@@ -3,16 +3,18 @@ import { groupSizeFields, type WidthSplit } from '../core/groupSize';
 import { t, tr } from '../core/i18n';
 import { commonPanelCheck } from '../core/common';
 import { sharedSideCheck } from '../core/shared';
+import { connectionCheck, isConnected } from '../core/connections';
 import { pieceName, type Project } from '../core/project';
 import { groupOf, sameIds, type Group } from '../core/selection';
 import { useDesign } from '../store/designStore';
 import { askConfirm } from './Confirm';
 import { InfoTip, MmField, Segmented, Toggle } from './controls';
 import { Icon } from './icons';
+import { MoveToButtons } from './MoveTo';
 
 /**
  * Several pieces selected (ADR-097): what acts on the whole selection — Delete, Duplicate, Turn about its centre,
- * Group or Ungroup. Each is one undo step; the main piece's card follows below for what is one piece's.
+ * Group or Ungroup, Align, and Move to as one block (ADR-182). Each is one undo step; the main piece's card follows below for what is one piece's.
  */
 export function SelectionCard() {
   const ids = useDesign((s) => s.selectedItemIds);
@@ -28,11 +30,15 @@ export function SelectionCard() {
   const distribute = useDesign((s) => s.distributeSelection);
   const setCommon = useDesign((s) => s.setCommon);
   const setShared = useDesign((s) => s.setShared);
+  const setConnected = useDesign((s) => s.setConnected);
   const [msg, setMsg] = useState<{ for: string; text: string | null }>({ for: '', text: null });
+  // Align, distribute and Move to act on the pieces (3D models are display only, ADR-076), to the first selected one.
+  const pieceIds = useMemo(
+    () => ids.filter((id) => project?.items.some((i) => i.id === id)),
+    [ids, project],
+  );
   if (!project || ids.length < 2) return null;
   const key = ids.join(',');
-  // Align and distribute act on the pieces (3D models are display only, ADR-076), to the first selected piece.
-  const pieceIds = ids.filter((id) => project.items.some((i) => i.id === id));
   const g = groupOf(project, ids[0]);
   const isGroup = !!g && sameIds(g.itemIds, ids);
   const say = (text: string | null) => setMsg({ for: key, text });
@@ -162,6 +168,17 @@ export function SelectionCard() {
           )}
         </div>
       )}
+      {/* Move to as one block (ADR-182): the selection keeps its layout; each tap is one undo step. */}
+      {pieceIds.length >= 2 && (
+        <div className="selection-move-to">
+          <p className="hint">
+            {t('Move to, as one block, from the front of {name}:', {
+              name: tr(pieceName(project, pieceIds[0])),
+            })}
+          </p>
+          <MoveToButtons key={`move-to-${key}`} id={pieceIds} onlyWorking />
+        </div>
+      )}
       <CommonToggles
         project={project}
         ids={pieceIds}
@@ -169,6 +186,9 @@ export function SelectionCard() {
         setShared={setShared}
         say={say}
       />
+      {pieceIds.length === 2 && (
+        <ConnectToggle project={project} ids={pieceIds} setConnected={setConnected} say={say} />
+      )}
       {isGroup && <GroupSize project={project} group={g!} say={say} />}
       {msg.for === key && msg.text && (
         <p className="hint" role="status">
@@ -176,6 +196,46 @@ export function SelectionCard() {
         </p>
       )}
     </section>
+  );
+}
+
+/**
+ * The two selected pieces connected (ADR-168): on when a connection between them is stored; disabled with the
+ * reason when they cannot be connected.
+ */
+function ConnectToggle({
+  project,
+  ids,
+  setConnected,
+  say,
+}: {
+  project: Project;
+  ids: string[];
+  setConnected: (on: boolean) => string;
+  say: (text: string | null) => void;
+}) {
+  const on = isConnected(project, ids[0], ids[1]);
+  const why = useMemo(
+    () => (on ? null : connectionCheck(project, ids[0], ids[1]).reason),
+    [project, ids, on],
+  );
+  return (
+    <div className="connect-toggle">
+      <Toggle
+        label={t('Connected')}
+        checked={on}
+        disabled={!!why}
+        onChange={(v) => say(setConnected(v) || null)}
+        info={
+          <InfoTip label={t('About connections')} align="start">
+            {t(
+              'Connected pieces move together; a snap connects them, Alt while dragging moves one alone. A pair that no longer touches is warned about.',
+            )}
+          </InfoTip>
+        }
+      />
+      {why && <p className="hint">{why}</p>}
+    </div>
   );
 }
 

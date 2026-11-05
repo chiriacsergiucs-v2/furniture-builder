@@ -48,7 +48,7 @@ export function buildModel(design: Design): FurnitureModel {
           : null;
     return id ? { ...p, materialId: id } : p;
   });
-  // An edge band chosen for one part or its role (ADR-168): the part's own, then its role's, then its board's.
+  // An edge band chosen for one part or its role (ADR-188): the part's own, then its role's, then its board's.
   const ownBand = design.partBands ?? {};
   const roleBand = design.roleBands ?? {};
   if (Object.keys(ownBand).length || Object.keys(roleBand).length)
@@ -172,7 +172,7 @@ export function buildModel(design: Design): FurnitureModel {
     const env = box(0, 0, 0, W, H, D);
     const front = materials.get(prod.params.frontMaterialId);
     // Sliding doors run on a track in front of the carcass (ADR-037). Fronts over a shared side reach over half of
-    // the neighbour's side (ADR-170).
+    // the neighbour's side (ADR-190).
     const body = materials.get(prod.params.bodyMaterialId);
     const over = prod.params.shared?.right ? Math.floor((body?.thickness ?? 0) / 2) : 0;
     const frontEnv = box(

@@ -1,4 +1,5 @@
-import { isSizeLocked, SIZE_LOCKED_HINT } from '../core/sizeLock';
+import { isSizeLocked, lockedAxes, SIZE_LOCKED_HINT } from '../core/sizeLock';
+import type { SizeAxis } from '../core/project';
 import { useEffect, useMemo, useState } from 'react';
 import {
   bayLayoutOf,
@@ -182,6 +183,14 @@ function ComposeStart() {
   const sizeLocked = useDesign((s) =>
     isSizeLocked(s.project?.items.find((i) => i.id === (s.editingItemId ?? s.drillItemId))),
   );
+  // Sizes locked one by one (ADR-171), as a stable key so the selector returns the same reference.
+  const lockedKeysText = useDesign((s) =>
+    lockedAxes(s.project?.items.find((i) => i.id === (s.editingItemId ?? s.drillItemId))).join(),
+  );
+  const lockedKeys = useMemo(
+    () => (lockedKeysText ? (lockedKeysText.split(',') as SizeAxis[]) : []),
+    [lockedKeysText],
+  );
   const setSettingsOpen = useUi((s) => s.setSettingsOpen);
   const roots = productRoots(prod);
   return (
@@ -206,7 +215,9 @@ function ComposeStart() {
           </p>
         )}
       </header>
-      {whole && <PieceSize product={prod} onChange={resize} locked={sizeLocked} />}
+      {whole && (
+        <PieceSize product={prod} onChange={resize} locked={sizeLocked} lockedKeys={lockedKeys} />
+      )}
       {roots.map((r) => (
         <button key={r.root.id} type="button" className="row-btn" onClick={() => select(r.root.id)}>
           <span className="glyph">
@@ -1314,6 +1325,27 @@ function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[]
           )}
         </div>
       </div>
+      <Segmented<'floor' | 'wall'>
+        label={t('Stands on')}
+        value={p.mount ?? 'floor'}
+        options={[
+          { value: 'floor', label: t('The floor') },
+          { value: 'wall', label: t('Wall brackets') },
+        ]}
+        onChange={(v) =>
+          set(v === 'wall' ? { mount: v, mountHeight: p.mountHeight ?? 1450 } : { mount: v })
+        }
+      />
+      {p.mount === 'wall' && (
+        <MmField
+          label={t('Underside above the floor')}
+          value={p.mountHeight ?? 1450}
+          min={0}
+          max={2500}
+          onChange={(v) => set({ mountHeight: v })}
+          hint={t('Position only; the hardware list asks you to choose the hanging brackets.')}
+        />
+      )}
       <Group title={t('Construction')} id="g-build">
         <Segmented
           label={t('Top@@panel')}
@@ -1347,14 +1379,16 @@ function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[]
           ]}
           onChange={(v) => set({ back: v })}
         />
-        <MmField
-          label={t('Plinth height')}
-          value={p.plinthHeight}
-          min={0}
-          max={250}
-          onChange={(v) => set({ plinthHeight: v })}
-          hint={t('0 for no plinth')}
-        />
+        {p.mount !== 'wall' && (
+          <MmField
+            label={t('Plinth height')}
+            value={p.plinthHeight}
+            min={0}
+            max={250}
+            onChange={(v) => set({ plinthHeight: v })}
+            hint={t('0 for no plinth')}
+          />
+        )}
         <MmField
           label={t('Gap between fronts')}
           value={p.frontGap}

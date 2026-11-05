@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// Find-it for shared sides (ADR-170, N172), in jsdom (ADR-108): select two base units standing side by side → Shared
+// Find-it for shared sides (ADR-190, N@172), in jsdom (ADR-108): select two base units standing side by side → Shared
 // sides → the parts list counts 3 sides; with a wardrobe in the selection the toggle is off and says why.
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
@@ -19,7 +19,7 @@ async function addPiece(user: User, name: RegExp) {
   if (place) await user.click(place);
 }
 
-describe.each(WIDTHS)('shared sides at %ipx (find-it, ADR-170)', (width) => {
+describe.each(WIDTHS)('shared sides at %ipx (find-it, ADR-190)', (width) => {
   it('two base units → Select both → Shared sides → Parts counts 3 sides; a wardrobe makes it off', async () => {
     const { user } = await renderApp(width);
     await user.click(screen.getByLabelText('More'));

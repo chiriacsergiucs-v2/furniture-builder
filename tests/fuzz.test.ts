@@ -243,8 +243,11 @@ function genDiagonal(): Design {
       ]),
     },
   };
+  // ADR-177: some stand on the floor, some hang on the wall (schemaVersion 7).
+  const mount = pick([undefined, 'floor', 'wall'] as const);
+  if (mount) params.mount = mount;
   return {
-    schemaVersion: 2,
+    schemaVersion: mount ? 7 : 2,
     id: 'd',
     name: 'c',
     createdAt: '',
@@ -372,6 +375,14 @@ function check(d: Design): string[] {
   for (let i = 0; i < E.length; i++)
     for (let j = i + 1; j < E.length; j++)
       if (panelsOverlap(E[i], E[j])) probs.push(`exploded-overlap ${E[i].id} ${E[j].id}`);
+  // ADR-177: a hung corner has no plinth and one choose-the-brackets line, never brackets or a rail of its own.
+  if (d.product.kind === 'corner' && d.product.params.mount === 'wall') {
+    if (P.some((p) => p.role === 'plinth')) probs.push('corner-hung-plinth');
+    if (m.hardware.filter((h) => h.kind === 'wall-hanging').length !== 1)
+      probs.push('corner-hung-line');
+    if (m.hardware.some((h) => h.kind === 'wall-bracket' || h.kind === 'wall-rail'))
+      probs.push('corner-hung-brackets');
+  }
   const tf = d.materials.find((m) => m.id === 'front')!.thickness;
   const fronts = P.filter((p) => FRONT.has(p.role));
   let W: number, H: number, Dd: number, ph: number, g: number, envD: number;

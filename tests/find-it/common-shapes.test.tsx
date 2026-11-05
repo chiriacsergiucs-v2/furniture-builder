@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// Find-it for a common top over a corner unit (ADR-169, N171), in jsdom (ADR-108): an L-shaped corner base and two
+// Find-it for a common top over a corner unit (ADR-189, N@171), in jsdom (ADR-108): an L-shaped corner base and two
 // base units beside it → Select all → Common top → the parts list has one Common top, cut to template.
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
@@ -20,7 +20,7 @@ async function addPiece(user: User, search: string, name: RegExp) {
   if (place) await user.click(place);
 }
 
-describe.each(WIDTHS)('common top over a corner at %ipx (find-it, ADR-169)', (width) => {
+describe.each(WIDTHS)('common top over a corner at %ipx (find-it, ADR-189)', (width) => {
   it('L corner + two base units → Select all → Common top → Parts: Common top, cut to template', async () => {
     const { user } = await renderApp(width);
     await user.click(screen.getByLabelText('More'));

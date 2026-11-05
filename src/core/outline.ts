@@ -1,5 +1,5 @@
 /**
- * Plan outlines of panels lying flat (ADR-169): polygons in room x and z, whole millimetres. Used to join the tops
+ * Plan outlines of panels lying flat (ADR-189): polygons in room x and z, whole millimetres. Used to join the tops
  * (or bottoms) of items that touch into one part. Exact integer arithmetic; never throws.
  */
 import type { Box, Panel } from './types';

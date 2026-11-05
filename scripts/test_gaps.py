@@ -48,6 +48,30 @@ class LedgerTest(unittest.TestCase):
         self.assertIn("- Status: Done (ADR-007)", new)
         self.assertEqual(gaps.sync(text, {"007": "Pending"}), (text, []))
 
+    def test_add_skips_archived_ids(self):
+        gid, _ = gaps.add(ENTRY.format(status="Open"), "Next", "o", "m", "r", "q", "p", {"G-005"})
+        self.assertEqual(gid, "G-006")
+
+    def test_archive_moves_done_gaps_in_id_order(self):
+        done = ENTRY.format(status="Done (ADR-007)")
+        text = ENTRY.format(status="Open").replace("G-001", "G-003") + "\n" + done
+        ledger, archived, moved = gaps.archive(text, "")
+        self.assertEqual(moved, ["G-001"])
+        self.assertEqual(gaps.ids(ledger), {"G-003"})
+        self.assertEqual(gaps.ids(archived), {"G-001"})
+        self.assertEqual(gaps.archive_problems(archived, ledger), [])
+        self.assertEqual(gaps.archive(ledger, archived)[2], [])
+
+    def test_the_archive_holds_only_done_gaps_not_in_the_ledger(self):
+        text = ENTRY.format(status="Open")
+        errors = gaps.archive_problems(text, text)
+        self.assertIn("G-001 is in both GAPS.md and GAPS-archive.md", errors)
+        self.assertTrue(any("only Done gaps" in e for e in errors))
+
+    def test_the_repository_archive_is_valid(self):
+        if gaps.ARCHIVE.exists():
+            self.assertEqual(gaps.archive_problems(gaps.ARCHIVE.read_text(), gaps.LEDGER.read_text()), [])
+
 
 def transcript(*entries):
     f = tempfile.NamedTemporaryFile("w", suffix=".jsonl", delete=False)

@@ -106,6 +106,7 @@ export function NewDialog({
   onBrowse,
   onWizard,
   onFillWall,
+  onFillRoom,
   onOpened,
 }: {
   open: boolean;
@@ -113,6 +114,8 @@ export function NewDialog({
   onBrowse?: () => void;
   onWizard?: () => void;
   onFillWall?: () => void;
+  /** Fill the room (ADR-173): every wall of a drawn room, with corner cabinets. */
+  onFillRoom?: () => void;
   onOpened?: () => void;
 }) {
   const load = useDesign((s) => s.load);
@@ -181,6 +184,22 @@ export function NewDialog({
             <span className="sub">
               {t(
                 "Enter a wall's width, depth and height; get suggested mixes of tall and base cabinets that fill it exactly, then refine them.",
+              )}
+            </span>
+          </span>
+          <Icon name="chevron-right" className="chev sm" />
+        </button>
+      )}
+      {onFillRoom && (
+        <button type="button" className="row-btn" onClick={onFillRoom}>
+          <span className="glyph">
+            <Icon name="project" />
+          </span>
+          <span>
+            <strong>{t('Fill the room')}</strong>
+            <span className="sub">
+              {t(
+                'Pick a room shape; get suggested mixes for every wall at once, with a corner cabinet at each inside corner, then refine them.',
               )}
             </span>
           </span>

@@ -11,6 +11,8 @@ import {
   LOCKED_HINT,
   mirroredRotation,
   moveBlocked,
+  turnBlocked,
+  TURN_LOCKED_HINT,
   pieceName,
   placedBounds,
   placedOutline,
@@ -22,6 +24,7 @@ import {
   type ProjectItem,
 } from './project';
 import { placedBox } from './panelset';
+import { withGroups } from './groupMove';
 import type { Box, Design, Product, Space } from './types';
 
 // ---------------------------------------------------------------------------
@@ -211,7 +214,7 @@ export function turnAboutCentre(project: Project, id: string, dir: 1 | -1 = 1): 
 export function tryTurn(project: Project, id: string, dir: 1 | -1 = 1): MoveResult {
   const it = project.items.find((i) => i.id === id);
   if (!it) return { project };
-  const reason = moveBlocked(project, [id]);
+  const reason = moveBlocked(project, [id]) ?? turnBlocked(project, [id]);
   if (reason) return { project, reason };
   // The quarter-turned outline, not the box around an angled piece (ADR-121): the extra angle turns with it.
   const b = outlinesOf(project).get(id)!;
@@ -233,7 +236,7 @@ export function setItemRotation(project: Project, id: string, deg: number): Move
   if (!split) return { project, reason: t('Rotation must be whole degrees from 0 to 359.') };
   if (split.rotationY === it.rotationY && (split.angle ?? 0) === (it.angle ?? 0))
     return { project };
-  const reason = moveBlocked(project, [id]);
+  const reason = moveBlocked(project, [id]) ?? turnBlocked(project, [id]);
   if (reason) return { project, reason };
   let next = project;
   // Quarter turns first, the short way round, each keeping the centre.
@@ -261,6 +264,8 @@ export function mirrorItem(project: Project, id: string): MoveResult {
   const it = project.items.find((i) => i.id === id);
   if (!it) return { project };
   if (it.locked) return { project, reason: `${LOCKED_HINT}: ${pieceName(project, id)}.` };
+  // Mirroring turns the piece's hinges and handles round (ADR-171): a locked turn refuses it.
+  if (it.turnLocked) return { project, reason: `${TURN_LOCKED_HINT}: ${pieceName(project, id)}.` };
   const m = mirrorDesign(it.design);
   if (!m.ok) return { project, reason: m.reason };
   return {
@@ -310,13 +315,15 @@ export function touchingRun(project: Project, id: string, placed?: Map<string, B
 /**
  * Mirror the run `id` is in (ADR-069): every piece's position reflects about the run's centre and each piece is
  * mirrored. Pieces resting on a run piece (and on those, at any depth) are mirrored too and keep their place over
- * their base, reflected. Pieces with nothing to mirror only move; `reasons` lists them.
+ * their base, reflected. Pieces with nothing to mirror only move; `reasons` lists them. Every member of a group with a
+ * piece in the run mirrors with it (ADR-176): the run is widened with its groups first, and a group that cannot mirror
+ * refuses the whole action.
  */
 export function mirrorRun(
   project: Project,
   id: string,
 ): { project: Project; reasons: string[]; refused?: string } {
-  const run = touchingRun(project, id);
+  const run = withGroups(project, touchingRun(project, id));
   if (!run.length) return { project, reasons: [] };
   const r = mirrorSet(project, run);
   return r.refused ? { ...r, refused: t('Mirror the run refused: {why}', { why: r.refused }) } : r;

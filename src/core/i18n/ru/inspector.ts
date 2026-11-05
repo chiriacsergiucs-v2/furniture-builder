@@ -123,6 +123,8 @@ export const ru_inspector = {
   'Underside above the floor': 'Низ над полом',
   'Position only; brackets and a rail are added to the hardware list.':
     'Только положение; кронштейны и шина добавляются в список фурнитуры.',
+  'Position only; the hardware list asks you to choose the hanging brackets.':
+    'Только положение; навесы вы выбираете сами — об этом напомнит список фурнитуры.',
   Construction: 'Конструкция',
   'On the sides': 'На боковинах',
   'Between sides': 'Между боковинами',

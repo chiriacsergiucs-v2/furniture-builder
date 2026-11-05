@@ -1,4 +1,4 @@
-// Edge bands per role and per part, and run parts in the Material dialog (ADR-168).
+// Edge bands per role and per part, and run parts in the Material dialog (ADR-188).
 import { describe, expect, it } from 'vitest';
 import { buildModel } from '../src/core/build';
 import { cutlist } from '../src/core/cutlist';
@@ -30,7 +30,7 @@ function run(): Project {
   return { ...p, runParts: suggestRunParts(p) };
 }
 
-describe('edge band per role and per part (ADR-168)', () => {
+describe('edge band per role and per part (ADR-188)', () => {
   it('part › role › board in the cut list; a narrow band is the band-narrow error; a lost part warns', () => {
     const d = t('chest');
     expect(rowBand(d, 'Drawer front')).toBeUndefined();
@@ -47,37 +47,41 @@ describe('edge band per role and per part (ADR-168)', () => {
     expect(rowBand(withPart, 'Left side')).toEqual(PVC1);
     expect(rowBand(withPart, 'Right side')).toBeUndefined();
     // Carcass band reaches the sides; a side's own role band wins over it.
-    const body: Design = { ...d, schemaVersion: 7, roleBands: { body: ABS2, side: PVC1 } };
+    const body: Design = { ...d, schemaVersion: 8, roleBands: { body: ABS2, side: PVC1 } };
     expect(rowBand(body, 'Top')).toEqual(ABS2);
     expect(rowBand(body, 'Left side')).toEqual(PVC1);
     expect(validateDesign(withPart)).toEqual([]);
-    const narrow: Design = { ...d, schemaVersion: 7, roleBands: { front: NARROW } };
+    const narrow: Design = { ...d, schemaVersion: 8, roleBands: { front: NARROW } };
     expect(buildModel(narrow).diagnostics.map((x) => x.code)).toContain('band-narrow');
-    const lost: Design = { ...d, schemaVersion: 7, partBands: { 'gone/side': ABS2 } };
+    const lost: Design = { ...d, schemaVersion: 8, partBands: { 'gone/side': ABS2 } };
     expect(buildModel(lost).diagnostics.map((x) => x.code)).toContain('part-band-lost');
     expect(lost.partBands).toEqual({ 'gone/side': ABS2 });
   });
 
-  it('are validated: unknown roles, bad bands and the fields in a version-6 file', () => {
+  it('are validated: unknown roles, bad bands and the fields in a version-7 file', () => {
     const d = t('chest');
-    expect(validateDesign({ ...d, schemaVersion: 7, roleBands: { door: ABS2 } })).toContain(
+    expect(validateDesign({ ...d, schemaVersion: 8, roleBands: { door: ABS2 } })).toContain(
       'Invalid band for door',
     );
     expect(
       validateDesign({
         ...d,
-        schemaVersion: 7,
+        schemaVersion: 8,
         roleBands: { front: { kind: 'abs', thickness: 0, width: 22 } },
       }),
     ).toContain('Invalid band for front');
-    expect(validateDesign({ ...d, schemaVersion: 6, roleBands: { front: ABS2 } })).toContain(
-      'Role and part bands need schemaVersion 7',
+    expect(validateDesign({ ...d, schemaVersion: 7, roleBands: { front: ABS2 } })).toContain(
+      'Role and part bands need schemaVersion 8',
     );
+    expect(validateDesign({ ...d, schemaVersion: 7, partBands: { x: ABS2 } })).toContain(
+      'Role and part bands need schemaVersion 8',
+    );
+    expect(validateDesign({ ...d, schemaVersion: 7 })).toEqual([]);
     expect(validateDesign({ ...d, schemaVersion: 6 })).toEqual([]);
   });
 });
 
-describe('run parts in the Material dialog (ADR-168)', () => {
+describe('run parts in the Material dialog (ADR-188)', () => {
   it('Item reaches the worktop made from it; the board and band stay after a refresh', () => {
     const p = run();
     const wt = p.runParts!.find((r) => r.kind === 'worktop')!;

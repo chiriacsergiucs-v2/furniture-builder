@@ -1,6 +1,7 @@
-// A common top or bottom across a gap, over corner units and desks (ADR-169).
+// A common top or bottom across a gap, over corner units and desks (ADR-189).
 import { describe, expect, it } from 'vitest';
-import { commonPanelCheck } from '../src/core/common';
+import { buildModel } from '../src/core/build';
+import { commonDesign, commonPanelCheck } from '../src/core/common';
 import { templates } from '../src/core/design';
 import { footprint } from '../src/core/outline';
 import { buildProjectModel, makeItem, newProject, type Project } from '../src/core/project';
@@ -42,7 +43,7 @@ const commons = (p: Project): Panel[] =>
 const codes = (p: Project) => buildProjectModel(p).diagnostics.map((d) => d.code);
 const errors = (p: Project) =>
   buildProjectModel(p).diagnostics.filter((d) => d.severity === 'error');
-describe('common panel across gaps, corners and desks (ADR-169)', () => {
+describe('common panel across gaps, corners and desks (ADR-189)', () => {
   it('two cabinets 600 mm apart: one top 600 + 600 + 600 wide, with the common-gap warning', () => {
     const p0 = newProject('Gap');
     const a = at(p0, t('base-door'), 0, 0),
@@ -131,5 +132,39 @@ describe('common panel across gaps, corners and desks (ADR-169)', () => {
     expect(
       commonPanelCheck({ ...p, items: [...p.items, bed] }, [desk.id, bed.id], 'top').reason,
     ).toMatch(/not a cabinet, corner unit or desk/);
+  });
+});
+
+describe('a hung corner in a common top or bottom (ADR-189 with ADR-177)', () => {
+  const hungDiagonal = (): Design => {
+    const d = diagonal();
+    return d.product.kind === 'corner'
+      ? {
+          ...d,
+          product: {
+            ...d.product,
+            params: { ...d.product.params, mount: 'wall', mountHeight: 1450, plinthHeight: 100 },
+          },
+        }
+      : d;
+  };
+  it('built as while linked: no plinth, returns between the bottom and the top, the brackets line kept', () => {
+    const d = hungDiagonal();
+    const t0 = 18;
+    const m = buildModel(commonDesign(d, { top: true, bottom: true }));
+    expect(m.panels.some((x) => x.role === 'plinth')).toBe(false);
+    const H = d.product.kind === 'corner' ? d.product.params.height : 0;
+    const bottom = m.panels.find((x) => x.id.endsWith('/bottom'))!;
+    expect(bottom.box.y).toBe(0);
+    for (const r of m.panels.filter((x) => x.label.startsWith('Side return')))
+      expect([r.box.y, r.box.h]).toEqual([t0, H - 2 * t0]);
+    expect(m.hardware.some((h) => h.kind === 'wall-hanging')).toBe(true);
+  });
+  it('a hung corner and a hung cabinet are not refused for their stored plinth heights', () => {
+    const p0 = newProject('Hung');
+    const c = at(p0, hungDiagonal(), 0, 0),
+      w = at(p0, withCab(t('base-door'), { mount: 'wall', plinthHeight: 60 }), 900, 0);
+    const reason = commonPanelCheck({ ...p0, items: [c, w] }, [c.id, w.id], 'bottom').reason;
+    expect(reason ?? '').not.toMatch(/plinth/);
   });
 });

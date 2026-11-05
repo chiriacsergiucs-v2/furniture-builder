@@ -2306,6 +2306,132 @@ td.note {
   stroke-width: 5;
   vector-effect: non-scaling-stroke;
 }
+/* The turn handle of the selected piece (ADR-169): a knob on a stem from the front; the turned outline while dragging. */
+.turn-handle {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.turn-handle .turn-stem {
+  stroke: var(--primary);
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+.turn-handle .turn-hit {
+  fill: transparent;
+  cursor: grab;
+}
+.turn-handle.turning .turn-hit {
+  cursor: grabbing;
+}
+.turn-handle .turn-knob {
+  fill: var(--surface);
+  stroke: var(--primary);
+  stroke-width: 2.4;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+.turn-handle .turn-ghost {
+  fill: var(--primary-soft);
+  fill-opacity: 0.5;
+  stroke: var(--primary);
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+.turn-handle .turn-label {
+  fill: var(--ink);
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: var(--surface);
+  stroke-width: 4;
+  pointer-events: none;
+}
+/* Assembly steps (ADR-174). */
+.assembly .assembly-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s-2);
+}
+.assembly .assembly-steps > li {
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: var(--s-2) var(--s-3);
+}
+.assembly .assembly-steps > li.on {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+.assembly .step-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+.assembly .step-head .btn {
+  margin-left: auto;
+  white-space: nowrap;
+}
+.assembly .step-n {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--surface);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+.assembly .step-parts {
+  margin: var(--s-1) 0 0;
+  padding-left: var(--s-4);
+}
+.assembly .assembly-piece h3 {
+  margin: var(--s-3) 0 var(--s-2);
+}
+/* Assembly steps re-check (ADR-185, ADR-186): the instruction, drawer boxes once × N, the fixings. */
+.assembly .step-do {
+  margin: var(--s-1) 0 0;
+}
+.assembly .step-boxes {
+  list-style: none;
+  padding-left: 0;
+}
+.assembly .step-boxes > li > .step-parts {
+  margin-top: 0;
+}
+.assembly .step-fix {
+  margin: var(--s-1) 0 0;
+  padding-left: var(--s-4);
+}
+/* Fill the room (ADR-173): the walls to tick. */
+.wf-walls {
+  list-style: none;
+  margin: var(--s-3) 0 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s-2);
+}
+.wf-walls label {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 44px;
+}
+/* A tick across the seam of two connected pieces (ADR-168). */
+.plan-connections line {
+  stroke: var(--primary);
+  stroke-width: 3;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
 .plan-piece text {
   fill: var(--ink);
   font-family: var(--font);
@@ -3623,6 +3749,20 @@ table.buy {
   .pr-elev .el-space rect {
     fill: transparent !important;
   }
+  /* One front view per piece on the assembly sheet (ADR-185). */
+  .pr-piece .pr-elev .elevation {
+    height: 60mm;
+  }
+  .pr-piece .pr-table tr {
+    break-inside: avoid;
+  }
+  .pr-do {
+    font-style: italic;
+    margin-top: 1mm;
+  }
+  .pr-box {
+    margin-bottom: 1mm;
+  }
   .pr-table {
     width: 100%;
     border-collapse: collapse;
@@ -4781,6 +4921,41 @@ button.tile:hover {
 .bar .path .btn {
   flex: none;
 }
+/* The running cost estimate (ADR-172): a pill that opens the Shopping list. */
+.estimate-chip {
+  flex: none;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  line-height: 1;
+  padding: var(--s-1) var(--s-3);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.estimate-chip.partial {
+  border-color: var(--warn);
+}
+.estimate-chip.none {
+  color: var(--ink-2);
+  font-weight: 500;
+}
+.estimate-chip:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+}
+.modes {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+.modes .segmented {
+  flex: 1 1 auto;
+  min-width: 0;
+}
 .bar-tools {
   margin-left: auto;
   display: flex;
@@ -5219,6 +5394,14 @@ button.tile:hover {
   align-items: center;
   min-height: 32px;
   cursor: pointer;
+}
+/* A repair the group cannot follow: listed, disabled, with the reason under it (ADR-176). */
+.problem-banner .repairs label.refused {
+  cursor: not-allowed;
+  color: var(--ink-2);
+}
+.problem-banner .repairs .refused-why {
+  display: block;
 }
 .problem-banner .repair-actions {
   display: flex;

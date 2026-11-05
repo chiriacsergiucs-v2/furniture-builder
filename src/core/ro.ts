@@ -197,7 +197,10 @@ export function drillingRo(text: string): string {
     .replace(/cut to template \((\d+) points\)/g, pt('tăiere după șablon ($1 puncte)'));
 }
 
-export function hardwareRo(h: HardwareItem): { item: string; note: string } {
+export function hardwareRo(h: Pick<HardwareItem, 'kind' | 'label' | 'note'>): {
+  item: string;
+  note: string;
+} {
   const perDoor = /^(\d+) per door/.exec(h.note ?? '')?.[1];
   switch (h.kind) {
     case 'drawer-runner-pair':
@@ -240,6 +243,11 @@ export function hardwareRo(h: HardwareItem): { item: string; note: string } {
       return {
         item: pt('Șină de perete pentru agățători'),
         note: pt('tăiată la lățimea corpului'),
+      };
+    case 'wall-hanging':
+      return {
+        item: pt('Agățători de perete pentru corpul de colț: la alegerea dvs.'),
+        note: pt('alegeți agățătorile, câte și unde, după fișa tehnică și tipul peretelui'),
       };
     case 'corner-hinge':
       return {

@@ -78,7 +78,7 @@ describe('common top or bottom (ADR-165)', () => {
     const mixed = linked(pair({ topLayers: 2 }, {}));
     expect(ofRole(mixed, 'top')).toHaveLength(1);
     expect(codes(mixed)).toContain('common-top-layers');
-    // Moved 10 mm forward, out of line (a gap along the row is bridged since ADR-169): not built, a warning, each
+    // Moved 10 mm forward, out of line (a gap along the row is bridged since ADR-189): not built, a warning, each
     // keeps its own top.
     const p = linked(pair());
     const moved = {
@@ -102,7 +102,7 @@ describe('common top or bottom (ADR-165)', () => {
     expect(why(pair({}, { depth: 500 }))).toMatch(/depth/);
     expect(why(pair({}, { plinthHeight: 120 }))).toMatch(/height|plinth/);
     const p = pair();
-    // A gap along the row is bridged (ADR-169); out of line is refused.
+    // A gap along the row is bridged (ADR-189); out of line is refused.
     const gap = {
       ...p,
       items: p.items.map((it, i) =>
@@ -127,7 +127,7 @@ describe('common top or bottom (ADR-165)', () => {
     let withDesk = newProject('Desk');
     withDesk = { ...withDesk, items: [makeItem(withDesk, t('base-door'))] };
     withDesk = { ...withDesk, items: [...withDesk.items, makeItem(withDesk, t('desk-pedestal'))] };
-    // A desk may join since ADR-169, but this one is lower than the base unit.
+    // A desk may join since ADR-189, but this one is lower than the base unit.
     expect(why(withDesk)).toMatch(/height/);
     expect(commonPanelCheck(p, [ids(p)[0]], 'top').reason).toMatch(/two or more/);
   });
@@ -150,7 +150,7 @@ describe('common top or bottom (ADR-165)', () => {
 
   it('a version-16 project with common panels is invalid; 17 loads; pruneCommon drops a list left with one', () => {
     const p = linked(pair());
-    expect(PROJECT_SCHEMA).toBe(18);
+    expect(PROJECT_SCHEMA).toBe(20);
     expect(validateProject(JSON.parse(JSON.stringify(p)))).toEqual([]);
     expect(validateProject({ ...p, schemaVersion: 16 })).toContain(
       'Common tops and bottoms need project schemaVersion 17',

@@ -169,3 +169,111 @@ describe('moving a piece in the store (ADR-065)', () => {
     expect(liftOff({ ...it0, placement: undefined })).toBeUndefined();
   });
 });
+
+// ── Turning with the handle (ADR-169) ───────────────────────────────────────────────────────────────────────────
+import {
+  bracketTurn,
+  cancelPress,
+  cancelTurn,
+  moveTurn,
+  pointerDeg,
+  pressTurn,
+  releaseTurn,
+  turnAngle,
+  turnedFootprint,
+} from '../src/ui/planDrag';
+import { makeItem, placeItem, rotationOf } from '../src/core/project';
+import { describeChange } from '../src/core/history';
+
+describe('the turn handle (ADR-169)', () => {
+  it('turnAngle: whole degrees from the pointer; snaps to a quarter turn within 5°; Shift steps by 15°', () => {
+    expect(turnAngle(0, 10, 47, false)).toBe(37);
+    expect(turnAngle(0, 10, 98, false)).toBe(90);
+    expect(turnAngle(0, 10, 4, false)).toBe(354);
+    expect(turnAngle(0, 10, 12, false)).toBe(0);
+    expect(turnAngle(0, 10, 47, true)).toBe(30);
+    expect(turnAngle(0, 10, 50, true)).toBe(45);
+    expect(turnAngle(270, 0, 100, false)).toBe(10);
+    expect(turnAngle(0, 0, 358.2, false)).toBe(0);
+  });
+  it('pointerDeg is counter-clockwise positive with z drawn downward', () => {
+    expect(pointerDeg(0, 0, 10, 0)).toBe(0);
+    expect(pointerDeg(0, 0, 0, -10)).toBe(90);
+    expect(pointerDeg(0, 0, -10, 0)).toBe(180);
+    expect(pointerDeg(0, 0, 0, 10)).toBe(270);
+  });
+  it('press, move and release: a tap turns nothing; a drag gives the angle; other pointers are ignored', () => {
+    const at = (x: number, z: number, pointerId = 1) => ({
+      pointerId,
+      sx: 0,
+      sy: 0,
+      room: { x, z },
+    });
+    const g = pressTurn('a', { x: 0, z: 0 }, 0, at(100, 0))!;
+    expect(g.from).toBe(0);
+    expect(releaseTurn(g, 1)).toBeNull();
+    expect(moveTurn(g, at(0, -100, 2), false)).toBe(g);
+    const m = moveTurn(g, at(60, -80), false)!;
+    expect(m.angle).toBe(53);
+    expect(releaseTurn(m, 1)).toBe(53);
+    expect(releaseTurn(m, 2)).toBeNull();
+    expect(
+      pressTurn('a', { x: 0, z: 0 }, 0, { pointerId: 1, sx: 0, sy: 0, room: null }),
+    ).toBeNull();
+    const back = moveTurn(m, at(100, 0), false)!;
+    expect(releaseTurn(back, 1)).toBeNull();
+  });
+  it('the turned outline matches the core for the same angle (sign and centre)', () => {
+    let p = newProject('Turn');
+    p = { ...p, items: [makeItem(p, wallTemplate()), makeItem(p, t('base-door'))] };
+    for (const it of p.items) {
+      const flat = placeItem(it);
+      const b = flat.bounds;
+      const turned = placeItem({ ...it, angle: 37 });
+      const mine = turnedFootprint(flat.footprint, b.x + b.w / 2, b.z + b.d / 2, 37);
+      for (let i = 0; i < 4; i++) {
+        expect(Math.abs(mine[i][0] - turned.footprint[i][0])).toBeLessThanOrEqual(1);
+        expect(Math.abs(mine[i][1] - turned.footprint[i][1])).toBeLessThanOrEqual(1);
+      }
+    }
+  });
+  it('cancelTurn keeps the gesture at the start angle; moves are ignored and the release turns nothing', () => {
+    const at = (x: number, z: number) => ({ pointerId: 1, sx: 0, sy: 0, room: { x, z } });
+    const g = moveTurn(pressTurn('a', { x: 0, z: 0 }, 20, at(100, 0)), at(60, -80), false)!;
+    const c = cancelTurn(g)!;
+    expect(c.angle).toBe(20);
+    expect(moveTurn(c, at(0, -100), false)).toBe(c);
+    expect(releaseTurn(c, 1)).toBeNull();
+    expect(cancelTurn(null)).toBeNull();
+  });
+  it('[ and ] turn by 1° (Shift 15°); cancelPress is true only with a gesture', () => {
+    expect(bracketTurn(']', false)).toBe(1);
+    expect(bracketTurn('[', true)).toBe(-15);
+    expect(bracketTurn('r', false)).toBeNull();
+    expect(cancelPress(null)).toBe(false);
+    expect(
+      cancelPress(
+        pressTurn('a', { x: 0, z: 0 }, 0, { pointerId: 1, sx: 0, sy: 0, room: { x: 1, z: 0 } }),
+      ),
+    ).toBe(true);
+  });
+  it('setRotation from the handle is one undo step named "Turn …"; the piece turns about its centre', () => {
+    let p = newProject('Turn');
+    p = { ...p, items: [makeItem(p, t('base-door'))] };
+    st().openProject(p);
+    const id = p.items[0].id;
+    const before = placeItem(st().project!.items[0]).bounds;
+    expect(st().setRotation(id, 37)).toBeNull();
+    const it = st().project!.items[0];
+    expect(rotationOf(it)).toBe(37);
+    const after = placeItem(it).bounds;
+    expect(Math.abs(after.x + after.w / 2 - (before.x + before.w / 2))).toBeLessThanOrEqual(1);
+    expect(Math.abs(after.z + after.d / 2 - (before.z + before.d / 2))).toBeLessThanOrEqual(1);
+    expect(st().projectPastNames.at(-1)).toMatch(/^Turn/);
+    expect(describeChange(p, st().project!)).toMatch(/^Turn/);
+    st().undoProject();
+    expect(rotationOf(st().project!.items[0])).toBe(0);
+    expect(st().setRotation(id, (rotationOf(st().project!.items[0]) + 359) % 360)).toBeNull();
+    expect(rotationOf(st().project!.items[0])).toBe(359);
+  });
+});

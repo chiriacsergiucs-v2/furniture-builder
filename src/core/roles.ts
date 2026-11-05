@@ -1,5 +1,5 @@
 /**
- * Part roles a board or an edge band can be put on (ADR-163, ADR-168), and the generated part roles each covers.
+ * Part roles a board or an edge band can be put on (ADR-163, ADR-188), and the generated part roles each covers.
  * Pure data: the Material dialog, `applyMaterial` and `buildModel` (role bands) read it.
  */
 import type { PanelRole } from './types';

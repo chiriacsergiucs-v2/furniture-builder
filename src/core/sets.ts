@@ -12,8 +12,12 @@ import {
   placedBounds,
   pruneGroups,
   pruneRunExtras,
+  requestKey,
   type Project,
   type ProjectItem,
+  type RunHandle,
+  type RunRequest,
+  type RunSink,
 } from './project';
 import { evaluateVariables, readTarget, writeTarget } from './variables';
 import type { Design } from './types';
@@ -94,13 +98,21 @@ export function updateSet(
   return next;
 }
 
-/** Remove a set and its pieces. */
+/** Remove a set and its pieces; its run requests, run handles and sinks go with them (ADR-175). */
 export function removeSet(project: Project, id: string): Project {
   const sets = (project.variableSets ?? []).filter((s) => s.id !== id);
+  const items = project.items.filter((i) => i.set?.id !== id);
+  const ids = new Set(items.map((i) => i.id));
+  const runRequests = project.runRequests
+    ?.map((r) =>
+      r.from.every((x) => ids.has(x)) ? r : { ...r, from: r.from.filter((x) => ids.has(x)) },
+    )
+    .filter((r) => r.from.length);
   return pruneRunExtras(
     pruneGroups({
       ...project,
-      items: project.items.filter((i) => i.set?.id !== id),
+      items,
+      ...(runRequests ? { runRequests } : {}),
       ...(sets.length ? { variableSets: sets } : { variableSets: undefined }),
     }),
   );
@@ -108,10 +120,19 @@ export function removeSet(project: Project, id: string): Project {
 
 /** A duplicate of `src` for `set`: new ids, the original's design, placed at the set's origin. */
 function duplicateFor(src: ProjectItem, set: VariableSet): ProjectItem {
-  const { locked: _l, sizeLocked: _s, linkId: _k, ...rest } = structuredClone(src);
+  const {
+    locked: _l,
+    sizeLocked: _s,
+    linkId: _k,
+    turnLocked: _t,
+    sizeLocks: _a,
+    ...rest
+  } = structuredClone(src);
   void _l;
   void _s;
   void _k;
+  void _t;
+  void _a;
   return {
     ...rest,
     id: newId(),
@@ -165,7 +186,8 @@ export function setMembers(project: Project): Set<string> {
 /**
  * Keep every complete set's duplicates in step with set 1: one duplicate per member piece (`setMembers`), its
  * design, bindings and template reference the original's (one way, ADR-167: a duplicate is edited through its
- * original); a duplicate whose original is gone or left the members goes. An incomplete set keeps what it has.
+ * original); a duplicate whose original is gone or left the members goes. Set 1's run requests, run handles and sinks
+ * are copied onto the duplicates the same way (ADR-175, `syncRunExtras`). An incomplete set keeps what it has.
  * The same project when nothing changes; every commit applies it.
  */
 export function syncSets(project: Project): Project {
@@ -217,7 +239,7 @@ export function syncSets(project: Project): Project {
       changed = true;
     }
   }
-  if (!changed) return project;
+  if (!changed) return syncRunExtras(project, project, members);
   // A duplicate placed on a piece follows that piece's duplicate in its set, or stands free at its position.
   const dupOf = new Map<string, string>();
   for (const i of items) if (i.set) dupOf.set(`${i.set.id}:${i.set.of}`, i.id);
@@ -252,7 +274,208 @@ export function syncSets(project: Project): Project {
         ),
       ]
     : project.groups;
-  return { ...project, items: placed, ...(groups ? { groups } : {}) };
+  // A duplicate connected like its original: the set-1 connection is copied to each set's duplicates (ADR-168).
+  const connections = project.connections?.length
+    ? [
+        ...project.connections,
+        ...sets.flatMap((set) =>
+          project
+            .connections!.map((c) => ({
+              id: `${c.id}:${set.id}`,
+              itemIds: c.itemIds.map((x) => dupOf.get(`${set.id}:${x}`)) as [string, string],
+            }))
+            .filter(
+              (c) =>
+                c.itemIds[0] &&
+                c.itemIds[1] &&
+                !project.connections!.some(
+                  (o) =>
+                    o.id === c.id ||
+                    (o.itemIds.includes(c.itemIds[0]) && o.itemIds.includes(c.itemIds[1])),
+                ),
+            ),
+        ),
+      ]
+    : project.connections;
+  return syncRunExtras(
+    project,
+    {
+      ...project,
+      items: placed,
+      ...(groups ? { groups } : {}),
+      ...(connections ? { connections } : {}),
+    },
+    members,
+  );
+}
+
+/**
+ * Bring a list of set copies in step with the copies set 1 asks for (ADR-175). `wanted` holds, per set, the copies
+ * its set-1 entries map to; `copyIn` names the set an entry is a copy of, undefined for an entry the user made. A copy
+ * that matches a wanted one by `key` takes its content and keeps its id; one that matches none goes; a wanted copy
+ * with no match is added (`fresh`) in the sets of `addTo` only. The same list when nothing changes.
+ */
+function syncCopies<T>(
+  list: T[] | undefined,
+  copyIn: (e: T) => string | undefined,
+  wanted: Map<string, T[]>,
+  addTo: Set<string>,
+  key: (e: T) => string,
+  adopt: (want: T, have: T) => T,
+  fresh: (want: T) => T,
+): T[] | undefined {
+  const queue = new Map<string, T[]>();
+  for (const [s, ws] of wanted)
+    for (const w of ws) {
+      const k = `${s}\n${key(w)}`;
+      queue.set(k, [...(queue.get(k) ?? []), w]);
+    }
+  const matched = new Set<T>();
+  const out: T[] = [];
+  let changed = false;
+  for (const e of list ?? []) {
+    const s = copyIn(e);
+    if (s === undefined) {
+      out.push(e);
+      continue;
+    }
+    const w = queue.get(`${s}\n${key(e)}`)?.shift();
+    if (!w) {
+      changed = true;
+      continue;
+    }
+    matched.add(w);
+    const next = adopt(w, e);
+    if (JSON.stringify(next) === JSON.stringify(e)) out.push(e);
+    else {
+      out.push(next);
+      changed = true;
+    }
+  }
+  for (const [s, ws] of wanted) {
+    if (!addTo.has(s)) continue;
+    for (const w of ws)
+      if (!matched.has(w)) {
+        out.push(fresh(w));
+        changed = true;
+      }
+  }
+  if (!changed) return list;
+  return out.length || list ? out : undefined;
+}
+
+/**
+ * Run requests, run handles and sinks of set 1 copied onto each set's duplicates and kept in step (ADR-175, one way
+ * like designs, ADR-167): a set-1 entry naming member pieces is copied with each member replaced by its duplicate in
+ * the set (pieces that are not members are dropped; an entry left with none is not copied). An entry is a set's copy
+ * when all its pieces are that set's duplicates; copies follow their set-1 entry or go when it does. An incomplete set
+ * gets no new copies. Entries on other pieces are never touched. `before` is the project before the duplicates were
+ * synced, so a copy on a duplicate that just went is still known as a copy. The same `next` when nothing changes.
+ */
+function syncRunExtras(before: Project, next: Project, members: Set<string>): Project {
+  if (!next.runRequests?.length && !next.runHandles?.length && !next.sinks?.length) return next;
+  const sets = next.variableSets ?? [];
+  const dupSet = new Map<string, string>();
+  for (const i of [...before.items, ...next.items]) if (i.set) dupSet.set(i.id, i.set.id);
+  const dupOf = new Map<string, string>();
+  for (const i of next.items) if (i.set) dupOf.set(`${i.set.id}:${i.set.of}`, i.id);
+  const addTo = new Set(sets.filter((s) => setComplete(next, s)).map((s) => s.id));
+  /** The set all of `ids` are duplicates in, if any. */
+  const copyIn = (ids: string[]): string | undefined => {
+    const s = ids.length ? dupSet.get(ids[0]) : undefined;
+    return s !== undefined && ids.every((x) => dupSet.get(x) === s) ? s : undefined;
+  };
+  /** Set-1 `ids` in set `s`: the members' duplicates, in order. */
+  const mapIds = (s: string, ids: string[]) =>
+    ids
+      .filter((x) => members.has(x))
+      .map((x) => dupOf.get(`${s}:${x}`))
+      .filter((x): x is string => !!x);
+  const wantedBy = <T>(
+    list: T[] | undefined,
+    ids: (e: T) => string[],
+    copy: (e: T, s: string) => T | null,
+  ) => {
+    const out = new Map<string, T[]>();
+    const sources = (list ?? []).filter(
+      (e) => copyIn(ids(e)) === undefined && ids(e).some((x) => members.has(x)),
+    );
+    for (const set of sets)
+      out.set(
+        set.id,
+        sources.map((e) => copy(e, set.id)).filter((e): e is T => !!e),
+      );
+    return out;
+  };
+
+  const reqWanted = wantedBy<RunRequest>(
+    next.runRequests,
+    (r) => r.from,
+    (r, s) => {
+      const from = mapIds(s, r.from);
+      return from.length ? { ...structuredClone(r), from } : null;
+    },
+  );
+  // One request per key: two set-1 requests that map to the same pieces give one copy.
+  for (const [s, rs] of reqWanted)
+    reqWanted.set(
+      s,
+      rs.filter((r, n) => rs.findIndex((o) => requestKey(o) === requestKey(r)) === n),
+    );
+  const runRequests = syncCopies<RunRequest>(
+    next.runRequests,
+    (r) => copyIn(r.from),
+    reqWanted,
+    addTo,
+    requestKey,
+    (w) => w,
+    (w) => w,
+  );
+
+  const runHandles = syncCopies<RunHandle>(
+    next.runHandles,
+    (h) => copyIn(h.from),
+    wantedBy<RunHandle>(
+      next.runHandles,
+      (h) => h.from,
+      (h, s) => {
+        const from = mapIds(s, h.from);
+        if (!from.length) return null;
+        const c = structuredClone(h);
+        return { ...c, from, ...(c.own ? { own: mapIds(s, c.own) } : {}) };
+      },
+    ),
+    addTo,
+    (h) => h.from.join(','),
+    (w, have) => ({ ...w, id: have.id }),
+    (w) => ({ ...w, id: newId() }),
+  );
+
+  const sinks = syncCopies<RunSink>(
+    next.sinks,
+    (sk) => copyIn([sk.baseId]),
+    wantedBy<RunSink>(
+      next.sinks,
+      (sk) => [sk.baseId],
+      (sk, s) => {
+        const [baseId] = mapIds(s, [sk.baseId]);
+        return baseId ? { ...sk, baseId } : null;
+      },
+    ),
+    addTo,
+    (sk) => sk.baseId,
+    (w, have) => ({ ...w, id: have.id }),
+    (w) => ({ ...w, id: newId() }),
+  );
+
+  if (runRequests === next.runRequests && runHandles === next.runHandles && sinks === next.sinks)
+    return next;
+  return {
+    ...next,
+    ...(runRequests ? { runRequests } : {}),
+    ...(runHandles ? { runHandles } : {}),
+    ...(sinks ? { sinks } : {}),
+  };
 }
 
 /**
@@ -321,6 +544,13 @@ export function projectFromSet(project: Project, setId: string, now = new Date()
     variables,
     ...(project.groups
       ? { groups: project.groups.map((g) => ({ ...g, id: newId(), itemIds: keep(g.itemIds) })) }
+      : {}),
+    ...(project.connections
+      ? {
+          connections: project.connections
+            .map((c) => ({ id: newId(), itemIds: keep(c.itemIds) as [string, string] }))
+            .filter((c) => c.itemIds.length === 2),
+        }
       : {}),
     ...(project.runRequests
       ? {
