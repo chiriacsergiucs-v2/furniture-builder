@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { t } from '../core/i18n';
-import { setWallFinish, wallFinish, type Room } from '../core/room';
+import { wallFinish, type Room, type WallFinish } from '../core/room';
 import { pictureRect, rectLabel } from '../core/wallPicture';
 import { importImage, useImageUrls } from '../persist/images';
 import { Select } from './controls';
 import { Icon } from './icons';
 import { StraightenPhoto } from './StraightenPhoto';
+import { applyWallFinish } from './wallFinishTarget';
+import { useUi } from './shell/uiStore';
 
 /** Starting paint colour for a wall: the grey the 3D view shows walls in. */
 const WALL_GREY = '#c9cdc8';
@@ -18,11 +20,11 @@ const WALL_GREY = '#c9cdc8';
 export function WallBackground({
   room,
   wall,
-  setRoom,
+  projectId,
 }: {
   room: Room;
   wall: number;
-  setRoom: (r: Room) => void;
+  projectId: string;
 }) {
   const f = wallFinish(room, wall);
   const img = f?.image;
@@ -33,15 +35,35 @@ export function WallBackground({
   // Picture chosen but none added yet: the wall keeps what it had until a picture arrives.
   const [wantPicture, setWantPicture] = useState(false);
   const [straightening, setStraightening] = useState(false);
+  const operation = useRef(0);
+  useEffect(
+    () => () => {
+      operation.current++;
+    },
+    [],
+  );
   const name = t('Wall {n}', { n: wall + 1 });
   const kind = img || wantPicture ? 'picture' : f ? 'colour' : 'none';
-  const set = (next: Parameters<typeof setWallFinish>[2]) =>
-    setRoom(setWallFinish(room, wall, next));
+  const stale = () =>
+    useUi.getState().setNotice({
+      ok: false,
+      text: t('The prepared picture was not applied because its wall or background changed.'),
+    });
+  const set = (next: Omit<WallFinish, 'wall'> | undefined) => {
+    const applied = applyWallFinish(projectId, room, wall, next);
+    if (!applied) stale();
+    return applied;
+  };
   const pick = async (file: File | undefined) => {
     if (!file) return;
+    const token = ++operation.current;
     setBusy(true);
     setProblem(null);
     const r = await importImage(file);
+    if (token !== operation.current) {
+      stale();
+      return;
+    }
     setBusy(false);
     if (!r.ok) {
       setProblem(`${r.problem} ${t('{name} keeps its current background.', { name })}`);
@@ -61,6 +83,8 @@ export function WallBackground({
           { value: 'picture', label: t('Picture') },
         ]}
         onChange={(v) => {
+          operation.current++;
+          setBusy(false);
           setProblem(null);
           setWantPicture(v === 'picture');
           if (v === 'none') set(undefined);
@@ -74,7 +98,10 @@ export function WallBackground({
             type="color"
             aria-label={t('{name} colour', { name })}
             value={f!.colour}
-            onChange={(e) => set({ colour: e.target.value })}
+            onChange={(e) => {
+              operation.current++;
+              set({ colour: e.target.value });
+            }}
           />
         </label>
       )}

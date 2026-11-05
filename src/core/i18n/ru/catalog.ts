@@ -123,8 +123,6 @@ export const ru_catalog = {
     'Новый шаблон на этом устройстве, в разделах «Каталог › Шаблоны» и «Добавить изделие». Это изделие остаётся связанным с ним.',
   Save: 'Сохранить',
   'Name of the project template': 'Название шаблона проекта',
-  'Include the room (walls, doors, windows) in the template? Without it, the pieces keep their places relative to each other.':
-    'Включить комнату (стены, двери, окна) в шаблон? Без неё изделия сохраняют расположение относительно друг друга.',
   'Include the room': 'Включить комнату',
   'Saved as project template “{name}”. Use it from Projects → Create from a project template.':
     'Сохранено как шаблон проекта «{name}». Используйте его в разделе «Проекты → Создать из шаблона проекта».',

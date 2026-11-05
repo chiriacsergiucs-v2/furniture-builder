@@ -1914,6 +1914,13 @@ td.note {
   color: var(--ink-2);
   font-size: var(--fs-sm);
 }
+.parts-sizes .size-share-error {
+  grid-column: 1 / -1;
+  order: 1;
+}
+.parts-sizes input[aria-invalid='true'] {
+  border-color: var(--error);
+}
 .inline-diags {
   list-style: none;
   margin: 0;

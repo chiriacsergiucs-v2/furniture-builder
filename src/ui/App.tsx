@@ -43,6 +43,7 @@ import { setTheme, useTheme } from './useTheme';
 import { setLook, useLook } from './useLook';
 import { RenderDialog } from './RenderDialog';
 import { MoreMenu } from './shell/MoreMenu';
+import { editorShortcutAllowed } from './editorShortcuts';
 import { ProjectsPage } from './shell/ProjectsPage';
 import { useMediaQuery } from './useMediaQuery';
 import { MODE_LABEL, MODES, takeKeepSheetClosed, useUi } from './shell/uiStore';
@@ -427,8 +428,8 @@ export function App() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (!editorShortcutAllowed(e, page)) return;
       const t = e.target as HTMLElement;
-      if (t.closest('input, textarea, select')) return;
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
         e.preventDefault();
         if (e.shiftKey) redo();

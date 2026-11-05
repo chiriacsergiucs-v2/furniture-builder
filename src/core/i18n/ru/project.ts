@@ -1,5 +1,23 @@
 /** Russian text for project (ADR-153). Key: the English text; value: the Russian text. */
 export const ru_project = {
+  Retry: 'Повторить',
+  'The project template could not be exported.': 'Не удалось экспортировать шаблон проекта.',
+  'The project template could not be deleted from this device.':
+    'Не удалось удалить шаблон проекта с этого устройства.',
+  'The project could not be created on this device.':
+    'Не удалось создать проект на этом устройстве.',
+  'The project template could not be renamed on this device.':
+    'Не удалось переименовать шаблон проекта на этом устройстве.',
+  'Versions could not be read from this device.': 'Не удалось прочитать версии на этом устройстве.',
+  'The version could not be saved on this device.':
+    'Не удалось сохранить версию на этом устройстве.',
+  'The version could not be restored.': 'Не удалось восстановить версию.',
+  'The version could not be deleted from this device.':
+    'Не удалось удалить версию с этого устройства.',
+  'The project changed while saving the version. Try restoring again.':
+    'Проект изменился во время сохранения версии. Повторите восстановление.',
+  'The prepared picture was not applied because its wall or background changed.':
+    'Подготовленное изображение не применено: стена или её фон изменились.',
   'front faces you': 'фасад к вам',
   'front faces right': 'фасад вправо',
   'front faces the back wall': 'фасад к задней стене',
