@@ -235,19 +235,6 @@ export const data_research2: Record<string, string> = {
     'Суждение: часть строки MVP об отмене; транзакционная отмена/повтор относится к высоко ценимым (ранг 9).',
   'Listed in the MVP undo row; expected wherever snapping exists.':
     'Указано в строке MVP об отмене; ожидается везде, где есть привязка.',
-  'Connected items stay independently selectable':
-    'Соединённые изделия остаются выбираемыми по отдельности',
-  'After connection, either item can still be selected on its own and shows its existing parametric controls; selecting the ensemble/group exposes common operations.':
-    'После соединения любое изделие по-прежнему можно выбрать отдельно, и оно показывает свои параметрические настройки; выбор ансамбля/группы открывает общие операции.',
-  Selection: 'Выделение',
-  'N84 (ADR-088), N95 (ADR-097): each project piece stays selectable with its own controls; a grouped piece is reached by a second tap; N171 (ADR-168): a connected piece is selected and edited on its own, and moved alone with Alt.':
-    'N84 (ADR-088), N95 (ADR-097): каждое изделие проекта остаётся выбираемым со своими настройками; изделие в группе выбирается вторым касанием; N171 (ADR-168): соединённое изделие выбирается и правится само по себе, а с Alt двигается отдельно.',
-  'MVP table: "Selection/groups" (select one item).':
-    'Таблица MVP: «Выделение/группы» (выбор одного изделия).',
-  'Judgement: reusable/configurable objects are most appreciated (line 65) and multi-select/groups is rated High (rank 8).':
-    'Суждение: многократно используемые/настраиваемые объекты ценятся больше всего (строка 65), а множественный выбор/группы оценены высоко (ранг 8).',
-  'Keeps item configurability after connection; matches the grouping/selection requests.':
-    'Сохраняет настраиваемость изделия после соединения; отвечает запросам о группировке и выделении.',
   'Connection hierarchy / assembly graph': 'Иерархия соединений / граф сборки',
   'An internal graph of instances and their connections (Roomle uses a docking tree with parent/child relations) that the editor, validation and BOM read from.':
     'Внутренний граф экземпляров и их соединений (Roomle использует дерево стыковки с отношениями родитель/потомок), из которого читают редактор, проверка и спецификация.',
@@ -298,54 +285,10 @@ export const data_research2: Record<string, string> = {
     'Суждение: нет данных, и статья предостерегает от автоматизации, которую пользователь не может отменить, — оценка не унаследована от «Понятных предупреждений» (высокая).',
   'One-line mention; risky without trustworthy rules and the paper warns against uncontrollable automation.':
     'Упомянуто одной строкой; рискованно без надёжных правил, и статья предостерегает от неуправляемой автоматизации.',
-  'Direct manipulation in 2D/3D': 'Прямое управление в 2D/3D',
-  'User can move and rotate instances in 2D and 3D by dragging, with picking and transform handles, and also enter exact numeric transforms.':
-    'Пользователь может перемещать и поворачивать экземпляры в 2D и 3D перетаскиванием, с выбором объектов и манипуляторами преобразования, а также вводить точные числовые преобразования.',
-  Transforms: 'Преобразования',
-  'Move and rotate in both views.': 'Перемещение и поворот в обоих видах.',
-  'Exact numeric transforms (see Precise numeric manipulation).':
-    'Точные числовые преобразования (см. «Точное числовое управление»).',
-  'Transform = position, rotation (quaternion), optional scale.':
-    'Преобразование = положение, поворот (кватернион), необязательный масштаб.',
-  'This app places project pieces in whole mm with quarter turns about the vertical axis only (ADR-022).':
-    'Это приложение размещает изделия проекта в целых мм с поворотами на четверть оборота только вокруг вертикальной оси (ADR-022).',
-  'User can move and rotate instances in 2D/3D and enter exact numeric transforms.':
-    'Пользователь может перемещать и поворачивать экземпляры в 2D/3D и вводить точные числовые преобразования.',
-  'N60, N64: drag and turn pieces on the plan; N91 (ADR-093): move and turn them in the 3D view; N123 (ADR-122): drag a wall unit’s height in 3D; N172 (ADR-169): turn to any whole degree by dragging the handle on the plan.':
-    'N60, N64: перетаскивание и поворот изделий на плане; N91 (ADR-093): перемещение и поворот в 3D-виде; N123 (ADR-122): перетаскивание высоты навесного модуля в 3D; N172 (ADR-169): поворот на любой целый градус перетаскиванием ручки на плане.',
-  'MVP table: "Direct manipulation".': 'Таблица MVP: «Прямое управление».',
-  'Praise: SketchUp is valued for direct modelling (line 43); rapid placement is most appreciated (line 65).':
-    'Похвала: SketchUp ценят за прямое моделирование (строка 43); быстрое размещение ценится больше всего (строка 65).',
-  'MVP row; move/rotate in 2D/3D is a category norm.':
-    'Строка MVP; перемещение/поворот в 2D/3D — норма для этой категории.',
-  'Transform handles (TransformControls or custom gizmos)':
-    'Манипуляторы преобразования (TransformControls или собственные гизмо)',
-  'Three.js TransformControls as a baseline; furniture-specific constrained gizmos will probably need custom UX.':
-    'TransformControls из Three.js как основа; для мебельных гизмо с ограничениями, вероятно, понадобится собственный UX.',
-  'Handles are one way of moving and rotating pieces.':
-    'Манипуляторы — один из способов перемещать и поворачивать изделия.',
-  'Judgement: dragging plus numeric entry meet the MVP row; furniture-specific handles "will probably need custom UX" (line 443).':
-    'Суждение: перетаскивание и числовой ввод закрывают строку MVP; мебельным манипуляторам «вероятно, понадобится собственный UX» (строка 443).',
-  'Judgement: direct modelling is valued (line 43), but nothing is said about handles themselves.':
-    'Суждение: прямое моделирование ценится (строка 43), но о самих манипуляторах ничего не сказано.',
-  'Baseline control exists; the paper expects furniture-specific handles to need custom UX.':
-    'Базовый элемент управления есть; статья ожидает, что мебельным манипуляторам понадобится собственный UX.',
   'Lock/pin modules and preserve manual overrides':
     'Блокировка/закрепление модулей и сохранение ручных правок',
-  'Lock an instance\'s position, rotation or named parameters; locks and manual overrides outrank soft rules so the application never keeps "correcting" intentional placement. Auto-fit respects locked modules; snap ranking considers user locks.':
-    'Блокировать положение, поворот или именованные параметры экземпляра; блокировки и ручные правки важнее мягких правил, чтобы приложение не «исправляло» намеренное размещение снова и снова. Автоподгонка учитывает заблокированные модули; ранжирование привязок учитывает блокировки пользователя.',
-  Locks: 'Блокировки',
-  'Smart behaviour becomes frustrating when it repeatedly overrides intentional placement.':
-    'Умное поведение раздражает, когда оно раз за разом отменяет намеренное размещение.',
-  'locked.position, locked.rotation, locked.parameters on the instance.':
-    'locked.position, locked.rotation, locked.parameters в экземпляре.',
-  'Locks outrank soft constraints.': 'Блокировки важнее мягких ограничений.',
-  'Auto-fit respects locked modules.': 'Автоподгонка учитывает заблокированные модули.',
-  'Medium; precision feedback supports it': 'Средняя; её поддерживают отзывы о точности',
   'Intelligent compatibility and automatic adjustments (phase 2)':
     'Умная совместимость и автоматические подстройки (этап 2)',
-  'N93 (ADR-095): Lock a piece; drags, turns, the gap tool and repairs leave it alone; N123 (ADR-122): Lock size; N174 (ADR-171): Lock turn and each size one by one; locks outrank variables, Replace, linked copies and project settings.':
-    'N93 (ADR-095): «Заблокировать» изделие; перетаскивания, повороты, инструмент зазоров и исправления его не трогают; N123 (ADR-122): блокировка размера; N174 (ADR-171): блокировка поворота и каждого размера по отдельности; блокировки важнее переменных, замены, связанных копий и настроек проекта.',
   'Local dependency update on parameter change':
     'Локальное обновление зависимостей при изменении параметра',
   'parameter change → connector frames recalculated → connected constraints re-solved → collisions/clearances rechecked → derived countertop/fillers regenerated → BOM refreshed.':
@@ -380,21 +323,7 @@ export const data_research2: Record<string, string> = {
   'Medium; one IKEA user explicitly found it low-value':
     'Средняя; один пользователь IKEA прямо назвал это малополезным',
   'Transactional undo/redo': 'Транзакционная отмена/повтор',
-  'Add, delete, move, rotate, snap, unsnap, parameter change and group operations can be reverted; a compound operation (a snap that moves an item, connects it and regenerates a countertop) undoes as one user action.':
-    'Добавление, удаление, перемещение, поворот, привязку, отсоединение, изменение параметра и операции с группами можно отменить; составная операция (привязка, которая сдвигает изделие, соединяет его и пересоздаёт столешницу) отменяется как одно действие пользователя.',
   Undo: 'Отмена',
-  'Command/transaction log: one semantic operation touching instances, connections, generated parts and BOM stays one undo step.':
-    'Журнал команд/транзакций: одна смысловая операция, затрагивающая экземпляры, соединения, генерируемые детали и спецификацию, остаётся одним шагом отмены.',
-  'Complex configurators continue to spend engineering effort on correct undo grouping (the cited source is the Roomle changelog, ref-54).':
-    'Сложные конфигураторы продолжают тратить инженерные усилия на правильную группировку отмены (цитируемый источник — журнал изменений Roomle, ref-54).',
-  'This app: undo/redo in the piece editor (F15) and for every project change, one action = one step (ADR-051, N46).':
-    'Это приложение: отмена/повтор в редакторе изделия (F15) и для каждого изменения проекта, одно действие = один шаг (ADR-051, N46).',
-  'High; complex editors continuously refine undo semantics':
-    'Высокая; сложные редакторы постоянно дорабатывают семантику отмены',
-  'Add, delete, move, rotate, snap, unsnap, parameter change and group operations can be reverted. Compound operations undo atomically.':
-    'Добавление, удаление, перемещение, поворот, привязку, отсоединение, изменение параметра и операции с группами можно отменить. Составные операции отменяются атомарно.',
-  'N46 (ADR-051): undo/redo for project changes, one step per drag (N60); N124 (ADR-123): named steps, compound actions as one step, Edit history; N171 (ADR-168): a snap connects pieces and a drag apart disconnects them, each one undo step.':
-    'N46 (ADR-051): отмена/повтор для изменений проекта, один шаг на перетаскивание (N60); N124 (ADR-123): именованные шаги, составные действия как один шаг, история правок; N171 (ADR-168): примагничивание соединяет изделия, а перетаскивание врозь разъединяет их, каждое — один шаг отмены.',
   'Command/transaction log': 'Журнал команд/транзакций',
   'Undo/redo implemented as a command/transaction log.':
     'Отмена/повтор реализованы как журнал команд/транзакций.',
@@ -402,21 +331,6 @@ export const data_research2: Record<string, string> = {
   "The stack table's answer to atomic undo (ranked #9).":
     'Ответ таблицы стека на атомарную отмену (ранг 9).',
   'Versioned save/reload of entire ensembles': 'Сохранение и загрузка целых ансамблей с версиями',
-  'Saving and reopening restores template versions, parameter overrides, transformations, groups and connections — not merely a flattened mesh. Save reliability is a product feature, not plumbing.':
-    'Сохранение и повторное открытие восстанавливает версии шаблонов, переопределения параметров, преобразования, группы и соединения — а не просто сплющенную сетку. Надёжность сохранения — функция продукта, а не внутренняя инфраструктура.',
-  Saving: 'Сохранение',
-  'Version-loss complaints in planning software (Planner 5D).':
-    'Жалобы на потерю версий в программах планировки (Planner 5D).',
-  'Versioned JSON/domain records plus separate asset references allow migrations and keep template identity.':
-    'Версионированные записи JSON/домена и отдельные ссылки на ресурсы позволяют выполнять миграции и сохраняют идентичность шаблонов.',
-  'This app: autosaved local library and projects in IndexedDB (F14, ADR-012).':
-    'Это приложение: автосохраняемая локальная библиотека и проекты в IndexedDB (F14, ADR-012).',
-  'High; version-loss frustration documented':
-    'Высокая; раздражение от потери версий задокументировано',
-  'Saving and reopening restores template versions, parameter overrides, transformations, groups and connections.':
-    'Сохранение и повторное открытие восстанавливает версии шаблонов, переопределения параметров, преобразования, группы и соединения.',
-  'N48, F14: projects saved and reopened with every piece and position; N94: template revisions kept per piece; N171 (ADR-168): connections saved with the project (schemaVersion 18).':
-    'N48, F14: проекты сохраняются и открываются со всеми изделиями и положениями; N94: ревизии шаблонов хранятся для каждого изделия; N171 (ADR-168): соединения сохраняются вместе с проектом (schemaVersion 18).',
   'Generated shared components (ensemble-derived parts)':
     'Генерируемые общие компоненты (детали, производные от ансамбля)',
   'Countertops, worktops, plinths/toe-kicks, fillers, end panels, crown moulding and shared structural elements derive from the modules they span instead of behaving like manually placed products. They remember their source instances and generator version and regenerate on change, keeping permitted user overrides.':
@@ -463,13 +377,8 @@ export const data_research2: Record<string, string> = {
   'Keeps edits fast and side-effect free; architecture guidance.':
     'Сохраняет правки быстрыми и без побочных эффектов; рекомендация по архитектуре.',
   'Live price/cost estimate': 'Оценка цены/стоимости в реальном времени',
-  'A running price or cost estimate for the ensemble (Roomle pricing, Cyncly live pricing data, VividWorks pricing); costing is part of phase three.':
-    'Текущая оценка цены или стоимости ансамбля (цены Roomle, актуальные цены Cyncly, цены VividWorks); расчёт стоимости — часть этапа три.',
-  'Medium if data exists': 'Средняя, если есть данные',
   'Manufacturing and advanced configuration (phase 3)':
     'Производство и расширенная настройка (этап 3)',
-  "N57 (ADR-062): estimate from the user's own price list; N162 (ADR-161): the bundled seller's prices with their date; N175 (ADR-172): a running estimate in the editor and a Seller prices workflow that converts a new export. No live supplier feed (ADR-063 Deferred).":
-    'N57 (ADR-062): оценка по собственному прайс-листу пользователя; N162 (ADR-161): цены встроенного продавца с их датой; N175 (ADR-172): текущая оценка в редакторе и рабочий процесс «Цены продавца», преобразующий новый экспорт. Живой канал поставщика не построен (ADR-063 отложен).',
   'Quotations / quoting': 'Коммерческие предложения',
   'Turn a configuration into a quotation (Homestyler quotations, Cyncly quoting); the same configuration can feed pricing, quotations, BOMs and manufacturing.':
     'Превращать конфигурацию в коммерческое предложение (предложения Homestyler, расчёт предложений Cyncly); одна и та же конфигурация может питать цены, предложения, спецификации и производство.',
@@ -529,11 +438,6 @@ export const data_research2: Record<string, string> = {
   'Professional production detail (Hexagon suite) listed in phase three.':
     'Профессиональная производственная деталь (пакет Hexagon), указанная в этапе три.',
   'Step-by-step assembly sequence': 'Пошаговая последовательность сборки',
-  'A correct step-by-step assembly sequence needs explicit knowledge of assembly relationships — joints, hardware and ordering — that geometry alone does not give. VividWorks provides assembly information.':
-    'Правильной пошаговой последовательности сборки нужно явное знание сборочных связей — соединений, фурнитуры и порядка, — которого одна геометрия не даёт. VividWorks предоставляет информацию о сборке.',
-  'Assembly steps': 'Шаги сборки',
-  'High for DIY': 'Высокая для самостоятельной сборки',
-  'Medium-low': 'Средняя–низкая',
   'Kitchen/wardrobe/desk as presets over one engine': 'Кухня/шкаф/стол как пресеты одного движка',
   'Do not encode "Kitchen Mode", "Wardrobe Mode" and "Desk Mode" as separate applications; make them presets or specialised workflows over one composition engine.':
     'Не делать «Режим кухни», «Режим шкафа» и «Режим стола» отдельными приложениями; сделать их пресетами или специализированными рабочими процессами над одним движком компоновки.',
@@ -565,30 +469,7 @@ export const data_research2: Record<string, string> = {
     'Профессиональные инструменты на это опираются; нужны онлайн-потоки данных (здесь противоречит ADR-002).',
   'Deterministic generation of alternative valid layouts':
     'Детерминированная генерация альтернативных допустимых компоновок',
-  'Generate alternative valid layouts deterministically; phase four begins here before AI.':
-    'Детерминированно генерировать альтернативные допустимые компоновки; с этого начинается этап четыре, ещё до ИИ.',
-  'Deterministic layout': 'Детерминированная компоновка',
   'Smart layout and AI assistance (phase 4)': 'Умная компоновка и помощь ИИ (этап 4)',
-  'N34 (ADR-045): suggested combinations kept only when buildModel() has no errors — per piece; N101, N102 (ADR-103, ADR-104): four suggested mixes for one wall run; N176 (ADR-173): four whole-room mixes over every wall of a drawn room, each checked as a project.':
-    'N34 (ADR-045): предложенные сочетания остаются, только если в buildModel() нет ошибок, — для каждого изделия; N101, N102 (ADR-103, ADR-104): четыре предложенных набора для одного ряда у стены; N176 (ADR-173): четыре набора на всю комнату по каждой стене начерченной комнаты, каждый проверен как проект.',
-  'Budget and style filters': 'Фильтры по бюджету и стилю',
-  'Filter generated layouts by budget and style (phase four), e.g. "keep it under €2,500".':
-    'Фильтровать сгенерированные компоновки по бюджету и стилю (этап четыре), например «уложиться в 2 500 €».',
-  'Filters on the generated alternatives.': 'Фильтры для сгенерированных альтернатив.',
-  'Phase 4: "budget/style filters" (line 491).': 'Этап 4: «фильтры по бюджету/стилю» (строка 491).',
-  'Parent: Deterministic generation of alternative valid layouts ("High", rank 26).':
-    'Родитель: Детерминированная генерация альтернативных допустимых компоновок («Высокая», ранг 26).',
-  'Phase-four item; budget filtering needs price data the paper ties to "if data exists".':
-    'Пункт этапа четыре; фильтру по бюджету нужны данные о ценах, которые статья связывает с условием «если есть данные».',
-  'Layout optimisation': 'Оптимизация компоновки',
-  'Optimisation of layouts, listed in phase four without further detail.':
-    'Оптимизация компоновок, указанная в этапе четыре без подробностей.',
-  'Ranking generated alternatives.': 'Ранжирование сгенерированных альтернатив.',
-  'Phase 4: "optimisation" (line 491).': 'Этап 4: «оптимизация» (строка 491).',
-  'Judgement: one word in the phase-4 list — not inherited from Deterministic alternatives (High).':
-    'Суждение: одно слово в списке этапа 4 — оценка не унаследована от «Детерминированных альтернатив» (высокая).',
-  'One word in the phase-four list with no detail.':
-    'Одно слово в списке этапа четыре без подробностей.',
   'AI layout generation': 'Генерация компоновки с помощью ИИ',
   'AI proposes candidate arrangements; the deterministic engine validates; the user accepts or edits. AI never overrides a hard compatibility rule. Coohom (AI kitchen auto-layout) and Planner 5D (AI-assisted placement) implement versions of it.':
     'ИИ предлагает варианты расстановки; детерминированный движок их проверяет; пользователь принимает или правит. ИИ никогда не нарушает жёсткое правило совместимости. Coohom (автокомпоновка кухни с ИИ) и Planner 5D (размещение с помощью ИИ) реализуют свои версии.',
@@ -650,15 +531,6 @@ export const data_research2: Record<string, string> = {
   'Relevant only if collaboration becomes a requirement.':
     'Имеет смысл, только если совместная работа станет требованием.',
   'Reusable ensemble templates': 'Многократно используемые шаблоны ансамблей',
-  "Save the selected ensemble as a reusable template storing item references, parameter defaults, relative transformations, connections, generated-component recipes and optional room-independent constraints — not a permanent copy of every item's geometry.":
-    'Сохранить выбранный ансамбль как многократно используемый шаблон, который хранит ссылки на изделия, значения параметров по умолчанию, относительные преобразования, соединения, рецепты генерируемых компонентов и необязательные ограничения, не зависящие от комнаты, — а не постоянную копию геометрии каждого изделия.',
-  Templates: 'Шаблоны',
-  'Medium-high; reusable component/configuration patterns':
-    'Средняя–высокая; шаблоны многократно используемых компонентов/конфигураций',
-  'N177 (ADR-174): an ordered step list per piece from the parts’ positions, with joint counts and hardware per step, lit in the exploded 3D view and printable; order from geometry as labelled guidance, no joint or fastener knowledge (ADR-010).':
-    'N177 (ADR-174): упорядоченный список шагов по каждому изделию из положения деталей, с числом соединений и фурнитурой на шаг, подсвечивается в разнесённом 3D-виде и печатается; порядок из геометрии как рекомендация, без знаний о соединениях и крепеже (ADR-010).',
-  'N55 (ADR-060): save a project as a reusable project template; N124 (ADR-123): insert one into a project; N173 (ADR-170): a template keeps the run-part recipe, connections, variables and bindings. Copies by choice (ADR-060), not item references.':
-    'N55 (ADR-060): сохранить проект как многократно используемый шаблон проекта; N124 (ADR-123): вставка шаблона в проект; N173 (ADR-170): шаблон хранит рецепт частей ряда, соединения, переменные и привязки. Копии по решению (ADR-060), а не ссылки на изделия.',
   'Dual priorities: price P1/P2, sheet optimisation and CAD/CNC export P2/P3':
     'Двойные приоритеты: цена P1/P2, оптимизация листов и экспорт CAD/ЧПУ P2/P3',
   'The paper keeps two priority bands for these rows; live price complexity is "Medium if data exists".':
@@ -677,25 +549,14 @@ export const data_research2: Record<string, string> = {
     'Трудозатраты: 2–3 месяца против «может сильно ошибаться»',
   'The first usable phase is sized at about two to three months for three engineers (XL overall), with the explicit warning that the estimate can be badly wrong and is not a commitment.':
     'Первый пригодный к использованию этап оценён примерно в два-три месяца для трёх инженеров (в целом XL) с прямым предупреждением, что оценка может сильно ошибаться и не является обязательством.',
-  'Value score vs priority label': 'Оценка ценности против метки приоритета',
-  'Read across the table (not stated by the paper): "Explainable warnings" scores 4.8 but is P1 while lower-scored rows 16, 17 and 19 are P0; "Lock/pin" is P1 although the architecture section calls locks outranking soft rules "essential for user trust". Value and priority are separate columns in the paper.':
-    'Вывод при сопоставлении таблицы (статья этого не утверждает): «Понятные предупреждения» набирают 4.8, но имеют P1, тогда как строки 16, 17 и 19 с меньшей оценкой — P0; «Блокировка/закрепление» — P1, хотя раздел об архитектуре называет блокировки, которые важнее мягких правил, «необходимыми для доверия пользователей». Ценность и приоритет — разные столбцы в статье.',
   'P0 features missing from the MVP table and phase plan':
     'Функции P0, отсутствующие в таблице MVP и плане этапов',
   'Read across the paper (not stated by it): room geometry (rank 16, P0, recommendation #14), edge/face/centre alignment (rank 17, P0), duplicate/mirror/rotate (rank 19, P0) and the assembly graph (rank 22, "P0 internal") are not in the MVP capability table, and none of them is named in the four phases. No phase is assigned to them here.':
     'Вывод при сопоставлении статьи (сама статья этого не утверждает): геометрия комнаты (ранг 16, P0, рекомендация №14), выравнивание по краю/грани/центру (ранг 17, P0), дублирование/зеркалирование/поворот (ранг 19, P0) и граф сборки (ранг 22, «P0, внутренняя») отсутствуют в таблице возможностей MVP, и ни одна из них не названа в четырёх этапах. Этап им здесь не назначается.',
-  '"High" evidence confidence resting on anecdotes':
-    '«Высокая» уверенность в данных, основанная на отдельных случаях',
-  'Read across the paper (not stated by it): several rows rate evidence "High" from community posts — rank 3 "real interference reports", rank 8 "explicit request also found", rank 10 "version-loss frustration documented" (its only citation, ref-55, is the r/planner5d forum) — while the paper calls these sources anecdotes, not statistically representative, and "low for prevalence".':
-    'Вывод при сопоставлении статьи (сама статья этого не утверждает): несколько строк оценивают данные как «Высокие» по сообщениям сообщества — ранг 3 «реальные сообщения о пересечениях», ранг 8 «также найден явный запрос», ранг 10 «раздражение от потери версий задокументировано» (его единственный источник, ref-55, — форум r/planner5d), — тогда как статья называет эти источники отдельными случаями, не статистически репрезентативными, и «низкими для оценки распространённости».',
   'Research vs ADR-002: AI, collaboration, live data':
     'Исследование против ADR-002: ИИ, совместная работа, актуальные данные',
   'AI layout, natural-language generation, real-time collaboration (Yjs), live pricing/inventory data and server-side processing need network services; ADR-002 keeps this app a static offline PWA with no backend, accounts, cloud or remote AI.':
     'Компоновке с ИИ, генерации на естественном языке, совместной работе в реальном времени (Yjs), актуальным данным о ценах/наличии и обработке на сервере нужны сетевые сервисы; ADR-002 оставляет это приложение статическим офлайн-PWA без сервера, учётных записей, облака или удалённого ИИ.',
-  'Research vs ADR-022: free rotation vs quarter turns':
-    'Исследование против ADR-022: свободный поворот против поворотов на четверть оборота',
-  "The paper's Transform uses a quaternion rotation; this app keeps every panel an axis-aligned box and rotates project pieces in quarter turns about the vertical axis only.":
-    'Transform в статье использует поворот кватернионом; это приложение держит каждую панель прямоугольным параллелепипедом, выровненным по осям, и поворачивает изделия проекта на четверть оборота только вокруг вертикальной оси.',
   'P1 internal': 'P1, внутренняя',
   'P2 internal': 'P2, внутренняя',
   'P3 internal': 'P3, внутренняя',

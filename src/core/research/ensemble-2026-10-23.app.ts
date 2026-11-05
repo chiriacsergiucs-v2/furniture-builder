@@ -5,39 +5,19 @@
  *
  * Statuses: In Progress — part of it is built, `missing` says what is not (user answer 2026-10-26: "In Progress +
  * what's missing"). Features not listed are Not Started. Built features (Verified, Implemented) are deleted from the
- * data (ADR-149). A status the user sets on the page wins over these.
+ * data (ADR-149, ADR-152, ADR-184). A status the user sets on the page wins over these.
  */
 import type { Implementation } from './types';
 
 type Status = [status: Implementation, evidence: string, missing?: string];
 
-export const APP_CHECKED = '2026-11-04';
+export const APP_CHECKED = '2026-11-05';
 
 export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
-  'transactional-undo': [
-    'verified',
-    'N46 (ADR-051): undo/redo for project changes, one step per drag (N60); N124 (ADR-123): named steps, compound actions as one step, Edit history; N171 (ADR-168): a snap connects pieces and a drag apart disconnects them, each one undo step.',
-  ],
   'generated-parts': [
     'in-progress',
     'N26, N49, N56, N70: run parts derived from the pieces they span.',
     'shared supports, sinks and handles as generated parts',
-  ],
-  'assembly-sequence': [
-    'verified',
-    'N177 (ADR-174): an ordered step list per piece from the parts’ positions, with joint counts and hardware per step, lit in the exploded 3D view and printable; order from geometry as labelled guidance, no joint or fastener knowledge (ADR-010).',
-  ],
-  'ensemble-templates': [
-    'verified',
-    'N55 (ADR-060): save a project as a reusable project template; N124 (ADR-123): insert one into a project; N173 (ADR-170): a template keeps the run-part recipe, connections, variables and bindings. Copies by choice (ADR-060), not item references.',
-  ],
-  'live-price': [
-    'verified',
-    "N57 (ADR-062): estimate from the user's own price list; N162 (ADR-161): the bundled seller's prices with their date; N175 (ADR-172): a running estimate in the editor and a Seller prices workflow that converts a new export. No live supplier feed (ADR-063 Deferred).",
-  ],
-  'independent-selection': [
-    'verified',
-    'N84 (ADR-088), N95 (ADR-097): each project piece stays selectable with its own controls; a grouped piece is reached by a second tap; N171 (ADR-168): a connected piece is selected and edited on its own, and moved alone with Alt.',
   ],
   'semantic-connectors': [
     'in-progress',
@@ -49,10 +29,6 @@ export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
     'N03, N02, F09: Fusion 360 script, SVG/PDF, CSV.',
     'DXF, STEP and CNC output',
   ],
-  'direct-manipulation': [
-    'verified',
-    'N60, N64: drag and turn pieces on the plan; N91 (ADR-093): move and turn them in the 3D view; N123 (ADR-122): drag a wall unit’s height in 3D; N172 (ADR-169): turn to any whole degree by dragging the handle on the plan.',
-  ],
   'composition-layer': [
     'in-progress',
     'N04: projects of independent pieces above the item editor.',
@@ -63,18 +39,10 @@ export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
     'N04, N53, N56: project with items, room and run parts; N95: saved groups; N94: template references with revisions.',
     'connections',
   ],
-  'versioned-save': [
-    'verified',
-    'N48, F14: projects saved and reopened with every piece and position; N94: template revisions kept per piece; N171 (ADR-168): connections saved with the project (schemaVersion 18).',
-  ],
   'propagation-pipeline': [
     'in-progress',
     'N56, N66: after a change, checks rerun and run parts regenerate.',
     'connector frames and constraints (no connectors yet)',
-  ],
-  'deterministic-alternatives': [
-    'verified',
-    'N34 (ADR-045): suggested combinations kept only when buildModel() has no errors — per piece; N101, N102 (ADR-103, ADR-104): four suggested mixes for one wall run; N176 (ADR-173): four whole-room mixes over every wall of a drawn room, each checked as a project.',
   ],
   'automated-fixes': [
     'in-progress',
@@ -85,10 +53,6 @@ export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
     'in-progress',
     'N19 (ADR-031): a piece placed on another follows it (a parent/child relation).',
     'connections between pieces beyond stacking, stored as a graph',
-  ],
-  'locks-overrides': [
-    'verified',
-    'N93 (ADR-095): Lock a piece; drags, turns, the gap tool and repairs leave it alone; N123 (ADR-122): Lock size; N174 (ADR-171): Lock turn and each size one by one; locks outrank variables, Replace, linked copies and project settings.',
   ],
   'no-silent-moves': [
     'in-progress',
@@ -142,15 +106,12 @@ export const ENSEMBLE_MERGES: Record<string, [target: string, reason: string]> =
   ],
   'connection-status': ['assembly-graph', "Status is stored on the graph's connections."],
   unsnap: ['assembly-graph', 'Removing an edge of the assembly graph.'],
-  'transform-gizmos': ['direct-manipulation', 'Handles are one way of moving and rotating pieces.'],
   'live-manufacturer-data': [
     'multi-supplier-catalogue',
     'Live data is how a cross-manufacturer catalogue stays current.',
   ],
   labels: ['cad-cnc-export', 'Part labels are a manufacturing output.'],
   'manufacturing-adapter': ['cad-cnc-export', 'The layer that produces manufacturing output.'],
-  'budget-style-filters': ['deterministic-alternatives', 'Filters on the generated alternatives.'],
-  'layout-optimisation': ['deterministic-alternatives', 'Ranking generated alternatives.'],
   'ai-floorplan': ['ai-layout', 'AI layout on the room plan.'],
   'ai-explains': ['ai-layout', 'Part of the AI layout loop (propose, explain, validate).'],
   'inspiration-images': ['nl-generation', 'Another input to intent-driven generation.'],

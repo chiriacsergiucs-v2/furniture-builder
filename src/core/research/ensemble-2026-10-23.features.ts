@@ -179,7 +179,7 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
     findings: ['099', '102', '120', 'phase-1'],
     phase: P1,
     tags: ['data-model', 'core'],
-    related: ['assembly-graph', 'versioned-save'],
+    related: ['assembly-graph'],
   }),
 
   // ── Workspace and catalogue placement ─────────────────────────────────────────────────────────────────────────
@@ -312,16 +312,6 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
     findings: ['mvp-13'],
     tags: ['MVP'],
   }),
-  F('independent-selection', {
-    name: 'Connected items stay independently selectable',
-    parent: 'persistent-connections',
-    category: 'positioning',
-    subcategory: 'Selection',
-    description:
-      'After connection, either item can still be selected on its own and shows its existing parametric controls; selecting the ensemble/group exposes common operations.',
-    findings: ['076'],
-    tags: ['selection'],
-  }),
   F('assembly-graph', {
     name: 'Connection hierarchy / assembly graph',
     category: 'architecture',
@@ -369,53 +359,6 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
   }),
 
   // ── Positioning and manipulation ──────────────────────────────────────────────────────────────────────────────
-  F('direct-manipulation', {
-    name: 'Direct manipulation in 2D/3D',
-    category: 'positioning',
-    subcategory: 'Transforms',
-    description:
-      'User can move and rotate instances in 2D and 3D by dragging, with picking and transform handles, and also enter exact numeric transforms.',
-    mvp: 'User can move and rotate instances in 2D/3D and enter exact numeric transforms.',
-    requirements: [
-      'Move and rotate in both views.',
-      'Exact numeric transforms (see Precise numeric manipulation).',
-    ],
-    technical: ['Transform = position, rotation (quaternion), optional scale.'],
-    findings: ['mvp-3', '091', 'phase-1'],
-    phase: P1,
-    tags: ['MVP'],
-    appNotes: [
-      'This app places project pieces in whole mm with quarter turns about the vertical axis only (ADR-022).',
-    ],
-  }),
-  F('transform-gizmos', {
-    name: 'Transform handles (TransformControls or custom gizmos)',
-    parent: 'direct-manipulation',
-    category: 'positioning',
-    subcategory: 'Transforms',
-    description:
-      'Three.js TransformControls as a baseline; furniture-specific constrained gizmos will probably need custom UX.',
-    findings: ['089', 'stack-03'],
-    tags: ['technology'],
-  }),
-  F('locks-overrides', {
-    name: 'Lock/pin modules and preserve manual overrides',
-    category: 'parametric',
-    subcategory: 'Locks',
-    ...ranked(18),
-    description:
-      'Lock an instance\'s position, rotation or named parameters; locks and manual overrides outrank soft rules so the application never keeps "correcting" intentional placement. Auto-fit respects locked modules; snap ranking considers user locks.',
-    userProblem:
-      'Smart behaviour becomes frustrating when it repeatedly overrides intentional placement.',
-    requirements: [
-      'locked.position, locked.rotation, locked.parameters on the instance.',
-      'Locks outrank soft constraints.',
-      'Auto-fit respects locked modules.',
-    ],
-    findings: ['rank-18', '095', '108', '074', '122', 'phase-2'],
-    phase: P2,
-    tags: ['P1', 'trust'],
-  }),
 
   // ── Parametric editing in context ─────────────────────────────────────────────────────────────────────────────
   F('propagation-pipeline', {
@@ -451,54 +394,13 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
   }),
 
   // ── Undo and persistence ──────────────────────────────────────────────────────────────────────────────────────
-  F('transactional-undo', {
-    name: 'Transactional undo/redo',
-    category: 'persistence',
-    subcategory: 'Undo',
-    ...ranked(9),
-    recommendationRank: 9,
-    description:
-      'Add, delete, move, rotate, snap, unsnap, parameter change and group operations can be reverted; a compound operation (a snap that moves an item, connects it and regenerates a countertop) undoes as one user action.',
-    mvp: 'Add, delete, move, rotate, snap, unsnap, parameter change and group operations can be reverted. Compound operations undo atomically.',
-    technical: [
-      'Command/transaction log: one semantic operation touching instances, connections, generated parts and BOM stays one undo step.',
-      'Complex configurators continue to spend engineering effort on correct undo grouping (the cited source is the Roomle changelog, ref-54).',
-    ],
-    competitors: ['c.roomle'],
-    findings: ['rank-09', 'rec-09', 'mvp-13', 'stack-07'],
-    phase: P1,
-    tags: ['core', 'MVP', 'P0'],
-    appNotes: [
-      'This app: undo/redo in the piece editor (F15) and for every project change, one action = one step (ADR-051, N46).',
-    ],
-  }),
   F('command-log', {
     name: 'Command/transaction log',
-    parent: 'transactional-undo',
     category: 'architecture',
     subcategory: 'Undo',
     description: 'Undo/redo implemented as a command/transaction log.',
     findings: ['stack-07', '120'],
     tags: ['technology'],
-  }),
-  F('versioned-save', {
-    name: 'Versioned save/reload of entire ensembles',
-    category: 'persistence',
-    subcategory: 'Saving',
-    ...ranked(10),
-    recommendationRank: 10,
-    description:
-      'Saving and reopening restores template versions, parameter overrides, transformations, groups and connections — not merely a flattened mesh. Save reliability is a product feature, not plumbing.',
-    userProblem: 'Version-loss complaints in planning software (Planner 5D).',
-    mvp: 'Saving and reopening restores template versions, parameter overrides, transformations, groups and connections.',
-    technical: [
-      'Versioned JSON/domain records plus separate asset references allow migrations and keep template identity.',
-    ],
-    competitors: ['c.planner5d'],
-    findings: ['rank-10', 'rec-10', 'mvp-14', 'stack-08', '043', '063', '061'],
-    phase: P1,
-    tags: ['core', 'MVP', 'P0'],
-    appNotes: ['This app: autosaved local library and projects in IndexedDB (F14, ADR-012).'],
   }),
 
   // ── Replace, materials, generated parts ───────────────────────────────────────────────────────────────────────
@@ -546,40 +448,6 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
   }),
 
   // ── BOM, costing, commerce ────────────────────────────────────────────────────────────────────────────────────
-  F('live-price', {
-    name: 'Live price/cost estimate',
-    category: 'commerce',
-    subcategory: 'Pricing',
-    ...ranked(24),
-    description:
-      'A running price or cost estimate for the ensemble (Roomle pricing, Cyncly live pricing data, VividWorks pricing); costing is part of phase three.',
-    competitors: ['c.roomle', 'c.cyncly', 'c.vividworks'],
-    findings: [
-      'rank-24',
-      '039',
-      '054',
-      '057',
-      'phase-3',
-      '041',
-      '055',
-      '156',
-      '157',
-      '158',
-      '159',
-      '160',
-      '161',
-      '162',
-      '163',
-      '164',
-      '165',
-      '166',
-      '167',
-      '168',
-      '168b',
-    ],
-    phase: P3,
-    tags: ['P1/P2'],
-  }),
   F('quotation', {
     name: 'Quotations / quoting',
     category: 'commerce',
@@ -647,18 +515,6 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
   }),
 
   // ── Assembly instructions ─────────────────────────────────────────────────────────────────────────────────────
-  F('assembly-sequence', {
-    name: 'Step-by-step assembly sequence',
-    category: 'instructions',
-    subcategory: 'Assembly steps',
-    ...ranked(30),
-    description:
-      'A correct step-by-step assembly sequence needs explicit knowledge of assembly relationships — joints, hardware and ordering — that geometry alone does not give. VividWorks provides assembly information.',
-    competitors: ['c.vividworks'],
-    findings: ['rank-30', '124', 'phase-3', '057'],
-    phase: P3,
-    tags: ['P2'],
-  }),
 
   // ── Room and cross-family ─────────────────────────────────────────────────────────────────────────────────────
   F('family-presets', {
@@ -693,38 +549,6 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
   }),
 
   // ── Automation and AI ─────────────────────────────────────────────────────────────────────────────────────────
-  F('deterministic-alternatives', {
-    name: 'Deterministic generation of alternative valid layouts',
-    category: 'ai',
-    subcategory: 'Deterministic layout',
-    ...ranked(26),
-    description:
-      'Generate alternative valid layouts deterministically; phase four begins here before AI.',
-    findings: ['rank-26', '125', 'phase-4', '141'],
-    phase: P4,
-    tags: ['P2'],
-  }),
-  F('budget-style-filters', {
-    name: 'Budget and style filters',
-    parent: 'deterministic-alternatives',
-    category: 'ai',
-    subcategory: 'Deterministic layout',
-    description:
-      'Filter generated layouts by budget and style (phase four), e.g. "keep it under €2,500".',
-    findings: ['phase-4', '125', '126'],
-    phase: P4,
-    tags: ['phase-4'],
-  }),
-  F('layout-optimisation', {
-    name: 'Layout optimisation',
-    parent: 'deterministic-alternatives',
-    category: 'ai',
-    subcategory: 'Deterministic layout',
-    description: 'Optimisation of layouts, listed in phase four without further detail.',
-    findings: ['phase-4'],
-    phase: P4,
-    tags: ['detail-unknown'],
-  }),
   F('ai-layout', {
     name: 'AI layout generation',
     category: 'ai',
@@ -812,17 +636,6 @@ export const ENSEMBLE_FEATURES: ResearchFeature[] = [
     findings: ['stack-09'],
     tags: ['technology'],
   }),
-  F('ensemble-templates', {
-    name: 'Reusable ensemble templates',
-    category: 'assembly',
-    subcategory: 'Templates',
-    ...ranked(21),
-    description:
-      "Save the selected ensemble as a reusable template storing item references, parameter defaults, relative transformations, connections, generated-component recipes and optional room-independent constraints — not a permanent copy of every item's geometry.",
-    competitors: ['c.pcon', 'c.ikea-planners'],
-    findings: ['rank-21', '083', '086'],
-    tags: ['P1'],
-  }),
 ];
 
 /** Contradictions, mixed evidence and conflicting estimates, kept side by side. */
@@ -834,7 +647,7 @@ export const ENSEMBLE_CONTRADICTIONS: Contradiction[] = [
     description:
       'The paper keeps two priority bands for these rows; live price complexity is "Medium if data exists".',
     findings: ['ens.n.rank-24', 'ens.n.rank-32', 'ens.n.rank-33'],
-    features: ['ens.f.live-price', 'ens.f.cad-cnc-export'],
+    features: ['ens.f.cad-cnc-export'],
   },
   {
     id: 'ens.x.04',
@@ -872,15 +685,6 @@ export const ENSEMBLE_CONTRADICTIONS: Contradiction[] = [
     features: ['ens.f.composition-layer'],
   },
   {
-    id: 'ens.x.10',
-    basis: 'inferred',
-    title: 'Value score vs priority label',
-    description:
-      'Read across the table (not stated by the paper): "Explainable warnings" scores 4.8 but is P1 while lower-scored rows 16, 17 and 19 are P0; "Lock/pin" is P1 although the architecture section calls locks outranking soft rules "essential for user trust". Value and priority are separate columns in the paper.',
-    findings: ['ens.n.rank-07', 'ens.n.rank-16', 'ens.n.rank-18', 'ens.n.108'],
-    features: ['ens.f.locks-overrides'],
-  },
-  {
     id: 'ens.x.15',
     basis: 'inferred',
     title: 'P0 features missing from the MVP table and phase plan',
@@ -896,23 +700,6 @@ export const ENSEMBLE_CONTRADICTIONS: Contradiction[] = [
       'ens.n.phase-1',
     ],
     features: ['ens.f.assembly-graph'],
-  },
-  {
-    id: 'ens.x.16',
-    basis: 'inferred',
-    title: '"High" evidence confidence resting on anecdotes',
-    description:
-      'Read across the paper (not stated by it): several rows rate evidence "High" from community posts — rank 3 "real interference reports", rank 8 "explicit request also found", rank 10 "version-loss frustration documented" (its only citation, ref-55, is the r/planner5d forum) — while the paper calls these sources anecdotes, not statistically representative, and "low for prevalence".',
-    findings: [
-      'ens.n.rank-03',
-      'ens.n.rank-08',
-      'ens.n.rank-10',
-      'ens.n.013',
-      'ens.n.019',
-      'ens.n.144',
-      'ens.n.151',
-    ],
-    features: ['ens.f.versioned-save'],
   },
   {
     id: 'ens.x.11',
@@ -933,17 +720,7 @@ export const ENSEMBLE_CONTRADICTIONS: Contradiction[] = [
       'ens.f.ai-layout',
       'ens.f.nl-generation',
       'ens.f.collaboration',
-      'ens.f.live-price',
       'ens.f.inventory-alternatives',
     ],
-  },
-  {
-    id: 'ens.x.13',
-    basis: 'app',
-    title: 'Research vs ADR-022: free rotation vs quarter turns',
-    description:
-      "The paper's Transform uses a quaternion rotation; this app keeps every panel an axis-aligned box and rotates project pieces in quarter turns about the vertical axis only.",
-    findings: ['ens.n.091', 'ens.n.mvp-3'],
-    features: ['ens.f.direct-manipulation'],
   },
 ];
