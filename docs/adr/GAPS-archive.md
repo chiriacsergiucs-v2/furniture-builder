@@ -1650,21 +1650,23 @@ highest id in either file.
 
 ### G-320: Common panel across a gap
 
-- Status: Done (obsolete: user decision 2026-11-05, a common panel joins touching items only)
+- Status: Done (ADR-189)
 - Origin: ADR-165
 - Missing: A common top or bottom needs touching items; a gap between items is not bridged.
 - Request: Add the possibility to have a common bottom or top between multiple items.
 - Questions: Should one panel bridge a gap between items?
 - Suggested pick: Touching items only (the user's pick).
+- Note: Reopened by the user 2026-11-05 ('Build them: PR #151 wins'); built by ADR-189/ADR-190.
 
 ### G-321: Shared side between neighbours
 
-- Status: Done (obsolete: user decision 2026-11-05, items keep their own sides)
+- Status: Done (ADR-190)
 - Origin: ADR-165
 - Missing: Items under a common top or bottom keep their own two sides; no shared side between neighbours.
 - Request: Add the possibility to have a common bottom or top between multiple items.
 - Questions: Should neighbours also share one side panel?
 - Suggested pick: Own sides (the user's pick); a shared side in a later ADR.
+- Note: Reopened by the user 2026-11-05 ('Build them: PR #151 wins'); built by ADR-189/ADR-190.
 
 ### G-323: Variables outside projects
 

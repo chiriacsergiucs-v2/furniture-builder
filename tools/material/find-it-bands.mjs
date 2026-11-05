@@ -1,4 +1,4 @@
-// Find-it acceptance for run parts and edge bands in the Material dialog (CLAUDE.md R3, backlog N@170, ADR-188),
+// Find-it acceptance for run parts and edge bands in the Material dialog (CLAUDE.md R3, backlog N193, ADR-188),
 // against a production build:
 //   pnpm build && pnpm exec vite preview --port 4173 &  node tools/material/find-it-bands.mjs http://localhost:4173/furniture-builder/ <out dir>
 // From the bare app, by visible text, at 1280 and 390 px: a project with two base units and its run parts (Settings ›

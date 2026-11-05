@@ -1,13 +1,15 @@
-# ADR-169: A common top or bottom across a gap, over corner units and desks
+# ADR-189: A common top or bottom across a gap, over corner units and desks
 
 - Status: Pending
 - Date: 2026-10-31
 - Depends on: ADR-040, ADR-165
 - Design: docs/ui-design.md (§4 Screens: project selected-items card)
-- Backlog: N171
+- Backlog: N194
 - Agreed: 2026-10-31, every question answered by the user (see Context)
 
 ## Context
+
+Renumbered 2026-11-05 from ADR-168/169/170 when merged with main (user: 'Renumber and merge').
 
 User 2026-10-31: "ADR for G-317, G-318, G-320, G-321, G-322, same pr". G-320 (from ADR-165): a common panel needs
 touching items; G-322: corner units and desks are refused. The request behind them: "Add the possibility to have a
@@ -77,6 +79,10 @@ has one per carcass); `CornerParams.join` (in memory only) builds corner carcass
 returns under the top; a desk gives up only its worktop. Doors are checked against the top's convex pieces (the
 members' former tops and the gaps), not its concave outline. Tests: `tests/common-shapes.test.ts`, the ADR-165 tests
 updated to the new gap rule, `tests/find-it/common-shapes.test.tsx`; deep fuzz passes.
+
+Merged with main 2026-11-05: a hung corner (ADR-177) builds with no plinth, so a linked diagonal's returns stand on its
+bottom at one board thickness; the plinth check counts a hung corner's plinth as 0, as a hung cabinet's
+(`tests/common-shapes.test.ts`, "a hung corner in a common top or bottom").
 
 ## Open questions
 

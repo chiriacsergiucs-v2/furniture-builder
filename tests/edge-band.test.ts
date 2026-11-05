@@ -103,7 +103,7 @@ describe('edge band specs on boards (ADR-077)', () => {
     expect(up.materials).toEqual(v2.materials);
     expect(buildModel(up).panels).toEqual(buildModel(v2).panels);
     expect(upgradeDesign(up)).toBe(up);
-    expect(validateDesign({ ...chest(), schemaVersion: 8 }).join()).toMatch(/schemaVersion/);
+    expect(validateDesign({ ...chest(), schemaVersion: 9 }).join()).toMatch(/schemaVersion/);
   });
 
   it('never change cut sizes (ADR-009): only the band is named', () => {

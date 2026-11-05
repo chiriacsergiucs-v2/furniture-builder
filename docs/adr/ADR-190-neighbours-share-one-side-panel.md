@@ -1,13 +1,15 @@
-# ADR-170: Neighbours share one side panel
+# ADR-190: Neighbours share one side panel
 
 - Status: Pending
 - Date: 2026-10-31
 - Depends on: ADR-165
 - Design: docs/ui-design.md (§4 Screens: project selected-items card)
-- Backlog: N172
+- Backlog: N195
 - Agreed: 2026-10-31, every question answered by the user (see Context)
 
 ## Context
+
+Renumbered 2026-11-05 from ADR-168/169/170 when merged with main (user: 'Renumber and merge').
 
 User 2026-10-31: "ADR for G-317, G-318, G-320, G-321, G-322, same pr". G-321 (from ADR-165): items keep their own
 two sides; no shared side between neighbours.
@@ -17,11 +19,11 @@ serves both, so the left item's inside grows by one board thickness and nothing 
 shared side**; its own toggle **Shared sides**, with or without a common top or bottom; **pin rows on both faces**;
 **cabinets only** (corner units and desks keep both sides, with the reason).
 
-Change control: a project field (ADR-011): `Project.sharedSides`, project schemaVersion **18**; older files load.
+Change control: a project field (ADR-011): `Project.sharedSides`, project schemaVersion **20** (18 and 19 are connections and per-size locks, ADR-168 and ADR-171); older files load.
 
 ## Decision
 
-- **`Project.sharedSides?: { id: string; itemIds: string[] }[]`** (schemaVersion 18): the selected cabinets, left to
+- **`Project.sharedSides?: { id: string; itemIds: string[] }[]`** (schemaVersion 20): the selected cabinets, left to
   right, share a side at each joint. Validation as `common` (ADR-165); `pruneShared` drops removed items.
 - **Check** (`sharedSideCheck`): cabinets, counted once, turned the same way, no extra angle, same height, depth,
   plinth, back and side board thickness, touching with no gap. Otherwise refused with the reason.
@@ -43,8 +45,8 @@ Change control: a project field (ADR-011): `Project.sharedSides`, project schema
 
 - In scope: field, validation, check, build, fronts, pins, warning, store, toggle, tests, find-it.
 - Takes over G-321.
-- Out of scope: corner units and desks sharing a side (G-328, the user's pick); sliding and inset fronts at a shared
-  side keep their own rule: an inset front never covers a side, a sliding door runs in its own track (G-329).
+- Out of scope: corner units and desks sharing a side (G-354, the user's pick); sliding and inset fronts at a shared
+  side keep their own rule: an inset front never covers a side, a sliding door runs in its own track (G-355).
 
 ## Consequences
 
@@ -71,7 +73,7 @@ Change control: a project field (ADR-011): `Project.sharedSides`, project schema
 shared side's middle (overlay and half overlay; inset fronts already stop at the opening) and record the pin rows the
 neighbour's side needs (`FurnitureModel.sharedPins`), which the right member's left side gets on its `-x` face. The
 left member's front reaches over half the shared side, so its own envelope allows that (`outside` check). Project
-schemaVersion 18; store `setShared`; the third toggle **Shared sides**. Tests: `tests/shared-sides.test.ts`,
+schemaVersion 20; store `setShared`; the third toggle **Shared sides**. Tests: `tests/shared-sides.test.ts`,
 `tests/find-it/shared-sides.test.tsx`.
 
 ## Open questions

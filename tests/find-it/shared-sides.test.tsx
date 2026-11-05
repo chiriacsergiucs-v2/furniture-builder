@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// Find-it for shared sides (ADR-190, N@172), in jsdom (ADR-108): select two base units standing side by side → Shared
+// Find-it for shared sides (ADR-190, N195), in jsdom (ADR-108): select two base units standing side by side → Shared
 // sides → the parts list counts 3 sides; with a wardrobe in the selection the toggle is off and says why.
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';

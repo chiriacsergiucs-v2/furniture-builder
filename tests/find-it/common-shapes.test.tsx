@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// Find-it for a common top over a corner unit (ADR-189, N@171), in jsdom (ADR-108): an L-shaped corner base and two
+// Find-it for a common top over a corner unit (ADR-189, N194), in jsdom (ADR-108): an L-shaped corner base and two
 // base units beside it → Select all → Common top → the parts list has one Common top, cut to template.
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';

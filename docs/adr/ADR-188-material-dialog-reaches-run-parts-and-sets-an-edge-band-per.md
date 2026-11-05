@@ -1,14 +1,16 @@
-# ADR-168: Material dialog reaches run parts and sets an edge band per role
+# ADR-188: Material dialog reaches run parts and sets an edge band per role
 
 - Status: Pending
 - Date: 2026-10-31
 - Depends on: ADR-077, ADR-163
 - Design: docs/ui-design.md (§4 Screens: Material sheet)
-- Backlog: N170
+- Backlog: N193
 - Acceptance: browser
 - Agreed: 2026-10-31, every question answered by the user (see Context)
 
 ## Context
+
+Renumbered 2026-11-05 from ADR-168/169/170 when merged with main (user: 'Renumber and merge').
 
 User 2026-10-31: "ADR for G-317, G-318, G-320, G-321, G-322, same pr". G-317 (from ADR-163): run-part boards are not
 in the Material dialog; G-318: the dialog changes boards only, the band stays the board's (ADR-077). The request
@@ -18,7 +20,7 @@ Answers (2026-10-31): **all run parts** (worktop, fillers and covers, run plinth
 when it reaches **one of the items it was made from**; a band is stored **per role on the piece** (new field), and
 **per part** too; band choices are **project bands + seller bands + your own**; the band is a **select under Board**.
 
-Change control: `Design.roleBands` and `Design.partBands` are new design fields (ADR-011): design schemaVersion **7**.
+Change control: `Design.roleBands` and `Design.partBands` are new design fields (ADR-011): design schemaVersion **8** (7 is the corner mount, ADR-177; 1 to 7 still load).
 ADR-077's rule "a band belongs to a board" stays the default; a role or part band wins over it.
 
 ## Decision
@@ -69,7 +71,7 @@ EdgeBand>`. `buildModel` keeps each panel's board; the band used for a panel is 
 
 ## Implementation notes
 
-`src/core/roles.ts` (roles and `rolesOf`), `Design.roleBands` / `partBands` (design schemaVersion 7, `validateBands`),
+`src/core/roles.ts` (roles and `rolesOf`), `Design.roleBands` / `partBands` (design schemaVersion 8, `validateBands`),
 `Panel.band` set in `buildModel` and read by the cut list and `band-narrow`; `putRoleBoards` / `putPartBoard` take a
 band; `RunRole`, `runPartsOf`, `putRunBoard` (a trim's request board too) in `src/core/finish.ts`; `projectBands` in
 `src/core/boards.ts`; the Material dialog's run chips, run parts in the Part list and the Edge band select (Keep the
