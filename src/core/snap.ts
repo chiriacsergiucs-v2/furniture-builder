@@ -20,6 +20,7 @@ import {
   type ProjectItem,
 } from './project';
 import type { Room } from './room';
+import { hasAnyLock } from './sizeLock';
 import type { Box, Mm } from './types';
 
 /** How close (mm) a connector must be to the dragged footprint to snap (ADR-070 open question: default 60). */
@@ -230,6 +231,8 @@ interface Cand {
   walls?: number[];
   /** A side snap: the neighbour face, which the final footprint must still touch along it. */
   face?: FaceConnector;
+  /** A neighbour candidate whose piece has any lock (placement, turn or size); it wins a tie on distance (ADR-180). */
+  locked?: boolean;
 }
 
 /** A footprint moved on the plan. */
@@ -242,14 +245,19 @@ const RANK: Record<Cand['kind'], number> = { corner: 0, wall: 1, side: 2, centre
 const overlap = (a: { lo: number; hi: number }, b: { lo: number; hi: number }) =>
   Math.min(a.hi, b.hi) - Math.max(a.lo, b.lo);
 const distOf = (m: Move) => Math.abs(m.x ?? 0) + Math.abs(m.z ?? 0);
-const cmp = (a: { dist: number; kind: Cand['kind']; key: string }, b: typeof a) =>
-  a.dist - b.dist || RANK[a.kind] - RANK[b.kind] || (a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
+/** Distance, then a locked neighbour first (ADR-180; walls and corners count as not locked), then kind, then id. */
+const cmp = (a: { dist: number; kind: Cand['kind']; key: string; locked?: boolean }, b: typeof a) =>
+  a.dist - b.dist ||
+  Number(!!b.locked) - Number(!!a.locked) ||
+  RANK[a.kind] - RANK[b.kind] ||
+  (a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
 const wallName = (w: number) => (w < 0 ? t('the back wall') : t('wall {n}', { n: w + 1 }));
 
 /**
  * Where a dragged piece lands with snapping on (ADR-070). `dx` / `dz` is the pointer's move in plan mm, as for
- * `dragPosition`. Candidates within `range` of the stepped drop are ranked by distance, then kind (corner, wall,
- * neighbour side, neighbour centre — ADR-099), then id; when the best one fixes one axis only, the best candidate on the other axis is added.
+ * `dragPosition`. Candidates within `range` of the stepped drop are ranked by distance, then a neighbour with any
+ * lock (placement, turn or size) before any other candidate (ADR-180), then kind (corner, wall, neighbour side, neighbour centre — ADR-099),
+ * then id; when the best one fixes one axis only, the best candidate on the other axis is added.
  * Pieces resting on the dragged piece follow it and are not neighbours. Never throws; never clamps.
  */
 export function snapDrag(
@@ -345,6 +353,7 @@ export function snapDrag(
         label: t('Joins {name}', { name: n.name }),
         notes,
         face: n,
+        locked: hasAnyLock(itemById.get(n.owner)),
       });
     }
     for (const w of conn.walls) {
@@ -396,8 +405,8 @@ export function snapDrag(
   }
 
   // Centre to centre along the wall (ADR-099): a piece above or below the dropped one at the same depth (a wall unit
-  // over a base unit) offers its centre line, within the same range, ranked as the others (distance, then kind, then
-  // id). Pieces at the same height are left out: centred on each other they would stand in each other's place. It is
+  // over a base unit) offers its centre line, within the same range, ranked as the others (distance, then locked, then
+  // kind, then id). Pieces at the same height are left out: centred on each other they would stand in each other's place. It is
   // an alignment, not a join, so the join rules (ADR-100) do not apply to it.
   const here = at();
   for (const n of others) {
@@ -414,6 +423,7 @@ export function snapDrag(
       key: `centre:${n.item.id}`,
       label: t('Centre to centre with {name}', { name: n.item.design.name }),
       notes: [],
+      locked: hasAnyLock(n.item),
     });
   }
 
