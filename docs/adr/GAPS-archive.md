@@ -471,6 +471,17 @@ highest id in either file.
 - Questions: Allow a tolerance (mm) before warning?
 - Suggested pick: Any difference warns until the user names a tolerance (never invent a physical value, ADR-010).
 
+### G-097: Fastener notes point to a removed screen
+
+- Status: Done (4025b89: the notes name Settings › Fasteners in the app, the print and Russian)
+- Origin: Gap re-check 2026-10-26 (G-042); agent found it
+- Missing: Fastener notes point to 'Materials › Fasteners', a screen that no longer exists (the list is under Settings › Fasteners, src/ui/Settings.tsx:70): src/core/shopping.ts:53, src/core/fasteners.ts:319, src/core/assembly.ts:506,524 and the print line, with their Russian and print entries.
+- Request: Hardware and fastener completeness (G-042) (context, not a quote)
+- Questions: None; it is a wording bug. Fix together with the Romanian labels in G-042?
+- Suggested pick: Point both to the current path (Settings › Fasteners, or the piece's Size, boards and construction), and translate them in the Romanian CSV with G-042. (estimate: effort +1%, value +3%)
+- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: Re-checked 2026-11-05 on main c4a15bd (code read, no browser): Missing text updated to the current code.
+
 ### G-098: ADR-082 still Pending though built
 
 - Status: Done (ec9c7a8)

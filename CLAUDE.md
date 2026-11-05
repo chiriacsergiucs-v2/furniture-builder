@@ -180,6 +180,9 @@ on restores it unchanged.
   only if someone opened the published URL and checked it.
 - Every implementation reply ends with the backlog status table (including every row still marked
   `find-it pending (light, ADR-066)`) and a **Skipped this iteration** section.
+- Sync only what is pending (user rule 2026-11-05): a gap or feature sync checks only what `pnpm sync:pending` lists, and
+  sets `checked` (the date) on the feature lines it verifies (`src/core/features.ts`); Done gaps live in
+  `docs/adr/GAPS-archive.md` and are never re-checked.
 - Gaps ledger (ADR-082, user rule 2026-10-25): anything not built is recorded in `docs/adr/GAPS.md` in the same
   change: each skipped item, out-of-scope line, unanswered open question or cut requirement. Use `pnpm gaps add`
   with the origin, what is missing, the user's request in their words, questions and the suggested pick (the rule
