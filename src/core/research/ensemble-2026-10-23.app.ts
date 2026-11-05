@@ -23,14 +23,17 @@ export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
     'N26, N49, N56, N70: run parts derived from the pieces they span.',
     'shared supports, sinks and handles as generated parts',
   ],
+  'assembly-sequence': [
+    'verified',
+    'N177 (ADR-174): an ordered step list per piece from the parts’ positions, with joint counts and hardware per step, lit in the exploded 3D view and printable; order from geometry as labelled guidance, no joint or fastener knowledge (ADR-010).',
+  ],
   'ensemble-templates': [
     'verified',
     'N55 (ADR-060): save a project as a reusable project template; N124 (ADR-123): insert one into a project; N173 (ADR-170): a template keeps the run-part recipe, connections, variables and bindings. Copies by choice (ADR-060), not item references.',
   ],
   'live-price': [
-    'in-progress',
-    "N57 (ADR-062): estimate from the user's own price list.",
-    'live supplier prices (N58, ADR-063 deferred)',
+    'verified',
+    "N57 (ADR-062): estimate from the user's own price list; N162 (ADR-161): the bundled seller's prices with their date; N175 (ADR-172): a running estimate in the editor and a Seller prices workflow that converts a new export. No live supplier feed (ADR-063 Deferred).",
   ],
   'independent-selection': [
     'verified',
@@ -70,9 +73,8 @@ export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
     'connector frames and constraints (no connectors yet)',
   ],
   'deterministic-alternatives': [
-    'in-progress',
-    'N34 (ADR-045): suggested combinations kept only when buildModel() has no errors — per piece; N101, N102 (ADR-103, ADR-104): four suggested mixes for one wall run.',
-    'alternative layouts of a whole project',
+    'verified',
+    'N34 (ADR-045): suggested combinations kept only when buildModel() has no errors — per piece; N101, N102 (ADR-103, ADR-104): four suggested mixes for one wall run; N176 (ADR-173): four whole-room mixes over every wall of a drawn room, each checked as a project.',
   ],
   'automated-fixes': [
     'in-progress',
@@ -85,9 +87,8 @@ export const ENSEMBLE_APP_STATUS: Record<string, Status> = {
     'connections between pieces beyond stacking, stored as a graph',
   ],
   'locks-overrides': [
-    'in-progress',
-    'N93 (ADR-095): Lock a piece; drags, turns, the gap tool and repairs leave it alone; N123 (ADR-122): Lock size.',
-    'locks on single named parameters (rotation only, a width only); Lock size locks all three sizes together',
+    'verified',
+    'N93 (ADR-095): Lock a piece; drags, turns, the gap tool and repairs leave it alone; N123 (ADR-122): Lock size; N174 (ADR-171): Lock turn and each size one by one; locks outrank variables, Replace, linked copies and project settings.',
   ],
   'no-silent-moves': [
     'in-progress',

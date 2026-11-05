@@ -344,10 +344,8 @@ export const data_research2: Record<string, string> = {
   'Medium; precision feedback supports it': 'Средняя; её поддерживают отзывы о точности',
   'Intelligent compatibility and automatic adjustments (phase 2)':
     'Умная совместимость и автоматические подстройки (этап 2)',
-  'N93 (ADR-095): Lock a piece; drags, turns, the gap tool and repairs leave it alone; N123 (ADR-122): Lock size.':
-    'N93 (ADR-095): «Заблокировать» изделие; перетаскивания, повороты, инструмент зазоров и исправления его не трогают; N123 (ADR-122): блокировка размера.',
-  'locks on single named parameters (rotation only, a width only); Lock size locks all three sizes together':
-    'блокировки отдельных именованных параметров (только поворот, только ширина); блокировка размера блокирует все три размера вместе',
+  'N93 (ADR-095): Lock a piece; drags, turns, the gap tool and repairs leave it alone; N123 (ADR-122): Lock size; N174 (ADR-171): Lock turn and each size one by one; locks outrank variables, Replace, linked copies and project settings.':
+    'N93 (ADR-095): «Заблокировать» изделие; перетаскивания, повороты, инструмент зазоров и исправления его не трогают; N123 (ADR-122): блокировка размера; N174 (ADR-171): блокировка поворота и каждого размера по отдельности; блокировки важнее переменных, замены, связанных копий и настроек проекта.',
   'Local dependency update on parameter change':
     'Локальное обновление зависимостей при изменении параметра',
   'parameter change → connector frames recalculated → connected constraints re-solved → collisions/clearances rechecked → derived countertop/fillers regenerated → BOM refreshed.':
@@ -470,10 +468,8 @@ export const data_research2: Record<string, string> = {
   'Medium if data exists': 'Средняя, если есть данные',
   'Manufacturing and advanced configuration (phase 3)':
     'Производство и расширенная настройка (этап 3)',
-  "N57 (ADR-062): estimate from the user's own price list.":
-    'N57 (ADR-062): оценка по собственному прайс-листу пользователя.',
-  'live supplier prices (N58, ADR-063 deferred)':
-    'актуальные цены поставщиков (N58, ADR-063 отложен)',
+  "N57 (ADR-062): estimate from the user's own price list; N162 (ADR-161): the bundled seller's prices with their date; N175 (ADR-172): a running estimate in the editor and a Seller prices workflow that converts a new export. No live supplier feed (ADR-063 Deferred).":
+    'N57 (ADR-062): оценка по собственному прайс-листу пользователя; N162 (ADR-161): цены встроенного продавца с их датой; N175 (ADR-172): текущая оценка в редакторе и рабочий процесс «Цены продавца», преобразующий новый экспорт. Живой канал поставщика не построен (ADR-063 отложен).',
   'Quotations / quoting': 'Коммерческие предложения',
   'Turn a configuration into a quotation (Homestyler quotations, Cyncly quoting); the same configuration can feed pricing, quotations, BOMs and manufacturing.':
     'Превращать конфигурацию в коммерческое предложение (предложения Homestyler, расчёт предложений Cyncly); одна и та же конфигурация может питать цены, предложения, спецификации и производство.',
@@ -573,9 +569,8 @@ export const data_research2: Record<string, string> = {
     'Детерминированно генерировать альтернативные допустимые компоновки; с этого начинается этап четыре, ещё до ИИ.',
   'Deterministic layout': 'Детерминированная компоновка',
   'Smart layout and AI assistance (phase 4)': 'Умная компоновка и помощь ИИ (этап 4)',
-  'N34 (ADR-045): suggested combinations kept only when buildModel() has no errors — per piece; N101, N102 (ADR-103, ADR-104): four suggested mixes for one wall run.':
-    'N34 (ADR-045): предложенные сочетания остаются, только если в buildModel() нет ошибок, — для каждого изделия; N101, N102 (ADR-103, ADR-104): четыре предложенных набора для одного ряда у стены.',
-  'alternative layouts of a whole project': 'альтернативные компоновки целого проекта',
+  'N34 (ADR-045): suggested combinations kept only when buildModel() has no errors — per piece; N101, N102 (ADR-103, ADR-104): four suggested mixes for one wall run; N176 (ADR-173): four whole-room mixes over every wall of a drawn room, each checked as a project.':
+    'N34 (ADR-045): предложенные сочетания остаются, только если в buildModel() нет ошибок, — для каждого изделия; N101, N102 (ADR-103, ADR-104): четыре предложенных набора для одного ряда у стены; N176 (ADR-173): четыре набора на всю комнату по каждой стене начерченной комнаты, каждый проверен как проект.',
   'Budget and style filters': 'Фильтры по бюджету и стилю',
   'Filter generated layouts by budget and style (phase four), e.g. "keep it under €2,500".':
     'Фильтровать сгенерированные компоновки по бюджету и стилю (этап четыре), например «уложиться в 2 500 €».',
@@ -660,6 +655,8 @@ export const data_research2: Record<string, string> = {
   Templates: 'Шаблоны',
   'Medium-high; reusable component/configuration patterns':
     'Средняя–высокая; шаблоны многократно используемых компонентов/конфигураций',
+  'N177 (ADR-174): an ordered step list per piece from the parts’ positions, with joint counts and hardware per step, lit in the exploded 3D view and printable; order from geometry as labelled guidance, no joint or fastener knowledge (ADR-010).':
+    'N177 (ADR-174): упорядоченный список шагов по каждому изделию из положения деталей, с числом соединений и фурнитурой на шаг, подсвечивается в разнесённом 3D-виде и печатается; порядок из геометрии как рекомендация, без знаний о соединениях и крепеже (ADR-010).',
   'N55 (ADR-060): save a project as a reusable project template; N124 (ADR-123): insert one into a project; N173 (ADR-170): a template keeps the run-part recipe, connections, variables and bindings. Copies by choice (ADR-060), not item references.':
     'N55 (ADR-060): сохранить проект как многократно используемый шаблон проекта; N124 (ADR-123): вставка шаблона в проект; N173 (ADR-170): шаблон хранит рецепт частей ряда, соединения, переменные и привязки. Копии по решению (ADR-060), а не ссылки на изделия.',
   'Dual priorities: price P1/P2, sheet optimisation and CAD/CNC export P2/P3':

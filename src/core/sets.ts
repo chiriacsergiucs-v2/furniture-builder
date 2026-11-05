@@ -108,10 +108,19 @@ export function removeSet(project: Project, id: string): Project {
 
 /** A duplicate of `src` for `set`: new ids, the original's design, placed at the set's origin. */
 function duplicateFor(src: ProjectItem, set: VariableSet): ProjectItem {
-  const { locked: _l, sizeLocked: _s, linkId: _k, ...rest } = structuredClone(src);
+  const {
+    locked: _l,
+    sizeLocked: _s,
+    linkId: _k,
+    turnLocked: _t,
+    sizeLocks: _a,
+    ...rest
+  } = structuredClone(src);
   void _l;
   void _s;
   void _k;
+  void _t;
+  void _a;
   return {
     ...rest,
     id: newId(),

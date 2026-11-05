@@ -89,6 +89,10 @@ export type Placement =
   | { kind: 'wall'; height: Mm }
   | { kind: 'above'; baseId: string; gap: Mm; offsetX: Mm };
 
+/** An outside size a lock can hold (ADR-171). */
+export type SizeAxis = 'width' | 'height' | 'depth';
+export const SIZE_AXES: readonly SizeAxis[] = ['width', 'height', 'depth'];
+
 export interface ProjectItem {
   id: string;
   /** Embedded copy; edited inside the project only. */
@@ -130,6 +134,16 @@ export interface ProjectItem {
    * user either. Separate from `locked` (placement). Absent = not locked. Saved from project schemaVersion 11.
    */
   sizeLocked?: true;
+  /**
+   * Turn locked (ADR-171): its quarter turn and angle do not change until it is unlocked; it still moves and resizes.
+   * Absent = not locked. Saved from project schemaVersion 19.
+   */
+  turnLocked?: true;
+  /**
+   * Sizes locked one by one (ADR-171): the listed outside sizes do not change until unlocked; `sizeLocked` stays and
+   * means all three. Absent = none. Saved from project schemaVersion 19.
+   */
+  sizeLocks?: SizeAxis[];
   /**
    * Template reference (ADR-124): the piece refers to its catalog origin (`design.catalog.origin`: template, variant,
    * revision) and `overrides` are the settings it changed against it (`src/core/ownEdits.ts`), kept up to date while
@@ -254,9 +268,9 @@ export interface RunSink {
  * (ADR-122); 12 = template references and project-wide settings (ADR-124); 13 = run handles and sinks (ADR-125);
  * 14 = wall backgrounds (ADR-145); 15 = fitted and straightened wall pictures (ADR-146); 16 = variables, bindings
  * and value sets (ADR-166, ADR-167); 17 = common tops and bottoms (ADR-165); 18 = connections between pieces
- * (ADR-168).
+ * (ADR-168); 19 = turn and per-size locks (ADR-171).
  */
-export const PROJECT_SCHEMA = 18 as const;
+export const PROJECT_SCHEMA = 19 as const;
 export const PROJECT_SCHEMAS: readonly number[] = [
   1,
   2,
@@ -275,10 +289,29 @@ export const PROJECT_SCHEMAS: readonly number[] = [
   15,
   16,
   17,
+  18,
   PROJECT_SCHEMA,
 ];
 export type ProjectSchemaVersion =
-  1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | typeof PROJECT_SCHEMA;
+  | 1
+  | 2
+  | 3
+  | 4
+  | 5
+  | 6
+  | 7
+  | 8
+  | 9
+  | 10
+  | 11
+  | 12
+  | 13
+  | 14
+  | 15
+  | 16
+  | 17
+  | 18
+  | typeof PROJECT_SCHEMA;
 const RUN_REQUESTS_SINCE = 4;
 const MODELS_SINCE = 5;
 const LOCKS_SINCE = 6;
@@ -294,6 +327,7 @@ const FITTED_WALLS_SINCE = 15;
 const VARIABLES_SINCE = 16;
 const COMMON_SINCE = 17;
 const CONNECTIONS_SINCE = 18;
+const PARAM_LOCKS_SINCE = 19;
 
 export interface Project {
   schemaVersion: ProjectSchemaVersion;
@@ -538,6 +572,35 @@ export const isLocked = (item: Pick<ProjectItem, 'locked'> | undefined): boolean
 
 /** The hint shown when a locked piece is dragged, turned or mirrored (ADR-095). */
 export const LOCKED_HINT = t('Locked — unlock to move');
+/** The hint shown where a turn-locked piece would be turned (ADR-171). */
+export const TURN_LOCKED_HINT = t('Turn locked — unlock to turn');
+export const isTurnLocked = (item: Pick<ProjectItem, 'turnLocked'> | undefined): boolean =>
+  !!item?.turnLocked;
+
+/** Lock or unlock a piece's turn (ADR-171); the flag is absent when unlocked. The same project when nothing changes. */
+export function setTurnLocked(project: Project, id: string, on: boolean): Project {
+  const it = project.items.find((i) => i.id === id);
+  if (!it || isTurnLocked(it) === on) return project;
+  const { turnLocked: _l, ...rest } = it;
+  void _l;
+  const next: ProjectItem = on ? { ...rest, turnLocked: true } : rest;
+  return { ...project, items: project.items.map((i) => (i.id === id ? next : i)) };
+}
+
+/**
+ * Why the pieces `ids` may not turn (ADR-171), or null: one of them, or a piece carried by one of them, has its turn
+ * locked. The reason names the piece. A placement lock (ADR-095) is `moveBlocked`'s.
+ */
+export function turnBlocked(project: Project, ids: readonly string[]): string | null {
+  const turning = new Set(ids);
+  const own =
+    project.items.find((it) => turning.has(it.id) && it.turnLocked) ??
+    carriedBy(project, ids, (it) => !!it.turnLocked).find((it) => it.turnLocked);
+  if (!own) return null;
+  return t('{name} has its turn locked — unlock it to turn it.', {
+    name: pieceName(project, own.id),
+  });
+}
 
 /** What a move helper did: the project after it, or the same project and why nothing moved (ADR-095). */
 export interface MoveResult {
@@ -2586,6 +2649,26 @@ export function validateProject(p: unknown): string[] {
         errs.push(t('Invalid item link'));
       else if ((p.schemaVersion as number) < LINKS_SINCE)
         errs.push(t('Linked copies need project schemaVersion {v}', { v: LINKS_SINCE }));
+    }
+    if (it.turnLocked !== undefined) {
+      if (it.turnLocked !== true) errs.push(t('Invalid item turn lock'));
+      else if ((p.schemaVersion as number) < PARAM_LOCKS_SINCE)
+        errs.push(
+          t('Turn and size locks need project schemaVersion {v}', { v: PARAM_LOCKS_SINCE }),
+        );
+    }
+    if (it.sizeLocks !== undefined) {
+      if (
+        !Array.isArray(it.sizeLocks) ||
+        !it.sizeLocks.length ||
+        !it.sizeLocks.every((a) => (SIZE_AXES as readonly unknown[]).includes(a)) ||
+        new Set(it.sizeLocks).size !== it.sizeLocks.length
+      )
+        errs.push(t('Invalid item size locks'));
+      else if ((p.schemaVersion as number) < PARAM_LOCKS_SINCE)
+        errs.push(
+          t('Turn and size locks need project schemaVersion {v}', { v: PARAM_LOCKS_SINCE }),
+        );
     }
     if (it.sizeLocked !== undefined) {
       if (it.sizeLocked !== true) errs.push(t('Invalid item size lock'));

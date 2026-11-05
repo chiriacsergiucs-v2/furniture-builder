@@ -1,0 +1,69 @@
+# ADR-172: refreshes the bundled Regency catalog (prices, stock, products) from a new product export the user
+# uploads somewhere reachable (for example an asset of a release of this repository), keeps the shipped pictures
+# and their marks (ADR-162), and pushes a branch with a pull request. Started by hand (Actions › Seller prices ›
+# Run workflow); nothing is pushed to main directly and the app makes no request (ADR-002, ADR-126).
+name: Seller prices
+
+on:
+  workflow_dispatch:
+    inputs:
+      export_url:
+        description: 'https URL of the Regency product export (JSON, schema_version 3.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  prices:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/setup@v3
+        with:
+          runtime: node@24
+          cache: true
+          require-lockfile: true
+
+      - name: Download the export
+        env:
+          EXPORT_URL: ${{ inputs.export_url }}
+        run: |
+          case "$EXPORT_URL" in
+            https://*) ;;
+            *) echo "::error::export_url must be an https URL"; exit 1 ;;
+          esac
+          mkdir -p .export
+          curl -sSfL --max-time 300 -o .export/regency.json "$EXPORT_URL"
+
+      # The previous catalog keeps its thumbnail paths and picture marks per product (ADR-162).
+      - name: Convert the export, keeping the shipped pictures
+        run: |
+          cp src/core/sellers/regency.json .export/previous.json
+          node tools/sellers/regency.mjs .export/regency.json src/core/sellers/regency.json - .export/previous.json
+          node tools/sellers/regency-pictures.ts mark src/core/sellers/regency.json public/sellers/regency
+
+      - name: Push a branch with the catalog and open a pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet -- src/core/sellers/regency.json; then
+            echo "No change in the catalog."
+            exit 0
+          fi
+          date="$(node -e "console.log(JSON.parse(require('fs').readFileSync('src/core/sellers/regency.json','utf8')).extracted)")"
+          count="$(node -e "console.log(JSON.parse(require('fs').readFileSync('src/core/sellers/regency.json','utf8')).products.length)")"
+          branch="seller-prices-${{ github.run_id }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add src/core/sellers/regency.json
+          git commit -m "ADR-172: Regency catalog refreshed from the export of $date ($count products)"
+          git push -u origin "$branch"
+          gh pr create --base main --head "$branch" \
+            --title "ADR-172: Regency prices from the export of $date" \
+            --body "Catalog converted by the Seller prices workflow (run ${{ github.run_id }}) from the export at the given URL: $count products, extraction date $date. Shipped pictures and their marks kept." \
+            || echo "::notice::Pushed $branch; open its pull request by hand (Actions may not create pull requests here)."

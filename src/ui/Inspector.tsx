@@ -1,4 +1,5 @@
-import { isSizeLocked, SIZE_LOCKED_HINT } from '../core/sizeLock';
+import { isSizeLocked, lockedAxes, SIZE_LOCKED_HINT } from '../core/sizeLock';
+import type { SizeAxis } from '../core/project';
 import { useEffect, useMemo, useState } from 'react';
 import {
   bayLayoutOf,
@@ -182,6 +183,14 @@ function ComposeStart() {
   const sizeLocked = useDesign((s) =>
     isSizeLocked(s.project?.items.find((i) => i.id === (s.editingItemId ?? s.drillItemId))),
   );
+  // Sizes locked one by one (ADR-171), as a stable key so the selector returns the same reference.
+  const lockedKeysText = useDesign((s) =>
+    lockedAxes(s.project?.items.find((i) => i.id === (s.editingItemId ?? s.drillItemId))).join(),
+  );
+  const lockedKeys = useMemo(
+    () => (lockedKeysText ? (lockedKeysText.split(',') as SizeAxis[]) : []),
+    [lockedKeysText],
+  );
   const setSettingsOpen = useUi((s) => s.setSettingsOpen);
   const roots = productRoots(prod);
   return (
@@ -206,7 +215,9 @@ function ComposeStart() {
           </p>
         )}
       </header>
-      {whole && <PieceSize product={prod} onChange={resize} locked={sizeLocked} />}
+      {whole && (
+        <PieceSize product={prod} onChange={resize} locked={sizeLocked} lockedKeys={lockedKeys} />
+      )}
       {roots.map((r) => (
         <button key={r.root.id} type="button" className="row-btn" onClick={() => select(r.root.id)}>
           <span className="glyph">

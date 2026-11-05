@@ -2349,6 +2349,65 @@ td.note {
   stroke-width: 4;
   pointer-events: none;
 }
+/* Assembly steps (ADR-174). */
+.assembly .assembly-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s-2);
+}
+.assembly .assembly-steps > li {
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: var(--s-2) var(--s-3);
+}
+.assembly .assembly-steps > li.on {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+.assembly .step-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+.assembly .step-head .btn {
+  margin-left: auto;
+}
+.assembly .step-n {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--surface);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+.assembly .step-parts {
+  margin: var(--s-1) 0 0;
+  padding-left: var(--s-4);
+}
+.assembly .assembly-piece h3 {
+  margin: var(--s-3) 0 var(--s-2);
+}
+/* Fill the room (ADR-173): the walls to tick. */
+.wf-walls {
+  list-style: none;
+  margin: var(--s-3) 0 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s-2);
+}
+.wf-walls label {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 44px;
+}
 /* A tick across the seam of two connected pieces (ADR-168). */
 .plan-connections line {
   stroke: var(--primary);
@@ -4831,6 +4890,41 @@ button.tile:hover {
 }
 .bar .path .btn {
   flex: none;
+}
+/* The running cost estimate (ADR-172): a pill that opens the Shopping list. */
+.estimate-chip {
+  flex: none;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  line-height: 1;
+  padding: var(--s-1) var(--s-3);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.estimate-chip.partial {
+  border-color: var(--warn);
+}
+.estimate-chip.none {
+  color: var(--ink-2);
+  font-weight: 500;
+}
+.estimate-chip:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+}
+.modes {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+.modes .segmented {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 .bar-tools {
   margin-left: auto;

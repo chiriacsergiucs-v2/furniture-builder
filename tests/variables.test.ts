@@ -138,7 +138,7 @@ describe('bindings on a project (ADR-166)', () => {
     const d = variableDiagnostics(next).find((x) => x.code === 'binding-range');
     expect(d?.message).toMatch(/-50 mm is outside 100–3000 mm/);
   });
-  it('a y binding on a floor piece is an error; a size lock is a warning', () => {
+  it('a y binding on a floor piece is an error; a locked size keeps its value and warns (ADR-171)', () => {
     const { p, ids } = three();
     const a = addVariable(p, 'h', '300');
     let next = setBinding(a.project, ids[0], 'y', 'h');
@@ -149,7 +149,9 @@ describe('bindings on a project (ADR-166)', () => {
     };
     const codes = variableDiagnostics(next).map((x) => x.code);
     expect(codes).toContain('binding-floor');
-    expect(codes).toContain('binding-size-lock');
+    expect(codes).toContain('binding-held');
+    // The lock outranks the binding: the width stays as it was.
+    expect(cab(applyBindings(next), ids[1]).width).toBe(cab(p, ids[1]).width);
   });
   it('deleting a used variable lists its users and unbinds them; rename follows', () => {
     const { p, ids } = three();

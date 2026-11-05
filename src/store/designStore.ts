@@ -74,7 +74,7 @@ import { drill, type Selection } from '../core/selectPath';
 import { resizeProduct, type SizeField } from '../core/pieceSize';
 import { carryGroups, withGroups } from '../core/groupMove';
 import { resizeGroup, type WidthSplit } from '../core/groupSize';
-import { resizeBlocked, setSizeLocked, sizeLockBlocked } from '../core/sizeLock';
+import { resizeBlocked, setAxisLocked, setSizeLocked, sizeLockBlocked } from '../core/sizeLock';
 import { setWallHeight } from '../core/height';
 import { moveTo, type MoveToAction } from '../core/moveTo';
 import {
@@ -111,6 +111,8 @@ import {
   type RunRequest,
   type RunSettings,
   type RunSink,
+  setTurnLocked,
+  type SizeAxis,
 } from '../core/project';
 import type {
   CabinetParams,
@@ -144,7 +146,7 @@ import {
 const keepSelection = (d: Design, sel: Selection): Selection =>
   sel && !findInProduct(d.product, sel) ? null : sel;
 
-export type Tab = 'parts' | 'sheets' | 'hardware' | 'shopping' | 'checks';
+export type Tab = 'parts' | 'sheets' | 'hardware' | 'assembly' | 'shopping' | 'checks';
 
 /** How a move was made (ADR-168): `snapped` = the drop snapped; `alone` = Alt held, so connected pieces stay. */
 export interface MoveOpts {
@@ -163,6 +165,9 @@ interface State {
   /** 3D preview with the panels pushed apart (display only). */
   exploded: boolean;
   tab: Tab;
+  /** Panel ids lit in the 3D view by an assembly step (ADR-174); null = every part as usual. Viewer-only. */
+  litPanelIds: string[] | null;
+  setLit: (ids: string[] | null) => void;
   /** Phones: the results panel under the views is open (ADR-091). UI state only; a reload starts collapsed. */
   resultsOpen: boolean;
   past: Design[];
@@ -322,6 +327,9 @@ interface State {
   setLocked: (id: string, on: boolean) => void;
   /** Lock or unlock a piece's size (ADR-122); one undo step. */
   setSizeLocked: (id: string, on: boolean) => void;
+  /** Lock or unlock the piece's turn, or one of its outside sizes (ADR-171). One undo step each. */
+  setTurnLocked: (id: string, on: boolean) => void;
+  setAxisLocked: (id: string, axis: SizeAxis, on: boolean) => void;
   /** Hang a wall unit at a new height, e.g. dragged in 3D (ADR-122); one undo step. Returns why not, or null. */
   setItemHeight: (id: string, height: number) => string | null;
   /** "Keep mine" (ADR-096): hide the newer-template notice for this revision; one undo step. */
@@ -475,6 +483,8 @@ interface State {
    * kind any of them is in), off removes the one they are in. Returns why it was refused, or ''. One undo step.
    */
   setCommon: (kind: 'top' | 'bottom', on: boolean) => string;
+  /** Add a room mix's pieces to the open project (ADR-173): one undo step, the pieces selected. Their ids. */
+  fillRoom: (mix: Project) => string[];
   /** Connect or disconnect the two selected pieces (ADR-168); the reason when it cannot be done, else ''. */
   setConnected: (on: boolean) => string;
   /** Forget a part's own board (ADR-151) on a project item (`id`) or the open piece (null). */
@@ -898,6 +908,18 @@ export const useDesign = create<State>((rawSet, get) => {
       const p = get().project;
       if (!p) return;
       const next = setSizeLocked(p, id, on);
+      if (next !== p) commitProject(next);
+    },
+    setTurnLocked: (id, on) => {
+      const p = get().project;
+      if (!p) return;
+      const next = setTurnLocked(p, id, on);
+      if (next !== p) commitProject(next);
+    },
+    setAxisLocked: (id, axis, on) => {
+      const p = get().project;
+      if (!p) return;
+      const next = setAxisLocked(p, id, axis, on);
       if (next !== p) commitProject(next);
     },
     setItemHeight: (id, height) => {
@@ -1487,6 +1509,14 @@ export const useDesign = create<State>((rawSet, get) => {
       );
       return '';
     },
+    fillRoom: (mix) => {
+      const p = get().project;
+      if (!p || !mix.items.length) return [];
+      commitProject({ ...p, items: [...p.items, ...mix.items] }, t('Fill the room'));
+      const ids = mix.items.map((i) => i.id);
+      get().selectItems(ids);
+      return ids;
+    },
     setConnected: (on) => {
       const p = get().project;
       const ids = get().selectedItemIds.filter((id) => p?.items.some((i) => i.id === id));
@@ -1764,6 +1794,8 @@ export const useDesign = create<State>((rawSet, get) => {
     setHighlight: (ids) => set({ highlight: ids }),
     setShowFronts: (v) => set({ showFronts: v }),
     setExploded: (v) => set({ exploded: v }),
+    litPanelIds: null,
+    setLit: (ids) => set({ litPanelIds: ids }),
     setTab: (t) => set({ tab: t, resultsOpen: true }),
     toggleTab: (t) =>
       set((s) =>

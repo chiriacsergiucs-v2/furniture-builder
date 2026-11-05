@@ -85,9 +85,6 @@ export const ru_info = {
   'Place on the floor, on the wall or on another piece':
     'Поставить на пол, на стену или на другое изделие',
   'A piece on another piece follows it.': 'Изделие на другом изделии следует за ним.',
-  'Lock a piece in place': 'Закрепить изделие на месте',
-  'Drags, automatic moves and repairs leave it alone.':
-    'Перетаскивание, автоматические перемещения и исправления его не трогают.',
   'Aligning and arranging': 'Выравнивание и расстановка',
   'Snap to neighbours and walls': 'Привязка к соседям и стенам',
   'A preview while dragging; the Snap switch or Alt places freely.':
@@ -380,4 +377,17 @@ export const ru_info = {
     'Перетащите круглую ручку перед выбранным изделием; она примагничивается к четвертям оборота, Shift шагает по 15°, [ и ] поворачивают на 1°.',
   'Copies of the pieces with their positions, run-part recipe, connections, variables and bindings; pieces inserted into a project take its settings.':
     'Копии изделий с их положениями, рецептом частей ряда, соединениями, переменными и привязками; изделия, вставленные в проект, принимают его настройки.',
+  'Lock a piece in place, its turn, or each of its sizes':
+    'Закрепить изделие на месте, его поворот или каждый размер',
+  'Lock keeps it where it is; Lock turn, Lock width, Lock height, Lock depth and Lock size (all three) in More actions. A locked value outranks variables, Replace, linked copies and project settings.':
+    '«Закрепить» держит его на месте; «Закрепить поворот», «Закрепить ширину», «Закрепить высоту», «Закрепить глубину» и «Закрепить размер» (все три) — в «Ещё действия». Закреплённое значение важнее переменных, замены, связанных копий и настроек проекта.',
+  'Running cost estimate': 'Текущая оценка стоимости',
+  'A chip in the editor header with the estimate of what is shown, updated on every change; tap it to open the Shopping list.':
+    'Значок в шапке редактора с оценкой того, что показано, обновляется при каждом изменении; нажмите, чтобы открыть список покупок.',
+  'Fill the room': 'Заполнить комнату',
+  'Pick a room shape or use the project’s room: suggested mixes for every ticked wall at once, doors and windows kept free, a corner cabinet at each inside corner; each mix checked as a project.':
+    'Выберите форму комнаты или возьмите комнату проекта: наборы сразу для всех отмеченных стен, двери и окна остаются свободными, угловой шкаф в каждом внутреннем углу; каждый набор проверен как проект.',
+  'Assembly steps': 'Шаги сборки',
+  'An ordered step list per piece from the parts’ positions, with the joints and hardware of each step, labelled guidance; Show step lights the parts in 3D; printable.':
+    'Упорядоченный список шагов по каждому изделию из положения деталей, с соединениями и фурнитурой каждого шага, как рекомендация; «Показать шаг» подсвечивает детали в 3D; печатается.',
 } satisfies Record<string, string>;

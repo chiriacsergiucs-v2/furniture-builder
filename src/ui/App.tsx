@@ -13,11 +13,15 @@ import { useDesign } from '../store/designStore';
 import { keepSessionVersion } from '../store/versions';
 import type { Design } from '../core/types';
 import { t, tr } from '../core/i18n';
+import { formatMoney } from '../core/prices';
+import { useEstimate } from './useEstimate';
 import { NewDialog } from './Dialogs';
 import { SettingsDialog } from './Settings';
 import { MaterialDialog } from './MaterialDialog';
 import { WizardDialog } from './Wizard';
 import { WallFillDialog } from './WallFill';
+import { RoomFillDialog } from './RoomFill';
+import { PrintAssembly } from './Assembly';
 import { CatalogPage } from './Catalog';
 import { ResearchPage } from './Research';
 import { GapsPage } from './Gaps';
@@ -87,6 +91,40 @@ const NoViewer = () => (
   </div>
 );
 
+/**
+ * The running cost estimate (ADR-172): what the Shopping list shows, in the header (a phone: the mode row, amount
+ * only). Tapping it opens Build & Preview › Shopping list.
+ */
+function EstimateChip({ compact = false }: { compact?: boolean }) {
+  const { est, currency, priceState } = useEstimate();
+  const setMode = useUi((s) => s.setMode);
+  const setTab = useDesign((s) => s.setTab);
+  const none =
+    priceState !== 'ready' ||
+    (!est.priced && !est.missing.length) ||
+    (!est.priced && est.total === 0);
+  const amount = t('{amount} {currency}', { amount: formatMoney(est.total), currency });
+  const full = none
+    ? t('No prices yet')
+    : est.missing.length
+      ? t('Estimate: {amount} · {n} missing', { amount, n: est.missing.length })
+      : t('Estimate: {amount}', { amount });
+  return (
+    <button
+      type="button"
+      className={`estimate-chip ${none ? 'none' : est.missing.length ? 'partial' : ''}`}
+      aria-label={`${full} — ${t('Open the Shopping list')}`}
+      title={t('Open the Shopping list')}
+      onClick={() => {
+        setMode('build');
+        setTab('shopping');
+      }}
+    >
+      {compact && !none ? amount : full}
+    </button>
+  );
+}
+
 type SaveState = 'idle' | 'saving' | 'saved' | 'failed';
 const SAVE_TEXT: Record<SaveState, string> = {
   idle: '',
@@ -150,7 +188,9 @@ export function App() {
   // The step each would undo or redo, named (ADR-123).
   const undoName = useDesign((s) => s.projectPastNames[s.projectPastNames.length - 1]),
     redoName = useDesign((s) => s.projectFutureNames[0]);
-  const [dialog, setDialog] = useState<null | 'new' | 'wizard' | 'render' | 'wallfill'>(null);
+  const [dialog, setDialog] = useState<
+    null | 'new' | 'wizard' | 'render' | 'wallfill' | 'roomfill'
+  >(null);
   const look = useLook();
   const openCatalog = () => {
     setDialog(null);
@@ -189,6 +229,7 @@ export function App() {
   const mode = useUi((s) => s.mode);
   const setMode = useUi((s) => s.setMode);
   const printing = useUi((s) => s.printing);
+  const printMode = useUi((s) => s.printMode);
   const setPrinting = useUi((s) => s.setPrinting);
   const notice = useUi((s) => s.notice);
   const setNotice = useUi((s) => s.setNotice);
@@ -608,6 +649,7 @@ export function App() {
               )}
             </span>
           )}
+          {page === 'editor' && !phone && <EstimateChip />}
           <SyncStatus />
           <div className="bar-tools">
             {page === 'editor' && (
@@ -687,6 +729,7 @@ export function App() {
         </header>
         {page === 'editor' && (
           <div className="modes" ref={modesRef}>
+            {phone && <EstimateChip compact />}
             <div className="segmented" role="radiogroup" aria-label={t('Editor mode')}>
               {MODES.map((m) => (
                 <button
@@ -899,11 +942,17 @@ export function App() {
           onBrowse={openCatalog}
           onWizard={() => openWizard(null)}
           onFillWall={() => setDialog('wallfill')}
+          onFillRoom={() => setDialog('roomfill')}
           onOpened={() => setPage('editor')}
         />
         <WallFillDialog
           open={dialog === 'wallfill'}
           onClose={() => setDialog((d) => (d === 'wallfill' ? null : d))}
+          onOpened={() => setPage('editor')}
+        />
+        <RoomFillDialog
+          open={dialog === 'roomfill'}
+          onClose={() => setDialog((d) => (d === 'roomfill' ? null : d))}
           onOpened={() => setPage('editor')}
         />
         <WizardDialog
@@ -930,7 +979,7 @@ export function App() {
         />
       </div>
       <ConfirmHost />
-      {printing && <PrintSheet />}
+      {printing && (printMode === 'assembly' ? <PrintAssembly /> : <PrintSheet />)}
     </>
   );
 }

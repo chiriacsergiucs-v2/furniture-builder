@@ -1469,7 +1469,17 @@ function Panels({
   const drag = usePieceDrag(inProject && moving, snapOn);
   const prefix = drillItem ? `${drillItem.id}:` : '';
   const ownId = inProject ? `${prefix}${selectedSpace}` : selectedSpace;
+  // An assembly step lights its parts (ADR-174): the rest goes translucent, as outside a selected space.
+  const litIds = useDesign((s) => s.litPanelIds);
+  const litSet = useMemo(() => (litIds ? new Set(litIds) : null), [litIds]);
+  useEffect(() => {
+    document.body.dataset.lit = String(litIds?.length ?? 0);
+    return () => {
+      delete document.body.dataset.lit;
+    };
+  }, [litIds]);
   const isFaded = (p: Panel) => {
+    if (litSet && !litSet.has(p.id)) return true;
     if (!fadeBox) return false;
     if (!inProject) return !inSelection(fadeBox, (built.get(p.id) ?? p).box);
     const own = p.id.startsWith(prefix) ? local.get(p.id.slice(prefix.length)) : undefined;

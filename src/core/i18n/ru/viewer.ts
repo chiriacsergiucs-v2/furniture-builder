@@ -257,4 +257,44 @@ export const ru_viewer = {
   'Snaps: {list}': 'Привязка: {list}',
   'Alt held: placing freely.': 'Alt зажат: свободное размещение.',
   'Snap is off.': 'Привязка выключена.',
+  // Fill the room (ADR-173).
+  'Fill the room': 'Заполнить комнату',
+  'Pick a room shape; get suggested mixes for every wall at once, with a corner cabinet at each inside corner, then refine them.':
+    'Выберите форму комнаты; получите наборы сразу для всех стен с угловым шкафом в каждом внутреннем углу, затем уточните их.',
+  Room: 'Комната',
+  Walls: 'Стены',
+  'Fill the room steps': 'Шаги заполнения комнаты',
+  'A ready shape and its sizes, in mm (ADR-059). Doors and windows come from a project’s own room: open the project and use Fill the room from its ⋯ menu.':
+    'Готовая форма и её размеры в мм (ADR-059). Двери и окна берутся из комнаты проекта: откройте проект и выберите «Заполнить комнату» в его меню ⋯.',
+  Shape: 'Форма',
+  Rectangle: 'Прямоугольник',
+  L: 'Г',
+  U: 'П',
+  Alcove: 'Ниша',
+  'Room height': 'Высота комнаты',
+  'Cut width': 'Ширина выреза',
+  'Cut depth': 'Глубина выреза',
+  'Cut offset': 'Смещение выреза',
+  'This project’s room, with its doors and windows. Tick the walls to fill.':
+    'Комната этого проекта с её дверями и окнами. Отметьте стены для заполнения.',
+  'Tick the walls to fill; every wall is ticked to start with.':
+    'Отметьте стены для заполнения; вначале отмечены все.',
+  'Walls to fill': 'Стены для заполнения',
+  'Wall {n}, {len} mm': 'Стена {n}, {len} мм',
+  'Leave a field empty for any. Applied to every ticked wall; shelves wider than the shelf-span guidance get a centre divider.':
+    'Оставьте поле пустым для любого значения. Применяется к каждой отмеченной стене; полки шире рекомендованного пролёта получают центральную перегородку.',
+  'Corner cabinet': 'Угловой шкаф',
+  'Blind corner': 'Глухой угол',
+  'L corner': 'Г-образный угол',
+  'Suggested room mixes': 'Предложенные наборы для комнаты',
+  '{n|# wall|# walls} · best {k}, checked as a project':
+    '{n|# стена|# стены|# стен} · лучшие {k}, проверены как проект',
+  'Room mix: {summary}': 'Набор для комнаты: {summary}',
+  'Wall {n}: {w} mm': 'Стена {n}: {w} мм',
+  '{summary} · {n|# corner cabinet|# corner cabinets}':
+    '{summary} · {n|# угловой шкаф|# угловых шкафа|# угловых шкафов}',
+  'Add this mix': 'Добавить этот набор',
+  Next: 'Далее',
+  'Fill the room…': 'Заполнить комнату…',
+  'every wall of this room at once': 'все стены этой комнаты сразу',
 } satisfies Record<string, string>;

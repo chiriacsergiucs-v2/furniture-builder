@@ -62,6 +62,12 @@ export const FEATURES: FeatureDomain[] = [
         adrs: ['ADR-103', 'ADR-104'],
       },
       { name: 'Make a new piece inside a project', adrs: ['ADR-107'] },
+      {
+        name: 'Fill the room',
+        detail:
+          'Pick a room shape or use the project’s room: suggested mixes for every ticked wall at once, doors and windows kept free, a corner cabinet at each inside corner; each mix checked as a project.',
+        adrs: ['ADR-173'],
+      },
     ],
   },
   {
@@ -190,9 +196,10 @@ export const FEATURES: FeatureDomain[] = [
         adrs: ['ADR-031'],
       },
       {
-        name: 'Lock a piece in place',
-        detail: 'Drags, automatic moves and repairs leave it alone.',
-        adrs: ['ADR-095'],
+        name: 'Lock a piece in place, its turn, or each of its sizes',
+        detail:
+          'Lock keeps it where it is; Lock turn, Lock width, Lock height, Lock depth and Lock size (all three) in More actions. A locked value outranks variables, Replace, linked copies and project settings.',
+        adrs: ['ADR-095', 'ADR-122', 'ADR-171'],
       },
     ],
   },
@@ -541,6 +548,12 @@ export const FEATURES: FeatureDomain[] = [
               'Parts, Sheets, Hardware, Shopping list and Checks with counts; on a phone they stay folded until you tap a tab.',
             adrs: ['ADR-079', 'ADR-091'],
           },
+          {
+            name: 'Assembly steps',
+            detail:
+              'An ordered step list per piece from the parts’ positions, with the joints and hardware of each step, labelled guidance; Show step lights the parts in 3D; printable.',
+            adrs: ['ADR-174'],
+          },
         ],
       },
       {
@@ -565,6 +578,12 @@ export const FEATURES: FeatureDomain[] = [
       {
         name: 'Shopping and costs',
         features: [
+          {
+            name: 'Running cost estimate',
+            detail:
+              'A chip in the editor header with the estimate of what is shown, updated on every change; tap it to open the Shopping list.',
+            adrs: ['ADR-172'],
+          },
           {
             name: 'Shopping list',
             detail: 'Boards, banding, hardware, run parts and what is still to choose.',

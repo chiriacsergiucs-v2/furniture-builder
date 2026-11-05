@@ -9,6 +9,7 @@ import { withModels } from '../../persist/models';
 import { useDesign } from '../../store/designStore';
 import { askConfirm } from '../Confirm';
 import { ReviewPackDialog } from '../ReviewPack';
+import { RoomFillDialog } from '../RoomFill';
 import { Icon } from '../icons';
 import { CopyCodeDialog } from '../ShareCode';
 import { download, downloadFrontSvg, fileName } from './files';
@@ -44,6 +45,7 @@ export function MoreMenu({
   const setNotice = useUi((s) => s.setNotice);
   const signedIn = useAccount((s) => !!s.user);
   const [pack, setPack] = useState(false);
+  const [roomFill, setRoomFill] = useState(false);
   const close = () => ref.current?.removeAttribute('open');
   const [codeOpen, setCodeOpen] = useState(false);
 
@@ -139,6 +141,13 @@ export function MoreMenu({
               <button type="button" onClick={run(() => setPack(true))}>
                 <Icon name="upload" />
                 {t('Hand to a professional…')} <small>{t('one .zip to check the plan')}</small>
+              </button>
+            )}
+            {/* Fill the room (ADR-173): mixes for every wall of this project's room, added to the project. */}
+            {inProject && project.room && (
+              <button type="button" onClick={run(() => setRoomFill(true))}>
+                <Icon name="project" />
+                {t('Fill the room…')} <small>{t('every wall of this room at once')}</small>
               </button>
             )}
             {inProject ? null : (
@@ -247,6 +256,11 @@ export function MoreMenu({
       {/* Out of the app bar, whose styles are for its own buttons. */}
       {pack &&
         createPortal(<ReviewPackDialog open onClose={() => setPack(false)} />, document.body)}
+      {roomFill &&
+        createPortal(
+          <RoomFillDialog open addTo onClose={() => setRoomFill(false)} onOpened={onOpened} />,
+          document.body,
+        )}
       {codeOpen &&
         createPortal(<CopyCodeDialog onClose={() => setCodeOpen(false)} />, document.body)}
     </>

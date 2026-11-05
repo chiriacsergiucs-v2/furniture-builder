@@ -1,8 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   CURRENCY_ID,
-  DEFAULT_CURRENCY,
-  estimate,
   formatMoney,
   linePrice,
   parseMoney,
@@ -13,33 +11,23 @@ import {
   type PriceEntry,
   type SellerLookup,
 } from '../core/prices';
-import {
-  anyOffers,
-  hardwareOffers,
-  productIndex,
-  refOf,
-  sellerPriceLookup,
-  type Offer,
-  type SellerCatalog,
-} from '../core/sellers';
+import { anyOffers, hardwareOffers, refOf, type Offer, type SellerCatalog } from '../core/sellers';
 import { validPer } from '../core/design';
-import { ProductPicker, useSellerCatalogs } from './ProductPicker';
+import { ProductPicker } from './ProductPicker';
 import {
   NOT_COUNTED,
   shoppingCsvRo,
-  shoppingList,
   type ShopLine,
   type ShopSection,
   type ShopUnit,
 } from '../core/shopping';
 import { t, tr } from '../core/i18n';
-import { sinkList } from '../core/project';
-import { listPrices, savePrice, savePrices } from '../persist/db';
+import { savePrices } from '../persist/db';
 import { useDesign } from '../store/designStore';
-import { useFastenerChoices, useFastenerCounts } from './Fasteners';
+import { usePrices } from './priceStore';
+import { useEstimate } from './useEstimate';
 import { GuidanceTip, InfoTip } from './controls';
 import { Icon } from './icons';
-import { useNesting } from './useNesting';
 import { useView } from './useView';
 
 const SECTIONS: { id: ShopSection; title: string }[] = [
@@ -82,61 +70,23 @@ function save(name: string, text: string, type: string) {
  */
 export function ShoppingList() {
   const view = useView();
-  const runParts = useDesign((s) =>
-    s.project && !s.editingItemId ? s.project.runParts : undefined,
-  );
   const shownProject = useDesign((s) => (s.project && !s.editingItemId ? s.project : undefined));
-  const sinks = useMemo(() => (shownProject ? sinkList(shownProject) : []), [shownProject]);
-  const n = useNesting(true);
-  const fastenerCounts = useFastenerCounts();
-  const fastenerChoices = useFastenerChoices();
   const projectView = !!shownProject;
   const addSellerItem = useDesign((s) => s.addSellerItem);
   const [adding, setAdding] = useState(false);
-  const [prices, setPrices] = useState<PriceEntry[]>([]);
   const [editing, setEditing] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
-  useEffect(() => {
-    listPrices()
-      .then(setPrices)
-      .catch(() => setMsg(t('Prices could not be read from this browser.')));
-  }, []);
-  const sheets = useMemo(
-    () =>
-      n.status === 'done'
-        ? new Map(n.results.filter((r) => r.valid).map((r) => [r.materialId, r.stats.sheetsUsed]))
-        : null,
-    [n],
-  );
-  const lines = useMemo(
-    () =>
-      shoppingList({
-        rows: view.rows,
-        materials: view.materials,
-        hardware: view.hardware,
-        sheets,
-        runParts,
-        sinks,
-        diagnostics: view.diagnostics,
-        fasteners: { counts: fastenerCounts, choices: fastenerChoices },
-        hardwareProducts: view.hardwareProducts,
-        sellerItems: view.sellerItems,
-      }),
-    [view, sheets, runParts, sinks, fastenerCounts, fastenerChoices],
-  );
-  // Seller prices (ADR-161): the bundled catalogs load only when a line links a seller product.
-  const cats = useSellerCatalogs(lines.some((l) => l.product));
-  const seller = useMemo<SellerLookup | undefined>(
-    () => (cats && cats !== 'error' ? sellerPriceLookup(productIndex(cats)) : undefined),
-    [cats],
-  );
+  // The lines, prices and estimate are the header chip's too (ADR-172): one number everywhere.
+  const { lines, prices, priceState, seller, est, currency } = useEstimate();
+  const reloadPrices = usePrices((s) => s.reload);
+  const storePrice = usePrices((s) => s.setPrice);
+  // A device that refused the price list says so until another message replaces it.
+  const shown =
+    msg ?? (priceState === 'failed' ? t('Prices could not be read from this browser.') : null);
   const map = useMemo(() => new Map(prices.map((p) => [p.id, p])), [prices]);
-  const currency = map.get(CURRENCY_ID)?.text ?? DEFAULT_CURRENCY;
-  const est = useMemo(() => estimate(lines, prices, seller), [lines, prices, seller]);
   const any = useCallback((c: SellerCatalog[], q: string) => anyOffers(c, q), []);
   const setPrice = (e: PriceEntry) => {
-    setPrices((ps) => [...ps.filter((p) => p.id !== e.id), e]);
-    void savePrice(e).catch(() => setMsg(t('The price could not be saved on this device.')));
+    void storePrice(e).catch(() => setMsg(t('The price could not be saved on this device.')));
   };
   const importCsv = async (f: File) => {
     const r = parsePricesCsv(await f.text());
@@ -150,7 +100,7 @@ export function ShoppingList() {
       return;
     }
     await savePrices(r.prices);
-    setPrices(await listPrices());
+    await reloadPrices();
     setMsg(
       `${t('{n} prices imported', { n: r.prices.length })}${
         r.problems.length
@@ -340,9 +290,9 @@ export function ShoppingList() {
           </label>
         </div>
       )}
-      {msg && (
+      {shown && (
         <p className="hint" role="status">
-          {msg}
+          {shown}
         </p>
       )}
       {SECTIONS.map((s) => {
