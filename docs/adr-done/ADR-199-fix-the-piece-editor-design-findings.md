@@ -1,7 +1,8 @@
 # ADR-199: Fix the piece editor design findings
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-06
+- Implemented: 2026-11-05 (Built in PR #169 (merged 353108e, CI run 42126747931); production find-it re-run on main 2026-11-05)
 - Depends on: ADR-079, ADR-080, ADR-112, ADR-117
 - Design: docs/ui-design.md (Piece editor (Compose and Configure))
 - Backlog: N204

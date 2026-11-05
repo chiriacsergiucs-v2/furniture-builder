@@ -1839,3 +1839,12 @@ highest id in either file.
 - Request: “Fill the room” (user 2026-11-04)
 - Questions: Place a wall corner cabinet (corner-blind-wall) in the corner?
 - Suggested pick: Add the catalog's wall corner cabinet over each corner cabinet (estimate: effort +20%, value +15%).
+
+### G-367: Design critiques of shell, piece editor and project
+
+- Status: Done (ADR-200)
+- Origin: Design critique batch, 2026-11-05; implementation approved 2026-11-06
+- Missing: Shipping the approved fixes through ADR-200; implementation and local verification are complete. This branch implements and verifies ADR-198, ADR-199, ADR-200, with production checks at 390 × 844 and 1280 × 900 and inspected light/dark screenshots.
+- Request: "run a /batch for 1 through 7 with a critique of design … 1 adr … per flow (7 total adrs)"; "Implement ADR-s 198, 199, 200"; "Yes" to all twelve fixes.
+- Questions: None: all twelve fixes were accepted. Merge and deployment have not been requested.
+- Suggested pick: The accepted fixes are built; review the implementation pull requests, then ship on the user's instruction. No approved fix was omitted.
