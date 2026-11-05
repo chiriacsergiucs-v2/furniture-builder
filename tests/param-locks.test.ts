@@ -120,7 +120,7 @@ describe('per-size locks (ADR-171)', () => {
 
 describe('validation and schema (ADR-171, ADR-011)', () => {
   it('schemaVersion 19 validates the fields; older projects load unchanged; bad values are refused', () => {
-    expect(PROJECT_SCHEMA).toBe(19);
+    expect(PROJECT_SCHEMA).toBe(20);
     const p0 = row('base-door');
     const id = p0.items[0].id;
     const old = { ...p0, schemaVersion: 18 as const };

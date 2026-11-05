@@ -39,7 +39,7 @@ describe.each(WIDTHS)('common top at %ipx (find-it, ADR-165)', (width) => {
     const rows = within(within(side).getByRole('list', { name: 'Pieces' })).getAllByRole('button');
     for (const r of rows) if (r.getAttribute('aria-pressed') !== 'true') await user.click(r);
     const card = within(side).getByRole('region', { name: /^2 pieces selected/ });
-    const common = within(card).getByRole('group', { name: 'Common top and bottom' });
+    const common = within(card).getByRole('group', { name: 'Common top, bottom and sides' });
     const top = within(common).getByRole('checkbox', { name: 'Common top' });
     expect((top as HTMLInputElement).disabled).toBe(false);
     await user.click(top);
@@ -62,13 +62,14 @@ describe.each(WIDTHS)('common top at %ipx (find-it, ADR-165)', (width) => {
     for (const r of rows3) if (r.getAttribute('aria-pressed') !== 'true') await user.click(r);
     const card3 = within(side).getByRole('region', { name: /^3 pieces selected/ });
     const top3 = within(
-      within(card3).getByRole('group', { name: 'Common top and bottom' }),
+      within(card3).getByRole('group', { name: 'Common top, bottom and sides' }),
     ).getByRole('checkbox', { name: 'Common top' });
     expect((top3 as HTMLInputElement).checked).toBe(false);
     expect((top3 as HTMLInputElement).disabled).toBe(true);
     expect(
-      within(card3).getAllByText(/not the same height|not the same depth|do not touch|turned/)
-        .length,
+      within(card3).getAllByText(
+        /^Wardrobe (has another plinth height|is not the same height|is not the same depth|does not touch)/,
+      ).length,
     ).toBeGreaterThan(0);
   });
 });

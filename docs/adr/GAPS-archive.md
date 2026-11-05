@@ -1639,6 +1639,36 @@ highest id in either file.
 - Suggested pick: Keep the same panel until the user says what Build & Preview should show.
 - Answer (user, 2026-10-30): "Same as Compose".
 
+### G-317: Run-part boards in the Material dialog
+
+- Status: Done (ADR-188)
+- Origin: ADR-163
+- Missing: The worktop, filler and cover boards of a run are not offered in the Material dialog; they keep their own select under Run parts.
+- Request: Adjusting the material used MUST be always available.
+- Questions: Should run-part boards join the Material dialog as a Worktop / Fillers role with scope Group?
+- Suggested pick: Add them as roles in a later ADR (closest to 'always available').
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium
+- Issue: Run worktops, fillers and cover boards cannot be changed from the Material dialog; they use a separate select.
+- Fix: Add Worktop and Fillers roles with Group scope to the Material dialog in a later ADR.
+- Conflicts: none
+
+### G-318: Edge band per role in the Material dialog
+
+- Status: Done (ADR-188)
+- Origin: ADR-163
+- Missing: The Material dialog changes boards only; the edge band of a role stays the board's band (ADR-077).
+- Request: Not only piece/carcass, but any other combination or piece separately.
+- Questions: Should a role also take an edge-band choice?
+- Suggested pick: Add an edge-band select per role in a later ADR.
+- Work: Medium
+- Impact: Medium
+- Necessity: Low-medium
+- Issue: The Material dialog changes boards only; a role's edge band always follows its board's band.
+- Fix: Add an edge-band select per role in the Material dialog, stored as a per-role band override.
+- Conflicts: none
+
 ### G-319: App-wide Materials list
 
 - Status: Done (obsolete: user decision 2026-11-05, no app-wide Materials list; project boards and the decor list)
@@ -1650,21 +1680,38 @@ highest id in either file.
 
 ### G-320: Common panel across a gap
 
-- Status: Done (obsolete: user decision 2026-11-05, a common panel joins touching items only)
+- Status: Done (ADR-189)
 - Origin: ADR-165
 - Missing: A common top or bottom needs touching items; a gap between items is not bridged.
 - Request: Add the possibility to have a common bottom or top between multiple items.
 - Questions: Should one panel bridge a gap between items?
 - Suggested pick: Touching items only (the user's pick).
+- Note: Reopened by the user 2026-11-05 ('Build them: PR #151 wins'); built by ADR-189/ADR-190.
 
 ### G-321: Shared side between neighbours
 
-- Status: Done (obsolete: user decision 2026-11-05, items keep their own sides)
+- Status: Done (ADR-190)
 - Origin: ADR-165
 - Missing: Items under a common top or bottom keep their own two sides; no shared side between neighbours.
 - Request: Add the possibility to have a common bottom or top between multiple items.
 - Questions: Should neighbours also share one side panel?
 - Suggested pick: Own sides (the user's pick); a shared side in a later ADR.
+- Note: Reopened by the user 2026-11-05 ('Build them: PR #151 wins'); built by ADR-189/ADR-190.
+
+### G-322: Common panel on corner cabinets and desks
+
+- Status: Done (ADR-189)
+- Origin: ADR-165
+- Missing: Only cabinets join a common top or bottom; corner cabinets, desks and frames are refused with the reason.
+- Request: Add the possibility to have a common bottom or top between multiple items.
+- Questions: Should corner cabinets and desks join a common panel?
+- Suggested pick: Cabinets first; corners and desks in a later ADR.
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low
+- Issue: Only plain cabinets can share a common top or bottom; corner cabinets and desks are refused.
+- Fix: Extend the common-panel check and build to corner cabinets and desks in a later ADR.
+- Conflicts: none
 
 ### G-323: Variables outside projects
 
