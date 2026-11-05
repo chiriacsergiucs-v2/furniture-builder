@@ -1,7 +1,8 @@
 # ADR-187: Gaps page: work, impact and necessity ratings, an issue and a fix line, and an ADR check per gap
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-05
+- Implemented: 2026-11-05
 - Depends on: ADR-082, ADR-101
 - Design: docs/ui-design.md (section 4, Gaps page)
 - Backlog: N191
@@ -50,8 +51,8 @@ on the scale Low, Low-medium, Medium, Medium-high, High (`src/core/research/type
 
 ## Done when
 
-- [ ] Every open and acknowledged gap has Work, Impact, Necessity, Issue, Fix and Conflicts; `pnpm docs:check` refuses
+- [x] Every open and acknowledged gap has Work, Impact, Necessity, Issue, Fix and Conflicts; `pnpm docs:check` refuses
       a rating outside the scale (tests)
-- [ ] Gaps page → Impact: High → only high-impact gaps, each row with its Issue and Fix lines at 390 and 1280 px
+- [x] Gaps page → Impact: High → only high-impact gaps, each row with its Issue and Fix lines at 390 and 1280 px
       (jsdom find-it)
-- [ ] A gap with a conflict shows its Conflicts chip (jsdom find-it)
+- [x] A gap with a conflict shows its Conflicts chip (jsdom find-it)
