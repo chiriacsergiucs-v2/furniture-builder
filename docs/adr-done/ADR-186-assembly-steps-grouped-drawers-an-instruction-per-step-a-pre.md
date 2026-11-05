@@ -1,7 +1,8 @@
 # ADR-186: Assembly steps: grouped drawers, an instruction per step, a preparation step and a square check
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-05
+- Implemented: 2026-11-05
 - Depends on: ADR-174, ADR-185
 - Design: docs/ui-design.md (section 4, results tabs; print sheets)
 - Backlog: N189
@@ -10,7 +11,7 @@
 
 ## Context
 
-Same re-check as [ADR-185](ADR-185-assembly-steps-print-language-drawings-fasteners-and-hardwar.md): the chest's Drawer
+Same re-check as [ADR-185](../adr-done/ADR-185-assembly-steps-print-language-drawings-fasteners-and-hardwar.md): the chest's Drawer
 boxes step lists 16 rows for 4 identical drawers; a step is a title and a parts list with no sentence saying what to
 do; nothing prepares the parts (edge banding, hinge cups, shelf-pin rows) before assembly; nothing says to check the
 carcass is square before the back.
@@ -45,9 +46,9 @@ carcass is square before the back.
 
 ## Done when
 
-- [ ] A chest of 4 equal drawers shows "Drawer box × 4" with its 5 parts in 4 rows (the two sides in one row; user 2026-11-05: "4 rows, sides combined"); unequal drawers stay apart (tests)
-- [ ] Every step has an instruction in en, ro and ru; the Back step's includes the square check (tests)
-- [ ] A base cabinet starts with Prepare the parts listing banded edges and its hinge cups; a plain panel set has no
+- [x] A chest of 4 equal drawers shows "Drawer box × 4" with its 5 parts in 4 rows (the two sides in one row; user 2026-11-05: "4 rows, sides combined"); unequal drawers stay apart (tests)
+- [x] Every step has an instruction in en, ro and ru; the Back step's includes the square check (tests)
+- [x] A base cabinet starts with Prepare the parts listing banded edges and its hinge cups; a plain panel set has no
       preparation step (tests)
-- [ ] Assembly tab → "Prepare the parts" and "Drawer box × 4" at 390 and 1280 px (jsdom find-it)
-- [ ] Russian entries for every new text; print texts in ro, ru and en
+- [x] Assembly tab → "Prepare the parts" and "Drawer box × 4" at 390 and 1280 px (jsdom find-it)
+- [x] Russian entries for every new text; print texts in ro, ru and en

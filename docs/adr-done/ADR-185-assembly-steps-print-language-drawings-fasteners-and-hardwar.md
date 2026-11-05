@@ -1,7 +1,8 @@
 # ADR-185: Assembly steps: print language, drawings, fasteners and hardware at the right step
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-05
+- Implemented: 2026-11-05
 - Depends on: ADR-174, ADR-074, ADR-157
 - Design: docs/ui-design.md (section 4, results tabs; print sheets)
 - Backlog: N188
@@ -58,11 +59,11 @@ drawers):
 
 ## Done when
 
-- [ ] The Romanian, Russian and English prints show part and hardware names in that language (tests)
-- [ ] A project's print has a front view in each piece's section (tests)
-- [ ] With a fastener chosen for carcass joints (per 2), Sides to the bottom of a base cabinet lists "4 × {name}";
+- [x] The Romanian, Russian and English prints show part and hardware names in that language (tests)
+- [x] A project's print has a front view in each piece's section (tests)
+- [x] With a fastener chosen for carcass joints (per 2), Sides to the bottom of a base cabinet lists "4 × {name}";
       without one it says "choose your fastener"; per-step counts sum to the ADR-074 totals (tests)
-- [ ] A base cabinet's steps start with Fit hardware to the sides (hinge plates) and end with Fit drawers and doors;
+- [x] A base cabinet's steps start with Fit hardware to the sides (hinge plates) and end with Fit drawers and doors;
       a chest's runner pairs appear in the side step and in Drawer boxes (tests)
-- [ ] Assembly tab → "Fit hardware to the sides" and a fastener line at 390 and 1280 px (jsdom find-it)
-- [ ] Russian entries for every new text; print texts in ro, ru and en
+- [x] Assembly tab → "Fit hardware to the sides" and a fastener line at 390 and 1280 px (jsdom find-it)
+- [x] Russian entries for every new text; print texts in ro, ru and en
