@@ -364,8 +364,8 @@ export const ru_info = {
     'Ручка, накладка фасадов и высота цоколя, которым следуют изделия; «Материал» с областью «Проект» задаёт плиты корпуса, фасадов и задней стенки.',
   'Turn ↺ and ↻ in the toolbar, or R and Shift+R.':
     'Поворот ↺ и ↻ на панели инструментов или клавишами R и Shift+R.',
-  "One tap slides it to a wall, corner or neighbour, up to the ceiling or down, centres it, or matches a neighbour's top or front.":
-    'Одно касание сдвигает его к стене, в угол или к соседу, вверх до потолка или вниз, ставит по центру или выравнивает по верху или фасаду соседа.',
+  "One tap slides it to a wall, corner or neighbour, up to the ceiling or down, centres it, or matches a neighbour's top or front. Several selected pieces move as one block.":
+    'Одно касание сдвигает его к стене, в угол или к соседу, вверх до потолка или вниз, ставит по центру или выравнивает по верху или фасаду соседа. Несколько выбранных изделий перемещаются единым блоком.',
   'Groups align and distribute as one block': 'Группы выравниваются и распределяются как один блок',
   'Width, height and depth of the whole piece where it is selected':
     'Ширина, высота и глубина всего изделия там, где оно выбрано',

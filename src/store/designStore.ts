@@ -321,8 +321,11 @@ interface State {
   ) => string | null;
   /** The gap tool (ADR-022); returns why nothing moved when it would move a locked piece (ADR-095), or null. */
   setGap: (id: string, gap: number, moveRight: boolean) => string | null;
-  /** A one-tap Move to action (ADR-147); one undo step. Returns why nothing moved, or null. */
-  moveItemTo: (id: string, action: MoveToAction) => string | null;
+  /**
+   * A one-tap Move to action (ADR-147) on one piece, or on several selected pieces moved as one block (ADR-182); one
+   * undo step. Returns why nothing moved, or null.
+   */
+  moveItemTo: (id: string | readonly string[], action: MoveToAction) => string | null;
   /** Lock or unlock a piece's placement (ADR-095); one undo step. */
   setLocked: (id: string, on: boolean) => void;
   /** Lock or unlock a piece's size (ADR-122); one undo step. */
@@ -887,15 +890,16 @@ export const useDesign = create<State>((rawSet, get) => {
     moveItemTo: (id, action) => {
       const p = get().project;
       if (!p) return null;
-      const one = moveTo(p, id, action);
+      const ids = typeof id === 'string' ? [id] : [...id];
+      const one = moveTo(p, ids, action);
       // Its group and connected pieces come along (ADR-148, ADR-168); landing against a neighbour connects.
-      const res = one.reason ? one : carryUnits(p, one.project, [id]);
+      const res = one.reason ? one : carryUnits(p, one.project, ids);
       if (res.reason) {
         set({ notice: res.reason });
         return res.reason;
       }
       if (res.project !== p)
-        commitProject(settleConnections(res.project, movingSet(p, [id]), true));
+        commitProject(settleConnections(res.project, movingSet(p, ids), true));
       return null;
     },
     setLocked: (id, on) => {

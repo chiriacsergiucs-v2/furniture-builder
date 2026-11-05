@@ -258,6 +258,14 @@ export const ru_core2 = {
     'Стоит на другом изделии; его задняя сторона остаётся на одной линии с ним.',
   'Fronts already in line.': 'Фасады уже на одной линии.',
   'No piece selected.': 'Изделие не выбрано.',
+  '{name} stands on the floor; the selected pieces move up and down together.':
+    '«{name}» стоит на полу; выбранные изделия поднимаются и опускаются вместе.',
+  '{name} would go below the floor; the selected pieces move together.':
+    '«{name}» ушло бы ниже пола; выбранные изделия перемещаются вместе.',
+  '{name} would go into the piece under it; the selected pieces move together.':
+    '«{name}» вошло бы в изделие под ним; выбранные изделия перемещаются вместе.',
+  '{name} already sits on the floor or on a piece; the selected pieces move down together.':
+    '«{name}» уже стоит на полу или на изделии; выбранные изделия опускаются вместе.',
   'Nothing to mirror in this piece': 'В этом изделии нечего отражать',
   'The lounger backrest is always at the left end; it cannot be mirrored yet':
     'Спинка шезлонга всегда у левого края; отразить её пока нельзя',
