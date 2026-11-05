@@ -93,9 +93,7 @@ for (const width of [1440, 375]) {
       `${t.label}: the wizard opens on the Type step`,
       (await wizard.locator('.steps [aria-current="step"] .lbl').innerText()) === 'Type',
     );
-    await wizard
-      .getByRole('button', { name: new RegExp(t.label.replace(/[()]/g, '\\$&')) })
-      .click();
+    await wizard.getByRole('radio', { name: new RegExp(t.label.replace(/[()]/g, '\\$&')) }).click();
     await wizard.getByRole('button', { name: 'Next' }).click();
     const name = `Find-it ${t.label.split(' ')[0]} ${width}`;
     await wizard.getByLabel('Name').fill(name);

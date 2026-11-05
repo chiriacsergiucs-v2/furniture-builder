@@ -51,8 +51,8 @@ describe.each(WIDTHS)('save a project piece to the catalog at %ipx (find-it, ADR
     const list = await screen.findByRole('dialog', { name: 'Add a piece' });
     await user.click(within(list).getByRole('button', { name: /New piece, step by step/ }));
     const wiz = await screen.findByRole('dialog', { name: 'New piece' });
-    // Skip on the type step takes the first type; Next keeps each step's defaults up to the review.
-    await user.click(within(wiz).getByRole('button', { name: 'Skip' }));
+    // "Use Cabinet (closed box)" on the type step takes the first type (ADR-187); Next keeps each step's defaults up to the review.
+    await user.click(within(wiz).getByRole('button', { name: 'Use Cabinet (closed box)' }));
     for (let i = 0; i < 20 && !within(wiz).queryByRole('button', { name: 'Add to project' }); i++)
       await user.click(within(wiz).getByRole('button', { name: 'Next' }));
     await user.click(within(wiz).getByRole('button', { name: 'Add to project' }));

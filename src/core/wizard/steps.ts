@@ -240,7 +240,7 @@ export const CONTENT_KINDS: (Option & { uses: ('shelves' | 'drawers')[] })[] = [
 export const contentUses = (kind: string) =>
   CONTENT_KINDS.find((k) => k.value === kind)?.uses ?? [];
 
-function contentText(c: Compartment): string {
+export function contentText(c: Compartment): string {
   switch (c.kind) {
     case 'open':
       return t('open');
@@ -448,7 +448,11 @@ export const STEPS: StepDef[] = [
         id: 'frontsPer',
         label: 'Doors on compartment',
         kind: 'perCompartment',
-        default: [],
+        // By hand as by the cards (ADR-187): one door on every compartment without drawers.
+        fill: (a) =>
+          compartmentsOf(a).map((c) =>
+            contentUses(c.kind).includes('drawers') ? 'none' : 'single',
+          ),
         count: compartmentCount,
         options: [
           { value: 'none', label: 'None' },

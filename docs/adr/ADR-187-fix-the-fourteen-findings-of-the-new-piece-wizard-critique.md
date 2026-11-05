@@ -23,16 +23,19 @@ label; finding 5 builds the Review summary ADR-044 already names.
 
 Build the fix chosen for each finding, numbered as in the critique.
 
-1. **Closing loses every answer.** The wizard ignores backdrop clicks; × asks "Discard the answers?" (Cancel / Discard)
-   whenever any answer differs from `resolve({})`.
+1. **Closing loses every answer.** The wizard ignores backdrop clicks; × and Esc ask "Discard the answers?" (Cancel /
+   Discard) whenever any answer differs from `resolve({})`. Esc on every dialog now asks its owner to close instead of
+   closing on its own, so a guard sees it (built 2026-11-05).
 2. **Type change keeps foreign answers.** On a type change keep only the Size answers that are inside the new type's
    range and are not in its `hide` or `labels`; drop every other answer and every `done` id.
 3. **A size typo builds a 0 mm model.** `check()` skips `toDesign` and `buildModel` while `fieldProblems` holds an
    error; the preview then reads "Fix the marked fields" (not "Choose a type to see the piece.").
 4. **Skip is destructive and unexplained.** The button reads "Use defaults"; on the Type step "Use <label of the first
    type option>", read from `fieldOptions` (no type id in the UI). The `title` tooltip goes.
-5. **Review shows no answers.** Review lists one row per visible step with `summary(r)` and an Edit button that opens
-   that step.
+5. **Review shows no answers.** Review lists one row per visible step and an Edit button that opens that step. The row
+   text is the step's visible fields, "Label: value" (built 2026-11-05: `summary(r)` leaves out the handle, the
+   plinth height and the board the Context names, and shows a bed's hidden width and depth as 0); the Type row is the
+   type's label.
 6. **Done steps can hold errors.** The rail shows a step as done only while it has no error.
 7. **Red error before any action** (user answer 2026-11-05: hint until the user leaves the step). The untouched Type
    step shows "Choose a construction type." as a hint; it is an error once the user leaves Type or uses defaults.
