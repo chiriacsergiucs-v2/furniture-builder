@@ -898,8 +898,7 @@ export const useDesign = create<State>((rawSet, get) => {
         set({ notice: res.reason });
         return res.reason;
       }
-      if (res.project !== p)
-        commitProject(settleConnections(res.project, movingSet(p, ids), true));
+      if (res.project !== p) commitProject(settleConnections(res.project, movingSet(p, ids), true));
       return null;
     },
     setLocked: (id, on) => {

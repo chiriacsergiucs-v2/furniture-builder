@@ -2,12 +2,7 @@
 // have a Unit price column in the print language (ro, ru, en).
 import { afterEach, describe, expect, it } from 'vitest';
 import { setPrintLang } from '../src/core/i18n/print';
-import {
-  linePrice,
-  unitPrice,
-  type PriceEntry,
-  type SellerLookup,
-} from '../src/core/prices';
+import { linePrice, unitPrice, type PriceEntry, type SellerLookup } from '../src/core/prices';
 import { shoppingCsvRo, unitPricePrint, type ShopLine } from '../src/core/shopping';
 
 const board: ShopLine = {
@@ -89,7 +84,7 @@ describe('Unit price column in the CSV and the print, in ro, ru and en (ADR-181)
       'lei',
       (l) => unitPrice(l, prices),
     )
-      .replace(/^﻿/, '')
+      .replace(/^\uFEFF/, '')
       .split('\r\n');
   it.each([
     ['ro', 'Preț unitar (lei)', '45,00 / m²', '45,00 lei / m²'],

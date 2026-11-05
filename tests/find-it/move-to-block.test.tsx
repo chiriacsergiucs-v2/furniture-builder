@@ -65,7 +65,9 @@ describe.each(WIDTHS)('Move to a selection at %ipx (find-it, ADR-182)', (width) 
     const moveTo = within(card).getByRole('group', { name: 'Move to' });
     await user.click(within(moveTo).getByRole('button', { name: 'To wall' }));
     // To wall is now off, with its reason, under "N more are off".
-    await waitFor(() => expect(within(moveTo).queryByRole('button', { name: 'To wall' })).toBeNull());
+    await waitFor(() =>
+      expect(within(moveTo).queryByRole('button', { name: 'To wall' })).toBeNull(),
+    );
     expect(within(moveTo).getByText(/more are off/)).toBeTruthy();
     expect(within(moveTo).getByText(/Already touching wall/)).toBeTruthy();
 
