@@ -146,7 +146,6 @@ export const PRINT_RU = {
   'Îmbinări și feronerie': 'Соединения и фурнитура',
   'Îndrumare: ordinea rezultă din pozițiile pieselor; îmbinările, elementele de fixare și găurirea sunt alegerea dumneavoastră.':
     'Рекомендация: порядок следует из положения деталей; соединения, крепёж и присадка — ваш выбор.',
-  '{n} îmbinări de corp': 'соединений корпуса: {n}',
   Fundul: 'Дно',
   'Laturile pe fund': 'Боковины на дно',
   'Despărțitoare și polițe fixe': 'Перегородки и неподвижные полки',
@@ -160,6 +159,74 @@ export const PRINT_RU = {
   'Prindere și fixare': 'Навес и крепление',
   'Piese libere': 'Свободные детали',
   'De asemenea': 'Также',
+  // Assembly steps re-check (ADR-185, ADR-186)
+  'Pregătirea pieselor': 'Подготовка деталей',
+  'Feroneria pe laterale': 'Фурнитура на боковины',
+  'Montarea sertarelor și ușilor, reglarea fronturilor':
+    'Установка ящиков и дверей, регулировка фасадов',
+  'Corp de sertar × {n}': 'Корпус ящика × {n}',
+  'jumătățile de corp': 'корпусные половинки',
+  'jumătățile de sertar': 'ящичные половинки',
+  'plăcuțe de montaj': 'монтажные планки',
+  'cupe și brațe, pe uși': 'чашки и плечи, на дверцах',
+  '{n|# îmbinare|# îmbinări}': '{n|# соединение|# соединения|# соединений}',
+  '{n|# suport de raft|# suporți de raft}':
+    '{n|# полкодержатель|# полкодержателя|# полкодержателей}',
+  '{n|# panou de spate|# panouri de spate}': '{n|# задняя стенка|# задние стенки|# задних стенок}',
+  '{n|# agățătoare|# agățători}': '{n|# навес|# навеса|# навесов}',
+  '{n|# blat|# blaturi}': '{n|# столешница|# столешницы|# столешниц}',
+  '{n|# piesă pe soclu|# piese pe soclu}':
+    '{n|# изделие на цоколе|# изделия на цоколе|# изделий на цоколе}',
+  '{count} — alegeți elementul de fixare ({path})': '{count} — выберите крепёж ({path})',
+  '{n|# latură lungă|# laturi lungi}': '{n|# длинная сторона|# длинные стороны|# длинных сторон}',
+  '{n|# latură scurtă|# laturi scurte}':
+    '{n|# короткая сторона|# короткие стороны|# коротких сторон}',
+  'cant pe {what}': 'кромка: {what}',
+  'Cupe de balama de găurit: {n} — {hinge}': 'Чашки петель к сверлению: {n} — {hinge}',
+  'Rânduri pentru suporți de raft de găurit: {n|# piesă|# piese}':
+    'Ряды под полкодержатели к сверлению: {n|# деталь|# детали|# деталей}',
+  ' și ': ' и ',
+  ' ({n|# îmbinare|# îmbinări})': ' ({n|# соединение|# соединения|# соединений})',
+  'cantuiți muchiile la {n|# piesă|# piese}': 'оклейте кромкой {n|# деталь|# детали|# деталей}',
+  'găuriți {n|# cupă de balama|# cupe de balama}':
+    'просверлите {n|# чашку петли|# чашки петель|# чашек петель}',
+  'găuriți rândurile pentru suporți de raft în {n|# piesă|# piese}':
+    'просверлите ряды под полкодержатели в {n|# детали|# деталях|# деталях}',
+  'Înainte de asamblare: {what}.': 'До сборки: {what}.',
+  'jumătățile de corp ale glisierelor ({n|# pereche|# perechi})':
+    'корпусные половинки направляющих ({n|# пара|# пары|# пар})',
+  'plăcuțele de montaj ale balamalelor ({n})': 'монтажные планки петель ({n})',
+  'Fixați {what} pe laterale cât stau culcate.': 'Закрепите {what} на боковинах, пока они лежат.',
+  'Așezați pe o suprafață plană, cu fața interioară în sus: {parts}.':
+    'Положите на ровную поверхность внутренней стороной вверх: {parts}.',
+  'Fixați pe bază: {parts}{joints}.': 'Прикрепите к дну: {parts}{joints}.',
+  'Fixați între laterale: {parts}{joints}.': 'Закрепите между боковинами: {parts}{joints}.',
+  'Fixați deasupra lateralelor: {parts}{joints}.':
+    'Закрепите сверху на боковинах: {parts}{joints}.',
+  'Verificați că corpul este în echer (diagonale egale) înainte de a fixa spatele.':
+    'Проверьте, что корпус прямоугольный (диагонали равны), прежде чем крепить заднюю стенку.',
+  'Apoi fixați pe corp: {parts}{joints}.': 'Затем закрепите на корпусе: {parts}{joints}.',
+  'Fixați sub corp: {parts}{joints}.': 'Закрепите под корпусом: {parts}{joints}.',
+  'Puneți suporții de raft la înălțimile dorite și așezați pe ei: {parts}.':
+    'Вставьте полкодержатели на нужной высоте и положите на них: {parts}.',
+  'Asamblați {n|# corp de sertar|# corpuri de sertar} și fixați jumătățile de sertar ale glisierelor pe laterale.':
+    'Соберите {n|# корпус ящика|# корпуса ящиков|# корпусов ящиков} и закрепите на их боковинах ящичные половинки направляющих.',
+  'Asamblați {n|# corp de sertar|# corpuri de sertar}.':
+    'Соберите {n|# корпус ящика|# корпуса ящиков|# корпусов ящиков}.',
+  'montați balamalele pe uși': 'установите петли на дверцы',
+  'pregătiți ușile pentru montaj': 'подготовьте дверцы к установке',
+  'fixați fronturile pe corpurile de sertar': 'закрепите фасады на корпусах ящиков',
+  'fixați: {parts}': 'закрепите: {parts}',
+  'montați feroneria de aici': 'установите указанную здесь фурнитуру',
+  'Fixați mânerele pe fronturi.': 'Закрепите ручки на фасадах.',
+  'agățați corpul pe agățători': 'навесьте изделие на навесы',
+  'agățați ușile': 'навесьте дверцы',
+  'introduceți sertarele': 'вставьте ящики',
+  'reglați fronturile până când rosturile sunt egale':
+    'отрегулируйте фасады, чтобы зазоры были равными',
+  'Îmbinați piesele după cum decideți; nu se propune o ordine.':
+    'Соедините детали так, как решите сами; порядок не предлагается.',
+  'Montați aceste piese la locul lor.': 'Установите эти детали на свои места.',
   // Project order on the assembly sheet (ADR-178)
   'Ordinea în proiect': 'Порядок в проекте',
   'Corpuri de colț': 'Угловые шкафы',
@@ -327,7 +394,6 @@ export const PRINT_EN: Record<keyof typeof PRINT_RU, string> = {
   'Îmbinări și feronerie': 'Joints and hardware',
   'Îndrumare: ordinea rezultă din pozițiile pieselor; îmbinările, elementele de fixare și găurirea sunt alegerea dumneavoastră.':
     "Guidance: order from the parts' positions; your joints, fasteners and drilling decide.",
-  '{n} îmbinări de corp': '{n} carcass joints',
   Fundul: 'Bottom',
   'Laturile pe fund': 'Sides to the bottom',
   'Despărțitoare și polițe fixe': 'Fixed dividers and shelves',
@@ -341,6 +407,66 @@ export const PRINT_EN: Record<keyof typeof PRINT_RU, string> = {
   'Prindere și fixare': 'Hanging and fixing',
   'Piese libere': 'Loose parts',
   'De asemenea': 'Also',
+  'Pregătirea pieselor': 'Prepare the parts',
+  'Feroneria pe laterale': 'Fit hardware to the sides',
+  'Montarea sertarelor și ușilor, reglarea fronturilor': 'Fit drawers and doors, adjust the fronts',
+  'Corp de sertar × {n}': 'Drawer box × {n}',
+  'jumătățile de corp': 'carcass halves',
+  'jumătățile de sertar': 'drawer halves',
+  'plăcuțe de montaj': 'mounting plates',
+  'cupe și brațe, pe uși': 'cups and arms, on the doors',
+  '{n|# îmbinare|# îmbinări}': '{n|# joint|# joints}',
+  '{n|# suport de raft|# suporți de raft}': '{n|# pin|# pins}',
+  '{n|# panou de spate|# panouri de spate}': '{n|# back|# backs}',
+  '{n|# agățătoare|# agățători}': '{n|# bracket|# brackets}',
+  '{n|# blat|# blaturi}': '{n|# worktop|# worktops}',
+  '{n|# piesă pe soclu|# piese pe soclu}': '{n|# piece on a plinth|# pieces on a plinth}',
+  '{count} — alegeți elementul de fixare ({path})': '{count} — choose your fastener ({path})',
+  '{n|# latură lungă|# laturi lungi}': '{n|# long edge|# long edges}',
+  '{n|# latură scurtă|# laturi scurte}': '{n|# short edge|# short edges}',
+  'cant pe {what}': 'band {what}',
+  'Cupe de balama de găurit: {n} — {hinge}': 'Hinge cups to drill: {n} — {hinge}',
+  'Rânduri pentru suporți de raft de găurit: {n|# piesă|# piese}':
+    'Shelf-pin rows to drill: {n|# panel|# panels}',
+  ' și ': ' and ',
+  ' ({n|# îmbinare|# îmbinări})': ' ({n|# joint|# joints})',
+  'cantuiți muchiile la {n|# piesă|# piese}': 'band the edges of {n|# part|# parts}',
+  'găuriți {n|# cupă de balama|# cupe de balama}': 'drill {n|# hinge cup|# hinge cups}',
+  'găuriți rândurile pentru suporți de raft în {n|# piesă|# piese}':
+    'drill the shelf-pin rows in {n|# panel|# panels}',
+  'Înainte de asamblare: {what}.': 'Before assembly: {what}.',
+  'jumătățile de corp ale glisierelor ({n|# pereche|# perechi})':
+    'the carcass halves of the runners ({n|# pair|# pairs})',
+  'plăcuțele de montaj ale balamalelor ({n})': 'the hinge mounting plates ({n})',
+  'Fixați {what} pe laterale cât stau culcate.': 'Fix {what} to the sides while they lie flat.',
+  'Așezați pe o suprafață plană, cu fața interioară în sus: {parts}.':
+    'Lay the {parts} on a flat surface, inside face up.',
+  'Fixați pe bază: {parts}{joints}.': 'Fix the {parts} to the bottom{joints}.',
+  'Fixați între laterale: {parts}{joints}.': 'Fix the {parts} between the sides{joints}.',
+  'Fixați deasupra lateralelor: {parts}{joints}.': 'Fix the {parts} on top of the sides{joints}.',
+  'Verificați că corpul este în echer (diagonale egale) înainte de a fixa spatele.':
+    'Check the carcass is square (equal diagonals) before fixing the back.',
+  'Apoi fixați pe corp: {parts}{joints}.': 'Then fix the {parts} to the carcass{joints}.',
+  'Fixați sub corp: {parts}{joints}.': 'Fix the {parts} under the carcass{joints}.',
+  'Puneți suporții de raft la înălțimile dorite și așezați pe ei: {parts}.':
+    'Set the shelf pins at the heights you want and lay the {parts} on them.',
+  'Asamblați {n|# corp de sertar|# corpuri de sertar} și fixați jumătățile de sertar ale glisierelor pe laterale.':
+    'Assemble {n|# drawer box|# drawer boxes} and fix the drawer halves of the runners to their sides.',
+  'Asamblați {n|# corp de sertar|# corpuri de sertar}.':
+    'Assemble {n|# drawer box|# drawer boxes}.',
+  'montați balamalele pe uși': 'fit the hinges to the doors',
+  'pregătiți ușile pentru montaj': 'get the doors ready to fit',
+  'fixați fronturile pe corpurile de sertar': 'fix the fronts to the drawer boxes',
+  'fixați: {parts}': 'fix the {parts}',
+  'montați feroneria de aici': 'fit the hardware listed here',
+  'Fixați mânerele pe fronturi.': 'Fix the handles to the fronts.',
+  'agățați corpul pe agățători': 'hang the piece on its brackets',
+  'agățați ușile': 'hang the doors',
+  'introduceți sertarele': 'slide the drawers in',
+  'reglați fronturile până când rosturile sunt egale': 'adjust the fronts until the gaps are even',
+  'Îmbinați piesele după cum decideți; nu se propune o ordine.':
+    'Join the parts as your own design decides; no order is claimed.',
+  'Montați aceste piese la locul lor.': 'Fit these parts where they belong.',
   'Ordinea în proiect': 'Project order',
   'Corpuri de colț': 'Corner cabinets',
   'Corpuri de jos': 'Base pieces',

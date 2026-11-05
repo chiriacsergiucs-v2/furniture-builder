@@ -102,10 +102,10 @@ for (const width of [1440, 390]) {
   );
   check(
     width,
-    'a step names its parts with sizes and its carcass joints',
+    'a step names its parts with sizes and its joints (ADR-185: a fastener line)',
     /\d+ ×.*side.*\d+ × \d+ × \d+ mm/i.test(
       (await steps.nth(at('Sides to the bottom')).textContent()) ?? '',
-    ) && /carcass joint/.test((await steps.nth(at('Sides to the bottom')).textContent()) ?? ''),
+    ) && /\d+ joints? — /.test((await steps.nth(at('Sides to the bottom')).textContent()) ?? ''),
   );
   await shot('tab');
 
