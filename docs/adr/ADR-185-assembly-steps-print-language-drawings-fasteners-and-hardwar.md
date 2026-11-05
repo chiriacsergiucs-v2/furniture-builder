@@ -38,6 +38,8 @@ drawers):
    (drawer halves); a new last step **Fit drawers and doors, adjust the fronts** lists the doors and drawer fronts
    being hung. Each hardware line shows once with its quantity in each step that uses it, labelled which half.
 5. App and print use the same steps; the step order stays guidance (ADR-010).
+6. On the print the menu named in a fastener hint follows the print language too (Materiale › Elemente de fixare,
+   Материалы › Крепёж, Materials › Fasteners; user 2026-11-05: "Translate with the print").
 
 ## Alternatives considered
 

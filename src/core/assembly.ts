@@ -518,7 +518,8 @@ export function fastenerLines(s: AssemblyStep, choices: FastenerChoice[], w: Wor
         w === 'print'
           ? pt('{count} — alegeți elementul de fixare ({path})', {
               count: what,
-              path: t('Materials › Fasteners'),
+              // The menu's name in the print language (user 2026-11-05: a print never mixes languages).
+              path: pt('Materiale › Elemente de fixare'),
             })
           : t('{count} — choose your fastener (Materials › Fasteners)', { count: what }),
       );

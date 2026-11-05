@@ -45,7 +45,7 @@ carcass is square before the back.
 
 ## Done when
 
-- [ ] A chest of 4 equal drawers shows "Drawer box × 4" with 5 part rows; unequal drawers stay apart (tests)
+- [ ] A chest of 4 equal drawers shows "Drawer box × 4" with its 5 parts in 4 rows (the two sides in one row; user 2026-11-05: "4 rows, sides combined"); unequal drawers stay apart (tests)
 - [ ] Every step has an instruction in en, ro and ru; the Back step's includes the square check (tests)
 - [ ] A base cabinet starts with Prepare the parts listing banded edges and its hinge cups; a plain panel set has no
       preparation step (tests)

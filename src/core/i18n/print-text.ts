@@ -178,6 +178,7 @@ export const PRINT_RU = {
   '{n|# piesă pe soclu|# piese pe soclu}':
     '{n|# изделие на цоколе|# изделия на цоколе|# изделий на цоколе}',
   '{count} — alegeți elementul de fixare ({path})': '{count} — выберите крепёж ({path})',
+  'Materiale › Elemente de fixare': 'Материалы › Крепёж',
   '{n|# latură lungă|# laturi lungi}': '{n|# длинная сторона|# длинные стороны|# длинных сторон}',
   '{n|# latură scurtă|# laturi scurte}':
     '{n|# короткая сторона|# короткие стороны|# коротких сторон}',
@@ -422,6 +423,7 @@ export const PRINT_EN: Record<keyof typeof PRINT_RU, string> = {
   '{n|# blat|# blaturi}': '{n|# worktop|# worktops}',
   '{n|# piesă pe soclu|# piese pe soclu}': '{n|# piece on a plinth|# pieces on a plinth}',
   '{count} — alegeți elementul de fixare ({path})': '{count} — choose your fastener ({path})',
+  'Materiale › Elemente de fixare': 'Materials › Fasteners',
   '{n|# latură lungă|# laturi lungi}': '{n|# long edge|# long edges}',
   '{n|# latură scurtă|# laturi scurte}': '{n|# short edge|# short edges}',
   'cant pe {what}': 'band {what}',
