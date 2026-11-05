@@ -1402,3 +1402,21 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Not a quote: found while running the browser find-it scripts for ADR-179.
 - Questions: Fix the script's turn check and 3D wait, or the app if the turn really fails?
 - Suggested pick: Debug it on main first (debug skill); fix the cause (estimate: effort +5%, value +5%).
+
+### G-352: Fit hardware step cannot be shown in 3D
+
+- Status: Open
+- Origin: ADR-185, 2026-11-05; agent scoped it out
+- Missing: The Fit hardware to the sides step has no Show step button: the model does not record which side panel each hinge plate or runner carcass half is fixed to, so nothing can be lit in 3D.
+- Request: Re-check assembly steps, both ui and pdf, they seem to not have the expected assembly relevant info and steps.
+- Questions: Record which panel each hinge and runner goes on in the model so the step can light them?
+- Suggested pick: Tag each hinge and runner pair with its side panel in the generators, then light those panels (estimate: effort +15%, value +5%).
+
+### G-353: Catalog piece names untranslated on prints
+
+- Status: Open
+- Origin: ADR-185, 2026-11-05; agent left it out
+- Missing: Piece names on the printed assembly sheet print as named (catalog defaults are English), so a Romanian or Russian print shows English piece names such as 'Base cabinet, 1 door'.
+- Request: Translate with the print (user 2026-11-05, for the fastener menu name); user-typed names are not translated (G-304).
+- Questions: Translate catalog default piece names on prints when the user has not renamed the piece?
+- Suggested pick: Translate a piece name only while it equals its catalog template's default name (estimate: effort +10%, value +5%).

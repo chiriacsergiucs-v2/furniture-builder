@@ -197,7 +197,10 @@ export function drillingRo(text: string): string {
     .replace(/cut to template \((\d+) points\)/g, pt('tăiere după șablon ($1 puncte)'));
 }
 
-export function hardwareRo(h: HardwareItem): { item: string; note: string } {
+export function hardwareRo(h: Pick<HardwareItem, 'kind' | 'label' | 'note'>): {
+  item: string;
+  note: string;
+} {
   const perDoor = /^(\d+) per door/.exec(h.note ?? '')?.[1];
   switch (h.kind) {
     case 'drawer-runner-pair':

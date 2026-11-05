@@ -5,7 +5,7 @@ import { inSelection, selectionBox } from '../core/selectPath';
 import { faceMapping } from '../core/surface';
 import { imageKey, useImageUrls } from '../persist/images';
 import { useDesign } from '../store/designStore';
-import type { Panel, SpaceOpening } from '../core/types';
+import type { FurnitureModel, Material, Panel, SpaceOpening } from '../core/types';
 import { frontOutline } from '../core/shape';
 import { boxIn, cardCorner, CountStepper } from './CountStepper';
 
@@ -264,6 +264,80 @@ export function Elevation() {
           style={pos ? { left: pos.left, top: pos.top } : { visibility: 'hidden' }}
         />
       )}
+    </figure>
+  );
+}
+
+/**
+ * One piece's front view from its own model (ADR-185): the printed assembly sheet draws it in each piece's section,
+ * for a design and for every piece of a project. Drawn like the editor's (structure solid in its board colours, the
+ * back behind, fronts dashed, handles, overall width and height); nothing to tap or select. Geometry comes from the
+ * model only (ADR-004).
+ */
+export function PieceElevation({
+  model,
+  materials,
+  label,
+}: {
+  model: FurnitureModel;
+  materials: Material[];
+  label: string;
+}) {
+  const mats = new Map(materials.map((m) => [m.id, m]));
+  const b = model.bounds;
+  const pad = Math.max(b.w, b.h) * 0.09;
+  const vb = `${b.x - pad} ${-(b.y + b.h) - pad} ${b.w + 2 * pad} ${b.h + 2 * pad * 1.4}`;
+  const fontSize = Math.max(b.w, b.h) / 26;
+  const BEHIND = new Set<Panel['role']>(['back', 'modesty']);
+  const structure = model.panels.filter(
+    (p) => !FRONTS.has(p.role) && !DRAWER_BOX.has(p.role) && !BEHIND.has(p.role),
+  );
+  const backs = model.panels.filter((p) => BEHIND.has(p.role));
+  const fronts = model.panels.filter((p) => FRONTS.has(p.role));
+  return (
+    <figure className="elevation piece-elevation" aria-label={label}>
+      <svg viewBox={vb} preserveAspectRatio="xMidYMid meet" role="img" aria-label={label}>
+        <rect className="floor" x={b.x - pad} y={0} width={b.w + 2 * pad} height={pad * 0.15} />
+        {backs.map((p) => (
+          <polygon key={p.id} className="el-back" points={outlinePoints(p)} />
+        ))}
+        {structure.map((p) => (
+          <polygon
+            key={p.id}
+            className="el-panel"
+            points={outlinePoints(p)}
+            style={{ fill: mats.get(p.materialId)?.color }}
+          />
+        ))}
+        {fronts.map((p) => (
+          <polygon key={p.id} className="el-front" points={outlinePoints(p)} />
+        ))}
+        {fronts
+          .filter((p) => p.handleHoles)
+          .map((p) => {
+            const pts = p.handleHoles!.at.map(([u, v]) => [p.box.x + u, -(p.box.y + v)] as const);
+            return pts.length === 2 ? (
+              <line
+                key={`h-${p.id}`}
+                className="el-handle"
+                x1={pts[0][0]}
+                y1={pts[0][1]}
+                x2={pts[1][0]}
+                y2={pts[1][1]}
+              />
+            ) : (
+              <circle
+                key={`h-${p.id}`}
+                className="el-knob"
+                cx={pts[0][0]}
+                cy={pts[0][1]}
+                r={Math.max(b.w, b.h) / 160}
+              />
+            );
+          })}
+        <Dim x1={b.x} x2={b.x + b.w} y={pad * 0.75} fontSize={fontSize} label={`${b.w}`} />
+        <DimV y1={0} y2={-(b.y + b.h)} x={b.x - pad * 0.55} fontSize={fontSize} label={`${b.h}`} />
+      </svg>
     </figure>
   );
 }

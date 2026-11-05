@@ -29,7 +29,7 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ vars.SUPABASE_URL || 'https://nllwhcxvcbtjfkdhsyse.supabase.co' }}
           VITE_SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY || 'sb_publishable_jnuJfAkWljedvgaXtG-lVg_8FbXCFRC' }}
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: dist
   deploy:
@@ -39,5 +39,9 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      # v5 runs on Node 24 and backs off while polling. Pages can stay at "updating_pages" for more than the default
+      # 10 minutes when GitHub is slow (2026-11-05, run 42070761861), so wait up to 30 minutes before cancelling.
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
+        with:
+          timeout: 1800000

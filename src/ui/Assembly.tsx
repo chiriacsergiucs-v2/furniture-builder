@@ -8,19 +8,29 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   ASSEMBLY_GUIDANCE,
   assemblySteps,
+  boxTitle,
+  fastenerLines,
+  hardwareLine,
+  partName,
+  prepLines,
   projectAssemblyOrder,
   projectOrderPrint,
+  stepInstruction,
+  stepLitIds,
+  stepTitle,
   type AssemblyStep,
   type OrderEntry,
   type ProjectStage,
+  type StepPart,
 } from '../core/assembly';
+import type { FastenerChoice } from '../core/fasteners';
 import { t, tr } from '../core/i18n';
 import { getPrintLang, PRINT_DATE_LOCALE, pt } from '../core/i18n/print';
-import type { FurnitureModel } from '../core/types';
+import type { FurnitureModel, Material } from '../core/types';
 import { useDesign } from '../store/designStore';
 import { useFastenerChoices } from './Fasteners';
 import { GuidanceTip } from './controls';
-import { Elevation } from './Elevation';
+import { PieceElevation } from './Elevation';
 import { Icon } from './icons';
 import { useUi } from './shell/uiStore';
 import { useView } from './useView';
@@ -33,6 +43,9 @@ interface PieceSteps {
   /** Panel ids as the 3D view knows them (a project prefixes the piece id). */
   idOf: (panelId: string) => string;
   steps: AssemblyStep[];
+  /** The piece's own model and boards, for its front view on the printed sheet (ADR-185). */
+  model: FurnitureModel;
+  materials: Material[];
 }
 
 /** The pieces shown with their steps: the open design, or every piece of the project (linked copies once). */
@@ -42,6 +55,7 @@ function usePieceSteps(): PieceSteps[] {
     s.project && !s.editingItemId ? s.projectModel?.pieces : undefined,
   );
   const designName = useDesign((s) => s.design.name);
+  const designMaterials = useDesign((s) => s.design.materials);
   return useMemo(() => {
     if (view.mode === 'design' || !pieces)
       return [
@@ -51,6 +65,8 @@ function usePieceSteps(): PieceSteps[] {
           times: 1,
           idOf: (id) => id,
           steps: assemblySteps(view.model),
+          model: view.model,
+          materials: designMaterials,
         },
       ];
     const out: PieceSteps[] = [];
@@ -69,12 +85,14 @@ function usePieceSteps(): PieceSteps[] {
         times: pc.item.quantity,
         idOf: (id) => `${pc.item.id}:${id}`,
         steps: assemblySteps(model),
+        model,
+        materials: pc.item.design.materials,
       };
       if (link) seen.set(link, entry);
       out.push(entry);
     }
     return out;
-  }, [view, pieces, designName]);
+  }, [view, pieces, designName, designMaterials]);
 }
 
 /** The project's order of pieces (ADR-178); none for a design alone or while one piece is being edited. */
@@ -156,7 +174,7 @@ export function Assembly() {
   useEffect(() => () => setLit(null), [setLit]);
   const show = (p: PieceSteps, step: AssemblyStep) => {
     setCurrent({ piece: p.key, n: step.n });
-    setLit(step.parts.flatMap((part) => part.panelIds.map(p.idOf)));
+    setLit(stepLitIds(step).map(p.idOf));
   };
   const move = (dir: 1 | -1) => {
     const p = pieces.find((x) => x.key === current?.piece) ?? pieces[0];
@@ -165,7 +183,6 @@ export function Assembly() {
     const next = p.steps[Math.min(p.steps.length - 1, Math.max(0, idx + dir))];
     if (next) show(p, next);
   };
-  const chosen = (joint: string) => choices.find((c) => c.joint === joint);
   return (
     <div
       className="assembly"
@@ -224,7 +241,7 @@ export function Assembly() {
                   <div className="step-head">
                     <span className="step-n">{s.n}</span>
                     <strong>{s.title}</strong>
-                    {s.parts.length > 0 && (
+                    {stepLitIds(s).length > 0 && (
                       <button
                         type="button"
                         className={`btn sm ${on ? 'primary' : 'outline'}`}
@@ -235,32 +252,8 @@ export function Assembly() {
                       </button>
                     )}
                   </div>
-                  {s.parts.length > 0 && (
-                    <ul className="step-parts">
-                      {s.parts.map((part, i) => (
-                        <li key={i}>
-                          <span className="num">{part.quantity} ×</span> {tr(part.label)}{' '}
-                          <span className="num hint">
-                            {part.size[0]} × {part.size[1]} × {part.size[2]} {t('mm')}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  {(s.joints > 0 || s.hardware.length > 0) && (
-                    <p className="step-joins hint">
-                      {s.joints > 0 &&
-                        t('{n|# carcass joint|# carcass joints}', { n: s.joints }) +
-                          (chosen('carcass-joint')
-                            ? t(' — your fastener: {name}, {per} per joint', {
-                                name: chosen('carcass-joint')!.name,
-                                per: chosen('carcass-joint')!.per,
-                              })
-                            : '')}
-                      {s.joints > 0 && s.hardware.length > 0 ? ' · ' : ''}
-                      {s.hardware.map((h) => `${h.quantity} × ${tr(h.label)}`).join(', ')}
-                    </p>
-                  )}
+                  <p className="step-do">{stepInstruction(s, 'app')}</p>
+                  <StepBody step={s} choices={choices} />
                 </li>
               );
             })}
@@ -271,13 +264,87 @@ export function Assembly() {
   );
 }
 
-/** Printable assembly sheet (ADR-174): the steps per piece in the print language, labelled guidance. */
+/** A part row on the tab: "2 × Left side 702 × 542 × 18 mm". */
+function PartRow({ part }: { part: StepPart }) {
+  return (
+    <li>
+      <span className="num">{part.quantity} ×</span> {partName(part.label, 'app')}{' '}
+      <span className="num hint">
+        {part.size[0]} × {part.size[1]} × {part.size[2]} {t('mm')}
+      </span>
+    </li>
+  );
+}
+
+/** A step's lists on the tab: prepared parts, parts, drawer boxes once × N, fronts hung again, fixings. */
+function StepBody({ step: s, choices }: { step: AssemblyStep; choices: FastenerChoice[] }) {
+  const prep = prepLines(s, 'app');
+  const fixings = [
+    ...fastenerLines(s, choices, 'app'),
+    ...s.hardware.map((h) => hardwareLine(h, 'app')),
+  ];
+  return (
+    <>
+      {prep.length > 0 && (
+        <ul className="step-parts">
+          {prep.map((line, i) => (
+            <li key={i}>{line}</li>
+          ))}
+        </ul>
+      )}
+      {s.parts.length > 0 && (
+        <ul className="step-parts">
+          {s.parts.map((part, i) => (
+            <PartRow key={i} part={part} />
+          ))}
+        </ul>
+      )}
+      {s.boxes.length > 0 && (
+        <ul className="step-parts step-boxes">
+          {s.boxes.map((b, i) => (
+            <li key={i}>
+              <strong>{boxTitle(b, 'app')}</strong>
+              <ul className="step-parts">
+                {b.parts.map((part, k) => (
+                  <PartRow key={k} part={part} />
+                ))}
+              </ul>
+            </li>
+          ))}
+        </ul>
+      )}
+      {s.again.length > 0 && (
+        <ul className="step-parts">
+          {s.again.map((part, i) => (
+            <PartRow key={i} part={part} />
+          ))}
+        </ul>
+      )}
+      {fixings.length > 0 && (
+        <ul className="step-fix hint">
+          {fixings.map((line, i) => (
+            <li key={i}>{line}</li>
+          ))}
+        </ul>
+      )}
+    </>
+  );
+}
+
+/** Printable assembly sheet (ADR-174): per piece its front view and steps, in the print language (ADR-157, ADR-185). */
 export function PrintAssembly() {
   const view = useView();
   const pieces = usePieceSteps();
   const order = useProjectOrder();
+  const choices = useFastenerChoices();
   const locale = PRINT_DATE_LOCALE[getPrintLang()];
   const mm = pt('mm');
+  const row = (part: StepPart, i: number) => (
+    <div key={i}>
+      {part.quantity} × {partName(part.label, 'print')} — {part.size[0]} × {part.size[1]} ×{' '}
+      {part.size[2]} {mm}
+    </div>
+  );
   return (
     <div className="print-root" aria-hidden="true">
       <header className="pr-head">
@@ -294,18 +361,19 @@ export function PrintAssembly() {
         </p>
       </header>
       {order.length > 0 && <PrintProjectOrder stages={order} />}
-      {view.mode === 'design' && (
-        <section className="pr-block pr-elev">
-          <h2>{pt('Vedere frontală')}</h2>
-          <Elevation />
-        </section>
-      )}
       {pieces.map((p) => (
-        <section key={p.key} className="pr-block">
+        <section key={p.key} className="pr-block pr-piece">
           <h2>
             {p.name}
             {p.times > 1 ? ` × ${p.times}` : ''}
           </h2>
+          <div className="pr-elev">
+            <PieceElevation
+              model={p.model}
+              materials={p.materials}
+              label={`${pt('Vedere frontală')}: ${p.name}`}
+            />
+          </div>
           <table className="pr-table">
             <thead>
               <tr>
@@ -318,22 +386,30 @@ export function PrintAssembly() {
               {p.steps.map((s) => (
                 <tr key={s.id}>
                   <td>
-                    {s.n}. {pt(STEP_PT[s.id])}
+                    <strong>
+                      {s.n}. {stepTitle(s, 'print')}
+                    </strong>
+                    <div className="pr-do">{stepInstruction(s, 'print')}</div>
                   </td>
                   <td>
-                    {s.parts.map((part, i) => (
-                      <div key={i}>
-                        {part.quantity} × {part.label} — {part.size[0]} × {part.size[1]} ×{' '}
-                        {part.size[2]} {mm}
+                    {prepLines(s, 'print').map((line, i) => (
+                      <div key={`p${i}`}>{line}</div>
+                    ))}
+                    {s.parts.map(row)}
+                    {s.boxes.map((b, i) => (
+                      <div key={`b${i}`} className="pr-box">
+                        <strong>{boxTitle(b, 'print')}</strong>
+                        {b.parts.map(row)}
                       </div>
                     ))}
+                    {s.again.map(row)}
                   </td>
                   <td>
-                    {s.joints > 0 && <div>{pt('{n} îmbinări de corp', { n: s.joints })}</div>}
+                    {fastenerLines(s, choices, 'print').map((line, i) => (
+                      <div key={`f${i}`}>{line}</div>
+                    ))}
                     {s.hardware.map((h, i) => (
-                      <div key={i}>
-                        {h.quantity} × {h.label}
-                      </div>
+                      <div key={`h${i}`}>{hardwareLine(h, 'print')}</div>
                     ))}
                   </td>
                 </tr>
@@ -345,20 +421,3 @@ export function PrintAssembly() {
     </div>
   );
 }
-
-/** Step titles as print text keys (Romanian, ADR-020/157). */
-const STEP_PT: Record<AssemblyStep['id'], Parameters<typeof pt>[0]> = {
-  bottom: 'Fundul',
-  sides: 'Laturile pe fund',
-  fixed: 'Despărțitoare și polițe fixe',
-  top: 'Capacul',
-  back: 'Spatele',
-  plinth: 'Soclul',
-  adjustable: 'Polițe reglabile',
-  drawers: 'Corpuri de sertar',
-  fronts: 'Uși și fronturi',
-  handles: 'Mânere',
-  hang: 'Prindere și fixare',
-  loose: 'Piese libere',
-  also: 'De asemenea',
-};

@@ -2373,6 +2373,7 @@ td.note {
 }
 .assembly .step-head .btn {
   margin-left: auto;
+  white-space: nowrap;
 }
 .assembly .step-n {
   width: 24px;
@@ -2393,6 +2394,21 @@ td.note {
 }
 .assembly .assembly-piece h3 {
   margin: var(--s-3) 0 var(--s-2);
+}
+/* Assembly steps re-check (ADR-185, ADR-186): the instruction, drawer boxes once × N, the fixings. */
+.assembly .step-do {
+  margin: var(--s-1) 0 0;
+}
+.assembly .step-boxes {
+  list-style: none;
+  padding-left: 0;
+}
+.assembly .step-boxes > li > .step-parts {
+  margin-top: 0;
+}
+.assembly .step-fix {
+  margin: var(--s-1) 0 0;
+  padding-left: var(--s-4);
 }
 /* Fill the room (ADR-173): the walls to tick. */
 .wf-walls {
@@ -3732,6 +3748,20 @@ table.buy {
   }
   .pr-elev .el-space rect {
     fill: transparent !important;
+  }
+  /* One front view per piece on the assembly sheet (ADR-185). */
+  .pr-piece .pr-elev .elevation {
+    height: 60mm;
+  }
+  .pr-piece .pr-table tr {
+    break-inside: avoid;
+  }
+  .pr-do {
+    font-style: italic;
+    margin-top: 1mm;
+  }
+  .pr-box {
+    margin-bottom: 1mm;
   }
   .pr-table {
     width: 100%;
