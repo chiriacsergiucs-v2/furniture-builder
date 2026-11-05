@@ -821,6 +821,23 @@ highest id in either file.
 - Questions: Run a measured trial (decision recorded, nothing shipped unless it wins), or adopt Rapier for the checks now?
 - Suggested pick: Measured trial first (the research says 'evaluate'; a new WASM dependency needs its licence, size and offline behaviour checked)
 
+### G-173: Selected space hides its piece's boards in 3D
+
+- Status: Done (obsolete: dropped by the user 2026-11-05, "Drop g 173")
+- Origin: ADR-121 (found while building)
+- Missing: With a space selected inside a piece, that piece's boards do not draw in the 3D view; only the selection outline shows. Also on main (happens at 0° and with the always-on render loop)
+- Request: Accept default, /batch all ready
+- Questions: Fix it in this PR or in a separate change?
+- Suggested pick: Fix it in this PR, since this PR touches Viewer3D (estimate +5 % work)
+- Work: Low
+- Impact: Medium
+- Necessity: Medium-high
+- Issue: Selecting a space inside a piece may hide its boards in 3D; now faded, unverified in browser.
+- Fix: Check in a browser; if boards still vanish, keep them drawn (faded) with the selection outline.
+- Conflicts: none
+- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): no fix found after 0b8fc21; the 3D view fades rather than hides boards (src/viewer/Viewer3D.tsx:1471-1477). Needs a browser run to tell whether it still happens.
+- Note: Re-checked 2026-11-05 on main c4a15bd (code read, no browser): boards now fade (Viewer3D isFaded, opacity 0.28) rather than hide; no fix commit found. Needs a browser check to close.
+
 ### G-180: Lock parameters other than size
 
 - Status: Done (ADR-171)
