@@ -1517,6 +1517,16 @@ highest id in either file.
 - Suggested pick: Yes, in a follow-up ADR; it is the same panel when no project is open.
 - Answer (user, 2026-10-30): "Flatten + order"; built in ADR-160.
 
+### G-310: Build & Preview side panel content undecided
+
+- Status: Done (obsolete: built as answered; the side panel shows the Compose panel in every mode, src/ui/App.tsx:803-808; user 2026-11-05)
+- Origin: ADR-160 (side panel critique, 2026-10-30)
+- Missing: In Build & Preview the side panel shows the same Compose panel; the critique asked whether that is intended and the user did not answer.
+- Request: Agree with all, implement, fix, remove the how many completely, there already is rotation in toolbar, no more need for the 4 buttons, also remove the rotation degree input, hidden for now
+- Questions: Should Build & Preview show a different side panel (for example finishes and checks only)?
+- Suggested pick: Keep the same panel until the user says what Build & Preview should show.
+- Answer (user, 2026-10-30): "Same as Compose".
+
 ### G-323: Variables outside projects
 
 - Status: Done (ADR-170)
