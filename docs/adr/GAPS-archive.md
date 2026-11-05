@@ -1458,6 +1458,15 @@ highest id in either file.
 - Questions: Should repairs and Mirror the run also carry or refuse grouped pieces?
 - Suggested pick: Carry the whole group, refusing a repair the group cannot follow (closer to the request; estimate effort +10 %)
 
+### G-294: Move to for several selected pieces
+
+- Status: Done (ADR-182)
+- Origin: ADR-147, 2026-10-29; out of scope
+- Missing: Move to actions move only the selected piece, not a multi-selection
+- Request: add a move action for a piece, snap to closest wall, snap to closest ceiling, snap to closest left piece, snap to closest right piece, and any other snaps you think would be appropriate
+- Questions: Should Move to move every selected piece as one block?
+- Suggested pick: Yes, as one block (closest to how drag moves a selection; estimate +20 % work)
+
 ### G-295: Move to for a stacked piece
 
 - Status: Done (ADR-147)
@@ -1565,6 +1574,15 @@ highest id in either file.
 - Questions: Should pieces placed on a bound piece (ADR-031) or grouped with one (ADR-097) follow it into the set?
 - Suggested pick: Duplicate a piece whose base is a bound piece too (estimate: effort +15%, value +15%).
 
+### G-328: Feature tree details left short
+
+- Status: Done (ADR-183)
+- Origin: N170 (ff), 2026-11-04; agent left them out
+- Missing: Seven feature-tree lines keep correct but incomplete details: Drag a piece on the plan (arrow keys), Wall colour or picture (where it shows, Solid walls), 2D, 3D or both (one switch in both modes), Share links, Save pieces and templates to your account, Boards and edge bands from a seller (seller pictures load online), Seller products for hardware (Add seller product).
+- Request: “Sync features and gaps with latest changes, remove implemented, validate still listed, remove obsolete”
+- Questions: Add the longer details to these seven lines?
+- Suggested pick: Add them with their Russian entries (estimate: effort +10%, value +5%).
+
 ### G-330: Connections shown only on the plan
 
 - Status: Done (ADR-179)
@@ -1573,6 +1591,33 @@ highest id in either file.
 - Request: Not a quote: the user chose record, re-check and move together
 - Questions: Show connections in the front view and 3D?
 - Suggested pick: A matching tick in the front view and a thin line in 3D (estimate: effort +15%, value +10%).
+
+### G-336: Verified research rows not yet deleted from the data
+
+- Status: Done (ADR-184)
+- Origin: ADR-168, 2026-11-04; agent scoped it out
+- Missing: The three research rows ADR-168 completes (Transactional undo/redo, Versioned save/reload, Connected items stay independently selectable) are marked Verified in the research data but stay listed; ADR-149 and ADR-152 deleted built features from the data in their own ADRs.
+- Request: “Validate all High demand features … create adrs” (user 2026-11-04)
+- Questions: Delete the three rows from the research data as ADR-152 did?
+- Suggested pick: A small deletion ADR after ADR-168 to ADR-170 ship, covering all four High-demand rows at once (estimate: effort +5%, value +5%).
+
+### G-338: Snap ranking ignores locks
+
+- Status: Done (ADR-180)
+- Origin: ADR-171, 2026-11-04; agent scoped it out
+- Missing: Snap ranking does not prefer locked neighbours (research: 'snap ranking considers user locks').
+- Request: “Separate locks per parameter” (user 2026-11-04)
+- Questions: Rank a locked neighbour's side above an unlocked one when both are in range?
+- Suggested pick: A tie-break in ADR-070's ranking: locked first (estimate: effort +5%, value +5%).
+
+### G-339: No per-row price column
+
+- Status: Done (ADR-181)
+- Origin: ADR-172, 2026-11-04; agent scoped it out
+- Missing: No price per row in the Parts table; only the running total and the Shopping list.
+- Request: “Running estimate + scheduled seller price refresh” (user 2026-11-04)
+- Questions: Add a price column to Parts?
+- Suggested pick: A price column on the Shopping list rows only, where the prices live (estimate: effort +10%, value +10%).
 
 ### G-345: No project-level assembly order
 

@@ -1,7 +1,8 @@
 # ADR-182: Move to moves a multi-selection as one block
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-05
+- Implemented: 2026-11-05
 - Depends on: ADR-147
 - Design: docs/ui-design.md (section 4, project side panel)
 - Backlog: N185
@@ -39,8 +40,8 @@ wall or neighbour; the same as dragging a selection.
 
 ## Done when
 
-- [ ] Three selected pieces, Move to the back wall: all move by the same dz, the block's back meets the wall (tests)
-- [ ] Move to a neighbour stops at the first piece outside the selection; a locked member refuses with its reason
+- [x] Three selected pieces, Move to the back wall: all move by the same dz, the block's back meets the wall (tests)
+- [x] Move to a neighbour stops at the first piece outside the selection; a locked member refuses with its reason
       (tests)
-- [ ] Select 2 pieces → Selected pieces → Move to → the back wall at 390 and 1280 px (jsdom find-it)
-- [ ] Russian entries for every new text
+- [x] Select 2 pieces → Selected pieces → Move to → the back wall at 390 and 1280 px (jsdom find-it)
+- [x] Russian entries for every new text

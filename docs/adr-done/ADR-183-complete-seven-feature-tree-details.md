@@ -1,7 +1,8 @@
 # ADR-183: Complete seven feature-tree details
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-05
+- Implemented: 2026-11-05
 - Depends on: ADR-158
 - Design: n/a
 - Backlog: N186
@@ -35,5 +36,5 @@ User, 2026-11-05: complete them with their Russian entries.
 
 ## Done when
 
-- [ ] The seven details name the missing points; each has its Russian entry (typecheck, tests)
-- [ ] More → Information → "arrow keys" under Drag a piece on the plan at 390 and 1280 px (jsdom find-it)
+- [x] The seven details name the missing points; each has its Russian entry (typecheck, tests)
+- [x] More → Information → "arrow keys" under Drag a piece on the plan at 390 and 1280 px (jsdom find-it)

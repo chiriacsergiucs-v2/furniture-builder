@@ -1,7 +1,8 @@
 # ADR-180: Snap ranking prefers a locked neighbour on a tie
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-05
+- Implemented: 2026-11-05
 - Depends on: ADR-070, ADR-171
 - Design: n/a
 - Backlog: N183
@@ -38,6 +39,6 @@ side wins; nothing else changes.
 
 ## Done when
 
-- [ ] Two neighbour sides at the same distance: the locked piece's side wins (position, turn or size lock); unlocked first when the locked side is
+- [x] Two neighbour sides at the same distance: the locked piece's side wins (position, turn or size lock); unlocked first when the locked side is
       1 mm farther (tests)
-- [ ] Existing snap tests and the fuzz stay green (tests, fuzz)
+- [x] Existing snap tests and the fuzz stay green (tests, fuzz)

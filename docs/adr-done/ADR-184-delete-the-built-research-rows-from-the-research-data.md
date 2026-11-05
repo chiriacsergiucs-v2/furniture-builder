@@ -1,7 +1,8 @@
 # ADR-184: Delete the built research rows from the research data
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-05
+- Implemented: 2026-11-05
 - Depends on: ADR-149, ADR-168
 - Design: n/a
 - Backlog: N187
@@ -39,5 +40,5 @@ User, 2026-11-05: **delete all 9**.
 
 ## Done when
 
-- [ ] No feature in the research data has status Verified or Implemented (tests)
-- [ ] Research tests and `pnpm typecheck` pass; the research page renders (tests)
+- [x] No feature in the research data has status Verified or Implemented (tests)
+- [x] Research tests and `pnpm typecheck` pass; the research page renders (tests)

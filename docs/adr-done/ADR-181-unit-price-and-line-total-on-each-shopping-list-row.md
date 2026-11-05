@@ -1,7 +1,8 @@
 # ADR-181: Unit price and line total on each Shopping list row
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-05
+- Implemented: 2026-11-05
 - Depends on: ADR-172
 - Design: docs/ui-design.md (section 4, Build & Preview tabs)
 - Backlog: N184
@@ -43,8 +44,8 @@ prices already are; "—" when a row has no price.
 
 ## Done when
 
-- [ ] A row priced per m² shows "/ m²" with the entry's amount and the same line total as before (tests)
-- [ ] A row without a price shows "—" (tests)
-- [ ] The CSV and the print have the Unit price column in ro, ru and en (tests)
-- [ ] Shopping list → a unit price beside a total at 390 and 1280 px (jsdom find-it)
-- [ ] Russian entries for every new text
+- [x] A row priced per m² shows "/ m²" with the entry's amount and the same line total as before (tests)
+- [x] A row without a price shows "—" (tests)
+- [x] The CSV and the print have the Unit price column in ro, ru and en (tests)
+- [x] Shopping list → a unit price beside a total at 390 and 1280 px (jsdom find-it)
+- [x] Russian entries for every new text
