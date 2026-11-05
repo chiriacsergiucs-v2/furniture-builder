@@ -168,6 +168,13 @@ export const PRINT_RU = {
   'Piese de rând': 'Детали ряда',
   'Decupaj chiuvetă {w} × {d} mm': 'Вырез под мойку {w} × {d} мм',
   'peretele {n}': 'стена {n}',
+  // Shopping list unit price (ADR-181)
+  'Preț unitar': 'Цена за единицу',
+  '/ placă': '/ лист',
+  '/ m²': '/ м²',
+  '/ m': '/ м',
+  '/ buc': '/ шт.',
+  '/ blat': '/ щит столешницы',
 } satisfies Record<string, string>;
 
 export const PRINT_EN: Record<keyof typeof PRINT_RU, string> = {
@@ -327,4 +334,10 @@ export const PRINT_EN: Record<keyof typeof PRINT_RU, string> = {
   'Piese de rând': 'Run parts',
   'Decupaj chiuvetă {w} × {d} mm': 'Sink cut-out {w} × {d} mm',
   'peretele {n}': 'wall {n}',
+  'Preț unitar': 'Unit price',
+  '/ placă': '/ sheet',
+  '/ m²': '/ m²',
+  '/ m': '/ m',
+  '/ buc': '/ piece',
+  '/ blat': '/ worktop board',
 };

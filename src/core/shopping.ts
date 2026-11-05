@@ -8,7 +8,8 @@ import { bandKey, rowBandMetres, type CutRow } from './cutlist';
 import { bandText } from './materials';
 import type { RunPart } from './project';
 import { fastenerShopLines, type FastenerChoice, type FastenerCount } from './fasteners';
-import { csvCell } from './prices';
+import { pt, type PrintKey } from './i18n/print';
+import { csvCell, formatMoney, type UnitPer, type UnitPrice } from './prices';
 import { materialKey } from './project';
 import type {
   Diagnostic,
@@ -290,13 +291,32 @@ const SECTION_RO: Record<ShopSection, string> = {
   choose: 'De ales înainte de cumpărare',
 };
 
-/** Shopping list as Romanian CSV (`;`), like the Parts CSV (ADR-020). */
+/** What a unit price is per, on the printed list and in the CSV (ADR-181), in the print language. */
+const PER_PRINT: Record<UnitPer, PrintKey> = {
+  sheet: '/ placă',
+  m2: '/ m²',
+  m: '/ m',
+  piece: '/ buc',
+  worktop: '/ blat',
+};
+
+/** "45,00 lei / m²" (ADR-181): a unit price for the printed list, the unit in the print language. */
+export function unitPricePrint(u: UnitPrice, currency: string): string {
+  return `${formatMoney(u.amount)} ${currency} ${pt(PER_PRINT[u.per])}`;
+}
+
+/**
+ * Shopping list as Romanian CSV (`;`), like the Parts CSV (ADR-020). With `unitOf`, a Unit price column after the
+ * price, its header and unit in the print language (ADR-181): "45,00 / m²".
+ */
 export function shoppingCsvRo(
   lines: ShopLine[],
   priceOf?: (l: ShopLine) => number | null,
   currency = 'lei',
+  unitOf?: (l: ShopLine) => UnitPrice | null,
 ): string {
   const esc = csvCell;
+  const money = (minor: number) => (minor / 100).toFixed(2).replace('.', ',');
   const head = [
     'Secțiune',
     'Articol',
@@ -304,18 +324,19 @@ export function shoppingCsvRo(
     'UM',
     'Detalii',
     ...(priceOf ? [`Preț (${currency})`] : []),
+    ...(unitOf ? [`${pt('Preț unitar')} (${currency})`] : []),
   ];
   const body = lines.map((l) => {
     const p = priceOf?.(l);
+    const u = unitOf?.(l);
     return [
       SECTION_RO[l.section],
       l.label,
       String(l.quantity).replace('.', ','),
       UNIT_RO[l.unit],
       l.detail,
-      ...(priceOf
-        ? [p === null || p === undefined ? '' : (p / 100).toFixed(2).replace('.', ',')]
-        : []),
+      ...(priceOf ? [p === null || p === undefined ? '' : money(p)] : []),
+      ...(unitOf ? [u ? `${money(u.amount)} ${pt(PER_PRINT[u.per])}` : ''] : []),
     ]
       .map(esc)
       .join(';');

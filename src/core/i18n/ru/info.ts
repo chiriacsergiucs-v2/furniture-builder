@@ -384,6 +384,9 @@ export const ru_info = {
     'Закрепить изделие на месте, его поворот или каждый размер',
   'Lock keeps it where it is; Lock turn, Lock width, Lock height, Lock depth and Lock size (all three) in More actions. A locked value outranks variables, Replace, linked copies and project settings.':
     '«Закрепить» держит его на месте; «Закрепить поворот», «Закрепить ширину», «Закрепить высоту», «Закрепить глубину» и «Закрепить размер» (все три) — в «Ещё действия». Закреплённое значение важнее переменных, замены, связанных копий и настроек проекта.',
+  'Unit price on each Shopping list row': 'Цена за единицу в каждой строке списка покупок',
+  'Under each line total, the unit price it comes from (your price or the seller’s); “—” when a row has no price. Also a column on the printed list and in the CSV.':
+    'Под суммой строки — цена за единицу, из которой она получена (ваша цена или цена продавца); «—», если у строки нет цены. Также столбец в печатном списке и в CSV.',
   'Running cost estimate': 'Текущая оценка стоимости',
   'A chip in the editor header with the estimate of what is shown, updated on every change; tap it to open the Shopping list.':
     'Значок в шапке редактора с оценкой того, что показано, обновляется при каждом изменении; нажмите, чтобы открыть список покупок.',
