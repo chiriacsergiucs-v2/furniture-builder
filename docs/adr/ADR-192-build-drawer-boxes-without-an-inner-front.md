@@ -49,9 +49,9 @@ front, so no schema bump and old readers and saved designs are unchanged.
 
 ## Done when
 
-- [ ] A cabinet with `innerFront: false` has no `drawer-inner-front` parts; sides, back and bottom are unchanged (test).
-- [ ] Absent `innerFront` gives today's parts (test).
-- [ ] Drawers behind doors keep their inner front and get the `inner-front-internal` warning (test).
-- [ ] `validateDesign` rejects `innerFront: 'no'` (test).
-- [ ] Find-it (jsdom, 390 and 1280 px): the **Box has an inner front** checkbox is found in Drawers and runners;
+- [x] A cabinet with `innerFront: false` has no `drawer-inner-front` parts; sides, back and bottom are unchanged (test).
+- [x] Absent `innerFront` gives today's parts (test).
+- [x] Drawers behind doors keep their inner front and get the `inner-front-internal` warning (test).
+- [x] `validateDesign` rejects `innerFront: 'no'` (test).
+- [x] Find-it (jsdom, 390 and 1280 px): the **Box has an inner front** checkbox is found in Drawers and runners;
       unticking it removes "Drawer 1 inner front" from the parts.
