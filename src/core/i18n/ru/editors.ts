@@ -505,9 +505,8 @@ export const ru_editors = {
   'drawer halves': 'ящичные половинки',
   'mounting plates': 'монтажные планки',
   'cups and arms, on the doors': 'чашки и плечи, на дверцах',
-  'Materials › Fasteners': 'Материалы › Крепёж',
-  '{count} — choose your fastener (Materials › Fasteners)':
-    '{count} — выберите крепёж (Материалы › Крепёж)',
+  'Settings › Fasteners': 'Настройки › Крепёж',
+  '{count} — choose your fastener ({path})': '{count} — выберите крепёж ({path})',
   '{n|# long edge|# long edges}': '{n|# длинная сторона|# длинные стороны|# длинных сторон}',
   '{n|# short edge|# short edges}': '{n|# короткая сторона|# короткие стороны|# коротких сторон}',
   'band {what}': 'кромка: {what}',

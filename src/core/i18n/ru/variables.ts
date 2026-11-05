@@ -5,8 +5,8 @@ export const ru_variables = {
   'Bind a size, a division or a position to a named value; change it once.':
     'Привяжите размер, деление или положение к именованному значению; меняйте его один раз.',
   'Value sets': 'Наборы значений',
-  'Duplicate every bound piece with other values, with the room; save a set as a project.':
-    'Дублируйте каждое привязанное изделие с другими значениями, вместе с комнатой; сохраните набор как проект.',
+  'Duplicate every bound piece with other values, with the room; set 1’s run parts, run handles and sinks are copied onto each set and kept in step; save a set as a project.':
+    'Дублируйте каждое привязанное изделие с другими значениями, вместе с комнатой; детали ряда, ручки ряда и мойки набора 1 копируются в каждый набор и остаются согласованными; сохраните набор как проект.',
   // validation
   'Invalid variables': 'Недопустимые переменные',
   'Variables need project schemaVersion {v}': 'Переменным нужна версия схемы проекта {v}',

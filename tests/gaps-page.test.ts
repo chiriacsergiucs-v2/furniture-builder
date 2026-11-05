@@ -7,10 +7,14 @@ import {
   decisionsText,
   filterGaps,
   gapCounts,
+  hasConflict,
   parseGaps,
+  RATING_SCALE,
+  ratingCounts,
   statusKind,
   validateGapMark,
   type GapMark,
+  type GapStatusKind,
 } from '../src/core/gaps';
 import { db, listGapMarks, saveGapMark } from '../src/persist/db';
 
@@ -66,6 +70,59 @@ const SAMPLE = `# Gaps
 ### G-005: Broken
 
 - Status: Maybe
+`;
+
+const RATED = `# Gaps
+
+### G-001: Rated with a conflict
+
+- Status: Open
+- Origin: x
+- Missing: x
+- Request: x
+- Questions: x
+- Suggested pick: x
+- Work: Low-medium
+- Impact: High
+- Necessity: Medium
+- Issue: Drawers are missing
+- Fix: Add a drawer option
+- Conflicts: ADR-014: the viewer never edits
+
+### G-002: Rated, no conflict
+
+- Status: Acknowledged (2026-11-01)
+- Origin: x
+- Missing: x
+- Request: x
+- Questions: x
+- Suggested pick: x
+- Work: High
+- Impact: High
+- Necessity: Low
+- Issue: No wall map
+- Fix: Draw the wall map
+- Conflicts: none
+
+### G-003: Off the scale
+
+- Status: Open
+- Origin: x
+- Missing: x
+- Request: x
+- Questions: x
+- Suggested pick: x
+- Work: Huge
+- Impact: Low
+
+### G-004: Not rated
+
+- Status: ADR-101
+- Origin: x
+- Missing: x
+- Request: x
+- Questions: x
+- Suggested pick: x
 `;
 
 describe('gaps ledger parser (ADR-101)', () => {
@@ -134,6 +191,60 @@ describe('gaps ledger parser (ADR-101)', () => {
     expect(decisionsText(gaps, { 'G-001': mark('G-001', 'adr') })).toContain(
       '- make an ADR from G-001 (First)',
     );
+  });
+
+  it('reads Work, Impact, Necessity, Issue, Fix and Conflicts; a gap without them still parses (ADR-187)', () => {
+    const gaps = parseGaps(RATED);
+    expect(gaps.map((g) => g.id)).toEqual(['G-001', 'G-002', 'G-003', 'G-004']);
+    expect(gaps[0]).toMatchObject({
+      work: 'Low-medium',
+      impact: 'High',
+      necessity: 'Medium',
+      issue: 'Drawers are missing',
+      fix: 'Add a drawer option',
+      conflicts: 'ADR-014: the viewer never edits',
+    });
+    expect(hasConflict(gaps[0])).toBe(true);
+    expect(hasConflict(gaps[1])).toBe(false);
+    // Off the scale reads as no rating (pnpm docs:check reports it).
+    expect(gaps[2]).toMatchObject({ work: null, impact: 'Low', necessity: null });
+    expect(gaps[3]).toMatchObject({
+      work: null,
+      impact: null,
+      necessity: null,
+      issue: '',
+      fix: '',
+      conflicts: '',
+    });
+    expect(hasConflict(gaps[3])).toBe(false);
+    expect(RATING_SCALE).toEqual(['Low', 'Low-medium', 'Medium', 'Medium-high', 'High']);
+  });
+
+  it('filters by Work, Impact and Necessity with status and search; empty means all (ADR-187)', () => {
+    const gaps = parseGaps(RATED);
+    const all: GapStatusKind[] = ['open', 'acknowledged', 'adr', 'done'];
+    const ids = (r: Parameters<typeof filterGaps>[3], q = '', k = all) =>
+      filterGaps(gaps, q, k, r).map((g) => g.id);
+    expect(ids({})).toEqual(['G-001', 'G-002', 'G-003', 'G-004']);
+    expect(ids({ impact: [], work: [] })).toEqual(['G-001', 'G-002', 'G-003', 'G-004']);
+    expect(ids({ impact: ['High'] })).toEqual(['G-001', 'G-002']);
+    expect(ids({ impact: ['High', 'Low'] })).toEqual(['G-001', 'G-002', 'G-003']);
+    expect(ids({ impact: ['High'], work: ['High'] })).toEqual(['G-002']);
+    expect(ids({ necessity: ['Medium'] })).toEqual(['G-001']);
+    expect(ids({ impact: ['High'] }, '', ['open'])).toEqual(['G-001']);
+    // The search covers Issue, Fix and Conflicts.
+    expect(ids({}, 'drawer option')).toEqual(['G-001']);
+    expect(ids({}, 'wall map')).toEqual(['G-002']);
+    expect(ids({ impact: ['High'] }, 'viewer never')).toEqual(['G-001']);
+    const counts = ratingCounts(gaps);
+    expect(counts.impact).toEqual({
+      Low: 1,
+      'Low-medium': 0,
+      Medium: 0,
+      'Medium-high': 0,
+      High: 2,
+    });
+    expect(counts.work.High).toBe(1);
   });
 
   it('validates stored marks', () => {

@@ -219,6 +219,11 @@ described above. Audit and wireframes are in `docs/research/2026-10-24-ui-redesi
   **Acknowledge** and **Make ADR** (pressed state, tap again to clear) and **Your note** for Open and ADR gaps.
   Copy decisions shows the text in **Decisions to paste to Claude** and copies it when the browser allows. At
   ≤ 520 px the field list stacks label over value.
+  ADR-187 adds three rating filter groups under the toolbar, **Work**, **Impact** and **Necessity**, each with the
+  five chips **Low, Low-medium, Medium, Medium-high, High (N)** (multi-select; none pressed shows all; counts follow
+  the status filter and search) and **Clear filters**. Each gap card shows **Issue:** and **Fix:** lines under its
+  title and small chips **Work: L**, **Impact: L**, **Necessity: L**; a conflict shows as a warning chip
+  **Conflicts: ADR-NNN: why**.
 - _Material sheet (ADR-163)._ A **Material** icon button sits in the header bar tools next to Settings on the
   editor page (a piece, a project, Build & Preview). It opens the **Material** dialog (phone: full-width sheet):
   **Apply to** as a radio row **Part · Item · Group · Whole project** (Group and Whole project only in a project;

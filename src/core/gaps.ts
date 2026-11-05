@@ -1,8 +1,27 @@
 /**
  * The gaps ledger (ADR-082) read for the Gaps page (ADR-101). Parses `docs/adr/GAPS.md` the same way
  * `scripts/gaps.py` does: a `### G-NNN: title` heading, then `- Key: value` lines. Malformed sections are skipped;
- * nothing here throws.
+ * nothing here throws. ADR-187 adds rough Work, Impact and Necessity ratings, an Issue and a Fix line and a Conflicts
+ * line per gap; a gap without them still parses.
  */
+
+import { CONFIDENCE_SCALE } from './research/types';
+
+/** The rating scale of the gaps (ADR-187), the same five levels as the Research page. */
+export const RATING_SCALE = CONFIDENCE_SCALE;
+export type GapRating = (typeof RATING_SCALE)[number];
+export type RatingKey = 'work' | 'impact' | 'necessity';
+export const RATING_KEYS: RatingKey[] = ['work', 'impact', 'necessity'];
+export const RATING_LABEL: Record<RatingKey, string> = {
+  work: 'Work',
+  impact: 'Impact',
+  necessity: 'Necessity',
+};
+/** Selected levels per rating; an empty or missing list means every gap (ADR-187). */
+export type RatingFilter = Partial<Record<RatingKey, GapRating[]>>;
+
+const asRating = (v: string | undefined): GapRating | null =>
+  (RATING_SCALE as readonly string[]).includes(v ?? '') ? (v as GapRating) : null;
 
 export type GapStatusKind = 'open' | 'acknowledged' | 'adr' | 'done';
 
@@ -18,6 +37,16 @@ export interface Gap {
   questions: string;
   pick: string;
   notes: string[];
+  /** Rough estimates (ADR-187); null when the ledger has none or a value off the scale. */
+  work: GapRating | null;
+  impact: GapRating | null;
+  necessity: GapRating | null;
+  /** One line: what is wrong or missing. Empty when the ledger has none. */
+  issue: string;
+  /** One line: what would close it. Empty when the ledger has none. */
+  fix: string;
+  /** `none`, or the implemented ADR(s) the fix would contradict and why; empty when the ledger has none. */
+  conflicts: string;
 }
 
 /** What the user decided on this device for one gap (ADR-101). Never written automatically. */
@@ -73,6 +102,12 @@ export function parseGaps(text: string): Gap[] {
       questions: fields['Questions'] ?? '',
       pick: fields['Suggested pick'] ?? '',
       notes,
+      work: asRating(fields['Work']),
+      impact: asRating(fields['Impact']),
+      necessity: asRating(fields['Necessity']),
+      issue: fields['Issue'] ?? '',
+      fix: fields['Fix'] ?? '',
+      conflicts: fields['Conflicts'] ?? '',
     });
   });
   return gaps;
@@ -84,10 +119,41 @@ export function gapCounts(gaps: Gap[]): Record<GapStatusKind, number> {
   return out;
 }
 
-export function filterGaps(gaps: Gap[], query: string, kinds: GapStatusKind[]): Gap[] {
+/** A Conflicts value other than `none` (ADR-187). */
+export const hasConflict = (g: Gap): boolean =>
+  g.conflicts !== '' && g.conflicts.toLowerCase() !== 'none';
+
+/** How many of `gaps` have each level of each rating. */
+export function ratingCounts(gaps: Gap[]): Record<RatingKey, Record<GapRating, number>> {
+  const zero = () =>
+    Object.fromEntries(RATING_SCALE.map((l) => [l, 0])) as Record<GapRating, number>;
+  const out = { work: zero(), impact: zero(), necessity: zero() };
+  for (const g of gaps)
+    for (const k of RATING_KEYS) {
+      const v = g[k];
+      if (v) out[k][v] += 1;
+    }
+  return out;
+}
+
+/**
+ * The gaps with one of `kinds`, every word of `query` and, per rating, one of the selected levels (an empty
+ * selection lets every gap through, ADR-187).
+ */
+export function filterGaps(
+  gaps: Gap[],
+  query: string,
+  kinds: GapStatusKind[],
+  ratings: RatingFilter = {},
+): Gap[] {
   const words = query.toLowerCase().split(/\s+/).filter(Boolean);
   return gaps.filter((g) => {
     if (!kinds.includes(g.kind)) return false;
+    for (const k of RATING_KEYS) {
+      const want = ratings[k];
+      const v = g[k];
+      if (want?.length && !(v && want.includes(v))) return false;
+    }
     const hay = [
       g.id,
       g.title,
@@ -97,6 +163,9 @@ export function filterGaps(gaps: Gap[], query: string, kinds: GapStatusKind[]): 
       g.request,
       g.questions,
       g.pick,
+      g.issue,
+      g.fix,
+      g.conflicts,
       ...g.notes,
     ]
       .join(' ')

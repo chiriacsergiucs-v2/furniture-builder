@@ -50,7 +50,7 @@ export interface ShopLine {
 }
 
 export const NOT_COUNTED = t(
-  'Screws, dowels and cams are counted only as joints, as guidance; the fastener is yours (Materials › Fasteners). Glue is not counted.',
+  'Screws, dowels and cams are counted only as joints, as guidance; the fastener is yours (Settings › Fasteners). Glue is not counted.',
 );
 
 /** Checks that leave a purchase or a safety value to the user (rules registry, ADR-035). */

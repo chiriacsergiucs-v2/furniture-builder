@@ -316,7 +316,7 @@ export function fastenerShopLines(
         }),
         quantity: c.count,
         unit: 'piece',
-        detail: t('{guidance} ({how}{len}). Name yours under Materials › Fasteners.', {
+        detail: t('{guidance} ({how}{len}). Name yours under Settings › Fasteners.', {
           guidance: GUIDANCE,
           how: j.how,
           len,
