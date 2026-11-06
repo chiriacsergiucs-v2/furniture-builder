@@ -13,13 +13,15 @@ import {
   cornerWalls,
   freeStretches,
   insideCorner,
+  checkRoom,
   suggestRoomMixes,
+  tallAtRight,
   turnFor,
   wallRowParts,
   type RoomInput,
 } from '../src/core/roomfill';
 import { shapeOutline, wallBox, wallLength, type Room, type RoomFeature } from '../src/core/room';
-import { MIXES_FIRST, WALL_HEIGHT } from '../src/core/wallfill';
+import { BASE_HEIGHT, MIXES_FIRST, WALL_HEIGHT } from '../src/core/wallfill';
 
 const rect = (features: RoomFeature[] = []): Room => ({
   height: 2500,
@@ -437,5 +439,96 @@ describe('wall rows beside a window (ADR-177)', () => {
         wi,
       ),
     ).toEqual([]);
+  });
+});
+
+// ADR-193: the tall cabinet tried at both ends of each stretch on auto; the room's sizes checked.
+describe('ADR-193: tall side and room sizes', () => {
+  const sizes = { width: 3600, depth: 3000, cutWidth: 1500, cutDepth: 1500, offset: 0 };
+  // The wizard's default room (Fill the room's start values).
+  const typed: Room = {
+    height: 2500,
+    outline: shapeOutline('rectangle', sizes),
+    features: [],
+    shape: { kind: 'rectangle', sizes },
+  };
+  const wizard = (over: Partial<RoomInput> = {}): RoomInput => ({
+    room: typed,
+    walls: [0, 1, 2, 3],
+    depth: 560,
+    minWidth: 400,
+    maxWidth: 1200,
+    baseHeight: BASE_HEIGHT,
+    wallRow: 'always',
+    wallHeight: WALL_HEIGHT,
+    corner: 'blind',
+    atLeast: {},
+    ...over,
+  });
+  it('the default room (3600 × 3000, 4 walls): the first card has at most 4 warnings', () => {
+    const r = suggestRoomMixes(wizard());
+    expect(r.problems).toEqual([]);
+    expect(r.mixes.length).toBe(MIXES_FIRST);
+    expect(r.mixes[0].warnings.length).toBeLessThanOrEqual(4);
+    // The clear side is the right end here: the tall cabinet no longer stands against the corner's door.
+    expect(r.mixes[0].key).toMatch(/\|right/);
+    expect(r.mixes[0].warnings.map((w) => w.message).join('\n')).not.toMatch(
+      /cannot open fully: it hits Tall cabinet/,
+    );
+  });
+  it('tallPosition left is still obeyed: no tall moved to the right end', () => {
+    const r = suggestRoomMixes(wizard({ tallPosition: 'left' }));
+    expect(r.mixes.length).toBeGreaterThan(0);
+    for (const m of r.mixes) expect(m.key).not.toMatch(/\|right/);
+  });
+  // The fastest of 5 warm runs is its own cost; a busy test machine slows single runs (retried, never loosened).
+  it('the 4-wall default stays under 100 ms', { retry: 2 }, () => {
+    suggestRoomMixes(wizard());
+    const runs = [0, 1, 2, 3, 4].map(() => {
+      const t0 = performance.now();
+      suggestRoomMixes(wizard());
+      return performance.now() - t0;
+    });
+    expect(Math.min(...runs)).toBeLessThan(100);
+  });
+  it('tallAtRight: the one tall cabinet moves to the right end, a new signature; none without a single tall', () => {
+    const c = {
+      slots: [
+        { kind: 'tall' as const, width: 600 },
+        { kind: 'drawers' as const, width: 500 },
+        { kind: 'door' as const, width: 400 },
+      ],
+      score: [0],
+      signature: 's',
+    };
+    expect(tallAtRight(c)).toEqual({
+      ...c,
+      slots: [c.slots[1], c.slots[2], c.slots[0]],
+      signature: 's|right',
+    });
+    expect(tallAtRight({ ...c, slots: [c.slots[1], c.slots[0]] })).toBeNull();
+    expect(tallAtRight({ ...c, slots: [c.slots[0], c.slots[1], c.slots[0]] })).toBeNull();
+    expect(tallAtRight({ ...c, slots: [c.slots[1]] })).toBeNull();
+  });
+  it('a wrong room size is named by checkRoom, never a "NaN mm" wall or a mix', () => {
+    for (const width of [Number('abc'), 0, -100]) {
+      const s = { ...sizes, width };
+      const room: Room = {
+        ...typed,
+        outline: shapeOutline('rectangle', s),
+        shape: { kind: 'rectangle', sizes: s },
+      };
+      const r = suggestRoomMixes(wizard({ room }));
+      expect(r.mixes).toEqual([]);
+      expect(r.problems.map((p) => p.message)).toEqual([
+        'Width must be a whole number of mm above 0.',
+      ]);
+      expect(checkRoom(wizard({ room }))[0]).toMatchObject({ code: 'room-size', field: 'width' });
+    }
+    // A room height of 0 is named once, as the room's height.
+    const low = suggestRoomMixes(wizard({ room: { ...typed, height: 0 } }));
+    expect(low.problems.map((p) => p.message)).toEqual([
+      'Room height must be a whole number of mm above 0.',
+    ]);
   });
 });

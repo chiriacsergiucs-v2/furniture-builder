@@ -146,44 +146,63 @@ const info = (code: string, message: string): Diagnostic => ({
 });
 const whole = (n: unknown): n is number => typeof n === 'number' && Number.isInteger(n);
 
+/** The answer a problem names (ADR-193), so the wizard can mark that field. */
+export type WallField =
+  | 'width'
+  | 'depth'
+  | 'height'
+  | 'tallDepth'
+  | 'baseHeight'
+  | 'wallHeight'
+  | 'minWidth'
+  | 'maxWidth'
+  | 'pieces'
+  | 'equalFronts'
+  | 'tallCount'
+  | 'shelves'
+  | 'drawers'
+  | 'door';
+export type WallIssue = Diagnostic & { field: WallField };
+
 /** Problems with the input itself; the wizard shows them and suggests nothing (ADR-008: never clamp). */
-export function checkWall(input: WallInput): Diagnostic[] {
-  const out: Diagnostic[] = [];
-  const pos = (v: unknown, label: string) => {
+export function checkWall(input: WallInput): WallIssue[] {
+  const out: WallIssue[] = [];
+  const bad = (field: WallField, code: string, message: string) =>
+    out.push({ ...err(code, message), field });
+  const pos = (field: WallField, v: unknown, label: string) => {
     if (!whole(v) || v <= 0)
-      out.push(err('wall-input', t('{label} must be a whole number of mm above 0.', { label })));
+      bad(field, 'wall-input', t('{label} must be a whole number of mm above 0.', { label }));
   };
-  pos(input.width, t('Width'));
-  pos(input.depth, t('Depth'));
-  pos(input.height, t('Height'));
-  if (input.tallDepth !== undefined) pos(input.tallDepth, t('Tall depth'));
-  if (input.baseHeight !== undefined) pos(input.baseHeight, t('Base height'));
-  if (input.wallHeight !== undefined) pos(input.wallHeight, t('Wall cabinet height'));
+  pos('width', input.width, t('Width'));
+  pos('depth', input.depth, t('Depth'));
+  pos('height', input.height, t('Height'));
+  if (input.tallDepth !== undefined) pos('tallDepth', input.tallDepth, t('Tall depth'));
+  if (input.baseHeight !== undefined) pos('baseHeight', input.baseHeight, t('Base height'));
+  if (input.wallHeight !== undefined) pos('wallHeight', input.wallHeight, t('Wall cabinet height'));
   const min = input.minWidth ?? WALL_DEFAULTS.minWidth,
     max = input.maxWidth ?? WALL_DEFAULTS.maxWidth;
-  pos(min, t('Min piece width'));
-  pos(max, t('Max piece width'));
+  pos('minWidth', min, t('Min piece width'));
+  pos('maxWidth', max, t('Max piece width'));
   if (whole(min) && whole(max) && min > max)
-    out.push(
-      err(
-        'wall-range',
-        t('Min piece width {min} mm is more than the max, {max} mm.', { min, max }),
-      ),
+    bad(
+      'minWidth',
+      'wall-range',
+      t('Min piece width {min} mm is more than the max, {max} mm.', { min, max }),
     );
-  for (const [v, label] of [
-    [input.pieces, t('Number of pieces')],
-    [input.equalFronts, t('Equal fronts')],
+  for (const [field, v, label] of [
+    ['pieces', input.pieces, t('Number of pieces')],
+    ['equalFronts', input.equalFronts, t('Equal fronts')],
   ] as const)
     if (v !== undefined && (!whole(v) || v < 1))
-      out.push(err('wall-input', t('{label} must be 1 or more.', { label })));
-  for (const [v, label] of [
-    [input.tallCount, t('Tall cabinets')],
-    [input.atLeast?.shelves, t('Open shelf bases')],
-    [input.atLeast?.drawers, t('Drawer bases')],
-    [input.atLeast?.door, t('Door bases')],
+      bad(field, 'wall-input', t('{label} must be 1 or more.', { label }));
+  for (const [field, v, label] of [
+    ['tallCount', input.tallCount, t('Tall cabinets')],
+    ['shelves', input.atLeast?.shelves, t('Open shelf bases')],
+    ['drawers', input.atLeast?.drawers, t('Drawer bases')],
+    ['door', input.atLeast?.door, t('Door bases')],
   ] as const)
     if (v !== undefined && (!whole(v) || v < 0))
-      out.push(err('wall-input', t('{label} must be 0 or more.', { label })));
+      bad(field, 'wall-input', t('{label} must be 0 or more.', { label }));
   return out;
 }
 

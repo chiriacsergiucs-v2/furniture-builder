@@ -3,7 +3,7 @@
  * it exactly, each drawn like a catalog card. Refine narrows the mixes; "Use this mix" saves and opens a project.
  * The mixes are worked out in `src/core/wallfill.ts`; this file only collects the answers and shows the result.
  */
-import { useId, useMemo, useState } from 'react';
+import { useId, useMemo, useState, type FormEvent } from 'react';
 import { t } from '../core/i18n';
 import { snapshotSvg } from '../core/snapshot';
 import {
@@ -11,8 +11,10 @@ import {
   WALL_HEIGHT,
   MIXES_FIRST,
   WALL_DEFAULTS,
+  checkWall,
   suggestMixes,
   type Mix,
+  type WallIssue,
   type TallPosition,
   type WallRow,
   type WallInput,
@@ -69,6 +71,9 @@ const START: Form = {
   wallHeight: String(WALL_HEIGHT),
 };
 
+/** The answers asked on the Wall step; the rest are on Refine. */
+const WALL_STEP: WallIssue['field'][] = ['width', 'depth', 'height', 'tallDepth'];
+
 /** Empty = any (absent); anything else goes to the core as a number, which reports what is wrong with it. */
 const num = (s: string) => Number(s.trim());
 const opt = (s: string) => (s.trim() === '' ? undefined : num(s));
@@ -92,13 +97,15 @@ function toInput(f: Form): WallInput {
   };
 }
 
-function Field({
+/** A whole-mm answer kept as typed (ADR-008); shared with Fill the room. */
+export function Field({
   label,
   value,
   onChange,
   hint,
   unit = t('mm'),
   placeholder,
+  problem,
 }: {
   label: string;
   value: string;
@@ -106,6 +113,8 @@ function Field({
   hint?: string;
   unit?: string;
   placeholder?: string;
+  /** Ids of the problems that name this field (ADR-193): marks it invalid and points to them. */
+  problem?: string;
 }) {
   const id = useId();
   return (
@@ -117,6 +126,8 @@ function Field({
           inputMode="numeric"
           value={value}
           placeholder={placeholder}
+          aria-invalid={problem ? true : undefined}
+          aria-describedby={problem}
           onChange={(e) => onChange(e.target.value)}
         />
         <span className="unit">{unit}</span>
@@ -188,22 +199,65 @@ export function WallFillDialog({
   );
 }
 
+/** The problems with the answers, under the fields of the step (ADR-193). */
+export function Problems({
+  list,
+  idOf,
+}: {
+  list: { message: string }[];
+  idOf: (i: number) => string;
+}) {
+  if (!list.length) return null;
+  return (
+    <div className="wf-problems">
+      {list.map((p, i) => (
+        <p key={i} id={idOf(i)} className="alert error" role="alert">
+          <Icon name="alert-circle" className="sm" />
+          <span>{p.message}</span>
+        </p>
+      ))}
+    </div>
+  );
+}
+
 function WallFill({ onClose, onOpened }: { onClose: () => void; onOpened: () => void }) {
   const openProject = useDesign((s) => s.openProject);
+  const uid = useId();
   const [form, setForm] = useState<Form>(START);
-  // The answers the cards were made from: set by "Show suggestions" and "Suggest again".
-  const [applied, setApplied] = useState<Form>(START);
+  // The answers the cards were made from: set by "Show suggestions" and "Suggest again"; none until then (ADR-193).
+  const [applied, setApplied] = useState<Form | null>(null);
   const [step, setStep] = useState<StepId>('wall');
+  const [problems, setProblems] = useState<WallIssue[]>([]);
   const [saveError, setSaveError] = useState<string | null>(null);
   const set = (k: keyof Form) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
-  const result = useMemo(() => suggestMixes(toInput(applied)), [applied]);
+  const result = useMemo(() => (applied ? suggestMixes(toInput(applied)) : null), [applied]);
+  const problemId = (i: number) => `${uid}-problem-${i}`;
+  const problem = (k: keyof Form) =>
+    problems
+      .map((d, i) => (d.field === k ? problemId(i) : ''))
+      .filter(Boolean)
+      .join(' ') || undefined;
   const go = (s: StepId) => {
+    setProblems([]);
     setStep(s);
     document.querySelector('.dialog[open] .dialog-body')?.scrollTo({ top: 0 });
   };
+  // A wrong answer keeps the user on the step, named under the fields (ADR-008, ADR-193).
   const suggest = () => {
+    const bad = checkWall(toInput(form));
+    if (bad.length) {
+      setProblems(bad);
+      // Suggestions has no fields: the user goes to the step that holds the first problem.
+      if (step === 'mixes') setStep(WALL_STEP.includes(bad[0].field) ? 'wall' : 'refine');
+      return;
+    }
     setApplied(form);
     go('mixes');
+  };
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    if (step === 'mixes') go('refine');
+    else suggest();
   };
   const use = async (m: Mix) => {
     try {
@@ -216,12 +270,12 @@ function WallFill({ onClose, onOpened }: { onClose: () => void; onOpened: () => 
     }
   };
   return (
-    <div className="wizard wall-fill">
+    <form className="wizard wall-fill" onSubmit={submit} noValidate>
       <Steps
         label={t('Fill a wall steps')}
         current={step}
         onSelect={(id) => (id === 'mixes' ? suggest() : go(id as StepId))}
-        steps={STEPS.map((s) => ({ ...s, done: s.id === 'wall' && step !== 'wall' }))}
+        steps={STEPS.map((s) => ({ ...s, done: s.id === 'wall' && applied !== null }))}
       />
       {step === 'wall' && (
         <section aria-label={t('Wall')}>
@@ -232,16 +286,33 @@ function WallFill({ onClose, onOpened }: { onClose: () => void; onOpened: () => 
             )}
           </p>
           <div className="wf-grid">
-            <Field label={t('Width')} value={form.width} onChange={set('width')} />
-            <Field label={t('Depth')} value={form.depth} onChange={set('depth')} />
-            <Field label={t('Height')} value={form.height} onChange={set('height')} />
+            <Field
+              label={t('Width')}
+              value={form.width}
+              onChange={set('width')}
+              problem={problem('width')}
+            />
+            <Field
+              label={t('Depth')}
+              value={form.depth}
+              onChange={set('depth')}
+              problem={problem('depth')}
+            />
+            <Field
+              label={t('Height')}
+              value={form.height}
+              onChange={set('height')}
+              problem={problem('height')}
+            />
             <Field
               label={t('Tall cabinet depth')}
               value={form.tallDepth}
               onChange={set('tallDepth')}
               placeholder={t('same as depth')}
+              problem={problem('tallDepth')}
             />
           </div>
+          <Problems list={problems} idOf={problemId} />
         </section>
       )}
       {step === 'refine' && (
@@ -253,13 +324,29 @@ function WallFill({ onClose, onOpened }: { onClose: () => void; onOpened: () => 
             )}
           </p>
           <div className="wf-grid">
-            <Field label={t('Min piece width')} value={form.minWidth} onChange={set('minWidth')} />
-            <Field label={t('Max piece width')} value={form.maxWidth} onChange={set('maxWidth')} />
-            <Field label={t('Base height')} value={form.baseHeight} onChange={set('baseHeight')} />
+            <Field
+              label={t('Min piece width')}
+              value={form.minWidth}
+              onChange={set('minWidth')}
+              problem={problem('minWidth')}
+            />
+            <Field
+              label={t('Max piece width')}
+              value={form.maxWidth}
+              onChange={set('maxWidth')}
+              problem={problem('maxWidth')}
+            />
+            <Field
+              label={t('Base height')}
+              value={form.baseHeight}
+              onChange={set('baseHeight')}
+              problem={problem('baseHeight')}
+            />
             <Field
               label={t('Number of pieces')}
               value={form.pieces}
               onChange={set('pieces')}
+              problem={problem('pieces')}
               unit=""
               placeholder={t('any')}
             />
@@ -267,6 +354,7 @@ function WallFill({ onClose, onOpened }: { onClose: () => void; onOpened: () => 
               label={t('Tall cabinets')}
               value={form.tallCount}
               onChange={set('tallCount')}
+              problem={problem('tallCount')}
               unit=""
               placeholder={t('any')}
             />
@@ -274,6 +362,7 @@ function WallFill({ onClose, onOpened }: { onClose: () => void; onOpened: () => 
               label={t('At least, open shelf bases')}
               value={form.shelves}
               onChange={set('shelves')}
+              problem={problem('shelves')}
               unit=""
               placeholder={t('any')}
             />
@@ -281,6 +370,7 @@ function WallFill({ onClose, onOpened }: { onClose: () => void; onOpened: () => 
               label={t('At least, drawer bases')}
               value={form.drawers}
               onChange={set('drawers')}
+              problem={problem('drawers')}
               unit=""
               placeholder={t('any')}
             />
@@ -288,6 +378,7 @@ function WallFill({ onClose, onOpened }: { onClose: () => void; onOpened: () => 
               label={t('At least, door bases')}
               value={form.door}
               onChange={set('door')}
+              problem={problem('door')}
               unit=""
               placeholder={t('any')}
             />
@@ -295,6 +386,7 @@ function WallFill({ onClose, onOpened }: { onClose: () => void; onOpened: () => 
               label={t('Equal fronts')}
               value={form.equalFronts}
               onChange={set('equalFronts')}
+              problem={problem('equalFronts')}
               unit=""
               placeholder={t('off')}
               hint={t('Every door the same width; insides left empty to configure later.')}
@@ -303,6 +395,7 @@ function WallFill({ onClose, onOpened }: { onClose: () => void; onOpened: () => 
               label={t('Wall cabinet height')}
               value={form.wallHeight}
               onChange={set('wallHeight')}
+              problem={problem('wallHeight')}
               hint={t('Wall cabinet tops sit at the wall height.')}
             />
           </div>
@@ -328,15 +421,16 @@ function WallFill({ onClose, onOpened }: { onClose: () => void; onOpened: () => 
               { value: 'centre', label: t('Centre') },
             ]}
           />
+          <Problems list={problems} idOf={problemId} />
         </section>
       )}
-      {step === 'mixes' && (
+      {step === 'mixes' && applied && result && (
         <section className="wz-suggest" aria-label={t('Suggested mixes')}>
           <div className="card-title">
             <span>{t('Suggested mixes')}</span>
             <span className="hint">
-              {t('{width} mm wall · best {n}, checked by the model', {
-                width: applied.width,
+              {t('{width} mm wall · best {n}, each checked for problems', {
+                width: toInput(applied).width,
                 n: MIXES_FIRST,
               })}
             </span>
@@ -367,7 +461,10 @@ function WallFill({ onClose, onOpened }: { onClose: () => void; onOpened: () => 
           type="button"
           className="btn"
           disabled={step === 'wall'}
-          onClick={() => go(step === 'refine' ? 'mixes' : 'wall')}
+          // Back to Suggestions with nothing applied yet makes them from the typed answers (ADR-193).
+          onClick={() =>
+            step === 'refine' && !applied ? suggest() : go(step === 'refine' ? 'mixes' : 'wall')
+          }
         >
           {t('Back')}
         </button>
@@ -375,22 +472,15 @@ function WallFill({ onClose, onOpened }: { onClose: () => void; onOpened: () => 
         <button type="button" className="btn ghost" onClick={onClose}>
           {t('Cancel')}
         </button>
-        {step === 'wall' && (
-          <button type="button" className="btn primary" onClick={suggest}>
-            {t('Show suggestions')}
-          </button>
-        )}
-        {step === 'mixes' && (
-          <button type="button" className="btn primary" onClick={() => go('refine')}>
-            {t('Refine')}
-          </button>
-        )}
-        {step === 'refine' && (
-          <button type="button" className="btn primary" onClick={suggest}>
-            {t('Suggest again')}
-          </button>
-        )}
+        {/* The step's primary action is the form's submit, so Enter does it (ADR-193). */}
+        <button type="submit" className="btn primary">
+          {step === 'wall'
+            ? t('Show suggestions')
+            : step === 'mixes'
+              ? t('Refine')
+              : t('Suggest again')}
+        </button>
       </div>
-    </div>
+    </form>
   );
 }

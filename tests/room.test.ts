@@ -12,6 +12,7 @@ import {
 import { findFamily } from '../src/core/catalog';
 import type { Design } from '../src/core/types';
 import {
+  checkRoomSizes,
   closeOutline,
   doorSwing,
   featureBox,
@@ -412,5 +413,54 @@ describe('pipes and outlets (ADR-072)', () => {
       ['outlet', 1200, 80],
     ]);
     expect(featureBox(r, pipe)).toEqual({ x: 200, y: 300, z: 0, w: 100, h: 100, d: 50 });
+  });
+});
+
+describe('checkRoomSizes (ADR-193)', () => {
+  const sizes = { width: 3600, depth: 3000, cutWidth: 1500, cutDepth: 1500, offset: 600 };
+  const fields = (r: ReturnType<typeof checkRoomSizes>) => r.map((d) => d.field);
+  it('a good room of every shape has no problem', () => {
+    for (const shape of ['rectangle', 'l-shape', 'u-shape', 'alcove'] as const)
+      expect(checkRoomSizes(shape, sizes, 2500)).toEqual([]);
+  });
+  it('each size must be a whole number of mm above 0, named by its field; never a throw or a clamp', () => {
+    for (const bad of [Number('abc'), 0, -100, 12.5]) {
+      const r = checkRoomSizes('rectangle', { ...sizes, width: bad }, 2500);
+      expect(fields(r)).toEqual(['width']);
+      expect(r[0]).toMatchObject({
+        severity: 'error',
+        code: 'room-size',
+        message: 'Width must be a whole number of mm above 0.',
+      });
+    }
+    expect(fields(checkRoomSizes('rectangle', { ...sizes, depth: 0 }, 0))).toEqual([
+      'depth',
+      'height',
+    ]);
+    // A rectangle has no cut; an L has no offset.
+    expect(checkRoomSizes('rectangle', { ...sizes, cutWidth: 0, offset: -1 }, 2500)).toEqual([]);
+    expect(checkRoomSizes('l-shape', { ...sizes, offset: 0 }, 2500)).toEqual([]);
+    expect(fields(checkRoomSizes('u-shape', { ...sizes, cutDepth: NaN, offset: 0 }, 2500))).toEqual(
+      ['cutDepth', 'offset'],
+    );
+  });
+  it('the cut lies inside the room: not on or past its edge', () => {
+    expect(fields(checkRoomSizes('l-shape', { ...sizes, cutWidth: 3600 }, 2500))).toEqual([
+      'cutWidth',
+    ]);
+    expect(fields(checkRoomSizes('l-shape', { ...sizes, cutDepth: 3000 }, 2500))).toEqual([
+      'cutDepth',
+    ]);
+    const u = checkRoomSizes('u-shape', { ...sizes, offset: 2100 }, 2500);
+    expect(u.map((d) => d.message)).toEqual([
+      'Cut offset 2100 mm plus cut width 1500 mm must be less than the width, 3600 mm.',
+    ]);
+    // An alcove goes out of the room: its depth is not limited by the room's.
+    expect(checkRoomSizes('alcove', { ...sizes, cutDepth: 5000 }, 2500)).toEqual([]);
+    expect(fields(checkRoomSizes('alcove', { ...sizes, offset: 2500 }, 2500))).toEqual(['offset']);
+    // A cut wider than the room is named on its own, also while the offset is wrong.
+    expect(
+      fields(checkRoomSizes('u-shape', { ...sizes, cutWidth: 5000, offset: 0 }, 2500)),
+    ).toEqual(['offset', 'cutWidth']);
   });
 });

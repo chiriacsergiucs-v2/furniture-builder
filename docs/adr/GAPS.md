@@ -2237,3 +2237,25 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: Find-it tests dominate test CPU; each mounts the bare app with full module isolation and typed input delays.
 - Fix: Measure each lever, then apply the ones that keep the bare-app start (ADR-108).
 - Conflicts: none
+
+### G-372: Default L and U rooms give no Fill the room mix
+
+- Status: Open
+- Origin: ADR-193, 2026-11-06; agent found it while building (not caused by ADR-193)
+- Missing: The default L room (3600 x 3000, cut 1500 x 1500) and the U room (offset 600) give no mix in Fill the room: Wall 2 has no stretch of 400 mm, then 'Every mix tried had a problem in the room (60 tried)'. Same with tallPosition left/right, so it predates ADR-193; the find-it uses Use this mix on the rectangle instead.
+- Request: Not a quote: ADR-193 Done-when only asks 'Rectangle -> L shows 6 ticked walls'; the user's request was 'a critique of design ... high and medium issues and fixes per flow'.
+- Questions: Should the default L and U rooms give mixes? Which problem blocks them (corner reservations on the 1500 mm walls, or a clash the model reports as an error)?
+- Suggested pick: Find which error rejects every L/U mix (run suggestRoomMixes on the default L and list the error codes), then fix that cause in a new ADR so the default L and U rooms give cards. Closest to the user's wish for working flows. (estimate: effort +15% of ADR-193, value +10%)
+- Work: Medium
+- Impact: Medium
+
+### G-373: Fill the room starts U and Alcove with an offset the size check rejects
+
+- Status: Open
+- Origin: ADR-193, 2026-11-06; agent kept the existing start value (no default invented)
+- Missing: Fill the room starts with Cut offset 0. With ADR-193's size check (offset inside the room) a U or Alcove at offset 0 is named as an error on Next ('Cut offset must be a whole number of mm above 0.'), because at 0 a wall has no length and the outline folds back. The user must type an offset before a U or Alcove can go on.
+- Request: Not a quote: ADR-193 item 2, 'cut and offset inside the room'; the start value was not part of the decision.
+- Questions: Which start value should Cut offset have for U and Alcove (for example the Project room editor's 1000 mm, or centred: (width - cut width) / 2)?
+- Suggested pick: Start Cut offset at the Project room editor's 1000 mm, so the default U and Alcove pass Next without typing; the same value the app already uses for a project's room. (estimate: effort +2% of ADR-193, value +5%)
+- Work: Low
+- Impact: Low-medium
