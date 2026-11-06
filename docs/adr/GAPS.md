@@ -429,7 +429,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-034: Hinge repair, filler repair, 3D preview
 
-- Status: Open
+- Status: ADR-209
 - Origin: ADR-071, 2026-10-25 00:10 UTC; agent default, accepted by the user
 - Missing: No “Reverse the hinge” repair. The filler repair shows only with automatic refresh off. No outline or preview in 3D.
 - Request: “Explainable warnings with repairs”.
@@ -441,6 +441,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: No Reverse the hinge repair, filler repair only without auto refresh, no problem outline or preview in 3D.
 - Fix: Hinge-side clearance then the hinge repair; fillers kept by auto refresh; draw box and preview in 3D.
 - Conflicts: none
+- Note: 2026-11-06: ADR-209 takes over the fillers kept by automatic refresh and the problem box and repair preview in 3D; the reverse-the-hinge repair needs G-011, which conflicts with ADR-057, and moved to G-436.
 
 ### G-035: Mouldings, sink and hob cut-outs, templates
 
@@ -1791,7 +1792,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-325: Variables on run parts
 
-- Status: Open
+- Status: ADR-209
 - Origin: ADR-166, 2026-10-30; agent scoped it out
 - Missing: Run parts, worktops, run handles and sinks (ADR-036, ADR-075, ADR-125) cannot be bound to a variable; they follow the pieces they are derived from.
 - Request: Not a quote: the user named pieces only.
@@ -2267,7 +2268,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-380: Project fasteners panel and drilling positions
 
-- Status: Open
+- Status: ADR-209
 - Origin: ADR-202, 2026-11-06; agent scoped it out (remainder of G-042)
 - Missing: Fasteners in the project's own Settings dialog (Settings.tsx:62-71) and drilling patterns drawn only from the values the user enters. ADR-202 takes over only the fastener CSV and print text of G-042.
 - Request: “Hardware and fastener completeness”.
@@ -2279,6 +2280,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: No fasteners panel in project Settings; no drilling patterns drawn.
 - Fix: Add the project fasteners panel; draw drilling only from user values, labelled as guidance.
 - Conflicts: none
+- Note: 2026-11-06: ADR-209 draws drilling positions for carcass joints; the other joint types moved to G-439.
 
 ### G-381: Piece names in the parts CSV and shopping list title
 
@@ -2355,7 +2357,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-405: Profiled mouldings, run requests in templates, ceiling-filler find-it
 
-- Status: Open
+- Status: ADR-209
 - Origin: ADR-205, 2026-11-06; remainder of G-035 (the coordinator split it: ADR-205 takes only the sink and hob cut-outs)
 - Missing: Mouldings are plain strips with no profile. Project templates drop the requested trims and worktops (runRequests). The ceiling filler has not been checked in a browser.
 - Request: “Shared worktops”, “fillers, plinths, end panels and trim”, for kitchens.
@@ -2385,7 +2387,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-407: Typed position for sink and hob cut-outs
 
-- Status: Open
+- Status: ADR-209
 - Origin: ADR-205, 2026-11-06; agent scoped it out
 - Missing: Sink and hob cut-outs store only their width and depth. ADR-205 draws them centred on their base and on the worktop depth, and no offset can be typed.
 - Request: Sink and hob cut-outs on the worktop from sizes you enter (G-035 suggested pick, not a quote)
@@ -2400,7 +2402,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-408: Sink and hob cut-outs drawn in 3D and the front view
 
-- Status: Open
+- Status: ADR-209
 - Origin: ADR-205, 2026-11-06; the rest of G-212 (its suggested pick was the plan only)
 - Missing: The sink and hob cut-outs are outlined on the plan only, not in 3D or in the room front view.
 - Request: Accept default, /batch all ready (ADR-125: run sinks and handles)
@@ -2412,6 +2414,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: Cut-outs show only on the plan.
 - Fix: Give the worktop a profile hole for each cut-out in the project build.
 - Conflicts: none
+- Note: 2026-11-06: ADR-209 takes over the 3D holes (the suggested pick); the room front view moved to G-438.
 
 ### G-409: Worktop joint fixings
 
@@ -2429,7 +2432,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-412: Worktop edge profiles and bundled appliance models
 
-- Status: Open
+- Status: ADR-209
 - Origin: ADR-206, 2026-11-06; split from G-020 by the coordinator (ADR-206 takes only the client sheet)
 - Missing: Worktops have no edge profile choice; no appliance models are bundled (appliances come only as .glb imports, ADR-076).
 - Request: “To sell designed kitchens”.
@@ -2441,6 +2444,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: Worktops cannot show an edge profile and no appliance models ship with the app.
 - Fix: Add three drawn worktop edge profiles; bundle a few CC0 appliance models once the licence is chosen.
 - Conflicts: none
+- Note: 2026-11-06: ADR-209 takes over the worktop edge profiles; the bundled CC0 appliance models moved to G-437.
 
 ### G-413: Board pictures in the plan, catalog pictures and cut sheets
 
@@ -2460,7 +2464,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-414: Formula conditions and stepped rounding
 
-- Status: Open
+- Status: ADR-209
 - Origin: ADR-206, 2026-11-06; agent scoped it out (G-324's pick names min, max, floor, ceil and round only)
 - Missing: Formulas have no conditions (if) and no rounding to a step such as a sheet thickness.
 - Request: Formulas too (user answer 2026-10-30).
@@ -2606,3 +2610,62 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: Catalog pictures and cut sheets show boards as plain colour.
 - Fix: A new ADR if catalog pictures or cut sheets should show the board picture.
 - Conflicts: ADR-048 (catalog pictures and cut sheets use the average colour)
+### G-436: Reverse-the-hinge repair
+
+- Status: Open
+- Origin: ADR-209, 2026-11-06; remainder of G-034 (the coordinator split it: the repair needs G-011)
+- Missing: A door blocked by a neighbour has no "Reverse the hinge" repair. The ADR-057 clearance is a box as deep as the door is wide on both sides, so reversing the hinge never clears it.
+- Request: “Explainable warnings with repairs”.
+- Questions: Build the hinge-side clearance (G-011, which changes ADR-057's box decision) and then this repair?
+- Suggested pick: Once G-011 is decided, offer the hinge repair for single doors. (estimate: effort +10%, value +10%)
+- Work: Low-medium
+- Impact: Low-medium
+- Necessity: Low-medium
+- Issue: Reversing the hinge is not offered as a repair.
+- Fix: After G-011, add the hinge repair to `repairsFor`.
+- Conflicts: ADR-057 (clearances are axis-aligned boxes on both hinge sides)
+
+### G-437: Bundled CC0 appliance models
+
+- Status: Open
+- Origin: ADR-209, 2026-11-06; remainder of G-412 (ADR-209 takes only the worktop edge profiles)
+- Missing: No appliance models ship with the app; appliances come only as .glb imports (ADR-076).
+- Request: “To sell designed kitchens”.
+- Questions: Bundle a few appliance models under the CC0 licence? Which ones?
+- Suggested pick: A few CC0 appliance models once you pick that licence and the models. (estimate: effort +15%, value +10%)
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low
+- Issue: A kitchen shows no appliances unless the user imports a model.
+- Fix: Bundle a few CC0 appliance models as display-only items once the licence is chosen.
+- Conflicts: none
+
+### G-438: Sink and hob cut-outs in the room front view
+
+- Status: Open
+- Origin: ADR-209, 2026-11-06; remainder of G-408 (its suggested pick was the 3D view only)
+- Missing: The room front view does not mark sink and hob cut-outs on the worktop.
+- Request: Accept default, /batch all ready (ADR-125: run sinks and handles)
+- Questions: Draw each cut-out as dashed hidden lines in the worktop's front view?
+- Suggested pick: Dashed lines at the cut-out's width on the worktop edge. (estimate: effort +5%, value +3%)
+- Work: Low
+- Impact: Low
+- Necessity: Low
+- Issue: Cut-outs are not seen in the front view.
+- Fix: Draw each cut-out's width dashed on the worktop in the room front view.
+- Conflicts: none
+
+### G-439: Drilling positions for joints other than carcass joints
+
+- Status: Open
+- Origin: ADR-209, 2026-11-06; agent scoped it out (remainder of G-380)
+- Missing: Drilling positions from the user's values are drawn for carcass joints only, not for back fixings, hanging points, worktop fixings or feet.
+- Request: “Hardware and fastener completeness”.
+- Questions: Which values would you enter for each of those joint types (for example distance from the edge for back fixings)?
+- Suggested pick: Back fixings next, around the back's perimeter, from an edge distance you enter. (estimate: effort +10%, value +5%)
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
+- Issue: Only carcass joints show drilling positions.
+- Fix: Add user-value drilling positions to the other joint types, one at a time.
+- Conflicts: none
