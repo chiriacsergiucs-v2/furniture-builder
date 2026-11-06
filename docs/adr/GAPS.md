@@ -2991,3 +2991,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: The built-in templates' descriptions are kept in the code but no screen shows them, so a corrected text has no place to be seen.
 - Fix: Ask the user whether to show the built-in templates' descriptions somewhere or remove them as unused data.
 - Conflicts: none
+
+### G-476: Mirrored sliding doors are not a mirror image
+
+- Status: Open
+- Origin: ADR-205 tests, 2026-11-06; CI found it on PR #188
+- Missing: Mirror does not keep sliding doors symmetric: the first sliding door always runs in the front plane and takes the rounding remainder, so a mirrored set of sliding doors differs by 1 mm in two widths and by one door plane. The mirror fuzz test leaves sliding fronts out of its reflection check.
+- Request: Not asked in words; ADR-205 Decision G-032: mirrored copies match the original to the mm.
+- Questions: Should Mirror also reverse the door planes and the width remainder of a sliding set (a real mirror image), or keep the planes as the design convention?
+- Suggested pick: Reverse both for new mirrored copies: widths by remainderFirst, and the plane parity from the right. (estimate: effort +5 %, value +3 %)

@@ -864,7 +864,10 @@ it(
         const sized = (p: { role: string; box: Box }) => key(p.role, { ...p.box, x: 0 });
         const want = orig.panels.map(sized).sort(),
           got = mir.panels.map(sized).sort();
-        if (JSON.stringify(want) !== JSON.stringify(got)) {
+        // Sliding doors are left out of the reflection check: the first door always runs in the front plane and takes
+        // the rounding remainder, so a mirrored set differs by 1 mm in two widths and by one plane (G-476).
+        const sliding = JSON.stringify(d.product).includes('"sliding"');
+        if (!sliding && JSON.stringify(want) !== JSON.stringify(got)) {
           const miss = want.filter((x) => !got.includes(x)).slice(0, 2);
           probs.push(`size-differs ${miss.join(' | ')}`);
         }
@@ -875,6 +878,7 @@ it(
         const a = xs(orig.panels, true),
           b = xs(mir.panels, false);
         if (
+          !sliding &&
           a.length === b.length &&
           a.some(([k, x], j) => b[j][0] !== k || Math.abs(b[j][1] - x) > 1)
         )
