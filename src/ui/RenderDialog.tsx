@@ -4,6 +4,7 @@ import type { RenderJob } from '../viewer/pathtrace';
 import { Segmented } from './controls';
 import { Dialog } from './Dialogs';
 import { Icon } from './icons';
+import { useUi } from './shell/uiStore';
 import {
   hasWebGL2,
   RENDER_SAMPLES,
@@ -36,6 +37,7 @@ export function RenderDialog({
   const [supported] = useState(hasWebGL2);
   const job = useRef<RenderJob | null>(null);
   const holder = useRef<HTMLDivElement>(null);
+  const setLastRender = useUi((s) => s.setLastRender);
 
   const stop = () => {
     job.current?.dispose();
@@ -67,6 +69,8 @@ export function RenderDialog({
       holder.current?.replaceChildren(j.canvas);
       const png = await j.done;
       if (job.current !== j) return;
+      // The client sheet prints the last render of this session (ADR-206).
+      if (png) setLastRender(URL.createObjectURL(png));
       setState(png ? { kind: 'done', png } : { kind: 'idle' });
     } catch (e) {
       stop();

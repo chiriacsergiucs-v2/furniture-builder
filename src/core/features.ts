@@ -729,6 +729,12 @@ export const FEATURES: FeatureDomain[] = [
             adrs: ['ADR-068'],
             checked: '2026-11-05',
           },
+          {
+            name: 'Export scene (.glb)',
+            detail:
+              'The 3D scene with its boards and their pictures as one binary glTF file, for Blender or another renderer; made on this device.',
+            adrs: ['ADR-206'],
+          },
           { name: 'Section view and Isolate', adrs: ['ADR-122'], checked: '2026-11-05' },
           { name: 'Draws only when something changes', adrs: ['ADR-121'], checked: '2026-11-05' },
         ],
@@ -856,6 +862,12 @@ export const FEATURES: FeatureDomain[] = [
             adrs: ['ADR-121'],
             checked: '2026-11-05',
           },
+          {
+            name: 'Client sheet',
+            detail:
+              'One A4 page to sell from: a picture, the pieces with their sizes and the estimated price, with the lines that have no price counted.',
+            adrs: ['ADR-206'],
+          },
         ],
       },
     ],
@@ -909,6 +921,12 @@ export const FEATURES: FeatureDomain[] = [
         detail: 'Bind a size, a division or a position to a named value; change it once.',
         adrs: ['ADR-166'],
         checked: '2026-11-05',
+      },
+      {
+        name: 'Formula functions',
+        detail:
+          'min, max, floor, ceil and round in variables and bindings; values in a call are separated by a comma or a semicolon.',
+        adrs: ['ADR-206'],
       },
       {
         name: 'Value sets',

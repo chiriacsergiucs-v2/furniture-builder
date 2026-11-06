@@ -39,12 +39,14 @@ import { Inspector, selectionLabel } from './Inspector';
 import { Output } from './Output';
 import { useProblem } from './problemStore';
 import { PrintSheet } from './PrintSheet';
+import { PrintClient } from './PrintClient';
 import { Icon } from './icons';
 import { rovingKeys, rovingTab } from './controls';
 import { setTheme, useTheme } from './useTheme';
 import { setLook, useLook } from './useLook';
 import { RenderDialog } from './RenderDialog';
 import { MoreMenu } from './shell/MoreMenu';
+import { SceneMenu } from './SceneMenu';
 import { editorShortcutAllowed } from './editorShortcuts';
 import { ProjectsPage } from './shell/ProjectsPage';
 import { useMediaQuery } from './useMediaQuery';
@@ -927,6 +929,7 @@ export function App() {
                     {t('Render')}
                   </button>
                 )}
+                {mount3d && <SceneMenu name={inProject ? project!.name : design.name} />}
               </ViewOptions>
             </div>
             <div className={`views ${shown === 'both' ? 'both' : ''}`}>
@@ -1005,7 +1008,14 @@ export function App() {
         />
       </div>
       <ConfirmHost />
-      {printing && (printMode === 'assembly' ? <PrintAssembly /> : <PrintSheet />)}
+      {printing &&
+        (printMode === 'assembly' ? (
+          <PrintAssembly />
+        ) : printMode === 'client' ? (
+          <PrintClient />
+        ) : (
+          <PrintSheet />
+        ))}
     </>
   );
 }

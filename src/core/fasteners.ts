@@ -325,6 +325,9 @@ export function validFastenerChoice(c: unknown): c is FastenerChoice {
  * Shelf pins are already in the hardware schedule: without a choice they stay as scheduled (no extra line); with
  * one, `replacesShelfPins` tells the list to show the user's line instead of the scheduled pins.
  */
+/** The key a fastener line's seller product is saved under in `Design.hardwareProducts` (ADR-206). */
+export const fastenerProductKey = (joint: JointType) => `fs:${joint}`;
+
 export function fastenerShopLines(
   counts: FastenerCount[],
   choices: FastenerChoice[],
@@ -383,6 +386,7 @@ export function fastenerShopLines(
             path: pt('Setări › Elemente de fixare'),
           });
         },
+        productKey: fastenerProductKey(c.joint),
       });
       continue;
     }
@@ -413,6 +417,7 @@ export function fastenerShopLines(
             return `${pt('Orientativ: numărat din model')}: ${parts.map((p) => p()).join('; ')}.`;
           },
           priceKey: `hw:${name}`,
+          productKey: fastenerProductKey(c.joint),
         },
       });
     }

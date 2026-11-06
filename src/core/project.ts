@@ -37,8 +37,8 @@ import {
   nameProblem,
 } from './variables';
 import { bandKey, cutlist, hardwareSummary, type CutRow } from './cutlist';
-import { bandFor, bandProblems, bandText } from './materials';
-import { DEFAULT_KERF, newId, sheetOf, upgradeDesign, validateDesign } from './design';
+import { bandFor, bandProblems, bandText, productRefProblems } from './materials';
+import { DEFAULT_KERF, newId, sheetOf, upgradeDesign, validateDesign, validPer } from './design';
 import {
   cutDimensions,
   enclosing,
@@ -81,6 +81,7 @@ import type {
   FurnitureModel,
   Handle,
   HardwareItem,
+  HardwareProduct,
   Material,
   Mm,
   Panel,
@@ -290,9 +291,10 @@ export interface RunSink {
  * (ADR-122); 12 = template references and project-wide settings (ADR-124); 13 = run handles and sinks (ADR-125);
  * 14 = wall backgrounds (ADR-145); 15 = fitted and straightened wall pictures (ADR-146); 16 = variables, bindings
  * and value sets (ADR-166, ADR-167); 17 = common tops and bottoms (ADR-165); 18 = connections between pieces
- * (ADR-168); 19 = turn and per-size locks (ADR-171); 20 = shared sides (ADR-190).
+ * (ADR-168); 19 = turn and per-size locks (ADR-171); 20 = shared sides (ADR-190); 21 = seller products on run parts
+ * (ADR-206).
  */
-export const PROJECT_SCHEMA = 20 as const;
+export const PROJECT_SCHEMA = 21 as const;
 export const PROJECT_SCHEMAS: readonly number[] = [
   1,
   2,
@@ -313,6 +315,7 @@ export const PROJECT_SCHEMAS: readonly number[] = [
   17,
   18,
   19,
+  20,
   PROJECT_SCHEMA,
 ];
 export type ProjectSchemaVersion =
@@ -335,6 +338,7 @@ export type ProjectSchemaVersion =
   | 17
   | 18
   | 19
+  | 20
   | typeof PROJECT_SCHEMA;
 const RUN_REQUESTS_SINCE = 4;
 const MODELS_SINCE = 5;
@@ -353,6 +357,7 @@ const COMMON_SINCE = 17;
 const CONNECTIONS_SINCE = 18;
 const PARAM_LOCKS_SINCE = 19;
 const SHARED_SINCE = 20;
+const RUN_PRODUCTS_SINCE = 21;
 
 export interface Project {
   schemaVersion: ProjectSchemaVersion;
@@ -395,6 +400,11 @@ export interface Project {
   sharedSides?: SharedSides[];
   /** Connections between touching pieces (ADR-168, schemaVersion 18): they move together and are re-checked. */
   connections?: Connection[];
+  /**
+   * Seller products linked to run parts (ADR-206, schemaVersion 21), by run part key (`key`, else `id`): priced by the
+   * product when its unit fits (piece or m), else by the board. Absent = none.
+   */
+  runProducts?: Record<string, HardwareProduct>;
 }
 
 /**
@@ -2617,7 +2627,7 @@ function validateVariables(p: Record<string, unknown>): string[] {
         v.name.length > MAX_VARIABLE_NAME ||
         typeof v.expr !== 'string' ||
         v.expr.length > MAX_EXPR ||
-        nameProblem(v.name, vars) !== null ||
+        nameProblem(v.name, vars, false) !== null ||
         vars.some((x) => x.id === v.id)
       ) {
         errs.push(t('Invalid variable'));
@@ -3047,6 +3057,21 @@ export function validateProject(p: unknown): string[] {
           )
             errs.push(t('Invalid sink'));
     }
+  }
+  if (p.runProducts !== undefined) {
+    if ((p.schemaVersion as number) < RUN_PRODUCTS_SINCE)
+      errs.push(t('Run part products need project schemaVersion {v}', { v: RUN_PRODUCTS_SINCE }));
+    if (!isObj(p.runProducts) || Object.keys(p.runProducts).length > 500)
+      errs.push(t('Invalid run part products'));
+    else
+      for (const [k, v] of Object.entries(p.runProducts))
+        if (
+          !k ||
+          k.length > 300 ||
+          productRefProblems(v).length > 0 ||
+          !validPer((v as { per?: unknown }).per)
+        )
+          errs.push(t('Invalid run part product for {k}', { k }));
   }
   if (p.models !== undefined) {
     if ((p.schemaVersion as number) < MODELS_SINCE)

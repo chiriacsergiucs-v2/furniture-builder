@@ -13,7 +13,15 @@ import {
   type SellerLookup,
   type UnitPer,
 } from '../core/prices';
-import { anyOffers, hardwareOffers, refOf, type Offer, type SellerCatalog } from '../core/sellers';
+import {
+  anyOffers,
+  hardwareOffers,
+  refOf,
+  runPartOffers,
+  type Offer,
+  type SellerCatalog,
+} from '../core/sellers';
+import type { HardwareProduct } from '../core/types';
 import { validPer } from '../core/design';
 import { notCountedPrint } from '../core/fasteners';
 import { ProductPicker } from './ProductPicker';
@@ -327,7 +335,7 @@ export function ShoppingList() {
                   <th scope="col">{t('Qty')}</th>
                   <th scope="col">{t('Item')}</th>
                   <th scope="col">{t('Details')}</th>
-                  {s.id !== 'run' && s.id !== 'choose' && <th scope="col">{t('Price')}</th>}
+                  {s.id !== 'choose' && <th scope="col">{t('Price')}</th>}
                 </tr>
               </thead>
               <tbody>
@@ -376,8 +384,10 @@ function Line({
   const p = linePrice(l, map, seller);
   const u = unitPrice(l, map, seller);
   const fromSeller = p !== null && priceSource(l, map, seller) === 'seller';
-  const priced = l.section !== 'run' && l.section !== 'choose';
-  const sellerRow = l.productKey !== undefined || l.itemIndex !== undefined;
+  // Run parts show a price once their own product prices them (ADR-206); otherwise their board's line does.
+  const priced = l.section !== 'choose';
+  const sellerRow =
+    l.productKey !== undefined || l.itemIndex !== undefined || l.runKey !== undefined;
   return (
     <>
       <tr className={sellerRow ? 'has-seller' : undefined}>
@@ -418,6 +428,8 @@ function Line({
                   <span>{PER[unit]}</span>
                 )}
               </span>
+            ) : p === null && l.section === 'run' ? (
+              <span className="hint">{t('with its board')}</span>
             ) : p === null ? (
               <span className="hint">
                 {l.priceKey &&
@@ -461,14 +473,21 @@ function Line({
  * an added item's quantity. Boards and bands are linked under Materials.
  */
 function LineProduct({ l, projectView }: { l: ShopLine; projectView: boolean }) {
-  const setHardwareProduct = useDesign((s) => s.setHardwareProduct);
+  const setLineProduct = useDesign((s) => s.setHardwareProduct);
+  const setRunProduct = useDesign((s) => s.setRunProduct);
   const setQuantity = useDesign((s) => s.setSellerItemQuantity);
   const [open, setOpen] = useState(false);
   const [bad, setBad] = useState(false);
-  const { hardwareKind, sizeMm, productKey } = l;
+  const { hardwareKind, sizeMm, runKey } = l;
+  // A run part (ADR-206) is linked in the project; a hardware or fastener line in the design (ADR-161, ADR-206).
+  const productKey = runKey ?? l.productKey;
+  const worktop = /worktop/i.test(l.label);
+  const setHardwareProduct = (key: string, hp: HardwareProduct | undefined) =>
+    runKey ? setRunProduct(key, hp) : setLineProduct(key, hp);
   const offers = useCallback(
-    (c: SellerCatalog[], q: string) => hardwareOffers(c, hardwareKind, sizeMm, q),
-    [hardwareKind, sizeMm],
+    (c: SellerCatalog[], q: string) =>
+      runKey ? runPartOffers(c, worktop, q) : hardwareOffers(c, hardwareKind, sizeMm, q),
+    [hardwareKind, sizeMm, runKey, worktop],
   );
   if (l.itemIndex !== undefined) {
     if (projectView) return null;
@@ -541,9 +560,15 @@ function LineProduct({ l, projectView }: { l: ShopLine; projectView: boolean }) 
       <ProductPicker
         open={open}
         title={t('Product for {item}', { item })}
-        hint={t(
-          'Products of this kind first (runners of the same length first). The price counts 1 seller unit per item until you change it.',
-        )}
+        hint={
+          runKey
+            ? t(
+                'Boards and worktops first. A product priced per piece or per metre prices this part instead of its board.',
+              )
+            : t(
+                'Products of this kind first (runners of the same length first). The price counts 1 seller unit per item until you change it.',
+              )
+        }
         offers={offers}
         onClose={() => setOpen(false)}
         onPick={(o: Offer) => {

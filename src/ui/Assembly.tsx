@@ -34,6 +34,11 @@ import { GuidanceTip } from './controls';
 import { PieceElevation } from './Elevation';
 import { Icon } from './icons';
 import { useUi } from './shell/uiStore';
+import { captureStill, hasStill } from '../viewer/renderBridge';
+
+const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
+/** A step's picture in the assembly print (ADR-206). */
+const stepPictureKey = (piece: string, step: string) => `${piece}:${step}`;
 import { useView } from './useView';
 
 interface PieceSteps {
@@ -170,10 +175,44 @@ export function Assembly() {
   const order = useProjectOrder();
   const setLit = useDesign((s) => s.setLit);
   const lit = useDesign((s) => s.litPanelIds);
-  const setPrinting = useUi((s) => s.setPrinting);
-  const setPrintMode = useUi((s) => s.setPrintMode);
+  const printWith = useUi((s) => s.printWith);
   const choices = useFastenerChoices();
   const [current, setCurrent] = useState<{ piece: string; n: number } | null>(null);
+  const [taking, setTaking] = useState(false);
+  /**
+   * The print (ADR-174) with one 3D picture per step (ADR-206): with the 3D view open, every step is shown in turn
+   * with Show step and Exploded 3D, drawn once on demand and kept as a PNG; the view then returns to its state.
+   * Without the 3D view the sheet keeps the front view and says so.
+   */
+  const print = async () => {
+    if (!hasStill()) {
+      printWith('assembly', { steps: null });
+      return;
+    }
+    setTaking(true);
+    const st = useDesign.getState();
+    const wasExploded = st.exploded;
+    const wasLit = st.litPanelIds;
+    const steps: Record<string, string> = {};
+    try {
+      st.setExploded(true);
+      for (const p of pieces)
+        for (const s of p.steps) {
+          const ids = stepLitIds(s);
+          if (!ids.length) continue;
+          useDesign.getState().setLit(ids.map(p.idOf));
+          await nextFrame();
+          await nextFrame();
+          const png = captureStill();
+          if (png) steps[stepPictureKey(p.key, s.id)] = png;
+        }
+    } finally {
+      useDesign.getState().setExploded(wasExploded);
+      useDesign.getState().setLit(wasLit);
+      setTaking(false);
+    }
+    printWith('assembly', { steps });
+  };
   // Leaving the tab turns the highlight off (the model is untouched either way, ADR-014).
   useEffect(() => () => setLit(null), [setLit]);
   const show = (p: PieceSteps, step: AssemblyStep) => {
@@ -204,13 +243,11 @@ export function Assembly() {
         <button
           type="button"
           className="btn primary"
-          onClick={() => {
-            setPrintMode('assembly');
-            setPrinting(true);
-          }}
+          disabled={taking}
+          onClick={() => void print()}
         >
           <Icon name="printer" className="sm" />
-          {t('Print assembly steps')}
+          {taking ? t('Taking the step pictures…') : t('Print assembly steps')}
         </button>
         {lit && (
           <button type="button" className="btn sm" onClick={() => setLit(null)}>
@@ -341,6 +378,7 @@ export function PrintAssembly() {
   const pieces = usePieceSteps();
   const order = useProjectOrder();
   const choices = useFastenerChoices();
+  const pictures = useUi((s) => s.stepPictures);
   const locale = PRINT_DATE_LOCALE[getPrintLang()];
   const mm = pt('mm');
   const row = (part: StepPart, i: number) => (
@@ -363,6 +401,7 @@ export function PrintAssembly() {
             'Îndrumare: ordinea rezultă din pozițiile pieselor; îmbinările, elementele de fixare și găurirea sunt alegerea dumneavoastră.',
           )}
         </p>
+        {!pictures && <p className="pr-note">{pt('Imaginile pașilor cer vizualizarea 3D')}</p>}
       </header>
       {order.length > 0 && <PrintProjectOrder stages={order} />}
       {pieces.map((p) => (
@@ -394,6 +433,13 @@ export function PrintAssembly() {
                       {s.n}. {stepTitle(s, 'print')}
                     </strong>
                     <div className="pr-do">{stepInstruction(s, 'print')}</div>
+                    {pictures?.[stepPictureKey(p.key, s.id)] && (
+                      <img
+                        className="pr-step-pic"
+                        src={pictures[stepPictureKey(p.key, s.id)]}
+                        alt=""
+                      />
+                    )}
                   </td>
                   <td>
                     {prepLines(s, 'print').map((line, i) => (

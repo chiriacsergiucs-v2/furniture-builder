@@ -3784,6 +3784,23 @@ table.buy {
   .pr-box {
     margin-bottom: 1mm;
   }
+  /* One 3D picture per assembly step, and the client sheet's picture (ADR-206). */
+  .pr-step-pic {
+    display: block;
+    width: 45mm;
+    max-height: 34mm;
+    object-fit: contain;
+    margin-top: 1mm;
+  }
+  .pr-client-pic img {
+    display: block;
+    width: 100%;
+    max-height: 120mm;
+    object-fit: contain;
+  }
+  .pr-client-total h2 {
+    border-bottom: 0;
+  }
   .pr-table {
     width: 100%;
     border-collapse: collapse;

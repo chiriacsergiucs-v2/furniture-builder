@@ -280,6 +280,13 @@ export const PRINT_RU = {
   'Șuruburile, diblurile și excentricii sunt numărați doar ca îmbinări, orientativ; elementul de fixare îl alegeți dvs. ({path}). Lipiciul nu este numărat.':
     'Шурупы, шканты и эксцентрики учитываются только как соединения, ориентировочно; крепёж выбираете вы ({path}). Клей не учитывается.',
   buc: 'шт.',
+  // Client sheet and step pictures (ADR-206)
+  'Fișă pentru client': 'Лист для клиента',
+  'Preț estimat': 'Ориентировочная цена',
+  'linii fără preț': 'строк без цены',
+  'Dimensiuni L × Î × A, mm': 'Размеры Ш × В × Г, мм',
+  'Prețuri de vânzător: {sellers}': 'Цены продавца: {sellers}',
+  'Imaginile pașilor cer vizualizarea 3D': 'Для картинок шагов нужен 3D-вид',
 } satisfies Record<string, string>;
 
 export const PRINT_EN: Record<keyof typeof PRINT_RU, string> = {
@@ -540,4 +547,10 @@ export const PRINT_EN: Record<keyof typeof PRINT_RU, string> = {
     '{guidance} ({how}{len}). Name yours under {path}.',
   'Șuruburile, diblurile și excentricii sunt numărați doar ca îmbinări, orientativ; elementul de fixare îl alegeți dvs. ({path}). Lipiciul nu este numărat.':
     'Screws, dowels and cams are counted only as joints, as guidance; the fastener is yours ({path}). Glue is not counted.',
+  'Fișă pentru client': 'Client sheet',
+  'Preț estimat': 'Estimated price',
+  'linii fără preț': 'lines without a price',
+  'Dimensiuni L × Î × A, mm': 'Size W × H × D, mm',
+  'Prețuri de vânzător: {sellers}': 'Seller prices: {sellers}',
+  'Imaginile pașilor cer vizualizarea 3D': 'Step pictures need the 3D view',
 };

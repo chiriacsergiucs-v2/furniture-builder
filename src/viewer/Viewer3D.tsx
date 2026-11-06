@@ -85,7 +85,7 @@ import { PHONE, useMediaQuery } from '../ui/useMediaQuery';
 import { useTheme } from '../ui/useTheme';
 import { useLook } from '../ui/useLook';
 import { setSolidWalls, useSolidWalls } from '../ui/useSolidWalls';
-import { SHADOW_CATCHER, setStage, useRendering } from './renderBridge';
+import { SHADOW_CATCHER, setCapture, setStage, useRendering } from './renderBridge';
 import { CountStepper } from '../ui/CountStepper';
 import { useSnap } from '../ui/useSnap';
 import { MoveToButtons } from '../ui/MoveTo';
@@ -766,11 +766,21 @@ function CountsAnchor({
 
 /** Lets the path tracer (ADR-068) read the scene and camera the user is looking at. */
 function Stage() {
-  const { scene, camera } = useThree();
+  const { scene, camera, gl } = useThree();
   useEffect(() => {
     setStage({ scene, camera });
-    return () => setStage(null);
-  }, [scene, camera]);
+    // A still for the client sheet and the assembly print's step pictures (ADR-206): one frame drawn and read.
+    setCapture(() => {
+      gl.render(scene, camera);
+      const url = gl.domElement.toDataURL('image/png');
+      invalidate();
+      return url.startsWith('data:image/png') ? url : null;
+    });
+    return () => {
+      setStage(null);
+      setCapture(null);
+    };
+  }, [scene, camera, gl]);
   return null;
 }
 

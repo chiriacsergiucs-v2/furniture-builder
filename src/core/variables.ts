@@ -45,13 +45,20 @@ export const isBindTarget = (s: unknown): s is BindTarget =>
   (['width', 'height', 'depth', 'mountHeight', 'x', 'y', 'z'].includes(s) || SPLIT_TARGET.test(s));
 
 /** Why a variable name cannot be used, or null. */
-export function nameProblem(name: string, others: readonly ProjectVariable[] = []): string | null {
+export function nameProblem(
+  name: string,
+  others: readonly ProjectVariable[] = [],
+  /** False when reading a stored variable: a name taken before a function had it still loads (ADR-206). */
+  reserved = true,
+): string | null {
   const n = name.trim();
   if (!n) return t('A variable needs a name.');
   if (n.length > MAX_VARIABLE_NAME)
     return t('A variable name is at most {n} characters.', { n: MAX_VARIABLE_NAME });
   if (!NAME_RE.test(n))
     return t('A variable name is letters, digits and spaces, starting with a letter.');
+  if (reserved && isFunctionName(n))
+    return t('“{name}” is the name of a formula function; pick another name.', { name: n });
   if (others.some((v) => v.name.toLowerCase() === n.toLowerCase()))
     return t('A variable named “{name}” already exists.', { name: n });
   return null;
@@ -61,12 +68,14 @@ export function nameProblem(name: string, others: readonly ProjectVariable[] = [
 // Formulas
 // ---------------------------------------------------------------------------
 
+type Op = '+' | '-' | '*' | '/' | '(' | ')' | ',';
 type Token =
   | { kind: 'num'; value: number; at: number; text: string }
   | { kind: 'name'; name: string; at: number; text: string }
-  | { kind: 'op'; op: '+' | '-' | '*' | '/' | '(' | ')'; at: number; text: string };
+  | { kind: 'fn'; name: string; at: number; text: string }
+  | { kind: 'op'; op: Op; at: number; text: string };
 
-const OPS: Record<string, '+' | '-' | '*' | '/' | '(' | ')'> = {
+const OPS: Record<string, Op> = {
   '+': '+',
   '-': '-',
   '−': '-',
@@ -80,8 +89,41 @@ const OPS: Record<string, '+' | '-' | '*' | '/' | '(' | ')'> = {
 };
 
 /**
+ * Formula functions (ADR-206): a name followed by `(` is a call. One entry per function: how many values it takes and
+ * what it does; a later function (ADR-209) is one more entry. Their names are reserved for new variables.
+ */
+export interface FormulaFunction {
+  /** Fewest and most values; `max` absent = any number from `min`. */
+  min: number;
+  max?: number;
+  apply: (args: number[]) => number;
+}
+export const FUNCTIONS: Record<string, FormulaFunction> = {
+  min: { min: 2, apply: (a) => Math.min(...a) },
+  max: { min: 2, apply: (a) => Math.max(...a) },
+  floor: { min: 1, max: 1, apply: ([x]) => Math.floor(x) },
+  ceil: { min: 1, max: 1, apply: ([x]) => Math.ceil(x) },
+  round: { min: 1, max: 1, apply: ([x]) => Math.round(x) },
+};
+/** Whether a name is a formula function's, compared without case. */
+export const isFunctionName = (name: string): boolean =>
+  Object.hasOwn(FUNCTIONS, name.trim().toLowerCase());
+
+/** Why a call has the wrong number of values, or null. */
+function arityProblem(name: string, f: FormulaFunction, n: number): string | null {
+  if (f.max !== undefined && f.min === f.max && n !== f.min)
+    return t('“{fn}” takes exactly {n|# value|# values}.', { fn: name, n: f.min });
+  if (n < f.min) return t('“{fn}” takes at least {n|# value|# values}.', { fn: name, n: f.min });
+  if (f.max !== undefined && n > f.max)
+    return t('“{fn}” takes at most {n|# value|# values}.', { fn: name, n: f.max });
+  return null;
+}
+
+/**
  * Split a formula into tokens. Variable names may hold spaces, so the known names are matched first, longest
- * first, without case; anything else that starts with a letter is an unknown name (reported by the parser).
+ * first, without case; anything else that starts with a letter is an unknown name (reported by the parser). A
+ * function name followed by `(` is a call (ADR-206), even when a variable has that name; inside a call's
+ * parentheses `,` or `;` separates the values, so decimals there take a point.
  */
 export function tokenize(
   expr: string,
@@ -89,6 +131,8 @@ export function tokenize(
 ): { tokens: Token[] } | { problem: string } {
   const sorted = [...names].sort((a, b) => b.length - a.length);
   const tokens: Token[] = [];
+  /** Open parentheses: true for a call's. */
+  const parens: boolean[] = [];
   let i = 0;
   const lower = expr.toLowerCase();
   while (i < expr.length) {
@@ -97,16 +141,31 @@ export function tokenize(
       i++;
       continue;
     }
+    const inCall = parens.length > 0 && parens[parens.length - 1];
+    if (inCall && (c === ',' || c === ';')) {
+      tokens.push({ kind: 'op', op: ',', at: i, text: c });
+      i++;
+      continue;
+    }
     const op = OPS[c];
     if (op) {
+      const prev = tokens[tokens.length - 1];
+      if (op === '(') parens.push(prev?.kind === 'fn');
+      if (op === ')') parens.pop();
       tokens.push({ kind: 'op', op, at: i, text: c });
       i++;
       continue;
     }
-    const num = /^\d+(?:[.,]\d+)?/.exec(expr.slice(i));
+    const num = (inCall ? /^\d+(?:\.\d+)?/ : /^\d+(?:[.,]\d+)?/).exec(expr.slice(i));
     if (num) {
       tokens.push({ kind: 'num', value: Number(num[0].replace(',', '.')), at: i, text: num[0] });
       i += num[0].length;
+      continue;
+    }
+    const call = /^([\p{L}_][\p{L}\p{N}_]*)\s*\(/u.exec(expr.slice(i));
+    if (call && isFunctionName(call[1])) {
+      tokens.push({ kind: 'fn', name: call[1].toLowerCase(), at: i, text: call[1] });
+      i += call[1].length;
       continue;
     }
     const hit = sorted.find((n) => {
@@ -152,6 +211,29 @@ export function evaluateExpr(
     if (tok.kind === 'num') return tok.value;
     if (tok.kind === 'name')
       return values.get(tok.name) ?? fail(t('Unknown variable “{name}”.', { name: tok.name }));
+    if (tok.kind === 'fn') {
+      // A call (ADR-206): name `(` value {, value} `)`; the tokenizer saw the `(` after the name.
+      const f = FUNCTIONS[tok.name];
+      pos++;
+      const args: number[] = [];
+      const close = peek();
+      if (close && close.kind === 'op' && close.op === ')') pos++;
+      else
+        for (;;) {
+          args.push(sum());
+          const nx = peek();
+          if (nx && nx.kind === 'op' && nx.op === ',') {
+            pos++;
+            continue;
+          }
+          if (!nx || nx.kind !== 'op' || nx.op !== ')') return fail(t('A “(” is not closed.'));
+          pos++;
+          break;
+        }
+      const bad = arityProblem(tok.text, f, args.length);
+      if (bad) return fail(bad);
+      return f.apply(args);
+    }
     if (tok.op === '(') {
       const v = sum();
       const close = peek();

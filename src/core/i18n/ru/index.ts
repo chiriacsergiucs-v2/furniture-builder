@@ -17,6 +17,7 @@ import { ru_info } from './info';
 import { ru_inspector } from './inspector';
 import { ru_material } from './material';
 import { ru_project } from './project';
+import { ru_prints } from './prints';
 import { ru_research } from './research';
 import { ru_sellers } from './sellers';
 import { ru_variables } from './variables';
@@ -41,6 +42,7 @@ export const ru = {
   ...ru_sellers,
   ...ru_variables,
   ...ru_material,
+  ...ru_prints,
 };
 
 export const ruData: Record<string, string> = {

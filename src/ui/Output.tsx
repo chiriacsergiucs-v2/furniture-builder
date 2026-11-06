@@ -18,6 +18,7 @@ import { Icon } from './icons';
 import { cutlistCsvRo } from '../core/ro';
 import { download, fileName } from './shell/files';
 import { useUi } from './shell/uiStore';
+import { captureStill } from '../viewer/renderBridge';
 import { mayRepair, problemPanels } from '../core/repairs';
 import { useProblem } from './problemStore';
 import { PHONE, useMediaQuery } from './useMediaQuery';
@@ -108,6 +109,8 @@ function Parts() {
   const total = rows.reduce((n, r) => n + r.quantity, 0);
 
   const setPrinting = useUi((s) => s.setPrinting);
+  const printWith = useUi((s) => s.printWith);
+  const lastRender = useUi((s) => s.lastRender);
   const why = blocked ? t('Fix the problems listed under Checks first') : undefined;
 
   return (
@@ -138,6 +141,22 @@ function Parts() {
         >
           <Icon name="printer" />
           {t('Print')}
+        </button>
+        <button
+          type="button"
+          className="btn outline"
+          disabled={blocked}
+          title={
+            why ??
+            t('Print one page for your client: a picture, the pieces and the estimated price')
+          }
+          onClick={() =>
+            // The last render of this session, else a still of the open 3D view, else the front view (ADR-206).
+            printWith('client', { client: lastRender ?? captureStill() })
+          }
+        >
+          <Icon name="printer" />
+          {t('Client sheet')}
         </button>
       </div>
       {blocked && (

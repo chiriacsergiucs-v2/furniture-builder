@@ -31,9 +31,24 @@ interface Ui {
   /** The print sheet is on screen and the print dialog is open (ADR-020). */
   printing: boolean;
   setPrinting: (v: boolean) => void;
-  /** What prints: the cutting sheet, or the assembly steps (ADR-174). Back to the sheet after each print. */
-  printMode: 'sheet' | 'assembly';
-  setPrintMode: (printMode: 'sheet' | 'assembly') => void;
+  /**
+   * What prints: the cutting sheet, the assembly steps (ADR-174) or the client sheet (ADR-206). Back to the sheet after
+   * each print.
+   */
+  printMode: 'sheet' | 'assembly' | 'client';
+  setPrintMode: (printMode: 'sheet' | 'assembly' | 'client') => void;
+  /** The last PNG the Render dialog made this session (ADR-068), as an object URL: the client sheet's picture. */
+  lastRender: string | null;
+  setLastRender: (url: string | null) => void;
+  /** The picture the client sheet prints (ADR-206), chosen when it is asked for; null = the front view. */
+  clientPicture: string | null;
+  /** One 3D picture per assembly step for the print (ADR-206), by `<piece>:<step>`; null without the 3D view. */
+  stepPictures: Record<string, string> | null;
+  /** Print with these pictures; cleared again after each print. */
+  printWith: (
+    printMode: 'sheet' | 'assembly' | 'client',
+    pictures: { client?: string | null; steps?: Record<string, string> | null },
+  ) => void;
   /** A one-line result of an import or export started from a menu, shown until dismissed. */
   notice: { ok: boolean; text: string } | null;
   setNotice: (n: { ok: boolean; text: string } | null) => void;
@@ -60,9 +75,29 @@ export const useUi = create<Ui>((set) => ({
     set({ mode });
   },
   printing: false,
-  setPrinting: (printing) => set(printing ? { printing } : { printing, printMode: 'sheet' }),
+  setPrinting: (printing) =>
+    set(
+      printing
+        ? { printing }
+        : { printing, printMode: 'sheet', clientPicture: null, stepPictures: null },
+    ),
   printMode: 'sheet',
   setPrintMode: (printMode) => set({ printMode }),
+  lastRender: null,
+  setLastRender: (lastRender) =>
+    set((s) => {
+      if (s.lastRender && s.lastRender !== lastRender) URL.revokeObjectURL(s.lastRender);
+      return { lastRender };
+    }),
+  clientPicture: null,
+  stepPictures: null,
+  printWith: (printMode, pictures) =>
+    set({
+      printMode,
+      printing: true,
+      clientPicture: pictures.client ?? null,
+      stepPictures: pictures.steps ?? null,
+    }),
   notice: null,
   setNotice: (notice) => set({ notice }),
   settingsOpen: false,

@@ -55,6 +55,29 @@ export interface ShopLine {
   sizeMm?: number;
   /** Added seller items: their place in `Design.sellerItems`, for changing or removing them. */
   itemIndex?: number;
+  /** Run part lines: the run part's key in `Project.runProducts` (ADR-206). */
+  runKey?: string;
+  /** Run part lines: the part's length in metres, for a seller price per metre (ADR-206). */
+  lengthM?: number;
+}
+
+/** The key a run part's seller product is saved under (`Project.runProducts`, ADR-206). */
+export const runPartKey = (rp: Pick<RunPart, 'key' | 'id'>) => rp.key ?? rp.id;
+
+/**
+ * The rows without the parts of run parts priced by their own product (ADR-206), so they are not bought twice: a row
+ * loses those parts and goes when none is left.
+ */
+function withoutRunParts(rows: CutRow[], panelIds: Set<string>): CutRow[] {
+  if (!panelIds.size) return rows;
+  return rows.flatMap((r) => {
+    const gone = r.panelIds.filter((id) => panelIds.has(id)).length;
+    if (!gone) return [r];
+    const quantity = r.quantity - gone;
+    return quantity > 0
+      ? [{ ...r, quantity, panelIds: r.panelIds.filter((id) => !panelIds.has(id)) }]
+      : [];
+  });
 }
 
 export const NOT_COUNTED = t(
@@ -141,8 +164,21 @@ export function shoppingList(input: {
   /** Seller products chosen for hardware lines and added by the user (ADR-161). */
   hardwareProducts?: Record<string, HardwareProduct>;
   sellerItems?: SellerItem[];
+  /** Seller products linked to run parts, by run part key (ADR-206, `Project.runProducts`). */
+  runProducts?: Record<string, HardwareProduct>;
+  /**
+   * Run part keys whose linked product has a price in a unit that fits (piece or m): those parts are priced by their
+   * product and leave their board's line; the others stay priced by their board, as before (ADR-206).
+   */
+  runPriced?: ReadonlySet<string>;
 }): ShopLine[] {
-  const { rows, materials, sheets } = input;
+  const { materials, sheets } = input;
+  const priced = new Set(
+    (input.runParts ?? [])
+      .filter((rp) => input.runProducts?.[runPartKey(rp)] && input.runPriced?.has(runPartKey(rp)))
+      .map((rp) => `run:${rp.id}`),
+  );
+  const rows = withoutRunParts(input.rows, priced);
   const fast = input.fasteners
     ? fastenerShopLines(input.fasteners.counts, input.fasteners.choices)
     : null;
@@ -241,7 +277,25 @@ export function shoppingList(input: {
       itemIndex: i,
     }),
   );
-  if (fast) lines.push(...fast.lines);
+  // A fastener line takes its seller product (ADR-206); one still to choose moves to Hardware once linked.
+  if (fast)
+    for (const l of fast.lines) {
+      const link = l.productKey ? input.hardwareProducts?.[l.productKey] : undefined;
+      if (!link) {
+        lines.push(l);
+        continue;
+      }
+      const product = { seller: link.seller, id: link.id, name: link.name };
+      // Set on the line itself: its print texts are getters read in the print language at print time (ADR-202).
+      lines.push(
+        Object.assign(
+          l,
+          l.section === 'choose'
+            ? { section: 'hardware' as const, priceKey: l.productKey, product, per: link.per }
+            : { product, per: link.per },
+        ),
+      );
+    }
   const seen = new Set<string>();
   for (const d of input.diagnostics ?? []) {
     if (!CHOOSE_CODES.has(d.code) || seen.has(d.message)) continue;
@@ -274,17 +328,24 @@ export function shoppingList(input: {
       }),
     });
   for (const rp of input.runParts ?? []) {
+    const runKey = runPartKey(rp);
+    const link = input.runProducts?.[runKey];
+    const own = !!link && !!input.runPriced?.has(runKey);
+    const size = { w: rp.box.w, h: rp.box.h, d: rp.box.d, material: rp.material.name };
     lines.push({
       section: 'run',
       label: rp.label,
       quantity: 1,
       unit: 'piece',
-      detail: t('{w} × {h} × {d} mm, {material} (counted under Boards)', {
-        w: rp.box.w,
-        h: rp.box.h,
-        d: rp.box.d,
-        material: rp.material.name,
-      }),
+      detail: own
+        ? t('{w} × {h} × {d} mm, {material} (priced by its product)', size)
+        : t('{w} × {h} × {d} mm, {material} (counted under Boards)', size),
+      runKey,
+      lengthM: Math.max(rp.box.w, rp.box.h, rp.box.d) / 1000,
+      ...(link
+        ? { product: { seller: link.seller, id: link.id, name: link.name }, per: link.per }
+        : {}),
+      ...(own ? { priceKey: `run:${runKey}` } : {}),
     });
   }
   return lines;

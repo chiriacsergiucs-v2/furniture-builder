@@ -237,6 +237,8 @@ interface State {
   addSellerItem: (it: SellerItem) => void;
   /** ADR-161: an added item's quantity; 0 removes it. */
   setSellerItemQuantity: (index: number, quantity: number) => void;
+  /** ADR-206: a seller product for a run part of the open project, by run part key (undefined removes it). */
+  setRunProduct: (key: string, hp: HardwareProduct | undefined) => void;
   rename: (name: string) => void;
   updateCabinet: (patch: Partial<CabinetParams>) => void;
   updateDesk: (patch: Partial<DeskParams>) => void;
@@ -1679,6 +1681,14 @@ export const useDesign = create<State>((rawSet, get) => {
       else commit(withHardwareProduct(get().design, key, hp));
     },
     addSellerItem: (it) => commit(withSellerItem(get().design, it)),
+    setRunProduct: (key, hp) => {
+      const p = get().project;
+      if (!p) return;
+      const next = { ...p.runProducts };
+      if (hp) next[key] = hp;
+      else delete next[key];
+      commitProject({ ...p, runProducts: Object.keys(next).length ? next : undefined });
+    },
     setSellerItemQuantity: (index, quantity) =>
       commit(withSellerItemQuantity(get().design, index, quantity)),
     rename: (name) => commit({ ...get().design, name }),

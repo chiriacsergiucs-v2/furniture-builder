@@ -31,6 +31,9 @@ export function unitsFor(l: ShopLine): ShopUnit[] {
   return [l.unit];
 }
 
+/** Whether a run part's seller price can price it (ADR-206): per piece or per metre. */
+export const runUnitFits = (unit: SellerPrice['unit']) => unit === 'piece' || unit === 'm';
+
 /** A linked product's price from the bundled seller catalogs (ADR-161); null when it is not in them. */
 export type SellerLookup = (r: ProductRef) => SellerPrice | null;
 
@@ -43,6 +46,13 @@ export function sellerLinePrice(l: ShopLine, seller?: SellerLookup): number | nu
   if (!l.product || !seller) return null;
   const sp = seller(l.product);
   if (!sp) return null;
+  // A run part priced by its own product (ADR-206): per piece × seller units per item, or per metre of its length.
+  if (l.section === 'run') {
+    if (sp.unit === 'piece') return Math.round(l.quantity * (l.per ?? 1) * sp.amount);
+    if (sp.unit === 'm' && l.lengthM !== undefined)
+      return Math.round(l.lengthM * (l.per ?? 1) * sp.amount);
+    return null;
+  }
   if (l.section === 'boards' && l.unit !== 'm') {
     if (sp.unit === 'piece')
       return l.sheets === null || l.sheets === undefined ? null : Math.round(l.sheets * sp.amount);
