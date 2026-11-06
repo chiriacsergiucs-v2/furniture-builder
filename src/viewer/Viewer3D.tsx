@@ -450,8 +450,10 @@ export default function Viewer3D() {
                   ? t('Turn off Exploded 3D to move pieces')
                   : t('Drag a piece to move it; dragging empty space turns the view')
               }
+              // A tap flips what the button shows (G-181): Move can be on but not in effect (placing a piece or drawing the
+              // room), and flipping the stored value then changed nothing on screen, so the first tap seemed lost.
               onClick={() => {
-                setMoveOn(!moveOn);
+                setMoveOn(!moving);
                 setAdjustOn(false);
               }}
             >
@@ -483,7 +485,7 @@ export default function Viewer3D() {
                     )
               }
               onClick={() => {
-                setAdjustOn(!adjustOn);
+                setAdjustOn(!adjusting);
                 setMoveOn(false);
               }}
             >
@@ -566,7 +568,9 @@ export default function Viewer3D() {
             <button
               type="button"
               className="btn sm outline isolate-toggle"
-              aria-pressed={isolating}
+              // Pressed while Isolate is on, also with nothing selected (it then waits for a selection): the tap turns
+              // off what the button shows (G-181), not a value it hid.
+              aria-pressed={section.isolate}
               title={t('Show only the selected pieces')}
               onClick={() => setSection({ isolate: !section.isolate })}
             >
