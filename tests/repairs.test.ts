@@ -1,13 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { templates } from '../src/core/design';
+import { findFamily, insertVariant } from '../src/core/catalog';
+import { compatRule } from '../src/core/compat';
 import {
   buildProjectModel,
   makeItem,
   newProject,
   placeItem,
+  suggestRunParts,
   type Project,
   type QuarterTurn,
 } from '../src/core/project';
+import { addVariable, applyBindings, setBinding } from '../src/core/variables';
 import {
   mayRepair,
   moveItem,
@@ -17,10 +21,14 @@ import {
   settle,
 } from '../src/core/repairs';
 import { shapeOutline, type Room } from '../src/core/room';
-import type { Diagnostic } from '../src/core/types';
+import type { Design, Diagnostic } from '../src/core/types';
 import { useDesign } from '../src/store/designStore';
 
 const t = (id: string) => templates.find((x) => x.id === id)!.create();
+const fromCatalog = (family: string): Design => {
+  const f = findFamily(family)!;
+  return insertVariant(f, f.variants[0], '2026-11-06T00:00:00.000Z')!;
+};
 const rect = (w = 3000, d = 3000): Room => ({
   height: 2600,
   outline: shapeOutline('rectangle', { width: w, depth: d, cutWidth: 0, cutDepth: 0, offset: 0 }),
@@ -265,7 +273,13 @@ describe('repairs fuzz over layouts (ADR-071)', () => {
       if (rnd() < 0.5) p = { ...p, room: rect(3000, 2600) };
       const pm = buildProjectModel(p);
       for (const d of pm.diagnostics.filter((x) =>
-        ['pieces-overlap', 'opening-blocked', 'outside-room'].includes(x.code),
+        [
+          'pieces-overlap',
+          'opening-blocked',
+          'outside-room',
+          'compat-depth-match',
+          'compat-height-match',
+        ].includes(x.code),
       )) {
         expect(d.itemIds?.length).toBeGreaterThan(0);
         expect(d.box).toBeDefined();
@@ -273,5 +287,153 @@ describe('repairs fuzz over layouts (ADR-071)', () => {
       }
     }
     expect(offered).toBeGreaterThan(0);
+  });
+});
+
+// ADR-204: match-the-neighbour repairs for the depth and height warnings (ADR-100).
+describe('match-the-neighbour repairs (ADR-204)', () => {
+  const base = () => fromCatalog('base-doors');
+  const cabOf = (p: Project, id: string) => {
+    const pr = p.items.find((i) => i.id === id)!.design.product;
+    return pr.kind === 'cabinet' ? pr.params : null;
+  };
+  const sized = (d: Design, k: 'depth' | 'height', v: number): Design => {
+    const c = structuredClone(d);
+    if (c.product.kind === 'cabinet') c.product.params[k] = v;
+    return c;
+  };
+  /** Two touching base units, the second one changed; with `worktop`, the run's worktop over both. */
+  function pair(k: 'depth' | 'height', v: number, worktop = false): Project {
+    const w = buildProjectModel(atX([{ d: base(), x: 0 }])).pieces[0].bounds.w;
+    const p = atX([
+      { d: base(), x: 0 },
+      { d: sized(base(), k, v), x: w },
+    ]);
+    return worktop ? { ...p, runParts: suggestRunParts(p) } : p;
+  }
+  function atX(pieces: { d: Design; x: number }[]): Project {
+    let p = newProject('Match');
+    for (const s of pieces) {
+      const it = makeItem(p, s.d);
+      p = { ...p, items: [...p.items, { ...it, position: { ...it.position, x: s.x, z: 0 } }] };
+    }
+    return p;
+  }
+  const warning = (p: Project, code: string) => find(p, code)[0];
+  const esc = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  it('the rules list the repair; both codes are repairable', () => {
+    expect(compatRule('depth-match').repairs).toEqual(['match-depth']);
+    expect(compatRule('height-match').repairs).toEqual(['match-height']);
+    const p = pair('depth', 500);
+    expect(mayRepair(warning(p, 'compat-depth-match'))).toBe(true);
+  });
+
+  it('a depth warning offers both ways, labelled, smallest change first; each clears it and adds no error', () => {
+    const p = pair('depth', 500);
+    const [a, b] = p.items;
+    const d = warning(p, 'compat-depth-match');
+    const reps = expectSound(p, d);
+    const [na, nb] = [pieceName(p, a.id), pieceName(p, b.id)];
+    expect(reps.map((r) => r.label).sort()).toEqual(
+      [`Make ${na} 500 mm deep like ${nb}`, `Make ${nb} 560 mm deep like ${na}`].sort(),
+    );
+    expect(reps.every((r) => !r.refused && r.distance === 60)).toBe(true);
+    const toB = reps.find((r) => r.label.startsWith(`Make ${nb}`))!;
+    expect(cabOf(toB.project, b.id)!.depth).toBe(560);
+    expect(cabOf(toB.project, a.id)!.depth).toBe(cabOf(p, a.id)!.depth);
+  });
+
+  it('a height warning under one worktop offers both ways; applying one clears it', () => {
+    const p = pair('height', 800, true);
+    const [a, b] = p.items;
+    const d = warning(p, 'compat-height-match');
+    expect(d).toBeTruthy();
+    const reps = expectSound(p, d);
+    const [na, nb] = [pieceName(p, a.id), pieceName(p, b.id)];
+    expect(reps).toHaveLength(2);
+    expect(
+      reps.some((r) => new RegExp(`^Make ${esc(nb)} \\d+ mm high like ${esc(na)}$`).test(r.label)),
+    ).toBe(true);
+    expect(
+      reps.some((r) => new RegExp(`^Make ${esc(na)} \\d+ mm high like ${esc(nb)}$`).test(r.label)),
+    ).toBe(true);
+    const toB = reps.find((r) => r.label.startsWith(`Make ${nb}`))!;
+    expect(cabOf(toB.project, b.id)!.height).toBe(cabOf(p, a.id)!.height);
+  });
+
+  it('applying one is one undo step; undo brings the warning back', () => {
+    const s = () => useDesign.getState();
+    s().openProject(pair('depth', 500));
+    const d = s().projectModel!.diagnostics.find((x) => x.code === 'compat-depth-match')!;
+    const [r] = repairsFor(s().project!, s().projectModel!, d);
+    const past = s().projectPast.length;
+    s().updateProject(() => r.project);
+    expect(s().projectPast.length).toBe(past + 1);
+    expect(s().projectModel!.diagnostics.filter((x) => x.code === 'compat-depth-match')).toEqual(
+      [],
+    );
+    s().undoProject();
+    expect(s().projectModel!.diagnostics.some((x) => sameProblem(d, x))).toBe(true);
+  });
+
+  it('a size-locked piece gets none; with both locked there is no repair', () => {
+    const p = pair('depth', 500);
+    const [a, b] = p.items;
+    const lockB: Project = {
+      ...p,
+      items: [a, { ...b, sizeLocks: ['depth'] }],
+    };
+    const reps = repairsFor(lockB, buildProjectModel(lockB), warning(lockB, 'compat-depth-match'));
+    expect(reps.map((r) => r.label)).toEqual([
+      `Make ${pieceName(p, a.id)} 500 mm deep like ${pieceName(p, b.id)}`,
+    ]);
+    const both: Project = {
+      ...p,
+      items: [
+        { ...a, sizeLocked: true },
+        { ...b, sizeLocked: true },
+      ],
+    };
+    expect(repairsFor(both, buildProjectModel(both), warning(both, 'compat-depth-match'))).toEqual(
+      [],
+    );
+  });
+
+  it('a size bound to a variable is listed refused with the reason, never applied', () => {
+    let p = pair('depth', 500);
+    const [, b] = p.items;
+    p = addVariable(p, 'd', '500').project;
+    p = applyBindings(setBinding(p, b.id, 'depth', 'd'));
+    const d = warning(p, 'compat-depth-match');
+    expect(d).toBeTruthy();
+    const reps = repairsFor(p, buildProjectModel(p), d);
+    const refused = reps.filter((r) => r.refused);
+    expect(refused).toHaveLength(1);
+    expect(refused[0].label).toMatch(
+      new RegExp(`^Make ${esc(pieceName(p, b.id))} 560 mm deep like`),
+    );
+    expect(refused[0].refused).toBe(
+      'The size follows a project variable; change the variable instead.',
+    );
+    expect(refused[0].project).toBe(p);
+    expect(reps.filter((r) => !r.refused)).toHaveLength(1);
+  });
+
+  it('linked copies follow the repaired piece', () => {
+    const p0 = pair('depth', 500);
+    const [a, b] = p0.items;
+    const copy = { ...makeItem(p0, structuredClone(b.design)), linkId: 'L' };
+    const p: Project = {
+      ...p0,
+      items: [a, { ...b, linkId: 'L' }, { ...copy, position: { ...copy.position, x: 2500 } }],
+    };
+    const d = warning(p, 'compat-depth-match');
+    const r = repairsFor(p, buildProjectModel(p), d).find((x) =>
+      x.label.startsWith(`Make ${pieceName(p, b.id)}`),
+    )!;
+    expect(r).toBeTruthy();
+    expect(cabOf(r.project, b.id)!.depth).toBe(560);
+    expect(cabOf(r.project, copy.id)!.depth).toBe(560);
   });
 });

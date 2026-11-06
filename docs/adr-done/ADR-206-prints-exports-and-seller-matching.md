@@ -1,7 +1,8 @@
 # ADR-206: Prints, exports and seller matching
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-06
+- Implemented: 2026-11-06
 - Depends on: ADR-048, ADR-121, ADR-161, ADR-166, ADR-172, ADR-174
 - Design: docs/ui-design.md (§3 Button, Dialog; §4 Build & Preview results, the 3D view)
 - Backlog: N211
@@ -83,11 +84,11 @@ Every new UI text goes through `t()` with its Russian entry; the feature tree ga
 
 ## Done when
 
-- [ ] The client sheet shows picture, piece list, total and the count of unpriced lines in ro, ru and en (tests)
-- [ ] The assembly print has one picture per step with the 3D view open, and the fallback line without it (find-it)
-- [ ] Export scene (.glb) downloads a file starting with `glTF` with the panels' meshes, no request (find-it)
-- [ ] Fronts show their board picture; the SVG download embeds it; the G-316 check is recorded with screenshots
-- [ ] Fastener and run part products save, price and reload; project files of every older version still load (tests)
-- [ ] `price-changes.mjs` reports changed, new and dropped products on two sample catalogs (tests)
-- [ ] min, max, floor, ceil and round evaluate; bad argument counts and reserved names give diagnostics (tests)
-- [ ] Browser find-it at 390 and 1280 px finds Client sheet, Export scene (.glb) and Product on a run part line
+- [x] The client sheet shows picture, piece list, total and the count of unpriced lines in ro, ru and en (tests)
+- [x] The assembly print has one picture per step with the 3D view open, and the fallback line without it (find-it)
+- [x] Export scene (.glb) downloads a file starting with `glTF` with the panels' meshes, no request (find-it)
+- [x] Fronts show their board picture; the SVG download embeds it; the G-316 check is recorded with screenshots
+- [x] Fastener and run part products save, price and reload; project files of every older version still load (tests)
+- [x] `price-changes.mjs` reports changed, new and dropped products on two sample catalogs (tests)
+- [x] min, max, floor, ceil and round evaluate; bad argument counts and reserved names give diagnostics (tests)
+- [x] Browser find-it at 390 and 1280 px finds Client sheet, Export scene (.glb) and Product on a run part line

@@ -24,6 +24,9 @@ import {
   type Project,
 } from '../src/core/project';
 import { repairsFor, settle } from '../src/core/repairs';
+import { resizeProduct, type SizeField } from '../src/core/pieceSize';
+import { outerSize, resizeBlocked, sizeLockBlocked } from '../src/core/sizeLock';
+import type { Design } from '../src/core/types';
 import { loadProject, saveProject } from '../src/persist/db';
 import { useDesign } from '../src/store/designStore';
 
@@ -36,6 +39,7 @@ function run(ids: string[]): Project {
 const lock = (p: Project, i: number) => setLocked(p, p.items[i].id, true);
 const pos = (p: Project, i: number) => p.items[i].position;
 const s = () => useDesign.getState();
+type SizeKey = SizeField['key'];
 
 describe('a locked piece stays where it is (ADR-095)', () => {
   it('lock and unlock set and clear the flag; unknown ids and no-ops return the same project', () => {
@@ -246,5 +250,81 @@ describe('locked pieces are saved (ADR-095, ADR-011)', () => {
     const p = { ...run(['chest']), schemaVersion: 5 as const };
     await saveProject(p);
     expect(await loadProject(p.id)).toEqual(p);
+  });
+});
+
+describe('a base carrying a locked piece is not resized (ADR-203, G-106)', () => {
+  /** A base cabinet with a wall cabinet resting on it; the top one locked when asked. */
+  function stack(lockTop: boolean): Project {
+    let p = run(['base-door', 'wall-cabinet']);
+    const [base, top] = p.items;
+    p = resolvePlacements({
+      ...p,
+      items: [base, { ...top, placement: { kind: 'above', baseId: base.id, gap: 0, offsetX: 0 } }],
+    });
+    return lockTop ? setLocked(p, top.id, true) : p;
+  }
+  const size = (d: Design, key: SizeKey) =>
+    outerSize(d)[key === 'width' ? 'w' : key === 'height' ? 'h' : 'd'];
+  const param = (d: Design, key: SizeKey) =>
+    (d.product.params as unknown as Record<SizeKey, number>)[key];
+  const resized = (d: Design, key: SizeKey, by: number): Design => ({
+    ...d,
+    product: resizeProduct(d.product, key, param(d, key) + by),
+  });
+
+  it('resizeBlocked refuses an outside-size change with the reason naming both pieces', () => {
+    const p = stack(true);
+    const [base, top] = p.items;
+    for (const key of ['width', 'height', 'depth'] as const) {
+      const next = resized(base.design, key, 50);
+      expect(size(next, key)).toBe(size(base.design, key) + 50);
+      const why = resizeBlocked(p, base.id, next);
+      expect(why).toMatch(/sits on .* and is locked — unlock it to resize/);
+      expect(why).toContain(top.design.name);
+      expect(why).toContain(base.design.name);
+    }
+    // Not a size change: allowed (only a resize is refused).
+    expect(resizeBlocked(p, base.id, { ...base.design, name: 'Renamed' })).toBeNull();
+    expect(resizeBlocked(p, base.id, base.design)).toBeNull();
+    expect(resizeBlocked(p, 'nope', resized(base.design, 'width', 50))).toBeNull();
+    // Unlocked on top: the base may be resized.
+    const free = stack(false);
+    expect(resizeBlocked(free, base.id, resized(base.design, 'height', 50))).toBeNull();
+  });
+
+  it('sizeLockBlocked refuses the whole project change; an unlocked piece on it allows it', () => {
+    const p = stack(true);
+    const grow = (q: Project): Project => ({
+      ...q,
+      items: [{ ...q.items[0], design: resized(q.items[0].design, 'height', 60) }, q.items[1]],
+    });
+    expect(sizeLockBlocked(p, grow(p))).toMatch(/sits on .* and is locked — unlock it to resize/);
+    expect(sizeLockBlocked(null, grow(p))).toBeNull();
+    expect(sizeLockBlocked(stack(false), grow(stack(false)))).toBeNull();
+  });
+
+  it('in the store: a resize is refused with the notice and no undo step; unlocked, the piece on it follows', () => {
+    s().openProject(stack(true));
+    const [base, top] = s().project!.items;
+    const h0 = param(base.design, 'height');
+    const past = s().projectPast.length;
+    s().resizeItem(base.id, 'height', h0 + 60);
+    expect(s().notice).toMatch(/sits on .* and is locked — unlock it to resize/);
+    expect(s().project!.items[0].design).toBe(base.design);
+    expect(s().projectPast.length).toBe(past);
+    // The piece editor: the edit of the open piece is refused the same way.
+    s().editItem(base.id);
+    useDesign.setState({ notice: null });
+    s().resizePiece('height', h0 + 60);
+    expect(param(s().design, 'height')).toBe(h0);
+    expect(s().notice).toMatch(/sits on .* and is locked/);
+    s().backToProject();
+    // Unlocked on top: the resize goes through and the piece on it rises with it.
+    s().setLocked(top.id, false);
+    const y0 = s().project!.items[1].position.y;
+    s().resizeItem(base.id, 'height', h0 + 60);
+    expect(param(s().project!.items[0].design, 'height')).toBe(h0 + 60);
+    expect(s().project!.items[1].position.y).toBe(y0 + 60);
   });
 });

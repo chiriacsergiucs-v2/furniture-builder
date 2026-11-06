@@ -1,7 +1,8 @@
 # ADR-208: Room surfaces, plan tracing, placed 3D models and AR
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-06
+- Implemented: 2026-11-06
 - Depends on: ADR-059, ADR-068, ADR-076, ADR-093, ADR-145
 - Design: docs/ui-design.md (§4 Project panel, Drawings, 3D look and Render)
 - Backlog: N213
@@ -92,15 +93,15 @@ item (ADR-158).
 
 ## Done when
 
-- [ ] Project schema 22 and template schema 4 round-trip; every older version loads; bad entries give problems (tests)
-- [ ] Plan: wall bands, floor fill, board picture fills, and a plan picture at the typed scale (unit tests on the
+- [x] Project schema 22 and template schema 4 round-trip; every older version loads; bad entries give problems (tests)
+- [x] Plan: wall bands, floor fill, board picture fills, and a plan picture at the typed scale (unit tests on the
       scale and fill helpers)
-- [ ] Models resolve on floor, wall and a piece, drag with snap on the plan and in Move mode with one undo step, and
+- [x] Models resolve on floor, wall and a piece, drag with snap on the plan and in Move mode with one undo step, and
       survive a template round-trip; a model a template uses cannot be deleted (tests)
-- [ ] With `navigator.xr` stubbed, View in AR requests `immersive-ar` with `hit-test`; Export for AR downloads a zip
+- [x] With `navigator.xr` stubbed, View in AR requests `immersive-ar` with `hit-test`; Export for AR downloads a zip
       holding a `.usda`, with no request (find-it)
 - [ ] Render shows "Engine: WebGPU" with an adapter and "Engine: WebGL 2" without, and both reach 8 samples (find-it)
-- [ ] `tools/room-surfaces/find-it.mjs` at 390 and 1280 px finds **Floor background**, **Plan picture**, **Set the
+- [x] `tools/room-surfaces/find-it.mjs` at 390 and 1280 px finds **Floor background**, **Plan picture**, **Set the
       scale**, the wall behind a single piece, and a model placed **On a piece**
 - [ ] The user checks View in AR on an Android phone and AR Quick Look on an iPhone; result recorded in N213
-- [ ] Every new text has its `t()` entry; all CI checks pass
+- [x] Every new text has its `t()` entry; all CI checks pass

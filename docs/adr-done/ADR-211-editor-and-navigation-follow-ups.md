@@ -1,7 +1,8 @@
 # ADR-211: Editor and navigation follow-ups
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-06
+- Implemented: 2026-11-06
 - Depends on: ADR-012, ADR-079, ADR-106, ADR-120, ADR-123, ADR-159, ADR-171, ADR-191, ADR-194, ADR-203
 - Design: docs/ui-design.md (section 4, Screens: editor and phone bottom sheet, project panel, New dialog)
 - Backlog: N216
@@ -87,17 +88,17 @@ Every new text has its Russian entry (ADR-153); each visible change adds its fea
 
 ## Done when
 
-- [ ] Lock boards and Lock construction refuse their changes with the reason; size and place still change; schema 20
+- [x] Lock boards and Lock construction refuse their changes with the reason; size and place still change; schema 20
       and 21 projects load unchanged (`tests/param-locks.test.ts`).
-- [ ] `itemsInFrontBox`, `bedSizeFields` and `resizeBed` return the expected pieces and sizes (tests).
-- [ ] `listOrphanVersions` lists only readable versions without a project and keeps unreadable rows; Restore saves a
+- [x] `itemsInFrontBox`, `bedSizeFields` and `resizeBed` return the expected pieces and sizes (tests).
+- [x] `listOrphanVersions` lists only readable versions without a project and keeps unreadable rows; Restore saves a
       new project and keeps the version; Delete removes only the tapped one (`tests/history.test.ts`).
-- [ ] Every new text has its Russian entry (`pnpm typecheck`).
-- [ ] `tools/editor-nav/find-it.mjs` (production build, 390 px touch): dragging "Resize the sheet" reaches full, half
+- [x] Every new text has its Russian entry (`pnpm typecheck`).
+- [x] `tools/editor-nav/find-it.mjs` (production build, 390 px touch): dragging "Resize the sheet" reaches full, half
       and peek; arrow keys step; "Up one level" selects the parent space; a bed shows "Mattress width".
-- [ ] The same script at 390 and 1280 px: a front-view drag box selects two pieces; "Lock boards" disables Boards
+- [x] The same script at 390 and 1280 px: a front-view drag box selects two pieces; "Lock boards" disables Boards
       with its hint; "About Select" opens; Gaps and Research show no Back with no design open.
-- [ ] The same script: a closed New piece wizard reopens with "Continue where you left off" on its step; the Fill a
+- [x] The same script: a closed New piece wizard reopens with "Continue where you left off" on its step; the Fill a
       wall and Fill the room rows have different glyphs.
-- [ ] The same script: after deleting a project and keeping its versions, History lists "Versions of deleted
+- [x] The same script: after deleting a project and keeping its versions, History lists "Versions of deleted
       projects"; Restore as a new project opens it; Delete asks and removes one.

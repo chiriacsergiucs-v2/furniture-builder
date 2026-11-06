@@ -21,6 +21,7 @@ import {
   templateFromProject,
   validateProjectTemplate,
 } from '../src/core/projectTemplate';
+import { setPrintLang } from '../src/core/i18n/print';
 import { shoppingCsvRo, shoppingList } from '../src/core/shopping';
 import { shapeOutline } from '../src/core/room';
 import type { Design, Space } from '../src/core/types';
@@ -91,7 +92,7 @@ describe('project templates (ADR-060)', () => {
     expect(projectFromTemplate(withRoom).items[0].position.x).toBe(p.items[0].position.x);
   });
   it('stored in Dexie v7 next to everything else; an unreadable row is skipped and kept', async () => {
-    expect(db.verno).toBe(11);
+    expect(db.verno).toBe(12);
     const tpl = templateFromProject(kitchen(), 'Stored');
     await saveProjectTemplate(tpl);
     await db.projectTemplates.put({
@@ -127,7 +128,7 @@ describe('project templates (ADR-060)', () => {
     ) => typeof db;
     const nw = new Fresh(name);
     await nw.open();
-    expect(nw.verno).toBe(11);
+    expect(nw.verno).toBe(12);
     expect(await nw.decors.get('x')).toBeDefined();
     expect(await nw.prices.count()).toBe(0);
     nw.close();
@@ -354,7 +355,16 @@ describe('shopping list (ADR-064) and estimate (ADR-062)', () => {
     expect(safety.some((l) => l.section === 'choose' && l.label === 'Anti-tip fixing')).toBe(true);
     const csv = shoppingCsvRo(lines);
     expect(csv).toContain('Plăci');
-    expect(csv).toContain('not counted');
+    // The footer is in the print language (ADR-202): Romanian by default, then Russian and English.
+    expect(csv).toContain('Lipiciul nu este numărat.');
+    try {
+      setPrintLang('ru');
+      expect(shoppingCsvRo(lines)).toContain('Клей не учитывается.');
+      setPrintLang('en');
+      expect(shoppingCsvRo(lines)).toContain('Glue is not counted.');
+    } finally {
+      setPrintLang('ro');
+    }
   });
   it('with a sheet count from the layout, a board is bought in sheets (m² kept for per-m² prices)', () => {
     const p = underRun();

@@ -1,7 +1,8 @@
 # ADR-205: Kitchen cut-outs, worktop corners and placement precision
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-06
+- Implemented: 2026-11-06
 - Depends on: ADR-040, ADR-069, ADR-070, ADR-072, ADR-073, ADR-125
 - Design: docs/ui-design.md (4. Screens: Project panel, Drawings)
 - Backlog: N210
@@ -115,21 +116,21 @@ entries. `src/core/features.ts` gains a line for each item above (ADR-158).
 
 ## Done when
 
-- [ ] An L of two runs gets two worktops and the error `worktop-corner-joint` until a joint is picked. Mitred gives two
+- [x] An L of two runs gets two worktops and the error `worktop-corner-joint` until a joint is picked. Mitred gives two
       profiled worktops that meet on the diagonal, and Butt gives one worktop through and one shortened. The
       cut-list notes and the plan joint line are covered by tests, and the run-part fuzz includes quarter-turned runs.
-- [ ] A hob over a base appears with the size the user typed in the cut list, the CSV and the printed sheet (ro, ru,
+- [x] A hob over a base appears with the size the user typed in the cut list, the CSV and the printed sheet (ro, ru,
       en), with its three diagnostics. The plan draws the sink and hob outlines (tests).
-- [ ] Cut the back around it gives a back with a notch or a hole of the zone's size, notes it in the cut list and
+- [x] Cut the back around it gives a back with a notch or a hole of the zone's size, notes it in the cut list and
       print, and clears the warning. The worktop-over-pipe, plinth-over-pipe and template-keeps-pipes tests pass.
-- [ ] Clearances draws translucent zone boxes in 3D, and the plan draws the installation strip and arc. A template
+- [x] Clearances draws translucent zone boxes in 3D, and the plan draws the installation strip and arc. A template
       keeps the item zones (tests).
-- [ ] The height drag in the front view and in 3D snaps to the worktop and wall-unit lines within 60 mm, and Snap off
+- [x] The height drag in the front view and in 3D snaps to the worktop and wall-unit lines within 60 mm, and Snap off
       or Alt places freely (tests). Distribute spaces each row. An angled piece snaps along its turned faces with
       exact overlap amounts. A mirrored copy matches the original to the mm, and mirroring twice returns it (tests).
-- [ ] Project schema 20, design schema 8 and template schema 2 files load unchanged (tests). The command
+- [x] Project schema 20, design schema 8 and template schema 2 files load unchanged (tests). The command
       `FUZZ_N=30000 pnpm exec vitest run tests/fuzz.test.ts` passes, and every new text has its `t()`/`pt()` entries.
-- [ ] `tools/kitchen-corners/find-it.mjs` passes against the production build at 390 and 1280 px. From the bare app
+- [x] `tools/kitchen-corners/find-it.mjs` passes against the production build at 390 and 1280 px. From the bare app
       it finds **Worktop corner**, **Mitred joint**, **Butt joint**, **Runs through**, **Hob**, **Cut the back around
       it**, **Snapped to the worktop line**, and the zones in 3D under **Clearances**.
-- [ ] All CI checks pass.
+- [x] All CI checks pass.

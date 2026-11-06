@@ -177,7 +177,7 @@ describe('device storage: backup .zip and restore (ADR-133)', () => {
     expect(await getSetting('x')).toBe(1);
   });
 
-  it('a version-10 database upgrades to 11 with every row, an unreadable one included', async () => {
+  it('a version-10 database upgrades to 12 with every row, an unreadable one included', async () => {
     const name = 'backup-upgrade-test';
     const old = new Dexie(name);
     old.version(10).stores({
@@ -202,11 +202,12 @@ describe('device storage: backup .zip and restore (ADR-133)', () => {
     const Fresh = db.constructor as new (n: string) => typeof db;
     const nw = new Fresh(name);
     await nw.open();
-    expect(nw.verno).toBe(11);
+    expect(nw.verno).toBe(12);
     expect((await nw.designs.get(d.id))?.design).toEqual(d);
     expect(await nw.designs.get('bad')).toBeDefined();
     expect(await nw.settings.count()).toBe(0);
     expect(await nw.accountLinks.count()).toBe(0);
+    expect(await nw.bands.count()).toBe(0);
     nw.close();
   });
 });

@@ -2,7 +2,8 @@
 // Find-it for the New-piece wizard (ADR-044–046, ADR-191), in jsdom (ADR-108): from the bare app, Catalog → New
 // piece → a type → a size → Review → Create piece, plus the critique fixes: the untouched Type step hints, a size
 // typo is one problem, a type change drops the old type's answers, Review lists the answers with Edit, the footer
-// reads "Use defaults", and closing with changed answers asks first.
+// reads "Use defaults", and closing with changed answers asks first: a new piece keeps its answers as the session's
+// draft (Continue where you left off / Start over, ADR-211), a reopened piece asks "Discard the answers?".
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { ru_shell } from '../../src/core/i18n/ru/shell';
@@ -77,25 +78,115 @@ describe.each(WIDTHS)('New-piece wizard at %ipx (find-it, ADR-191)', (width) => 
     await user.click(within(wiz).getByRole('button', { name: 'Create piece' }));
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'New piece' })).toBeNull());
 
-    // 1: a backdrop click keeps the wizard open; × with changed answers asks first.
+    // 1: a backdrop click keeps the wizard open; × with changed answers asks first. A new piece's answers stay as the
+    // session's draft (ADR-211, G-356): the ask says so and closes with Close.
     await user.click(await screen.findByRole('link', { name: /Catalog/ }));
     await user.click(await screen.findByRole('button', { name: 'New piece' }));
     const again = await screen.findByRole('dialog', { name: 'New piece' });
+    // A finished piece leaves no draft behind.
+    expect(within(again).queryByRole('button', { name: 'Continue where you left off' })).toBeNull();
     await user.click(within(again).getByRole('radio', { name: /Open shelving/ }));
     await user.click(again);
     expect(screen.getByRole('dialog', { name: 'New piece' })).toBeTruthy();
     await user.click(within(again).getByRole('button', { name: 'Close' }));
-    const ask = await screen.findByRole('dialog', { name: 'Confirm' });
-    expect(within(ask).getByText('Discard the answers?')).toBeTruthy();
+    let ask = await screen.findByRole('dialog', { name: 'Confirm' });
+    expect(
+      within(ask).getByText(
+        'Close the wizard? Your answers stay as a draft until you close the app.',
+      ),
+    ).toBeTruthy();
+    expect(within(ask).queryByText('Discard the answers?')).toBeNull();
     await user.click(within(ask).getByRole('button', { name: 'Cancel' }));
     expect(screen.getByRole('dialog', { name: 'New piece' })).toBeTruthy();
     await user.click(within(again).getByRole('button', { name: 'Close' }));
-    await user.click(
-      within(await screen.findByRole('dialog', { name: 'Confirm' })).getByRole('button', {
-        name: 'Discard',
-      }),
-    );
+    ask = await screen.findByRole('dialog', { name: 'Confirm' });
+    await user.click(within(ask).getByRole('button', { name: 'Close' }));
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'New piece' })).toBeNull());
+  });
+});
+
+describe.each(WIDTHS)('New-piece wizard draft at %ipx (find-it, ADR-211)', (width) => {
+  it('a closed new piece reopens with Continue where you left off on its step; Start over; a reopened piece asks Discard', async () => {
+    const { user } = await renderApp(width);
+    const offer = (wiz: HTMLElement) =>
+      within(wiz).queryByRole('button', { name: 'Continue where you left off' });
+    const open = async () => {
+      await user.click(await screen.findByRole('button', { name: 'New piece' }));
+      return screen.findByRole('dialog', { name: 'New piece' });
+    };
+    const closeKeepingDraft = async (wiz: HTMLElement) => {
+      await user.click(within(wiz).getByRole('button', { name: 'Close' }));
+      const ask = await screen.findByRole('dialog', { name: 'Confirm' });
+      expect(
+        within(ask).getByText(
+          'Close the wizard? Your answers stay as a draft until you close the app.',
+        ),
+      ).toBeTruthy();
+      await user.click(within(ask).getByRole('button', { name: 'Close' }));
+      await waitFor(() => expect(screen.queryByRole('dialog', { name: 'New piece' })).toBeNull());
+    };
+    const shelving = (wiz: HTMLElement) =>
+      within(wiz)
+        .getByRole('radio', { name: /Open shelving/ })
+        .getAttribute('aria-checked');
+
+    await user.click(await screen.findByRole('link', { name: /Catalog/ }));
+    let wiz = await open();
+    expect(offer(wiz)).toBeNull();
+    await user.click(within(wiz).getByRole('radio', { name: /Open shelving/ }));
+    await user.click(within(wiz).getByRole('button', { name: 'Next' }));
+    const stepName = within(wiz).getByRole('heading', { level: 3 }).textContent;
+    expect(stepName).not.toBe('Type');
+    await closeKeepingDraft(wiz);
+
+    // Reopened, the Type step offers the draft; Continue where you left off returns to its step with its answers.
+    wiz = await open();
+    expect(within(wiz).getByRole('button', { name: 'Start over' })).toBeTruthy();
+    await user.click(offer(wiz)!);
+    expect(within(wiz).getByRole('heading', { level: 3 }).textContent).toBe(stepName);
+    expect(offer(wiz)).toBeNull();
+    const rail = within(wiz).getByRole('list', { name: 'Wizard steps' });
+    await user.click(within(rail).getByRole('button', { name: 'Type' }));
+    expect(shelving(wiz)).toBe('true');
+
+    // Creating the piece clears the draft.
+    for (let i = 0; i < 20 && !within(wiz).queryByRole('button', { name: 'Create piece' }); i++)
+      await user.click(within(wiz).getByRole('button', { name: 'Next' }));
+    await user.click(within(wiz).getByRole('button', { name: 'Create piece' }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'New piece' })).toBeNull());
+    await user.click(await screen.findByRole('link', { name: /Catalog/ }));
+    wiz = await open();
+    expect(offer(wiz)).toBeNull();
+
+    // Start over clears a draft: a fresh Type step, and no offer the next time.
+    await user.click(within(wiz).getByRole('radio', { name: /Open shelving/ }));
+    await closeKeepingDraft(wiz);
+    wiz = await open();
+    await user.click(within(wiz).getByRole('button', { name: 'Start over' }));
+    expect(offer(wiz)).toBeNull();
+    expect(shelving(wiz)).toBe('false');
+    await user.click(within(wiz).getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'New piece' })).toBeNull());
+    wiz = await open();
+    expect(offer(wiz)).toBeNull();
+    await user.click(within(wiz).getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'New piece' })).toBeNull());
+
+    // A reopened piece keeps its own answers: closing it with changes still asks "Discard the answers?" (ADR-191).
+    await user.click(await screen.findByRole('button', { name: 'Back to the editor' }));
+    await user.click(await screen.findByRole('button', { name: 'Settings' }));
+    const settings = await screen.findByRole('dialog', { name: /^Settings/ });
+    await user.click(within(settings).getByRole('button', { name: 'Open in wizard' }));
+    const reopened = await screen.findByRole('dialog', { name: /^Wizard: / });
+    expect(offer(reopened)).toBeNull();
+    const rail2 = within(reopened).getByRole('list', { name: 'Wizard steps' });
+    await user.click(within(rail2).getByRole('button', { name: 'Type' }));
+    await user.click(within(reopened).getByRole('radio', { name: /Cabinet \(closed box\)/ }));
+    await user.click(within(reopened).getByRole('button', { name: 'Close' }));
+    const ask = await screen.findByRole('dialog', { name: 'Confirm' });
+    expect(within(ask).getByText('Discard the answers?')).toBeTruthy();
+    await user.click(within(ask).getByRole('button', { name: 'Discard' }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: /^Wizard: / })).toBeNull());
   });
 });
 

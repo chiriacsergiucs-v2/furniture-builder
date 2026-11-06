@@ -1,7 +1,8 @@
 # ADR-207: Connect pieces with typed and stacked connections and editable assembly steps
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-06
+- Implemented: 2026-11-06
 - Depends on: ADR-069, ADR-111, ADR-168, ADR-174, ADR-185, ADR-190
 - Design: docs/ui-design.md (§4 Screens: project selected-items card, plan; Build & Preview results, Assembly tab)
 - Backlog: N212
@@ -96,18 +97,18 @@ pieces, Backrest end, Side panel end. No new `pt()` text. `features.ts` gains a 
 
 ## Done when
 
-- [ ] Each kind's check accepts its case and names the reason otherwise; a snap makes side, corner, stacked and wall
+- [x] Each kind's check accepts its case and names the reason otherwise; a snap makes side, corner, stacked and wall
       connections; ADR-100 rules run on side joins as before (tests).
-- [ ] Moving a base carries its stacked wall unit, a wall connection slides along its wall, Alt frees; Mirror a run
+- [x] Moving a base carries its stacked wall unit, a wall connection slides along its wall, Alt frees; Mirror a run
       takes stacked pieces; Merge keeps the others' connections; `connection-broken` per kind (store tests, fuzz).
-- [ ] Project 20–21, design 8–9 and template 2–3 files load unchanged; project 22, design 10 and template 4 validate
+- [x] Project 20–21, design 8–9 and template 2–3 files load unchanged; project 22, design 10 and template 4 validate
       the new fields (tests).
-- [ ] A blind corner beside a cabinet and a desk beside a cabinet each give one side less with outlines unchanged;
+- [x] A blind corner beside a cabinet and a desk beside a cabinet each give one side less with outlines unchanged;
       L-shape, pedestal end and desk with desk are refused with the reason (`tests/shared-sides.test.ts`).
-- [ ] Fit hardware to the sides lights the hinge side and both runner sides; a moved and renamed step shows in the
+- [x] Fit hardware to the sides lights the hinge side and both runner sides; a moved and renamed step shows in the
       tab and the print, and Reset restores the generated steps (tests).
-- [ ] Link 3 identical pieces links all three; a lounger and a daybed mirror to the right end and back (tests).
-- [ ] `tools/connections-typed/find-it.mjs` passes on the production build at 390 and 1280 px: **Against the wall**,
+- [x] Link 3 identical pieces links all three; a lounger and a daybed mirror to the right end and back (tests).
+- [x] `tools/connections-typed/find-it.mjs` passes on the production build at 390 and 1280 px: **Against the wall**,
       **stacked**, **Link 2 identical pieces**, **Move step up**, **Reset the steps**, **Show step** on Fit hardware
       lighting 3D, **Backrest end**; no page errors.
-- [ ] Every new text has its `t()` entry, deleted texts lose theirs, and all CI checks pass.
+- [x] Every new text has its `t()` entry, deleted texts lose theirs, and all CI checks pass.

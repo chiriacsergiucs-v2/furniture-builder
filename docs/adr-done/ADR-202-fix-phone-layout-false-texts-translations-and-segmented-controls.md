@@ -1,7 +1,8 @@
 # ADR-202: Fix the phone layout, false texts, translations and segmented controls
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-06
+- Implemented: 2026-11-06
 - Depends on: ADR-048, ADR-074, ADR-157, ADR-185, ADR-191
 - Design: docs/ui-design.md (3. Components and states)
 - Backlog: N207
@@ -86,15 +87,15 @@ value (ADR-010) or touches saved designs; the design document does not change, s
 
 ## Done when
 
-- [ ] At 375 and 390 px the Materials row has no overlapping field and no horizontal page scroll; the empty Brands
+- [x] At 375 and 390 px the Materials row has no overlapping field and no horizontal page scroll; the empty Brands
       list shows the new text in English and Russian (browser find-it).
-- [ ] Under Russian, every hardware note of every catalog variant's model translates, with no English left (test).
-- [ ] Romanian, Russian and English assembly prints of an untouched "Base cabinet, 1 door" show its name in that
+- [x] Under Russian, every hardware note of every catalog variant's model translates, with no English left (test).
+- [x] Romanian, Russian and English assembly prints of an untouched "Base cabinet, 1 door" show its name in that
       language; a renamed piece prints as typed (tests).
-- [ ] The Russian and English shopping CSV show fastener lines, details and footer in that language (tests).
-- [ ] _By room_ shows the several-rooms hint; Wizard Doors shows five whole segmented labels at 390 and 1280 px;
+- [x] The Russian and English shopping CSV show fastener lines, details and footer in that language (tests).
+- [x] _By room_ shows the several-rooms hint; Wizard Doors shows five whole segmented labels at 390 and 1280 px;
       Review reads "Compartment widths: 0 mm" (browser find-it).
-- [ ] In `Segmented` and the eight hand-written groups, Tab reaches only the selected option; arrows, Home and End
+- [x] In `Segmented` and the eight hand-written groups, Tab reaches only the selected option; arrows, Home and End
       move and select (unit test of the helper; find-it on Editor mode and Finish).
-- [ ] `tools/texts-and-controls/find-it.mjs` passes against the production build at 390 and 1280 px.
-- [ ] Lint, format, typecheck, test, build and docs check pass.
+- [x] `tools/texts-and-controls/find-it.mjs` passes against the production build at 390 and 1280 px.
+- [x] Lint, format, typecheck, test, build and docs check pass.

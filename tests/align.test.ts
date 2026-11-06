@@ -151,7 +151,8 @@ describe('align and distribute with stacked pieces (ADR-099 review)', () => {
     expect(out.map((x) => x.x)).toEqual([b(p)[0].x, b(p)[0].x, b(p)[0].x]);
   });
 
-  it('distribute refuses pieces at different heights (one row only) and reports gaps as they are', () => {
+  it('distribute spaces each row on its own, leaves a row of fewer than three and reports gaps as they are (ADR-205)', () => {
+    // Two base units and one wall unit: the base row has two, the wall row one; nothing moves, both are named.
     const p = at(
       ['base-door', 'base-door', 'wall-cabinet'],
       [
@@ -164,8 +165,39 @@ describe('align and distribute with stacked pieces (ADR-099 review)', () => {
       p,
       p.items.map((i) => i.id),
     );
-    expect(r.project).toBe(p);
-    expect(skippedText(r)).toMatch(/one row/);
+    expect(r.refused).toBeUndefined();
+    expect(b(r.project)).toEqual(b(p));
+    expect(r.skipped.filter((s) => /fewer than three in this row/.test(s))).toHaveLength(2);
+    expect(skippedText(r)).not.toMatch(/one row along the wall/);
+    // Three base units and three wall units: each row is spaced on its own, exact gaps.
+    const six = at(
+      ['base-door', 'base-door', 'base-door', 'wall-cabinet', 'wall-cabinet', 'wall-cabinet'],
+      [
+        [0, 0],
+        [50, 0],
+        [901, 0],
+        [0, 0],
+        [10, 0],
+        [500, 0],
+      ],
+    );
+    const ids = six.items.map((i) => i.id);
+    const two = distributeItems(six, ids);
+    expect(two.refused).toBeUndefined();
+    const rowsOut = b(two.project);
+    const rowGaps = (idx: number[]) => {
+      const o = idx.map((i) => rowsOut[i]).sort((a, c) => a.x - c.x);
+      return o.slice(1).map((x, i) => x.x - (o[i].x + o[i].w));
+    };
+    const base = rowGaps([0, 1, 2]),
+      wall = rowGaps([3, 4, 5]);
+    expect(Math.max(...base) - Math.min(...base)).toBeLessThanOrEqual(1);
+    expect(Math.max(...wall) - Math.min(...wall)).toBeLessThanOrEqual(1);
+    // The heights never change, and the ends of each row stay.
+    for (const i of [0, 2, 3, 5]) expect(rowsOut[i].x).toBe(b(six)[i].x);
+    rowsOut.forEach((o, i) => expect(o.y).toBe(b(six)[i].y));
+    expect(two.gaps).toEqual([...base, ...wall]);
+    expect(two.skipped.some((s) => /fewer than three/.test(s))).toBe(false);
     const q = at(
       ['base-door', 'base-door', 'base-door', 'base-door'],
       [

@@ -11,6 +11,7 @@ import {
   saveProject,
 } from '../persist/db';
 import { newId } from '../core/design';
+import { onSavedChange } from '../persist/events';
 import { useDesign } from '../store/designStore';
 import { restoreVersion, saveVersionNow } from '../store/versions';
 import { askConfirm } from './Confirm';
@@ -245,6 +246,16 @@ function OrphanVersions({ reload }: { reload: number }) {
       live = false;
     };
   }, [reload, again]);
+  // The editor stays mounted while Projects is shown: a project deleted there (keeping its versions), or a version
+  // saved or deleted anywhere, reads the list again.
+  useEffect(
+    () =>
+      onSavedChange((c) => {
+        if ((c.table === 'projects' && c.deleted) || c.table === 'projectVersions')
+          setAgain((n) => n + 1);
+      }),
+    [],
+  );
   if (!rows.length) return null;
   const run = async (work: () => Promise<void>, errorText: string) => {
     if (busy) return;
@@ -295,7 +306,7 @@ function OrphanVersions({ reload }: { reload: number }) {
         aria-label={t('Versions of deleted projects ({n})', { n: rows.length })}
       >
         {rows.map((v) => (
-          <li key={v.id} className="version-row">
+          <li key={v.id} className="version-row orphan">
             <span>
               <strong>{v.project.name}</strong>
               <span className="sub">

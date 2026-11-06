@@ -454,7 +454,11 @@ export function CatalogPage({
             t('“{name}” is already edited on this device. Keep yours or use the imported one?', {
               name: tr(tpl.family.name),
             }),
-            { confirmLabel: t('Use the imported one'), cancelLabel: t('Keep mine') },
+            {
+              confirmLabel: t('Use the imported one'),
+              cancelLabel: t('Keep mine'),
+              cancelFirst: true,
+            },
           );
           if (!use) {
             kept++;

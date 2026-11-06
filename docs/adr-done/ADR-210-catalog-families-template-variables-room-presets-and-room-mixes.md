@@ -1,7 +1,8 @@
 # ADR-210: Catalog families, template variables, room presets and room-mix filters
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-06
+- Implemented: 2026-11-06
 - Depends on: ADR-011, ADR-073, ADR-100, ADR-123, ADR-161, ADR-170, ADR-172, ADR-173, ADR-193, ADR-204
 - Design: docs/ui-design.md (section 4, Screens: catalog, dialogs and wizards, Output)
 - Backlog: N215
@@ -14,11 +15,11 @@ Request fields): G-025 "The 14 features you selected at 21:28" (context, not a q
 variables "within the project" (not a quote); G-341 and G-342 "Fill the room"; G-044 "Mark 029 as won't do"; G-396 G-104's
 "Offer repairs such as … 'Move the bed away'?" (not a quote); G-313 "Match products to parts in app". No pick
 conflicts with an implemented ADR. G-044 stays offline:
-[ADR-029](ADR-029-the-catalog-is-fed-by-a-scheduled-search-and-extract-job-wit.md) (the feed) stays won't do, and
-the brand filter of [ADR-027](ADR-027-catalog-page-browse-furniture-by-category-brand-and-saved-on.md) (Deferred)
+[ADR-029](../adr/ADR-029-the-catalog-is-fed-by-a-scheduled-search-and-extract-job-wit.md) (the feed) stays won't do, and
+the brand filter of [ADR-027](../adr/ADR-027-catalog-page-browse-furniture-by-category-brand-and-saved-on.md) (Deferred)
 takes the user's decor list instead. Builds on pending
 [ADR-193](../adr-done/ADR-193-fix-the-start-something-new-fill-a-wall-and-fill-the-room-fl.md) and
-[ADR-204](ADR-204-complete-templates-and-the-fill-a-wall-and-fill-the-room-wizards.md) (Refine fields, compat
+[ADR-204](../adr-done/ADR-204-complete-templates-and-the-fill-a-wall-and-fill-the-room-wizards.md) (Refine fields, compat
 repairs) without repeating them.
 
 ## Decision
@@ -56,7 +57,7 @@ repairs) without repeating them.
    list (`listDecors()`, ADR-049; `other` rows by their written maker) with its count, beside any shipped brand
    entry. A chip lists that maker's decors (swatch, code, name, thickness, type) and the saved pieces with a board of
    that maker. Empty: "No brands yet. Import your decor list under Boards to see its manufacturers here."; a failed
-   read: "The decor list could not be read on this device." (alert). This empty text replaces the one [ADR-202](ADR-202-fix-phone-layout-false-texts-translations-and-segmented-controls.md) writes for G-096 (built first), with its Russian entry. No request.
+   read: "The decor list could not be read on this device." (alert). This empty text replaces the one [ADR-202](../adr-done/ADR-202-fix-phone-layout-false-texts-translations-and-segmented-controls.md) writes for G-096 (built first), with its Russian entry. No request.
 7. **Repair for the family warning (G-396).** `compat-family` joins `REPAIRABLE`: the later-placed piece (then the
    other) moves along its wall, left or right, to the nearest spot where it touches no piece side by side, overlaps
    none and stays in the room, labelled with the existing "Move {name} {mm} mm {side}"; previewed, one undo step
@@ -91,17 +92,17 @@ cite ADR-210 (ADR-158).
 
 ## Done when
 
-- [ ] Each room preset builds with no error and no `compat-family` warning; kitchen and desk never touch (tests).
-- [ ] A piece from an `own-…` family with rooms [bedroom] beside a kitchen base is refused and warned; design 1–9
+- [x] Each room preset builds with no error and no `compat-family` warning; kitchen and desk never touch (tests).
+- [x] A piece from an `own-…` family with rooms [bedroom] beside a kitchen base is refused and warned; design 1–9
       files load; `origin.rooms` below 10 or with an unknown room is refused (tests).
-- [ ] A design variable bound to width drives the cut list; a bad formula blocks export; inside a project a project
+- [x] A design variable bound to width drives the cut list; a bad formula blocks export; inside a project a project
       binding on that target wins (tests).
-- [ ] Room fill: a ceiling hides costlier mixes with the count; a style changes every mix's fronts; island mixes
+- [x] Room fill: a ceiling hides costlier mixes with the count; a style changes every mix's fronts; island mixes
       keep the walkway; an empty walkway is an error (tests).
-- [ ] The family warning offers move repairs that clear it in one undo step; a locked piece is not moved (tests).
-- [ ] Project seller items save, reload, show on the shopping list and travel in templates; project 21 and template
+- [x] The family warning offers move repairs that clear it in one undo step; a locked piece is not moved (tests).
+- [x] Project seller items save, reload, show on the shopping list and travel in templates; project 21 and template
       3 files load (tests).
-- [ ] Find-it (390 and 1280 px): New… → Room preset → "Home office: desk and bookcase" opens a project with both;
+- [x] Find-it (390 and 1280 px): New… → Room preset → "Home office: desk and bookcase" opens a project with both;
       Catalog → Brands with a decor list → "Egger" lists its decors; Fill the room → Refine shows "Budget ceiling"
       and "Add an island".
-- [ ] Russian entries for every new text, removed ones deleted; typecheck, lint, test, build and docs:check pass.
+- [x] Russian entries for every new text, removed ones deleted; typecheck, lint, test, build and docs:check pass.

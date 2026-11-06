@@ -2162,6 +2162,14 @@ function boxSegments(b: Box): [number, number, number][] {
  */
 function ProblemBoxes() {
   const problem = useFocusedProblem();
+  // drei's Html puts its label in the canvas's container when it mounts. With a problem already picked, it mounts with
+  // the view itself, before that container is ready: the label was lost and removing it later threw. Labels wait for
+  // the first frame.
+  const [labels, setLabels] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setLabels(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
   if (!problem) return null;
   const b = problem.d.box;
   const zone = b && b.w > 0 && b.h > 0 && b.d > 0 ? b : null;
@@ -2196,13 +2204,15 @@ function ProblemBoxes() {
             renderOrder={10}
             raycast={() => null}
           />
-          <Html
-            position={[p.box.x * S, (p.box.y + p.box.h) * S, (p.box.z + p.box.d) * S]}
-            className="repair-label-3d"
-            zIndexRange={[5, 0]}
-          >
-            <span className="repair-preview-3d">{t('After repair')}</span>
-          </Html>
+          {labels && (
+            <Html
+              position={[p.box.x * S, (p.box.y + p.box.h) * S, (p.box.z + p.box.d) * S]}
+              className="repair-label-3d"
+              zIndexRange={[5, 0]}
+            >
+              <span className="repair-preview-3d">{t('After repair')}</span>
+            </Html>
+          )}
         </group>
       ))}
     </>

@@ -6,6 +6,24 @@ highest id in either file.
 
 ## Gaps
 
+### G-001: Board pictures only in 3D
+
+- Status: Done (ADR-206)
+- Origin: ADR-048, 2026-10-24 06:54 UTC; agent scoped it out
+- Missing: Front-view carcass panels already show the board picture; still plain colour or outline: door/drawer fronts in the front view, the front-view SVG download (patterns stripped, src/ui/shell/files.ts:31), catalog snapshots (src/core/snapshot.ts:273,312), the plan and cut sheets.
+- Request: “Render the furniture according to the selected material's color and structure”, then “any image as color/background for the material”.
+- Questions: Fill which drawings with the picture: plan, front view, SVG download, catalog pictures, cut sheets?
+- Suggested pick: Fill every 2D drawing with the picture as an SVG <pattern> (the data URL is already stored), rotated with the grain. Fill fronts in the front view. Use the same fill in catalog snapshots and the SVG download. Cut sheets keep a light tint, for legibility when printed. (estimate: effort +30%, value +25%)
+- Work: Medium
+- Impact: Medium
+- Necessity: Low-medium
+- Issue: Board pictures show only on front-view carcass panels; fronts, SVG download, catalog pictures and plan stay plain colour.
+- Fix: Fill fronts, plan and SVG download with the picture as a grain-rotated SVG pattern; keep cut sheets tinted.
+- Conflicts: ADR-048: decided catalog pictures and cut sheets use the picture's average colour.
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): text partly wrong. The front view already fills carcass panels with the picture, rotated with the grain (src/ui/Elevation.tsx:51-61, :147-164, since 009173a). Still plain colour: fronts in the front view (outlines), the SVG download (patterns stripped, src/ui/shell/files.ts:30-34), catalog snapshots (src/core/snapshot.ts:266), the plan and cut sheets.
+- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: 2026-11-06: ADR-206 takes over fronts in the front view and the front-view SVG download; the plan, catalog pictures and cut sheets moved to G-413 (ADR-048 decided the average colour for catalog pictures and cut sheets).
+
 ### G-002: Decor list not in exports
 
 - Status: Done (ADR-133)
@@ -17,6 +35,89 @@ highest id in either file.
 - Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): origin is ADR-049 (the decor list, Dexie v6 decors), not ADR-048. Boards made from decors already travel in exported files with their code (src/core/materials.ts:286-293). Only exporting the whole decor list remains.
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): the folder and .zip backup carries the decor list and restore adds it on another device (src/core/backup.ts:22, :138-199).
 
+### G-003: Materials fields overlap at 375 px
+
+- Status: Done (ADR-202)
+- Origin: ADR-048, 2026-10-24 08:27 UTC; agent scoped it out
+- Missing: At phone width the Materials row (Dialogs.tsx:362-390) collapses to a 36px 1fr grid (styles.css:2670-2672), so "Thickness" likely overlaps "Has grain"; not checked in a browser.
+- Request: Phone-first (CLAUDE.md: no overlap or sideways scroll at 390 px) (context, not a quote)
+- Questions: None; it is a bug.
+- Suggested pick: Re-check at 375 px and fix the field grid. It is a bug, not a choice. (estimate: effort +1%, value +3%)
+- Work: Low
+- Impact: Low-medium
+- Necessity: Medium-high
+- Issue: On a phone the Materials fields likely overlap (Thickness over Has grain); never checked in a browser.
+- Fix: Check at 375 px and fix the phone field grid in the Settings materials row.
+- Conflicts: none
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): still likely (not checked in a browser): the phone materials row is 36px 1fr (src/styles.css:2333-2335). Materials now lives in the Settings dialog (ADR-080, src/ui/Settings.tsx), not inline.
+- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+
+### G-007: Connector engine and stored connections
+
+- Status: Done (ADR-207)
+- Origin: Research, 2026-10-24 15:42 UTC; agent default, accepted by the user
+- Missing: Semantic connectors (typed joint points), an assembly graph beyond side-by-side pairs, and connector authoring are not built (stored side-by-side connections exist: ADR-168, ADR-170, ADR-179; see G-092, G-329).
+- Request: “Verify, then Quick wins, then Medium effort”; later “guided snapping” and “cross-family composition”.
+- Questions: Write one ADR for stored connections between pieces (side by side, on top, in corner, against wall)?
+- Suggested pick: One ADR for stored connections between pieces (side by side, on top, in corner, against wall). Snap, Mirror a run, run parts and Merge would all read them, so pieces move together and the plan explains why. (estimate: effort +60%, value +35%)
+- Work: High
+- Impact: Medium
+- Necessity: Low-medium
+- Issue: No typed connectors, on-top or corner connections, assembly graph or connector authoring; only side-by-side connections exist.
+- Fix: One ADR extending stored connections to on-top, corner and against-wall, read by snap, mirror and merge.
+- Conflicts: none
+- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: Re-checked 2026-11-05 on main c4a15bd (code read, no browser): Missing text updated to the current code.
+- Note: 2026-11-06: ADR-207 takes over typed connections (side, corner, stacked, against wall) read by snap, move, Mirror a run and Merge. Run parts reading connections moved to G-420; connector authoring to G-424.
+
+### G-008: AR, plan review, shared structural elements
+
+- Status: Done (ADR-208)
+- Origin: Research, 2026-10-24 15:42 UTC; agent default, accepted by the user
+- Missing: A professional review pack (ADR-121) and common top/bottom panels (ADR-165) exist; AR placement and shared side panels between pieces are still not built.
+- Request: Features from the competitor research (context, not a quote)
+- Questions: Which first: WebXR AR, a review pack, or shared side panels?
+- Suggested pick: AR: WebXR with the existing three.js scene (Android Chrome, offline, no new service), plus a USDZ export for iPhone Quick Look. Review: a “review pack” of print sheets plus the design file. Shared elements: one shared side panel between touching cabinets, building on ADR-047. (estimate: effort +50%, value +20%)
+- Work: High
+- Impact: Low-medium
+- Necessity: Low
+- Issue: No AR placement and no side panel shared between touching cabinets.
+- Fix: WebXR AR from the three.js scene plus USDZ export; one shared side panel between touching cabinets.
+- Conflicts: none
+- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: 2026-11-06: ADR-208 takes over WebXR AR and the USDZ export. Shared side panels were built by ADR-190 and the review pack by ADR-121, so nothing else remains.
+
+### G-010: Worktop joints and corner runs
+
+- Status: Done (ADR-205)
+- Origin: ADR-054, 2026-10-24 15:54 UTC; agent scoped it out
+- Missing: No worktop joints and no corner runs. Out of scope.
+- Request: Kitchen runs with plinth, filler, sink front (context, not a quote)
+- Questions: Mitred or butt joint as the default? Corner runs first?
+- Suggested pick: Corner runs: an L run where the worktop is mitred or butt-jointed (the user picks), with the joint drawn on the plan and listed in the cut list. Corner cabinets already exist (ADR-025). (estimate: effort +40%, value +30%)
+- Work: Medium-high
+- Impact: Medium
+- Necessity: Medium
+- Issue: Kitchen runs cannot turn a corner and worktops have no joints.
+- Fix: L-shaped corner runs with a user-picked mitred or butt worktop joint, drawn on the plan and cut list.
+- Conflicts: none
+
+### G-012: Angled walls and plan tracing
+
+- Status: Done (ADR-208)
+- Origin: ADR-058/059, 2026-10-24 15:54 UTC; agent scoped it out
+- Missing: No angled walls, no tracing over a picture of a plan.
+- Request: Room and floor plan (context, not a quote)
+- Questions: Tracing over a picture now? Angled walls need a new ADR against ADR-003/004; wanted?
+- Suggested pick: Tracing: put a picture of your plan under the drawing at a scale you set from one known wall, then draw over it. Angled walls clash with ADR-003/004 (axis-aligned) and would need a new ADR; ask first. (estimate: effort +20% (tracing), value +15%)
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low
+- Issue: Rooms cannot have angled walls, and a plan picture cannot be traced over.
+- Fix: Put a plan picture under the drawing, scaled from one known wall, and trace over it.
+- Conflicts: none
+- Note: 2026-11-06: ADR-208 takes over only tracing over a picture of a plan. Angled walls moved to G-428.
+
 ### G-013: Templates from selected pieces
 
 - Status: Done (merged into G-032)
@@ -26,6 +127,23 @@ highest id in either file.
 - Questions: Build together with multi-select (G-032)?
 - Suggested pick: “Save selection as template”. It needs multi-select, which ADR-069 also left out, so build both together. (estimate: effort +15%, value +10%)
 - Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): merged into G-032 (it needs multi-select).
+
+### G-016: Export blocking never tried in a browser
+
+- Status: Done (ADR-201)
+- Origin: ADR-062/064, 2026-10-24 17:52 UTC; agent scoped it out
+- Missing: Not checked by any find-it: the blocked-export message (src/ui/Output.tsx:140-146) and the blocked Shopping list CSV and Print (src/ui/Shopping.tsx:202-279).
+- Request: Errors block export (ADR-008) (context, not a quote)
+- Questions: None; add the find-it step.
+- Suggested pick: Add a find-it step: make an error, check that CSV and Print are disabled, and that the message says why. (estimate: effort +2%, value +5%)
+- Work: Low
+- Impact: Low-medium
+- Necessity: Medium
+- Issue: No acceptance test checks the blocked-export reason message or the blocked Shopping list CSV and Print.
+- Fix: Add a find-it step: cause an error, check CSV and Print disabled and the reason shown.
+- Conflicts: none
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): partly resolved. tools/editor-modes/find-it.mjs:202-216 checks CSV and Print are disabled on an error and tools/edge-band/find-it.mjs:218-221 checks CSV is blocked (both pass per N88). Not checked: the message saying why (src/ui/Output.tsx:139), and that the Shopping list CSV and Print are blocked.
+- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
 
 ### G-017: Drag a catalog item onto the plan
 
@@ -58,6 +176,57 @@ highest id in either file.
 - Suggested pick: Use your own board pictures (ADR-048) as textures in Realistic mode, to scale with the grain direction. This needs no bundled files and no licence question. (estimate: effort +20%, value +35%)
 - Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): resolved: Realistic mode has used the user's board pictures as textures since it shipped (src/viewer/Viewer3D.tsx:701, 715-717; UVs follow the grain). Bundled wood-grain textures were not the suggested pick and stay out (ADR-067).
 
+### G-020: Appliances, sinks, edge profiles, client sheet
+
+- Status: Done (ADR-206)
+- Origin: ADR-067/068, 2026-10-24 19:55 UTC; agent default, accepted by the user
+- Missing: Remaining: a client sheet with render and price, worktop edge profiles, bundled CC0 appliance models.
+- Request: “To sell designed kitchens”.
+- Questions: Client sheet first? Which licence for bundled appliance models (CC0)?
+- Suggested pick: Client sheet: one printable page with the PNG render, the piece list and the ADR-062 price. Appliances come through ADR-076 imports plus a few CC0 models once you pick that licence. Edge profiles: three profile choices drawn on the worktop. (estimate: effort +45%, value +40%)
+- Work: Medium-high
+- Impact: Medium
+- Necessity: Low-medium
+- Issue: No client sheet with render and price, no worktop edge profiles, no bundled appliance models.
+- Fix: One printable client sheet with render, piece list and price; three drawn edge profiles; CC0 models once licensed.
+- Conflicts: none
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): partly resolved. Appliances and sinks can be imported as .glb (ADR-076); appliance niches (ADR-036) and a sink base exist. Remaining: client sheet, worktop edge profiles, bundled CC0 models (licence question).
+- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: 2026-11-06: ADR-206 takes over the printable client sheet (render, piece list, price); worktop edge profiles and bundled CC0 appliance models moved to G-412.
+
+### G-021: Blender / glTF export
+
+- Status: Done (ADR-206)
+- Origin: ADR-068, 2026-10-24 19:55 UTC; agent default, accepted by the user
+- Missing: No Blender or glTF export.
+- Request: High-quality renders (context, not a quote)
+- Questions: Add Export scene (.glb) with three.js GLTFExporter?
+- Suggested pick: three.js already ships GLTFExporter, so no new dependency: “Export scene (.glb)” with materials and pictures, ready for Blender. (estimate: effort +10%, value +15%)
+- Work: Low-medium
+- Impact: Low-medium
+- Necessity: Low
+- Issue: The 3D scene cannot be exported to Blender or glTF.
+- Fix: Add Export scene (.glb) using three.js GLTFExporter with materials and pictures.
+- Conflicts: none
+
+### G-022: Render not checked on a laptop GPU
+
+- Status: Done (ADR-208)
+- Origin: ADR-067/068, 2026-10-24 20:43 UTC; blocked by the environment
+- Missing: Remaining: three-gpu-pathtracer still pinned at 0.0.27 on WebGL; no WebGPU path-tracer ADR.
+- Request: Laptop, preview quality (context, not a quote)
+- Questions: Can you run the render once on your laptop? Plan the WebGPU path-tracer upgrade?
+- Suggested pick: Run the full render find-it on a machine with a GPU. Write an ADR for the WebGPU path-tracer upgrade before the WebGL build stops working. (estimate: effort +5%, value +10%)
+- Work: Low-medium
+- Impact: Low-medium
+- Necessity: Low
+- Issue: The path tracer is pinned to an old WebGL version with no upgrade plan.
+- Fix: Write an ADR for a WebGPU path-tracer upgrade before the WebGL build stops working.
+- Conflicts: none
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): partly resolved per documents: ADR-068 records the user's full 256/256 render and Save PNG on a laptop; N88 ran the scripted full render and Save PNG at 1280 px and 18/18 at 390 px. Remaining: three-gpu-pathtracer still pinned at 0.0.27 on WebGL, no WebGPU ADR.
+- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: 2026-11-06: ADR-208 takes over the WebGPU path-tracer upgrade plan. Running the render on the user's laptop moved to G-429.
+
 ### G-023: No outline on selection in Realistic mode
 
 - Status: Done (ADR-087)
@@ -78,6 +247,25 @@ highest id in either file.
 - Suggested pick: You export research-decisions-<date>.json once; then Claude reconciles it with the ADRs. (estimate: effort 0%, value needs your file)
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): no longer applies: the user removed the research decisions download and upload on purpose (ADR-110, “Remove all, including spec export”).
 
+### G-025: Cross-family composition and room presets
+
+- Status: Done (ADR-210)
+- Origin: Research, 2026-10-24 21:28 UTC; agent scoped it out
+- Missing: No wardrobe or desk room presets that place several pieces, and a kitchen run plus a desk in one project is unchecked; Fill the room fills kitchen walls (ADR-173, ADR-177).
+- Request: The 14 features you selected at 21:28 (context, not a quote)
+- Questions: Check each against the app and write ADRs for what is missing?
+- Suggested pick: Check each against the app with find-it. Write an ADR for whatever is missing (likely: one project mixing a kitchen run with a desk, and room presets that place several pieces at once). (estimate: effort +30%, value +20%)
+- Work: Medium
+- Impact: Medium
+- Necessity: Low-medium
+- Issue: No room presets that place several pieces; a kitchen run plus a desk in one project is unchecked.
+- Fix: Find-it check of mixed projects, then an ADR for multi-piece room presets.
+- Conflicts: none
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): partly resolved; text partly wrong. Cross-family composition was already checked (N48, tools/ensemble/find-it.mjs: base cabinet + wardrobe + daybed). Remaining: built-in room presets that place several pieces; a kitchen run plus a desk in one project not checked.
+- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: Re-checked 2026-11-05 on main c4a15bd (code read, no browser): Missing text updated to the current code.
+- Note: ADR-210 adds room presets and checks a kitchen run with a desk; Fill the room for other rooms is G-446.
+
 ### G-026: Free-angle rotation
 
 - Status: Done (ADR-121)
@@ -88,6 +276,24 @@ highest id in either file.
 - Suggested pick: 90° turns cover “predictable”. Free angles need a new ADR; not recommended unless you have angled rooms.
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): pieces can stand at any whole-degree angle (src/core/project.ts:514-522); typing the angle is hidden, tracked by G-311.
 
+### G-027: Bottom sheet drag, mode bar, old find-it scripts
+
+- Status: Done (ADR-211)
+- Origin: ADR-079, 2026-10-24 23:07 UTC; agent scoped it out
+- Missing: Remaining: the phone bottom sheet opens only by tap (App.tsx:746-757, no drag); on desktop the Compose / Build & Preview switch is still its own row (App.tsx:687-708).
+- Request: “Help with the sticky bars top and bottom, they occupy too much”.
+- Questions: Three stops for the sheet (peek, half, full)? Mode switch in the top bar on desktop?
+- Suggested pick: Drag handle with three stops (peek, half, full). Move the mode switch into the top bar on desktop. Update the old scripts so every earlier feature is found again in the new shell. (estimate: effort +25%, value +25%)
+- Work: Medium
+- Impact: Medium
+- Necessity: Low-medium
+- Issue: The phone bottom sheet opens only by tap, and the desktop mode switch takes its own row.
+- Fix: Drag handle with peek, half and full stops; move the desktop mode switch into the top bar.
+- Conflicts: ADR-079: decided the mode control sits under the app bar.
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): partly resolved. The old find-it scripts were fixed (N88, G-060 Done). Remaining: the phone sheet still opens only by tap (src/ui/App.tsx:673-681); the desktop mode switch is still its own row.
+- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: 2026-11-06: ADR-211 takes over the bottom-sheet drag (peek, half and full stops); the desktop mode switch in the top bar conflicts with ADR-079 and stays in G-452.
+
 ### G-029: Light acceptance never retired
 
 - Status: Done (obsolete: user 2026-10-28)
@@ -97,6 +303,175 @@ highest id in either file.
 - Questions: Merge the unmerged ADR under the next free numbers, then catch up every pending find-it?
 - Suggested pick: Give it the next free ADR and backlog numbers, merge it, then run every pending find-it (see the ADR-080 row). (estimate: effort +5%, value matches your words)
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): no longer applies: the user made every ADR light (“update all adrs te be light”, ADR-126, ADR-137); CLAUDE.md R3 keeps the ADR-066 exception.
+
+### G-030: Back cut-outs over pipes and outlets
+
+- Status: Done (ADR-205)
+- Origin: ADR-072, 2026-10-24 23:58 UTC; agent scoped it out
+- Missing: Remaining: a shaped back panel with a cut-out over a pipe or outlet, electrical rules, and a test for a worktop or plinth over a pipe.
+- Request: Pipes and outlets checked against the pieces (context, not a quote)
+- Questions: Cut the back as a shaped part at the zone? Templates carry room features?
+- Suggested pick: Make the back a shaped part with a rectangular cut-out at the zone (ADR-040 already does shaped parts), listed on the cut list and printed sheet. Templates carry room features. Add the missing test. (estimate: effort +35%, value +30%)
+- Work: Medium-high
+- Impact: Medium
+- Necessity: Low-medium
+- Issue: Back panels cannot be cut out around pipes or outlets; no electrical rules or pipe-under-worktop test.
+- Fix: Shaped back with a rectangular cut-out at the zone, on cut list and print; add the missing test.
+- Conflicts: none
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): text partly wrong: templates already keep pipes and outlets when the room is included (src/core/projectTemplate.ts:97, :203), untested. Remaining: shaped back with a cut-out, electrical rules, the worktop/plinth-over-pipe test.
+- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: 2026-11-06: ADR-205 builds the shaped back, the worktop and plinth over pipe tests, and the template test. Electrical rules were not in the suggested pick and moved to G-406.
+
+### G-032: Multi-select, fixed-hand mirroring, 1 mm drift
+
+- Status: Done (ADR-205)
+- Origin: ADR-069, 2026-10-25 00:01 UTC; agent scoped it out
+- Missing: Multi-select and groups are built (ADR-097, ADR-159); remaining: the lounger backrest and daybed side panel cannot be mirrored (arrange.ts:131-135), and mirrored pieces may be ±1 mm off.
+- Request: “Duplicate, mirror and predictable rotate operations”.
+- Questions: Store a hand side on the lounger and daybed? Symmetric rounding for mirrored copies? Multi-select gesture?
+- Suggested pick: Store a hand (left or right) on those two pieces so they mirror. Use symmetric rounding for mirrored copies so they match to the mm. Add multi-select (Shift-click or long-press) for duplicate, mirror and move together. (estimate: effort +40%, value +30%)
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low-medium
+- Issue: Lounger backrest and daybed side cannot be mirrored, and mirrored pieces may be 1 mm off.
+- Fix: Store a hand side on those two pieces and use symmetric rounding for mirrored copies.
+- Conflicts: none
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): still valid. Absorbs G-013 (Save selection as template), which needs multi-select.
+- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: 2026-11-06: ADR-205 takes over only the 1 mm drift (mirrored copies match to the mm). The stored hand side on the lounger and daybed and the multi-select gesture moved to G-404.
+
+### G-033: Snapping in the front view and 3D
+
+- Status: Done (ADR-205)
+- Origin: ADR-070, 2026-10-25 00:07 UTC; agent scoped it out
+- Missing: No height snapping in the front view or the 3D height drag (worktop or wall-unit lines); src/core/height.ts dragHeight only rounds. Snapped drops are stored as connections (ADR-168).
+- Request: “Guided snapping”.
+- Questions: Front-view height snaps first (worktop line, wall-unit line)?
+- Suggested pick: Front-view snapping to heights (worktop line, wall-unit line), using the same rules. Stored snaps come from the connections ADR above. Add the hint to find-it. (estimate: effort +30%, value +20%)
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low-medium
+- Issue: Height drags in the front view and 3D only round; they do not snap to worktop or wall-unit lines.
+- Fix: Snap height drags to the worktop and wall-unit lines with the existing snap rules and a hint.
+- Conflicts: none
+- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: Re-checked 2026-11-05 on main c4a15bd (code read, no browser): Missing text updated to the current code.
+
+### G-034: Hinge repair, filler repair, 3D preview
+
+- Status: Done (ADR-209)
+- Origin: ADR-071, 2026-10-25 00:10 UTC; agent default, accepted by the user
+- Missing: No “Reverse the hinge” repair. The filler repair shows only with automatic refresh off. No outline or preview in 3D.
+- Request: “Explainable warnings with repairs”.
+- Questions: Clearance follows the hinge side (needs G-011), or drop the hinge repair?
+- Suggested pick: Make the clearance follow the hinge side (see the ADR-057 row), then offer the hinge repair. Let a repair add a filler that automatic refresh keeps. Draw the problem box and the dashed preview in 3D. (estimate: effort +35%, value +30%)
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium
+- Issue: No Reverse the hinge repair, filler repair only without auto refresh, no problem outline or preview in 3D.
+- Fix: Hinge-side clearance then the hinge repair; fillers kept by auto refresh; draw box and preview in 3D.
+- Conflicts: none
+- Note: 2026-11-06: ADR-209 takes over the fillers kept by automatic refresh and the problem box and repair preview in 3D; the reverse-the-hinge repair needs G-011, which conflicts with ADR-057, and moved to G-436.
+
+### G-035: Mouldings, sink and hob cut-outs, templates
+
+- Status: Done (ADR-205)
+- Origin: ADR-075, 2026-10-25 00:13 UTC; agent scoped it out
+- Missing: Sink cut-outs exist (ADR-125); remaining: profiled mouldings, hob cut-outs, templates keeping requested trims/worktops (runRequests), and a browser check of the ceiling filler.
+- Request: “Shared worktops”, “fillers, plinths, end panels and trim”, for kitchens.
+- Questions: Cut-outs from sizes you enter? Templates carry run requests?
+- Suggested pick: Sink and hob cut-outs on the worktop from sizes you enter (no invented appliance sizes), on the cut list and the print. Templates carry run requests. Add a ceiling filler to find-it. (estimate: effort +35%, value +30%)
+- Work: Medium
+- Impact: Medium
+- Necessity: Low-medium
+- Issue: No profiled mouldings or hob cut-outs; templates drop requested trims and worktops; ceiling filler unchecked.
+- Fix: Hob cut-outs from user-entered sizes on cut list and print; templates carry run requests; ceiling filler find-it.
+- Conflicts: none
+- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: 2026-11-06: ADR-205 takes over only the sink and hob cut-outs from user-entered sizes on the cut list and print. Profiled mouldings, run requests in templates and the ceiling-filler find-it moved to G-405.
+
+### G-036: Clearance zones in 3D and templates
+
+- Status: Done (ADR-205)
+- Origin: ADR-073, 2026-10-25 00:14 UTC; agent scoped it out
+- Missing: Clearance zones are not drawn in 3D and are not saved in templates. No separate installation zone on the plan.
+- Request: “Collision and clearance”.
+- Questions: Draw zones as translucent volumes in 3D? Draw the installation arc on the plan?
+- Suggested pick: Draw zones as translucent volumes in 3D, with the same toggle. Draw the installation zone (tilt-up arc) on the plan. Templates carry zones. (estimate: effort +25%, value +20%)
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low
+- Issue: Clearance zones are not drawn in 3D, not kept in templates, and installation has no plan arc.
+- Fix: Translucent zone volumes in 3D under the same toggle, tilt-up arc on the plan, templates carry zones.
+- Conflicts: none
+
+### G-038: Band-list import and colour matching
+
+- Status: Done (ADR-212)
+- Origin: ADR-077, 2026-10-25 00:15 UTC; agent scoped it out
+- Missing: Bands from the bundled seller catalog are matched to the board decor code (ADR-161); remaining: importing a supplier band list as CSV, tolerances and edgebander settings.
+- Request: “Check the European standards for ABS, apply them accordingly”.
+- Questions: Import a supplier band list as CSV and match bands to the board decor?
+- Suggested pick: No EN standard sets band sizes; that finding stands. Closer: import a band list (CSV, like decors) and match the band to the board's decor code and picture. (estimate: effort +20%, value +20%)
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low
+- Issue: No way to import a supplier's edge-band list as CSV; tolerances and edgebander settings are not covered.
+- Fix: Import a band list as CSV like decors, matching each band to the board's decor code and picture.
+- Conflicts: none
+- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: 2026-11-06: ADR-212 takes over only the band-list CSV import and its match to the board's decor code; tolerances and edgebander settings moved to G-460.
+
+### G-040: 3D model placement and templates
+
+- Status: Done (ADR-208)
+- Origin: ADR-076, 2026-10-25 00:16 UTC; agent scoped it out
+- Missing: Imported models can't be dragged, hung on a wall or put on another piece. Templates don't keep them. Nothing is bundled.
+- Request: “Import 3D models and model libraries”.
+- Questions: Floor, wall and on-a-piece placement with drag and snap? Bundle CC0 models?
+- Suggested pick: Give models the same placement (floor, wall, on a piece) and drag or snap as pieces. Templates carry them. For “libraries”: a small bundled set of CC0 models (fridge, oven, sink, hob) once you agree that licence. (estimate: effort +35%, value +35%)
+- Work: High
+- Impact: Medium
+- Necessity: Low-medium
+- Issue: Imported 3D models cannot be dragged, wall-hung or set on a piece; templates drop them; none bundled.
+- Fix: Give models the same placement, drag and snap as pieces, keep them in templates, later bundle CC0 models.
+- Conflicts: none
+- Note: 2026-11-06: ADR-208 takes over placement, drag, snap and templates for models. Bundling CC0 models moved to G-430.
+
+### G-042: Project fasteners panel and Romanian labels
+
+- Status: Done (ADR-202)
+- Origin: ADR-074, 2026-10-25 00:16 UTC; agent scoped it out
+- Missing: Remaining: Fasteners in the project's own Settings dialog (Settings.tsx:62-71), fastener lines and footer of the shopping CSV in the print language (shopping.ts:51-53, 288-318 use t(), not pt()), drilling patterns.
+- Request: “Hardware and fastener completeness”.
+- Questions: Add the project-level panel? Draw drilling positions only from your values?
+- Suggested pick: Add the project-level panel. Translate the fastener labels (a bug). Draw drilling positions only from the values you enter, labelled as guidance (ADR-010). (estimate: effort +30%, value +25%)
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium
+- Issue: No fasteners panel in project Settings; shopping CSV fastener lines stay English; no drilling patterns drawn.
+- Fix: Add the project fasteners panel, route fastener CSV text through pt(), draw drilling only from user values.
+- Conflicts: none
+- Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): partly resolved. A piece's Fasteners panel is reachable from a project via Inside this piece › Size, boards and construction (ADR-090). Remaining: Fasteners in the project's own Settings dialog; the Romanian shopping CSV still writes fastener lines and footer in English (src/core/fasteners.ts, src/core/shopping.ts:32-33); drilling patterns.
+- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: 2026-11-06: ADR-202 takes over only the fastener CSV and print text (pt()); the project-level fasteners panel and drilling positions moved to G-380.
+
+### G-044: Catalog feed and brand filter
+
+- Status: Done (ADR-210)
+- Origin: ADR-029/052/027, 2026-10-25 06:52 UTC; user decision
+- Missing: Feed (N16) and brand filter (N14) not built (user: won't do); note the Brands tab still promises "The weekly catalog feed … adds them" (Catalog.tsx:618).
+- Request: “Mark 029 as won't do”.
+- Questions: Feed the brand filter from your decor imports instead of IKEA (new ADR)?
+- Suggested pick: The brand filter could be fed by your Egger / Kronospan decor imports (by manufacturer) instead of IKEA. It would need a new ADR replacing ADR-027's IKEA dependency. (estimate: effort +15%, value +15%)
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low
+- Issue: Catalog feed and brand filter were cancelled by the user; the brand filter has no data source.
+- Fix: Optionally feed the brand filter from the user's decor imports by manufacturer, in a new ADR.
+- Conflicts: none
+- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: ADR-210 feeds the brand filter from the decor list, offline; the feed stays won't do (ADR-029, user 2026-10-25).
 
 ### G-046: Settings dialog built as light
 
@@ -146,6 +521,21 @@ highest id in either file.
 - Questions: In a project, does the 2nd tap on a selected piece open it in the editor with the bay under the tap selected, or keep today's separate edit step?
 - Suggested pick: Continue drilling into the piece (2nd tap opens it with the bay selected): closest to '1 click = entire furniture'; estimate +30 % work, +25 % of value
 - Answer: User 2026-10-25: "2 yes" — the 2nd tap on a selected piece opens it with the space under the tap selected; built in ADR-083.
+
+### G-053: Step back up one level without the breadcrumb
+
+- Status: Done (ADR-203)
+- Origin: ADR-083, 2026-10-25, out of scope (Claude)
+- Missing: Going one level back up with a gesture (Esc / long press)
+- Request: The flow of selecting the furniture, then the middle (given there are 2 dividers), then having a horizontal divider, then selecting the bottom one to adjust shelves is a painful horrible user experience. Adjust the selecting to go from bigger to smaller. 1 click = entire furniture, second click selects the smaller frame, third again the smaller within, iteratively.
+- Questions: Is a 'go up one level' gesture wanted besides the breadcrumb?
+- Suggested pick: Esc on desktop goes up one level; estimate +5 % work
+- Work: Low
+- Impact: Low-medium
+- Necessity: Low
+- Issue: Selection can go up one level only through the breadcrumb; no key or gesture does it.
+- Fix: On desktop, Esc goes up one level instead of clearing the selection.
+- Conflicts: none
 
 ### G-054: Count stepper not over the 3D view
 
@@ -336,6 +726,22 @@ highest id in either file.
 - Suggested pick: Every width: the request names no width and keeps the render views main everywhere
 - Answer: User 2026-10-26: "Only phones"; built in ADR-091 (desktop keeps a tab open).
 
+### G-076: Research app records go stale as ADRs ship
+
+- Status: Done (ADR-212)
+- Origin: ADR-092 (2026-10-26, Claude: not asked for)
+- Missing: The research app records (src/core/research/ensemble-2026-10-23.app.ts) are refreshed only by one-off re-check ADRs (ADR-149, ADR-152); ship-adr/next-adr still do not update them when an ADR ships.
+- Request: Text that is not a quote: follows from "mark implemented ones" (2026-10-26).
+- Questions: Should ship-adr update the research app record of the feature an ADR names, or should the research page be re-checked on request only?
+- Suggested pick: ship-adr updates the record (closest to keeping 'implemented' marked; about +5 % work per shipped ADR, +100 % of the freshness value; estimates).
+- Work: Low
+- Impact: Low
+- Necessity: Low
+- Issue: Research records go stale between ADR ships; only one-off re-check ADRs refresh them.
+- Fix: Have ship-adr update or delete the research row of the feature an ADR builds.
+- Conflicts: none
+- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+
 ### G-077: Free-angle rotation of project pieces
 
 - Status: Done (ADR-121)
@@ -471,6 +877,38 @@ highest id in either file.
 - Questions: Allow a tolerance (mm) before warning?
 - Suggested pick: Any difference warns until the user names a tolerance (never invent a physical value, ADR-010).
 
+### G-095: Catalog counts agreement unconfirmed
+
+- Status: Done (ADR-201)
+- Origin: Gap re-check 2026-10-26 (G-059); agent found it
+- Missing: The 'N ready items' label (src/ui/Catalog.tsx:236) exists, but no check (find-it or browser) has confirmed the total equals the sum of the category counts at 390 and 1280 px.
+- Request: Run critique this design for the entire ui/ux; then 'Fix them directly' (G-059)
+- Questions: None; it is a check.
+- Suggested pick: Add a find-it step that compares the catalog total with the sum of its category counts at 390 and 1280 px; fix if they differ. (estimate: effort +2%, value +3%)
+- Work: Low
+- Impact: Low
+- Necessity: Low-medium
+- Issue: Nothing checks that the catalog's ready-items total equals the sum of its category counts.
+- Fix: Add a find-it step comparing total and category sum at 390 and 1280 px; fix any mismatch.
+- Conflicts: none
+- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+
+### G-096: Empty Brands list promises a cancelled feed
+
+- Status: Done (ADR-202)
+- Origin: Gap re-check 2026-10-26 (G-044); agent found it
+- Missing: Same text, now at src/ui/Catalog.tsx:618 (Russian entry src/core/i18n/ru/catalog.ts:47).
+- Request: Catalog feed and brand filter (G-044) (context, not a quote)
+- Questions: Replace the text with how brand products get in today (import), or hide the Brands source while it is empty?
+- Suggested pick: Replace the text with what is true now: no brand products are bundled; import your own. Closest to the current app; no new feature. (estimate: effort +1%, value +3%)
+- Work: Low
+- Impact: Low-medium
+- Necessity: Medium
+- Issue: The empty Brands list promises a weekly IKEA feed that the user cancelled.
+- Fix: Replace the text, and its Russian entry, with: no brand products bundled; import your own.
+- Conflicts: none
+- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+
 ### G-097: Fastener notes point to a removed screen
 
 - Status: Done (4025b89: the notes name Settings › Fasteners in the app, the print and Russian)
@@ -491,6 +929,21 @@ highest id in either file.
 - Questions: Ship ADR-082 now (ship-adr), after checking its Done-when list?
 - Suggested pick: Check ADR-082's Done-when list against the repo, then ship it with ship-adr. (estimate: effort +2%, value +2%)
 
+### G-100: Gap marks not in a file
+
+- Status: Done (ADR-212)
+- Origin: ADR-101, 2026-10-26; agent scoped it out
+- Missing: Marks made on the gaps page cannot be exported or imported as a file; they live on one device. Copy decisions is the only way out.
+- Request: “Mark + hand to Claude”
+- Questions: Export and import the marks as a file, like research marks?
+- Suggested pick: Export / import a JSON of marks, like Research's Import & export (estimate: effort +10%, value +5%)
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
+- Issue: Marks on the gaps page stay on one device and cannot be exported or imported.
+- Fix: Add JSON export and import of gap marks, like the Research page's import and export.
+- Conflicts: none
+
 ### G-102: Alternatives for a piece that sits on another piece
 
 - Status: Done (user answer 2026-10-26 "Same width only for stacked pieces")
@@ -499,6 +952,67 @@ highest id in either file.
 - Request: New adr 5 (2026-10-26): compatible = same placement kind (floor, wall, on another piece)
 - Questions: For a piece on another piece, offer every item, or only standing items, or only items of the same family?
 - Suggested pick: Every item, since the placement carries over (as built; narrowing to standing items is about +5 % of ADR-098's work)
+
+### G-103: Family rule for your own templates
+
+- Status: Done (ADR-210)
+- Origin: ADR-100 (2026-10-26, Claude: not asked for)
+- Missing: The family rule reads the shipped catalog families only; a piece from one of your own templates (own-… families, stored on this device) has no known room group, so the family rule never refuses or warns for it.
+- Request: New adr 3
+- Questions: Should pieces from your own templates follow the family rule too (their template's rooms)?
+- Suggested pick: Yes: record the template's rooms on the inserted piece's catalog origin (a design document change, ADR-011; about +10 % of ADR-100's work, closes the rule for every piece).
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low-medium
+- Issue: Pieces from the user's own templates have no room group, so the family rule never checks them.
+- Fix: Store the template's rooms on the inserted piece's catalog origin, with a schema bump.
+- Conflicts: none
+
+### G-104: Repairs for compatibility warnings
+
+- Status: Done (ADR-204)
+- Origin: ADR-100 (2026-10-26, Claude: not asked for)
+- Missing: The depth, height and family warnings offer no previewed repair (ADR-071); each rule's repairs list is empty because no existing repair fixes them.
+- Request: New adr 3
+- Questions: Offer repairs such as 'Make Base cabinet 560 deep like its neighbour' or 'Move the bed away'?
+- Suggested pick: Add a 'match the neighbour's depth/height' repair (closest to fixing the warning; about +20 % of ADR-100's work).
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low
+- Issue: Depth, height and family compatibility warnings offer no previewed repair.
+- Fix: Add a previewed repair that sets the piece's depth or height to match its neighbour.
+- Conflicts: none
+
+### G-105: Move display-only 3D models in the 3D view
+
+- Status: Done (ADR-203)
+- Origin: ADR-093 (2026-10-26, Claude: skipped this iteration)
+- Missing: Move mode in 3D drags and turns project pieces only; display-only 3D models can be resized there (ADR-102) but not moved or turned.
+- Request: New adr to override the conflicts for 4 and make it ready
+- Questions: Should Move in 3D also drag and turn display-only 3D models?
+- Suggested pick: Yes, the same Move and Turn (closest to direct manipulation in 2D/3D; about +15 % work for +10 % of the request, estimates).
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low
+- Issue: In 3D Move mode, display-only 3D models can be resized but not moved or turned.
+- Fix: Give models the same 3D Move drag and Turn buttons as project pieces.
+- Conflicts: none
+- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+
+### G-106: Resizing a base moves a locked piece on it
+
+- Status: Done (ADR-203)
+- Origin: ADR-095 (2026-10-26, Claude: found while building)
+- Missing: A locked piece placed on or above another piece still follows its base when the base's size changes in the piece editor (moving or turning the base is refused; resizing is not a move).
+- Request: Not a quote: ADR-095 'Nothing moves it for the user'
+- Questions: Should resizing a base keep a locked piece on it where it is (leaving its base), or refuse the resize?
+- Suggested pick: Refuse the resize with the reason, as a move of the base is refused (about +10 % of ADR-095's work).
+- Work: Low-medium
+- Impact: Medium
+- Necessity: Medium-high
+- Issue: Resizing a base piece still moves a locked piece sitting on it, which breaks the lock rule.
+- Fix: Refuse the base resize with a reason, as moving the base is already refused.
+- Conflicts: none
 
 ### G-108: Multi-select in the front view and 3D
 
@@ -509,6 +1023,21 @@ highest id in either file.
 - Questions: Add Shift/Ctrl-click to the room front view and to 3D too?
 - Suggested pick: Yes, the same toggle in both views (about +10 % of ADR-097's work, +10 % value; estimates).
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Shift/Ctrl/Cmd-click selects several pieces in the front view and in 3D (src/ui/Project.tsx:1984-1992, src/viewer/Viewer3D.tsx:1434-1437).
+
+### G-110: Distribute across rows and centre-snap rules
+
+- Status: Done (ADR-205)
+- Origin: ADR-099 (2026-10-26, Claude: defaulted while building)
+- Missing: Distribute evenly over pieces at different heights (wall units and base units together, or a piece on another) is refused with the reason instead of spacing each row; centre snapping is offered only between pieces above and below each other (never at the same height) and the ADR-100 join rules do not apply to it (an alignment, not a join).
+- Request: New adr 7 (2026-10-26): Distribute evenly (three or more selected pieces, along the wall)
+- Questions: With a mixed selection, distribute each row on its own instead of refusing? Should the join rules also limit centre snapping?
+- Suggested pick: Distribute each row on its own (closest to 'tidy runs in one tap'; about +15 % of ADR-099's work, +10 % value; estimates); keep the join rules for joins only.
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low-medium
+- Issue: Distribute evenly refuses a mixed selection of wall and base rows instead of spacing each row.
+- Fix: Distribute each height row separately in distributeItems; keep join rules for joins only.
+- Conflicts: none
 
 ### G-111: Keep proportions switch is not saved
 
@@ -556,6 +1085,66 @@ highest id in either file.
 - Questions: Should the wall row appear in every mix, in some mixes, or be chosen in Refine (any / always / never)?
 - Suggested pick: Refine choice 'Wall cabinets: any / always / never', default any, so the first 4 cards show mixes with and without a wall row. (estimate: effort +3%, value +10%)
 
+### G-116: Fill a wall: carcasses with 3 or more equal fronts
+
+- Status: Done (ADR-204)
+- Origin: ADR-103, 2026-10-27; Claude cut it while building
+- Missing: Equal fronts puts 1 or 2 fronts on a carcass only (a door front has 1 or 2 leaves); carcasses with 3 or more fronts are not suggested, so fronts under 200 mm wide (with the 400 mm min) give no mix.
+- Request: 6 equal front panels, what's behind is to be configured (answer: Equal fronts, any carcass widths)
+- Questions: Should a carcass carry 3 or more equal fronts (with dividers inside), for narrow fronts?
+- Suggested pick: Allow 3–4 fronts per carcass, built as equal bays with a divider and one door each, so narrow fronts still fill the wall. (estimate: effort +10%, value +5%)
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low
+- Issue: Fill a wall puts at most 2 equal fronts per carcass, so narrow equal fronts give no mix.
+- Fix: Allow 3-4 fronts per carcass as equal bays with dividers and one door each.
+- Conflicts: none
+
+### G-117: Fill a wall: tall cabinet height
+
+- Status: Done (ADR-204)
+- Origin: ADR-103, 2026-10-27; default chosen by Claude while building
+- Missing: Tall cabinets are always the catalog height (2200 mm, ADR-036 typical value); there is no tall-height field. A wall lower than that gets the warning on every mix with a tall cabinet.
+- Request: allow with a warning items like tall cabinets, above this height
+- Questions: Should Refine have a tall cabinet height field, or should tall cabinets follow the entered height?
+- Suggested pick: Add a Tall cabinet height field in Refine, catalog value prefilled; the warning stays when it is above the entered height. (estimate: effort +3%, value +10%)
+- Work: Low
+- Impact: Medium
+- Necessity: Medium
+- Issue: Fill a wall tall cabinets are always 2200 mm; lower walls warn on every mix with one.
+- Fix: Add a Tall cabinet height field in Refine, catalog value prefilled; keep the warning above entered height.
+- Conflicts: none
+
+### G-118: Fill a wall: a width per base kind
+
+- Status: Done (ADR-204)
+- Origin: ADR-103, 2026-10-27; Claude narrowed it while building
+- Missing: All base kinds in one mix share one width (tall cabinets may have their own round width); mixes such as an 800 drawer base next to 600 shelf bases are not suggested.
+- Request: So basically a mix and match (answer: Equal per kind, exact split)
+- Questions: Should each base kind (open shelves, drawers, door + shelves) get its own width in a mix?
+- Suggested pick: Also try one round width per base kind (steps of 50 mm), ranked after the shared width, so the cards show such mixes too. (estimate: effort +10%, value +15%)
+- Work: Medium
+- Impact: Medium
+- Necessity: Low-medium
+- Issue: All base kinds in a Fill a wall mix share one width, so mixed-width runs are never suggested.
+- Fix: Also try one round width per base kind in 50 mm steps, ranked after the shared width.
+- Conflicts: none
+
+### G-123: Fill a wall: wall cabinet depth
+
+- Status: Done (ADR-204)
+- Origin: ADR-104, 2026-10-27; default chosen by Claude while building
+- Missing: Wall cabinets keep the catalog depth (320 mm carcass); there is no wall cabinet depth field.
+- Request: Wall cabinets above (answer to: Which kinds of pieces may appear in a mix?)
+- Questions: Should Refine have a wall cabinet depth field?
+- Suggested pick: Add Wall cabinet depth in Refine, catalog value prefilled. (estimate: effort +2%, value +5%)
+- Work: Low
+- Impact: Low-medium
+- Necessity: Low-medium
+- Issue: Fill a wall wall cabinets always use the catalog 320 mm depth; no depth field.
+- Fix: Add a Wall cabinet depth field in Refine, catalog value prefilled.
+- Conflicts: none
+
 ### G-125: Width and depth card over the project view for a selected piece
 
 - Status: Done (ADR-109)
@@ -564,6 +1153,22 @@ highest id in either file.
 - Request: Add the posibility to change width/depth when whole cabinet or whole piece is selected; answer: Card + side panel
 - Questions: Should a selected project piece also get a floating Width/Depth card over the project plan, elevation and 3D?
 - Suggested pick: Yes, a floating card over the project views (closest to 'Card + side panel'; estimate +60 % work, +15 % of value)
+
+### G-126: No width/depth fields for a bed or a set of loose panels
+
+- Status: Done (ADR-211)
+- Origin: ADR-106
+- Missing: A bed and a set of loose panels show no size fields when selected (src/core/pieceSize.ts:49-63); a filler/cover panel shows Width and Height (no depth).
+- Request: Add the posibility to change width/depth when whole cabinet or whole piece is selected
+- Questions: Should a bed show its mattress size there instead, and loose panels nothing?
+- Suggested pick: Bed: show the mattress width and length there (closest to the request; estimate +10 % work, +5 % of value)
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
+- Issue: A selected bed or set of loose panels shows no size fields in the whole-piece size group.
+- Fix: Show the bed's mattress width and length there; loose panels stay without fields.
+- Conflicts: none
+- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
 
 ### G-130: jsdom find-it cannot check layout
 
@@ -613,6 +1218,21 @@ highest id in either file.
 - Request: i dont see doors text moved with other; answer: Same row as Snap (Recommended)
 - Questions: Should all four plan controls fit one row on a phone (shorter labels or icons), or is the wrap fine?
 - Suggested pick: Keep the wrap (closest to the request: Doors and fronts is in Snap's row); one row would need shorter labels (estimate +20 % work, +5 % of value)
+
+### G-136: Link pieces that are already 100% identical
+
+- Status: Done (ADR-207)
+- Origin: ADR-111, 2026-10-27, user choice
+- Missing: Only copies made with 'Add a linked copy' are linked; identical pieces added separately, by Duplicate or by adding the same item again stay independent (user picked explicit links and only 'Add a linked copy').
+- Request: use a piece, a item created by the user, added to the project, added multiple times, and give the possibility to bulk update the width/height/drawers, just like it would be 1 piece, with 2 symlinks to it, change to 1 changes all the other, including internal, and it should be propagated further to the ones in the 100% same.
+- Questions: Should 'Link N identical pieces' link existing identical pieces, or should Duplicate / adding the same item again make linked copies?
+- Suggested pick: 'Link N identical pieces' on the card: closest to 'propagated further to the ones in the 100% same' (est. +20 % work).
+- Work: Medium
+- Impact: Medium
+- Necessity: Low-medium
+- Issue: Identical pieces added separately or by Duplicate stay independent; only 'Add a linked copy' links.
+- Fix: Add 'Link N identical pieces' on the card, giving existing identical pieces one shared linkId.
+- Conflicts: none
 
 ### G-138: How an info button shows its text
 
@@ -667,6 +1287,21 @@ highest id in either file.
 - Request: accept gap picks (G-141: one follow-up ADR for all of them)
 - Questions: Accept the nine fixes as written in ADR-120, or change any?
 - Suggested pick: Accept as written (each is the critique's fix for the item it names)
+
+### G-148: ADR ids and Back link left on the Gaps and Research pages; Select lost its tooltip
+
+- Status: Done (ADR-211)
+- Origin: ADR-120 (found while building)
+- Missing: The Gaps page search placeholder still names ADR-072 and the Research page lists ADR ids (they are the content); Gaps and Research always show 'Back to the editor', not only with a design open; the Select checkbox lost the tooltip the old button had
+- Request: accept as written (ADR-120: no ADR numbers in UI text; Back to the editor only when a design is open)
+- Questions: Remove ADR ids from those two pages and hide Back there too, and give Select an info tip?
+- Suggested pick: Keep the ids on Gaps and Research (they are the page's subject); hide Back there too; add an info tip to Select (estimate +5 % work, +5 % of value)
+- Work: Low
+- Impact: Low
+- Necessity: Low-medium
+- Issue: Gaps and Research always show Back to the editor; Select checkbox lost its tooltip.
+- Fix: Keep ADR ids on those pages, show Back only with a design open, add an info tip to Select.
+- Conflicts: none
 
 ### G-149: Typed rotation: exact checks or bounding boxes
 
@@ -821,6 +1456,36 @@ highest id in either file.
 - Questions: Run a measured trial (decision recorded, nothing shipped unless it wins), or adopt Rapier for the checks now?
 - Suggested pick: Measured trial first (the research says 'evaluate'; a new WASM dependency needs its licence, size and offline behaviour checked)
 
+### G-170: Angled pieces snap and measure by their enclosing box
+
+- Status: Done (ADR-205)
+- Origin: ADR-121 (found while building)
+- Missing: A piece typed at an angle snaps to neighbours and walls by the axis-aligned box around it, not its turned faces; the mm amounts in overlap and blocked-opening messages are measured on those boxes. Detection itself is exact.
+- Request: Accept default, /batch all ready
+- Questions: Snap angled pieces face to face along their turned sides, and measure overlaps exactly?
+- Suggested pick: Snap along turned faces and measure exactly (closest to typed rotation 'while snapping keeps working'; estimate +40 % work on ADR-121's rotation part, +15 % of value)
+- Work: Medium-high
+- Impact: Low-medium
+- Necessity: Low-medium
+- Issue: Angled pieces snap and report overlap amounts by their enclosing box, not their turned faces.
+- Fix: Snap along turned faces and measure overlaps exactly on the rotated boxes.
+- Conflicts: none
+
+### G-172: 3D outlines of an angled piece are drawn unturned
+
+- Status: Done (ADR-203)
+- Origin: ADR-121 (found while building)
+- Missing: In the 3D view, the selection outline of a space inside an angled piece and the Move-mode ghost are drawn as the unturned or enclosing boxes; the boards themselves are drawn turned
+- Request: Accept default, /batch all ready
+- Questions: Turn the selection outline and the Move ghost with the piece?
+- Suggested pick: Turn them (estimate +5 % work, +5 % of value)
+- Work: Low
+- Impact: Low
+- Necessity: Low-medium
+- Issue: In 3D, an angled piece's selection outline and Move ghost are drawn unturned.
+- Fix: Apply the piece's turn to the selection outline and the Move-mode ghost.
+- Conflicts: none
+
 ### G-173: Selected space hides its piece's boards in 3D
 
 - Status: Done (obsolete: dropped by the user 2026-11-05, "Drop g 173")
@@ -847,6 +1512,36 @@ highest id in either file.
 - Questions: Should other parameters (boards, construction, insides) be lockable too, and one by one or together?
 - Suggested pick: Leave as is until asked (the user's pick was a separate Lock size)
 
+### G-181: Move/Section toggle sometimes ignores the first tap after a touch drag or while the 3D view settles
+
+- Status: Done (ADR-201)
+- Origin: ADR-122 (found while checking)
+- Missing: In the production-build find-it run, Move and Section sometimes stayed off after one tap: right after a touch drag on a phone, or while the 3D view was settling after the look changed; the script now taps again until the toggle reads pressed
+- Request: Push, merge
+- Questions: Trace and fix the dropped tap, or keep the retry in the find-it script?
+- Suggested pick: Trace and fix (estimate +10 % work)
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium
+- Issue: Move and Section toggles in 3D sometimes ignore the first tap after a touch drag or re-render.
+- Fix: Trace the dropped tap in the 3D toolbar and fix it; then drop the retry from the find-it script.
+- Conflicts: none
+
+### G-190: Versions of a deleted project
+
+- Status: Done (ADR-203)
+- Origin: ADR-123 (found while building)
+- Missing: Deleting a project leaves its kept versions on the device; nothing lists or removes them (G-156: nothing removes versions without the user)
+- Request: Accept default, /batch all ready (G-156: keep every version until the user deletes it)
+- Questions: When a project is deleted, ask whether to delete its versions too, keep them silently, or list orphaned versions somewhere to restore or delete?
+- Suggested pick: Ask on delete, defaulting to keep (closest to G-156: nothing removed without the user's decision)
+- Work: Low-medium
+- Impact: Low-medium
+- Necessity: Medium
+- Issue: Deleting a project leaves its kept versions on the device, unlisted and impossible to remove or restore.
+- Fix: On project delete, ask whether to delete its versions too, defaulting to keep them.
+- Conflicts: none
+
 ### G-200: Project-wide settings and the size lock
 
 - Status: Done (ADR-122)
@@ -865,6 +1560,51 @@ highest id in either file.
 - Questions: Should they take the project settings like Add a piece?
 - Suggested pick: They take them, like Add a piece (estimate +5 % work)
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+
+### G-210: Project templates drop run handles and sinks
+
+- Status: Done (ADR-204)
+- Origin: ADR-125 (found while building)
+- Missing: Saving a project as a project template (ADR-060) keeps neither its run handles nor its sinks; a project made from it has none
+- Request: Accept default, /batch all ready (ADR-125: run sinks and handles)
+- Questions: Should project templates keep run handles and sinks (with the piece ids remapped)?
+- Suggested pick: Keep them, remapped like run-part keys (closest to a reusable kitchen layout)
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium
+- Issue: Project templates drop run handles and sinks, so projects made from them have none.
+- Fix: Save run handles and sinks in project templates, remapping piece ids like run-part keys.
+- Conflicts: none
+
+### G-211: Run handles not shown inside the piece editor
+
+- Status: Done (ADR-203)
+- Origin: ADR-125 (found while building)
+- Missing: Opening one piece of a handled run shows and edits its own handles; the run's handle shows only in the project views, cut list and hardware
+- Request: Accept default, /batch all ready (ADR-125: run sinks and handles)
+- Questions: Should the piece editor show the run's handle (read-only) with a note that the run sets it?
+- Suggested pick: Show it read-only with 'Set by Handles for this run' (no change to the piece's own design)
+- Work: Low-medium
+- Impact: Low-medium
+- Necessity: Medium
+- Issue: The piece editor shows the piece's own handles, not the run handle that actually applies.
+- Fix: Show the run's handle read-only in the piece editor with 'Set by Handles for this run'.
+- Conflicts: none
+
+### G-212: Sink cut-out not drawn
+
+- Status: Done (ADR-205)
+- Origin: ADR-125 (found while building)
+- Missing: The sink cut-out is a cut-list note, a shopping line and checks; it is not drawn on the plan, the front view or in 3D (worktop cut-outs were already not drawn)
+- Request: Accept default, /batch all ready (ADR-125: run sinks and handles)
+- Questions: Draw the cut-out outline on the plan and in 3D?
+- Suggested pick: Outline on the plan only (where the worktop is drawn from above)
+- Work: Low-medium
+- Impact: Low-medium
+- Necessity: Low-medium
+- Issue: The sink cut-out is only a cut-list note and checks; it is not drawn anywhere.
+- Fix: Draw the sink cut-out outline on the worktop in the 2D plan.
+- Conflicts: none
 
 ### G-213: Paid backend allowed
 
@@ -1458,6 +2198,51 @@ highest id in either file.
 - Questions: Saved in the project (same on every device and in exports), or a view setting on this device only? Start solid or see-through?
 - Suggested pick: A 3D view setting on this device ('Solid walls'), starting see-through as today; the front view always shows the background. Keeps the project document smaller and today's look unchanged.
 
+### G-273: Wall backgrounds outside 3D and front view
+
+- Status: Done (ADR-208)
+- Origin: ADR-145 (out of scope)
+- Missing: Wall backgrounds on the 2D floor plan, the SVG download, catalog snapshots and cut sheets
+- Request: Set wall background; answers 2026-10-28: colour or picture, 3D view and front view, per wall, toggle solid/see-through
+- Questions: Show the wall colour on the plan too?
+- Suggested pick: Colour strip along each wall on the plan only; the others stay as they are.
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
+- Issue: Wall backgrounds do not show on the 2D plan, SVG download, catalog snapshots or cut sheets.
+- Fix: Draw a colour strip along each wall on the plan only; leave other outputs unchanged.
+- Conflicts: none
+
+### G-274: Floor background
+
+- Status: Done (ADR-208)
+- Origin: ADR-145 (out of scope)
+- Missing: Floor colour or picture
+- Request: Set wall background; answers 2026-10-28: colour or picture, 3D view and front view, per wall, toggle solid/see-through
+- Questions: Set the floor like the walls?
+- Suggested pick: Same picker for the floor in a later ADR, reusing this one's code.
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low
+- Issue: The floor cannot be given a colour or picture as the walls can.
+- Fix: A later ADR adding the same colour/picture picker for the floor, reusing the wall code.
+- Conflicts: none
+
+### G-275: Wall background in the single-piece front view
+
+- Status: Done (ADR-208)
+- Origin: ADR-145 (found while building)
+- Missing: The wall background shows in the project's front view (the whole room seen from the front); the front view of a single piece, opened from the project, shows no wall behind it
+- Request: Set wall background adr; answers 2026-10-28: 3D view and front view
+- Questions: Show the wall the piece stands against behind it in the single-piece front view too?
+- Suggested pick: Yes: the same floor-to-room-height fill behind the piece when it is opened from a project with a room (estimate: effort +10%, value +10%)
+- Work: Low-medium
+- Impact: Low-medium
+- Necessity: Low-medium
+- Issue: A single piece opened from a project shows no wall background behind it in its front view.
+- Fix: Fill the wall finish floor-to-room-height behind the piece when opened from a project with a room.
+- Conflicts: none
+
 ### G-283: Where the four straighten corners are placed
 
 - Status: Done (ADR-146)
@@ -1636,6 +2421,21 @@ highest id in either file.
 - Questions: Build a plan layer filter at all, now that the front view, 3D and the piece list select several pieces?
 - Suggested pick: None suggested: the user's latest answer keeps the plan as is.
 
+### G-308: Selection box in the front view and the 3D view
+
+- Status: Done (ADR-211)
+- Origin: ADR-159
+- Missing: Dragging on empty space in the room front view or the 3D view does not draw a selection box; only taps (Select on, or Shift/Ctrl-click) add pieces there.
+- Request: Add the select to 3d, so i can click on them to multiselect
+- Questions: Should the front view and 3D also get a drag-to-box selection?
+- Suggested pick: Front view only (3D drags orbit the camera); closest to the plan's existing box.
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low
+- Issue: Dragging empty space in the room front view or 3D view draws no selection box.
+- Fix: Add a drag-to-box selection in the front view only, like the plan's box.
+- Conflicts: none
+
 ### G-309: Single-piece Inspector not reordered
 
 - Status: Done (ADR-160)
@@ -1655,6 +2455,52 @@ highest id in either file.
 - Questions: Should Build & Preview show a different side panel (for example finishes and checks only)?
 - Suggested pick: Keep the same panel until the user says what Build & Preview should show.
 - Answer (user, 2026-10-30): "Same as Compose".
+
+### G-313: Extra seller items only per piece
+
+- Status: Done (ADR-210)
+- Origin: ADR-161, 2026-10-30; agent scoped it out
+- Missing: In a project view, a seller product cannot be added as an extra item; open a piece to add it there. Hardware links chosen in the project view are written to every piece that has that hardware line.
+- Request: Match products to parts in app
+- Questions: Should a project hold its own extra seller items?
+- Suggested pick: Add project-level extra items (estimate: effort +20 %, value +10 %)
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low
+- Issue: A project cannot hold its own extra seller items; they must be added to a single piece.
+- Fix: Add project-level extra seller items to the project document (needs an ADR and schema bump).
+- Conflicts: none
+
+### G-314: Fasteners and run parts not matched
+
+- Status: Done (ADR-206)
+- Origin: ADR-161, 2026-10-30; agent scoped it out
+- Missing: Screws, dowels, cams (fasteners, ADR-074) and run parts (plinths, fillers, cornices) are not matched to seller products.
+- Request: Match products to parts in app
+- Questions: Match fasteners and run parts to seller products too?
+- Suggested pick: Yes: a product button on fastener lines and on run parts (estimate: effort +25 %, value +10 %)
+- Work: Medium
+- Impact: Medium
+- Necessity: Low-medium
+- Issue: Fasteners and run parts (plinths, fillers, cornices) cannot be matched to seller products.
+- Fix: Add a product picker button on fastener lines and run parts, as on hardware lines.
+- Conflicts: none
+
+### G-316: Seller pictures not seen before shipping
+
+- Status: Done (ADR-206)
+- Origin: ADR-162, 2026-10-30; agent scoped it out
+- Missing: The board pictures are now downloaded and shipped (public/sellers/regency, 1 453 files) and a 16-picture sample was checked by eye, but none has been seen as a board texture in 3D in a browser.
+- Request: You didnt use the image i provided to render
+- Questions: Are the seller's pictures good board textures (whole panel photo vs decor swatch)?
+- Suggested pick: Check a few boards in 3D after the first download; adjust the tile size if needed (estimate: effort 5 %)
+- Work: Low
+- Impact: Medium
+- Necessity: Medium
+- Issue: Shipped seller board pictures were never seen as board textures in 3D in a browser.
+- Fix: Open a few seller boards in 3D on the production build; adjust the texture tile size if needed.
+- Conflicts: none
+- Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
 
 ### G-317: Run-part boards in the Material dialog
 
@@ -1740,6 +2586,36 @@ highest id in either file.
 - Suggested pick: Keep bindings in project templates only (built); add variables to catalog designs as a later ADR (estimate: effort +40%, value +15%).
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
 
+### G-324: Formula functions
+
+- Status: Done (ADR-206)
+- Origin: ADR-166, 2026-10-30; agent scoped it out
+- Missing: Formulas know only + − × ÷ and parentheses: no min, max, round, floor or conditions.
+- Request: Formulas too (user answer 2026-10-30).
+- Questions: Which functions are needed: min/max, round to a sheet thickness, if?
+- Suggested pick: Add min, max, floor, ceil and round when a real project needs one (estimate: effort +10%, value +10%).
+- Work: Low-medium
+- Impact: Low-medium
+- Necessity: Low
+- Issue: Formulas support only arithmetic and parentheses; no min, max, rounding or conditions.
+- Fix: Add min, max, floor, ceil and round to the formula parser when a real project needs them.
+- Conflicts: none
+
+### G-325: Variables on run parts
+
+- Status: Done (ADR-209)
+- Origin: ADR-166, 2026-10-30; agent scoped it out
+- Missing: Run parts, worktops, run handles and sinks (ADR-036, ADR-075, ADR-125) cannot be bound to a variable; they follow the pieces they are derived from.
+- Request: Not a quote: the user named pieces only.
+- Questions: Should a run request (a worktop length or overhang) take a formula?
+- Suggested pick: Bind run-request sizes the same way as piece sizes (estimate: effort +15%, value +10%).
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low
+- Issue: Run parts such as worktop length or overhang cannot be bound to a project variable.
+- Fix: Allow bindings on run-request sizes the same way as piece sizes.
+- Conflicts: none
+
 ### G-326: Run requests not duplicated per set
 
 - Status: Done (ADR-175)
@@ -1768,6 +2644,21 @@ highest id in either file.
 - Questions: Add the longer details to these seven lines?
 - Suggested pick: Add them with their Russian entries (estimate: effort +10%, value +5%).
 
+### G-329: Typed connectors and assembly graph
+
+- Status: Done (ADR-207)
+- Origin: ADR-168, 2026-11-04; agent scoped it out
+- Missing: Connector types and a typed assembly graph (research model): connections are untyped pairs of side-by-side pieces.
+- Request: “Validate all High demand features … create adrs” (user 2026-11-04); the research row names a connection hierarchy
+- Questions: Add connector types (side, top, back) with their own rules?
+- Suggested pick: Not yet; untyped pairs cover undo, save and templates. Typed connectors when a rule needs them (estimate: effort +50%, value +15%).
+- Work: High
+- Impact: Low-medium
+- Necessity: Low
+- Issue: Connections are untyped pairs; there are no connector types or a typed assembly graph.
+- Fix: Add typed connectors (side, top, back) with their own rules only when a rule needs them.
+- Conflicts: none
+
 ### G-330: Connections shown only on the plan
 
 - Status: Done (ADR-179)
@@ -1776,6 +2667,21 @@ highest id in either file.
 - Request: Not a quote: the user chose record, re-check and move together
 - Questions: Show connections in the front view and 3D?
 - Suggested pick: A matching tick in the front view and a thin line in 3D (estimate: effort +15%, value +10%).
+
+### G-331: No stacked or cross-level connections
+
+- Status: Done (ADR-207)
+- Origin: ADR-168, 2026-11-04; agent scoped it out
+- Missing: Only side-by-side touching pieces on one floor level connect; a wall unit over a base unit, stacked pieces or pieces across floor levels do not.
+- Request: Not a quote: the user chose record, re-check and move together
+- Questions: Connect stacked pieces (wall unit over base) too?
+- Suggested pick: Add a 'stacked' connection kind once typed connectors exist (G-329) (estimate: effort +30%, value +20%).
+- Work: Medium-high
+- Impact: Medium
+- Necessity: Low
+- Issue: Only side-by-side pieces on one level connect; stacked pieces like wall-over-base units do not.
+- Fix: Add a stacked connection kind after typed connectors exist.
+- Conflicts: none
 
 ### G-334: Templates keep copies, not references
 
@@ -1786,6 +2692,21 @@ highest id in either file.
 - Questions: None; the user chose copies.
 - Suggested pick: Keep copies (chosen). References would need a new ADR replacing ADR-060 (estimate: effort +150%, value +30%).
 
+### G-335: Variables in catalog designs and the stand-alone editor
+
+- Status: Done (ADR-210)
+- Origin: ADR-170, 2026-11-04; agent scoped it out
+- Missing: Variables and bindings live in projects and project templates only; the stand-alone design editor and catalog designs have none (the rest of G-323).
+- Request: Not a quote: the user asked for variables “within the project”
+- Questions: Should a catalog design carry bindings as parameters?
+- Suggested pick: A later ADR adds variables to catalog designs (estimate: effort +40%, value +15%).
+- Work: Medium-high
+- Impact: Low-medium
+- Necessity: Low
+- Issue: Catalog designs and the stand-alone design editor have no variables or bindings.
+- Fix: A later ADR adds variables and bindings as parameters of catalog designs.
+- Conflicts: none
+
 ### G-336: Verified research rows not yet deleted from the data
 
 - Status: Done (ADR-184)
@@ -1794,6 +2715,22 @@ highest id in either file.
 - Request: “Validate all High demand features … create adrs” (user 2026-11-04)
 - Questions: Delete the three rows from the research data as ADR-152 did?
 - Suggested pick: A small deletion ADR after ADR-168 to ADR-170 ship, covering all four High-demand rows at once (estimate: effort +5%, value +5%).
+
+### G-337: Locks on boards, construction and insides
+
+- Status: Done (ADR-211)
+- Origin: ADR-171, 2026-11-04; agent scoped it out
+- Missing: Boards, construction and insides of a piece cannot be locked (the rest of G-180).
+- Request: “Separate locks per parameter” (user 2026-11-04)
+- Questions: Lock boards, construction or insides too, one by one or together?
+- Suggested pick: Lock boards and construction as two more toggles once asked (estimate: effort +25%, value +10%).
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+- Issue: A piece's boards, construction and insides cannot be locked against changes.
+- Fix: Add Lock boards and Lock construction toggles to the Lock menu when asked.
+- Conflicts: none
+- Note: 2026-11-06: ADR-211 takes over Lock boards and Lock construction (the suggested pick); locking the insides stays in G-453.
 
 ### G-338: Snap ranking ignores locks
 
@@ -1813,6 +2750,85 @@ highest id in either file.
 - Questions: Add a price column to Parts?
 - Suggested pick: A price column on the Shopping list rows only, where the prices live (estimate: effort +10%, value +10%).
 
+### G-340: No price change report between exports
+
+- Status: Done (ADR-206)
+- Origin: ADR-172, 2026-11-04; agent scoped it out
+- Missing: A refreshed seller export replaces prices silently: no report of what changed between two exports.
+- Request: “You upload a new export; the workflow converts it” (user 2026-11-04)
+- Questions: Should the pull request list changed prices and dropped products?
+- Suggested pick: The workflow writes a short change summary into the pull request body (estimate: effort +10%, value +15%).
+- Work: Low-medium
+- Impact: Medium
+- Necessity: Low-medium
+- Issue: A refreshed seller export replaces prices silently, with no report of changed or dropped products.
+- Fix: The price workflow writes a summary of changed prices and dropped products into the pull request body.
+- Conflicts: none
+
+### G-341: No budget or style filters on room mixes
+
+- Status: Done (ADR-210)
+- Origin: ADR-173, 2026-11-04; agent scoped it out
+- Missing: The research children Budget and style filters and Layout optimisation are not built; mixes are ranked by ADR-103's rules only.
+- Request: “Fill the room” (user 2026-11-04)
+- Questions: Filter mixes by a budget (ADR-172 estimate) or a style (ADR-123)?
+- Suggested pick: A budget ceiling and a style pick on Refine, after ADR-172 (estimate: effort +30%, value +20%).
+- Work: Medium-high
+- Impact: Medium
+- Necessity: Low
+- Issue: Fill the room mixes cannot be filtered by budget or style; no layout optimisation.
+- Fix: Add a budget ceiling and a style pick on the Refine step, using the cost estimate.
+- Conflicts: none
+- Note: ADR-210 takes over the budget ceiling and style pick; layout optimisation stays open as G-444.
+
+### G-342: No islands or peninsulas in room mixes
+
+- Status: Done (ADR-210)
+- Origin: ADR-173, 2026-11-04; agent scoped it out
+- Missing: Islands and peninsulas are not suggested; only pieces along walls.
+- Request: “Fill the room” (user 2026-11-04)
+- Questions: Suggest an island when the room is wide enough?
+- Suggested pick: An island option on Refine with the clearance rules of ADR-073 (estimate: effort +40%, value +15%).
+- Work: Medium-high
+- Impact: Low-medium
+- Necessity: Low
+- Issue: Fill the room suggests pieces along walls only, never islands or peninsulas.
+- Fix: Add an island option on Refine, checked against the clearance rules.
+- Conflicts: none
+- Note: ADR-210 takes over islands in rectangle rooms; peninsulas and islands in L and U rooms stay open as G-445.
+
+### G-343: No per-step pictures in the assembly print
+
+- Status: Done (ADR-206)
+- Origin: ADR-174, 2026-11-04; agent scoped it out
+- Missing: The printed assembly sheet shows one front view of the piece and a table of steps (src/ui/Assembly.tsx:218-261); no step has a picture or marked parts.
+- Request: “Ordered step list + 3D highlight” (user 2026-11-04)
+- Questions: Render one exploded picture per step into the print?
+- Suggested pick: Use ADR-121's on-demand render per step once asked (estimate: effort +40%, value +20%).
+- Work: Medium-high
+- Impact: Medium
+- Necessity: Low-medium
+- Issue: The printed assembly sheet has one front view and a step table; no per-step pictures.
+- Fix: Render one exploded 3D picture per step into the print with the on-demand renderer.
+- Conflicts: none
+- Note: Re-checked 2026-11-05 on main 0c26d0b (code read, no browser): Missing text updated to the current code.
+
+### G-344: Assembly steps are not editable
+
+- Status: Done (ADR-207)
+- Origin: ADR-174, 2026-11-04; agent scoped it out
+- Missing: The assembly sequence cannot be edited: steps cannot be reordered, merged or renamed.
+- Request: “Ordered step list + 3D highlight” (user 2026-11-04)
+- Questions: Let the user reorder or rename steps, saved with the design?
+- Suggested pick: An editable order saved on the design, with a reset (estimate: effort +35%, value +20%).
+- Work: Medium-high
+- Impact: Low-medium
+- Necessity: Low
+- Issue: Assembly steps cannot be reordered, merged or renamed by the user.
+- Fix: Save an editable step order on the design, with a reset to the generated order.
+- Conflicts: none
+- Note: 2026-11-06: ADR-207 takes over reordering, renaming and a reset. Merging steps moved to G-422.
+
 ### G-345: No project-level assembly order
 
 - Status: Done (ADR-178)
@@ -1821,6 +2837,51 @@ highest id in either file.
 - Request: “Ordered step list + 3D highlight” (user 2026-11-04)
 - Questions: Add a project order: pieces along the wall, then run parts?
 - Suggested pick: A project section before the pieces: corner first, then along each wall, run parts last (estimate: effort +20%, value +15%).
+
+### G-346: Connections in 3D Move mode not checked in a browser
+
+- Status: Done (ADR-201)
+- Origin: ADR-168, 2026-11-04; agent, at ship time
+- Missing: Moving a connected piece in 3D Move mode (dropItemAt) is covered by a store test only; it was not checked in a browser (the browser find-it drags on the plan).
+- Request: “ship ADR-168” (user 2026-11-04)
+- Questions: Add a 3D Move mode drag to tools/connections/find-it.mjs (as tools/move-3d/find-it.mjs does)?
+- Suggested pick: Extend the script with one 3D drag of a connected piece and an Alt drag (estimate: effort +10%, value +5%).
+- Work: Low
+- Impact: Low
+- Necessity: Low-medium
+- Issue: Moving a connected piece in 3D Move mode was tested only in the store, not in a browser.
+- Fix: Add one 3D drag of a connected piece and an Alt drag to the connections browser script.
+- Conflicts: none
+
+### G-347: accounts find-it at 390 px is timing-sensitive under the full suite
+
+- Status: Done (ADR-201)
+- Origin: N171/N172 full test runs, 2026-11-04; agent
+- Missing: tests/find-it/accounts.test.tsx at 390 px fails under the full local suite (the 'In your account' badge is not found in time) in two of three full runs on 2026-11-04, while it passes when run alone and in CI.
+- Request: Not a quote: the suite is the source of truth (CLAUDE.md)
+- Questions: Raise the badge's waitFor timeout, or split the long find-it into two tests?
+- Suggested pick: Wrap the badge lookup in findByText with a longer timeout at 390 px (estimate: effort +2%, value +5%).
+- Work: Low
+- Impact: Low-medium
+- Necessity: Medium
+- Issue: The accounts find-it test at 390 px fails intermittently under the full local suite.
+- Fix: Use findByText with a longer timeout for the account badge at 390 px, or split the test.
+- Conflicts: none
+
+### G-348: Fill the room: openings only through a project's room
+
+- Status: Done (ADR-204)
+- Origin: ADR-173, 2026-11-04; agent scoped it out
+- Missing: Fill the room from the New dialog takes a ready shape and sizes only; doors and windows come only through a project's own room (Project ⋯ → Fill the room…).
+- Request: “Fill the room” (user 2026-11-04)
+- Questions: Add doors and windows to the Room step of the dialog?
+- Suggested pick: Reuse the room editor's feature list in the dialog (estimate: effort +25%, value +15%).
+- Work: Medium
+- Impact: Medium
+- Necessity: Low-medium
+- Issue: Fill the room from the New dialog cannot add doors or windows; only a project's room can.
+- Fix: Reuse the room editor's doors and windows list in the dialog's Room step.
+- Conflicts: none
 
 ### G-349: Fill the room: wall row leaves out whole cabinets at a window
 
@@ -1840,6 +2901,157 @@ highest id in either file.
 - Questions: Place a wall corner cabinet (corner-blind-wall) in the corner?
 - Suggested pick: Add the catalog's wall corner cabinet over each corner cabinet (estimate: effort +20%, value +15%).
 
+### G-351: move-3d find-it fails on main at 1440 px
+
+- Status: Done (ADR-201)
+- Origin: ADR-179 build, 2026-11-05; found by the agent
+- Missing: tools/move-3d/find-it.mjs fails at 1440 px on the production build of main 0c26d0b and of this branch: 'Turn 90° ↺ turned the piece' reads an empty rotation, then the 3D canvas wait times out (20 s).
+- Request: Not a quote: found while running the browser find-it scripts for ADR-179.
+- Questions: Fix the script's turn check and 3D wait, or the app if the turn really fails?
+- Suggested pick: Debug it on main first (debug skill); fix the cause (estimate: effort +5%, value +5%).
+- Work: Low-medium
+- Impact: Medium
+- Necessity: High
+- Issue: The 3D Move browser test fails on main at 1440 px: turn reads empty, canvas wait times out.
+- Fix: Debug on main; fix the app if turning really fails, otherwise fix the script's checks.
+- Conflicts: none
+
+### G-352: Fit hardware step cannot be shown in 3D
+
+- Status: Done (ADR-207)
+- Origin: ADR-185, 2026-11-05; agent scoped it out
+- Missing: The Fit hardware to the sides step has no Show step button: the model does not record which side panel each hinge plate or runner carcass half is fixed to, so nothing can be lit in 3D.
+- Request: Re-check assembly steps, both ui and pdf, they seem to not have the expected assembly relevant info and steps.
+- Questions: Record which panel each hinge and runner goes on in the model so the step can light them?
+- Suggested pick: Tag each hinge and runner pair with its side panel in the generators, then light those panels (estimate: effort +15%, value +5%).
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+- Issue: The Fit hardware step has no Show step button; the model does not record each hinge's side panel.
+- Fix: Tag each hinge and runner pair with its side panel in the generators and light those panels.
+- Conflicts: none
+
+### G-353: Catalog piece names untranslated on prints
+
+- Status: Done (ADR-202)
+- Origin: ADR-185, 2026-11-05; agent left it out
+- Missing: Piece names on the printed assembly sheet print as named (catalog defaults are English), so a Romanian or Russian print shows English piece names such as 'Base cabinet, 1 door'.
+- Request: Translate with the print (user 2026-11-05, for the fastener menu name); user-typed names are not translated (G-304).
+- Questions: Translate catalog default piece names on prints when the user has not renamed the piece?
+- Suggested pick: Translate a piece name only while it equals its catalog template's default name (estimate: effort +10%, value +5%).
+- Work: Low-medium
+- Impact: Low-medium
+- Necessity: Medium
+- Issue: Romanian or Russian assembly prints show English catalog piece names like 'Base cabinet, 1 door'.
+- Fix: Translate a piece name on prints while it still equals its catalog template's default name.
+- Conflicts: none
+
+### G-354: Shared side with corner units and desks
+
+- Status: Done (ADR-207)
+- Origin: ADR-190
+- Missing: Corner units and desks keep both sides; only two cabinets can share a side.
+- Request: Add the possibility to have a common bottom or top between multiple items.
+- Questions: Should a blind corner's straight side or a desk gable be shared with a neighbouring cabinet?
+- Suggested pick: Cabinets only (the user's pick); corners and desks in a later ADR.
+- Work: Medium-high
+- Impact: Low-medium
+- Necessity: Low
+- Issue: Corner units and desks cannot share a side with a neighbouring cabinet; only two cabinets can.
+- Fix: Let a blind corner's straight side or a desk gable be shared, in a later ADR.
+- Conflicts: none
+- Note: 2026-11-06: ADR-207 takes over a blind corner's straight end and a desk gable. L-shape and diagonal corners and desk pedestal ends moved to G-421.
+
+### G-356: Wizard draft survives closing the dialog
+
+- Status: Done (ADR-211)
+- Origin: ADR-191, 2026-11-05; agent scoped it out
+- Missing: The wizard's answers live only while the dialog is open. Confirming before a close (ADR-191) stops accidental loss; a draft that survives closing the dialog (Continue where you left off) is not built.
+- Request: Not asked; the critique of 2026-11-05 noted the loss and the user chose the grouped ADR as proposed (confirm on close).
+- Questions: Should a closed wizard keep its draft for the session, or until the piece is created?
+- Suggested pick: Keep the draft in the store for the session; the Type step offers Continue or Start over. (estimate: effort +8 %, value +10 % over confirm-on-close)
+
+### G-357: Doors choice is a dropdown on desktop
+
+- Status: Done (ADR-202)
+- Origin: ADR-191, 2026-11-05; agent scoped it out
+- Missing: The Doors field on a desktop is a dropdown (five options; the segmented control takes four), so sliding and per-compartment doors are hidden behind a click while the cards promote them. Not changed by ADR-191.
+- Request: Not asked; noted during the critique of 2026-11-05 and left out of the fourteen findings.
+- Questions: Allow a five-option segmented control on desktop and wrap it on a phone?
+- Suggested pick: Segmented up to five options at 1280 px, wrapping at 390 px. (estimate: effort +2 %, value +3 %)
+
+### G-358: Start-new rows share one glyph
+
+- Status: Done (ADR-211)
+- Origin: ADR-193, 2026-11-05; design critique, agent scoped it out
+- Missing: The Project, Fill a wall and Fill the room rows of Start something new share one 'project' glyph (Low).
+- Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
+- Questions: Give each row its own glyph?
+- Suggested pick: A wall glyph for Fill a wall and a room-plan glyph for Fill the room. (estimate: effort +1 %, value +1 %)
+
+### G-359: Open in wizard inside a project
+
+- Status: Done (ADR-203)
+- Origin: ADR-194, 2026-11-05; design critique, agent scoped it out
+- Missing: Open in wizard is hidden for a wizard-made piece inside a project (Settings hides it there).
+- Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
+- Questions: Offer Open in wizard for a project piece, updating it in place in the project?
+- Suggested pick: Offer it; Update piece replaces the project item's design. (estimate: effort +6 %, value +5 %)
+
+### G-360: Wizard Review rows repeat long labels
+
+- Status: Done (ADR-202)
+- Origin: ADR-194, 2026-11-05; design critique, agent scoped it out
+- Missing: Review rows repeat long field labels, e.g. 'Width of each compartment (0 = share the rest): 0 mm'.
+- Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
+- Questions: Give fields a short Review label?
+- Suggested pick: An optional short label per field for Review. (estimate: effort +2 %, value +2 %)
+
+### G-361: Arrow keys on Segmented controls
+
+- Status: Done (ADR-202)
+- Origin: ADR-194, 2026-11-05; design critique, agent scoped it out
+- Missing: Segmented controls have no arrow-key movement anywhere in the app.
+- Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
+- Questions: Add roving tabindex and arrow keys to Segmented app-wide?
+- Suggested pick: Yes, in the shared control, one change for every screen. (estimate: effort +3 %, value +3 %)
+
+### G-362: Catalog item counts differ from room chips
+
+- Status: Done (ADR-202)
+- Origin: ADR-195, 2026-11-05; design critique, agent scoped it out
+- Missing: The Catalog header says 118 items while the room chips sum to 183, because a family is listed under every room (ADR-032).
+- Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
+- Questions: Say 'in N families, listed under several rooms' or count per room only?
+- Suggested pick: Keep the header; add a hint that a family can sit in several rooms. (estimate: effort +1 %, value +2 %)
+
+### G-363: Imported templates shadow silently
+
+- Status: Done (ADR-203)
+- Origin: ADR-195, 2026-11-05; design critique, agent scoped it out
+- Missing: Two imported templates that shadow the same shipped family: the last one wins silently (local.ts:85).
+- Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
+- Questions: Warn on import, or keep both as separate families?
+- Suggested pick: Warn on import and ask which one to keep. (estimate: effort +3 %, value +3 %)
+
+### G-365: Handle side on a turned corner wing
+
+- Status: Done (ADR-203)
+- Origin: ADR-196, 2026-11-05; design critique, agent scoped it out
+- Missing: Which edge 'left' means for handle holes on a turned wing-B front of an L-corner was not verified.
+- Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
+- Questions: Check handle hole sides on turned wing-B fronts?
+- Suggested pick: A test that builds an L-corner with a left handle and checks the hole side. (estimate: effort +2 %, value +2 %)
+
+### G-366: Hardware notes built from English fragments
+
+- Status: Done (ADR-202)
+- Origin: ADR-196, 2026-11-05; design critique, agent scoped it out
+- Missing: Hardware notes are assembled from English fragments (hingeBand), so the Russian schedule mixes languages.
+- Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
+- Questions: Move the notes to whole t() sentences?
+- Suggested pick: Whole sentences per note in t(), with Russian entries. (estimate: effort +4 %, value +3 %)
+
 ### G-367: Design critiques of shell, piece editor and project
 
 - Status: Done (ADR-200)
@@ -1848,3 +3060,239 @@ highest id in either file.
 - Request: "run a /batch for 1 through 7 with a critique of design … 1 adr … per flow (7 total adrs)"; "Implement ADR-s 198, 199, 200"; "Yes" to all twelve fixes.
 - Questions: None: all twelve fixes were accepted. Merge and deployment have not been requested.
 - Suggested pick: The accepted fixes are built; review the implementation pull requests, then ship on the user's instruction. No approved fix was omitted.
+
+### G-368: CI runs only the tests related to a core-only change
+
+- Status: Done (ADR-201)
+- Origin: ADR-197 CI analysis 2026-11-05
+- Missing: Suggestion C, tests by domain of change: a pull request that touches only src/core still runs the whole suite. vitest --changed origin/main (or a related-files filter) could run only the related tests there. The find-it files all import App, so any src/ui change still runs all 37 of them.
+- Request: Suggest improvements. Triggering less often the ci optimisations? Tests running by domain of change? Do all parts of the app need tests? Gaps/features/docs/unnecessary overcovering tests? (the user chose "all of these 4 + Suggestions A(all) and B(all)"; this suggestion was left out)
+- Questions: Run only the related tests on pull requests and the full suite on main only?
+- Suggested pick: Full suite on main; related tests only on pull requests that touch src/core alone. (estimate: work +15 %, saves about 60 % of the test CPU on those pull requests)
+- Work: Medium
+- Impact: Medium
+- Necessity: Low-medium
+- Issue: A core-only pull request runs all 143 test files.
+- Fix: In the CI test job, use vitest --changed against the base on core-only pull requests; keep the full suite on main.
+- Conflicts: none
+
+### G-370: Review find-it tests that re-test logic through the UI
+
+- Status: Done (ADR-201)
+- Origin: ADR-197 CI analysis 2026-11-05
+- Missing: Suggestion E, over-coverage review: find-it/research-batch-4 (10.4 s, 6 tests) asserts research rows through the UI; find-it/connections (13.3 s) and find-it/variables (9.2 s) look like logic re-tested through the UI; tests/rapier-trial.test.ts is permanently skipped.
+- Request: Suggest improvements. Triggering less often the ci optimisations? Tests running by domain of change? Do all parts of the app need tests? Gaps/features/docs/unnecessary overcovering tests? (the user chose "all of these 4 + Suggestions A(all) and B(all)"; this suggestion was left out)
+- Questions: Move the logic assertions to core tests, keep one click path per find-it file, and delete rapier-trial?
+- Suggested pick: Yes. (estimate: work +25 %, about 15 % less find-it CPU)
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low
+- Issue: Some find-it files assert model logic through the UI, which is slow; one test file is always skipped.
+- Fix: Move logic assertions to tests/ core tests, keep one click path per find-it file, delete tests/rapier-trial.test.ts.
+- Conflicts: none
+
+### G-377: Remove the Rapier devDependency once its trial test is gone
+
+- Status: Done (ADR-212)
+- Origin: ADR-201, 2026-11-06; agent scoped it out
+- Missing: ADR-201 deletes tests/rapier-trial.test.ts (G-370), the only file that imports @dimforge/rapier3d-compat; the devDependency and its lockfile entry would stay, unused. ADR-125 added it as a devDependency for the trial only.
+- Request: Not a quote: follows from G-370's pick, "Move the logic assertions to core tests, keep one click path per find-it file, and delete rapier-trial" (accepted 2026-11-06).
+- Questions: Remove the devDependency with the trial file, or keep it for a later re-run of the trial?
+- Suggested pick: Remove it in the same change as the trial file (estimate: effort +2%, value +2%; smaller install).
+- Work: Low
+- Impact: Low
+- Necessity: Low
+- Issue: Deleting the Rapier trial test leaves an unused devDependency in package.json and the lockfile.
+- Fix: pnpm remove @dimforge/rapier3d-compat in the change that deletes tests/rapier-trial.test.ts.
+
+### G-380: Project fasteners panel and drilling positions
+
+- Status: Done (ADR-209)
+- Origin: ADR-202, 2026-11-06; agent scoped it out (remainder of G-042)
+- Missing: Fasteners in the project's own Settings dialog (Settings.tsx:62-71) and drilling patterns drawn only from the values the user enters. ADR-202 takes over only the fastener CSV and print text of G-042.
+- Request: “Hardware and fastener completeness”.
+- Questions: Add the project-level panel? Draw drilling positions only from your values?
+- Suggested pick: Add the project-level panel. Draw drilling positions only from the values you enter, labelled as guidance (ADR-010). (estimate: effort +25%, value +20%)
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium
+- Issue: No fasteners panel in project Settings; no drilling patterns drawn.
+- Fix: Add the project fasteners panel; draw drilling only from user values, labelled as guidance.
+- Conflicts: none
+- Note: 2026-11-06: ADR-209 draws drilling positions for carcass joints; the other joint types moved to G-439.
+
+### G-381: Piece names in the parts CSV and shopping list title
+
+- Status: Done (ADR-212)
+- Origin: ADR-202, 2026-11-06; agent scoped it out
+- Missing: ADR-202 prints untouched catalog piece names in the print language on the assembly sheet and the cut sheet's pieces table only; the parts CSV ("Piece: part" names) and the shopping list title keep the name as stored.
+- Request: Translate with the print (user 2026-11-05, for the fastener menu name); user-typed names are not translated (G-304).
+- Questions: Use the same print name in the parts CSV and the shopping list title?
+- Suggested pick: Yes, the same printPieceName() wherever a piece name is printed or exported. (estimate: effort +3%, value +3%)
+- Work: Low
+- Impact: Low
+- Necessity: Low-medium
+- Issue: The parts CSV and shopping list title show English catalog piece names on a Romanian or Russian export.
+- Fix: Route those names through printPieceName() too.
+
+### G-388: Go up one selection level on a phone
+
+- Status: Done (ADR-211)
+- Origin: ADR-203, 2026-11-06, out of scope (Claude)
+- Missing: ADR-203 makes Esc go up one selection level on desktop; a phone has no gesture for it besides the breadcrumb.
+- Request: The flow of selecting the furniture, then the middle (given there are 2 dividers), then having a horizontal divider, then selecting the bottom one to adjust shelves is a painful horrible user experience. Adjust the selecting to go from bigger to smaller. 1 click = entire furniture, second click selects the smaller frame, third again the smaller within, iteratively.
+- Questions: Add a phone gesture or button to go up one level, besides the breadcrumb?
+- Suggested pick: An "Up one level" button next to the breadcrumb on phones (estimate: effort +3 %, value +3 %).
+- Work: Low
+- Impact: Low
+- Necessity: Low
+- Issue: On a phone, going one selection level up needs the breadcrumb.
+- Fix: Add an "Up one level" button on phones that selects the parent level.
+- Conflicts: none
+
+### G-389: Versions left by projects deleted earlier
+
+- Status: Done (ADR-211)
+- Origin: ADR-203, 2026-11-06, out of scope (Claude)
+- Missing: ADR-203 asks about versions only when a project is deleted from now on; versions of projects deleted before it stay on the device, unlisted.
+- Request: Accept default, /batch all ready (G-156: keep every version until the user deletes it)
+- Questions: List versions whose project is gone, to restore or delete them?
+- Suggested pick: A "Versions of deleted projects" list in History with Restore as a new project and Delete (estimate: effort +8 %, value +5 %).
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
+- Issue: Versions of projects deleted before ADR-203 take space and cannot be reached.
+- Fix: List versions with no project in History, each with Restore and Delete.
+- Note: 2026-11-06: ADR-211 puts the list in History as picked; reaching it with no project open is G-454.
+
+### G-396: No repair for the family warning
+
+- Status: Done (ADR-210)
+- Origin: ADR-204, 2026-11-06; agent scoped it out (G-104's pick covers depth and height only)
+- Missing: The family compatibility warning (ADR-100) still offers no previewed repair (ADR-071); only the depth and height warnings get "match the neighbour" repairs.
+- Request: Not a quote: G-104 asked "Offer repairs such as 'Make Base cabinet 560 deep like its neighbour' or 'Move the bed away'?"
+- Questions: Offer a repair that moves one of the two pieces away until they no longer touch side by side?
+- Suggested pick: Move the later-placed piece sideways just clear of the other, reusing the overlap repair's moves (estimate: effort +10%, value +5%).
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
+- Issue: The family warning names pieces from rooms that do not belong together but offers no fix.
+- Fix: Offer a previewed move that takes one piece clear of the other.
+
+### G-404: Hand side for the lounger and daybed, multi-select gesture
+
+- Status: Done (ADR-207)
+- Origin: ADR-205, 2026-11-06; remainder of G-032 (the coordinator split it: ADR-205 takes only the 1 mm drift)
+- Missing: The lounger backrest and the daybed side panel are always built at the left end, so Mirror refuses them (arrange.ts). The multi-select gesture part of G-032 was not reviewed again; multi-select and groups are already built (ADR-097, ADR-159).
+- Request: “Duplicate, mirror and predictable rotate operations”.
+- Questions: Store a hand (left or right) on the lounger and daybed? Does any multi-select gesture still need to be added?
+- Suggested pick: Store a hand on those two pieces so that they mirror, and check whether Shift-click and long-press already cover the gesture. (estimate: effort +20%, value +15%)
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low-medium
+- Issue: The lounger backrest and the daybed side panel cannot be mirrored.
+- Fix: Add a stored hand side that the generators read, and that mirrorDesign swaps.
+- Conflicts: none
+- Note: 2026-11-06: ADR-207 takes over the stored end for the lounger and daybed and the gesture check (Shift/Ctrl-click and Select cover every view). A long-press gesture moved to G-423.
+
+### G-405: Profiled mouldings, run requests in templates, ceiling-filler find-it
+
+- Status: Done (ADR-209)
+- Origin: ADR-205, 2026-11-06; remainder of G-035 (the coordinator split it: ADR-205 takes only the sink and hob cut-outs)
+- Missing: Mouldings are plain strips with no profile. Project templates drop the requested trims and worktops (runRequests). The ceiling filler has not been checked in a browser.
+- Request: “Shared worktops”, “fillers, plinths, end panels and trim”, for kitchens.
+- Questions: Should templates carry run requests? Which moulding profiles are needed (shapes from the user, never invented)?
+- Suggested pick: Make templates carry run requests, and add a ceiling filler to a browser find-it. Mouldings get profiles that the user draws or types. (estimate: effort +25%, value +20%)
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low-medium
+- Issue: Templates lose requested trims and worktops, mouldings have no profile, and the ceiling filler has not been checked in a browser.
+- Fix: Keep runRequests in project templates, add user profiles to mouldings, and add a ceiling-filler browser find-it.
+- Conflicts: none
+
+### G-407: Typed position for sink and hob cut-outs
+
+- Status: Done (ADR-209)
+- Origin: ADR-205, 2026-11-06; agent scoped it out
+- Missing: Sink and hob cut-outs store only their width and depth. ADR-205 draws them centred on their base and on the worktop depth, and no offset can be typed.
+- Request: Sink and hob cut-outs on the worktop from sizes you enter (G-035 suggested pick, not a quote)
+- Questions: Add optional offsets from the base's left edge and from the worktop's front edge?
+- Suggested pick: Two optional offsets in mm; absent means centred, as today. (estimate: effort +10%, value +10%)
+- Work: Low
+- Impact: Low-medium
+- Necessity: Low-medium
+- Issue: A cut-out cannot be placed off-centre.
+- Fix: Add optional x and z offsets to RunSink and the hobs, and use them in the outline and the cut-list note.
+- Conflicts: none
+
+### G-408: Sink and hob cut-outs drawn in 3D and the front view
+
+- Status: Done (ADR-209)
+- Origin: ADR-205, 2026-11-06; the rest of G-212 (its suggested pick was the plan only)
+- Missing: The sink and hob cut-outs are outlined on the plan only, not in 3D or in the room front view.
+- Request: Accept default, /batch all ready (ADR-125: run sinks and handles)
+- Questions: Draw the cut-out as a hole in the 3D worktop?
+- Suggested pick: Extrude the worktop with the cut-out as a hole in 3D (the ADR-205 profile holes). (estimate: effort +10%, value +5%)
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
+- Issue: Cut-outs show only on the plan.
+- Fix: Give the worktop a profile hole for each cut-out in the project build.
+- Conflicts: none
+- Note: 2026-11-06: ADR-209 takes over the 3D holes (the suggested pick); the room front view moved to G-438.
+
+### G-412: Worktop edge profiles and bundled appliance models
+
+- Status: Done (ADR-209)
+- Origin: ADR-206, 2026-11-06; split from G-020 by the coordinator (ADR-206 takes only the client sheet)
+- Missing: Worktops have no edge profile choice; no appliance models are bundled (appliances come only as .glb imports, ADR-076).
+- Request: “To sell designed kitchens”.
+- Questions: Which three edge profiles? Which licence for bundled appliance models (CC0)?
+- Suggested pick: Three profile choices drawn on the worktop; a few CC0 appliance models once you pick that licence. (estimate: effort +30%, value +20%)
+- Work: Medium
+- Impact: Medium
+- Necessity: Low-medium
+- Issue: Worktops cannot show an edge profile and no appliance models ship with the app.
+- Fix: Add three drawn worktop edge profiles; bundle a few CC0 appliance models once the licence is chosen.
+- Conflicts: none
+- Note: 2026-11-06: ADR-209 takes over the worktop edge profiles; the bundled CC0 appliance models moved to G-437.
+
+### G-413: Board pictures in the plan, catalog pictures and cut sheets
+
+- Status: Done (ADR-208)
+- Origin: ADR-206, 2026-11-06; split from G-001 by the coordinator
+- Missing: The plan, catalog snapshots (src/core/snapshot.ts) and the cut sheets draw boards in plain colour.
+- Request: “Render the furniture according to the selected material's color and structure”.
+- Questions: Fill the plan and catalog pictures with the board picture, against ADR-048's average colour for catalog pictures and cut sheets?
+- Suggested pick: Fill the plan with the picture pattern; keep the average colour on catalog pictures and cut sheets as ADR-048 decided. (estimate: effort +10%, value +5%)
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
+- Issue: The plan, catalog pictures and cut sheets show boards as plain colour, not their picture.
+- Fix: Fill the plan with the board picture pattern; a new ADR if catalog pictures or cut sheets should change.
+- Conflicts: ADR-048 (catalog pictures and cut sheets use the average colour)
+- Note: 2026-11-06: ADR-208 takes over board pictures on the 2D plan only. Catalog pictures and cut sheets moved to G-431 (ADR-048 keeps the average colour there).
+
+### G-414: Formula conditions and stepped rounding
+
+- Status: Done (ADR-209)
+- Origin: ADR-206, 2026-11-06; agent scoped it out (G-324's pick names min, max, floor, ceil and round only)
+- Missing: Formulas have no conditions (if) and no rounding to a step such as a sheet thickness.
+- Request: Formulas too (user answer 2026-10-30).
+- Questions: Add if(condition, a, b) and round(x, step)?
+- Suggested pick: Add them when a real project needs one. (estimate: effort +10%, value +5%)
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
+- Issue: Formulas cannot branch or round to a step.
+- Fix: Add if(condition, a, b) and round(x, step) to the formula parser.
+- Conflicts: none
+
+### G-469: Enter chooses the destructive button in two ADR-203 dialogs
+
+- Status: Done (user 2026-11-06: "keep Enter on Keep in both dialogs"; commit 9a094917)
+- Origin: ADR-203 tests, 2026-11-06; agent found it
+- Missing: The shared confirm dialog focuses the non-default button, so Enter chooses 'Delete versions' (project delete) or 'Use the imported one' (template import) although ADR-203 makes 'Keep them' / 'Keep mine' the default (Esc and Keep delete nothing).
+- Request: Not asked; ADR-203 Decision: Keep is the default and nothing is deleted without the user's explicit choice (ADR-012).
+- Questions: Should Enter on these two dialogs choose the Keep button?
+- Suggested pick: Focus the Keep button first in both dialogs, so Enter keeps. (estimate: effort +2 %, value +4 %)

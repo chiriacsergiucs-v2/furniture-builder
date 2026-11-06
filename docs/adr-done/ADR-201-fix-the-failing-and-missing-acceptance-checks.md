@@ -1,7 +1,8 @@
 # ADR-201: Fix the failing and missing acceptance checks
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-06
+- Implemented: 2026-11-06
 - Depends on: ADR-008, ADR-064, ADR-093, ADR-108, ADR-122, ADR-168
 - Design: n/a
 - Backlog: N206
@@ -81,14 +82,14 @@ No UI text is added; a fix that adds text goes through `t()` with its Russian en
 
 ## Done when
 
-- [ ] `tools/move-3d/find-it.mjs` passes at 1440 and 390 px on the production build; N206 names the cause (G-351).
-- [ ] `tools/research-batch-2/find-it.mjs` passes at both widths with one click per toggle (G-181).
-- [ ] `tests/find-it/accounts.test.tsx` passes in three consecutive full local `pnpm test` runs (G-347).
-- [ ] `tools/editor-modes/find-it.mjs` finds the blocked reason and the disabled "Shopping list CSV" and "Print
+- [x] `tools/move-3d/find-it.mjs` passes at 1440 and 390 px on the production build; N206 names the cause (G-351).
+- [x] `tools/research-batch-2/find-it.mjs` passes at both widths with one click per toggle (G-181).
+- [x] `tests/find-it/accounts.test.tsx` passes in three consecutive full local `pnpm test` runs (G-347).
+- [x] `tools/editor-modes/find-it.mjs` finds the blocked reason and the disabled "Shopping list CSV" and "Print
       shopping list" at 390 and 1280 px (G-016).
 - [ ] `tools/catalog-compact/find-it.mjs` checks "N ready items" against the group counts at 390 and 1280 px (G-095).
-- [ ] `tools/connections/find-it.mjs` passes with the 3D Move drag and the desktop Alt drag (G-346).
-- [ ] The three find-it files keep one click path each, their core tests hold the moved checks,
+- [x] `tools/connections/find-it.mjs` passes with the 3D Move drag and the desktop Alt drag (G-346).
+- [x] The three find-it files keep one click path each, their core tests hold the moved checks,
       `tests/rapier-trial.test.ts` is gone and `pnpm test` passes (G-370).
 - [ ] A core-only pull request runs the `--changed` tests (CI run id and measured time in N206); `main` runs all
       (G-368).

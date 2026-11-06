@@ -453,41 +453,57 @@ function perKindWidths(
   if (!steps.length) return true;
   const head = order.length - 1;
   const lastN = count[head];
+  // The fixed kinds' widths are tried in the same order as an odometer (the first kind changing fastest), but a
+  // choice that leaves the last kind no room within min–max is skipped at once instead of being counted out at the
+  // end: only the valid combinations were ever built, and they come out in the same order.
+  const below = count.map((_, k) => count.slice(0, k).reduce((a, n) => a + n, 0));
+  const first = steps[0],
+    lastStep = steps[steps.length - 1];
   for (const wt of t ? steps : [0]) {
     const left = W - t * wt;
-    const pick = Array<number>(head).fill(0);
-    for (;;) {
-      const fixed = pick.map((i) => steps[i]);
-      const rest = left - fixed.reduce((a, w, k) => a + w * count[k], 0);
-      if (rest > 0) {
+    const fixed = Array<number>(head).fill(0);
+    const walk = (k: number, chosen: number): boolean => {
+      if (k < 0) {
+        const rest = left - chosen;
+        if (rest <= 0) return true;
+        // The last kind's pieces are floor(rest / lastN) or one more: both within min–max, and not all one width.
+        const lowest = Math.floor(rest / lastN);
+        if (lowest < min || Math.ceil(rest / lastN) > max || fixed.every((w) => w === lowest))
+          return true;
         const lastW = exactSplit(rest, lastN);
-        const widths = [...fixed, Math.floor(rest / lastN)];
-        if (lastW.every((w) => w >= min && w <= max) && new Set(widths).size > 1) {
-          if (out.length >= MAX_CANDIDATES) {
-            if (report) report.capped = true;
-            return false;
-          }
-          // Widths in the order the kinds stand, the last kind's exact split from the left.
-          let li = 0;
-          const bw = kinds.map((k) => {
-            const i = order.indexOf(k);
-            return i < head ? fixed[i] : lastW[li++];
-          });
-          const slots = lay({ tall: Array(t).fill(wt), base: bw }, kinds, at, n);
-          const nominal = [...Array(t).fill(wt), ...kinds.map((k) => widths[order.indexOf(k)])];
-          out.push({
-            slots,
-            score: scoreOf(slots, nominal, rest % lastN === 0, true),
-            // The signature names each kind's width: "800 drawers + 600 shelves" differs from the swap (ADR-204).
-            signature: `${t}|${t ? `tall ${wt},` : ''}${order.map((k, i) => `${k} ${widths[i]}×${count[i]}`).join(',')}`,
-          });
+        const widths = [...fixed, lowest];
+        if (out.length >= MAX_CANDIDATES) {
+          if (report) report.capped = true;
+          return false;
         }
+        // Widths in the order the kinds stand, the last kind's exact split from the left.
+        let li = 0;
+        const bw = kinds.map((kind) => {
+          const i = order.indexOf(kind);
+          return i < head ? fixed[i] : lastW[li++];
+        });
+        const slots = lay({ tall: Array(t).fill(wt), base: bw }, kinds, at, n);
+        const nominal = [...Array(t).fill(wt), ...kinds.map((kind) => widths[order.indexOf(kind)])];
+        out.push({
+          slots,
+          score: scoreOf(slots, nominal, rest % lastN === 0, true),
+          // The signature names each kind's width: "800 drawers + 600 shelves" differs from the swap (ADR-204).
+          signature: `${t}|${t ? `tall ${wt},` : ''}${order.map((kind, x) => `${kind} ${widths[x]}×${count[x]}`).join(',')}`,
+        });
+        return true;
       }
-      // The next combination of the fixed kinds' widths.
-      let k = 0;
-      while (k < head && ++pick[k] >= steps.length) pick[k++] = 0;
-      if (k === head) break;
-    }
+      for (const w of steps) {
+        fixed[k] = w;
+        const c = chosen + w * count[k];
+        // The kinds still to choose (0 to k-1) take between `first` and `lastStep` each; what is left for the last
+        // kind must fit lastN pieces of min–max.
+        if (left - c - below[k] * first < lastN * min) break; // wider only leaves less
+        if (left - c - below[k] * lastStep > lastN * max) continue;
+        if (!walk(k - 1, c)) return false;
+      }
+      return true;
+    };
+    if (!walk(head - 1, 0)) return false;
   }
   return true;
 }
@@ -820,14 +836,7 @@ export function suggestMixes(input: WallInput, limit = MIXES_FIRST): WallFill {
   const min = input.minWidth ?? WALL_DEFAULTS.minWidth,
     max = input.maxWidth ?? WALL_DEFAULTS.maxWidth;
   const report = { capped: false };
-  const list = candidates(input, report).sort(
-    (a, b) =>
-      cmp(a.score, b.score) ||
-      cmp(
-        a.slots.map((s) => s.width),
-        b.slots.map((s) => s.width),
-      ),
-  );
+  const list = candidates(input, report).sort(compareCandidates);
   const mixes: Mix[] = [];
   const seen = new Set<string>();
   let built = 0,
@@ -1028,6 +1037,21 @@ export function suggestMixes(input: WallInput, limit = MIXES_FIRST): WallFill {
       );
   }
   return { mixes, problems };
+}
+
+/**
+ * The order candidates are ranked in: by score, then by the slot widths left to right (a shorter list counts as
+ * zeros). Compares in place; the ranking sorts many thousands of candidates, so it allocates nothing per comparison.
+ */
+export function compareCandidates(a: Candidate, b: Candidate): number {
+  const d = cmp(a.score, b.score);
+  if (d) return d;
+  const n = Math.max(a.slots.length, b.slots.length);
+  for (let i = 0; i < n; i++) {
+    const w = (a.slots[i]?.width ?? 0) - (b.slots[i]?.width ?? 0);
+    if (w) return w;
+  }
+  return 0;
 }
 
 export function cmp(a: number[], b: number[]): number {

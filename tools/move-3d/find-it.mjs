@@ -5,6 +5,9 @@
 // 3D view, **Move**, a drag on the piece that changes its "From left", one **Undo** putting it back, **Turn 90° ↺**
 // turning it, and with Move off a drag that turns the view and moves nothing. Desktop drags with the mouse; the phone
 // with real touch (CDP). Not part of `pnpm test`.
+// ADR-201 (G-351): the piece card has no "Turn" radiogroup any more (the typed rotation is hidden, TYPED_ROTATION), so
+// the turn is read from the plan piece's name, "<name>, W by D mm", whose W and D swap after a quarter turn; and a
+// phone opens Build & Preview in 2D (ADR-144), so `to3d()` taps "3D" there too.
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
 
@@ -49,7 +52,13 @@ for (const width of [1440, 390]) {
   const dlg = page.locator('dialog[open]');
   const click = async (loc) => {
     await loc.scrollIntoViewIfNeeded();
-    await loc.click({ timeout: 3000 }).catch(() => loc.dispatchEvent('click'));
+    // ADR-201 (G-181): a click Playwright delivered ("click action done") but whose page was too busy to answer in
+    // 3 s (software-rendered 3D) was taken; clicking again here undid it, the "lost first tap". Fall back only when
+    // the click never happened (covered or off screen).
+    await loc.click({ timeout: 3000 }).catch((e) => {
+      if (!/performing click action|click action done/.test(e.message))
+        return loc.dispatchEvent('click');
+    });
   };
   const btn = (name, exact = true) => page.getByRole('button', { name, exact });
   // On a phone the project's pieces sit in the Compose sheet: open it to add or read, close it to see the view.
@@ -76,11 +85,24 @@ for (const width of [1440, 390]) {
   const canvas = three.locator('canvas');
   const move = tools.getByRole('button', { name: 'Move', exact: true });
   const note = three.getByText(/From left -?\d+ · From back -?\d+ mm/);
-  /** The selected piece's "From left" and turn, read from the piece's fields (on a phone: Compose, then back). */
+  /** The plan piece's "W by D mm" (its name on the plan; hidden behind the 3D view on a desktop, so included). */
+  const planSize = async () =>
+    (
+      (await page
+        .getByRole('button', { name: /^Base cabinet.*, \d+ by \d+ mm$/, includeHidden: true })
+        .first()
+        .getAttribute('aria-label', { timeout: 3000 })
+        .catch(() => '')) ?? ''
+    ).match(/(\d+ by \d+) mm$/)?.[1] ?? '';
+  /** The selected piece's "From left" and plan size, read from the piece's fields and the plan (on a phone: Compose,
+   *  then back). */
   const read = async () => {
     if (phone) {
       await page.getByRole('radio', { name: /Compose/ }).click();
       await page.waitForTimeout(300);
+      // The view choice is kept across modes: back to the plan ("2D") to read and tap the piece there.
+      const two = page.getByRole('radio', { name: '2D', exact: true });
+      if ((await two.getAttribute('aria-checked')) !== 'true') await two.click();
       await sheet(true);
     }
     await openGroup('Position');
@@ -99,21 +121,18 @@ for (const width of [1440, 390]) {
     }
     await field.scrollIntoViewIfNeeded().catch(() => {});
     const x = Number(await field.inputValue({ timeout: 3000 }).catch(() => 'NaN'));
-    const turn =
-      (await page
-        .getByRole('radiogroup', { name: 'Turn' })
-        .getByRole('radio', { checked: true })
-        .textContent({ timeout: 3000 })
-        .catch(() => '')) ?? '';
+    const size = await planSize();
     if (phone) {
       await sheet(false);
       await to3d();
     }
-    return { x, turn: turn.trim() };
+    return { x, size };
   };
   const to3d = async () => {
     if (phone) await page.getByRole('radio', { name: /Build & Preview/ }).click();
-    else await page.getByRole('radio', { name: '3D', exact: true }).click();
+    // A phone opens Build & Preview in 2D (ADR-144): tap "3D" as a user would.
+    const three3d = page.getByRole('radio', { name: '3D', exact: true });
+    if ((await three3d.getAttribute('aria-checked')) !== 'true') await three3d.click();
     await canvas.waitFor({ state: 'visible', timeout: 20000 });
     await page.waitForTimeout(1200);
   };
@@ -156,9 +175,13 @@ for (const width of [1440, 390]) {
   await to3d();
   // The Simple look draws fast enough in a software-rendered browser (it is kept on this device).
   {
-    const menu = page.locator('details.view-options');
+    // The Options menu that holds the Look (on a phone the plan has its own Options menu too).
+    const menu = page
+      .locator('details.view-options')
+      .filter({ has: page.getByRole('radio', { name: 'Simple', includeHidden: true }) });
     const inMenu = (await menu.count()) > 0;
-    if (inMenu && !(await menu.evaluate((d) => d.open))) await menu.locator('summary').click();
+    if (inMenu && !(await menu.evaluate((d) => d.open)))
+      await menu.locator(':scope > summary').click();
     await page.getByRole('radio', { name: 'Simple' }).click();
     if (inMenu) await page.keyboard.press('Escape');
     await page.waitForTimeout(800);
@@ -223,11 +246,12 @@ for (const width of [1440, 390]) {
   await click(turnBtn);
   await page.waitForTimeout(400);
   const turned = await read();
+  const [w0, d0] = start.size.split(' by ');
   check(
     width,
-    'Turn 90° ↺ turned the piece',
-    turned.turn === '90°',
-    `${start.turn} → ${turned.turn}`,
+    'Turn 90° ↺ turned the piece (the plan size swaps W and D)',
+    Boolean(w0) && w0 !== d0 && turned.size === `${d0} by ${w0}`,
+    `${start.size} → ${turned.size}; From left ${undone.x} → ${turned.x}`,
   );
   await shot('turned');
 

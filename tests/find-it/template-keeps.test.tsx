@@ -80,7 +80,7 @@ describe.each(WIDTHS)('templates keep variables at %ipx (find-it, ADR-170)', (wi
     await user.click(await screen.findByRole('button', { name: /Information and guides/ }));
     expect(
       await screen.findByText(
-        /connections, variables and bindings; pieces inserted into a project take its settings/,
+        /connections, variables, bindings, run handles and sinks; pieces inserted into a project take its settings/,
       ),
     ).toBeTruthy();
   });

@@ -39,7 +39,7 @@ import { applyStyle, type Style } from './styles';
 import {
   BASE_HEIGHT,
   candidates,
-  cmp,
+  compareCandidates,
   MIXES_FIRST,
   piece,
   WALL_HEIGHT,
@@ -525,14 +525,7 @@ function planIsland(
   const length = Math.floor((len - 2 * (input.depth + walkway)) / 50) * 50;
   if (length < (input.minWidth ?? 400)) return tooSmall;
   const widthInput: WallInput = { ...perWall, width: length, wallRow: 'never', tallCount: 0 };
-  const best = candidates(widthInput).sort(
-    (a, b) =>
-      cmp(a.score, b.score) ||
-      cmp(
-        a.slots.map((x) => x.width),
-        b.slots.map((x) => x.width),
-      ),
-  )[0];
+  const best = candidates(widthInput).sort(compareCandidates)[0];
   if (!best) return tooSmall;
   // The run's front: as deep as a base piece with its fronts; the island stands a walkway away from it.
   const probe = newProject('island');
@@ -636,14 +629,7 @@ export function suggestRoomMixes(input: RoomInput, limit = MIXES_FIRST): RoomFil
   // The best candidates per stretch.
   let lists: Candidate[][] = stretches.map((s) => {
     const list = candidates({ ...perWall, width: s.to - s.from })
-      .sort(
-        (a, b) =>
-          cmp(a.score, b.score) ||
-          cmp(
-            a.slots.map((x) => x.width),
-            b.slots.map((x) => x.width),
-          ),
-      )
+      .sort(compareCandidates)
       .slice(0, PER_STRETCH);
     return list;
   });

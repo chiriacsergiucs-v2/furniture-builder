@@ -189,7 +189,8 @@ export function Assembly() {
   const printWith = useUi((s) => s.printWith);
   const setAssembly = useDesign((s) => s.setAssembly);
   const choices = useFastenerChoices();
-  const [current, setCurrent] = useState<{ piece: string; n: number } | null>(null);
+  // The shown step by its id, so it stays the same step when the user moves steps (ADR-207).
+  const [current, setCurrent] = useState<{ piece: string; id: AssemblyStep['id'] } | null>(null);
   const [taking, setTaking] = useState(false);
   /**
    * The print (ADR-174) with one 3D picture per step (ADR-206): with the 3D view open, every step is shown in turn
@@ -228,13 +229,13 @@ export function Assembly() {
   // Leaving the tab turns the highlight off (the model is untouched either way, ADR-014).
   useEffect(() => () => setLit(null), [setLit]);
   const show = (p: PieceSteps, step: AssemblyStep) => {
-    setCurrent({ piece: p.key, n: step.n });
+    setCurrent({ piece: p.key, id: step.id });
     setLit(stepLitIds(step).map(p.idOf));
   };
   const move = (dir: 1 | -1) => {
     const p = pieces.find((x) => x.key === current?.piece) ?? pieces[0];
     if (!p) return;
-    const idx = current ? p.steps.findIndex((s) => s.n === current.n) : -1;
+    const idx = current ? p.steps.findIndex((s) => s.id === current.id) : -1;
     const next = p.steps[Math.min(p.steps.length - 1, Math.max(0, idx + dir))];
     if (next) show(p, next);
   };
@@ -310,7 +311,7 @@ export function Assembly() {
           )}
           <ol className="assembly-steps">
             {p.steps.map((s, i) => {
-              const on = current?.piece === p.key && current.n === s.n;
+              const on = current?.piece === p.key && current.id === s.id;
               const move = (dir: -1 | 1) => {
                 const edit = moveStep(p.steps, s.id, dir, p.edit);
                 if (edit)
