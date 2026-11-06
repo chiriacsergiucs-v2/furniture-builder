@@ -157,6 +157,7 @@ export function ProjectsPage({
             confirmLabel: t('Delete versions'),
             cancelLabel: t('Keep them'),
             danger: true,
+            cancelFirst: true,
           },
         ));
       await deleteProject(r.id);

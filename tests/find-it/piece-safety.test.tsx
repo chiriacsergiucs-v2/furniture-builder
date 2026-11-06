@@ -74,6 +74,10 @@ describe.each(WIDTHS)('keep project pieces safe at %ipx (find-it, ADR-203)', (wi
     );
     expect(within(ask).getByRole('button', { name: 'Keep them' })).toBeTruthy();
     expect(within(ask).getByRole('button', { name: 'Delete versions' })).toBeTruthy();
+    // Keep them takes the focus, so Enter keeps the versions (user 2026-11-06, G-469).
+    await waitFor(() =>
+      expect(document.activeElement).toBe(within(ask).getByRole('button', { name: 'Keep them' })),
+    );
     // Esc on a modal dialog is its cancel event.
     fireEvent(ask, new Event('cancel', { cancelable: true }));
     await waitFor(async () => expect(await db.loadProject(esc.id)).toBeUndefined());
@@ -229,6 +233,10 @@ describe.each(WIDTHS)('keep project pieces safe at %ipx (find-it, ADR-203)', (wi
         '“Their wardrobe” is already edited on this device. Keep yours or use the imported one?',
       ),
     ).toBeTruthy();
+    // Keep mine takes the focus, so Enter keeps the device's edit (user 2026-11-06, G-469).
+    await waitFor(() =>
+      expect(document.activeElement).toBe(within(ask).getByRole('button', { name: 'Keep mine' })),
+    );
     await user.click(within(ask).getByRole('button', { name: 'Keep mine' }));
     expect((await within(page).findByText(/kept as they were/)).textContent).toBe(
       '0 templates imported, 1 kept as they were.',
