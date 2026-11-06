@@ -33,11 +33,11 @@ function designTexts(d: Design): string[] {
 }
 
 /**
- * A note with numbers in it is covered by one key with placeholders (ADR-202): "side clearance 13 mm per side" by
- * "side clearance {n} mm per side", read through `tr()`.
+ * A text with numbers in it is covered by one key with `{placeholders}` (ADR-202: the number-specific literal entries
+ * of the hardware notes were deleted); `tr()` fills the key's placeholders with the text's numbers.
  */
 function byPlaceholders(s: string): boolean {
-  if (!/\d/.test(s)) return false;
+  if (!/\d/.test(s) || s.includes(': ')) return false;
   setLang('ru');
   try {
     return tr(s) !== s;

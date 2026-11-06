@@ -97,6 +97,7 @@ export const FEATURES: FeatureDomain[] = [
         detail:
           'New… → Room preset: a bedroom, a home office, or a kitchen and desk, ready in a 3600 × 3000 room.',
         adrs: ['ADR-210'],
+        checked: '2026-11-06',
       },
     ],
   },
@@ -1053,6 +1054,7 @@ export const FEATURES: FeatureDomain[] = [
             detail:
               'Add seller product in the project view puts a product on the project’s own shopping list; it travels in project templates.',
             adrs: ['ADR-210'],
+            checked: '2026-11-06',
           },
         ],
       },
@@ -1159,6 +1161,7 @@ export const FEATURES: FeatureDomain[] = [
         detail:
           'A piece’s own variables in its settings; its width, height, depth and underside height bind to them, also inside projects and catalog templates.',
         adrs: ['ADR-210'],
+        checked: '2026-11-06',
       },
       {
         name: 'Formula functions',
@@ -1221,12 +1224,14 @@ export const FEATURES: FeatureDomain[] = [
         detail:
           'A chip per manufacturer of your decor list, with its count: its decors and the saved pieces with its boards.',
         adrs: ['ADR-210'],
+        checked: '2026-11-06',
       },
       {
         name: 'Family rule for your own templates',
         detail:
           'A piece from your own template keeps its rooms, so pieces of rooms apart are warned about.',
         adrs: ['ADR-210'],
+        checked: '2026-11-06',
       },
       {
         name: 'Reference entries for upholstered pieces',
