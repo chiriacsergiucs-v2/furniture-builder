@@ -47,7 +47,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-003: Materials fields overlap at 375 px
 
-- Status: Open
+- Status: ADR-202
 - Origin: ADR-048, 2026-10-24 08:27 UTC; agent scoped it out
 - Missing: At phone width the Materials row (Dialogs.tsx:362-390) collapses to a 36px 1fr grid (styles.css:2670-2672), so "Thickness" likely overlaps "Has grain"; not checked in a browser.
 - Request: Phone-first (CLAUDE.md: no overlap or sideways scroll at 390 px) (context, not a quote)
@@ -544,7 +544,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-042: Project fasteners panel and Romanian labels
 
-- Status: Open
+- Status: ADR-202
 - Origin: ADR-074, 2026-10-25 00:16 UTC; agent scoped it out
 - Missing: Remaining: Fasteners in the project's own Settings dialog (Settings.tsx:62-71), fastener lines and footer of the shopping CSV in the print language (shopping.ts:51-53, 288-318 use t(), not pt()), drilling patterns.
 - Request: “Hardware and fastener completeness”.
@@ -558,6 +558,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Conflicts: none
 - Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): partly resolved. A piece's Fasteners panel is reachable from a project via Inside this piece › Size, boards and construction (ADR-090). Remaining: Fasteners in the project's own Settings dialog; the Romanian shopping CSV still writes fastener lines and footer in English (src/core/fasteners.ts, src/core/shopping.ts:32-33); drilling patterns.
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: 2026-11-06: ADR-202 takes over only the fastener CSV and print text (pt()); the project-level fasteners panel and drilling positions moved to G-380.
 
 ### G-043: Duplicate backlog id D02
 
@@ -780,7 +781,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-096: Empty Brands list promises a cancelled feed
 
-- Status: Open
+- Status: ADR-202
 - Origin: Gap re-check 2026-10-26 (G-044); agent found it
 - Missing: Same text, now at src/ui/Catalog.tsx:618 (Russian entry src/core/i18n/ru/catalog.ts:47).
 - Request: Catalog feed and brand filter (G-044) (context, not a quote)
@@ -2036,7 +2037,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-353: Catalog piece names untranslated on prints
 
-- Status: Open
+- Status: ADR-202
 - Origin: ADR-185, 2026-11-05; agent left it out
 - Missing: Piece names on the printed assembly sheet print as named (catalog defaults are English), so a Romanian or Russian print shows English piece names such as 'Base cabinet, 1 door'.
 - Request: Translate with the print (user 2026-11-05, for the fastener menu name); user-typed names are not translated (G-304).
@@ -2090,7 +2091,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-357: Doors choice is a dropdown on desktop
 
-- Status: Open
+- Status: ADR-202
 - Origin: ADR-191, 2026-11-05; agent scoped it out
 - Missing: The Doors field on a desktop is a dropdown (five options; the segmented control takes four), so sliding and per-compartment doors are hidden behind a click while the cards promote them. Not changed by ADR-191.
 - Request: Not asked; noted during the critique of 2026-11-05 and left out of the fourteen findings.
@@ -2117,7 +2118,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-360: Wizard Review rows repeat long labels
 
-- Status: Open
+- Status: ADR-202
 - Origin: ADR-194, 2026-11-05; design critique, agent scoped it out
 - Missing: Review rows repeat long field labels, e.g. 'Width of each compartment (0 = share the rest): 0 mm'.
 - Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
@@ -2126,7 +2127,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-361: Arrow keys on Segmented controls
 
-- Status: Open
+- Status: ADR-202
 - Origin: ADR-194, 2026-11-05; design critique, agent scoped it out
 - Missing: Segmented controls have no arrow-key movement anywhere in the app.
 - Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
@@ -2135,7 +2136,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-362: Catalog item counts differ from room chips
 
-- Status: Open
+- Status: ADR-202
 - Origin: ADR-195, 2026-11-05; design critique, agent scoped it out
 - Missing: The Catalog header says 118 items while the room chips sum to 183, because a family is listed under every room (ADR-032).
 - Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
@@ -2171,7 +2172,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-366: Hardware notes built from English fragments
 
-- Status: Open
+- Status: ADR-202
 - Origin: ADR-196, 2026-11-05; design critique, agent scoped it out
 - Missing: Hardware notes are assembled from English fragments (hingeBand), so the Russian schedule mixes languages.
 - Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
@@ -2236,4 +2237,34 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Necessity: Low-medium
 - Issue: Find-it tests dominate test CPU; each mounts the bare app with full module isolation and typed input delays.
 - Fix: Measure each lever, then apply the ones that keep the bare-app start (ADR-108).
+- Conflicts: none
+
+### G-380: Project fasteners panel and drilling positions
+
+- Status: Open
+- Origin: ADR-202, 2026-11-06; agent scoped it out (remainder of G-042)
+- Missing: Fasteners in the project's own Settings dialog (Settings.tsx:62-71) and drilling patterns drawn only from the values the user enters. ADR-202 takes over only the fastener CSV and print text of G-042.
+- Request: “Hardware and fastener completeness”.
+- Questions: Add the project-level panel? Draw drilling positions only from your values?
+- Suggested pick: Add the project-level panel. Draw drilling positions only from the values you enter, labelled as guidance (ADR-010). (estimate: effort +25%, value +20%)
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium
+- Issue: No fasteners panel in project Settings; no drilling patterns drawn.
+- Fix: Add the project fasteners panel; draw drilling only from user values, labelled as guidance.
+- Conflicts: none
+
+### G-381: Piece names in the parts CSV and shopping list title
+
+- Status: Open
+- Origin: ADR-202, 2026-11-06; agent scoped it out
+- Missing: ADR-202 prints untouched catalog piece names in the print language on the assembly sheet and the cut sheet's pieces table only; the parts CSV ("Piece: part" names) and the shopping list title keep the name as stored.
+- Request: Translate with the print (user 2026-11-05, for the fastener menu name); user-typed names are not translated (G-304).
+- Questions: Use the same print name in the parts CSV and the shopping list title?
+- Suggested pick: Yes, the same printPieceName() wherever a piece name is printed or exported. (estimate: effort +3%, value +3%)
+- Work: Low
+- Impact: Low
+- Necessity: Low-medium
+- Issue: The parts CSV and shopping list title show English catalog piece names on a Romanian or Russian export.
+- Fix: Route those names through printPieceName() too.
 - Conflicts: none
