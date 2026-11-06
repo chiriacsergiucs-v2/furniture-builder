@@ -1,7 +1,8 @@
 # ADR-195: Fix the catalog and template flows: honest revisions, visible storage errors, readable cards
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-05
+- Implemented: 2026-11-06 (Built and shipped in one PR (user 2026-11-06))
 - Depends on: ADR-034, ADR-096, ADR-107, ADR-118, ADR-119, ADR-153, ADR-166
 - Design: docs/ui-design.md (section 4, catalog)
 - Backlog: N200
