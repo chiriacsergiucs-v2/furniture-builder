@@ -7,6 +7,9 @@
  * ADR-177: a wall corner cabinet above each base corner cabinet when the wall row is on (blind → the catalog's wall
  * blind corner, L and diagonal → its wall L corner), the wall rows meeting it; a window splits a wall row into the
  * parts beside it, each filled as its own row up to the window edge.
+ * ADR-210: a style put on every piece of each mix before its checks; each mix's estimate, with a budget ceiling that
+ * hides costlier mixes; and an island of base cabinets in a rectangle room, its fronts facing the longest filled wall's
+ * run across a walkway the user types (no prefilled clearance, ADR-010).
  */
 import { kitchen } from './catalog/kitchen';
 import { cornerDefaults, newId, templates } from './design';
@@ -22,6 +25,9 @@ import {
   placedBounds,
 } from './project';
 import { inside, wallBox, wallInward, wallLength, type Room } from './room';
+import type { PriceEntry, SellerLookup, Estimate } from './prices';
+import { projectEstimate } from './projectEstimate';
+import { applyStyle, type Style } from './styles';
 import {
   BASE_HEIGHT,
   candidates,
@@ -51,6 +57,15 @@ export interface RoomInput extends Omit<WallInput, 'width' | 'height'> {
   corner?: CornerKind;
   /** Height for the wall row and the tall warning; absent = the room's height. */
   height?: Mm;
+  /** A style put on every piece of each mix before its checks (ADR-123, ADR-210); absent = Any. */
+  style?: Style;
+  /** The user's prices and the seller prices, for each mix's estimate (ADR-172, ADR-210). */
+  prices?: readonly PriceEntry[];
+  seller?: SellerLookup;
+  /** Mixes whose estimate is above this (minor units) are hidden (ADR-210); absent = no ceiling. */
+  ceiling?: number;
+  /** An island of base cabinets (ADR-210): `walkway` is the user's walkway width, required (no prefill, ADR-010). */
+  island?: { walkway?: Mm };
 }
 
 /** A stretch of a wall that pieces may stand on: `from`..`to` along the wall from its start corner. */
@@ -74,11 +89,18 @@ export interface RoomMix {
   project: Project;
   model: ProjectModel;
   warnings: Diagnostic[];
+  /** Its cost estimate (ADR-210): total and the lines without a price. */
+  estimate: Estimate;
+  /** The island's pieces in words, when it has one (ADR-210). */
+  island?: string;
 }
 
 export interface RoomFill {
   mixes: RoomMix[];
   problems: Diagnostic[];
+  /** Mixes hidden because their estimate is above the ceiling (ADR-210), and the cheapest of them. */
+  overBudget?: number;
+  cheapest?: number;
 }
 
 /** Candidates kept per stretch before combining (ADR-173: "cut to the best 6"). */
@@ -418,7 +440,114 @@ export function checkRoom(input: RoomInput): Diagnostic[] {
     out.push(err('room-input', t('A ticked wall is not a wall of this room.')));
   const probe: WallInput = { ...input, width: 1000, height: input.height ?? input.room.height };
   out.push(...checkWall(probe).filter((d) => d.code !== 'wall-input' || !/Width/.test(d.message)));
+  // An island (ADR-210): the user's walkway width, in a rectangle room.
+  if (input.island) {
+    const w = input.island.walkway;
+    if (w === undefined)
+      out.push(err('room-island', t('Type the walkway width to place an island.')));
+    else if (!Number.isInteger(w) || w < 1 || w > 10000)
+      out.push(err('room-island', t('The walkway width must be a whole number of mm above 0.')));
+    if (!isRectangle(input.room))
+      out.push(err('room-island', t('An island needs a rectangle room.')));
+  }
   return out;
+}
+
+/** A room of four walls, each along x or z (ADR-210: islands go in rectangle rooms only). */
+export function isRectangle(room: Room): boolean {
+  const o = room.outline;
+  return (
+    o.length === 4 &&
+    o.every((p, i) => {
+      const q = o[(i + 1) % 4];
+      return (p[0] === q[0]) !== (p[1] === q[1]);
+    })
+  );
+}
+
+/** The island's slots and where it stands, or why it does not fit (ADR-210). */
+interface IslandPlan {
+  wall: number;
+  from: Mm;
+  slots: Slot[];
+  /** Its fronts' distance from the wall: the run's depth plus the walkway. */
+  offset: Mm;
+  input: WallInput;
+}
+
+/** A turned piece's footprint along and across a wall it is put against. */
+function footOf(p: Project, d: Design, rotationY: QuarterTurn): { along: Mm; across: Mm } {
+  const made = makeItem(p, d);
+  const foot = placedBounds({ ...made, rotationY, position: { x: 0, y: 0, z: 0 } });
+  return rotationY % 180 === 0
+    ? { along: foot.w, across: foot.d }
+    : { along: foot.d, across: foot.w };
+}
+
+/**
+ * The island (ADR-210): base cabinets only, parallel to the longest filled wall, its fronts facing that wall's run a
+ * walkway away; as long as the wall less twice the depth and the walkway, in 50 mm steps, filled by `candidates()`;
+ * the walkway is kept behind it too (to the opposite wall or its run). An error when the room is too small.
+ */
+function planIsland(
+  input: RoomInput,
+  walls: number[],
+  perWall: WallInput,
+): IslandPlan | Diagnostic {
+  const room = input.room;
+  const walkway = input.island!.walkway!;
+  const tooSmall = err('room-island', t('The room is too small for an island with this walkway.'));
+  const wall = walls.reduce((a, b) => (wallLength(room, b) > wallLength(room, a) ? b : a));
+  const len = wallLength(room, wall);
+  const length = Math.floor((len - 2 * (input.depth + walkway)) / 50) * 50;
+  if (length < (input.minWidth ?? 400)) return tooSmall;
+  const widthInput: WallInput = { ...perWall, width: length, wallRow: 'never', tallCount: 0 };
+  const best = candidates(widthInput).sort(
+    (a, b) =>
+      cmp(a.score, b.score) ||
+      cmp(
+        a.slots.map((x) => x.width),
+        b.slots.map((x) => x.width),
+      ),
+  )[0];
+  if (!best) return tooSmall;
+  // The run's front: as deep as a base piece with its fronts; the island stands a walkway away from it.
+  const probe = newProject('island');
+  const [nx, nz] = wallInward(room, wall);
+  const turn = turnFor([-nx, -nz]);
+  const across = Math.max(
+    ...best.slots.map((s) => footOf(probe, piece(s, widthInput), turn).across),
+  );
+  const offset = across + walkway;
+  const opposite = (wall + 2) % 4;
+  const roomDepth = wallLength(room, (wall + 1) % 4);
+  const behind = roomDepth - (offset + across) - (walls.includes(opposite) ? across : 0);
+  if (behind < walkway) return tooSmall;
+  return {
+    wall,
+    from: Math.floor((len - length) / 2),
+    slots: best.slots,
+    offset,
+    input: widthInput,
+  };
+}
+
+/** The island's pieces in project `p`, turned to face the wall's run (ADR-210). */
+function islandItems(p: Project, room: Room, plan: IslandPlan): ProjectItem[] {
+  const [nx, nz] = wallInward(room, plan.wall);
+  const rotationY = turnFor([-nx, -nz]);
+  let at = plan.from;
+  return plan.slots.map((slot) => {
+    const d = piece(slot, plan.input);
+    const made = makeItem(p, d);
+    const { along, across } = footOf(p, d, rotationY);
+    // From the wall out to the island's back, then only the island's own depth.
+    const b = wallBox(room, plan.wall, at, along, plan.offset + across, 0, 1);
+    at += slot.width;
+    const x = nx > 0 ? b.x + plan.offset : b.x;
+    const z = nz > 0 ? b.z + plan.offset : b.z;
+    return { ...made, rotationY, position: { x, y: made.position.y, z } };
+  });
 }
 
 /**
@@ -430,6 +559,11 @@ export function suggestRoomMixes(input: RoomInput, limit = MIXES_FIRST): RoomFil
   if (bad.length) return { mixes: [], problems: bad };
   const room = input.room;
   const walls = (input.walls ?? room.outline.map((_, i) => i)).slice().sort((a, b) => a - b);
+  // The island first (ADR-210): the same for every mix; a room too small for it is an error.
+  const island = input.island
+    ? planIsland(input, walls, { ...input, width: 0, height: input.height ?? room.height })
+    : null;
+  if (island && 'severity' in island) return { mixes: [], problems: [island] };
   const corner = input.corner ?? 'blind';
   const n = room.outline.length;
   const min = input.minWidth ?? 400;
@@ -506,13 +640,20 @@ export function suggestRoomMixes(input: RoomInput, limit = MIXES_FIRST): RoomFil
   const mixes: RoomMix[] = [];
   const seen = new Set<string>();
   let failed = 0;
+  let overBudget = 0;
+  let cheapest: number | undefined;
   for (const combo of combos) {
     if (mixes.length >= limit) break;
     const picks = combo.map((r, k) => lists[k][r]);
     const key = picks.map((c, k) => `${stretches[k].wall}:${c.signature}`).join('/');
     if (seen.has(key)) continue;
     seen.add(key);
-    const project = roomProject(input, stretches, picks, cabinets, corner, perWall);
+    let project = roomProject(input, stretches, picks, cabinets, corner, perWall);
+    if (island)
+      project = { ...project, items: [...project.items, ...islandItems(project, room, island)] };
+    // A style goes on every piece before the checks (ADR-210).
+    if (input.style && project.items.length)
+      project = applyStyle(project, project.items[0].id, input.style, 'project').project;
     const model = buildProjectModel(project);
     if (model.diagnostics.some((d) => d.severity === 'error')) {
       failed++;
@@ -534,6 +675,13 @@ export function suggestRoomMixes(input: RoomInput, limit = MIXES_FIRST): RoomFil
           itemIds: [pc.item.id],
         });
     }
+    // Its estimate (ADR-210); a mix above the ceiling is hidden and counted.
+    const estimate = projectEstimate(project, model, input.prices ?? [], input.seller).est;
+    if (input.ceiling !== undefined && estimate.total > input.ceiling) {
+      overBudget++;
+      cheapest = Math.min(cheapest ?? estimate.total, estimate.total);
+      continue;
+    }
     const byWall = walls.map((w) => {
       const ks = stretches.map((s, k) => (s.wall === w ? k : -1)).filter((k) => k >= 0);
       const slots = ks.flatMap((k) => picks[k].slots);
@@ -551,13 +699,15 @@ export function suggestRoomMixes(input: RoomInput, limit = MIXES_FIRST): RoomFil
       project,
       model,
       warnings: [...tallWarn, ...model.diagnostics.filter((d) => d.severity === 'warning')],
+      estimate,
+      ...(island ? { island: summaryOf(island.slots) } : {}),
     });
   }
   mixes.sort(
     (a, b) =>
       a.warnings.length - b.warnings.length || a.project.items.length - b.project.items.length,
   );
-  if (!mixes.length)
+  if (!mixes.length && !overBudget)
     problems.push(
       err(
         'room-no-mix',
@@ -569,7 +719,7 @@ export function suggestRoomMixes(input: RoomInput, limit = MIXES_FIRST): RoomFil
           : t('No mix could be built.'),
       ),
     );
-  return { mixes, problems };
+  return { mixes, problems, ...(overBudget ? { overBudget, cheapest } : {}) };
 }
 
 const summaryOf = (slots: Slot[]): string => {

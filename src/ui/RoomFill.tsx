@@ -4,8 +4,8 @@
  * narrows them; "Use this mix" saves and opens a project, or adds the pieces to the open project. The mixes are
  * worked out in `src/core/roomfill.ts`; this file only collects the answers and shows the result.
  */
-import { useId, useMemo, useState } from 'react';
-import { t } from '../core/i18n';
+import { useEffect, useId, useMemo, useState } from 'react';
+import { t, tr } from '../core/i18n';
 import {
   BASE_HEIGHT,
   TALL_HEIGHT,
@@ -16,7 +16,17 @@ import {
   type TallPosition,
   type WallRow,
 } from '../core/wallfill';
-import { suggestRoomMixes, type CornerKind, type RoomInput, type RoomMix } from '../core/roomfill';
+import {
+  isRectangle,
+  suggestRoomMixes,
+  type CornerKind,
+  type RoomInput,
+  type RoomMix,
+} from '../core/roomfill';
+import { CURRENCY_ID, DEFAULT_CURRENCY, formatMoney, parseMoney } from '../core/prices';
+import { builtInStyles, yourStyles, type Style } from '../core/styles';
+import { listProjects } from '../persist/db';
+import { usePrices } from './priceStore';
 import {
   DEFAULT_ROOM_HEIGHT,
   shapeOutline,
@@ -69,6 +79,11 @@ interface Form {
   wallDepth: string;
   /** The room's doors, windows and other features (ADR-204). */
   features: RoomFeature[];
+  /** Budget ceiling as typed (empty = none), the style's id ('' = Any), an island and its walkway (ADR-210). */
+  ceiling: string;
+  style: string;
+  island: boolean;
+  walkway: string;
 }
 
 const START: Form = {
@@ -95,6 +110,11 @@ const START: Form = {
   tallHeight: String(TALL_HEIGHT),
   wallDepth: String(WALL_DEPTH),
   features: [],
+  ceiling: '',
+  style: '',
+  island: false,
+  // No prefilled walkway: the user's own size (ADR-010, ADR-073).
+  walkway: '',
 };
 
 const num = (s: string) => Number(s.trim());
@@ -117,8 +137,20 @@ function roomOf(f: Form): Room {
   };
 }
 
-function toInput(f: Form, room: Room, walls: number[]): RoomInput {
+/** What Fill the room needs beyond the form (ADR-210): the styles to pick from and the prices to estimate with. */
+interface Extras {
+  styles: Style[];
+  prices: RoomInput['prices'];
+}
+
+function toInput(f: Form, room: Room, walls: number[], extras?: Extras): RoomInput {
+  const ceiling = f.ceiling.trim() ? parseMoney(f.ceiling) : null;
+  const style = f.style ? extras?.styles.find((s) => s.id === f.style) : undefined;
   return {
+    ...(ceiling !== null ? { ceiling } : {}),
+    ...(style ? { style } : {}),
+    ...(f.island ? { island: { walkway: opt(f.walkway) } } : {}),
+    prices: extras?.prices ?? [],
     room,
     walls,
     depth: num(f.pieceDepth),
@@ -174,7 +206,17 @@ function Field({
 const picture = (m: RoomMix) =>
   `data:image/svg+xml;charset=utf-8,${encodeURIComponent(snapshotSvg(m.model.model, m.model.materials, 220))}`;
 
-function MixCard({ m, onUse, label }: { m: RoomMix; onUse: () => void; label: string }) {
+function MixCard({
+  m,
+  onUse,
+  label,
+  currency,
+}: {
+  m: RoomMix;
+  onUse: () => void;
+  label: string;
+  currency: string;
+}) {
   const src = useMemo(() => picture(m), [m]);
   return (
     <li className="wz-card wf-card">
@@ -196,6 +238,14 @@ function MixCard({ m, onUse, label }: { m: RoomMix; onUse: () => void; label: st
               n: m.corners,
             })
           : m.summary}
+      </span>
+      {m.island && (
+        <span className="wz-card-label">{t('Island: {summary}', { summary: m.island })}</span>
+      )}
+      <span className="wz-card-label num">
+        {t('Estimate {total} {currency}', { total: formatMoney(m.estimate.total), currency })}
+        {m.estimate.missing.length > 0 &&
+          ` · ${t('{n|# line|# lines} without a price', { n: m.estimate.missing.length })}`}
       </span>
       {m.warnings.length > 0 && (
         <ul className="wf-warnings">
@@ -258,15 +308,40 @@ function RoomFill({
   const [walls, setWalls] = useState<number[] | null>(null);
   const ticked = walls ?? room.outline.map((_, i) => i);
   const set = (k: keyof Form) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
+  // Styles (ADR-123): the built-in ones and yours, from your saved projects (ADR-210).
+  const [mine, setMine] = useState<Style[]>([]);
+  useEffect(() => {
+    let live = true;
+    listProjects()
+      .then((rows) => live && setMine(yourStyles(rows.map((r) => r.project))))
+      .catch(() => live && setMine([]));
+    return () => {
+      live = false;
+    };
+  }, []);
+  const styles = useMemo(() => [...builtInStyles(), ...mine], [mine]);
+  // The user's prices for each mix's estimate (ADR-172, ADR-210).
+  const prices = usePrices((s) => s.prices);
+  const loadPrices = usePrices((s) => s.load);
+  useEffect(() => loadPrices(), [loadPrices]);
+  const currency = useMemo(
+    () => prices.find((p) => p.id === CURRENCY_ID)?.text ?? DEFAULT_CURRENCY,
+    [prices],
+  );
   const result = useMemo(
     () =>
       applied
         ? suggestRoomMixes(
-            toInput(applied.form, projectRoom ?? roomOf(applied.form), applied.walls),
+            toInput(applied.form, projectRoom ?? roomOf(applied.form), applied.walls, {
+              styles,
+              prices,
+            }),
           )
         : null,
-    [applied, projectRoom],
+    [applied, projectRoom, styles, prices],
   );
+  const badCeiling = form.ceiling.trim() !== '' && parseMoney(form.ceiling) === null;
+  const rectangle = isRectangle(room);
   const go = (s: StepId) => {
     setStep(s);
     document.querySelector('.dialog[open] .dialog-body')?.scrollTo({ top: 0 });
@@ -463,6 +538,55 @@ function RoomFill({
               { value: 'centre', label: t('Centre') },
             ]}
           />
+          <div className="wf-grid">
+            <Field
+              label={t('Budget ceiling')}
+              value={form.ceiling}
+              onChange={set('ceiling')}
+              unit={currency}
+              placeholder={t('none')}
+              hint={t('Mixes whose estimate is above it are hidden.')}
+            />
+            <div className="field">
+              <label htmlFor="room-fill-style">{t('Style')}</label>
+              <select
+                id="room-fill-style"
+                value={form.style}
+                onChange={(e) => setForm((f) => ({ ...f, style: e.target.value }))}
+              >
+                <option value="">{t('Any')}</option>
+                {styles.map((st) => (
+                  <option key={st.id} value={st.id}>
+                    {tr(st.name)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          {badCeiling && (
+            <p className="alert error" role="alert">
+              <Icon name="alert-circle" className="sm" />
+              <span>{t('The budget ceiling is not an amount; it is not applied.')}</span>
+            </p>
+          )}
+          <label className="toggle small">
+            <input
+              type="checkbox"
+              checked={form.island}
+              disabled={!rectangle}
+              onChange={(e) => setForm((f) => ({ ...f, island: e.target.checked }))}
+            />
+            <span>{t('Add an island')}</span>
+          </label>
+          {!rectangle && <p className="hint">{t('An island needs a rectangle room.')}</p>}
+          {form.island && (
+            <Field
+              label={t('Walkway width')}
+              value={form.walkway}
+              onChange={set('walkway')}
+              hint={t('Your walkway around the island, in front of it and behind it.')}
+            />
+          )}
         </section>
       )}
       {step === 'mixes' && result && (
@@ -476,6 +600,22 @@ function RoomFill({
               })}
             </span>
           </div>
+          {!!result.overBudget && result.mixes.length > 0 && (
+            <p className="alert info" role="status">
+              <Icon name="info" className="sm" />
+              <span>{t('{n|# mix|# mixes} over the budget hidden', { n: result.overBudget })}</span>
+            </p>
+          )}
+          {!!result.overBudget && !result.mixes.length && (
+            <p className="alert error" role="status">
+              <Icon name="alert-circle" className="sm" />
+              <span>
+                {t('No mix fits the budget; the cheapest is {total}.', {
+                  total: `${formatMoney(result.cheapest ?? 0)} ${currency}`,
+                })}
+              </span>
+            </p>
+          )}
           {result.problems.map((p, i) => (
             <p key={i} className={`alert ${p.severity}`} role="status">
               <Icon name={p.severity === 'error' ? 'alert-circle' : 'info'} className="sm" />
@@ -489,6 +629,7 @@ function RoomFill({
                   key={m.key}
                   m={m}
                   label={addTo ? t('Add this mix') : t('Use this mix')}
+                  currency={currency}
                   onUse={() => void use(m)}
                 />
               ))}

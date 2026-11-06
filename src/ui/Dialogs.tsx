@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { kerfOf, newId, sheetOf } from '../core/design';
 import type { BoardFinish, Material, MaterialKind, MaterialMaker } from '../core/types';
 import { t } from '../core/i18n';
@@ -14,6 +14,8 @@ import {
   type Decor,
 } from '../core/materials';
 import { newProject } from '../core/project';
+import { roomPresets } from '../core/catalog/roomPresets';
+import { projectFromTemplate, type ProjectTemplate } from '../core/projectTemplate';
 import {
   clearDecors,
   listBands,
@@ -249,6 +251,7 @@ export function NewDialog({
           <Icon name="chevron-right" className="chev sm" />
         </button>
       )}
+      <RoomPresets onOpened={opened} />
       {open && (
         <StartFrom
           onPick={(d) => {
@@ -259,6 +262,76 @@ export function NewDialog({
         />
       )}
     </Dialog>
+  );
+}
+
+/**
+ * New… → Room preset (ADR-210): the shipped room presets; one becomes a project with its room, saved on this device and
+ * opened (ADR-060). Presets are built when the row opens.
+ */
+function RoomPresets({ onOpened }: { onOpened: () => void }) {
+  const openProject = useDesign((s) => s.openProject);
+  const [shown, setShown] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const presets = useMemo(() => (shown ? roomPresets() : []), [shown]);
+  const use = async (template: ProjectTemplate) => {
+    try {
+      const p = projectFromTemplate(template);
+      await saveProject(p);
+      openProject(p);
+      onOpened();
+    } catch {
+      setError(t('The project could not be created on this device.'));
+    }
+  };
+  return (
+    <>
+      <button
+        type="button"
+        className="row-btn"
+        aria-expanded={shown}
+        onClick={() => setShown((v) => !v)}
+      >
+        <span className="glyph">
+          <Icon name="project" />
+        </span>
+        <span>
+          <strong>{t('Room preset')}</strong>
+          <span className="sub">
+            {t(
+              'A ready room with its pieces against the walls: a bedroom, a home office, a kitchen and desk.',
+            )}
+          </span>
+        </span>
+        <Icon name={shown ? 'chevron-down' : 'chevron-right'} className="chev sm" />
+      </button>
+      {shown && (
+        <ul className="home-list" aria-label={t('Room presets')}>
+          {presets.map((pr) => (
+            <li key={pr.id}>
+              <button type="button" className="row-btn" onClick={() => void use(pr.template)}>
+                <span className="glyph">
+                  <Icon name="project" />
+                </span>
+                <span>
+                  <strong>{pr.name}</strong>
+                  <span className="sub">
+                    {t('{n|# piece|# pieces}', { n: pr.template.items.length })}
+                    {t(', with the room')}
+                  </span>
+                </span>
+                <Icon name="chevron-right" className="chev sm" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {error && (
+        <p className="alert error" role="alert">
+          {error}
+        </p>
+      )}
+    </>
   );
 }
 

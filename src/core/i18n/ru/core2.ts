@@ -685,4 +685,9 @@ export const ru_core2 = {
   'Invalid backrest or side panel end': 'Недопустимая сторона спинки или боковой панели',
   'Connection kinds need project schemaVersion {v}':
     'Виды соединений требуют schemaVersion проекта {v}',
+  'Catalog origin rooms need schemaVersion 9':
+    'Комнаты происхождения из каталога требуют schemaVersion 9',
+  'Invalid catalog origin rooms': 'Неверные комнаты происхождения из каталога',
+  'Piece variables need schemaVersion 9': 'Переменные изделия требуют schemaVersion 9',
+  'Invalid piece bindings': 'Неверные привязки изделия',
 } satisfies Record<string, string>;

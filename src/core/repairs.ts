@@ -26,7 +26,7 @@ import {
   type ProjectModel,
   type RunPart,
 } from './project';
-import { movesInside } from './room';
+import { boxInside, movesInside } from './room';
 import type { Box, Diagnostic, Material, Mm } from './types';
 
 export interface Repair {
@@ -56,7 +56,10 @@ export const applicable = (r: Repair) => !r.refused;
 /** At most this many repairs are listed for one problem, smallest first. */
 export const MAX_REPAIRS = 4;
 
-/** The codes repairs exist for (ADR-071; the depth and height matches ADR-204; a back over a pipe or outlet, ADR-205). */
+/**
+ * The codes repairs exist for (ADR-071; the depth and height matches ADR-204; a back over a pipe or outlet, ADR-205;
+ * the family warning, ADR-210).
+ */
 export const REPAIRABLE = new Set([
   'pieces-overlap',
   'opening-blocked',
@@ -64,6 +67,7 @@ export const REPAIRABLE = new Set([
   'compat-depth-match',
   'compat-height-match',
   'covers-service',
+  'compat-family',
 ]);
 
 /**
@@ -315,6 +319,59 @@ function matchCandidate(
   return { ...base, project: propagateLinks(project, next, true) };
 }
 
+/** Whether two boxes share volume. */
+const boxesOverlap = (a: Box, b: Box) =>
+  a.x < b.x + b.w &&
+  b.x < a.x + a.w &&
+  a.z < b.z + b.d &&
+  b.z < a.z + a.d &&
+  a.y < b.y + b.h &&
+  b.y < a.y + a.h;
+
+/**
+ * The family warning's repair (ADR-210): piece `pc` moves along its wall in direction `dir` to the nearest spot where
+ * it touches no piece side by side, overlaps none and stays in the room. Null when there is none or it is locked.
+ */
+function apartCandidate(
+  project: Project,
+  pm: ProjectModel,
+  pc: PlacedPiece,
+  dir: 1 | -1,
+): Candidate | null {
+  if (pc.item.locked) return null;
+  const axis: 'x' | 'z' = pc.facing.axis === 'z' ? 'x' : 'z';
+  const others = pm.pieces.filter((o) => o.item.id !== pc.item.id);
+  const m = pc.bounds;
+  const lo = (b: Box) => (axis === 'x' ? b.x : b.z);
+  const len = (b: Box) => (axis === 'x' ? b.w : b.d);
+  // The spots to try: 1 mm off where it is, and 1 mm past each other piece's edge, in this direction.
+  const shifts = new Set<number>([dir]);
+  for (const o of others.map((x) => x.bounds)) {
+    shifts.add(lo(o) + len(o) + 1 - lo(m));
+    shifts.add(lo(o) - 1 - (lo(m) + len(m)));
+  }
+  const tries = [...shifts].filter((s) => s * dir > 0).sort((p, q) => Math.abs(p) - Math.abs(q));
+  const room = project.room;
+  for (const s of tries) {
+    const box = axis === 'x' ? { ...m, x: m.x + s } : { ...m, z: m.z + s };
+    if (room && !boxInside(room.outline, box)) continue;
+    const touches = others.some((o) => {
+      const b = o.bounds;
+      if (boxesOverlap(box, b)) return true;
+      // Side by side: one end face on the other's, with depth and height in common.
+      const faces = lo(box) + len(box) === lo(b) || lo(b) + len(b) === lo(box);
+      const across = axis === 'x' ? ['z', 'd'] : ['x', 'w'];
+      const [p, w] = across as ['x' | 'z', 'w' | 'd'];
+      const deep = Math.min(box[p] + box[w], b[p] + b[w]) - Math.max(box[p], b[p]);
+      const high = Math.min(box.y + box.h, b.y + b.h) - Math.max(box.y, b.y);
+      return faces && deep > 0 && high > 0;
+    });
+    if (touches) continue;
+    return moveCandidate(project, pc, axis, s);
+  }
+  return null;
+}
+
 function candidates(project: Project, pm: ProjectModel, d: Diagnostic): Candidate[] {
   const byId = new Map(pm.pieces.map((pc) => [pc.item.id, pc]));
   const ids = d.itemIds ?? [];
@@ -370,6 +427,12 @@ function candidates(project: Project, pm: ProjectModel, d: Diagnostic): Candidat
     const axis = d.code === 'compat-depth-match' ? 'depth' : 'height';
     // Both ways: the second piece like the first, then the first like the second; sorted by the change in mm.
     out.push(matchCandidate(project, b, a, axis), matchCandidate(project, a, b, axis));
+  } else if (d.code === 'compat-family' && ids.length === 2) {
+    const [a, b] = ids.map((id) => byId.get(id));
+    if (!a || !b) return [];
+    // The later-placed piece first, then the other: along its wall, left or right, to the nearest spot (ADR-210).
+    for (const m of [b, a])
+      for (const dir of [1, -1] as const) out.push(apartCandidate(project, pm, m, dir));
   } else if (d.code === 'outside-room' && ids.length === 1) {
     const pc = byId.get(ids[0]);
     const room = project.room;

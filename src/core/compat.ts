@@ -10,7 +10,13 @@
  * warning that never blocks export (ADR-008). Pure and deterministic.
  */
 import { t, tr } from './i18n';
-import { findFamily, ROOM_LABEL, type CatalogFamily, type FunctionGroup } from './catalog';
+import {
+  findFamily,
+  ROOM_LABEL,
+  type CatalogFamily,
+  type FunctionGroup,
+  type Room,
+} from './catalog';
 import { isWallHung, type PlacedPiece, type ProjectItem, type RunPart } from './project';
 import type { Box, Diagnostic, Mm, Product } from './types';
 
@@ -149,7 +155,8 @@ export const COMPAT_RULES: readonly CompatRule[] = [
     text: 'family rule: pieces join side by side only when their catalog families share a room',
     messages: { snap: t('{reason}; {text}'), checks: t('{reason}; {text}.') },
     namedWhenSnapped: true,
-    repairs: [],
+    // ADR-210: the later-placed piece (then the other) moves along its wall to where it touches nothing.
+    repairs: ['move-apart'],
   },
 ];
 
@@ -178,6 +185,17 @@ export function familyOf(item: ProjectItem): CatalogFamily | undefined {
   return id ? findFamily(id) : undefined;
 }
 
+/**
+ * The family a piece's rooms come from, for the family rule (ADR-210): a shipped family by its id, else the rooms the
+ * user's own family recorded on the piece (`origin.rooms`). Undefined for a piece with neither (nothing is known).
+ */
+export function familyRooms(item: ProjectItem): { name: string; rooms: Room[] } | undefined {
+  const f = familyOf(item);
+  if (f) return { name: f.name, rooms: f.rooms };
+  const o = item.design.catalog?.origin;
+  return o?.rooms?.length ? { name: o.productName, rooms: o.rooms } : undefined;
+}
+
 /** Whether a rule's "applies to" covers a piece placed as `mount`. */
 export function appliesTo(
   rule: CompatRule,
@@ -194,7 +212,7 @@ export function appliesTo(
   return true;
 }
 
-const rooms = (f: CatalogFamily) => f.rooms.map((r) => tr(ROOM_LABEL[r])).join(', ');
+const rooms = (f: { rooms: Room[] }) => f.rooms.map((r) => tr(ROOM_LABEL[r])).join(', ');
 
 // ---------------------------------------------------------------------------
 // The predicates: each returns null when the rule holds (or does not concern this join), else what it found.
@@ -253,9 +271,9 @@ const PREDICATES: Record<RulePredicate, (rule: CompatRule, c: JoinContext) => st
       : null,
   'shared-room': (_, c) => {
     if (!c.b) return null;
-    const fa = familyOf(c.a),
-      fb = familyOf(c.b);
-    // A piece with no shipped family: nothing is known about it, so nothing is refused.
+    const fa = familyRooms(c.a),
+      fb = familyRooms(c.b);
+    // A piece with no shipped family and no recorded rooms: nothing is known about it, so nothing is refused.
     if (!fa || !fb || fa.rooms.some((r) => fb.rooms.includes(r))) return null;
     return t('{a} ({fa}: {ra}) and {b} ({fb}: {rb}) share no room', {
       a: c.a.design.name,

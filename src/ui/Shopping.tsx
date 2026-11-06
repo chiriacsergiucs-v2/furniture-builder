@@ -265,13 +265,7 @@ export function ShoppingList() {
           <Icon name="printer" className="sm" />
           {t('Print shopping list')}
         </button>
-        <button
-          type="button"
-          className="btn sm"
-          disabled={projectView}
-          title={projectView ? t('Open a piece to add a seller product to it') : undefined}
-          onClick={() => setAdding(true)}
-        >
+        <button type="button" className="btn sm" onClick={() => setAdding(true)}>
           <Icon name="plus" className="sm" />
           {t('Add seller product')}
         </button>
@@ -279,7 +273,11 @@ export function ShoppingList() {
       <ProductPicker
         open={adding}
         title={t('Add seller product')}
-        hint={t('Any product of a seller, added to this piece’s shopping list.')}
+        hint={
+          projectView
+            ? t('Any product of a seller, added to this project’s shopping list.')
+            : t('Any product of a seller, added to this piece’s shopping list.')
+        }
         offers={any}
         onClose={() => setAdding(false)}
         onPick={(o: Offer) => {
@@ -481,6 +479,8 @@ function LineProduct({ l, projectView }: { l: ShopLine; projectView: boolean }) 
   const setLineProduct = useDesign((s) => s.setHardwareProduct);
   const setRunProduct = useDesign((s) => s.setRunProduct);
   const setQuantity = useDesign((s) => s.setSellerItemQuantity);
+  const setProjectQuantity = useDesign((s) => s.setProjectSellerItemQuantity);
+  const project = useDesign((s) => s.project);
   const [open, setOpen] = useState(false);
   const [bad, setBad] = useState(false);
   const { hardwareKind, sizeMm, runKey } = l;
@@ -495,8 +495,24 @@ function LineProduct({ l, projectView }: { l: ShopLine; projectView: boolean }) 
     [hardwareKind, sizeMm, runKey, worktop],
   );
   if (l.itemIndex !== undefined) {
-    if (projectView) return null;
+    // In the project view only the project's own items change here (ADR-210); a piece's are changed in the piece.
+    const p = l.product;
+    const own =
+      projectView && p && project
+        ? project.sellerItems?.find((x) => x.seller === p.seller && x.id === p.id)
+        : undefined;
+    if (
+      projectView &&
+      (!own ||
+        !p ||
+        project?.items.some((it) =>
+          it.design.sellerItems?.some((x) => x.seller === p.seller && x.id === p.id),
+        ))
+    )
+      return null;
     const i = l.itemIndex;
+    const change = (v: number) =>
+      own && p ? setProjectQuantity(p.seller, p.id, v) : setQuantity(i, v);
     return (
       <span className="seller-line">
         <label className="field inline">
@@ -510,11 +526,11 @@ function LineProduct({ l, projectView }: { l: ShopLine; projectView: boolean }) 
             defaultValue={l.quantity}
             onBlur={(e) => {
               const v = Number(e.target.value);
-              if (Number.isInteger(v) && v >= 0 && v <= 9999) setQuantity(i, v);
+              if (Number.isInteger(v) && v >= 0 && v <= 9999) change(v);
             }}
           />
         </label>
-        <button type="button" className="btn sm ghost" onClick={() => setQuantity(i, 0)}>
+        <button type="button" className="btn sm ghost" onClick={() => change(0)}>
           {t('Remove')}
         </button>
       </span>

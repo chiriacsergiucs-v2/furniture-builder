@@ -30,4 +30,6 @@ export const ru_prints = {
   'Print one page for your client: a picture, the pieces and the estimated price':
     'Печать одной страницы для клиента: картинка, изделия и ориентировочная цена',
   'Taking the step pictures…': 'Снимаем картинки шагов…',
+  'Project seller items need project schemaVersion {v}':
+    'Товары продавца проекта требуют schemaVersion проекта {v}',
 } satisfies Record<string, string>;

@@ -12,7 +12,8 @@ import { mapProductSpace, newId, setProductParams } from './design';
 import { SIZE_AXES, type Project, type ProjectItem, type SizeAxis } from './project';
 import { isAxisLocked } from './sizeLock';
 import { sizeFields } from './pieceSize';
-import type { Diagnostic, Mm, Product, Space } from './types';
+import type { Design, DesignVariable, Diagnostic, Mm, Product, Space } from './types';
+import { MAX_EXPR, MAX_VARIABLE_NAME, MAX_VARIABLES, NAME_RE, SPLIT_TARGET } from './varLimits';
 
 export interface ProjectVariable {
   id: string;
@@ -34,11 +35,7 @@ export interface Binding {
   expr: string;
 }
 
-export const MAX_VARIABLE_NAME = 60;
-export const MAX_EXPR = 200;
-export const MAX_VARIABLES = 100;
-const SPLIT_TARGET = /^split:([^:]+):(\d+)$/;
-const NAME_RE = /^[\p{L}][\p{L}\p{N} _]*$/u;
+export { MAX_EXPR, MAX_VARIABLE_NAME, MAX_VARIABLES };
 
 export const isBindTarget = (s: unknown): s is BindTarget =>
   typeof s === 'string' &&
@@ -859,4 +856,178 @@ export function heldByBinding(
     }
   }
   return null;
+}
+
+// ---------------------------------------------------------------------------
+// A piece's own variables (ADR-210)
+// ---------------------------------------------------------------------------
+
+/** A stand-in project item for a design alone, so the target helpers above serve a piece's own bindings. */
+const asItem = (d: Design): ProjectItem => ({
+  id: '',
+  design: d,
+  quantity: 1,
+  position: { x: 0, y: 0, z: 0 },
+  rotationY: 0,
+});
+
+/** The values of a piece's own variables that evaluate, by name. */
+export const designScope = (d: Pick<Design, 'variables'>): Map<string, number> =>
+  variableScope(d.variables ?? []);
+
+/**
+ * The piece's own bindings evaluated with its own variables and written into its sizes (ADR-210). Targets in `skip`
+ * are left alone (a project binding on the same target wins). The same design when nothing changes; problems are
+ * left to `designVariableDiagnostics`, and a binding with a problem leaves its field as it is.
+ */
+export function applyDesignBindings(d: Design, skip: readonly string[] = []): Design {
+  if (!d.bindings?.length) return d;
+  const scope = designScope(d);
+  let item = asItem(d);
+  for (const b of d.bindings) {
+    if (skip.includes(b.target)) continue;
+    const e = evaluateBinding(b.expr, scope);
+    if (e.value === undefined || rangeProblem(item, b.target, e.value)) continue;
+    item = writeTarget(item, b.target, e.value);
+  }
+  return item.design;
+}
+
+/** Problems of a piece's own variables and bindings (ADR-008): errors, so export is blocked. */
+export function designVariableDiagnostics(d: Design): Diagnostic[] {
+  const vars = d.variables ?? [];
+  if (!vars.length && !d.bindings?.length) return [];
+  const out: Diagnostic[] = [];
+  const ev = evaluateVariables(vars);
+  for (const v of vars) {
+    const r = ev.get(v.id);
+    if (r?.problem)
+      out.push({
+        severity: 'error',
+        code: 'variable-problem',
+        message: t('Variable “{name}”: {problem}', { name: v.name, problem: r.problem }),
+        nodeId: `var:${v.id}`,
+      });
+  }
+  const scope = designScope(d);
+  const item = asItem(d);
+  for (const b of d.bindings ?? []) {
+    const e = evaluateBinding(b.expr, scope);
+    const field = targetLabel(b.target);
+    const range = e.value !== undefined ? rangeProblem(item, b.target, e.value) : null;
+    const problem = e.problem
+      ? e.problem
+      : range
+        ? t('{problem} The field keeps {n} mm.', {
+            problem: range,
+            n: readTarget(item, b.target) ?? 0,
+          })
+        : !hasTarget(item, b.target)
+          ? t('{name} has no {field} to bind.', { name: d.name, field })
+          : null;
+    if (problem)
+      out.push({
+        severity: 'error',
+        code: 'binding-problem',
+        message: t('{name}, {field}: {problem}', { name: d.name, field, problem }),
+        nodeId: d.product.id,
+      });
+  }
+  return out;
+}
+
+export function addDesignVariable(
+  d: Design,
+  name: string,
+  expr: string,
+): { design: Design; id: string } {
+  const id = newId();
+  const variables = [...(d.variables ?? []), { id, name: name.trim(), expr: expr.trim() }];
+  return { design: { ...d, variables }, id };
+}
+
+/** Rename or change a piece's own variable; a rename follows into its formulas and bindings. */
+export function updateDesignVariable(
+  d: Design,
+  id: string,
+  patch: { name?: string; expr?: string },
+): Design {
+  const vars = d.variables ?? [];
+  const v = vars.find((x) => x.id === id);
+  if (!v) return d;
+  const name = patch.name?.trim() ?? v.name;
+  const names = vars.map((x) => x.name);
+  const ren = (expr: string) => (name === v.name ? expr : renameInExpr(expr, v.name, name, names));
+  return {
+    ...d,
+    variables: vars.map((x) =>
+      x.id === id
+        ? { ...x, name, expr: patch.expr?.trim() ?? x.expr }
+        : { ...x, expr: ren(x.expr) },
+    ),
+    ...(d.bindings ? { bindings: d.bindings.map((b) => ({ ...b, expr: ren(b.expr) })) } : {}),
+  };
+}
+
+/** Remove a piece's own variable; the bindings that used it go and their fields keep their numbers. */
+export function deleteDesignVariable(d: Design, id: string): Design {
+  const vars = d.variables ?? [];
+  const v = vars.find((x) => x.id === id);
+  if (!v) return d;
+  const names = vars.map((x) => x.name);
+  const refers = (expr: string) =>
+    namesIn(expr, names).some((n) => n.toLowerCase() === v.name.toLowerCase());
+  const variables = vars.filter((x) => x.id !== id);
+  const bindings = (d.bindings ?? []).filter((b) => !refers(b.expr));
+  return {
+    ...d,
+    variables: variables.length ? variables : undefined,
+    bindings: bindings.length ? bindings : undefined,
+  };
+}
+
+/** Set, replace or (with `expr` null) remove a piece's own binding on `target`. */
+export function setDesignBinding(d: Design, target: string, expr: string | null): Design {
+  const rest = (d.bindings ?? []).filter((b) => b.target !== target);
+  const bindings = expr === null ? rest : [...rest, { target, expr: expr.trim() }];
+  return { ...d, bindings: bindings.length ? bindings : undefined };
+}
+
+/** How many of the piece's bindings and which of its other variables refer to its variable `id`. */
+export function designVariableUsers(
+  d: Design,
+  id: string,
+): { bindings: number; vars: DesignVariable[] } {
+  const vars = d.variables ?? [];
+  const v = vars.find((x) => x.id === id);
+  if (!v) return { bindings: 0, vars: [] };
+  const names = vars.map((x) => x.name);
+  const refers = (expr: string) =>
+    namesIn(expr, names).some((n) => n.toLowerCase() === v.name.toLowerCase());
+  return {
+    bindings: (d.bindings ?? []).filter((b) => refers(b.expr)).length,
+    vars: vars.filter((x) => x.id !== id && refers(x.expr)),
+  };
+}
+
+/**
+ * Every project piece's own bindings, evaluated with its own variables only (ADR-210): the piece's parameters. A
+ * project binding on the same target wins (it is left to `applyBindings`), and a locked size keeps its value
+ * (ADR-171). The same project when nothing changes.
+ */
+export function applyPieceBindings(project: Project): Project {
+  if (!project.items.some((i) => i.design.bindings?.length)) return project;
+  let changed = false;
+  const items = project.items.map((item) => {
+    if (!item.design.bindings?.length) return item;
+    const skip = [
+      ...(item.bindings ?? []).map((b) => b.target),
+      ...SIZE_AXES.filter((a) => isAxisLocked(item, a)),
+    ];
+    const design = applyDesignBindings(item.design, skip);
+    if (design === item.design) return item;
+    changed = true;
+    return { ...item, design };
+  });
+  return changed ? { ...project, items } : project;
 }

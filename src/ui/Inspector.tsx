@@ -63,7 +63,13 @@ import {
 import { Icon } from './icons';
 import { CountStepper } from './CountStepper';
 import { PieceSize } from './PieceSize';
-import { BindButton, bindingHint } from './Variables';
+import {
+  BindButton,
+  bindingHint,
+  DesignBindButton,
+  designBindingHint,
+  VariablesPanel,
+} from './Variables';
 import { askConfirm } from './Confirm';
 import { useUi } from './shell/uiStore';
 import { tNode } from './i18n';
@@ -124,6 +130,8 @@ export function Inspector({ mode }: { mode: 'compose' | 'configure' }) {
     <>
       <SizeLockNote />
       {editor}
+      {/* The piece's own variables (ADR-210): its sizes bind to them with the ƒ button beside each size. */}
+      <VariablesPanel scope="design" />
     </>
   );
 }
@@ -940,6 +948,8 @@ function SplitEditor({
 function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material[] }) {
   const set = useDesign((s) => s.updateCabinet);
   const constructionLock = usePieceLockHint('construction');
+  // Bound to the piece's own variable (ADR-210): the field is off and says what it follows.
+  const mountBound = useDesign((s) => designBindingHint(s.design, 'mountHeight'));
   const select = useDesign((s) => s.select);
   const inside = insideSummary([p.interior]);
   const steps: Step[] = [
@@ -1014,7 +1024,11 @@ function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material
           min={0}
           max={2500}
           onChange={(v) => set({ mountHeight: v })}
-          hint={t('Position only; brackets and a rail are added to the hardware list.')}
+          disabled={!!mountBound}
+          hint={
+            mountBound ?? t('Position only; brackets and a rail are added to the hardware list.')
+          }
+          trailing={<DesignBindButton target="mountHeight" />}
         />
       )}
       <Group title={t('Construction')} id="g-build" locked={constructionLock}>

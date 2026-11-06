@@ -86,8 +86,14 @@ export const FEATURES: FeatureDomain[] = [
       {
         name: 'Fill the room',
         detail:
-          'Pick a room shape with its doors and windows, or use the project’s room: suggested mixes for every ticked wall at once, doors and windows kept free, a corner cabinet at each inside corner with a wall corner cabinet above it, wall rows split at windows; each mix checked as a project.',
-        adrs: ['ADR-173', 'ADR-177', 'ADR-204'],
+          'Pick a room shape with its doors and windows, or use the project’s room: suggested mixes for every ticked wall at once, doors and windows kept free, a corner cabinet at each inside corner with a wall corner cabinet above it, wall rows split at windows; each mix checked as a project. Refine adds a budget ceiling, a style and an island with your walkway width; each mix shows its estimate.',
+        adrs: ['ADR-173', 'ADR-177', 'ADR-204', 'ADR-210'],
+      },
+      {
+        name: 'Room presets',
+        detail:
+          'New… → Room preset: a bedroom, a home office, or a kitchen and desk, ready in a 3600 × 3000 room.',
+        adrs: ['ADR-210'],
       },
     ],
   },
@@ -784,8 +790,8 @@ export const FEATURES: FeatureDomain[] = [
       {
         name: 'Previewed repairs',
         detail:
-          'A repair moves the whole group and connected pieces together; one they cannot follow is shown refused, with the reason. A depth or height mismatch between neighbours is repaired by matching one to the other.',
-        adrs: ['ADR-071', 'ADR-176', 'ADR-204'],
+          'A repair moves the whole group and connected pieces together; one they cannot follow is shown refused, with the reason. A depth or height mismatch between neighbours is repaired by matching one to the other; pieces whose families share no room, by moving one along its wall.',
+        adrs: ['ADR-071', 'ADR-176', 'ADR-204', 'ADR-210'],
       },
     ],
   },
@@ -976,6 +982,12 @@ export const FEATURES: FeatureDomain[] = [
             adrs: ['ADR-161'],
             checked: '2026-11-05',
           },
+          {
+            name: 'Project seller items',
+            detail:
+              'Add seller product in the project view puts a product on the project’s own shopping list; it travels in project templates.',
+            adrs: ['ADR-210'],
+          },
         ],
       },
       {
@@ -1075,6 +1087,12 @@ export const FEATURES: FeatureDomain[] = [
         checked: '2026-11-05',
       },
       {
+        name: 'Variables in a piece',
+        detail:
+          'A piece’s own variables in its settings; its width, height, depth and underside height bind to them, also inside projects and catalog templates.',
+        adrs: ['ADR-210'],
+      },
+      {
         name: 'Formula functions',
         detail:
           'min, max, floor, ceil and round in variables and bindings; values in a call are separated by a comma or a semicolon.',
@@ -1123,6 +1141,18 @@ export const FEATURES: FeatureDomain[] = [
       },
       { name: 'Save a project piece to the catalog', adrs: ['ADR-107'], checked: '2026-11-05' },
       { name: 'Catalog origin kept on copies', adrs: ['ADR-028'], checked: '2026-11-05' },
+      {
+        name: 'Brands',
+        detail:
+          'A chip per manufacturer of your decor list, with its count: its decors and the saved pieces with its boards.',
+        adrs: ['ADR-210'],
+      },
+      {
+        name: 'Family rule for your own templates',
+        detail:
+          'A piece from your own template keeps its rooms, so pieces of rooms apart are warned about.',
+        adrs: ['ADR-210'],
+      },
       {
         name: 'Reference entries for upholstered pieces',
         adrs: ['ADR-039'],

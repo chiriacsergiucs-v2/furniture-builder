@@ -301,4 +301,26 @@ export const ru_viewer = {
   Next: 'Далее',
   'Fill the room…': 'Заполнить комнату…',
   'every wall of this room at once': 'все стены этой комнаты сразу',
+  'Type the walkway width to place an island.': 'Введите ширину прохода, чтобы поставить остров.',
+  'The walkway width must be a whole number of mm above 0.':
+    'Ширина прохода должна быть целым числом мм больше 0.',
+  'An island needs a rectangle room.': 'Для острова нужна прямоугольная комната.',
+  'The room is too small for an island with this walkway.':
+    'Комната слишком мала для острова с таким проходом.',
+  'Island: {summary}': 'Остров: {summary}',
+  'Estimate {total} {currency}': 'Оценка {total} {currency}',
+  '{n|# line|# lines} without a price': '{n|# строка|# строки|# строк} без цены',
+  'Budget ceiling': 'Предел бюджета',
+  'Mixes whose estimate is above it are hidden.': 'Наборы с оценкой выше него скрыты.',
+  Style: 'Стиль',
+  'The budget ceiling is not an amount; it is not applied.':
+    'Предел бюджета — не сумма; он не применён.',
+  'Add an island': 'Добавить остров',
+  'Walkway width': 'Ширина прохода',
+  'Your walkway around the island, in front of it and behind it.':
+    'Ваш проход вокруг острова — перед ним и за ним.',
+  '{n|# mix|# mixes} over the budget hidden':
+    '{n|# набор|# набора|# наборов} дороже бюджета скрыто',
+  'No mix fits the budget; the cheapest is {total}.':
+    'Ни один набор не укладывается в бюджет; самый дешёвый — {total}.',
 } satisfies Record<string, string>;

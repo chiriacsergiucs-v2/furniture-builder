@@ -2,7 +2,9 @@ import { turnModelItem } from '../core/model3d';
 import { create } from 'zustand';
 import { buildModel } from '../core/build';
 import {
+  projectSellerItemQuantity,
   projectWithHardwareProduct,
+  projectWithSellerItem,
   withHardwareProduct,
   withSellerItem,
   withSellerItemQuantity,
@@ -156,11 +158,17 @@ import type { LocalTemplate } from '../core/catalog/local';
 import { t } from '../core/i18n';
 import { addSet, removeSet, updateSet, syncSets, type VariableSet } from '../core/sets';
 import {
+  addDesignVariable,
   addVariable,
   applyBindings,
+  applyDesignBindings,
+  applyPieceBindings,
+  deleteDesignVariable,
   deleteVariable,
   heldByBinding,
   setBinding,
+  setDesignBinding,
+  updateDesignVariable,
   updateVariable,
 } from '../core/variables';
 
@@ -249,10 +257,12 @@ interface State {
   setKerf: (kerf: number) => void;
   /** ADR-161: a seller product for a hardware line (undefined removes it); in a project view, in every piece. */
   setHardwareProduct: (key: string, hp: HardwareProduct | undefined) => void;
-  /** ADR-161: a seller product added to the open piece's shopping list. */
+  /** ADR-161: a seller product added to the open piece's shopping list; in a project view, the project's (ADR-210). */
   addSellerItem: (it: SellerItem) => void;
   /** ADR-161: an added item's quantity; 0 removes it. */
   setSellerItemQuantity: (index: number, quantity: number) => void;
+  /** ADR-210: a project's own seller item's quantity, by seller and product id; 0 removes it. One undo step. */
+  setProjectSellerItemQuantity: (seller: string, id: string, quantity: number) => void;
   /** ADR-206: a seller product for a run part of the open project, by run part key (undefined removes it). */
   setRunProduct: (key: string, hp: HardwareProduct | undefined) => void;
   rename: (name: string) => void;
@@ -408,6 +418,12 @@ interface State {
   deleteVariable: (id: string) => void;
   /** Bind (or with null unbind) a piece's size, division or position to a variable or formula (ADR-166). */
   bindTarget: (itemId: string, target: string, expr: string | null) => void;
+  /** The open piece's own variables (ADR-210); each is one undo step. Deleting unbinds the sizes that used it. */
+  addDesignVariable: (name: string, expr: string) => string;
+  updateDesignVariable: (id: string, patch: { name?: string; expr?: string }) => void;
+  deleteDesignVariable: (id: string) => void;
+  /** Bind (or with null unbind) the open piece's size or division to its own variable or formula (ADR-210). */
+  bindDesignTarget: (target: string, expr: string | null) => void;
   /** Value sets (ADR-167); each is one undo step. Removing a set removes its pieces. */
   addVariableSet: () => string;
   updateVariableSet: (
@@ -597,11 +613,15 @@ export const useDesign = create<State>((rawSet, get) => {
       set({ notice: locked });
       return;
     }
+    // The piece's own bindings take its own variables' values (ADR-210); inside a project, a project binding on the
+    // same target wins, so it is left to the project's commit.
+    const openItem = p0 && open ? p0.items.find((i) => i.id === open) : undefined;
+    const bound = applyDesignBindings(next, openItem?.bindings?.map((b) => b.target) ?? []);
     // A copy of a brand's product stops being that brand's product once edited; its origin stays (ADR-028).
     const debranded =
-      next.catalog?.brand && next.catalog.origin
-        ? { ...next, catalog: { ...next.catalog, brand: undefined } }
-        : next;
+      bound.catalog?.brand && bound.catalog.origin
+        ? { ...bound, catalog: { ...bound.catalog, brand: undefined } }
+        : bound;
     const stamped = { ...debranded, updatedAt: new Date().toISOString() };
     set({
       design: stamped,
@@ -697,7 +717,8 @@ export const useDesign = create<State>((rawSet, get) => {
     // Bindings take their variables' values and value sets keep their duplicates (ADR-166, ADR-167); a bound field
     // the change tried to move is held and the reason shown.
     // Sets first, so a fresh duplicate takes its set's values in the same step.
-    const bound = applyBindings(syncSets(linked));
+    // A piece's own bindings first (ADR-210), so a project binding on the same target wins.
+    const bound = applyBindings(applyPieceBindings(syncSets(linked)));
     const held = heldByBinding(get().project, linked, bound);
     // Worktop corner joints follow their worktops (ADR-205).
     const stamped = {
@@ -1117,6 +1138,22 @@ export const useDesign = create<State>((rawSet, get) => {
         expr === null ? t('Unbind') : t('Bind to variable'),
       );
     },
+    addDesignVariable: (name, expr) => {
+      const res = addDesignVariable(get().design, name, expr);
+      commit(res.design);
+      return res.id;
+    },
+    updateDesignVariable: (id, patch) => {
+      const d = get().design;
+      const next = updateDesignVariable(d, id, patch);
+      if (next !== d) commit(next);
+    },
+    deleteDesignVariable: (id) => {
+      const d = get().design;
+      const next = deleteDesignVariable(d, id);
+      if (next !== d) commit(next);
+    },
+    bindDesignTarget: (target, expr) => commit(setDesignBinding(get().design, target, expr)),
     addVariableSet: () => {
       const p = get().project;
       if (!p) return '';
@@ -1855,7 +1892,19 @@ export const useDesign = create<State>((rawSet, get) => {
       if (project && !editingItemId) commitProject(projectWithHardwareProduct(project, key, hp));
       else commit(withHardwareProduct(get().design, key, hp));
     },
-    addSellerItem: (it) => commit(withSellerItem(get().design, it)),
+    addSellerItem: (it) => {
+      const { project, editingItemId } = get();
+      // In the project view the item goes on the project's own list (ADR-210).
+      if (project && !editingItemId)
+        commitProject(projectWithSellerItem(project, it), t('Add seller product'));
+      else commit(withSellerItem(get().design, it));
+    },
+    setProjectSellerItemQuantity: (seller, id, quantity) => {
+      const p = get().project;
+      if (!p) return;
+      const next = projectSellerItemQuantity(p, seller, id, quantity);
+      if (next !== p) commitProject(next);
+    },
     setRunProduct: (key, hp) => {
       const p = get().project;
       if (!p) return;

@@ -32,7 +32,7 @@ import {
   type ModelTurn,
 } from './model3d';
 import type { ItemZones } from './envelopes';
-import type { Design, Mm } from './types';
+import type { Design, Mm, SellerItem } from './types';
 
 export interface TemplateItem {
   /** Id inside the template, so placements can point at their base. */
@@ -54,8 +54,8 @@ export interface TemplateItem {
 
 /**
  * 1 = ADR-060; 2 = variables, bindings and connections (ADR-170); 3 = run handles and sinks (ADR-204), connection
- * kinds and wall connections (ADR-207), 3D models (ADR-208) and item clearance zones (ADR-205). An older app refuses
- * a version it does not know.
+ * kinds and wall connections (ADR-207), 3D models (ADR-208), item clearance zones (ADR-205) and the project's
+ * seller items (ADR-210). An older app refuses a version it does not know.
  */
 export const TEMPLATE_SCHEMA = 3 as const;
 export type TemplateSchemaVersion = 1 | 2 | typeof TEMPLATE_SCHEMA;
@@ -115,6 +115,8 @@ export interface ProjectTemplate {
   sinks?: TemplateSink[];
   /** The project's display-only 3D models (schemaVersion 3, ADR-208). Template files embed their files. */
   models?: TemplateModel[];
+  /** The project's own seller items (schemaVersion 3, ADR-210). */
+  sellerItems?: SellerItem[];
 }
 
 /**
@@ -210,7 +212,8 @@ export function templateFromProject(
       sinks.length ||
       connections?.some((c) => c.kind) ||
       models.length ||
-      zoned
+      zoned ||
+      p.sellerItems?.length
         ? TEMPLATE_SCHEMA
         : variables || connections?.length || bound
           ? VARS_SINCE
@@ -237,6 +240,7 @@ export function templateFromProject(
     ...(runHandles.length ? { runHandles } : {}),
     ...(sinks.length ? { sinks } : {}),
     ...(models.length ? { models } : {}),
+    ...(p.sellerItems?.length ? { sellerItems: structuredClone(p.sellerItems) } : {}),
     ...(p.runParts?.length || p.runSettings
       ? {
           runRecipe: {
@@ -280,7 +284,8 @@ export function projectFromTemplate(t: ProjectTemplate, name = t.name): Project 
     connections.length ||
     extras.runHandles.length ||
     extras.sinks.length ||
-    models.length;
+    models.length ||
+    t.sellerItems?.length;
   const base: Project = {
     // Linked copies, angled pieces, bindings, connections, run handles and sinks need the project version that stores
     // them (ADR-111, ADR-121, ADR-166, ADR-168, ADR-125).
@@ -297,6 +302,7 @@ export function projectFromTemplate(t: ProjectTemplate, name = t.name): Project 
     ...(extras.runHandles.length ? { runHandles: extras.runHandles } : {}),
     ...(extras.sinks.length ? { sinks: extras.sinks } : {}),
     ...(models.length ? { models } : {}),
+    ...(t.sellerItems?.length ? { sellerItems: structuredClone(t.sellerItems) } : {}),
   };
   if (!t.runRecipe) return t.variables?.length ? applyBindings(base) : base;
   const removed = remapKeys(t.runRecipe.removed ?? [], ids);
@@ -540,6 +546,9 @@ export function validateProjectTemplate(t: unknown): string[] {
       }
     }
   }
+  // The project's own seller items (ADR-210): version 3; each item is checked on the project the template makes.
+  if (t.sellerItems !== undefined && (!v3 || !Array.isArray(t.sellerItems)))
+    errs.push(`Seller items need template schemaVersion ${TEMPLATE_SCHEMA}`);
   const rr = t.runRecipe;
   if (rr !== undefined) {
     const s = isObj(rr) ? rr.settings : null;

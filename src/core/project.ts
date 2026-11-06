@@ -100,6 +100,7 @@ import type {
   Panel,
   PanelShape,
   PinRows,
+  SellerItem,
   Space,
   Yaw,
 } from './types';
@@ -339,7 +340,7 @@ export interface WorktopJoint {
  * (ADR-168); 19 = turn and per-size locks (ADR-171); 20 = shared sides (ADR-190); 21 = seller products on run parts
  * (ADR-206), connection kinds and wall connections (ADR-207), the floor background, the plan picture and model
  * placements (ADR-208), worktop corner joints, hobs and backs cut around pipes and outlets (ADR-205), board and
- * construction locks (ADR-211).
+ * construction locks (ADR-211), the project's own seller items (ADR-210).
  */
 export const PROJECT_SCHEMA = 21 as const;
 export const PROJECT_SCHEMAS: readonly number[] = [
@@ -409,6 +410,7 @@ const CONNECTION_KINDS_SINCE = 21;
 const SURFACES_SINCE = 21;
 const KITCHEN_SINCE = 21;
 const PIECE_LOCKS_SINCE = 21;
+const SELLER_ITEMS_SINCE = 21;
 
 export interface Project {
   schemaVersion: ProjectSchemaVersion;
@@ -465,6 +467,11 @@ export interface Project {
   worktopJoints?: WorktopJoint[];
   /** Hobs over base units: worktop cut-outs (ADR-205, schemaVersion 21). Absent = none. */
   hobs?: RunHob[];
+  /**
+   * Seller products added to the project's own shopping list (ADR-210, schemaVersion 21; ADR-161 `SellerItem`),
+   * listed once after the pieces' items. Absent = none.
+   */
+  sellerItems?: SellerItem[];
 }
 
 /**
@@ -3908,6 +3915,18 @@ export function validateProject(p: unknown): string[] {
         seen.add(j.id);
       }
     }
+  }
+  if (p.sellerItems !== undefined) {
+    if ((p.schemaVersion as number) < SELLER_ITEMS_SINCE)
+      errs.push(
+        t('Project seller items need project schemaVersion {v}', { v: SELLER_ITEMS_SINCE }),
+      );
+    if (!Array.isArray(p.sellerItems) || p.sellerItems.length > 500)
+      errs.push(t('Invalid seller items'));
+    else
+      for (const v of p.sellerItems)
+        if (productRefProblems(v).length || !isInt(v.quantity, 1) || v.quantity > 9999)
+          errs.push(t('Invalid seller item'));
   }
   if (p.models !== undefined) {
     if ((p.schemaVersion as number) < MODELS_SINCE)

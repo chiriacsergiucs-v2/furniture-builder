@@ -46,8 +46,6 @@ export const ru_catalog = {
   'Import templates': 'Импортировать шаблоны',
   'Nothing matches “{query}”.': 'Ничего не найдено по запросу «{query}».',
   'Jump to a group': 'Перейти к группе',
-  'No brand products are bundled with the app. Import your own under Template files › Import templates.':
-    'Товары брендов не входят в приложение. Импортируйте свои: Файлы шаблонов › Импортировать шаблоны.',
   Ready: 'Готово',
   'Needs construction': 'Нужна конструкция',
   'Safety-regulated': 'Требования безопасности',
@@ -230,4 +228,21 @@ export const ru_catalog = {
     '«{name}» уже изменён на этом устройстве. Оставить ваш вариант или взять импортированный?',
   'Use the imported one': 'Взять импортированный',
   ', {n} kept as they were': ', {n} оставлено как было',
+  'Bedroom: bed, two nightstands and a wardrobe': 'Спальня: кровать, две тумбочки и шкаф',
+  'Home office: desk and bookcase': 'Домашний кабинет: стол и книжный шкаф',
+  'Kitchen and desk': 'Кухня и стол',
+  'Room preset': 'Готовая комната',
+  'A ready room with its pieces against the walls: a bedroom, a home office, a kitchen and desk.':
+    'Готовая комната с изделиями у стен: спальня, домашний кабинет, кухня и стол.',
+  'Room presets': 'Готовые комнаты',
+  'The decor list could not be read on this device.':
+    'Не удалось прочитать список декоров на этом устройстве.',
+  'No brands yet. Import your decor list under Boards to see its manufacturers here.':
+    'Брендов пока нет. Импортируйте список декоров в разделе «Плиты», чтобы увидеть здесь его производителей.',
+  'Brands from your decor list': 'Бренды из вашего списка декоров',
+  '{brand} ({n})': '{brand} ({n})',
+  '{brand} decors': 'Декоры {brand}',
+  'Saved pieces with a {brand} board': 'Сохранённые изделия с плитой {brand}',
+  'No saved piece has a board of this maker yet.':
+    'Пока ни одно сохранённое изделие не имеет плиты этого производителя.',
 } satisfies Record<string, string>;

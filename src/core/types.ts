@@ -1,3 +1,4 @@
+import type { Room } from './catalog/types';
 /**
  * Core domain types. Pure data: no React, no storage, no three.js.
  *
@@ -722,6 +723,11 @@ export interface CatalogMeta {
     productName: string;
     sourceUrl?: string;
     takenAt: string;
+    /**
+     * The rooms of the user's own family it was inserted from (ADR-210, schemaVersion 9): the family rule checks a
+     * piece of an `own-…` family by them. Absent for shipped families (looked up by id) and older pieces.
+     */
+    rooms?: Room[];
   };
 }
 
@@ -742,8 +748,9 @@ export interface Design {
    * 2 adds stock sheets and cutting settings (ADR-019); 3 adds edge band specs on boards (ADR-077); 4 adds a
    * board per part (`partMaterials`); 5 adds seller products (ADR-161); 6 adds a board per part role
    * (`roleMaterials`, ADR-163); 7 adds a corner's mount (ADR-177); 8 adds an edge band per part role and per part
-   * (`roleBands`, `partBands`, ADR-188); 9 adds the user's assembly steps and the lounger and daybed ends (ADR-207)
-   * and a split's `remainderFirst` (ADR-205). Older files are upgraded in memory on load.
+   * (`roleBands`, `partBands`, ADR-188); 9 adds the user's assembly steps and the lounger and daybed ends (ADR-207),
+   * a split's `remainderFirst` (ADR-205), and the piece's own variables and bindings and an origin's rooms (ADR-210).
+   * Older files are upgraded in memory on load.
    */
   schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
   id: string;
@@ -786,6 +793,25 @@ export interface Design {
   hardwareProducts?: Record<string, HardwareProduct>;
   /** Seller products added to this piece's shopping list (ADR-161). */
   sellerItems?: SellerItem[];
+  /**
+   * The piece's own variables (ADR-210, schemaVersion 9): the same shape and limits as a project's (ADR-166). Its
+   * bindings drive width, height, depth, mountHeight and `split:*` (no positions); evaluated on each commit.
+   */
+  variables?: DesignVariable[];
+  bindings?: DesignBinding[];
+}
+
+/** A piece's own variable (ADR-210): a named number or formula, as a project variable (ADR-166). */
+export interface DesignVariable {
+  id: string;
+  name: string;
+  expr: string;
+}
+
+/** A binding of a piece's own size to its variables (ADR-210). */
+export interface DesignBinding {
+  target: string;
+  expr: string;
 }
 
 /** The assembly steps a piece can have (ADR-174, ADR-185, ADR-186), in their generated order (`STEP_ORDER`). */

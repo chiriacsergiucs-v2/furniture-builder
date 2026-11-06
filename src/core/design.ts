@@ -17,6 +17,8 @@ import { isFinish, materialImageProblems } from './surface';
 import { bandProblems, materialLabelProblems, productRefProblems } from './materials';
 import { MATERIAL_ROLES } from './roles';
 import { t } from './i18n';
+import { ROOMS } from './catalog/types';
+import { isDesignTarget, MAX_EXPR, MAX_VARIABLE_NAME, MAX_VARIABLES, NAME_RE } from './varLimits';
 
 export type PedestalSide = 'left' | 'right';
 
@@ -839,7 +841,7 @@ function validateSellerChoices(d: Record<string, unknown>, errs: string[]) {
 }
 
 /** ADR-028: optional catalog metadata; checked when present, never throws. */
-function validateCatalog(c: unknown, errs: string[]) {
+function validateCatalog(c: unknown, version: unknown, errs: string[]) {
   if (c === undefined) return;
   if (!isObj(c)) {
     errs.push(t('Invalid catalog metadata'));
@@ -861,6 +863,17 @@ function validateCatalog(c: unknown, errs: string[]) {
     errs.push(t('Invalid catalog origin'));
     return;
   }
+  // The rooms of the user's own family (ADR-210): known rooms only, from schemaVersion 9.
+  if (o.rooms !== undefined) {
+    if ((version as number) < 9) errs.push(t('Catalog origin rooms need schemaVersion 9'));
+    if (
+      !Array.isArray(o.rooms) ||
+      !o.rooms.length ||
+      o.rooms.length > ROOMS.length ||
+      !o.rooms.every((r) => (ROOMS as readonly unknown[]).includes(r))
+    )
+      errs.push(t('Invalid catalog origin rooms'));
+  }
   if (
     o.sourceUrl !== undefined &&
     !(
@@ -870,6 +883,58 @@ function validateCatalog(c: unknown, errs: string[]) {
     )
   )
     errs.push(t('Catalog source link must be an http(s) address'));
+}
+
+/**
+ * The piece's own variables and bindings (ADR-210, schemaVersion 9): the limits of project variables (ADR-166); a
+ * binding drives a size or a division, never a position. Formulas are checked as diagnostics, not here (ADR-008).
+ */
+function validateDesignVariables(d: Record<string, unknown>, errs: string[]) {
+  const vars = d.variables,
+    binds = d.bindings;
+  if (vars === undefined && binds === undefined) return;
+  if ((d.schemaVersion as number) < 9) errs.push(t('Piece variables need schemaVersion 9'));
+  if (vars !== undefined) {
+    if (!Array.isArray(vars) || vars.length > MAX_VARIABLES) errs.push(t('Invalid variables'));
+    else {
+      const ids = new Set<string>(),
+        names = new Set<string>();
+      for (const v of vars) {
+        const name = isObj(v) && typeof v.name === 'string' ? v.name.trim() : '';
+        if (
+          !isObj(v) ||
+          !isStr(v.id) ||
+          ids.has(v.id as string) ||
+          !name ||
+          name.length > MAX_VARIABLE_NAME ||
+          !NAME_RE.test(name) ||
+          names.has(name.toLowerCase()) ||
+          typeof v.expr !== 'string' ||
+          v.expr.length > MAX_EXPR
+        ) {
+          errs.push(t('Invalid variable'));
+          continue;
+        }
+        ids.add(v.id as string);
+        names.add(name.toLowerCase());
+      }
+    }
+  }
+  if (binds !== undefined) {
+    if (
+      !Array.isArray(binds) ||
+      binds.length > 200 ||
+      !binds.every(
+        (b) =>
+          isObj(b) &&
+          isDesignTarget(b.target) &&
+          typeof b.expr === 'string' &&
+          b.expr.length <= MAX_EXPR,
+      ) ||
+      new Set(binds.map((b) => (isObj(b) ? b.target : ''))).size !== binds.length
+    )
+      errs.push(t('Invalid piece bindings'));
+  }
 }
 
 /** ADR-046: the wizard answers a piece was made from; checked when present, never geometry. */
@@ -1108,7 +1173,8 @@ export function validateDesign(d: unknown): string[] {
   validatePartMaterials(d.partMaterials, d.schemaVersion, mids, errs);
   validateRoleMaterials(d.roleMaterials, d.schemaVersion, mids, errs);
   validateBands(d, errs);
-  validateCatalog(d.catalog, errs);
+  validateCatalog(d.catalog, d.schemaVersion, errs);
+  validateDesignVariables(d, errs);
   validateSellerChoices(d, errs);
   validateRules(d.settings, errs);
   validateWizard(d.wizard, errs);

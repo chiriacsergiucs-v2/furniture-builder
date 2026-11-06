@@ -237,8 +237,8 @@ export const ru_info = {
   'Tapping a check selects the pieces and shows where it is.':
     'Касание проверки выделяет изделия и показывает место.',
   'Previewed repairs': 'Исправления с предпросмотром',
-  'A repair moves the whole group and connected pieces together; one they cannot follow is shown refused, with the reason. A depth or height mismatch between neighbours is repaired by matching one to the other.':
-    'Исправление перемещает всю группу и соединённые изделия вместе; исправление, за которым они не могут последовать, показано отклонённым, с причиной. Разницу глубины или высоты соседей исправляют, выравнивая одно изделие по другому.',
+  'A repair moves the whole group and connected pieces together; one they cannot follow is shown refused, with the reason. A depth or height mismatch between neighbours is repaired by matching one to the other; pieces whose families share no room, by moving one along its wall.':
+    'Исправление перемещает всю группу и соединённые изделия вместе; исправление, за которым они не могут последовать, показано отклонённым, с причиной. Разницу глубины или высоты соседей исправляют, выравнивая одно изделие по другому; изделия, чьи семейства не делят комнату, — сдвигая одно вдоль его стены.',
   Views: 'Виды',
   Drawings: 'Чертежи',
   'Compose and Build & Preview modes': 'Режимы «Компоновка» и «Сборка и просмотр»',
@@ -410,8 +410,8 @@ export const ru_info = {
   'A chip in the editor header with the estimate of what is shown, updated on every change; tap it to open the Shopping list.':
     'Значок в шапке редактора с оценкой того, что показано, обновляется при каждом изменении; нажмите, чтобы открыть список покупок.',
   'Fill the room': 'Заполнить комнату',
-  'Pick a room shape with its doors and windows, or use the project’s room: suggested mixes for every ticked wall at once, doors and windows kept free, a corner cabinet at each inside corner with a wall corner cabinet above it, wall rows split at windows; each mix checked as a project.':
-    'Выберите форму комнаты с её дверями и окнами или возьмите комнату проекта: наборы сразу для всех отмеченных стен, двери и окна остаются свободными, угловой шкаф в каждом внутреннем углу и навесной угловой шкаф над ним, ряды навесных шкафов разделены у окон; каждый набор проверен как проект.',
+  'Pick a room shape with its doors and windows, or use the project’s room: suggested mixes for every ticked wall at once, doors and windows kept free, a corner cabinet at each inside corner with a wall corner cabinet above it, wall rows split at windows; each mix checked as a project. Refine adds a budget ceiling, a style and an island with your walkway width; each mix shows its estimate.':
+    'Выберите форму комнаты с её дверями и окнами или возьмите комнату проекта: наборы сразу для всех отмеченных стен, двери и окна остаются свободными, угловой шкаф в каждом внутреннем углу и навесной угловой шкаф над ним, ряды навесных шкафов разделены у окон; каждый набор проверен как проект. Уточнение добавляет предел бюджета, стиль и остров с вашей шириной прохода; у каждого набора видна его оценка.',
   'Assembly steps': 'Шаги сборки',
   'Steps per piece, labelled guidance: prepare the parts, fit hardware to the sides, assemble, then fit drawers and doors. Each step has an instruction, its parts, joints, fasteners and hardware; identical drawers are listed once. Show step lights the parts in 3D; printed with each piece’s front view in the print language.':
     'Шаги по каждому изделию, как рекомендация: подготовка деталей, фурнитура на боковины, сборка, затем установка ящиков и дверей. У каждого шага есть указание, его детали, соединения, крепёж и фурнитура; одинаковые ящики перечислены один раз. «Показать шаг» подсвечивает детали в 3D; печатается с видом спереди каждого изделия на языке печати.',
@@ -501,4 +501,18 @@ export const ru_info = {
   'Back to the editor only with a design open': '«Назад в редактор» только при открытом проекте',
   'On the Gaps and Research pages, as in the Catalog.':
     'На страницах пробелов и исследований, как в каталоге.',
+  'Room presets': 'Готовые комнаты',
+  'New… → Room preset: a bedroom, a home office, or a kitchen and desk, ready in a 3600 × 3000 room.':
+    'Новое… → Готовая комната: спальня, домашний кабинет или кухня и стол, готовые в комнате 3600 × 3000.',
+  'Variables in a piece': 'Переменные в изделии',
+  'A piece’s own variables in its settings; its width, height, depth and underside height bind to them, also inside projects and catalog templates.':
+    'Собственные переменные изделия в его настройках; к ним привязываются ширина, высота, глубина и высота низа — также в проектах и шаблонах каталога.',
+  'Project seller items': 'Товары продавца в проекте',
+  'Add seller product in the project view puts a product on the project’s own shopping list; it travels in project templates.':
+    '«Добавить товар продавца» в виде проекта добавляет товар в собственный список покупок проекта; он переходит в шаблоны проектов.',
+  'A chip per manufacturer of your decor list, with its count: its decors and the saved pieces with its boards.':
+    'Метка для каждого производителя из вашего списка декоров, с количеством: его декоры и сохранённые изделия с его плитами.',
+  'Family rule for your own templates': 'Правило семейств для ваших шаблонов',
+  'A piece from your own template keeps its rooms, so pieces of rooms apart are warned about.':
+    'Изделие из вашего шаблона сохраняет его комнаты, поэтому об изделиях из разных комнат выводится предупреждение.',
 } satisfies Record<string, string>;
