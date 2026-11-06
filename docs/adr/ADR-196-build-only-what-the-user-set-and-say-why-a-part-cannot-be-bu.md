@@ -78,12 +78,59 @@ the entire app into domains or flows … critique of design … 1 adr with high 
 
 ## Done when
 
-- [ ] A diagonal corner with a bar handle drills and schedules it; `adjustable` there gives `diagonal-adjustable`.
-- [ ] A chair with 10 back slats gives `back-slats-crowded` and no overlap; 4 slats build as before.
-- [ ] A lift-up flap drills its bar 40 mm from its bottom edge, a drop-down flap from its top; the Inspector shows the
+- [x] A diagonal corner with a bar handle drills and schedules it; `adjustable` there gives `diagonal-adjustable`.
+- [x] A chair with 10 back slats gives `back-slats-crowded` and no overlap; 4 slats build as before.
+- [x] A lift-up flap drills its bar 40 mm from its bottom edge, a drop-down flap from its top; the Inspector shows the
       same default; an explicit position wins.
-- [ ] No negative box or cut-list size for any gap; `front-gap` names gap and zone; fuzz FUZZ_N=30000 passes.
-- [ ] `split-fit` names asked, room, dividers and inside width; a 0 mm share names the part.
-- [ ] An L-corner wing without a corner side makes adjustable shelves an error and schedules no pins.
-- [ ] The blind corner template description matches `cornerDefaults('blind')`.
-- [ ] `drawer-low` names front, slot, clearance and the smallest front that fits; Russian entries for every new text.
+- [x] No negative box or cut-list size for any gap; `front-gap` names gap and zone; fuzz FUZZ_N=30000 passes.
+- [x] `split-fit` names asked, room, dividers and inside width; a 0 mm share names the part.
+- [x] An L-corner wing without a corner side makes adjustable shelves an error and schedules no pins.
+- [x] The blind corner template description matches `cornerDefaults('blind')`.
+- [x] `drawer-low` names front, slot, clearance and the smallest front that fits; Russian entries for every new text.
+
+## Implementation evidence
+
+Built 2026-11-06 on branch `adr-196-model-diagnostics` (user approved every numbered fix as written on 2026-11-06).
+Ran locally; not merged, not deployed, not live-verified.
+
+1. `corner.ts` `buildDiagonal` drills the bar/knob on each diagonal door with the cabinet's rule (`attachHandle`,
+   now exported from `cabinet.ts`) and schedules it (`handleHardware`); a right-hand corner mirrors the holes. An
+   adjustable diagonal space gives the error `diagonal-adjustable`; the five-sided shelves stay in the drawing behind
+   the blocking error and no shelf supports are scheduled (as in item 6).
+2. `frame.ts` builds the asked back slat count; more than fit gives `back-slats-crowded` and no back slats are built,
+   so nothing overlaps (building the asked count on top of each other would overlap, which the Done-when forbids).
+   `max` is the existing `floor(bw / (w + 20))`, or 1 when one centred slat is no wider than the space.
+3. A flap's default handle position follows its direction (`defaultHandlePosition`: `up` → bottom, `down` → top),
+   40 mm from that edge, centred; an explicit `position` wins; the Inspector's Position select reads the same function.
+4. `front-gap`: a front zone with no size (each door at least 1 mm after the gaps between doors; each drawer front at
+   least 1 mm) gives one error and no front (doors, sliding, flap, drawer fronts and boxes; the diagonal doors; the
+   blind panel). The area named is the zone with its gap (overlay, half overlay), the opening (inset), the diagonal
+   span × carcass height, or the blind section × carcass height. With a 0 mm gap the text is "There is no room for
+   fronts on {w}×{h} mm." (code-review finding: a 0 mm gap is not the cause). Drawers behind doors have no fronts and
+   skip the front checks.
+5. `split-fit`: "Parts need {asked} mm but {room} mm is left after {n} divider(s) of {t} mm ({along} mm inside)" and
+   "Part {i}'s share is too small to give it any width".
+6. `pin-rows-no-panel` is an error; no holes on either side and no shelf pins scheduled; the L-corner's open wing
+   names itself ("The side-wall wing has no side at the corner…") when the missing side is the omitted one, other
+   cases get "One side of this space has no panel…". Node ids are mapped like every other diagnostic.
+7. The blind corner template description is built from `cornerDefaults('blind')` (610 mm). It is shown nowhere in the
+   app (no screen renders `templates`), so it is checked in core only: G-470.
+8. `drawer-low` (per drawer, fronts of its own): "Drawer {i} box would be only {bh} mm high (front {fh}, slot {slot},
+   clearance {vc} mm); give it a front of at least {min} mm", where {min} is the front that gives a 60 mm box once
+   chosen for that drawer (slot = front + a fixed amount by place); the resize warning is removed when it follows.
+   Drawers behind doors keep the old text (no front to name).
+
+Every added text has its Russian entry in `src/core/i18n/ru/core2.ts` (old split-fit and pin-row warning texts and
+their entries deleted; the blind description entry changed in `ru/data-catalog.ts`).
+
+Checks run (2026-11-06, local): `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build`,
+`pnpm docs:check` passed; `FUZZ_N=30000 pnpm exec vitest run tests/fuzz.test.ts` 4/4 passed (the fuzz now draws a
+gap of 40–1500 mm for 4 % of cabinets and diagonal corners and checks that no part or cut-list row has a size at or
+under 0, errors or not; a mutation removing the front-gap guard fails it). `pnpm catalog:snapshots` and
+`pnpm catalog:docs`: no change (no catalog picture draws handle holes; no catalog lift-up flap has a handle).
+
+Tests: `tests/constructions.test.ts` (ADR-196 block, one test per item plus Russian); jsdom find-it
+`tests/find-it/model-diagnostics.test.tsx` at 390 and 1280 px, from the bare app by role and visible text: the flap
+Position default ("Near the bottom" / "Near the top", explicit "Middle" kept), the open-wing and diagonal pin texts
+(Inspector and Results › Checks), the diagonal "Bar handle, 128 mm centres" in Hardware, the drawer-low text, the
+split-fit text, the front-gap text (inset front on a 5 mm part) and the back-slats text in Checks.

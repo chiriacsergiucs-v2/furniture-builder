@@ -67,6 +67,11 @@ export const ru_core2 = {
     'Верхний ящик — ложный фасад, у него нет короба для выреза под сифон; U-вырез не учитывается.',
   'Drawer {i} box would be only {bh} mm high.':
     'Короб ящика {i} получился бы высотой всего {bh} мм.',
+  'Drawer {i} box would be only {bh} mm high (front {fh}, slot {slot}, clearance {vc} mm); give it a front of at least {min} mm.':
+    'Короб ящика {i} получился бы высотой всего {bh} мм (фасад {fh}, проём {slot}, зазор {vc} мм); дайте ему фасад не меньше {min} мм.',
+  'The {g} mm gap leaves no room for fronts on {w}×{h} mm.':
+    'Зазор {g} мм не оставляет места для фасадов на {w}×{h} мм.',
+  'There is no room for fronts on {w}×{h} mm.': 'На {w}×{h} мм нет места для фасадов.',
   'A {w} × {d} mm notch does not fit a {bw} × {runner} mm drawer box.':
     'Вырез {w} × {d} мм не помещается в короб ящика {bw} × {runner} мм.',
   'Drawer 1 is cut around the trap ({w} × {d} mm notch at the back): check the trap and pipes before cutting.':
@@ -75,11 +80,14 @@ export const ru_core2 = {
     'Ящики за дверцами: проверьте зазор петель и дверец относительно коробов ящиков.',
   'A split needs at least two parts with one size each.':
     'Для деления нужно минимум две части, у каждой свой размер.',
-  'Fixed sizes do not fit in {along} mm.': 'Фиксированные размеры не помещаются в {along} мм.',
+  'Parts need {asked} mm but {room} mm is left after {n|# divider|# dividers} of {t} mm ({along} mm inside).':
+    'Частям нужно {asked} мм, а после {n|# перегородки|# перегородок|# перегородок} по {t} мм остаётся {room} мм (внутри {along} мм).',
+  "Part {i}'s share is too small to give it any width.":
+    'Доля части {i} слишком мала, чтобы дать ей хоть какую-то ширину.',
   'Fixed sizes add up to {asked} mm but there is {room} mm; the last part was adjusted to {last} mm. Make one part "Share" to absorb the difference.':
     'Фиксированные размеры в сумме {asked} мм, а места {room} мм; последняя часть подогнана до {last} мм. Сделайте одну часть «Доля», чтобы она забирала разницу.',
-  'No side panel found for shelf pins on one side of an adjustable space.':
-    'С одной стороны отсека с переставными полками нет боковой панели для полкодержателей.',
+  'One side of this space has no panel, so its shelves cannot rest on pins; make them fixed.':
+    'С одной стороны этого отсека нет панели, поэтому полки не могут лежать на полкодержателях; сделайте их неподвижными.',
   'Shelves {d} mm deep are too shallow for two pin rows {s} mm from their edges.':
     'Полки глубиной {d} мм слишком мелкие для двух рядов полкодержателей в {s} мм от краёв.',
   'This space is {h} mm high: no room for shelf-pin holes {c} mm clear of its top and bottom on one side. Make the shelves fixed or the space taller.':
@@ -143,6 +151,8 @@ export const ru_core2 = {
     'Царги высотой {ah} мм не оставляют места под столешницей.',
   'A slatted top rests on rails: give the rails under the top a height.':
     'Реечная столешница лежит на царгах: задайте высоту царг под ней.',
+  '{n} back slats of {w} mm do not fit between the posts ({bw} mm); at most {max} fit.':
+    '{n|# рейка|# рейки|# реек} спинки по {w} мм не помещаются между стойками ({bw} мм); помещается не больше {max}.',
   'A back needs the seat ({seat} mm) well below the top of the back ({h} mm).':
     'Для спинки сиденье ({seat} мм) должно быть заметно ниже верха спинки ({h} мм).',
   'A {len} mm backrest leaves too little seat on a {w} mm frame.':
@@ -186,6 +196,10 @@ export const ru_core2 = {
     'Диагональный угловой шкаф {w} × {h} × {d} мм слишком мал для плит толщиной {t} мм.',
   'A diagonal corner takes one door or a pair.':
     'В диагональный угловой шкаф ставится одна дверца или пара.',
+  'A diagonal corner has no straight sides for shelf pins; make the shelves fixed.':
+    'У диагонального углового шкафа нет прямых боковин для полкодержателей; сделайте полки неподвижными.',
+  'The side-wall wing has no side at the corner, so its shelves cannot rest on pins; make them fixed.':
+    'У крыла у боковой стены нет боковины в углу, поэтому его полки не могут лежать на полкодержателях; сделайте их неподвижными.',
   'Blind section {blind} mm and usable section {usable} mm must each be at least {min} mm.':
     'Глухая часть {blind} мм и рабочая часть {usable} мм должны быть каждая не меньше {min} мм.',
   "Blind section is {blind} mm; about the neighbouring cabinet's depth + 50 mm ({d} mm) keeps its door and handle clear of this door.":

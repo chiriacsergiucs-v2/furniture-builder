@@ -20,6 +20,7 @@ import {
   unsplit,
   usesPedestal,
 } from '../core/design';
+import { defaultHandlePosition } from '../core/cabinet';
 import { t, tr } from '../core/i18n';
 import { boardChoices } from '../core/boards';
 import type { Decor } from '../core/materials';
@@ -651,7 +652,7 @@ function HandleEditor({
           )}
           <Select<'top' | 'centre' | 'bottom'>
             label={t('Position')}
-            value={h.position ?? (space.front ? 'centre' : 'top')}
+            value={h.position ?? defaultHandlePosition(space.front)}
             options={[
               { value: 'top', label: t('Near the top') },
               { value: 'centre', label: t('Middle') },
