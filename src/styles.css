@@ -4556,6 +4556,17 @@ button.tile:hover {
 .wz-card .btn {
   width: 100%;
 }
+/* Wizard cards (ADR-194): a column whose button sits at the card's foot, so the buttons of a row line up whether a
+   card lists warnings or not. */
+.wz-card.wz-pick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+}
+.wz-card.wz-pick > .btn {
+  margin-top: auto;
+}
 /* Fill a wall (ADR-103) */
 .wf-grid {
   display: grid;
@@ -4612,6 +4623,19 @@ button.tile:hover {
     margin-right: calc(-1 * var(--s-4));
     padding-left: var(--s-4);
     padding-right: var(--s-4);
+  }
+  /* The New-piece wizard's footer, two rows on a phone (ADR-194): Back | Next first, the defaults button full width under them. The DOM order
+     (Back, defaults, Next) stays (ADR-118). */
+  .wz-footer {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .wz-footer .wz-spacer {
+    display: none;
+  }
+  .wz-footer .wz-defaults {
+    order: 1;
+    grid-column: 1 / -1;
   }
   .wz-body {
     grid-template-columns: minmax(0, 1fr);
