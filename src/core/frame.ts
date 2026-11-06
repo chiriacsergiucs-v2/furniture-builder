@@ -325,10 +325,22 @@ export function buildFrame(
       member('rail', 'Back rail bottom', box(bx, y0, rz, bw, back.railHeight, at));
       const sy = y0 + back.railHeight,
         sh = H - back.railHeight - sy;
-      const n = Math.max(1, Math.min(back.count, Math.floor(bw / (slats.width + 20))));
+      // The asked count, never a clamped one (ADR-196, ADR-008): slats that do not fit are an error and none are
+      // built, since they would overlap. A single slat goes in the middle, so it fits wherever it is not wider than
+      // the space between the posts.
+      const max = Math.max(bw >= slats.width ? 1 : 0, Math.floor(bw / (slats.width + 20)));
       const sz = li + Math.floor((ld - slats.thickness) / 2);
-      for (const x of spread(bx + 20, bw - 40, slats.width, n))
-        member('slat', 'Back slat', box(x, sy, sz, slats.width, sh, slats.thickness));
+      if (back.count > max)
+        err(
+          'back-slats-crowded',
+          tx(
+            '{n} back slats of {w} mm do not fit between the posts ({bw} mm); at most {max} fit.',
+            { n: back.count, w: slats.width, bw, max },
+          ),
+        );
+      else
+        for (const x of spread(bx + 20, bw - 40, slats.width, back.count))
+          member('slat', 'Back slat', box(x, sy, sz, slats.width, sh, slats.thickness));
     }
     // The back leans back (top towards the wall) about the back edge of the posts at seat-frame level.
     tiltFrom(b0, 'x', -rake, [0, topY, li]);

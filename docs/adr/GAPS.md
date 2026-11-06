@@ -2932,7 +2932,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Questions: Should Enter on these two dialogs choose the Keep button?
 - Suggested pick: Focus the Keep button first in both dialogs, so Enter keeps. (estimate: effort +2 %, value +4 %)
 
-### G-470: Client sheet: occasional second page and table at the page edge
+### G-475: Client sheet: occasional second page and table at the page edge
 
 - Status: Open
 - Origin: ADR-206 tests, 2026-11-06; agent found it
@@ -2976,3 +2976,18 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Not asked; CLAUDE.md rule: no horizontal scroll at 390 px.
 - Questions: None; it is a bug.
 - Suggested pick: Let the Depth field shrink in the three-column size row so the dialog fits at 375 px. (estimate: effort +2 %, value +4 %)
+
+### G-470: Built-in template descriptions are shown nowhere in the app
+
+- Status: Open
+- Origin: ADR-196 item 7 (blind corner template text), found while building 2026-11-06
+- Missing: The built-in templates' descriptions in src/core/design.ts (templates) are not rendered by any screen: TemplateButton in src/ui/Templates.tsx is unused and the New single piece dialog lists catalog items instead. ADR-196 corrected the blind corner text to read cornerDefaults('blind') (610 mm), proven by tests/constructions.test.ts, but there is no visible place to find it in a find-it test.
+- Request: "Split the entire app into domains or flows … critique of design … 1 adr with high and medium issues and fixes per flow" (ADR-196 item 7: the description reads the defaults)
+- Questions: Should the built-in template descriptions be shown somewhere (the Templates source of the catalog, or Fill the room), or be removed as unused data?
+- Suggested pick: Ask the user; closest to the request: keep the corrected text and show nothing new until the user asks (no UI change was asked by ADR-196).
+- Work: Low
+- Impact: Low
+- Necessity: Low
+- Issue: The built-in templates' descriptions are kept in the code but no screen shows them, so a corrected text has no place to be seen.
+- Fix: Ask the user whether to show the built-in templates' descriptions somewhere or remove them as unused data.
+- Conflicts: none

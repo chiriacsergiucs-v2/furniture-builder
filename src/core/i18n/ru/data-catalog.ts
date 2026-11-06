@@ -12,8 +12,8 @@ export const data_catalog: Record<string, string> = {
   '1000 wide, 720 carcass on the plinth': 'Ширина 1000, корпус 720 на цоколе',
   '1000 wide, deeper towards the floor': 'Ширина 1000, к полу глубже',
   '1000 wide, shelf 150 above the floor': 'Ширина 1000, полка на 150 над полом',
-  '1000 × 720 × 560, 400 mm blind section on the left, one door':
-    '1000 × 720 × 560, глухая секция 400 мм слева, одна дверца',
+  '1000 × 720 × 560, 610 mm blind section on the left, one door':
+    '1000 × 720 × 560, глухая секция 610 мм слева, одна дверца',
   '1100 × 1950 × 600': '1100 × 1950 × 600',
   '1100 × 420 × 600': '1100 × 420 × 600',
   '1200 × 2100 × 600': '1200 × 2100 × 600',

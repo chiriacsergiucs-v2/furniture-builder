@@ -269,7 +269,7 @@ function genDiagonal(): Design {
     back: pick(['applied', 'none'] as const),
     plinthHeight: pick([0, ri(40, 150)]),
     plinthSetback: ri(0, 80),
-    frontGap: ri(0, 5),
+    frontGap: rnd() < 0.04 ? ri(40, 1500) : ri(0, 5),
     drawers: drawers(),
     interior: {
       id: nid(),
@@ -315,7 +315,8 @@ function genCabinet(): Design {
     frontStyle: pick(['overlay', 'overlay', 'half', 'inset'] as const),
     plinthHeight: pick([0, 0, ri(40, 120)]),
     plinthSetback: ri(0, 60),
-    frontGap: ri(0, 6),
+    // Now and then a gap wider than the fronts' room (ADR-196).
+    frontGap: rnd() < 0.04 ? ri(40, 1500) : ri(0, 6),
     shelfSetback: ri(0, 30),
     shelfClearance: ri(0, 2),
     pinRowSetback: pick([37, 37, ri(25, 60)]),
@@ -389,6 +390,12 @@ function check(d: Design): string[] {
   });
   if (narrow !== errs.some((x) => x.code === 'band-narrow'))
     probs.push(`band-narrow expected ${narrow}`);
+  // ADR-196: whatever the input (a gap wider than the fronts' room among it), no part and no cut-list row has a
+  // size at or under 0, errors or not.
+  for (const p of m.panels)
+    if (Math.min(p.box.w, p.box.h, p.box.d) <= 0) probs.push(`size ${p.id}`);
+  for (const r of cutlist(m, d.materials))
+    if (Math.min(r.length, r.width) <= 0) probs.push(`cut-size ${r.labels.join()}`);
   if (errs.length) return probs; // only check invariants for designs reported clean
   // ADR-009/077: naming bands never changes a cut size (sampled: the cut list is built twice).
   if (brnd() < 0.1) {
@@ -504,7 +511,9 @@ function check(d: Design): string[] {
   const okGap = (gap: number) => gap === g || (style === 'inset' && gap === 2 * g + t);
   for (let i = 0; i < fronts.length; i++)
     for (let j = 0; j < fronts.length; j++) {
-      if (i === j) continue;
+      // Sliding doors overlap in two planes and have no gap between them; with a gap wider than a door (ADR-196
+      // fuzzes gaps up to 1500 mm) two doors of one plane would otherwise fall within the distance looked at.
+      if (i === j || sliding(fronts[i]) || sliding(fronts[j])) continue;
       const a = fronts[i].box,
         b = fronts[j].box;
       const yo = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y);

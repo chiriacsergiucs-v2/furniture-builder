@@ -5,6 +5,7 @@ import type {
   CabinetParams,
   Diagnostic,
   Face,
+  Front,
   Handle,
   HardwareItem,
   Material,
@@ -63,6 +64,8 @@ export interface BuildOptions {
   omitSide?: 'left' | 'right';
   /** Shorten the front zone at either end (corner doors that must clear each other). */
   frontTrim?: { left?: Mm; right?: Mm };
+  /** The error for adjustable shelves with no panel on one side, naming where (ADR-196: an L-corner's open wing). */
+  noPinSide?: string;
 }
 
 export interface PartialModel {
@@ -98,6 +101,128 @@ export function slidingTrackDepth(s: Space): Mm {
 
 const lo = (g: Mm) => Math.floor(g / 2);
 const hi = (g: Mm) => g - Math.floor(g / 2);
+
+export type HandlePosition = NonNullable<Handle['position']>;
+
+/**
+ * The error for fronts left with no size (ADR-196): a gap names itself and the area the fronts were to cover; with
+ * no gap at all, the area alone is too small.
+ */
+export function noFrontRoomMessage(g: Mm, w: Mm, h: Mm): string {
+  return g > 0
+    ? tx('The {g} mm gap leaves no room for fronts on {w}×{h} mm.', { g, w, h })
+    : tx('There is no room for fronts on {w}×{h} mm.', { w, h });
+}
+
+/**
+ * Where a handle goes when the user set no position (ADR-196): drawers near the top, doors in the middle, a flap
+ * near its free edge — a lift-up flap (hinged at its top, ADR-037) near its bottom, a drop-down flap near its top.
+ * The Inspector shows the same default.
+ */
+export function defaultHandlePosition(front: Front | null | undefined): HandlePosition {
+  if (front?.kind === 'flap') return front.direction === 'up' ? 'bottom' : 'top';
+  return front ? 'centre' : 'top';
+}
+
+/**
+ * Drill handle holes on a front just built (ADR-024), positions from the front's left and bottom edges. `drawer`
+ * puts a bar across the width, centred, 40 mm from the top or bottom edge; `door` puts it upright, 40 mm from the
+ * opening edge, 100 mm from the top or bottom. A bar longer than the front is a warning and drills nothing.
+ */
+export function attachHandle(
+  panel: Panel,
+  h: Handle | null | undefined,
+  kind: 'door' | 'drawer',
+  w: Mm,
+  hgt: Mm,
+  openEdge: 'left' | 'right' | null,
+  diagnostics: Diagnostic[],
+  nodeId: string,
+  defaultPos?: HandlePosition,
+): void {
+  if (!h || h.kind === 'push') return;
+  const pos = h.position ?? defaultPos ?? (kind === 'drawer' ? 'top' : 'centre');
+  const inset = kind === 'drawer' ? 40 : 100;
+  // A run handle's line (ADR-125), where it crosses this front at least 20 mm from its edges.
+  const onLine = h.lineY === undefined ? null : h.lineY - panel.box.y;
+  const vc =
+    onLine !== null && onLine >= 20 && onLine <= hgt - 20
+      ? onLine
+      : pos === 'top'
+        ? hgt - Math.min(inset, lo(hgt))
+        : pos === 'bottom'
+          ? Math.min(inset, lo(hgt))
+          : lo(hgt);
+  const uc =
+    kind === 'drawer' ? lo(w) : openEdge === 'left' ? Math.min(40, lo(w)) : w - Math.min(40, lo(w));
+  if (h.kind === 'knob') {
+    panel.handleHoles = { at: [[uc, vc]], diameter: 5 };
+    return;
+  }
+  const S = h.holeSpacing ?? 128;
+  const along = kind === 'drawer' ? w : hgt;
+  if (S + 40 > along) {
+    diagnostics.push({
+      severity: 'warning',
+      code: 'handle-fit',
+      message: tx('{s} mm handle does not fit on {part} ({along} mm).', {
+        s: S,
+        part: tr(panel.label).toLowerCase(),
+        along,
+      }),
+      nodeId,
+    });
+    return;
+  }
+  const centre = kind === 'drawer' ? uc : vc;
+  let a = centre - lo(S),
+    b = centre + hi(S);
+  // keep the holes on the front at top/bottom positions
+  if (kind === 'door' && b > hgt - 20) {
+    b = hgt - 20;
+    a = b - S;
+  }
+  if (kind === 'door' && a < 20) {
+    a = 20;
+    b = a + S;
+  }
+  panel.handleHoles = {
+    at:
+      kind === 'drawer'
+        ? [
+            [a, vc],
+            [b, vc],
+          ]
+        : [
+            [uc, a],
+            [uc, b],
+          ],
+    diameter: 5,
+  };
+}
+
+/** The schedule line for the handles (or push latches) of `fronts` fronts; null for none. */
+export function handleHardware(
+  nodeId: string,
+  h: Handle | null | undefined,
+  fronts: number,
+): HardwareItem | null {
+  if (!h || fronts <= 0) return null;
+  if (h.kind === 'push')
+    return {
+      nodeId,
+      kind: 'push-latch',
+      label: 'Push latch (push-to-open)',
+      quantity: fronts,
+      note: 'use hinges without self-closing spring for doors (check the latch datasheet)',
+    };
+  return {
+    nodeId,
+    kind: 'handle',
+    label: h.kind === 'bar' ? `Bar handle, ${h.holeSpacing ?? 128} mm centres` : 'Knob',
+    quantity: fronts,
+  };
+}
 
 /** Typical hinge count by door height. Guidance only; the hinge maker's datasheet decides. */
 export function hingeCount(doorHeight: Mm): number {
@@ -192,72 +317,19 @@ export function buildCabinet(
     hgt: Mm,
     openEdge: 'left' | 'right' | null,
     nodeId: string,
-  ) => {
-    if (!h || h.kind === 'push') return;
-    const panel = out.panels[out.panels.length - 1];
-    const pos = h.position ?? (kind === 'drawer' ? 'top' : 'centre');
-    const inset = kind === 'drawer' ? 40 : 100;
-    // A run handle's line (ADR-125), where it crosses this front at least 20 mm from its edges.
-    const onLine = h.lineY === undefined ? null : h.lineY - panel.box.y;
-    const vc =
-      onLine !== null && onLine >= 20 && onLine <= hgt - 20
-        ? onLine
-        : pos === 'top'
-          ? hgt - Math.min(inset, lo(hgt))
-          : pos === 'bottom'
-            ? Math.min(inset, lo(hgt))
-            : lo(hgt);
-    const uc =
-      kind === 'drawer'
-        ? lo(w)
-        : openEdge === 'left'
-          ? Math.min(40, lo(w))
-          : w - Math.min(40, lo(w));
-    if (h.kind === 'knob') {
-      panel.handleHoles = { at: [[uc, vc]], diameter: 5 };
-      return;
-    }
-    const S = h.holeSpacing ?? 128;
-    const along = kind === 'drawer' ? w : hgt;
-    if (S + 40 > along) {
-      out.diagnostics.push({
-        severity: 'warning',
-        code: 'handle-fit',
-        message: tx('{s} mm handle does not fit on {part} ({along} mm).', {
-          s: S,
-          part: tr(panel.label).toLowerCase(),
-          along,
-        }),
-        nodeId: mapNode(nodeId),
-      });
-      return;
-    }
-    const centre = kind === 'drawer' ? uc : vc;
-    let a = centre - lo(S),
-      b = centre + hi(S);
-    // keep the holes on the front at top/bottom positions
-    if (kind === 'door' && b > hgt - 20) {
-      b = hgt - 20;
-      a = b - S;
-    }
-    if (kind === 'door' && a < 20) {
-      a = 20;
-      b = a + S;
-    }
-    panel.handleHoles = {
-      at:
-        kind === 'drawer'
-          ? [
-              [a, vc],
-              [b, vc],
-            ]
-          : [
-              [uc, a],
-              [uc, b],
-            ],
-      diameter: 5,
-    };
-  };
+    defaultPos?: HandlePosition,
+  ) =>
+    attachHandle(
+      out.panels[out.panels.length - 1],
+      h,
+      kind,
+      w,
+      hgt,
+      openEdge,
+      out.diagnostics,
+      mapNode(nodeId),
+      defaultPos,
+    );
   const hw = (item: HardwareItem) => out.hardware.push({ ...item, nodeId: mapNode(item.nodeId) });
   /**
    * The upright panels (sides, dividers) at an opening's left or right edge, already built: what a hinge's plates or a
@@ -505,23 +577,22 @@ export function buildCabinet(
         }
       : c.front;
   const frontZ = inset ? D - tf : D;
+  /**
+   * ADR-196: a gap wider than the space leaves its fronts no size (`w` or `h` at or under 0). One error names the gap
+   * and the area the fronts were to cover — the opening for inset fronts, else the zone with its gap — and the
+   * caller builds no front there.
+   */
+  const noFrontRoom = (c: Ctx, f: FrontZone, nodeId: string, w: Mm, h: Mm) => {
+    if (w > 0 && h > 0) return false;
+    const room = inset
+      ? { w: c.opening.w, h: c.opening.h }
+      : { w: f.x1 - f.x0 + g, h: f.y1 - f.y0 + g };
+    err('front-gap', noFrontRoomMessage(g, room.w, room.h), nodeId);
+    return true;
+  };
   const handleHw = (nodeId: string, h: Handle | null | undefined, fronts: number) => {
-    if (!h || fronts <= 0) return;
-    if (h.kind === 'push')
-      hw({
-        nodeId,
-        kind: 'push-latch',
-        label: 'Push latch (push-to-open)',
-        quantity: fronts,
-        note: 'use hinges without self-closing spring for doors (check the latch datasheet)',
-      });
-    else
-      hw({
-        nodeId,
-        kind: 'handle',
-        label: h.kind === 'bar' ? `Bar handle, ${h.holeSpacing ?? 128} mm centres` : 'Knob',
-        quantity: fronts,
-      });
+    const item = handleHardware(nodeId, h, fronts);
+    if (item) hw(item);
   };
 
   // ---- interior ------------------------------------------------------------
@@ -550,9 +621,23 @@ export function buildCabinet(
         s.id,
       );
 
-    if (s.front?.kind === 'sliding') {
+    // Hinged doors lose a gap between each pair as well; each must keep at least 1 mm.
+    const fzone = zoneOf(c);
+    const noFront =
+      !!s.front &&
+      noFrontRoom(
+        c,
+        fzone,
+        s.id,
+        s.front.kind === 'doors'
+          ? Math.floor((fzone.x1 - fzone.x0 - (s.front.count - 1) * g) / s.front.count)
+          : fzone.x1 - fzone.x0,
+        fzone.y1 - fzone.y0,
+      );
+    // ADR-196: no doors, sliding doors or flap where the gap leaves them no size.
+    if (s.front?.kind === 'sliding' && !noFront) {
       const sf = s.front;
-      const f = zoneOf(c);
+      const f = fzone;
       const n = sf.count;
       const ov = sf.overlap ?? DEFAULT_SLIDING_OVERLAP;
       const track = sf.track ?? DEFAULT_SLIDING_TRACK;
@@ -607,9 +692,9 @@ export function buildCabinet(
         });
         handleHw(s.id, s.handle, n);
       }
-    } else if (s.front?.kind === 'flap') {
+    } else if (s.front?.kind === 'flap' && !noFront) {
       const fl = s.front;
-      const f = zoneOf(c);
+      const f = fzone;
       const w = f.x1 - f.x0,
         h = f.y1 - f.y0;
       add(
@@ -622,7 +707,8 @@ export function buildCabinet(
         'x',
         ['-x', '+x', '-y', '+y'],
       );
-      placeHandle(s.handle, 'drawer', w, h, null, s.id);
+      // A bar across the flap, centred, 40 mm from its free edge (ADR-196): not beside the hinge.
+      placeHandle(s.handle, 'drawer', w, h, null, s.id, defaultHandlePosition(fl));
       if (w < 100 || h < 100)
         err('door-small', tx('Flap {w}×{h} mm is too small.', { w, h }), s.id);
       hw({
@@ -651,8 +737,8 @@ export function buildCabinet(
           s.id,
         );
       handleHw(s.id, s.handle, 1);
-    } else if (s.front?.kind === 'doors') {
-      const f = zoneOf(c);
+    } else if (s.front?.kind === 'doors' && !noFront) {
+      const f = fzone;
       const n = s.front.count;
       const totalW = f.x1 - f.x0 - (n - 1) * g;
       const widths = equalParts(totalW, n);
@@ -858,8 +944,13 @@ export function buildCabinet(
           return;
         }
         const frontRoom = fz.y1 - fz.y0 - (n - 1) * g;
-        const frontHeights =
-          custom && !internal ? distribute(frontRoom, custom) : equalParts(frontRoom, n);
+        // Drawers behind doors have no fronts of their own; others need room for every front (ADR-196).
+        if (!internal && noFrontRoom(c, fz, s.id, fz.x1 - fz.x0, Math.floor(frontRoom / n))) return;
+        const frontHeights = internal
+          ? []
+          : custom
+            ? distribute(frontRoom, custom)
+            : equalParts(frontRoom, n);
         if (!frontHeights || frontHeights.some((v) => v <= 0)) {
           err(
             'drawer-heights',
@@ -890,10 +981,11 @@ export function buildCabinet(
             ft = fb - g;
           }
         }
+        let resized: Diagnostic | null = null;
         if (custom && custom.every((z) => z.mode === 'mm')) {
           const room = internal ? ip.h : frontRoom;
           const asked = custom.reduce((a, z) => a + z.value, 0);
-          if (asked !== room)
+          if (asked !== room) {
             warn(
               'drawer-heights-resized',
               tx(
@@ -902,6 +994,8 @@ export function buildCabinet(
               ),
               s.id,
             );
+            resized = out.diagnostics[out.diagnostics.length - 1];
+          }
         }
         let slotTop = ip.y + ip.h;
         let frontTop = fz.y1;
@@ -952,11 +1046,38 @@ export function buildCabinet(
           }
           const bh = sh - ds.verticalClearance;
           if (bh < 60) {
+            // ADR-196: front → slot → clearance, and the smallest front that gives a 60 mm box once it is set as a
+            // chosen height. A chosen front's slot is the front plus a fixed amount by its place: the top drawer's
+            // half gap less the front's overhang above the opening, a middle one's whole gap, the bottom one's half
+            // gap plus the opening's step below the fronts; a single drawer's slot grows with its front. Drawers
+            // behind doors have no front to name. The resize warning would only mislead.
+            const fh = frontHeights[i];
+            const over =
+              n === 1
+                ? sh - fh
+                : i === 0
+                  ? lo(g) - (fz.y1 - (ip.y + ip.h))
+                  : i === n - 1
+                    ? hi(g) + (fz.y0 - ip.y)
+                    : g;
             err(
               'drawer-low',
-              tx('Drawer {i} box would be only {bh} mm high.', { i: i + 1, bh }),
+              internal
+                ? tx('Drawer {i} box would be only {bh} mm high.', { i: i + 1, bh })
+                : tx(
+                    'Drawer {i} box would be only {bh} mm high (front {fh}, slot {slot}, clearance {vc} mm); give it a front of at least {min} mm.',
+                    {
+                      i: i + 1,
+                      bh,
+                      fh,
+                      slot: sh,
+                      vc: ds.verticalClearance,
+                      min: 60 + ds.verticalClearance - over,
+                    },
+                  ),
               s.id,
             );
+            if (resized) out.diagnostics.splice(out.diagnostics.indexOf(resized), 1);
             return;
           }
           const by = slotBottom + lo(ds.verticalClearance);
@@ -1183,8 +1304,31 @@ export function buildCabinet(
         }
         const along = s.axis === 'x' ? ip.w : ip.h;
         const parts = distribute(along - (k - 1) * t, s.sizes, !!s.remainderFirst);
-        if (!parts || parts.some((v) => v <= 0)) {
-          err('split-fit', tx('Fixed sizes do not fit in {along} mm.', { along }), s.id);
+        if (!parts) {
+          // ADR-196: name what the parts ask, what the dividers leave and the inside width.
+          err(
+            'split-fit',
+            tx(
+              'Parts need {asked} mm but {room} mm is left after {n|# divider|# dividers} of {t} mm ({along} mm inside).',
+              {
+                asked: s.sizes.reduce((a, z) => a + (z.mode === 'mm' ? z.value : 0), 0),
+                room: along - (k - 1) * t,
+                n: k - 1,
+                t,
+                along,
+              },
+            ),
+            s.id,
+          );
+          return;
+        }
+        const empty = parts.findIndex((v) => v <= 0);
+        if (empty >= 0) {
+          err(
+            'split-fit',
+            tx("Part {i}'s share is too small to give it any width.", { i: empty + 1 }),
+            s.id,
+          );
           return;
         }
         if (s.sizes.every((z) => z.mode === 'mm')) {
@@ -1292,15 +1436,23 @@ export function buildCabinet(
       }
     : null;
   if (virtual) out.panels.push(virtual);
-  addPinRows(
+  const noPins = addPinRows(
     out.panels,
     adjustable.map((a) => ({
       ...a,
+      spaceId: mapNode(a.spaceId),
       op: { ...a.op, x: a.op.x + o.x, y: a.op.y + o.y, z: a.op.z + o.z },
     })),
     p.pinRowSetback ?? DEFAULT_PIN_ROW_SETBACK,
     out.diagnostics,
+    // The side left out (an L-corner's open wing) faces the shelves from the right (−x) or the left (+x).
+    opts.noPinSide && omitSide
+      ? { face: omitSide === 'right' ? '-x' : '+x', message: opts.noPinSide }
+      : undefined,
   );
+  // A shelf with no panel to rest on at one side gets no pins (ADR-196).
+  if (noPins.size)
+    out.hardware = out.hardware.filter((x) => !(x.kind === 'shelf-pin' && noPins.has(x.nodeId)));
   if (virtual) {
     out.panels = out.panels.filter((x) => x !== virtual);
     if (virtual.pinRows?.length) out.sharedPins = virtual.pinRows;
@@ -1321,14 +1473,17 @@ function addPinRows(
   spaces: { spaceId: string; op: Box; shelfDepth: Mm }[],
   setback: Mm,
   diags: Diagnostic[],
-) {
+  openSide?: { face: Face; message: string },
+): Set<string> {
+  const noPanel = new Set<string>();
   for (const { spaceId, op, shelfDepth } of spaces) {
     const sides: [Face, (p: Panel) => boolean][] = [
       ['+x', (p) => p.box.x + p.box.w === op.x],
       ['-x', (p) => p.box.x === op.x + op.w],
     ];
-    for (const [face, touches] of sides) {
-      const panel = panels.find(
+    const found = sides.map(([face, touches]) => ({
+      face,
+      panel: panels.find(
         (p) =>
           SUPPORTS.has(p.role) &&
           p.thicknessAxis === 'x' &&
@@ -1337,16 +1492,27 @@ function addPinRows(
           p.box.y + p.box.h >= op.y + op.h &&
           p.box.z <= op.z &&
           p.box.z + p.box.d >= op.z + op.d,
-      );
-      if (!panel) {
-        diags.push({
-          severity: 'warning',
-          code: 'pin-rows-no-panel',
-          message: tx('No side panel found for shelf pins on one side of an adjustable space.'),
-          nodeId: spaceId,
-        });
-        continue;
-      }
+      ),
+    }));
+    // A loose shelf needs a panel on both sides (ADR-196): an error, no holes on either side, no pins scheduled.
+    const missing = found.find((f) => !f.panel);
+    if (missing) {
+      diags.push({
+        severity: 'error',
+        code: 'pin-rows-no-panel',
+        message:
+          openSide?.face === missing.face
+            ? openSide.message
+            : tx(
+                'One side of this space has no panel, so its shelves cannot rest on pins; make them fixed.',
+              ),
+        nodeId: spaceId,
+      });
+      noPanel.add(spaceId);
+      continue;
+    }
+    for (const { face, panel } of found) {
+      if (!panel) continue; // never: every side has a panel here
       if (shelfDepth < 2 * setback + PIN_PITCH) {
         diags.push({
           severity: 'warning',
@@ -1388,4 +1554,5 @@ function addPinRows(
       panel.pinRows = [...(panel.pinRows ?? []), rows];
     }
   }
+  return noPanel;
 }

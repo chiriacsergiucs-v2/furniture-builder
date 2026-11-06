@@ -1,19 +1,31 @@
 import { describe, expect, it } from 'vitest';
 import { buildModel } from '../src/core/build';
 import { cutlist, lengthsList } from '../src/core/cutlist';
+import { defaultHandlePosition } from '../src/core/cabinet';
 import {
   cabinet,
   cabinetDefaults,
   cornerDefaults,
+  fr,
   frameDefaults,
+  mm,
   newId,
   panelDefaults,
+  templates,
   validateDesign,
   wrap,
 } from '../src/core/design';
+import { setLang } from '../src/core/i18n';
 import { nestingJobs } from '../src/core/nesting/fromDesign';
 import { overlaps } from '../src/core/geometry';
-import type { CabinetParams, Design, FrameParams, Space } from '../src/core/types';
+import type {
+  CabinetParams,
+  CornerParams,
+  Design,
+  FrameParams,
+  Space,
+  SplitSize,
+} from '../src/core/types';
 
 const noOverlaps = (d: Design) => {
   const P = buildModel(d).panels;
@@ -400,6 +412,315 @@ describe('doubled top (ADR-105)', () => {
       expect(tops(two).length, v).toBe(2 * tops(one).length);
       expect(errors(two), v).toEqual([]);
       noOverlaps(two);
+    }
+  });
+});
+
+describe('build only what the user set, and say why a part cannot be built (ADR-196)', () => {
+  const corner = (over: Partial<CornerParams>, variant: CornerParams['variant'] = 'diagonal') =>
+    wrap('C', { kind: 'corner', id: 'C', params: { ...cornerDefaults(variant), ...over } });
+  const bar = { kind: 'bar' as const, holeSpacing: 128 };
+  const message = (d: Design, code: string) =>
+    buildModel(d).diagnostics.find((x) => x.code === code)?.message;
+
+  it('1. a diagonal corner drills and schedules its bar handle; adjustable shelves there are an error', () => {
+    const door = (side: 'left' | 'right', count: 1 | 2 = 1) =>
+      corner({
+        side,
+        interior: {
+          id: 'i',
+          kind: 'shelves',
+          count: 1,
+          front: { kind: 'doors', count },
+          handle: bar,
+        },
+      });
+    const l = buildModel(door('left'));
+    expect(l.diagnostics.filter((x) => x.severity === 'error')).toEqual([]);
+    const leaf = l.panels.find((p) => p.role === 'door')!;
+    // 479 × 618 mm leaf hinged left: the bar upright 40 mm from the right (opening) edge, centred on the height.
+    expect([leaf.box.w, leaf.box.h]).toEqual([479, 618]);
+    expect(leaf.handleHoles).toEqual({
+      at: [
+        [439, 245],
+        [439, 373],
+      ],
+      diameter: 5,
+    });
+    expect(l.hardware.find((h) => h.kind === 'handle')).toMatchObject({
+      nodeId: 'i',
+      label: 'Bar handle, 128 mm centres',
+      quantity: 1,
+    });
+    // Mirrored for a corner on the right: the holes move to the other edge with the door.
+    const r = buildModel(door('right'));
+    expect(r.panels.find((p) => p.role === 'door')!.handleHoles?.at.map(([u]) => u)).toEqual([
+      40, 40,
+    ]);
+    // A pair: one bar on each meeting edge, two handles scheduled.
+    const pair = buildModel(door('left', 2));
+    expect(pair.panels.filter((p) => p.role === 'door' && p.handleHoles)).toHaveLength(2);
+    expect(pair.hardware.find((h) => h.kind === 'handle')?.quantity).toBe(2);
+
+    const adj = corner({
+      interior: { id: 'i', kind: 'shelves', count: 2, adjustable: true, front: null },
+    });
+    const m = buildModel(adj);
+    expect(m.diagnostics.find((x) => x.code === 'diagonal-adjustable')).toMatchObject({
+      severity: 'error',
+      nodeId: 'i',
+      message: 'A diagonal corner has no straight sides for shelf pins; make the shelves fixed.',
+    });
+    // The shelves stay in the drawing behind the blocking error, as in an L-corner's open wing; no supports scheduled.
+    expect(m.panels.filter((p) => p.role === 'shelf')).toHaveLength(2);
+    expect(m.hardware.some((h) => h.kind === 'shelf-pin')).toBe(false);
+    // Fixed shelves build as before.
+    const fixed = buildModel(corner({ interior: { id: 'i', kind: 'shelves', count: 2 } }));
+    expect(fixed.panels.filter((p) => p.role === 'shelf')).toHaveLength(2);
+    expect(fixed.diagnostics.map((x) => x.code)).not.toContain('diagonal-adjustable');
+  });
+
+  it('2. back slats are never clamped: too many is an error and nothing overlaps; 4 build as before', () => {
+    const chair = (count: number) =>
+      frame('chair', {
+        back: { seatHeight: 460, style: 'slats', count, railHeight: 60, angleDeg: 0 },
+      });
+    const crowded = chair(10);
+    expect(message(crowded, 'back-slats-crowded')).toBe(
+      '10 back slats of 40 mm do not fit between the posts (370 mm); at most 6 fit.',
+    );
+    expect(errors(crowded).map((x) => x.code)).toEqual(['back-slats-crowded']);
+    expect(buildModel(crowded).panels.filter((p) => p.label === 'Back slat')).toHaveLength(0);
+    noOverlaps(crowded);
+    for (const n of [4, 6]) {
+      const ok = chair(n);
+      expect(buildModel(ok).panels.filter((p) => p.label === 'Back slat')).toHaveLength(n);
+      expect(errors(ok)).toEqual([]);
+      noOverlaps(ok);
+    }
+  });
+
+  it('3. a flap bar sits 40 mm from its free edge, centred; an explicit position wins', () => {
+    const flap = (direction: 'up' | 'down', position?: 'top' | 'centre' | 'bottom') =>
+      cab(
+        {},
+        {
+          id: 'f',
+          kind: 'shelves',
+          count: 0,
+          front: { kind: 'flap', count: 1, direction, fitting: 'X' },
+          handle: position ? { ...bar, position } : bar,
+        },
+      );
+    const holes = (d: Design) => buildModel(d).panels.find((p) => p.role === 'door')!;
+    const up = holes(flap('up'));
+    expect([up.box.w, up.box.h]).toEqual([798, 818]);
+    expect(up.handleHoles?.at).toEqual([
+      [335, 40],
+      [463, 40],
+    ]);
+    expect(holes(flap('down')).handleHoles?.at).toEqual([
+      [335, 778],
+      [463, 778],
+    ]);
+    expect(holes(flap('up', 'top')).handleHoles?.at).toEqual([
+      [335, 778],
+      [463, 778],
+    ]);
+    expect(holes(flap('down', 'centre')).handleHoles?.at).toEqual([
+      [335, 409],
+      [463, 409],
+    ]);
+    expect(defaultHandlePosition({ kind: 'flap', count: 1, direction: 'up' })).toBe('bottom');
+    expect(defaultHandlePosition({ kind: 'flap', count: 1, direction: 'down' })).toBe('top');
+    expect(defaultHandlePosition({ kind: 'doors', count: 1 })).toBe('centre');
+    expect(defaultHandlePosition(null)).toBe('top');
+  });
+
+  it('4. a gap wider than the front zone builds no front and names gap and zone; no negative size anywhere', () => {
+    const fronts: Space[] = [
+      { id: 's', kind: 'shelves', count: 1, front: { kind: 'doors', count: 1 } },
+      { id: 's', kind: 'shelves', count: 1, front: { kind: 'doors', count: 2 } },
+      { id: 's', kind: 'shelves', count: 0, front: { kind: 'sliding', count: 2 } },
+      { id: 's', kind: 'shelves', count: 0, front: { kind: 'flap', count: 1, direction: 'up' } },
+    ];
+    for (const interior of fronts) {
+      const d = cab({ width: 120, height: 200, depth: 150, frontGap: 150 }, interior);
+      const m = buildModel(d);
+      const gap = m.diagnostics.filter((x) => x.code === 'front-gap');
+      expect(gap, interior.kind).toHaveLength(1);
+      expect(gap[0]).toMatchObject({
+        severity: 'error',
+        message: 'The 150 mm gap leaves no room for fronts on 120×120 mm.',
+      });
+      expect(m.panels.filter((p) => p.role === 'door' || p.role === 'drawer-front')).toEqual([]);
+      expect(m.diagnostics.map((x) => x.code)).not.toContain('door-small');
+      for (const p of m.panels)
+        expect(Math.min(p.box.w, p.box.h, p.box.d), p.id).toBeGreaterThan(0);
+      for (const r of cutlist(m, d.materials))
+        expect(Math.min(r.length, r.width), r.labels.join()).toBeGreaterThan(0);
+    }
+    // Drawer fronts: a gap of the cabinet's width leaves them none; the boxes are not built either.
+    const chest = cab({ frontGap: 800 }, { id: 's', kind: 'drawers', count: 2 });
+    expect(message(chest, 'front-gap')).toBe(
+      'The 800 mm gap leaves no room for fronts on 800×820 mm.',
+    );
+    expect(buildModel(chest).panels.some((p) => p.role.startsWith('drawer'))).toBe(false);
+    // Doors that only lose their room to the gap between them say so too.
+    const pair = cab(
+      { width: 200, frontGap: 190 },
+      { id: 's', kind: 'shelves', count: 0, front: { kind: 'doors', count: 2 } },
+    );
+    expect(codes(pair)).toContain('front-gap');
+    expect(buildModel(pair).panels.some((p) => p.role === 'door')).toBe(false);
+    // With no gap at all the space alone is too small: a 1 mm inset part with a pair of doors.
+    const tiny = cab(
+      { frontStyle: 'inset', frontGap: 0 },
+      {
+        id: 'sp',
+        kind: 'split',
+        axis: 'x',
+        sizes: [mm(1), fr()],
+        children: [
+          { id: 'a', kind: 'shelves', count: 0, front: { kind: 'doors', count: 2 } },
+          { id: 'b', kind: 'shelves', count: 0 },
+        ],
+      },
+    );
+    expect(message(tiny, 'front-gap')).toMatch(/^There is no room for fronts on 1×\d+ mm\.$/);
+    expect(buildModel(tiny).panels.some((p) => p.role === 'door')).toBe(false);
+    // Corners: the diagonal doors and the blind panel.
+    expect(message(corner({ frontGap: 1000 }), 'front-gap')).toBe(
+      'The 1000 mm gap leaves no room for fronts on 481×620 mm.',
+    );
+    const blind = buildModel(corner({ frontGap: 700 }, 'blind'));
+    expect(blind.panels.some((p) => p.role === 'blind-panel')).toBe(false);
+    expect(blind.diagnostics.map((x) => x.code)).toContain('front-gap');
+    // An ordinary gap builds fronts as before.
+    expect(codes(cab({}, fronts[0]))).not.toContain('front-gap');
+  });
+
+  it('5. split-fit names what the parts ask, the room left after the dividers and the inside width', () => {
+    const split = (sizes: SplitSize[]) =>
+      cab(
+        { width: 800 },
+        {
+          id: 'sp',
+          kind: 'split',
+          axis: 'x',
+          sizes,
+          children: sizes.map((_, i) => ({ id: `c${i}`, kind: 'shelves', count: 0 })),
+        },
+      );
+    expect(message(split([mm(382), mm(382)]), 'split-fit')).toBe(
+      'Parts need 764 mm but 746 mm is left after 1 divider of 18 mm (764 mm inside).',
+    );
+    expect(message(split([mm(300), mm(300), mm(300)]), 'split-fit')).toBe(
+      'Parts need 900 mm but 728 mm is left after 2 dividers of 18 mm (764 mm inside).',
+    );
+    expect(message(split([fr(0.01), fr(1000)]), 'split-fit')).toBe(
+      "Part 1's share is too small to give it any width.",
+    );
+    expect(codes(split([mm(373), fr()]))).not.toContain('split-fit');
+  });
+
+  it('6. an L-corner wing with no side at the corner: adjustable shelves are an error and no pins are scheduled', () => {
+    const l = corner(
+      { wingInterior: { id: 'w', kind: 'shelves', count: 2, adjustable: true, front: null } },
+      'l-shape',
+    );
+    const m = buildModel(l);
+    expect(m.diagnostics.find((x) => x.code === 'pin-rows-no-panel')).toMatchObject({
+      severity: 'error',
+      nodeId: 'w',
+      message:
+        'The side-wall wing has no side at the corner, so its shelves cannot rest on pins; make them fixed.',
+    });
+    expect(m.hardware.filter((h) => h.kind === 'shelf-pin' && h.nodeId === 'w')).toEqual([]);
+    expect(m.panels.some((p) => p.pinRows?.length)).toBe(false);
+    // Wing A has both sides: its adjustable shelves get pins as before.
+    const a = buildModel(
+      corner(
+        {
+          interior: {
+            id: 'a',
+            kind: 'shelves',
+            count: 2,
+            adjustable: true,
+            front: { kind: 'doors', count: 1 },
+          },
+        },
+        'l-shape',
+      ),
+    );
+    expect(a.diagnostics.map((x) => x.code)).not.toContain('pin-rows-no-panel');
+    expect(a.hardware.find((h) => h.kind === 'shelf-pin' && h.nodeId === 'a')?.quantity).toBe(8);
+  });
+
+  it('7. the blind corner template says the blind width it builds', () => {
+    const t = templates.find((x) => x.id === 'corner-blind')!;
+    const c = cornerDefaults('blind');
+    expect(t.description).toBe(
+      `${c.width} × ${c.height} × ${c.depth}, ${c.blindWidth} mm blind section on the left, one door`,
+    );
+    expect(t.description).toContain('610 mm blind section');
+    const p = t.create().product;
+    expect(p.kind === 'corner' && p.params.blindWidth).toBe(c.blindWidth);
+  });
+
+  it('8. drawer-low names front, slot, clearance and the smallest front that fits, with no resize warning', () => {
+    const drawers = (first: number, second = 100) =>
+      cab({}, { id: 'd', kind: 'drawers', count: 3, heights: [mm(first), mm(second), mm(100)] });
+    const low = drawers(100);
+    expect(message(low, 'drawer-low')).toBe(
+      'Drawer 1 box would be only 54 mm high (front 100, slot 84, clearance 30 mm); give it a front of at least 106 mm.',
+    );
+    expect(codes(low)).not.toContain('drawer-heights-resized');
+    // The front it names is enough: drawer 1 now builds; a middle drawer is named with its own numbers.
+    expect(codes(drawers(106))).not.toContain('drawer-low');
+    expect(codes(drawers(106))).toContain('drawer-heights-resized');
+    expect(message(drawers(106, 50), 'drawer-low')).toBe(
+      'Drawer 2 box would be only 23 mm high (front 50, slot 53, clearance 30 mm); give it a front of at least 87 mm.',
+    );
+    expect(codes(drawers(106, 87))).not.toContain('drawer-low');
+    // Equal heights: the named front is the one that works once it is chosen for that drawer.
+    const equal = cab({}, { id: 'd', kind: 'drawers', count: 12 });
+    expect(message(equal, 'drawer-low')).toBe(
+      'Drawer 1 box would be only 36 mm high (front 66, slot 66, clearance 30 mm); give it a front of at least 106 mm.',
+    );
+    const chosen = cab(
+      {},
+      {
+        id: 'd',
+        kind: 'drawers',
+        count: 12,
+        heights: [mm(106), ...Array.from({ length: 11 }, () => fr())],
+      },
+    );
+    expect(message(chosen, 'drawer-low')).not.toMatch(/^Drawer 1 /);
+    // Without an error the resize warning stays.
+    expect(
+      codes(cab({}, { id: 'd', kind: 'drawers', count: 2, heights: [mm(200), mm(200)] })),
+    ).toContain('drawer-heights-resized');
+  });
+
+  it('every new text has its Russian entry', () => {
+    const door: Space = { id: 's', kind: 'shelves', count: 1, front: { kind: 'doors', count: 1 } };
+    setLang('ru');
+    try {
+      expect(
+        message(cab({ width: 120, height: 200, depth: 150, frontGap: 150 }, door), 'front-gap'),
+      ).toBe('Зазор 150 мм не оставляет места для фасадов на 120×120 мм.');
+      expect(
+        message(
+          frame('chair', {
+            back: { seatHeight: 460, style: 'slats', count: 10, railHeight: 60, angleDeg: 0 },
+          }),
+          'back-slats-crowded',
+        ),
+      ).toMatch(/^10 реек спинки по 40 мм/);
+    } finally {
+      setLang('en');
     }
   });
 });
