@@ -121,4 +121,4 @@ Ran locally on branch `adr-193-start-new-fill-flows`, 2026-11-06. Not merged, no
   (Chromium, 390 × 844 and 1280 × 900): 48 checks passed. `FUZZ_N=30000` fuzz 4/4. lint, format:check,
   typecheck, build and docs:check pass; `pnpm test` 1219 passed (1 skipped).
 - Gaps found while building: G-461 (the default L and U rooms give no mix, before and after this ADR) and G-462 (the
-  start Cut offset 0 is rejected for U and Alcove by the new size check).
+  start Cut offset 0 is rejected for U and Alcove by the new size check; acknowledged by the user 2026-11-06: "Keep cut offset at 0").

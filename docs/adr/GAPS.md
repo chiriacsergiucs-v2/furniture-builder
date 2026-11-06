@@ -2841,6 +2841,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: Band tolerances and edgebander settings are not recorded anywhere.
 - Fix: Add user-filled tolerance and edgebander fields to the band spec, labelled guidance (ADR-010).
 - Conflicts: none
+
 ### G-461: Default L and U rooms give no Fill the room mix
 
 - Status: Open
@@ -2854,7 +2855,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-462: Fill the room starts U and Alcove with an offset the size check rejects
 
-- Status: Open
+- Status: Acknowledged (2026-11-06)
 - Origin: ADR-193, 2026-11-06; agent kept the existing start value (no default invented)
 - Missing: Fill the room starts with Cut offset 0. With ADR-193's size check (offset inside the room) a U or Alcove at offset 0 is named as an error on Next ('Cut offset must be a whole number of mm above 0.'), because at 0 a wall has no length and the outline folds back. The user must type an offset before a U or Alcove can go on.
 - Request: Not a quote: ADR-193 item 2, 'cut and offset inside the room'; the start value was not part of the decision.
@@ -2862,3 +2863,4 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Suggested pick: Start Cut offset at the Project room editor's 1000 mm, so the default U and Alcove pass Next without typing; the same value the app already uses for a project's room. (estimate: effort +2% of ADR-193, value +5%)
 - Work: Low
 - Impact: Low-medium
+- Fix: Keep the Cut offset start value at 0 (user 2026-11-06); the size check names it for U and Alcove until the user types a valid offset.
