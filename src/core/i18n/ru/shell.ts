@@ -311,9 +311,11 @@ export const ru_shell = {
   'No problems found.': 'Проблем не найдено.',
   '…and {n} more on Review.': '…и ещё {n} на шаге «Проверка».',
   Default: 'По умолчанию',
-  'Warnings: see Review after using it': 'Предупреждения: смотрите «Проверку» после выбора',
   '{n|# warning|# warnings}': '{n|# предупреждение|# предупреждения|# предупреждений}',
   'Use this': 'Выбрать',
+  'Use this: {label}': 'Выбрать: {label}',
+  'Shelves in compartment {n}': 'Полки в секции {n}',
+  'Drawers in compartment {n}': 'Ящики в секции {n}',
   'Suggested combinations': 'Предлагаемые сочетания',
   'About suggested combinations': 'О предлагаемых сочетаниях',
   'Fit the sizes entered so far, checked by the model.':
@@ -321,7 +323,7 @@ export const ru_shell = {
   'No combination fits these sizes without errors; set the answers by hand.':
     'Ни одно сочетание не подходит к этим размерам без ошибок; задайте ответы вручную.',
   'Show more ({n})': 'Показать ещё ({n})',
-  'Start blank': 'Начать с нуля',
+  'Continue by hand': 'Продолжить вручную',
   'Wizard: {name}': 'Мастер: {name}',
   'New piece': 'Новое изделие',
   'The piece could not be saved in this browser’s storage.':

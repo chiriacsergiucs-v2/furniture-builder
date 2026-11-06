@@ -38,20 +38,20 @@ export const FEATURES: FeatureDomain[] = [
         name: 'New-piece wizard',
         detail:
           "Answer the size, construction and contents questions; only the chosen type's questions are asked.",
-        adrs: ['ADR-044', 'ADR-046', 'ADR-191'],
-        checked: '2026-11-05',
+        adrs: ['ADR-044', 'ADR-046', 'ADR-191', 'ADR-194'],
+        checked: '2026-11-06',
       },
       {
         name: 'Suggested combinations in the wizard',
         detail: 'Cards with variations of your answers, kept only when they build without errors.',
-        adrs: ['ADR-045'],
-        checked: '2026-11-05',
+        adrs: ['ADR-045', 'ADR-194'],
+        checked: '2026-11-06',
       },
       {
         name: 'Reopen a piece in the wizard',
         detail: 'The answers stay with the piece, so you can change them later.',
-        adrs: ['ADR-046'],
-        checked: '2026-11-05',
+        adrs: ['ADR-046', 'ADR-194'],
+        checked: '2026-11-06',
       },
       {
         name: 'Create a project',
