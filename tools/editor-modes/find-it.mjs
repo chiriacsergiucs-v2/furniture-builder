@@ -127,12 +127,9 @@ for (const [width, scheme] of [
     'Settings shows Width',
     await dlg.getByLabel('Width', { exact: true }).first().isVisible(),
   );
-  for (const t of [
-    'Construction',
-    'Materials',
-    'Drawers and runners',
-    'Boards, sheets and saw cut',
-  ])
+  // The boards (materials) live under "Boards, sheets and saw cut" with its "Add a material" (checked below); there is
+  // no separate Materials group any more.
+  for (const t of ['Construction', 'Drawers and runners', 'Boards, sheets and saw cut'])
     ck(width, `Settings shows "${t}"`, (await dgroup(t).count()) > 0);
   await dgroup('Boards, sheets and saw cut').click();
   const addMaterial = dlg.getByRole('button', { name: 'Add a material' });
@@ -167,6 +164,11 @@ for (const [width, scheme] of [
 
   // 4. Build & Preview: 3D and the parts with Download CSV and Print; an error blocks both.
   await mode('Build & Preview').click();
+  // Build & Preview opens in 2D (a phone since ADR-144): tap "3D" as a user would.
+  {
+    const three = page.getByRole('radio', { name: '3D', exact: true });
+    if ((await three.getAttribute('aria-checked')) !== 'true') await three.click();
+  }
   await page
     .locator('canvas')
     .first()
@@ -204,6 +206,31 @@ for (const [width, scheme] of [
     'Download CSV and Print disabled with an error',
     (await csv.isDisabled()) && (await print.isDisabled()),
   );
+  // ADR-201 (G-016): the reason shows beside the disabled exports, and the Shopping list's exports are blocked too.
+  ck(
+    width,
+    'the blocked reason shows ("Fix them before cutting.")',
+    await page
+      .getByText('This design has problems (see Checks). Fix them before cutting.')
+      .isVisible(),
+  );
+  await page.getByRole('tab', { name: /^Shopping/ }).click();
+  {
+    const shopCsv = page.getByRole('button', { name: 'Shopping list CSV' });
+    const shopPrint = page.getByRole('button', { name: 'Print shopping list' });
+    await shopCsv.scrollIntoViewIfNeeded();
+    ck(
+      width,
+      'Shopping list CSV and Print shopping list disabled with an error',
+      (await shopCsv.isVisible()) && (await shopCsv.isDisabled()) && (await shopPrint.isDisabled()),
+    );
+    ck(
+      width,
+      'Shopping says "Fix the problems under Checks first"',
+      await page.getByText(/^Fix the problems under Checks first;/).isVisible(),
+    );
+    await shot('blocked-shopping');
+  }
   {
     const t = page.getByRole('tab', { name: /Checks/ });
     if ((await t.getAttribute('aria-selected')) !== 'true') await t.click();
@@ -238,6 +265,8 @@ for (const [width, scheme] of [
     .click();
   await page.locator('main.work').waitFor({ state: 'visible' });
   await mode('Compose').click();
+  // The 3D view chosen above is kept: back to the plan ("2D"), as a user would.
+  await page.getByRole('radio', { name: '2D', exact: true }).click();
   ck(
     width,
     'project shows its plan in Compose',
@@ -248,7 +277,8 @@ for (const [width, scheme] of [
     width,
     'Settings holds the project settings',
     // Titled by the dialog only since ADR-116 ("Settings: <project>", its ⓘ "About project settings").
-    (await dlg.getByRole('button', { name: 'About project settings' }).isVisible()) &&
+    // The title's ⓘ (the Project settings group has its own, folded below it).
+    (await dlg.getByRole('button', { name: 'About project settings' }).first().isVisible()) &&
       (await dlg.getByLabel('Saw cut (kerf) for this project', { exact: true }).isVisible()),
   );
   await closeSettings();

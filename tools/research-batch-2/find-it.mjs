@@ -36,18 +36,19 @@ for (const width of [1280, 390]) {
   const dlg = page.locator('dialog[open]');
   const click = async (loc) => {
     await loc.scrollIntoViewIfNeeded().catch(() => {});
-    await loc.click({ timeout: 3000 }).catch(() => loc.dispatchEvent('click'));
+    // ADR-201 (G-181): a click Playwright delivered ("click action done") but whose page was too busy to answer in
+    // 3 s (software-rendered 3D) was taken; clicking again here undid it, the "lost first tap". Fall back only when
+    // the click never happened (covered or off screen).
+    await loc.click({ timeout: 3000 }).catch((e) => {
+      if (!/performing click action|click action done/.test(e.message))
+        return loc.dispatchEvent('click');
+    });
   };
   const btn = (name, exact = true) => page.getByRole('button', { name, exact });
-  /**
-   * Click a toggle until it reads `want`: the first tap after a touch drag, or while the 3D view settles, is sometimes
-   * not taken. Not traced yet: gap G-181.
-   */
+  /** One click on a toggle that does not read `want` yet (ADR-201, G-181: no retry; a lost tap is a failure). */
   const toggle = async (loc, want) => {
-    for (let i = 0; i < 3 && (await loc.getAttribute('aria-pressed')) !== String(want); i++) {
-      await click(loc);
-      await page.waitForTimeout(500);
-    }
+    if ((await loc.getAttribute('aria-pressed')) !== String(want)) await click(loc);
+    await page.waitForTimeout(300);
     return (await loc.getAttribute('aria-pressed')) === String(want);
   };
   const plan = page.getByRole('figure', { name: /Room plan, seen from above/ });
@@ -166,21 +167,28 @@ for (const width of [1280, 390]) {
   if (phone) await click(plan.getByRole('checkbox', { name: 'Select', exact: true }));
   await page.keyboard.press('Escape');
 
-  // 3. One piece → Lock size → "Size locked" and the hint by its size fields.
+  // 3. One piece → More actions › Lock size → "Locked: size" and the hint by its size fields. Since ADR-171 the card's
+  // More actions menu holds Lock size, and one chip names what is locked.
   await tap(0);
   await compose();
-  const lockSize = btn('Lock size');
+  const card = page.getByRole('region', { name: /^Selected piece: / });
+  const more = card.getByRole('button', { name: 'More actions', exact: true });
+  await click(more);
+  const lockSize = card.getByRole('button', { name: 'Lock size', exact: true });
   check(
     width,
-    '"Lock size" is on the selected-piece card',
+    '"Lock size" is in the selected-piece card\'s More actions',
     await lockSize.isVisible().catch(() => false),
   );
   await click(lockSize);
   await page.waitForTimeout(200);
   check(
     width,
-    'the card says "Size locked"',
-    await page.getByText('Size locked', { exact: true }).first().isVisible(),
+    'the card says "Locked: size"',
+    await card
+      .getByText('Locked: size', { exact: true })
+      .isVisible()
+      .catch(() => false),
   );
   const hint = page.getByText('Size locked — unlock to change').first();
   check(
@@ -188,22 +196,29 @@ for (const width of [1280, 390]) {
     'the size fields say "Size locked — unlock to change"',
     await hint.isVisible().catch(() => false),
   );
+  await click(more);
   check(
     width,
-    '"Unlock size" is offered',
-    await btn('Unlock size')
+    '"Unlock size" is offered in More actions',
+    await card
+      .getByRole('button', { name: 'Unlock size', exact: true })
       .isVisible()
       .catch(() => false),
   );
+  await click(more);
   await hint.scrollIntoViewIfNeeded().catch(() => {});
   await shot('size-lock');
 
   // 4. 3D → Move → the "Change height" handle → drag up → "From floor … mm".
   await to3d();
   {
-    const menu = page.locator('details.view-options');
+    // The Options menu that holds the Look (on a phone the plan has its own Options menu too).
+    const menu = page
+      .locator('details.view-options')
+      .filter({ has: page.getByRole('radio', { name: 'Simple', includeHidden: true }) });
     const inMenu = (await menu.count()) > 0;
-    if (inMenu && !(await menu.evaluate((d) => d.open))) await menu.locator('summary').click();
+    if (inMenu && !(await menu.evaluate((d) => d.open)))
+      await menu.locator(':scope > summary').click();
     await page
       .getByRole('radio', { name: 'Simple' })
       .click()
@@ -236,7 +251,7 @@ for (const width of [1280, 390]) {
     const note = await drag({ x: hb.x + hb.width / 2, y: hb.y + hb.height / 2 }, 0, -60, 'height');
     check(width, 'dragging it shows "From floor … mm"', /From floor \d+ mm/.test(note), note);
   }
-  await toggle(move, false);
+  check(width, 'one tap turns Move off after the drag', await toggle(move, false));
 
   // 5. Section → Width / Height / Depth and "Cut at … mm"; Isolate.
   const section = tools.getByRole('button', { name: 'Section', exact: true });
@@ -257,7 +272,7 @@ for (const width of [1280, 390]) {
     '"Isolate" is offered with a piece selected',
     await isolate.isVisible().catch(() => false),
   );
-  await toggle(section, false);
+  check(width, 'one tap turns Section off', await toggle(section, false));
   await toggle(isolate, true);
   check(
     width,
