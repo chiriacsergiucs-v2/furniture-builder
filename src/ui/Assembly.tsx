@@ -26,8 +26,9 @@ import {
 import type { FastenerChoice } from '../core/fasteners';
 import { t, tr } from '../core/i18n';
 import { getPrintLang, PRINT_DATE_LOCALE, pt } from '../core/i18n/print';
-import type { FurnitureModel, Material } from '../core/types';
+import type { Design, FurnitureModel, Material } from '../core/types';
 import { useDesign } from '../store/designStore';
+import { printPieceName } from '../core/catalog/printName';
 import { useFastenerChoices } from './Fasteners';
 import { GuidanceTip } from './controls';
 import { PieceElevation } from './Elevation';
@@ -38,6 +39,8 @@ import { useView } from './useView';
 interface PieceSteps {
   key: string;
   name: string;
+  /** For the name on the printed sheet (`printPieceName`, ADR-202). */
+  design: Pick<Design, 'name' | 'catalog'>;
   /** Linked copies (ADR-111) listed once: how many pieces share these steps. */
   times: number;
   /** Panel ids as the 3D view knows them (a project prefixes the piece id). */
@@ -54,19 +57,19 @@ function usePieceSteps(): PieceSteps[] {
   const pieces = useDesign((s) =>
     s.project && !s.editingItemId ? s.projectModel?.pieces : undefined,
   );
-  const designName = useDesign((s) => s.design.name);
-  const designMaterials = useDesign((s) => s.design.materials);
+  const design = useDesign((s) => s.design);
   return useMemo(() => {
     if (view.mode === 'design' || !pieces)
       return [
         {
           key: 'design',
-          name: designName,
+          name: design.name,
+          design,
           times: 1,
           idOf: (id) => id,
           steps: assemblySteps(view.model),
           model: view.model,
-          materials: designMaterials,
+          materials: design.materials,
         },
       ];
     const out: PieceSteps[] = [];
@@ -82,6 +85,7 @@ function usePieceSteps(): PieceSteps[] {
       const entry: PieceSteps = {
         key: pc.item.id,
         name: pc.item.design.name,
+        design: pc.item.design,
         times: pc.item.quantity,
         idOf: (id) => `${pc.item.id}:${id}`,
         steps: assemblySteps(model),
@@ -92,7 +96,7 @@ function usePieceSteps(): PieceSteps[] {
       out.push(entry);
     }
     return out;
-  }, [view, pieces, designName, designMaterials]);
+  }, [view, pieces, design]);
 }
 
 /** The project's order of pieces (ADR-178); none for a design alone or while one piece is being edited. */
@@ -364,14 +368,14 @@ export function PrintAssembly() {
       {pieces.map((p) => (
         <section key={p.key} className="pr-block pr-piece">
           <h2>
-            {p.name}
+            {printPieceName(p.design)}
             {p.times > 1 ? ` × ${p.times}` : ''}
           </h2>
           <div className="pr-elev">
             <PieceElevation
               model={p.model}
               materials={p.materials}
-              label={`${pt('Vedere frontală')}: ${p.name}`}
+              label={`${pt('Vedere frontală')}: ${printPieceName(p.design)}`}
             />
           </div>
           <table className="pr-table">

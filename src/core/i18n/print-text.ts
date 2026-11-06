@@ -256,6 +256,29 @@ export const PRINT_RU = {
   plăci: 'листы',
   'm²': 'м²',
   m: 'м',
+  // Fastener lines on the shopping CSV and printed list (ADR-202)
+  'Fixare îmbinări': 'Крепёж соединений',
+  'Suporți de raft': 'Полкодержатели',
+  'Fixare panouri de spate': 'Крепёж задних стенок',
+  'Fixare agățători': 'Крепёж навесов',
+  'Fixare blaturi': 'Крепёж столешниц',
+  Picioare: 'Опоры',
+  'fiecare loc unde se întâlnesc două plăci ale corpului: laterale, capac, bază, despărțitori, rafturi fixe, traverse':
+    'каждое место, где встречаются две плиты корпуса: боковины, крышка, дно, перегородки, неподвижные полки, царги',
+  'suporții de raft din lista de feronerie': 'полкодержатели и опоры из перечня фурнитуры',
+  'fiecare panou de spate, fixat pe tot perimetrul':
+    'каждая задняя стенка, крепится по всему периметру',
+  'fiecare agățătoare a unei piese suspendate': 'каждый навес навесного изделия',
+  'fiecare blat, de linie sau de birou': 'каждая столешница, ряда или стола',
+  'fiecare piesă așezată pe soclu': 'каждое изделие на цоколе',
+  ', {m} m de margine a spatelui': ', {m} м кромки задней стенки',
+  ', {m} m de blat': ', {m} м столешницы',
+  'Orientativ: numărat din model': 'Ориентировочно: подсчитано по модели',
+  '{line}: {count} — alegeți elementul de fixare': '{line}: {count} — выберите крепёж',
+  '{guidance} ({how}{len}). Numiți-l pe al dvs. în {path}.':
+    '{guidance} ({how}{len}). Укажите свой в разделе {path}.',
+  'Șuruburile, diblurile și excentricii sunt numărați doar ca îmbinări, orientativ; elementul de fixare îl alegeți dvs. ({path}). Lipiciul nu este numărat.':
+    'Шурупы, шканты и эксцентрики учитываются только как соединения, ориентировочно; крепёж выбираете вы ({path}). Клей не учитывается.',
   buc: 'шт.',
 } satisfies Record<string, string>;
 
@@ -495,4 +518,26 @@ export const PRINT_EN: Record<keyof typeof PRINT_RU, string> = {
   'm²': 'm²',
   m: 'm',
   buc: 'pcs',
+  // Fastener lines on the shopping CSV and printed list (ADR-202)
+  'Fixare îmbinări': 'Joint fixings',
+  'Suporți de raft': 'Shelf pins',
+  'Fixare panouri de spate': 'Back fixings',
+  'Fixare agățători': 'Hanging point fixings',
+  'Fixare blaturi': 'Worktop fixings',
+  Picioare: 'Feet',
+  'fiecare loc unde se întâlnesc două plăci ale corpului: laterale, capac, bază, despărțitori, rafturi fixe, traverse':
+    'each place two carcass boards meet: sides, top, bottom, dividers, fixed shelves, rails',
+  'suporții de raft din lista de feronerie': 'the shelf pins and supports in the hardware schedule',
+  'fiecare panou de spate, fixat pe tot perimetrul': 'each back panel, fixed round its perimeter',
+  'fiecare agățătoare a unei piese suspendate': 'each hanging bracket of a wall-hung piece',
+  'fiecare blat, de linie sau de birou': 'each worktop, run or desk top',
+  'fiecare piesă așezată pe soclu': 'each piece standing on a plinth',
+  ', {m} m de margine a spatelui': ', {m} m of back edge',
+  ', {m} m de blat': ', {m} m of worktop',
+  'Orientativ: numărat din model': 'Guidance: counted from the model',
+  '{line}: {count} — alegeți elementul de fixare': '{line}: {count} — choose your fastener',
+  '{guidance} ({how}{len}). Numiți-l pe al dvs. în {path}.':
+    '{guidance} ({how}{len}). Name yours under {path}.',
+  'Șuruburile, diblurile și excentricii sunt numărați doar ca îmbinări, orientativ; elementul de fixare îl alegeți dvs. ({path}). Lipiciul nu este numărat.':
+    'Screws, dowels and cams are counted only as joints, as guidance; the fastener is yours ({path}). Glue is not counted.',
 };

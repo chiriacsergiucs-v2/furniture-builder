@@ -176,13 +176,15 @@ function FieldInput({
           </fieldset>
         );
       }
-      return opts.length <= 4 ? (
+      // Up to five options are a segmented control; five wrap to a second row on a phone (ADR-202).
+      return opts.length <= 5 ? (
         <>
           <Segmented
             label={label}
             value={String(v ?? '')}
             options={opts}
             onChange={(x) => set(f.id, x)}
+            wrap={opts.length === 5}
           />
           {help && <p className="hint">{help}</p>}
         </>
@@ -688,7 +690,9 @@ function Wizard({
                           {s.id === TYPE
                             ? tr(typeOf(a)?.label ?? '')
                             : visibleFields(s, a)
-                                .map((f) => `${tr(f.label)}: ${valueText(f, a, r)}`)
+                                .map(
+                                  (f) => `${tr(f.reviewLabel ?? f.label)}: ${valueText(f, a, r)}`,
+                                )
                                 .join(' · ')}
                         </span>
                         <button

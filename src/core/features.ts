@@ -1055,6 +1055,12 @@ export const FEATURES: FeatureDomain[] = [
         checked: '2026-11-05',
       },
       { name: 'Info buttons', adrs: ['ADR-080', 'ADR-113'], checked: '2026-11-05' },
+      {
+        name: 'Arrow keys in segmented controls',
+        detail:
+          'Tab reaches the chosen option; the arrow keys, Home and End move and choose, in every segmented control.',
+        adrs: ['ADR-202'],
+      },
       { name: 'Light and dark themes', adrs: ['ADR-030'], checked: '2026-11-05' },
     ],
   },

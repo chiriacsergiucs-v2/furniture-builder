@@ -7,7 +7,12 @@ import { t } from './i18n';
 import { bandKey, rowBandMetres, type CutRow } from './cutlist';
 import { bandText } from './materials';
 import type { RunPart } from './project';
-import { fastenerShopLines, type FastenerChoice, type FastenerCount } from './fasteners';
+import {
+  fastenerShopLines,
+  notCountedPrint,
+  type FastenerChoice,
+  type FastenerCount,
+} from './fasteners';
 import { pt, type PrintKey } from './i18n/print';
 import { csvCell, formatMoney, type UnitPer, type UnitPrice } from './prices';
 import { materialKey } from './project';
@@ -29,6 +34,9 @@ export interface ShopLine {
   quantity: number;
   unit: ShopUnit;
   detail: string;
+  /** The label and detail on the CSV and printed list, in the print language (ADR-202); absent = `label` / `detail`. */
+  printLabel?: string;
+  printDetail?: string;
   /** Price-list key (ADR-062); absent = not priced on its own (run parts use their board's price). */
   priceKey?: string;
   /** Boards: both measures, so a per-sheet or per-m² price can be used. Sheets null until laid out. */
@@ -337,15 +345,15 @@ export function shoppingCsvRo(
     const u = unitOf?.(l);
     return [
       shopSectionPrint(l.section),
-      l.label,
+      l.printLabel ?? l.label,
       String(l.quantity).replace('.', ','),
       pt(UNIT_PRINT[l.unit]),
-      l.detail,
+      l.printDetail ?? l.detail,
       ...(priceOf ? [p === null || p === undefined ? '' : money(p)] : []),
       ...(unitOf ? [u ? `${money(u.amount)} ${pt(PER_PRINT[u.per])}` : ''] : []),
     ]
       .map(esc)
       .join(';');
   });
-  return '\uFEFF' + [head.join(';'), ...body, esc(NOT_COUNTED)].join('\r\n') + '\r\n';
+  return '\uFEFF' + [head.join(';'), ...body, esc(notCountedPrint())].join('\r\n') + '\r\n';
 }

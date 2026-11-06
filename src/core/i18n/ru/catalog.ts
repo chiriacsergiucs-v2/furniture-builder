@@ -2,6 +2,8 @@
 export const ru_catalog = {
   'Group by': 'Группировать по',
   'By room': 'По комнатам',
+  'A family can sit in several rooms, so the room counts add up to more than the total.':
+    'Одно семейство может относиться к нескольким комнатам, поэтому сумма по комнатам больше общего числа.',
   Room: 'Комната',
   'By type': 'По типу',
   Type: 'Тип',
@@ -44,8 +46,8 @@ export const ru_catalog = {
   'Import templates': 'Импортировать шаблоны',
   'Nothing matches “{query}”.': 'Ничего не найдено по запросу «{query}».',
   'Jump to a group': 'Перейти к группе',
-  "No brand products yet. The weekly catalog feed (Mondays, IKEA first) adds them once it can reach the manufacturers' sites.":
-    'Товаров брендов пока нет. Еженедельное обновление каталога (по понедельникам, сначала IKEA) добавит их, когда сможет обратиться к сайтам производителей.',
+  'No brand products are bundled with the app. Import your own under Template files › Import templates.':
+    'Товары брендов не входят в приложение. Импортируйте свои: Файлы шаблонов › Импортировать шаблоны.',
   Ready: 'Готово',
   'Needs construction': 'Нужна конструкция',
   'Safety-regulated': 'Требования безопасности',

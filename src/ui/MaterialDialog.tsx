@@ -20,7 +20,7 @@ import { materialKey, runOf } from '../core/project';
 import type { Design, EdgeBand, EdgeBandKind, Material } from '../core/types';
 import { listDecors } from '../persist/db';
 import { useDesign } from '../store/designStore';
-import { InfoTip, MmField, Select } from './controls';
+import { InfoTip, MmField, rovingKeys, rovingTab, Select } from './controls';
 import { Dialog } from './Dialogs';
 import { StyleSuggestions } from './History';
 import { useUi } from './shell/uiStore';
@@ -319,13 +319,23 @@ function MaterialFields() {
         <span className="field-label" id="material-scope">
           {t('Apply to')}
         </span>
-        <div className="segmented" role="radiogroup" aria-labelledby="material-scope">
-          {scopes.map((s) => (
+        <div
+          className="segmented"
+          role="radiogroup"
+          aria-labelledby="material-scope"
+          onKeyDown={rovingKeys}
+        >
+          {scopes.map((s, i) => (
             <button
               key={s.value}
               type="button"
               role="radio"
               aria-checked={scope === s.value}
+              tabIndex={rovingTab(
+                scope === s.value,
+                i,
+                scopes.some((x) => x.value === scope),
+              )}
               className={scope === s.value ? 'on' : ''}
               disabled={s.disabled}
               title={s.title}

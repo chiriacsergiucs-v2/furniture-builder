@@ -15,6 +15,7 @@ import {
 } from '../core/prices';
 import { anyOffers, hardwareOffers, refOf, type Offer, type SellerCatalog } from '../core/sellers';
 import { validPer } from '../core/design';
+import { notCountedPrint } from '../core/fasteners';
 import { ProductPicker } from './ProductPicker';
 import {
   NOT_COUNTED,
@@ -138,7 +139,7 @@ export function ShoppingList() {
             .map((l) => {
               const p = linePrice(l, map, seller);
               const u = unitPrice(l, map, seller);
-              return `<tr><td>${l.quantity} ${UNIT_SHOWN[l.unit]}</td><td>${esc(tr(l.label))}</td><td>${esc(tr(l.detail))}</td><td>${p === null ? '' : `${formatMoney(p)} ${esc(currency)}`}</td><td>${u ? esc(unitPricePrint(u, currency)) : ''}</td></tr>`;
+              return `<tr><td>${l.quantity} ${UNIT_SHOWN[l.unit]}</td><td>${esc(l.printLabel ?? tr(l.label))}</td><td>${esc(l.printDetail ?? tr(l.detail))}</td><td>${p === null ? '' : `${formatMoney(p)} ${esc(currency)}`}</td><td>${u ? esc(unitPricePrint(u, currency)) : ''}</td></tr>`;
             })
             .join('')}</table>`
         : '';
@@ -157,7 +158,7 @@ export function ShoppingList() {
           : t(' (your prices)')),
     );
     w.document.write(
-      `<!doctype html><meta charset="utf-8"><title>${title}</title><style>body{font:12px sans-serif;margin:16px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #999;padding:3px 6px;text-align:left}h2{font-size:14px;margin:14px 0 4px}</style><h1>${title}</h1>${rowsHtml}<p>${esc(NOT_COUNTED)}</p><p>${estimate}</p>`,
+      `<!doctype html><meta charset="utf-8"><title>${title}</title><style>body{font:12px sans-serif;margin:16px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #999;padding:3px 6px;text-align:left}h2{font-size:14px;margin:14px 0 4px}</style><h1>${title}</h1>${rowsHtml}<p>${esc(notCountedPrint())}</p><p>${estimate}</p>`,
     );
     w.document.close();
     w.focus();

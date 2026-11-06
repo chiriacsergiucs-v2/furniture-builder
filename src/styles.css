@@ -715,6 +715,14 @@ select {
   min-height: calc(var(--control-h-sm) - 2 * var(--s-1) - 2px);
   padding: 0 var(--s-3);
 }
+/* Five options (ADR-202): each label stays whole on one line; the control wraps to a second row when it runs out of
+   room (390 px) and fits one row when there is room (1280 px). */
+.segmented.wrap button {
+  flex: 1 0 auto;
+  min-width: max-content;
+  overflow: visible;
+  text-overflow: clip;
+}
 
 /* Counter: − n + */
 .counter {
@@ -2802,6 +2810,12 @@ table.buy {
   }
   .materials li {
     grid-template-columns: 36px 1fr;
+  }
+  /* Colour and name share row one; every other field takes the whole row, so none lands in the 36 px column
+     (G-003, ADR-202). */
+  .materials li > :not(input[type='color']):not(.mat-name) {
+    grid-column: 1 / -1;
+    min-width: 0;
   }
   .template-grid {
     grid-template-columns: 1fr;

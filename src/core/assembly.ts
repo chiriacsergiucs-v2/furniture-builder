@@ -13,6 +13,7 @@
 import { baseLabel } from './cutlist';
 import {
   carcassJointPairs,
+  COUNTED_PT,
   JOINT_BY_ID,
   JOINTS,
   plural,
@@ -33,7 +34,8 @@ import {
 } from './project';
 import { NEAR_WALL, wallEnds, wallInward, type Pt, type Room } from './room';
 import { insideCorner } from './roomfill';
-import type { Box, FurnitureModel, HardwareKind, Mm, Panel, PanelRole } from './types';
+import type { Box, Design, FurnitureModel, HardwareKind, Mm, Panel, PanelRole } from './types';
+import { printPieceName } from './catalog/printName';
 
 export type StepId =
   | 'prepare'
@@ -489,15 +491,6 @@ export function hardwareLine(h: StepHardware, w: Words): string {
   return `${h.quantity} × ${hardwareName(h, w)}${half}`;
 }
 
-/** Counted joints of a type in the print language ("4 îmbinări"). */
-const COUNTED_PT: Record<JointType, PrintKey> = {
-  'carcass-joint': '{n|# îmbinare|# îmbinări}',
-  'shelf-pin': '{n|# suport de raft|# suporți de raft}',
-  'back-fixing': '{n|# panou de spate|# panouri de spate}',
-  'hanging-point': '{n|# agățătoare|# agățători}',
-  'worktop-fixing': '{n|# blat|# blaturi}',
-  foot: '{n|# piesă pe soclu|# piese pe soclu}',
-};
 const counted = (j: JointType, n: number, w: Words) =>
   w === 'print' ? pt(COUNTED_PT[j], { n }) : plural(n, JOINT_BY_ID.get(j)!);
 
@@ -786,6 +779,8 @@ export interface OrderEntry {
   ids: string[];
   /** The piece's name, or the part's label as the generators name it (English: `tr()` / `partRo()` to show). */
   name: string;
+  /** A piece's design, for its name on the print (`printPieceName`, ADR-202). */
+  design?: Pick<Design, 'name' | 'catalog'>;
   /** Copies of a piece and its linked copies (ADR-111), or identical run parts: how many this line stands for. */
   times: number;
   /** The wall (from 0) the piece's back stands on; absent = on no wall, or no room. */
@@ -952,6 +947,7 @@ export function projectAssemblyOrder(
         kind: 'piece',
         ids: [pc.item.id],
         name: pc.item.design.name,
+        design: pc.item.design,
         times: pc.item.quantity,
         ...(w !== undefined ? { wall: w } : {}),
       };
@@ -1019,7 +1015,7 @@ const STAGE_PT: Record<ProjectStageId, PrintKey> = {
 
 /**
  * The Project order as the printed assembly sheet starts with it (ADR-178), in the print language (ADR-157): a
- * heading and each numbered stage with its lines (piece names as the user named them; part names via `partRo`).
+ * heading and each numbered stage with its lines (piece names via `printPieceName`; part names via `partRo`).
  */
 export function projectOrderPrint(stages: ProjectStage[]): {
   heading: string;
@@ -1035,7 +1031,9 @@ export function projectOrderPrint(stages: ProjectStage[]): {
           e.kind === 'sink'
             ? pt('Decupaj chiuvetă {w} × {d} mm', { w: e.size![0], d: e.size![1] })
             : e.kind === 'piece'
-              ? e.name
+              ? e.design
+                ? printPieceName(e.design)
+                : e.name
               : partRo(e.name);
         const wall = e.wall !== undefined ? ` (${pt('peretele {n}', { n: e.wall + 1 })})` : '';
         return `${name}${e.times > 1 ? ` × ${e.times}` : ''}${wall}`;

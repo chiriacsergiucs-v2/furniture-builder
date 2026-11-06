@@ -1,3 +1,4 @@
+import { printPieceName } from '../core/catalog/printName';
 import { useMemo } from 'react';
 import { areaM2, bandMetersFromRows } from '../core/cutlist';
 import { sheetOf } from '../core/design';
@@ -72,7 +73,7 @@ export function PrintSheet() {
               <tbody>
                 {project.items.map((i) => (
                   <tr key={i.id}>
-                    <td>{i.design.name}</td>
+                    <td>{printPieceName(i.design)}</td>
                     <td className="n">{i.quantity}</td>
                     <td className="n">
                       {i.position.x} / {i.position.y} / {i.position.z}

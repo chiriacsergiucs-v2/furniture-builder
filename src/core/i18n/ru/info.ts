@@ -363,6 +363,9 @@ export const ru_info = {
   'Gaps with rough work, impact and necessity ratings, filters, and an issue and a fix line each.':
     'Пробелы с примерной оценкой работы, влияния и необходимости, фильтрами и строками проблемы и решения.',
   'Info buttons': 'Информационные кнопки',
+  'Arrow keys in segmented controls': 'Клавиши-стрелки в сегментных переключателях',
+  'Tab reaches the chosen option; the arrow keys, Home and End move and choose, in every segmented control.':
+    'Tab переходит к выбранному варианту; стрелки, Home и End перемещают и выбирают — в каждом сегментном переключателе.',
   'Light and dark themes': 'Светлая и тёмная темы',
   // ADR-160
   'Side panel ordered by use': 'Боковая панель по частоте использования',

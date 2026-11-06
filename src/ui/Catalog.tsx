@@ -45,7 +45,7 @@ import { useDesign } from '../store/designStore';
 import { useTemplates } from '../store/templatesStore';
 import { ProjectTemplateList } from './ProjectTemplates';
 import { askConfirm, askText } from './Confirm';
-import { InfoTip } from './controls';
+import { InfoTip, rovingKeys, rovingTab } from './controls';
 import { t, tr } from '../core/i18n';
 import { tNode } from './i18n';
 import { Icon } from './icons';
@@ -146,11 +146,17 @@ function GroupToggle({
   short?: boolean;
 }) {
   return (
-    <div className="segmented small" role="radiogroup" aria-label={t('Group by')}>
+    <div
+      className="segmented small"
+      role="radiogroup"
+      aria-label={t('Group by')}
+      onKeyDown={rovingKeys}
+    >
       <button
         type="button"
         role="radio"
         aria-checked={value === 'room'}
+        tabIndex={rovingTab(value === 'room', 0, true)}
         aria-label={short ? t('By room') : undefined}
         className={value === 'room' ? 'on' : ''}
         onClick={() => onChange('room')}
@@ -161,6 +167,7 @@ function GroupToggle({
         type="button"
         role="radio"
         aria-checked={value === 'type'}
+        tabIndex={rovingTab(value === 'type', 1, true)}
         aria-label={short ? t('By type') : undefined}
         className={value === 'type' ? 'on' : ''}
         onClick={() => onChange('type')}
@@ -357,13 +364,14 @@ export function CatalogPage({
   const all = families.flatMap((f) => f.variants);
   const ready = all.filter(insertable).length;
   const sources = (
-    <div className="segmented small" role="tablist" aria-label={t('Source')}>
-      {(['templates', 'saved', 'brands'] as const).map((s) => (
+    <div className="segmented small" role="tablist" aria-label={t('Source')} onKeyDown={rovingKeys}>
+      {(['templates', 'saved', 'brands'] as const).map((s, i) => (
         <button
           key={s}
           type="button"
           role="tab"
           aria-selected={source === s}
+          tabIndex={rovingTab(source === s, i, true)}
           aria-label={phone && s === 'saved' ? t('Saved on this device') : undefined}
           className={source === s ? 'on' : ''}
           onClick={() => setSource(s)}
@@ -603,6 +611,13 @@ export function CatalogPage({
             ))}
           </nav>
         ))}
+      {source === 'templates' && !editing && grouping === 'room' && groups.length > 0 && (
+        <p className="hint">
+          {t(
+            'A family can sit in several rooms, so the room counts add up to more than the total.',
+          )}
+        </p>
+      )}
       {source === 'templates' &&
         !editing &&
         groups.map((g) => (
@@ -634,7 +649,7 @@ export function CatalogPage({
           <p className="empty center">
             <Icon name="catalog" />
             {t(
-              "No brand products yet. The weekly catalog feed (Mondays, IKEA first) adds them once it can reach the manufacturers' sites.",
+              'No brand products are bundled with the app. Import your own under Template files › Import templates.',
             )}
           </p>
         ) : (

@@ -40,6 +40,7 @@ import { Output } from './Output';
 import { useProblem } from './problemStore';
 import { PrintSheet } from './PrintSheet';
 import { Icon } from './icons';
+import { rovingKeys, rovingTab } from './controls';
 import { setTheme, useTheme } from './useTheme';
 import { setLook, useLook } from './useLook';
 import { RenderDialog } from './RenderDialog';
@@ -733,13 +734,19 @@ export function App() {
         {page === 'editor' && (
           <div className="modes" ref={modesRef}>
             {phone && <EstimateChip compact />}
-            <div className="segmented" role="radiogroup" aria-label={t('Editor mode')}>
-              {MODES.map((m) => (
+            <div
+              className="segmented"
+              role="radiogroup"
+              aria-label={t('Editor mode')}
+              onKeyDown={rovingKeys}
+            >
+              {MODES.map((m, i) => (
                 <button
                   key={m}
                   type="button"
                   role="radio"
                   aria-checked={mode === m}
+                  tabIndex={rovingTab(mode === m, i, MODES.includes(mode))}
                   className={mode === m ? 'on' : ''}
                   onClick={() => setMode(m)}
                 >
@@ -825,13 +832,23 @@ export function App() {
               />
             )}
             <div className="stage-tools">
-              <div className="segmented small" role="radiogroup" aria-label={t('View')}>
-                {viewOptions(has3d).map((o) => (
+              <div
+                className="segmented small"
+                role="radiogroup"
+                aria-label={t('View')}
+                onKeyDown={rovingKeys}
+              >
+                {viewOptions(has3d).map((o, i, all) => (
                   <button
                     key={o.id}
                     type="button"
                     role="radio"
                     aria-checked={shown === o.id}
+                    tabIndex={rovingTab(
+                      shown === o.id,
+                      i,
+                      all.some((x) => x.id === shown),
+                    )}
                     className={shown === o.id ? 'on' : ''}
                     disabled={o.disabled}
                     title={o.reason}
@@ -876,13 +893,19 @@ export function App() {
                   </button>
                 )}
                 {mount3d && (
-                  <div className="segmented small" role="radiogroup" aria-label={t('Look')}>
-                    {(['simple', 'realistic'] as const).map((l) => (
+                  <div
+                    className="segmented small"
+                    role="radiogroup"
+                    aria-label={t('Look')}
+                    onKeyDown={rovingKeys}
+                  >
+                    {(['simple', 'realistic'] as const).map((l, i) => (
                       <button
                         key={l}
                         type="button"
                         role="radio"
                         aria-checked={look === l}
+                        tabIndex={rovingTab(look === l, i, true)}
                         className={look === l ? 'on' : ''}
                         onClick={() => setLook(l)}
                       >

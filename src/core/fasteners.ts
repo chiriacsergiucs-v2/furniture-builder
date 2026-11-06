@@ -5,6 +5,7 @@
  * user's own fastener list, saved on this device. Every line is labelled guidance.
  */
 import { t } from './i18n';
+import { pt, type PrintKey } from './i18n/print';
 import { buildModel } from './build';
 import type { RunPart } from './project';
 import type { ShopLine } from './shopping';
@@ -267,6 +268,42 @@ const COUNTED: Record<JointType, (n: number) => string> = {
 export const plural = (n: number, j: JointInfo) => COUNTED[j.id](n);
 export const GUIDANCE = t('Guidance: counted from the model');
 
+/** Counted joints of a type in the print language ("4 îmbinări"), for the CSV and printed sheets (ADR-185, ADR-202). */
+export const COUNTED_PT: Record<JointType, PrintKey> = {
+  'carcass-joint': '{n|# îmbinare|# îmbinări}',
+  'shelf-pin': '{n|# suport de raft|# suporți de raft}',
+  'back-fixing': '{n|# panou de spate|# panouri de spate}',
+  'hanging-point': '{n|# agățătoare|# agățători}',
+  'worktop-fixing': '{n|# blat|# blaturi}',
+  foot: '{n|# piesă pe soclu|# piese pe soclu}',
+};
+/** The shopping-list line name of a joint type in the print language (ADR-202). */
+const LINE_PT: Record<JointType, PrintKey> = {
+  'carcass-joint': 'Fixare îmbinări',
+  'shelf-pin': 'Suporți de raft',
+  'back-fixing': 'Fixare panouri de spate',
+  'hanging-point': 'Fixare agățători',
+  'worktop-fixing': 'Fixare blaturi',
+  foot: 'Picioare',
+};
+/** How a joint type is counted, in the print language (ADR-202). */
+const HOW_PT: Record<JointType, PrintKey> = {
+  'carcass-joint':
+    'fiecare loc unde se întâlnesc două plăci ale corpului: laterale, capac, bază, despărțitori, rafturi fixe, traverse',
+  'shelf-pin': 'suporții de raft din lista de feronerie',
+  'back-fixing': 'fiecare panou de spate, fixat pe tot perimetrul',
+  'hanging-point': 'fiecare agățătoare a unei piese suspendate',
+  'worktop-fixing': 'fiecare blat, de linie sau de birou',
+  foot: 'fiecare piesă așezată pe soclu',
+};
+/** The footer of the shopping CSV and printed list, in the print language (ADR-202, replaces `NOT_COUNTED` there). */
+export function notCountedPrint(): string {
+  return pt(
+    'Șuruburile, diblurile și excentricii sunt numărați doar ca îmbinări, orientativ; elementul de fixare îl alegeți dvs. ({path}). Lipiciul nu este numărat.',
+    { path: pt('Setări › Elemente de fixare') },
+  );
+}
+
 /** A choice the app can use: a joint type it knows, a name, a whole count per joint ≥ 1. */
 export function validFastenerChoice(c: unknown): c is FastenerChoice {
   if (!c || typeof c !== 'object') return false;
@@ -294,20 +331,31 @@ export function fastenerShopLines(
 ): { lines: ShopLine[]; replacesShelfPins: boolean } {
   const chosen = new Map(choices.filter(validFastenerChoice).map((c) => [c.joint, c]));
   const choose: ShopLine[] = [];
-  const counted = new Map<string, ShopLine>();
+  const counted = new Map<string, { line: ShopLine; parts: (() => string)[] }>();
   let replacesShelfPins = false;
   for (const c of counts) {
     const j = JOINT_BY_ID.get(c.joint);
     if (!j || c.count <= 0) continue;
     const pick = chosen.get(c.joint);
+    const m = (c.lengthMm / 1000).toFixed(2);
     const len =
       c.joint === 'back-fixing'
-        ? t(', {m} m of back edge', { m: (c.lengthMm / 1000).toFixed(2) })
+        ? t(', {m} m of back edge', { m })
         : c.joint === 'worktop-fixing'
-          ? t(', {m} m of worktop', { m: (c.lengthMm / 1000).toFixed(2) })
+          ? t(', {m} m of worktop', { m })
           : '';
+    // Print text is read when the CSV or the list is made, so a print language chosen later applies (ADR-157).
+    const lenPt = () =>
+      c.joint === 'back-fixing'
+        ? pt(', {m} m de margine a spatelui', { m })
+        : c.joint === 'worktop-fixing'
+          ? pt(', {m} m de blat', { m })
+          : '';
+    const countPt = (n: number) => pt(COUNTED_PT[c.joint], { n });
     if (!pick) {
       if (c.joint === 'shelf-pin') continue;
+      const joint = c.joint;
+      const n = c.count;
       choose.push({
         section: 'choose',
         label: t('{line}: {count} — choose your fastener', {
@@ -321,25 +369,53 @@ export function fastenerShopLines(
           how: j.how,
           len,
         }),
+        get printLabel() {
+          return pt('{line}: {count} — alegeți elementul de fixare', {
+            line: pt(LINE_PT[joint]),
+            count: countPt(n),
+          });
+        },
+        get printDetail() {
+          return pt('{guidance} ({how}{len}). Numiți-l pe al dvs. în {path}.', {
+            guidance: pt('Orientativ: numărat din model'),
+            how: pt(HOW_PT[joint]),
+            len: lenPt(),
+            path: pt('Setări › Elemente de fixare'),
+          });
+        },
       });
       continue;
     }
     if (c.joint === 'shelf-pin') replacesShelfPins = true;
     const name = pick.name.trim();
     const part = `${plural(c.count, j)} × ${pick.per}`;
+    const n = c.count;
+    const per = pick.per;
+    const partPt = () => `${countPt(n)} × ${per}`;
     const cur = counted.get(name);
     if (cur) {
-      cur.quantity += c.count * pick.per;
-      cur.detail = cur.detail.replace(/\.$/, `; ${part}.`);
-    } else
+      cur.line.quantity += c.count * pick.per;
+      cur.line.detail = cur.line.detail.replace(/\.$/, `; ${part}.`);
+      cur.parts.push(partPt);
+    } else {
+      const parts = [partPt];
       counted.set(name, {
-        section: 'hardware',
-        label: name,
-        quantity: c.count * pick.per,
-        unit: 'piece',
-        detail: `${GUIDANCE}: ${part}.`,
-        priceKey: `hw:${name}`,
+        parts,
+        line: {
+          section: 'hardware',
+          label: name,
+          quantity: c.count * pick.per,
+          unit: 'piece',
+          detail: `${GUIDANCE}: ${part}.`,
+          // The user's fastener name prints as typed (ADR-202).
+          printLabel: name,
+          get printDetail() {
+            return `${pt('Orientativ: numărat din model')}: ${parts.map((p) => p()).join('; ')}.`;
+          },
+          priceKey: `hw:${name}`,
+        },
       });
+    }
   }
-  return { lines: [...counted.values(), ...choose], replacesShelfPins };
+  return { lines: [...[...counted.values()].map((x) => x.line), ...choose], replacesShelfPins };
 }

@@ -107,11 +107,29 @@ export function hingeCount(doorHeight: Mm): number {
   return 5;
 }
 
-export function hingeBand(doorHeight: Mm): string {
-  if (doorHeight <= 900) return 'doors up to 900 mm';
-  if (doorHeight <= 1600) return 'doors 901–1600 mm';
-  if (doorHeight <= 2000) return 'doors 1601–2000 mm';
-  return 'doors over 2000 mm';
+/**
+ * The hinge note of a door, one whole sentence per door-height band (ADR-202), so each translates as a whole through
+ * `tr()` (its entry in `ru/data-parts.ts`). The bands follow `hingeCount`.
+ */
+export function hingeNote(doorHeight: Mm): string {
+  if (doorHeight <= 900)
+    return '2 per door, doors up to 900 mm (typical — confirm with the hinge datasheet)';
+  if (doorHeight <= 1600)
+    return '3 per door, doors 901–1600 mm (typical — confirm with the hinge datasheet)';
+  if (doorHeight <= 2000)
+    return '4 per door, doors 1601–2000 mm (typical — confirm with the hinge datasheet)';
+  return '5 per door, doors over 2000 mm (typical — confirm with the hinge datasheet)';
+}
+
+/** The diagonal corner door's hinge note, one whole sentence per door-height band (ADR-202). */
+export function cornerHingeNote(doorHeight: Mm): string {
+  if (doorHeight <= 900)
+    return "2 per door (typical for doors up to 900 mm); choose the hinge maker's 45° corner hinge or angled plate";
+  if (doorHeight <= 1600)
+    return "3 per door (typical for doors 901–1600 mm); choose the hinge maker's 45° corner hinge or angled plate";
+  if (doorHeight <= 2000)
+    return "4 per door (typical for doors 1601–2000 mm); choose the hinge maker's 45° corner hinge or angled plate";
+  return "5 per door (typical for doors over 2000 mm); choose the hinge maker's 45° corner hinge or angled plate";
 }
 
 export function buildCabinet(
@@ -654,7 +672,7 @@ export function buildCabinet(
         kind: 'hinge',
         label: 'Hinge, 35 mm cup, soft-close, clip-on',
         quantity: hingeCount(dh) * n,
-        note: `${hingeCount(dh)} per door, ${hingeBand(dh)} (typical — confirm with the hinge datasheet)`,
+        note: hingeNote(dh),
       });
       handleHw(s.id, s.handle, n);
     }

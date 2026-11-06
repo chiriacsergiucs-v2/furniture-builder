@@ -1,5 +1,5 @@
 import { t as tx } from './i18n';
-import { buildCabinet, hingeBand, hingeCount, type PartialModel } from './cabinet';
+import { buildCabinet, cornerHingeNote, hingeCount, type PartialModel } from './cabinet';
 import { box, equalParts } from './geometry';
 import type {
   Box,
@@ -340,7 +340,7 @@ function buildDiagonal(
       kind: 'hinge',
       label: 'Concealed hinge for a 45° diagonal corner door',
       quantity: n * hingeCount(dh),
-      note: `${hingeCount(dh)} per door (typical for ${hingeBand(dh)}); choose the hinge maker's 45° corner hinge or angled plate`,
+      note: cornerHingeNote(dh),
     });
   } else if (doors) return err('diagonal-front', tx('A diagonal corner takes one door or a pair.'));
   if (s.count)
