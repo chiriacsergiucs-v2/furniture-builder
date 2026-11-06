@@ -39,16 +39,16 @@ export const sheetOf = (m: Material) => m.sheet ?? defaultSheetFor(m);
 export const kerfOf = (d: Design) => d.cutting?.kerf ?? DEFAULT_KERF;
 
 /**
- * The document shape this app writes: 9 adds the user's assembly steps and the lounger and daybed ends (ADR-207);
- * 8 added role and part bands (ADR-188); 7 added corner mount (ADR-177); 6 added role boards (ADR-163); 1 to 8 still
- * load.
+ * The document shape this app writes: 9 adds the user's assembly steps and the lounger and daybed ends (ADR-207)
+ * and a split's `remainderFirst` on mirrored copies (ADR-205); 8 added role and part bands (ADR-188); 7 added corner
+ * mount (ADR-177); 6 added role boards (ADR-163); 1 to 8 still load.
  */
 export const SCHEMA_VERSION = 9;
 
 /**
  * Older versions → 9 in memory: version 1 gets stock sheets and cutting settings; 2 → … → 9 add only optional fields
  * (band specs, part boards, seller products, role boards, corner mount, role and part bands, assembly steps and
- * frame ends), so nothing else changes.
+ * frame ends, a split's remainder order), so nothing else changes.
  * Returns the same object when already current.
  */
 export function upgradeDesign(d: Design): Design {
@@ -993,6 +993,9 @@ function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0)
         return;
       }
       for (const z of s.sizes) if (!validSize(z)) errs.push(t('Invalid split size'));
+      // ADR-205: only `true` is stored; its schemaVersion is checked in `validateDesign`.
+      if (s.remainderFirst !== undefined && s.remainderFirst !== true)
+        errs.push(t('Invalid split'));
       for (const c of s.children) validateSpace(c, errs, seen, depth + 1);
       return;
     default:
@@ -1005,6 +1008,12 @@ export function validateDesign(d: unknown): string[] {
   if (!isObj(d)) return [t('Design must be an object')];
   if (![1, 2, 3, 4, 5, 6, 7, 8, 9].includes(d.schemaVersion as number))
     errs.push(t('Unsupported schemaVersion'));
+  // A split's remainder order (ADR-205) came with schemaVersion 9.
+  if (
+    (d.schemaVersion as number) < 9 &&
+    JSON.stringify(d.product ?? null).includes('"remainderFirst"')
+  )
+    errs.push(t('Split remainder order needs schemaVersion 9'));
   if (
     d.cutting !== undefined &&
     !(isObj(d.cutting) && isInt(d.cutting.kerf) && (d.cutting.kerf as number) <= 20)

@@ -211,7 +211,17 @@ export interface Panel {
  */
 export type PanelShape =
   | { kind: 'tilt'; axis: Axis; angleDeg: number; pivot: [Mm, Mm, Mm] }
-  | { kind: 'profile'; points: [Mm, Mm][] };
+  | {
+      kind: 'profile';
+      points: [Mm, Mm][];
+      /** Holes cut through the board (ADR-205), whole-mm polygons in the same [u, v] terms as `points`. */
+      holes?: [Mm, Mm][][];
+      /**
+       * The rectangular cut-outs (notches or holes) made in it, for the cut-list note (ADR-205): `u`/`v` from the blank's
+       * left and bottom (its minimum corner on the in-plane axes), `w` × `h` mm.
+       */
+      cutouts?: { u: Mm; v: Mm; w: Mm; h: Mm }[];
+    };
 
 /** Hole rows on one face of a panel. Positions are measured on the panel itself, in mm. */
 export interface PinRows {
@@ -275,6 +285,8 @@ export interface Diagnostic {
   box?: Box;
   /** How much, mm (ADR-071): the overlap, the missing opening space or the distance outside the room. */
   amount?: Mm;
+  /** The room pipe or outlet a back covers (ADR-205): what "Cut the back around it" cuts round. */
+  featureId?: string;
 }
 
 /** The clear interior of an editable space, for selection and labelling. */
@@ -407,6 +419,11 @@ export interface SplitSpace extends SpaceBase {
   axis: 'x' | 'y';
   sizes: SplitSize[];
   children: Space[];
+  /**
+   * The rounding remainder goes to the first flexible part instead of the last (ADR-205, schemaVersion 9): set on
+   * mirrored copies so the remainder stays on the same physical part. Absent = the last.
+   */
+  remainderFirst?: true;
 }
 
 export type Space = EmptySpace | ShelvesSpace | HangingSpace | DrawersSpace | SplitSpace;
@@ -725,8 +742,8 @@ export interface Design {
    * 2 adds stock sheets and cutting settings (ADR-019); 3 adds edge band specs on boards (ADR-077); 4 adds a
    * board per part (`partMaterials`); 5 adds seller products (ADR-161); 6 adds a board per part role
    * (`roleMaterials`, ADR-163); 7 adds a corner's mount (ADR-177); 8 adds an edge band per part role and per part
-   * (`roleBands`, `partBands`, ADR-188); 9 adds the user's assembly steps and the lounger and daybed ends (ADR-207).
-   * Older files are upgraded in memory on load.
+   * (`roleBands`, `partBands`, ADR-188); 9 adds the user's assembly steps and the lounger and daybed ends (ADR-207)
+   * and a split's `remainderFirst` (ADR-205). Older files are upgraded in memory on load.
    */
   schemaVersion: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
   id: string;

@@ -230,6 +230,13 @@ export function PrintSheet() {
                     className="tp-cut"
                     points={tp.points.map(([x, y]) => `${x},${y}`).join(' ')}
                   />
+                  {tp.holes.map((hole, k) => (
+                    <polygon
+                      key={`hole-${k}`}
+                      className="tp-cut"
+                      points={hole.map(([x, y]) => `${x},${y}`).join(' ')}
+                    />
+                  ))}
                   {[
                     [0, 0],
                     [PAGE.w, 0],

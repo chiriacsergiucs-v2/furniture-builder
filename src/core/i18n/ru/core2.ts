@@ -411,8 +411,6 @@ export const ru_core2 = {
     '«{names}» в одной группе с «{ref}»; разгруппируйте, чтобы выровнять его.',
   'Distribute needs three or more pieces or groups; the pieces of a group move together, so ungroup them to space them.':
     'Для распределения нужно три или больше изделий или групп; изделия группы двигаются вместе, поэтому разгруппируйте их, чтобы расставить.',
-  'Distribute works on pieces in one row along the wall; select the base units or the wall units, not both.':
-    'Распределение работает с изделиями в одном ряду вдоль стены; выберите нижние модули или навесные, но не те и другие.',
   'Not moved: {list}': 'Не сдвинуто: {list}',
   'Shelf span {span} mm is long for {t} mm {name} and may sag (typical limit {limit} mm — confirm for your board and load).':
     'Пролёт полки {span} мм велик для «{name}» {t} мм, полка может прогнуться (типичный предел {limit} мм — уточните для своей плиты и нагрузки).',

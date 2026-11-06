@@ -2,7 +2,8 @@
  * Run parts the user asks for (ADR-075): a worktop over chosen adjacent base units, a worktop's overhangs, and
  * crown, pelmet and ceiling-filler trims over wall or tall units. Every size comes from the core plan
  * (`planRuns`); this only collects the choice. Trim heights have no default: the user enters them.
- * Also handles for a run and sinks over base units (ADR-125).
+ * Also handles for a run and sinks over base units (ADR-125); hobs, worktop corner joints and the cut-outs and joint
+ * lines drawn on the plan (ADR-205).
  */
 import { useId, useMemo, useState } from 'react';
 import { newId } from '../core/design';
@@ -10,11 +11,18 @@ import { projectBoards, roleBoard } from '../core/finish';
 import { t } from '../core/i18n';
 import {
   BAR_SPACINGS,
+  cutoutOutlines,
   materialKey,
   requestCandidates,
   requestKey,
   runHandleMembers,
+  runPartKey,
+  runPartNames,
+  worktopCorners,
+  worktopJointLines,
   WORKTOP_OVERHANG,
+  type PlacedPiece,
+  type Project,
   type RunHandle,
   type RunPart,
   type RunRequest,
@@ -371,8 +379,10 @@ export function RunHandlesAndSinks() {
   const removeRunHandle = useDesign((s) => s.removeRunHandle);
   const setSink = useDesign((s) => s.setSink);
   const removeSink = useDesign((s) => s.removeSink);
+  const setHob = useDesign((s) => s.setHob);
+  const removeHob = useDesign((s) => s.removeHob);
   const runs = useMemo(() => requestCandidates(project).runs, [project]);
-  const [open, setOpen] = useState<'handles' | 'sink' | null>(null);
+  const [open, setOpen] = useState<'handles' | 'sink' | 'hob' | null>(null);
   const [runIdx, setRunIdx] = useState('0');
   const [kind, setKind] = useState<Handle['kind']>('bar');
   const [spacing, setSpacing] = useState('128');
@@ -409,6 +419,14 @@ export function RunHandlesAndSinks() {
     setW('');
     setD('');
   };
+  // A hob works like a sink (ADR-205): over a chosen base, its cut-out size typed by the user.
+  const addHob = () => {
+    if (!base || sinkW === null || sinkD === null) return;
+    setHob({ id: newId(), baseId: base, w: sinkW, d: sinkD });
+    setOpen(null);
+    setW('');
+    setD('');
+  };
   const toggleOwn = (rh: RunHandle, id: string, own: boolean) => {
     const rest = (rh.own ?? []).filter((x) => x !== id);
     const next = own ? [...rest, id] : rest;
@@ -416,9 +434,10 @@ export function RunHandlesAndSinks() {
   };
   const handles = project.runHandles ?? [];
   const sinks = project.sinks ?? [];
+  const hobs = project.hobs ?? [];
   return (
     <>
-      {(handles.length > 0 || sinks.length > 0) && (
+      {(handles.length > 0 || sinks.length > 0 || hobs.length > 0) && (
         <ul className="run-list">
           {handles.map((rh) => {
             const members = runHandleMembers(project, rh);
@@ -475,6 +494,22 @@ export function RunHandlesAndSinks() {
               </button>
             </li>
           ))}
+          {hobs.map((hb) => (
+            <li key={hb.id}>
+              <span>
+                <strong>{t('Hob over {name}', { name: name(hb.baseId) })}</strong>{' '}
+                <span className="num">{t('cut-out {w} × {d}', { w: hb.w, d: hb.d })}</span>
+              </span>
+              <button
+                type="button"
+                className="btn icon ghost sm"
+                aria-label={t('Remove the hob over {name}', { name: name(hb.baseId) })}
+                onClick={() => removeHob(hb.id)}
+              >
+                <Icon name="trash" />
+              </button>
+            </li>
+          ))}
         </ul>
       )}
       <div className="run-ask-actions">
@@ -495,6 +530,15 @@ export function RunHandlesAndSinks() {
         >
           <Icon name="plus" className="sm" />
           {t('Add sink…')}
+        </button>
+        <button
+          type="button"
+          className="btn outline sm"
+          aria-expanded={open === 'hob'}
+          onClick={() => setOpen(open === 'hob' ? null : 'hob')}
+        >
+          <Icon name="plus" className="sm" />
+          {t('Add hob…')}
         </button>
       </div>
       {open === 'handles' && (
@@ -602,6 +646,169 @@ export function RunHandlesAndSinks() {
           )}
         </div>
       )}
+      {open === 'hob' && (
+        <div className="run-ask" aria-label={t('Hob over a base unit')} role="group">
+          {base ? (
+            <>
+              <Select
+                label={t('Hob over')}
+                value={base}
+                options={bases.map((id) => ({ value: id, label: name(id) }))}
+                onChange={setBaseId}
+              />
+              <TypedMm
+                label={t('Cut-out width')}
+                value={w}
+                onChange={setW}
+                hint={t("From the hob's installation drawing; there is no default.")}
+              />
+              <TypedMm
+                label={t('Cut-out depth')}
+                value={d}
+                onChange={setD}
+                hint={t("From the hob's installation drawing; there is no default.")}
+              />
+              <button
+                type="button"
+                className="btn primary"
+                disabled={sinkW === null || sinkD === null}
+                onClick={addHob}
+              >
+                {t('Add hob')}
+              </button>
+            </>
+          ) : (
+            <p className="hint">{t('No base units on the floor facing the room yet.')}</p>
+          )}
+        </div>
+      )}
     </>
+  );
+}
+
+/**
+ * Worktop corners (ADR-205): where two worktops meet at right angles the user chooses a mitred or a butt joint, and for
+ * a butt joint the worktop that runs through. There is no default: until one is chosen the corner is an error and
+ * export is blocked. The cut shapes come from the core (`worktopJointCuts`).
+ */
+export function WorktopCorners() {
+  const project = useDesign((s) => s.project)!;
+  const setJoint = useDesign((s) => s.setWorktopJoint);
+  const corners = useMemo(() => worktopCorners(project), [project]);
+  if (!corners.length) return null;
+  return (
+    <ul className="run-list worktop-corners">
+      {corners.map((c) => {
+        const ka = runPartKey(c.a),
+          kb = runPartKey(c.b);
+        const j = c.joint;
+        const names = { a: runPartNames(project, c.a), b: runPartNames(project, c.b) };
+        // The worktop that runs through, as this corner's a or b.
+        const through = j?.through ? ((j.through === 'a' ? j.a : j.b) === ka ? 'a' : 'b') : '';
+        const save = (kind: 'mitre' | 'butt', thr?: 'a' | 'b') =>
+          setJoint({
+            id: j?.id ?? newId(),
+            a: ka,
+            b: kb,
+            kind,
+            ...(kind === 'butt' && thr ? { through: thr } : {}),
+          });
+        return (
+          <li key={`${ka}|${kb}`} className="worktop-corner">
+            <span>
+              <strong>{t('Worktop corner')}</strong>{' '}
+              <span className="sub">
+                {names.a} · {names.b}
+              </span>
+            </span>
+            <div className="run-pick" role="group" aria-label={t('Worktop corner')}>
+              <button
+                type="button"
+                className="btn sm outline"
+                aria-pressed={j?.kind === 'mitre'}
+                onClick={() => save('mitre')}
+              >
+                {t('Mitred joint')}
+              </button>
+              <button
+                type="button"
+                className="btn sm outline"
+                aria-pressed={j?.kind === 'butt'}
+                onClick={() => save('butt', through || undefined)}
+              >
+                {t('Butt joint')}
+              </button>
+            </div>
+            {j?.kind === 'butt' && (
+              <fieldset className="run-pick">
+                <legend>{t('Runs through')}</legend>
+                {(['a', 'b'] as const).map((k) => (
+                  <label key={k} className="radio">
+                    <input
+                      type="radio"
+                      name={`through-${ka}|${kb}`}
+                      checked={through === k}
+                      onChange={() => save('butt', k)}
+                    />
+                    <span>{names[k]}</span>
+                  </label>
+                ))}
+              </fieldset>
+            )}
+            {(!j || (j.kind === 'butt' && !through)) && (
+              <p className="hint warn">
+                {t('Joint not chosen yet: export is blocked until you choose one.')}
+              </p>
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+/**
+ * On the plan (ADR-205): each sink and hob cut-out dashed on its worktop with its size, and the joint line of each
+ * worktop corner. Positions come from the core (`cutoutOutlines`, `worktopJointLines`).
+ */
+export function PlanKitchenMarks({
+  project,
+  pieces,
+  fs,
+}: {
+  project: Project;
+  pieces: PlacedPiece[];
+  fs: number;
+}) {
+  const cuts = useMemo(() => cutoutOutlines(project, pieces), [project, pieces]);
+  const joints = useMemo(() => worktopJointLines(project), [project]);
+  if (!cuts.length && !joints.length) return null;
+  return (
+    <g className="kitchen-marks" aria-hidden="true">
+      {cuts.map((c) => (
+        <g key={c.id} className={`cutout ${c.kind}`}>
+          <rect x={c.box.x} y={c.box.z} width={c.box.w} height={c.box.d} />
+          <text
+            x={c.box.x + c.box.w / 2}
+            y={c.box.z + c.box.d / 2}
+            fontSize={Math.min(fs * 0.8, c.box.w / 5)}
+            textAnchor="middle"
+            dominantBaseline="middle"
+          >
+            {t('{w} × {d} mm', { w: c.w, d: c.d })}
+          </text>
+        </g>
+      ))}
+      {joints.map((j) => (
+        <line
+          key={j.id}
+          className={`worktop-joint ${j.kind}`}
+          x1={j.line[0]}
+          y1={j.line[1]}
+          x2={j.line[2]}
+          y2={j.line[3]}
+        />
+      ))}
+    </g>
   );
 }

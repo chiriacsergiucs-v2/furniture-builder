@@ -103,6 +103,7 @@ import {
   planRuns,
   pruneGroups,
   pruneRunExtras,
+  pruneWorktopJoints,
   PROJECT_SCHEMA,
   refreshRunParts,
   requestKey,
@@ -122,6 +123,8 @@ import {
   type RunRequest,
   type RunSettings,
   type RunSink,
+  type RunHob,
+  type WorktopJoint,
   setTurnLocked,
   type SizeAxis,
 } from '../core/project';
@@ -492,6 +495,11 @@ interface State {
   /** A sink over a base unit (ADR-125): add or replace the one with the same id, or remove it. */
   setSink: (sk: RunSink) => void;
   removeSink: (id: string) => void;
+  /** A hob over a base unit (ADR-205), like a sink. */
+  setHob: (hb: RunHob) => void;
+  removeHob: (id: string) => void;
+  /** The joint the user chose at a worktop corner (ADR-205); replaces the corner's earlier one. */
+  setWorktopJoint: (j: WorktopJoint) => void;
   /** Put one board on the fronts or carcass of the selected piece, its run or the whole project (ADR-055). */
   applyFinish: (
     id: string,
@@ -679,10 +687,13 @@ export const useDesign = create<State>((rawSet, get) => {
     // Sets first, so a fresh duplicate takes its set's values in the same step.
     const bound = applyBindings(syncSets(linked));
     const held = heldByBinding(get().project, linked, bound);
+    // Worktop corner joints follow their worktops (ADR-205).
     const stamped = {
-      ...refreshRunParts(
-        resolvePlacements(
-          pruneRunExtras(pruneShared(pruneConnections(pruneCommon(pruneGroups(bound))))),
+      ...pruneWorktopJoints(
+        refreshRunParts(
+          resolvePlacements(
+            pruneRunExtras(pruneShared(pruneConnections(pruneCommon(pruneGroups(bound))))),
+          ),
         ),
       ),
       schemaVersion: PROJECT_SCHEMA, // an edited project is saved in the current shape (ADR-011, ADR-073)
@@ -1491,7 +1502,8 @@ export const useDesign = create<State>((rawSet, get) => {
       // Automatic refresh is on by default the first time; after that the user's choice is kept (ADR-061).
       const settings = { scribe: p.runSettings?.scribe ?? 0, auto: p.runSettings?.auto ?? true };
       const base = { ...p, runSettings: settings, runPartsRemoved: [] };
-      commitProject({ ...base, runParts: planRuns(base).parts });
+      // Suggest also plans the runs along the side walls (ADR-205).
+      commitProject({ ...base, runParts: planRuns(base, { sides: true }).parts });
     },
     removeRunPart: (id) => {
       const p = get().project;
@@ -1558,6 +1570,27 @@ export const useDesign = create<State>((rawSet, get) => {
       if (!p?.sinks) return;
       const rest = p.sinks.filter((x) => x.id !== id);
       commitProject({ ...p, sinks: rest.length ? rest : undefined });
+    },
+    setHob: (hb) => {
+      const p = get().project;
+      if (!p) return;
+      commitProject({ ...p, hobs: [...(p.hobs ?? []).filter((x) => x.id !== hb.id), hb] });
+    },
+    removeHob: (id) => {
+      const p = get().project;
+      if (!p?.hobs) return;
+      const rest = p.hobs.filter((x) => x.id !== id);
+      commitProject({ ...p, hobs: rest.length ? rest : undefined });
+    },
+    setWorktopJoint: (j) => {
+      const p = get().project;
+      if (!p) return;
+      const same = (x: WorktopJoint) =>
+        x.id === j.id || (x.a === j.a && x.b === j.b) || (x.a === j.b && x.b === j.a);
+      commitProject({
+        ...p,
+        worktopJoints: [...(p.worktopJoints ?? []).filter((x) => !same(x)), j],
+      });
     },
     setRunSettings: (patch) => {
       const p = get().project;

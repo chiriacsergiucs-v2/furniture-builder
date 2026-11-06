@@ -448,8 +448,8 @@ export function roomChecks(
     /** The piece as one box, turned when typed at an angle (ADR-121); absent = `bounds`. */
     outline?: Box;
     hitsPanels: (b: Box) => boolean;
-    /** The back, plinth or worktop panel (its role) that enters a box, or null (ADR-072). */
-    covers?: (b: Box) => string | null;
+    /** The back, plinth or worktop panel (its role) that enters a feature's box, or null (ADR-072, ADR-205). */
+    covers?: (b: Box, featureId?: string) => string | null;
     clearances: { label: string; box: Box; need: Mm; panelId?: string }[];
   }[],
 ): {
@@ -634,7 +634,12 @@ export const TALL_UNIT_HEIGHT = 1600;
  */
 export function serviceChecks(
   room: Room,
-  pc: { id: string; name: string; bounds: Box; covers?: (b: Box) => string | null },
+  pc: {
+    id: string;
+    name: string;
+    bounds: Box;
+    covers?: (b: Box, featureId?: string) => string | null;
+  },
 ): Diagnostic[] {
   const out: Diagnostic[] = [];
   for (const f of room.features) {
@@ -647,7 +652,12 @@ export function serviceChecks(
 function serviceIssue(
   f: RoomFeature,
   zone: Box,
-  pc: { id: string; name: string; bounds: Box; covers?: (b: Box) => string | null },
+  pc: {
+    id: string;
+    name: string;
+    bounds: Box;
+    covers?: (b: Box, featureId?: string) => string | null;
+  },
 ): Diagnostic | null {
   const b = pc.bounds;
   if (
@@ -667,7 +677,7 @@ function serviceIssue(
       }),
       nodeId: pc.id,
     };
-  const part = pc.covers?.(zone);
+  const part = pc.covers?.(zone, f.id);
   if (!part) return null;
   return {
     severity: 'warning',
@@ -679,6 +689,8 @@ function serviceIssue(
       { name: pc.name, label: f.label, part },
     ),
     nodeId: pc.id,
+    // A back can be cut around it (ADR-205, "Cut the back around it").
+    ...(part === 'back' ? { featureId: f.id, itemIds: [pc.id] } : {}),
   };
 }
 

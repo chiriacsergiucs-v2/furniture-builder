@@ -1182,7 +1182,7 @@ export function buildCabinet(
           return;
         }
         const along = s.axis === 'x' ? ip.w : ip.h;
-        const parts = distribute(along - (k - 1) * t, s.sizes);
+        const parts = distribute(along - (k - 1) * t, s.sizes, !!s.remainderFirst);
         if (!parts || parts.some((v) => v <= 0)) {
           err('split-fit', tx('Fixed sizes do not fit in {along} mm.', { along }), s.id);
           return;
@@ -1193,10 +1193,16 @@ export function buildCabinet(
           if (asked !== room)
             warn(
               'split-resized',
-              tx(
-                'Fixed sizes add up to {asked} mm but there is {room} mm; the last part was adjusted to {last} mm. Make one part "Share" to absorb the difference.',
-                { asked, room, last: parts[k - 1] },
-              ),
+              // A mirrored split adjusts its first part (ADR-205).
+              s.remainderFirst
+                ? tx(
+                    'Fixed sizes add up to {asked} mm but there is {room} mm; the first part was adjusted to {first} mm. Make one part "Share" to absorb the difference.',
+                    { asked, room, first: parts[0] },
+                  )
+                : tx(
+                    'Fixed sizes add up to {asked} mm but there is {room} mm; the last part was adjusted to {last} mm. Make one part "Share" to absorb the difference.',
+                    { asked, room, last: parts[k - 1] },
+                  ),
               s.id,
             );
         }

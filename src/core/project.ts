@@ -19,6 +19,8 @@ import {
 } from './envelopes';
 import {
   boxInside,
+  featureBox,
+  isService,
   outlineIssues,
   roomChecks,
   serviceChecks,
@@ -43,8 +45,11 @@ import {
   cutDimensions,
   enclosing,
   footprintOf,
+  inPlaneAxes,
   intersection,
   overlaps,
+  penetration,
+  sizeOn,
   union,
   yawPoint,
 } from './geometry';
@@ -65,7 +70,7 @@ import {
   withSharedPins,
   type SharedBuild,
 } from './shared';
-import { aabbOf, overlapsBox, panelsOverlap, turnShape } from './shape';
+import { aabbOf, area2, overlapsBox, panelsOverlap, turnShape } from './shape';
 import {
   modelBox,
   modelChecks,
@@ -78,6 +83,7 @@ import type { SheetSettings } from './nesting';
 import { jobsFromCutlist } from './nesting';
 import type { NestJob } from './nesting/types';
 import type {
+  Axis,
   Box,
   CabinetParams,
   CatalogMeta,
@@ -92,6 +98,7 @@ import type {
   Material,
   Mm,
   Panel,
+  PanelShape,
   PinRows,
   Space,
   Yaw,
@@ -185,6 +192,11 @@ export interface ProjectItem {
    * Saved from project schemaVersion 16.
    */
   set?: { id: string; of: string };
+  /**
+   * Room pipes and outlets (feature ids) its back is cut around (ADR-205, "Cut the back around it"): the back becomes a
+   * profiled part with a notch or a hole the size of the zone. Absent = none. Saved from project schemaVersion 21.
+   */
+  backCuts?: string[];
 }
 
 /**
@@ -289,6 +301,22 @@ export interface RunSink {
   d: Mm;
 }
 
+/** A hob over a base unit (ADR-205): a cut-out in the run worktop, its size the user's (ADR-010); same shape as a sink. */
+export type RunHob = RunSink;
+
+/**
+ * The joint where two worktops meet at a corner (ADR-205): `a` and `b` are the two worktops' run-part keys. There is no
+ * default: until the user picks one the corner is an error. A mitre cuts both along the diagonal; a butt joint lets the
+ * worktop `through` names (`a` or `b`) run to the outer corner and stops the other at its front edge.
+ */
+export interface WorktopJoint {
+  id: string;
+  a: string;
+  b: string;
+  kind: 'mitre' | 'butt';
+  through?: 'a' | 'b';
+}
+
 /**
  * Project document versions (ADR-011): new and edited projects are written at `PROJECT_SCHEMA`; every version in
  * `PROJECT_SCHEMAS` still loads unchanged. 2 = room pipes and outlets (ADR-072); 3 = clearance zones on items
@@ -300,7 +328,7 @@ export interface RunSink {
  * and value sets (ADR-166, ADR-167); 17 = common tops and bottoms (ADR-165); 18 = connections between pieces
  * (ADR-168); 19 = turn and per-size locks (ADR-171); 20 = shared sides (ADR-190); 21 = seller products on run parts
  * (ADR-206), connection kinds and wall connections (ADR-207), the floor background, the plan picture and model
- * placements (ADR-208).
+ * placements (ADR-208), worktop corner joints, hobs and backs cut around pipes and outlets (ADR-205).
  */
 export const PROJECT_SCHEMA = 21 as const;
 export const PROJECT_SCHEMAS: readonly number[] = [
@@ -368,6 +396,7 @@ const SHARED_SINCE = 20;
 const RUN_PRODUCTS_SINCE = 21;
 const CONNECTION_KINDS_SINCE = 21;
 const SURFACES_SINCE = 21;
+const KITCHEN_SINCE = 21;
 
 export interface Project {
   schemaVersion: ProjectSchemaVersion;
@@ -420,6 +449,10 @@ export interface Project {
   runProducts?: Record<string, HardwareProduct>;
   /** A picture of the floor plan to trace over (ADR-208, schemaVersion 21). Absent = none. */
   planPicture?: PlanPicture;
+  /** Joints where worktops meet at a corner (ADR-205, schemaVersion 21). Absent = none chosen. */
+  worktopJoints?: WorktopJoint[];
+  /** Hobs over base units: worktop cut-outs (ADR-205, schemaVersion 21). Absent = none. */
+  hobs?: RunHob[];
 }
 
 /**
@@ -972,6 +1005,8 @@ export interface PlacedPiece {
   footprint: [number, number][];
   /** The front edge on the floor, x1 z1 x2 z2 (ADR-121). */
   front: [number, number, number, number];
+  /** The pipes and outlets its back is cut around (ADR-205), feature ids; absent = none. */
+  backCut?: string[];
 }
 
 /** Which corners of `footprintOf` (back-left, back-right, front-right, front-left when unturned) carry the front. */
@@ -1044,7 +1079,14 @@ const withYaw = (item: ProjectItem, rb: Pick<Box, 'w' | 'd'>, b: Box): Box => {
 
 export function placeItem(
   item: ProjectItem,
-  opts?: { noPlinth?: boolean; common?: CommonBuild; shared?: SharedBuild; sharedPins?: PinRows[] },
+  opts?: {
+    noPlinth?: boolean;
+    common?: CommonBuild;
+    shared?: SharedBuild;
+    sharedPins?: PinRows[];
+    /** The room, for backs cut around its pipes and outlets (ADR-205). */
+    room?: Room;
+  },
 ): PlacedPiece {
   const c = opts?.common;
   // In a common top or bottom (ADR-165) the piece is built with its top over (bottom under) the sides; sharing a
@@ -1052,9 +1094,26 @@ export function placeItem(
   const raw = buildModel(
     sharedDesign(c ? commonDesign(item.design, c) : item.design, opts?.shared),
   );
-  const built = opts?.sharedPins?.length
+  const pinned = opts?.sharedPins?.length
     ? { ...raw, panels: withSharedPins(raw.panels, opts.sharedPins) }
     : raw;
+  // A back cut around a pipe or outlet (ADR-205) is a profiled part, turned with the piece below.
+  const cuts = item.backCuts?.length
+    ? backCutsOf(
+        item,
+        pinned.panels,
+        opts?.shared?.right ? buildModel(item.design).panels : pinned.panels,
+        opts?.room,
+      )
+    : { shapes: new Map<string, PanelShape>(), features: [] };
+  const built = cuts.shapes.size
+    ? {
+        ...pinned,
+        panels: pinned.panels.map((p) =>
+          cuts.shapes.has(p.id) ? { ...p, shape: cuts.shapes.get(p.id) } : p,
+        ),
+      }
+    : pinned;
   // A run plinth replaces the piece's own plinth (ADR-054); a common top or bottom replaces its own (ADR-165).
   const leaves = (p: Panel) =>
     (!!opts?.noPlinth && p.role === 'plinth') ||
@@ -1135,7 +1194,133 @@ export function placeItem(
     footprint: corners,
     front: [...corners[f1], ...corners[f2]] as [number, number, number, number],
     ...(left.length ? { removed: all.slice(model.panels.length) } : {}),
+    ...(cuts.features.length ? { backCut: cuts.features } : {}),
   };
+}
+
+// ---------------------------------------------------------------------------
+// Backs cut around a pipe or outlet (ADR-205)
+// ---------------------------------------------------------------------------
+
+/**
+ * A board's outline with rectangular cut-outs taken away (ADR-205), in whole mm on its face (`w` × `h`): the outline
+ * and the holes left, or null when nothing or more than one piece is left (the cut-outs would split it). A cut-out that
+ * reaches an edge makes a notch in the outline; one inside the board makes a hole.
+ */
+export function cutOutline(
+  w: Mm,
+  h: Mm,
+  rects: { u: Mm; v: Mm; w: Mm; h: Mm }[],
+): { points: [Mm, Mm][]; holes: [Mm, Mm][][] } | null {
+  const xs = [...new Set([0, w, ...rects.flatMap((r) => [r.u, r.u + r.w])])].sort((a, b) => a - b);
+  const ys = [...new Set([0, h, ...rects.flatMap((r) => [r.v, r.v + r.h])])].sort((a, b) => a - b);
+  const solid = (i: number, j: number) => {
+    if (i < 0 || j < 0 || i >= xs.length - 1 || j >= ys.length - 1) return false;
+    const cx = (xs[i] + xs[i + 1]) / 2,
+      cy = (ys[j] + ys[j + 1]) / 2;
+    return !rects.some((r) => cx > r.u && cx < r.u + r.w && cy > r.v && cy < r.v + r.h);
+  };
+  // The boundary as directed edges, the solid on their left (counter-clockwise outside, clockwise round holes).
+  const next = new Map<string, [Mm, Mm][]>();
+  const key = (p: [Mm, Mm]) => `${p[0]},${p[1]}`;
+  const edge = (a: [Mm, Mm], b: [Mm, Mm]) => {
+    const list = next.get(key(a));
+    if (list) list.push(b);
+    else next.set(key(a), [b]);
+  };
+  for (let i = 0; i < xs.length - 1; i++)
+    for (let j = 0; j < ys.length - 1; j++) {
+      if (!solid(i, j)) continue;
+      const [x0, x1, y0, y1] = [xs[i], xs[i + 1], ys[j], ys[j + 1]];
+      if (!solid(i, j - 1)) edge([x0, y0], [x1, y0]);
+      if (!solid(i + 1, j)) edge([x1, y0], [x1, y1]);
+      if (!solid(i, j + 1)) edge([x1, y1], [x0, y1]);
+      if (!solid(i - 1, j)) edge([x0, y1], [x0, y0]);
+    }
+  const loops: [Mm, Mm][][] = [];
+  for (const [start] of next) {
+    while (next.get(start)?.length) {
+      const loop: [Mm, Mm][] = [];
+      let at = start;
+      for (let guard = 0; guard < 10000; guard++) {
+        const outs = next.get(at);
+        if (!outs?.length) break;
+        const to = outs.shift()!;
+        loop.push(at.split(',').map(Number) as [Mm, Mm]);
+        at = key(to);
+        if (at === start) break;
+      }
+      // Corners only: points in a straight line between their neighbours are left out.
+      const pts = loop.filter((p, k) => {
+        const a = loop[(k - 1 + loop.length) % loop.length],
+          b = loop[(k + 1) % loop.length];
+        return (p[0] - a[0]) * (b[1] - p[1]) - (p[1] - a[1]) * (b[0] - p[0]) !== 0;
+      });
+      if (pts.length >= 3) loops.push(pts);
+    }
+  }
+  const outer = loops.filter((l) => area2(l) > 0);
+  if (outer.length !== 1) return null;
+  return { points: outer[0], holes: loops.filter((l) => area2(l) < 0) };
+}
+
+/**
+ * The backs of a piece cut around the pipes and outlets the user asked for (`backCuts`, ADR-205), by panel id in the
+ * piece's own coordinates: a profile with a cut-out exactly the size of the zone typed in the room (no clearance
+ * added), a notch where the zone reaches an edge of the back, otherwise a hole. `panels` are the piece's built parts and
+ * `own` the parts its outline is placed by (as `placeItem`). A piece typed at an angle is not cut (the repair says why);
+ * neither is a back already shaped, nor one the cut-outs would split. `features`: the pipes and outlets cut round.
+ */
+export function backCutsOf(
+  item: ProjectItem,
+  panels: Panel[],
+  own: Panel[],
+  room: Room | undefined,
+): { shapes: Map<string, PanelShape>; features: string[] } {
+  const shapes = new Map<string, PanelShape>();
+  const features: string[] = [];
+  if (!item.backCuts?.length || !room || item.angle || !own.length) return { shapes, features };
+  const r = item.rotationY;
+  const rb = union(own.map((p) => rotateBox(aabbOf(p), r)));
+  const [dx, dy, dz] = [item.position.x - rb.x, item.position.y - rb.y, item.position.z - rb.z];
+  const undo = ((360 - r) % 360) as QuarterTurn;
+  const rects = new Map<string, { u: Mm; v: Mm; w: Mm; h: Mm }[]>();
+  const by = new Map<string, string[]>();
+  const lo = (b: Box, a: Axis) => (a === 'x' ? b.x : a === 'y' ? b.y : b.z);
+  for (const fid of item.backCuts) {
+    const f = room.features.find((x) => x.id === fid && isService(x.kind));
+    const zone = f ? featureBox(room, f) : null;
+    if (!zone) continue;
+    const local = rotateBox({ ...zone, x: zone.x - dx, y: zone.y - dy, z: zone.z - dz }, undo);
+    for (const p of panels) {
+      if (p.role !== 'back' || p.shape || !overlaps(p.box, local)) continue;
+      const [ua, va] = inPlaneAxes(p.thicknessAxis);
+      const W = sizeOn(p.box, ua),
+        H = sizeOn(p.box, va);
+      const u0 = Math.max(0, lo(local, ua) - lo(p.box, ua)),
+        u1 = Math.min(W, lo(local, ua) + sizeOn(local, ua) - lo(p.box, ua));
+      const v0 = Math.max(0, lo(local, va) - lo(p.box, va)),
+        v1 = Math.min(H, lo(local, va) + sizeOn(local, va) - lo(p.box, va));
+      if (u1 <= u0 || v1 <= v0) continue;
+      rects.set(p.id, [...(rects.get(p.id) ?? []), { u: u0, v: v0, w: u1 - u0, h: v1 - v0 }]);
+      by.set(p.id, [...(by.get(p.id) ?? []), fid]);
+    }
+  }
+  for (const p of panels) {
+    const list = rects.get(p.id);
+    if (!list) continue;
+    const [ua, va] = inPlaneAxes(p.thicknessAxis);
+    const cut = cutOutline(sizeOn(p.box, ua), sizeOn(p.box, va), list);
+    if (!cut) continue;
+    shapes.set(p.id, {
+      kind: 'profile',
+      points: cut.points,
+      ...(cut.holes.length ? { holes: cut.holes } : {}),
+      cutouts: list,
+    });
+    for (const fid of by.get(p.id)!) if (!features.includes(fid)) features.push(fid);
+  }
+  return { shapes, features };
 }
 
 export const placedBounds = (item: ProjectItem): Box => placeItem(item).bounds;
@@ -1203,6 +1388,7 @@ export function buildProjectModel(input: Project): ProjectModel {
       common: common.builds.get(i.id),
       shared: shared.builds.get(i.id),
       sharedPins: shared.pins.get(i.id),
+      room: project.room,
     }),
   );
   const materials = new Map<string, Material>();
@@ -1293,8 +1479,12 @@ export function buildProjectModel(input: Project): ProjectModel {
       if (hit) overlapping.add(pieces[a].item.id).add(pieces[b].item.id);
       if (hit) {
         // Where and how much (ADR-071): the shared part of their outlines, and its thinnest side (the shortest way out).
+        // Pieces at an angle are measured on their turned outlines (ADR-205: separating-axis penetration, rounded up).
         const box = intersection(pieces[a].bounds, pieces[b].bounds);
-        const amount = Math.min(box.w, box.h, box.d);
+        const amount =
+          pieces[a].outline.yaw || pieces[b].outline.yaw
+            ? Math.max(1, penetration(pieces[a].outline, pieces[b].outline))
+            : Math.min(box.w, box.h, box.d);
         diagnostics.push({
           severity: 'error',
           code: 'pieces-overlap',
@@ -1322,6 +1512,8 @@ export function buildProjectModel(input: Project): ProjectModel {
       });
   // Run parts (ADR-036): their own panels, checked against every piece like pieces are against each other.
   const placedById = new Map(pieces.map((pc) => [pc.item.id, pc]));
+  // Worktops meeting at a corner, with the joint the user chose (ADR-205).
+  const joints = worktopJointCuts(project);
   for (const rp of project.runParts ?? []) {
     // Made for pieces that are gone, or a run plinth no longer as long as its pieces (refresh off, ADR-061).
     const src = (rp.from ?? []).map((id) => placedById.get(id));
@@ -1343,7 +1535,7 @@ export function buildProjectModel(input: Project): ProjectModel {
       });
     const k = materialKey(rp.material);
     if (!materials.has(k)) materials.set(k, { ...rp.material, id: k, sheet: sheetOf(rp.material) });
-    const panel = runPanel(rp, k);
+    const panel = runPanel(rp, k, joints.get(rp.id));
     // ADR-077: a band narrower than the run part's board is an error, as on a piece's own parts.
     const band = panel.banded.length
       ? bandFor(runMaterial(project, rp.material), panel.role)
@@ -1364,7 +1556,7 @@ export function buildProjectModel(input: Project): ProjectModel {
     panels.push(panel);
     piecePanels.push([panel]);
     const hit = pieces.find(
-      (pc) => overlaps(pc.bounds, rp.box) && pc.panels.some((q) => overlapsBox(q, rp.box)),
+      (pc) => overlaps(pc.bounds, panel.box) && pc.panels.some((q) => overlapsBox(q, panel.box)),
     );
     if (hit)
       diagnostics.push({
@@ -1377,7 +1569,11 @@ export function buildProjectModel(input: Project): ProjectModel {
         nodeId: `run:${rp.id}`,
       });
   }
-  diagnostics.push(...sinkChecks(project, placedById));
+  diagnostics.push(
+    ...cutoutChecks(project, placedById, 'sink'),
+    ...cutoutChecks(project, placedById, 'hob'),
+    ...worktopJointChecks(project),
+  );
   // Run parts the user asked for that could not be made (ADR-075): an error, never left out silently (ADR-008).
   const made = new Set((project.runParts ?? []).map((rp) => rp.key));
   const missing = (project.runRequests ?? []).filter((r) => !made.has(requestKey(r)));
@@ -1404,8 +1600,14 @@ export function buildProjectModel(input: Project): ProjectModel {
     bounds: pc.bounds,
     outline: pc.outline,
     hitsPanels: (b: Box) => pc.panels.some((q) => overlapsBox(q, b)),
-    covers: (b: Box) =>
-      pc.panels.find((q) => COVER_ROLES.has(q.role) && overlapsBox(q, b))?.role ?? null,
+    // A back cut around this pipe or outlet (ADR-205) no longer covers it.
+    covers: (b: Box, featureId?: string) =>
+      pc.panels.find(
+        (q) =>
+          COVER_ROLES.has(q.role) &&
+          !(q.role === 'back' && !!featureId && !!pc.backCut?.includes(featureId)) &&
+          overlapsBox(q, b),
+      )?.role ?? null,
     clearances: pc.clearances,
   }));
   // Run parts (worktop, plinth, fillers, covers) are checked against models too.
@@ -1597,16 +1799,55 @@ function clearanceZones(
       });
     }
     for (const e of pc.envelopes)
-      if (e.kind !== 'installation')
-        out.push({
-          itemId: id,
-          kind: e.kind,
-          label: e.label,
-          box: e.box,
-          severity: ec.severity.get(e) ?? 'none',
-        });
+      out.push({
+        itemId: id,
+        kind: e.kind,
+        label: e.label,
+        box: e.box,
+        severity: ec.severity.get(e) ?? 'none',
+        // ADR-205: where it lies before it is tipped up, and the arc its top sweeps, for the plan.
+        ...(e.kind === 'installation' ? { tipUp: tipUpOf(pc) } : {}),
+      });
   }
   return out;
+}
+
+/**
+ * Where a piece lies on its back before it is tipped up (ADR-205): the floor strip in front of it, as deep as it is
+ * high, and a quarter arc of that radius from its front corner, as a door swing is drawn; turned with the piece.
+ */
+function tipUpOf(pc: PlacedPiece): NonNullable<ClearanceZone['tipUp']> {
+  const o = pc.outline,
+    r = o.h;
+  const { axis, sign } = pc.facing;
+  const strip: Box =
+    axis === 'z'
+      ? { x: o.x, y: 0, z: sign > 0 ? o.z + o.d : o.z - r, w: o.w, h: 0, d: r }
+      : { x: sign > 0 ? o.x + o.w : o.x - r, y: 0, z: o.z, w: r, h: 0, d: o.d };
+  // The hinge: the front edge's corner on the piece's left as seen from the front (a door swing's start).
+  const hinge: [number, number] =
+    axis === 'z'
+      ? sign > 0
+        ? [o.x, o.z + o.d]
+        : [o.x + o.w, o.z]
+      : sign > 0
+        ? [o.x + o.w, o.z + o.d]
+        : [o.x, o.z];
+  const n: [number, number] = axis === 'z' ? [0, sign] : [sign, 0];
+  const along: [number, number] = axis === 'z' ? [sign, 0] : [0, -sign];
+  const turn = (p: [number, number]): [number, number] => (o.yaw ? yawPoint(o.yaw, p[0], p[1]) : p);
+  const from = turn([hinge[0] + n[0] * r, hinge[1] + n[1] * r]);
+  const to = turn([hinge[0] + along[0] * r, hinge[1] + along[1] * r]);
+  const h = turn(hinge);
+  const cross = (from[0] - h[0]) * (to[1] - h[1]) - (from[1] - h[1]) * (to[0] - h[0]);
+  return {
+    strip: o.yaw ? { ...strip, yaw: o.yaw } : strip,
+    hinge: h,
+    from,
+    to,
+    radius: r,
+    sweep: cross > 0 ? 1 : 0,
+  };
 }
 
 /** Parts that cover a pipe or outlet behind them (ADR-072). */
@@ -1642,6 +1883,7 @@ function openingChecks(
           .filter((q) => !q.id.startsWith(own) && overlapsBox(q, c.box))
           .map((q) => ({
             box: aabbOf(q),
+            exact: q.shape ? aabbOf(q) : q.box,
             itemId: q.id.startsWith('run:')
               ? undefined
               : pieces.find((o) => q.id.startsWith(`${o.item.id}:`))?.item.id,
@@ -1651,14 +1893,18 @@ function openingChecks(
           })),
         ...obstacles
           .filter((o) => overlaps(o.box, c.box))
-          .map((o) => ({ box: o.box, itemId: undefined, name: o.label })),
+          .map((o) => ({ box: o.box, exact: o.box, itemId: undefined, name: o.label })),
       ];
       if (!hits.length) continue;
       const near = hits.reduce((a, b) =>
         freeBefore(c, pc.facing, b.box) < freeBefore(c, pc.facing, a.box) ? b : a,
       );
       blocked.push({ itemId: pc.item.id, box: c.box });
-      const free = freeBefore(c, pc.facing, near.box);
+      // At an angle (ADR-205) the space missing is how far the two turned boxes go into each other.
+      const turned = !!c.box.yaw || !!near.exact.yaw;
+      const free = turned
+        ? Math.max(0, c.need - Math.max(1, penetration(c.box, near.exact)))
+        : freeBefore(c, pc.facing, near.box);
       diagnostics.push({
         severity: 'warning',
         code: 'opening-blocked',
@@ -1766,7 +2012,12 @@ export function plinthCovered(project: Project): Set<string> {
   );
 }
 
-const runPanel = (rp: RunPart, materialId: string): Panel => ({
+const runPanel = (
+  rp: RunPart,
+  materialId: string,
+  cut?: { box: Box; shape?: PanelShape },
+): Panel => ({
+  ...(cut?.shape ? { shape: cut.shape } : {}),
   id: `run:${rp.id}`,
   nodeId: `run:${rp.id}`,
   role:
@@ -1781,7 +2032,7 @@ const runPanel = (rp: RunPart, materialId: string): Panel => ({
             : 'trim',
   label: rp.label,
   materialId,
-  box: rp.box,
+  box: cut?.box ?? rp.box,
   thicknessAxis: rp.thicknessAxis,
   grainAxis: rp.grainAxis,
   banded: rp.banded,
@@ -1800,36 +2051,92 @@ export const worktopMaterial = (): Material => ({
   sheet: { length: 4100, width: 600, trim: 10, count: null },
 });
 
-/** Runs of base units: floor cabinets/corners facing the room, side by side with gaps up to 150 mm, left → right. */
+/** A base unit for a run (ADR-036): a floor cabinet or corner up to worktop height, not at an angle. */
+const isRunBase = (pc: PlacedPiece) => {
+  const k = pc.item.design.product.kind;
+  return (
+    (k === 'cabinet' || k === 'corner') &&
+    !pc.item.angle &&
+    pc.bounds.y === 0 &&
+    pc.bounds.h <= RUN_MAX_HEIGHT &&
+    !isWallHung(pc.item.design)
+  );
+};
+
+/** The quarter turns runs are found at: facing the room along the back wall, and along the side walls (ADR-205). */
+const RUN_TURNS = [0, 90, 270] as const;
+
+/**
+ * Runs of base units with gaps up to 150 mm (ADR-036): floor cabinets/corners facing the room side by side along x,
+ * left → right, then (ADR-205) those turned a quarter (`rotationY` 90 or 270) along a side wall, side by side along z.
+ * Every piece of a run has the same turn.
+ */
 function groupRuns(placed: PlacedPiece[]): PlacedPiece[][] {
-  const base = placed
-    .filter((pc) => {
-      const k = pc.item.design.product.kind;
-      return (
-        (k === 'cabinet' || k === 'corner') &&
-        pc.item.rotationY === 0 &&
-        !pc.item.angle &&
-        pc.bounds.y === 0 &&
-        pc.bounds.h <= RUN_MAX_HEIGHT &&
-        !isWallHung(pc.item.design)
-      );
-    })
-    .sort((a, b) => a.bounds.x - b.bounds.x);
   const runs: PlacedPiece[][] = [];
-  for (const pc of base) {
-    const run = runs.find((r) => {
-      const last = r[r.length - 1];
-      const gap = pc.bounds.x - (last.bounds.x + last.bounds.w);
-      return (
-        gap >= 0 &&
-        gap <= FILLER_MAX_GAP &&
-        spans(last.bounds.z, last.bounds.z + last.bounds.d, pc.bounds.z, pc.bounds.z + pc.bounds.d)
-      );
-    });
-    if (run) run.push(pc);
-    else runs.push([pc]);
+  for (const r of RUN_TURNS) {
+    const alongX = r === 0;
+    const lo = (b: Box) => (alongX ? b.x : b.z),
+      size = (b: Box) => (alongX ? b.w : b.d);
+    const across = (b: Box): [Mm, Mm] => (alongX ? [b.z, b.z + b.d] : [b.x, b.x + b.w]);
+    const base = placed
+      .filter((pc) => isRunBase(pc) && pc.item.rotationY === r)
+      .sort((a, b) => lo(a.bounds) - lo(b.bounds));
+    const mine: PlacedPiece[][] = [];
+    for (const pc of base) {
+      const run = mine.find((rn) => {
+        const last = rn[rn.length - 1];
+        const gap = lo(pc.bounds) - (lo(last.bounds) + size(last.bounds));
+        return (
+          gap >= 0 && gap <= FILLER_MAX_GAP && spans(...across(last.bounds), ...across(pc.bounds))
+        );
+      });
+      if (run) run.push(pc);
+      else mine.push([pc]);
+    }
+    runs.push(...mine);
   }
   return runs;
+}
+
+/**
+ * A run's own frame (ADR-205): runs along a side wall are planned as if they stood along the back wall, run along x
+ * and front towards +z, then turned back. `toLocal` and `toRoom` are exact in integers.
+ */
+interface RunFrame {
+  toLocal: (b: Box) => Box;
+  toRoom: (b: Box) => Box;
+  axis: (a: Axis) => Axis;
+  face: (f: Face) => Face;
+}
+const SAME_FRAME: RunFrame = {
+  toLocal: (b) => b,
+  toRoom: (b) => b,
+  axis: (a) => a,
+  face: (f) => f,
+};
+const swapXZ = (a: Axis): Axis => (a === 'x' ? 'z' : a === 'z' ? 'x' : 'y');
+function runFrame(r: QuarterTurn): RunFrame {
+  if (r === 90)
+    return {
+      toLocal: (b) => ({ x: b.z, y: b.y, z: b.x, w: b.d, h: b.h, d: b.w }),
+      toRoom: (b) => ({ x: b.z, y: b.y, z: b.x, w: b.d, h: b.h, d: b.w }),
+      axis: swapXZ,
+      face: (f) => `${f[0]}${swapXZ(f[1] as Axis)}` as Face,
+    };
+  if (r === 270)
+    return {
+      toLocal: (b) => ({ x: b.z, y: b.y, z: -(b.x + b.w), w: b.d, h: b.h, d: b.w }),
+      toRoom: (b) => ({ x: -(b.z + b.d), y: b.y, z: b.x, w: b.d, h: b.h, d: b.w }),
+      axis: swapXZ,
+      // Local +z (the front) is room -x; local x is room z.
+      face: (f) =>
+        f[1] === 'z'
+          ? (`${f[0] === '+' ? '-' : '+'}x` as Face)
+          : f[1] === 'x'
+            ? (`${f[0]}z` as Face)
+            : f,
+    };
+  return SAME_FRAME;
 }
 
 /** The ids of the run a piece belongs to (the same runs the run parts use), or null. */
@@ -1919,9 +2226,12 @@ export function applyRunHandles(project: Project): Project {
   };
 }
 
-/** Run handles and sinks keep only pieces still in the project (ADR-125). The same project when nothing changes. */
+/**
+ * Run handles, sinks and hobs keep only pieces still in the project (ADR-125, ADR-205). The same project when nothing
+ * changes.
+ */
 export function pruneRunExtras(project: Project): Project {
-  if (!project.runHandles && !project.sinks) return project;
+  if (!project.runHandles && !project.sinks && !project.hobs) return project;
   const ids = new Set(project.items.map((i) => i.id));
   const handles = project.runHandles
     ?.map((rh) => ({
@@ -1931,10 +2241,14 @@ export function pruneRunExtras(project: Project): Project {
     }))
     .filter((rh) => rh.from.length);
   const sinks = project.sinks?.filter((sk) => ids.has(sk.baseId));
+  const hobs = project.hobs?.filter((hb) => ids.has(hb.baseId));
   const same =
     JSON.stringify(handles) === JSON.stringify(project.runHandles) &&
-    (sinks?.length ?? 0) === (project.sinks?.length ?? 0);
-  return same ? project : { ...project, runHandles: handles, sinks };
+    (sinks?.length ?? 0) === (project.sinks?.length ?? 0) &&
+    (hobs?.length ?? 0) === (project.hobs?.length ?? 0);
+  return same
+    ? project
+    : { ...project, runHandles: handles, sinks, ...(project.hobs ? { hobs } : {}) };
 }
 
 /** The run worktop over a base unit, if any (ADR-125). */
@@ -1950,47 +2264,341 @@ export function sinkList(project: Project): { over: string; w: Mm; d: Mm }[] {
   }));
 }
 
-/** Diagnostics of the sinks (ADR-125): no worktop to cut, a cut-out wider than its base or through the worktop. */
-function sinkChecks(project: Project, placedById: Map<string, PlacedPiece>): Diagnostic[] {
+/** The wording of each cut-out's diagnostics (ADR-125 sinks, ADR-205 hobs). */
+const CUTOUT_TEXT = {
+  sink: {
+    none: 'The sink over {name} has no worktop to be cut out of; add the run worktop.',
+    deep: 'Sink cut-out {w} × {d} mm is as deep as the worktop over {name} ({depth} mm) or deeper.',
+    wide: 'Sink cut-out {w} mm is wider than {name} under it ({width} mm).',
+  },
+  hob: {
+    none: 'The hob over {name} has no worktop to be cut out of; add the run worktop.',
+    deep: 'Hob cut-out {w} × {d} mm is as deep as the worktop over {name} ({depth} mm) or deeper.',
+    wide: 'Hob cut-out {w} mm is wider than {name} under it ({width} mm).',
+  },
+} as const satisfies Record<'sink' | 'hob', Record<'none' | 'deep' | 'wide', Key>>;
+
+/**
+ * Diagnostics of the sinks or hobs (ADR-125, ADR-205): no worktop to cut, a cut-out wider than its base or through
+ * the worktop.
+ */
+function cutoutChecks(
+  project: Project,
+  placedById: Map<string, PlacedPiece>,
+  kind: 'sink' | 'hob',
+): Diagnostic[] {
   const out: Diagnostic[] = [];
-  for (const sk of project.sinks ?? []) {
+  const text = CUTOUT_TEXT[kind];
+  for (const sk of (kind === 'sink' ? project.sinks : project.hobs) ?? []) {
     const base = placedById.get(sk.baseId);
     if (!base) continue;
     const name = base.item.design.name;
     const top = worktopOver(project, sk.baseId);
-    const nodeId = `sink:${sk.id}`;
+    const nodeId = `${kind}:${sk.id}`;
+    // Across its run: the worktop's depth along z on the back wall, along x on a side wall (ADR-205).
+    const side = top?.grainAxis === 'z';
+    const depth = top ? (side ? top.box.w : top.box.d) : 0;
+    const width = side ? base.bounds.d : base.bounds.w;
     if (!top)
       out.push({
         severity: 'warning',
-        code: 'sink-no-worktop',
-        message: t('The sink over {name} has no worktop to be cut out of; add the run worktop.', {
-          name,
-        }),
+        code: `${kind}-no-worktop`,
+        message: t(text.none, { name }),
         nodeId,
       });
-    else if (sk.d >= top.box.d)
+    else if (sk.d >= depth)
       out.push({
         severity: 'error',
-        code: 'sink-cutout-deep',
-        message: t(
-          'Sink cut-out {w} × {d} mm is as deep as the worktop over {name} ({depth} mm) or deeper.',
-          { w: sk.w, d: sk.d, name, depth: top.box.d },
-        ),
+        code: `${kind}-cutout-deep`,
+        message: t(text.deep, { w: sk.w, d: sk.d, name, depth }),
         nodeId,
       });
-    if (sk.w > base.bounds.w)
+    if (sk.w > width)
       out.push({
         severity: 'warning',
-        code: 'sink-cutout-wide',
-        message: t('Sink cut-out {w} mm is wider than {name} under it ({width} mm).', {
-          w: sk.w,
-          name,
-          width: base.bounds.w,
-        }),
+        code: `${kind}-cutout-wide`,
+        message: t(text.wide, { w: sk.w, name, width }),
         nodeId,
       });
   }
   return out;
+}
+
+/** A sink or hob cut-out on the plan (ADR-205): dashed on its worktop, labelled with its size. */
+export interface CutoutOutline {
+  id: string;
+  kind: 'sink' | 'hob';
+  /** Room mm. */
+  box: Box;
+  /** The cut-out as typed: along the run × across it. */
+  w: Mm;
+  d: Mm;
+}
+
+/**
+ * Where each sink and hob cut-out is drawn (ADR-205). A cut-out has no stored position (G-407): it is centred on its
+ * base along the run and on the worktop's depth, whole mm (a half mm rounds down). Cut-outs without a worktop are not
+ * drawn (their diagnostic says why).
+ */
+export function cutoutOutlines(project: Project, pieces: PlacedPiece[]): CutoutOutline[] {
+  const byId = new Map(pieces.map((pc) => [pc.item.id, pc]));
+  const out: CutoutOutline[] = [];
+  for (const [kind, list] of [
+    ['sink', project.sinks],
+    ['hob', project.hobs],
+  ] as const)
+    for (const c of list ?? []) {
+      const base = byId.get(c.baseId)?.bounds;
+      const part = worktopOver(project, c.baseId);
+      if (!base || !part) continue;
+      const top = part.box;
+      const box: Box =
+        part.grainAxis === 'z'
+          ? {
+              x: top.x + Math.floor((top.w - c.d) / 2),
+              y: top.y,
+              z: base.z + Math.floor((base.d - c.w) / 2),
+              w: c.d,
+              h: top.h,
+              d: c.w,
+            }
+          : {
+              x: base.x + Math.floor((base.w - c.w) / 2),
+              y: top.y,
+              z: top.z + Math.floor((top.d - c.d) / 2),
+              w: c.w,
+              h: top.h,
+              d: c.d,
+            };
+      out.push({ id: `${kind}:${c.id}`, kind, box, w: c.w, d: c.d });
+    }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// Worktop corners (ADR-205)
+// ---------------------------------------------------------------------------
+
+/** Two worktops at right angles that overlap or meet in plan: `a` along the back wall (x), `b` along a side wall (z). */
+export interface WorktopCorner {
+  a: RunPart;
+  b: RunPart;
+  /** The joint the user chose; absent = none yet (the corner is an error until one is chosen). */
+  joint?: WorktopJoint;
+}
+
+export const runPartKey = (rp: RunPart) => rp.key ?? rp.id;
+
+/** A side worktop faces +x (its back edge is its smaller x): its banded front edge says so. */
+const facesPlusX = (b: RunPart) => !b.banded.includes('-x');
+
+/**
+ * The worktop corners of a project (ADR-205): a worktop along x and one along z that overlap or touch in plan at the
+ * same height, the side one reaching out in front of the back one, the back one reaching away from the side one.
+ */
+export function worktopCorners(project: Project): WorktopCorner[] {
+  const tops = (project.runParts ?? []).filter((rp) => rp.kind === 'worktop');
+  const out: WorktopCorner[] = [];
+  for (const a of tops) {
+    if (a.grainAxis !== 'x') continue;
+    for (const b of tops) {
+      if (b.grainAxis !== 'z') continue;
+      const A = a.box,
+        B = b.box;
+      const meets =
+        A.x <= B.x + B.w &&
+        B.x <= A.x + A.w &&
+        A.z <= B.z + B.d &&
+        B.z <= A.z + A.d &&
+        A.y < B.y + B.h &&
+        B.y < A.y + A.h;
+      if (!meets || B.z + B.d <= A.z + A.d) continue;
+      if (facesPlusX(b) ? A.x + A.w <= B.x + B.w : A.x >= B.x) continue;
+      const ka = runPartKey(a),
+        kb = runPartKey(b);
+      const joint = (project.worktopJoints ?? []).find(
+        (j) => (j.a === ka && j.b === kb) || (j.a === kb && j.b === ka),
+      );
+      out.push({ a, b, ...(joint ? { joint } : {}) });
+    }
+  }
+  return out;
+}
+
+/** Whether the corner's worktop `a` (else `b`) runs through its butt joint; undefined when not chosen. */
+function aRunsThrough(c: WorktopCorner): boolean | undefined {
+  const j = c.joint;
+  if (j?.kind !== 'butt' || !j.through) return undefined;
+  return (j.through === 'a' ? j.a : j.b) === runPartKey(c.a);
+}
+
+/** "Base 600 + Base 800": the pieces a run part was made from. */
+export const runPartNames = (project: Project, rp: RunPart) =>
+  (rp.from ?? [])
+    .map((id) => project.items.find((i) => i.id === id)?.design.name ?? t('a removed piece'))
+    .join(' + ');
+
+/** The corner's lines in plan: the side worktop's back and front edge (x), the back worktop's back and front edge (z). */
+function cornerLines(c: WorktopCorner) {
+  const A = c.a.box,
+    B = c.b.box;
+  const plus = facesPlusX(c.b);
+  return {
+    plus,
+    xb: plus ? B.x : B.x + B.w,
+    xf: plus ? B.x + B.w : B.x,
+    zb: A.z,
+    zf: A.z + A.d,
+  };
+}
+
+/**
+ * Each worktop of a corner as cut (ADR-205), by run-part id: its blank, mitred also the profile cut along the line from
+ * the inner corner (where the front edges meet) to the outer corner, and its cut-list notes. Mitred, both reach the
+ * outer corner; butt, the worktop that runs through reaches it and the other stops at its front edge. Corners without
+ * a joint leave their worktops as they are. Whole mm; the stored run parts never change.
+ */
+export function worktopJointCuts(
+  project: Project,
+): Map<string, { box: Box; shape?: PanelShape; notes: string[] }> {
+  /** Along the worktop: where its near (l) and far (r) ends are, at its back (b) and at its front (f) edge. */
+  type Ends = { lb: Mm; lf: Mm; rb: Mm; rf: Mm };
+  const ends = new Map<string, Ends>();
+  const notes = new Map<string, string[]>();
+  const endsOf = (rp: RunPart) => {
+    let e = ends.get(rp.id);
+    if (!e) {
+      const b = rp.box;
+      e =
+        rp.grainAxis === 'z'
+          ? { lb: b.z, lf: b.z, rb: b.z + b.d, rf: b.z + b.d }
+          : { lb: b.x, lf: b.x, rb: b.x + b.w, rf: b.x + b.w };
+      ends.set(rp.id, e);
+    }
+    return e;
+  };
+  const note = (rp: RunPart, n: string) => notes.set(rp.id, [...(notes.get(rp.id) ?? []), n]);
+  for (const c of worktopCorners(project)) {
+    const j = c.joint;
+    const through = aRunsThrough(c);
+    if (!j || (j.kind === 'butt' && through === undefined)) continue;
+    const { plus, xb, xf, zb, zf } = cornerLines(c);
+    const ea = endsOf(c.a),
+      eb = endsOf(c.b);
+    // The end of `a` at the corner: its left end when the side worktop faces +x, else its right end.
+    const setA = (back: Mm, front: Mm) => {
+      if (plus) [ea.lb, ea.lf] = [back, front];
+      else [ea.rb, ea.rf] = [back, front];
+    };
+    if (j.kind === 'mitre') {
+      setA(xb, xf);
+      [eb.lb, eb.lf] = [zb, zf];
+      note(c.a, 'mitre joint');
+      note(c.b, 'mitre joint');
+      continue;
+    }
+    if (through) {
+      setA(xb, xb);
+      [eb.lb, eb.lf] = [zf, zf];
+    } else {
+      setA(xf, xf);
+      [eb.lb, eb.lf] = [zb, zb];
+    }
+    note(c.a, `butt joint against ${runPartNames(project, c.b)}`);
+    note(c.b, `butt joint against ${runPartNames(project, c.a)}`);
+  }
+  const out = new Map<string, { box: Box; shape?: PanelShape; notes: string[] }>();
+  for (const rp of project.runParts ?? []) {
+    const e = ends.get(rp.id);
+    if (!e) continue;
+    const b = rp.box;
+    const lo = Math.min(e.lb, e.lf),
+      hi = Math.max(e.rb, e.rf);
+    const side = rp.grainAxis === 'z';
+    const box: Box = side ? { ...b, z: lo, d: hi - lo } : { ...b, x: lo, w: hi - lo };
+    // On the worktop's face, [u, v] = [x, z] from the blank's corner (ADR-040).
+    const plus = facesPlusX(rp);
+    const ub = plus ? 0 : b.w,
+      uf = plus ? b.w : 0;
+    const points: [Mm, Mm][] = side
+      ? [
+          [ub, e.lb - lo],
+          [uf, e.lf - lo],
+          [uf, e.rf - lo],
+          [ub, e.rb - lo],
+        ]
+      : [
+          [e.lb - lo, 0],
+          [e.rb - lo, 0],
+          [e.rf - lo, b.d],
+          [e.lf - lo, b.d],
+        ];
+    const shaped = e.lb !== e.lf || e.rb !== e.rf;
+    out.set(rp.id, {
+      box,
+      ...(shaped ? { shape: { kind: 'profile', points } } : {}),
+      notes: notes.get(rp.id) ?? [],
+    });
+  }
+  return out;
+}
+
+/** The joint line of each chosen corner on the plan (ADR-205): x1 z1 x2 z2, room mm. */
+export function worktopJointLines(
+  project: Project,
+): { id: string; kind: WorktopJoint['kind']; line: [Mm, Mm, Mm, Mm] }[] {
+  const out: { id: string; kind: WorktopJoint['kind']; line: [Mm, Mm, Mm, Mm] }[] = [];
+  for (const c of worktopCorners(project)) {
+    const through = aRunsThrough(c);
+    if (!c.joint || (c.joint.kind === 'butt' && through === undefined)) continue;
+    const { xb, xf, zb, zf } = cornerLines(c);
+    const line: [Mm, Mm, Mm, Mm] =
+      c.joint.kind === 'mitre' ? [xf, zf, xb, zb] : through ? [xb, zf, xf, zf] : [xf, zb, xf, zf];
+    out.push({ id: c.joint.id, kind: c.joint.kind, line });
+  }
+  return out;
+}
+
+/** A corner without a chosen joint is an error (ADR-205, ADR-008): the app picks no default joint. */
+function worktopJointChecks(project: Project): Diagnostic[] {
+  const out: Diagnostic[] = [];
+  for (const c of worktopCorners(project)) {
+    const names = { a: runPartNames(project, c.a), b: runPartNames(project, c.b) };
+    const nodeId = `corner:${runPartKey(c.a)}|${runPartKey(c.b)}`;
+    if (!c.joint)
+      out.push({
+        severity: 'error',
+        code: 'worktop-corner-joint',
+        message: t(
+          'The worktops over {a} and {b} overlap at the corner: choose a mitred or butt joint.',
+          names,
+        ),
+        nodeId,
+      });
+    else if (c.joint.kind === 'butt' && aRunsThrough(c) === undefined)
+      out.push({
+        severity: 'error',
+        code: 'worktop-corner-joint',
+        message: t(
+          'The worktops over {a} and {b} meet in a butt joint: choose the one that runs through.',
+          names,
+        ),
+        nodeId,
+      });
+  }
+  return out;
+}
+
+/**
+ * Joints follow their worktops (ADR-205, ADR-061): a joint whose two worktops no longer meet at a corner goes. The same
+ * project when nothing changes; every commit applies it.
+ */
+export function pruneWorktopJoints(project: Project): Project {
+  if (!project.worktopJoints) return project;
+  const live = new Set(worktopCorners(project).flatMap((c) => (c.joint ? [c.joint.id] : [])));
+  const kept = project.worktopJoints.filter((j) => live.has(j.id));
+  if (kept.length === project.worktopJoints.length) return project;
+  return { ...project, worktopJoints: kept.length ? kept : undefined };
 }
 
 /**
@@ -2000,7 +2608,14 @@ function sinkChecks(project: Project, placedById: Map<string, PlacedPiece>): Dia
  * and the plinths match; that plinth replaces the pieces' own. Parts that would overlap another piece are left out;
  * parts the user removed (`runPartsRemoved`) are not proposed again. `notes` say why a run got no plinth.
  */
-export function planRuns(project: Project): {
+export function planRuns(
+  project: Project,
+  /**
+   * `sides`: plan the runs along the side walls too (ADR-205: the user asked, Suggest). Without it a side-wall run gets
+   * parts only when it already has some or the user asked for one of its worktops, so existing run parts never change.
+   */
+  opts: { sides?: boolean } = {},
+): {
   parts: RunPart[];
   notes: string[];
   /** Why a run part the user asked for was not made, by request key (ADR-075). */
@@ -2011,8 +2626,14 @@ export function planRuns(project: Project): {
   const removed = new Set(project.runPartsRemoved ?? []);
   const scribe = project.runSettings?.scribe ?? 0;
   const notes: string[] = [];
-  const runs = groupRuns(placed);
   const requests = project.runRequests ?? [];
+  const had = new Set([
+    ...(project.runParts ?? []).flatMap((rp) => rp.from ?? []),
+    ...requests.flatMap((r) => r.from),
+  ]);
+  const runs = groupRuns(placed).filter(
+    (run) => run[0].item.rotationY === 0 || !!opts.sides || run.some((pc) => had.has(pc.item.id)),
+  );
   const unmade: Record<string, string> = {};
   const fail = (r: RunRequest, why: string) => {
     const note = t('{part}: {why}.', { part: requestName(r, project), why });
@@ -2020,16 +2641,21 @@ export function planRuns(project: Project): {
     notes.push(note);
   };
   const out: RunPart[] = [];
-  /** Free of every piece (a run plinth ignores the plinths it replaces) and of the parts proposed so far. */
-  const free = (b: Box, skipPlinthOf: Set<string> = new Set()) =>
+  /**
+   * Free of every piece (a run plinth ignores the plinths it replaces) and of the parts proposed so far. A worktop may
+   * meet a worktop at right angles to it (`grain`): that corner is a joint the user chooses (ADR-205).
+   */
+  const freeRoom = (b: Box, skipPlinthOf: Set<string> = new Set(), grain?: Axis) =>
     !placed.some(
       (pc) =>
         overlaps(pc.bounds, b) &&
         pc.panels.some(
           (q) => !(q.role === 'plinth' && skipPlinthOf.has(pc.item.id)) && overlapsBox(q, b),
         ),
-    ) && !out.some((o) => overlaps(o.box, b));
-  const push = (rp: RunPart) => {
+    ) && !out.some((o) => overlaps(o.box, b) && !crosses(o, grain));
+  const crosses = (o: RunPart, grain?: Axis) =>
+    !!grain && o.kind === 'worktop' && o.grainAxis !== grain;
+  const pushRoom = (rp: RunPart) => {
     if (!removed.has(rp.key!)) out.push(rp);
   };
   const frontOf = (pc: PlacedPiece) => {
@@ -2037,7 +2663,20 @@ export function planRuns(project: Project): {
     const id = p.kind === 'cabinet' || p.kind === 'corner' ? p.params.frontMaterialId : '';
     return pc.item.design.materials.find((m) => m.id === id) ?? pc.item.design.materials[0];
   };
-  runs.forEach((run) => {
+  runs.forEach((roomRun) => {
+    // A side-wall run is planned in its own frame and its parts turned back into the room (ADR-205).
+    const fr = runFrame(roomRun[0].item.rotationY);
+    const run = roomRun.map((pc) => ({ ...pc, bounds: fr.toLocal(pc.bounds) }));
+    const toRoom = (rp: RunPart): RunPart => ({
+      ...rp,
+      box: fr.toRoom(rp.box),
+      thicknessAxis: fr.axis(rp.thicknessAxis),
+      grainAxis: fr.axis(rp.grainAxis),
+      banded: rp.banded.map(fr.face),
+    });
+    const free = (b: Box, skipPlinthOf?: Set<string>, grain?: Axis) =>
+      freeRoom(fr.toRoom(b), skipPlinthOf, grain && fr.axis(grain));
+    const push = (rp: RunPart) => pushRoom(toRoom(rp));
     const ids = run.map((pc) => pc.item.id);
     const first = run[0].bounds,
       last = run[run.length - 1].bounds;
@@ -2205,9 +2844,9 @@ export function planRuns(project: Project): {
     );
     const worktop = (pcs: PlacedPiece[], key: string, front = WORKTOP_OVERHANG, side = 0) => {
       const own = pcs.map((pc) => pc.item.id);
-      const covers = out.filter(
-        (o) => o.kind === 'cover' && o.from!.some((id) => own.includes(id)),
-      );
+      const covers = out
+        .filter((o) => o.kind === 'cover' && o.from!.some((id) => own.includes(id)))
+        .map((o) => ({ ...o, box: fr.toLocal(o.box) }));
       const l = pcs[0].bounds,
         r = pcs[pcs.length - 1].bounds;
       const wx0 = Math.min(l.x, ...covers.map((c) => c.box.x)) - side,
@@ -2231,7 +2870,7 @@ export function planRuns(project: Project): {
         label: 'Worktop',
         reason: `${m === n ? 'run of' : 'over'} ${m} ${m === 1 ? 'piece' : 'pieces'}, ${wb.w} mm long${
           front !== WORKTOP_OVERHANG || side ? `, overhang ${front} mm front, ${side} mm sides` : ''
-        }; joints and cut-outs are not drawn`,
+        }`,
         box: wb,
         material: wt,
         thicknessAxis: 'y',
@@ -2250,9 +2889,10 @@ export function planRuns(project: Project): {
           r.front,
           r.side,
         );
-        if (out.some((o) => overlaps(o.box, wb.box)))
+        const room = toRoom(wb);
+        if (out.some((o) => overlaps(o.box, room.box) && !crosses(o, room.grainAxis)))
           fail(r, t('it would overlap another worktop or run part'));
-        else out.push(wb);
+        else out.push(room);
       }
       const bare = run.filter((pc) => !asked.some((r) => r.from.includes(pc.item.id)));
       if (bare.length)
@@ -2266,7 +2906,7 @@ export function planRuns(project: Project): {
     }
     const key = `worktop|${ids.join(',')}`;
     const wb = worktop(run, key);
-    if (free(wb.box)) push(wb);
+    if (free(wb.box, undefined, wb.grainAxis)) push(wb);
   });
   // Trims the user asked for along wall or tall units (ADR-075).
   const byId = new Map(placed.map((pc) => [pc.item.id, pc]));
@@ -2455,15 +3095,17 @@ export function refreshRunParts(project: Project): Project {
 }
 
 /**
- * The sink cut-outs to make in a worktop (ADR-125), the note added to its cut-list row; null when none. Added after
- * grouping, since part labels lose their numbers there (`baseLabel`).
+ * The sink and hob cut-outs to make in a worktop (ADR-125, ADR-205): notes for its cut-list row, in the notes column
+ * (printed in the print language, `drillingRo`).
  */
-function sinkNote(project: Project, rp: RunPart): string | null {
-  if (rp.kind !== 'worktop') return null;
-  const cuts = (project.sinks ?? []).filter((sk) => rp.from?.includes(sk.baseId));
-  return cuts.length
-    ? `sink cut-out ${cuts.map((sk) => `${sk.w} × ${sk.d} mm`).join(' and ')}`
-    : null;
+function cutoutNotes(project: Project, rp: RunPart): string[] {
+  if (rp.kind !== 'worktop') return [];
+  const on = (list: RunSink[] | undefined) =>
+    (list ?? []).filter((sk) => rp.from?.includes(sk.baseId));
+  return [
+    ...on(project.sinks).map((sk) => `sink cut-out ${sk.w} × ${sk.d} mm`),
+    ...on(project.hobs).map((hb) => `hob cut-out ${hb.w} × ${hb.d} mm`),
+  ];
 }
 
 /** Parts for the whole project: each piece's cut list × its quantity, merged across pieces, then the run parts. */
@@ -2471,12 +3113,8 @@ export function projectCutlist(input: Project): CutRow[] {
   const project = applyRunHandles(input);
   const rows = new Map<string, CutRow>();
   const extra = (project.runParts ?? []).map((rp) => ({ rp, key: materialKey(rp.material) }));
-  const notes = new Map(
-    extra.flatMap(({ rp }) => {
-      const n = sinkNote(project, rp);
-      return n ? [[`run:${rp.id}`, n] as [string, string]] : [];
-    }),
-  );
+  // Worktops at a corner are cut to their joint (ADR-205).
+  const joints = worktopJointCuts(project);
   if (extra.length) {
     const mats = [
       ...new Map(
@@ -2485,25 +3123,45 @@ export function projectCutlist(input: Project): CutRow[] {
     ];
     // Fillers are cut wider by their scribe allowance (ADR-054); the model keeps the installed size.
     const cutPanel = (rp: RunPart, key: string) => {
-      const p = runPanel(rp, key);
+      const p = runPanel(rp, key, joints.get(rp.id));
       return rp.scribe ? { ...p, box: { ...p.box, w: p.box.w + rp.scribe } } : p;
     };
-    const model: FurnitureModel = {
-      panels: extra.map((e) => cutPanel(e.rp, e.key)),
-      spaces: [],
-      hardware: [],
-      diagnostics: [],
-      bounds: { x: 0, y: 0, z: 0, w: 0, h: 0, d: 0 },
-    };
-    for (const r of cutlist(model, mats)) {
-      const cut = r.panelIds.flatMap((id) => notes.get(id) ?? []);
-      rows.set(
-        ['run', r.materialId, r.length, r.width, r.edgesL, r.edgesW, bandKey(r.band)].join('|'),
-        {
-          ...r,
-          labels: r.labels.map((l) => `Run: ${l}${cut.length ? `, ${cut.join(' and ')}` : ''}`),
-        },
-      );
+    // One part at a time, so the sink and hob cut-outs and the corner joints (ADR-205) go in the row's notes column and
+    // parts with different notes never share a row.
+    for (const e of extra) {
+      const model: FurnitureModel = {
+        panels: [cutPanel(e.rp, e.key)],
+        spaces: [],
+        hardware: [],
+        diagnostics: [],
+        bounds: { x: 0, y: 0, z: 0, w: 0, h: 0, d: 0 },
+      };
+      for (const r of cutlist(model, mats)) {
+        const drilling = [
+          r.drilling,
+          ...cutoutNotes(project, e.rp),
+          ...(joints.get(e.rp.id)?.notes ?? []),
+        ]
+          .filter(Boolean)
+          .join('; ');
+        const key = [
+          'run',
+          r.materialId,
+          r.length,
+          r.width,
+          r.edgesL,
+          r.edgesW,
+          bandKey(r.band),
+          drilling,
+        ].join('|');
+        const labels = r.labels.map((l) => `Run: ${l}`);
+        const cur = rows.get(key);
+        if (cur) {
+          cur.quantity += r.quantity;
+          cur.panelIds.push(...r.panelIds);
+          for (const l of labels) if (!cur.labels.includes(l)) cur.labels.push(l);
+        } else rows.set(key, { ...r, drilling, labels });
+      }
     }
   }
   const covered = plinthCovered(project);
@@ -2531,7 +3189,24 @@ export function projectCutlist(input: Project): CutRow[] {
       sharedDesign(c ? commonDesign(item.design, c) : item.design, shared.builds.get(item.id)),
     );
     const pins = shared.pins.get(item.id);
-    const built = pins ? { ...raw, panels: withSharedPins(raw.panels, pins) } : raw;
+    const pinned = pins ? { ...raw, panels: withSharedPins(raw.panels, pins) } : raw;
+    // A back cut around a pipe or outlet (ADR-205): its own row, noted with the cut-out.
+    const cuts = item.backCuts?.length
+      ? backCutsOf(
+          item,
+          pinned.panels,
+          shared.builds.get(item.id)?.right ? buildModel(item.design).panels : pinned.panels,
+          project.room,
+        )
+      : { shapes: new Map<string, PanelShape>(), features: [] };
+    const built = cuts.shapes.size
+      ? {
+          ...pinned,
+          panels: pinned.panels.map((p) =>
+            cuts.shapes.has(p.id) ? { ...p, shape: cuts.shapes.get(p.id) } : p,
+          ),
+        }
+      : pinned;
     const leaves = (p: Panel) =>
       (covered.has(item.id) && p.role === 'plinth') ||
       (!!c?.top && p.role === commonTopRole(item.design)) ||
@@ -2857,6 +3532,17 @@ export function validateProject(p: unknown): string[] {
       else if ((p.schemaVersion as number) < VARIABLES_SINCE)
         errs.push(t('Value sets need project schemaVersion {v}', { v: VARIABLES_SINCE }));
     }
+    if (it.backCuts !== undefined) {
+      if (
+        !Array.isArray(it.backCuts) ||
+        !it.backCuts.length ||
+        !it.backCuts.every((x) => typeof x === 'string' && !!x) ||
+        new Set(it.backCuts).size !== it.backCuts.length
+      )
+        errs.push(t('Invalid back cut-outs'));
+      else if ((p.schemaVersion as number) < KITCHEN_SINCE)
+        errs.push(t('Backs cut around pipes need project schemaVersion {v}', { v: KITCHEN_SINCE }));
+    }
     const de = validateDesign(it.design);
     if (de.length) errs.push(t('Item {id}: {problem}', { id: String(it.id), problem: de[0] }));
   }
@@ -3150,6 +3836,53 @@ export function validateProject(p: unknown): string[] {
           !validPer((v as { per?: unknown }).per)
         )
           errs.push(t('Invalid run part product for {k}', { k }));
+  }
+  // Hobs and worktop corner joints (ADR-205).
+  if (p.hobs !== undefined) {
+    if ((p.schemaVersion as number) < KITCHEN_SINCE)
+      errs.push(t('Hobs need project schemaVersion {v}', { v: KITCHEN_SINCE }));
+    if (!Array.isArray(p.hobs)) errs.push(t('Invalid hobs'));
+    else
+      for (const hb of p.hobs)
+        if (
+          !isObj(hb) ||
+          typeof hb.id !== 'string' ||
+          !hb.id ||
+          typeof hb.baseId !== 'string' ||
+          !ids.has(hb.baseId) ||
+          !isInt(hb.w, 1) ||
+          (hb.w as number) > 3000 ||
+          !isInt(hb.d, 1) ||
+          (hb.d as number) > 3000
+        )
+          errs.push(t('Invalid hob'));
+  }
+  if (p.worktopJoints !== undefined) {
+    if ((p.schemaVersion as number) < KITCHEN_SINCE)
+      errs.push(t('Worktop joints need project schemaVersion {v}', { v: KITCHEN_SINCE }));
+    if (!Array.isArray(p.worktopJoints)) errs.push(t('Invalid worktop joints'));
+    else {
+      const seen = new Set<string>();
+      for (const j of p.worktopJoints) {
+        if (
+          !isObj(j) ||
+          typeof j.id !== 'string' ||
+          !j.id ||
+          seen.has(j.id) ||
+          typeof j.a !== 'string' ||
+          !j.a ||
+          typeof j.b !== 'string' ||
+          !j.b ||
+          j.a === j.b ||
+          (j.kind !== 'mitre' && j.kind !== 'butt') ||
+          (j.through !== undefined && j.through !== 'a' && j.through !== 'b')
+        ) {
+          errs.push(t('Invalid worktop joint'));
+          continue;
+        }
+        seen.add(j.id);
+      }
+    }
   }
   if (p.models !== undefined) {
     if ((p.schemaVersion as number) < MODELS_SINCE)

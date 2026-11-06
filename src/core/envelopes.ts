@@ -202,10 +202,24 @@ export function envelopeChecks(
 /** A zone on the plan's Clearances overlay (ADR-073), coloured by its worst problem. */
 export interface ClearanceZone {
   itemId: string;
-  kind: 'body' | 'door' | 'drawer' | 'flap' | 'chair' | 'service';
+  kind: 'body' | 'door' | 'drawer' | 'flap' | 'chair' | 'service' | 'installation';
   label: string;
+  /** The zone in room mm; for installation, the space above the piece it sweeps when tipped up. */
   box: Box;
   severity: Severity;
+  /**
+   * Installation (ADR-205): where the piece lies on its back before it is tipped up, for the plan: the floor strip in
+   * front of it (as deep as it is high) and a quarter arc of that radius drawn like a door swing (`sweep` is the SVG arc
+   * direction from `from` to `to` about `hinge`, plan x right and z down).
+   */
+  tipUp?: {
+    strip: Box;
+    hinge: [number, number];
+    from: [number, number];
+    to: [number, number];
+    radius: Mm;
+    sweep: 0 | 1;
+  };
 }
 
 export const worse = (a: Severity, b: Severity): Severity =>

@@ -36,6 +36,7 @@ import {
   SIZE_AXES,
 } from '../core/project';
 import { dropTarget, SNAP_RANGE } from '../core/snap';
+import { dragHeight, heightDraggable, heightLabel, snapWallHeight } from '../core/height';
 import { groupOf, itemsAt, itemsInBox, nextUnder } from '../core/selection';
 import { droppedWallConnections, keptVariables } from '../core/insertTemplate';
 import {
@@ -59,6 +60,7 @@ import {
   arrowMove,
   bracketTurn,
   cancelPress,
+  DRAG_THRESHOLD_PX,
   cancelTurn,
   moveTurn,
   pressTurn,
@@ -109,8 +111,14 @@ import { StartFrom } from './Catalog';
 import { askConfirm } from './Confirm';
 import { SaveProjectTemplate } from './ProjectTemplates';
 import { FrontModels, ModelFields, ModelList, MyModels, PlanModels } from './Models3D';
-import { AskRunParts, RunHandlesAndSinks, WorktopOverhang } from './RunRequests';
-import { ClearanceFields, ZoneOverlay, ZoneToolbar } from './Clearances';
+import {
+  AskRunParts,
+  PlanKitchenMarks,
+  RunHandlesAndSinks,
+  WorktopCorners,
+  WorktopOverhang,
+} from './RunRequests';
+import { ClearanceFields, useClearances, ZoneOverlay, ZoneToolbar } from './Clearances';
 import { useMediaQuery } from './useMediaQuery';
 import { ViewOptions } from './ViewOptions';
 import { inOptions } from './viewChoice';
@@ -1595,7 +1603,8 @@ function RoomPlan({
   const board = useBoardFills(pm.pieces);
   const tapping = !!placing || !!drawing || !!scaling;
   const moveItemBy = useDesign((s) => s.moveItemBy);
-  const [showZones, setShowZones] = useState(false);
+  // Shared with the 3D view (ADR-205): one Clearances switch shows the zones in both.
+  const [showZones, setShowZones] = useClearances();
   const turnItem = useDesign((s) => s.turnItem);
   const setRotation = useDesign((s) => s.setRotation);
   /** Why the last move did nothing (a locked piece, ADR-095). */
@@ -1732,7 +1741,9 @@ function RoomPlan({
   ];
   // With Clearances on, the view also frames the zones (chair or service space beyond the pieces); models always.
   const framed = [
-    ...(showZones ? pm.zones.map((z) => z.box) : pm.pieces.map((p) => p.bounds)),
+    ...(showZones
+      ? pm.zones.flatMap((z) => (z.tipUp ? [z.box, z.tipUp.strip] : [z.box]))
+      : pm.pieces.map((p) => p.bounds)),
     ...pm.models.map((m) => m.box),
   ];
   const xs = [...framed.flatMap((b) => [b.x, b.x + b.w]), ...pts.map((p) => p[0])],
@@ -2145,6 +2156,8 @@ function RoomPlan({
           />
         )}
         {showZones && <ZoneOverlay zones={pm.zones} fs={fs} />}
+        {/* Sink and hob cut-outs and worktop corner joints (ADR-205), from the core. */}
+        {project && <PlanKitchenMarks project={project} pieces={pm.pieces} fs={fs} />}
         {project && <ConnectionTicks project={project} pieces={pm.pieces} fs={fs} />}
         <PlanModels pm={pm} fs={fs} tapping={tapping} />
         {pm.blocked
@@ -2415,6 +2428,11 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
   // A tap on the selected piece opens it with the space under the tap selected (ADR-083). Seen from the front, a
   // piece turned a quarter shows its side, so it opens with the whole piece selected.
   const tapFront = (e: MouseEvent<SVGRectElement>, item: ProjectItem) => {
+    // The click that ends a height drag does nothing more (ADR-205).
+    if (lifted.current) {
+      lifted.current = false;
+      return;
+    }
     if (multi || e.shiftKey || e.ctrlKey || e.metaKey) return toggleItem(item.id);
     const m = e.currentTarget.ownerSVGElement?.getScreenCTM();
     if (!m || item.rotationY % 180 !== 0) return tapItem(item.id);
@@ -2425,6 +2443,67 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
   const project = useDesign((s) => s.project);
   const room = project?.room;
   const rv = useMemo(() => (room ? roomFrontView(room) : null), [room]);
+  // Dragging a selected wall unit up or down (ADR-205): through `setWallHeight` (ADR-122), one undo step on release;
+  // with Snap on (Alt not held) its underside or top snaps to the worktop and wall-unit lines within 60 mm.
+  const setItemHeight = useDesign((s) => s.setItemHeight);
+  const [snapOn] = useSnap();
+  const [lift, setLift] = useState<{ id: string; height: number; hint: string | null } | null>(
+    null,
+  );
+  const liftRef = useRef<{
+    id: string;
+    pointerId: number;
+    sy: number;
+    y0: number;
+    start: number;
+    dragging: boolean;
+  } | null>(null);
+  const lifted = useRef(false);
+  const svgY = (e: { clientX: number; clientY: number }, el: SVGGraphicsElement) => {
+    const m = el.ownerSVGElement?.getScreenCTM();
+    return m ? new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse()).y : null;
+  };
+  const pressLift = (e: React.PointerEvent<SVGRectElement>, pc: PlacedPiece) => {
+    if (!project || e.button !== 0 || multi || e.shiftKey || e.ctrlKey || e.metaKey) return;
+    if (!selectedIds.includes(pc.item.id) || pc.item.placement?.kind !== 'wall') return;
+    if (!heightDraggable(project, pc.item.id)) return;
+    const y0 = svgY(e, e.currentTarget);
+    if (y0 === null) return;
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    liftRef.current = {
+      id: pc.item.id,
+      pointerId: e.pointerId,
+      sy: e.clientY,
+      y0,
+      start: pc.item.placement.height,
+      dragging: false,
+    };
+  };
+  const moveLift = (e: React.PointerEvent<SVGRectElement>) => {
+    const g = liftRef.current;
+    if (!g || e.pointerId !== g.pointerId || !project || !pm) return;
+    g.dragging ||= Math.abs(e.clientY - g.sy) > DRAG_THRESHOLD_PX;
+    if (!g.dragging) return;
+    const y = svgY(e, e.currentTarget);
+    if (y === null) return;
+    // The view's y runs down; up is a higher hanging height.
+    const free = dragHeight(g.start, g.y0 - y);
+    const snapped =
+      snapOn && !e.altKey
+        ? snapWallHeight(project, pm.pieces, g.id, free)
+        : { height: free, hint: null };
+    setLift({ id: g.id, ...snapped });
+  };
+  const endLift = (e: React.PointerEvent<SVGRectElement>, commit: boolean) => {
+    const g = liftRef.current;
+    if (!g || e.pointerId !== g.pointerId) return;
+    liftRef.current = null;
+    const at = lift;
+    setLift(null);
+    if (!g.dragging) return;
+    lifted.current = true;
+    if (commit && at?.id === g.id && at.height !== g.start) setItemHeight(g.id, at.height);
+  };
   // Back-wall backgrounds (ADR-145): floor to room height behind the pieces against them; a picture covers its
   // rectangle once, straightened when asked, its average colour around it, as in 3D (ADR-146).
   const wallUrls = useWallPictureUrls(room?.walls ?? NO_WALLS);
@@ -2514,8 +2593,14 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
         {/* The plan's Select (ADR-097), shared: taps add and remove pieces (ADR-159). */}
         <Toggle label={t('Select')} checked={multi} onChange={setMulti} />
       </div>
+      {lift && (
+        <span className="plan-drag-note" role="status">
+          {lift.hint ?? heightLabel(lift.height)}
+        </span>
+      )}
       <InfoTip label={t('About the front view')}>
-        {t('Seen from the front. Sizes in mm: overall in yellow, the selected piece in green.')}
+        {t('Seen from the front. Sizes in mm: overall in yellow, the selected piece in green.')}{' '}
+        {t('Drag up or down to change the height')}
         {rv &&
           ` ${t('The room height and the doors, windows and obstacles on the back wall are outlined.')}`}
       </InfoTip>
@@ -2605,8 +2690,28 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
             })}
             onClick={(e) => tapFront(e, pc.item)}
             onKeyDown={onKey(() => select(pc.item.id))}
+            onPointerDown={(e) => pressLift(e, pc)}
+            onPointerMove={moveLift}
+            onPointerUp={(e) => endLift(e, true)}
+            onPointerCancel={(e) => endLift(e, false)}
           />
         ))}
+        {lift &&
+          (() => {
+            const pc = pm.pieces.find((x) => x.item.id === lift.id);
+            if (!pc) return null;
+            const b = pc.bounds;
+            return (
+              <rect
+                className="lift-ghost"
+                x={b.x}
+                y={Y(lift.height, b.h)}
+                width={b.w}
+                height={b.h}
+                aria-hidden="true"
+              />
+            );
+          })()}
         {pm.pieces
           .filter(
             (pc) => isLocked(pc.item) || isTurnLocked(pc.item) || lockedAxes(pc.item).length > 0,
@@ -2919,6 +3024,7 @@ function RunParts() {
           {n}
         </p>
       ))}
+      <WorktopCorners />
       <AskRunParts />
       <RunHandlesAndSinks />
       {removed.length > 0 && (

@@ -4,8 +4,8 @@
  * and suggested again when the template is used, so they always fit the pieces. Since schemaVersion 2 (ADR-170) a
  * template also keeps the project's variables, each piece's bindings and the connections between pieces (ADR-166,
  * ADR-168); a template with none of them stays version 1. Since schemaVersion 3 (ADR-204) it keeps the run handles
- * and sinks (ADR-125) over template refs, and the project's display-only 3D models (ADR-208: offset and placement
- * over refs); a template without them stays version 1 or 2.
+ * and sinks (ADR-125) over template refs, the project's display-only 3D models (ADR-208: offset and placement over
+ * refs) and (ADR-205) each piece's clearance zones (ADR-073); a template without them stays version 1 or 2.
  */
 import { newId, validateDesign } from './design';
 import { applyBindings, type Binding, type ProjectVariable } from './variables';
@@ -31,6 +31,7 @@ import {
   type ModelItem,
   type ModelTurn,
 } from './model3d';
+import type { ItemZones } from './envelopes';
 import type { Design, Mm } from './types';
 
 export interface TemplateItem {
@@ -47,11 +48,14 @@ export interface TemplateItem {
   angle?: number;
   /** The piece's bindings to the template's variables, by name (ADR-166, ADR-170; schemaVersion 2). */
   bindings?: Binding[];
+  /** Its chair, service and installation settings (ADR-073, ADR-205; schemaVersion 3). */
+  zones?: ItemZones;
 }
 
 /**
  * 1 = ADR-060; 2 = variables, bindings and connections (ADR-170); 3 = run handles and sinks (ADR-204), connection
- * kinds and wall connections (ADR-207) and 3D models (ADR-208). An older app refuses a version it does not know.
+ * kinds and wall connections (ADR-207), 3D models (ADR-208) and item clearance zones (ADR-205). An older app refuses
+ * a version it does not know.
  */
 export const TEMPLATE_SCHEMA = 3 as const;
 export type TemplateSchemaVersion = 1 | 2 | typeof TEMPLATE_SCHEMA;
@@ -176,6 +180,7 @@ export function templateFromProject(
       ...(c.wall !== undefined ? { wall: c.wall } : {}),
     }));
   const bound = p.items.some((i) => i.bindings?.length);
+  const zoned = p.items.some((i) => i.zones);
   // Run handles and sinks over template refs (ADR-204): pieces no longer there are dropped.
   const extras = remapRunExtras(p.runHandles, p.sinks, refs);
   const runHandles: TemplateRunHandle[] = extras.runHandles.map(({ id: _i, ...rh }) => {
@@ -198,10 +203,14 @@ export function templateFromProject(
   }));
   return {
     kind: 'project-template',
-    // Run handles, sinks, connection kinds or 3D models need version 3 (ADR-204, ADR-207, ADR-208); variables,
-    // bindings or connections version 2 (ADR-170); without them an older app can still read it.
+    // Run handles, sinks, connection kinds, 3D models or item zones need version 3 (ADR-204, ADR-207, ADR-208,
+    // ADR-205); variables, bindings or connections version 2 (ADR-170); without them an older app can still read it.
     schemaVersion:
-      runHandles.length || sinks.length || connections?.some((c) => c.kind) || models.length
+      runHandles.length ||
+      sinks.length ||
+      connections?.some((c) => c.kind) ||
+      models.length ||
+      zoned
         ? TEMPLATE_SCHEMA
         : variables || connections?.length || bound
           ? VARS_SINCE
@@ -221,6 +230,7 @@ export function templateFromProject(
       ...(i.linkId ? { linkId: i.linkId } : {}),
       ...(i.angle ? { angle: i.angle } : {}),
       ...(i.bindings?.length ? { bindings: structuredClone(i.bindings) } : {}),
+      ...(i.zones ? { zones: structuredClone(i.zones) } : {}),
     })),
     ...(variables ? { variables } : {}),
     ...(connections?.length ? { connections } : {}),
@@ -258,13 +268,14 @@ export function projectFromTemplate(t: ProjectTemplate, name = t.name): Project 
       ...(i.linkId ? { linkId: i.linkId } : {}),
       ...(i.angle ? { angle: i.angle } : {}),
       ...(i.bindings?.length ? { bindings: structuredClone(i.bindings) } : {}),
+      ...(i.zones ? { zones: structuredClone(i.zones) } : {}),
     };
   });
   const connections = templateConnections(t.connections, ids, t.room).connections;
   const extras = remapRunExtras(t.runHandles, t.sinks, ids);
   const models = templateModels(t.models, ids);
   const extended =
-    items.some((i) => i.linkId || i.angle || i.bindings) ||
+    items.some((i) => i.linkId || i.angle || i.bindings || i.zones) ||
     t.variables?.length ||
     connections.length ||
     extras.runHandles.length ||
@@ -424,6 +435,9 @@ export function validateProjectTemplate(t: unknown): string[] {
     // Bindings need version 2; their shape and targets are checked on the project the template makes.
     if (it.bindings !== undefined && (!v2 || !Array.isArray(it.bindings)))
       errs.push(`${name}: bindings need template schemaVersion ${VARS_SINCE}`);
+    // Zones need version 3 (ADR-205); their values are checked on the project the template makes.
+    if (it.zones !== undefined && (!v3 || !isObj(it.zones)))
+      errs.push(`${name}: clearance zones need template schemaVersion ${RUN_EXTRAS_SINCE}`);
   }
   if (t.variables !== undefined && (!v2 || !Array.isArray(t.variables)))
     errs.push(`Variables need template schemaVersion ${VARS_SINCE}`);

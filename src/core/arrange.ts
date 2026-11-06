@@ -65,6 +65,12 @@ export function mirrorSpace(s: Space): Space {
       children: s.axis === 'x' ? children.reverse() : children,
       sizes: s.axis === 'x' ? [...s.sizes].reverse() : s.sizes,
     };
+    // ADR-205: the rounding remainder stays on the same physical part, so the copy matches to the mm; mirroring twice
+    // takes the flag off again.
+    if (s.axis === 'x') {
+      const { remainderFirst, ...rest } = out as typeof s;
+      out = remainderFirst ? rest : { ...rest, remainderFirst: true };
+    }
   }
   return out;
 }
@@ -83,7 +89,11 @@ export function mirrorDesign(d: Design): MirrorResult {
   const prod = d.product;
   const same = (reason: string): MirrorResult => ({ ok: false, design: d, reason });
   const withProduct = (product: Product): MirrorResult => {
-    const design = { ...d, product };
+    // A split's remainder order needs design schemaVersion 9 (ADR-205).
+    const flagged = JSON.stringify(product).includes('"remainderFirst"');
+    const design: Design = flagged
+      ? { ...d, schemaVersion: SCHEMA_VERSION, product }
+      : { ...d, product };
     return JSON.stringify(product) === JSON.stringify(prod)
       ? same(NOTHING_TO_MIRROR)
       : { ok: true, design };

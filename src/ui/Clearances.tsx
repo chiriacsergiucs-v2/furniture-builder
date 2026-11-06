@@ -3,7 +3,7 @@
  * Clearances overlay that draws every zone the core derived, hatched and coloured by its worst problem.
  * Nothing here computes geometry: zones come from `buildProjectModel` (ADR-004).
  */
-import { useId, useState } from 'react';
+import { useId, useState, useSyncExternalStore } from 'react';
 import {
   MAX_ZONE_DEPTH,
   kneeSpan,
@@ -157,12 +157,37 @@ const KIND_NAME: Record<ClearanceZone['kind'], string> = {
   flap: t('Flap'),
   chair: t('Chair space'),
   service: t('Service zone'),
+  installation: t('Installation space'),
 };
 const SEVERITY_NAME: Record<ClearanceZone['severity'], string> = {
   none: t('no problem'),
   warning: t('warning'),
   error: t('error'),
 };
+
+// The Clearances toggle is shared by the plan and the 3D view (ADR-205): one switch shows the zones in both. A view
+// setting for this page only, never saved in the project.
+let clearancesOn = false;
+const clearanceListeners = new Set<() => void>();
+export function setClearances(v: boolean) {
+  clearancesOn = v;
+  clearanceListeners.forEach((f) => f());
+}
+const subscribeClearances = (l: () => void) => {
+  clearanceListeners.add(l);
+  return () => clearanceListeners.delete(l);
+};
+/** Whether Clearances is on, and its setter (ADR-073 on the plan, ADR-205 in 3D). */
+export function useClearances(): [boolean, (v: boolean) => void] {
+  return [
+    useSyncExternalStore(
+      subscribeClearances,
+      () => clearancesOn,
+      () => false,
+    ),
+    setClearances,
+  ];
+}
 
 /** The Clearances toggle and legend, in the plan's own tool row ("Clear." on screen, ADR-112). */
 export function ZoneToolbar({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
@@ -207,39 +232,66 @@ export function ZoneOverlay({ zones, fs }: { zones: ClearanceZone[]; fs: number 
           </pattern>
         ))}
       </defs>
-      {zones.map((z, i) => (
-        <g key={i} className={`zone ${z.severity} ${z.kind}`}>
-          <rect
-            x={z.box.x}
-            y={z.box.z}
-            width={z.box.w}
-            height={z.box.d}
-            fill={`url(#${uid}-${z.severity})`}
-            // A zone of a piece at an angle (ADR-121) is drawn turned the way the core turned it.
-            transform={
-              z.box.yaw ? `rotate(${-z.box.yaw.deg} ${z.box.yaw.cx} ${z.box.yaw.cz})` : undefined
-            }
-          >
-            <title>
-              {tr(z.label).startsWith(KIND_NAME[z.kind])
-                ? tr(z.label)
-                : `${KIND_NAME[z.kind]}: ${tr(z.label)}`}
-              , {SEVERITY_NAME[z.severity]}
-            </title>
-          </rect>
-          {(z.kind === 'chair' || z.kind === 'service') && (
-            <text
-              x={z.box.x + z.box.w / 2}
-              y={z.box.z + z.box.d / 2}
-              fontSize={Math.min(fs * 0.8, z.box.w / 6, z.box.d / 1.5)}
-              textAnchor="middle"
-              dominantBaseline="middle"
+      {zones.map((z, i) =>
+        z.tipUp ? (
+          // Installation (ADR-205): the floor strip it lies on before it is tipped up, and the arc its top sweeps.
+          <g key={i} className={`zone ${z.severity} ${z.kind}`}>
+            <rect
+              x={z.tipUp.strip.x}
+              y={z.tipUp.strip.z}
+              width={z.tipUp.strip.w}
+              height={z.tipUp.strip.d}
+              fill={`url(#${uid}-${z.severity})`}
+              transform={
+                z.tipUp.strip.yaw
+                  ? `rotate(${-z.tipUp.strip.yaw.deg} ${z.tipUp.strip.yaw.cx} ${z.tipUp.strip.yaw.cz})`
+                  : undefined
+              }
             >
-              {KIND_NAME[z.kind]}
-            </text>
-          )}
-        </g>
-      ))}
+              <title>
+                {tr(z.label)}: {t('Where it lies before it is tipped up')},{' '}
+                {SEVERITY_NAME[z.severity]}
+              </title>
+            </rect>
+            <path
+              className="tip-arc"
+              d={`M ${z.tipUp.from[0]} ${z.tipUp.from[1]} A ${z.tipUp.radius} ${z.tipUp.radius} 0 0 ${z.tipUp.sweep} ${z.tipUp.to[0]} ${z.tipUp.to[1]}`}
+            />
+          </g>
+        ) : (
+          <g key={i} className={`zone ${z.severity} ${z.kind}`}>
+            <rect
+              x={z.box.x}
+              y={z.box.z}
+              width={z.box.w}
+              height={z.box.d}
+              fill={`url(#${uid}-${z.severity})`}
+              // A zone of a piece at an angle (ADR-121) is drawn turned the way the core turned it.
+              transform={
+                z.box.yaw ? `rotate(${-z.box.yaw.deg} ${z.box.yaw.cx} ${z.box.yaw.cz})` : undefined
+              }
+            >
+              <title>
+                {tr(z.label).startsWith(KIND_NAME[z.kind])
+                  ? tr(z.label)
+                  : `${KIND_NAME[z.kind]}: ${tr(z.label)}`}
+                , {SEVERITY_NAME[z.severity]}
+              </title>
+            </rect>
+            {(z.kind === 'chair' || z.kind === 'service') && (
+              <text
+                x={z.box.x + z.box.w / 2}
+                y={z.box.z + z.box.d / 2}
+                fontSize={Math.min(fs * 0.8, z.box.w / 6, z.box.d / 1.5)}
+                textAnchor="middle"
+                dominantBaseline="middle"
+              >
+                {KIND_NAME[z.kind]}
+              </text>
+            )}
+          </g>
+        ),
+      )}
     </g>
   );
 }

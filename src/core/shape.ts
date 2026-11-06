@@ -202,6 +202,25 @@ export function shapeProblems(p: Panel): string[] {
     ];
   if (Math.abs(area2(s.points)) === 0)
     return [t('{part}: the profile has no area.', { part: tr(p.label) })];
+  // Holes (ADR-205): inside the blank, whole mm, each with an area.
+  if (
+    s.holes?.some(
+      (h) =>
+        h.length < 3 ||
+        Math.abs(area2(h)) === 0 ||
+        !h.every(
+          ([u, v]) =>
+            Number.isInteger(u) && Number.isInteger(v) && u > 0 && v > 0 && u < W && v < H,
+        ),
+    )
+  )
+    return [
+      t('{part}: a cut-out must lie inside its {w} × {h} mm blank, in whole millimetres.', {
+        part: tr(p.label),
+        w: W,
+        h: H,
+      }),
+    ];
   return [];
 }
 
@@ -214,8 +233,12 @@ export const area2 = (pts: [number, number][]) =>
 
 /** Cut-list note for a shaped panel (ADR-040): profiles are cut to the printed template; tilt is placement only. */
 export function shapeNote(p: Panel): string {
-  if (p.shape?.kind === 'profile') return `cut to template (${p.shape.points.length} points)`;
-  return '';
+  if (p.shape?.kind !== 'profile') return '';
+  // ADR-205: each rectangular cut-out (a notch or a hole) with its size and where it is on the blank.
+  const cuts = (p.shape.cutouts ?? []).map(
+    (c) => `cut-out ${c.w} × ${c.h} mm at ${c.u}/${c.v} mm from left/bottom`,
+  );
+  return [`cut to template (${p.shape.points.length} points)`, ...cuts].join('; ');
 }
 
 // ---------------------------------------------------------------------------
@@ -248,19 +271,34 @@ export function turnShape(s: PanelShape, from: Box, to: Box, t: Axis, tTo: Axis,
     ) as [number, number, number];
     return { kind: 'tilt', axis: AXES[i], angleDeg: a[i] < 0 ? -s.angleDeg : s.angleDeg, pivot };
   }
-  const world = profileWorld(from, t, s.points).map((v) => turnPoint(v, r));
   // The turned blank's back face may now be its front face: measure in-plane coordinates only.
   const [ua, va] = inPlaneAxes(tTo);
   const o = min3(to);
+  const turn = (pts: [number, number][]) =>
+    profileWorld(from, t, pts)
+      .map((v) => turnPoint(v, r))
+      .map(
+        (v) =>
+          [Math.round(v[idx(ua)] - o[idx(ua)]), Math.round(v[idx(va)] - o[idx(va)])] as [
+            number,
+            number,
+          ],
+      );
+  // Holes and cut-outs (ADR-205) turn with the outline; a cut-out is the box around its turned corners.
+  const cutouts = s.cutouts?.map((c) => {
+    const q = turn([
+      [c.u, c.v],
+      [c.u + c.w, c.v + c.h],
+    ]);
+    const u = Math.min(q[0][0], q[1][0]),
+      v = Math.min(q[0][1], q[1][1]);
+    return { u, v, w: Math.abs(q[1][0] - q[0][0]), h: Math.abs(q[1][1] - q[0][1]) };
+  });
   return {
     kind: 'profile',
-    points: world.map(
-      (v) =>
-        [Math.round(v[idx(ua)] - o[idx(ua)]), Math.round(v[idx(va)] - o[idx(va)])] as [
-          number,
-          number,
-        ],
-    ),
+    points: turn(s.points),
+    ...(s.holes ? { holes: s.holes.map(turn) } : {}),
+    ...(cutouts ? { cutouts } : {}),
   };
 }
 

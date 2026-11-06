@@ -7294,3 +7294,47 @@ ul.plain {
   gap: var(--s-2);
   pointer-events: auto;
 }
+
+/* ADR-205: sink and hob cut-outs and worktop corner joints on the plan. */
+.plan .kitchen-marks {
+  pointer-events: none;
+}
+.plan .kitchen-marks .cutout rect {
+  fill: none;
+  stroke: var(--ink-2);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 4;
+  vector-effect: non-scaling-stroke;
+}
+.plan .kitchen-marks .cutout text {
+  fill: var(--ink-2);
+  font-family: var(--font);
+}
+.plan .kitchen-marks .worktop-joint {
+  stroke: var(--ink);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+/* ADR-205: the arc a piece's top sweeps when it is tipped up. */
+.plan .zone .tip-arc {
+  fill: none;
+  stroke: var(--ink-2);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+  vector-effect: non-scaling-stroke;
+}
+/* ADR-205: where a wall unit dragged up or down in the front view would hang. */
+.plan .lift-ghost {
+  fill: var(--primary-soft);
+  fill-opacity: 0.5;
+  stroke: var(--primary);
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+.worktop-corners .run-pick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}

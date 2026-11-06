@@ -308,6 +308,10 @@ export const FEATURES: FeatureDomain[] = [
       },
       { name: 'Align tops and bottoms', adrs: ['ADR-122'], checked: '2026-11-05' },
       { name: 'Distribute evenly', adrs: ['ADR-099'], checked: '2026-11-05' },
+      { name: 'Distribute each row', adrs: ['ADR-205'] },
+      { name: 'Wall unit heights snap to the worktop and wall units', adrs: ['ADR-205'] },
+      { name: 'Angled pieces snap along their turned faces', adrs: ['ADR-205'] },
+      { name: 'Mirrored copies match to the mm', adrs: ['ADR-205'] },
       {
         name: 'Groups align and distribute as one block',
         adrs: ['ADR-099', 'ADR-148'],
@@ -490,6 +494,10 @@ export const FEATURES: FeatureDomain[] = [
             adrs: ['ADR-203'],
           },
           { name: 'Sink cut-out in the run worktop', adrs: ['ADR-125'], checked: '2026-11-05' },
+          { name: 'Runs along the side walls', adrs: ['ADR-205'] },
+          { name: 'Worktop corners with a mitred or butt joint', adrs: ['ADR-205'] },
+          { name: 'Hob cut-out in the run worktop', adrs: ['ADR-205'] },
+          { name: 'Sink and hob cut-outs drawn on the plan', adrs: ['ADR-205'] },
         ],
       },
       {
@@ -711,6 +719,8 @@ export const FEATURES: FeatureDomain[] = [
         adrs: ['ADR-073'],
         checked: '2026-11-05',
       },
+      { name: 'Clearance zones in 3D', adrs: ['ADR-205'] },
+      { name: 'Backs cut around pipes and outlets', adrs: ['ADR-205'] },
     ],
   },
   {

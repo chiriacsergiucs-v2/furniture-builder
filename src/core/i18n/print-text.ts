@@ -34,6 +34,13 @@ export const PRINT_RU = {
   'gaură mâner ø$1 la': 'отверстие под ручку ø$1:',
   'mm de la stânga/jos': 'мм от левого/нижнего края',
   'tăiere după șablon ($1 puncte)': 'раскрой по шаблону (точек: $1)',
+  // Cut-outs and worktop joints (ADR-205)
+  'decupaj {w} × {h} mm la {u}/{v} mm de la stânga/jos':
+    'вырез {w} × {h} мм в {u}/{v} мм от левого/нижнего края',
+  'decupaj chiuvetă {w} × {d} mm': 'вырез под мойку {w} × {d} мм',
+  'decupaj plită {w} × {d} mm': 'вырез под варочную панель {w} × {d} мм',
+  'îmbinare la 45°': 'соединение под 45°',
+  'îmbinare cap la cap cu {other}': 'соединение встык с {other}',
   // Hardware
   'Pereche glisiere cu bile, montaj lateral': 'Пара шариковых направляющих, боковой монтаж',
   'joc {gap} mm pe parte': 'зазор {gap} мм на сторону',
@@ -318,6 +325,12 @@ export const PRINT_EN: Record<keyof typeof PRINT_RU, string> = {
   'gaură mâner ø$1 la': 'handle hole ø$1 at',
   'mm de la stânga/jos': 'mm from left/bottom',
   'tăiere după șablon ($1 puncte)': 'cut to template ($1 points)',
+  'decupaj {w} × {h} mm la {u}/{v} mm de la stânga/jos':
+    'cut-out {w} × {h} mm at {u}/{v} mm from left/bottom',
+  'decupaj chiuvetă {w} × {d} mm': 'sink cut-out {w} × {d} mm',
+  'decupaj plită {w} × {d} mm': 'hob cut-out {w} × {d} mm',
+  'îmbinare la 45°': 'mitre joint',
+  'îmbinare cap la cap cu {other}': 'butt joint against {other}',
   'Pereche glisiere cu bile, montaj lateral': 'Ball-bearing runner pair, side mount',
   'joc {gap} mm pe parte': '{gap} mm clearance per side',
   'Balama aplicată, cupă 35 mm, soft-close, clip-on':

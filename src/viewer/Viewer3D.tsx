@@ -24,6 +24,7 @@ import {
   type Intersection,
   Matrix4,
   Mesh,
+  Path,
   PMREMGenerator,
   Plane,
   PlaneGeometry,
@@ -88,6 +89,8 @@ import { useTheme } from '../ui/useTheme';
 import { useLook } from '../ui/useLook';
 import { setSolidWalls, useSolidWalls } from '../ui/useSolidWalls';
 import { SHADOW_CATCHER, setCapture, setStage, useRendering } from './renderBridge';
+import { useClearances } from '../ui/Clearances';
+import type { ClearanceZone } from '../core/envelopes';
 import { CountStepper } from '../ui/CountStepper';
 import { useSnap } from '../ui/useSnap';
 import { MoveToButtons } from '../ui/MoveTo';
@@ -115,6 +118,12 @@ function profileGeometry(p: Panel): ExtrudeGeometry {
   const pts = p.shape.points;
   const shape = new Shape();
   pts.forEach(([u, v], i) => (i ? shape.lineTo(u * S, v * S) : shape.moveTo(u * S, v * S)));
+  // Holes cut through the board (ADR-205: a back cut around a pipe or outlet) are extruded too.
+  for (const hole of p.shape.holes ?? []) {
+    const path = new Path();
+    hole.forEach(([u, v], i) => (i ? path.lineTo(u * S, v * S) : path.moveTo(u * S, v * S)));
+    shape.holes.push(path);
+  }
   const tAxis = p.thicknessAxis,
     t = tAxis === 'x' ? p.box.w : tAxis === 'y' ? p.box.h : p.box.d;
   const g = new ExtrudeGeometry(shape, { depth: t * S, bevelEnabled: false });
@@ -354,6 +363,8 @@ export default function Viewer3D() {
   const canIsolate = inProject && selectedIds.length > 0;
   const hasRoom = useDesign((s) => !!s.project?.room);
   const solidWalls = useSolidWalls();
+  // The plan's Clearances switch also draws the zones in 3D (ADR-205).
+  const [zonesOn, setZonesOn] = useClearances();
   return (
     <>
       <Canvas
@@ -419,6 +430,7 @@ export default function Viewer3D() {
           <SeamLines color={primary} only={isolating ? selectedIds : undefined} />
         )}
         {moving && turnId && <HeightHandle id={turnId} />}
+        {view.mode === 'project' && zonesOn && !exploded && !rendering && <ZoneBoxes />}
         {sectionOn && <SectionClip axis={section.axis} at={cut!} />}
         {showLocks && <LockAnchors pieces={locked} badges={lockBadges} />}
         <Fit key={designId} bounds={bounds} />
@@ -596,6 +608,17 @@ export default function Viewer3D() {
               onClick={() => setSolidWalls(!solidWalls)}
             >
               {t('Solid walls')}
+            </button>
+          )}
+          {view.mode === 'project' && hasPieces && (
+            <button
+              type="button"
+              className="btn sm outline zones-toggle"
+              aria-pressed={zonesOn}
+              title={t('Show clearance zones in 3D')}
+              onClick={() => setZonesOn(!zonesOn)}
+            >
+              {t('Clearances')}
             </button>
           )}
           {sectionOn && (
@@ -1197,7 +1220,7 @@ function HeightNote() {
       className={`plan-drag-note three-drag-note${preview.height < 0 ? ' locked' : ''}`}
       role="status"
     >
-      {heightLabel(preview.height)}
+      {preview.hint ?? heightLabel(preview.height)}
       {preview.height < 0 ? t(' — below the floor, it will not move') : ''}
     </span>
   );
@@ -1886,10 +1909,6 @@ function Panels({
   );
 }
 
-/**
- * A part of a piece at an angle (ADR-121): drawn inside a group turned about the piece's vertical line. Three.js turns
- * (x, z) about y the same way the core's yaw does, so the angle is used as it is.
- */
 /** Children turned as an angled piece's panels are (ADR-121): the selection outline and the Move ghost (ADR-203). */
 function YawGroup({ yaw, children }: { yaw?: Yaw; children: ReactNode }) {
   if (!yaw) return <>{children}</>;
@@ -1900,6 +1919,61 @@ function YawGroup({ yaw, children }: { yaw?: Yaw; children: ReactNode }) {
   );
 }
 
+const ZONE_COLOR: Record<ClearanceZone['severity'], string> = {
+  none: '#3f8f5a',
+  warning: '#d99a00',
+  error: '#c0392b',
+};
+
+/**
+ * Every clearance zone of the project (ADR-205, the Clearances switch): a translucent box coloured by its worst
+ * problem, turned with a piece at an angle. Display only: never picked, never edited; the zones come from the core.
+ */
+function ZoneBoxes() {
+  const zones = useDesign((s) => s.projectModel?.zones);
+  if (!zones?.length) return null;
+  return (
+    <>
+      {zones.map((z, i) => {
+        const b = z.box;
+        if (b.w <= 0 || b.h <= 0 || b.d <= 0) return null;
+        const mesh = (
+          <mesh
+            key={i}
+            position={[(b.x + b.w / 2) * S, (b.y + b.h / 2) * S, (b.z + b.d / 2) * S]}
+            raycast={() => null}
+            renderOrder={4}
+          >
+            <boxGeometry args={[b.w * S, b.h * S, b.d * S]} />
+            <meshBasicMaterial
+              color={ZONE_COLOR[z.severity]}
+              transparent
+              opacity={z.kind === 'body' ? 0.12 : 0.22}
+              depthWrite={false}
+            />
+          </mesh>
+        );
+        const y = b.yaw;
+        return y ? (
+          <group
+            key={i}
+            position={[y.cx * S, 0, y.cz * S]}
+            rotation={[0, (y.deg * Math.PI) / 180, 0]}
+          >
+            <group position={[-y.cx * S, 0, -y.cz * S]}>{mesh}</group>
+          </group>
+        ) : (
+          mesh
+        );
+      })}
+    </>
+  );
+}
+
+/**
+ * A part of a piece at an angle (ADR-121): drawn inside a group turned about the piece's vertical line. Three.js turns
+ * (x, z) about y the same way the core's yaw does, so the angle is used as it is.
+ */
 function yawed(p: Panel, el: ReactElement): ReactElement {
   const y = p.box.yaw;
   if (!y) return el;

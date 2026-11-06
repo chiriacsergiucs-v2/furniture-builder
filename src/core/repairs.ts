@@ -56,22 +56,31 @@ export const applicable = (r: Repair) => !r.refused;
 /** At most this many repairs are listed for one problem, smallest first. */
 export const MAX_REPAIRS = 4;
 
-/** The codes repairs exist for (ADR-071; the depth and height matches ADR-204). */
+/** The codes repairs exist for (ADR-071; the depth and height matches ADR-204; a back over a pipe or outlet, ADR-205). */
 export const REPAIRABLE = new Set([
   'pieces-overlap',
   'opening-blocked',
   'outside-room',
   'compat-depth-match',
   'compat-height-match',
+  'covers-service',
 ]);
 
-/** A problem with a repair family (ADR-071): an overlap, a front blocked by another piece, a piece outside the room. */
+/**
+ * A problem with a repair family (ADR-071): an overlap, a front blocked by another piece, a piece outside the room; a
+ * back covering a pipe or outlet, which can be cut around it (ADR-205).
+ */
 export const mayRepair = (d: Diagnostic) =>
-  REPAIRABLE.has(d.code) && (d.itemIds?.length ?? 0) === (d.code === 'outside-room' ? 1 : 2);
+  REPAIRABLE.has(d.code) &&
+  (d.code === 'covers-service'
+    ? !!d.featureId && d.itemIds?.length === 1
+    : (d.itemIds?.length ?? 0) === (d.code === 'outside-room' ? 1 : 2));
 
 /** The same problem in another build: same code, and the same front, or else the same pieces. */
 export function sameProblem(a: Diagnostic, b: Diagnostic): boolean {
   if (a.code !== b.code) return false;
+  // The same pipe or outlet behind the same piece (ADR-205).
+  if ((a.featureId || b.featureId) && a.featureId !== b.featureId) return false;
   if (a.panelIds?.length) return (b.panelIds ?? []).join(',') === a.panelIds.join(',');
   const ids = (d: Diagnostic) => [...(d.itemIds ?? [d.nodeId ?? ''])].sort().join(',');
   return ids(a) === ids(b);
@@ -403,6 +412,7 @@ export function repairsFor(
   max = MAX_REPAIRS,
 ): Repair[] {
   if (!REPAIRABLE.has(d.code)) return [];
+  if (d.code === 'covers-service') return backCutRepair(project, pm, d);
   const before = new Set(pm.diagnostics.filter((e) => e.severity === 'error').map(errorKey));
   const seen = new Set<string>();
   const out: Repair[] = [];
@@ -484,4 +494,52 @@ export function repairsFor(
     });
   }
   return out;
+}
+
+/**
+ * "Cut the back around it" (ADR-205): the back covering a pipe or outlet gets a cut-out exactly the size of its zone
+ * (`ProjectItem.backCuts`); nothing is cut until the user applies it (ADR-072). Offered when, built again, the warning
+ * is gone and no error appeared; a piece typed at an angle is refused with the reason.
+ */
+function backCutRepair(project: Project, pm: ProjectModel, d: Diagnostic): Repair[] {
+  const id = d.itemIds?.[0] ?? d.nodeId;
+  const item = project.items.find((i) => i.id === id);
+  const fid = d.featureId;
+  if (!item || !fid) return [];
+  const label = tx('Cut the back around it');
+  if (item.angle)
+    return [
+      {
+        id: 'r0',
+        label,
+        distance: 0,
+        project,
+        preview: [],
+        refused: tx(
+          '{name} is typed at an angle: its back cannot be cut around a pipe or outlet; turn it to a quarter turn or move it.',
+          { name: pieceName(project, item.id) },
+        ),
+      },
+    ];
+  if (item.backCuts?.includes(fid)) return [];
+  const next = settle({
+    ...project,
+    items: project.items.map((i) =>
+      i.id === item.id ? { ...i, backCuts: [...(i.backCuts ?? []), fid] } : i,
+    ),
+  });
+  const after = buildProjectModel(next);
+  const before = new Set(pm.diagnostics.filter((e) => e.severity === 'error').map(errorKey));
+  if (after.diagnostics.some((e) => sameProblem(d, e))) return [];
+  if (after.diagnostics.some((e) => e.severity === 'error' && !before.has(errorKey(e)))) return [];
+  const pc = after.pieces.find((x) => x.item.id === item.id);
+  return [
+    {
+      id: 'r0',
+      label,
+      distance: 0,
+      project: next,
+      preview: pc ? [{ id: item.id, box: pc.bounds }] : [],
+    },
+  ];
 }

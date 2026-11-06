@@ -15,6 +15,7 @@ import { data_wizard } from './data-wizard';
 import { ru_editors } from './editors';
 import { ru_info } from './info';
 import { ru_inspector } from './inspector';
+import { ru_kitchen } from './kitchen';
 import { ru_material } from './material';
 import { ru_project } from './project';
 import { ru_prints } from './prints';
@@ -45,6 +46,7 @@ export const ru = {
   ...ru_material,
   ...ru_prints,
   ...ru_surfaces,
+  ...ru_kitchen,
 };
 
 export const ruData: Record<string, string> = {
