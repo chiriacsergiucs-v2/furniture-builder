@@ -2844,7 +2844,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-463: Arrow keys choose a type in the wizard
 
-- Status: Open
+- Status: Acknowledged (2026-11-06)
 - Origin: ADR-194, 2026-11-06; built by the agent, choice not asked
 - Missing: On the Type step the arrow keys move the focus between the type radios without choosing one; Space or Enter chooses. The WAI-ARIA radio pattern also checks the radio on arrow keys, but choosing a type drops the Size answers it cannot use and resets the steps (ADR-191), so arrowing past a type would lose answers.
 - Request: ADR-194 item 7 (approved 2026-11-06): "the type radiogroup gets a roving tabindex with arrow keys"
@@ -2853,3 +2853,4 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low
 - Impact: Low
 - Necessity: Low
+- Fix: Arrow keys only move focus between types; Space or Enter chooses (user 2026-11-06).

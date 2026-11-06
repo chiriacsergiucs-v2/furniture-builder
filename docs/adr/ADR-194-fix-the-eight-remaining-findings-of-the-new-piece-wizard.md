@@ -111,8 +111,7 @@ deployed, not live-verified.
    field kind shows its own problems under it; the step list keeps only problems without a shown field.
 7. `Counter` takes `name` ("Shelves in compartment {n}", also "Drawers in compartment {n}"); `go()` focuses the step
    heading (`tabIndex=-1`); the choice radios (Type) have a roving tabindex. Arrow keys, Home and End move the focus;
-   Space or Enter chooses, since choosing a type drops answers it cannot use (ADR-191). Whether arrows should also
-   choose is open: G-463.
+   Space or Enter chooses, since choosing a type drops answers it cannot use (ADR-191). User decision 2026-11-06 (G-463): "arrows only move focus".
 8. "Start blank" renamed "Continue by hand" (Russian "Продолжить вручную"); behaviour unchanged; the old entry is
    deleted. `tools/wizard/find-it.mjs` uses the new names.
 
