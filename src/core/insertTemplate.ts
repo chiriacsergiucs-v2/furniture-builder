@@ -7,7 +7,7 @@
 import { newId } from './design';
 import { placedBounds, type Project, type ProjectItem } from './project';
 import { withSettings } from './projectSettings';
-import { remapRunKey, type ProjectTemplate } from './projectTemplate';
+import { remapRunExtras, remapRunKey, type ProjectTemplate } from './projectTemplate';
 import type { Mm } from './types';
 
 export interface InsertResult {
@@ -80,6 +80,8 @@ export function insertTemplate(
       id: newId(),
       itemIds: [ids.get(c.itemIds[0])!, ids.get(c.itemIds[1])!] as [string, string],
     }));
+  // Run handles and sinks join with the new piece ids and new ids of their own (ADR-204).
+  const extras = remapRunExtras(t.runHandles, t.sinks, ids);
   const recipe = t.runRecipe;
   const removed = (recipe?.removed ?? [])
     .map((k) => remapRunKey(k, ids))
@@ -95,6 +97,10 @@ export function insertTemplate(
     ...(connections.length
       ? { connections: [...(project.connections ?? []), ...connections] }
       : {}),
+    ...(extras.runHandles.length
+      ? { runHandles: [...(project.runHandles ?? []), ...extras.runHandles] }
+      : {}),
+    ...(extras.sinks.length ? { sinks: [...(project.sinks ?? []), ...extras.sinks] } : {}),
   };
   return { project: next, ids: items.map((i) => i.id), kept };
 }

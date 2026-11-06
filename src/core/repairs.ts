@@ -4,9 +4,16 @@
  * the user previews one and applies it (one undo step). No diagnostic is hidden or softened (ADR-008). A repair that
  * moves a piece carries its whole group and its connected pieces, as a drag does (ADR-176); one they cannot follow
  * is listed refused, with the reason, and cannot be applied.
+ * ADR-204: a depth or height mismatch between neighbours (ADR-100) is repaired by making one piece as deep or as high as
+ * the other, both ways; a size-locked size gets none, a size bound to a variable is listed refused, and linked copies
+ * follow (ADR-111).
  */
 import { carryUnits } from './connections';
 import { t as tx } from './i18n';
+import { propagateLinks } from './linked';
+import { resizeProduct } from './pieceSize';
+import { isAxisLocked } from './sizeLock';
+import { bindingOf } from './variables';
 import { overlapsBox } from './shape';
 import {
   buildProjectModel,
@@ -49,8 +56,14 @@ export const applicable = (r: Repair) => !r.refused;
 /** At most this many repairs are listed for one problem, smallest first. */
 export const MAX_REPAIRS = 4;
 
-/** The codes repairs exist for (ADR-071). */
-export const REPAIRABLE = new Set(['pieces-overlap', 'opening-blocked', 'outside-room']);
+/** The codes repairs exist for (ADR-071; the depth and height matches ADR-204). */
+export const REPAIRABLE = new Set([
+  'pieces-overlap',
+  'opening-blocked',
+  'outside-room',
+  'compat-depth-match',
+  'compat-height-match',
+]);
 
 /** A problem with a repair family (ADR-071): an overlap, a front blocked by another piece, a piece outside the room. */
 export const mayRepair = (d: Diagnostic) =>
@@ -114,6 +127,8 @@ type Candidate = Omit<Repair, 'project' | 'preview' | 'id' | 'refused'> & {
   added?: string;
   /** The piece the repair moves: its group and connected pieces follow it (ADR-176). */
   lead: string;
+  /** Listed refused with this reason whatever it would do (ADR-204: a size bound to a variable). */
+  refusedWhy?: string;
 };
 
 const side = (axis: 'x' | 'z', s: number) =>
@@ -245,6 +260,52 @@ function fillerCandidate(
   };
 }
 
+/**
+ * Make `pc` as deep (or high) as `other` (ADR-204): its carcass depth set to the other's, or its height changed by the
+ * difference of their outside heights. None for a size-locked size (ADR-122, ADR-171); refused for a size bound to a
+ * variable (ADR-166). Linked copies take the same change (ADR-111).
+ */
+function matchCandidate(
+  project: Project,
+  pc: PlacedPiece,
+  other: PlacedPiece,
+  axis: 'depth' | 'height',
+): Candidate | null {
+  const p = pc.item.design.product,
+    o = other.item.design.product;
+  if (
+    (p.kind !== 'cabinet' && p.kind !== 'corner') ||
+    (o.kind !== 'cabinet' && o.kind !== 'corner')
+  )
+    return null;
+  if (isAxisLocked(pc.item, axis)) return null;
+  const from = axis === 'depth' ? p.params.depth : p.params.height;
+  const to = axis === 'depth' ? o.params.depth : p.params.height + (other.bounds.h - pc.bounds.h);
+  if (to === from || to <= 0) return null;
+  const vars = {
+    name: pieceName(project, pc.item.id),
+    mm: to,
+    other: pieceName(project, other.item.id),
+  };
+  const label =
+    axis === 'depth'
+      ? tx('Make {name} {mm} mm deep like {other}', vars)
+      : tx('Make {name} {mm} mm high like {other}', vars);
+  const base = { label, distance: Math.abs(to - from), lead: pc.item.id };
+  if (bindingOf(pc.item, axis))
+    return {
+      ...base,
+      project,
+      refusedWhy: tx('The size follows a project variable; change the variable instead.'),
+    };
+  const design = { ...pc.item.design, product: resizeProduct(p, axis, to) };
+  const next: Project = {
+    ...project,
+    items: project.items.map((i) => (i.id === pc.item.id ? { ...i, design } : i)),
+  };
+  return { ...base, project: propagateLinks(project, next, true) };
+}
+
 function candidates(project: Project, pm: ProjectModel, d: Diagnostic): Candidate[] {
   const byId = new Map(pm.pieces.map((pc) => [pc.item.id, pc]));
   const ids = d.itemIds ?? [];
@@ -291,6 +352,15 @@ function candidates(project: Project, pm: ProjectModel, d: Diagnostic): Candidat
       const fc = fillerCandidate(project, door, other, s);
       if (fc) out.push(fc);
     }
+  } else if (
+    (d.code === 'compat-depth-match' || d.code === 'compat-height-match') &&
+    ids.length === 2
+  ) {
+    const [a, b] = ids.map((id) => byId.get(id));
+    if (!a || !b) return [];
+    const axis = d.code === 'compat-depth-match' ? 'depth' : 'height';
+    // Both ways: the second piece like the first, then the first like the second; sorted by the change in mm.
+    out.push(matchCandidate(project, b, a, axis), matchCandidate(project, a, b, axis));
   } else if (d.code === 'outside-room' && ids.length === 1) {
     const pc = byId.get(ids[0]);
     const room = project.room;
@@ -363,6 +433,21 @@ export function repairsFor(
     if (ok >= max) break;
     if (seen.has(c.label)) continue;
     seen.add(c.label);
+    // A size bound to a variable (ADR-204): listed refused with the reason, never applied.
+    if (c.refusedWhy) {
+      if (refused >= max) continue;
+      refused++;
+      out.push({
+        id: `r${out.length}`,
+        label: c.label,
+        distance: c.distance,
+        project,
+        preview: [],
+        refused: c.refusedWhy,
+      });
+      continue;
+    }
+
     // The whole group and the connected pieces follow the moved piece (ADR-176).
     const carried = carryUnits(project, c.project, [c.lead]);
     if (carried.reason) {

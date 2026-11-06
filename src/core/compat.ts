@@ -56,7 +56,7 @@ export interface CompatRule {
   messages: { snap?: string; checks?: string };
   /** A refusal named even when the piece snaps to something else (rules about what pieces are, not their faces). */
   namedWhenSnapped?: boolean;
-  /** ADR-071 repairs that may fix it (none exist for these rules yet, G-104). */
+  /** ADR-071 repairs that may fix it (the depth and height matches since ADR-204). */
   repairs: string[];
 }
 
@@ -110,7 +110,7 @@ export const COMPAT_RULES: readonly CompatRule[] = [
       snap: '{reason}',
       checks: t('{a} and {b} stand side by side with different depths ({reason} mm); {text}.'),
     },
-    repairs: [],
+    repairs: ['match-depth'],
   },
   {
     id: 'height-match',
@@ -127,7 +127,7 @@ export const COMPAT_RULES: readonly CompatRule[] = [
     messages: {
       checks: t('{a} and {b} are under one worktop with different heights ({reason} mm); {text}.'),
     },
-    repairs: [],
+    repairs: ['match-height'],
   },
   {
     id: 'family',

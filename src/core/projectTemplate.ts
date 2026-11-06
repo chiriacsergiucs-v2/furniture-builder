@@ -3,7 +3,8 @@
  * relative to the leftmost-back piece (or to the room when the room is included); run parts are kept as a recipe
  * and suggested again when the template is used, so they always fit the pieces. Since schemaVersion 2 (ADR-170) a
  * template also keeps the project's variables, each piece's bindings and the connections between pieces (ADR-166,
- * ADR-168); a template with none of them stays version 1.
+ * ADR-168); a template with none of them stays version 1. Since schemaVersion 3 (ADR-204) it keeps the run handles
+ * and sinks (ADR-125) over template refs; a template without them stays version 1 or 2.
  */
 import { newId, validateDesign } from './design';
 import { applyBindings, type Binding, type ProjectVariable } from './variables';
@@ -14,7 +15,9 @@ import {
   type Placement,
   type Project,
   type QuarterTurn,
+  type RunHandle,
   type RunSettings,
+  type RunSink,
 } from './project';
 import { validateRoom, type Room } from './room';
 import type { Design, Mm } from './types';
@@ -35,9 +38,21 @@ export interface TemplateItem {
   bindings?: Binding[];
 }
 
-/** 1 = ADR-060; 2 = variables, bindings and connections (ADR-170). An older app refuses a version it does not know. */
-export const TEMPLATE_SCHEMA = 2 as const;
-export type TemplateSchemaVersion = 1 | typeof TEMPLATE_SCHEMA;
+/**
+ * 1 = ADR-060; 2 = variables, bindings and connections (ADR-170); 3 = run handles and sinks (ADR-204). An older app
+ * refuses a version it does not know.
+ */
+export const TEMPLATE_SCHEMA = 3 as const;
+export type TemplateSchemaVersion = 1 | 2 | typeof TEMPLATE_SCHEMA;
+/** The version that first stores variables, bindings and connections (ADR-170). */
+const VARS_SINCE = 2;
+/** The version that first stores run handles and sinks (ADR-204). */
+const RUN_EXTRAS_SINCE = 3;
+
+/** A run handle kept in a template (ADR-204): `from` and `own` are template refs; a new id is given on use. */
+export type TemplateRunHandle = Omit<RunHandle, 'id'>;
+/** A sink kept in a template (ADR-204): `baseId` is a template ref; a new id is given on use. */
+export type TemplateSink = Omit<RunSink, 'id'>;
 
 export interface ProjectTemplate {
   kind: 'project-template';
@@ -58,6 +73,36 @@ export interface ProjectTemplate {
   variables?: ProjectVariable[];
   /** Connections between pieces (ADR-168), over template refs (schemaVersion 2). */
   connections?: { itemIds: [string, string] }[];
+  /** Run handles (ADR-125), over template refs (schemaVersion 3, ADR-204). */
+  runHandles?: TemplateRunHandle[];
+  /** Sinks over base units (ADR-125), over template refs (schemaVersion 3, ADR-204). */
+  sinks?: TemplateSink[];
+}
+
+/**
+ * Run handles and sinks with their piece ids mapped through `ids` (ADR-204): ids not mapped (pieces not there any
+ * more) are dropped, a handle left with no piece and a sink over a gone base go. `fresh` gives each a new id.
+ */
+export function remapRunExtras(
+  handles: readonly TemplateRunHandle[] | undefined,
+  sinks: readonly TemplateSink[] | undefined,
+  ids: ReadonlyMap<string, string>,
+): { runHandles: RunHandle[]; sinks: RunSink[] } {
+  const map = (xs: readonly string[]) =>
+    xs.map((x) => ids.get(x)).filter((x): x is string => x !== undefined);
+  const runHandles = (handles ?? [])
+    .map((rh) => ({
+      id: newId(),
+      from: map(rh.from),
+      handle: { ...rh.handle },
+      ...(rh.height !== undefined ? { height: rh.height } : {}),
+      ...(rh.own ? { own: map(rh.own) } : {}),
+    }))
+    .filter((rh) => rh.from.length);
+  const out = (sinks ?? [])
+    .filter((sk) => ids.has(sk.baseId))
+    .map((sk) => ({ id: newId(), baseId: ids.get(sk.baseId)!, w: sk.w, d: sk.d }));
+  return { runHandles, sinks: out };
 }
 
 /**
@@ -93,10 +138,26 @@ export function templateFromProject(
     ?.filter((c) => refs.has(c.itemIds[0]) && refs.has(c.itemIds[1]))
     .map((c) => ({ itemIds: [c.itemIds[0], c.itemIds[1]] as [string, string] }));
   const bound = p.items.some((i) => i.bindings?.length);
+  // Run handles and sinks over template refs (ADR-204): pieces no longer there are dropped.
+  const extras = remapRunExtras(p.runHandles, p.sinks, refs);
+  const runHandles: TemplateRunHandle[] = extras.runHandles.map(({ id: _i, ...rh }) => {
+    void _i;
+    return rh;
+  });
+  const sinks: TemplateSink[] = extras.sinks.map(({ id: _i, ...sk }) => {
+    void _i;
+    return sk;
+  });
   return {
     kind: 'project-template',
-    // Variables, bindings or connections need version 2 (ADR-170); without them an older app can still read it.
-    schemaVersion: variables || connections?.length || bound ? TEMPLATE_SCHEMA : 1,
+    // Run handles or sinks need version 3 (ADR-204); variables, bindings or connections version 2 (ADR-170); without
+    // them an older app can still read it.
+    schemaVersion:
+      runHandles.length || sinks.length
+        ? TEMPLATE_SCHEMA
+        : variables || connections?.length || bound
+          ? VARS_SINCE
+          : 1,
     id: newId(),
     name,
     description: opts.description ?? '',
@@ -115,6 +176,8 @@ export function templateFromProject(
     })),
     ...(variables ? { variables } : {}),
     ...(connections?.length ? { connections } : {}),
+    ...(runHandles.length ? { runHandles } : {}),
+    ...(sinks.length ? { sinks } : {}),
     ...(p.runParts?.length || p.runSettings
       ? {
           runRecipe: {
@@ -154,13 +217,16 @@ export function projectFromTemplate(t: ProjectTemplate, name = t.name): Project 
       id: newId(),
       itemIds: [ids.get(c.itemIds[0])!, ids.get(c.itemIds[1])!] as [string, string],
     }));
+  const extras = remapRunExtras(t.runHandles, t.sinks, ids);
   const extended =
     items.some((i) => i.linkId || i.angle || i.bindings) ||
     t.variables?.length ||
-    connections.length;
+    connections.length ||
+    extras.runHandles.length ||
+    extras.sinks.length;
   const base: Project = {
-    // Linked copies, angled pieces, bindings and connections need the project version that stores them (ADR-111,
-    // ADR-121, ADR-166, ADR-168).
+    // Linked copies, angled pieces, bindings, connections, run handles and sinks need the project version that stores
+    // them (ADR-111, ADR-121, ADR-166, ADR-168, ADR-125).
     schemaVersion: extended ? PROJECT_SCHEMA : 1,
     id: newId(),
     name,
@@ -171,6 +237,8 @@ export function projectFromTemplate(t: ProjectTemplate, name = t.name): Project 
     ...(t.room ? { room: structuredClone(t.room) } : {}),
     ...(t.variables?.length ? { variables: structuredClone(t.variables) } : {}),
     ...(connections.length ? { connections } : {}),
+    ...(extras.runHandles.length ? { runHandles: extras.runHandles } : {}),
+    ...(extras.sinks.length ? { sinks: extras.sinks } : {}),
   };
   if (!t.runRecipe) return t.variables?.length ? applyBindings(base) : base;
   const removed = remapKeys(t.runRecipe.removed ?? [], ids);
@@ -195,10 +263,11 @@ export function validateProjectTemplate(t: unknown): string[] {
   const errs: string[] = [];
   if (
     t.kind !== 'project-template' ||
-    (t.schemaVersion !== 1 && t.schemaVersion !== TEMPLATE_SCHEMA)
+    (t.schemaVersion !== 1 && t.schemaVersion !== VARS_SINCE && t.schemaVersion !== TEMPLATE_SCHEMA)
   )
     errs.push('Not a project template');
-  const v2 = t.schemaVersion === TEMPLATE_SCHEMA;
+  const v2 = typeof t.schemaVersion === 'number' && t.schemaVersion >= VARS_SINCE;
+  const v3 = typeof t.schemaVersion === 'number' && t.schemaVersion >= RUN_EXTRAS_SINCE;
   if (typeof t.id !== 'string' || !t.id || typeof t.name !== 'string' || !t.name)
     errs.push('Missing template id or name');
   if (typeof t.description !== 'string') errs.push('Missing description');
@@ -251,14 +320,14 @@ export function validateProjectTemplate(t: unknown): string[] {
       errs.push(`${name}: invalid link`);
     // Bindings need version 2; their shape and targets are checked on the project the template makes.
     if (it.bindings !== undefined && (!v2 || !Array.isArray(it.bindings)))
-      errs.push(`${name}: bindings need template schemaVersion ${TEMPLATE_SCHEMA}`);
+      errs.push(`${name}: bindings need template schemaVersion ${VARS_SINCE}`);
   }
   if (t.variables !== undefined && (!v2 || !Array.isArray(t.variables)))
-    errs.push(`Variables need template schemaVersion ${TEMPLATE_SCHEMA}`);
+    errs.push(`Variables need template schemaVersion ${VARS_SINCE}`);
   if (t.connections !== undefined) {
     const pairs = new Set<string>();
     if (!v2 || !Array.isArray(t.connections))
-      errs.push(`Connections need template schemaVersion ${TEMPLATE_SCHEMA}`);
+      errs.push(`Connections need template schemaVersion ${VARS_SINCE}`);
     else
       for (const c of t.connections) {
         const ids = isObj(c) && Array.isArray(c.itemIds) ? (c.itemIds as unknown[]) : null;
@@ -272,6 +341,31 @@ export function validateProjectTemplate(t: unknown): string[] {
         }
         pairs.add(key);
       }
+  }
+  // Run handles and sinks (ADR-204): version 3, every ref a template item; their shape is checked on the project.
+  const allRefs = (v: unknown) =>
+    Array.isArray(v) && v.every((x) => typeof x === 'string' && refs.has(x));
+  if (t.runHandles !== undefined) {
+    if (!v3 || !Array.isArray(t.runHandles))
+      errs.push(`Run handles need template schemaVersion ${RUN_EXTRAS_SINCE}`);
+    else
+      for (const rh of t.runHandles)
+        if (
+          !isObj(rh) ||
+          !allRefs(rh.from) ||
+          !(rh.from as string[]).length ||
+          (rh.own !== undefined && !allRefs(rh.own)) ||
+          !isObj(rh.handle)
+        )
+          errs.push('Invalid template run handle');
+  }
+  if (t.sinks !== undefined) {
+    if (!v3 || !Array.isArray(t.sinks))
+      errs.push(`Sinks need template schemaVersion ${RUN_EXTRAS_SINCE}`);
+    else
+      for (const sk of t.sinks)
+        if (!isObj(sk) || typeof sk.baseId !== 'string' || !refs.has(sk.baseId))
+          errs.push('Invalid template sink');
   }
   const rr = t.runRecipe;
   if (rr !== undefined) {

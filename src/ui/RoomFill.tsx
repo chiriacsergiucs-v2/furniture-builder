@@ -8,6 +8,8 @@ import { useId, useMemo, useState } from 'react';
 import { t } from '../core/i18n';
 import {
   BASE_HEIGHT,
+  TALL_HEIGHT,
+  WALL_DEPTH,
   WALL_HEIGHT,
   MIXES_FIRST,
   WALL_DEFAULTS,
@@ -20,6 +22,7 @@ import {
   shapeOutline,
   wallLength,
   type Room,
+  type RoomFeature,
   type RoomShape,
   type ShapeSizes,
 } from '../core/room';
@@ -29,6 +32,7 @@ import { useDesign } from '../store/designStore';
 import { Segmented, Steps } from './controls';
 import { Dialog } from './Dialogs';
 import { Icon } from './icons';
+import { RoomFeatures } from './RoomFeatures';
 
 type StepId = 'room' | 'walls' | 'mixes' | 'refine';
 const STEPS: { id: StepId; label: string }[] = [
@@ -60,6 +64,11 @@ interface Form {
   wallRow: WallRow;
   wallHeight: string;
   corner: CornerKind;
+  /** Tall cabinet height and wall cabinet depth (ADR-204). */
+  tallHeight: string;
+  wallDepth: string;
+  /** The room's doors, windows and other features (ADR-204). */
+  features: RoomFeature[];
 }
 
 const START: Form = {
@@ -83,12 +92,15 @@ const START: Form = {
   wallRow: 'always',
   wallHeight: String(WALL_HEIGHT),
   corner: 'blind',
+  tallHeight: String(TALL_HEIGHT),
+  wallDepth: String(WALL_DEPTH),
+  features: [],
 };
 
 const num = (s: string) => Number(s.trim());
 const opt = (s: string) => (s.trim() === '' ? undefined : num(s));
 
-/** The room from the form: a ready shape and its sizes (ADR-059), no openings. */
+/** The room from the form: a ready shape and its sizes (ADR-059), with its doors, windows and features (ADR-204). */
 function roomOf(f: Form): Room {
   const sizes: ShapeSizes = {
     width: num(f.width),
@@ -100,7 +112,7 @@ function roomOf(f: Form): Room {
   return {
     height: num(f.roomHeight),
     outline: shapeOutline(f.shape, sizes),
-    features: [],
+    features: f.features,
     shape: { kind: f.shape, sizes },
   };
 }
@@ -119,6 +131,8 @@ function toInput(f: Form, room: Room, walls: number[]): RoomInput {
     atLeast: { shelves: opt(f.shelves), drawers: opt(f.drawers), door: opt(f.door) },
     wallRow: f.wallRow,
     wallHeight: opt(f.wallHeight),
+    tallHeight: opt(f.tallHeight),
+    wallDepth: opt(f.wallDepth),
     corner: f.corner,
   };
 }
@@ -297,9 +311,7 @@ function RoomFill({
         <section aria-label={t('Room')}>
           <h3>{t('Room')}</h3>
           <p className="hint">
-            {t(
-              'A ready shape and its sizes, in mm (ADR-059). Doors and windows come from a project’s own room: open the project and use Fill the room from its ⋯ menu.',
-            )}
+            {t('A ready shape and its sizes, in mm, with its doors, windows and other features.')}
           </p>
           <Segmented
             label={t('Shape')}
@@ -319,6 +331,10 @@ function RoomFill({
               </>
             )}
           </div>
+          <RoomFeatures
+            room={room}
+            onChange={(r) => setForm((f) => ({ ...f, features: r.features }))}
+          />
         </section>
       )}
       {step === 'walls' && (
@@ -403,6 +419,16 @@ function RoomFill({
               value={form.wallHeight}
               onChange={set('wallHeight')}
               hint={t('Wall cabinet tops sit at the wall height.')}
+            />
+            <Field
+              label={t('Tall cabinet height')}
+              value={form.tallHeight}
+              onChange={set('tallHeight')}
+            />
+            <Field
+              label={t('Wall cabinet depth')}
+              value={form.wallDepth}
+              onChange={set('wallDepth')}
             />
           </div>
           <Segmented

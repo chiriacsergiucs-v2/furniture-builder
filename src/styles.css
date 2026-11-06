@@ -4799,11 +4799,14 @@ button.tile:hover {
   align-items: center;
   gap: var(--s-2);
 }
-/* Five "Add …" buttons (ADR-072) wrap instead of widening the side panel on a phone. */
-.room .split-actions {
+/* Five "Add …" buttons (ADR-072) wrap instead of widening the side panel on a phone; also in Fill the room's Room
+   step (ADR-204). */
+.room .split-actions,
+.room-fill .split-actions {
   flex-wrap: wrap;
 }
-.room .room-feature {
+.room .room-feature,
+.room-fill .room-feature {
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: var(--s-2);

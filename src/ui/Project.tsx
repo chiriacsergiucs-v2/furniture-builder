@@ -46,6 +46,7 @@ import type { ProjectTemplate } from '../core/projectTemplate';
 import { useDesign } from '../store/designStore';
 import { Group, InfoTip, MmField, Segmented, Select, Toggle } from './controls';
 import { WallBackground } from './WallBackground';
+import { RoomFeatures } from './RoomFeatures';
 import { pictureRect } from '../core/wallPicture';
 import { pictureKey, useWallPictureUrls } from './wallPictures';
 import {
@@ -78,8 +79,6 @@ import {
 import {
   DEFAULT_ROOM_HEIGHT,
   doorSwing,
-  DEFAULT_OUTLET_ZONE,
-  DEFAULT_PIPE_ZONE,
   featureBox,
   keepWallFinishes,
   outlineIssues,
@@ -91,11 +90,9 @@ import {
   type WallFinish,
   wallLength,
   type Room,
-  type RoomFeature,
   type RoomShape,
   type ShapeSizes,
 } from '../core/room';
-import { newId } from '../core/design';
 import { Dim, DimV, outlinePoints } from './Elevation';
 import { Icon } from './icons';
 import { InsideEditor } from './Inspector';
@@ -2815,22 +2812,6 @@ const SHAPES: { value: RoomShape; label: string }[] = [
   { value: 'u-shape', label: t('U-shape') },
   { value: 'alcove', label: t('Alcove') },
 ];
-/** Default labels of new room features: stored in the project, so kept in English. */
-const FEATURE_KIND: Record<RoomFeature['kind'], string> = {
-  door: 'Door',
-  window: 'Window',
-  obstacle: 'Obstacle',
-  pipe: 'Pipe',
-  outlet: 'Outlet',
-};
-const REMOVE_FEATURE: Record<RoomFeature['kind'], string> = {
-  door: t('Remove door'),
-  window: t('Remove window'),
-  obstacle: t('Remove obstacle'),
-  pipe: t('Remove pipe'),
-  outlet: t('Remove outlet'),
-};
-
 /** The room (ADR-058/0056): shape and walls, height, doors, windows and obstacles, checked against the pieces. */
 function RoomSection() {
   const project = useDesign((s) => s.project)!;
@@ -2869,66 +2850,6 @@ function RoomSection() {
   };
   const issues = room ? outlineIssues(room.outline) : [];
   const walls = room ? room.outline.map((_, i) => i) : [];
-  const addFeature = (kind: RoomFeature['kind']) => {
-    if (!room) return;
-    const n = room.features.filter((f) => f.kind === kind).length + 1;
-    const f: RoomFeature =
-      kind === 'door'
-        ? {
-            id: newId(),
-            kind,
-            wall: room.outline.length - 1,
-            from: 100,
-            width: 800,
-            sill: 0,
-            height: 2000,
-            depth: 0,
-            label: `Door ${n}`,
-          }
-        : kind === 'window'
-          ? {
-              id: newId(),
-              kind,
-              wall: 0,
-              from: 500,
-              width: 1000,
-              sill: 900,
-              height: 1200,
-              depth: 0,
-              label: `Window ${n}`,
-            }
-          : kind === 'pipe' || kind === 'outlet'
-            ? {
-                // A zone on the wall (ADR-072); default sizes are the ADR's open question, edited here.
-                id: newId(),
-                kind,
-                wall: 0,
-                from: kind === 'pipe' ? 200 : 400,
-                width: kind === 'pipe' ? DEFAULT_PIPE_ZONE : DEFAULT_OUTLET_ZONE,
-                sill: 300,
-                height: kind === 'pipe' ? DEFAULT_PIPE_ZONE : DEFAULT_OUTLET_ZONE,
-                depth: 0,
-                label: `${FEATURE_KIND[kind]} ${n}`,
-              }
-            : {
-                id: newId(),
-                kind,
-                wall: 0,
-                from: 0,
-                width: 600,
-                sill: 100,
-                height: 600,
-                depth: 100,
-                label: `Obstacle ${n}`,
-              };
-    setRoom({ ...room, features: [...room.features, f] });
-  };
-  const setFeature = (id: string, patch: Partial<RoomFeature>) =>
-    room &&
-    setRoom({
-      ...room,
-      features: room.features.map((f) => (f.id === id ? { ...f, ...patch } : f)),
-    });
   return (
     <section className="section room" aria-label={t('Room')}>
       {!room ? (
@@ -3089,128 +3010,7 @@ function RoomSection() {
                 <Icon name="pencil" className="sm" />
                 {t('Draw the room again')}
               </button>
-              <h4 className="list-head">{t('Doors, windows, obstacles, pipes and outlets')}</h4>
-              {room.features.length === 0 && <p className="hint">{t('None yet.')}</p>}
-              {room.features.map((f) => (
-                <fieldset key={f.id} className="room-feature" aria-label={tr(f.label)}>
-                  <legend>{tr(f.label)}</legend>
-                  <Select
-                    label={t('On')}
-                    value={f.wall === null ? 'floor' : String(f.wall)}
-                    options={[
-                      ...walls.map((i) => ({
-                        value: String(i),
-                        label: t('Wall {n}', { n: i + 1 }),
-                      })),
-                      ...(f.kind === 'obstacle'
-                        ? [{ value: 'floor', label: t('Free-standing') }]
-                        : []),
-                    ]}
-                    onChange={(v) =>
-                      setFeature(
-                        f.id,
-                        v === 'floor' ? { wall: null, x: 0, z: 0 } : { wall: Number(v) },
-                      )
-                    }
-                  />
-                  {f.wall === null ? (
-                    <>
-                      <MmField
-                        label={t('From left')}
-                        value={f.x ?? 0}
-                        min={-30000}
-                        max={30000}
-                        onChange={(v) => setFeature(f.id, { x: v })}
-                      />
-                      <MmField
-                        label={t('From back')}
-                        value={f.z ?? 0}
-                        min={-30000}
-                        max={30000}
-                        onChange={(v) => setFeature(f.id, { z: v })}
-                      />
-                    </>
-                  ) : (
-                    <MmField
-                      label={t("From the wall's start")}
-                      value={f.from}
-                      min={0}
-                      max={30000}
-                      onChange={(v) => setFeature(f.id, { from: v })}
-                    />
-                  )}
-                  <MmField
-                    label={t('Width')}
-                    value={f.width}
-                    min={10}
-                    max={30000}
-                    onChange={(v) => setFeature(f.id, { width: v })}
-                  />
-                  {f.kind !== 'door' && (
-                    <MmField
-                      label={f.kind === 'window' ? t('Sill height') : t('Bottom above floor')}
-                      value={f.sill}
-                      min={0}
-                      max={10000}
-                      onChange={(v) => setFeature(f.id, { sill: v })}
-                    />
-                  )}
-                  <MmField
-                    label={t('Height')}
-                    value={f.height}
-                    min={10}
-                    max={10000}
-                    onChange={(v) => setFeature(f.id, { height: v })}
-                  />
-                  {f.kind === 'obstacle' && (
-                    <MmField
-                      label={t('Comes out')}
-                      value={f.depth}
-                      min={1}
-                      max={30000}
-                      onChange={(v) => setFeature(f.id, { depth: v })}
-                    />
-                  )}
-                  <button
-                    type="button"
-                    className="danger-link"
-                    onClick={() =>
-                      setRoom({ ...room, features: room.features.filter((x) => x.id !== f.id) })
-                    }
-                  >
-                    {REMOVE_FEATURE[f.kind]}
-                  </button>
-                </fieldset>
-              ))}
-              <div className="split-actions">
-                <button type="button" className="btn outline sm" onClick={() => addFeature('door')}>
-                  {t('Add door')}
-                </button>
-                <button
-                  type="button"
-                  className="btn outline sm"
-                  onClick={() => addFeature('window')}
-                >
-                  {t('Add window')}
-                </button>
-                <button
-                  type="button"
-                  className="btn outline sm"
-                  onClick={() => addFeature('obstacle')}
-                >
-                  {t('Add obstacle')}
-                </button>
-                <button type="button" className="btn outline sm" onClick={() => addFeature('pipe')}>
-                  {t('Add pipe')}
-                </button>
-                <button
-                  type="button"
-                  className="btn outline sm"
-                  onClick={() => addFeature('outlet')}
-                >
-                  {t('Add outlet')}
-                </button>
-              </div>
+              <RoomFeatures room={room} onChange={setRoom} />
               <button
                 type="button"
                 className="danger-link"

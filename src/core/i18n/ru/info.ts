@@ -24,8 +24,8 @@ export const ru_info = {
   'Several pieces placed in one room.': 'Несколько изделий, расставленных в одной комнате.',
   'Create a project from a project template': 'Создать проект из шаблона проекта',
   'Fill a wall': 'Заполнить стену',
-  'Enter a wall width and pick a suggested mix of tall, base and wall cabinets that fills it exactly.':
-    'Введите ширину стены и выберите предложенный набор пеналов, нижних и навесных шкафов, который заполняет её точно.',
+  'Enter a wall width and pick a suggested mix of tall, base and wall cabinets that fills it exactly; Refine sets the tall cabinet height and wall cabinet depth, mixes may give each base kind its own width, and equal fronts may share carcasses of up to 4 fronts.':
+    'Введите ширину стены и выберите предложенный набор пеналов, нижних и навесных шкафов, который заполняет её точно; в уточнении задаются высота пеналов и глубина навесных шкафов, у каждого вида нижних шкафов может быть своя ширина, а одинаковые фасады могут делить корпуса до 4 фасадов.',
   'Make a new piece inside a project': 'Создать новое изделие внутри проекта',
   Composition: 'Компоновка',
   'Dividing spaces': 'Деление пространства',
@@ -237,8 +237,8 @@ export const ru_info = {
   'Tapping a check selects the pieces and shows where it is.':
     'Касание проверки выделяет изделия и показывает место.',
   'Previewed repairs': 'Исправления с предпросмотром',
-  'A repair moves the whole group and connected pieces together; one they cannot follow is shown refused, with the reason.':
-    'Исправление перемещает всю группу и соединённые изделия вместе; исправление, за которым они не могут последовать, показано отклонённым, с причиной.',
+  'A repair moves the whole group and connected pieces together; one they cannot follow is shown refused, with the reason. A depth or height mismatch between neighbours is repaired by matching one to the other.':
+    'Исправление перемещает всю группу и соединённые изделия вместе; исправление, за которым они не могут последовать, показано отклонённым, с причиной. Разницу глубины или высоты соседей исправляют, выравнивая одно изделие по другому.',
   Views: 'Виды',
   Drawings: 'Чертежи',
   'Compose and Build & Preview modes': 'Режимы «Компоновка» и «Сборка и просмотр»',
@@ -396,8 +396,9 @@ export const ru_info = {
   'Turn to any whole degree with a handle': 'Поворот на любой целый градус ручкой',
   'Drag the round handle in front of the selected piece; it snaps to quarter turns, Shift steps by 15°, [ and ] turn by 1°.':
     'Перетащите круглую ручку перед выбранным изделием; она примагничивается к четвертям оборота, Shift шагает по 15°, [ и ] поворачивают на 1°.',
-  'Copies of the pieces with their positions, run-part recipe, connections, variables and bindings; pieces inserted into a project take its settings.':
-    'Копии изделий с их положениями, рецептом частей ряда, соединениями, переменными и привязками; изделия, вставленные в проект, принимают его настройки.',
+  'Copies of the pieces with their positions, run-part recipe, connections, variables, bindings, run handles and sinks; pieces inserted into a project take its settings.':
+    'Копии изделий с их положениями, рецептом частей ряда, соединениями, переменными, привязками, ручками ряда и мойками; изделия, вставленные в проект, принимают его настройки.',
+
   'Lock a piece in place, its turn, or each of its sizes':
     'Закрепить изделие на месте, его поворот или каждый размер',
   'Lock keeps it where it is; Lock turn, Lock width, Lock height, Lock depth and Lock size (all three) in More actions. A locked value outranks variables, Replace, linked copies and project settings.':
@@ -409,8 +410,8 @@ export const ru_info = {
   'A chip in the editor header with the estimate of what is shown, updated on every change; tap it to open the Shopping list.':
     'Значок в шапке редактора с оценкой того, что показано, обновляется при каждом изменении; нажмите, чтобы открыть список покупок.',
   'Fill the room': 'Заполнить комнату',
-  'Pick a room shape or use the project’s room: suggested mixes for every ticked wall at once, doors and windows kept free, a corner cabinet at each inside corner with a wall corner cabinet above it, wall rows split at windows; each mix checked as a project.':
-    'Выберите форму комнаты или возьмите комнату проекта: наборы сразу для всех отмеченных стен, двери и окна остаются свободными, угловой шкаф в каждом внутреннем углу и навесной угловой шкаф над ним, ряды навесных шкафов разделены у окон; каждый набор проверен как проект.',
+  'Pick a room shape with its doors and windows, or use the project’s room: suggested mixes for every ticked wall at once, doors and windows kept free, a corner cabinet at each inside corner with a wall corner cabinet above it, wall rows split at windows; each mix checked as a project.':
+    'Выберите форму комнаты с её дверями и окнами или возьмите комнату проекта: наборы сразу для всех отмеченных стен, двери и окна остаются свободными, угловой шкаф в каждом внутреннем углу и навесной угловой шкаф над ним, ряды навесных шкафов разделены у окон; каждый набор проверен как проект.',
   'Assembly steps': 'Шаги сборки',
   'Steps per piece, labelled guidance: prepare the parts, fit hardware to the sides, assemble, then fit drawers and doors. Each step has an instruction, its parts, joints, fasteners and hardware; identical drawers are listed once. Show step lights the parts in 3D; printed with each piece’s front view in the print language.':
     'Шаги по каждому изделию, как рекомендация: подготовка деталей, фурнитура на боковины, сборка, затем установка ящиков и дверей. У каждого шага есть указание, его детали, соединения, крепёж и фурнитура; одинаковые ящики перечислены один раз. «Показать шаг» подсвечивает детали в 3D; печатается с видом спереди каждого изделия на языке печати.',

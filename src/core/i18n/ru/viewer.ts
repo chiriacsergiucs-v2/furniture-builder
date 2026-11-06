@@ -110,6 +110,10 @@ export const ru_viewer = {
     'Все дверцы одной ширины; внутреннее наполнение остаётся пустым, чтобы настроить позже.',
   'Wall cabinet height': 'Высота настенных шкафов',
   'Wall cabinet tops sit at the wall height.': 'Верх настенных шкафов — на высоте стены.',
+  // ADR-204: Refine fields of Fill a wall and Fill the room.
+  'Tall cabinet height': 'Высота пеналов',
+  'Wall cabinet depth': 'Глубина настенных шкафов',
+
   'Wall cabinets': 'Навесные шкафы',
   Any: 'Любые',
   Always: 'Всегда',
@@ -264,8 +268,8 @@ export const ru_viewer = {
   Room: 'Комната',
   Walls: 'Стены',
   'Fill the room steps': 'Шаги заполнения комнаты',
-  'A ready shape and its sizes, in mm (ADR-059). Doors and windows come from a project’s own room: open the project and use Fill the room from its ⋯ menu.':
-    'Готовая форма и её размеры в мм (ADR-059). Двери и окна берутся из комнаты проекта: откройте проект и выберите «Заполнить комнату» в его меню ⋯.',
+  'A ready shape and its sizes, in mm, with its doors, windows and other features.':
+    'Готовая форма и её размеры в мм, с дверями, окнами и другими элементами.',
   Shape: 'Форма',
   Rectangle: 'Прямоугольник',
   L: 'Г',

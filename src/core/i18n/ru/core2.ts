@@ -126,8 +126,10 @@ export const ru_core2 = {
     'Стена ({w} мм) уже мин. ширины изделия, {min} мм.',
   'These settings need more than {max} pieces; raise the min or max piece width, or lower the counts.':
     'Для этих настроек нужно больше {max} изделий; увеличьте мин. или макс. ширину изделия либо уменьшите количества.',
-  'With {n} equal fronts each front is about {each} mm; no carcass of 1 or 2 fronts is between {min} and {max} mm with these settings.':
-    'При {n} одинаковых фасадах каждый около {each} мм; при этих настройках нет корпуса на 1 или 2 фасада шириной от {min} до {max} мм.',
+  'With {n} equal fronts each front is about {each} mm; no carcass of 1 to 4 fronts is between {min} and {max} mm with these settings.':
+    'При {n} одинаковых фасадах каждый около {each} мм; при этих настройках нет корпуса на 1–4 фасада шириной от {min} до {max} мм.',
+  'More than {max} ways fill this wall; only the first {max} were tried. Narrow the width range or set the counts to see the rest.':
+    'Эту стену можно заполнить более чем {max} способами; проверены только первые {max}. Сузьте диапазон ширины или задайте количества, чтобы увидеть остальные.',
   'Every mix that fits has a problem in a piece (check the depth and heights).':
     'В каждом подходящем варианте у какого-то изделия есть проблема (проверьте глубину и высоты).',
   'No mix fills {w} mm with pieces {min}–{max} mm wide and these Refine settings.':
@@ -305,6 +307,12 @@ export const ru_core2 = {
   'Move {name} {mm} mm {side}': 'Сдвинуть «{name}» на {mm} мм {side}',
   'Hang {name} {mm} mm higher': 'Повесить «{name}» на {mm} мм выше',
   'Hang {name} {mm} mm lower': 'Повесить «{name}» на {mm} мм ниже',
+  // ADR-204: match-the-neighbour repairs.
+  'Make {name} {mm} mm deep like {other}': 'Сделать «{name}» глубиной {mm} мм, как «{other}»',
+  'Make {name} {mm} mm high like {other}': 'Сделать «{name}» высотой {mm} мм, как «{other}»',
+  'The size follows a project variable; change the variable instead.':
+    'Размер следует переменной проекта; измените переменную.',
+
   'Move {name} {mm} mm {side} and add a {mm} mm filler':
     'Сдвинуть «{name}» на {mm} мм {side} и добавить доборную планку {mm} мм',
   '{mm} mm {side}': 'на {mm} мм {side}',

@@ -67,24 +67,21 @@ export const FEATURES: FeatureDomain[] = [
       {
         name: 'Create a project from a project template',
         detail:
-          'Copies of the pieces with their positions, run-part recipe, connections, variables and bindings; pieces inserted into a project take its settings.',
-        adrs: ['ADR-060', 'ADR-123', 'ADR-170', 'ADR-200'],
-        checked: '2026-11-06',
+          'Copies of the pieces with their positions, run-part recipe, connections, variables, bindings, run handles and sinks; pieces inserted into a project take its settings.',
+        adrs: ['ADR-060', 'ADR-123', 'ADR-170', 'ADR-200', 'ADR-204'],
       },
       {
         name: 'Fill a wall',
         detail:
-          'Enter a wall width and pick a suggested mix of tall, base and wall cabinets that fills it exactly.',
-        adrs: ['ADR-103', 'ADR-104'],
-        checked: '2026-11-05',
+          'Enter a wall width and pick a suggested mix of tall, base and wall cabinets that fills it exactly; Refine sets the tall cabinet height and wall cabinet depth, mixes may give each base kind its own width, and equal fronts may share carcasses of up to 4 fronts.',
+        adrs: ['ADR-103', 'ADR-104', 'ADR-204'],
       },
       { name: 'Make a new piece inside a project', adrs: ['ADR-107'], checked: '2026-11-05' },
       {
         name: 'Fill the room',
         detail:
-          'Pick a room shape or use the project’s room: suggested mixes for every ticked wall at once, doors and windows kept free, a corner cabinet at each inside corner with a wall corner cabinet above it, wall rows split at windows; each mix checked as a project.',
-        adrs: ['ADR-173', 'ADR-177'],
-        checked: '2026-11-05',
+          'Pick a room shape with its doors and windows, or use the project’s room: suggested mixes for every ticked wall at once, doors and windows kept free, a corner cabinet at each inside corner with a wall corner cabinet above it, wall rows split at windows; each mix checked as a project.',
+        adrs: ['ADR-173', 'ADR-177', 'ADR-204'],
       },
     ],
   },
@@ -684,9 +681,8 @@ export const FEATURES: FeatureDomain[] = [
       {
         name: 'Previewed repairs',
         detail:
-          'A repair moves the whole group and connected pieces together; one they cannot follow is shown refused, with the reason.',
-        adrs: ['ADR-071', 'ADR-176'],
-        checked: '2026-11-05',
+          'A repair moves the whole group and connected pieces together; one they cannot follow is shown refused, with the reason. A depth or height mismatch between neighbours is repaired by matching one to the other.',
+        adrs: ['ADR-071', 'ADR-176', 'ADR-204'],
       },
     ],
   },

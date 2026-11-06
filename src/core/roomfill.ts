@@ -238,8 +238,12 @@ const WALL_CORNER = {
   diagonal: 'corner-l-wall',
 } as const;
 
-/** The depth of the wall row's cabinets: the deepest wall-cabinet variant the row deals (ADR-104). */
-const wallRowDepth = (): Mm =>
+/**
+ * The depth of the wall row's cabinets: the wall cabinet depth from Refine (ADR-204), else the deepest wall-cabinet
+ * variant the row deals (ADR-104).
+ */
+export const wallRowDepth = (input: Pick<WallInput, 'wallDepth'> = {}): Mm =>
+  input.wallDepth ??
   Math.max(
     ...WALL_VARIANTS.map((v) => {
       const p = v.create!().product;
@@ -261,7 +265,8 @@ export function wallCornerPiece(
   const d = v.create();
   if (d.product.kind !== 'corner') return null;
   const p = d.product.params;
-  const depth = wallRowDepth();
+  const depth = wallRowDepth(input);
+
   const params: CornerParams = {
     ...p,
     depth,
