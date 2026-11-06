@@ -1,7 +1,8 @@
 # ADR-197: Speed up CI: parallel jobs, test shards, docs-only runs, caches and a deploy that waits on CI
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-05
+- Implemented: 2026-11-06 (Built and merged before shipping; CI run 42126747931 and Deploy run 42127180665 verified 2026-11-06)
 - Depends on: none
 - Design: n/a
 - Backlog: N202
@@ -79,11 +80,22 @@ The user's answers (2026-11-05, interactive), which are the approval:
 
 ## Done when
 
-- [ ] `pnpm lint` and `pnpm format:check` use their caches (second local run faster; `.eslintcache` ignored by git)
-- [ ] `pnpm build:ci` builds; `pnpm build` is unchanged
-- [ ] The three shards together run every test file once (passed counts add up to the unsharded run)
-- [ ] `scripts/test_ci_docs_only.py` (run by `pnpm docs:check`) passes: docs-only and full-run fixture lists
-- [ ] The pull request's CI run shows `checks`, `test (1)`, `test (2)`, `test (3)`, `build` and `verify` green,
+- [x] `pnpm lint` and `pnpm format:check` use their caches (second local run faster; `.eslintcache` ignored by git)
+- [x] `pnpm build:ci` builds; `pnpm build` is unchanged
+- [x] The three shards together run every test file once (passed counts add up to the unsharded run)
+- [x] `scripts/test_ci_docs_only.py` (run by `pnpm docs:check`) passes: docs-only and full-run fixture lists
+- [x] The pull request's CI run shows `checks`, `test (1)`, `test (2)`, `test (3)`, `build` and `verify` green,
       with its wall time compared to the 3 min 15 s baseline (run id in N197)
-- [ ] After merge: the push-to-main CI run triggers `Deploy GitHub Pages` through `workflow_run`, which builds
+- [x] After merge: the push-to-main CI run triggers `Deploy GitHub Pages` through `workflow_run`, which builds
       and publishes without lint, typecheck or test (not verifiable before the merge; run id in N197)
+
+## Shipping evidence (2026-11-06)
+
+Executed on main `dca2ad8`: `pnpm lint` 90 s cold, 3 s cached; `pnpm format:check` 13 s, then 8 s; `.eslintcache` in
+`.gitignore`; `pnpm build:ci` builds, and `pnpm build` is still `tsc -b && vite build`. Shards 1/2/3: 50 + 50 + 50 test
+files (150 in `tests/`), 359 + 457 + 388 = 1,204 passed, 1 skipped, which matches the 1,204 + 1 of the unsharded
+run reported on PR #169. `scripts/test_ci_docs_only.py`: 4 tests pass, also inside `pnpm docs:check`.
+Read from GitHub: PR #169 CI run 42126747931 had `ship-check`, `checks` (31 s), `test (1)` (69 s), `test (2)`
+(64 s), `test (3)` (71 s), `build` (23 s) and `verify` all green. Wall time was 1 min 24 s against the 3 min 15 s
+baseline. `Deploy GitHub Pages` run 42127180665 ran with event `workflow_run` on head `353108e`, after the CI on
+main, and succeeded.

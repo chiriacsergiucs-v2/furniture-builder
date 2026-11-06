@@ -30,7 +30,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-001: Board pictures only in 3D
 
-- Status: Open
+- Status: ADR-206
 - Origin: ADR-048, 2026-10-24 06:54 UTC; agent scoped it out
 - Missing: Front-view carcass panels already show the board picture; still plain colour or outline: door/drawer fronts in the front view, the front-view SVG download (patterns stripped, src/ui/shell/files.ts:31), catalog snapshots (src/core/snapshot.ts:273,312), the plan and cut sheets.
 - Request: “Render the furniture according to the selected material's color and structure”, then “any image as color/background for the material”.
@@ -44,10 +44,11 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Conflicts: ADR-048: decided catalog pictures and cut sheets use the picture's average colour.
 - Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): text partly wrong. The front view already fills carcass panels with the picture, rotated with the grain (src/ui/Elevation.tsx:51-61, :147-164, since 009173a). Still plain colour: fronts in the front view (outlines), the SVG download (patterns stripped, src/ui/shell/files.ts:30-34), catalog snapshots (src/core/snapshot.ts:266), the plan and cut sheets.
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: 2026-11-06: ADR-206 takes over fronts in the front view and the front-view SVG download; the plan, catalog pictures and cut sheets moved to G-413 (ADR-048 decided the average colour for catalog pictures and cut sheets).
 
 ### G-003: Materials fields overlap at 375 px
 
-- Status: Open
+- Status: ADR-202
 - Origin: ADR-048, 2026-10-24 08:27 UTC; agent scoped it out
 - Missing: At phone width the Materials row (Dialogs.tsx:362-390) collapses to a 36px 1fr grid (styles.css:2670-2672), so "Thickness" likely overlaps "Has grain"; not checked in a browser.
 - Request: Phone-first (CLAUDE.md: no overlap or sideways scroll at 390 px) (context, not a quote)
@@ -110,7 +111,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-007: Connector engine and stored connections
 
-- Status: Open
+- Status: ADR-207
 - Origin: Research, 2026-10-24 15:42 UTC; agent default, accepted by the user
 - Missing: Semantic connectors (typed joint points), an assembly graph beyond side-by-side pairs, and connector authoring are not built (stored side-by-side connections exist: ADR-168, ADR-170, ADR-179; see G-092, G-329).
 - Request: “Verify, then Quick wins, then Medium effort”; later “guided snapping” and “cross-family composition”.
@@ -124,10 +125,11 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Conflicts: none
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
 - Note: Re-checked 2026-11-05 on main c4a15bd (code read, no browser): Missing text updated to the current code.
+- Note: 2026-11-06: ADR-207 takes over typed connections (side, corner, stacked, against wall) read by snap, move, Mirror a run and Merge. Run parts reading connections moved to G-420; connector authoring to G-424.
 
 ### G-008: AR, plan review, shared structural elements
 
-- Status: Open
+- Status: ADR-208
 - Origin: Research, 2026-10-24 15:42 UTC; agent default, accepted by the user
 - Missing: A professional review pack (ADR-121) and common top/bottom panels (ADR-165) exist; AR placement and shared side panels between pieces are still not built.
 - Request: Features from the competitor research (context, not a quote)
@@ -140,6 +142,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Fix: WebXR AR from the three.js scene plus USDZ export; one shared side panel between touching cabinets.
 - Conflicts: none
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: 2026-11-06: ADR-208 takes over WebXR AR and the USDZ export. Shared side panels were built by ADR-190 and the review pack by ADR-121, so nothing else remains.
 
 ### G-009: Supplier feeds and ordering
 
@@ -160,7 +163,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-010: Worktop joints and corner runs
 
-- Status: Open
+- Status: ADR-205
 - Origin: ADR-054, 2026-10-24 15:54 UTC; agent scoped it out
 - Missing: No worktop joints and no corner runs. Out of scope.
 - Request: Kitchen runs with plinth, filler, sink front (context, not a quote)
@@ -190,7 +193,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-012: Angled walls and plan tracing
 
-- Status: Open
+- Status: ADR-208
 - Origin: ADR-058/059, 2026-10-24 15:54 UTC; agent scoped it out
 - Missing: No angled walls, no tracing over a picture of a plan.
 - Request: Room and floor plan (context, not a quote)
@@ -202,6 +205,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: Rooms cannot have angled walls, and a plan picture cannot be traced over.
 - Fix: Put a plan picture under the drawing, scaled from one known wall, and trace over it.
 - Conflicts: none
+- Note: 2026-11-06: ADR-208 takes over only tracing over a picture of a plan. Angled walls moved to G-428.
 
 ### G-014: Undo across reloads and in the library
 
@@ -238,7 +242,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-016: Export blocking never tried in a browser
 
-- Status: Open
+- Status: ADR-201
 - Origin: ADR-062/064, 2026-10-24 17:52 UTC; agent scoped it out
 - Missing: Not checked by any find-it: the blocked-export message (src/ui/Output.tsx:140-146) and the blocked Shopping list CSV and Print (src/ui/Shopping.tsx:202-279).
 - Request: Errors block export (ADR-008) (context, not a quote)
@@ -255,7 +259,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-020: Appliances, sinks, edge profiles, client sheet
 
-- Status: Open
+- Status: ADR-206
 - Origin: ADR-067/068, 2026-10-24 19:55 UTC; agent default, accepted by the user
 - Missing: Remaining: a client sheet with render and price, worktop edge profiles, bundled CC0 appliance models.
 - Request: “To sell designed kitchens”.
@@ -269,10 +273,11 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Conflicts: none
 - Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): partly resolved. Appliances and sinks can be imported as .glb (ADR-076); appliance niches (ADR-036) and a sink base exist. Remaining: client sheet, worktop edge profiles, bundled CC0 models (licence question).
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: 2026-11-06: ADR-206 takes over the printable client sheet (render, piece list, price); worktop edge profiles and bundled CC0 appliance models moved to G-412.
 
 ### G-021: Blender / glTF export
 
-- Status: Open
+- Status: ADR-206
 - Origin: ADR-068, 2026-10-24 19:55 UTC; agent default, accepted by the user
 - Missing: No Blender or glTF export.
 - Request: High-quality renders (context, not a quote)
@@ -287,7 +292,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-022: Render not checked on a laptop GPU
 
-- Status: Open
+- Status: ADR-208
 - Origin: ADR-067/068, 2026-10-24 20:43 UTC; blocked by the environment
 - Missing: Remaining: three-gpu-pathtracer still pinned at 0.0.27 on WebGL; no WebGPU path-tracer ADR.
 - Request: Laptop, preview quality (context, not a quote)
@@ -301,10 +306,11 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Conflicts: none
 - Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): partly resolved per documents: ADR-068 records the user's full 256/256 render and Save PNG on a laptop; N88 ran the scripted full render and Save PNG at 1280 px and 18/18 at 390 px. Remaining: three-gpu-pathtracer still pinned at 0.0.27 on WebGL, no WebGPU ADR.
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: 2026-11-06: ADR-208 takes over the WebGPU path-tracer upgrade plan. Running the render on the user's laptop moved to G-429.
 
 ### G-025: Cross-family composition and room presets
 
-- Status: Open
+- Status: ADR-210
 - Origin: Research, 2026-10-24 21:28 UTC; agent scoped it out
 - Missing: No wardrobe or desk room presets that place several pieces, and a kitchen run plus a desk in one project is unchecked; Fill the room fills kitchen walls (ADR-173, ADR-177).
 - Request: The 14 features you selected at 21:28 (context, not a quote)
@@ -319,10 +325,11 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): partly resolved; text partly wrong. Cross-family composition was already checked (N48, tools/ensemble/find-it.mjs: base cabinet + wardrobe + daybed). Remaining: built-in room presets that place several pieces; a kitchen run plus a desk in one project not checked.
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
 - Note: Re-checked 2026-11-05 on main c4a15bd (code read, no browser): Missing text updated to the current code.
+- Note: ADR-210 adds room presets and checks a kitchen run with a desk; Fill the room for other rooms is G-446.
 
 ### G-027: Bottom sheet drag, mode bar, old find-it scripts
 
-- Status: Open
+- Status: ADR-211
 - Origin: ADR-079, 2026-10-24 23:07 UTC; agent scoped it out
 - Missing: Remaining: the phone bottom sheet opens only by tap (App.tsx:746-757, no drag); on desktop the Compose / Build & Preview switch is still its own row (App.tsx:687-708).
 - Request: “Help with the sticky bars top and bottom, they occupy too much”.
@@ -336,6 +343,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Conflicts: ADR-079: decided the mode control sits under the app bar.
 - Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): partly resolved. The old find-it scripts were fixed (N88, G-060 Done). Remaining: the phone sheet still opens only by tap (src/ui/App.tsx:673-681); the desktop mode switch is still its own row.
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: 2026-11-06: ADR-211 takes over the bottom-sheet drag (peek, half and full stops); the desktop mode switch in the top bar conflicts with ADR-079 and stays in G-452.
 
 ### G-028: Mobila sample files still in the repo
 
@@ -354,7 +362,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-030: Back cut-outs over pipes and outlets
 
-- Status: Open
+- Status: ADR-205
 - Origin: ADR-072, 2026-10-24 23:58 UTC; agent scoped it out
 - Missing: Remaining: a shaped back panel with a cut-out over a pipe or outlet, electrical rules, and a test for a worktop or plinth over a pipe.
 - Request: Pipes and outlets checked against the pieces (context, not a quote)
@@ -368,6 +376,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Conflicts: none
 - Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): text partly wrong: templates already keep pipes and outlets when the room is included (src/core/projectTemplate.ts:97, :203), untested. Remaining: shaped back with a cut-out, electrical rules, the worktop/plinth-over-pipe test.
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: 2026-11-06: ADR-205 builds the shaped back, the worktop and plinth over pipe tests, and the template test. Electrical rules were not in the suggested pick and moved to G-406.
 
 ### G-031: ADR-072 defaults unconfirmed
 
@@ -387,7 +396,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-032: Multi-select, fixed-hand mirroring, 1 mm drift
 
-- Status: Open
+- Status: ADR-205
 - Origin: ADR-069, 2026-10-25 00:01 UTC; agent scoped it out
 - Missing: Multi-select and groups are built (ADR-097, ADR-159); remaining: the lounger backrest and daybed side panel cannot be mirrored (arrange.ts:131-135), and mirrored pieces may be ±1 mm off.
 - Request: “Duplicate, mirror and predictable rotate operations”.
@@ -401,10 +410,11 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Conflicts: none
 - Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): still valid. Absorbs G-013 (Save selection as template), which needs multi-select.
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: 2026-11-06: ADR-205 takes over only the 1 mm drift (mirrored copies match to the mm). The stored hand side on the lounger and daybed and the multi-select gesture moved to G-404.
 
 ### G-033: Snapping in the front view and 3D
 
-- Status: Open
+- Status: ADR-205
 - Origin: ADR-070, 2026-10-25 00:07 UTC; agent scoped it out
 - Missing: No height snapping in the front view or the 3D height drag (worktop or wall-unit lines); src/core/height.ts dragHeight only rounds. Snapped drops are stored as connections (ADR-168).
 - Request: “Guided snapping”.
@@ -421,7 +431,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-034: Hinge repair, filler repair, 3D preview
 
-- Status: Open
+- Status: ADR-209
 - Origin: ADR-071, 2026-10-25 00:10 UTC; agent default, accepted by the user
 - Missing: No “Reverse the hinge” repair. The filler repair shows only with automatic refresh off. No outline or preview in 3D.
 - Request: “Explainable warnings with repairs”.
@@ -433,10 +443,11 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: No Reverse the hinge repair, filler repair only without auto refresh, no problem outline or preview in 3D.
 - Fix: Hinge-side clearance then the hinge repair; fillers kept by auto refresh; draw box and preview in 3D.
 - Conflicts: none
+- Note: 2026-11-06: ADR-209 takes over the fillers kept by automatic refresh and the problem box and repair preview in 3D; the reverse-the-hinge repair needs G-011, which conflicts with ADR-057, and moved to G-436.
 
 ### G-035: Mouldings, sink and hob cut-outs, templates
 
-- Status: Open
+- Status: ADR-205
 - Origin: ADR-075, 2026-10-25 00:13 UTC; agent scoped it out
 - Missing: Sink cut-outs exist (ADR-125); remaining: profiled mouldings, hob cut-outs, templates keeping requested trims/worktops (runRequests), and a browser check of the ceiling filler.
 - Request: “Shared worktops”, “fillers, plinths, end panels and trim”, for kitchens.
@@ -449,10 +460,11 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Fix: Hob cut-outs from user-entered sizes on cut list and print; templates carry run requests; ceiling filler find-it.
 - Conflicts: none
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: 2026-11-06: ADR-205 takes over only the sink and hob cut-outs from user-entered sizes on the cut list and print. Profiled mouldings, run requests in templates and the ceiling-filler find-it moved to G-405.
 
 ### G-036: Clearance zones in 3D and templates
 
-- Status: Open
+- Status: ADR-205
 - Origin: ADR-073, 2026-10-25 00:14 UTC; agent scoped it out
 - Missing: Clearance zones are not drawn in 3D and are not saved in templates. No separate installation zone on the plan.
 - Request: “Collision and clearance”.
@@ -482,7 +494,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-038: Band-list import and colour matching
 
-- Status: Open
+- Status: ADR-212
 - Origin: ADR-077, 2026-10-25 00:15 UTC; agent scoped it out
 - Missing: Bands from the bundled seller catalog are matched to the board decor code (ADR-161); remaining: importing a supplier band list as CSV, tolerances and edgebander settings.
 - Request: “Check the European standards for ABS, apply them accordingly”.
@@ -495,6 +507,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Fix: Import a band list as CSV like decors, matching each band to the board's decor code and picture.
 - Conflicts: none
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: 2026-11-06: ADR-212 takes over only the band-list CSV import and its match to the board's decor code; tolerances and edgebander settings moved to G-460.
 
 ### G-039: ADR-077 open decisions
 
@@ -513,7 +526,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-040: 3D model placement and templates
 
-- Status: Open
+- Status: ADR-208
 - Origin: ADR-076, 2026-10-25 00:16 UTC; agent scoped it out
 - Missing: Imported models can't be dragged, hung on a wall or put on another piece. Templates don't keep them. Nothing is bundled.
 - Request: “Import 3D models and model libraries”.
@@ -525,10 +538,11 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: Imported 3D models cannot be dragged, wall-hung or set on a piece; templates drop them; none bundled.
 - Fix: Give models the same placement, drag and snap as pieces, keep them in templates, later bundle CC0 models.
 - Conflicts: none
+- Note: 2026-11-06: ADR-208 takes over placement, drag, snap and templates for models. Bundling CC0 models moved to G-430.
 
 ### G-041: ADR-076 models list
 
-- Status: Open
+- Status: ADR-212
 - Origin: ADR-076, 2026-10-25 00:16 UTC; agent default, accepted by the user
 - Missing: Models are stored in a separate Project.models list, not on project items as the ADR says.
 - Request: “Import 3D models and model libraries”.
@@ -544,7 +558,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-042: Project fasteners panel and Romanian labels
 
-- Status: Open
+- Status: ADR-202
 - Origin: ADR-074, 2026-10-25 00:16 UTC; agent scoped it out
 - Missing: Remaining: Fasteners in the project's own Settings dialog (Settings.tsx:62-71), fastener lines and footer of the shopping CSV in the print language (shopping.ts:51-53, 288-318 use t(), not pt()), drilling patterns.
 - Request: “Hardware and fastener completeness”.
@@ -558,6 +572,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Conflicts: none
 - Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): partly resolved. A piece's Fasteners panel is reachable from a project via Inside this piece › Size, boards and construction (ADR-090). Remaining: Fasteners in the project's own Settings dialog; the Romanian shopping CSV still writes fastener lines and footer in English (src/core/fasteners.ts, src/core/shopping.ts:32-33); drilling patterns.
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: 2026-11-06: ADR-202 takes over only the fastener CSV and print text (pt()); the project-level fasteners panel and drilling positions moved to G-380.
 
 ### G-043: Duplicate backlog id D02
 
@@ -576,7 +591,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-044: Catalog feed and brand filter
 
-- Status: Open
+- Status: ADR-210
 - Origin: ADR-029/052/027, 2026-10-25 06:52 UTC; user decision
 - Missing: Feed (N16) and brand filter (N14) not built (user: won't do); note the Brands tab still promises "The weekly catalog feed … adds them" (Catalog.tsx:618).
 - Request: “Mark 029 as won't do”.
@@ -589,6 +604,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Fix: Optionally feed the brand filter from the user's decor imports by manufacturer, in a new ADR.
 - Conflicts: none
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: ADR-210 feeds the brand filter from the decor list, offline; the feed stays won't do (ADR-029, user 2026-10-25).
 
 ### G-045: ADR-069 to 079 shipped with open gaps
 
@@ -625,7 +641,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-049: G ids on pre-ADR-082 notes
 
-- Status: Open
+- Status: ADR-212
 - Origin: ADR-082, 2026-10-25; agent scoped it out
 - Missing: Backlog notes and ADRs written before ADR-082 do not cite G ids; the seed G-001 to G-048 covers their gaps, but the old text does not link to it.
 - Request: “Configure the project so everytime something is "not implemented" it is being saved into adrs folder into "Gaps"”
@@ -640,7 +656,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-053: Step back up one level without the breadcrumb
 
-- Status: Open
+- Status: ADR-203
 - Origin: ADR-083, 2026-10-25, out of scope (Claude)
 - Missing: Going one level back up with a gesture (Esc / long press)
 - Request: The flow of selecting the furniture, then the middle (given there are 2 dividers), then having a horizontal divider, then selecting the bottom one to adjust shelves is a painful horrible user experience. Adjust the selecting to go from bigger to smaller. 1 click = entire furniture, second click selects the smaller frame, third again the smaller within, iteratively.
@@ -703,7 +719,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-076: Research app records go stale as ADRs ship
 
-- Status: Open
+- Status: ADR-212
 - Origin: ADR-092 (2026-10-26, Claude: not asked for)
 - Missing: The research app records (src/core/research/ensemble-2026-10-23.app.ts) are refreshed only by one-off re-check ADRs (ADR-149, ADR-152); ship-adr/next-adr still do not update them when an ADR ships.
 - Request: Text that is not a quote: follows from "mark implemented ones" (2026-10-26).
@@ -764,7 +780,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-095: Catalog counts agreement unconfirmed
 
-- Status: Open
+- Status: ADR-201
 - Origin: Gap re-check 2026-10-26 (G-059); agent found it
 - Missing: The 'N ready items' label (src/ui/Catalog.tsx:236) exists, but no check (find-it or browser) has confirmed the total equals the sum of the category counts at 390 and 1280 px.
 - Request: Run critique this design for the entire ui/ux; then 'Fix them directly' (G-059)
@@ -780,7 +796,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-096: Empty Brands list promises a cancelled feed
 
-- Status: Open
+- Status: ADR-202
 - Origin: Gap re-check 2026-10-26 (G-044); agent found it
 - Missing: Same text, now at src/ui/Catalog.tsx:618 (Russian entry src/core/i18n/ru/catalog.ts:47).
 - Request: Catalog feed and brand filter (G-044) (context, not a quote)
@@ -811,7 +827,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-100: Gap marks not in a file
 
-- Status: Open
+- Status: ADR-212
 - Origin: ADR-101, 2026-10-26; agent scoped it out
 - Missing: Marks made on the gaps page cannot be exported or imported as a file; they live on one device. Copy decisions is the only way out.
 - Request: “Mark + hand to Claude”
@@ -842,7 +858,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-103: Family rule for your own templates
 
-- Status: Open
+- Status: ADR-210
 - Origin: ADR-100 (2026-10-26, Claude: not asked for)
 - Missing: The family rule reads the shipped catalog families only; a piece from one of your own templates (own-… families, stored on this device) has no known room group, so the family rule never refuses or warns for it.
 - Request: New adr 3
@@ -857,7 +873,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-104: Repairs for compatibility warnings
 
-- Status: Open
+- Status: ADR-204
 - Origin: ADR-100 (2026-10-26, Claude: not asked for)
 - Missing: The depth, height and family warnings offer no previewed repair (ADR-071); each rule's repairs list is empty because no existing repair fixes them.
 - Request: New adr 3
@@ -872,7 +888,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-105: Move display-only 3D models in the 3D view
 
-- Status: Open
+- Status: ADR-203
 - Origin: ADR-093 (2026-10-26, Claude: skipped this iteration)
 - Missing: Move mode in 3D drags and turns project pieces only; display-only 3D models can be resized there (ADR-102) but not moved or turned.
 - Request: New adr to override the conflicts for 4 and make it ready
@@ -888,7 +904,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-106: Resizing a base moves a locked piece on it
 
-- Status: Open
+- Status: ADR-203
 - Origin: ADR-095 (2026-10-26, Claude: found while building)
 - Missing: A locked piece placed on or above another piece still follows its base when the base's size changes in the piece editor (moving or turning the base is refused; resizing is not a move).
 - Request: Not a quote: ADR-095 'Nothing moves it for the user'
@@ -933,7 +949,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-110: Distribute across rows and centre-snap rules
 
-- Status: Open
+- Status: ADR-205
 - Origin: ADR-099 (2026-10-26, Claude: defaulted while building)
 - Missing: Distribute evenly over pieces at different heights (wall units and base units together, or a piece on another) is refused with the reason instead of spacing each row; centre snapping is offered only between pieces above and below each other (never at the same height) and the ADR-100 join rules do not apply to it (an alignment, not a join).
 - Request: New adr 7 (2026-10-26): Distribute evenly (three or more selected pieces, along the wall)
@@ -948,7 +964,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-116: Fill a wall: carcasses with 3 or more equal fronts
 
-- Status: Open
+- Status: ADR-204
 - Origin: ADR-103, 2026-10-27; Claude cut it while building
 - Missing: Equal fronts puts 1 or 2 fronts on a carcass only (a door front has 1 or 2 leaves); carcasses with 3 or more fronts are not suggested, so fronts under 200 mm wide (with the 400 mm min) give no mix.
 - Request: 6 equal front panels, what's behind is to be configured (answer: Equal fronts, any carcass widths)
@@ -963,7 +979,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-117: Fill a wall: tall cabinet height
 
-- Status: Open
+- Status: ADR-204
 - Origin: ADR-103, 2026-10-27; default chosen by Claude while building
 - Missing: Tall cabinets are always the catalog height (2200 mm, ADR-036 typical value); there is no tall-height field. A wall lower than that gets the warning on every mix with a tall cabinet.
 - Request: allow with a warning items like tall cabinets, above this height
@@ -978,7 +994,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-118: Fill a wall: a width per base kind
 
-- Status: Open
+- Status: ADR-204
 - Origin: ADR-103, 2026-10-27; Claude narrowed it while building
 - Missing: All base kinds in one mix share one width (tall cabinets may have their own round width); mixes such as an 800 drawer base next to 600 shelf bases are not suggested.
 - Request: So basically a mix and match (answer: Equal per kind, exact split)
@@ -1053,7 +1069,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-123: Fill a wall: wall cabinet depth
 
-- Status: Open
+- Status: ADR-204
 - Origin: ADR-104, 2026-10-27; default chosen by Claude while building
 - Missing: Wall cabinets keep the catalog depth (320 mm carcass); there is no wall cabinet depth field.
 - Request: Wall cabinets above (answer to: Which kinds of pieces may appear in a mix?)
@@ -1083,7 +1099,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-126: No width/depth fields for a bed or a set of loose panels
 
-- Status: Open
+- Status: ADR-211
 - Origin: ADR-106
 - Missing: A bed and a set of loose panels show no size fields when selected (src/core/pieceSize.ts:49-63); a filler/cover panel shows Width and Height (no depth).
 - Request: Add the posibility to change width/depth when whole cabinet or whole piece is selected
@@ -1159,7 +1175,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-136: Link pieces that are already 100% identical
 
-- Status: Open
+- Status: ADR-207
 - Origin: ADR-111, 2026-10-27, user choice
 - Missing: Only copies made with 'Add a linked copy' are linked; identical pieces added separately, by Duplicate or by adding the same item again stay independent (user picked explicit links and only 'Add a linked copy').
 - Request: use a piece, a item created by the user, added to the project, added multiple times, and give the possibility to bulk update the width/height/drawers, just like it would be 1 piece, with 2 symlinks to it, change to 1 changes all the other, including internal, and it should be propagated further to the ones in the 100% same.
@@ -1250,7 +1266,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-148: ADR ids and Back link left on the Gaps and Research pages; Select lost its tooltip
 
-- Status: Open
+- Status: ADR-211
 - Origin: ADR-120 (found while building)
 - Missing: The Gaps page search placeholder still names ADR-072 and the Research page lists ADR ids (they are the content); Gaps and Research always show 'Back to the editor', not only with a design open; the Select checkbox lost the tooltip the old button had
 - Request: accept as written (ADR-120: no ADR numbers in UI text; Back to the editor only when a design is open)
@@ -1265,7 +1281,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-170: Angled pieces snap and measure by their enclosing box
 
-- Status: Open
+- Status: ADR-205
 - Origin: ADR-121 (found while building)
 - Missing: A piece typed at an angle snaps to neighbours and walls by the axis-aligned box around it, not its turned faces; the mm amounts in overlap and blocked-opening messages are measured on those boxes. Detection itself is exact.
 - Request: Accept default, /batch all ready
@@ -1295,7 +1311,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-172: 3D outlines of an angled piece are drawn unturned
 
-- Status: Open
+- Status: ADR-203
 - Origin: ADR-121 (found while building)
 - Missing: In the 3D view, the selection outline of a space inside an angled piece and the Move-mode ghost are drawn as the unturned or enclosing boxes; the boards themselves are drawn turned
 - Request: Accept default, /batch all ready
@@ -1310,7 +1326,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-181: Move/Section toggle sometimes ignores the first tap after a touch drag or while the 3D view settles
 
-- Status: Open
+- Status: ADR-201
 - Origin: ADR-122 (found while checking)
 - Missing: In the production-build find-it run, Move and Section sometimes stayed off after one tap: right after a touch drag on a phone, or while the 3D view was settling after the look changed; the script now taps again until the toggle reads pressed
 - Request: Push, merge
@@ -1325,7 +1341,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-190: Versions of a deleted project
 
-- Status: Open
+- Status: ADR-203
 - Origin: ADR-123 (found while building)
 - Missing: Deleting a project leaves its kept versions on the device; nothing lists or removes them (G-156: nothing removes versions without the user)
 - Request: Accept default, /batch all ready (G-156: keep every version until the user deletes it)
@@ -1370,7 +1386,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-210: Project templates drop run handles and sinks
 
-- Status: Open
+- Status: ADR-204
 - Origin: ADR-125 (found while building)
 - Missing: Saving a project as a project template (ADR-060) keeps neither its run handles nor its sinks; a project made from it has none
 - Request: Accept default, /batch all ready (ADR-125: run sinks and handles)
@@ -1385,7 +1401,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-211: Run handles not shown inside the piece editor
 
-- Status: Open
+- Status: ADR-203
 - Origin: ADR-125 (found while building)
 - Missing: Opening one piece of a handled run shows and edits its own handles; the run's handle shows only in the project views, cut list and hardware
 - Request: Accept default, /batch all ready (ADR-125: run sinks and handles)
@@ -1400,7 +1416,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-212: Sink cut-out not drawn
 
-- Status: Open
+- Status: ADR-205
 - Origin: ADR-125 (found while building)
 - Missing: The sink cut-out is a cut-list note, a shopping line and checks; it is not drawn on the plan, the front view or in 3D (worktop cut-outs were already not drawn)
 - Request: Accept default, /batch all ready (ADR-125: run sinks and handles)
@@ -1415,7 +1431,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-273: Wall backgrounds outside 3D and front view
 
-- Status: Open
+- Status: ADR-208
 - Origin: ADR-145 (out of scope)
 - Missing: Wall backgrounds on the 2D floor plan, the SVG download, catalog snapshots and cut sheets
 - Request: Set wall background; answers 2026-10-28: colour or picture, 3D view and front view, per wall, toggle solid/see-through
@@ -1430,7 +1446,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-274: Floor background
 
-- Status: Open
+- Status: ADR-208
 - Origin: ADR-145 (out of scope)
 - Missing: Floor colour or picture
 - Request: Set wall background; answers 2026-10-28: colour or picture, 3D view and front view, per wall, toggle solid/see-through
@@ -1445,7 +1461,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-275: Wall background in the single-piece front view
 
-- Status: Open
+- Status: ADR-208
 - Origin: ADR-145 (found while building)
 - Missing: The wall background shows in the project's front view (the whole room seen from the front); the front view of a single piece, opened from the project, shows no wall behind it
 - Request: Set wall background adr; answers 2026-10-28: 3D view and front view
@@ -1657,7 +1673,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-308: Selection box in the front view and the 3D view
 
-- Status: Open
+- Status: ADR-211
 - Origin: ADR-159
 - Missing: Dragging on empty space in the room front view or the 3D view does not draw a selection box; only taps (Select on, or Shift/Ctrl-click) add pieces there.
 - Request: Add the select to 3d, so i can click on them to multiselect
@@ -1704,7 +1720,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-313: Extra seller items only per piece
 
-- Status: Open
+- Status: ADR-210
 - Origin: ADR-161, 2026-10-30; agent scoped it out
 - Missing: In a project view, a seller product cannot be added as an extra item; open a piece to add it there. Hardware links chosen in the project view are written to every piece that has that hardware line.
 - Request: Match products to parts in app
@@ -1719,7 +1735,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-314: Fasteners and run parts not matched
 
-- Status: Open
+- Status: ADR-206
 - Origin: ADR-161, 2026-10-30; agent scoped it out
 - Missing: Screws, dowels, cams (fasteners, ADR-074) and run parts (plinths, fillers, cornices) are not matched to seller products.
 - Request: Match products to parts in app
@@ -1749,7 +1765,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-316: Seller pictures not seen before shipping
 
-- Status: Open
+- Status: ADR-206
 - Origin: ADR-162, 2026-10-30; agent scoped it out
 - Missing: The board pictures are now downloaded and shipped (public/sellers/regency, 1 453 files) and a 16-picture sample was checked by eye, but none has been seen as a board texture in 3D in a browser.
 - Request: You didnt use the image i provided to render
@@ -1765,7 +1781,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-324: Formula functions
 
-- Status: Open
+- Status: ADR-206
 - Origin: ADR-166, 2026-10-30; agent scoped it out
 - Missing: Formulas know only + − × ÷ and parentheses: no min, max, round, floor or conditions.
 - Request: Formulas too (user answer 2026-10-30).
@@ -1780,7 +1796,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-325: Variables on run parts
 
-- Status: Open
+- Status: ADR-209
 - Origin: ADR-166, 2026-10-30; agent scoped it out
 - Missing: Run parts, worktops, run handles and sinks (ADR-036, ADR-075, ADR-125) cannot be bound to a variable; they follow the pieces they are derived from.
 - Request: Not a quote: the user named pieces only.
@@ -1795,7 +1811,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-329: Typed connectors and assembly graph
 
-- Status: Open
+- Status: ADR-207
 - Origin: ADR-168, 2026-11-04; agent scoped it out
 - Missing: Connector types and a typed assembly graph (research model): connections are untyped pairs of side-by-side pieces.
 - Request: “Validate all High demand features … create adrs” (user 2026-11-04); the research row names a connection hierarchy
@@ -1810,7 +1826,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-331: No stacked or cross-level connections
 
-- Status: Open
+- Status: ADR-207
 - Origin: ADR-168, 2026-11-04; agent scoped it out
 - Missing: Only side-by-side touching pieces on one floor level connect; a wall unit over a base unit, stacked pieces or pieces across floor levels do not.
 - Request: Not a quote: the user chose record, re-check and move together
@@ -1855,7 +1871,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-335: Variables in catalog designs and the stand-alone editor
 
-- Status: Open
+- Status: ADR-210
 - Origin: ADR-170, 2026-11-04; agent scoped it out
 - Missing: Variables and bindings live in projects and project templates only; the stand-alone design editor and catalog designs have none (the rest of G-323).
 - Request: Not a quote: the user asked for variables “within the project”
@@ -1870,7 +1886,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-337: Locks on boards, construction and insides
 
-- Status: Open
+- Status: ADR-211
 - Origin: ADR-171, 2026-11-04; agent scoped it out
 - Missing: Boards, construction and insides of a piece cannot be locked (the rest of G-180).
 - Request: “Separate locks per parameter” (user 2026-11-04)
@@ -1882,10 +1898,11 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: A piece's boards, construction and insides cannot be locked against changes.
 - Fix: Add Lock boards and Lock construction toggles to the Lock menu when asked.
 - Conflicts: none
+- Note: 2026-11-06: ADR-211 takes over Lock boards and Lock construction (the suggested pick); locking the insides stays in G-453.
 
 ### G-340: No price change report between exports
 
-- Status: Open
+- Status: ADR-206
 - Origin: ADR-172, 2026-11-04; agent scoped it out
 - Missing: A refreshed seller export replaces prices silently: no report of what changed between two exports.
 - Request: “You upload a new export; the workflow converts it” (user 2026-11-04)
@@ -1900,7 +1917,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-341: No budget or style filters on room mixes
 
-- Status: Open
+- Status: ADR-210
 - Origin: ADR-173, 2026-11-04; agent scoped it out
 - Missing: The research children Budget and style filters and Layout optimisation are not built; mixes are ranked by ADR-103's rules only.
 - Request: “Fill the room” (user 2026-11-04)
@@ -1912,10 +1929,11 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: Fill the room mixes cannot be filtered by budget or style; no layout optimisation.
 - Fix: Add a budget ceiling and a style pick on the Refine step, using the cost estimate.
 - Conflicts: none
+- Note: ADR-210 takes over the budget ceiling and style pick; layout optimisation stays open as G-444.
 
 ### G-342: No islands or peninsulas in room mixes
 
-- Status: Open
+- Status: ADR-210
 - Origin: ADR-173, 2026-11-04; agent scoped it out
 - Missing: Islands and peninsulas are not suggested; only pieces along walls.
 - Request: “Fill the room” (user 2026-11-04)
@@ -1927,10 +1945,11 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: Fill the room suggests pieces along walls only, never islands or peninsulas.
 - Fix: Add an island option on Refine, checked against the clearance rules.
 - Conflicts: none
+- Note: ADR-210 takes over islands in rectangle rooms; peninsulas and islands in L and U rooms stay open as G-445.
 
 ### G-343: No per-step pictures in the assembly print
 
-- Status: Open
+- Status: ADR-206
 - Origin: ADR-174, 2026-11-04; agent scoped it out
 - Missing: The printed assembly sheet shows one front view of the piece and a table of steps (src/ui/Assembly.tsx:218-261); no step has a picture or marked parts.
 - Request: “Ordered step list + 3D highlight” (user 2026-11-04)
@@ -1946,7 +1965,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-344: Assembly steps are not editable
 
-- Status: Open
+- Status: ADR-207
 - Origin: ADR-174, 2026-11-04; agent scoped it out
 - Missing: The assembly sequence cannot be edited: steps cannot be reordered, merged or renamed.
 - Request: “Ordered step list + 3D highlight” (user 2026-11-04)
@@ -1958,10 +1977,11 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: Assembly steps cannot be reordered, merged or renamed by the user.
 - Fix: Save an editable step order on the design, with a reset to the generated order.
 - Conflicts: none
+- Note: 2026-11-06: ADR-207 takes over reordering, renaming and a reset. Merging steps moved to G-422.
 
 ### G-346: Connections in 3D Move mode not checked in a browser
 
-- Status: Open
+- Status: ADR-201
 - Origin: ADR-168, 2026-11-04; agent, at ship time
 - Missing: Moving a connected piece in 3D Move mode (dropItemAt) is covered by a store test only; it was not checked in a browser (the browser find-it drags on the plan).
 - Request: “ship ADR-168” (user 2026-11-04)
@@ -1976,7 +1996,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-347: accounts find-it at 390 px is timing-sensitive under the full suite
 
-- Status: Open
+- Status: ADR-201
 - Origin: N171/N172 full test runs, 2026-11-04; agent
 - Missing: tests/find-it/accounts.test.tsx at 390 px fails under the full local suite (the 'In your account' badge is not found in time) in two of three full runs on 2026-11-04, while it passes when run alone and in CI.
 - Request: Not a quote: the suite is the source of truth (CLAUDE.md)
@@ -1991,7 +2011,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-348: Fill the room: openings only through a project's room
 
-- Status: Open
+- Status: ADR-204
 - Origin: ADR-173, 2026-11-04; agent scoped it out
 - Missing: Fill the room from the New dialog takes a ready shape and sizes only; doors and windows come only through a project's own room (Project ⋯ → Fill the room…).
 - Request: “Fill the room” (user 2026-11-04)
@@ -2006,7 +2026,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-351: move-3d find-it fails on main at 1440 px
 
-- Status: Open
+- Status: ADR-201
 - Origin: ADR-179 build, 2026-11-05; found by the agent
 - Missing: tools/move-3d/find-it.mjs fails at 1440 px on the production build of main 0c26d0b and of this branch: 'Turn 90° ↺ turned the piece' reads an empty rotation, then the 3D canvas wait times out (20 s).
 - Request: Not a quote: found while running the browser find-it scripts for ADR-179.
@@ -2021,7 +2041,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-352: Fit hardware step cannot be shown in 3D
 
-- Status: Open
+- Status: ADR-207
 - Origin: ADR-185, 2026-11-05; agent scoped it out
 - Missing: The Fit hardware to the sides step has no Show step button: the model does not record which side panel each hinge plate or runner carcass half is fixed to, so nothing can be lit in 3D.
 - Request: Re-check assembly steps, both ui and pdf, they seem to not have the expected assembly relevant info and steps.
@@ -2036,7 +2056,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-353: Catalog piece names untranslated on prints
 
-- Status: Open
+- Status: ADR-202
 - Origin: ADR-185, 2026-11-05; agent left it out
 - Missing: Piece names on the printed assembly sheet print as named (catalog defaults are English), so a Romanian or Russian print shows English piece names such as 'Base cabinet, 1 door'.
 - Request: Translate with the print (user 2026-11-05, for the fastener menu name); user-typed names are not translated (G-304).
@@ -2051,7 +2071,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-354: Shared side with corner units and desks
 
-- Status: Open
+- Status: ADR-207
 - Origin: ADR-190
 - Missing: Corner units and desks keep both sides; only two cabinets can share a side.
 - Request: Add the possibility to have a common bottom or top between multiple items.
@@ -2063,6 +2083,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: Corner units and desks cannot share a side with a neighbouring cabinet; only two cabinets can.
 - Fix: Let a blind corner's straight side or a desk gable be shared, in a later ADR.
 - Conflicts: none
+- Note: 2026-11-06: ADR-207 takes over a blind corner's straight end and a desk gable. L-shape and diagonal corners and desk pedestal ends moved to G-421.
 
 ### G-355: Shared side with inset and sliding fronts
 
@@ -2081,7 +2102,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-356: Wizard draft survives closing the dialog
 
-- Status: Open
+- Status: ADR-211
 - Origin: ADR-191, 2026-11-05; agent scoped it out
 - Missing: The wizard's answers live only while the dialog is open. Confirming before a close (ADR-191) stops accidental loss; a draft that survives closing the dialog (Continue where you left off) is not built.
 - Request: Not asked; the critique of 2026-11-05 noted the loss and the user chose the grouped ADR as proposed (confirm on close).
@@ -2090,7 +2111,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-357: Doors choice is a dropdown on desktop
 
-- Status: Open
+- Status: ADR-202
 - Origin: ADR-191, 2026-11-05; agent scoped it out
 - Missing: The Doors field on a desktop is a dropdown (five options; the segmented control takes four), so sliding and per-compartment doors are hidden behind a click while the cards promote them. Not changed by ADR-191.
 - Request: Not asked; noted during the critique of 2026-11-05 and left out of the fourteen findings.
@@ -2099,7 +2120,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-358: Start-new rows share one glyph
 
-- Status: Open
+- Status: ADR-211
 - Origin: ADR-193, 2026-11-05; design critique, agent scoped it out
 - Missing: The Project, Fill a wall and Fill the room rows of Start something new share one 'project' glyph (Low).
 - Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
@@ -2108,7 +2129,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-359: Open in wizard inside a project
 
-- Status: Open
+- Status: ADR-203
 - Origin: ADR-194, 2026-11-05; design critique, agent scoped it out
 - Missing: Open in wizard is hidden for a wizard-made piece inside a project (Settings hides it there).
 - Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
@@ -2117,7 +2138,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-360: Wizard Review rows repeat long labels
 
-- Status: Open
+- Status: ADR-202
 - Origin: ADR-194, 2026-11-05; design critique, agent scoped it out
 - Missing: Review rows repeat long field labels, e.g. 'Width of each compartment (0 = share the rest): 0 mm'.
 - Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
@@ -2126,7 +2147,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-361: Arrow keys on Segmented controls
 
-- Status: Open
+- Status: ADR-202
 - Origin: ADR-194, 2026-11-05; design critique, agent scoped it out
 - Missing: Segmented controls have no arrow-key movement anywhere in the app.
 - Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
@@ -2135,7 +2156,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-362: Catalog item counts differ from room chips
 
-- Status: Open
+- Status: ADR-202
 - Origin: ADR-195, 2026-11-05; design critique, agent scoped it out
 - Missing: The Catalog header says 118 items while the room chips sum to 183, because a family is listed under every room (ADR-032).
 - Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
@@ -2144,7 +2165,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-363: Imported templates shadow silently
 
-- Status: Open
+- Status: ADR-203
 - Origin: ADR-195, 2026-11-05; design critique, agent scoped it out
 - Missing: Two imported templates that shadow the same shipped family: the last one wins silently (local.ts:85).
 - Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
@@ -2162,7 +2183,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-365: Handle side on a turned corner wing
 
-- Status: Open
+- Status: ADR-203
 - Origin: ADR-196, 2026-11-05; design critique, agent scoped it out
 - Missing: Which edge 'left' means for handle holes on a turned wing-B front of an L-corner was not verified.
 - Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
@@ -2171,7 +2192,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-366: Hardware notes built from English fragments
 
-- Status: Open
+- Status: ADR-202
 - Origin: ADR-196, 2026-11-05; design critique, agent scoped it out
 - Missing: Hardware notes are assembled from English fragments (hingeBand), so the Russian schedule mixes languages.
 - Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
@@ -2180,7 +2201,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-368: CI runs only the tests related to a core-only change
 
-- Status: Open
+- Status: ADR-201
 - Origin: ADR-197 CI analysis 2026-11-05
 - Missing: Suggestion C, tests by domain of change: a pull request that touches only src/core still runs the whole suite. vitest --changed origin/main (or a related-files filter) could run only the related tests there. The find-it files all import App, so any src/ui change still runs all 37 of them.
 - Request: Suggest improvements. Triggering less often the ci optimisations? Tests running by domain of change? Do all parts of the app need tests? Gaps/features/docs/unnecessary overcovering tests? (the user chose "all of these 4 + Suggestions A(all) and B(all)"; this suggestion was left out)
@@ -2210,7 +2231,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-370: Review find-it tests that re-test logic through the UI
 
-- Status: Open
+- Status: ADR-201
 - Origin: ADR-197 CI analysis 2026-11-05
 - Missing: Suggestion E, over-coverage review: find-it/research-batch-4 (10.4 s, 6 tests) asserts research rows through the UI; find-it/connections (13.3 s) and find-it/variables (9.2 s) look like logic re-tested through the UI; tests/rapier-trial.test.ts is permanently skipped.
 - Request: Suggest improvements. Triggering less often the ci optimisations? Tests running by domain of change? Do all parts of the app need tests? Gaps/features/docs/unnecessary overcovering tests? (the user chose "all of these 4 + Suggestions A(all) and B(all)"; this suggestion was left out)
@@ -2225,7 +2246,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-371: Cheaper find-it runs (stopped before it was built)
 
-- Status: Open
+- Status: ADR-212
 - Origin: ADR-197 CI analysis 2026-11-05
 - Missing: Find-it files take 192 of the 217 s of test CPU. Not measured or applied: userEvent.setup({ delay: null }), find-it as its own vitest project with jsdom and isolate: false, a cheaper module reset; each keeps the bare-app start (ADR-108). The user stopped the ADR before it was built.
 - Request: "all of these 4 + Suggestions A(all) and B(all)" (item 3: cheaper find-it mounts); then "Stop 193" (the cheaper find-it ADR, never registered)
@@ -2238,9 +2259,592 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Fix: Measure each lever, then apply the ones that keep the bare-app start (ADR-108).
 - Conflicts: none
 
-### G-372: Arrow keys choose a type in the wizard
+### G-372: Wall picture: stale notice on a deliberate change or leaving the page
 
 - Status: Open
+- Origin: Review of PR #169 (ADR-198..200), 2026-11-05
+- Missing: src/ui/WallBackground.tsx pick(): the 'prepared picture was not applied' error notice fires when the user switches the wall to None/Colour during an upload, or leaves the page (global notice shows on another page).
+- Request: Check PR 169 code, it was written by a chatgpt
+- Questions: Show the stale notice only when the wall or background changed outside this control?
+- Suggested pick: Only notify when the operation was not cancelled by this control or unmount (closest to ADR-200's intent; est. +5 % work, removes a false error).
+- Work: Low
+- Impact: Low
+- Necessity: Low-medium
+
+### G-373: Size-lock note shows unrelated design notices
+
+- Status: Open
+- Origin: Review of PR #169 (ADR-198..200), 2026-11-05
+- Missing: src/ui/Inspector.tsx SizeLockNote now renders any design-store notice (move refused, plan notices) in the size-lock info box, even for unlocked pieces.
+- Request: Check PR 169 code, it was written by a chatgpt
+- Questions: Is showing every refusal notice in the inspector intended, or only size-lock refusals?
+- Suggested pick: Show the note only when an axis is locked or the notice is a size-lock refusal (matches ADR-122/199 wording; est. small change).
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-374: Escape on More may not close it in Safari
+
+- Status: Open
+- Origin: Review of PR #169 (ADR-198..200), 2026-11-05
+- Missing: src/ui/shell/MoreMenu.tsx listens for Escape on the menu element only; Safari does not focus <summary> on click, so Escape likely does nothing while editor shortcuts stay blocked. Not tested in Safari.
+- Request: Check PR 169 code, it was written by a chatgpt
+- Questions: Listen on window again but only act when More is open?
+- Suggested pick: Window listener gated on details.open, keeping preventDefault/stopPropagation (keeps ADR-198 behaviour in all browsers; est. small change).
+- Work: Low
+- Impact: Low-medium
+- Necessity: Low-medium
+
+### G-375: Template list refresh skipped while a read is pending
+
+- Status: Open
+- Origin: Review of PR #169 (ADR-198..200), 2026-11-05
+- Missing: src/ui/ProjectTemplates.tsx refresh() returns early when a read is in flight, so a delete or rename finishing during a Retry read can leave a stale row.
+- Request: Check PR 169 code, it was written by a chatgpt
+- Questions: Queue one follow-up read instead of dropping it?
+- Suggested pick: Mark a pending re-read and run it after the current read (fixes the race fully; est. small change).
+- Work: Low
+- Impact: Low
+- Necessity: Low
+
+### G-376: Include the room starts ticked in Save as project template
+
+- Status: Open
+- Origin: Review of PR #169 (ADR-198..200), 2026-11-05
+- Missing: ADR-200 approved an explicit Include room checkbox; the default (ticked) was chosen by the implementer, not the user.
+- Request: Check PR 169 code, it was written by a chatgpt
+- Questions: Should Include the room start ticked or unticked?
+- Suggested pick: No recommendation until the user picks: ticked keeps the room (most complete template); unticked matches the old Cancel-path result. Both are a one-line change.
+- Work: Low
+- Impact: Low
+- Necessity: Medium
+
+### G-377: Remove the Rapier devDependency once its trial test is gone
+
+- Status: ADR-212
+- Origin: ADR-201, 2026-11-06; agent scoped it out
+- Missing: ADR-201 deletes tests/rapier-trial.test.ts (G-370), the only file that imports @dimforge/rapier3d-compat; the devDependency and its lockfile entry would stay, unused. ADR-125 added it as a devDependency for the trial only.
+- Request: Not a quote: follows from G-370's pick, "Move the logic assertions to core tests, keep one click path per find-it file, and delete rapier-trial" (accepted 2026-11-06).
+- Questions: Remove the devDependency with the trial file, or keep it for a later re-run of the trial?
+- Suggested pick: Remove it in the same change as the trial file (estimate: effort +2%, value +2%; smaller install).
+- Work: Low
+- Impact: Low
+- Necessity: Low
+- Issue: Deleting the Rapier trial test leaves an unused devDependency in package.json and the lockfile.
+- Fix: pnpm remove @dimforge/rapier3d-compat in the change that deletes tests/rapier-trial.test.ts.
+
+### G-380: Project fasteners panel and drilling positions
+
+- Status: ADR-209
+- Origin: ADR-202, 2026-11-06; agent scoped it out (remainder of G-042)
+- Missing: Fasteners in the project's own Settings dialog (Settings.tsx:62-71) and drilling patterns drawn only from the values the user enters. ADR-202 takes over only the fastener CSV and print text of G-042.
+- Request: “Hardware and fastener completeness”.
+- Questions: Add the project-level panel? Draw drilling positions only from your values?
+- Suggested pick: Add the project-level panel. Draw drilling positions only from the values you enter, labelled as guidance (ADR-010). (estimate: effort +25%, value +20%)
+- Work: Medium
+- Impact: Medium
+- Necessity: Medium
+- Issue: No fasteners panel in project Settings; no drilling patterns drawn.
+- Fix: Add the project fasteners panel; draw drilling only from user values, labelled as guidance.
+- Conflicts: none
+- Note: 2026-11-06: ADR-209 draws drilling positions for carcass joints; the other joint types moved to G-439.
+
+### G-381: Piece names in the parts CSV and shopping list title
+
+- Status: ADR-212
+- Origin: ADR-202, 2026-11-06; agent scoped it out
+- Missing: ADR-202 prints untouched catalog piece names in the print language on the assembly sheet and the cut sheet's pieces table only; the parts CSV ("Piece: part" names) and the shopping list title keep the name as stored.
+- Request: Translate with the print (user 2026-11-05, for the fastener menu name); user-typed names are not translated (G-304).
+- Questions: Use the same print name in the parts CSV and the shopping list title?
+- Suggested pick: Yes, the same printPieceName() wherever a piece name is printed or exported. (estimate: effort +3%, value +3%)
+- Work: Low
+- Impact: Low
+- Necessity: Low-medium
+- Issue: The parts CSV and shopping list title show English catalog piece names on a Romanian or Russian export.
+- Fix: Route those names through printPieceName() too.
+
+### G-388: Go up one selection level on a phone
+
+- Status: ADR-211
+- Origin: ADR-203, 2026-11-06, out of scope (Claude)
+- Missing: ADR-203 makes Esc go up one selection level on desktop; a phone has no gesture for it besides the breadcrumb.
+- Request: The flow of selecting the furniture, then the middle (given there are 2 dividers), then having a horizontal divider, then selecting the bottom one to adjust shelves is a painful horrible user experience. Adjust the selecting to go from bigger to smaller. 1 click = entire furniture, second click selects the smaller frame, third again the smaller within, iteratively.
+- Questions: Add a phone gesture or button to go up one level, besides the breadcrumb?
+- Suggested pick: An "Up one level" button next to the breadcrumb on phones (estimate: effort +3 %, value +3 %).
+- Work: Low
+- Impact: Low
+- Necessity: Low
+- Issue: On a phone, going one selection level up needs the breadcrumb.
+- Fix: Add an "Up one level" button on phones that selects the parent level.
+- Conflicts: none
+
+### G-389: Versions left by projects deleted earlier
+
+- Status: ADR-211
+- Origin: ADR-203, 2026-11-06, out of scope (Claude)
+- Missing: ADR-203 asks about versions only when a project is deleted from now on; versions of projects deleted before it stay on the device, unlisted.
+- Request: Accept default, /batch all ready (G-156: keep every version until the user deletes it)
+- Questions: List versions whose project is gone, to restore or delete them?
+- Suggested pick: A "Versions of deleted projects" list in History with Restore as a new project and Delete (estimate: effort +8 %, value +5 %).
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
+- Issue: Versions of projects deleted before ADR-203 take space and cannot be reached.
+- Fix: List versions with no project in History, each with Restore and Delete.
+- Note: 2026-11-06: ADR-211 puts the list in History as picked; reaching it with no project open is G-454.
+
+### G-396: No repair for the family warning
+
+- Status: ADR-210
+- Origin: ADR-204, 2026-11-06; agent scoped it out (G-104's pick covers depth and height only)
+- Missing: The family compatibility warning (ADR-100) still offers no previewed repair (ADR-071); only the depth and height warnings get "match the neighbour" repairs.
+- Request: Not a quote: G-104 asked "Offer repairs such as 'Make Base cabinet 560 deep like its neighbour' or 'Move the bed away'?"
+- Questions: Offer a repair that moves one of the two pieces away until they no longer touch side by side?
+- Suggested pick: Move the later-placed piece sideways just clear of the other, reusing the overlap repair's moves (estimate: effort +10%, value +5%).
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
+- Issue: The family warning names pieces from rooms that do not belong together but offers no fix.
+- Fix: Offer a previewed move that takes one piece clear of the other.
+
+### G-404: Hand side for the lounger and daybed, multi-select gesture
+
+- Status: ADR-207
+- Origin: ADR-205, 2026-11-06; remainder of G-032 (the coordinator split it: ADR-205 takes only the 1 mm drift)
+- Missing: The lounger backrest and the daybed side panel are always built at the left end, so Mirror refuses them (arrange.ts). The multi-select gesture part of G-032 was not reviewed again; multi-select and groups are already built (ADR-097, ADR-159).
+- Request: “Duplicate, mirror and predictable rotate operations”.
+- Questions: Store a hand (left or right) on the lounger and daybed? Does any multi-select gesture still need to be added?
+- Suggested pick: Store a hand on those two pieces so that they mirror, and check whether Shift-click and long-press already cover the gesture. (estimate: effort +20%, value +15%)
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low-medium
+- Issue: The lounger backrest and the daybed side panel cannot be mirrored.
+- Fix: Add a stored hand side that the generators read, and that mirrorDesign swaps.
+- Conflicts: none
+- Note: 2026-11-06: ADR-207 takes over the stored end for the lounger and daybed and the gesture check (Shift/Ctrl-click and Select cover every view). A long-press gesture moved to G-423.
+
+### G-405: Profiled mouldings, run requests in templates, ceiling-filler find-it
+
+- Status: ADR-209
+- Origin: ADR-205, 2026-11-06; remainder of G-035 (the coordinator split it: ADR-205 takes only the sink and hob cut-outs)
+- Missing: Mouldings are plain strips with no profile. Project templates drop the requested trims and worktops (runRequests). The ceiling filler has not been checked in a browser.
+- Request: “Shared worktops”, “fillers, plinths, end panels and trim”, for kitchens.
+- Questions: Should templates carry run requests? Which moulding profiles are needed (shapes from the user, never invented)?
+- Suggested pick: Make templates carry run requests, and add a ceiling filler to a browser find-it. Mouldings get profiles that the user draws or types. (estimate: effort +25%, value +20%)
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low-medium
+- Issue: Templates lose requested trims and worktops, mouldings have no profile, and the ceiling filler has not been checked in a browser.
+- Fix: Keep runRequests in project templates, add user profiles to mouldings, and add a ceiling-filler browser find-it.
+- Conflicts: none
+
+### G-406: Electrical rules for outlets
+
+- Status: Open
+- Origin: ADR-205, 2026-11-06; remainder of G-030 (not in its suggested pick)
+- Missing: No electrical rules: distances of outlets from sinks, hobs or water are not checked.
+- Request: Pipes and outlets checked against the pieces (context, not a quote)
+- Questions: Which rules, and from which regulation? The app must not invent them (ADR-010).
+- Suggested pick: Only the distances the user enters, checked as warnings and labelled as the user's rule. (estimate: effort +20%, value +10%)
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low
+- Issue: Outlets are not checked against sinks, hobs or water.
+- Fix: Add distances that the user enters, checked as warnings, with no built-in values.
+- Conflicts: none
+
+### G-407: Typed position for sink and hob cut-outs
+
+- Status: ADR-209
+- Origin: ADR-205, 2026-11-06; agent scoped it out
+- Missing: Sink and hob cut-outs store only their width and depth. ADR-205 draws them centred on their base and on the worktop depth, and no offset can be typed.
+- Request: Sink and hob cut-outs on the worktop from sizes you enter (G-035 suggested pick, not a quote)
+- Questions: Add optional offsets from the base's left edge and from the worktop's front edge?
+- Suggested pick: Two optional offsets in mm; absent means centred, as today. (estimate: effort +10%, value +10%)
+- Work: Low
+- Impact: Low-medium
+- Necessity: Low-medium
+- Issue: A cut-out cannot be placed off-centre.
+- Fix: Add optional x and z offsets to RunSink and the hobs, and use them in the outline and the cut-list note.
+- Conflicts: none
+
+### G-408: Sink and hob cut-outs drawn in 3D and the front view
+
+- Status: ADR-209
+- Origin: ADR-205, 2026-11-06; the rest of G-212 (its suggested pick was the plan only)
+- Missing: The sink and hob cut-outs are outlined on the plan only, not in 3D or in the room front view.
+- Request: Accept default, /batch all ready (ADR-125: run sinks and handles)
+- Questions: Draw the cut-out as a hole in the 3D worktop?
+- Suggested pick: Extrude the worktop with the cut-out as a hole in 3D (the ADR-205 profile holes). (estimate: effort +10%, value +5%)
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
+- Issue: Cut-outs show only on the plan.
+- Fix: Give the worktop a profile hole for each cut-out in the project build.
+- Conflicts: none
+- Note: 2026-11-06: ADR-209 takes over the 3D holes (the suggested pick); the room front view moved to G-438.
+
+### G-409: Worktop joint fixings
+
+- Status: Open
+- Origin: ADR-205, 2026-11-06; agent scoped it out
+- Missing: A mitred or butt worktop joint lists no fixings (worktop connector bolts, biscuits). Their type and count are supplier values (ADR-010).
+- Request: Kitchen runs with plinth, filler, sink front (G-010 context, not a quote)
+- Questions: List a "Worktop joint fixings (your choice)" line under To choose before buying?
+- Suggested pick: Yes: one line per joint, with no count or size. (estimate: effort +5%, value +5%)
+- Work: Low
+- Impact: Low
+- Necessity: Low-medium
+- Issue: Worktop joints have no fixing line in the shopping list.
+- Fix: Add one user-chosen shopping line per worktop joint.
+
+### G-412: Worktop edge profiles and bundled appliance models
+
+- Status: ADR-209
+- Origin: ADR-206, 2026-11-06; split from G-020 by the coordinator (ADR-206 takes only the client sheet)
+- Missing: Worktops have no edge profile choice; no appliance models are bundled (appliances come only as .glb imports, ADR-076).
+- Request: “To sell designed kitchens”.
+- Questions: Which three edge profiles? Which licence for bundled appliance models (CC0)?
+- Suggested pick: Three profile choices drawn on the worktop; a few CC0 appliance models once you pick that licence. (estimate: effort +30%, value +20%)
+- Work: Medium
+- Impact: Medium
+- Necessity: Low-medium
+- Issue: Worktops cannot show an edge profile and no appliance models ship with the app.
+- Fix: Add three drawn worktop edge profiles; bundle a few CC0 appliance models once the licence is chosen.
+- Conflicts: none
+- Note: 2026-11-06: ADR-209 takes over the worktop edge profiles; the bundled CC0 appliance models moved to G-437.
+
+### G-413: Board pictures in the plan, catalog pictures and cut sheets
+
+- Status: ADR-208
+- Origin: ADR-206, 2026-11-06; split from G-001 by the coordinator
+- Missing: The plan, catalog snapshots (src/core/snapshot.ts) and the cut sheets draw boards in plain colour.
+- Request: “Render the furniture according to the selected material's color and structure”.
+- Questions: Fill the plan and catalog pictures with the board picture, against ADR-048's average colour for catalog pictures and cut sheets?
+- Suggested pick: Fill the plan with the picture pattern; keep the average colour on catalog pictures and cut sheets as ADR-048 decided. (estimate: effort +10%, value +5%)
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
+- Issue: The plan, catalog pictures and cut sheets show boards as plain colour, not their picture.
+- Fix: Fill the plan with the board picture pattern; a new ADR if catalog pictures or cut sheets should change.
+- Conflicts: ADR-048 (catalog pictures and cut sheets use the average colour)
+- Note: 2026-11-06: ADR-208 takes over board pictures on the 2D plan only. Catalog pictures and cut sheets moved to G-431 (ADR-048 keeps the average colour there).
+
+### G-414: Formula conditions and stepped rounding
+
+- Status: ADR-209
+- Origin: ADR-206, 2026-11-06; agent scoped it out (G-324's pick names min, max, floor, ceil and round only)
+- Missing: Formulas have no conditions (if) and no rounding to a step such as a sheet thickness.
+- Request: Formulas too (user answer 2026-10-30).
+- Questions: Add if(condition, a, b) and round(x, step)?
+- Suggested pick: Add them when a real project needs one. (estimate: effort +10%, value +5%)
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
+- Issue: Formulas cannot branch or round to a step.
+- Fix: Add if(condition, a, b) and round(x, step) to the formula parser.
+- Conflicts: none
+
+### G-420: Run parts read connections
+
+- Status: Open
+- Origin: ADR-207, 2026-11-06; remainder of G-007 (the coordinator kept ADR-207 to its size)
+- Missing: Suggest run parts (ADR-061) groups runs from touching pieces only; it does not read stored connections.
+- Request: “Verify, then Quick wins, then Medium effort”; later “guided snapping” and “cross-family composition”.
+- Questions: Should run parts treat side- and corner-connected pieces as one run?
+- Suggested pick: Build runs from side and corner connections when they exist, else from touching pieces as today. (estimate: effort +15%, value +10%)
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low
+- Issue: Run parts ignore stored connections.
+- Fix: Let groupRuns read side and corner connections.
+- Conflicts: none
+
+### G-421: L-shape and diagonal corners and desk pedestal ends share no side
+
+- Status: Open
+- Origin: ADR-207, 2026-11-06; remainder of G-354
+- Missing: Only a blind corner's straight end and a desk gable end can share a side; L-shape and diagonal corner units and a desk's pedestal end keep both sides.
+- Request: Add the possibility to have a common bottom or top between multiple items.
+- Questions: Should the wing ends of L-shape and diagonal corners and a desk's pedestal side be shared with a neighbouring cabinet?
+- Suggested pick: Share the wing ends of L-shape corners and a pedestal's outer side, as ADR-190 does for cabinets. (estimate: effort +25%, value +10%)
+- Work: Medium-high
+- Impact: Low
+- Necessity: Low
+- Issue: L-shape and diagonal corners and desk pedestal ends cannot share a side.
+- Fix: Extend sharedSideCheck and the corner and desk builds to those ends.
+- Conflicts: none
+
+### G-422: Merge assembly steps
+
+- Status: Open
+- Origin: ADR-207, 2026-11-06; remainder of G-344 (its pick names an editable order with a reset)
+- Missing: Steps can be reordered and renamed but not merged into one step.
+- Request: “Ordered step list + 3D highlight” (user 2026-11-04)
+- Questions: Let the user merge two neighbouring steps into one?
+- Suggested pick: Merge with the next step, saved in the design's step order, undone by Reset the steps. (estimate: effort +15%, value +5%)
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+- Issue: Two assembly steps cannot be merged.
+- Fix: Store merged step pairs with the step order and show them as one step.
+- Conflicts: none
+
+### G-423: Long-press to select several pieces
+
+- Status: Open
+- Origin: ADR-207, 2026-11-06; remainder of G-404 (gesture check)
+- Missing: There is no long-press gesture; on a phone the Select toggle adds pieces (ADR-097, ADR-159).
+- Request: “Duplicate, mirror and predictable rotate operations”.
+- Questions: Add a long-press on a piece that turns Select on and adds the piece?
+- Suggested pick: Not needed while the Select toggle covers the phone; add it if users miss it. (estimate: effort +10%, value +5%)
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
+- Issue: A phone user cannot start selecting several pieces by holding a piece.
+- Fix: Long-press on the plan, front view and 3D turns Select on and adds the piece.
+- Conflicts: none
+
+### G-424: Connector authoring
+
+- Status: Open
+- Origin: ADR-207, 2026-11-06; remainder of G-007
+- Missing: Connection kinds are fixed in code (side, corner, stacked, wall); the user cannot define connector points or kinds.
+- Request: “Verify, then Quick wins, then Medium effort”; later “guided snapping” and “cross-family composition”.
+- Questions: Let the user define connector points on a piece and the rules between them?
+- Suggested pick: Not yet; the four built-in kinds cover the requests so far. (estimate: effort +60%, value +10%)
+- Work: High
+- Impact: Low
+- Necessity: Low
+- Issue: Connector points and kinds cannot be authored.
+- Fix: A connector editor storing points and rules per piece, in its own ADR.
+- Conflicts: none
+
+### G-428: Angled walls
+
+- Status: Open
+- Origin: ADR-208, 2026-11-06; remainder of G-012 (ADR-208 takes only tracing over a plan picture)
+- Missing: Every room wall is parallel to x or z; a wall at another angle cannot be drawn or traced.
+- Request: Room and floor plan (context, not a quote)
+- Questions: Angled walls need a new ADR against ADR-003/004 (axis-aligned boxes); wanted?
+- Suggested pick: Ask first; if wanted, a new ADR for angled walls that keeps pieces axis-aligned to their own wall. (estimate: effort +40%, value +10%)
+- Work: High
+- Impact: Low-medium
+- Necessity: Low
+- Issue: Rooms with an angled wall cannot be drawn.
+- Fix: A new ADR for angled walls, against ADR-003/004, once the user wants it.
+- Conflicts: ADR-003, ADR-004, ADR-059 (walls parallel to x or z)
+
+### G-429: Render run on a laptop GPU
+
+- Status: Open
+- Origin: ADR-208, 2026-11-06; remainder of G-022 (ADR-208 takes the WebGPU path-tracer plan)
+- Missing: The full render find-it has not been run on a machine with a real GPU since the WebGPU engine was planned.
+- Request: Laptop, preview quality (context, not a quote)
+- Questions: Can you run the render once on your laptop after ADR-208 ships?
+- Suggested pick: Run the full render find-it on a machine with a GPU, on both engines, and record it in the backlog. (estimate: effort +5%, value +10%)
+- Work: Low
+- Impact: Low-medium
+- Necessity: Low
+- Issue: The render is checked only in a GPU-less browser.
+- Fix: The user runs the render on a laptop GPU and the result is recorded.
+- Conflicts: none
+
+### G-430: Bundled CC0 3D models
+
+- Status: Open
+- Origin: ADR-208, 2026-11-06; remainder of G-040 (ADR-208 takes placement, drag, snap and templates for models)
+- Missing: No 3D models ship with the app; models come only as .glb or .gltf imports (ADR-076).
+- Request: “Import 3D models and model libraries”.
+- Questions: Which licence for bundled models (CC0)? Which models (fridge, oven, sink, hob)?
+- Suggested pick: A small bundled set of CC0 models (fridge, oven, sink, hob) once you agree that licence; one answer also settles G-412's appliance models. (estimate: effort +15%, value +15%)
+- Work: Medium
+- Impact: Medium
+- Necessity: Low
+- Issue: There is no ready model library.
+- Fix: Bundle a few CC0 models in the app once the licence is chosen.
+- Conflicts: none
+
+### G-431: Board pictures in catalog pictures and cut sheets
+
+- Status: Open
+- Origin: ADR-208, 2026-11-06; remainder of G-413 (ADR-208 takes the 2D plan only)
+- Missing: Catalog snapshots (src/core/snapshot.ts) and the cut sheets draw boards in their average colour.
+- Request: “Render the furniture according to the selected material's color and structure”.
+- Questions: Fill catalog pictures and cut sheets with the board picture, against ADR-048's average colour?
+- Suggested pick: Keep the average colour as ADR-048 decided; a new ADR only if you want pictures there. (estimate: effort +10%, value +5%)
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
+- Issue: Catalog pictures and cut sheets show boards as plain colour.
+- Fix: A new ADR if catalog pictures or cut sheets should show the board picture.
+- Conflicts: ADR-048 (catalog pictures and cut sheets use the average colour)
+
+### G-436: Reverse-the-hinge repair
+
+- Status: Open
+- Origin: ADR-209, 2026-11-06; remainder of G-034 (the coordinator split it: the repair needs G-011)
+- Missing: A door blocked by a neighbour has no "Reverse the hinge" repair. The ADR-057 clearance is a box as deep as the door is wide on both sides, so reversing the hinge never clears it.
+- Request: “Explainable warnings with repairs”.
+- Questions: Build the hinge-side clearance (G-011, which changes ADR-057's box decision) and then this repair?
+- Suggested pick: Once G-011 is decided, offer the hinge repair for single doors. (estimate: effort +10%, value +10%)
+- Work: Low-medium
+- Impact: Low-medium
+- Necessity: Low-medium
+- Issue: Reversing the hinge is not offered as a repair.
+- Fix: After G-011, add the hinge repair to `repairsFor`.
+- Conflicts: ADR-057 (clearances are axis-aligned boxes on both hinge sides)
+
+### G-437: Bundled CC0 appliance models
+
+- Status: Open
+- Origin: ADR-209, 2026-11-06; remainder of G-412 (ADR-209 takes only the worktop edge profiles)
+- Missing: No appliance models ship with the app; appliances come only as .glb imports (ADR-076).
+- Request: “To sell designed kitchens”.
+- Questions: Bundle a few appliance models under the CC0 licence? Which ones?
+- Suggested pick: A few CC0 appliance models once you pick that licence and the models. (estimate: effort +15%, value +10%)
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low
+- Issue: A kitchen shows no appliances unless the user imports a model.
+- Fix: Bundle a few CC0 appliance models as display-only items once the licence is chosen.
+- Conflicts: none
+
+### G-438: Sink and hob cut-outs in the room front view
+
+- Status: Open
+- Origin: ADR-209, 2026-11-06; remainder of G-408 (its suggested pick was the 3D view only)
+- Missing: The room front view does not mark sink and hob cut-outs on the worktop.
+- Request: Accept default, /batch all ready (ADR-125: run sinks and handles)
+- Questions: Draw each cut-out as dashed hidden lines in the worktop's front view?
+- Suggested pick: Dashed lines at the cut-out's width on the worktop edge. (estimate: effort +5%, value +3%)
+- Work: Low
+- Impact: Low
+- Necessity: Low
+- Issue: Cut-outs are not seen in the front view.
+- Fix: Draw each cut-out's width dashed on the worktop in the room front view.
+- Conflicts: none
+
+### G-439: Drilling positions for joints other than carcass joints
+
+- Status: Open
+- Origin: ADR-209, 2026-11-06; agent scoped it out (remainder of G-380)
+- Missing: Drilling positions from the user's values are drawn for carcass joints only, not for back fixings, hanging points, worktop fixings or feet.
+- Request: “Hardware and fastener completeness”.
+- Questions: Which values would you enter for each of those joint types (for example distance from the edge for back fixings)?
+- Suggested pick: Back fixings next, around the back's perimeter, from an edge distance you enter. (estimate: effort +10%, value +5%)
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
+- Issue: Only carcass joints show drilling positions.
+- Fix: Add user-value drilling positions to the other joint types, one at a time.
+
+### G-444: No layout optimisation of room mixes
+
+- Status: Open
+- Origin: ADR-210, 2026-11-06; split from G-341 (its pick covers the budget and style filters only)
+- Missing: Fill the room ranks mixes by ADR-103 and ADR-173's rules; no search moves pieces between walls or trades widths to improve a whole-room layout.
+- Request: “Fill the room” (user 2026-11-04)
+- Questions: Should Fill the room optimise the whole layout (work triangle, fewest fillers) rather than rank per wall?
+- Suggested pick: Rank whole-room mixes by fewest fillers and corner warnings first, after ADR-210 ships (estimate: effort +30%, value +10%).
+- Work: Medium-high
+- Impact: Low-medium
+- Necessity: Low
+- Issue: Room mixes are ranked per wall; the whole layout is never optimised.
+- Fix: Add a whole-room ranking pass over the built mixes.
+- Conflicts: none
+
+### G-445: No peninsulas, and no islands outside rectangle rooms
+
+- Status: Open
+- Origin: ADR-210, 2026-11-06; split from G-342 (its pick names an island option only)
+- Missing: Fill the room offers an island in rectangle rooms only (ADR-210); no peninsula joined to a run, no island in L or U rooms.
+- Request: “Fill the room” (user 2026-11-04)
+- Questions: Offer a peninsula off the end of a run, and islands in L and U rooms?
+- Suggested pick: A peninsula option on Refine, a base run square to a wall's run end, with the same walkway width (estimate: effort +30%, value +10%).
+- Work: Medium-high
+- Impact: Low-medium
+- Necessity: Low
+- Issue: Peninsulas are never suggested and islands only fit rectangle rooms.
+- Fix: Add a peninsula option and island placement for L and U rooms.
+- Conflicts: none
+
+### G-446: Fill the room fills kitchen walls only
+
+- Status: Open
+- Origin: ADR-210, 2026-11-06; agent scoped it out (G-025's pick adds room presets, not new wizard room types)
+- Missing: Fill the room suggests kitchen cabinets only; bedroom (wardrobes) and office (desk, bookcases) walls come only from ADR-210's fixed room presets.
+- Request: The 14 features you selected at 21:28 (context, not a quote)
+- Questions: Should Fill the room offer a room type (Kitchen, Bedroom, Home office) that fills walls with that room's families?
+- Suggested pick: A Room type choice on the Room step, filling walls from the families of that room (estimate: effort +40%, value +15%).
+- Work: Medium-high
+- Impact: Medium
+- Necessity: Low
+- Issue: Fill the room cannot fill a bedroom or office.
+- Fix: Add a room type to Fill the room that picks the families it fills with.
+
+### G-452: Desktop mode switch in the top bar
+
+- Status: Open
+- Origin: ADR-211, 2026-11-06; split from G-027 by the coordinator (conflicts with ADR-079)
+- Missing: On desktop the Compose / Build & Preview switch is still its own row under the app bar (src/ui/App.tsx).
+- Request: “Help with the sticky bars top and bottom, they occupy too much”.
+- Questions: Move the desktop mode switch into the top bar, replacing ADR-079's "segmented control under the app bar"?
+- Suggested pick: Move it into the top bar on desktop through a new ADR that replaces that ADR-079 sentence (estimate: effort +5 %, value +5 %).
+- Work: Low
+- Impact: Low
+- Necessity: Low
+- Issue: The desktop mode switch takes its own row.
+- Fix: A new ADR moving the switch into the top bar on desktop.
+- Conflicts: ADR-079: decided the mode control sits under the app bar.
+
+### G-453: Lock a piece's insides
+
+- Status: Open
+- Origin: ADR-211, 2026-11-06; remainder of G-337 (its pick covers boards and construction only)
+- Missing: A piece's insides (spaces, dividers, shelves, drawers, doors) cannot be locked against changes.
+- Request: “Separate locks per parameter” (user 2026-11-04).
+- Questions: Add a Lock insides toggle that refuses changes to the piece's spaces?
+- Suggested pick: Add Lock insides beside Lock boards and Lock construction when a real project needs it (estimate: effort +15 %, value +5 %).
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+- Issue: A piece's insides cannot be locked.
+- Fix: A Lock insides toggle in More actions, refused like the other locks.
+- Conflicts: none
+
+### G-454: Versions of deleted projects with no project open
+
+- Status: Open
+- Origin: ADR-211, 2026-11-06; agent scoped it out (G-389's pick puts the list in History, inside an open project)
+- Missing: With no project open (for example after deleting every project) the versions of deleted projects cannot be reached.
+- Request: Accept default, /batch all ready (G-156: keep every version until the user deletes it).
+- Questions: Also show the Versions of deleted projects list on the Projects page?
+- Suggested pick: Show the same list, with Restore as a new project and Delete, under the Projects page's list (estimate: effort +4 %, value +3 %).
+- Work: Low
+- Impact: Low
+- Necessity: Low
+- Issue: Kept versions of deleted projects need an open project to be reached.
+- Fix: The same list on the Projects page.
+
+### G-460: Band tolerances and edgebander settings
+
+- Status: Open
+- Origin: ADR-212, 2026-11-06; agent scoped it out (remainder of G-038)
+- Missing: No band tolerances (thickness or width deviation, overhang to trim) and no edgebander settings; ADR-212 takes over only the band-list CSV import and its decor match.
+- Request: “Check the European standards for ABS, apply them accordingly”.
+- Questions: Add fields for tolerances and edgebander settings, filled only from values you type or your band list holds?
+- Suggested pick: Add them only as fields you fill, labelled guidance, nothing shipped (ADR-010). (estimate: effort +15%, value +5%)
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+- Issue: Band tolerances and edgebander settings are not recorded anywhere.
+- Fix: Add user-filled tolerance and edgebander fields to the band spec, labelled guidance (ADR-010).
+- Conflicts: none
+
+### G-463: Arrow keys choose a type in the wizard
+
+- Status: Acknowledged (2026-11-06)
 - Origin: ADR-194, 2026-11-06; built by the agent, choice not asked
 - Missing: On the Type step the arrow keys move the focus between the type radios without choosing one; Space or Enter chooses. The WAI-ARIA radio pattern also checks the radio on arrow keys, but choosing a type drops the Size answers it cannot use and resets the steps (ADR-191), so arrowing past a type would lose answers.
 - Request: ADR-194 item 7 (approved 2026-11-06): "the type radiogroup gets a roving tabindex with arrow keys"
@@ -2249,3 +2853,4 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Work: Low
 - Impact: Low
 - Necessity: Low
+- Fix: Arrow keys only move focus between types; Space or Enter chooses (user 2026-11-06).
