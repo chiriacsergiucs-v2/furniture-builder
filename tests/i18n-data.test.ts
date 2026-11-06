@@ -32,8 +32,24 @@ function designTexts(d: Design): string[] {
   return out;
 }
 
+/**
+ * A note with numbers in it is covered by one key with placeholders (ADR-202): "side clearance 13 mm per side" by
+ * "side clearance {n} mm per side", read through `tr()`.
+ */
+function byPlaceholders(s: string): boolean {
+  if (!/\d/.test(s)) return false;
+  setLang('ru');
+  try {
+    return tr(s) !== s;
+  } finally {
+    setLang('en');
+  }
+}
+
 const missing = (texts: (string | undefined)[]) =>
-  [...new Set(texts.filter((s): s is string => !!s && !!s.trim()))].filter((s) => !hasRu(s));
+  [...new Set(texts.filter((s): s is string => !!s && !!s.trim()))].filter(
+    (s) => !hasRu(s) && !byPlaceholders(s),
+  );
 
 describe('Russian text for built-in data (ADR-155)', () => {
   let safety = false;
