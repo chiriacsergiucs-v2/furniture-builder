@@ -34,6 +34,23 @@ export const PRINT_RU = {
   'gaură mâner ø$1 la': 'отверстие под ручку ø$1:',
   'mm de la stânga/jos': 'мм от левого/нижнего края',
   'tăiere după șablon ($1 puncte)': 'раскрой по шаблону (точек: $1)',
+  // Cut-outs and worktop joints (ADR-205)
+  'decupaj {w} × {h} mm la {u}/{v} mm de la stânga/jos':
+    'вырез {w} × {h} мм в {u}/{v} мм от левого/нижнего края',
+  'decupaj chiuvetă {w} × {d} mm': 'вырез под мойку {w} × {d} мм',
+  'decupaj plită {w} × {d} mm': 'вырез под варочную панель {w} × {d} мм',
+  'îmbinare la 45°': 'соединение под 45°',
+  'îmbinare cap la cap cu {other}': 'соединение встык с {other}',
+  // Placed cut-outs, moulding profiles, worktop edges and fixing positions (ADR-209)
+  'decupaj {what} {w} × {d} mm, la {x} mm de stânga și {z} mm de față':
+    'вырез {what} {w} × {d} мм, в {x} мм от левого края и {z} мм от переднего',
+  chiuvetă: 'под мойку',
+  plită: 'под варочную панель',
+  'profil {w} × {h} mm, desenat de tine': 'профиль {w} × {h} мм, нарисован вами',
+  'cant rotunjit R{s} mm': 'скруглённая кромка R{s} мм',
+  'cant teșit {s} mm': 'скошенная кромка {s} мм',
+  'găuri de fixare la {list} mm, orientativ, din valorile tale':
+    'отверстия под крепёж в {list} мм, ориентировочно, по вашим значениям',
   // Hardware
   'Pereche glisiere cu bile, montaj lateral': 'Пара шариковых направляющих, боковой монтаж',
   'joc {gap} mm pe parte': 'зазор {gap} мм на сторону',
@@ -256,7 +273,37 @@ export const PRINT_RU = {
   plăci: 'листы',
   'm²': 'м²',
   m: 'м',
+  // Fastener lines on the shopping CSV and printed list (ADR-202)
+  'Fixare îmbinări': 'Крепёж соединений',
+  'Suporți de raft': 'Полкодержатели',
+  'Fixare panouri de spate': 'Крепёж задних стенок',
+  'Fixare agățători': 'Крепёж навесов',
+  'Fixare blaturi': 'Крепёж столешниц',
+  Picioare: 'Опоры',
+  'fiecare loc unde se întâlnesc două plăci ale corpului: laterale, capac, bază, despărțitori, rafturi fixe, traverse':
+    'каждое место, где встречаются две плиты корпуса: боковины, крышка, дно, перегородки, неподвижные полки, царги',
+  'suporții de raft din lista de feronerie': 'полкодержатели и опоры из перечня фурнитуры',
+  'fiecare panou de spate, fixat pe tot perimetrul':
+    'каждая задняя стенка, крепится по всему периметру',
+  'fiecare agățătoare a unei piese suspendate': 'каждый навес навесного изделия',
+  'fiecare blat, de linie sau de birou': 'каждая столешница, ряда или стола',
+  'fiecare piesă așezată pe soclu': 'каждое изделие на цоколе',
+  ', {m} m de margine a spatelui': ', {m} м кромки задней стенки',
+  ', {m} m de blat': ', {m} м столешницы',
+  'Orientativ: numărat din model': 'Ориентировочно: подсчитано по модели',
+  '{line}: {count} — alegeți elementul de fixare': '{line}: {count} — выберите крепёж',
+  '{guidance} ({how}{len}). Numiți-l pe al dvs. în {path}.':
+    '{guidance} ({how}{len}). Укажите свой в разделе {path}.',
+  'Șuruburile, diblurile și excentricii sunt numărați doar ca îmbinări, orientativ; elementul de fixare îl alegeți dvs. ({path}). Lipiciul nu este numărat.':
+    'Шурупы, шканты и эксцентрики учитываются только как соединения, ориентировочно; крепёж выбираете вы ({path}). Клей не учитывается.',
   buc: 'шт.',
+  // Client sheet and step pictures (ADR-206)
+  'Fișă pentru client': 'Лист для клиента',
+  'Preț estimat': 'Ориентировочная цена',
+  'linii fără preț': 'строк без цены',
+  'Dimensiuni L × Î × A, mm': 'Размеры Ш × В × Г, мм',
+  'Prețuri de vânzător: {sellers}': 'Цены продавца: {sellers}',
+  'Imaginile pașilor cer vizualizarea 3D': 'Для картинок шагов нужен 3D-вид',
 } satisfies Record<string, string>;
 
 export const PRINT_EN: Record<keyof typeof PRINT_RU, string> = {
@@ -288,6 +335,21 @@ export const PRINT_EN: Record<keyof typeof PRINT_RU, string> = {
   'gaură mâner ø$1 la': 'handle hole ø$1 at',
   'mm de la stânga/jos': 'mm from left/bottom',
   'tăiere după șablon ($1 puncte)': 'cut to template ($1 points)',
+  'decupaj {w} × {h} mm la {u}/{v} mm de la stânga/jos':
+    'cut-out {w} × {h} mm at {u}/{v} mm from left/bottom',
+  'decupaj chiuvetă {w} × {d} mm': 'sink cut-out {w} × {d} mm',
+  'decupaj plită {w} × {d} mm': 'hob cut-out {w} × {d} mm',
+  'îmbinare la 45°': 'mitre joint',
+  'îmbinare cap la cap cu {other}': 'butt joint against {other}',
+  'decupaj {what} {w} × {d} mm, la {x} mm de stânga și {z} mm de față':
+    '{what} cut-out {w} × {d} mm, {x} mm from the left and {z} mm from the front',
+  chiuvetă: 'sink',
+  plită: 'hob',
+  'profil {w} × {h} mm, desenat de tine': 'profile {w} × {h} mm, drawn by you',
+  'cant rotunjit R{s} mm': 'rounded edge R{s} mm',
+  'cant teșit {s} mm': 'bevelled edge {s} mm',
+  'găuri de fixare la {list} mm, orientativ, din valorile tale':
+    'fixing holes at {list} mm, guidance from your values',
   'Pereche glisiere cu bile, montaj lateral': 'Ball-bearing runner pair, side mount',
   'joc {gap} mm pe parte': '{gap} mm clearance per side',
   'Balama aplicată, cupă 35 mm, soft-close, clip-on':
@@ -495,4 +557,32 @@ export const PRINT_EN: Record<keyof typeof PRINT_RU, string> = {
   'm²': 'm²',
   m: 'm',
   buc: 'pcs',
+  // Fastener lines on the shopping CSV and printed list (ADR-202)
+  'Fixare îmbinări': 'Joint fixings',
+  'Suporți de raft': 'Shelf pins',
+  'Fixare panouri de spate': 'Back fixings',
+  'Fixare agățători': 'Hanging point fixings',
+  'Fixare blaturi': 'Worktop fixings',
+  Picioare: 'Feet',
+  'fiecare loc unde se întâlnesc două plăci ale corpului: laterale, capac, bază, despărțitori, rafturi fixe, traverse':
+    'each place two carcass boards meet: sides, top, bottom, dividers, fixed shelves, rails',
+  'suporții de raft din lista de feronerie': 'the shelf pins and supports in the hardware schedule',
+  'fiecare panou de spate, fixat pe tot perimetrul': 'each back panel, fixed round its perimeter',
+  'fiecare agățătoare a unei piese suspendate': 'each hanging bracket of a wall-hung piece',
+  'fiecare blat, de linie sau de birou': 'each worktop, run or desk top',
+  'fiecare piesă așezată pe soclu': 'each piece standing on a plinth',
+  ', {m} m de margine a spatelui': ', {m} m of back edge',
+  ', {m} m de blat': ', {m} m of worktop',
+  'Orientativ: numărat din model': 'Guidance: counted from the model',
+  '{line}: {count} — alegeți elementul de fixare': '{line}: {count} — choose your fastener',
+  '{guidance} ({how}{len}). Numiți-l pe al dvs. în {path}.':
+    '{guidance} ({how}{len}). Name yours under {path}.',
+  'Șuruburile, diblurile și excentricii sunt numărați doar ca îmbinări, orientativ; elementul de fixare îl alegeți dvs. ({path}). Lipiciul nu este numărat.':
+    'Screws, dowels and cams are counted only as joints, as guidance; the fastener is yours ({path}). Glue is not counted.',
+  'Fișă pentru client': 'Client sheet',
+  'Preț estimat': 'Estimated price',
+  'linii fără preț': 'lines without a price',
+  'Dimensiuni L × Î × A, mm': 'Size W × H × D, mm',
+  'Prețuri de vânzător: {sellers}': 'Seller prices: {sellers}',
+  'Imaginile pașilor cer vizualizarea 3D': 'Step pictures need the 3D view',
 };

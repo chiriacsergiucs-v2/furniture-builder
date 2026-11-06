@@ -182,6 +182,17 @@ export function hardwareOffers(
   });
 }
 
+/**
+ * Products for a run part (ADR-206): a worktop's worktops first, then boards; any product is searchable, since a
+ * plinth, filler or trim may be sold as its own item.
+ */
+export const runPartOffers = (cats: SellerCatalog[], worktop: boolean, query = '') =>
+  searchProducts(cats, {
+    query,
+    score: (p) =>
+      p.k === (worktop ? 'worktop' : 'board') ? 0 : p.k === 'worktop' || p.k === 'board' ? 1 : 2,
+  });
+
 /** Any product at all (Add seller product). */
 export const anyOffers = (cats: SellerCatalog[], query = '') => searchProducts(cats, { query });
 

@@ -1,3 +1,4 @@
+import { parentOf } from '../core/selectPath';
 import { Component, lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   lastDesignId,
@@ -38,11 +39,15 @@ import { Inspector, selectionLabel } from './Inspector';
 import { Output } from './Output';
 import { useProblem } from './problemStore';
 import { PrintSheet } from './PrintSheet';
+import { PrintClient } from './PrintClient';
 import { Icon } from './icons';
+import { SheetHandle, type SheetStop } from './SheetHandle';
+import { rovingKeys, rovingTab } from './controls';
 import { setTheme, useTheme } from './useTheme';
 import { setLook, useLook } from './useLook';
 import { RenderDialog } from './RenderDialog';
 import { MoreMenu } from './shell/MoreMenu';
+import { SceneMenu } from './SceneMenu';
 import { editorShortcutAllowed } from './editorShortcuts';
 import { ProjectsPage } from './shell/ProjectsPage';
 import { useMediaQuery } from './useMediaQuery';
@@ -243,7 +248,10 @@ export function App() {
   // changes (G-266); only crossing 1500 px starts again from the default (G-268).
   const [view, setView] = useState<StageView>(() => defaultView(wide, has3d));
   const [lastWide, setLastWide] = useState(wide);
-  const [sheetOpen, setSheetOpen] = useState(false);
+  // The phone Compose sheet's stop (ADR-211, G-027): peek, half (today's open sheet) or full.
+  const [sheetStop, setSheetStop] = useState<SheetStop>('peek');
+  const sheetOpen = sheetStop !== 'peek';
+  const setSheetOpen = (open: boolean) => setSheetStop(open ? 'half' : 'peek');
   if (wide !== lastWide) {
     setLastWide(wide);
     setView(defaultView(wide, has3d));
@@ -289,7 +297,9 @@ export function App() {
   if (selKey !== lastSel) {
     setLastSel(selKey);
     const keepClosed = takeKeepSheetClosed();
-    if (selKey && !tapMode && inProject && !keepClosed) setSheetOpen(true);
+    // A chosen piece opens the half sheet; a full sheet stays full (ADR-211).
+    if (selKey && !tapMode && inProject && !keepClosed)
+      setSheetStop((st) => (st === 'peek' ? 'half' : st));
   }
   // A project check tapped under Checks (ADR-071) is shown on the plan: the drawing comes forward, the sheet steps aside.
   const problemTap = useProblem((s) => s.tapped);
@@ -486,7 +496,8 @@ export function App() {
       if (e.key === 'Escape' && !e.defaultPrevented && !document.querySelector('dialog[open]')) {
         const st = useDesign.getState();
         if (st.project && !st.editingItemId) st.selectItem(null);
-        else st.select(null);
+        // In the piece editor Esc goes up one level: a space → the one around it → the whole piece → nothing (ADR-203).
+        else st.select(parentOf(st.model, st.selectedId));
       }
     };
     window.addEventListener('keydown', onKey);
@@ -731,13 +742,19 @@ export function App() {
         {page === 'editor' && (
           <div className="modes" ref={modesRef}>
             {phone && <EstimateChip compact />}
-            <div className="segmented" role="radiogroup" aria-label={t('Editor mode')}>
-              {MODES.map((m) => (
+            <div
+              className="segmented"
+              role="radiogroup"
+              aria-label={t('Editor mode')}
+              onKeyDown={rovingKeys}
+            >
+              {MODES.map((m, i) => (
                 <button
                   key={m}
                   type="button"
                   role="radio"
                   aria-checked={mode === m}
+                  tabIndex={rovingTab(mode === m, i, MODES.includes(mode))}
                   className={mode === m ? 'on' : ''}
                   onClick={() => setMode(m)}
                 >
@@ -781,20 +798,23 @@ export function App() {
             onNewPiece={() => openWizard(null)}
           />
         )}
-        {page === 'research' && <ResearchPage onDone={() => setPage('editor')} />}
-        {page === 'gaps' && <GapsPage onDone={() => setPage('editor')} />}
+        {page === 'research' && (
+          <ResearchPage onDone={() => setPage('editor')} designOpen={designOpen} />
+        )}
+        {page === 'gaps' && <GapsPage onDone={() => setPage('editor')} designOpen={designOpen} />}
         {page === 'info' && <InfoPage onDone={() => setPage('editor')} />}
         <main
-          className={`work mode-${mode} ${sheetOpen ? 'sheet-open' : ''}`}
+          className={`work mode-${mode} ${sheetOpen ? 'sheet-open' : ''} ${sheetStop === 'full' ? 'sheet-full' : ''}`}
           hidden={page !== 'editor'}
         >
           <aside className="side" aria-label={t('Compose')}>
             <div className="sheet-peek-row">
+              {phone && <SheetHandle stop={sheetStop} onStop={setSheetStop} />}
               <button
                 type="button"
                 className="sheet-peek"
                 aria-expanded={sheetOpen}
-                onClick={() => setSheetOpen((o) => !o)}
+                onClick={() => setSheetOpen(!sheetOpen)}
               >
                 <span>{peek}</span>
                 <Icon name={sheetOpen ? 'chevron-down' : 'chevron-up'} className="sm" />
@@ -823,13 +843,23 @@ export function App() {
               />
             )}
             <div className="stage-tools">
-              <div className="segmented small" role="radiogroup" aria-label={t('View')}>
-                {viewOptions(has3d).map((o) => (
+              <div
+                className="segmented small"
+                role="radiogroup"
+                aria-label={t('View')}
+                onKeyDown={rovingKeys}
+              >
+                {viewOptions(has3d).map((o, i, all) => (
                   <button
                     key={o.id}
                     type="button"
                     role="radio"
                     aria-checked={shown === o.id}
+                    tabIndex={rovingTab(
+                      shown === o.id,
+                      i,
+                      all.some((x) => x.id === shown),
+                    )}
                     className={shown === o.id ? 'on' : ''}
                     disabled={o.disabled}
                     title={o.reason}
@@ -874,13 +904,19 @@ export function App() {
                   </button>
                 )}
                 {mount3d && (
-                  <div className="segmented small" role="radiogroup" aria-label={t('Look')}>
-                    {(['simple', 'realistic'] as const).map((l) => (
+                  <div
+                    className="segmented small"
+                    role="radiogroup"
+                    aria-label={t('Look')}
+                    onKeyDown={rovingKeys}
+                  >
+                    {(['simple', 'realistic'] as const).map((l, i) => (
                       <button
                         key={l}
                         type="button"
                         role="radio"
                         aria-checked={look === l}
+                        tabIndex={rovingTab(look === l, i, true)}
                         className={look === l ? 'on' : ''}
                         onClick={() => setLook(l)}
                       >
@@ -902,6 +938,7 @@ export function App() {
                     {t('Render')}
                   </button>
                 )}
+                {mount3d && <SceneMenu name={inProject ? project!.name : design.name} />}
               </ViewOptions>
             </div>
             <div className={`views ${shown === 'both' ? 'both' : ''}`}>
@@ -980,7 +1017,14 @@ export function App() {
         />
       </div>
       <ConfirmHost />
-      {printing && (printMode === 'assembly' ? <PrintAssembly /> : <PrintSheet />)}
+      {printing &&
+        (printMode === 'assembly' ? (
+          <PrintAssembly />
+        ) : printMode === 'client' ? (
+          <PrintClient />
+        ) : (
+          <PrintSheet />
+        ))}
     </>
   );
 }

@@ -13,6 +13,7 @@
 import { baseLabel } from './cutlist';
 import {
   carcassJointPairs,
+  COUNTED_PT,
   JOINT_BY_ID,
   JOINTS,
   plural,
@@ -33,25 +34,20 @@ import {
 } from './project';
 import { NEAR_WALL, wallEnds, wallInward, type Pt, type Room } from './room';
 import { insideCorner } from './roomfill';
-import type { Box, FurnitureModel, HardwareKind, Mm, Panel, PanelRole } from './types';
+import type {
+  AssemblyEdit,
+  Box,
+  Design,
+  FurnitureModel,
+  HardwareKind,
+  Mm,
+  Panel,
+  PanelRole,
+  StepId,
+} from './types';
+import { printPieceName } from './catalog/printName';
 
-export type StepId =
-  | 'prepare'
-  | 'fit-hardware'
-  | 'bottom'
-  | 'sides'
-  | 'fixed'
-  | 'top'
-  | 'back'
-  | 'plinth'
-  | 'adjustable'
-  | 'drawers'
-  | 'fronts'
-  | 'handles'
-  | 'hang'
-  | 'fit'
-  | 'loose'
-  | 'also';
+export type { StepId };
 
 export interface StepPart {
   /** Panel ids of the model (one entry per identical part; in a drawer box group, every box's). */
@@ -82,6 +78,8 @@ export interface StepHardware {
   sizeMm?: Mm;
   /** Absent: the whole item. Runner pairs: carcass or drawer half; hinges: mounting plate or door half. */
   half?: HardwareHalf;
+  /** The panels the carcass half or the mounting plates fix to (ADR-207, `HardwareItem.panelIds`), for Show step. */
+  panelIds?: string[];
 }
 
 /** The fasteners of one joint type a step uses (ADR-185, counted by ADR-074's rules). */
@@ -100,7 +98,10 @@ export interface AssemblyStep {
   id: StepId;
   /** Step number from 1, in order. */
   n: number;
+  /** The generated title (`STEP_TITLE`). */
   title: string;
+  /** The user's own name for the step (ADR-207), shown as typed on the tab and the sheet; absent = `title`. */
+  named?: string;
   /** The parts fixed in this step (every panel is in exactly one step's `parts` or `boxes`). */
   parts: StepPart[];
   /** Drawer boxes, identical ones once (ADR-186). */
@@ -307,8 +308,11 @@ function groupHardware(items: StepHardware[]): StepHardware[] {
   for (const h of items) {
     const key = `${h.kind}|${h.label}|${h.half ?? ''}`;
     const have = out.get(key);
-    if (have) have.quantity += h.quantity;
-    else out.set(key, { ...h });
+    if (have) {
+      have.quantity += h.quantity;
+      if (h.panelIds?.length)
+        have.panelIds = [...new Set([...(have.panelIds ?? []), ...h.panelIds])];
+    } else out.set(key, { ...h, ...(h.panelIds ? { panelIds: [...h.panelIds] } : {}) });
   }
   return [...out.values()];
 }
@@ -319,17 +323,87 @@ export const stepPanelIds = (s: AssemblyStep): string[] => [
   ...s.boxes.flatMap((b) => b.parts.flatMap((p) => p.panelIds)),
 ];
 
-/** The panels Show step lights: the step's own, the parts it works on again and the parts it prepares. */
+/**
+ * The panels Show step lights: the step's own, the parts it works on again, the parts it prepares, and the panels the
+ * carcass halves and hinge plates it fits go on (ADR-207).
+ */
 export const stepLitIds = (s: AssemblyStep): string[] => [
-  ...stepPanelIds(s),
-  ...s.again.flatMap((p) => p.panelIds),
-  ...s.prep.flatMap((x) =>
-    x.kind === 'band' ? x.part.panelIds : x.kind === 'pins' ? x.panelIds : [],
-  ),
+  ...new Set([
+    ...stepPanelIds(s),
+    ...s.again.flatMap((p) => p.panelIds),
+    ...s.prep.flatMap((x) =>
+      x.kind === 'band' ? x.part.panelIds : x.kind === 'pins' ? x.panelIds : [],
+    ),
+    ...s.hardware.flatMap((h) =>
+      h.half === 'carcass' || h.half === 'plate' ? (h.panelIds ?? []) : [],
+    ),
+  ]),
 ];
 
-/** The steps for one piece's model; every panel is in exactly one step, every scheduled hardware item too. */
-export function assemblySteps(model: FurnitureModel): AssemblyStep[] {
+/**
+ * The steps in the user's order with their names (ADR-207): the steps `edit.order` names come first, in that order;
+ * every other step keeps its generated place right after its generated predecessor (at the start when it has none).
+ * Unknown ids are ignored; an empty name keeps the generated title. Numbers follow the new order.
+ */
+export function orderSteps(steps: AssemblyStep[], edit?: AssemblyEdit): AssemblyStep[] {
+  if (!edit) return steps;
+  const have = new Set(steps.map((s) => s.id));
+  const named = [...new Set(edit.order.filter((id) => have.has(id)))];
+  const order: StepId[] = [...named];
+  steps.forEach((s, i) => {
+    if (named.includes(s.id)) return;
+    const before = i > 0 ? order.indexOf(steps[i - 1].id) : -1;
+    order.splice(before + 1, 0, s.id);
+  });
+  const byId = new Map(steps.map((s) => [s.id, s]));
+  return order.map((id, i) => {
+    const s = byId.get(id)!;
+    const name = edit.names?.[id]?.trim();
+    return { ...s, n: i + 1, ...(name ? { named: name } : {}) };
+  });
+}
+
+/** The edit that moves step `id` one place up (-1) or down (1) in `steps` as shown; null at either end. */
+export function moveStep(
+  steps: AssemblyStep[],
+  id: StepId,
+  dir: -1 | 1,
+  edit?: AssemblyEdit,
+): AssemblyEdit | null {
+  const order = steps.map((s) => s.id);
+  const i = order.indexOf(id),
+    j = i + dir;
+  if (i < 0 || j < 0 || j >= order.length) return null;
+  [order[i], order[j]] = [order[j], order[i]];
+  return { ...edit, order };
+}
+
+/** The edit that names step `id` (an empty name restores the generated title); the order as shown is kept. */
+export function renameStep(
+  steps: AssemblyStep[],
+  id: StepId,
+  name: string,
+  edit?: AssemblyEdit,
+): AssemblyEdit {
+  const names = { ...edit?.names };
+  const text = name.trim().slice(0, 120);
+  if (text) names[id] = text;
+  else delete names[id];
+  return {
+    order: edit?.order ?? steps.map((s) => s.id),
+    ...(Object.keys(names).length ? { names } : {}),
+  };
+}
+
+/**
+ * The steps for one piece's model; every panel is in exactly one step, every scheduled hardware item too. `edit`: the
+ * user's order and names (ADR-207, `Design.assembly`).
+ */
+export function assemblySteps(model: FurnitureModel, edit?: AssemblyEdit): AssemblyStep[] {
+  return orderSteps(generatedSteps(model), edit);
+}
+
+function generatedSteps(model: FurnitureModel): AssemblyStep[] {
   const pinned = new Set(model.hardware.filter((h) => h.kind === 'shelf-pin').map((h) => h.nodeId));
   // A panel set (ADR-041) or frame furniture (ADR-038): one step, no order claimed.
   const loose = model.panels.some((p) => p.role === 'loose' || FRAME.has(p.role));
@@ -376,7 +450,11 @@ export function assemblySteps(model: FurnitureModel): AssemblyStep[] {
       ...(h.sizeMm ? { sizeMm: h.sizeMm } : {}),
     };
     if (halves) {
-      addHw('fit-hardware', { ...item, half: halves[0] });
+      addHw('fit-hardware', {
+        ...item,
+        half: halves[0],
+        ...(h.panelIds?.length ? { panelIds: [...h.panelIds] } : {}),
+      });
       addHw(s, { ...item, half: halves[1] });
     } else addHw(s, item);
     if (h.kind === 'shelf-pin') addFast(s, 'shelf-pin', h.quantity);
@@ -462,7 +540,7 @@ export const hardwareName = (h: StepHardware, w: Words): string =>
 
 /** The step's title. */
 export const stepTitle = (s: AssemblyStep, w: Words): string =>
-  w === 'print' ? pt(STEP_PT[s.id]) : s.title;
+  s.named ?? (w === 'print' ? pt(STEP_PT[s.id]) : s.title);
 
 /** "Drawer box × 4". */
 export const boxTitle = (b: StepBox, w: Words): string =>
@@ -489,15 +567,6 @@ export function hardwareLine(h: StepHardware, w: Words): string {
   return `${h.quantity} × ${hardwareName(h, w)}${half}`;
 }
 
-/** Counted joints of a type in the print language ("4 îmbinări"). */
-const COUNTED_PT: Record<JointType, PrintKey> = {
-  'carcass-joint': '{n|# îmbinare|# îmbinări}',
-  'shelf-pin': '{n|# suport de raft|# suporți de raft}',
-  'back-fixing': '{n|# panou de spate|# panouri de spate}',
-  'hanging-point': '{n|# agățătoare|# agățători}',
-  'worktop-fixing': '{n|# blat|# blaturi}',
-  foot: '{n|# piesă pe soclu|# piese pe soclu}',
-};
 const counted = (j: JointType, n: number, w: Words) =>
   w === 'print' ? pt(COUNTED_PT[j], { n }) : plural(n, JOINT_BY_ID.get(j)!);
 
@@ -786,6 +855,8 @@ export interface OrderEntry {
   ids: string[];
   /** The piece's name, or the part's label as the generators name it (English: `tr()` / `partRo()` to show). */
   name: string;
+  /** A piece's design, for its name on the print (`printPieceName`, ADR-202). */
+  design?: Pick<Design, 'name' | 'catalog'>;
   /** Copies of a piece and its linked copies (ADR-111), or identical run parts: how many this line stands for. */
   times: number;
   /** The wall (from 0) the piece's back stands on; absent = on no wall, or no room. */
@@ -952,6 +1023,7 @@ export function projectAssemblyOrder(
         kind: 'piece',
         ids: [pc.item.id],
         name: pc.item.design.name,
+        design: pc.item.design,
         times: pc.item.quantity,
         ...(w !== undefined ? { wall: w } : {}),
       };
@@ -1019,7 +1091,7 @@ const STAGE_PT: Record<ProjectStageId, PrintKey> = {
 
 /**
  * The Project order as the printed assembly sheet starts with it (ADR-178), in the print language (ADR-157): a
- * heading and each numbered stage with its lines (piece names as the user named them; part names via `partRo`).
+ * heading and each numbered stage with its lines (piece names via `printPieceName`; part names via `partRo`).
  */
 export function projectOrderPrint(stages: ProjectStage[]): {
   heading: string;
@@ -1035,7 +1107,9 @@ export function projectOrderPrint(stages: ProjectStage[]): {
           e.kind === 'sink'
             ? pt('Decupaj chiuvetă {w} × {d} mm', { w: e.size![0], d: e.size![1] })
             : e.kind === 'piece'
-              ? e.name
+              ? e.design
+                ? printPieceName(e.design)
+                : e.name
               : partRo(e.name);
         const wall = e.wall !== undefined ? ` (${pt('peretele {n}', { n: e.wall + 1 })})` : '';
         return `${name}${e.times > 1 ? ` × ${e.times}` : ''}${wall}`;

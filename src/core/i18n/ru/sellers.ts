@@ -29,8 +29,6 @@ export const ru_sellers = {
   'No product matches.': 'Нет подходящих товаров.',
   'On order': 'Под заказ',
   'Online only': 'Только онлайн',
-  'Open a piece to add a seller product to it':
-    'Откройте изделие, чтобы добавить в него товар продавца',
   'Out of stock': 'Нет в наличии',
   'Pictures load from the seller’s site while this is on.':
     'Пока это включено, картинки загружаются с сайта продавца.',
@@ -63,4 +61,6 @@ export const ru_sellers = {
   '{price} {currency} {per}': '{price} {currency} {per}',
   '{seller}, {date}': '{seller}, {date}',
   '{w} × {t} mm': '{w} × {t} мм',
+  'Any product of a seller, added to this project’s shopping list.':
+    'Любой товар продавца, добавленный в список покупок этого проекта.',
 };

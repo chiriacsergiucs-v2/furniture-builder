@@ -23,6 +23,7 @@ jobs:
     outputs:
       skip: ${{ steps.msg.outputs.skip }}
       docs_only: ${{ steps.docs.outputs.docs_only }}
+      core_only: ${{ steps.docs.outputs.core_only }}
     steps:
       - id: msg
         env:
@@ -73,14 +74,34 @@ jobs:
             if [ "$n" -gt 0 ] && [ "$n" -lt 300 ]; then echo true; else echo false; fi
           }
           # END docs-only matcher
+          # ADR-201 (G-368): a pull request whose every changed path is under src/core/ or docs-only, with at least one
+          # under src/core/, runs only the tests that import a changed file (`vitest --changed`). Deleted or renamed
+          # files, 300 or more files and an API error get the full run.
+          # BEGIN core-only matcher
+          core_only_list() {
+            local n=0 core=0 f
+            while IFS= read -r f; do
+              [ -n "$f" ] || continue
+              n=$((n + 1))
+              case "$f" in
+                src/core/*) core=$((core + 1)) ;;
+                *) docs_only_path "$f" || { echo false; return; } ;;
+              esac
+            done
+            if [ "$core" -gt 0 ] && [ "$n" -lt 300 ]; then echo true; else echo false; fi
+          }
+          # END core-only matcher
           docs_only=false
+          core_only=false
           if [ "$EVENT" = pull_request ] &&
             files=$(gh api "repos/$REPO/compare/$BASE...$HEAD" --paginate --jq '.files[] |
               if .status == "removed" then "deleted:" + .filename
               else .filename, (.previous_filename // empty | "deleted:" + .) end'); then
             docs_only=$(printf '%s\n' "$files" | docs_only_list)
+            core_only=$(printf '%s\n' "$files" | core_only_list)
           fi
           echo "docs_only=$docs_only" | tee -a "$GITHUB_OUTPUT"
+          echo "core_only=$core_only" | tee -a "$GITHUB_OUTPUT"
 
   checks:
     needs: ship-check
@@ -136,9 +157,14 @@ jobs:
       fail-fast: false
       matrix:
         shard: [1, 2, 3]
+    env:
+      CORE_ONLY: ${{ needs.ship-check.outputs.core_only }}
 
     steps:
+      # A core-only pull request (ADR-201) needs its base: the merge commit's first parent, two commits deep.
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: ${{ needs.ship-check.outputs.core_only == 'true' && 2 || 1 }}
 
       - uses: pnpm/setup@v3
         with:
@@ -146,7 +172,15 @@ jobs:
           cache: true
           require-lockfile: true
 
-      - run: pnpm test --shard=${{ matrix.shard }}/3
+      # Pushes to main and every other pull request run the whole suite. A core-only pull request runs the tests whose
+      # imports reach a changed file: `--changed` against the base (HEAD^1 of the merge commit), shard by shard.
+      - name: test (related to a core-only change)
+        if: env.CORE_ONLY == 'true'
+        run: pnpm test --changed "$(git rev-parse HEAD^1)" --passWithNoTests --shard=${{ matrix.shard }}/3
+
+      - name: test
+        if: env.CORE_ONLY != 'true'
+        run: pnpm test --shard=${{ matrix.shard }}/3
 
   # Type errors are caught by `pnpm typecheck` in `checks`, so the build here is `vite build` alone (ADR-197).
   build:

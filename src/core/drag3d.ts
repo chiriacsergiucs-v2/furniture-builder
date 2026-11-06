@@ -6,6 +6,7 @@
  */
 import { liftOff, type PlacedPiece, type Project, type ProjectItem } from './project';
 import { dropTarget, SNAP_RANGE, type SnapResult } from './snap';
+import { modelDrop as placeDrop } from './modelPlace';
 import type { Mm } from './types';
 
 /** A room point on the plan, in mm (x along the back wall, z away from it). */
@@ -91,4 +92,32 @@ export function landingY(item: ProjectItem): Mm {
   if (item.placement?.kind !== 'above') return item.position.y;
   const pl = liftOff(item);
   return pl?.kind === 'wall' ? pl.height : 0;
+}
+
+/**
+ * The drop for a display-only 3D model (ADR-076) pressed at `from` and dragged to `to` (ADR-203, G-105): the same
+ * drop as a plan drag of the model (ADR-208, `modelPlace.modelDrop`): the 10 mm step, and with `snap` its sides snap
+ * within `range` to the walls, the pieces' faces and the other models' sides; a model on a piece lands on the floor.
+ * Whole mm; null when the model is not in the project. Never throws.
+ */
+export function modelDrop(
+  project: Project,
+  pieces: PlacedPiece[],
+  id: string,
+  from: FloorPoint,
+  to: FloorPoint,
+  snap: boolean,
+  range: Mm = SNAP_RANGE,
+): SnapResult | null {
+  const d = placeDrop(project, pieces, id, to.x - from.x, to.z - from.z, snap, range);
+  if (!d) return null;
+  return {
+    position: d.position,
+    box: d.box,
+    snap: d.snap
+      ? { label: d.snap, notes: [], kind: d.snap.includes(' · ') ? 'corner' : 'side' }
+      : null,
+    hint: d.hint,
+    refused: [],
+  };
 }

@@ -8,6 +8,7 @@ import { buildFrame } from './frame';
 import { buildPanel } from './panel';
 import { bandFor, bandText } from './materials';
 import { runRules } from './rules';
+import { designVariableDiagnostics } from './variables';
 import { box, contains, cutDimensions, isMm, union } from './geometry';
 import { aabbOf, panelsOverlap, shapeProblems } from './shape';
 import type { Design, Diagnostic, EdgeBand, FurnitureModel, Material, Panel } from './types';
@@ -263,6 +264,8 @@ export function buildModel(design: Design): FurnitureModel {
   };
   // Construction guidance (ADR-035): labelled warnings and reminders, after the independent checks above.
   const ruled = runRules(design, model, materials);
+  // The piece's own variables and bindings (ADR-210): a problem is an error and blocks export (ADR-008).
+  model.diagnostics.push(...designVariableDiagnostics(design));
   model.diagnostics.push(...ruled.diagnostics);
   model.hardware.push(...ruled.hardware);
   return model;

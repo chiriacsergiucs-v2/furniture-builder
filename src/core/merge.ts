@@ -6,6 +6,7 @@
  */
 import { t as tx } from './i18n';
 import { fr, mm, newId, SCHEMA_VERSION } from './design';
+import { mergeConnections } from './connections';
 import {
   placeItem,
   type Placement,
@@ -248,5 +249,10 @@ export function mergeItems(
     }
     return [i];
   });
-  return { project: { ...project, items }, mergedId: merged.id, issues: [] };
+  // The two pieces' other connections go to the merged piece; the one between them goes (ADR-207).
+  return {
+    project: mergeConnections({ ...project, items }, [l.id, r.id], merged.id),
+    mergedId: merged.id,
+    issues: [],
+  };
 }

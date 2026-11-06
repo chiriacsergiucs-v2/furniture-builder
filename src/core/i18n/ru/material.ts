@@ -134,7 +134,16 @@ export const ru_material = {
   'The shared sides are not built: {reason} The items keep both their sides.':
     'Общие боковины не построены: {reason} Изделия сохраняют обе свои боковины.',
   '{name} has sides of another thickness.': 'У {name} боковины другой толщины.',
-  '{name} is not a cabinet.': '{name} — не шкаф.',
+  '{name} is not a cabinet, a blind corner unit or a desk.':
+    '{name} — не шкаф, не глухой угловой модуль и не стол.',
+  '{name} is an L-shape or diagonal corner unit; only a blind corner shares a side.':
+    '{name} — Г-образный или диагональный угловой модуль; общую боковину может иметь только глухой угол.',
+  '{name} meets its neighbour at its blind end; only its straight end shares a side.':
+    '{name} примыкает к соседу глухим концом; общую боковину может иметь только прямой конец.',
+  '{name} has a pedestal at that end; only a gable end shares a side.':
+    'У {name} с этой стороны тумба; общую боковину может иметь только конец с опорной стенкой.',
+  '{a} and {b} are both desks; a desk shares a side only with a cabinet.':
+    '{a} и {b} — оба столы; стол делит боковину только со шкафом.',
   'Shared sides': 'Общие боковины',
   'About shared sides': 'Об общих боковинах',
   'Neighbours share one side panel: the left item leaves out its right side; sizes and places stay, fronts meet over the middle.':

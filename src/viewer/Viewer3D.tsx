@@ -13,6 +13,7 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import {
+  type BufferGeometry,
   BoxGeometry,
   Color,
   EdgesGeometry,
@@ -24,6 +25,7 @@ import {
   type Intersection,
   Matrix4,
   Mesh,
+  Path,
   PMREMGenerator,
   Plane,
   PlaneGeometry,
@@ -32,6 +34,7 @@ import {
   RepeatWrapping,
   SRGBColorSpace,
   Shape,
+  ShapeGeometry,
   Texture,
   TextureLoader,
   Vector2,
@@ -42,11 +45,14 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { useFocusedProblem } from '../ui/ProblemBanner';
 import { connectionSeams } from '../core/connections';
 import { explode } from '../core/explode';
 import { t } from '../core/i18n';
 import { hitToMm, inSelection, selectionBox } from '../core/selectPath';
 import {
+  floorRect,
   roomDisplayBoxes,
   wallFinish,
   type Room,
@@ -85,7 +91,9 @@ import { PHONE, useMediaQuery } from '../ui/useMediaQuery';
 import { useTheme } from '../ui/useTheme';
 import { useLook } from '../ui/useLook';
 import { setSolidWalls, useSolidWalls } from '../ui/useSolidWalls';
-import { SHADOW_CATCHER, setStage, useRendering } from './renderBridge';
+import { SHADOW_CATCHER, setCapture, setStage, useRendering } from './renderBridge';
+import { useClearances } from '../ui/Clearances';
+import type { ClearanceZone } from '../core/envelopes';
 import { CountStepper } from '../ui/CountStepper';
 import { useSnap } from '../ui/useSnap';
 import { MoveToButtons } from '../ui/MoveTo';
@@ -93,10 +101,11 @@ import { SNAP_RANGE } from '../core/snap';
 import { S, useGhost, useMoveMode, usePieceDrag, type PieceGhost } from './pieceDrag';
 import { landingY } from '../core/drag3d';
 import { useModelResize, useResizePreview, type HandleAxis } from './modelResize';
+import { ARBridge, enterAR, exitAR, exportUsdz, turnAR, useARState, useARSupported } from './AR';
 import { useHeightDrag, useHeightPreview } from './heightDrag';
 import { AXIS_LABEL, cutAt, setSection, useSection, type SectionAxis } from './section';
 import { heightDraggable, heightLabel } from '../core/height';
-import type { Box, MaterialImage, Panel } from '../core/types';
+import type { Box, MaterialImage, Panel, Yaw } from '../core/types';
 
 const FRONT = new Set<Panel['role']>(['door', 'drawer-front']);
 const SELECT = '#2d5b4c';
@@ -112,6 +121,12 @@ function profileGeometry(p: Panel): ExtrudeGeometry {
   const pts = p.shape.points;
   const shape = new Shape();
   pts.forEach(([u, v], i) => (i ? shape.lineTo(u * S, v * S) : shape.moveTo(u * S, v * S)));
+  // Holes cut through the board (ADR-205: a back cut around a pipe or outlet) are extruded too.
+  for (const hole of p.shape.holes ?? []) {
+    const path = new Path();
+    hole.forEach(([u, v], i) => (i ? path.lineTo(u * S, v * S) : path.moveTo(u * S, v * S)));
+    shape.holes.push(path);
+  }
   const tAxis = p.thicknessAxis,
     t = tAxis === 'x' ? p.box.w : tAxis === 'y' ? p.box.h : p.box.d;
   const g = new ExtrudeGeometry(shape, { depth: t * S, bevelEnabled: false });
@@ -139,6 +154,159 @@ function profileGeometry(p: Panel): ExtrudeGeometry {
   );
   g.computeVertexNormals();
   geoCache.set(p, g);
+  return g;
+}
+
+const followCache = new WeakMap<Panel, BufferGeometry | null>();
+/** An extruded outline, placed by a matrix whose columns are where the shape's x, y and extrusion go, and its origin. */
+function placedExtrude(
+  outline: [number, number][],
+  holes: [number, number][][],
+  depth: number,
+  cols: [number[], number[], number[]],
+  origin: [number, number, number],
+): ExtrudeGeometry {
+  const shape = new Shape();
+  outline.forEach(([u, v], i) => (i ? shape.lineTo(u * S, v * S) : shape.moveTo(u * S, v * S)));
+  for (const hole of holes) {
+    const path = new Path();
+    hole.forEach(([u, v], i) => (i ? path.lineTo(u * S, v * S) : path.moveTo(u * S, v * S)));
+    shape.holes.push(path);
+  }
+  const g = new ExtrudeGeometry(shape, { depth: depth * S, bevelEnabled: false });
+  const [a, b, c] = cols;
+  g.applyMatrix4(
+    new Matrix4().set(
+      a[0],
+      b[0],
+      c[0],
+      origin[0] * S,
+      a[1],
+      b[1],
+      c[1],
+      origin[1] * S,
+      a[2],
+      b[2],
+      c[2],
+      origin[2] * S,
+      0,
+      0,
+      0,
+      1,
+    ),
+  );
+  return g;
+}
+
+/**
+ * ADR-209, display only: a crown's or pelmet's profile extruded along its length (`section`), or a worktop with its
+ * rounded or bevelled front edge (`edgeProfile`), drawn as a lower slab, a top slab stopping `size` short of the front
+ * and the shaped edge strip; its cut-out holes stay. Null when the panel has neither.
+ */
+function followUpGeometry(p: Panel): BufferGeometry | null {
+  if (followCache.has(p)) return followCache.get(p)!;
+  const b = p.box;
+  let g: BufferGeometry | null = null;
+  if (p.section && p.section.length >= 3) {
+    // Across (z) and up (y) from the back-bottom corner, extruded along x.
+    g = placedExtrude(
+      p.section,
+      [],
+      b.w,
+      [
+        [0, 0, 1],
+        [0, 1, 0],
+        [1, 0, 0],
+      ],
+      [b.x, b.y, b.z],
+    );
+  } else if (p.edgeProfile && p.thicknessAxis === 'y') {
+    const { kind, size: s, face } = p.edgeProfile;
+    const t = b.h;
+    const own = p.shape?.kind === 'profile' ? p.shape : null;
+    const pts: [number, number][] = own
+      ? own.points
+      : [
+          [0, 0],
+          [b.w, 0],
+          [b.w, b.d],
+          [0, b.d],
+        ];
+    const holes = own?.holes ?? [];
+    // The worktop's plan: u along x, v along z; the front line and how a point moves back from it.
+    const onU = face[1] === 'x';
+    const at = face === '+z' ? b.d : face === '+x' ? b.w : 0;
+    const back = face[0] === '+' ? -s : s;
+    const isFront = ([u, v]: [number, number]) => (onU ? u : v) === at;
+    const pull = ([u, v]: [number, number]): [number, number] =>
+      isFront([u, v]) ? (onU ? [u + back, v] : [u, v + back]) : [u, v];
+    const clamp = ([u, v]: [number, number]): [number, number] => {
+      const lim = at + back;
+      const c = onU ? u : v;
+      const k = face[0] === '+' ? Math.min(c, lim) : Math.max(c, lim);
+      return onU ? [k, v] : [u, k];
+    };
+    const along = pts.filter(isFront).map(([u, v]) => (onU ? v : u));
+    const plan: [number[], number[], number[]] = [
+      [1, 0, 0],
+      [0, 0, 1],
+      [0, 1, 0],
+    ];
+    const parts: BufferGeometry[] = [
+      placedExtrude(pts, holes, t - s, plan, [b.x, b.y, b.z]),
+      placedExtrude(
+        pts.map(pull),
+        holes.map((h) => h.map(clamp)),
+        s,
+        plan,
+        [b.x, b.y + t - s, b.z],
+      ),
+    ];
+    if (along.length >= 2) {
+      const e0 = Math.min(...along),
+        e1 = Math.max(...along);
+      // The edge strip's section: a back from the front, b up from the top slab's underside.
+      const sec: [number, number][] = [
+        [0, 0],
+        [s, 0],
+        [s, s],
+      ];
+      if (kind === 'rounded')
+        for (let i = 1; i < 12; i++) {
+          const th = (i / 12) * (Math.PI / 2);
+          sec.push([s - s * Math.sin(th), s * Math.cos(th)]);
+        }
+      const y0 = b.y + t - s;
+      const [aDir, eDir, origin]: [number[], number[], [number, number, number]] =
+        face === '+z'
+          ? [
+              [0, 0, -1],
+              [1, 0, 0],
+              [b.x + e0, y0, b.z + b.d],
+            ]
+          : face === '-z'
+            ? [
+                [0, 0, 1],
+                [1, 0, 0],
+                [b.x + e0, y0, b.z],
+              ]
+            : face === '+x'
+              ? [
+                  [-1, 0, 0],
+                  [0, 0, 1],
+                  [b.x + b.w, y0, b.z + e0],
+                ]
+              : [
+                  [1, 0, 0],
+                  [0, 0, 1],
+                  [b.x, y0, b.z + e0],
+                ];
+      parts.push(placedExtrude(sec, [], e1 - e0, [aDir, [0, 1, 0], eDir], origin));
+    }
+    g = mergeGeometries(parts.map((x) => x.toNonIndexed()));
+  }
+  g?.computeVertexNormals();
+  followCache.set(p, g);
   return g;
 }
 
@@ -304,6 +472,17 @@ export default function Viewer3D() {
       : null,
   );
   const turnItem = useDesign((s) => s.turnItem);
+  // A selected display-only model turns too (ADR-203, G-105).
+  const modelTurnId = useDesign((s) =>
+    inProject && s.selectedItemId && s.project?.models?.some((m) => m.id === s.selectedItemId)
+      ? s.selectedItemId
+      : null,
+  );
+  const turnModel = useDesign((s) => s.turnModel);
+  const turnSelected = (dir: 1 | -1) => {
+    if (turnId) turnItem(turnId, dir);
+    else if (modelTurnId) turnModel(modelTurnId, dir);
+  };
   const [moveToOpen, setMoveToOpen] = useState(false);
   // Several pieces selected: Move to moves them as one block (ADR-182).
   const pieceItems = useDesign((s) => s.project?.items);
@@ -340,6 +519,8 @@ export default function Viewer3D() {
   const canIsolate = inProject && selectedIds.length > 0;
   const hasRoom = useDesign((s) => !!s.project?.room);
   const solidWalls = useSolidWalls();
+  // The plan's Clearances switch also draws the zones in 3D (ADR-205).
+  const [zonesOn, setZonesOn] = useClearances();
   return (
     <>
       <Canvas
@@ -399,15 +580,18 @@ export default function Viewer3D() {
           </>
         )}
         {view.mode === 'project' && !exploded && !isolating && (
-          <ModelItems plain={rendering} moving={moving} />
+          <ModelItems plain={rendering} moving={moving} snapOn={snapOn} />
         )}
         {view.mode === 'project' && !exploded && !rendering && !preview && (
           <SeamLines color={primary} only={isolating ? selectedIds : undefined} />
         )}
         {moving && turnId && <HeightHandle id={turnId} />}
+        {view.mode === 'project' && zonesOn && !exploded && !rendering && <ZoneBoxes />}
+        {view.mode === 'project' && !exploded && !rendering && !preview && <ProblemBoxes />}
         {sectionOn && <SectionClip axis={section.axis} at={cut!} />}
         {showLocks && <LockAnchors pieces={locked} badges={lockBadges} />}
         <Fit key={designId} bounds={bounds} />
+        {!preview && <ARBridge bounds={bounds} />}
       </Canvas>
       {showLocks && (
         <div className="lock-badges" aria-hidden="true">
@@ -426,8 +610,14 @@ export default function Viewer3D() {
           ))}
         </div>
       )}
+      {!(hasPieces || hasPicture) && !rendering && !preview && (
+        <div className="three-tools" role="toolbar" aria-label={t('3D view tools')}>
+          <ThreeMore name={view.title} />
+        </div>
+      )}
       {(hasPieces || hasPicture) && !rendering && (
         <div className="three-tools" role="toolbar" aria-label={t('Place pieces in 3D')}>
+          {!preview && <ThreeMore name={view.title} />}
           {hasPieces && (
             <button
               type="button"
@@ -439,8 +629,10 @@ export default function Viewer3D() {
                   ? t('Turn off Exploded 3D to move pieces')
                   : t('Drag a piece to move it; dragging empty space turns the view')
               }
+              // A tap flips what the button shows (G-181): Move can be on but not in effect (placing a piece or drawing the
+              // room), and flipping the stored value then changed nothing on screen, so the first tap seemed lost.
               onClick={() => {
-                setMoveOn(!moveOn);
+                setMoveOn(!moving);
                 setAdjustOn(false);
               }}
             >
@@ -472,7 +664,7 @@ export default function Viewer3D() {
                     )
               }
               onClick={() => {
-                setAdjustOn(!adjustOn);
+                setAdjustOn(!adjusting);
                 setMoveOn(false);
               }}
             >
@@ -502,14 +694,14 @@ export default function Viewer3D() {
               {t('Snap')}
             </button>
           )}
-          {turnId && !tapping && (
+          {(turnId || modelTurnId) && !tapping && (
             <>
               <button
                 type="button"
                 className="btn sm outline"
                 aria-label={t('Turn 90° anticlockwise about its centre')}
                 title={t('Turn about its centre (R)')}
-                onClick={() => turnItem(turnId, 1)}
+                onClick={() => turnSelected(1)}
               >
                 {t('Turn 90° ↺')}
               </button>
@@ -518,7 +710,7 @@ export default function Viewer3D() {
                 className="btn sm outline"
                 aria-label={t('Turn 90° clockwise about its centre')}
                 title={t('Turn about its centre (Shift+R)')}
-                onClick={() => turnItem(turnId, -1)}
+                onClick={() => turnSelected(-1)}
               >
                 {t('Turn 90° ↻')}
               </button>
@@ -555,7 +747,9 @@ export default function Viewer3D() {
             <button
               type="button"
               className="btn sm outline isolate-toggle"
-              aria-pressed={isolating}
+              // Pressed while Isolate is on, also with nothing selected (it then waits for a selection): the tap turns
+              // off what the button shows (G-181), not a value it hid.
+              aria-pressed={section.isolate}
               title={t('Show only the selected pieces')}
               onClick={() => setSection({ isolate: !section.isolate })}
             >
@@ -571,6 +765,17 @@ export default function Viewer3D() {
               onClick={() => setSolidWalls(!solidWalls)}
             >
               {t('Solid walls')}
+            </button>
+          )}
+          {view.mode === 'project' && hasPieces && (
+            <button
+              type="button"
+              className="btn sm outline zones-toggle"
+              aria-pressed={zonesOn}
+              title={t('Show clearance zones in 3D')}
+              onClick={() => setZonesOn(!zonesOn)}
+            >
+              {t('Clearances')}
             </button>
           )}
           {sectionOn && (
@@ -619,6 +824,81 @@ export default function Viewer3D() {
           <CountStepper className="in-3d" foldable />
         </div>
       )}
+    </>
+  );
+}
+
+/**
+ * The 3D toolbar's ⋯ menu (ADR-208): View in AR when this device offers immersive AR, and Export for AR (.usdz). The
+ * AR overlay (dom-overlay) holds the hint, Turn 90° ↻ and Exit AR.
+ */
+function ThreeMore({ name }: { name: string }) {
+  const canAR = useARSupported();
+  const ar = useARState();
+  const [note, setNote] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const overlay = useRef<HTMLDivElement>(null);
+  const menu = useRef<HTMLDetailsElement>(null);
+  // Taps on the overlay's buttons must not also place the furniture (WebXR 'beforexrselect').
+  useEffect(() => {
+    const el = overlay.current;
+    if (!el) return;
+    const stop = (e: Event) => e.preventDefault();
+    el.addEventListener('beforexrselect', stop);
+    return () => el.removeEventListener('beforexrselect', stop);
+  }, []);
+  return (
+    <>
+      <details className="menu three-more" ref={menu}>
+        <summary aria-label={t('More 3D actions')}>⋯</summary>
+        <div className="three-more-panel" role="group" aria-label={t('More 3D actions')}>
+          {canAR && (
+            <button
+              type="button"
+              className="btn sm outline"
+              onClick={async () => {
+                menu.current?.removeAttribute('open');
+                setNote(await enterAR(overlay.current));
+              }}
+            >
+              {t('View in AR')}
+            </button>
+          )}
+          <button
+            type="button"
+            className="btn sm outline"
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              setNote(await exportUsdz(name));
+              setBusy(false);
+              menu.current?.removeAttribute('open');
+            }}
+          >
+            {t('Export for AR (.usdz)')}
+          </button>
+        </div>
+      </details>
+      {note && (
+        <span className="plan-drag-note three-drag-note locked" role="alert">
+          {note}
+        </span>
+      )}
+      <div ref={overlay} className="ar-overlay" hidden={ar === 'off'}>
+        <p className="ar-hint" role="status">
+          {ar === 'placing' ? t('Tap the floor to place') : ''}
+        </p>
+        <div className="ar-actions">
+          {ar === 'placed' && (
+            <button type="button" className="btn" onClick={turnAR}>
+              {t('Turn 90° ↻')}
+            </button>
+          )}
+          <button type="button" className="btn solid" onClick={exitAR}>
+            {t('Exit AR')}
+          </button>
+        </div>
+      </div>
     </>
   );
 }
@@ -751,11 +1031,21 @@ function CountsAnchor({
 
 /** Lets the path tracer (ADR-068) read the scene and camera the user is looking at. */
 function Stage() {
-  const { scene, camera } = useThree();
+  const { scene, camera, gl } = useThree();
   useEffect(() => {
     setStage({ scene, camera });
-    return () => setStage(null);
-  }, [scene, camera]);
+    // A still for the client sheet and the assembly print's step pictures (ADR-206): one frame drawn and read.
+    setCapture(() => {
+      gl.render(scene, camera);
+      const url = gl.domElement.toDataURL('image/png');
+      invalidate();
+      return url.startsWith('data:image/png') ? url : null;
+    });
+    return () => {
+      setStage(null);
+      setCapture(null);
+    };
+  }, [scene, camera, gl]);
   return null;
 }
 
@@ -863,9 +1153,19 @@ function Occlusion() {
 }
 
 /** Display-only 3D models of the project (ADR-076): shown and selectable; in Move mode the selected one is resized (ADR-102). */
-function ModelItems({ plain, moving }: { plain: boolean; moving: boolean }) {
+function ModelItems({
+  plain,
+  moving,
+  snapOn,
+}: {
+  plain: boolean;
+  moving: boolean;
+  snapOn: boolean;
+}) {
   const models = useDesign((s) => s.projectModel?.models);
   const preview = useResizePreview();
+  // In Move mode a model drags across the floor as a piece does (ADR-203, G-105).
+  const drag = usePieceDrag(moving, snapOn);
   if (!models?.length) return null;
   return (
     <>
@@ -880,6 +1180,7 @@ function ModelItems({ plain, moving }: { plain: boolean; moving: boolean }) {
             box={box}
             plain={plain}
             handles={moving ? m.item : null}
+            drag={drag}
           />
         );
       })}
@@ -893,12 +1194,15 @@ function ModelItemMesh({
   box,
   plain,
   handles,
+  drag,
 }: {
   item: ModelItem;
   box: Box;
   plain: boolean;
   /** In Move mode, the saved item whose size the handles change when it is selected (ADR-102). */
   handles: ModelItem | null;
+  /** Move mode's drag (ADR-203): pressing the model drags it. */
+  drag: ReturnType<typeof usePieceDrag>;
 }) {
   const [loaded, setLoaded] = useState<{ id: string; scene: ModelScene | null } | null>(null);
   useEffect(() => {
@@ -936,8 +1240,11 @@ function ModelItemMesh({
       <group
         position={[(box.x + box.w / 2) * S, (box.y + box.h / 2) * S, (box.z + box.d / 2) * S]}
         rotation={[0, (modelYaw(item) * Math.PI) / 180, 0]}
+        onPointerDown={(e) => drag.press(e, item.id)}
         onClick={(e) => {
           e.stopPropagation();
+          // The click ending a 3D move (or the press that selected the model) does nothing more (ADR-093, ADR-203).
+          if (drag.clicked()) return;
           selectItem(item.id);
         }}
       >
@@ -1070,7 +1377,7 @@ function HeightNote() {
       className={`plan-drag-note three-drag-note${preview.height < 0 ? ' locked' : ''}`}
       role="status"
     >
-      {heightLabel(preview.height)}
+      {preview.hint ?? heightLabel(preview.height)}
       {preview.height < 0 ? t(' — below the floor, it will not move') : ''}
     </span>
   );
@@ -1229,7 +1536,7 @@ function RoomWalls({
         <PictureHandles room={room} wall={chosen} rect={rectOf(chosen)!} press={press} />
       )}
       {boxes.obstacles.map((b, i) => mesh(b, `o${i}`, '#b3261e', 0.35))}
-      {boxes.walls.length > 0 && <RoomFloor outline={room.outline} />}
+      {boxes.walls.length > 0 && <RoomFloor room={room} />}
     </>
   );
 }
@@ -1402,20 +1709,51 @@ function PictureNote() {
   );
 }
 
-/** The floor inside the room outline, just under the pieces. */
-function RoomFloor({ outline }: { outline: [number, number][] }) {
-  const shape = useMemo(
-    () => new Shape(outline.map(([x, z]) => new Vector2(x * S, -z * S))),
-    [outline],
-  );
+/**
+ * The floor inside the room outline, just under the pieces; with a floor background (ADR-208) in its colour, or its
+ * picture over the plan rectangle it covers (`floorRect`).
+ */
+function RoomFloor({ room }: { room: Room }) {
+  const outline = room.outline;
+  const f = room.floor;
+  const finishes = useMemo<WallFinish[]>(() => (f ? [{ wall: 0, ...f }] : []), [f]);
+  const urls = useWallPictureUrls(finishes);
+  const textures = useTextures(urls, false);
+  const tex = f?.image ? textures.get(pictureKey(f.image)) : undefined;
+  const rect = f?.image ? floorRect(room, f.image) : null;
+  const geo = useMemo(() => {
+    const g = new ShapeGeometry(new Shape(outline.map(([x, z]) => new Vector2(x * S, -z * S))));
+    if (rect) {
+      // Picture coordinates from plan mm: across from the rectangle's left, down from its back edge.
+      const pos = g.getAttribute('position');
+      const uv: number[] = [];
+      for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i) / S,
+          z = -pos.getY(i) / S;
+        uv.push((x - rect.x) / rect.w, 1 - (z - rect.z) / rect.d);
+      }
+      g.setAttribute('uv', new Float32BufferAttribute(uv, 2));
+    }
+    return g;
+    // The rectangle is compared by value: a new object each render must not rebuild the floor.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [outline, rect?.x, rect?.z, rect?.w, rect?.d]);
+  useEffect(() => () => geo.dispose(), [geo]);
+  const solid = useSolidWalls();
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.001, 0]} raycast={() => null}>
-      <shapeGeometry args={[shape]} />
+    <mesh
+      rotation={[-Math.PI / 2, 0, 0]}
+      position={[0, -0.001, 0]}
+      raycast={() => null}
+      geometry={geo}
+    >
       <meshStandardMaterial
-        color="#d9dcd6"
-        transparent
-        opacity={0.35}
-        depthWrite={false}
+        key={tex ? tex.uuid : 'plain'}
+        color={tex ? '#ffffff' : (f?.colour ?? '#d9dcd6')}
+        map={tex ?? null}
+        transparent={!f || !solid}
+        opacity={f ? (solid ? 1 : 0.85) : 0.35}
+        depthWrite={!!f && solid}
         side={DoubleSide}
       />
     </mesh>
@@ -1558,10 +1896,13 @@ function Panels({
     <group>
       {outline && !exploded && (
         // Keyed by the box: drei's segment line does not pick up changed points.
-        <SelectionOutline
-          key={`${outline.x},${outline.y},${outline.w},${outline.h}`}
-          box={outline}
-        />
+        // An angled piece's outline turns with its panels (ADR-121, ADR-203).
+        <YawGroup yaw={outline.yaw}>
+          <SelectionOutline
+            key={`${outline.x},${outline.y},${outline.w},${outline.h}`}
+            box={outline}
+          />
+        </YawGroup>
       )}
       {moving && <MoveGhost panels={view.model.panels} showFronts={showFronts} />}
       {panels
@@ -1591,7 +1932,9 @@ function Panels({
                 : tinted
                   ? new Color(base).lerp(new Color(SELECT), 0.45).getStyle()
                   : base;
-              const side = p.shape?.kind === 'profile' ? DoubleSide : FrontSide;
+              // A moulding profile or a shaped worktop edge (ADR-209) is drawn from its own geometry.
+              const follow = followUpGeometry(p);
+              const side = p.shape?.kind === 'profile' || follow ? DoubleSide : FrontSide;
               const look = realistic ? (
                 <>
                   {/* Realistic (ADR-067): the finish sets how matte or glossy a board is; backs stay opaque. Panel edges are
@@ -1648,6 +1991,19 @@ function Panels({
                   <PictureGeometry p={p} img={img} />
                 ) : (
                   <boxGeometry args={[b.w * S, b.h * S, b.d * S]} />
+                );
+              if (follow)
+                return (
+                  <mesh
+                    key={p.id}
+                    geometry={follow}
+                    onClick={onClick}
+                    onPointerDown={onDown}
+                    castShadow={realistic}
+                    receiveShadow={realistic}
+                  >
+                    {look}
+                  </mesh>
                 );
               if (p.shape?.kind === 'profile') {
                 return map && img ? (
@@ -1725,6 +2081,134 @@ function Panels({
   );
 }
 
+/** Children turned as an angled piece's panels are (ADR-121): the selection outline and the Move ghost (ADR-203). */
+function YawGroup({ yaw, children }: { yaw?: Yaw; children: ReactNode }) {
+  if (!yaw) return <>{children}</>;
+  return (
+    <group position={[yaw.cx * S, 0, yaw.cz * S]} rotation={[0, (yaw.deg * Math.PI) / 180, 0]}>
+      <group position={[-yaw.cx * S, 0, -yaw.cz * S]}>{children}</group>
+    </group>
+  );
+}
+
+const ZONE_COLOR: Record<ClearanceZone['severity'], string> = {
+  none: '#3f8f5a',
+  warning: '#d99a00',
+  error: '#c0392b',
+};
+
+/**
+ * Every clearance zone of the project (ADR-205, the Clearances switch): a translucent box coloured by its worst
+ * problem, turned with a piece at an angle. Display only: never picked, never edited; the zones come from the core.
+ */
+function ZoneBoxes() {
+  const zones = useDesign((s) => s.projectModel?.zones);
+  if (!zones?.length) return null;
+  return (
+    <>
+      {zones.map((z, i) => {
+        const b = z.box;
+        if (b.w <= 0 || b.h <= 0 || b.d <= 0) return null;
+        const mesh = (
+          <mesh
+            key={i}
+            position={[(b.x + b.w / 2) * S, (b.y + b.h / 2) * S, (b.z + b.d / 2) * S]}
+            raycast={() => null}
+            renderOrder={4}
+          >
+            <boxGeometry args={[b.w * S, b.h * S, b.d * S]} />
+            <meshBasicMaterial
+              color={ZONE_COLOR[z.severity]}
+              transparent
+              opacity={z.kind === 'body' ? 0.12 : 0.22}
+              depthWrite={false}
+            />
+          </mesh>
+        );
+        const y = b.yaw;
+        return y ? (
+          <group
+            key={i}
+            position={[y.cx * S, 0, y.cz * S]}
+            rotation={[0, (y.deg * Math.PI) / 180, 0]}
+          >
+            <group position={[-y.cx * S, 0, -y.cz * S]}>{mesh}</group>
+          </group>
+        ) : (
+          mesh
+        );
+      })}
+    </>
+  );
+}
+
+/** The twelve edges of a box, as segment pairs in metres. */
+function boxSegments(b: Box): [number, number, number][] {
+  const [x0, x1] = [b.x * S, (b.x + b.w) * S];
+  const [y0, y1] = [b.y * S, (b.y + b.h) * S];
+  const [z0, z1] = [b.z * S, (b.z + b.d) * S];
+  const corners = [x0, x1].flatMap((x) =>
+    [y0, y1].flatMap((y) => [z0, z1].map((z) => [x, y, z] as [number, number, number])),
+  );
+  const segs: [number, number, number][] = [];
+  for (let i = 0; i < 8; i++)
+    for (const bit of [1, 2, 4]) if (!(i & bit)) segs.push(corners[i], corners[i | bit]);
+  return segs;
+}
+
+/**
+ * The problem picked under Checks (ADR-209, G-034), in 3D: its box as a translucent red box and the chosen repair's
+ * result as dashed outlines labelled "After repair", as on the plan. Display only: never picked, never edited.
+ */
+function ProblemBoxes() {
+  const problem = useFocusedProblem();
+  if (!problem) return null;
+  const b = problem.d.box;
+  const zone = b && b.w > 0 && b.h > 0 && b.d > 0 ? b : null;
+  return (
+    <>
+      {zone && (
+        <mesh
+          position={[
+            (zone.x + zone.w / 2) * S,
+            (zone.y + zone.h / 2) * S,
+            (zone.z + zone.d / 2) * S,
+          ]}
+          raycast={() => null}
+          renderOrder={5}
+        >
+          <boxGeometry args={[zone.w * S, zone.h * S, zone.d * S]} />
+          <meshBasicMaterial color="#c0392b" transparent opacity={0.3} depthWrite={false} />
+        </mesh>
+      )}
+      {problem.chosen?.preview.map((p) => (
+        <group key={p.id}>
+          <Line
+            points={boxSegments(p.box)}
+            segments
+            dashed
+            dashSize={0.03}
+            gapSize={0.02}
+            color="#c0392b"
+            lineWidth={2}
+            depthTest={false}
+            transparent
+            renderOrder={10}
+            raycast={() => null}
+          />
+          <Html
+            position={[p.box.x * S, (p.box.y + p.box.h) * S, (p.box.z + p.box.d) * S]}
+            className="repair-label-3d"
+            zIndexRange={[5, 0]}
+          >
+            <span className="repair-preview-3d">{t('After repair')}</span>
+          </Html>
+        </group>
+      ))}
+    </>
+  );
+}
+
 /**
  * A part of a piece at an angle (ADR-121): drawn inside a group turned about the piece's vertical line. Three.js turns
  * (x, z) about y the same way the core's yaw does, so the angle is used as it is.
@@ -1746,9 +2230,27 @@ function yawed(p: Panel, el: ReactElement): ReactElement {
 function MoveGhost({ panels, showFronts }: { panels: Panel[]; showFronts: boolean }) {
   const ghost = useGhost();
   // A locked piece does not follow the pointer (ADR-095): no ghost, the note says why.
-  return ghost && !ghost.blocked ? (
-    <GhostBoxes ghost={ghost} panels={panels} showFronts={showFronts} />
-  ) : null;
+  if (!ghost || ghost.blocked) return null;
+  // A display-only model (ADR-203): its box where it would land.
+  if (ghost.model) {
+    const b = ghost.target.box;
+    return (
+      <mesh
+        position={[(b.x + b.w / 2) * S, (b.y + b.h / 2) * S, (b.z + b.d / 2) * S]}
+        raycast={() => null}
+        renderOrder={5}
+      >
+        <boxGeometry args={[b.w * S, b.h * S, b.d * S]} />
+        <meshBasicMaterial
+          color={ghost.target.snap ? '#2e7d4f' : SELECT}
+          transparent
+          opacity={0.28}
+          depthWrite={false}
+        />
+      </mesh>
+    );
+  }
+  return <GhostBoxes ghost={ghost} panels={panels} showFronts={showFronts} />;
 }
 
 function GhostBoxes({
@@ -1764,7 +2266,11 @@ function GhostBoxes({
     () =>
       panels
         .filter((p) => p.nodeId.startsWith(`${ghost.id}:`) && (showFronts || !FRONT.has(p.role)))
-        .map(aabbOf),
+        // An angled piece's boards are drawn unturned, then turned with it (ADR-121, ADR-203).
+        .map((p) => {
+          const { yaw, ...flat } = p.box;
+          return { box: aabbOf({ ...p, box: flat }), yaw };
+        }),
     [panels, ghost.id, showFronts],
   );
   const item = useDesign((s) => s.project?.items.find((i) => i.id === ghost.id));
@@ -1776,16 +2282,17 @@ function GhostBoxes({
   const color = ghost.target.snap ? '#2e7d4f' : SELECT;
   return (
     <group position={[dx * S, dy * S, dz * S]}>
-      {own.map((b, i) => (
-        <mesh
-          key={i}
-          position={[(b.x + b.w / 2) * S, (b.y + b.h / 2) * S, (b.z + b.d / 2) * S]}
-          raycast={() => null}
-          renderOrder={5}
-        >
-          <boxGeometry args={[b.w * S, b.h * S, b.d * S]} />
-          <meshBasicMaterial color={color} transparent opacity={0.28} depthWrite={false} />
-        </mesh>
+      {own.map(({ box: b, yaw }, i) => (
+        <YawGroup key={i} yaw={yaw}>
+          <mesh
+            position={[(b.x + b.w / 2) * S, (b.y + b.h / 2) * S, (b.z + b.d / 2) * S]}
+            raycast={() => null}
+            renderOrder={5}
+          >
+            <boxGeometry args={[b.w * S, b.h * S, b.d * S]} />
+            <meshBasicMaterial color={color} transparent opacity={0.28} depthWrite={false} />
+          </mesh>
+        </YawGroup>
       ))}
     </group>
   );

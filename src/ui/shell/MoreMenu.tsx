@@ -170,8 +170,8 @@ export function MoreMenu({
                 </button>
                 <button
                   type="button"
-                  onClick={run(() => {
-                    if (!downloadFrontSvg(design))
+                  onClick={run(async () => {
+                    if (!(await downloadFrontSvg(design)))
                       setNotice({ ok: false, text: t('Open the piece in the editor first.') });
                   })}
                 >

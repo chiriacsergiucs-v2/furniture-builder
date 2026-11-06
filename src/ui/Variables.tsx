@@ -1,15 +1,20 @@
 import { useState } from 'react';
 import { t, tr } from '../core/i18n';
-import type { Project, ProjectItem } from '../core/project';
+import type { Project, ProjectItem, RequestTarget, RunRequest } from '../core/project';
+import type { Design, DesignVariable } from '../core/types';
 import { projectFromSet, setComplete, setProgress, type VariableSet } from '../core/sets';
 import {
   bindingOf,
+  designScope,
+  designVariableUsers,
   evaluateBinding,
   evaluateVariables,
   evaluatedText,
   nameProblem,
+  REQUEST_TARGET_LABEL,
   scopeFor,
   targetLabel,
+  variableScope,
   variableUsers,
 } from '../core/variables';
 import { saveProject } from '../persist/db';
@@ -40,16 +45,105 @@ export function bindingHint(
 export function BindButton({ itemId, target }: { itemId: string; target: string }) {
   const project = useDesign((s) => s.project);
   const bind = useDesign((s) => s.bindTarget);
-  const [open, setOpen] = useState(false);
-  const [expr, setExpr] = useState('');
   const item = project?.items.find((i) => i.id === itemId);
   if (!project || !item) return null;
-  const current = bindingOf(item, target);
-  // A value set's duplicate takes its bindings from its original (ADR-167).
-  const copy = !!item.set;
-  const vars = project.variables ?? [];
-  const label = targetLabel(target);
-  const scope = scopeFor(project, item);
+  return (
+    <BindControl
+      label={targetLabel(target)}
+      current={bindingOf(item, target)}
+      vars={project.variables ?? []}
+      scope={scopeFor(project, item)}
+      // A value set's duplicate takes its bindings from its original (ADR-167).
+      disabled={!!item.set}
+      emptyHint={t('No variables yet. Add them in Settings › Variables.')}
+      onBind={(expr) => bind(itemId, target, expr)}
+    />
+  );
+}
+
+/** `width = 600`: what a size bound to the piece's own variable shows (ADR-210). */
+export function designBindingHint(d: Design, target: string): string | undefined {
+  const b = d.bindings?.find((x) => x.target === target);
+  if (!b) return undefined;
+  const e = evaluateBinding(b.expr, designScope(d));
+  return e.value === undefined
+    ? t('{expr}: {problem}', { expr: b.expr, problem: e.problem ?? '' })
+    : t('{expr} = {n}', { expr: b.expr, n: e.value });
+}
+
+/** The ƒ button beside a size of the open piece: binds it to the piece's own variables (ADR-210). */
+export function DesignBindButton({ target }: { target: string }) {
+  const design = useDesign((s) => s.design);
+  const bind = useDesign((s) => s.bindDesignTarget);
+  return (
+    <BindControl
+      label={targetLabel(target)}
+      current={design.bindings?.find((b) => b.target === target)}
+      vars={design.variables ?? []}
+      scope={designScope(design)}
+      emptyHint={t('No variables yet. Add them under Variables in this piece’s settings.')}
+      onBind={(expr) => bind(target, expr)}
+    />
+  );
+}
+
+/** `front overhang = 30`: what a bound run-request field shows instead of being edited (ADR-209). */
+export function requestBindingHint(
+  project: Project,
+  r: RunRequest,
+  target: RequestTarget,
+): string | undefined {
+  const b = r.bindings?.find((x) => x.target === target);
+  if (!b) return undefined;
+  const e = evaluateBinding(b.expr, variableScope(project.variables ?? []));
+  return e.value === undefined
+    ? t('{expr}: {problem}', { expr: b.expr, problem: e.problem ?? '' })
+    : t('{expr} = {n}', { expr: b.expr, n: e.value });
+}
+
+/** The ƒ button beside a run request's overhang or height (ADR-209): the same sheet pieces have. */
+export function RequestBindButton({
+  request,
+  target,
+}: {
+  request: RunRequest;
+  target: RequestTarget;
+}) {
+  const project = useDesign((s) => s.project);
+  const bind = useDesign((s) => s.bindRequest);
+  if (!project) return null;
+  return (
+    <BindControl
+      label={REQUEST_TARGET_LABEL[target]}
+      current={request.bindings?.find((b) => b.target === target)}
+      vars={project.variables ?? []}
+      scope={variableScope(project.variables ?? [])}
+      emptyHint={t('No variables yet. Add them in Settings › Variables.')}
+      onBind={(expr) => bind(request, target, expr)}
+    />
+  );
+}
+
+/** The ƒ button and its sheet: pick a variable or type a formula, or unbind (ADR-166, ADR-210). */
+function BindControl({
+  label,
+  current,
+  vars,
+  scope,
+  disabled = false,
+  emptyHint,
+  onBind,
+}: {
+  label: string;
+  current: { expr: string } | undefined;
+  vars: readonly { id: string; name: string }[];
+  scope: ReadonlyMap<string, number>;
+  disabled?: boolean;
+  emptyHint: string;
+  onBind: (expr: string | null) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [expr, setExpr] = useState('');
   const preview = expr.trim() ? evaluateBinding(expr, scope) : null;
   const start = () => {
     setExpr(current?.expr ?? '');
@@ -61,7 +155,7 @@ export function BindButton({ itemId, target }: { itemId: string; target: string 
         type="button"
         className={`btn icon sm bind ${current ? 'on' : 'ghost'}`}
         onClick={start}
-        disabled={copy}
+        disabled={disabled}
         aria-label={
           current
             ? t('{field} follows a variable; change or unbind', { field: label })
@@ -90,7 +184,7 @@ export function BindButton({ itemId, target }: { itemId: string; target: string 
                   type="button"
                   className="btn outline"
                   onClick={() => {
-                    bind(itemId, target, null);
+                    onBind(null);
                     setOpen(false);
                   }}
                 >
@@ -105,7 +199,7 @@ export function BindButton({ itemId, target }: { itemId: string; target: string 
                 className="btn solid"
                 disabled={!preview || preview.value === undefined}
                 onClick={() => {
-                  bind(itemId, target, expr);
+                  onBind(expr);
                   setOpen(false);
                 }}
               >
@@ -132,7 +226,7 @@ export function BindButton({ itemId, target }: { itemId: string; target: string 
               </ul>
             </div>
           ) : (
-            <p className="hint">{t('No variables yet. Add them in Settings › Variables.')}</p>
+            <p className="hint">{emptyHint}</p>
           )}
           <label className="field">
             <span className="field-label">{t('Formula')}</span>
@@ -159,8 +253,148 @@ export function BindButton({ itemId, target }: { itemId: string; target: string 
   );
 }
 
-/** Variables and value sets in Configure (ADR-166, ADR-167). */
-export function VariablesPanel() {
+/**
+ * Variables and value sets in Configure (ADR-166, ADR-167); with `scope="design"` the open piece's own variables in
+ * the Inspector (ADR-210).
+ */
+export function VariablesPanel({ scope = 'project' }: { scope?: 'project' | 'design' }) {
+  return scope === 'design' ? <DesignVariables /> : <ProjectVariables />;
+}
+
+/** The open piece's own variables (ADR-210): its sizes bind to them with the ƒ button beside each size. */
+function DesignVariables() {
+  const design = useDesign((s) => s.design);
+  const add = useDesign((s) => s.addDesignVariable);
+  const update = useDesign((s) => s.updateDesignVariable);
+  const remove = useDesign((s) => s.deleteDesignVariable);
+  const [name, setName] = useState('');
+  const [expr, setExpr] = useState('');
+  const [msg, setMsg] = useState<string | null>(null);
+  const vars: DesignVariable[] = design.variables ?? [];
+  const ev = evaluateVariables(vars);
+  const problem = nameProblem(name, vars);
+  const submit = () => {
+    if (problem || !expr.trim())
+      return setMsg(problem ?? t('A variable needs a value or a formula.'));
+    add(name, expr);
+    setName('');
+    setExpr('');
+    setMsg(null);
+  };
+  const del = async (id: string) => {
+    const v = vars.find((x) => x.id === id)!;
+    const users = designVariableUsers(design, id);
+    const names = [
+      ...(users.bindings ? [t('{n|# size|# sizes}', { n: users.bindings })] : []),
+      ...users.vars.map((x) => x.name),
+    ];
+    const message = names.length
+      ? t('Delete “{name}”? {list} use it; they keep their current numbers.', {
+          name: v.name,
+          list: names.join(', '),
+        })
+      : t('Delete “{name}”?', { name: v.name });
+    if (await askConfirm(message, { confirmLabel: t('Delete'), danger: true })) remove(id);
+  };
+  return (
+    <section className="variables section" aria-labelledby="piece-variables-head">
+      <div className="info-row">
+        <h3 id="piece-variables-head">{t('Variables')}</h3>
+        <InfoTip label={t('About variables')} align="start">
+          {t(
+            'Named numbers or formulas of this piece. Bind its width, height, depth or underside height to one with the ƒ button beside the field; they travel with the piece into projects and templates.',
+          )}
+        </InfoTip>
+      </div>
+      {vars.length > 0 && (
+        <ul className="variable-list" role="list">
+          {vars.map((v) => {
+            const r = ev.get(v.id)!;
+            const used = designVariableUsers(design, v.id).bindings;
+            return (
+              <li key={v.id} className="variable-row">
+                <input
+                  aria-label={t('Name of {name}', { name: v.name })}
+                  defaultValue={v.name}
+                  key={`n-${v.id}-${v.name}`}
+                  onBlur={(e) => {
+                    const n = e.target.value.trim();
+                    if (n === v.name) return;
+                    const p = nameProblem(
+                      n,
+                      vars.filter((x) => x.id !== v.id),
+                    );
+                    if (p) {
+                      setMsg(p);
+                      e.target.value = v.name;
+                    } else update(v.id, { name: n });
+                  }}
+                />
+                <input
+                  aria-label={t('Value of {name}', { name: v.name })}
+                  defaultValue={v.expr}
+                  key={`e-${v.id}-${v.expr}`}
+                  inputMode="decimal"
+                  onBlur={(e) => {
+                    const x = e.target.value.trim();
+                    if (x !== v.expr) update(v.id, { expr: x });
+                  }}
+                />
+                <span
+                  className={`result ${r.value === undefined ? 'error' : ''}`}
+                  role={r.value === undefined ? 'alert' : undefined}
+                >
+                  {evaluatedText(r)}
+                </span>
+                <button
+                  type="button"
+                  className="btn icon ghost sm"
+                  onClick={() => void del(v.id)}
+                  aria-label={t('Delete {name}', { name: v.name })}
+                >
+                  <Icon name="trash" />
+                </button>
+                <span className="hint">
+                  {used ? t('used by {n|# size|# sizes}', { n: used }) : t('not used')}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      <div className="variable-add">
+        <label className="field">
+          <span className="field-label">{t('New variable')}</span>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={t('e.g. bottom height')}
+          />
+        </label>
+        <label className="field">
+          <span className="field-label">{t('Value or formula')}</span>
+          <input
+            value={expr}
+            onChange={(e) => setExpr(e.target.value)}
+            placeholder="400"
+            inputMode="decimal"
+          />
+        </label>
+        <button type="button" className="btn outline" onClick={submit}>
+          {t('Add variable')}
+        </button>
+      </div>
+      {msg && (
+        <p className="alert error" role="alert">
+          {msg}
+        </p>
+      )}
+    </section>
+  );
+}
+
+/** Project variables and value sets (ADR-166, ADR-167). */
+function ProjectVariables() {
   const project = useDesign((s) => s.project)!;
   const add = useDesign((s) => s.addVariable);
   const update = useDesign((s) => s.updateVariable);

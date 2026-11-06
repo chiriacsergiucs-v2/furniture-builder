@@ -53,7 +53,34 @@ if ! grep -q '^- Status:' "$src"; then
   exit 1
 fi
 
+# Research features this ADR builds (ADR-212): "- Research: <feature id>, …". Each id must be a feature of
+# the research record; an unknown one stops the ship before anything changes. Ids are spelled
+# "ens.f.<slug>" or the bare slug.
+research_file="src/core/research/ensemble-2026-10-23.features.ts"
+research_line="$(grep -m1 '^- Research:' "$src" || true)"
+research_ids=()
+if [ -n "$research_line" ]; then
+  if [ ! -f "$research_file" ]; then
+    echo "ERROR: $src names research features but $research_file is missing." >&2; exit 1
+  fi
+  known="$(perl -ne "print \"\$1\n\" while /\\bF\\('([a-z0-9-]+)'/g" "$research_file")"
+  IFS=',' read -r -a raw_ids <<< "${research_line#- Research:}"
+  for rid in "${raw_ids[@]}"; do
+    rid="$(echo "$rid" | tr -d '[:space:]')"
+    [ -z "$rid" ] && continue
+    slug_id="${rid#ens.f.}"
+    if ! grep -qxF "$slug_id" <<< "$known"; then
+      echo "ERROR: $src names research feature '$rid', not in $research_file." >&2; exit 1
+    fi
+    research_ids+=("ens.f.$slug_id")
+  done
+fi
+
 echo "Shipping $slug"
+if [ ${#research_ids[@]} -gt 0 ]; then
+  echo "Research features to update (ship-adr skill, step 'Update the research record'):"
+  printf '  %s\n' "${research_ids[@]}"
+fi
 
 # Hint only: unchecked items in the "Done when" section.
 unchecked="$(awk '

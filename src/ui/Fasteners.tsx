@@ -149,8 +149,13 @@ function FastenerRow({
   const clear = useFastenerList((s) => s.clear);
   const [name, setName] = useState(choice?.name ?? '');
   const [per, setPer] = useState(String(choice?.per ?? 1));
+  // Carcass joints (ADR-209): mm from each end of a joint to the first and last fixing; empty = no drilling positions.
+  const [edge, setEdge] = useState(choice?.edge !== undefined ? String(choice.edge) : '');
   const perN = Number(per);
   const perOk = per.trim() !== '' && Number.isSafeInteger(perN) && perN >= 1;
+  const edgeN = Number(edge);
+  const edgeOk = edge.trim() === '' || (Number.isSafeInteger(edgeN) && edgeN >= 0 && edgeN <= 5000);
+  const drills = joint.id === 'carcass-joint';
   const commit = (nextName = name, nextPer = per) => {
     const n = nextName.trim();
     const p = Number(nextPer);
@@ -159,8 +164,10 @@ function FastenerRow({
       return;
     }
     if (!(nextPer.trim() !== '' && Number.isSafeInteger(p) && p >= 1)) return;
-    if (choice && choice.name === n && choice.per === p) return;
-    setChoice({ joint: joint.id, name: n, per: p });
+    if (!edgeOk) return;
+    const e = drills && edge.trim() !== '' ? edgeN : undefined;
+    if (choice && choice.name === n && choice.per === p && choice.edge === e) return;
+    setChoice({ joint: joint.id, name: n, per: p, ...(e !== undefined ? { edge: e } : {}) });
   };
   return (
     <li className="fastener">
@@ -209,6 +216,29 @@ function FastenerRow({
         <p className="field-error" id={`${id}-err`}>
           {t('Whole number, 1 or more. Not saved until it is.')}
         </p>
+      )}
+      {drills && (
+        <div className="field">
+          <label htmlFor={`${id}-edge`}>{t('From each end (mm)')}</label>
+          <input
+            id={`${id}-edge`}
+            inputMode="numeric"
+            value={edge}
+            placeholder={t('Not set')}
+            aria-invalid={!edgeOk}
+            aria-describedby={`${id}-edge-hint`}
+            onChange={(e) => setEdge(e.target.value.replace(/[^\d]/g, ''))}
+            onBlur={() => commit()}
+            onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
+          />
+          <p className={edgeOk ? 'hint' : 'field-error'} id={`${id}-edge-hint`}>
+            {edgeOk
+              ? t(
+                  'Guidance: with your fastener named and this typed, Parts shows drilling positions from your values. No diameter, depth or screw is given.',
+                )
+              : t('Whole number from 0 to 5000. Not saved until it is.')}
+          </p>
+        </div>
       )}
     </li>
   );

@@ -164,7 +164,6 @@ const FIXED: Record<string, string> = {
   'Ball-bearing side runner pair': 'Пара шариковых боковых направляющих',
   'Ball-bearing side runner pair (internal drawers)':
     'Пара шариковых боковых направляющих (внутренние ящики)',
-  'side clearance 13 mm per side': 'боковой зазор 13 мм с каждой стороны',
   'Fixing for the fixed (false) front': 'Крепление неподвижного фальшфасада',
   'user-specified: choose clips or brackets for the sink front':
     'на ваш выбор: подберите клипсы или уголки для фасада мойки',
@@ -208,30 +207,16 @@ const FIXED: Record<string, string> = {
   'Screws: Laterală pat stânga to Cap pe picioare': 'Шурупы: левая боковина кровати к изножью',
   'Laterală pat dreapta – Cap pe picioare': 'Правая боковина кровати – изножье',
   'Laterală pat stânga – Cap pe picioare': 'Левая боковина кровати – изножье',
-  "2 doors in two planes, 80 mm in front of the carcass (confirm rollers, track and door sizes with the sliding system's datasheet)":
-    '2 дверцы в двух плоскостях, на 80 мм перед корпусом (сверьте ролики, направляющие и размеры дверец с техпаспортом раздвижной системы)',
-  "front 797×388 mm — choose by front weight and height from the fitting's datasheet":
-    'фасад 797×388 мм — подберите по весу и высоте фасада по техпаспорту механизма',
-  "front 798×388 mm — choose by front weight and height from the fitting's datasheet":
-    'фасад 798×388 мм — подберите по весу и высоте фасада по техпаспорту механизма',
-  "front 798×398 mm — choose by front weight and height from the fitting's datasheet":
-    'фасад 798×398 мм — подберите по весу и высоте фасада по техпаспорту механизма',
-  'the piece is 1200 mm tall — fix it to the wall; choose the fixing for your wall type (typical guidance)':
-    'высота изделия 1200 мм — закрепите его на стене; подберите крепёж под тип вашей стены (типичная рекомендация)',
-  'the piece is 1800 mm tall — fix it to the wall; choose the fixing for your wall type (typical guidance)':
-    'высота изделия 1800 мм — закрепите его на стене; подберите крепёж под тип вашей стены (типичная рекомендация)',
-  'the piece is 1950 mm tall — fix it to the wall; choose the fixing for your wall type (typical guidance)':
-    'высота изделия 1950 мм — закрепите его на стене; подберите крепёж под тип вашей стены (типичная рекомендация)',
-  'the piece is 2100 mm tall — fix it to the wall; choose the fixing for your wall type (typical guidance)':
-    'высота изделия 2100 мм — закрепите его на стене; подберите крепёж под тип вашей стены (типичная рекомендация)',
-  'the piece is 2200 mm tall — fix it to the wall; choose the fixing for your wall type (typical guidance)':
-    'высота изделия 2200 мм — закрепите его на стене; подберите крепёж под тип вашей стены (типичная рекомендация)',
   'Bar handle, {n} mm centres': 'Ручка-скоба, {n} мм между отверстиями',
   'the piece is {h} mm tall — fix it to the wall; choose the fixing for your wall type (typical guidance)':
     'высота изделия {h} мм — закрепите его на стене; подберите крепёж под тип вашей стены (типичная рекомендация)',
   "front {w}×{h} mm — choose by front weight and height from the fitting's datasheet":
     'фасад {w}×{h} мм — подберите по весу и высоте фасада по техпаспорту механизма',
   'side clearance {n} mm per side': 'боковой зазор {n} мм с каждой стороны',
+  "{n} doors in two planes, {track} mm in front of the carcass (confirm rollers, track and door sizes with the sliding system's datasheet)":
+    '{n|# дверца|# дверцы|# дверец} в двух плоскостях, на {track} мм перед корпусом (сверьте ролики, направляющие и размеры дверец с техпаспортом раздвижной системы)',
+  "niche {w}×{h}×{d} mm as entered — check every size and the ventilation against the appliance's installation drawing":
+    'ниша {w}×{h}×{d} мм, как введено — сверьте все размеры и вентиляцию с монтажным чертежом техники',
   'Flap fitting: {name}': 'Механизм клапана: {name}',
   'Screws: {a} to {b}': 'Шурупы: {a} к {b}',
   'Carcass joint': 'Соединение корпуса',

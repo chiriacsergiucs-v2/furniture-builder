@@ -7,6 +7,8 @@ export const ru_core = {
     '{name} закреплено — снимите закрепление, чтобы переместить.',
   '{name} sits on {base} and is locked — unlock it to move {base}.':
     '{name} стоит на {base} и закреплено — снимите закрепление, чтобы переместить {base}.',
+  '{name} sits on {base} and is locked — unlock it to resize {base}.':
+    '{name} стоит на {base} и закреплено — снимите закрепление, чтобы изменить размер {base}.',
   '{name} was placed on a piece that is no longer in the project; it stays where it is.':
     '{name} было поставлено на изделие, которого больше нет в проекте; оно остаётся на месте.',
   '{name} and {other} are placed on each other.': '{name} и {other} поставлены друг на друга.',

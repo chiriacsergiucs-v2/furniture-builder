@@ -38,6 +38,8 @@ export interface FieldDef {
   /** Answer key. */
   id: string;
   label: string;
+  /** A shorter label for the Review step (ADR-202); absent = `label`. Wizard definition, not saved data. */
+  reviewLabel?: string;
   kind: FieldKind;
   unit?: 'mm';
   min?: number;

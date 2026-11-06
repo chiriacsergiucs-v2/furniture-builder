@@ -17,6 +17,8 @@ import { isFinish, materialImageProblems } from './surface';
 import { bandProblems, materialLabelProblems, productRefProblems } from './materials';
 import { MATERIAL_ROLES } from './roles';
 import { t } from './i18n';
+import { ROOMS } from './catalog/types';
+import { isDesignTarget, MAX_EXPR, MAX_VARIABLE_NAME, MAX_VARIABLES, NAME_RE } from './varLimits';
 
 export type PedestalSide = 'left' | 'right';
 
@@ -39,15 +41,16 @@ export const sheetOf = (m: Material) => m.sheet ?? defaultSheetFor(m);
 export const kerfOf = (d: Design) => d.cutting?.kerf ?? DEFAULT_KERF;
 
 /**
- * The document shape this app writes: 8 adds role and part bands (ADR-188); 7 added corner mount (ADR-177); 6 added
- * role boards (ADR-163); 1 to 7 still load.
+ * The document shape this app writes: 9 adds the user's assembly steps and the lounger and daybed ends (ADR-207)
+ * and a split's `remainderFirst` on mirrored copies (ADR-205); 8 added role and part bands (ADR-188); 7 added corner
+ * mount (ADR-177); 6 added role boards (ADR-163); 1 to 8 still load.
  */
-export const SCHEMA_VERSION = 8;
+export const SCHEMA_VERSION = 9;
 
 /**
- * Older versions → 8 in memory: version 1 gets stock sheets and cutting settings; 2 → 3 → 4 → 5 → 6 → 7 → 8 add only
- * optional fields (band specs, part boards, seller products, role boards, corner mount, role and part bands), so
- * nothing else changes.
+ * Older versions → 9 in memory: version 1 gets stock sheets and cutting settings; 2 → … → 9 add only optional fields
+ * (band specs, part boards, seller products, role boards, corner mount, role and part bands, assembly steps and
+ * frame ends, a split's remainder order), so nothing else changes.
  * Returns the same object when already current.
  */
 export function upgradeDesign(d: Design): Design {
@@ -844,7 +847,7 @@ function validateSellerChoices(d: Record<string, unknown>, errs: string[]) {
 }
 
 /** ADR-028: optional catalog metadata; checked when present, never throws. */
-function validateCatalog(c: unknown, errs: string[]) {
+function validateCatalog(c: unknown, version: unknown, errs: string[]) {
   if (c === undefined) return;
   if (!isObj(c)) {
     errs.push(t('Invalid catalog metadata'));
@@ -866,6 +869,17 @@ function validateCatalog(c: unknown, errs: string[]) {
     errs.push(t('Invalid catalog origin'));
     return;
   }
+  // The rooms of the user's own family (ADR-210): known rooms only, from schemaVersion 9.
+  if (o.rooms !== undefined) {
+    if ((version as number) < 9) errs.push(t('Catalog origin rooms need schemaVersion 9'));
+    if (
+      !Array.isArray(o.rooms) ||
+      !o.rooms.length ||
+      o.rooms.length > ROOMS.length ||
+      !o.rooms.every((r) => (ROOMS as readonly unknown[]).includes(r))
+    )
+      errs.push(t('Invalid catalog origin rooms'));
+  }
   if (
     o.sourceUrl !== undefined &&
     !(
@@ -875,6 +889,58 @@ function validateCatalog(c: unknown, errs: string[]) {
     )
   )
     errs.push(t('Catalog source link must be an http(s) address'));
+}
+
+/**
+ * The piece's own variables and bindings (ADR-210, schemaVersion 9): the limits of project variables (ADR-166); a
+ * binding drives a size or a division, never a position. Formulas are checked as diagnostics, not here (ADR-008).
+ */
+function validateDesignVariables(d: Record<string, unknown>, errs: string[]) {
+  const vars = d.variables,
+    binds = d.bindings;
+  if (vars === undefined && binds === undefined) return;
+  if ((d.schemaVersion as number) < 9) errs.push(t('Piece variables need schemaVersion 9'));
+  if (vars !== undefined) {
+    if (!Array.isArray(vars) || vars.length > MAX_VARIABLES) errs.push(t('Invalid variables'));
+    else {
+      const ids = new Set<string>(),
+        names = new Set<string>();
+      for (const v of vars) {
+        const name = isObj(v) && typeof v.name === 'string' ? v.name.trim() : '';
+        if (
+          !isObj(v) ||
+          !isStr(v.id) ||
+          ids.has(v.id as string) ||
+          !name ||
+          name.length > MAX_VARIABLE_NAME ||
+          !NAME_RE.test(name) ||
+          names.has(name.toLowerCase()) ||
+          typeof v.expr !== 'string' ||
+          v.expr.length > MAX_EXPR
+        ) {
+          errs.push(t('Invalid variable'));
+          continue;
+        }
+        ids.add(v.id as string);
+        names.add(name.toLowerCase());
+      }
+    }
+  }
+  if (binds !== undefined) {
+    if (
+      !Array.isArray(binds) ||
+      binds.length > 200 ||
+      !binds.every(
+        (b) =>
+          isObj(b) &&
+          isDesignTarget(b.target) &&
+          typeof b.expr === 'string' &&
+          b.expr.length <= MAX_EXPR,
+      ) ||
+      new Set(binds.map((b) => (isObj(b) ? b.target : ''))).size !== binds.length
+    )
+      errs.push(t('Invalid piece bindings'));
+  }
 }
 
 /** ADR-046: the wizard answers a piece was made from; checked when present, never geometry. */
@@ -998,6 +1064,9 @@ function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0)
         return;
       }
       for (const z of s.sizes) if (!validSize(z)) errs.push(t('Invalid split size'));
+      // ADR-205: only `true` is stored; its schemaVersion is checked in `validateDesign`.
+      if (s.remainderFirst !== undefined && s.remainderFirst !== true)
+        errs.push(t('Invalid split'));
       for (const c of s.children) validateSpace(c, errs, seen, depth + 1);
       return;
     default:
@@ -1008,8 +1077,14 @@ function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0)
 export function validateDesign(d: unknown): string[] {
   const errs: string[] = [];
   if (!isObj(d)) return [t('Design must be an object')];
-  if (![1, 2, 3, 4, 5, 6, 7, 8].includes(d.schemaVersion as number))
+  if (![1, 2, 3, 4, 5, 6, 7, 8, 9].includes(d.schemaVersion as number))
     errs.push(t('Unsupported schemaVersion'));
+  // A split's remainder order (ADR-205) came with schemaVersion 9.
+  if (
+    (d.schemaVersion as number) < 9 &&
+    JSON.stringify(d.product ?? null).includes('"remainderFirst"')
+  )
+    errs.push(t('Split remainder order needs schemaVersion 9'));
   if (
     d.cutting !== undefined &&
     !(isObj(d.cutting) && isInt(d.cutting.kerf) && (d.cutting.kerf as number) <= 20)
@@ -1104,10 +1179,12 @@ export function validateDesign(d: unknown): string[] {
   validatePartMaterials(d.partMaterials, d.schemaVersion, mids, errs);
   validateRoleMaterials(d.roleMaterials, d.schemaVersion, mids, errs);
   validateBands(d, errs);
-  validateCatalog(d.catalog, errs);
+  validateCatalog(d.catalog, d.schemaVersion, errs);
+  validateDesignVariables(d, errs);
   validateSellerChoices(d, errs);
   validateRules(d.settings, errs);
   validateWizard(d.wizard, errs);
+  validateAssembly(d, errs);
   if (p.kind === 'panels') {
     if (!Array.isArray(params.panels) || params.panels.length > MAX_LOOSE)
       return [...errs, t('Invalid panel list')];
@@ -1177,6 +1254,7 @@ export function validateDesign(d: unknown): string[] {
   }
   if (p.kind === 'frame') {
     validateFrame(params, errs, ints, matRef);
+    validateFrameEnds(params, d.schemaVersion, errs);
     return errs;
   }
   const dr = params.drawers;
@@ -1307,6 +1385,37 @@ export function validateDesign(d: unknown): string[] {
     validateSpace(params.wingInterior, errs, seen);
   } else errs.push(t('Unknown product kind'));
   return errs;
+}
+
+/** The user's assembly steps (ADR-207, schemaVersion 9): known step ids once each, names short text. Never throws. */
+function validateAssembly(d: Record<string, unknown>, errs: string[]) {
+  const a = d.assembly;
+  if (a === undefined) return;
+  if ((d.schemaVersion as number) < 9) errs.push(t('Assembly steps need schemaVersion 9'));
+  if (
+    !isObj(a) ||
+    !Array.isArray(a.order) ||
+    a.order.length > 40 ||
+    !a.order.every((x) => typeof x === 'string' && x.length <= 40) ||
+    new Set(a.order).size !== a.order.length ||
+    (a.names !== undefined &&
+      !(
+        isObj(a.names) &&
+        Object.keys(a.names).length <= 40 &&
+        Object.values(a.names).every((v) => typeof v === 'string' && v.length <= 120)
+      ))
+  )
+    errs.push(t('Invalid assembly steps'));
+}
+
+/** The lounger backrest's and the daybed side panel's end (ADR-207, schemaVersion 9): 'right' or absent. */
+function validateFrameEnds(f: Record<string, unknown>, version: unknown, errs: string[]) {
+  const br = isObj(f.backrest) ? f.backrest.end : undefined;
+  const bed = isObj(f.bed) ? f.bed.sidePanelEnd : undefined;
+  if (br === undefined && bed === undefined) return;
+  if ((version as number) < 9) errs.push(t('Backrest and side panel ends need schemaVersion 9'));
+  if ((br !== undefined && br !== 'right') || (bed !== undefined && bed !== 'right'))
+    errs.push(t('Invalid backrest or side panel end'));
 }
 
 function validateFrame(

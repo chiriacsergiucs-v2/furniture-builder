@@ -28,10 +28,12 @@ export const startFamilies = (families: CatalogFamily[] = catalogFamilies) =>
 
 /**
  * A new, independent design from a variant: fresh design id, origin recorded, hardware still to choose noted.
- * Null when the variant cannot be built yet (its requirements are not built or it has no design).
+ * Null when the variant cannot be built yet (its requirements are not built or it has no design). A piece of the user's
+ * own family (`own-…`) records the family's rooms in its origin (ADR-210).
  */
 export function insertVariant(
-  family: Pick<CatalogFamily, 'id' | 'name' | 'catalogVersion'>,
+  family: Pick<CatalogFamily, 'id' | 'name' | 'catalogVersion'> &
+    Partial<Pick<CatalogFamily, 'rooms'>>,
   variant: CatalogVariant,
   now = new Date().toISOString(),
 ): Design | null {
@@ -51,6 +53,10 @@ export function insertVariant(
         revision: family.catalogVersion,
         productName: `${family.name} — ${variant.name}`,
         takenAt: now,
+        // The user's own family keeps its rooms on the piece, so the family rule can check it (ADR-210).
+        ...(family.id.startsWith('own-') && family.rooms?.length
+          ? { rooms: [...family.rooms] }
+          : {}),
       },
     },
   };

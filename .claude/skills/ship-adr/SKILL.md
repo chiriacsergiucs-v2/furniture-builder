@@ -40,11 +40,23 @@ Project: **Furniture Builder** — offline PWA for designing casework.
    `docs/adr/GAPS.md` that moved into this ADR `Done (ADR-NNN)` (ADR-082), and warns about
    unchecked `Done when` items and stale references elsewhere. Anything of the ADR still not
    built gets a new gap (`pnpm gaps add`) before shipping, never a silent Done.
-4. **Review** `git status --short` and `git diff`; fix reported stale references by hand.
+   The helper stops before changing anything when the ADR's optional `- Research: <feature id>, …` header
+   names an id that is not a feature in `src/core/research/ensemble-2026-10-23.features.ts` (ADR-212), and
+   otherwise lists the named ids.
+4. **Update the research record (ADR-212).** Only when the helper listed research features:
+   - a feature the ADR built is deleted as ADR-149/152/184 did: its `F('<slug>', …)` row in
+     `ensemble-2026-10-23.features.ts`, its `ENSEMBLE_APP_STATUS` entry and any `ENSEMBLE_MERGES` reference to it
+     in `ensemble-2026-10-23.app.ts`, and its Russian entries in `src/core/i18n/ru/data-research*.ts`;
+   - a feature the ADR built only in part keeps its row: its `ENSEMBLE_APP_STATUS` entry cites this ADR as
+     evidence and gets a new `missing` text (with its Russian entry);
+   - `APP_CHECKED` becomes the ship date.
+     Ship pull requests merge without CI on them, so before the ship commit run `pnpm typecheck` and the research
+     tests: `pnpm exec vitest run tests/research-built-rows.test.ts tests/i18n-research*.test.ts`.
+5. **Review** `git status --short` and `git diff`; fix reported stale references by hand.
    Tick the `Done when` boxes you verified. Run `pnpm docs:check`, `pnpm format:check` and
    `pnpm exec vitest run tests/sync-pending.test.ts` (user rule 2026-11-06: an ADR with no feature line
    fails it once shipped; add it to the exemptions in `scripts/sync-pending.mjs` only when it has no feature).
-5. **Commit and push:**
+6. **Commit and push:**
    ```bash
    git add -A
    git commit -m "Ship ADR-NNN: <short title> — mark implemented"

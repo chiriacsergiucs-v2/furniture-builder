@@ -46,6 +46,10 @@ jobs:
           node tools/sellers/regency.mjs .export/regency.json src/core/sellers/regency.json - .export/previous.json
           node tools/sellers/regency-pictures.ts mark src/core/sellers/regency.json public/sellers/regency
 
+      # ADR-206: what changed since the shipped catalog, for the pull request body.
+      - name: Summarise the price changes
+        run: node tools/sellers/price-changes.mjs .export/previous.json src/core/sellers/regency.json .export/changes.md
+
       - name: Push a branch with the catalog and open a pull request
         env:
           GH_TOKEN: ${{ github.token }}
@@ -63,7 +67,12 @@ jobs:
           git add src/core/sellers/regency.json
           git commit -m "ADR-172: Regency catalog refreshed from the export of $date ($count products)"
           git push -u origin "$branch"
+          {
+            echo "Catalog converted by the Seller prices workflow (run ${{ github.run_id }}) from the export at the given URL: $count products, extraction date $date. Shipped pictures and their marks kept."
+            echo
+            cat .export/changes.md
+          } > .export/body.md
           gh pr create --base main --head "$branch" \
             --title "ADR-172: Regency prices from the export of $date" \
-            --body "Catalog converted by the Seller prices workflow (run ${{ github.run_id }}) from the export at the given URL: $count products, extraction date $date. Shipped pictures and their marks kept." \
+            --body-file .export/body.md \
             || echo "::notice::Pushed $branch; open its pull request by hand (Actions may not create pull requests here)."

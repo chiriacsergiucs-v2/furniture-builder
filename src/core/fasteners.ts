@@ -5,9 +5,11 @@
  * user's own fastener list, saved on this device. Every line is labelled guidance.
  */
 import { t } from './i18n';
+import { pt, type PrintKey } from './i18n/print';
 import { buildModel } from './build';
 import type { RunPart } from './project';
 import type { ShopLine } from './shopping';
+import { inPlaneAxes } from './geometry';
 import type { Axis, Box, FurnitureModel, Mm, Panel, PanelRole } from './types';
 
 export type JointType =
@@ -94,6 +96,11 @@ export interface FastenerChoice {
   name: string;
   /** Whole number ≥ 1. */
   per: number;
+  /**
+   * Carcass joints (ADR-209): mm from each end of a joint to the first and last fixing, typed by the user (no default,
+   * ADR-010). Only with it are drilling positions drawn. Saved on this device with the choice.
+   */
+  edge?: Mm;
 }
 
 /** Boards that are screwed or doweled to each other in a carcass. Fronts, backs, plinths, drawer boxes and worktops are not. */
@@ -267,6 +274,42 @@ const COUNTED: Record<JointType, (n: number) => string> = {
 export const plural = (n: number, j: JointInfo) => COUNTED[j.id](n);
 export const GUIDANCE = t('Guidance: counted from the model');
 
+/** Counted joints of a type in the print language ("4 îmbinări"), for the CSV and printed sheets (ADR-185, ADR-202). */
+export const COUNTED_PT: Record<JointType, PrintKey> = {
+  'carcass-joint': '{n|# îmbinare|# îmbinări}',
+  'shelf-pin': '{n|# suport de raft|# suporți de raft}',
+  'back-fixing': '{n|# panou de spate|# panouri de spate}',
+  'hanging-point': '{n|# agățătoare|# agățători}',
+  'worktop-fixing': '{n|# blat|# blaturi}',
+  foot: '{n|# piesă pe soclu|# piese pe soclu}',
+};
+/** The shopping-list line name of a joint type in the print language (ADR-202). */
+const LINE_PT: Record<JointType, PrintKey> = {
+  'carcass-joint': 'Fixare îmbinări',
+  'shelf-pin': 'Suporți de raft',
+  'back-fixing': 'Fixare panouri de spate',
+  'hanging-point': 'Fixare agățători',
+  'worktop-fixing': 'Fixare blaturi',
+  foot: 'Picioare',
+};
+/** How a joint type is counted, in the print language (ADR-202). */
+const HOW_PT: Record<JointType, PrintKey> = {
+  'carcass-joint':
+    'fiecare loc unde se întâlnesc două plăci ale corpului: laterale, capac, bază, despărțitori, rafturi fixe, traverse',
+  'shelf-pin': 'suporții de raft din lista de feronerie',
+  'back-fixing': 'fiecare panou de spate, fixat pe tot perimetrul',
+  'hanging-point': 'fiecare agățătoare a unei piese suspendate',
+  'worktop-fixing': 'fiecare blat, de linie sau de birou',
+  foot: 'fiecare piesă așezată pe soclu',
+};
+/** The footer of the shopping CSV and printed list, in the print language (ADR-202, replaces `NOT_COUNTED` there). */
+export function notCountedPrint(): string {
+  return pt(
+    'Șuruburile, diblurile și excentricii sunt numărați doar ca îmbinări, orientativ; elementul de fixare îl alegeți dvs. ({path}). Lipiciul nu este numărat.',
+    { path: pt('Setări › Elemente de fixare') },
+  );
+}
+
 /** A choice the app can use: a joint type it knows, a name, a whole count per joint ≥ 1. */
 export function validFastenerChoice(c: unknown): c is FastenerChoice {
   if (!c || typeof c !== 'object') return false;
@@ -278,9 +321,94 @@ export function validFastenerChoice(c: unknown): c is FastenerChoice {
     !!r.name.trim() &&
     typeof r.per === 'number' &&
     Number.isSafeInteger(r.per) &&
-    r.per >= 1
+    r.per >= 1 &&
+    (r.edge === undefined ||
+      (typeof r.edge === 'number' && Number.isSafeInteger(r.edge) && r.edge >= 0 && r.edge <= 5000))
   );
 }
+
+/** A part with drilling positions (ADR-209): its face size along its two in-plane axes and the positions on it. */
+export interface FixingPart {
+  /** The face's size along its first and second in-plane axes (x, y, z order), mm. */
+  u: Mm;
+  v: Mm;
+  /** Positions [u, v] from the face's minimum corner, whole mm. */
+  at: [Mm, Mm][];
+}
+
+/** Whole-mm positions of `per` fixings along a joint `length` long: one centred, else from `edge` to length − `edge`. */
+export function fixingSpots(length: Mm, per: number, edge: Mm): Mm[] | null {
+  // One fixing: centred, the length split in two exact parts (ADR-003), the first taking a spare millimetre.
+  if (per === 1) return length > 0 ? [Math.ceil(length / 2)] : null;
+  const span = length - 2 * edge;
+  if (span < per - 1 || edge < 0) return null;
+  // Exact integer gaps (ADR-003): the first ones take the spare millimetres.
+  const q = Math.floor(span / (per - 1)),
+    r = span - q * (per - 1);
+  const out = [edge];
+  for (let i = 0; i < per - 1; i++) out.push(out[i] + q + (i < r ? 1 : 0));
+  return out;
+}
+
+/**
+ * Drilling positions of the carcass joints (ADR-209), only once the user typed `edge` on their carcass-joint fastener:
+ * `per` positions along each joint's contact line at the other board's mid-thickness, drawn on the board that is
+ * drilled through (the one whose face takes the joint). Projected from the model (ADR-004), never saved. No diameter,
+ * depth or screw (ADR-010). Joints shorter than twice `edge` get none and are counted in `tooShort`.
+ */
+export function fixingPositions(
+  model: Pick<FurnitureModel, 'panels' | 'hardware'>,
+  choice: FastenerChoice | undefined,
+  prefix = '',
+): { parts: Map<string, FixingPart>; tooShort: number } {
+  const parts = new Map<string, FixingPart>();
+  let tooShort = 0;
+  if (!choice || choice.joint !== 'carcass-joint' || choice.edge === undefined)
+    return { parts, tooShort };
+  for (const [a, b] of carcassJointPairs(model as FurnitureModel)) {
+    const ax = contactAxis(a.box, b.box);
+    if (!ax) continue;
+    const face = a.thicknessAxis === ax ? a : b;
+    const edgeBoard = face === a ? b : a;
+    const others = AXES.filter((x) => x !== ax);
+    const lap = others.map((x) => {
+      const i = AXES.indexOf(x) as 0 | 1 | 2;
+      const [f0, f1] = span(face.box, i),
+        [e0, e1] = span(edgeBoard.box, i);
+      return { axis: x, lo: Math.max(f0, e0), hi: Math.min(f1, e1) };
+    });
+    const [line, across] = lap[0].hi - lap[0].lo >= lap[1].hi - lap[1].lo ? lap : [lap[1], lap[0]];
+    const len = line.hi - line.lo;
+    const spots = fixingSpots(len, choice.per, choice.edge);
+    if (!spots) {
+      tooShort++;
+      continue;
+    }
+    // Across the line: the other board's mid-thickness when its thickness lies across, else the middle of the contact.
+    const t = edgeBoard.thicknessAxis === across.axis;
+    const i = AXES.indexOf(across.axis) as 0 | 1 | 2;
+    const [c0, c1] = t ? span(edgeBoard.box, i) : [across.lo, across.hi];
+    const mid = c0 + Math.floor((c1 - c0) / 2);
+    const [ua, va] = inPlaneAxes(face.thicknessAxis);
+    const lo = (x: Axis) => span(face.box, AXES.indexOf(x) as 0 | 1 | 2)[0];
+    const size = (x: Axis) => {
+      const [s0, s1] = span(face.box, AXES.indexOf(x) as 0 | 1 | 2);
+      return s1 - s0;
+    };
+    const key = prefix + face.id;
+    const cur = parts.get(key) ?? { u: size(ua), v: size(va), at: [] };
+    for (const s of spots) {
+      const at = (x: Axis) => (x === line.axis ? line.lo + s : x === across.axis ? mid : lo(x));
+      cur.at.push([at(ua) - lo(ua), at(va) - lo(va)]);
+    }
+    parts.set(key, cur);
+  }
+  return { parts, tooShort };
+}
+
+/** The drilling note of a part (ADR-209), in English for the model; printed through `pt()` (`drillingRo`). */
+export const fixingNote = (p: FixingPart) =>
+  `fixing holes at ${p.at.map(([u, v]) => `${u}/${v}`).join(', ')} mm, guidance from your values`;
 
 /**
  * Shopping-list lines for the counts (ADR-074). Without a chosen fastener a count is a line in "to choose before
@@ -288,26 +416,40 @@ export function validFastenerChoice(c: unknown): c is FastenerChoice {
  * Shelf pins are already in the hardware schedule: without a choice they stay as scheduled (no extra line); with
  * one, `replacesShelfPins` tells the list to show the user's line instead of the scheduled pins.
  */
+/** The key a fastener line's seller product is saved under in `Design.hardwareProducts` (ADR-206). */
+export const fastenerProductKey = (joint: JointType) => `fs:${joint}`;
+
 export function fastenerShopLines(
   counts: FastenerCount[],
   choices: FastenerChoice[],
 ): { lines: ShopLine[]; replacesShelfPins: boolean } {
   const chosen = new Map(choices.filter(validFastenerChoice).map((c) => [c.joint, c]));
   const choose: ShopLine[] = [];
-  const counted = new Map<string, ShopLine>();
+  const counted = new Map<string, { line: ShopLine; parts: (() => string)[] }>();
   let replacesShelfPins = false;
   for (const c of counts) {
     const j = JOINT_BY_ID.get(c.joint);
     if (!j || c.count <= 0) continue;
     const pick = chosen.get(c.joint);
+    const m = (c.lengthMm / 1000).toFixed(2);
     const len =
       c.joint === 'back-fixing'
-        ? t(', {m} m of back edge', { m: (c.lengthMm / 1000).toFixed(2) })
+        ? t(', {m} m of back edge', { m })
         : c.joint === 'worktop-fixing'
-          ? t(', {m} m of worktop', { m: (c.lengthMm / 1000).toFixed(2) })
+          ? t(', {m} m of worktop', { m })
           : '';
+    // Print text is read when the CSV or the list is made, so a print language chosen later applies (ADR-157).
+    const lenPt = () =>
+      c.joint === 'back-fixing'
+        ? pt(', {m} m de margine a spatelui', { m })
+        : c.joint === 'worktop-fixing'
+          ? pt(', {m} m de blat', { m })
+          : '';
+    const countPt = (n: number) => pt(COUNTED_PT[c.joint], { n });
     if (!pick) {
       if (c.joint === 'shelf-pin') continue;
+      const joint = c.joint;
+      const n = c.count;
       choose.push({
         section: 'choose',
         label: t('{line}: {count} — choose your fastener', {
@@ -321,25 +463,55 @@ export function fastenerShopLines(
           how: j.how,
           len,
         }),
+        get printLabel() {
+          return pt('{line}: {count} — alegeți elementul de fixare', {
+            line: pt(LINE_PT[joint]),
+            count: countPt(n),
+          });
+        },
+        get printDetail() {
+          return pt('{guidance} ({how}{len}). Numiți-l pe al dvs. în {path}.', {
+            guidance: pt('Orientativ: numărat din model'),
+            how: pt(HOW_PT[joint]),
+            len: lenPt(),
+            path: pt('Setări › Elemente de fixare'),
+          });
+        },
+        productKey: fastenerProductKey(c.joint),
       });
       continue;
     }
     if (c.joint === 'shelf-pin') replacesShelfPins = true;
     const name = pick.name.trim();
     const part = `${plural(c.count, j)} × ${pick.per}`;
+    const n = c.count;
+    const per = pick.per;
+    const partPt = () => `${countPt(n)} × ${per}`;
     const cur = counted.get(name);
     if (cur) {
-      cur.quantity += c.count * pick.per;
-      cur.detail = cur.detail.replace(/\.$/, `; ${part}.`);
-    } else
+      cur.line.quantity += c.count * pick.per;
+      cur.line.detail = cur.line.detail.replace(/\.$/, `; ${part}.`);
+      cur.parts.push(partPt);
+    } else {
+      const parts = [partPt];
       counted.set(name, {
-        section: 'hardware',
-        label: name,
-        quantity: c.count * pick.per,
-        unit: 'piece',
-        detail: `${GUIDANCE}: ${part}.`,
-        priceKey: `hw:${name}`,
+        parts,
+        line: {
+          section: 'hardware',
+          label: name,
+          quantity: c.count * pick.per,
+          unit: 'piece',
+          detail: `${GUIDANCE}: ${part}.`,
+          // The user's fastener name prints as typed (ADR-202).
+          printLabel: name,
+          get printDetail() {
+            return `${pt('Orientativ: numărat din model')}: ${parts.map((p) => p()).join('; ')}.`;
+          },
+          priceKey: `hw:${name}`,
+          productKey: fastenerProductKey(c.joint),
+        },
       });
+    }
   }
-  return { lines: [...counted.values(), ...choose], replacesShelfPins };
+  return { lines: [...[...counted.values()].map((x) => x.line), ...choose], replacesShelfPins };
 }

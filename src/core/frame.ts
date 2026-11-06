@@ -185,19 +185,23 @@ export function buildFrame(
         }),
       );
     const L = br ? br.length : 0;
+    // The backrest lifts at the left end, or at the right end when `end` says so (ADR-207): built mirrored along x.
+    const right = br?.end === 'right';
+    const mx = (x: Mm, w: Mm) => (right ? W - x - w : x);
     for (const z of spread(z0, span, slats.width, n))
-      member('slat', `${topLabel} slat`, box(L, topY, z, W - L, topT, slats.width));
+      member('slat', `${topLabel} slat`, box(mx(L, W - L), topY, z, W - L, topT, slats.width));
     if (br) {
       // Lounger backrest (ADR-040): the first L mm of the slats on two battens, hinged at the top edge at x = L.
       const i0 = out.panels.length;
       for (const z of spread(z0, span, slats.width, n))
-        member('slat', 'Backrest slat', box(0, topY, z, L, topT, slats.width));
+        member('slat', 'Backrest slat', box(mx(0, L), topY, z, L, topT, slats.width));
       const bw = 45,
         bz = li + ld,
         bd = D - 2 * li - 2 * ld;
       for (const bx of [li + lw + 10, L - bw - 10])
-        member('rail', 'Backrest batten', box(bx, topY - at, bz, bw, at, bd));
-      tiltFrom(i0, 'z', -(180 - (br.positions[br.at] ?? 180)), [L, seatH, 0]);
+        member('rail', 'Backrest batten', box(mx(bx, bw), topY - at, bz, bw, at, bd));
+      const lift = 180 - (br.positions[br.at] ?? 180);
+      tiltFrom(i0, 'z', right ? lift : -lift, [right ? W - L : L, seatH, 0]);
       out.hardware.push({
         nodeId: id,
         kind: 'purchased',
@@ -466,8 +470,12 @@ function buildBed(
       'mattress-size',
       tx('A {mw}×{ml} mm mattress is not a size this bed can take.', { mw, ml }),
     );
-  const leftT = b.sidePanelHeight > 0 ? pt : rt;
-  const W = mw + 2 * c + leftT + rt,
+  // The daybed's side panel stands at the left, or at the right when `sidePanelEnd` says so (ADR-207).
+  const panelRight = b.sidePanelEnd === 'right';
+  const sideT = b.sidePanelHeight > 0 ? pt : rt;
+  const leftT = panelRight ? rt : sideT,
+    rightT = panelRight ? sideT : rt;
+  const W = mw + 2 * c + leftT + rightT,
     IL = ml + 2 * c,
     L = IL + 2 * pt;
   const deck = b.deckHeight;
@@ -494,27 +502,40 @@ function buildBed(
         'side-panel',
         tx('The side panel must reach at least the top of the rails ({top} mm).', { top: railTop }),
       );
-    sheet('gable', 'Side panel', box(0, 0, pt, pt, b.sidePanelHeight, IL), 'x', 'z', ['+y']);
+    sheet(
+      'gable',
+      'Side panel',
+      box(panelRight ? W - pt : 0, 0, pt, pt, b.sidePanelHeight, IL),
+      'x',
+      'z',
+      ['+y'],
+    );
   }
   decks.forEach((d, tier) => {
     const tag = decks.length > 1 ? (tier ? ' (top bunk)' : ' (bottom bunk)') : '';
     const rTop = d + MATTRESS_LIP;
-    if (!(b.sidePanelHeight > 0 && tier === 0))
+    const panelHere = b.sidePanelHeight > 0 && tier === 0;
+    if (!(panelHere && !panelRight))
       member(
         'rail',
         `Side rail left${tag}`,
         box(0, rTop - b.railHeight, pt, leftT, b.railHeight, IL),
       );
-    member(
-      'rail',
-      `Side rail right${tag}`,
-      box(W - rt, rTop - b.railHeight, pt, rt, b.railHeight, IL),
-    );
+    if (!(panelHere && panelRight))
+      member(
+        'rail',
+        `Side rail right${tag}`,
+        box(W - rightT, rTop - b.railHeight, pt, rightT, b.railHeight, IL),
+      );
     const ly = d - st - LEDGER_HEIGHT;
     member('ledger', `Slat ledger left${tag}`, box(leftT, ly, pt, rt, LEDGER_HEIGHT, IL));
-    member('ledger', `Slat ledger right${tag}`, box(W - 2 * rt, ly, pt, rt, LEDGER_HEIGHT, IL));
+    member(
+      'ledger',
+      `Slat ledger right${tag}`,
+      box(W - rightT - rt, ly, pt, rt, LEDGER_HEIGHT, IL),
+    );
     for (const z of spread(pt, IL, sw, slatCount(IL)))
-      member('slat', `Slat${tag}`, box(leftT, d - st, z, W - leftT - rt, st, sw));
+      member('slat', `Slat${tag}`, box(leftT, d - st, z, W - leftT - rightT, st, sw));
     if (mw >= CENTRE_RAIL_FROM) {
       const cx = Math.floor((W - rt) / 2);
       member(
@@ -547,7 +568,7 @@ function buildBed(
         return;
       }
       member('rail', 'Guard rail left', box(0, gy, pt, leftT, GUARD_RAIL, IL));
-      member('rail', 'Guard rail right', box(W - rt, gy, pt, rt, GUARD_RAIL, IL));
+      member('rail', 'Guard rail right', box(W - rightT, gy, pt, rightT, GUARD_RAIL, IL));
     }
   });
   if (b.tierGap > 0) {

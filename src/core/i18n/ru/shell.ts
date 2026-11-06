@@ -225,6 +225,18 @@ export const ru_shell = {
     'Удалить список декоров с этого устройства? Плиты сохранят свои названия, цвета и метки.',
   'Remove list': 'Удалить список',
   'Remove decor list': 'Удалить список декоров',
+  'No bands imported. {problems}': 'Кромки не импортированы. {problems}',
+  'The band list could not be saved on this device.':
+    'Список кромок не удалось сохранить на этом устройстве.',
+  '{n|# band|# bands} imported from {file}.':
+    'Импортировано из {file}: {n|# кромка|# кромки|# кромок}.',
+  'Band list: {list}, {n|# band|# bands}.':
+    'Список кромок: {list}, {n|# кромка|# кромки|# кромок}.',
+  'Band list: none.': 'Список кромок: нет.',
+  'About the band list': 'О списке кромок',
+  'Import your own CSV with the columns {columns} (thickness in mm with one decimal, width whole mm, #rrggbb; decor optional) to pick bands in each board’s edge band.':
+    'Импортируйте свой CSV со столбцами {columns} (толщина в мм с одним знаком после запятой, ширина в целых мм, #rrggbb; декор необязателен), чтобы выбирать кромку для каждой плиты.',
+  'Import band list (CSV)': 'Импортировать список кромок (CSV)',
   '{name} colour': '{name}: цвет',
   Name: 'Название',
   Thickness: 'Толщина',
@@ -366,4 +378,9 @@ export const ru_shell = {
   'Estimate: {amount} · {n} missing': 'Оценка: {amount} · не хватает {n}',
   'Estimate: {amount}': 'Оценка: {amount}',
   'Open the Shopping list': 'Открыть список покупок',
+  // Phone sheet stops (ADR-211)
+  'Resize the sheet': 'Изменить высоту панели',
+  Collapsed: 'Свёрнута',
+  Half: 'Наполовину',
+  'Full screen': 'На весь экран',
 } satisfies Record<string, string>;
