@@ -329,7 +329,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-027: Bottom sheet drag, mode bar, old find-it scripts
 
-- Status: Open
+- Status: ADR-211
 - Origin: ADR-079, 2026-10-24 23:07 UTC; agent scoped it out
 - Missing: Remaining: the phone bottom sheet opens only by tap (App.tsx:746-757, no drag); on desktop the Compose / Build & Preview switch is still its own row (App.tsx:687-708).
 - Request: “Help with the sticky bars top and bottom, they occupy too much”.
@@ -343,6 +343,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Conflicts: ADR-079: decided the mode control sits under the app bar.
 - Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): partly resolved. The old find-it scripts were fixed (N88, G-060 Done). Remaining: the phone sheet still opens only by tap (src/ui/App.tsx:673-681); the desktop mode switch is still its own row.
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: 2026-11-06: ADR-211 takes over the bottom-sheet drag (peek, half and full stops); the desktop mode switch in the top bar conflicts with ADR-079 and stays in G-452.
 
 ### G-028: Mobila sample files still in the repo
 
@@ -1097,7 +1098,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-126: No width/depth fields for a bed or a set of loose panels
 
-- Status: Open
+- Status: ADR-211
 - Origin: ADR-106
 - Missing: A bed and a set of loose panels show no size fields when selected (src/core/pieceSize.ts:49-63); a filler/cover panel shows Width and Height (no depth).
 - Request: Add the posibility to change width/depth when whole cabinet or whole piece is selected
@@ -1264,7 +1265,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-148: ADR ids and Back link left on the Gaps and Research pages; Select lost its tooltip
 
-- Status: Open
+- Status: ADR-211
 - Origin: ADR-120 (found while building)
 - Missing: The Gaps page search placeholder still names ADR-072 and the Research page lists ADR ids (they are the content); Gaps and Research always show 'Back to the editor', not only with a design open; the Select checkbox lost the tooltip the old button had
 - Request: accept as written (ADR-120: no ADR numbers in UI text; Back to the editor only when a design is open)
@@ -1671,7 +1672,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-308: Selection box in the front view and the 3D view
 
-- Status: Open
+- Status: ADR-211
 - Origin: ADR-159
 - Missing: Dragging on empty space in the room front view or the 3D view does not draw a selection box; only taps (Select on, or Shift/Ctrl-click) add pieces there.
 - Request: Add the select to 3d, so i can click on them to multiselect
@@ -1884,7 +1885,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-337: Locks on boards, construction and insides
 
-- Status: Open
+- Status: ADR-211
 - Origin: ADR-171, 2026-11-04; agent scoped it out
 - Missing: Boards, construction and insides of a piece cannot be locked (the rest of G-180).
 - Request: “Separate locks per parameter” (user 2026-11-04)
@@ -1896,6 +1897,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: A piece's boards, construction and insides cannot be locked against changes.
 - Fix: Add Lock boards and Lock construction toggles to the Lock menu when asked.
 - Conflicts: none
+- Note: 2026-11-06: ADR-211 takes over Lock boards and Lock construction (the suggested pick); locking the insides stays in G-453.
 
 ### G-340: No price change report between exports
 
@@ -2099,7 +2101,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-356: Wizard draft survives closing the dialog
 
-- Status: Open
+- Status: ADR-211
 - Origin: ADR-191, 2026-11-05; agent scoped it out
 - Missing: The wizard's answers live only while the dialog is open. Confirming before a close (ADR-191) stops accidental loss; a draft that survives closing the dialog (Continue where you left off) is not built.
 - Request: Not asked; the critique of 2026-11-05 noted the loss and the user chose the grouped ADR as proposed (confirm on close).
@@ -2117,7 +2119,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-358: Start-new rows share one glyph
 
-- Status: Open
+- Status: ADR-211
 - Origin: ADR-193, 2026-11-05; design critique, agent scoped it out
 - Missing: The Project, Fill a wall and Fill the room rows of Start something new share one 'project' glyph (Low).
 - Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
@@ -2302,7 +2304,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-388: Go up one selection level on a phone
 
-- Status: Open
+- Status: ADR-211
 - Origin: ADR-203, 2026-11-06, out of scope (Claude)
 - Missing: ADR-203 makes Esc go up one selection level on desktop; a phone has no gesture for it besides the breadcrumb.
 - Request: The flow of selecting the furniture, then the middle (given there are 2 dividers), then having a horizontal divider, then selecting the bottom one to adjust shelves is a painful horrible user experience. Adjust the selecting to go from bigger to smaller. 1 click = entire furniture, second click selects the smaller frame, third again the smaller within, iteratively.
@@ -2317,7 +2319,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-389: Versions left by projects deleted earlier
 
-- Status: Open
+- Status: ADR-211
 - Origin: ADR-203, 2026-11-06, out of scope (Claude)
 - Missing: ADR-203 asks about versions only when a project is deleted from now on; versions of projects deleted before it stay on the device, unlisted.
 - Request: Accept default, /batch all ready (G-156: keep every version until the user deletes it)
@@ -2328,6 +2330,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Necessity: Low
 - Issue: Versions of projects deleted before ADR-203 take space and cannot be reached.
 - Fix: List versions with no project in History, each with Restore and Delete.
+- Note: 2026-11-06: ADR-211 puts the list in History as picked; reaching it with no project open is G-454.
 
 ### G-396: No repair for the family warning
 
@@ -2715,4 +2718,47 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Necessity: Low
 - Issue: Fill the room cannot fill a bedroom or office.
 - Fix: Add a room type to Fill the room that picks the families it fills with.
+### G-452: Desktop mode switch in the top bar
+
+- Status: Open
+- Origin: ADR-211, 2026-11-06; split from G-027 by the coordinator (conflicts with ADR-079)
+- Missing: On desktop the Compose / Build & Preview switch is still its own row under the app bar (src/ui/App.tsx).
+- Request: “Help with the sticky bars top and bottom, they occupy too much”.
+- Questions: Move the desktop mode switch into the top bar, replacing ADR-079's "segmented control under the app bar"?
+- Suggested pick: Move it into the top bar on desktop through a new ADR that replaces that ADR-079 sentence (estimate: effort +5 %, value +5 %).
+- Work: Low
+- Impact: Low
+- Necessity: Low
+- Issue: The desktop mode switch takes its own row.
+- Fix: A new ADR moving the switch into the top bar on desktop.
+- Conflicts: ADR-079: decided the mode control sits under the app bar.
+
+### G-453: Lock a piece's insides
+
+- Status: Open
+- Origin: ADR-211, 2026-11-06; remainder of G-337 (its pick covers boards and construction only)
+- Missing: A piece's insides (spaces, dividers, shelves, drawers, doors) cannot be locked against changes.
+- Request: “Separate locks per parameter” (user 2026-11-04).
+- Questions: Add a Lock insides toggle that refuses changes to the piece's spaces?
+- Suggested pick: Add Lock insides beside Lock boards and Lock construction when a real project needs it (estimate: effort +15 %, value +5 %).
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+- Issue: A piece's insides cannot be locked.
+- Fix: A Lock insides toggle in More actions, refused like the other locks.
+- Conflicts: none
+
+### G-454: Versions of deleted projects with no project open
+
+- Status: Open
+- Origin: ADR-211, 2026-11-06; agent scoped it out (G-389's pick puts the list in History, inside an open project)
+- Missing: With no project open (for example after deleting every project) the versions of deleted projects cannot be reached.
+- Request: Accept default, /batch all ready (G-156: keep every version until the user deletes it).
+- Questions: Also show the Versions of deleted projects list on the Projects page?
+- Suggested pick: Show the same list, with Restore as a new project and Delete, under the Projects page's list (estimate: effort +4 %, value +3 %).
+- Work: Low
+- Impact: Low
+- Necessity: Low
+- Issue: Kept versions of deleted projects need an open project to be reached.
+- Fix: The same list on the Projects page.
 - Conflicts: none
