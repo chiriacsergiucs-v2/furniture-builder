@@ -23,7 +23,23 @@ import { frameDefaults, solidMaterials } from '../src/core/design';
 import { aabbOf, panelsOverlap, shapeProblems } from '../src/core/shape';
 import { catalogFamilies, insertable, insertVariant } from '../src/core/catalog';
 import { carryEdits, resolveItem, settingsDiff, SIZE_SKIP, syncRef } from '../src/core/ownEdits';
-import { makeItem, newProject, type ProjectSettings } from '../src/core/project';
+import {
+  buildProjectModel,
+  makeItem,
+  newProject,
+  profileBounds,
+  profileValid,
+  projectCutlist,
+  refreshRunParts,
+  requestKey,
+  runPartKey,
+  validateProject,
+  type Project,
+  type ProjectSettings,
+  type RunRequest,
+} from '../src/core/project';
+import { templates as designTemplates } from '../src/core/design';
+import { applyBindings } from '../src/core/variables';
 import { withSettings } from '../src/core/projectSettings';
 import type {
   Handle,
@@ -785,6 +801,156 @@ it(
       }
     }
     expect(probs.slice(0, 5)).toEqual([]);
+  },
+  FUZZ_TIMEOUT * 3,
+);
+
+it(
+  'random kitchen runs with moulding profiles, placed cut-outs, worktop edges and repair fillers (seeded fuzz, ADR-209)',
+  () => {
+    const N = Math.ceil(Number(process.env.FUZZ_N ?? 3000) / 10);
+    const tpl = (id: string) => designTemplates.find((x) => x.id === id)!.create();
+    const isInt = (n: number) => Number.isInteger(n);
+    const intBox = (b: Box) => [b.x, b.y, b.z, b.w, b.h, b.d].every(isInt);
+    const probs: string[] = [];
+    // How often each new shape was drawn, so the generator is seen to exercise it.
+    const seen = { section: 0, hole: 0, edge: 0, filler: 0 };
+    for (let i = 0; i < N && probs.length < 5; i++) {
+      // A run of base units of random widths, with wall units beside them.
+      let p: Project = newProject('Fuzz kitchen');
+      const n = ri(1, 4);
+      for (let k = 0; k < n; k++) {
+        const d = tpl('base-door');
+        const params = d.product.params as CabinetParams;
+        const width = pick([300, 400, 450, 500, 600, 800, ri(250, 1000)]);
+        const design = { ...d, product: { ...d.product, params: { ...params, width } } } as Design;
+        p = { ...p, items: [...p.items, makeItem(p, design)] };
+      }
+      for (let k = ri(0, 3); k > 0; k--)
+        p = { ...p, items: [...p.items, makeItem(p, tpl('wall-cabinet'))] };
+      const bases = p.items.slice(0, n).map((x) => x.id);
+      const wallIds = p.items.slice(n).map((x) => x.id);
+      const board = p.items[0].design.materials[0];
+      // A random section: often a valid polygon, sometimes a crossing or short one.
+      const profile = (): [number, number][] =>
+        Array.from({ length: ri(2, 7) }, () => [ri(-20, 80), ri(-20, 120)] as [number, number]);
+      const requests: RunRequest[] = [];
+      if (rnd() < 0.5)
+        requests.push({
+          kind: 'worktop',
+          from: bases,
+          front: ri(0, 60),
+          side: ri(0, 30),
+          ...(rnd() < 0.3
+            ? {
+                bindings: [
+                  {
+                    target: 'front',
+                    expr: pick(['if(1 < 2, 30, 10)', 'round(47, 10)', 'round(5, 0)', '25']),
+                  },
+                ],
+              }
+            : {}),
+        });
+      if (wallIds.length && rnd() < 0.7)
+        requests.push({
+          kind: pick(['crown', 'pelmet'] as const),
+          from: wallIds,
+          material: board,
+          ...(rnd() < 0.5 ? { height: ri(1, 120) } : {}),
+          ...(rnd() < 0.8 ? { profile: profile() } : {}),
+        });
+      if (n > 1 && rnd() < 0.4)
+        requests.push({ kind: 'filler', from: [bases[0], bases[1]], width: ri(1, 150) });
+      p = { ...p, runRequests: requests, runSettings: { scribe: 0, auto: true } };
+      const cut = () => ({
+        id: `c${ri(0, 1e6)}`,
+        baseId: pick(bases),
+        w: ri(100, 900),
+        d: ri(100, 700),
+        ...(rnd() < 0.6 ? { x: ri(0, 600) } : {}),
+        ...(rnd() < 0.6 ? { z: ri(0, 400) } : {}),
+      });
+      if (rnd() < 0.6) p = { ...p, sinks: [cut()] };
+      if (rnd() < 0.6) p = { ...p, hobs: [cut()] };
+      try {
+        p = refreshRunParts(applyBindings(p));
+        const wt = p.runParts?.find((r) => r.kind === 'worktop');
+        if (wt && rnd() < 0.7)
+          p = {
+            ...p,
+            worktopEdges: [
+              {
+                key: runPartKey(wt),
+                kind: pick(['square', 'rounded', 'bevel'] as const),
+                ...(rnd() < 0.8 ? { size: ri(1, 60) } : {}),
+              },
+            ],
+          };
+        const errs = validateProject(p);
+        if (errs.length) probs.push(`invalid ${errs.join('; ')}`);
+        const pm = buildProjectModel(p);
+        projectCutlist(p);
+        for (const rp of p.runParts ?? []) if (!intBox(rp.box)) probs.push(`run-int ${rp.key}`);
+        // trim-profile-invalid exactly when the one trim's profile cannot be made.
+        const trim = requests.find((r) => r.profile);
+        if (
+          trim &&
+          profileValid(trim.profile!) ===
+            pm.diagnostics.some((d) => d.code === 'trim-profile-invalid')
+        )
+          probs.push(`profile-diagnostic ${JSON.stringify(trim.profile)}`);
+        for (const panel of pm.model.panels) {
+          if (!panel.id.startsWith('run:')) continue;
+          const b = panel.box;
+          // A section starts at 0, 0 and fills the strip's box exactly, in whole mm.
+          if (panel.section) {
+            seen.section++;
+            const pb = profileBounds(panel.section);
+            if (
+              pb.u !== 0 ||
+              pb.v !== 0 ||
+              pb.w !== b.d ||
+              pb.h !== b.h ||
+              !panel.section.flat().every(isInt)
+            )
+              probs.push(
+                `section ${panel.id} ${JSON.stringify(panel.section)} ${JSON.stringify(b)}`,
+              );
+          }
+          // A drawn edge is a whole mm, at least 1 and under the worktop's thickness.
+          if (panel.edgeProfile) seen.edge++;
+          if (
+            panel.edgeProfile &&
+            (!isInt(panel.edgeProfile.size) ||
+              panel.edgeProfile.size < 1 ||
+              panel.edgeProfile.size >= b.h)
+          )
+            probs.push(`edge ${panel.id} ${panel.edgeProfile.size} ${b.h}`);
+          // Every cut-out hole lies strictly inside the worktop, in whole mm.
+          const shape = panel.shape;
+          if (shape?.kind === 'profile')
+            for (const hole of shape.holes ?? []) {
+              seen.hole++;
+              for (const [u, v] of hole)
+                if (!isInt(u) || !isInt(v) || u <= 0 || v <= 0 || u >= b.w || v >= b.d)
+                  probs.push(`hole ${panel.id} ${JSON.stringify(hole)} ${JSON.stringify(b)}`);
+            }
+        }
+        // A repair filler made from its request stands as high as the door's piece, from its foot.
+        for (const rp of p.runParts ?? []) {
+          if (rp.kind !== 'filler' || !requests.some((r) => requestKey(r) === rp.key)) continue;
+          seen.filler++;
+          const pc = pm.pieces.find((x) => x.item.id === rp.from?.[0]);
+          if (!pc || rp.box.h !== pc.bounds.h || rp.box.y !== pc.bounds.y)
+            probs.push(`filler ${rp.key}`);
+        }
+      } catch (e) {
+        probs.push(`throws ${(e as Error).message}`);
+      }
+    }
+    expect(probs).toEqual([]);
+    expect(Object.values(seen).every((n) => n > 0)).toBe(true);
   },
   FUZZ_TIMEOUT * 3,
 );

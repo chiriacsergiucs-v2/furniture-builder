@@ -535,12 +535,24 @@ export const FEATURES: FeatureDomain[] = [
           { name: 'Worktop corners with a mitred or butt joint', adrs: ['ADR-205'] },
           { name: 'Hob cut-out in the run worktop', adrs: ['ADR-205'] },
           { name: 'Sink and hob cut-outs drawn on the plan', adrs: ['ADR-205'] },
-          { name: 'Moulding profiles drawn or typed', adrs: ['ADR-209'] },
-          { name: 'Templates keep run requests', adrs: ['ADR-209'] },
-          { name: 'Sink and hob cut-outs placed from the left and the front', adrs: ['ADR-209'] },
-          { name: 'Cut-outs as holes in the 3D worktop', adrs: ['ADR-209'] },
-          { name: 'Worktop edges square, rounded or bevelled', adrs: ['ADR-209'] },
-          { name: 'Worktop overhangs and trim heights follow variables', adrs: ['ADR-209'] },
+          { name: 'Moulding profiles drawn or typed', adrs: ['ADR-209'], checked: '2026-11-06' },
+          { name: 'Templates keep run requests', adrs: ['ADR-209'], checked: '2026-11-06' },
+          {
+            name: 'Sink and hob cut-outs placed from the left and the front',
+            adrs: ['ADR-209'],
+            checked: '2026-11-06',
+          },
+          { name: 'Cut-outs as holes in the 3D worktop', adrs: ['ADR-209'], checked: '2026-11-06' },
+          {
+            name: 'Worktop edges square, rounded or bevelled',
+            adrs: ['ADR-209'],
+            checked: '2026-11-06',
+          },
+          {
+            name: 'Worktop overhangs and trim heights follow variables',
+            adrs: ['ADR-209'],
+            checked: '2026-11-06',
+          },
         ],
       },
       {
@@ -693,7 +705,11 @@ export const FEATURES: FeatureDomain[] = [
         adrs: ['ADR-074'],
         checked: '2026-11-05',
       },
-      { name: 'Project fasteners and drilling positions', adrs: ['ADR-209'] },
+      {
+        name: 'Project fasteners and drilling positions',
+        adrs: ['ADR-209'],
+        checked: '2026-11-06',
+      },
       {
         name: 'Hardware you choose yourself',
         detail:
@@ -800,7 +816,11 @@ export const FEATURES: FeatureDomain[] = [
           'A repair moves the whole group and connected pieces together; one they cannot follow is shown refused, with the reason. A depth or height mismatch between neighbours is repaired by matching one to the other; pieces whose families share no room, by moving one along its wall.',
         adrs: ['ADR-071', 'ADR-176', 'ADR-204', 'ADR-210'],
       },
-      { name: 'Repair fillers kept by automatic refresh; the problem in 3D', adrs: ['ADR-209'] },
+      {
+        name: 'Repair fillers kept by automatic refresh; the problem in 3D',
+        adrs: ['ADR-209'],
+        checked: '2026-11-06',
+      },
     ],
   },
   {
@@ -1106,7 +1126,11 @@ export const FEATURES: FeatureDomain[] = [
           'min, max, floor, ceil and round in variables and bindings; values in a call are separated by a comma or a semicolon.',
         adrs: ['ADR-206'],
       },
-      { name: 'Formulas with comparisons, if and stepped rounding', adrs: ['ADR-209'] },
+      {
+        name: 'Formulas with comparisons, if and stepped rounding',
+        adrs: ['ADR-209'],
+        checked: '2026-11-06',
+      },
       {
         name: 'Value sets',
         detail:
