@@ -129,7 +129,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-008: AR, plan review, shared structural elements
 
-- Status: Open
+- Status: ADR-208
 - Origin: Research, 2026-10-24 15:42 UTC; agent default, accepted by the user
 - Missing: A professional review pack (ADR-121) and common top/bottom panels (ADR-165) exist; AR placement and shared side panels between pieces are still not built.
 - Request: Features from the competitor research (context, not a quote)
@@ -142,6 +142,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Fix: WebXR AR from the three.js scene plus USDZ export; one shared side panel between touching cabinets.
 - Conflicts: none
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: 2026-11-06: ADR-208 takes over WebXR AR and the USDZ export. Shared side panels were built by ADR-190 and the review pack by ADR-121, so nothing else remains.
 
 ### G-009: Supplier feeds and ordering
 
@@ -192,7 +193,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-012: Angled walls and plan tracing
 
-- Status: Open
+- Status: ADR-208
 - Origin: ADR-058/059, 2026-10-24 15:54 UTC; agent scoped it out
 - Missing: No angled walls, no tracing over a picture of a plan.
 - Request: Room and floor plan (context, not a quote)
@@ -204,6 +205,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: Rooms cannot have angled walls, and a plan picture cannot be traced over.
 - Fix: Put a plan picture under the drawing, scaled from one known wall, and trace over it.
 - Conflicts: none
+- Note: 2026-11-06: ADR-208 takes over only tracing over a picture of a plan. Angled walls moved to G-428.
 
 ### G-014: Undo across reloads and in the library
 
@@ -290,7 +292,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-022: Render not checked on a laptop GPU
 
-- Status: Open
+- Status: ADR-208
 - Origin: ADR-067/068, 2026-10-24 20:43 UTC; blocked by the environment
 - Missing: Remaining: three-gpu-pathtracer still pinned at 0.0.27 on WebGL; no WebGPU path-tracer ADR.
 - Request: Laptop, preview quality (context, not a quote)
@@ -304,6 +306,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Conflicts: none
 - Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): partly resolved per documents: ADR-068 records the user's full 256/256 render and Save PNG on a laptop; N88 ran the scripted full render and Save PNG at 1280 px and 18/18 at 390 px. Remaining: three-gpu-pathtracer still pinned at 0.0.27 on WebGL, no WebGPU ADR.
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: 2026-11-06: ADR-208 takes over the WebGPU path-tracer upgrade plan. Running the render on the user's laptop moved to G-429.
 
 ### G-025: Cross-family composition and room presets
 
@@ -519,7 +522,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-040: 3D model placement and templates
 
-- Status: Open
+- Status: ADR-208
 - Origin: ADR-076, 2026-10-25 00:16 UTC; agent scoped it out
 - Missing: Imported models can't be dragged, hung on a wall or put on another piece. Templates don't keep them. Nothing is bundled.
 - Request: “Import 3D models and model libraries”.
@@ -531,6 +534,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: Imported 3D models cannot be dragged, wall-hung or set on a piece; templates drop them; none bundled.
 - Fix: Give models the same placement, drag and snap as pieces, keep them in templates, later bundle CC0 models.
 - Conflicts: none
+- Note: 2026-11-06: ADR-208 takes over placement, drag, snap and templates for models. Bundling CC0 models moved to G-430.
 
 ### G-041: ADR-076 models list
 
@@ -1422,7 +1426,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-273: Wall backgrounds outside 3D and front view
 
-- Status: Open
+- Status: ADR-208
 - Origin: ADR-145 (out of scope)
 - Missing: Wall backgrounds on the 2D floor plan, the SVG download, catalog snapshots and cut sheets
 - Request: Set wall background; answers 2026-10-28: colour or picture, 3D view and front view, per wall, toggle solid/see-through
@@ -1437,7 +1441,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-274: Floor background
 
-- Status: Open
+- Status: ADR-208
 - Origin: ADR-145 (out of scope)
 - Missing: Floor colour or picture
 - Request: Set wall background; answers 2026-10-28: colour or picture, 3D view and front view, per wall, toggle solid/see-through
@@ -1452,7 +1456,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-275: Wall background in the single-piece front view
 
-- Status: Open
+- Status: ADR-208
 - Origin: ADR-145 (found while building)
 - Missing: The wall background shows in the project's front view (the whole room seen from the front); the front view of a single piece, opened from the project, shows no wall behind it
 - Request: Set wall background adr; answers 2026-10-28: 3D view and front view
@@ -2440,7 +2444,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-413: Board pictures in the plan, catalog pictures and cut sheets
 
-- Status: Open
+- Status: ADR-208
 - Origin: ADR-206, 2026-11-06; split from G-001 by the coordinator
 - Missing: The plan, catalog snapshots (src/core/snapshot.ts) and the cut sheets draw boards in plain colour.
 - Request: “Render the furniture according to the selected material's color and structure”.
@@ -2452,6 +2456,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: The plan, catalog pictures and cut sheets show boards as plain colour, not their picture.
 - Fix: Fill the plan with the board picture pattern; a new ADR if catalog pictures or cut sheets should change.
 - Conflicts: ADR-048 (catalog pictures and cut sheets use the average colour)
+- Note: 2026-11-06: ADR-208 takes over board pictures on the 2D plan only. Catalog pictures and cut sheets moved to G-431 (ADR-048 keeps the average colour there).
 
 ### G-414: Formula conditions and stepped rounding
 
@@ -2542,3 +2547,62 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: Connector points and kinds cannot be authored.
 - Fix: A connector editor storing points and rules per piece, in its own ADR.
 - Conflicts: none
+### G-428: Angled walls
+
+- Status: Open
+- Origin: ADR-208, 2026-11-06; remainder of G-012 (ADR-208 takes only tracing over a plan picture)
+- Missing: Every room wall is parallel to x or z; a wall at another angle cannot be drawn or traced.
+- Request: Room and floor plan (context, not a quote)
+- Questions: Angled walls need a new ADR against ADR-003/004 (axis-aligned boxes); wanted?
+- Suggested pick: Ask first; if wanted, a new ADR for angled walls that keeps pieces axis-aligned to their own wall. (estimate: effort +40%, value +10%)
+- Work: High
+- Impact: Low-medium
+- Necessity: Low
+- Issue: Rooms with an angled wall cannot be drawn.
+- Fix: A new ADR for angled walls, against ADR-003/004, once the user wants it.
+- Conflicts: ADR-003, ADR-004, ADR-059 (walls parallel to x or z)
+
+### G-429: Render run on a laptop GPU
+
+- Status: Open
+- Origin: ADR-208, 2026-11-06; remainder of G-022 (ADR-208 takes the WebGPU path-tracer plan)
+- Missing: The full render find-it has not been run on a machine with a real GPU since the WebGPU engine was planned.
+- Request: Laptop, preview quality (context, not a quote)
+- Questions: Can you run the render once on your laptop after ADR-208 ships?
+- Suggested pick: Run the full render find-it on a machine with a GPU, on both engines, and record it in the backlog. (estimate: effort +5%, value +10%)
+- Work: Low
+- Impact: Low-medium
+- Necessity: Low
+- Issue: The render is checked only in a GPU-less browser.
+- Fix: The user runs the render on a laptop GPU and the result is recorded.
+- Conflicts: none
+
+### G-430: Bundled CC0 3D models
+
+- Status: Open
+- Origin: ADR-208, 2026-11-06; remainder of G-040 (ADR-208 takes placement, drag, snap and templates for models)
+- Missing: No 3D models ship with the app; models come only as .glb or .gltf imports (ADR-076).
+- Request: “Import 3D models and model libraries”.
+- Questions: Which licence for bundled models (CC0)? Which models (fridge, oven, sink, hob)?
+- Suggested pick: A small bundled set of CC0 models (fridge, oven, sink, hob) once you agree that licence; one answer also settles G-412's appliance models. (estimate: effort +15%, value +15%)
+- Work: Medium
+- Impact: Medium
+- Necessity: Low
+- Issue: There is no ready model library.
+- Fix: Bundle a few CC0 models in the app once the licence is chosen.
+- Conflicts: none
+
+### G-431: Board pictures in catalog pictures and cut sheets
+
+- Status: Open
+- Origin: ADR-208, 2026-11-06; remainder of G-413 (ADR-208 takes the 2D plan only)
+- Missing: Catalog snapshots (src/core/snapshot.ts) and the cut sheets draw boards in their average colour.
+- Request: “Render the furniture according to the selected material's color and structure”.
+- Questions: Fill catalog pictures and cut sheets with the board picture, against ADR-048's average colour?
+- Suggested pick: Keep the average colour as ADR-048 decided; a new ADR only if you want pictures there. (estimate: effort +10%, value +5%)
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
+- Issue: Catalog pictures and cut sheets show boards as plain colour.
+- Fix: A new ADR if catalog pictures or cut sheets should show the board picture.
+- Conflicts: ADR-048 (catalog pictures and cut sheets use the average colour)
