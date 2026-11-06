@@ -3350,10 +3350,14 @@ table.buy {
   text-decoration: none;
   font-size: var(--fs-sm);
 }
+.catalog-group,
+.catalog-page > .alert,
+.catalog-page .family {
+  scroll-margin-top: 64px;
+}
 .catalog-group {
   display: grid;
   gap: var(--s-3);
-  scroll-margin-top: 64px;
 }
 .catalog-group .group-head {
   border-bottom: 2px solid var(--line-2);
@@ -3524,21 +3528,23 @@ table.buy {
 .family-body > .chips {
   grid-column: 1 / -1;
 }
-/* Picture | name and summary | Open, then the meta line (tags first) under both, so the tags have the width. */
+/* Picture over Open in the first column; name, summary, the meta line (tags first) and the Romanian name in the second,
+   so the text has the card's width less the picture (ADR-195: ≈214 px at 390 instead of ≈150). The lines sit on their
+   16 px line height with no row gap, so the card stays as tall as before. */
 .item.compact {
-  grid-template-columns: 96px minmax(0, 1fr) auto;
-  gap: var(--s-1) var(--s-2);
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 0 var(--s-2);
   align-items: center;
   padding: var(--s-1) var(--s-2) var(--s-1) var(--s-1);
   line-height: 16px;
 }
 .item.compact > .snap {
   grid-column: 1;
-  /* Name, summary, meta and the Romanian name (ADR-120). */
-  grid-row: 1 / span 4;
+  /* Beside the name and summary; Open sits under it, beside the meta and Romanian lines. */
+  grid-row: 1 / span 2;
   align-self: start;
   width: 96px;
-  height: 60px;
+  height: 34px;
 }
 .item.compact .item-text {
   display: contents;
@@ -3571,24 +3577,53 @@ table.buy {
   margin-block: calc((1lh - var(--control-h)) / 2);
   padding: 0 var(--s-2);
 }
+/* Open under the picture (column 1, rows 3–4, ADR-195). */
 .item.compact > .btn {
-  grid-column: 3;
-  grid-row: 1 / span 2;
+  grid-column: 1;
+  grid-row: 3 / span 2;
+  align-self: start;
+  justify-self: stretch;
+  margin-top: var(--s-1);
 }
 .item.compact .item-meta {
-  grid-column: 2 / 4;
+  grid-column: 2;
   grid-row: 3;
 }
-.item.compact .item-text > .sub:not(.summary) {
-  grid-column: 2 / 4;
+.item.compact .item-text > .sub:not(.summary),
+.item.compact .safety-gate {
+  grid-column: 2;
+}
+/* A card without a picture (an item that cannot open yet) has nothing to put Open under: name and summary beside
+   Open, the lines below at full width, as before ADR-195. */
+.item.compact:not(:has(> .snap)) {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.item.compact:not(:has(> .snap)) > .btn {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  margin-top: 0;
 }
 .item.compact:not(:has(> .snap)) .item-name,
 .item.compact:not(:has(> .snap)) .summary-row {
-  grid-column: 1 / 3;
+  grid-column: 1;
 }
 .item.compact:not(:has(> .snap)) .item-meta,
-.item.compact:not(:has(> .snap)) .item-text > .sub:not(.summary) {
-  grid-column: 1 / 4;
+.item.compact:not(:has(> .snap)) .item-text > .sub:not(.summary),
+.item.compact:not(:has(> .snap)) .safety-gate {
+  grid-column: 1 / -1;
+}
+/* "Safety-regulated: …" and "I check it myself" (ADR-195): the reason wraps, the button keeps its size. */
+.item.compact .safety-gate {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1) var(--s-2);
+  align-items: center;
+  min-width: 0;
+  margin-top: var(--s-1);
+}
+.item.compact .safety-gate .sub {
+  white-space: normal;
+  overflow: visible;
 }
 .item.compact .item-name,
 .item.compact .sub {
@@ -3656,6 +3691,11 @@ table.buy {
 @media (max-width: 760px) {
   .catalog-page .catalog-toolbar {
     top: var(--bar-h, 0px);
+  }
+  /* Brought into view below the sticky bar and search row (ADR-195). */
+  .catalog-page > .alert,
+  .catalog-page .family {
+    scroll-margin-top: calc(var(--bar-h, 0px) + 64px);
   }
   .family-head > .family-tools {
     grid-column: 1 / -1;
@@ -4750,7 +4790,7 @@ button.tile:hover {
 }
 .row-btn .thumb {
   width: 64px;
-  height: 44px;
+  height: 36px;
   object-fit: contain;
 }
 .plain-list {
@@ -5288,6 +5328,15 @@ button.tile:hover {
   .bar .lbl-long,
   .bar .family {
     display: none;
+  }
+  /* Template mode (ADR-195): the variant, Save and Cancel take their own row under the tools, so no tool button
+     covers Cancel at 390 px. */
+  .bar:has(> .path.template) {
+    flex-wrap: wrap;
+  }
+  .bar .path.template {
+    order: 1;
+    flex-basis: 100%;
   }
   .bar .crumb {
     flex: 0 1 auto;

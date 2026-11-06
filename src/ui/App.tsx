@@ -29,7 +29,7 @@ import { GapsPage } from './Gaps';
 import { InfoPage } from './Info';
 import { ConfirmHost } from './Confirm';
 import { catalogFamilies } from '../core/catalog';
-import { useTemplates } from '../store/templatesStore';
+import { cancelTemplateEdit, saveTemplateEdit } from '../store/templatesStore';
 import { askRemove, PeekActions, PlanView, ProjectPanel } from './Project';
 import { PieceList } from './PieceList';
 import { usePieceList } from './pieceDrag';
@@ -584,7 +584,7 @@ export function App() {
             ))}
           </nav>
           {page === 'editor' && (
-            <div className="path">
+            <div className={templateEdit ? 'path template' : 'path'}>
               {templateEdit ? (
                 <>
                   <span className="crumb family" title={t('Template')}>
@@ -605,9 +605,9 @@ export function App() {
                     className="btn sm primary"
                     aria-label={t('Save to template')}
                     title={t('Saved to the template on this device')}
-                    onClick={() => {
-                      const t = useDesign.getState().finishTemplateEdit(true);
-                      if (t) void useTemplates.getState().save(t);
+                    onClick={async () => {
+                      // One save, one revision; a draft that cannot be stored waits on the Catalog page (ADR-195).
+                      await saveTemplateEdit();
                       setPage('catalog');
                     }}
                   >
@@ -618,7 +618,7 @@ export function App() {
                     type="button"
                     className="btn sm"
                     onClick={() => {
-                      useDesign.getState().finishTemplateEdit(false);
+                      cancelTemplateEdit();
                       setPage('catalog');
                     }}
                   >

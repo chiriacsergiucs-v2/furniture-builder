@@ -5,6 +5,7 @@
 - Depends on: ADR-034, ADR-096, ADR-107, ADR-118, ADR-119, ADR-153, ADR-166
 - Design: docs/ui-design.md (section 4, catalog)
 - Backlog: N200
+- Acceptance: browser
 
 ## Context
 
@@ -69,11 +70,44 @@ Every text added or changed gets its Russian entry (ADR-153).
 
 ## Done when
 
-- [ ] Edit design → Cancel leaves no local row; → Save adds one revision; Keep mine leaves `localRevision` as is.
-- [ ] A rejected template write or read shows an alert on the Catalog page and keeps the draft.
-- [ ] Searching "flap" shows chip and heading counts equal to the cards shown.
-- [ ] At 390 px under 30 % of cards show "More"; the page stays under 30 000 px; one meta line per card.
-- [ ] "Save this piece as a template" is absent with no design open, else opens the name/room/type form.
-- [ ] A draft with no rooms or no name shows the user sentence in English and Russian; no raw validator string renders.
-- [ ] A safety-gated card shows "I check it myself"; tapping it enables Open and ticks the catalog switch.
-- [ ] The three formula inputs have no `inputMode`; find-it passes at 390 and 1280 px.
+- [x] Edit design → Cancel leaves no local row; → Save adds one revision; Keep mine leaves `localRevision` as is.
+- [x] A rejected template write or read shows an alert on the Catalog page and keeps the draft.
+- [x] Searching "flap" shows chip and heading counts equal to the cards shown.
+- [ ] At 390 px under 30 % of cards show "More"; the page stays under 30 000 px; one meta line per card. — Not met:
+      178 of 183 cards (97.3 %) still show "More"; the page (29 734 px) and one meta line per card are met (G-477).
+- [x] "Save this piece as a template" is absent with no design open, else opens the name/room/type form.
+- [x] A draft with no rooms or no name shows the user sentence in English and Russian; no raw validator string renders.
+- [x] A safety-gated card shows "I check it myself"; tapping it enables Open and ticks the catalog switch.
+- [x] The three formula inputs have no `inputMode`; find-it passes at 390 and 1280 px.
+
+## Implementation evidence
+
+Run locally on 2026-11-06 on branch `adr-195-catalog-template-flows` (not merged, not deployed, not live-verified).
+
+- Item 1: Edit design carries the unsaved draft into template mode (no save); "Save to template" stores it once
+  (`saveTemplateEdit`, revision + 1); Cancel hands the draft back to the Catalog editor (`cancelTemplateEdit`).
+  "Keep mine" writes the new optional `seenShipped` (validated in `validateLocalTemplate`; old rows without it read
+  as before; no Dexie version change, no row rewritten). `basedOn` and `localRevision` stay.
+- Item 2: `save`/`remove` never throw; they return false and set the store `error`, shown on the Catalog page as
+  `alert error` (role=alert, scrolled into view, Dismiss). A failed editor Save keeps the editor open; a failed
+  template-mode Save reopens the draft (edited design included). A failed templates read and a failed saved-designs
+  read say they could not be read.
+- Item 3: chip and heading counts count matched variants; the heading uses a plural ("1 item").
+- Item 4: Open under the picture (column 1, rows 3–4), picture 96 × 34 px, no row gap, so a card keeps its height
+  (92 px at 390 px, as before). Text column 214 px at 390 px (281 px at 1280) instead of ≈150. Cards without a
+  picture keep the old layout. The "More" target is not reached: the meta line needs 272 px at the median (G-477).
+- Item 5: "Save this piece as a template" is hidden when no design is open and opens the shared Save to catalog
+  form (`CatalogSaveForm`: name, room, type); the confirmation links to the new family.
+- Item 6: `validateLocalTemplate` returns codes; `templateProblemText` maps each to a `t()` sentence with a Russian
+  entry (editor, Save to catalog, backup import). `templateFromDesign`'s texts got Russian data entries.
+- Item 7: a card waiting only for `safety:user-confirmed` says "Safety-regulated: you check it against the standards
+  yourself" with "I check it myself", which sets the catalog switch.
+- Item 8: `inputMode` removed from the formula fields in `Variables.tsx` (the three named, plus the per-variable
+  "Value of …" field in Settings, which also takes formulas).
+- Needed for reachability: at 390 px the template-mode bar covered Cancel with the Undo button; the template-mode path
+  now takes its own row on a phone.
+
+Checks: `tests/catalog-flows.test.ts` 16/16, `tests/find-it/catalog.test.tsx` 16/16 (jsdom, 390 and 1280 px),
+`tests/find-it/variables.test.tsx` new inputMode case at both widths. Browser acceptance
+`tools/catalog-flows/find-it.mjs` on the production build (preview, port 4176): 39 passed, 1 failed (the item-4
+"More" share at 390 px). Lint, format:check, typecheck, `pnpm test` (189 files, 1677 tests passed), build and docs check passed after rebasing on main.

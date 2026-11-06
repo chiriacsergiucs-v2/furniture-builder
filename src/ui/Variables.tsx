@@ -467,7 +467,6 @@ function ProjectVariables() {
                   aria-label={t('Value of {name}', { name: v.name })}
                   defaultValue={v.expr}
                   key={`e-${v.id}-${v.expr}`}
-                  inputMode="decimal"
                   onBlur={(e) => {
                     const x = e.target.value.trim();
                     if (x !== v.expr) update(v.id, { expr: x });
@@ -508,12 +507,7 @@ function ProjectVariables() {
         </label>
         <label className="field">
           <span className="field-label">{t('Value or formula')}</span>
-          <input
-            value={expr}
-            onChange={(e) => setExpr(e.target.value)}
-            placeholder="400"
-            inputMode="decimal"
-          />
+          <input value={expr} onChange={(e) => setExpr(e.target.value)} placeholder="400" />
         </label>
         <button type="button" className="btn outline" onClick={submit}>
           {t('Add variable')}
@@ -638,7 +632,6 @@ function SetCard({
                 aria-label={t('{set}: value of {name}', { set: set.name, name: v.name })}
                 defaultValue={set.values[v.id] ?? ''}
                 key={`${set.id}-${v.id}-${set.values[v.id] ?? ''}`}
-                inputMode="decimal"
                 placeholder={t('not set')}
                 onBlur={(e) => {
                   const x = e.target.value.trim();
@@ -767,7 +760,6 @@ export function VariablesStrip() {
                   aria-label={t('Value of {name}', { name: v.name })}
                   defaultValue={v.expr}
                   key={`${v.id}-${v.expr}`}
-                  inputMode="decimal"
                   onBlur={(e) => {
                     const x = e.target.value.trim();
                     if (x !== v.expr) update(v.id, { expr: x });

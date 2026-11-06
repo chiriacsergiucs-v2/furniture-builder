@@ -315,11 +315,20 @@ export const ru_info = {
   'Browse by room or type, with search': 'Просмотр по комнате или типу, с поиском',
   '1–5 variants per family': '1–5 вариантов в семействе',
   'Catalog pictures': 'Картинки каталога',
+  'Group chips and headings count the items the search shows.':
+    'Кнопки групп и заголовки считают изделия, которые показывает поиск.',
   'Compact cards with More': 'Компактные карточки с кнопкой «Ещё»',
+  'Open under the picture, so the text has the card’s width.':
+    'Кнопка «Открыть» под картинкой, чтобы тексту хватало ширины карточки.',
   'Edit templates on this device': 'Редактировать шаблоны на этом устройстве',
-  'Shipped templates never change; reset or compare with the shipped one.':
-    'Встроенные шаблоны не меняются; можно сбросить или сравнить со встроенным.',
+  'Shipped templates never change; reset or compare with the shipped one. One save is one revision; Cancel keeps the draft; a failed save or read is shown.':
+    'Встроенные шаблоны не меняются; можно сбросить или сравнить со встроенным. Одно сохранение — одна ревизия; «Отмена» сохраняет черновик; неудачное сохранение или чтение показывается.',
   'Save a design as a template': 'Сохранить изделие как шаблон',
+  'Name, room and type, with a link to the new family.':
+    'Название, комната и тип, со ссылкой на новое семейство.',
+  'Safety-regulated items': 'Изделия с требованиями безопасности',
+  'A bunk bed or cradle card says you check it yourself, with "I check it myself".':
+    'Карточка двухъярусной кровати или колыбели говорит, что вы проверяете её сами, с кнопкой «Проверяю сам».',
   'Save a project piece to the catalog': 'Сохранить изделие проекта в каталог',
   'Catalog origin kept on copies': 'Происхождение из каталога сохраняется в копиях',
   'Reference entries for upholstered pieces': 'Справочные записи для мягкой мебели',

@@ -2,8 +2,8 @@
 export const ru_variables = {
   // features
   'Project variables and formulas': 'Переменные и формулы проекта',
-  'Bind a size, a division or a position to a named value; change it once.':
-    'Привяжите размер, деление или положение к именованному значению; меняйте его один раз.',
+  'Bind a size, a division or a position to a named value; change it once. Formula fields keep the full keyboard.':
+    'Привяжите размер, деление или положение к именованному значению; меняйте его один раз. Поля формул открывают полную клавиатуру.',
   'Value sets': 'Наборы значений',
   'Duplicate every bound piece with other values, with the room; set 1’s run parts, run handles and sinks are copied onto each set and kept in step; save a set as a project.':
     'Дублируйте каждое привязанное изделие с другими значениями, вместе с комнатой; детали ряда, ручки ряда и мойки набора 1 копируются в каждый набор и остаются согласованными; сохраните набор как проект.',

@@ -912,4 +912,7 @@ export const data_catalog: Record<string, string> = {
   'Wardrobe — 4 doors, 2 sections': 'Шкаф для одежды — 4 дверцы, 2 секции',
   'Wardrobe — Double hanging': 'Шкаф для одежды — Две штанги',
   'Wardrobe — Sliding 2 doors': 'Шкаф для одежды — 2 раздвижные дверцы',
+  // A template saved from one of the user's designs (`templateFromDesign`, ADR-195).
+  'Saved from one of your designs.': 'Сохранено из одного из ваших проектов.',
+  'Edit it like any design': 'Изменяйте его как любой проект',
 };

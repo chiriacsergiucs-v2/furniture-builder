@@ -1180,9 +1180,10 @@ export const FEATURES: FeatureDomain[] = [
       { name: 'Save as a project template', adrs: ['ADR-060', 'ADR-200'], checked: '2026-11-06' },
       {
         name: 'Project variables and formulas',
-        detail: 'Bind a size, a division or a position to a named value; change it once.',
-        adrs: ['ADR-166'],
-        checked: '2026-11-05',
+        detail:
+          'Bind a size, a division or a position to a named value; change it once. Formula fields keep the full keyboard.',
+        adrs: ['ADR-166', 'ADR-195'],
+        checked: '2026-11-06',
       },
       {
         name: 'Variables in a piece',
@@ -1228,17 +1229,33 @@ export const FEATURES: FeatureDomain[] = [
   {
     name: 'Catalog and templates',
     features: [
-      { name: 'Browse by room or type, with search', adrs: ['ADR-032'], checked: '2026-11-05' },
+      {
+        name: 'Browse by room or type, with search',
+        detail: 'Group chips and headings count the items the search shows.',
+        adrs: ['ADR-032', 'ADR-195'],
+        checked: '2026-11-06',
+      },
       { name: '1–5 variants per family', adrs: ['ADR-033'], checked: '2026-11-05' },
       { name: 'Catalog pictures', adrs: ['ADR-042'], checked: '2026-11-05' },
-      { name: 'Compact cards with More', adrs: ['ADR-118', 'ADR-119'], checked: '2026-11-05' },
+      {
+        name: 'Compact cards with More',
+        detail: 'Open under the picture, so the text has the card’s width.',
+        adrs: ['ADR-118', 'ADR-119', 'ADR-195'],
+        checked: '2026-11-06',
+      },
       {
         name: 'Edit templates on this device',
-        detail: 'Shipped templates never change; reset or compare with the shipped one.',
-        adrs: ['ADR-034'],
-        checked: '2026-11-05',
+        detail:
+          'Shipped templates never change; reset or compare with the shipped one. One save is one revision; Cancel keeps the draft; a failed save or read is shown.',
+        adrs: ['ADR-034', 'ADR-195'],
+        checked: '2026-11-06',
       },
-      { name: 'Save a design as a template', adrs: ['ADR-034'], checked: '2026-11-05' },
+      {
+        name: 'Save a design as a template',
+        detail: 'Name, room and type, with a link to the new family.',
+        adrs: ['ADR-034', 'ADR-195'],
+        checked: '2026-11-06',
+      },
       {
         name: 'Choose which edit to keep on template import',
         detail: 'An imported template for a family you edited asks; Keep mine is the default.',
@@ -1246,6 +1263,12 @@ export const FEATURES: FeatureDomain[] = [
         checked: '2026-11-06',
       },
       { name: 'Save a project piece to the catalog', adrs: ['ADR-107'], checked: '2026-11-05' },
+      {
+        name: 'Safety-regulated items',
+        detail: 'A bunk bed or cradle card says you check it yourself, with "I check it myself".',
+        adrs: ['ADR-035', 'ADR-195'],
+        checked: '2026-11-06',
+      },
       { name: 'Catalog origin kept on copies', adrs: ['ADR-028'], checked: '2026-11-05' },
       {
         name: 'Brands',
