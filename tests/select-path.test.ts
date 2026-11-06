@@ -4,7 +4,14 @@ import { buildModel } from '../src/core/build';
 import { findInProduct, splitSpace, templates } from '../src/core/design';
 import { makeItem, newProject, pieceBoxToRoom, placeItem, type Project } from '../src/core/project';
 import { countSubject } from '../src/core/counts';
-import { drill, hitToMm, inSelection, pathAt, selectionBox } from '../src/core/selectPath';
+import {
+  drill,
+  hitToMm,
+  inSelection,
+  parentOf,
+  pathAt,
+  selectionBox,
+} from '../src/core/selectPath';
 import type { Design, Space, SpaceOpening } from '../src/core/types';
 import { useDesign } from '../src/store/designStore';
 
@@ -284,5 +291,35 @@ describe('the selection look follows the selection (ADR-087)', () => {
     const sides = model.panels.filter((q) => q.role === 'side');
     expect(sides.some((q) => inSelection(selectionBox(model, p.left)!, q.box))).toBe(false);
     expect(selectionBox(model, undefined)).toBeUndefined();
+  });
+});
+
+describe('Esc goes up one level (ADR-203, G-053)', () => {
+  const p = piece();
+  const model = buildModel(p.design);
+
+  it('a space → the space around it → the whole piece → nothing', () => {
+    expect(parentOf(model, p.bottom)).toBe(p.middle);
+    expect(parentOf(model, p.top)).toBe(p.middle);
+    expect(parentOf(model, p.middle)).toBeNull();
+    expect(parentOf(model, p.left)).toBeNull();
+    expect(parentOf(model, null)).toBeUndefined();
+    expect(parentOf(model, undefined)).toBeUndefined();
+    // A space that is not in the model goes up to the whole piece.
+    expect(parentOf(model, 'gone')).toBeNull();
+  });
+
+  it('walks back exactly the levels a tap drills through', () => {
+    const [bx, by] = centre(opening(p.design, p.bottom));
+    const down: (string | null)[] = [];
+    let sel = drill(model, bx, by, undefined);
+    while (sel !== undefined && !down.includes(sel)) {
+      down.push(sel);
+      sel = drill(model, bx, by, sel);
+    }
+    expect(down).toEqual([null, p.middle, p.bottom]);
+    const up: (string | null)[] = [];
+    for (let s = down.at(-1); s !== undefined; s = parentOf(model, s)) up.push(s);
+    expect(up).toEqual([...down].reverse());
   });
 });

@@ -63,6 +63,7 @@ export const FEATURES: FeatureDomain[] = [
         name: 'Reopen a project piece in the wizard',
         detail: 'Open in wizard in its Settings; Update piece replaces it in the project only.',
         adrs: ['ADR-203'],
+        checked: '2026-11-06',
       },
       {
         name: 'Create a project',
@@ -205,11 +206,13 @@ export const FEATURES: FeatureDomain[] = [
             detail:
               'In the piece editor: a space, then the space around it, then the whole piece, then nothing.',
             adrs: ['ADR-203'],
+            checked: '2026-11-06',
           },
           {
             name: 'Outline turns with an angled piece',
             detail: 'The 3D selection outline and the Move ghost are turned like its boards.',
             adrs: ['ADR-203'],
+            checked: '2026-11-06',
           },
         ],
       },
@@ -274,6 +277,7 @@ export const FEATURES: FeatureDomain[] = [
         name: 'A locked piece on a base keeps the base from being resized',
         detail: 'Unlock it to resize the piece under it; unlocked pieces on it follow.',
         adrs: ['ADR-203'],
+        checked: '2026-11-06',
       },
     ],
   },
@@ -529,6 +533,7 @@ export const FEATURES: FeatureDomain[] = [
             name: 'Run handle shown in the piece editor',
             detail: 'Its kind and hole centres, read-only, under Set by Handles for this run.',
             adrs: ['ADR-203'],
+            checked: '2026-11-06',
           },
           { name: 'Sink cut-out in the run worktop', adrs: ['ADR-125'], checked: '2026-11-05' },
           { name: 'Runs along the side walls', adrs: ['ADR-205'] },
@@ -882,6 +887,7 @@ export const FEATURES: FeatureDomain[] = [
             name: 'Move and turn a model in 3D',
             detail: 'Drag it in Move mode, with Snap, and turn it 90° about its centre.',
             adrs: ['ADR-203'],
+            checked: '2026-11-06',
           },
           {
             name: 'Place and drag 3D models',
@@ -1043,6 +1049,7 @@ export const FEATURES: FeatureDomain[] = [
         name: 'Ask about kept versions when deleting a project',
         detail: 'Keep them is the default; only readable versions are deleted.',
         adrs: ['ADR-203'],
+        checked: '2026-11-06',
       },
       {
         name: 'Versions of deleted projects',
@@ -1147,6 +1154,7 @@ export const FEATURES: FeatureDomain[] = [
         name: 'Choose which edit to keep on template import',
         detail: 'An imported template for a family you edited asks; Keep mine is the default.',
         adrs: ['ADR-203'],
+        checked: '2026-11-06',
       },
       { name: 'Save a project piece to the catalog', adrs: ['ADR-107'], checked: '2026-11-05' },
       { name: 'Catalog origin kept on copies', adrs: ['ADR-028'], checked: '2026-11-05' },
