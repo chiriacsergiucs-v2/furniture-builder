@@ -1,7 +1,8 @@
 # ADR-196: Build only what the user set, and say why a part cannot be built
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-05
+- Implemented: 2026-11-06 (Built and shipped in one PR (user 2026-11-06))
 - Depends on: ADR-003, ADR-008, ADR-010, ADR-023, ADR-024, ADR-025, ADR-037, ADR-038, ADR-040
 - Design: docs/ui-design.md (4. Screens — Inspector, problem banner, cut list)
 - Backlog: N201
