@@ -13,8 +13,17 @@ import {
   type SellerLookup,
   type UnitPer,
 } from '../core/prices';
-import { anyOffers, hardwareOffers, refOf, type Offer, type SellerCatalog } from '../core/sellers';
+import {
+  anyOffers,
+  hardwareOffers,
+  refOf,
+  runPartOffers,
+  type Offer,
+  type SellerCatalog,
+} from '../core/sellers';
+import type { HardwareProduct } from '../core/types';
 import { validPer } from '../core/design';
+import { notCountedPrint } from '../core/fasteners';
 import { ProductPicker } from './ProductPicker';
 import {
   NOT_COUNTED,
@@ -27,6 +36,7 @@ import {
 } from '../core/shopping';
 import { t, tr } from '../core/i18n';
 import { pt } from '../core/i18n/print';
+import { printPieceName } from '../core/catalog/printName';
 import { savePrices } from '../persist/db';
 import { useDesign } from '../store/designStore';
 import { usePrices } from './priceStore';
@@ -83,6 +93,7 @@ function save(name: string, text: string, type: string) {
  */
 export function ShoppingList() {
   const view = useView();
+  const design = useDesign((s) => s.design);
   const shownProject = useDesign((s) => (s.project && !s.editingItemId ? s.project : undefined));
   const projectView = !!shownProject;
   const addSellerItem = useDesign((s) => s.addSellerItem);
@@ -138,12 +149,15 @@ export function ShoppingList() {
             .map((l) => {
               const p = linePrice(l, map, seller);
               const u = unitPrice(l, map, seller);
-              return `<tr><td>${l.quantity} ${UNIT_SHOWN[l.unit]}</td><td>${esc(tr(l.label))}</td><td>${esc(tr(l.detail))}</td><td>${p === null ? '' : `${formatMoney(p)} ${esc(currency)}`}</td><td>${u ? esc(unitPricePrint(u, currency)) : ''}</td></tr>`;
+              return `<tr><td>${l.quantity} ${UNIT_SHOWN[l.unit]}</td><td>${esc(l.printLabel ?? tr(l.label))}</td><td>${esc(l.printDetail ?? tr(l.detail))}</td><td>${p === null ? '' : `${formatMoney(p)} ${esc(currency)}`}</td><td>${u ? esc(unitPricePrint(u, currency)) : ''}</td></tr>`;
             })
             .join('')}</table>`
         : '';
     }).join('');
-    const title = esc(pt('Listă de cumpărături — {name}', { name: view.title }));
+    // A single piece's title follows the print language (ADR-212, ADR-202); a project name prints as typed.
+    const name =
+      view.mode === 'design' && view.title === design.name ? printPieceName(design) : view.title;
+    const title = esc(pt('Listă de cumpărături — {name}', { name }));
     const estimate = esc(
       t('Estimate: {total} {currency}', { total: formatMoney(est.total), currency }) +
         (est.missing.length
@@ -157,7 +171,7 @@ export function ShoppingList() {
           : t(' (your prices)')),
     );
     w.document.write(
-      `<!doctype html><meta charset="utf-8"><title>${title}</title><style>body{font:12px sans-serif;margin:16px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #999;padding:3px 6px;text-align:left}h2{font-size:14px;margin:14px 0 4px}</style><h1>${title}</h1>${rowsHtml}<p>${esc(NOT_COUNTED)}</p><p>${estimate}</p>`,
+      `<!doctype html><meta charset="utf-8"><title>${title}</title><style>body{font:12px sans-serif;margin:16px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #999;padding:3px 6px;text-align:left}h2{font-size:14px;margin:14px 0 4px}</style><h1>${title}</h1>${rowsHtml}<p>${esc(notCountedPrint())}</p><p>${estimate}</p>`,
     );
     w.document.close();
     w.focus();
@@ -251,13 +265,7 @@ export function ShoppingList() {
           <Icon name="printer" className="sm" />
           {t('Print shopping list')}
         </button>
-        <button
-          type="button"
-          className="btn sm"
-          disabled={projectView}
-          title={projectView ? t('Open a piece to add a seller product to it') : undefined}
-          onClick={() => setAdding(true)}
-        >
+        <button type="button" className="btn sm" onClick={() => setAdding(true)}>
           <Icon name="plus" className="sm" />
           {t('Add seller product')}
         </button>
@@ -265,7 +273,11 @@ export function ShoppingList() {
       <ProductPicker
         open={adding}
         title={t('Add seller product')}
-        hint={t('Any product of a seller, added to this piece’s shopping list.')}
+        hint={
+          projectView
+            ? t('Any product of a seller, added to this project’s shopping list.')
+            : t('Any product of a seller, added to this piece’s shopping list.')
+        }
         offers={any}
         onClose={() => setAdding(false)}
         onPick={(o: Offer) => {
@@ -326,7 +338,7 @@ export function ShoppingList() {
                   <th scope="col">{t('Qty')}</th>
                   <th scope="col">{t('Item')}</th>
                   <th scope="col">{t('Details')}</th>
-                  {s.id !== 'run' && s.id !== 'choose' && <th scope="col">{t('Price')}</th>}
+                  {s.id !== 'choose' && <th scope="col">{t('Price')}</th>}
                 </tr>
               </thead>
               <tbody>
@@ -375,8 +387,10 @@ function Line({
   const p = linePrice(l, map, seller);
   const u = unitPrice(l, map, seller);
   const fromSeller = p !== null && priceSource(l, map, seller) === 'seller';
-  const priced = l.section !== 'run' && l.section !== 'choose';
-  const sellerRow = l.productKey !== undefined || l.itemIndex !== undefined;
+  // Run parts show a price once their own product prices them (ADR-206); otherwise their board's line does.
+  const priced = l.section !== 'choose';
+  const sellerRow =
+    l.productKey !== undefined || l.itemIndex !== undefined || l.runKey !== undefined;
   return (
     <>
       <tr className={sellerRow ? 'has-seller' : undefined}>
@@ -417,6 +431,8 @@ function Line({
                   <span>{PER[unit]}</span>
                 )}
               </span>
+            ) : p === null && l.section === 'run' ? (
+              <span className="hint">{t('with its board')}</span>
             ) : p === null ? (
               <span className="hint">
                 {l.priceKey &&
@@ -460,18 +476,43 @@ function Line({
  * an added item's quantity. Boards and bands are linked under Materials.
  */
 function LineProduct({ l, projectView }: { l: ShopLine; projectView: boolean }) {
-  const setHardwareProduct = useDesign((s) => s.setHardwareProduct);
+  const setLineProduct = useDesign((s) => s.setHardwareProduct);
+  const setRunProduct = useDesign((s) => s.setRunProduct);
   const setQuantity = useDesign((s) => s.setSellerItemQuantity);
+  const setProjectQuantity = useDesign((s) => s.setProjectSellerItemQuantity);
+  const project = useDesign((s) => s.project);
   const [open, setOpen] = useState(false);
   const [bad, setBad] = useState(false);
-  const { hardwareKind, sizeMm, productKey } = l;
+  const { hardwareKind, sizeMm, runKey } = l;
+  // A run part (ADR-206) is linked in the project; a hardware or fastener line in the design (ADR-161, ADR-206).
+  const productKey = runKey ?? l.productKey;
+  const worktop = /worktop/i.test(l.label);
+  const setHardwareProduct = (key: string, hp: HardwareProduct | undefined) =>
+    runKey ? setRunProduct(key, hp) : setLineProduct(key, hp);
   const offers = useCallback(
-    (c: SellerCatalog[], q: string) => hardwareOffers(c, hardwareKind, sizeMm, q),
-    [hardwareKind, sizeMm],
+    (c: SellerCatalog[], q: string) =>
+      runKey ? runPartOffers(c, worktop, q) : hardwareOffers(c, hardwareKind, sizeMm, q),
+    [hardwareKind, sizeMm, runKey, worktop],
   );
   if (l.itemIndex !== undefined) {
-    if (projectView) return null;
+    // In the project view only the project's own items change here (ADR-210); a piece's are changed in the piece.
+    const p = l.product;
+    const own =
+      projectView && p && project
+        ? project.sellerItems?.find((x) => x.seller === p.seller && x.id === p.id)
+        : undefined;
+    if (
+      projectView &&
+      (!own ||
+        !p ||
+        project?.items.some((it) =>
+          it.design.sellerItems?.some((x) => x.seller === p.seller && x.id === p.id),
+        ))
+    )
+      return null;
     const i = l.itemIndex;
+    const change = (v: number) =>
+      own && p ? setProjectQuantity(p.seller, p.id, v) : setQuantity(i, v);
     return (
       <span className="seller-line">
         <label className="field inline">
@@ -485,11 +526,11 @@ function LineProduct({ l, projectView }: { l: ShopLine; projectView: boolean }) 
             defaultValue={l.quantity}
             onBlur={(e) => {
               const v = Number(e.target.value);
-              if (Number.isInteger(v) && v >= 0 && v <= 9999) setQuantity(i, v);
+              if (Number.isInteger(v) && v >= 0 && v <= 9999) change(v);
             }}
           />
         </label>
-        <button type="button" className="btn sm ghost" onClick={() => setQuantity(i, 0)}>
+        <button type="button" className="btn sm ghost" onClick={() => change(0)}>
           {t('Remove')}
         </button>
       </span>
@@ -540,9 +581,15 @@ function LineProduct({ l, projectView }: { l: ShopLine; projectView: boolean }) 
       <ProductPicker
         open={open}
         title={t('Product for {item}', { item })}
-        hint={t(
-          'Products of this kind first (runners of the same length first). The price counts 1 seller unit per item until you change it.',
-        )}
+        hint={
+          runKey
+            ? t(
+                'Boards and worktops first. A product priced per piece or per metre prices this part instead of its board.',
+              )
+            : t(
+                'Products of this kind first (runners of the same length first). The price counts 1 seller unit per item until you change it.',
+              )
+        }
         offers={offers}
         onClose={() => setOpen(false)}
         onPick={(o: Offer) => {

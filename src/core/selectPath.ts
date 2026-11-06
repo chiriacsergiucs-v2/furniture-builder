@@ -43,6 +43,20 @@ export function drill(model: FurnitureModel, x: Mm, y: Mm, current: Selection): 
 }
 
 /**
+ * One level up from `sel` (ADR-203, G-053): a space → the space around it, a top space → the whole piece (`null`), the
+ * whole piece → nothing (`undefined`). Levels are those a tap drills through (`pathAt`); a space not on that path (an
+ * L-corner's side wing) goes up to the whole piece.
+ */
+export function parentOf(model: FurnitureModel, sel: Selection): Selection {
+  if (sel === undefined || sel === null) return undefined;
+  const s = model.spaces.find((o) => o.nodeId === sel && o.view !== 'side');
+  if (!s) return null;
+  const path = pathAt(model, s.box.x + s.box.w / 2, s.box.y + s.box.h / 2);
+  const at = path.indexOf(sel);
+  return at > 0 ? path[at - 1] : null;
+}
+
+/**
  * The box the selection look draws round (ADR-087), the same one the quick-count card anchors on: the piece's bounds
  * for the whole piece, the space's front-view box for a space, nothing when nothing is selected.
  */

@@ -3,7 +3,14 @@ import type { FinishScope } from '../core/finish';
 import { getLang, t, tr } from '../core/i18n';
 import { VERSION_KIND_TEXT, type ProjectVersion } from '../core/projectVersion';
 import { builtInStyles, HANDLE_NAMES, yourStyles, type Style } from '../core/styles';
-import { deleteProjectVersion, listProjects, listProjectVersions } from '../persist/db';
+import {
+  deleteProjectVersion,
+  listOrphanVersions,
+  listProjects,
+  listProjectVersions,
+  saveProject,
+} from '../persist/db';
+import { newId } from '../core/design';
 import { useDesign } from '../store/designStore';
 import { restoreVersion, saveVersionNow } from '../store/versions';
 import { askConfirm } from './Confirm';
@@ -212,7 +219,112 @@ function HistoryForProject() {
           ))}
         </ul>
       )}
+      <OrphanVersions reload={reload} />
       <EditHistory open={steps} onClose={() => setSteps(false)} />
+    </Group>
+  );
+}
+
+/**
+ * Versions of deleted projects (ADR-211, G-389): kept versions whose project was deleted with Keep versions (ADR-203).
+ * Restore as a new project saves a copy under a new id and opens it; the version stays. Delete removes only the tapped
+ * version, after asking. Nothing here deletes anything on its own (ADR-012, G-156).
+ */
+function OrphanVersions({ reload }: { reload: number }) {
+  const openProject = useDesign((s) => s.openProject);
+  const [rows, setRows] = useState<ProjectVersion[]>([]);
+  const [again, setAgain] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  useEffect(() => {
+    let live = true;
+    listOrphanVersions()
+      .then((v) => live && setRows(v))
+      .catch(() => live && setRows([]));
+    return () => {
+      live = false;
+    };
+  }, [reload, again]);
+  if (!rows.length) return null;
+  const run = async (work: () => Promise<void>, errorText: string) => {
+    if (busy) return;
+    setBusy(true);
+    setMsg(null);
+    try {
+      await work();
+    } catch {
+      setMsg({ ok: false, text: errorText });
+    } finally {
+      setBusy(false);
+      setAgain((n) => n + 1);
+    }
+  };
+  const restore = (v: ProjectVersion) =>
+    run(async () => {
+      const now = new Date().toISOString();
+      const copy = {
+        ...structuredClone(v.project),
+        id: newId(),
+        name: t('{name} (restored)', { name: v.project.name }),
+        createdAt: now,
+        updatedAt: now,
+      };
+      await saveProject(copy);
+      openProject(copy);
+    }, t('The version could not be restored.'));
+  const remove = (v: ProjectVersion) =>
+    run(async () => {
+      if (
+        !(await askConfirm(
+          t('Delete the version of {when}? It cannot be undone.', { when: when(v.savedAt) }),
+          { confirmLabel: t('Delete'), danger: true },
+        ))
+      )
+        return;
+      await deleteProjectVersion(v.id);
+    }, t('The version could not be deleted from this device.'));
+  return (
+    <Group title={t('Versions of deleted projects ({n})', { n: rows.length })} defaultOpen={false}>
+      {msg && (
+        <p className={msg.ok ? 'hint' : 'alert error'} role={msg.ok ? 'status' : 'alert'}>
+          {msg.text}
+        </p>
+      )}
+      <ul
+        className="versions"
+        aria-label={t('Versions of deleted projects ({n})', { n: rows.length })}
+      >
+        {rows.map((v) => (
+          <li key={v.id} className="version-row">
+            <span>
+              <strong>{v.project.name}</strong>
+              <span className="sub">
+                {when(v.savedAt)} · {tr(VERSION_KIND_TEXT[v.kind])} ·{' '}
+                {t('{n|# piece|# pieces}', { n: v.project.items.length })}
+              </span>
+            </span>
+            <span className="split-actions">
+              <button
+                type="button"
+                className="btn sm outline"
+                disabled={busy}
+                onClick={() => void restore(v)}
+              >
+                {t('Restore as a new project')}
+              </button>
+              <button
+                type="button"
+                className="btn sm ghost"
+                disabled={busy}
+                aria-label={t('Delete the version of {when}', { when: when(v.savedAt) })}
+                onClick={() => void remove(v)}
+              >
+                <Icon name="trash" className="sm" />
+              </button>
+            </span>
+          </li>
+        ))}
+      </ul>
     </Group>
   );
 }

@@ -5,8 +5,16 @@
  * the floor is refused with the reason, never clamped (ADR-008); a locked piece stays (ADR-095).
  */
 import { t } from './i18n';
-import { moveBlocked, pieceName, type Project, type MoveResult } from './project';
-import type { Mm } from './types';
+import {
+  isWallHung,
+  moveBlocked,
+  pieceName,
+  type MoveResult,
+  type PlacedPiece,
+  type Project,
+} from './project';
+import { SNAP_RANGE } from './snap';
+import type { Box, Mm } from './types';
 
 /** The label shown while the height is dragged: "From floor 1450 mm". */
 export const heightLabel = (height: number) => t('From floor {h} mm', { h: height });
@@ -54,4 +62,68 @@ export function setWallHeight(project: Project, id: string, height: number): Mov
       ),
     },
   };
+}
+
+/** A wall unit's height after snapping (ADR-205): where it lands and the hint naming the line, or null when free. */
+export interface HeightSnap {
+  height: Mm;
+  hint: string | null;
+}
+
+/**
+ * Snap a dragged wall unit's height (ADR-205, G-033): its underside or its top within `range` (60 mm, ADR-070) of a
+ * line lands on it. The lines are the worktop line (the top of the run worktop under it, or of the base units under it
+ * when there is no worktop) and the undersides and tops of the other wall units. The nearest line wins, ties broken by
+ * the line's kind (worktop first) and then the piece id. Nothing in range: the height as given, no hint. Whole mm; a
+ * line below the floor is never offered. Snap off or Alt held: the caller does not call this.
+ */
+export function snapWallHeight(
+  project: Project,
+  pieces: PlacedPiece[],
+  id: string,
+  height: Mm,
+  range: Mm = SNAP_RANGE,
+): HeightSnap {
+  const me = pieces.find((pc) => pc.item.id === id);
+  if (!me) return { height, hint: null };
+  const b = me.bounds;
+  const under = (o: Box) =>
+    o.x < b.x + b.w && b.x < o.x + o.w && o.z < b.z + b.d && b.z < o.z + o.d;
+  type Line = { y: Mm; rank: number; key: string; hint: (y: Mm) => string };
+  const worktop = (y: Mm) => t('Snapped to the worktop line, {h} mm', { h: y });
+  const tops = (project.runParts ?? []).filter((rp) => rp.kind === 'worktop' && under(rp.box));
+  const bases = pieces.filter(
+    (pc) =>
+      pc.item.id !== id && pc.bounds.y === 0 && !isWallHung(pc.item.design) && under(pc.bounds),
+  );
+  const lines: Line[] = tops.length
+    ? tops.map((rp) => ({ y: rp.box.y + rp.box.h, rank: 0, key: rp.id, hint: worktop }))
+    : bases.map((pc) => ({
+        y: pc.bounds.y + pc.bounds.h,
+        rank: 0,
+        key: pc.item.id,
+        hint: worktop,
+      }));
+  for (const pc of pieces) {
+    if (pc.item.id === id || pc.item.placement?.kind !== 'wall') continue;
+    const hint = (y: Mm) => t('Snapped to {name}, {h} mm', { name: pc.item.design.name, h: y });
+    lines.push(
+      { y: pc.bounds.y, rank: 1, key: pc.item.id, hint },
+      { y: pc.bounds.y + pc.bounds.h, rank: 1, key: pc.item.id, hint },
+    );
+  }
+  let best: { at: Mm; dist: number; line: Line } | null = null;
+  for (const line of lines)
+    for (const at of [line.y, line.y - b.h]) {
+      const dist = Math.abs(at - height);
+      if (at < 0 || dist > range) continue;
+      const better =
+        !best ||
+        dist < best.dist ||
+        (dist === best.dist &&
+          (line.rank < best.line.rank ||
+            (line.rank === best.line.rank && line.key < best.line.key)));
+      if (better) best = { at, dist, line };
+    }
+  return best ? { height: best.at, hint: best.line.hint(best.line.y) } : { height, hint: null };
 }

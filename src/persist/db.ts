@@ -3,7 +3,7 @@ import { validateDesign } from '../core/design';
 import { validateProject, type Project } from '../core/project';
 import { validateLocalTemplate, type LocalTemplate } from '../core/catalog/local';
 import type { Design } from '../core/types';
-import type { Decor } from '../core/materials';
+import { validateBand, type Band, type Decor } from '../core/materials';
 import type { ModelFormat, ModelSize } from '../core/model3d';
 import { validatePrice, type PriceEntry } from '../core/prices';
 import { validFastenerChoice, type FastenerChoice, type JointType } from '../core/fasteners';
@@ -90,6 +90,7 @@ class FurnitureDb extends Dexie {
   projectVersions!: Table<ProjectVersion, string>;
   settings!: Table<SettingRow, string>;
   accountLinks!: Table<AccountLink, [string, string, string]>;
+  bands!: Table<Band, string>;
   constructor(name = 'furniture-builder') {
     super(name);
     // Never edit a shipped version block; add a new version for any change (ADR-012).
@@ -204,6 +205,24 @@ class FurnitureDb extends Dexie {
       // link never travels in exported files or design codes.
       accountLinks: '[accountId+table+localId], accountId, remoteId',
     });
+    // v12 (ADR-212, G-038): the band list the user imported. Earlier tables untouched (additive).
+    this.version(12).stores({
+      designs: 'id, updatedAt, name',
+      projects: 'id, updatedAt, name',
+      templates: 'id, updatedAt',
+      researchDocs: 'key, docId',
+      researchMarks: 'id, updatedAt',
+      images: 'id',
+      decors: 'id',
+      projectTemplates: 'id, updatedAt, name',
+      prices: 'id',
+      models: 'id, createdAt',
+      gapMarks: 'gapId, updatedAt',
+      projectVersions: 'id, projectId, savedAt',
+      settings: 'key',
+      accountLinks: '[accountId+table+localId], accountId, remoteId',
+      bands: 'id',
+    });
     // Every user table reports its changes after the write (backup, account upload; src/persist/events.ts).
     for (const [name] of BACKUP_TABLES) {
       const t = this.table(name);
@@ -273,9 +292,36 @@ export async function listProjectVersions(
   };
   return rows.filter(usable).sort((a, b) => b.savedAt.localeCompare(a.savedAt));
 }
+/**
+ * Kept versions whose project is gone (ADR-211, G-389): readable versions whose `projectId` has no project row, newest
+ * first. Unreadable rows are skipped and kept (ADR-012); nothing here deletes anything.
+ */
+export async function listOrphanVersions(database = db): Promise<ProjectVersion[]> {
+  const [ids, rows] = await Promise.all([
+    database.projects.toCollection().primaryKeys(),
+    database.projectVersions.toArray(),
+  ]);
+  const live = new Set<string>(ids.map(String));
+  const usable = (v: unknown) => {
+    try {
+      return !validateVersion(v).length;
+    } catch {
+      return false;
+    }
+  };
+  return rows
+    .filter((v) => usable(v) && !live.has(v.projectId))
+    .sort((a, b) => b.savedAt.localeCompare(a.savedAt));
+}
 /** Only on the user's Delete (ADR-123, G-156: nothing removes versions automatically). */
 export const deleteProjectVersion = (id: string, database = db) =>
   database.projectVersions.delete(id);
+/**
+ * Only on the user's Delete versions when a project is deleted (ADR-203, G-190): the rows `listProjectVersions`
+ * returned, by id; rows the app cannot read are never in that list and stay (ADR-012).
+ */
+export const deleteProjectVersions = (ids: readonly string[], database = db) =>
+  database.projectVersions.bulkDelete([...ids]);
 
 export async function saveTemplate(t: LocalTemplate, database = db): Promise<void> {
   await database.templates.put({ id: t.id, updatedAt: t.updatedAt, template: t });
@@ -307,6 +353,10 @@ export async function listResearchMarks(database = db): Promise<ResearchMark[]> 
 export async function saveGapMark(mark: GapMark, database = db): Promise<void> {
   await database.gapMarks.put(mark);
 }
+/** Marks read from a gap-marks file (ADR-212), already merged newer-wins by `readGapMarksFile`. */
+export async function saveGapMarks(marks: GapMark[], database = db): Promise<void> {
+  await database.gapMarks.bulkPut(marks);
+}
 /** Gap marks that still validate; unreadable rows are skipped and kept (ADR-012). */
 export async function listGapMarks(database = db): Promise<GapMark[]> {
   const rows = await database.gapMarks.toArray();
@@ -336,6 +386,19 @@ export async function replaceDecors(decors: Decor[], database = db): Promise<voi
 }
 export const listDecors = (database = db): Promise<Decor[]> => database.decors.toArray();
 export const clearDecors = (database = db) => database.decors.clear();
+
+/** A new band-list import replaces the list (ADR-212), as the decor list does. */
+export async function replaceBands(bands: Band[], database = db): Promise<void> {
+  await database.transaction('rw', database.bands, async () => {
+    await database.bands.clear();
+    await database.bands.bulkPut(bands);
+  });
+}
+/** The band list; unreadable rows are skipped and kept (ADR-012). */
+export async function listBands(database = db): Promise<Band[]> {
+  const rows = await database.bands.toArray();
+  return rows.filter(validateBand);
+}
 
 export async function saveProjectTemplate(t: ProjectTemplate, database = db): Promise<void> {
   await database.projectTemplates.put({
@@ -373,7 +436,7 @@ export async function listPrices(database = db): Promise<PriceEntry[]> {
  * `fastener:<joint type>`, so no new Dexie version is needed. Unreadable rows are skipped and kept (ADR-012).
  */
 export const FASTENER_PREFIX = 'fastener:';
-type FastenerRow = PriceEntry & { per?: unknown };
+type FastenerRow = PriceEntry & { per?: unknown; edge?: unknown };
 export async function listFasteners(database = db): Promise<FastenerChoice[]> {
   const rows = (await database.prices
     .where('id')
@@ -384,6 +447,8 @@ export async function listFasteners(database = db): Promise<FastenerChoice[]> {
       joint: r.id.slice(FASTENER_PREFIX.length) as JointType,
       name: r.text ?? '',
       per: r.per as number,
+      // The edge distance (ADR-209): an extra field on the same row, no new Dexie version or index.
+      ...(r.edge !== undefined ? { edge: r.edge as number } : {}),
     }))
     .filter(validFastenerChoice);
 }
@@ -394,6 +459,7 @@ export const saveFastener = (c: FastenerChoice, database = db) =>
     amount: 0,
     text: c.name,
     per: c.per,
+    ...(c.edge !== undefined ? { edge: c.edge } : {}),
   } as FastenerRow);
 export const deleteFastener = (joint: JointType, database = db) =>
   database.prices.delete(FASTENER_PREFIX + joint);
@@ -435,23 +501,39 @@ export async function listModels(database = db): Promise<StoredModel[]> {
   return rows.filter((r) => r.bytes instanceof ArrayBuffer && typeof r.name === 'string');
 }
 /**
- * Delete a model from the library unless a project still uses it (ADR-076, ADR-012). Saved projects are searched as
- * text, so a project the app cannot read still keeps its models; `keep` holds ids the open project uses.
+ * Delete a model from the library unless a project or a project template still uses it (ADR-076, ADR-208, ADR-012).
+ * Saved rows are searched as text, so a row the app cannot read still keeps its models; `keep` holds ids the open
+ * project uses.
  */
 export async function deleteModelIfUnused(
   id: string,
   keep: Iterable<string> = [],
   database = db,
 ): Promise<{ deleted: boolean; usedBy: string[] }> {
-  return database.transaction('rw', database.models, database.projects, async () => {
-    const usedBy = (await database.projects.toArray())
-      .filter((r) => JSON.stringify(r).includes(`"${id}"`))
-      .map((r) => (typeof r.name === 'string' ? r.name : t('a saved project')));
-    if (new Set(keep).has(id)) usedBy.unshift(t('the open project'));
-    if (usedBy.length) return { deleted: false, usedBy };
-    await database.models.delete(id);
-    return { deleted: true, usedBy };
-  });
+  return database.transaction(
+    'rw',
+    database.models,
+    database.projects,
+    database.projectTemplates,
+    async () => {
+      const usedBy = [
+        ...(await database.projects.toArray())
+          .filter((r) => JSON.stringify(r).includes(`"${id}"`))
+          .map((r) => (typeof r.name === 'string' ? r.name : t('a saved project'))),
+        ...(await database.projectTemplates.toArray())
+          .filter((r) => JSON.stringify(r).includes(`"${id}"`))
+          .map((r) =>
+            typeof r.name === 'string'
+              ? t('the project template {name}', { name: r.name })
+              : t('a project template'),
+          ),
+      ];
+      if (new Set(keep).has(id)) usedBy.unshift(t('the open project'));
+      if (usedBy.length) return { deleted: false, usedBy };
+      await database.models.delete(id);
+      return { deleted: true, usedBy };
+    },
+  );
 }
 
 const LAST_KEY = 'furniture-builder:last-design';

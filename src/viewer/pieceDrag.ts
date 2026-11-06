@@ -1,7 +1,7 @@
 import { useThree, type ThreeEvent } from '@react-three/fiber';
 import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 import { Raycaster, Vector2 } from 'three';
-import { floorDrop, floorPoint, type FloorPoint } from '../core/drag3d';
+import { floorDrop, floorPoint, modelDrop, type FloorPoint } from '../core/drag3d';
 import { isLocked, LOCKED_HINT, moveBlocked } from '../core/project';
 import type { SnapResult } from '../core/snap';
 import { useDesign } from '../store/designStore';
@@ -18,6 +18,8 @@ export interface PieceGhost {
   snapping: boolean;
   /** Why the piece will not move (locked, or carrying a locked piece, ADR-095): no ghost, this hint instead. */
   blocked?: string;
+  /** A display-only 3D model (ADR-076) is dragged, not a piece (ADR-203): its box is the ghost. */
+  model?: true;
 }
 
 // The ghost lives outside React state so a pointer move re-renders only the ghost and its note, not the scene.
@@ -63,6 +65,8 @@ interface Gesture {
   to: FloorPoint;
   dragging: boolean;
   alt: boolean;
+  /** A display-only 3D model (ADR-203, G-105). */
+  model: boolean;
 }
 
 /**
@@ -129,6 +133,10 @@ export function usePieceDrag(enabled: boolean, snapOn: boolean) {
     const pieces = st.projectModel?.pieces;
     if (!st.project || !pieces) return null;
     const snapping = live.current.snapOn && !g.alt;
+    if (g.model) {
+      const target = modelDrop(st.project, pieces, g.id, g.from, g.to, snapping);
+      return target ? { id: g.id, target, snapping, model: true } : null;
+    }
     const target = floorDrop(st.project, pieces, g.id, g.from, g.to, snapping);
     const item = st.project.items.find((i) => i.id === g.id);
     const blocked = isLocked(item) ? LOCKED_HINT : moveBlocked(st.project, [g.id]);
@@ -145,12 +153,15 @@ export function usePieceDrag(enabled: boolean, snapOn: boolean) {
       if (gesture.current) return;
       const st = useDesign.getState();
       const pc = st.projectModel?.pieces.find((p) => p.item.id === id);
+      // A display-only model drags as a piece does (ADR-203, G-105), on the plane of its base.
+      const mb = pc ? undefined : st.projectModel?.models.find((m) => m.item.id === id)?.box;
       // A run part (worktop, trim) is not a piece: the press stops here, so the piece under it is not dragged.
-      if (!pc) {
+      if (!pc && !mb) {
         e.stopPropagation();
         return;
       }
-      const from = toFloor(ne.clientX, ne.clientY, pc.bounds.y);
+      const baseY = pc ? pc.bounds.y : mb!.y;
+      const from = toFloor(ne.clientX, ne.clientY, baseY);
       if (!from) return;
       e.stopPropagation();
       // Pressing a piece selects it; the click that follows must not also open it (ADR-083).
@@ -164,11 +175,12 @@ export function usePieceDrag(enabled: boolean, snapOn: boolean) {
         pointerId: ne.pointerId,
         sx: ne.clientX,
         sy: ne.clientY,
-        y: pc.bounds.y,
+        y: baseY,
         from,
         to: from,
         dragging: false,
         alt: ne.altKey,
+        model: !pc,
       };
       const onMove = (ev: PointerEvent) => {
         const g = gesture.current;
@@ -188,8 +200,14 @@ export function usePieceDrag(enabled: boolean, snapOn: boolean) {
         if (!g.dragging) return;
         swallow.current = true;
         const snapping = live.current.snapOn && !ev.altKey;
+        const st2 = useDesign.getState();
+        if (g.model) {
+          // A model's drop is the plan's (ADR-203, ADR-208): lifted off a piece, one undo step.
+          st2.dropModel(g.id, g.to.x - g.from.x, g.to.z - g.from.z, snapping);
+          return;
+        }
         // Alt: the piece moves without its connected neighbours (ADR-168).
-        useDesign.getState().dropItemAt(g.id, g.from, g.to, snapping, ev.altKey);
+        st2.dropItemAt(g.id, g.from, g.to, snapping, ev.altKey);
       };
       const onCancel = (ev: PointerEvent) => {
         const g = gesture.current;

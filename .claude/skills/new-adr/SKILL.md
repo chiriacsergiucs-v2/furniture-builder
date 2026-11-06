@@ -45,6 +45,10 @@ Everything written to the repo is in **English**, whatever language the conversa
    - `Design:` — `docs/ui-design.md` (with the section) for anything visible, or `n/a`.
    - `Backlog:` — the `docs/backlog.md` ids; add a new row there (next free `N` id, status
      `Not done`) if the work has none.
+   - `Research:` (optional, ADR-212) — when the ADR builds a feature of the research record, add
+     `- Research: <feature id>, …` under `- Backlog:`, naming its `ens.f.<slug>` ids from
+     `src/core/research/ensemble-2026-10-23.features.ts`. `pnpm docs:check` and `ship-adr.sh` reject an unknown
+     id, and `ship-adr` updates those rows when the ADR ships.
    - **Context** (the user's words), **Decision**, **Alternatives considered** (2–4 real
      options), **Scope**, **Consequences**.
    - **Done when** — verifiable items only (tests, diagnostics, visible text the find-it

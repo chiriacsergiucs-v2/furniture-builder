@@ -7,7 +7,8 @@
 - "- Acceptance:" is light, full or browser (ADR-066, ADR-108); a light ADR keeps the find-it marker on its backlog
   rows until they are Done (ADR-066);
 - docs/adr/GAPS.md and GAPS-archive.md (Done gaps only) are well formed, every G id used exists in one of them, and an ADR from ADR-082 on cites a gap for each
-  out-of-scope line and open question (ADR-082).
+  out-of-scope line and open question (ADR-082);
+- a pending ADR's optional "- Research:" line names only features of the research record (ADR-212).
 
 Run: npm run docs:check  (python3 -I scripts/check-docs.py)"""
 import pathlib, re, subprocess, sys
@@ -65,8 +66,28 @@ for num in adrs:
     if seen.get(num) != 1:
         errors.append(f"docs/adr/README.md: ADR-{num} listed {seen.get(num, 0)} times")
 
+# Research features an ADR names (ADR-212): "- Research: ens.f.<slug>, …" (or the bare slug).
+RESEARCH = REPO / "src/core/research/ensemble-2026-10-23.features.ts"
+research_ids = set(re.findall(r"\bF\('([a-z0-9-]+)'", RESEARCH.read_text())) if RESEARCH.exists() else set()
+
+
+def research_problems(text):
+    """Unknown research feature ids named on the ADR's '- Research:' line."""
+    line = re.search(r"^- Research: (.+)$", text, re.M)
+    if not line:
+        return []
+    out = []
+    for rid in (s.strip() for s in line.group(1).split(",")):
+        if rid and rid.removeprefix("ens.f.") not in research_ids:
+            out.append(f"unknown research feature '{rid}' (not in {RESEARCH.relative_to(REPO)})")
+    return out
+
+
 # Header references inside each ADR.
 for num, (path, status) in adrs.items():
+    # A shipped ADR deletes the features it built, so only pending ADRs are checked.
+    if status != "Implemented":
+        errors += [f"{path.relative_to(REPO)}: {e}" for e in research_problems(path.read_text())]
     text, rel = path.read_text(), path.relative_to(REPO)
     deps = re.search(r"^- Depends on: (.+)$", text, re.M)
     for d in re.findall(r"ADR-(\d{3})", deps.group(1) if deps else ""):

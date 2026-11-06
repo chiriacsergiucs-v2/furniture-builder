@@ -23,9 +23,11 @@ import {
 import { t, tr } from '../core/i18n';
 import { boardChoices } from '../core/boards';
 import type { Decor } from '../core/materials';
-import { materialKey } from '../core/project';
+import { materialKey, runHandleFor, type RunHandle } from '../core/project';
 import { listDecors } from '../persist/db';
-import type { Selection } from '../core/selectPath';
+import { parentOf as parentSel, type Selection } from '../core/selectPath';
+import { useMediaQuery } from './useMediaQuery';
+import { usePieceLockHint } from './pieceLockHint';
 import type {
   CabinetParams,
   CornerParams,
@@ -61,7 +63,13 @@ import {
 import { Icon } from './icons';
 import { CountStepper } from './CountStepper';
 import { PieceSize } from './PieceSize';
-import { BindButton, bindingHint } from './Variables';
+import {
+  BindButton,
+  bindingHint,
+  DesignBindButton,
+  designBindingHint,
+  VariablesPanel,
+} from './Variables';
 import { askConfirm } from './Confirm';
 import { useUi } from './shell/uiStore';
 import { tNode } from './i18n';
@@ -122,6 +130,8 @@ export function Inspector({ mode }: { mode: 'compose' | 'configure' }) {
     <>
       <SizeLockNote />
       {editor}
+      {/* The piece's own variables (ADR-210): its sizes bind to them with the ƒ button beside each size. */}
+      <VariablesPanel scope="design" />
     </>
   );
 }
@@ -356,6 +366,9 @@ function Crumbs({
   wholeLabel: string;
 }) {
   const select = useDesign((s) => s.select);
+  const model = useDesign((s) => s.model);
+  // Phones get a plain Up one level beside the path (ADR-211, G-388); desktop has Esc (ADR-203).
+  const phone = useMediaQuery('(max-width: 760px)');
   const chain: Space[] = [];
   let cur: Space | undefined = findSpace(root, id);
   while (cur) {
@@ -364,6 +377,16 @@ function Crumbs({
   }
   return (
     <nav className="crumbs" aria-label={t('Where this space sits')}>
+      {phone && (
+        <button
+          type="button"
+          className="up-level"
+          onClick={() => select(parentSel(model, id) ?? null)}
+        >
+          <Icon name="chevron-up" className="sm" />
+          {t('Up one level')}
+        </button>
+      )}
       <button type="button" onClick={() => select(null)}>
         {wholeLabel}
       </button>
@@ -403,6 +426,13 @@ function SpaceEditor({
   const diags = useMemo(() => allDiags.filter((d) => d.nodeId === space.id), [allDiags, space.id]);
   const set = (fn: (s: Space) => Space) => update(space.id, fn);
   const parent = parentOf(root, space.id);
+  // A run handle reaching this project piece (ADR-125) sets its handles: shown read-only (ADR-203, G-211).
+  const project = useDesign((s) => s.project);
+  const pieceId = useDesign((s) => s.editingItemId ?? s.drillItemId);
+  const runHandle = useMemo(
+    () => (project && pieceId ? runHandleFor(project, pieceId) : undefined),
+    [project, pieceId],
+  );
   // Doors and handles go on the outside only: a space inside other doors gets none (N109).
   const behindDoors = insideDoors(root, space.id);
 
@@ -586,7 +616,9 @@ function SpaceEditor({
               </p>
             )}
             <FrontEditor space={space} onChange={set} />
-            {space.front || space.handle || (space.kind === 'drawers' && !behindDoors) ? (
+            {runHandle && (space.front || (space.kind === 'drawers' && !behindDoors)) ? (
+              <RunHandleNote handle={runHandle.handle} />
+            ) : space.front || space.handle || (space.kind === 'drawers' && !behindDoors) ? (
               <HandleEditor space={space} onChange={set} />
             ) : (
               <p className="hint">{t('Handles appear once there are doors or drawers.')}</p>
@@ -608,6 +640,29 @@ function SpaceEditor({
 }
 
 const BAR_SPACINGS = [96, 128, 160, 192, 224, 256, 320];
+
+/** The run handle's kind and hole spacing, read-only: the run sets them, the piece's own stay in its design (ADR-203). */
+function RunHandleNote({ handle }: { handle: RunHandle['handle'] }) {
+  const kind =
+    handle.kind === 'bar' ? t('Bar') : handle.kind === 'knob' ? t('Knob') : t('Push to open');
+  return (
+    <div className="run-handle-note">
+      <p className="hint">{t('Set by Handles for this run')}</p>
+      <dl className="dims2">
+        <div>
+          <dt>{t('Handles')}</dt>
+          <dd>{kind}</dd>
+        </div>
+        {handle.kind === 'bar' && (
+          <div>
+            <dt>{t('Hole centres')}</dt>
+            <dd>{t('{n} mm', { n: handle.holeSpacing ?? 128 })}</dd>
+          </div>
+        )}
+      </dl>
+    </div>
+  );
+}
 
 function HandleEditor({
   space,
@@ -892,6 +947,9 @@ function SplitEditor({
 
 function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material[] }) {
   const set = useDesign((s) => s.updateCabinet);
+  const constructionLock = usePieceLockHint('construction');
+  // Bound to the piece's own variable (ADR-210): the field is off and says what it follows.
+  const mountBound = useDesign((s) => designBindingHint(s.design, 'mountHeight'));
   const select = useDesign((s) => s.select);
   const inside = insideSummary([p.interior]);
   const steps: Step[] = [
@@ -966,10 +1024,14 @@ function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material
           min={0}
           max={2500}
           onChange={(v) => set({ mountHeight: v })}
-          hint={t('Position only; brackets and a rail are added to the hardware list.')}
+          disabled={!!mountBound}
+          hint={
+            mountBound ?? t('Position only; brackets and a rail are added to the hardware list.')
+          }
+          trailing={<DesignBindButton target="mountHeight" />}
         />
       )}
-      <Group title={t('Construction')} id="g-build">
+      <Group title={t('Construction')} id="g-build" locked={constructionLock}>
         <Segmented
           label={t('Top@@panel')}
           value={p.top}
@@ -1189,6 +1251,7 @@ function DrawerSettingsGroup({
 
 function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[] }) {
   const set = useDesign((s) => s.updateCorner);
+  const constructionLock = usePieceLockHint('construction');
   const select = useDesign((s) => s.select);
   const blind = p.variant === 'blind',
     diagonal = p.variant === 'diagonal';
@@ -1347,7 +1410,7 @@ function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[]
           hint={t('Position only; the hardware list asks you to choose the hanging brackets.')}
         />
       )}
-      <Group title={t('Construction')} id="g-build">
+      <Group title={t('Construction')} id="g-build" locked={constructionLock}>
         <Segmented
           label={t('Top@@panel')}
           value={p.top}
@@ -1689,6 +1752,7 @@ function DeskEditor({
 }) {
   const select = useDesign((s) => s.select);
   const set = useDesign((s) => s.updateDesk);
+  const constructionLock = usePieceLockHint('construction');
   const ped = p.support !== 'gables';
   const sides = (['left', 'right'] as const).filter((sd) => usesPedestal(p, sd));
   const steps: Step[] = [
@@ -1787,7 +1851,7 @@ function DeskEditor({
           </div>
         </div>
       )}
-      <Group title={t('Construction')} id="g-build">
+      <Group title={t('Construction')} id="g-build" locked={constructionLock}>
         <MmField
           label={t('Top overhang at the front')}
           value={p.frontOverhang}

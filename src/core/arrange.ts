@@ -4,7 +4,7 @@
  * to the usual diagnostics (ADR-008).
  */
 import { t } from './i18n';
-import { newId } from './design';
+import { newId, SCHEMA_VERSION } from './design';
 import { overlaps } from './geometry';
 import {
   carriedBy,
@@ -65,6 +65,12 @@ export function mirrorSpace(s: Space): Space {
       children: s.axis === 'x' ? children.reverse() : children,
       sizes: s.axis === 'x' ? [...s.sizes].reverse() : s.sizes,
     };
+    // ADR-205: the rounding remainder stays on the same physical part, so the copy matches to the mm; mirroring twice
+    // takes the flag off again.
+    if (s.axis === 'x') {
+      const { remainderFirst, ...rest } = out as typeof s;
+      out = remainderFirst ? rest : { ...rest, remainderFirst: true };
+    }
   }
   return out;
 }
@@ -83,7 +89,11 @@ export function mirrorDesign(d: Design): MirrorResult {
   const prod = d.product;
   const same = (reason: string): MirrorResult => ({ ok: false, design: d, reason });
   const withProduct = (product: Product): MirrorResult => {
-    const design = { ...d, product };
+    // A split's remainder order needs design schemaVersion 9 (ADR-205).
+    const flagged = JSON.stringify(product).includes('"remainderFirst"');
+    const design: Design = flagged
+      ? { ...d, schemaVersion: SCHEMA_VERSION, product }
+      : { ...d, product };
     return JSON.stringify(product) === JSON.stringify(prod)
       ? same(NOTHING_TO_MIRROR)
       : { ok: true, design };
@@ -131,11 +141,22 @@ export function mirrorDesign(d: Design): MirrorResult {
     }
     case 'frame': {
       const p = prod.params;
-      // Built only at the left end today; mirroring them needs a stored side (left open in ADR-069).
-      if (p.kind === 'bench' && p.backrest)
-        return same(t('The lounger backrest is always at the left end; it cannot be mirrored yet'));
-      if (p.kind === 'bed' && p.bed && p.bed.sidePanelHeight > 0)
-        return same(t('The daybed side panel is always on the left; it cannot be mirrored yet'));
+      // The lounger backrest and the daybed side panel are built at their stored end (ADR-207): mirroring swaps it.
+      // The end is a schemaVersion 9 field, so the mirrored design is written at the current version.
+      const swapped = (product: Product): MirrorResult => ({
+        ok: true,
+        design: { ...d, schemaVersion: SCHEMA_VERSION, product },
+      });
+      if (p.kind === 'bench' && p.backrest) {
+        const { end, ...rest } = p.backrest;
+        const backrest = end === 'right' ? rest : { ...rest, end: 'right' as const };
+        return swapped({ ...prod, params: { ...p, backrest } });
+      }
+      if (p.kind === 'bed' && p.bed && p.bed.sidePanelHeight > 0) {
+        const { sidePanelEnd, ...rest } = p.bed;
+        const bed = sidePanelEnd === 'right' ? rest : { ...rest, sidePanelEnd: 'right' as const };
+        return swapped({ ...prod, params: { ...p, bed } });
+      }
       return same(NOTHING_TO_MIRROR);
     }
     case 'panel':
@@ -276,6 +297,18 @@ export function mirrorItem(project: Project, id: string): MoveResult {
   };
 }
 
+/** `ids` and the pieces stacked-connected to them, repeatedly (ADR-207: a wall unit over its base). */
+function stackedWith(project: Project, ids: readonly string[]): string[] {
+  const out = [...ids];
+  for (let i = 0; i < out.length; i++)
+    for (const c of project.connections ?? []) {
+      if (c.kind !== 'stacked' || c.itemIds.length !== 2 || !c.itemIds.includes(out[i])) continue;
+      const other = c.itemIds[0] === out[i] ? c.itemIds[1] : c.itemIds[0];
+      if (!out.includes(other)) out.push(other);
+    }
+  return out;
+}
+
 /** Open-interval overlap of two spans. */
 const spans = (a0: number, a1: number, b0: number, b1: number) =>
   Math.min(a1, b1) > Math.max(a0, b0);
@@ -317,13 +350,13 @@ export function touchingRun(project: Project, id: string, placed?: Map<string, B
  * mirrored. Pieces resting on a run piece (and on those, at any depth) are mirrored too and keep their place over
  * their base, reflected. Pieces with nothing to mirror only move; `reasons` lists them. Every member of a group with a
  * piece in the run mirrors with it (ADR-176): the run is widened with its groups first, and a group that cannot mirror
- * refuses the whole action.
+ * refuses the whole action. Pieces stacked-connected to a run piece (a wall unit over its base, ADR-207) mirror too.
  */
 export function mirrorRun(
   project: Project,
   id: string,
 ): { project: Project; reasons: string[]; refused?: string } {
-  const run = withGroups(project, touchingRun(project, id));
+  const run = withGroups(project, stackedWith(project, touchingRun(project, id)));
   if (!run.length) return { project, reasons: [] };
   const r = mirrorSet(project, run);
   return r.refused ? { ...r, refused: t('Mirror the run refused: {why}', { why: r.refused }) } : r;

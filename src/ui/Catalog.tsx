@@ -40,12 +40,14 @@ import { VARIANT_RO } from '../core/catalog/ro';
 import { brandEntries, copyBrandEntry } from '../core/catalog/brands';
 import { newId } from '../core/design';
 import type { Design } from '../core/types';
-import { listDesigns, type StoredDesign } from '../persist/db';
+import { listDecors, listDesigns, type StoredDesign } from '../persist/db';
+import { decorBrands, usesBrand } from '../core/catalog/decorBrands';
+import { kindName, type Decor } from '../core/materials';
 import { useDesign } from '../store/designStore';
 import { useTemplates } from '../store/templatesStore';
 import { ProjectTemplateList } from './ProjectTemplates';
 import { askConfirm, askText } from './Confirm';
-import { InfoTip } from './controls';
+import { InfoTip, rovingKeys, rovingTab } from './controls';
 import { t, tr } from '../core/i18n';
 import { tNode } from './i18n';
 import { Icon } from './icons';
@@ -146,11 +148,17 @@ function GroupToggle({
   short?: boolean;
 }) {
   return (
-    <div className="segmented small" role="radiogroup" aria-label={t('Group by')}>
+    <div
+      className="segmented small"
+      role="radiogroup"
+      aria-label={t('Group by')}
+      onKeyDown={rovingKeys}
+    >
       <button
         type="button"
         role="radio"
         aria-checked={value === 'room'}
+        tabIndex={rovingTab(value === 'room', 0, true)}
         aria-label={short ? t('By room') : undefined}
         className={value === 'room' ? 'on' : ''}
         onClick={() => onChange('room')}
@@ -161,6 +169,7 @@ function GroupToggle({
         type="button"
         role="radio"
         aria-checked={value === 'type'}
+        tabIndex={rovingTab(value === 'type', 1, true)}
         aria-label={short ? t('By type') : undefined}
         className={value === 'type' ? 'on' : ''}
         onClick={() => onChange('type')}
@@ -357,13 +366,14 @@ export function CatalogPage({
   const all = families.flatMap((f) => f.variants);
   const ready = all.filter(insertable).length;
   const sources = (
-    <div className="segmented small" role="tablist" aria-label={t('Source')}>
-      {(['templates', 'saved', 'brands'] as const).map((s) => (
+    <div className="segmented small" role="tablist" aria-label={t('Source')} onKeyDown={rovingKeys}>
+      {(['templates', 'saved', 'brands'] as const).map((s, i) => (
         <button
           key={s}
           type="button"
           role="tab"
           aria-selected={source === s}
+          tabIndex={rovingTab(source === s, i, true)}
           aria-label={phone && s === 'saved' ? t('Saved on this device') : undefined}
           className={source === s ? 'on' : ''}
           onClick={() => setSource(s)}
@@ -427,17 +437,36 @@ export function CatalogPage({
       const data = JSON.parse(await file.text()) as { templates?: unknown[] };
       const list = Array.isArray(data.templates) ? data.templates : [];
       let ok = 0,
-        bad = 0;
-      for (const tpl of list) {
-        if (validateLocalTemplate(tpl).length) {
+        bad = 0,
+        kept = 0;
+      for (const raw of list) {
+        if (validateLocalTemplate(raw).length) {
           bad++;
           continue;
         }
-        await useTemplates.getState().save(tpl as LocalTemplate);
+        const tpl = raw as LocalTemplate;
+        // A family already edited on this device, or earlier in this file (saved by then), is asked about: Keep mine
+        // (the default, also Esc) skips the imported one; only Use the imported one replaces the edit (ADR-203, G-363).
+        const store = useTemplates.getState();
+        const edited = tpl.shadows ? store.locals.filter((l) => l.shadows === tpl.shadows) : [];
+        if (edited.length) {
+          const use = await askConfirm(
+            t('“{name}” is already edited on this device. Keep yours or use the imported one?', {
+              name: tr(tpl.family.name),
+            }),
+            { confirmLabel: t('Use the imported one'), cancelLabel: t('Keep mine') },
+          );
+          if (!use) {
+            kept++;
+            continue;
+          }
+          for (const l of edited) if (l.id !== tpl.id) await store.remove(l.id);
+        }
+        await store.save(tpl);
         ok++;
       }
       setMsg(
-        `${t('{n|# template|# templates} imported', { n: ok })}${bad ? t(', {n} skipped (not valid)', { n: bad }) : ''}.`,
+        `${t('{n|# template|# templates} imported', { n: ok })}${bad ? t(', {n} skipped (not valid)', { n: bad }) : ''}${kept ? t(', {n} kept as they were', { n: kept }) : ''}.`,
       );
     } catch {
       setMsg(t('That file could not be read as a templates file.'));
@@ -584,6 +613,13 @@ export function CatalogPage({
             ))}
           </nav>
         ))}
+      {source === 'templates' && !editing && grouping === 'room' && groups.length > 0 && (
+        <p className="hint">
+          {t(
+            'A family can sit in several rooms, so the room counts add up to more than the total.',
+          )}
+        </p>
+      )}
       {source === 'templates' &&
         !editing &&
         groups.map((g) => (
@@ -610,43 +646,40 @@ export function CatalogPage({
           <ProjectTemplateList manage onOpened={onDone} />
         </>
       )}
-      {source === 'brands' &&
-        (brandEntries.length === 0 ? (
-          <p className="empty center">
-            <Icon name="catalog" />
-            {t(
-              "No brand products yet. The weekly catalog feed (Mondays, IKEA first) adds them once it can reach the manufacturers' sites.",
-            )}
-          </p>
-        ) : (
-          <ul className="template-list template-grid">
-            {brandEntries.map((e) => (
-              <li key={e.catalogId}>
-                <button
-                  type="button"
-                  className="row-btn"
-                  onClick={() => take(copyBrandEntry(e, newId()))}
-                >
-                  <span className="glyph">
-                    <Icon name={templateGlyph(e.design.product.kind)} />
-                  </span>
-                  <span>
-                    <strong>
-                      {e.design.catalog!.brand} {e.design.catalog!.productName ?? tr(e.design.name)}
-                    </strong>
-                    <span className="sub">
-                      {e.design.catalog!.category ? tr(e.design.catalog!.category) : ''}
-                      {e.design.catalog!.articleNumber
-                        ? ` · ${e.design.catalog!.articleNumber}`
-                        : ''}
+      {source === 'brands' && (
+        <DecorBrandList onTake={take}>
+          {brandEntries.length > 0 && (
+            <ul className="template-list template-grid">
+              {brandEntries.map((e) => (
+                <li key={e.catalogId}>
+                  <button
+                    type="button"
+                    className="row-btn"
+                    onClick={() => take(copyBrandEntry(e, newId()))}
+                  >
+                    <span className="glyph">
+                      <Icon name={templateGlyph(e.design.product.kind)} />
                     </span>
-                  </span>
-                  <Icon name="chevron-right" className="chev sm" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        ))}
+                    <span>
+                      <strong>
+                        {e.design.catalog!.brand}{' '}
+                        {e.design.catalog!.productName ?? tr(e.design.name)}
+                      </strong>
+                      <span className="sub">
+                        {e.design.catalog!.category ? tr(e.design.catalog!.category) : ''}
+                        {e.design.catalog!.articleNumber
+                          ? ` · ${e.design.catalog!.articleNumber}`
+                          : ''}
+                      </span>
+                    </span>
+                    <Icon name="chevron-right" className="chev sm" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </DecorBrandList>
+      )}
     </main>
   );
 }
@@ -1051,6 +1084,116 @@ function SaveAsTemplate() {
     >
       {done ? t('Saved as a template') : t('Save this piece as a template')}
     </button>
+  );
+}
+
+/**
+ * Catalog → Brands (ADR-210, G-044): a chip per manufacturer of the decor list on this device, with its count, beside
+ * any shipped brand entry (`children`). A chip lists that maker's decors and the saved pieces with a board of it.
+ * Nothing is fetched (ADR-002).
+ */
+function DecorBrandList({
+  onTake,
+  children,
+}: {
+  onTake: (d: Design) => void;
+  children?: ReactNode;
+}) {
+  const [data, setData] = useState<{ decors: Decor[]; saved: StoredDesign[] } | 'error' | null>(
+    null,
+  );
+  const [picked, setPicked] = useState<string | null>(null);
+  useEffect(() => {
+    let live = true;
+    Promise.all([listDecors(), listDesigns().catch(() => [] as StoredDesign[])])
+      .then(([decors, saved]) => live && setData({ decors, saved }))
+      .catch(() => live && setData('error'));
+    return () => {
+      live = false;
+    };
+  }, []);
+  const brands = useMemo(() => (data && data !== 'error' ? decorBrands(data.decors) : []), [data]);
+  if (data === null) return <p className="loading">{t('Loading…')}</p>;
+  if (data === 'error')
+    return (
+      <>
+        <p className="alert error" role="alert">
+          <Icon name="alert-circle" className="sm" />
+          <span>{t('The decor list could not be read on this device.')}</span>
+        </p>
+        {children}
+      </>
+    );
+  if (!brands.length && !children)
+    return (
+      <p className="empty center">
+        <Icon name="catalog" />
+        {t('No brands yet. Import your decor list under Boards to see its manufacturers here.')}
+      </p>
+    );
+  const brand = brands.find((b) => b.key === picked);
+  const pieces = brand ? data.saved.filter((r) => usesBrand(r.design, brand)) : [];
+  return (
+    <>
+      {brands.length > 0 && (
+        <div className="chips" role="group" aria-label={t('Brands from your decor list')}>
+          {brands.map((b) => (
+            <button
+              key={b.key}
+              type="button"
+              className={`chip ${picked === b.key ? 'on' : ''}`}
+              aria-pressed={picked === b.key}
+              onClick={() => setPicked(picked === b.key ? null : b.key)}
+            >
+              {t('{brand} ({n})', { brand: b.label, n: b.decors.length })}
+            </button>
+          ))}
+        </div>
+      )}
+      {brand && (
+        <section aria-label={brand.label}>
+          <h3 className="list-head">{t('{brand} decors', { brand: brand.label })}</h3>
+          <ul className="template-list">
+            {brand.decors.map((d) => (
+              <li key={d.id} className="decor-row">
+                <span className="swatch" style={{ background: d.color }} aria-hidden="true" />
+                <span>
+                  <strong>
+                    {d.code} {d.name}
+                  </strong>
+                  <span className="sub">
+                    {t('{n} mm', { n: d.thickness })} · {kindName(d.kind) ?? d.kind}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+          <h3 className="list-head">
+            {t('Saved pieces with a {brand} board', { brand: brand.label })}
+          </h3>
+          {pieces.length ? (
+            <ul className="template-list template-grid">
+              {pieces.map((r) => (
+                <li key={r.id}>
+                  <button type="button" className="row-btn" onClick={() => onTake(r.design)}>
+                    <span className="glyph">
+                      <Icon name={templateGlyph(r.design.product.kind)} />
+                    </span>
+                    <span>
+                      <strong>{r.name}</strong>
+                    </span>
+                    <Icon name="chevron-right" className="chev sm" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="hint">{t('No saved piece has a board of this maker yet.')}</p>
+          )}
+        </section>
+      )}
+      {children}
+    </>
   );
 }
 

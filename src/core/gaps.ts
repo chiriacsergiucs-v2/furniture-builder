@@ -211,3 +211,91 @@ export function validateGapMark(v: unknown): v is GapMark {
     typeof m.updatedAt === 'string'
   );
 }
+
+/** The kind tag of a gap-marks file (ADR-212, G-100). */
+export const GAP_MARKS_KIND = 'furniture-builder-gap-marks';
+export interface GapMarksFile {
+  kind: typeof GAP_MARKS_KIND;
+  version: 1;
+  exportedAt: string;
+  marks: GapMark[];
+}
+
+/** The marks as a file to move to another device (ADR-212): only valid marks are written. */
+export function gapMarksFile(marks: readonly GapMark[], exportedAt: string): GapMarksFile {
+  return {
+    kind: GAP_MARKS_KIND,
+    version: 1,
+    exportedAt,
+    marks: marks.filter(validateGapMark).map((m) => ({
+      gapId: m.gapId,
+      decision: m.decision,
+      note: m.note,
+      updatedAt: m.updatedAt,
+    })),
+  };
+}
+
+export interface GapMarksImport {
+  /** Marks to write: newer than the one on this device, or for a gap with none. */
+  apply: GapMark[];
+  /** Valid rows for a gap in the ledger (applied or older than the device's mark). */
+  imported: number;
+  /** Rows that are invalid or name a gap not in the ledger. */
+  skipped: number;
+  /** Set when the file itself cannot be read; nothing is applied. */
+  problem?: string;
+}
+
+/**
+ * Reads a gap-marks file (ADR-212). Never throws: every row is checked with `validateGapMark` (ADR-011); rows that
+ * are invalid or name a gap not in `known` are skipped and counted; per gap the newer `updatedAt` wins, against the
+ * device's marks and against earlier rows of the same file.
+ */
+export function readGapMarksFile(
+  text: string,
+  known: ReadonlySet<string>,
+  current: Readonly<Record<string, GapMark>>,
+): GapMarksImport {
+  const notAFile = {
+    apply: [],
+    imported: 0,
+    skipped: 0,
+    problem: 'The file is not a gap-marks file.',
+  };
+  let data: unknown;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    return notAFile;
+  }
+  if (!data || typeof data !== 'object') return notAFile;
+  const f = data as Record<string, unknown>;
+  if (f.kind !== GAP_MARKS_KIND || !Array.isArray(f.marks)) return notAFile;
+  if (f.version !== 1)
+    return {
+      apply: [],
+      imported: 0,
+      skipped: 0,
+      problem: 'The file is from another version of the app.',
+    };
+  const best = new Map<string, GapMark>();
+  let imported = 0;
+  let skipped = 0;
+  for (const row of f.marks as unknown[]) {
+    if (!validateGapMark(row) || !known.has(row.gapId)) {
+      skipped++;
+      continue;
+    }
+    imported++;
+    const mark: GapMark = {
+      gapId: row.gapId,
+      decision: row.decision,
+      note: row.note,
+      updatedAt: row.updatedAt,
+    };
+    const prev = best.get(mark.gapId) ?? current[mark.gapId];
+    if (!prev || mark.updatedAt > prev.updatedAt) best.set(mark.gapId, mark);
+  }
+  return { apply: [...best.values()], imported, skipped };
+}

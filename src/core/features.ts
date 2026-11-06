@@ -54,6 +54,17 @@ export const FEATURES: FeatureDomain[] = [
         checked: '2026-11-06',
       },
       {
+        name: 'Keep a closed wizard as a draft',
+        detail:
+          'A closed New piece wizard keeps its answers until you close the app; Continue where you left off or Start over.',
+        adrs: ['ADR-211'],
+      },
+      {
+        name: 'Reopen a project piece in the wizard',
+        detail: 'Open in wizard in its Settings; Update piece replaces it in the project only.',
+        adrs: ['ADR-203'],
+      },
+      {
         name: 'Create a project',
         detail: 'Several pieces placed in one room.',
         adrs: ['ADR-022', 'ADR-078', 'ADR-193'],
@@ -62,24 +73,27 @@ export const FEATURES: FeatureDomain[] = [
       {
         name: 'Create a project from a project template',
         detail:
-          'Copies of the pieces with their positions, run-part recipe, connections, variables and bindings; pieces inserted into a project take its settings.',
-        adrs: ['ADR-060', 'ADR-123', 'ADR-170', 'ADR-200'],
-        checked: '2026-11-06',
+          'Copies of the pieces with their positions, run-part recipe, connections, variables, bindings, run handles and sinks; pieces inserted into a project take its settings.',
+        adrs: ['ADR-060', 'ADR-123', 'ADR-170', 'ADR-200', 'ADR-204'],
       },
       {
         name: 'Fill a wall',
         detail:
-          'Enter a wall width and pick a suggested mix of tall, base and wall cabinets that fills it exactly.',
-        adrs: ['ADR-103', 'ADR-104', 'ADR-193'],
-        checked: '2026-11-06',
+          'Enter a wall width and pick a suggested mix of tall, base and wall cabinets that fills it exactly; Refine sets the tall cabinet height and wall cabinet depth, mixes may give each base kind its own width, and equal fronts may share carcasses of up to 4 fronts.',
+        adrs: ['ADR-103', 'ADR-104', 'ADR-193', 'ADR-204'],
       },
       { name: 'Make a new piece inside a project', adrs: ['ADR-107'], checked: '2026-11-05' },
       {
         name: 'Fill the room',
         detail:
-          'Pick a room shape or use the project’s room: suggested mixes for every ticked wall at once, doors and windows kept free, a corner cabinet at each inside corner with a wall corner cabinet above it, wall rows split at windows; each mix checked as a project.',
-        adrs: ['ADR-173', 'ADR-177', 'ADR-193'],
-        checked: '2026-11-06',
+          'Pick a room shape with its doors and windows, or use the project’s room: suggested mixes for every ticked wall at once, doors and windows kept free, a corner cabinet at each inside corner with a wall corner cabinet above it, wall rows split at windows; each mix checked as a project. Refine adds a budget ceiling, a style and an island with your walkway width; each mix shows its estimate.',
+        adrs: ['ADR-173', 'ADR-177', 'ADR-193', 'ADR-204', 'ADR-210'],
+      },
+      {
+        name: 'Room presets',
+        detail:
+          'New… → Room preset: a bedroom, a home office, or a kitchen and desk, ready in a 3600 × 3000 room.',
+        adrs: ['ADR-210'],
       },
     ],
   },
@@ -186,6 +200,17 @@ export const FEATURES: FeatureDomain[] = [
             adrs: ['ADR-088', 'ADR-090'],
             checked: '2026-11-05',
           },
+          {
+            name: 'Esc selects one level up',
+            detail:
+              'In the piece editor: a space, then the space around it, then the whole piece, then nothing.',
+            adrs: ['ADR-203'],
+          },
+          {
+            name: 'Outline turns with an angled piece',
+            detail: 'The 3D selection outline and the Move ghost are turned like its boards.',
+            adrs: ['ADR-203'],
+          },
         ],
       },
     ],
@@ -245,6 +270,11 @@ export const FEATURES: FeatureDomain[] = [
         adrs: ['ADR-095', 'ADR-122', 'ADR-171'],
         checked: '2026-11-05',
       },
+      {
+        name: 'A locked piece on a base keeps the base from being resized',
+        detail: 'Unlock it to resize the piece under it; unlocked pieces on it follow.',
+        adrs: ['ADR-203'],
+      },
     ],
   },
   {
@@ -266,6 +296,18 @@ export const FEATURES: FeatureDomain[] = [
         checked: '2026-11-05',
       },
       {
+        name: 'Connection kinds',
+        detail:
+          'A snap or Connected joins pieces side by side, in a corner or stacked (a wall unit over its base), each checked its own way; Connected to names each kind.',
+        adrs: ['ADR-207'],
+      },
+      {
+        name: 'Against the wall',
+        detail:
+          'A piece connected against its wall slides along it; Alt moves it away. Connected and stacked pieces move, mirror and merge together.',
+        adrs: ['ADR-207'],
+      },
+      {
         name: 'Compatibility rules',
         detail: 'Checked when snapping and in the project checks.',
         adrs: ['ADR-100'],
@@ -278,6 +320,10 @@ export const FEATURES: FeatureDomain[] = [
       },
       { name: 'Align tops and bottoms', adrs: ['ADR-122'], checked: '2026-11-05' },
       { name: 'Distribute evenly', adrs: ['ADR-099'], checked: '2026-11-05' },
+      { name: 'Distribute each row', adrs: ['ADR-205'] },
+      { name: 'Wall unit heights snap to the worktop and wall units', adrs: ['ADR-205'] },
+      { name: 'Angled pieces snap along their turned faces', adrs: ['ADR-205'] },
+      { name: 'Mirrored copies match to the mm', adrs: ['ADR-205'] },
       {
         name: 'Groups align and distribute as one block',
         adrs: ['ADR-099', 'ADR-148'],
@@ -303,6 +349,16 @@ export const FEATURES: FeatureDomain[] = [
         adrs: ['ADR-111'],
         checked: '2026-11-05',
       },
+      {
+        name: 'Link identical pieces',
+        detail: 'Pieces that are exactly the same are linked in one tap from the card.',
+        adrs: ['ADR-207'],
+      },
+      {
+        name: 'Mirror a lounger or a daybed',
+        detail: 'The backrest and the side panel are built at the left or the right end.',
+        adrs: ['ADR-207'],
+      },
     ],
   },
   {
@@ -321,6 +377,21 @@ export const FEATURES: FeatureDomain[] = [
         checked: '2026-11-05',
       },
       { name: 'Selection box on the plan', adrs: ['ADR-097'], checked: '2026-11-05' },
+      {
+        name: 'Selection box in the front view',
+        detail: 'A drag on empty space selects every piece it touches; Shift, Ctrl or Cmd adds.',
+        adrs: ['ADR-211'],
+      },
+      {
+        name: 'About Select',
+        detail: 'An ⓘ beside each Select says what a tap, a click and a drag do.',
+        adrs: ['ADR-211'],
+      },
+      {
+        name: 'Up one level on a phone',
+        detail: 'A button beside the path selects the space around the selected one.',
+        adrs: ['ADR-211'],
+      },
       { name: 'Cycle through overlapping pieces', adrs: ['ADR-097'], checked: '2026-11-05' },
       {
         name: 'Keep pieces as named groups',
@@ -342,6 +413,16 @@ export const FEATURES: FeatureDomain[] = [
         name: 'Size, boards and construction of a project piece',
         adrs: ['ADR-090'],
         checked: '2026-11-05',
+      },
+      {
+        name: 'Mattress size where a bed is selected',
+        detail: 'Mattress width and length beside the selected bed, as in its Settings.',
+        adrs: ['ADR-211'],
+      },
+      {
+        name: 'Lock boards and Lock construction',
+        detail: 'Each keeps its part of the piece until unlocked; size and place still change.',
+        adrs: ['ADR-211'],
       },
       {
         name: 'Lock size',
@@ -444,7 +525,22 @@ export const FEATURES: FeatureDomain[] = [
           },
           { name: 'Crown, pelmet and ceiling filler', adrs: ['ADR-075'], checked: '2026-11-05' },
           { name: 'Handles for a whole run', adrs: ['ADR-125'], checked: '2026-11-05' },
+          {
+            name: 'Run handle shown in the piece editor',
+            detail: 'Its kind and hole centres, read-only, under Set by Handles for this run.',
+            adrs: ['ADR-203'],
+          },
           { name: 'Sink cut-out in the run worktop', adrs: ['ADR-125'], checked: '2026-11-05' },
+          { name: 'Runs along the side walls', adrs: ['ADR-205'] },
+          { name: 'Worktop corners with a mitred or butt joint', adrs: ['ADR-205'] },
+          { name: 'Hob cut-out in the run worktop', adrs: ['ADR-205'] },
+          { name: 'Sink and hob cut-outs drawn on the plan', adrs: ['ADR-205'] },
+          { name: 'Moulding profiles drawn or typed', adrs: ['ADR-209'] },
+          { name: 'Templates keep run requests', adrs: ['ADR-209'] },
+          { name: 'Sink and hob cut-outs placed from the left and the front', adrs: ['ADR-209'] },
+          { name: 'Cut-outs as holes in the 3D worktop', adrs: ['ADR-209'] },
+          { name: 'Worktop edges square, rounded or bevelled', adrs: ['ADR-209'] },
+          { name: 'Worktop overhangs and trim heights follow variables', adrs: ['ADR-209'] },
         ],
       },
       {
@@ -522,6 +618,12 @@ export const FEATURES: FeatureDomain[] = [
         adrs: ['ADR-190'],
         checked: '2026-11-05',
       },
+      {
+        name: 'Shared sides with blind corners and desks',
+        detail:
+          'A blind corner unit shares its straight end with a cabinet; a desk beside a cabinet leaves its gable out.',
+        adrs: ['ADR-207'],
+      },
       { name: 'Stock sheets, trim and kerf', adrs: ['ADR-019'], checked: '2026-11-05' },
       { name: 'Solid timber stock', adrs: ['ADR-038'], checked: '2026-11-05' },
       { name: 'Manufacturer and type labels', adrs: ['ADR-049'], checked: '2026-11-05' },
@@ -547,6 +649,12 @@ export const FEATURES: FeatureDomain[] = [
         detail: 'Type, thickness, width and code, on the cut list and shopping list.',
         adrs: ['ADR-077'],
         checked: '2026-11-05',
+      },
+      {
+        name: 'Band list import',
+        detail:
+          'Import your band list (CSV); each board’s edge band offers matching bands first, then the others by colour.',
+        adrs: ['ADR-212'],
       },
       {
         name: 'Own board for any single part',
@@ -585,6 +693,7 @@ export const FEATURES: FeatureDomain[] = [
         adrs: ['ADR-074'],
         checked: '2026-11-05',
       },
+      { name: 'Project fasteners and drilling positions', adrs: ['ADR-209'] },
       {
         name: 'Hardware you choose yourself',
         detail:
@@ -622,6 +731,34 @@ export const FEATURES: FeatureDomain[] = [
         checked: '2026-11-05',
       },
       {
+        name: 'Wall colour bands on the plan',
+        detail: "A 50 mm band inside each wall with a background, in the wall's colour.",
+        adrs: ['ADR-208'],
+      },
+      {
+        name: 'Floor colour or picture',
+        detail:
+          'Set under Walls in the room; shown on the floor in 3D and under the pieces on the plan.',
+        adrs: ['ADR-208'],
+      },
+      {
+        name: 'Wall behind a single piece',
+        detail:
+          'A piece opened from a project with a room shows the wall its back stands against in its own front view.',
+        adrs: ['ADR-208'],
+      },
+      {
+        name: 'Board pictures on the plan',
+        detail: "Each piece on the plan shows the picture of its highest panel's board.",
+        adrs: ['ADR-208'],
+      },
+      {
+        name: 'Trace a plan picture',
+        detail:
+          'Add a picture of the floor plan, set its scale from two taps and a known length, and draw the room over it.',
+        adrs: ['ADR-208'],
+      },
+      {
         name: 'Opening clearances',
         detail: 'Doors and drawers need free space in front.',
         adrs: ['ADR-057'],
@@ -632,6 +769,8 @@ export const FEATURES: FeatureDomain[] = [
         adrs: ['ADR-073'],
         checked: '2026-11-05',
       },
+      { name: 'Clearance zones in 3D', adrs: ['ADR-205'] },
+      { name: 'Backs cut around pipes and outlets', adrs: ['ADR-205'] },
     ],
   },
   {
@@ -658,10 +797,10 @@ export const FEATURES: FeatureDomain[] = [
       {
         name: 'Previewed repairs',
         detail:
-          'A repair moves the whole group and connected pieces together; one they cannot follow is shown refused, with the reason.',
-        adrs: ['ADR-071', 'ADR-176'],
-        checked: '2026-11-05',
+          'A repair moves the whole group and connected pieces together; one they cannot follow is shown refused, with the reason. A depth or height mismatch between neighbours is repaired by matching one to the other; pieces whose families share no room, by moving one along its wall.',
+        adrs: ['ADR-071', 'ADR-176', 'ADR-204', 'ADR-210'],
       },
+      { name: 'Repair fillers kept by automatic refresh; the problem in 3D', adrs: ['ADR-209'] },
     ],
   },
   {
@@ -707,6 +846,24 @@ export const FEATURES: FeatureDomain[] = [
             adrs: ['ADR-068'],
             checked: '2026-11-05',
           },
+          {
+            name: 'Export scene (.glb)',
+            detail:
+              'The 3D scene with its boards and their pictures as one binary glTF file, for Blender or another renderer; made on this device.',
+            adrs: ['ADR-206'],
+          },
+          {
+            name: 'WebGPU rendering',
+            detail:
+              'Render uses the WebGPU path tracer when the device has WebGPU, WebGL 2 otherwise.',
+            adrs: ['ADR-208'],
+          },
+          {
+            name: 'View in AR and export for AR',
+            detail:
+              'From the 3D toolbar ⋯: View in AR on phones that offer it, and a .usdz file for AR Quick Look.',
+            adrs: ['ADR-208'],
+          },
           { name: 'Section view and Isolate', adrs: ['ADR-122'], checked: '2026-11-05' },
           { name: 'Draws only when something changes', adrs: ['ADR-121'], checked: '2026-11-05' },
         ],
@@ -721,6 +878,17 @@ export const FEATURES: FeatureDomain[] = [
             checked: '2026-11-05',
           },
           { name: 'Width, height and depth of a model', adrs: ['ADR-102'], checked: '2026-11-05' },
+          {
+            name: 'Move and turn a model in 3D',
+            detail: 'Drag it in Move mode, with Snap, and turn it 90° about its centre.',
+            adrs: ['ADR-203'],
+          },
+          {
+            name: 'Place and drag 3D models',
+            detail:
+              'On the floor, on the wall or on a piece; dragged with snapping on the plan and in Move mode; kept in project templates.',
+            adrs: ['ADR-208'],
+          },
         ],
       },
     ],
@@ -744,6 +912,18 @@ export const FEATURES: FeatureDomain[] = [
               'Steps per piece, labelled guidance: prepare the parts, fit hardware to the sides, assemble, then fit drawers and doors. Each step has an instruction, its parts, joints, fasteners and hardware; identical drawers are listed once. Show step lights the parts in 3D; printed with each piece’s front view in the print language.',
             adrs: ['ADR-174', 'ADR-185', 'ADR-186'],
             checked: '2026-11-05',
+          },
+          {
+            name: 'Show the hardware step in 3D',
+            detail:
+              'Fit hardware to the sides lights the sides and dividers its hinges and runners go on.',
+            adrs: ['ADR-207'],
+          },
+          {
+            name: 'Your own assembly steps',
+            detail:
+              'Move steps up and down and rename them; the tab and the print follow; Reset the steps brings the generated ones back.',
+            adrs: ['ADR-207'],
           },
           {
             name: 'Project assembly order',
@@ -810,6 +990,12 @@ export const FEATURES: FeatureDomain[] = [
             adrs: ['ADR-161'],
             checked: '2026-11-05',
           },
+          {
+            name: 'Project seller items',
+            detail:
+              'Add seller product in the project view puts a product on the project’s own shopping list; it travels in project templates.',
+            adrs: ['ADR-210'],
+          },
         ],
       },
       {
@@ -829,6 +1015,12 @@ export const FEATURES: FeatureDomain[] = [
             adrs: ['ADR-121'],
             checked: '2026-11-05',
           },
+          {
+            name: 'Client sheet',
+            detail:
+              'One A4 page to sell from: a picture, the pieces with their sizes and the estimated price, with the lines that have no price counted.',
+            adrs: ['ADR-206'],
+          },
         ],
       },
     ],
@@ -846,6 +1038,30 @@ export const FEATURES: FeatureDomain[] = [
         detail: 'Open, duplicate and delete projects and single pieces.',
         adrs: ['ADR-078'],
         checked: '2026-11-05',
+      },
+      {
+        name: 'Ask about kept versions when deleting a project',
+        detail: 'Keep them is the default; only readable versions are deleted.',
+        adrs: ['ADR-203'],
+      },
+      {
+        name: 'Versions of deleted projects',
+        detail: 'Under History: restore one as a new project, or delete it with a tap.',
+        adrs: ['ADR-211'],
+      },
+      {
+        name: 'Resize the phone sheet',
+        detail: 'Drag the handle to collapsed, half or full screen; arrow keys step.',
+        adrs: ['ADR-211'],
+      },
+      {
+        name: 'Own glyphs for Fill a wall and Fill the room',
+        adrs: ['ADR-211'],
+      },
+      {
+        name: 'Back to the editor only with a design open',
+        detail: 'On the Gaps and Research pages, as in the Catalog.',
+        adrs: ['ADR-211'],
       },
       { name: 'Add a piece from a list with pictures', adrs: ['ADR-094'], checked: '2026-11-05' },
       { name: 'Tap the plan to place', adrs: ['ADR-056'], checked: '2026-11-05' },
@@ -878,6 +1094,19 @@ export const FEATURES: FeatureDomain[] = [
         adrs: ['ADR-166'],
         checked: '2026-11-05',
       },
+      {
+        name: 'Variables in a piece',
+        detail:
+          'A piece’s own variables in its settings; its width, height, depth and underside height bind to them, also inside projects and catalog templates.',
+        adrs: ['ADR-210'],
+      },
+      {
+        name: 'Formula functions',
+        detail:
+          'min, max, floor, ceil and round in variables and bindings; values in a call are separated by a comma or a semicolon.',
+        adrs: ['ADR-206'],
+      },
+      { name: 'Formulas with comparisons, if and stepped rounding', adrs: ['ADR-209'] },
       {
         name: 'Value sets',
         detail:
@@ -914,8 +1143,25 @@ export const FEATURES: FeatureDomain[] = [
         checked: '2026-11-05',
       },
       { name: 'Save a design as a template', adrs: ['ADR-034'], checked: '2026-11-05' },
+      {
+        name: 'Choose which edit to keep on template import',
+        detail: 'An imported template for a family you edited asks; Keep mine is the default.',
+        adrs: ['ADR-203'],
+      },
       { name: 'Save a project piece to the catalog', adrs: ['ADR-107'], checked: '2026-11-05' },
       { name: 'Catalog origin kept on copies', adrs: ['ADR-028'], checked: '2026-11-05' },
+      {
+        name: 'Brands',
+        detail:
+          'A chip per manufacturer of your decor list, with its count: its decors and the saved pieces with its boards.',
+        adrs: ['ADR-210'],
+      },
+      {
+        name: 'Family rule for your own templates',
+        detail:
+          'A piece from your own template keeps its rooms, so pieces of rooms apart are warned about.',
+        adrs: ['ADR-210'],
+      },
       {
         name: 'Reference entries for upholstered pieces',
         adrs: ['ADR-039'],
@@ -1013,7 +1259,19 @@ export const FEATURES: FeatureDomain[] = [
         adrs: ['ADR-101', 'ADR-187'],
         checked: '2026-11-05',
       },
+      {
+        name: 'Gap marks in a file',
+        detail:
+          'Export marks and Import marks move your gap marks between devices; the newer mark wins.',
+        adrs: ['ADR-212'],
+      },
       { name: 'Info buttons', adrs: ['ADR-080', 'ADR-113'], checked: '2026-11-05' },
+      {
+        name: 'Arrow keys in segmented controls',
+        detail:
+          'Tab reaches the chosen option; the arrow keys, Home and End move and choose, in every segmented control.',
+        adrs: ['ADR-202'],
+      },
       { name: 'Light and dark themes', adrs: ['ADR-030'], checked: '2026-11-05' },
     ],
   },

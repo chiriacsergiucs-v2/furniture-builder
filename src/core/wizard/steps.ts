@@ -400,6 +400,7 @@ export const STEPS: StepDef[] = [
       {
         id: 'widths',
         label: 'Width of each compartment (0 = share the rest)',
+        reviewLabel: 'Compartment widths',
         kind: 'perCompartmentMm',
         unit: 'mm',
         default: [],

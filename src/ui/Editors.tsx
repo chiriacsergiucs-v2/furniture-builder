@@ -28,6 +28,7 @@ import {
 import { tNode } from './i18n';
 import { Icon } from './icons';
 import { DimensionField } from './DimensionField';
+import { usePieceLockHint } from './pieceLockHint';
 
 const matOptions = (materials: Material[], filter?: (m: Material) => boolean) =>
   materials.filter(filter ?? (() => true)).map((m) => ({ value: m.id, label: boardLabel(m) }));
@@ -505,6 +506,7 @@ const FRAME_LABEL: Record<FrameParams['kind'], string> = {
 /** Frames (ADR-038): legs, rails, stretchers, slats; beds by mattress size. */
 export function FrameEditor({ p }: { p: FrameParams }) {
   const set = useDesign((s) => s.updateFrame);
+  const constructionLock = usePieceLockHint('construction');
   const b = p.bed;
   return (
     <div className="inspector">
@@ -606,6 +608,22 @@ export function FrameEditor({ p }: { p: FrameParams }) {
               hint={t('0 = none (daybed back)')}
             />
           </div>
+          {b.sidePanelHeight > 0 && (
+            <Segmented<'left' | 'right'>
+              label={t('Side panel end')}
+              value={b.sidePanelEnd ?? 'left'}
+              options={[
+                { value: 'left', label: t('Left') },
+                { value: 'right', label: t('Right') },
+              ]}
+              onChange={(v) => {
+                // ADR-207: absent = left; the end is a design schemaVersion 9 field.
+                const { sidePanelEnd: _e, ...rest } = b;
+                void _e;
+                set({ bed: v === 'right' ? { ...rest, sidePanelEnd: 'right' } : rest });
+              }}
+            />
+          )}
         </>
       ) : (
         <>
@@ -800,6 +818,20 @@ export function FrameEditor({ p }: { p: FrameParams }) {
                     options={p.backrest.positions.map((a, i) => ({ value: i, label: `${a}°` }))}
                     onChange={(v) => set({ backrest: { ...p.backrest!, at: v } })}
                   />
+                  <Segmented<'left' | 'right'>
+                    label={t('Backrest end')}
+                    value={p.backrest.end ?? 'left'}
+                    options={[
+                      { value: 'left', label: t('Left') },
+                      { value: 'right', label: t('Right') },
+                    ]}
+                    onChange={(v) => {
+                      // ADR-207: absent = left.
+                      const { end: _e, ...rest } = p.backrest!;
+                      void _e;
+                      set({ backrest: v === 'right' ? { ...rest, end: 'right' } : rest });
+                    }}
+                  />
                 </>
               )}
               {p.kind === 'chair' && (
@@ -815,7 +847,7 @@ export function FrameEditor({ p }: { p: FrameParams }) {
               )}
             </>
           )}
-          <Group title={t('Legs, rails and stretchers')} id="g-build">
+          <Group title={t('Legs, rails and stretchers')} id="g-build" locked={constructionLock}>
             <div className="dims2">
               <MmField
                 label={t('Leg width')}

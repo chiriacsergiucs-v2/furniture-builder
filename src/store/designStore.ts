@@ -1,7 +1,10 @@
+import { turnModelItem } from '../core/model3d';
 import { create } from 'zustand';
 import { buildModel } from '../core/build';
 import {
+  projectSellerItemQuantity,
   projectWithHardwareProduct,
+  projectWithSellerItem,
   withHardwareProduct,
   withSellerItem,
   withSellerItemQuantity,
@@ -18,6 +21,7 @@ import {
 } from '../core/design';
 import { duplicateItem, mirrorItem, mirrorRun, setItemRotation, tryTurn } from '../core/arrange';
 import { floorDrop, type FloorPoint } from '../core/drag3d';
+import { modelDrop, moveModelTo } from '../core/modelPlace';
 import {
   applyFinish,
   applyMaterial,
@@ -36,21 +40,26 @@ import {
 import { commonPanelCheck, pruneCommon } from '../core/common';
 import { pruneShared, sharedSideCheck } from '../core/shared';
 import {
+  alongWalls,
   carryUnits,
   connect,
   connectionCheck,
+  connectWall,
   disconnect,
+  disconnectWall,
   isConnected,
   movingSet,
   pruneConnections,
   settleConnections,
+  wallAgainst,
+  wallsOf,
 } from '../core/connections';
 import { mergeItems } from '../core/merge';
 import { describeChange } from '../core/history';
 import { insertTemplate } from '../core/insertTemplate';
 import type { ProjectTemplate } from '../core/projectTemplate';
 import { applyStyle, type Style } from '../core/styles';
-import { addLinkedCopy, propagateLinks } from '../core/linked';
+import { addLinkedCopy, linkIdentical, propagateLinks } from '../core/linked';
 import { alignItems, distributeItems, skippedText, type AlignHow } from '../core/align';
 import {
   duplicateItems,
@@ -75,10 +84,16 @@ import {
 } from '../core/projectSettings';
 import { countRows, countSubject, stepCount, type CountKey } from '../core/counts';
 import { drill, type Selection } from '../core/selectPath';
-import { resizeProduct, type SizeField } from '../core/pieceSize';
+import { resizeBed, resizeProduct, type SizeField } from '../core/pieceSize';
 import { carryGroups, withGroups } from '../core/groupMove';
 import { resizeGroup, type WidthSplit } from '../core/groupSize';
 import { resizeBlocked, setAxisLocked, setSizeLocked, sizeLockBlocked } from '../core/sizeLock';
+import {
+  lockBlocked,
+  pieceLocksBlocked,
+  setBoardsLocked,
+  setConstructionLocked,
+} from '../core/pieceLocks';
 import { setWallHeight } from '../core/height';
 import { moveTo, type MoveToAction } from '../core/moveTo';
 import {
@@ -96,6 +111,7 @@ import {
   planRuns,
   pruneGroups,
   pruneRunExtras,
+  pruneWorktopJoints,
   PROJECT_SCHEMA,
   refreshRunParts,
   requestKey,
@@ -115,6 +131,12 @@ import {
   type RunRequest,
   type RunSettings,
   type RunSink,
+  type RunHob,
+  type WorktopJoint,
+  type WorktopEdge,
+  type RequestTarget,
+  pruneWorktopEdges,
+  remakeAskedParts,
   setTurnLocked,
   type SizeAxis,
 } from '../core/project';
@@ -122,6 +144,7 @@ import type {
   CabinetParams,
   CatalogMeta,
   CornerParams,
+  AssemblyEdit,
   DeskParams,
   Design,
   FrameParams,
@@ -139,11 +162,18 @@ import type { LocalTemplate } from '../core/catalog/local';
 import { t } from '../core/i18n';
 import { addSet, removeSet, updateSet, syncSets, type VariableSet } from '../core/sets';
 import {
+  addDesignVariable,
   addVariable,
   applyBindings,
+  applyDesignBindings,
+  applyPieceBindings,
+  deleteDesignVariable,
   deleteVariable,
   heldByBinding,
   setBinding,
+  setDesignBinding,
+  updateDesignVariable,
+  setRequestBinding,
   updateVariable,
 } from '../core/variables';
 
@@ -232,10 +262,14 @@ interface State {
   setKerf: (kerf: number) => void;
   /** ADR-161: a seller product for a hardware line (undefined removes it); in a project view, in every piece. */
   setHardwareProduct: (key: string, hp: HardwareProduct | undefined) => void;
-  /** ADR-161: a seller product added to the open piece's shopping list. */
+  /** ADR-161: a seller product added to the open piece's shopping list; in a project view, the project's (ADR-210). */
   addSellerItem: (it: SellerItem) => void;
   /** ADR-161: an added item's quantity; 0 removes it. */
   setSellerItemQuantity: (index: number, quantity: number) => void;
+  /** ADR-210: a project's own seller item's quantity, by seller and product id; 0 removes it. One undo step. */
+  setProjectSellerItemQuantity: (seller: string, id: string, quantity: number) => void;
+  /** ADR-206: a seller product for a run part of the open project, by run part key (undefined removes it). */
+  setRunProduct: (key: string, hp: HardwareProduct | undefined) => void;
   rename: (name: string) => void;
   updateCabinet: (patch: Partial<CabinetParams>) => void;
   updateDesk: (patch: Partial<DeskParams>) => void;
@@ -256,6 +290,11 @@ interface State {
    * undo step. Returns what to tell the user: why nothing changed, or the pieces that kept their size; '' otherwise.
    */
   resizeGroup: (groupId: string, key: SizeField['key'], value: Mm, split: WidthSplit) => string;
+  /**
+   * Replace the open piece's design as one edit (ADR-203, G-359: Update piece from the wizard on a project piece), so
+   * it stays in the project's own copy; size locks and a locked piece on it refuse it (the reason comes back).
+   */
+  replaceDesign: (d: Design) => string | null;
   /** Catalog metadata and guidance settings (ADR-028, ADR-035). */
   updateMeta: (patch: Partial<Pick<Design, 'catalog' | 'settings'>>) => void;
   editTemplateVariant: (template: LocalTemplate, variantId: string) => void;
@@ -338,6 +377,9 @@ interface State {
   /** Lock or unlock the piece's turn, or one of its outside sizes (ADR-171). One undo step each. */
   setTurnLocked: (id: string, on: boolean) => void;
   setAxisLocked: (id: string, axis: SizeAxis, on: boolean) => void;
+  /** Lock or unlock a piece's boards, or its construction (ADR-211). One undo step each. */
+  setBoardsLocked: (id: string, on: boolean) => void;
+  setConstructionLocked: (id: string, on: boolean) => void;
   /** Hang a wall unit at a new height, e.g. dragged in 3D (ADR-122); one undo step. Returns why not, or null. */
   setItemHeight: (id: string, height: number) => string | null;
   /** "Keep mine" (ADR-096): hide the newer-template notice for this revision; one undo step. */
@@ -351,6 +393,13 @@ interface State {
   duplicateItem: (id: string) => void;
   /** Place a linked copy beside the piece (ADR-111); one undo step. */
   addLinkedCopy: (id: string) => void;
+  /** Link every piece identical to this one (ADR-207, "Link {n} identical pieces"); one undo step. */
+  linkIdentical: (id: string) => void;
+  /**
+   * The user's assembly steps (ADR-207) of a project piece (`itemId`) or the open piece (null): their order and names,
+   * or undefined to reset them to the generated steps. One undo step named `name`; linked copies share it (ADR-111).
+   */
+  setAssembly: (itemId: string | null, edit: AssemblyEdit | undefined, name: string) => void;
   /** "Change all copies" (ADR-111): on, a change to a linked piece reaches its copies; off, the piece leaves them. */
   linkAll: boolean;
   setLinkAll: (v: boolean) => void;
@@ -374,6 +423,12 @@ interface State {
   deleteVariable: (id: string) => void;
   /** Bind (or with null unbind) a piece's size, division or position to a variable or formula (ADR-166). */
   bindTarget: (itemId: string, target: string, expr: string | null) => void;
+  /** The open piece's own variables (ADR-210); each is one undo step. Deleting unbinds the sizes that used it. */
+  addDesignVariable: (name: string, expr: string) => string;
+  updateDesignVariable: (id: string, patch: { name?: string; expr?: string }) => void;
+  deleteDesignVariable: (id: string) => void;
+  /** Bind (or with null unbind) the open piece's size or division to its own variable or formula (ADR-210). */
+  bindDesignTarget: (target: string, expr: string | null) => void;
   /** Value sets (ADR-167); each is one undo step. Removing a set removes its pieces. */
   addVariableSet: () => string;
   updateVariableSet: (
@@ -383,6 +438,8 @@ interface State {
   removeVariableSet: (id: string) => void;
   /** Returns why it did not turn (a locked piece, ADR-095), or null. */
   turnItem: (id: string, dir: 1 | -1) => string | null;
+  /** Turn a display-only 3D model a quarter about its centre (ADR-203, G-105); one undo step. */
+  turnModel: (id: string, dir: 1 | -1) => void;
   /**
    * Turn a piece to whole degrees 0–359 about its centre (ADR-121); one undo step. Returns why not (a locked piece,
    * a number outside 0–359), or null. Nothing is clamped (ADR-008).
@@ -468,6 +525,15 @@ interface State {
   /** A sink over a base unit (ADR-125): add or replace the one with the same id, or remove it. */
   setSink: (sk: RunSink) => void;
   removeSink: (id: string) => void;
+  /** A hob over a base unit (ADR-205), like a sink. */
+  setHob: (hb: RunHob) => void;
+  removeHob: (id: string) => void;
+  /** The joint the user chose at a worktop corner (ADR-205); replaces the corner's earlier one. */
+  setWorktopJoint: (j: WorktopJoint) => void;
+  /** A worktop's front edge (ADR-209): square, rounded or bevelled and its size; replaces the worktop's earlier one. */
+  setWorktopEdge: (e: WorktopEdge) => void;
+  /** Bind (or with null unbind) a run request's overhang or height to a variable or formula (ADR-209). */
+  bindRequest: (r: RunRequest, target: RequestTarget, expr: string | null) => void;
   /** Put one board on the fronts or carcass of the selected piece, its run or the whole project (ADR-055). */
   applyFinish: (
     id: string,
@@ -497,8 +563,16 @@ interface State {
   setShared: (on: boolean) => string;
   /** Add a room mix's pieces to the open project (ADR-173): one undo step, the pieces selected. Their ids. */
   fillRoom: (mix: Project) => string[];
-  /** Connect or disconnect the two selected pieces (ADR-168); the reason when it cannot be done, else ''. */
+  /**
+   * Connect or disconnect the two selected pieces (ADR-168) with the kind the check finds (side, corner, stacked,
+   * ADR-207); the reason when it cannot be done, else ''.
+   */
   setConnected: (on: boolean) => string;
+  /**
+   * Against the wall (ADR-207): connect the piece against the wall its back lies on, or remove its wall connections.
+   * The reason when it cannot be done, else ''. One undo step.
+   */
+  setAgainstWall: (id: string, on: boolean) => string;
   /** Forget a part's own board (ADR-151) on a project item (`id`) or the open piece (null). */
   clearPartBoard: (id: string | null, panelId: string) => void;
   /** Put the piece being placed with its left-back corner at a plan point (whole mm, x and z ≥ 0), or stop placing (ADR-056). */
@@ -511,6 +585,17 @@ interface State {
   /** Close the drawn outline into the room (keeps height and features); false when fewer than three corners. */
   finishDrawRoom: () => boolean;
   cancelDrawRoom: () => void;
+  /**
+   * Move a 3D model dragged on the plan (`dx`, `dz` plan mm) or in Move mode (ADR-208): the same drop either way,
+   * snapping with `snap`, lifted off a piece; one undo step. Nothing happens when it would not move.
+   */
+  dropModel: (id: string, dx: number, dz: number, snap: boolean) => void;
+  /** Setting a plan picture's scale (ADR-208): the picture points tapped so far, or null when not setting it. */
+  scalingPlan: Pt[] | null;
+  startScalePlan: () => void;
+  /** A tap on the plan while setting the scale, as a picture pixel; the second tap sets the picture's two points. */
+  addScalePoint: (p: Pt) => void;
+  cancelScalePlan: () => void;
 }
 
 const HISTORY = 100;
@@ -530,16 +615,22 @@ export const useDesign = create<State>((rawSet, get) => {
     // A project piece whose size is locked keeps its size (ADR-122): the edit is refused and the reason shown.
     const open = get().editingItemId ?? get().drillItemId;
     const p0 = get().project;
-    const locked = p0 && open ? resizeBlocked(p0, open, next) : null;
+    // Boards and construction locks (ADR-211) refuse their changes the same way.
+    const locked =
+      p0 && open ? (resizeBlocked(p0, open, next) ?? lockBlocked(p0, open, next)) : null;
     if (locked) {
       set({ notice: locked });
       return;
     }
+    // The piece's own bindings take its own variables' values (ADR-210); inside a project, a project binding on the
+    // same target wins, so it is left to the project's commit.
+    const openItem = p0 && open ? p0.items.find((i) => i.id === open) : undefined;
+    const bound = applyDesignBindings(next, openItem?.bindings?.map((b) => b.target) ?? []);
     // A copy of a brand's product stops being that brand's product once edited; its origin stays (ADR-028).
     const debranded =
-      next.catalog?.brand && next.catalog.origin
-        ? { ...next, catalog: { ...next.catalog, brand: undefined } }
-        : next;
+      bound.catalog?.brand && bound.catalog.origin
+        ? { ...bound, catalog: { ...bound.catalog, brand: undefined } }
+        : bound;
     const stamped = { ...debranded, updatedAt: new Date().toISOString() };
     set({
       design: stamped,
@@ -625,7 +716,8 @@ export const useDesign = create<State>((rawSet, get) => {
     if (items.some((i, n) => i !== linked.items[n])) linked = { ...linked, items };
     // Nothing resizes a size-locked piece (ADR-122), also through a linked copy, a project-wide setting or Replace:
     // the whole change is refused.
-    const locked = sizeLockBlocked(get().project, linked);
+    const locked =
+      sizeLockBlocked(get().project, linked) ?? pieceLocksBlocked(get().project, linked);
     if (locked) {
       set({ notice: locked });
       syncDrill();
@@ -634,12 +726,20 @@ export const useDesign = create<State>((rawSet, get) => {
     // Bindings take their variables' values and value sets keep their duplicates (ADR-166, ADR-167); a bound field
     // the change tried to move is held and the reason shown.
     // Sets first, so a fresh duplicate takes its set's values in the same step.
-    const bound = applyBindings(syncSets(linked));
+    // A piece's own bindings first (ADR-210), so a project binding on the same target wins. With automatic refresh
+    // off, the parts of run requests a binding changed are made again (ADR-209).
+    const synced = applyPieceBindings(syncSets(linked));
+    const bound = remakeAskedParts(synced, applyBindings(synced));
     const held = heldByBinding(get().project, linked, bound);
+    // Worktop corner joints and edges follow their worktops (ADR-205, ADR-209).
     const stamped = {
-      ...refreshRunParts(
-        resolvePlacements(
-          pruneRunExtras(pruneShared(pruneConnections(pruneCommon(pruneGroups(bound))))),
+      ...pruneWorktopEdges(
+        pruneWorktopJoints(
+          refreshRunParts(
+            resolvePlacements(
+              pruneRunExtras(pruneShared(pruneConnections(pruneCommon(pruneGroups(bound))))),
+            ),
+          ),
         ),
       ),
       schemaVersion: PROJECT_SCHEMA, // an edited project is saved in the current shape (ADR-011, ADR-073)
@@ -743,6 +843,7 @@ export const useDesign = create<State>((rawSet, get) => {
     sessionBase: null,
     placingItemId: null,
     drawingRoom: null,
+    scalingPlan: null,
     templateEdit: null,
     notice: null,
 
@@ -809,6 +910,7 @@ export const useDesign = create<State>((rawSet, get) => {
         sessionBase: p,
         placingItemId: null,
         drawingRoom: null,
+        scalingPlan: null,
         notice: null,
       });
     },
@@ -828,6 +930,7 @@ export const useDesign = create<State>((rawSet, get) => {
         sessionBase: null,
         placingItemId: null,
         drawingRoom: null,
+        scalingPlan: null,
       }),
     updateProject: (fn) => {
       const p = get().project;
@@ -866,10 +969,10 @@ export const useDesign = create<State>((rawSet, get) => {
       const p = get().project;
       if (!p) return null;
       // A grouped piece moves with its whole group (ADR-148) and a connected one with its neighbours (ADR-168),
-      // unless Alt was held (`alone`).
+      // unless Alt was held (`alone`). A piece against a wall slides along it (ADR-207).
       const unit = movingSet(p, [id], !opts?.alone);
-      const res =
-        unit.length > 1 ? moveItems(p, unit, dxMm, dzMm, step) : moveBy(p, id, dxMm, dzMm, step);
+      const { dx, dz } = opts?.alone ? { dx: dxMm, dz: dzMm } : alongWalls(p, unit, dxMm, dzMm);
+      const res = unit.length > 1 ? moveItems(p, unit, dx, dz, step) : moveBy(p, id, dx, dz, step);
       if (res.reason) {
         set({ notice: res.reason });
         return res.reason;
@@ -934,6 +1037,18 @@ export const useDesign = create<State>((rawSet, get) => {
       const p = get().project;
       if (!p) return;
       const next = setAxisLocked(p, id, axis, on);
+      if (next !== p) commitProject(next);
+    },
+    setBoardsLocked: (id, on) => {
+      const p = get().project;
+      if (!p) return;
+      const next = setBoardsLocked(p, id, on);
+      if (next !== p) commitProject(next);
+    },
+    setConstructionLocked: (id, on) => {
+      const p = get().project;
+      if (!p) return;
+      const next = setConstructionLocked(p, id, on);
       if (next !== p) commitProject(next);
     },
     setItemHeight: (id, height) => {
@@ -1028,6 +1143,21 @@ export const useDesign = create<State>((rawSet, get) => {
       const next = deleteVariable(p, id);
       if (next !== p) commitProject(next, t('Delete variable'));
     },
+    bindRequest: (r, target, expr) => {
+      const p = get().project;
+      if (!p) return;
+      const key = requestKey(r);
+      // A suggested worktop is asked for first (ADR-075), with its binding (ADR-209).
+      if (!p.runRequests?.some((x) => requestKey(x) === key)) {
+        if (expr === null) return;
+        get().setRunRequest({ ...r, bindings: [{ target, expr: expr.trim() }] });
+        return;
+      }
+      commitProject(
+        setRequestBinding(p, key, target, expr),
+        expr === null ? t('Unbind') : t('Bind to variable'),
+      );
+    },
     bindTarget: (itemId, target, expr) => {
       const p = get().project;
       if (!p) return;
@@ -1036,6 +1166,22 @@ export const useDesign = create<State>((rawSet, get) => {
         expr === null ? t('Unbind') : t('Bind to variable'),
       );
     },
+    addDesignVariable: (name, expr) => {
+      const res = addDesignVariable(get().design, name, expr);
+      commit(res.design);
+      return res.id;
+    },
+    updateDesignVariable: (id, patch) => {
+      const d = get().design;
+      const next = updateDesignVariable(d, id, patch);
+      if (next !== d) commit(next);
+    },
+    deleteDesignVariable: (id) => {
+      const d = get().design;
+      const next = deleteDesignVariable(d, id);
+      if (next !== d) commit(next);
+    },
+    bindDesignTarget: (target, expr) => commit(setDesignBinding(get().design, target, expr)),
     addVariableSet: () => {
       const p = get().project;
       if (!p) return '';
@@ -1072,6 +1218,36 @@ export const useDesign = create<State>((rawSet, get) => {
       commitProject(res.project);
       set({ selectedItemId: res.id });
     },
+    linkIdentical: (id) => {
+      const p = get().project;
+      if (!p) return;
+      const next = linkIdentical(p, id);
+      if (next !== p) commitProject(next, t('Link identical pieces'));
+    },
+    setAssembly: (itemId, edit, name) => {
+      // The user's steps live in the design (ADR-207, design schemaVersion 9).
+      const apply = (d: Design): Design => {
+        const { assembly: _was, ...rest } = d;
+        void _was;
+        return edit
+          ? { ...rest, schemaVersion: SCHEMA_VERSION, assembly: edit }
+          : { ...rest, schemaVersion: d.schemaVersion };
+      };
+      const p = get().project;
+      if (itemId && p && get().editingItemId !== itemId) {
+        const it = p.items.find((i) => i.id === itemId);
+        if (!it) return;
+        commitProject(
+          {
+            ...p,
+            items: p.items.map((i) => (i.id === itemId ? { ...i, design: apply(i.design) } : i)),
+          },
+          name,
+        );
+        return;
+      }
+      commit(apply(get().design));
+    },
     addLinkedCopy: (id) => {
       const p = get().project;
       const res = p && addLinkedCopy(p, id);
@@ -1080,6 +1256,27 @@ export const useDesign = create<State>((rawSet, get) => {
       set({ selectedItemId: res.id });
     },
     setLinkAll: (v) => set({ linkAll: v }),
+    turnModel: (id, dir) => {
+      const p = get().project;
+      if (!p?.models?.some((m) => m.id === id)) return;
+      commitProject({
+        ...p,
+        models: p.models.map((m) => {
+          if (m.id !== id) return m;
+          const turned = turnModelItem(m, dir);
+          // A model on a piece keeps its new place along it (ADR-208): its offset follows the turn.
+          return m.placement?.kind === 'above'
+            ? {
+                ...turned,
+                placement: {
+                  ...m.placement,
+                  offsetX: m.placement.offsetX + turned.position.x - m.position.x,
+                },
+              }
+            : turned;
+        }),
+      });
+    },
     turnItem: (id, dir) => {
       const p = get().project;
       if (!p) return null;
@@ -1163,7 +1360,9 @@ export const useDesign = create<State>((rawSet, get) => {
       const p = get().project;
       if (!p) return null;
       const unit = movingSet(p, get().selectedItemIds, !opts?.alone);
-      const res = moveItems(p, unit, dx, dz, step);
+      // Pieces against a wall slide along it (ADR-207), unless Alt was held.
+      const along = opts?.alone ? { dx, dz } : alongWalls(p, unit, dx, dz);
+      const res = moveItems(p, unit, along.dx, along.dz, step);
       if (res.reason) {
         set({ notice: res.reason });
         return res.reason;
@@ -1392,7 +1591,8 @@ export const useDesign = create<State>((rawSet, get) => {
       // Automatic refresh is on by default the first time; after that the user's choice is kept (ADR-061).
       const settings = { scribe: p.runSettings?.scribe ?? 0, auto: p.runSettings?.auto ?? true };
       const base = { ...p, runSettings: settings, runPartsRemoved: [] };
-      commitProject({ ...base, runParts: planRuns(base).parts });
+      // Suggest also plans the runs along the side walls (ADR-205).
+      commitProject({ ...base, runParts: planRuns(base, { sides: true }).parts });
     },
     removeRunPart: (id) => {
       const p = get().project;
@@ -1459,6 +1659,36 @@ export const useDesign = create<State>((rawSet, get) => {
       if (!p?.sinks) return;
       const rest = p.sinks.filter((x) => x.id !== id);
       commitProject({ ...p, sinks: rest.length ? rest : undefined });
+    },
+    setHob: (hb) => {
+      const p = get().project;
+      if (!p) return;
+      commitProject({ ...p, hobs: [...(p.hobs ?? []).filter((x) => x.id !== hb.id), hb] });
+    },
+    removeHob: (id) => {
+      const p = get().project;
+      if (!p?.hobs) return;
+      const rest = p.hobs.filter((x) => x.id !== id);
+      commitProject({ ...p, hobs: rest.length ? rest : undefined });
+    },
+    setWorktopJoint: (j) => {
+      const p = get().project;
+      if (!p) return;
+      const same = (x: WorktopJoint) =>
+        x.id === j.id || (x.a === j.a && x.b === j.b) || (x.a === j.b && x.b === j.a);
+      commitProject({
+        ...p,
+        worktopJoints: [...(p.worktopJoints ?? []).filter((x) => !same(x)), j],
+      });
+    },
+    setWorktopEdge: (e) => {
+      const p = get().project;
+      if (!p) return;
+      const rest = (p.worktopEdges ?? []).filter((x) => x.key !== e.key);
+      // Square without a size is the default: nothing to keep.
+      const keep = e.kind !== 'square' || e.size !== undefined;
+      const list = keep ? [...rest, e] : rest;
+      commitProject({ ...p, worktopEdges: list.length ? list : undefined });
     },
     setRunSettings: (patch) => {
       const p = get().project;
@@ -1560,10 +1790,25 @@ export const useDesign = create<State>((rawSet, get) => {
       if (!p || ids.length !== 2) return t('Select exactly two pieces standing side by side.');
       const [a, b] = ids;
       if (on) {
-        const { reason } = connectionCheck(p, a, b, get().projectModel?.pieces);
+        // The kind the check finds: side by side, in the corner or stacked (ADR-207).
+        const { reason, kind } = connectionCheck(p, a, b, get().projectModel?.pieces);
         if (reason) return reason;
-        if (!isConnected(p, a, b)) commitProject(connect(p, a, b), t('Connect'));
+        if (!isConnected(p, a, b)) commitProject(connect(p, a, b, kind), t('Connect'));
       } else if (isConnected(p, a, b)) commitProject(disconnect(p, a, b), t('Disconnect'));
+      return '';
+    },
+    setAgainstWall: (id, on) => {
+      const p = get().project;
+      if (!p || !p.items.some((i) => i.id === id)) return t('No project is open.');
+      if (!on) {
+        const next = disconnectWall(p, id);
+        if (next !== p) commitProject(next, t('Off the wall'));
+        return '';
+      }
+      if (wallsOf(p, id).length) return '';
+      const { wall, reason } = wallAgainst(p, id, get().projectModel?.pieces);
+      if (wall === null) return reason ?? '';
+      commitProject(connectWall(p, id, wall), t('Against the wall'));
       return '';
     },
     clearPartBoard: (id, panelId) => {
@@ -1653,6 +1898,28 @@ export const useDesign = create<State>((rawSet, get) => {
       return true;
     },
     cancelDrawRoom: () => set({ drawingRoom: null }),
+    dropModel: (id, dx, dz, snap) => {
+      const p = get().project;
+      const pieces = get().projectModel?.pieces;
+      if (!p || !pieces) return;
+      const d = modelDrop(p, pieces, id, dx, dz, snap);
+      if (!d) return;
+      const next = moveModelTo(p, id, d.position);
+      if (next !== p) commitProject(next);
+    },
+    startScalePlan: () => set({ scalingPlan: [], drawingRoom: null, placingItemId: null }),
+    addScalePoint: (pt) => {
+      const pts = get().scalingPlan;
+      const p = get().project;
+      if (!pts || !p?.planPicture) return;
+      if (!pts.length) return set({ scalingPlan: [pt] });
+      set({ scalingPlan: null });
+      const a = pts[0];
+      // Two taps on the same pixel give no distance: the scale stays as it was.
+      if (a[0] === pt[0] && a[1] === pt[1]) return;
+      commitProject({ ...p, planPicture: { ...p.planPicture, a, b: pt } });
+    },
+    cancelScalePlan: () => set({ scalingPlan: null }),
     setKerf: (kerf) => {
       const d = get().design;
       commit({ ...d, cutting: { ...d.cutting, kerf } });
@@ -1662,7 +1929,27 @@ export const useDesign = create<State>((rawSet, get) => {
       if (project && !editingItemId) commitProject(projectWithHardwareProduct(project, key, hp));
       else commit(withHardwareProduct(get().design, key, hp));
     },
-    addSellerItem: (it) => commit(withSellerItem(get().design, it)),
+    addSellerItem: (it) => {
+      const { project, editingItemId } = get();
+      // In the project view the item goes on the project's own list (ADR-210).
+      if (project && !editingItemId)
+        commitProject(projectWithSellerItem(project, it), t('Add seller product'));
+      else commit(withSellerItem(get().design, it));
+    },
+    setProjectSellerItemQuantity: (seller, id, quantity) => {
+      const p = get().project;
+      if (!p) return;
+      const next = projectSellerItemQuantity(p, seller, id, quantity);
+      if (next !== p) commitProject(next);
+    },
+    setRunProduct: (key, hp) => {
+      const p = get().project;
+      if (!p) return;
+      const next = { ...p.runProducts };
+      if (hp) next[key] = hp;
+      else delete next[key];
+      commitProject({ ...p, runProducts: Object.keys(next).length ? next : undefined });
+    },
     setSellerItemQuantity: (index, quantity) =>
       commit(withSellerItemQuantity(get().design, index, quantity)),
     rename: (name) => commit({ ...get().design, name }),
@@ -1729,13 +2016,14 @@ export const useDesign = create<State>((rawSet, get) => {
     },
     resizePiece: (key, value) => {
       const d = get().design;
-      const product = resizeProduct(d.product, key, value);
+      // A bed's size is its mattress (ADR-211); `resizeBed` leaves other pieces alone.
+      const product = resizeBed(resizeProduct(d.product, key, value), key, value);
       if (product !== d.product) commit({ ...d, product });
     },
     resizeItem: (id, key, value) => {
       const it = get().project?.items.find((i) => i.id === id);
       if (!it) return;
-      const product = resizeProduct(it.design.product, key, value);
+      const product = resizeBed(resizeProduct(it.design.product, key, value), key, value);
       if (product === it.design.product) return;
       // Resized, a brand's product is no longer that brand's product; its origin stays (ADR-028), as in `commit`.
       const catalog =
@@ -1754,6 +2042,11 @@ export const useDesign = create<State>((rawSet, get) => {
       if (res.reason) return res.reason;
       if (res.project !== p) commitProject(res.project, t('Resize {name}', { name: g.name }));
       return res.kept.length ? `Kept: ${res.kept.join(', ')}.` : '';
+    },
+    replaceDesign: (d) => {
+      const before = get().design;
+      commit(d);
+      return get().design === before && d !== before ? get().notice : null;
     },
     updateMeta: (patch) => commit({ ...get().design, ...patch }),
     editTemplateVariant: (template, variantId) => {

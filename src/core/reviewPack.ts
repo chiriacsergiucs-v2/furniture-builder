@@ -6,6 +6,7 @@
 import { getPrintLang, pt } from './i18n/print';
 import { snapshotSvg } from './snapshot';
 import { cutlistCsvRo } from './ro';
+import { printPieceNames } from './catalog/printName';
 import { projectCutlist, rotationOf, type Project, type ProjectModel } from './project';
 import { zipStore, type ZipEntry } from './zip';
 
@@ -109,7 +110,10 @@ export function reviewPackFiles(
     },
     {
       name: `${base}-${pt('piese')}.csv`,
-      text: cutlistCsvRo(projectCutlist(project)),
+      text: cutlistCsvRo(
+        projectCutlist(project),
+        printPieceNames(project.items.map((i) => i.design)),
+      ),
       what: 'Parts list (CSV)',
     },
     { name: `${base}-plan.svg`, text: planSvg(pm, project), what: 'Plan seen from above (SVG)' },

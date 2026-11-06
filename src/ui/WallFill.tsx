@@ -8,6 +8,8 @@ import { t } from '../core/i18n';
 import { snapshotSvg } from '../core/snapshot';
 import {
   BASE_HEIGHT,
+  TALL_HEIGHT,
+  WALL_DEPTH,
   WALL_HEIGHT,
   MIXES_FIRST,
   WALL_DEFAULTS,
@@ -50,6 +52,9 @@ interface Form {
   equalFronts: string;
   wallRow: WallRow;
   wallHeight: string;
+  /** Tall cabinet height and wall cabinet depth (ADR-204). */
+  tallHeight: string;
+  wallDepth: string;
 }
 
 const START: Form = {
@@ -69,6 +74,8 @@ const START: Form = {
   equalFronts: '',
   wallRow: 'always',
   wallHeight: String(WALL_HEIGHT),
+  tallHeight: String(TALL_HEIGHT),
+  wallDepth: String(WALL_DEPTH),
 };
 
 /** The answers asked on the Wall step; the rest are on Refine. */
@@ -94,6 +101,8 @@ function toInput(f: Form): WallInput {
     equalFronts: opt(f.equalFronts),
     wallRow: f.wallRow,
     wallHeight: opt(f.wallHeight),
+    tallHeight: opt(f.tallHeight),
+    wallDepth: opt(f.wallDepth),
   };
 }
 
@@ -397,6 +406,16 @@ function WallFill({ onClose, onOpened }: { onClose: () => void; onOpened: () => 
               onChange={set('wallHeight')}
               problem={problem('wallHeight')}
               hint={t('Wall cabinet tops sit at the wall height.')}
+            />
+            <Field
+              label={t('Tall cabinet height')}
+              value={form.tallHeight}
+              onChange={set('tallHeight')}
+            />
+            <Field
+              label={t('Wall cabinet depth')}
+              value={form.wallDepth}
+              onChange={set('wallDepth')}
             />
           </div>
           <Segmented

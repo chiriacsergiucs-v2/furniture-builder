@@ -1,5 +1,5 @@
 import { t as tx } from './i18n';
-import { buildCabinet, hingeBand, hingeCount, type PartialModel } from './cabinet';
+import { buildCabinet, cornerHingeNote, hingeCount, type PartialModel } from './cabinet';
 import { box, equalParts } from './geometry';
 import type {
   Box,
@@ -340,7 +340,7 @@ function buildDiagonal(
       kind: 'hinge',
       label: 'Concealed hinge for a 45° diagonal corner door',
       quantity: n * hingeCount(dh),
-      note: `${hingeCount(dh)} per door (typical for ${hingeBand(dh)}); choose the hinge maker's 45° corner hinge or angled plate`,
+      note: cornerHingeNote(dh),
     });
   } else if (doors) return err('diagonal-front', tx('A diagonal corner takes one door or a pair.'));
   if (s.count)
@@ -467,14 +467,25 @@ function buildCornerUnit(
       materials,
       { idPrefix: `${id}/blind:`, productNodeId: id, mapNodeId: () => id },
     );
-    const main = buildCabinet(carcass(p, usable, p.interior), materials, {
-      idPrefix: `${id}/main:`,
-      productNodeId: id,
-      origin: { x: p.blindWidth, y: 0, z: 0 },
-    });
+    // Sharing a side at its straight end (ADR-207, as ADR-190): drawn on the right here. A left corner leaves its
+    // right side out (the neighbour's serves); a right corner keeps it and its front stops over its middle.
+    const leaves = p.side === 'left' && !!p.shared?.right;
+    const keeps = p.side === 'right' && !!p.shared?.left;
+    const main = buildCabinet(
+      { ...carcass(p, usable, p.interior), ...(leaves ? { shared: { right: true } } : {}) },
+      materials,
+      {
+        idPrefix: `${id}/main:`,
+        productNodeId: id,
+        origin: { x: p.blindWidth, y: 0, z: 0 },
+        ...(keeps ? { frontTrim: { right: lo(t) + Math.ceil(g / 2) - lo(g) } } : {}),
+      },
+    );
     const local: PartialModel = { panels: [], spaces: [], hardware: [], diagnostics: [] };
     merge(local, blind);
     merge(local, main);
+    // The pin rows the neighbour's side needs for this corner's shelves (only unmirrored: a left corner).
+    if (leaves && main.sharedPins) out.sharedPins = main.sharedPins;
     // Fixed blind panel in front of the blind section, one gap from the usable section's door.
     const ph = plinthOf(p);
     local.panels.push({

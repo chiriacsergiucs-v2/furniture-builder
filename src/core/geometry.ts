@@ -133,30 +133,36 @@ export const translate = (b: Box, dx: Mm, dy: Mm, dz: Mm): Box => ({
 
 /**
  * Split `total` integer millimetres into parts. Fixed parts take their value; the remainder is shared by
- * fractional weights. Integer rounding remainder goes to the last fractional part, so sum === total exactly.
- * Returns null when fixed parts exceed the total.
+ * fractional weights. Integer rounding remainder goes to the last fractional part, so sum === total exactly; with
+ * `remainderFirst` (a mirrored split, ADR-205) it goes to the first one instead, so a mirrored copy keeps it on the
+ * same physical part. Returns null when fixed parts exceed the total.
  */
-export function distribute(total: Mm, sizes: SplitSize[]): Mm[] | null {
+export function distribute(total: Mm, sizes: SplitSize[], remainderFirst = false): Mm[] | null {
   const fixed = sizes.reduce((s, p) => s + (p.mode === 'mm' ? p.value : 0), 0);
   const rest = total - fixed;
   if (rest < 0) return null;
   const weights = sizes.map((p) => (p.mode === 'fr' ? Math.max(0, p.value) : 0));
   const wsum = weights.reduce((a, b) => a + b, 0);
   if (wsum === 0 && rest !== 0) {
-    // No flexible part: the leftover goes to the last part so the parts still fill the space.
+    // No flexible part: the leftover goes to the last part (the first, mirrored) so the parts still fill the space.
     const out = sizes.map((p) => (p.mode === 'mm' ? p.value : 0));
-    out[out.length - 1] += rest;
+    out[remainderFirst ? 0 : out.length - 1] += rest;
     return out;
   }
   const out = sizes.map((p, i) =>
     p.mode === 'mm' ? p.value : Math.floor((rest * weights[i]) / wsum),
   );
   const assigned = out.reduce((a, b) => a + b, 0);
-  let lastFr = -1;
+  let lastFr = -1,
+    firstFr = -1;
   sizes.forEach((p, i) => {
-    if (p.mode === 'fr' && weights[i] > 0) lastFr = i;
+    if (p.mode === 'fr' && weights[i] > 0) {
+      lastFr = i;
+      if (firstFr < 0) firstFr = i;
+    }
   });
-  if (lastFr >= 0) out[lastFr] += total - assigned;
+  const to = remainderFirst ? firstFr : lastFr;
+  if (to >= 0) out[to] += total - assigned;
   return out;
 }
 
@@ -217,4 +223,38 @@ export function intersection(a0: Box, b0: Box): Box {
     [y, h] = ax('y'),
     [z, d] = ax('z');
   return { x, y, z, w, h, d };
+}
+
+/**
+ * How far two boxes go into each other (ADR-205), mm, rounded up: the shortest way out. Turned boxes (ADR-121) are
+ * measured on their turned outlines (separating-axis penetration on the floor, and the height overlap); 0 when apart.
+ */
+export function penetration(a: Box, b: Box): Mm {
+  const y = overlap1(extent(a, 'y'), extent(b, 'y'));
+  if (y <= 0) return 0;
+  if (!a.yaw && !b.yaw)
+    return Math.min(
+      y,
+      overlap1(extent(a, 'x'), extent(b, 'x')),
+      overlap1(extent(a, 'z'), extent(b, 'z')),
+    );
+  const pa = footprintOf(a),
+    pb = footprintOf(b);
+  let least = y;
+  for (const poly of [pa, pb])
+    for (let i = 0; i < poly.length; i++) {
+      const [x0, z0] = poly[i],
+        [x1, z1] = poly[(i + 1) % poly.length];
+      const nx = z0 - z1,
+        nz = x1 - x0;
+      const len = Math.hypot(nx, nz);
+      if (len < 1e-9) continue;
+      const qa = pa.map(([x, z]) => (x * nx + z * nz) / len),
+        qb = pb.map(([x, z]) => (x * nx + z * nz) / len);
+      const o =
+        Math.min(Math.max(...qa), Math.max(...qb)) - Math.max(Math.min(...qa), Math.min(...qb));
+      if (o <= 0) return 0;
+      least = Math.min(least, o);
+    }
+  return Math.ceil(least - 1e-6);
 }

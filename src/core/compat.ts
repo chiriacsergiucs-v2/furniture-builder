@@ -10,7 +10,13 @@
  * warning that never blocks export (ADR-008). Pure and deterministic.
  */
 import { t, tr } from './i18n';
-import { findFamily, ROOM_LABEL, type CatalogFamily, type FunctionGroup } from './catalog';
+import {
+  findFamily,
+  ROOM_LABEL,
+  type CatalogFamily,
+  type FunctionGroup,
+  type Room,
+} from './catalog';
 import { isWallHung, type PlacedPiece, type ProjectItem, type RunPart } from './project';
 import type { Box, Diagnostic, Mm, Product } from './types';
 
@@ -27,6 +33,9 @@ export type RulePredicate =
   | 'same-depth'
   | 'same-height-under-worktop'
   | 'shared-room';
+
+/** The kinds of join between pieces (ADR-207): side by side, in a corner, one over the other, or against a wall. */
+export type JoinKind = 'side' | 'corner' | 'stacked' | 'wall';
 
 export type CompatRuleId =
   'side-only' | 'same-mount' | 'back-to-wall' | 'depth-match' | 'height-match' | 'family';
@@ -47,6 +56,8 @@ export interface CompatRule {
   severity: RuleSeverity;
   /** Where it runs. */
   where: ('snap' | 'checks')[];
+  /** The joins it runs on (ADR-207); absent = side joins only, as every ADR-100 rule. */
+  joins?: JoinKind[];
   /** The rule in words, for the Rules list and the messages. */
   text: string;
   /**
@@ -56,7 +67,7 @@ export interface CompatRule {
   messages: { snap?: string; checks?: string };
   /** A refusal named even when the piece snaps to something else (rules about what pieces are, not their faces). */
   namedWhenSnapped?: boolean;
-  /** ADR-071 repairs that may fix it (none exist for these rules yet, G-104). */
+  /** ADR-071 repairs that may fix it (the depth and height matches since ADR-204). */
   repairs: string[];
 }
 
@@ -82,6 +93,8 @@ export const COMPAT_RULES: readonly CompatRule[] = [
     check: { predicate: 'same-mount', params: {} },
     severity: 'refuse',
     where: ['snap'],
+    // Also a corner join (ADR-207): a floor unit and a wall unit never meet in a corner either.
+    joins: ['side', 'corner'],
     text: 'side to side only floor unit with floor unit and wall unit with wall unit',
     messages: { snap: '{reason}' },
     repairs: [],
@@ -110,7 +123,7 @@ export const COMPAT_RULES: readonly CompatRule[] = [
       snap: '{reason}',
       checks: t('{a} and {b} stand side by side with different depths ({reason} mm); {text}.'),
     },
-    repairs: [],
+    repairs: ['match-depth'],
   },
   {
     id: 'height-match',
@@ -127,7 +140,7 @@ export const COMPAT_RULES: readonly CompatRule[] = [
     messages: {
       checks: t('{a} and {b} are under one worktop with different heights ({reason} mm); {text}.'),
     },
-    repairs: [],
+    repairs: ['match-height'],
   },
   {
     id: 'family',
@@ -142,7 +155,8 @@ export const COMPAT_RULES: readonly CompatRule[] = [
     text: 'family rule: pieces join side by side only when their catalog families share a room',
     messages: { snap: t('{reason}; {text}'), checks: t('{reason}; {text}.') },
     namedWhenSnapped: true,
-    repairs: [],
+    // ADR-210: the later-placed piece (then the other) moves along its wall to where it touches nothing.
+    repairs: ['move-apart'],
   },
 ];
 
@@ -171,6 +185,17 @@ export function familyOf(item: ProjectItem): CatalogFamily | undefined {
   return id ? findFamily(id) : undefined;
 }
 
+/**
+ * The family a piece's rooms come from, for the family rule (ADR-210): a shipped family by its id, else the rooms the
+ * user's own family recorded on the piece (`origin.rooms`). Undefined for a piece with neither (nothing is known).
+ */
+export function familyRooms(item: ProjectItem): { name: string; rooms: Room[] } | undefined {
+  const f = familyOf(item);
+  if (f) return { name: f.name, rooms: f.rooms };
+  const o = item.design.catalog?.origin;
+  return o?.rooms?.length ? { name: o.productName, rooms: o.rooms } : undefined;
+}
+
 /** Whether a rule's "applies to" covers a piece placed as `mount`. */
 export function appliesTo(
   rule: CompatRule,
@@ -187,7 +212,7 @@ export function appliesTo(
   return true;
 }
 
-const rooms = (f: CatalogFamily) => f.rooms.map((r) => tr(ROOM_LABEL[r])).join(', ');
+const rooms = (f: { rooms: Room[] }) => f.rooms.map((r) => tr(ROOM_LABEL[r])).join(', ');
 
 // ---------------------------------------------------------------------------
 // The predicates: each returns null when the rule holds (or does not concern this join), else what it found.
@@ -210,6 +235,8 @@ export interface JoinContext {
   heightB?: Mm;
   /** Both pieces are under one run worktop (ADR-036). */
   underOneWorktop?: boolean;
+  /** The kind of join (ADR-207); absent = side. A rule runs only on the joins it names (`CompatRule.joins`). */
+  join?: JoinKind;
 }
 
 const differs = (what: string, a: Mm | undefined, b: Mm | undefined, tol: number) =>
@@ -244,9 +271,9 @@ const PREDICATES: Record<RulePredicate, (rule: CompatRule, c: JoinContext) => st
       : null,
   'shared-room': (_, c) => {
     if (!c.b) return null;
-    const fa = familyOf(c.a),
-      fb = familyOf(c.b);
-    // A piece with no shipped family: nothing is known about it, so nothing is refused.
+    const fa = familyRooms(c.a),
+      fb = familyRooms(c.b);
+    // A piece with no shipped family and no recorded rooms: nothing is known about it, so nothing is refused.
     if (!fa || !fb || fa.rooms.some((r) => fb.rooms.includes(r))) return null;
     return t('{a} ({fa}: {ra}) and {b} ({fb}: {rb}) share no room', {
       a: c.a.design.name,
@@ -282,6 +309,7 @@ export function evaluate(stage: 'snap' | 'checks', c: JoinContext): Finding[] {
   const out: Finding[] = [];
   for (const rule of COMPAT_RULES) {
     if (!rule.where.includes(stage)) continue;
+    if (!(rule.joins ?? ['side']).includes(c.join ?? 'side')) continue;
     if (!appliesTo(rule, c.a, c.mountA)) continue;
     if (c.b && !appliesTo(rule, c.b, c.mountB)) continue;
     const reason = PREDICATES[rule.check.predicate](rule, c);

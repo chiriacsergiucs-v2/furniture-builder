@@ -316,3 +316,230 @@ export const decorPatch = (d: Decor): Partial<Material> => ({
   kind: d.kind,
   decor: { code: d.code, list: d.list },
 });
+
+// ---------------------------------------------------------------------------
+// The user's band list (ADR-212, G-038): edge bands from the user's own file, nothing filled in (ADR-010).
+// ---------------------------------------------------------------------------
+
+/** One row of the user's band list. */
+export interface Band {
+  /** `${maker}:${code}:${thickness}:${width}`, unique in the stored list. */
+  id: string;
+  /** As written in the file. */
+  makerText: string;
+  kind: EdgeBandKind;
+  code: string;
+  /** The board decor code this band matches, when the file names one. */
+  decor?: string;
+  name: string;
+  /** Tenths of a mm (0.4 mm → 4, ADR-077). */
+  thickness: number;
+  width: Mm;
+  color: string;
+  /** File name it came from. */
+  list: string;
+}
+
+const BAND_KIND_WORDS: Record<string, EdgeBandKind> = {
+  abs: 'abs',
+  pvc: 'pvc',
+  pp: 'pp',
+  melamine: 'melamine',
+  veneer: 'veneer',
+};
+type BandColumn = 'maker' | 'kind' | 'code' | 'decor' | 'name' | 'thickness' | 'width' | 'color';
+const BAND_HEADERS: Record<string, BandColumn> = {
+  manufacturer: 'maker',
+  producer: 'maker',
+  producator: 'maker',
+  brand: 'maker',
+  type: 'kind',
+  tip: 'kind',
+  code: 'code',
+  cod: 'code',
+  decor: 'decor',
+  name: 'name',
+  nume: 'name',
+  denumire: 'name',
+  thickness: 'thickness',
+  grosime: 'thickness',
+  width: 'width',
+  latime: 'width',
+  color: 'color',
+  colour: 'color',
+  culoare: 'color',
+};
+export const BAND_COLUMNS = 'manufacturer, type, code, decor, name, thickness, width, color';
+const BAND_REQUIRED: BandColumn[] = [
+  'maker',
+  'kind',
+  'code',
+  'name',
+  'thickness',
+  'width',
+  'color',
+];
+const BAND_COLUMN_NAME: Record<BandColumn, string> = {
+  maker: 'manufacturer',
+  kind: 'type',
+  code: 'code',
+  decor: 'decor',
+  name: 'name',
+  thickness: 'thickness',
+  width: 'width',
+  color: 'color',
+};
+
+/**
+ * Reads a band list the user provides (ADR-212): CSV with a header row naming the columns manufacturer, type, code,
+ * decor (optional), name, thickness (mm, one decimal), width (whole mm) and color (#rrggbb), separated by commas or
+ * semicolons. Type abs, pvc, pp, melamine or veneer, anything else `other`. Rows with a problem are skipped and
+ * listed; never throws (ADR-008).
+ */
+export function parseBandList(text: string, list: string): { bands: Band[]; problems: string[] } {
+  const lines = text
+    .replace(/^\uFEFF/, '')
+    .split(/\r?\n/)
+    .filter((l) => l.trim());
+  if (!lines.length) return { bands: [], problems: [t('The file is empty.')] };
+  const sep = (lines[0].match(/;/g)?.length ?? 0) > (lines[0].match(/,/g)?.length ?? 0) ? ';' : ',';
+  const head = splitLine(lines[0], sep).map((h) => BAND_HEADERS[norm(h)]);
+  const missing = BAND_REQUIRED.filter((k) => !head.includes(k));
+  if (missing.length)
+    return {
+      bands: [],
+      problems: [
+        t('The first row must name the columns {cols}; missing: {missing}.', {
+          cols: BAND_COLUMNS,
+          missing: missing.map((k) => BAND_COLUMN_NAME[k]).join(', '),
+        }),
+      ],
+    };
+  const bands: Band[] = [],
+    problems: string[] = [],
+    seen = new Set<string>();
+  lines.slice(1).forEach((line, i) => {
+    const row = i + 2;
+    const cells = splitLine(line, sep);
+    const get = (k: BandColumn) => (head.includes(k) ? (cells[head.indexOf(k)] ?? '') : '');
+    const makerText = get('maker'),
+      code = get('code'),
+      decor = get('decor'),
+      name = get('name'),
+      color = get('color');
+    const thickness = parseTenths(get('thickness'));
+    const widthText = get('width');
+    const width = /^\d+$/.test(widthText) ? Number(widthText) : NaN;
+    const why = !makerText
+      ? t('no manufacturer')
+      : !code
+        ? t('no code')
+        : code.length > BAND_MAX_CODE || decor.length > BAND_MAX_CODE
+          ? t('band code must be text up to 60 characters')
+          : !name
+            ? t('no name')
+            : thickness === null
+              ? t('thickness "{v}" is not mm from 0.1 to 10 with one decimal', {
+                  v: get('thickness'),
+                })
+              : !(width >= 1 && width <= BAND_MAX_WIDTH)
+                ? t('width "{v}" is not whole mm from 1 to {max}', {
+                    v: widthText,
+                    max: BAND_MAX_WIDTH,
+                  })
+                : !/^#[0-9a-fA-F]{6}$/.test(color)
+                  ? t('color "{v}" is not #rrggbb', { v: color })
+                  : null;
+    if (why || thickness === null) {
+      problems.push(t('Row {row}: {why}.', { row, why: why ?? '' }));
+      return;
+    }
+    const id = `${norm(makerText)}:${code}:${thickness}:${width}`;
+    if (seen.has(id)) {
+      problems.push(
+        t('Row {row}: {maker} {code} {mm} mm is listed twice; the first is kept.', {
+          row,
+          maker: makerText,
+          code,
+          mm: `${tenthsText(thickness)} × ${width}`,
+        }),
+      );
+      return;
+    }
+    seen.add(id);
+    bands.push({
+      id,
+      makerText,
+      kind: BAND_KIND_WORDS[norm(get('kind'))] ?? 'other',
+      code,
+      ...(decor ? { decor } : {}),
+      name: name.slice(0, 200),
+      thickness,
+      width,
+      color: color.toLowerCase(),
+      list,
+    });
+  });
+  if (!bands.length && !problems.length)
+    problems.push(t('The file has a header row but no bands.'));
+  return { bands, problems };
+}
+
+/** A stored band row the app can read (ADR-012: unreadable rows are skipped, never deleted). */
+export function validateBand(v: unknown): v is Band {
+  if (!v || typeof v !== 'object') return false;
+  const b = v as Record<string, unknown>;
+  const str = (x: unknown) => typeof x === 'string' && x.length > 0;
+  return (
+    str(b.id) &&
+    str(b.makerText) &&
+    BAND_KINDS.some((k) => k.value === b.kind) &&
+    str(b.code) &&
+    (b.decor === undefined || typeof b.decor === 'string') &&
+    typeof b.name === 'string' &&
+    Number.isSafeInteger(b.thickness) &&
+    (b.thickness as number) >= 1 &&
+    (b.thickness as number) <= BAND_MAX_THICKNESS &&
+    Number.isSafeInteger(b.width) &&
+    (b.width as number) >= 1 &&
+    (b.width as number) <= BAND_MAX_WIDTH &&
+    typeof b.color === 'string' &&
+    typeof b.list === 'string'
+  );
+}
+
+/** What picking a band from the list fills in: the existing `EdgeBand` fields, only from the file (ADR-212). */
+export const bandFromList = (b: Band): EdgeBand => ({
+  kind: b.kind,
+  thickness: b.thickness,
+  width: b.width,
+  code: b.code,
+});
+
+const rgb = (hex: string) =>
+  /^#[0-9a-f]{6}$/i.test(hex)
+    ? [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16))
+    : [128, 128, 128];
+const colourDistance = (a: string, b: string) => {
+  const [x, y] = [rgb(a), rgb(b)];
+  return x.reduce((s, v, i) => s + (v - y[i]) ** 2, 0);
+};
+
+/**
+ * The band list for one board (ADR-212): matching bands (decor or code equals the board's decor code, band at least
+ * as wide as the board is thick) first, then the others by closeness to the board's colour.
+ */
+export function bandsForBoard(
+  bands: readonly Band[],
+  board: Pick<Material, 'thickness' | 'color' | 'decor'>,
+): { matching: Band[]; others: Band[] } {
+  const code = board.decor?.code;
+  const matches = (b: Band) =>
+    !!code && (b.decor === code || b.code === code) && b.width >= board.thickness;
+  const byColour = (a: Band, b: Band) =>
+    colourDistance(a.color, board.color) - colourDistance(b.color, board.color);
+  return {
+    matching: bands.filter(matches).sort(byColour),
+    others: bands.filter((b) => !matches(b)).sort(byColour),
+  };
+}

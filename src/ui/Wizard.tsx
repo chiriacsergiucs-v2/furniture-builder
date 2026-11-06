@@ -52,6 +52,7 @@ import { askConfirm } from './Confirm';
 import { Counter, InfoTip, Segmented, Select, Steps } from './controls';
 import { Dialog } from './Dialogs';
 import { Icon } from './icons';
+import { useUi, type WizardDraft } from './shell/uiStore';
 
 const picture = (model: FurnitureModel, materials: Material[], size: number) =>
   `data:image/svg+xml;charset=utf-8,${encodeURIComponent(snapshotSvg(model, materials, size))}`;
@@ -303,13 +304,15 @@ function FieldInput({
             {under}
           </>
         );
-      return opts.length <= 4 ? (
+      // Up to five options are a segmented control; five wrap to a second row on a phone (ADR-202).
+      return opts.length <= 5 ? (
         <>
           <Segmented
             label={label}
             value={String(v ?? '')}
             options={opts}
             onChange={(x) => set(f.id, x)}
+            wrap={opts.length === 5}
           />
           {help && <p className="hint">{help}</p>}
           {under}
@@ -595,13 +598,30 @@ export function WizardDialog({
 }) {
   // True while the answers differ from a fresh wizard's; × and Esc then ask first (ADR-191). Backdrop clicks never close.
   const dirtyRef = useRef(false);
+  // A new piece's answers, step and finished steps, kept as the session's draft when it closes (ADR-211, G-356).
+  const draftRef = useRef<WizardDraft | null>(null);
   const close = async () => {
-    if (
-      open &&
-      dirtyRef.current &&
-      !(await askConfirm(t('Discard the answers?'), { confirmLabel: t('Discard'), danger: true }))
-    )
-      return;
+    if (open && dirtyRef.current) {
+      if (from) {
+        // A reopened piece keeps its own answers: closing it still discards the changes (ADR-191).
+        if (
+          !(await askConfirm(t('Discard the answers?'), {
+            confirmLabel: t('Discard'),
+            danger: true,
+          }))
+        )
+          return;
+      } else {
+        if (
+          !(await askConfirm(
+            t('Close the wizard? Your answers stay as a draft until you close the app.'),
+            { confirmLabel: t('Close') },
+          ))
+        )
+          return;
+        if (draftRef.current) useUi.getState().setWizardDraft(draftRef.current);
+      }
+    }
     onClose();
   };
   return (
@@ -619,6 +639,7 @@ export function WizardDialog({
           from={from ?? null}
           toProject={!!toProject && !from}
           dirtyRef={dirtyRef}
+          draftRef={draftRef}
         />
       )}
     </Dialog>
@@ -655,11 +676,13 @@ function Wizard({
   from,
   toProject,
   dirtyRef,
+  draftRef,
 }: {
   onCreated: () => void;
   from: Design | null;
   toProject: boolean;
   dirtyRef: { current: boolean };
+  draftRef: { current: WizardDraft | null };
 }) {
   const load = useDesign((s) => s.load);
   const addPiece = useDesign((s) => s.addPiece);
@@ -723,6 +746,24 @@ function Wizard({
       dirtyRef.current = false;
     };
   }, [dirtyRef, dirtyNow]);
+  // The session's draft of a new piece (ADR-211): offered on the Type step until continued or started over.
+  const draft = useUi((s) => s.wizardDraft);
+  const setDraft = useUi((s) => s.setWizardDraft);
+  const [offerDraft, setOfferDraft] = useState(() => !from && !!draft);
+  useEffect(() => {
+    draftRef.current = from ? null : { answers: a, stepId, done: [...done] };
+  }, [draftRef, from, a, stepId, done]);
+  const continueDraft = () => {
+    if (!draft) return;
+    setA(draft.answers);
+    setDone(new Set(draft.done));
+    setOfferDraft(false);
+    go(draft.stepId);
+  };
+  const startOver = () => {
+    setDraft(null);
+    setOfferDraft(false);
+  };
   /** A new type keeps only the Size answers it can use (ADR-191); the steps start over. */
   const set = (id: string, v: AnswerValue) => {
     if (id === 'type') {
@@ -763,10 +804,21 @@ function Wizard({
   const create = async () => {
     const res = createPiece(a, new Date().toISOString(), from ?? undefined);
     if (!res.ok) return;
+    // A project piece reopened from its Settings (ADR-203, G-359): Update piece replaces that piece in the project's own
+    // copy as one edit, never the library; a size lock or a locked piece on it refuses it.
+    const st = useDesign.getState();
+    if (from && st.project && st.editingItemId) {
+      const refused = st.replaceDesign(res.design);
+      if (refused) setSaveError(refused);
+      else onCreated();
+      return;
+    }
     try {
       await saveDesign(res.design);
       if (toProject) addPiece(res.design, res.design.id);
       else load(res.design);
+      // The piece is made: the session's draft is done with (ADR-211).
+      if (!from) setDraft(null);
       onCreated();
     } catch {
       setSaveError(t('The piece could not be saved in this browser’s storage.'));
@@ -806,6 +858,19 @@ function Wizard({
                   : ''}
               </span>
             </p>
+          )}
+          {offerDraft && draft && step.id === TYPE && (
+            <div className="alert info wz-draft" role="status">
+              <Icon name="info" className="sm" />
+              <span className="wz-draft-actions">
+                <button type="button" className="btn sm primary" onClick={continueDraft}>
+                  {t('Continue where you left off')}
+                </button>
+                <button type="button" className="btn sm" onClick={startOver}>
+                  {t('Start over')}
+                </button>
+              </span>
+            </div>
           )}
           {step.help ? (
             <div className="info-row">
@@ -859,7 +924,9 @@ function Wizard({
                           {s.id === TYPE
                             ? tr(typeOf(a)?.label ?? '')
                             : visibleFields(s, a)
-                                .map((f) => `${tr(f.label)}: ${valueText(f, a, r)}`)
+                                .map(
+                                  (f) => `${tr(f.reviewLabel ?? f.label)}: ${valueText(f, a, r)}`,
+                                )
                                 .join(' · ')}
                         </span>
                         <button

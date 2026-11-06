@@ -151,8 +151,8 @@ export interface ModelFile {
   thumb?: string;
 }
 
-/** The project with every model its items use that is on this device, as base64 (`models3d`). */
-export async function withModels<T extends { models?: ModelItem[] }>(
+/** The project or template with every model its items use that is on this device, as base64 (`models3d`). */
+export async function withModels<T extends { models?: { modelId: string }[] }>(
   data: T,
   database = db,
 ): Promise<T & { models3d?: ModelFile[] }> {

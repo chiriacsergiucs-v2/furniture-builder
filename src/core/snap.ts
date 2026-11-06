@@ -14,6 +14,7 @@ import {
   dragPosition,
   isWallHung,
   placementBases,
+  rotationOf,
   tapPosition,
   type PlacedPiece,
   type Project,
@@ -312,76 +313,93 @@ export function snapDrag(
     });
   const itemById = new Map(others.map((pc) => [pc.item.id, pc.item]));
 
-  for (const f of faces) {
-    for (const n of conn.faces) {
-      if (n.axis !== f.axis || n.normal !== -f.normal || overlap(f, n) <= 0) continue;
-      const d = n.at - f.at;
-      if (Math.abs(d) > range) continue;
-      const key = `piece:${n.owner}`;
-      // The compatibility rules (ADR-100), in table order: the first failed `refuse` rule removes the candidate.
-      const found = evaluate('snap', {
-        a: me.item,
-        mountA: mine,
-        faceA: f.face,
-        b: itemById.get(n.owner)!,
-        mountB: n.mount,
-        faceB: n.face,
-        depthA: f.depth,
-        depthB: n.depth,
-        heightA: f.height,
-        heightB: n.height,
-      });
-      const refused = found.find((x) => x.rule.severity === 'refuse');
-      if (refused) {
-        reject('side', Math.abs(d), key, n.name, refused.message, refused.rule.namedWhenSnapped);
-        continue;
+  // A piece at an angle (ADR-205, G-170): its connectors are its turned faces.
+  if (me.item.angle)
+    cands.push(
+      ...angledCandidates(
+        me,
+        sx,
+        sz,
+        others,
+        conn.walls,
+        range,
+        mine,
+        (kind, d, key, target, why, named) => reject(kind, d, key, target, why, named),
+      ),
+    );
+  else
+    for (const f of faces) {
+      for (const n of conn.faces) {
+        if (n.axis !== f.axis || n.normal !== -f.normal || overlap(f, n) <= 0) continue;
+        const d = n.at - f.at;
+        if (Math.abs(d) > range) continue;
+        const key = `piece:${n.owner}`;
+        // The compatibility rules (ADR-100), in table order: the first failed `refuse` rule removes the candidate.
+        const found = evaluate('snap', {
+          a: me.item,
+          mountA: mine,
+          faceA: f.face,
+          b: itemById.get(n.owner)!,
+          mountB: n.mount,
+          faceB: n.face,
+          depthA: f.depth,
+          depthB: n.depth,
+          heightA: f.height,
+          heightB: n.height,
+        });
+        const refused = found.find((x) => x.rule.severity === 'refuse');
+        if (refused) {
+          reject('side', Math.abs(d), key, n.name, refused.message, refused.rule.namedWhenSnapped);
+          continue;
+        }
+        // Depth and height differences are allowed but named (ADR-070); failed `warning` rules are named too.
+        const notes = [
+          ...new Set([
+            ...(f.depth !== n.depth ? [t('depth {a} vs {b}', { a: f.depth, b: n.depth })] : []),
+            ...(f.height !== n.height
+              ? [t('height {a} vs {b}', { a: f.height, b: n.height })]
+              : []),
+            ...found.map((x) => x.message),
+          ]),
+        ];
+        const move = f.axis === 'x' ? { x: d } : { z: d };
+        cands.push({
+          kind: 'side',
+          move,
+          dist: Math.abs(d),
+          key,
+          label: t('Joins {name}', { name: n.name }),
+          notes,
+          face: n,
+          locked: hasAnyLock(itemById.get(n.owner)),
+        });
       }
-      // Depth and height differences are allowed but named (ADR-070); failed `warning` rules are named too.
-      const notes = [
-        ...new Set([
-          ...(f.depth !== n.depth ? [t('depth {a} vs {b}', { a: f.depth, b: n.depth })] : []),
-          ...(f.height !== n.height ? [t('height {a} vs {b}', { a: f.height, b: n.height })] : []),
-          ...found.map((x) => x.message),
-        ]),
-      ];
-      const move = f.axis === 'x' ? { x: d } : { z: d };
-      cands.push({
-        kind: 'side',
-        move,
-        dist: Math.abs(d),
-        key,
-        label: t('Joins {name}', { name: n.name }),
-        notes,
-        face: n,
-        locked: hasAnyLock(itemById.get(n.owner)),
-      });
-    }
-    for (const w of conn.walls) {
-      if (w.axis !== f.axis || w.normal !== -f.normal || overlap(f, w) <= 0) continue;
-      const d = w.at - f.at;
-      if (Math.abs(d) > range) continue;
-      const key = `wall:${String(w.wall).padStart(4, '0')}`;
-      const refused = evaluate('snap', { a: me.item, mountA: mine, faceA: f.face }).find(
-        (x) => x.rule.severity === 'refuse',
-      );
-      if (refused) {
-        reject('wall', Math.abs(d), key, wallName(w.wall), refused.message);
-        continue;
+      for (const w of conn.walls) {
+        if (w.axis !== f.axis || w.normal !== -f.normal || overlap(f, w) <= 0) continue;
+        const d = w.at - f.at;
+        if (Math.abs(d) > range) continue;
+        const key = `wall:${String(w.wall).padStart(4, '0')}`;
+        const refused = evaluate('snap', { a: me.item, mountA: mine, faceA: f.face }).find(
+          (x) => x.rule.severity === 'refuse',
+        );
+        if (refused) {
+          reject('wall', Math.abs(d), key, wallName(w.wall), refused.message);
+          continue;
+        }
+        const move = f.axis === 'x' ? { x: d } : { z: d };
+        cands.push({
+          kind: 'wall',
+          move,
+          dist: Math.abs(d),
+          key,
+          label: t('Against {wall}', { wall: wallName(w.wall) }),
+          notes: [],
+          walls: [w.wall],
+        });
       }
-      const move = f.axis === 'x' ? { x: d } : { z: d };
-      cands.push({
-        kind: 'wall',
-        move,
-        dist: Math.abs(d),
-        key,
-        label: t('Against {wall}', { wall: wallName(w.wall) }),
-        notes: [],
-        walls: [w.wall],
-      });
     }
-  }
   const wallById = new Map(conn.walls.map((w) => [w.wall, w]));
-  for (const c of conn.corners) {
+  for (const c of me.item.angle ? [] : conn.corners) {
     const [a, b] = c.walls.map((i) => wallById.get(i));
     if (!a || !b || a.axis === b.axis) continue;
     const fa = faces.find((f) => f.axis === a.axis && f.normal === -a.normal);
@@ -532,4 +550,156 @@ export function dropNewPiece(
     items: [...project.items.filter((i) => i.id !== item.id), item],
   };
   return snapDrag(withMe, [...others, moved], item.id, 0, 0, range) ?? free;
+}
+
+/** A turned face of a footprint (ADR-205): its ends, outward normal and name (front, back or side). */
+interface TurnedFace {
+  a: [number, number];
+  b: [number, number];
+  n: [number, number];
+  face: FaceConnector['face'];
+}
+
+/** The four faces of a turned footprint; `front` is the piece's front edge (x1 z1 x2 z2) at the same place. */
+function turnedFaces(pts: [number, number][], front: number[]): TurnedFace[] {
+  const cx = pts.reduce((s, p) => s + p[0], 0) / pts.length,
+    cz = pts.reduce((s, p) => s + p[1], 0) / pts.length;
+  const near = (p: [number, number], x: number, z: number) =>
+    Math.abs(p[0] - x) < 1e-6 && Math.abs(p[1] - z) < 1e-6;
+  const isFront = (a: [number, number], b: [number, number]) =>
+    (near(a, front[0], front[1]) && near(b, front[2], front[3])) ||
+    (near(b, front[0], front[1]) && near(a, front[2], front[3]));
+  const fi = pts.findIndex((p, i) => isFront(p, pts[(i + 1) % pts.length]));
+  return pts.map((a, i) => {
+    const b = pts[(i + 1) % pts.length];
+    const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+    let n: [number, number] = [(b[1] - a[1]) / len, -(b[0] - a[0]) / len];
+    const mx = (a[0] + b[0]) / 2 - cx,
+      mz = (a[1] + b[1]) / 2 - cz;
+    if (n[0] * mx + n[1] * mz < 0) n = [-n[0], -n[1]];
+    const face: FaceConnector['face'] =
+      i === fi ? 'front' : fi >= 0 && i === (fi + 2) % pts.length ? 'back' : 'side';
+    return { a, b, n, face };
+  });
+}
+
+/**
+ * The whole-mm move closest to `d` mm along the unit direction `n` that does not go past it (ADR-205): of the four
+ * whole-mm points around the exact move, the one reaching furthest without passing `d`, so the snapped piece never
+ * overlaps what it snaps to and the gap left is under 1 mm.
+ */
+export function roundAway(n: [number, number], d: number): { x: number; z: number } {
+  const ex = n[0] * d,
+    ez = n[1] * d;
+  let best: { x: number; z: number; reach: number } | null = null;
+  for (const x of [Math.floor(ex), Math.ceil(ex)])
+    for (const z of [Math.floor(ez), Math.ceil(ez)]) {
+      const reach = x * n[0] + z * n[1];
+      if (reach > d + 1e-9) continue;
+      if (!best || reach > best.reach) best = { x: x || 0, z: z || 0, reach };
+    }
+  return best ?? { x: Math.trunc(ex) || 0, z: Math.trunc(ez) || 0 };
+}
+
+/**
+ * Snap candidates of a piece at an angle (ADR-205, G-170): a turned face snaps to the parallel face of another piece
+ * turned to the same angle (a quarter turn apart counts), and against a wall the nearest corner of the turned outline
+ * snaps to it. Each move is whole mm, rounded away from what it snaps to (`roundAway`).
+ */
+function angledCandidates(
+  me: PlacedPiece,
+  sx: number,
+  sz: number,
+  others: PlacedPiece[],
+  walls: WallConnector[],
+  range: Mm,
+  mine: Mount,
+  reject: (
+    kind: Snapped['kind'],
+    dist: number,
+    key: string,
+    target: string,
+    why: string,
+    named?: boolean,
+  ) => void,
+): Cand[] {
+  const out: Cand[] = [];
+  const pts = me.footprint.map(([x, z]) => [x + sx, z + sz] as [number, number]);
+  const front = [me.front[0] + sx, me.front[1] + sz, me.front[2] + sx, me.front[3] + sz];
+  const mineFaces = turnedFaces(pts, front);
+  const depthOf = (pc: PlacedPiece) =>
+    pc.item.rotationY % 180 === 0 ? pc.outline.d : pc.outline.w;
+  const turn = rotationOf(me.item);
+  for (const o of others) {
+    if ((((rotationOf(o.item) - turn) % 90) + 90) % 90 !== 0) continue;
+    const theirs = turnedFaces(o.footprint, o.front);
+    for (const f of mineFaces)
+      for (const g of theirs) {
+        if (f.n[0] * g.n[0] + f.n[1] * g.n[1] > -0.9999) continue;
+        // Along the face: the two faces must share some length.
+        const tx = -f.n[1],
+          tz = f.n[0];
+        const along = (p: [number, number]) => p[0] * tx + p[1] * tz;
+        const lo = Math.max(Math.min(along(f.a), along(f.b)), Math.min(along(g.a), along(g.b)));
+        const hi = Math.min(Math.max(along(f.a), along(f.b)), Math.max(along(g.a), along(g.b)));
+        if (hi - lo <= 1e-6) continue;
+        const d = (g.a[0] - f.a[0]) * f.n[0] + (g.a[1] - f.a[1]) * f.n[1];
+        if (Math.abs(d) > range) continue;
+        const key = `piece:${o.item.id}`;
+        const found = evaluate('snap', {
+          a: me.item,
+          mountA: mine,
+          faceA: f.face,
+          b: o.item,
+          mountB: mountOf(o.item),
+          faceB: g.face,
+          depthA: depthOf(me),
+          depthB: depthOf(o),
+          heightA: me.bounds.h,
+          heightB: o.bounds.h,
+        });
+        const refused = found.find((x) => x.rule.severity === 'refuse');
+        if (refused) {
+          reject(
+            'side',
+            Math.abs(d),
+            key,
+            o.item.design.name,
+            refused.message,
+            refused.rule.namedWhenSnapped,
+          );
+          continue;
+        }
+        const m = roundAway(f.n, d);
+        out.push({
+          kind: 'side',
+          move: { x: m.x, z: m.z },
+          dist: Math.abs(d),
+          key,
+          label: t('Joins {name}', { name: o.item.design.name }),
+          notes: [...new Set(found.map((x) => x.message))],
+          locked: hasAnyLock(o.item),
+        });
+      }
+  }
+  for (const w of walls) {
+    // The corner of the turned outline nearest the wall goes onto it, never through it.
+    const i = w.axis === 'x' ? 0 : 1;
+    const corner = pts.reduce((a, b) => ((b[i] - a[i]) * w.normal < 0 ? b : a));
+    const other = corner[1 - i];
+    if (other < w.lo || other > w.hi) continue;
+    const exact = w.at - corner[i];
+    if (Math.abs(exact) > range) continue;
+    const m = w.normal > 0 ? Math.ceil(exact - 1e-9) : Math.floor(exact + 1e-9);
+    out.push({
+      kind: 'wall',
+      move: w.axis === 'x' ? { x: m || 0 } : { z: m || 0 },
+      dist: Math.abs(exact),
+      key: `wall:${String(w.wall).padStart(4, '0')}`,
+      label: t('Against {wall}', { wall: wallName(w.wall) }),
+      notes: [],
+      walls: [w.wall],
+    });
+  }
+  return out;
 }

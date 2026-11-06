@@ -2,6 +2,8 @@
 export const ru_catalog = {
   'Group by': 'Группировать по',
   'By room': 'По комнатам',
+  'A family can sit in several rooms, so the room counts add up to more than the total.':
+    'Одно семейство может относиться к нескольким комнатам, поэтому сумма по комнатам больше общего числа.',
   Room: 'Комната',
   'By type': 'По типу',
   Type: 'Тип',
@@ -44,8 +46,6 @@ export const ru_catalog = {
   'Import templates': 'Импортировать шаблоны',
   'Nothing matches “{query}”.': 'Ничего не найдено по запросу «{query}».',
   'Jump to a group': 'Перейти к группе',
-  "No brand products yet. The weekly catalog feed (Mondays, IKEA first) adds them once it can reach the manufacturers' sites.":
-    'Товаров брендов пока нет. Еженедельное обновление каталога (по понедельникам, сначала IKEA) добавит их, когда сможет обратиться к сайтам производителей.',
   Ready: 'Готово',
   'Needs construction': 'Нужна конструкция',
   'Safety-regulated': 'Требования безопасности',
@@ -220,4 +220,29 @@ export const ru_catalog = {
     'Не удалось сохранить шаблон в хранилище этого браузера.',
   'Templates saved on this device could not be read.':
     'Не удалось прочитать шаблоны, сохранённые на этом устройстве.',
+  'Also delete its {n|# kept version|# kept versions}?':
+    'Удалить и его {n|# сохранённую версию|# сохранённые версии|# сохранённых версий}?',
+  'Delete versions': 'Удалить версии',
+  'Keep them': 'Оставить их',
+  '“{name}” is already edited on this device. Keep yours or use the imported one?':
+    '«{name}» уже изменён на этом устройстве. Оставить ваш вариант или взять импортированный?',
+  'Use the imported one': 'Взять импортированный',
+  ', {n} kept as they were': ', {n} оставлено как было',
+  'Bedroom: bed, two nightstands and a wardrobe': 'Спальня: кровать, две тумбочки и шкаф',
+  'Home office: desk and bookcase': 'Домашний кабинет: стол и книжный шкаф',
+  'Kitchen and desk': 'Кухня и стол',
+  'Room preset': 'Готовая комната',
+  'A ready room with its pieces against the walls: a bedroom, a home office, a kitchen and desk.':
+    'Готовая комната с изделиями у стен: спальня, домашний кабинет, кухня и стол.',
+  'Room presets': 'Готовые комнаты',
+  'The decor list could not be read on this device.':
+    'Не удалось прочитать список декоров на этом устройстве.',
+  'No brands yet. Import your decor list under Boards to see its manufacturers here.':
+    'Брендов пока нет. Импортируйте список декоров в разделе «Плиты», чтобы увидеть здесь его производителей.',
+  'Brands from your decor list': 'Бренды из вашего списка декоров',
+  '{brand} ({n})': '{brand} ({n})',
+  '{brand} decors': 'Декоры {brand}',
+  'Saved pieces with a {brand} board': 'Сохранённые изделия с плитой {brand}',
+  'No saved piece has a board of this maker yet.':
+    'Пока ни одно сохранённое изделие не имеет плиты этого производителя.',
 } satisfies Record<string, string>;

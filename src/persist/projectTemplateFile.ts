@@ -7,12 +7,16 @@ import { newId } from '../core/design';
 import { validateProjectTemplate, type ProjectTemplate } from '../core/projectTemplate';
 import { db } from './db';
 import { takePictures, withPictures } from './images';
+import { takeModels, withModels } from './models';
 import { t } from '../core/i18n';
 
-/** The template as a file: the template plus `pictures` (when any are on this device). */
-export const projectTemplateFile = (t: ProjectTemplate) =>
+/**
+ * The template as a file: the template plus `pictures` and, for its 3D models (ADR-208), `models3d` (when they are
+ * on this device).
+ */
+export const projectTemplateFile = async (t: ProjectTemplate) =>
   withPictures(
-    t,
+    await withModels(t),
     t.items.map((i) => i.design),
   );
 
@@ -37,7 +41,10 @@ export async function readProjectTemplateFile(
         problems: errs.slice(0, 3).join('; '),
       }),
     };
-  const { data, problems } = await takePictures(parsed, database);
+  const pics = await takePictures(parsed, database);
+  // Model files go to this device under new ids; the template's models point at them (ADR-208).
+  const { data, problems: modelProblems } = await takeModels(pics.data, database);
+  const problems = [...pics.problems, ...modelProblems];
   return {
     ok: true,
     template: {

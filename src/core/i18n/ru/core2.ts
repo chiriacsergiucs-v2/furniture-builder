@@ -126,8 +126,10 @@ export const ru_core2 = {
     'Стена ({w} мм) уже мин. ширины изделия, {min} мм.',
   'These settings need more than {max} pieces; raise the min or max piece width, or lower the counts.':
     'Для этих настроек нужно больше {max} изделий; увеличьте мин. или макс. ширину изделия либо уменьшите количества.',
-  'With {n} equal fronts each front is about {each} mm; no carcass of 1 or 2 fronts is between {min} and {max} mm with these settings.':
-    'При {n} одинаковых фасадах каждый около {each} мм; при этих настройках нет корпуса на 1 или 2 фасада шириной от {min} до {max} мм.',
+  'With {n} equal fronts each front is about {each} mm; no carcass of 1 to 4 fronts is between {min} and {max} mm with these settings.':
+    'При {n} одинаковых фасадах каждый около {each} мм; при этих настройках нет корпуса на 1–4 фасада шириной от {min} до {max} мм.',
+  'More than {max} ways fill this wall; only the first {max} were tried. Narrow the width range or set the counts to see the rest.':
+    'Эту стену можно заполнить более чем {max} способами; проверены только первые {max}. Сузьте диапазон ширины или задайте количества, чтобы увидеть остальные.',
   'Every mix that fits has a problem in a piece (check the depth and heights).':
     'В каждом подходящем варианте у какого-то изделия есть проблема (проверьте глубину и высоты).',
   'No mix fills {w} mm with pieces {min}–{max} mm wide and these Refine settings.':
@@ -269,10 +271,6 @@ export const ru_core2 = {
   '{name} already sits on the floor or on a piece; the selected pieces move down together.':
     '«{name}» уже стоит на полу или на изделии; выбранные изделия опускаются вместе.',
   'Nothing to mirror in this piece': 'В этом изделии нечего отражать',
-  'The lounger backrest is always at the left end; it cannot be mirrored yet':
-    'Спинка шезлонга всегда у левого края; отразить её пока нельзя',
-  'The daybed side panel is always on the left; it cannot be mirrored yet':
-    'Боковая панель кушетки всегда слева; отразить её пока нельзя',
   'Rotation must be whole degrees from 0 to 359.':
     'Поворот должен быть целым числом градусов от 0 до 359.',
   'Mirror the run refused: {why}': 'Отражение линии отклонено: {why}',
@@ -305,6 +303,12 @@ export const ru_core2 = {
   'Move {name} {mm} mm {side}': 'Сдвинуть «{name}» на {mm} мм {side}',
   'Hang {name} {mm} mm higher': 'Повесить «{name}» на {mm} мм выше',
   'Hang {name} {mm} mm lower': 'Повесить «{name}» на {mm} мм ниже',
+  // ADR-204: match-the-neighbour repairs.
+  'Make {name} {mm} mm deep like {other}': 'Сделать «{name}» глубиной {mm} мм, как «{other}»',
+  'Make {name} {mm} mm high like {other}': 'Сделать «{name}» высотой {mm} мм, как «{other}»',
+  'The size follows a project variable; change the variable instead.':
+    'Размер следует переменной проекта; измените переменную.',
+
   'Move {name} {mm} mm {side} and add a {mm} mm filler':
     'Сдвинуть «{name}» на {mm} мм {side} и добавить доборную планку {mm} мм',
   '{mm} mm {side}': 'на {mm} мм {side}',
@@ -397,6 +401,10 @@ export const ru_core2 = {
   'Row {row}: {maker} {code} {mm} mm is listed twice; the first is kept.':
     'Строка {row}: {maker} {code} {mm} мм указан дважды; оставлен первый.',
   'The file has a header row but no decors.': 'В файле есть строка заголовков, но нет декоров.',
+  'thickness "{v}" is not mm from 0.1 to 10 with one decimal':
+    'толщина «{v}» — не мм от 0,1 до 10 с одним знаком после запятой',
+  'width "{v}" is not whole mm from 1 to {max}': 'ширина «{v}» — не целое число мм от 1 до {max}',
+  'The file has a header row but no bands.': 'В файле есть строка заголовков, но нет кромок.',
   '{name} stands on the floor; Top and Bottom move wall units and stacked pieces.':
     '«{name}» стоит на полу; «Верх» и «Низ» двигают навесные модули и изделия, стоящие на других.',
   '{name} would go below the floor.': '«{name}» ушло бы ниже пола.',
@@ -407,8 +415,6 @@ export const ru_core2 = {
     '«{names}» в одной группе с «{ref}»; разгруппируйте, чтобы выровнять его.',
   'Distribute needs three or more pieces or groups; the pieces of a group move together, so ungroup them to space them.':
     'Для распределения нужно три или больше изделий или групп; изделия группы двигаются вместе, поэтому разгруппируйте их, чтобы расставить.',
-  'Distribute works on pieces in one row along the wall; select the base units or the wall units, not both.':
-    'Распределение работает с изделиями в одном ряду вдоль стены; выберите нижние модули или навесные, но не те и другие.',
   'Not moved: {list}': 'Не сдвинуто: {list}',
   'Shelf span {span} mm is long for {t} mm {name} and may sag (typical limit {limit} mm — confirm for your board and load).':
     'Пролёт полки {span} мм велик для «{name}» {t} мм, полка может прогнуться (типичный предел {limit} мм — уточните для своей плиты и нагрузки).',
@@ -671,4 +677,17 @@ export const ru_core2 = {
   'touching side by side': 'стоят вплотную рядом',
   'touching side by side under one run worktop': 'стоят вплотную рядом под одной столешницей линии',
   'both pieces come from catalog families': 'оба изделия из семейств каталога',
+  // ADR-207: document validation.
+  'Assembly steps need schemaVersion 9': 'Шаги сборки требуют schemaVersion 9',
+  'Invalid assembly steps': 'Недопустимые шаги сборки',
+  'Backrest and side panel ends need schemaVersion 9':
+    'Сторона спинки и боковой панели требует schemaVersion 9',
+  'Invalid backrest or side panel end': 'Недопустимая сторона спинки или боковой панели',
+  'Connection kinds need project schemaVersion {v}':
+    'Виды соединений требуют schemaVersion проекта {v}',
+  'Catalog origin rooms need schemaVersion 9':
+    'Комнаты происхождения из каталога требуют schemaVersion 9',
+  'Invalid catalog origin rooms': 'Неверные комнаты происхождения из каталога',
+  'Piece variables need schemaVersion 9': 'Переменные изделия требуют schemaVersion 9',
+  'Invalid piece bindings': 'Неверные привязки изделия',
 } satisfies Record<string, string>;

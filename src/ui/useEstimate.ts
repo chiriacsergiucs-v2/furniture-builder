@@ -9,6 +9,7 @@ import {
   estimate,
   type Estimate,
   type PriceEntry,
+  runUnitFits,
   type SellerLookup,
 } from '../core/prices';
 import { sinkList } from '../core/project';
@@ -37,6 +38,9 @@ export function useEstimate(): EstimateView {
   const runParts = useDesign((s) =>
     s.project && !s.editingItemId ? s.project.runParts : undefined,
   );
+  const runProducts = useDesign((s) =>
+    s.project && !s.editingItemId ? s.project.runProducts : undefined,
+  );
   const shownProject = useDesign((s) => (s.project && !s.editingItemId ? s.project : undefined));
   const sinks = useMemo(() => (shownProject ? sinkList(shownProject) : []), [shownProject]);
   const n = useNesting(true);
@@ -53,6 +57,28 @@ export function useEstimate(): EstimateView {
         : null,
     [n],
   );
+  // Seller prices (ADR-161): the bundled catalogs load only when a line links a seller product (a run part's too).
+  const cats = useSellerCatalogs(
+    !!runProducts ||
+      Object.keys(view.hardwareProducts ?? {}).length > 0 ||
+      !!view.sellerItems?.length ||
+      view.rows.some((r) => r.band?.product) ||
+      [...view.materials, ...(runParts ?? []).map((r) => r.material)].some(
+        (m) => m.product || m.band?.product || m.frontBand?.product,
+      ),
+  );
+  const index = useMemo(() => (cats && cats !== 'error' ? productIndex(cats) : null), [cats]);
+  // Run parts whose product's unit fits are priced by it and leave their board's line (ADR-206).
+  const runPriced = useMemo(() => {
+    const out = new Set<string>();
+    if (!index || !runProducts) return out;
+    const price = sellerPriceLookup(index);
+    for (const [k, v] of Object.entries(runProducts)) {
+      const sp = price(v);
+      if (sp && runUnitFits(sp.unit)) out.add(k);
+    }
+    return out;
+  }, [index, runProducts]);
   const lines = useMemo(
     () =>
       shoppingList({
@@ -66,14 +92,14 @@ export function useEstimate(): EstimateView {
         fasteners: { counts: fastenerCounts, choices: fastenerChoices },
         hardwareProducts: view.hardwareProducts,
         sellerItems: view.sellerItems,
+        runProducts,
+        runPriced,
       }),
-    [view, sheets, runParts, sinks, fastenerCounts, fastenerChoices],
+    [view, sheets, runParts, sinks, fastenerCounts, fastenerChoices, runProducts, runPriced],
   );
-  // Seller prices (ADR-161): the bundled catalogs load only when a line links a seller product.
-  const cats = useSellerCatalogs(lines.some((l) => l.product));
   const seller = useMemo<SellerLookup | undefined>(
-    () => (cats && cats !== 'error' ? sellerPriceLookup(productIndex(cats)) : undefined),
-    [cats],
+    () => (index ? sellerPriceLookup(index) : undefined),
+    [index],
   );
   const currency = useMemo(
     () => prices.find((p) => p.id === CURRENCY_ID)?.text ?? DEFAULT_CURRENCY,

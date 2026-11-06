@@ -129,4 +129,23 @@ export const ru_variables = {
   '{n} mm is outside {min}–{max} mm.': '{n} мм вне диапазона {min}–{max} мм.',
   '{name}, {field}: {problem} The field keeps {n} mm.':
     '{name}, {field}: {problem} Поле сохраняет {n} мм.',
+  // formula functions (ADR-206)
+  '“{name}” is the name of a formula function; pick another name.':
+    '«{name}» — имя функции формулы; выберите другое имя.',
+  '“{fn}” takes exactly {n|# value|# values}.':
+    '«{fn}» принимает ровно {n|# значение|# значения|# значений}.',
+  '“{fn}” takes at least {n|# value|# values}.':
+    '«{fn}» принимает не меньше {n|# значения|# значений|# значений}.',
+  '“{fn}” takes at most {n|# value|# values}.':
+    '«{fn}» принимает не больше {n|# значения|# значений|# значений}.',
+  'Formula functions': 'Функции в формулах',
+  'min, max, floor, ceil and round in variables and bindings; values in a call are separated by a comma or a semicolon.':
+    'min, max, floor, ceil и round в переменных и привязках; значения в вызове разделяются запятой или точкой с запятой.',
+  '{problem} The field keeps {n} mm.': '{problem} Поле сохраняет {n} мм.',
+  'No variables yet. Add them under Variables in this piece’s settings.':
+    'Переменных пока нет. Добавьте их в разделе «Переменные» в настройках изделия.',
+  '{n|# size|# sizes}': '{n|# размер|# размера|# размеров}',
+  'used by {n|# size|# sizes}': 'используют {n|# размер|# размера|# размеров}',
+  'Named numbers or formulas of this piece. Bind its width, height, depth or underside height to one with the ƒ button beside the field; they travel with the piece into projects and templates.':
+    'Именованные числа или формулы этого изделия. Привяжите к ним ширину, высоту, глубину или высоту низа кнопкой ƒ рядом с полем; они переходят вместе с изделием в проекты и шаблоны.',
 } satisfies Record<string, string>;

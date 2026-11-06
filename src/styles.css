@@ -715,6 +715,14 @@ select {
   min-height: calc(var(--control-h-sm) - 2 * var(--s-1) - 2px);
   padding: 0 var(--s-3);
 }
+/* Five options (ADR-202): each label stays whole on one line; the control wraps to a second row when it runs out of
+   room (390 px) and fits one row when there is room (1280 px). */
+.segmented.wrap button {
+  flex: 1 0 auto;
+  min-width: max-content;
+  overflow: visible;
+  text-overflow: clip;
+}
 
 /* Counter: − n + */
 .counter {
@@ -1817,6 +1825,18 @@ td.note {
   color: var(--ink-3);
   padding: 0 var(--s-1);
 }
+/* Up one level on phones (ADR-211): a plain button, not a path link. */
+.crumbs button.up-level {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  margin-right: var(--s-2);
+  padding: var(--s-1) var(--s-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  color: var(--ink);
+  text-decoration: none;
+}
 .rail {
   min-width: 0;
   margin: 0 calc(-1 * var(--s-2));
@@ -2382,6 +2402,13 @@ td.note {
   margin-left: auto;
   white-space: nowrap;
 }
+/* The user's own step order and names (ADR-207): small controls under the step's title. */
+.assembly .step-edit {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1);
+  margin-top: var(--s-1);
+}
 .assembly .step-n {
   width: 24px;
   height: 24px;
@@ -2652,6 +2679,38 @@ table.buy {
 .mat-actions {
   justify-items: start;
 }
+/* The user's band list beside the board's picture (ADR-212). */
+.band-list-pick {
+  display: grid;
+  gap: var(--s-2);
+  min-width: 0;
+}
+.band-matching {
+  display: grid;
+  gap: var(--s-1);
+  min-width: 0;
+  flex: 1 1 200px;
+}
+.band-matches {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s-1);
+}
+.band-matches .btn {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: start;
+}
+.band-matches .swatch {
+  flex: none;
+  width: 12px;
+  height: 18px;
+  border-radius: 3px;
+  border: 1px solid var(--line);
+}
 .decor-list {
   display: grid;
   gap: var(--s-2);
@@ -2802,6 +2861,12 @@ table.buy {
   }
   .materials li {
     grid-template-columns: 36px 1fr;
+  }
+  /* Colour and name share row one; every other field takes the whole row, so none lands in the 36 px column
+     (G-003, ADR-202). */
+  .materials li > :not(input[type='color']):not(.mat-name) {
+    grid-column: 1 / -1;
+    min-width: 0;
   }
   .template-grid {
     grid-template-columns: 1fr;
@@ -3769,6 +3834,23 @@ table.buy {
   }
   .pr-box {
     margin-bottom: 1mm;
+  }
+  /* One 3D picture per assembly step, and the client sheet's picture (ADR-206). */
+  .pr-step-pic {
+    display: block;
+    width: 45mm;
+    max-height: 34mm;
+    object-fit: contain;
+    margin-top: 1mm;
+  }
+  .pr-client-pic img {
+    display: block;
+    width: 100%;
+    max-height: 120mm;
+    object-fit: contain;
+  }
+  .pr-client-total h2 {
+    border-bottom: 0;
   }
   .pr-table {
     width: 100%;
@@ -4821,11 +4903,14 @@ button.tile:hover {
   align-items: center;
   gap: var(--s-2);
 }
-/* Five "Add …" buttons (ADR-072) wrap instead of widening the side panel on a phone. */
-.room .split-actions {
+/* Five "Add …" buttons (ADR-072) wrap instead of widening the side panel on a phone; also in Fill the room's Room
+   step (ADR-204). */
+.room .split-actions,
+.room-fill .split-actions {
   flex-wrap: wrap;
 }
-.room .room-feature {
+.room .room-feature,
+.room-fill .room-feature {
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: var(--s-2);
@@ -6003,6 +6088,39 @@ p > .info-tip {
     display: none;
   }
 }
+@media (max-width: 760px) {
+  /* The full stop reaches the top bar and overlays the stage (ADR-211, G-027). */
+  .work.mode-compose.sheet-full .side {
+    height: calc(100dvh - var(--bar-h, 50px) - var(--actions-h, 64px));
+    max-height: calc(100dvh - var(--bar-h, 50px) - var(--actions-h, 64px));
+    z-index: 30;
+  }
+  .work.mode-compose .side.sheet-dragging .side-body {
+    display: block;
+  }
+  /* The grab handle on the peek row follows the finger (ADR-211). */
+  .work.mode-compose .sheet-handle {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    min-height: 56px;
+    touch-action: none;
+    cursor: grab;
+    background: var(--surface);
+  }
+  .work.mode-compose .sheet-handle:focus-visible {
+    outline: 2px solid var(--link);
+    outline-offset: -2px;
+  }
+  .work.mode-compose .sheet-grip {
+    width: 6px;
+    height: 28px;
+    border-radius: 3px;
+    background: var(--line);
+  }
+}
 /* Touch screens: every control is at least 44 px in both directions. */
 @media (pointer: coarse) {
   .btn,
@@ -6406,6 +6524,12 @@ p > .info-tip {
   flex-wrap: wrap;
   gap: var(--s-2);
   align-items: center;
+}
+/* Copy decisions, Export marks and Import marks (ADR-212) wrap at phone width. */
+.gaps-copy {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
 }
 .gaps-toolbar .search {
   flex: 1 1 240px;
@@ -7201,4 +7325,213 @@ ul.plain {
 .set-tag {
   fill: var(--ink-2);
   font-weight: 600;
+}
+
+/* Room surfaces on the plan (ADR-208): the plan picture under everything, floor and wall bands under the pieces. */
+.plan-picture-layer,
+.room-floor-finish,
+.wall-bands {
+  pointer-events: none;
+}
+.plan .room-floor.traced {
+  fill-opacity: 0.3;
+}
+.plan .scale-tap {
+  fill: var(--accent);
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+.plan-picture-section {
+  display: grid;
+  gap: var(--s-1);
+  margin-top: var(--s-2);
+  min-width: 0;
+}
+.wall-behind {
+  pointer-events: none;
+}
+/* The 3D toolbar's ⋯ menu (ADR-208): View in AR and Export for AR. */
+.three-more {
+  position: relative;
+}
+.three-more > summary {
+  list-style: none;
+  cursor: pointer;
+  min-width: 32px;
+  min-height: 32px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  font-weight: 600;
+}
+.three-more > summary:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+}
+.three-more-panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 3;
+  display: grid;
+  gap: var(--s-1);
+  padding: var(--s-2);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  max-width: calc(100vw - 32px);
+}
+/* The AR overlay (dom-overlay): the hint at the top, Turn and Exit at the bottom. */
+.ar-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: var(--s-3);
+  pointer-events: none;
+}
+.ar-overlay[hidden] {
+  display: none;
+}
+.ar-overlay .ar-hint {
+  align-self: center;
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--ink);
+}
+.ar-overlay .ar-hint:empty {
+  visibility: hidden;
+}
+.ar-overlay .ar-actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--s-2);
+  pointer-events: auto;
+}
+
+/* ADR-205: sink and hob cut-outs and worktop corner joints on the plan. */
+.plan .kitchen-marks {
+  pointer-events: none;
+}
+.plan .kitchen-marks .cutout rect {
+  fill: none;
+  stroke: var(--ink-2);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 4;
+  vector-effect: non-scaling-stroke;
+}
+.plan .kitchen-marks .cutout text {
+  fill: var(--ink-2);
+  font-family: var(--font);
+}
+.plan .kitchen-marks .worktop-joint {
+  stroke: var(--ink);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+/* ADR-205: the arc a piece's top sweeps when it is tipped up. */
+.plan .zone .tip-arc {
+  fill: none;
+  stroke: var(--ink-2);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+  vector-effect: non-scaling-stroke;
+}
+/* ADR-205: where a wall unit dragged up or down in the front view would hang. */
+.plan .lift-ghost {
+  fill: var(--primary-soft);
+  fill-opacity: 0.5;
+  stroke: var(--primary);
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+.worktop-corners .run-pick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+/* The new-piece wizard's session draft (ADR-211): Continue or Start over on the Type step. */
+.wz-draft-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+/* A group whose board or construction lock is on (ADR-211): the controls are off, the hint says why. */
+fieldset.group-locked {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0.6;
+}
+/* ADR-209: the moulding profile editor, cut-out positions, drilling positions and the repair label in 3D. */
+.profile-editor .profile-grid {
+  display: block;
+  width: 100%;
+  max-width: 240px;
+  aspect-ratio: 1;
+  margin-top: var(--s-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface, transparent);
+  touch-action: none;
+  cursor: crosshair;
+}
+.profile-editor .profile-grid .grid {
+  stroke: var(--line-2);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.profile-editor .profile-grid .shape {
+  fill: var(--primary-soft);
+  stroke: var(--primary);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+.profile-editor .profile-grid .shape.bad {
+  fill: var(--error-soft);
+  stroke: var(--error);
+}
+.profile-editor .profile-grid .pt {
+  fill: var(--ink-2);
+}
+.cutout-place {
+  flex-basis: 100%;
+}
+.fixing-sketch {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-top: var(--s-1);
+}
+.fixing-sketch svg {
+  width: 96px;
+  max-height: 48px;
+  flex: none;
+}
+.fixing-sketch .outline {
+  fill: none;
+  stroke: var(--ink-2);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.fixing-sketch .dot {
+  fill: var(--primary);
+}
+.repair-preview-3d {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--error-soft);
+  color: var(--error);
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
 }

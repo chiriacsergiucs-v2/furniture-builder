@@ -47,6 +47,10 @@ const PATHS = {
   'desk-pedestal': 'M3 7h18M4 7v12M20 7v12M13 7v12M13 11h7M13 15h7',
   'desk-gables': 'M3 7h18M5 7v12M19 7v12',
   project: 'M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z',
+  /* Fill a wall: a wall line with a row of cabinets on it (ADR-211) */
+  wall: 'M2 4h20M4 8h7v12H4zM13 8h7v12h-7zM2 20h20',
+  /* Fill the room: an L-shaped room outline seen from above (ADR-211) */
+  'room-plan': 'M3 3h18v18H3zM3 7h4v14M7 7h14M17 7v4',
   table: 'M3 8h18M5 8v12M19 8v12M5 12h14',
   bed: 'M3 18V7M21 18v-5H3M3 13V9h7v4M3 18h18',
   chair: 'M7 3v18M7 12h10v9M7 12V3M17 12v-2',

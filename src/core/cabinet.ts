@@ -107,11 +107,29 @@ export function hingeCount(doorHeight: Mm): number {
   return 5;
 }
 
-export function hingeBand(doorHeight: Mm): string {
-  if (doorHeight <= 900) return 'doors up to 900 mm';
-  if (doorHeight <= 1600) return 'doors 901–1600 mm';
-  if (doorHeight <= 2000) return 'doors 1601–2000 mm';
-  return 'doors over 2000 mm';
+/**
+ * The hinge note of a door, one whole sentence per door-height band (ADR-202), so each translates as a whole through
+ * `tr()` (its entry in `ru/data-parts.ts`). The bands follow `hingeCount`.
+ */
+export function hingeNote(doorHeight: Mm): string {
+  if (doorHeight <= 900)
+    return '2 per door, doors up to 900 mm (typical — confirm with the hinge datasheet)';
+  if (doorHeight <= 1600)
+    return '3 per door, doors 901–1600 mm (typical — confirm with the hinge datasheet)';
+  if (doorHeight <= 2000)
+    return '4 per door, doors 1601–2000 mm (typical — confirm with the hinge datasheet)';
+  return '5 per door, doors over 2000 mm (typical — confirm with the hinge datasheet)';
+}
+
+/** The diagonal corner door's hinge note, one whole sentence per door-height band (ADR-202). */
+export function cornerHingeNote(doorHeight: Mm): string {
+  if (doorHeight <= 900)
+    return "2 per door (typical for doors up to 900 mm); choose the hinge maker's 45° corner hinge or angled plate";
+  if (doorHeight <= 1600)
+    return "3 per door (typical for doors 901–1600 mm); choose the hinge maker's 45° corner hinge or angled plate";
+  if (doorHeight <= 2000)
+    return "4 per door (typical for doors 1601–2000 mm); choose the hinge maker's 45° corner hinge or angled plate";
+  return "5 per door (typical for doors over 2000 mm); choose the hinge maker's 45° corner hinge or angled plate";
 }
 
 export function buildCabinet(
@@ -241,6 +259,24 @@ export function buildCabinet(
     };
   };
   const hw = (item: HardwareItem) => out.hardware.push({ ...item, nodeId: mapNode(item.nodeId) });
+  /**
+   * The upright panels (sides, dividers) at an opening's left or right edge, already built: what a hinge's plates or a
+   * runner's carcass half fix to (ADR-207). Empty when that panel is not part of this piece (a shared side).
+   */
+  const edgePanels = (op: Box, end: 'left' | 'right'): string[] => {
+    const x = (end === 'left' ? op.x : op.x + op.w) + o.x;
+    const y0 = op.y + o.y,
+      y1 = y0 + op.h;
+    return out.panels
+      .filter(
+        (q) =>
+          q.thicknessAxis === 'x' &&
+          (q.role === 'side' || q.role === 'divider') &&
+          (end === 'left' ? q.box.x + q.box.w === x : q.box.x === x) &&
+          Math.min(q.box.y + q.box.h, y1) > Math.max(q.box.y, y0),
+      )
+      .map((q) => q.id);
+  };
 
   const { width: W, height: H, depth: D } = p;
   const wall = p.mount === 'wall';
@@ -649,12 +685,17 @@ export function buildCabinet(
         x += w + g;
       });
       const dh = f.y1 - f.y0;
+      // The plates go on the side or divider at the hinged edge (both edges for a pair), ADR-207.
+      const hinged: ('left' | 'right')[] =
+        n === 2 ? ['left', 'right'] : [s.front.hinge === 'right' ? 'right' : 'left'];
+      const plateOn = hinged.flatMap((end) => edgePanels(op, end));
       hw({
+        ...(plateOn.length ? { panelIds: plateOn } : {}),
         nodeId: s.id,
         kind: 'hinge',
         label: 'Hinge, 35 mm cup, soft-close, clip-on',
         quantity: hingeCount(dh) * n,
-        note: `${hingeCount(dh)} per door, ${hingeBand(dh)} (typical — confirm with the hinge datasheet)`,
+        note: hingeNote(dh),
       });
       handleHw(s.id, s.handle, n);
     }
@@ -1103,8 +1144,11 @@ export function buildCabinet(
           slotTop = slotBottom;
         }
         const boxes = fixed ? n - 1 : n;
+        // The carcass halves go on the two panels either side of the opening (ADR-207).
+        const runnerOn = [...edgePanels(ip, 'left'), ...edgePanels(ip, 'right')];
         if (boxes)
           hw({
+            ...(runnerOn.length ? { panelIds: runnerOn } : {}),
             nodeId: s.id,
             kind: 'drawer-runner-pair',
             label: internal
@@ -1138,7 +1182,7 @@ export function buildCabinet(
           return;
         }
         const along = s.axis === 'x' ? ip.w : ip.h;
-        const parts = distribute(along - (k - 1) * t, s.sizes);
+        const parts = distribute(along - (k - 1) * t, s.sizes, !!s.remainderFirst);
         if (!parts || parts.some((v) => v <= 0)) {
           err('split-fit', tx('Fixed sizes do not fit in {along} mm.', { along }), s.id);
           return;
@@ -1149,10 +1193,16 @@ export function buildCabinet(
           if (asked !== room)
             warn(
               'split-resized',
-              tx(
-                'Fixed sizes add up to {asked} mm but there is {room} mm; the last part was adjusted to {last} mm. Make one part "Share" to absorb the difference.',
-                { asked, room, last: parts[k - 1] },
-              ),
+              // A mirrored split adjusts its first part (ADR-205).
+              s.remainderFirst
+                ? tx(
+                    'Fixed sizes add up to {asked} mm but there is {room} mm; the first part was adjusted to {first} mm. Make one part "Share" to absorb the difference.',
+                    { asked, room, first: parts[0] },
+                  )
+                : tx(
+                    'Fixed sizes add up to {asked} mm but there is {room} mm; the last part was adjusted to {last} mm. Make one part "Share" to absorb the difference.',
+                    { asked, room, last: parts[k - 1] },
+                  ),
               s.id,
             );
         }
@@ -1231,7 +1281,8 @@ export function buildCabinet(
         role: 'side',
         label: 'Shared side',
         materialId: body.id,
-        box: box(W, sideY, z0, t, sideH, Dc),
+        // At the carcass's origin like its own panels (a blind corner's usable section, ADR-207).
+        box: box(W + o.x, sideY + o.y, z0 + o.z, t, sideH, Dc),
         thicknessAxis: 'x',
         grainAxis: 'y',
         banded: [],

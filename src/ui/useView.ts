@@ -15,6 +15,9 @@ import type {
   SellerItem,
 } from '../core/types';
 import { useDesign } from '../store/designStore';
+import { buildModel } from '../core/build';
+import { fixingNote, fixingPositions, type FixingPart } from '../core/fasteners';
+import { useFastenerChoices } from './Fasteners';
 
 /** What the result panels, 3D and printout show: the piece being edited, or the whole open project. */
 export interface ViewData {
@@ -32,6 +35,22 @@ export interface ViewData {
   /** Seller products chosen for hardware lines and added items (ADR-161); a project gathers its pieces'. */
   hardwareProducts?: Record<string, HardwareProduct>;
   sellerItems?: SellerItem[];
+  /**
+   * Drilling positions of the carcass joints by panel id (ADR-209), only once the user typed the edge distance of their
+   * carcass-joint fastener; guidance, never saved. `tooShort`: joints shorter than twice that distance (none drawn).
+   */
+  fixings?: { parts: Map<string, FixingPart>; tooShort: number };
+}
+
+/** The rows with each part's drilling positions in its notes (ADR-209); the same rows when there are none. */
+function withFixingNotes(rows: CutRow[], parts: Map<string, FixingPart>): CutRow[] {
+  if (!parts.size) return rows;
+  return rows.map((r) => {
+    const notes = [
+      ...new Set(r.panelIds.flatMap((id) => (parts.has(id) ? [fixingNote(parts.get(id)!)] : []))),
+    ];
+    return notes.length ? { ...r, drilling: [r.drilling, ...notes].filter(Boolean).join('; ') } : r;
+  });
 }
 
 /**
@@ -47,9 +66,19 @@ export function useView(): ViewData {
   const project = useDesign((s) => s.project);
   const projectModel = useDesign((s) => s.projectModel);
   const editing = useDesign((s) => s.editingItemId);
+  // The user's carcass-joint fastener (ADR-209): drilling positions only once its edge distance is typed.
+  const choices = useFastenerChoices();
+  const carcass = choices.find((c) => c.joint === 'carcass-joint');
   const own = useMemo((): ViewData => {
     if (project && projectModel && !editing) {
-      const rows = projectCutlist(project);
+      const fixings = { parts: new Map<string, FixingPart>(), tooShort: 0 };
+      if (carcass?.edge !== undefined)
+        for (const item of project.items) {
+          const f = fixingPositions(buildModel(item.design), carcass, `${item.id}:`);
+          for (const [k, v] of f.parts) fixings.parts.set(k, v);
+          fixings.tooShort += f.tooShort;
+        }
+      const rows = withFixingNotes(projectCutlist(project), fixings.parts);
       return {
         mode: 'project',
         title: project.name,
@@ -62,15 +91,18 @@ export function useView(): ViewData {
         kerf: project.cutting?.kerf ?? 4,
         jobs: () => projectNestingJobs(project, rows, projectModel.materials),
         ...projectSellerChoices(project),
+        fixings,
       };
     }
+    const fixings = fixingPositions(model, carcass);
     return {
       mode: 'design',
       title: design.name,
       model,
       pieces: [model.panels],
       materials: design.materials,
-      rows: cutlist(model, design.materials),
+      rows: withFixingNotes(cutlist(model, design.materials), fixings.parts),
+      fixings,
       hardware: hardwareSummary(model),
       diagnostics: model.diagnostics,
       kerf: kerfOf(design),
@@ -78,6 +110,6 @@ export function useView(): ViewData {
       hardwareProducts: design.hardwareProducts,
       sellerItems: design.sellerItems,
     };
-  }, [design, model, project, projectModel, editing]);
+  }, [design, model, project, projectModel, editing, carcass]);
   return override ?? own;
 }
