@@ -150,7 +150,7 @@ describe('common top or bottom (ADR-165)', () => {
 
   it('a version-16 project with common panels is invalid; 17 loads; pruneCommon drops a list left with one', () => {
     const p = linked(pair());
-    expect(PROJECT_SCHEMA).toBe(20);
+    expect(PROJECT_SCHEMA).toBe(21);
     expect(validateProject(JSON.parse(JSON.stringify(p)))).toEqual([]);
     expect(validateProject({ ...p, schemaVersion: 16 })).toContain(
       'Common tops and bottoms need project schemaVersion 17',

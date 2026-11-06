@@ -851,6 +851,7 @@ export const FEATURES: FeatureDomain[] = [
             detail:
               'The 3D scene with its boards and their pictures as one binary glTF file, for Blender or another renderer; made on this device.',
             adrs: ['ADR-206'],
+            checked: '2026-11-06',
           },
           {
             name: 'WebGPU rendering',
@@ -1020,6 +1021,7 @@ export const FEATURES: FeatureDomain[] = [
             detail:
               'One A4 page to sell from: a picture, the pieces with their sizes and the estimated price, with the lines that have no price counted.',
             adrs: ['ADR-206'],
+            checked: '2026-11-06',
           },
         ],
       },
@@ -1105,6 +1107,7 @@ export const FEATURES: FeatureDomain[] = [
         detail:
           'min, max, floor, ceil and round in variables and bindings; values in a call are separated by a comma or a semicolon.',
         adrs: ['ADR-206'],
+        checked: '2026-11-06',
       },
       { name: 'Formulas with comparisons, if and stepped rounding', adrs: ['ADR-209'] },
       {
