@@ -310,7 +310,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-025: Cross-family composition and room presets
 
-- Status: Open
+- Status: ADR-210
 - Origin: Research, 2026-10-24 21:28 UTC; agent scoped it out
 - Missing: No wardrobe or desk room presets that place several pieces, and a kitchen run plus a desk in one project is unchecked; Fill the room fills kitchen walls (ADR-173, ADR-177).
 - Request: The 14 features you selected at 21:28 (context, not a quote)
@@ -325,6 +325,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): partly resolved; text partly wrong. Cross-family composition was already checked (N48, tools/ensemble/find-it.mjs: base cabinet + wardrobe + daybed). Remaining: built-in room presets that place several pieces; a kitchen run plus a desk in one project not checked.
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
 - Note: Re-checked 2026-11-05 on main c4a15bd (code read, no browser): Missing text updated to the current code.
+- Note: ADR-210 adds room presets and checks a kitchen run with a desk; Fill the room for other rooms is G-446.
 
 ### G-027: Bottom sheet drag, mode bar, old find-it scripts
 
@@ -588,7 +589,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-044: Catalog feed and brand filter
 
-- Status: Open
+- Status: ADR-210
 - Origin: ADR-029/052/027, 2026-10-25 06:52 UTC; user decision
 - Missing: Feed (N16) and brand filter (N14) not built (user: won't do); note the Brands tab still promises "The weekly catalog feed … adds them" (Catalog.tsx:618).
 - Request: “Mark 029 as won't do”.
@@ -601,6 +602,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Fix: Optionally feed the brand filter from the user's decor imports by manufacturer, in a new ADR.
 - Conflicts: none
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: ADR-210 feeds the brand filter from the decor list, offline; the feed stays won't do (ADR-029, user 2026-10-25).
 
 ### G-045: ADR-069 to 079 shipped with open gaps
 
@@ -854,7 +856,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-103: Family rule for your own templates
 
-- Status: Open
+- Status: ADR-210
 - Origin: ADR-100 (2026-10-26, Claude: not asked for)
 - Missing: The family rule reads the shipped catalog families only; a piece from one of your own templates (own-… families, stored on this device) has no known room group, so the family rule never refuses or warns for it.
 - Request: New adr 3
@@ -1716,7 +1718,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-313: Extra seller items only per piece
 
-- Status: Open
+- Status: ADR-210
 - Origin: ADR-161, 2026-10-30; agent scoped it out
 - Missing: In a project view, a seller product cannot be added as an extra item; open a piece to add it there. Hardware links chosen in the project view are written to every piece that has that hardware line.
 - Request: Match products to parts in app
@@ -1867,7 +1869,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-335: Variables in catalog designs and the stand-alone editor
 
-- Status: Open
+- Status: ADR-210
 - Origin: ADR-170, 2026-11-04; agent scoped it out
 - Missing: Variables and bindings live in projects and project templates only; the stand-alone design editor and catalog designs have none (the rest of G-323).
 - Request: Not a quote: the user asked for variables “within the project”
@@ -1912,7 +1914,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-341: No budget or style filters on room mixes
 
-- Status: Open
+- Status: ADR-210
 - Origin: ADR-173, 2026-11-04; agent scoped it out
 - Missing: The research children Budget and style filters and Layout optimisation are not built; mixes are ranked by ADR-103's rules only.
 - Request: “Fill the room” (user 2026-11-04)
@@ -1924,10 +1926,11 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: Fill the room mixes cannot be filtered by budget or style; no layout optimisation.
 - Fix: Add a budget ceiling and a style pick on the Refine step, using the cost estimate.
 - Conflicts: none
+- Note: ADR-210 takes over the budget ceiling and style pick; layout optimisation stays open as G-444.
 
 ### G-342: No islands or peninsulas in room mixes
 
-- Status: Open
+- Status: ADR-210
 - Origin: ADR-173, 2026-11-04; agent scoped it out
 - Missing: Islands and peninsulas are not suggested; only pieces along walls.
 - Request: “Fill the room” (user 2026-11-04)
@@ -1939,6 +1942,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: Fill the room suggests pieces along walls only, never islands or peninsulas.
 - Fix: Add an island option on Refine, checked against the clearance rules.
 - Conflicts: none
+- Note: ADR-210 takes over islands in rectangle rooms; peninsulas and islands in L and U rooms stay open as G-445.
 
 ### G-343: No per-step pictures in the assembly print
 
@@ -2327,7 +2331,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-396: No repair for the family warning
 
-- Status: Open
+- Status: ADR-210
 - Origin: ADR-204, 2026-11-06; agent scoped it out (G-104's pick covers depth and height only)
 - Missing: The family compatibility warning (ADR-100) still offers no previewed repair (ADR-071); only the depth and height warnings get "match the neighbour" repairs.
 - Request: Not a quote: G-104 asked "Offer repairs such as 'Make Base cabinet 560 deep like its neighbour' or 'Move the bed away'?"
@@ -2668,4 +2672,47 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Necessity: Low
 - Issue: Only carcass joints show drilling positions.
 - Fix: Add user-value drilling positions to the other joint types, one at a time.
+### G-444: No layout optimisation of room mixes
+
+- Status: Open
+- Origin: ADR-210, 2026-11-06; split from G-341 (its pick covers the budget and style filters only)
+- Missing: Fill the room ranks mixes by ADR-103 and ADR-173's rules; no search moves pieces between walls or trades widths to improve a whole-room layout.
+- Request: “Fill the room” (user 2026-11-04)
+- Questions: Should Fill the room optimise the whole layout (work triangle, fewest fillers) rather than rank per wall?
+- Suggested pick: Rank whole-room mixes by fewest fillers and corner warnings first, after ADR-210 ships (estimate: effort +30%, value +10%).
+- Work: Medium-high
+- Impact: Low-medium
+- Necessity: Low
+- Issue: Room mixes are ranked per wall; the whole layout is never optimised.
+- Fix: Add a whole-room ranking pass over the built mixes.
+- Conflicts: none
+
+### G-445: No peninsulas, and no islands outside rectangle rooms
+
+- Status: Open
+- Origin: ADR-210, 2026-11-06; split from G-342 (its pick names an island option only)
+- Missing: Fill the room offers an island in rectangle rooms only (ADR-210); no peninsula joined to a run, no island in L or U rooms.
+- Request: “Fill the room” (user 2026-11-04)
+- Questions: Offer a peninsula off the end of a run, and islands in L and U rooms?
+- Suggested pick: A peninsula option on Refine, a base run square to a wall's run end, with the same walkway width (estimate: effort +30%, value +10%).
+- Work: Medium-high
+- Impact: Low-medium
+- Necessity: Low
+- Issue: Peninsulas are never suggested and islands only fit rectangle rooms.
+- Fix: Add a peninsula option and island placement for L and U rooms.
+- Conflicts: none
+
+### G-446: Fill the room fills kitchen walls only
+
+- Status: Open
+- Origin: ADR-210, 2026-11-06; agent scoped it out (G-025's pick adds room presets, not new wizard room types)
+- Missing: Fill the room suggests kitchen cabinets only; bedroom (wardrobes) and office (desk, bookcases) walls come only from ADR-210's fixed room presets.
+- Request: The 14 features you selected at 21:28 (context, not a quote)
+- Questions: Should Fill the room offer a room type (Kitchen, Bedroom, Home office) that fills walls with that room's families?
+- Suggested pick: A Room type choice on the Room step, filling walls from the families of that room (estimate: effort +40%, value +15%).
+- Work: Medium-high
+- Impact: Medium
+- Necessity: Low
+- Issue: Fill the room cannot fill a bedroom or office.
+- Fix: Add a room type to Fill the room that picks the families it fills with.
 - Conflicts: none
