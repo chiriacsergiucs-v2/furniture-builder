@@ -641,7 +641,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-053: Step back up one level without the breadcrumb
 
-- Status: Open
+- Status: ADR-203
 - Origin: ADR-083, 2026-10-25, out of scope (Claude)
 - Missing: Going one level back up with a gesture (Esc / long press)
 - Request: The flow of selecting the furniture, then the middle (given there are 2 dividers), then having a horizontal divider, then selecting the bottom one to adjust shelves is a painful horrible user experience. Adjust the selecting to go from bigger to smaller. 1 click = entire furniture, second click selects the smaller frame, third again the smaller within, iteratively.
@@ -873,7 +873,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-105: Move display-only 3D models in the 3D view
 
-- Status: Open
+- Status: ADR-203
 - Origin: ADR-093 (2026-10-26, Claude: skipped this iteration)
 - Missing: Move mode in 3D drags and turns project pieces only; display-only 3D models can be resized there (ADR-102) but not moved or turned.
 - Request: New adr to override the conflicts for 4 and make it ready
@@ -889,7 +889,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-106: Resizing a base moves a locked piece on it
 
-- Status: Open
+- Status: ADR-203
 - Origin: ADR-095 (2026-10-26, Claude: found while building)
 - Missing: A locked piece placed on or above another piece still follows its base when the base's size changes in the piece editor (moving or turning the base is refused; resizing is not a move).
 - Request: Not a quote: ADR-095 'Nothing moves it for the user'
@@ -1296,7 +1296,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-172: 3D outlines of an angled piece are drawn unturned
 
-- Status: Open
+- Status: ADR-203
 - Origin: ADR-121 (found while building)
 - Missing: In the 3D view, the selection outline of a space inside an angled piece and the Move-mode ghost are drawn as the unturned or enclosing boxes; the boards themselves are drawn turned
 - Request: Accept default, /batch all ready
@@ -1326,7 +1326,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-190: Versions of a deleted project
 
-- Status: Open
+- Status: ADR-203
 - Origin: ADR-123 (found while building)
 - Missing: Deleting a project leaves its kept versions on the device; nothing lists or removes them (G-156: nothing removes versions without the user)
 - Request: Accept default, /batch all ready (G-156: keep every version until the user deletes it)
@@ -1386,7 +1386,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-211: Run handles not shown inside the piece editor
 
-- Status: Open
+- Status: ADR-203
 - Origin: ADR-125 (found while building)
 - Missing: Opening one piece of a handled run shows and edits its own handles; the run's handle shows only in the project views, cut list and hardware
 - Request: Accept default, /batch all ready (ADR-125: run sinks and handles)
@@ -2109,7 +2109,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-359: Open in wizard inside a project
 
-- Status: Open
+- Status: ADR-203
 - Origin: ADR-194, 2026-11-05; design critique, agent scoped it out
 - Missing: Open in wizard is hidden for a wizard-made piece inside a project (Settings hides it there).
 - Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
@@ -2145,7 +2145,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-363: Imported templates shadow silently
 
-- Status: Open
+- Status: ADR-203
 - Origin: ADR-195, 2026-11-05; design critique, agent scoped it out
 - Missing: Two imported templates that shadow the same shipped family: the last one wins silently (local.ts:85).
 - Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
@@ -2163,7 +2163,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-365: Handle side on a turned corner wing
 
-- Status: Open
+- Status: ADR-203
 - Origin: ADR-196, 2026-11-05; design critique, agent scoped it out
 - Missing: Which edge 'left' means for handle holes on a turned wing-B front of an L-corner was not verified.
 - Request: Not asked; noted in the 2026-11-05 design critique ("critique of design … 1 adr with high and medium issues and fixes per flow") and left out of the ADR.
@@ -2280,4 +2280,32 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Necessity: Low-medium
 - Issue: The parts CSV and shopping list title show English catalog piece names on a Romanian or Russian export.
 - Fix: Route those names through printPieceName() too.
+### G-388: Go up one selection level on a phone
+
+- Status: Open
+- Origin: ADR-203, 2026-11-06, out of scope (Claude)
+- Missing: ADR-203 makes Esc go up one selection level on desktop; a phone has no gesture for it besides the breadcrumb.
+- Request: The flow of selecting the furniture, then the middle (given there are 2 dividers), then having a horizontal divider, then selecting the bottom one to adjust shelves is a painful horrible user experience. Adjust the selecting to go from bigger to smaller. 1 click = entire furniture, second click selects the smaller frame, third again the smaller within, iteratively.
+- Questions: Add a phone gesture or button to go up one level, besides the breadcrumb?
+- Suggested pick: An "Up one level" button next to the breadcrumb on phones (estimate: effort +3 %, value +3 %).
+- Work: Low
+- Impact: Low
+- Necessity: Low
+- Issue: On a phone, going one selection level up needs the breadcrumb.
+- Fix: Add an "Up one level" button on phones that selects the parent level.
+- Conflicts: none
+
+### G-389: Versions left by projects deleted earlier
+
+- Status: Open
+- Origin: ADR-203, 2026-11-06, out of scope (Claude)
+- Missing: ADR-203 asks about versions only when a project is deleted from now on; versions of projects deleted before it stay on the device, unlisted.
+- Request: Accept default, /batch all ready (G-156: keep every version until the user deletes it)
+- Questions: List versions whose project is gone, to restore or delete them?
+- Suggested pick: A "Versions of deleted projects" list in History with Restore as a new project and Delete (estimate: effort +8 %, value +5 %).
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
+- Issue: Versions of projects deleted before ADR-203 take space and cannot be reached.
+- Fix: List versions with no project in History, each with Restore and Delete.
 - Conflicts: none
