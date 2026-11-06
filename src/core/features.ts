@@ -306,12 +306,14 @@ export const FEATURES: FeatureDomain[] = [
         detail:
           'A snap or Connected joins pieces side by side, in a corner or stacked (a wall unit over its base), each checked its own way; Connected to names each kind.',
         adrs: ['ADR-207'],
+        checked: '2026-11-06',
       },
       {
         name: 'Against the wall',
         detail:
           'A piece connected against its wall slides along it; Alt moves it away. Connected and stacked pieces move, mirror and merge together.',
         adrs: ['ADR-207'],
+        checked: '2026-11-06',
       },
       {
         name: 'Compatibility rules',
@@ -367,11 +369,13 @@ export const FEATURES: FeatureDomain[] = [
         name: 'Link identical pieces',
         detail: 'Pieces that are exactly the same are linked in one tap from the card.',
         adrs: ['ADR-207'],
+        checked: '2026-11-06',
       },
       {
         name: 'Mirror a lounger or a daybed',
         detail: 'The backrest and the side panel are built at the left or the right end.',
         adrs: ['ADR-207'],
+        checked: '2026-11-06',
       },
     ],
   },
@@ -646,6 +650,7 @@ export const FEATURES: FeatureDomain[] = [
         detail:
           'A blind corner unit shares its straight end with a cabinet; a desk beside a cabinet leaves its gable out.',
         adrs: ['ADR-207'],
+        checked: '2026-11-06',
       },
       { name: 'Stock sheets, trim and kerf', adrs: ['ADR-019'], checked: '2026-11-05' },
       { name: 'Solid timber stock', adrs: ['ADR-038'], checked: '2026-11-05' },
@@ -943,12 +948,14 @@ export const FEATURES: FeatureDomain[] = [
             detail:
               'Fit hardware to the sides lights the sides and dividers its hinges and runners go on.',
             adrs: ['ADR-207'],
+            checked: '2026-11-06',
           },
           {
             name: 'Your own assembly steps',
             detail:
               'Move steps up and down and rename them; the tab and the print follow; Reset the steps brings the generated ones back.',
             adrs: ['ADR-207'],
+            checked: '2026-11-06',
           },
           {
             name: 'Project assembly order',

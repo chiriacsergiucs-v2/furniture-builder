@@ -101,10 +101,19 @@ export function propagateLinks(before: Project | null, next: Project, all: boole
  * same.
  */
 function canonical(d: Design): string {
-  const { id: _id, createdAt: _c, updatedAt: _u, ...rest } = d;
+  const { id: _id, createdAt: _c, updatedAt: _u, ...own } = d;
   void _id;
   void _c;
   void _u;
+  // When a catalog copy was taken (`origin.takenAt`) is not part of the piece either: two copies of one catalog item
+  // taken a moment apart are the same piece.
+  const origin = own.catalog?.origin;
+  const rest = origin?.takenAt
+    ? {
+        ...own,
+        catalog: { ...own.catalog, origin: { ...origin, takenAt: undefined } },
+      }
+    : own;
   const ids = new Map<string, string>();
   const collect = (v: unknown) => {
     if (Array.isArray(v)) v.forEach(collect);
