@@ -2940,3 +2940,21 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Not asked; ADR-206 Done when says the client sheet prints one A4 page.
 - Questions: None; it is a bug.
 - Suggested pick: Reproduce with tools/prints-exports/find-it.mjs on repeated runs, find the layout race (the sheet prints 50 ms after it is asked for), and give the table a page margin. (estimate: effort +4 %, value +4 %)
+
+### G-471: Catalog page is taller than the 15000 px script limit
+
+- Status: Open
+- Origin: ADR-201 tests, 2026-11-06; agent found it
+- Missing: tools/catalog-compact/find-it.mjs 'Catalog page under 15000 px tall' fails: the catalog page is 15198 px tall at 1280 px (it failed before ADR-201 too). The limit was not changed because it is a user decision.
+- Request: Not asked; the script's own limit.
+- Questions: Raise the limit to 16000 px, or shorten the catalog page?
+- Suggested pick: Raise the limit to the current height plus a margin and record it, since the page grows with the catalog. (estimate: effort +1 %, value +1 %)
+
+### G-472: Core-only test selection: saving unproven
+
+- Status: Open
+- Origin: ADR-201 tests, 2026-11-06; agent found it
+- Missing: G-368 (CI runs only related tests on core-only PRs) is unproven: no CI run id exists for a core-only PR, and for widely imported core files the saving can be under 10 % (src/core/sizeLock.ts selects 136 of 151 test files; shareCode.ts selects 45). ADR-201 says to ask the user when the saving is under 10 %.
+- Request: Not asked in words; ADR-201 Decision for G-368: measure, and ask the user if the saving is under 10 %.
+- Questions: Keep the core-only selection (it saves little for widely imported files), or drop it and keep the full suite on every PR?
+- Suggested pick: Keep it: it saves 70 to 90 % on narrow core changes and costs nothing otherwise. Record a CI run id once a core-only PR runs. (estimate: effort +0 %, value +3 %)
