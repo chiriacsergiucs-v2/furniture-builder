@@ -655,6 +655,8 @@ export const FEATURES: FeatureDomain[] = [
         detail:
           'Import your band list (CSV); each board’s edge band offers matching bands first, then the others by colour.',
         adrs: ['ADR-212'],
+
+        checked: '2026-11-06',
       },
       {
         name: 'Own board for any single part',
@@ -1264,6 +1266,8 @@ export const FEATURES: FeatureDomain[] = [
         detail:
           'Export marks and Import marks move your gap marks between devices; the newer mark wins.',
         adrs: ['ADR-212'],
+
+        checked: '2026-11-06',
       },
       { name: 'Info buttons', adrs: ['ADR-080', 'ADR-113'], checked: '2026-11-05' },
       {
