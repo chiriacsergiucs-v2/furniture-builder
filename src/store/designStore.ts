@@ -133,6 +133,10 @@ import {
   type RunSink,
   type RunHob,
   type WorktopJoint,
+  type WorktopEdge,
+  type RequestTarget,
+  pruneWorktopEdges,
+  remakeAskedParts,
   setTurnLocked,
   type SizeAxis,
 } from '../core/project';
@@ -169,6 +173,7 @@ import {
   setBinding,
   setDesignBinding,
   updateDesignVariable,
+  setRequestBinding,
   updateVariable,
 } from '../core/variables';
 
@@ -525,6 +530,10 @@ interface State {
   removeHob: (id: string) => void;
   /** The joint the user chose at a worktop corner (ADR-205); replaces the corner's earlier one. */
   setWorktopJoint: (j: WorktopJoint) => void;
+  /** A worktop's front edge (ADR-209): square, rounded or bevelled and its size; replaces the worktop's earlier one. */
+  setWorktopEdge: (e: WorktopEdge) => void;
+  /** Bind (or with null unbind) a run request's overhang or height to a variable or formula (ADR-209). */
+  bindRequest: (r: RunRequest, target: RequestTarget, expr: string | null) => void;
   /** Put one board on the fronts or carcass of the selected piece, its run or the whole project (ADR-055). */
   applyFinish: (
     id: string,
@@ -717,15 +726,19 @@ export const useDesign = create<State>((rawSet, get) => {
     // Bindings take their variables' values and value sets keep their duplicates (ADR-166, ADR-167); a bound field
     // the change tried to move is held and the reason shown.
     // Sets first, so a fresh duplicate takes its set's values in the same step.
-    // A piece's own bindings first (ADR-210), so a project binding on the same target wins.
-    const bound = applyBindings(applyPieceBindings(syncSets(linked)));
+    // A piece's own bindings first (ADR-210), so a project binding on the same target wins. With automatic refresh
+    // off, the parts of run requests a binding changed are made again (ADR-209).
+    const synced = applyPieceBindings(syncSets(linked));
+    const bound = remakeAskedParts(synced, applyBindings(synced));
     const held = heldByBinding(get().project, linked, bound);
-    // Worktop corner joints follow their worktops (ADR-205).
+    // Worktop corner joints and edges follow their worktops (ADR-205, ADR-209).
     const stamped = {
-      ...pruneWorktopJoints(
-        refreshRunParts(
-          resolvePlacements(
-            pruneRunExtras(pruneShared(pruneConnections(pruneCommon(pruneGroups(bound))))),
+      ...pruneWorktopEdges(
+        pruneWorktopJoints(
+          refreshRunParts(
+            resolvePlacements(
+              pruneRunExtras(pruneShared(pruneConnections(pruneCommon(pruneGroups(bound))))),
+            ),
           ),
         ),
       ),
@@ -1129,6 +1142,21 @@ export const useDesign = create<State>((rawSet, get) => {
       if (!p) return;
       const next = deleteVariable(p, id);
       if (next !== p) commitProject(next, t('Delete variable'));
+    },
+    bindRequest: (r, target, expr) => {
+      const p = get().project;
+      if (!p) return;
+      const key = requestKey(r);
+      // A suggested worktop is asked for first (ADR-075), with its binding (ADR-209).
+      if (!p.runRequests?.some((x) => requestKey(x) === key)) {
+        if (expr === null) return;
+        get().setRunRequest({ ...r, bindings: [{ target, expr: expr.trim() }] });
+        return;
+      }
+      commitProject(
+        setRequestBinding(p, key, target, expr),
+        expr === null ? t('Unbind') : t('Bind to variable'),
+      );
     },
     bindTarget: (itemId, target, expr) => {
       const p = get().project;
@@ -1652,6 +1680,15 @@ export const useDesign = create<State>((rawSet, get) => {
         ...p,
         worktopJoints: [...(p.worktopJoints ?? []).filter((x) => !same(x)), j],
       });
+    },
+    setWorktopEdge: (e) => {
+      const p = get().project;
+      if (!p) return;
+      const rest = (p.worktopEdges ?? []).filter((x) => x.key !== e.key);
+      // Square without a size is the default: nothing to keep.
+      const keep = e.kind !== 'square' || e.size !== undefined;
+      const list = keep ? [...rest, e] : rest;
+      commitProject({ ...p, worktopEdges: list.length ? list : undefined });
     },
     setRunSettings: (patch) => {
       const p = get().project;

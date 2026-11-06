@@ -7,6 +7,7 @@ import {
   lengthsList,
 } from '../core/cutlist';
 import { t, tr } from '../core/i18n';
+import type { FixingPart } from '../core/fasteners';
 import { useDesign, type Tab } from '../store/designStore';
 import { Sheets } from './Sheets';
 import { FastenerCounts } from './Fasteners';
@@ -184,6 +185,14 @@ function Parts() {
           {t('Sizes are finished sizes; edges marked for banding.')}
         </InfoTip>
       </p>
+      {!!view.fixings?.tooShort && (
+        <p className="hint warn">
+          {t(
+            '{n|# joint is|# joints are} shorter than twice your distance from each end: no drilling positions there.',
+            { n: view.fixings.tooShort },
+          )}
+        </p>
+      )}
       {byMat.map(([mid, list]) => {
         const name = tr(list[0].materialName);
         // Said once in the summary when no board names its band yet (G-059), else per board.
@@ -234,6 +243,11 @@ function Parts() {
                           {t('Drill: {what}', { what: tr(r.drilling) })}
                         </span>
                       )}
+                      <FixingSketch
+                        part={r.panelIds
+                          .map((id) => view.fixings?.parts.get(id))
+                          .find((x) => x !== undefined)}
+                      />
                     </td>
                   </tr>
                 );
@@ -310,6 +324,29 @@ function Lengths() {
         </table>
       ))}
     </section>
+  );
+}
+
+/**
+ * Drilling positions on a part's outline (ADR-209): dots where the user's fixings go, from their fastener and edge
+ * distance, labelled guidance. The longer side is drawn across. No diameter, depth or screw (ADR-010).
+ */
+function FixingSketch({ part }: { part?: FixingPart }) {
+  if (!part || !part.at.length) return null;
+  const wide = part.u >= part.v;
+  const W = wide ? part.u : part.v,
+    H = wide ? part.v : part.u;
+  const r = Math.max(W, H) / 60;
+  return (
+    <span className="fixing-sketch">
+      <svg viewBox={`${-r * 2} ${-r * 2} ${W + r * 4} ${H + r * 4}`} aria-hidden="true">
+        <rect x={0} y={0} width={W} height={H} className="outline" />
+        {part.at.map(([u, v], i) => (
+          <circle key={i} cx={wide ? u : v} cy={H - (wide ? v : u)} r={r} className="dot" />
+        ))}
+      </svg>
+      <span className="hint">{t('Guidance: drilling positions from your values')}</span>
+    </span>
   );
 }
 

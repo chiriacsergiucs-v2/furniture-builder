@@ -9,6 +9,7 @@ import { pt, type PrintKey } from './i18n/print';
 import { buildModel } from './build';
 import type { RunPart } from './project';
 import type { ShopLine } from './shopping';
+import { inPlaneAxes } from './geometry';
 import type { Axis, Box, FurnitureModel, Mm, Panel, PanelRole } from './types';
 
 export type JointType =
@@ -95,6 +96,11 @@ export interface FastenerChoice {
   name: string;
   /** Whole number ≥ 1. */
   per: number;
+  /**
+   * Carcass joints (ADR-209): mm from each end of a joint to the first and last fixing, typed by the user (no default,
+   * ADR-010). Only with it are drilling positions drawn. Saved on this device with the choice.
+   */
+  edge?: Mm;
 }
 
 /** Boards that are screwed or doweled to each other in a carcass. Fronts, backs, plinths, drawer boxes and worktops are not. */
@@ -315,9 +321,94 @@ export function validFastenerChoice(c: unknown): c is FastenerChoice {
     !!r.name.trim() &&
     typeof r.per === 'number' &&
     Number.isSafeInteger(r.per) &&
-    r.per >= 1
+    r.per >= 1 &&
+    (r.edge === undefined ||
+      (typeof r.edge === 'number' && Number.isSafeInteger(r.edge) && r.edge >= 0 && r.edge <= 5000))
   );
 }
+
+/** A part with drilling positions (ADR-209): its face size along its two in-plane axes and the positions on it. */
+export interface FixingPart {
+  /** The face's size along its first and second in-plane axes (x, y, z order), mm. */
+  u: Mm;
+  v: Mm;
+  /** Positions [u, v] from the face's minimum corner, whole mm. */
+  at: [Mm, Mm][];
+}
+
+/** Whole-mm positions of `per` fixings along a joint `length` long: one centred, else from `edge` to length − `edge`. */
+export function fixingSpots(length: Mm, per: number, edge: Mm): Mm[] | null {
+  // One fixing: centred, the length split in two exact parts (ADR-003), the first taking a spare millimetre.
+  if (per === 1) return length > 0 ? [Math.ceil(length / 2)] : null;
+  const span = length - 2 * edge;
+  if (span < per - 1 || edge < 0) return null;
+  // Exact integer gaps (ADR-003): the first ones take the spare millimetres.
+  const q = Math.floor(span / (per - 1)),
+    r = span - q * (per - 1);
+  const out = [edge];
+  for (let i = 0; i < per - 1; i++) out.push(out[i] + q + (i < r ? 1 : 0));
+  return out;
+}
+
+/**
+ * Drilling positions of the carcass joints (ADR-209), only once the user typed `edge` on their carcass-joint fastener:
+ * `per` positions along each joint's contact line at the other board's mid-thickness, drawn on the board that is
+ * drilled through (the one whose face takes the joint). Projected from the model (ADR-004), never saved. No diameter,
+ * depth or screw (ADR-010). Joints shorter than twice `edge` get none and are counted in `tooShort`.
+ */
+export function fixingPositions(
+  model: Pick<FurnitureModel, 'panels' | 'hardware'>,
+  choice: FastenerChoice | undefined,
+  prefix = '',
+): { parts: Map<string, FixingPart>; tooShort: number } {
+  const parts = new Map<string, FixingPart>();
+  let tooShort = 0;
+  if (!choice || choice.joint !== 'carcass-joint' || choice.edge === undefined)
+    return { parts, tooShort };
+  for (const [a, b] of carcassJointPairs(model as FurnitureModel)) {
+    const ax = contactAxis(a.box, b.box);
+    if (!ax) continue;
+    const face = a.thicknessAxis === ax ? a : b;
+    const edgeBoard = face === a ? b : a;
+    const others = AXES.filter((x) => x !== ax);
+    const lap = others.map((x) => {
+      const i = AXES.indexOf(x) as 0 | 1 | 2;
+      const [f0, f1] = span(face.box, i),
+        [e0, e1] = span(edgeBoard.box, i);
+      return { axis: x, lo: Math.max(f0, e0), hi: Math.min(f1, e1) };
+    });
+    const [line, across] = lap[0].hi - lap[0].lo >= lap[1].hi - lap[1].lo ? lap : [lap[1], lap[0]];
+    const len = line.hi - line.lo;
+    const spots = fixingSpots(len, choice.per, choice.edge);
+    if (!spots) {
+      tooShort++;
+      continue;
+    }
+    // Across the line: the other board's mid-thickness when its thickness lies across, else the middle of the contact.
+    const t = edgeBoard.thicknessAxis === across.axis;
+    const i = AXES.indexOf(across.axis) as 0 | 1 | 2;
+    const [c0, c1] = t ? span(edgeBoard.box, i) : [across.lo, across.hi];
+    const mid = c0 + Math.floor((c1 - c0) / 2);
+    const [ua, va] = inPlaneAxes(face.thicknessAxis);
+    const lo = (x: Axis) => span(face.box, AXES.indexOf(x) as 0 | 1 | 2)[0];
+    const size = (x: Axis) => {
+      const [s0, s1] = span(face.box, AXES.indexOf(x) as 0 | 1 | 2);
+      return s1 - s0;
+    };
+    const key = prefix + face.id;
+    const cur = parts.get(key) ?? { u: size(ua), v: size(va), at: [] };
+    for (const s of spots) {
+      const at = (x: Axis) => (x === line.axis ? line.lo + s : x === across.axis ? mid : lo(x));
+      cur.at.push([at(ua) - lo(ua), at(va) - lo(va)]);
+    }
+    parts.set(key, cur);
+  }
+  return { parts, tooShort };
+}
+
+/** The drilling note of a part (ADR-209), in English for the model; printed through `pt()` (`drillingRo`). */
+export const fixingNote = (p: FixingPart) =>
+  `fixing holes at ${p.at.map(([u, v]) => `${u}/${v}`).join(', ')} mm, guidance from your values`;
 
 /**
  * Shopping-list lines for the counts (ADR-074). Without a chosen fastener a count is a line in "to choose before

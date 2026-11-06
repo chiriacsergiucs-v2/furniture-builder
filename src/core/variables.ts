@@ -9,7 +9,17 @@
  */
 import { t } from './i18n';
 import { mapProductSpace, newId, setProductParams } from './design';
-import { SIZE_AXES, type Project, type ProjectItem, type SizeAxis } from './project';
+import {
+  REQUEST_RANGE,
+  requestKey,
+  requestName,
+  SIZE_AXES,
+  type Project,
+  type ProjectItem,
+  type RequestTarget,
+  type RunRequest,
+  type SizeAxis,
+} from './project';
 import { isAxisLocked } from './sizeLock';
 import { sizeFields } from './pieceSize';
 import type { Design, DesignVariable, Diagnostic, Mm, Product, Space } from './types';
@@ -65,7 +75,9 @@ export function nameProblem(
 // Formulas
 // ---------------------------------------------------------------------------
 
-type Op = '+' | '-' | '*' | '/' | '(' | ')' | ',';
+/** Comparisons (ADR-209): 1 when true, 0 when not. */
+type Cmp = '<' | '<=' | '>' | '>=' | '=' | '<>';
+type Op = '+' | '-' | '*' | '/' | '(' | ')' | ',' | Cmp;
 type Token =
   | { kind: 'num'; value: number; at: number; text: string }
   | { kind: 'name'; name: string; at: number; text: string }
@@ -83,7 +95,16 @@ const OPS: Record<string, Op> = {
   '÷': '/',
   '(': '(',
   ')': ')',
+  '<': '<',
+  '>': '>',
+  '=': '=',
+  '≤': '<=',
+  '≥': '>=',
+  '≠': '<>',
 };
+/** Two-character comparisons, matched before the one-character operators (ADR-209). */
+const OPS2: Record<string, Op> = { '<=': '<=', '>=': '>=', '<>': '<>' };
+const CMPS = new Set<Op>(['<', '<=', '>', '>=', '=', '<>']);
 
 /**
  * Formula functions (ADR-206): a name followed by `(` is a call. One entry per function: how many values it takes and
@@ -94,13 +115,31 @@ export interface FormulaFunction {
   min: number;
   max?: number;
   apply: (args: number[]) => number;
+  /** Why these values cannot be used (ADR-209: a rounding step of 0), or null; a diagnostic, never a throw. */
+  problem?: (args: number[]) => string | null;
+  /** Only this value's problem counts (ADR-209: `if` takes the chosen branch); the index from the values. */
+  uses?: (args: number[]) => number[];
 }
 export const FUNCTIONS: Record<string, FormulaFunction> = {
   min: { min: 2, apply: (a) => Math.min(...a) },
   max: { min: 2, apply: (a) => Math.max(...a) },
   floor: { min: 1, max: 1, apply: ([x]) => Math.floor(x) },
   ceil: { min: 1, max: 1, apply: ([x]) => Math.ceil(x) },
-  round: { min: 1, max: 1, apply: ([x]) => Math.round(x) },
+  // `round(x, step)` (ADR-209): the nearest multiple of step.
+  round: {
+    min: 1,
+    max: 2,
+    apply: ([x, step]) => (step === undefined ? Math.round(x) : Math.round(x / step) * step),
+    problem: ([, step]) =>
+      step !== undefined && !(step > 0) ? t('The step of “round” must be more than 0.') : null,
+  },
+  // `if(c, a, b)` (ADR-209): a when c is not 0, else b.
+  if: {
+    min: 3,
+    max: 3,
+    apply: ([c, a, b]) => (c !== 0 ? a : b),
+    uses: ([c]) => [0, c !== 0 ? 1 : 2],
+  },
 };
 /** Whether a name is a formula function's, compared without case. */
 export const isFunctionName = (name: string): boolean =>
@@ -142,6 +181,12 @@ export function tokenize(
     if (inCall && (c === ',' || c === ';')) {
       tokens.push({ kind: 'op', op: ',', at: i, text: c });
       i++;
+      continue;
+    }
+    const two = OPS2[expr.slice(i, i + 2)];
+    if (two) {
+      tokens.push({ kind: 'op', op: two, at: i, text: expr.slice(i, i + 2) });
+      i += 2;
       continue;
     }
     const op = OPS[c];
@@ -213,11 +258,15 @@ export function evaluateExpr(
       const f = FUNCTIONS[tok.name];
       pos++;
       const args: number[] = [];
+      // The problem each value raised, if it was the first (ADR-209: `if` keeps only its chosen branch's).
+      const raised: (string | null)[] = [];
       const close = peek();
       if (close && close.kind === 'op' && close.op === ')') pos++;
       else
         for (;;) {
-          args.push(sum());
+          const had = problem;
+          args.push(compare());
+          raised.push(had === null && problem !== null ? problem : null);
           const nx = peek();
           if (nx && nx.kind === 'op' && nx.op === ',') {
             pos++;
@@ -229,10 +278,22 @@ export function evaluateExpr(
         }
       const bad = arityProblem(tok.text, f, args.length);
       if (bad) return fail(bad);
+      // A value the call does not use (the other branch of `if`) may have no value, e.g. a division by zero there.
+      if (f.uses && raised.some(Boolean)) {
+        const used = new Set(f.uses(args));
+        // Only a value problem is dropped; a formula that does not parse stays a problem wherever it is.
+        const soft = [t('Division by zero.'), t('The step of “round” must be more than 0.')];
+        if (raised.every((r, i) => !r || (!used.has(i) && soft.includes(r)))) problem = null;
+        else return NaN;
+        const v = f.apply(args);
+        return Number.isFinite(v) ? v : fail(t('The formula has no value.'));
+      }
+      const why = f.problem?.(args);
+      if (why) return fail(why);
       return f.apply(args);
     }
     if (tok.op === '(') {
-      const v = sum();
+      const v = compare();
       const close = peek();
       if (!close || close.kind !== 'op' || close.op !== ')') return fail(t('A “(” is not closed.'));
       pos++;
@@ -264,7 +325,28 @@ export function evaluateExpr(
       v = tok.op === '+' ? v + r : v - r;
     }
   };
-  const raw = sum();
+  /** A comparison (ADR-209): 1 when it holds, 0 when not; one per expression level, no chains. */
+  const compare = (): number => {
+    const v = sum();
+    const tok = peek();
+    if (!tok || tok.kind !== 'op' || !CMPS.has(tok.op)) return v;
+    pos++;
+    const r = sum();
+    const holds =
+      tok.op === '<'
+        ? v < r
+        : tok.op === '<='
+          ? v <= r
+          : tok.op === '>'
+            ? v > r
+            : tok.op === '>='
+              ? v >= r
+              : tok.op === '='
+                ? v === r
+                : v !== r;
+    return holds ? 1 : 0;
+  };
+  const raw = compare();
   if (problem) return { problem };
   if (pos < tokens.length)
     return { problem: t('Unexpected “{text}” in the formula.', { text: tokens[pos].text }) };
@@ -568,7 +650,9 @@ export function scopeFor(project: Project, item: Pick<ProjectItem, 'set'>): Map<
  * Every binding evaluated and written into its item. The same project when nothing changes. Problems are left to
  * `variableDiagnostics`; a binding with a problem leaves its field as it is.
  */
-export function applyBindings(project: Project): Project {
+export function applyBindings(input: Project): Project {
+  // Run requests follow their variables too (ADR-209).
+  const project = applyRequestBindings(input);
   if (!project.items.some((i) => i.bindings?.length)) return project;
   const scopes = new Map<string, Map<string, number>>();
   const scopeOf = (item: ProjectItem) => {
@@ -595,9 +679,119 @@ export function applyBindings(project: Project): Project {
   return changed ? { ...project, items } : project;
 }
 
+// ---------------------------------------------------------------------------
+// Bindings on run requests (ADR-209)
+// ---------------------------------------------------------------------------
+
+/** The request fields a variable can drive (ADR-209): worktop overhangs and a crown's or pelmet's height. */
+export const REQUEST_TARGET_LABEL: Record<RequestTarget, string> = {
+  front: t('Front overhang'),
+  side: t('Side overhang'),
+  height: t('Trim height'),
+};
+
+/** Whether a request has the field a target names: overhangs on a worktop, a height on a crown or pelmet. */
+export const requestHasTarget = (r: RunRequest, target: string): target is RequestTarget =>
+  target === 'height'
+    ? r.kind === 'crown' || r.kind === 'pelmet'
+    : (target === 'front' || target === 'side') && r.kind === 'worktop';
+
+/** Why a value cannot go into a request field (ADR-008: never clamped silently), or null. */
+function requestRangeProblem(target: RequestTarget, value: Mm): string | null {
+  const r = REQUEST_RANGE[target];
+  return value < r.min || value > r.max
+    ? t('{n} mm is outside {min}–{max} mm.', { n: value, min: r.min, max: r.max })
+    : null;
+}
+
+/** Every run request's bindings evaluated with set 1's values and written into it; the same project when none change. */
+export function applyRequestBindings(project: Project): Project {
+  const reqs = project.runRequests;
+  if (!reqs?.some((r) => r.bindings?.length)) return project;
+  const scope = variableScope(project.variables ?? []);
+  let changed = false;
+  const runRequests = reqs.map((r) => {
+    let next = r;
+    for (const b of r.bindings ?? []) {
+      if (!requestHasTarget(r, b.target)) continue;
+      const e = evaluateBinding(b.expr, scope);
+      if (e.value === undefined || requestRangeProblem(b.target, e.value)) continue;
+      if (next[b.target] !== e.value) next = { ...next, [b.target]: e.value };
+    }
+    if (next !== r) changed = true;
+    return next;
+  });
+  return changed ? { ...project, runRequests } : project;
+}
+
+/** Set, replace or (with `expr` null) remove the binding on a request field (ADR-209). */
+export function setRequestBinding(
+  project: Project,
+  key: string,
+  target: RequestTarget,
+  expr: string | null,
+): Project {
+  const runRequests = (project.runRequests ?? []).map((r) => {
+    if (requestKey(r) !== key) return r;
+    const rest = (r.bindings ?? []).filter((b) => b.target !== target);
+    const bindings = expr === null ? rest : [...rest, { target, expr: expr.trim() }];
+    if (bindings.length) return { ...r, bindings };
+    const { bindings: _b, ...without } = r;
+    void _b;
+    return without;
+  });
+  return { ...project, runRequests };
+}
+
+/** Problems of request bindings (ADR-209), as for pieces' bindings: errors that block export. */
+function requestBindingDiagnostics(project: Project): Diagnostic[] {
+  const out: Diagnostic[] = [];
+  const reqs = (project.runRequests ?? []).filter((r) => r.bindings?.length);
+  if (!reqs.length) return out;
+  const scope = variableScope(project.variables ?? []);
+  for (const r of reqs)
+    for (const b of r.bindings!) {
+      const name = requestName(r, project);
+      const nodeId = `request:${requestKey(r)}`;
+      const field = REQUEST_TARGET_LABEL[b.target as RequestTarget] ?? b.target;
+      if (!requestHasTarget(r, b.target)) {
+        out.push({
+          severity: 'error',
+          code: 'binding-target',
+          message: t('{name} has no {field} to bind.', { name, field }),
+          nodeId,
+        });
+        continue;
+      }
+      const e = evaluateBinding(b.expr, scope);
+      const range = e.value !== undefined ? requestRangeProblem(b.target, e.value) : null;
+      if (e.problem)
+        out.push({
+          severity: 'error',
+          code: 'binding-problem',
+          message: t('{name}, {field}: {problem}', { name, field, problem: e.problem }),
+          nodeId,
+        });
+      else if (range)
+        out.push({
+          severity: 'error',
+          code: 'binding-range',
+          message: t('{name}, {field}: {problem} The field keeps {n} mm.', {
+            name,
+            field,
+            problem: range,
+            n: r[b.target] ?? 0,
+          }),
+          nodeId,
+        });
+    }
+  return out;
+}
+
 /** Problems of variables and bindings (ADR-008): errors block export; a bound size on a size-locked piece warns. */
 export function variableDiagnostics(project: Project): Diagnostic[] {
-  const out: Diagnostic[] = [];
+  // Run requests' bindings (ADR-209) are checked even without variables: a name then is unknown.
+  const out: Diagnostic[] = requestBindingDiagnostics(project);
   const vars = project.variables ?? [];
   if (!vars.length) return out;
   const report = (setName: string | null, values?: Record<string, string>) => {
@@ -784,6 +978,16 @@ export function updateVariable(
           ? { ...i, bindings: i.bindings.map((b) => ({ ...b, expr: ren(b.expr) })) }
           : i,
       ),
+      // Run requests' bindings follow a rename too (ADR-209).
+      ...(next.runRequests?.some((r) => r.bindings?.length)
+        ? {
+            runRequests: next.runRequests.map((r) =>
+              r.bindings?.length
+                ? { ...r, bindings: r.bindings.map((b) => ({ ...b, expr: ren(b.expr) })) }
+                : r,
+            ),
+          }
+        : {}),
       ...(next.variableSets
         ? {
             variableSets: next.variableSets.map((s) => ({
@@ -813,6 +1017,15 @@ export function deleteVariable(project: Project, id: string): Project {
     void _b;
     return without;
   });
+  // A run request's binding on it goes too; the field keeps its number (ADR-209).
+  const runRequests = project.runRequests?.map((r) => {
+    if (!r.bindings?.some((b) => refers(b.expr))) return r;
+    const bindings = r.bindings.filter((b) => !refers(b.expr));
+    if (bindings.length) return { ...r, bindings };
+    const { bindings: _b, ...without } = r;
+    void _b;
+    return without;
+  });
   const variables = vars.filter((x) => x.id !== id);
   const variableSets = project.variableSets?.map((s) => {
     const { [id]: _gone, ...values } = s.values;
@@ -822,6 +1035,7 @@ export function deleteVariable(project: Project, id: string): Project {
   return {
     ...project,
     items,
+    ...(runRequests ? { runRequests } : {}),
     ...(variables.length ? { variables } : { variables: undefined }),
     ...(variableSets ? { variableSets } : {}),
   };

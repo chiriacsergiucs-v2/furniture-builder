@@ -190,6 +190,26 @@ export function drillingRo(text: string): string {
       .replace(/cut-out (\d+) × (\d+) mm at (\d+)\/(\d+) mm from left\/bottom/g, (_, w, h, u, v) =>
         pt('decupaj {w} × {h} mm la {u}/{v} mm de la stânga/jos', { w, h, u, v }),
       )
+      // Placed cut-outs, moulding profiles, worktop edges and fixing positions (ADR-209).
+      .replace(
+        /(sink|hob) cut-out (\d+) × (\d+) mm at (\d+) mm from left and (\d+) mm from front/g,
+        (_, what, w, d, x, z) =>
+          pt('decupaj {what} {w} × {d} mm, la {x} mm de stânga și {z} mm de față', {
+            what: what === 'sink' ? pt('chiuvetă') : pt('plită'),
+            w,
+            d,
+            x,
+            z,
+          }),
+      )
+      .replace(/profile (\d+) × (\d+) mm, drawn by you/g, (_, w, h) =>
+        pt('profil {w} × {h} mm, desenat de tine', { w, h }),
+      )
+      .replace(/rounded edge R(\d+) mm/g, (_, s) => pt('cant rotunjit R{s} mm', { s }))
+      .replace(/bevelled edge (\d+) mm/g, (_, s) => pt('cant teșit {s} mm', { s }))
+      .replace(/fixing holes at ([\d, /]+) mm, guidance from your values/g, (_, list) =>
+        pt('găuri de fixare la {list} mm, orientativ, din valorile tale', { list }),
+      )
       .replace(/sink cut-out (\d+) × (\d+) mm/g, (_, w, d) =>
         pt('decupaj chiuvetă {w} × {d} mm', { w, d }),
       )

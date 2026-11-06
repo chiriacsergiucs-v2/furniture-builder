@@ -5,7 +5,7 @@
  * Also handles for a run and sinks over base units (ADR-125); hobs, worktop corner joints and the cut-outs and joint
  * lines drawn on the plan (ADR-205).
  */
-import { useId, useMemo, useState } from 'react';
+import { useId, useMemo, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { newId } from '../core/design';
 import { projectBoards, roleBoard } from '../core/finish';
 import { t } from '../core/i18n';
@@ -13,6 +13,10 @@ import {
   BAR_SPACINGS,
   cutoutOutlines,
   materialKey,
+  parseProfile,
+  profileBounds,
+  profileText,
+  profileValid,
   requestCandidates,
   requestKey,
   runHandleMembers,
@@ -26,12 +30,15 @@ import {
   type RunHandle,
   type RunPart,
   type RunRequest,
+  type RunSink,
   type TrimKind,
+  type WorktopEdgeKind,
 } from '../core/project';
-import type { Handle } from '../core/types';
+import type { Handle, Mm } from '../core/types';
 import { useDesign } from '../store/designStore';
 import { MmField, Segmented, Select, Toggle } from './controls';
 import { Icon } from './icons';
+import { RequestBindButton, requestBindingHint } from './Variables';
 
 const TRIMS: { value: TrimKind; label: string }[] = [
   { value: 'crown', label: t('Crown') },
@@ -55,7 +62,8 @@ function picked(rows: string[][], ticked: Set<string>): { ids: string[]; adjacen
 
 /** Front and side overhang of one worktop; editing them asks for that worktop with these values. */
 export function WorktopOverhang({ part }: { part: RunPart }) {
-  const requests = useDesign((s) => s.project?.runRequests);
+  const project = useDesign((s) => s.project);
+  const requests = project?.runRequests;
   const setRunRequest = useDesign((s) => s.setRunRequest);
   const [open, setOpen] = useState(false);
   const req = requests?.find((r) => requestKey(r) === part.key);
@@ -68,6 +76,10 @@ export function WorktopOverhang({ part }: { part: RunPart }) {
       side,
       ...patch,
     });
+  // The overhangs can follow a variable (ADR-209); binding one asks for this worktop first if it was only suggested.
+  const asked: RunRequest = req ?? { kind: 'worktop', from: part.from ?? [], front, side };
+  const hint = (target: 'front' | 'side') =>
+    project ? requestBindingHint(project, asked, target) : undefined;
   return (
     <div className="run-edit">
       <button
@@ -87,6 +99,9 @@ export function WorktopOverhang({ part }: { part: RunPart }) {
             max={1000}
             step={5}
             onChange={(v) => set({ front: v })}
+            disabled={!!hint('front')}
+            hint={hint('front')}
+            trailing={<RequestBindButton request={asked} target="front" />}
           />
           <MmField
             label={t('Side overhang')}
@@ -95,7 +110,232 @@ export function WorktopOverhang({ part }: { part: RunPart }) {
             max={1000}
             step={5}
             onChange={(v) => set({ side: v })}
-            hint={t('Past each end of the worktop')}
+            disabled={!!hint('side')}
+            hint={hint('side') ?? t('Past each end of the worktop')}
+            trailing={<RequestBindButton request={asked} target="side" />}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+const EDGE_KINDS: { value: WorktopEdgeKind; label: string }[] = [
+  { value: 'square', label: t('Square') },
+  { value: 'rounded', label: t('Rounded') },
+  { value: 'bevel', label: t('Bevelled') },
+];
+
+/**
+ * A worktop's front edge (ADR-209): Square, Rounded or Bevelled, and its size typed by the user (no default, ADR-010).
+ * Rounded or Bevelled without a size is a warning and is drawn square.
+ */
+export function WorktopEdgeEdit({ part }: { part: RunPart }) {
+  const edges = useDesign((s) => s.project?.worktopEdges);
+  const setEdge = useDesign((s) => s.setWorktopEdge);
+  const key = runPartKey(part);
+  const edge = edges?.find((e) => e.key === key);
+  const kind = edge?.kind ?? 'square';
+  const [size, setSize] = useState(edge?.size !== undefined ? String(edge.size) : '');
+  const [seen, setSeen] = useState(edge?.size);
+  if (seen !== edge?.size) {
+    setSeen(edge?.size);
+    setSize(edge?.size !== undefined ? String(edge.size) : '');
+  }
+  const save = (k: WorktopEdgeKind, s: string) => {
+    const n = typed(s);
+    setEdge({ key, kind: k, ...(n !== null ? { size: n } : {}) });
+  };
+  return (
+    <div className="run-edit worktop-edge">
+      <Segmented<WorktopEdgeKind>
+        label={t('Edge profile')}
+        value={kind}
+        options={EDGE_KINDS}
+        onChange={(k) => save(k, size)}
+      />
+      {kind !== 'square' && (
+        <TypedMm
+          label={t('Edge size (mm)')}
+          value={size}
+          onChange={(v) => {
+            setSize(v);
+            if (v.trim() === '' || typed(v) !== null) save(kind, v);
+          }}
+          hint={
+            kind === 'rounded'
+              ? t('The radius of the front edge; there is no default.')
+              : t('How far the bevel cuts back; there is no default.')
+          }
+        />
+      )}
+    </div>
+  );
+}
+
+/**
+ * A moulding's cross-section (ADR-209): typed as points ("0,0; 20,0; 20,45; 0,60") or tapped on a whole-mm grid, with
+ * a live drawing. Across first, then up, from the back-bottom corner. Malformed text is not saved; a profile that
+ * crosses itself is saved and shown as the error `trim-profile-invalid`.
+ */
+export function ProfileEditor({
+  value,
+  onChange,
+}: {
+  value: [Mm, Mm][] | undefined;
+  onChange: (p: [Mm, Mm][] | undefined) => void;
+}) {
+  const id = useId();
+  const [text, setText] = useState(value ? profileText(value) : '');
+  const [seen, setSeen] = useState(value);
+  if (seen !== value) {
+    setSeen(value);
+    setText(value ? profileText(value) : '');
+  }
+  const parsed = parseProfile(text);
+  const pts = parsed ?? value ?? [];
+  const bad = parsed === null;
+  const crossing = !bad && pts.length > 0 && !profileValid(pts);
+  const commit = (next: [Mm, Mm][] | null) => {
+    if (next === null) return;
+    onChange(next.length ? next : undefined);
+  };
+  const b = profileBounds(pts);
+  const W = Math.max(100, b.u + b.w + 20),
+    H = Math.max(100, b.v + b.h + 20);
+  const tap = (e: ReactPointerEvent<SVGSVGElement>) => {
+    const svg = e.currentTarget;
+    const m = svg.getScreenCTM();
+    if (!m) return;
+    const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse());
+    // A whole-mm grid: the tap lands on the nearest millimetre.
+    const u = Math.round(p.x),
+      v = Math.round(H - p.y);
+    if (u < 0 || v < 0 || u > W || v > H) return;
+    const next: [Mm, Mm][] = [...pts, [u, v]];
+    setText(profileText(next));
+    commit(next);
+  };
+  const grid: number[] = [];
+  for (let g = 0; g <= Math.max(W, H); g += 10) grid.push(g);
+  return (
+    <div className="field profile-editor">
+      <label htmlFor={id}>{t('Moulding profile')}</label>
+      <input
+        id={id}
+        value={text}
+        placeholder={t('e.g. 0,0; 20,0; 20,45; 0,60')}
+        aria-invalid={bad || crossing}
+        aria-describedby={`${id}-hint`}
+        onChange={(e) => setText(e.target.value)}
+        onBlur={() => commit(parsed)}
+        onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
+      />
+      <svg
+        className="profile-grid"
+        viewBox={`0 0 ${W} ${H}`}
+        role="img"
+        aria-label={t('Moulding profile drawing; tap to add a point')}
+        onPointerDown={tap}
+      >
+        {grid
+          .filter((g) => g <= W)
+          .map((g) => (
+            <line key={`u${g}`} x1={g} y1={0} x2={g} y2={H} className="grid" />
+          ))}
+        {grid
+          .filter((g) => g <= H)
+          .map((g) => (
+            <line key={`v${g}`} x1={0} y1={H - g} x2={W} y2={H - g} className="grid" />
+          ))}
+        {pts.length > 1 && (
+          <polygon
+            className={crossing ? 'shape bad' : 'shape'}
+            points={pts.map(([u, v]) => `${u},${H - v}`).join(' ')}
+          />
+        )}
+        {pts.map(([u, v], i) => (
+          <circle key={i} cx={u} cy={H - v} r={1.6} className="pt" />
+        ))}
+      </svg>
+      <div className="run-ask-actions">
+        <button
+          type="button"
+          className="btn ghost sm"
+          disabled={!pts.length}
+          onClick={() => {
+            const next = pts.slice(0, -1);
+            setText(profileText(next));
+            commit(next);
+          }}
+        >
+          {t('Remove last point')}
+        </button>
+        <button
+          type="button"
+          className="btn ghost sm"
+          disabled={!pts.length}
+          onClick={() => {
+            setText('');
+            commit([]);
+          }}
+        >
+          {t('Clear profile')}
+        </button>
+      </div>
+      <p className={bad || crossing ? 'field-error' : 'hint'} id={`${id}-hint`}>
+        {bad
+          ? t('Type whole-mm points as across,up separated by ";". Not saved until it is.')
+          : crossing
+            ? t('The profile crosses itself or has fewer than three points.')
+            : pts.length
+              ? t('Profile {w} × {h} mm: the strip takes this size.', { w: b.w, h: b.h })
+              : t('Optional: without a profile the trim is a plain strip.')}
+      </p>
+    </div>
+  );
+}
+
+/** A crown's or pelmet's height and profile (ADR-209); the height can follow a variable. */
+export function TrimEdit({ part }: { part: RunPart }) {
+  const project = useDesign((s) => s.project);
+  const setRunRequest = useDesign((s) => s.setRunRequest);
+  const [open, setOpen] = useState(false);
+  const req = project?.runRequests?.find((r) => requestKey(r) === part.key);
+  if (!project || !req || (req.kind !== 'crown' && req.kind !== 'pelmet')) return null;
+  const shaped = !!req.profile && profileValid(req.profile);
+  const hint = requestBindingHint(project, req, 'height');
+  return (
+    <div className="run-edit">
+      <button
+        type="button"
+        className="btn ghost sm"
+        aria-expanded={open}
+        onClick={() => setOpen(!open)}
+      >
+        {shaped
+          ? t('Profile {w} × {h} mm', { w: part.box.d, h: part.box.h })
+          : t('Height {h} mm, no profile', { h: part.box.h })}
+      </button>
+      {open && (
+        <div className="run-ask">
+          <MmField
+            label={t('Trim height')}
+            value={req.height ?? part.box.h}
+            min={1}
+            max={3000}
+            onChange={(v) => setRunRequest({ ...req, height: v })}
+            disabled={!!hint || shaped}
+            hint={hint ?? (shaped ? t('The profile sets the height.') : undefined)}
+            trailing={<RequestBindButton request={req} target="height" />}
+          />
+          <ProfileEditor
+            value={req.profile}
+            onChange={(profile) => {
+              const { profile: _p, ...rest } = req;
+              void _p;
+              setRunRequest(profile ? { ...rest, profile } : rest);
+            }}
           />
         </div>
       )}
@@ -117,6 +357,7 @@ export function AskRunParts() {
   const [side, setSide] = useState(0);
   const [kind, setKind] = useState<TrimKind>('crown');
   const [height, setHeight] = useState('');
+  const [profile, setProfile] = useState<[Mm, Mm][] | undefined>(undefined);
   const [boardKey, setBoardKey] = useState('');
   const name = (id: string) => project.items.find((i) => i.id === id)?.design.name ?? id;
   const failed = (project.runRequests ?? []).flatMap((r) => {
@@ -146,7 +387,11 @@ export function AskRunParts() {
     boards.find((b) => materialKey(b) === (boardKey || (front0 && materialKey(front0)))) ??
     boards[0];
   const needsHeight = kind !== 'ceiling-filler';
-  const ready = choice.adjacent && (open === 'worktop' || (!!board && (!needsHeight || heightOk)));
+  // A crown or pelmet with a profile takes its height from it (ADR-209).
+  const pb = profile ? profileBounds(profile) : null;
+  const shaped = needsHeight && !!pb && pb.w > 0 && pb.h > 0;
+  const ready =
+    choice.adjacent && (open === 'worktop' || (!!board && (!needsHeight || heightOk || shaped)));
   const add = () => {
     if (!ready) return;
     if (open === 'worktop') setRunRequest({ kind: 'worktop', from: choice.ids, front, side });
@@ -154,12 +399,14 @@ export function AskRunParts() {
       setRunRequest({
         kind,
         from: choice.ids,
-        ...(needsHeight ? { height: h } : {}),
+        ...(needsHeight && heightOk ? { height: h } : {}),
+        ...(needsHeight && profile ? { profile } : {}),
         material: { ...board },
       });
     setOpen(null);
     setTicked(new Set());
     setHeight('');
+    setProfile(undefined);
   };
   const pieceList = (groups: string[][]) => (
     <fieldset className="run-pick">
@@ -255,7 +502,10 @@ export function AskRunParts() {
                 onChange={setBoardKey}
               />
               {needsHeight ? (
-                <HeightField value={height} onChange={setHeight} valid={heightOk} />
+                <>
+                  {!shaped && <HeightField value={height} onChange={setHeight} valid={heightOk} />}
+                  <ProfileEditor value={profile} onChange={setProfile} />
+                </>
               ) : (
                 <p className="hint">
                   {project.room
@@ -345,6 +595,72 @@ function TypedMm({
       </div>
       <p className={showErr ? 'field-error' : 'hint'} id={`${id}-hint`}>
         {showErr ? t('Whole number from 1 to 3000.') : hint}
+      </p>
+    </div>
+  );
+}
+
+/**
+ * Where a sink or hob cut-out is (ADR-209): **From left** (the base's left edge to the cut-out) and **From front** (the
+ * worktop's front edge to it), whole mm; empty = centred on that axis.
+ */
+function CutoutPlace({ cut, onChange }: { cut: RunSink; onChange: (c: RunSink) => void }) {
+  const set = (axis: 'x' | 'z', v: Mm | undefined) => {
+    const { [axis]: _gone, ...rest } = cut;
+    void _gone;
+    onChange(v === undefined ? rest : { ...rest, [axis]: v });
+  };
+  return (
+    <div className="dims2 cutout-place">
+      <OffsetMm label={t('From left')} value={cut.x} onChange={(v) => set('x', v)} />
+      <OffsetMm label={t('From front')} value={cut.z} onChange={(v) => set('z', v)} />
+    </div>
+  );
+}
+
+/** A whole-mm offset from 0 to 3000, empty = centred (ADR-209); typed text that is not one is not saved. */
+function OffsetMm({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: Mm | undefined;
+  onChange: (v: Mm | undefined) => void;
+}) {
+  const id = useId();
+  const [text, setText] = useState(value === undefined ? '' : String(value));
+  const [seen, setSeen] = useState(value);
+  if (seen !== value) {
+    setSeen(value);
+    setText(value === undefined ? '' : String(value));
+  }
+  const n = Number(text);
+  const ok = text.trim() === '' || (Number.isInteger(n) && n >= 0 && n <= 3000);
+  const commit = () => {
+    if (!ok) return;
+    const next = text.trim() === '' ? undefined : n;
+    if (next !== value) onChange(next);
+  };
+  return (
+    <div className="field">
+      <label htmlFor={id}>{label}</label>
+      <div className={`mm ${ok ? '' : 'invalid'}`}>
+        <input
+          id={id}
+          inputMode="numeric"
+          value={text}
+          placeholder={t('centred')}
+          aria-invalid={!ok}
+          aria-describedby={`${id}-hint`}
+          onChange={(e) => setText(e.target.value.replace(/[^\d]/g, ''))}
+          onBlur={commit}
+          onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
+        />
+        <span className="unit">{t('mm')}</span>
+      </div>
+      <p className={ok ? 'hint' : 'field-error'} id={`${id}-hint`}>
+        {ok ? t('Empty = centred.') : t('Whole number from 0 to 3000.')}
       </p>
     </div>
   );
@@ -492,6 +808,7 @@ export function RunHandlesAndSinks() {
               >
                 <Icon name="trash" />
               </button>
+              <CutoutPlace cut={sk} onChange={setSink} />
             </li>
           ))}
           {hobs.map((hb) => (
@@ -508,6 +825,7 @@ export function RunHandlesAndSinks() {
               >
                 <Icon name="trash" />
               </button>
+              <CutoutPlace cut={hb} onChange={setHob} />
             </li>
           ))}
         </ul>

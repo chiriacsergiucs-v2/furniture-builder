@@ -116,9 +116,12 @@ import {
   AskRunParts,
   PlanKitchenMarks,
   RunHandlesAndSinks,
+  TrimEdit,
   WorktopCorners,
+  WorktopEdgeEdit,
   WorktopOverhang,
 } from './RunRequests';
+import { FastenersPanel } from './Fasteners';
 import { ClearanceFields, useClearances, ZoneOverlay, ZoneToolbar } from './Clearances';
 import { useMediaQuery } from './useMediaQuery';
 import { ViewOptions } from './ViewOptions';
@@ -250,6 +253,8 @@ export function ProjectPanel({
         <RunParts />
         <ProjectSettingsPanel />
         <VariablesPanel />
+        {/* The project's fastener counts and the user's fasteners (ADR-209, ADR-074). */}
+        <FastenersPanel />
         <MmField
           label={t('Saw cut (kerf) for this project')}
           value={project.cutting?.kerf ?? 4}
@@ -3111,6 +3116,8 @@ function RunParts() {
                 <Icon name="trash" />
               </button>
               {rp.kind === 'worktop' && <WorktopOverhang part={rp} />}
+              {rp.kind === 'worktop' && <WorktopEdgeEdit part={rp} />}
+              {(rp.kind === 'crown' || rp.kind === 'pelmet') && <TrimEdit part={rp} />}
             </li>
           ))}
         </ul>

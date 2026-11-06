@@ -13,6 +13,7 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import {
+  type BufferGeometry,
   BoxGeometry,
   Color,
   EdgesGeometry,
@@ -44,6 +45,8 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { useFocusedProblem } from '../ui/ProblemBanner';
 import { connectionSeams } from '../core/connections';
 import { explode } from '../core/explode';
 import { t } from '../core/i18n';
@@ -151,6 +154,159 @@ function profileGeometry(p: Panel): ExtrudeGeometry {
   );
   g.computeVertexNormals();
   geoCache.set(p, g);
+  return g;
+}
+
+const followCache = new WeakMap<Panel, BufferGeometry | null>();
+/** An extruded outline, placed by a matrix whose columns are where the shape's x, y and extrusion go, and its origin. */
+function placedExtrude(
+  outline: [number, number][],
+  holes: [number, number][][],
+  depth: number,
+  cols: [number[], number[], number[]],
+  origin: [number, number, number],
+): ExtrudeGeometry {
+  const shape = new Shape();
+  outline.forEach(([u, v], i) => (i ? shape.lineTo(u * S, v * S) : shape.moveTo(u * S, v * S)));
+  for (const hole of holes) {
+    const path = new Path();
+    hole.forEach(([u, v], i) => (i ? path.lineTo(u * S, v * S) : path.moveTo(u * S, v * S)));
+    shape.holes.push(path);
+  }
+  const g = new ExtrudeGeometry(shape, { depth: depth * S, bevelEnabled: false });
+  const [a, b, c] = cols;
+  g.applyMatrix4(
+    new Matrix4().set(
+      a[0],
+      b[0],
+      c[0],
+      origin[0] * S,
+      a[1],
+      b[1],
+      c[1],
+      origin[1] * S,
+      a[2],
+      b[2],
+      c[2],
+      origin[2] * S,
+      0,
+      0,
+      0,
+      1,
+    ),
+  );
+  return g;
+}
+
+/**
+ * ADR-209, display only: a crown's or pelmet's profile extruded along its length (`section`), or a worktop with its
+ * rounded or bevelled front edge (`edgeProfile`), drawn as a lower slab, a top slab stopping `size` short of the front
+ * and the shaped edge strip; its cut-out holes stay. Null when the panel has neither.
+ */
+function followUpGeometry(p: Panel): BufferGeometry | null {
+  if (followCache.has(p)) return followCache.get(p)!;
+  const b = p.box;
+  let g: BufferGeometry | null = null;
+  if (p.section && p.section.length >= 3) {
+    // Across (z) and up (y) from the back-bottom corner, extruded along x.
+    g = placedExtrude(
+      p.section,
+      [],
+      b.w,
+      [
+        [0, 0, 1],
+        [0, 1, 0],
+        [1, 0, 0],
+      ],
+      [b.x, b.y, b.z],
+    );
+  } else if (p.edgeProfile && p.thicknessAxis === 'y') {
+    const { kind, size: s, face } = p.edgeProfile;
+    const t = b.h;
+    const own = p.shape?.kind === 'profile' ? p.shape : null;
+    const pts: [number, number][] = own
+      ? own.points
+      : [
+          [0, 0],
+          [b.w, 0],
+          [b.w, b.d],
+          [0, b.d],
+        ];
+    const holes = own?.holes ?? [];
+    // The worktop's plan: u along x, v along z; the front line and how a point moves back from it.
+    const onU = face[1] === 'x';
+    const at = face === '+z' ? b.d : face === '+x' ? b.w : 0;
+    const back = face[0] === '+' ? -s : s;
+    const isFront = ([u, v]: [number, number]) => (onU ? u : v) === at;
+    const pull = ([u, v]: [number, number]): [number, number] =>
+      isFront([u, v]) ? (onU ? [u + back, v] : [u, v + back]) : [u, v];
+    const clamp = ([u, v]: [number, number]): [number, number] => {
+      const lim = at + back;
+      const c = onU ? u : v;
+      const k = face[0] === '+' ? Math.min(c, lim) : Math.max(c, lim);
+      return onU ? [k, v] : [u, k];
+    };
+    const along = pts.filter(isFront).map(([u, v]) => (onU ? v : u));
+    const plan: [number[], number[], number[]] = [
+      [1, 0, 0],
+      [0, 0, 1],
+      [0, 1, 0],
+    ];
+    const parts: BufferGeometry[] = [
+      placedExtrude(pts, holes, t - s, plan, [b.x, b.y, b.z]),
+      placedExtrude(
+        pts.map(pull),
+        holes.map((h) => h.map(clamp)),
+        s,
+        plan,
+        [b.x, b.y + t - s, b.z],
+      ),
+    ];
+    if (along.length >= 2) {
+      const e0 = Math.min(...along),
+        e1 = Math.max(...along);
+      // The edge strip's section: a back from the front, b up from the top slab's underside.
+      const sec: [number, number][] = [
+        [0, 0],
+        [s, 0],
+        [s, s],
+      ];
+      if (kind === 'rounded')
+        for (let i = 1; i < 12; i++) {
+          const th = (i / 12) * (Math.PI / 2);
+          sec.push([s - s * Math.sin(th), s * Math.cos(th)]);
+        }
+      const y0 = b.y + t - s;
+      const [aDir, eDir, origin]: [number[], number[], [number, number, number]] =
+        face === '+z'
+          ? [
+              [0, 0, -1],
+              [1, 0, 0],
+              [b.x + e0, y0, b.z + b.d],
+            ]
+          : face === '-z'
+            ? [
+                [0, 0, 1],
+                [1, 0, 0],
+                [b.x + e0, y0, b.z],
+              ]
+            : face === '+x'
+              ? [
+                  [-1, 0, 0],
+                  [0, 0, 1],
+                  [b.x + b.w, y0, b.z + e0],
+                ]
+              : [
+                  [1, 0, 0],
+                  [0, 0, 1],
+                  [b.x, y0, b.z + e0],
+                ];
+      parts.push(placedExtrude(sec, [], e1 - e0, [aDir, [0, 1, 0], eDir], origin));
+    }
+    g = mergeGeometries(parts.map((x) => x.toNonIndexed()));
+  }
+  g?.computeVertexNormals();
+  followCache.set(p, g);
   return g;
 }
 
@@ -431,6 +587,7 @@ export default function Viewer3D() {
         )}
         {moving && turnId && <HeightHandle id={turnId} />}
         {view.mode === 'project' && zonesOn && !exploded && !rendering && <ZoneBoxes />}
+        {view.mode === 'project' && !exploded && !rendering && !preview && <ProblemBoxes />}
         {sectionOn && <SectionClip axis={section.axis} at={cut!} />}
         {showLocks && <LockAnchors pieces={locked} badges={lockBadges} />}
         <Fit key={designId} bounds={bounds} />
@@ -1775,7 +1932,9 @@ function Panels({
                 : tinted
                   ? new Color(base).lerp(new Color(SELECT), 0.45).getStyle()
                   : base;
-              const side = p.shape?.kind === 'profile' ? DoubleSide : FrontSide;
+              // A moulding profile or a shaped worktop edge (ADR-209) is drawn from its own geometry.
+              const follow = followUpGeometry(p);
+              const side = p.shape?.kind === 'profile' || follow ? DoubleSide : FrontSide;
               const look = realistic ? (
                 <>
                   {/* Realistic (ADR-067): the finish sets how matte or glossy a board is; backs stay opaque. Panel edges are
@@ -1832,6 +1991,19 @@ function Panels({
                   <PictureGeometry p={p} img={img} />
                 ) : (
                   <boxGeometry args={[b.w * S, b.h * S, b.d * S]} />
+                );
+              if (follow)
+                return (
+                  <mesh
+                    key={p.id}
+                    geometry={follow}
+                    onClick={onClick}
+                    onPointerDown={onDown}
+                    castShadow={realistic}
+                    receiveShadow={realistic}
+                  >
+                    {look}
+                  </mesh>
                 );
               if (p.shape?.kind === 'profile') {
                 return map && img ? (
@@ -1966,6 +2138,73 @@ function ZoneBoxes() {
           mesh
         );
       })}
+    </>
+  );
+}
+
+/** The twelve edges of a box, as segment pairs in metres. */
+function boxSegments(b: Box): [number, number, number][] {
+  const [x0, x1] = [b.x * S, (b.x + b.w) * S];
+  const [y0, y1] = [b.y * S, (b.y + b.h) * S];
+  const [z0, z1] = [b.z * S, (b.z + b.d) * S];
+  const corners = [x0, x1].flatMap((x) =>
+    [y0, y1].flatMap((y) => [z0, z1].map((z) => [x, y, z] as [number, number, number])),
+  );
+  const segs: [number, number, number][] = [];
+  for (let i = 0; i < 8; i++)
+    for (const bit of [1, 2, 4]) if (!(i & bit)) segs.push(corners[i], corners[i | bit]);
+  return segs;
+}
+
+/**
+ * The problem picked under Checks (ADR-209, G-034), in 3D: its box as a translucent red box and the chosen repair's
+ * result as dashed outlines labelled "After repair", as on the plan. Display only: never picked, never edited.
+ */
+function ProblemBoxes() {
+  const problem = useFocusedProblem();
+  if (!problem) return null;
+  const b = problem.d.box;
+  const zone = b && b.w > 0 && b.h > 0 && b.d > 0 ? b : null;
+  return (
+    <>
+      {zone && (
+        <mesh
+          position={[
+            (zone.x + zone.w / 2) * S,
+            (zone.y + zone.h / 2) * S,
+            (zone.z + zone.d / 2) * S,
+          ]}
+          raycast={() => null}
+          renderOrder={5}
+        >
+          <boxGeometry args={[zone.w * S, zone.h * S, zone.d * S]} />
+          <meshBasicMaterial color="#c0392b" transparent opacity={0.3} depthWrite={false} />
+        </mesh>
+      )}
+      {problem.chosen?.preview.map((p) => (
+        <group key={p.id}>
+          <Line
+            points={boxSegments(p.box)}
+            segments
+            dashed
+            dashSize={0.03}
+            gapSize={0.02}
+            color="#c0392b"
+            lineWidth={2}
+            depthTest={false}
+            transparent
+            renderOrder={10}
+            raycast={() => null}
+          />
+          <Html
+            position={[p.box.x * S, (p.box.y + p.box.h) * S, (p.box.z + p.box.d) * S]}
+            className="repair-label-3d"
+            zIndexRange={[5, 0]}
+          >
+            <span className="repair-preview-3d">{t('After repair')}</span>
+          </Html>
+        </group>
+      ))}
     </>
   );
 }

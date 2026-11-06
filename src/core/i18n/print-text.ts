@@ -41,6 +41,16 @@ export const PRINT_RU = {
   'decupaj plită {w} × {d} mm': 'вырез под варочную панель {w} × {d} мм',
   'îmbinare la 45°': 'соединение под 45°',
   'îmbinare cap la cap cu {other}': 'соединение встык с {other}',
+  // Placed cut-outs, moulding profiles, worktop edges and fixing positions (ADR-209)
+  'decupaj {what} {w} × {d} mm, la {x} mm de stânga și {z} mm de față':
+    'вырез {what} {w} × {d} мм, в {x} мм от левого края и {z} мм от переднего',
+  chiuvetă: 'под мойку',
+  plită: 'под варочную панель',
+  'profil {w} × {h} mm, desenat de tine': 'профиль {w} × {h} мм, нарисован вами',
+  'cant rotunjit R{s} mm': 'скруглённая кромка R{s} мм',
+  'cant teșit {s} mm': 'скошенная кромка {s} мм',
+  'găuri de fixare la {list} mm, orientativ, din valorile tale':
+    'отверстия под крепёж в {list} мм, ориентировочно, по вашим значениям',
   // Hardware
   'Pereche glisiere cu bile, montaj lateral': 'Пара шариковых направляющих, боковой монтаж',
   'joc {gap} mm pe parte': 'зазор {gap} мм на сторону',
@@ -331,6 +341,15 @@ export const PRINT_EN: Record<keyof typeof PRINT_RU, string> = {
   'decupaj plită {w} × {d} mm': 'hob cut-out {w} × {d} mm',
   'îmbinare la 45°': 'mitre joint',
   'îmbinare cap la cap cu {other}': 'butt joint against {other}',
+  'decupaj {what} {w} × {d} mm, la {x} mm de stânga și {z} mm de față':
+    '{what} cut-out {w} × {d} mm, {x} mm from the left and {z} mm from the front',
+  chiuvetă: 'sink',
+  plită: 'hob',
+  'profil {w} × {h} mm, desenat de tine': 'profile {w} × {h} mm, drawn by you',
+  'cant rotunjit R{s} mm': 'rounded edge R{s} mm',
+  'cant teșit {s} mm': 'bevelled edge {s} mm',
+  'găuri de fixare la {list} mm, orientativ, din valorile tale':
+    'fixing holes at {list} mm, guidance from your values',
   'Pereche glisiere cu bile, montaj lateral': 'Ball-bearing runner pair, side mount',
   'joc {gap} mm pe parte': '{gap} mm clearance per side',
   'Balama aplicată, cupă 35 mm, soft-close, clip-on':

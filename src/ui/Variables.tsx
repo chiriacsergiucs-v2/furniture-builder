@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { t, tr } from '../core/i18n';
-import type { Project, ProjectItem } from '../core/project';
+import type { Project, ProjectItem, RequestTarget, RunRequest } from '../core/project';
 import type { Design, DesignVariable } from '../core/types';
 import { projectFromSet, setComplete, setProgress, type VariableSet } from '../core/sets';
 import {
@@ -11,8 +11,10 @@ import {
   evaluateVariables,
   evaluatedText,
   nameProblem,
+  REQUEST_TARGET_LABEL,
   scopeFor,
   targetLabel,
+  variableScope,
   variableUsers,
 } from '../core/variables';
 import { saveProject } from '../persist/db';
@@ -81,6 +83,43 @@ export function DesignBindButton({ target }: { target: string }) {
       scope={designScope(design)}
       emptyHint={t('No variables yet. Add them under Variables in this piece’s settings.')}
       onBind={(expr) => bind(target, expr)}
+    />
+  );
+}
+
+/** `front overhang = 30`: what a bound run-request field shows instead of being edited (ADR-209). */
+export function requestBindingHint(
+  project: Project,
+  r: RunRequest,
+  target: RequestTarget,
+): string | undefined {
+  const b = r.bindings?.find((x) => x.target === target);
+  if (!b) return undefined;
+  const e = evaluateBinding(b.expr, variableScope(project.variables ?? []));
+  return e.value === undefined
+    ? t('{expr}: {problem}', { expr: b.expr, problem: e.problem ?? '' })
+    : t('{expr} = {n}', { expr: b.expr, n: e.value });
+}
+
+/** The ƒ button beside a run request's overhang or height (ADR-209): the same sheet pieces have. */
+export function RequestBindButton({
+  request,
+  target,
+}: {
+  request: RunRequest;
+  target: RequestTarget;
+}) {
+  const project = useDesign((s) => s.project);
+  const bind = useDesign((s) => s.bindRequest);
+  if (!project) return null;
+  return (
+    <BindControl
+      label={REQUEST_TARGET_LABEL[target]}
+      current={request.bindings?.find((b) => b.target === target)}
+      vars={project.variables ?? []}
+      scope={variableScope(project.variables ?? [])}
+      emptyHint={t('No variables yet. Add them in Settings › Variables.')}
+      onBind={(expr) => bind(request, target, expr)}
     />
   );
 }

@@ -7,6 +7,8 @@
  * ADR-204: a depth or height mismatch between neighbours (ADR-100) is repaired by making one piece as deep or as high as
  * the other, both ways; a size-locked size gets none, a size bound to a variable is listed refused, and linked copies
  * follow (ADR-111).
+ * ADR-209 (replaces ADR-071's "only with automatic refresh off"): the filler repair adds a run request of kind `filler`,
+ * planned with the run parts, so automatic refresh keeps it and the repair is offered with refresh on too.
  */
 import { carryUnits } from './connections';
 import { t as tx } from './i18n';
@@ -18,13 +20,15 @@ import { overlapsBox } from './shape';
 import {
   buildProjectModel,
   pieceName,
+  planRuns,
   refreshRunParts,
+  requestKey,
   resolvePlacements,
   type PlacedPiece,
   type Project,
   type ProjectItem,
   type ProjectModel,
-  type RunPart,
+  type RunRequest,
 } from './project';
 import { boxInside, movesInside } from './room';
 import type { Box, Diagnostic, Material, Mm } from './types';
@@ -222,41 +226,22 @@ function fillerCandidate(
   other: PlacedPiece,
   s: Mm,
 ): Candidate | null {
-  const b = pc.bounds,
-    m = frontBoard(pc);
+  const m = frontBoard(pc);
   if (!m || pc.item.locked) return null;
   const along = pc.facing.axis === 'z' ? 'x' : 'z';
-  const t = m.thickness;
-  const gap0 = s > 0 ? (along === 'x' ? b.x : b.z) : (along === 'x' ? b.x + b.w : b.z + b.d) + s;
-  const front =
-    pc.facing.axis === 'z'
-      ? pc.facing.sign > 0
-        ? b.z + b.d - t
-        : b.z
-      : pc.facing.sign > 0
-        ? b.x + b.w - t
-        : b.x;
   const w = Math.abs(s);
-  const box: Box =
-    along === 'x'
-      ? { x: gap0, y: b.y, z: front, w, h: b.h, d: t }
-      : { x: front, y: b.y, z: gap0, w: t, h: b.h, d: w };
   const key = `filler|${pc.item.id},${other.item.id}`;
-  const part: RunPart = {
-    id: key,
-    key,
-    from: [pc.item.id, other.item.id],
-    kind: 'filler',
-    label: 'Filler',
-    reason: `${w} mm gap so ${pc.item.design.name} opens clear of ${other.item.design.name} (repair)`,
-    box,
-    material: { ...m },
-    thicknessAxis: along === 'x' ? 'z' : 'x',
-    grainAxis: 'y',
-    banded: along === 'x' ? ['-x', '+x', '-y', '+y'] : ['-z', '+z', '-y', '+y'],
-  };
   const moved = moveItem(project, pc.item.id, along === 'x' ? s : 0, along === 'z' ? s : 0);
   if (!moved) return null;
+  // The filler is a run request (ADR-209): planned with the run parts, so automatic refresh keeps it and moves it with
+  // the pieces. With refresh off, its part is added now, as asking for a run part does.
+  const req: RunRequest = { kind: 'filler', from: [pc.item.id, other.item.id], width: w };
+  const withReq: Project = {
+    ...moved,
+    runRequests: [...(moved.runRequests ?? []).filter((r) => requestKey(r) !== key), req],
+    runPartsRemoved: (moved.runPartsRemoved ?? []).filter((k) => k !== key),
+  };
+  const planned = planRuns(resolvePlacements(withReq)).parts.find((r) => r.key === key);
   return {
     label: tx('Move {name} {mm} mm {side} and add a {mm} mm filler', {
       name: pieceName(project, pc.item.id),
@@ -265,8 +250,11 @@ function fillerCandidate(
     }),
     distance: w,
     project: {
-      ...moved,
-      runParts: [...(moved.runParts ?? []).filter((r) => r.key !== key), part],
+      ...withReq,
+      runParts: [
+        ...(withReq.runParts ?? []).filter((r) => r.key !== key),
+        ...(planned ? [planned] : []),
+      ],
     },
     added: key,
     lead: pc.item.id,

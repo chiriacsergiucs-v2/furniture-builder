@@ -5,7 +5,8 @@
  * template also keeps the project's variables, each piece's bindings and the connections between pieces (ADR-166,
  * ADR-168); a template with none of them stays version 1. Since schemaVersion 3 (ADR-204) it keeps the run handles
  * and sinks (ADR-125) over template refs, the project's display-only 3D models (ADR-208: offset and placement over
- * refs) and (ADR-205) each piece's clearance zones (ADR-073); a template without them stays version 1 or 2.
+ * refs) and (ADR-205) each piece's clearance zones (ADR-073); a template without them stays version 1 or 2. Also at
+ * version 3 (ADR-209), the run requests over template refs, with new ids when the template is used.
  */
 import { newId, validateDesign } from './design';
 import { applyBindings, type Binding, type ProjectVariable } from './variables';
@@ -17,6 +18,7 @@ import {
   type Project,
   type QuarterTurn,
   type RunHandle,
+  type RunRequest,
   type RunSettings,
   type RunSink,
 } from './project';
@@ -113,6 +115,8 @@ export interface ProjectTemplate {
   runHandles?: TemplateRunHandle[];
   /** Sinks over base units (ADR-125), over template refs (schemaVersion 3, ADR-204). */
   sinks?: TemplateSink[];
+  /** Run requests (ADR-075): worktops, trims and repair fillers over template refs (schemaVersion 3, ADR-209). */
+  runRequests?: RunRequest[];
   /** The project's display-only 3D models (schemaVersion 3, ADR-208). Template files embed their files. */
   models?: TemplateModel[];
   /** The project's own seller items (schemaVersion 3, ADR-210). */
@@ -141,8 +145,29 @@ export function remapRunExtras(
     .filter((rh) => rh.from.length);
   const out = (sinks ?? [])
     .filter((sk) => ids.has(sk.baseId))
-    .map((sk) => ({ id: newId(), baseId: ids.get(sk.baseId)!, w: sk.w, d: sk.d }));
+    .map((sk) => ({
+      id: newId(),
+      baseId: ids.get(sk.baseId)!,
+      w: sk.w,
+      d: sk.d,
+      // Where the cut-out is (ADR-209).
+      ...(sk.x !== undefined ? { x: sk.x } : {}),
+      ...(sk.z !== undefined ? { z: sk.z } : {}),
+    }));
   return { runHandles, sinks: out };
+}
+
+/**
+ * Run requests (ADR-075) with their piece ids mapped through `ids` (ADR-209, G-405): a request one of whose pieces is
+ * not mapped is dropped (its key would no longer hold). Profiles, bindings and boards are copied.
+ */
+export function remapRunRequests(
+  requests: readonly RunRequest[] | undefined,
+  ids: ReadonlyMap<string, string>,
+): RunRequest[] {
+  return (requests ?? [])
+    .filter((r) => r.from.length && r.from.every((x) => ids.has(x)))
+    .map((r) => ({ ...structuredClone(r), from: r.from.map((x) => ids.get(x)!) }));
 }
 
 /**
@@ -193,6 +218,8 @@ export function templateFromProject(
     void _i;
     return sk;
   });
+  // Run requests over template refs (ADR-209): ones over pieces no longer there are dropped.
+  const runRequests = remapRunRequests(p.runRequests, refs);
   const models: TemplateModel[] = (p.models ?? []).map((m) => ({
     ref: m.id,
     modelId: m.modelId,
@@ -210,6 +237,7 @@ export function templateFromProject(
     schemaVersion:
       runHandles.length ||
       sinks.length ||
+      runRequests.length ||
       connections?.some((c) => c.kind) ||
       models.length ||
       zoned ||
@@ -239,6 +267,7 @@ export function templateFromProject(
     ...(connections?.length ? { connections } : {}),
     ...(runHandles.length ? { runHandles } : {}),
     ...(sinks.length ? { sinks } : {}),
+    ...(runRequests.length ? { runRequests } : {}),
     ...(models.length ? { models } : {}),
     ...(p.sellerItems?.length ? { sellerItems: structuredClone(p.sellerItems) } : {}),
     ...(p.runParts?.length || p.runSettings
@@ -277,6 +306,7 @@ export function projectFromTemplate(t: ProjectTemplate, name = t.name): Project 
   });
   const connections = templateConnections(t.connections, ids, t.room).connections;
   const extras = remapRunExtras(t.runHandles, t.sinks, ids);
+  const runRequests = remapRunRequests(t.runRequests, ids);
   const models = templateModels(t.models, ids);
   const extended =
     items.some((i) => i.linkId || i.angle || i.bindings || i.zones) ||
@@ -284,6 +314,7 @@ export function projectFromTemplate(t: ProjectTemplate, name = t.name): Project 
     connections.length ||
     extras.runHandles.length ||
     extras.sinks.length ||
+    runRequests.length ||
     models.length ||
     t.sellerItems?.length;
   const base: Project = {
@@ -301,6 +332,7 @@ export function projectFromTemplate(t: ProjectTemplate, name = t.name): Project 
     ...(connections.length ? { connections } : {}),
     ...(extras.runHandles.length ? { runHandles: extras.runHandles } : {}),
     ...(extras.sinks.length ? { sinks: extras.sinks } : {}),
+    ...(runRequests.length ? { runRequests } : {}),
     ...(models.length ? { models } : {}),
     ...(t.sellerItems?.length ? { sellerItems: structuredClone(t.sellerItems) } : {}),
   };
@@ -507,6 +539,15 @@ export function validateProjectTemplate(t: unknown): string[] {
       for (const sk of t.sinks)
         if (!isObj(sk) || typeof sk.baseId !== 'string' || !refs.has(sk.baseId))
           errs.push('Invalid template sink');
+  }
+  // Run requests (ADR-209): version 3, every piece a template item; their shape is checked on the project.
+  if (t.runRequests !== undefined) {
+    if (!v3 || !Array.isArray(t.runRequests))
+      errs.push(`Run requests need template schemaVersion ${RUN_EXTRAS_SINCE}`);
+    else
+      for (const r of t.runRequests)
+        if (!isObj(r) || !allRefs(r.from) || !(r.from as string[]).length)
+          errs.push('Invalid template run request');
   }
   if (t.models !== undefined) {
     if (!v3 || !Array.isArray(t.models))

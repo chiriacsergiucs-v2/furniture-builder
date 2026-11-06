@@ -7435,3 +7435,67 @@ fieldset.group-locked {
   border: 0;
   opacity: 0.6;
 }
+/* ADR-209: the moulding profile editor, cut-out positions, drilling positions and the repair label in 3D. */
+.profile-editor .profile-grid {
+  display: block;
+  width: 100%;
+  max-width: 240px;
+  aspect-ratio: 1;
+  margin-top: var(--s-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface, transparent);
+  touch-action: none;
+  cursor: crosshair;
+}
+.profile-editor .profile-grid .grid {
+  stroke: var(--line-2);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.profile-editor .profile-grid .shape {
+  fill: var(--primary-soft);
+  stroke: var(--primary);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+.profile-editor .profile-grid .shape.bad {
+  fill: var(--error-soft);
+  stroke: var(--error);
+}
+.profile-editor .profile-grid .pt {
+  fill: var(--ink-2);
+}
+.cutout-place {
+  flex-basis: 100%;
+}
+.fixing-sketch {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-top: var(--s-1);
+}
+.fixing-sketch svg {
+  width: 96px;
+  max-height: 48px;
+  flex: none;
+}
+.fixing-sketch .outline {
+  fill: none;
+  stroke: var(--ink-2);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.fixing-sketch .dot {
+  fill: var(--primary);
+}
+.repair-preview-3d {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--error-soft);
+  color: var(--error);
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+}

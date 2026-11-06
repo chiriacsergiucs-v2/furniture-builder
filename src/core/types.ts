@@ -203,6 +203,13 @@ export interface Panel {
   shape?: PanelShape;
   /** The edge band chosen for this part or its role (ADR-188); absent = its board's band. */
   band?: EdgeBand;
+  /**
+   * A moulding's cross-section (ADR-209): whole-mm points [across, up] from the box's back-bottom corner, drawn in 3D
+   * extruded along the box's length (x). Display only: the cut size is `box`.
+   */
+  section?: [Mm, Mm][];
+  /** A worktop's front edge shape (ADR-209): drawn in 3D on the edge `face`, `size` mm; display only. */
+  edgeProfile?: { kind: 'rounded' | 'bevel'; size: Mm; face: Face };
 }
 
 /**

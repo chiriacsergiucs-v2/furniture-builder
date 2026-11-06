@@ -271,8 +271,9 @@ export const TRIM_KINDS: TrimKind[] = ['crown', 'pelmet', 'ceiling-filler'];
  * pieces (ADR-061). The key is `kind|from ids`, the same form as the suggested parts.
  */
 export interface RunRequest {
-  kind: 'worktop' | TrimKind;
-  /** Item ids, left to right. */
+  /** `filler`: a filler a repair added beside a door's piece (ADR-209), `from` = [door's piece, neighbour]. */
+  kind: 'worktop' | TrimKind | 'filler';
+  /** Item ids, left to right (a filler: the door's piece, then its neighbour). */
   from: string[];
   /** Worktop: overhang past the front and past each end, mm. Absent = 20 and 0, as suggested worktops. */
   front?: Mm;
@@ -281,7 +282,26 @@ export interface RunRequest {
   height?: Mm;
   /** Trims: the board, a copy. */
   material?: Material;
+  /**
+   * Crown and pelmet (ADR-209): the moulding's cross-section the user typed or tapped, whole-mm points [across, up]; the
+   * strip takes its bounding width and height. Absent = a plain strip of `height`.
+   */
+  profile?: [Mm, Mm][];
+  /** Fields that follow project variables (ADR-209, ADR-166): targets `front`, `side` and `height`. */
+  bindings?: Binding[];
+  /** A repair filler's width, mm (ADR-209). */
+  width?: Mm;
 }
+
+/** The fields of a run request that can follow a variable (ADR-209). */
+export const REQUEST_TARGETS = ['front', 'side', 'height'] as const;
+export type RequestTarget = (typeof REQUEST_TARGETS)[number];
+/** The whole-mm range of a request field: the same limits as its field and the document check. */
+export const REQUEST_RANGE: Record<RequestTarget, { min: Mm; max: Mm }> = {
+  front: { min: 0, max: 1000 },
+  side: { min: 0, max: 1000 },
+  height: { min: 1, max: 3000 },
+};
 export const requestKey = (r: Pick<RunRequest, 'kind' | 'from'>) => `${r.kind}|${r.from.join(',')}`;
 
 /** Bar handle hole centres offered (ADR-024), mm: the handle list run handles choose from (ADR-010, ADR-125). */
@@ -310,6 +330,12 @@ export interface RunSink {
   /** Cut-out width and depth, mm. */
   w: Mm;
   d: Mm;
+  /**
+   * Where the cut-out is (ADR-209): `x` from the base's left edge to the cut-out, `z` from the worktop's front edge,
+   * whole mm. Absent = centred on that axis (ADR-205).
+   */
+  x?: Mm;
+  z?: Mm;
 }
 
 /** A hob over a base unit (ADR-205): a cut-out in the run worktop, its size the user's (ADR-010); same shape as a sink. */
@@ -328,6 +354,16 @@ export interface WorktopJoint {
   through?: 'a' | 'b';
 }
 
+/** A worktop's front edge (ADR-209): square, rounded or bevelled by the size the user typed (no default, ADR-010). */
+export type WorktopEdgeKind = 'square' | 'rounded' | 'bevel';
+export interface WorktopEdge {
+  /** The worktop's run-part key (`runPartKey`), as worktop joints are keyed. */
+  key: string;
+  kind: WorktopEdgeKind;
+  /** Radius (rounded) or bevel size, whole mm; absent = not typed yet (a warning; drawn square). */
+  size?: Mm;
+}
+
 /**
  * Project document versions (ADR-011): new and edited projects are written at `PROJECT_SCHEMA`; every version in
  * `PROJECT_SCHEMAS` still loads unchanged. 2 = room pipes and outlets (ADR-072); 3 = clearance zones on items
@@ -340,7 +376,8 @@ export interface WorktopJoint {
  * (ADR-168); 19 = turn and per-size locks (ADR-171); 20 = shared sides (ADR-190); 21 = seller products on run parts
  * (ADR-206), connection kinds and wall connections (ADR-207), the floor background, the plan picture and model
  * placements (ADR-208), worktop corner joints, hobs and backs cut around pipes and outlets (ADR-205), board and
- * construction locks (ADR-211), the project's own seller items (ADR-210).
+ * construction locks (ADR-211), the project's own seller items (ADR-210), moulding profiles, request bindings and
+ * repair fillers on run requests, cut-out positions and worktop edges (ADR-209).
  */
 export const PROJECT_SCHEMA = 21 as const;
 export const PROJECT_SCHEMAS: readonly number[] = [
@@ -411,6 +448,7 @@ const SURFACES_SINCE = 21;
 const KITCHEN_SINCE = 21;
 const PIECE_LOCKS_SINCE = 21;
 const SELLER_ITEMS_SINCE = 21;
+const FOLLOW_UPS_SINCE = 21;
 
 export interface Project {
   schemaVersion: ProjectSchemaVersion;
@@ -472,6 +510,8 @@ export interface Project {
    * listed once after the pieces' items. Absent = none.
    */
   sellerItems?: SellerItem[];
+  /** Worktop front edges (ADR-209, schemaVersion 21), one per worktop by run-part key. Absent = square. */
+  worktopEdges?: WorktopEdge[];
 }
 
 /**
@@ -1533,6 +1573,8 @@ export function buildProjectModel(input: Project): ProjectModel {
   const placedById = new Map(pieces.map((pc) => [pc.item.id, pc]));
   // Worktops meeting at a corner, with the joint the user chose (ADR-205).
   const joints = worktopJointCuts(project);
+  // The sink and hob cut-outs, cut through their worktops in 3D (ADR-209).
+  const cutouts = cutoutOutlines(project, pieces);
   for (const rp of project.runParts ?? []) {
     // Made for pieces that are gone, or a run plinth no longer as long as its pieces (refresh off, ADR-061).
     const src = (rp.from ?? []).map((id) => placedById.get(id));
@@ -1554,7 +1596,13 @@ export function buildProjectModel(input: Project): ProjectModel {
       });
     const k = materialKey(rp.material);
     if (!materials.has(k)) materials.set(k, { ...rp.material, id: k, sheet: sheetOf(rp.material) });
-    const panel = runPanel(rp, k, joints.get(rp.id));
+    // A worktop's cut-outs as holes, a moulding's profile and a worktop's edge, for 3D (ADR-209).
+    const panel = followUpPanel(
+      project,
+      rp,
+      runPanel(rp, k, joints.get(rp.id)),
+      cutouts.filter((c) => c.partId === rp.id),
+    );
     // ADR-077: a band narrower than the run part's board is an error, as on a piece's own parts.
     const band = panel.banded.length
       ? bandFor(runMaterial(project, rp.material), panel.role)
@@ -1592,6 +1640,8 @@ export function buildProjectModel(input: Project): ProjectModel {
     ...cutoutChecks(project, placedById, 'sink'),
     ...cutoutChecks(project, placedById, 'hob'),
     ...worktopJointChecks(project),
+    ...trimProfileChecks(project),
+    ...worktopEdgeChecks(project),
   );
   // Run parts the user asked for that could not be made (ADR-075): an error, never left out silently (ADR-008).
   const made = new Set((project.runParts ?? []).map((rp) => rp.key));
@@ -2057,6 +2107,64 @@ const runPanel = (
   banded: rp.banded,
 });
 
+/**
+ * A run part's panel as drawn (ADR-209): a crown's or pelmet's profile (`section`), a worktop's rounded or bevelled
+ * front edge (`edgeProfile`) and a hole per sink or hob cut-out in a worktop (a profile with `holes`, ADR-205). Only the
+ * project build adds them; the cut list keeps the plain blank and its notes.
+ */
+function followUpPanel(
+  project: Project,
+  rp: RunPart,
+  panel: Panel,
+  cuts: readonly CutoutOutline[],
+): Panel {
+  let p = panel;
+  if (rp.kind === 'crown' || rp.kind === 'pelmet') {
+    const section = trimSection(project.runRequests?.find((r) => requestKey(r) === rp.key));
+    if (section) p = { ...p, section };
+  }
+  if (rp.kind !== 'worktop') return p;
+  const e = worktopEdgeOf(project, rp);
+  if (e) p = { ...p, edgeProfile: { ...e, face: worktopFront(rp) } };
+  if (!cuts.length || p.thicknessAxis !== 'y') return p;
+  const b = p.box;
+  const holes = cuts.flatMap((c): [Mm, Mm][][] => {
+    const u0 = c.box.x - b.x,
+      v0 = c.box.z - b.z,
+      u1 = u0 + c.box.w,
+      v1 = v0 + c.box.d;
+    // A cut-out past the worktop's edge has its diagnostic; it is not drawn as a hole.
+    if (u0 <= 0 || v0 <= 0 || u1 >= b.w || v1 >= b.d) return [];
+    return [
+      [
+        [u0, v0],
+        [u1, v0],
+        [u1, v1],
+        [u0, v1],
+      ],
+    ];
+  });
+  if (!holes.length) return p;
+  const own = p.shape?.kind === 'profile' ? p.shape : null;
+  const points: [Mm, Mm][] = own
+    ? own.points
+    : [
+        [0, 0],
+        [b.w, 0],
+        [b.w, b.d],
+        [0, b.d],
+      ];
+  return {
+    ...p,
+    shape: {
+      kind: 'profile',
+      points,
+      holes: [...(own?.holes ?? []), ...holes],
+      ...(own?.cutouts ? { cutouts: own.cutouts } : {}),
+    },
+  };
+}
+
 /** Base units for runs: floor pieces facing the room (no turn) whose carcass is a cabinet or corner up to worktop height. */
 const RUN_MAX_HEIGHT = 950;
 const FILLER_MAX_GAP = 150;
@@ -2318,6 +2426,8 @@ function cutoutChecks(
     const side = top?.grainAxis === 'z';
     const depth = top ? (side ? top.box.w : top.box.d) : 0;
     const width = side ? base.bounds.d : base.bounds.w;
+    // A placed cut-out (ADR-209): its offset counts with its size.
+    const at = CUTOUT_AT_TEXT[kind];
     if (!top)
       out.push({
         severity: 'warning',
@@ -2325,23 +2435,40 @@ function cutoutChecks(
         message: t(text.none, { name }),
         nodeId,
       });
-    else if (sk.d >= depth)
+    else if ((sk.z ?? 0) + sk.d >= depth)
       out.push({
         severity: 'error',
         code: `${kind}-cutout-deep`,
-        message: t(text.deep, { w: sk.w, d: sk.d, name, depth }),
+        message:
+          sk.z === undefined
+            ? t(text.deep, { w: sk.w, d: sk.d, name, depth })
+            : t(at.deep, { d: sk.d, z: sk.z, name, depth }),
         nodeId,
       });
-    if (sk.w > width)
+    if ((sk.x ?? 0) + sk.w > width)
       out.push({
         severity: 'warning',
         code: `${kind}-cutout-wide`,
-        message: t(text.wide, { w: sk.w, name, width }),
+        message:
+          sk.x === undefined
+            ? t(text.wide, { w: sk.w, name, width })
+            : t(at.wide, { w: sk.w, x: sk.x, name, width }),
         nodeId,
       });
   }
   return out;
 }
+
+const CUTOUT_AT_TEXT = {
+  sink: {
+    deep: 'Sink cut-out {d} mm deep at {z} mm from the front reaches the back of the worktop over {name} ({depth} mm) or past it.',
+    wide: 'Sink cut-out {w} mm wide at {x} mm from the left goes past {name} under it ({width} mm).',
+  },
+  hob: {
+    deep: 'Hob cut-out {d} mm deep at {z} mm from the front reaches the back of the worktop over {name} ({depth} mm) or past it.',
+    wide: 'Hob cut-out {w} mm wide at {x} mm from the left goes past {name} under it ({width} mm).',
+  },
+} as const satisfies Record<'sink' | 'hob', Record<'deep' | 'wide', Key>>;
 
 /** A sink or hob cut-out on the plan (ADR-205): dashed on its worktop, labelled with its size. */
 export interface CutoutOutline {
@@ -2352,12 +2479,19 @@ export interface CutoutOutline {
   /** The cut-out as typed: along the run × across it. */
   w: Mm;
   d: Mm;
+  /** The worktop run part it is cut in. */
+  partId: string;
+  /** Where it is (ADR-209): from the base's left edge and from the worktop's front edge, mm (typed or centred). */
+  x: Mm;
+  z: Mm;
+  /** Whether the user placed it (`x` or `z` typed); absent = centred, as ADR-205. */
+  placed: boolean;
 }
 
 /**
- * Where each sink and hob cut-out is drawn (ADR-205). A cut-out has no stored position (G-407): it is centred on its
- * base along the run and on the worktop's depth, whole mm (a half mm rounds down). Cut-outs without a worktop are not
- * drawn (their diagnostic says why).
+ * Where each sink and hob cut-out is drawn (ADR-205): at the offsets the user typed (ADR-209: `x` from the base's left
+ * edge, `z` from the worktop's front edge), else centred on its base along the run and on the worktop's depth, whole mm
+ * (a half mm rounds down). Cut-outs without a worktop are not drawn (their diagnostic says why).
  */
 export function cutoutOutlines(project: Project, pieces: PlacedPiece[]): CutoutOutline[] {
   const byId = new Map(pieces.map((pc) => [pc.item.id, pc]));
@@ -2371,25 +2505,42 @@ export function cutoutOutlines(project: Project, pieces: PlacedPiece[]): CutoutO
       const part = worktopOver(project, c.baseId);
       if (!base || !part) continue;
       const top = part.box;
-      const box: Box =
-        part.grainAxis === 'z'
-          ? {
-              x: top.x + Math.floor((top.w - c.d) / 2),
-              y: top.y,
-              z: base.z + Math.floor((base.d - c.w) / 2),
-              w: c.d,
-              h: top.h,
-              d: c.w,
-            }
-          : {
-              x: base.x + Math.floor((base.w - c.w) / 2),
-              y: top.y,
-              z: top.z + Math.floor((top.d - c.d) / 2),
-              w: c.w,
-              h: top.h,
-              d: c.d,
-            };
-      out.push({ id: `${kind}:${c.id}`, kind, box, w: c.w, d: c.d });
+      const side = part.grainAxis === 'z';
+      const width = side ? base.d : base.w,
+        depth = side ? top.w : top.d;
+      const x = c.x ?? Math.floor((width - c.w) / 2);
+      const z = c.z ?? Math.floor((depth - c.d) / 2);
+      // Across the run from the front edge: +z on the back wall; a side worktop faces +x or -x.
+      const plus = !side || facesPlusX(part);
+      const box: Box = side
+        ? {
+            x: c.z === undefined ? top.x + z : plus ? top.x + top.w - z - c.d : top.x + z,
+            y: top.y,
+            z: base.z + x,
+            w: c.d,
+            h: top.h,
+            d: c.w,
+          }
+        : {
+            x: base.x + x,
+            y: top.y,
+            z: c.z === undefined ? top.z + z : top.z + top.d - z - c.d,
+            w: c.w,
+            h: top.h,
+            d: c.d,
+          };
+      out.push({
+        id: `${kind}:${c.id}`,
+        kind,
+        box,
+        w: c.w,
+        d: c.d,
+        partId: part.id,
+        x,
+        // Centred, `z` above was counted from the back (ADR-205's rounding); from the front it is the rest.
+        z: c.z ?? depth - c.d - z,
+        placed: c.x !== undefined || c.z !== undefined,
+      });
     }
   return out;
 }
@@ -2648,7 +2799,7 @@ export function planRuns(
   const requests = project.runRequests ?? [];
   const had = new Set([
     ...(project.runParts ?? []).flatMap((rp) => rp.from ?? []),
-    ...requests.flatMap((r) => r.from),
+    ...requests.filter((r) => r.kind !== 'filler').flatMap((r) => r.from),
   ]);
   const runs = groupRuns(placed).filter(
     (run) => run[0].item.rotationY === 0 || !!opts.sides || run.some((pc) => had.has(pc.item.id)),
@@ -2935,9 +3086,28 @@ export function planRuns(
     crown: 1,
     pelmet: 2,
     'ceiling-filler': 3,
+    filler: 4,
   };
   for (const r of [...requests].sort((a, b) => order[a.kind] - order[b.kind])) {
     const key = requestKey(r);
+    // A repair filler (ADR-209): it takes the place of a suggested filler with the same key.
+    if (r.kind === 'filler') {
+      const part = planRepairFiller(r, byId);
+      const rest = out.filter((o) => o.key !== key);
+      if (typeof part === 'string') fail(r, part);
+      else if (
+        placed.some(
+          (pc) => overlaps(pc.bounds, part.box) && pc.panels.some((q) => overlapsBox(q, part.box)),
+        ) ||
+        rest.some((o) => overlaps(o.box, part.box))
+      )
+        fail(r, t('it would overlap another piece or run part'));
+      else {
+        out.length = 0;
+        out.push(...rest, part);
+      }
+      continue;
+    }
     if (r.kind === 'worktop') {
       if (out.some((o) => o.key === key) || unmade[key]) continue;
       const why =
@@ -2965,6 +3135,7 @@ const TRIM_LABEL: Record<RunRequest['kind'], string> = {
   crown: 'Crown',
   pelmet: 'Pelmet',
   'ceiling-filler': 'Ceiling filler',
+  filler: 'Filler',
 };
 
 const REQUEST_NAME = {
@@ -2972,6 +3143,7 @@ const REQUEST_NAME = {
   crown: 'Crown over {names}',
   pelmet: 'Pelmet over {names}',
   'ceiling-filler': 'Ceiling filler over {names}',
+  filler: 'Filler beside {names}',
 } as const satisfies Record<RunRequest['kind'], Key>;
 
 /** "Crown over Wall unit + Wall unit 2", for notes and diagnostics. */
@@ -3047,12 +3219,18 @@ function planTrim(
     if (h <= 0) return t('the run already reaches the {h} mm ceiling', { h: room.height });
     reason = `from ${y} mm up to the ${room.height} mm ceiling`;
   } else {
-    if (!r.height) return t('enter its height');
-    h = r.height;
+    // A moulding with a profile (ADR-209) takes its bounding height; one too broken to have a size needs a height.
+    const pb = r.profile ? profileBounds(r.profile) : null;
+    const ph = pb && pb.w > 0 && pb.h > 0 ? pb.h : undefined;
+    if (!ph && !r.height) return t('enter its height');
+    h = ph ?? r.height!;
     y = r.kind === 'crown' ? top : bottom - h;
     if (y < 0) return t('it would go {mm} mm below the floor', { mm: -y });
     reason = r.kind === 'crown' ? `on top, ${h} mm high` : `under the units, ${h} mm high`;
   }
+  // The strip's depth: the profile's bounding width (ADR-209), else the board.
+  const pb = r.kind !== 'ceiling-filler' && r.profile ? profileBounds(r.profile) : null;
+  const depth = pb && pb.w > 0 && pb.h > 0 ? pb.w : m.thickness;
   const key = requestKey(r);
   return {
     id: key,
@@ -3061,11 +3239,190 @@ function planTrim(
     kind: r.kind,
     label: TRIM_LABEL[r.kind],
     reason: `${reason}, ${x1 - x0} mm along ${pcs.length} ${pcs.length === 1 ? 'piece' : 'pieces'}`,
-    box: { x: x0, y, z: zf - m.thickness, w: x1 - x0, h, d: m.thickness },
+    box: { x: x0, y, z: zf - depth, w: x1 - x0, h, d: depth },
     material: { ...m },
     thicknessAxis: 'z',
     grainAxis: 'x',
     banded: r.kind === 'crown' ? ['+y'] : r.kind === 'pelmet' ? ['-y'] : [],
+  };
+}
+
+/**
+ * With automatic refresh off (ADR-061), the parts of requests whose numbers a binding just changed (ADR-209) are made
+ * again, as asking for them does; the other run parts stay. `before` is the project before the bindings were applied;
+ * the same `after` when nothing changed or refresh is on (it remakes them anyway).
+ */
+export function remakeAskedParts(before: Project, after: Project): Project {
+  if (after.runSettings?.auto || after.runRequests === before.runRequests) return after;
+  const was = new Map((before.runRequests ?? []).map((r) => [requestKey(r), JSON.stringify(r)]));
+  const keys = new Set(
+    (after.runRequests ?? [])
+      .filter((r) => was.get(requestKey(r)) !== JSON.stringify(r))
+      .map((r) => requestKey(r)),
+  );
+  if (!keys.size) return after;
+  const made = planRuns(after).parts.filter((rp) => keys.has(rp.key ?? ''));
+  const kept = (after.runParts ?? []).filter((rp) => !keys.has(rp.key ?? ''));
+  return { ...after, runParts: [...kept, ...made] };
+}
+
+// ---------------------------------------------------------------------------
+// Moulding profiles and repair fillers (ADR-209)
+// ---------------------------------------------------------------------------
+
+/** The bounding box of a profile's points: its lowest corner and its width (across) and height (up). */
+export function profileBounds(points: readonly [Mm, Mm][]): { u: Mm; v: Mm; w: Mm; h: Mm } {
+  if (!points.length) return { u: 0, v: 0, w: 0, h: 0 };
+  const us = points.map((p) => p[0]),
+    vs = points.map((p) => p[1]);
+  const u = Math.min(...us),
+    v = Math.min(...vs);
+  return { u, v, w: Math.max(...us) - u, h: Math.max(...vs) - v };
+}
+
+const orient = (a: [Mm, Mm], b: [Mm, Mm], c: [Mm, Mm]) =>
+  Math.sign((b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]));
+const onSegment = (a: [Mm, Mm], b: [Mm, Mm], c: [Mm, Mm]) =>
+  Math.min(a[0], b[0]) <= c[0] &&
+  c[0] <= Math.max(a[0], b[0]) &&
+  Math.min(a[1], b[1]) <= c[1] &&
+  c[1] <= Math.max(a[1], b[1]);
+/** Whether segments ab and cd share a point (exact in integers). */
+function segmentsMeet(a: [Mm, Mm], b: [Mm, Mm], c: [Mm, Mm], d: [Mm, Mm]): boolean {
+  const o1 = orient(a, b, c),
+    o2 = orient(a, b, d),
+    o3 = orient(c, d, a),
+    o4 = orient(c, d, b);
+  if (o1 !== o2 && o3 !== o4) return true;
+  return (
+    (o1 === 0 && onSegment(a, b, c)) ||
+    (o2 === 0 && onSegment(a, b, d)) ||
+    (o3 === 0 && onSegment(c, d, a)) ||
+    (o4 === 0 && onSegment(c, d, b))
+  );
+}
+
+/**
+ * Whether a moulding profile can be made (ADR-209): three points or more, none repeated, no two edges crossing or
+ * doubling back, and an area. Otherwise it is the error `trim-profile-invalid`.
+ */
+export function profileValid(points: readonly [Mm, Mm][]): boolean {
+  const n = points.length;
+  if (n < 3) return false;
+  if (new Set(points.map(([u, v]) => `${u},${v}`)).size !== n) return false;
+  if (area2(points as [number, number][]) === 0) return false;
+  for (let i = 0; i < n; i++) {
+    const a = points[i],
+      b = points[(i + 1) % n],
+      c = points[(i + 2) % n];
+    // Two edges in a row going back along each other.
+    if (orient(a, b, c) === 0 && (b[0] - a[0]) * (c[0] - b[0]) + (b[1] - a[1]) * (c[1] - b[1]) < 0)
+      return false;
+    for (let j = i + 2; j < n; j++) {
+      if (i === 0 && j === n - 1) continue;
+      if (segmentsMeet(a, b, points[j], points[(j + 1) % n])) return false;
+    }
+  }
+  return true;
+}
+
+/** "0,0; 20,0; 20,45; 0,60" → points; null when it is not whole-mm pairs (the field says so; nothing is saved). */
+export function parseProfile(text: string): [Mm, Mm][] | null {
+  const parts = text
+    .split(';')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const out: [Mm, Mm][] = [];
+  for (const p of parts) {
+    const m = /^(-?\d+)\s*,\s*(-?\d+)$/.exec(p);
+    if (!m) return null;
+    const u = Number(m[1]),
+      v = Number(m[2]);
+    if (Math.abs(u) > 1000 || Math.abs(v) > 1000) return null;
+    out.push([u, v]);
+  }
+  return out;
+}
+export const profileText = (points: readonly [Mm, Mm][]) =>
+  points.map(([u, v]) => `${u},${v}`).join('; ');
+
+/** A crown or pelmet's profile as drawn in 3D (ADR-209): moved to start at 0, 0; null when absent or invalid. */
+function trimSection(r: RunRequest | undefined): [Mm, Mm][] | null {
+  if (!r?.profile || (r.kind !== 'crown' && r.kind !== 'pelmet') || !profileValid(r.profile))
+    return null;
+  const b = profileBounds(r.profile);
+  return r.profile.map(([u, v]) => [u - b.u, v - b.v]);
+}
+
+/** `trim-profile-invalid` (ADR-209): a crown or pelmet profile that crosses itself or has fewer than three points. */
+function trimProfileChecks(project: Project): Diagnostic[] {
+  return (project.runRequests ?? [])
+    .filter((r) => r.profile && (r.kind === 'crown' || r.kind === 'pelmet'))
+    .filter((r) => !profileValid(r.profile!))
+    .map((r) => ({
+      severity: 'error' as const,
+      code: 'trim-profile-invalid',
+      message: t('The profile of {name} crosses itself or has fewer than three points.', {
+        name: requestName(r, project),
+      }),
+      nodeId: `request:${requestKey(r)}`,
+    }));
+}
+
+/** The board of a piece's fronts: a repair filler is made of it (ADR-054 fillers, ADR-209). */
+function frontBoardOf(pc: PlacedPiece): Material | undefined {
+  const p = pc.item.design.product;
+  const id = p.kind === 'cabinet' || p.kind === 'corner' ? p.params.frontMaterialId : '';
+  return pc.item.design.materials.find((m) => m.id === id) ?? pc.item.design.materials[0];
+}
+
+/**
+ * A repair filler (ADR-209): `width` mm beside the door's piece (`from[0]`), on the side towards its neighbour
+ * (`from[1]`), in the piece's front plane, as high as it, of its front board. Planned like every run part, so it follows
+ * the pieces. Returns why it cannot be made instead.
+ */
+function planRepairFiller(r: RunRequest, byId: Map<string, PlacedPiece>): RunPart | string {
+  const pc = byId.get(r.from[0]),
+    other = byId.get(r.from[1]);
+  if (!pc || !other || r.from.length !== 2)
+    return t('a piece it was made for is no longer in the project');
+  const m = frontBoardOf(pc);
+  if (!m) return t('choose its board');
+  const w = r.width ?? 0;
+  if (w < 1) return t('enter its width');
+  const b = pc.bounds;
+  const along = pc.facing.axis === 'z' ? 'x' : 'z';
+  const th = m.thickness;
+  const lo = along === 'x' ? b.x : b.z,
+    hi = along === 'x' ? b.x + b.w : b.z + b.d;
+  const oc =
+    along === 'x' ? other.bounds.x + other.bounds.w / 2 : other.bounds.z + other.bounds.d / 2;
+  const gap0 = oc < (lo + hi) / 2 ? lo - w : hi;
+  const front =
+    pc.facing.axis === 'z'
+      ? pc.facing.sign > 0
+        ? b.z + b.d - th
+        : b.z
+      : pc.facing.sign > 0
+        ? b.x + b.w - th
+        : b.x;
+  const box: Box =
+    along === 'x'
+      ? { x: gap0, y: b.y, z: front, w, h: b.h, d: th }
+      : { x: front, y: b.y, z: gap0, w: th, h: b.h, d: w };
+  const key = requestKey(r);
+  return {
+    id: key,
+    key,
+    from: [...r.from],
+    kind: 'filler',
+    label: 'Filler',
+    reason: `${w} mm gap so ${pc.item.design.name} opens clear of ${other.item.design.name} (repair)`,
+    box,
+    material: { ...m },
+    thicknessAxis: along === 'x' ? 'z' : 'x',
+    grainAxis: 'y',
+    banded: along === 'x' ? ['-x', '+x', '-y', '+y'] : ['-z', '+z', '-y', '+y'],
   };
 }
 
@@ -3117,14 +3474,103 @@ export function refreshRunParts(project: Project): Project {
  * The sink and hob cut-outs to make in a worktop (ADR-125, ADR-205): notes for its cut-list row, in the notes column
  * (printed in the print language, `drillingRo`).
  */
-function cutoutNotes(project: Project, rp: RunPart): string[] {
+function cutoutNotes(project: Project, rp: RunPart, outlines: CutoutOutline[]): string[] {
   if (rp.kind !== 'worktop') return [];
   const on = (list: RunSink[] | undefined) =>
     (list ?? []).filter((sk) => rp.from?.includes(sk.baseId));
+  // A placed cut-out (ADR-209) says where it is: from the base's left edge and the worktop's front edge.
+  const at = (kind: 'sink' | 'hob', sk: RunSink) => {
+    const o = outlines.find((x) => x.id === `${kind}:${sk.id}`);
+    return o?.placed ? ` at ${o.x} mm from left and ${o.z} mm from front` : '';
+  };
   return [
-    ...on(project.sinks).map((sk) => `sink cut-out ${sk.w} × ${sk.d} mm`),
-    ...on(project.hobs).map((hb) => `hob cut-out ${hb.w} × ${hb.d} mm`),
+    ...on(project.sinks).map((sk) => `sink cut-out ${sk.w} × ${sk.d} mm${at('sink', sk)}`),
+    ...on(project.hobs).map((hb) => `hob cut-out ${hb.w} × ${hb.d} mm${at('hob', hb)}`),
   ];
+}
+
+/**
+ * Notes of ADR-209 on a run part's cut-list row: a moulding's profile and a worktop's rounded or bevelled front edge
+ * (printed in the print language, `drillingRo`).
+ */
+function followUpNotes(project: Project, rp: RunPart): string[] {
+  const out: string[] = [];
+  if (rp.kind === 'crown' || rp.kind === 'pelmet') {
+    const r = project.runRequests?.find((x) => requestKey(x) === rp.key);
+    if (r?.profile && profileValid(r.profile)) {
+      const b = profileBounds(r.profile);
+      out.push(`profile ${b.w} × ${b.h} mm, drawn by you`);
+    }
+  }
+  if (rp.kind === 'worktop') {
+    const e = worktopEdgeOf(project, rp);
+    if (e)
+      out.push(e.kind === 'rounded' ? `rounded edge R${e.size} mm` : `bevelled edge ${e.size} mm`);
+  }
+  return out;
+}
+
+/** A worktop's rounded or bevelled front edge as made (ADR-209): null when square, not typed or too big (warned). */
+export function worktopEdgeOf(
+  project: Project,
+  rp: RunPart,
+): { kind: 'rounded' | 'bevel'; size: Mm } | null {
+  const e = project.worktopEdges?.find((x) => x.key === runPartKey(rp));
+  if (!e || e.kind === 'square' || e.size === undefined) return null;
+  if (e.size >= rp.material.thickness) return null;
+  return { kind: e.kind, size: e.size };
+}
+
+/** The front face of a worktop: the banded one (ADR-036, ADR-205). */
+const worktopFront = (rp: RunPart): Face => rp.banded.find((f) => f[1] !== 'y') ?? '+z';
+
+/**
+ * `worktop-edge-size` (ADR-209): a rounded or bevelled worktop edge without a size, or one not smaller than the
+ * worktop's thickness, is drawn square until the user types one.
+ */
+function worktopEdgeChecks(project: Project): Diagnostic[] {
+  const out: Diagnostic[] = [];
+  for (const e of project.worktopEdges ?? []) {
+    if (e.kind === 'square') continue;
+    const rp = (project.runParts ?? []).find(
+      (x) => x.kind === 'worktop' && runPartKey(x) === e.key,
+    );
+    if (!rp) continue;
+    const name = runPartNames(project, rp);
+    const what = e.kind === 'rounded' ? t('rounded') : t('bevelled');
+    if (e.size === undefined)
+      out.push({
+        severity: 'warning',
+        code: 'worktop-edge-size',
+        message: t(
+          'The worktop over {name} has a {what} edge but no size; enter the edge size. It is drawn square until then.',
+          { name, what },
+        ),
+        nodeId: `run:${rp.id}`,
+      });
+    else if (e.size >= rp.material.thickness)
+      out.push({
+        severity: 'warning',
+        code: 'worktop-edge-size',
+        message: t(
+          'The {what} edge of the worktop over {name} is {size} mm, not less than the {t} mm worktop; it is drawn square.',
+          { name, what, size: e.size, t: rp.material.thickness },
+        ),
+        nodeId: `run:${rp.id}`,
+      });
+  }
+  return out;
+}
+
+/** Worktop edges follow their worktops (ADR-209): an edge whose worktop is gone goes. */
+export function pruneWorktopEdges(project: Project): Project {
+  if (!project.worktopEdges) return project;
+  const live = new Set(
+    (project.runParts ?? []).filter((rp) => rp.kind === 'worktop').map((rp) => runPartKey(rp)),
+  );
+  const kept = project.worktopEdges.filter((e) => live.has(e.key));
+  if (kept.length === project.worktopEdges.length) return project;
+  return { ...project, worktopEdges: kept.length ? kept : undefined };
 }
 
 /** Parts for the whole project: each piece's cut list × its quantity, merged across pieces, then the run parts. */
@@ -3135,6 +3581,14 @@ export function projectCutlist(input: Project): CutRow[] {
   // Worktops at a corner are cut to their joint (ADR-205).
   const joints = worktopJointCuts(project);
   if (extra.length) {
+    // Where the sink and hob cut-outs are (ADR-209), for their notes.
+    const outlines =
+      project.sinks?.length || project.hobs?.length
+        ? cutoutOutlines(
+            project,
+            resolvePlacements(project).items.map((i) => placeItem(i)),
+          )
+        : [];
     const mats = [
       ...new Map(
         extra.map((e) => [e.key, { ...runMaterial(project, e.rp.material), id: e.key }]),
@@ -3158,8 +3612,9 @@ export function projectCutlist(input: Project): CutRow[] {
       for (const r of cutlist(model, mats)) {
         const drilling = [
           r.drilling,
-          ...cutoutNotes(project, e.rp),
+          ...cutoutNotes(project, e.rp, outlines),
           ...(joints.get(e.rp.id)?.notes ?? []),
+          ...followUpNotes(project, e.rp),
         ]
           .filter(Boolean)
           .join('; ');
@@ -3311,6 +3766,12 @@ const isObj = (v: unknown): v is Record<string, unknown> =>
   !!v && typeof v === 'object' && !Array.isArray(v);
 const isInt = (v: unknown, min = -1e7) =>
   typeof v === 'number' && Number.isSafeInteger(v) && v >= min && v <= 1e7;
+
+/** A sink's or hob's position (ADR-209): absent, or whole mm from 0 to 3000 on each axis. */
+const validOffsets = (c: Record<string, unknown>) =>
+  (c.x === undefined || (isInt(c.x, 0) && (c.x as number) <= 3000)) &&
+  (c.z === undefined || (isInt(c.z, 0) && (c.z as number) <= 3000));
+const hasOffsets = (c: Record<string, unknown>) => c.x !== undefined || c.z !== undefined;
 
 /** Item clearance settings (ADR-073): whole-mm depths from 1 mm, a known side, a yes/no flag. */
 function validZones(z: unknown): boolean {
@@ -3627,9 +4088,50 @@ export function validateProject(p: unknown): string[] {
     else
       for (const r of p.runRequests) {
         const m = isObj(r) ? r.material : undefined;
+        // ADR-209: a profile (crown, pelmet), bindings and the repair filler, from schemaVersion 21. A profile's shape is
+        // checked as a diagnostic (`trim-profile-invalid`), not here: only its whole-mm points are.
+        if (
+          isObj(r) &&
+          (r.profile !== undefined || r.bindings !== undefined || r.kind === 'filler') &&
+          (p.schemaVersion as number) < FOLLOW_UPS_SINCE
+        )
+          errs.push(
+            t('Moulding profiles, bindings and repair fillers need project schemaVersion {v}', {
+              v: FOLLOW_UPS_SINCE,
+            }),
+          );
+        if (
+          isObj(r) &&
+          ((r.profile !== undefined &&
+            (!(r.kind === 'crown' || r.kind === 'pelmet') ||
+              !Array.isArray(r.profile) ||
+              r.profile.length > 100 ||
+              !r.profile.every(
+                (pt) =>
+                  Array.isArray(pt) &&
+                  pt.length === 2 &&
+                  pt.every((n) => isInt(n) && Math.abs(n as number) <= 1000),
+              ))) ||
+            (r.bindings !== undefined &&
+              (!Array.isArray(r.bindings) ||
+                r.bindings.length > REQUEST_TARGETS.length ||
+                !r.bindings.every(
+                  (b) =>
+                    isObj(b) &&
+                    REQUEST_TARGETS.includes(b.target as RequestTarget) &&
+                    typeof b.expr === 'string' &&
+                    b.expr.length <= MAX_EXPR,
+                ))) ||
+            (r.kind === 'filler' &&
+              (!Array.isArray(r.from) ||
+                r.from.length !== 2 ||
+                !(isInt(r.width, 1) && (r.width as number) <= 3000))) ||
+            (r.kind !== 'filler' && r.width !== undefined))
+        )
+          errs.push(t('Invalid run request'));
         if (
           !isObj(r) ||
-          !['worktop', ...TRIM_KINDS].includes(r.kind as string) ||
+          !['worktop', 'filler', ...TRIM_KINDS].includes(r.kind as string) ||
           !Array.isArray(r.from) ||
           !r.from.length ||
           !r.from.every((x) => typeof x === 'string') ||
@@ -3849,9 +4351,14 @@ export function validateProject(p: unknown): string[] {
             !isInt(sk.w, 1) ||
             (sk.w as number) > 3000 ||
             !isInt(sk.d, 1) ||
-            (sk.d as number) > 3000
+            (sk.d as number) > 3000 ||
+            !validOffsets(sk)
           )
             errs.push(t('Invalid sink'));
+          else if (hasOffsets(sk) && (p.schemaVersion as number) < FOLLOW_UPS_SINCE)
+            errs.push(
+              t('Cut-out positions need project schemaVersion {v}', { v: FOLLOW_UPS_SINCE }),
+            );
     }
   }
   if (p.runProducts !== undefined) {
@@ -3885,9 +4392,34 @@ export function validateProject(p: unknown): string[] {
           !isInt(hb.w, 1) ||
           (hb.w as number) > 3000 ||
           !isInt(hb.d, 1) ||
-          (hb.d as number) > 3000
+          (hb.d as number) > 3000 ||
+          !validOffsets(hb)
         )
           errs.push(t('Invalid hob'));
+  }
+  // Worktop front edges (ADR-209).
+  if (p.worktopEdges !== undefined) {
+    if ((p.schemaVersion as number) < FOLLOW_UPS_SINCE)
+      errs.push(t('Worktop edges need project schemaVersion {v}', { v: FOLLOW_UPS_SINCE }));
+    if (!Array.isArray(p.worktopEdges)) errs.push(t('Invalid worktop edges'));
+    else {
+      const seen = new Set<string>();
+      for (const e of p.worktopEdges) {
+        if (
+          !isObj(e) ||
+          typeof e.key !== 'string' ||
+          !e.key ||
+          e.key.length > 2000 ||
+          seen.has(e.key) ||
+          !['square', 'rounded', 'bevel'].includes(e.kind as string) ||
+          (e.size !== undefined && !(isInt(e.size, 1) && (e.size as number) <= 200))
+        ) {
+          errs.push(t('Invalid worktop edge'));
+          continue;
+        }
+        seen.add(e.key);
+      }
+    }
   }
   if (p.worktopJoints !== undefined) {
     if ((p.schemaVersion as number) < KITCHEN_SINCE)
