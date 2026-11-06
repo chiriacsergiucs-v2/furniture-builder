@@ -5,6 +5,7 @@
  * exact gaps between fronts and half-gap outer reveals, drawer parts inside their slot, longest fitting runner.
  * FUZZ_N=50000 npx vitest run tests/fuzz.test.ts for a deep run.
  */
+import { isDeepStrictEqual } from 'node:util';
 import { it, expect } from 'vitest';
 import { buildModel } from '../src/core/build';
 import { INTERNAL_DRAWER_SETBACK } from '../src/core/cabinet';
@@ -14,6 +15,7 @@ import {
   findSpace,
   cornerDefaults,
   upgradeDesign,
+  templates,
 } from '../src/core/design';
 import { explode } from '../src/core/explode';
 import { contains, cutDimensions, enclosing, footprintOf, overlaps } from '../src/core/geometry';
@@ -23,7 +25,23 @@ import { frameDefaults, solidMaterials } from '../src/core/design';
 import { aabbOf, panelsOverlap, shapeProblems } from '../src/core/shape';
 import { catalogFamilies, insertable, insertVariant } from '../src/core/catalog';
 import { carryEdits, resolveItem, settingsDiff, SIZE_SKIP, syncRef } from '../src/core/ownEdits';
-import { makeItem, newProject, type ProjectSettings } from '../src/core/project';
+import {
+  buildProjectModel,
+  makeItem,
+  newProject,
+  placeItem,
+  planRuns,
+  projectCutlist,
+  runPartKey,
+  validateProject,
+  worktopCorners,
+  type Project,
+  type ProjectItem,
+  type ProjectSettings,
+  type WorktopJoint,
+} from '../src/core/project';
+import { mirrorDesign } from '../src/core/arrange';
+import { shapeOutline, type RoomFeature } from '../src/core/room';
 import { withSettings } from '../src/core/projectSettings';
 import type {
   Handle,
@@ -785,6 +803,227 @@ it(
       }
     }
     expect(probs.slice(0, 5)).toEqual([]);
+  },
+  FUZZ_TIMEOUT * 3,
+);
+
+// ADR-205 below: drawn after the earlier tests so their seeded designs stay the same.
+
+it(
+  'mirrored cabinets match the original to the mm and mirror twice back (seeded fuzz, ADR-205)',
+  () => {
+    const N = Math.ceil(Number(process.env.FUZZ_N ?? 3000) / 4);
+    const found: Record<string, { n: number; probs: string[] }> = {};
+    let mirrored = 0;
+    const key = (role: string, b: Box) => [role, b.x, b.y, b.z, b.w, b.h, b.d].join();
+    for (let i = 0; i < N; i++) {
+      const d = upgradeDesign(genCabinet());
+      const m = mirrorDesign(d);
+      if (!m.ok) continue;
+      const probs: string[] = [];
+      try {
+        const orig = buildModel(d);
+        if (orig.diagnostics.some((x) => x.severity === 'error')) continue;
+        mirrored++;
+        probs.push(...check(m.design).map((p) => `mirrored-${p}`));
+        const mir = buildModel(m.design);
+        // The mirrored copy's parts match the original's to the mm: every part's size, height and depth, and its place
+        // reflected across the middle. A front placed by the outer reveal may sit 1 mm over when the gap is odd (its
+        // half-gap rounds the same way on both copies, as before ADR-205); its size still matches.
+        const W = 2 * orig.bounds.x + orig.bounds.w;
+        const sized = (p: { role: string; box: Box }) => key(p.role, { ...p.box, x: 0 });
+        const want = orig.panels.map(sized).sort(),
+          got = mir.panels.map(sized).sort();
+        if (JSON.stringify(want) !== JSON.stringify(got)) {
+          const miss = want.filter((x) => !got.includes(x)).slice(0, 2);
+          probs.push(`size-differs ${miss.join(' | ')}`);
+        }
+        const xs = (ps: { role: string; box: Box }[], flip: boolean) =>
+          ps
+            .map((p) => [sized(p), flip ? W - (p.box.x + p.box.w) : p.box.x] as const)
+            .sort((p, q) => (p[0] < q[0] ? -1 : p[0] > q[0] ? 1 : p[1] - q[1]));
+        const a = xs(orig.panels, true),
+          b = xs(mir.panels, false);
+        if (
+          a.length === b.length &&
+          a.some(([k, x], j) => b[j][0] !== k || Math.abs(b[j][1] - x) > 1)
+        )
+          probs.push(`not-reflected`);
+        // Twice gives the same design back (an explicit left hinge comes back as absent, which means left, ADR-024).
+        const twice = mirrorDesign(m.design).design;
+        if (
+          JSON.stringify(twice.product).includes('"remainderFirst"') !==
+            JSON.stringify(d.product).includes('"remainderFirst"') ||
+          !isDeepStrictEqual(buildModel(twice).panels, orig.panels)
+        )
+          probs.push('twice-differs');
+      } catch (e) {
+        probs.push(`throws ${(e as Error).message}`);
+      }
+      for (const p of probs) {
+        const k = p.split(' ')[0];
+        if (process.env.FUZZ_DEBUG && !found[k]) console.log(k, JSON.stringify(d.product));
+        found[k] ??= { n: 0, probs };
+        found[k].n++;
+      }
+    }
+    expect(mirrored).toBeGreaterThan(N / 50);
+    expect(found).toEqual({});
+  },
+  FUZZ_TIMEOUT,
+);
+
+it(
+  'random L kitchens: side-wall runs, worktop joints, hobs and back cut-outs keep the run invariants (seeded fuzz, ADR-205)',
+  () => {
+    const N = Math.ceil(Number(process.env.FUZZ_N ?? 3000) / 30);
+    const base = templates.find((x) => x.id === 'base-door')!;
+    /** A base unit `width` wide, with doors or drawers. */
+    const baseOf = (width: number): Design => {
+      const d = base.create();
+      if (d.product.kind !== 'cabinet') return d;
+      const interior: Space =
+        rnd() < 0.5
+          ? d.product.params.interior
+          : { id: 'dr', kind: 'drawers', count: ri(1, 4), front: null };
+      return {
+        ...d,
+        product: { ...d.product, params: { ...d.product.params, width, interior } },
+      };
+    };
+    const probs: string[] = [];
+    const ints = (pts: [number, number][]) =>
+      pts.every(([u, v]) => Number.isInteger(u) && Number.isInteger(v));
+    let joined = 0;
+    for (let i = 0; i < N && probs.length < 5; i++) {
+      const side = rnd() < 0.5 ? 'left' : 'right';
+      let p: Project = newProject('Fuzz L');
+      const backN = ri(1, 3),
+        sideN = ri(1, 3);
+      let x = 0;
+      for (let k = 0; k < backN; k++) {
+        const it = makeItem(p, baseOf(ri(300, 900)));
+        p = { ...p, items: [...p.items, { ...it, position: { x, y: 0, z: 0 } }] };
+        x += placeItem(p.items[p.items.length - 1]).bounds.w;
+      }
+      let z = placeItem(p.items[0]).bounds.d;
+      for (let k = 0; k < sideN; k++) {
+        const it = makeItem(p, baseOf(ri(300, 900)));
+        const turned: ProjectItem = {
+          ...it,
+          rotationY: side === 'left' ? 90 : 270,
+          position: { x: 0, y: 0, z },
+        };
+        const b = placeItem(turned).bounds;
+        const at = side === 'left' ? 0 : x - b.w;
+        p = { ...p, items: [...p.items, { ...turned, position: { x: at, y: 0, z } }] };
+        z += b.d;
+      }
+      p = { ...p, runParts: planRuns(p, { sides: true }).parts };
+      const corners = worktopCorners(p);
+      const choice = rnd();
+      if (corners.length && choice >= 0.15) {
+        const c = corners[0];
+        const kind = choice < 0.55 ? 'mitre' : 'butt';
+        const through = rnd() < 0.5 ? 'a' : 'b';
+        const joint: WorktopJoint = {
+          id: 'j',
+          a: runPartKey(c.a),
+          b: runPartKey(c.b),
+          kind,
+          ...(kind === 'butt' && rnd() < 0.9 ? { through } : {}),
+        };
+        p = { ...p, worktopJoints: [joint] };
+      }
+      if (rnd() < 0.6)
+        p = {
+          ...p,
+          hobs: [{ id: 'h', baseId: pick(p.items).id, w: ri(100, 900), d: ri(100, 700) }],
+        };
+      if (rnd() < 0.5) {
+        const feature: RoomFeature = {
+          id: 'p',
+          kind: rnd() < 0.5 ? 'pipe' : 'outlet',
+          wall: 0,
+          from: ri(0, Math.max(0, x - 50)),
+          width: ri(20, 300),
+          sill: ri(0, 700),
+          height: ri(20, 300),
+          depth: 0,
+          label: 'Pipe',
+        };
+        const outline = shapeOutline('rectangle', {
+          width: x + 1000,
+          depth: z + 1000,
+          cutWidth: 0,
+          cutDepth: 0,
+          offset: 0,
+        });
+        p = { ...p, room: { height: 2600, outline, features: [feature] } };
+        const warn = buildProjectModel(p).diagnostics.find(
+          (d) => d.code === 'covers-service' && d.featureId,
+        );
+        if (warn) {
+          const id = warn.itemIds![0];
+          p = {
+            ...p,
+            items: p.items.map((it) => (it.id === id ? { ...it, backCuts: ['p'] } : it)),
+          };
+        }
+      }
+      try {
+        const stored = JSON.stringify(p.runParts);
+        const v = validateProject(JSON.parse(JSON.stringify(p)));
+        if (v.length) probs.push(`invalid ${v.join(';')}`);
+        const pm = buildProjectModel(p);
+        // Joints are applied at build: the stored worktops never change.
+        if (JSON.stringify(p.runParts) !== stored) probs.push('run-parts-changed');
+        const j = p.worktopJoints?.[0];
+        const open = corners.length > 0 && (!j || (j.kind === 'butt' && !j.through));
+        const cornerErr = pm.diagnostics.some((d) => d.code === 'worktop-corner-joint');
+        if (cornerErr !== open) probs.push(`corner-error ${cornerErr} open ${open}`);
+        for (const q of pm.model.panels) {
+          const b = q.box;
+          if (![b.x, b.y, b.z, b.w, b.h, b.d].every(Number.isInteger))
+            probs.push(`non-integer ${q.id}`);
+          if (q.shape?.kind === 'profile') {
+            if (!ints(q.shape.points) || !(q.shape.holes ?? []).every(ints))
+              probs.push(`non-integer-shape ${q.id}`);
+            const sp = shapeProblems(q);
+            if (sp.length) probs.push(`shape ${q.id} ${sp.join(';')}`);
+          }
+        }
+        // Joined worktops never overlap each other.
+        if (corners.length && !open) {
+          joined++;
+          const tops = pm.model.panels.filter((q) => q.role === 'worktop');
+          for (let a = 0; a < tops.length; a++)
+            for (let b = a + 1; b < tops.length; b++)
+              if (panelsOverlap(tops[a], tops[b])) probs.push(`worktops-overlap ${tops[a].id}`);
+        }
+        // A piece whose back was cut around the pipe no longer warns about it; its back is cut exactly where asked.
+        for (const it of p.items.filter((x) => x.backCuts)) {
+          const cut = pm.model.panels.some(
+            (q) => q.id.startsWith(`${it.id}:`) && q.role === 'back' && q.shape?.kind === 'profile',
+          );
+          const warns = pm.diagnostics.some(
+            (d) => d.code === 'covers-service' && d.featureId === 'p' && d.itemIds?.[0] === it.id,
+          );
+          if (cut === warns) probs.push(`back-cut cut=${cut} warns=${warns}`);
+        }
+        const rows = projectCutlist(p);
+        if (
+          p.hobs?.length &&
+          !pm.diagnostics.some((d) => d.code === 'hob-no-worktop') &&
+          !rows.some((r) => r.drilling.includes('hob cut-out'))
+        )
+          probs.push('hob-note-missing');
+      } catch (e) {
+        probs.push(`throws ${(e as Error).message}`);
+      }
+    }
+    expect(joined).toBeGreaterThan(0);
+    expect(probs).toEqual([]);
   },
   FUZZ_TIMEOUT * 3,
 );

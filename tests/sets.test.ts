@@ -368,7 +368,9 @@ describe('run requests, run handles and sinks per set (ADR-175)', () => {
     // differs by the left cover panel set 1 has no room for at x 0.
     for (const r of rows) {
       expect(r.width).toBe(560 + 30 + 18);
-      expect(r.labels).toEqual(['Run: Worktop, sink cut-out 500 × 400 mm']);
+      // ADR-205: the sink note is in the row's notes column, not its label.
+      expect(r.labels).toEqual(['Run: Worktop']);
+      expect(r.drilling).toContain('sink cut-out 500 × 400 mm');
     }
   });
 });
