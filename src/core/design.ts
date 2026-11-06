@@ -325,6 +325,12 @@ export const cabinet = (name: string, over: Partial<CabinetParams>, interior: Sp
     params: { ...cabinetDefaults(interior), ...over, interior },
   });
 
+/** The blind corner template's description, read from its defaults so it says what it builds (ADR-196). */
+function blindDescription(): string {
+  const c = cornerDefaults('blind');
+  return `${c.width} × ${c.height} × ${c.depth}, ${c.blindWidth} mm blind section on the ${c.side}, one door`;
+}
+
 export interface Template {
   id: string;
   name: string;
@@ -435,7 +441,7 @@ export const templates: Template[] = [
   {
     id: 'corner-blind',
     name: 'Blind corner base',
-    description: '1000 × 720 × 560, 400 mm blind section on the left, one door',
+    description: blindDescription(),
     create: () =>
       wrap('Blind corner base', { kind: 'corner', id: newId(), params: cornerDefaults('blind') }),
   },

@@ -106,7 +106,7 @@ export const FEATURES: FeatureDomain[] = [
           {
             name: 'Divide a space side by side or stacked',
             detail: 'Fixed millimetre sizes or shares, split exactly in whole millimetres.',
-            adrs: ['ADR-005', 'ADR-003', 'ADR-199'],
+            adrs: ['ADR-005', 'ADR-003', 'ADR-199', 'ADR-196'],
             checked: '2026-11-06',
           },
           { name: 'New parts start empty', adrs: ['ADR-089'], checked: '2026-11-05' },
@@ -137,13 +137,13 @@ export const FEATURES: FeatureDomain[] = [
           {
             name: 'Shelves, fixed or adjustable',
             detail: 'Adjustable shelves get 32 mm pin-row notes on the sides.',
-            adrs: ['ADR-023'],
-            checked: '2026-11-05',
+            adrs: ['ADR-023', 'ADR-196'],
+            checked: '2026-11-06',
           },
           {
             name: 'Drawers with equal or chosen heights',
-            adrs: ['ADR-005', 'ADR-023'],
-            checked: '2026-11-05',
+            adrs: ['ADR-005', 'ADR-023', 'ADR-196'],
+            checked: '2026-11-06',
           },
           { name: 'Hanging rail', adrs: ['ADR-005'], checked: '2026-11-05' },
           { name: 'Drawers behind doors', adrs: ['ADR-005', 'ADR-006'], checked: '2026-11-05' },
@@ -465,8 +465,8 @@ export const FEATURES: FeatureDomain[] = [
             name: 'Corner cabinets',
             detail:
               'Blind, L-shaped and diagonal corners, on the floor or hung on the wall (you choose the brackets).',
-            adrs: ['ADR-025', 'ADR-040', 'ADR-177'],
-            checked: '2026-11-05',
+            adrs: ['ADR-025', 'ADR-040', 'ADR-177', 'ADR-196'],
+            checked: '2026-11-06',
           },
           { name: 'Tall cabinets', adrs: ['ADR-036'], checked: '2026-11-05' },
         ],
@@ -484,9 +484,17 @@ export const FEATURES: FeatureDomain[] = [
             adrs: ['ADR-024'],
             checked: '2026-11-05',
           },
-          { name: 'Exact gaps between fronts', adrs: ['ADR-006'], checked: '2026-11-05' },
+          {
+            name: 'Exact gaps between fronts',
+            adrs: ['ADR-006', 'ADR-196'],
+            checked: '2026-11-06',
+          },
           { name: 'Sliding doors', adrs: ['ADR-037'], checked: '2026-11-05' },
-          { name: 'Lift-up and drop-down flaps', adrs: ['ADR-037'], checked: '2026-11-05' },
+          {
+            name: 'Lift-up and drop-down flaps',
+            adrs: ['ADR-037', 'ADR-196'],
+            checked: '2026-11-06',
+          },
           { name: 'No doors or handles inside other doors', adrs: [], checked: '2026-11-05' },
           {
             name: 'Front-only panels',
@@ -549,8 +557,8 @@ export const FEATURES: FeatureDomain[] = [
           { name: 'Desks with pedestals', adrs: ['ADR-007', 'ADR-026'], checked: '2026-11-05' },
           {
             name: 'Tables, benches, stools, chairs and beds',
-            adrs: ['ADR-038'],
-            checked: '2026-11-05',
+            adrs: ['ADR-038', 'ADR-196'],
+            checked: '2026-11-06',
           },
           {
             name: 'Shaped parts',
@@ -686,7 +694,11 @@ export const FEATURES: FeatureDomain[] = [
         adrs: ['ADR-010'],
         checked: '2026-11-05',
       },
-      { name: 'Handles: bar, knob or push to open', adrs: ['ADR-024'], checked: '2026-11-05' },
+      {
+        name: 'Handles: bar, knob or push to open',
+        adrs: ['ADR-024', 'ADR-196'],
+        checked: '2026-11-06',
+      },
       {
         name: 'Fastener counts',
         detail: 'Counted from the model as guidance; you name the fasteners you use.',
@@ -778,8 +790,8 @@ export const FEATURES: FeatureDomain[] = [
     features: [
       {
         name: 'Problems checked on their own; errors block export',
-        adrs: ['ADR-008'],
-        checked: '2026-11-05',
+        adrs: ['ADR-008', 'ADR-196'],
+        checked: '2026-11-06',
       },
       { name: 'Overlap and room checks', adrs: ['ADR-022', 'ADR-058'], checked: '2026-11-05' },
       {
