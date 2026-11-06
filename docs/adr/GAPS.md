@@ -2967,3 +2967,12 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Request: Not asked in words; ADR-205 Decision G-032: mirrored copies match the original to the mm.
 - Questions: Make the outer reveal round symmetrically too, which changes the 1 mm position of such fronts in new mirrored copies only?
 - Suggested pick: Yes: apply the remainderFirst rounding to the outer reveal, for new mirrored copies only. (estimate: effort +5 %, value +4 %)
+
+### G-474: Settings dialog scrolls sideways at 375 and 390 px
+
+- Status: Open
+- Origin: ADR-202 tests, 2026-11-06; agent found it
+- Missing: At 375 and 390 px the Settings dialog itself scrolls sideways by 32 to 37 px; the page does not. Cause: the piece-size Depth field (.dims3 .mm.with-trailing, from commit a617fac0). Not caused by ADR-202, so not fixed.
+- Request: Not asked; CLAUDE.md rule: no horizontal scroll at 390 px.
+- Questions: None; it is a bug.
+- Suggested pick: Let the Depth field shrink in the three-column size row so the dialog fits at 375 px. (estimate: effort +2 %, value +4 %)
