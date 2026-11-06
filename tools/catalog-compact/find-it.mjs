@@ -337,15 +337,16 @@ for (const width of [1280, 390]) {
   await page.evaluate(() => window.scrollTo(0, 0));
   check(width, 'no sideways scroll (Catalog)', await noSideScroll());
 
-  // 6. The wizard from the Catalog: form first on a phone; footer Back, Skip, Next; no Cancel.
+  // 6. The wizard from the Catalog: form first on a phone; footer Back, Use <first type>, Next (ADR-194: on the Type
+  // step "Use …" names the type it keeps, where Skip was); no Cancel.
   await page.getByRole('button', { name: 'New piece', exact: true }).click();
   await dlg.getByRole('heading', { name: 'New piece' }).waitFor();
   const footer = dlg.locator('.wizard-footer');
   const labels = (await footer.getByRole('button').allInnerTexts()).map((s) => s.trim());
   check(
     width,
-    'wizard footer is Back, Skip, Next',
-    labels.join(',') === 'Back,Skip,Next',
+    'wizard footer is Back, Use …, Next',
+    labels.length === 3 && labels[0] === 'Back' && /^Use /.test(labels[1]) && labels[2] === 'Next',
     labels.join(' / '),
   );
   check(
@@ -355,8 +356,8 @@ for (const width of [1280, 390]) {
   );
   const preview = dlg.getByRole('complementary', { name: 'Preview' });
   // Type step: its first field is the type choice; Size step: Name.
-  await dlg.getByRole('button', { name: /^Cabinet \(closed box\)/ }).click();
-  const typeField = await dlg.getByRole('group', { name: 'Construction type' }).boundingBox();
+  await dlg.getByRole('radio', { name: /^Cabinet \(closed box\)/ }).click();
+  const typeField = await dlg.getByRole('radiogroup', { name: 'Construction type' }).boundingBox();
   const pv = await preview.boundingBox();
   if (phone)
     check(
@@ -386,6 +387,11 @@ for (const width of [1280, 390]) {
     check(width, 'desktop: preview beside the Size form', !!nameBox && !!pv2 && pv2.x > nameBox.x);
   await shot('wizard-size');
   await dlg.getByRole('button', { name: 'Close', exact: true }).click();
+  // With answers the × asks first (ADR-191, ADR-211: they stay as a draft): confirm with its "Close".
+  const ask = page.getByRole('dialog', { name: 'Confirm' });
+  await ask.waitFor({ timeout: 2000 }).catch(() => {});
+  if (await ask.isVisible().catch(() => false))
+    await ask.getByRole('button', { name: 'Close', exact: true }).click();
   await dlg.waitFor({ state: 'detached', timeout: 2000 }).catch(() => {});
   check(
     width,
@@ -393,6 +399,44 @@ for (const width of [1280, 390]) {
     (await page.locator('dialog[open]').count()) === 0,
   );
   check(width, 'no sideways scroll (wizard closed)', await noSideScroll());
+
+  // 7. ADR-201 (G-095): "Start from" counts. By type each item is in one group, so the group counts add up to
+  // "N ready items"; by room a piece listed in several rooms counts under each, so they add up to at least N.
+  await page
+    .getByRole('navigation', { name: 'Places' })
+    .getByRole('link', { name: /Projects/ })
+    .click();
+  await page.getByRole('button', { name: 'New single piece', exact: true }).click();
+  const startHead = dlg.getByRole('heading', { name: /^Start from/ });
+  await startHead.waitFor();
+  const ready = Number(((await startHead.innerText()).match(/(\d+) ready items/) ?? [])[1]);
+  const groupSum = async (name) => {
+    await dlg.getByRole('radio', { name, exact: true }).click();
+    await page.waitForTimeout(300);
+    const counts = await dlg
+      .getByRole('region')
+      .getByRole('heading', { level: 4 })
+      .locator('.count')
+      .allInnerTexts();
+    return { sum: counts.reduce((n, c) => n + Number(c), 0), groups: counts.length };
+  };
+  const byType = await groupSum('By type');
+  check(
+    width,
+    'Start from: by type the group counts add up to "N ready items"',
+    ready > 0 && byType.groups > 1 && byType.sum === ready,
+    `${ready} ready items, ${byType.groups} groups adding up to ${byType.sum}`,
+  );
+  const byRoomSum = await groupSum('By room');
+  check(
+    width,
+    'Start from: by room the group counts add up to at least "N ready items"',
+    ready > 0 && byRoomSum.groups > 1 && byRoomSum.sum >= ready,
+    `${ready} ready items, ${byRoomSum.groups} groups adding up to ${byRoomSum.sum}`,
+  );
+  await shot('start-from-counts');
+  await dlg.getByRole('button', { name: 'Close', exact: true }).click();
+  await dlg.waitFor({ state: 'detached', timeout: 2000 }).catch(() => {});
   check(width, 'no page errors', errors.length === 0, errors.slice(0, 2).join(' | '));
   await ctx.close();
 }

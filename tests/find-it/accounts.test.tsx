@@ -82,12 +82,13 @@ describe.each(WIDTHS)('accounts, backup and share links at %ipx (find-it, N130â€
     // N140, N138 (ADR-139, ADR-137): the sync status and the item's badge; the notice is gone.
     await waitFor(
       () => expect(document.querySelector('.sync-status')?.textContent).toMatch(/In your account/),
-      { timeout: 5000 },
+      { timeout: 15000 },
     );
     // The status above already reads "In your account" before the first sync (idle, nothing waiting); the badge
-    // appears only when that sync finishes, which takes over a second under a loaded test shard (ADR-197).
+    // appears only when that sync finishes, which takes over a second under a loaded test shard (ADR-197) and longer
+    // under a loaded full local run at 390 px (G-347, ADR-201): 15 s, under the 30 s test timeout.
     expect(
-      await screen.findByText('In your account', { selector: '.badge' }, { timeout: 5000 }),
+      await screen.findByText('In your account', { selector: '.badge' }, { timeout: 15000 }),
     ).toBeTruthy();
     await waitFor(() =>
       expect(screen.queryByText(/Your designs are only on this device/)).toBeNull(),
@@ -170,6 +171,13 @@ describe.each(WIDTHS)('accounts, backup and share links at %ipx (find-it, N130â€
 
     // N135 (ADR-134, reading B): after a reload the account shows at once, offline too.
     Object.defineProperty(navigator, 'onLine', { configurable: true, get: () => false });
+    // A reload ends this page's sync. In jsdom the modules of this run outlive it (renderApp makes fresh ones) and
+    // share the IndexedDB: left running, a late sync of this account links the next run's piece to this account, so
+    // that run's own sync skips it and its badge never shows (G-347, ADR-201). Stop it as a reload would: no more
+    // auto sync, this backend signed out (later syncs return at once), and the one in flight drained.
+    client.stopAutoSync();
+    await backend.signOut();
+    await client.sync();
     cleanup();
     await renderApp(width);
     expect((await screen.findByRole('button', { name: 'Account' })).textContent).toBe('M');

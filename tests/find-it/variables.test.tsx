@@ -22,10 +22,27 @@ async function projectWithTwoPieces(user: User) {
   }
 }
 
+// One click path per width (ADR-201, G-370): formulas, their problems, bindings following a change and Delete
+// unbinding are proven in tests/variables.test.ts; this path finds each feature by its visible text.
 describe.each(WIDTHS)('ADR-166 at %ipx (find-it)', (width) => {
-  it('Settings › Variables › Add variable; ƒ by Height binds it; 450 follows; Delete asks and unbinds', async () => {
+  it('ƒ by Width: a formula with a problem keeps Bind off; Settings › Variables › Add variable; ƒ by Height binds it; 450 follows; Delete asks and unbinds', async () => {
     const { user } = await renderApp(width);
     await projectWithTwoPieces(user);
+
+    // No variables yet: a formula with a problem is shown in the bind sheet and Bind stays off.
+    const first = await screen.findByRole('region', { name: /^Selected piece: / });
+    await user.click(within(first).getByRole('button', { name: 'Bind Width to a variable' }));
+    const sheet = await screen.findByRole('dialog', { name: 'Bind Width' });
+    expect(within(sheet).getByText(/No variables yet/)).toBeTruthy();
+    await user.type(within(sheet).getByLabelText('Formula'), 'nothing + 1');
+    expect((await within(sheet).findByRole('alert')).textContent).toMatch(
+      /Unknown variable “nothing”/,
+    );
+    expect(
+      (within(sheet).getByRole('button', { name: 'Bind' }) as HTMLButtonElement).disabled,
+    ).toBe(true);
+    await user.click(within(sheet).getByRole('button', { name: 'Cancel' }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Bind Width' })).toBeNull());
 
     await user.click(screen.getByRole('button', { name: 'Settings' }));
     const settings = await screen.findByRole('dialog', { name: /^Settings: / });
@@ -71,21 +88,5 @@ describe.each(WIDTHS)('ADR-166 at %ipx (find-it)', (width) => {
     await user.click(within(again).getByRole('button', { name: 'Done' }));
     await waitFor(() => expect(height.disabled).toBe(false));
     expect(height.value).toBe('450');
-  });
-
-  it('a formula with a problem is shown in the bind sheet and Bind stays off', async () => {
-    const { user } = await renderApp(width);
-    await projectWithTwoPieces(user);
-    const card = await screen.findByRole('region', { name: /^Selected piece: / });
-    await user.click(within(card).getByRole('button', { name: 'Bind Width to a variable' }));
-    const bind = await screen.findByRole('dialog', { name: 'Bind Width' });
-    expect(within(bind).getByText(/No variables yet/)).toBeTruthy();
-    await user.type(within(bind).getByLabelText('Formula'), 'nothing + 1');
-    expect((await within(bind).findByRole('alert')).textContent).toMatch(
-      /Unknown variable “nothing”/,
-    );
-    expect((within(bind).getByRole('button', { name: 'Bind' }) as HTMLButtonElement).disabled).toBe(
-      true,
-    );
   });
 });
