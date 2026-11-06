@@ -857,7 +857,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-104: Repairs for compatibility warnings
 
-- Status: Open
+- Status: ADR-204
 - Origin: ADR-100 (2026-10-26, Claude: not asked for)
 - Missing: The depth, height and family warnings offer no previewed repair (ADR-071); each rule's repairs list is empty because no existing repair fixes them.
 - Request: New adr 3
@@ -948,7 +948,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-116: Fill a wall: carcasses with 3 or more equal fronts
 
-- Status: Open
+- Status: ADR-204
 - Origin: ADR-103, 2026-10-27; Claude cut it while building
 - Missing: Equal fronts puts 1 or 2 fronts on a carcass only (a door front has 1 or 2 leaves); carcasses with 3 or more fronts are not suggested, so fronts under 200 mm wide (with the 400 mm min) give no mix.
 - Request: 6 equal front panels, what's behind is to be configured (answer: Equal fronts, any carcass widths)
@@ -963,7 +963,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-117: Fill a wall: tall cabinet height
 
-- Status: Open
+- Status: ADR-204
 - Origin: ADR-103, 2026-10-27; default chosen by Claude while building
 - Missing: Tall cabinets are always the catalog height (2200 mm, ADR-036 typical value); there is no tall-height field. A wall lower than that gets the warning on every mix with a tall cabinet.
 - Request: allow with a warning items like tall cabinets, above this height
@@ -978,7 +978,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-118: Fill a wall: a width per base kind
 
-- Status: Open
+- Status: ADR-204
 - Origin: ADR-103, 2026-10-27; Claude narrowed it while building
 - Missing: All base kinds in one mix share one width (tall cabinets may have their own round width); mixes such as an 800 drawer base next to 600 shelf bases are not suggested.
 - Request: So basically a mix and match (answer: Equal per kind, exact split)
@@ -1053,7 +1053,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-123: Fill a wall: wall cabinet depth
 
-- Status: Open
+- Status: ADR-204
 - Origin: ADR-104, 2026-10-27; default chosen by Claude while building
 - Missing: Wall cabinets keep the catalog depth (320 mm carcass); there is no wall cabinet depth field.
 - Request: Wall cabinets above (answer to: Which kinds of pieces may appear in a mix?)
@@ -1370,7 +1370,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-210: Project templates drop run handles and sinks
 
-- Status: Open
+- Status: ADR-204
 - Origin: ADR-125 (found while building)
 - Missing: Saving a project as a project template (ADR-060) keeps neither its run handles nor its sinks; a project made from it has none
 - Request: Accept default, /batch all ready (ADR-125: run sinks and handles)
@@ -1991,7 +1991,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-348: Fill the room: openings only through a project's room
 
-- Status: Open
+- Status: ADR-204
 - Origin: ADR-173, 2026-11-04; agent scoped it out
 - Missing: Fill the room from the New dialog takes a ready shape and sizes only; doors and windows come only through a project's own room (Project ⋯ → Fill the room…).
 - Request: “Fill the room” (user 2026-11-04)
@@ -2236,4 +2236,19 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Necessity: Low-medium
 - Issue: Find-it tests dominate test CPU; each mounts the bare app with full module isolation and typed input delays.
 - Fix: Measure each lever, then apply the ones that keep the bare-app start (ADR-108).
+- Conflicts: none
+
+### G-396: No repair for the family warning
+
+- Status: Open
+- Origin: ADR-204, 2026-11-06; agent scoped it out (G-104's pick covers depth and height only)
+- Missing: The family compatibility warning (ADR-100) still offers no previewed repair (ADR-071); only the depth and height warnings get "match the neighbour" repairs.
+- Request: Not a quote: G-104 asked "Offer repairs such as 'Make Base cabinet 560 deep like its neighbour' or 'Move the bed away'?"
+- Questions: Offer a repair that moves one of the two pieces away until they no longer touch side by side?
+- Suggested pick: Move the later-placed piece sideways just clear of the other, reusing the overlap repair's moves (estimate: effort +10%, value +5%).
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
+- Issue: The family warning names pieces from rooms that do not belong together but offers no fix.
+- Fix: Offer a previewed move that takes one piece clear of the other.
 - Conflicts: none
