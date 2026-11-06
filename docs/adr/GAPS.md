@@ -238,7 +238,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-016: Export blocking never tried in a browser
 
-- Status: Open
+- Status: ADR-201
 - Origin: ADR-062/064, 2026-10-24 17:52 UTC; agent scoped it out
 - Missing: Not checked by any find-it: the blocked-export message (src/ui/Output.tsx:140-146) and the blocked Shopping list CSV and Print (src/ui/Shopping.tsx:202-279).
 - Request: Errors block export (ADR-008) (context, not a quote)
@@ -764,7 +764,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-095: Catalog counts agreement unconfirmed
 
-- Status: Open
+- Status: ADR-201
 - Origin: Gap re-check 2026-10-26 (G-059); agent found it
 - Missing: The 'N ready items' label (src/ui/Catalog.tsx:236) exists, but no check (find-it or browser) has confirmed the total equals the sum of the category counts at 390 and 1280 px.
 - Request: Run critique this design for the entire ui/ux; then 'Fix them directly' (G-059)
@@ -1310,7 +1310,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-181: Move/Section toggle sometimes ignores the first tap after a touch drag or while the 3D view settles
 
-- Status: Open
+- Status: ADR-201
 - Origin: ADR-122 (found while checking)
 - Missing: In the production-build find-it run, Move and Section sometimes stayed off after one tap: right after a touch drag on a phone, or while the 3D view was settling after the look changed; the script now taps again until the toggle reads pressed
 - Request: Push, merge
@@ -1961,7 +1961,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-346: Connections in 3D Move mode not checked in a browser
 
-- Status: Open
+- Status: ADR-201
 - Origin: ADR-168, 2026-11-04; agent, at ship time
 - Missing: Moving a connected piece in 3D Move mode (dropItemAt) is covered by a store test only; it was not checked in a browser (the browser find-it drags on the plan).
 - Request: “ship ADR-168” (user 2026-11-04)
@@ -1976,7 +1976,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-347: accounts find-it at 390 px is timing-sensitive under the full suite
 
-- Status: Open
+- Status: ADR-201
 - Origin: N171/N172 full test runs, 2026-11-04; agent
 - Missing: tests/find-it/accounts.test.tsx at 390 px fails under the full local suite (the 'In your account' badge is not found in time) in two of three full runs on 2026-11-04, while it passes when run alone and in CI.
 - Request: Not a quote: the suite is the source of truth (CLAUDE.md)
@@ -2006,7 +2006,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-351: move-3d find-it fails on main at 1440 px
 
-- Status: Open
+- Status: ADR-201
 - Origin: ADR-179 build, 2026-11-05; found by the agent
 - Missing: tools/move-3d/find-it.mjs fails at 1440 px on the production build of main 0c26d0b and of this branch: 'Turn 90° ↺ turned the piece' reads an empty rotation, then the 3D canvas wait times out (20 s).
 - Request: Not a quote: found while running the browser find-it scripts for ADR-179.
@@ -2180,7 +2180,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-368: CI runs only the tests related to a core-only change
 
-- Status: Open
+- Status: ADR-201
 - Origin: ADR-197 CI analysis 2026-11-05
 - Missing: Suggestion C, tests by domain of change: a pull request that touches only src/core still runs the whole suite. vitest --changed origin/main (or a related-files filter) could run only the related tests there. The find-it files all import App, so any src/ui change still runs all 37 of them.
 - Request: Suggest improvements. Triggering less often the ci optimisations? Tests running by domain of change? Do all parts of the app need tests? Gaps/features/docs/unnecessary overcovering tests? (the user chose "all of these 4 + Suggestions A(all) and B(all)"; this suggestion was left out)
@@ -2210,7 +2210,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-370: Review find-it tests that re-test logic through the UI
 
-- Status: Open
+- Status: ADR-201
 - Origin: ADR-197 CI analysis 2026-11-05
 - Missing: Suggestion E, over-coverage review: find-it/research-batch-4 (10.4 s, 6 tests) asserts research rows through the UI; find-it/connections (13.3 s) and find-it/variables (9.2 s) look like logic re-tested through the UI; tests/rapier-trial.test.ts is permanently skipped.
 - Request: Suggest improvements. Triggering less often the ci optimisations? Tests running by domain of change? Do all parts of the app need tests? Gaps/features/docs/unnecessary overcovering tests? (the user chose "all of these 4 + Suggestions A(all) and B(all)"; this suggestion was left out)
@@ -2236,4 +2236,19 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Necessity: Low-medium
 - Issue: Find-it tests dominate test CPU; each mounts the bare app with full module isolation and typed input delays.
 - Fix: Measure each lever, then apply the ones that keep the bare-app start (ADR-108).
+- Conflicts: none
+
+### G-372: Remove the Rapier devDependency once its trial test is gone
+
+- Status: Open
+- Origin: ADR-201, 2026-11-06; agent scoped it out
+- Missing: ADR-201 deletes tests/rapier-trial.test.ts (G-370), the only file that imports @dimforge/rapier3d-compat; the devDependency and its lockfile entry would stay, unused. ADR-125 added it as a devDependency for the trial only.
+- Request: Not a quote: follows from G-370's pick, "Move the logic assertions to core tests, keep one click path per find-it file, and delete rapier-trial" (accepted 2026-11-06).
+- Questions: Remove the devDependency with the trial file, or keep it for a later re-run of the trial?
+- Suggested pick: Remove it in the same change as the trial file (estimate: effort +2%, value +2%; smaller install).
+- Work: Low
+- Impact: Low
+- Necessity: Low
+- Issue: Deleting the Rapier trial test leaves an unused devDependency in package.json and the lockfile.
+- Fix: pnpm remove @dimforge/rapier3d-compat in the change that deletes tests/rapier-trial.test.ts.
 - Conflicts: none
