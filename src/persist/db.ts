@@ -441,23 +441,39 @@ export async function listModels(database = db): Promise<StoredModel[]> {
   return rows.filter((r) => r.bytes instanceof ArrayBuffer && typeof r.name === 'string');
 }
 /**
- * Delete a model from the library unless a project still uses it (ADR-076, ADR-012). Saved projects are searched as
- * text, so a project the app cannot read still keeps its models; `keep` holds ids the open project uses.
+ * Delete a model from the library unless a project or a project template still uses it (ADR-076, ADR-208, ADR-012).
+ * Saved rows are searched as text, so a row the app cannot read still keeps its models; `keep` holds ids the open
+ * project uses.
  */
 export async function deleteModelIfUnused(
   id: string,
   keep: Iterable<string> = [],
   database = db,
 ): Promise<{ deleted: boolean; usedBy: string[] }> {
-  return database.transaction('rw', database.models, database.projects, async () => {
-    const usedBy = (await database.projects.toArray())
-      .filter((r) => JSON.stringify(r).includes(`"${id}"`))
-      .map((r) => (typeof r.name === 'string' ? r.name : t('a saved project')));
-    if (new Set(keep).has(id)) usedBy.unshift(t('the open project'));
-    if (usedBy.length) return { deleted: false, usedBy };
-    await database.models.delete(id);
-    return { deleted: true, usedBy };
-  });
+  return database.transaction(
+    'rw',
+    database.models,
+    database.projects,
+    database.projectTemplates,
+    async () => {
+      const usedBy = [
+        ...(await database.projects.toArray())
+          .filter((r) => JSON.stringify(r).includes(`"${id}"`))
+          .map((r) => (typeof r.name === 'string' ? r.name : t('a saved project'))),
+        ...(await database.projectTemplates.toArray())
+          .filter((r) => JSON.stringify(r).includes(`"${id}"`))
+          .map((r) =>
+            typeof r.name === 'string'
+              ? t('the project template {name}', { name: r.name })
+              : t('a project template'),
+          ),
+      ];
+      if (new Set(keep).has(id)) usedBy.unshift(t('the open project'));
+      if (usedBy.length) return { deleted: false, usedBy };
+      await database.models.delete(id);
+      return { deleted: true, usedBy };
+    },
+  );
 }
 
 const LAST_KEY = 'furniture-builder:last-design';

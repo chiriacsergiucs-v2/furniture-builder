@@ -52,6 +52,46 @@ export interface Room {
   shape?: { kind: RoomShape; sizes: ShapeSizes };
   /** Wall backgrounds (ADR-145, project schemaVersion 14), at most one per wall. Absent = the plain see-through grey. */
   walls?: WallFinish[];
+  /**
+   * The floor's background (ADR-208, project schemaVersion 21): a colour, or a picture from this device with its
+   * average colour. A picture's `fit` is in plan mm: `x` from the left, `y` the distance from the back (z). Absent =
+   * the plain floor.
+   */
+  floor?: FloorFinish;
+}
+
+/** A floor background (ADR-208): the wall finish's shape without a wall number. */
+export interface FloorFinish {
+  colour: string;
+  image?: WallImage;
+}
+
+/** The plan rectangle a floor picture covers (ADR-208): its `fit` (x, then z as `y`), or the outline's bounds. */
+export function floorRect(r: Room, img: WallImage): { x: Mm; z: Mm; w: Mm; d: Mm } {
+  if (img.fit) return { x: img.fit.x, z: img.fit.y, w: img.fit.w, d: img.fit.h };
+  const xs = r.outline.map((p) => p[0]),
+    zs = r.outline.map((p) => p[1]);
+  const x = Math.min(...xs),
+    z = Math.min(...zs);
+  return { x, z, w: Math.max(1, Math.max(...xs) - x), d: Math.max(1, Math.max(...zs) - z) };
+}
+
+/** How deep a wall's colour band reaches into the room on the plan (ADR-208). */
+export const WALL_BAND: Mm = 50;
+
+/**
+ * The colour bands of the walls with a background on the plan (ADR-208): a `WALL_BAND` mm strip inside each wall
+ * line, in the wall's colour (a picture's average colour). Empty while the outline has problems.
+ */
+export function wallBands(r: Room): { wall: number; colour: string; box: Box }[] {
+  if (outlineIssues(r.outline).length) return [];
+  return (r.walls ?? [])
+    .filter((f) => f.wall >= 0 && f.wall < r.outline.length)
+    .map((f) => ({
+      wall: f.wall,
+      colour: f.colour,
+      box: wallBox(r, f.wall, 0, wallLength(r, f.wall), WALL_BAND, 0, 0),
+    }));
 }
 
 /**
@@ -797,8 +837,27 @@ export function validateRoom(r: unknown): string[] {
         else seen.add(f.wall as number);
       }
   }
+  if (r.floor !== undefined) {
+    const f = r.floor;
+    if (!isObj(f) || typeof f.colour !== 'string' || !HEX.test(f.colour) || !validImage(f.image))
+      errs.push(t('Invalid floor background'));
+  }
   return errs;
 }
+
+/** A wall or floor picture reference (ADR-145, ADR-146, ADR-208), or none. */
+const validImage = (img: unknown) =>
+  img === undefined ||
+  (isObj(img) &&
+    typeof img.id === 'string' &&
+    !!img.id &&
+    img.id.length <= 200 &&
+    typeof img.name === 'string' &&
+    img.name.length <= 500 &&
+    (img.tileWidth === undefined || isTile(img.tileWidth)) &&
+    (img.tileHeight === undefined || isTile(img.tileHeight)) &&
+    (img.fit === undefined || isWallRect(img.fit)) &&
+    (img.straighten === undefined || isQuad(img.straighten)));
 
 /**
  * Walls for the 3D view (ADR-058): thin boxes just outside the outline, full room height, with door and window

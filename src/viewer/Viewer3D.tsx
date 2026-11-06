@@ -32,6 +32,7 @@ import {
   RepeatWrapping,
   SRGBColorSpace,
   Shape,
+  ShapeGeometry,
   Texture,
   TextureLoader,
   Vector2,
@@ -47,6 +48,7 @@ import { explode } from '../core/explode';
 import { t } from '../core/i18n';
 import { hitToMm, inSelection, selectionBox } from '../core/selectPath';
 import {
+  floorRect,
   roomDisplayBoxes,
   wallFinish,
   type Room,
@@ -93,6 +95,7 @@ import { SNAP_RANGE } from '../core/snap';
 import { S, useGhost, useMoveMode, usePieceDrag, type PieceGhost } from './pieceDrag';
 import { landingY } from '../core/drag3d';
 import { useModelResize, useResizePreview, type HandleAxis } from './modelResize';
+import { ARBridge, enterAR, exitAR, exportUsdz, turnAR, useARState, useARSupported } from './AR';
 import { useHeightDrag, useHeightPreview } from './heightDrag';
 import { AXIS_LABEL, cutAt, setSection, useSection, type SectionAxis } from './section';
 import { heightDraggable, heightLabel } from '../core/height';
@@ -419,6 +422,7 @@ export default function Viewer3D() {
         {sectionOn && <SectionClip axis={section.axis} at={cut!} />}
         {showLocks && <LockAnchors pieces={locked} badges={lockBadges} />}
         <Fit key={designId} bounds={bounds} />
+        {!preview && <ARBridge bounds={bounds} />}
       </Canvas>
       {showLocks && (
         <div className="lock-badges" aria-hidden="true">
@@ -437,8 +441,14 @@ export default function Viewer3D() {
           ))}
         </div>
       )}
+      {!(hasPieces || hasPicture) && !rendering && !preview && (
+        <div className="three-tools" role="toolbar" aria-label={t('3D view tools')}>
+          <ThreeMore name={view.title} />
+        </div>
+      )}
       {(hasPieces || hasPicture) && !rendering && (
         <div className="three-tools" role="toolbar" aria-label={t('Place pieces in 3D')}>
+          {!preview && <ThreeMore name={view.title} />}
           {hasPieces && (
             <button
               type="button"
@@ -634,6 +644,81 @@ export default function Viewer3D() {
           <CountStepper className="in-3d" foldable />
         </div>
       )}
+    </>
+  );
+}
+
+/**
+ * The 3D toolbar's ⋯ menu (ADR-208): View in AR when this device offers immersive AR, and Export for AR (.usdz). The
+ * AR overlay (dom-overlay) holds the hint, Turn 90° ↻ and Exit AR.
+ */
+function ThreeMore({ name }: { name: string }) {
+  const canAR = useARSupported();
+  const ar = useARState();
+  const [note, setNote] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const overlay = useRef<HTMLDivElement>(null);
+  const menu = useRef<HTMLDetailsElement>(null);
+  // Taps on the overlay's buttons must not also place the furniture (WebXR 'beforexrselect').
+  useEffect(() => {
+    const el = overlay.current;
+    if (!el) return;
+    const stop = (e: Event) => e.preventDefault();
+    el.addEventListener('beforexrselect', stop);
+    return () => el.removeEventListener('beforexrselect', stop);
+  }, []);
+  return (
+    <>
+      <details className="menu three-more" ref={menu}>
+        <summary aria-label={t('More 3D actions')}>⋯</summary>
+        <div className="three-more-panel" role="group" aria-label={t('More 3D actions')}>
+          {canAR && (
+            <button
+              type="button"
+              className="btn sm outline"
+              onClick={async () => {
+                menu.current?.removeAttribute('open');
+                setNote(await enterAR(overlay.current));
+              }}
+            >
+              {t('View in AR')}
+            </button>
+          )}
+          <button
+            type="button"
+            className="btn sm outline"
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              setNote(await exportUsdz(name));
+              setBusy(false);
+              menu.current?.removeAttribute('open');
+            }}
+          >
+            {t('Export for AR (.usdz)')}
+          </button>
+        </div>
+      </details>
+      {note && (
+        <span className="plan-drag-note three-drag-note locked" role="alert">
+          {note}
+        </span>
+      )}
+      <div ref={overlay} className="ar-overlay" hidden={ar === 'off'}>
+        <p className="ar-hint" role="status">
+          {ar === 'placing' ? t('Tap the floor to place') : ''}
+        </p>
+        <div className="ar-actions">
+          {ar === 'placed' && (
+            <button type="button" className="btn" onClick={turnAR}>
+              {t('Turn 90° ↻')}
+            </button>
+          )}
+          <button type="button" className="btn solid" onClick={exitAR}>
+            {t('Exit AR')}
+          </button>
+        </div>
+      </div>
     </>
   );
 }
@@ -1271,7 +1356,7 @@ function RoomWalls({
         <PictureHandles room={room} wall={chosen} rect={rectOf(chosen)!} press={press} />
       )}
       {boxes.obstacles.map((b, i) => mesh(b, `o${i}`, '#b3261e', 0.35))}
-      {boxes.walls.length > 0 && <RoomFloor outline={room.outline} />}
+      {boxes.walls.length > 0 && <RoomFloor room={room} />}
     </>
   );
 }
@@ -1444,20 +1529,51 @@ function PictureNote() {
   );
 }
 
-/** The floor inside the room outline, just under the pieces. */
-function RoomFloor({ outline }: { outline: [number, number][] }) {
-  const shape = useMemo(
-    () => new Shape(outline.map(([x, z]) => new Vector2(x * S, -z * S))),
-    [outline],
-  );
+/**
+ * The floor inside the room outline, just under the pieces; with a floor background (ADR-208) in its colour, or its
+ * picture over the plan rectangle it covers (`floorRect`).
+ */
+function RoomFloor({ room }: { room: Room }) {
+  const outline = room.outline;
+  const f = room.floor;
+  const finishes = useMemo<WallFinish[]>(() => (f ? [{ wall: 0, ...f }] : []), [f]);
+  const urls = useWallPictureUrls(finishes);
+  const textures = useTextures(urls, false);
+  const tex = f?.image ? textures.get(pictureKey(f.image)) : undefined;
+  const rect = f?.image ? floorRect(room, f.image) : null;
+  const geo = useMemo(() => {
+    const g = new ShapeGeometry(new Shape(outline.map(([x, z]) => new Vector2(x * S, -z * S))));
+    if (rect) {
+      // Picture coordinates from plan mm: across from the rectangle's left, down from its back edge.
+      const pos = g.getAttribute('position');
+      const uv: number[] = [];
+      for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i) / S,
+          z = -pos.getY(i) / S;
+        uv.push((x - rect.x) / rect.w, 1 - (z - rect.z) / rect.d);
+      }
+      g.setAttribute('uv', new Float32BufferAttribute(uv, 2));
+    }
+    return g;
+    // The rectangle is compared by value: a new object each render must not rebuild the floor.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [outline, rect?.x, rect?.z, rect?.w, rect?.d]);
+  useEffect(() => () => geo.dispose(), [geo]);
+  const solid = useSolidWalls();
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.001, 0]} raycast={() => null}>
-      <shapeGeometry args={[shape]} />
+    <mesh
+      rotation={[-Math.PI / 2, 0, 0]}
+      position={[0, -0.001, 0]}
+      raycast={() => null}
+      geometry={geo}
+    >
       <meshStandardMaterial
-        color="#d9dcd6"
-        transparent
-        opacity={0.35}
-        depthWrite={false}
+        key={tex ? tex.uuid : 'plain'}
+        color={tex ? '#ffffff' : (f?.colour ?? '#d9dcd6')}
+        map={tex ?? null}
+        transparent={!f || !solid}
+        opacity={f ? (solid ? 1 : 0.85) : 0.35}
+        depthWrite={!!f && solid}
         side={DoubleSide}
       />
     </mesh>

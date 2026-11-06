@@ -11,6 +11,7 @@ import {
   remapRunExtras,
   remapRunKey,
   templateConnections,
+  templateModels,
   type ProjectTemplate,
 } from './projectTemplate';
 import type { Mm } from './types';
@@ -91,6 +92,8 @@ export function insertTemplate(
   const { connections, droppedWalls } = templateConnections(t.connections, ids, project.room);
   // Run handles and sinks join with the new piece ids and new ids of their own (ADR-204).
   const extras = remapRunExtras(t.runHandles, t.sinks, ids);
+  // The template's 3D models join too (ADR-208), with new ids; one on a piece follows that piece.
+  const models = templateModels(t.models, ids, ax - ox, az - oz);
   const recipe = t.runRecipe;
   const removed = (recipe?.removed ?? [])
     .map((k) => remapRunKey(k, ids))
@@ -110,6 +113,7 @@ export function insertTemplate(
       ? { runHandles: [...(project.runHandles ?? []), ...extras.runHandles] }
       : {}),
     ...(extras.sinks.length ? { sinks: [...(project.sinks ?? []), ...extras.sinks] } : {}),
+    ...(models.length ? { models: [...(project.models ?? []), ...models] } : {}),
   };
   return { project: next, ids: items.map((i) => i.id), kept, droppedWalls };
 }

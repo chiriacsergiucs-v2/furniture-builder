@@ -4,7 +4,8 @@
  * and suggested again when the template is used, so they always fit the pieces. Since schemaVersion 2 (ADR-170) a
  * template also keeps the project's variables, each piece's bindings and the connections between pieces (ADR-166,
  * ADR-168); a template with none of them stays version 1. Since schemaVersion 3 (ADR-204) it keeps the run handles
- * and sinks (ADR-125) over template refs; a template without them stays version 1 or 2.
+ * and sinks (ADR-125) over template refs, and the project's display-only 3D models (ADR-208: offset and placement
+ * over refs); a template without them stays version 1 or 2.
  */
 import { newId, validateDesign } from './design';
 import { applyBindings, type Binding, type ProjectVariable } from './variables';
@@ -21,6 +22,15 @@ import {
 } from './project';
 import { validateRoom, type Room } from './room';
 import type { Connection, ConnectionKind } from './connections';
+import {
+  FRONT_TURN,
+  validModelPlacement,
+  type ModelFront,
+  type ModelPlacement,
+  type ModelSize,
+  type ModelItem,
+  type ModelTurn,
+} from './model3d';
 import type { Design, Mm } from './types';
 
 export interface TemplateItem {
@@ -41,7 +51,7 @@ export interface TemplateItem {
 
 /**
  * 1 = ADR-060; 2 = variables, bindings and connections (ADR-170); 3 = run handles and sinks (ADR-204), connection
- * kinds and wall connections (ADR-207). An older app refuses a version it does not know.
+ * kinds and wall connections (ADR-207) and 3D models (ADR-208). An older app refuses a version it does not know.
  */
 export const TEMPLATE_SCHEMA = 3 as const;
 export type TemplateSchemaVersion = 1 | 2 | typeof TEMPLATE_SCHEMA;
@@ -49,6 +59,19 @@ export type TemplateSchemaVersion = 1 | 2 | typeof TEMPLATE_SCHEMA;
 const VARS_SINCE = 2;
 /** The version that first stores run handles and sinks (ADR-204), connection kinds and wall connections (ADR-207). */
 const RUN_EXTRAS_SINCE = 3;
+
+/** A display-only 3D model kept in a template (ADR-208): a project's model item with an offset; `ref` is its id. */
+export interface TemplateModel {
+  ref: string;
+  modelId: string;
+  name: string;
+  size: ModelSize;
+  offset: { x: Mm; y: Mm; z: Mm };
+  rotationY: ModelTurn;
+  front?: ModelFront;
+  /** On a piece: `baseId` is that piece's template ref. */
+  placement?: ModelPlacement;
+}
 
 /** A run handle kept in a template (ADR-204): `from` and `own` are template refs; a new id is given on use. */
 export type TemplateRunHandle = Omit<RunHandle, 'id'>;
@@ -86,6 +109,8 @@ export interface ProjectTemplate {
   runHandles?: TemplateRunHandle[];
   /** Sinks over base units (ADR-125), over template refs (schemaVersion 3, ADR-204). */
   sinks?: TemplateSink[];
+  /** The project's display-only 3D models (schemaVersion 3, ADR-208). Template files embed their files. */
+  models?: TemplateModel[];
 }
 
 /**
@@ -161,12 +186,22 @@ export function templateFromProject(
     void _i;
     return sk;
   });
+  const models: TemplateModel[] = (p.models ?? []).map((m) => ({
+    ref: m.id,
+    modelId: m.modelId,
+    name: m.name,
+    size: { ...m.size },
+    offset: { x: m.position.x - ox, y: m.position.y, z: m.position.z - oz },
+    rotationY: m.rotationY,
+    ...(m.front ? { front: m.front } : {}),
+    ...(m.placement ? { placement: structuredClone(m.placement) } : {}),
+  }));
   return {
     kind: 'project-template',
-    // Run handles, sinks or connection kinds need version 3 (ADR-204, ADR-207); variables, bindings or connections
-    // version 2 (ADR-170); without them an older app can still read it.
+    // Run handles, sinks, connection kinds or 3D models need version 3 (ADR-204, ADR-207, ADR-208); variables,
+    // bindings or connections version 2 (ADR-170); without them an older app can still read it.
     schemaVersion:
-      runHandles.length || sinks.length || connections?.some((c) => c.kind)
+      runHandles.length || sinks.length || connections?.some((c) => c.kind) || models.length
         ? TEMPLATE_SCHEMA
         : variables || connections?.length || bound
           ? VARS_SINCE
@@ -191,6 +226,7 @@ export function templateFromProject(
     ...(connections?.length ? { connections } : {}),
     ...(runHandles.length ? { runHandles } : {}),
     ...(sinks.length ? { sinks } : {}),
+    ...(models.length ? { models } : {}),
     ...(p.runParts?.length || p.runSettings
       ? {
           runRecipe: {
@@ -226,12 +262,14 @@ export function projectFromTemplate(t: ProjectTemplate, name = t.name): Project 
   });
   const connections = templateConnections(t.connections, ids, t.room).connections;
   const extras = remapRunExtras(t.runHandles, t.sinks, ids);
+  const models = templateModels(t.models, ids);
   const extended =
     items.some((i) => i.linkId || i.angle || i.bindings) ||
     t.variables?.length ||
     connections.length ||
     extras.runHandles.length ||
-    extras.sinks.length;
+    extras.sinks.length ||
+    models.length;
   const base: Project = {
     // Linked copies, angled pieces, bindings, connections, run handles and sinks need the project version that stores
     // them (ADR-111, ADR-121, ADR-166, ADR-168, ADR-125).
@@ -247,6 +285,7 @@ export function projectFromTemplate(t: ProjectTemplate, name = t.name): Project 
     ...(connections.length ? { connections } : {}),
     ...(extras.runHandles.length ? { runHandles: extras.runHandles } : {}),
     ...(extras.sinks.length ? { sinks: extras.sinks } : {}),
+    ...(models.length ? { models } : {}),
   };
   if (!t.runRecipe) return t.variables?.length ? applyBindings(base) : base;
   const removed = remapKeys(t.runRecipe.removed ?? [], ids);
@@ -285,6 +324,35 @@ export function templateConnections(
     });
   }
   return { connections, droppedWalls };
+}
+
+/**
+ * A template's 3D models as project model items (ADR-208): new ids, at their offsets moved by `dx`, `dz`; one on a
+ * piece follows that piece's new id.
+ */
+export function templateModels(
+  list: readonly TemplateModel[] | undefined,
+  ids: ReadonlyMap<string, string>,
+  dx = 0,
+  dz = 0,
+): ModelItem[] {
+  return (list ?? []).map((m) => ({
+    id: newId(),
+    modelId: m.modelId,
+    name: m.name,
+    size: { ...m.size },
+    position: { x: m.offset.x + dx, y: m.offset.y, z: m.offset.z + dz },
+    rotationY: m.rotationY,
+    ...(m.front ? { front: m.front } : {}),
+    ...(m.placement
+      ? {
+          placement:
+            m.placement.kind === 'above'
+              ? { ...m.placement, baseId: ids.get(m.placement.baseId) ?? m.placement.baseId }
+              : { ...m.placement },
+        }
+      : {}),
+  }));
 }
 
 const isObj = (v: unknown): v is Record<string, unknown> =>
@@ -419,6 +487,44 @@ export function validateProjectTemplate(t: unknown): string[] {
       for (const sk of t.sinks)
         if (!isObj(sk) || typeof sk.baseId !== 'string' || !refs.has(sk.baseId))
           errs.push('Invalid template sink');
+  }
+  if (t.models !== undefined) {
+    if (!v3 || !Array.isArray(t.models))
+      errs.push(`3D models need template schemaVersion ${TEMPLATE_SCHEMA}`);
+    else {
+      const seen = new Set<string>();
+      for (const m of t.models) {
+        const size = isObj(m) ? m.size : null;
+        const o = isObj(m) ? m.offset : null;
+        const pl = isObj(m) ? m.placement : undefined;
+        if (
+          !isObj(m) ||
+          typeof m.ref !== 'string' ||
+          !m.ref ||
+          seen.has(m.ref) ||
+          refs.has(m.ref) ||
+          typeof m.modelId !== 'string' ||
+          !m.modelId ||
+          typeof m.name !== 'string' ||
+          m.name.length > 200 ||
+          !isObj(size) ||
+          !['w', 'h', 'd'].every((k) => isInt(size[k], 1)) ||
+          !isObj(o) ||
+          !isInt(o.x) ||
+          !isInt(o.y, 0) ||
+          !isInt(o.z) ||
+          ![0, 90, 180, 270].includes(m.rotationY as number) ||
+          (m.front !== undefined && !((m.front as string) in FRONT_TURN)) ||
+          (pl !== undefined &&
+            (!validModelPlacement(pl) ||
+              (isObj(pl) && pl.kind === 'above' && !refs.has(pl.baseId as string))))
+        ) {
+          errs.push('Invalid template 3D model');
+          continue;
+        }
+        seen.add(m.ref);
+      }
+    }
   }
   const rr = t.runRecipe;
   if (rr !== undefined) {

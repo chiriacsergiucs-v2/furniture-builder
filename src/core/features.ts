@@ -673,6 +673,34 @@ export const FEATURES: FeatureDomain[] = [
         checked: '2026-11-05',
       },
       {
+        name: 'Wall colour bands on the plan',
+        detail: "A 50 mm band inside each wall with a background, in the wall's colour.",
+        adrs: ['ADR-208'],
+      },
+      {
+        name: 'Floor colour or picture',
+        detail:
+          'Set under Walls in the room; shown on the floor in 3D and under the pieces on the plan.',
+        adrs: ['ADR-208'],
+      },
+      {
+        name: 'Wall behind a single piece',
+        detail:
+          'A piece opened from a project with a room shows the wall its back stands against in its own front view.',
+        adrs: ['ADR-208'],
+      },
+      {
+        name: 'Board pictures on the plan',
+        detail: "Each piece on the plan shows the picture of its highest panel's board.",
+        adrs: ['ADR-208'],
+      },
+      {
+        name: 'Trace a plan picture',
+        detail:
+          'Add a picture of the floor plan, set its scale from two taps and a known length, and draw the room over it.',
+        adrs: ['ADR-208'],
+      },
+      {
         name: 'Opening clearances',
         detail: 'Doors and drawers need free space in front.',
         adrs: ['ADR-057'],
@@ -763,6 +791,18 @@ export const FEATURES: FeatureDomain[] = [
               'The 3D scene with its boards and their pictures as one binary glTF file, for Blender or another renderer; made on this device.',
             adrs: ['ADR-206'],
           },
+          {
+            name: 'WebGPU rendering',
+            detail:
+              'Render uses the WebGPU path tracer when the device has WebGPU, WebGL 2 otherwise.',
+            adrs: ['ADR-208'],
+          },
+          {
+            name: 'View in AR and export for AR',
+            detail:
+              'From the 3D toolbar ⋯: View in AR on phones that offer it, and a .usdz file for AR Quick Look.',
+            adrs: ['ADR-208'],
+          },
           { name: 'Section view and Isolate', adrs: ['ADR-122'], checked: '2026-11-05' },
           { name: 'Draws only when something changes', adrs: ['ADR-121'], checked: '2026-11-05' },
         ],
@@ -781,6 +821,12 @@ export const FEATURES: FeatureDomain[] = [
             name: 'Move and turn a model in 3D',
             detail: 'Drag it in Move mode, with Snap, and turn it 90° about its centre.',
             adrs: ['ADR-203'],
+          },
+          {
+            name: 'Place and drag 3D models',
+            detail:
+              'On the floor, on the wall or on a piece; dragged with snapping on the plan and in Move mode; kept in project templates.',
+            adrs: ['ADR-208'],
           },
         ],
       },

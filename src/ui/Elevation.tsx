@@ -8,6 +8,7 @@ import { useDesign } from '../store/designStore';
 import type { FurnitureModel, Material, Panel, SpaceOpening } from '../core/types';
 import { frontOutline } from '../core/shape';
 import { boxIn, cardCorner, CountStepper } from './CountStepper';
+import { WallBehind } from './WallBehind';
 
 /** SVG points of a panel's front outline (y flipped so the floor is at the bottom). */
 export const outlinePoints = (p: Panel) =>
@@ -158,6 +159,8 @@ export function Elevation() {
             ));
           })}
         </defs>
+        {/* A piece opened from a project with a room shows the wall behind it (ADR-208). */}
+        <WallBehind b={b} />
         <rect className="floor" x={b.x - pad} y={0} width={b.w + 2 * pad} height={pad * 0.15} />
         {backs.map((p) => (
           <polygon key={p.id} className={`el-back${fade(p.box)}`} points={outlinePoints(p)} />

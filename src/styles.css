@@ -7207,3 +7207,90 @@ ul.plain {
   fill: var(--ink-2);
   font-weight: 600;
 }
+
+/* Room surfaces on the plan (ADR-208): the plan picture under everything, floor and wall bands under the pieces. */
+.plan-picture-layer,
+.room-floor-finish,
+.wall-bands {
+  pointer-events: none;
+}
+.plan .room-floor.traced {
+  fill-opacity: 0.3;
+}
+.plan .scale-tap {
+  fill: var(--accent);
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+.plan-picture-section {
+  display: grid;
+  gap: var(--s-1);
+  margin-top: var(--s-2);
+  min-width: 0;
+}
+.wall-behind {
+  pointer-events: none;
+}
+/* The 3D toolbar's ⋯ menu (ADR-208): View in AR and Export for AR. */
+.three-more {
+  position: relative;
+}
+.three-more > summary {
+  list-style: none;
+  cursor: pointer;
+  min-width: 32px;
+  min-height: 32px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  font-weight: 600;
+}
+.three-more > summary:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+}
+.three-more-panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 3;
+  display: grid;
+  gap: var(--s-1);
+  padding: var(--s-2);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  max-width: calc(100vw - 32px);
+}
+/* The AR overlay (dom-overlay): the hint at the top, Turn and Exit at the bottom. */
+.ar-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: var(--s-3);
+  pointer-events: none;
+}
+.ar-overlay[hidden] {
+  display: none;
+}
+.ar-overlay .ar-hint {
+  align-self: center;
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--ink);
+}
+.ar-overlay .ar-hint:empty {
+  visibility: hidden;
+}
+.ar-overlay .ar-actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--s-2);
+  pointer-events: auto;
+}

@@ -19,6 +19,7 @@ import {
 } from '../core/design';
 import { duplicateItem, mirrorItem, mirrorRun, setItemRotation, tryTurn } from '../core/arrange';
 import { floorDrop, type FloorPoint } from '../core/drag3d';
+import { modelDrop, moveModelTo } from '../core/modelPlace';
 import {
   applyFinish,
   applyMaterial,
@@ -542,6 +543,17 @@ interface State {
   /** Close the drawn outline into the room (keeps height and features); false when fewer than three corners. */
   finishDrawRoom: () => boolean;
   cancelDrawRoom: () => void;
+  /**
+   * Move a 3D model dragged on the plan (`dx`, `dz` plan mm) or in Move mode (ADR-208): the same drop either way,
+   * snapping with `snap`, lifted off a piece; one undo step. Nothing happens when it would not move.
+   */
+  dropModel: (id: string, dx: number, dz: number, snap: boolean) => void;
+  /** Setting a plan picture's scale (ADR-208): the picture points tapped so far, or null when not setting it. */
+  scalingPlan: Pt[] | null;
+  startScalePlan: () => void;
+  /** A tap on the plan while setting the scale, as a picture pixel; the second tap sets the picture's two points. */
+  addScalePoint: (p: Pt) => void;
+  cancelScalePlan: () => void;
 }
 
 const HISTORY = 100;
@@ -774,6 +786,7 @@ export const useDesign = create<State>((rawSet, get) => {
     sessionBase: null,
     placingItemId: null,
     drawingRoom: null,
+    scalingPlan: null,
     templateEdit: null,
     notice: null,
 
@@ -840,6 +853,7 @@ export const useDesign = create<State>((rawSet, get) => {
         sessionBase: p,
         placingItemId: null,
         drawingRoom: null,
+        scalingPlan: null,
         notice: null,
       });
     },
@@ -859,6 +873,7 @@ export const useDesign = create<State>((rawSet, get) => {
         sessionBase: null,
         placingItemId: null,
         drawingRoom: null,
+        scalingPlan: null,
       }),
     updateProject: (fn) => {
       const p = get().project;
@@ -1146,7 +1161,20 @@ export const useDesign = create<State>((rawSet, get) => {
       if (!p?.models?.some((m) => m.id === id)) return;
       commitProject({
         ...p,
-        models: p.models.map((m) => (m.id === id ? turnModelItem(m, dir) : m)),
+        models: p.models.map((m) => {
+          if (m.id !== id) return m;
+          const turned = turnModelItem(m, dir);
+          // A model on a piece keeps its new place along it (ADR-208): its offset follows the turn.
+          return m.placement?.kind === 'above'
+            ? {
+                ...turned,
+                placement: {
+                  ...m.placement,
+                  offsetX: m.placement.offsetX + turned.position.x - m.position.x,
+                },
+              }
+            : turned;
+        }),
       });
     },
     turnItem: (id, dir) => {
@@ -1739,6 +1767,28 @@ export const useDesign = create<State>((rawSet, get) => {
       return true;
     },
     cancelDrawRoom: () => set({ drawingRoom: null }),
+    dropModel: (id, dx, dz, snap) => {
+      const p = get().project;
+      const pieces = get().projectModel?.pieces;
+      if (!p || !pieces) return;
+      const d = modelDrop(p, pieces, id, dx, dz, snap);
+      if (!d) return;
+      const next = moveModelTo(p, id, d.position);
+      if (next !== p) commitProject(next);
+    },
+    startScalePlan: () => set({ scalingPlan: [], drawingRoom: null, placingItemId: null }),
+    addScalePoint: (pt) => {
+      const pts = get().scalingPlan;
+      const p = get().project;
+      if (!pts || !p?.planPicture) return;
+      if (!pts.length) return set({ scalingPlan: [pt] });
+      set({ scalingPlan: null });
+      const a = pts[0];
+      // Two taps on the same pixel give no distance: the scale stays as it was.
+      if (a[0] === pt[0] && a[1] === pt[1]) return;
+      commitProject({ ...p, planPicture: { ...p.planPicture, a, b: pt } });
+    },
+    cancelScalePlan: () => set({ scalingPlan: null }),
     setKerf: (kerf) => {
       const d = get().design;
       commit({ ...d, cutting: { ...d.cutting, kerf } });

@@ -9,17 +9,29 @@ import {
   type ModelTurn,
 } from '../core/model3d';
 import { newId } from '../core/design';
-import { t } from '../core/i18n';
+import { t, tr } from '../core/i18n';
 import { PROJECT_SCHEMA, type ProjectModel } from '../core/project';
 import type { Box } from '../core/types';
 import { deleteModelIfUnused, listModels, loadModel, type StoredModel } from '../persist/db';
 import { forgetModelScene, importModelFile } from '../persist/models';
 import { useDesign } from '../store/designStore';
 import { askConfirm } from './Confirm';
-import { InfoTip, MmField, Segmented, Toggle } from './controls';
+import { InfoTip, MmField, Segmented, Select, Toggle } from './controls';
 import { useKeepProportions } from './keepProportions';
 import { Icon } from './icons';
-import { arrowMove } from './planDrag';
+import {
+  arrowMove,
+  movePointer,
+  pressPiece,
+  releasePointer,
+  type DragGesture,
+  type PointerAt,
+} from './planDrag';
+import { useSnap } from './useSnap';
+import { modelDrop } from '../core/modelPlace';
+import { placementBases } from '../core/project';
+import type { ModelPlacement } from '../core/model3d';
+import type { PointerEvent as ReactPointerEvent } from 'react';
 
 /**
  * Display-only 3D models in a project (ADR-076): the library under Add a piece → My 3D models, the selected model's
@@ -150,6 +162,7 @@ export function ModelFields({ item }: { item: ModelItem }) {
           </InfoTip>
         }
       />
+      <ModelPlacementFields item={item} />
       <div className="dims3">
         <MmField
           label={t('From left')}
@@ -165,13 +178,15 @@ export function ModelFields({ item }: { item: ModelItem }) {
           max={20000}
           onChange={(v) => patch(item.id, { position: { ...pos, z: v } })}
         />
-        <MmField
-          label={t('Height above floor')}
-          value={pos.y}
-          min={0}
-          max={5000}
-          onChange={(v) => patch(item.id, { position: { ...pos, y: v } })}
-        />
+        {!item.placement && (
+          <MmField
+            label={t('Height above floor')}
+            value={pos.y}
+            min={0}
+            max={5000}
+            onChange={(v) => patch(item.id, { position: { ...pos, y: v } })}
+          />
+        )}
       </div>
       <button
         type="button"
@@ -194,6 +209,91 @@ export function ModelFields({ item }: { item: ModelItem }) {
         {t('Remove from project')}
       </button>
     </section>
+  );
+}
+
+type ModelPlacementKind = ModelPlacement['kind'] | 'free';
+
+/**
+ * A model's placement (ADR-208), the same control as a piece's (ADR-031): on the floor, on the wall at a height, on a
+ * piece (never on another model), or anywhere. `resolvePlacements` keeps its height in line.
+ */
+function ModelPlacementFields({ item }: { item: ModelItem }) {
+  const project = useDesign((s) => s.project)!;
+  const patch = usePatchModel();
+  // Every piece can carry a model; a model is never a base (ADR-208).
+  const bases = useMemo(() => placementBases(project, ''), [project]);
+  const pl = item.placement;
+  const set = (placement: ModelPlacement | undefined) => {
+    const { placement: _p, ...rest } = item;
+    void _p;
+    patch(item.id, placement ? { ...rest, placement } : { ...rest, placement: undefined });
+  };
+  const choose = (k: ModelPlacementKind) => {
+    if (k === 'free') set(undefined);
+    else if (k === 'floor') set({ kind: 'floor' });
+    else if (k === 'wall')
+      set({ kind: 'wall', height: item.position.y > 0 ? item.position.y : 1450 });
+    else if (bases.length) set({ kind: 'above', baseId: bases[0].id, gap: 0, offsetX: 0 });
+  };
+  return (
+    <>
+      <Segmented<ModelPlacementKind>
+        label={t('Placed')}
+        value={pl?.kind ?? 'free'}
+        onChange={choose}
+        options={[
+          { value: 'floor', label: t('Floor'), title: t('Stands on the floor') },
+          { value: 'wall', label: t('Wall'), title: t('Hung on the wall at a height') },
+          ...(bases.length
+            ? [
+                {
+                  value: 'above' as const,
+                  label: t('On a piece'),
+                  title: t('Stands on, or hangs above, another piece and follows it'),
+                },
+              ]
+            : []),
+          { value: 'free', label: t('Anywhere'), title: t('Set all three distances yourself') },
+        ]}
+      />
+      {pl?.kind === 'wall' && (
+        <MmField
+          label={t('Underside above the floor')}
+          value={pl.height}
+          min={0}
+          max={5000}
+          onChange={(v) => set({ ...pl, height: v })}
+        />
+      )}
+      {pl?.kind === 'above' && (
+        <>
+          <Select
+            label={t('On or above')}
+            value={pl.baseId}
+            options={bases.map((b) => ({ value: b.id, label: tr(b.design.name) }))}
+            onChange={(v) => set({ ...pl, baseId: v })}
+          />
+          <div className="dims2">
+            <MmField
+              label={t('Gap above it')}
+              value={pl.gap}
+              min={0}
+              max={3000}
+              onChange={(v) => set({ ...pl, gap: v })}
+              hint={t('0 = stands on it')}
+            />
+            <MmField
+              label={t('From its left edge')}
+              value={pl.offsetX}
+              min={-5000}
+              max={5000}
+              onChange={(v) => set({ ...pl, offsetX: v })}
+            />
+          </div>
+        </>
+      )}
+    </>
   );
 }
 
@@ -419,7 +519,22 @@ function frontEdge(b: Box, yaw: ModelTurn): [number, number, number, number] {
         : [b.x, b.z, b.x, b.z + b.d];
 }
 
-/** The project's models on the plan: labelled dashed boxes; tap to select, arrow keys move by 10 mm (Shift 100). */
+/** Screen point → plan mm, through the plan's own drawing. */
+function planAt(e: ReactPointerEvent<SVGGElement>): PointerAt {
+  const m = e.currentTarget.ownerSVGElement?.getScreenCTM();
+  const pt = m ? new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse()) : null;
+  return {
+    pointerId: e.pointerId,
+    sx: e.clientX,
+    sy: e.clientY,
+    room: pt ? { x: Math.round(pt.x), z: Math.round(pt.y) } : null,
+  };
+}
+
+/**
+ * The project's models on the plan: labelled dashed boxes; tap to select, drag to move with Snap and Alt as pieces
+ * do (ADR-208), arrow keys move by 10 mm (Shift 100). One undo step per drop.
+ */
 export function PlanModels({
   pm,
   fs,
@@ -431,7 +546,32 @@ export function PlanModels({
 }) {
   const selectedId = useDesign((s) => s.selectedItemId);
   const select = useDesign((s) => s.selectItem);
+  const dropModel = useDesign((s) => s.dropModel);
+  const project = useDesign((s) => s.project);
   const patch = usePatchModel();
+  const [snapOn] = useSnap();
+  const [drag, setDragState] = useState<{ g: DragGesture; alt: boolean } | null>(null);
+  const dragRef = useRef<{ g: DragGesture; alt: boolean } | null>(null);
+  const setDrag = (v: { g: DragGesture; alt: boolean } | null) => {
+    dragRef.current = v;
+    setDragState(v);
+  };
+  // Esc cancels a drag (ADR-065).
+  useEffect(() => {
+    if (!drag) return;
+    const onKey = (e: globalThis.KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setDrag(null);
+      }
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [drag]);
+  const target =
+    drag?.g.dragging && project
+      ? modelDrop(project, pm.pieces, drag.g.id, drag.g.dx, drag.g.dz, snapOn && !drag.alt)
+      : null;
   return (
     <>
       {pm.models.map(({ item, box: b }) => {
@@ -446,6 +586,33 @@ export function PlanModels({
             aria-pressed={on}
             aria-label={t('{name} (3D model), {w} by {d} mm', { name: item.name, w: b.w, d: b.d })}
             onClick={tapping ? undefined : () => select(item.id)}
+            onPointerDown={
+              tapping
+                ? undefined
+                : (e) => {
+                    if (e.pointerType === 'mouse' && e.button !== 0) return;
+                    if (dragRef.current) return setDrag(null);
+                    const g = pressPiece(null, item.id, planAt(e));
+                    if (!g) return;
+                    e.stopPropagation();
+                    e.currentTarget.setPointerCapture?.(e.pointerId);
+                    setDrag({ g, alt: e.altKey });
+                  }
+            }
+            onPointerMove={(e) => {
+              const d = dragRef.current;
+              if (!d || d.g.id !== item.id) return;
+              const g = movePointer(d.g, planAt(e));
+              if (g !== d.g || e.altKey !== d.alt) setDrag({ g: g!, alt: e.altKey });
+            }}
+            onPointerUp={(e) => {
+              const d = dragRef.current;
+              if (!d || d.g.id !== item.id) return;
+              const end = releasePointer(d.g, e.pointerId);
+              setDrag(null);
+              if (end?.kind === 'drop') dropModel(item.id, end.dx, end.dz, snapOn && !e.altKey);
+            }}
+            onPointerCancel={() => setDrag(null)}
             onKeyDown={(e) => {
               const m = tapping ? null : arrowMove(e.key, e.shiftKey);
               if (!m) return onEnter(() => select(item.id))(e);
@@ -473,6 +640,27 @@ export function PlanModels({
           </g>
         );
       })}
+      {target && (
+        <g className={`drag-ghost ${target.snap ? 'snapped' : ''}`} aria-hidden="true">
+          <rect x={target.box.x} y={target.box.z} width={target.box.w} height={target.box.d} />
+          <text x={target.box.x} y={target.box.z - fs * 0.5} fontSize={fs}>
+            {t('From left {x} · From back {z} mm', {
+              x: target.position.x,
+              z: target.position.z,
+            })}
+          </text>
+          {(target.snap ?? target.hint) && (
+            <text
+              className="snap-label"
+              x={target.box.x}
+              y={target.box.z + target.box.d + fs * 1.2}
+              fontSize={fs}
+            >
+              {target.snap ?? target.hint}
+            </text>
+          )}
+        </g>
+      )}
     </>
   );
 }

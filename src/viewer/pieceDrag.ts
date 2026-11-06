@@ -202,20 +202,8 @@ export function usePieceDrag(enabled: boolean, snapOn: boolean) {
         const snapping = live.current.snapOn && !ev.altKey;
         const st2 = useDesign.getState();
         if (g.model) {
-          // A model's drop sets its x and z, one undo step (ADR-203).
-          const p = st2.project,
-            pieces = st2.projectModel?.pieces;
-          const tg = p && pieces ? modelDrop(p, pieces, g.id, g.from, g.to, snapping) : null;
-          const was = p?.models?.find((m) => m.id === g.id)?.position;
-          if (tg && was && (tg.position.x !== was.x || tg.position.z !== was.z))
-            st2.updateProject((q) => ({
-              ...q,
-              models: (q.models ?? []).map((m) =>
-                m.id === g.id
-                  ? { ...m, position: { ...m.position, x: tg.position.x, z: tg.position.z } }
-                  : m,
-              ),
-            }));
+          // A model's drop is the plan's (ADR-203, ADR-208): lifted off a piece, one undo step.
+          st2.dropModel(g.id, g.to.x - g.from.x, g.to.z - g.from.z, snapping);
           return;
         }
         // Alt: the piece moves without its connected neighbours (ADR-168).

@@ -66,7 +66,14 @@ import {
   type SharedBuild,
 } from './shared';
 import { aabbOf, overlapsBox, panelsOverlap, turnShape } from './shape';
-import { modelBox, modelChecks, validateModelItems, type ModelItem } from './model3d';
+import {
+  modelBox,
+  modelChecks,
+  validateModelItems,
+  type ModelItem,
+  type ModelPlacement,
+} from './model3d';
+import { planPictureProblems, type PlanPicture } from './planPicture';
 import type { SheetSettings } from './nesting';
 import { jobsFromCutlist } from './nesting';
 import type { NestJob } from './nesting/types';
@@ -292,7 +299,8 @@ export interface RunSink {
  * 14 = wall backgrounds (ADR-145); 15 = fitted and straightened wall pictures (ADR-146); 16 = variables, bindings
  * and value sets (ADR-166, ADR-167); 17 = common tops and bottoms (ADR-165); 18 = connections between pieces
  * (ADR-168); 19 = turn and per-size locks (ADR-171); 20 = shared sides (ADR-190); 21 = seller products on run parts
- * (ADR-206), connection kinds and wall connections (ADR-207).
+ * (ADR-206), connection kinds and wall connections (ADR-207), the floor background, the plan picture and model
+ * placements (ADR-208).
  */
 export const PROJECT_SCHEMA = 21 as const;
 export const PROJECT_SCHEMAS: readonly number[] = [
@@ -359,6 +367,7 @@ const PARAM_LOCKS_SINCE = 19;
 const SHARED_SINCE = 20;
 const RUN_PRODUCTS_SINCE = 21;
 const CONNECTION_KINDS_SINCE = 21;
+const SURFACES_SINCE = 21;
 
 export interface Project {
   schemaVersion: ProjectSchemaVersion;
@@ -409,6 +418,8 @@ export interface Project {
    * product when its unit fits (piece or m), else by the board. Absent = none.
    */
   runProducts?: Record<string, HardwareProduct>;
+  /** A picture of the floor plan to trace over (ADR-208, schemaVersion 21). Absent = none. */
+  planPicture?: PlanPicture;
 }
 
 /**
@@ -419,6 +430,9 @@ export const pictureHolders = (p: Project): { materials: { image?: { id: string 
   ...p.items.map((i) => i.design),
   { materials: (p.runParts ?? []).map((r) => r.material) },
   { materials: p.room?.walls ?? [] },
+  // The floor background and the plan picture (ADR-208).
+  { materials: p.room?.floor ? [p.room.floor] : [] },
+  { materials: p.planPicture ? [{ image: { id: p.planPicture.id } }] : [] },
 ];
 
 /**
@@ -541,7 +555,38 @@ export function resolvePlacements(project: Project): Project {
     return next;
   };
   const items = project.items.map(resolve);
-  return items.every((it, i) => it === project.items[i]) ? project : { ...project, items };
+  // Display-only models follow their placement too (ADR-208); their base is always a piece, never a model.
+  const resolved = new Map(items.map((i) => [i.id, i]));
+  const models = project.models?.map((m) => {
+    const position = modelPosition(m.position, m.placement, (id) => {
+      const base = resolved.get(id);
+      return base ? placedBounds(base) : undefined;
+    });
+    return position === m.position ? m : { ...m, position };
+  });
+  const sameItems = items.every((it, i) => it === project.items[i]);
+  const sameModels = !models || models.every((m, i) => m === project.models![i]);
+  if (sameItems && sameModels) return project;
+  return { ...project, items, ...(models ? { models } : {}) };
+}
+
+/**
+ * Where a model stands for its placement (ADR-208): on the floor, on the wall at its height, or on a piece (`baseBox`
+ * gives that piece's placed box). The same position object when nothing changes; a missing base keeps it.
+ */
+export function modelPosition(
+  position: ModelItem['position'],
+  pl: ModelPlacement | undefined,
+  baseBox: (id: string) => Box | undefined,
+): ModelItem['position'] {
+  let next = position;
+  if (pl?.kind === 'floor') next = { ...position, y: 0 };
+  else if (pl?.kind === 'wall') next = { ...position, y: pl.height };
+  else if (pl?.kind === 'above') {
+    const b = baseBox(pl.baseId);
+    if (b) next = { x: b.x + pl.offsetX, y: b.y + b.h + pl.gap, z: b.z };
+  }
+  return next.x === position.x && next.y === position.y && next.z === position.z ? position : next;
 }
 
 // ---------------------------------------------------------------------------
@@ -858,6 +903,18 @@ export function placementIssues(project: Project): Diagnostic[] {
         nodeId: it.id,
       });
   }
+  // A model placed on a piece that is gone keeps its place (ADR-208).
+  for (const m of project.models ?? [])
+    if (m.placement?.kind === 'above' && !byId.has(m.placement.baseId))
+      out.push({
+        severity: 'warning',
+        code: 'placement-base-missing',
+        message: t(
+          '{name} was placed on a piece that is no longer in the project; it stays where it is.',
+          { name: m.name },
+        ),
+        nodeId: m.id,
+      });
   return out;
 }
 
@@ -3098,6 +3155,27 @@ export function validateProject(p: unknown): string[] {
     if ((p.schemaVersion as number) < MODELS_SINCE)
       errs.push(t('3D models need project schemaVersion {v}', { v: MODELS_SINCE }));
     errs.push(...validateModelItems(p.models, ids));
+    if (Array.isArray(p.models)) {
+      const pieces = new Set(
+        p.items.flatMap((it) => (isObj(it) && typeof it.id === 'string' ? [it.id] : [])),
+      );
+      for (const m of p.models) {
+        const pl = isObj(m) ? m.placement : undefined;
+        if (pl === undefined) continue;
+        if ((p.schemaVersion as number) < SURFACES_SINCE)
+          errs.push(t('Placed 3D models need project schemaVersion {v}', { v: SURFACES_SINCE }));
+        // A model stands on a piece, never on another model (ADR-208).
+        if (isObj(pl) && pl.kind === 'above' && !pieces.has(pl.baseId as string))
+          errs.push(t('Invalid 3D model placement'));
+      }
+    }
   }
+  if (p.planPicture !== undefined) {
+    if ((p.schemaVersion as number) < SURFACES_SINCE)
+      errs.push(t('Plan pictures need project schemaVersion {v}', { v: SURFACES_SINCE }));
+    errs.push(...planPictureProblems(p.planPicture));
+  }
+  if (isObj(p.room) && p.room.floor !== undefined && (p.schemaVersion as number) < SURFACES_SINCE)
+    errs.push(t('Floor backgrounds need project schemaVersion {v}', { v: SURFACES_SINCE }));
   return errs;
 }

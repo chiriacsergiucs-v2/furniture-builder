@@ -28,3 +28,16 @@ export function renderFileName(name: string): string {
     .trim();
   return `${clean || 'Furniture'} render.png`;
 }
+
+/** Which path tracer renders (ADR-208, G-022): WebGPU when the device has an adapter, otherwise WebGL 2. */
+export type RenderEngineName = 'WebGPU' | 'WebGL 2';
+
+/** WebGPU when `navigator.gpu` gives an adapter, else WebGL 2; never throws. */
+export async function detectEngine(): Promise<RenderEngineName> {
+  try {
+    const gpu = (navigator as unknown as { gpu?: { requestAdapter(): Promise<unknown> } }).gpu;
+    return gpu && (await gpu.requestAdapter()) ? 'WebGPU' : 'WebGL 2';
+  } catch {
+    return 'WebGL 2';
+  }
+}

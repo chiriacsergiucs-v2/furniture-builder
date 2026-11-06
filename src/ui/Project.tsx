@@ -129,6 +129,16 @@ import { PieceProjectSettings, ProjectSettingsPanel } from './ProjectSettings';
 import { BindButton, bindingHint, VariablesPanel, VariablesStrip } from './Variables';
 import { setRooms } from '../core/setRoom';
 import { ProjectHistory } from './History';
+import {
+  FloorBackground,
+  FloorFill,
+  PlanPictureLayer,
+  PlanPictureSection,
+  useBoardFills,
+  usePlanPictureRect,
+  WallBands,
+} from './RoomSurfaces';
+import { roomToPicture } from '../core/planPicture';
 
 const FRONT_SIDE: Record<QuarterTurn, string> = {
   0: t('front faces you'),
@@ -1405,6 +1415,10 @@ export function PlanView({ fronts, card }: { fronts?: boolean; card?: boolean })
   const hasRoom = useDesign((s) => !!s.project?.room);
   const finishDraw = useDesign((s) => s.finishDrawRoom);
   const cancelDraw = useDesign((s) => s.cancelDrawRoom);
+  // Setting the plan picture's scale (ADR-208): two taps on the plan.
+  const scaling = useDesign((s) => s.scalingPlan);
+  const cancelScale = useDesign((s) => s.cancelScalePlan);
+  const hasPicture = useDesign((s) => !!s.project?.planPicture);
   useEffect(() => {
     if (placingId || drawing) ref.current?.scrollIntoView({ block: 'nearest' });
   }, [placingId, drawing]);
@@ -1419,14 +1433,28 @@ export function PlanView({ fronts, card }: { fronts?: boolean; card?: boolean })
   }, [tapped]);
   // With the piece list open the plan is shown even when empty: items are dropped onto it (ADR-094).
   const listOpen = usePieceList((s) => s.open);
-  if (!pm || (!pm.pieces.length && !pm.models.length && !hasRoom && !drawing && !listOpen))
+  if (
+    !pm ||
+    (!pm.pieces.length && !pm.models.length && !hasRoom && !hasPicture && !drawing && !listOpen)
+  )
     return (
       <div className="no-3d">
         <p>{t('Add pieces to see them on the plan.')}</p>
       </div>
     );
   return (
-    <div className={`plan-views ${placing || drawing ? 'placing' : ''}`} ref={ref}>
+    <div className={`plan-views ${placing || drawing || scaling ? 'placing' : ''}`} ref={ref}>
+      {scaling && (
+        <div className="place-banner" role="status">
+          <span>
+            {t('Tap a corner of the plan, then the other end of a wall you know.')}{' '}
+            {t('{n} of 2', { n: scaling.length })}
+          </span>
+          <button type="button" className="btn sm ghost" onClick={cancelScale}>
+            {t('Cancel')}
+          </button>
+        </div>
+      )}
       {drawing && (
         <div className="place-banner" role="status">
           <span>
@@ -1560,7 +1588,12 @@ function RoomPlan({
   const room = useDesign((s) => s.project?.room);
   const drawing = useDesign((s) => s.drawingRoom);
   const addCorner = useDesign((s) => s.addRoomCorner);
-  const tapping = !!placing || !!drawing;
+  const scaling = useDesign((s) => s.scalingPlan);
+  const addScalePoint = useDesign((s) => s.addScalePoint);
+  const planPicture = useDesign((s) => s.project?.planPicture);
+  const pictureRect = usePlanPictureRect(planPicture);
+  const board = useBoardFills(pm.pieces);
+  const tapping = !!placing || !!drawing || !!scaling;
   const moveItemBy = useDesign((s) => s.moveItemBy);
   const [showZones, setShowZones] = useState(false);
   const turnItem = useDesign((s) => s.turnItem);
@@ -1689,6 +1722,13 @@ function RoomPlan({
     ...(room?.outline ?? []),
     ...(drawing ?? []),
     ...(project ? setRooms(project).flatMap((sr) => sr.room.outline) : []),
+    // The plan picture is framed too while it is shown (ADR-208).
+    ...(pictureRect && !planPicture?.hidden
+      ? ([
+          [pictureRect.x, pictureRect.z],
+          [pictureRect.x + pictureRect.w, pictureRect.z + pictureRect.d],
+        ] as [number, number][])
+      : []),
   ];
   // With Clearances on, the view also frames the zones (chair or service space beyond the pieces); models always.
   const framed = [
@@ -1829,6 +1869,10 @@ function RoomPlan({
                 const p = toRoom(e);
                 if (!p) return;
                 e.stopPropagation();
+                if (scaling) {
+                  if (planPicture) addScalePoint(roomToPicture(planPicture, p.x, p.z));
+                  return;
+                }
                 if (drawing) {
                   addCorner(p.x, p.z);
                   return;
@@ -1839,10 +1883,14 @@ function RoomPlan({
             : undefined
         }
       >
+        {board.defs}
+        {planPicture && (
+          <PlanPictureLayer pp={planPicture} rect={pictureRect} taps={scaling} fs={fs} />
+        )}
         {project && <SetTags project={project} pm={pm} fs={fs} />}
         {room ? (
           <>
-            <RoomOutline room={room} fs={fs} />
+            <RoomOutline room={room} fs={fs} traced={!!pictureRect && !planPicture?.hidden} />
             {/* A value set's room copy at its origin (ADR-167). */}
             {project &&
               setRooms(project).map((sr) => (
@@ -2040,7 +2088,12 @@ function RoomPlan({
               {pc.item.angle ? (
                 // A piece at an angle (ADR-121): its turned outline and front edge, from the core.
                 <>
-                  <polygon points={pc.footprint.map((p) => p.join(',')).join(' ')} />
+                  <polygon
+                    points={pc.footprint.map((p) => p.join(',')).join(' ')}
+                    style={
+                      board.fillOf(pc.item.id) ? { fill: board.fillOf(pc.item.id) } : undefined
+                    }
+                  />
                   <line
                     className="front"
                     x1={pc.front[0]}
@@ -2051,7 +2104,16 @@ function RoomPlan({
                 </>
               ) : (
                 <>
-                  <rect x={b.x} y={b.z} width={b.w} height={b.d} />
+                  {/* The board of its highest panel, as a picture (ADR-208). */}
+                  <rect
+                    x={b.x}
+                    y={b.z}
+                    width={b.w}
+                    height={b.d}
+                    style={
+                      board.fillOf(pc.item.id) ? { fill: board.fillOf(pc.item.id) } : undefined
+                    }
+                  />
                   <line className="front" x1={fx1} y1={fz1} x2={fx2} y2={fz2} />
                 </>
               )}
@@ -2254,11 +2316,17 @@ function SetTags({ project, pm, fs }: { project: Project; pm: ProjectModel; fs: 
 }
 
 /** The room on the plan (ADR-058/0056): walls with their numbers, door swings, windows and obstacles. */
-function RoomOutline({ room, fs }: { room: Room; fs: number }) {
+function RoomOutline({ room, fs, traced }: { room: Room; fs: number; traced?: boolean }) {
   const n = room.outline.length;
   return (
     <g className="room-outline">
-      <polygon className="room-floor" points={room.outline.map((p) => p.join(',')).join(' ')} />
+      {/* Over a plan picture the floor lets it show through (ADR-208); a floor background fills it. */}
+      <polygon
+        className={`room-floor${traced ? ' traced' : ''}`}
+        points={room.outline.map((p) => p.join(',')).join(' ')}
+      />
+      <FloorFill room={room} />
+      <WallBands room={room} />
       {room.outline.map((_, i) => {
         const [a, b] = wallEnds(room, i);
         return (
@@ -3087,6 +3155,7 @@ function RoomSection() {
                   </li>
                 ))}
               </ul>
+              <FloorBackground room={room} />
               <button type="button" className="btn ghost" onClick={startDraw}>
                 <Icon name="pencil" className="sm" />
                 {t('Draw the room again')}
@@ -3116,6 +3185,7 @@ function RoomSection() {
           ))}
         </>
       )}
+      <PlanPictureSection />
     </section>
   );
 }

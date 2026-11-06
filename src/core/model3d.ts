@@ -35,6 +35,31 @@ export interface ModelItem {
   rotationY: ModelTurn;
   /** Absent = 'front': the file's +z side is the front (the glTF convention). */
   front?: ModelFront;
+  /**
+   * How it is placed (ADR-208, project schemaVersion 21), as a piece is (ADR-031): on the floor, on the wall at a
+   * height, or on a piece (never on another model). `resolvePlacements` keeps `position` in line. Absent = free.
+   */
+  placement?: ModelPlacement;
+}
+
+/** A model's placement (ADR-208): the piece placements of ADR-031; the base of `above` is always a piece. */
+export type ModelPlacement =
+  | { kind: 'floor' }
+  | { kind: 'wall'; height: Mm }
+  | { kind: 'above'; baseId: string; gap: Mm; offsetX: Mm };
+
+/** A placement read from a file is well formed (its base is checked against the pieces by the project). */
+export function validModelPlacement(pl: unknown): boolean {
+  if (!isObj(pl)) return false;
+  if (pl.kind === 'floor') return true;
+  if (pl.kind === 'wall') return isInt(pl.height, 0);
+  return (
+    pl.kind === 'above' &&
+    typeof pl.baseId === 'string' &&
+    !!pl.baseId &&
+    isInt(pl.gap, 0) &&
+    isInt(pl.offsetX)
+  );
 }
 
 /** The turn that brings the named side of the file's model to the front (+z). */
@@ -321,7 +346,8 @@ export function validateModelItems(list: unknown, ids: Set<string>): string[] {
       isInt(m.position.y, 0) &&
       isInt(m.position.z) &&
       [0, 90, 180, 270].includes(m.rotationY as number) &&
-      (m.front === undefined || (m.front as string) in FRONT_TURN);
+      (m.front === undefined || (m.front as string) in FRONT_TURN) &&
+      (m.placement === undefined || validModelPlacement(m.placement));
     if (!ok) {
       errs.push(t('Invalid 3D model item'));
       continue;
