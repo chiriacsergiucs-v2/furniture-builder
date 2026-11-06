@@ -160,7 +160,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-010: Worktop joints and corner runs
 
-- Status: Open
+- Status: ADR-205
 - Origin: ADR-054, 2026-10-24 15:54 UTC; agent scoped it out
 - Missing: No worktop joints and no corner runs. Out of scope.
 - Request: Kitchen runs with plinth, filler, sink front (context, not a quote)
@@ -354,7 +354,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-030: Back cut-outs over pipes and outlets
 
-- Status: Open
+- Status: ADR-205
 - Origin: ADR-072, 2026-10-24 23:58 UTC; agent scoped it out
 - Missing: Remaining: a shaped back panel with a cut-out over a pipe or outlet, electrical rules, and a test for a worktop or plinth over a pipe.
 - Request: Pipes and outlets checked against the pieces (context, not a quote)
@@ -368,6 +368,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Conflicts: none
 - Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): text partly wrong: templates already keep pipes and outlets when the room is included (src/core/projectTemplate.ts:97, :203), untested. Remaining: shaped back with a cut-out, electrical rules, the worktop/plinth-over-pipe test.
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: 2026-11-06: ADR-205 builds the shaped back, the worktop and plinth over pipe tests, and the template test. Electrical rules were not in the suggested pick and moved to G-406.
 
 ### G-031: ADR-072 defaults unconfirmed
 
@@ -387,7 +388,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-032: Multi-select, fixed-hand mirroring, 1 mm drift
 
-- Status: Open
+- Status: ADR-205
 - Origin: ADR-069, 2026-10-25 00:01 UTC; agent scoped it out
 - Missing: Multi-select and groups are built (ADR-097, ADR-159); remaining: the lounger backrest and daybed side panel cannot be mirrored (arrange.ts:131-135), and mirrored pieces may be ±1 mm off.
 - Request: “Duplicate, mirror and predictable rotate operations”.
@@ -401,10 +402,11 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Conflicts: none
 - Note: Re-checked 2026-10-26 on main 51e4f42 (code read, no browser): still valid. Absorbs G-013 (Save selection as template), which needs multi-select.
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: 2026-11-06: ADR-205 takes over only the 1 mm drift (mirrored copies match to the mm). The stored hand side on the lounger and daybed and the multi-select gesture moved to G-404.
 
 ### G-033: Snapping in the front view and 3D
 
-- Status: Open
+- Status: ADR-205
 - Origin: ADR-070, 2026-10-25 00:07 UTC; agent scoped it out
 - Missing: No height snapping in the front view or the 3D height drag (worktop or wall-unit lines); src/core/height.ts dragHeight only rounds. Snapped drops are stored as connections (ADR-168).
 - Request: “Guided snapping”.
@@ -436,7 +438,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-035: Mouldings, sink and hob cut-outs, templates
 
-- Status: Open
+- Status: ADR-205
 - Origin: ADR-075, 2026-10-25 00:13 UTC; agent scoped it out
 - Missing: Sink cut-outs exist (ADR-125); remaining: profiled mouldings, hob cut-outs, templates keeping requested trims/worktops (runRequests), and a browser check of the ceiling filler.
 - Request: “Shared worktops”, “fillers, plinths, end panels and trim”, for kitchens.
@@ -449,10 +451,11 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Fix: Hob cut-outs from user-entered sizes on cut list and print; templates carry run requests; ceiling filler find-it.
 - Conflicts: none
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
+- Note: 2026-11-06: ADR-205 takes over only the sink and hob cut-outs from user-entered sizes on the cut list and print. Profiled mouldings, run requests in templates and the ceiling-filler find-it moved to G-405.
 
 ### G-036: Clearance zones in 3D and templates
 
-- Status: Open
+- Status: ADR-205
 - Origin: ADR-073, 2026-10-25 00:14 UTC; agent scoped it out
 - Missing: Clearance zones are not drawn in 3D and are not saved in templates. No separate installation zone on the plan.
 - Request: “Collision and clearance”.
@@ -933,7 +936,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-110: Distribute across rows and centre-snap rules
 
-- Status: Open
+- Status: ADR-205
 - Origin: ADR-099 (2026-10-26, Claude: defaulted while building)
 - Missing: Distribute evenly over pieces at different heights (wall units and base units together, or a piece on another) is refused with the reason instead of spacing each row; centre snapping is offered only between pieces above and below each other (never at the same height) and the ADR-100 join rules do not apply to it (an alignment, not a join).
 - Request: New adr 7 (2026-10-26): Distribute evenly (three or more selected pieces, along the wall)
@@ -1265,7 +1268,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-170: Angled pieces snap and measure by their enclosing box
 
-- Status: Open
+- Status: ADR-205
 - Origin: ADR-121 (found while building)
 - Missing: A piece typed at an angle snaps to neighbours and walls by the axis-aligned box around it, not its turned faces; the mm amounts in overlap and blocked-opening messages are measured on those boxes. Detection itself is exact.
 - Request: Accept default, /batch all ready
@@ -1400,7 +1403,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-212: Sink cut-out not drawn
 
-- Status: Open
+- Status: ADR-205
 - Origin: ADR-125 (found while building)
 - Missing: The sink cut-out is a cut-list note, a shopping line and checks; it is not drawn on the plan, the front view or in 3D (worktop cut-outs were already not drawn)
 - Request: Accept default, /batch all ready (ADR-125: run sinks and handles)
@@ -2236,4 +2239,94 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Necessity: Low-medium
 - Issue: Find-it tests dominate test CPU; each mounts the bare app with full module isolation and typed input delays.
 - Fix: Measure each lever, then apply the ones that keep the bare-app start (ADR-108).
+- Conflicts: none
+
+### G-404: Hand side for the lounger and daybed, multi-select gesture
+
+- Status: Open
+- Origin: ADR-205, 2026-11-06; remainder of G-032 (the coordinator split it: ADR-205 takes only the 1 mm drift)
+- Missing: The lounger backrest and the daybed side panel are always built at the left end, so Mirror refuses them (arrange.ts). The multi-select gesture part of G-032 was not reviewed again; multi-select and groups are already built (ADR-097, ADR-159).
+- Request: “Duplicate, mirror and predictable rotate operations”.
+- Questions: Store a hand (left or right) on the lounger and daybed? Does any multi-select gesture still need to be added?
+- Suggested pick: Store a hand on those two pieces so that they mirror, and check whether Shift-click and long-press already cover the gesture. (estimate: effort +20%, value +15%)
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low-medium
+- Issue: The lounger backrest and the daybed side panel cannot be mirrored.
+- Fix: Add a stored hand side that the generators read, and that mirrorDesign swaps.
+- Conflicts: none
+
+### G-405: Profiled mouldings, run requests in templates, ceiling-filler find-it
+
+- Status: Open
+- Origin: ADR-205, 2026-11-06; remainder of G-035 (the coordinator split it: ADR-205 takes only the sink and hob cut-outs)
+- Missing: Mouldings are plain strips with no profile. Project templates drop the requested trims and worktops (runRequests). The ceiling filler has not been checked in a browser.
+- Request: “Shared worktops”, “fillers, plinths, end panels and trim”, for kitchens.
+- Questions: Should templates carry run requests? Which moulding profiles are needed (shapes from the user, never invented)?
+- Suggested pick: Make templates carry run requests, and add a ceiling filler to a browser find-it. Mouldings get profiles that the user draws or types. (estimate: effort +25%, value +20%)
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low-medium
+- Issue: Templates lose requested trims and worktops, mouldings have no profile, and the ceiling filler has not been checked in a browser.
+- Fix: Keep runRequests in project templates, add user profiles to mouldings, and add a ceiling-filler browser find-it.
+- Conflicts: none
+
+### G-406: Electrical rules for outlets
+
+- Status: Open
+- Origin: ADR-205, 2026-11-06; remainder of G-030 (not in its suggested pick)
+- Missing: No electrical rules: distances of outlets from sinks, hobs or water are not checked.
+- Request: Pipes and outlets checked against the pieces (context, not a quote)
+- Questions: Which rules, and from which regulation? The app must not invent them (ADR-010).
+- Suggested pick: Only the distances the user enters, checked as warnings and labelled as the user's rule. (estimate: effort +20%, value +10%)
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low
+- Issue: Outlets are not checked against sinks, hobs or water.
+- Fix: Add distances that the user enters, checked as warnings, with no built-in values.
+- Conflicts: none
+
+### G-407: Typed position for sink and hob cut-outs
+
+- Status: Open
+- Origin: ADR-205, 2026-11-06; agent scoped it out
+- Missing: Sink and hob cut-outs store only their width and depth. ADR-205 draws them centred on their base and on the worktop depth, and no offset can be typed.
+- Request: Sink and hob cut-outs on the worktop from sizes you enter (G-035 suggested pick, not a quote)
+- Questions: Add optional offsets from the base's left edge and from the worktop's front edge?
+- Suggested pick: Two optional offsets in mm; absent means centred, as today. (estimate: effort +10%, value +10%)
+- Work: Low
+- Impact: Low-medium
+- Necessity: Low-medium
+- Issue: A cut-out cannot be placed off-centre.
+- Fix: Add optional x and z offsets to RunSink and the hobs, and use them in the outline and the cut-list note.
+- Conflicts: none
+
+### G-408: Sink and hob cut-outs drawn in 3D and the front view
+
+- Status: Open
+- Origin: ADR-205, 2026-11-06; the rest of G-212 (its suggested pick was the plan only)
+- Missing: The sink and hob cut-outs are outlined on the plan only, not in 3D or in the room front view.
+- Request: Accept default, /batch all ready (ADR-125: run sinks and handles)
+- Questions: Draw the cut-out as a hole in the 3D worktop?
+- Suggested pick: Extrude the worktop with the cut-out as a hole in 3D (the ADR-205 profile holes). (estimate: effort +10%, value +5%)
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
+- Issue: Cut-outs show only on the plan.
+- Fix: Give the worktop a profile hole for each cut-out in the project build.
+- Conflicts: none
+
+### G-409: Worktop joint fixings
+
+- Status: Open
+- Origin: ADR-205, 2026-11-06; agent scoped it out
+- Missing: A mitred or butt worktop joint lists no fixings (worktop connector bolts, biscuits). Their type and count are supplier values (ADR-010).
+- Request: Kitchen runs with plinth, filler, sink front (G-010 context, not a quote)
+- Questions: List a "Worktop joint fixings (your choice)" line under To choose before buying?
+- Suggested pick: Yes: one line per joint, with no count or size. (estimate: effort +5%, value +5%)
+- Work: Low
+- Impact: Low
+- Necessity: Low-medium
+- Issue: Worktop joints have no fixing line in the shopping list.
+- Fix: Add one user-chosen shopping line per worktop joint.
 - Conflicts: none
