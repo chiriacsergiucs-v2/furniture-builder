@@ -27,6 +27,9 @@ Pages, no backend (ADR-002, ADR-013).
   `pnpm docs:check` makes sure each one exists.
 - **Backlog:** an ADR names its `docs/backlog.md` items on a `- Backlog:` line.
 - **Size:** up to ~110 lines, ~6.5 KB and 8 `Done when` items. Bigger means split it.
+- **Version numbers in pending ADRs are plans.** ADR-204 to ADR-212 were written in parallel and name
+  overlapping project, design, template and Dexie version numbers. Each one takes the next free version
+  of each kind when it is built, whatever number its text names, and its tests check that number.
 
 ADR-001 to ADR-049 were written before ADR-050 adopted this layout. They keep their original
 sections (Context, Decision, Alternatives, Consequences, Evidence, Compliance check, answers and

@@ -56,7 +56,7 @@ repairs) without repeating them.
    list (`listDecors()`, ADR-049; `other` rows by their written maker) with its count, beside any shipped brand
    entry. A chip lists that maker's decors (swatch, code, name, thickness, type) and the saved pieces with a board of
    that maker. Empty: "No brands yet. Import your decor list under Boards to see its manufacturers here."; a failed
-   read: "The decor list could not be read on this device." (alert). The feed sentence and its entry go. No request.
+   read: "The decor list could not be read on this device." (alert). This empty text replaces the one [ADR-202](ADR-202-fix-phone-layout-false-texts-translations-and-segmented-controls.md) writes for G-096 (built first), with its Russian entry. No request.
 7. **Repair for the family warning (G-396).** `compat-family` joins `REPAIRABLE`: the later-placed piece (then the
    other) moves along its wall, left or right, to the nearest spot where it touches no piece side by side, overlaps
    none and stays in the room, labelled with the existing "Move {name} {mm} mm {side}"; previewed, one undo step

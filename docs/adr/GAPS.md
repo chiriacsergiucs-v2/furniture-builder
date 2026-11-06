@@ -2559,6 +2559,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: Connector points and kinds cannot be authored.
 - Fix: A connector editor storing points and rules per piece, in its own ADR.
 - Conflicts: none
+
 ### G-428: Angled walls
 
 - Status: Open
@@ -2618,6 +2619,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: Catalog pictures and cut sheets show boards as plain colour.
 - Fix: A new ADR if catalog pictures or cut sheets should show the board picture.
 - Conflicts: ADR-048 (catalog pictures and cut sheets use the average colour)
+
 ### G-436: Reverse-the-hinge repair
 
 - Status: Open
@@ -2676,6 +2678,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Necessity: Low
 - Issue: Only carcass joints show drilling positions.
 - Fix: Add user-value drilling positions to the other joint types, one at a time.
+
 ### G-444: No layout optimisation of room mixes
 
 - Status: Open
@@ -2719,6 +2722,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Necessity: Low
 - Issue: Fill the room cannot fill a bedroom or office.
 - Fix: Add a room type to Fill the room that picks the families it fills with.
+
 ### G-452: Desktop mode switch in the top bar
 
 - Status: Open
@@ -2762,6 +2766,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Necessity: Low
 - Issue: Kept versions of deleted projects need an open project to be reached.
 - Fix: The same list on the Projects page.
+
 ### G-460: Band tolerances and edgebander settings
 
 - Status: Open
