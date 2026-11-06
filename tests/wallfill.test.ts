@@ -7,7 +7,10 @@ import { describe, expect, it } from 'vitest';
 import { buildModel } from '../src/core/build';
 import { RULE_DEFAULTS } from '../src/core/rules';
 import {
+  candidates,
   checkWall,
+  frontGroups,
+  MAX_CANDIDATES,
   MAX_PIECES,
   WALL_HEIGHT,
   WALL_VARIANTS,
@@ -296,7 +299,11 @@ describe('fuzz', () => {
         equalFronts: pick([undefined, undefined, undefined, 4, 6, 9]),
         wallRow: pick([undefined, 'any', 'always', 'never'] as const),
         wallHeight: pick([undefined, 360, 720, 900]),
+        // ADR-204: tall cabinet height, wall cabinet depth and 3- or 4-front carcasses.
+        tallHeight: pick([undefined, 1800, 2000, 2200, 2500]),
+        wallDepth: pick([undefined, 250, 320, 350, 400]),
       };
+      if (rnd() < 0.2) input.equalFronts = pick([3, 7, 8, 10, 12]);
       const r = suggestMixes(input);
       if (!r.mixes.length) expect(r.problems.length).toBeGreaterThan(0);
       for (const m of r.mixes) {
@@ -309,6 +316,187 @@ describe('fuzz', () => {
       }
     }
   }, 600_000);
+});
+
+// ADR-204: tall cabinet height and wall cabinet depth, a width per base kind, carcasses of 3 or 4 equal fronts.
+describe('Refine: tall cabinet height and wall cabinet depth (ADR-204)', () => {
+  const isTop = (name: string) => name.startsWith('Top box');
+  it('tallHeight 2000: every tall cabinet is 2000 high, the top box fills the rest; no above-height warning on 2100', () => {
+    const r = suggestMixes(wall({ height: 2400, tallHeight: 2000, wallRow: 'always' }));
+    expect(r.mixes.length).toBeGreaterThan(0);
+    for (const m of r.mixes) {
+      const talls = m.model.pieces.filter((p) => p.item.design.name.startsWith('Tall'));
+      expect(talls.length).toBeGreaterThan(0);
+      for (const p of talls) expect(p.bounds.y + p.bounds.h).toBe(2000);
+      const box = m.wall!.find((w) => w.variant === 'top-box')!;
+      expect(box.height).toBe(400);
+      const placed = m.model.pieces.find((p) => isTop(p.item.design.name))!;
+      expect(placed.bounds.y).toBe(2000);
+      expect(placed.bounds.y + placed.bounds.h).toBe(2400);
+    }
+    const low = suggestMixes(wall({ height: 2100, tallHeight: 2000 }));
+    expect(low.mixes.length).toBeGreaterThan(0);
+    for (const m of low.mixes) expect(m.warnings.map((w) => w.code)).not.toContain('wall-too-tall');
+    // Without it the catalog's 2200 stands 100 mm above the same wall, with the warning (kept, ADR-103).
+    const dflt = suggestMixes(wall({ height: 2100 }));
+    expect(dflt.mixes[0].warnings.find((w) => w.code === 'wall-too-tall')?.message).toMatch(
+      /100 mm above the 2100 mm height/,
+    );
+  });
+  const depthOf = (p: { item: { design: { product: { params: unknown } } } }) =>
+    (p.item.design.product.params as { depth: number }).depth;
+  it('wallDepth 350: every wall cabinet is 350 deep; absent: the catalog 320', () => {
+    const deep = suggestMixes(wall({ width: 6000, wallRow: 'always', wallDepth: 350 }));
+    expect(deep.mixes.length).toBeGreaterThan(0);
+    for (const m of deep.mixes) {
+      const row = m.model.pieces.filter(
+        (p) => p.item.placement?.kind !== 'floor' && !isTop(p.item.design.name),
+      );
+      expect(row.length).toBeGreaterThan(0);
+      // The carcass depth; the doors stand in front of it.
+      for (const p of row) expect(depthOf(p)).toBe(350);
+      for (const p of row)
+        for (const side of buildModel(p.item.design).panels.filter((x) => x.role === 'side'))
+          expect(side.box.d).toBe(350);
+      expect(m.model.diagnostics.filter((d) => d.severity === 'error')).toEqual([]);
+    }
+    for (const p of suggestMixes(wall({ wallRow: 'always' })).mixes[0].model.pieces.filter(
+      (x) => x.item.placement?.kind !== 'floor' && !isTop(x.item.design.name),
+    ))
+      expect(depthOf(p)).toBe(320);
+  });
+  it('a wrong tall height or wall depth is a checkWall error naming its field', () => {
+    const r = checkWall({
+      ...wall(),
+      tallHeight: Number('abc'),
+      wallDepth: 'abc' as unknown as number,
+    });
+    expect(r.map((d) => [d.field, d.severity, d.message])).toEqual([
+      ['tallHeight', 'error', 'Tall cabinet height must be a whole number of mm above 0.'],
+      ['wallDepth', 'error', 'Wall cabinet depth must be a whole number of mm above 0.'],
+    ]);
+    for (const bad of [{ tallHeight: 0 }, { wallDepth: -5 }, { wallDepth: 300.5 }]) {
+      const s = suggestMixes(wall(bad));
+      expect(s.mixes).toEqual([]);
+      expect(s.problems.some((p) => p.severity === 'error')).toBe(true);
+    }
+  });
+});
+
+describe('a width per base kind (ADR-204)', () => {
+  it('2000 mm, 3 pieces, no tall: an 800 drawer base beside 600 bases, ranked after the shared width', () => {
+    const r = suggestMixes(wall({ width: 2000, pieces: 3, tallCount: 0, wallRow: 'never' }), 60);
+    const shared = r.mixes.findIndex((m) => new Set(m.slots.map((s) => s.width)).size <= 2);
+    expect(shared).toBe(0);
+    expect(r.mixes[0].slots.map((s) => s.width).sort()).toEqual([666, 667, 667]);
+    const i = r.mixes.findIndex(
+      (m) =>
+        m.slots.some((s) => s.kind === 'drawers' && s.width === 800) &&
+        m.slots.filter((s) => s.kind !== 'drawers').every((s) => s.width === 600),
+    );
+    expect(i).toBeGreaterThan(shared);
+    const mix = r.mixes[i];
+    expect(sum(mix.slots.map((s) => s.width))).toBe(2000);
+    expect(mix.model.diagnostics.filter((d) => d.severity === 'error')).toEqual([]);
+    // The swap is a separate card: the signature names each kind's width.
+    const swap = r.mixes.findIndex(
+      (m) =>
+        m.slots.some((s) => s.kind === 'shelves' && s.width === 800) &&
+        m.slots.filter((s) => s.kind !== 'shelves').every((s) => s.width === 600),
+    );
+    expect(swap).toBeGreaterThan(0);
+    expect(r.mixes[swap].key).not.toBe(mix.key);
+    expect(new Set(r.mixes.map((m) => m.key)).size).toBe(r.mixes.length);
+  });
+  it('the first 4 mixes of the 3000 mm default are unchanged', () => {
+    expect(suggestMixes(wall()).mixes.map((m) => [m.key, m.summary])).toEqual([
+      [
+        '1|600,600,600,600,600|wall',
+        '1 tall, 2 open shelves, 1 drawers, 1 door + shelves; wall row: 4 wall cabinets + top box',
+      ],
+      [
+        '1|500,500,500,500,500,500|wall',
+        '1 tall, 3 open shelves, 1 drawers, 1 door + shelves; wall row: 5 wall cabinets + top box',
+      ],
+      [
+        '1|750,750,750,750|wall',
+        '1 tall, 1 open shelves, 1 drawers, 1 door + shelves; wall row: 3 wall cabinets + top box',
+      ],
+      [
+        '1|1000,1000,1000|wall',
+        '1 tall, 1 open shelves, 1 drawers; wall row: 4 wall cabinets + top box',
+      ],
+    ]);
+  });
+  it('a 6000 mm wall stays capped at MAX_CANDIDATES, says so, and is answered quickly', () => {
+    const report = { capped: false };
+    expect(candidates(wall({ width: 6000 }), report).length).toBeLessThanOrEqual(MAX_CANDIDATES);
+    expect(report.capped).toBe(true);
+    const t0 = performance.now();
+    const r = suggestMixes(wall({ width: 6000 }));
+    expect(performance.now() - t0).toBeLessThan(3000);
+    expect(r.mixes).toHaveLength(MIXES_FIRST);
+    const note = r.problems.find((p) => p.code === 'wall-capped')!;
+    // Reported like MAX_PIECES ('wall-many'): a note on the result, never an error.
+    expect(note.severity).toBe('warning');
+    expect(note.message).toMatch(new RegExp(`More than ${MAX_CANDIDATES} ways fill this wall`));
+    expect(suggestMixes(wall()).problems.map((p) => p.code)).not.toContain('wall-capped');
+  });
+});
+
+describe('carcasses of 3 or 4 equal fronts (ADR-204)', () => {
+  it('Equal fronts 6 on 1000 mm: two 3-front carcasses of 3 bays, one door each, doors within 1 mm', () => {
+    const r = suggestMixes(
+      wall({ width: 1000, equalFronts: 6, tallCount: 0, wallRow: 'never' }),
+      20,
+    );
+    expect(r.mixes).toHaveLength(1);
+    const m = r.mixes[0];
+    expect(m.slots).toEqual([
+      { kind: 'door', width: 500, fronts: 3 },
+      { kind: 'door', width: 500, fronts: 3 },
+    ]);
+    expect(m.model.diagnostics.filter((d) => d.severity === 'error')).toEqual([]);
+    for (const item of m.model.pieces.map((p) => p.item)) {
+      const model = buildModel(item.design);
+      expect(model.panels.filter((p) => p.role === 'door')).toHaveLength(3);
+      expect(model.panels.filter((p) => p.role === 'divider')).toHaveLength(2);
+      expect(model.panels.some((p) => p.role === 'shelf' || p.role === 'drawer-front')).toBe(false);
+    }
+    const ws = m.model.model.panels.filter((p) => p.role === 'door').map((d) => d.box.w);
+    expect(ws).toHaveLength(6);
+    expect(Math.max(...ws) - Math.min(...ws)).toBeLessThanOrEqual(1);
+  });
+  it('4-front carcasses too; a tall one has both halves split; the 1-and-2 groups come first', () => {
+    expect(frontGroups(12)).toContainEqual([3, 3, 3, 3]);
+    expect(frontGroups(12)).toContainEqual([4, 4, 4]);
+    // 4s in the middle, 3s at both ends.
+    expect(frontGroups(10)).toContainEqual([3, 4, 3]);
+    const groups = frontGroups(8);
+    const firstBig = groups.findIndex((g) => g.some((k) => k > 2));
+    expect(groups.slice(0, firstBig).every((g) => g.every((k) => k <= 2))).toBe(true);
+    expect(groups).toContainEqual([4, 4]);
+    const r = suggestMixes(
+      wall({ width: 1600, equalFronts: 8, tallCount: 1, wallRow: 'never' }),
+      20,
+    );
+    const four = r.mixes.find((m) => m.slots.some((s) => s.kind === 'tall' && s.fronts === 4));
+    expect(four).toBeTruthy();
+    const tallItem = four!.model.pieces.find((p) => p.item.design.name.startsWith('Tall'))!.item;
+    expect(buildModel(tallItem.design).panels.filter((p) => p.role === 'door')).toHaveLength(8);
+    for (const m of r.mixes) {
+      const ws = m.model.model.panels.filter((p) => p.role === 'door').map((d) => d.box.w);
+      expect(Math.max(...ws) - Math.min(...ws)).toBeLessThanOrEqual(1);
+    }
+  });
+  it('the empty-result note names carcasses of 1 to 4 fronts', () => {
+    // 30 fronts of 100 mm: 4 fronts would fit, but 30 is no sum of 4s; every grouping has a 300 mm carcass of 3.
+    const r = suggestMixes(wall({ equalFronts: 30, tallCount: 0 }));
+    expect(r.mixes).toEqual([]);
+    expect(r.problems.map((p) => p.message).join('\n')).toMatch(
+      /no carcass of 1 to 4 fronts is between 400 and 1200 mm/,
+    );
+  });
 });
 
 describe('checkWall fields (ADR-193)', () => {

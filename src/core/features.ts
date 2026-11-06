@@ -76,12 +76,14 @@ export const FEATURES: FeatureDomain[] = [
         detail:
           'Copies of the pieces with their positions, run-part recipe, connections, variables, bindings, run handles and sinks; pieces inserted into a project take its settings.',
         adrs: ['ADR-060', 'ADR-123', 'ADR-170', 'ADR-200', 'ADR-204'],
+        checked: '2026-11-06',
       },
       {
         name: 'Fill a wall',
         detail:
           'Enter a wall width and pick a suggested mix of tall, base and wall cabinets that fills it exactly; Refine sets the tall cabinet height and wall cabinet depth, mixes may give each base kind its own width, and equal fronts may share carcasses of up to 4 fronts.',
         adrs: ['ADR-103', 'ADR-104', 'ADR-193', 'ADR-204'],
+        checked: '2026-11-06',
       },
       { name: 'Make a new piece inside a project', adrs: ['ADR-107'], checked: '2026-11-05' },
       {

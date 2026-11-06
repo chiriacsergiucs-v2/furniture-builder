@@ -35,7 +35,10 @@ const st = () => useDesign.getState();
 describe('templateFromProject (ADR-170)', () => {
   it('keeps variables, bindings and connections at schemaVersion 2; without them a template stays version 1', () => {
     const tpl = templateFromProject(bound(), 'Kitchen');
-    expect(tpl.schemaVersion).toBe(TEMPLATE_SCHEMA);
+    // Variables, bindings and connections alone make version 2; version 3 (TEMPLATE_SCHEMA) is for run handles,
+    // sinks and the later fields (ADR-204).
+    expect(tpl.schemaVersion).toBe(2);
+    expect(TEMPLATE_SCHEMA).toBe(3);
     expect(tpl.variables?.map((v) => [v.name, v.expr])).toEqual([['h', '600']]);
     expect(tpl.items[0].bindings).toEqual([{ target: 'height', expr: 'h' }]);
     expect(tpl.items[1].bindings).toBeUndefined();
@@ -64,7 +67,7 @@ describe('templateFromProject (ADR-170)', () => {
     expect(
       validateProjectTemplate({ ...tpl, connections: [{ itemIds: [a, b] }, { itemIds: [b, a] }] }),
     ).toContain('Invalid template connection');
-    expect(validateProjectTemplate({ ...tpl, schemaVersion: 3 })).toContain(
+    expect(validateProjectTemplate({ ...tpl, schemaVersion: 4 })).toContain(
       'Not a project template',
     );
   });
@@ -131,5 +134,115 @@ describe('store (ADR-170)', () => {
     expect(isConnected(st().project!, ids[0], ids[1])).toBe(true);
     st().undoProject();
     expect(st().project!.items).toHaveLength(1);
+  });
+});
+
+describe('run handles and sinks in templates (ADR-204)', () => {
+  /** Three touching base units with a run handle (the middle one keeps its own) and a sink over the first. */
+  function kitchen(): Project {
+    const p = row('base-door', 'base-door', 'base-door');
+    const ids = p.items.map((i) => i.id);
+    return {
+      ...p,
+      runHandles: [
+        {
+          id: 'rh1',
+          from: ids,
+          handle: { kind: 'bar', holeSpacing: 128 },
+          height: 800,
+          own: [ids[1]],
+        },
+      ],
+      sinks: [{ id: 'sk1', baseId: ids[0], w: 500, d: 400 }],
+    };
+  }
+  it('a template with a run handle and a sink is version 3, over template refs; without them it stays 1 or 2', () => {
+    const src = kitchen();
+    expect(validateProject(src)).toEqual([]);
+    const tpl = templateFromProject(src, 'Kitchen');
+    expect(tpl.schemaVersion).toBe(3);
+    const refs = tpl.items.map((i) => i.ref);
+    expect(tpl.runHandles).toEqual([
+      { from: refs, handle: { kind: 'bar', holeSpacing: 128 }, height: 800, own: [refs[1]] },
+    ]);
+    expect(tpl.sinks).toEqual([{ baseId: refs[0], w: 500, d: 400 }]);
+    expect(validateProjectTemplate(tpl)).toEqual([]);
+    expect(templateFromProject(row('base-door'), 'Plain').schemaVersion).toBe(1);
+    expect(templateFromProject(bound(), 'Vars').schemaVersion).toBe(2);
+  });
+  it('a handle over a gone piece keeps the rest; a sink over a gone base is dropped', () => {
+    const src = kitchen();
+    const first = src.items[0].id;
+    const p: Project = {
+      ...src,
+      runHandles: [{ ...src.runHandles![0], from: [...src.runHandles![0].from, 'gone'] }],
+      sinks: [...src.sinks!, { id: 'sk2', baseId: 'gone', w: 500, d: 400 }],
+    };
+    const tpl = templateFromProject(p, 'Kitchen');
+    expect(tpl.runHandles![0].from).not.toContain('gone');
+    expect(tpl.runHandles![0].from).toHaveLength(3);
+    expect(tpl.sinks).toHaveLength(1);
+    expect(tpl.sinks![0].baseId).toBe(first);
+  });
+  it('versions 1 and 2 load unchanged; handles or sinks below version 3 and unknown refs are refused', () => {
+    const v1 = templateFromProject(row('base-door', 'base-door'), 'Plain');
+    const v2 = templateFromProject(bound(), 'Vars');
+    expect(validateProjectTemplate(structuredClone(v1))).toEqual([]);
+    expect(validateProjectTemplate(structuredClone(v2))).toEqual([]);
+    expect(projectFromTemplate(v1).runHandles).toBeUndefined();
+    expect(projectFromTemplate(v2).sinks).toBeUndefined();
+    const tpl = templateFromProject(kitchen(), 'Kitchen');
+    expect(validateProjectTemplate({ ...tpl, schemaVersion: 2 })).toEqual(
+      expect.arrayContaining([
+        'Run handles need template schemaVersion 3',
+        'Sinks need template schemaVersion 3',
+      ]),
+    );
+    expect(validateProjectTemplate({ ...tpl, schemaVersion: 1 })).toContain(
+      'Run handles need template schemaVersion 3',
+    );
+    const rh = tpl.runHandles![0];
+    expect(validateProjectTemplate({ ...tpl, runHandles: [{ ...rh, from: ['nope'] }] })).toContain(
+      'Invalid template run handle',
+    );
+    expect(validateProjectTemplate({ ...tpl, runHandles: [{ ...rh, own: ['nope'] }] })).toContain(
+      'Invalid template run handle',
+    );
+    expect(
+      validateProjectTemplate({ ...tpl, sinks: [{ ...tpl.sinks![0], baseId: 'nope' }] }),
+    ).toContain('Invalid template sink');
+  });
+  it('a project made from it has both, on the new piece ids, with new ids of their own', () => {
+    const tpl = templateFromProject(kitchen(), 'Kitchen');
+    const p = projectFromTemplate(tpl);
+    expect(validateProject(p)).toEqual([]);
+    const ids = p.items.map((i) => i.id);
+    expect(ids.some((id) => tpl.items.some((i) => i.ref === id))).toBe(false);
+    expect(p.runHandles).toHaveLength(1);
+    expect(p.runHandles![0].from).toEqual(ids);
+    expect(p.runHandles![0].own).toEqual([ids[1]]);
+    expect(p.runHandles![0].id).not.toBe('rh1');
+    expect(p.sinks).toEqual([{ id: expect.any(String), baseId: ids[0], w: 500, d: 400 }]);
+    expect(p.sinks![0].id).not.toBe('sk1');
+    const again = projectFromTemplate(tpl);
+    expect(again.runHandles![0].id).not.toBe(p.runHandles![0].id);
+    expect(again.sinks![0].id).not.toBe(p.sinks![0].id);
+  });
+  it('an insert adds both on the inserted pieces with new ids; the project’s own stay', () => {
+    const tpl = templateFromProject(kitchen(), 'Kitchen');
+    const target = kitchen();
+    const res = insertTemplate(target, tpl);
+    const p = res.project;
+    expect(validateProject(p)).toEqual([]);
+    expect(p.runHandles).toHaveLength(2);
+    expect(p.sinks).toHaveLength(2);
+    expect(p.runHandles![0]).toEqual(target.runHandles![0]);
+    expect(p.sinks![0]).toEqual(target.sinks![0]);
+    const rh = p.runHandles![1];
+    expect(rh.from).toEqual(res.ids);
+    expect(rh.own).toEqual([res.ids[1]]);
+    expect(rh.id).not.toBe('rh1');
+    expect(p.sinks![1].baseId).toBe(res.ids[0]);
+    expect(p.sinks![1].id).not.toBe('sk1');
   });
 });
