@@ -111,7 +111,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-007: Connector engine and stored connections
 
-- Status: Open
+- Status: ADR-207
 - Origin: Research, 2026-10-24 15:42 UTC; agent default, accepted by the user
 - Missing: Semantic connectors (typed joint points), an assembly graph beyond side-by-side pairs, and connector authoring are not built (stored side-by-side connections exist: ADR-168, ADR-170, ADR-179; see G-092, G-329).
 - Request: “Verify, then Quick wins, then Medium effort”; later “guided snapping” and “cross-family composition”.
@@ -125,6 +125,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Conflicts: none
 - Note: Re-checked 2026-11-04 on main d7bd2e8 (code read, no browser): Missing text updated to the current code.
 - Note: Re-checked 2026-11-05 on main c4a15bd (code read, no browser): Missing text updated to the current code.
+- Note: 2026-11-06: ADR-207 takes over typed connections (side, corner, stacked, against wall) read by snap, move, Mirror a run and Merge. Run parts reading connections moved to G-420; connector authoring to G-424.
 
 ### G-008: AR, plan review, shared structural elements
 
@@ -1165,7 +1166,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-136: Link pieces that are already 100% identical
 
-- Status: Open
+- Status: ADR-207
 - Origin: ADR-111, 2026-10-27, user choice
 - Missing: Only copies made with 'Add a linked copy' are linked; identical pieces added separately, by Duplicate or by adding the same item again stay independent (user picked explicit links and only 'Add a linked copy').
 - Request: use a piece, a item created by the user, added to the project, added multiple times, and give the possibility to bulk update the width/height/drawers, just like it would be 1 piece, with 2 symlinks to it, change to 1 changes all the other, including internal, and it should be propagated further to the ones in the 100% same.
@@ -1801,7 +1802,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-329: Typed connectors and assembly graph
 
-- Status: Open
+- Status: ADR-207
 - Origin: ADR-168, 2026-11-04; agent scoped it out
 - Missing: Connector types and a typed assembly graph (research model): connections are untyped pairs of side-by-side pieces.
 - Request: “Validate all High demand features … create adrs” (user 2026-11-04); the research row names a connection hierarchy
@@ -1816,7 +1817,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-331: No stacked or cross-level connections
 
-- Status: Open
+- Status: ADR-207
 - Origin: ADR-168, 2026-11-04; agent scoped it out
 - Missing: Only side-by-side touching pieces on one floor level connect; a wall unit over a base unit, stacked pieces or pieces across floor levels do not.
 - Request: Not a quote: the user chose record, re-check and move together
@@ -1952,7 +1953,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-344: Assembly steps are not editable
 
-- Status: Open
+- Status: ADR-207
 - Origin: ADR-174, 2026-11-04; agent scoped it out
 - Missing: The assembly sequence cannot be edited: steps cannot be reordered, merged or renamed.
 - Request: “Ordered step list + 3D highlight” (user 2026-11-04)
@@ -1964,6 +1965,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: Assembly steps cannot be reordered, merged or renamed by the user.
 - Fix: Save an editable step order on the design, with a reset to the generated order.
 - Conflicts: none
+- Note: 2026-11-06: ADR-207 takes over reordering, renaming and a reset. Merging steps moved to G-422.
 
 ### G-346: Connections in 3D Move mode not checked in a browser
 
@@ -2027,7 +2029,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-352: Fit hardware step cannot be shown in 3D
 
-- Status: Open
+- Status: ADR-207
 - Origin: ADR-185, 2026-11-05; agent scoped it out
 - Missing: The Fit hardware to the sides step has no Show step button: the model does not record which side panel each hinge plate or runner carcass half is fixed to, so nothing can be lit in 3D.
 - Request: Re-check assembly steps, both ui and pdf, they seem to not have the expected assembly relevant info and steps.
@@ -2057,7 +2059,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-354: Shared side with corner units and desks
 
-- Status: Open
+- Status: ADR-207
 - Origin: ADR-190
 - Missing: Corner units and desks keep both sides; only two cabinets can share a side.
 - Request: Add the possibility to have a common bottom or top between multiple items.
@@ -2069,6 +2071,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: Corner units and desks cannot share a side with a neighbouring cabinet; only two cabinets can.
 - Fix: Let a blind corner's straight side or a desk gable be shared, in a later ADR.
 - Conflicts: none
+- Note: 2026-11-06: ADR-207 takes over a blind corner's straight end and a desk gable. L-shape and diagonal corners and desk pedestal ends moved to G-421.
 
 ### G-355: Shared side with inset and sliding fronts
 
@@ -2332,7 +2335,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 
 ### G-404: Hand side for the lounger and daybed, multi-select gesture
 
-- Status: Open
+- Status: ADR-207
 - Origin: ADR-205, 2026-11-06; remainder of G-032 (the coordinator split it: ADR-205 takes only the 1 mm drift)
 - Missing: The lounger backrest and the daybed side panel are always built at the left end, so Mirror refuses them (arrange.ts). The multi-select gesture part of G-032 was not reviewed again; multi-select and groups are already built (ADR-097, ADR-159).
 - Request: “Duplicate, mirror and predictable rotate operations”.
@@ -2344,6 +2347,7 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Issue: The lounger backrest and the daybed side panel cannot be mirrored.
 - Fix: Add a stored hand side that the generators read, and that mirrorDesign swaps.
 - Conflicts: none
+- Note: 2026-11-06: ADR-207 takes over the stored end for the lounger and daybed and the gesture check (Shift/Ctrl-click and Select cover every view). A long-press gesture moved to G-423.
 
 ### G-405: Profiled mouldings, run requests in templates, ceiling-filler find-it
 
@@ -2462,4 +2466,79 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Necessity: Low
 - Issue: Formulas cannot branch or round to a step.
 - Fix: Add if(condition, a, b) and round(x, step) to the formula parser.
+- Conflicts: none
+
+### G-420: Run parts read connections
+
+- Status: Open
+- Origin: ADR-207, 2026-11-06; remainder of G-007 (the coordinator kept ADR-207 to its size)
+- Missing: Suggest run parts (ADR-061) groups runs from touching pieces only; it does not read stored connections.
+- Request: “Verify, then Quick wins, then Medium effort”; later “guided snapping” and “cross-family composition”.
+- Questions: Should run parts treat side- and corner-connected pieces as one run?
+- Suggested pick: Build runs from side and corner connections when they exist, else from touching pieces as today. (estimate: effort +15%, value +10%)
+- Work: Medium
+- Impact: Low-medium
+- Necessity: Low
+- Issue: Run parts ignore stored connections.
+- Fix: Let groupRuns read side and corner connections.
+- Conflicts: none
+
+### G-421: L-shape and diagonal corners and desk pedestal ends share no side
+
+- Status: Open
+- Origin: ADR-207, 2026-11-06; remainder of G-354
+- Missing: Only a blind corner's straight end and a desk gable end can share a side; L-shape and diagonal corner units and a desk's pedestal end keep both sides.
+- Request: Add the possibility to have a common bottom or top between multiple items.
+- Questions: Should the wing ends of L-shape and diagonal corners and a desk's pedestal side be shared with a neighbouring cabinet?
+- Suggested pick: Share the wing ends of L-shape corners and a pedestal's outer side, as ADR-190 does for cabinets. (estimate: effort +25%, value +10%)
+- Work: Medium-high
+- Impact: Low
+- Necessity: Low
+- Issue: L-shape and diagonal corners and desk pedestal ends cannot share a side.
+- Fix: Extend sharedSideCheck and the corner and desk builds to those ends.
+- Conflicts: none
+
+### G-422: Merge assembly steps
+
+- Status: Open
+- Origin: ADR-207, 2026-11-06; remainder of G-344 (its pick names an editable order with a reset)
+- Missing: Steps can be reordered and renamed but not merged into one step.
+- Request: “Ordered step list + 3D highlight” (user 2026-11-04)
+- Questions: Let the user merge two neighbouring steps into one?
+- Suggested pick: Merge with the next step, saved in the design's step order, undone by Reset the steps. (estimate: effort +15%, value +5%)
+- Work: Medium
+- Impact: Low
+- Necessity: Low
+- Issue: Two assembly steps cannot be merged.
+- Fix: Store merged step pairs with the step order and show them as one step.
+- Conflicts: none
+
+### G-423: Long-press to select several pieces
+
+- Status: Open
+- Origin: ADR-207, 2026-11-06; remainder of G-404 (gesture check)
+- Missing: There is no long-press gesture; on a phone the Select toggle adds pieces (ADR-097, ADR-159).
+- Request: “Duplicate, mirror and predictable rotate operations”.
+- Questions: Add a long-press on a piece that turns Select on and adds the piece?
+- Suggested pick: Not needed while the Select toggle covers the phone; add it if users miss it. (estimate: effort +10%, value +5%)
+- Work: Low-medium
+- Impact: Low
+- Necessity: Low
+- Issue: A phone user cannot start selecting several pieces by holding a piece.
+- Fix: Long-press on the plan, front view and 3D turns Select on and adds the piece.
+- Conflicts: none
+
+### G-424: Connector authoring
+
+- Status: Open
+- Origin: ADR-207, 2026-11-06; remainder of G-007
+- Missing: Connection kinds are fixed in code (side, corner, stacked, wall); the user cannot define connector points or kinds.
+- Request: “Verify, then Quick wins, then Medium effort”; later “guided snapping” and “cross-family composition”.
+- Questions: Let the user define connector points on a piece and the rules between them?
+- Suggested pick: Not yet; the four built-in kinds cover the requests so far. (estimate: effort +60%, value +10%)
+- Work: High
+- Impact: Low
+- Necessity: Low
+- Issue: Connector points and kinds cannot be authored.
+- Fix: A connector editor storing points and rules per piece, in its own ADR.
 - Conflicts: none
