@@ -2877,3 +2877,57 @@ iteration_ item, an _Out of scope_ line, an open question answered with a defaul
 - Impact: Low
 - Necessity: Low
 - Fix: Arrow keys only move focus between types; Space or Enter chooses (user 2026-11-06).
+
+### G-464: Real-device AR check of ADR-208
+
+- Status: Open
+- Origin: ADR-208 tests, 2026-11-06; agent could not run it
+- Missing: The real-device AR check was not done: View in AR on an Android phone and AR Quick Look (rel=ar from a blob URL) on an iPhone. AR was only tested with a stubbed navigator.xr in jsdom and Chromium.
+- Request: Not asked in words; ADR-208 Done when lists the check on a real Android phone and an iPhone (user: 'Build only adrs 201-212').
+- Questions: Can you open the live page on an Android phone and an iPhone and try View in AR and Export for AR (.usdz)?
+- Suggested pick: You run the two device checks after the merge and tell Claude the result; Claude records it in N213. (estimate: effort +0 % for Claude, value +10 %: the only proof AR works)
+
+### G-465: WebGPU render path not run on a real adapter
+
+- Status: Open
+- Origin: ADR-208 tests, 2026-11-06; agent could not run it
+- Missing: The render check on the WebGPU path was not run: headless Chromium has no WebGPU adapter. Only the WebGL 2 path reached 8 samples at 390 and 1280 px; the switch to WebGPU is unit-tested with a stubbed navigator.gpu.
+- Request: Not asked in words; ADR-208 Done when asks for 8 samples on both render engines.
+- Questions: Can you run Render on a laptop or phone with WebGPU and report Engine: WebGPU and the sample count?
+- Suggested pick: You run it once on a WebGPU device. (estimate: effort +0 % for Claude, value +4 %)
+
+### G-466: find-it helper leaks Dexie data between widths
+
+- Status: Open
+- Origin: ADR-212 tests, 2026-11-06; agent found it
+- Missing: tests/find-it/setup.tsx renderApp sets a fresh indexedDB, but Dexie keeps the first factory it saw (vi.resetModules does not reset node_modules), so saved data leaks between the 390 and 1280 px runs in one file, against ADR-108 (each run starts with empty storage). Two find-it files work around it in their own beforeEach.
+- Request: Not asked; ADR-108 rule: each find-it run starts from the bare app.
+- Questions: None; it is a test-helper bug. Other find-it tests may depend on the leaked data.
+- Suggested pick: Set Dexie.dependencies.indexedDB to a fresh factory in renderApp, then fix any find-it test that relied on leftover data. (estimate: effort +4 %, value +3 %)
+
+### G-467: Door near a corner is blocked by the neighbouring wall run
+
+- Status: Open
+- Origin: ADR-204 tests, 2026-11-06; agent found it
+- Missing: In Fill the room, a door placed 100 mm from a corner is blocked by the neighbouring wall's run: a Blind corner base or a tall cabinet stands in its opening. freeStretches in src/core/roomfill.ts (ADR-173) frees a door's range only on the door's own wall. A fix needs a door swing depth, which is not known (ADR-010).
+- Request: Not asked; found while testing ADR-204 (doors and windows in Fill the room, G-348).
+- Questions: How deep a clear zone should a door keep on the neighbouring wall, in mm?
+- Suggested pick: You give a swing depth (or say to use the door width); Claude frees that range on the neighbouring wall. (estimate: effort +6 %, value +6 %)
+
+### G-468: removeChild error with a selected model in 3D Move mode
+
+- Status: Open
+- Origin: ADR-203 tests, 2026-11-06; agent found it
+- Missing: With a 3D model selected in Move mode, the page logs NotFoundError: Failed to execute 'removeChild' on 'Node' when the 3D view opens or closes or Move is turned off. It may come from ResizeHandles in src/viewer/Viewer3D.tsx (ADR-102) rather than ADR-203; not proven. The app keeps working. tools/piece-safety/find-it.mjs 'no page errors' fails at 390 and 1280 px because of it.
+- Request: Not asked; found while testing ADR-203 (G-105, models in 3D Move mode).
+- Questions: None; it is a bug.
+- Suggested pick: Reproduce with the piece-safety script, find which unmount removes the node twice, and fix it. (estimate: effort +5 %, value +5 %)
+
+### G-469: Enter chooses the destructive button in two ADR-203 dialogs
+
+- Status: Open
+- Origin: ADR-203 tests, 2026-11-06; agent found it
+- Missing: The shared confirm dialog focuses the non-default button, so Enter chooses 'Delete versions' (project delete) or 'Use the imported one' (template import) although ADR-203 makes 'Keep them' / 'Keep mine' the default (Esc and Keep delete nothing).
+- Request: Not asked; ADR-203 Decision: Keep is the default and nothing is deleted without the user's explicit choice (ADR-012).
+- Questions: Should Enter on these two dialogs choose the Keep button?
+- Suggested pick: Focus the Keep button first in both dialogs, so Enter keeps. (estimate: effort +2 %, value +4 %)
