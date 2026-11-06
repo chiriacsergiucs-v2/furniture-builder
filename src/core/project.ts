@@ -292,7 +292,7 @@ export interface RunSink {
  * 14 = wall backgrounds (ADR-145); 15 = fitted and straightened wall pictures (ADR-146); 16 = variables, bindings
  * and value sets (ADR-166, ADR-167); 17 = common tops and bottoms (ADR-165); 18 = connections between pieces
  * (ADR-168); 19 = turn and per-size locks (ADR-171); 20 = shared sides (ADR-190); 21 = seller products on run parts
- * (ADR-206).
+ * (ADR-206), connection kinds and wall connections (ADR-207).
  */
 export const PROJECT_SCHEMA = 21 as const;
 export const PROJECT_SCHEMAS: readonly number[] = [
@@ -358,6 +358,7 @@ const CONNECTIONS_SINCE = 18;
 const PARAM_LOCKS_SINCE = 19;
 const SHARED_SINCE = 20;
 const RUN_PRODUCTS_SINCE = 21;
+const CONNECTION_KINDS_SINCE = 21;
 
 export interface Project {
   schemaVersion: ProjectSchemaVersion;
@@ -398,7 +399,10 @@ export interface Project {
   common?: CommonPanel[];
   /** Neighbours sharing one side panel (ADR-190, schemaVersion 20). Absent = none. */
   sharedSides?: SharedSides[];
-  /** Connections between touching pieces (ADR-168, schemaVersion 18): they move together and are re-checked. */
+  /**
+   * Connections between pieces (ADR-168, schemaVersion 18): they move together and are re-checked. Their kind (side,
+   * corner, stacked) and wall connections (one piece against a wall) since schemaVersion 21 (ADR-207).
+   */
   connections?: Connection[];
   /**
    * Seller products linked to run parts (ADR-206, schemaVersion 21), by run part key (`key`, else `id`): priced by the
@@ -2989,18 +2993,35 @@ export function validateProject(p: unknown): string[] {
     if (!Array.isArray(p.connections)) errs.push(t('Invalid connections'));
     else
       for (const c of p.connections) {
+        // A kind (ADR-207) needs version 21; a wall connection holds one piece and the index of its wall.
+        const kind = isObj(c) ? c.kind : undefined;
+        if (kind !== undefined && (p.schemaVersion as number) < CONNECTION_KINDS_SINCE) {
+          errs.push(
+            t('Connection kinds need project schemaVersion {v}', { v: CONNECTION_KINDS_SINCE }),
+          );
+          continue;
+        }
+        const wall = kind === 'wall';
         const pair = isObj(c) && Array.isArray(c.itemIds) ? (c.itemIds as unknown[]) : null;
+        // A wall connection holds its one piece twice (ADR-207).
         const key =
-          pair && pair.length === 2 && pair.every((x) => typeof x === 'string')
-            ? [...(pair as string[])].sort().join('|')
+          pair &&
+          pair.length === 2 &&
+          pair.every((x) => typeof x === 'string') &&
+          (!wall || pair[0] === pair[1])
+            ? wall
+              ? `wall:${pair[0] as string}:${String(c.wall)}`
+              : [...(pair as string[])].sort().join('|')
             : '';
         if (
           !isObj(c) ||
           typeof c.id !== 'string' ||
           !c.id ||
           seen.has(c.id) ||
+          (kind !== undefined && !['side', 'corner', 'stacked', 'wall'].includes(kind as string)) ||
+          (wall ? !isInt(c.wall, 0) || (c.wall as number) > 999 : c.wall !== undefined) ||
           !key ||
-          pair![0] === pair![1] ||
+          (!wall && pair![0] === pair![1]) ||
           !pair!.every((x) => ids.has(x as string)) ||
           pairs.has(key)
         ) {

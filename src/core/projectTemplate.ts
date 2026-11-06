@@ -20,6 +20,7 @@ import {
   type RunSink,
 } from './project';
 import { validateRoom, type Room } from './room';
+import type { Connection, ConnectionKind } from './connections';
 import type { Design, Mm } from './types';
 
 export interface TemplateItem {
@@ -39,20 +40,28 @@ export interface TemplateItem {
 }
 
 /**
- * 1 = ADR-060; 2 = variables, bindings and connections (ADR-170); 3 = run handles and sinks (ADR-204). An older app
- * refuses a version it does not know.
+ * 1 = ADR-060; 2 = variables, bindings and connections (ADR-170); 3 = run handles and sinks (ADR-204), connection
+ * kinds and wall connections (ADR-207). An older app refuses a version it does not know.
  */
 export const TEMPLATE_SCHEMA = 3 as const;
 export type TemplateSchemaVersion = 1 | 2 | typeof TEMPLATE_SCHEMA;
 /** The version that first stores variables, bindings and connections (ADR-170). */
 const VARS_SINCE = 2;
-/** The version that first stores run handles and sinks (ADR-204). */
+/** The version that first stores run handles and sinks (ADR-204), connection kinds and wall connections (ADR-207). */
 const RUN_EXTRAS_SINCE = 3;
 
 /** A run handle kept in a template (ADR-204): `from` and `own` are template refs; a new id is given on use. */
 export type TemplateRunHandle = Omit<RunHandle, 'id'>;
 /** A sink kept in a template (ADR-204): `baseId` is a template ref; a new id is given on use. */
 export type TemplateSink = Omit<RunSink, 'id'>;
+
+/** A connection in a template, over template refs (ADR-168); its kind and wall since version 3 (ADR-207). */
+export interface TemplateConnection {
+  /** A wall connection holds its one piece twice, as in a project. */
+  itemIds: [string, string];
+  kind?: ConnectionKind;
+  wall?: number;
+}
 
 export interface ProjectTemplate {
   kind: 'project-template';
@@ -71,8 +80,8 @@ export interface ProjectTemplate {
   room?: Room;
   /** The project's variables (ADR-166), every one (schemaVersion 2). */
   variables?: ProjectVariable[];
-  /** Connections between pieces (ADR-168), over template refs (schemaVersion 2). */
-  connections?: { itemIds: [string, string] }[];
+  /** Connections between pieces (ADR-168), over template refs (schemaVersion 2; kinds and walls 3, ADR-207). */
+  connections?: TemplateConnection[];
   /** Run handles (ADR-125), over template refs (schemaVersion 3, ADR-204). */
   runHandles?: TemplateRunHandle[];
   /** Sinks over base units (ADR-125), over template refs (schemaVersion 3, ADR-204). */
@@ -135,8 +144,12 @@ export function templateFromProject(
   const removed = remapKeys(p.runPartsRemoved ?? [], refs);
   const variables = p.variables?.length ? structuredClone(p.variables) : undefined;
   const connections = p.connections
-    ?.filter((c) => refs.has(c.itemIds[0]) && refs.has(c.itemIds[1]))
-    .map((c) => ({ itemIds: [c.itemIds[0], c.itemIds[1]] as [string, string] }));
+    ?.filter((c) => c.itemIds.every((x) => refs.has(x)))
+    .map((c): TemplateConnection => ({
+      itemIds: [c.itemIds[0], c.itemIds[1]],
+      ...(c.kind ? { kind: c.kind } : {}),
+      ...(c.wall !== undefined ? { wall: c.wall } : {}),
+    }));
   const bound = p.items.some((i) => i.bindings?.length);
   // Run handles and sinks over template refs (ADR-204): pieces no longer there are dropped.
   const extras = remapRunExtras(p.runHandles, p.sinks, refs);
@@ -150,10 +163,10 @@ export function templateFromProject(
   });
   return {
     kind: 'project-template',
-    // Run handles or sinks need version 3 (ADR-204); variables, bindings or connections version 2 (ADR-170); without
-    // them an older app can still read it.
+    // Run handles, sinks or connection kinds need version 3 (ADR-204, ADR-207); variables, bindings or connections
+    // version 2 (ADR-170); without them an older app can still read it.
     schemaVersion:
-      runHandles.length || sinks.length
+      runHandles.length || sinks.length || connections?.some((c) => c.kind)
         ? TEMPLATE_SCHEMA
         : variables || connections?.length || bound
           ? VARS_SINCE
@@ -211,12 +224,7 @@ export function projectFromTemplate(t: ProjectTemplate, name = t.name): Project 
       ...(i.bindings?.length ? { bindings: structuredClone(i.bindings) } : {}),
     };
   });
-  const connections = (t.connections ?? [])
-    .filter((c) => ids.has(c.itemIds[0]) && ids.has(c.itemIds[1]))
-    .map((c) => ({
-      id: newId(),
-      itemIds: [ids.get(c.itemIds[0])!, ids.get(c.itemIds[1])!] as [string, string],
-    }));
+  const connections = templateConnections(t.connections, ids, t.room).connections;
   const extras = remapRunExtras(t.runHandles, t.sinks, ids);
   const extended =
     items.some((i) => i.linkId || i.angle || i.bindings) ||
@@ -250,6 +258,33 @@ export function projectFromTemplate(t: ProjectTemplate, name = t.name): Project 
   const planned = { ...withSettings, runParts: planRuns(withSettings).parts };
   // Bound sizes take their variables' values at once (ADR-166).
   return t.variables?.length ? applyBindings(planned) : planned;
+}
+
+/**
+ * A template's connections over the new piece ids (ADR-168, ADR-207); a wall connection to a wall `room` lacks is
+ * dropped and counted, for the notice.
+ */
+export function templateConnections(
+  list: readonly TemplateConnection[] | undefined,
+  ids: ReadonlyMap<string, string>,
+  room: Room | undefined,
+): { connections: Connection[]; droppedWalls: number } {
+  let droppedWalls = 0;
+  const connections: Connection[] = [];
+  for (const c of list ?? []) {
+    if (!c.itemIds.every((x) => ids.has(x))) continue;
+    if (c.kind === 'wall' && (!room || c.wall === undefined || c.wall >= room.outline.length)) {
+      droppedWalls++;
+      continue;
+    }
+    connections.push({
+      id: newId(),
+      ...(c.kind ? { kind: c.kind } : {}),
+      itemIds: [ids.get(c.itemIds[0])!, ids.get(c.itemIds[1])!],
+      ...(c.wall !== undefined ? { wall: c.wall } : {}),
+    });
+  }
+  return { connections, droppedWalls };
 }
 
 const isObj = (v: unknown): v is Record<string, unknown> =>
@@ -330,12 +365,30 @@ export function validateProjectTemplate(t: unknown): string[] {
       errs.push(`Connections need template schemaVersion ${VARS_SINCE}`);
     else
       for (const c of t.connections) {
+        const kind = isObj(c) ? c.kind : undefined;
+        // Kinds and wall connections need version 3 (ADR-207).
+        if ((kind !== undefined || (isObj(c) && c.wall !== undefined)) && !v3) {
+          errs.push(`Connection kinds need template schemaVersion ${TEMPLATE_SCHEMA}`);
+          continue;
+        }
+        const wall = kind === 'wall';
         const ids = isObj(c) && Array.isArray(c.itemIds) ? (c.itemIds as unknown[]) : null;
         const key =
-          ids && ids.length === 2 && ids.every((x) => typeof x === 'string' && refs.has(x))
-            ? [...(ids as string[])].sort().join('|')
+          ids &&
+          ids.length === 2 &&
+          ids.every((x) => typeof x === 'string' && refs.has(x)) &&
+          (!wall || ids[0] === ids[1])
+            ? wall
+              ? `wall:${ids[0] as string}:${String(c.wall)}`
+              : [...(ids as string[])].sort().join('|')
             : '';
-        if (!key || ids![0] === ids![1] || pairs.has(key)) {
+        if (
+          !key ||
+          (kind !== undefined && !['side', 'corner', 'stacked', 'wall'].includes(kind as string)) ||
+          (wall ? !isInt(c.wall, 0, 999) : c.wall !== undefined) ||
+          (!wall && ids![0] === ids![1]) ||
+          pairs.has(key)
+        ) {
           errs.push('Invalid template connection');
           continue;
         }

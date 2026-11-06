@@ -39,15 +39,16 @@ export const sheetOf = (m: Material) => m.sheet ?? defaultSheetFor(m);
 export const kerfOf = (d: Design) => d.cutting?.kerf ?? DEFAULT_KERF;
 
 /**
- * The document shape this app writes: 8 adds role and part bands (ADR-188); 7 added corner mount (ADR-177); 6 added
- * role boards (ADR-163); 1 to 7 still load.
+ * The document shape this app writes: 9 adds the user's assembly steps and the lounger and daybed ends (ADR-207);
+ * 8 added role and part bands (ADR-188); 7 added corner mount (ADR-177); 6 added role boards (ADR-163); 1 to 8 still
+ * load.
  */
-export const SCHEMA_VERSION = 8;
+export const SCHEMA_VERSION = 9;
 
 /**
- * Older versions → 8 in memory: version 1 gets stock sheets and cutting settings; 2 → 3 → 4 → 5 → 6 → 7 → 8 add only
- * optional fields (band specs, part boards, seller products, role boards, corner mount, role and part bands), so
- * nothing else changes.
+ * Older versions → 9 in memory: version 1 gets stock sheets and cutting settings; 2 → … → 9 add only optional fields
+ * (band specs, part boards, seller products, role boards, corner mount, role and part bands, assembly steps and
+ * frame ends), so nothing else changes.
  * Returns the same object when already current.
  */
 export function upgradeDesign(d: Design): Design {
@@ -1002,7 +1003,7 @@ function validateSpace(s: unknown, errs: string[], seen: Set<string>, depth = 0)
 export function validateDesign(d: unknown): string[] {
   const errs: string[] = [];
   if (!isObj(d)) return [t('Design must be an object')];
-  if (![1, 2, 3, 4, 5, 6, 7, 8].includes(d.schemaVersion as number))
+  if (![1, 2, 3, 4, 5, 6, 7, 8, 9].includes(d.schemaVersion as number))
     errs.push(t('Unsupported schemaVersion'));
   if (
     d.cutting !== undefined &&
@@ -1102,6 +1103,7 @@ export function validateDesign(d: unknown): string[] {
   validateSellerChoices(d, errs);
   validateRules(d.settings, errs);
   validateWizard(d.wizard, errs);
+  validateAssembly(d, errs);
   if (p.kind === 'panels') {
     if (!Array.isArray(params.panels) || params.panels.length > MAX_LOOSE)
       return [...errs, t('Invalid panel list')];
@@ -1171,6 +1173,7 @@ export function validateDesign(d: unknown): string[] {
   }
   if (p.kind === 'frame') {
     validateFrame(params, errs, ints, matRef);
+    validateFrameEnds(params, d.schemaVersion, errs);
     return errs;
   }
   const dr = params.drawers;
@@ -1301,6 +1304,37 @@ export function validateDesign(d: unknown): string[] {
     validateSpace(params.wingInterior, errs, seen);
   } else errs.push(t('Unknown product kind'));
   return errs;
+}
+
+/** The user's assembly steps (ADR-207, schemaVersion 9): known step ids once each, names short text. Never throws. */
+function validateAssembly(d: Record<string, unknown>, errs: string[]) {
+  const a = d.assembly;
+  if (a === undefined) return;
+  if ((d.schemaVersion as number) < 9) errs.push(t('Assembly steps need schemaVersion 9'));
+  if (
+    !isObj(a) ||
+    !Array.isArray(a.order) ||
+    a.order.length > 40 ||
+    !a.order.every((x) => typeof x === 'string' && x.length <= 40) ||
+    new Set(a.order).size !== a.order.length ||
+    (a.names !== undefined &&
+      !(
+        isObj(a.names) &&
+        Object.keys(a.names).length <= 40 &&
+        Object.values(a.names).every((v) => typeof v === 'string' && v.length <= 120)
+      ))
+  )
+    errs.push(t('Invalid assembly steps'));
+}
+
+/** The lounger backrest's and the daybed side panel's end (ADR-207, schemaVersion 9): 'right' or absent. */
+function validateFrameEnds(f: Record<string, unknown>, version: unknown, errs: string[]) {
+  const br = isObj(f.backrest) ? f.backrest.end : undefined;
+  const bed = isObj(f.bed) ? f.bed.sidePanelEnd : undefined;
+  if (br === undefined && bed === undefined) return;
+  if ((version as number) < 9) errs.push(t('Backrest and side panel ends need schemaVersion 9'));
+  if ((br !== undefined && br !== 'right') || (bed !== undefined && bed !== 'right'))
+    errs.push(t('Invalid backrest or side panel end'));
 }
 
 function validateFrame(

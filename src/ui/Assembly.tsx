@@ -11,10 +11,12 @@ import {
   boxTitle,
   fastenerLines,
   hardwareLine,
+  moveStep,
   partName,
   prepLines,
   projectAssemblyOrder,
   projectOrderPrint,
+  renameStep,
   stepInstruction,
   stepLitIds,
   stepTitle,
@@ -26,10 +28,11 @@ import {
 import type { FastenerChoice } from '../core/fasteners';
 import { t, tr } from '../core/i18n';
 import { getPrintLang, PRINT_DATE_LOCALE, pt } from '../core/i18n/print';
-import type { Design, FurnitureModel, Material } from '../core/types';
+import type { AssemblyEdit, Design, FurnitureModel, Material } from '../core/types';
 import { useDesign } from '../store/designStore';
 import { printPieceName } from '../core/catalog/printName';
 import { useFastenerChoices } from './Fasteners';
+import { askConfirm, askText } from './Confirm';
 import { GuidanceTip } from './controls';
 import { PieceElevation } from './Elevation';
 import { Icon } from './icons';
@@ -54,6 +57,10 @@ interface PieceSteps {
   /** The piece's own model and boards, for its front view on the printed sheet (ADR-185). */
   model: FurnitureModel;
   materials: Material[];
+  /** The project piece whose steps these are, or null for the open piece (ADR-207: where an edit goes). */
+  itemId: string | null;
+  /** The user's order and names (ADR-207, `Design.assembly`); absent = the generated steps. */
+  edit?: AssemblyEdit;
 }
 
 /** The pieces shown with their steps: the open design, or every piece of the project (linked copies once). */
@@ -72,9 +79,11 @@ function usePieceSteps(): PieceSteps[] {
           design,
           times: 1,
           idOf: (id) => id,
-          steps: assemblySteps(view.model),
+          steps: assemblySteps(view.model, design.assembly),
           model: view.model,
           materials: design.materials,
+          itemId: null,
+          ...(design.assembly ? { edit: design.assembly } : {}),
         },
       ];
     const out: PieceSteps[] = [];
@@ -93,9 +102,11 @@ function usePieceSteps(): PieceSteps[] {
         design: pc.item.design,
         times: pc.item.quantity,
         idOf: (id) => `${pc.item.id}:${id}`,
-        steps: assemblySteps(model),
+        steps: assemblySteps(model, pc.item.design.assembly),
         model,
         materials: pc.item.design.materials,
+        itemId: pc.item.id,
+        ...(pc.item.design.assembly ? { edit: pc.item.design.assembly } : {}),
       };
       if (link) seen.set(link, entry);
       out.push(entry);
@@ -176,6 +187,7 @@ export function Assembly() {
   const setLit = useDesign((s) => s.setLit);
   const lit = useDesign((s) => s.litPanelIds);
   const printWith = useUi((s) => s.printWith);
+  const setAssembly = useDesign((s) => s.setAssembly);
   const choices = useFastenerChoices();
   const [current, setCurrent] = useState<{ piece: string; n: number } | null>(null);
   const [taking, setTaking] = useState(false);
@@ -274,14 +286,41 @@ export function Assembly() {
             {tr(p.name)}
             {p.times > 1 ? ` × ${p.times}` : ''}
           </h3>
+          {/* The user's own order and names (ADR-207): Reset brings the generated steps back. */}
+          {p.edit && (
+            <div className="out-actions">
+              <button
+                type="button"
+                className="btn sm outline"
+                onClick={async () => {
+                  if (
+                    await askConfirm(
+                      t('Reset the steps of {name} to the generated order and titles?', {
+                        name: tr(p.name),
+                      }),
+                      { confirmLabel: t('Reset the steps') },
+                    )
+                  )
+                    setAssembly(p.itemId, undefined, t('Reset the steps'));
+                }}
+              >
+                {t('Reset the steps')}
+              </button>
+            </div>
+          )}
           <ol className="assembly-steps">
-            {p.steps.map((s) => {
+            {p.steps.map((s, i) => {
               const on = current?.piece === p.key && current.n === s.n;
+              const move = (dir: -1 | 1) => {
+                const edit = moveStep(p.steps, s.id, dir, p.edit);
+                if (edit)
+                  setAssembly(p.itemId, edit, dir < 0 ? t('Move step up') : t('Move step down'));
+              };
               return (
                 <li key={s.id} className={on ? 'on' : ''} aria-current={on ? 'step' : undefined}>
                   <div className="step-head">
                     <span className="step-n">{s.n}</span>
-                    <strong>{s.title}</strong>
+                    <strong>{stepTitle(s, 'app')}</strong>
                     {stepLitIds(s).length > 0 && (
                       <button
                         type="button"
@@ -292,6 +331,48 @@ export function Assembly() {
                         {t('Show step')}
                       </button>
                     )}
+                  </div>
+                  <div className="step-edit" role="group" aria-label={t('Edit this step')}>
+                    <button
+                      type="button"
+                      className="btn sm ghost"
+                      disabled={i === 0}
+                      aria-label={t('Move step up')}
+                      title={t('Move step up')}
+                      onClick={() => move(-1)}
+                    >
+                      <Icon name="chevron-up" className="sm" />
+                    </button>
+                    <button
+                      type="button"
+                      className="btn sm ghost"
+                      disabled={i === p.steps.length - 1}
+                      aria-label={t('Move step down')}
+                      title={t('Move step down')}
+                      onClick={() => move(1)}
+                    >
+                      <Icon name="chevron-down" className="sm" />
+                    </button>
+                    <button
+                      type="button"
+                      className="btn sm ghost"
+                      onClick={async () => {
+                        const name = await askText(
+                          t('Name of the step (empty: the generated title “{title}”)', {
+                            title: s.title,
+                          }),
+                          stepTitle(s, 'app'),
+                        );
+                        if (name === null) return;
+                        setAssembly(
+                          p.itemId,
+                          renameStep(p.steps, s.id, name, p.edit),
+                          t('Rename step'),
+                        );
+                      }}
+                    >
+                      {t('Rename step')}
+                    </button>
                   </div>
                   <p className="step-do">{stepInstruction(s, 'app')}</p>
                   <StepBody step={s} choices={choices} />

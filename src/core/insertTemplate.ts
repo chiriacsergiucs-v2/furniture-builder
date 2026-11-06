@@ -7,7 +7,12 @@
 import { newId } from './design';
 import { placedBounds, type Project, type ProjectItem } from './project';
 import { withSettings } from './projectSettings';
-import { remapRunExtras, remapRunKey, type ProjectTemplate } from './projectTemplate';
+import {
+  remapRunExtras,
+  remapRunKey,
+  templateConnections,
+  type ProjectTemplate,
+} from './projectTemplate';
 import type { Mm } from './types';
 
 export interface InsertResult {
@@ -16,6 +21,14 @@ export interface InsertResult {
   ids: string[];
   /** Template variables whose name the project already had: the project's are kept and the bindings follow them. */
   kept: string[];
+  /** Wall connections dropped because the project's room lacks their wall (ADR-207), for the notice. */
+  droppedWalls: number;
+}
+
+/** How many of the template's wall connections the project's room has no wall for (ADR-207). */
+export function droppedWallConnections(project: Project, t: ProjectTemplate): number {
+  const ids = new Map(t.items.map((i) => [i.ref, i.ref]));
+  return templateConnections(t.connections, ids, project.room).droppedWalls;
 }
 
 /** Where a template's block goes when no point is given: right of the project's pieces, against the back. */
@@ -38,7 +51,7 @@ export function insertTemplate(
   t: ProjectTemplate,
   at: { x: Mm; z: Mm } = insertPoint(project),
 ): InsertResult {
-  if (!t.items.length) return { project, ids: [], kept: [] };
+  if (!t.items.length) return { project, ids: [], kept: [], droppedWalls: 0 };
   // Templates saved with their room keep room positions: the block is moved by its own left-back corner.
   const ox = Math.min(...t.items.map((i) => i.offset.x));
   const oz = Math.min(...t.items.map((i) => i.offset.z));
@@ -74,12 +87,8 @@ export function insertTemplate(
   const variables = added.length
     ? [...(project.variables ?? []), ...added.map((v) => ({ ...v, id: newId() }))]
     : project.variables;
-  const connections = (t.connections ?? [])
-    .filter((c) => ids.has(c.itemIds[0]) && ids.has(c.itemIds[1]))
-    .map((c) => ({
-      id: newId(),
-      itemIds: [ids.get(c.itemIds[0])!, ids.get(c.itemIds[1])!] as [string, string],
-    }));
+  // A wall connection to a wall the project's room lacks is dropped (ADR-207); the notice says how many.
+  const { connections, droppedWalls } = templateConnections(t.connections, ids, project.room);
   // Run handles and sinks join with the new piece ids and new ids of their own (ADR-204).
   const extras = remapRunExtras(t.runHandles, t.sinks, ids);
   const recipe = t.runRecipe;
@@ -102,5 +111,5 @@ export function insertTemplate(
       : {}),
     ...(extras.sinks.length ? { sinks: [...(project.sinks ?? []), ...extras.sinks] } : {}),
   };
-  return { project: next, ids: items.map((i) => i.id), kept };
+  return { project: next, ids: items.map((i) => i.id), kept, droppedWalls };
 }

@@ -271,10 +271,6 @@ export const ru_core2 = {
   '{name} already sits on the floor or on a piece; the selected pieces move down together.':
     '«{name}» уже стоит на полу или на изделии; выбранные изделия опускаются вместе.',
   'Nothing to mirror in this piece': 'В этом изделии нечего отражать',
-  'The lounger backrest is always at the left end; it cannot be mirrored yet':
-    'Спинка шезлонга всегда у левого края; отразить её пока нельзя',
-  'The daybed side panel is always on the left; it cannot be mirrored yet':
-    'Боковая панель кушетки всегда слева; отразить её пока нельзя',
   'Rotation must be whole degrees from 0 to 359.':
     'Поворот должен быть целым числом градусов от 0 до 359.',
   'Mirror the run refused: {why}': 'Отражение линии отклонено: {why}',
@@ -679,4 +675,12 @@ export const ru_core2 = {
   'touching side by side': 'стоят вплотную рядом',
   'touching side by side under one run worktop': 'стоят вплотную рядом под одной столешницей линии',
   'both pieces come from catalog families': 'оба изделия из семейств каталога',
+  // ADR-207: document validation.
+  'Assembly steps need schemaVersion 9': 'Шаги сборки требуют schemaVersion 9',
+  'Invalid assembly steps': 'Недопустимые шаги сборки',
+  'Backrest and side panel ends need schemaVersion 9':
+    'Сторона спинки и боковой панели требует schemaVersion 9',
+  'Invalid backrest or side panel end': 'Недопустимая сторона спинки или боковой панели',
+  'Connection kinds need project schemaVersion {v}':
+    'Виды соединений требуют schemaVersion проекта {v}',
 } satisfies Record<string, string>;

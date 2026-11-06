@@ -330,4 +330,47 @@ export const ru_project = {
     'У каждого проверенного набора была проблема в комнате (проверено {n}); измените стены или диапазон ширин.',
   'No mix could be built.': 'Не удалось построить ни одного набора.',
   'Room {w} × {d}': 'Комната {w} × {d}',
+  // ADR-207: connection kinds, against the wall, assembly step editing, linking identical pieces.
+  'side by side': 'рядом',
+  'in the corner': 'в углу',
+  stacked: 'друг над другом',
+  'against wall {n}': 'у стены {n}',
+  '{name} ({kind})': '{name} ({kind})',
+  '{a} and {b} do not meet in a corner.': '{a} и {b} не сходятся в углу.',
+  '{a} and {b} are not one over the other.': '{a} и {b} не стоят друг над другом.',
+  '{a} and {b} are not side by side, in a corner or one over the other.':
+    '{a} и {b} не стоят рядом, в углу или друг над другом.',
+  'A wall connection holds one piece.': 'Соединение со стеной относится к одному изделию.',
+  'The room has no wall {n}.': 'В комнате нет стены {n}.',
+  '{name} is turned at an angle.': '{name} повёрнуто под углом.',
+  'The back of {name} does not face wall {n}.': 'Задняя сторона {name} не обращена к стене {n}.',
+  'The back of {name} is not against wall {n}.': 'Задняя сторона {name} не прилегает к стене {n}.',
+  '{name} reaches past the end of wall {n}.': '{name} выходит за конец стены {n}.',
+  'Draw the room first: a piece goes against its walls.':
+    'Сначала нарисуйте комнату: изделие ставится к её стенам.',
+  'The back of {name} is not against a wall.': 'Задняя сторона {name} не прилегает к стене.',
+  '{a} is connected against wall {n} but no longer joined: {reason}':
+    '{a} соединено со стеной {n}, но больше не прилегает: {reason}',
+  'Against the wall': 'У стены',
+  'Off the wall': 'Не у стены',
+  'About against the wall': 'Об установке у стены',
+  'The piece stays against its wall: dragging it slides it along the wall. Alt while dragging moves it away and takes it off the wall.':
+    'Изделие остаётся у своей стены: при перетаскивании оно скользит вдоль стены. Alt при перетаскивании отодвигает его и снимает со стены.',
+  '{n|# wall connection was|# wall connections were} left out: this room has no such wall.':
+    '{n|# соединение со стеной пропущено|# соединения со стеной пропущены|# соединений со стеной пропущено}: в этой комнате нет такой стены.',
+  'Link identical pieces': 'Связать одинаковые изделия',
+  'Link {n} identical pieces': 'Связать одинаковые изделия ({n})',
+  'These pieces are the same; linked, a change to one changes them all.':
+    'Эти изделия одинаковы; после связывания изменение одного меняет все.',
+  'Move step up': 'Переместить шаг выше',
+  'Move step down': 'Переместить шаг ниже',
+  'Rename step': 'Переименовать шаг',
+  'Reset the steps': 'Сбросить шаги',
+  'Edit this step': 'Изменить этот шаг',
+  'Reset the steps of {name} to the generated order and titles?':
+    'Вернуть шагам {name} созданный порядок и названия?',
+  'Name of the step (empty: the generated title “{title}”)':
+    'Название шага (пусто — созданное название «{title}»)',
+  'Backrest end': 'Сторона спинки',
+  'Side panel end': 'Сторона боковой панели',
 } satisfies Record<string, string>;

@@ -37,21 +37,26 @@ import {
 import { commonPanelCheck, pruneCommon } from '../core/common';
 import { pruneShared, sharedSideCheck } from '../core/shared';
 import {
+  alongWalls,
   carryUnits,
   connect,
   connectionCheck,
+  connectWall,
   disconnect,
+  disconnectWall,
   isConnected,
   movingSet,
   pruneConnections,
   settleConnections,
+  wallAgainst,
+  wallsOf,
 } from '../core/connections';
 import { mergeItems } from '../core/merge';
 import { describeChange } from '../core/history';
 import { insertTemplate } from '../core/insertTemplate';
 import type { ProjectTemplate } from '../core/projectTemplate';
 import { applyStyle, type Style } from '../core/styles';
-import { addLinkedCopy, propagateLinks } from '../core/linked';
+import { addLinkedCopy, linkIdentical, propagateLinks } from '../core/linked';
 import { alignItems, distributeItems, skippedText, type AlignHow } from '../core/align';
 import {
   duplicateItems,
@@ -123,6 +128,7 @@ import type {
   CabinetParams,
   CatalogMeta,
   CornerParams,
+  AssemblyEdit,
   DeskParams,
   Design,
   FrameParams,
@@ -359,6 +365,13 @@ interface State {
   duplicateItem: (id: string) => void;
   /** Place a linked copy beside the piece (ADR-111); one undo step. */
   addLinkedCopy: (id: string) => void;
+  /** Link every piece identical to this one (ADR-207, "Link {n} identical pieces"); one undo step. */
+  linkIdentical: (id: string) => void;
+  /**
+   * The user's assembly steps (ADR-207) of a project piece (`itemId`) or the open piece (null): their order and names,
+   * or undefined to reset them to the generated steps. One undo step named `name`; linked copies share it (ADR-111).
+   */
+  setAssembly: (itemId: string | null, edit: AssemblyEdit | undefined, name: string) => void;
   /** "Change all copies" (ADR-111): on, a change to a linked piece reaches its copies; off, the piece leaves them. */
   linkAll: boolean;
   setLinkAll: (v: boolean) => void;
@@ -507,8 +520,16 @@ interface State {
   setShared: (on: boolean) => string;
   /** Add a room mix's pieces to the open project (ADR-173): one undo step, the pieces selected. Their ids. */
   fillRoom: (mix: Project) => string[];
-  /** Connect or disconnect the two selected pieces (ADR-168); the reason when it cannot be done, else ''. */
+  /**
+   * Connect or disconnect the two selected pieces (ADR-168) with the kind the check finds (side, corner, stacked,
+   * ADR-207); the reason when it cannot be done, else ''.
+   */
   setConnected: (on: boolean) => string;
+  /**
+   * Against the wall (ADR-207): connect the piece against the wall its back lies on, or remove its wall connections.
+   * The reason when it cannot be done, else ''. One undo step.
+   */
+  setAgainstWall: (id: string, on: boolean) => string;
   /** Forget a part's own board (ADR-151) on a project item (`id`) or the open piece (null). */
   clearPartBoard: (id: string | null, panelId: string) => void;
   /** Put the piece being placed with its left-back corner at a plan point (whole mm, x and z ≥ 0), or stop placing (ADR-056). */
@@ -876,10 +897,10 @@ export const useDesign = create<State>((rawSet, get) => {
       const p = get().project;
       if (!p) return null;
       // A grouped piece moves with its whole group (ADR-148) and a connected one with its neighbours (ADR-168),
-      // unless Alt was held (`alone`).
+      // unless Alt was held (`alone`). A piece against a wall slides along it (ADR-207).
       const unit = movingSet(p, [id], !opts?.alone);
-      const res =
-        unit.length > 1 ? moveItems(p, unit, dxMm, dzMm, step) : moveBy(p, id, dxMm, dzMm, step);
+      const { dx, dz } = opts?.alone ? { dx: dxMm, dz: dzMm } : alongWalls(p, unit, dxMm, dzMm);
+      const res = unit.length > 1 ? moveItems(p, unit, dx, dz, step) : moveBy(p, id, dx, dz, step);
       if (res.reason) {
         set({ notice: res.reason });
         return res.reason;
@@ -1082,6 +1103,36 @@ export const useDesign = create<State>((rawSet, get) => {
       commitProject(res.project);
       set({ selectedItemId: res.id });
     },
+    linkIdentical: (id) => {
+      const p = get().project;
+      if (!p) return;
+      const next = linkIdentical(p, id);
+      if (next !== p) commitProject(next, t('Link identical pieces'));
+    },
+    setAssembly: (itemId, edit, name) => {
+      // The user's steps live in the design (ADR-207, design schemaVersion 9).
+      const apply = (d: Design): Design => {
+        const { assembly: _was, ...rest } = d;
+        void _was;
+        return edit
+          ? { ...rest, schemaVersion: SCHEMA_VERSION, assembly: edit }
+          : { ...rest, schemaVersion: d.schemaVersion };
+      };
+      const p = get().project;
+      if (itemId && p && get().editingItemId !== itemId) {
+        const it = p.items.find((i) => i.id === itemId);
+        if (!it) return;
+        commitProject(
+          {
+            ...p,
+            items: p.items.map((i) => (i.id === itemId ? { ...i, design: apply(i.design) } : i)),
+          },
+          name,
+        );
+        return;
+      }
+      commit(apply(get().design));
+    },
     addLinkedCopy: (id) => {
       const p = get().project;
       const res = p && addLinkedCopy(p, id);
@@ -1181,7 +1232,9 @@ export const useDesign = create<State>((rawSet, get) => {
       const p = get().project;
       if (!p) return null;
       const unit = movingSet(p, get().selectedItemIds, !opts?.alone);
-      const res = moveItems(p, unit, dx, dz, step);
+      // Pieces against a wall slide along it (ADR-207), unless Alt was held.
+      const along = opts?.alone ? { dx, dz } : alongWalls(p, unit, dx, dz);
+      const res = moveItems(p, unit, along.dx, along.dz, step);
       if (res.reason) {
         set({ notice: res.reason });
         return res.reason;
@@ -1578,10 +1631,25 @@ export const useDesign = create<State>((rawSet, get) => {
       if (!p || ids.length !== 2) return t('Select exactly two pieces standing side by side.');
       const [a, b] = ids;
       if (on) {
-        const { reason } = connectionCheck(p, a, b, get().projectModel?.pieces);
+        // The kind the check finds: side by side, in the corner or stacked (ADR-207).
+        const { reason, kind } = connectionCheck(p, a, b, get().projectModel?.pieces);
         if (reason) return reason;
-        if (!isConnected(p, a, b)) commitProject(connect(p, a, b), t('Connect'));
+        if (!isConnected(p, a, b)) commitProject(connect(p, a, b, kind), t('Connect'));
       } else if (isConnected(p, a, b)) commitProject(disconnect(p, a, b), t('Disconnect'));
+      return '';
+    },
+    setAgainstWall: (id, on) => {
+      const p = get().project;
+      if (!p || !p.items.some((i) => i.id === id)) return t('No project is open.');
+      if (!on) {
+        const next = disconnectWall(p, id);
+        if (next !== p) commitProject(next, t('Off the wall'));
+        return '';
+      }
+      if (wallsOf(p, id).length) return '';
+      const { wall, reason } = wallAgainst(p, id, get().projectModel?.pieces);
+      if (wall === null) return reason ?? '';
+      commitProject(connectWall(p, id, wall), t('Against the wall'));
       return '';
     },
     clearPartBoard: (id, panelId) => {

@@ -2390,6 +2390,13 @@ td.note {
   margin-left: auto;
   white-space: nowrap;
 }
+/* The user's own step order and names (ADR-207): small controls under the step's title. */
+.assembly .step-edit {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1);
+  margin-top: var(--s-1);
+}
 .assembly .step-n {
   width: 24px;
   height: 24px;

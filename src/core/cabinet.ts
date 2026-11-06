@@ -259,6 +259,24 @@ export function buildCabinet(
     };
   };
   const hw = (item: HardwareItem) => out.hardware.push({ ...item, nodeId: mapNode(item.nodeId) });
+  /**
+   * The upright panels (sides, dividers) at an opening's left or right edge, already built: what a hinge's plates or a
+   * runner's carcass half fix to (ADR-207). Empty when that panel is not part of this piece (a shared side).
+   */
+  const edgePanels = (op: Box, end: 'left' | 'right'): string[] => {
+    const x = (end === 'left' ? op.x : op.x + op.w) + o.x;
+    const y0 = op.y + o.y,
+      y1 = y0 + op.h;
+    return out.panels
+      .filter(
+        (q) =>
+          q.thicknessAxis === 'x' &&
+          (q.role === 'side' || q.role === 'divider') &&
+          (end === 'left' ? q.box.x + q.box.w === x : q.box.x === x) &&
+          Math.min(q.box.y + q.box.h, y1) > Math.max(q.box.y, y0),
+      )
+      .map((q) => q.id);
+  };
 
   const { width: W, height: H, depth: D } = p;
   const wall = p.mount === 'wall';
@@ -667,7 +685,12 @@ export function buildCabinet(
         x += w + g;
       });
       const dh = f.y1 - f.y0;
+      // The plates go on the side or divider at the hinged edge (both edges for a pair), ADR-207.
+      const hinged: ('left' | 'right')[] =
+        n === 2 ? ['left', 'right'] : [s.front.hinge === 'right' ? 'right' : 'left'];
+      const plateOn = hinged.flatMap((end) => edgePanels(op, end));
       hw({
+        ...(plateOn.length ? { panelIds: plateOn } : {}),
         nodeId: s.id,
         kind: 'hinge',
         label: 'Hinge, 35 mm cup, soft-close, clip-on',
@@ -1121,8 +1144,11 @@ export function buildCabinet(
           slotTop = slotBottom;
         }
         const boxes = fixed ? n - 1 : n;
+        // The carcass halves go on the two panels either side of the opening (ADR-207).
+        const runnerOn = [...edgePanels(ip, 'left'), ...edgePanels(ip, 'right')];
         if (boxes)
           hw({
+            ...(runnerOn.length ? { panelIds: runnerOn } : {}),
             nodeId: s.id,
             kind: 'drawer-runner-pair',
             label: internal
@@ -1249,7 +1275,8 @@ export function buildCabinet(
         role: 'side',
         label: 'Shared side',
         materialId: body.id,
-        box: box(W, sideY, z0, t, sideH, Dc),
+        // At the carcass's origin like its own panels (a blind corner's usable section, ADR-207).
+        box: box(W + o.x, sideY + o.y, z0 + o.z, t, sideH, Dc),
         thicknessAxis: 'x',
         grainAxis: 'y',
         banded: [],

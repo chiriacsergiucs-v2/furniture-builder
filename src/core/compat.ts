@@ -28,6 +28,9 @@ export type RulePredicate =
   | 'same-height-under-worktop'
   | 'shared-room';
 
+/** The kinds of join between pieces (ADR-207): side by side, in a corner, one over the other, or against a wall. */
+export type JoinKind = 'side' | 'corner' | 'stacked' | 'wall';
+
 export type CompatRuleId =
   'side-only' | 'same-mount' | 'back-to-wall' | 'depth-match' | 'height-match' | 'family';
 
@@ -47,6 +50,8 @@ export interface CompatRule {
   severity: RuleSeverity;
   /** Where it runs. */
   where: ('snap' | 'checks')[];
+  /** The joins it runs on (ADR-207); absent = side joins only, as every ADR-100 rule. */
+  joins?: JoinKind[];
   /** The rule in words, for the Rules list and the messages. */
   text: string;
   /**
@@ -82,6 +87,8 @@ export const COMPAT_RULES: readonly CompatRule[] = [
     check: { predicate: 'same-mount', params: {} },
     severity: 'refuse',
     where: ['snap'],
+    // Also a corner join (ADR-207): a floor unit and a wall unit never meet in a corner either.
+    joins: ['side', 'corner'],
     text: 'side to side only floor unit with floor unit and wall unit with wall unit',
     messages: { snap: '{reason}' },
     repairs: [],
@@ -210,6 +217,8 @@ export interface JoinContext {
   heightB?: Mm;
   /** Both pieces are under one run worktop (ADR-036). */
   underOneWorktop?: boolean;
+  /** The kind of join (ADR-207); absent = side. A rule runs only on the joins it names (`CompatRule.joins`). */
+  join?: JoinKind;
 }
 
 const differs = (what: string, a: Mm | undefined, b: Mm | undefined, tol: number) =>
@@ -282,6 +291,7 @@ export function evaluate(stage: 'snap' | 'checks', c: JoinContext): Finding[] {
   const out: Finding[] = [];
   for (const rule of COMPAT_RULES) {
     if (!rule.where.includes(stage)) continue;
+    if (!(rule.joins ?? ['side']).includes(c.join ?? 'side')) continue;
     if (!appliesTo(rule, c.a, c.mountA)) continue;
     if (c.b && !appliesTo(rule, c.b, c.mountB)) continue;
     const reason = PREDICATES[rule.check.predicate](rule, c);

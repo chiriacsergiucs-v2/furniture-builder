@@ -13,7 +13,7 @@ import {
 } from 'react';
 import { boxIn, cardCorner, CountStepper } from './CountStepper';
 import { touchingRun } from '../core/arrange';
-import { linkCount } from '../core/linked';
+import { identicalPieces, linkCount } from '../core/linked';
 import { mergeCandidates } from '../core/merge';
 import {
   DRAG_STEP,
@@ -37,8 +37,14 @@ import {
 } from '../core/project';
 import { dropTarget, SNAP_RANGE } from '../core/snap';
 import { groupOf, itemsAt, itemsInBox, nextUnder } from '../core/selection';
-import { keptVariables } from '../core/insertTemplate';
-import { connectedTo, connectionSeams } from '../core/connections';
+import { droppedWallConnections, keptVariables } from '../core/insertTemplate';
+import {
+  connectionSeams,
+  connectionsOf,
+  kindName,
+  wallAgainst,
+  wallsOf,
+} from '../core/connections';
 import { inSelection, selectionBox } from '../core/selectPath';
 import type { Box, Design, Diagnostic, Panel } from '../core/types';
 import { listDesigns, listProjectTemplates, loadDesign, type StoredDesign } from '../persist/db';
@@ -428,6 +434,7 @@ export function ProjectPanel({
           <Group title={t('Position')} openOn={openKey(item.id, positionErrors)}>
             <GroupErrors messages={positionErrors} />
             <ConnectedTo project={project} id={item.id} />
+            <AgainstWall project={project} id={item.id} />
             {blocked && (
               <p className="hint" role="note">
                 {isLocked(item) ? `${LOCKED_HINT}.` : blocked}{' '}
@@ -672,14 +679,56 @@ function LockChip({ item }: { item: ProjectItem }) {
   );
 }
 
-/** The pieces this one is connected to (ADR-168), under Position. */
+/** What this piece is connected to (ADR-168), each with its kind (ADR-207), under Position. */
 function ConnectedTo({ project, id }: { project: Project; id: string }) {
-  const names = connectedTo(project, id).map((x) => tr(pieceName(project, x)));
+  const names = connectionsOf(project, id).map((c) =>
+    c.other
+      ? t('{name} ({kind})', { name: tr(pieceName(project, c.other)), kind: kindName(c.kind) })
+      : kindName(c.kind, c.wall),
+  );
   if (!names.length) return null;
   return (
     <p className="hint connected-to" role="note">
       {t('Connected to {names}', { names: names.join(', ') })}
     </p>
+  );
+}
+
+/**
+ * Against the wall (ADR-207): on when the piece is connected against a wall of the room; it then slides along that
+ * wall. Disabled with the reason when its back lies on no wall.
+ */
+function AgainstWall({ project, id }: { project: Project; id: string }) {
+  const setAgainstWall = useDesign((s) => s.setAgainstWall);
+  const pieces = useDesign((s) => s.projectModel?.pieces);
+  const on = wallsOf(project, id).length > 0;
+  const why = useMemo(
+    () => (on ? null : wallAgainst(project, id, pieces).reason),
+    [project, id, pieces, on],
+  );
+  const [msg, setMsg] = useState<string | null>(null);
+  return (
+    <div className="connect-toggle">
+      <Toggle
+        label={t('Against the wall')}
+        checked={on}
+        disabled={!!why}
+        onChange={(v) => setMsg(setAgainstWall(id, v) || null)}
+        info={
+          <InfoTip label={t('About against the wall')} align="start">
+            {t(
+              'The piece stays against its wall: dragging it slides it along the wall. Alt while dragging moves it away and takes it off the wall.',
+            )}
+          </InfoTip>
+        }
+      />
+      {why && <p className="hint">{why}</p>}
+      {msg && (
+        <p className="hint" role="status">
+          {msg}
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -1007,17 +1056,35 @@ function LinkedCopies({ item }: { item: ProjectItem }) {
   const project = useDesign((s) => s.project)!;
   const linkAll = useDesign((s) => s.linkAll);
   const setLinkAll = useDesign((s) => s.setLinkAll);
+  const linkIdentical = useDesign((s) => s.linkIdentical);
   const n = useMemo(() => linkCount(project, item.id), [project, item.id]);
-  if (n < 2) return null;
+  // Other pieces identical to this one and not in its link group (ADR-207): one tap links them all.
+  const same = useMemo(() => identicalPieces(project, item.id).length, [project, item.id]);
+  if (n < 2 && !same) return null;
   return (
     <div className="linked-copies" role="group" aria-label={t('Linked copies')}>
-      <p className="hint">
-        <strong>{t('Linked: {n} copies', { n })}</strong>.{' '}
-        {linkAll
-          ? t('A change to this piece changes every copy, inside too.')
-          : t('A change to this piece changes it alone and unlinks it.')}
-      </p>
-      <Toggle label={t('Change all copies')} checked={linkAll} onChange={setLinkAll} />
+      {n >= 2 && (
+        <>
+          <p className="hint">
+            <strong>{t('Linked: {n} copies', { n })}</strong>.{' '}
+            {linkAll
+              ? t('A change to this piece changes every copy, inside too.')
+              : t('A change to this piece changes it alone and unlinks it.')}
+          </p>
+          <Toggle label={t('Change all copies')} checked={linkAll} onChange={setLinkAll} />
+        </>
+      )}
+      {same > 0 && (
+        <button
+          type="button"
+          className="btn outline block"
+          title={t('These pieces are the same; linked, a change to one changes them all.')}
+          onClick={() => linkIdentical(item.id)}
+        >
+          <Icon name="link" className="sm" />
+          {t('Link {n} identical pieces', { n: same })}
+        </button>
+      )}
     </div>
   );
 }
@@ -2661,14 +2728,28 @@ export function AddPieceList({
                   onClick={() => {
                     // A variable the project already has keeps its value; the inserted pieces follow it (ADR-170).
                     const kept = project ? keptVariables(project, tpl) : [];
+                    // A wall connection to a wall this room lacks is dropped (ADR-207); the notice says so.
+                    const dropped = project ? droppedWallConnections(project, tpl) : 0;
                     if (!insertTemplate(tpl).length) return;
-                    if (kept.length)
-                      useUi.getState().setNotice({
-                        ok: true,
-                        text: t('Kept the project’s {names}; the inserted pieces follow it.', {
-                          names: kept.map((n) => `“${n}”`).join(', '),
-                        }),
-                      });
+                    const notes = [
+                      ...(kept.length
+                        ? [
+                            t('Kept the project’s {names}; the inserted pieces follow it.', {
+                              names: kept.map((n) => `“${n}”`).join(', '),
+                            }),
+                          ]
+                        : []),
+                      ...(dropped
+                        ? [
+                            t(
+                              '{n|# wall connection was|# wall connections were} left out: this room has no such wall.',
+                              { n: dropped },
+                            ),
+                          ]
+                        : []),
+                    ];
+                    if (notes.length)
+                      useUi.getState().setNotice({ ok: true, text: notes.join(' ') });
                     onDone();
                   }}
                 >

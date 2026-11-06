@@ -445,4 +445,24 @@ export const ru_info = {
     'Выбор, какую правку оставить при импорте шаблона',
   'An imported template for a family you edited asks; Keep mine is the default.':
     'Импортированный шаблон для изменённого вами семейства спрашивает; «Оставить мой» — по умолчанию.',
+  // ADR-207 feature lines.
+  'Connection kinds': 'Виды соединений',
+  'A snap or Connected joins pieces side by side, in a corner or stacked (a wall unit over its base), each checked its own way; Connected to names each kind.':
+    'Привязка или «Соединено» соединяет изделия рядом, в углу или друг над другом (навесной модуль над нижним), каждый вид проверяется по-своему; «Соединено с» называет вид.',
+  'A piece connected against its wall slides along it; Alt moves it away. Connected and stacked pieces move, mirror and merge together.':
+    'Изделие, соединённое со стеной, скользит вдоль неё; Alt отодвигает его. Соединённые изделия и изделия друг над другом перемещаются, отражаются и объединяются вместе.',
+  'Pieces that are exactly the same are linked in one tap from the card.':
+    'Полностью одинаковые изделия связываются одним нажатием на карточке.',
+  'Mirror a lounger or a daybed': 'Отражение шезлонга или кушетки',
+  'The backrest and the side panel are built at the left or the right end.':
+    'Спинка и боковая панель строятся у левого или правого конца.',
+  'Shared sides with blind corners and desks': 'Общие боковины с глухими углами и столами',
+  'A blind corner unit shares its straight end with a cabinet; a desk beside a cabinet leaves its gable out.':
+    'Глухой угловой модуль делит прямой конец со шкафом; стол рядом со шкафом обходится без своей опорной стенки.',
+  'Show the hardware step in 3D': 'Показ шага с фурнитурой в 3D',
+  'Fit hardware to the sides lights the sides and dividers its hinges and runners go on.':
+    'Шаг «Фурнитура на боковины» подсвечивает боковины и перегородки, на которые ставятся петли и направляющие.',
+  'Your own assembly steps': 'Свои шаги сборки',
+  'Move steps up and down and rename them; the tab and the print follow; Reset the steps brings the generated ones back.':
+    'Перемещайте шаги вверх и вниз и переименовывайте их; вкладка и печать следуют за этим; «Сбросить шаги» возвращает созданные.',
 } satisfies Record<string, string>;

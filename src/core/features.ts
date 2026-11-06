@@ -284,6 +284,18 @@ export const FEATURES: FeatureDomain[] = [
         checked: '2026-11-05',
       },
       {
+        name: 'Connection kinds',
+        detail:
+          'A snap or Connected joins pieces side by side, in a corner or stacked (a wall unit over its base), each checked its own way; Connected to names each kind.',
+        adrs: ['ADR-207'],
+      },
+      {
+        name: 'Against the wall',
+        detail:
+          'A piece connected against its wall slides along it; Alt moves it away. Connected and stacked pieces move, mirror and merge together.',
+        adrs: ['ADR-207'],
+      },
+      {
         name: 'Compatibility rules',
         detail: 'Checked when snapping and in the project checks.',
         adrs: ['ADR-100'],
@@ -320,6 +332,16 @@ export const FEATURES: FeatureDomain[] = [
         detail: 'Change one copy and every linked copy changes.',
         adrs: ['ADR-111'],
         checked: '2026-11-05',
+      },
+      {
+        name: 'Link identical pieces',
+        detail: 'Pieces that are exactly the same are linked in one tap from the card.',
+        adrs: ['ADR-207'],
+      },
+      {
+        name: 'Mirror a lounger or a daybed',
+        detail: 'The backrest and the side panel are built at the left or the right end.',
+        adrs: ['ADR-207'],
       },
     ],
   },
@@ -544,6 +566,12 @@ export const FEATURES: FeatureDomain[] = [
           'Select cabinets side by side: Shared sides leaves one side per joint; fronts meet over its middle.',
         adrs: ['ADR-190'],
         checked: '2026-11-05',
+      },
+      {
+        name: 'Shared sides with blind corners and desks',
+        detail:
+          'A blind corner unit shares its straight end with a cabinet; a desk beside a cabinet leaves its gable out.',
+        adrs: ['ADR-207'],
       },
       { name: 'Stock sheets, trim and kerf', adrs: ['ADR-019'], checked: '2026-11-05' },
       { name: 'Solid timber stock', adrs: ['ADR-038'], checked: '2026-11-05' },
@@ -777,6 +805,18 @@ export const FEATURES: FeatureDomain[] = [
               'Steps per piece, labelled guidance: prepare the parts, fit hardware to the sides, assemble, then fit drawers and doors. Each step has an instruction, its parts, joints, fasteners and hardware; identical drawers are listed once. Show step lights the parts in 3D; printed with each piece’s front view in the print language.',
             adrs: ['ADR-174', 'ADR-185', 'ADR-186'],
             checked: '2026-11-05',
+          },
+          {
+            name: 'Show the hardware step in 3D',
+            detail:
+              'Fit hardware to the sides lights the sides and dividers its hinges and runners go on.',
+            adrs: ['ADR-207'],
+          },
+          {
+            name: 'Your own assembly steps',
+            detail:
+              'Move steps up and down and rename them; the tab and the print follow; Reset the steps brings the generated ones back.',
+            adrs: ['ADR-207'],
           },
           {
             name: 'Project assembly order',

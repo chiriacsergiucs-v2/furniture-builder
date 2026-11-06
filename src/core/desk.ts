@@ -94,6 +94,8 @@ export function buildDesk(
   const leftPed = p.support === 'pedestal-left' || p.support === 'two-pedestals';
   const rightPed = p.support === 'pedestal-right' || p.support === 'two-pedestals';
   const pw = p.pedestal.width;
+  // Sharing a side with a cabinet (ADR-207): the gable at that end is left out, the cabinet's side serves.
+  const omit = p.omitGable ?? {};
   const merge = (m: PartialModel) => {
     out.panels.push(...m.panels);
     out.spaces.push(...m.spaces);
@@ -108,7 +110,7 @@ export function buildDesk(
         productNodeId: deskId,
       }),
     );
-  else
+  else if (!omit.left)
     panel('gable-left', 'gable', 'Left gable', body.id, box(0, 0, 0, t, Hu, Ds), 'x', 'y', ['+z']);
 
   if (rightPed)
@@ -119,13 +121,13 @@ export function buildDesk(
         origin: { x: W - pw, y: 0, z: 0 },
       }),
     );
-  else
+  else if (!omit.right)
     panel('gable-right', 'gable', 'Right gable', body.id, box(W - t, 0, 0, t, Hu, Ds), 'x', 'y', [
       '+z',
     ]);
 
-  const lx = leftPed ? pw : t,
-    rx = W - (rightPed ? pw : t);
+  const lx = leftPed ? pw : omit.left ? 0 : t,
+    rx = W - (rightPed ? pw : omit.right ? 0 : t);
   const knee = rx - lx;
   if (knee <= 0) {
     err('no-knee-space', tx('Supports leave no space between them.'));
