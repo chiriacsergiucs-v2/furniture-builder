@@ -40,7 +40,14 @@ const GAP_IDS = new Set(GAPS.map((g) => g.id));
  * user marks gaps on this device (Acknowledge, Make ADR, a note) and copies the decisions to paste to
  * Claude, who applies them to `docs/adr/GAPS.md`. Nothing here changes the ledger itself (ADR-002).
  */
-export function GapsPage({ onDone }: { onDone: () => void }) {
+export function GapsPage({
+  onDone,
+  designOpen = true,
+}: {
+  onDone: () => void;
+  /** Back to the editor only with a design open, as the Catalog (ADR-120, ADR-211). */
+  designOpen?: boolean;
+}) {
   const [marks, setMarks] = useState<Record<string, GapMark>>({});
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
@@ -181,10 +188,12 @@ export function GapsPage({ onDone }: { onDone: () => void }) {
             device; Copy decisions gives the text to paste to Claude, who updates the ledger.
           </p>
         </div>
-        <button type="button" className="btn outline" onClick={onDone}>
-          <Icon name="chevron-left" className="sm" />
-          Back to the editor
-        </button>
+        {designOpen && (
+          <button type="button" className="btn outline" onClick={onDone}>
+            <Icon name="chevron-left" className="sm" />
+            Back to the editor
+          </button>
+        )}
       </header>
       {error && (
         <p className="alert warning" role="status">

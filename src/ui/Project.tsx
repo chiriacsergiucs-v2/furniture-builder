@@ -37,7 +37,8 @@ import {
 } from '../core/project';
 import { dropTarget, SNAP_RANGE } from '../core/snap';
 import { dragHeight, heightDraggable, heightLabel, snapWallHeight } from '../core/height';
-import { groupOf, itemsAt, itemsInBox, nextUnder } from '../core/selection';
+import { groupOf, itemsAt, itemsInBox, itemsInFrontBox, nextUnder } from '../core/selection';
+import { isBoardsLocked, isConstructionLocked } from '../core/pieceLocks';
 import { droppedWallConnections, keptVariables } from '../core/insertTemplate';
 import {
   connectionSeams,
@@ -286,7 +287,10 @@ export function ProjectPanel({
         </h3>
         {/* The views' Select (ADR-097), shared: a tap on a row adds or removes the piece (ADR-159). */}
         {project.items.length > 0 && (
-          <Toggle label={t('Select')} checked={multi} onChange={setMulti} />
+          <>
+            <Toggle label={t('Select')} checked={multi} onChange={setMulti} />
+            <SelectTip />
+          </>
         )}
         {/* The most used action of a room's day sits at the top of the panel (ADR-160). */}
         <button type="button" className="btn sm primary add-piece" onClick={onAdd}>
@@ -841,6 +845,8 @@ function PieceMenu({
   const setSizeLocked = useDesign((s) => s.setSizeLocked);
   const setTurnLocked = useDesign((s) => s.setTurnLocked);
   const setAxisLocked = useDesign((s) => s.setAxisLocked);
+  const setBoardsLocked = useDesign((s) => s.setBoardsLocked);
+  const setConstructionLocked = useDesign((s) => s.setConstructionLocked);
   const mirrorRun = useDesign((s) => s.mirrorRun);
   const [open, setOpen] = useState(false);
   const [dialog, setDialog] = useState<'replace' | 'save' | null>(null);
@@ -933,6 +939,23 @@ function PieceMenu({
           >
             <Icon name="lock" className="sm" />
             {isTurnLocked(item) ? t('Unlock turn') : t('Lock turn')}
+          </button>
+          {/* Boards and construction, each on its own (ADR-211, G-337); size and place stay free. */}
+          <button
+            type="button"
+            aria-pressed={isBoardsLocked(item)}
+            onClick={pick(() => setBoardsLocked(item.id, !isBoardsLocked(item)))}
+          >
+            <Icon name="lock" className="sm" />
+            {isBoardsLocked(item) ? t('Unlock boards') : t('Lock boards')}
+          </button>
+          <button
+            type="button"
+            aria-pressed={isConstructionLocked(item)}
+            onClick={pick(() => setConstructionLocked(item.id, !isConstructionLocked(item)))}
+          >
+            <Icon name="lock" className="sm" />
+            {isConstructionLocked(item) ? t('Unlock construction') : t('Lock construction')}
           </button>
           {!isSizeLocked(item) &&
             SIZE_AXES.map((axis) => {
@@ -1790,6 +1813,7 @@ function RoomPlan({
         )}
         {/* Phones: taps add and remove pieces, and a drag on empty plan draws a selection box (ADR-097). */}
         <Toggle label={t('Select')} checked={multi} onChange={setMulti} />
+        <SelectTip box />
         {/* Checkboxes like Fronts and Clear.: one toggle style in the row (ADR-120). On a phone Snap and the
             clearances sit behind Options; Fronts and Select stay in the row (ADR-144, G-269). */}
         <ViewOptions menu={inOptions('snap', phone)}>
@@ -2425,6 +2449,35 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
   const multi = useDesign((s) => s.multiSelect);
   const setMulti = useDesign((s) => s.setMultiSelect);
   const toggleItem = useDesign((s) => s.toggleItem);
+  const selectItems = useDesign((s) => s.selectItems);
+  /** The selection box being drawn on empty front view (room mm, y up from the floor), or null (ADR-211, G-308). */
+  const [box, setBoxState] = useState<{
+    pointerId: number;
+    a: { x: number; y: number };
+    b: { x: number; y: number };
+    add: boolean;
+  } | null>(null);
+  const boxRef = useRef<typeof box>(null);
+  const setBox = (v: typeof box) => {
+    boxRef.current = v;
+    setBoxState(v);
+  };
+  const svgRef = useRef<SVGSVGElement>(null);
+  const toFront = (e: { clientX: number; clientY: number }) => {
+    const m = svgRef.current?.getScreenCTM();
+    if (!m) return null;
+    const pt = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse());
+    return { x: Math.round(pt.x), y: Math.round(-pt.y) };
+  };
+  /** The placed front-view boxes the project model holds (pieces and 3D models), for the box without a rebuild. */
+  const placedBoxes = useMemo(
+    () =>
+      new Map<string, Box>([
+        ...pm.pieces.map((pc) => [pc.item.id, pc.bounds] as [string, Box]),
+        ...pm.models.map((m) => [m.item.id, m.box] as [string, Box]),
+      ]),
+    [pm.pieces, pm.models],
+  );
   // A tap on the selected piece opens it with the space under the tap selected (ADR-083). Seen from the front, a
   // piece turned a quarter shows its side, so it opens with the whole piece selected.
   const tapFront = (e: MouseEvent<SVGRectElement>, item: ProjectItem) => {
@@ -2592,6 +2645,7 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
       <div className="plan-tools">
         {/* The plan's Select (ADR-097), shared: taps add and remove pieces (ADR-159). */}
         <Toggle label={t('Select')} checked={multi} onChange={setMulti} />
+        <SelectTip box />
       </div>
       {lift && (
         <span className="plan-drag-note" role="status">
@@ -2605,7 +2659,39 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
           ` ${t('The room height and the doors, windows and obstacles on the back wall are outlined.')}`}
       </InfoTip>
       <svg
+        ref={svgRef}
         viewBox={`${x0 - pad * 1.2} ${-top - pad * 0.8} ${x1 - x0 + pad * 2.4} ${top + pad * 1.8}`}
+        className={multi ? 'selecting' : undefined}
+        // The plan's box rules (ADR-097) in the front view (ADR-211): a press on empty space with a mouse or pen, or
+        // with Select on, draws a box; Shift/Ctrl/Cmd adds to the selection.
+        onPointerMove={(e) => {
+          const bx = boxRef.current;
+          if (bx && e.pointerId === bx.pointerId) {
+            const p = toFront(e);
+            if (p) setBox({ ...bx, b: p });
+          }
+        }}
+        onPointerDown={(e) => {
+          if (boxRef.current && e.pointerId !== boxRef.current.pointerId) setBox(null);
+          const onPiece = (e.target as Element).closest?.('.front-hit, .front-model');
+          if (onPiece || boxRef.current) return;
+          if (e.pointerType === 'touch' && !multi) return;
+          if (e.pointerType === 'mouse' && e.button !== 0) return;
+          const p = toFront(e);
+          if (!p) return;
+          e.currentTarget.setPointerCapture?.(e.pointerId);
+          setBox({ pointerId: e.pointerId, a: p, b: p, add: e.shiftKey || e.ctrlKey || e.metaKey });
+        }}
+        onPointerUp={(e) => {
+          const bx = boxRef.current;
+          if (!bx || e.pointerId !== bx.pointerId || !project) return;
+          setBox(null);
+          // A press without a drag is not a box.
+          if (Math.abs(bx.a.x - bx.b.x) < 1 && Math.abs(bx.a.y - bx.b.y) < 1) return;
+          const hit = itemsInFrontBox(project, bx.a, bx.b, placedBoxes);
+          selectItems(bx.add ? [...selectedIds, ...hit] : hit);
+        }}
+        onPointerCancel={() => setBox(null)}
       >
         <rect className="floor" x={x0 - pad} y={0} width={x1 - x0 + 2 * pad} height={pad * 0.15} />
         {backs.length > 0 && (
@@ -2724,6 +2810,16 @@ function RoomFront({ pm, card }: { pm: ProjectModel; card?: boolean }) {
               size={Math.min(span / 40, pc.bounds.w / 7)}
             />
           ))}
+        {box && (
+          <rect
+            className="select-box"
+            x={Math.min(box.a.x, box.b.x)}
+            y={-Math.max(box.a.y, box.b.y)}
+            width={Math.abs(box.b.x - box.a.x)}
+            height={Math.abs(box.b.y - box.a.y)}
+            aria-hidden="true"
+          />
+        )}
         {project && <FrontConnectionTicks project={project} pieces={pm.pieces} fs={span / 40} />}
         <FrontModels pm={pm} fs={span / 40} />
         <Dim x1={x0} x2={x1} y={pad * 0.6} fontSize={dfs} label={`${x1 - x0}`} />
@@ -3293,5 +3389,17 @@ function RoomSection() {
       )}
       <PlanPictureSection />
     </section>
+  );
+}
+
+/** What Select does (ADR-211, G-148), beside each of the three Select toggles; the views add the drag box. */
+function SelectTip({ box = false }: { box?: boolean }) {
+  return (
+    <InfoTip label={t('About Select')}>
+      {t(
+        'With Select on, each tap adds or removes a piece; with a mouse, Shift, Ctrl or Cmd-click does the same.',
+      )}
+      {box && t(' A drag on empty space selects every piece it touches.')}
+    </InfoTip>
   );
 }

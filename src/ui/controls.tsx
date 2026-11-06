@@ -307,6 +307,7 @@ export function Group({
   id,
   info,
   openOn,
+  locked,
 }: {
   title: string;
   children: ReactNode;
@@ -315,6 +316,8 @@ export function Group({
   /** An `InfoTip` on the title row (ADR-113); it sits beside the summary, never inside it. */
   info?: ReactNode;
   openOn?: string;
+  /** Why the group's controls are off (a board or construction lock, ADR-211); shown as its hint. */
+  locked?: string | null;
 }) {
   const ref = useRef<HTMLDetailsElement>(null);
   useEffect(() => {
@@ -326,7 +329,20 @@ export function Group({
         {title}
         <Icon name="chevron-down" className="chev" />
       </summary>
-      <div className="group-body">{children}</div>
+      <div className="group-body">
+        {locked ? (
+          <>
+            <p className="hint group-lock-hint" role="note">
+              {locked}
+            </p>
+            <fieldset className="group-locked" disabled>
+              {children}
+            </fieldset>
+          </>
+        ) : (
+          children
+        )}
+      </div>
     </details>
   );
   if (!info) return group;

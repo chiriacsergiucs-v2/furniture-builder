@@ -90,8 +90,11 @@ export function ResearchPage({
   onDone,
   initialTab = 'features',
   initialDetail = null,
+  designOpen = true,
 }: {
   onDone: () => void;
+  /** Back to the editor only with a design open, as the Catalog (ADR-120, ADR-211). */
+  designOpen?: boolean;
   initialTab?: Tab;
   initialDetail?: string | null;
 }) {
@@ -139,10 +142,12 @@ export function ResearchPage({
             )}
           </p>
         </div>
-        <button type="button" className="btn outline" onClick={onDone}>
-          <Icon name="chevron-left" className="sm" />
-          {t('Back to the editor')}
-        </button>
+        {designOpen && (
+          <button type="button" className="btn outline" onClick={onDone}>
+            <Icon name="chevron-left" className="sm" />
+            {t('Back to the editor')}
+          </button>
+        )}
       </header>
       {error && (
         <p className="alert warning" role="status">

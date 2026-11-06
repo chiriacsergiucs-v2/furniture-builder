@@ -41,6 +41,7 @@ import { useProblem } from './problemStore';
 import { PrintSheet } from './PrintSheet';
 import { PrintClient } from './PrintClient';
 import { Icon } from './icons';
+import { SheetHandle, type SheetStop } from './SheetHandle';
 import { rovingKeys, rovingTab } from './controls';
 import { setTheme, useTheme } from './useTheme';
 import { setLook, useLook } from './useLook';
@@ -247,7 +248,10 @@ export function App() {
   // changes (G-266); only crossing 1500 px starts again from the default (G-268).
   const [view, setView] = useState<StageView>(() => defaultView(wide, has3d));
   const [lastWide, setLastWide] = useState(wide);
-  const [sheetOpen, setSheetOpen] = useState(false);
+  // The phone Compose sheet's stop (ADR-211, G-027): peek, half (today's open sheet) or full.
+  const [sheetStop, setSheetStop] = useState<SheetStop>('peek');
+  const sheetOpen = sheetStop !== 'peek';
+  const setSheetOpen = (open: boolean) => setSheetStop(open ? 'half' : 'peek');
   if (wide !== lastWide) {
     setLastWide(wide);
     setView(defaultView(wide, has3d));
@@ -293,7 +297,9 @@ export function App() {
   if (selKey !== lastSel) {
     setLastSel(selKey);
     const keepClosed = takeKeepSheetClosed();
-    if (selKey && !tapMode && inProject && !keepClosed) setSheetOpen(true);
+    // A chosen piece opens the half sheet; a full sheet stays full (ADR-211).
+    if (selKey && !tapMode && inProject && !keepClosed)
+      setSheetStop((st) => (st === 'peek' ? 'half' : st));
   }
   // A project check tapped under Checks (ADR-071) is shown on the plan: the drawing comes forward, the sheet steps aside.
   const problemTap = useProblem((s) => s.tapped);
@@ -792,20 +798,23 @@ export function App() {
             onNewPiece={() => openWizard(null)}
           />
         )}
-        {page === 'research' && <ResearchPage onDone={() => setPage('editor')} />}
-        {page === 'gaps' && <GapsPage onDone={() => setPage('editor')} />}
+        {page === 'research' && (
+          <ResearchPage onDone={() => setPage('editor')} designOpen={designOpen} />
+        )}
+        {page === 'gaps' && <GapsPage onDone={() => setPage('editor')} designOpen={designOpen} />}
         {page === 'info' && <InfoPage onDone={() => setPage('editor')} />}
         <main
-          className={`work mode-${mode} ${sheetOpen ? 'sheet-open' : ''}`}
+          className={`work mode-${mode} ${sheetOpen ? 'sheet-open' : ''} ${sheetStop === 'full' ? 'sheet-full' : ''}`}
           hidden={page !== 'editor'}
         >
           <aside className="side" aria-label={t('Compose')}>
             <div className="sheet-peek-row">
+              {phone && <SheetHandle stop={sheetStop} onStop={setSheetStop} />}
               <button
                 type="button"
                 className="sheet-peek"
                 aria-expanded={sheetOpen}
-                onClick={() => setSheetOpen((o) => !o)}
+                onClick={() => setSheetOpen(!sheetOpen)}
               >
                 <span>{peek}</span>
                 <Icon name={sheetOpen ? 'chevron-down' : 'chevron-up'} className="sm" />

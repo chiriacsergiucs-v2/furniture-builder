@@ -176,6 +176,16 @@ export interface ProjectItem {
    */
   sizeLocks?: SizeAxis[];
   /**
+   * Boards locked (ADR-211): its boards and edge bands do not change until it is unlocked (`src/core/pieceLocks.ts`).
+   * Absent = not locked. Saved from project schemaVersion 21.
+   */
+  boardsLocked?: true;
+  /**
+   * Construction locked (ADR-211): the choices of its Construction group do not change until it is unlocked. Absent =
+   * not locked. Saved from project schemaVersion 21.
+   */
+  constructionLocked?: true;
+  /**
    * Template reference (ADR-124): the piece refers to its catalog origin (`design.catalog.origin`: template, variant,
    * revision) and `overrides` are the settings it changed against it (`src/core/ownEdits.ts`), kept up to date while
    * that revision is the catalog's. `design` stays the full copy, the fallback (G-161). Absent = a plain copy.
@@ -328,7 +338,8 @@ export interface WorktopJoint {
  * and value sets (ADR-166, ADR-167); 17 = common tops and bottoms (ADR-165); 18 = connections between pieces
  * (ADR-168); 19 = turn and per-size locks (ADR-171); 20 = shared sides (ADR-190); 21 = seller products on run parts
  * (ADR-206), connection kinds and wall connections (ADR-207), the floor background, the plan picture and model
- * placements (ADR-208), worktop corner joints, hobs and backs cut around pipes and outlets (ADR-205).
+ * placements (ADR-208), worktop corner joints, hobs and backs cut around pipes and outlets (ADR-205), board and
+ * construction locks (ADR-211).
  */
 export const PROJECT_SCHEMA = 21 as const;
 export const PROJECT_SCHEMAS: readonly number[] = [
@@ -397,6 +408,7 @@ const RUN_PRODUCTS_SINCE = 21;
 const CONNECTION_KINDS_SINCE = 21;
 const SURFACES_SINCE = 21;
 const KITCHEN_SINCE = 21;
+const PIECE_LOCKS_SINCE = 21;
 
 export interface Project {
   schemaVersion: ProjectSchemaVersion;
@@ -3485,6 +3497,19 @@ export function validateProject(p: unknown): string[] {
       else if ((p.schemaVersion as number) < PARAM_LOCKS_SINCE)
         errs.push(
           t('Turn and size locks need project schemaVersion {v}', { v: PARAM_LOCKS_SINCE }),
+        );
+    }
+    for (const [key, bad] of [
+      ['boardsLocked', t('Invalid item boards lock')],
+      ['constructionLocked', t('Invalid item construction lock')],
+    ] as const) {
+      if (it[key] === undefined) continue;
+      if (it[key] !== true) errs.push(bad);
+      else if ((p.schemaVersion as number) < PIECE_LOCKS_SINCE)
+        errs.push(
+          t('Board and construction locks need project schemaVersion {v}', {
+            v: PIECE_LOCKS_SINCE,
+          }),
         );
     }
     if (it.sizeLocks !== undefined) {

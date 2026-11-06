@@ -28,6 +28,7 @@ import {
 import { tNode } from './i18n';
 import { Icon } from './icons';
 import { DimensionField } from './DimensionField';
+import { usePieceLockHint } from './pieceLockHint';
 
 const matOptions = (materials: Material[], filter?: (m: Material) => boolean) =>
   materials.filter(filter ?? (() => true)).map((m) => ({ value: m.id, label: boardLabel(m) }));
@@ -505,6 +506,7 @@ const FRAME_LABEL: Record<FrameParams['kind'], string> = {
 /** Frames (ADR-038): legs, rails, stretchers, slats; beds by mattress size. */
 export function FrameEditor({ p }: { p: FrameParams }) {
   const set = useDesign((s) => s.updateFrame);
+  const constructionLock = usePieceLockHint('construction');
   const b = p.bed;
   return (
     <div className="inspector">
@@ -845,7 +847,7 @@ export function FrameEditor({ p }: { p: FrameParams }) {
               )}
             </>
           )}
-          <Group title={t('Legs, rails and stretchers')} id="g-build">
+          <Group title={t('Legs, rails and stretchers')} id="g-build" locked={constructionLock}>
             <div className="dims2">
               <MmField
                 label={t('Leg width')}

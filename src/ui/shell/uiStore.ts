@@ -1,5 +1,13 @@
 import { create } from 'zustand';
 import { t } from '../../core/i18n';
+import type { Answers } from '../../core/wizard/types';
+
+/** A closed new-piece wizard's answers, kept in memory for the session only, never stored (ADR-211, G-356). */
+export interface WizardDraft {
+  answers: Answers;
+  stepId: string;
+  done: string[];
+}
 
 /**
  * The two editor modes (ADR-080, was three in ADR-079): what goes where · what you get. What it is made of is in the
@@ -61,6 +69,9 @@ interface Ui {
   /** The Saved data dialog (ADR-133): persistent storage, folder backup and restore for this device. */
   savedDataOpen: boolean;
   setSavedDataOpen: (v: boolean) => void;
+  /** The new-piece wizard's draft (ADR-211): kept until the app closes, a piece is created or Start over. */
+  wizardDraft: WizardDraft | null;
+  setWizardDraft: (d: WizardDraft | null) => void;
 }
 
 /** UI-only state shared by the shell and the editors; nothing here is part of a design (remembered per device only). */
@@ -106,6 +117,8 @@ export const useUi = create<Ui>((set) => ({
   setMaterialOpen: (materialOpen) => set({ materialOpen }),
   savedDataOpen: false,
   setSavedDataOpen: (savedDataOpen) => set({ savedDataOpen }),
+  wizardDraft: null,
+  setWizardDraft: (wizardDraft) => set({ wizardDraft }),
 }));
 
 /**

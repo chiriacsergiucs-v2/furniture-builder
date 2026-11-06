@@ -472,4 +472,33 @@ export const ru_info = {
   'Gap marks in a file': 'Отметки пробелов в файле',
   'Export marks and Import marks move your gap marks between devices; the newer mark wins.':
     '«Экспорт отметок» и «Импорт отметок» переносят ваши отметки пробелов между устройствами; побеждает более новая отметка.',
+  // ADR-211 feature lines.
+  'Keep a closed wizard as a draft': 'Черновик закрытого мастера',
+  'A closed New piece wizard keeps its answers until you close the app; Continue where you left off or Start over.':
+    'Закрытый мастер нового изделия хранит ответы, пока вы не закроете приложение; «Продолжить с того же места» или «Начать заново».',
+  'Selection box in the front view': 'Рамка выбора на виде спереди',
+  'A drag on empty space selects every piece it touches; Shift, Ctrl or Cmd adds.':
+    'Протягивание по пустому месту выбирает все изделия, которых касается рамка; Shift, Ctrl или Cmd добавляет.',
+  'An ⓘ beside each Select says what a tap, a click and a drag do.':
+    'Значок ⓘ рядом с каждым «Выбор» объясняет, что делают касание, щелчок и протягивание.',
+  'Up one level on a phone': 'На уровень выше на телефоне',
+  'A button beside the path selects the space around the selected one.':
+    'Кнопка рядом с путём выбирает пространство вокруг выбранного.',
+  'Mattress size where a bed is selected': 'Размер матраса там, где выбрана кровать',
+  'Mattress width and length beside the selected bed, as in its Settings.':
+    'Ширина и длина матраса рядом с выбранной кроватью, как в её настройках.',
+  'Lock boards and Lock construction': 'Блокировка плит и блокировка конструкции',
+  'Each keeps its part of the piece until unlocked; size and place still change.':
+    'Каждая сохраняет свою часть изделия до разблокировки; размер и место по-прежнему меняются.',
+  'Versions of deleted projects': 'Версии удалённых проектов',
+  'Under History: restore one as a new project, or delete it with a tap.':
+    'В «Истории»: восстановите версию как новый проект или удалите её одним нажатием.',
+  'Resize the phone sheet': 'Изменение высоты панели на телефоне',
+  'Drag the handle to collapsed, half or full screen; arrow keys step.':
+    'Потяните за ручку: свёрнута, наполовину или на весь экран; стрелки переключают шаги.',
+  'Own glyphs for Fill a wall and Fill the room':
+    'Свои значки для «Заполнить стену» и «Заполнить комнату»',
+  'Back to the editor only with a design open': '«Назад в редактор» только при открытом проекте',
+  'On the Gaps and Research pages, as in the Catalog.':
+    'На страницах пробелов и исследований, как в каталоге.',
 } satisfies Record<string, string>;

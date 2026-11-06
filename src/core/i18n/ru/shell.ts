@@ -376,4 +376,9 @@ export const ru_shell = {
   'Estimate: {amount} · {n} missing': 'Оценка: {amount} · не хватает {n}',
   'Estimate: {amount}': 'Оценка: {amount}',
   'Open the Shopping list': 'Открыть список покупок',
+  // Phone sheet stops (ADR-211)
+  'Resize the sheet': 'Изменить высоту панели',
+  Collapsed: 'Свёрнута',
+  Half: 'Наполовину',
+  'Full screen': 'На весь экран',
 } satisfies Record<string, string>;

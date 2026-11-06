@@ -82,10 +82,16 @@ import {
 } from '../core/projectSettings';
 import { countRows, countSubject, stepCount, type CountKey } from '../core/counts';
 import { drill, type Selection } from '../core/selectPath';
-import { resizeProduct, type SizeField } from '../core/pieceSize';
+import { resizeBed, resizeProduct, type SizeField } from '../core/pieceSize';
 import { carryGroups, withGroups } from '../core/groupMove';
 import { resizeGroup, type WidthSplit } from '../core/groupSize';
 import { resizeBlocked, setAxisLocked, setSizeLocked, sizeLockBlocked } from '../core/sizeLock';
+import {
+  lockBlocked,
+  pieceLocksBlocked,
+  setBoardsLocked,
+  setConstructionLocked,
+} from '../core/pieceLocks';
 import { setWallHeight } from '../core/height';
 import { moveTo, type MoveToAction } from '../core/moveTo';
 import {
@@ -356,6 +362,9 @@ interface State {
   /** Lock or unlock the piece's turn, or one of its outside sizes (ADR-171). One undo step each. */
   setTurnLocked: (id: string, on: boolean) => void;
   setAxisLocked: (id: string, axis: SizeAxis, on: boolean) => void;
+  /** Lock or unlock a piece's boards, or its construction (ADR-211). One undo step each. */
+  setBoardsLocked: (id: string, on: boolean) => void;
+  setConstructionLocked: (id: string, on: boolean) => void;
   /** Hang a wall unit at a new height, e.g. dragged in 3D (ADR-122); one undo step. Returns why not, or null. */
   setItemHeight: (id: string, height: number) => string | null;
   /** "Keep mine" (ADR-096): hide the newer-template notice for this revision; one undo step. */
@@ -581,7 +590,9 @@ export const useDesign = create<State>((rawSet, get) => {
     // A project piece whose size is locked keeps its size (ADR-122): the edit is refused and the reason shown.
     const open = get().editingItemId ?? get().drillItemId;
     const p0 = get().project;
-    const locked = p0 && open ? resizeBlocked(p0, open, next) : null;
+    // Boards and construction locks (ADR-211) refuse their changes the same way.
+    const locked =
+      p0 && open ? (resizeBlocked(p0, open, next) ?? lockBlocked(p0, open, next)) : null;
     if (locked) {
       set({ notice: locked });
       return;
@@ -676,7 +687,8 @@ export const useDesign = create<State>((rawSet, get) => {
     if (items.some((i, n) => i !== linked.items[n])) linked = { ...linked, items };
     // Nothing resizes a size-locked piece (ADR-122), also through a linked copy, a project-wide setting or Replace:
     // the whole change is refused.
-    const locked = sizeLockBlocked(get().project, linked);
+    const locked =
+      sizeLockBlocked(get().project, linked) ?? pieceLocksBlocked(get().project, linked);
     if (locked) {
       set({ notice: locked });
       syncDrill();
@@ -991,6 +1003,18 @@ export const useDesign = create<State>((rawSet, get) => {
       const p = get().project;
       if (!p) return;
       const next = setAxisLocked(p, id, axis, on);
+      if (next !== p) commitProject(next);
+    },
+    setBoardsLocked: (id, on) => {
+      const p = get().project;
+      if (!p) return;
+      const next = setBoardsLocked(p, id, on);
+      if (next !== p) commitProject(next);
+    },
+    setConstructionLocked: (id, on) => {
+      const p = get().project;
+      if (!p) return;
+      const next = setConstructionLocked(p, id, on);
       if (next !== p) commitProject(next);
     },
     setItemHeight: (id, height) => {
@@ -1906,13 +1930,14 @@ export const useDesign = create<State>((rawSet, get) => {
     },
     resizePiece: (key, value) => {
       const d = get().design;
-      const product = resizeProduct(d.product, key, value);
+      // A bed's size is its mattress (ADR-211); `resizeBed` leaves other pieces alone.
+      const product = resizeBed(resizeProduct(d.product, key, value), key, value);
       if (product !== d.product) commit({ ...d, product });
     },
     resizeItem: (id, key, value) => {
       const it = get().project?.items.find((i) => i.id === id);
       if (!it) return;
-      const product = resizeProduct(it.design.product, key, value);
+      const product = resizeBed(resizeProduct(it.design.product, key, value), key, value);
       if (product === it.design.product) return;
       // Resized, a brand's product is no longer that brand's product; its origin stays (ADR-028), as in `commit`.
       const catalog =

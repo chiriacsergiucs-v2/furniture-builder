@@ -54,6 +54,12 @@ export const FEATURES: FeatureDomain[] = [
         checked: '2026-11-05',
       },
       {
+        name: 'Keep a closed wizard as a draft',
+        detail:
+          'A closed New piece wizard keeps its answers until you close the app; Continue where you left off or Start over.',
+        adrs: ['ADR-211'],
+      },
+      {
         name: 'Reopen a project piece in the wizard',
         detail: 'Open in wizard in its Settings; Update piece replaces it in the project only.',
         adrs: ['ADR-203'],
@@ -365,6 +371,21 @@ export const FEATURES: FeatureDomain[] = [
         checked: '2026-11-05',
       },
       { name: 'Selection box on the plan', adrs: ['ADR-097'], checked: '2026-11-05' },
+      {
+        name: 'Selection box in the front view',
+        detail: 'A drag on empty space selects every piece it touches; Shift, Ctrl or Cmd adds.',
+        adrs: ['ADR-211'],
+      },
+      {
+        name: 'About Select',
+        detail: 'An ⓘ beside each Select says what a tap, a click and a drag do.',
+        adrs: ['ADR-211'],
+      },
+      {
+        name: 'Up one level on a phone',
+        detail: 'A button beside the path selects the space around the selected one.',
+        adrs: ['ADR-211'],
+      },
       { name: 'Cycle through overlapping pieces', adrs: ['ADR-097'], checked: '2026-11-05' },
       {
         name: 'Keep pieces as named groups',
@@ -386,6 +407,16 @@ export const FEATURES: FeatureDomain[] = [
         name: 'Size, boards and construction of a project piece',
         adrs: ['ADR-090'],
         checked: '2026-11-05',
+      },
+      {
+        name: 'Mattress size where a bed is selected',
+        detail: 'Mattress width and length beside the selected bed, as in its Settings.',
+        adrs: ['ADR-211'],
+      },
+      {
+        name: 'Lock boards and Lock construction',
+        detail: 'Each keeps its part of the piece until unlocked; size and place still change.',
+        adrs: ['ADR-211'],
       },
       {
         name: 'Lock size',
@@ -992,6 +1023,25 @@ export const FEATURES: FeatureDomain[] = [
         name: 'Ask about kept versions when deleting a project',
         detail: 'Keep them is the default; only readable versions are deleted.',
         adrs: ['ADR-203'],
+      },
+      {
+        name: 'Versions of deleted projects',
+        detail: 'Under History: restore one as a new project, or delete it with a tap.',
+        adrs: ['ADR-211'],
+      },
+      {
+        name: 'Resize the phone sheet',
+        detail: 'Drag the handle to collapsed, half or full screen; arrow keys step.',
+        adrs: ['ADR-211'],
+      },
+      {
+        name: 'Own glyphs for Fill a wall and Fill the room',
+        adrs: ['ADR-211'],
+      },
+      {
+        name: 'Back to the editor only with a design open',
+        detail: 'On the Gaps and Research pages, as in the Catalog.',
+        adrs: ['ADR-211'],
       },
       { name: 'Add a piece from a list with pictures', adrs: ['ADR-094'], checked: '2026-11-05' },
       { name: 'Tap the plan to place', adrs: ['ADR-056'], checked: '2026-11-05' },

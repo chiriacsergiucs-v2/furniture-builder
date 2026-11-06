@@ -292,6 +292,27 @@ export async function listProjectVersions(
   };
   return rows.filter(usable).sort((a, b) => b.savedAt.localeCompare(a.savedAt));
 }
+/**
+ * Kept versions whose project is gone (ADR-211, G-389): readable versions whose `projectId` has no project row, newest
+ * first. Unreadable rows are skipped and kept (ADR-012); nothing here deletes anything.
+ */
+export async function listOrphanVersions(database = db): Promise<ProjectVersion[]> {
+  const [ids, rows] = await Promise.all([
+    database.projects.toCollection().primaryKeys(),
+    database.projectVersions.toArray(),
+  ]);
+  const live = new Set<string>(ids.map(String));
+  const usable = (v: unknown) => {
+    try {
+      return !validateVersion(v).length;
+    } catch {
+      return false;
+    }
+  };
+  return rows
+    .filter((v) => usable(v) && !live.has(v.projectId))
+    .sort((a, b) => b.savedAt.localeCompare(a.savedAt));
+}
 /** Only on the user's Delete (ADR-123, G-156: nothing removes versions automatically). */
 export const deleteProjectVersion = (id: string, database = db) =>
   database.projectVersions.delete(id);

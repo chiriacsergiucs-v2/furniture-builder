@@ -31,6 +31,7 @@ import { StartFrom } from './Catalog';
 import { askConfirm } from './Confirm';
 import { importImage, useImageUrls } from '../persist/images';
 import { FINISHES, MAX_TILE } from '../core/surface';
+import { usePieceLockHint } from './pieceLockHint';
 
 const FINISH_LABEL: Record<BoardFinish, string> = {
   matte: t('Matte'),
@@ -219,7 +220,7 @@ export function NewDialog({
       {onFillWall && (
         <button type="button" className="row-btn" onClick={onFillWall}>
           <span className="glyph">
-            <Icon name="project" />
+            <Icon name="wall" />
           </span>
           <span>
             <strong>{t('Fill a wall')}</strong>
@@ -235,7 +236,7 @@ export function NewDialog({
       {onFillRoom && (
         <button type="button" className="row-btn" onClick={onFillRoom}>
           <span className="glyph">
-            <Icon name="project" />
+            <Icon name="room-plan" />
           </span>
           <span>
             <strong>{t('Fill the room')}</strong>
@@ -267,6 +268,7 @@ export function NewDialog({
  */
 export function MaterialsPanel() {
   const materials = useDesign((s) => s.design.materials);
+  const boardsLock = usePieceLockHint('boards');
   const kerf = useDesign((s) => kerfOf(s.design));
   const setKerf = useDesign((s) => s.setKerf);
   const update = useDesign((s) => s.updateMaterial);
@@ -370,6 +372,7 @@ export function MaterialsPanel() {
       title={t('Boards, sheets and saw cut')}
       id="g-boards"
       defaultOpen={false}
+      locked={boardsLock}
       info={
         <InfoTip label={t('About boards and sheets')}>
           {t(

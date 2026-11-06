@@ -25,7 +25,9 @@ import { boardChoices } from '../core/boards';
 import type { Decor } from '../core/materials';
 import { materialKey, runHandleFor, type RunHandle } from '../core/project';
 import { listDecors } from '../persist/db';
-import type { Selection } from '../core/selectPath';
+import { parentOf as parentSel, type Selection } from '../core/selectPath';
+import { useMediaQuery } from './useMediaQuery';
+import { usePieceLockHint } from './pieceLockHint';
 import type {
   CabinetParams,
   CornerParams,
@@ -356,6 +358,9 @@ function Crumbs({
   wholeLabel: string;
 }) {
   const select = useDesign((s) => s.select);
+  const model = useDesign((s) => s.model);
+  // Phones get a plain Up one level beside the path (ADR-211, G-388); desktop has Esc (ADR-203).
+  const phone = useMediaQuery('(max-width: 760px)');
   const chain: Space[] = [];
   let cur: Space | undefined = findSpace(root, id);
   while (cur) {
@@ -364,6 +369,16 @@ function Crumbs({
   }
   return (
     <nav className="crumbs" aria-label={t('Where this space sits')}>
+      {phone && (
+        <button
+          type="button"
+          className="up-level"
+          onClick={() => select(parentSel(model, id) ?? null)}
+        >
+          <Icon name="chevron-up" className="sm" />
+          {t('Up one level')}
+        </button>
+      )}
       <button type="button" onClick={() => select(null)}>
         {wholeLabel}
       </button>
@@ -924,6 +939,7 @@ function SplitEditor({
 
 function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material[] }) {
   const set = useDesign((s) => s.updateCabinet);
+  const constructionLock = usePieceLockHint('construction');
   const select = useDesign((s) => s.select);
   const inside = insideSummary([p.interior]);
   const steps: Step[] = [
@@ -1001,7 +1017,7 @@ function CabinetEditor({ p, materials }: { p: CabinetParams; materials: Material
           hint={t('Position only; brackets and a rail are added to the hardware list.')}
         />
       )}
-      <Group title={t('Construction')} id="g-build">
+      <Group title={t('Construction')} id="g-build" locked={constructionLock}>
         <Segmented
           label={t('Top@@panel')}
           value={p.top}
@@ -1221,6 +1237,7 @@ function DrawerSettingsGroup({
 
 function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[] }) {
   const set = useDesign((s) => s.updateCorner);
+  const constructionLock = usePieceLockHint('construction');
   const select = useDesign((s) => s.select);
   const blind = p.variant === 'blind',
     diagonal = p.variant === 'diagonal';
@@ -1379,7 +1396,7 @@ function CornerEditor({ p, materials }: { p: CornerParams; materials: Material[]
           hint={t('Position only; the hardware list asks you to choose the hanging brackets.')}
         />
       )}
-      <Group title={t('Construction')} id="g-build">
+      <Group title={t('Construction')} id="g-build" locked={constructionLock}>
         <Segmented
           label={t('Top@@panel')}
           value={p.top}
@@ -1721,6 +1738,7 @@ function DeskEditor({
 }) {
   const select = useDesign((s) => s.select);
   const set = useDesign((s) => s.updateDesk);
+  const constructionLock = usePieceLockHint('construction');
   const ped = p.support !== 'gables';
   const sides = (['left', 'right'] as const).filter((sd) => usesPedestal(p, sd));
   const steps: Step[] = [
@@ -1819,7 +1837,7 @@ function DeskEditor({
           </div>
         </div>
       )}
-      <Group title={t('Construction')} id="g-build">
+      <Group title={t('Construction')} id="g-build" locked={constructionLock}>
         <MmField
           label={t('Top overhang at the front')}
           value={p.frontOverhang}

@@ -69,3 +69,28 @@ export function resizeProduct(product: Product, key: SizeField['key'], value: Mm
   if (!sizeFields(product).some((s) => s.key === key)) return product;
   return { ...product, params: { ...product.params, [key]: value } } as Product;
 }
+
+/**
+ * A bed's mattress size where the bed is selected (ADR-211, G-126), as in its Settings: the mattress width on the width
+ * key and its length on the depth key, so a width or depth lock turns off the matching field. Not a bed: none. Kept
+ * apart from `sizeFields`, whose width and depth are the outside size (groups, repairs and variables use it).
+ */
+export function bedSizeFields(product: Product): SizeField[] {
+  if (product.kind !== 'frame' || product.params.kind !== 'bed' || !product.params.bed) return [];
+  const m = product.params.bed.mattress;
+  return [
+    { key: 'width', label: t('Mattress width'), value: m.w, min: 300, max: 2200 },
+    { key: 'depth', label: t('Mattress length'), value: m.l, min: 600, max: 2300 },
+  ];
+}
+
+/** The bed with its mattress width (`width`) or length (`depth`) changed; anything else comes back unchanged. */
+export function resizeBed(product: Product, key: SizeField['key'], value: Mm): Product {
+  if (product.kind !== 'frame' || product.params.kind !== 'bed' || !product.params.bed)
+    return product;
+  if (key === 'height') return product;
+  const b = product.params.bed;
+  const mattress = key === 'width' ? { ...b.mattress, w: value } : { ...b.mattress, l: value };
+  if (mattress.w === b.mattress.w && mattress.l === b.mattress.l) return product;
+  return { ...product, params: { ...product.params, bed: { ...b, mattress } } };
+}

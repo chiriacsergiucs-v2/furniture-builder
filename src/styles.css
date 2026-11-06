@@ -1825,6 +1825,18 @@ td.note {
   color: var(--ink-3);
   padding: 0 var(--s-1);
 }
+/* Up one level on phones (ADR-211): a plain button, not a path link. */
+.crumbs button.up-level {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  margin-right: var(--s-2);
+  padding: var(--s-1) var(--s-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  color: var(--ink);
+  text-decoration: none;
+}
 .rail {
   min-width: 0;
   margin: 0 calc(-1 * var(--s-2));
@@ -6040,6 +6052,39 @@ p > .info-tip {
     display: none;
   }
 }
+@media (max-width: 760px) {
+  /* The full stop reaches the top bar and overlays the stage (ADR-211, G-027). */
+  .work.mode-compose.sheet-full .side {
+    height: calc(100dvh - var(--bar-h, 50px) - var(--actions-h, 64px));
+    max-height: calc(100dvh - var(--bar-h, 50px) - var(--actions-h, 64px));
+    z-index: 30;
+  }
+  .work.mode-compose .side.sheet-dragging .side-body {
+    display: block;
+  }
+  /* The grab handle on the peek row follows the finger (ADR-211). */
+  .work.mode-compose .sheet-handle {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    min-height: 56px;
+    touch-action: none;
+    cursor: grab;
+    background: var(--surface);
+  }
+  .work.mode-compose .sheet-handle:focus-visible {
+    outline: 2px solid var(--link);
+    outline-offset: -2px;
+  }
+  .work.mode-compose .sheet-grip {
+    width: 6px;
+    height: 28px;
+    border-radius: 3px;
+    background: var(--line);
+  }
+}
 /* Touch screens: every control is at least 44 px in both directions. */
 @media (pointer: coarse) {
   .btn,
@@ -7375,4 +7420,18 @@ ul.plain {
   display: flex;
   flex-wrap: wrap;
   gap: var(--s-2);
+}
+/* The new-piece wizard's session draft (ADR-211): Continue or Start over on the Type step. */
+.wz-draft-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+/* A group whose board or construction lock is on (ADR-211): the controls are off, the hint says why. */
+fieldset.group-locked {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0.6;
 }

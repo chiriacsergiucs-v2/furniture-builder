@@ -264,4 +264,5 @@ export const ru_inspector = {
   One: 'Одна',
   Pair: 'Пара',
   'Set by Handles for this run': 'Задано в «Ручки для этого ряда»',
+  'Up one level': 'На уровень выше',
 } satisfies Record<string, string>;

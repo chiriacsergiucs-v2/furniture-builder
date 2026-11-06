@@ -282,6 +282,20 @@ export const ru_project = {
     'Сохранена переменная проекта {names}; вставленные изделия следуют ей.',
   // Turn and per-size locks (ADR-171).
   'Invalid item turn lock': 'Недопустимая блокировка поворота изделия',
+  'Invalid item boards lock': 'Недопустимая блокировка плит изделия',
+  'Invalid item construction lock': 'Недопустимая блокировка конструкции изделия',
+  'Board and construction locks need project schemaVersion {v}':
+    'Блокировкам плит и конструкции нужна версия проекта schemaVersion {v}',
+  'Boards locked — unlock to change': 'Плиты заблокированы — разблокируйте, чтобы изменить',
+  'Construction locked — unlock to change':
+    'Конструкция заблокирована — разблокируйте, чтобы изменить',
+  'Lock boards': 'Заблокировать плиты',
+  'Versions of deleted projects ({n})': 'Версии удалённых проектов ({n})',
+  'Restore as a new project': 'Восстановить как новый проект',
+  '{name} (restored)': '{name} (восстановлен)',
+  'Unlock boards': 'Разблокировать плиты',
+  'Lock construction': 'Заблокировать конструкцию',
+  'Unlock construction': 'Разблокировать конструкцию',
   'Invalid item size locks': 'Недопустимые блокировки размеров изделия',
   'Turn and size locks need project schemaVersion {v}':
     'Для блокировок поворота и размеров нужна версия схемы проекта {v}',
@@ -373,4 +387,10 @@ export const ru_project = {
     'Название шага (пусто — созданное название «{title}»)',
   'Backrest end': 'Сторона спинки',
   'Side panel end': 'Сторона боковой панели',
+  // ADR-211
+  'About Select': 'О режиме «Выбор»',
+  'With Select on, each tap adds or removes a piece; with a mouse, Shift, Ctrl or Cmd-click does the same.':
+    'Когда «Выбор» включён, каждое касание добавляет или убирает изделие; мышью то же делает щелчок с Shift, Ctrl или Cmd.',
+  ' A drag on empty space selects every piece it touches.':
+    ' Протягивание по пустому месту выбирает все изделия, которых касается рамка.',
 } satisfies Record<string, string>;
