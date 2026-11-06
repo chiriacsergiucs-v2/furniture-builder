@@ -92,6 +92,7 @@ export const FEATURES: FeatureDomain[] = [
         detail:
           'Pick a room shape with its doors and windows, or use the project’s room: suggested mixes for every ticked wall at once, doors and windows kept free, a corner cabinet at each inside corner with a wall corner cabinet above it, wall rows split at windows; each mix checked as a project. Refine adds a budget ceiling, a style and an island with your walkway width; each mix shows its estimate.',
         adrs: ['ADR-173', 'ADR-177', 'ADR-193', 'ADR-204', 'ADR-210'],
+        checked: '2026-11-06',
       },
       {
         name: 'Room presets',
@@ -857,6 +858,7 @@ export const FEATURES: FeatureDomain[] = [
         detail:
           'A repair moves the whole group and connected pieces together; one they cannot follow is shown refused, with the reason. A depth or height mismatch between neighbours is repaired by matching one to the other; pieces whose families share no room, by moving one along its wall.',
         adrs: ['ADR-071', 'ADR-176', 'ADR-204', 'ADR-210'],
+        checked: '2026-11-06',
       },
       {
         name: 'Repair fillers kept by automatic refresh; the problem in 3D',
@@ -920,12 +922,14 @@ export const FEATURES: FeatureDomain[] = [
             detail:
               'Render uses the WebGPU path tracer when the device has WebGPU, WebGL 2 otherwise.',
             adrs: ['ADR-208'],
+            checked: '2026-11-06',
           },
           {
             name: 'View in AR and export for AR',
             detail:
               'From the 3D toolbar ⋯: View in AR on phones that offer it, and a .usdz file for AR Quick Look.',
             adrs: ['ADR-208'],
+            checked: '2026-11-06',
           },
           { name: 'Section view and Isolate', adrs: ['ADR-122'], checked: '2026-11-05' },
           { name: 'Draws only when something changes', adrs: ['ADR-121'], checked: '2026-11-05' },

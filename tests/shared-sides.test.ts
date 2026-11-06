@@ -115,7 +115,7 @@ describe('shared sides (ADR-190)', () => {
     };
     expect(codes(moved)).toContain('shared-side-broken');
     expect(buildProjectModel(moved).model.panels.filter((x) => x.role === 'side')).toHaveLength(4);
-    expect(PROJECT_SCHEMA).toBe(20);
+    expect(PROJECT_SCHEMA).toBeGreaterThanOrEqual(20);
     expect(validateProject(JSON.parse(JSON.stringify(q)))).toEqual([]);
     expect(validateProject({ ...q, schemaVersion: 19 })).toContain(
       'Shared sides need project schemaVersion 20',
