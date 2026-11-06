@@ -1,7 +1,8 @@
 # ADR-204: Complete templates and the Fill a wall and Fill the room wizards
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-06
+- Implemented: 2026-11-06
 - Depends on: ADR-011, ADR-060, ADR-071, ADR-100, ADR-103, ADR-104, ADR-125, ADR-153, ADR-170, ADR-173, ADR-193
 - Design: docs/ui-design.md (section 4, Screens: dialogs and wizards)
 - Backlog: N209
@@ -71,17 +72,17 @@ the same wizard steps (forms, Walls-step depths, the Room hint); this ADR builds
 
 ## Done when
 
-- [ ] A template from a project with a run handle and a sink is version 3; projects made from it and inserts of it
+- [x] A template from a project with a run handle and a sink is version 3; projects made from it and inserts of it
       have both, ids remapped and new; versions 1 and 2 still load; a template without them stays 1 or 2 (tests).
-- [ ] `tallHeight` 2000: tall cabinets and top boxes use it, no above-height warning on a 2100 wall; `wallDepth`
+- [x] `tallHeight` 2000: tall cabinets and top boxes use it, no above-height warning on a 2100 wall; `wallDepth`
       350: every wall cabinet and wall corner cabinet is 350 deep; "abc" in either is a `checkWall` error (tests).
-- [ ] 2000 mm wall, 3 pieces, no tall: a mix with an 800 drawer base beside 600 bases, ranked after the shared-width
+- [x] 2000 mm wall, 3 pieces, no tall: a mix with an 800 drawer base beside 600 bases, ranked after the shared-width
       mixes; the first 4 mixes of the 3000 mm default are unchanged; a 6000 mm wall stays capped (tests).
-- [ ] Equal fronts 6 on 1000 mm gives two 3-front carcasses of 3 bays with one door each, doors within 1 mm (tests).
-- [ ] Depth and height warnings offer both match repairs; applying one clears it in one undo step; size-locked
+- [x] Equal fronts 6 on 1000 mm gives two 3-front carcasses of 3 bays with one door each, doors within 1 mm (tests).
+- [x] Depth and height warnings offer both match repairs; applying one clears it in one undo step; size-locked
       gets none; a bound size is listed refused; the family warning still has none (tests).
-- [ ] Find-it (390 and 1280 px): New… → Fill a wall → Refine shows "Tall cabinet height" and "Wall cabinet depth";
+- [x] Find-it (390 and 1280 px): New… → Fill a wall → Refine shows "Tall cabinet height" and "Wall cabinet depth";
       Fill the room → Room → "Add door" adds a door kept free in the suggestions.
-- [ ] Find-it (390 and 1280 px): Checks on a depth warning shows "Make … mm deep like …"; applying it clears it.
-- [ ] Russian entries for every new text; old hint entry removed; feature tree updated; typecheck, lint, test,
+- [x] Find-it (390 and 1280 px): Checks on a depth warning shows "Make … mm deep like …"; applying it clears it.
+- [x] Russian entries for every new text; old hint entry removed; feature tree updated; typecheck, lint, test,
       build and docs:check pass.

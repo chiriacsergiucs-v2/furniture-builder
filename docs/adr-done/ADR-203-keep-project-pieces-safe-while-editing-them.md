@@ -1,7 +1,8 @@
 # ADR-203: Keep project pieces safe while editing them
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-06
+- Implemented: 2026-11-06
 - Depends on: ADR-012, ADR-034, ADR-046, ADR-076, ADR-083, ADR-093, ADR-095, ADR-102, ADR-121, ADR-123, ADR-125
 - Design: docs/ui-design.md (section 4, editor screen; Plan view, 3D view)
 - Backlog: N208
@@ -82,15 +83,15 @@ Each visible change adds its line to the feature tree (`src/core/features.ts`, A
 
 ## Done when
 
-- [ ] Resizing a base under a locked piece is refused with the reason; an unlocked piece on it still follows
+- [x] Resizing a base under a locked piece is refused with the reason; an unlocked piece on it still follows
       (`tests/lock.test.ts`).
-- [ ] `runHandleFor` and `parentOf` return the expected handle and levels (`tests/run-handles.test.ts`,
+- [x] `runHandleFor` and `parentOf` return the expected handle and levels (`tests/run-handles.test.ts`,
       `tests/select-path.test.ts`).
-- [ ] The L-corner wing-B handle holes sit away from the hinge holes (`tests/corner-mount.test.ts`).
-- [ ] Deleting a project with versions asks; Keep leaves every version, Delete removes only readable ones; an
+- [x] The L-corner wing-B handle holes sit away from the hinge holes (`tests/corner-mount.test.ts`).
+- [x] Deleting a project with versions asks; Keep leaves every version, Delete removes only readable ones; an
       import that shadows an edited family asks and Keep mine changes nothing (storage tests).
-- [ ] Every new text has its Russian entry (`pnpm typecheck`).
-- [ ] `tools/piece-safety/find-it.mjs` on the production build at 390 and 1280 px finds "Also delete its",
+- [x] Every new text has its Russian entry (`pnpm typecheck`).
+- [x] `tools/piece-safety/find-it.mjs` on the production build at 390 and 1280 px finds "Also delete its",
       "Set by Handles for this run", "Open in wizard" in a project piece's Settings, and Esc going up one level.
-- [ ] The same script, in 3D Move mode, drags and turns a display-only model and checks an angled piece's selection
+- [x] The same script, in 3D Move mode, drags and turns a display-only model and checks an angled piece's selection
       outline is turned with it.

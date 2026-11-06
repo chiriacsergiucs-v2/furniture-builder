@@ -1,7 +1,8 @@
 # ADR-212: Ledger tooling, faster find-it runs, print names and band-list import
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-06
+- Implemented: 2026-11-06
 - Depends on: ADR-077, ADR-092, ADR-101, ADR-108, ADR-201, ADR-202
 - Design: docs/ui-design.md (§3 Button, Dialog; §4 Materials dialog, Gaps page)
 - Backlog: N217
@@ -84,11 +85,11 @@ gets its own. Ship pull requests merge without CI on them (user rule 2026-10-29)
 
 ## Done when
 
-- [ ] `ship-adr.sh` and `pnpm docs:check` reject an unknown `Research:` id (scripts tests); skill updated (G-076)
-- [ ] Export marks and Import marks round-trip, keep the newer mark and count skipped rows (tests) (G-100)
+- [x] `ship-adr.sh` and `pnpm docs:check` reject an unknown `Research:` id (scripts tests); skill updated (G-076)
+- [x] Export marks and Import marks round-trip, keep the newer mark and count skipped rows (tests) (G-100)
 - [ ] Old backlog gap notes and pending ADR open questions name their G ids; `pnpm docs:check` passes (G-049, G-041)
 - [ ] Each find-it lever's measured time is in N217; applied ones pass three consecutive full runs (G-371)
-- [ ] `@dimforge/rapier3d-compat` is gone from `package.json`; install, test and build pass (G-377)
-- [ ] A catalog piece's parts CSV labels and shopping title follow the print language in ro, ru, en (tests) (G-381)
-- [ ] `parseBandList` reads tenths, skips bad rows with problems; old storage rows load after the upgrade (G-038)
-- [ ] jsdom find-it at 390 and 1280 px finds Export marks, Import band list (CSV) and Matching bands
+- [x] `@dimforge/rapier3d-compat` is gone from `package.json`; install, test and build pass (G-377)
+- [x] A catalog piece's parts CSV labels and shopping title follow the print language in ro, ru, en (tests) (G-381)
+- [x] `parseBandList` reads tenths, skips bad rows with problems; old storage rows load after the upgrade (G-038)
+- [x] jsdom find-it at 390 and 1280 px finds Export marks, Import band list (CSV) and Matching bands

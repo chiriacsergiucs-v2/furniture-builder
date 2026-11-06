@@ -1,7 +1,8 @@
 # ADR-209: Kitchen run follow-ups: mouldings, cut-out positions, edge profiles, formulas and fasteners
 
-- Status: Pending
+- Status: Implemented
 - Date: 2026-11-06
+- Implemented: 2026-11-06
 - Depends on: ADR-071, ADR-075, ADR-202, ADR-204, ADR-205, ADR-206
 - Design: docs/ui-design.md (4. Screens: Project panel, Output, the 3D view)
 - Backlog: N214
@@ -16,10 +17,10 @@ G-407 cut-outs "from sizes you enter" (not a quote); G-408 "Accept default, /bat
 handles)"; G-412 "To sell designed kitchens"; G-325 the user named pieces only (not a quote); G-414 "Formulas too";
 G-034 "Explainable warnings with repairs"; G-380 "Hardware and fastener completeness".
 
-Builds on [ADR-205](ADR-205-kitchen-cut-outs-worktop-corners-and-placement-precision.md) (cut-outs, profile holes,
-worktop joints), [ADR-202](ADR-202-fix-phone-layout-false-texts-translations-and-segmented-controls.md) (fastener
-`pt()` labels), [ADR-206](ADR-206-prints-exports-and-seller-matching.md) (formula functions) and
-[ADR-204](ADR-204-complete-templates-and-the-fill-a-wall-and-fill-the-room-wizards.md) (template schema 3).
+Builds on [ADR-205](../adr-done/ADR-205-kitchen-cut-outs-worktop-corners-and-placement-precision.md) (cut-outs, profile holes,
+worktop joints), [ADR-202](../adr-done/ADR-202-fix-phone-layout-false-texts-translations-and-segmented-controls.md) (fastener
+`pt()` labels), [ADR-206](../adr-done/ADR-206-prints-exports-and-seller-matching.md) (formula functions) and
+[ADR-204](../adr-done/ADR-204-complete-templates-and-the-fill-a-wall-and-fill-the-room-wizards.md) (template schema 3).
 Change control: ADR-071's default "the filler repair is offered only with automatic refresh off" is replaced (G-034).
 G-414's pick reads "add them when a real project needs one"; the user put it in this batch, so it is built now. Taken
 in part: G-412 (edge profiles; CC0 appliance models stay G-437), G-034 (the hinge repair needs G-011, which conflicts
@@ -94,18 +95,18 @@ stores `runRequests`. Every older version loads unchanged. **Texts.** New UI tex
 
 ## Done when
 
-- [ ] A crown with a typed profile has its bounding size, note and 3D section; a crossing profile gives
+- [x] A crown with a typed profile has its bounding size, note and 3D section; a crossing profile gives
       `trim-profile-invalid`; a template keeps run requests at version 4, ids new (tests).
-- [ ] Offsets move the sink and hob outline, notes and diagnostics; absent stays centred; the 3D worktop has a hole
+- [x] Offsets move the sink and hob outline, notes and diagnostics; absent stays centred; the 3D worktop has a hole
       per cut-out (tests).
-- [ ] Rounded and Bevelled draw in 3D and print their note in ro, ru and en; no size gives `worktop-edge-size` (tests).
-- [ ] A worktop overhang and a crown height bound to a variable follow it; `if` and `round(x, step)` evaluate, and a
+- [x] Rounded and Bevelled draw in 3D and print their note in ro, ru and en; no size gives `worktop-edge-size` (tests).
+- [x] A worktop overhang and a crown height bound to a variable follow it; `if` and `round(x, step)` evaluate, and a
       step of 0 is a diagnostic (tests).
-- [ ] With automatic refresh on, the filler repair is offered, applies in one undo step and survives a refresh and a
+- [x] With automatic refresh on, the filler repair is offered, applies in one undo step and survives a refresh and a
       move of its pieces (tests).
-- [ ] Project Settings shows Fasteners; drilling dots appear only once `edge` is typed, at exact positions (tests).
-- [ ] Project schema 21 and template schema 3 files load unchanged; every new text has its entries; the fuzz
+- [x] Project Settings shows Fasteners; drilling dots appear only once `edge` is typed, at exact positions (tests).
+- [x] Project schema 21 and template schema 3 files load unchanged; every new text has its entries; the fuzz
       `FUZZ_N=30000 pnpm exec vitest run tests/fuzz.test.ts` passes.
-- [ ] `tools/kitchen-follow-ups/find-it.mjs` passes on the production build at 390 and 1280 px: **From left**,
+- [x] `tools/kitchen-follow-ups/find-it.mjs` passes on the production build at 390 and 1280 px: **From left**,
       **Edge profile**, the moulding profile, a **Ceiling filler** in 3D, the problem box in 3D, **Fasteners** in
       project Settings and "Guidance: drilling positions from your values"; all CI checks pass.
