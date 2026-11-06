@@ -26,14 +26,18 @@ export function planScale(pp: Pick<PlanPicture, 'a' | 'b' | 'length'>): number {
   return px > 0 ? pp.length / px : 0;
 }
 
-/** Where a picture of `width` × `height` pixels lies on the plan, in room mm (x, z of its top-left, w, d). */
+/**
+ * Where a picture of `width` × `height` pixels lies on the plan, in whole room mm (x, z of its top-left, w, d): the
+ * plan frames and measures it, and its sizes are whole mm like every other (ADR-003).
+ */
 export function planPictureRect(
   pp: Pick<PlanPicture, 'a' | 'b' | 'length'>,
   width: number,
   height: number,
 ): { x: number; z: number; w: number; d: number } {
   const s = planScale(pp);
-  return { x: -pp.a[0] * s, z: -pp.a[1] * s, w: width * s, d: height * s };
+  const mm = (v: number) => Math.round(v) || 0;
+  return { x: mm(-pp.a[0] * s), z: mm(-pp.a[1] * s), w: mm(width * s), d: mm(height * s) };
 }
 
 /** The picture pixel (whole) under a room point (mm), at the picture's present scale. */
