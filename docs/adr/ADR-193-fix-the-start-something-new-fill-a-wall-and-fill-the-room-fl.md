@@ -5,6 +5,7 @@
 - Depends on: ADR-008, ADR-078, ADR-103, ADR-104, ADR-153, ADR-173, ADR-177
 - Design: docs/ui-design.md (section 4, Screens: dialogs and wizards)
 - Backlog: N198
+- Acceptance: browser
 
 ## Context
 
@@ -77,12 +78,47 @@ medium issues and fixes per flow".
 
 ## Done when
 
-- [ ] Default room (3600 × 3000, 4 walls): first card ≤ 4 warnings; `tallPosition: 'left'` still obeyed.
-- [ ] Room width "abc", "0", "-100": Next stays on Room with an alert naming the field; no "NaN mm" anywhere.
-- [ ] Fill a wall width "abc" + Enter: stays on Wall, alert under the field, `aria-invalid`; header never echoes it.
-- [ ] Room → Refine → Back and Wall → Refine → Back show cards for the typed values; never a blank step.
-- [ ] U → Rectangle → Show suggestions gives cards; Rectangle → L shows 6 ticked walls.
-- [ ] Walls step shows Depth and Tall cabinet depth for a typed room and for a project's room.
-- [ ] A rejected `saveProject` in "Project with several pieces" shows the alert and opens nothing.
-- [ ] At 390 px `.dialog-body` scrollWidth equals clientWidth; no "(ADR-059)"; ru entries updated; find-it passes
+- [x] Default room (3600 × 3000, 4 walls): first card ≤ 4 warnings; `tallPosition: 'left'` still obeyed.
+- [x] Room width "abc", "0", "-100": Next stays on Room with an alert naming the field; no "NaN mm" anywhere.
+- [x] Fill a wall width "abc" + Enter: stays on Wall, alert under the field, `aria-invalid`; header never echoes it.
+- [x] Room → Refine → Back and Wall → Refine → Back show cards for the typed values; never a blank step.
+- [x] U → Rectangle → Show suggestions gives cards; Rectangle → L shows 6 ticked walls.
+- [x] Walls step shows Depth and Tall cabinet depth for a typed room and for a project's room.
+- [x] A rejected `saveProject` in "Project with several pieces" shows the alert and opens nothing.
+- [x] At 390 px `.dialog-body` scrollWidth equals clientWidth; no "(ADR-059)"; ru entries updated; find-it passes
       at 390 and 1280 px; typecheck, lint, test, build and docs:check pass.
+
+## Implementation evidence
+
+Ran locally on branch `adr-193-start-new-fill-flows`, 2026-11-06. Not merged, not deployed, not live-verified.
+
+- Item 1: `suggestRoomMixes` on auto gives each stretch's one-tall candidates a twin with the tall at the right end
+  (`tallAtRight`, signature `…|right`). Starting from the best combination with every tall on the left, each stretch in
+  turn moves its tall right and keeps it when the room has fewer warnings. The kept side's candidates come first in
+  each list, the other side's after them (lists up to 2 × `PER_STRETCH`). The first 4 combinations alone are not
+  enough for the "fewest warnings" ranking to find the clear side, so the side is chosen this way. Each combination
+  is built once (a per-call memo of pieces and footprints), which keeps the default room fast. Default room:
+  first card 4 warnings (it was 19); `tallPosition: 'left'` gives no `|right` key. Fill a wall is unchanged.
+- Item 2: `checkRoomSizes` (`src/core/room.ts`), run by `checkRoom` (with a ready shape) and when leaving the Room
+  step (Next or a step tab). Each problem carries its `field`.
+- Item 3: both wizards are a `<form>` whose submit is the step's primary button. `checkWall` / `checkRoom` errors
+  stay on the step as `role="alert"` under the fields; the field gets `aria-invalid` and `aria-describedby`.
+  `checkWall` problems now name their `field`. The header shows `toInput(applied).width`, a number.
+- Item 4: `applied` starts null in both. Back from Refine with nothing applied runs `suggest()`; Walls (room) and
+  Wall (wall) count as done only once something is applied.
+- Item 5: a shape change resets `walls` to null. Item 6: Depth and Tall cabinet depth sit on the Walls step under
+  "Cabinets", for a typed room and for a project's room.
+- Item 7: `NewDialog` awaits `saveProject` in try/catch; on failure it shows the storage alert and opens nothing. A
+  second tap while it saves does nothing, and the alert is gone when the dialog opens again (code review).
+- Item 8: under 760 px the `.wizard-footer` side margins and padding are `--s-4`. The vertical offsets stay `--s-5`,
+  because the dialog body's bottom padding stays `--s-5` at that width (only its side padding changes). Measured:
+  `.dialog-body` scrollWidth equals clientWidth at 390 px.
+- Item 9: "(ADR-059)" dropped; room summaries "Wall {n}: …"; headers "{w} mm wall · best {n}, each checked for
+  problems" and "{n} walls · best {k}, each checked for problems". Russian entries added, changed or removed.
+- Checks: `tests/roomfill.test.ts`, `tests/room.test.ts`, `tests/wallfill.test.ts`: 60/60, including the default
+  room ≤ 4 warnings, `left` obeyed, warm run under 100 ms (fastest of 3), sizes named. `tests/find-it/start-new.test.tsx`
+  (jsdom, 390 and 1280 px): 6/6. Browser: `node tools/start-new/find-it.mjs` on `pnpm build` + `pnpm preview`
+  (Chromium, 390 × 844 and 1280 × 900): 48 checks passed. `FUZZ_N=30000` fuzz 4/4. lint, format:check,
+  typecheck, build and docs:check pass; `pnpm test` 1219 passed (1 skipped).
+- Gaps found while building: G-461 (the default L and U rooms give no mix, before and after this ADR) and G-462 (the
+  start Cut offset 0 is rejected for U and Alcove by the new size check; acknowledged by the user 2026-11-06: "Keep cut offset at 0").

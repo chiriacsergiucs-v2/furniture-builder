@@ -325,7 +325,7 @@ export const ru_project = {
     'Ничего не помещается: все стены слишком короткие или заняты.',
   'No mix fits the {w} mm stretch of wall {n} within the width range.':
     'Ни один набор не помещается на участок {w} мм стены {n} в заданном диапазоне ширин.',
-  'wall {n}: {s}': 'стена {n}: {s}',
+  'Wall {n}: {s}': 'Стена {n}: {s}',
   'Every mix tried had a problem in the room ({n} tried); change the walls or the width range.':
     'У каждого проверенного набора была проблема в комнате (проверено {n}); измените стены или диапазон ширин.',
   'No mix could be built.': 'Не удалось построить ни одного набора.',
